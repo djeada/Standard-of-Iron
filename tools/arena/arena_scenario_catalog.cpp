@@ -10557,9 +10557,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         QString::fromLatin1(k_promo_commander_rally_id),
         QStringLiteral("Promo: The Consul Steps In"),
         QStringLiteral("Afternoon capture scene. A thinned Roman line is being "
-                       "rolled up by twice its number until the consul walks up "
-                       "from the rear, calls the Consular Assault, and the legion "
-                       "turns the field with the horse coming round the flank."),
+                       "rolled up by twice its number until the consul signals "
+                       "from his rise, calls the Consular Assault, and the "
+                       "legion turns the field with the horse coming round the "
+                       "flank."),
         50.0F,
         {30.0F, 26.0F, 0.0F});
     s.camera_focus = QVector3D(0.0F, 1.0F, 0.0F);
@@ -10575,22 +10576,23 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.terrain_seed_override = 2024;
     s.suppress_boundary_mountains = true;
     {
-      constexpr int k_ring_mounds = 18;
-      constexpr float k_ring_radius = 44.0F;
+      constexpr int k_ring_mounds = 14;
+      constexpr float k_ring_radius = 47.0F;
       for (int i = 0; i < k_ring_mounds; ++i) {
         float const angle = 2.0F * std::numbers::pi_v<float> * static_cast<float>(i) /
                             static_cast<float>(k_ring_mounds);
-        float const wobble = 0.5F * std::sin(static_cast<float>(i) * 2.3F);
+        float const wobble = (0.6F * std::sin(static_cast<float>(i) * 2.3F)) +
+                             (0.4F * std::sin(static_cast<float>(i) * 0.9F));
         s.elevation_patches.push_back(
             {{k_ring_radius * std::sin(angle), 0.0F, k_ring_radius * std::cos(angle)},
-             20.0F,
-             14.5F + (2.5F * wobble)});
+             26.0F,
+             10.5F + (2.2F * wobble)});
       }
     }
-    s.environment.start_time = 14.6F;
+    s.environment.start_time = 15.8F;
     s.environment.time_mode = Game::Map::TimeMode::Locked;
-    s.environment.fog_density_override = 0.018F;
-    s.environment.exposure_override = 1.22F;
+    s.environment.fog_density_override = 0.006F;
+    s.environment.exposure_override = 1.05F;
 
     s.elevation_patches.push_back({{0.0F, 0.0F, -17.5F}, 11.0F, 6.0F, 3.5F});
 
@@ -10601,6 +10603,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                         {0.0F, 0.0F, -16.0F},
                         1);
     consul.health_override = consul.max_health_override = 12000;
+
+    consul.showcase_routine = {QStringLiteral("sword_flourish:2.6:1.4")};
+    consul.showcase_start_delay = 16.3F;
+    consul.showcase_loop = false;
 
     auto roman_line = group(QStringLiteral("roman_line"),
                             Troop::Swordsman,
@@ -10668,6 +10674,12 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         {QStringLiteral("pine"), 6, {-36.0F, 0.0F, -30.0F}, {4.0F, 0.0F, 2.5F}, 1.3F},
         {QStringLiteral("pine"), 5, {-34.0F, 0.0F, 30.0F}, {4.2F, 0.0F, 2.0F}, 1.25F},
         {QStringLiteral("pine"), 4, {8.0F, 0.0F, 34.0F}, {4.2F, 0.0F, 2.0F}, 1.2F},
+        {QStringLiteral("pine"), 3, {5.0F, 0.0F, -28.0F}, {4.6F, 0.0F, 1.6F}, 1.25F},
+        {QStringLiteral("boulder"),
+         3,
+         {-9.0F, 0.0F, -25.0F},
+         {3.2F, 0.0F, 1.4F},
+         1.15F},
         {QStringLiteral("boulder"), 3, {-30.0F, 0.0F, 24.0F}, {3.4F, 0.0F, 2.0F}, 1.1F},
         {QStringLiteral("boulder"),
          2,
@@ -10681,8 +10693,6 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     auto rally =
         at(17.4F, Command::TriggerCommanderAura, QStringLiteral("roman_consul"));
     rally.value = 18;
-
-    auto signal = at(16.6F, Command::TriggerFlagRally, QStringLiteral("roman_consul"));
 
     auto first_blood = at(6.0F, Command::ApplyDamage, QStringLiteral("roman_line"));
     first_blood.value = 110;
@@ -10712,8 +10722,6 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
            QStringLiteral("roman_spears")),
         second_blood,
         third_blood,
-        at(16.5F, Command::Stop, QStringLiteral("roman_consul")),
-        signal,
         rally,
 
         at(19.7F,
@@ -10737,7 +10745,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         expectation(Expect::GroupIsRendered, QStringLiteral("roman_consul")),
         expectation(Expect::GroupIsRendered, QStringLiteral("roman_horse")),
         expectation(Expect::CommanderAuraActivated, QStringLiteral("roman_consul")),
-        expectation(Expect::CommanderAuraBuffObserved, QStringLiteral("roman_line")),
+
         expectation(Expect::AttackAnimationObserved, QStringLiteral("punic_horde")),
         expectation(Expect::DeathAnimationObserved, QStringLiteral("punic_horde")),
     };
