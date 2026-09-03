@@ -8,7 +8,7 @@
 
 namespace Game::Systems {
 
-inline constexpr int k_cut_tree_wood_reward = 40;
+inline constexpr int k_cut_tree_wood_reward = 80;
 inline constexpr int k_collect_stone_reward = 35;
 inline constexpr int k_collect_iron_ore_reward = 30;
 inline constexpr int k_harvest_grain_food_reward = 60;
