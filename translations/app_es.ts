@@ -4605,6 +4605,22 @@ Esta acción no se puede deshacer.</translation>
         <source>Standard of Iron - RTS game</source>
         <translation>Standard of Iron - juego de estrategia en tiempo real</translation>
     </message>
+    <message>
+        <source>Leave this battle?</source>
+        <translation>¿Abandonar esta batalla?</translation>
+    </message>
+    <message>
+        <source>The battle in progress will be lost. Save it first if you want to come back to it.</source>
+        <translation>La batalla en curso se perderá. Guárdala primero si quieres volver a ella.</translation>
+    </message>
+    <message>
+        <source>Leave the battle</source>
+        <translation>Abandonar la batalla</translation>
+    </message>
+    <message>
+        <source>Keep fighting</source>
+        <translation>Seguir luchando</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -5161,10 +5177,6 @@ para ver la vista previa</translation>
         <translation>El paso de los Alpes</translation>
     </message>
     <message>
-        <source>Crossing the Rhone - Polished Maze Version</source>
-        <translation>El paso del Ródano - versión laberinto pulida</translation>
-    </message>
-    <message>
         <source>Iron Sepulcher Watch</source>
         <translation>Vigilia del Sepulcro de Hierro</translation>
     </message>
@@ -5243,6 +5255,10 @@ para ver la vista previa</translation>
     <message>
         <source>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</source>
         <translation>Una cuadrilla de leñadores sobre el Aguapino, por ejemplo. El bosquete cercano al campamento ya está medio talado, así que la leva sólo se completa con los pinos profundos, un acarreo largo al noreste, pasada la espina de roca que el camino de arrastre debe rodear. La pedrera que da la piedra queda justo al otro lado, y la cuadrilla no es lo bastante grande para trabajar ambas sin dividirse.</translation>
+    </message>
+    <message>
+        <source>Crossing the Rhone</source>
+        <translation>El cruce del Ródano</translation>
     </message>
 </context>
 <context>

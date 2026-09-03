@@ -24,6 +24,114 @@ ApplicationWindow {
     property bool capture_view_settled: false
     property bool capture_tutorial_requested: false
 
+    property var pending_launch: null
+
+    Component {
+        id: sharedTooltipBackground
+
+        Rectangle {
+            color: Design.Theme.panelLeather
+            radius: Design.Metrics.radiusSmall
+            border.color: Design.Theme.borderStrong
+        }
+    }
+
+    Component {
+        id: sharedTooltipText
+
+        Text {
+            color: Design.Theme.textPrimary
+            font.family: Design.Typography.family
+            font.pixelSize: Design.Typography.caption
+            wrapMode: Text.WordWrap
+        }
+    }
+
+    Item {
+        id: sharedTooltipAnchor
+    }
+
+    function theme_shared_tooltip() {
+        var tip = sharedTooltipAnchor.ToolTip.toolTip;
+        if (!tip)
+            return;
+        tip.delay = Design.Metrics.tooltipDelay;
+        tip.timeout = 8000;
+        tip.padding = Design.Metrics.space8;
+        tip.background = sharedTooltipBackground.createObject(tip);
+        var body = sharedTooltipText.createObject(tip, {
+                "text": Qt.binding(function () {
+                        return tip.text;
+                    }),
+                "width": Qt.binding(function () {
+                        return tip.availableWidth;
+                    })
+            });
+        tip.contentItem = body;
+        tip.implicitWidth = Qt.binding(function () {
+                return Math.min(body.implicitWidth + tip.leftPadding + tip.rightPadding, Design.Metrics.tooltipWidth);
+            });
+        tip.implicitHeight = Qt.binding(function () {
+                return body.contentHeight + tip.topPadding + tip.bottomPadding;
+            });
+    }
+
+    function keyboard_focus_target() {
+        if (mainWindow.menu_visible)
+            return mainMenu;
+        var overlays = [commander_preview, load_game_panel, save_game_panel, settingsPanel, objectivesPanel, help_panel, mapSelect, campaign_screen, missions_screen];
+        for (var i = 0; i < overlays.length; ++i) {
+            if (overlays[i].visible)
+                return overlays[i];
+        }
+        if (mainWindow.game_started)
+            return gameViewItem;
+        return null;
+    }
+
+    function item_accepts_text(item) {
+        return item !== null && item !== undefined && typeof item.cursorPosition !== 'undefined' && typeof item.selectAll === 'function';
+    }
+
+    function item_within(item, ancestor) {
+        var probe = item;
+        while (probe) {
+            if (probe === ancestor)
+                return true;
+            probe = probe.parent;
+        }
+        return false;
+    }
+
+    function keyboard_focus_needs_restore(item, target) {
+        if (!target || item === target)
+            return false;
+        if (!item)
+            return true;
+        if (mainWindow.item_accepts_text(item))
+            return false;
+        return target === gameViewItem && mainWindow.item_within(item, hud);
+    }
+
+    onActiveFocusItemChanged: {
+        if (!mainWindow.keyboard_focus_needs_restore(mainWindow.activeFocusItem, mainWindow.keyboard_focus_target()))
+            return;
+        Qt.callLater(function () {
+                var target = mainWindow.keyboard_focus_target();
+                if (mainWindow.keyboard_focus_needs_restore(mainWindow.activeFocusItem, target))
+                    target.forceActiveFocus();
+            });
+    }
+
+    function confirm_leaving_battle(launch) {
+        if (!mainWindow.game_started) {
+            launch();
+            return;
+        }
+        mainWindow.pending_launch = launch;
+        abandon_battle_dialog.open();
+    }
+
     function show_view(name) {
         mainWindow.suppress_modals = true;
         if (typeof game !== 'undefined' && game.clear_error)
@@ -69,12 +177,14 @@ ApplicationWindow {
     function start_tutorial() {
         if (typeof game === 'undefined' || !game.tutorial || !game.tutorial.start)
             return;
-        game.tutorial.start();
-        help_panel.visible = false;
-        mainWindow.menu_visible = false;
-        mainWindow.game_started = true;
-        mainWindow.game_paused = false;
-        gameViewItem.forceActiveFocus();
+        mainWindow.confirm_leaving_battle(function () {
+                game.tutorial.start();
+                help_panel.visible = false;
+                mainWindow.menu_visible = false;
+                mainWindow.game_started = true;
+                mainWindow.game_paused = false;
+                gameViewItem.forceActiveFocus();
+            });
     }
 
     function open_help(from_menu) {
@@ -149,6 +259,7 @@ ApplicationWindow {
     title: qsTr("Standard of Iron - RTS game")
     color: Theme.bg
     Component.onCompleted: {
+        mainWindow.theme_shared_tooltip();
         Design.UiSound.audioSystem = (typeof game !== 'undefined') ? game.audio_system : null;
         sync_audio_context();
     }
@@ -185,6 +296,7 @@ ApplicationWindow {
         z: 1
         visible: !mainWindow.menu_visible && game_started
         overlay_active: mainWindow.overlay_active
+        game_is_paused: mainWindow.game_paused
         onActiveFocusChanged: {
             if (activeFocus)
                 gameViewItem.forceActiveFocus();
@@ -251,7 +363,6 @@ ApplicationWindow {
         game_is_paused: mainWindow.game_paused
         onPause_requested: {
             mainWindow.game_paused = !mainWindow.game_paused;
-            hud.game_is_paused = mainWindow.game_paused;
             gameViewItem.forceActiveFocus();
         }
         onHelp_requested: mainWindow.open_help(false)
@@ -408,24 +519,28 @@ ApplicationWindow {
         }
         onMap_chosen: function (map_path, player_configs) {
             console.log("Main: onMap_chosen received", map_path, "with", player_configs.length, "player configs");
-            if (typeof game !== 'undefined' && game.setup.start_skirmish)
-                game.setup.start_skirmish(map_path, player_configs);
-            mapSelect.visible = false;
-            mainWindow.menu_visible = false;
-            mainWindow.game_started = true;
-            mainWindow.game_paused = false;
-            gameViewItem.forceActiveFocus();
+            mainWindow.confirm_leaving_battle(function () {
+                    if (typeof game !== 'undefined' && game.setup.start_skirmish)
+                        game.setup.start_skirmish(map_path, player_configs);
+                    mapSelect.visible = false;
+                    mainWindow.menu_visible = false;
+                    mainWindow.game_started = true;
+                    mainWindow.game_paused = false;
+                    gameViewItem.forceActiveFocus();
+                });
         }
         onObserve_requested: function (map_path) {
             if (typeof game === 'undefined' || !game.setup.start_observed_skirmish)
                 return;
-            if (!game.setup.start_observed_skirmish(map_path))
-                return;
-            mapSelect.visible = false;
-            mainWindow.menu_visible = false;
-            mainWindow.game_started = true;
-            mainWindow.game_paused = false;
-            gameViewItem.forceActiveFocus();
+            mainWindow.confirm_leaving_battle(function () {
+                    if (!game.setup.start_observed_skirmish(map_path))
+                        return;
+                    mapSelect.visible = false;
+                    mainWindow.menu_visible = false;
+                    mainWindow.game_started = true;
+                    mainWindow.game_paused = false;
+                    gameViewItem.forceActiveFocus();
+                });
         }
         onCancelled: function () {
             Design.UiSound.back();
@@ -452,12 +567,14 @@ ApplicationWindow {
         onMission_selected: function (campaign_id, mission_id) {
             console.log("Main: Campaign mission selected:", campaign_id + "/" + mission_id);
             if (typeof game !== 'undefined' && game.setup.start_campaign_mission) {
-                game.setup.start_campaign_mission(campaign_id + "/" + mission_id);
-                campaign_screen.visible = false;
-                mainWindow.menu_visible = false;
-                mainWindow.game_started = true;
-                mainWindow.game_paused = false;
-                gameViewItem.forceActiveFocus();
+                mainWindow.confirm_leaving_battle(function () {
+                        game.setup.start_campaign_mission(campaign_id + "/" + mission_id);
+                        campaign_screen.visible = false;
+                        mainWindow.menu_visible = false;
+                        mainWindow.game_started = true;
+                        mainWindow.game_paused = false;
+                        gameViewItem.forceActiveFocus();
+                    });
             }
         }
         onCancelled: function () {
@@ -485,12 +602,14 @@ ApplicationWindow {
         onMission_chosen: function (file_path) {
             if (typeof game === 'undefined' || !game.setup.start_mission_file)
                 return;
-            game.setup.start_mission_file(file_path);
-            missions_screen.visible = false;
-            mainWindow.menu_visible = false;
-            mainWindow.game_started = true;
-            mainWindow.game_paused = false;
-            gameViewItem.forceActiveFocus();
+            mainWindow.confirm_leaving_battle(function () {
+                    game.setup.start_mission_file(file_path);
+                    missions_screen.visible = false;
+                    mainWindow.menu_visible = false;
+                    mainWindow.game_started = true;
+                    mainWindow.game_paused = false;
+                    gameViewItem.forceActiveFocus();
+                });
         }
         onCancelled: function () {
             Design.UiSound.back();
@@ -546,12 +665,14 @@ ApplicationWindow {
         onLoad_requested: function (slot_name) {
             console.log("Main: Load requested for slot:", slot_name);
             if (typeof game !== 'undefined' && game.saves.load_from_slot) {
-                game.saves.load_from_slot(slot_name);
-                load_game_panel.visible = false;
-                mainWindow.menu_visible = false;
-                mainWindow.game_started = true;
-                mainWindow.game_paused = false;
-                gameViewItem.forceActiveFocus();
+                mainWindow.confirm_leaving_battle(function () {
+                        game.saves.load_from_slot(slot_name);
+                        load_game_panel.visible = false;
+                        mainWindow.menu_visible = false;
+                        mainWindow.game_started = true;
+                        mainWindow.game_paused = false;
+                        gameViewItem.forceActiveFocus();
+                    });
             }
         }
         onCancelled: function () {
@@ -795,6 +916,26 @@ ApplicationWindow {
                     game.camera.move(step.x, step.y);
             }
         }
+    }
+
+    Design.IronDialog {
+        id: abandon_battle_dialog
+
+        anchors.centerIn: parent
+        width: Math.min(parent.width * 0.6, 520)
+        title: qsTr("Leave this battle?")
+        tone: "warning"
+        message: qsTr("The battle in progress will be lost. Save it first if you want to come back to it.")
+        primaryAction: qsTr("Leave the battle")
+        secondaryAction: qsTr("Keep fighting")
+        onPrimaryActivated: {
+            var launch = mainWindow.pending_launch;
+            mainWindow.pending_launch = null;
+            if (launch)
+                launch();
+        }
+        onSecondaryActivated: mainWindow.pending_launch = null
+        onClosed: mainWindow.pending_launch = null
     }
 
     Design.IronDialog {

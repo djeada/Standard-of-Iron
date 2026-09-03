@@ -4605,6 +4605,22 @@ This action cannot be undone.</translation>
         <source>Standard of Iron - RTS game</source>
         <translation>Standard of Iron - RTS game</translation>
     </message>
+    <message>
+        <source>Leave this battle?</source>
+        <translation>Leave this battle?</translation>
+    </message>
+    <message>
+        <source>The battle in progress will be lost. Save it first if you want to come back to it.</source>
+        <translation>The battle in progress will be lost. Save it first if you want to come back to it.</translation>
+    </message>
+    <message>
+        <source>Leave the battle</source>
+        <translation>Leave the battle</translation>
+    </message>
+    <message>
+        <source>Keep fighting</source>
+        <translation>Keep fighting</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -5161,10 +5177,6 @@ to see preview</translation>
         <translation>Crossing the Alps</translation>
     </message>
     <message>
-        <source>Crossing the Rhone - Polished Maze Version</source>
-        <translation>Crossing the Rhone - Polished Maze Version</translation>
-    </message>
-    <message>
         <source>Iron Sepulcher Watch</source>
         <translation>Iron Sepulcher Watch</translation>
     </message>
@@ -5243,6 +5255,10 @@ to see preview</translation>
     <message>
         <source>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</source>
         <translation>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</translation>
+    </message>
+    <message>
+        <source>Crossing the Rhone</source>
+        <translation>Crossing the Rhone</translation>
     </message>
 </context>
 <context>

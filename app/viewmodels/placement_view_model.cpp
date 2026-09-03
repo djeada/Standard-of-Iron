@@ -110,7 +110,31 @@ void PlacementViewModel::publish_frame() {
     auto* production = m_context.production;
     return production != nullptr ? production->pending_building_type() : QString();
   }();
+  const auto previous = m_readout.read();
+  const bool formation_changed =
+      !previous || previous->placing_formation != readout.placing_formation;
+  const bool construction_changed =
+      !previous || previous->placing_construction != readout.placing_construction;
+  const bool preview_active_changed =
+      !previous ||
+      previous->construction_preview_active != readout.construction_preview_active;
+  const bool preview_valid_changed =
+      !previous ||
+      previous->construction_preview_valid != readout.construction_preview_valid;
   m_readout.publish(std::move(readout));
+
+  if (formation_changed) {
+    emit placing_formation_changed();
+  }
+  if (construction_changed) {
+    emit placing_construction_changed();
+  }
+  if (preview_active_changed) {
+    emit construction_preview_active_changed();
+  }
+  if (preview_valid_changed) {
+    emit construction_preview_valid_changed();
+  }
 }
 
 auto PlacementViewModel::any_selected_in_formation_mode() const -> bool {
