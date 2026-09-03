@@ -4605,6 +4605,22 @@ Esta ação não pode ser desfeita.</translation>
         <source>Standard of Iron - RTS game</source>
         <translation>Standard of Iron - jogo de estratégia em tempo real</translation>
     </message>
+    <message>
+        <source>Leave this battle?</source>
+        <translation>Abandonar esta batalha?</translation>
+    </message>
+    <message>
+        <source>The battle in progress will be lost. Save it first if you want to come back to it.</source>
+        <translation>A batalha em andamento será perdida. Salve-a primeiro se quiser voltar a ela.</translation>
+    </message>
+    <message>
+        <source>Leave the battle</source>
+        <translation>Abandonar a batalha</translation>
+    </message>
+    <message>
+        <source>Keep fighting</source>
+        <translation>Continuar lutando</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -5161,10 +5177,6 @@ para ver a prévia</translation>
         <translation>A Travessia dos Alpes</translation>
     </message>
     <message>
-        <source>Crossing the Rhone - Polished Maze Version</source>
-        <translation>A Travessia do Ródano – versão labirinto revisada</translation>
-    </message>
-    <message>
         <source>Iron Sepulcher Watch</source>
         <translation>Vigília do Sepulcro de Ferro</translation>
     </message>
@@ -5243,6 +5255,10 @@ para ver a prévia</translation>
     <message>
         <source>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</source>
         <translation>Um destacamento de madeira acima do Pinhágua, por exemplo. O bosque próximo ao acampamento já está meio derrubado, então a leva só se completa com os pinheiros profundos, um longo transporte a nordeste, passando a espinha de rocha que a estrada de arraste precisa contornar. O cascalho que dá a pedra fica exatamente do outro lado, e a turma não é grande o bastante para trabalhar os dois sem se dividir.</translation>
+    </message>
+    <message>
+        <source>Crossing the Rhone</source>
+        <translation>A travessia do Ródano</translation>
     </message>
 </context>
 <context>

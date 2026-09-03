@@ -62,12 +62,24 @@ Item {
         systemVoice.lastFailureCount = 0;
     }
 
+    function announce_busy(message) {
+        if (!message || message.length === 0)
+            return;
+        Design.Notifications.urgent(message, {
+                "channel": "refusal-unit_busy",
+                "icon": Design.Icons.warning
+            });
+    }
+
     Connections {
         function onOrder_feedback(kind, accepted, message, failure) {
-            if (accepted)
+            if (accepted) {
                 systemVoice.forget();
-            else
+            } else if (failure === "unit_busy") {
+                systemVoice.announce_busy(message);
+            } else {
                 systemVoice.note_refusal(failure);
+            }
         }
 
         target: systemVoice.engine

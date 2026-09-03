@@ -3091,6 +3091,7 @@ auto GameEngine::orders_view_model() const -> QObject* {
 
 void GameEngine::launch_match(const App::Core::MatchLaunch& launch) {
   clear_error();
+  set_game_speed(App::Core::GameSpeed::k_default);
   m_replay_launch = {launch.kind, launch.reference, launch.player_configs};
   start_skirmish_internal(
       launch.map_path, launch.player_configs, launch.set_skirmish_context);
