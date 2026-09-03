@@ -181,7 +181,6 @@ Item {
             game_is_paused: hud.game_is_paused
             current_speed: hud.current_speed
             onPause_toggled: {
-                hud.game_is_paused = !hud.game_is_paused;
                 hud.pause_toggled();
             }
             onSpeed_changed: function (s) {

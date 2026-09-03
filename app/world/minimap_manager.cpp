@@ -9,6 +9,7 @@
 #include <cstdint>
 
 #include "game/core/component.h"
+#include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/map/map_loader.h"
 #include "game/map/render_visibility_rules.h"
@@ -18,6 +19,7 @@
 #include "game/render_bridge/minimap/minimap_utils.h"
 #include "game/render_bridge/minimap/unit_layer.h"
 #include "game/session/session_context.h"
+#include "game/systems/owner_registry.h"
 #include "game/systems/selection_system.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
@@ -385,7 +387,31 @@ void MinimapManager::update_units(Engine::Core::World* world,
       };
     }
 
-    m_unit_layer->update(markers, local_owner_id, visibility_check, nullptr);
+    const auto& owners = Game::Session::session_for(*world).owners();
+    Game::Map::Minimap::PlayerColorFn const player_color =
+        [&owners](int owner_id, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) {
+          if (Game::Core::is_neutral_owner(owner_id)) {
+            return false;
+          }
+          const auto& known = owners.get_all_owners();
+          const bool registered =
+              std::any_of(known.begin(), known.end(), [owner_id](const auto& info) {
+                return info.owner_id == owner_id;
+              });
+          if (!registered) {
+            return false;
+          }
+          const auto color = owners.get_owner_color(owner_id);
+          const auto to_byte = [](float value) {
+            return static_cast<std::uint8_t>(std::clamp(value, 0.0F, 1.0F) * 255.0F +
+                                             0.5F);
+          };
+          r = to_byte(color[0]);
+          g = to_byte(color[1]);
+          b = to_byte(color[2]);
+          return true;
+        };
+    m_unit_layer->update(markers, local_owner_id, visibility_check, player_color);
 
     m_minimap_units_image = m_minimap_fog_image;
     const QImage& unit_overlay = m_unit_layer->get_image();

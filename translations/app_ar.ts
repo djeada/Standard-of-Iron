@@ -4617,6 +4617,22 @@ This action cannot be undone.</source>
         <source>Standard of Iron - RTS game</source>
         <translation>Standard of Iron - لعبة استراتيجية آنية</translation>
     </message>
+    <message>
+        <source>Leave this battle?</source>
+        <translation>مغادرة هذه المعركة؟</translation>
+    </message>
+    <message>
+        <source>The battle in progress will be lost. Save it first if you want to come back to it.</source>
+        <translation>ستُفقد المعركة الجارية. احفظها أولاً إذا أردت العودة إليها.</translation>
+    </message>
+    <message>
+        <source>Leave the battle</source>
+        <translation>غادر المعركة</translation>
+    </message>
+    <message>
+        <source>Keep fighting</source>
+        <translation>واصل القتال</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -5173,10 +5189,6 @@ to see preview</source>
         <translation>عبور جبال الألب</translation>
     </message>
     <message>
-        <source>Crossing the Rhone - Polished Maze Version</source>
-        <translation>عبور الرون - نسخة المتاهة المنقّحة</translation>
-    </message>
-    <message>
         <source>Iron Sepulcher Watch</source>
         <translation>حراسة ضريح الحديد</translation>
     </message>
@@ -5255,6 +5267,10 @@ to see preview</source>
     <message>
         <source>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</source>
         <translation>فرقة حطب فوق ماء الصنوبر، مثلًا. الأجمة القريبة من المعسكر قُطع نصفها بالفعل، فلا تُستكمل الحصة إلا من الصنوبر العميق في نقلة طويلة إلى الشمال الشرقي، خلف عمود الصخر الذي يلتف حوله طريق السحب. أما الحصى الذي يعطي الحجر فيقع في الاتجاه المعاكس تمامًا، والطاقم أصغر من أن يعمل على الاثنين دون أن ينقسم.</translation>
+    </message>
+    <message>
+        <source>Crossing the Rhone</source>
+        <translation>عبور نهر الرون</translation>
     </message>
 </context>
 <context>

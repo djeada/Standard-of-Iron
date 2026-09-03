@@ -200,13 +200,15 @@ Item {
 
                         delegate: Rectangle {
                             width: saveListView.width
-                            height: 80
+                            height: Math.max(80, saveRowLayout.implicitHeight + Theme.spacingMedium * 2)
                             color: mouseArea.containsMouse ? Theme.hoverBg : Qt.rgba(0, 0, 0, 0)
                             radius: Theme.radiusMedium
                             border.color: Theme.cardBorder
                             border.width: 1
 
                             RowLayout {
+                                id: saveRowLayout
+
                                 anchors.fill: parent
                                 anchors.margins: Theme.spacingMedium
                                 spacing: Theme.spacingMedium

@@ -773,7 +773,7 @@ Design.IronPanel {
             width: parent.width
             spacing: Design.Metrics.space8
 
-            readonly property int minCardWidth: Design.Metrics.space24 * 3 + Design.Metrics.space8
+            readonly property int minCardWidth: Design.Metrics.space24 * 2 + Design.Metrics.space8
             readonly property int fitColumns: Math.max(1, Math.floor((width + spacing) / (minCardWidth + spacing)))
             readonly property int columnCount: Math.max(1, Math.min(fitColumns, root.groups.length))
             readonly property real cardWidth: Math.floor((width - spacing * (columnCount - 1)) / columnCount)

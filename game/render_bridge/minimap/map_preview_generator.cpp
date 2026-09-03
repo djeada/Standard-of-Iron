@@ -279,8 +279,7 @@ auto MapPreviewGenerator::base_markers(const QString& map_path) -> QVariantList 
     QString name = place_name_from_key(option.key);
     if (name.isEmpty()) {
 
-      name = compass_label(option.position.x() / (world_width * 0.5F),
-                           -option.position.z() / (world_height * 0.5F));
+      name = compass_label((nx - 0.5F) * 2.0F, -(ny - 0.5F) * 2.0F);
     }
     const int uses = ++name_uses[name];
     if (uses > 1) {

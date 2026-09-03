@@ -4597,16 +4597,32 @@ Tej czynności nie da się cofnąć.</translation>
         <translation>PAUZA</translation>
     </message>
     <message>
-        <source>Press Space to resume</source>
-        <translation>Naciśnij spację, by wznowić</translation>
-    </message>
-    <message>
         <source>A new standard in the valley, and nobody under it who has held a spear more than twice.</source>
         <translation>Nowy sztandar w dolinie, a pod nim nikt, kto trzymał włócznię więcej niż dwa razy.</translation>
     </message>
     <message>
         <source>Error</source>
         <translation>Błąd</translation>
+    </message>
+    <message>
+        <source>Press %1 to resume</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Leave this battle?</source>
+        <translation>Opuścić tę bitwę?</translation>
+    </message>
+    <message>
+        <source>The battle in progress will be lost. Save it first if you want to come back to it.</source>
+        <translation>Trwająca bitwa zostanie utracona. Najpierw ją zapisz, jeśli chcesz do niej wrócić.</translation>
+    </message>
+    <message>
+        <source>Leave the battle</source>
+        <translation>Opuść bitwę</translation>
+    </message>
+    <message>
+        <source>Keep fighting</source>
+        <translation>Walcz dalej</translation>
     </message>
 </context>
 <context>
@@ -5192,10 +5208,6 @@ by zobaczyć podgląd</translation>
         <translation>Przejście przez Alpy</translation>
     </message>
     <message>
-        <source>Crossing the Rhone - Polished Maze Version</source>
-        <translation>Przeprawa przez Rodan — wersja dopracowanego labiryntu</translation>
-    </message>
-    <message>
         <source>Deep wet pine forest for two. A crater wall rings the shrine bowl at the centre and no road enters it - the gates cut through its rim are the only way in, so the middle belongs to whoever will fight for it on foot. Everything else is one ring road and the trees.</source>
         <translation>Głęboki, wilgotny bór sosnowy dla dwóch. Ściana krateru otacza kotlinę ze świątynią pośrodku i nie wchodzi w nią żadna droga — jedyne wejście to bramy przecięte w jej krawędzi, więc środek należy do tego, kto stoczy o niego walkę pieszo. Cała reszta to jedna droga okrężna i drzewa.</translation>
     </message>
@@ -5246,6 +5258,10 @@ by zobaczyć podgląd</translation>
     <message>
         <source>Training Meadow</source>
         <translation>Łąka ćwiczebna</translation>
+    </message>
+    <message>
+        <source>Crossing the Rhone</source>
+        <translation>Przeprawa przez Rodan</translation>
     </message>
 </context>
 <context>

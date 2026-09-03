@@ -4597,16 +4597,32 @@ This action cannot be undone.</source>
         <translation>ПАУЗА</translation>
     </message>
     <message>
-        <source>Press Space to resume</source>
-        <translation>Нажмите пробел, чтобы продолжить</translation>
-    </message>
-    <message>
         <source>A new standard in the valley, and nobody under it who has held a spear more than twice.</source>
         <translation>Новое знамя в долине, и под ним ни одного, кто держал копьё больше двух раз.</translation>
     </message>
     <message>
         <source>Error</source>
         <translation>Ошибка</translation>
+    </message>
+    <message>
+        <source>Press %1 to resume</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Leave this battle?</source>
+        <translation>Покинуть эту битву?</translation>
+    </message>
+    <message>
+        <source>The battle in progress will be lost. Save it first if you want to come back to it.</source>
+        <translation>Текущая битва будет потеряна. Сначала сохраните её, если хотите к ней вернуться.</translation>
+    </message>
+    <message>
+        <source>Leave the battle</source>
+        <translation>Покинуть битву</translation>
+    </message>
+    <message>
+        <source>Keep fighting</source>
+        <translation>Продолжить бой</translation>
     </message>
 </context>
 <context>
@@ -5192,10 +5208,6 @@ to see preview</source>
         <translation>Переход через Альпы</translation>
     </message>
     <message>
-        <source>Crossing the Rhone - Polished Maze Version</source>
-        <translation>Переправа через Родан — отточенная версия лабиринта</translation>
-    </message>
-    <message>
         <source>Deep wet pine forest for two. A crater wall rings the shrine bowl at the centre and no road enters it - the gates cut through its rim are the only way in, so the middle belongs to whoever will fight for it on foot. Everything else is one ring road and the trees.</source>
         <translation>Глухой сырой сосновый бор на двоих. Стена кратера окружает котловину со святилищем в середине, и внутрь не входит ни одна дорога — единственный вход через ворота, прорезанные в её кромке, так что середина принадлежит тому, кто будет драться за неё пешим. Всё остальное — одна кольцевая дорога и деревья.</translation>
     </message>
@@ -5246,6 +5258,10 @@ to see preview</source>
     <message>
         <source>Training Meadow</source>
         <translation>Учебный луг</translation>
+    </message>
+    <message>
+        <source>Crossing the Rhone</source>
+        <translation>Переправа через Рону</translation>
     </message>
 </context>
 <context>

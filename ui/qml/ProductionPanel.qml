@@ -1081,7 +1081,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderCatapultMouseArea.containsMouse
 
-                            width: 110
+                            width: 150
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -1116,7 +1116,7 @@ Rectangle {
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
                                 anchors.margins: 1
-                                height: parent.height * 0.5
+                                height: parent.height * 0.7
                                 radius: 6
                                 gradient: Gradient {
                                     GradientStop {
@@ -1251,7 +1251,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderBallistaMouseArea.containsMouse
 
-                            width: 110
+                            width: 150
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -1286,7 +1286,7 @@ Rectangle {
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
                                 anchors.margins: 1
-                                height: parent.height * 0.5
+                                height: parent.height * 0.7
                                 radius: 6
                                 gradient: Gradient {
                                     GradientStop {
@@ -1421,7 +1421,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderDefenseTowerMouseArea.containsMouse
 
-                            width: 110
+                            width: 150
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -1456,7 +1456,7 @@ Rectangle {
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
                                 anchors.margins: 1
-                                height: parent.height * 0.5
+                                height: parent.height * 0.7
                                 radius: 6
                                 gradient: Gradient {
                                     GradientStop {
@@ -1591,7 +1591,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderHomeMouseArea.containsMouse
 
-                            width: 110
+                            width: 150
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -1626,7 +1626,7 @@ Rectangle {
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
                                 anchors.margins: 1
-                                height: parent.height * 0.5
+                                height: parent.height * 0.7
                                 radius: 6
                                 gradient: Gradient {
                                     GradientStop {
@@ -1761,7 +1761,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderFarmMouseArea.containsMouse
 
-                            width: 110
+                            width: 150
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -1796,7 +1796,7 @@ Rectangle {
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
                                 anchors.margins: 1
-                                height: parent.height * 0.5
+                                height: parent.height * 0.7
                                 radius: 6
                                 gradient: Gradient {
                                     GradientStop {
@@ -1931,7 +1931,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderWallSegmentMouseArea.containsMouse
 
-                            width: 110
+                            width: 150
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -1966,7 +1966,7 @@ Rectangle {
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
                                 anchors.margins: 1
-                                height: parent.height * 0.5
+                                height: parent.height * 0.7
                                 radius: 6
                                 gradient: Gradient {
                                     GradientStop {
@@ -2101,7 +2101,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderWallGateMouseArea.containsMouse
 
-                            width: 110
+                            width: 150
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -2136,7 +2136,7 @@ Rectangle {
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
                                 anchors.margins: 1
-                                height: parent.height * 0.5
+                                height: parent.height * 0.7
                                 radius: 6
                                 gradient: Gradient {
                                     GradientStop {
@@ -2271,7 +2271,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderMarketplaceMouseArea.containsMouse
 
-                            width: 110
+                            width: 150
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -2306,7 +2306,7 @@ Rectangle {
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
                                 anchors.margins: 1
-                                height: parent.height * 0.5
+                                height: parent.height * 0.7
                                 radius: 6
                                 gradient: Gradient {
                                     GradientStop {
@@ -2441,7 +2441,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderTempleMouseArea.containsMouse
 
-                            width: 110
+                            width: 150
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -2476,7 +2476,7 @@ Rectangle {
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
                                 anchors.margins: 1
-                                height: parent.height * 0.5
+                                height: parent.height * 0.7
                                 radius: 6
                                 gradient: Gradient {
                                     GradientStop {

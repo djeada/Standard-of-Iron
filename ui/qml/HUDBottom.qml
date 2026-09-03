@@ -647,6 +647,8 @@ RowLayout {
 
         readonly property int commandColumns: Math.max(bottomRoot.primaryCommands.length, bottomRoot.contextualCommands.length)
         readonly property int commandCardWidth: Math.max(Design.A11y.scaled(24), Math.floor((bottomRoot.zoneWidth - Design.Metrics.space4 * (commandDeck.commandColumns - 1)) / commandDeck.commandColumns))
+        readonly property int primaryColumns: Math.max(1, bottomRoot.primaryCommands.length)
+        readonly property int primaryCardWidth: Math.max(Design.A11y.scaled(24), Math.floor((bottomRoot.zoneWidth - Design.Metrics.space4 * (commandDeck.primaryColumns - 1)) / commandDeck.primaryColumns))
 
         objectName: "commandDeck"
 
@@ -807,7 +809,7 @@ RowLayout {
                     readonly property var state: bottomRoot.action_state(primaryCommandButton.modelData.id)
 
                     objectName: "primaryCommand_" + primaryCommandButton.modelData.id
-                    width: commandDeck.commandCardWidth
+                    width: commandDeck.primaryCardWidth
                     height: Design.Metrics.commandButtonSize
                     iconOnly: false
 

@@ -4602,6 +4602,22 @@ Bu işlem geri alınamaz.</translation>
         <source>Error</source>
         <translation>Hata</translation>
     </message>
+    <message>
+        <source>Leave this battle?</source>
+        <translation>Bu savaştan ayrılmak mı?</translation>
+    </message>
+    <message>
+        <source>The battle in progress will be lost. Save it first if you want to come back to it.</source>
+        <translation>Süren savaş kaybolacak. Geri dönmek istiyorsan önce kaydet.</translation>
+    </message>
+    <message>
+        <source>Leave the battle</source>
+        <translation>Savaştan ayrıl</translation>
+    </message>
+    <message>
+        <source>Keep fighting</source>
+        <translation>Savaşmaya devam et</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -5186,10 +5202,6 @@ bir harita seç</translation>
         <translation>Alpler&apos;i Geçiş</translation>
     </message>
     <message>
-        <source>Crossing the Rhone - Polished Maze Version</source>
-        <translation>Rhône&apos;u Geçiş - Cilalı Labirent Sürümü</translation>
-    </message>
-    <message>
         <source>Deep wet pine forest for two. A crater wall rings the shrine bowl at the centre and no road enters it - the gates cut through its rim are the only way in, so the middle belongs to whoever will fight for it on foot. Everything else is one ring road and the trees.</source>
         <translation>İki kişilik derin ve nemli çam ormanı. Ortadaki mabet çanağını bir krater duvarı çevreler ve içine hiçbir yol girmez - kenarında açılmış kapılar tek giriştir, bu yüzden orta, uğruna yaya çarpışmayı göze alanındır. Geri kalan her şey tek bir çevre yolu ve ağaçlardır.</translation>
     </message>
@@ -5240,6 +5252,10 @@ bir harita seç</translation>
     <message>
         <source>Training Meadow</source>
         <translation>Talim Çayırı</translation>
+    </message>
+    <message>
+        <source>Crossing the Rhone</source>
+        <translation>Rhône Geçişi</translation>
     </message>
 </context>
 <context>

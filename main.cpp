@@ -1095,7 +1095,6 @@ auto main(int argc, char* argv[]) -> int {
               return;
             }
             *mission_started = true;
-            game_engine_ptr->set_game_speed(direct_game_speed);
             if (!replay_path.isEmpty()) {
               qInfo() << "Playing replay:" << replay_path;
               if (!game_engine_ptr->start_replay(replay_path)) {
@@ -1119,6 +1118,7 @@ auto main(int argc, char* argv[]) -> int {
               game_engine_ptr->match_setup()->start_campaign_mission(
                   direct_campaign_mission);
             }
+            game_engine_ptr->set_game_speed(direct_game_speed);
           };
 
           QObject::connect(game_engine_ptr,

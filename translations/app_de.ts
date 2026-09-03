@@ -4605,6 +4605,22 @@ Diese Aktion kann nicht rückgängig gemacht werden.</translation>
         <source>Standard of Iron - RTS game</source>
         <translation>Standard of Iron - Echtzeitstrategie</translation>
     </message>
+    <message>
+        <source>Leave this battle?</source>
+        <translation>Diese Schlacht verlassen?</translation>
+    </message>
+    <message>
+        <source>The battle in progress will be lost. Save it first if you want to come back to it.</source>
+        <translation>Die laufende Schlacht geht verloren. Speichere sie zuerst, wenn du zu ihr zurückkehren willst.</translation>
+    </message>
+    <message>
+        <source>Leave the battle</source>
+        <translation>Schlacht verlassen</translation>
+    </message>
+    <message>
+        <source>Keep fighting</source>
+        <translation>Weiterkämpfen</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -5161,10 +5177,6 @@ um die Vorschau zu sehen</translation>
         <translation>Die Überquerung der Alpen</translation>
     </message>
     <message>
-        <source>Crossing the Rhone - Polished Maze Version</source>
-        <translation>Die Überquerung der Rhone – überarbeitete Labyrinth-Fassung</translation>
-    </message>
-    <message>
         <source>Iron Sepulcher Watch</source>
         <translation>Wacht am Eisernen Grabmal</translation>
     </message>
@@ -5243,6 +5255,10 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</source>
         <translation>Ein Holzkommando oberhalb des Kiefernwassers zum Beispiel. Der nahe Bestand neben dem Lager ist schon halb gefällt, also wird das Soll nur aus den tiefen Kiefern weit im Nordosten gedeckt, hinter dem Felsrücken, um den die Rückegasse herumschwenken muss. Das Geröll, das den Stein hergibt, liegt genau in der anderen Richtung, und der Trupp ist zu klein, um beides ohne Teilung zu schaffen.</translation>
+    </message>
+    <message>
+        <source>Crossing the Rhone</source>
+        <translation>Die Rhone-Überquerung</translation>
     </message>
 </context>
 <context>

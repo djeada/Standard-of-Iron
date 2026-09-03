@@ -338,7 +338,7 @@
         }
     ],
     "max_troops_per_player": 900,
-    "name": "Crossing the Rhone - Polished Maze Version",
+    "name": "Crossing the Rhone",
     "rain": {
         "active_duration": 70,
         "cycle_duration": 300,

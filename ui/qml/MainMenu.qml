@@ -679,8 +679,8 @@ Item {
                             anchors.fill: parent
                             anchors.leftMargin: 14
                             anchors.rightMargin: 16
-                            anchors.topMargin: 9
-                            anchors.bottomMargin: 9
+                            anchors.topMargin: root.command_row_height < 62 ? 5 : 9
+                            anchors.bottomMargin: root.command_row_height < 62 ? 5 : 9
                             spacing: 13
 
                             Rectangle {
@@ -729,6 +729,7 @@ Item {
 
                                 Text {
                                     Layout.fillWidth: true
+                                    visible: root.command_row_height >= 50
                                     text: qsTr(commandItem.subtitle)
                                     color: commandItem.selected ? Theme.accentBright : Theme.textDim
                                     font.pixelSize: root.narrow ? Design.Typography.caption : Design.Typography.label

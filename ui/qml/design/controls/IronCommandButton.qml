@@ -41,7 +41,10 @@ AbstractButton {
 
     property bool tile: false
 
-    readonly property bool compact: control.iconOnly || (width > 0 && width < minimumShortWidth)
+    readonly property real minimumTightLabelWidth: Design.Metrics.space24 + Design.Metrics.space4
+    readonly property real tightChromeWidth: Design.Metrics.space16 + Design.Metrics.space4 + Design.Metrics.space4 + Design.Metrics.space4 + hotkeyWidth
+    readonly property bool compact: control.iconOnly || (width > 0 && width < tightChromeWidth + minimumTightLabelWidth)
+    readonly property bool tightLabel: !control.compact && width > 0 && width < minimumShortWidth
 
     readonly property bool showsShortLabel: !control.iconOnly && control.shortLabel !== "" && width < minimumLabelledWidth
     readonly property string displayLabel: control.showsShortLabel ? control.shortLabel : control.label
@@ -185,11 +188,11 @@ AbstractButton {
             id: iconSlot
 
             anchors.left: parent.left
-            anchors.leftMargin: control.tile ? Math.max(0, (parent.width - iconSlot.width) / 2) : control.compact ? Math.max(Design.Metrics.space4, (parent.width - width - hotkeyLabel.width) / 2) : Design.Metrics.space8
+            anchors.leftMargin: control.tile ? Math.max(0, (parent.width - iconSlot.width) / 2) : control.compact ? Math.max(Design.Metrics.space4, (parent.width - width - hotkeyLabel.width) / 2) : control.tightLabel ? Design.Metrics.space4 : Design.Metrics.space8
             anchors.verticalCenter: parent.verticalCenter
             anchors.verticalCenterOffset: control.tile && tileHotkey.visible ? -Design.Metrics.space2 : 0
 
-            width: control.tile ? Math.round(Design.Metrics.iconMedium * 1.1) : control.compact ? Math.round(Design.Metrics.iconMedium * 1.35) : Design.Metrics.iconMedium
+            width: control.tile ? Math.round(Design.Metrics.iconMedium * 1.1) : control.compact ? Math.round(Design.Metrics.iconMedium * 1.35) : control.tightLabel ? Design.Metrics.space16 + Design.Metrics.space4 : Design.Metrics.iconMedium
             height: width
             opacity: control.interactive ? 1 : 0.45
 
@@ -230,7 +233,7 @@ AbstractButton {
 
             visible: !control.compact
             anchors.left: iconSlot.right
-            anchors.leftMargin: Design.Metrics.space8
+            anchors.leftMargin: control.tightLabel ? Design.Metrics.space4 : Design.Metrics.space8
             anchors.right: hotkeyLabel.visible ? hotkeyLabel.left : parent.right
             anchors.rightMargin: Design.Metrics.space4
             anchors.verticalCenter: parent.verticalCenter
@@ -241,14 +244,14 @@ AbstractButton {
                 text: control.displayLabel
                 color: control.interactive ? Design.Theme.textPrimary : Design.Theme.textDisabled
                 font.family: Design.Typography.family
-                font.pixelSize: Design.Typography.label
+                font.pixelSize: control.tightLabel ? Design.Typography.caption : Design.Typography.label
                 font.weight: control.highlighted ? Design.Typography.bold : Design.Typography.medium
                 elide: Text.ElideRight
             }
 
             Text {
                 width: parent.width
-                visible: text !== ""
+                visible: text !== "" && !control.tightLabel
                 text: control.statusText !== "" ? control.statusText : (control.placing ? qsTr("Pick a target") : control.coverageText)
                 color: Design.Theme.textSecondary
                 font.family: Design.Typography.family

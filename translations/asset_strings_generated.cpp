@@ -287,7 +287,7 @@ namespace {
     QT_TRANSLATE_NOOP("Maps", "Campania Campaign"),
     QT_TRANSLATE_NOOP("Maps", "Copper Canyons"),
     QT_TRANSLATE_NOOP("Maps", "Crossing the Alps"),
-    QT_TRANSLATE_NOOP("Maps", "Crossing the Rhone - Polished Maze Version"),
+    QT_TRANSLATE_NOOP("Maps", "Crossing the Rhone"),
     QT_TRANSLATE_NOOP("Maps", "Deep wet pine forest for two. A crater wall rings the shrine bowl at the centre and no road enters it - the gates cut through its rim are the only way in, so the middle belongs to whoever will fight for it on foot. Everything else is one ring road and the trees."),
     QT_TRANSLATE_NOOP("Maps", "Four camps in a snowed-in basin. Two melt races cross at its centre and cut the ground into quarters, so every neighbour is a bridge away: an inner crossing in the open, or a longer one out under the rim ranges. Four corner tarns and four barrow cairns fill the rest."),
     QT_TRANSLATE_NOOP("Maps", "Four camps on a dry Iberian hillside. No river runs here - the terraces are the map. Each camp looks out through a horned terrace wall with a gate at either horn, and the old press mound in the middle is high ground four worn tracks climb."),
