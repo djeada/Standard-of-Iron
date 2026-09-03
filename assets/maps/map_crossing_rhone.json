@@ -6560,7 +6560,7 @@
                 "food": 80,
                 "gold": 120
             },
-            "id": "crossing_ruins",
+            "id": "rhone_gaul_barrows",
             "leash_radius": 38.13,
             "owner_id": 99,
             "radius": 20.53,
@@ -6575,7 +6575,8 @@
                 }
             ],
             "x": 37.59,
-            "z": 360.56
+            "z": 360.56,
+            "fog_density": 0.3
         }
     ],
     "victory": {
@@ -6834,20 +6835,6 @@
             "z": 312.48
         },
         {
-            "rotation": -13,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 112.76,
-            "z": 412.06
-        },
-        {
-            "rotation": 18,
-            "scale": 0.9500000000000001,
-            "type": "ruins",
-            "x": 82.69,
-            "z": 264.41
-        },
-        {
             "rotation": 89,
             "scale": 0.8,
             "type": "supply_cart",
@@ -6897,25 +6884,11 @@
             "z": 460.14
         },
         {
-            "rotation": 40,
-            "scale": 0.8,
-            "type": "weapon_rack",
-            "x": 90.21000000000001,
-            "z": 425.8
-        },
-        {
             "rotation": 16,
             "scale": 1.1,
             "type": "dead_tree",
             "x": 55.13,
             "z": 422.37
-        },
-        {
-            "rotation": -16,
-            "scale": 0.7000000000000001,
-            "type": "ruins",
-            "x": 42.6,
-            "z": 288.44
         },
         {
             "rotation": 95,
@@ -6930,13 +6903,6 @@
             "type": "supply_cart",
             "x": 298.19,
             "z": 309.05
-        },
-        {
-            "rotation": 12,
-            "scale": 1,
-            "type": "tent",
-            "x": 370.86,
-            "z": 130.49
         },
         {
             "rotation": -18,
@@ -6973,32 +6939,11 @@
             "z": 175.13
         },
         {
-            "rotation": 20,
-            "scale": 0.85,
-            "type": "ruins",
-            "x": 298.19,
-            "z": 394.89
-        },
-        {
-            "rotation": -25,
-            "scale": 0.85,
-            "type": "dead_tree",
-            "x": 282.09,
-            "z": 450.38
-        },
-        {
             "rotation": 4,
             "scale": 0.9,
             "type": "supply_cart",
             "x": 285.66,
             "z": 257.54
-        },
-        {
-            "rotation": 30,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 388.40000000000003,
-            "z": 216.33
         },
         {
             "rotation": -40,
@@ -7080,15 +7025,6 @@
             "z": 288.44
         },
         {
-            "intensity": 1.1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 378.37,
-            "z": 99.58
-        },
-        {
             "scale": 1,
             "type": "magic_shrine",
             "x": 17.54,
@@ -7160,12 +7096,6 @@
         {
             "scale": 1,
             "type": "dead_tree",
-            "x": 50.12,
-            "z": 217.14
-        },
-        {
-            "scale": 1,
-            "type": "dead_tree",
             "x": 50.120000000000005,
             "z": 75.54
         },
@@ -7186,15 +7116,6 @@
             "type": "dead_tree",
             "x": 180.42000000000002,
             "z": 463.57
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 132.81,
-            "z": 422.37
         },
         {
             "intensity": 1,
@@ -8008,6 +7929,1592 @@
             "type": "cursed_gold_vein",
             "x": 122,
             "z": 192
+        },
+        {
+            "type": "supply_cart",
+            "x": 217.13,
+            "z": 267.67,
+            "scale": 1.0,
+            "rotation": 4.536,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "supply_cart",
+            "x": 218.59,
+            "z": 261.68,
+            "scale": 1.0,
+            "rotation": 4.844,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "supply_cart",
+            "x": 218.96,
+            "z": 255.86,
+            "scale": 1.0,
+            "rotation": 4.729,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "supply_cart",
+            "x": 217.63,
+            "z": 249.32,
+            "scale": 1.0,
+            "rotation": 4.827,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "supply_cart",
+            "x": 216.87,
+            "z": 244.39,
+            "scale": 1.0,
+            "rotation": 4.768,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "supply_cart",
+            "x": 218.86,
+            "z": 238.19,
+            "scale": 1.0,
+            "rotation": 4.864,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "supply_cart",
+            "x": 217.6,
+            "z": 232.31,
+            "scale": 1.0,
+            "rotation": 4.526,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "tent",
+            "x": 209.19,
+            "z": 258.55,
+            "scale": 0.97,
+            "rotation": 6.283,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "tent",
+            "x": 208.21,
+            "z": 249.08,
+            "scale": 1.02,
+            "rotation": 6.283,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "tent",
+            "x": 207.13,
+            "z": 241.3,
+            "scale": 0.98,
+            "rotation": 6.283,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "tent",
+            "x": 200.67,
+            "z": 257.35,
+            "scale": 1.03,
+            "rotation": 6.283,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "tent",
+            "x": 200.08,
+            "z": 249.56,
+            "scale": 0.99,
+            "rotation": 6.283,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "tent",
+            "x": 198.96,
+            "z": 241.98,
+            "scale": 0.99,
+            "rotation": 6.283,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "tent",
+            "x": 192.96,
+            "z": 257.2,
+            "scale": 1.0,
+            "rotation": 6.283,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "tent",
+            "x": 191.35,
+            "z": 249.64,
+            "scale": 0.98,
+            "rotation": 6.283,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "firecamp",
+            "x": 206.21,
+            "z": 264.34,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_landing",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 203.8,
+            "z": 245.6,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_landing",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 203.04,
+            "z": 236.6,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_landing",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 204.71,
+            "z": 228.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_landing",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 214.18,
+            "z": 258.28,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 212.0,
+            "z": 241.0,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "boulder",
+            "x": 221.99,
+            "z": 232.03,
+            "scale": 1.05,
+            "rotation": 2.647,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "boulder",
+            "x": 220.89,
+            "z": 234.78,
+            "scale": 1.01,
+            "rotation": 4.83,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "boulder",
+            "x": 222.29,
+            "z": 263.01,
+            "scale": 0.99,
+            "rotation": 4.434,
+            "dressing": "rhone_landing"
+        },
+        {
+            "type": "boulder",
+            "x": 231.26,
+            "z": 182.34,
+            "scale": 1.03,
+            "rotation": 3.609,
+            "dressing": "rhone_landing_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 231.24,
+            "z": 196.34,
+            "scale": 0.97,
+            "rotation": 3.301,
+            "dressing": "rhone_landing_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 227.23,
+            "z": 199.02,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_landing_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 224.27,
+            "z": 180.51,
+            "scale": 1.0,
+            "rotation": 4.153,
+            "dressing": "rhone_landing_bridge"
+        },
+        {
+            "type": "supply_cart",
+            "x": 222.23,
+            "z": 200.01,
+            "scale": 1.0,
+            "rotation": -2.987,
+            "dressing": "rhone_landing_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 249.34,
+            "z": 182.94,
+            "scale": 1.17,
+            "rotation": 1.716,
+            "dressing": "rhone_landing_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 250.0,
+            "z": 195.21,
+            "scale": 0.93,
+            "rotation": 4.718,
+            "dressing": "rhone_landing_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 254.47,
+            "z": 180.06,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_landing_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 257.43,
+            "z": 198.57,
+            "scale": 1.0,
+            "rotation": 5.421,
+            "dressing": "rhone_landing_bridge"
+        },
+        {
+            "type": "ruins",
+            "x": 565.42,
+            "z": 158.43,
+            "scale": 1.22,
+            "rotation": 2.324,
+            "dressing": "rhone_oppidum"
+        },
+        {
+            "type": "ruins",
+            "x": 556.35,
+            "z": 160.48,
+            "scale": 1.19,
+            "rotation": 2.998,
+            "dressing": "rhone_oppidum"
+        },
+        {
+            "type": "ruins",
+            "x": 547.56,
+            "z": 158.68,
+            "scale": 1.16,
+            "rotation": 3.988,
+            "dressing": "rhone_oppidum"
+        },
+        {
+            "type": "ruins",
+            "x": 546.04,
+            "z": 150.12,
+            "scale": 1.01,
+            "rotation": 4.702,
+            "dressing": "rhone_oppidum"
+        },
+        {
+            "type": "firecamp",
+            "x": 560.0,
+            "z": 150.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_oppidum",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 552.08,
+            "z": 153.67,
+            "scale": 1.0,
+            "rotation": 3.214,
+            "dressing": "rhone_oppidum"
+        },
+        {
+            "type": "dead_tree",
+            "x": 552.8,
+            "z": 144.15,
+            "scale": 1.0,
+            "rotation": 0.356,
+            "dressing": "rhone_oppidum"
+        },
+        {
+            "type": "boulder",
+            "x": 548.57,
+            "z": 164.51,
+            "scale": 1.02,
+            "rotation": 1.073,
+            "dressing": "rhone_oppidum"
+        },
+        {
+            "type": "boulder",
+            "x": 562.56,
+            "z": 164.87,
+            "scale": 1.03,
+            "rotation": 3.148,
+            "dressing": "rhone_oppidum"
+        },
+        {
+            "type": "statue",
+            "x": 524.47,
+            "z": 177.75,
+            "scale": 1.1,
+            "rotation": 0.0,
+            "dressing": "rhone_druid_grove"
+        },
+        {
+            "type": "firecamp",
+            "x": 529.38,
+            "z": 178.72,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_druid_grove",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "pine_tree",
+            "x": 536.34,
+            "z": 180.03,
+            "scale": 0.94,
+            "rotation": 4.586,
+            "dressing": "rhone_druid_grove"
+        },
+        {
+            "type": "pine_tree",
+            "x": 525.92,
+            "z": 168.48,
+            "scale": 1.07,
+            "rotation": 1.296,
+            "dressing": "rhone_druid_grove"
+        },
+        {
+            "type": "pine_tree",
+            "x": 533.33,
+            "z": 171.12,
+            "scale": 0.97,
+            "rotation": 0.065,
+            "dressing": "rhone_druid_grove"
+        },
+        {
+            "type": "boulder",
+            "x": 518.53,
+            "z": 178.54,
+            "scale": 0.82,
+            "rotation": 0.65,
+            "dressing": "rhone_druid_grove"
+        },
+        {
+            "type": "ruins",
+            "x": 49.89,
+            "z": 357.97,
+            "scale": 1.07,
+            "rotation": 0.273,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 44.36,
+            "z": 368.48,
+            "scale": 0.8,
+            "rotation": 4.716,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 36.78,
+            "z": 370.47,
+            "scale": 0.86,
+            "rotation": 0.917,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 26.32,
+            "z": 366.1,
+            "scale": 0.85,
+            "rotation": 4.208,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 28.4,
+            "z": 354.46,
+            "scale": 0.92,
+            "rotation": 0.697,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 37.07,
+            "z": 350.86,
+            "scale": 0.92,
+            "rotation": 1.437,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 44.82,
+            "z": 350.92,
+            "scale": 1.11,
+            "rotation": 4.308,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 51.08,
+            "z": 370.89,
+            "scale": 0.85,
+            "rotation": 4.717,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 24.21,
+            "z": 371.87,
+            "scale": 1.14,
+            "rotation": 5.921,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 29.93,
+            "z": 343.56,
+            "scale": 0.95,
+            "rotation": 1.802,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 50.1,
+            "z": 347.06,
+            "scale": 0.92,
+            "rotation": 2.37,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 46.87,
+            "z": 375.34,
+            "scale": 1.09,
+            "rotation": 0.902,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 45.63,
+            "z": 361.53,
+            "scale": 0.9,
+            "rotation": 5.773,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 27.96,
+            "z": 362.21,
+            "scale": 0.9,
+            "rotation": 2.097,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 36.28,
+            "z": 345.98,
+            "scale": 1.18,
+            "rotation": 5.455,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 49.18,
+            "z": 364.04,
+            "scale": 1.15,
+            "rotation": 3.558,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 40.9,
+            "z": 372.62,
+            "scale": 1.05,
+            "rotation": 6.156,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 29.51,
+            "z": 348.84,
+            "scale": 1.11,
+            "rotation": 1.549,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "magic_shrine",
+            "x": 37.59,
+            "z": 360.56,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 66.32,
+            "z": 387.17,
+            "scale": 0.92,
+            "rotation": 2.819,
+            "dressing": "rhone_barrow_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 66.0,
+            "z": 380.62,
+            "scale": 1.1,
+            "rotation": 4.1,
+            "dressing": "rhone_barrow_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 67.55,
+            "z": 400.25,
+            "scale": 0.98,
+            "rotation": 1.75,
+            "dressing": "rhone_barrow_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 76.31,
+            "z": 391.27,
+            "scale": 1.11,
+            "rotation": 0.21,
+            "dressing": "rhone_barrow_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 71.3,
+            "z": 381.11,
+            "scale": 0.85,
+            "rotation": 5.238,
+            "dressing": "rhone_barrow_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 72.31,
+            "z": 402.12,
+            "scale": 1.08,
+            "rotation": 4.004,
+            "dressing": "rhone_barrow_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 56.21,
+            "z": 392.18,
+            "scale": 1.03,
+            "rotation": 4.969,
+            "dressing": "rhone_barrow_bones"
+        },
+        {
+            "type": "ruins",
+            "x": 61.11,
+            "z": 397.16,
+            "scale": 0.93,
+            "rotation": 5.219,
+            "dressing": "rhone_barrow_bones"
+        },
+        {
+            "type": "ruins",
+            "x": 70.58,
+            "z": 394.97,
+            "scale": 0.92,
+            "rotation": 1.328,
+            "dressing": "rhone_barrow_bones"
+        },
+        {
+            "type": "ruins",
+            "x": 60.72,
+            "z": 388.2,
+            "scale": 0.87,
+            "rotation": 2.966,
+            "dressing": "rhone_barrow_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 74.85,
+            "z": 398.16,
+            "scale": 1.12,
+            "rotation": 4.68,
+            "dressing": "rhone_barrow_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 77.66,
+            "z": 387.35,
+            "scale": 0.91,
+            "rotation": 2.228,
+            "dressing": "rhone_barrow_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 55.6,
+            "z": 387.33,
+            "scale": 1.14,
+            "rotation": 1.327,
+            "dressing": "rhone_barrow_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 80.66,
+            "z": 388.95,
+            "scale": 1.18,
+            "rotation": 5.127,
+            "dressing": "rhone_barrow_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 231.13,
+            "z": 295.06,
+            "scale": 0.94,
+            "rotation": 3.237,
+            "dressing": "rhone_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 230.26,
+            "z": 308.79,
+            "scale": 1.11,
+            "rotation": 2.686,
+            "dressing": "rhone_south_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 226.11,
+            "z": 310.89,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_south_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 224.76,
+            "z": 289.99,
+            "scale": 1.0,
+            "rotation": 5.285,
+            "dressing": "rhone_south_bridge"
+        },
+        {
+            "type": "supply_cart",
+            "x": 221.06,
+            "z": 311.57,
+            "scale": 1.0,
+            "rotation": -2.872,
+            "dressing": "rhone_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 250.34,
+            "z": 295.51,
+            "scale": 0.82,
+            "rotation": 4.153,
+            "dressing": "rhone_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 249.4,
+            "z": 310.34,
+            "scale": 0.86,
+            "rotation": 5.166,
+            "dressing": "rhone_south_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 254.47,
+            "z": 293.66,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_south_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 254.76,
+            "z": 314.02,
+            "scale": 1.0,
+            "rotation": 1.328,
+            "dressing": "rhone_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 342.39,
+            "z": 234.61,
+            "scale": 1.1,
+            "rotation": 2.291,
+            "dressing": "rhone_branch_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 328.73,
+            "z": 235.37,
+            "scale": 0.85,
+            "rotation": 3.626,
+            "dressing": "rhone_branch_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 325.76,
+            "z": 231.53,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_branch_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 344.06,
+            "z": 227.5,
+            "scale": 1.0,
+            "rotation": 5.008,
+            "dressing": "rhone_branch_bridge"
+        },
+        {
+            "type": "supply_cart",
+            "x": 324.48,
+            "z": 226.6,
+            "scale": 1.0,
+            "rotation": -1.858,
+            "dressing": "rhone_branch_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 343.33,
+            "z": 247.05,
+            "scale": 1.17,
+            "rotation": 5.785,
+            "dressing": "rhone_branch_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 327.02,
+            "z": 246.34,
+            "scale": 0.91,
+            "rotation": 5.565,
+            "dressing": "rhone_branch_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 345.87,
+            "z": 250.92,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_branch_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 328.0,
+            "z": 256.06,
+            "scale": 1.0,
+            "rotation": 3.789,
+            "dressing": "rhone_branch_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 558.79,
+            "z": 490.15,
+            "scale": 1.29,
+            "rotation": 0.313,
+            "dressing": "rhone_town_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 547.08,
+            "z": 492.98,
+            "scale": 1.0,
+            "rotation": 2.951,
+            "dressing": "rhone_town_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 543.89,
+            "z": 489.64,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_town_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 559.66,
+            "z": 483.97,
+            "scale": 1.0,
+            "rotation": 3.446,
+            "dressing": "rhone_town_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 563.64,
+            "z": 511.62,
+            "scale": 0.95,
+            "rotation": 3.08,
+            "dressing": "rhone_town_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 552.74,
+            "z": 514.25,
+            "scale": 1.0,
+            "rotation": 1.825,
+            "dressing": "rhone_town_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 567.46,
+            "z": 514.81,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_town_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 551.19,
+            "z": 520.85,
+            "scale": 1.0,
+            "rotation": 2.514,
+            "dressing": "rhone_town_bridge"
+        },
+        {
+            "type": "statue",
+            "x": 505.56,
+            "z": 237.47,
+            "scale": 1.0,
+            "rotation": 1.806,
+            "dressing": "rhone_east_junction"
+        },
+        {
+            "type": "firecamp",
+            "x": 501.88,
+            "z": 236.54,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_east_junction",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "ruins",
+            "x": 511.92,
+            "z": 234.85,
+            "scale": 0.8,
+            "rotation": 3.062,
+            "dressing": "rhone_east_junction"
+        },
+        {
+            "type": "statue",
+            "x": 156.61,
+            "z": 370.8,
+            "scale": 1.0,
+            "rotation": 2.892,
+            "dressing": "rhone_west_junction"
+        },
+        {
+            "type": "firecamp",
+            "x": 599.23,
+            "z": 460.45,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_south_junction",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "supply_cart",
+            "x": 603.9,
+            "z": 463.12,
+            "scale": 1.0,
+            "rotation": 0.14,
+            "dressing": "rhone_south_junction"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 594.99,
+            "z": 461.87,
+            "scale": 1.0,
+            "rotation": 0.14,
+            "dressing": "rhone_south_junction"
+        },
+        {
+            "type": "boulder",
+            "x": 392.5,
+            "z": 104.0,
+            "scale": 1.17,
+            "rotation": 5.877,
+            "dressing": "rhone_fort_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 394.5,
+            "z": 110.0,
+            "scale": 1.35,
+            "rotation": 5.791,
+            "dressing": "rhone_fort_ramp"
+        },
+        {
+            "type": "dead_tree",
+            "x": 394.97,
+            "z": 97.72,
+            "scale": 1.0,
+            "rotation": 0.847,
+            "dressing": "rhone_fort_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 359.5,
+            "z": 104.0,
+            "scale": 0.98,
+            "rotation": 0.64,
+            "dressing": "rhone_fort_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 357.5,
+            "z": 110.0,
+            "scale": 0.9,
+            "rotation": 2.809,
+            "dressing": "rhone_fort_ramp"
+        },
+        {
+            "type": "statue",
+            "x": 358.5,
+            "z": 114.0,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "rhone_fort_ramp"
+        },
+        {
+            "type": "firecamp",
+            "x": 356.5,
+            "z": 118.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_fort_ramp",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 450.18,
+            "z": 176.5,
+            "scale": 1.17,
+            "rotation": 1.763,
+            "dressing": "rhone_oppidum_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 444.18,
+            "z": 178.5,
+            "scale": 1.3,
+            "rotation": 2.48,
+            "dressing": "rhone_oppidum_ramp"
+        },
+        {
+            "type": "dead_tree",
+            "x": 458.18,
+            "z": 180.5,
+            "scale": 1.0,
+            "rotation": 0.04,
+            "dressing": "rhone_oppidum_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 450.18,
+            "z": 147.5,
+            "scale": 1.25,
+            "rotation": 1.153,
+            "dressing": "rhone_oppidum_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 444.18,
+            "z": 145.5,
+            "scale": 1.01,
+            "rotation": 3.24,
+            "dressing": "rhone_oppidum_ramp"
+        },
+        {
+            "type": "statue",
+            "x": 440.18,
+            "z": 146.5,
+            "scale": 1.0,
+            "rotation": -0.0,
+            "dressing": "rhone_oppidum_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 557.5,
+            "z": 233.44,
+            "scale": 0.93,
+            "rotation": 2.502,
+            "dressing": "rhone_oppidum_south_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 558.61,
+            "z": 236.16,
+            "scale": 1.02,
+            "rotation": 2.549,
+            "dressing": "rhone_oppidum_south_ramp"
+        },
+        {
+            "type": "dead_tree",
+            "x": 561.5,
+            "z": 225.44,
+            "scale": 1.0,
+            "rotation": 3.282,
+            "dressing": "rhone_oppidum_south_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 524.5,
+            "z": 233.44,
+            "scale": 0.94,
+            "rotation": 2.185,
+            "dressing": "rhone_oppidum_south_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 521.61,
+            "z": 236.16,
+            "scale": 1.44,
+            "rotation": 2.178,
+            "dressing": "rhone_oppidum_south_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 227.35,
+            "z": 56.74,
+            "scale": 0.87,
+            "rotation": 1.99,
+            "dressing": "rhone_upper_bank"
+        },
+        {
+            "type": "plant",
+            "x": 250.76,
+            "z": 83.21,
+            "scale": 1.21,
+            "rotation": 1.458,
+            "dressing": "rhone_upper_bank"
+        },
+        {
+            "type": "plant",
+            "x": 252.28,
+            "z": 87.45,
+            "scale": 1.18,
+            "rotation": 5.423,
+            "dressing": "rhone_upper_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 229.84,
+            "z": 115.07,
+            "scale": 0.81,
+            "rotation": 5.779,
+            "dressing": "rhone_upper_bank"
+        },
+        {
+            "type": "plant",
+            "x": 250.16,
+            "z": 144.83,
+            "scale": 1.18,
+            "rotation": 6.131,
+            "dressing": "rhone_upper_bank"
+        },
+        {
+            "type": "plant",
+            "x": 252.75,
+            "z": 147.89,
+            "scale": 1.06,
+            "rotation": 2.678,
+            "dressing": "rhone_upper_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 228.39,
+            "z": 174.82,
+            "scale": 0.82,
+            "rotation": 1.371,
+            "dressing": "rhone_upper_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 227.99,
+            "z": 335.4,
+            "scale": 0.98,
+            "rotation": 4.222,
+            "dressing": "rhone_lower_bank"
+        },
+        {
+            "type": "plant",
+            "x": 245.24,
+            "z": 372.22,
+            "scale": 0.95,
+            "rotation": 1.113,
+            "dressing": "rhone_lower_bank"
+        },
+        {
+            "type": "plant",
+            "x": 244.93,
+            "z": 375.97,
+            "scale": 1.1,
+            "rotation": 5.575,
+            "dressing": "rhone_lower_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 221.67,
+            "z": 404.76,
+            "scale": 0.81,
+            "rotation": 5.519,
+            "dressing": "rhone_lower_bank"
+        },
+        {
+            "type": "plant",
+            "x": 241.2,
+            "z": 439.17,
+            "scale": 1.27,
+            "rotation": 0.78,
+            "dressing": "rhone_lower_bank"
+        },
+        {
+            "type": "plant",
+            "x": 243.98,
+            "z": 441.13,
+            "scale": 1.25,
+            "rotation": 2.89,
+            "dressing": "rhone_lower_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 222.55,
+            "z": 474.35,
+            "scale": 1.12,
+            "rotation": 1.298,
+            "dressing": "rhone_lower_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 246.99,
+            "z": 506.31,
+            "scale": 1.26,
+            "rotation": 1.661,
+            "dressing": "rhone_lower_bank"
+        },
+        {
+            "type": "plant",
+            "x": 226.3,
+            "z": 539.7,
+            "scale": 1.17,
+            "rotation": 5.965,
+            "dressing": "rhone_lower_bank"
+        },
+        {
+            "type": "plant",
+            "x": 225.34,
+            "z": 544.11,
+            "scale": 1.34,
+            "rotation": 0.835,
+            "dressing": "rhone_lower_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 249.82,
+            "z": 573.69,
+            "scale": 0.81,
+            "rotation": 2.362,
+            "dressing": "rhone_lower_bank"
+        },
+        {
+            "type": "firecamp",
+            "x": 379.55,
+            "z": 65.47,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 369.01,
+            "z": 65.47,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 409.0,
+            "z": 42.73,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 409.0,
+            "z": 53.27,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 413.43,
+            "z": 55.39,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_gate_2"
+        },
+        {
+            "type": "firecamp",
+            "x": 554.14,
+            "z": 517.25,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_gate_3",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 564.27,
+            "z": 515.43,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_gate_3",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 566.39,
+            "z": 511.0,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "rhone_gate_3"
+        },
+        {
+            "type": "statue",
+            "x": 567.28,
+            "z": 507.28,
+            "scale": 1.0,
+            "rotation": -3.142,
+            "dressing": "rhone_gate_3"
+        },
+        {
+            "type": "firecamp",
+            "x": 599.0,
+            "z": 536.7,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_gate_4",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 599.0,
+            "z": 547.3,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_gate_4",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 603.0,
+            "z": 548.3,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_gate_4"
+        },
+        {
+            "type": "firecamp",
+            "x": 64.82,
+            "z": 169.72,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_gate_5",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 67.0,
+            "z": 179.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_gate_5",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 71.0,
+            "z": 180.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "rhone_gate_5"
+        },
+        {
+            "type": "tent",
+            "x": 75.06,
+            "z": 157.25,
+            "scale": 1.0,
+            "rotation": -3.142,
+            "dressing": "rhone_gate_5"
+        }
+    ],
+    "dressing": [
+        {
+            "id": "rhone_landing",
+            "kind": "raft_camp",
+            "x": 218,
+            "z": 250,
+            "facing": "west",
+            "carts": 7,
+            "tents": 8,
+            "fires": 4
+        },
+        {
+            "id": "rhone_landing_bridge",
+            "kind": "bridgehead",
+            "x": 240,
+            "z": 190
+        },
+        {
+            "id": "rhone_oppidum",
+            "kind": "hilltop_ruin",
+            "x": 558,
+            "z": 150,
+            "facing": "west",
+            "radius": 13,
+            "ruins": 8
+        },
+        {
+            "id": "rhone_druid_grove",
+            "kind": "sacred_grove",
+            "x": 524,
+            "z": 180,
+            "tree": "pine_tree",
+            "count": 9,
+            "radius": 12
+        },
+        {
+            "id": "rhone_barrows",
+            "kind": "barrow_field",
+            "x": 37.59,
+            "z": 360.56,
+            "radius": 12,
+            "shrine": true,
+            "ruins": 7,
+            "dead_trees": 5
+        },
+        {
+            "id": "rhone_barrow_bones",
+            "kind": "boneyard",
+            "x": 66,
+            "z": 392,
+            "radius": 12,
+            "statues": 0
+        },
+        {
+            "id": "rhone_south_bridge",
+            "kind": "bridgehead",
+            "x": 240,
+            "z": 302
+        },
+        {
+            "id": "rhone_branch_bridge",
+            "kind": "bridgehead",
+            "x": 336,
+            "z": 241
+        },
+        {
+            "id": "rhone_town_bridge",
+            "kind": "bridgehead",
+            "x": 556,
+            "z": 502,
+            "cart": false
+        },
+        {
+            "id": "rhone_east_junction",
+            "kind": "junction",
+            "x": 505,
+            "z": 245,
+            "style": "shrine"
+        },
+        {
+            "id": "rhone_west_junction",
+            "kind": "junction",
+            "x": 150,
+            "z": 372,
+            "style": "milestone",
+            "tree": "pine_tree"
+        },
+        {
+            "id": "rhone_south_junction",
+            "kind": "junction",
+            "x": 600,
+            "z": 455,
+            "style": "camp"
+        },
+        {
+            "id": "rhone_fort_ramp",
+            "kind": "ramp_mouth",
+            "x": 376,
+            "z": 88,
+            "statue": true,
+            "fire": true
+        },
+        {
+            "id": "rhone_oppidum_ramp",
+            "kind": "ramp_mouth",
+            "x": 470,
+            "z": 162,
+            "statue": true
+        },
+        {
+            "id": "rhone_oppidum_south_ramp",
+            "kind": "ramp_mouth",
+            "x": 541,
+            "z": 225
+        },
+        {
+            "id": "rhone_upper_bank",
+            "kind": "riverbank",
+            "from": [
+                238,
+                40
+            ],
+            "to": [
+                238,
+                175
+            ],
+            "spacing": 30
+        },
+        {
+            "id": "rhone_lower_bank",
+            "kind": "riverbank",
+            "from": [
+                238,
+                320
+            ],
+            "to": [
+                238,
+                600
+            ],
+            "spacing": 34
+        },
+        {
+            "id": "rhone_gate_1",
+            "kind": "gate_approach",
+            "x": 376.0,
+            "z": 58.0,
+            "statues": true
+        },
+        {
+            "id": "rhone_gate_2",
+            "kind": "gate_approach",
+            "x": 400.0,
+            "z": 48.0,
+            "statues": true
+        },
+        {
+            "id": "rhone_gate_3",
+            "kind": "gate_approach",
+            "x": 560.0,
+            "z": 524.0,
+            "statues": true
+        },
+        {
+            "id": "rhone_gate_4",
+            "kind": "gate_approach",
+            "x": 590.0,
+            "z": 542.0,
+            "statues": true
+        },
+        {
+            "id": "rhone_gate_5",
+            "kind": "gate_approach",
+            "x": 58,
+            "z": 174,
+            "tents": 2
         }
     ]
 }
