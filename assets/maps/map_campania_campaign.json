@@ -5207,32 +5207,6 @@
     ],
     "undead_zones": [
         {
-            "anchor_type": "magic_shrine",
-            "awaken_on": [
-                "unit_enters_radius"
-            ],
-            "clear_reward": {
-                "iron": 100,
-                "stone": 140
-            },
-            "id": "pass_shrine",
-            "leash_radius": 29.42,
-            "owner_id": 99,
-            "radius": 16.81,
-            "team_id": 99,
-            "waves": [
-                {
-                    "trigger": "initial",
-                    "units": {
-                        "grave_priest": 1,
-                        "skeleton_swordsman": 2
-                    }
-                }
-            ],
-            "x": 432,
-            "z": 33
-        },
-        {
             "anchor_type": "ruins",
             "awaken_on": [
                 "unit_enters_radius"
@@ -5241,10 +5215,10 @@
                 "gold": 130,
                 "wood": 90
             },
-            "id": "ford_shades",
-            "leash_radius": 38.22,
+            "id": "campania_river_dead",
+            "leash_radius": 32.0,
             "owner_id": 99,
-            "radius": 21.84,
+            "radius": 18.0,
             "team_id": 99,
             "waves": [
                 {
@@ -5255,11 +5229,12 @@
                     }
                 }
             ],
-            "x": 394,
-            "z": 207
+            "x": 585,
+            "z": 52,
+            "fog_density": 0.3
         },
         {
-            "anchor_type": "magic_shrine",
+            "anchor_type": "ruins",
             "awaken_on": [
                 "unit_enters_radius"
             ],
@@ -5267,7 +5242,7 @@
                 "gold": 110,
                 "iron": 70
             },
-            "id": "bridge_watch",
+            "id": "campania_coast_barrow",
             "leash_radius": 35.49,
             "owner_id": 99,
             "radius": 19.11,
@@ -5281,7 +5256,8 @@
                 }
             ],
             "x": 162,
-            "z": 586
+            "z": 586,
+            "fog_density": 0.28
         },
         {
             "anchor_type": "ruins",
@@ -5292,7 +5268,7 @@
                 "food": 140,
                 "gold": 180
             },
-            "id": "old_grave",
+            "id": "campania_old_grave",
             "leash_radius": 47.89,
             "owner_id": 99,
             "radius": 26.61,
@@ -5314,7 +5290,8 @@
                 }
             ],
             "x": 28,
-            "z": 277
+            "z": 277,
+            "fog_density": 0.3
         },
         {
             "anchor_type": "ruins",
@@ -5341,7 +5318,8 @@
                 }
             ],
             "x": 611,
-            "z": 392
+            "z": 392,
+            "fog_density": 0.32
         }
     ],
     "victory": {
@@ -5481,27 +5459,6 @@
             "z": 302.12
         },
         {
-            "rotation": 0.8,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 88.39,
-            "z": 330.32
-        },
-        {
-            "rotation": 3.1,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 111.66,
-            "z": 339.62
-        },
-        {
-            "rotation": 2.6,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 409.46,
-            "z": 338.77
-        },
-        {
             "rotation": 5.4,
             "scale": 0.9,
             "type": "dead_tree",
@@ -5514,13 +5471,6 @@
             "type": "dead_tree",
             "x": 172.14000000000001,
             "z": 167.48
-        },
-        {
-            "rotation": 4.1,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 394,
-            "z": 22
         },
         {
             "rotation": 0.3,
@@ -5579,32 +5529,11 @@
             "z": 269.84000000000003
         },
         {
-            "rotation": 1.1,
-            "scale": 0.9,
-            "type": "tent",
-            "x": 579.22,
-            "z": 255.88
-        },
-        {
-            "rotation": 4.2,
-            "scale": 0.9,
-            "type": "tent",
-            "x": 621.09,
-            "z": 258.2
-        },
-        {
             "rotation": 2.6,
             "scale": 1,
             "type": "supply_cart",
             "x": 600.15,
             "z": 293.1
-        },
-        {
-            "rotation": 5,
-            "scale": 0.9,
-            "type": "weapon_rack",
-            "x": 628.0600000000001,
-            "z": 244.25
         },
         {
             "intensity": 1.1500000000000001,
@@ -5621,13 +5550,6 @@
             "type": "ruins",
             "x": 97.7,
             "z": 532.69
-        },
-        {
-            "rotation": 3.5,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 111.66,
-            "z": 521.0600000000001
         },
         {
             "intensity": 1.25,
@@ -5733,13 +5655,6 @@
             "z": 243.64000000000001
         },
         {
-            "rotation": 345.40000000000003,
-            "scale": 1,
-            "type": "ruins",
-            "x": 115.58,
-            "z": 250
-        },
-        {
             "rotation": 84.7,
             "scale": 1.1400000000000001,
             "type": "dead_tree",
@@ -5754,32 +5669,11 @@
             "z": 147.86
         },
         {
-            "rotation": 295.8,
-            "scale": 0.9500000000000001,
-            "type": "weapon_rack",
-            "x": 133.37,
-            "z": 122.68
-        },
-        {
-            "rotation": 61.5,
-            "scale": 1.06,
-            "type": "supply_cart",
-            "x": 424.28000000000003,
-            "z": 111.43
-        },
-        {
             "rotation": 19.7,
             "scale": 1.02,
             "type": "weapon_rack",
             "x": 133.37,
             "z": 494.26
-        },
-        {
-            "rotation": 86.4,
-            "scale": 1.06,
-            "type": "tent",
-            "x": 442.77,
-            "z": 558.0500000000001
         },
         {
             "intensity": 1.21,
@@ -5796,13 +5690,6 @@
             "type": "tent",
             "x": 237.69,
             "z": 258.78
-        },
-        {
-            "rotation": 173.70000000000002,
-            "scale": 1.1,
-            "type": "tent",
-            "x": 61.54,
-            "z": 21.5
         },
         {
             "rotation": 234.1,
@@ -5840,13 +5727,6 @@
             "type": "supply_cart",
             "x": 251.72,
             "z": 303.31
-        },
-        {
-            "rotation": 21.5,
-            "scale": 1.07,
-            "type": "tent",
-            "x": 38.27,
-            "z": 45.21
         },
         {
             "rotation": 204.20000000000002,
@@ -5953,15 +5833,6 @@
             "z": 382.46000000000004
         },
         {
-            "intensity": 1.35,
-            "persistent": true,
-            "radius": 3.1,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 443.18,
-            "z": 531.9300000000001
-        },
-        {
             "rotation": 352.1,
             "scale": 1.03,
             "type": "tent",
@@ -5981,15 +5852,6 @@
             "type": "tent",
             "x": 168.34,
             "z": 59.27
-        },
-        {
-            "intensity": 1.22,
-            "persistent": true,
-            "radius": 3.1,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 465.01,
-            "z": 74.3
         },
         {
             "intensity": 0.9,
@@ -6031,13 +5893,6 @@
             "z": 109.3
         },
         {
-            "rotation": 345.1,
-            "scale": 0.91,
-            "type": "tent",
-            "x": 441.84000000000003,
-            "z": 94.99
-        },
-        {
             "intensity": 1.1400000000000001,
             "persistent": true,
             "radius": 2.6,
@@ -6072,27 +5927,11 @@
             "z": 159.79
         },
         {
-            "rotation": 97.4,
-            "scale": 1.1300000000000001,
-            "type": "weapon_rack",
-            "x": 113.7,
-            "z": 126.53
-        },
-        {
             "rotation": 337.40000000000003,
             "scale": 0.91,
             "type": "tent",
             "x": 496.35,
             "z": 83.98
-        },
-        {
-            "intensity": 1.26,
-            "persistent": true,
-            "radius": 3.3000000000000003,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 31.54,
-            "z": 399.01
         },
         {
             "rotation": 264.1,
@@ -6139,13 +5978,6 @@
             "type": "supply_cart",
             "x": 91.7,
             "z": 392.43
-        },
-        {
-            "rotation": 74,
-            "scale": 1.02,
-            "type": "tent",
-            "x": 448.09000000000003,
-            "z": 507.24
         },
         {
             "rotation": 169.5,
@@ -6221,13 +6053,6 @@
             "z": 203.70000000000002
         },
         {
-            "rotation": 78.2,
-            "scale": 0.97,
-            "type": "supply_cart",
-            "x": 393.28000000000003,
-            "z": 443.44
-        },
-        {
             "rotation": 343.1,
             "scale": 0.98,
             "type": "supply_cart",
@@ -6258,13 +6083,6 @@
             "z": 228.28
         },
         {
-            "rotation": 341.6,
-            "scale": 0.99,
-            "type": "dead_tree",
-            "x": 311.24,
-            "z": 119.89
-        },
-        {
             "rotation": 304.3,
             "scale": 0.87,
             "type": "ruins",
@@ -6286,13 +6104,6 @@
             "z": 395.55
         },
         {
-            "rotation": 170.4,
-            "scale": 1.03,
-            "type": "dead_tree",
-            "x": 359.02,
-            "z": 110.46000000000001
-        },
-        {
             "rotation": 57,
             "scale": 0.97,
             "type": "ruins",
@@ -6307,25 +6118,11 @@
             "z": 20
         },
         {
-            "rotation": 187.4,
-            "scale": 1.16,
-            "type": "ruins",
-            "x": 317,
-            "z": 27
-        },
-        {
             "rotation": 8.700000000000001,
             "scale": 1.12,
             "type": "ruins",
             "x": 300,
             "z": 17
-        },
-        {
-            "rotation": 9.9,
-            "scale": 0.99,
-            "type": "dead_tree",
-            "x": 216.93,
-            "z": 625.09
         },
         {
             "rotation": 79.3,
@@ -6349,32 +6146,11 @@
             "z": 525.77
         },
         {
-            "rotation": 185.3,
-            "scale": 1.16,
-            "type": "ruins",
-            "x": 21.16,
-            "z": 332.03000000000003
-        },
-        {
-            "rotation": 16.5,
-            "scale": 1.09,
-            "type": "ruins",
-            "x": 36.79,
-            "z": 330.17
-        },
-        {
             "rotation": 233.4,
             "scale": 0.9500000000000001,
             "type": "ruins",
             "x": 16.87,
             "z": 248.93
-        },
-        {
-            "rotation": 40.1,
-            "scale": 0.93,
-            "type": "dead_tree",
-            "x": 473.51,
-            "z": 631.9300000000001
         },
         {
             "rotation": 351.5,
@@ -6391,32 +6167,11 @@
             "z": 293.67
         },
         {
-            "rotation": 202.3,
-            "scale": 1.12,
-            "type": "dead_tree",
-            "x": 496.93,
-            "z": 442.19
-        },
-        {
-            "rotation": 114.10000000000001,
-            "scale": 1.1300000000000001,
-            "type": "dead_tree",
-            "x": 543.84,
-            "z": 525.64
-        },
-        {
             "rotation": 111.3,
             "scale": 0.96,
             "type": "ruins",
             "x": 50.13,
             "z": 302.54
-        },
-        {
-            "rotation": 100.9,
-            "scale": 1.1,
-            "type": "dead_tree",
-            "x": 28.84,
-            "z": 595.15
         },
         {
             "rotation": 344.1,
@@ -6480,13 +6235,6 @@
             "type": "abandoned_home",
             "x": 117.93,
             "z": 224.8
-        },
-        {
-            "rotation": 140.20000000000002,
-            "scale": 1.05,
-            "type": "abandoned_home",
-            "x": 106.35000000000001,
-            "z": 250.48000000000002
         },
         {
             "rotation": 347.1,
@@ -6750,14 +6498,6 @@
             "type": "statue",
             "x": 195,
             "z": 352
-        },
-        {
-            "landmark": "campania_vesuvian_shrine",
-            "rotation": 90,
-            "scale": 1,
-            "type": "ruins",
-            "x": 205,
-            "z": 367
         },
         {
             "landmark": "campania_vesuvian_shrine",
@@ -7167,6 +6907,2388 @@
             "type": "cursed_gold_vein",
             "x": 62,
             "z": 362
+        },
+        {
+            "type": "cypress_tree",
+            "x": 377.44,
+            "z": 247.19,
+            "scale": 1.03,
+            "rotation": 6.05,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 376.27,
+            "z": 260.03,
+            "scale": 0.96,
+            "rotation": 5.224,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 386.86,
+            "z": 247.6,
+            "scale": 1.06,
+            "rotation": 0.966,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 384.63,
+            "z": 261.3,
+            "scale": 0.92,
+            "rotation": 4.068,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 395.08,
+            "z": 249.38,
+            "scale": 1.09,
+            "rotation": 0.008,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 393.58,
+            "z": 262.09,
+            "scale": 0.97,
+            "rotation": 1.996,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 404.01,
+            "z": 249.79,
+            "scale": 1.03,
+            "rotation": 5.704,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 402.57,
+            "z": 262.26,
+            "scale": 1.07,
+            "rotation": 2.751,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 413.62,
+            "z": 250.83,
+            "scale": 0.91,
+            "rotation": 3.357,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 422.17,
+            "z": 251.58,
+            "scale": 1.02,
+            "rotation": 4.493,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 431.74,
+            "z": 253.96,
+            "scale": 0.97,
+            "rotation": 0.465,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 429.35,
+            "z": 264.49,
+            "scale": 0.91,
+            "rotation": 4.081,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 441.02,
+            "z": 256.7,
+            "scale": 1.06,
+            "rotation": 5.909,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 437.01,
+            "z": 269.11,
+            "scale": 1.09,
+            "rotation": 1.21,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 445.3,
+            "z": 272.38,
+            "scale": 0.91,
+            "rotation": 5.64,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 453.43,
+            "z": 275.97,
+            "scale": 0.94,
+            "rotation": 2.646,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 466.18,
+            "z": 266.8,
+            "scale": 1.03,
+            "rotation": 0.25,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 462.2,
+            "z": 279.01,
+            "scale": 1.0,
+            "rotation": 2.051,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 469.03,
+            "z": 283.42,
+            "scale": 0.96,
+            "rotation": 5.476,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 483.38,
+            "z": 273.58,
+            "scale": 0.96,
+            "rotation": 3.439,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 477.9,
+            "z": 285.36,
+            "scale": 1.01,
+            "rotation": 4.317,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 489.37,
+            "z": 275.41,
+            "scale": 1.02,
+            "rotation": 4.044,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 486.81,
+            "z": 288.78,
+            "scale": 1.1,
+            "rotation": 4.94,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 499.57,
+            "z": 279.81,
+            "scale": 1.09,
+            "rotation": 4.741,
+            "dressing": "campania_appian_way"
+        },
+        {
+            "type": "ruins",
+            "x": 262.0,
+            "z": 261.55,
+            "scale": 1.14,
+            "rotation": 1.533,
+            "dressing": "campania_villa_ruin"
+        },
+        {
+            "type": "ruins",
+            "x": 251.18,
+            "z": 252.39,
+            "scale": 0.96,
+            "rotation": 6.441,
+            "dressing": "campania_villa_ruin"
+        },
+        {
+            "type": "statue",
+            "x": 231.82,
+            "z": 258.69,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "campania_villa_ruin"
+        },
+        {
+            "type": "statue",
+            "x": 231.28,
+            "z": 264.32,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "campania_villa_ruin"
+        },
+        {
+            "type": "firecamp",
+            "x": 248.0,
+            "z": 262.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_villa_ruin",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 254.22,
+            "z": 259.98,
+            "scale": 1.0,
+            "rotation": 5.344,
+            "dressing": "campania_villa_ruin"
+        },
+        {
+            "type": "dead_tree",
+            "x": 253.19,
+            "z": 265.9,
+            "scale": 1.0,
+            "rotation": 6.215,
+            "dressing": "campania_villa_ruin"
+        },
+        {
+            "type": "boulder",
+            "x": 292.97,
+            "z": 304.67,
+            "scale": 1.0,
+            "rotation": 1.109,
+            "dressing": "campania_villa_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 297.51,
+            "z": 309.07,
+            "scale": 1.11,
+            "rotation": 5.298,
+            "dressing": "campania_villa_ramp"
+        },
+        {
+            "type": "dead_tree",
+            "x": 291.89,
+            "z": 291.32,
+            "scale": 1.0,
+            "rotation": 2.775,
+            "dressing": "campania_villa_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 263.68,
+            "z": 319.86,
+            "scale": 1.43,
+            "rotation": 3.799,
+            "dressing": "campania_villa_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 264.67,
+            "z": 326.11,
+            "scale": 1.49,
+            "rotation": 4.203,
+            "dressing": "campania_villa_ramp"
+        },
+        {
+            "type": "statue",
+            "x": 267.4,
+            "z": 329.2,
+            "scale": 1.0,
+            "rotation": -2.049,
+            "dressing": "campania_villa_ramp"
+        },
+        {
+            "type": "statue",
+            "x": 306.0,
+            "z": 306.0,
+            "scale": 1.1,
+            "rotation": 0.0,
+            "dressing": "campania_olive_terrace"
+        },
+        {
+            "type": "firecamp",
+            "x": 310.0,
+            "z": 309.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_olive_terrace",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "olive_tree",
+            "x": 320.87,
+            "z": 306.54,
+            "scale": 0.99,
+            "rotation": 4.042,
+            "dressing": "campania_olive_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 317.55,
+            "z": 313.73,
+            "scale": 1.07,
+            "rotation": 4.649,
+            "dressing": "campania_olive_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 312.54,
+            "z": 317.97,
+            "scale": 1.03,
+            "rotation": 4.941,
+            "dressing": "campania_olive_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 302.57,
+            "z": 320.44,
+            "scale": 0.98,
+            "rotation": 0.193,
+            "dressing": "campania_olive_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 296.66,
+            "z": 315.95,
+            "scale": 0.95,
+            "rotation": 1.184,
+            "dressing": "campania_olive_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 297.85,
+            "z": 300.65,
+            "scale": 1.0,
+            "rotation": 3.583,
+            "dressing": "campania_olive_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 299.57,
+            "z": 291.53,
+            "scale": 0.96,
+            "rotation": 1.93,
+            "dressing": "campania_olive_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 304.99,
+            "z": 291.23,
+            "scale": 1.05,
+            "rotation": 2.317,
+            "dressing": "campania_olive_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 310.36,
+            "z": 292.47,
+            "scale": 0.94,
+            "rotation": 2.778,
+            "dressing": "campania_olive_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 317.72,
+            "z": 300.67,
+            "scale": 0.94,
+            "rotation": 0.931,
+            "dressing": "campania_olive_terrace"
+        },
+        {
+            "type": "boulder",
+            "x": 308.51,
+            "z": 313.23,
+            "scale": 0.89,
+            "rotation": 1.829,
+            "dressing": "campania_olive_terrace"
+        },
+        {
+            "type": "boulder",
+            "x": 313.69,
+            "z": 305.57,
+            "scale": 0.74,
+            "rotation": 0.167,
+            "dressing": "campania_olive_terrace"
+        },
+        {
+            "type": "firecamp",
+            "x": 396.0,
+            "z": 212.0,
+            "scale": 1.1,
+            "rotation": 0.0,
+            "dressing": "campania_second_terrace",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "olive_tree",
+            "x": 407.38,
+            "z": 210.37,
+            "scale": 0.96,
+            "rotation": 5.475,
+            "dressing": "campania_second_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 406.28,
+            "z": 218.43,
+            "scale": 1.04,
+            "rotation": 1.742,
+            "dressing": "campania_second_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 399.12,
+            "z": 222.99,
+            "scale": 1.03,
+            "rotation": 3.679,
+            "dressing": "campania_second_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 389.89,
+            "z": 221.6,
+            "scale": 1.07,
+            "rotation": 3.89,
+            "dressing": "campania_second_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 384.95,
+            "z": 216.34,
+            "scale": 1.1,
+            "rotation": 5.939,
+            "dressing": "campania_second_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 386.04,
+            "z": 208.4,
+            "scale": 1.1,
+            "rotation": 3.799,
+            "dressing": "campania_second_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 400.05,
+            "z": 199.73,
+            "scale": 0.98,
+            "rotation": 6.059,
+            "dressing": "campania_second_terrace"
+        },
+        {
+            "type": "olive_tree",
+            "x": 404.54,
+            "z": 204.09,
+            "scale": 0.92,
+            "rotation": 3.874,
+            "dressing": "campania_second_terrace"
+        },
+        {
+            "type": "boulder",
+            "x": 394.33,
+            "z": 217.15,
+            "scale": 0.83,
+            "rotation": 0.646,
+            "dressing": "campania_second_terrace"
+        },
+        {
+            "type": "boulder",
+            "x": 402.41,
+            "z": 213.43,
+            "scale": 0.78,
+            "rotation": 0.273,
+            "dressing": "campania_second_terrace"
+        },
+        {
+            "type": "ruins",
+            "x": 594.78,
+            "z": 53.07,
+            "scale": 0.87,
+            "rotation": 1.912,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 588.86,
+            "z": 61.62,
+            "scale": 1.0,
+            "rotation": 5.692,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 577.81,
+            "z": 61.03,
+            "scale": 0.91,
+            "rotation": 4.045,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 574.82,
+            "z": 52.42,
+            "scale": 1.15,
+            "rotation": 3.115,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 580.89,
+            "z": 42.78,
+            "scale": 1.02,
+            "rotation": 5.737,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 590.12,
+            "z": 42.45,
+            "scale": 0.87,
+            "rotation": 0.052,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 599.93,
+            "z": 61.88,
+            "scale": 0.85,
+            "rotation": 2.598,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 571.48,
+            "z": 58.78,
+            "scale": 1.06,
+            "rotation": 3.154,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 575.96,
+            "z": 39.01,
+            "scale": 0.95,
+            "rotation": 2.159,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 595.69,
+            "z": 37.37,
+            "scale": 1.13,
+            "rotation": 3.646,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 593.77,
+            "z": 67.89,
+            "scale": 1.02,
+            "rotation": 5.255,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 592.19,
+            "z": 49.51,
+            "scale": 0.9,
+            "rotation": 5.16,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 576.93,
+            "z": 46.8,
+            "scale": 0.9,
+            "rotation": 5.677,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 572.79,
+            "z": 47.02,
+            "scale": 1.27,
+            "rotation": 3.137,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 599.24,
+            "z": 52.21,
+            "scale": 0.88,
+            "rotation": 4.96,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 582.58,
+            "z": 36.72,
+            "scale": 1.05,
+            "rotation": 3.394,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "magic_shrine",
+            "x": 585.0,
+            "z": 52.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_river_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 174.34,
+            "z": 586.72,
+            "scale": 1.02,
+            "rotation": 4.789,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 164.81,
+            "z": 595.97,
+            "scale": 1.11,
+            "rotation": 0.006,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 154.59,
+            "z": 595.42,
+            "scale": 1.12,
+            "rotation": 1.35,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 150.95,
+            "z": 584.69,
+            "scale": 1.15,
+            "rotation": 0.885,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 155.85,
+            "z": 577.17,
+            "scale": 1.12,
+            "rotation": 4.517,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 167.27,
+            "z": 575.48,
+            "scale": 0.99,
+            "rotation": 3.733,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 170.77,
+            "z": 600.03,
+            "scale": 1.03,
+            "rotation": 4.904,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 147.93,
+            "z": 594.34,
+            "scale": 0.89,
+            "rotation": 5.901,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 147.99,
+            "z": 576.89,
+            "scale": 0.85,
+            "rotation": 1.731,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 175.5,
+            "z": 575.34,
+            "scale": 1.05,
+            "rotation": 1.956,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 168.01,
+            "z": 604.47,
+            "scale": 0.88,
+            "rotation": 0.382,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 170.55,
+            "z": 590.37,
+            "scale": 0.9,
+            "rotation": 4.225,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 156.29,
+            "z": 583.28,
+            "scale": 0.9,
+            "rotation": 4.527,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 151.07,
+            "z": 590.74,
+            "scale": 1.19,
+            "rotation": 1.33,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 170.86,
+            "z": 579.23,
+            "scale": 0.84,
+            "rotation": 3.091,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 151.08,
+            "z": 574.61,
+            "scale": 0.99,
+            "rotation": 1.663,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 174.69,
+            "z": 579.76,
+            "scale": 1.15,
+            "rotation": 1.281,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "magic_shrine",
+            "x": 162.0,
+            "z": 586.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_coast_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 35.85,
+            "z": 276.06,
+            "scale": 0.99,
+            "rotation": 4.178,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 33.91,
+            "z": 286.36,
+            "scale": 1.09,
+            "rotation": 5.351,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 16.89,
+            "z": 282.86,
+            "scale": 0.91,
+            "rotation": 0.257,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 19.31,
+            "z": 272.48,
+            "scale": 1.17,
+            "rotation": 2.119,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 30.97,
+            "z": 267.49,
+            "scale": 0.85,
+            "rotation": 1.57,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 40.18,
+            "z": 291.39,
+            "scale": 1.12,
+            "rotation": 1.866,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 20.2,
+            "z": 291.74,
+            "scale": 0.86,
+            "rotation": 5.538,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 18.71,
+            "z": 264.41,
+            "scale": 0.9,
+            "rotation": 3.916,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 35.6,
+            "z": 262.13,
+            "scale": 0.9,
+            "rotation": 0.303,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "statue",
+            "x": 33.26,
+            "z": 271.76,
+            "scale": 0.9,
+            "rotation": 6.076,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "statue",
+            "x": 16.97,
+            "z": 277.31,
+            "scale": 0.9,
+            "rotation": 1.746,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 34.29,
+            "z": 292.82,
+            "scale": 1.29,
+            "rotation": 2.661,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 41.35,
+            "z": 269.85,
+            "scale": 1.04,
+            "rotation": 0.464,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 24.83,
+            "z": 292.27,
+            "scale": 1.18,
+            "rotation": 5.505,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "magic_shrine",
+            "x": 28.0,
+            "z": 277.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_old_grave_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 622.65,
+            "z": 390.88,
+            "scale": 0.86,
+            "rotation": 3.632,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 619.33,
+            "z": 399.64,
+            "scale": 1.2,
+            "rotation": 1.595,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 607.6,
+            "z": 403.84,
+            "scale": 1.05,
+            "rotation": 3.325,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 601.53,
+            "z": 394.19,
+            "scale": 1.04,
+            "rotation": 6.024,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 600.13,
+            "z": 386.41,
+            "scale": 1.04,
+            "rotation": 2.002,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 607.89,
+            "z": 382.21,
+            "scale": 1.08,
+            "rotation": 2.633,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 617.55,
+            "z": 385.31,
+            "scale": 1.13,
+            "rotation": 3.391,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 626.69,
+            "z": 399.01,
+            "scale": 1.09,
+            "rotation": 5.143,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 603.56,
+            "z": 408.73,
+            "scale": 0.94,
+            "rotation": 1.068,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 598.23,
+            "z": 378.28,
+            "scale": 1.04,
+            "rotation": 0.19,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 620.98,
+            "z": 379.24,
+            "scale": 1.08,
+            "rotation": 5.143,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 619.42,
+            "z": 407.47,
+            "scale": 1.02,
+            "rotation": 6.268,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "statue",
+            "x": 618.07,
+            "z": 394.34,
+            "scale": 0.9,
+            "rotation": 5.996,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "statue",
+            "x": 604.74,
+            "z": 390.01,
+            "scale": 0.9,
+            "rotation": 4.007,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "statue",
+            "x": 617.23,
+            "z": 392.36,
+            "scale": 0.9,
+            "rotation": 1.113,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 623.43,
+            "z": 383.57,
+            "scale": 1.14,
+            "rotation": 5.171,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 595.34,
+            "z": 390.01,
+            "scale": 1.06,
+            "rotation": 2.063,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 622.9,
+            "z": 405.31,
+            "scale": 1.03,
+            "rotation": 5.223,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 594.58,
+            "z": 392.78,
+            "scale": 0.99,
+            "rotation": 3.377,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "magic_shrine",
+            "x": 611.0,
+            "z": 392.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_tomb_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 211.02,
+            "z": 172.76,
+            "scale": 1.12,
+            "rotation": 0.764,
+            "dressing": "campania_volturnus_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 198.59,
+            "z": 174.29,
+            "scale": 1.13,
+            "rotation": 0.821,
+            "dressing": "campania_volturnus_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 196.93,
+            "z": 171.41,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_volturnus_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 215.0,
+            "z": 167.29,
+            "scale": 1.0,
+            "rotation": 3.498,
+            "dressing": "campania_volturnus_bridge"
+        },
+        {
+            "type": "supply_cart",
+            "x": 193.1,
+            "z": 167.7,
+            "scale": 1.0,
+            "rotation": -1.361,
+            "dressing": "campania_volturnus_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 212.58,
+            "z": 188.59,
+            "scale": 1.23,
+            "rotation": 6.047,
+            "dressing": "campania_volturnus_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 197.47,
+            "z": 187.06,
+            "scale": 1.24,
+            "rotation": 2.04,
+            "dressing": "campania_volturnus_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 215.5,
+            "z": 192.59,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_volturnus_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 200.29,
+            "z": 196.46,
+            "scale": 1.0,
+            "rotation": 2.288,
+            "dressing": "campania_volturnus_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 431.56,
+            "z": 189.71,
+            "scale": 0.9,
+            "rotation": 6.075,
+            "dressing": "campania_east_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 434.38,
+            "z": 189.3,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_east_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 387.06,
+            "z": 475.06,
+            "scale": 1.19,
+            "rotation": 5.733,
+            "dressing": "campania_appian_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 373.25,
+            "z": 475.12,
+            "scale": 1.26,
+            "rotation": 6.021,
+            "dressing": "campania_appian_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 370.45,
+            "z": 471.13,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_appian_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 388.93,
+            "z": 468.05,
+            "scale": 1.0,
+            "rotation": 0.285,
+            "dressing": "campania_appian_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 386.76,
+            "z": 490.06,
+            "scale": 1.03,
+            "rotation": 2.433,
+            "dressing": "campania_appian_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 372.8,
+            "z": 490.12,
+            "scale": 1.06,
+            "rotation": 1.807,
+            "dressing": "campania_appian_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 389.54,
+            "z": 494.05,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_appian_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 371.06,
+            "z": 497.13,
+            "scale": 1.0,
+            "rotation": 1.351,
+            "dressing": "campania_appian_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 215.91,
+            "z": 324.03,
+            "scale": 1.23,
+            "rotation": 2.681,
+            "dressing": "campania_south_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 212.86,
+            "z": 322.51,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_south_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 231.68,
+            "z": 319.27,
+            "scale": 1.0,
+            "rotation": 1.967,
+            "dressing": "campania_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 229.94,
+            "z": 339.4,
+            "scale": 0.96,
+            "rotation": 1.209,
+            "dressing": "campania_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 215.58,
+            "z": 338.66,
+            "scale": 1.04,
+            "rotation": 0.803,
+            "dressing": "campania_south_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 231.91,
+            "z": 343.51,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_south_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 210.87,
+            "z": 343.16,
+            "scale": 1.0,
+            "rotation": 3.926,
+            "dressing": "campania_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 351.73,
+            "z": 333.35,
+            "scale": 1.26,
+            "rotation": 3.264,
+            "dressing": "campania_centre_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 338.57,
+            "z": 331.45,
+            "scale": 0.95,
+            "rotation": 3.936,
+            "dressing": "campania_centre_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 335.87,
+            "z": 328.49,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_centre_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 354.51,
+            "z": 326.49,
+            "scale": 1.0,
+            "rotation": 5.88,
+            "dressing": "campania_centre_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 351.82,
+            "z": 345.86,
+            "scale": 0.84,
+            "rotation": 3.49,
+            "dressing": "campania_centre_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 337.43,
+            "z": 345.09,
+            "scale": 0.95,
+            "rotation": 1.615,
+            "dressing": "campania_centre_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 353.75,
+            "z": 349.97,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_centre_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 335.11,
+            "z": 351.97,
+            "scale": 1.0,
+            "rotation": 3.178,
+            "dressing": "campania_centre_bridge"
+        },
+        {
+            "type": "statue",
+            "x": 6.28,
+            "z": 221.04,
+            "scale": 1.0,
+            "rotation": -1.222,
+            "dressing": "campania_west_junction"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 5.51,
+            "z": 227.09,
+            "scale": 1.0,
+            "rotation": 1.082,
+            "dressing": "campania_west_junction"
+        },
+        {
+            "type": "statue",
+            "x": 295.91,
+            "z": 20.44,
+            "scale": 1.0,
+            "rotation": 0.932,
+            "dressing": "campania_north_junction"
+        },
+        {
+            "type": "firecamp",
+            "x": 291.46,
+            "z": 20.88,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_north_junction",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "ruins",
+            "x": 301.07,
+            "z": 9.23,
+            "scale": 0.8,
+            "rotation": 1.774,
+            "dressing": "campania_north_junction"
+        },
+        {
+            "type": "firecamp",
+            "x": 560.59,
+            "z": 305.02,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_siege_junction",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "plant",
+            "x": 36.52,
+            "z": 188.61,
+            "scale": 1.0,
+            "rotation": 2.334,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 39.0,
+            "z": 191.08,
+            "scale": 1.05,
+            "rotation": 5.931,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 68.28,
+            "z": 173.82,
+            "scale": 1.05,
+            "rotation": 1.332,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 71.0,
+            "z": 170.88,
+            "scale": 1.4,
+            "rotation": 6.042,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 99.96,
+            "z": 188.52,
+            "scale": 0.88,
+            "rotation": 1.448,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 131.83,
+            "z": 175.1,
+            "scale": 1.05,
+            "rotation": 4.355,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 164.83,
+            "z": 190.31,
+            "scale": 0.92,
+            "rotation": 5.144,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 167.0,
+            "z": 192.24,
+            "scale": 1.19,
+            "rotation": 2.289,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 197.46,
+            "z": 176.58,
+            "scale": 1.15,
+            "rotation": 2.681,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 227.66,
+            "z": 186.8,
+            "scale": 1.23,
+            "rotation": 3.967,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 231.0,
+            "z": 189.56,
+            "scale": 1.05,
+            "rotation": 4.328,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 290.76,
+            "z": 188.24,
+            "scale": 0.98,
+            "rotation": 0.045,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 356.56,
+            "z": 189.88,
+            "scale": 1.28,
+            "rotation": 3.44,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 359.0,
+            "z": 191.62,
+            "scale": 1.09,
+            "rotation": 3.895,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 386.64,
+            "z": 171.61,
+            "scale": 1.05,
+            "rotation": 4.555,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 391.0,
+            "z": 171.86,
+            "scale": 1.28,
+            "rotation": 5.494,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 453.14,
+            "z": 174.75,
+            "scale": 1.04,
+            "rotation": 0.827,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 483.82,
+            "z": 190.03,
+            "scale": 0.87,
+            "rotation": 0.515,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 487.0,
+            "z": 190.72,
+            "scale": 1.17,
+            "rotation": 4.582,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 514.91,
+            "z": 174.86,
+            "scale": 1.18,
+            "rotation": 3.764,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 519.0,
+            "z": 172.18,
+            "scale": 1.26,
+            "rotation": 4.621,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 547.47,
+            "z": 191.45,
+            "scale": 0.88,
+            "rotation": 1.508,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "plant",
+            "x": 549.64,
+            "z": 195.22,
+            "scale": 1.18,
+            "rotation": 1.717,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 581.51,
+            "z": 178.07,
+            "scale": 0.99,
+            "rotation": 1.557,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 611.56,
+            "z": 197.37,
+            "scale": 0.9,
+            "rotation": 5.763,
+            "dressing": "campania_volturnus_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 114.6,
+            "z": 455.18,
+            "scale": 1.29,
+            "rotation": 6.05,
+            "dressing": "campania_coast_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 124.44,
+            "z": 435.35,
+            "scale": 1.17,
+            "rotation": 1.778,
+            "dressing": "campania_coast_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 118.73,
+            "z": 432.63,
+            "scale": 1.4,
+            "rotation": 5.612,
+            "dressing": "campania_coast_ramp"
+        },
+        {
+            "type": "firecamp",
+            "x": 113.1,
+            "z": 429.92,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_coast_ramp",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 141.0,
+            "z": 62.12,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 143.81,
+            "z": 62.94,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_1"
+        },
+        {
+            "type": "firecamp",
+            "x": 114.12,
+            "z": 91.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 101.88,
+            "z": 91.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 100.88,
+            "z": 95.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "campania_gate_2"
+        },
+        {
+            "type": "supply_cart",
+            "x": 115.62,
+            "z": 97.0,
+            "scale": 1.0,
+            "rotation": 1.871,
+            "dressing": "campania_gate_2"
+        },
+        {
+            "type": "firecamp",
+            "x": 507.0,
+            "z": 134.4,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_3",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 507.0,
+            "z": 145.6,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_3",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 511.0,
+            "z": 146.6,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_3"
+        },
+        {
+            "type": "supply_cart",
+            "x": 513.0,
+            "z": 132.9,
+            "scale": 1.0,
+            "rotation": 0.3,
+            "dressing": "campania_gate_3"
+        },
+        {
+            "type": "firecamp",
+            "x": 61.0,
+            "z": 473.3,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_4",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 61.0,
+            "z": 462.7,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_4",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 57.0,
+            "z": 461.7,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "campania_gate_4"
+        },
+        {
+            "type": "supply_cart",
+            "x": 55.0,
+            "z": 474.8,
+            "scale": 1.0,
+            "rotation": 3.442,
+            "dressing": "campania_gate_4"
+        },
+        {
+            "type": "firecamp",
+            "x": 509.0,
+            "z": 284.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_5",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 505.0,
+            "z": 283.0,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "campania_gate_5"
+        },
+        {
+            "type": "supply_cart",
+            "x": 501.88,
+            "z": 297.93,
+            "scale": 1.0,
+            "rotation": 3.442,
+            "dressing": "campania_gate_5"
+        },
+        {
+            "type": "statue",
+            "x": 498.0,
+            "z": 297.0,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "campania_gate_5"
+        },
+        {
+            "type": "firecamp",
+            "x": 508.11,
+            "z": 342.72,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_6",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 509.43,
+            "z": 335.12,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_6",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 505.0,
+            "z": 333.0,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "campania_gate_6"
+        },
+        {
+            "type": "statue",
+            "x": 498.0,
+            "z": 333.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "campania_gate_6"
+        },
+        {
+            "type": "firecamp",
+            "x": 352.0,
+            "z": 215.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_7",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 364.0,
+            "z": 215.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_7",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 365.0,
+            "z": 211.0,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "campania_gate_7"
+        },
+        {
+            "type": "supply_cart",
+            "x": 350.5,
+            "z": 209.0,
+            "scale": 1.0,
+            "rotation": -1.271,
+            "dressing": "campania_gate_7"
+        },
+        {
+            "type": "statue",
+            "x": 351.0,
+            "z": 204.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_7"
+        },
+        {
+            "type": "statue",
+            "x": 365.0,
+            "z": 204.0,
+            "scale": 1.0,
+            "rotation": -3.142,
+            "dressing": "campania_gate_7"
+        },
+        {
+            "type": "firecamp",
+            "x": 371.71,
+            "z": 245.13,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_8",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "supply_cart",
+            "x": 381.87,
+            "z": 241.21,
+            "scale": 1.0,
+            "rotation": 0.3,
+            "dressing": "campania_gate_8"
+        },
+        {
+            "type": "statue",
+            "x": 386.87,
+            "z": 241.71,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "campania_gate_8"
+        },
+        {
+            "type": "firecamp",
+            "x": 333.43,
+            "z": 282.12,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_9",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 323.0,
+            "z": 281.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_9",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 322.0,
+            "z": 285.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "campania_gate_9"
+        },
+        {
+            "type": "supply_cart",
+            "x": 334.93,
+            "z": 288.12,
+            "scale": 1.0,
+            "rotation": 1.871,
+            "dressing": "campania_gate_9"
+        },
+        {
+            "type": "statue",
+            "x": 334.43,
+            "z": 293.12,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "campania_gate_9"
+        },
+        {
+            "type": "statue",
+            "x": 322.0,
+            "z": 292.0,
+            "scale": 1.0,
+            "rotation": -0.0,
+            "dressing": "campania_gate_9"
+        },
+        {
+            "type": "firecamp",
+            "x": 299.81,
+            "z": 247.62,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_10",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 300.11,
+            "z": 232.92,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_10",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 296.05,
+            "z": 230.8,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "campania_gate_10"
+        },
+        {
+            "type": "supply_cart",
+            "x": 295.0,
+            "z": 249.3,
+            "scale": 1.0,
+            "rotation": 3.442,
+            "dressing": "campania_gate_10"
+        },
+        {
+            "type": "statue",
+            "x": 290.0,
+            "z": 248.8,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "campania_gate_10"
+        },
+        {
+            "type": "statue",
+            "x": 289.13,
+            "z": 238.49,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "campania_gate_10"
+        },
+        {
+            "type": "firecamp",
+            "x": 378.82,
+            "z": 499.72,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_11",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 391.0,
+            "z": 499.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_11",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 392.43,
+            "z": 496.12,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "campania_gate_11"
+        },
+        {
+            "type": "supply_cart",
+            "x": 376.22,
+            "z": 493.89,
+            "scale": 1.0,
+            "rotation": -1.271,
+            "dressing": "campania_gate_11"
+        },
+        {
+            "type": "firecamp",
+            "x": 379.3,
+            "z": 557.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_12",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 370.95,
+            "z": 557.47,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_gate_12",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 367.7,
+            "z": 561.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "campania_gate_12"
+        },
+        {
+            "type": "supply_cart",
+            "x": 380.8,
+            "z": 563.0,
+            "scale": 1.0,
+            "rotation": 1.871,
+            "dressing": "campania_gate_12"
+        }
+    ],
+    "dressing": [
+        {
+            "id": "campania_appian_way",
+            "kind": "tree_avenue",
+            "from": [
+                372,
+                256
+            ],
+            "to": [
+                500,
+                292
+            ],
+            "tree": "cypress_tree",
+            "spacing": 9
+        },
+        {
+            "id": "campania_villa_ruin",
+            "kind": "hilltop_ruin",
+            "x": 250,
+            "z": 262,
+            "facing": "east",
+            "radius": 14,
+            "ruins": 8,
+            "dead_trees": 2
+        },
+        {
+            "id": "campania_villa_ramp",
+            "kind": "ramp_mouth",
+            "x": 265,
+            "z": 292,
+            "statue": true
+        },
+        {
+            "id": "campania_olive_terrace",
+            "kind": "sacred_grove",
+            "x": 306,
+            "z": 306,
+            "tree": "olive_tree",
+            "count": 11,
+            "radius": 14,
+            "centre": "statue"
+        },
+        {
+            "id": "campania_second_terrace",
+            "kind": "sacred_grove",
+            "x": 396,
+            "z": 212,
+            "tree": "olive_tree",
+            "count": 9,
+            "radius": 12,
+            "centre": "firecamp",
+            "fire": false
+        },
+        {
+            "id": "campania_river_barrows",
+            "kind": "barrow_field",
+            "x": 585,
+            "z": 52,
+            "radius": 12,
+            "shrine": true,
+            "ruins": 6,
+            "dead_trees": 5,
+            "boulders": 3
+        },
+        {
+            "id": "campania_coast_barrows",
+            "kind": "barrow_field",
+            "x": 162,
+            "z": 586,
+            "radius": 12,
+            "shrine": true,
+            "ruins": 6,
+            "dead_trees": 5,
+            "boulders": 4
+        },
+        {
+            "id": "campania_old_grave_ring",
+            "kind": "barrow_field",
+            "x": 28,
+            "z": 277,
+            "radius": 12,
+            "shrine": true,
+            "ruins": 5,
+            "dead_trees": 4,
+            "boulders": 3
+        },
+        {
+            "id": "campania_tomb_ring",
+            "kind": "barrow_field",
+            "x": 611,
+            "z": 392,
+            "radius": 12,
+            "shrine": true,
+            "ruins": 7,
+            "dead_trees": 5,
+            "statues": 3
+        },
+        {
+            "id": "campania_volturnus_bridge",
+            "kind": "bridgehead",
+            "x": 206,
+            "z": 181
+        },
+        {
+            "id": "campania_east_bridge",
+            "kind": "bridgehead",
+            "x": 424,
+            "z": 181
+        },
+        {
+            "id": "campania_appian_bridge",
+            "kind": "bridgehead",
+            "x": 380,
+            "z": 482
+        },
+        {
+            "id": "campania_south_bridge",
+            "kind": "bridgehead",
+            "x": 223,
+            "z": 332,
+            "cart": false
+        },
+        {
+            "id": "campania_centre_bridge",
+            "kind": "bridgehead",
+            "x": 344,
+            "z": 339,
+            "cart": false
+        },
+        {
+            "id": "campania_west_junction",
+            "kind": "junction",
+            "x": 8,
+            "z": 214,
+            "style": "milestone",
+            "tree": "cypress_tree"
+        },
+        {
+            "id": "campania_north_junction",
+            "kind": "junction",
+            "x": 300,
+            "z": 24,
+            "style": "shrine",
+            "snap": 6
+        },
+        {
+            "id": "campania_siege_junction",
+            "kind": "junction",
+            "x": 566,
+            "z": 300,
+            "style": "camp"
+        },
+        {
+            "id": "campania_volturnus_bank",
+            "kind": "riverbank",
+            "from": [
+                20,
+                182
+            ],
+            "to": [
+                630,
+                195
+            ],
+            "spacing": 32,
+            "kinds": [
+                "plant",
+                "plant",
+                "boulder",
+                "dead_tree",
+                "plant"
+            ]
+        },
+        {
+            "id": "campania_coast_ramp",
+            "kind": "ramp_mouth",
+            "x": 141,
+            "z": 448,
+            "fire": true
+        },
+        {
+            "id": "campania_gate_1",
+            "kind": "gate_approach",
+            "x": 132.0,
+            "z": 56.0
+        },
+        {
+            "id": "campania_gate_2",
+            "kind": "gate_approach",
+            "x": 108.0,
+            "z": 82.0
+        },
+        {
+            "id": "campania_gate_3",
+            "kind": "gate_approach",
+            "x": 498.0,
+            "z": 140.0
+        },
+        {
+            "id": "campania_gate_4",
+            "kind": "gate_approach",
+            "x": 70.0,
+            "z": 468.0
+        },
+        {
+            "id": "campania_gate_5",
+            "kind": "gate_approach",
+            "x": 518.0,
+            "z": 290.0,
+            "statues": true
+        },
+        {
+            "id": "campania_gate_6",
+            "kind": "gate_approach",
+            "x": 518.0,
+            "z": 340.0,
+            "statues": true
+        },
+        {
+            "id": "campania_gate_7",
+            "kind": "gate_approach",
+            "x": 358,
+            "z": 224,
+            "statues": true
+        },
+        {
+            "id": "campania_gate_8",
+            "kind": "gate_approach",
+            "x": 366,
+            "z": 252,
+            "statues": true
+        },
+        {
+            "id": "campania_gate_9",
+            "kind": "gate_approach",
+            "x": 328,
+            "z": 272,
+            "statues": true
+        },
+        {
+            "id": "campania_gate_10",
+            "kind": "gate_approach",
+            "x": 310,
+            "z": 242,
+            "statues": true
+        },
+        {
+            "id": "campania_gate_11",
+            "kind": "gate_approach",
+            "x": 386,
+            "z": 508
+        },
+        {
+            "id": "campania_gate_12",
+            "kind": "gate_approach",
+            "x": 374,
+            "z": 548
         }
     ]
 }

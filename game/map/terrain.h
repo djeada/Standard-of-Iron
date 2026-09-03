@@ -511,14 +511,14 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
 
   case GroundType::SoilRocky:
 
-    settings.grass_primary = QVector3D(0.38F, 0.46F, 0.27F);
-    settings.grass_secondary = QVector3D(0.45F, 0.54F, 0.31F);
-    settings.grass_dry = QVector3D(0.58F, 0.52F, 0.38F);
-    settings.soil_color = QVector3D(0.55F, 0.48F, 0.38F);
-    settings.rock_low = QVector3D(0.52F, 0.50F, 0.46F);
-    settings.rock_high = QVector3D(0.72F, 0.70F, 0.66F);
-    settings.terrain_ambient_boost = 0.96F;
-    settings.terrain_rock_detail_strength = 0.65F;
+    settings.grass_primary = QVector3D(0.31F, 0.34F, 0.22F);
+    settings.grass_secondary = QVector3D(0.38F, 0.40F, 0.24F);
+    settings.grass_dry = QVector3D(0.51F, 0.44F, 0.30F);
+    settings.soil_color = QVector3D(0.44F, 0.34F, 0.24F);
+    settings.rock_low = QVector3D(0.42F, 0.40F, 0.36F);
+    settings.rock_high = QVector3D(0.62F, 0.59F, 0.53F);
+    settings.terrain_ambient_boost = 0.93F;
+    settings.terrain_rock_detail_strength = 0.68F;
 
     settings.patch_density = 2.2F;
     settings.patch_jitter = 0.60F;
@@ -543,11 +543,11 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
     settings.plant_density = 0.18F;
 
     settings.snow_coverage = 0.0F;
-    settings.moisture_level = 0.35F;
-    settings.crack_intensity = 0.25F;
-    settings.rock_exposure = 0.75F;
-    settings.grass_saturation = 1.00F;
-    settings.soil_roughness = 0.85F;
+    settings.moisture_level = 0.28F;
+    settings.crack_intensity = 0.32F;
+    settings.rock_exposure = 0.82F;
+    settings.grass_saturation = 0.78F;
+    settings.soil_roughness = 0.88F;
     settings.snow_color = QVector3D(0.92F, 0.94F, 0.98F);
     break;
 

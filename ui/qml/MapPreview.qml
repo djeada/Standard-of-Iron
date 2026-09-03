@@ -61,8 +61,8 @@ Rectangle {
     }
 
     radius: Theme.radiusSmall
-    color: "#241c14"
-    border.color: "#8f6d43"
+    color: "#b814100d"
+    border.color: "#6b5032"
     border.width: 1
     clip: true
     onMap_pathChanged: refresh_preview()
@@ -72,7 +72,7 @@ Rectangle {
         id: preview_image
 
         anchors.fill: parent
-        anchors.margins: Theme.spacingSmall
+        anchors.margins: 6
         fillMode: Image.PreserveAspectFit
         smooth: true
         cache: false
@@ -149,8 +149,16 @@ Rectangle {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         height: legend_label.implicitHeight + Theme.spacingSmall
-        color: "#cc140f0b"
+        color: "#df100c09"
         visible: preview_image.visible && root.legend_text.length > 0
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            height: 1
+            color: "#785a35"
+        }
 
         Text {
             id: legend_label

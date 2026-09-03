@@ -793,6 +793,7 @@ Item {
 
     Item {
         anchors.fill: parent
+        z: -2
 
         Image {
             anchors.fill: parent
@@ -801,7 +802,7 @@ Item {
             asynchronous: true
             smooth: true
             mipmap: true
-            opacity: 0.62
+            opacity: 0.88
         }
 
         Rectangle {
@@ -809,41 +810,52 @@ Item {
             gradient: Gradient {
                 GradientStop {
                     position: 0
-                    color: "#b00b0b0d"
+                    color: "#700b0b0d"
                 }
 
                 GradientStop {
                     position: 0.55
-                    color: "#d0120d09"
+                    color: "#bd120d09"
                 }
 
                 GradientStop {
                     position: 1
-                    color: "#f00a0806"
+                    color: "#e80a0806"
                 }
             }
         }
     }
 
     Rectangle {
+        width: container.width
+        height: container.height
+        anchors.centerIn: parent
+        anchors.horizontalCenterOffset: 9
+        anchors.verticalCenterOffset: 12
+        radius: container.radius + 2
+        color: "#80000000"
+        z: -1
+    }
+
+    Rectangle {
         id: container
 
-        width: Math.min(parent.width * 0.95, 1600)
-        height: Math.min(parent.height * 0.95, 1000)
+        width: Math.min(parent.width * 0.935, 1560)
+        height: Math.min(parent.height * 0.93, 980)
         anchors.centerIn: parent
         radius: Theme.radiusPanel
         gradient: Gradient {
             GradientStop {
                 position: 0
-                color: "#f22a2119"
+                color: "#dc281f18"
             }
 
             GradientStop {
                 position: 1
-                color: "#fa15100c"
+                color: "#ec130e0b"
             }
         }
-        border.color: "#a78048"
+        border.color: "#8b683d"
         border.width: 1
         clip: true
 
@@ -851,9 +863,10 @@ Item {
             anchors.fill: parent
             anchors.margins: 4
             color: "transparent"
-            border.color: "#594024"
+            border.color: "#704d29"
             border.width: 1
             radius: Math.max(2, container.radius - 4)
+            opacity: 0.72
         }
 
         ColumnLayout {
@@ -896,6 +909,34 @@ Item {
                 }
             }
 
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+
+                    GradientStop {
+                        position: 0
+                        color: "#00b88b4c"
+                    }
+
+                    GradientStop {
+                        position: 0.12
+                        color: "#a8b88b4c"
+                    }
+
+                    GradientStop {
+                        position: 0.68
+                        color: "#4fb88b4c"
+                    }
+
+                    GradientStop {
+                        position: 1
+                        color: "#00b88b4c"
+                    }
+                }
+            }
+
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -910,15 +951,15 @@ Item {
                     gradient: Gradient {
                         GradientStop {
                             position: 0
-                            color: "#e833291f"
+                            color: "#d52b231b"
                         }
 
                         GradientStop {
                             position: 1
-                            color: "#f21d1712"
+                            color: "#e514100d"
                         }
                     }
-                    border.color: "#765a37"
+                    border.color: "#59432d"
                     border.width: 1
 
                     ColumnLayout {
@@ -953,7 +994,7 @@ Item {
 
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            color: "#b818130f"
+                            color: "#a8120f0c"
                             radius: Theme.radiusSmall
                             border.color: "#493521"
                             border.width: 1
@@ -1188,15 +1229,15 @@ Item {
                         gradient: Gradient {
                             GradientStop {
                                 position: 0
-                                color: "#e833291f"
+                                color: "#d52b231b"
                             }
 
                             GradientStop {
                                 position: 1
-                                color: "#f21d1712"
+                                color: "#e514100d"
                             }
                         }
-                        border.color: "#765a37"
+                        border.color: "#59432d"
                         border.width: 1
 
                         RowLayout {
@@ -1330,15 +1371,15 @@ Item {
                         gradient: Gradient {
                             GradientStop {
                                 position: 0
-                                color: "#e833291f"
+                                color: "#d52b231b"
                             }
 
                             GradientStop {
                                 position: 1
-                                color: "#f21d1712"
+                                color: "#e514100d"
                             }
                         }
-                        border.color: "#765a37"
+                        border.color: "#59432d"
                         border.width: 1
                         visible: root.has_selection
 
@@ -1407,9 +1448,9 @@ Item {
                                     width: players_list.width - (players_list.ScrollBar.vertical.visible ? Theme.spacingMedium : 0)
                                     height: 68
                                     radius: Theme.radiusSmall
-                                    color: player_card.focused ? "#4a3726" : (model.isHuman ? "#33261a" : "#2c231a")
-                                    border.color: player_card.focused ? Theme.accentBright : (model.isEnabled ? (model.isHuman ? Theme.accent : Theme.thumbBr) : Theme.thumbBr)
-                                    border.width: (player_card.focused || (model.isHuman && model.isEnabled)) ? 2 : 1
+                                    color: player_card.focused ? "#493126" : (model.isHuman ? "#30231a" : "#251d17")
+                                    border.color: player_card.focused ? Theme.accentBright : (model.isEnabled ? "#61482e" : "#463522")
+                                    border.width: player_card.focused ? 2 : 1
                                     opacity: model.isEnabled ? 1 : 0.55
                                     enabled: true
 
@@ -1571,8 +1612,8 @@ Item {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: dossier_column.implicitHeight + Theme.spacingMedium * 2
                                 radius: Theme.radiusSmall
-                                color: "#241c14"
-                                border.color: "#8f6d43"
+                                color: "#b817120e"
+                                border.color: "#59432d"
                                 border.width: 1
                                 visible: human_commander_name !== ""
 
@@ -1654,7 +1695,7 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 1
-                color: Theme.panelBr
+                color: "#684c2d"
             }
 
             RowLayout {

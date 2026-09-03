@@ -37,24 +37,24 @@ const int k_box_edge_octaves = 2;
 const float k_box_edge_weight = 0.22;
 const float k_box_detail_scale = 0.0030;
 const float k_box_detail_drift = 1.7;
-const float k_box_coverage_floor = 0.36;
-const float k_box_coverage_gain = 0.50;
-const float k_box_coverage_softness = 0.09;
+const float k_box_coverage_floor = 0.0;
+const float k_box_coverage_gain = 0.68;
+const float k_box_coverage_softness = 0.12;
 const float k_box_profile_base_soft = 0.15;
 const float k_box_profile_top_soft = 0.62;
 const float k_box_erosion = 0.50;
-const float k_box_density_gain = 2.00;
-const float k_box_extinction = 0.0110;
+const float k_box_density_gain = 1.50;
+const float k_box_extinction = 0.0080;
 const float k_box_light_step = 90.0;
 const float k_box_light_extinction = 0.0045;
-const float k_box_powder = 2.4;
-const float k_box_powder_floor = 0.30;
-const float k_box_sun_gain = 1.50;
-const float k_box_ambient_gain = 0.40;
+const float k_box_powder = 1.8;
+const float k_box_powder_floor = 0.24;
+const float k_box_sun_gain = 0.82;
+const float k_box_ambient_gain = 0.34;
 const float k_box_anisotropy = 0.55;
-const float k_box_phase_weight = 0.45;
+const float k_box_phase_weight = 0.32;
 const float k_box_phase_min = 0.35;
-const float k_box_phase_max = 1.80;
+const float k_box_phase_max = 1.50;
 const float k_box_transmittance_cutoff = 0.02;
 const float k_box_dither_x = 0.06711056;
 const float k_box_dither_y = 0.00583715;
@@ -113,6 +113,11 @@ float sky_box_phase(float cos_angle) {
 }
 
 vec4 sky_box_clouds(vec3 ray, float dither) {
+  float cloud_cover = clamp(environment_cloud_cover(), 0.0, 1.0);
+  if (cloud_cover <= 0.0001) {
+    return vec4(0.0);
+  }
+
   if (ray.y <= k_box_min_upward) {
     return vec4(0.0);
   }
@@ -123,8 +128,8 @@ vec4 sky_box_clouds(vec3 ray, float dither) {
     return vec4(0.0);
   }
 
-  float coverage = clamp(
-      environment_cloud_cover() * k_box_coverage_gain + k_box_coverage_floor, 0.0, 1.0);
+  float coverage =
+      clamp(cloud_cover * k_box_coverage_gain + k_box_coverage_floor, 0.0, 1.0);
   vec3 sun_direction = environment_primary_direction();
   vec3 sun_color = environment_primary_color() * environment_primary_intensity();
   vec3 ambient = sky_cloud_tint(ray);
