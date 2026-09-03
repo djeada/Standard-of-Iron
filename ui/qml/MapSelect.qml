@@ -791,39 +791,67 @@ Item {
         onWheel: wheel => wheel.accepted = true
     }
 
-    Rectangle {
+    Item {
         anchors.fill: parent
-        color: Theme.dim
+
+        Image {
+            anchors.fill: parent
+            source: "qrc:/StandardOfIron/assets/visuals/load_screen.png"
+            fillMode: Image.PreserveAspectCrop
+            asynchronous: true
+            smooth: true
+            mipmap: true
+            opacity: 0.62
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            gradient: Gradient {
+                GradientStop {
+                    position: 0
+                    color: "#b00b0b0d"
+                }
+
+                GradientStop {
+                    position: 0.55
+                    color: "#d0120d09"
+                }
+
+                GradientStop {
+                    position: 1
+                    color: "#f00a0806"
+                }
+            }
+        }
     }
 
     Rectangle {
         id: container
 
-        width: Math.min(parent.width * 0.975, 1660)
-        height: Math.min(parent.height * 0.975, 1040)
+        width: Math.min(parent.width * 0.95, 1600)
+        height: Math.min(parent.height * 0.95, 1000)
         anchors.centerIn: parent
         radius: Theme.radiusPanel
         gradient: Gradient {
             GradientStop {
                 position: 0
-                color: "#2b2118"
+                color: "#f22a2119"
             }
 
             GradientStop {
                 position: 1
-                color: "#1a140f"
+                color: "#fa15100c"
             }
         }
-        border.color: "#8f6d43"
-        border.width: 2
-        opacity: 0.98
+        border.color: "#a78048"
+        border.width: 1
         clip: true
 
         Rectangle {
             anchors.fill: parent
             anchors.margins: 4
             color: "transparent"
-            border.color: "#4a3722"
+            border.color: "#594024"
             border.width: 1
             radius: Math.max(2, container.radius - 4)
         }
@@ -876,22 +904,22 @@ Item {
                 Rectangle {
                     id: maps_panel
 
-                    Layout.preferredWidth: Math.max(340, container.width * 0.31)
+                    Layout.preferredWidth: Math.max(360, container.width * 0.285)
                     Layout.fillHeight: true
                     radius: Theme.radiusMedium
                     gradient: Gradient {
                         GradientStop {
                             position: 0
-                            color: "#3a2f23"
+                            color: "#e833291f"
                         }
 
                         GradientStop {
                             position: 1
-                            color: "#241b14"
+                            color: "#f21d1712"
                         }
                     }
-                    border.color: "#a7814a"
-                    border.width: 2
+                    border.color: "#765a37"
+                    border.width: 1
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -925,9 +953,9 @@ Item {
 
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            color: "#241c14"
+                            color: "#b818130f"
                             radius: Theme.radiusSmall
-                            border.color: "#8f6d43"
+                            border.color: "#493521"
                             border.width: 1
                             clip: true
 
@@ -955,18 +983,32 @@ Item {
                                     readonly property int slot_count: Number((typeof playerCount !== "undefined") ? playerCount : ((modelData && modelData.playerCount !== undefined) ? modelData.playerCount : 0))
 
                                     width: list.width - (list.ScrollBar.vertical.visible ? Theme.spacingMedium : 0)
-                                    height: 76
+                                    height: 84
                                     radius: Theme.radiusSmall
                                     clip: true
-                                    color: map_card.current ? Theme.selectedBg : (map_mouse.containsMouse ? Theme.hoverBg : "#2c231a")
-                                    border.width: map_card.current ? 2 : 1
-                                    border.color: map_card.current ? Theme.selectedBr : (map_mouse.containsMouse ? Theme.accentBr : Theme.thumbBr)
+                                    color: map_card.current ? "#4a251e" : (map_mouse.containsMouse ? "#3b2c20" : "#292018")
+                                    border.width: 1
+                                    border.color: map_card.current ? "#b98549" : (map_mouse.containsMouse ? Theme.accentBr : "#574027")
+
+                                    Rectangle {
+                                        width: map_card.current ? 4 : 2
+                                        anchors.left: parent.left
+                                        anchors.top: parent.top
+                                        anchors.bottom: parent.bottom
+                                        color: map_card.current ? "#c44332" : "transparent"
+
+                                        Behavior on width  {
+                                            NumberAnimation {
+                                                duration: Theme.animFast
+                                            }
+                                        }
+                                    }
 
                                     Rectangle {
                                         id: thumb_wrap
 
-                                        width: 80
-                                        height: 56
+                                        width: 92
+                                        height: 64
                                         radius: Theme.radiusSmall
                                         color: Theme.cardBase
                                         border.color: Theme.thumbBr
@@ -1141,21 +1183,21 @@ Item {
                         id: briefing_panel
 
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 236
+                        Layout.preferredHeight: 286
                         radius: Theme.radiusMedium
                         gradient: Gradient {
                             GradientStop {
                                 position: 0
-                                color: "#3a2f23"
+                                color: "#e833291f"
                             }
 
                             GradientStop {
                                 position: 1
-                                color: "#241b14"
+                                color: "#f21d1712"
                             }
                         }
-                        border.color: "#a7814a"
-                        border.width: 2
+                        border.color: "#765a37"
+                        border.width: 1
 
                         RowLayout {
                             anchors.fill: parent
@@ -1166,7 +1208,7 @@ Item {
                             MapPreview {
                                 id: map_preview
 
-                                Layout.preferredWidth: briefing_panel.height - Theme.spacingMedium * 2
+                                Layout.preferredWidth: Math.min(270, briefing_panel.height - Theme.spacingMedium * 2)
                                 Layout.fillHeight: true
                                 map_path: selected_map_path
                                 player_configs: get_player_configs()
@@ -1288,16 +1330,16 @@ Item {
                         gradient: Gradient {
                             GradientStop {
                                 position: 0
-                                color: "#3a2f23"
+                                color: "#e833291f"
                             }
 
                             GradientStop {
                                 position: 1
-                                color: "#241b14"
+                                color: "#f21d1712"
                             }
                         }
-                        border.color: "#a7814a"
-                        border.width: 2
+                        border.color: "#765a37"
+                        border.width: 1
                         visible: root.has_selection
 
                         ColumnLayout {

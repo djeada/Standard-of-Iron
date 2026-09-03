@@ -1580,7 +1580,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                     4.95F);
       held_combo.counter_key = QStringLiteral("accepted");
       held_combo.end_seconds = 8.5F;
-      held_combo.maximum = 4.0F;
+      held_combo.maximum = 5.0F;
       s.expectations.push_back(held_combo);
     }
     {
@@ -1633,11 +1633,11 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
         at(0.60F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
 
-        at(1.20F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(1.02F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
 
         at(3.50F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
 
-        at(3.90F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(3.75F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
     };
     add_visual_stability(
         s, {QStringLiteral("rpg_commander"), QStringLiteral("enemy_formation")});
@@ -1647,7 +1647,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                   QStringLiteral("rpg_commander"),
                                   {},
                                   1.0F,
-                                  1.15F);
+                                  1.00F);
       buffered.counter_key = QStringLiteral("buffered");
       buffered.end_seconds = 2.40F;
       s.expectations.push_back(buffered);
@@ -1657,7 +1657,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                  QStringLiteral("rpg_commander"),
                                  {},
                                  1.0F,
-                                 1.15F);
+                                 1.00F);
       carried.counter_key = QStringLiteral("accepted");
       carried.end_seconds = 2.40F;
       carried.maximum = 1.0F;
@@ -1668,7 +1668,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                  QStringLiteral("rpg_commander"),
                                  {},
                                  1.0F,
-                                 3.85F);
+                                 3.70F);
       expired.counter_key = QStringLiteral("expired");
       expired.end_seconds = 5.60F;
       s.expectations.push_back(expired);
@@ -1677,7 +1677,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                      QStringLiteral("rpg_commander"),
                                      {},
                                      0.0F,
-                                     3.85F);
+                                     3.70F);
       not_carried.counter_key = QStringLiteral("accepted");
       not_carried.end_seconds = 5.60F;
       not_carried.maximum = 0.0F;

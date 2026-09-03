@@ -3,6 +3,7 @@
 uniform sampler2D u_material_detail;
 uniform bool u_has_material_detail;
 
+const int k_material_mineral = 0;
 const int k_material_metal = 1;
 const int k_material_wood = 2;
 const int k_material_cloth = 3;
@@ -27,6 +28,39 @@ float soi_detail_fine(vec2 lattice) {
 
 float soi_detail_micro(vec2 lattice) {
   return texture(u_material_detail, lattice / k_detail_cells_micro).a;
+}
+
+vec2 soi_surface_lattice(vec3 world_pos, vec3 normal) {
+  vec3 axis = abs(normal);
+  if (axis.x > axis.y && axis.x > axis.z) {
+    return world_pos.zy;
+  }
+  if (axis.y > axis.z) {
+    return world_pos.xz;
+  }
+  return world_pos.xy;
+}
+
+vec3 soi_mineral_variation(vec3 base_color, vec2 uv, vec3 normal) {
+  float broad = soi_detail_coarse(uv * 0.70) - 0.5;
+  float mottle = soi_detail_mid(uv * 2.3) - 0.5;
+  float grain = soi_detail_fine(uv * 8.5) - 0.5;
+  float upness = abs(normal.y);
+
+  vec3 cool_lime = base_color * vec3(0.94, 0.98, 1.025);
+  vec3 sun_worn = base_color * vec3(1.045, 0.995, 0.91);
+  vec3 variation = mix(cool_lime, sun_worn, smoothstep(-0.35, 0.35, broad));
+  variation *= 0.97 + broad * 0.10 + mottle * 0.075 + grain * 0.035;
+
+  float vertical_streak =
+      smoothstep(0.60, 0.90, soi_detail_mid(vec2(uv.x * 0.42, uv.y * 2.4)));
+  vertical_streak *= (1.0 - upness) * (0.35 + 0.65 * soi_detail_coarse(uv * 0.28));
+  variation =
+      mix(variation, variation * vec3(0.72, 0.75, 0.71), vertical_streak * 0.12);
+
+  float dust = upness * smoothstep(0.62, 0.92, soi_detail_coarse(uv * 0.46));
+  variation = mix(variation, variation * vec3(1.04, 0.995, 0.90), dust * 0.08);
+  return variation;
 }
 
 vec3 soi_wood_variation(vec3 base_color, vec2 uv, vec3 normal, float height) {
@@ -68,9 +102,11 @@ vec3 soi_material_variation(vec3 base_color,
   if (!u_has_material_detail) {
     return base_color;
   }
-  vec2 uv = world_pos.xz * 4.0;
+  vec2 uv = soi_surface_lattice(world_pos, normal) * 4.0;
   vec3 variation = base_color;
-  if (material_id == k_material_wood) {
+  if (material_id == k_material_mineral) {
+    variation = soi_mineral_variation(base_color, uv, normal);
+  } else if (material_id == k_material_wood) {
     variation = soi_wood_variation(base_color, uv, normal, world_pos.y);
   } else if (material_id == k_material_metal) {
     variation = soi_metal_variation(base_color, uv, normal);
