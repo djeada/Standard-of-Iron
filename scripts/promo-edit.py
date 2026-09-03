@@ -78,6 +78,7 @@ from __future__ import annotations
 
 import argparse
 import array
+import itertools
 import json
 import os
 import shutil
@@ -534,24 +535,80 @@ def resolve_font(requested: str | None) -> str:
     raise AssertionError("unreachable")
 
 
+def text_width(text: str, font: str, size: int) -> int:
+    """Rendered width of ``text`` at ``size``, or a reasonable guess without PIL."""
+    try:
+        from PIL import ImageFont
+    except ImportError:
+        return int(len(text) * size * 0.62)
+    return ImageFont.truetype(font, size).getbbox(text)[2]
+
+
 def fit_font_size(text: str, font: str, size: int, max_width: int) -> int:
     """Shrink a font size until the rendered string fits the frame width.
 
     drawtext has no auto-fit, and a title that overruns the frame is silently
-    cropped rather than reported.
+    cropped rather than reported. Prefer ``fit_text_block`` for anything the
+    viewer is meant to read at display size -- this shrinks without limit.
     """
-    try:
-        from PIL import ImageFont
-    except ImportError:
-
-        estimated = int(max_width / max(len(text), 1) / 0.62)
-        return max(18, min(size, estimated))
-
     for candidate in range(size, 17, -2):
-        face = ImageFont.truetype(font, candidate)
-        if face.getbbox(text)[2] <= max_width:
+        if text_width(text, font, candidate) <= max_width:
             return candidate
     return 18
+
+
+def balance_lines(words: list[str], count: int) -> list[str]:
+    """Split ``words`` over ``count`` lines with the shortest possible longest line.
+
+    Display lettering wants even lines, not the ragged right a greedy wrap
+    gives. Captions are a handful of words, so every split point is tried.
+    """
+    if count <= 1 or len(words) <= 1:
+        return [" ".join(words)]
+    best: tuple[int, list[str]] | None = None
+    for cuts in itertools.combinations(range(1, len(words)), count - 1):
+        bounds = (0, *cuts, len(words))
+        lines = [
+            " ".join(words[bounds[i] : bounds[i + 1]]) for i in range(len(bounds) - 1)
+        ]
+        widest = max(len(tracked(line)) for line in lines)
+        if best is None or widest < best[0]:
+            best = (widest, lines)
+    assert best is not None
+    return best[1]
+
+
+def fit_text_block(
+    text: str,
+    font: str,
+    size: int,
+    max_width: int,
+    max_lines: int = 2,
+    floor: float = 0.72,
+) -> tuple[list[str], int]:
+    """Lay a display line out near ``size``, wrapping before it shrinks.
+
+    ``tracked`` inflates every string and drawtext neither wraps nor auto-fits,
+    so shrinking a single line to make it fit punished the longest string in a
+    spec hardest: a reel titled "AVERAGE ROMAN COMMANDER" set its title at 39 px
+    on a 1920-tall frame -- under its own subtitle, and a third of the size the
+    layout asked for. Wrapping first keeps display type at display size and only
+    falls back to shrinking when even the widest wrap will not fit.
+    """
+    words = text.split()
+    if not words:
+        return [], size
+    smallest = max(18, int(size * floor))
+    line_budget = max(1, min(max_lines, len(words)))
+    for count in range(1, line_budget + 1):
+        lines = [tracked(line) for line in balance_lines(words, count)]
+        for candidate in range(size, smallest - 1, -2):
+            if max(text_width(line, font, candidate) for line in lines) <= max_width:
+                return lines, candidate
+
+    lines = [tracked(line) for line in balance_lines(words, line_budget)]
+    widest = max(lines, key=len)
+    return lines, fit_font_size(widest, font, size, max_width)
 
 
 THIN_SPACE = "\u2009"
@@ -605,13 +662,52 @@ def drawtext(
         fade_in = f"min(1,(t-{start:.3f})/{fade:.3f})"
         visible = f"min({fade_in},{fade_out})"
     alpha = f"if(between(t,{start:.3f},{end:.3f}),{visible},0)"
+    border = max(3, round(size * 0.07))
     return (
         f"drawtext=fontfile='{font}':text='{escape_text(text)}'"
         f":fontcolor={color}:fontsize={size}:x=(w-text_w)/2:y={y_expr}"
-        f":borderw=4:bordercolor=black@0.85"
-        f":shadowcolor=black@0.55:shadowx=0:shadowy=6"
+        f":borderw={border}:bordercolor=black@0.85"
+        f":shadowcolor=black@0.55:shadowx=0:shadowy={max(4, round(size * 0.09))}"
         f":alpha='{alpha}'"
     )
+
+
+def drawtext_block(
+    *,
+    lines: list[str],
+    font: str,
+    size: int,
+    y_expr: str,
+    start: float,
+    end: float,
+    color: str = "white",
+    fade: float = CAPTION_FADE,
+) -> str:
+    """Stack a wrapped caption around ``y_expr``, one drawtext per line.
+
+    drawtext draws a single line, so a block is n filters with the same fade.
+    The stack is centred on the anchor rather than hung from it, which keeps a
+    one-line and a two-line caption sitting on the same optical baseline.
+    """
+    step = int(size * 1.24)
+    span = step * (len(lines) - 1)
+    parts = []
+    for index, line in enumerate(lines):
+        offset = (index * step) - (span // 2)
+        anchored = y_expr if offset == 0 else f"{y_expr}{offset:+d}"
+        parts.append(
+            drawtext(
+                text=line,
+                font=font,
+                size=size,
+                y_expr=anchored,
+                start=start,
+                end=end,
+                color=color,
+                fade=fade,
+            )
+        )
+    return ",".join(parts)
 
 
 def build_grade(grade: dict) -> str:
@@ -1021,14 +1117,15 @@ def main() -> int:
             freeze = freezes[index] if index < len(freezes) else 0.0
             punchline = authored.get(name, {}).get("freeze_text")
             if punchline and freeze > 0.0:
+                punch_lines, punch_size = fit_text_block(
+                    punchline, font, title_size, title_safe_width
+                )
                 chain.append(
                     f"[{stage}]"
-                    + drawtext(
-                        text=tracked(punchline),
+                    + drawtext_block(
+                        lines=punch_lines,
                         font=font,
-                        size=fit_font_size(
-                            tracked(punchline), font, title_size, title_safe_width
-                        ),
+                        size=punch_size,
                         y_expr=f"h*{FREEZE_TEXT_Y_FRACTION}",
                         start=max(start, end - freeze + 0.05),
                         end=end - 0.03,
@@ -1052,14 +1149,15 @@ def main() -> int:
 
             if has_card and visible_start < card_start:
                 visible_end = min(visible_end, card_start - CAPTION_FADE)
+            caption_lines, size = fit_text_block(
+                caption, font, caption_size, safe_width
+            )
             chain.append(
                 f"[{stage}]"
-                + drawtext(
-                    text=tracked(caption),
+                + drawtext_block(
+                    lines=caption_lines,
                     font=font,
-                    size=fit_font_size(
-                        tracked(caption), font, caption_size, safe_width
-                    ),
+                    size=size,
                     y_expr=caption_y,
                     start=visible_start,
                     end=visible_end,
@@ -1082,12 +1180,13 @@ def main() -> int:
             visible_end = max(visible_start + 0.6, end - trailing)
             if visible_end <= visible_start + 0.3:
                 continue
-            act_text = tracked(act_title)
-            act_size = fit_font_size(act_text, font, title_size, title_safe_width)
+            act_lines, act_size = fit_text_block(
+                act_title, font, title_size, title_safe_width
+            )
             chain.append(
                 f"[{stage}]"
-                + drawtext(
-                    text=act_text,
+                + drawtext_block(
+                    lines=act_lines,
                     font=font,
                     size=act_size,
                     y_expr="(h-text_h)/2",
@@ -1119,15 +1218,18 @@ def main() -> int:
                 step += 1
 
         title = spec.get("title")
+        title_block_height = 0
         if title:
+            title_lines, card_title_size = fit_text_block(
+                title, font, title_size, title_safe_width
+            )
+            title_block_height = int(card_title_size * 1.24) * len(title_lines)
             chain.append(
                 f"[{stage}]"
-                + drawtext(
-                    text=tracked(title),
+                + drawtext_block(
+                    lines=title_lines,
                     font=font,
-                    size=fit_font_size(
-                        tracked(title), font, title_size, title_safe_width
-                    ),
+                    size=card_title_size,
                     y_expr=f"h*{TITLE_Y_FRACTION}",
                     start=card_start,
                     end=total,
@@ -1136,16 +1238,19 @@ def main() -> int:
             )
             stage = "titled"
         subtitle = spec.get("subtitle")
+
+        card_gap = max(int(title_size * 1.35), title_block_height + subtitle_size)
         if subtitle:
+            subtitle_lines, card_subtitle_size = fit_text_block(
+                subtitle, font, subtitle_size, safe_width
+            )
             chain.append(
                 f"[{stage}]"
-                + drawtext(
-                    text=tracked(subtitle),
+                + drawtext_block(
+                    lines=subtitle_lines,
                     font=font,
-                    size=fit_font_size(
-                        tracked(subtitle), font, subtitle_size, safe_width
-                    ),
-                    y_expr=f"h*{TITLE_Y_FRACTION}+{int(title_size * 1.35)}",
+                    size=card_subtitle_size,
+                    y_expr=f"h*{TITLE_Y_FRACTION}+{card_gap}",
                     start=card_start + 0.35,
                     end=total,
                     color="#e6c98a",
@@ -1158,7 +1263,7 @@ def main() -> int:
         if credit_lines:
 
             credit_size = max(24, int(type_base * 0.032))
-            credit_top = int(title_size * 1.35) + int(subtitle_size * 2.4)
+            credit_top = card_gap + int(subtitle_size * 2.4)
             for line_index, line in enumerate(credit_lines):
                 offset = credit_top + int(credit_size * 1.7 * line_index)
                 chain.append(

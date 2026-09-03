@@ -6,6 +6,7 @@
 #include <cmath>
 #include <numbers>
 #include <optional>
+#include <unordered_set>
 
 #include "../../core/component.h"
 #include "../../core/world.h"
@@ -349,9 +350,6 @@ has_authored_orientation(const Engine::Core::Entity* entity) -> bool {
 }
 
 constexpr float k_lock_facing_turn_degrees_per_second = 360.0F;
-constexpr float k_lock_facing_turn_elephant_degrees_per_second = 110.0F;
-constexpr float k_lock_facing_turn_siege_degrees_per_second = 100.0F;
-constexpr float k_lock_facing_turn_cavalry_degrees_per_second = 300.0F;
 
 [[nodiscard]] auto lock_facing_turn_rate(const Engine::Core::Entity* actor) -> float {
   auto const* unit =
@@ -359,19 +357,9 @@ constexpr float k_lock_facing_turn_cavalry_degrees_per_second = 300.0F;
   if (unit == nullptr) {
     return k_lock_facing_turn_degrees_per_second;
   }
-  switch (unit->spawn_type) {
-  case Game::Units::SpawnType::Elephant:
-    return k_lock_facing_turn_elephant_degrees_per_second;
-  case Game::Units::SpawnType::Catapult:
-  case Game::Units::SpawnType::Ballista:
-    return k_lock_facing_turn_siege_degrees_per_second;
-  case Game::Units::SpawnType::MountedKnight:
-  case Game::Units::SpawnType::HorseArcher:
-  case Game::Units::SpawnType::HorseSpearman:
-    return k_lock_facing_turn_cavalry_degrees_per_second;
-  default:
-    return k_lock_facing_turn_degrees_per_second;
-  }
+
+  return std::min(k_lock_facing_turn_degrees_per_second,
+                  Game::Units::body_turn_speed_degrees(unit->spawn_type));
 }
 
 void lock_facing(Engine::Core::TransformComponent* actor_transform,
@@ -403,10 +391,40 @@ void lock_facing(Engine::Core::TransformComponent* actor_transform,
          FormationCombat::has_formation_slots(*actor);
 }
 
+class FacingLedger {
+public:
+  auto claim(Engine::Core::EntityID id) -> bool { return m_turned.insert(id).second; }
+
+private:
+  std::unordered_set<Engine::Core::EntityID> m_turned;
+};
+
+[[nodiscard]] auto steers_its_own_heading(const Engine::Core::Entity* entity) -> bool {
+  if (entity == nullptr) {
+    return false;
+  }
+  if (auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
+      transform != nullptr && transform->has_desired_yaw) {
+    return true;
+  }
+  auto const* movement = entity->get_component<Engine::Core::MovementComponent>();
+  if (movement == nullptr) {
+    return false;
+  }
+  if (movement->get_has_target()) {
+    return true;
+  }
+  constexpr float k_under_way_speed = 0.2F;
+  float const vx = movement->get_vx();
+  float const vz = movement->get_vz();
+  return (vx * vx) + (vz * vz) > k_under_way_speed * k_under_way_speed;
+}
+
 void lock_combatant_facing(Engine::Core::Entity* actor,
                            Engine::Core::TransformComponent* actor_transform,
                            Engine::Core::TransformComponent* target_transform,
-                           float delta_time) {
+                           float delta_time,
+                           FacingLedger& ledger) {
   if (has_authored_orientation(actor)) {
     return;
   }
@@ -414,6 +432,9 @@ void lock_combatant_facing(Engine::Core::Entity* actor,
 
     actor_transform->desired_yaw = actor_transform->rotation.y;
     actor_transform->has_desired_yaw = false;
+    return;
+  }
+  if (actor != nullptr && !ledger.claim(actor->get_id())) {
     return;
   }
   lock_facing(
@@ -551,7 +572,8 @@ void release_structure_lock_for_troop_target(Engine::Core::Entity* attacker,
 void process_melee_lock(Engine::Core::Entity* attacker,
                         Engine::Core::AttackComponent* attack_comp,
                         Engine::Core::World* world,
-                        float delta_time) {
+                        float delta_time,
+                        FacingLedger& ledger) {
   if (attack_comp == nullptr || !attack_comp->in_melee_lock) {
     return;
   }
@@ -599,13 +621,14 @@ void process_melee_lock(Engine::Core::Entity* attacker,
     return;
   }
 
-  lock_combatant_facing(attacker, att_t, tgt_t, delta_time);
+  lock_combatant_facing(attacker, att_t, tgt_t, delta_time, ledger);
   bool const reciprocal_lock =
       (lock_target_atk != nullptr) && lock_target_atk->in_melee_lock &&
       lock_target_atk->melee_lock_target_id == attacker->get_id();
 
-  if (!reciprocal_lock && !has_valid_melee_lock(lock_target, world)) {
-    lock_combatant_facing(lock_target, tgt_t, att_t, delta_time);
+  if (!reciprocal_lock && !has_valid_melee_lock(lock_target, world) &&
+      !steers_its_own_heading(lock_target)) {
+    lock_combatant_facing(lock_target, tgt_t, att_t, delta_time, ledger);
   }
 
   if (is_in_range(attacker,
@@ -1027,7 +1050,8 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
                            Engine::Core::Entity* target,
                            Engine::Core::AttackComponent* attack_comp,
                            Engine::Core::World* world,
-                           float delta_time) {
+                           float delta_time,
+                           FacingLedger& ledger) {
   if ((attacker == nullptr) || (target == nullptr) || (attack_comp == nullptr)) {
     return;
   }
@@ -1111,13 +1135,14 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
   }
 
   if ((att_t != nullptr) && (tgt_t != nullptr)) {
-    lock_combatant_facing(attacker, att_t, tgt_t, delta_time);
+    lock_combatant_facing(attacker, att_t, tgt_t, delta_time, ledger);
     auto* target_atk_after = target->get_component<Engine::Core::AttackComponent>();
     bool const reciprocal_lock =
         (target_atk_after != nullptr) && target_atk_after->in_melee_lock &&
         target_atk_after->melee_lock_target_id == attacker->get_id();
-    if (reciprocal_lock || !has_valid_melee_lock(target, world)) {
-      lock_combatant_facing(target, tgt_t, att_t, delta_time);
+    if ((reciprocal_lock || !has_valid_melee_lock(target, world)) &&
+        !steers_its_own_heading(target)) {
+      lock_combatant_facing(target, tgt_t, att_t, delta_time, ledger);
     }
   }
 }
@@ -1498,6 +1523,7 @@ void process_attacks(Engine::Core::World* world,
   auto* projectile_sys = world->get_system<ProjectileSystem>();
   std::vector<CommandService::MoveIntent> chase_move_intents;
   chase_move_intents.reserve(units.size());
+  FacingLedger facing_ledger;
 
   for (auto* attacker : units) {
     if (attacker->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -1521,6 +1547,11 @@ void process_attacks(Engine::Core::World* world,
       continue;
     }
 
+    if (attacker->has_component<Engine::Core::WildlifeComponent>()) {
+      Game::Systems::CombatRules::clear_rts_combat_tracking(attacker);
+      continue;
+    }
+
     if (is_formation_reserve(attacker, world)) {
       Game::Systems::CombatRules::clear_rts_combat_tracking(attacker);
       continue;
@@ -1535,7 +1566,7 @@ void process_attacks(Engine::Core::World* world,
     release_structure_lock_for_troop_target(attacker, attacker_atk, world);
 
     if (!resolving_charge_impact) {
-      process_melee_lock(attacker, attacker_atk, world, delta_time);
+      process_melee_lock(attacker, attacker_atk, world, delta_time, facing_ledger);
     }
     sync_melee_lock_target(attacker, attacker_atk);
     drop_target_left_by_a_finished_lock(attacker, attacker_atk);
@@ -1943,7 +1974,8 @@ void process_attacks(Engine::Core::World* world,
           continue;
         }
 
-        initiate_melee_combat(attacker, best_target, attacker_atk, world, delta_time);
+        initiate_melee_combat(
+            attacker, best_target, attacker_atk, world, delta_time, facing_ledger);
       }
 
       float const tactical_multiplier = calculate_tactical_damage_multiplier(

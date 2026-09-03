@@ -217,6 +217,7 @@ add_executable(
     headless/tight_gap_navigation_test.cpp
     headless/hill_traversal_test.cpp
     headless/playable_ground_test.cpp
+    headless/wildlife_fight_motion_test.cpp
     headless/battle_speed_load_test.cpp
     headless/selected_unit_readout_test.cpp
     simulation_main.cpp
@@ -363,6 +364,7 @@ add_executable(
     render/instance_draw_guard_test.cpp
     render/pose_controller_test.cpp
     render/wildlife_action_pose_test.cpp
+    render/wildlife_clip_selection_test.cpp
     render/sheep_rig_integrity_test.cpp
     render/wolf_rig_integrity_test.cpp
     render/pose_controller_compatibility_test.cpp

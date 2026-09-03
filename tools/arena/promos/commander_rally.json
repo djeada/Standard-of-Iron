@@ -15,7 +15,7 @@
       "name": "the_valley",
       "scenario": "promo_commander_rally",
       "start": 11.0,
-      "duration": 3.4286,
+      "duration": 2.9,
       "slow_motion": 1.0,
       "focus": {
         "mode": "group_pair",
@@ -26,19 +26,19 @@
       "camera": [
         {
           "time": 0,
-          "distance": 29,
-          "pitch": 41,
-          "yaw": 150,
-          "fov": 42,
-          "height": 2.5
+          "distance": 31,
+          "pitch": 12,
+          "yaw": 66,
+          "fov": 40,
+          "height": 1.0
         },
         {
-          "time": 3.429,
-          "distance": 24,
-          "pitch": 37,
-          "yaw": 140,
-          "fov": 42,
-          "height": 2.0,
+          "time": 2.9,
+          "distance": 28,
+          "pitch": 10,
+          "yaw": 76,
+          "fov": 40,
+          "height": 1.2,
           "ease": "smooth"
         }
       ],
@@ -54,30 +54,30 @@
     {
       "name": "he_watches",
       "scenario": "promo_commander_rally",
-      "start": 13.6,
-      "duration": 2.1429,
+      "start": 13.8,
+      "duration": 2.0,
       "slow_motion": 1.0,
       "focus": {
         "mode": "point",
-        "point": [0.0, 5.5, -16.0],
+        "point": [0.5, 7.0, -15.5],
         "smoothing": 2.2
       },
       "camera": [
         {
           "time": 0,
-          "distance": 15.0,
-          "pitch": 26,
-          "yaw": 178,
+          "distance": 13.0,
+          "pitch": 4,
+          "yaw": 134,
           "fov": 36,
-          "height": 6.5
+          "height": 1.5
         },
         {
-          "time": 2.143,
-          "distance": 12.5,
-          "pitch": 23,
-          "yaw": 188,
+          "time": 2.0,
+          "distance": 11.5,
+          "pitch": 3,
+          "yaw": 146,
           "fov": 36,
-          "height": 5.5,
+          "height": 1.3,
           "ease": "smooth"
         }
       ],
@@ -90,30 +90,30 @@
     {
       "name": "his_face",
       "scenario": "promo_commander_rally",
-      "start": 15.4,
-      "duration": 1.7143,
-      "slow_motion": 1.5,
+      "start": 15.5,
+      "duration": 1.7,
+      "slow_motion": 1.4,
       "focus": {
         "mode": "point",
-        "point": [0.0, 7.3, -16.0],
-        "smoothing": 2.8
+        "point": [0.5, 7.0, -15.5],
+        "smoothing": 2.6
       },
       "camera": [
         {
-          "time": 0.0,
-          "distance": 3.6,
-          "pitch": 3,
-          "yaw": 16,
-          "fov": 31,
-          "height": 0.3
+          "time": 0,
+          "distance": 7.0,
+          "pitch": -5,
+          "yaw": 332,
+          "fov": 32,
+          "height": 0.9
         },
         {
-          "time": 1.714,
-          "distance": 3.0,
-          "pitch": 5,
-          "yaw": 27,
-          "fov": 31,
-          "height": 0.38,
+          "time": 1.7,
+          "distance": 6.4,
+          "pitch": -7,
+          "yaw": 344,
+          "fov": 32,
+          "height": 1.0,
           "ease": "smooth"
         }
       ],
@@ -126,30 +126,30 @@
     {
       "name": "the_signal",
       "scenario": "promo_commander_rally",
-      "start": 17.1,
-      "duration": 2.1429,
-      "slow_motion": 1.6,
+      "start": 16.4,
+      "duration": 2.8,
+      "slow_motion": 1.15,
       "focus": {
         "mode": "point",
-        "point": [0.0, 5.5, -16.0],
-        "smoothing": 2.2
+        "point": [0.5, 7.0, -15.5],
+        "smoothing": 2.6
       },
       "camera": [
         {
           "time": 0,
-          "distance": 7.2,
-          "pitch": 4,
-          "yaw": 22,
-          "fov": 30,
-          "height": 1.4
+          "distance": 7.6,
+          "pitch": -4,
+          "yaw": 340,
+          "fov": 33,
+          "height": 1.0
         },
         {
-          "time": 2.143,
-          "distance": 5.8,
-          "pitch": 9,
-          "yaw": 40,
-          "fov": 30,
-          "height": 1.9,
+          "time": 2.8,
+          "distance": 6.6,
+          "pitch": -7,
+          "yaw": 322,
+          "fov": 33,
+          "height": 1.1,
           "ease": "smooth"
         }
       ],
@@ -160,17 +160,54 @@
       },
       "punch": [
         {
-          "at": 1.2,
+          "at": 2.1,
           "amount": 0.16,
           "decay": 0.3
         }
       ]
     },
     {
+      "name": "the_press",
+      "scenario": "promo_commander_rally",
+      "start": 21.4,
+      "duration": 1.9,
+      "slow_motion": 1.4,
+      "focus": {
+        "mode": "group_pair",
+        "group": "roman_line",
+        "second_group": "punic_horde",
+        "smoothing": 0.9
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 9.0,
+          "pitch": 10,
+          "yaw": 26,
+          "fov": 34,
+          "height": 1.2
+        },
+        {
+          "time": 1.9,
+          "distance": 8.2,
+          "pitch": 12,
+          "yaw": 44,
+          "fov": 34,
+          "height": 1.3,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "",
+      "transition": {
+        "type": "whip",
+        "duration": 0.16
+      }
+    },
+    {
       "name": "the_charge",
       "scenario": "promo_commander_rally",
-      "start": 19.7,
-      "duration": 3.0,
+      "start": 22.6,
+      "duration": 2.6,
       "slow_motion": 1.0,
       "focus": {
         "mode": "group",
@@ -180,19 +217,19 @@
       "camera": [
         {
           "time": 0,
-          "distance": 21,
+          "distance": 23,
           "pitch": 12,
-          "yaw": 58,
+          "yaw": 100,
           "fov": 40,
-          "height": 3.0
+          "height": 2.1
         },
         {
-          "time": 3.0,
-          "distance": 18,
-          "pitch": 16,
-          "yaw": 86,
+          "time": 2.6,
+          "distance": 20,
+          "pitch": 11,
+          "yaw": 120,
           "fov": 40,
-          "height": 2.6,
+          "height": 1.9,
           "ease": "smooth"
         }
       ],
@@ -212,8 +249,8 @@
     {
       "name": "they_break",
       "scenario": "promo_commander_rally",
-      "start": 23.5,
-      "duration": 2.5714,
+      "start": 25.8,
+      "duration": 2.4,
       "slow_motion": 1.0,
       "focus": {
         "mode": "group_pair",
@@ -225,18 +262,18 @@
         {
           "time": 0,
           "distance": 20,
-          "pitch": 20,
-          "yaw": 112,
-          "fov": 42,
-          "height": 3.4
+          "pitch": 11,
+          "yaw": 94,
+          "fov": 40,
+          "height": 1.9
         },
         {
-          "time": 2.571,
+          "time": 2.4,
           "distance": 17,
-          "pitch": 17,
-          "yaw": 132,
-          "fov": 42,
-          "height": 3.0,
+          "pitch": 9,
+          "yaw": 114,
+          "fov": 40,
+          "height": 1.7,
           "ease": "smooth"
         }
       ],
@@ -249,8 +286,8 @@
     {
       "name": "after",
       "scenario": "promo_commander_rally",
-      "start": 34.0,
-      "duration": 3.0,
+      "start": 33.0,
+      "duration": 2.2,
       "slow_motion": 1.0,
       "focus": {
         "mode": "group_pair",
@@ -261,19 +298,19 @@
       "camera": [
         {
           "time": 0,
-          "distance": 22,
-          "pitch": 32,
-          "yaw": 150,
-          "fov": 42,
-          "height": 2.5
+          "distance": 24,
+          "pitch": 12,
+          "yaw": 120,
+          "fov": 40,
+          "height": 1.8
         },
         {
-          "time": 3.0,
-          "distance": 26,
-          "pitch": 36,
-          "yaw": 166,
-          "fov": 42,
-          "height": 3.2,
+          "time": 2.2,
+          "distance": 29,
+          "pitch": 15,
+          "yaw": 142,
+          "fov": 40,
+          "height": 2.4,
           "ease": "smooth"
         }
       ],
@@ -285,95 +322,125 @@
     }
   ],
   "grade": {
-    "contrast": 1.16,
-    "saturation": 1.2
+    "contrast": 1.08,
+    "saturation": 1.05
   },
   "music": "artifacts/promo/reel_beat.ogg",
-  "music_start": 3.429,
+  "beat": {
+    "bpm": 140.0,
+    "beat_seconds": 0.42857142857142855
+  },
   "sfx": [
     {
       "file": "assets/audio/sfx/combat/battlefield_distant_mass_01.ogg",
-      "at": 0.1,
-      "gain": 1.25
+      "at": 0.05,
+      "gain": 1.15
     },
     {
       "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
       "at": 0.35,
-      "gain": 1.8
+      "gain": 1.7
     },
     {
       "file": "assets/audio/sfx/combat/gladius_shield_impacts_close.ogg",
-      "at": 1.1,
-      "gain": 1.4
+      "at": 1.0,
+      "gain": 1.35
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
+      "at": 1.7,
+      "gain": 1.2
     },
     {
       "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
-      "at": 2.3,
+      "at": 2.4,
       "gain": 0.95
     },
     {
+      "file": "assets/audio/sfx/combat/battlefield_distant_mass_01.ogg",
+      "at": 3.24,
+      "gain": 0.8
+    },
+    {
       "file": "assets/audio/sfx/orders/attack_horn_stab.ogg",
-      "at": 8.3,
+      "at": 6.115,
       "gain": 2.4
     },
     {
       "file": "assets/audio/sfx/combat/roman_war_horns_orders.ogg",
-      "at": 8.4,
+      "at": 6.345,
       "gain": 1.8
     },
     {
-      "file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
-      "at": 11.6,
+      "file": "assets/audio/sfx/combat/charge_roar.ogg",
+      "at": 7.955,
       "gain": 1.7
     },
     {
-      "file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
-      "at": 12.8,
-      "gain": 1.5
-    },
-    {
-      "file": "assets/audio/sfx/combat/vanguard_rush.ogg",
-      "at": 13.6,
-      "gain": 1.3
-    },
-    {
-      "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
-      "at": 14.7,
-      "gain": 1.95
+      "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
+      "at": 8.645,
+      "gain": 1.1
     },
     {
       "file": "assets/audio/sfx/combat/blade_clash_03.ogg",
-      "at": 15.0,
-      "gain": 2.2
+      "at": 8.78,
+      "gain": 2.1
     },
     {
       "file": "assets/audio/sfx/combat/sword_hit_01.ogg",
-      "at": 15.08,
+      "at": 9.27,
       "gain": 1.6
     },
     {
       "file": "assets/audio/sfx/combat/blade_clash_01.ogg",
-      "at": 15.55,
-      "gain": 2.2
+      "at": 9.76,
+      "gain": 2.0
     },
     {
-      "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
-      "at": 16.05,
-      "gain": 2.2
+      "file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
+      "at": 10.48,
+      "gain": 1.7
     },
     {
-      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
-      "at": 16.4,
+      "file": "assets/audio/sfx/combat/vanguard_rush.ogg",
+      "at": 11.58,
+      "gain": 1.3
+    },
+    {
+      "file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
+      "at": 12.38,
       "gain": 1.5
     },
     {
+      "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
+      "at": 12.94,
+      "gain": 1.95
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
+      "at": 13.29,
+      "gain": 2.05
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry_v2.ogg",
+      "at": 13.84,
+      "gain": 1.5
+    },
+    {
+      "file": "assets/audio/sfx/combat/army_retreat_panic.ogg",
+      "at": 14.44,
+      "gain": 1.4
+    },
+    {
       "file": "assets/audio/sfx/combat/soldiers_victory_cheer.ogg",
-      "at": 17.9,
+      "at": 15.0,
       "gain": 1.25
+    },
+    {
+      "file": "assets/audio/sfx/combat/aftermath_battlefield.ogg",
+      "at": 15.9,
+      "gain": 0.9
     }
   ],
-  "beat": {
-    "bpm": 140.0,
-    "beat_seconds": 0.42857142857142855
-  }
+  "music_start": 2.5
 }
