@@ -55,6 +55,12 @@ void CueRegistry::clear() {
   m_silent_requests.clear();
 }
 
+void CueRegistry::reset_cooldowns() {
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  m_last_played.clear();
+  m_resource_dispatched_at.clear();
+}
+
 auto CueRegistry::is_bound(const std::string& cue_id) const -> bool {
   std::lock_guard<std::mutex> const lock(m_mutex);
   auto it = m_bindings.find(cue_id);

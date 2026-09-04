@@ -33,6 +33,7 @@ public:
 
   void bind(const std::string& cue_id, CueBinding binding);
   void clear();
+  void reset_cooldowns();
 
   auto play(const std::string& cue_id,
             float volume_scale = AudioConstants::DEFAULT_VOLUME,

@@ -48,7 +48,6 @@ TEST_F(ArenaFeedbackTest, ACombatHitBecomesAFloatingNumberOverTheTarget) {
   ASSERT_EQ(feedback.live_count(), 1)
       << "a hit in the arena must raise the same floating number the game shows";
 
-  QPointF projected;
   float seen_x = 0.0F;
   float seen_y = 0.0F;
   float seen_z = 0.0F;

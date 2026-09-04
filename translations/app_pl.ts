@@ -4606,7 +4606,7 @@ Tej czynności nie da się cofnąć.</translation>
     </message>
     <message>
         <source>Press %1 to resume</source>
-        <translation type="unfinished"></translation>
+        <translation>Naciśnij %1, aby wznowić</translation>
     </message>
     <message>
         <source>Leave this battle?</source>

@@ -124,6 +124,7 @@ public:
   auto has_resource(const std::string& resource_id) const -> bool;
   [[nodiscard]] auto is_resource_ready(const std::string& resource_id) const -> bool;
   [[nodiscard]] auto resource_cooldown_ms(const std::string& resource_id) const -> int;
+  void reset_playback_throttles();
   void unload_sound(const std::string& sound_id);
   void unload_music(const std::string& music_id);
   void set_listener(const Game::Audio::AudioListener& listener);
