@@ -45,6 +45,7 @@ struct GrassBatchParams {
 struct StoneInstanceGpu {
   QVector4D pos_scale;
   QVector4D color_rot;
+  QVector4D ground_fit{0.0F, 0.0F, 0.0F, 0.0F};
 };
 
 struct StoneBatchParams {
