@@ -321,11 +321,14 @@ Item {
                         id: objectiveDetail
 
                         anchors.verticalCenter: parent.verticalCenter
-                        visible: topRoot.objectiveDetailText !== ""
+
+                        width: Math.min(implicitWidth, Math.max(0, objectiveZone.width - objectiveGlyph.width - objectiveRow.spacing))
+                        visible: topRoot.objectiveDetailText !== "" && width > 0
                         text: topRoot.objectiveDetailText
                         color: Design.Theme.accent
                         font.family: Design.Typography.family
                         font.pixelSize: Design.Typography.label
+                        elide: Text.ElideRight
                     }
 
                     Text {

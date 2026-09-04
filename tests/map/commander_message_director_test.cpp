@@ -243,4 +243,41 @@ TEST_F(CommanderMessageDirectorTest, RestoringASaveDoesNotReplayASpentLine) {
   EXPECT_FALSE(m_director.has_active());
 }
 
+TEST_F(CommanderMessageDirectorTest, LongLinesStayUpLongEnoughToTypeAndRead) {
+  Game::Mission::MissionDefinition mission;
+  auto message = make_message(QStringLiteral("open"),
+                              Game::Mission::CommanderMessageTrigger::MissionStart);
+  message.text = QString(240, QLatin1Char('a'));
+  message.duration = 9.0F;
+  mission.commander_messages.push_back(message);
+  configure(std::move(mission));
+
+  m_director.notify_mission_start();
+  EXPECT_TRUE(m_director.update(0.0F));
+  ASSERT_TRUE(m_director.has_active());
+
+  const float typing =
+      240.0F * Game::Mission::k_commander_message_type_seconds_per_char;
+  const float reading =
+      240.0F * Game::Mission::k_commander_message_read_seconds_per_char;
+  EXPECT_GE(m_director.active().duration, typing + reading);
+  EXPECT_LE(m_director.active().duration,
+            Game::Mission::k_commander_message_max_seconds);
+}
+
+TEST_F(CommanderMessageDirectorTest, ShortLinesKeepTheirAuthoredDuration) {
+  Game::Mission::MissionDefinition mission;
+  auto message = make_message(QStringLiteral("open"),
+                              Game::Mission::CommanderMessageTrigger::MissionStart);
+  message.text = QStringLiteral("Hold.");
+  message.duration = 9.0F;
+  mission.commander_messages.push_back(message);
+  configure(std::move(mission));
+
+  m_director.notify_mission_start();
+  EXPECT_TRUE(m_director.update(0.0F));
+  ASSERT_TRUE(m_director.has_active());
+  EXPECT_FLOAT_EQ(m_director.active().duration, 9.0F);
+}
+
 } // namespace

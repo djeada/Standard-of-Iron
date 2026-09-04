@@ -20,8 +20,6 @@ HUDBottomCommander 1.0 HUDBottomCommander.qml
 HUDBottomSpectator 1.0 HUDBottomSpectator.qml
 RpgFpvOverlay 1.0 RpgFpvOverlay.qml
 RpgMeter 1.0 RpgMeter.qml
-RpgDamageNumbers 1.0 RpgDamageNumbers.qml
-CombatDamageNumbers 1.0 CombatDamageNumbers.qml
 EconomyCoach 1.0 EconomyCoach.qml
 EconomyHelpPanel 1.0 EconomyHelpPanel.qml
 UnitInspectPanel 1.0 UnitInspectPanel.qml

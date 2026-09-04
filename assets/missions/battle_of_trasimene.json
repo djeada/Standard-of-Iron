@@ -237,8 +237,8 @@
   ],
   "commander_messages": [
     {
-      "id": "trasimene_marcellus_open",
-      "speaker": "roman_field_commander",
+      "id": "trasimene_fabius_open",
+      "speaker": "roman_legion_organizer",
       "pose": "dismissive",
       "trigger": {
         "type": "mission_start",
@@ -250,8 +250,8 @@
       "priority": 100
     },
     {
-      "id": "trasimene_marcellus_victory",
-      "speaker": "roman_field_commander",
+      "id": "trasimene_fabius_victory",
+      "speaker": "roman_legion_organizer",
       "pose": "cynical",
       "trigger": {
         "type": "mission_victory",
@@ -263,8 +263,8 @@
       "priority": 120
     },
     {
-      "id": "trasimene_marcellus_defeat",
-      "speaker": "roman_field_commander",
+      "id": "trasimene_fabius_defeat",
+      "speaker": "roman_legion_organizer",
       "pose": "dismissive",
       "trigger": {
         "type": "mission_defeat",

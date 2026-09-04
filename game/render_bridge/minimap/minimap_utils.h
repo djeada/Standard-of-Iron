@@ -97,6 +97,17 @@ grid_to_world_coords(float grid_x,
   return {world_x, world_z};
 }
 
+inline auto rotated_world_bounds(float world_width,
+                                 float world_height) -> std::pair<float, float> {
+  const auto& orient = MinimapOrientation::instance();
+  const float cos_abs = std::abs(orient.cos_yaw());
+  const float sin_abs = std::abs(orient.sin_yaw());
+  return {std::max(world_width * cos_abs + world_height * sin_abs,
+                   Constants::k_min_tile_size),
+          std::max(world_width * sin_abs + world_height * cos_abs,
+                   Constants::k_min_tile_size)};
+}
+
 inline auto world_to_pixel(float world_x,
                            float world_z,
                            float world_width,
