@@ -72,20 +72,30 @@ void main() {
   float vein_wide = clamp(max(wide1, wide2), 0.0, 1.0);
   float vein_core = clamp(max(core1, core2), 0.0, 1.0);
 
-  vec3 deep_rock = v_color * vec3(0.46, 0.48, 0.55);
-  vec3 cool_rock = v_color * vec3(0.70, 0.72, 0.82);
+  vec3 deep_rock = v_color * vec3(0.66, 0.64, 0.66);
+  vec3 cool_rock = v_color * vec3(1.02, 0.99, 1.00);
   vec3 warm_mineral = vec3(0.48, 0.30, 0.20);
 
   vec3 rock_color = mix(deep_rock, cool_rock, stone_large);
   rock_color *= mix(0.72, 1.08, stone_grain);
   rock_color = mix(rock_color, warm_mineral, mineral_noise * 0.18);
 
+  float magic_strength = max(u_magic_strength, 0.0);
+  float magic_mix = clamp(magic_strength, 0.0, 1.0);
+
+  vec3 hematite_core = vec3(0.23, 0.11, 0.08);
+  vec3 limonite_rim = vec3(0.56, 0.34, 0.16);
+  vec3 rust_bloom = vec3(0.50, 0.26, 0.13);
+  vec3 seam = mix(limonite_rim, hematite_core, vein_core);
+  vec3 natural_ore = mix(rock_color, seam, vein_wide * 0.85);
+  natural_ore = mix(natural_ore, rust_bloom, mineral_noise * 0.24 * (1.0 - vein_wide));
+
   vec3 magic_a = vec3(0.14, 0.85, 1.35);
   vec3 magic_b = vec3(0.82, 0.24, 1.45);
   vec3 magic_color = mix(magic_a, magic_b, fbm(q * 1.7 + vec3(v_seed)));
 
   vec3 stained_ore = mix(rock_color, magic_color * 0.55, vein_wide * 0.45);
-  vec3 albedo = stained_ore;
+  vec3 albedo = mix(natural_ore, stained_ore, magic_mix);
 
   vec3 cell_p = q * 9.0;
   vec3 cell = floor(cell_p);
@@ -111,8 +121,7 @@ void main() {
 
   float ao = clamp(N.y * 0.45 + 0.68, 0.28, 1.0);
 
-  vec3 ambient = environment_ambient_light(N);
-  vec3 direct = soi_key_light(N) * 0.82;
+  vec3 illumination = soi_surface_lighting_scaled(N, 0.82);
 
   float spec_base = max(dot(N, H), 0.0);
   float ore_spec = pow(spec_base, 42.0) * (0.08 + vein_wide * 0.35);
@@ -122,15 +131,14 @@ void main() {
 
   float pulse = 0.78 + 0.22 * sin(u_time * 2.1 + v_seed * 12.0 + fbm(q * 2.0) * 5.0);
 
-  float magic_strength = max(u_magic_strength, 0.0);
-
   vec3 glow = magic_color * magic_strength * pulse *
               (vein_core * 1.75 + vein_wide * 0.22 + fresnel * vein_wide * 0.45 +
                crystal * 1.35);
 
-  vec3 color = albedo * (ambient + direct) * ao * environment_exposure();
+  vec3 color = albedo * illumination * ao;
   color += sun_color * ore_spec * ao;
-  color += magic_color * crystal_spec;
+  vec3 glint_color = mix(sun_color * vec3(0.95, 0.88, 0.80), magic_color, magic_mix);
+  color += glint_color * crystal_spec;
   color += glow;
 
   color = apply_directional_shadow(color, v_world_pos, v_normal);

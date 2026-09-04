@@ -248,7 +248,7 @@ private:
   std::unique_ptr<TerrainHeightMap> m_height_map;
   TerrainField m_terrain_field;
   BiomeSettings m_biome_settings;
-  float m_supernatural_presence{1.0F};
+  float m_supernatural_presence{0.0F};
   CoordSystem m_coord_system{CoordSystem::Grid};
   std::vector<WorldProp> m_authored_world_props;
   std::vector<WorldProp> m_world_props;

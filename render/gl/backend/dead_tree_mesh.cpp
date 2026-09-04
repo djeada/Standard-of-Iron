@@ -133,7 +133,7 @@ void append_oriented_box(std::vector<PropMeshVertex>& verts,
   V3 const b3 = b - side + depth;
 
   auto face = [&](const V3& p0, const V3& p1, const V3& p2, const V3& p3) {
-    V3 n = QVector3D::crossProduct(p1 - p0, p3 - p0);
+    V3 n = QVector3D::crossProduct(p3 - p0, p1 - p0);
     if (n.lengthSquared() > 1.0e-8F) {
       n.normalize();
     } else {
