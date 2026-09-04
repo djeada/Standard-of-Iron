@@ -58,6 +58,7 @@ void EffectsPipeline::cache_basic_uniforms() {
   m_basic_uniforms.color = m_basic_shader->uniform_handle("u_color");
   m_basic_uniforms.alpha = m_basic_shader->uniform_handle("u_alpha");
   m_basic_uniforms.instanced = m_basic_shader->optional_uniform_handle("u_instanced");
+  m_basic_uniforms.camera_pos = m_basic_shader->optional_uniform_handle("u_camera_pos");
 }
 
 void EffectsPipeline::cache_basic_instanced_uniforms() {

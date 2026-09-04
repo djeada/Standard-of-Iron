@@ -10,12 +10,14 @@ in vec3 v_normal;
 in vec3 v_color;
 in vec3 v_local_pos;
 
+uniform vec3 u_camera_pos;
+
 out vec4 frag_color;
 
 void main() {
   vec3 N = normalize(v_normal);
   vec3 L = environment_primary_direction();
-  vec3 V = normalize(vec3(0.0, 0.86, 0.52));
+  vec3 V = normalize(u_camera_pos - v_world_pos);
   vec3 H = normalize(L + V);
 
   float height = v_local_pos.y;

@@ -11,6 +11,7 @@ in vec2 v_tex_coord;
 in vec3 v_world_pos;
 
 uniform vec3 u_color;
+uniform vec3 u_camera_pos;
 
 out vec4 frag_color;
 
@@ -168,18 +169,32 @@ void main() {
   vec3 N = normalize(mix(Ng, n_bump, 0.65));
 
   vec3 L = environment_primary_direction();
-  vec3 V = normalize(vec3(0.0, 0.9, 0.4));
+  vec3 V = normalize(u_camera_pos - v_world_pos);
 
   float steep = saturate(length(slope));
-  float roughness = clamp(mix(0.65, 0.95, steep), 0.02, 1.0);
-  float F0 = 0.035;
-
-  float spec = ggx_specular(N, V, L, roughness, F0);
-
   vec3 base_color = mix(mortar_color, stone_color, stone_mask);
 
+  float wetness = environment_wetness();
+  float rain_exposure = smoothstep(0.08, 0.82, Ng.y);
+  float pooling_field = fbm(macro_uv * 3.7 + vec2(11.0, -23.0));
+  float joint_pool = wetness * rain_exposure * mortar_mask *
+                     smoothstep(0.46, 0.76, pooling_field + (1.0 - cavity) * 0.24);
+  float damp = wetness * rain_exposure *
+               clamp(0.48 + (1.0 - cavity) * 0.32 + pooling_field * 0.20, 0.0, 1.0);
+  base_color *= 1.0 - damp * 0.22 - joint_pool * 0.10;
+
+  vec3 wet_normal = normalize(mix(N, Ng, damp * 0.10 + joint_pool * 0.62));
+  float roughness =
+      clamp(mix(0.65, 0.95, steep) - damp * 0.24 - joint_pool * 0.30, 0.12, 1.0);
+  float F0 = mix(0.035, 0.055, damp);
+  float spec = ggx_specular(wet_normal, V, L, roughness, F0);
+  float sky_fresnel = fresnel_schlick(max(dot(wet_normal, V), 0.0), F0);
+
   vec3 lit_color = base_color * soi_surface_lighting_scaled(N, 0.76) * ao;
-  lit_color += environment_primary_color() * spec * 0.14;
+  lit_color += environment_primary_color() * environment_primary_intensity() * spec *
+               (0.14 + damp * 0.34 + joint_pool * 0.52);
+  lit_color +=
+      environment_sky_color() * sky_fresnel * (damp * 0.055 + joint_pool * 0.10);
   lit_color += soi_rim_light(N, V);
 
   float grime = (1.0 - cavity) * 0.25 * (0.8 + 0.2 * soi_noise_3d41e6(macro_uv * 5.0));

@@ -96,6 +96,13 @@ void main() {
   vec2 wind_dir = normalize(vec2(0.78, 0.62));
   vec2 cross_dir = vec2(-wind_dir.y, wind_dir.x);
   vec2 wind_offset = (wind_dir * sway + cross_dir * secondary) * sway_influence;
+  float branch_flex =
+      foliage_mask * smoothstep(0.16, 0.48, source_radius) * mix(0.45, 1.0, tip_mask);
+  float branch_flutter =
+      sin(wind_time * 2.45 + angle * 3.0 + sway_phase * 1.37 + needle_seed * TWO_PI) *
+      sin(wind_time * 0.91 + angle * 1.7 + silhouette_seed * TWO_PI);
+  wind_offset +=
+      cross_dir * branch_flutter * branch_flex * gust * u_wind_strength * 0.018 * scale;
   local_pos.y -= abs(sway) * 0.012 * foliage_mask * scale;
 
   vec3 local_normal = a_normal;

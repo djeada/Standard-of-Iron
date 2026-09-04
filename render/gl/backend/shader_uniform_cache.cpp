@@ -58,6 +58,7 @@ auto ShaderUniformCache::build_uniform_set(Shader* shader) const -> BasicUniform
   uniforms.view_proj = shader->optional_uniform_handle("u_view_proj");
   uniforms.light_dir = shader->optional_uniform_handle("u_light_dir");
   uniforms.ambient_strength = shader->optional_uniform_handle("u_ambient_strength");
+  uniforms.camera_pos = shader->optional_uniform_handle("u_camera_pos");
   return uniforms;
 }
 

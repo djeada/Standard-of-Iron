@@ -177,6 +177,10 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
         m_effects_pipeline->m_basic_uniforms.instanced, false);
     m_effects_pipeline->m_basic_shader->set_uniform(
         m_effects_pipeline->m_basic_uniforms.view_proj, view_proj);
+    if (m_effects_pipeline->m_basic_uniforms.camera_pos != Shader::InvalidUniform) {
+      m_effects_pipeline->m_basic_shader->set_uniform(
+          m_effects_pipeline->m_basic_uniforms.camera_pos, cam.get_position());
+    }
     m_effects_pipeline->m_basic_shader->set_uniform(
         m_effects_pipeline->m_basic_uniforms.color, sm.color);
     DepthMaskScope const depth_mask(false);

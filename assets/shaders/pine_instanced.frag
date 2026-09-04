@@ -15,6 +15,8 @@ in float v_bark_seed;
 in vec3 v_local_pos;
 in float v_bough;
 
+uniform vec3 u_camera_pos;
+
 out vec4 frag_color;
 
 const float PI = 3.14159265359;
@@ -34,7 +36,7 @@ void main() {
 
   vec3 geometric_normal = normalize(v_normal);
   vec3 l = environment_primary_direction();
-  vec3 view_dir = normalize(vec3(0.0, 0.86, 0.52));
+  vec3 view_dir = normalize(u_camera_pos - v_world_pos);
 
   vec3 needle_seed_offset =
       vec3(v_needle_seed * 41.0, v_needle_seed * 17.0, v_needle_seed * 63.0);

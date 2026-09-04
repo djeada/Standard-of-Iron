@@ -126,6 +126,8 @@ void VegetationPipeline::cache_uniforms() {
     m_stone_uniforms.view_proj = m_stone_shader->optional_uniform_handle("u_view_proj");
     m_stone_uniforms.light_direction =
         m_stone_shader->optional_uniform_handle("u_light_direction");
+    m_stone_uniforms.camera_pos =
+        m_stone_shader->optional_uniform_handle("u_camera_pos");
   }
 
   auto cache_foliage_uniforms = [](FoliageUniforms& u, GL::Shader* shader) {
@@ -137,6 +139,7 @@ void VegetationPipeline::cache_uniforms() {
     u.wind_strength = shader->uniform_handle("u_wind_strength");
     u.wind_speed = shader->uniform_handle("u_wind_speed");
     u.light_direction = shader->optional_uniform_handle("u_light_direction");
+    u.camera_pos = shader->optional_uniform_handle("u_camera_pos");
   };
 
   cache_foliage_uniforms(m_plant_uniforms, m_plant_shader);

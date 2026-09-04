@@ -68,6 +68,7 @@ public:
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle visibility_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle visibility_size{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle visibility_tile_size{GL::Shader::InvalidUniform};
@@ -84,6 +85,7 @@ public:
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle surface_kind{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle visibility_texture{GL::Shader::InvalidUniform};

@@ -11,6 +11,8 @@ in vec3 v_color;
 in vec3 v_local_pos;
 in vec3 v_local_normal;
 
+uniform vec3 u_camera_pos;
+
 out vec4 frag_color;
 
 float band(float value, float center, float half_width, float feather) {
@@ -20,7 +22,7 @@ float band(float value, float center, float half_width, float feather) {
 void main() {
   vec3 N = normalize(v_normal);
   vec3 L = environment_primary_direction();
-  vec3 V = normalize(vec3(0.0, 0.86, 0.52));
+  vec3 V = normalize(u_camera_pos - v_world_pos);
   vec3 H = normalize(L + V);
 
   float wheel_x = smoothstep(0.71, 0.755, abs(v_local_pos.x)) *

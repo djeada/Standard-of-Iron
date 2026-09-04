@@ -662,6 +662,7 @@ struct ArenaScenarioRunner::Impl {
     float issued_at{0.0F};
     float deadline{0.0F};
     QVector3D initial_position;
+    float initial_yaw{0.0F};
     QString command;
     bool observed{false};
     bool reported{false};
@@ -776,6 +777,11 @@ struct ArenaScenarioRunner::Impl {
     QString species;
     QString behavior;
     Engine::Core::EntityID focus_id{0};
+    float yaw{0.0F};
+    float desired_yaw{0.0F};
+    bool has_desired_yaw{false};
+    float vx{0.0F};
+    float vz{0.0F};
     bool biting{false};
     bool dying{false};
   };
@@ -1246,6 +1252,7 @@ struct ArenaScenarioRunner::Impl {
                               elapsed + threshold,
                               transform != nullptr ? vector_from_transform(*transform)
                                                    : QVector3D{},
+                              transform != nullptr ? transform->rotation.y : 0.0F,
                               command,
                               false,
                               false};
@@ -2031,6 +2038,14 @@ struct ArenaScenarioRunner::Impl {
                          : QStringLiteral("sheep");
     animal.behavior = behavior_name;
     animal.focus_id = wildlife.focus_id;
+    animal.yaw = transform->rotation.y;
+    animal.desired_yaw = transform->desired_yaw;
+    animal.has_desired_yaw = transform->has_desired_yaw;
+    if (auto const* movement =
+            entity.get_component<Engine::Core::MovementComponent>()) {
+      animal.vx = movement->get_vx();
+      animal.vz = movement->get_vz();
+    }
     animal.biting = wildlife.bite_timer > 0.0F;
     animal.dying = entity.has_component<Engine::Core::DeathAnimationComponent>();
     frame.animals.push_back(std::move(animal));
@@ -3139,6 +3154,10 @@ struct ArenaScenarioRunner::Impl {
         response != responses.end() && !response->observed) {
       bool const moved =
           horizontal_distance(position, response->initial_position) > 0.03F;
+      bool const turned =
+          std::abs(std::fmod(transform->rotation.y - response->initial_yaw + 540.0F,
+                             360.0F) -
+                   180.0F) > 5.0F;
       bool const visually_active = motion != nullptr && motion->has_locomotion();
       auto const* combat = world.try_get<Engine::Core::CombatStateComponent>(entity_id);
       bool const combat_active =
@@ -3149,7 +3168,7 @@ struct ArenaScenarioRunner::Impl {
           response->command == QStringLiteral("ReleaseReserve") && hold != nullptr &&
           !hold->active;
       response->observed =
-          moved || visually_active || combat_active || stance_exit_accepted;
+          moved || turned || visually_active || combat_active || stance_exit_accepted;
       if (!response->observed && elapsed > response->deadline && !response->reported) {
         response->reported = true;
         add_issue(QStringLiteral("command_response_timeout"),
@@ -6483,6 +6502,10 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("health"), animal.health},
           {QStringLiteral("behavior"), animal.behavior},
           {QStringLiteral("focus_id"), static_cast<qint64>(animal.focus_id)},
+          {QStringLiteral("yaw"), animal.yaw},
+          {QStringLiteral("desired_yaw"), animal.desired_yaw},
+          {QStringLiteral("has_desired_yaw"), animal.has_desired_yaw},
+          {QStringLiteral("velocity"), QJsonArray{animal.vx, animal.vz}},
           {QStringLiteral("biting"), animal.biting},
           {QStringLiteral("dying"), animal.dying}});
     }

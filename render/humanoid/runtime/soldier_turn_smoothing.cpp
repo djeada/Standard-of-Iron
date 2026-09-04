@@ -14,6 +14,12 @@ constexpr float k_wheel_path_blend_end_degrees = 65.0F;
 constexpr float k_turn_direction_epsilon_degrees = 0.05F;
 constexpr float k_turn_settle_heading_degrees = 1.0F;
 constexpr float k_turn_stable_reset_seconds = 0.08F;
+constexpr float k_pivot_yaw_rate_degrees = 10.0F;
+constexpr float k_pivot_center_speed = 0.35F;
+constexpr float k_sweep_excess_speed = 0.5F;
+constexpr float k_wheel_catch_up_scale = 1.5F;
+constexpr float k_pivot_snap_distance_scale = 2.0F;
+constexpr float k_relocate_travel_speed = 0.3F;
 
 [[nodiscard]] auto hash_u32(std::uint32_t value) -> std::uint32_t {
   value ^= value >> 16U;
@@ -85,7 +91,30 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
   SoldierTurnSmoothingResult result{};
   state.updated_frame = inputs.frame_index;
 
-  if (inputs.position_is_authoritative) {
+  float const formation_yaw_delta =
+      state.valid
+          ? wrap_degrees(inputs.formation_yaw_degrees - state.formation_yaw_degrees)
+          : 0.0F;
+  bool pivoting = false;
+  if (inputs.allow_pivot_wheel && state.valid && inputs.dt > 0.0F) {
+    float const center_step =
+        std::hypot(inputs.formation_center_x - state.formation_center_x,
+                   inputs.formation_center_z - state.formation_center_z);
+    float const center_speed = center_step / inputs.dt;
+    float const slot_speed =
+        std::hypot(inputs.target_x - state.slot_x, inputs.target_z - state.slot_z) /
+        inputs.dt;
+    float const yaw_rate = std::abs(formation_yaw_delta) / inputs.dt;
+    bool const rotating = yaw_rate > k_pivot_yaw_rate_degrees;
+    bool const turning_on_the_spot = center_speed < k_pivot_center_speed;
+    bool const slot_outruns_the_unit = slot_speed > center_speed + k_sweep_excess_speed;
+    pivoting = rotating && (turning_on_the_spot || slot_outruns_the_unit);
+  }
+  result.pivoting = pivoting;
+
+  bool const slot_owns_position =
+      inputs.position_is_authoritative && !pivoting && !state.relocating;
+  if (slot_owns_position) {
     state.world_x = inputs.target_x;
     state.world_z = inputs.target_z;
   }
@@ -95,18 +124,28 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
   float const distance =
       std::sqrt(to_target_x * to_target_x + to_target_z * to_target_z);
 
-  bool const must_snap = !state.valid || distance > inputs.snap_distance;
+  bool const wheeling_from_authoritative_slot =
+      pivoting || (inputs.position_is_authoritative && state.relocating);
+  float const snap_distance = wheeling_from_authoritative_slot
+                                  ? inputs.snap_distance * k_pivot_snap_distance_scale
+                                  : inputs.snap_distance;
+  bool const must_snap = !state.valid || distance > snap_distance;
   if (must_snap) {
     state.world_x = inputs.target_x;
     state.world_z = inputs.target_z;
     state.body_yaw_degrees = wrap_degrees(inputs.formation_yaw_degrees);
     state.formation_yaw_degrees = wrap_degrees(inputs.formation_yaw_degrees);
     state.facing_yaw_degrees = wrap_degrees(inputs.formation_yaw_degrees);
+    state.formation_center_x = inputs.formation_center_x;
+    state.formation_center_z = inputs.formation_center_z;
+    state.slot_x = inputs.target_x;
+    state.slot_z = inputs.target_z;
     state.wheel_direction = 0.0F;
     state.turn_delay_remaining = 0.0F;
     state.formation_stable_seconds = 0.0F;
     state.valid = true;
     state.relocating = false;
+    state.wheeling = false;
     state.turn_pending = false;
     result.x = state.world_x;
     result.z = state.world_z;
@@ -124,8 +163,13 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
     return result;
   }
 
-  float const formation_yaw_delta =
-      wrap_degrees(inputs.formation_yaw_degrees - state.formation_yaw_degrees);
+  state.formation_center_x = inputs.formation_center_x;
+  state.formation_center_z = inputs.formation_center_z;
+  state.slot_x = inputs.target_x;
+  state.slot_z = inputs.target_z;
+  if (pivoting && state.relocating) {
+    state.wheeling = true;
+  }
   if (std::abs(formation_yaw_delta) > k_turn_direction_epsilon_degrees) {
     state.wheel_direction = formation_yaw_delta < 0.0F ? -1.0F : 1.0F;
     state.formation_stable_seconds = 0.0F;
@@ -147,7 +191,9 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
     state.facing_yaw_degrees = state.formation_yaw_degrees;
   }
 
-  float const max_step = inputs.max_speed * inputs.dt;
+  float const max_speed =
+      state.wheeling ? inputs.max_speed * k_wheel_catch_up_scale : inputs.max_speed;
+  float const max_step = max_speed * inputs.dt;
   float step = std::min(distance, max_step);
   float travel_yaw = state.body_yaw_degrees;
   float wheel_amount = 0.0F;
@@ -211,16 +257,18 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
   float const remaining_x = inputs.target_x - state.world_x;
   float const remaining_z = inputs.target_z - state.world_z;
   float const remaining = std::hypot(remaining_x, remaining_z);
+  result.travel_speed = inputs.dt > 0.0F ? step / inputs.dt : 0.0F;
+  bool const swept_by_pivot = pivoting && result.travel_speed > k_relocate_travel_speed;
   if (state.relocating) {
-    state.relocating = remaining > inputs.settle_distance;
+    state.relocating = remaining > inputs.settle_distance || swept_by_pivot;
   } else {
-    state.relocating = remaining > inputs.relocate_distance;
+    state.relocating = remaining > inputs.relocate_distance || swept_by_pivot;
   }
   if (!state.relocating) {
     state.wheel_direction = 0.0F;
+    state.wheeling = false;
   }
   result.relocating = state.relocating;
-  result.travel_speed = inputs.dt > 0.0F ? step / inputs.dt : 0.0F;
   result.travel_yaw_degrees = wrap_degrees(travel_yaw);
 
   bool const awaiting_turn_response =

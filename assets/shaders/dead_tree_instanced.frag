@@ -11,6 +11,8 @@ in vec3 v_color;
 in vec3 v_local_pos;
 in vec3 v_local_normal;
 
+uniform vec3 u_camera_pos;
+
 out vec4 frag_color;
 
 float noise21(vec2 p) {
@@ -32,7 +34,7 @@ void main() {
   vec3 light_dir = environment_primary_direction();
   vec3 sun_color = environment_primary_color() * environment_primary_intensity();
   vec3 illumination = soi_surface_lighting_scaled(normal, 0.62);
-  vec3 view_dir = normalize(vec3(0.0, 0.85, 0.53));
+  vec3 view_dir = normalize(u_camera_pos - v_world_pos);
   vec3 half_vec = normalize(light_dir + view_dir);
   float spec_base = max(dot(normal, half_vec), 0.0);
 
