@@ -51,6 +51,8 @@ struct CreatureLodSettings {
 
   bool visibility_budget = true;
   int max_full_detail_units = 300;
+
+  bool snapshot_meshes = true;
 };
 
 struct BatchingConfig {
@@ -126,7 +128,8 @@ inline constexpr std::array<GraphicsProfile, k_graphics_quality_count>
                              .full_distance_scale = 0.6F,
                              .cull_distance = 120.0F,
                              .visibility_budget = true,
-                             .max_full_detail_units = 120},
+                             .max_full_detail_units = 120,
+                             .snapshot_meshes = false},
             .batching = {.force_batching = true,
                          .never_batch = false,
                          .batching_unit_threshold = 0,

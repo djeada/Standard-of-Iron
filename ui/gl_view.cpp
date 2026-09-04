@@ -478,6 +478,10 @@ void GLView::GLRenderer::reset_runtime_benchmark_samples() {
   m_benchmark_snapshot_cache_bytes = 0;
   m_benchmark_prepared_batches = 0;
   m_benchmark_instanced_batches = 0;
+  m_benchmark_rigged_commands = 0;
+  m_benchmark_rigged_instanced_draws = 0;
+  m_benchmark_rigged_instanced_instances = 0;
+  m_benchmark_rigged_single_draws = 0;
   m_benchmark_world_us = 0;
   m_benchmark_visibility_us = 0;
   m_benchmark_minimap_us = 0;
@@ -560,6 +564,10 @@ void GLView::GLRenderer::observe_runtime_benchmark(
       std::max(m_benchmark_snapshot_cache_bytes, profile.snapshot_cache_bytes);
   m_benchmark_prepared_batches += profile.prepared_batches;
   m_benchmark_instanced_batches += profile.instanced_batches;
+  m_benchmark_rigged_commands += profile.rigged_commands;
+  m_benchmark_rigged_instanced_draws += profile.rigged_instanced_draws;
+  m_benchmark_rigged_instanced_instances += profile.rigged_instanced_instances;
+  m_benchmark_rigged_single_draws += profile.rigged_single_draws;
   m_benchmark_gpu_shadow_ms.push_back(profile.gpu_shadow_ms);
   m_benchmark_gpu_color_ms.push_back(profile.gpu_color_ms);
   m_benchmark_gpu_wait_ms.push_back(profile.gpu_wait_ms);
@@ -652,7 +660,26 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
       {QStringLiteral("instanced_batches_average"),
        sample_count > 0.0
            ? static_cast<double>(m_benchmark_instanced_batches) / sample_count
-           : 0.0}};
+           : 0.0},
+      {QStringLiteral("rigged_draws_average"),
+       QJsonObject{
+           {QStringLiteral("commands"),
+            sample_count > 0.0
+                ? static_cast<double>(m_benchmark_rigged_commands) / sample_count
+                : 0.0},
+           {QStringLiteral("instanced_draws"),
+            sample_count > 0.0
+                ? static_cast<double>(m_benchmark_rigged_instanced_draws) / sample_count
+                : 0.0},
+           {QStringLiteral("instanced_creatures"),
+            sample_count > 0.0
+                ? static_cast<double>(m_benchmark_rigged_instanced_instances) /
+                      sample_count
+                : 0.0},
+           {QStringLiteral("single_draws"),
+            sample_count > 0.0
+                ? static_cast<double>(m_benchmark_rigged_single_draws) / sample_count
+                : 0.0}}}};
 
   QJsonObject draw_cmd_average;
   for (std::size_t i = 0; i < m_benchmark_draw_cmd_counts.size(); ++i) {

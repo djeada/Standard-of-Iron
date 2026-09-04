@@ -381,7 +381,13 @@ private:
     std::size_t mark_count{0};
     bool pending{false};
   };
+  QVector2D m_contact_shadow_ground{0.0F, 1.0F};
+  float m_contact_shadow_cast_weight{-1.0F};
+  bool m_contact_shadow_uniforms_valid{false};
+
   bool m_gpu_breakdown_enabled{false};
+
+  bool m_frame_timing_active{false};
   std::array<double, 32> m_gpu_breakdown_ms{};
   double m_gpu_breakdown_post_ms{0.0};
   std::size_t m_gpu_breakdown_frames{0};

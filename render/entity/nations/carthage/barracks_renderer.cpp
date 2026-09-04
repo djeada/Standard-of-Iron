@@ -38,15 +38,16 @@ constexpr auto k_mask_normal = BuildingStateMask::Normal;
 constexpr float k_pi = 3.14159265F;
 
 struct CarthagePalette {
-  QVector3D sandstone{0.80F, 0.69F, 0.51F};
-  QVector3D sandstone_light{0.87F, 0.78F, 0.61F};
-  QVector3D sandstone_dark{0.58F, 0.48F, 0.34F};
+  QVector3D sandstone{0.82F, 0.70F, 0.52F};
+  QVector3D sandstone_light{0.92F, 0.84F, 0.68F};
+  QVector3D sandstone_dark{0.55F, 0.44F, 0.31F};
   QVector3D stone_dark{0.38F, 0.32F, 0.24F};
-  QVector3D plaster{0.91F, 0.86F, 0.74F};
-  QVector3D plaster_shade{0.82F, 0.76F, 0.63F};
+  QVector3D plaster{0.90F, 0.83F, 0.68F};
+  QVector3D plaster_shade{0.80F, 0.73F, 0.58F};
   QVector3D brick_dark{0.40F, 0.18F, 0.11F};
-  QVector3D purple{0.42F, 0.14F, 0.46F};
-  QVector3D purple_dark{0.28F, 0.09F, 0.31F};
+  QVector3D indigo{0.21F, 0.25F, 0.45F};
+  QVector3D oxblood{0.47F, 0.10F, 0.08F};
+  QVector3D saffron{0.76F, 0.36F, 0.035F};
   QVector3D wood{0.46F, 0.30F, 0.16F};
   QVector3D wood_dark{0.23F, 0.16F, 0.09F};
   QVector3D iron{0.24F, 0.23F, 0.21F};
@@ -153,22 +154,22 @@ void add_merlon(BuildingArchetypeDesc& desc,
                 const QVector3D& half_size,
                 float yaw_deg,
                 BuildingStateMask states,
-                int seed) {
+                int) {
   const QVector3D rot(0.0F, yaw_deg, 0.0F);
-  const QVector3D body = weathered(c.sandstone_light, seed, 0.07F);
-  desc.add_rotated_box(center, half_size, rot, body, states);
-  const float step_y = center.y() + half_size.y() + half_size.y() * 0.7F;
+  const QVector3D body(half_size.x(), half_size.y() * 1.55F, half_size.z());
   desc.add_rotated_box(
-      QVector3D(center.x(), step_y, center.z()),
-      QVector3D(half_size.x() * 0.52F, half_size.y() * 0.7F, half_size.z()),
-      rot,
+      QVector3D(center.x(), center.y() + body.y() - half_size.y(), center.z()),
       body,
+      rot,
+      c.sandstone_light,
       states);
   desc.add_rotated_box(
-      QVector3D(center.x(), step_y + half_size.y() * 0.7F + 0.012F, center.z()),
-      QVector3D(half_size.x() * 0.52F + 0.01F, 0.012F, half_size.z() + 0.01F),
+      QVector3D(center.x(),
+                center.y() + 2.0F * body.y() - half_size.y() + 0.010F,
+                center.z()),
+      QVector3D(half_size.x() + 0.008F, 0.010F, half_size.z() + 0.008F),
       rot,
-      c.brick_dark,
+      c.sandstone_dark,
       states);
 }
 
@@ -237,7 +238,7 @@ void add_keep(BuildingArchetypeDesc& desc, const CarthagePalette& c, const Heigh
       k_mask_intact);
   desc.add_box(QVector3D(0.0F, k_keep_ashlar_top + 0.05F, cz),
                QVector3D(k_keep_hx + 0.012F, 0.03F, hz + 0.012F),
-               c.purple,
+               c.indigo,
                k_mask_intact);
   desc.add_box(QVector3D(0.0F, k_keep_ashlar_top + 0.012F, cz),
                QVector3D(k_keep_hx + 0.02F, 0.012F, hz + 0.02F),
@@ -266,7 +267,7 @@ void add_keep(BuildingArchetypeDesc& desc, const CarthagePalette& c, const Heigh
       desc.add_box(
           QVector3D(px, mid(k_keep_plinth_top, h.keep - 0.07F), z + side * 0.025F),
           QVector3D(0.06F, half(k_keep_plinth_top, h.keep - 0.07F), 0.025F),
-          weathered(c.sandstone_dark, static_cast<int>(px * 10.0F) + 3, 0.05F),
+          c.sandstone_dark,
           k_mask_intact);
     }
   }
@@ -276,7 +277,7 @@ void add_keep(BuildingArchetypeDesc& desc, const CarthagePalette& c, const Heigh
                              mid(k_keep_plinth_top, h.keep - 0.07F),
                              pz),
                    QVector3D(0.025F, half(k_keep_plinth_top, h.keep - 0.07F), 0.06F),
-                   weathered(c.sandstone_dark, static_cast<int>(pz * 10.0F) + 9, 0.05F),
+                   c.sandstone_dark,
                    k_mask_intact);
     }
   }
@@ -370,7 +371,7 @@ void add_towers(BuildingArchetypeDesc& desc,
     desc.add_cylinder(QVector3D(x, k_keep_plinth_top, z),
                       QVector3D(x, top, z),
                       k_tower_r,
-                      weathered(c.sandstone, seed, 0.04F));
+                      c.sandstone);
     if (h.destroyed) {
       desc.add_cylinder(QVector3D(x, top, z),
                         QVector3D(x, top + 0.22F + (front ? 0.14F : 0.0F), z),
@@ -384,7 +385,7 @@ void add_towers(BuildingArchetypeDesc& desc,
     desc.add_cylinder(QVector3D(x, k_keep_ashlar_top + 0.02F, z),
                       QVector3D(x, k_keep_ashlar_top + 0.08F, z),
                       k_tower_r + 0.015F,
-                      c.purple,
+                      c.indigo,
                       k_mask_intact);
     desc.add_cylinder(QVector3D(x, top - 0.09F, z),
                       QVector3D(x, top - 0.04F, z),
@@ -473,7 +474,7 @@ void add_donjon(BuildingArchetypeDesc& desc,
                k_mask_intact);
   desc.add_box(QVector3D(0.0F, band_y + 0.03F, cz),
                QVector3D(k_donjon_hx + 0.012F, 0.025F, hz + 0.012F),
-               c.purple,
+               c.indigo,
                k_mask_intact);
   for (const float qx : {-k_donjon_hx, k_donjon_hx}) {
     for (const float qz : {k_donjon_z0, k_donjon_z1}) {
@@ -636,7 +637,7 @@ void add_gatehouse(BuildingArchetypeDesc& desc,
                k_mask_intact);
   desc.add_box(QVector3D(0.0F, k_keep_ashlar_top + 0.05F, cz),
                QVector3D(k_gate_hx + 0.012F, 0.03F, hz + 0.012F),
-               c.purple,
+               c.indigo,
                k_mask_intact);
 
   add_punic_tanit_relief(desc,
@@ -681,7 +682,7 @@ void add_gatehouse(BuildingArchetypeDesc& desc,
       QVector3D(0.0F, mid(awn_top_y, awn_low_y), mid(awn_top_z, awn_low_z)),
       QVector3D(0.52F, 0.012F, len * 0.5F),
       QVector3D(tilt_deg, 0.0F, 0.0F),
-      c.purple,
+      c.oxblood,
       k_mask_normal);
   for (const float stripe_x : {-0.36F, 0.0F, 0.36F}) {
     desc.add_rotated_box(QVector3D(stripe_x,
@@ -689,7 +690,7 @@ void add_gatehouse(BuildingArchetypeDesc& desc,
                                    mid(awn_top_z, awn_low_z)),
                          QVector3D(0.05F, 0.006F, len * 0.5F - 0.01F),
                          QVector3D(tilt_deg, 0.0F, 0.0F),
-                         c.purple_dark,
+                         c.saffron,
                          k_mask_normal);
   }
   desc.add_palette_box(QVector3D(0.0F, awn_low_y - 0.06F, awn_low_z),
@@ -857,7 +858,7 @@ void add_palm(BuildingArchetypeDesc& desc,
     desc.add_cylinder(from,
                       to,
                       0.062F - 0.012F * t0,
-                      weathered(c.palm_trunk, seed + i, 0.08F),
+                      weathered(c.palm_trunk, seed + i, 0.03F),
                       k_mask_intact);
     from = to;
   }
@@ -870,17 +871,17 @@ void add_palm(BuildingArchetypeDesc& desc,
   for (int i = 0; i < 9; ++i) {
     const float yaw = static_cast<float>(i) * (2.0F * k_pi / 9.0F) +
                       0.3F * static_cast<float>(seed % 3);
-    const float droop = (i % 2 == 0) ? 0.55F : 0.30F;
-    const float len = (i % 2 == 0) ? 0.62F : 0.50F;
+    const float droop = (i % 2 == 0) ? 0.62F : 0.36F;
+    const float len = (i % 2 == 0) ? 0.62F : 0.52F;
     const QVector3D dir(std::sin(yaw) * std::cos(droop),
                         -std::sin(droop),
                         std::cos(yaw) * std::cos(droop));
     const QVector3D start = crown + QVector3D(0.0F, 0.05F, 0.0F) + dir * 0.04F;
-    desc.add_cylinder(start,
-                      start + dir * len,
-                      0.028F,
-                      (i % 2 == 0) ? c.frond : c.frond_dark,
-                      k_mask_intact);
+    desc.add_rotated_box(start + dir * (len * 0.5F),
+                         QVector3D(0.048F, 0.008F, len * 0.5F),
+                         QVector3D(droop * 180.0F / k_pi, yaw * 180.0F / k_pi, 0.0F),
+                         (i % 2 == 0) ? c.frond : c.frond_dark,
+                         k_mask_intact);
   }
   for (const float side : {-1.0F, 1.0F}) {
     desc.add_box(crown + QVector3D(side * 0.09F, -0.06F, 0.0F),
@@ -918,12 +919,12 @@ void add_roof_canopy(BuildingArchetypeDesc& desc,
   }
   desc.add_box(QVector3D(cx, post_top + 0.01F, cz),
                QVector3D(hx + 0.05F, 0.010F, hz + 0.05F),
-               c.purple,
+               c.oxblood,
                k_mask_normal);
   for (const float sz : {-0.22F, 0.0F, 0.22F}) {
     desc.add_box(QVector3D(cx, post_top + 0.022F, cz + sz),
                  QVector3D(hx + 0.04F, 0.004F, 0.05F),
-                 c.purple_dark,
+                 c.saffron,
                  k_mask_normal);
   }
   desc.add_palette_box(QVector3D(cx, post_top - 0.04F, cz + hz + 0.05F),

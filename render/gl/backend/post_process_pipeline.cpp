@@ -99,7 +99,8 @@ auto PostProcessPipeline::create_color_target(RenderTarget& target,
 }
 
 auto PostProcessPipeline::ensure_targets(int width, int height) -> bool {
-  if (m_scene.fbo != 0 && m_scene.width == width && m_scene.height == height) {
+  if (m_scene.fbo != 0 && m_scene.width == width && m_scene.height == height &&
+      attachments_match(m_target_passes, m_passes)) {
     return true;
   }
 
@@ -141,27 +142,31 @@ auto PostProcessPipeline::ensure_targets(int width, int height) -> bool {
     return false;
   }
 
-  const unsigned int bloom_format =
-      m_scene_is_float ? k_format_rgba16f : k_format_rgba8;
-  for (auto& target : m_bloom) {
-    if (!create_color_target(target, bloom_width, bloom_height, bloom_format)) {
-      release_targets();
-      return false;
+  if (m_passes.bloom) {
+    const unsigned int bloom_format =
+        m_scene_is_float ? k_format_rgba16f : k_format_rgba8;
+    for (auto& target : m_bloom) {
+      if (!create_color_target(target, bloom_width, bloom_height, bloom_format)) {
+        release_targets();
+        return false;
+      }
     }
   }
 
-  if (!create_color_target(m_composite, width, height, k_format_rgba8)) {
+  if (m_passes.fxaa &&
+      !create_color_target(m_composite, width, height, k_format_rgba8)) {
     release_targets();
     return false;
   }
-  if (!create_color_target(m_rays,
-                           std::max(width / k_godray_divisor, 1),
-                           std::max(height / k_godray_divisor, 1),
-                           k_format_rgba8)) {
+  if (m_passes.godrays && !create_color_target(m_rays,
+                                               std::max(width / k_godray_divisor, 1),
+                                               std::max(height / k_godray_divisor, 1),
+                                               k_format_rgba8)) {
     release_targets();
     return false;
   }
 
+  m_target_passes = m_passes;
   return true;
 }
 
@@ -362,10 +367,12 @@ void PostProcessPipeline::resolve_scene() {
   m_composite_shader->set_uniform("u_depth_range",
                                   QVector2D(m_near_plane, m_far_plane));
 
+  const int output_width = m_passes.fxaa ? m_composite.width : m_scene.width;
+  const int output_height = m_passes.fxaa ? m_composite.height : m_scene.height;
   m_composite_shader->set_uniform(
       m_composite_shader->optional_uniform_handle("u_inverse_resolution"),
-      QVector2D(1.0F / static_cast<float>(m_composite.width),
-                1.0F / static_cast<float>(m_composite.height)));
+      QVector2D(1.0F / static_cast<float>(std::max(output_width, 1)),
+                1.0F / static_cast<float>(std::max(output_height, 1))));
   m_composite_shader->set_uniform(
       m_composite_shader->optional_uniform_handle("u_ground_ao_radius"),
       k_ground_ao_radius);
@@ -418,8 +425,8 @@ void PostProcessPipeline::resolve_scene() {
     m_fxaa_shader->set_uniform("u_source", 0);
     m_fxaa_shader->set_uniform(
         m_fxaa_shader->optional_uniform_handle("u_inverse_resolution"),
-        QVector2D(1.0F / static_cast<float>(m_composite.width),
-                  1.0F / static_cast<float>(m_composite.height)));
+        QVector2D(1.0F / static_cast<float>(std::max(m_composite.width, 1)),
+                  1.0F / static_cast<float>(std::max(m_composite.height, 1))));
     glBindTexture(GL_TEXTURE_2D, m_composite.color);
     draw_fullscreen();
   }

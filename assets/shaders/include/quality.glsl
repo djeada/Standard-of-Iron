@@ -34,3 +34,9 @@
 #else
 #define SOI_ULTRA_EFFECTS 0
 #endif
+
+#if SOI_QUALITY_TIER >= SOI_TIER_MEDIUM
+#define SOI_CHARACTER_HIGHLIGHTS 1
+#else
+#define SOI_CHARACTER_HIGHLIGHTS 0
+#endif

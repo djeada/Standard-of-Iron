@@ -84,6 +84,11 @@ struct FrameProfile {
   std::uint64_t prepared_batches{0};
   std::uint64_t instanced_batches{0};
 
+  std::uint64_t rigged_commands{0};
+  std::uint64_t rigged_instanced_draws{0};
+  std::uint64_t rigged_instanced_instances{0};
+  std::uint64_t rigged_single_draws{0};
+
   double gpu_shadow_ms{0.0};
   double gpu_color_ms{0.0};
   double gpu_wait_ms{0.0};
@@ -140,6 +145,10 @@ struct FrameProfile {
     snapshot_cache_bytes = 0;
     prepared_batches = 0;
     instanced_batches = 0;
+    rigged_commands = 0;
+    rigged_instanced_draws = 0;
+    rigged_instanced_instances = 0;
+    rigged_single_draws = 0;
     gpu_shadow_ms = 0.0;
     gpu_color_ms = 0.0;
     gpu_wait_ms = 0.0;

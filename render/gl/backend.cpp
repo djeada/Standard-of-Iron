@@ -400,6 +400,12 @@ void Backend::apply_graphics_profile(const Render::GraphicsProfile& profile,
     qInfo() << "Backend: shader tier" << static_cast<int>(m_shader_tier) << "-"
             << reloaded << "programs recompiled";
   }
+  m_contact_shadow_uniforms_valid = false;
+
+  if (!m_shadow_settings.enabled) {
+    release_directional_shadow_resources();
+  }
+
   if (m_post_process_pipeline != nullptr) {
     m_post_process_pipeline->set_passes(
         {.bloom = profile.post_process.bloom,
@@ -418,6 +424,16 @@ void Backend::update_contact_shadow_uniforms() {
   }
   ground.normalize();
   const float cast_weight = m_shadow_settings.enabled ? 0.0F : 1.0F;
+
+  if (m_contact_shadow_uniforms_valid &&
+      qFuzzyCompare(m_contact_shadow_ground, ground) &&
+      m_contact_shadow_cast_weight == cast_weight) {
+    return;
+  }
+  m_contact_shadow_ground = ground;
+  m_contact_shadow_cast_weight = cast_weight;
+  m_contact_shadow_uniforms_valid = true;
+
   for (Shader* shader : {m_shadow_shader, m_shadow_instanced_shader}) {
     if (shader == nullptr) {
       continue;
@@ -1253,15 +1269,25 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
     return;
   }
 
+  m_frame_timing_active =
+      Render::Profiling::global_profile().enabled || m_gpu_breakdown_enabled;
+
   FrameGpuTiming& frame_timing = m_frame_timings[m_frame_timing_slot];
   m_frame_timing_slot = (m_frame_timing_slot + 1U) % m_frame_timings.size();
   wait_for_frame_slot(frame_timing);
   m_frame_tracker.begin_frame();
-  if (frame_timing.timestamps[0] == 0U) {
-    glGenQueries(static_cast<GLsizei>(frame_timing.timestamps.size()),
-                 frame_timing.timestamps.data());
+  if (m_frame_timing_active) {
+    if (frame_timing.timestamps[0] == 0U) {
+      glGenQueries(static_cast<GLsizei>(frame_timing.timestamps.size()),
+                   frame_timing.timestamps.data());
+    }
+    glQueryCounter(frame_timing.timestamps[0], GL_TIMESTAMP);
+  } else {
+    m_active_frame_timing = nullptr;
+    m_last_playback_stats.gpu_shadow_ms = 0.0;
+    m_last_playback_stats.gpu_color_ms = 0.0;
+    m_last_playback_stats.gpu_wait_ms = 0.0;
   }
-  glQueryCounter(frame_timing.timestamps[0], GL_TIMESTAMP);
 
   const QMatrix4x4 view = cam.get_view_matrix();
   const QMatrix4x4 projection = cam.get_projection_matrix();
@@ -1275,7 +1301,9 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
         &Render::Profiling::global_profile(), Render::Profiling::Phase::Shadow);
     render_directional_shadows(queue, cam);
   }
-  glQueryCounter(frame_timing.timestamps[1], GL_TIMESTAMP);
+  if (m_frame_timing_active) {
+    glQueryCounter(frame_timing.timestamps[1], GL_TIMESTAMP);
+  }
   if (m_post_process_pipeline != nullptr && m_post_process_pipeline->is_capturing()) {
     m_post_process_pipeline->set_depth_range(cam.get_near(), cam.get_far());
     const auto [fog_start, fog_end] = fog_range_for_camera(cam);
@@ -1442,8 +1470,10 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   if (breakdown_last_type >= 0) {
     gpu_breakdown_mark(frame_timing, static_cast<std::uint8_t>(breakdown_last_type));
   }
-  glQueryCounter(frame_timing.timestamps[2], GL_TIMESTAMP);
-  m_active_frame_timing = &frame_timing;
+  if (m_frame_timing_active) {
+    glQueryCounter(frame_timing.timestamps[2], GL_TIMESTAMP);
+    m_active_frame_timing = &frame_timing;
+  }
 
   m_frame_tracker.mark_complete();
   m_frame_tracker.end_frame();
