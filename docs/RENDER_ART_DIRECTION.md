@@ -385,6 +385,41 @@ Ruins grow ivy up their shaded faces (`ruins_instanced.frag`) and statue plinths
 moss (`statue_instanced.frag`); both are shader-only overgrowth keyed to local position
 and the sun's azimuth, so nothing new had to be authored.
 
+## Rocks
+
+Every boulder and scatter stone is one shared lump mesh
+(`VegetationPipeline::initialize_stone_pipeline`), so the variety has to come from
+the instance. `StoneInstanceGpu::ground_fit` carries the terrain normal under the
+rock, a shape seed and a sink depth (`render/ground/stone_ground_fit.h` packs it,
+`sample_ground_normal` reads it off the height grid). `stone_instanced.vert` derives
+everything else from the seed: non-uniform proportions, a lean shear, a small random
+cant on top of the slope alignment, and beds the rock into the ground by the sink
+depth. Before this the mesh sat _on_ the surface point with a yaw only, which is why
+a rock field read as a row of identical pebbles standing to attention on a hillside.
+
+The mesh itself is twelve-sided, seven rings, hash-jittered and split into planar
+triangles so the faces read as cleavage planes. `stone_instanced.frag` adds a
+gradient-noise relief normal on top of the flat facets, keeps lichen to the weathered
+upper faces, moss to the shaded side and the foot, and dirties the skirt where the
+rock meets the soil (`v_ground_height` is the height above the ground sample).
+
+Rock colour is one palette for boulders, authored boulders and scatter stones
+(`stone_instance_color`): the map's `rock_low`/`rock_high`, an earth cast, and a
+minority of iron-stained and lichen-grey rocks so a field is not one grey.
+
+Iron ore used to render as a black lump with glowing veins on every map. Two causes:
+`append_oriented_box` (both the prop mesh builder and the dead tree's copy) took its
+face cross product in the wrong order, so every oriented box lit from the inside, and
+the ore is nothing but oriented boxes; and the haunted stain was always on. The
+normals now point outward (`PropMeshBuilderTest`), and the magic shrine's rune
+stones and the dead tree's branch stubs pick up the same fix.
+
+Iron ore is hematite unless the world is haunted. `iron_ore_instanced.frag` only mixes
+the cyan/violet stain and the coloured crystal glints in by `u_magic_strength`, which
+`IronOreRenderer` takes from `TerrainService::supernatural_presence()`. That flag is
+now off by default and set from the map's undead zones (the arena sets it from the
+scenario's zones before the terrain configures), so a plain quarry no longer glows.
+
 ## Known geometry fix
 
 The stone mesh in `render/gl/backend/vegetation_pipeline_natural.cpp` computed

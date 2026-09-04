@@ -405,6 +405,7 @@ add_executable(
     render/linear_feature_visibility_test.cpp
     render/ground_utils_test.cpp
     render/dead_tree_mesh_test.cpp
+    render/prop_mesh_builder_test.cpp
     render/local_lighting_test.cpp
     render/contact_shadow_test.cpp
     render/shadow_cascade_fit_test.cpp

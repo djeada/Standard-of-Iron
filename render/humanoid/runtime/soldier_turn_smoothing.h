@@ -21,10 +21,15 @@ struct SoldierTurnSmoothingState {
   float wheel_direction{0.0F};
   float turn_delay_remaining{0.0F};
   float formation_stable_seconds{0.0F};
+  float formation_center_x{0.0F};
+  float formation_center_z{0.0F};
+  float slot_x{0.0F};
+  float slot_z{0.0F};
 
   std::uint32_t updated_frame{0U};
   bool valid{false};
   bool relocating{false};
+  bool wheeling{false};
   bool turn_pending{false};
 };
 
@@ -69,6 +74,8 @@ struct SoldierTurnSmoothingInputs {
 
   bool position_is_authoritative{false};
 
+  bool allow_pivot_wheel{true};
+
   std::uint32_t frame_index{0U};
 };
 
@@ -82,6 +89,8 @@ struct SoldierTurnSmoothingResult {
   float travel_yaw_degrees{0.0F};
 
   bool relocating{false};
+
+  bool pivoting{false};
 };
 
 [[nodiscard]] auto resolve_soldier_turn_smoothing(

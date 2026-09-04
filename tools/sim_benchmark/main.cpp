@@ -141,13 +141,14 @@ struct Result {
 
 auto run_scenario(int units_per_side, int ticks, bool per_system) -> Result {
   const int map_size = map_size_for(units_per_side);
-  Game::Systems::NavGrid::initialize(map_size, map_size);
 
   auto factory = std::make_shared<Game::Units::UnitFactoryRegistry>();
   Game::Units::register_built_in_units(*factory);
 
   auto session = std::make_unique<SessionContext>();
   const ScopedSession scope(*session);
+
+  Game::Systems::NavGrid::initialize(map_size, map_size);
 
   auto& owners = session->owners();
   owners.register_owner_with_id(k_left_owner, Game::Systems::OwnerType::Player, "left");

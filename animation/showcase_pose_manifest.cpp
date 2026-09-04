@@ -1505,9 +1505,9 @@ constexpr std::array<ShowcaseKey, 6> k_rest_sit_knees_down_keys{{
      {126.0F, -5.0F, 15.0F, 105.0F}},
 }};
 
-constexpr std::array<ShowcaseKey, 7> k_taunt_dismissive_keys{{
-    {0.0F,
-     0.0F,
+constexpr std::array<ShowcaseKey, 10> k_taunt_dismissive_keys{{
+    {0.00F,
+     0.000F,
      0.975F,
      0.0F,
      0.0F,
@@ -1524,17 +1524,35 @@ constexpr std::array<ShowcaseKey, 7> k_taunt_dismissive_keys{{
      {6.0F, 9.0F, 0.0F, 20.0F},
      {20.0F, 9.0F, 0.0F, 40.0F},
      {12.0F, 4.0F, 0.0F, 22.0F}},
-    {0.20F,
+    {0.06F,
+     0.000F,
+     0.976F,
      0.0F,
-     0.978F,
+     0.0F,
+     -2.0F,
+     0.0F,
+     -0.4F,
+     -3.0F,
+     -9.0F,
+     -8.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {12.0F, 9.0F, 2.0F, 24.0F},
+     {6.0F, 9.0F, 0.0F, 20.0F},
+     {20.0F, 9.0F, 0.0F, 40.0F},
+     {12.0F, 4.0F, 0.0F, 22.0F}},
+    {0.14F,
+     0.000F,
+     0.977F,
      0.0F,
      0.0F,
      -3.0F,
      0.0F,
-     0.0F,
+     -0.6F,
      -4.0F,
-     -20.0F,
-     -14.0F,
+     -18.0F,
+     -13.0F,
      0.0F,
      0.0F,
      0.0F,
@@ -1542,17 +1560,17 @@ constexpr std::array<ShowcaseKey, 7> k_taunt_dismissive_keys{{
      {6.0F, 9.0F, 0.0F, 20.0F},
      {20.0F, 9.0F, 0.0F, 40.0F},
      {12.0F, 4.0F, 0.0F, 22.0F}},
-    {0.33F,
-     0.0F,
-     0.980F,
+    {0.22F,
+     0.000F,
+     0.978F,
      0.0F,
      0.0F,
      -3.0F,
      0.0F,
-     0.0F,
+     -0.6F,
      -4.0F,
-     -18.0F,
      -17.0F,
+     -16.0F,
      0.0F,
      0.0F,
      0.0F,
@@ -1560,17 +1578,17 @@ constexpr std::array<ShowcaseKey, 7> k_taunt_dismissive_keys{{
      {7.0F, 9.0F, 0.0F, 20.0F},
      {20.0F, 9.0F, 0.0F, 40.0F},
      {12.0F, 4.0F, 0.0F, 22.0F}},
-    {0.44F,
-     0.0F,
+    {0.30F,
+     0.000F,
      0.978F,
      0.0F,
      0.0F,
-     -2.0F,
+     -2.5F,
      0.0F,
-     0.0F,
+     -0.4F,
      -3.0F,
      -12.0F,
-     -16.0F,
+     -15.0F,
      0.0F,
      0.0F,
      0.0F,
@@ -1578,16 +1596,16 @@ constexpr std::array<ShowcaseKey, 7> k_taunt_dismissive_keys{{
      {7.0F, 9.0F, 0.0F, 20.0F},
      {20.0F, 9.0F, 0.0F, 40.0F},
      {12.0F, 4.0F, 0.0F, 22.0F}},
-    {0.60F,
-     0.0F,
+    {0.40F,
+     0.000F,
      0.976F,
      0.0F,
      0.0F,
      -2.0F,
      0.0F,
-     0.0F,
+     -0.2F,
      -3.0F,
-     -6.0F,
+     -7.0F,
      -12.0F,
      0.0F,
      0.0F,
@@ -1596,8 +1614,8 @@ constexpr std::array<ShowcaseKey, 7> k_taunt_dismissive_keys{{
      {6.0F, 9.0F, 0.0F, 20.0F},
      {20.0F, 9.0F, 0.0F, 40.0F},
      {12.0F, 4.0F, 0.0F, 22.0F}},
-    {0.78F,
-     0.0F,
+    {0.52F,
+     0.000F,
      0.975F,
      0.0F,
      0.0F,
@@ -1605,7 +1623,7 @@ constexpr std::array<ShowcaseKey, 7> k_taunt_dismissive_keys{{
      0.0F,
      0.0F,
      -3.0F,
-     -4.0F,
+     -5.0F,
      -8.0F,
      0.0F,
      0.0F,
@@ -1614,8 +1632,44 @@ constexpr std::array<ShowcaseKey, 7> k_taunt_dismissive_keys{{
      {6.0F, 9.0F, 0.0F, 20.0F},
      {20.0F, 9.0F, 0.0F, 40.0F},
      {12.0F, 4.0F, 0.0F, 22.0F}},
-    {1.0F,
+    {0.66F,
+     0.000F,
+     0.977F,
      0.0F,
+     0.0F,
+     -2.5F,
+     0.0F,
+     -0.5F,
+     -2.0F,
+     -11.0F,
+     -5.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {4.0F, 7.0F, 0.0F, 16.0F},
+     {7.0F, 10.0F, 0.0F, 21.0F},
+     {20.0F, 9.0F, 0.0F, 40.0F},
+     {12.0F, 4.0F, 0.0F, 22.0F}},
+    {0.82F,
+     0.000F,
+     0.974F,
+     0.0F,
+     0.0F,
+     -2.0F,
+     0.0F,
+     0.2F,
+     -3.0F,
+     -7.0F,
+     -7.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {4.0F, 7.0F, 0.0F, 16.0F},
+     {6.0F, 9.0F, 0.0F, 20.0F},
+     {20.0F, 9.0F, 0.0F, 40.0F},
+     {12.0F, 4.0F, 0.0F, 22.0F}},
+    {1.00F,
+     0.000F,
      0.975F,
      0.0F,
      0.0F,
@@ -1623,7 +1677,7 @@ constexpr std::array<ShowcaseKey, 7> k_taunt_dismissive_keys{{
      0.0F,
      0.0F,
      -3.0F,
-     -7.0F,
+     -6.0F,
      -6.0F,
      0.0F,
      0.0F,
@@ -1634,9 +1688,9 @@ constexpr std::array<ShowcaseKey, 7> k_taunt_dismissive_keys{{
      {12.0F, 4.0F, 0.0F, 22.0F}},
 }};
 
-constexpr std::array<ShowcaseKey, 5> k_taunt_cynical_keys{{
-    {0.0F,
-     0.0F,
+constexpr std::array<ShowcaseKey, 9> k_taunt_cynical_keys{{
+    {0.00F,
+     0.000F,
      0.970F,
      0.0F,
      -5.0F,
@@ -1653,62 +1707,134 @@ constexpr std::array<ShowcaseKey, 5> k_taunt_cynical_keys{{
      {5.0F, 8.0F, 0.0F, 14.0F},
      {23.0F, 12.0F, 0.0F, 46.0F},
      {10.0F, 3.0F, 0.0F, 18.0F}},
-    {0.25F,
-     0.0F,
-     0.972F,
-     0.0F,
-     -5.0F,
-     -4.0F,
-     0.0F,
-     -3.0F,
-     -5.0F,
-     -8.0F,
-     -13.0F,
-     0.0F,
-     0.0F,
-     0.0F,
-     {3.0F, 16.0F, 0.0F, 28.0F},
-     {5.0F, 8.0F, 0.0F, 15.0F},
-     {23.0F, 12.0F, 0.0F, 46.0F},
-     {10.0F, 3.0F, 0.0F, 18.0F}},
-    {0.5F,
-     0.0F,
-     0.969F,
-     0.0F,
-     -6.0F,
-     -4.0F,
-     0.0F,
-     -3.0F,
-     -5.0F,
-     8.0F,
-     -10.0F,
-     0.0F,
-     0.0F,
-     0.0F,
-     {2.0F, 14.0F, 0.0F, 25.0F},
-     {5.0F, 8.0F, 0.0F, 14.0F},
-     {23.0F, 12.0F, 0.0F, 46.0F},
-     {10.0F, 3.0F, 0.0F, 18.0F}},
-    {0.75F,
-     0.0F,
-     0.972F,
+    {0.10F,
+     0.000F,
+     0.973F,
      0.0F,
      -5.0F,
      -4.0F,
      0.0F,
-     -3.0F,
+     -3.6F,
      -5.0F,
-     -6.0F,
+     5.0F,
      -12.0F,
      0.0F,
      0.0F,
      0.0F,
-     {3.0F, 16.0F, 0.0F, 28.0F},
-     {5.0F, 8.0F, 0.0F, 15.0F},
+     {3.0F, 16.0F, 0.0F, 27.0F},
+     {5.0F, 8.0F, 0.0F, 14.0F},
      {23.0F, 12.0F, 0.0F, 46.0F},
      {10.0F, 3.0F, 0.0F, 18.0F}},
-    {1.0F,
+    {0.22F,
+     0.000F,
+     0.970F,
      0.0F,
+     -5.0F,
+     -4.0F,
+     0.0F,
+     -3.0F,
+     -4.0F,
+     2.0F,
+     -8.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {2.0F, 15.0F, 0.0F, 26.0F},
+     {8.0F, 10.0F, 0.0F, 18.0F},
+     {23.0F, 12.0F, 0.0F, 46.0F},
+     {10.0F, 3.0F, 0.0F, 18.0F}},
+    {0.34F,
+     0.000F,
+     0.971F,
+     0.0F,
+     -5.0F,
+     -4.0F,
+     0.0F,
+     -2.0F,
+     -3.0F,
+     -1.0F,
+     -6.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {2.0F, 14.0F, 0.0F, 25.0F},
+     {14.0F, 16.0F, -8.0F, 34.0F},
+     {23.0F, 12.0F, 0.0F, 46.0F},
+     {10.0F, 3.0F, 0.0F, 18.0F}},
+    {0.44F,
+     0.000F,
+     0.972F,
+     0.0F,
+     -5.0F,
+     -4.0F,
+     0.0F,
+     -2.2F,
+     -3.0F,
+     -2.0F,
+     -7.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {2.0F, 14.0F, 0.0F, 25.0F},
+     {13.0F, 18.0F, -6.0F, 36.0F},
+     {23.0F, 12.0F, 0.0F, 46.0F},
+     {10.0F, 3.0F, 0.0F, 18.0F}},
+    {0.56F,
+     0.000F,
+     0.969F,
+     0.0F,
+     -5.0F,
+     -5.0F,
+     0.0F,
+     -3.0F,
+     -6.0F,
+     3.0F,
+     -12.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {2.0F, 15.0F, 0.0F, 26.0F},
+     {6.0F, 9.0F, 0.0F, 15.0F},
+     {23.0F, 12.0F, 0.0F, 46.0F},
+     {10.0F, 3.0F, 0.0F, 18.0F}},
+    {0.70F,
+     0.000F,
+     0.972F,
+     0.0F,
+     -5.0F,
+     -4.0F,
+     0.0F,
+     -3.4F,
+     -5.0F,
+     11.0F,
+     -13.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {3.0F, 17.0F, 0.0F, 28.0F},
+     {5.0F, 8.0F, 0.0F, 14.0F},
+     {23.0F, 12.0F, 0.0F, 46.0F},
+     {10.0F, 3.0F, 0.0F, 18.0F}},
+    {0.84F,
+     0.000F,
+     0.969F,
+     0.0F,
+     -5.0F,
+     -4.0F,
+     0.0F,
+     -2.8F,
+     -4.5F,
+     7.0F,
+     -10.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {2.0F, 15.0F, 0.0F, 26.0F},
+     {5.0F, 8.0F, 0.0F, 14.0F},
+     {23.0F, 12.0F, 0.0F, 46.0F},
+     {10.0F, 3.0F, 0.0F, 18.0F}},
+    {1.00F,
+     0.000F,
      0.970F,
      0.0F,
      -5.0F,
@@ -1800,10 +1926,95 @@ blend_key(const ShowcaseKey& a, const ShowcaseKey& b, float u) noexcept -> Showc
   return out;
 }
 
+constexpr std::size_t k_key_scalar_count = 29;
+
+[[nodiscard]] auto
+key_scalars(const ShowcaseKey& key) noexcept -> std::array<float, k_key_scalar_count> {
+  return {key.root_x,       key.root_y,      key.root_z,      key.body_pitch,
+          key.body_roll,    key.body_yaw,    key.spine_pitch, key.spine_roll,
+          key.spine_yaw,    key.head_pitch,  key.blade_pitch, key.blade_yaw,
+          key.blade_amount, key.arm_l.pitch, key.arm_l.splay, key.arm_l.yaw,
+          key.arm_l.bend,   key.arm_r.pitch, key.arm_r.splay, key.arm_r.yaw,
+          key.arm_r.bend,   key.leg_l.pitch, key.leg_l.splay, key.leg_l.yaw,
+          key.leg_l.bend,   key.leg_r.pitch, key.leg_r.splay, key.leg_r.yaw,
+          key.leg_r.bend};
+}
+
+[[nodiscard]] auto key_from_scalars(
+    float t, const std::array<float, k_key_scalar_count>& v) noexcept -> ShowcaseKey {
+  ShowcaseKey key{};
+  key.t = t;
+  key.root_x = v[0];
+  key.root_y = v[1];
+  key.root_z = v[2];
+  key.body_pitch = v[3];
+  key.body_roll = v[4];
+  key.body_yaw = v[5];
+  key.spine_pitch = v[6];
+  key.spine_roll = v[7];
+  key.spine_yaw = v[8];
+  key.head_pitch = v[9];
+  key.blade_pitch = v[10];
+  key.blade_yaw = v[11];
+  key.blade_amount = v[12];
+  key.arm_l = {v[13], v[14], v[15], v[16]};
+  key.arm_r = {v[17], v[18], v[19], v[20]};
+  key.leg_l = {v[21], v[22], v[23], v[24]};
+  key.leg_r = {v[25], v[26], v[27], v[28]};
+  return key;
+}
+
+[[nodiscard]] auto sample_key_periodic(std::span<const ShowcaseKey> keys,
+                                       float phase) noexcept -> ShowcaseKey {
+  std::size_t const n = keys.size();
+  phase = std::clamp(phase, 0.0F, 1.0F);
+  std::size_t i = 0;
+  while (i + 2 < n && phase > keys[i + 1].t) {
+    ++i;
+  }
+  ShowcaseKey const& a = keys[i];
+  ShowcaseKey const& b = keys[i + 1];
+  ShowcaseKey const& before = i == 0 ? keys[n - 2] : keys[i - 1];
+  ShowcaseKey const& after = i + 2 >= n ? keys[1] : keys[i + 2];
+  float const t_before = i == 0 ? keys[n - 2].t - 1.0F : before.t;
+  float const t_after = i + 2 >= n ? keys[1].t + 1.0F : after.t;
+
+  float const span = std::max(1.0e-5F, b.t - a.t);
+  float const u = std::clamp((phase - a.t) / span, 0.0F, 1.0F);
+  float const u2 = u * u;
+  float const u3 = u2 * u;
+  float const h00 = 2.0F * u3 - 3.0F * u2 + 1.0F;
+  float const h10 = u3 - 2.0F * u2 + u;
+  float const h01 = -2.0F * u3 + 3.0F * u2;
+  float const h11 = u3 - u2;
+
+  auto const pa = key_scalars(a);
+  auto const pb = key_scalars(b);
+  auto const pp = key_scalars(before);
+  auto const pn = key_scalars(after);
+  float const span_before = std::max(1.0e-5F, a.t - t_before);
+  float const span_after = std::max(1.0e-5F, t_after - b.t);
+
+  std::array<float, k_key_scalar_count> out{};
+  for (std::size_t k = 0; k < k_key_scalar_count; ++k) {
+    float const slope_ab = (pb[k] - pa[k]) / span;
+    float const slope_pa = (pa[k] - pp[k]) / span_before;
+    float const slope_bn = (pn[k] - pb[k]) / span_after;
+    float const m_a = 0.5F * (slope_ab + slope_pa);
+    float const m_b = 0.5F * (slope_ab + slope_bn);
+    out[k] = h00 * pa[k] + h10 * span * m_a + h01 * pb[k] + h11 * span * m_b;
+  }
+  return key_from_scalars(phase, out);
+}
+
 [[nodiscard]] auto sample_key(std::span<const ShowcaseKey> keys,
-                              float phase) noexcept -> ShowcaseKey {
+                              float phase,
+                              bool periodic) noexcept -> ShowcaseKey {
   if (keys.empty()) {
     return {};
+  }
+  if (periodic && keys.size() >= 3) {
+    return sample_key_periodic(keys, phase);
   }
   phase = std::clamp(phase, 0.0F, 1.0F);
   if (phase <= keys.front().t) {
@@ -1896,9 +2107,9 @@ auto humanoid_showcase_move_duration(HumanoidShowcaseMove move) noexcept -> floa
   case HumanoidShowcaseMove::RestSitKneesDown:
     return 1.7F;
   case HumanoidShowcaseMove::TauntDismissive:
-    return 2.4F;
+    return 4.8F;
   case HumanoidShowcaseMove::TauntCynical:
-    return 3.2F;
+    return 6.4F;
   case HumanoidShowcaseMove::None:
   case HumanoidShowcaseMove::Count:
     break;
@@ -1970,7 +2181,8 @@ auto resolve_humanoid_showcase_pose(const HumanoidShowcasePoseInputs& inputs) no
   if (keys.empty()) {
     return {};
   }
-  ShowcaseKey const key = sample_key(keys, inputs.phase);
+  ShowcaseKey const key =
+      sample_key(keys, inputs.phase, humanoid_showcase_move_is_taunt(inputs.move));
   HumanoidShowcaseRig const& rig = inputs.rig;
 
   Mat3 const spine =

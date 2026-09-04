@@ -258,6 +258,11 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         stone_shader->set_uniform(
             m_vegetation_pipeline->m_stone_uniforms.light_direction, light_dir);
       }
+      if (m_vegetation_pipeline->m_stone_uniforms.camera_pos !=
+          Shader::InvalidUniform) {
+        stone_shader->set_uniform(m_vegetation_pipeline->m_stone_uniforms.camera_pos,
+                                  cam.get_position());
+      }
 
       glBindVertexArray(m_vegetation_pipeline->m_stone_mesh.vao);
       stone.instance_buffer->bind();
@@ -273,7 +278,13 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
                                    GL_FLOAT,
                                    GL_FALSE,
                                    stride,
-                                   offsetof(StoneInstanceGpu, color_rot)}});
+                                   offsetof(StoneInstanceGpu, color_rot)},
+                                  {instance_scale,
+                                   vec4,
+                                   GL_FLOAT,
+                                   GL_FALSE,
+                                   stride,
+                                   offsetof(StoneInstanceGpu, ground_fit)}});
       stone.instance_buffer->unbind();
 
       glDrawElementsInstanced(GL_TRIANGLES,
@@ -339,6 +350,9 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
           light_dir.normalize();
         }
         shader->set_uniform(uniforms.light_direction, light_dir);
+      }
+      if (uniforms.camera_pos != Shader::InvalidUniform) {
+        shader->set_uniform(uniforms.camera_pos, cam.get_position());
       }
 
       glBindVertexArray(foliage.mesh->vao);

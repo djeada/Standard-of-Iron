@@ -396,6 +396,79 @@ TEST(ShaderSource, WorldSurfacesTakeTheirKeyLightFromTheSharedModel) {
          "above their first caller in this include";
 }
 
+TEST(ShaderSource, WorldMaterialHighlightsFollowTheCamera) {
+  const auto root = find_repo_root();
+  const std::vector<std::string> shaders{
+      "bridge.frag",
+      "road.frag",
+      "stone_instanced.frag",
+      "tent_instanced.frag",
+      "supply_cart_instanced.frag",
+      "weapon_rack_instanced.frag",
+      "ruins_instanced.frag",
+      "dead_tree_instanced.frag",
+      "statue_instanced.frag",
+      "pine_instanced.frag",
+      "olive_instanced.frag",
+  };
+
+  for (const auto& name : shaders) {
+    const auto source = read_text(root / "assets" / "shaders" / name);
+    ASSERT_FALSE(source.empty()) << name;
+    EXPECT_NE(source.find("uniform vec3 u_camera_pos;"), std::string::npos) << name;
+    EXPECT_NE(source.find("normalize(u_camera_pos - v_world_pos)"), std::string::npos)
+        << name;
+    EXPECT_EQ(source.find("normalize(vec3(0.0, 0.8"), std::string::npos)
+        << name << " still anchors its specular or rim light to a fake eye vector";
+    EXPECT_EQ(source.find("normalize(vec3(0.0, 0.9"), std::string::npos)
+        << name << " still anchors its specular or rim light to a fake eye vector";
+  }
+
+  for (const auto* name : {"basic.frag", "basic_instanced.frag"}) {
+    const auto source = read_shader_with_includes(root, name);
+    ASSERT_FALSE(source.empty()) << name;
+    EXPECT_NE(source.find("uniform vec3 u_camera_pos;"), std::string::npos) << name;
+    EXPECT_NE(source.find("normalize(u_camera_pos - world_pos)"), std::string::npos)
+        << name;
+    EXPECT_EQ(source.find("normalize(vec3(0.0, 1.0, 0."), std::string::npos)
+        << name << " still anchors shared material sheen to a fake eye vector";
+  }
+}
+
+TEST(ShaderSource, WetStoneCarriesWeatherIntoItsMaterialResponse) {
+  const auto root = find_repo_root();
+  const auto bridge = read_text(root / "assets" / "shaders" / "bridge.frag");
+  const auto stone = read_text(root / "assets" / "shaders" / "stone_instanced.frag");
+  ASSERT_FALSE(bridge.empty());
+  ASSERT_FALSE(stone.empty());
+  const auto flat_bridge = collapse_whitespace(bridge);
+  const auto flat_stone = collapse_whitespace(stone);
+
+  EXPECT_NE(flat_bridge.find("float wetness = environment_wetness();"),
+            std::string::npos);
+  EXPECT_NE(flat_bridge.find("float joint_pool ="), std::string::npos);
+  EXPECT_NE(flat_bridge.find("vec3 wet_normal ="), std::string::npos);
+  EXPECT_NE(flat_stone.find("float rain_damp = environment_wetness()"),
+            std::string::npos);
+  EXPECT_NE(flat_stone.find("float wet_surface = max(ground_damp, rain_damp);"),
+            std::string::npos);
+}
+
+TEST(ShaderSource, TreeCrownsCarrySecondaryWindMotion) {
+  const auto root = find_repo_root();
+  const auto pine = read_text(root / "assets" / "shaders" / "pine_instanced.vert");
+  const auto olive = read_text(root / "assets" / "shaders" / "olive_instanced.vert");
+  ASSERT_FALSE(pine.empty());
+  ASSERT_FALSE(olive.empty());
+  const auto flat_pine = collapse_whitespace(pine);
+  const auto flat_olive = collapse_whitespace(olive);
+
+  EXPECT_NE(flat_pine.find("float branch_flutter ="), std::string::npos);
+  EXPECT_NE(flat_pine.find("branch_flutter * branch_flex * gust"), std::string::npos);
+  EXPECT_NE(flat_olive.find("float leaf_flutter ="), std::string::npos);
+  EXPECT_NE(flat_olive.find("leaf_flutter * flutter_flex * gust"), std::string::npos);
+}
+
 TEST(ShaderSource, GeneralWorldShadersDoNotHardCodeDaylightColors) {
   const auto root = find_repo_root();
   for (const auto* name : {"basic.frag",

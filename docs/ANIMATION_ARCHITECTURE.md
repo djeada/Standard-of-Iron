@@ -272,6 +272,47 @@ Review changes with the `humanoid_gait_review` scenario, or far faster with
 `build/bin/humanoid_preview --clip walk --view side --report`, which renders the baked
 clip as a phase strip and prints per-frame bone stretch.
 
+### A formation that pivots in place wheels its men
+
+A formation given a destination behind it does not walk a U-turn: `movement_system`
+stops translating once the heading error passes ~100° and turns the whole unit on the
+spot at `formation_turn_speed_degrees` (outer-file speed capped at `max(2, 1.5·speed)`,
+so an 8-wide line turns at roughly 67°/s). The simulation reports
+`MotionPresentationState::Turning` for that second or two, which selects the **idle**
+clip — and every slot is a rigid offset from the unit yaw, so before this note the men on
+the wings were dragged sideways along a 4 m arc at 4.6 m/s in a standing pose. The
+`*_locomotion_matrix` arena scenarios reported it as `command_response_timeout`: nothing
+walked, nothing translated, the unit had merely rotated.
+
+`resolve_soldier_turn_smoothing` (`render/humanoid/runtime/soldier_turn_smoothing.cpp`)
+already knew how to wheel a man to a rotated slot — the wheel path, the catch-up speed,
+the travel-facing yaw — but for a unit that publishes a `FormationPresentation` the slot
+is `position_is_authoritative` and the state snapped to it every frame, so nothing ever
+relocated. The smoother now detects a **sweep** on its own inputs: the formation yaw turning
+faster than 10°/s while either the formation centre moves under 0.35 m/s (the same
+threshold `movement_system` uses to decide it is turning rather than walking) or the
+man's own slot outruns the centre by more than 0.5 m/s. The second clause matters as much
+as the first: the unit begins translating while it is still turning, and for the next
+1.5 s a wing slot travels at ~6 m/s under a 2.5 m/s walk gait — 17 % of every moving
+soldier frame in `infantry_locomotion_matrix` was a body outrunning its unit by over
+1 m/s. An inner file on a gentle marching corner (30°/s at 1.5 m from the centre) stays
+inside the margin and keeps its slot. While a sweep holds, and until the man has settled
+again, the slot stops owning his position and he walks after it, facing his direction of
+travel; a man swept faster than 0.3 m/s counts as relocating even inside the 0.30 m
+relocate band, which is what keeps the inner files stepping rather than gliding. A man
+who started relocating under a sweep is `wheeling` and may jog at 1.5× the ordinary
+catch-up cap, so a wing regains its place in a couple of seconds instead of trailing the
+line for ten. Once the sweep ends and he is within `settle_distance`, the slot is
+authoritative again with no snap, because he is already standing on it. The
+snap-distance teleport guard doubles while wheeling so a wide line's wing is not cut to
+its slot mid-arc.
+
+Two cases keep the rigid sweep on purpose, through `allow_pivot_wheel`: a formation in
+melee (contact geometry is simulation-owned and a lagging body would fight beside the
+wrong man) and one in hold mode (a kneeling wall must not stand up to shuffle). The
+arena's command-response check now also accepts a 5° rotation as a visible response, so a
+unit that turns before it walks is no longer reported as ignoring its order.
+
 ---
 
 ## 4b. Showcase moves (authored keyframes, not procedural shaping)

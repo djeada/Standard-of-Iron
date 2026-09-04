@@ -34,6 +34,7 @@ public:
   struct StoneUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_pos{GL::Shader::InvalidUniform};
   } m_stone_uniforms;
 
   struct FoliageUniforms {
@@ -42,6 +43,7 @@ public:
     GL::Shader::UniformHandle wind_strength{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle wind_speed{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_pos{GL::Shader::InvalidUniform};
   };
 
   FoliageUniforms m_plant_uniforms;
