@@ -80,6 +80,23 @@ TestCase {
         compare(testCase.spoken_lines(), 0, "a successful order is not a refusal");
     }
 
+    function test_a_hauling_crew_is_told_at_once_and_loudly() {
+        testCase.reset();
+        voice.announce_busy("Hauling a load - it cannot be interrupted until the load is dropped off.");
+        compare(testCase.spoken_lines(), 1, "a busy crew does not wait for the third refusal");
+        compare(Notifications.current.priority, "urgent", "the refusal outranks the ambient chatter");
+        compare(Notifications.current.channel, "refusal-unit_busy");
+        voice.announce_busy("Hauling a load - it cannot be interrupted until the load is dropped off.");
+        compare(testCase.spoken_lines(), 1, "repeats fold into the same card instead of stacking");
+        compare(Notifications.current.repeats, 2);
+    }
+
+    function test_a_busy_refusal_with_no_words_stays_quiet() {
+        testCase.reset();
+        voice.announce_busy("");
+        compare(testCase.spoken_lines(), 0);
+    }
+
     function test_every_line_it_can_say_is_worth_saying() {
         var kinds = ["no_selection", "unreachable", "insufficient_resources", "manpower_cap", "unit_busy", "out_of_range", "wrong_owner", "invalid_target"];
         for (var i = 0; i < kinds.length; ++i) {
