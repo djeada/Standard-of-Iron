@@ -342,6 +342,8 @@ public:
 
   MovementDirectionSource direction_source{MovementDirectionSource::None};
 
+  float last_accepted_speed{0.0F};
+
   void begin_tick() {
     desired = {};
     motor = {};
@@ -1407,6 +1409,7 @@ public:
   float cancel_speed{2.2F};
   float speed_loss_grace{0.15F};
   float below_cancel_speed_time{0.0F};
+  float last_observed_speed{0.0F};
   float cooldown_duration{0.65F};
   float cooldown_remaining{0.0F};
   float impact_speed{0.0F};
