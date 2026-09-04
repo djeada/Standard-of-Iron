@@ -182,7 +182,8 @@ TEST_F(ProductionSystemTest, BuilderCollectsStoneAndAwardsStone) {
 
   const auto* carry = builder->get_component<Engine::Core::ResourceCarryComponent>();
   ASSERT_NE(carry, nullptr) << "the gathered load should be on the worker's back";
-  EXPECT_EQ(carry->amounts.get(Game::Systems::ResourceType::Stone), 35);
+  EXPECT_EQ(carry->amounts.get(Game::Systems::ResourceType::Stone),
+            Game::Systems::k_collect_stone_reward);
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Stone),
             0)
@@ -193,7 +194,7 @@ TEST_F(ProductionSystemTest, BuilderCollectsStoneAndAwardsStone) {
 
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Stone),
-            35);
+            Game::Systems::k_collect_stone_reward);
   EXPECT_FALSE(builder->has_component<Engine::Core::ResourceCarryComponent>());
   EXPECT_TRUE(terrain.world_props().empty());
 
@@ -264,7 +265,8 @@ TEST_F(ProductionSystemTest, BuilderCollectsIronOreAndAwardsIron) {
 
   const auto* carry = builder->get_component<Engine::Core::ResourceCarryComponent>();
   ASSERT_NE(carry, nullptr) << "the gathered load should be on the worker's back";
-  EXPECT_EQ(carry->amounts.get(Game::Systems::ResourceType::Iron), 30);
+  EXPECT_EQ(carry->amounts.get(Game::Systems::ResourceType::Iron),
+            Game::Systems::k_collect_iron_ore_reward);
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Iron),
             0)
@@ -275,7 +277,7 @@ TEST_F(ProductionSystemTest, BuilderCollectsIronOreAndAwardsIron) {
 
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Iron),
-            30);
+            Game::Systems::k_collect_iron_ore_reward);
   EXPECT_FALSE(builder->has_component<Engine::Core::ResourceCarryComponent>());
   EXPECT_TRUE(terrain.world_props().empty());
 

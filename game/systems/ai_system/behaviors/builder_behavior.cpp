@@ -57,9 +57,6 @@ constexpr int MAX_CATAPULTS = 5;
 
 constexpr float MAP_EDGE_PADDING = 5.0F;
 
-constexpr int k_recruit_wood_reserve = 80;
-constexpr int k_recruit_iron_reserve = 50;
-
 void clamp_to_map_bounds(const AISnapshot& snapshot, float& x, float& z) {
   if (!snapshot.has_map_bounds) {
     return;
@@ -257,20 +254,6 @@ auto field_is_worked(const AISnapshot& snapshot,
 auto granary_has_room(const AISnapshot& snapshot) -> bool {
   return snapshot.has_resource_snapshot &&
          snapshot.resources.get(ResourceType::Food) < k_ai_granary_target;
-}
-
-auto recruit_reserve_shortfall(const AISnapshot& snapshot) -> ResourceType {
-  if (!snapshot.has_resource_snapshot) {
-    return ResourceType::Count;
-  }
-  const int wood_deficit =
-      k_recruit_wood_reserve - snapshot.resources.get(ResourceType::Wood);
-  const int iron_deficit =
-      k_recruit_iron_reserve - snapshot.resources.get(ResourceType::Iron);
-  if (wood_deficit <= 0 && iron_deficit <= 0) {
-    return ResourceType::Count;
-  }
-  return iron_deficit > wood_deficit ? ResourceType::Iron : ResourceType::Wood;
 }
 
 auto node_matches_resource(const ResourceNodeSnapshot& node,

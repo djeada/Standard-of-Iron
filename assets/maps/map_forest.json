@@ -983,15 +983,15 @@
     {
       "id": "p1_tent_b",
       "type": "tent",
-      "x": 44.51,
-      "z": 144.58,
+      "x": 35.84,
+      "z": 138.66,
       "rotation": 315.0
     },
     {
       "id": "p1_cart",
       "type": "supply_cart",
-      "x": 50.48,
-      "z": 143.91,
+      "x": 59.48,
+      "z": 128.32,
       "rotation": 405.0
     },
     {
@@ -1018,8 +1018,8 @@
     {
       "id": "p2_tent_b",
       "type": "tent",
-      "x": 130.39,
-      "z": 31.01,
+      "x": 127.57,
+      "z": 48.79,
       "rotation": 135.0
     },
     {
@@ -1294,16 +1294,16 @@
     },
     {
       "type": "ruins",
-      "x": 83.55,
-      "z": 160.63,
+      "x": 99.59,
+      "z": 152.46,
       "scale": 0.9,
       "rotation": 270.0,
       "landmark": "south_hamlet"
     },
     {
       "type": "dead_tree",
-      "x": 100.0,
-      "z": 154.0,
+      "x": 100.42,
+      "z": 156.36,
       "scale": 1.0,
       "rotation": 90.0,
       "landmark": "south_hamlet"
@@ -1358,8 +1358,8 @@
     },
     {
       "type": "ruins",
-      "x": 92.35,
-      "z": 15.68,
+      "x": 79.26,
+      "z": 13.37,
       "scale": 0.9,
       "rotation": 90.0,
       "landmark": "north_hamlet"
