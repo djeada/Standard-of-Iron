@@ -16,6 +16,8 @@ in float v_branch_id;
 in vec2 v_local_pos_xz;
 in vec3 v_local_pos;
 
+uniform vec3 u_camera_pos;
+
 out vec4 frag_color;
 
 const float PI = 3.14159265359;
@@ -36,7 +38,7 @@ void main() {
 
   vec3 geometric_normal = normalize(v_normal);
   vec3 l = environment_primary_direction();
-  vec3 view_dir = normalize(vec3(0.0, 0.86, 0.52));
+  vec3 view_dir = normalize(u_camera_pos - v_world_pos);
 
   vec3 leaf_seed_offset =
       vec3(v_leaf_seed * 37.0, v_branch_id * 11.0, v_leaf_seed * 59.0);

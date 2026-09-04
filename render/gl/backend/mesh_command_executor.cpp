@@ -133,6 +133,9 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
       if (uniforms->ambient_strength != Shader::InvalidUniform) {
         active_shader->set_uniform(uniforms->ambient_strength, m_ambient_strength);
       }
+      if (uniforms->camera_pos != Shader::InvalidUniform) {
+        active_shader->set_uniform(uniforms->camera_pos, cam.get_position());
+      }
       bind_material_detail(*active_shader, *uniforms, m_resources.get());
       m_last_bound_shader = active_shader;
     }
@@ -171,6 +174,9 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
           if (inst_uniforms->ambient_strength != Shader::InvalidUniform) {
             batch_shader->set_uniform(inst_uniforms->ambient_strength,
                                       m_ambient_strength);
+          }
+          if (inst_uniforms->camera_pos != Shader::InvalidUniform) {
+            batch_shader->set_uniform(inst_uniforms->camera_pos, cam.get_position());
           }
           Texture* tex_to_use = (it.texture != nullptr)
                                     ? it.texture
@@ -295,6 +301,9 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
       active_shader->use();
       if (uniforms->view_proj != Shader::InvalidUniform) {
         active_shader->set_uniform(uniforms->view_proj, view_proj);
+      }
+      if (uniforms->camera_pos != Shader::InvalidUniform) {
+        active_shader->set_uniform(uniforms->camera_pos, cam.get_position());
       }
       bind_material_detail(*active_shader, *uniforms, m_resources.get());
       m_last_bound_shader = active_shader;

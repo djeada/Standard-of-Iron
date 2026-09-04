@@ -9,6 +9,8 @@ in vec3 v_normal;
 in vec3 v_color;
 in vec3 v_local_pos;
 
+uniform vec3 u_camera_pos;
+
 out vec4 frag_color;
 
 float hash31(vec3 p) {
@@ -34,7 +36,7 @@ float stone_noise3(vec3 p) {
 void main() {
   vec3 N = normalize(v_normal);
   vec3 L = environment_primary_direction();
-  vec3 V = normalize(vec3(0.0, 0.86, 0.52));
+  vec3 V = normalize(u_camera_pos - v_world_pos);
   vec3 H = normalize(L + V);
 
   vec3 p = v_local_pos;
@@ -57,6 +59,9 @@ void main() {
   float ground_damp = (1.0 - smoothstep(0.02, 0.24, p.y)) *
                       smoothstep(0.28, 0.72, stone_noise3(v_world_pos * 0.9));
   stone = mix(stone, stone * vec3(0.52, 0.58, 0.60), ground_damp * 0.58);
+  float rain_damp =
+      environment_wetness() * smoothstep(0.02, 0.78, N.y) * mix(0.62, 1.0, broad);
+  stone *= 1.0 - rain_damp * 0.20;
 
   float ndotl = max(dot(N, L), 0.0);
   float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
@@ -65,7 +70,8 @@ void main() {
   vec3 illumination = soi_surface_lighting_scaled(N, 0.72);
   float crevice_ao = mix(1.0, 0.62, fissures) * mix(0.58, 1.0, hemi);
 
-  float wet_spec = ground_damp * pow(max(dot(N, H), 0.0), 34.0) * 0.16;
+  float wet_surface = max(ground_damp, rain_damp);
+  float wet_spec = wet_surface * pow(max(dot(N, H), 0.0), 38.0) * 0.22;
   float dry_spec = pow(max(dot(N, H), 0.0), 18.0) * 0.025;
   float rim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.055;
 

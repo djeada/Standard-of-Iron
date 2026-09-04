@@ -104,6 +104,14 @@ void main() {
   vec2 wind_dir = normalize(vec2(0.78, 0.62));
   vec2 cross_dir = vec2(-wind_dir.y, wind_dir.x);
   vec2 wind_offset = (wind_dir * sway + cross_dir * sway2) * sway_amount;
+  float canopy_edge = smoothstep(0.12, 0.40, length(model_pos.xz));
+  float leaf_flutter =
+      sin(wind_time * 3.15 + branch_id * 1.73 + leaf_seed * TWO_PI + angle * 1.4) *
+      sin(wind_time * 1.21 + sway_phase * 0.83 + silhouette_seed * TWO_PI);
+  float flutter_flex = foliage_mask * mix(0.42, 1.0, canopy_edge);
+  wind_offset +=
+      cross_dir * leaf_flutter * flutter_flex * gust * u_wind_strength * 0.022 * scale;
+  local_pos.y += leaf_flutter * flutter_flex * u_wind_strength * 0.006 * scale;
   local_pos.y -= abs(sway) * 0.012 * foliage_mask * scale;
 
   float cos_r = cos(rotation);
