@@ -65,6 +65,7 @@ Item {
     function announce_busy(message) {
         if (!message || message.length === 0)
             return;
+        Design.UiSound.warning();
         Design.Notifications.urgent(message, {
                 "channel": "refusal-unit_busy",
                 "icon": Design.Icons.warning

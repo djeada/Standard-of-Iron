@@ -1,14 +1,50 @@
 #include "app/orders/order_submission.h"
 
+#include <algorithm>
 #include <type_traits>
 #include <utility>
 #include <variant>
 
 #include "game/command/command_queue.h"
 #include "game/command/command_validator.h"
+#include "game/core/component.h"
 #include "game/core/world.h"
 
 namespace App::Core {
+
+namespace {
+
+auto payload_units(const Game::Command::Payload& payload)
+    -> const std::vector<Engine::Core::EntityID>* {
+  return std::visit(
+      [](const auto& body) -> const std::vector<Engine::Core::EntityID>* {
+        if constexpr (requires { body.units; }) {
+          return &body.units;
+        } else {
+          return nullptr;
+        }
+      },
+      payload);
+}
+
+auto is_hauling_a_load(const Engine::Core::World& world,
+                       Engine::Core::EntityID unit) -> bool {
+  const auto* carry = world.try_get<Engine::Core::ResourceCarryComponent>(unit);
+  return carry != nullptr && !carry->empty();
+}
+
+auto every_unit_is_hauling(const Engine::Core::World& world,
+                           const Game::Command::Payload& payload) -> bool {
+  const auto* units = payload_units(payload);
+  if (units == nullptr || units->empty()) {
+    return false;
+  }
+  return std::all_of(units->begin(), units->end(), [&world](auto id) {
+    return is_hauling_a_load(world, id);
+  });
+}
+
+} // namespace
 
 auto payload_unit_count(const Game::Command::Payload& payload) -> std::size_t {
   return std::visit(
@@ -36,6 +72,15 @@ auto submit_player_order(Engine::Core::World& world,
   outcome.target = request.target;
   outcome.has_destination = request.has_destination;
   outcome.destination = request.destination;
+
+  if (every_unit_is_hauling(world, request.payload)) {
+    outcome.unit_count = payload_unit_count(request.payload);
+    outcome.status = OrderStatus::Rejected;
+    auto refusal = hauling_load_reason();
+    outcome.failure = refusal.failure;
+    outcome.reason = std::move(refusal.text);
+    return outcome;
+  }
 
   const Game::Command::Command command{.source = Game::Command::Source::LocalPlayer,
                                        .owner_id = owner_id,

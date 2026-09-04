@@ -58,8 +58,9 @@ ApplicationWindow {
         tip.delay = Design.Metrics.tooltipDelay;
         tip.timeout = 8000;
         tip.padding = Design.Metrics.space8;
-        tip.background = sharedTooltipBackground.createObject(tip);
-        var body = sharedTooltipText.createObject(tip, {
+        var host = (tip.contentItem && tip.contentItem.parent) ? tip.contentItem.parent : sharedTooltipAnchor;
+        tip.background = sharedTooltipBackground.createObject(host);
+        var body = sharedTooltipText.createObject(host, {
                 "text": Qt.binding(function () {
                         return tip.text;
                     }),
@@ -67,6 +68,7 @@ ApplicationWindow {
                         return tip.availableWidth;
                     })
             });
+        body.parent = null;
         tip.contentItem = body;
         tip.implicitWidth = Qt.binding(function () {
                 return Math.min(body.implicitWidth + tip.leftPadding + tip.rightPadding, Design.Metrics.tooltipWidth);
