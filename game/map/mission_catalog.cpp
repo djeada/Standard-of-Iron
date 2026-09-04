@@ -14,6 +14,8 @@
 #include "campaign_loader.h"
 #include "game/map/campaign_definition.h"
 #include "game/map/mission_definition.h"
+#include "game/systems/resource_json.h"
+#include "game/systems/resource_types.h"
 #include "game/util/asset_text.h"
 #include "json_keys.h"
 #include "mission_loader.h"
@@ -127,6 +129,31 @@ auto build_starting_force(const QJsonObject& map_object,
     add_to_force(force, unit.type, std::max(1, unit.count));
   }
   return force;
+}
+
+auto build_starting_resources(const QJsonObject& map_object,
+                              const Game::Systems::ResourceOverlay& mission_overlay)
+    -> QVariantList {
+
+  Game::Systems::ResourceAmounts stock;
+  Game::Systems::read_resource_overlay(
+      map_object.value(QLatin1String(STARTING_RESOURCES)).toObject())
+      .apply_to(stock);
+  mission_overlay.apply_to(stock);
+
+  QVariantList out;
+  for (const Game::Systems::ResourceType type : Game::Systems::k_all_resource_types) {
+    const int amount = stock.get(type);
+    if (amount <= 0) {
+      continue;
+    }
+    QVariantMap row;
+    row[QStringLiteral("type")] =
+        QString::fromLatin1(Game::Systems::resource_type_key(type));
+    row[QStringLiteral("amount")] = amount;
+    out.append(row);
+  }
+  return out;
 }
 
 auto build_map_summary(const QString& map_path,
@@ -251,6 +278,8 @@ auto MissionCatalog::standalone_missions() -> QVariantList {
     entry[QStringLiteral("victory_mode")] = mission.victory_mode;
     entry[QStringLiteral("starting_force")] =
         build_starting_force(map_object, mission.player_setup.starting_units);
+    entry[QStringLiteral("starting_resources")] =
+        build_starting_resources(map_object, mission.player_setup.starting_resources);
     entry[QStringLiteral("objectives")] =
         build_objective_list(mission.victory_conditions);
     entry[QStringLiteral("optional_objectives")] =

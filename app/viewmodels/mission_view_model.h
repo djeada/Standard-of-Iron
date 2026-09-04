@@ -29,6 +29,8 @@ class MissionViewModel : public QObject {
   Q_PROPERTY(QVariantList markers READ markers NOTIFY stages_changed)
   Q_PROPERTY(bool stages_mirror_victory_conditions READ stages_mirror_victory_conditions
                  NOTIFY stages_changed)
+  Q_PROPERTY(
+      qreal seconds_until_deadline READ seconds_until_deadline NOTIFY deadline_changed)
 
 public:
   MissionViewModel(const App::Core::ClientContext& context,
@@ -37,6 +39,7 @@ public:
                    QObject* parent = nullptr);
 
   void set_stages(const QVariantList& stages, bool mirrors_victory_conditions = false);
+  void set_seconds_until_deadline(qreal seconds);
   void clear();
 
   [[nodiscard]] auto staged() const -> bool { return !m_stages.isEmpty(); }
@@ -54,10 +57,15 @@ public:
     return m_stages_mirror_victory_conditions;
   }
 
+  [[nodiscard]] auto seconds_until_deadline() const -> qreal {
+    return m_seconds_until_deadline;
+  }
+
   Q_INVOKABLE void focus_active_stage();
 
 signals:
   void stages_changed();
+  void deadline_changed();
 
 private:
   [[nodiscard]] auto active_stage() const -> QVariantMap;
@@ -70,6 +78,7 @@ private:
   QVariantList m_markers;
   int m_active_index = -1;
   bool m_stages_mirror_victory_conditions = false;
+  qreal m_seconds_until_deadline = -1.0;
 };
 
 } // namespace App::ViewModels

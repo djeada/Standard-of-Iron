@@ -771,8 +771,11 @@ void GameEngine::simulate(float dt) {
     return;
   }
 
+  const bool overlay_up =
+      m_loading_overlay_wait_for_first_frame.load(std::memory_order_acquire);
+
   float simulation_time_scale = 0.0F;
-  if (!m_runtime.paused) {
+  if (!m_runtime.paused && !overlay_up) {
     simulation_time_scale =
         m_runtime.time_scale * m_commander_view_model->time_effect_scale(
                                    dt * m_runtime.time_scale, m_runtime.paused);
@@ -1532,6 +1535,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
 
   if (!m_runtime.victory_state.isEmpty()) {
     m_runtime.victory_state = "";
+    m_runtime.defeat_reason.clear();
     emit victory_state_changed();
   }
   if (m_victory_service) {
@@ -1639,6 +1643,9 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
     m_skirmish_runtime->initialize_player_resources(
         {*m_session, m_level, m_runtime.local_owner_id, authored_mission_def});
     configure_mission_victory_conditions();
+
+    publish_mission_stages();
+    publish_wave_status();
     configure_rain_system();
     if (m_environment_clock) {
       m_environment_clock->reset(m_level.environment);
@@ -1710,6 +1717,8 @@ void GameEngine::apply_mission_setup() {
   m_mission_waves.bind_after_setup(
       mission_wave_binding(), std::move(waves), std::move(events));
   configure_mission_stages();
+
+  publish_wave_status();
   m_mission_start_cue_pending = m_commander_message_director.has_messages();
   if (effects.rebuild_entity_cache) {
     GameStateRestorer::rebuild_entity_cache(
@@ -1750,6 +1759,8 @@ void GameEngine::configure_mission_victory_conditions() {
         Game::Audio::play_cue(Game::Audio::Cue::k_alert_objective_failed);
       }
       m_runtime.victory_state = state;
+      m_runtime.defeat_reason =
+          state == "defeat" ? m_victory_service->get_defeat_description() : QString();
       emit victory_state_changed();
 
       if (state == "victory") {
@@ -2038,6 +2049,8 @@ void GameEngine::restore_mission_stages(const QJsonObject& stage_state) {
 }
 
 void GameEngine::update_mission_stages(float delta_time) {
+  publish_mission_deadline();
+
   if (!m_mission_stage_tracker.has_stages() || !m_session) {
     return;
   }
@@ -2055,6 +2068,16 @@ void GameEngine::update_mission_stages(float delta_time) {
   if (changed) {
     publish_mission_stages();
   }
+}
+
+void GameEngine::publish_mission_deadline() {
+  if (!m_mission_view_model) {
+    return;
+  }
+  const float remaining =
+      m_victory_service ? m_victory_service->seconds_until_deadline() : -1.0F;
+  m_mission_view_model->set_seconds_until_deadline(
+      remaining < 0.0F ? -1.0 : std::floor(static_cast<double>(remaining)));
 }
 
 void GameEngine::publish_mission_stages() {

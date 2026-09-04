@@ -159,18 +159,22 @@ auto build_victory_rules(const MissionDefinition& mission)
 
   for (const auto& condition : mission.defeat_conditions) {
     QString const type = condition.type.trimmed().toLower();
+    const auto add_defeat_rule = [&rules, &condition](Game::Systems::DefeatRule rule) {
+      rules.defeat_rules.emplace_back(std::move(rule), condition.description);
+    };
+
     if (type == "lose_all_units") {
-      rules.defeat_rules.emplace_back(Game::Systems::NoUnitsDefeatRule{});
+      add_defeat_rule(Game::Systems::NoUnitsDefeatRule{});
       continue;
     }
 
     if (type == "lose_commander") {
-      rules.defeat_rules.emplace_back(Game::Systems::NoCommanderDefeatRule{});
+      add_defeat_rule(Game::Systems::NoCommanderDefeatRule{});
       continue;
     }
 
     if (type == "only_commander_remaining") {
-      rules.defeat_rules.emplace_back(Game::Systems::OnlyCommanderRemainingDefeatRule{
+      add_defeat_rule(Game::Systems::OnlyCommanderRemainingDefeatRule{
           normalize_structure_types(condition)});
       continue;
     }
@@ -180,13 +184,13 @@ auto build_victory_rules(const MissionDefinition& mission)
         qWarning() << "Mission defeat condition time_limit is missing duration";
         continue;
       }
-      rules.defeat_rules.emplace_back(
+      add_defeat_rule(
           Game::Systems::TimeLimitDefeatRule{std::max(0.0F, *condition.duration)});
       continue;
     }
 
     if (type == "lose_structure") {
-      rules.defeat_rules.emplace_back(Game::Systems::NoKeyStructuresDefeatRule{
+      add_defeat_rule(Game::Systems::NoKeyStructuresDefeatRule{
           normalize_structure_types(condition)});
       continue;
     }

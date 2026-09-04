@@ -86,8 +86,18 @@ auto place_name_from_key(const QString& key) -> QString {
 
 } // namespace
 
+namespace {
+
+auto preview_config() -> MinimapGenerator::Config {
+  MinimapGenerator::Config config;
+  config.pixels_per_tile = 4.0F;
+  return config;
+}
+
+} // namespace
+
 MapPreviewGenerator::MapPreviewGenerator()
-    : m_minimap_generator(std::make_unique<MinimapGenerator>()) {
+    : m_minimap_generator(std::make_unique<MinimapGenerator>(preview_config())) {
 }
 
 MapPreviewGenerator::~MapPreviewGenerator() = default;
@@ -259,10 +269,9 @@ auto MapPreviewGenerator::base_markers(const QString& map_path) -> QVariantList 
 
   MinimapOrientation::instance().set_yaw_degrees(map_def.camera.yaw_deg);
 
-  const float world_width =
-      static_cast<float>(map_def.grid.width) * map_def.grid.tile_size;
-  const float world_height =
-      static_cast<float>(map_def.grid.height) * map_def.grid.tile_size;
+  const auto [world_width, world_height] = rotated_world_bounds(
+      static_cast<float>(map_def.grid.width) * map_def.grid.tile_size,
+      static_cast<float>(map_def.grid.height) * map_def.grid.tile_size);
 
   QHash<QString, int> name_uses;
   const std::vector<BaseOption> options = collect_base_options(map_def);
@@ -309,13 +318,13 @@ auto MapPreviewGenerator::world_to_pixel(float world_x,
   const float rotated_x = world_x * orient.cos_yaw() - world_z * orient.sin_yaw();
   const float rotated_z = world_x * orient.sin_yaw() + world_z * orient.cos_yaw();
 
-  const float world_width = grid.width * grid.tile_size;
-  const float world_height = grid.height * grid.tile_size;
+  const auto [extent_width, extent_height] =
+      rotated_world_bounds(grid.width * grid.tile_size, grid.height * grid.tile_size);
   const float img_width = grid.width * pixels_per_tile;
   const float img_height = grid.height * pixels_per_tile;
 
-  const float px = (rotated_x + world_width * 0.5F) * (img_width / world_width);
-  const float py = (rotated_z + world_height * 0.5F) * (img_height / world_height);
+  const float px = (rotated_x + extent_width * 0.5F) * (img_width / extent_width);
+  const float py = (rotated_z + extent_height * 0.5F) * (img_height / extent_height);
 
   return {px, py};
 }

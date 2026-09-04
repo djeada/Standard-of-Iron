@@ -165,6 +165,7 @@ public:
   Q_PROPERTY(
       float time_scale READ time_scale WRITE set_game_speed NOTIFY time_scale_changed)
   Q_PROPERTY(QString victory_state READ victory_state NOTIFY victory_state_changed)
+  Q_PROPERTY(QString defeat_reason READ defeat_reason NOTIFY victory_state_changed)
   Q_PROPERTY(QString cursor_mode READ cursor_mode WRITE set_cursor_mode NOTIFY
                  cursor_mode_changed)
   Q_PROPERTY(qreal global_cursor_x READ global_cursor_x NOTIFY global_cursor_changed)
@@ -217,6 +218,8 @@ public:
     return m_dropped_simulation_ticks;
   }
   [[nodiscard]] QString victory_state() const { return m_runtime.victory_state; }
+
+  [[nodiscard]] QString defeat_reason() const { return m_runtime.defeat_reason; }
   [[nodiscard]] QString cursor_mode() const;
   void set_cursor_mode(const QString& mode);
   [[nodiscard]] qreal global_cursor_x() const;
@@ -355,6 +358,7 @@ private:
     float time_scale = 1.0F;
     int local_owner_id = 1;
     QString victory_state = "";
+    QString defeat_reason = "";
     CursorMode cursor_mode{CursorMode::Normal};
     QString last_error = "";
     Qt::CursorShape current_cursor = Qt::ArrowCursor;
@@ -441,6 +445,7 @@ private:
   void release_pending_mission_start_cue();
   void publish_commander_message();
   void publish_mission_stages();
+  void publish_mission_deadline();
   void publish_victory_objectives();
   void publish_minimap_overlays(float dt);
   void note_minimap_combat_hit(const Engine::Core::CombatHitEvent& event);

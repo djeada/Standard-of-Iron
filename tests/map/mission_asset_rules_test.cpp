@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSet>
 
 #include <algorithm>
 #include <gtest/gtest.h>
@@ -16,7 +17,10 @@
 #include "game/map/mission_definition.h"
 #include "game/map/mission_loader.h"
 #include "game/map/terrain.h"
+#include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/harvest_yields.h"
+#include "game/systems/resource_types.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 #include "utils/resource_utils.h"
@@ -232,11 +236,17 @@ TEST(MissionAssetRulesTest, AlpsMapYieldsEnoughHarvestForItsGatherObjective) {
   Game::Systems::ResourceAmounts authored_yield;
   for (const auto& prop : map.world_props) {
     if (Game::Map::is_tree_world_prop_type(prop.type)) {
-      authored_yield.add(Game::Systems::ResourceType::Wood, 40);
+      authored_yield.add(
+          Game::Systems::ResourceType::Wood,
+          Game::Systems::harvest_yield(Game::Systems::ResourceType::Wood));
     } else if (Game::Map::is_boulder_world_prop_type(prop.type)) {
-      authored_yield.add(Game::Systems::ResourceType::Stone, 35);
+      authored_yield.add(
+          Game::Systems::ResourceType::Stone,
+          Game::Systems::harvest_yield(Game::Systems::ResourceType::Stone));
     } else if (Game::Map::is_iron_ore_world_prop_type(prop.type)) {
-      authored_yield.add(Game::Systems::ResourceType::Iron, 30);
+      authored_yield.add(
+          Game::Systems::ResourceType::Iron,
+          Game::Systems::harvest_yield(Game::Systems::ResourceType::Iron));
     }
   }
 
@@ -510,4 +520,133 @@ TEST(MissionAssetRulesTest, TutorialMissionIsFullyAuthored) {
                            structure.type == Game::Units::SpawnType::Barracks;
                   });
   EXPECT_TRUE(player_barracks) << "gathered loads need a yard to be dropped on";
+}
+
+TEST(MissionAssetRulesTest, GatherObjectivesFitTheHarvestActuallyOnTheMap) {
+  QDir const missions_dir(asset_dir_path(QStringLiteral("missions")));
+  ASSERT_TRUE(missions_dir.exists()) << missions_dir.path().toStdString();
+
+  const QStringList files = missions_dir.entryList({"*.json"}, QDir::Files, QDir::Name);
+  ASSERT_FALSE(files.isEmpty());
+
+  int gather_missions = 0;
+  for (const QString& file_name : files) {
+    Game::Mission::MissionDefinition mission;
+    QString mission_error;
+    ASSERT_TRUE(Game::Mission::MissionLoader::load_from_json_file(
+        missions_dir.absoluteFilePath(file_name), mission, &mission_error))
+        << mission_error.toStdString();
+
+    Game::Systems::ResourceAmounts wanted;
+    bool has_gather_objective = false;
+    const auto collect = [&wanted, &has_gather_objective](
+                             const std::vector<Game::Mission::Condition>& conditions) {
+      for (const auto& condition : conditions) {
+        if (condition.type != QStringLiteral("accumulate_resources") ||
+            !condition.resources.has_value()) {
+          continue;
+        }
+        has_gather_objective = true;
+        for (Game::Systems::ResourceType const type :
+             Game::Systems::k_all_resource_types) {
+          wanted.set(type, std::max(wanted.get(type), condition.resources->get(type)));
+        }
+      }
+    };
+    collect(mission.victory_conditions);
+    collect(mission.optional_objectives);
+    if (!has_gather_objective) {
+      continue;
+    }
+    ++gather_missions;
+
+    Game::Map::MapDefinition map;
+    QString map_error;
+    ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+        Utils::Resources::resolve_resource_path(mission.map_path), map, &map_error))
+        << file_name.toStdString() << ": " << map_error.toStdString();
+
+    Game::Map::TerrainService::instance().initialize(map);
+    Game::Systems::ResourceAmounts on_the_map;
+    for (const auto& prop : Game::Map::TerrainService::instance().world_props()) {
+      if (Game::Map::is_tree_world_prop_type(prop.type)) {
+        on_the_map.add(Game::Systems::ResourceType::Wood,
+                       Game::Systems::harvest_yield(Game::Systems::ResourceType::Wood));
+      } else if (Game::Map::is_boulder_world_prop_type(prop.type)) {
+        on_the_map.add(
+            Game::Systems::ResourceType::Stone,
+            Game::Systems::harvest_yield(Game::Systems::ResourceType::Stone));
+      } else if (Game::Map::is_iron_ore_world_prop_type(prop.type)) {
+        on_the_map.add(Game::Systems::ResourceType::Iron,
+                       Game::Systems::harvest_yield(Game::Systems::ResourceType::Iron));
+      }
+    }
+    Game::Map::TerrainService::instance().clear();
+
+    Game::Systems::ResourceAmounts stock = map.starting_resources;
+    mission.player_setup.starting_resources.apply_to(stock);
+
+    for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
+      const int required = wanted.get(type);
+      if (required <= 0) {
+        continue;
+      }
+      const int reachable = on_the_map.get(type) + stock.get(type);
+      EXPECT_GE(reachable, required * 5 / 4)
+          << file_name.toStdString() << " asks for " << required << " "
+          << Game::Systems::resource_type_key(type)
+          << " but the map and the starting stores only hold " << reachable;
+    }
+  }
+
+  EXPECT_GT(gather_missions, 0);
+}
+
+TEST(MissionAssetRulesTest, EveryCommanderMessageIsSpokenBySomebodyOnTheField) {
+  QDir const missions_dir(asset_dir_path(QStringLiteral("missions")));
+  ASSERT_TRUE(missions_dir.exists()) << missions_dir.path().toStdString();
+
+  const QStringList files = missions_dir.entryList({"*.json"}, QDir::Files, QDir::Name);
+  ASSERT_FALSE(files.isEmpty());
+
+  int checked = 0;
+  for (const QString& file_name : files) {
+    Game::Mission::MissionDefinition mission;
+    QString mission_error;
+    ASSERT_TRUE(Game::Mission::MissionLoader::load_from_json_file(
+        missions_dir.absoluteFilePath(file_name), mission, &mission_error))
+        << mission_error.toStdString();
+    if (mission.commander_messages.empty()) {
+      continue;
+    }
+
+    Game::Map::MapDefinition map;
+    QString map_error;
+    ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+        Utils::Resources::resolve_resource_path(mission.map_path), map, &map_error))
+        << file_name.toStdString() << ": " << map_error.toStdString();
+
+    QSet<QString> fielded;
+    for (const auto& spawn : map.spawns) {
+      const auto troop_type = Game::Units::spawn_typeToTroopType(spawn.type);
+      if (!troop_type.has_value() || !Game::Units::is_commander_troop(*troop_type)) {
+        continue;
+      }
+      fielded.insert(Game::Units::troop_typeToQString(*troop_type));
+    }
+
+    for (const auto& message : mission.commander_messages) {
+      if (message.speaker.isEmpty()) {
+        continue;
+      }
+      ++checked;
+      EXPECT_TRUE(fielded.contains(message.speaker))
+          << file_name.toStdString() << ": message " << message.id.toStdString()
+          << " is spoken by " << message.speaker.toStdString()
+          << ", who never takes the field on " << mission.map_path.toStdString()
+          << " -- the panel shows a portrait nobody is fighting";
+    }
+  }
+
+  EXPECT_GT(checked, 0) << "no shipped mission speaks in a commander's voice any more";
 }

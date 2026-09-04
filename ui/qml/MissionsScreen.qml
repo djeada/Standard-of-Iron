@@ -72,6 +72,19 @@ Item {
         return parts.join(", ");
     }
 
+    function starting_supplies_text(mission) {
+        if (!mission || !mission.starting_resources || mission.starting_resources.length === 0)
+            return "";
+        var parts = [];
+        for (var i = 0; i < mission.starting_resources.length; i++) {
+            var stock = mission.starting_resources[i];
+            if (!stock)
+                continue;
+            parts.push(qsTr("%1 %2").arg(Design.Numerals.grouped(stock.amount)).arg(Design.Icons.humanise(String(stock.type))));
+        }
+        return parts.join(", ");
+    }
+
     function orders_heading(mission) {
         if (!mission)
             return "";
@@ -399,50 +412,69 @@ Item {
                             Layout.fillHeight: true
                             spacing: Theme.spacingLarge
 
-                            ColumnLayout {
+                            Flickable {
+                                id: briefing_scroll
+
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
-                                spacing: Theme.spacingMedium
+                                clip: true
+                                contentWidth: width
+                                contentHeight: briefing_column.implicitHeight
+                                boundsBehavior: Flickable.StopAtBounds
 
-                                Label {
-                                    Layout.fillWidth: true
-                                    text: root.selected ? String(root.selected.summary) : ""
-                                    color: Theme.textMain
-                                    font.pixelSize: Design.Typography.body
-                                    font.family: "serif"
-                                    wrapMode: Text.WordWrap
+                                ScrollBar.vertical: ScrollBar {
+                                    policy: ScrollBar.AsNeeded
                                 }
 
-                                MissionOrderList {
-                                    Layout.fillWidth: true
-                                    heading: root.orders_heading(root.selected)
-                                    heading_color: Theme.accentBright
-                                    lines: root.objective_lines(root.selected)
-                                }
+                                ColumnLayout {
+                                    id: briefing_column
 
-                                MissionOrderList {
-                                    Layout.fillWidth: true
-                                    heading: qsTr("Worth doing as well")
-                                    heading_color: Theme.infoText
-                                    lines: root.bonus_lines(root.selected)
-                                }
+                                    width: briefing_scroll.width
+                                    spacing: Theme.spacingMedium
 
-                                MissionOrderList {
-                                    Layout.fillWidth: true
-                                    heading: qsTr("You bring")
-                                    heading_color: Theme.textSubLite
-                                    lines: root.starting_force_text(root.selected).length > 0 ? [root.starting_force_text(root.selected)] : []
-                                }
+                                    Label {
+                                        Layout.fillWidth: true
+                                        text: root.selected ? String(root.selected.summary) : ""
+                                        color: Theme.textMain
+                                        font.pixelSize: Design.Typography.body
+                                        font.family: "serif"
+                                        wrapMode: Text.WordWrap
+                                    }
 
-                                MissionOrderList {
-                                    Layout.fillWidth: true
-                                    heading: qsTr("It ends badly if")
-                                    heading_color: Theme.dangerBr
-                                    lines: root.failure_lines(root.selected)
-                                }
+                                    MissionOrderList {
+                                        Layout.fillWidth: true
+                                        heading: root.orders_heading(root.selected)
+                                        heading_color: Theme.accentBright
+                                        lines: root.objective_lines(root.selected)
+                                    }
 
-                                Item {
-                                    Layout.fillHeight: true
+                                    MissionOrderList {
+                                        Layout.fillWidth: true
+                                        heading: qsTr("Worth doing as well")
+                                        heading_color: Theme.infoText
+                                        lines: root.bonus_lines(root.selected)
+                                    }
+
+                                    MissionOrderList {
+                                        Layout.fillWidth: true
+                                        heading: qsTr("You bring")
+                                        heading_color: Theme.textSubLite
+                                        lines: root.starting_force_text(root.selected).length > 0 ? [root.starting_force_text(root.selected)] : []
+                                    }
+
+                                    MissionOrderList {
+                                        Layout.fillWidth: true
+                                        heading: qsTr("You start with")
+                                        heading_color: Theme.textSubLite
+                                        lines: root.starting_supplies_text(root.selected).length > 0 ? [root.starting_supplies_text(root.selected)] : [qsTr("Nothing in the stores. Everything you spend, you gather first.")]
+                                    }
+
+                                    MissionOrderList {
+                                        Layout.fillWidth: true
+                                        heading: qsTr("It ends badly if")
+                                        heading_color: Theme.dangerBr
+                                        lines: root.failure_lines(root.selected)
+                                    }
                                 }
                             }
 

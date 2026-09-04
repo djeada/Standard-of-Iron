@@ -27,6 +27,7 @@ Design.IronOutcomeOverlay {
 
     held: victoryOverlay.game_ready() && game.commander_message && game.commander_message.holds_outcome
     victoryState: victoryOverlay.victory_state()
+    outcomeReason: victoryOverlay.game_ready() ? game.defeat_reason : ""
     isTutorial: victoryOverlay.game_ready() && !!game.tutorial && game.tutorial.finished
     isCampaignMission: victoryOverlay.game_ready() && game.setup.is_mission_match
     campaignCompleted: victoryOverlay.game_ready() && game.setup.campaign_completed === true

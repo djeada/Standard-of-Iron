@@ -139,9 +139,28 @@ struct ObjectiveStatus {
   bool complete = false;
 };
 
+struct DefeatCondition {
+  DefeatCondition() = default;
+
+  template <
+      typename T,
+      typename = std::enable_if_t<std::is_constructible_v<DefeatRule, T&&> &&
+                                  !std::is_same_v<std::decay_t<T>, DefeatCondition>>>
+
+  DefeatCondition(T&& authored_rule)
+      : rule(std::forward<T>(authored_rule)) {}
+
+  DefeatCondition(DefeatRule authored_rule, QString text)
+      : rule(std::move(authored_rule))
+      , description(std::move(text)) {}
+
+  DefeatRule rule;
+  QString description;
+};
+
 struct VictoryRuleSet {
   std::vector<VictoryObjective> victory_rules;
-  std::vector<DefeatRule> defeat_rules;
+  std::vector<DefeatCondition> defeat_rules;
   bool include_ambient_undead = false;
   bool require_all_victory_rules = false;
 };
@@ -179,6 +198,12 @@ public:
   void update(Engine::Core::World& world, float delta_time);
 
   [[nodiscard]] auto get_victory_state() const -> QString { return m_victory_state; }
+
+  [[nodiscard]] auto get_defeat_description() const -> QString {
+    return m_defeat_description;
+  }
+
+  [[nodiscard]] auto seconds_until_deadline() const -> float;
 
   [[nodiscard]] auto is_game_over() const -> bool { return !m_victory_state.isEmpty(); }
 
@@ -249,6 +274,7 @@ private:
 
   int m_local_owner_id = 1;
   QString m_victory_state;
+  QString m_defeat_description;
 
   VictoryCallback m_victory_callback;
   ObjectivesChangedCallback m_objectives_changed_callback;

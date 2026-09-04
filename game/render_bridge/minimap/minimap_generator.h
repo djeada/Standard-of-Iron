@@ -37,6 +37,9 @@ private:
 
   [[nodiscard]] auto pixels_per_tile_for(const GridDefinition& grid) const -> float;
 
+  [[nodiscard]] static auto
+  projection_extent(const GridDefinition& grid) -> std::pair<float, float>;
+
   void render_parchment_background(QImage& image);
   void render_terrain_base(QImage& image, const MapDefinition& map_def);
   void render_terrain_features(QImage& image, const MapDefinition& map_def);

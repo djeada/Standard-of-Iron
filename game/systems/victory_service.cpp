@@ -228,6 +228,7 @@ void VictoryService::reset() {
   m_objective_complete.clear();
   m_local_owner_id = 1;
   m_victory_state.clear();
+  m_defeat_description.clear();
   m_world_ptr = nullptr;
   m_victory_callback = nullptr;
 }
@@ -396,7 +397,7 @@ void VictoryService::refresh_rule_metadata() {
         objective.rule);
   }
 
-  for (const auto& rule : m_rule_set.defeat_rules) {
+  for (const auto& condition : m_rule_set.defeat_rules) {
     m_has_world_based_rules = true;
     std::visit(
         Overloaded{
@@ -423,7 +424,7 @@ void VictoryService::refresh_rule_metadata() {
             [this](const TimeLimitDefeatRule&) {
               m_has_time_limit_defeat = true;
             }},
-        rule);
+        condition.rule);
   }
 }
 
@@ -490,8 +491,9 @@ void VictoryService::evaluate_rules(const WorldSummary& summary) {
     }
   }
 
-  for (const auto& rule : m_rule_set.defeat_rules) {
-    if (check_defeat_rule(rule, summary)) {
+  for (const auto& condition : m_rule_set.defeat_rules) {
+    if (check_defeat_rule(condition.rule, summary)) {
+      m_defeat_description = condition.description;
       finalize_game(QStringLiteral("defeat"));
       return;
     }
@@ -738,6 +740,19 @@ auto VictoryService::check_victory_rule(const VictoryRule& rule,
             return m_eliminate_commanders_armed && summary.enemy_commander_count == 0;
           }},
       rule);
+}
+
+auto VictoryService::seconds_until_deadline() const -> float {
+  float shortest = -1.0F;
+  for (const auto& condition : m_rule_set.defeat_rules) {
+    if (const auto* rule = std::get_if<TimeLimitDefeatRule>(&condition.rule)) {
+      const float remaining = std::max(0.0F, rule->duration - m_elapsed_time);
+      if (shortest < 0.0F || remaining < shortest) {
+        shortest = remaining;
+      }
+    }
+  }
+  return shortest;
 }
 
 auto VictoryService::check_defeat_rule(const DefeatRule& rule,

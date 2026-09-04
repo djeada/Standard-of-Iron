@@ -50,17 +50,18 @@ TEST(MissionVictoryRulesTest, BuildsIndependentVictoryAndDefeatRules) {
 
   ASSERT_EQ(rules.defeat_rules.size(), 4);
   auto const* lose_structure_rule =
-      std::get_if<Game::Systems::NoKeyStructuresDefeatRule>(rules.defeat_rules.data());
+      std::get_if<Game::Systems::NoKeyStructuresDefeatRule>(
+          &rules.defeat_rules[0].rule);
   ASSERT_NE(lose_structure_rule, nullptr);
   ASSERT_EQ(lose_structure_rule->structure_types.size(), 1);
   EXPECT_EQ(lose_structure_rule->structure_types[0], QStringLiteral("defense_tower"));
-  EXPECT_TRUE(
-      std::holds_alternative<Game::Systems::NoUnitsDefeatRule>(rules.defeat_rules[1]));
+  EXPECT_TRUE(std::holds_alternative<Game::Systems::NoUnitsDefeatRule>(
+      rules.defeat_rules[1].rule));
   EXPECT_TRUE(std::holds_alternative<Game::Systems::NoCommanderDefeatRule>(
-      rules.defeat_rules[2]));
+      rules.defeat_rules[2].rule));
   auto const* isolated_commander_rule =
       std::get_if<Game::Systems::OnlyCommanderRemainingDefeatRule>(
-          &rules.defeat_rules[3]);
+          &rules.defeat_rules[3].rule);
   ASSERT_NE(isolated_commander_rule, nullptr);
   ASSERT_EQ(isolated_commander_rule->structure_types.size(), 1);
   EXPECT_EQ(isolated_commander_rule->structure_types[0], QStringLiteral("barracks"));
@@ -80,10 +81,10 @@ TEST(MissionVictoryRulesTest, FallsBackToCommanderDefaultsWhenMissionOmitsDefeat
   ASSERT_EQ(rules.victory_rules.size(), 1);
   ASSERT_EQ(rules.defeat_rules.size(), 2);
   EXPECT_TRUE(std::holds_alternative<Game::Systems::NoCommanderDefeatRule>(
-      rules.defeat_rules[0]));
+      rules.defeat_rules[0].rule));
   auto const* isolated_commander_rule =
       std::get_if<Game::Systems::OnlyCommanderRemainingDefeatRule>(
-          &rules.defeat_rules[1]);
+          &rules.defeat_rules[1].rule);
   ASSERT_NE(isolated_commander_rule, nullptr);
   ASSERT_EQ(isolated_commander_rule->structure_types.size(), 1);
   EXPECT_EQ(isolated_commander_rule->structure_types[0], QStringLiteral("barracks"));
@@ -107,7 +108,7 @@ TEST(MissionVictoryRulesTest, OnlyCommanderRemainingKeepsLegacyVillageNormalizat
   ASSERT_EQ(rules.defeat_rules.size(), 1);
   auto const* isolated_commander_rule =
       std::get_if<Game::Systems::OnlyCommanderRemainingDefeatRule>(
-          rules.defeat_rules.data());
+          &rules.defeat_rules[0].rule);
   ASSERT_NE(isolated_commander_rule, nullptr);
   ASSERT_EQ(isolated_commander_rule->structure_types.size(), 1);
   EXPECT_EQ(isolated_commander_rule->structure_types[0], QStringLiteral("barracks"));
@@ -208,7 +209,7 @@ TEST(MissionVictoryRulesTest, BuildsSurviveWavesAndTimeLimitRules) {
 
   ASSERT_EQ(rules.defeat_rules.size(), 1);
   auto const* time_limit_rule =
-      std::get_if<Game::Systems::TimeLimitDefeatRule>(rules.defeat_rules.data());
+      std::get_if<Game::Systems::TimeLimitDefeatRule>(&rules.defeat_rules[0].rule);
   ASSERT_NE(time_limit_rule, nullptr);
   EXPECT_FLOAT_EQ(time_limit_rule->duration, 420.0F);
 }
@@ -230,7 +231,7 @@ TEST(MissionVictoryRulesTest, DropsTimeLimitDefeatRuleWithoutDuration) {
 
   ASSERT_EQ(rules.defeat_rules.size(), 2);
   EXPECT_TRUE(std::holds_alternative<Game::Systems::NoCommanderDefeatRule>(
-      rules.defeat_rules[0]));
+      rules.defeat_rules[0].rule));
 }
 
 TEST(MissionVictoryRulesTest, VictoryModeAllRequiresEveryCondition) {

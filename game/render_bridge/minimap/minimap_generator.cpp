@@ -378,22 +378,30 @@ auto MinimapGenerator::world_to_pixel(float world_x,
   const float rotated_x = world_x * orient.cos_yaw() - world_z * orient.sin_yaw();
   const float rotated_z = world_x * orient.sin_yaw() + world_z * orient.cos_yaw();
 
-  const float world_width = grid.width * grid.tile_size;
-  const float world_height = grid.height * grid.tile_size;
+  const auto [extent_width, extent_height] = projection_extent(grid);
   const float pixels_per_tile = pixels_per_tile_for(grid);
   const float img_width = grid.width * pixels_per_tile;
   const float img_height = grid.height * pixels_per_tile;
 
-  const float px = (rotated_x + world_width * 0.5F) * (img_width / world_width);
-  const float py = (rotated_z + world_height * 0.5F) * (img_height / world_height);
+  const float px = (rotated_x + extent_width * 0.5F) * (img_width / extent_width);
+  const float py = (rotated_z + extent_height * 0.5F) * (img_height / extent_height);
 
   return {px, py};
+}
+
+auto MinimapGenerator::projection_extent(const GridDefinition& grid)
+    -> std::pair<float, float> {
+
+  return rotated_world_bounds(grid.width * grid.tile_size,
+                              grid.height * grid.tile_size);
 }
 
 auto MinimapGenerator::world_to_pixel_size(float world_size,
                                            const GridDefinition& grid) const -> float {
 
-  return (world_size / grid.tile_size) * pixels_per_tile_for(grid);
+  const auto [extent_width, extent_height] = projection_extent(grid);
+  const float img_width = grid.width * pixels_per_tile_for(grid);
+  return world_size * (img_width / extent_width);
 }
 
 void MinimapGenerator::render_parchment_background(QImage& image) {

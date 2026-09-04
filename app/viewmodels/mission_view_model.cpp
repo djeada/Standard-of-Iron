@@ -74,6 +74,15 @@ void MissionViewModel::set_stages(const QVariantList& stages,
   emit stages_changed();
 }
 
+void MissionViewModel::set_seconds_until_deadline(qreal seconds) {
+  const qreal normalized = seconds < 0.0 ? -1.0 : seconds;
+  if (qFuzzyCompare(m_seconds_until_deadline + 1.0, normalized + 1.0)) {
+    return;
+  }
+  m_seconds_until_deadline = normalized;
+  emit deadline_changed();
+}
+
 void MissionViewModel::clear() {
   if (m_stages.isEmpty() && m_markers.isEmpty() && m_active_index < 0) {
     return;
@@ -83,6 +92,7 @@ void MissionViewModel::clear() {
   m_active_index = -1;
   m_stages_mirror_victory_conditions = false;
   emit stages_changed();
+  set_seconds_until_deadline(-1.0);
 }
 
 auto MissionViewModel::active_stage() const -> QVariantMap {

@@ -423,6 +423,53 @@ TEST_F(VictoryServiceTest, MapSpecificDefeatConditionsCannotDisableCommanderLoss
   EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("defeat"));
 }
 
+TEST_F(VictoryServiceTest, ATimedMissionCountsDownAndSaysWhyItWasLost) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::RomanFieldCommander,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+  ASSERT_NE(create_unit(world, 2, Game::Units::SpawnType::Barracks), nullptr);
+
+  const QString reason =
+      QStringLiteral("The column came back through and the carts were still empty.");
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.victory_rules.emplace_back(capture_structures({QStringLiteral("barracks")}, 1),
+                                   QStringLiteral("take_the_yard"),
+                                   QStringLiteral("Take the yard"));
+  rules.defeat_rules.emplace_back(Game::Systems::TimeLimitDefeatRule{30.0F}, reason);
+  m_service->configure(rules, 1);
+
+  advance_past_startup_delay(world);
+  EXPECT_NEAR(m_service->seconds_until_deadline(), 29.6F, 0.05F);
+
+  m_service->update(world, 20.0F);
+  ASSERT_FALSE(m_service->is_game_over());
+  EXPECT_NEAR(m_service->seconds_until_deadline(), 9.6F, 0.05F);
+
+  m_service->update(world, 10.0F);
+  EXPECT_TRUE(m_service->is_game_over());
+  EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("defeat"));
+  EXPECT_EQ(m_service->get_defeat_description(), reason)
+      << "the outcome screen has nothing to tell the player without this";
+  EXPECT_FLOAT_EQ(m_service->seconds_until_deadline(), 0.0F);
+}
+
+TEST_F(VictoryServiceTest, AMissionWithNoClockReportsNoDeadline) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world, 1, Game::Units::SpawnType::Barracks), nullptr);
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.defeat_rules.emplace_back(lose_structures({QStringLiteral("barracks")}),
+                                  QStringLiteral("The yard is gone"));
+  m_service->configure(rules, 1);
+
+  advance_past_startup_delay(world);
+  EXPECT_LT(m_service->seconds_until_deadline(), 0.0F);
+}
+
 TEST_F(VictoryServiceTest, CommanderAloneWithoutBarracksTriggersDefeat) {
   Engine::Core::World world;
   ASSERT_NE(create_unit(world,
