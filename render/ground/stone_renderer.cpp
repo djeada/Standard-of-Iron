@@ -22,6 +22,7 @@
 #include "render/gl/buffer.h"
 #include "render/scene_renderer.h"
 #include "scatter_runtime.h"
+#include "stone_ground_fit.h"
 
 namespace {
 
@@ -117,22 +118,24 @@ void StoneRenderer::generate_stone_instances() {
     float const scale = remap(rand_01(state), 0.25F, 0.68F) * tile_safe *
                         scatter_scale_bias(ScatterRuleSpecies::Stone, scene);
 
-    float const color_var = remap(rand_01(state), 0.0F, 1.0F);
-    QVector3D const base_rock = surface_profile.rock_low;
-    QVector3D const high_rock = surface_profile.rock_high;
-    QVector3D color = base_rock * (1.0F - color_var) + high_rock * color_var;
-
-    float const earth_mix = remap(
-        rand_01(state), 0.08F + scene.dryness * 0.08F, 0.28F + scene.rockiness * 0.12F);
-    QVector3D const earth_tint(0.34F, 0.31F, 0.27F);
-    color = color * (1.0F - earth_mix) + earth_tint * earth_mix;
-    color *= 0.84F + scene.rockiness * 0.08F;
+    QVector3D const color = stone_instance_color(surface_profile.rock_low,
+                                                 surface_profile.rock_high,
+                                                 scene.dryness,
+                                                 scene.rockiness,
+                                                 state);
 
     float const rotation = rand_01(state) * MathConstants::k_two_pi;
+    QVector3D const ground_normal =
+        sample_ground_normal(m_height_data, m_width, m_height, m_tile_size, sgx, sgz);
 
     StoneInstanceGpu instance;
     instance.pos_scale = QVector4D(world_x, world_y + 0.01F, world_z, scale);
     instance.color_rot = QVector4D(color.x(), color.y(), color.z(), rotation);
+    instance.ground_fit =
+        pack_stone_ground_fit(ground_normal,
+                              rand_01(state),
+                              scale,
+                              stone_sink_fraction(ground_normal, state));
     stone_instances.push_back(instance);
     return true;
   };

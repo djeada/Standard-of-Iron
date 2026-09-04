@@ -4287,6 +4287,8 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   if (m_prewarm_unit_templates && m_renderer != nullptr) {
     m_renderer->prewarm_unit_templates(m_world.get(), {});
   }
+  m_session.terrain().set_supernatural_presence(
+      definition->undead_zones.empty() ? 0.0F : 1.0F);
   reconfigure_terrain_from_state();
   configure_scenario_undead_zones(*definition, scenario_origin);
 

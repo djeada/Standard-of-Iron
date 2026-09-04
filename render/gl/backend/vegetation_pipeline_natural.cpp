@@ -12,6 +12,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <utility>
 #include <vector>
 
@@ -37,7 +38,7 @@ constexpr GLuint k_foliage_normal_location = 2;
 
 constexpr std::array<GLuint, 3> k_foliage_instance_locations{3, 4, 5};
 
-constexpr std::array<GLuint, 2> k_stone_instance_locations{2, 3};
+constexpr std::array<GLuint, 3> k_stone_instance_locations{2, 3, 4};
 
 void VegetationPipeline::initialize_stone_pipeline() {
   initializeOpenGLFunctions();
@@ -52,21 +53,26 @@ void VegetationPipeline::initialize_stone_pipeline() {
   std::vector<F> verts;
   std::vector<uint16_t> idx;
 
-  constexpr int k_n = 8;
+  constexpr int k_n = 12;
   constexpr float k_tau = 6.28318530F;
-  constexpr int k_rings = 5;
+  constexpr int k_rings = 7;
 
-  constexpr float k_perturb_amount = 0.07F;
-  constexpr float k_perturb_freq_vertex = 2.3F;
-  constexpr float k_perturb_freq_ring = 1.7F;
+  constexpr float k_radial_jitter = 0.11F;
+  constexpr float k_y_jitter = 0.030F;
 
-  constexpr float k_y_jitter_amount = 0.025F;
-  constexpr float k_y_jitter_freq_vertex = 1.9F;
-  constexpr float k_y_jitter_freq_ring = 0.9F;
+  constexpr float k_apex_offset_x = 0.09F;
+  constexpr float k_apex_height = 0.70F;
+  constexpr float k_apex_offset_z = -0.08F;
 
-  constexpr float k_apex_offset_x = 0.08F;
-  constexpr float k_apex_height = 0.66F;
-  constexpr float k_apex_offset_z = -0.07F;
+  auto jitter = [](int ring, int vertex, int salt) -> float {
+    uint32_t hash = static_cast<uint32_t>(ring + 1) * 0x9E3779B9U ^
+                    static_cast<uint32_t>(vertex + 1) * 0x85EBCA6BU ^
+                    static_cast<uint32_t>(salt + 1) * 0xC2B2AE35U;
+    hash ^= hash >> 15;
+    hash *= 0x27D4EB2FU;
+    hash ^= hash >> 13;
+    return static_cast<float>(hash & 0xFFFFU) / 65535.0F;
+  };
 
   struct Ring {
     float y;
@@ -78,55 +84,32 @@ void VegetationPipeline::initialize_stone_pipeline() {
     float cz;
   };
   const Ring rings[] = {
-      {-0.03F, 0.34F, 0.12F, 1.08F, 1.16F, -0.04F, 0.02F},
-      {0.12F, 0.50F, -0.04F, 1.12F, 0.96F, 0.01F, -0.02F},
-      {0.30F, 0.46F, 0.18F, 0.98F, 1.08F, 0.04F, -0.01F},
-      {0.47F, 0.31F, 0.06F, 1.06F, 0.90F, 0.01F, -0.05F},
-      {0.58F, 0.16F, 0.24F, 0.92F, 1.02F, 0.04F, -0.05F},
+      {-0.07F, 0.33F, 0.10F, 1.08F, 1.16F, -0.04F, 0.02F},
+      {0.05F, 0.47F, 0.02F, 1.14F, 1.00F, 0.00F, -0.02F},
+      {0.19F, 0.53F, -0.06F, 1.06F, 1.10F, 0.03F, -0.01F},
+      {0.33F, 0.49F, 0.14F, 0.97F, 1.12F, 0.05F, -0.02F},
+      {0.46F, 0.40F, 0.06F, 1.05F, 0.90F, 0.03F, -0.05F},
+      {0.58F, 0.26F, 0.22F, 0.93F, 1.00F, 0.06F, -0.06F},
+      {0.66F, 0.12F, 0.30F, 0.90F, 1.04F, 0.08F, -0.07F},
   };
+  static_assert(std::size(rings) == static_cast<std::size_t>(k_rings));
 
   QVector3D ring_pts[k_rings][k_n];
   for (int ri = 0; ri < k_rings; ++ri) {
     const Ring& r = rings[ri];
     for (int i = 0; i < k_n; ++i) {
       float const t = static_cast<float>(i) / k_n;
-      float const angle = t * k_tau + r.phase;
+      float const angle_jitter = (jitter(ri, i, 3) - 0.5F) * (k_tau / k_n) * 0.55F;
+      float const angle = t * k_tau + r.phase + angle_jitter;
 
-      float const perturb =
-          1.0F + k_perturb_amount * std::sin(float(i) * k_perturb_freq_vertex +
-                                             float(ri) * k_perturb_freq_ring);
+      float const perturb = 1.0F + k_radial_jitter * (jitter(ri, i, 1) - 0.5F) * 2.0F;
       float const rx = r.radius * perturb * r.sx * std::cos(angle);
       float const rz = r.radius * perturb * r.sz * std::sin(angle);
 
-      float const ry =
-          r.y + k_y_jitter_amount * std::cos(float(i) * k_y_jitter_freq_vertex +
-                                             float(ri) * k_y_jitter_freq_ring);
+      float const ry = r.y + k_y_jitter * (jitter(ri, i, 2) - 0.5F) * 2.0F;
       ring_pts[ri][i] = QVector3D(rx + r.cx, ry, rz + r.cz);
     }
   }
-
-  auto emit_quad = [&](const QVector3D& a,
-                       const QVector3D& b,
-                       const QVector3D& c,
-                       const QVector3D& d) {
-    QVector3D n = QVector3D::crossProduct(d - a, b - a);
-    if (n.lengthSquared() > 1.0e-8F) {
-      n.normalize();
-    } else {
-      n = QVector3D(0.0F, 1.0F, 0.0F);
-    }
-    auto base = static_cast<uint16_t>(verts.size());
-    verts.push_back({a, n});
-    verts.push_back({b, n});
-    verts.push_back({c, n});
-    verts.push_back({d, n});
-    idx.push_back(base);
-    idx.push_back(uint16_t(base + 2));
-    idx.push_back(uint16_t(base + 1));
-    idx.push_back(base);
-    idx.push_back(uint16_t(base + 3));
-    idx.push_back(uint16_t(base + 2));
-  };
 
   auto emit_tri = [&](const QVector3D& a, const QVector3D& b, const QVector3D& c) {
     QVector3D n = QVector3D::crossProduct(c - a, b - a);
@@ -142,6 +125,19 @@ void VegetationPipeline::initialize_stone_pipeline() {
     idx.push_back(base);
     idx.push_back(uint16_t(base + 2));
     idx.push_back(uint16_t(base + 1));
+  };
+
+  auto emit_quad = [&](const QVector3D& a,
+                       const QVector3D& b,
+                       const QVector3D& c,
+                       const QVector3D& d) {
+    if ((c - a).lengthSquared() <= (d - b).lengthSquared()) {
+      emit_tri(a, b, c);
+      emit_tri(a, c, d);
+    } else {
+      emit_tri(a, b, d);
+      emit_tri(b, c, d);
+    }
   };
 
   for (int ri = 0; ri < k_rings - 1; ++ri) {
@@ -162,7 +158,7 @@ void VegetationPipeline::initialize_stone_pipeline() {
     emit_tri(ring_pts[k_rings - 1][i], ring_pts[k_rings - 1][next], apex);
   }
 
-  QVector3D const bot_center(0.0F, -0.01F, 0.0F);
+  QVector3D const bot_center(0.0F, -0.09F, 0.0F);
   for (int i = 0; i < k_n; ++i) {
     int const next = (i + 1) % k_n;
 

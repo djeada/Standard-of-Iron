@@ -15,6 +15,7 @@
 #include "map/terrain_service.h"
 #include "render/scene_renderer.h"
 #include "scatter_runtime.h"
+#include "stone_ground_fit.h"
 
 namespace {
 
@@ -89,22 +90,23 @@ void BoulderRenderer::append_world_prop_boulders() {
     uint32_t state = hash_coords(static_cast<int>(prop.x),
                                  static_cast<int>(prop.z),
                                  m_biome_settings.seed ^ 0xD3A4B1C2U);
-    float const color_var = remap(rand_01(state), 0.0F, 1.0F);
-    QVector3D const base_rock = surface_profile.rock_low;
-    QVector3D const high_rock = surface_profile.rock_high;
-    QVector3D color = base_rock * (1.0F - color_var) + high_rock * color_var;
-    float const earth_mix = remap(rand_01(state), 0.08F, 0.30F);
-    QVector3D const earth_tint(0.34F, 0.31F, 0.27F);
-    color = color * (1.0F - earth_mix) + earth_tint * earth_mix;
-    color *= 0.86F;
+    QVector3D const color = stone_instance_color(
+        surface_profile.rock_low, surface_profile.rock_high, 0.35F, 0.45F, state);
+
+    float const render_scale = prop.scale * Game::Map::world_prop_render_scale(
+                                                Game::Map::WorldProp::Type::Boulder);
+    float const gx = world_to_grid_coord(resolved.x(), m_width, m_tile_size);
+    float const gz = world_to_grid_coord(resolved.z(), m_height, m_tile_size);
+    QVector3D const ground_normal =
+        sample_ground_normal(m_height_data, m_width, m_height, m_tile_size, gx, gz);
 
     StoneInstanceGpu inst;
-    inst.pos_scale = QVector4D(resolved.x(),
-                               resolved.y(),
-                               resolved.z(),
-                               prop.scale * Game::Map::world_prop_render_scale(
-                                                Game::Map::WorldProp::Type::Boulder));
+    inst.pos_scale = QVector4D(resolved.x(), resolved.y(), resolved.z(), render_scale);
     inst.color_rot = QVector4D(color.x(), color.y(), color.z(), prop.rotation);
+    inst.ground_fit = pack_stone_ground_fit(ground_normal,
+                                            rand_01(state),
+                                            render_scale,
+                                            stone_sink_fraction(ground_normal, state));
     m_state.instances.push_back(inst);
   }
 }
@@ -164,20 +166,24 @@ void BoulderRenderer::generate_procedural_boulders(
     validator.grid_to_world(gx, gz, world_x, world_z);
     float const world_y = terrain_cache.sample_height_at(gx, gz);
 
-    float const color_var = remap(rand_01(state), 0.0F, 1.0F);
-    QVector3D color = surface_profile.rock_low * (1.0F - color_var) +
-                      surface_profile.rock_high * color_var;
-    QVector3D const earth_tint(0.34F, 0.31F, 0.27F);
-    float const earth_mix = remap(rand_01(state), 0.10F, 0.25F + scene.dryness * 0.10F);
-    color = color * (1.0F - earth_mix) + earth_tint * earth_mix;
-    color *= 0.82F + scene.rockiness * 0.08F;
+    QVector3D const color = stone_instance_color(surface_profile.rock_low,
+                                                 surface_profile.rock_high,
+                                                 scene.dryness,
+                                                 scene.rockiness,
+                                                 state);
 
     StoneInstanceGpu inst;
     float const scale = remap(rand_01(state), scale_min, scale_max) *
                         scatter_scale_bias(ScatterRuleSpecies::Stone, scene);
+    QVector3D const ground_normal =
+        sample_ground_normal(m_height_data, m_width, m_height, m_tile_size, gx, gz);
     inst.pos_scale = QVector4D(world_x, world_y + 0.01F, world_z, scale);
     inst.color_rot = QVector4D(
         color.x(), color.y(), color.z(), rand_01(state) * MathConstants::k_two_pi);
+    inst.ground_fit = pack_stone_ground_fit(ground_normal,
+                                            rand_01(state),
+                                            scale,
+                                            stone_sink_fraction(ground_normal, state));
     out.push_back(inst);
     return true;
   };

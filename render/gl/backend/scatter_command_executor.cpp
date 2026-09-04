@@ -278,7 +278,13 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
                                    GL_FLOAT,
                                    GL_FALSE,
                                    stride,
-                                   offsetof(StoneInstanceGpu, color_rot)}});
+                                   offsetof(StoneInstanceGpu, color_rot)},
+                                  {instance_scale,
+                                   vec4,
+                                   GL_FLOAT,
+                                   GL_FALSE,
+                                   stride,
+                                   offsetof(StoneInstanceGpu, ground_fit)}});
       stone.instance_buffer->unbind();
 
       glDrawElementsInstanced(GL_TRIANGLES,

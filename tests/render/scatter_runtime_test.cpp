@@ -1,8 +1,13 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
+#include <iterator>
+#include <string>
+#include <vector>
 
 #include "game/map/map_loader.h"
 #include "game/map/procedural_tree_generation.h"
@@ -20,6 +25,7 @@
 #include "render/ground/plant_renderer.h"
 #include "render/ground/scatter_renderer_state.h"
 #include "render/ground/scatter_runtime.h"
+#include "render/ground/stone_ground_fit.h"
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/tree_renderer.h"
@@ -695,3 +701,90 @@ TEST(ScatterRuntimeTest, RevealingGroundOnlyDirtiesTheChunksItTouches) {
 }
 
 } // namespace
+
+TEST(StoneGroundFit, ANormalOnALevelFieldPacksAsUprightWithNoTilt) {
+  std::vector<float> const heights(16 * 16, 3.0F);
+  auto const normal =
+      Render::Ground::sample_ground_normal(heights, 16, 16, 1.0F, 7.5F, 4.2F);
+  EXPECT_NEAR(normal.x(), 0.0F, 1.0e-5F);
+  EXPECT_NEAR(normal.y(), 1.0F, 1.0e-5F);
+  EXPECT_NEAR(normal.z(), 0.0F, 1.0e-5F);
+
+  auto const fit = Render::Ground::pack_stone_ground_fit(normal, 0.25F, 2.0F, 0.15F);
+  EXPECT_FLOAT_EQ(fit.x(), 0.0F);
+  EXPECT_FLOAT_EQ(fit.y(), 0.25F);
+  EXPECT_FLOAT_EQ(fit.z(), 0.0F);
+  EXPECT_FLOAT_EQ(fit.w(), 0.30F)
+      << "sink is authored as a fraction of the render scale";
+}
+
+TEST(StoneGroundFit, ASlopeTiltsTheStoneDownhillAndBedsItDeeper) {
+  std::vector<float> heights(16 * 16, 0.0F);
+  for (int z = 0; z < 16; ++z) {
+    for (int x = 0; x < 16; ++x) {
+      heights[static_cast<std::size_t>(z * 16 + x)] = static_cast<float>(x) * 0.5F;
+    }
+  }
+  auto const normal =
+      Render::Ground::sample_ground_normal(heights, 16, 16, 1.0F, 8.0F, 8.0F);
+  EXPECT_LT(normal.x(), -0.3F)
+      << "the ground rises with x, so the normal leans back toward -x";
+  EXPECT_GT(normal.y(), 0.5F);
+  EXPECT_NEAR(normal.z(), 0.0F, 1.0e-4F);
+
+  auto const flat = QVector3D(0.0F, 1.0F, 0.0F);
+  float flat_total = 0.0F;
+  float slope_total = 0.0F;
+  for (std::uint32_t seed = 1U; seed <= 32U; ++seed) {
+    std::uint32_t flat_state = seed;
+    std::uint32_t slope_state = seed;
+    flat_total += Render::Ground::stone_sink_fraction(flat, flat_state);
+    slope_total += Render::Ground::stone_sink_fraction(normal, slope_state);
+  }
+  EXPECT_GT(slope_total, flat_total)
+      << "a rock on a hillside has to be sunk further or its downhill lip floats";
+  for (std::uint32_t seed = 1U; seed <= 32U; ++seed) {
+    std::uint32_t state = seed;
+    EXPECT_LE(Render::Ground::stone_sink_fraction(normal, state), 0.34F);
+  }
+}
+
+TEST(StoneGroundFit, TheGpuInstanceCarriesTheGroundFitToTheStoneShader) {
+  Render::GL::StoneInstanceGpu const instance{QVector4D(1.0F, 2.0F, 3.0F, 1.5F),
+                                              QVector4D(0.5F, 0.5F, 0.5F, 0.0F)};
+  EXPECT_EQ(instance.ground_fit, QVector4D(0.0F, 0.0F, 0.0F, 0.0F))
+      << "an instance with no ground fit stands upright on the surface point";
+  EXPECT_EQ(sizeof(Render::GL::StoneInstanceGpu), 3U * sizeof(QVector4D));
+
+  const auto root = find_repo_root();
+  ASSERT_FALSE(root.empty());
+  std::ifstream vert(root / "assets" / "shaders" / "stone_instanced.vert");
+  std::string const source((std::istreambuf_iterator<char>(vert)),
+                           std::istreambuf_iterator<char>());
+  ASSERT_FALSE(source.empty());
+  EXPECT_NE(source.find("layout(location = 4) in vec4 a_ground_fit;"),
+            std::string::npos)
+      << "the executor binds StoneInstanceGpu::ground_fit at instance_scale";
+  EXPECT_NE(source.find("align_up_to("), std::string::npos)
+      << "stones tilt onto the slope they lie on";
+}
+
+TEST(StoneGroundFit, RockFieldsAreNotOneColour) {
+  QVector3D const rock_low(0.48F, 0.46F, 0.44F);
+  QVector3D const rock_high(0.68F, 0.69F, 0.73F);
+  float max_spread = 0.0F;
+  QVector3D first;
+  for (std::uint32_t seed = 1U; seed <= 64U; ++seed) {
+    std::uint32_t state = seed * 7919U;
+    auto const color =
+        Render::Ground::stone_instance_color(rock_low, rock_high, 0.3F, 0.4F, state);
+    EXPECT_GT(color.x(), 0.15F);
+    EXPECT_LT(color.x(), 0.80F);
+    if (seed == 1U) {
+      first = color;
+    }
+    max_spread = std::max(max_spread, (color - first).length());
+  }
+  EXPECT_GT(max_spread, 0.08F)
+      << "iron stains and lichen greys should split the palette";
+}

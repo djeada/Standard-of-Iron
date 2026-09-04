@@ -162,7 +162,7 @@ void append_oriented_box(PropMeshVerts& verts,
                   const QVector3D& p1,
                   const QVector3D& p2,
                   const QVector3D& p3) {
-    QVector3D n = QVector3D::crossProduct(p1 - p0, p3 - p0);
+    QVector3D n = QVector3D::crossProduct(p3 - p0, p1 - p0);
     if (n.lengthSquared() > 1.0e-8F) {
       n.normalize();
     } else {
