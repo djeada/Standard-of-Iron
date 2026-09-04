@@ -355,6 +355,33 @@ and goes around.
 Neither stage keeps a spatial structure of its own. Both query
 `Engine::Core::WorldSpatialIndex`, which is the one dynamic index over units.
 
+### The motor and how fast a body may gain speed
+
+The motor integrates velocity towards the steered target with a gain of
+`4 × max_speed` per second and a half-strength damping term while under way, so a
+body settles at roughly three quarters of its configured speed (that damping is
+per-tick, which is one of the reasons the simulation is frame-rate dependent) and
+gets there in a few ticks. For a foot soldier that reads as stepping off; for a
+horse it meant 0 → 8 m/s inside one tick, and an elephant or a fleeing sheep
+likewise appeared at full speed on the first frame. `Game::Units::body_acceleration`
+(`game/units/spawn_type.h`) now caps how much _speed_ a body may gain per second —
+1.2 m/s² for an elephant, 5 for a horse, 6 for a sheep, 8 for a wolf, unlimited for
+everything else — applied to the _translated_ step against the previous tick's
+accepted velocity (`MovementFacts::motor`), not to the integrated velocity. That
+distinction matters: translation is scaled down while a body turns towards its
+heading, so a cap on the velocity let it wind up silently during the pivot and then
+release at full speed the moment the heading came within 20°. Capping the step keeps
+the steady state, the direction blending and the stop exactly what they were; only
+the wind-up is slower. The quadruped gaits already derive their cadence from
+ground speed, so the horse walks into its canter and gallop instead of appearing
+in one.
+
+The mounted charge is the one consumer that cared: its intent is cancelled as
+`SpeedLost` after 0.15 s below 2.2 m/s, which a horse winding up from a standstill
+would always trip. `MountedChargeComponent::last_observed_speed` lets the processor
+skip that accumulation while the body is still gaining speed; holding below the
+cancel speed without gaining is still a lost charge.
+
 The number to watch is `SteeringFacts::body_overlap`, which the contact pass
 records and the movement trace carries; `MovementFindingKind::BodyOverlap` fires
 when bodies are left standing inside one another, and

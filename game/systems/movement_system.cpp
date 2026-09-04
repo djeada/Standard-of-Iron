@@ -1050,6 +1050,18 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   float translated_vx = movement->vx * translation_scale;
   float translated_vz = movement->vz * translation_scale;
 
+  float const body_acceleration = Game::Units::body_acceleration(unit->spawn_type);
+  if (body_acceleration > 0.0F) {
+    float const speed_ceiling =
+        facts->last_accepted_speed + body_acceleration * delta_time;
+    float const translated_speed = std::hypot(translated_vx, translated_vz);
+    if (translated_speed > speed_ceiling && translated_speed > 1.0e-5F) {
+      float const scale = speed_ceiling / translated_speed;
+      translated_vx *= scale;
+      translated_vz *= scale;
+    }
+  }
+
   if (auto const* traversal =
           entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
       traversal != nullptr && traversal->root_motion_blocked && world != nullptr &&
@@ -1104,6 +1116,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   facts->motor.accepted_dz = stepped_z;
   facts->motor.accepted_vx = stepped_x / std::max(1.0e-5F, delta_time);
   facts->motor.accepted_vz = stepped_z / std::max(1.0e-5F, delta_time);
+  facts->last_accepted_speed =
+      std::hypot(facts->motor.accepted_vx, facts->motor.accepted_vz);
   facts->motor.rejected_dx = sweep.rejected_dx;
   facts->motor.rejected_dz = sweep.rejected_dz;
   facts->motor.accepted_fraction = sweep.accepted_fraction;

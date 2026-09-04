@@ -29,6 +29,7 @@
 #include "render/gl/primitives.h"
 #include "render/graphics_settings.h"
 #include "render/humanoid/schema/skeleton_schema.h"
+#include "render/palette.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 #include "scene/environment_lighting.h"
@@ -85,6 +86,9 @@ constexpr QVector3D k_brow{0.13F, 0.075F, 0.035F};
 constexpr QVector3D k_mouth{0.16F, 0.055F, 0.035F};
 constexpr QVector3D k_mouth_interior{0.085F, 0.030F, 0.024F};
 constexpr QVector3D k_lip{0.38F, 0.16F, 0.11F};
+constexpr QVector3D k_default_skin{0.78F, 0.62F, 0.49F};
+constexpr float k_lid_shade = 0.90F;
+constexpr float k_lid_visible_close = 0.02F;
 
 struct PortraitDebug {
   bool trace = false;
@@ -331,6 +335,17 @@ auto camera_distance() -> float {
   return debug.camera_override ? debug.distance : k_bust_distance;
 }
 
+auto review_lighting() -> Render::EnvironmentLightingState {
+  Render::EnvironmentLightingState lighting = portrait_lighting();
+  const auto& debug = portrait_debug();
+  if (debug.camera_override) {
+    QMatrix4x4 yaw;
+    yaw.rotate(debug.yaw_degrees, 0.0F, 1.0F, 0.0F);
+    lighting.primary_direction = yaw.map(lighting.primary_direction);
+  }
+  return lighting;
+}
+
 } // namespace
 
 class CommanderPortraitView::PortraitRenderer
@@ -410,6 +425,7 @@ private:
   void release_scene();
   auto ensure_scene() -> bool;
   void apply_pose();
+  [[nodiscard]] auto resolve_skin() const -> QVector3D;
 
   void submit_face(const QMatrix4x4& head_world);
   [[nodiscard]] auto advance_focus(float delta) -> QVector3D;
@@ -424,6 +440,7 @@ private:
   QString m_troop_type;
   QString m_nation;
   QString m_pose;
+  QVector3D m_skin = k_default_skin;
   bool m_speaking = false;
   bool m_talking = false;
   bool m_scene_dirty = true;
@@ -439,6 +456,8 @@ private:
 
   std::chrono::steady_clock::time_point m_last_frame{};
   int m_dumped_frames = 0;
+  float m_wall_ms = 0.0F;
+  float m_render_ms = 0.0F;
   QVector3D m_last_head{};
   bool m_has_last_head = false;
 };
@@ -481,10 +500,26 @@ auto CommanderPortraitView::PortraitRenderer::ensure_scene() -> bool {
     m_world = scene.world;
     m_entity = scene.entity;
     m_pose_dirty = true;
+    m_skin = resolve_skin();
   }
 
   m_scene_dirty = false;
   return true;
+}
+
+auto CommanderPortraitView::PortraitRenderer::resolve_skin() const -> QVector3D {
+  if (m_world == nullptr) {
+    return k_default_skin;
+  }
+  auto* entity = m_world->get_entity(m_entity);
+  if (entity == nullptr) {
+    return k_default_skin;
+  }
+  std::uint32_t seed = static_cast<std::uint32_t>(entity->get_id()) * 0x9E3779B9U;
+  if (auto* unit = entity->get_component<Engine::Core::UnitComponent>()) {
+    seed ^= static_cast<std::uint32_t>(unit->owner_id) * 0x85EBCA6BU;
+  }
+  return Render::GL::make_humanoid_palette(QVector3D(0.5F, 0.5F, 0.5F), seed).skin;
 }
 
 void CommanderPortraitView::PortraitRenderer::apply_pose() {
@@ -534,7 +569,7 @@ void CommanderPortraitView::PortraitRenderer::submit_face(
     disc = sphere;
   }
 
-  const float lid_scale = std::max(0.14F, m_expression.lid);
+  const float lid_close = std::clamp((1.0F - m_expression.lid) / 0.88F, 0.0F, 1.0F);
   const float mouth_open = std::clamp(m_expression.mouth, 0.0F, 1.0F);
   const QVector2D gaze(m_expression.gaze.x() * k_head_radius * 0.075F,
                        m_expression.gaze.y() * k_head_radius * 0.050F);
@@ -555,10 +590,10 @@ void CommanderPortraitView::PortraitRenderer::submit_face(
                      face_disc_model(eye_frame,
                                      QVector3D(0.0F, 0.0F, k_eye_shell_bias),
                                      k_head_radius * 0.33F,
-                                     k_head_radius * 0.27F * lid_scale,
+                                     k_head_radius * 0.27F,
                                      k_head_radius * 0.012F),
                      k_eye_white);
-    const QVector3D gaze_offset(gaze.x(), gaze.y() * lid_scale, 0.0F);
+    const QVector3D gaze_offset(gaze.x(), gaze.y(), 0.0F);
     m_renderer->mesh(
         disc,
         face_disc_model(
@@ -566,7 +601,7 @@ void CommanderPortraitView::PortraitRenderer::submit_face(
             gaze_offset +
                 QVector3D(0.0F, 0.0F, k_eye_shell_bias + (k_head_radius * 0.010F)),
             k_head_radius * 0.155F,
-            k_head_radius * 0.165F * lid_scale,
+            k_head_radius * 0.165F,
             k_head_radius * 0.010F),
         iris);
     m_renderer->mesh(
@@ -576,7 +611,7 @@ void CommanderPortraitView::PortraitRenderer::submit_face(
             gaze_offset +
                 QVector3D(0.0F, 0.0F, k_eye_shell_bias + (k_head_radius * 0.018F)),
             k_head_radius * 0.075F,
-            k_head_radius * 0.090F * lid_scale,
+            k_head_radius * 0.090F,
             k_head_radius * 0.008F),
         k_pupil);
     m_renderer->mesh(
@@ -584,12 +619,27 @@ void CommanderPortraitView::PortraitRenderer::submit_face(
         face_disc_model(eye_frame,
                         gaze_offset +
                             QVector3D(k_head_radius * 0.080F,
-                                      k_head_radius * 0.082F * lid_scale,
+                                      k_head_radius * 0.082F,
                                       k_eye_shell_bias + (k_head_radius * 0.026F)),
                         k_head_radius * 0.038F,
-                        k_head_radius * 0.038F * lid_scale,
+                        k_head_radius * 0.038F,
                         k_head_radius * 0.008F),
         k_catchlight);
+
+    if (lid_close > k_lid_visible_close) {
+      const float lid_height = k_head_radius * 0.31F;
+      const float lid_rest = lid_height * 2.0F;
+      m_renderer->mesh(
+          disc,
+          face_disc_model(eye_frame,
+                          QVector3D(0.0F,
+                                    lid_rest * (1.0F - lid_close),
+                                    k_eye_shell_bias + (k_head_radius * 0.040F)),
+                          k_head_radius * 0.37F,
+                          lid_height,
+                          k_head_radius * 0.008F),
+          m_skin * k_lid_shade);
+    }
 
     const float brow_roll =
         side * (m_pose == QStringLiteral("dismissive") ? 5.0F : -3.0F);
@@ -652,9 +702,11 @@ void CommanderPortraitView::PortraitRenderer::debug_after_frame(
     m_last_head = head;
     m_has_last_head = true;
     std::fprintf(stderr,
-                 "SOI_PORTRAIT_TRACE t=%.3f head=(%.4f,%.4f,%.4f) step_mm=%.2f "
-                 "mouth=%.2f lid=%.2f\n",
+                 "SOI_PORTRAIT_TRACE t=%.3f wall_ms=%.1f render_ms=%.1f "
+                 "head=(%.4f,%.4f,%.4f) step_mm=%.2f mouth=%.2f lid=%.2f\n",
                  static_cast<double>(m_expression.time),
+                 static_cast<double>(m_wall_ms),
+                 static_cast<double>(m_render_ms),
                  static_cast<double>(head.x()),
                  static_cast<double>(head.y()),
                  static_cast<double>(head.z()),
@@ -681,6 +733,7 @@ void CommanderPortraitView::PortraitRenderer::render() {
     delta = std::clamp(std::chrono::duration<float>(now - m_last_frame).count(),
                        0.0F,
                        k_max_frame_seconds);
+    m_wall_ms = std::chrono::duration<float, std::milli>(now - m_last_frame).count();
   }
   m_last_frame = now;
 
@@ -713,7 +766,7 @@ void CommanderPortraitView::PortraitRenderer::render() {
 
   m_renderer->set_camera(m_camera);
   m_renderer->set_viewport(m_size.width(), m_size.height());
-  m_renderer->set_environment_lighting(portrait_lighting());
+  m_renderer->set_environment_lighting(review_lighting());
 
   m_renderer->set_clear_color(0.055F, 0.048F, 0.042F, 1.0F);
   m_renderer->set_local_owner_id(1);
@@ -745,6 +798,9 @@ void CommanderPortraitView::PortraitRenderer::render() {
   }
   m_renderer->end_frame();
 
+  m_render_ms =
+      std::chrono::duration<float, std::milli>(std::chrono::steady_clock::now() - now)
+          .count();
   debug_after_frame(head_probe);
 
   update();

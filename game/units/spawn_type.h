@@ -422,6 +422,23 @@ inline auto is_wall_network_spawn(SpawnType type) -> bool {
   }
 }
 
+[[nodiscard]] inline auto body_acceleration(SpawnType type) noexcept -> float {
+  switch (type) {
+  case SpawnType::Elephant:
+    return 1.2F;
+  case SpawnType::MountedKnight:
+  case SpawnType::HorseArcher:
+  case SpawnType::HorseSpearman:
+    return 5.0F;
+  case SpawnType::Sheep:
+    return 6.0F;
+  case SpawnType::Wolf:
+    return 8.0F;
+  default:
+    return 0.0F;
+  }
+}
+
 inline auto can_use_attack_mode(SpawnType type) -> bool {
   return type != SpawnType::Healer && type != SpawnType::Builder &&
          !is_building_spawn(type) && !is_wildlife_spawn(type);

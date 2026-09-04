@@ -385,6 +385,47 @@ TEST_F(MovementMotorTest, AnUnreachableGoalEndsInADeclaredOutcome) {
   EXPECT_FALSE(movement->get_has_target());
 }
 
+TEST_F(MovementMotorTest, AnElephantWindsUpInsteadOfLeapingToSpeed) {
+  const EntityID id = spawn(Game::Units::SpawnType::Elephant, world_of(10, 24));
+  ASSERT_NE(id, 0U);
+
+  CommandService::move_unit(m_session->world(), id, world_of(50, 24));
+  const double step = m_session->clock().tick_seconds();
+  QVector3D last = position_of(id);
+  float last_speed = 0.0F;
+  float peak_gain_per_second = 0.0F;
+  float peak_speed = 0.0F;
+  for (int tick = 0; tick < 240; ++tick) {
+    run_for(step);
+    const QVector3D now = position_of(id);
+    const float speed =
+        std::hypot(now.x() - last.x(), now.z() - last.z()) / static_cast<float>(step);
+    peak_gain_per_second =
+        std::max(peak_gain_per_second, (speed - last_speed) / static_cast<float>(step));
+    peak_speed = std::max(peak_speed, speed);
+    last_speed = speed;
+    last = now;
+  }
+  EXPECT_LE(peak_gain_per_second,
+            Game::Units::body_acceleration(Game::Units::SpawnType::Elephant) + 0.3F)
+      << "the elephant leapt to speed instead of winding up";
+  EXPECT_GT(peak_speed, 1.4F) << "the ramp never let the elephant reach travel speed";
+}
+
+TEST_F(MovementMotorTest, AFootSoldierStillStepsOffAtOnce) {
+  const EntityID id = spawn(Game::Units::SpawnType::Spearman, world_of(10, 24));
+  ASSERT_NE(id, 0U);
+
+  CommandService::move_unit(m_session->world(), id, world_of(50, 24));
+  run_for(0.6);
+  const QVector3D start = position_of(id);
+  run_for(0.25);
+  const QVector3D now = position_of(id);
+  const float speed = std::hypot(now.x() - start.x(), now.z() - start.z()) / 0.25F;
+  EXPECT_GT(speed, 1.0F) << "an unramped body type should be at travel speed "
+                            "once it has turned to face its goal";
+}
+
 TEST_F(MovementMotorTest, AWallDoesNotStopTravelAlongIt) {
   seal_column(30);
   const EntityID id = spawn(Game::Units::SpawnType::Spearman, world_of(28, 10));
