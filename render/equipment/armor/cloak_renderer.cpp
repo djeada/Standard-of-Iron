@@ -154,22 +154,25 @@ auto make_cloak_back_surface() -> ClothSurface {
 
   for (int y = 0; y <= k_length_segments; ++y) {
     float const v = static_cast<float>(y) / static_cast<float>(k_length_segments);
-    float const hem_curve = 0.04F * v * v;
-    float const half_width = 0.52F - 0.10F * std::pow(v, 1.10F);
+    float const hem_curve = 0.035F * v * v;
+    float const half_width = 0.50F - 0.08F * std::pow(v, 1.10F);
     for (int x = 0; x <= k_width_segments; ++x) {
       float const u = static_cast<float>(x) / static_cast<float>(k_width_segments);
       float const x_norm = u * 2.0F - 1.0F;
       float const x_abs = std::abs(x_norm);
       float const edge_falloff = std::max(0.0F, 1.0F - std::pow(x_abs, 1.45F));
-      float const fold_band = std::max(0.0F, std::cos(x_abs * k_pi * 3.0F - 0.35F));
-      float const symmetric_folds =
-          fold_band * edge_falloff * (0.008F + 0.018F * v * v);
+      float const fold_phase = x_abs * k_pi * 3.0F - 0.35F;
+      float const fold_band = std::max(0.0F, std::cos(fold_phase));
+      float const fold_gain = 0.006F + 0.030F * v * v;
+      float const symmetric_folds = fold_band * edge_falloff * fold_gain;
       float const center_swell =
-          std::max(0.0F, 1.0F - x_abs * 1.7F) * (0.010F + 0.020F * v);
+          std::max(0.0F, 1.0F - x_abs * 1.7F) * (0.008F + 0.018F * v);
       float const back_bulge =
-          edge_falloff * (0.015F + 0.060F * std::sin(v * k_pi) + 0.050F * v);
-      float const depth = back_bulge + symmetric_folds + center_swell;
-      float const length = v - 0.5F + hem_curve * edge_falloff;
+          edge_falloff * (0.012F + 0.055F * std::sin(v * k_pi) + 0.055F * v);
+      float const side_wrap = -0.045F * x_abs * x_abs * (1.0F - 0.55F * v);
+      float const depth = back_bulge + symmetric_folds + center_swell + side_wrap;
+      float const hem_scallop = 0.018F * std::cos(fold_phase) * v * v * v;
+      float const length = v - 0.5F + hem_curve * edge_falloff + hem_scallop;
       surface.positions.emplace_back(x_norm * half_width, depth, length);
       surface.uvs.emplace_back(u, v);
     }
@@ -194,13 +197,16 @@ auto make_cloak_shoulder_surface() -> ClothSurface {
       float const u = static_cast<float>(x) / static_cast<float>(k_width_segments);
       float const x_norm = u * 2.0F - 1.0F;
       float const x_abs = std::abs(x_norm);
-      float const shoulder_drop = -(0.014F + 0.060F * v) * (1.0F - x_abs * 0.76F);
-      float const back_drape =
-          -std::max(0.0F, v - 0.28F) * (0.020F + 0.040F * (1.0F - x_abs));
+      float const lateral_drop = -0.105F * std::pow(x_abs, 1.6F);
+      float const front_drop = -std::max(0.0F, 0.30F - v) * 0.06F;
+      float const back_drape = -std::pow(std::max(0.0F, v - 0.36F), 1.25F) * 0.16F;
       float const collar_rise =
-          std::max(0.0F, 0.22F - v) * 0.020F * (1.0F - x_abs * 0.60F);
-      surface.positions.emplace_back(
-          x_norm * 0.5F, shoulder_drop + back_drape + collar_rise, depth);
+          std::max(0.0F, 0.26F - v) * 0.020F * (1.0F - x_abs * 0.60F);
+      float const shoulder_round = -0.012F * std::sin(v * k_pi);
+      surface.positions.emplace_back(x_norm * 0.5F,
+                                     lateral_drop + front_drop + back_drape +
+                                         collar_rise + shoulder_round,
+                                     depth);
       surface.uvs.emplace_back(u, v);
     }
   }
@@ -240,7 +246,7 @@ auto make_cloak_placement(const CloakConfig& config,
   CloakPlacement placement;
 
   float const shoulder_width = shoulder_span * 1.48F * config.width_scale;
-  float const shoulder_depth = torso_r * 1.46F;
+  float const shoulder_depth = torso_r * 1.22F;
   QVector3D const shoulder_anchor = shoulder_mid +
                                     up * (torso_r * config.shoulder_anchor_up) +
                                     back * (torso_r * 0.16F);
@@ -264,10 +270,6 @@ auto make_cloak_placement(const CloakConfig& config,
   placement.drape_model = placement.drape_model * drape_orient;
   placement.drape_model.translate(0.0F, 0.0F, drape_length * 0.5F);
 
-  QMatrix4x4 flare;
-  flare.setToIdentity();
-  flare(0, 2) = 0.10F;
-  placement.drape_model = placement.drape_model * flare;
   placement.drape_model.scale(drape_width, 1.0F, drape_length);
 
   if (config.show_clasp) {

@@ -180,6 +180,7 @@ struct HumanoidUnitAnimationRuntime {
   float turn_smoothing_cap{2.5F};
   bool turn_smoothing_travel_yaw{true};
   bool turn_smoothing_stagger{true};
+  bool turn_smoothing_pivot_wheel{true};
 
   bool unit_is_archer{false};
   std::uint32_t ctx_entity_id{0U};
@@ -623,6 +624,7 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
   float turn_smoothing_cap = 2.5F;
   bool turn_smoothing_travel_yaw = true;
   bool turn_smoothing_stagger = true;
+  bool turn_smoothing_pivot_wheel = true;
   if (layout_cache_comp != nullptr && allow_animation_persistence &&
       transform_comp != nullptr && !ctx.force_single_soldier && !has_entity_death &&
       total_layout_count > 1) {
@@ -661,6 +663,7 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
       turn_smoothing_travel_yaw = false;
       turn_smoothing_stagger = false;
     }
+    turn_smoothing_pivot_wheel = !combat_active && !anim.is_in_hold_mode;
   }
   bool const unit_is_archer =
       unit_comp != nullptr && unit_comp->spawn_type == Game::Units::SpawnType::Archer;
@@ -695,6 +698,7 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
   result.turn_smoothing_cap = turn_smoothing_cap;
   result.turn_smoothing_travel_yaw = turn_smoothing_travel_yaw;
   result.turn_smoothing_stagger = turn_smoothing_stagger;
+  result.turn_smoothing_pivot_wheel = turn_smoothing_pivot_wheel;
   result.unit_is_archer = unit_is_archer;
   result.ctx_entity_id = ctx_entity_id;
   result.unit_origin = unit_origin;
@@ -764,6 +768,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   const float turn_smoothing_cap = u.turn_smoothing_cap;
   const bool turn_smoothing_travel_yaw = u.turn_smoothing_travel_yaw;
   const bool turn_smoothing_stagger = u.turn_smoothing_stagger;
+  const bool turn_smoothing_pivot_wheel = u.turn_smoothing_pivot_wheel;
   const bool unit_is_archer = u.unit_is_archer;
   const std::uint32_t ctx_entity_id = u.ctx_entity_id;
   const bool unit_fog_visible = u.unit_fog_visible;
@@ -928,6 +933,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
         turn_smoothing_stagger ? turn_variation.response_delay_seconds : 0.0F;
     smoothing_inputs.allow_travel_yaw = turn_smoothing_travel_yaw;
     smoothing_inputs.position_is_authoritative = formation_presentation != nullptr;
+    smoothing_inputs.allow_pivot_wheel = turn_smoothing_pivot_wheel;
 
     smoothing_inputs.frame_index = frame_index + 1U;
     turn_smoothing = resolve_soldier_turn_smoothing(

@@ -319,7 +319,7 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
       const auto& fog_mask = feature.fog_mask;
       if (m_last_bound_shader != bridge_shader) {
         bridge_shader->use();
-        bridge_shader->set_uniform(bridge_uniforms.light_direction, m_light_dir);
+        set_water_environment(bridge_shader, bridge_uniforms);
         m_last_bound_shader = bridge_shader;
         m_last_bound_texture = nullptr;
       }
@@ -370,8 +370,7 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
       const auto& visibility = feature.visibility;
       if (m_last_bound_shader != road_shader) {
         road_shader->use();
-        road_shader->set_uniform(m_water_pipeline->m_road_uniforms.light_direction,
-                                 m_light_dir);
+        set_water_environment(road_shader, m_water_pipeline->m_road_uniforms);
         m_last_bound_shader = road_shader;
         m_last_bound_texture = nullptr;
       }

@@ -11,6 +11,7 @@ in vec3 v_world_pos;
 uniform vec3 u_color;
 uniform float u_alpha;
 uniform int u_surface_kind;
+uniform vec3 u_camera_pos;
 
 out vec4 frag_color;
 
@@ -199,7 +200,7 @@ void main() {
   vec3 n_final = normalize(mix(n_geom, n_bump, 0.38));
 
   vec3 light_dir = environment_primary_direction();
-  vec3 view_dir = normalize(vec3(0.0, 0.9, 0.4));
+  vec3 view_dir = normalize(u_camera_pos - v_world_pos);
 
   float steep = saturate_val(length(vec2(sx, sy)) * bump_strength);
   float wetness = environment_wetness();

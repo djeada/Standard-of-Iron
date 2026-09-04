@@ -2,6 +2,7 @@
 
 uniform sampler2D u_material_detail;
 uniform bool u_has_material_detail;
+uniform vec3 u_camera_pos;
 
 const int k_material_mineral = 0;
 const int k_material_metal = 1;
@@ -63,28 +64,30 @@ vec3 soi_mineral_variation(vec3 base_color, vec2 uv, vec3 normal) {
   return variation;
 }
 
-vec3 soi_wood_variation(vec3 base_color, vec2 uv, vec3 normal, float height) {
+vec3 soi_wood_variation(
+    vec3 base_color, vec2 uv, vec3 normal, vec3 view_dir, float height) {
   float grain_field = soi_detail_mid(uv * 4.5);
   float grain = sin(height * 22.0 + grain_field * 3.5) * 0.5 + 0.5;
   float fine = soi_detail_micro(uv * 48.0) * 0.10;
   float knot = step(0.93, soi_detail_mid(uv * 2.2)) * 0.16;
   float wood_noise = grain * 0.13 + fine - knot;
-  float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.3))));
+  float view_angle = abs(dot(normal, view_dir));
   float sheen = pow(1.0 - view_angle, 4.0) * 0.06;
   return base_color * (1.0 + wood_noise) + vec3(sheen);
 }
 
-vec3 soi_metal_variation(vec3 base_color, vec2 uv, vec3 normal) {
+vec3 soi_metal_variation(vec3 base_color, vec2 uv, vec3 normal, vec3 view_dir) {
   float metal_noise = soi_detail_fine(uv * 9.0) * 0.018;
-  float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
+  float view_angle = abs(dot(normal, view_dir));
   float fresnel = pow(1.0 - view_angle, 2.0) * 0.10;
   return base_color + vec3(metal_noise + fresnel);
 }
 
-vec3 soi_cloth_variation(vec3 base_color, vec2 uv, vec3 normal, vec3 world_pos) {
+vec3 soi_cloth_variation(
+    vec3 base_color, vec2 uv, vec3 normal, vec3 view_dir, vec3 world_pos) {
   float weave_pattern = sin(world_pos.x * 55.0) * sin(world_pos.z * 55.0) * 0.025;
   float cloth_noise = soi_detail_mid(uv * 2.5) * 0.10 - 0.05;
-  float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
+  float view_angle = abs(dot(normal, view_dir));
   float sheen = pow(1.0 - view_angle, 3.0) * 0.15;
   return base_color * (1.0 + cloth_noise + weave_pattern) + vec3(sheen);
 }
@@ -103,15 +106,16 @@ vec3 soi_material_variation(vec3 base_color,
     return base_color;
   }
   vec2 uv = soi_surface_lattice(world_pos, normal) * 4.0;
+  vec3 view_dir = normalize(u_camera_pos - world_pos);
   vec3 variation = base_color;
   if (material_id == k_material_mineral) {
     variation = soi_mineral_variation(base_color, uv, normal);
   } else if (material_id == k_material_wood) {
-    variation = soi_wood_variation(base_color, uv, normal, world_pos.y);
+    variation = soi_wood_variation(base_color, uv, normal, view_dir, world_pos.y);
   } else if (material_id == k_material_metal) {
-    variation = soi_metal_variation(base_color, uv, normal);
+    variation = soi_metal_variation(base_color, uv, normal, view_dir);
   } else if (material_id == k_material_cloth) {
-    variation = soi_cloth_variation(base_color, uv, normal, world_pos);
+    variation = soi_cloth_variation(base_color, uv, normal, view_dir, world_pos);
   } else if (material_id == k_material_leather) {
     variation = soi_leather_variation(base_color, uv);
   }
