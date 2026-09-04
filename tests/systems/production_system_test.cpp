@@ -9,6 +9,7 @@
 #include "game/map/terrain_service.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/harvest_yields.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/movement_pipeline.h"
 #include "game/systems/nav_grid.h"
@@ -98,7 +99,8 @@ TEST_F(ProductionSystemTest, BuilderChopsTreeAndAwardsWood) {
 
   const auto* carry = builder->get_component<Engine::Core::ResourceCarryComponent>();
   ASSERT_NE(carry, nullptr) << "the gathered load should be on the worker's back";
-  EXPECT_EQ(carry->amounts.get(Game::Systems::ResourceType::Wood), 40);
+  EXPECT_EQ(carry->amounts.get(Game::Systems::ResourceType::Wood),
+            Game::Systems::k_cut_tree_wood_reward);
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Wood),
             0)
@@ -109,7 +111,7 @@ TEST_F(ProductionSystemTest, BuilderChopsTreeAndAwardsWood) {
 
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Wood),
-            40);
+            Game::Systems::k_cut_tree_wood_reward);
   EXPECT_FALSE(builder->has_component<Engine::Core::ResourceCarryComponent>());
   EXPECT_TRUE(terrain.world_props().empty());
 

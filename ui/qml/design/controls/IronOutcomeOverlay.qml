@@ -12,6 +12,8 @@ Item {
     default property alias detail: detailHost.data
 
     property string factionId: ""
+
+    property string outcomeReason: ""
     property string primaryAction: qsTr("Battle Report")
 
     property bool showingSummary: false
@@ -47,6 +49,8 @@ Item {
     }
 
     readonly property string subtitle: {
+        if (root.outcomeKind === "defeat" && root.outcomeReason !== "")
+            return root.outcomeReason;
         switch (root.outcomeKind) {
         case "spectator":
             return qsTr("One side is left holding the field.");

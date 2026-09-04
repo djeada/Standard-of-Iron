@@ -426,7 +426,9 @@ TEST(MapPreviewGeneratorTest, PlayerBasesLandOnTheCappedPreviewScale) {
   ASSERT_FALSE(preview.isNull());
   EXPECT_LE(std::max(preview.width(), preview.height()), 512);
 
-  const auto [world_width, world_height] = world_dimensions(map_def.grid);
+  const auto [axis_width, axis_height] = world_dimensions(map_def.grid);
+  const auto [world_width, world_height] =
+      Game::Map::Minimap::rotated_world_bounds(axis_width, axis_height);
   const auto [px, py] =
       Game::Map::Minimap::world_to_pixel(player_one_base->position.x(),
                                          player_one_base->position.z(),
@@ -442,6 +444,45 @@ TEST(MapPreviewGeneratorTest, PlayerBasesLandOnTheCappedPreviewScale) {
   EXPECT_LT(color_distance(preview.pixelColor(marker), player_color), 90)
       << "The start-position marker must be drawn at the same scale as the "
          "capped preview image.";
+}
+
+TEST(MapPreviewGeneratorTest, MapCornersStayInsideTheRotatedPreview) {
+  const QString map_path = QStringLiteral("assets/maps/map_sallow_ford.json");
+
+  MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(MapLoader::load_from_json_file(map_path, map_def, &error))
+      << error.toStdString();
+
+  MapPreviewGenerator generator;
+  const QImage preview = generator.generate_preview(map_path, QVariantList{});
+  ASSERT_FALSE(preview.isNull());
+
+  const float last_x = static_cast<float>(map_def.grid.width) - 1.0F;
+  const float last_z = static_cast<float>(map_def.grid.height) - 1.0F;
+  const std::pair<float, float> corners[] = {
+      {0.0F, 0.0F}, {last_x, 0.0F}, {0.0F, last_z}, {last_x, last_z}};
+
+  for (const auto& [grid_x, grid_z] : corners) {
+    const auto [world_x, world_z] = grid_to_world_coords(grid_x, grid_z, map_def);
+    const auto [axis_width, axis_height] = world_dimensions(map_def.grid);
+    const auto [extent_width, extent_height] =
+        Game::Map::Minimap::rotated_world_bounds(axis_width, axis_height);
+    const auto [px, py] =
+        Game::Map::Minimap::world_to_pixel(world_x,
+                                           world_z,
+                                           extent_width,
+                                           extent_height,
+                                           static_cast<float>(preview.width()),
+                                           static_cast<float>(preview.height()));
+
+    EXPECT_GE(px, 0.0F) << "corner " << grid_x << "," << grid_z;
+    EXPECT_GE(py, 0.0F) << "corner " << grid_x << "," << grid_z;
+    EXPECT_LE(px, static_cast<float>(preview.width()))
+        << "corner " << grid_x << "," << grid_z;
+    EXPECT_LE(py, static_cast<float>(preview.height()))
+        << "corner " << grid_x << "," << grid_z;
+  }
 }
 
 TEST_F(MinimapGeneratorTest, HandlesEmptyMap) {

@@ -847,6 +847,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/EconomyCoach.qml
             ui/qml/EconomyHelpPanel.qml
             ui/qml/WaveTracker.qml
+            ui/qml/MissionDeadline.qml
             ui/qml/HUDBottom.qml
             ui/qml/HUDBottomCommander.qml
             ui/qml/HUDBottomSpectator.qml

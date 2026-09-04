@@ -225,8 +225,8 @@
       "priority": 60
     },
     {
-      "id": "marcellus_consul_fallen",
-      "speaker": "roman_field_commander",
+      "id": "fabius_consul_fallen",
+      "speaker": "roman_legion_organizer",
       "pose": "cynical",
       "trigger": {
         "type": "commander_defeated",

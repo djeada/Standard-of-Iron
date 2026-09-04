@@ -76,8 +76,12 @@ void CommanderMessageDirector::configure(const MissionDefinition& mission,
     cue.pose = authored.pose.isEmpty() ? QStringLiteral("cynical") : authored.pose;
     cue.text = authored.text;
     cue.voice_cue = authored.voice_cue;
-    cue.duration = authored.duration > 0.0F ? authored.duration
-                                            : k_default_commander_message_seconds;
+    const float authored_seconds = authored.duration > 0.0F
+                                       ? authored.duration
+                                       : k_default_commander_message_seconds;
+
+    cue.duration = legible_commander_message_seconds(
+        static_cast<int>(authored.text.length()), authored_seconds);
     cue.holds_outcome = authored.trigger == CommanderMessageTrigger::MissionVictory ||
                         authored.trigger == CommanderMessageTrigger::MissionDefeat;
 
