@@ -4952,6 +4952,29 @@ TEST_F(CombatModeTest, MountedChargeCancelsAfterSustainedSpeedLoss) {
   EXPECT_EQ(attacker->get_component<RpgCommanderActionComponent>(), nullptr);
 }
 
+TEST_F(CombatModeTest, MountedChargeIntentSurvivesWindingUpFromStandstill) {
+  auto* attacker = make_mounted_attacker(*world, 0.0F, 0.0F);
+  auto* movement = attacker->add_component<MovementComponent>();
+  movement->set_manual_velocity(0.0F, 0.4F);
+  auto* charge = attacker->add_component<MountedChargeComponent>();
+  charge->auto_contact_enabled = false;
+
+  ASSERT_TRUE(Game::Systems::Combat::request_mounted_charge(
+      *attacker, MountedChargeIntentSource::Player));
+  for (float const speed : {0.8F, 1.2F, 1.6F, 2.0F}) {
+    movement->set_manual_velocity(0.0F, speed);
+    Game::Systems::Combat::process_combat_state(world.get(), 0.1F);
+    EXPECT_EQ(charge->state, MountedChargeState::Ready) << "at " << speed << " m/s";
+    EXPECT_TRUE(charge->intent_requested) << "at " << speed << " m/s";
+  }
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.1F);
+  Game::Systems::Combat::process_combat_state(world.get(), 0.1F);
+  EXPECT_EQ(charge->state, MountedChargeState::Cooldown)
+      << "holding below the cancel speed without gaining any is still a lost charge";
+  EXPECT_EQ(charge->last_cancel_reason, MountedChargeCancelReason::SpeedLost);
+}
+
 TEST_F(CombatModeTest, AiChargeIntentArmsAgainstForwardTargetBeforeContact) {
   auto* attacker = make_mounted_attacker(*world, 0.0F, 0.0F);
   auto* movement = attacker->add_component<MovementComponent>();

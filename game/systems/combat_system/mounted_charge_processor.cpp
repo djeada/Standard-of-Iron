@@ -225,6 +225,8 @@ void process_mounted_charge_intents(Engine::Core::World* world, float delta_time
     }
 
     float const speed = movement_speed(*movement);
+    bool const gaining_speed = speed > charge->last_observed_speed + 0.01F;
+    charge->last_observed_speed = speed;
     if (charge->state == Engine::Core::MountedChargeState::Charging ||
         charge->state == Engine::Core::MountedChargeState::ImpactActive) {
       if (is_knockdown_interrupted(*entity)) {
@@ -264,7 +266,7 @@ void process_mounted_charge_intents(Engine::Core::World* world, float delta_time
           *entity, Engine::Core::MountedChargeIntentSource::ContactAuto);
     }
     if (charge->intent_requested && contact.target_id == 0U &&
-        speed < charge->cancel_speed) {
+        speed < charge->cancel_speed && !gaining_speed) {
       charge->below_cancel_speed_time += std::max(0.0F, delta_time);
       if (charge->below_cancel_speed_time >= charge->speed_loss_grace) {
         (void)cancel_mounted_charge(*entity,
