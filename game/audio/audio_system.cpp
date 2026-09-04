@@ -350,6 +350,11 @@ auto AudioSystem::resource_cooldown_ms(const std::string& resource_id) const -> 
       .cooldown_ms;
 }
 
+void AudioSystem::reset_playback_throttles() {
+  std::lock_guard<std::mutex> const lock(resource_mutex);
+  resource_last_played_at.clear();
+}
+
 void AudioSystem::unload_sound(const std::string& sound_id) {
   enqueue_unload(sound_id);
 }

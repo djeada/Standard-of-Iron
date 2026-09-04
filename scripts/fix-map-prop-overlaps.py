@@ -1018,8 +1018,14 @@ def ground_defects(item: Placeable, terrain: Terrain) -> tuple[float, float]:
     rotated or opened a gateway somewhere the JSON never said is measured where
     it actually landed.  Returns ``(0.0, 0.0)`` for a body that is not judged
     against the ground at all -- a wall run is laid across whatever it has to
-    hold, and a spawn is spread by the formation pass on the first tick."""
+    hold, and a spawn is spread by the formation pass on the first tick.  An
+    anchor building is exempt for the same reason ``may_step_aside`` refuses to
+    push one off a slope: a hall built into a hillside is a decision, and a
+    defect the repair is forbidden to fix can never reach the zero this audit
+    demands.  Anchors are still judged against roads, water and each other."""
     if terrain.surface is None or not item.avoids_slope_rims:
+        return 0.0, 0.0
+    if item.priority >= PRIORITY_ANCHOR:
         return 0.0, 0.0
     points = item.ground_footprint(terrain.surface)
     return (

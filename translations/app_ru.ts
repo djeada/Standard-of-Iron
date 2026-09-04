@@ -4606,7 +4606,7 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Press %1 to resume</source>
-        <translation type="unfinished"></translation>
+        <translation>Нажмите %1, чтобы продолжить</translation>
     </message>
     <message>
         <source>Leave this battle?</source>

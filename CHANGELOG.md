@@ -184,6 +184,47 @@ tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
 
 ### Fixed
 
+- **The recorded ambience beds are audible again.** The August refresh replaced
+  all thirteen beds cut from field recordings with versions 11 to 29 dB below
+  the -19.3 LUFS the mixer masters to, which is more make-up gain than decode
+  can apply -- a wood, a river or a storm read as silence under the game.
+  `forest_ambush` had also inverted: 2-6 kHz sat above its own 100-800 Hz body,
+  which is the one thing `AmbienceAssetsTest` refuses. All thirteen are rebuilt
+  from their recipes in `tools/audio_field/sources.py` and now measure between
+  -19.1 and -20.2 LUFS, beside the generated beds.
+- **A catapult hitting a wall is heard as a catapult.** `combat.hit.siege` and
+  `combat.hit.structure` are bound to the same recording, so a sword on masonry
+  put the siege impact on that resource's cooldown and the catapult landed in
+  silence. `CueRegistry::reset_cooldowns()` and
+  `AudioSystem::reset_playback_throttles()` drop both throttles without
+  disturbing the bindings, which is what a scene change wants and what the
+  scenario tests were missing. The missing masonry recording that would give
+  the two cues separate voices is now listed in
+  [docs/AUDIO_REGENERATION.md](docs/AUDIO_REGENERATION.md).
+- **The Roman assault camp raises its towers.** Its blueprint was restructured
+  from 24 wall links to 86, which left the third and fourth tower queued behind
+  35 of them -- fifty simulated minutes was not enough to reach either, and the
+  camp fought the match with two. The third tower now goes up with the first
+  two, as it does in the Punic grand camp and the Fabian bulwark.
+- **A home no longer lands on top of a wall gate.** A gate is validated against
+  a 2 x 2 site and then resized to the 9 x 3 it actually occupies, so anything
+  placed beside one could be legal when it was sited and overlapping a moment
+  later. `wall_gate` now declares its real span in the collision registry, so
+  the check and the body agree.
+- **The first wave at Trasimene marches on the camp.** One dead tree in the
+  `trasimene_south_bridge` dressing stood in the approach to the only crossing
+  on the wave's route, and the column got 17 m from its entry point and stopped.
+  The tree has moved 8 m west.
+- **Authored props no longer float on hills they were never measured against.**
+  `scripts/fix-map-prop-overlaps.py` measures slope and hill entrances against
+  the heightfield the engine builds, read back from `tools/terrain_probe`, but
+  it was gated in a compiler-free job with no probe to ask -- so it fell back to
+  the authored hill ellipses, which model a different shape entirely. The two
+  models disagreed about which props were broken, so a repair that satisfied one
+  was flagged by the other. The audit now runs in the job that has a build tree,
+  with `--surface require`, and the six maps it measures are clean against the
+  real ground.
+
 - **The UI's C++ types are declared to QML instead of registered by hand.**
   `Theme`, the persisted preferences, the input bindings and the three
   `QQuickFramebufferObject` views reached QML through `qmlRegisterType` calls in

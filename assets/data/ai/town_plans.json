@@ -841,6 +841,11 @@
           "z": -7.4
         },
         {
+          "building": "defense_tower",
+          "x": 18.0,
+          "z": 6.2
+        },
+        {
           "building": "wall_segment",
           "x": -18.0,
           "z": -18.0,
@@ -1049,11 +1054,6 @@
           "x": 0.0,
           "z": -12.0,
           "rotation": 0.0
-        },
-        {
-          "building": "defense_tower",
-          "x": 18.0,
-          "z": 6.2
         },
         {
           "building": "defense_tower",

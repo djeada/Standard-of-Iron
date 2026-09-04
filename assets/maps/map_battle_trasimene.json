@@ -2370,8 +2370,8 @@
             "nation": "carthage",
             "player_id": 1,
             "type": "defense_tower",
-            "x": 299,
-            "z": 553.0500000000001
+            "x": 303.4,
+            "z": 555.59
         },
         {
             "authored": true,
@@ -5559,7 +5559,7 @@
         },
         {
             "type": "dead_tree",
-            "x": 189.06,
+            "x": 181.06,
             "z": 390.58,
             "scale": 1.0,
             "rotation": 5.352,

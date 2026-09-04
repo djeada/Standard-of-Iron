@@ -122,6 +122,8 @@ protected:
     owners.set_local_player_id(k_local_owner);
 
     AudioResourceLoader::load_audio_cues();
+    Game::Audio::CueRegistry::instance().reset_cooldowns();
+    AudioSystem::get_instance().reset_playback_throttles();
     std::this_thread::sleep_for(std::chrono::milliseconds(60));
     CueTrace::instance().reset();
 

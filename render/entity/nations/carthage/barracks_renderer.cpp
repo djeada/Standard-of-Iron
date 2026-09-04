@@ -301,32 +301,35 @@ void add_keep(BuildingArchetypeDesc& desc, const CarthagePalette& c, const Heigh
   const float merlon_y = h.keep + 0.07F;
   int seed = 11;
   for (const float mx : {-1.10F, -0.72F, 0.72F, 1.10F}) {
+    const int merlon_seed = seed++;
     add_merlon(desc,
                c,
                QVector3D(mx, merlon_y, k_keep_z1 - 0.02F),
                merlon_half,
                0.0F,
-               (seed % 2 == 0) ? k_mask_normal : k_mask_intact,
-               seed++);
+               (merlon_seed % 2 == 0) ? k_mask_intact : k_mask_normal,
+               merlon_seed);
   }
   for (const float mx : {-1.10F, -0.76F, 0.76F, 1.10F}) {
+    const int merlon_seed = seed++;
     add_merlon(desc,
                c,
                QVector3D(mx, merlon_y, k_keep_z0 + 0.02F),
                merlon_half,
                0.0F,
-               (seed % 2 == 0) ? k_mask_normal : k_mask_intact,
-               seed++);
+               (merlon_seed % 2 == 0) ? k_mask_intact : k_mask_normal,
+               merlon_seed);
   }
   for (const float mz : {-1.05F, -0.70F, -0.35F, 0.0F, 0.30F}) {
     for (const float side : {-1.0F, 1.0F}) {
+      const int merlon_seed = seed++;
       add_merlon(desc,
                  c,
                  QVector3D(side * (k_keep_hx - 0.02F), merlon_y, mz),
                  QVector3D(0.07F, 0.07F, 0.09F),
                  0.0F,
-                 (seed % 2 == 0) ? k_mask_normal : k_mask_intact,
-                 seed++);
+                 (merlon_seed % 2 == 0) ? k_mask_intact : k_mask_normal,
+                 merlon_seed);
     }
   }
 
@@ -505,30 +508,33 @@ void add_donjon(BuildingArchetypeDesc& desc,
   const float merlon_y = top + 0.07F;
   int seed = 71;
   for (const float mx : {-0.46F, -0.16F, 0.16F, 0.46F}) {
+    const int front_seed = seed++;
     add_merlon(desc,
                c,
                QVector3D(mx, merlon_y, k_donjon_z1 - 0.02F),
                QVector3D(0.075F, 0.07F, 0.06F),
                0.0F,
-               (seed % 2 == 0) ? k_mask_normal : k_mask_intact,
-               seed++);
+               (front_seed % 2 == 0) ? k_mask_intact : k_mask_normal,
+               front_seed);
+    const int back_seed = seed++;
     add_merlon(desc,
                c,
                QVector3D(mx, merlon_y, k_donjon_z0 + 0.02F),
                QVector3D(0.075F, 0.07F, 0.06F),
                0.0F,
-               (seed % 2 == 0) ? k_mask_normal : k_mask_intact,
-               seed++);
+               (back_seed % 2 == 0) ? k_mask_intact : k_mask_normal,
+               back_seed);
   }
   for (const float mz : {-1.08F, -0.81F, -0.54F}) {
     for (const float side : {-1.0F, 1.0F}) {
+      const int merlon_seed = seed++;
       add_merlon(desc,
                  c,
                  QVector3D(side * (k_donjon_hx - 0.02F), merlon_y, mz),
                  QVector3D(0.06F, 0.07F, 0.075F),
                  0.0F,
-                 (seed % 2 == 0) ? k_mask_normal : k_mask_intact,
-                 seed++);
+                 (merlon_seed % 2 == 0) ? k_mask_intact : k_mask_normal,
+                 merlon_seed);
     }
   }
 
@@ -644,13 +650,14 @@ void add_gatehouse(BuildingArchetypeDesc& desc,
   const float merlon_y = h.gate + 0.07F;
   int seed = 91;
   for (const float mx : {-0.46F, -0.16F, 0.16F, 0.46F}) {
+    const int merlon_seed = seed++;
     add_merlon(desc,
                c,
                QVector3D(mx, merlon_y, k_gate_z1 - 0.02F),
                QVector3D(0.075F, 0.07F, 0.06F),
                0.0F,
-               (seed % 2 == 0) ? k_mask_normal : k_mask_intact,
-               seed++);
+               (merlon_seed % 2 == 0) ? k_mask_intact : k_mask_normal,
+               merlon_seed);
   }
   for (const float side : {-1.0F, 1.0F}) {
     add_merlon(desc,

@@ -88,10 +88,13 @@ jobs:
             -DDEFAULT_LANG=en \
             -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
 
+      # terrain_probe is built alongside the test binaries because the authored
+      # placement audit below measures the ground the engine actually raises,
+      # not the hill ellipses the map JSON declares.
       - name: Build test targets
         run: |
           cmake --build build --parallel \
-            --target soi_test_binaries content_validator
+            --target soi_test_binaries content_validator terrain_probe
 
       - name: Unit tests
         env:
@@ -113,6 +116,16 @@ jobs:
 
       - name: Content validation
         run: ./build/bin/content_validator assets
+
+      # A tent lying across the break of a hill, or standing in the ramp the
+      # engine cuts out of one, floats a corner of its model in the air. Neither
+      # is visible in the map JSON: a hill is authored as a centre and a radius,
+      # and what gets raised from that is warped, roughened, rotated and cut
+      # open. --surface require makes a missing terrain_probe a failure, because
+      # the fallback measures the authored ellipse and reports a clean map that
+      # is not clean.
+      - name: Authored placement audit
+        run: python scripts/fix-map-prop-overlaps.py --check --surface require
 
       - name: Validator integration tests
         run: bash tests/validator_integration_test.sh

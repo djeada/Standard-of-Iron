@@ -120,6 +120,24 @@ thresholds come from measurement rather than taste: a paced ten-a-side melee
 asks for about 19 impacts a second and lands about four of them, which is in
 `tests/core/audio_battle_load_test.cpp` and re-measured on every run.
 
+## Cooldowns outlive the scene that set them
+
+Two throttles decide whether a request is heard: a per-cue one in
+`CueRegistry` (`m_last_played`) and a per-resource one in `AudioSystem`
+(`resource_last_played_at`). Both are wall-clock and neither is scoped to a
+mission, so they carry across a restart, a scenario change, or the boundary
+between two tests. `CueRegistry::reset_cooldowns()` and
+`AudioSystem::reset_playback_throttles()` clear them without disturbing the
+bindings or the loaded resources.
+
+This matters most where two cues share one recording -- `combat.hit.siege` and
+`combat.hit.structure` are both bound to `sfx.combat.stone_impact_01` today, so
+a masonry hit puts the catapult hit on that resource's cooldown and the trace
+reports `resource_cooldown` against a cue that is wired correctly. The
+scenario tests in `tests/core/audio_gameplay_scenarios_test.cpp` clear both
+throttles in `SetUp` for exactly this reason; the missing masonry recording is
+listed in [AUDIO_REGENERATION.md](AUDIO_REGENERATION.md).
+
 ## Where it lives
 
 `game/audio/cue_trace.*` owns the counters, the log line and the export.

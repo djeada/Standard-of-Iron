@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "../core/ambient_session.h"
+#include "../core/component.h"
 #include "../core/world.h"
 
 namespace Game::Systems {
@@ -25,7 +26,9 @@ const std::map<std::string, BuildingCollisionRegistry::BuildingSize>
         {"temple", {12.4F, 9.2F}},
         {"farm", {13.6F, 13.6F}},
         {"wall_segment", {2.0F, 2.0F}},
-        {"wall_gate", {2.0F, 2.0F}},
+        {"wall_gate",
+         {Engine::Core::GateComponent::k_structure_half_span * 2.0F,
+          Engine::Core::GateComponent::k_cross_half_extent * 2.0F}},
 
 };
 
