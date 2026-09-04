@@ -1,6 +1,7 @@
 #include "character_wear.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "quality.glsl"
 
 uniform vec3 u_camera_position;
 
@@ -84,6 +85,7 @@ vec3 shade_readable_character(vec3 base,
   color += base * sky_color * fill * shadow_side *
            mix(k_readable_fill_near, k_readable_fill_far, zoom);
 
+#if SOI_CHARACTER_HIGHLIGHTS
   float rim = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 3.0);
   color += sky_color * rim * mix(k_readable_rim_near, k_readable_rim_far, zoom);
 
@@ -152,6 +154,7 @@ vec3 shade_readable_character(vec3 base,
                                      wetness * k_wet_sheen_gloss * sheen_gain);
     color = mix(color, color * k_wet_darken, wetness * 0.5);
   }
+#endif
   return clamp(color, 0.0, 1.0);
 }
 

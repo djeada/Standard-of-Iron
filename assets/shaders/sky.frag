@@ -21,6 +21,7 @@ void main() {
   float upward = clamp(ray.y, 0.0, 1.0);
   vec3 sky = sky_gradient(ray);
 
+#if SOI_SURFACE_DETAIL
   vec2 cloud_plane = ray.xz / (upward + k_sky_cloud_plane_lift);
   float band_field = soi_fbm_23e5ab(cloud_plane * k_sky_band_scale);
   band_field =
@@ -31,6 +32,11 @@ void main() {
                            band_field);
   bands *= smoothstep(0.02, 0.30, upward);
   sky = mix(sky, sky_cloud_tint(ray), bands * 0.72);
+#else
+  float bands = clamp(environment_cloud_cover() + k_sky_cloud_floor, 0.0, 1.0) *
+                smoothstep(0.02, 0.30, upward);
+  sky = mix(sky, sky_cloud_tint(ray), bands * 0.42);
+#endif
 
   sky += sky_celestial(ray, bands);
 

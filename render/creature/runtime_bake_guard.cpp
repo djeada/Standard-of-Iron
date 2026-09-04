@@ -1,6 +1,8 @@
 #include "runtime_bake_guard.h"
 
 #include <QDebug>
+#include <QLatin1Char>
+#include <QString>
 
 #include <atomic>
 #include <mutex>
@@ -54,6 +56,39 @@ auto runtime_bake_operation_name(RuntimeBakeOperation operation) -> std::string_
     return "static_archetype_build";
   }
   return "unknown";
+}
+
+namespace {
+
+auto reported_identities_mutex() -> std::mutex& {
+  static std::mutex mutex;
+  return mutex;
+}
+
+auto reported_identities() -> std::unordered_set<std::uint64_t>& {
+  static std::unordered_set<std::uint64_t> reported;
+  return reported;
+}
+
+} // namespace
+
+auto note_runtime_bake_violation(RuntimeBakeOperation operation,
+                                 std::uint64_t identity) -> bool {
+  Render::Profiling::count_asset(Render::Profiling::AssetCounter::ForbiddenBake);
+  const std::uint64_t key =
+      identity ^ (static_cast<std::uint64_t>(operation) * 0x9E3779B97F4A7C15ULL);
+  std::lock_guard<std::mutex> const lock(reported_identities_mutex());
+  return reported_identities().emplace(key).second;
+}
+
+void log_runtime_bake_violation(RuntimeBakeOperation operation,
+                                std::string_view detail) {
+  const auto name = runtime_bake_operation_name(operation);
+  qCritical().noquote()
+      << "Forbidden render-time bake:"
+      << (QString::fromUtf8(name.data(), static_cast<int>(name.size())) +
+          QLatin1Char(':') +
+          QString::fromUtf8(detail.data(), static_cast<int>(detail.size())));
 }
 
 void report_runtime_bake_violation(RuntimeBakeOperation operation,

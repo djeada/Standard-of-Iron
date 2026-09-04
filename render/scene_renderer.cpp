@@ -271,6 +271,13 @@ void Renderer::end_frame() {
       profile.gpu_shadow_ms = stats.gpu_shadow_ms;
       profile.gpu_color_ms = stats.gpu_color_ms;
       profile.gpu_wait_ms = stats.gpu_wait_ms;
+      profile.rigged_commands = static_cast<std::uint64_t>(stats.rigged_commands);
+      profile.rigged_instanced_draws =
+          static_cast<std::uint64_t>(stats.rigged_instanced_draws);
+      profile.rigged_instanced_instances =
+          static_cast<std::uint64_t>(stats.rigged_instanced_instances);
+      profile.rigged_single_draws =
+          static_cast<std::uint64_t>(stats.rigged_single_draws);
     }
     constexpr double k_frame_budget_ms = 16.67;
     profile.budget_headroom_ms =

@@ -88,6 +88,10 @@ private:
     std::uint64_t m_benchmark_snapshot_cache_bytes = 0;
     std::uint64_t m_benchmark_prepared_batches = 0;
     std::uint64_t m_benchmark_instanced_batches = 0;
+    std::uint64_t m_benchmark_rigged_commands = 0;
+    std::uint64_t m_benchmark_rigged_instanced_draws = 0;
+    std::uint64_t m_benchmark_rigged_instanced_instances = 0;
+    std::uint64_t m_benchmark_rigged_single_draws = 0;
     std::array<std::uint64_t,
                static_cast<std::size_t>(Render::Profiling::Phase::_Count)>
         m_benchmark_phase_us{};

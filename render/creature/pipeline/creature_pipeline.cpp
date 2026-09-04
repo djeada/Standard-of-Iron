@@ -31,6 +31,7 @@
 #include "render/creature/spec.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/entity/registry.h"
+#include "render/graphics_settings.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/runtime/frame_control.h"
 #include "render/profiling/asset_counters.h"
@@ -64,18 +65,39 @@ void report_submit_cache_miss(std::string_view path,
   if (!runtime_bake_forbidden()) {
     return;
   }
+  const auto asset_id = static_cast<std::uint32_t>(
+      handle.asset != nullptr ? handle.asset->id : k_invalid_creature_asset);
+
+  auto mix = [](std::uint64_t seed, std::uint64_t value) noexcept -> std::uint64_t {
+    seed ^= value + 0x9E3779B97F4A7C15ULL + (seed << 6U) + (seed >> 2U);
+    return seed;
+  };
+  std::uint64_t identity = std::hash<std::string_view>{}(path);
+  identity = mix(identity, static_cast<std::uint64_t>(archetype));
+  identity = mix(identity, asset_id);
+  identity = mix(identity, static_cast<std::uint64_t>(lod));
+  identity = mix(identity, static_cast<std::uint64_t>(state));
+  identity = mix(identity, clip_id);
+  identity = mix(identity, frame_in_clip);
+  identity = mix(identity, static_cast<std::uint64_t>(variant));
+  identity = mix(identity, clip_variant);
+  identity = mix(identity, attachment_set_id);
+  identity = mix(identity, attachments_hash);
+  if (!note_runtime_bake_violation(RuntimeBakeOperation::CreatureSubmitMiss,
+                                   identity)) {
+    return;
+  }
+
   std::ostringstream detail;
   detail << "path=" << path << " archetype=" << static_cast<std::uint32_t>(archetype)
-         << " asset="
-         << static_cast<std::uint32_t>(
-                handle.asset != nullptr ? handle.asset->id : k_invalid_creature_asset)
-         << " lod=" << static_cast<int>(lod) << " state=" << static_cast<int>(state)
-         << " clip=" << clip_id << " frame_in_clip=" << frame_in_clip
+         << " asset=" << asset_id << " lod=" << static_cast<int>(lod)
+         << " state=" << static_cast<int>(state) << " clip=" << clip_id
+         << " frame_in_clip=" << frame_in_clip
          << " variant=" << static_cast<std::uint32_t>(variant)
          << " clip_variant=" << static_cast<int>(clip_variant)
          << " attachment_set_id=" << attachment_set_id << " attachments_hash=0x"
          << std::hex << attachments_hash;
-  report_runtime_bake_violation(RuntimeBakeOperation::CreatureSubmitMiss, detail.str());
+  log_runtime_bake_violation(RuntimeBakeOperation::CreatureSubmitMiss, detail.str());
 }
 
 auto rigged_cache_for(Render::GL::Renderer* renderer) -> Render::GL::RiggedMeshCache& {
@@ -1035,7 +1057,10 @@ auto CreaturePipeline::submit_requests(
       ++stats.upper_body_overlay_requests;
     }
 
-    const bool use_snapshot_mesh = req.lod != CreatureLOD::Full && primary.snapshot;
+    const bool use_snapshot_mesh =
+        req.lod != CreatureLOD::Full && primary.snapshot &&
+        (prebaked_lowpoly_required ||
+         Render::GraphicsSettings::instance().creature_lod().snapshot_meshes);
     if (use_snapshot_mesh) {
       auto snapshot_playback = primary;
       if (req.full_body_blend.active() && full_body.valid() &&
