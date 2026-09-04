@@ -98,6 +98,55 @@ TEST_F(OrderFeedbackTest, FriendlyTargetIsRejectedAndNothingIsDispatched) {
   EXPECT_EQ(archer->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
 }
 
+TEST_F(OrderFeedbackTest, ACrewHaulingALoadRefusesEveryOrderUntilItIsDroppedOff) {
+  auto* hauler = create_unit(0.0F, 0.0F, 1);
+  auto* carry = hauler->add_component<Engine::Core::ResourceCarryComponent>();
+  carry->amounts.set(Game::Systems::ResourceType::Wood, 10);
+  auto* enemy = create_unit(5.0F, 0.0F, 2);
+
+  OrderRequest attack;
+  attack.kind = OrderKind::Attack;
+  attack.payload = Game::Command::AttackTarget{.units = {hauler->get_id()},
+                                               .target = enemy->get_id()};
+  const auto attack_outcome =
+      App::Core::submit_player_order(world, 1, std::move(attack));
+  EXPECT_TRUE(attack_outcome.rejected());
+  EXPECT_EQ(attack_outcome.failure, App::Core::OrderFailure::UnitBusy);
+  EXPECT_EQ(attack_outcome.unit_count, 1U);
+  EXPECT_FALSE(attack_outcome.reason.isEmpty());
+  EXPECT_EQ(hauler->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+
+  OrderRequest stop;
+  stop.kind = OrderKind::Stop;
+  stop.payload = Game::Command::Stop{.units = {hauler->get_id()}};
+  const auto stop_outcome = App::Core::submit_player_order(world, 1, std::move(stop));
+  EXPECT_TRUE(stop_outcome.rejected());
+  EXPECT_EQ(stop_outcome.failure, App::Core::OrderFailure::UnitBusy);
+
+  carry->amounts.set(Game::Systems::ResourceType::Wood, 0);
+  OrderRequest after_dropoff;
+  after_dropoff.kind = OrderKind::Attack;
+  after_dropoff.payload = Game::Command::AttackTarget{.units = {hauler->get_id()},
+                                                      .target = enemy->get_id()};
+  EXPECT_TRUE(
+      App::Core::submit_player_order(world, 1, std::move(after_dropoff)).accepted());
+}
+
+TEST_F(OrderFeedbackTest, AMixedCrewWithOneHaulerStillTakesTheOrder) {
+  auto* hauler = create_unit(0.0F, 0.0F, 1);
+  hauler->add_component<Engine::Core::ResourceCarryComponent>()->amounts.set(
+      Game::Systems::ResourceType::Stone, 4);
+  auto* archer = create_unit(1.0F, 0.0F, 1);
+  auto* enemy = create_unit(5.0F, 0.0F, 2);
+
+  OrderRequest request;
+  request.kind = OrderKind::Attack;
+  request.payload = Game::Command::AttackTarget{
+      .units = {hauler->get_id(), archer->get_id()}, .target = enemy->get_id()};
+
+  EXPECT_TRUE(App::Core::submit_player_order(world, 1, std::move(request)).accepted());
+}
+
 TEST_F(OrderFeedbackTest, EmptySubjectListIsRejectedAsNoSubjects) {
   auto* enemy = create_unit(5.0F, 0.0F, 2);
 
