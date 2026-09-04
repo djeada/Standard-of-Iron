@@ -63,6 +63,12 @@ private:
     int height{0};
   };
 
+  [[nodiscard]] static auto
+  attachments_match(const PassSelection& lhs,
+                    const PassSelection& rhs) noexcept -> bool {
+    return lhs.bloom == rhs.bloom && lhs.godrays == rhs.godrays && lhs.fxaa == rhs.fxaa;
+  }
+
   auto ensure_targets(int width, int height) -> bool;
   void release_targets();
   auto create_color_target(RenderTarget& target,
@@ -90,6 +96,7 @@ private:
   GL::Shader* m_sky_shader{nullptr};
   GL::Shader* m_godrays_shader{nullptr};
   PassSelection m_passes{};
+  PassSelection m_target_passes{};
 
   RenderTarget m_scene{};
   RenderTarget m_composite{};

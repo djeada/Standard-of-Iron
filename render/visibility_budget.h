@@ -4,7 +4,6 @@
 #include <atomic>
 #include <cstdint>
 #include <iterator>
-#include <mutex>
 #include <vector>
 
 #include "entity/registry.h"
@@ -21,8 +20,7 @@ public:
 
   void reset_frame() noexcept {
     m_full_detail_count.store(0, std::memory_order_relaxed);
-    std::lock_guard const lock(m_contact_shadow_mutex);
-    m_contact_shadow_count = 0;
+    m_contact_shadow_count.store(0, std::memory_order_relaxed);
   }
 
   [[nodiscard]] auto
@@ -66,17 +64,20 @@ public:
 
   [[nodiscard]] auto request_contact_shadow() noexcept -> bool {
     const auto& budget = GraphicsSettings::instance().contact_shadow_budget();
-    std::lock_guard const lock(m_contact_shadow_mutex);
-    if (m_contact_shadow_count >= budget.max_casters) {
-      return false;
+    int current = m_contact_shadow_count.load(std::memory_order_relaxed);
+    while (current < budget.max_casters) {
+      if (m_contact_shadow_count.compare_exchange_weak(current,
+                                                       current + 1,
+                                                       std::memory_order_relaxed,
+                                                       std::memory_order_relaxed)) {
+        return true;
+      }
     }
-    ++m_contact_shadow_count;
-    return true;
+    return false;
   }
 
   [[nodiscard]] auto contact_shadow_count() const noexcept -> int {
-    std::lock_guard const lock(m_contact_shadow_mutex);
-    return m_contact_shadow_count;
+    return m_contact_shadow_count.load(std::memory_order_relaxed);
   }
 
 private:
@@ -96,8 +97,7 @@ private:
   }
 
   std::atomic<int> m_full_detail_count{0};
-  mutable std::mutex m_contact_shadow_mutex;
-  int m_contact_shadow_count{0};
+  std::atomic<int> m_contact_shadow_count{0};
 };
 
 } // namespace Render

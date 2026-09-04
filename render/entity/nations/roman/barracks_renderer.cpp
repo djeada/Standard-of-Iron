@@ -39,18 +39,20 @@ constexpr auto k_mask_damaged = BuildingStateMask::Damaged;
 constexpr float k_pi = 3.14159265F;
 
 struct RomanPalette {
-  QVector3D plaster{0.87F, 0.82F, 0.70F};
-  QVector3D plaster_shade{0.78F, 0.72F, 0.60F};
-  QVector3D limestone{0.84F, 0.80F, 0.71F};
-  QVector3D limestone_shade{0.74F, 0.70F, 0.61F};
-  QVector3D limestone_dark{0.60F, 0.56F, 0.49F};
-  QVector3D cedar{0.50F, 0.36F, 0.23F};
-  QVector3D cedar_dark{0.33F, 0.22F, 0.13F};
+  QVector3D plaster{0.93F, 0.90F, 0.82F};
+  QVector3D plaster_shade{0.84F, 0.80F, 0.71F};
+  QVector3D limestone{0.96F, 0.94F, 0.88F};
+  QVector3D limestone_shade{0.88F, 0.85F, 0.78F};
+  QVector3D limestone_dark{0.66F, 0.62F, 0.55F};
+  QVector3D cedar{0.52F, 0.38F, 0.26F};
+  QVector3D cedar_dark{0.38F, 0.26F, 0.16F};
   QVector3D oak{0.46F, 0.39F, 0.30F};
   QVector3D oak_pale{0.62F, 0.55F, 0.44F};
-  QVector3D terracotta{0.72F, 0.33F, 0.19F};
-  QVector3D terracotta_dark{0.48F, 0.16F, 0.09F};
-  QVector3D dado{0.56F, 0.17F, 0.12F};
+  QVector3D terracotta{0.76F, 0.32F, 0.18F};
+  QVector3D terracotta_dark{0.46F, 0.12F, 0.07F};
+  QVector3D terracotta_light{0.84F, 0.42F, 0.25F};
+  QVector3D dado{0.53F, 0.10F, 0.07F};
+  QVector3D blue_accent{0.28F, 0.48F, 0.68F};
   QVector3D iron{0.30F, 0.30F, 0.32F};
   QVector3D bronze{0.62F, 0.46F, 0.24F};
   QVector3D gold{0.85F, 0.72F, 0.35F};
@@ -61,7 +63,6 @@ struct RomanPalette {
   QVector3D earth_dark{0.27F, 0.21F, 0.14F};
   QVector3D leather{0.42F, 0.30F, 0.19F};
   QVector3D leather_dark{0.30F, 0.20F, 0.12F};
-  QVector3D terracotta_light{0.80F, 0.42F, 0.26F};
   QVector3D team{0.8F, 0.9F, 1.0F};
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };
@@ -130,12 +131,6 @@ void add_platform(BuildingArchetypeDesc& desc, const RomanPalette& c) {
                QVector3D(1.10F, 0.004F, 0.54F),
                c.limestone_shade,
                k_mask_intact);
-  for (const float gx : {-0.20F, 0.30F, 0.80F, 1.30F}) {
-    desc.add_box(QVector3D(gx, k_platform_top + 0.006F, 0.92F),
-                 QVector3D(0.006F, 0.004F, 0.54F),
-                 c.limestone_dark,
-                 k_mask_normal);
-  }
 }
 
 void add_walls_and_dado(BuildingArchetypeDesc& desc,
@@ -231,23 +226,45 @@ void add_door_z_face(BuildingArchetypeDesc& desc,
                k_mask_intact);
 }
 
+constexpr float k_pediment_half_thickness = 0.05F;
+constexpr float k_pediment_recess = 0.01F;
+
+struct GableWedge {
+  float theta_deg;
+  float half_len;
+  float depth;
+  float along_offset;
+  float y;
+};
+
+auto gable_wedge(float eave_y, float half_w, float rise) -> GableWedge {
+  const float theta = std::atan2(rise, half_w);
+  const float slope_len = std::sqrt(half_w * half_w + rise * rise);
+  const float depth = 1.3F * half_w * std::sin(theta);
+  return {theta * 180.0F / k_pi,
+          slope_len * 0.5F,
+          depth,
+          half_w * 0.5F - depth * 0.5F * std::sin(theta),
+          eave_y + rise * 0.5F - depth * 0.5F * std::cos(theta)};
+}
+
 void add_pediment_z_face(BuildingArchetypeDesc& desc,
                          const QVector3D& color,
                          float cx,
                          float z,
+                         float outward,
                          float eave_y,
                          float half_w,
                          float rise) {
-  constexpr int k_steps = 5;
-  for (int i = 0; i < k_steps; ++i) {
-    const float f0 = static_cast<float>(i) / static_cast<float>(k_steps);
-    const float f1 = static_cast<float>(i + 1) / static_cast<float>(k_steps);
-    const float y0 = eave_y + rise * f0;
-    const float y1 = eave_y + rise * f1;
-    desc.add_box(QVector3D(cx, mid(y0, y1), z),
-                 QVector3D(half_w * (1.0F - f0), half(y0, y1), 0.05F),
-                 color,
-                 k_mask_intact);
+  const GableWedge w = gable_wedge(eave_y, half_w, rise);
+  const float zc = z - outward * (k_pediment_half_thickness + k_pediment_recess);
+  for (const float side : {-1.0F, 1.0F}) {
+    desc.add_rotated_box(
+        QVector3D(cx + side * w.along_offset, w.y, zc),
+        QVector3D(w.half_len, w.depth * 0.5F, k_pediment_half_thickness),
+        QVector3D(0.0F, 0.0F, -side * w.theta_deg),
+        color,
+        k_mask_intact);
   }
 }
 
@@ -255,19 +272,19 @@ void add_pediment_x_face(BuildingArchetypeDesc& desc,
                          const QVector3D& color,
                          float x,
                          float cz,
+                         float outward,
                          float eave_y,
                          float half_d,
                          float rise) {
-  constexpr int k_steps = 5;
-  for (int i = 0; i < k_steps; ++i) {
-    const float f0 = static_cast<float>(i) / static_cast<float>(k_steps);
-    const float f1 = static_cast<float>(i + 1) / static_cast<float>(k_steps);
-    const float y0 = eave_y + rise * f0;
-    const float y1 = eave_y + rise * f1;
-    desc.add_box(QVector3D(x, mid(y0, y1), cz),
-                 QVector3D(0.05F, half(y0, y1), half_d * (1.0F - f0)),
-                 color,
-                 k_mask_intact);
+  const GableWedge w = gable_wedge(eave_y, half_d, rise);
+  const float xc = x - outward * (k_pediment_half_thickness + k_pediment_recess);
+  for (const float side : {-1.0F, 1.0F}) {
+    desc.add_rotated_box(
+        QVector3D(xc, w.y, cz + side * w.along_offset),
+        QVector3D(k_pediment_half_thickness, w.depth * 0.5F, w.half_len),
+        QVector3D(side * w.theta_deg, 0.0F, 0.0F),
+        color,
+        k_mask_intact);
   }
 }
 
@@ -327,13 +344,16 @@ void add_range(BuildingArchetypeDesc& desc,
         desc, c, QVector3D(sx, 0.98F, k_range_z1 + 0.03F), 0.0F, 0.72F, k_mask_normal);
   }
 
+  const float range_hz = half(k_range_z0, k_range_z1);
   add_pediment_x_face(desc,
-                      c.plaster_shade,
+                      c.plaster,
                       k_range_x1,
                       cz,
+                      1.0F,
                       k_range_wall_top,
-                      half(k_range_z0, k_range_z1),
-                      k_range_roof_rise - 0.05F);
+                      range_hz,
+                      k_range_roof_rise * range_hz /
+                          (range_hz + k_range_roof_overhang));
 }
 
 void add_veranda(BuildingArchetypeDesc& desc,
@@ -403,17 +423,6 @@ void add_veranda(BuildingArchetypeDesc& desc,
                        rot,
                        c.terracotta,
                        k_mask_intact);
-  const QVector3D normal(0.0F, std::cos(theta_deg * k_pi / 180.0F), 0.0F);
-  for (const float f : {0.18F, 0.50F, 0.82F}) {
-    const QVector3D at(
-        slope_center.x(), top_y - drop * f + normal.y() * 0.04F, top_z + run * f);
-    desc.add_rotated_box(
-        at,
-        QVector3D(half(k_range_x0, k_range_x1 + 0.10F) + 0.04F, 0.012F, 0.03F),
-        rot,
-        c.terracotta_dark,
-        k_mask_normal);
-  }
   desc.add_box(QVector3D(slope_center.x(), low_y + 0.02F, low_z + 0.02F),
                QVector3D(half(k_range_x0, k_range_x1 + 0.10F) + 0.06F, 0.025F, 0.03F),
                c.terracotta_dark,
@@ -464,32 +473,14 @@ void add_range_roof(BuildingArchetypeDesc& desc,
                          k_mask_damaged);
   }
 
-  const QVector3D normal(0.0F, std::cos(theta), std::sin(theta));
-  for (const float f : {0.16F, 0.36F, 0.56F, 0.76F, 0.94F}) {
-    const float y = eave_y + k_range_roof_rise * f;
-    const float dz = half_depth * (1.0F - f);
-    const QVector3D lift = normal * 0.05F;
-    desc.add_rotated_box(QVector3D(cx, y + lift.y(), cz + dz + lift.z()),
-                         QVector3D(hx - 0.01F, 0.012F, 0.032F),
-                         QVector3D(theta_deg, 0.0F, 0.0F),
-                         c.terracotta_dark,
-                         k_mask_normal);
-    desc.add_rotated_box(QVector3D(cx, y + lift.y(), cz - dz - lift.z()),
-                         QVector3D(hx - 0.01F, 0.012F, 0.032F),
-                         QVector3D(-theta_deg, 0.0F, 0.0F),
-                         c.terracotta_dark,
-                         k_mask_intact);
-  }
   desc.add_box(QVector3D(cx, eave_y + k_range_roof_rise + 0.025F, cz),
                QVector3D(hx + 0.02F, 0.035F, 0.07F),
                c.terracotta_dark,
                k_mask_intact);
-  for (const float ax : {-0.30F, 0.10F, 0.50F, 0.90F, 1.24F}) {
-    desc.add_box(QVector3D(ax, eave_y + 0.035F, cz + half_depth + 0.01F),
-                 QVector3D(0.035F, 0.04F, 0.015F),
-                 c.terracotta_dark,
-                 k_mask_normal);
-  }
+  desc.add_box(QVector3D(cx, eave_y + 0.03F, cz + half_depth + 0.01F),
+               QVector3D(hx, 0.028F, 0.015F),
+               c.terracotta_dark,
+               k_mask_normal);
 }
 
 void add_quarters(BuildingArchetypeDesc& desc,
@@ -514,7 +505,7 @@ void add_quarters(BuildingArchetypeDesc& desc,
                k_mask_intact);
   desc.add_box(QVector3D(cx, k_quarters_wall_top - 0.035F, cz),
                QVector3D(hx + 0.045F, 0.043F, hz + 0.045F),
-               c.limestone_shade,
+               c.blue_accent,
                k_mask_intact);
 
   add_door_z_face(desc, c, cx, k_quarters_z1, 1.0F, 0.15F, 1.00F);
@@ -534,7 +525,7 @@ void add_quarters(BuildingArchetypeDesc& desc,
   }
   desc.add_box(QVector3D(cx, k_platform_top + 1.27F, k_quarters_z1 + 0.05F),
                QVector3D(0.42F, 0.025F, 0.075F),
-               c.limestone_shade,
+               c.blue_accent,
                k_mask_intact);
 
   for (const float wx : {cx - 0.22F, cx + 0.22F}) {
@@ -546,20 +537,11 @@ void add_quarters(BuildingArchetypeDesc& desc,
     add_window_x_face(desc, c, k_quarters_x0, 0.98F, wz, -1.0F);
   }
 
-  add_pediment_z_face(desc,
-                      c.plaster_shade,
-                      cx,
-                      k_quarters_z1,
-                      k_quarters_wall_top,
-                      hx,
-                      k_quarters_roof_rise - 0.05F);
-  add_pediment_z_face(desc,
-                      c.plaster_shade,
-                      cx,
-                      k_quarters_z0,
-                      k_quarters_wall_top,
-                      hx,
-                      k_quarters_roof_rise - 0.05F);
+  const float gable_rise = k_quarters_roof_rise * hx / (hx + k_quarters_overhang);
+  add_pediment_z_face(
+      desc, c.plaster, cx, k_quarters_z1, 1.0F, k_quarters_wall_top, hx, gable_rise);
+  add_pediment_z_face(
+      desc, c.plaster, cx, k_quarters_z0, -1.0F, k_quarters_wall_top, hx, gable_rise);
   add_roman_aquila_relief(
       desc,
       QVector3D(cx, k_quarters_wall_top + 0.20F, k_quarters_z1 + 0.06F),
@@ -598,22 +580,6 @@ void add_quarters(BuildingArchetypeDesc& desc,
                          QVector3D(0.0F, 0.0F, theta_deg),
                          c.cedar_dark,
                          k_mask_damaged);
-  }
-  const QVector3D normal(std::sin(theta), std::cos(theta), 0.0F);
-  for (const float f : {0.18F, 0.42F, 0.66F, 0.90F}) {
-    const float y = eave_y + k_quarters_roof_rise * f;
-    const float dx = half_depth * (1.0F - f);
-    const QVector3D lift = normal * 0.05F;
-    desc.add_rotated_box(QVector3D(cx + dx + lift.x(), y + lift.y(), cz),
-                         QVector3D(0.032F, 0.012F, hz + k_quarters_overhang - 0.01F),
-                         QVector3D(0.0F, 0.0F, -theta_deg),
-                         c.terracotta_dark,
-                         k_mask_intact);
-    desc.add_rotated_box(QVector3D(cx - dx - lift.x(), y + lift.y(), cz),
-                         QVector3D(0.032F, 0.012F, hz + k_quarters_overhang - 0.01F),
-                         QVector3D(0.0F, 0.0F, theta_deg),
-                         c.terracotta_dark,
-                         k_mask_normal);
   }
   desc.add_box(QVector3D(cx, eave_y + k_quarters_roof_rise + 0.025F, cz),
                QVector3D(0.07F, 0.035F, hz + k_quarters_overhang + 0.02F),
@@ -807,17 +773,15 @@ void add_rampart(BuildingArchetypeDesc& desc,
   int index = 0;
   const auto stake = [&](float x, float z) {
     const BuildingStateMask states = (index % 3 == 1) ? k_mask_normal : k_mask_intact;
-    const float jitter = std::sin(static_cast<float>(index) * 7.31F) * 0.04F;
+    const float jitter = std::sin(static_cast<float>(index) * 7.31F) * 0.015F;
     const float top = 0.92F + jitter;
-    desc.add_cylinder(QVector3D(x, 0.12F, z),
-                      QVector3D(x, top, z),
-                      0.034F,
-                      weathered(c.oak, index, 0.10F),
-                      states);
+    const QVector3D timber = weathered(c.oak, index, 0.03F);
+    desc.add_cylinder(
+        QVector3D(x, 0.12F, z), QVector3D(x, top, z), 0.034F, timber, states);
     desc.add_cone(QVector3D(x, top, z),
                   QVector3D(x, top + 0.16F, z),
                   0.036F,
-                  weathered(c.oak_pale, index, 0.10F),
+                  timber * 1.12F,
                   states);
     ++index;
   };

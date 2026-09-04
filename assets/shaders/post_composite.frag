@@ -263,8 +263,10 @@ void main() {
   vec3 world = has_geometry ? world_position(v_uv) : vec3(0.0);
   float fog = has_geometry ? scene_fog_amount(world) : 0.0;
   vec3 scene = far_softened_scene(fog);
-  vec3 bloom = texture(u_bloom, v_uv).rgb;
-  vec3 combined = scene + bloom * u_bloom_intensity;
+  vec3 combined = scene;
+  if (u_bloom_intensity > 0.0) {
+    combined += texture(u_bloom, v_uv).rgb * u_bloom_intensity;
+  }
   if (u_godray_strength > 0.0) {
     float rays = texture(u_rays, v_uv).r;
     combined += environment_primary_color() * environment_primary_intensity() *
@@ -300,7 +302,9 @@ void main() {
   float vignette = 1.0 - falloff * u_vignette_strength;
   graded = mix(graded * k_vignette_tint, graded, vignette);
   graded *= vignette;
+#if SOI_SURFACE_DETAIL
   graded = film_grain(graded);
+#endif
 
   frag_color = vec4(clamp(graded, 0.0, 1.0), 1.0);
 }
