@@ -204,7 +204,8 @@ auto evaluate_elephant_motion(
     state.locomotion_phase_valid = true;
     motion_time = state.locomotion_phase * cycle_time;
   } else {
-    state.locomotion_phase_valid = false;
+
+    state.locomotion_phase_time = anim.time;
   }
   Quadruped::MotionSample const quadruped_motion = Quadruped::evaluate_cycle_motion(
       to_quadruped_dimensions(d),

@@ -18,6 +18,7 @@ struct GaitCursor {
   float stamp{0.0F};
   float speed{0.0F};
   float elapsed{0.0F};
+  float pending_distance{0.0F};
   float ambient{0.0F};
   float action{0.0F};
   float graze_hold{0.0F};
@@ -170,19 +171,32 @@ auto gait_speed(const DrawState& state) -> float {
     cursor.distance = state.distance;
     cursor.stamp = state.time;
     cursor.speed = 0.0F;
+    cursor.pending_distance = 0.0F;
   }
 
-  cursor.elapsed = std::clamp(state.time - cursor.stamp, 0.0F, k_gait_max_step_seconds);
+  float const elapsed = std::max(state.time - cursor.stamp, 0.0F);
+
+  if (!restarted && elapsed <= 1.0e-5F) {
+    cursor.elapsed = 0.0F;
+    return cursor.speed;
+  }
+  cursor.elapsed = std::min(elapsed, k_gait_max_step_seconds);
   cursor.stamp = state.time;
 
   float const stepped = std::max(0.0F, state.distance - cursor.distance);
   cursor.distance = state.distance;
+  cursor.pending_distance += stepped;
 
-  if (cursor.elapsed > 1.0e-5F) {
-    float const measured = stepped / cursor.elapsed;
+  if (elapsed > 1.0e-5F) {
+    float const measured = stepped / elapsed;
     float const blend = std::clamp(
         cursor.elapsed / (k_gait_speed_smoothing + cursor.elapsed), 0.0F, 1.0F);
     cursor.speed += (measured - cursor.speed) * blend;
+    if (stepped <= 1.0e-6F &&
+        (state.bite_progress >= 0.0F || state.flinch_progress >= 0.0F)) {
+
+      cursor.speed = 0.0F;
+    }
   }
   cursor.sampled = true;
   return cursor.speed;
@@ -259,7 +273,10 @@ auto gait_phase(const DrawState& state, float advance) -> float {
   GaitCursor& cursor = entry->second;
 
   if (advance > 1.0e-4F) {
-    cursor.cycles += (cursor.speed * cursor.elapsed) / advance;
+
+    cursor.cycles += cursor.pending_distance / advance;
+    cursor.cycles -= std::floor(cursor.cycles);
+    cursor.pending_distance = 0.0F;
   }
   return cursor.cycles - std::floor(cursor.cycles);
 }

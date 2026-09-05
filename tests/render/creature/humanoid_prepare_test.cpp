@@ -1749,6 +1749,59 @@ TEST(HumanoidPrepare, ActiveBuilderWorkOverridesSharedTravellingRowsWithCircle) 
   }
 }
 
+TEST(HumanoidPrepare, FormationGuardDoesNotInheritTheStrikeCarriersAuthoredClip) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
+  ctx.allow_template_cache = false;
+  Engine::Core::StandaloneEntity scratch(4343);
+  auto& entity = scratch.entity();
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 2.0F);
+  unit->spawn_type = Game::Units::SpawnType::Spearman;
+  unit->render_individuals_per_unit_override = 2;
+  entity.add_component<Engine::Core::TransformComponent>();
+  auto* shared = entity.add_component<Engine::Core::FormationPresentationComponent>();
+  shared->rows = 1;
+  shared->cols = 2;
+  shared->melee_ordered = true;
+  shared->target_alive = true;
+  shared->target_id = 99;
+  for (std::uint16_t index = 0; index < 2; ++index) {
+    Engine::Core::FormationSoldierPresentation soldier;
+    soldier.slot_index = index;
+    soldier.col = index;
+    soldier.local_x = static_cast<float>(index);
+    soldier.alive = true;
+    soldier.opponent_id = 99;
+    soldier.damage_carrier = index == 1;
+    soldier.combat_role = index == 0
+                              ? Engine::Core::FormationSoldierCombatRole::Guard
+                              : Engine::Core::FormationSoldierCombatRole::LeadStrike;
+    soldier.action = index == 0 ? Engine::Core::FormationSoldierAction::MeleeGuard
+                                : Engine::Core::FormationSoldierAction::MeleeEngaged;
+    shared->soldiers.push_back(soldier);
+  }
+  ctx.entity = &entity;
+  Render::GL::AnimationInputs anim{};
+  anim.time = 2.0F;
+  anim.is_melee = true;
+  anim.is_attacking = true;
+  anim.is_in_melee_lock = true;
+  anim.attack_family = Engine::Core::CombatAttackFamily::Spear;
+  anim.has_authored_action_phase = true;
+  anim.authored_action_phase = 0.82F;
+  anim.has_authored_action_clip = true;
+  anim.authored_action_clip = Animation::k_humanoid_attack_spear_a_clip;
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
+  auto const requests = prep.bodies.requests();
+  ASSERT_EQ(requests.size(), 2U);
+  EXPECT_NE(requests[0].clip_id, anim.authored_action_clip);
+  EXPECT_EQ(requests[1].clip_id, anim.authored_action_clip);
+  EXPECT_NEAR(requests[1].phase, anim.authored_action_phase, 1.0e-4F);
+}
+
 TEST(HumanoidPrepare, BuilderConstructionPlaybackUsesWorkClip) {
   using Render::Creature::AnimationStateId;
   using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;

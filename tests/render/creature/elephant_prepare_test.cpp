@@ -411,6 +411,21 @@ TEST(ElephantPrepare, LocomotionClockSurvivesARenderClockRebaseWithoutLegJump) {
   EXPECT_NEAR(after.phase, before.phase, 0.0001F);
 }
 
+TEST(ElephantPrepare, AnIdlePausePreservesThePlantedStridePhase) {
+  auto const profile = make_test_elephant_profile();
+  Render::Creature::ElephantAnimationStateComponent state{};
+  Render::GL::AnimationInputs anim{};
+  anim.time = 0.37F;
+  anim.movement_state = Render::Creature::MovementAnimationState::Walk;
+  auto const walking = Render::GL::evaluate_elephant_motion(profile, anim, &state);
+  anim.movement_state = Render::Creature::MovementAnimationState::Idle;
+  anim.time = 4.0F;
+  (void)Render::GL::evaluate_elephant_motion(profile, anim, &state);
+  anim.movement_state = Render::Creature::MovementAnimationState::Walk;
+  auto const resumed = Render::GL::evaluate_elephant_motion(profile, anim, &state);
+  EXPECT_NEAR(resumed.phase, walking.phase, 1.0e-5F);
+}
+
 TEST(ElephantPrepare, SharedWalkRunClassifierControlsPreparedPlaybackState) {
   Render::GL::ElephantRendererBase const renderer;
   Render::GL::ElephantProfile profile = make_test_elephant_profile();

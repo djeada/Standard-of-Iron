@@ -835,6 +835,14 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   Render::Entity::FormationInstance const& layout =
       soldier_layouts[static_cast<std::size_t>(idx)];
   AnimationInputs soldier_render_anim = soldier_anim;
+  bool const follows_authoritative_strike =
+      !has_shared_formation_layout ||
+      formation_presentation->soldiers[static_cast<std::size_t>(idx)].damage_carrier;
+  if (!follows_authoritative_strike && formation_presentation->melee_ordered) {
+
+    soldier_render_anim.has_authored_action_phase = false;
+    soldier_render_anim.has_authored_action_clip = false;
+  }
   if (creature_presentation != nullptr &&
       !creature_presentation->allow_full_body_hit_reaction &&
       soldier_render_anim.is_hit_reacting) {
@@ -1261,8 +1269,6 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   raw_combat.is_dying = soldier_render_anim.is_dying;
   raw_combat.is_dead = soldier_render_anim.is_dead;
   raw_combat.locomotion = soldier_render_anim.movement_state;
-  bool const follows_authoritative_strike =
-      soldier_directive == nullptr || soldier_directive->damage_carrier;
   raw_combat.combat_phase = follows_authoritative_strike
                                 ? soldier_render_anim.combat_phase
                                 : Render::GL::CombatAnimPhase::Idle;
