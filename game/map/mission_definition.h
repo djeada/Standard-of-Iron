@@ -3,6 +3,7 @@
 #include <QString>
 
 #include <algorithm>
+#include <cstdint>
 #include <optional>
 #include <vector>
 
@@ -141,7 +142,49 @@ enum class CommanderMessageTrigger {
   MissionVictory,
   MissionDefeat,
   StructureCaptured,
-  CommanderDefeated
+  CommanderDefeated,
+  AttackLaunched,
+  UnderAttack,
+  FirstContact,
+  HeavyLosses,
+  NearDefeat,
+  OwnerEliminated,
+  WaveIncoming,
+  WaveCleared
+};
+
+[[nodiscard]] inline constexpr auto
+commander_message_trigger_is_outcome(CommanderMessageTrigger trigger) -> bool {
+  return trigger == CommanderMessageTrigger::MissionVictory ||
+         trigger == CommanderMessageTrigger::MissionDefeat;
+}
+
+[[nodiscard]] inline constexpr auto
+commander_message_trigger_is_chatter(CommanderMessageTrigger trigger) -> bool {
+  switch (trigger) {
+  case CommanderMessageTrigger::MissionStart:
+  case CommanderMessageTrigger::MissionVictory:
+  case CommanderMessageTrigger::MissionDefeat:
+  case CommanderMessageTrigger::CommanderDefeated:
+  case CommanderMessageTrigger::OwnerEliminated:
+    return false;
+  default:
+    return true;
+  }
+}
+
+enum class CommanderMessageRole : std::uint8_t {
+  Unset,
+  Self,
+  Player,
+  AllyOfSpeaker,
+  EnemyOfSpeaker,
+  Any
+};
+
+enum class CommanderRelationship : std::uint8_t {
+  Enemy,
+  Ally
 };
 
 struct CommanderMessageCondition {
@@ -152,12 +195,19 @@ struct CommanderMessageCondition {
   std::optional<int> by_owner_id;
   bool by_owner_is_local = false;
 
+  CommanderMessageRole subject_role = CommanderMessageRole::Unset;
+  CommanderMessageRole actor_role = CommanderMessageRole::Unset;
+
   std::optional<QString> subject_type;
 
   std::optional<QString> nation;
 
+  std::optional<bool> final_wave;
+
   std::optional<Position> at;
   std::optional<float> radius;
+
+  float cooldown = 0.0F;
 };
 
 inline constexpr float k_default_commander_message_seconds = 9.0F;
@@ -167,6 +217,14 @@ inline constexpr float k_commander_message_type_seconds_per_char = 0.022F;
 inline constexpr float k_commander_message_read_seconds_per_char = 0.055F;
 
 inline constexpr float k_commander_message_max_seconds = 20.0F;
+
+inline constexpr float k_commander_chatter_min_gap_seconds = 12.0F;
+
+inline constexpr float k_commander_chatter_expiry_seconds = 15.0F;
+
+inline constexpr int k_commander_chatter_exempt_priority = 80;
+
+inline constexpr int k_default_commander_chatter_per_match = 10;
 
 [[nodiscard]] inline auto
 legible_commander_message_seconds(int character_count,
@@ -193,6 +251,12 @@ struct CommanderMessage {
   float duration = k_default_commander_message_seconds;
   int priority = 0;
   bool once = true;
+};
+
+struct CommanderVoicesPolicy {
+  bool generic = true;
+  std::vector<CommanderMessageTrigger> muted_triggers;
+  std::vector<QString> muted_lines;
 };
 
 struct EventTrigger {
@@ -228,6 +292,7 @@ struct MissionDefinition {
   std::vector<MissionStage> stages;
   std::vector<GameEvent> events;
   std::vector<CommanderMessage> commander_messages;
+  CommanderVoicesPolicy commander_voices;
   bool include_ambient_undead = false;
   bool tutorial = false;
 };

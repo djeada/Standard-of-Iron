@@ -27,6 +27,8 @@ namespace App::Mission {
 struct MissionFrameEffects {
   QStringList announcements;
   QStringList audio_cues;
+  std::vector<Game::Mission::WaveBeat> incoming_waves;
+  std::vector<Game::Mission::WaveBeat> cleared_waves;
   Game::Systems::ResourceAmounts reward;
   bool reward_granted = false;
   bool wave_status_changed = false;

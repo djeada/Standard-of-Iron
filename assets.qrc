@@ -469,6 +469,14 @@
         <file>assets/data/nations/carthage.json</file>
         <file>assets/data/nations/iron_sepulcher.json</file>
 
+        <!-- Commander voice banks: what each commander says as enemy or ally -->
+        <file>assets/data/commanders/voices/roman_legion_organizer.json</file>
+        <file>assets/data/commanders/voices/roman_veteran_consul.json</file>
+        <file>assets/data/commanders/voices/roman_field_commander.json</file>
+        <file>assets/data/commanders/voices/carthage_spear_commander.json</file>
+        <file>assets/data/commanders/voices/carthage_bow_commander.json</file>
+        <file>assets/data/commanders/voices/carthage_sword_commander.json</file>
+
         <!-- Formation doctrines and unit layouts -->
         <file>assets/data/formations/army/carthage.json</file>
         <file>assets/data/formations/army/iron_sepulcher.json</file>

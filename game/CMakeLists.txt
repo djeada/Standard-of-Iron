@@ -448,12 +448,14 @@ target_link_libraries(soi_campaign PUBLIC game_sim)
 add_library(
     soi_missions
     STATIC
+    map/commander_message_grammar.cpp
     map/mission_loader.cpp
     map/mission_stage_tracker.cpp
     map/mission_victory_rules.cpp
     map/wave_archetype_catalog.cpp
     map/map_catalog.cpp
     map/mission_catalog.cpp
+    mission/commander_voice_bank.cpp
     mission/mission_commander_setup.cpp
     mission/mission_definition_view.cpp
     mission/tutorial_director.cpp
@@ -542,6 +544,8 @@ add_library(
     STATIC
     mission/campaign_manager.cpp
     mission/commander_message_director.cpp
+    mission/commander_speaker_roster.cpp
+    mission/commander_voice_observer.cpp
     mission/mission_setup_coordinator.cpp
     mission/mission_wave_director.cpp
     mission/mission_waves.cpp

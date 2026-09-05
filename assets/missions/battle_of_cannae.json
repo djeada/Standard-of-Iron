@@ -365,6 +365,123 @@
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
+    },
+    {
+      "id": "cannae_allied_camp_lost",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 4,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "You have the allied camp. Socii - allies. They were promised land for this war, and you have just handed them the first piece of it face down.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "cannae_consular_town_lost",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 2,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "Varro's town. Varro is not in it; Varro is out front, being brave at other people. Enjoy the walls. I never needed them.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "cannae_river_camp_lost",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 3,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "The Aufidus camp. So the ring closes. I told the Senate a ring was what he wanted. They told me I was old.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "cannae_varro_goes_forward",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 2,
+        "delay": 0.5
+      },
+      "text": "Here they come - the whole consular line, in step, at Varro's tempo. Eighty thousand men do not turn. Remember that when you want them to.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "cannae_allied_wing_hits_camp",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "under_attack",
+        "owner_id": "player",
+        "by_owner_id": 4,
+        "cooldown": 120
+      },
+      "text": "The allied wing is at your works. Italians, mostly. They fight for Rome because the alternative is fighting Rome, which is a very persuasive argument.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 45,
+      "once": false
+    },
+    {
+      "id": "cannae_your_line_bleeds",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "heavy_losses",
+        "owner_id": "player",
+        "cooldown": 120
+      },
+      "text": "Your men are going down in the centre. I know - that is where you put the Gauls, and Gauls are for spending. It is still a great many funerals.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 40,
+      "once": false
+    },
+    {
+      "id": "cannae_hannibal_fallen",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "commander_defeated",
+        "owner_id": "player",
+        "delay": 2.0
+      },
+      "text": "Hannibal is down. The Senate will strike a coin. I shall keep one and never spend it, which I am told is what he would have done.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "cannae_scipio_last_stand",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "near_defeat",
+        "owner_id": 4
+      },
+      "text": "The allied wing is down to a handful. I have counted them twice, because there was time. Whatever happens next on this field, remember someone counted.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
     }
   ],
   "include_ambient_undead": false,

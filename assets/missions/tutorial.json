@@ -6,6 +6,7 @@
   "narrative_intent": "A guided first field, paced by the player rather than the clock: the Roman raid waits until the recruit's army stands, and the enemy camp is small enough to fall to a first attack.",
   "terrain_type": "meadow",
   "tutorial": true,
+  "commander_voices": { "generic": false },
   "map_path": ":/assets/maps/map_tutorial.json",
   "player_setup": {
     "nation": "carthage",

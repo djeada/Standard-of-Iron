@@ -1861,6 +1861,7 @@ void GameEngine::reset_mission_runtime_state() {
   m_mission_stage_poll_accumulator = 0.0F;
   m_mission_start_cue_pending = false;
   m_commander_message_director.clear();
+  m_commander_voice_observer.clear();
   m_interaction_targeting = {};
   m_interaction_targeting_accumulator = 0.0F;
   m_interaction_target_hint.clear();
@@ -1898,6 +1899,16 @@ void GameEngine::update_mission_waves(float dt) {
 
   for (const auto& announcement : effects.announcements) {
     emit mission_announcement(announcement);
+  }
+  for (const auto& beat : effects.incoming_waves) {
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::MissionWaveIncomingEvent(
+            beat.owner_id, beat.phase_index, beat.phase_count, beat.final_wave));
+  }
+  for (const auto& beat : effects.cleared_waves) {
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::MissionWaveClearedEvent(
+            beat.owner_id, beat.phase_index, beat.phase_count, beat.final_wave));
   }
   for (const auto& cue : effects.audio_cues) {
     Game::Audio::play_cue(cue.toStdString());
@@ -1959,18 +1970,42 @@ void GameEngine::configure_mission_stages() {
 void GameEngine::configure_commander_messages() {
   m_mission_start_cue_pending = false;
   m_commander_message_director.clear();
+  m_commander_voice_observer.clear();
   publish_commander_message();
 
-  if (m_campaign_manager == nullptr ||
-      !m_campaign_manager->current_mission_definition().has_value()) {
+  if (m_world == nullptr || m_session == nullptr) {
     return;
   }
 
+  Game::Mission::CommanderMessageScript script;
+  const bool has_mission = m_campaign_manager != nullptr &&
+                           m_campaign_manager->current_mission_definition().has_value();
+  if (has_mission) {
+    const auto& mission = *m_campaign_manager->current_mission_definition();
+    script.mission_lines = mission.commander_messages;
+    script.policy = mission.commander_voices;
+  }
+  script.speakers = Game::Mission::build_commander_speaker_roster(
+      *m_world, m_session->owners(), m_runtime.local_owner_id);
+  script.voices = &commander_voices();
+
   m_commander_message_director.configure(
-      *m_campaign_manager->current_mission_definition(),
+      script,
       m_runtime.local_owner_id,
       Game::Mission::make_mission_position_to_world(m_level));
 
+  std::vector<int> watched;
+  watched.reserve(script.speakers.size() + 1);
+  watched.push_back(m_runtime.local_owner_id);
+  for (const auto& speaker : script.speakers) {
+    watched.push_back(speaker.owner_id);
+  }
+  m_commander_voice_observer.configure(std::move(watched), m_runtime.local_owner_id);
+
+  m_commander_message_director.set_relationship_lookup(
+      [this](int owner_a, int owner_b) -> bool {
+        return m_session != nullptr && m_session->owners().are_allies(owner_a, owner_b);
+      });
   m_commander_message_director.set_structure_position_lookup(
       [this](Engine::Core::EntityID id) -> std::optional<QVector3D> {
         if (m_world == nullptr) {
@@ -1990,6 +2025,18 @@ void GameEngine::configure_commander_messages() {
       });
 }
 
+auto GameEngine::commander_voices() -> const Game::Mission::CommanderVoiceLibrary& {
+  if (!m_commander_voices_loaded) {
+    m_commander_voices_loaded = true;
+    QString error;
+    m_commander_voices = Game::Mission::CommanderVoiceLibrary::load_default(&error);
+    if (!error.isEmpty()) {
+      qWarning() << "Commander voice banks:" << error;
+    }
+  }
+  return m_commander_voices;
+}
+
 void GameEngine::release_pending_mission_start_cue() {
   if (!m_mission_start_cue_pending) {
     return;
@@ -2002,11 +2049,31 @@ void GameEngine::release_pending_mission_start_cue() {
   m_commander_message_director.notify_mission_start();
 }
 
+auto GameEngine::commander_message_state() const -> QJsonObject {
+  QJsonObject state = m_commander_message_director.serialize();
+  state["observer"] = m_commander_voice_observer.serialize();
+  return state;
+}
+
+void GameEngine::restore_commander_message_state(const QJsonObject& state) {
+  m_commander_message_director.restore(state);
+  if (state.contains("observer")) {
+    m_commander_voice_observer.restore(state["observer"].toObject());
+  }
+  publish_commander_message();
+}
+
 void GameEngine::update_commander_messages(float delta_time) {
   if (!m_commander_message_director.has_messages()) {
     return;
   }
   release_pending_mission_start_cue();
+  if (m_world != nullptr && m_runtime.victory_state.isEmpty() &&
+      m_commander_voice_observer.is_configured()) {
+    const Game::Mission::AiSystemAttackPlanSource plans(
+        m_world->get_system<Game::Systems::AISystem>());
+    m_commander_voice_observer.update(*m_world, &plans, delta_time);
+  }
   if (m_commander_message_director.update(delta_time)) {
     publish_commander_message();
   }
@@ -2030,8 +2097,12 @@ void GameEngine::publish_commander_message() {
   message["speaker_role"] =
       Game::Util::tr_asset(Game::Util::k_commanders_context, cue.speaker_role);
   message["nation"] = cue.nation;
+  message["relationship"] = cue.relationship;
+  message["speaker_owner_id"] = cue.speaker_owner_id;
   message["pose"] = cue.pose;
-  message["text"] = Game::Util::tr_asset(Game::Util::k_missions_context, cue.text);
+  message["text"] = Game::Util::tr_asset(
+      cue.text_context != nullptr ? cue.text_context : Game::Util::k_missions_context,
+      cue.text);
   message["duration"] = cue.duration;
   message["holds_outcome"] = cue.holds_outcome;
   m_commander_message_view_model->set_message(message);
@@ -2443,7 +2514,7 @@ void GameEngine::begin_save(const QString& slot_name,
            .autosave_retention = autosave_retention,
            .mission_wave_state = m_mission_waves.director().serialize(),
            .mission_stage_state = m_mission_stage_tracker.serialize(),
-           .commander_message_state = m_commander_message_director.serialize()});
+           .commander_message_state = commander_message_state()});
   if (!effects.queued) {
     set_error(effects.error);
     return;
@@ -2543,8 +2614,7 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
                },
            .restore_commander_messages =
                [this](const QJsonObject& message_state) {
-                 m_commander_message_director.restore(message_state);
-                 publish_commander_message();
+                 restore_commander_message_state(message_state);
                }});
   if (!effects.success) {
     set_error(effects.error);
