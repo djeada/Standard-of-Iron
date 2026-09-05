@@ -482,6 +482,10 @@ struct ArenaBattleSideResult {
   int peak_forward_units{0};
 
   float mean_home_share{0.0F};
+
+  QString ai_state;
+  bool wave_committed{false};
+  int wave_size{0};
 };
 
 struct ArenaBattleOutcome {
@@ -572,6 +576,9 @@ struct ArenaAIDoctrineSample {
   QString posture;
 
   QString state;
+
+  bool wave_committed{false};
+  int wave_size{0};
 };
 
 struct ArenaScenarioHost {
@@ -661,6 +668,10 @@ public:
   [[nodiscard]] auto elapsed_seconds() const noexcept -> float;
   [[nodiscard]] auto finished() const noexcept -> bool;
   [[nodiscard]] auto report() const noexcept -> const ArenaScenarioReport&;
+
+  [[nodiscard]] auto live_battle_sides() const -> std::vector<ArenaBattleSideResult>;
+  [[nodiscard]] auto battle_decided() const noexcept -> bool;
+
   [[nodiscard]] auto group_entities(const QString& group) const
       -> const std::vector<Engine::Core::EntityID>&;
   [[nodiscard]] auto all_entities() const -> std::vector<Engine::Core::EntityID>;

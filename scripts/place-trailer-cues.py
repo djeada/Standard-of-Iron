@@ -31,6 +31,14 @@ import json
 import sys
 from pathlib import Path
 
+
+def shot_slow_motion(shot: dict) -> float:
+    """`time_lapse` is `slow_motion` written for values below one."""
+    if "time_lapse" in shot and "slow_motion" not in shot:
+        return 1.0 / max(1.0, float(shot["time_lapse"]))
+    return float(shot.get("slow_motion", 1.0))
+
+
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = (
     Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "tools/arena/promos/trailer.json"
@@ -109,7 +117,7 @@ def timeline(spec: dict) -> dict[str, float]:
             overlap = float(join.get("duration", 0.35))
         start = max(0.0, end - overlap)
         starts[shot["name"]] = start
-        end = start + float(shot["duration"]) * float(shot.get("slow_motion", 1.0))
+        end = start + float(shot["duration"]) * shot_slow_motion(shot)
     starts["__total__"] = end
     return starts
 

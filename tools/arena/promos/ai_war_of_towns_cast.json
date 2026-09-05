@@ -1,0 +1,413 @@
+{
+  "id": "ai_war_of_towns_cast",
+  "title": "SCIPIO  VS  HANNIBAL",
+  "subtitle": "AI VS AI  ·  STANDARD OF IRON",
+  "_comment": [
+    "A cast match, not a surveillance tape. The recorder plays the match through",
+    "once without rendering (require_decision), refuses to record a stalemate,",
+    "and resolves every start_on from that dry run, so the cut follows the",
+    "fight wherever it happens. Time-lapse shots carry the town building;",
+    "the wave and the clashes are shot at full speed and half speed from",
+    "inside the arena floor, with the casting strip on for the whole cut.",
+    "Point-focus keys are checked against the 58 m floor before capture, and",
+    "any frame that still reaches the rim fails the run (forbid_world_edge)."
+  ],
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "supersample": 1,
+  "audio": true,
+  "casting_overlay": true,
+  "require_decision": true,
+  "forbid_world_edge": true,
+  "music_track": "music.combat.dust_of_trasimene",
+  "report_sound_decided": "music.stinger.victory_fanfare",
+  "report_sound_undecided": "music.stinger.defeat_quiet_field",
+  "music_volume": 0.16,
+  "end_card_seconds": 4.5,
+  "end_card_lines": [
+    "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+    "EVERY ORDER IN THIS MATCH CAME FROM THE GAME AI"
+  ],
+  "transition": { "type": "dissolve", "duration": 0.4 },
+  "grade": {
+    "contrast": 1.08,
+    "saturation": 1.1,
+    "brightness": 0.02,
+    "gamma": 1.04,
+    "grain": 2,
+    "vignette": 0.1,
+    "sharpen": 0.5
+  },
+  "shots": [
+    {
+      "name": "field",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 1.0,
+      "duration": 6.0,
+      "casting_overlay": false,
+      "focus": { "mode": "point", "point": [0.0, 0.0, 0.0], "smoothing": 0.0 },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 62,
+          "pitch": 58,
+          "yaw": 315,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        },
+        {
+          "time": 6.0,
+          "distance": 58,
+          "pitch": 56,
+          "yaw": 321,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "ONE RIVER  ·  THREE CROSSINGS  ·  TWO COMPUTER COMMANDERS"
+    },
+    {
+      "name": "rome_intro",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 8.0,
+      "duration": 5.0,
+      "focus": {
+        "mode": "group",
+        "group": "scipio_commander",
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 22,
+          "pitch": 24,
+          "yaw": 28,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 5.0,
+          "distance": 20,
+          "pitch": 22,
+          "yaw": 40,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "NORTH BANK — SCIPIO OF THE ROMAN REPUBLIC"
+    },
+    {
+      "name": "carthage_intro",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 14.0,
+      "duration": 5.0,
+      "focus": {
+        "mode": "group",
+        "group": "hannibal_commander",
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 22,
+          "pitch": 24,
+          "yaw": 208,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 5.0,
+          "distance": 20,
+          "pitch": 22,
+          "yaw": 220,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "SOUTH BANK — HANNIBAL OF CARTHAGE"
+    },
+    {
+      "name": "rome_builds",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 20.0,
+      "duration": 300.0,
+      "time_lapse": 25,
+      "focus": {
+        "mode": "point",
+        "point": [-38.0, 0.0, -38.0],
+        "smoothing": 0.0
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 46,
+          "pitch": 52,
+          "yaw": 40,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        },
+        {
+          "time": 300.0,
+          "distance": 44,
+          "pitch": 50,
+          "yaw": 52,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "FIVE MINUTES IN TWELVE SECONDS — THE LEGION RAISES A TOWN"
+    },
+    {
+      "name": "carthage_builds",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 20.0,
+      "duration": 300.0,
+      "time_lapse": 25,
+      "focus": {
+        "mode": "point",
+        "point": [38.0, 0.0, 38.0],
+        "smoothing": 0.0
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 46,
+          "pitch": 52,
+          "yaw": 220,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        },
+        {
+          "time": 300.0,
+          "distance": 44,
+          "pitch": 50,
+          "yaw": 232,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "HANNIBAL BUILDS WIDER"
+    },
+    {
+      "name": "muster",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start_on": { "event": "first_wave", "offset": -4.0 },
+      "duration": 7.0,
+      "focus": { "mode": "all", "smoothing": 0.5 },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 58,
+          "pitch": 54,
+          "yaw": 300,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        },
+        {
+          "time": 7.0,
+          "distance": 54,
+          "pitch": 52,
+          "yaw": 312,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE FIRST WAVE MUSTERS"
+    },
+    {
+      "name": "march",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start_on": { "event": "first_contact", "offset": -18.0 },
+      "duration": 9.0,
+      "focus": { "mode": "battle", "engagement_radius": 40, "smoothing": 0.8 },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 34,
+          "pitch": 30,
+          "yaw": 250,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 9.0,
+          "distance": 30,
+          "pitch": 28,
+          "yaw": 262,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "ACROSS THE RIVER"
+    },
+    {
+      "name": "first_blood",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start_on": { "event": "first_contact", "offset": -1.0 },
+      "duration": 5.0,
+      "slow_motion": 1.6,
+      "focus": { "mode": "battle", "engagement_radius": 16, "smoothing": 0.35 },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 15,
+          "pitch": 18,
+          "yaw": 80,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 5.0,
+          "distance": 13,
+          "pitch": 16,
+          "yaw": 92,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "FIRST BLOOD"
+    },
+    {
+      "name": "the_fight",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start_on": { "event": "first_contact", "offset": 6.0 },
+      "duration": 10.0,
+      "focus": { "mode": "battle", "engagement_radius": 24, "smoothing": 0.5 },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 24,
+          "pitch": 26,
+          "yaw": 60,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 10.0,
+          "distance": 22,
+          "pitch": 24,
+          "yaw": 80,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "the_town_burns",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start_on": { "event": "first_building_lost", "offset": -3.0 },
+      "duration": 9.0,
+      "focus": { "mode": "battle", "engagement_radius": 30, "smoothing": 0.6 },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 28,
+          "pitch": 30,
+          "yaw": 20,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 9.0,
+          "distance": 26,
+          "pitch": 28,
+          "yaw": 38,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE FIRST HOUSE FALLS"
+    },
+    {
+      "name": "the_long_war",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start_on": { "event": "first_building_lost", "offset": 8.0 },
+      "duration": 360.0,
+      "time_lapse": 30,
+      "focus": { "mode": "point", "point": [0.0, 0.0, 0.0], "smoothing": 0.0 },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 62,
+          "pitch": 58,
+          "yaw": 315,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        },
+        {
+          "time": 360.0,
+          "distance": 60,
+          "pitch": 57,
+          "yaw": 325,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "SIX MINUTES IN TWELVE SECONDS"
+    },
+    {
+      "name": "the_end",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start_on": { "event": "decision", "offset": -14.0 },
+      "duration": 16.0,
+      "report_card": 6.0,
+      "focus": { "mode": "battle", "engagement_radius": 34, "smoothing": 0.7 },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 30,
+          "pitch": 32,
+          "yaw": 200,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 16.0,
+          "distance": 40,
+          "pitch": 40,
+          "yaw": 224,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE DECISION"
+    }
+  ]
+}

@@ -15,6 +15,7 @@
 #include <optional>
 #include <vector>
 
+#include "arena_casting.h"
 #include "arena_feedback.h"
 #include "arena_scenario.h"
 #include "game/core/component.h"
@@ -214,6 +215,8 @@ public:
   void set_capture_active(bool active);
   void set_batch_render_suppressed(bool suppressed);
   [[nodiscard]] auto ai_activity_summary() const -> QString;
+
+  [[nodiscard]] auto casting_snapshot() const -> Arena::ArenaCastingSnapshot;
   [[nodiscard]] auto world() const -> Engine::Core::World* { return m_world.get(); }
   [[nodiscard]] auto session() -> Game::Session::SessionContext& { return m_session; }
   void set_frame_hook(std::function<void(float)> hook);

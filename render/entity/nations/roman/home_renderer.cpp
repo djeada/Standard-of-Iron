@@ -22,6 +22,9 @@ namespace {
 using Render::Geom::clamp_vec_01;
 
 constexpr std::uint8_t k_home_team_slot = 0;
+constexpr std::uint8_t k_home_roof_slot = 1;
+
+constexpr float k_roof_owner_blend = 0.42F;
 
 struct RomanPalette {
   QVector3D limestone{0.96F, 0.94F, 0.88F};
@@ -47,8 +50,12 @@ inline auto make_palette(const QVector3D& team) -> RomanPalette {
   return p;
 }
 
-auto home_palette_slots(const QVector3D& team) -> std::array<QVector3D, 1> {
-  return {make_palette(team).team};
+auto home_palette_slots(const QVector3D& team)
+    -> std::array<QVector3D, k_home_palette_slots> {
+  const auto palette = make_palette(team);
+  const QVector3D roof = clamp_vec_01(palette.terracotta * (1.0F - k_roof_owner_blend) +
+                                      palette.team * k_roof_owner_blend);
+  return {palette.team, roof};
 }
 
 auto build_home_archetype(BuildingState state) -> RenderArchetype {
@@ -231,8 +238,23 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   };
   float const eave_y = cornice_y + 0.02F;
   float const roof_rise = 0.55F * height_multiplier;
-  add_gable_roof_z(
-      add_rot, 0.0F, 0.0F, eave_y, 0.98F, 0.98F, roof_rise, 0.05F, c.terracotta, 0.07F);
+  auto add_roof_slab = [&](const QVector3D& center,
+                           const QVector3D& scale,
+                           const QVector3D& euler,
+                           const QVector3D&) {
+    desc.add_palette_rotated_box(
+        center, scale, euler, k_home_roof_slot, k_building_state_mask_intact);
+  };
+  add_gable_roof_z(add_roof_slab,
+                   0.0F,
+                   0.0F,
+                   eave_y,
+                   0.98F,
+                   0.98F,
+                   roof_rise,
+                   0.05F,
+                   c.terracotta,
+                   0.07F);
 
   desc.add_box(QVector3D(0.0F, eave_y + roof_rise + 0.01F, 0.0F),
                QVector3D(0.05F, 0.03F, 1.04F),

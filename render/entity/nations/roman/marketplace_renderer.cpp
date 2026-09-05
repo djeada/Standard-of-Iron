@@ -3,6 +3,8 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 
 #include "game/core/component.h"
@@ -48,7 +50,13 @@ struct RomanMarketPalette {
   QVector3D gold{0.72F, 0.53F, 0.20F};
 };
 
-constexpr std::uint8_t k_marketplace_team_slot = 1;
+constexpr std::uint8_t k_marketplace_team_slot = 0;
+
+auto marketplace_palette_slots(const QVector3D& team) -> std::array<QVector3D, 1> {
+  return {QVector3D(std::clamp(team.x(), 0.0F, 1.0F),
+                    std::clamp(team.y(), 0.0F, 1.0F),
+                    std::clamp(team.z(), 0.0F, 1.0F))};
+}
 
 void add_amphora(BuildingArchetypeDesc& desc,
                  const QVector3D& base,
@@ -443,6 +451,7 @@ void register_marketplace_renderer(EntityRendererRegistry& registry) {
       registry,
       MarketplaceRendererConfig{.nation_slug = "roman",
                                 .archetype = &marketplace_archetype,
+                                .palette_slots = &marketplace_palette_slots,
                                 .selection = BuildingSelectionStyle{1.8F, 1.8F}});
 }
 

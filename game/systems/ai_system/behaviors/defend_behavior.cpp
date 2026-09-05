@@ -109,6 +109,11 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
       continue;
     }
 
+    if (!context.strategy_config.full_recall_on_base_threat &&
+        marches_with_the_wave(entity.id, context)) {
+      continue;
+    }
+
     if (is_entity_engaged(entity, snapshot.visible_enemies)) {
       engaged_defenders.push_back(&entity);
     } else {

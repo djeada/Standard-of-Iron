@@ -22,6 +22,9 @@ namespace {
 using Render::Geom::clamp_vec_01;
 
 constexpr std::uint8_t k_home_team_slot = 0;
+constexpr std::uint8_t k_home_roof_slot = 1;
+
+constexpr float k_roof_owner_blend = 0.42F;
 
 struct CarthagePalette {
   QVector3D stone_light{0.88F, 0.79F, 0.63F};
@@ -47,8 +50,12 @@ inline auto make_palette(const QVector3D& team) -> CarthagePalette {
   return p;
 }
 
-auto home_palette_slots(const QVector3D& team) -> std::array<QVector3D, 1> {
-  return {make_palette(team).team};
+auto home_palette_slots(const QVector3D& team)
+    -> std::array<QVector3D, k_home_palette_slots> {
+  const auto palette = make_palette(team);
+  const QVector3D roof = clamp_vec_01(palette.tile_red * (1.0F - k_roof_owner_blend) +
+                                      palette.team * k_roof_owner_blend);
+  return {palette.team, roof};
 }
 
 auto build_home_archetype(BuildingState state) -> RenderArchetype {
@@ -120,10 +127,10 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   }
 
   float const roof_y = wall_height * height_multiplier + 0.24F;
-  desc.add_box(QVector3D(0.0F, roof_y, 0.0F),
-               QVector3D(1.02F, 0.05F, 1.02F),
-               c.tile_red,
-               k_building_state_mask_intact);
+  desc.add_palette_box(QVector3D(0.0F, roof_y, 0.0F),
+                       QVector3D(1.02F, 0.05F, 1.02F),
+                       k_home_roof_slot,
+                       k_building_state_mask_intact);
   add_tile_rows_z(
       [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
         desc.add_box(center, size, color, k_building_state_mask_intact);

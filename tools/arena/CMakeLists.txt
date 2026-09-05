@@ -37,6 +37,19 @@ target_link_libraries(
 # the same reason the panels do: arena_tests asserts on the ticks the arena
 # actually paints, not on a second compiled copy of them.
 add_library(arena_feedback STATIC arena_feedback.cpp)
+
+# The casting strip painted over cast-match promo frames. Its own library so
+# arena_tests can paint it onto an image and look at the pixels the arena
+# ships, and because it needs the arena typography but no GL.
+add_library(arena_casting_overlay STATIC promo_casting_overlay.cpp arena_typography.cpp)
+target_include_directories(
+    arena_casting_overlay
+    PUBLIC "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+target_link_libraries(
+    arena_casting_overlay
+    PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui arena_scenario_harness ui_shell
+)
 target_include_directories(
     arena_feedback
     PUBLIC "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -76,6 +89,8 @@ set(ARENA_APP_SOURCES
     promo_runner.cpp
     arena_audio_recorder.cpp
 )
+# arena_typography.cpp moved into arena_casting_overlay, which arena_app links.
+list(REMOVE_ITEM ARENA_APP_SOURCES arena_typography.cpp)
 
 if(QT_VERSION_MAJOR EQUAL 6)
     qt6_add_executable(arena_app ${ARENA_APP_SOURCES})
@@ -105,6 +120,7 @@ target_link_libraries(
         arena_scenario_harness
         arena_panels
         arena_feedback
+        arena_casting_overlay
 )
 
 set_target_properties(

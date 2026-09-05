@@ -14,6 +14,9 @@ wave_force_units(const AISnapshot& snapshot,
 
 [[nodiscard]] auto wave_size_for(const AIContext& context) -> int;
 
+[[nodiscard]] auto wave_objective(const AISnapshot& snapshot,
+                                  const AIContext& context) -> const ContactSnapshot*;
+
 [[nodiscard]] auto garrison_target_for(const AIContext& context,
                                        int combat_unit_count,
                                        int keep_free = 1) -> int;

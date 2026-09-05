@@ -844,6 +844,9 @@ struct ArenaScenarioRunner::Impl {
     float eliminated_at{-1.0F};
     bool had_presence{false};
     QSet<Engine::Core::EntityID> seen_units;
+    QString ai_state;
+    bool wave_committed{false};
+    int wave_size{0};
   };
 
   struct UndeadZoneObservation {
@@ -2233,6 +2236,9 @@ struct ArenaScenarioRunner::Impl {
         if (doctrine.valid) {
           side.strategy = doctrine.strategy;
           side.posture = doctrine.posture;
+          side.ai_state = doctrine.state;
+          side.wave_committed = doctrine.wave_committed;
+          side.wave_size = doctrine.wave_size;
           float const step = std::max(0.0F, elapsed - side.seconds_observed);
           side.seconds_observed = elapsed;
           if (doctrine.state == QStringLiteral("attacking")) {
@@ -2307,6 +2313,62 @@ struct ArenaScenarioRunner::Impl {
     return false;
   }
 
+  [[nodiscard]] static auto
+  side_result(const BattleSideState& side) -> ArenaBattleSideResult {
+    ArenaBattleSideResult result;
+    result.owner_id = side.owner_id;
+    result.label = side.label;
+    result.living_units = side.living_units;
+    result.living_soldiers = side.living_soldiers;
+    result.living_buildings = side.living_buildings;
+    result.peak_units = side.peak_units;
+    result.peak_soldiers = std::max(side.peak_soldiers, side.initial_soldiers);
+    result.units_produced =
+        std::max(0, static_cast<int>(side.seen_units.size()) - side.initial_units);
+    result.peak_advance = side.peak_advance;
+    result.final_advance = side.final_advance;
+    result.eliminated_at = side.eliminated_at;
+    result.strategy = side.strategy;
+    result.posture = side.posture;
+    result.ai_state = side.ai_state;
+    result.wave_committed = side.wave_committed;
+    result.wave_size = side.wave_size;
+    result.buildings_constructed =
+        std::max(0,
+                 static_cast<int>(side.seen_buildings.size()) -
+                     static_cast<int>(side.initial_buildings.size()));
+    result.peak_buildings = side.peak_buildings;
+    result.peak_home_units = side.peak_home_units;
+    result.peak_forward_units = side.peak_forward_units;
+    result.mean_home_share =
+        side.home_share_samples > 0
+            ? static_cast<float>(side.home_share_sum /
+                                 static_cast<double>(side.home_share_samples))
+            : 0.0F;
+    {
+      QStringList census;
+      auto keys = side.building_census.keys();
+      std::sort(keys.begin(), keys.end());
+      for (auto const& key : keys) {
+        census.push_back(
+            QStringLiteral("%1x%2").arg(key).arg(side.building_census.value(key)));
+      }
+      result.building_census = census.join(QStringLiteral(","));
+    }
+    result.seconds_attacking = side.seconds_attacking;
+    result.seconds_observed = side.seconds_observed;
+    return result;
+  }
+
+  [[nodiscard]] auto live_sides() const -> std::vector<ArenaBattleSideResult> {
+    std::vector<ArenaBattleSideResult> sides;
+    sides.reserve(battle_sides.size());
+    for (auto const& side : battle_sides) {
+      sides.push_back(side_result(side));
+    }
+    return sides;
+  }
+
   void publish_battle_outcome() {
     if (battle_sides.empty()) {
       return;
@@ -2316,46 +2378,7 @@ struct ArenaScenarioRunner::Impl {
     report.battle.decided_at_seconds = battle_decided_at;
     report.battle.sides.clear();
     for (auto const& side : battle_sides) {
-      ArenaBattleSideResult result;
-      result.owner_id = side.owner_id;
-      result.label = side.label;
-      result.living_units = side.living_units;
-      result.living_soldiers = side.living_soldiers;
-      result.living_buildings = side.living_buildings;
-      result.peak_units = side.peak_units;
-      result.peak_soldiers = std::max(side.peak_soldiers, side.initial_soldiers);
-      result.units_produced =
-          std::max(0, static_cast<int>(side.seen_units.size()) - side.initial_units);
-      result.peak_advance = side.peak_advance;
-      result.final_advance = side.final_advance;
-      result.eliminated_at = side.eliminated_at;
-      result.strategy = side.strategy;
-      result.posture = side.posture;
-      result.buildings_constructed =
-          std::max(0,
-                   static_cast<int>(side.seen_buildings.size()) -
-                       static_cast<int>(side.initial_buildings.size()));
-      result.peak_buildings = side.peak_buildings;
-      result.peak_home_units = side.peak_home_units;
-      result.peak_forward_units = side.peak_forward_units;
-      result.mean_home_share =
-          side.home_share_samples > 0
-              ? static_cast<float>(side.home_share_sum /
-                                   static_cast<double>(side.home_share_samples))
-              : 0.0F;
-      {
-        QStringList census;
-        auto keys = side.building_census.keys();
-        std::sort(keys.begin(), keys.end());
-        for (auto const& key : keys) {
-          census.push_back(
-              QStringLiteral("%1x%2").arg(key).arg(side.building_census.value(key)));
-        }
-        result.building_census = census.join(QStringLiteral(","));
-      }
-      result.seconds_attacking = side.seconds_attacking;
-      result.seconds_observed = side.seconds_observed;
-      report.battle.sides.push_back(std::move(result));
+      report.battle.sides.push_back(side_result(side));
       if (battle_decided && side.eliminated_at < 0.0F) {
         report.battle.victor_owner_id = side.owner_id;
         report.battle.victor_label = side.label;
@@ -6213,6 +6236,15 @@ auto ArenaScenarioRunner::finished() const noexcept -> bool {
 
 auto ArenaScenarioRunner::report() const noexcept -> const ArenaScenarioReport& {
   return m_impl->report;
+}
+
+auto ArenaScenarioRunner::live_battle_sides() const
+    -> std::vector<ArenaBattleSideResult> {
+  return m_impl->live_sides();
+}
+
+auto ArenaScenarioRunner::battle_decided() const noexcept -> bool {
+  return m_impl->battle_decided;
 }
 
 auto ArenaScenarioRunner::group_entities(const QString& group) const

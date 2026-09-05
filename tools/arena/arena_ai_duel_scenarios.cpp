@@ -102,7 +102,7 @@ void add_battlefield(ArenaScenarioDefinition& scenario) {
   };
 
   scenario.rivers.push_back(
-      Game::Map::RiverSegment{reach(-60.10F, 67.18F), reach(-31.47F, 27.93F), 12.0F});
+      Game::Map::RiverSegment{reach(-68.70F, 79.00F), reach(-31.47F, 27.93F), 12.0F});
   scenario.rivers.push_back(
       Game::Map::RiverSegment{reach(-31.47F, 27.93F), reach(-9.90F, 9.90F), 11.0F});
   scenario.rivers.push_back(
@@ -110,7 +110,7 @@ void add_battlefield(ArenaScenarioDefinition& scenario) {
   scenario.rivers.push_back(
       Game::Map::RiverSegment{reach(9.90F, -9.90F), reach(27.93F, -31.47F), 11.0F});
   scenario.rivers.push_back(
-      Game::Map::RiverSegment{reach(27.93F, -31.47F), reach(67.18F, -60.10F), 12.0F});
+      Game::Map::RiverSegment{reach(27.93F, -31.47F), reach(68.70F, -79.00F), 12.0F});
 
   constexpr float k_bridge_reach = 5.7F;
 
@@ -120,6 +120,21 @@ void add_battlefield(ArenaScenarioDefinition& scenario) {
                                                {k_bridge_reach, 0.0F, k_bridge_reach},
                                                k_bridge_deck_width,
                                                0.5F});
+
+  constexpr float k_flank_reach = 7.0F;
+  constexpr float k_flank_deck_width = 9.0F;
+  const QVector3D flank_centre(-40.0F, 0.0F, 39.6F);
+  const QVector3D flank_axis(0.808F, 0.0F, 0.589F);
+  scenario.bridges.push_back(
+      Game::Map::Bridge{flank_centre - flank_axis * k_flank_reach,
+                        flank_centre + flank_axis * k_flank_reach,
+                        k_flank_deck_width,
+                        0.5F});
+  scenario.bridges.push_back(
+      Game::Map::Bridge{-(flank_centre - flank_axis * k_flank_reach),
+                        -(flank_centre + flank_axis * k_flank_reach),
+                        k_flank_deck_width,
+                        0.5F});
 
   const auto hill = [](float x,
                        float z,
@@ -264,9 +279,9 @@ void add_side(ArenaScenarioDefinition& scenario, const DuelSide& side) {
   scenario.resource_patches.push_back(
       patch("boulder", 8, {-14.0F, 0.0F, 37.74F}, {-1.8F, 0.0F, 0.0F}, 1.05F));
   scenario.resource_patches.push_back(
-      patch("iron_ore", 6, {24.0F, 0.0F, 29.74F}, {1.6F, 0.0F, 0.0F}, 1.0F));
+      patch("iron_ore", 4, {24.0F, 0.0F, 29.74F}, {1.6F, 0.0F, 0.0F}, 1.0F));
   scenario.resource_patches.push_back(
-      patch("iron_ore", 5, {34.0F, 0.0F, 13.74F}, {1.2F, 0.0F, 0.0F}, 1.0F));
+      patch("iron_ore", 3, {34.0F, 0.0F, 13.74F}, {1.2F, 0.0F, 0.0F}, 1.0F));
 }
 
 auto war_of_towns_wildlife() -> Game::Wildlife::WildlifeSettings {
@@ -308,7 +323,8 @@ auto duel_definition(const char* id,
   scenario.collect_animation_diagnostics = false;
 
   scenario.suppress_terrain_scatter = false;
-  scenario.terrain_grid_extent = 128;
+
+  scenario.terrain_grid_extent = 160;
 
   scenario.ai_starting_resources = {
       .gold = 2000, .food = 200, .wood = 250, .stone = 120, .iron = 80};

@@ -9,6 +9,7 @@
 #include <initializer_list>
 #include <limits>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -384,6 +385,14 @@ auto locked_settlement_facing(const AIContext& context,
     return {context.settlement_facing_x, context.settlement_facing_z};
   }
   return settlement_facing(context, snapshot);
+}
+
+auto is_fortification(const char* building_type) -> bool {
+  if (building_type == nullptr) {
+    return false;
+  }
+  const std::string_view type(building_type);
+  return type == BUILDING_TYPE_WALL_SEGMENT || type == BUILDING_TYPE_WALL_GATE;
 }
 
 auto slot_clearance(const char* building_type,
@@ -1415,8 +1424,11 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     wish(BUILDING_TYPE_MARKETPLACE);
   }
   constexpr int k_roofs_before_the_castle = 4;
+  const bool plan_step_is_a_fortification =
+      has_plan_step && is_fortification(planned.building);
   if (targets.raise_homes_first && standing.homes < MAX_HOMES &&
-      !(has_plan_step && standing.homes >= k_roofs_before_the_castle)) {
+      (!has_plan_step || standing.homes < k_roofs_before_the_castle ||
+       plan_step_is_a_fortification)) {
 
     wish(BUILDING_TYPE_HOME);
   }

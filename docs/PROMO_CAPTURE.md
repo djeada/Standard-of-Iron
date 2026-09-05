@@ -128,6 +128,66 @@ recording even though it was on screen in the arena window:
 A flame card records neither: it is a full-frame effect pass with no world
 behind it.
 
+## Casting a whole match
+
+A cast AI-versus-AI match is a different job from a formation reel: the shots
+have to follow a fight whose timing nobody knows in advance, the town building
+takes minutes that nobody will watch in real time, and a match that ends in a
+stalemate is not worth rendering at all. Four spec features carry that, and
+`tools/arena/promos/ai_war_of_towns_cast.json` uses all of them.
+
+**The dry run.** `"require_decision": true` makes the recorder play every
+scenario the spec names through once before capture, with rendering suppressed
+-- a thirty-minute match takes a minute or two -- and refuse to record when the
+battle reaches no decision. `--promo-precheck` forces the dry run for any spec,
+`--promo-precheck-only` stops after it. Either way the recorder writes
+`timeline.json` beside the clips: when the first wave committed (overall and per
+side), when the armies first met, when the first building fell (overall and per
+side), and when the match was decided, plus each side's closing census.
+
+**Event-driven starts.** A shot may name a match event instead of a second:
+
+```json
+{
+    "name": "first_blood",
+    "duration": 5.0,
+    "start_on": { "event": "first_contact", "offset": -1.0 }
+}
+```
+
+`event` is one of `first_wave`, `first_contact`, `first_building_lost` and
+`decision`; `side` narrows the first two per-side events to one label; `offset`
+may be negative. The recorder resolves every `start_on` from the dry run's
+timeline before planning its passes, so the rest of the pipeline sees ordinary
+`start` values. A shot whose event never happened fails the run by name.
+
+**Time-lapse.** `"time_lapse": 25` shows twenty-five simulation seconds in one
+screen second; it is `slow_motion` written the friendly way round for values
+below one, and a shot may not set both. The arena sub-steps the simulation so no
+system ever sees a tick longer than a thirtieth of a second, and the audio bed
+keeps to real time under a time-lapse rather than compressing minutes of battle
+into a roar. Camera rate limits are judged in screen seconds, so a pan that is
+calm on the clock but whips across a time-lapse is refused.
+
+**The casting strip.** `"casting_overlay": true` (spec-wide, or per shot) paints
+the broadcast strip along the top of every frame: each side's name under its
+colour, army and soldier count, town size, treasury, doctrine and state, a match
+clock, and a strength bar split between the sides by living soldiers. It is the
+same data the closing report card prints, drawn from the scenario runner's live
+census (`ArenaScenarioRunner::live_battle_sides`) and the session economy, in the
+card's typography.
+
+**The world edge.** The first full-match render framed the whole arena from
+130 m, and the corners of every frame showed the boundary mountains and the fog
+box behind them. `view_ground_footprint` in `promo_spec.h` projects a pose's four
+frame corners onto the ground; a frame "shows the world edge" when a corner
+looks over the horizon or lands beyond the scenario's flattened floor
+(`arena_floor_half_extent`, 58 m on the duel maps) plus a small margin.
+Point-focus shots are checked from their keys before capture
+(`world_edge_violations`); every recorded frame is checked at capture time and
+the count lands in `shots.json` as `edge_frames`. `"forbid_world_edge": true`
+turns that warning into a failed run.
+
 ## Transitions
 
 `promo-edit.py` joins the clips. Each shot's `transition` describes the cut

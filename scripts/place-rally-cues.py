@@ -17,6 +17,14 @@ re-run this after any retime.
 import json
 import sys
 
+
+def shot_slow_motion(shot: dict) -> float:
+    """`time_lapse` is `slow_motion` written for values below one."""
+    if "time_lapse" in shot and "slow_motion" not in shot:
+        return 1.0 / max(1.0, float(shot["time_lapse"]))
+    return float(shot.get("slow_motion", 1.0))
+
+
 trace_path, spec_path = sys.argv[1], sys.argv[2]
 
 alive = {}
@@ -47,7 +55,7 @@ DEFAULT = spec.get("transition", {"type": "cut", "duration": 0.0})
 shots = []
 finished = 0.0
 for index, shot in enumerate(spec["shots"]):
-    slow = shot.get("slow_motion", 1.0)
+    slow = shot_slow_motion(shot)
     if index > 0:
         join = shot.get("transition", DEFAULT)
         if join.get("type") != "cut":
