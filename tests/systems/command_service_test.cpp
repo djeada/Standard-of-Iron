@@ -362,6 +362,28 @@ TEST_F(CommandServiceTest, SharpWaypointTurnLimitsSidewaysTranslation) {
   EXPECT_GT(std::hypot(movement->get_vx(), movement->get_vz()), 0.0F);
 }
 
+TEST_F(CommandServiceTest, FormationFacesItsRouteAroundAnObstacleInsteadOfTheGoal) {
+  Engine::Core::World world;
+  auto* entity = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
+  entity->get_component<Engine::Core::UnitComponent>()
+      ->render_individuals_per_unit_override = 8;
+  ASSERT_TRUE(Game::Systems::FormationCombat::has_formation_slots(*entity));
+  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+  auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 0.0F);
+  MovementTestAccess::set_target_y(*movement, -10.0F);
+
+  auto* facts = entity->add_component<Engine::Core::MovementFactsComponent>();
+  facts->desired.valid = true;
+  facts->desired.velocity_x = 2.0F;
+  facts->desired.velocity_z = 0.0F;
+  Game::Systems::MovementSystem motor;
+  motor.update(&world, 1.0F / 60.0F);
+  EXPECT_GT(transform->rotation.y, 0.0F);
+  EXPECT_LT(transform->rotation.y, 90.0F);
+}
+
 TEST_F(CommandServiceTest, MoveOptionsControlFormationModePersistence) {
   Engine::Core::World world;
   auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Archer);

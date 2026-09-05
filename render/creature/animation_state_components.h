@@ -40,6 +40,9 @@ struct HorseAnimationStateComponent {
   float gait_transition_progress{1.0F};
   float transition_start_time{0.0F};
   float idle_bob_intensity{1.0F};
+  Render::GL::HorseGait transition_source{};
+  bool transition_source_valid{false};
+  bool transition_has_motion{false};
   float locomotion_phase{0.0F};
   float locomotion_phase_time{0.0F};
   bool locomotion_phase_valid{false};

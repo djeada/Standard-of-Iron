@@ -288,15 +288,22 @@ auto to_render_gait_type(Animation::HorseGaitType gait) noexcept -> GaitType {
 auto resolve_persistent_gait(
     const Render::Creature::HorseAnimationStateComponent& state,
     const HorseProfile& profile) -> HorseGait {
-  HorseGait const current = gait_for_type(state.current_gait, profile.gait);
-  if (state.gait_transition_progress < 1.0F &&
-      state.current_gait != state.target_gait) {
+  HorseGait const current = state.transition_source_valid
+                                ? state.transition_source
+                                : gait_for_type(state.current_gait, profile.gait);
+  if (state.gait_transition_progress < 1.0F) {
     HorseGait const target = gait_for_type(state.target_gait, profile.gait);
     float const t = state.gait_transition_progress;
     float const eased = t * t * (3.0F - 2.0F * t);
     return blend_gaits(current, target, eased);
   }
-  return current;
+  return gait_for_type(state.current_gait, profile.gait);
+}
+
+auto gait_has_motion(const Render::Creature::HorseAnimationStateComponent& state)
+    -> bool {
+  return state.current_gait != GaitType::IDLE || state.target_gait != GaitType::IDLE ||
+         (state.gait_transition_progress < 1.0F && state.transition_has_motion);
 }
 
 void evaluate_phase_and_bob(Render::Creature::HorseAnimationStateComponent& state,
@@ -307,8 +314,7 @@ void evaluate_phase_and_bob(Render::Creature::HorseAnimationStateComponent& stat
                             float rider_intensity,
                             float& out_phase,
                             float& out_bob) {
-  bool const is_moving =
-      state.current_gait != GaitType::IDLE || state.target_gait != GaitType::IDLE;
+  bool const is_moving = gait_has_motion(state);
   float const phase_offset = resolved.phase_offset;
 
   if (is_moving) {
@@ -367,7 +373,8 @@ void evaluate_phase_and_bob(Render::Creature::HorseAnimationStateComponent& stat
     out_phase = quadruped_motion.phase;
     out_bob = (breathing + weight_shift) * profile.dims.idle_bob_amplitude * 0.8F *
               state.idle_bob_intensity;
-    state.locomotion_phase_valid = false;
+
+    state.locomotion_phase_time = anim.time;
   }
 }
 
@@ -405,6 +412,19 @@ auto evaluate_horse_motion(const HorseProfile& profile,
       .speed = speed,
       .anchor = to_animation_gait_type(state.target_gait),
   });
+  if (desired_gait != to_animation_gait_type(state.target_gait)) {
+
+    HorseGait const source = resolve_persistent_gait(state, profile);
+    state.transition_has_motion =
+        gait_has_motion(state) || desired_gait != Animation::HorseGaitType::Idle;
+    state.current_gait =
+        to_render_gait_type(Animation::horse_playback_gait_for_transition(
+            to_animation_gait_type(state.current_gait),
+            to_animation_gait_type(state.target_gait),
+            gait_has_motion(state)));
+    state.transition_source = source;
+    state.transition_source_valid = true;
+  }
   auto const transition = Animation::resolve_horse_gait_transition({
       .current = to_animation_gait_type(state.current_gait),
       .target = to_animation_gait_type(state.target_gait),
@@ -427,8 +447,7 @@ auto evaluate_horse_motion(const HorseProfile& profile,
   resolved.phase_offset =
       Quadruped::wrap_phase(resolved.phase_offset + individuality.gait_phase_offset);
 
-  sample.is_moving =
-      state.current_gait != GaitType::IDLE || state.target_gait != GaitType::IDLE;
+  sample.is_moving = gait_has_motion(state);
   if (sample.is_moving) {
 
     constexpr float k_horse_stride_to_local = 0.56F;

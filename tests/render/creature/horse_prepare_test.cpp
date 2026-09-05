@@ -543,6 +543,37 @@ TEST(HorsePrepare, MountOwnsItsLocomotionClockInsteadOfFollowingRiderLegPhase) {
   EXPECT_LT(advance, 0.03F);
 }
 
+TEST(HorsePrepare, AnInterruptedStartBlendsBackFromTheVisibleGait) {
+  auto const profile = Render::GL::make_horse_profile(
+      17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
+  Render::Creature::HorseAnimationStateComponent state{};
+  Render::GL::HumanoidAnimationContext rider{};
+  rider.gait.state = Render::GL::HumanoidMotionState::Walk;
+  rider.gait.speed = 1.8F;
+  Render::GL::AnimationInputs anim{};
+  anim.movement_state = Render::Creature::MovementAnimationState::Walk;
+  (void)Render::GL::evaluate_horse_motion(profile, anim, rider, &state);
+  anim.time = 0.15F;
+  (void)Render::GL::evaluate_horse_motion(profile, anim, rider, &state);
+  float const expected_lift =
+      Render::GL::blend_gaits(
+          Render::GL::gait_for_type(Render::GL::GaitType::IDLE, profile.gait),
+          Render::GL::gait_for_type(Render::GL::GaitType::WALK, profile.gait),
+          0.5F)
+          .stride_lift;
+  rider.gait.state = Render::GL::HumanoidMotionState::Idle;
+  rider.gait.speed = 0.0F;
+  anim.movement_state = Render::Creature::MovementAnimationState::Idle;
+  auto const stopping = Render::GL::evaluate_horse_motion(profile, anim, rider, &state);
+  EXPECT_TRUE(stopping.is_moving);
+  EXPECT_EQ(stopping.playback_gait_type, Render::GL::GaitType::WALK);
+  EXPECT_NEAR(state.transition_source.stride_lift, expected_lift, 1.0e-5F);
+  EXPECT_GT(stopping.gait.stride_lift, 0.02F);
+  anim.time = 0.5F;
+  EXPECT_FALSE(
+      Render::GL::evaluate_horse_motion(profile, anim, rider, &state).is_moving);
+}
+
 TEST(HorsePrepare, HorseGaitsMapToSharedWalkRunAnimationStates) {
   using Render::Creature::MovementAnimationState;
 

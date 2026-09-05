@@ -23,6 +23,7 @@ struct ContactBody {
   float radius{0.0F};
   BodyProfile profile;
   bool movable{false};
+  float separation_remaining{0.0F};
   Engine::Core::EntityID melee_intent{0};
 };
 
@@ -70,6 +71,13 @@ auto profile_for(const Engine::Core::Entity& entity) -> BodyProfile {
 }
 
 auto try_push(ContactBody& body, float dx, float dz) -> bool {
+  float const distance = std::hypot(dx, dz);
+  float const step = std::min(distance, body.separation_remaining);
+  if (step <= 1.0e-6F || distance <= 1.0e-6F) {
+    return true;
+  }
+  dx *= step / distance;
+  dz *= step / distance;
   QVector3D const destination(
       body.transform->position.x + dx, 0.0F, body.transform->position.z + dz);
   if (!Walkability::can_stand(destination, body.profile)) {
@@ -77,6 +85,7 @@ auto try_push(ContactBody& body, float dx, float dz) -> bool {
   }
   body.transform->position.x = destination.x();
   body.transform->position.z = destination.z();
+  body.separation_remaining -= step;
   return true;
 }
 
@@ -122,6 +131,8 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
     body.radius = CommandService::get_unit_radii(world, entry.id).core;
     body.profile = profile_for(*entity);
     body.movable = body_is_movable(*entity, body.facts);
+    body.separation_remaining =
+        std::min(k_separation_speed * delta_time, k_max_separation_step);
     body.melee_intent = melee_intent_of(*entity);
     widest_radius = std::max(widest_radius, body.radius);
   }
