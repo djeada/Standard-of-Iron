@@ -805,3 +805,9 @@ endif()
 if(TARGET battlefield_gameplay_verifier)
     add_dependencies(soi_test_binaries battlefield_gameplay_verifier)
 endif()
+
+# The headless replay round trip in scripts/run-tests.sh drives this binary, and
+# a missing one is an error there rather than a skip.
+if(TARGET soi_headless)
+    add_dependencies(soi_test_binaries soi_headless)
+endif()

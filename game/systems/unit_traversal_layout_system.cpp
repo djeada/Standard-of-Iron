@@ -509,16 +509,7 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
     float const proposed_x = slot.current_local_x + next_vx * step;
     float const proposed_z = slot.current_local_z + next_vz * step;
 
-    auto allowed = [&](float candidate_x, float candidate_z) {
-      if (slot.alive) {
-        int const current_score =
-            walkability_score(slot.current_local_x, slot.current_local_z, 0.0F, 0.0F);
-        int const candidate_score =
-            walkability_score(candidate_x, candidate_z, 0.0F, 0.0F);
-        if (candidate_score < 9 && candidate_score < current_score) {
-          return false;
-        }
-      }
+    auto keeps_separation = [&](float candidate_x, float candidate_z) {
       return std::all_of(next.begin(), next.end(), [&](auto const& other) {
         if (other.slot_index == slot.slot_index || !slot.alive || !other.alive) {
           return true;
@@ -531,6 +522,25 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
         return candidate_distance + 0.00001F >= minimum_separation ||
                candidate_distance + 0.000001F >= previous_distance;
       });
+    };
+
+    int current_score = -1;
+    auto stays_on_walkable_ground = [&](float candidate_x, float candidate_z) {
+      if (!slot.alive) {
+        return true;
+      }
+      if (current_score < 0) {
+        current_score =
+            walkability_score(slot.current_local_x, slot.current_local_z, 0.0F, 0.0F);
+      }
+      int const candidate_score =
+          walkability_score(candidate_x, candidate_z, 0.0F, 0.0F);
+      return candidate_score >= 9 || candidate_score >= current_score;
+    };
+
+    auto allowed = [&](float candidate_x, float candidate_z) {
+      return keeps_separation(candidate_x, candidate_z) &&
+             stays_on_walkable_ground(candidate_x, candidate_z);
     };
 
     float fraction = allowed(proposed_x, proposed_z) ? 1.0F : 0.0F;

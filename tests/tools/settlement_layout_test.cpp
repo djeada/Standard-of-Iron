@@ -20,9 +20,12 @@ struct Footprint {
 };
 
 [[nodiscard]] auto
-building_half_extent(Game::Units::SpawnType type) -> std::pair<float, float> {
-  const auto size = Game::Systems::BuildingCollisionRegistry::get_building_size(
-      Game::Units::spawn_typeToQString(type).toStdString());
+building_half_extent(Game::Units::SpawnType type,
+                     float facing_degrees) -> std::pair<float, float> {
+  const auto size = Game::Systems::BuildingCollisionRegistry::axis_aligned_size(
+      Game::Systems::BuildingCollisionRegistry::get_building_size(
+          Game::Units::spawn_typeToQString(type).toStdString()),
+      facing_degrees);
   return {size.width * 0.5F, size.depth * 0.5F};
 }
 
@@ -38,7 +41,8 @@ building_half_extent(Game::Units::SpawnType type) -> std::pair<float, float> {
         *group.spawn_type != Game::Units::SpawnType::DefenseTower) {
       continue;
     }
-    const auto [half_w, half_d] = building_half_extent(*group.spawn_type);
+    const auto [half_w, half_d] =
+        building_half_extent(*group.spawn_type, group.facing_degrees);
     const float center = (static_cast<float>(group.count) - 1.0F) * 0.5F;
     for (int index = 0; index < group.count; ++index) {
       const QVector3D at =
@@ -63,7 +67,8 @@ building_half_extent(Game::Units::SpawnType type) -> std::pair<float, float> {
         *group.spawn_type == Game::Units::SpawnType::DefenseTower) {
       continue;
     }
-    const auto [half_w, half_d] = building_half_extent(*group.spawn_type);
+    const auto [half_w, half_d] =
+        building_half_extent(*group.spawn_type, group.facing_degrees);
     const float center = (static_cast<float>(group.count) - 1.0F) * 0.5F;
     for (int index = 0; index < group.count; ++index) {
       const QVector3D at =

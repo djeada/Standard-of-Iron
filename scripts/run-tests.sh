@@ -68,10 +68,17 @@ done
 # it the gate to run before a release candidate, but it lived only in CTest, so
 # no pull request and no release tag ever ran it. It runs here now, at the same
 # 15 seconds per scenario CTest uses; the 60-second soak stays a manual step.
+#
+# --determinism-runs 2 replays every scenario a second time and requires the
+# same digest. That is the CTest test named simulation_determinism, which had
+# the same problem the verifier itself had: it existed only in CTest, so no
+# pull request ever ran it. Running it here costs a second pass over the same
+# scenarios and is the one property a lockstep match cannot ship without.
 verifier=$(resolve battlefield_gameplay_verifier)
 if [ -n "${verifier}" ]; then
   echo "--- battlefield_gameplay_verifier ---"
-  if ! "${verifier}" --all --seconds "${SOI_VERIFIER_SECONDS:-15}"; then
+  if ! "${verifier}" --all --seconds "${SOI_VERIFIER_SECONDS:-15}" \
+    --determinism-runs 2; then
     status=1
     failed+=("battlefield_gameplay_verifier")
   fi
@@ -90,6 +97,23 @@ if [ -n "${qml_binary}" ]; then
   fi
 else
   echo "--- design_system_qml_tests skipped (Qt QuickTest not available) ---"
+fi
+
+# Record a headless bot skirmish and replay it with digest verification. Also
+# CTest-only until now (headless_replay_round_trip). It needs no display and
+# takes about a second, and it covers the half of determinism the verifier does
+# not: that a recorded command stream replays into the same world.
+headless=$(resolve soi_headless)
+if [ -n "${headless}" ]; then
+  echo "--- headless_replay_round_trip ---"
+  if ! SOI_HEADLESS="${headless}" bash scripts/check-headless-replay.sh; then
+    status=1
+    failed+=("headless_replay_round_trip")
+  fi
+else
+  echo "error: ${bin_dir}/soi_headless not built." >&2
+  status=1
+  failed+=("headless_replay_round_trip (not built)")
 fi
 
 if [ ${status} -ne 0 ]; then

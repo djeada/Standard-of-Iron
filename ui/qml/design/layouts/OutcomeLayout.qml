@@ -130,6 +130,7 @@ Item {
                 font.pixelSize: Design.Typography.caption
                 font.weight: Design.Typography.bold
                 font.hintingPreference: Design.Typography.titleHinting
+                font.kerning: true
                 font.letterSpacing: Design.Typography.trackingWide
                 horizontalAlignment: Text.AlignHCenter
             }

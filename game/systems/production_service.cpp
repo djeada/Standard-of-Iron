@@ -109,18 +109,6 @@ auto home_committed_civilian_count(const Engine::Core::ProductionComponent* prod
 
 } // namespace
 
-auto recruiting_building_for(Game::Units::TroopType unit_type)
-    -> Game::Units::SpawnType {
-  switch (unit_type) {
-  case Game::Units::TroopType::Civilian:
-    return Game::Units::SpawnType::Home;
-  case Game::Units::TroopType::Healer:
-    return Game::Units::SpawnType::Temple;
-  default:
-    return Game::Units::SpawnType::Barracks;
-  }
-}
-
 namespace {
 
 auto production_ruling(Engine::Core::World& world,

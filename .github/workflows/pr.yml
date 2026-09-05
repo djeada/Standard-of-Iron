@@ -137,3 +137,93 @@ jobs:
       # needs no compiler, only the ffmpeg the job already installs.
       - name: Promo first-frame tests
         run: bash tests/promo_first_frame_test.sh
+
+  # ---------------------------------------------------------------------
+  # Lane 3: the deterministic simulation budget. Its own job, and its own
+  # build type, for two reasons.
+  #
+  # sim_benchmark links soi_runtime, soi_ai and game_sim and nothing else --
+  # no Qt Quick, no renderer -- so this builds a fraction of what the test
+  # job does. And it has to be Release: the budgets in
+  # tests/perf/sim_budgets.json are recorded from an optimised build, and a
+  # Debug run of 2,000 units for 240 ticks is minutes of CI time measuring a
+  # build nobody ships.
+  #
+  # scripts/check-sim-budgets.py existed for months and ran in no workflow,
+  # which is how position_tests per unit-tick sat at 2,120 with a budget that
+  # nothing read.
+  # ---------------------------------------------------------------------
+  simulation:
+    name: Simulation budgets (ubuntu-24.04)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730 # v4.3.1
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: linux
+          cache: true
+          modules: qt5compat qtmultimedia
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build libgl1-mesa-dev libegl1
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          key: pr-ubuntu-24.04-sim-Release
+          max-size: 1G
+
+      - name: Cache CMake FetchContent dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: build/_deps
+          key: deps-ubuntu-24.04-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
+          restore-keys: deps-ubuntu-24.04-
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DDEFAULT_LANG=en \
+            -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
+
+      - name: Build the benchmark
+        run: cmake --build build --parallel --target sim_benchmark
+
+      # Amplification counters only. The wall-clock budgets are recorded and
+      # printed but not gated (--check-timings turns that on), because a shared
+      # runner's tick p95 says more about its neighbours than about this commit
+      # -- recording a baseline and immediately re-checking it on a busy box
+      # moved tick p95 by 38% while every counter came back byte-identical.
+      #
+      # --check-digest is deliberately off too. The digest is stable for a given
+      # binary but not across builds: the release flags include -ffast-math, so
+      # a different compiler or -march moves it without anything being wrong.
+      # Same-binary determinism is what actually matters and it is gated in the
+      # test job, by the verifier's --determinism-runs and the headless replay
+      # round trip.
+      - name: Simulation budgets
+        run: python scripts/check-sim-budgets.py --binary build/bin/sim_benchmark
+
+      - name: Upload benchmark JSON
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sim-benchmark-json
+          path: artifacts/perf/
+          if-no-files-found: ignore
