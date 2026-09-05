@@ -106,6 +106,39 @@ jobs:
           python scripts/validate_opengl_requirements.py
           python scripts/validate_qrc_resources.py
 
+      # These eight are add_custom_target(... ALL) in CMakeLists.txt or steps of
+      # `make quality`, so a local build runs them and CI never has: pr.yml
+      # builds named targets (soi_test_binaries, content_validator,
+      # terrain_probe) and a named-target build does not run the ALL targets.
+      # Every one of these budgets has therefore been unenforced on pull
+      # requests since the day it was added, and three of them had drifted past
+      # their budget on main by the time this step was written. They read source
+      # and need no compiler, which is why they belong in this job rather than
+      # behind a forty-minute build.
+      - name: Architecture boundaries
+        run: |
+          python scripts/check-layering.py .
+          python scripts/check-modules.py .
+          python scripts/check-render-boundary.py .
+          python scripts/check-command-boundary.py .
+
+      # The three ratchets. Each counts a shape the codebase is migrating away
+      # from and fails when a directory has more of it than the recorded budget,
+      # so the number may only go down. Lower the budget in the same change that
+      # earns the gain (each script takes --write), and say why in review if one
+      # has to go up.
+      - name: Migration ratchets
+        run: |
+          python scripts/check-ambient-instances.py .
+          python scripts/check-world-scans.py .
+          python scripts/check-entity-access.py .
+
+      # QML reads per-frame snapshots or self-locking queues; only commands take
+      # the frame lock. `make quality` has run this since it was written and CI
+      # never has.
+      - name: QML thread-safety boundary
+        run: python scripts/check-frame-lock.py
+
   # The three portability passes that need no compiler and no Qt. The fourth
   # one (Clang + libc++ over every translation unit) needs a configured build
   # tree and clang 18, so it runs in the test job of pr.yml, which has both.

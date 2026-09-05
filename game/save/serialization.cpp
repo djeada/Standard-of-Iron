@@ -267,7 +267,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     commander_obj["aura_ability_cooldown_remaining"] =
         commander->aura_ability_cooldown_remaining;
     commander_obj["aura_affinity_spawn_type"] =
-        static_cast<int>(commander->aura_affinity_spawn_type);
+        Game::Units::spawn_typeToQString(commander->aura_affinity_spawn_type);
     commander_obj["wounded"] = commander->wounded;
     commander_obj["rally_requested"] = commander->rally_requested;
     commander_obj["rally_requires_manual_trigger"] =
@@ -1069,9 +1069,18 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
             commander->aura_ability_cooldown));
     commander->aura_ability_cooldown_remaining = static_cast<float>(
         commander_obj["aura_ability_cooldown_remaining"].toDouble(0.0));
-    commander->aura_affinity_spawn_type = static_cast<Game::Units::SpawnType>(
-        commander_obj["aura_affinity_spawn_type"].toInt(
-            static_cast<int>(commander->aura_affinity_spawn_type)));
+    const QJsonValue affinity = commander_obj["aura_affinity_spawn_type"];
+    if (affinity.isString()) {
+      Game::Units::try_parse_spawn_type(affinity.toString(),
+                                        commander->aura_affinity_spawn_type);
+    } else if (affinity.isDouble()) {
+      const int ordinal =
+          affinity.toInt(static_cast<int>(commander->aura_affinity_spawn_type));
+      if (ordinal >= 0 && ordinal <= static_cast<int>(Game::Units::SpawnType::Farm)) {
+        commander->aura_affinity_spawn_type =
+            static_cast<Game::Units::SpawnType>(ordinal);
+      }
+    }
     commander->wounded = commander_obj["wounded"].toBool(commander->wounded);
     commander->rally_requested = commander_obj["rally_requested"].toBool(false);
     commander->rally_requires_manual_trigger =
