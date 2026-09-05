@@ -296,9 +296,9 @@ def append_summary(
             lines.append("")
             lines.append("```text")
             lines.append(
-                (result.output or "target and PR both fail without output")[:4000].replace(
-                    "```", "` ` `"
-                )
+                (result.output or "target and PR both fail without output")[
+                    :4000
+                ].replace("```", "` ` `")
             )
             lines.append("```")
             lines.append("")
@@ -385,7 +385,10 @@ def self_test() -> int:
     root = Path(__file__).resolve().parents[1]
     missing = [check.script for check in CHECKS if not (root / check.script).is_file()]
     if missing:
-        print(f"self-test: missing configured script(s): {', '.join(missing)}", file=sys.stderr)
+        print(
+            f"self-test: missing configured script(s): {', '.join(missing)}",
+            file=sys.stderr,
+        )
         return 1
 
     check = Check("fixture", "Fixture", "fixture.py", ())
