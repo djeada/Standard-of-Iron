@@ -29,6 +29,9 @@ public:
   static constexpr float k_stale_position_margin = 0.5F;
   static constexpr float k_stale_position_speed_allowance = 12.0F;
 
+  static constexpr float k_separation_speed = 2.0F;
+  static constexpr float k_max_separation_step = 0.15F;
+
 private:
   BodyContactDiagnostics m_diagnostics;
 };

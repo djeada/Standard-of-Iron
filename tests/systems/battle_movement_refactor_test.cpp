@@ -170,6 +170,53 @@ TEST_F(LocalAvoidanceTest, ContactPassDoesNotShoveAHoldingBody) {
             0.0F);
 }
 
+TEST_F(LocalAvoidanceTest, DenseContactsShareOneBoundedCorrectionPerBody) {
+  std::vector<Entity*> units;
+  for (int i = 0; i < 16; ++i) {
+    auto* entity = world->create_entity();
+    entity->add_component<TransformComponent>(5.0F, 0.0F, 5.0F);
+    entity->add_component<UnitComponent>(100, 100, 2.0F, 12.0F)->owner_id = 1;
+    entity->add_component<MovementComponent>();
+    entity->add_component<MovementFactsComponent>()->desired.valid = true;
+    units.push_back(entity);
+  }
+  BodyContactSystem contact;
+  float const dt = 1.0F / 60.0F;
+  contact.update(world.get(), dt);
+  for (auto const* entity : units) {
+    auto const& pos = entity->get_component<TransformComponent>()->position;
+    EXPECT_LE(std::hypot(pos.x - 5.0F, pos.z - 5.0F),
+              BodyContactSystem::k_separation_speed * dt + 1.0e-5F);
+  }
+  EXPECT_GT(contact.diagnostics().pairs_resolved, 0U);
+}
+
+TEST_F(LocalAvoidanceTest, ContactCorrectionSettlesWithoutMovingALockedFighter) {
+  auto* fighter = world->create_entity();
+  auto* fixed = fighter->add_component<TransformComponent>(5.0F, 0.0F, 5.0F);
+  fighter->add_component<UnitComponent>(100, 100, 2.0F, 12.0F);
+  fighter->add_component<MovementComponent>();
+  fighter->add_component<MovementFactsComponent>()->desired.valid = true;
+  fighter->add_component<AttackComponent>()->in_melee_lock = true;
+  auto* walker = world->create_entity();
+  auto* moved = walker->add_component<TransformComponent>(5.05F, 0.0F, 5.0F);
+  walker->add_component<UnitComponent>(100, 100, 2.0F, 12.0F);
+  walker->add_component<MovementComponent>();
+  walker->add_component<MovementFactsComponent>()->desired.valid = true;
+  BodyContactSystem contact;
+  for (int frame = 0; frame < 180; ++frame) {
+    float const previous_x = moved->position.x;
+    contact.update(world.get(), 1.0F / 60.0F);
+    EXPECT_GE(moved->position.x, previous_x);
+    EXPECT_FLOAT_EQ(fixed->position.x, 5.0F);
+    EXPECT_FLOAT_EQ(fixed->position.z, 5.0F);
+  }
+  float const settled_x = moved->position.x;
+  contact.update(world.get(), 1.0F / 60.0F);
+  EXPECT_FLOAT_EQ(moved->position.x, settled_x);
+  EXPECT_GT(settled_x, 5.1F);
+}
+
 TEST_F(LocalAvoidanceTest, StationaryUnitsNotDisplaced) {
 
   auto* stationary = world->create_entity();

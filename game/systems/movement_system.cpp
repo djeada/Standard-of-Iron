@@ -85,6 +85,15 @@ auto heading_reference(const Engine::Core::Entity& entity,
   bool const formation =
       unit != nullptr && FormationCombat::has_formation_slots(entity);
   if (formation && movement.get_has_target()) {
+
+    auto const* facts = entity.get_component<Engine::Core::MovementFactsComponent>();
+    if (facts != nullptr && facts->desired.valid) {
+      float const dx = facts->desired.velocity_x;
+      float const dz = facts->desired.velocity_z;
+      if (dx * dx + dz * dz > 1.0e-5F) {
+        return {true, std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>};
+      }
+    }
     float const intent_x = movement.get_target_x() - transform.position.x;
     float const intent_z = movement.get_target_y() - transform.position.z;
     if (intent_x * intent_x + intent_z * intent_z >
