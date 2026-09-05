@@ -18,7 +18,9 @@ The required pull-request path has three parts:
 - **Fast build/test**: Debug-build only the core/headless suites
   (`simulation_tests`, `combat_balance_tests`, `ai_tests`, `campaign_tests`,
   `persistence_tests`) plus `content_validator`, then run
-  `SOI_TEST_PROFILE=pr scripts/run-tests.sh`. The job has a 30-minute ceiling.
+  `SOI_TEST_PROFILE=pr scripts/run-tests.sh`. The job has a 90-minute ceiling so
+  normal cold builds have enough headroom while genuinely stuck runs remain
+  bounded.
 
 The PR path deliberately does **not** build renderer, application, arena or tool
 test binaries, run the battlefield verifier, run the replay round-trip, execute
