@@ -6,8 +6,8 @@
   "app/orders": 55,
   "app/persistence": 1,
   "app/session": 5,
-  "app/viewmodels": 10,
-  "app/world": 19,
+  "app/viewmodels": 7,
+  "app/world": 23,
   "game/audio": 2,
   "game/command": 52,
   "game/formation": 25,
@@ -25,9 +25,9 @@
   "render/geom": 4,
   "render/gl": 6,
   "render/humanoid": 15,
-  "tools/arena": 125,
+  "tools/arena": 128,
   "tools/balance_sim": 20,
   "tools/building_preview": 5,
   "tools/sim_benchmark": 4,
-  "ui": 3
+  "ui": 4
 }

@@ -55,6 +55,8 @@ add_library(
     systems/unit_activity.cpp
     util/asset_text.cpp
     util/json_vec_utils.cpp
+    systems/resource_types.cpp
+    systems/resource_json.cpp
     formation/formation_roles.cpp
     formation/army_formation_types.cpp
 )
@@ -106,8 +108,6 @@ add_library(
     systems/owner_queries.cpp
     systems/owner_registry.cpp
     systems/player_resource_registry.cpp
-    systems/resource_types.cpp
-    systems/resource_json.cpp
     systems/run_stamina.cpp
     systems/troop_count_registry.cpp
     systems/troop_profile_service.cpp

@@ -7,6 +7,7 @@
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
 #include "nation_id.h"
+#include "recruitment_rules.h"
 
 namespace Engine::Core {
 class World;
@@ -44,9 +45,6 @@ struct ProductionState {
   int queue_size = 0;
   std::vector<Game::Units::TroopType> production_queue;
 };
-
-[[nodiscard]] auto
-recruiting_building_for(Game::Units::TroopType unit_type) -> Game::Units::SpawnType;
 
 class ProductionService {
 public:

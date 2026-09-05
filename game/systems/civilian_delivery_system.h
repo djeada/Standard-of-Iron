@@ -1,10 +1,9 @@
 #pragma once
 
 #include "../core/system.h"
+#include "recruitment_rules.h"
 
 namespace Game::Systems {
-
-inline constexpr int k_civilian_delivery_reserve_grant = 18;
 
 class CivilianDeliverySystem : public Engine::Core::System {
 public:
