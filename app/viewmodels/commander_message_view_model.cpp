@@ -42,6 +42,14 @@ auto CommanderMessageViewModel::nation() const -> QString {
   return m_message.value("nation").toString();
 }
 
+auto CommanderMessageViewModel::relationship() const -> QString {
+  return m_message.value("relationship").toString();
+}
+
+auto CommanderMessageViewModel::is_ally() const -> bool {
+  return relationship() == QStringLiteral("ally");
+}
+
 auto CommanderMessageViewModel::speaker_id() const -> QString {
   return m_message.value("speaker_id").toString();
 }

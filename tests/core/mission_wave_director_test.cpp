@@ -122,6 +122,41 @@ TEST(MissionWaveDirectorTest, WarningFiresBeforeTheWaveLands) {
   EXPECT_TRUE(director.advance().announcements.isEmpty());
 }
 
+TEST(MissionWaveDirectorTest, AWarnedWaveReportsItsOwnerAndPhaseAsABeat) {
+  Engine::Core::World world;
+  std::vector<PendingMissionWave> waves{make_wave("roman", 1, 60.0F),
+                                        make_wave("roman", 2, 200.0F)};
+  set_phase_count(waves, 2);
+  waves.back().final_wave = true;
+
+  MissionWaveDirector director;
+  director.bind(&waves, &world);
+
+  director.set_elapsed(40.0F);
+  EXPECT_TRUE(director.advance().incoming_waves.empty());
+
+  director.set_elapsed(51.0F);
+  const auto warned = director.advance();
+  ASSERT_EQ(warned.incoming_waves.size(), 1U);
+  EXPECT_EQ(warned.incoming_waves.front().owner_id, 2);
+  EXPECT_EQ(warned.incoming_waves.front().phase_index, 1);
+  EXPECT_EQ(warned.incoming_waves.front().phase_count, 2);
+  EXPECT_FALSE(warned.incoming_waves.front().final_wave);
+  EXPECT_TRUE(director.advance().incoming_waves.empty()) << "a beat is reported once";
+
+  director.set_elapsed(60.0F);
+  const auto landed = director.advance();
+  ASSERT_EQ(landed.waves_to_spawn.size(), 1U);
+  const auto ids = spawn_into(director, world, landed.waves_to_spawn.front(), 2);
+  for (const auto id : ids) {
+    kill(world, id);
+  }
+  const auto cleared = director.advance();
+  ASSERT_EQ(cleared.cleared_waves.size(), 1U);
+  EXPECT_EQ(cleared.cleared_waves.front().phase_index, 1);
+  EXPECT_EQ(cleared.cleared_waves.front().owner_id, 2);
+}
+
 TEST(MissionWaveDirectorTest, AfterPreviousClearedWaitsForTheClearPlusGrace) {
   Engine::Core::World world;
   std::vector<PendingMissionWave> waves{

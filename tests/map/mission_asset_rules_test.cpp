@@ -602,6 +602,85 @@ TEST(MissionAssetRulesTest, GatherObjectivesFitTheHarvestActuallyOnTheMap) {
   EXPECT_GT(gather_missions, 0);
 }
 
+TEST(MissionAssetRulesTest, EveryCampaignMissionSpeaksOnAtLeastSixBeats) {
+
+  const QString campaign_path =
+      asset_dir_path(QStringLiteral("campaigns/second_punic_war.json"));
+  QFile campaign_file(campaign_path);
+  ASSERT_TRUE(campaign_file.open(QIODevice::ReadOnly)) << campaign_path.toStdString();
+  const QJsonArray campaign_missions =
+      QJsonDocument::fromJson(campaign_file.readAll()).object()["missions"].toArray();
+  ASSERT_FALSE(campaign_missions.isEmpty());
+
+  QDir const missions_dir(asset_dir_path(QStringLiteral("missions")));
+  for (const auto entry : campaign_missions) {
+    const QString mission_id = entry.toObject()["mission_id"].toString();
+    Game::Mission::MissionDefinition mission;
+    QString error;
+    ASSERT_TRUE(Game::Mission::MissionLoader::load_from_json_file(
+        missions_dir.absoluteFilePath(mission_id + QStringLiteral(".json")),
+        mission,
+        &error))
+        << mission_id.toStdString() << ": " << error.toStdString();
+
+    QSet<int> triggers;
+    bool has_placed_capture = false;
+    bool has_wave_line = false;
+    bool has_player_commander_fallen = false;
+    bool has_last_stand = false;
+    for (const auto& message : mission.commander_messages) {
+      triggers.insert(static_cast<int>(message.trigger));
+      using Game::Mission::CommanderMessageTrigger;
+      switch (message.trigger) {
+      case CommanderMessageTrigger::StructureCaptured:
+        has_placed_capture = has_placed_capture ||
+                             message.condition.owner_id.has_value() ||
+                             message.condition.at.has_value();
+        break;
+      case CommanderMessageTrigger::WaveIncoming:
+        has_wave_line = true;
+        break;
+      case CommanderMessageTrigger::CommanderDefeated:
+        has_player_commander_fallen =
+            has_player_commander_fallen || message.condition.owner_is_local;
+        break;
+      case CommanderMessageTrigger::NearDefeat:
+        has_last_stand = true;
+        break;
+      default:
+        break;
+      }
+    }
+
+    bool takes_camps = false;
+    for (const auto& condition : mission.victory_conditions) {
+      takes_camps =
+          takes_camps || condition.type == QStringLiteral("capture_structures");
+    }
+    bool has_waves = false;
+    for (const auto& ai : mission.ai_setups) {
+      has_waves = has_waves || !ai.waves.empty();
+    }
+
+    EXPECT_GE(triggers.size(), 6)
+        << mission_id.toStdString() << " answers too few beats in a commander's voice";
+    if (takes_camps) {
+      EXPECT_TRUE(has_placed_capture)
+          << mission_id.toStdString()
+          << " takes camps but no commander speaks of losing one";
+    }
+    if (has_waves) {
+      EXPECT_TRUE(has_wave_line)
+          << mission_id.toStdString() << " marches waves nobody announces";
+    }
+    EXPECT_TRUE(has_player_commander_fallen)
+        << mission_id.toStdString()
+        << " has no line for the player's commander falling";
+    EXPECT_TRUE(has_last_stand) << mission_id.toStdString()
+                                << " has no commander speaking at his own last stand";
+  }
+}
+
 TEST(MissionAssetRulesTest, EveryCommanderMessageIsSpokenBySomebodyOnTheField) {
   QDir const missions_dir(asset_dir_path(QStringLiteral("missions")));
   ASSERT_TRUE(missions_dir.exists()) << missions_dir.path().toStdString();

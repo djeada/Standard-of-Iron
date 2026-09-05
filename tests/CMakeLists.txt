@@ -253,6 +253,7 @@ add_executable(
     headless/mission_wave_assault_test.cpp
     headless/ai_skirmish_opening_test.cpp
     headless/ai_duel_match_test.cpp
+    headless/commander_voice_skirmish_test.cpp
     headless/ai_town_plan_test.cpp
     headless/movement_quality_gate_test.cpp
     simulation_main.cpp
@@ -267,6 +268,7 @@ target_link_libraries(
         game_sim
         soi_ai
         soi_runtime
+        soi_mission_runtime
 )
 soi_register_test_binary(ai_tests)
 
@@ -290,6 +292,7 @@ add_executable(
     map/mission_asset_rules_test.cpp
     map/mission_stage_tracker_test.cpp
     map/commander_message_director_test.cpp
+    map/commander_voice_bank_test.cpp
     map/mission_victory_rules_test.cpp
     map/wave_archetype_catalog_test.cpp
     map/map_catalog_test.cpp
@@ -304,6 +307,8 @@ add_executable(
     # proves the move -- setting a mission up, spawning its forces, stepping the
     # tutorial and firing its waves need no renderer and no view model.
     core/campaign_manager_test.cpp
+    core/commander_speaker_roster_test.cpp
+    core/commander_voice_observer_test.cpp
     core/mission_commander_setup_test.cpp
     core/mission_definition_view_test.cpp
     core/mission_events_test.cpp

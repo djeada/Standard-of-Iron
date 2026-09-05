@@ -358,6 +358,108 @@
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
+    },
+    {
+      "id": "trebia_first_crossing",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 2,
+        "delay": 0.5,
+        "final_wave": false
+      },
+      "text": "Sempronius is crossing. Now, in the cold, without breakfast, because a consul's year ends in March and he wants his battle before it does.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "trebia_last_crossing",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 2,
+        "delay": 0.5,
+        "final_wave": true
+      },
+      "text": "The last of the legions is in the water. Everything Rome has north of the Apennines is coming at you wet. Hold this and you hold Italy for a winter.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 65
+    },
+    {
+      "id": "trebia_reserve_moves",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 3,
+        "delay": 0.5
+      },
+      "text": "The western reserve is moving, against my advice. I gave the advice knowing it would be ignored; it is still worth having given.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 55
+    },
+    {
+      "id": "trebia_crossing_hits_bank",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "under_attack",
+        "owner_id": "player",
+        "by_owner_id": 2,
+        "cooldown": 120
+      },
+      "text": "We are on your bank and at your works. A river only stops men who are not already freezing.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 45,
+      "once": false
+    },
+    {
+      "id": "trebia_your_losses",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "heavy_losses",
+        "owner_id": "player",
+        "cooldown": 120
+      },
+      "text": "Your line is bleeding along the bank. Wet ground is slow ground, and slow men are what spears are for.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 40,
+      "once": false
+    },
+    {
+      "id": "trebia_hannibal_fallen",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "commander_defeated",
+        "owner_id": "player",
+        "delay": 2.0
+      },
+      "text": "Hannibal is down in the Trebia mud. Whatever Mago has hidden in the gullies, it will not bring him back.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "trebia_marcellus_last_stand",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "near_defeat",
+        "owner_id": 2
+      },
+      "text": "Sempronius has a handful left and they are on the wrong side of a winter river. He will still call it a victory in Rome. He always does.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
     }
   ],
   "include_ambient_undead": false,

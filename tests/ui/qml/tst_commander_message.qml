@@ -68,6 +68,20 @@ TestCase {
         source.destroy();
     }
 
+    function test_an_ally_line_is_tagged_and_an_enemy_line_is_not() {
+        var source = testCase.makeSource("Hold the flank.");
+        var panel = testCase.makePanel(source);
+        var tag = findChild(panel, "commanderAllyTag");
+        verify(tag !== null, "the ally tag was not created");
+        compare(tag.visible, false, "an enemy line must not carry the ally tag");
+        source.relationship = "ally";
+        wait(1);
+        compare(tag.visible, true, "an ally line must carry the ally tag");
+        verify(tag.text.length > 0, "the ally tag must say something");
+        panel.destroy();
+        source.destroy();
+    }
+
     Component {
         id: sourceComponent
 
@@ -75,6 +89,7 @@ TestCase {
             property bool active: true
             property string text: ""
             property string nation: "carthage"
+            property string relationship: "enemy"
             property string speaker_id: "hannibal"
             property string pose: "neutral"
             property string speaker_name: "Hannibal"

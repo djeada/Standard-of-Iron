@@ -773,6 +773,7 @@ ApplicationWindow {
             property string speaker_name: "Marcus Claudius Marcellus"
             property string speaker_role: "Roman field commander"
             property string nation: "roman_republic"
+            property string relationship: "enemy"
             property string speaker_id: "roman_field_commander"
             property string pose: "dismissive"
             property string text: qsTr("A new standard in the valley, and nobody under it who has held a spear more than twice.")

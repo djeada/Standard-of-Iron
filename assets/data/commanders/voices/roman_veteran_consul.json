@@ -1,0 +1,377 @@
+{
+  "commander": "roman_veteran_consul",
+  "chatter_per_match": 10,
+  "lines": [
+    {
+      "id": "scipio.enemy.match_start",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 100,
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "duration": 12.0,
+      "variants": [
+        "Another standard on my frontier. I have counted your tents from the ridge - it did not take long. Rome has surveyed better men than you and buried them in straighter rows.",
+        "So this is the army. I make it three cohorts and some optimism. My clerks have already drawn up the receipt for your camp; we only need the date."
+      ]
+    },
+    {
+      "id": "scipio.enemy.player_victory",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 120,
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "duration": 12.0,
+      "variants": [
+        "Keep the field, then. Rome does not lose provinces - she lends them, at interest. My accountants will be along in the spring, and they are far less pleasant than I am.",
+        "You have beaten a consul. Write it down somewhere; nobody in the city will believe you, and next year they will send two."
+      ]
+    },
+    {
+      "id": "scipio.enemy.player_defeat",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 120,
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "duration": 12.0,
+      "variants": [
+        "There. That is what happens when amateurs march against a ledger. Sit down. My men will count you when they have counted the horses.",
+        "You brought numbers. I brought arithmetic. Do write to your people and tell them the difference, if any of them can read."
+      ]
+    },
+    {
+      "id": "scipio.enemy.first_contact",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 20,
+      "trigger": {
+        "type": "first_contact",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 1
+      },
+      "variants": [
+        "Ah. Blades at last. I had begun to think you were a rumour with a baggage train."
+      ]
+    },
+    {
+      "id": "scipio.enemy.attack_launched",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "attack_launched",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 90,
+        "delay": 1.5
+      },
+      "variants": [
+        "The legion is moving. Do not trouble to form a line - it will only give my men something to step over.",
+        "I am sending the cohorts down now. Count them as they come. It will give you something to do with your last minutes.",
+        "Forward, in order. If you have a reserve, this would be the moment to discover it does not exist."
+      ]
+    },
+    {
+      "id": "scipio.enemy.under_attack",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 45,
+      "once": false,
+      "trigger": {
+        "type": "under_attack",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 60
+      },
+      "variants": [
+        "You are at my walls. Bold. My grandfather kept a dog that was bold; we buried it with honours and bought a better one.",
+        "Hitting my camp, are we? Every stone you knock loose has already been invoiced to your treasury."
+      ]
+    },
+    {
+      "id": "scipio.enemy.lost_camp",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "You have that camp. Congratulations - you now own its wells, its debts, and its sanitation. I shall want it back before the rains.",
+        "One camp changes hands. I have lost more to a dishonest quartermaster and slept perfectly well."
+      ]
+    },
+    {
+      "id": "scipio.enemy.took_camp",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "That was yours a moment ago. My surveyors are already renaming the streets. Something Latin, I think.",
+        "Another camp for the Republic. Do stay and watch the standards go up; you will not see it done better."
+      ]
+    },
+    {
+      "id": "scipio.enemy.heavy_losses_player",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "Your line is thinning nicely. I am told grief is easier when one has fewer names to remember.",
+        "Look at them fall. I did warn you that arithmetic is cruel, and I am only its clerk."
+      ]
+    },
+    {
+      "id": "scipio.enemy.heavy_losses_self",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "My cohorts are bleeding. Very well. Rome bleeds the way rivers do - it is how she reaches the sea."
+      ]
+    },
+    {
+      "id": "scipio.enemy.wave_incoming",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "wave_incoming",
+        "subject": "self",
+        "cooldown": 20
+      },
+      "variants": [
+        "A fresh column is on the road to you. Treat them courteously; several of them owe me money.",
+        "Reinforcements march. Rome has a great many sons and a very short memory for their names."
+      ]
+    },
+    {
+      "id": "scipio.enemy.player_commander_fallen",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "player",
+        "actor": "self",
+        "delay": 2.0
+      },
+      "variants": [
+        "Your commander is down. Pity. I had meant to invite him to dinner after and explain where he went wrong."
+      ]
+    },
+    {
+      "id": "scipio.enemy.own_commander_fallen",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "self",
+        "delay": 2.0
+      },
+      "variants": [
+        "You have killed a consul. Rome keeps forty more in cupboards in the city, and I promise you the ones still in the cupboards are worse."
+      ]
+    },
+    {
+      "id": "scipio.enemy.near_defeat",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 80,
+      "once": false,
+      "trigger": {
+        "type": "near_defeat",
+        "subject": "self",
+        "cooldown": 180
+      },
+      "variants": [
+        "Nearly beaten, they tell me. I have been nearly beaten before. The word is doing a great deal of work in that sentence."
+      ]
+    },
+    {
+      "id": "scipio.ally.match_start",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "trigger": {
+        "type": "mission_start",
+        "delay": 4.0
+      },
+      "duration": 11.0,
+      "variants": [
+        "We fight together, then. Do try to keep your line straight - I shall be watching from the good ground, and I have a very long memory for embarrassments."
+      ]
+    },
+    {
+      "id": "scipio.ally.victory",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 110,
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "variants": [
+        "A victory, and a tidy one. I shall write it up as mostly mine; you would have done the same."
+      ]
+    },
+    {
+      "id": "scipio.ally.defeat",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 110,
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "variants": [
+        "Beaten. Beside you, which stings. I shall mention that the ground was poor and the allies poorer."
+      ]
+    },
+    {
+      "id": "scipio.ally.under_attack",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 45,
+      "once": false,
+      "trigger": {
+        "type": "under_attack",
+        "subject": "self",
+        "cooldown": 60
+      },
+      "variants": [
+        "My camp is under the hammer. If you have men to spare, spare them now; if not, I shall be curious to see what you were saving them for.",
+        "They are at my walls, and my walls were built by the lowest bidder. Some assistance would not go unrecorded."
+      ]
+    },
+    {
+      "id": "scipio.ally.heavy_losses",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "I am losing cohorts faster than the treasury can replace them, and the treasury is quicker than you think."
+      ]
+    },
+    {
+      "id": "scipio.ally.near_defeat",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 80,
+      "once": false,
+      "trigger": {
+        "type": "near_defeat",
+        "subject": "self",
+        "cooldown": 180
+      },
+      "variants": [
+        "This is what the end of a consulship looks like from the inside. Come quickly, or come for the funeral."
+      ]
+    },
+    {
+      "id": "scipio.ally.eliminated",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "trigger": {
+        "type": "owner_eliminated",
+        "subject": "self",
+        "delay": 1.5
+      },
+      "variants": [
+        "That is the end of my part. The rest of the war is yours. Do keep the receipts."
+      ]
+    },
+    {
+      "id": "scipio.ally.attack_launched",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "attack_launched",
+        "actor": "self",
+        "cooldown": 90,
+        "delay": 1.5
+      },
+      "variants": [
+        "My cohorts are marching on them. Watch the manoeuvre; it is not something one sees twice for free.",
+        "I am attacking. If you wished to be consulted, you should have brought more men."
+      ]
+    },
+    {
+      "id": "scipio.ally.took_camp",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "actor": "self",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "That camp is Rome's now. I shall let you have the wells, at the usual rate."
+      ]
+    },
+    {
+      "id": "scipio.ally.player_commander_fallen",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "player",
+        "delay": 2.0
+      },
+      "variants": [
+        "Your commander has fallen. Unfortunate. Hold your line; I shall not hold mine for a leaderless ally very long."
+      ]
+    }
+  ]
+}

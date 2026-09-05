@@ -1,0 +1,377 @@
+{
+  "commander": "roman_field_commander",
+  "chatter_per_match": 10,
+  "lines": [
+    {
+      "id": "marcellus.enemy.match_start",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 100,
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "duration": 12.0,
+      "variants": [
+        "Right. You are here, I am here. No speeches. Sharpen what you have; I do not like to fight dull men.",
+        "Good. An enemy who shows up. Half my career was spent chasing ones who did not. Let us get on with it."
+      ]
+    },
+    {
+      "id": "marcellus.enemy.player_victory",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 120,
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "duration": 12.0,
+      "variants": [
+        "Beaten. Fair. You held when I thought you would run and you hit when I thought you would hold. I will not forget your standard.",
+        "You won. Do not gloat; it slows the feet. I will find you again on better ground."
+      ]
+    },
+    {
+      "id": "marcellus.enemy.player_defeat",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 120,
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "duration": 12.0,
+      "variants": [
+        "Done. You came at the wrong tempo and I was already inside it. Lie down; the surgeons work through the fallen in the order they fell.",
+        "That is the end of it. You fought. That counts for something in my camp, if not in yours."
+      ]
+    },
+    {
+      "id": "marcellus.enemy.first_contact",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 20,
+      "trigger": {
+        "type": "first_contact",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 1
+      },
+      "variants": [
+        "Steel. Finally. Now we find out what you are made of, and I already have a guess."
+      ]
+    },
+    {
+      "id": "marcellus.enemy.attack_launched",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "attack_launched",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 90,
+        "delay": 1.5
+      },
+      "variants": [
+        "Cohorts, forward. Fast. Hit them before they finish thinking.",
+        "I am coming at you now. All of it. Do not blink; you will miss the only part that matters.",
+        "Advance. Double time. A slow attack is a gift to the enemy, and I am not generous."
+      ]
+    },
+    {
+      "id": "marcellus.enemy.under_attack",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 45,
+      "once": false,
+      "trigger": {
+        "type": "under_attack",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 60
+      },
+      "variants": [
+        "You are hitting my camp. Good. That means you are close enough for me to hit back.",
+        "At my walls, are you. Keep swinging. Every man you put there is a man not guarding your own."
+      ]
+    },
+    {
+      "id": "marcellus.enemy.lost_camp",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "You took the camp. Fine. It was walls; I fight in the field. Come and find me there.",
+        "One camp gone. I have never yet lost a war to masonry."
+      ]
+    },
+    {
+      "id": "marcellus.enemy.took_camp",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "That camp is mine. Took it at the run. Did you even see the standard change?",
+        "Your camp, gone in a heartbeat. That is what tempo does. Learn it or lose the next one."
+      ]
+    },
+    {
+      "id": "marcellus.enemy.heavy_losses_player",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "Your line is breaking. I can hear it from here. Press or pull back - standing there is just dying slowly.",
+        "Look at that. You are bleeding out and still holding the ground. Brave. Wrong, but brave."
+      ]
+    },
+    {
+      "id": "marcellus.enemy.heavy_losses_self",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "My men are down in numbers. So be it. Blood is the coin, and I have always paid in full."
+      ]
+    },
+    {
+      "id": "marcellus.enemy.wave_incoming",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "wave_incoming",
+        "subject": "self",
+        "cooldown": 20
+      },
+      "variants": [
+        "Fresh cohorts on the road. They march fast because I told them to.",
+        "More men coming. Not for you to see - for you to feel."
+      ]
+    },
+    {
+      "id": "marcellus.enemy.player_commander_fallen",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "player",
+        "actor": "self",
+        "delay": 2.0
+      },
+      "variants": [
+        "Your commander is down. I did not enjoy it. I did not have to."
+      ]
+    },
+    {
+      "id": "marcellus.enemy.own_commander_fallen",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "self",
+        "delay": 2.0
+      },
+      "variants": [
+        "Down, then. Tell them Marcellus died forward. Tell them the ground was worth it. Both are true."
+      ]
+    },
+    {
+      "id": "marcellus.enemy.near_defeat",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 80,
+      "once": false,
+      "trigger": {
+        "type": "near_defeat",
+        "subject": "self",
+        "cooldown": 180
+      },
+      "variants": [
+        "I am nearly out of men. Nearly. The last handful are the ones who stayed, and those are the ones you should fear."
+      ]
+    },
+    {
+      "id": "marcellus.ally.match_start",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 90,
+      "trigger": {
+        "type": "mission_start",
+        "delay": 4.0
+      },
+      "duration": 11.0,
+      "variants": [
+        "We fight side by side. Keep pace with me or stay out of my way; either is fine, both at once is not."
+      ]
+    },
+    {
+      "id": "marcellus.ally.victory",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 110,
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "variants": [
+        "Won. Clean and fast. That is how it is done. Drink tonight; march tomorrow."
+      ]
+    },
+    {
+      "id": "marcellus.ally.defeat",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 110,
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "variants": [
+        "Lost. We were slow when it mattered. I will say so to anyone who asks, including you."
+      ]
+    },
+    {
+      "id": "marcellus.ally.under_attack",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 45,
+      "once": false,
+      "trigger": {
+        "type": "under_attack",
+        "subject": "self",
+        "cooldown": 60
+      },
+      "variants": [
+        "My camp is taking hits. I can hold. I would rather kill them with you than hold without you.",
+        "They are at my walls. Come now, hard, and we break them between us."
+      ]
+    },
+    {
+      "id": "marcellus.ally.heavy_losses",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "I am losing men fast. Faster than I like, and I like it fast. Something has to change."
+      ]
+    },
+    {
+      "id": "marcellus.ally.near_defeat",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 80,
+      "once": false,
+      "trigger": {
+        "type": "near_defeat",
+        "subject": "self",
+        "cooldown": 180
+      },
+      "variants": [
+        "I am down to the last of them. If you are coming, run."
+      ]
+    },
+    {
+      "id": "marcellus.ally.eliminated",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "trigger": {
+        "type": "owner_eliminated",
+        "subject": "self",
+        "delay": 1.5
+      },
+      "variants": [
+        "That is my part done. Went forward the whole way. Finish what is left of them."
+      ]
+    },
+    {
+      "id": "marcellus.ally.attack_launched",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "attack_launched",
+        "actor": "self",
+        "cooldown": 90,
+        "delay": 1.5
+      },
+      "variants": [
+        "I am going in. Now. Hit them from your side or watch me do it alone.",
+        "Cohorts moving. Fast. Keep up if you can."
+      ]
+    },
+    {
+      "id": "marcellus.ally.took_camp",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "actor": "self",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "Camp taken. At the run. Next one is yours, if you are quick."
+      ]
+    },
+    {
+      "id": "marcellus.ally.player_commander_fallen",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "player",
+        "delay": 2.0
+      },
+      "variants": [
+        "Your commander has fallen. Sorry. Keep your men moving; grief stands still and standing still kills."
+      ]
+    }
+  ]
+}

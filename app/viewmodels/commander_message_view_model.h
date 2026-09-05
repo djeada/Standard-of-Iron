@@ -14,6 +14,8 @@ class CommanderMessageViewModel : public QObject {
   Q_PROPERTY(QString speaker_name READ speaker_name NOTIFY message_changed)
   Q_PROPERTY(QString speaker_role READ speaker_role NOTIFY message_changed)
   Q_PROPERTY(QString nation READ nation NOTIFY message_changed)
+  Q_PROPERTY(QString relationship READ relationship NOTIFY message_changed)
+  Q_PROPERTY(bool is_ally READ is_ally NOTIFY message_changed)
   Q_PROPERTY(QString speaker_id READ speaker_id NOTIFY message_changed)
   Q_PROPERTY(QString pose READ pose NOTIFY message_changed)
   Q_PROPERTY(QString text READ text NOTIFY message_changed)
@@ -31,6 +33,8 @@ public:
   [[nodiscard]] auto speaker_name() const -> QString;
   [[nodiscard]] auto speaker_role() const -> QString;
   [[nodiscard]] auto nation() const -> QString;
+  [[nodiscard]] auto relationship() const -> QString;
+  [[nodiscard]] auto is_ally() const -> bool;
   [[nodiscard]] auto speaker_id() const -> QString;
   [[nodiscard]] auto pose() const -> QString;
   [[nodiscard]] auto text() const -> QString;

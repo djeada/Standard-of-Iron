@@ -1,0 +1,377 @@
+{
+  "commander": "carthage_spear_commander",
+  "chatter_per_match": 10,
+  "lines": [
+    {
+      "id": "hanno.enemy.match_start",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 100,
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "duration": 12.0,
+      "variants": [
+        "An army, and someone paying for it. Let us not pretend this is about glory. I will make you an offer at the end; you will not like the terms.",
+        "So the Barcids' war has found me a new opponent. Understand that I am here for the ledger, not the legend, and ledgers are much harder to kill."
+      ]
+    },
+    {
+      "id": "hanno.enemy.player_victory",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 120,
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "duration": 12.0,
+      "variants": [
+        "You have won the field. Very well. I have lost cheaper things to worse men. The Council will hear that the Barcids' war lost it, not mine.",
+        "Beaten. I shall write it down as an expense and you as a creditor. I pay my creditors. Eventually, and never in full."
+      ]
+    },
+    {
+      "id": "hanno.enemy.player_defeat",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 120,
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "duration": 12.0,
+      "variants": [
+        "There. You are done, and I have lost fewer men than I budgeted for. That is a good day in my trade.",
+        "Finished. I shall put your camp in the books as a purchase. Blood is a currency like any other; you simply overpaid."
+      ]
+    },
+    {
+      "id": "hanno.enemy.first_contact",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 20,
+      "trigger": {
+        "type": "first_contact",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 1
+      },
+      "variants": [
+        "Steel meets steel. Now the costs begin. I do hope you are keeping accounts, because I am."
+      ]
+    },
+    {
+      "id": "hanno.enemy.attack_launched",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "attack_launched",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 90,
+        "delay": 1.5
+      },
+      "variants": [
+        "My spears are moving. Every one of them is paid through the season, so they will not stop for a little dying.",
+        "I am attacking. Do not take it personally; I am simply collecting on ground you owe me.",
+        "Forward, in pay order. Mercenaries fight best when they can see the paymaster watching."
+      ]
+    },
+    {
+      "id": "hanno.enemy.under_attack",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 45,
+      "once": false,
+      "trigger": {
+        "type": "under_attack",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 60
+      },
+      "variants": [
+        "You are at my walls. Do you have any idea what those walls cost? Of course not. Nobody who breaks things ever does.",
+        "An assault on my camp. Every breach is coming out of someone's wages, and it will not be mine."
+      ]
+    },
+    {
+      "id": "hanno.enemy.lost_camp",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "You have taken a camp. Take the debts that come with it too; I was rather hoping someone would.",
+        "A camp lost. I shall claim it was never mine. That is the beauty of having good clerks."
+      ]
+    },
+    {
+      "id": "hanno.enemy.took_camp",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "That camp is mine now. I have already sold the grain in it twice. Do not look so surprised; it is how one makes a profit on war.",
+        "Your camp, under new management. I shall keep the wells and fire the garrison. Standard practice."
+      ]
+    },
+    {
+      "id": "hanno.enemy.heavy_losses_player",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "Your men are dying at a rate that would bankrupt a lesser treasury. I find that admirable and very stupid.",
+        "Look at your losses. Whoever is paying for this war is getting very poor value."
+      ]
+    },
+    {
+      "id": "hanno.enemy.heavy_losses_self",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "My spears are falling. Every one is a contract I have to settle with a widow. Someone will pay for this, and it will not be me."
+      ]
+    },
+    {
+      "id": "hanno.enemy.wave_incoming",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "wave_incoming",
+        "subject": "self",
+        "cooldown": 20
+      },
+      "variants": [
+        "More of my hired men are coming down the road. Fresh, fed, and paid. You cannot say the same for yours.",
+        "Reinforcements. Bought this morning, delivered this afternoon. That is what a treasury is for."
+      ]
+    },
+    {
+      "id": "hanno.enemy.player_commander_fallen",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "player",
+        "actor": "self",
+        "delay": 2.0
+      },
+      "variants": [
+        "Your commander is dead. A costly man to lose. I have already calculated what it will cost you to replace him; the number is not kind."
+      ]
+    },
+    {
+      "id": "hanno.enemy.own_commander_fallen",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "self",
+        "delay": 2.0
+      },
+      "variants": [
+        "So. The Barcids get their wish and I get a spear. Tell the Council the books are in order. They always were."
+      ]
+    },
+    {
+      "id": "hanno.enemy.near_defeat",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 80,
+      "once": false,
+      "trigger": {
+        "type": "near_defeat",
+        "subject": "self",
+        "cooldown": 180
+      },
+      "variants": [
+        "Nearly bankrupt, then. In men, I mean. I have been bankrupt before; the trick is to owe so much that they cannot afford to finish you."
+      ]
+    },
+    {
+      "id": "hanno.ally.match_start",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "trigger": {
+        "type": "mission_start",
+        "delay": 4.0
+      },
+      "duration": 11.0,
+      "variants": [
+        "We are allies, so I am told. I did not vote for it. Keep your men off my supply lines and we shall get along splendidly."
+      ]
+    },
+    {
+      "id": "hanno.ally.victory",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 110,
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "variants": [
+        "Won. I shall tell the Council it was my doing and yours was very expensive. They will believe half of it."
+      ]
+    },
+    {
+      "id": "hanno.ally.defeat",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 110,
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "variants": [
+        "Lost. I did say this was the Barcids' kind of war. Nobody listens to the man who keeps the books until the books are empty."
+      ]
+    },
+    {
+      "id": "hanno.ally.under_attack",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 45,
+      "once": false,
+      "trigger": {
+        "type": "under_attack",
+        "subject": "self",
+        "cooldown": 60
+      },
+      "variants": [
+        "My camp is under attack, and my men are paid to fight, not to die. If you want them alive tomorrow, come today.",
+        "They are at my walls. Mercenaries have a fine sense of when a paymaster is about to become a corpse. Do hurry."
+      ]
+    },
+    {
+      "id": "hanno.ally.heavy_losses",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "I am bleeding men, and each one was paid in advance. This is not a battle, it is an audit, and it is going badly."
+      ]
+    },
+    {
+      "id": "hanno.ally.near_defeat",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 80,
+      "once": false,
+      "trigger": {
+        "type": "near_defeat",
+        "subject": "self",
+        "cooldown": 180
+      },
+      "variants": [
+        "I am nearly finished. I would rather not be. Consider this an invoice for immediate assistance."
+      ]
+    },
+    {
+      "id": "hanno.ally.eliminated",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "trigger": {
+        "type": "owner_eliminated",
+        "subject": "self",
+        "delay": 1.5
+      },
+      "variants": [
+        "My part is over. I shall be in the Council chamber by morning, explaining how it was your fault. Win anyway."
+      ]
+    },
+    {
+      "id": "hanno.ally.attack_launched",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "attack_launched",
+        "actor": "self",
+        "cooldown": 90,
+        "delay": 1.5
+      },
+      "variants": [
+        "My spears are marching on them. I do not do this cheaply, so kindly make it count.",
+        "I am attacking. Hold your side. If this is wasted, I shall be sending you the bill."
+      ]
+    },
+    {
+      "id": "hanno.ally.took_camp",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "actor": "self",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "That camp is ours. I have already leased the granary. To you, actually. We can discuss terms."
+      ]
+    },
+    {
+      "id": "hanno.ally.player_commander_fallen",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "player",
+        "delay": 2.0
+      },
+      "variants": [
+        "Your commander is dead. Unfortunate, and expensive. Keep your line; a leaderless ally is a liability I did not agree to insure."
+      ]
+    }
+  ]
+}
