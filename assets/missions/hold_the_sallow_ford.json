@@ -323,7 +323,55 @@
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
+    },
+    {
+      "id": "ford_first_column",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 2,
+        "delay": 0.5,
+        "final_wave": false
+      },
+      "text": "First column on the cart gate. Spears up. Let them come to the stakes; the stakes do not get tired.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "ford_last_column",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 2,
+        "delay": 0.5,
+        "final_wave": true
+      },
+      "text": "The last column. Everything they have left is on the road. Hold this one and the ford is ours until the spring.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 65
+    },
+    {
+      "id": "ford_our_losses",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "heavy_losses",
+        "owner_id": "player",
+        "cooldown": 120
+      },
+      "text": "We are losing men on the goat path. Pull the wounded back and put fresh spears in the gap. Nobody dies standing in a hole.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 40,
+      "once": false
     }
   ],
-  "theme": "The ground does half the work. The other half is knowing when to leave the lane you are winning."
+  "theme": "The ground does half the work. The other half is knowing when to leave the lane you are winning.",
+  "commander_voices": {
+    "generic": false
+  }
 }

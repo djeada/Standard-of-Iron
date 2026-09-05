@@ -222,6 +222,10 @@ auto MissionWaveDirector::advance() -> Effects {
     if (!wave.warned && m_elapsed >= wave.ready_at - wave.warning_seconds) {
       wave.warned = true;
       effects.announcements.append(wave_incoming_announcement(wave));
+      effects.incoming_waves.push_back({.owner_id = wave.owner_id,
+                                        .phase_index = wave.phase_index,
+                                        .phase_count = wave.phase_count,
+                                        .final_wave = wave.final_wave});
       effects.audio_cues.append(
           QString::fromLatin1(Game::Audio::Cue::k_alert_enemy_reinforcements));
       effects.status_changed = true;
@@ -255,6 +259,10 @@ auto MissionWaveDirector::advance() -> Effects {
     }
     if (representative != nullptr) {
       effects.announcements.append(wave_cleared_announcement(*representative));
+      effects.cleared_waves.push_back({.owner_id = representative->owner_id,
+                                       .phase_index = representative->phase_index,
+                                       .phase_count = representative->phase_count,
+                                       .final_wave = representative->final_wave});
       effects.audio_cues.append(
           QString::fromLatin1(Game::Audio::Cue::k_alert_objective_complete));
     }

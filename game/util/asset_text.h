@@ -16,6 +16,7 @@ inline constexpr const char* k_formations_context = "Formation";
 inline constexpr const char* k_campaign_map_context = "CampaignMap";
 inline constexpr const char* k_units_context = "Units";
 inline constexpr const char* k_commanders_context = "Commanders";
+inline constexpr const char* k_commander_voices_context = "CommanderVoices";
 
 [[nodiscard]] auto tr_asset(const char* context, const QString& source) -> QString;
 [[nodiscard]] auto tr_asset(const char* context, const std::string& source) -> QString;

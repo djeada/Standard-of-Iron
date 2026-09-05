@@ -735,7 +735,6 @@ they answer to under a top-level `commander_messages` array.
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `id`        | Stable name. Saves record which lines are spent by id.                                                                                                             |
 | `speaker`   | A commander troop type (`game/units/commander_catalog.cpp`). The display name, battlefield role and nation come from the catalogue, so a line never restates them. |
-| `portrait`  | Art stem under `assets/visuals/`. Optional -- without a matching file the panel falls back to the speaker's nation mark.                                           |
 | `text`      | The line. Extracted for translation, so write it in English and never bake it into art.                                                                            |
 | `voice_cue` | Cue id played when the panel opens. Optional.                                                                                                                      |
 | `duration`  | Seconds the panel holds. Defaults to nine.                                                                                                                         |
@@ -744,13 +743,27 @@ they answer to under a top-level `commander_messages` array.
 
 `trigger.type` is one of:
 
-| Trigger              | Fires when                                                     |
-| -------------------- | -------------------------------------------------------------- |
-| `mission_start`      | The mission's forces are placed and the battle begins.         |
-| `mission_victory`    | The victory service resolves the mission as won.               |
-| `mission_defeat`     | The victory service resolves the mission as lost.              |
-| `structure_captured` | A barrack changes hands (`BarrackCapturedEvent`).              |
-| `commander_defeated` | A commander dies (`UnitDiedEvent` for a catalogued commander). |
+| Trigger              | Fires when                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------- |
+| `mission_start`      | The mission's forces are placed and the battle begins. `match_start` is an alias.             |
+| `mission_victory`    | The victory service resolves the mission as won.                                              |
+| `mission_defeat`     | The victory service resolves the mission as lost.                                             |
+| `structure_captured` | A barrack changes hands (`BarrackCapturedEvent`). Subject: previous owner; actor: new owner.  |
+| `commander_defeated` | A commander dies (`UnitDiedEvent` for a catalogued commander). Subject: owner; actor: killer. |
+| `attack_launched`    | An AI commits an attack wave. Subject: the owner it marches on; actor: the AI.                |
+| `under_attack`       | An owner's buildings take sustained damage. Subject: building owner; actor: attacker.         |
+| `first_contact`      | Two owners trade blows for the first time. Subject: the AI; actor: the other side.            |
+| `heavy_losses`       | An owner loses a large share of its troops in a short window. Actor: who did most of it.      |
+| `near_defeat`        | An owner is reduced to a handful of units or a last structure.                                |
+| `owner_eliminated`   | An owner has nothing left on the field. Actor: who took the last of it.                       |
+| `wave_incoming`      | A scripted mission wave is warned. Subject: the wave's owner. `final_wave` filters.           |
+| `wave_cleared`       | A scripted wave is broken. Subject: the wave's owner.                                         |
+
+The first five come straight off the event bus. The rest are published by
+`Game::Mission::CommanderVoiceObserver` (`game/mission/commander_voice_observer.h`),
+which watches building hits, combat hits, deaths and each AI's attack plan on
+the main thread and applies the hysteresis that keeps a siege from reading as
+sixty separate attacks; the wave beats come from `MissionWaveDirector::Effects`.
 
 Every shipped mission authors at least these three -- `mission_start`,
 `mission_victory` and `mission_defeat` -- and
@@ -776,6 +789,10 @@ take filters, and a line fires only when all of them match:
 | `unit_type`      | `commander_defeated` | Restricts to one commander troop type.                                                                         |
 | `nation`         | `commander_defeated` | The fallen commander's nation, read from the catalogue.                                                        |
 | `at` + `radius`  | `structure_captured` | Mission-space position of the camp this line is about. Without it, any camp matching the owner filters counts. |
+| `subject`        | both                 | Alias of `owner_id` that also accepts a role token: `self`, `ally_of_speaker`, `enemy_of_speaker`, `any`.      |
+| `actor`          | both                 | Alias of `by_owner_id` with the same role tokens.                                                              |
+| `cooldown`       | both                 | Seconds before the same line -- or any line of the same speaker on the same trigger -- may fire again.         |
+| `final_wave`     | `wave_incoming`      | Restricts to the last authored wave, or to every wave before it.                                               |
 
 So "the village that belongs to owner 3 is taken by the player" is:
 
@@ -852,6 +869,121 @@ model, which is the only way to look at this without playing a mission to a
 trigger. Note that the screenshot harness does not advance QML animations: it is
 the surface to review framing and placement on, not motion. The typewriter-to-
 portrait handoff is covered by `tests/ui/qml/tst_commander_message.qml`.
+
+### Commander voices
+
+Missions write lines for one battle. Skirmish has no mission file, yet every AI
+owner already has a commander (the `commanderTroop` each MapSelect slot carries),
+so each of the six commanders also owns a **voice bank**: what they say to the
+player as an enemy and as an ally, on the generic trigger vocabulary above.
+
+Banks live in `assets/data/commanders/voices/<commander_id>.json`, one file per
+commander, and are registered in `assets.qrc`.
+
+```json
+{
+    "commander": "roman_veteran_consul",
+    "chatter_per_match": 10,
+    "lines": [
+        {
+            "id": "scipio.enemy.attack_launched",
+            "relationship": "enemy",
+            "pose": "dismissive",
+            "priority": 40,
+            "once": false,
+            "trigger": {
+                "type": "attack_launched",
+                "actor": "self",
+                "subject": "player",
+                "cooldown": 90,
+                "delay": 1.5
+            },
+            "variants": [
+                "The legion is moving. Do not trouble to form a line...",
+                "..."
+            ]
+        }
+    ]
+}
+```
+
+| Field               | Meaning                                                                                                                                |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `relationship`      | `enemy` or `ally`: how the speaker stands to the local player. A line is only instantiated for owners in that relationship.            |
+| `variants`          | Alternative texts for the same beat. They play in authored order, first unspent; a repeating line cycles. `text` is shorthand for one. |
+| `chatter_per_match` | How many chatter lines this speaker may show in one match. Openings, outcomes, commander deaths and eliminations do not count.         |
+
+Role tokens make one bank serve every seat at the table: `self` is the speaker's
+own owner, `player` the local player, `ally_of_speaker` / `enemy_of_speaker` are
+read from the owner registry's teams. "You took my camp" is therefore
+`structure_captured` with `subject: self, actor: player`; the same line as
+"my ally took a camp" is `actor: self` with `relationship: ally`.
+
+**Binding.** At match start `GameEngine::configure_commander_messages()` reads the
+roster from the world (`game/mission/commander_speaker_roster.h`): every owner
+other than the player and the neutral owner who fields a live commander, with
+its relationship. Each speaker's bank is expanded into rules whose ids are
+`<owner_id>:<line_id>.<variant>` -- so two owners sharing a commander stay
+distinct and saves record spent lines by the same mechanism as mission lines.
+An AI with no commander on the field is given its nation's default so it still
+has a face.
+
+**Missions override banks.** A mission's own `commander_messages` keep working
+as before; when an event matches a mission-authored line for a speaker, that
+speaker's generic lines for the same trigger are skipped for that event, so a
+mission that writes what Scipio says about the river town never hears the stock
+capture line as well. A mission can also silence beats it does not want:
+
+```json
+"commander_voices": { "generic": true, "muted_triggers": ["first_contact"], "muted_lines": ["scipio.enemy.wave_incoming"] }
+```
+
+`"generic": false` turns the banks off for that mission; the tutorial does this.
+
+**Cadence.** The director (`game/mission/commander_message_director.h`) keeps
+the banter from becoming noise:
+
+- Chatter -- anything but openings, outcomes, commander deaths and eliminations
+  at priority below 80 -- waits at least 12 seconds after the previous line ends.
+- A line's `cooldown` also covers every line of the same speaker on the same
+  trigger, so variants cannot chain.
+- Chatter that has waited 15 seconds unshown is dropped rather than replayed
+  after the moment has passed.
+- Each speaker has a `chatter_per_match` budget.
+- Outcome lines pre-empt whatever is showing and flush pending chatter; nothing
+  else pre-empts. After the outcome, only outcome lines play.
+- One fact draws one answer: when several speakers could answer the same event,
+  the highest priority speaks, ties going to the lower owner id. Openings are
+  the exception; every speaker gets one.
+
+The panel marks ally lines with an **ALLY** tag and tints its rule in the
+success colour, since the portrait and nation mark alone would not tell a
+player which side the speaker is on in a mirror match.
+
+Bank text is extracted for translation under the `CommanderVoices` context;
+`tools/content_validator` checks every bank (catalogued commander, unique ids,
+baked poses only, cooldowns on repeating lines, chatter short enough to read),
+and `tests/map/commander_voice_bank_test.cpp` fails the build if a commander
+has no bank or a bank lacks one of the required beats.
+
+#### Writing a commander's lines
+
+- **Voice.** Scipio is clipped and aristocratic and counts things. Fabius is
+  patient, agrarian, never boasts; time is his. Marcellus is a blunt soldier:
+  tempo and blood, short sentences. Hannibal is sardonic and theatrical and
+  speaks of Rome as a stubborn animal. Hasdrubal is the loyal younger brother,
+  hunters' imagery, worried about supply. Hanno is the mercenary-master: money
+  and ledgers, and no love for the Barcids even as their ally.
+- **Length.** Chatter runs 90-180 characters; the panel's cap is 20 seconds, so
+  260 is the hard limit the validator enforces. Openings and outcomes may run to
+  400 as today.
+- **Never restate name, role or nation.** The panel shows them.
+- **No numbers the simulation can contradict**, and no assumption about the
+  player's nation: a Roman commander may be fighting Rome in a mirror match.
+- **Allies never give orders.** They ask, warn and report.
+- **Poses.** Only `dismissive` and `cynical` are baked. Enemies use
+  `dismissive` for the player's setbacks and their own attacks, `cynical` for
+  their own setbacks; allies use `cynical` as their neutral register.
 
 ### The tutorial mission
 

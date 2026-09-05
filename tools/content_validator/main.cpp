@@ -13,12 +13,14 @@
 #include <set>
 
 #include "../../game/map/campaign_loader.h"
+#include "../../game/map/commander_message_grammar.h"
 #include "../../game/map/map_loader.h"
 #include "../../game/map/mission_loader.h"
 #include "../../game/map/terrain_service.h"
 #include "../../game/map/undead_shrine_placement.h"
 #include "../../game/systems/building_collision_registry.h"
 #include "game/formation/formation_data_loader.h"
+#include "game/mission/commander_voice_bank.h"
 #include "game/session/session_context.h"
 #include "game/units/commander_catalog.h"
 #include "game/units/troop_catalog_loader.h"
@@ -319,6 +321,134 @@ auto validateMissionFile(const QString& file_path) -> ValidationResult {
   return result;
 }
 
+constexpr int k_commander_chatter_max_chars = 260;
+
+auto isAllowedCommanderPose(const QString& pose) -> bool {
+  return pose.isEmpty() || pose == QStringLiteral("dismissive") ||
+         pose == QStringLiteral("cynical");
+}
+
+auto commanderIdIsCatalogued(const QString& commander_id) -> bool {
+  Game::Units::TroopType troop{};
+  return Game::Units::try_parse_troop_type(commander_id, troop) &&
+         Game::Units::commander_definition(troop) != nullptr;
+}
+
+auto validateCommanderVoices(const QString& assets_dir,
+                             Game::Mission::CommanderVoiceLibrary& out_library)
+    -> ValidationResult {
+  ValidationResult result;
+  const QDir voices_dir(QDir(assets_dir).filePath("data/commanders/voices"));
+  if (!voices_dir.exists()) {
+    result.addError(
+        QString("Commander voices: directory %1 is missing").arg(voices_dir.path()));
+    return result;
+  }
+
+  std::set<QString> line_ids;
+  for (const QString& file_name :
+       voices_dir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name)) {
+    const QString path = voices_dir.filePath(file_name);
+    QString error;
+    auto bank = Game::Mission::CommanderVoiceLibrary::load_from_file(path, &error);
+    if (!bank.has_value()) {
+      result.addError(QString("Commander voices: %1").arg(error));
+      continue;
+    }
+    if (!commanderIdIsCatalogued(bank->commander_id)) {
+      result.addError(
+          QString("Commander voices %1: '%2' is not a commander in the catalogue")
+              .arg(file_name, bank->commander_id));
+    }
+    if (QFileInfo(file_name).completeBaseName() != bank->commander_id) {
+      result.addError(QString("Commander voices %1: file is named for a different "
+                              "commander than '%2'")
+                          .arg(file_name, bank->commander_id));
+    }
+    if (bank->chatter_per_match <= 0) {
+      result.addError(QString("Commander voices %1: chatter_per_match must be positive")
+                          .arg(file_name));
+    }
+    for (const auto& line : bank->lines) {
+      if (!line_ids.insert(line.id).second) {
+        result.addError(
+            QString("Commander voices %1: line id '%2' is used twice across "
+                    "the banks; saves record spent lines by id")
+                .arg(file_name, line.id));
+      }
+      if (line.variants.isEmpty()) {
+        result.addError(QString("Commander voices %1: line '%2' has no text")
+                            .arg(file_name, line.id));
+      }
+      if (!isAllowedCommanderPose(line.pose)) {
+        result.addError(QString("Commander voices %1: line '%2' uses pose '%3'; only "
+                                "dismissive and cynical are baked")
+                            .arg(file_name, line.id, line.pose));
+      }
+      if (!line.once && line.condition.cooldown <= 0.0F) {
+        result.addError(QString("Commander voices %1: line '%2' repeats but has no "
+                                "cooldown")
+                            .arg(file_name, line.id));
+      }
+      if (line.duration <= 0.0F) {
+        result.addError(QString("Commander voices %1: line '%2' holds for %3 seconds")
+                            .arg(file_name, line.id)
+                            .arg(static_cast<double>(line.duration)));
+      }
+      const bool is_bookend =
+          line.trigger == Game::Mission::CommanderMessageTrigger::MissionStart ||
+          Game::Mission::commander_message_trigger_is_outcome(line.trigger);
+      if (!is_bookend) {
+        for (const QString& variant : line.variants) {
+          if (variant.length() > k_commander_chatter_max_chars) {
+            result.addError(
+                QString("Commander voices %1: line '%2' runs to %3 characters; chatter "
+                        "must read inside the %4 second panel cap")
+                    .arg(file_name, line.id)
+                    .arg(variant.length())
+                    .arg(static_cast<double>(
+                        Game::Mission::k_commander_message_max_seconds)));
+          }
+        }
+      }
+    }
+    out_library.add(std::move(*bank));
+  }
+
+  for (const auto& definition : Game::Units::all_commander_definitions()) {
+    const QString commander_id = QString::fromStdString(definition.id);
+    if (out_library.bank_for(commander_id) == nullptr) {
+      result.addError(
+          QString("Commander voices: %1 has no voice bank").arg(commander_id));
+    }
+  }
+  return result;
+}
+
+auto validateMissionVoicePolicy(const QString& file_path,
+                                const Game::Mission::MissionDefinition& mission,
+                                const Game::Mission::CommanderVoiceLibrary& library)
+    -> ValidationResult {
+  ValidationResult result;
+  for (const QString& muted : mission.commander_voices.muted_lines) {
+    bool found = false;
+    for (const auto& bank : library.banks()) {
+      for (const auto& line : bank.lines) {
+        if (line.id == muted) {
+          found = true;
+        }
+      }
+    }
+    if (!found) {
+      result.addError(
+          QString("Mission %1: commander_voices.muted_lines names '%2', which "
+                  "no voice bank defines")
+              .arg(file_path, muted));
+    }
+  }
+  return result;
+}
+
 auto validateMapFile(Game::Session::SessionContext& session,
                      const QString& file_path) -> ValidationResult {
   ValidationResult result;
@@ -521,6 +651,16 @@ auto main(int argc, char* argv[]) -> int {
   bool all_valid = true;
   std::set<QString> mission_ids;
 
+  Game::Mission::CommanderVoiceLibrary voices;
+  {
+    std::cout << "\nValidating commander voice banks..." << '\n';
+    const ValidationResult result = validateCommanderVoices(assets_dir, voices);
+    printResults(result, QStringLiteral("data/commanders/voices"));
+    if (!result.success) {
+      all_valid = false;
+    }
+  }
+
   const QDir missions_dir = base_dir.filePath("missions");
   if (missions_dir.exists()) {
     const QStringList mission_files =
@@ -539,6 +679,12 @@ auto main(int argc, char* argv[]) -> int {
         Game::Mission::MissionDefinition mission;
         if (Game::Mission::MissionLoader::load_from_json_file(mission_path, mission)) {
           mission_ids.insert(mission.id);
+          const ValidationResult policy =
+              validateMissionVoicePolicy(mission_path, mission, voices);
+          if (!policy.success) {
+            printResults(policy, QString("missions/") + mission_file);
+            all_valid = false;
+          }
         }
       } else {
         all_valid = false;

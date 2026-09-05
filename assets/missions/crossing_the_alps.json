@@ -344,6 +344,121 @@
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
+    },
+    {
+      "id": "alps_first_pass_lost",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 2,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "The lower pass camp is yours. Keep it warm. The tribes will want it back in the spring and I will not be here to stop them.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "alps_second_pass_lost",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 3,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "The second pass. You are buying road with men and paying in snow. I have never seen an army spend itself so willingly on scenery.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "alps_final_pass_lost",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 4,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "The last pass camp. So you are through - what is left of you. Italy is below. Italy has been waiting, and Italy is not friendly.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 65
+    },
+    {
+      "id": "alps_tribes_descend",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 2,
+        "delay": 0.5
+      },
+      "text": "The tribes are coming down the slope. They do not fight in lines. They fight in rockfalls.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "alps_final_pass_wave",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 4,
+        "delay": 0.5
+      },
+      "text": "The high pass is sending everything it has. They have been paid in Roman silver to hold that road, and mountain men earn their silver.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "alps_your_losses",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "heavy_losses",
+        "owner_id": "player",
+        "cooldown": 120
+      },
+      "text": "Your men are dying on the ice. Not from spears - from cold, and hunger, and the arithmetic of a road that is longer than your grain.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 40,
+      "once": false
+    },
+    {
+      "id": "alps_hannibal_fallen",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "commander_defeated",
+        "owner_id": "player",
+        "delay": 2.0
+      },
+      "text": "Hannibal dies in the snow. Then the elephants were for nothing, and so was the road. History will find that very tidy.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "alps_scipio_last_stand",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "near_defeat",
+        "owner_id": 4
+      },
+      "text": "The final pass is nearly cleared. Whatever comes down the far side, I shall be in Italy waiting for it with a great many more men than this.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
     }
   ],
   "include_ambient_undead": false,

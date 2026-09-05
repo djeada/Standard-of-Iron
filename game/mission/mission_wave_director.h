@@ -19,11 +19,20 @@ class World;
 
 namespace Game::Mission {
 
+struct WaveBeat {
+  int owner_id = 0;
+  int phase_index = 1;
+  int phase_count = 1;
+  bool final_wave = false;
+};
+
 class MissionWaveDirector : public Game::Systems::MissionWaveQuery {
 public:
   struct Effects {
     QStringList announcements;
     QStringList audio_cues;
+    std::vector<WaveBeat> incoming_waves;
+    std::vector<WaveBeat> cleared_waves;
     std::vector<std::size_t> waves_to_spawn;
     Game::Systems::ResourceAmounts reward;
     bool status_changed = false;

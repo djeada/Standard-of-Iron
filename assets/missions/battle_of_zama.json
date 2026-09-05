@@ -451,6 +451,152 @@
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
+    },
+    {
+      "id": "zama_north_camp_lost",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 5,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "The northern camp is gone. Fine. It was a camp. Scipio's line still stands, and that is the only thing on this plain that matters.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "zama_rearguard_camp_lost",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 4,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "The rearguard camp falls. I held it the way I hold everything - long enough, and no longer. Scipio will manage without an old man's tents.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "zama_scipio_town_lost",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 2,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "My town. You have taken my town, at Zama, with Masinissa's horse behind you. I begin to think the gods have a sense of proportion after all.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 65
+    },
+    {
+      "id": "zama_numidian_camp_lost",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 3,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "Masinissa's camp is yours. His riders will not care; they were never in it. Watch the horizon, not the tents.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "zama_line_advances",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 2,
+        "delay": 0.5
+      },
+      "text": "The main line is advancing. No trumpets, no tricks, no gaps between the maniples for your elephants to find. I learned. You taught me.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "zama_numidians_ride",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 3,
+        "delay": 0.5
+      },
+      "text": "The Numidians are riding. Your Numidians, once. Now they ride for Rome, and they ride the same way they always did - around you.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 55
+    },
+    {
+      "id": "zama_line_hits_camp",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "under_attack",
+        "owner_id": "player",
+        "by_owner_id": 2,
+        "cooldown": 120
+      },
+      "text": "Legionaries at your works. Not Varro's legions; mine. Men who were at Cannae and remember exactly how it felt.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 45,
+      "once": false
+    },
+    {
+      "id": "zama_your_losses",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "heavy_losses",
+        "owner_id": "player",
+        "cooldown": 120
+      },
+      "text": "Your veterans are dying. Italy's veterans, really; you took them from us sixteen years ago and now we are taking them back one at a time.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 40,
+      "once": false
+    },
+    {
+      "id": "zama_hannibal_fallen",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "commander_defeated",
+        "owner_id": "player",
+        "delay": 2.0
+      },
+      "text": "Hannibal has fallen at Zama. I wanted to meet him after, and ask him about Cannae. I shall have to ask the ground instead.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "zama_scipio_last_stand",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "near_defeat",
+        "owner_id": 2
+      },
+      "text": "The line is nearly broken. Nearly. I was at Cannae, you understand. I know exactly what nearly looks like from the other side, and I am still here.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
     }
   ],
   "include_ambient_undead": true,

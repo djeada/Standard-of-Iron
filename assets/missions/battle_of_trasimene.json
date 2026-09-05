@@ -274,6 +274,122 @@
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
+    },
+    {
+      "id": "trasimene_column_town_lost",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 2,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "You have the marching town. Flaminius built it in a fog and never looked back. There is a lesson there; he will not be the one to learn it.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "trasimene_shore_camp_lost",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 3,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "The shore camp. That was the way out, and now there is only the lake. Romans are not, on the whole, a swimming people.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "trasimene_column_marches",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 2,
+        "delay": 0.5
+      },
+      "text": "The column is on the lakeside road. In fog, in a defile, in a hurry. Every word of that sentence is a mistake and Flaminius owns them all.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "trasimene_escape_tries",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 3,
+        "delay": 0.5
+      },
+      "text": "Somebody is trying to cut a way out along the shore. Good. Somebody should get home and describe this accurately.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 55
+    },
+    {
+      "id": "trasimene_column_hits_camp",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "under_attack",
+        "owner_id": "player",
+        "by_owner_id": 2,
+        "cooldown": 120
+      },
+      "text": "They are hitting your camp, because it is the only thing on this road they can see. Men in fog attack whatever is nearest. Remember it.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 45,
+      "once": false
+    },
+    {
+      "id": "trasimene_your_losses",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "heavy_losses",
+        "owner_id": "player",
+        "cooldown": 120
+      },
+      "text": "Your men are dying too. A trap costs the trapper something; the good ones simply cost him less.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 40,
+      "once": false
+    },
+    {
+      "id": "trasimene_hannibal_fallen",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "commander_defeated",
+        "owner_id": "player",
+        "delay": 2.0
+      },
+      "text": "So he dies by his own lake in his own fog. Rome will call it justice. I call it weather, and I have always respected weather.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "trasimene_fabius_last_stand",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "near_defeat",
+        "owner_id": 2
+      },
+      "text": "The column is nearly gone. What is left of it will hold until the fog lifts, because that is the only order anyone can still hear.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
     }
   ],
   "include_ambient_undead": false,

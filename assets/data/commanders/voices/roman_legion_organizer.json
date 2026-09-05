@@ -1,0 +1,377 @@
+{
+  "commander": "roman_legion_organizer",
+  "chatter_per_match": 10,
+  "lines": [
+    {
+      "id": "fabius.enemy.match_start",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 100,
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "duration": 12.0,
+      "variants": [
+        "You have come a long way to stand in a field. Stand in it, then. I have wheat to bring in, and a great deal of time, and you have neither.",
+        "I see your banners. I saw others like them, years ago; they made excellent kindling. Take your time. I intend to take mine."
+      ]
+    },
+    {
+      "id": "fabius.enemy.player_victory",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 120,
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "duration": 12.0,
+      "variants": [
+        "You have the ground. Ground is patient; so am I. Winter will visit you here long before I do, and it does not negotiate.",
+        "Well. A field is lost. I have lost fields before and taken the harvest anyway. We shall see who is still here at the sowing."
+      ]
+    },
+    {
+      "id": "fabius.enemy.player_defeat",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 120,
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "duration": 12.0,
+      "variants": [
+        "There. It was never a battle, only a season, and seasons end. Go home if you have one; the road is long and I shall not follow.",
+        "You hurried. Men who hurry meet me exactly where I am waiting. Rest now. The ground is good for it."
+      ]
+    },
+    {
+      "id": "fabius.enemy.first_contact",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 20,
+      "trigger": {
+        "type": "first_contact",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 1
+      },
+      "variants": [
+        "So it begins. Spears touch, men fall, and the wheat grows regardless. I can wait longer than you can bleed."
+      ]
+    },
+    {
+      "id": "fabius.enemy.attack_launched",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "attack_launched",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 90,
+        "delay": 1.5
+      },
+      "variants": [
+        "The cohorts are moving - slowly, in step. You will have time to see them coming. That is the point.",
+        "I am sending men forward now. Not many. Enough. One does not empty the granary to kill a fox.",
+        "My line advances. Do not look for the trick; there is no trick. There is only the next step, and then the one after."
+      ]
+    },
+    {
+      "id": "fabius.enemy.under_attack",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 45,
+      "once": false,
+      "trigger": {
+        "type": "under_attack",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 60
+      },
+      "variants": [
+        "You are at my walls. Knock. My walls have been knocked on by better, and they have learned not to answer.",
+        "An assault on my camp. Spend your men on it if you like; I have budgeted for exactly this kind of impatience."
+      ]
+    },
+    {
+      "id": "fabius.enemy.lost_camp",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "You have taken a camp. It will need feeding, and I have noticed that you do not feed things well.",
+        "A camp lost. I have a dozen more, and the one you hold is the one I liked least."
+      ]
+    },
+    {
+      "id": "fabius.enemy.took_camp",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "That camp is mine now. I shall not do anything dramatic with it. I shall simply keep it, which is worse.",
+        "Another camp gathered in. Slowly, like fruit. Rot takes the ones you leave on the branch."
+      ]
+    },
+    {
+      "id": "fabius.enemy.heavy_losses_player",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "Your men are falling faster than you are replacing them. That is not a battle. That is a harvest, and it is not yours.",
+        "You are bleeding. I am not pleased by it; I am merely not surprised."
+      ]
+    },
+    {
+      "id": "fabius.enemy.heavy_losses_self",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "My cohorts are thinning. It is a cost, and I keep the books honestly. There is still more field than you have men."
+      ]
+    },
+    {
+      "id": "fabius.enemy.wave_incoming",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "wave_incoming",
+        "subject": "self",
+        "cooldown": 20
+      },
+      "variants": [
+        "More men are on the road. I did not send for them out of fear; I sent for them because there is room.",
+        "Another column comes down the road. Rome walks slowly and never, ever stops."
+      ]
+    },
+    {
+      "id": "fabius.enemy.player_commander_fallen",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "player",
+        "actor": "self",
+        "delay": 2.0
+      },
+      "variants": [
+        "Your commander has fallen. Hasty men do. Bury him with honour; you will be joining him soon enough, and the ground here is soft."
+      ]
+    },
+    {
+      "id": "fabius.enemy.own_commander_fallen",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "self",
+        "delay": 2.0
+      },
+      "variants": [
+        "So the old man falls at last. Rome will call it a tragedy for a week and a lesson for a century. Mind the lesson."
+      ]
+    },
+    {
+      "id": "fabius.enemy.near_defeat",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 80,
+      "once": false,
+      "trigger": {
+        "type": "near_defeat",
+        "subject": "self",
+        "cooldown": 180
+      },
+      "variants": [
+        "I am nearly finished, they say. Nearly. A fire is nearly out for a long time before it goes cold, and it burns fingers all the while."
+      ]
+    },
+    {
+      "id": "fabius.ally.match_start",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "trigger": {
+        "type": "mission_start",
+        "delay": 4.0
+      },
+      "duration": 11.0,
+      "variants": [
+        "We stand together. I will not be hurried, and I will not hurry you. Hold what you have and let the enemy come to us tired."
+      ]
+    },
+    {
+      "id": "fabius.ally.victory",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 110,
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "variants": [
+        "Won. Not quickly, but won. Remember how it felt to wait; it is the part nobody else will remember for you."
+      ]
+    },
+    {
+      "id": "fabius.ally.defeat",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 110,
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "variants": [
+        "Lost. We were quicker than we should have been, or slower. I shall spend the winter deciding which."
+      ]
+    },
+    {
+      "id": "fabius.ally.under_attack",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 45,
+      "once": false,
+      "trigger": {
+        "type": "under_attack",
+        "subject": "self",
+        "cooldown": 60
+      },
+      "variants": [
+        "They are at my walls. I can hold a while - I always can - but a while is not forever, and I would rather not test the word.",
+        "My camp is taking the weight of their attack. If you were planning to come, this is the day for planning to end."
+      ]
+    },
+    {
+      "id": "fabius.ally.heavy_losses",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "I am losing men at a rate I do not care for. The ledger still balances. Do not let it stop balancing."
+      ]
+    },
+    {
+      "id": "fabius.ally.near_defeat",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 80,
+      "once": false,
+      "trigger": {
+        "type": "near_defeat",
+        "subject": "self",
+        "cooldown": 180
+      },
+      "variants": [
+        "I am at the end of what patience can buy. Come, or write to my family. Either will do; only one is useful."
+      ]
+    },
+    {
+      "id": "fabius.ally.eliminated",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "trigger": {
+        "type": "owner_eliminated",
+        "subject": "self",
+        "delay": 1.5
+      },
+      "variants": [
+        "That is all of me spent. It was a long war and I regret none of the slow parts. Finish it."
+      ]
+    },
+    {
+      "id": "fabius.ally.attack_launched",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "attack_launched",
+        "actor": "self",
+        "cooldown": 90,
+        "delay": 1.5
+      },
+      "variants": [
+        "My cohorts are moving on them. Slowly. If you are quicker, be quicker where they can see it.",
+        "I am advancing. It will not look like much. It is not meant to."
+      ]
+    },
+    {
+      "id": "fabius.ally.took_camp",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "actor": "self",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "A camp gathered in. I shall keep it quiet and fed. That is what I am for."
+      ]
+    },
+    {
+      "id": "fabius.ally.player_commander_fallen",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "player",
+        "delay": 2.0
+      },
+      "variants": [
+        "Your commander has fallen. Grief later; line now. The field does not pause for either of us."
+      ]
+    }
+  ]
+}

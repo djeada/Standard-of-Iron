@@ -13,6 +13,8 @@ Item {
     readonly property color accent: faction.accent
     readonly property string speakerType: source ? source.speaker_id : ""
     readonly property string speakerPose: source ? source.pose : ""
+    readonly property bool allySpeaker: source !== null && source.relationship === "ally"
+    readonly property string relationshipTag: allySpeaker ? qsTr("ALLY") : ""
 
     property int revealed: 0
 
@@ -203,22 +205,40 @@ Item {
                     font.weight: Design.Typography.bold
                 }
 
-                Text {
+                RowLayout {
                     Layout.fillWidth: true
-                    visible: text.length > 0
-                    text: messageRoot.faction.name + "  " + messageRoot.faction.glyph
-                    color: Design.Theme.textSecondary
-                    elide: Text.ElideRight
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.caption
-                    font.letterSpacing: Design.Typography.trackingWide
+                    spacing: Design.Metrics.space8
+
+                    Text {
+                        id: allyTag
+
+                        objectName: "commanderAllyTag"
+                        visible: messageRoot.allySpeaker
+                        text: messageRoot.relationshipTag
+                        color: Design.Theme.success
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
+                        font.weight: Design.Typography.bold
+                        font.letterSpacing: Design.Typography.trackingWide
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        visible: text.length > 0
+                        text: messageRoot.faction.name + "  " + messageRoot.faction.glyph
+                        color: Design.Theme.textSecondary
+                        elide: Text.ElideRight
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
+                        font.letterSpacing: Design.Typography.trackingWide
+                    }
                 }
 
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.topMargin: Design.Metrics.space4
                     Layout.preferredHeight: Design.Metrics.borderThin
-                    color: messageRoot.accent
+                    color: messageRoot.allySpeaker ? Design.Theme.success : messageRoot.accent
                     opacity: 0.45
                 }
 

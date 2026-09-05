@@ -92,6 +92,11 @@ ASSET_CONTEXTS: list[dict] = [
         ],
     },
     {
+        "context": "CommanderVoices",
+        "glob": "data/commanders/voices/*.json",
+        "paths": ["lines[]/variants[]"],
+    },
+    {
         "context": "LoadingTips",
         "glob": "data/loading_tips.json",
         "paths": ["tips[]/text"],

@@ -262,6 +262,118 @@ public:
   int new_owner_id;
 };
 
+class AiAttackLaunchedEvent : public Event {
+public:
+  AiAttackLaunchedEvent(int attacker_owner_id, int target_owner_id, EntityID target_id)
+      : attacker_owner_id(attacker_owner_id)
+      , target_owner_id(target_owner_id)
+      , target_id(target_id) {}
+  int attacker_owner_id;
+  int target_owner_id;
+  EntityID target_id;
+  [[nodiscard]] auto get_type_name() const -> const char* override {
+    return "AI_ATTACK_LAUNCHED";
+  }
+};
+
+class OwnerUnderAttackEvent : public Event {
+public:
+  OwnerUnderAttackEvent(int owner_id, int attacker_owner_id)
+      : owner_id(owner_id)
+      , attacker_owner_id(attacker_owner_id) {}
+  int owner_id;
+  int attacker_owner_id;
+  [[nodiscard]] auto get_type_name() const -> const char* override {
+    return "OWNER_UNDER_ATTACK";
+  }
+};
+
+class OwnersFirstContactEvent : public Event {
+public:
+  OwnersFirstContactEvent(int owner_id, int other_owner_id)
+      : owner_id(owner_id)
+      , other_owner_id(other_owner_id) {}
+  int owner_id;
+  int other_owner_id;
+  [[nodiscard]] auto get_type_name() const -> const char* override {
+    return "OWNERS_FIRST_CONTACT";
+  }
+};
+
+class OwnerHeavyLossesEvent : public Event {
+public:
+  OwnerHeavyLossesEvent(int owner_id, int killer_owner_id, int losses)
+      : owner_id(owner_id)
+      , killer_owner_id(killer_owner_id)
+      , losses(losses) {}
+  int owner_id;
+  int killer_owner_id;
+  int losses;
+  [[nodiscard]] auto get_type_name() const -> const char* override {
+    return "OWNER_HEAVY_LOSSES";
+  }
+};
+
+class OwnerNearDefeatEvent : public Event {
+public:
+  explicit OwnerNearDefeatEvent(int owner_id)
+      : owner_id(owner_id) {}
+  int owner_id;
+  [[nodiscard]] auto get_type_name() const -> const char* override {
+    return "OWNER_NEAR_DEFEAT";
+  }
+};
+
+class OwnerEliminatedEvent : public Event {
+public:
+  OwnerEliminatedEvent(int owner_id, int by_owner_id)
+      : owner_id(owner_id)
+      , by_owner_id(by_owner_id) {}
+  int owner_id;
+  int by_owner_id;
+  [[nodiscard]] auto get_type_name() const -> const char* override {
+    return "OWNER_ELIMINATED";
+  }
+};
+
+class MissionWaveIncomingEvent : public Event {
+public:
+  MissionWaveIncomingEvent(int owner_id,
+                           int phase_index,
+                           int phase_count,
+                           bool final_wave)
+      : owner_id(owner_id)
+      , phase_index(phase_index)
+      , phase_count(phase_count)
+      , final_wave(final_wave) {}
+  int owner_id;
+  int phase_index;
+  int phase_count;
+  bool final_wave;
+  [[nodiscard]] auto get_type_name() const -> const char* override {
+    return "MISSION_WAVE_INCOMING";
+  }
+};
+
+class MissionWaveClearedEvent : public Event {
+public:
+  MissionWaveClearedEvent(int owner_id,
+                          int phase_index,
+                          int phase_count,
+                          bool final_wave)
+      : owner_id(owner_id)
+      , phase_index(phase_index)
+      , phase_count(phase_count)
+      , final_wave(final_wave) {}
+  int owner_id;
+  int phase_index;
+  int phase_count;
+  bool final_wave;
+  [[nodiscard]] auto get_type_name() const -> const char* override {
+    return "MISSION_WAVE_CLEARED";
+  }
+};
+
 enum class AmbientState {
   PEACEFUL,
   TENSE,

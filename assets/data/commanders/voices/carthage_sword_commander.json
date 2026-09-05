@@ -1,0 +1,377 @@
+{
+  "commander": "carthage_sword_commander",
+  "chatter_per_match": 10,
+  "lines": [
+    {
+      "id": "hannibal.enemy.match_start",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 100,
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "duration": 12.0,
+      "variants": [
+        "So. You have come to fight me. How refreshing - most of my enemies prefer to wait behind their walls until I have finished with the countryside.",
+        "Welcome to my field. I say mine; I have not signed anything. I simply find that fields tend to become mine after a while."
+      ]
+    },
+    {
+      "id": "hannibal.enemy.player_victory",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 120,
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "duration": 12.0,
+      "variants": [
+        "You have won. I am almost pleased; a man learns nothing from beating fools. I shall learn from you, and I promise you will not enjoy the lesson.",
+        "Beaten, on this ground, today. Note the qualifications. I have made a career of the ground and the day after."
+      ]
+    },
+    {
+      "id": "hannibal.enemy.player_defeat",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 120,
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "duration": 12.0,
+      "variants": [
+        "There it is. You came straight at me, like a bull at a red cloak, and now you are wondering where the cloak went.",
+        "Finished. You fought like a wall - solid, honest, and completely unable to turn around."
+      ]
+    },
+    {
+      "id": "hannibal.enemy.first_contact",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 20,
+      "trigger": {
+        "type": "first_contact",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 1
+      },
+      "variants": [
+        "First blood. Good. I was beginning to worry you were one of those enemies who negotiate."
+      ]
+    },
+    {
+      "id": "hannibal.enemy.attack_launched",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "attack_launched",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 90,
+        "delay": 1.5
+      },
+      "variants": [
+        "I am coming for you. Not from where you are looking. I never come from where you are looking.",
+        "My columns are moving. Watch the front, by all means; someone should, and it may as well be you.",
+        "Forward. If it seems too easy, that is because it is meant to."
+      ]
+    },
+    {
+      "id": "hannibal.enemy.under_attack",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 45,
+      "once": false,
+      "trigger": {
+        "type": "under_attack",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 60
+      },
+      "variants": [
+        "You are at my camp. A camp is a tent with ambition; I have left better ones to wolves.",
+        "Hitting my walls, are you. Every man you spend there is one I need not outwit later."
+      ]
+    },
+    {
+      "id": "hannibal.enemy.lost_camp",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "Take the camp. I have taken cities and given them back; the joy is in the taking, not the holding.",
+        "One camp lost. I have lost an eye, an army and a brother, and here I still am."
+      ]
+    },
+    {
+      "id": "hannibal.enemy.took_camp",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "That camp is mine. I did not even need the elephants. I am almost disappointed.",
+        "Your camp changes masters. They will find me a lenient landlord and a very poor tenant."
+      ]
+    },
+    {
+      "id": "hannibal.enemy.heavy_losses_player",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "Your men are falling in rows. That is what happens when you fight a wall's war against a river.",
+        "Look at your line. Brave, disciplined, and in exactly the wrong place. Rome taught you well."
+      ]
+    },
+    {
+      "id": "hannibal.enemy.heavy_losses_self",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "My men are dying. Good men, too. The enemy may take them; the enemy may not have my attention as well."
+      ]
+    },
+    {
+      "id": "hannibal.enemy.wave_incoming",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "wave_incoming",
+        "subject": "self",
+        "cooldown": 20
+      },
+      "variants": [
+        "More of mine are coming down the road. I know - I did not tell you. That was rather the idea.",
+        "Reinforcements. Mine, I am afraid. I collect them the way others collect debts."
+      ]
+    },
+    {
+      "id": "hannibal.enemy.player_commander_fallen",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "player",
+        "actor": "self",
+        "delay": 2.0
+      },
+      "variants": [
+        "Your commander has fallen. A pity. I had a speech prepared for after, and he would have hated it."
+      ]
+    },
+    {
+      "id": "hannibal.enemy.own_commander_fallen",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "self",
+        "delay": 2.0
+      },
+      "variants": [
+        "So it ends with a blade after all. Tell Rome I was a wolf, not a bull. She never did learn the difference."
+      ]
+    },
+    {
+      "id": "hannibal.enemy.near_defeat",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 80,
+      "once": false,
+      "trigger": {
+        "type": "near_defeat",
+        "subject": "self",
+        "cooldown": 180
+      },
+      "variants": [
+        "I am nearly done, they say. I have crossed mountains on nearly. Do not count what is left of me; count what it is still holding."
+      ]
+    },
+    {
+      "id": "hannibal.ally.match_start",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 90,
+      "trigger": {
+        "type": "mission_start",
+        "delay": 4.0
+      },
+      "duration": 11.0,
+      "variants": [
+        "Together, then. I will do the clever part. You may do the brave part; it is honest work and someone must."
+      ]
+    },
+    {
+      "id": "hannibal.ally.victory",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 110,
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "variants": [
+        "Won. Neatly. Remember that half of it was the ground and the other half was the timing, and none of it was luck."
+      ]
+    },
+    {
+      "id": "hannibal.ally.defeat",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 110,
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "variants": [
+        "Lost. We fought their war instead of ours. Next time we choose the field before we choose the fight."
+      ]
+    },
+    {
+      "id": "hannibal.ally.under_attack",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 45,
+      "once": false,
+      "trigger": {
+        "type": "under_attack",
+        "subject": "self",
+        "cooldown": 60
+      },
+      "variants": [
+        "My camp is under attack. I would prefer not to be the one caught in a trap for once; if you can help, now would be poetic.",
+        "They are at my walls. I have been the hammer so often that I forget what the anvil feels like. It is unpleasant."
+      ]
+    },
+    {
+      "id": "hannibal.ally.heavy_losses",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "I am losing men. Not to cleverness, to weight. Lend me some of yours, or a distraction, or both."
+      ]
+    },
+    {
+      "id": "hannibal.ally.near_defeat",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 80,
+      "once": false,
+      "trigger": {
+        "type": "near_defeat",
+        "subject": "self",
+        "cooldown": 180
+      },
+      "variants": [
+        "This is the edge. I have stood on it before and walked back. I would rather not do it alone."
+      ]
+    },
+    {
+      "id": "hannibal.ally.eliminated",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "trigger": {
+        "type": "owner_eliminated",
+        "subject": "self",
+        "delay": 1.5
+      },
+      "variants": [
+        "That is the end of my army. Not of me - never that - but the war is in your hands now. Turn it."
+      ]
+    },
+    {
+      "id": "hannibal.ally.attack_launched",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "attack_launched",
+        "actor": "self",
+        "cooldown": 90,
+        "delay": 1.5
+      },
+      "variants": [
+        "I am moving on them. Do not follow me directly; be where they run to.",
+        "My columns advance. Watch their reserve. It will move when they see me, and that is when it is yours."
+      ]
+    },
+    {
+      "id": "hannibal.ally.took_camp",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "actor": "self",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "That camp is ours. I took it from the side nobody guards, which is every side, eventually."
+      ]
+    },
+    {
+      "id": "hannibal.ally.player_commander_fallen",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "player",
+        "delay": 2.0
+      },
+      "variants": [
+        "Your commander is down. Their moment of joy is your moment of opportunity; nobody watches the flanks while they cheer."
+      ]
+    }
+  ]
+}

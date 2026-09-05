@@ -298,6 +298,122 @@
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
+    },
+    {
+      "id": "ticino_consular_town_lost",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 2,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "My forward town, taken by horsemen. Horsemen. My father would have said something cutting; I find I am simply cold.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "ticino_reserve_camp_lost",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 3,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "The reserve camp is yours. It was never meant to fight - it was meant to be there afterwards. There is not going to be an afterwards, is there.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "ticino_screen_advances",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 2,
+        "delay": 0.5
+      },
+      "text": "The screen is coming across the flats. Velites, cavalry, the usual arrangement. Please try to stand still; it makes the reports so much tidier.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "ticino_reserve_rushes",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 3,
+        "delay": 0.5
+      },
+      "text": "The reserve is moving, and moving fast. I do not hold men back for the look of the thing.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 55
+    },
+    {
+      "id": "ticino_scipio_hits_camp",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "under_attack",
+        "owner_id": "player",
+        "by_owner_id": 2,
+        "cooldown": 120
+      },
+      "text": "Your camp is under the screen's spears. A camp on the wrong bank of a cold river - I would not have chosen it, and now you cannot un-choose it.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 45,
+      "once": false
+    },
+    {
+      "id": "ticino_your_horse_bleeds",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "heavy_losses",
+        "owner_id": "player",
+        "cooldown": 120
+      },
+      "text": "Your riders are dying by the ford. Numidians, I think. They ride beautifully, and they die at the ordinary speed.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 40,
+      "once": false
+    },
+    {
+      "id": "ticino_hannibal_fallen",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "commander_defeated",
+        "owner_id": "player",
+        "delay": 2.0
+      },
+      "text": "The Barcid falls at the Ticinus. Then this was the whole war, and it fit inside an afternoon. I expected more of it; I am not sure I wanted more.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "ticino_scipio_last_stand",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "near_defeat",
+        "owner_id": 2
+      },
+      "text": "A few of the screen left, and me. My son is somewhere on this field; if he finds me, he will be insufferable about it for the rest of his life.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
     }
   ],
   "include_ambient_undead": false,

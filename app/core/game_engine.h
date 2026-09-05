@@ -67,6 +67,9 @@
 #include "game/map/mission_definition.h"
 #include "game/map/mission_stage_tracker.h"
 #include "game/mission/commander_message_director.h"
+#include "game/mission/commander_speaker_roster.h"
+#include "game/mission/commander_voice_bank.h"
+#include "game/mission/commander_voice_observer.h"
 #include "game/mission/mission_setup_coordinator.h"
 #include "game/mission/mission_wave_director.h"
 #include "game/mission/mission_waves.h"
@@ -441,7 +444,10 @@ private:
   void publish_wave_status();
   void configure_mission_stages();
   void configure_commander_messages();
+  [[nodiscard]] auto commander_voices() -> const Game::Mission::CommanderVoiceLibrary&;
   void update_commander_messages(float delta_time);
+  [[nodiscard]] auto commander_message_state() const -> QJsonObject;
+  void restore_commander_message_state(const QJsonObject& state);
   void release_pending_mission_start_cue();
   void publish_commander_message();
   void publish_mission_stages();
@@ -603,6 +609,9 @@ private:
   QTimer m_autosave_timer;
   Game::Mission::MissionStageTracker m_mission_stage_tracker;
   Game::Mission::CommanderMessageDirector m_commander_message_director;
+  Game::Mission::CommanderVoiceLibrary m_commander_voices;
+  Game::Mission::CommanderVoiceObserver m_commander_voice_observer;
+  bool m_commander_voices_loaded = false;
   bool m_mission_start_cue_pending = false;
   float m_mission_stage_poll_accumulator = 0.0F;
   float m_minimap_landmark_poll_accumulator = 0.0F;

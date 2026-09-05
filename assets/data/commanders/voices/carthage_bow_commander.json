@@ -1,0 +1,377 @@
+{
+  "commander": "carthage_bow_commander",
+  "chatter_per_match": 10,
+  "lines": [
+    {
+      "id": "hasdrubal.enemy.match_start",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 100,
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "duration": 12.0,
+      "variants": [
+        "You are a long way from your supply, and I can see your fires from here. A hunter does not chase the deer; he waits at the water.",
+        "There you are. I have been counting your wagons. Fewer than you need, more than you can guard. This will be a patient day."
+      ]
+    },
+    {
+      "id": "hasdrubal.enemy.player_victory",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 120,
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "duration": 12.0,
+      "variants": [
+        "You win the field. Take it. I have hunted this country for years; the land will still feed me when you have eaten it bare.",
+        "Beaten. My brother would have a speech for this. I have only a road home and a great many arrows still in the quiver."
+      ]
+    },
+    {
+      "id": "hasdrubal.enemy.player_defeat",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 120,
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "duration": 12.0,
+      "variants": [
+        "Down. You came in fast and hungry, and hungry things walk into snares. Rest. The country will not miss you.",
+        "That is the end. You fought hard and thought little. In the hills, that gets you eaten."
+      ]
+    },
+    {
+      "id": "hasdrubal.enemy.first_contact",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 20,
+      "trigger": {
+        "type": "first_contact",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 1
+      },
+      "variants": [
+        "The first arrows fly. Now we learn whether you can bleed and think at once."
+      ]
+    },
+    {
+      "id": "hasdrubal.enemy.attack_launched",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "attack_launched",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 90,
+        "delay": 1.5
+      },
+      "variants": [
+        "My archers are moving up. Look to your flanks; that is where the country runs thin.",
+        "I am sending the column now. It will not look like an attack until it is one.",
+        "Forward, quietly. The best charge is the one the enemy hears about afterwards."
+      ]
+    },
+    {
+      "id": "hasdrubal.enemy.under_attack",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 45,
+      "once": false,
+      "trigger": {
+        "type": "under_attack",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 60
+      },
+      "variants": [
+        "You are at my walls. A camp is a hide, nothing more. I have others, and the hills have more still.",
+        "Hitting my camp. Spend your strength there while my hunters spend theirs on your wagons."
+      ]
+    },
+    {
+      "id": "hasdrubal.enemy.lost_camp",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "You have a camp of mine. Feed it. Water it. I will watch you try to do both from the road you do not hold.",
+        "A camp lost. I have slept in worse hides and woken to better mornings."
+      ]
+    },
+    {
+      "id": "hasdrubal.enemy.took_camp",
+      "relationship": "enemy",
+      "pose": "dismissive",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "That camp is mine. I did not storm it; I waited for it. There is a difference and you will feel it.",
+        "Your camp is taken. My brother will say it was his idea. It usually is."
+      ]
+    },
+    {
+      "id": "hasdrubal.enemy.heavy_losses_player",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "Your men are dropping in the open. A hunter feels no pride in it. Only a little pity, and a full quiver.",
+        "Look at your line. Brave men, standing where the arrows are. Whose idea was that?"
+      ]
+    },
+    {
+      "id": "hasdrubal.enemy.heavy_losses_self",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "My men are falling. The line thins. I have fed armies on less and the hills have not run out of stone."
+      ]
+    },
+    {
+      "id": "hasdrubal.enemy.wave_incoming",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "wave_incoming",
+        "subject": "self",
+        "cooldown": 20
+      },
+      "variants": [
+        "More of mine are coming. I sent for them before you arrived; a hunter sets the snare before he sees the deer.",
+        "Reinforcements on the road. Not many. Enough to make you turn your head at the wrong moment."
+      ]
+    },
+    {
+      "id": "hasdrubal.enemy.player_commander_fallen",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "player",
+        "actor": "self",
+        "delay": 2.0
+      },
+      "variants": [
+        "Your commander is down. He led from the front; brave men do, and it is where the arrows go."
+      ]
+    },
+    {
+      "id": "hasdrubal.enemy.own_commander_fallen",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "self",
+        "delay": 2.0
+      },
+      "variants": [
+        "So the arrow finds me at last. Tell my brother I held the road as long as roads can be held."
+      ]
+    },
+    {
+      "id": "hasdrubal.enemy.near_defeat",
+      "relationship": "enemy",
+      "pose": "cynical",
+      "priority": 80,
+      "once": false,
+      "trigger": {
+        "type": "near_defeat",
+        "subject": "self",
+        "cooldown": 180
+      },
+      "variants": [
+        "I am nearly done here. Nearly. The last few are hunters, and hunters are patient about dying."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.match_start",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "trigger": {
+        "type": "mission_start",
+        "delay": 4.0
+      },
+      "duration": 11.0,
+      "variants": [
+        "We fight together. I will hold the flanks and watch the roads. Keep your supply close; the enemy will not fight fair and neither will I."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.victory",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 110,
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "variants": [
+        "Won. Good. Now let us eat before someone counts what it cost us."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.defeat",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 110,
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "variants": [
+        "Lost. We ran out of arrows or out of time; in this country they are the same thing."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.under_attack",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 45,
+      "once": false,
+      "trigger": {
+        "type": "under_attack",
+        "subject": "self",
+        "cooldown": 60
+      },
+      "variants": [
+        "My camp is under attack, and my archers are better at giving than taking. If you can come, come along the ridge.",
+        "They are at my walls. I can hold a while with what I have. A while, not long. Please hear the difference."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.heavy_losses",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "heavy_losses",
+        "subject": "self",
+        "cooldown": 90
+      },
+      "variants": [
+        "I am losing men and I cannot replace them out here. If you have spare, I have work for them."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.near_defeat",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 80,
+      "once": false,
+      "trigger": {
+        "type": "near_defeat",
+        "subject": "self",
+        "cooldown": 180
+      },
+      "variants": [
+        "This is the end of my line unless you reach me. I will not ask twice; there will not be time to."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.eliminated",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "trigger": {
+        "type": "owner_eliminated",
+        "subject": "self",
+        "delay": 1.5
+      },
+      "variants": [
+        "My part is done. The hills kept me alive longer than the plain would have. Go on without me and win."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.attack_launched",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 40,
+      "once": false,
+      "trigger": {
+        "type": "attack_launched",
+        "actor": "self",
+        "cooldown": 90,
+        "delay": 1.5
+      },
+      "variants": [
+        "I am moving on them. Slowly, from the high ground. Do not wait for me; be where they break to.",
+        "My archers advance. When their line looks at me, it is not looking at you."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.took_camp",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 60,
+      "once": false,
+      "trigger": {
+        "type": "structure_captured",
+        "actor": "self",
+        "cooldown": 20,
+        "delay": 1.5
+      },
+      "variants": [
+        "That camp is ours. I will hold it and keep the road open behind you. Somebody has to."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.player_commander_fallen",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 80,
+      "trigger": {
+        "type": "commander_defeated",
+        "subject": "player",
+        "delay": 2.0
+      },
+      "variants": [
+        "Your commander has fallen. I know that grief. Keep your men together; scattered men are what the enemy is hunting."
+      ]
+    }
+  ]
+}

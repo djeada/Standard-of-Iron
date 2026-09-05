@@ -125,6 +125,8 @@ auto MissionWaveRuntime::advance(const MissionWaveBinding& binding,
   for (const auto& cue : director_effects.audio_cues) {
     effects.audio_cues.append(cue);
   }
+  effects.incoming_waves = director_effects.incoming_waves;
+  effects.cleared_waves = director_effects.cleared_waves;
 
   if (!director_effects.reward.empty()) {
     effects.reward = director_effects.reward;
