@@ -77,6 +77,9 @@ jobs:
       - name: Toolchain report
         run: make format-doctor
 
+      - name: Policy runner formatting diagnostics
+        run: black --check --diff scripts/check-pr-policy.py
+
       - name: Formatting
         run: python scripts/format.py --all --check --strict
 
