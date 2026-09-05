@@ -284,6 +284,14 @@ def shorter_arc(from_degrees: float, to_degrees: float) -> float:
     return delta - 360.0 if delta > 180.0 else delta
 
 
+def shot_slow_motion(shot: dict) -> float:
+    """Simulation seconds per screen second is 1 / this; `time_lapse` is the
+    same knob written the friendly way round for values below one."""
+    if "time_lapse" in shot and "slow_motion" not in shot:
+        return 1.0 / max(1.0, float(shot["time_lapse"]))
+    return float(shot.get("slow_motion", 1.0))
+
+
 def camera_offences(spec: dict) -> list[str]:
     """Author-time camera limits, mirrored from `Arena::Promo::motion_violations`."""
     offences: list[str] = []
@@ -292,7 +300,8 @@ def camera_offences(spec: dict) -> list[str]:
         if shot.get("flame_card"):
             continue
         name = shot.get("name", "?")
-        clip = float(shot.get("duration", 0.0)) * float(shot.get("slow_motion", 1.0))
+        slow_motion = shot_slow_motion(shot)
+        clip = float(shot.get("duration", 0.0)) * slow_motion
         clips.append(clip)
         if clip + 1e-3 < MOTION_LIMITS["min_clip"]:
             offences.append(
@@ -315,8 +324,11 @@ def camera_offences(spec: dict) -> list[str]:
                 )
                 break
         for before, after in zip(keys, keys[1:], strict=False):
+
             span = max(
-                0.001, float(after.get("time", 0.0)) - float(before.get("time", 0.0))
+                0.001,
+                (float(after.get("time", 0.0)) - float(before.get("time", 0.0)))
+                * slow_motion,
             )
             for axis, limit, delta in (
                 (

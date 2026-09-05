@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
+#include <map>
 #include <memory>
 #include <numbers>
 #include <optional>
@@ -24,11 +25,13 @@
 #include <vector>
 
 #include "arena_audio_recorder.h"
+#include "arena_casting.h"
 #include "arena_scenario.h"
 #include "arena_typography.h"
 #include "arena_viewport.h"
 #include "game/session/session_context.h"
 #include "game/visuals/team_colors.h"
+#include "promo_casting_overlay.h"
 #include "render/humanoid/runtime/runtime_stats.h"
 #include "video_encoder.h"
 
@@ -576,7 +579,39 @@ struct ShotResult {
   int frames{0};
   float scene_duration{0.0F};
   float clip_duration{0.0F};
+
+  int edge_frames{0};
+  float worst_edge_extent{0.0F};
 };
+
+struct MatchTimeline {
+  QString scenario;
+  int seed{0};
+  float elapsed_seconds{0.0F};
+  bool tracked{false};
+  bool decided{false};
+  QString victor;
+  float decided_at{-1.0F};
+  std::vector<std::pair<QString, float>> events;
+  std::vector<Arena::ArenaBattleSideResult> sides;
+
+  [[nodiscard]] auto event_time(const QString& key) const -> std::optional<float> {
+    for (const auto& [name, at] : events) {
+      if (name == key) {
+        return at;
+      }
+    }
+    return std::nullopt;
+  }
+
+  void note(const QString& key, float at) {
+    if (!event_time(key).has_value()) {
+      events.emplace_back(key, at);
+    }
+  }
+};
+
+constexpr float k_contact_radius = 14.0F;
 
 class Recorder {
 public:
@@ -586,6 +621,11 @@ public:
       , m_options(std::move(options))
       , m_passes(plan_passes(spec))
       , m_results(spec.shots.size()) {}
+
+  [[nodiscard]] auto wants_precheck() const -> bool {
+    return m_options.force_precheck || m_options.precheck_only ||
+           m_spec.require_decision || uses_start_events(m_spec);
+  }
 
   auto start(QString* error) -> bool {
     if (!VideoEncoder::ffmpeg_available()) {
@@ -608,7 +648,18 @@ public:
                                       m_spec.height * m_spec.supersample);
     m_viewport.set_capture_sink([this](const QImage& frame) { on_frame(frame); });
     m_viewport.set_frame_hook([this](float scenario_time) { on_tick(scenario_time); });
-    QTimer::singleShot(250, [this]() { begin_next_pass(); });
+    if (wants_precheck()) {
+      for (const Shot& shot : m_spec.shots) {
+        const auto key = std::make_pair(shot.scenario, shot.seed);
+        if (std::find(m_precheck_targets.begin(), m_precheck_targets.end(), key) ==
+            m_precheck_targets.end()) {
+          m_precheck_targets.push_back(key);
+        }
+      }
+      QTimer::singleShot(250, [this]() { begin_next_precheck(); });
+    } else {
+      QTimer::singleShot(250, [this]() { begin_next_pass(); });
+    }
     return true;
   }
 
@@ -619,6 +670,268 @@ private:
 
   [[nodiscard]] auto current_shot_index() const -> std::size_t {
     return m_passes[m_pass_index].shots[m_slot_index];
+  }
+
+  void begin_next_precheck() {
+    if (m_precheck_index >= m_precheck_targets.size()) {
+      finish_precheck();
+      return;
+    }
+    const auto& [scenario_id, seed] = m_precheck_targets[m_precheck_index];
+    const auto* definition = Arena::Scenarios::find_definition(scenario_id);
+    if (definition == nullptr) {
+      qCritical().noquote()
+          << QStringLiteral("Promo spec names unknown scenario '%1'").arg(scenario_id);
+      m_failed = true;
+      ++m_precheck_index;
+      QTimer::singleShot(0, [this]() { begin_next_precheck(); });
+      return;
+    }
+
+    m_timelines.push_back(MatchTimeline{});
+    m_timelines.back().scenario = scenario_id;
+    m_timelines.back().seed = seed;
+    m_precheck_peak_buildings.clear();
+    m_precheck_active = true;
+    m_precheck_frames = 0;
+    m_viewport.set_terrain_seed(seed);
+    m_viewport.set_batch_fixed_step(idle_step());
+    m_viewport.set_capture_active(false);
+    m_viewport.clear_cinematic_view();
+    m_viewport.set_scenario_duration_override(definition->duration_seconds);
+    m_viewport.load_scenario(scenario_id);
+    m_viewport.set_batch_render_suppressed(true);
+
+    qInfo().noquote() << QStringLiteral("Promo dry run %1/%2: %3 (seed %4), up to %5 s "
+                                        "of match")
+                             .arg(m_precheck_index + 1U)
+                             .arg(m_precheck_targets.size())
+                             .arg(scenario_id)
+                             .arg(seed)
+                             .arg(
+                                 QString::number(definition->duration_seconds, 'f', 0));
+
+    const std::size_t guarded = m_precheck_index;
+    const int watchdog_ms = std::max(k_pass_watchdog_ms,
+                                     static_cast<int>(definition->duration_seconds *
+                                                      1000.0F * k_pass_watchdog_scale));
+    QTimer::singleShot(watchdog_ms, [this, guarded]() {
+      if (m_precheck_active && m_precheck_index == guarded) {
+        qCritical().noquote() << QStringLiteral("Promo dry run of '%1' exceeded its "
+                                                "watchdog")
+                                     .arg(m_precheck_targets[guarded].first);
+        m_failed = true;
+        end_precheck();
+      }
+    });
+  }
+
+  void tick_precheck(float scenario_time) {
+    ++m_precheck_frames;
+    if (m_precheck_frames <= k_pass_warmup_frames) {
+      return;
+    }
+    MatchTimeline& timeline = m_timelines.back();
+    const auto snapshot = m_viewport.casting_snapshot();
+    if (snapshot.valid) {
+      for (const auto& side : snapshot.sides) {
+        const auto& census = side.census;
+        if (census.wave_committed && census.wave_size > 0) {
+          timeline.note(QLatin1String(k_event_first_wave), scenario_time);
+          timeline.note(QStringLiteral("%1:%2").arg(QLatin1String(k_event_first_wave),
+                                                    census.label),
+                        scenario_time);
+        }
+        int& peak = m_precheck_peak_buildings[census.owner_id];
+        if (census.living_buildings < peak) {
+          timeline.note(QLatin1String(k_event_first_building_lost), scenario_time);
+          timeline.note(QStringLiteral("%1:%2").arg(
+                            QLatin1String(k_event_first_building_lost), census.label),
+                        scenario_time);
+        }
+        peak = std::max(peak, census.living_buildings);
+      }
+    }
+    if (m_viewport.scenario_battle_center(0, k_contact_radius).has_value()) {
+      timeline.note(QLatin1String(k_event_first_contact), scenario_time);
+    }
+    if (m_viewport.active_scenario_finished()) {
+      end_precheck();
+    }
+  }
+
+  void end_precheck() {
+    if (!m_precheck_active) {
+      return;
+    }
+    m_precheck_active = false;
+    MatchTimeline& timeline = m_timelines.back();
+    if (const auto* report = m_viewport.active_scenario_report(); report != nullptr) {
+      timeline.elapsed_seconds = report->elapsed_seconds;
+      timeline.tracked = report->battle.tracked;
+      timeline.decided = report->battle.decided;
+      timeline.victor = report->battle.victor_label;
+      timeline.decided_at = report->battle.decided_at_seconds;
+      timeline.sides = report->battle.sides;
+      if (timeline.decided) {
+        timeline.note(QLatin1String(k_event_decision), timeline.decided_at);
+      }
+    }
+    std::stable_sort(
+        timeline.events.begin(),
+        timeline.events.end(),
+        [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
+
+    qInfo().noquote() << QStringLiteral("  %1 after %2 s: %3")
+                             .arg(timeline.scenario)
+                             .arg(QString::number(timeline.elapsed_seconds, 'f', 1))
+                             .arg(timeline.decided
+                                      ? QStringLiteral("%1 wins at %2 s")
+                                            .arg(side_display_name(timeline.victor))
+                                            .arg(QString::number(
+                                                timeline.decided_at, 'f', 1))
+                                      : QStringLiteral("no decision"));
+    for (const auto& [name, at] : timeline.events) {
+      qInfo().noquote() << QStringLiteral("    %1 s  %2")
+                               .arg(QString::number(at, 'f', 1), 7)
+                               .arg(name);
+    }
+    for (const auto& side : timeline.sides) {
+      qInfo().noquote() << QStringLiteral("    %1: %2 units raised, peak army %3, %4 "
+                                          "buildings raised, %5 s on the attack%6")
+                               .arg(side_display_name(side.label))
+                               .arg(side.units_produced)
+                               .arg(side.peak_units)
+                               .arg(side.buildings_constructed)
+                               .arg(QString::number(side.seconds_attacking, 'f', 0))
+                               .arg(side.eliminated_at >= 0.0F
+                                        ? QStringLiteral(", fell at %1 s")
+                                              .arg(QString::number(
+                                                  side.eliminated_at, 'f', 0))
+                                        : QString{});
+    }
+
+    m_viewport.set_batch_render_suppressed(false);
+    ++m_precheck_index;
+    QTimer::singleShot(0, [this]() { begin_next_precheck(); });
+  }
+
+  [[nodiscard]] auto timeline_for(const QString& scenario,
+                                  int seed) const -> const MatchTimeline* {
+    for (const MatchTimeline& timeline : m_timelines) {
+      if (timeline.scenario == scenario && timeline.seed == seed) {
+        return &timeline;
+      }
+    }
+    return nullptr;
+  }
+
+  [[nodiscard]] auto resolve_from_timelines() -> bool {
+    bool ok = true;
+    for (Shot& shot : m_spec.shots) {
+      if (!shot.start_on.has_value()) {
+        continue;
+      }
+      const MatchTimeline* timeline = timeline_for(shot.scenario, shot.seed);
+      const QString key =
+          shot.start_on->side.isEmpty()
+              ? shot.start_on->event
+              : QStringLiteral("%1:%2").arg(shot.start_on->event, shot.start_on->side);
+      const auto at = timeline != nullptr ? timeline->event_time(key) : std::nullopt;
+      if (!at.has_value()) {
+        qCritical().noquote()
+            << QStringLiteral("Promo shot '%1' starts on '%2', which never happened in "
+                              "the dry run of %3")
+                   .arg(shot.name, key, shot.scenario);
+        ok = false;
+        continue;
+      }
+      shot.start_seconds = std::max(0.0F, *at + shot.start_on->offset_seconds);
+      qInfo().noquote() << QStringLiteral("  shot %1 starts at %2 s (%3 %4 s)")
+                               .arg(shot.name)
+                               .arg(QString::number(shot.start_seconds, 'f', 1))
+                               .arg(key)
+                               .arg(QString::number(
+                                   shot.start_on->offset_seconds, 'f', 1));
+    }
+    if (m_spec.require_decision) {
+      for (const MatchTimeline& timeline : m_timelines) {
+        if (timeline.tracked && !timeline.decided) {
+          qCritical().noquote()
+              << QStringLiteral("Promo spec requires a decision, but %1 (seed %2) ran "
+                                "%3 s without one; not recording a stalemate")
+                     .arg(timeline.scenario)
+                     .arg(timeline.seed)
+                     .arg(QString::number(timeline.elapsed_seconds, 'f', 0));
+          ok = false;
+        }
+      }
+    }
+    return ok;
+  }
+
+  void write_timelines() const {
+    QJsonArray matches;
+    for (const MatchTimeline& timeline : m_timelines) {
+      QJsonArray events;
+      for (const auto& [name, at] : timeline.events) {
+        events.append(QJsonObject{{QStringLiteral("event"), name},
+                                  {QStringLiteral("at"), static_cast<double>(at)}});
+      }
+      QJsonArray sides;
+      for (const auto& side : timeline.sides) {
+        sides.append(QJsonObject{
+            {QStringLiteral("label"), side.label},
+            {QStringLiteral("owner_id"), side.owner_id},
+            {QStringLiteral("units_produced"), side.units_produced},
+            {QStringLiteral("peak_units"), side.peak_units},
+            {QStringLiteral("peak_soldiers"), side.peak_soldiers},
+            {QStringLiteral("buildings_constructed"), side.buildings_constructed},
+            {QStringLiteral("peak_buildings"), side.peak_buildings},
+            {QStringLiteral("living_units"), side.living_units},
+            {QStringLiteral("living_buildings"), side.living_buildings},
+            {QStringLiteral("seconds_attacking"),
+             static_cast<double>(side.seconds_attacking)},
+            {QStringLiteral("eliminated_at"), static_cast<double>(side.eliminated_at)},
+            {QStringLiteral("strategy"), side.strategy},
+            {QStringLiteral("posture"), side.posture}});
+      }
+      matches.append(QJsonObject{
+          {QStringLiteral("scenario"), timeline.scenario},
+          {QStringLiteral("seed"), timeline.seed},
+          {QStringLiteral("elapsed_seconds"),
+           static_cast<double>(timeline.elapsed_seconds)},
+          {QStringLiteral("decided"), timeline.decided},
+          {QStringLiteral("victor"), timeline.victor},
+          {QStringLiteral("decided_at"), static_cast<double>(timeline.decided_at)},
+          {QStringLiteral("events"), events},
+          {QStringLiteral("sides"), sides}});
+    }
+    QFile file(
+        QDir(m_options.output_directory).filePath(QStringLiteral("timeline.json")));
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+      file.write(QJsonDocument(QJsonObject{{QStringLiteral("id"), m_spec.id},
+                                           {QStringLiteral("matches"), matches}})
+                     .toJson(QJsonDocument::Indented));
+    }
+  }
+
+  void finish_precheck() {
+    write_timelines();
+    if (!resolve_from_timelines()) {
+      m_failed = true;
+      finish_run();
+      return;
+    }
+    if (m_options.precheck_only) {
+      qInfo().noquote() << QStringLiteral("Promo dry run complete; timeline in %1")
+                               .arg(QDir(m_options.output_directory).absolutePath());
+      finish_run();
+      return;
+    }
+    m_passes = plan_passes(m_spec);
+    m_pass_index = 0;
+    begin_next_pass();
   }
 
   void begin_next_pass() {
@@ -734,6 +1047,13 @@ private:
     m_card_frames_target = 0;
     m_card_image.reset();
     m_last_frame.reset();
+    m_edge_frames = 0;
+    m_worst_edge_extent = 0.0F;
+    m_floor_half_extent = 0.0F;
+    if (const auto* definition = Arena::Scenarios::find_definition(shot.scenario);
+        definition != nullptr) {
+      m_floor_half_extent = definition->arena_floor_half_extent;
+    }
     m_viewport.set_batch_fixed_step(idle_step());
     m_viewport.set_flame_card(shot.flame_card, shot.flame_speed, shot.flame_intensity);
     m_viewport.set_capture_gameplay_ui(shot.gameplay_ui && !shot.flame_card,
@@ -772,6 +1092,10 @@ private:
                    .arg(describe(m_viewport.scenario_army_center(3, 24.0F)));
       }
     }
+    if (m_precheck_active) {
+      tick_precheck(scenario_time);
+      return;
+    }
     if (!m_shot_active) {
       return;
     }
@@ -783,6 +1107,7 @@ private:
     const float shot_time = std::max(0.0F, scenario_time - shot.start_seconds);
 
     QVector3D target;
+    std::optional<GroundFootprint> footprint;
     if (shot.gameplay_camera || shot.flame_card) {
 
       m_viewport.clear_cinematic_view();
@@ -795,6 +1120,12 @@ private:
       }
       m_viewport.set_cinematic_view(
           target, pose.distance, pose.pitch, pose.yaw, pose.fov, pose.roll);
+      footprint =
+          view_ground_footprint(pose,
+                                focus + shot.focus.offset,
+                                static_cast<float>(m_spec.width) /
+                                    static_cast<float>(std::max(1, m_spec.height)),
+                                0.0F);
     }
 
     const bool in_window =
@@ -818,7 +1149,19 @@ private:
     const bool recording = in_window && m_frames_written < m_target_frames;
     m_viewport.set_capture_active(recording);
     if (m_audio != nullptr) {
-      m_audio->advance(m_shot_armed ? m_step_seconds : idle_step(), recording);
+
+      const bool time_lapse = shot.slow_motion < 1.0F;
+      const float audio_step =
+          (m_shot_armed && !time_lapse) ? m_step_seconds : idle_step();
+      m_audio->advance(audio_step, recording);
+    }
+    if (recording && footprint.has_value() && m_floor_half_extent > 0.0F &&
+        frames_world_edge(*footprint, m_floor_half_extent)) {
+      ++m_edge_frames;
+      m_worst_edge_extent = std::max(m_worst_edge_extent, footprint->max_abs_extent);
+      if (footprint->horizon_visible) {
+        m_worst_edge_extent = std::max(m_worst_edge_extent, 1e6F);
+      }
     }
 
     if (recording && !m_logged_framing) {
@@ -993,6 +1336,9 @@ private:
       }
       m_viewport.paint_capture_gameplay_ui(output);
     }
+    if (current_shot().casting_overlay && !current_shot().flame_card) {
+      paint_casting_overlay(output, m_viewport.casting_snapshot());
+    }
 
     QString error;
     if (!m_encoder->write_frame(output, &error)) {
@@ -1104,6 +1450,29 @@ private:
     result.scene_duration = static_cast<float>(m_frames_written) * m_step_seconds;
     result.clip_duration =
         static_cast<float>(m_frames_written) / static_cast<float>(m_spec.fps);
+    result.edge_frames = m_edge_frames;
+    result.worst_edge_extent = m_worst_edge_extent;
+    if (m_edge_frames > 0) {
+      const QString what =
+          m_worst_edge_extent >= 1e6F
+              ? QStringLiteral("sees over the horizon")
+              : QStringLiteral("reaches %1 m from the centre, past the %2 m floor")
+                    .arg(QString::number(m_worst_edge_extent, 'f', 1))
+                    .arg(QString::number(m_floor_half_extent, 'f', 1));
+      const QString message =
+          QStringLiteral("Promo shot '%1' shows the world edge in %2 of %3 frames: the "
+                         "view %4")
+              .arg(shot.name)
+              .arg(m_edge_frames)
+              .arg(m_frames_written)
+              .arg(what);
+      if (m_spec.forbid_world_edge) {
+        qCritical().noquote() << message;
+        m_failed = true;
+      } else {
+        qWarning().noquote() << message;
+      }
+    }
     if (m_options.write_posters && m_last_frame.has_value()) {
       result.poster_path =
           QDir(m_options.output_directory)
@@ -1168,7 +1537,8 @@ private:
                                         : QFileInfo(result.poster_path).fileName()},
           {QStringLiteral("frames"), result.frames},
           {QStringLiteral("scene_seconds"), result.scene_duration},
-          {QStringLiteral("clip_seconds"), result.clip_duration}});
+          {QStringLiteral("clip_seconds"), result.clip_duration},
+          {QStringLiteral("edge_frames"), result.edge_frames}});
     }
     const QJsonObject manifest{{QStringLiteral("id"), m_spec.id},
                                {QStringLiteral("title"), m_spec.title},
@@ -1183,9 +1553,18 @@ private:
   }
 
   ArenaViewport& m_viewport;
-  const Spec& m_spec;
+  Spec m_spec;
   RunOptions m_options;
   std::vector<CapturePass> m_passes;
+  std::vector<std::pair<QString, int>> m_precheck_targets;
+  std::vector<MatchTimeline> m_timelines;
+  std::map<int, int> m_precheck_peak_buildings;
+  std::size_t m_precheck_index{0};
+  int m_precheck_frames{0};
+  bool m_precheck_active{false};
+  int m_edge_frames{0};
+  float m_worst_edge_extent{0.0F};
+  float m_floor_half_extent{0.0F};
   std::unique_ptr<VideoEncoder> m_encoder;
   std::vector<ShotResult> m_results;
   std::optional<QImage> m_last_frame;

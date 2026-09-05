@@ -20,6 +20,9 @@ public:
 
   [[nodiscard]] auto can_run_concurrently() const -> bool override { return false; }
 
+  [[nodiscard]] auto
+  yields_to_exclusive(const AIContext& context) const -> bool override;
+
 private:
   float m_attack_timer = 0.0F;
   Engine::Core::EntityID m_last_target = 0;
