@@ -189,7 +189,7 @@ auto RiggedMeshCache::create_rigged_asset(
                                                                     lod);
 
   const BaseMeshKey base_key{&spec, lod, skin_species_id};
-  const AttachmentMeshKey attachment_key{&spec, skin_species_id, attachments_hash};
+  const AttachmentMeshKey attachment_key{&spec, lod, skin_species_id, attachments_hash};
   const bool base_is_cached = m_base_meshes.find(base_key) != m_base_meshes.end();
   const bool attachments_are_cached =
       attachments.empty() || m_attachment_meshes.contains(attachment_key);
@@ -233,6 +233,7 @@ auto RiggedMeshCache::create_rigged_asset(
         Render::Creature::BakeInput input{};
         input.bind_pose = rest_palette;
         input.attachments = attachments;
+        input.lod = lod;
         attachment_it->second = std::shared_ptr<RiggedMesh>(
             Render::Creature::bake_rigged_mesh(input).release());
       }

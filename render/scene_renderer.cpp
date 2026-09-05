@@ -278,6 +278,13 @@ void Renderer::end_frame() {
           static_cast<std::uint64_t>(stats.rigged_instanced_instances);
       profile.rigged_single_draws =
           static_cast<std::uint64_t>(stats.rigged_single_draws);
+      profile.triangles_by_type = stats.triangles_by_type;
+      profile.triangles = 0;
+      profile.instances = 0;
+      for (std::size_t i = 0; i < stats.triangles_by_type.size(); ++i) {
+        profile.triangles += stats.triangles_by_type[i];
+        profile.instances += stats.instances_by_type[i];
+      }
     }
     constexpr double k_frame_budget_ms = 16.67;
     profile.budget_headroom_ms =

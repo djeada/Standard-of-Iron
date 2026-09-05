@@ -14,6 +14,7 @@
 #include "gl/buffer.h"
 #include "gl_lifetime.h"
 #include "platform_gl.h"
+#include "render/gl/draw_tally.h"
 #include "render_constants.h"
 #include "vertex_attrib_layout.h"
 
@@ -130,6 +131,7 @@ void Mesh::draw() {
   }
   glDrawElements(
       GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()), GL_UNSIGNED_INT, nullptr);
+  tally_draw(m_indices.size());
 
   m_vao->unbind();
 
@@ -153,6 +155,7 @@ void Mesh::draw_instanced(std::size_t instance_count) {
                           GL_UNSIGNED_INT,
                           nullptr,
                           static_cast<GLsizei>(instance_count));
+  tally_draw(m_indices.size(), instance_count);
 
   m_vao->unbind();
 
@@ -178,6 +181,7 @@ void Mesh::draw_instanced_raw(std::size_t instance_count) {
                           GL_UNSIGNED_INT,
                           nullptr,
                           static_cast<GLsizei>(instance_count));
+  tally_draw(m_indices.size(), instance_count);
 #ifndef NDEBUG
   GLenum const err = glGetError();
   if (err != GL_NO_ERROR) {
