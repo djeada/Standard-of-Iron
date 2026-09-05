@@ -9,6 +9,7 @@ A pull request is responsible for regressions it introduces, not policy debt
 already present on its target branch. Each failing head check is therefore run
 against the resolved base ref too: an identical base failure is reported as
 inherited debt and does not block the PR; a new or changed failure still fails.
+Release/tag runs remain strict because they have no pull-request base ref.
 """
 
 from __future__ import annotations
@@ -126,7 +127,7 @@ def resolve_base(root: Path, explicit: str | None) -> tuple[str | None, str]:
                     ("HEAD^1", "pull-request merge parent fallback"),
                 ]
             )
-        else:
+        elif os.environ.get("GITHUB_ACTIONS") != "true":
             candidates.extend(
                 [
                     ("origin/main", "origin/main fallback"),
@@ -197,7 +198,9 @@ def normalize_output(output: str, roots: tuple[Path, ...]) -> str:
     return normalized
 
 
-def materialize_base(root: Path, base_ref: str | None) -> tuple[tempfile.TemporaryDirectory[str] | None, Path | None]:
+def materialize_base(
+    root: Path, base_ref: str | None
+) -> tuple[tempfile.TemporaryDirectory[str] | None, Path | None]:
     if base_ref is None:
         return None, None
 
