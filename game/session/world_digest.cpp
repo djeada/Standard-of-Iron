@@ -45,6 +45,16 @@ struct EntityLine {
   std::int64_t yaw = 0;
   int health = 0;
   int max_health = 0;
+
+  std::int64_t goal_x = 0;
+  std::int64_t goal_z = 0;
+  std::int64_t path_index = -1;
+  int movement_state = -1;
+  Engine::Core::EntityID attack_target = 0;
+  std::int64_t attack_cooldown = -1;
+  std::int64_t production_remaining = -1;
+  int production_queue = -1;
+  int produced_count = -1;
 };
 
 auto collect(const Engine::Core::World& world) -> std::vector<EntityLine> {
@@ -65,6 +75,26 @@ auto collect(const Engine::Core::World& world) -> std::vector<EntityLine> {
       line.kind = static_cast<int>(unit->spawn_type);
       line.health = unit->health;
       line.max_health = unit->max_health;
+    }
+    if (const auto* movement =
+            entity.get_component<Engine::Core::MovementComponent>()) {
+      line.goal_x = quantise(movement->get_goal_x());
+      line.goal_z = quantise(movement->get_goal_y());
+      line.path_index = static_cast<std::int64_t>(movement->get_path_index());
+      line.movement_state = static_cast<int>(movement->get_state());
+    }
+    if (const auto* target =
+            entity.get_component<Engine::Core::AttackTargetComponent>()) {
+      line.attack_target = target->target_id;
+    }
+    if (const auto* attack = entity.get_component<Engine::Core::AttackComponent>()) {
+      line.attack_cooldown = quantise(attack->time_since_last);
+    }
+    if (const auto* production =
+            entity.get_component<Engine::Core::ProductionComponent>()) {
+      line.production_remaining = quantise(production->time_remaining);
+      line.production_queue = static_cast<int>(production->production_queue.size());
+      line.produced_count = production->produced_count;
     }
     lines.push_back(line);
   });
@@ -87,6 +117,16 @@ auto world_digest(const Engine::Core::World& world) -> std::uint64_t {
     mix(digest, static_cast<std::uint64_t>(line.z));
     mix(digest, static_cast<std::uint64_t>(line.yaw));
     mix(digest, static_cast<std::uint64_t>(line.health));
+    mix(digest, static_cast<std::uint64_t>(line.max_health));
+    mix(digest, static_cast<std::uint64_t>(line.goal_x));
+    mix(digest, static_cast<std::uint64_t>(line.goal_z));
+    mix(digest, static_cast<std::uint64_t>(line.path_index));
+    mix(digest, static_cast<std::uint64_t>(line.movement_state));
+    mix(digest, static_cast<std::uint64_t>(line.attack_target));
+    mix(digest, static_cast<std::uint64_t>(line.attack_cooldown));
+    mix(digest, static_cast<std::uint64_t>(line.production_remaining));
+    mix(digest, static_cast<std::uint64_t>(line.production_queue));
+    mix(digest, static_cast<std::uint64_t>(line.produced_count));
   }
   return digest;
 }

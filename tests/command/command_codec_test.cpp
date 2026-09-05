@@ -1,5 +1,6 @@
 #include <QFile>
 #include <QJsonDocument>
+#include <QJsonObject>
 #include <QTemporaryDir>
 
 #include <gtest/gtest.h>
@@ -245,19 +246,85 @@ TEST(ReplayTest, RecordsWhatTheQueueAcceptedAndPlaysItBackOnTheSameTicks) {
   EXPECT_EQ(queue.pending(), 1U);
 }
 
+namespace {
+
+auto write_replay(const QString& path,
+                  const QJsonObject& header,
+                  const QByteArray& body) -> bool {
+  QFile file(path);
+  if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    return false;
+  }
+  file.write(QJsonDocument(header).toJson(QJsonDocument::Compact));
+  file.write("\n");
+  file.write(body);
+  return true;
+}
+
+} // namespace
+
 TEST(ReplayTest, RefusesAFileWithALineItCannotApply) {
   QTemporaryDir dir;
   const QString path = dir.filePath("bad.soireplay");
-  {
-    QFile file(path);
-    ASSERT_TRUE(file.open(QIODevice::WriteOnly | QIODevice::Text));
-    file.write("{\"replay_format\":1,\"kind\":\"skirmish\"}\n");
-    file.write("{\"type\":\"teleport\",\"source\":\"ai\",\"owner\":1,\"tick\":3,"
-               "\"payload\":{}}\n");
-  }
+  Game::Command::ReplayHeader header;
+  header.kind = QStringLiteral("skirmish");
+  ASSERT_TRUE(write_replay(path,
+                           header.to_json(),
+                           "{\"type\":\"teleport\",\"source\":\"ai\",\"owner\":1,"
+                           "\"tick\":3,\"payload\":{}}\n"));
   QString error;
   EXPECT_FALSE(Game::Command::ReplayFile::load(path, &error).has_value());
   EXPECT_TRUE(error.contains("bad.soireplay:2")) << error.toStdString();
+}
+
+TEST(ReplayTest, RefusesAFileRecordedByAnotherSimulationBuild) {
+  QTemporaryDir dir;
+  const QString path = dir.filePath("other-build.soireplay");
+  Game::Command::ReplayHeader header;
+  header.kind = QStringLiteral("skirmish");
+  header.build_id = QStringLiteral("0000deadbeef");
+  ASSERT_TRUE(write_replay(path, header.to_json(), ""));
+  QString error;
+  EXPECT_FALSE(Game::Command::ReplayFile::load(path, &error).has_value());
+  EXPECT_TRUE(error.contains("simulation build")) << error.toStdString();
+}
+
+TEST(ReplayTest, RefusesAFileRecordedAgainstOtherContent) {
+  QTemporaryDir dir;
+  const QString path = dir.filePath("other-content.soireplay");
+  Game::Command::ReplayHeader header;
+  header.kind = QStringLiteral("skirmish");
+  header.content_digest = QStringLiteral("00000000cafef00d");
+  ASSERT_TRUE(write_replay(path, header.to_json(), ""));
+  QString error;
+  EXPECT_FALSE(Game::Command::ReplayFile::load(path, &error).has_value());
+  EXPECT_TRUE(error.contains("content")) << error.toStdString();
+}
+
+TEST(ReplayTest, AcceptsAHeaderRecordedBeforeFingerprintsExisted) {
+  QTemporaryDir dir;
+  const QString path = dir.filePath("legacy.soireplay");
+  QJsonObject header;
+  header["replay_format"] = Game::Command::k_replay_format_version;
+  header["kind"] = QStringLiteral("skirmish");
+  ASSERT_TRUE(write_replay(path, header, ""));
+  QString error;
+  const auto loaded = Game::Command::ReplayFile::load(path, &error);
+  EXPECT_TRUE(loaded.has_value()) << error.toStdString();
+}
+
+TEST(ReplayTest, RoundTripsItsOwnHeader) {
+  QTemporaryDir dir;
+  const QString path = dir.filePath("own.soireplay");
+  Game::Command::ReplayHeader header;
+  header.kind = QStringLiteral("skirmish");
+  header.reference = QStringLiteral("map");
+  ASSERT_TRUE(write_replay(path, header.to_json(), ""));
+  QString error;
+  const auto loaded = Game::Command::ReplayFile::load(path, &error);
+  ASSERT_TRUE(loaded.has_value()) << error.toStdString();
+  EXPECT_EQ(loaded->header.build_id, Game::Command::simulation_build_id());
+  EXPECT_EQ(loaded->header.content_digest, Game::Command::simulation_content_digest());
 }
 
 } // namespace

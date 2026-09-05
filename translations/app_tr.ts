@@ -2460,6 +2460,10 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>Not enough reserve — build a home to raise more families.</source>
         <translation>Yeterli yedek yok — daha çok aile yetiştirmek için bir ev inşa et.</translation>
     </message>
+    <message>
+        <source>The previous frame is still running; the match could not be changed. Please try again.</source>
+        <translation>Önceki kare hâlâ çalışıyor; maç değiştirilemedi. Lütfen tekrar deneyin.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -7935,6 +7939,10 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <message>
         <source>No target under the cursor</source>
         <translation>İmlecin altında hedef yok</translation>
+    </message>
+    <message>
+        <source>Save: the match advanced while it was being captured. Please try again.</source>
+        <translation>Kaydetme: maç yakalanırken ilerledi. Lütfen tekrar deneyin.</translation>
     </message>
 </context>
 <context>

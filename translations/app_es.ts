@@ -2460,6 +2460,10 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>Not enough reserve — build a home to raise more families.</source>
         <translation>No hay suficiente reserva — construye una casa para criar más familias.</translation>
     </message>
+    <message>
+        <source>The previous frame is still running; the match could not be changed. Please try again.</source>
+        <translation>El fotograma anterior aún se está ejecutando; no se pudo cambiar la partida. Inténtalo de nuevo.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -7938,6 +7942,10 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     <message>
         <source>Turns the structure or wall you are placing clockwise. The mouse wheel does the same.</source>
         <translation>Gira en sentido horario la estructura o muralla que estás colocando. La rueda del ratón hace lo mismo.</translation>
+    </message>
+    <message>
+        <source>Save: the match advanced while it was being captured. Please try again.</source>
+        <translation>Guardar: la partida avanzó mientras se capturaba. Inténtalo de nuevo.</translation>
     </message>
 </context>
 <context>

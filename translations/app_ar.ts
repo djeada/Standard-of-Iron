@@ -2460,6 +2460,10 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Not enough reserve — build a home to raise more families.</source>
         <translation>الاحتياطي غير كافٍ — ابنِ منزلًا لتربية المزيد من الأسر.</translation>
     </message>
+    <message>
+        <source>The previous frame is still running; the match could not be changed. Please try again.</source>
+        <translation>الإطار السابق لا يزال قيد التنفيذ؛ لم يتم تغيير المعركة. الرجاء المحاولة مرة أخرى.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -7950,6 +7954,10 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Turns the structure or wall you are placing clockwise. The mouse wheel does the same.</source>
         <translation>يدير المبنى أو السور الذي تضعه في اتجاه عقارب الساعة. عجلة الفأرة تفعل الشيء نفسه.</translation>
+    </message>
+    <message>
+        <source>Save: the match advanced while it was being captured. Please try again.</source>
+        <translation>الحفظ: تقدّمت المعركة أثناء التقاطها. الرجاء المحاولة مرة أخرى.</translation>
     </message>
 </context>
 <context>

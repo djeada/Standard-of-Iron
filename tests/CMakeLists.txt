@@ -336,6 +336,7 @@ add_executable(
     persistence_tests
     save/snapshot_contract_test.cpp
     core/serialization_test.cpp
+    core/save_capture_coherence_test.cpp
     core/commander_state_round_trip_test.cpp
     db/save_storage_test.cpp
     db/save_format_test.cpp
@@ -565,6 +566,7 @@ add_executable(
     core/order_feedback_test.cpp
     core/rts_action_model_test.cpp
     core/runtime_frame_orchestrator_test.cpp
+    core/frame_barrier_test.cpp
     core/game_speed_test.cpp
     core/match_setup_maps_test.cpp
     core/camera_framing_test.cpp

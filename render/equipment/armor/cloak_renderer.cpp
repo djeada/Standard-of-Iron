@@ -111,11 +111,14 @@ auto make_double_sided_cloth_mesh(const ClothSurface& surface)
   }
 
   std::vector<QVector3D> const normals = build_normals(surface);
+
+  constexpr float k_half_thickness = 0.003F;
   vertices.reserve(surface.positions.size() * 2U);
   indices.reserve(surface.indices.size() * 2U);
 
   for (std::size_t i = 0; i < surface.positions.size(); ++i) {
-    QVector3D const& pos = surface.positions[i];
+    QVector3D const pos =
+        surface.positions[i] + QVector3D(0.0F, k_half_thickness, 0.0F);
     QVector3D const& normal = normals[i];
     QVector2D const& uv = surface.uvs[i];
     vertices.push_back({{pos.x(), pos.y(), pos.z()},
@@ -127,7 +130,8 @@ auto make_double_sided_cloth_mesh(const ClothSurface& surface)
 
   auto const backface_base = static_cast<unsigned int>(surface.positions.size());
   for (std::size_t i = 0; i < surface.positions.size(); ++i) {
-    QVector3D const& pos = surface.positions[i];
+    QVector3D const pos =
+        surface.positions[i] - QVector3D(0.0F, k_half_thickness, 0.0F);
     QVector3D const back_normal = -normals[i];
     QVector2D const& uv = surface.uvs[i];
     vertices.push_back({{pos.x(), pos.y(), pos.z()},

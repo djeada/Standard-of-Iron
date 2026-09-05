@@ -2460,6 +2460,10 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <source>Not enough reserve — build a home to raise more families.</source>
         <translation>Za mało rezerwy — zbuduj dom, by przybyło rodzin.</translation>
     </message>
+    <message>
+        <source>The previous frame is still running; the match could not be changed. Please try again.</source>
+        <translation>Poprzednia klatka jeszcze się wykonuje; nie udało się zmienić rozgrywki. Spróbuj ponownie.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -7941,6 +7945,10 @@ Szerokie pole widzenia i trwała kotwica osady</translation>
     <message>
         <source>No target under the cursor</source>
         <translation>Pod kursorem nie ma celu</translation>
+    </message>
+    <message>
+        <source>Save: the match advanced while it was being captured. Please try again.</source>
+        <translation>Zapis: rozgrywka posunęła się w trakcie zapisywania stanu. Spróbuj ponownie.</translation>
     </message>
 </context>
 <context>
