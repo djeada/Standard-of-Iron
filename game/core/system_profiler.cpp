@@ -11,10 +11,9 @@ void SystemProfiler::begin_tick(std::uint64_t tick_index, std::size_t entity_cou
   if (!m_enabled) {
     return;
   }
+  m_last_tick = TickSummary{};
   m_last_tick.tick_index = tick_index;
   m_last_tick.entity_count = entity_count;
-  m_last_tick.queries = {};
-  m_last_tick.total_us = 0;
 }
 
 void SystemProfiler::record_system(std::size_t slot,
@@ -52,12 +51,16 @@ void SystemProfiler::record_system(std::size_t slot,
   m_last_tick.queries.spatial_candidates += delta.spatial_candidates;
 }
 
-void SystemProfiler::end_tick(std::uint64_t total_us) {
+void SystemProfiler::end_tick(const TickTiming& timing) {
   if (!m_enabled) {
     return;
   }
-  m_last_tick.total_us = total_us;
-  m_tick_us.push(static_cast<double>(total_us));
+  m_last_tick.total_us = timing.total_us;
+  m_last_tick.systems_us = timing.systems_us;
+  m_last_tick.presentation_us = timing.presentation_us;
+  m_last_tick.publication_us = timing.publication_us;
+  m_last_tick.lock_wait_us = timing.lock_wait_us;
+  m_tick_us.push(static_cast<double>(timing.total_us));
   ++m_ticks;
 }
 
@@ -181,11 +184,17 @@ auto SystemProfiler::format_report() const -> std::string {
   std::snprintf(line,
                 sizeof(line),
                 "\nlast tick %llu: %llu entities, %llu us total\n"
+                "  systems %llu us  presentation %llu us  publication %llu us  "
+                "entity lock wait %llu us\n"
                 "  views %llu (%llu candidates)  collects %llu (%llu entities)\n"
                 "  spatial queries %llu (%llu candidates, %.1f per query)\n",
                 static_cast<unsigned long long>(m_last_tick.tick_index),
                 static_cast<unsigned long long>(m_last_tick.entity_count),
                 static_cast<unsigned long long>(m_last_tick.total_us),
+                static_cast<unsigned long long>(m_last_tick.systems_us),
+                static_cast<unsigned long long>(m_last_tick.presentation_us),
+                static_cast<unsigned long long>(m_last_tick.publication_us),
+                static_cast<unsigned long long>(m_last_tick.lock_wait_us),
                 static_cast<unsigned long long>(queries.views),
                 static_cast<unsigned long long>(queries.view_candidates),
                 static_cast<unsigned long long>(queries.collects),

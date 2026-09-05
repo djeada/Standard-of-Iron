@@ -25,7 +25,11 @@ constexpr std::array<std::string_view, NavProfile::k_count> k_names{
     "grid_rebuilds",
     "requests_queued",
     "requests_dropped",
-    "lock_wait_us"};
+    "lock_wait_us",
+    "route_cache_evictions",
+    "route_cache_kept",
+    "route_cache_flushes",
+    "region_map_rebuilds"};
 
 } // namespace
 

@@ -309,8 +309,10 @@ auto resolve_mesh_blend(const PrimitiveInstance& prim,
   }
 }
 
-auto transform_normal(const QMatrix4x4& m, const QVector3D& n) -> QVector3D {
-  QVector3D const mapped = m.mapVector(n);
+auto transform_normal(const QMatrix3x3& m, const QVector3D& n) -> QVector3D {
+  QVector3D const mapped(m(0, 0) * n.x() + m(0, 1) * n.y() + m(0, 2) * n.z(),
+                         m(1, 0) * n.x() + m(1, 1) * n.y() + m(1, 2) * n.z(),
+                         m(2, 0) * n.x() + m(2, 1) * n.y() + m(2, 2) * n.z());
   float const len_sq =
       mapped.x() * mapped.x() + mapped.y() * mapped.y() + mapped.z() * mapped.z();
   if (len_sq <= 1e-20F) {
@@ -325,6 +327,8 @@ void append_primitive_vertices(const PrimitiveInstance& prim,
                                const QMatrix4x4& unit_model,
                                std::span<const BoneWorldMatrix> bind_pose,
                                BakedRiggedMeshCpu& out) {
+
+  auto const normal_matrix = unit_model.normalMatrix();
   auto const& src_verts = unit_mesh.get_vertices();
   auto const& src_idx = unit_mesh.get_indices();
   if (src_verts.empty() || src_idx.empty()) {
@@ -342,7 +346,7 @@ void append_primitive_vertices(const PrimitiveInstance& prim,
     QVector3D const local_pos{v.position[0], v.position[1], v.position[2]};
     QVector3D const local_norm{v.normal[0], v.normal[1], v.normal[2]};
     QVector3D const world_pos = unit_model.map(local_pos);
-    QVector3D const world_norm = transform_normal(unit_model, local_norm);
+    QVector3D const world_norm = transform_normal(normal_matrix, local_norm);
 
     RiggedVertex rv;
     rv.position_bone_local = {world_pos.x(), world_pos.y(), world_pos.z()};
@@ -476,13 +480,14 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
 
     auto const base_vertex = static_cast<std::uint32_t>(out.vertices.size());
     auto const bone = static_cast<std::uint8_t>(spec.socket_bone_index & 0xFFU);
+    auto const normal_matrix = attach_model.normalMatrix();
 
     out.vertices.reserve(out.vertices.size() + src_verts.size());
     for (Render::GL::Vertex const& v : src_verts) {
       QVector3D const local_pos{v.position[0], v.position[1], v.position[2]};
       QVector3D const local_norm{v.normal[0], v.normal[1], v.normal[2]};
       QVector3D const baked_pos = attach_model.map(local_pos);
-      QVector3D const baked_norm = transform_normal(attach_model, local_norm);
+      QVector3D const baked_norm = transform_normal(normal_matrix, local_norm);
 
       RiggedVertex rv;
       rv.position_bone_local = {baked_pos.x(), baked_pos.y(), baked_pos.z()};

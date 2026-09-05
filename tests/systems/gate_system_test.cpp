@@ -131,12 +131,14 @@ void expect_passage_on_gate(const NavigationPassage& passage,
 
 } // namespace
 
-TEST_F(GateSystemTest, GateFootprintMatchesWallSegment) {
+TEST_F(GateSystemTest, GateFootprintSpansTheWallLineItInterrupts) {
   const auto gate = BuildingCollisionRegistry::get_building_size("wall_gate");
   const auto wall = BuildingCollisionRegistry::get_building_size("wall_segment");
 
-  EXPECT_FLOAT_EQ(gate.width, wall.width);
-  EXPECT_FLOAT_EQ(gate.depth, wall.depth);
+  EXPECT_GT(gate.width, wall.width);
+  EXPECT_GE(gate.depth, wall.depth);
+  EXPECT_FLOAT_EQ(gate.width, GateComponent::k_structure_half_span * 2.0F);
+  EXPECT_FLOAT_EQ(gate.depth, GateComponent::k_cross_half_extent * 2.0F);
 }
 
 TEST_F(GateSystemTest, GatehouseIsSolidAcrossThreeCellsAndOpensOnlyInTheMiddle) {

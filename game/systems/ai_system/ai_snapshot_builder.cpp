@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -85,18 +86,70 @@ auto collect_vision_sources(const std::vector<Engine::Core::Entity*>& entities)
   return sources;
 }
 
-auto is_visible_to_sources(const Engine::Core::TransformComponent& transform,
-                           const std::vector<VisionSource>& sources) -> bool {
-  for (const auto& source : sources) {
-    const float dx = transform.position.x - source.x;
-    const float dz = transform.position.z - source.z;
-    const float dist_sq = dx * dx + dz * dz;
-    if (dist_sq <= source.radius_sq) {
-      return true;
-    }
+class PointGrid {
+public:
+  explicit PointGrid(float cell_size)
+      : m_cell(std::max(cell_size, 1.0F)) {}
+
+  void insert(float x, float z, std::size_t index) {
+    m_cells[pack(cell_of(x), cell_of(z))].push_back(index);
   }
 
-  return false;
+  template <typename Fn>
+  auto any_near(float x, float z, Fn&& fn) const -> bool {
+    const int center_x = cell_of(x);
+    const int center_z = cell_of(z);
+    for (int dz = -1; dz <= 1; ++dz) {
+      for (int dx = -1; dx <= 1; ++dx) {
+        const auto found = m_cells.find(pack(center_x + dx, center_z + dz));
+        if (found == m_cells.end()) {
+          continue;
+        }
+        for (const std::size_t index : found->second) {
+          if (fn(index)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+private:
+  [[nodiscard]] auto cell_of(float value) const -> int {
+    return static_cast<int>(std::floor(value / m_cell));
+  }
+  static auto pack(int x, int z) -> std::int64_t {
+    return (static_cast<std::int64_t>(x) << 32) ^ static_cast<std::uint32_t>(z);
+  }
+
+  float m_cell;
+  std::unordered_map<std::int64_t, std::vector<std::size_t>> m_cells;
+};
+
+auto build_vision_grid(const std::vector<VisionSource>& sources) -> PointGrid {
+  float widest = 1.0F;
+  for (const auto& source : sources) {
+    widest = std::max(widest, std::sqrt(source.radius_sq));
+  }
+  PointGrid grid(widest);
+  for (std::size_t index = 0; index < sources.size(); ++index) {
+    grid.insert(sources[index].x, sources[index].z, index);
+  }
+  return grid;
+}
+
+auto is_visible_to_sources(const Engine::Core::TransformComponent& transform,
+                           const std::vector<VisionSource>& sources,
+                           const PointGrid& grid) -> bool {
+  const float x = transform.position.x;
+  const float z = transform.position.z;
+  return grid.any_near(x, z, [&](std::size_t index) {
+    const VisionSource& source = sources[index];
+    const float dx = x - source.x;
+    const float dz = z - source.z;
+    return (dx * dx + dz * dz) <= source.radius_sq;
+  });
 }
 
 } // namespace
@@ -154,6 +207,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     snapshot.map_max_z = half_h * tile;
   }
   const auto vision_sources = collect_vision_sources(friendlies);
+  const PointGrid vision_grid = build_vision_grid(vision_sources);
   snapshot.friendly_units.reserve(friendlies.size());
 
   for (auto* entity : friendlies) {
@@ -334,7 +388,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       snapshot.strategic_objectives.push_back(std::move(objective));
     }
 
-    if (!is_visible_to_sources(*transform, vision_sources)) {
+    if (!is_visible_to_sources(*transform, vision_sources, vision_grid)) {
       continue;
     }
 
@@ -356,21 +410,24 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
 
   const float engaged_radius_sq =
       Game::Systems::AI::k_engaged_radius * Game::Systems::AI::k_engaged_radius;
+  PointGrid engagement_grid(Game::Systems::AI::k_engaged_radius);
+  for (std::size_t index = 0; index < snapshot.visible_enemies.size(); ++index) {
+    const auto& enemy = snapshot.visible_enemies[index];
+    if (enemy.is_building) {
+      continue;
+    }
+    engagement_grid.insert(enemy.pos_x, enemy.pos_z, index);
+  }
   for (auto& friendly : snapshot.friendly_units) {
     friendly.engagement_resolved = true;
-    friendly.engaged = false;
-    for (const auto& enemy : snapshot.visible_enemies) {
-      if (enemy.is_building) {
-        continue;
-      }
-      const float dx = enemy.pos_x - friendly.pos_x;
-      const float dy = enemy.pos_y - friendly.pos_y;
-      const float dz = enemy.pos_z - friendly.pos_z;
-      if ((dx * dx + dy * dy + dz * dz) <= engaged_radius_sq) {
-        friendly.engaged = true;
-        break;
-      }
-    }
+    friendly.engaged = engagement_grid.any_near(
+        friendly.pos_x, friendly.pos_z, [&](std::size_t index) {
+          const auto& enemy = snapshot.visible_enemies[index];
+          const float dx = enemy.pos_x - friendly.pos_x;
+          const float dy = enemy.pos_y - friendly.pos_y;
+          const float dz = enemy.pos_z - friendly.pos_z;
+          return (dx * dx + dy * dy + dz * dz) <= engaged_radius_sq;
+        });
   }
 
   return snapshot;

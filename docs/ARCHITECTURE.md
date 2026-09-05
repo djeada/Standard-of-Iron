@@ -55,9 +55,10 @@ Dependencies point downwards only. Each arrow is a CMake link edge, so a
 violation is a build failure rather than a review comment.
 
 `game_sim` links every kernel target below it PUBLIC, so linking `game_sim`
-still means "the whole simulation kernel". `game_systems` is an INTERFACE target
+still means "the whole simulation kernel". `render_gl` links `game_sim`, not the
+whole gameplay stack. `game_systems` is an INTERFACE target
 that pulls in the whole gameplay stack — kernel, AI, missions, save stack — at
-once. It exists for consumers that genuinely want all of it — the renderer, the
+once. It exists for consumers that genuinely want all of it — the
 arena. New code should name the domains it uses instead: linking `game_systems`
 puts the AI and the save database into a binary that may need neither, and the
 link line stops being a statement about what that binary depends on.
@@ -807,12 +808,19 @@ merely moved:
 
 These are real and deliberate, not oversights:
 
-- 65 call sites still reach per-match state through the ambient `instance()`
-  accessors rather than a named service. `app/`, `ui/`, `render/`, `tools/` and
-  the `game/` modules above the session are at zero and pinned there by
-  `scripts/ambient_instance_budget.json`; what is left is 35 in `game/systems`
-  and 30 spread across `game/map`, `game/units`, `game/formation` and
-  `game/wildlife`.
+- 58 call sites still reach per-match state through the ambient `instance()`
+  accessors rather than a named service, budgeted per directory in
+  `scripts/ambient_instance_budget.json`: `game/systems` 24, `game/map` 14, `game/units` 9, `game/formation` 4, `game/wildlife` 3, `app/world` 2, `game/core` 1, `game/visuals` 1. `ui/`, `render/`,
+  `tools/` and the `game/` modules above the session are at zero and pinned
+  there. `app/` is not: `app/world` still holds two, so "zero in the app" is a
+  goal rather than a fact. `scripts/check-architecture-doc.py` fails when these
+  numbers drift from the budgets, so the sentence you are reading is checked
+  rather than remembered.
+- 76 full-world entity scans remain, of which 19 sit inside a loop
+  body. `scripts/check-world-scans.py` budgets the first number per directory
+  and refuses a new entry in the second; both are heuristics over source text,
+  so passing them is evidence that no _new_ scan was introduced in a recognised
+  spelling, not proof that every costly query is covered.
 - `NavGrid` is the largest single reason the last of those cannot be converted.
   It is a `static std::unique_ptr<Pathfinding>` process global with an entirely
   static API and roughly eighty `NavGrid::initialize` call sites, and

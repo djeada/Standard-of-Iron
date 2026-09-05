@@ -2682,6 +2682,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       float x{};
       float facing{};
     };
+
+    s.owner_teams = {{.owner_id = 1, .team_id = 1},
+                     {.owner_id = 2, .team_id = 1},
+                     {.owner_id = 3, .team_id = 1}};
     const HealerLineupEntry entries[] = {
         {"roman_front", Troop::Healer, Nation::RomanRepublic, 1, -7.5F, 180.0F},
         {"roman_back", Troop::Healer, Nation::RomanRepublic, 1, -4.5F, 0.0F},
@@ -2921,6 +2925,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       float z{};
       float facing{};
     };
+    s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 1}};
     const WorkerLineupEntry entries[] = {
         {"rome_builder_front",
          Troop::Builder,

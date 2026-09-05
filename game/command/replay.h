@@ -16,7 +16,11 @@ namespace Game::Command {
 
 class CommandQueue;
 
-inline constexpr int k_replay_format_version = 1;
+inline constexpr int k_replay_format_version = 2;
+
+[[nodiscard]] auto simulation_build_id() -> QString;
+
+[[nodiscard]] auto simulation_content_digest() -> QString;
 
 struct ReplayHeader {
   int format_version = k_replay_format_version;
@@ -26,10 +30,14 @@ struct ReplayHeader {
   double tick_seconds = 1.0 / 60.0;
   std::uint64_t rng_seed = 0;
   std::uint32_t digest_interval = 30;
+  QString build_id = simulation_build_id();
+  QString content_digest = simulation_content_digest();
 
   [[nodiscard]] auto to_json() const -> QJsonObject;
   [[nodiscard]] static auto
   from_json(const QJsonObject& object) -> std::optional<ReplayHeader>;
+
+  [[nodiscard]] auto compatibility_error() const -> QString;
 };
 
 class ReplayRecorder {

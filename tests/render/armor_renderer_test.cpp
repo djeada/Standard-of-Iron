@@ -277,6 +277,25 @@ TEST_F(ArmorRendererTest, CloakMeshesStaySymmetricLeftToRight) {
   assert_mirror_symmetry(meshes.shoulder, 11, 7);
 }
 
+TEST_F(ArmorRendererTest, CloakFacesHaveSeparateDepthToPreventZFight) {
+  CloakMeshes const meshes = shared_cloak_meshes();
+  for (Mesh* mesh : {meshes.back, meshes.shoulder}) {
+    ASSERT_NE(mesh, nullptr);
+    auto const& vertices = mesh->get_vertices();
+    ASSERT_EQ(vertices.size() % 2U, 0U);
+    auto const side_count = vertices.size() / 2U;
+    ASSERT_GT(side_count, 0U);
+    for (std::size_t i = 0; i < side_count; ++i) {
+      auto const& front = vertices[i];
+      auto const& back = vertices[i + side_count];
+      EXPECT_GT(front.position[1] - back.position[1], 0.001F);
+      for (std::size_t axis = 0; axis < 3U; ++axis) {
+        EXPECT_NEAR(front.normal[axis], -back.normal[axis], 1e-6F);
+      }
+    }
+  }
+}
+
 TEST_F(ArmorRendererTest, MountedCloaksRegisterLowerShoulderAnchors) {
   CloakConfig cloak{};
   cloak.primary_color = QVector3D(0.70F, 0.15F, 0.18F);

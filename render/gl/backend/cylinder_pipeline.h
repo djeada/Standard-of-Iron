@@ -28,6 +28,8 @@ public:
   [[nodiscard]] auto is_initialized() const -> bool override { return m_initialized; }
 
   void begin_frame();
+  void end_frame();
+  void point_cylinder_instance_attributes(std::size_t base_bytes);
 
   void upload_cylinder_instances(std::size_t count);
   void draw_cylinders(std::size_t count);
@@ -84,6 +86,9 @@ private:
   GL::ShaderCache* m_shader_cache;
   bool m_initialized{false};
   bool m_use_persistent_buffers{false};
+  bool m_cylinder_slot_writable{false};
+  std::size_t m_cylinder_instance_base_bytes{0};
+  bool m_fog_slot_writable{false};
 
   GL::Shader* m_cylinder_shader{nullptr};
   StaticMeshBuffers m_cylinder_mesh;

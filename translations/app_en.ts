@@ -2460,6 +2460,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Not enough reserve — build a home to raise more families.</source>
         <translation>Not enough reserve — build a home to raise more families.</translation>
     </message>
+    <message>
+        <source>The previous frame is still running; the match could not be changed. Please try again.</source>
+        <translation>The previous frame is still running; the match could not be changed. Please try again.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -7938,6 +7942,10 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>Turns the structure or wall you are placing clockwise. The mouse wheel does the same.</source>
         <translation>Turns the structure or wall you are placing clockwise. The mouse wheel does the same.</translation>
+    </message>
+    <message>
+        <source>Save: the match advanced while it was being captured. Please try again.</source>
+        <translation>Save: the match advanced while it was being captured. Please try again.</translation>
     </message>
 </context>
 <context>

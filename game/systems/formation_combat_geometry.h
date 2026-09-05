@@ -167,4 +167,18 @@ engaged_soldiers(const Engine::Core::Entity& attacker,
 
 void invalidate_layout_cache();
 
+[[nodiscard]] auto formation_cache_generation() -> std::uint64_t;
+
+struct ContactStats {
+  std::uint64_t resolutions{0};
+  std::uint64_t cache_hits{0};
+  std::uint64_t cache_misses{0};
+  std::uint64_t slot_pairs_possible{0};
+  std::uint64_t slot_pairs_examined{0};
+};
+
+[[nodiscard]] auto contact_stats() -> ContactStats;
+
+void reset_contact_stats();
+
 } // namespace Game::Systems::FormationCombat

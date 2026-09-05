@@ -189,6 +189,7 @@ void Pathfinding::set_obstacle(int x, int y, bool is_obstacle) {
 
   rebuild_clearance(x - 1, x + 1, y - 1, y + 1);
   m_navigation_revision.fetch_add(1, std::memory_order_release);
+  note_navigation_change(x - 1, x + 1, y - 1, y + 1);
 }
 
 auto Pathfinding::is_walkable(int x, int y, Passability passability) const -> bool {
@@ -430,7 +431,7 @@ auto Pathfinding::obstruction_revision() const -> std::uint64_t {
   return m_obstruction_revision.load(std::memory_order_acquire);
 }
 
-void Pathfinding::process_dirty_regions() {
+auto Pathfinding::process_dirty_regions() -> DirtyRegion {
   std::vector<DirtyRegion> regions_to_process;
 
   {
@@ -443,7 +444,7 @@ void Pathfinding::process_dirty_regions() {
       m_navigation_grid.fill(CellValue::Walkable);
       update_region(0, m_width - 1, 0, m_height - 1);
 
-      return;
+      return {0, m_width - 1, 0, m_height - 1};
     }
 
     regions_to_process = std::move(m_dirty_regions);
@@ -451,14 +452,23 @@ void Pathfinding::process_dirty_regions() {
   }
 
   if (regions_to_process.empty()) {
-    return;
+    return {0, -1, 0, -1};
   }
 
   merge_dirty_regions(regions_to_process);
 
+  DirtyRegion rebuilt{regions_to_process.front().min_x,
+                      regions_to_process.front().max_x,
+                      regions_to_process.front().min_z,
+                      regions_to_process.front().max_z};
   for (const auto& region : regions_to_process) {
     update_region(region.min_x, region.max_x, region.min_z, region.max_z);
+    rebuilt.min_x = std::min(rebuilt.min_x, region.min_x);
+    rebuilt.max_x = std::max(rebuilt.max_x, region.max_x);
+    rebuilt.min_z = std::min(rebuilt.min_z, region.min_z);
+    rebuilt.max_z = std::max(rebuilt.max_z, region.max_z);
   }
+  return rebuilt;
 }
 
 void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
@@ -869,11 +879,12 @@ void Pathfinding::update_navigation_grid() {
     rebuild_world_prop_index();
   }
   Engine::Core::count_nav(Engine::Core::NavCounter::GridRebuilds);
-  process_dirty_regions();
+  const DirtyRegion rebuilt = process_dirty_regions();
   m_applied_terrain_topology_revision.store(terrain_topology_revision,
                                             std::memory_order_release);
   m_applied_world_props_revision.store(world_props_revision, std::memory_order_release);
   m_navigation_revision.fetch_add(1, std::memory_order_release);
+  note_navigation_change(rebuilt.min_x, rebuilt.max_x, rebuilt.min_z, rebuilt.max_z);
 
   m_navigation_grid_dirty.store(false, std::memory_order_release);
 }
@@ -896,12 +907,13 @@ auto Pathfinding::find_path(const Point& start,
   {
     std::lock_guard<std::mutex> const cache_lock(m_path_cache_mutex);
     if (m_path_cache_revision != revision) {
-      m_path_cache.clear();
+      drop_paths_crossing_changes(m_path_cache_revision, revision);
       m_path_cache_revision = revision;
     }
     if (auto const cached = m_path_cache.find(key); cached != m_path_cache.end()) {
+      cached->second.last_used = ++m_path_cache_clock;
       Engine::Core::count_nav(Engine::Core::NavCounter::RouteCacheHits);
-      return cached->second;
+      return cached->second.path;
     }
   }
   Engine::Core::count_nav(Engine::Core::NavCounter::RouteCacheMisses);
@@ -913,12 +925,102 @@ auto Pathfinding::find_path(const Point& start,
   if (m_path_cache_revision != revision || navigation_revision() != revision) {
     return path;
   }
-  constexpr std::size_t k_max_cached_paths = 256U;
-  if (m_path_cache.size() >= k_max_cached_paths) {
-    m_path_cache.clear();
+  evict_cold_paths();
+  CachedPath entry;
+  entry.path = path;
+  entry.last_used = ++m_path_cache_clock;
+  entry.min_x = std::min(start.x, end.x);
+  entry.max_x = std::max(start.x, end.x);
+  entry.min_z = std::min(start.y, end.y);
+  entry.max_z = std::max(start.y, end.y);
+  for (const Point& point : entry.path) {
+    entry.min_x = std::min(entry.min_x, point.x);
+    entry.max_x = std::max(entry.max_x, point.x);
+    entry.min_z = std::min(entry.min_z, point.y);
+    entry.max_z = std::max(entry.max_z, point.y);
   }
-  m_path_cache.emplace(key, path);
+  m_path_cache.emplace(key, std::move(entry));
   return path;
+}
+
+void Pathfinding::note_navigation_change(int min_x, int max_x, int min_z, int max_z) {
+  std::lock_guard<std::mutex> const lock(m_nav_change_mutex);
+  if (m_nav_changes.size() >= k_max_tracked_nav_changes) {
+    m_nav_changes.erase(m_nav_changes.begin());
+  }
+  m_nav_changes.push_back({.revision = navigation_revision(),
+                           .min_x = min_x,
+                           .max_x = max_x,
+                           .min_z = min_z,
+                           .max_z = max_z});
+}
+
+void Pathfinding::drop_paths_crossing_changes(std::uint64_t from_revision,
+                                              std::uint64_t to_revision) {
+  std::vector<NavChange> changes;
+  bool covered = false;
+  {
+    std::lock_guard<std::mutex> const lock(m_nav_change_mutex);
+    covered =
+        !m_nav_changes.empty() && m_nav_changes.front().revision <= from_revision + 1;
+    for (const NavChange& change : m_nav_changes) {
+      if (change.revision > from_revision && change.revision <= to_revision) {
+        changes.push_back(change);
+      }
+    }
+  }
+
+  if (!covered || changes.empty()) {
+    Engine::Core::count_nav(Engine::Core::NavCounter::RouteCacheFlushes);
+    Engine::Core::count_nav(Engine::Core::NavCounter::RouteCacheEvictions,
+                            static_cast<std::uint64_t>(m_path_cache.size()));
+    m_path_cache.clear();
+    return;
+  }
+
+  constexpr int k_margin = 1;
+  std::uint64_t dropped = 0;
+  for (auto it = m_path_cache.begin(); it != m_path_cache.end();) {
+    const CachedPath& entry = it->second;
+    const bool crosses =
+        std::any_of(changes.begin(), changes.end(), [&](const NavChange& change) {
+          return entry.min_x <= change.max_x + k_margin &&
+                 entry.max_x >= change.min_x - k_margin &&
+                 entry.min_z <= change.max_z + k_margin &&
+                 entry.max_z >= change.min_z - k_margin;
+        });
+    if (crosses) {
+      it = m_path_cache.erase(it);
+      ++dropped;
+    } else {
+      ++it;
+    }
+  }
+  Engine::Core::count_nav(Engine::Core::NavCounter::RouteCacheEvictions, dropped);
+  Engine::Core::count_nav(Engine::Core::NavCounter::RouteCacheKept,
+                          static_cast<std::uint64_t>(m_path_cache.size()));
+}
+
+void Pathfinding::evict_cold_paths() {
+  if (m_path_cache.size() < k_max_cached_paths) {
+    return;
+  }
+  const std::size_t target = k_max_cached_paths / 4U;
+  std::vector<std::pair<std::uint64_t, PathCacheKey>> by_age;
+  by_age.reserve(m_path_cache.size());
+  for (const auto& [cache_key, entry] : m_path_cache) {
+    by_age.emplace_back(entry.last_used, cache_key);
+  }
+  std::partial_sort(
+      by_age.begin(),
+      by_age.begin() + static_cast<std::ptrdiff_t>(target),
+      by_age.end(),
+      [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; });
+  for (std::size_t i = 0; i < target; ++i) {
+    m_path_cache.erase(by_age[i].second);
+  }
+  Engine::Core::count_nav(Engine::Core::NavCounter::RouteCacheEvictions,
+                          static_cast<std::uint64_t>(target));
 }
 
 auto Pathfinding::label_at(const RegionMap& map,
@@ -992,6 +1094,7 @@ void Pathfinding::region_labels(const Point& first,
 
   auto& map = m_region_maps[static_cast<std::size_t>(passability)];
   if (!map.built || map.revision != revision) {
+    Engine::Core::count_nav(Engine::Core::NavCounter::RegionMapRebuilds);
     rebuild_region_map(map, passability);
     map.revision = revision;
     map.built = true;

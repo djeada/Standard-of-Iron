@@ -7,12 +7,18 @@
       "tick_average_ms": 43.320205,
       "navigation_p95_ms": 0.047,
       "navigation_average_ms": 2.289701,
-      "digest": "8a6c1ed190a8f170",
-      "position_tests_per_unit_tick": 601.6546083333334,
-      "standability_tests_per_unit_tick": 39.473145833333334,
-      "standability_cells_scanned_per_unit_tick": 348.444325,
+      "digest": "e08095e684358584",
+      "position_tests_per_unit_tick": 607.7330875,
+      "standability_tests_per_unit_tick": 39.4095375,
+      "standability_cells_scanned_per_unit_tick": 347.6465416666667,
       "nearest_standable_cells_scanned_per_unit_tick": 32.668033333333334,
-      "cells_expanded_per_unit_tick": 0.027641666666666665
+      "cells_expanded_per_unit_tick": 0.02975,
+      "route_cache_misses_per_unit_tick": 0.001,
+      "route_cache_evictions_per_unit_tick": 0.0,
+      "route_cache_flushes_per_unit_tick": 4.166666666666667e-6,
+      "region_map_rebuilds_per_unit_tick": 0.0,
+      "dirty_cells_rebuilt_per_unit_tick": 0.41606666666666664,
+      "route_cache_hit_ratio": 0.631336405529954
     },
     {
       "units": 2000,
@@ -21,12 +27,18 @@
       "tick_average_ms": 168.748026,
       "navigation_p95_ms": 0.176,
       "navigation_average_ms": 5.461838,
-      "digest": "32f93e7e2b221fa5",
-      "position_tests_per_unit_tick": 586.58203125,
-      "standability_tests_per_unit_tick": 45.51331458333333,
-      "standability_cells_scanned_per_unit_tick": 401.79043333333334,
+      "digest": "e9ebe0702d8fd52a",
+      "position_tests_per_unit_tick": 593.5191270833334,
+      "standability_tests_per_unit_tick": 45.451683333333335,
+      "standability_cells_scanned_per_unit_tick": 400.9749791666667,
       "nearest_standable_cells_scanned_per_unit_tick": 38.78981666666667,
-      "cells_expanded_per_unit_tick": 0.048952083333333334
+      "cells_expanded_per_unit_tick": 0.042097916666666665,
+      "route_cache_misses_per_unit_tick": 0.0011270833333333332,
+      "route_cache_evictions_per_unit_tick": 0.0006666666666666666,
+      "route_cache_flushes_per_unit_tick": 2.0833333333333334e-6,
+      "region_map_rebuilds_per_unit_tick": 0.0,
+      "dirty_cells_rebuilt_per_unit_tick": 0.6627,
+      "route_cache_hit_ratio": 0.7183758459135867
     }
   ]
 }

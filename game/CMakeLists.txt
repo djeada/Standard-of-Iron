@@ -388,8 +388,30 @@ add_library(
     systems/world_restore.cpp
 )
 
-target_include_directories(game_sim PUBLIC .)
+target_include_directories(game_sim PUBLIC . ${CMAKE_SOURCE_DIR})
 target_link_libraries(game_sim PUBLIC soi_wildlife soi_combat soi_economy soi_movement)
+
+# A replay is only replayable by the binary that recorded it: the determinism
+# contract is same-binary, and release floating-point options let two builds of
+# the same source disagree. Stamping the commit into the header is what lets
+# playback refuse a file it cannot reproduce instead of reporting a divergence
+# that is really a version mismatch. An archive with no git (a source tarball)
+# gets "unknown", which compares equal to itself and so never blocks playback.
+find_package(Git QUIET)
+set(SOI_SIMULATION_BUILD_ID "unknown")
+if(GIT_FOUND)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} rev-parse --short=12 HEAD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE SOI_GIT_REV
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(SOI_GIT_REV)
+        set(SOI_SIMULATION_BUILD_ID "${SOI_GIT_REV}")
+    endif()
+endif()
+target_compile_definitions(game_sim PRIVATE SOI_SIMULATION_BUILD_ID="${SOI_SIMULATION_BUILD_ID}")
 
 # engine_core once linked game_sim as well, in a declared cycle.
 #

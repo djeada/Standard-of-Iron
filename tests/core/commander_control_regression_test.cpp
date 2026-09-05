@@ -410,8 +410,12 @@ TEST(CommanderControlRegressionTest, SaveAndLoadForceCommanderModeBackToRts) {
   EXPECT_TRUE(contains(engine_source,
                        "if (m_commander_view_model->active()) {\n"
                        "    m_commander_view_model->exit_mode();\n"
-                       "  }\n"
-                       "  const Game::Systems::RuntimeSnapshot runtime_snapshot = "
+                       "  }\n\n"
+                       "  App::Core::SaveToSlotEffects effects;\n"
+                       "  {\n"
+                       "    const std::unique_lock<std::recursive_mutex> capture_lock "
+                       "= lock_frame();\n\n"
+                       "    const Game::Systems::RuntimeSnapshot runtime_snapshot = "
                        "to_runtime_snapshot();"));
 }
 

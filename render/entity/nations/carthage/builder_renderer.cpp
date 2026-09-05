@@ -31,6 +31,7 @@
 #include "render/entity/registry.h"
 #include "render/entity/renderer_constants.h"
 #include "render/equipment/armor/arm_guards_renderer.h"
+#include "render/equipment/armor/garment_shell.h"
 #include "render/equipment/armor/tool_belt_renderer.h"
 #include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/armor/work_apron_renderer.h"
@@ -336,31 +337,20 @@ auto carthage_civilian_sash_archetype() -> const RenderArchetype& {
     const AttachmentFrame& torso = bind.torso;
     const AttachmentFrame& waist = bind.waist;
 
-    float const tr = torso.radius * 1.02F;
-    float const td = (torso.depth > 0.0F) ? torso.depth * 0.88F : torso.radius * 0.76F;
+    float const tr = torso.radius * 1.18F;
+    float const td = (torso.depth > 0.0F) ? torso.depth * 1.08F : torso.radius * 0.94F;
     float const y_w = waist.origin.y() - torso.origin.y();
     float const y_sh = 0.035F;
     float const y_hem = y_w - 0.22F;
 
     RenderArchetypeBuilder builder{"carthage_civilian_sash"};
 
-    {
-      float const h = y_sh - y_w;
-      float const cy = (y_sh + y_w) * 0.5F;
-      QMatrix4x4 m;
-      m.translate(0.0F, cy, 0.0F);
-      m.scale(tr * 1.08F, h, td * 1.04F);
-      builder.add_palette_mesh(get_unit_tapered_cylinder(0.90F, 1.06F, 8), m, 0U);
-    }
-
-    {
-      float const h = y_w - y_hem;
-      float const cy = (y_w + y_hem) * 0.5F;
-      QMatrix4x4 m;
-      m.translate(0.0F, cy, 0.0F);
-      m.scale(tr * 1.08F, h, td * 1.04F);
-      builder.add_palette_mesh(get_unit_tapered_cylinder(1.40F, 0.90F, 8), m, 0U);
-    }
+    static const auto shell = make_garment_shell({
+        {y_hem, tr * 1.08F * 1.40F, td * 1.04F * 1.40F},
+        {y_w, tr * 1.08F * 0.90F, td * 1.04F * 0.90F},
+        {y_sh, tr * 1.08F * 1.06F, td * 1.04F * 1.06F},
+    });
+    builder.add_palette_mesh(shell.get(), QMatrix4x4{}, 0U);
 
     {
       QVector3D const sash_top(tr * 0.72F, y_sh + 0.008F, td * 0.28F);

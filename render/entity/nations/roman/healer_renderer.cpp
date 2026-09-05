@@ -28,6 +28,7 @@
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/registry.h"
 #include "render/entity/renderer_constants.h"
+#include "render/equipment/armor/garment_shell.h"
 #include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/generated_equipment.h"
@@ -155,22 +156,6 @@ auto senator_toga_archetype() -> const RenderArchetype& {
       return {blend(bust_w, chest_w, t), blend(bust_d, chest_d, t)};
     };
 
-    auto add_shell = [&](float y_bottom,
-                         float y_top_edge,
-                         float bottom_w,
-                         float bottom_d,
-                         float top_w,
-                         float top_d,
-                         std::uint8_t slot) {
-      float const height = y_top_edge - y_bottom;
-      float const ratio = top_w / bottom_w;
-      float const base_d = (bottom_d + top_d) / (1.0F + ratio);
-      QMatrix4x4 model;
-      model.translate(0.0F, (y_bottom + y_top_edge) * 0.5F, 0.0F);
-      model.scale(bottom_w, height, base_d);
-      builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, ratio, 18), model, slot);
-    };
-
     auto add_band = [&](float y_center,
                         float thickness,
                         float half_w,
@@ -182,62 +167,15 @@ auto senator_toga_archetype() -> const RenderArchetype& {
       builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, 1.0F, 18), model, slot);
     };
 
-    add_shell(y_waist, y_rib, waist_w, waist_d, rib_w, rib_d, k_toga_cloth_slot);
-    add_shell(y_rib - 0.004F, y_bust, rib_w, rib_d, bust_w, bust_d, k_toga_cloth_slot);
-    add_shell(
-        y_bust - 0.004F, y_top, bust_w, bust_d, chest_w, chest_d, k_toga_cloth_slot);
-    add_shell(y_waist - 0.26F,
-              y_waist + 0.01F,
-              skirt_mid_w,
-              skirt_mid_d,
-              waist_w,
-              waist_d,
-              k_toga_cloth_slot);
-    add_shell(y_knee,
-              y_waist - 0.25F,
-              hem_w,
-              hem_d,
-              skirt_mid_w,
-              skirt_mid_d,
-              k_toga_cloth_slot);
-
-    constexpr int k_folds = 12;
-    constexpr float pi = std::numbers::pi_v<float>;
-    for (int i = 0; i < k_folds; ++i) {
-      float const a = (static_cast<float>(i) / k_folds) * 2.0F * pi;
-      float const s = std::sin(a);
-      float const c = std::cos(a);
-      builder.add_palette_mesh(
-          get_unit_cylinder(),
-          cylinder_between(
-              QVector3D(s * hem_w * 0.99F, y_knee + 0.03F, c * hem_d * 0.99F),
-              QVector3D(
-                  s * skirt_mid_w * 0.99F, y_waist - 0.25F, c * skirt_mid_d * 0.99F),
-              0.011F),
-          (i % 2 == 0) ? k_toga_shade_slot : k_toga_cloth_slot);
-    }
-
-    constexpr int k_chest_folds = 9;
-    constexpr float k_chest_fold_half_arc = 2.05F;
-    float const chest_fold_bottom = y_waist + 0.055F;
-    float const chest_fold_top = y_top - 0.055F;
-    TorsoSection const fold_low = torso_at(chest_fold_bottom);
-    TorsoSection const fold_high = torso_at(chest_fold_top);
-    for (int i = 0; i < k_chest_folds; ++i) {
-      float const spread = (static_cast<float>(i) / (k_chest_folds - 1)) - 0.5F;
-      float const a = spread * 2.0F * k_chest_fold_half_arc;
-      float const s = std::sin(a);
-      float const c = std::cos(a);
-      builder.add_palette_mesh(get_unit_cylinder(),
-                               cylinder_between(QVector3D(s * fold_low.width * 0.995F,
-                                                          chest_fold_bottom,
-                                                          c * fold_low.depth * 0.995F),
-                                                QVector3D(s * fold_high.width * 0.995F,
-                                                          chest_fold_top,
-                                                          c * fold_high.depth * 0.995F),
-                                                0.011F),
-                               (i % 2 == 0) ? k_toga_shade_slot : k_toga_cloth_slot);
-    }
+    static const auto shell = make_garment_shell({
+        {y_knee, hem_w, hem_d},
+        {y_waist - 0.26F, skirt_mid_w, skirt_mid_d},
+        {y_waist, waist_w, waist_d},
+        {y_rib, rib_w, rib_d},
+        {y_bust, bust_w, bust_d},
+        {y_top, chest_w, chest_d},
+    });
+    builder.add_palette_mesh(shell.get(), QMatrix4x4{}, k_toga_cloth_slot);
 
     add_band(y_knee + 0.024F, 0.048F, hem_w * 1.02F, hem_d * 1.02F, k_toga_clavus_slot);
     add_band(y_knee + 0.056F, 0.011F, hem_w * 1.01F, hem_d * 1.01F, k_toga_gold_slot);

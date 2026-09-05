@@ -2460,6 +2460,10 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>Not enough reserve — build a home to raise more families.</source>
         <translation>Nicht genug Reserve — baue ein Haus, um mehr Familien heranzuziehen.</translation>
     </message>
+    <message>
+        <source>The previous frame is still running; the match could not be changed. Please try again.</source>
+        <translation>Der vorherige Frame läuft noch; das Gefecht konnte nicht gewechselt werden. Bitte versuche es erneut.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -7938,6 +7942,10 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     <message>
         <source>Turns the structure or wall you are placing clockwise. The mouse wheel does the same.</source>
         <translation>Dreht das Bauwerk oder die Mauer, die du gerade platzierst, im Uhrzeigersinn. Das Mausrad tut dasselbe.</translation>
+    </message>
+    <message>
+        <source>Save: the match advanced while it was being captured. Please try again.</source>
+        <translation>Speichern: Das Gefecht ist während der Aufnahme weitergelaufen. Bitte versuche es erneut.</translation>
     </message>
 </context>
 <context>

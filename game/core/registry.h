@@ -72,6 +72,10 @@ public:
   auto operator=(const Registry&) -> Registry& = delete;
   auto operator=(Registry&&) -> Registry& = delete;
 
+  [[nodiscard]] auto instance_id() const noexcept -> std::uint64_t {
+    return m_instance_id;
+  }
+
   auto create_entity() -> EntityID;
   auto create_entity_with_id(EntityID entity_id) -> EntityID;
   auto destroy_entity(EntityID entity_id) -> bool;
@@ -200,6 +204,7 @@ public:
   }
 
 private:
+  const std::uint64_t m_instance_id;
   struct Slot {
     std::uint32_t generation = 0;
     bool alive = false;

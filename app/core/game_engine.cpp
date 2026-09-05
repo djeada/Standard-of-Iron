@@ -639,52 +639,49 @@ constexpr float k_simulation_max_frame_seconds = 0.1F;
 
 } // namespace
 
+auto GameEngine::world_freeze_refused_message() -> QString {
+  return tr("The previous frame is still running; the match could not be "
+            "changed. Please try again.");
+}
+
 GameEngine::WorldFreeze::WorldFreeze(GameEngine& engine)
     : m_engine(engine) {
-  m_engine.m_world_freeze_depth.fetch_add(1);
-
-  const auto deadline = std::chrono::steady_clock::now() + k_render_frame_wait_budget;
-  while (m_engine.m_render_frame_active.load() ||
-         m_engine.m_simulation_tick_active.load()) {
-    if (std::chrono::steady_clock::now() >= deadline) {
-      qWarning() << "GameEngine: the render or simulation thread did not finish "
-                    "its frame within"
-                 << static_cast<int>(k_render_frame_wait_budget.count())
-                 << "ms; rebuilding the world anyway";
-      break;
-    }
-    std::this_thread::sleep_for(k_render_frame_wait_poll);
+  const auto result = m_engine.m_frame_barrier.try_freeze(k_render_frame_wait_budget,
+                                                          k_render_frame_wait_poll);
+  if (result != App::Core::FrameBarrier::FreezeResult::Acquired) {
+    qWarning() << "GameEngine: the"
+               << (result == App::Core::FrameBarrier::FreezeResult::RenderBusy
+                       ? "render"
+                       : "simulation")
+               << "thread did not acknowledge the world freeze within"
+               << static_cast<int>(k_render_frame_wait_budget.count())
+               << "ms; refusing the world transition and keeping the current world";
+    return;
   }
+  m_acquired = true;
 }
 
 GameEngine::WorldFreeze::~WorldFreeze() {
-  m_engine.m_world_freeze_depth.fetch_sub(1);
+  if (!m_acquired) {
+    return;
+  }
+  m_engine.m_frame_barrier.release_freeze();
 }
 
 auto GameEngine::try_begin_render_frame() -> bool {
-  m_render_frame_active.store(true);
-  if (m_world_freeze_depth.load() > 0) {
-    m_render_frame_active.store(false);
-    return false;
-  }
-  return true;
+  return m_frame_barrier.try_begin_render();
 }
 
 void GameEngine::end_render_frame() {
-  m_render_frame_active.store(false);
+  m_frame_barrier.end_render();
 }
 
 auto GameEngine::try_begin_simulation_tick() -> bool {
-  m_simulation_tick_active.store(true);
-  if (m_world_freeze_depth.load() > 0) {
-    m_simulation_tick_active.store(false);
-    return false;
-  }
-  return true;
+  return m_frame_barrier.try_begin_simulation();
 }
 
 void GameEngine::end_simulation_tick() {
-  m_simulation_tick_active.store(false);
+  m_frame_barrier.end_simulation();
 }
 
 void GameEngine::start_simulation_thread() {
@@ -1521,6 +1518,10 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
                                          bool set_skirmish_context) {
 
   auto world_freeze = std::make_shared<WorldFreeze>(*this);
+  if (!world_freeze->acquired()) {
+    set_error(world_freeze_refused_message());
+    return;
+  }
 
   clear_error();
   reset_preload_interaction_state();
@@ -2484,37 +2485,42 @@ void GameEngine::begin_save(const QString& slot_name,
   if (m_commander_view_model->active()) {
     m_commander_view_model->exit_mode();
   }
-  const Game::Systems::RuntimeSnapshot runtime_snapshot = to_runtime_snapshot();
-  Game::Systems::LevelSnapshot level_snapshot = m_level;
-  if (m_environment_clock) {
-    level_snapshot.environment = m_environment_clock->definition();
-    level_snapshot.environment_clock = m_environment_clock->snapshot();
-  }
-  if (m_rain_manager) {
-    level_snapshot.weather_runtime = m_rain_manager->snapshot();
-  }
-  std::optional<Game::Mission::MissionContext> mission_context;
-  if (m_campaign_manager) {
-    mission_context = m_campaign_manager->current_mission_context();
-  }
 
-  const App::Core::SaveToSlotEffects effects =
-      m_save_load_coordinator->begin_save_to_slot(
-          {.world = *m_world,
-           .save_load_service = *m_save_load_service,
-           .camera = m_camera,
-           .level = level_snapshot,
-           .runtime_snapshot = runtime_snapshot,
-           .slot = slot_name,
-           .title = slot_name,
-           .map_name = m_level.map_name,
-           .mission_context = std::move(mission_context),
-           .kind = kind,
-           .play_time_seconds = m_mission_waves.elapsed(),
-           .autosave_retention = autosave_retention,
-           .mission_wave_state = m_mission_waves.director().serialize(),
-           .mission_stage_state = m_mission_stage_tracker.serialize(),
-           .commander_message_state = commander_message_state()});
+  App::Core::SaveToSlotEffects effects;
+  {
+    const std::unique_lock<std::recursive_mutex> capture_lock = lock_frame();
+
+    const Game::Systems::RuntimeSnapshot runtime_snapshot = to_runtime_snapshot();
+    Game::Systems::LevelSnapshot level_snapshot = m_level;
+    if (m_environment_clock) {
+      level_snapshot.environment = m_environment_clock->definition();
+      level_snapshot.environment_clock = m_environment_clock->snapshot();
+    }
+    if (m_rain_manager) {
+      level_snapshot.weather_runtime = m_rain_manager->snapshot();
+    }
+    std::optional<Game::Mission::MissionContext> mission_context;
+    if (m_campaign_manager) {
+      mission_context = m_campaign_manager->current_mission_context();
+    }
+
+    effects = m_save_load_coordinator->begin_save_to_slot(
+        {.world = *m_world,
+         .save_load_service = *m_save_load_service,
+         .camera = m_camera,
+         .level = level_snapshot,
+         .runtime_snapshot = runtime_snapshot,
+         .slot = slot_name,
+         .title = slot_name,
+         .map_name = m_level.map_name,
+         .mission_context = std::move(mission_context),
+         .kind = kind,
+         .play_time_seconds = m_mission_waves.elapsed(),
+         .autosave_retention = autosave_retention,
+         .mission_wave_state = m_mission_waves.director().serialize(),
+         .mission_stage_state = m_mission_stage_tracker.serialize(),
+         .commander_message_state = commander_message_state()});
+  }
   if (!effects.queued) {
     set_error(effects.error);
     return;
@@ -2569,6 +2575,10 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
   }
 
   const WorldFreeze world_freeze(*this);
+  if (!world_freeze.acquired()) {
+    set_error(world_freeze_refused_message());
+    return;
+  }
 
   if (m_commander_view_model->active()) {
     m_commander_view_model->exit_mode();

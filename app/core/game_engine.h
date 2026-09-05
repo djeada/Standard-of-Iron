@@ -26,6 +26,7 @@
 #include "app/core/app_scene_context.h"
 #include "app/core/client_context.h"
 #include "app/core/entity_cache.h"
+#include "app/core/frame_barrier.h"
 #include "app/core/match_presentation_sync.h"
 #include "app/core/player_feedback.h"
 #include "app/core/runtime_frame_orchestrator.h"
@@ -346,13 +347,22 @@ public:
     WorldFreeze(WorldFreeze&&) = delete;
     auto operator=(WorldFreeze&&) -> WorldFreeze& = delete;
 
+    [[nodiscard]] auto acquired() const noexcept -> bool { return m_acquired; }
+    explicit operator bool() const noexcept { return m_acquired; }
+
   private:
     GameEngine& m_engine;
+    bool m_acquired = false;
   };
+
+  [[nodiscard]] auto world_freeze_refusals() const noexcept -> int {
+    return m_frame_barrier.refusals();
+  }
 
 private:
   void run_simulation_thread();
   void sync_render_camera();
+  [[nodiscard]] static auto world_freeze_refused_message() -> QString;
 
   struct RuntimeState {
     bool initialized = false;
@@ -579,9 +589,7 @@ private:
   bool m_loading_overlay_active = false;
   std::atomic_bool m_loading_overlay_wait_for_first_frame{false};
 
-  std::atomic<int> m_world_freeze_depth{0};
-  std::atomic<bool> m_render_frame_active{false};
-  std::atomic<bool> m_simulation_tick_active{false};
+  App::Core::FrameBarrier m_frame_barrier;
   std::atomic<bool> m_simulation_thread_running{false};
   std::atomic<std::uint64_t> m_simulation_tick_us{0};
   std::atomic<float> m_simulation_time_scale{0.0F};

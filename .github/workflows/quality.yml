@@ -121,6 +121,14 @@ jobs:
           python scripts/check-modules.py .
           python scripts/check-render-boundary.py .
           python scripts/check-command-boundary.py .
+          python scripts/check-architecture-doc.py .
+
+      # check-architecture-doc is the newest of these and the odd one out: it
+      # gates prose rather than code. The document claimed 65 ambient call sites
+      # against a budget of 58, and claimed the renderer links `game_systems`
+      # after the root CMake had been changed to link `game_sim`. A count nobody
+      # recomputes is a count that goes stale, and this one was being read as
+      # current by anyone planning work off the document.
 
       # The three ratchets. Each counts a shape the codebase is migrating away
       # from and fails when a directory has more of it than the recorded budget,

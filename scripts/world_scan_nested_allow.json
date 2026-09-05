@@ -1,0 +1,21 @@
+[
+  "app/viewmodels/commander_view_model.cpp:124",
+  "app/world/focus_target.cpp:129",
+  "app/world/focus_target.cpp:96",
+  "game/mission/mission_setup_coordinator.cpp:363",
+  "game/mission/mission_setup_coordinator.cpp:707",
+  "game/systems/battlefield_capture.cpp:314",
+  "game/systems/battlefield_capture.cpp:415",
+  "game/systems/gather_loop_system.cpp:324",
+  "game/systems/rpg_combat_system/rpg_engagement_system.cpp:18",
+  "render/entity/carried_load_renderer.cpp:365",
+  "render/entity/commander_aura_renderer.cpp:103",
+  "render/geom/patrol_flags.cpp:157",
+  "tools/arena/arena_scenario.cpp:2056",
+  "tools/arena/arena_scenario.cpp:6077",
+  "tools/arena/arena_scenario.cpp:6157",
+  "tools/arena/arena_viewport.cpp:2572",
+  "tools/arena/arena_viewport.cpp:4524",
+  "tools/arena/arena_viewport.cpp:4586",
+  "tools/arena/arena_viewport.cpp:4704"
+]

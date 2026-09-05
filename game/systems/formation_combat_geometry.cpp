@@ -1,10 +1,12 @@
 #include "formation_combat_geometry.h"
 
 #include <algorithm>
+#include <atomic>
 #include <bit>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <limits>
 #include <numbers>
 #include <unordered_map>
@@ -12,6 +14,8 @@
 #include <vector>
 
 #include "../core/component.h"
+#include "../core/entity.h"
+#include "../core/registry.h"
 #include "../formation/traversal_layout_policy.h"
 #include "../formation/unit_layout_resolver.h"
 #include "../units/spawn_type.h"
@@ -94,7 +98,51 @@ auto slot_distance(const SoldierSlot& lhs, const SoldierSlot& rhs) noexcept -> f
   return std::sqrt(dx * dx + dz * dz);
 }
 
+struct FormationCacheKey {
+  std::uint64_t registry{0};
+  Engine::Core::EntityID entity{0};
+
+  auto operator==(const FormationCacheKey&) const -> bool = default;
+};
+
+struct FormationCacheKeyHash {
+  auto operator()(const FormationCacheKey& key) const noexcept -> std::size_t {
+    std::uint64_t seed = 0xcbf29ce484222325ULL;
+    seed ^= key.registry + 0x9e3779b97f4a7c15ULL + (seed << 6U) + (seed >> 2U);
+    seed ^= key.entity + 0x9e3779b97f4a7c15ULL + (seed << 6U) + (seed >> 2U);
+    return static_cast<std::size_t>(seed);
+  }
+};
+
+auto cache_key(const Engine::Core::Entity& entity) -> FormationCacheKey {
+  const auto* registry = entity.registry();
+  return {.registry = registry != nullptr ? registry->instance_id() : 0U,
+          .entity = entity.get_id()};
+}
+
+std::atomic<std::uint64_t> g_formation_cache_epoch{1};
+
+auto formation_cache_epoch() -> std::uint64_t {
+  return g_formation_cache_epoch.load(std::memory_order_acquire);
+}
+
+template <typename Map>
+void evict_incrementally(Map& cache, std::size_t limit) {
+  if (cache.size() <= limit) {
+    return;
+  }
+  const std::uint64_t epoch = formation_cache_epoch();
+  std::size_t budget = 64U;
+  for (auto it = cache.begin(); it != cache.end() && budget > 0U; --budget) {
+    it = it->second.epoch != epoch ? cache.erase(it) : std::next(it);
+  }
+  if (cache.size() > limit + limit / 2U) {
+    cache.clear();
+  }
+}
+
 struct LayoutCacheEntry {
+  std::uint64_t epoch{0};
   std::uint64_t local_signature{0};
   float world_x{0.0F};
   float world_z{0.0F};
@@ -103,8 +151,9 @@ struct LayoutCacheEntry {
   FormationLayout layout;
 };
 
-thread_local std::unordered_map<const Engine::Core::Entity*, LayoutCacheEntry>
-    g_layout_cache;
+thread_local std::
+    unordered_map<FormationCacheKey, LayoutCacheEntry, FormationCacheKeyHash>
+        g_layout_cache;
 
 thread_local std::uint64_t g_layout_cache_generation = 0;
 
@@ -182,11 +231,13 @@ void store_layout_cache(const Engine::Core::Entity* entity,
                         std::uint64_t signature,
                         const Engine::Core::TransformComponent& transform,
                         const FormationLayout& layout) {
-  if (g_layout_cache.size() > 8192U) {
-    g_layout_cache.clear();
+  const std::size_t before = g_layout_cache.size();
+  evict_incrementally(g_layout_cache, 8192U);
+  if (g_layout_cache.size() != before) {
     ++g_layout_cache_generation;
   }
-  LayoutCacheEntry& cache = g_layout_cache[entity];
+  LayoutCacheEntry& cache = g_layout_cache[cache_key(*entity)];
+  cache.epoch = formation_cache_epoch();
   cache.local_signature = signature;
   cache.world_x = transform.position.x;
   cache.world_z = transform.position.z;
@@ -355,8 +406,10 @@ auto resolve_layout_entry(const Engine::Core::Entity& entity,
   Engine::Core::TransformComponent const identity_transform{};
   auto const& resolved_transform =
       transform != nullptr ? *transform : identity_transform;
-  if (auto cached = g_layout_cache.find(&entity);
-      cached != g_layout_cache.end() && cached->second.local_signature == signature) {
+  if (auto cached = g_layout_cache.find(cache_key(entity));
+      cached != g_layout_cache.end() &&
+      cached->second.epoch == formation_cache_epoch() &&
+      cached->second.local_signature == signature) {
     bool const transform_unchanged =
         cached->second.world_x == resolved_transform.position.x &&
         cached->second.world_z == resolved_transform.position.z &&
@@ -371,7 +424,7 @@ auto resolve_layout_entry(const Engine::Core::Entity& entity,
   }
 
   build_layout_into_cache(entity, *unit, resolved_transform, signature);
-  auto const rebuilt = g_layout_cache.find(&entity);
+  auto const rebuilt = g_layout_cache.find(cache_key(entity));
   return rebuilt != g_layout_cache.end() ? &rebuilt->second : nullptr;
 }
 
@@ -666,10 +719,12 @@ auto soldier_spatial_anchors(const Engine::Core::Entity& entity)
 
 auto formation_turn_radius(const Engine::Core::Entity& entity) -> float {
   std::uint64_t const signature = layout_signature(entity);
-  auto cached = g_layout_cache.find(&entity);
-  if (cached == g_layout_cache.end() || cached->second.local_signature != signature) {
+  auto cached = g_layout_cache.find(cache_key(entity));
+  if (cached == g_layout_cache.end() ||
+      cached->second.epoch != formation_cache_epoch() ||
+      cached->second.local_signature != signature) {
     (void)resolve_layout(entity);
-    cached = g_layout_cache.find(&entity);
+    cached = g_layout_cache.find(cache_key(entity));
   }
   return cached != g_layout_cache.end() ? cached->second.turn_radius : 0.0F;
 }
@@ -768,6 +823,7 @@ auto layout_revisions_of(const Engine::Core::Entity& entity) noexcept
 }
 
 struct SpatialLayoutCacheEntry {
+  std::uint64_t epoch{0};
   std::uint64_t base_signature{0};
   float world_x{0.0F};
   float world_z{0.0F};
@@ -777,15 +833,14 @@ struct SpatialLayoutCacheEntry {
   FormationLayout layout;
 };
 
-thread_local std::unordered_map<const Engine::Core::Entity*, SpatialLayoutCacheEntry>
-    g_spatial_layout_cache;
+thread_local std::
+    unordered_map<FormationCacheKey, SpatialLayoutCacheEntry, FormationCacheKeyHash>
+        g_spatial_layout_cache;
 
 constexpr std::size_t k_max_cached_spatial_layouts = 8192U;
 
 void prune_spatial_layout_cache() {
-  if (g_spatial_layout_cache.size() > k_max_cached_spatial_layouts) {
-    g_spatial_layout_cache.clear();
-  }
+  evict_incrementally(g_spatial_layout_cache, k_max_cached_spatial_layouts);
 }
 
 auto spatialized_layout_for(const Engine::Core::Entity& entity,
@@ -798,7 +853,11 @@ auto spatialized_layout_for(const Engine::Core::Entity& entity,
   float const world_z = transform != nullptr ? transform->position.z : 0.0F;
   float const yaw = transform != nullptr ? transform->rotation.y : 0.0F;
 
-  SpatialLayoutCacheEntry& entry = g_spatial_layout_cache[&entity];
+  SpatialLayoutCacheEntry& entry = g_spatial_layout_cache[cache_key(entity)];
+  if (entry.epoch != formation_cache_epoch()) {
+    entry = SpatialLayoutCacheEntry{};
+    entry.epoch = formation_cache_epoch();
+  }
   if (entry.valid && entry.base_signature == base_signature &&
       entry.world_x == world_x && entry.world_z == world_z && entry.yaw == yaw &&
       entry.revisions == revisions) {
@@ -822,20 +881,26 @@ struct ResolvedContact {
 };
 
 struct SlotsCacheEntry {
+  std::uint64_t epoch{0};
   std::uint64_t signature{0};
   bool has_slots{false};
   bool valid{false};
 };
 
-thread_local std::unordered_map<const Engine::Core::Entity*, SlotsCacheEntry>
-    g_slots_cache;
+thread_local std::
+    unordered_map<FormationCacheKey, SlotsCacheEntry, FormationCacheKeyHash>
+        g_slots_cache;
 
 auto has_formation_slots_for(const Engine::Core::Entity& entity,
                              std::uint64_t signature) -> bool {
   if (g_slots_cache.size() > k_max_cached_spatial_layouts) {
     g_slots_cache.clear();
   }
-  SlotsCacheEntry& entry = g_slots_cache[&entity];
+  SlotsCacheEntry& entry = g_slots_cache[cache_key(entity)];
+  if (entry.epoch != formation_cache_epoch()) {
+    entry = SlotsCacheEntry{};
+    entry.epoch = formation_cache_epoch();
+  }
   if (entry.valid && entry.signature == signature) {
     return entry.has_slots;
   }
@@ -846,8 +911,8 @@ auto has_formation_slots_for(const Engine::Core::Entity& entity,
 }
 
 struct ContactCacheKey {
-  const Engine::Core::Entity* attacker{nullptr};
-  const Engine::Core::Entity* target{nullptr};
+  FormationCacheKey attacker;
+  FormationCacheKey target;
 
   auto operator==(const ContactCacheKey&) const -> bool = default;
 };
@@ -855,11 +920,10 @@ struct ContactCacheKey {
 struct ContactCacheKeyHash {
   auto operator()(const ContactCacheKey& key) const noexcept -> std::size_t {
     std::uint64_t seed = 0xcbf29ce484222325ULL;
-    hash_combine(
-        seed,
-        static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(key.attacker)));
-    hash_combine(
-        seed, static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(key.target)));
+    hash_combine(seed, key.attacker.registry);
+    hash_combine(seed, key.attacker.entity);
+    hash_combine(seed, key.target.registry);
+    hash_combine(seed, key.target.entity);
     return static_cast<std::size_t>(seed);
   }
 };
@@ -883,6 +947,7 @@ struct ContactCacheStamp {
 };
 
 struct ContactCacheEntry {
+  std::uint64_t epoch{0};
   ContactCacheStamp stamp;
   ContactGeometry geometry;
   bool valid{false};
@@ -905,7 +970,15 @@ struct AttackerSlotEntry {
   float parallel{0.0F};
 };
 
+struct TargetSlotEntry {
+  const SlotOffset* slot{nullptr};
+  float parallel{0.0F};
+};
+
+thread_local ContactStats g_contact_stats;
+
 struct ContactSlotsEntry {
+  std::uint64_t epoch{0};
   std::uint64_t signature{0};
   float world_x{0.0F};
   float world_z{0.0F};
@@ -919,13 +992,12 @@ struct ContactSlotsEntry {
   bool valid{false};
 };
 
-thread_local std::unordered_map<const Engine::Core::Entity*, ContactSlotsEntry>
-    g_contact_slots_cache;
+thread_local std::
+    unordered_map<FormationCacheKey, ContactSlotsEntry, FormationCacheKeyHash>
+        g_contact_slots_cache;
 
 void prune_contact_slots_cache() {
-  if (g_contact_slots_cache.size() > k_max_cached_spatial_layouts) {
-    g_contact_slots_cache.clear();
-  }
+  evict_incrementally(g_contact_slots_cache, k_max_cached_spatial_layouts);
 }
 
 auto contact_slots_for(const Engine::Core::Entity& entity,
@@ -933,7 +1005,11 @@ auto contact_slots_for(const Engine::Core::Entity& entity,
                        const Engine::Core::TransformComponent& transform,
                        std::uint64_t signature,
                        const LayoutRevisions& revisions) -> const ContactSlotsEntry& {
-  ContactSlotsEntry& entry = g_contact_slots_cache[&entity];
+  ContactSlotsEntry& entry = g_contact_slots_cache[cache_key(entity)];
+  if (entry.epoch != formation_cache_epoch()) {
+    entry = ContactSlotsEntry{};
+    entry.epoch = formation_cache_epoch();
+  }
   if (entry.valid && entry.signature == signature &&
       entry.world_x == transform.position.x && entry.world_z == transform.position.z &&
       entry.yaw == transform.rotation.y && entry.revisions == revisions) {
@@ -984,12 +1060,24 @@ void accumulate_slot_contact(const ContactSlotsEntry& attacker_slots,
   const float target_min_z = target_slots.min_z;
   const float target_max_z = target_slots.max_z;
 
+  thread_local std::vector<TargetSlotEntry> target_entries;
+  target_entries.clear();
+  target_entries.reserve(target_offsets.size());
   float nearest_target_parallel = k_infinity;
   for (auto const& target_slot : target_offsets) {
-    nearest_target_parallel =
-        std::min(nearest_target_parallel,
-                 (target_slot.offset_x * dir_x) + (target_slot.offset_z * dir_z));
+    const float parallel =
+        (target_slot.offset_x * dir_x) + (target_slot.offset_z * dir_z);
+    nearest_target_parallel = std::min(nearest_target_parallel, parallel);
+    target_entries.push_back({.slot = &target_slot, .parallel = parallel});
   }
+  std::sort(target_entries.begin(),
+            target_entries.end(),
+            [](const TargetSlotEntry& lhs, const TargetSlotEntry& rhs) {
+              return lhs.parallel < rhs.parallel;
+            });
+  g_contact_stats.slot_pairs_possible +=
+      static_cast<std::uint64_t>(attacker_slots.offsets.size()) *
+      static_cast<std::uint64_t>(target_offsets.size());
 
   thread_local std::vector<AttackerSlotEntry> attacker_entries;
   attacker_entries.clear();
@@ -1027,22 +1115,32 @@ void accumulate_slot_contact(const ContactSlotsEntry& attacker_slots,
       continue;
     }
 
-    for (auto const& target_slot : target_offsets) {
+    bool deepen_exhausted = !may_deepen;
+    for (auto const& target_entry : target_entries) {
+      if (!may_shorten && deepen_exhausted) {
+        break;
+      }
+      const SlotOffset& target_slot = *target_entry.slot;
+      ++g_contact_stats.slot_pairs_examined;
       if (may_shorten) {
         const float span_x = target_slot.world_x - attacker_slot.world_x;
-        const float span_z = target_slot.world_z - attacker_slot.world_z;
-        nearest_sq = std::min(nearest_sq, (span_x * span_x) + (span_z * span_z));
+        if ((span_x * span_x) < nearest_sq) {
+          const float span_z = target_slot.world_z - attacker_slot.world_z;
+          nearest_sq = std::min(nearest_sq, (span_x * span_x) + (span_z * span_z));
+        }
       }
-      if (!may_deepen) {
+      if (deepen_exhausted) {
+        continue;
+      }
+
+      const float parallel = target_entry.parallel - attacker_parallel;
+      if (contact_radius - parallel <= result.contact_center_distance) {
+        deepen_exhausted = true;
         continue;
       }
 
       const float relative_x = target_slot.offset_x - attacker_offset_x;
       const float relative_z = target_slot.offset_z - attacker_offset_z;
-      const float parallel = (relative_x * dir_x) + (relative_z * dir_z);
-      if (contact_radius - parallel <= result.contact_center_distance) {
-        continue;
-      }
       const float relative_sq = (relative_x * relative_x) + (relative_z * relative_z);
       const float lateral_sq = std::max(0.0F, relative_sq - (parallel * parallel));
       if (lateral_sq > contact_radius_sq) {
@@ -1103,7 +1201,7 @@ void resolve_contact(const Engine::Core::Entity& attacker,
   const LayoutCacheEntry* target_entry = resolve_layout_entry(target, target_signature);
   if (g_layout_cache_generation != generation_before) {
 
-    auto const refreshed = g_layout_cache.find(&attacker);
+    auto const refreshed = g_layout_cache.find(cache_key(attacker));
     attacker_entry = refreshed != g_layout_cache.end() ? &refreshed->second : nullptr;
   }
 
@@ -1140,15 +1238,20 @@ void resolve_contact(const Engine::Core::Entity& attacker,
                                 .attacker_has_slots = attacker_has_slots,
                                 .target_has_slots = target_has_slots};
 
-  if (g_contact_cache.size() > k_max_cached_contacts) {
-    g_contact_cache.clear();
+  evict_incrementally(g_contact_cache, k_max_cached_contacts);
+  ContactCacheEntry& contact_cache = g_contact_cache[ContactCacheKey{
+      .attacker = cache_key(attacker), .target = cache_key(target)}];
+  ++g_contact_stats.resolutions;
+  if (contact_cache.epoch != formation_cache_epoch()) {
+    contact_cache = ContactCacheEntry{};
+    contact_cache.epoch = formation_cache_epoch();
   }
-  ContactCacheEntry& contact_cache =
-      g_contact_cache[ContactCacheKey{.attacker = &attacker, .target = &target}];
   if (contact_cache.valid && contact_cache.stamp == stamp) {
+    ++g_contact_stats.cache_hits;
     result = contact_cache.geometry;
     return;
   }
+  ++g_contact_stats.cache_misses;
 
   result.formation_overlap_required = attacker_has_slots && target_has_slots;
   result.contact_tolerance =
@@ -1407,12 +1510,25 @@ auto select_damage_engagement_pair(
 }
 
 void invalidate_layout_cache() {
-  g_layout_cache.clear();
+  g_formation_cache_epoch.fetch_add(1, std::memory_order_acq_rel);
   ++g_layout_cache_generation;
+  g_layout_cache.clear();
   g_spatial_layout_cache.clear();
   g_slots_cache.clear();
   g_contact_cache.clear();
   g_contact_slots_cache.clear();
+}
+
+auto formation_cache_generation() -> std::uint64_t {
+  return g_formation_cache_epoch.load(std::memory_order_acquire);
+}
+
+auto contact_stats() -> ContactStats {
+  return g_contact_stats;
+}
+
+void reset_contact_stats() {
+  g_contact_stats = {};
 }
 
 } // namespace Game::Systems::FormationCombat
