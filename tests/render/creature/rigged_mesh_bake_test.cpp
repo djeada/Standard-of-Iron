@@ -13,6 +13,7 @@
 #include "render/creature/part_graph.h"
 #include "render/creature/skeleton.h"
 #include "render/elephant/elephant_spec.h"
+#include "render/equipment/armor/garment_shell.h"
 #include "render/gl/primitives.h"
 #include "render/horse/horse_spec.h"
 #include "render/rigged_mesh.h"
@@ -139,6 +140,53 @@ TEST(RiggedMeshBake, TwoPrimitiveGraphAccumulatesVertexAndIndexCounts) {
             sphere->get_vertices().size() + cylinder->get_vertices().size());
   EXPECT_EQ(baked.indices.size(),
             sphere->get_indices().size() + cylinder->get_indices().size());
+}
+
+TEST(RiggedMeshBake, EllipsoidNormalsFollowSurfaceRatherThanPositionScale) {
+  ToyGraph t;
+  t.prims[0].shape = PrimitiveShape::OrientedSphere;
+  t.prims[0].params.half_extents = QVector3D(0.4F, 1.2F, 0.2F);
+  auto const baked = bake_rigged_mesh_cpu(
+      BakeInput{&t.graph, std::span<const BoneWorldMatrix>{t.bind_pose}});
+  auto const count = Render::GL::get_unit_sphere()->get_vertices().size();
+  ASSERT_GE(baked.vertices.size(), count);
+  for (std::size_t i = 0; i < count; ++i) {
+    auto const& v = baked.vertices[i];
+    QVector3D const expected = QVector3D(v.position_bone_local[0] / (0.4F * 0.4F),
+                                         v.position_bone_local[1] / (1.2F * 1.2F),
+                                         v.position_bone_local[2] / (0.2F * 0.2F))
+                                   .normalized();
+    QVector3D const actual(
+        v.normal_bone_local[0], v.normal_bone_local[1], v.normal_bone_local[2]);
+    EXPECT_GT(QVector3D::dotProduct(actual, expected), 0.9999F) << i;
+  }
+}
+
+TEST(GarmentShell, CurvedWaistHasOutwardUnitNormalsAndNoDegenerateFaces) {
+  auto const mesh = Render::GL::make_garment_shell(
+      {{-0.8F, 0.45F, 0.32F}, {-0.3F, 0.22F, 0.16F}, {0.0F, 0.30F, 0.21F}});
+  ASSERT_NE(mesh, nullptr);
+  auto const& vertices = mesh->get_vertices();
+  ASSERT_FALSE(vertices.empty());
+  for (auto const& v : vertices) {
+    QVector3D const n(v.normal[0], v.normal[1], v.normal[2]);
+    EXPECT_NEAR(n.length(), 1.0F, k_eps);
+    EXPECT_GT(n.x() * v.position[0] + n.z() * v.position[2], 0.0F);
+    EXPECT_GE(v.position[1], -0.8F - k_eps);
+    EXPECT_LE(v.position[1], k_eps);
+  }
+  auto const& indices = mesh->get_indices();
+  for (std::size_t i = 0; i < indices.size(); i += 3U) {
+    std::array<QVector3D, 3> p;
+    for (std::size_t j = 0; j < p.size(); ++j) {
+      ASSERT_LT(indices[i + j], vertices.size());
+      auto const& v = vertices[indices[i + j]].position;
+      p[j] = QVector3D(v[0], v[1], v[2]);
+    }
+    QVector3D const n = QVector3D::crossProduct(p[1] - p[0], p[2] - p[0]);
+    EXPECT_GT(n.lengthSquared(), 1.0e-12F);
+    EXPECT_GT(n.x() * p[0].x() + n.z() * p[0].z(), 0.0F);
+  }
 }
 
 TEST(RiggedMeshBake, CylinderUsesCustomMeshOverrideWhenProvided) {

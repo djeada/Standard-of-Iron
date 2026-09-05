@@ -29,7 +29,9 @@
 #include "../formation/army_formation_registry.h"
 #include "../map/terrain.h"
 #include "../map/terrain_service.h"
+#include "../session/deterministic_rng.h"
 #include "../session/session_context.h"
+#include "../session/simulation_clock.h"
 #include "../systems/nation_id.h"
 #include "../systems/owner_registry.h"
 #include "../units/spawn_type.h"
@@ -2353,6 +2355,18 @@ void Serialization::deserialize_terrain(
   height_map->restore_from_data(heights, terrain_types, rivers, bridges, lakes, hills);
 }
 
+auto Serialization::read_capture_stamp(const QJsonDocument& doc) -> CaptureStamp {
+  const QJsonObject world_obj = doc.object();
+  if (!world_obj.contains(QLatin1String("captureTick"))) {
+    return {};
+  }
+  return {.present = true,
+          .tick = static_cast<std::uint64_t>(
+              world_obj[QLatin1String("captureTick")].toVariant().toULongLong()),
+          .rng_draws = static_cast<std::uint64_t>(
+              world_obj[QLatin1String("captureRngDraws")].toVariant().toULongLong())};
+}
+
 auto Serialization::serialize_world(const World* world) -> QJsonDocument {
   QJsonObject world_obj;
   QJsonArray entities_array;
@@ -2368,6 +2382,8 @@ auto Serialization::serialize_world(const World* world) -> QJsonDocument {
   world_obj["entities"] = entities_array;
   world_obj["nextEntityId"] = static_cast<qint64>(world->get_next_entity_id());
   world_obj["schemaVersion"] = 2;
+  world_obj["captureTick"] = static_cast<qint64>(session.clock().tick());
+  world_obj["captureRngDraws"] = static_cast<qint64>(session.rng().draw_count());
   world_obj["owner_registry"] = session.owners().to_json();
   world_obj["army_formations"] =
       Game::Formation::ArmyFormationRegistry::instance().to_json();

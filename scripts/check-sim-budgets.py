@@ -11,6 +11,19 @@ re-checking it on the same box while a build was running moved tick p95 from
 138 ms to 191 ms at 1,000 units, while every amplification counter came back
 byte-identical. Timing budgets belong on the pinned hardware runner; this script
 is what an ordinary shared CI runner can honestly enforce on every commit.
+The pinned runner is .github/workflows/perf-nightly.yml, which runs this same
+script with --check-timings and records the hardware it ran on.
+
+The counter set covers navigation query amplification and, since the route
+cache learned to invalidate by region rather than by flush, its hit ratio and
+its eviction and flush counts. A ratio is gated from below: a cache that stops
+hitting is a regression even when every absolute count falls with it.
+
+What is still NOT gated anywhere: rendered frame percentiles, the portable
+rigged fallback, allocation counts, the longest GUI stall during a save, and
+creature-asset residency across a run of missions. Those need a GPU, a real
+client, or a multi-mission harness; none of them can be honestly asserted from
+a shared runner, and none of them should be inferred from the numbers here.
 """
 
 from __future__ import annotations
@@ -30,7 +43,14 @@ AMPLIFICATION_COUNTERS = (
     "standability_cells_scanned",
     "nearest_standable_cells_scanned",
     "cells_expanded",
+    "route_cache_misses",
+    "route_cache_evictions",
+    "route_cache_flushes",
+    "region_map_rebuilds",
+    "dirty_cells_rebuilt",
 )
+
+RATIO_METRICS = ("route_cache_hit_ratio",)
 
 
 def run_benchmark(binary: Path, units: int, ticks: int, out: Path) -> dict:
@@ -65,6 +85,9 @@ def scenario_metrics(scenario: dict) -> dict:
     }
     for counter in AMPLIFICATION_COUNTERS:
         metrics[f"{counter}_per_unit_tick"] = totals.get(counter, 0) / (units * ticks)
+    hits = totals.get("route_cache_hits", 0)
+    misses = totals.get("route_cache_misses", 0)
+    metrics["route_cache_hit_ratio"] = hits / max(1, hits + misses)
     return metrics
 
 
@@ -87,6 +110,14 @@ def compare(name: str, measured: dict, budget: dict, tolerance: float) -> list[s
             continue
         value = measured.get(key)
         if value is None:
+            continue
+        if key in RATIO_METRICS:
+            floor = limit * (1.0 - tolerance)
+            if value < floor:
+                failures.append(
+                    f"{name}: {key} fell to {value:.4f}, baseline {limit:.4f} "
+                    f"(-{tolerance:.0%} tolerance = {floor:.4f})"
+                )
             continue
         allowed = limit * (1.0 + tolerance)
         if value > allowed:

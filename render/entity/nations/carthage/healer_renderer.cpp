@@ -29,6 +29,7 @@
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/registry.h"
 #include "render/entity/renderer_constants.h"
+#include "render/equipment/armor/garment_shell.h"
 #include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_submit.h"
@@ -166,19 +167,6 @@ auto dark_mage_robe_archetype() -> const RenderArchetype& {
 
     RenderArchetypeBuilder builder{"carthage_dark_mage_robe"};
 
-    auto add_shell = [&](float y_bottom,
-                         float y_top_edge,
-                         float bottom_w,
-                         float bottom_d,
-                         float top_w,
-                         std::uint8_t slot) {
-      QMatrix4x4 model;
-      model.translate(0.0F, (y_bottom + y_top_edge) * 0.5F, 0.0F);
-      model.scale(bottom_w, y_top_edge - y_bottom, bottom_d);
-      builder.add_palette_mesh(
-          get_unit_tapered_cylinder(1.0F, top_w / bottom_w, 18), model, slot);
-    };
-
     auto add_band = [&](float y_center,
                         float thickness,
                         float half_w,
@@ -190,29 +178,13 @@ auto dark_mage_robe_archetype() -> const RenderArchetype& {
       builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, 1.0F, 18), model, slot);
     };
 
-    add_shell(y_waist, y_top, waist_w, waist_d, chest_w, k_mage_robe_slot);
-    add_shell(y_waist - 0.30F,
-              y_waist + 0.01F,
-              skirt_mid_w,
-              skirt_mid_d,
-              waist_w,
-              k_mage_robe_slot);
-    add_shell(y_hem, y_waist - 0.29F, hem_w, hem_d, skirt_mid_w, k_mage_robe_slot);
-
-    constexpr int k_folds = 14;
-    for (int i = 0; i < k_folds; ++i) {
-      float const a = (static_cast<float>(i) / k_folds) * 2.0F * pi;
-      float const sa = std::sin(a);
-      float const ca = std::cos(a);
-      builder.add_palette_mesh(
-          get_unit_cylinder(),
-          cylinder_between(
-              QVector3D(sa * hem_w * 0.99F, y_hem + 0.03F, ca * hem_d * 0.99F),
-              QVector3D(
-                  sa * skirt_mid_w * 0.99F, y_waist - 0.29F, ca * skirt_mid_d * 0.99F),
-              0.012F),
-          (i % 2 == 0) ? k_mage_robe_lit_slot : k_mage_robe_slot);
-    }
+    static const auto shell = make_garment_shell({
+        {y_hem, hem_w, hem_d},
+        {y_waist - 0.30F, skirt_mid_w, skirt_mid_d},
+        {y_waist, waist_w, waist_d},
+        {y_top, chest_w, chest_d},
+    });
+    builder.add_palette_mesh(shell.get(), QMatrix4x4{}, k_mage_robe_slot);
 
     add_band(
         y_hem + 0.020F, 0.038F, hem_w * 1.015F, hem_d * 1.015F, k_mage_shadow_slot);

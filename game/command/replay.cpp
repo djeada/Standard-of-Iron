@@ -1,19 +1,84 @@
 #include "replay.h"
 
+#include <QCryptographicHash>
+#include <QDir>
+#include <QDirIterator>
 #include <QFile>
 #include <QJsonDocument>
+#include <QStringList>
 #include <QTextStream>
 
 #include <algorithm>
 
 #include "command_codec.h"
 #include "command_queue.h"
+#include "utils/resource_utils.h"
 
 namespace Game::Command {
+
+auto simulation_build_id() -> QString {
+#ifdef SOI_SIMULATION_BUILD_ID
+  return QStringLiteral(SOI_SIMULATION_BUILD_ID);
+#else
+  return QStringLiteral("unknown");
+#endif
+}
+
+auto simulation_content_digest() -> QString {
+  static const QString digest = []() -> QString {
+    const QString data_root =
+        Utils::Resources::resolve_resource_path(QStringLiteral("assets/data"));
+    QDir data(data_root);
+    if (!data.exists()) {
+      return QStringLiteral("no-content");
+    }
+    QCryptographicHash hash(QCryptographicHash::Sha1);
+    QDirIterator files(data.absolutePath(),
+                       QStringList{QStringLiteral("*.json")},
+                       QDir::Files,
+                       QDirIterator::Subdirectories);
+    QStringList paths;
+    while (files.hasNext()) {
+      paths.append(files.next());
+    }
+    paths.sort();
+    for (const QString& path : paths) {
+      QFile file(path);
+      if (!file.open(QIODevice::ReadOnly)) {
+        continue;
+      }
+      hash.addData(QDir(data.absolutePath()).relativeFilePath(path).toUtf8());
+      hash.addData(file.readAll());
+    }
+    return QString::fromLatin1(hash.result().toHex().left(16));
+  }();
+  return digest;
+}
+
+auto ReplayHeader::compatibility_error() const -> QString {
+  if (format_version != k_replay_format_version) {
+    return QStringLiteral("replay format %1, this build reads %2")
+        .arg(format_version)
+        .arg(k_replay_format_version);
+  }
+  const QString current_build = simulation_build_id();
+  if (!build_id.isEmpty() && build_id != current_build) {
+    return QStringLiteral("recorded by simulation build %1, this is %2")
+        .arg(build_id, current_build);
+  }
+  const QString current_content = simulation_content_digest();
+  if (!content_digest.isEmpty() && content_digest != current_content) {
+    return QStringLiteral("recorded against content %1, this is %2")
+        .arg(content_digest, current_content);
+  }
+  return {};
+}
 
 auto ReplayHeader::to_json() const -> QJsonObject {
   QJsonObject object;
   object["replay_format"] = format_version;
+  object["build_id"] = build_id;
+  object["content_digest"] = content_digest;
   object["kind"] = kind;
   object["reference"] = reference;
   object["launch"] = launch;
@@ -30,6 +95,8 @@ auto ReplayHeader::from_json(const QJsonObject& object) -> std::optional<ReplayH
   }
   ReplayHeader header;
   header.format_version = version.toInt();
+  header.build_id = object.value(QLatin1String("build_id")).toString();
+  header.content_digest = object.value(QLatin1String("content_digest")).toString();
   header.kind = object.value(QLatin1String("kind")).toString();
   header.reference = object.value(QLatin1String("reference")).toString();
   header.launch = object.value(QLatin1String("launch")).toObject();
@@ -137,6 +204,14 @@ auto ReplayFile::load(const QString& path,
           *error = QStringLiteral("%1:%2: not a replay header this build reads")
                        .arg(path)
                        .arg(line_number);
+        }
+        return std::nullopt;
+      }
+      if (const QString incompatible = header->compatibility_error();
+          !incompatible.isEmpty()) {
+        if (error != nullptr) {
+          *error = QStringLiteral("%1: cannot be replayed by this build (%2)")
+                       .arg(path, incompatible);
         }
         return std::nullopt;
       }

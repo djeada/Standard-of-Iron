@@ -94,6 +94,18 @@ Renderer::Renderer(ShaderQuality quality)
     : m_shader_quality(quality)
     , m_effects_submitter(std::make_unique<EffectsSubmitter>()) {
   m_active_queue = &m_queues[m_fill_queue_index];
+
+  constexpr std::uint64_t k_default_creature_budget_mb = 768U;
+  std::uint64_t budget_mb = k_default_creature_budget_mb;
+  if (const QByteArray override_mb = qgetenv("SOI_CREATURE_CACHE_BUDGET_MB");
+      !override_mb.isEmpty()) {
+    bool parsed = false;
+    const auto value = override_mb.toULongLong(&parsed);
+    if (parsed) {
+      budget_mb = value;
+    }
+  }
+  m_rigged_mesh_cache.set_residency_budget_bytes(budget_mb * 1024U * 1024U);
 }
 
 Renderer::~Renderer() {
@@ -203,6 +215,7 @@ void Renderer::begin_frame() {
   m_humanoid_runtime.begin_frame();
   m_humanoid_runtime.reset_stats();
   m_quadruped_runtime.reset();
+  m_rigged_mesh_cache.begin_frame();
 
   Render::VisibilityBudgetTracker::instance().reset_frame();
   m_battle_optimizer.begin_frame();

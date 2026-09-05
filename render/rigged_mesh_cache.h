@@ -36,6 +36,7 @@ struct RiggedMeshEntry {
   std::vector<std::shared_ptr<RiggedMesh>> attachment_meshes;
 
   std::shared_ptr<RiggedSkinAtlas> skin_atlas;
+  mutable std::uint64_t last_used_frame{0};
 };
 
 class RiggedMeshCache {
@@ -72,6 +73,20 @@ public:
     std::uint32_t skin_atlas_builds{0};
     std::uint32_t skin_ubo_uploads{0};
     std::uint64_t skin_ubo_bytes_uploaded{0};
+    std::uint32_t evictions{0};
+    std::uint64_t evicted_bytes{0};
+  };
+
+  struct Residency {
+    std::uint64_t mesh_bytes{0};
+    std::uint64_t attachment_bytes{0};
+    std::uint64_t atlas_bytes{0};
+    std::uint64_t budget_bytes{0};
+    std::uint64_t high_water_bytes{0};
+
+    [[nodiscard]] auto total_bytes() const noexcept -> std::uint64_t {
+      return mesh_bytes + attachment_bytes + atlas_bytes;
+    }
   };
 
   RiggedMeshCache() = default;
@@ -144,9 +159,24 @@ public:
     m_base_meshes.clear();
     m_attachment_meshes.clear();
     m_has_pending_skin_ubo_uploads = false;
+    m_residency.mesh_bytes = 0;
+    m_residency.attachment_bytes = 0;
+    m_residency.atlas_bytes = 0;
   }
 
   [[nodiscard]] auto size() const noexcept -> std::size_t { return m_entries.size(); }
+
+  void begin_frame();
+
+  void set_residency_budget_bytes(std::uint64_t bytes) noexcept {
+    m_residency.budget_bytes = bytes;
+  }
+
+  [[nodiscard]] auto residency() const noexcept -> const Residency& {
+    return m_residency;
+  }
+
+  auto evict_unused_over_budget() -> std::uint64_t;
 
 private:
   struct SkinAtlasKey {
@@ -210,6 +240,7 @@ private:
   };
 
   void release_skin_atlases();
+  void recount_residency();
 
   std::unordered_map<Key, RiggedMeshEntry, KeyHash> m_entries;
   std::unordered_map<SkinAtlasKey, std::shared_ptr<RiggedSkinAtlas>, SkinAtlasKeyHash>
@@ -223,6 +254,8 @@ private:
 
   mutable FrameStats m_frame_stats;
   bool m_has_pending_skin_ubo_uploads{false};
+  std::uint64_t m_frame_index{0};
+  Residency m_residency;
 };
 
 void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry);

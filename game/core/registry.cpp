@@ -1,6 +1,7 @@
 #include "registry.h"
 
 #include <algorithm>
+#include <atomic>
 
 namespace Engine::Core {
 
@@ -11,7 +12,12 @@ auto this_thread_lock_token() noexcept -> std::uint64_t {
   return token;
 }
 
-Registry::Registry() {
+namespace {
+std::atomic<std::uint64_t> g_registry_instances{0};
+}
+
+Registry::Registry()
+    : m_instance_id(g_registry_instances.fetch_add(1, std::memory_order_relaxed) + 1) {
   m_slots.emplace_back();
 }
 

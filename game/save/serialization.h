@@ -4,6 +4,7 @@
 #include <QJsonObject>
 #include <QString>
 
+#include <cstdint>
 #include <vector>
 
 #include "../map/map_definition.h"
@@ -15,8 +16,21 @@ struct BiomeSettings;
 
 namespace Engine::Core {
 
+struct CaptureStamp {
+  bool present = false;
+  std::uint64_t tick = 0;
+  std::uint64_t rng_draws = 0;
+
+  [[nodiscard]] auto matches(std::uint64_t expected_tick,
+                             std::uint64_t expected_draws) const -> bool {
+    return !present || (tick == expected_tick && rng_draws == expected_draws);
+  }
+};
+
 class Serialization {
 public:
+  static auto read_capture_stamp(const QJsonDocument& doc) -> CaptureStamp;
+
   static auto serialize_entity(const class Entity* entity) -> QJsonObject;
   static void deserialize_entity(class Entity* entity, const QJsonObject& json);
 

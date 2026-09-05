@@ -2,7 +2,9 @@
 
 #include <QDebug>
 #include <QJsonObject>
+#include <QObject>
 
+#include <cstdint>
 #include <memory>
 
 #include "app/audio/audio_coordinator.h"
@@ -137,6 +139,18 @@ auto SaveLoadCoordinator::begin_save_to_slot(const SaveToSlotContext& context) c
   request.autosave_retention = context.autosave_retention;
 
   request.world = Engine::Core::Serialization::serialize_world(&context.world);
+
+  const Engine::Core::CaptureStamp stamp =
+      Engine::Core::Serialization::read_capture_stamp(request.world);
+  if (!stamp.matches(context.runtime_snapshot.simulation_tick,
+                     context.runtime_snapshot.rng_draw_count)) {
+    qWarning() << "SaveLoadCoordinator: torn capture - session metadata is at tick"
+               << context.runtime_snapshot.simulation_tick << "draw"
+               << context.runtime_snapshot.rng_draw_count << "but the world is at"
+               << stamp.tick << "draw" << stamp.rng_draws;
+    return {.error = QObject::tr("Save: the match advanced while it was being "
+                                 "captured. Please try again.")};
+  }
 
   const quint64 job_id = context.save_load_service.begin_save(request);
   if (job_id == 0) {
