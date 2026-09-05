@@ -1,4 +1,5 @@
 #include "command_executor_common.h"
+#include "render/gl/draw_tally.h"
 
 namespace Render::GL {
 
@@ -208,6 +209,8 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
                             0,
                             m_terrain_pipeline->m_grass_vertex_count,
                             static_cast<GLsizei>(grass.instance_count));
+      tally_draw(static_cast<std::size_t>(m_terrain_pipeline->m_grass_vertex_count),
+                 grass.instance_count);
       glBindVertexArray(0);
 
       if (prev_cull != 0U) {
@@ -292,6 +295,9 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
                               GL_UNSIGNED_SHORT,
                               nullptr,
                               static_cast<GLsizei>(stone.instance_count));
+      tally_draw(
+          static_cast<std::size_t>(m_vegetation_pipeline->m_stone_mesh.index_count),
+          stone.instance_count);
       glBindVertexArray(0);
 
       break;
@@ -383,6 +389,8 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
                               GL_UNSIGNED_SHORT,
                               nullptr,
                               static_cast<GLsizei>(deco_cmd_.instance_count));
+      tally_draw(static_cast<std::size_t>(foliage.mesh->index_count),
+                 deco_cmd_.instance_count);
       glBindVertexArray(0);
 
       if (prev_cull != 0U) {
@@ -507,6 +515,9 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
                               GL_UNSIGNED_SHORT,
                               nullptr,
                               static_cast<GLsizei>(firecamp.instance_count));
+      tally_draw(
+          static_cast<std::size_t>(m_vegetation_pipeline->m_firecamp_mesh.index_count),
+          firecamp.instance_count);
       glBindVertexArray(0);
 
       if (prev_cull != 0U) {
@@ -605,6 +616,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
                               GL_UNSIGNED_SHORT,
                               nullptr,
                               static_cast<GLsizei>(deco_cmd_.instance_count));
+      tally_draw(static_cast<std::size_t>(prop_idx_count), deco_cmd_.instance_count);
       glBindVertexArray(0);
 
       if (prev_cull2 != 0U) {

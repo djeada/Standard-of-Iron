@@ -11,6 +11,7 @@
 
 #include "gl/gl_lifetime.h"
 #include "gl/platform_gl.h"
+#include "render/gl/draw_tally.h"
 #include "render/profiling/asset_counters.h"
 
 namespace Render::GL {
@@ -155,6 +156,7 @@ void RiggedMesh::draw() {
   }
   glDrawElements(
       GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()), GL_UNSIGNED_INT, nullptr);
+  Render::GL::tally_draw(m_indices.size());
   m_vao->unbind();
 
 #ifndef NDEBUG

@@ -68,6 +68,8 @@ public:
     std::size_t rigged_instanced_draws{0};
     std::size_t rigged_instanced_instances{0};
     std::size_t rigged_single_draws{0};
+    std::array<std::uint64_t, 16> triangles_by_type{};
+    std::array<std::uint64_t, 16> instances_by_type{};
     std::size_t shadow_rigged_instanced_draws{0};
     std::size_t shadow_rigged_instanced_instances{0};
     std::size_t shadow_rigged_single_draws{0};

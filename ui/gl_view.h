@@ -83,6 +83,8 @@ private:
     std::vector<double> m_benchmark_wall_interval_ms;
     std::uint64_t m_benchmark_draw_calls = 0;
     std::uint64_t m_benchmark_visible_soldiers = 0;
+    std::uint64_t m_benchmark_soldiers_lod_full = 0;
+    std::uint64_t m_benchmark_soldiers_lod_minimal = 0;
     std::array<std::uint64_t, Render::Profiling::FrameProfile::k_draw_cmd_slots>
         m_benchmark_draw_cmd_counts{};
     std::uint64_t m_benchmark_snapshot_cache_bytes = 0;
@@ -92,6 +94,7 @@ private:
     std::uint64_t m_benchmark_rigged_instanced_draws = 0;
     std::uint64_t m_benchmark_rigged_instanced_instances = 0;
     std::uint64_t m_benchmark_rigged_single_draws = 0;
+    std::array<std::uint64_t, 16> m_benchmark_triangles_by_type{};
     std::array<std::uint64_t,
                static_cast<std::size_t>(Render::Profiling::Phase::_Count)>
         m_benchmark_phase_us{};

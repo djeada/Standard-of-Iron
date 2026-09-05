@@ -16,6 +16,7 @@
 #include "character_wear_binding.h"
 #include "render/draw_commands.h"
 #include "render/gl/buffer.h"
+#include "render/gl/draw_tally.h"
 #include "render/gl/gl_capabilities.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/shader_cache.h"
@@ -645,6 +646,7 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
           return;
         }
         draw_shader->set_uniform(rigid_uniform, rigid ? 1 : 0);
+        tally_draw(index_count, count);
         glDrawElementsInstanced(
             GL_TRIANGLES,
             static_cast<GLsizei>(index_count),
@@ -835,6 +837,7 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
 
   m_stats.dispatched_instances = static_cast<std::uint32_t>(count);
   m_stats.candidate_triangles = static_cast<std::uint32_t>(candidate_triangles);
+  tally_draw(static_cast<std::size_t>(candidate_triangles) * 3U, 1U);
 
 #ifndef NDEBUG
   GLenum const err = glGetError();

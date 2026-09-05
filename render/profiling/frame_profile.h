@@ -69,12 +69,17 @@ struct FrameProfile {
   std::atomic<std::uint64_t> soldier_layout_generation_us{0};
 
   std::uint64_t visible_soldiers{0};
+
+  std::uint64_t soldiers_lod_full{0};
+  std::uint64_t soldiers_lod_minimal{0};
   std::atomic<std::uint64_t> render_asset_cache_hits{0};
   std::atomic<std::uint64_t> render_asset_cache_misses{0};
 
   std::uint64_t draw_calls{0};
   std::uint64_t triangles{0};
   std::uint64_t instances{0};
+
+  std::array<std::uint64_t, 16> triangles_by_type{};
 
   static constexpr std::size_t k_draw_cmd_slots = 16;
   std::array<std::uint32_t, k_draw_cmd_slots> draw_cmd_counts{};
@@ -136,6 +141,8 @@ struct FrameProfile {
     render_asset_cache_lookup_us = 0;
     soldier_layout_generation_us = 0;
     visible_soldiers = 0;
+    soldiers_lod_full = 0;
+    soldiers_lod_minimal = 0;
     render_asset_cache_hits = 0;
     render_asset_cache_misses = 0;
     draw_calls = 0;
@@ -149,6 +156,9 @@ struct FrameProfile {
     rigged_instanced_draws = 0;
     rigged_instanced_instances = 0;
     rigged_single_draws = 0;
+    triangles = 0;
+    instances = 0;
+    triangles_by_type.fill(0);
     gpu_shadow_ms = 0.0;
     gpu_color_ms = 0.0;
     gpu_wait_ms = 0.0;

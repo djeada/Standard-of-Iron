@@ -474,6 +474,8 @@ void GLView::GLRenderer::reset_runtime_benchmark_samples() {
   m_benchmark_phase_us.fill(0);
   m_benchmark_draw_calls = 0;
   m_benchmark_visible_soldiers = 0;
+  m_benchmark_soldiers_lod_full = 0;
+  m_benchmark_soldiers_lod_minimal = 0;
   m_benchmark_draw_cmd_counts.fill(0);
   m_benchmark_snapshot_cache_bytes = 0;
   m_benchmark_prepared_batches = 0;
@@ -482,6 +484,7 @@ void GLView::GLRenderer::reset_runtime_benchmark_samples() {
   m_benchmark_rigged_instanced_draws = 0;
   m_benchmark_rigged_instanced_instances = 0;
   m_benchmark_rigged_single_draws = 0;
+  m_benchmark_triangles_by_type.fill(0);
   m_benchmark_world_us = 0;
   m_benchmark_visibility_us = 0;
   m_benchmark_minimap_us = 0;
@@ -557,6 +560,8 @@ void GLView::GLRenderer::observe_runtime_benchmark(
   auto const& profile = Render::Profiling::global_profile();
   m_benchmark_draw_calls += profile.draw_calls;
   m_benchmark_visible_soldiers += profile.visible_soldiers;
+  m_benchmark_soldiers_lod_full += profile.soldiers_lod_full;
+  m_benchmark_soldiers_lod_minimal += profile.soldiers_lod_minimal;
   for (std::size_t i = 0; i < profile.draw_cmd_counts.size(); ++i) {
     m_benchmark_draw_cmd_counts[i] += profile.draw_cmd_counts[i];
   }
@@ -568,6 +573,9 @@ void GLView::GLRenderer::observe_runtime_benchmark(
   m_benchmark_rigged_instanced_draws += profile.rigged_instanced_draws;
   m_benchmark_rigged_instanced_instances += profile.rigged_instanced_instances;
   m_benchmark_rigged_single_draws += profile.rigged_single_draws;
+  for (std::size_t i = 0; i < m_benchmark_triangles_by_type.size(); ++i) {
+    m_benchmark_triangles_by_type[i] += profile.triangles_by_type[i];
+  }
   m_benchmark_gpu_shadow_ms.push_back(profile.gpu_shadow_ms);
   m_benchmark_gpu_color_ms.push_back(profile.gpu_color_ms);
   m_benchmark_gpu_wait_ms.push_back(profile.gpu_wait_ms);
@@ -651,6 +659,14 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
        sample_count > 0.0
            ? static_cast<double>(m_benchmark_visible_soldiers) / sample_count
            : 0.0},
+      {QStringLiteral("soldiers_lod_full_average"),
+       sample_count > 0.0
+           ? static_cast<double>(m_benchmark_soldiers_lod_full) / sample_count
+           : 0.0},
+      {QStringLiteral("soldiers_lod_minimal_average"),
+       sample_count > 0.0
+           ? static_cast<double>(m_benchmark_soldiers_lod_minimal) / sample_count
+           : 0.0},
       {QStringLiteral("snapshot_cache_bytes_peak"),
        static_cast<qint64>(m_benchmark_snapshot_cache_bytes)},
       {QStringLiteral("prepared_batches_average"),
@@ -693,6 +709,21 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
                                 : 0.0);
   }
   report.insert(QStringLiteral("draw_commands_average_by_type"), draw_cmd_average);
+
+  QJsonObject triangle_average;
+  for (std::size_t i = 0; i < m_benchmark_triangles_by_type.size(); ++i) {
+    if (m_benchmark_triangles_by_type[i] == 0) {
+      continue;
+    }
+    const bool other = i + 1 == m_benchmark_triangles_by_type.size();
+    triangle_average.insert(
+        other ? QStringLiteral("other")
+              : QString::fromLatin1(Render::GL::draw_cmd_type_name(i)),
+        sample_count > 0.0
+            ? static_cast<double>(m_benchmark_triangles_by_type[i]) / sample_count
+            : 0.0);
+  }
+  report.insert(QStringLiteral("triangles_average_by_type"), triangle_average);
 
   auto stage_ms = [sample_count](std::uint64_t total_us) {
     return sample_count > 0.0 ? static_cast<double>(total_us) / sample_count / 1000.0

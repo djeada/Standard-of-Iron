@@ -180,11 +180,13 @@ private:
 
   struct AttachmentMeshKey {
     const Render::Creature::CreatureSpec* spec{nullptr};
+    Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
     std::uint32_t skin_species_id{0};
     std::uint64_t attachments_hash{0};
 
     auto operator==(const AttachmentMeshKey& other) const noexcept -> bool {
-      return spec == other.spec && skin_species_id == other.skin_species_id &&
+      return spec == other.spec && lod == other.lod &&
+             skin_species_id == other.skin_species_id &&
              attachments_hash == other.attachments_hash;
     }
   };
@@ -193,6 +195,7 @@ private:
     auto operator()(const AttachmentMeshKey& key) const noexcept -> std::size_t {
       const auto spec_bits = reinterpret_cast<std::uintptr_t>(key.spec);
       return (spec_bits * 0x9E3779B97F4A7C15ULL) ^
+             (static_cast<std::size_t>(key.lod) << 1U) ^
              (static_cast<std::size_t>(key.skin_species_id) * 0x85EBCA77ULL) ^
              static_cast<std::size_t>(key.attachments_hash);
     }

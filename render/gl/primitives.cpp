@@ -872,6 +872,26 @@ auto get_unit_torso(int radial_segments, int height_segments) -> Mesh* {
       });
 }
 
+auto coarse_unit_mesh_for(Mesh* mesh) -> Mesh* {
+  if (mesh == nullptr) {
+    return nullptr;
+  }
+
+  if (mesh == get_unit_sphere()) {
+    return get_unit_sphere(k_coarse_latitude_segments, k_coarse_radial_segments);
+  }
+  if (mesh == get_unit_cylinder()) {
+    return get_unit_cylinder(k_coarse_radial_segments);
+  }
+  if (mesh == get_unit_cone()) {
+    return get_unit_cone(k_coarse_radial_segments);
+  }
+  if (mesh == get_unit_capsule()) {
+    return get_unit_capsule(k_coarse_radial_segments);
+  }
+  return mesh;
+}
+
 auto get_orientation_arrow() -> Mesh* {
   return SharedGeometryCache::instance().get_or_build(
       geometry_key("gl/orientation_arrow"), create_orientation_arrow_mesh);
