@@ -1246,7 +1246,25 @@ void Renderer::render_world(Engine::Core::World* world) {
 
   m_battle_optimizer.commit_frame_stats(optimizer_stats);
 
-  frame_profile.visible_soldiers = get_humanoid_render_stats().soldiers_rendered;
+  {
+    std::uint64_t full = 0;
+    std::uint64_t minimal = 0;
+    for (const auto& preparation : m_unit_preparations) {
+      for (const auto& request : preparation.bodies.requests()) {
+        if (request.pass == Render::Creature::Pipeline::RenderPassIntent::Shadow) {
+          continue;
+        }
+        if (request.lod == Render::Creature::CreatureLOD::Full) {
+          ++full;
+        } else if (request.lod == Render::Creature::CreatureLOD::Minimal) {
+          ++minimal;
+        }
+      }
+    }
+    frame_profile.visible_soldiers = full + minimal;
+    frame_profile.soldiers_lod_full = full;
+    frame_profile.soldiers_lod_minimal = minimal;
+  }
 
   for (const auto& entry : building_entries) {
     submit_non_unit_entry(entry, world, res);

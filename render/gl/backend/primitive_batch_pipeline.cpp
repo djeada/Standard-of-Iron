@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstddef>
 
+#include "render/gl/draw_tally.h"
 #include "render/gl/mesh.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/primitives.h"
@@ -350,6 +351,7 @@ void PrimitiveBatchPipeline::draw_spheres(std::size_t count,
                           GL_UNSIGNED_INT,
                           nullptr,
                           static_cast<GLsizei>(count));
+  tally_draw(static_cast<std::size_t>(m_sphere_mesh.index_count), count);
   glBindVertexArray(0);
 }
 
@@ -373,6 +375,7 @@ void PrimitiveBatchPipeline::draw_cylinders(std::size_t count,
                           GL_UNSIGNED_INT,
                           nullptr,
                           static_cast<GLsizei>(count));
+  tally_draw(static_cast<std::size_t>(m_cylinder_mesh.index_count), count);
   glBindVertexArray(0);
 }
 
@@ -396,6 +399,7 @@ void PrimitiveBatchPipeline::draw_cones(std::size_t count,
                           GL_UNSIGNED_INT,
                           nullptr,
                           static_cast<GLsizei>(count));
+  tally_draw(static_cast<std::size_t>(m_cone_mesh.index_count), count);
   glBindVertexArray(0);
 }
 

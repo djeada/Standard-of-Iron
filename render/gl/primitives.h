@@ -31,4 +31,9 @@ auto get_unit_torso(int radial_segments = k_default_radial_segments,
 
 auto get_orientation_arrow() -> Mesh*;
 
+inline constexpr int k_coarse_radial_segments = 8;
+inline constexpr int k_coarse_latitude_segments = 5;
+
+[[nodiscard]] auto coarse_unit_mesh_for(Mesh* mesh) -> Mesh*;
+
 } // namespace Render::GL

@@ -46,6 +46,7 @@
 #include "buffer.h"
 #include "decoration_gpu.h"
 #include "directional_shadow_block.h"
+#include "draw_tally.h"
 #include "gl/resources.h"
 #include "gl_lifetime.h"
 #include "mesh.h"
@@ -1369,6 +1370,8 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
                                   polygon_offset_enabled};
 
   m_rigged_drawn_this_frame = 0;
+  auto& draw_tally = DrawTally::instance();
+  draw_tally.reset();
 
   int breakdown_last_type = -1;
   std::size_t batch_index = 0;
@@ -1388,6 +1391,7 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
         breakdown_last_type = type;
       }
     }
+    draw_tally.set_type(static_cast<std::size_t>(draw_cmd_type(cmd)));
     switch (draw_cmd_type(cmd)) {
     case DrawCmdType::Cylinder:
     case DrawCmdType::FogBatch:
@@ -1464,6 +1468,9 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
     m_last_bound_shader = nullptr;
   }
 
+  draw_tally.set_type(DrawTally::k_other);
+  m_last_playback_stats.triangles_by_type = draw_tally.triangles;
+  m_last_playback_stats.instances_by_type = draw_tally.instances;
   if (m_rigged_cull_pipeline) {
     m_rigged_cull_pipeline->end_frame();
   }

@@ -9,6 +9,7 @@
 #include <cstddef>
 
 #include "gl/shader_cache.h"
+#include "render/gl/draw_tally.h"
 #include "render/gl/mesh.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/primitives.h"
@@ -327,6 +328,7 @@ void CylinderPipeline::draw_cylinders(std::size_t count) {
                           GL_UNSIGNED_INT,
                           nullptr,
                           static_cast<GLsizei>(count));
+  tally_draw(static_cast<std::size_t>(m_cylinder_mesh.index_count), count);
   glBindVertexArray(0);
 }
 
@@ -463,6 +465,7 @@ void CylinderPipeline::draw_fog(std::size_t count) {
                           GL_UNSIGNED_INT,
                           nullptr,
                           static_cast<GLsizei>(count));
+  tally_draw(static_cast<std::size_t>(m_fog_mesh.index_count), count);
   glBindVertexArray(0);
 }
 

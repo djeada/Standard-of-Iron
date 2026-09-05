@@ -1,5 +1,6 @@
 #include "rigged_mesh_bake.h"
 
+#include <QDebug>
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <QVector4D>
@@ -7,6 +8,11 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <limits>
+#include <mutex>
+#include <set>
+#include <utility>
+#include <vector>
 
 #include "creature/part_graph.h"
 #include "creature/primitive_geometry.h"
@@ -17,6 +23,7 @@
 #include "gl/mesh.h"
 #include "gl/primitives.h"
 #include "horse/horse_spec.h"
+#include "render/gl/primitives.h"
 #include "render/profiling/asset_counters.h"
 #include "render_archetype.h"
 
@@ -374,7 +381,49 @@ void append_primitive_vertices(const PrimitiveInstance& prim,
   }
 }
 
+constexpr float k_minimal_detail_cutoff = 0.02F;
+
+auto draw_world_extent(const std::vector<Render::GL::Vertex>& vertices,
+                       const QMatrix4x4& model) noexcept -> float {
+  QVector3D lo(std::numeric_limits<float>::max(),
+               std::numeric_limits<float>::max(),
+               std::numeric_limits<float>::max());
+  QVector3D hi = -lo;
+  for (Render::GL::Vertex const& v : vertices) {
+    lo.setX(std::min(lo.x(), v.position[0]));
+    lo.setY(std::min(lo.y(), v.position[1]));
+    lo.setZ(std::min(lo.z(), v.position[2]));
+    hi.setX(std::max(hi.x(), v.position[0]));
+    hi.setY(std::max(hi.y(), v.position[1]));
+    hi.setZ(std::max(hi.z(), v.position[2]));
+  }
+  QVector3D world_lo = lo;
+  QVector3D world_hi = hi;
+  bool first = true;
+  for (int corner = 0; corner < 8; ++corner) {
+    const QVector3D local((corner & 1) != 0 ? hi.x() : lo.x(),
+                          (corner & 2) != 0 ? hi.y() : lo.y(),
+                          (corner & 4) != 0 ? hi.z() : lo.z());
+    const QVector3D world = model.map(local);
+    if (first) {
+      world_lo = world;
+      world_hi = world;
+      first = false;
+      continue;
+    }
+    world_lo.setX(std::min(world_lo.x(), world.x()));
+    world_lo.setY(std::min(world_lo.y(), world.y()));
+    world_lo.setZ(std::min(world_lo.z(), world.z()));
+    world_hi.setX(std::max(world_hi.x(), world.x()));
+    world_hi.setY(std::max(world_hi.y(), world.y()));
+    world_hi.setZ(std::max(world_hi.z(), world.z()));
+  }
+  const QVector3D span = world_hi - world_lo;
+  return std::max({span.x(), span.y(), span.z()});
+}
+
 void append_static_attachment(const StaticAttachmentSpec& spec,
+                              CreatureLOD lod,
                               BakedRiggedMeshCpu& out) {
   if (spec.archetype == nullptr) {
     return;
@@ -384,9 +433,14 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
   if (slice.draws.empty()) {
     return;
   }
+  const bool coarse = lod == CreatureLOD::Minimal;
+
+  static const bool log_attachment_triangles =
+      qEnvironmentVariableIntValue("SOI_ATTACHMENT_TRIS") != 0;
+  std::size_t logged_triangles = 0;
 
   for (const Render::GL::RenderArchetypeDraw& draw : slice.draws) {
-    Mesh* src = draw.mesh;
+    Mesh* src = coarse ? Render::GL::coarse_unit_mesh_for(draw.mesh) : draw.mesh;
     if (src == nullptr) {
       continue;
     }
@@ -401,6 +455,14 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
       scale_mat.scale(spec.uniform_scale);
     }
     const QMatrix4x4 attach_model = spec.local_offset * scale_mat * draw.local_model;
+
+    if (coarse &&
+        draw_world_extent(src_verts, attach_model) < k_minimal_detail_cutoff) {
+      continue;
+    }
+    if (log_attachment_triangles) {
+      logged_triangles += src_idx.size() / 3U;
+    }
 
     std::uint8_t role = 0;
     if (draw.palette_slot != Render::GL::k_render_archetype_fixed_color_slot) {
@@ -435,6 +497,18 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
     out.indices.reserve(out.indices.size() + src_idx.size());
     for (unsigned int const idx : src_idx) {
       out.indices.push_back(base_vertex + static_cast<std::uint32_t>(idx));
+    }
+  }
+
+  if (log_attachment_triangles) {
+    static std::mutex mutex;
+    static std::set<std::pair<const void*, int>> seen;
+    std::lock_guard<std::mutex> const lock(mutex);
+    if (seen.emplace(spec.archetype, static_cast<int>(lod)).second) {
+      qInfo().noquote() << "SOI_ATTACHMENT_TRIS"
+                        << QString::fromStdString(spec.archetype->debug_name) << "lod"
+                        << static_cast<int>(lod) << "draws" << slice.draws.size()
+                        << "triangles" << logged_triangles;
     }
   }
 }
@@ -478,7 +552,7 @@ auto bake_rigged_mesh_cpu(const BakeInput& in) -> BakedRiggedMeshCpu {
     if (!in.bind_pose.empty() && spec.socket_bone_index >= in.bind_pose.size()) {
       continue;
     }
-    append_static_attachment(spec, out);
+    append_static_attachment(spec, in.lod, out);
   }
 
   return out;

@@ -9,6 +9,10 @@
 
 namespace Render::Creature {
 
+static_assert(k_minimal_radial_segments == Render::GL::k_coarse_radial_segments &&
+                  k_minimal_latitude_segments == Render::GL::k_coarse_latitude_segments,
+              "the body's Minimal tessellation and the gear's coarse twin must match");
+
 namespace {
 
 auto box_model(const QMatrix4x4& bone,
