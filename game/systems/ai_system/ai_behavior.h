@@ -22,6 +22,12 @@ public:
   [[nodiscard]] virtual auto get_priority() const -> BehaviorPriority = 0;
 
   [[nodiscard]] virtual auto can_run_concurrently() const -> bool { return false; }
+
+  [[nodiscard]] virtual auto
+  yields_to_exclusive(const AIContext& context) const -> bool {
+    (void)context;
+    return !can_run_concurrently();
+  }
 };
 
 } // namespace Game::Systems::AI

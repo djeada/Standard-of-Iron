@@ -31,6 +31,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+
+def shot_slow_motion(shot: dict) -> float:
+    """`time_lapse` is `slow_motion` written for values below one."""
+    if "time_lapse" in shot and "slow_motion" not in shot:
+        return 1.0 / max(1.0, float(shot["time_lapse"]))
+    return float(shot.get("slow_motion", 1.0))
+
+
 SAMPLE_RATE = 8000
 HOP = 128
 MIN_BPM, MAX_BPM = 70.0, 190.0
@@ -162,7 +170,7 @@ def quantise(spec: dict, grid: dict, min_beats: int, punch_every: int) -> list[s
     for shot in spec.get("shots", []):
         if shot.get("flame_card"):
             continue
-        slow = float(shot.get("slow_motion", 1.0))
+        slow = shot_slow_motion(shot)
         clip = float(shot["duration"]) * slow
 
         freeze = float(shot.get("freeze", 0.0) or 0.0)
@@ -231,9 +239,7 @@ def main() -> int:
     notes = quantise(spec, grid, args.min_beats, args.punch_every)
     args.spec.write_text(json.dumps(spec, indent=2) + "\n")
 
-    total = sum(
-        shot["duration"] * shot.get("slow_motion", 1.0) for shot in spec["shots"]
-    )
+    total = sum(shot["duration"] * shot_slow_motion(shot) for shot in spec["shots"])
     source = "detected" if grid.get("detected") else "from the track's grid sidecar"
     print(
         f"beat-align: {grid['bpm']} BPM {source}; "

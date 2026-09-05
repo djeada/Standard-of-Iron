@@ -27,6 +27,7 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/pathfinding.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/runtime_system_registry.h"
 #include "game/systems/structure_placement_service.h"
@@ -48,6 +49,64 @@ constexpr int k_south = 3;
 constexpr int k_north_grid = 26;
 constexpr int k_south_grid = k_map_size - 26;
 constexpr int k_opening_builders = 4;
+
+struct DuelSetup {
+  bool river_and_bridge = false;
+  int gold = 500;
+};
+
+constexpr float k_river_crossing_margin = 8.0F;
+
+auto is_across_the_river(int owner, float x, float z) -> bool {
+  const float along = x + z;
+  return owner == k_north ? along > k_river_crossing_margin
+                          : along < -k_river_crossing_margin;
+}
+
+void add_river_and_bridge(Game::Map::MapDefinition& map) {
+  using Game::Map::HillShape;
+  using Game::Map::TerrainType;
+  const auto reach = [](float x, float z) {
+    return QVector3D{x, 0.0F, z};
+  };
+  map.rivers.push_back(
+      Game::Map::RiverSegment{reach(-60.10F, 67.18F), reach(-31.47F, 27.93F), 12.0F});
+  map.rivers.push_back(
+      Game::Map::RiverSegment{reach(-31.47F, 27.93F), reach(-9.90F, 9.90F), 11.0F});
+  map.rivers.push_back(
+      Game::Map::RiverSegment{reach(-9.90F, 9.90F), reach(9.90F, -9.90F), 10.0F});
+  map.rivers.push_back(
+      Game::Map::RiverSegment{reach(9.90F, -9.90F), reach(27.93F, -31.47F), 11.0F});
+  map.rivers.push_back(
+      Game::Map::RiverSegment{reach(27.93F, -31.47F), reach(67.18F, -60.10F), 12.0F});
+  map.bridges.push_back(
+      Game::Map::Bridge{{-5.7F, 0.0F, -5.7F}, {5.7F, 0.0F, 5.7F}, 10.0F, 0.5F});
+
+  const auto hill = [&map](float x,
+                           float z,
+                           float radius,
+                           float height,
+                           HillShape shape,
+                           float thickness,
+                           float rotation) {
+    Game::Map::TerrainFeature feature;
+    feature.type = TerrainType::Hill;
+    feature.center_x = x;
+    feature.center_z = z;
+    feature.radius = radius;
+    feature.height = height;
+    feature.shape = shape;
+    feature.thickness = thickness;
+    feature.rotation_deg = rotation;
+    map.terrain.push_back(feature);
+  };
+  hill(1.41F, -28.28F, 12.0F, 3.6F, HillShape::Corridor, 5.0F, -45.0F);
+  hill(-1.41F, 28.28F, 12.0F, 3.6F, HillShape::Corridor, 5.0F, -45.0F);
+  hill(-43.84F, 2.83F, 11.0F, 4.0F, HillShape::Blob, 7.0F, 0.0F);
+  hill(43.84F, -2.83F, 11.0F, 4.0F, HillShape::Blob, 7.0F, 0.0F);
+  hill(-38.89F, -6.36F, 11.0F, 3.6F, HillShape::Elbow, 5.5F, 135.0F);
+  hill(38.89F, 6.36F, 11.0F, 3.6F, HillShape::Arc, 5.0F, -45.0F);
+}
 
 struct SideReport {
   int buildings = 0;
@@ -77,6 +136,13 @@ struct SideHistory {
   int harvested = 0;
   float commander_lost_at = -1.0F;
   float commander_last_distance_from_home = 0.0F;
+
+  int most_across_the_river = 0;
+  float crossed_the_river_at = -1.0F;
+
+  int buildings_lost = 0;
+
+  float eliminated_at = -1.0F;
 };
 
 class AiDuelMatchTest : public ::testing::Test {
@@ -109,7 +175,8 @@ protected:
   auto make_duel(Game::Units::SpawnType north_commander,
                  Game::Systems::NationID north_nation,
                  Game::Units::SpawnType south_commander,
-                 Game::Systems::NationID south_nation) -> SessionContext& {
+                 Game::Systems::NationID south_nation,
+                 const DuelSetup& setup = {}) -> SessionContext& {
     m_session = std::make_unique<SessionContext>();
     auto& session = *m_session;
     session.world().set_presentation_enabled(false);
@@ -131,6 +198,9 @@ protected:
     map_definition.grid.tile_size = 1.0F;
     scatter_resources(map_definition, k_north_grid, k_north_grid);
     scatter_resources(map_definition, k_south_grid, k_south_grid);
+    if (setup.river_and_bridge) {
+      add_river_and_bridge(map_definition);
+    }
     session.terrain().initialize(map_definition);
 
     Game::Systems::register_runtime_systems(session.world());
@@ -138,7 +208,7 @@ protected:
     for (const int owner : {k_north, k_south}) {
       auto& economy = session.economy();
       economy.ensure_owner(owner);
-      economy.set(owner, Game::Systems::ResourceType::Gold, 500);
+      economy.set(owner, Game::Systems::ResourceType::Gold, setup.gold);
       economy.set(owner, Game::Systems::ResourceType::Food, 200);
       economy.set(owner, Game::Systems::ResourceType::Wood, 250);
       economy.set(owner, Game::Systems::ResourceType::Stone, 120);
@@ -356,6 +426,23 @@ protected:
     return 0.0F;
   }
 
+  static auto fighters_across_the_river(SessionContext& session, int owner) -> int {
+    int across = 0;
+    for (auto [id, unit, transform] :
+         session.world().view<UnitComponent, Engine::Core::TransformComponent>()) {
+      if (unit.owner_id != owner || unit.health <= 0 ||
+          Game::Units::is_building_spawn(unit.spawn_type) ||
+          unit.spawn_type == Game::Units::SpawnType::Builder ||
+          unit.spawn_type == Game::Units::SpawnType::Civilian) {
+        continue;
+      }
+      if (is_across_the_river(owner, transform.position.x, transform.position.z)) {
+        ++across;
+      }
+    }
+    return across;
+  }
+
   static void
   observe(SessionContext& session, int owner, float minute, SideHistory& history) {
     const auto report = survey(session, owner);
@@ -364,6 +451,18 @@ protected:
     if (report.commander_alive) {
       history.commander_last_distance_from_home =
           commander_distance_from_home(session, owner);
+    }
+
+    const int across = fighters_across_the_river(session, owner);
+    history.most_across_the_river = std::max(history.most_across_the_river, across);
+    if (across > 0 && history.crossed_the_river_at < 0.0F) {
+      history.crossed_the_river_at = minute;
+    }
+    history.buildings_lost =
+        std::max(history.buildings_lost, history.most_buildings - report.buildings);
+    if (history.most_buildings > 0 && report.buildings == 0 && report.fighters == 0 &&
+        !report.commander_alive && history.eliminated_at < 0.0F) {
+      history.eliminated_at = minute;
     }
 
     history.most_buildings = std::max(history.most_buildings, report.buildings);
@@ -397,6 +496,105 @@ protected:
     for (const auto& side : sides) {
       const auto report = survey(session, side.first);
       const auto* plan = ai != nullptr ? ai->plan_for(side.first) : nullptr;
+      if (qEnvironmentVariableIsSet("SOI_DUEL_WAVE") && plan != nullptr) {
+        std::printf("    %s wave committed %d target %llu at %.1f,%.1f members %zu\n",
+                    side.second,
+                    plan->wave.committed ? 1 : 0,
+                    static_cast<unsigned long long>(plan->wave.target_id),
+                    plan->wave.target_x,
+                    plan->wave.target_z,
+                    plan->wave.members.size());
+        for (auto [id, unit, transform, movement] :
+             session.world()
+                 .view<UnitComponent,
+                       Engine::Core::TransformComponent,
+                       Engine::Core::MovementComponent>()) {
+          if (unit.owner_id != side.first || unit.health <= 0 ||
+              Game::Units::is_building_spawn(unit.spawn_type) ||
+              unit.spawn_type == Game::Units::SpawnType::Builder ||
+              unit.spawn_type == Game::Units::SpawnType::Civilian) {
+            continue;
+          }
+          const bool in_wave =
+              std::find(plan->wave.members.begin(), plan->wave.members.end(), id) !=
+              plan->wave.members.end();
+
+          auto reach = [&](float gx, float gz) -> std::string {
+            auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+            if (pathfinder == nullptr) {
+              return "?";
+            }
+            const auto from = Game::Systems::NavGrid::world_to_grid(
+                transform.position.x, transform.position.z);
+            const auto to = Game::Systems::NavGrid::world_to_grid(gx, gz);
+            const auto path = pathfinder->find_path(from, to);
+            const bool complete = !path.empty() && path.back() == to;
+            return std::to_string(path.size()) + (complete ? "" : "!");
+          };
+          const std::string to_objective =
+              in_wave ? reach(plan->wave.target_x, plan->wave.target_z) : "-";
+          const std::string to_bridge = in_wave ? reach(0.0F, 0.0F) : "-";
+          std::printf("      %s%s %llu at %.1f,%.1f hp %d -> goal %.1f,%.1f target %d "
+                      "path %zu/%zu | reach objective %s bridge %s\n",
+                      in_wave ? "W " : "  ",
+                      Game::Units::spawn_typeToString(unit.spawn_type).c_str(),
+                      static_cast<unsigned long long>(id),
+                      transform.position.x,
+                      transform.position.z,
+                      unit.health,
+                      movement.get_goal_x(),
+                      movement.get_goal_y(),
+                      movement.get_has_target() ? 1 : 0,
+                      movement.get_path_index(),
+                      movement.get_path().size(),
+                      to_objective.c_str(),
+                      to_bridge.c_str());
+        }
+      }
+      if (qEnvironmentVariableIsSet("SOI_DUEL_CIVILIANS")) {
+        for (auto [id, unit, transform, movement] :
+             session.world()
+                 .view<UnitComponent,
+                       Engine::Core::TransformComponent,
+                       Engine::Core::MovementComponent>()) {
+          if (unit.owner_id != side.first || unit.health <= 0 ||
+              unit.spawn_type != Game::Units::SpawnType::Civilian) {
+            continue;
+          }
+          const auto here = Game::Systems::NavGrid::world_to_grid(transform.position.x,
+                                                                  transform.position.z);
+          std::printf("    civilian %llu at %.1f,%.1f (walk %d) -> goal %.1f,%.1f "
+                      "target %d path %zu/%zu\n",
+                      static_cast<unsigned long long>(id),
+                      transform.position.x,
+                      transform.position.z,
+                      Game::Systems::NavGrid::is_grid_walkable(here) ? 1 : 0,
+                      movement.get_goal_x(),
+                      movement.get_goal_y(),
+                      movement.get_has_target() ? 1 : 0,
+                      movement.get_path_index(),
+                      movement.get_path().size());
+        }
+        for (auto [id, unit, transform, prod] :
+             session.world()
+                 .view<UnitComponent,
+                       Engine::Core::TransformComponent,
+                       Engine::Core::ProductionComponent>()) {
+          if (unit.owner_id != side.first ||
+              unit.spawn_type != Game::Units::SpawnType::Barracks) {
+            continue;
+          }
+          std::printf("    barracks %llu at %.1f,%.1f manpower %d/%d (max_units %d) "
+                      "queue %zu\n",
+                      static_cast<unsigned long long>(id),
+                      transform.position.x,
+                      transform.position.z,
+                      prod.manpower_available,
+                      prod.manpower_limit(),
+                      prod.max_units,
+                      prod.production_queue.size());
+        }
+      }
       if (qEnvironmentVariableIsSet("SOI_DUEL_BUILDERS")) {
         for (auto [id, unit, transform, movement] :
              session.world()
@@ -464,7 +662,7 @@ protected:
           "  %-10s bar %d home %d farm %d tow %d wall %d mkt %d | work %d/%d "
           "fight %d (foot %d bow %d horse %d engine %d) | "
           "food %d wood %d stone %d iron %d gold %d manpower %d | "
-          "left %d homesfirst %d | wave %s(%d) %s\n",
+          "left %d homesfirst %d | pop %d/%d | wave %s(%d) %s | across %d\n",
           side.second,
           report.barracks,
           report.homes,
@@ -487,13 +685,16 @@ protected:
           barracks_manpower(session, side.first),
           plan != nullptr ? plan->home_civilians_remaining : -1,
           plan != nullptr && plan->macro_targets.raise_homes_first ? 1 : 0,
+          plan != nullptr ? plan->population_used : -1,
+          plan != nullptr ? plan->population_cap : -1,
           (plan != nullptr && plan->wave.committed) ? "yes" : "no",
           plan != nullptr ? static_cast<int>(plan->wave.members.size()) : 0,
           plan != nullptr
               ? Game::Systems::AI::AIStrategyFactory::state_to_string(plan->state)
                     .toUtf8()
                     .constData()
-              : "?");
+              : "?",
+          fighters_across_the_river(session, side.first));
     }
   }
 
@@ -508,8 +709,9 @@ protected:
             Game::Units::SpawnType south_commander,
             Game::Systems::NationID south_nation,
             const char* south_name,
-            int minutes) -> DuelOutcome {
-    make_duel(north_commander, north_nation, south_commander, south_nation);
+            int minutes,
+            const DuelSetup& setup = {}) -> DuelOutcome {
+    make_duel(north_commander, north_nation, south_commander, south_nation, setup);
     auto& session = *m_session;
     DuelOutcome outcome;
     for (int minute = 1; minute <= minutes; ++minute) {
@@ -689,4 +891,56 @@ TEST_F(AiDuelMatchTest, HannibalAndHasdrubalBothPlayTheirDoctrine) {
   expect_a_commander_played_the_match(outcome.north, "Hannibal");
   expect_a_commander_played_the_match(outcome.south, "Hasdrubal");
   expect_one_of_them_fought_a_war(outcome.north, outcome.south);
+}
+
+TEST_F(AiDuelMatchTest, HannibalMirrorGetsItsArmyAcrossTheRiver) {
+  DuelSetup setup;
+  setup.river_and_bridge = true;
+  setup.gold = 3000;
+  const auto outcome = play(Game::Units::SpawnType::CarthageSwordCommander,
+                            Game::Systems::NationID::Carthage,
+                            "hannibal_n",
+                            Game::Units::SpawnType::CarthageSwordCommander,
+                            Game::Systems::NationID::Carthage,
+                            "hannibal_s",
+                            30,
+                            setup);
+
+  constexpr float k_full_match_minutes = 15.0F;
+  const auto expect_if_it_lived = [&](const SideHistory& side, const char* name) {
+    if (side.eliminated_at < 0.0F || side.eliminated_at >= k_full_match_minutes) {
+      expect_a_commander_played_the_match(side, name);
+    }
+  };
+  expect_if_it_lived(outcome.north, "Hannibal (north)");
+  expect_if_it_lived(outcome.south, "Hannibal (south)");
+  expect_one_of_them_fought_a_war(outcome.north, outcome.south);
+
+  EXPECT_FALSE(outcome.north.eliminated_at >= 0.0F &&
+               outcome.south.eliminated_at >= 0.0F)
+      << "both towns were wiped out";
+
+  const float first_crossing = [&] {
+    float best = -1.0F;
+    for (const float at :
+         {outcome.north.crossed_the_river_at, outcome.south.crossed_the_river_at}) {
+      if (at >= 0.0F && (best < 0.0F || at < best)) {
+        best = at;
+      }
+    }
+    return best;
+  }();
+  EXPECT_GE(first_crossing, 0.0F)
+      << "neither army ever crossed the river in 30 minutes; the aggressive "
+         "doctrine parked at the bridge";
+  if (first_crossing >= 0.0F) {
+    EXPECT_LE(first_crossing, 15.0F)
+        << "the first crossing took " << first_crossing
+        << " minutes; a decisive doctrine with 3000 gold should be over the "
+           "bridge well inside the first half";
+  }
+  EXPECT_GE(std::max(outcome.north.most_across_the_river,
+                     outcome.south.most_across_the_river),
+            3)
+      << "no side ever had more than a straggler across the river";
 }

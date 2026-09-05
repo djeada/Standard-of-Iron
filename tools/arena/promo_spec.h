@@ -56,15 +56,32 @@ struct CameraKey {
   Ease ease{Ease::Smooth};
 };
 
+struct StartOn {
+  QString event;
+  QString side;
+  float offset_seconds{0.0F};
+};
+
+inline constexpr const char* k_event_first_wave = "first_wave";
+inline constexpr const char* k_event_first_contact = "first_contact";
+inline constexpr const char* k_event_first_building_lost = "first_building_lost";
+inline constexpr const char* k_event_decision = "decision";
+
+[[nodiscard]] auto known_start_event(const QString& event) -> bool;
+
 struct Shot {
   QString name;
   QString scenario;
   int seed{1337};
 
   float start_seconds{0.0F};
+  std::optional<StartOn> start_on;
   float duration_seconds{3.0F};
+
   float slow_motion{1.0F};
   float shake{0.0F};
+
+  bool casting_overlay{false};
 
   bool gameplay_camera{false};
 
@@ -111,9 +128,35 @@ struct Spec {
   float report_sound_volume{0.45F};
   bool gameplay_ui{false};
   bool gameplay_ui_all_owners{false};
+  bool casting_overlay{false};
+
+  bool require_decision{false};
+
+  bool forbid_world_edge{false};
+
   ReportCardStyle report_card_style{ReportCardStyle::Reel};
   std::vector<Shot> shots;
 };
+
+struct GroundFootprint {
+  bool horizon_visible{false};
+  float max_abs_extent{0.0F};
+};
+
+struct Pose;
+
+[[nodiscard]] auto view_ground_footprint(const Pose& pose,
+                                         const QVector3D& focus,
+                                         float aspect,
+                                         float ground_y = 0.0F) -> GroundFootprint;
+
+[[nodiscard]] auto frames_world_edge(const GroundFootprint& footprint,
+                                     float floor_half_extent) -> bool;
+
+[[nodiscard]] auto world_edge_violations(const Spec& spec, float floor_half_extent)
+    -> std::vector<QString>;
+
+[[nodiscard]] auto uses_start_events(const Spec& spec) -> bool;
 
 struct Pose {
   QVector3D target;

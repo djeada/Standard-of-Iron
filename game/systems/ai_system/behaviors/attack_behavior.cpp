@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <utility>
@@ -79,6 +80,10 @@ auto select_strategic_objective(const AISnapshot& snapshot,
   return best_objective;
 }
 } // namespace
+
+auto AttackBehavior::yields_to_exclusive(const AIContext& context) const -> bool {
+  return !(context.wave.committed && !context.wave.members.empty());
+}
 
 void AttackBehavior::execute(const AISnapshot& snapshot,
                              AIContext& context,
@@ -274,6 +279,27 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
         }
       }
 
+      if (target == nullptr) {
+        target = wave_objective(snapshot, context);
+      }
+      if (target == nullptr) {
+        for (const auto& enemy : snapshot.visible_enemies) {
+          if (!enemy.is_building || enemy.health <= 0) {
+            continue;
+          }
+          float const dist_sq = distance_squared(enemy.pos_x,
+                                                 enemy.pos_y,
+                                                 enemy.pos_z,
+                                                 group_center_x,
+                                                 group_center_y,
+                                                 group_center_z);
+          if (dist_sq < closest_dist_sq) {
+            closest_dist_sq = dist_sq;
+            target = &enemy;
+          }
+        }
+      }
+
       if ((target != nullptr) && !ready_units.empty()) {
 
         float attack_pos_x = target->pos_x;
@@ -346,8 +372,14 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
       ready_units, nearby_enemies, context.state == AIState::Attacking ? 0.7F : 0.9F);
 
   bool const being_attacked = context.damaged_units_count > 0;
+  bool const only_buildings_in_reach =
+      std::none_of(nearby_enemies.begin(),
+                   nearby_enemies.end(),
+                   [](const ContactSnapshot* enemy) { return !enemy->is_building; });
+  bool const wave_at_the_walls = context.wave.committed && only_buildings_in_reach;
 
-  if (!assessment.should_engage && !context.barracks_under_threat && !being_attacked) {
+  if (!assessment.should_engage && !context.barracks_under_threat && !being_attacked &&
+      !wave_at_the_walls) {
 
     m_last_target = 0;
     m_target_lock_duration = 0.0F;
@@ -381,6 +413,33 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
       objective != nullptr && assessment.force_ratio >= k_siege_superiority_ratio) {
 
     target_info.target_id = objective->id;
+  }
+
+  if (target_info.target_id == 0 &&
+      (context.wave.committed || context.state == AIState::Attacking)) {
+    const ContactSnapshot* building = nullptr;
+    float best_score = std::numeric_limits<float>::max();
+    for (const auto* enemy : nearby_enemies) {
+      if (!enemy->is_building || enemy->health <= 0) {
+        continue;
+      }
+      float score = distance_squared(enemy->pos_x,
+                                     enemy->pos_y,
+                                     enemy->pos_z,
+                                     group_center_x,
+                                     group_center_y,
+                                     group_center_z);
+      if (enemy->spawn_type == Game::Units::SpawnType::DefenseTower) {
+        score *= 0.25F;
+      }
+      if (score < best_score) {
+        best_score = score;
+        building = enemy;
+      }
+    }
+    if (building != nullptr) {
+      target_info.target_id = building->id;
+    }
   }
 
   if (target_info.target_id == 0) {
