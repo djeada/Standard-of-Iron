@@ -1496,6 +1496,60 @@ TEST_F(AISystemTest, AttackBehaviorPicksSoldierOverCloserBuilding) {
   EXPECT_TRUE(commands.front().should_chase);
 }
 
+TEST_F(AISystemTest,
+       AttackBehaviorMarchesTheWaveOnItsObjectiveWhenOnlyBuildingsAreInView) {
+  Game::Systems::AI::AttackBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.friendly_units = {
+      make_unit(1, 0.0F, 0.0F),
+      make_unit(2, 2.0F, 1.0F),
+      make_unit(3, 1.0F, 3.0F),
+  };
+
+  auto tower = make_enemy_building(101, -24.0F, -14.0F);
+  tower.spawn_type = Game::Units::SpawnType::DefenseTower;
+  snapshot.visible_enemies = {tower};
+
+  snapshot.strategic_objectives = {make_enemy_building(7, -37.5F, -37.5F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.state = Game::Systems::AI::AIState::Attacking;
+  context.total_units = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Aggressive);
+  context.wave.committed = true;
+  context.wave.members = {1, 2, 3};
+  context.wave.target_id = 7;
+  context.wave.target_x = -37.5F;
+  context.wave.target_z = -37.5F;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.6F, commands);
+
+  ASSERT_EQ(commands.size(), 1U)
+      << "a committed wave with its objective out of sight must still be ordered "
+         "to march";
+  const auto& order = commands.front();
+  EXPECT_EQ(order.type, Game::Systems::AI::AICommandType::MoveUnits);
+  ASSERT_EQ(order.move_target_x.size(), 3U);
+  float average_x = 0.0F;
+  float average_z = 0.0F;
+  for (std::size_t index = 0; index < order.move_target_x.size(); ++index) {
+    average_x += order.move_target_x[index];
+    average_z += order.move_target_z[index];
+  }
+  average_x /= 3.0F;
+  average_z /= 3.0F;
+
+  const float from_here = std::hypot(-37.5F - 1.0F, -37.5F - 1.3F);
+  const float from_there = std::hypot(-37.5F - average_x, -37.5F - average_z);
+  EXPECT_LT(from_there, from_here * 0.25F)
+      << "the wave was ordered to " << average_x << "," << average_z
+      << ", which is no closer to its objective at -37.5,-37.5";
+}
+
 TEST_F(AISystemTest, AssaultBehaviorPicksSoldierOverCloserBuilding) {
   Game::Systems::AI::AssaultBehavior behavior;
 

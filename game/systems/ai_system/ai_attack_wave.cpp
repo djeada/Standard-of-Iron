@@ -383,6 +383,14 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
   wave.committed_at = snapshot.game_time;
 }
 
+auto wave_objective(const AISnapshot& snapshot,
+                    const AIContext& context) -> const ContactSnapshot* {
+  if (!context.wave.committed || context.wave.target_id == 0) {
+    return nullptr;
+  }
+  return find_contact(snapshot, context.wave.target_id);
+}
+
 auto wave_force_units(const AISnapshot& snapshot,
                       const AIContext& context) -> std::vector<const EntitySnapshot*> {
   std::vector<const EntitySnapshot*> result;

@@ -636,6 +636,7 @@ add_executable(
     tools/arena_unit_spawn_options_test.cpp
     tools/arena_terrain_alignment_test.cpp
     tools/arena_promo_spec_test.cpp
+    tools/arena_casting_overlay_test.cpp
     tools/arena_matchup_short_test.cpp
     tools/arena_video_encoder_test.cpp
     tools/settlement_layout_test.cpp
@@ -656,6 +657,7 @@ target_link_libraries(
         arena_scenario_harness
         arena_panels
         arena_feedback
+        arena_casting_overlay
 )
 soi_register_test_binary(arena_tests)
 if(TARGET bake_creature_assets)

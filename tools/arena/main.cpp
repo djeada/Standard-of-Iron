@@ -415,6 +415,14 @@ auto main(int argc, char** argv) -> int {
       QStringLiteral("Directory for recorded promo clips, posters, and manifest."),
       QStringLiteral("directory"),
       QStringLiteral("artifacts/promo"));
+  QCommandLineOption const promo_precheck_option(
+      QStringList{QStringLiteral("promo-precheck")},
+      QStringLiteral("Play every scenario the promo spec names through once without "
+                     "rendering first, and write its match timeline."));
+  QCommandLineOption const promo_precheck_only_option(
+      QStringList{QStringLiteral("promo-precheck-only")},
+      QStringLiteral("Only the dry run: write the match timeline and verdict, record "
+                     "nothing."));
   parser.addOptions({batch_option,
                      all_option,
                      scenario_option,
@@ -442,6 +450,8 @@ auto main(int argc, char** argv) -> int {
                      fog_of_war_option,
                      promo_spec_option,
                      promo_out_option,
+                     promo_precheck_option,
+                     promo_precheck_only_option,
                      matchup_option,
                      matchup_seconds_option,
                      matchup_report_option,
@@ -580,6 +590,8 @@ auto main(int argc, char** argv) -> int {
     Arena::Promo::RunOptions promo_options;
     promo_options.output_directory =
         QDir(QDir::cleanPath(parser.value(promo_out_option))).filePath(spec->id);
+    promo_options.force_precheck = parser.isSet(promo_precheck_option);
+    promo_options.precheck_only = parser.isSet(promo_precheck_only_option);
     const int promo_status =
         Arena::Promo::run(*window.viewport(), *spec, promo_options, &promo_error);
     if (promo_status == 2 && !promo_error.isEmpty()) {

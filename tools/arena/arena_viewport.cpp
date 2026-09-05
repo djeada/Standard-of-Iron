@@ -38,6 +38,7 @@
 #include "app/orders/movement_utils.h"
 #include "app/session/renderer_bootstrap.h"
 #include "app/session/world_bootstrap.h"
+#include "arena_casting.h"
 #include "arena_scenario.h"
 #include "arena_scenarios.h"
 #include "game/core/component.h"
@@ -80,6 +81,7 @@
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 #include "game/units/unit.h"
+#include "game/visuals/team_colors.h"
 #include "game/wildlife/bird_flock.h"
 #include "game/wildlife/wildlife_system.h"
 #include "render/camera_visibility.h"
@@ -501,6 +503,10 @@ void ArenaViewport::resizeGL(int width, int height) {
   }
 }
 
+namespace {
+constexpr float k_max_simulation_substep = 1.0F / 30.0F;
+} // namespace
+
 void ArenaViewport::paintGL() {
   if (!m_gl_initialized || m_renderer == nullptr || m_camera == nullptr ||
       m_world == nullptr) {
@@ -554,7 +560,14 @@ void ArenaViewport::paintGL() {
 
   if (!m_paused) {
     update_rpg_scenario_controller(simulation_dt);
-    m_world->update(simulation_dt);
+
+    int const substeps = std::max(
+        1,
+        static_cast<int>(std::ceil(simulation_dt / k_max_simulation_substep - 1e-4F)));
+    float const substep = simulation_dt / static_cast<float>(substeps);
+    for (int step = 0; step < substeps; ++step) {
+      m_world->update(substep);
+    }
   }
   m_feedback.advance(simulation_dt);
 
@@ -2895,6 +2908,29 @@ auto ArenaViewport::ai_activity_summary() const -> QString {
       .arg(sides);
 }
 
+auto ArenaViewport::casting_snapshot() const -> Arena::ArenaCastingSnapshot {
+  Arena::ArenaCastingSnapshot snapshot;
+  if (m_scenario_runner == nullptr) {
+    return snapshot;
+  }
+  snapshot.valid = true;
+  snapshot.elapsed_seconds = m_scenario_runner->elapsed_seconds();
+  snapshot.decided = m_scenario_runner->battle_decided();
+  const auto& economy = m_session.economy();
+  for (const auto& side : m_scenario_runner->live_battle_sides()) {
+    Arena::ArenaCastingSide cast;
+    cast.census = side;
+    cast.color = Game::Visuals::team_colorForOwner(side.owner_id);
+    cast.gold = economy.get(side.owner_id, Game::Systems::ResourceType::Gold);
+    cast.food = economy.get(side.owner_id, Game::Systems::ResourceType::Food);
+    cast.wood = economy.get(side.owner_id, Game::Systems::ResourceType::Wood);
+    cast.stone = economy.get(side.owner_id, Game::Systems::ResourceType::Stone);
+    cast.iron = economy.get(side.owner_id, Game::Systems::ResourceType::Iron);
+    snapshot.sides.push_back(std::move(cast));
+  }
+  return snapshot;
+}
+
 void ArenaViewport::set_batch_render_suppressed(bool suppressed) {
   m_batch_render_suppressed = suppressed;
 }
@@ -4103,6 +4139,10 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     sample.posture =
         Game::Systems::AI::AIStrategyFactory::posture_to_string(state.posture);
     sample.state = Game::Systems::AI::AIStrategyFactory::state_to_string(state.state);
+    if (const auto* plan = ai_system->plan_for(owner_id); plan != nullptr) {
+      sample.wave_committed = plan->wave.committed;
+      sample.wave_size = static_cast<int>(plan->wave.members.size());
+    }
     return sample;
   };
 
