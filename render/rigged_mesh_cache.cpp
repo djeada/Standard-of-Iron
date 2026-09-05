@@ -5,7 +5,9 @@
 #include <QOpenGLVersionFunctionsFactory>
 #include <QtGlobal>
 
+#include <algorithm>
 #include <cstring>
+#include <iterator>
 #include <limits>
 #include <sstream>
 #include <vector>
@@ -154,6 +156,7 @@ auto RiggedMeshCache::find_rigged_asset(const Key& key) const noexcept
   if (it == m_entries.end()) {
     return nullptr;
   }
+  it->second.last_used_frame = m_frame_index;
   ++m_frame_stats.hits;
   return &it->second;
 }
@@ -252,8 +255,112 @@ auto RiggedMeshCache::create_rigged_asset(
   entry.skin_atlas = atlas_it->second;
 
   ++m_frame_stats.bakes;
+  entry.last_used_frame = m_frame_index;
   auto [it, _] = m_entries.emplace(key, std::move(entry));
+  recount_residency();
   return &it->second;
+}
+
+namespace {
+
+auto mesh_bytes(const RiggedMesh& mesh) -> std::uint64_t {
+  const auto cpu =
+      static_cast<std::uint64_t>(mesh.get_vertices().size() * sizeof(RiggedVertex)) +
+      static_cast<std::uint64_t>(mesh.get_indices().size() * sizeof(std::uint32_t));
+  return cpu * 2U;
+}
+
+} // namespace
+
+void RiggedMeshCache::recount_residency() {
+  std::uint64_t base = 0;
+  for (const auto& [_, mesh] : m_base_meshes) {
+    if (mesh != nullptr) {
+      base += mesh_bytes(*mesh);
+    }
+  }
+  std::uint64_t attachments = 0;
+  for (const auto& [_, mesh] : m_attachment_meshes) {
+    if (mesh != nullptr) {
+      attachments += mesh_bytes(*mesh);
+    }
+  }
+  std::uint64_t atlases = 0;
+  for (const auto& [_, atlas] : m_skin_atlases) {
+    if (atlas == nullptr) {
+      continue;
+    }
+    const auto palette_bytes =
+        atlas->palette_storage != nullptr
+            ? static_cast<std::uint64_t>(atlas->palette_storage->size() *
+                                         sizeof(QMatrix4x4))
+            : 0U;
+    const auto ubo_bytes =
+        atlas->palette_ubo != 0U
+            ? static_cast<std::uint64_t>(atlas->frame_total) * atlas->frame_stride_bytes
+            : 0U;
+    atlases += palette_bytes + ubo_bytes;
+  }
+  m_residency.mesh_bytes = base;
+  m_residency.attachment_bytes = attachments;
+  m_residency.atlas_bytes = atlases;
+  m_residency.high_water_bytes =
+      std::max(m_residency.high_water_bytes, m_residency.total_bytes());
+}
+
+void RiggedMeshCache::begin_frame() {
+  ++m_frame_index;
+  if (m_residency.budget_bytes == 0U) {
+    return;
+  }
+  if (m_residency.total_bytes() > m_residency.budget_bytes) {
+    evict_unused_over_budget();
+  }
+}
+
+auto RiggedMeshCache::evict_unused_over_budget() -> std::uint64_t {
+  constexpr std::uint64_t k_min_idle_frames = 240U;
+  if (m_frame_index < k_min_idle_frames) {
+    return 0;
+  }
+  const std::uint64_t before = m_residency.total_bytes();
+
+  std::vector<Key> cold;
+  for (const auto& [key, entry] : m_entries) {
+    if (m_frame_index - entry.last_used_frame < k_min_idle_frames) {
+      continue;
+    }
+    if (entry.mesh != nullptr && entry.mesh.use_count() > 2) {
+      continue;
+    }
+    cold.push_back(key);
+  }
+  std::sort(cold.begin(), cold.end(), [this](const Key& lhs, const Key& rhs) {
+    return m_entries.at(lhs).last_used_frame < m_entries.at(rhs).last_used_frame;
+  });
+
+  for (const Key& key : cold) {
+    if (m_residency.total_bytes() <= m_residency.budget_bytes) {
+      break;
+    }
+    m_entries.erase(key);
+    ++m_frame_stats.evictions;
+    for (auto it = m_base_meshes.begin(); it != m_base_meshes.end();) {
+      it = (it->second != nullptr && it->second.use_count() == 1)
+               ? m_base_meshes.erase(it)
+               : std::next(it);
+    }
+    for (auto it = m_attachment_meshes.begin(); it != m_attachment_meshes.end();) {
+      it = (it->second != nullptr && it->second.use_count() == 1)
+               ? m_attachment_meshes.erase(it)
+               : std::next(it);
+    }
+    recount_residency();
+  }
+
+  const std::uint64_t freed = before - m_residency.total_bytes();
+  m_frame_stats.evicted_bytes += freed;
+  return freed;
 }
 
 void RiggedMeshCache::release_skin_atlases() {

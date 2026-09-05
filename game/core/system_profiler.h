@@ -67,8 +67,20 @@ public:
   struct TickSummary {
     std::uint64_t tick_index{0};
     std::uint64_t total_us{0};
+    std::uint64_t systems_us{0};
+    std::uint64_t presentation_us{0};
+    std::uint64_t publication_us{0};
+    std::uint64_t lock_wait_us{0};
     std::size_t entity_count{0};
     QueryCounters queries;
+  };
+
+  struct TickTiming {
+    std::uint64_t total_us{0};
+    std::uint64_t systems_us{0};
+    std::uint64_t presentation_us{0};
+    std::uint64_t publication_us{0};
+    std::uint64_t lock_wait_us{0};
   };
 
   [[nodiscard]] auto tick_time_us() const -> Utils::Stats::Distribution {
@@ -83,7 +95,7 @@ public:
                      const char* name,
                      std::uint64_t elapsed_us,
                      const QueryCounters& delta);
-  void end_tick(std::uint64_t total_us);
+  void end_tick(const TickTiming& timing);
 
   [[nodiscard]] auto systems() const -> const std::vector<SystemRecord>& {
     return m_systems;

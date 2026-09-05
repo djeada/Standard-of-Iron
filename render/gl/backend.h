@@ -79,6 +79,9 @@ public:
     double gpu_shadow_ms{0.0};
     double gpu_color_ms{0.0};
     double gpu_wait_ms{0.0};
+    std::uint64_t gpu_sample_frame{0};
+    std::uint64_t gpu_sample_age_frames{0};
+    std::uint64_t gpu_samples_deferred{0};
   };
 
   Backend();
@@ -373,7 +376,7 @@ private:
   Render::FrameBudgetConfig m_frame_budget_config;
   Render::FrameTimeTracker m_frame_tracker;
 
-  static constexpr std::size_t k_frames_in_flight = 2;
+  static constexpr std::size_t k_frames_in_flight = 3;
   static constexpr std::size_t k_gpu_breakdown_marks = 48;
   struct FrameGpuTiming {
     GLsync fence{nullptr};
@@ -382,6 +385,7 @@ private:
     std::array<std::uint8_t, k_gpu_breakdown_marks> mark_types{};
     std::size_t mark_count{0};
     bool pending{false};
+    std::uint64_t frame_index{0};
   };
   QVector2D m_contact_shadow_ground{0.0F, 1.0F};
   float m_contact_shadow_cast_weight{-1.0F};
@@ -397,7 +401,10 @@ private:
   std::array<FrameGpuTiming, k_frames_in_flight> m_frame_timings{};
   std::size_t m_frame_timing_slot{0};
   FrameGpuTiming* m_active_frame_timing{nullptr};
+  auto try_collect_frame_slot(FrameGpuTiming& slot) -> bool;
+  void collect_frame_slot(FrameGpuTiming& slot);
   void wait_for_frame_slot(FrameGpuTiming& slot);
+  std::uint64_t m_frame_timing_index{0};
   ShaderQuality m_shader_quality{ShaderQuality::Full};
 };
 

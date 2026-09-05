@@ -2460,6 +2460,10 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Not enough reserve — build a home to raise more families.</source>
         <translation>Не хватает резерва — постройте дом, чтобы прибавилось семей.</translation>
     </message>
+    <message>
+        <source>The previous frame is still running; the match could not be changed. Please try again.</source>
+        <translation>Предыдущий кадр ещё выполняется; не удалось сменить матч. Попробуйте снова.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -7941,6 +7945,10 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>No target under the cursor</source>
         <translation>Под курсором нет цели</translation>
+    </message>
+    <message>
+        <source>Save: the match advanced while it was being captured. Please try again.</source>
+        <translation>Сохранение: матч продвинулся во время записи состояния. Попробуйте снова.</translation>
     </message>
 </context>
 <context>

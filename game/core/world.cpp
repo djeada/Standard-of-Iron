@@ -1344,13 +1344,15 @@ auto World::current_query_counters() const -> SystemProfiler::QueryCounters {
 }
 
 void World::update(float delta_time) {
+  const bool profiling = m_system_profiler.enabled();
+  const auto update_entered = std::chrono::steady_clock::now();
   const EntityLock lock(*this);
+  const auto lock_acquired = std::chrono::steady_clock::now();
   ++m_tick_id;
   if (m_presentation_enabled) {
     begin_motion_presentation_frame(*this, delta_time);
   }
 
-  const bool profiling = m_system_profiler.enabled();
   const NavTickScope nav_tick;
   const auto tick_started = std::chrono::steady_clock::now();
   if (profiling) {
@@ -1388,20 +1390,30 @@ void World::update(float delta_time) {
 
   m_deferred.apply(*this);
 
-  if (profiling) {
-    m_system_profiler.end_tick(static_cast<std::uint64_t>(
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::steady_clock::now() - tick_started)
-            .count()));
-  }
+  const auto systems_ended = std::chrono::steady_clock::now();
   if (m_presentation_enabled) {
     finalize_motion_presentation_frame(*this, delta_time);
     publish_creature_presentation_frame(*this);
   }
   publish_movement_trace_frame(*this);
+  const auto presentation_ended = std::chrono::steady_clock::now();
   if (!m_is_render_snapshot &&
       m_render_snapshots_requested.load(std::memory_order_acquire)) {
     publish_render_snapshot();
+  }
+
+  if (profiling) {
+    const auto micros = [](auto from, auto to) -> std::uint64_t {
+      return static_cast<std::uint64_t>(
+          std::chrono::duration_cast<std::chrono::microseconds>(to - from).count());
+    };
+    const auto update_left = std::chrono::steady_clock::now();
+    m_system_profiler.end_tick(
+        {.total_us = micros(update_entered, update_left),
+         .systems_us = micros(tick_started, systems_ended),
+         .presentation_us = micros(systems_ended, presentation_ended),
+         .publication_us = micros(presentation_ended, update_left),
+         .lock_wait_us = micros(update_entered, lock_acquired)});
   }
 }
 

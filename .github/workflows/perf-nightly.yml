@@ -1,0 +1,115 @@
+# The timing half of the performance gate.
+#
+# pr.yml runs check-sim-budgets.py with counters only, because a shared runner's
+# tick p95 says more about its neighbours than about the commit under test:
+# re-recording a baseline and immediately re-checking it on a busy box moved
+# tick p95 by 38% while every amplification counter came back byte-identical.
+#
+# The timing budgets still have to be enforced somewhere, or the wall-clock
+# numbers in tests/perf/sim_budgets.json are decoration. This workflow is that
+# somewhere. It is scheduled rather than per-PR, it runs with --check-timings,
+# and it records what it ran on, because a percentile without its hardware,
+# build type and content identity is not a measurement anybody can reproduce.
+#
+# It is deliberately NOT a required check. A nightly timing regression opens a
+# conversation; it does not block a merge on a runner nobody controls. Point it
+# at a self-hosted pinned machine (change `runs-on`) before treating a failure
+# here as authoritative.
+name: Performance (nightly)
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+    inputs:
+      tolerance:
+        description: Fractional slack allowed over the recorded budgets
+        required: false
+        default: "0.25"
+
+permissions:
+  contents: read
+
+env:
+  QT_VERSION: 6.8.2
+
+jobs:
+  timings:
+    name: Simulation timings (ubuntu-24.04)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730 # v4.3.1
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: linux
+          cache: true
+          modules: qt5compat qtmultimedia
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build libgl1-mesa-dev libegl1
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          key: nightly-ubuntu-24.04-sim-Release
+          max-size: 1G
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DDEFAULT_LANG=en \
+            -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
+
+      - name: Build the benchmark
+        run: cmake --build build --parallel --target sim_benchmark
+
+      # Every baseline needs its provenance beside it, or a comparison across
+      # two runs is comparing two machines.
+      - name: Record the hardware and content identity
+        run: |
+          mkdir -p artifacts/perf
+          {
+            echo "commit: ${GITHUB_SHA}"
+            echo "runner: ${RUNNER_NAME:-unknown} ${RUNNER_OS} ${RUNNER_ARCH}"
+            echo "build_type: Release"
+            echo "date: $(date --iso-8601=seconds)"
+            echo "cpu:"
+            lscpu | sed 's/^/  /'
+            echo "memory:"
+            free -h | sed 's/^/  /'
+            echo "load_at_start: $(uptime)"
+          } | tee artifacts/perf/environment.txt
+
+      - name: Simulation timings
+        run: |
+          python scripts/check-sim-budgets.py \
+            --binary build/bin/sim_benchmark \
+            --check-timings \
+            --tolerance "${{ github.event.inputs.tolerance || '0.25' }}"
+
+      - name: Load at finish
+        if: always()
+        run: uptime | tee -a artifacts/perf/environment.txt
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: perf-nightly-${{ github.run_id }}
+          path: artifacts/perf
+          retention-days: 30

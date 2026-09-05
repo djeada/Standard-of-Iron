@@ -31,6 +31,10 @@ enum class NavCounter : std::uint8_t {
   RequestsQueued,
   RequestsDropped,
   LockWaitUs,
+  RouteCacheEvictions,
+  RouteCacheKept,
+  RouteCacheFlushes,
+  RegionMapRebuilds,
   _Count
 };
 

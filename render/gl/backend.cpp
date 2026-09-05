@@ -109,6 +109,10 @@ Backend::~Backend() {
     return;
   }
 
+  for (FrameGpuTiming& slot : m_frame_timings) {
+    wait_for_frame_slot(slot);
+  }
+
   if (m_frame_ubo != 0) {
     glDeleteBuffers(1, &m_frame_ubo);
     m_frame_ubo = 0;
@@ -1177,20 +1181,77 @@ void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
   }
 }
 
+auto Backend::try_collect_frame_slot(FrameGpuTiming& slot) -> bool {
+  if (!slot.pending) {
+    return true;
+  }
+  auto const wait_start = std::chrono::steady_clock::now();
+  const GLenum polled = glClientWaitSync(slot.fence, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
+  m_last_playback_stats.gpu_wait_ms = std::chrono::duration<double, std::milli>(
+                                          std::chrono::steady_clock::now() - wait_start)
+                                          .count();
+  if (polled == GL_TIMEOUT_EXPIRED) {
+    ++m_last_playback_stats.gpu_samples_deferred;
+    return false;
+  }
+  if (polled == GL_WAIT_FAILED) {
+    qWarning() << "Backend: glClientWaitSync failed while collecting GPU timing; "
+                  "dropping this frame's queries";
+    glDeleteSync(slot.fence);
+    slot.fence = nullptr;
+    slot.pending = false;
+    slot.mark_count = 0;
+    m_last_playback_stats.gpu_shadow_ms = 0.0;
+    m_last_playback_stats.gpu_color_ms = 0.0;
+    return true;
+  }
+  collect_frame_slot(slot);
+  return true;
+}
+
 void Backend::wait_for_frame_slot(FrameGpuTiming& slot) {
   if (!slot.pending) {
     return;
   }
   auto const wait_start = std::chrono::steady_clock::now();
   constexpr GLuint64 k_wait_timeout_ns = 1'000'000'000ULL;
-  while (glClientWaitSync(slot.fence, GL_SYNC_FLUSH_COMMANDS_BIT, k_wait_timeout_ns) ==
-         GL_TIMEOUT_EXPIRED) {
+  constexpr int k_max_wait_attempts = 4;
+  bool signaled = false;
+  for (int attempt = 0; attempt < k_max_wait_attempts && !signaled; ++attempt) {
+    const GLenum waited =
+        glClientWaitSync(slot.fence, GL_SYNC_FLUSH_COMMANDS_BIT, k_wait_timeout_ns);
+    if (waited == GL_ALREADY_SIGNALED || waited == GL_CONDITION_SATISFIED) {
+      signaled = true;
+    } else if (waited == GL_WAIT_FAILED) {
+      qWarning() << "Backend: glClientWaitSync failed while collecting GPU timing; "
+                    "dropping this frame's queries";
+      break;
+    }
   }
-  glDeleteSync(slot.fence);
-  slot.fence = nullptr;
   m_last_playback_stats.gpu_wait_ms = std::chrono::duration<double, std::milli>(
                                           std::chrono::steady_clock::now() - wait_start)
                                           .count();
+  if (!signaled) {
+    qWarning() << "Backend: GPU timing fence never signaled after"
+               << k_max_wait_attempts << "waits; discarding the frame's timing slot";
+    glDeleteSync(slot.fence);
+    slot.fence = nullptr;
+    slot.pending = false;
+    slot.mark_count = 0;
+    m_last_playback_stats.gpu_shadow_ms = 0.0;
+    m_last_playback_stats.gpu_color_ms = 0.0;
+    return;
+  }
+  collect_frame_slot(slot);
+}
+
+void Backend::collect_frame_slot(FrameGpuTiming& slot) {
+  glDeleteSync(slot.fence);
+  slot.fence = nullptr;
+  m_last_playback_stats.gpu_sample_frame = slot.frame_index;
+  m_last_playback_stats.gpu_sample_age_frames =
+      m_frame_timing_index > slot.frame_index ? m_frame_timing_index - slot.frame_index
+                                              : 0;
   std::array<GLuint64, 4> ticks{};
   for (std::size_t i = 0; i < ticks.size(); ++i) {
     if (slot.timestamps[i] != 0U) {
@@ -1275,9 +1336,13 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
 
   FrameGpuTiming& frame_timing = m_frame_timings[m_frame_timing_slot];
   m_frame_timing_slot = (m_frame_timing_slot + 1U) % m_frame_timings.size();
-  wait_for_frame_slot(frame_timing);
+  ++m_frame_timing_index;
+  const bool timing_requested = m_frame_timing_active;
+  const bool slot_ready = try_collect_frame_slot(frame_timing);
+  m_frame_timing_active = timing_requested && slot_ready;
   m_frame_tracker.begin_frame();
   if (m_frame_timing_active) {
+    frame_timing.frame_index = m_frame_timing_index;
     if (frame_timing.timestamps[0] == 0U) {
       glGenQueries(static_cast<GLsizei>(frame_timing.timestamps.size()),
                    frame_timing.timestamps.data());
@@ -1285,9 +1350,13 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
     glQueryCounter(frame_timing.timestamps[0], GL_TIMESTAMP);
   } else {
     m_active_frame_timing = nullptr;
-    m_last_playback_stats.gpu_shadow_ms = 0.0;
-    m_last_playback_stats.gpu_color_ms = 0.0;
-    m_last_playback_stats.gpu_wait_ms = 0.0;
+    if (!timing_requested) {
+      m_last_playback_stats.gpu_shadow_ms = 0.0;
+      m_last_playback_stats.gpu_color_ms = 0.0;
+      m_last_playback_stats.gpu_wait_ms = 0.0;
+      m_last_playback_stats.gpu_sample_frame = 0;
+      m_last_playback_stats.gpu_sample_age_frames = 0;
+    }
   }
 
   const QMatrix4x4 view = cam.get_view_matrix();
@@ -1473,6 +1542,9 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   m_last_playback_stats.instances_by_type = draw_tally.instances;
   if (m_rigged_cull_pipeline) {
     m_rigged_cull_pipeline->end_frame();
+  }
+  if (m_cylinder_pipeline) {
+    m_cylinder_pipeline->end_frame();
   }
   if (breakdown_last_type >= 0) {
     gpu_breakdown_mark(frame_timing, static_cast<std::uint8_t>(breakdown_last_type));

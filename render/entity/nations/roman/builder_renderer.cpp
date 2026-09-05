@@ -31,6 +31,7 @@
 #include "render/entity/registry.h"
 #include "render/entity/renderer_constants.h"
 #include "render/equipment/armor/arm_guards_renderer.h"
+#include "render/equipment/armor/garment_shell.h"
 #include "render/equipment/armor/tool_belt_renderer.h"
 #include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/armor/work_apron_renderer.h"
@@ -434,31 +435,20 @@ auto roman_civilian_mantle_archetype() -> const RenderArchetype& {
     const AttachmentFrame& waist = bind.waist;
     const TorsoLocalFrame local = make_torso_local_frame(QMatrix4x4{}, torso);
 
-    float const tr = torso.radius * 1.06F;
-    float const td = (torso.depth > 0.0F) ? torso.depth * 0.94F : torso.radius * 0.82F;
+    float const tr = torso.radius * 1.22F;
+    float const td = (torso.depth > 0.0F) ? torso.depth * 1.12F : torso.radius * 0.98F;
     float const y_sh = 0.038F;
     float const y_w = local.point(waist.origin).y();
     float const y_hem = y_w - 0.20F;
 
     RenderArchetypeBuilder builder{"roman_civilian_mantle"};
 
-    {
-      float const h = y_sh - y_w;
-      float const cy = (y_sh + y_w) * 0.5F;
-      QMatrix4x4 m;
-      m.translate(0.0F, cy, 0.0F);
-      m.scale(tr, h, td);
-      builder.add_palette_mesh(get_unit_tapered_cylinder(0.88F, 1.04F, 8), m, 0U);
-    }
-
-    {
-      float const h = y_w - y_hem;
-      float const cy = (y_w + y_hem) * 0.5F;
-      QMatrix4x4 m;
-      m.translate(0.0F, cy, 0.0F);
-      m.scale(tr, h, td);
-      builder.add_palette_mesh(get_unit_tapered_cylinder(1.38F, 0.88F, 8), m, 0U);
-    }
+    static const auto shell = make_garment_shell({
+        {y_hem, tr * 1.38F, td * 1.38F},
+        {y_w, tr * 0.88F, td * 0.88F},
+        {y_sh, tr * 1.04F, td * 1.04F},
+    });
+    builder.add_palette_mesh(shell.get(), QMatrix4x4{}, 0U);
 
     {
       const QVector3D sh_l = local.point(bind.shoulder_l.origin);

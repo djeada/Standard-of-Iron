@@ -286,6 +286,31 @@ private:
     bool built{false};
   };
 
+  struct NavChange {
+    std::uint64_t revision{0};
+    int min_x{0};
+    int max_x{0};
+    int min_z{0};
+    int max_z{0};
+  };
+
+  struct CachedPath {
+    std::vector<Point> path;
+    std::uint64_t last_used{0};
+    int min_x{0};
+    int max_x{0};
+    int min_z{0};
+    int max_z{0};
+  };
+
+  static constexpr std::size_t k_max_tracked_nav_changes = 64U;
+  static constexpr std::size_t k_max_cached_paths = 256U;
+
+  void note_navigation_change(int min_x, int max_x, int min_z, int max_z);
+  void drop_paths_crossing_changes(std::uint64_t from_revision,
+                                   std::uint64_t to_revision);
+  void evict_cold_paths();
+
   static constexpr std::size_t k_passability_count = 2U;
 
   void region_labels(const Point& first,
@@ -297,7 +322,7 @@ private:
   [[nodiscard]] auto label_at(const RegionMap& map,
                               const Point& cell) const -> std::uint32_t;
 
-  void process_dirty_regions();
+  auto process_dirty_regions() -> DirtyRegion;
 
   void update_region(int min_x, int max_x, int min_z, int max_z);
   void apply_building_cells(
@@ -330,7 +355,10 @@ private:
   std::vector<float> m_cell_height;
   std::atomic<std::uint64_t> m_navigation_revision{1};
   std::uint64_t m_path_cache_revision{0};
-  std::unordered_map<PathCacheKey, std::vector<Point>, PathCacheKeyHash> m_path_cache;
+  std::uint64_t m_path_cache_clock{0};
+  std::unordered_map<PathCacheKey, CachedPath, PathCacheKeyHash> m_path_cache;
+  std::mutex m_nav_change_mutex;
+  std::vector<NavChange> m_nav_changes;
   mutable std::mutex m_region_mutex;
   std::array<RegionMap, k_passability_count> m_region_maps;
 };
