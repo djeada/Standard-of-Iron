@@ -1,9 +1,9 @@
 ---
 name: Quality
 
-# Reusable compiler-free gate: formatting, linting, quality markers and the
-# static content validators. Called by pr.yml on every pull request and by
-# release.yml as the preflight check before any packaging work is spent.
+# Reusable compiler-free gate shared by pull requests and release preflight.
+# Source architecture/migration policy is intentionally its own fast job so a
+# policy failure is not reported as a generic formatting/build failure.
 on:
   workflow_call:
 
@@ -11,9 +11,30 @@ permissions:
   contents: read
 
 jobs:
-  quality:
+  policy:
+    name: Source policy (architecture + migration)
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Policy runner self-test
+        run: python scripts/check-pr-policy.py --self-test
+
+      - name: PR source policy
+        run: python scripts/check-pr-policy.py
+
+  quality:
+    name: Formatting, lint and static validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
@@ -31,9 +52,6 @@ jobs:
           # shellcheck disable=SC1091
           source tools/versions.env
           sudo apt-get update
-          # The qml6-module-* packages are what qmllint reads type information
-          # from. Without them every `property alias` onto a QtQuick type reports
-          # "Cannot resolve alias", because the target type is unknown.
           sudo apt-get install -y --no-install-recommends \
             "clang-format-${CLANG_FORMAT_VERSION%%.*}" \
             shellcheck \
@@ -50,11 +68,9 @@ jobs:
             "ruff==${RUFF_VERSION}" \
             "gersemi==${GERSEMI_VERSION}" \
             "yamllint==${YAMLLINT_VERSION}"
-          # shfmt: download the pinned binary from GitHub releases
           curl -fsSL "https://github.com/mvdan/sh/releases/download/v${SHFMT_VERSION}/shfmt_v${SHFMT_VERSION}_linux_amd64" \
             -o /usr/local/bin/shfmt
           chmod +x /usr/local/bin/shfmt
-          # prettier: install via npm (Node.js is pre-installed on runners)
           npm install -g "prettier@${PRETTIER_VERSION}"
           echo "CLANG_FORMAT=clang-format-${CLANG_FORMAT_VERSION%%.*}" >> "$GITHUB_ENV"
 
@@ -72,87 +88,19 @@ jobs:
           git ls-files -z '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hpp' '*.py' '*.sh' \
             | xargs -0 -r python scripts/check-quality-markers.py
 
-      # A hard-coded font size ignores the interface scale a player sets, which
-      # is invisible in review and only shows up as "the text is too small" from
-      # a tester on a screen nobody on the team runs.
       - name: QML typography
         run: python scripts/check-typography.py
 
-      # There used to be a scripts/validate_shader_config.py here, excluded
-      # because it "reports 24 pre-existing content issues on main". Those 24
-      # were not real: it expected a per-nation, per-unit .vert/.frag pair and a
-      # shader_id in every style file, which is an architecture the renderer no
-      # longer uses -- units go through the shared character_skinned* shaders
-      # with styles registered from render/entity/nations/. The script was
-      # obsolete rather than the content, so it has been deleted. Anything
-      # replacing it should assert on style registration, not on file names.
-      # validate_qrc_resources.py runs here, in the compiler-free gate, on
-      # purpose. A .qrc entry whose file was deleted breaks rcc's dependency
-      # scan, so every target embedding that .qrc fails before any object is
-      # compiled -- a validator that needs a build cannot catch it.
-      #
-      # scripts/fix-map-prop-overlaps.py is deliberately NOT here. Its slope and
-      # ramp passes are measured against the heightfield the engine builds, read
-      # back from tools/terrain_probe, and a compiler-free job has no probe to
-      # ask. Without one the script falls back to the authored hill ellipses,
-      # which its own help calls unreliable -- the two models disagree about
-      # which props are broken, so props moved to satisfy one are flagged by the
-      # other. It runs in the test job of pr.yml, which has a build tree, with
-      # --surface require so a missing probe fails rather than silently
-      # downgrades the measurement.
       - name: Static content validation
         run: |
           python scripts/validate_shader_uniforms.py
           python scripts/validate_opengl_requirements.py
           python scripts/validate_qrc_resources.py
 
-      # These eight are add_custom_target(... ALL) in CMakeLists.txt or steps of
-      # `make quality`, so a local build runs them and CI never has: pr.yml
-      # builds named targets (soi_test_binaries, content_validator,
-      # terrain_probe) and a named-target build does not run the ALL targets.
-      # Every one of these budgets has therefore been unenforced on pull
-      # requests since the day it was added, and three of them had drifted past
-      # their budget on main by the time this step was written. They read source
-      # and need no compiler, which is why they belong in this job rather than
-      # behind a forty-minute build.
-      - name: Architecture boundaries
-        run: |
-          python scripts/check-layering.py .
-          python scripts/check-modules.py .
-          python scripts/check-render-boundary.py .
-          python scripts/check-command-boundary.py .
-          python scripts/check-architecture-doc.py .
-
-      # check-architecture-doc is the newest of these and the odd one out: it
-      # gates prose rather than code. The document claimed 65 ambient call sites
-      # against a budget of 58, and claimed the renderer links `game_systems`
-      # after the root CMake had been changed to link `game_sim`. A count nobody
-      # recomputes is a count that goes stale, and this one was being read as
-      # current by anyone planning work off the document.
-
-      # The three ratchets. Each counts a shape the codebase is migrating away
-      # from and fails when a directory has more of it than the recorded budget,
-      # so the number may only go down. Lower the budget in the same change that
-      # earns the gain (each script takes --write), and say why in review if one
-      # has to go up.
-      - name: Migration ratchets
-        run: |
-          python scripts/check-ambient-instances.py .
-          python scripts/check-world-scans.py .
-          python scripts/check-entity-access.py .
-
-      # QML reads per-frame snapshots or self-locking queues; only commands take
-      # the frame lock. `make quality` has run this since it was written and CI
-      # never has.
-      - name: QML thread-safety boundary
-        run: python scripts/check-frame-lock.py
-
-  # The three portability passes that need no compiler and no Qt. The fourth
-  # one (Clang + libc++ over every translation unit) needs a configured build
-  # tree and clang 18, so it runs in the test job of pr.yml, which has both.
   portability:
+    name: Portability policy (compiler-free)
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
@@ -168,17 +116,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends glslang-tools
 
-      # Mesa accepts GLSL that Apple's front end rejects, and a shader that
-      # fails to compile on macOS is a silently missing object rather than a
-      # crash. --require-all means a missing glslangValidator fails the job
-      # instead of quietly skipping the pass.
-      #
-      # The includes pass belongs here rather than in a build job because it
-      # compiles nothing: it reads the include graph. That is the only way to
-      # see a file that uses std::array without including <array>, which every
-      # standard library on a CI runner leaks and MSVC does not. Pull requests
-      # are the only place this can be caught before a Windows build a week
-      # later -- see the Weekly run of 2026-08-17, which is what added it.
       - name: Portability (GLSL, Windows and includes)
         run: |
           python scripts/check-portability.py --only glsl,windows,includes \
