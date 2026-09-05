@@ -17,8 +17,8 @@ fi
 bin_dir="${build_dir}/bin"
 
 # Keep in step with soi_test_binaries in tests/CMakeLists.txt.
-# tests/architecture/module_boundary_test.cpp parses this first suites=(...) list
-# and fails if the complete default suite drifts from CMake.
+# tests/architecture/module_boundary_test.cpp parses the first suite-array
+# declaration below and fails if the complete default suite drifts from CMake.
 suites=(
   simulation_tests
   combat_balance_tests
