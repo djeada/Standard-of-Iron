@@ -6127,6 +6127,14 @@ para ver a prévia</translation>
         <source>Crossing the Rhone</source>
         <translation>A travessia do Ródano</translation>
     </message>
+    <message>
+        <source>An enormous capital on a 768 m stage, built in rings. Farmland, orchards, quarries, lakes and a ruined old town fill the countryside; a great eight-gated wall encloses the new city with its circus, theatre, docks and insulae; an older Republican circuit holds the forum and the ancient core; and a walled citadel crowns the sacred mountain behind the whole thing, where the healers keep the temples.</source>
+        <translation>Uma capital enorme num palco de 768 m, construída em anéis. Terras de lavoura, pomares, pedreiras, lagos e uma cidade velha em ruínas preenchem o campo; uma grande muralha de oito portões encerra a cidade nova com seu circo, seu teatro, suas docas e suas insulae; um circuito republicano mais antigo guarda o fórum e o núcleo ancestral; e uma cidadela murada coroa a montanha sagrada atrás de tudo, onde os curandeiros zelam pelos templos.</translation>
+    </message>
+    <message>
+        <source>Aurelia Magna</source>
+        <translation>Aurélia Magna</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -7747,6 +7755,122 @@ para ver a prévia</translation>
     <message>
         <source>Your veterans are dying. Italy&apos;s veterans, really; you took them from us sixteen years ago and now we are taking them back one at a time.</source>
         <translation>Seus veteranos estão morrendo. Veteranos da Itália, na verdade; você os tirou de nós dezesseis anos atrás e agora os tomamos de volta um por um.</translation>
+    </message>
+    <message>
+        <source>A raid on the pasture, then a landing at the quay. Nine gates and one garrison: the avenue and the decumanus are how you get from one to the other.</source>
+        <translation>Uma incursão no pasto e depois um desembarque no cais. Nove portões e uma única guarnição: a avenida e o decumano são o modo de ir de um ao outro.</translation>
+    </message>
+    <message>
+        <source>Break all six assaults. They do not come at the same gate twice.</source>
+        <translation>Quebre todos os seis assaltos. Eles não vêm duas vezes ao mesmo portão.</translation>
+    </message>
+    <message>
+        <source>Break the siege</source>
+        <translation>Quebrar o cerco</translation>
+    </message>
+    <message>
+        <source>Bring in the first harvest</source>
+        <translation>Trazer a primeira colheita</translation>
+    </message>
+    <message>
+        <source>Everything I have is on the roads, consul. East, west, and the bridge. Choose two.</source>
+        <translation>Tudo o que tenho está nas estradas, cônsul. Leste, oeste e a ponte. Escolha duas.</translation>
+    </message>
+    <message>
+        <source>Grain from the river fields, timber from the groves, stone from the quarries beyond the north wall. Every assault you break early is a window to work.</source>
+        <translation>Grãos dos campos do rio, madeira dos bosques, pedra das pedreiras além da muralha norte. Cada assalto que você quebrar cedo é uma janela para trabalhar.</translation>
+    </message>
+    <message>
+        <source>Hold the outer gates</source>
+        <translation>Segurar os portões externos</translation>
+    </message>
+    <message>
+        <source>Keep every hall. The two granges and the two quarry camps stand outside the wall, and they are the only stockpiles the work crews can reach.</source>
+        <translation>Mantenha todos os quartéis. As duas granjas e os dois acampamentos de pedreira ficam fora da muralha, e são os únicos depósitos que as equipes de trabalho alcançam.</translation>
+    </message>
+    <message>
+        <source>Look at it. Three walls, seventeen gates, and not one stalk of grain growing inside any of them. The city was built to be admired, not besieged. Get the crews over the river while the road is still ours, and keep the garrison off the ramparts until you know which gate they want.</source>
+        <translation>Olhe para ela. Três muralhas, dezessete portões e nem um talo de trigo crescendo dentro de nenhuma delas. A cidade foi construída para ser admirada, não sitiada. Passe as equipes para o outro lado do rio enquanto a estrada ainda é nossa, e mantenha a guarnição fora das muralhas até saber qual portão eles querem.</translation>
+    </message>
+    <message>
+        <source>Lose every hall in the city and there is nothing left to recruit from, or carry a harvest to.</source>
+        <translation>Perca todos os quartéis da cidade e não restará de onde recrutar nem para onde levar uma colheita.</translation>
+    </message>
+    <message>
+        <source>One consul and an empty city is not a garrison.</source>
+        <translation>Um cônsul e uma cidade vazia não são uma guarnição.</translation>
+    </message>
+    <message>
+        <source>Provision the capital</source>
+        <translation>Abastecer a capital</translation>
+    </message>
+    <message>
+        <source>Provision the capital. The grain is across the river and the stone is past the quarry gate; neither will walk in by itself.</source>
+        <translation>Abasteça a capital. Os grãos estão do outro lado do rio e a pedra fica além do portão da pedreira; nenhum dos dois entra sozinho.</translation>
+    </message>
+    <message>
+        <source>Riders on the pasture gate. They are not here for the wall; they are here for the flocks. Whatever you send has to get there before the herds do.</source>
+        <translation>Cavaleiros no portão do pasto. Não vieram pela muralha; vieram pelos rebanhos. O que você mandar precisa chegar lá antes dos rebanhos.</translation>
+    </message>
+    <message>
+        <source>Six assaults and the granaries full. The city will say the walls held. The walls did nothing -- the road to the river held, and the crews who walked it did not stop walking it. Write that down and let them carve the other version.</source>
+        <translation>Seis assaltos e os celeiros cheios. A cidade dirá que as muralhas aguentaram. As muralhas não fizeram nada - quem aguentou foi a estrada até o rio, e as equipes que a percorriam não pararam de percorrê-la. Anote isso e deixe que gravem a outra versão.</translation>
+    </message>
+    <message>
+        <source>Six assaults, and the last one comes at three gates with elephants behind it.</source>
+        <translation>Seis assaltos, e o último vem por três portões com elefantes atrás.</translation>
+    </message>
+    <message>
+        <source>Stone is the scarce one: the only boulders are at the two quarries outside the walls.</source>
+        <translation>A pedra é o que falta: as únicas rochas estão nas duas pedreiras fora das muralhas.</translation>
+    </message>
+    <message>
+        <source>That gate holds. Do not stand there admiring it -- the crews go out now, and they come back before the next horn.</source>
+        <translation>Aquele portão aguenta. Não fique aí admirando - as equipes saem agora e voltam antes da próxima trompa.</translation>
+    </message>
+    <message>
+        <source>The Siege of Aurelia Magna</source>
+        <translation>O Cerco de Aurélia Magna</translation>
+    </message>
+    <message>
+        <source>The consul falls and the gates answer to nobody.</source>
+        <translation>O cônsul cai e os portões não respondem a ninguém.</translation>
+    </message>
+    <message>
+        <source>The fields are across the river and the roads are still open. Send the crews out now; they will not be open long.</source>
+        <translation>Os campos ficam do outro lado do rio e as estradas ainda estão abertas. Mande as equipes agora; não ficarão abertas por muito tempo.</translation>
+    </message>
+    <message>
+        <source>The granges on the south bank are the nearest stockpiles to the grain.</source>
+        <translation>As granjas da margem sul são os depósitos mais próximos dos grãos.</translation>
+    </message>
+    <message>
+        <source>The old Republican circuit and the citadel are still walls. Falling back is not losing.</source>
+        <translation>O velho circuito republicano e a cidadela ainda são muralhas. Recuar não é perder.</translation>
+    </message>
+    <message>
+        <source>They are on a gate. A gate is one building and it is the only thing between them and a street they can walk down. Answer it or fall back to the old circuit; do not do half of each.</source>
+        <translation>Eles estão em cima de um portão. Um portão é um único prédio e é a única coisa entre eles e uma rua por onde possam descer. Responda ou recue para o velho circuito; não faça metade de cada.</translation>
+    </message>
+    <message>
+        <source>Three walls, seventeen gates, and not one field inside them. The capital cannot be held by standing on its ramparts and it cannot be fed without leaving them. Break six assaults and still bring the harvest in.</source>
+        <translation>Três muralhas, dezessete portões e nem um campo dentro delas. A capital não se segura ficando em cima das suas muralhas, e não se alimenta sem sair delas. Quebre seis assaltos e ainda assim traga a colheita.</translation>
+    </message>
+    <message>
+        <source>Three walls. We only ever needed the fields. Open the granaries and put out the fires on the sacred way -- I want the citadel standing when they come to see what is left of it.</source>
+        <translation>Três muralhas. Só precisávamos dos campos. Abram os celeiros e apaguem os incêndios na via sagrada - quero a cidadela de pé quando vierem ver o que restou dela.</translation>
+    </message>
+    <message>
+        <source>We are spending the garrison faster than the city makes it. Pull back inside the Republican wall. It is shorter, it is older, and it has four gates instead of nine.</source>
+        <translation>Estamos gastando a guarnição mais rápido do que a cidade a produz. Recue para dentro da muralha republicana. Ela é mais curta, mais velha e tem quatro portões em vez de nove.</translation>
+    </message>
+    <message>
+        <source>We will not climb your wall, consul. We will stand on your fields and wait, and you will open the gate yourself to go and cut your own wheat.</source>
+        <translation>Não vamos escalar a sua muralha, cônsul. Vamos ficar de pé nos seus campos e esperar, e você mesmo abrirá o portão para ir ceifar o seu próprio trigo.</translation>
+    </message>
+    <message>
+        <source>You cannot cover every gate. Watch the telegraph and move on interior lines.</source>
+        <translation>Você não pode cobrir todos os portões. Fique atento ao aviso e mova-se por linhas interiores.</translation>
     </message>
 </context>
 <context>
