@@ -212,7 +212,7 @@ Item {
             id: preparingLabel
 
             anchors.centerIn: parent
-            text: qsTr("Preparing battle report…")
+            text: "…"
             color: Design.Theme.textSecondary
             font.family: Design.Typography.family
             font.pixelSize: Design.Typography.label
@@ -243,7 +243,7 @@ Item {
                 id: returningLabel
 
                 anchors.centerIn: parent
-                text: qsTr("Returning to main menu…")
+                text: report.primaryAction + "…"
                 color: Design.Theme.textPrimary
                 font.family: Design.Typography.family
                 font.pixelSize: Design.Typography.label
