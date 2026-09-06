@@ -648,6 +648,7 @@ add_executable(
     tools/arena_video_encoder_test.cpp
     tools/settlement_layout_test.cpp
     tools/sacred_mountain_slope_test.cpp
+    tools/city_map_parity_test.cpp
     test_main.cpp
 )
 target_link_libraries(

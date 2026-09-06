@@ -91,3 +91,45 @@ the authored shape and its numbers are preserved untouched.
 The terrain tool box also places the common shapes directly: **Ridge**,
 **Boomerang**, **Elbow** and **Ring** drop a hill already carrying the right
 `shape` and sensible extents, ready to be nudged in the JSON dialog.
+
+## Flat features: terraces and raised ground
+
+A `terrain` entry of type `flat` is the other half of the relief vocabulary. It
+does not gate navigation the way a hill does — there are no entrances and no
+unwalkable rim, so troops walk up it from any side — and it sets an absolute
+height inside an ellipse rather than raising a crown above the surrounding
+ground. That makes it the right tool for a terrace a city is built on, a shelf
+under a forum, or a mountain the player is expected to march over.
+
+| Field             | Meaning                                                                       |
+| ----------------- | ----------------------------------------------------------------------------- |
+| `width` / `depth` | The ellipse. `radius` is the fallback when neither is given.                  |
+| `height`          | The height inside the plateau.                                                |
+| `taper`           | How much of the radius the rim spends sloping, `0`–`1`. Default `0.20`.       |
+| `raise`           | Take the higher of the ground and this feature instead of setting the height. |
+
+`taper` is what separates a shelf from a mountain. At the default `0.20` the
+outer fifth of the radius is the slope and the rest is plateau, which reads as a
+step; the sacred mountain of `map_aurelia_magna` is `taper: 0.49`, so half its
+radius is the climb. Without it a long slope has to be faked as a stack of
+nested ellipses, and that renders as a visible wedding cake.
+
+`raise` matters as soon as two features overlap. By default a feature _sets_ the
+height it covers, so the last entry in the array wins and the order of the list
+silently decides the shape of the ground. With `"raise": true` each feature can
+only lift ground, never level it, so a broad low terrace and the mountain
+standing on it compose to the higher of the two whichever way round they are
+listed.
+
+```json
+{
+    "type": "flat",
+    "x": 0,
+    "z": -306,
+    "width": 300,
+    "depth": 300,
+    "height": 58,
+    "taper": 0.49,
+    "raise": true
+}
+```
