@@ -76,7 +76,8 @@ auto collect(const Engine::Core::World& world) -> std::vector<EntityLine> {
       line.health = unit->health;
       line.max_health = unit->max_health;
     }
-    if (const auto* movement = world.try_get<Engine::Core::MovementComponent>(line.id)) {
+    if (const auto* movement =
+            world.try_get<Engine::Core::MovementComponent>(line.id)) {
       line.goal_x = quantise(movement->get_goal_x());
       line.goal_z = quantise(movement->get_goal_y());
       line.path_index = static_cast<std::int64_t>(movement->get_path_index());
