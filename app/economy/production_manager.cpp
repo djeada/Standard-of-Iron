@@ -16,7 +16,7 @@
 #include "app/orders/order_submission.h"
 #include "game/audio/audio_cues.h"
 #include "game/command/command_queue.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"

@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "core/component.h"
+#include "core/component_commander.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "systems/building_collision_registry.h"

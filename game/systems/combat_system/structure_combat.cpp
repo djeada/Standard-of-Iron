@@ -6,7 +6,7 @@
 #include <string>
 #include <utility>
 
-#include "../../core/component.h"
+#include "../../core/component_core.h"
 #include "../../units/spawn_type.h"
 #include "../building_collision_registry.h"
 #include "../nav_grid.h"

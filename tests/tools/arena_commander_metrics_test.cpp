@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "app/commander/commander_presentation_trace.h"
-#include "game/core/component.h"
+#include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"

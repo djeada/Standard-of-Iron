@@ -5,7 +5,7 @@
 
 #include "app/commander/commander_control_controller.h"
 #include "app/commander/commander_mode_coordinator.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"

@@ -4,7 +4,7 @@
 #include <cmath>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_economy.h"
 #include "../core/world.h"
 #include "../units/troop_config.h"
 #include "building_collision_registry.h"

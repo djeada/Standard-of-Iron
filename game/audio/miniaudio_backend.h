@@ -71,6 +71,24 @@ public:
 
   auto is_track_ready(const QString& id) const -> bool;
 
+  [[nodiscard]] auto resident_pcm_bytes() const -> std::uint64_t {
+    return m_resident_pcm_bytes.load(std::memory_order_relaxed);
+  }
+
+  [[nodiscard]] auto peak_pcm_bytes() const -> std::uint64_t {
+    return m_peak_pcm_bytes.load(std::memory_order_relaxed);
+  }
+
+  [[nodiscard]] auto pcm_budget_bytes() const -> std::uint64_t {
+    return m_pcm_budget_bytes;
+  }
+
+  void set_pcm_budget_bytes(std::uint64_t budget) { m_pcm_budget_bytes = budget; }
+
+  [[nodiscard]] auto pcm_budget_overruns() const -> std::uint64_t {
+    return m_pcm_budget_overruns.load(std::memory_order_relaxed);
+  }
+
   [[nodiscard]] auto mastering_analyses_computed() const -> std::uint64_t {
     return m_analyses_computed.load(std::memory_order_relaxed);
   }
@@ -182,6 +200,14 @@ private:
   QHash<QString, CachedAnalysis> m_analysis_cache;
   bool m_offline_render{false};
   std::atomic<std::uint64_t> m_analyses_computed{0};
+  std::atomic<std::uint64_t> m_resident_pcm_bytes{0};
+  std::atomic<std::uint64_t> m_peak_pcm_bytes{0};
+  std::atomic<std::uint64_t> m_pcm_budget_overruns{0};
+  std::uint64_t m_pcm_budget_bytes = default_pcm_budget_bytes();
+
+  static auto default_pcm_budget_bytes() -> std::uint64_t;
+  void note_track_resident(std::size_t bytes, const QString& id);
+  void note_track_released(std::size_t bytes);
 
   std::thread m_decode_thread;
   bool m_decode_running{false};

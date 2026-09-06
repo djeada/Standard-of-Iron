@@ -11,7 +11,7 @@
 #include <optional>
 
 #include "../core/ambient_session.h"
-#include "../core/component.h"
+#include "../core/component_economy.h"
 #include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"

@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../../core/component.h"
+#include "../../core/component_gameplay.h"
 #include "../../core/world.h"
 #include "../../visuals/team_colors.h"
 #include "../combat_system/combat_types.h"

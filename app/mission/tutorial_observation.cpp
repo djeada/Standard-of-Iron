@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "app/viewmodels/placement_view_model.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"

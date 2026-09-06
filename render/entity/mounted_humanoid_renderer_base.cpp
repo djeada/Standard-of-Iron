@@ -7,7 +7,7 @@
 
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_registry.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "mounted_knight_pose.h"
 #include "render/creature/anatomy_bake.h"

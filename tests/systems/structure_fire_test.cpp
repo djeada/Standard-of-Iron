@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "core/component.h"
+#include "core/component_gameplay.h"
 #include "core/world.h"
 #include "systems/combat_system/combat_hit_resolver.h"
 #include "systems/combat_system/combat_status_effect_processor.h"

@@ -10,7 +10,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/systems/nation_id.h"
 #include "game/visuals/building_asset_key.h"
 #include "render/geom/transforms.h"

@@ -7,7 +7,7 @@
 #include "app/input/hover_tracker.h"
 #include "app/orders/command_controller.h"
 #include "app/orders/movement_utils.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/map/visibility_service.h"
 #include "game/render_bridge/picking_service.h"

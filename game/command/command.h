@@ -7,7 +7,7 @@
 #include <variant>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../formation/army_formation_types.h"
 #include "../systems/order_service.h"

@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include <string_view>
 
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"

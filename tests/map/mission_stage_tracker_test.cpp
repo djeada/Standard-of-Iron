@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "game/core/component.h"
+#include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/map/mission_stage_tracker.h"
 #include "game/session/session_context.h"

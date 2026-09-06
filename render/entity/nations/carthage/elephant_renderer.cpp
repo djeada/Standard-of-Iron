@@ -6,7 +6,7 @@
 #include <cmath>
 
 #include "../../../entity_appearance.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "game/visuals/team_colors.h"
 #include "math/math_utils.h"

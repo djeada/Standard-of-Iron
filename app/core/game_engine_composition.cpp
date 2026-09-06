@@ -96,7 +96,7 @@
 #include "game/audio/audio_event_handler.h"
 #include "game/audio/audio_system.h"
 #include "game/command/command_queue.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/event_manager.h"
 #include "game/core/local_audience.h"
 #include "game/core/system.h"
@@ -487,6 +487,25 @@ void GameEngine::build_services_and_controllers() {
                                                            m_session->nations());
   m_mission_setup = std::make_unique<Game::Mission::MissionSetupCoordinator>();
   m_save_load_coordinator = std::make_unique<App::Core::SaveLoadCoordinator>();
+  m_save_orchestrator = std::make_unique<App::Core::SaveOrchestrator>(
+      App::Core::SaveOrchestrator::Callbacks{
+          .simulation_running =
+              [this]() {
+                return m_simulation_thread_running.load(std::memory_order_acquire);
+              },
+          .capture =
+              [this](const QString& slot,
+                     Game::Systems::Save::SlotKind kind,
+                     int autosave_retention) {
+                return capture_save_to_slot(slot, kind, autosave_retention);
+              },
+          .deliver =
+              [this](const QString& slot, const App::Core::SaveToSlotEffects& effects) {
+                QMetaObject::invokeMethod(
+                    this,
+                    [this, slot, effects]() { finish_save_request(slot, effects); },
+                    Qt::QueuedConnection);
+              }});
   m_skirmish_runtime = std::make_unique<App::Core::SkirmishRuntimeCoordinator>();
   if (m_audio_event_handler->initialize()) {
     qInfo() << "AudioEventHandler initialized successfully";

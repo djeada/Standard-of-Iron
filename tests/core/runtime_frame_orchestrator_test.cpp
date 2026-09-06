@@ -8,7 +8,7 @@
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
 #include "game/command/command_system.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/map/environment_lighting.h"
 #include "game/map/map_definition.h"

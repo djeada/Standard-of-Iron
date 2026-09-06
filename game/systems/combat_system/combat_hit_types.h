@@ -2,7 +2,7 @@
 
 #include <QVector3D>
 
-#include "../../core/component.h"
+#include "../../core/component_combat.h"
 #include "../../core/entity.h"
 #include "../combat_actions/combat_action_definition.h"
 #include "../projectile_kind.h"

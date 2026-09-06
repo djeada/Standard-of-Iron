@@ -7,7 +7,7 @@
 #include <limits>
 #include <string_view>
 
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"

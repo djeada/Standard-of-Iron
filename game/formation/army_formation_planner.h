@@ -95,7 +95,8 @@ public:
 
   [[nodiscard]] static auto
   build_layout(const std::vector<ArmyFormationMember>& members,
-               const ArmyFormationRequest& request) -> ArmyFormationLayout;
+               const ArmyFormationRequest& request,
+               const ArmyFormation* previous_group = nullptr) -> ArmyFormationLayout;
 
   [[nodiscard]] static auto
   place(const ArmyFormationLayout& layout,
@@ -103,7 +104,8 @@ public:
 
   [[nodiscard]] static auto
   layout_signature(const std::vector<ArmyFormationMember>& members,
-                   const ArmyFormationRequest& request) -> std::uint64_t;
+                   const ArmyFormationRequest& request,
+                   const ArmyFormation* previous_group = nullptr) -> std::uint64_t;
 
   [[nodiscard]] static auto
   make_member(EntityID entity_id,

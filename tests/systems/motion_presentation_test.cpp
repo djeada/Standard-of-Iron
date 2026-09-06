@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "core/component.h"
+#include "core/component_core.h"
 #include "core/system.h"
 #include "core/world.h"
 #include "game/units/spawn_type.h"

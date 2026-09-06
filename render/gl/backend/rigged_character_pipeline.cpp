@@ -261,26 +261,51 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
         fn->glGenBuffers(1, &m_palette_ubo);
       }
       if (m_palette_ubo != 0) {
-        if (BonePaletteArena::k_palette_bytes > m_palette_ubo_capacity_bytes) {
+        if (m_palette_slot_stride_bytes == 0) {
+          GLint alignment = 256;
+          glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &alignment);
+          const auto step = static_cast<std::size_t>(std::max(alignment, 1));
+          m_palette_slot_stride_bytes =
+              ((BonePaletteArena::k_palette_bytes + step - 1U) / step) * step;
+        }
+
+        const std::size_t ring_bytes =
+            m_palette_slot_stride_bytes * k_palette_ring_slots;
+        if (ring_bytes > m_palette_ubo_capacity_bytes) {
           fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
           fn->glBufferData(GL_UNIFORM_BUFFER,
-                           static_cast<GLsizeiptr>(BonePaletteArena::k_palette_bytes),
+                           static_cast<GLsizeiptr>(ring_bytes),
                            nullptr,
-                           GL_DYNAMIC_DRAW);
-          m_palette_ubo_capacity_bytes = BonePaletteArena::k_palette_bytes;
+                           GL_STREAM_DRAW);
+          m_palette_ubo_capacity_bytes = ring_bytes;
+          m_palette_ring_cursor = 0;
         }
-        copy_palette_to_scratch(cmd, m_palette_scratch);
+
         fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
+        if (m_palette_ring_cursor >= k_palette_ring_slots) {
+
+          fn->glBufferData(GL_UNIFORM_BUFFER,
+                           static_cast<GLsizeiptr>(m_palette_ubo_capacity_bytes),
+                           nullptr,
+                           GL_STREAM_DRAW);
+          m_palette_ring_cursor = 0;
+          ++m_palette_ring_orphans;
+        }
+
+        const auto offset =
+            static_cast<GLintptr>(m_palette_ring_cursor * m_palette_slot_stride_bytes);
+        copy_palette_to_scratch(cmd, m_palette_scratch);
         fn->glBufferSubData(GL_UNIFORM_BUFFER,
-                            0,
+                            offset,
                             static_cast<GLsizeiptr>(BonePaletteArena::k_palette_bytes),
                             m_palette_scratch.data());
         fn->glBindBufferRange(
             GL_UNIFORM_BUFFER,
             k_bone_palette_binding_point,
             m_palette_ubo,
-            0,
+            offset,
             static_cast<GLsizeiptr>(BonePaletteArena::k_palette_bytes));
+        ++m_palette_ring_cursor;
       }
     }
   }

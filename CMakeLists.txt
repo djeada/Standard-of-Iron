@@ -706,6 +706,7 @@ add_library(
     # app/persistence -- saving and restoring a match.
     app/persistence/game_state_restorer.cpp
     app/persistence/save_load_coordinator.cpp
+    app/persistence/save_orchestrator.cpp
     # app/world -- world state read back as client presentation state.
     app/world/ambient_state_manager.cpp
     app/world/focus_target.cpp

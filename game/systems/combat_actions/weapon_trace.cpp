@@ -14,7 +14,7 @@
 #include "../../../animation/attack_pose_manifest.h"
 #include "../../../animation/clip_manifest.h"
 #include "../../../animation/melee_swing_manifest.h"
-#include "../../core/component.h"
+#include "../../core/component_combat.h"
 #include "../../core/simulation_timing.h"
 #include "../../core/world.h"
 #include "../combat_rules.h"

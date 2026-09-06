@@ -30,7 +30,8 @@ BUDGET_FILE = "scripts/ambient_instance_budget.json"
 AMBIENT = re.compile(
     r"\b(?:OwnerRegistry|TerrainService|VisibilityService|PlayerResourceRegistry"
     r"|NationRegistry|GlobalStatsRegistry|TroopCountRegistry"
-    r"|BuildingCollisionRegistry|MarketplaceSystem)::instance\s*\("
+    r"|BuildingCollisionRegistry|MarketplaceSystem|ArmyFormationRegistry"
+    r")::instance\s*\("
     r"|\bSessionContext::active(?:_or_null)?\s*\("
 )
 
@@ -48,6 +49,7 @@ DEFINITION_FILES = {
     "game/systems/troop_count_registry.cpp",
     "game/systems/building_collision_registry.cpp",
     "game/systems/marketplace_system.cpp",
+    "game/formation/army_formation_registry.cpp",
     "game/session/session_context.cpp",
 }
 

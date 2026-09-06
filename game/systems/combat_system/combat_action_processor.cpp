@@ -6,7 +6,7 @@
 #include <span>
 
 #include "../../audio/cue_ids.h"
-#include "../../core/component.h"
+#include "../../core/component_gameplay.h"
 #include "../../core/entity.h"
 #include "../../core/event_manager.h"
 #include "../../core/world.h"

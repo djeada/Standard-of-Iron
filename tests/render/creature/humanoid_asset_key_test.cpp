@@ -5,6 +5,7 @@
 #include <QVector4D>
 
 #include <gtest/gtest.h>
+#include <utility>
 #include <vector>
 
 #include "render/creature/pipeline/creature_asset.h"

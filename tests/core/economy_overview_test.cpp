@@ -9,7 +9,7 @@
 #include "app/core/user_settings.h"
 #include "app/economy/economy_overview.h"
 #include "app/viewmodels/economy_view_model.h"
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/systems/builder_product_types.h"

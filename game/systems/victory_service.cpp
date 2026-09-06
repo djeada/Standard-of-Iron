@@ -8,7 +8,7 @@
 #include <variant>
 
 #include "core/event_manager.h"
-#include "game/core/component.h"
+#include "game/core/component_commander.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"

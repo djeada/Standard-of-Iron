@@ -13,7 +13,7 @@
 #include "animation/locomotion_manifest.h"
 #include "animation/playback_manifest.h"
 #include "animation/rig/humanoid_proportions.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "game/map/terrain_service.h"
 #include "render/anim_key.h"
