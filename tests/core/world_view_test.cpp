@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "game/core/component.h"
+#include "game/core/component_combat.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 

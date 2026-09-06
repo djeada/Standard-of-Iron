@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../systems/nation_registry.h"

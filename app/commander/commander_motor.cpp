@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/simulation_timing.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"

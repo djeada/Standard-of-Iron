@@ -4,12 +4,14 @@
 #include "../command/replay.h"
 #include "../core/ambient_session.h"
 #include "../core/world.h"
+#include "../formation/army_formation_registry.h"
 #include "../map/terrain_service.h"
 #include "../map/visibility_service.h"
 #include "../systems/building_collision_registry.h"
 #include "../systems/global_stats_registry.h"
 #include "../systems/marketplace_system.h"
 #include "../systems/nation_registry.h"
+#include "../systems/navigation_service.h"
 #include "../systems/owner_registry.h"
 #include "../systems/player_resource_registry.h"
 #include "../systems/troop_count_registry.h"
@@ -37,6 +39,8 @@ struct SessionContext::State {
   Game::Systems::TroopCountRegistry troop_counts;
   Game::Systems::BuildingCollisionRegistry building_collision;
   Game::Systems::MarketplaceSystem marketplace;
+  Game::Systems::NavigationService navigation;
+  Game::Formation::ArmyFormationRegistry army_formations;
   Game::Map::VisibilityService visibility;
   Game::Command::CommandQueue commands;
   std::unique_ptr<Game::Command::ReplayPlayer> replay_player;
@@ -63,6 +67,8 @@ SessionContext::SessionContext(const Config& config)
   services.troop_counts = &m_state->troop_counts;
   services.building_collision = &m_state->building_collision;
   services.marketplace = &m_state->marketplace;
+  services.navigation = &m_state->navigation;
+  services.army_formations = &m_state->army_formations;
   services.clock = &m_state->clock;
   services.rng = &m_state->rng;
   services.commands = &m_state->commands;
@@ -73,6 +79,18 @@ SessionContext::SessionContext(const Config& config)
 SessionContext::~SessionContext() {
   unbind_world_services(m_state->world);
   unbind_ambient_services(&m_state->services);
+}
+
+auto SessionContext::army_formations() -> Game::Formation::ArmyFormationRegistry& {
+  return m_state->army_formations;
+}
+
+auto SessionContext::navigation() -> Game::Systems::NavigationService& {
+  return m_state->navigation;
+}
+
+auto SessionContext::navigation() const -> const Game::Systems::NavigationService& {
+  return m_state->navigation;
 }
 
 auto SessionContext::world() -> Engine::Core::World& {
@@ -214,6 +232,8 @@ void SessionContext::reset() {
   m_state->stats.clear();
   m_state->troop_counts.clear();
   m_state->building_collision.clear();
+  m_state->navigation.clear();
+  m_state->army_formations.clear();
   m_state->clock.reset();
   m_state->rng.reseed(m_state->seed);
 }

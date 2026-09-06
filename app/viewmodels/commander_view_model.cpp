@@ -18,7 +18,7 @@
 #include "game/audio/audio_system.h"
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
-#include "game/core/component.h"
+#include "game/core/component_commander.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"

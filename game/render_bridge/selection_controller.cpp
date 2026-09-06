@@ -10,7 +10,7 @@
 #include <cstddef>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_structures.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../render_bridge/picking_service.h"

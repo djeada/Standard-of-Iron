@@ -4,7 +4,7 @@
 #include <cmath>
 #include <limits>
 
-#include "../core/component.h"
+#include "../core/component_economy.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"
 #include "player_feedback.h"

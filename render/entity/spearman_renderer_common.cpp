@@ -9,7 +9,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/systems/nation_id.h"
 #include "nations/equipment_loadout_catalog.h"
 #include "render/creature/archetype_registry.h"

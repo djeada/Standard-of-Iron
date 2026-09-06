@@ -1,7 +1,7 @@
 #include "world_restore.h"
 
 #include "../core/ambient_session.h"
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
 #include "../systems/global_stats_registry.h"

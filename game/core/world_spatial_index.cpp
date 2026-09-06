@@ -4,7 +4,7 @@
 #include <cmath>
 #include <limits>
 
-#include "component.h"
+#include "component_economy.h"
 #include "world.h"
 
 namespace Engine::Core {

@@ -7,7 +7,7 @@
 #include <cmath>
 #include <optional>
 
-#include "../../core/component.h"
+#include "../../core/component_commander.h"
 #include "../../core/event_manager.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"

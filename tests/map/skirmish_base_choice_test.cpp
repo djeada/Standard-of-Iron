@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "app/session/skirmish_loader.h"
-#include "core/component.h"
+#include "core/component_core.h"
 #include "core/world.h"
 #include "game/map/base_options.h"
 #include "game/map/map_definition.h"

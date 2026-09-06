@@ -1,7 +1,7 @@
 #include "home_renderer_common.h"
 
 #include "../entity_appearance.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 
 namespace Render::GL {
 

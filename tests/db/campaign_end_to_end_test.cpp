@@ -6,7 +6,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "core/component.h"
+#include "core/component_commander.h"
 #include "core/event_manager.h"
 #include "core/world.h"
 #include "game/session/session_context.h"

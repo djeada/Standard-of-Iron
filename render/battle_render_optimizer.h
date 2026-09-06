@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <mutex>
 
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 
 namespace Render {
 

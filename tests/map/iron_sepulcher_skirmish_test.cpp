@@ -11,7 +11,7 @@
 
 #include "app/audio/audio_resource_loader.h"
 #include "app/session/skirmish_loader.h"
-#include "core/component.h"
+#include "core/component_gameplay.h"
 #include "core/event_manager.h"
 #include "core/world.h"
 #include "game/audio/audio_cues.h"

@@ -2,6 +2,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTemporaryDir>
+#include <QVector3D>
 
 #include <gtest/gtest.h>
 #include <variant>
@@ -9,8 +10,9 @@
 #include "game/command/command.h"
 #include "game/command/command_codec.h"
 #include "game/command/command_queue.h"
+#include "game/command/commander_input.h"
 #include "game/command/replay.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
 #include "game/systems/owner_registry.h"
@@ -328,3 +330,87 @@ TEST(ReplayTest, RoundTripsItsOwnHeader) {
 }
 
 } // namespace
+
+TEST(CommanderInputRecordTest, AFrameRoundTripsThroughItsJsonForm) {
+  Game::Command::CommanderInputFrame frame;
+  frame.commander = 4242;
+  frame.view_yaw = -37.5F;
+  frame.sequence = 19;
+  frame.dodge_direction = QVector3D(0.0F, 0.0F, -1.0F);
+  frame.set(Game::Command::CommanderInputFrame::Forward, true);
+  frame.set(Game::Command::CommanderInputFrame::Run, true);
+  frame.set(Game::Command::CommanderInputFrame::HeavyPressed, true);
+  frame.set(Game::Command::CommanderInputFrame::HasDodgeDirection, true);
+
+  const auto decoded =
+      Game::Command::commander_input_from_json(Game::Command::to_json(frame));
+
+  ASSERT_TRUE(decoded.has_value());
+  EXPECT_EQ(decoded->commander, frame.commander);
+  EXPECT_EQ(decoded->buttons, frame.buttons);
+  EXPECT_EQ(decoded->sequence, frame.sequence);
+  EXPECT_FLOAT_EQ(decoded->view_yaw, frame.view_yaw);
+  EXPECT_EQ(decoded->dodge_direction, frame.dodge_direction);
+  EXPECT_TRUE(decoded->held(Game::Command::CommanderInputFrame::Forward));
+  EXPECT_TRUE(decoded->held(Game::Command::CommanderInputFrame::HeavyPressed));
+  EXPECT_FALSE(decoded->held(Game::Command::CommanderInputFrame::JumpPressed));
+}
+
+TEST(CommanderInputRecordTest, RecordedFramesComeBackAtTheTickTheyWereAppliedOn) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  const QString path = dir.filePath("commander.soireplay");
+
+  Game::Command::CommandQueue queue;
+  Game::Command::ReplayHeader header;
+  header.kind = QStringLiteral("skirmish");
+  header.digest_interval = 0;
+
+  Game::Command::CommanderInputFrame first;
+  first.commander = 7;
+  first.view_yaw = 90.0F;
+  first.set(Game::Command::CommanderInputFrame::Forward, true);
+
+  Game::Command::CommanderInputFrame second;
+  second.commander = 7;
+  second.view_yaw = 91.5F;
+  second.set(Game::Command::CommanderInputFrame::JumpPressed, true);
+
+  {
+    Game::Command::ReplayRecorder recorder;
+    ASSERT_TRUE(recorder.begin(path, header, queue));
+    recorder.record_commander_input(12, first);
+    recorder.record_commander_input(30, second);
+    recorder.finish();
+  }
+
+  QString error;
+  auto file = Game::Command::ReplayFile::load(path, &error);
+  ASSERT_TRUE(file.has_value()) << error.toStdString();
+  EXPECT_EQ(file->commander_inputs.size(), 2U);
+
+  Game::Command::ReplayPlayer player(std::move(*file));
+  EXPECT_EQ(player.commander_input_count(), 2U);
+  EXPECT_EQ(player.commander_input(11), nullptr);
+  ASSERT_NE(player.commander_input(12), nullptr);
+  EXPECT_TRUE(
+      player.commander_input(12)->held(Game::Command::CommanderInputFrame::Forward));
+  EXPECT_FLOAT_EQ(player.commander_input(12)->view_yaw, 90.0F);
+  ASSERT_NE(player.commander_input(30), nullptr);
+  EXPECT_TRUE(player.commander_input(30)->held(
+      Game::Command::CommanderInputFrame::JumpPressed));
+  EXPECT_EQ(player.commander_input(31), nullptr);
+}
+
+TEST(CommanderInputRecordTest, AFileWithoutCommanderInputStillLoads) {
+  QTemporaryDir dir;
+  const QString path = dir.filePath("plain.soireplay");
+  Game::Command::ReplayHeader header;
+  header.kind = QStringLiteral("skirmish");
+  ASSERT_TRUE(write_replay(path, header.to_json(), ""));
+
+  QString error;
+  auto file = Game::Command::ReplayFile::load(path, &error);
+  ASSERT_TRUE(file.has_value()) << error.toStdString();
+  EXPECT_TRUE(file->commander_inputs.empty());
+}

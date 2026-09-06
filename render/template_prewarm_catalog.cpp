@@ -5,7 +5,7 @@
 
 #include "creature/archetype_registry.h"
 #include "creature/pose_intent.h"
-#include "game/core/component.h"
+#include "game/core/component_combat.h"
 
 namespace Render::GL {
 

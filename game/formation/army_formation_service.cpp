@@ -7,7 +7,7 @@
 #include <numbers>
 #include <unordered_map>
 
-#include "../core/component.h"
+#include "../core/component_core.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "army_formation_registry.h"
@@ -214,7 +214,7 @@ auto ArmyFormationService::build(Engine::Core::World& world,
   ArmyFormationRequest effective = request;
   if (effective.group_id == k_invalid_group) {
     effective.group_id =
-        ArmyFormationRegistry::instance().group_of(request.members.front());
+        ArmyFormationRegistry::for_world(world).group_of(request.members.front());
   }
 
   auto const plan = ArmyFormationPlanner::plan(world, effective);
@@ -263,7 +263,7 @@ auto ArmyFormationService::build(Engine::Core::World& world,
     return result;
   }
 
-  auto& registry = ArmyFormationRegistry::instance();
+  auto& registry = ArmyFormationRegistry::for_world(world);
   FormationGroupID group_id = effective.group_id;
   auto* existing = registry.find(group_id);
   if (existing == nullptr) {

@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"

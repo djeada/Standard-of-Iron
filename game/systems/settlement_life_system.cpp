@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "../core/ambient_session.h"
-#include "../core/component.h"
+#include "../core/component_economy.h"
 #include "../core/world.h"
 #include "../map/map_definition.h"
 #include "../map/terrain_service.h"

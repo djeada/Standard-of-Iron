@@ -18,7 +18,7 @@
 #include <vector>
 
 #include "animation/rig/horse_gait.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"

@@ -3,7 +3,7 @@
 #include <cstdint>
 
 #include "animation/combat_manifest.h"
-#include "game/core/component.h"
+#include "game/core/component_combat.h"
 #include "movement_state.h"
 
 namespace Render::Creature {

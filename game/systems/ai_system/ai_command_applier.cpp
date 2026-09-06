@@ -12,7 +12,7 @@
 #include "../../command/command.h"
 #include "../../command/command_dispatcher.h"
 #include "../../command/command_queue.h"
-#include "../../core/component.h"
+#include "../../core/component_structures.h"
 #include "../../core/world.h"
 #include "../../game_config.h"
 #include "../../map/terrain_service.h"

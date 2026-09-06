@@ -5,7 +5,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/system_context.h"
 #include "../core/world.h"
 #include "../core/world_spatial_index.h"

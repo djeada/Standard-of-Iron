@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "core/component.h"
+#include "core/component_economy.h"
 #include "core/world.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/unit_activity.h"

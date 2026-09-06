@@ -1,6 +1,6 @@
 #include "building_spawn_setup.h"
 
-#include "../core/component.h"
+#include "../core/component_structures.h"
 #include "../core/entity.h"
 #include "../visuals/building_asset_key.h"
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace Engine::Core {
 class World;
 }
@@ -14,10 +16,15 @@ class BuildingCollisionRegistry;
 class GlobalStatsRegistry;
 class MarketplaceSystem;
 class NationRegistry;
+class NavigationService;
 class OwnerRegistry;
 class PlayerResourceRegistry;
 class TroopCountRegistry;
 } // namespace Game::Systems
+
+namespace Game::Formation {
+class ArmyFormationRegistry;
+}
 
 namespace Game::Command {
 class CommandQueue;
@@ -41,6 +48,8 @@ struct AmbientServices {
   Game::Systems::TroopCountRegistry* troop_counts = nullptr;
   Game::Systems::BuildingCollisionRegistry* building_collision = nullptr;
   Game::Systems::MarketplaceSystem* marketplace = nullptr;
+  Game::Systems::NavigationService* navigation = nullptr;
+  Game::Formation::ArmyFormationRegistry* army_formations = nullptr;
   SimulationClock* clock = nullptr;
   DeterministicRng* rng = nullptr;
   Game::Command::CommandQueue* commands = nullptr;
@@ -58,6 +67,10 @@ void bind_world_services(const Engine::Core::World& world,
                          const AmbientServices* services);
 
 void unbind_world_services(const Engine::Core::World& world);
+
+[[nodiscard]] auto unbound_world_lookups() -> std::uint64_t;
+
+void reset_unbound_world_lookups();
 
 [[nodiscard]] auto ambient_services_or_null() -> const AmbientServices*;
 

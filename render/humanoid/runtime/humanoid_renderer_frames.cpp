@@ -4,7 +4,7 @@
 
 #include <memory>
 
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_config.h"

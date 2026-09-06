@@ -5,7 +5,7 @@
 #include <string>
 
 #include "entity_appearance.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/ownership_constants.h"
 #include "render/entity/barracks_flag_renderer.h"
 #include "render/entity/building_render_common.h"

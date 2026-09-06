@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "tools/arena/arena_feedback.h"

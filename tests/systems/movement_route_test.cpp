@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "game/core/component.h"
+#include "game/core/component_structures.h"
 #include "game/core/movement_trace.h"
 #include "game/core/movement_trace_analysis.h"
 #include "game/core/world.h"

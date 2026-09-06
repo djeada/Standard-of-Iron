@@ -1,8 +1,9 @@
 #include "grave_priest.h"
 
+#include <cmath>
 #include <memory>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../systems/troop_profile_service.h"

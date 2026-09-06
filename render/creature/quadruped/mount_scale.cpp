@@ -1,6 +1,6 @@
 #include "mount_scale.h"
 
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 

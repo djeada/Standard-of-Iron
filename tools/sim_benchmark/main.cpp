@@ -15,7 +15,7 @@
 #include <string_view>
 #include <vector>
 
-#include "game/core/component.h"
+#include "game/core/component_combat.h"
 #include "game/core/nav_profile.h"
 #include "game/core/system_profiler.h"
 #include "game/core/world.h"

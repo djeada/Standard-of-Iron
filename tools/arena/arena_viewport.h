@@ -18,7 +18,7 @@
 #include "arena_casting.h"
 #include "arena_feedback.h"
 #include "arena_scenario.h"
-#include "game/core/component.h"
+#include "game/core/component_combat.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "game/systems/attack_range.h"

@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"

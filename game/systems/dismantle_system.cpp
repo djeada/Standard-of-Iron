@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"

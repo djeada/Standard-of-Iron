@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "../../core/component_gameplay.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
 #include "../defensive_unit_layout_service.h"

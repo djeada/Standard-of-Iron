@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 
+#include "../../core/component_gameplay.h"
 #include "../combat_rules.h"
 #include "combat_random.h"
 

@@ -6,7 +6,7 @@
 #include <cmath>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../core/system_context.h"
 #include "../core/world.h"

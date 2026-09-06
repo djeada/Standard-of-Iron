@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/world.h"
 #include "core/entity.h"
 

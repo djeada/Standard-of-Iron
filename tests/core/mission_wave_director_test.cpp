@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "game/audio/cue_ids.h"
-#include "game/core/component.h"
+#include "game/core/component_structures.h"
 #include "game/core/world.h"
 #include "game/mission/mission_setup_coordinator.h"
 #include "game/mission/mission_wave_director.h"

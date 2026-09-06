@@ -1,6 +1,6 @@
 #include "factory.h"
 
-#include "../core/component.h"
+#include "../core/component_core.h"
 #include "../core/world.h"
 #include "archer.h"
 #include "ballista.h"

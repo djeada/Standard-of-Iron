@@ -154,6 +154,17 @@ void ReplayRecorder::record_digest(std::uint64_t tick, std::uint64_t digest) {
   m_file->write("\n");
 }
 
+void ReplayRecorder::record_commander_input(std::uint64_t tick,
+                                            const CommanderInputFrame& frame) {
+  if (!m_file) {
+    return;
+  }
+  QJsonObject object = to_json(frame);
+  object["tick"] = static_cast<qint64>(tick);
+  m_file->write(QJsonDocument(object).toJson(QJsonDocument::Compact));
+  m_file->write("\n");
+}
+
 void ReplayRecorder::finish() {
   if (m_queue != nullptr) {
     m_queue->set_observer({});
@@ -235,6 +246,21 @@ auto ReplayFile::load(const QString& path,
       replay.digests.push_back({static_cast<std::uint64_t>(tick.toDouble()), digest});
       continue;
     }
+    if (object.contains(QLatin1String("commander_input"))) {
+      auto frame = commander_input_from_json(object);
+      const auto tick = object.value(QLatin1String("tick"));
+      if (!frame.has_value() || !tick.isDouble()) {
+        if (error != nullptr) {
+          *error = QStringLiteral("%1:%2: malformed commander input line")
+                       .arg(path)
+                       .arg(line_number);
+        }
+        return std::nullopt;
+      }
+      replay.commander_inputs.push_back(
+          {static_cast<std::uint64_t>(tick.toDouble()), *frame});
+      continue;
+    }
     auto command = from_json(object);
     if (!command.has_value()) {
       if (error != nullptr) {
@@ -289,6 +315,21 @@ auto ReplayPlayer::check(std::uint64_t tick, std::uint64_t digest) -> bool {
         ReplayDivergence{.tick = tick, .recorded = recorded, .observed = digest};
   }
   return false;
+}
+
+auto ReplayPlayer::commander_input(std::uint64_t tick) const
+    -> const CommanderInputFrame* {
+  const auto found =
+      std::lower_bound(m_file.commander_inputs.begin(),
+                       m_file.commander_inputs.end(),
+                       tick,
+                       [](const RecordedCommanderInput& entry, std::uint64_t value) {
+                         return entry.tick < value;
+                       });
+  if (found == m_file.commander_inputs.end() || found->tick != tick) {
+    return nullptr;
+  }
+  return &found->frame;
 }
 
 void ReplayPlayer::feed(std::uint64_t tick, CommandQueue& queue) {

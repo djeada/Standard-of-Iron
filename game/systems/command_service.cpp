@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/world.h"
 #include "../formation/army_formation_planner.h"
 #include "../formation/army_formation_registry.h"
@@ -176,7 +176,7 @@ auto CommandService::resolve_group_slots(
     request.facing = formation_facing;
     request.spacing = Game::GameConfig::instance().gameplay().formation_spacing_default;
 
-    auto& registry = Game::Formation::ArmyFormationRegistry::instance();
+    auto& registry = Game::Formation::ArmyFormationRegistry::for_world(world);
     auto const group_id = registry.group_of(units.front());
     bool one_existing_group = group_id != Game::Formation::k_invalid_group;
     for (auto const member : units) {

@@ -10,7 +10,7 @@
 #include "building_decay.h"
 #include "building_render_common.h"
 #include "building_state.h"
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/entity.h"
 #include "game/systems/resource_stockpile.h"
 #include "render/geom/stone.h"

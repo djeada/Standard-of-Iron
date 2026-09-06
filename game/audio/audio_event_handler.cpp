@@ -6,7 +6,7 @@
 #include <string>
 #include <utility>
 
-#include "../core/component.h"
+#include "../core/component_core.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "audio_cues.h"

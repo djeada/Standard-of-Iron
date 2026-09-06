@@ -1,6 +1,10 @@
 #pragma once
 
-#include "game/core/component.h"
+#include <cstddef>
+#include <utility>
+#include <vector>
+
+#include "game/core/component_core.h"
 
 namespace Engine::Core {
 

@@ -1,6 +1,6 @@
 #include "app/world/unit_queries.h"
 
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nation_id.h"

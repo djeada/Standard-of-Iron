@@ -16,7 +16,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/world.h"
 #include "../session/session_context.h"
 #include "../session/world_digest.h"

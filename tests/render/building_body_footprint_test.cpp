@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/default_content.h"

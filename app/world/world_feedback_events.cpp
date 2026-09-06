@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "game/core/component.h"
+#include "game/core/component_structures.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 

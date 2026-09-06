@@ -33,9 +33,19 @@ auto read_text(const fs::path& path) -> std::string {
 
 auto component_headers() -> std::vector<fs::path> {
   const auto root = find_repo_root();
-  return {root / "game" / "core" / "component.h",
-          root / "render" / "creature" / "animation_state_components.h",
-          root / "render" / "humanoid" / "runtime" / "instance_state.h"};
+  std::vector<fs::path> headers;
+  for (const char* name : {"component_core.h",
+                           "component_combat.h",
+                           "component_structures.h",
+                           "component_commander.h",
+                           "component_gameplay.h",
+                           "component_economy.h",
+                           "component_presentation.h"}) {
+    headers.push_back(root / "game" / "core" / name);
+  }
+  headers.push_back(root / "render" / "creature" / "animation_state_components.h");
+  headers.push_back(root / "render" / "humanoid" / "runtime" / "instance_state.h");
+  return headers;
 }
 
 } // namespace

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "core/component.h"
+#include "core/component_gameplay.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "game/map/terrain_service.h"

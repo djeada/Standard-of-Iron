@@ -6,7 +6,7 @@
 
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
@@ -33,12 +33,14 @@ constexpr float k_gate_z = 0.0F;
 
 auto make_match() -> std::unique_ptr<SessionContext> {
   auto session = std::make_unique<SessionContext>();
+  const ScopedSession scope(*session);
   auto& owners = session->owners();
   owners.register_owner_with_id(k_defender, Game::Systems::OwnerType::Player, "blue");
   owners.register_owner_with_id(k_raider, Game::Systems::OwnerType::AI, "red");
   owners.set_owner_team(k_defender, 1);
   owners.set_owner_team(k_raider, 2);
   Game::Systems::register_runtime_systems(session->world());
+  Game::Systems::NavGrid::initialize(64, 64);
   return session;
 }
 

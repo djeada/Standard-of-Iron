@@ -95,7 +95,13 @@ Three of the modules need a word.
 dependencies of their own, scattered across `game/systems`, `game/units`,
 `game/formation` and `game/wildlife` by directory but belonging to no layer,
 because every layer names them. `component.h` storing a `SpawnType` is a struct
-holding a value, not the ECS reaching into gameplay. Formation roles and army
+holding a value, not the ECS reaching into gameplay. `component.h` itself is now
+only an umbrella over seven domain headers -- `component_core.h`,
+`_combat`, `_structures`, `_commander`, `_gameplay`, `_economy` and
+`_presentation` -- chained so that each includes the one below it. A file that
+needs transforms and movement includes the first and does not rebuild when a
+formation presentation field changes; the umbrella stays for the files that
+genuinely span the lot. Formation roles and army
 formation types are here for the same reason: a nation names its doctrine, so
 the type has to sit below the registries.
 
@@ -282,8 +288,8 @@ Reaching a session, in order of preference:
 sites per directory and fails if any directory has more than
 `scripts/ambient_instance_budget.json` allows (`--write` lowers the file after a
 clean-up). The client, the tools and the upper `game/` modules are at zero; what
-is left is 65 sites, and the largest single blocker is `NavGrid` — see
-"Known limitations".
+is left is 58 sites, spread over per-entity helpers that are handed an `Entity&`
+and no world — see "Known limitations".
 
 `ScopedSession` installs a session for a scope and restores the previous binding
 on exit — that is how a test gets isolation. `ScopedThreadSession` does the same
@@ -816,18 +822,28 @@ These are real and deliberate, not oversights:
   goal rather than a fact. `scripts/check-architecture-doc.py` fails when these
   numbers drift from the budgets, so the sentence you are reading is checked
   rather than remembered.
+- A system's `access()` is a claim, not a fact, so Debug builds check it: the
+  registry records the component types a system touches and `World::update`
+  compares them against the declaration when
+  `World::set_access_verification(true)` is on (`SOI_VERIFY_SYSTEM_ACCESS`
+  forces it into a Release build; Release compiles the recording out). Until
+  that check is green across a full match, `plan_phase_schedule`'s batches
+  describe what _could_ run together, and nothing is dispatched onto a thread.
 - 76 full-world entity scans remain, of which 19 sit inside a loop
   body. `scripts/check-world-scans.py` budgets the first number per directory
   and refuses a new entry in the second; both are heuristics over source text,
   so passing them is evidence that no _new_ scan was introduced in a recognised
   spelling, not proof that every costly query is covered.
-- `NavGrid` is the largest single reason the last of those cannot be converted.
-  It is a `static std::unique_ptr<Pathfinding>` process global with an entirely
-  static API and roughly eighty `NavGrid::initialize` call sites, and
-  `Pathfinding` reads terrain and the building-collision registry on nine lines
-  of its own. Nothing can hand it a session's services until the pathfinder is
-  owned by the session rather than by the class, which is a project of its own
-  rather than a call-site sweep. The remainder are per-entity helpers deep in
+- Navigation is session-owned. `NavigationService` holds the `Pathfinding` grid
+  and the gate blockers, `SessionContext` owns one, and `NavGrid`'s static API
+  is a facade that resolves the active session's service — including the
+  building-collision hooks, which now look the service up when they fire rather
+  than capturing one grid at installation. Two sessions therefore have
+  independent grids and blockers. What the static spelling still hides is which
+  session a call meant: the roughly eighty `NavGrid::initialize` call sites read
+  as process-wide even though they are not, and `Pathfinding` still reads
+  terrain and the building-collision registry through the ambient binding.
+  The remaining ambient sites are per-entity helpers deep in
   `movement_system`, `combat_utils`, `structure_combat` and
   `defensive_unit_layout_service` that are handed an `Entity&` and no world;
   each needs a service reference threaded from its entry point, and their

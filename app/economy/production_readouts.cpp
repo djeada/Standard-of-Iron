@@ -4,7 +4,7 @@
 
 #include "app/economy/resource_text.h"
 #include "app/economy/unit_profile.h"
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
 #include "game/systems/construction_cost_catalog.h"

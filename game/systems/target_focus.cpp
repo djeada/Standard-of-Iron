@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "../core/component.h"
+#include "../core/component_structures.h"
 #include "../core/world.h"
 #include "../map/render_visibility_rules.h"
 #include "attack_targeting.h"

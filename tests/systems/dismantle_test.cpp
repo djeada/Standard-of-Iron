@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <string>
 
-#include "core/component.h"
+#include "core/component_gameplay.h"
 #include "core/world.h"
 #include "game/command/command.h"
 #include "game/command/command_dispatcher.h"

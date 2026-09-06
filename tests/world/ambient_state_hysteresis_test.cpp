@@ -4,7 +4,7 @@
 
 #include "app/core/entity_cache.h"
 #include "app/world/ambient_state_manager.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/world.h"
 
 namespace {

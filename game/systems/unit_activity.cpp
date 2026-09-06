@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "builder_product_types.h"
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 

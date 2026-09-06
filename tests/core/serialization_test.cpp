@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include "core/component.h"
+#include "core/component_economy.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "map/terrain_service.h"

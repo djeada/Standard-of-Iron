@@ -332,6 +332,9 @@ void MiniaudioBackend::release_slot(int slot) {
     }
   }
   m_track_table[slot].store(nullptr, std::memory_order_release);
+  if (m_track_storage[slot]) {
+    note_track_released(m_track_storage[slot]->pcm.size() * sizeof(std::int16_t));
+  }
   m_track_storage[slot].reset();
   m_slot_taken[slot] = false;
   {
@@ -416,6 +419,40 @@ auto MiniaudioBackend::analysis_for(const QString& id,
   return analysis;
 }
 
+auto MiniaudioBackend::default_pcm_budget_bytes() -> std::uint64_t {
+  constexpr std::uint64_t k_default_megabytes = 192;
+  const QByteArray configured = qgetenv("SOI_AUDIO_PCM_BUDGET_MB");
+  bool ok = false;
+  const qulonglong parsed = configured.toULongLong(&ok);
+  const std::uint64_t megabytes =
+      (ok && parsed > 0) ? static_cast<std::uint64_t>(parsed) : k_default_megabytes;
+  return megabytes * 1024ULL * 1024ULL;
+}
+
+void MiniaudioBackend::note_track_resident(std::size_t bytes, const QString& id) {
+  const std::uint64_t resident =
+      m_resident_pcm_bytes.fetch_add(bytes, std::memory_order_acq_rel) + bytes;
+  std::uint64_t peak = m_peak_pcm_bytes.load(std::memory_order_relaxed);
+  while (resident > peak && !m_peak_pcm_bytes.compare_exchange_weak(
+                                peak, resident, std::memory_order_acq_rel)) {
+  }
+  if (m_pcm_budget_bytes > 0 && resident > m_pcm_budget_bytes) {
+    if (m_pcm_budget_overruns.fetch_add(1, std::memory_order_acq_rel) == 0) {
+      qWarning() << "MiniaudioBackend: decoded audio is over its residency budget after"
+                 << id << "-" << (resident / (1024 * 1024)) << "MB resident,"
+                 << (m_pcm_budget_bytes / (1024 * 1024))
+                 << "MB budgeted (SOI_AUDIO_PCM_BUDGET_MB)";
+    }
+  }
+}
+
+void MiniaudioBackend::note_track_released(std::size_t bytes) {
+  if (bytes == 0) {
+    return;
+  }
+  m_resident_pcm_bytes.fetch_sub(bytes, std::memory_order_acq_rel);
+}
+
 auto MiniaudioBackend::decode_into_slot(const DecodeJob& job) -> bool {
   QFile file(job.path);
   if (!file.open(QIODevice::ReadOnly)) {
@@ -423,7 +460,8 @@ auto MiniaudioBackend::decode_into_slot(const DecodeJob& job) -> bool {
     return false;
   }
 
-  const QByteArray data = file.readAll();
+  QByteArray data = file.readAll();
+  file.close();
   if (data.isEmpty()) {
     qWarning() << "miniaudio: empty track data" << job.path;
     return false;
@@ -470,6 +508,8 @@ auto MiniaudioBackend::decode_into_slot(const DecodeJob& job) -> bool {
   }
   const ma_uint32 source_rate = decoder.outputSampleRate;
   ma_decoder_uninit(&decoder);
+  data.clear();
+  data.squeeze();
 
   if (pcm.empty()) {
     qWarning() << "miniaudio: decode produced no PCM for" << job.path;
@@ -529,9 +569,11 @@ auto MiniaudioBackend::decode_into_slot(const DecodeJob& job) -> bool {
       m_track_ids.value(job.id, -1) != job.track) {
     return false;
   }
+  const std::size_t resident_bytes = track->pcm.size() * sizeof(std::int16_t);
   m_track_storage[job.track] = std::move(track);
   m_track_table[job.track].store(m_track_storage[job.track].get(),
                                  std::memory_order_release);
+  note_track_resident(resident_bytes, job.id);
   return true;
 }
 
@@ -592,6 +634,9 @@ void MiniaudioBackend::unload(const QString& id) {
 
   QMutexLocker const locker(&m_registry_mutex);
   m_track_table[slot].store(nullptr, std::memory_order_release);
+  if (m_track_storage[slot]) {
+    note_track_released(m_track_storage[slot]->pcm.size() * sizeof(std::int16_t));
+  }
   m_track_storage[slot].reset();
   m_slot_taken[slot] = false;
 }

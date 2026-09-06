@@ -3,7 +3,7 @@
 #include <numbers>
 
 #include "animation/melee_swing_manifest.h"
-#include "game/core/component.h"
+#include "game/core/component_combat.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_actions/melee_intent_solver.h"
 

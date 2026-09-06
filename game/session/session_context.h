@@ -18,10 +18,15 @@ class BuildingCollisionRegistry;
 class GlobalStatsRegistry;
 class MarketplaceSystem;
 class NationRegistry;
+class NavigationService;
 class OwnerRegistry;
 class PlayerResourceRegistry;
 class TroopCountRegistry;
 } // namespace Game::Systems
+
+namespace Game::Formation {
+class ArmyFormationRegistry;
+}
 
 namespace Game::Command {
 class CommandQueue;
@@ -75,6 +80,11 @@ public:
   [[nodiscard]] auto building_collision() -> Game::Systems::BuildingCollisionRegistry&;
 
   [[nodiscard]] auto marketplace() -> Game::Systems::MarketplaceSystem&;
+
+  [[nodiscard]] auto navigation() -> Game::Systems::NavigationService&;
+  [[nodiscard]] auto navigation() const -> const Game::Systems::NavigationService&;
+
+  [[nodiscard]] auto army_formations() -> Game::Formation::ArmyFormationRegistry&;
 
   [[nodiscard]] auto clock() -> SimulationClock&;
   [[nodiscard]] auto clock() const -> const SimulationClock&;

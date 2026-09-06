@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "../core/component.h"
+#include "../core/component_structures.h"
 #include "../core/event_manager.h"
 #include "player_resource_registry.h"
 

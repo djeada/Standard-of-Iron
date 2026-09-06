@@ -32,16 +32,33 @@ auto read_text(const std::filesystem::path& path) -> std::string {
   return buffer.str();
 }
 
+auto component_headers() -> std::vector<std::filesystem::path> {
+  const auto core = find_repo_root() / "game" / "core";
+  std::vector<std::filesystem::path> headers;
+  for (const char* name : {"component_core.h",
+                           "component_combat.h",
+                           "component_structures.h",
+                           "component_commander.h",
+                           "component_gameplay.h",
+                           "component_economy.h",
+                           "component_presentation.h"}) {
+    headers.push_back(core / name);
+  }
+  return headers;
+}
+
 auto declared_components() -> std::set<std::string> {
-  const auto source = read_text(find_repo_root() / "game" / "core" / "component.h");
   const std::regex pattern(R"(^(?:class|struct) ([A-Za-z0-9_]+Component) \{)",
                            std::regex::multiline);
 
   std::set<std::string> names;
-  for (auto it = std::sregex_iterator(source.begin(), source.end(), pattern);
-       it != std::sregex_iterator();
-       ++it) {
-    names.insert((*it)[1].str());
+  for (const auto& header : component_headers()) {
+    const auto source = read_text(header);
+    for (auto it = std::sregex_iterator(source.begin(), source.end(), pattern);
+         it != std::sregex_iterator();
+         ++it) {
+      names.insert((*it)[1].str());
+    }
   }
   return names;
 }
@@ -74,7 +91,7 @@ auto contract_components() -> std::set<std::string> {
 TEST(SnapshotContractTest, EveryComponentIsClassified) {
 
   const auto declared = declared_components();
-  ASSERT_FALSE(declared.empty()) << "component.h could not be scanned";
+  ASSERT_FALSE(declared.empty()) << "the component headers could not be scanned";
 
   const auto classified = contract_components();
   for (const auto& name : declared) {
@@ -174,13 +191,17 @@ namespace {
 
 auto snapshot_copy_list(const std::string& function_name) -> std::vector<std::string> {
   const auto source = read_text(find_repo_root() / "game" / "core" / "world.cpp");
-  const auto start = source.find("void " + function_name + "(");
+  auto start = source.find("void " + function_name + "(");
+  if (start == std::string::npos) {
+    start = source.find("auto " + function_name + "(");
+  }
   if (start == std::string::npos) {
     return {};
   }
   const auto end = source.find("\n}\n", start);
   const std::string body = source.substr(start, end - start);
-  const std::regex pattern(R"(copy_snapshot_component<([A-Za-z0-9_]+)>)");
+  const std::regex pattern(
+      R"(copy(?:_revisioned)?_snapshot_component<([A-Za-z0-9_]+)>)");
   std::vector<std::string> names;
   for (auto it = std::sregex_iterator(body.begin(), body.end(), pattern);
        it != std::sregex_iterator();

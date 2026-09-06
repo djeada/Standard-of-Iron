@@ -18,7 +18,7 @@
 #include "game/audio/audio_event_handler.h"
 #include "game/audio/audio_system.h"
 #include "game/core/ambient_session.h"
-#include "game/core/component.h"
+#include "game/core/component_structures.h"
 #include "game/core/world.h"
 
 namespace Arena::Promo {

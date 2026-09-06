@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "game/core/component.h"
+#include "game/core/component_structures.h"
 #include "game/core/entity.h"
 #include "game/units/building_spawn_setup.h"
 

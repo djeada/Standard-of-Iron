@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "core/component.h"
+#include "core/component_structures.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "systems/patrol_system.h"

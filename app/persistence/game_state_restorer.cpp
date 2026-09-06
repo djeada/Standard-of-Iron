@@ -5,7 +5,7 @@
 #include "app/session/environment.h"
 #include "app/world/minimap_manager.h"
 #include "app/world/visibility_coordinator.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/map/map_loader.h"

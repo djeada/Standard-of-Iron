@@ -180,28 +180,58 @@ TEST_F(SaveCaptureCoherenceTest, MetadataReadInsideTheCaptureLockIsNeverTorn) {
   EXPECT_EQ(torn, 0);
 }
 
-TEST_F(SaveCaptureCoherenceTest, BeginSaveCapturesUnderTheFrameLock) {
+TEST_F(SaveCaptureCoherenceTest, TheSaveCaptureAlwaysRunsUnderTheFrameLock) {
   const auto root = find_repo_root();
   ASSERT_FALSE(root.empty());
   const std::string source = read_text(root / "app" / "core" / "game_engine.cpp");
   ASSERT_FALSE(source.empty());
 
+  const std::size_t capture = source.find("auto GameEngine::capture_save_to_slot(");
+  ASSERT_NE(capture, std::string::npos);
+  const std::size_t capture_end =
+      source.find("\nvoid GameEngine::finish_save_request", capture);
+  ASSERT_NE(capture_end, std::string::npos);
+  const std::string capture_body = source.substr(capture, capture_end - capture);
+
+  ASSERT_NE(capture_body.find("to_runtime_snapshot()"), std::string::npos);
+  ASSERT_NE(capture_body.find("begin_save_to_slot"), std::string::npos);
+
   const std::size_t begin_save = source.find("void GameEngine::begin_save(");
   ASSERT_NE(begin_save, std::string::npos);
-  const std::size_t body_end =
-      source.find("\nvoid GameEngine::save_game_to_slot", begin_save);
-  ASSERT_NE(body_end, std::string::npos);
-  const std::string body = source.substr(begin_save, body_end - begin_save);
+  const std::size_t begin_save_end =
+      source.find("\nauto GameEngine::pending_save_capture_queued", begin_save);
+  ASSERT_NE(begin_save_end, std::string::npos);
+  const std::string begin_save_body =
+      source.substr(begin_save, begin_save_end - begin_save);
 
-  const std::size_t lock = body.find("lock_frame()");
-  const std::size_t capture = body.find("to_runtime_snapshot()");
-  const std::size_t request = body.find("begin_save_to_slot");
-
+  const std::size_t lock = begin_save_body.find("lock_frame()");
+  const std::size_t inline_capture = begin_save_body.find("capture_save_to_slot(");
   ASSERT_NE(lock, std::string::npos)
-      << "begin_save must take the frame lock so the world, the clock, the RNG and "
-         "the mission state all come from one simulation tick";
-  ASSERT_NE(capture, std::string::npos);
-  ASSERT_NE(request, std::string::npos);
-  EXPECT_LT(lock, capture);
-  EXPECT_LT(lock, request);
+      << "the fallback capture in begin_save must hold the frame lock so the world, "
+         "the clock, the RNG and the mission state all come from one tick";
+  ASSERT_NE(inline_capture, std::string::npos);
+  EXPECT_LT(lock, inline_capture);
+  EXPECT_EQ(begin_save_body.find("to_runtime_snapshot()"), std::string::npos)
+      << "begin_save must not capture on the GUI thread itself";
+}
+
+TEST_F(SaveCaptureCoherenceTest, TheSimulationThreadCapturesQueuedSavesUnderTheLock) {
+  const auto root = find_repo_root();
+  ASSERT_FALSE(root.empty());
+  const std::string source = read_text(root / "app" / "core" / "game_engine.cpp");
+  ASSERT_FALSE(source.empty());
+
+  const std::size_t loop = source.find("void GameEngine::run_simulation_thread() {");
+  ASSERT_NE(loop, std::string::npos);
+  const std::size_t loop_end = source.find("\nvoid GameEngine::simulate(", loop);
+  ASSERT_NE(loop_end, std::string::npos);
+  const std::string body = source.substr(loop, loop_end - loop);
+
+  const std::size_t frame_lock = body.find("frame_lock(m_frame_mutex)");
+  const std::size_t drain = body.find("drain_pending_save_capture();");
+  ASSERT_NE(frame_lock, std::string::npos);
+  ASSERT_NE(drain, std::string::npos)
+      << "a queued save must be captured by the simulation thread, not by the GUI "
+         "thread that asked for it";
+  EXPECT_LT(frame_lock, drain);
 }

@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "game/core/component.h"
+#include "game/core/component_combat.h"
 #include "game/core/entity.h"
 
 namespace Engine::Core {

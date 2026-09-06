@@ -2,7 +2,7 @@
 
 #include <QtGlobal>
 
-#include "../core/component.h"
+#include "../core/component_commander.h"
 #include "../core/entity.h"
 
 namespace Game::Units {

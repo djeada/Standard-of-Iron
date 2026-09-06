@@ -7,7 +7,7 @@
 
 #include "game/command/command_queue.h"
 #include "game/command/command_validator.h"
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/world.h"
 
 namespace App::Core {

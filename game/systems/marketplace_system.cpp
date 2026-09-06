@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "../core/ambient_session.h"
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"

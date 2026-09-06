@@ -3,7 +3,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
-#include "core/component.h"
+#include "core/component_economy.h"
 #include "core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"

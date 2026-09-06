@@ -17,11 +17,13 @@
 #include "game/accessibility/commander_input_settings.h"
 #include "game/accessibility/motion_settings.h"
 #include "game/audio/audio_cues.h"
+#include "game/command/replay.h"
 #include "game/core/component.h"
 #include "game/core/simulation_timing.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
+#include "game/session/simulation_clock.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/building_line_of_sight.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
@@ -293,6 +295,29 @@ auto CommanderControlController::advance_presentation_pose(
 void CommanderControlController::snap_presentation_pose() {
   m_presentation_snap_requested = true;
   m_presentation_age = 0.0F;
+}
+
+void CommanderControlController::exchange_recorded_input(
+    Engine::Core::World& world, Engine::Core::EntityID commander_id) {
+  auto* session = Game::Session::SessionContext::for_world(world);
+  if (session == nullptr) {
+    return;
+  }
+
+  const std::uint64_t tick = session->clock().tick();
+
+  if (auto* player = session->replay_player()) {
+    if (const auto* recorded = player->commander_input(tick)) {
+      m_tick_input = CommanderInputSnapshot::from_record(*recorded);
+      m_view_yaw = recorded->view_yaw;
+      return;
+    }
+  }
+
+  if (auto* recorder = session->replay_recorder()) {
+    recorder->record_commander_input(tick,
+                                     m_tick_input.to_record(commander_id, m_view_yaw));
+  }
 }
 
 auto CommanderControlController::take_input_snapshot() -> CommanderInputSnapshot {
@@ -1661,6 +1686,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   m_tick_input.primary_pressed =
       m_tick_input.primary_pressed || m_carried_primary_press;
   m_carried_primary_press = false;
+  exchange_recorded_input(world, commander_id);
 
   auto const* active_action =
       commander->get_component<Engine::Core::RpgCommanderActionComponent>();

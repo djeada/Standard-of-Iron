@@ -1,6 +1,6 @@
 #include "formation_move_dispatch_system.h"
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../formation/army_formation_registry.h"
 #include "command_service.h"
 
@@ -10,7 +10,7 @@ void FormationMoveDispatchSystem::update(Engine::Core::World* world, float) {
   if (world == nullptr) {
     return;
   }
-  auto& registry = Game::Formation::ArmyFormationRegistry::instance();
+  auto& registry = Game::Formation::ArmyFormationRegistry::for_world(*world);
   for (auto const id : registry.group_ids()) {
     auto* formation = registry.find(id);
     if (formation == nullptr || !formation->moves_pending) {

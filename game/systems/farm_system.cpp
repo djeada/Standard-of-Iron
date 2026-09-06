@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "../core/component.h"
+#include "../core/component_economy.h"
 #include "../core/ownership_constants.h"
 #include "../core/system_context.h"
 #include "../core/world.h"

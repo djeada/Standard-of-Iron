@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/entity.h"
 #include "game/session/session_context.h"
 #include "game/systems/nation_id.h"

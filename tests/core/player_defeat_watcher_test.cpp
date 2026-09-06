@@ -2,7 +2,7 @@
 #include <vector>
 
 #include "app/world/player_defeat_watcher.h"
-#include "game/core/component.h"
+#include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"

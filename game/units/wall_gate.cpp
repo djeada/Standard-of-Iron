@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"

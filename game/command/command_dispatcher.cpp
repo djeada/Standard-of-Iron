@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_economy.h"
 #include "../core/world.h"
 #include "../formation/army_formation_planner.h"
 #include "../formation/army_formation_service.h"

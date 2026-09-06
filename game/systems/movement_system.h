@@ -6,7 +6,7 @@
 #include <deque>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_combat.h"
 #include "../core/system.h"
 #include "../core/world.h"
 #include "command_service.h"

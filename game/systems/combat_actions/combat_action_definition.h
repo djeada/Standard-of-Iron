@@ -4,7 +4,7 @@
 #include <span>
 
 #include "../../../animation/clip_manifest.h"
-#include "../../core/component.h"
+#include "../../core/component_combat.h"
 
 namespace Game::Systems::CombatActions {
 

@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <map>
 
-#include "game/core/component.h"
+#include "game/core/component_commander.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "game/mission/mission_commander_setup.h"

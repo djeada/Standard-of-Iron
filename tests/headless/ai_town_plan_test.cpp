@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "game/core/component.h"
+#include "game/core/component_structures.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/formation/army_formation_registry.h"
@@ -116,6 +116,7 @@ protected:
     auto& session = *m_session;
     session.world().set_presentation_enabled(false);
     m_scope = std::make_unique<Game::Session::ScopedSession>(session);
+    Game::Systems::NavGrid::initialize(k_map_size, k_map_size);
 
     session.owners().register_owner_with_id(
         k_owner, Game::Systems::OwnerType::AI, "settler");

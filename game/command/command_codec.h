@@ -3,6 +3,7 @@
 #include <QJsonObject>
 
 #include <optional>
+#include <string_view>
 
 #include "command.h"
 

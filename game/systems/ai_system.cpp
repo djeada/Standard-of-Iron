@@ -4,6 +4,7 @@
 #include <queue>
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <utility>
@@ -102,6 +103,8 @@ void AISystem::reinitialize() {
 
   m_completed_decision_count = 0;
   m_applied_command_count = 0;
+  m_deferred_decision_count = 0;
+  m_longest_decision_wait_us = 0;
 
   initialize_ai_players();
 }
@@ -114,6 +117,11 @@ void AISystem::shutdown_workers() {
     ai.context.nation = nullptr;
   }
   m_ai_instances.clear();
+  m_worker_pool.reset();
+}
+
+auto AISystem::decision_thread_count() const -> std::size_t {
+  return (m_worker_pool != nullptr) ? m_worker_pool->thread_count() : 0U;
 }
 
 void AISystem::initialize_ai_players() {
@@ -124,6 +132,9 @@ void AISystem::initialize_ai_players() {
     return;
   }
 
+  m_worker_pool = std::make_unique<AI::AIWorkerPool>(
+      AI::AIWorkerPool::default_thread_count(ai_owner_ids.size()));
+
   for (std::size_t index = 0; index < ai_owner_ids.size(); ++index) {
     uint32_t const player_id = ai_owner_ids[index];
     AIInstance instance;
@@ -131,7 +142,8 @@ void AISystem::initialize_ai_players() {
     instance.context.state = AI::AIState::Idle;
     instance.behavior_registry = std::make_unique<AI::AIBehaviorRegistry>();
     populate_behavior_registry(*instance.behavior_registry);
-    instance.worker = std::make_unique<AI::AIWorker>(*instance.behavior_registry);
+    instance.worker =
+        std::make_unique<AI::AIWorker>(*m_worker_pool, *instance.behavior_registry);
     instance.update_timer =
         initial_ai_update_timer(index, ai_owner_ids.size(), m_update_interval);
     apply_nation_default_strategy(instance.context, m_services.nations);
@@ -225,7 +237,19 @@ void AISystem::process_results(Engine::Core::World& world) {
       continue;
     }
 
-    ai.worker->wait_idle();
+    const auto wait_started = std::chrono::steady_clock::now();
+    const bool finished = ai.worker->wait_idle(m_decision_wait_budget);
+    const auto waited = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now() - wait_started);
+    m_longest_decision_wait_us = std::max(m_longest_decision_wait_us,
+                                          static_cast<std::uint64_t>(waited.count()));
+
+    if (!finished) {
+      ++m_deferred_decision_count;
+      ai.job_due_update = m_update_count + 1;
+      continue;
+    }
+
     ai.job_pending = false;
 
     std::queue<AI::AIResult> results;

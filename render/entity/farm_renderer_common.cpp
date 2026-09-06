@@ -5,7 +5,7 @@
 #include <cstddef>
 
 #include "building_decay.h"
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "render/submitter.h"
 
 namespace Render::GL {

@@ -1,7 +1,7 @@
 #include "siege_renderer_common.h"
 
 #include "../entity_appearance.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
 #include "render/scene_renderer.h"

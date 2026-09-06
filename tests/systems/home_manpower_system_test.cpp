@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "game/core/ambient_session.h"
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/systems/home_system.h"

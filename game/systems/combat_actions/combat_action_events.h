@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "../../core/component.h"
+#include "../../core/component_combat.h"
 #include "combat_action_definition.h"
 
 namespace Game::Systems::CombatActions {

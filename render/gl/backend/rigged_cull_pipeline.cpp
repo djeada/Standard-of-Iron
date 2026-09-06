@@ -524,9 +524,15 @@ auto RiggedCullPipeline::draw(const RiggedCreatureCmd* const* cmds,
 auto RiggedCullPipeline::draw_shadow(const RiggedCreatureCmd* const* cmds,
                                      std::size_t count,
                                      const QMatrix4x4& light_view_proj,
-                                     const QVector2D& shadow_extent) -> bool {
-  return dispatch(
-      cmds, count, light_view_proj, QVector3D{}, shadow_extent, Pass::Depth);
+                                     const QVector2D& shadow_extent,
+                                     bool coarse_skinning) -> bool {
+  return dispatch(cmds,
+                  count,
+                  light_view_proj,
+                  QVector3D{},
+                  shadow_extent,
+                  Pass::Depth,
+                  coarse_skinning);
 }
 
 auto RiggedCullPipeline::draw_full_mesh(const RiggedCreatureCmd* const* cmds,
@@ -538,16 +544,18 @@ auto RiggedCullPipeline::draw_full_mesh(const RiggedCreatureCmd* const* cmds,
 
 auto RiggedCullPipeline::draw_full_mesh_shadow(const RiggedCreatureCmd* const* cmds,
                                                std::size_t count,
-                                               const QMatrix4x4& light_view_proj)
-    -> bool {
-  return draw_full_mesh_pass(cmds, count, light_view_proj, QVector3D{}, Pass::Depth);
+                                               const QMatrix4x4& light_view_proj,
+                                               bool coarse_skinning) -> bool {
+  return draw_full_mesh_pass(
+      cmds, count, light_view_proj, QVector3D{}, Pass::Depth, coarse_skinning);
 }
 
 auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmds,
                                              std::size_t count,
                                              const QMatrix4x4& view_proj,
                                              const QVector3D& camera_position,
-                                             Pass pass) -> bool {
+                                             Pass pass,
+                                             bool coarse_skinning) -> bool {
   m_stats = {};
   if (!m_available || cmds == nullptr || count < k_min_instances_for_full_mesh_path) {
     return false;
@@ -645,7 +653,7 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
         if (index_count == 0U) {
           return;
         }
-        draw_shader->set_uniform(rigid_uniform, rigid ? 1 : 0);
+        draw_shader->set_uniform(rigid_uniform, (rigid || coarse_skinning) ? 1 : 0);
         tally_draw(index_count, count);
         glDrawElementsInstanced(
             GL_TRIANGLES,
@@ -679,7 +687,8 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
                                   const QMatrix4x4& view_proj,
                                   const QVector3D& camera_position,
                                   const QVector2D& viewport,
-                                  Pass pass) -> bool {
+                                  Pass pass,
+                                  bool coarse_skinning) -> bool {
   m_stats = {};
   if (!m_available || cmds == nullptr || count < k_min_instances_for_gpu_path) {
     return false;
@@ -804,6 +813,11 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
   }
 
   draw_shader->use();
+  if (const auto rigid_uniform =
+          draw_shader->optional_uniform_handle("u_rigid_skinning");
+      rigid_uniform != Shader::InvalidUniform) {
+    draw_shader->set_uniform(rigid_uniform, coarse_skinning ? 1 : 0);
+  }
   draw_shader->set_uniform(draw_shader->uniform_handle("u_view_proj"), view_proj);
   draw_shader->set_uniform(draw_shader->uniform_handle("u_vertex_count"),
                            static_cast<GLuint>(mesh->vertex_count()));

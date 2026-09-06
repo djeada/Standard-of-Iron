@@ -9,7 +9,7 @@
 #include "app/persistence/game_state_restorer.h"
 #include "app/world/minimap_manager.h"
 #include "app/world/visibility_coordinator.h"
-#include "core/component.h"
+#include "core/component_gameplay.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "game/session/session_context.h"

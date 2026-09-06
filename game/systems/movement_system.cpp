@@ -16,7 +16,7 @@
 #include "combat_rules.h"
 #include "combat_system/structure_combat.h"
 #include "command_service.h"
-#include "core/component.h"
+#include "core/component_economy.h"
 #include "defensive_unit_layout_service.h"
 #include "formation_combat_geometry.h"
 #include "game/core/nav_profile.h"

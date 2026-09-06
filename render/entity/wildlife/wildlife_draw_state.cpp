@@ -5,7 +5,7 @@
 #include <unordered_map>
 
 #include "../../entity_appearance.h"
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/entity.h"
 
 namespace Render::GL::Wildlife {

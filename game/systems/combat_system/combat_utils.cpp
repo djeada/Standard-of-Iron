@@ -6,7 +6,7 @@
 #include <numbers>
 #include <optional>
 
-#include "../../core/component.h"
+#include "../../core/component_economy.h"
 #include "../../core/world.h"
 #include "../../core/world_spatial_index.h"
 #include "../../units/spawn_type.h"

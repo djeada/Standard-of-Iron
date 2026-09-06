@@ -6,7 +6,7 @@
 #include <cmath>
 #include <limits>
 
-#include "game/core/component.h"
+#include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
 #include "game/systems/nation_registry.h"

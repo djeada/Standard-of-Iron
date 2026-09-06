@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <initializer_list>
 
-#include "core/component.h"
+#include "core/component_gameplay.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "formation/unit_layout.h"

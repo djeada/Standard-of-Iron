@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "app/orders/command_controller.h"
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/picking_service.h"

@@ -9,7 +9,7 @@
 #include "building_archetype_desc.h"
 #include "building_render_common.h"
 #include "building_state.h"
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "registry.h"
 #include "render/render_archetype.h"
 

@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../../core/component.h"
+#include "../../core/component_gameplay.h"
 #include "../../core/event_manager.h"
 #include "../../core/world.h"
 #include "damage_application.h"

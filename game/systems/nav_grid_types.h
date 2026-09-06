@@ -2,8 +2,22 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 
 namespace Game::Systems {
+
+struct GateBlocker {
+  float min_x{0.0F};
+  float max_x{0.0F};
+  float min_z{0.0F};
+  float max_z{0.0F};
+  int owner_id{0};
+  std::uint64_t entity_id{0};
+
+  [[nodiscard]] auto contains(float world_x, float world_z) const -> bool {
+    return world_x >= min_x && world_x <= max_x && world_z >= min_z && world_z <= max_z;
+  }
+};
 
 struct Point {
   int x = 0;

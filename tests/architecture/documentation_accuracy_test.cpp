@@ -53,7 +53,16 @@ TEST(DocumentationAccuracy, StatedEntityIdWidthMatchesTheCode) {
 TEST(DocumentationAccuracy, ComponentsCarryNoPolymorphicBase) {
   const auto root = find_repo_root();
   const auto entity = read_text(root / "game" / "core" / "entity.h");
-  const auto components = read_text(root / "game" / "core" / "component.h");
+  std::string components;
+  for (const char* name : {"component_core.h",
+                           "component_combat.h",
+                           "component_structures.h",
+                           "component_commander.h",
+                           "component_gameplay.h",
+                           "component_economy.h",
+                           "component_presentation.h"}) {
+    components += read_text(root / "game" / "core" / name);
+  }
   const auto architecture = read_text(root / "docs" / "ARCHITECTURE.md");
   ASSERT_FALSE(entity.empty());
   ASSERT_FALSE(components.empty());

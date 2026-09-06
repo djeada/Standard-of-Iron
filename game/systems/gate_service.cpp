@@ -11,6 +11,7 @@
 #include "../core/world.h"
 #include "building_collision_registry.h"
 #include "nav_grid.h"
+#include "navigation_service.h"
 #include "owner_registry.h"
 #include "pathfinding.h"
 
@@ -24,8 +25,7 @@ using Engine::Core::TransformComponent;
 using Engine::Core::UnitComponent;
 
 auto blocker_storage() -> std::vector<GateBlocker>& {
-  static std::vector<GateBlocker> storage;
-  return storage;
+  return NavigationService::active().gate_blockers();
 }
 
 auto same_blocker(const GateBlocker& lhs, const GateBlocker& rhs) -> bool {

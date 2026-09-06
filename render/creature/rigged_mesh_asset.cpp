@@ -7,6 +7,7 @@
 #include <iterator>
 #include <limits>
 #include <ostream>
+#include <utility>
 
 #include "mesh_asset_io.h"
 

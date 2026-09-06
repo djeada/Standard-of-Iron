@@ -1,7 +1,7 @@
 #include "owner_queries.h"
 
 #include "../core/ambient_session.h"
-#include "../core/component.h"
+#include "../core/component_core.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "owner_registry.h"

@@ -2,7 +2,7 @@
 
 #include <QString>
 
-#include "../../core/component.h"
+#include "../../core/component_commander.h"
 #include "../../core/entity.h"
 #include "../../core/world.h"
 #include "../../units/commander_catalog.h"

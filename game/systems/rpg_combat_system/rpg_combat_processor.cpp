@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "../../core/ambient_session.h"
-#include "../../core/component.h"
+#include "../../core/component_commander.h"
 #include "../../core/world.h"
 #include "../combat_system/combat_random.h"
 #include "../combat_system/combat_utils.h"

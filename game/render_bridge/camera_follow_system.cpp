@@ -2,7 +2,7 @@
 
 #include <qvectornd.h>
 
-#include "../core/component.h"
+#include "../core/component_core.h"
 #include "../core/world.h"
 #include "../systems/selection_system.h"
 #include "scene/camera.h"

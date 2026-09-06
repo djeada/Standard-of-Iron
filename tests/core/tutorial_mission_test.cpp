@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "app/session/skirmish_loader.h"
-#include "core/component.h"
+#include "core/component_gameplay.h"
 #include "core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"

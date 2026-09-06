@@ -10,6 +10,7 @@
 #include <iterator>
 #include <limits>
 #include <sstream>
+#include <utility>
 #include <vector>
 
 #include "animation/bpat/bpat_format.h"

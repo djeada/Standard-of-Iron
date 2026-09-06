@@ -7,7 +7,7 @@
 #include <optional>
 
 #include "../core/ambient_session.h"
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "command_service.h"

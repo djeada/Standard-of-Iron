@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/component.h"
+#include "core/component_gameplay.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "game/map/map_transformer.h"

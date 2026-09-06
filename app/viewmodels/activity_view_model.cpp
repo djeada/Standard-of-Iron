@@ -14,7 +14,7 @@
 #include "app/world/unit_queries.h"
 #include "app/world/visibility_coordinator.h"
 #include "app/world/world_feedback_events.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/map/render_visibility_rules.h"

@@ -2,7 +2,7 @@
 
 #include <QVector3D>
 
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/nav_grid.h"

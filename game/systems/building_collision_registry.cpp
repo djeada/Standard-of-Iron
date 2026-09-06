@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "../core/ambient_session.h"
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/world.h"
 
 namespace Game::Systems {

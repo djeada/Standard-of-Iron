@@ -999,7 +999,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       if (m_rigged_cull_pipeline != nullptr &&
           m_rigged_cull_pipeline->has_shadow_path() && !visible_rigged.empty()) {
         if (m_rigged_cull_pipeline->draw_full_mesh_shadow(
-                visible_rigged.data(), visible_rigged.size(), light_vp)) {
+                visible_rigged.data(), visible_rigged.size(), light_vp, far_cascade)) {
           m_last_playback_stats.shadow_rigged_instanced_instances +=
               visible_rigged.size();
           m_last_playback_stats.shadow_rigged_instanced_draws +=
@@ -1012,7 +1012,8 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
             m_rigged_cull_pipeline->draw_shadow(visible_rigged.data(),
                                                 visible_rigged.size(),
                                                 light_vp,
-                                                QVector2D(extent, extent))) {
+                                                QVector2D(extent, extent),
+                                                far_cascade)) {
           m_last_playback_stats.shadow_rigged_instanced_instances +=
               visible_rigged.size();
           ++m_last_playback_stats.shadow_rigged_instanced_draws;

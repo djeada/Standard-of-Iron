@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "../../../game/core/component_presentation.h"
 #include "animation/action_manifest.h"
 #include "animation/ambient_pose_manifest.h"
 #include "render/creature/animation_state_components.h"

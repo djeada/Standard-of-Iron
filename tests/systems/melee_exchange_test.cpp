@@ -5,7 +5,7 @@
 #include <memory>
 #include <set>
 
-#include "core/component.h"
+#include "core/component_combat.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "game/map/terrain_service.h"

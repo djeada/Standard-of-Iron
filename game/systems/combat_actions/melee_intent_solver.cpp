@@ -4,7 +4,7 @@
 #include <cmath>
 #include <numbers>
 
-#include "../../core/component.h"
+#include "../../core/component_commander.h"
 
 namespace Game::Systems::CombatActions {
 

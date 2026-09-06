@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <vector>
 
 #include "pipeline_interface.h"
@@ -82,8 +83,13 @@ private:
 
   GL::Shader* m_last_bound_shader = nullptr;
   unsigned int m_wear_volume = 0;
+  static constexpr std::size_t k_palette_ring_slots = 64;
+
   unsigned int m_palette_ubo = 0;
   std::size_t m_palette_ubo_capacity_bytes = 0;
+  std::size_t m_palette_slot_stride_bytes = 0;
+  std::size_t m_palette_ring_cursor = 0;
+  std::uint64_t m_palette_ring_orphans = 0;
   std::vector<float> m_palette_scratch;
 };
 
