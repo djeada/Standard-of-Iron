@@ -180,7 +180,7 @@ Item {
                 id: transitionLabel
 
                 anchors.centerIn: parent
-                text: qsTr("Opening battle report…")
+                text: root.primaryAction + "…"
                 color: Design.Theme.textPrimary
                 font.family: Design.Typography.family
                 font.pixelSize: Design.Typography.label
