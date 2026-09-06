@@ -2031,7 +2031,6 @@ struct UnitTraversalSlotState {
   float target_local_z{0.0F};
   float velocity_x{0.0F};
   float velocity_z{0.0F};
-  float blocked_seconds{0.0F};
   bool alive{false};
   bool blocked{false};
 
@@ -2069,12 +2068,9 @@ public:
   float target_lateral_scale{1.0F};
   float available_half_width{0.0F};
   float desired_half_width{0.0F};
-  float constriction_distance{0.0F};
-  float root_hold_seconds{0.0F};
   float soldier_body_radius{0.0F};
   float file_spacing{0.0F};
   float rank_spacing{0.0F};
-  float authored_file_spacing{0.0F};
   float minimum_lateral_scale{1.0F};
 
   bool active{false};
