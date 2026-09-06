@@ -23,7 +23,7 @@ using Troop = Game::Units::TroopType;
 
 constexpr int k_marchers = 24;
 
-constexpr int k_gate_marchers = 12;
+constexpr int k_column_marchers = 12;
 constexpr float k_march_from = -20.0F;
 constexpr float k_march_to = 20.0F;
 constexpr float k_order_at = 1.0F;
@@ -238,7 +238,7 @@ auto build_traversal_definitions() -> std::vector<ArenaScenarioDefinition> {
                                {56.0F, 52.0F, 16.0F});
     seal_the_flanks(scenario, Game::Map::TerrainType::Mountain, 13.0F);
     scenario.groups = {
-        marchers(k_gate_marchers),
+        marchers(k_column_marchers),
         building_row("north_wall",
                      Spawn::WallSegment,
                      6,
@@ -265,11 +265,11 @@ auto build_traversal_definitions() -> std::vector<ArenaScenarioDefinition> {
                                "the block. It gives up the files the trunks "
                                "take and files through on the rest; how many "
                                "that is depends on where the trees fell.",
-                               52.0F,
+                               66.0F,
                                {54.0F, 50.0F, 20.0F});
     scenario.suppress_terrain_scatter = false;
     seal_the_flanks(scenario, Game::Map::TerrainType::Mountain, 13.0F);
-    scenario.groups = {marchers()};
+    scenario.groups = {marchers(k_column_marchers)};
     scenario.resource_patches = {
         patch("pine_tree", 11, {-15.0F, 0.0F, 3.4F}, {3.0F, 0.0F, 0.0F}, 1.0F),
         patch("pine_tree", 11, {-15.0F, 0.0F, -3.4F}, {3.0F, 0.0F, 0.0F}, 1.0F),
@@ -288,9 +288,9 @@ auto build_traversal_definitions() -> std::vector<ArenaScenarioDefinition> {
                                "A lane between two hills, narrower than the "
                                "block but wide enough to hold most of its "
                                "files. It closes ranks rather than filing off.",
-                               52.0F,
+                               64.0F,
                                {60.0F, 56.0F, 0.0F});
-    seal_the_flanks(scenario, Game::Map::TerrainType::Hill, 12.0F);
+    seal_the_flanks(scenario, Game::Map::TerrainType::Hill, 11.0F);
     scenario.groups = {marchers()};
     scenario.steps = {march_order()};
     expect_a_clean_crossing(scenario);
@@ -302,19 +302,19 @@ auto build_traversal_definitions() -> std::vector<ArenaScenarioDefinition> {
   {
     auto scenario = definition(k_traversal_rock_cluster_id,
                                "Traversal: Between Two Boulder Fields",
-                               "Dense stone on both sides leaves a two metre "
-                               "passage. The block gives up the files it has "
-                               "to and no more.",
-                               52.0F,
+                               "Dense stone on both sides leaves a passage "
+                               "narrower than the block. It gives up the files "
+                               "the stone takes and no more.",
+                               66.0F,
                                {52.0F, 50.0F, 22.0F});
     scenario.suppress_terrain_scatter = false;
     seal_the_flanks(scenario, Game::Map::TerrainType::Mountain, 13.0F);
-    scenario.groups = {marchers()};
+    scenario.groups = {marchers(k_column_marchers)};
     scenario.resource_patches = {
-        patch("boulder", 13, {-15.0F, 0.0F, 2.2F}, {2.5F, 0.0F, 0.0F}, 1.2F),
-        patch("boulder", 13, {-15.0F, 0.0F, -2.2F}, {2.5F, 0.0F, 0.0F}, 1.2F),
-        patch("boulder", 6, {-13.0F, 0.0F, 5.6F}, {5.0F, 0.0F, 0.0F}, 1.0F),
-        patch("boulder", 6, {-13.0F, 0.0F, -5.6F}, {5.0F, 0.0F, 0.0F}, 1.0F),
+        patch("boulder", 13, {-15.0F, 0.0F, 3.2F}, {2.5F, 0.0F, 0.0F}, 1.2F),
+        patch("boulder", 13, {-15.0F, 0.0F, -3.2F}, {2.5F, 0.0F, 0.0F}, 1.2F),
+        patch("boulder", 6, {-13.0F, 0.0F, 6.8F}, {5.0F, 0.0F, 0.0F}, 1.0F),
+        patch("boulder", 6, {-13.0F, 0.0F, -6.8F}, {5.0F, 0.0F, 0.0F}, 1.0F),
     };
     scenario.steps = {march_order()};
     expect_a_clean_crossing(scenario);
@@ -329,11 +329,11 @@ auto build_traversal_definitions() -> std::vector<ArenaScenarioDefinition> {
                                "line through them. The block narrows for the "
                                "pinches and widens between them without "
                                "flickering between the two.",
-                               56.0F,
+                               70.0F,
                                {52.0F, 50.0F, 24.0F});
     scenario.suppress_terrain_scatter = false;
     seal_the_flanks(scenario, Game::Map::TerrainType::Mountain, 13.0F);
-    scenario.groups = {marchers()};
+    scenario.groups = {marchers(k_column_marchers)};
     scenario.resource_patches = {
         patch("ruins", 3, {-14.0F, 0.0F, 3.6F}, {9.0F, 0.0F, 0.0F}, 1.2F),
         patch("ruins", 3, {-9.0F, 0.0F, -3.6F}, {9.0F, 0.0F, 0.0F}, 1.2F),
