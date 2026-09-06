@@ -790,6 +790,10 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Click to dismiss</source>
         <translation>Щёлкните, чтобы закрыть</translation>
     </message>
+    <message>
+        <source>ALLY</source>
+        <translation>СОЮЗНИК</translation>
+    </message>
 </context>
 <context>
     <name>CommanderSystem</name>
@@ -800,6 +804,873 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>%1 has lost its commander. The host breaks and its camps stand empty.</source>
         <translation>%1 теряет полководца. Войско рассыпается, его лагеря пусты.</translation>
+    </message>
+</context>
+<context>
+    <name>CommanderVoices</name>
+    <message>
+        <source>A camp gathered in. I shall keep it quiet and fed. That is what I am for.</source>
+        <translation>Лагерь прибран. Буду держать его тихим и сытым. Для того я и нужен.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I have a dozen more, and the one you hold is the one I liked least.</source>
+        <translation>Лагерь потерян. У меня их ещё дюжина, а тот, что ты занял, нравился мне меньше всех.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I have slept in worse hides and woken to better mornings.</source>
+        <translation>Лагерь потерян. Я спал в худших логовах и просыпался к лучшим утрам.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I shall claim it was never mine. That is the beauty of having good clerks.</source>
+        <translation>Лагерь потерян. Скажу, что он никогда не был моим. В этом вся прелесть хороших писцов.</translation>
+    </message>
+    <message>
+        <source>A fresh column is on the road to you. Treat them courteously; several of them owe me money.</source>
+        <translation>Свежая колонна идёт к тебе. Обходись с ними учтиво; некоторые должны мне денег.</translation>
+    </message>
+    <message>
+        <source>A victory, and a tidy one. I shall write it up as mostly mine; you would have done the same.</source>
+        <translation>Победа, и опрятная. Запишу её как по большей части мою; ты поступил бы так же.</translation>
+    </message>
+    <message>
+        <source>Advance. Double time. A slow attack is a gift to the enemy, and I am not generous.</source>
+        <translation>Вперёд. Беглым шагом. Медленная атака — подарок врагу, а я не щедр.</translation>
+    </message>
+    <message>
+        <source>Ah. Blades at last. I had begun to think you were a rumour with a baggage train.</source>
+        <translation>А. Наконец-то клинки. Я уж начал думать, что ты слух с обозом.</translation>
+    </message>
+    <message>
+        <source>An army, and someone paying for it. Let us not pretend this is about glory. I will make you an offer at the end; you will not like the terms.</source>
+        <translation>Войско, и кто-то, кто за него платит. Не будем делать вид, что дело в славе. В конце я сделаю тебе предложение; условия тебе не понравятся.</translation>
+    </message>
+    <message>
+        <source>An assault on my camp. Every breach is coming out of someone&apos;s wages, and it will not be mine.</source>
+        <translation>Приступ на мой лагерь. Каждый пролом вычтут у кого-то из жалованья, и это будет не моё.</translation>
+    </message>
+    <message>
+        <source>An assault on my camp. Spend your men on it if you like; I have budgeted for exactly this kind of impatience.</source>
+        <translation>Приступ на мой лагерь. Трать на него людей, если угодно; именно такое нетерпение у меня заложено в смету.</translation>
+    </message>
+    <message>
+        <source>Another camp for the Republic. Do stay and watch the standards go up; you will not see it done better.</source>
+        <translation>Ещё один лагерь Республике. Останься и погляди, как поднимают знамёна; лучше этого ты не увидишь.</translation>
+    </message>
+    <message>
+        <source>Another camp gathered in. Slowly, like fruit. Rot takes the ones you leave on the branch.</source>
+        <translation>Ещё один лагерь прибран. Медленно, как плоды. Гниль берёт те, что оставляешь на ветке.</translation>
+    </message>
+    <message>
+        <source>Another column comes down the road. Rome walks slowly and never, ever stops.</source>
+        <translation>Ещё одна колонна спускается по дороге. Рим идёт медленно и не останавливается никогда.</translation>
+    </message>
+    <message>
+        <source>Another standard on my frontier. I have counted your tents from the ridge - it did not take long. Rome has surveyed better men than you and buried them in straighter rows.</source>
+        <translation>Ещё одно знамя на моей границе. Я сосчитал твои шатры с гребня — это заняло немного. Рим обмерял людей получше тебя и хоронил их ровнее.</translation>
+    </message>
+    <message>
+        <source>At my walls, are you. Keep swinging. Every man you put there is a man not guarding your own.</source>
+        <translation>Значит, у моих стен. Бей дальше. Каждый человек, поставленный туда, не стережёт твоих.</translation>
+    </message>
+    <message>
+        <source>Beaten, on this ground, today. Note the qualifications. I have made a career of the ground and the day after.</source>
+        <translation>Побеждён, на этой земле, сегодня. Заметь оговорки. Я сделал карьеру на земле и на дне следующем.</translation>
+    </message>
+    <message>
+        <source>Beaten. Beside you, which stings. I shall mention that the ground was poor and the allies poorer.</source>
+        <translation>Побеждён. Рядом с тобой, что и жжёт. Скажу, что земля была плоха, а союзники ещё хуже.</translation>
+    </message>
+    <message>
+        <source>Beaten. Fair. You held when I thought you would run and you hit when I thought you would hold. I will not forget your standard.</source>
+        <translation>Побеждён. Честно. Ты выстоял, когда я ждал бегства, и ударил, когда я ждал, что выстоишь. Твоего знамени я не забуду.</translation>
+    </message>
+    <message>
+        <source>Beaten. I shall write it down as an expense and you as a creditor. I pay my creditors. Eventually, and never in full.</source>
+        <translation>Побеждён. Запишу это как расход, а тебя как заимодавца. Заимодавцам я плачу. Со временем и никогда полностью.</translation>
+    </message>
+    <message>
+        <source>Beaten. My brother would have a speech for this. I have only a road home and a great many arrows still in the quiver.</source>
+        <translation>Побеждён. У брата нашлась бы на это речь. У меня есть лишь дорога домой и весьма много стрел в колчане.</translation>
+    </message>
+    <message>
+        <source>Camp taken. At the run. Next one is yours, if you are quick.</source>
+        <translation>Лагерь взят. С ходу. Следующий твой, если поспешишь.</translation>
+    </message>
+    <message>
+        <source>Cohorts moving. Fast. Keep up if you can.</source>
+        <translation>Когорты двинулись. Быстро. Поспевай, если сможешь.</translation>
+    </message>
+    <message>
+        <source>Cohorts, forward. Fast. Hit them before they finish thinking.</source>
+        <translation>Когорты, вперёд. Быстро. Ударь по ним, пока они не додумали.</translation>
+    </message>
+    <message>
+        <source>Done. You came at the wrong tempo and I was already inside it. Lie down; the surgeons work through the fallen in the order they fell.</source>
+        <translation>Кончено. Ты пришёл не в том темпе, а я был уже внутри него. Ложись; лекари обходят павших в том порядке, в каком они пали.</translation>
+    </message>
+    <message>
+        <source>Down, then. Tell them Marcellus died forward. Tell them the ground was worth it. Both are true.</source>
+        <translation>Пал, значит. Скажите им, что Марцелл умер лицом вперёд. Скажите, что земля того стоила. И то и другое правда.</translation>
+    </message>
+    <message>
+        <source>Down. You came in fast and hungry, and hungry things walk into snares. Rest. The country will not miss you.</source>
+        <translation>Пал. Ты пришёл быстрым и голодным, а голодное входит в силки. Отдыхай. Страна по тебе не заскучает.</translation>
+    </message>
+    <message>
+        <source>Finished. I shall put your camp in the books as a purchase. Blood is a currency like any other; you simply overpaid.</source>
+        <translation>Закончено. Впишу твой лагерь в книги как покупку. Кровь — такая же монета, как всякая другая; ты просто переплатил.</translation>
+    </message>
+    <message>
+        <source>Finished. You fought like a wall - solid, honest, and completely unable to turn around.</source>
+        <translation>Закончено. Ты дрался как стена: крепко, честно и совершенно не умея повернуться.</translation>
+    </message>
+    <message>
+        <source>First blood. Good. I was beginning to worry you were one of those enemies who negotiate.</source>
+        <translation>Первая кровь. Хорошо. Я уж боялся, что ты из тех врагов, что ведут переговоры.</translation>
+    </message>
+    <message>
+        <source>Forward, in order. If you have a reserve, this would be the moment to discover it does not exist.</source>
+        <translation>Вперёд, в порядке. Если у тебя есть резерв, сейчас самое время обнаружить, что его нет.</translation>
+    </message>
+    <message>
+        <source>Forward, in pay order. Mercenaries fight best when they can see the paymaster watching.</source>
+        <translation>Вперёд, по платёжной ведомости. Наёмники дерутся лучше, когда видят, что казначей смотрит.</translation>
+    </message>
+    <message>
+        <source>Forward, quietly. The best charge is the one the enemy hears about afterwards.</source>
+        <translation>Вперёд, тихо. Лучший натиск тот, о котором враг узнаёт после.</translation>
+    </message>
+    <message>
+        <source>Forward. If it seems too easy, that is because it is meant to.</source>
+        <translation>Вперёд. Если кажется слишком лёгким, то так и задумано.</translation>
+    </message>
+    <message>
+        <source>Fresh cohorts on the road. They march fast because I told them to.</source>
+        <translation>Свежие когорты на дороге. Идут быстро, потому что я велел.</translation>
+    </message>
+    <message>
+        <source>Good. An enemy who shows up. Half my career was spent chasing ones who did not. Let us get on with it.</source>
+        <translation>Хорошо. Враг, который явился. Полжизни я гонялся за теми, кто не являлся. Приступим.</translation>
+    </message>
+    <message>
+        <source>Hitting my camp, are we? Every stone you knock loose has already been invoiced to your treasury.</source>
+        <translation>Значит, бьёшь по моему лагерю? Каждый выбитый камень уже выставлен счётом твоей казне.</translation>
+    </message>
+    <message>
+        <source>Hitting my camp. Spend your strength there while my hunters spend theirs on your wagons.</source>
+        <translation>Бьёшь по моему лагерю. Трать там силы, пока мои охотники тратят свои на твоих обозах.</translation>
+    </message>
+    <message>
+        <source>Hitting my walls, are you. Every man you spend there is one I need not outwit later.</source>
+        <translation>Значит, у моих стен. Каждый человек, потраченный там, — тот, кого мне не придётся перехитрять после.</translation>
+    </message>
+    <message>
+        <source>I am advancing. It will not look like much. It is not meant to.</source>
+        <translation>Я наступаю. Выглядеть это будет невелико. Так и задумано.</translation>
+    </message>
+    <message>
+        <source>I am at the end of what patience can buy. Come, or write to my family. Either will do; only one is useful.</source>
+        <translation>Я исчерпал всё, что можно купить терпением. Приходи или напиши моей семье. И то и другое сгодится; полезно только одно.</translation>
+    </message>
+    <message>
+        <source>I am attacking. Do not take it personally; I am simply collecting on ground you owe me.</source>
+        <translation>Я атакую. Не принимай на свой счёт; я лишь взыскиваю землю, которую ты мне должен.</translation>
+    </message>
+    <message>
+        <source>I am attacking. Hold your side. If this is wasted, I shall be sending you the bill.</source>
+        <translation>Я атакую. Держи свою сторону. Если это пропадёт впустую, я пришлю тебе счёт.</translation>
+    </message>
+    <message>
+        <source>I am attacking. If you wished to be consulted, you should have brought more men.</source>
+        <translation>Я атакую. Если хотел, чтобы с тобой советовались, надо было привести больше людей.</translation>
+    </message>
+    <message>
+        <source>I am bleeding men, and each one was paid in advance. This is not a battle, it is an audit, and it is going badly.</source>
+        <translation>Я теряю людей, и каждый оплачен вперёд. Это не битва, это ревизия, и она идёт скверно.</translation>
+    </message>
+    <message>
+        <source>I am coming at you now. All of it. Do not blink; you will miss the only part that matters.</source>
+        <translation>Я иду на тебя сейчас. Всем. Не моргай; пропустишь единственную часть, которая важна.</translation>
+    </message>
+    <message>
+        <source>I am coming for you. Not from where you are looking. I never come from where you are looking.</source>
+        <translation>Я иду за тобой. Не оттуда, куда ты смотришь. Я никогда не прихожу оттуда, куда ты смотришь.</translation>
+    </message>
+    <message>
+        <source>I am down to the last of them. If you are coming, run.</source>
+        <translation>У меня остались последние. Если идёшь — беги.</translation>
+    </message>
+    <message>
+        <source>I am going in. Now. Hit them from your side or watch me do it alone.</source>
+        <translation>Я вхожу. Сейчас. Ударь со своей стороны или смотри, как я делаю это один.</translation>
+    </message>
+    <message>
+        <source>I am losing cohorts faster than the treasury can replace them, and the treasury is quicker than you think.</source>
+        <translation>Я теряю когорты быстрее, чем казна успевает их восполнить, а казна быстрее, чем ты думаешь.</translation>
+    </message>
+    <message>
+        <source>I am losing men and I cannot replace them out here. If you have spare, I have work for them.</source>
+        <translation>Я теряю людей и здесь их не восполню. Если у тебя есть лишние, у меня для них работа.</translation>
+    </message>
+    <message>
+        <source>I am losing men at a rate I do not care for. The ledger still balances. Do not let it stop balancing.</source>
+        <translation>Я теряю людей в темпе, который мне не по нраву. Книги пока сходятся. Не дай им перестать сходиться.</translation>
+    </message>
+    <message>
+        <source>I am losing men fast. Faster than I like, and I like it fast. Something has to change.</source>
+        <translation>Я теряю людей быстро. Быстрее, чем люблю, а люблю я быстро. Что-то должно измениться.</translation>
+    </message>
+    <message>
+        <source>I am losing men. Not to cleverness, to weight. Lend me some of yours, or a distraction, or both.</source>
+        <translation>Я теряю людей. Не от хитрости, от веса. Одолжи мне своих, или отвлеки их, или и то и другое.</translation>
+    </message>
+    <message>
+        <source>I am moving on them. Do not follow me directly; be where they run to.</source>
+        <translation>Я иду на них. Не иди за мной прямо; будь там, куда они побегут.</translation>
+    </message>
+    <message>
+        <source>I am moving on them. Slowly, from the high ground. Do not wait for me; be where they break to.</source>
+        <translation>Я иду на них. Медленно, с высоты. Не жди меня; будь там, где они сломаются.</translation>
+    </message>
+    <message>
+        <source>I am nearly done here. Nearly. The last few are hunters, and hunters are patient about dying.</source>
+        <translation>Я здесь почти закончил. Почти. Последние — охотники, а охотники терпеливы в умирании.</translation>
+    </message>
+    <message>
+        <source>I am nearly done, they say. I have crossed mountains on nearly. Do not count what is left of me; count what it is still holding.</source>
+        <translation>Говорят, со мной почти покончено. Я переходил горы на этом «почти». Не считай, что от меня осталось; считай, что это ещё держит.</translation>
+    </message>
+    <message>
+        <source>I am nearly finished, they say. Nearly. A fire is nearly out for a long time before it goes cold, and it burns fingers all the while.</source>
+        <translation>Говорят, я почти кончен. Почти. Огонь бывает почти потухшим долго, прежде чем остынет, и всё это время жжёт пальцы.</translation>
+    </message>
+    <message>
+        <source>I am nearly finished. I would rather not be. Consider this an invoice for immediate assistance.</source>
+        <translation>Я почти кончен. Предпочёл бы обратное. Считай это счётом за немедленную помощь.</translation>
+    </message>
+    <message>
+        <source>I am nearly out of men. Nearly. The last handful are the ones who stayed, and those are the ones you should fear.</source>
+        <translation>У меня почти не осталось людей. Почти. Последняя горсть — те, кто остался, и вот их тебе и следует бояться.</translation>
+    </message>
+    <message>
+        <source>I am sending men forward now. Not many. Enough. One does not empty the granary to kill a fox.</source>
+        <translation>Я высылаю людей вперёд. Немного. Достаточно. Амбар не опустошают, чтобы убить лису.</translation>
+    </message>
+    <message>
+        <source>I am sending the cohorts down now. Count them as they come. It will give you something to do with your last minutes.</source>
+        <translation>Я спускаю когорты вниз. Считай их, пока идут. Будет чем занять последние минуты.</translation>
+    </message>
+    <message>
+        <source>I am sending the column now. It will not look like an attack until it is one.</source>
+        <translation>Я высылаю колонну. Она не будет похожа на атаку, пока ею не станет.</translation>
+    </message>
+    <message>
+        <source>I see your banners. I saw others like them, years ago; they made excellent kindling. Take your time. I intend to take mine.</source>
+        <translation>Вижу твои знамёна. Я видел такие же годы назад; они пошли на отменную растопку. Не спеши. Я тоже намерен не спешить.</translation>
+    </message>
+    <message>
+        <source>Keep the field, then. Rome does not lose provinces - she lends them, at interest. My accountants will be along in the spring, and they are far less pleasant than I am.</source>
+        <translation>Оставь себе поле. Рим не теряет провинций — он ссужает их под проценты. Мои счетоводы явятся весной, и они куда неприятнее меня.</translation>
+    </message>
+    <message>
+        <source>Look at that. You are bleeding out and still holding the ground. Brave. Wrong, but brave.</source>
+        <translation>Погляди-ка. Ты истекаешь кровью и всё ещё держишь землю. Храбро. Ошибочно, но храбро.</translation>
+    </message>
+    <message>
+        <source>Look at them fall. I did warn you that arithmetic is cruel, and I am only its clerk.</source>
+        <translation>Смотри, как они падают. Я ведь предупреждал, что арифметика жестока, а я всего лишь её писец.</translation>
+    </message>
+    <message>
+        <source>Look at your line. Brave men, standing where the arrows are. Whose idea was that?</source>
+        <translation>Взгляни на свой строй. Храбрецы, стоящие там, куда летят стрелы. Чья это была мысль?</translation>
+    </message>
+    <message>
+        <source>Look at your line. Brave, disciplined, and in exactly the wrong place. Rome taught you well.</source>
+        <translation>Взгляни на свой строй. Храбрый, выученный и ровно не на том месте. Рим научил тебя хорошо.</translation>
+    </message>
+    <message>
+        <source>Look at your losses. Whoever is paying for this war is getting very poor value.</source>
+        <translation>Взгляни на свои потери. Кто бы ни платил за эту войну, он получает очень мало за свои деньги.</translation>
+    </message>
+    <message>
+        <source>Lost. I did say this was the Barcids&apos; kind of war. Nobody listens to the man who keeps the books until the books are empty.</source>
+        <translation>Проиграно. Я же говорил, что это война Баркидов. Человека при книгах не слушают, пока книги не опустеют.</translation>
+    </message>
+    <message>
+        <source>Lost. We fought their war instead of ours. Next time we choose the field before we choose the fight.</source>
+        <translation>Проиграно. Мы вели их войну вместо своей. В следующий раз выберем поле прежде, чем выберем бой.</translation>
+    </message>
+    <message>
+        <source>Lost. We ran out of arrows or out of time; in this country they are the same thing.</source>
+        <translation>Проиграно. У нас кончились стрелы или время; в этой стране это одно и то же.</translation>
+    </message>
+    <message>
+        <source>Lost. We were quicker than we should have been, or slower. I shall spend the winter deciding which.</source>
+        <translation>Проиграно. Мы были быстрее, чем следовало, или медленнее. Проведу зиму, решая что именно.</translation>
+    </message>
+    <message>
+        <source>Lost. We were slow when it mattered. I will say so to anyone who asks, including you.</source>
+        <translation>Проиграно. Мы промедлили, когда это было важно. Скажу это всякому, кто спросит, и тебе тоже.</translation>
+    </message>
+    <message>
+        <source>More men are on the road. I did not send for them out of fear; I sent for them because there is room.</source>
+        <translation>По дороге идут ещё люди. Я послал за ними не от страха; я послал, потому что есть место.</translation>
+    </message>
+    <message>
+        <source>More men coming. Not for you to see - for you to feel.</source>
+        <translation>Идут ещё люди. Не чтобы ты их видел — чтобы ты их почувствовал.</translation>
+    </message>
+    <message>
+        <source>More of mine are coming down the road. I know - I did not tell you. That was rather the idea.</source>
+        <translation>Ещё мои спускаются по дороге. Знаю — я тебя не предупредил. В том и был замысел.</translation>
+    </message>
+    <message>
+        <source>More of mine are coming. I sent for them before you arrived; a hunter sets the snare before he sees the deer.</source>
+        <translation>Идут ещё мои. Я послал за ними до твоего прихода; охотник ставит силок прежде, чем увидит оленя.</translation>
+    </message>
+    <message>
+        <source>More of my hired men are coming down the road. Fresh, fed, and paid. You cannot say the same for yours.</source>
+        <translation>Ещё мои наёмные спускаются по дороге. Свежие, сытые и оплаченные. О твоих того же не скажешь.</translation>
+    </message>
+    <message>
+        <source>My archers advance. When their line looks at me, it is not looking at you.</source>
+        <translation>Мои лучники наступают. Когда их строй смотрит на меня, он не смотрит на тебя.</translation>
+    </message>
+    <message>
+        <source>My archers are moving up. Look to your flanks; that is where the country runs thin.</source>
+        <translation>Мои лучники выдвигаются. Береги фланги; там страна редеет.</translation>
+    </message>
+    <message>
+        <source>My camp is taking hits. I can hold. I would rather kill them with you than hold without you.</source>
+        <translation>Мой лагерь принимает удары. Я удержусь. Но лучше бить их с тобой, чем держаться без тебя.</translation>
+    </message>
+    <message>
+        <source>My camp is taking the weight of their attack. If you were planning to come, this is the day for planning to end.</source>
+        <translation>Мой лагерь держит вес их удара. Если ты собирался прийти, сегодня тот день, когда собираться пора кончать.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack, and my archers are better at giving than taking. If you can come, come along the ridge.</source>
+        <translation>На мой лагерь напали, а мои лучники лучше дают, чем берут. Если можешь прийти, иди по гребню.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack, and my men are paid to fight, not to die. If you want them alive tomorrow, come today.</source>
+        <translation>На мой лагерь напали, а моим людям платят за бой, не за смерть. Хочешь видеть их завтра живыми — приходи сегодня.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack. I would prefer not to be the one caught in a trap for once; if you can help, now would be poetic.</source>
+        <translation>На мой лагерь напали. Хоть раз я предпочёл бы не быть тем, кто попал в ловушку; если можешь помочь, сейчас вышло бы поэтично.</translation>
+    </message>
+    <message>
+        <source>My camp is under the hammer. If you have men to spare, spare them now; if not, I shall be curious to see what you were saving them for.</source>
+        <translation>Мой лагерь под молотом. Есть лишние люди — дай их сейчас; нет — мне будет любопытно, для чего ты их берёг.</translation>
+    </message>
+    <message>
+        <source>My cohorts are bleeding. Very well. Rome bleeds the way rivers do - it is how she reaches the sea.</source>
+        <translation>Мои когорты истекают кровью. Пусть. Рим кровоточит, как текут реки, — так он и достигает моря.</translation>
+    </message>
+    <message>
+        <source>My cohorts are marching on them. Watch the manoeuvre; it is not something one sees twice for free.</source>
+        <translation>Мои когорты идут на них. Смотри на манёвр; такое дважды даром не показывают.</translation>
+    </message>
+    <message>
+        <source>My cohorts are moving on them. Slowly. If you are quicker, be quicker where they can see it.</source>
+        <translation>Мои когорты идут на них. Медленно. Если ты быстрее, будь быстрее там, где это видно.</translation>
+    </message>
+    <message>
+        <source>My cohorts are thinning. It is a cost, and I keep the books honestly. There is still more field than you have men.</source>
+        <translation>Мои когорты редеют. Это цена, а книги я веду честно. Поля всё ещё больше, чем у тебя людей.</translation>
+    </message>
+    <message>
+        <source>My columns advance. Watch their reserve. It will move when they see me, and that is when it is yours.</source>
+        <translation>Мои колонны наступают. Следи за их резервом. Он двинется, когда увидит меня, и тогда он твой.</translation>
+    </message>
+    <message>
+        <source>My columns are moving. Watch the front, by all means; someone should, and it may as well be you.</source>
+        <translation>Мои колонны двинулись. Следи за фронтом, изволь; кто-то должен, и пусть это будешь ты.</translation>
+    </message>
+    <message>
+        <source>My line advances. Do not look for the trick; there is no trick. There is only the next step, and then the one after.</source>
+        <translation>Мой строй наступает. Не ищи хитрости; хитрости нет. Есть только следующий шаг, а затем ещё один.</translation>
+    </message>
+    <message>
+        <source>My men are down in numbers. So be it. Blood is the coin, and I have always paid in full.</source>
+        <translation>Мои люди падают во множестве. Пусть. Кровь — монета, и я всегда платил сполна.</translation>
+    </message>
+    <message>
+        <source>My men are dying. Good men, too. The enemy may take them; the enemy may not have my attention as well.</source>
+        <translation>Мои люди гибнут. И хорошие люди. Пусть враг заберёт их; моего внимания он в придачу не получит.</translation>
+    </message>
+    <message>
+        <source>My men are falling. The line thins. I have fed armies on less and the hills have not run out of stone.</source>
+        <translation>Мои люди падают. Строй редеет. Я кормил войска и меньшим, а у холмов камень не кончился.</translation>
+    </message>
+    <message>
+        <source>My part is done. The hills kept me alive longer than the plain would have. Go on without me and win.</source>
+        <translation>Моя часть сделана. Холмы держали меня в живых дольше, чем держала бы равнина. Иди без меня и побеждай.</translation>
+    </message>
+    <message>
+        <source>My part is over. I shall be in the Council chamber by morning, explaining how it was your fault. Win anyway.</source>
+        <translation>Моя часть окончена. К утру я буду в зале Совета объяснять, что виноват ты. Побеждай всё равно.</translation>
+    </message>
+    <message>
+        <source>My spears are falling. Every one is a contract I have to settle with a widow. Someone will pay for this, and it will not be me.</source>
+        <translation>Мои копейщики падают. Каждый — договор, который придётся закрывать со вдовой. Кто-то за это заплатит, и это буду не я.</translation>
+    </message>
+    <message>
+        <source>My spears are marching on them. I do not do this cheaply, so kindly make it count.</source>
+        <translation>Мои копейщики идут на них. Я делаю это недёшево, так что будь любезен, чтобы это стоило того.</translation>
+    </message>
+    <message>
+        <source>My spears are moving. Every one of them is paid through the season, so they will not stop for a little dying.</source>
+        <translation>Мои копейщики двинулись. Каждый оплачен до конца сезона, так что из-за небольшой смерти они не остановятся.</translation>
+    </message>
+    <message>
+        <source>Nearly bankrupt, then. In men, I mean. I have been bankrupt before; the trick is to owe so much that they cannot afford to finish you.</source>
+        <translation>Стало быть, почти разорён. В людях, я имею в виду. Я уже бывал разорён; хитрость в том, чтобы задолжать столько, что тебя не по карману добить.</translation>
+    </message>
+    <message>
+        <source>Nearly beaten, they tell me. I have been nearly beaten before. The word is doing a great deal of work in that sentence.</source>
+        <translation>Почти разбит, говорят мне. Я и раньше бывал почти разбит. Это слово делает в такой фразе очень много работы.</translation>
+    </message>
+    <message>
+        <source>One camp changes hands. I have lost more to a dishonest quartermaster and slept perfectly well.</source>
+        <translation>Один лагерь сменил хозяина. Я терял больше на нечестном интенданте и спал превосходно.</translation>
+    </message>
+    <message>
+        <source>One camp gone. I have never yet lost a war to masonry.</source>
+        <translation>Одним лагерем меньше. Я ещё ни разу не проиграл войну кладке.</translation>
+    </message>
+    <message>
+        <source>One camp lost. I have lost an eye, an army and a brother, and here I still am.</source>
+        <translation>Один лагерь потерян. Я потерял глаз, войско и брата, а всё ещё здесь.</translation>
+    </message>
+    <message>
+        <source>Reinforcements march. Rome has a great many sons and a very short memory for their names.</source>
+        <translation>Подкрепления идут. У Рима очень много сыновей и очень короткая память на их имена.</translation>
+    </message>
+    <message>
+        <source>Reinforcements on the road. Not many. Enough to make you turn your head at the wrong moment.</source>
+        <translation>Подкрепления в пути. Немного. Достаточно, чтобы ты повернул голову в неподходящий миг.</translation>
+    </message>
+    <message>
+        <source>Reinforcements. Bought this morning, delivered this afternoon. That is what a treasury is for.</source>
+        <translation>Подкрепления. Куплены утром, доставлены к вечеру. Для того и казна.</translation>
+    </message>
+    <message>
+        <source>Reinforcements. Mine, I am afraid. I collect them the way others collect debts.</source>
+        <translation>Подкрепления. Мои, увы. Я собираю их так, как другие собирают долги.</translation>
+    </message>
+    <message>
+        <source>Right. You are here, I am here. No speeches. Sharpen what you have; I do not like to fight dull men.</source>
+        <translation>Итак. Ты здесь, я здесь. Без речей. Наточи, что имеешь; я не люблю драться с тупыми.</translation>
+    </message>
+    <message>
+        <source>So it begins. Spears touch, men fall, and the wheat grows regardless. I can wait longer than you can bleed.</source>
+        <translation>Так начинается. Копья сходятся, люди падают, а пшеница растёт себе дальше. Я могу ждать дольше, чем ты можешь истекать кровью.</translation>
+    </message>
+    <message>
+        <source>So it ends with a blade after all. Tell Rome I was a wolf, not a bull. She never did learn the difference.</source>
+        <translation>Значит, всё же кончается клинком. Скажите Риму, что я был волком, а не быком. Разницы он так и не выучил.</translation>
+    </message>
+    <message>
+        <source>So the Barcids&apos; war has found me a new opponent. Understand that I am here for the ledger, not the legend, and ledgers are much harder to kill.</source>
+        <translation>Значит, война Баркидов нашла мне нового противника. Пойми: я здесь ради книг, а не ради легенды, а книги убить куда труднее.</translation>
+    </message>
+    <message>
+        <source>So the arrow finds me at last. Tell my brother I held the road as long as roads can be held.</source>
+        <translation>Значит, стрела всё же нашла меня. Скажите брату, что я держал дорогу столько, сколько дороги вообще держат.</translation>
+    </message>
+    <message>
+        <source>So the old man falls at last. Rome will call it a tragedy for a week and a lesson for a century. Mind the lesson.</source>
+        <translation>Значит, старик наконец пал. Рим неделю будет звать это трагедией, а век — уроком. Держись урока.</translation>
+    </message>
+    <message>
+        <source>So this is the army. I make it three cohorts and some optimism. My clerks have already drawn up the receipt for your camp; we only need the date.</source>
+        <translation>Так вот оно, войско. Насчитываю три когорты и немного бодрости. Мои писцы уже составили расписку на твой лагерь; не хватает лишь даты.</translation>
+    </message>
+    <message>
+        <source>So. The Barcids get their wish and I get a spear. Tell the Council the books are in order. They always were.</source>
+        <translation>Что ж. Баркиды получают своё, а я — копьё. Скажите Совету, что книги в порядке. Они всегда были в порядке.</translation>
+    </message>
+    <message>
+        <source>So. You have come to fight me. How refreshing - most of my enemies prefer to wait behind their walls until I have finished with the countryside.</source>
+        <translation>Итак. Ты пришёл драться со мной. Как освежающе — большинство моих врагов предпочитают ждать за стенами, пока я не закончу с округой.</translation>
+    </message>
+    <message>
+        <source>Steel meets steel. Now the costs begin. I do hope you are keeping accounts, because I am.</source>
+        <translation>Сталь встречает сталь. Теперь начинаются издержки. Надеюсь, ты ведёшь счёт, потому что я веду.</translation>
+    </message>
+    <message>
+        <source>Steel. Finally. Now we find out what you are made of, and I already have a guess.</source>
+        <translation>Сталь. Наконец-то. Теперь узнаем, из чего ты сделан, а у меня уже есть догадка.</translation>
+    </message>
+    <message>
+        <source>Take the camp. I have taken cities and given them back; the joy is in the taking, not the holding.</source>
+        <translation>Бери лагерь. Я брал города и отдавал их; радость во взятии, а не в удержании.</translation>
+    </message>
+    <message>
+        <source>That camp is Rome&apos;s now. I shall let you have the wells, at the usual rate.</source>
+        <translation>Этот лагерь теперь Рима. Колодцы оставлю тебе, по обычной ставке.</translation>
+    </message>
+    <message>
+        <source>That camp is mine now. I have already sold the grain in it twice. Do not look so surprised; it is how one makes a profit on war.</source>
+        <translation>Этот лагерь теперь мой. Зерно из него я уже продал дважды. Не делай такого лица; так и извлекают прибыль из войны.</translation>
+    </message>
+    <message>
+        <source>That camp is mine now. I shall not do anything dramatic with it. I shall simply keep it, which is worse.</source>
+        <translation>Этот лагерь теперь мой. Ничего громкого я с ним не сделаю. Я просто оставлю его себе, что хуже.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. I did not even need the elephants. I am almost disappointed.</source>
+        <translation>Этот лагерь мой. Мне даже не понадобились слоны. Я почти разочарован.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. I did not storm it; I waited for it. There is a difference and you will feel it.</source>
+        <translation>Этот лагерь мой. Я не брал его штурмом; я его дождался. Разница есть, и ты её почувствуешь.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. Took it at the run. Did you even see the standard change?</source>
+        <translation>Этот лагерь мой. Взят с ходу. Ты вообще успел увидеть, как сменилось знамя?</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I have already leased the granary. To you, actually. We can discuss terms.</source>
+        <translation>Этот лагерь наш. Зернохранилище я уже сдал внаём. Тебе, собственно. Условия можно обсудить.</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I took it from the side nobody guards, which is every side, eventually.</source>
+        <translation>Этот лагерь наш. Я взял его с той стороны, которую никто не стережёт, а это со временем всякая сторона.</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I will hold it and keep the road open behind you. Somebody has to.</source>
+        <translation>Этот лагерь наш. Я удержу его и оставлю дорогу за тобой открытой. Кто-то же должен.</translation>
+    </message>
+    <message>
+        <source>That is all of me spent. It was a long war and I regret none of the slow parts. Finish it.</source>
+        <translation>Вот и всё, что во мне было. Война была долгой, и ни об одной её медленной части я не жалею. Закончи её.</translation>
+    </message>
+    <message>
+        <source>That is my part done. Went forward the whole way. Finish what is left of them.</source>
+        <translation>Моя часть сделана. Шёл вперёд всю дорогу. Добей то, что от них осталось.</translation>
+    </message>
+    <message>
+        <source>That is the end of it. You fought. That counts for something in my camp, if not in yours.</source>
+        <translation>Это конец. Ты дрался. В моём лагере это чего-то стоит, пусть и не в твоём.</translation>
+    </message>
+    <message>
+        <source>That is the end of my army. Not of me - never that - but the war is in your hands now. Turn it.</source>
+        <translation>Это конец моего войска. Не мой — никогда, — но война теперь в твоих руках. Переверни её.</translation>
+    </message>
+    <message>
+        <source>That is the end of my part. The rest of the war is yours. Do keep the receipts.</source>
+        <translation>Это конец моей части. Остальная война твоя. Храни расписки.</translation>
+    </message>
+    <message>
+        <source>That is the end. You fought hard and thought little. In the hills, that gets you eaten.</source>
+        <translation>Это конец. Ты дрался упорно и думал мало. В холмах за это съедают.</translation>
+    </message>
+    <message>
+        <source>That was yours a moment ago. My surveyors are already renaming the streets. Something Latin, I think.</source>
+        <translation>Ещё мгновение назад это было твоим. Мои землемеры уже переименовывают улицы. Что-нибудь латинское, полагаю.</translation>
+    </message>
+    <message>
+        <source>The cohorts are moving - slowly, in step. You will have time to see them coming. That is the point.</source>
+        <translation>Когорты двинулись — медленно, в ногу. Ты успеешь увидеть, как они идут. В том и смысл.</translation>
+    </message>
+    <message>
+        <source>The first arrows fly. Now we learn whether you can bleed and think at once.</source>
+        <translation>Полетели первые стрелы. Теперь узнаем, умеешь ли ты истекать кровью и думать разом.</translation>
+    </message>
+    <message>
+        <source>The legion is moving. Do not trouble to form a line - it will only give my men something to step over.</source>
+        <translation>Легион двинулся. Не трудись строить линию — это лишь даст моим людям, через что перешагнуть.</translation>
+    </message>
+    <message>
+        <source>There it is. You came straight at me, like a bull at a red cloak, and now you are wondering where the cloak went.</source>
+        <translation>Вот и оно. Ты пошёл прямо на меня, как бык на красное полотно, и теперь гадаешь, куда делось полотно.</translation>
+    </message>
+    <message>
+        <source>There you are. I have been counting your wagons. Fewer than you need, more than you can guard. This will be a patient day.</source>
+        <translation>Вот ты где. Я считал твои повозки. Меньше, чем нужно, больше, чем сможешь устеречь. День будет терпеливым.</translation>
+    </message>
+    <message>
+        <source>There. It was never a battle, only a season, and seasons end. Go home if you have one; the road is long and I shall not follow.</source>
+        <translation>Вот и всё. Это никогда не было битвой, лишь временем года, а времена года кончаются. Иди домой, если он есть; дорога длинна, и я не пойду следом.</translation>
+    </message>
+    <message>
+        <source>There. That is what happens when amateurs march against a ledger. Sit down. My men will count you when they have counted the horses.</source>
+        <translation>Вот и всё. Так бывает, когда любители идут на счётную книгу. Садись. Мои люди сосчитают вас, когда сосчитают лошадей.</translation>
+    </message>
+    <message>
+        <source>There. You are done, and I have lost fewer men than I budgeted for. That is a good day in my trade.</source>
+        <translation>Вот и всё. Ты кончен, а я потерял меньше людей, чем заложил в смету. В моём ремесле это хороший день.</translation>
+    </message>
+    <message>
+        <source>They are at my walls, and my walls were built by the lowest bidder. Some assistance would not go unrecorded.</source>
+        <translation>Они у моих стен, а мои стены строил тот, кто дал самую дешёвую цену. Немного помощи не осталось бы незаписанным.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. Come now, hard, and we break them between us.</source>
+        <translation>Они у моих стен. Приходи сейчас, крепко, и мы сломаем их между собой.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I can hold a while - I always can - but a while is not forever, and I would rather not test the word.</source>
+        <translation>Они у моих стен. Я продержусь какое-то время — я всегда держусь, — но какое-то время не значит всегда, и слово это проверять не хочется.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I can hold a while with what I have. A while, not long. Please hear the difference.</source>
+        <translation>Они у моих стен. С тем, что есть, я продержусь какое-то время. Какое-то, недолго. Услышь разницу, прошу.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I have been the hammer so often that I forget what the anvil feels like. It is unpleasant.</source>
+        <translation>Они у моих стен. Я так часто был молотом, что забыл, каково быть наковальней. Это неприятно.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. Mercenaries have a fine sense of when a paymaster is about to become a corpse. Do hurry.</source>
+        <translation>Они у моих стен. У наёмников тонкое чутьё на то, когда казначей вот-вот станет трупом. Поторопись.</translation>
+    </message>
+    <message>
+        <source>This is the edge. I have stood on it before and walked back. I would rather not do it alone.</source>
+        <translation>Это край. Я уже стоял на нём и возвращался. Предпочёл бы не делать этого в одиночку.</translation>
+    </message>
+    <message>
+        <source>This is the end of my line unless you reach me. I will not ask twice; there will not be time to.</source>
+        <translation>Это конец моего строя, если ты не дойдёшь до меня. Дважды просить не стану; времени не будет.</translation>
+    </message>
+    <message>
+        <source>This is what the end of a consulship looks like from the inside. Come quickly, or come for the funeral.</source>
+        <translation>Вот как выглядит конец консульства изнутри. Приходи скорее или приходи на похороны.</translation>
+    </message>
+    <message>
+        <source>Together, then. I will do the clever part. You may do the brave part; it is honest work and someone must.</source>
+        <translation>Значит, вместе. Я возьму на себя умную часть. Ты можешь взять храбрую; работа честная, и кто-то должен её делать.</translation>
+    </message>
+    <message>
+        <source>We are allies, so I am told. I did not vote for it. Keep your men off my supply lines and we shall get along splendidly.</source>
+        <translation>Мы союзники, как мне сказали. Я за это не голосовал. Держи своих людей подальше от моих обозных путей, и мы прекрасно поладим.</translation>
+    </message>
+    <message>
+        <source>We fight side by side. Keep pace with me or stay out of my way; either is fine, both at once is not.</source>
+        <translation>Мы бьёмся плечом к плечу. Поспевай за мной или не путайся под ногами; и то и другое годится, оба разом — нет.</translation>
+    </message>
+    <message>
+        <source>We fight together, then. Do try to keep your line straight - I shall be watching from the good ground, and I have a very long memory for embarrassments.</source>
+        <translation>Значит, бьёмся вместе. Постарайся держать строй ровно — я буду смотреть с хорошей высоты, а на чужие конфузы у меня очень долгая память.</translation>
+    </message>
+    <message>
+        <source>We fight together. I will hold the flanks and watch the roads. Keep your supply close; the enemy will not fight fair and neither will I.</source>
+        <translation>Бьёмся вместе. Я держу фланги и слежу за дорогами. Держи обоз близко; враг не станет драться честно, и я тоже.</translation>
+    </message>
+    <message>
+        <source>We stand together. I will not be hurried, and I will not hurry you. Hold what you have and let the enemy come to us tired.</source>
+        <translation>Мы стоим вместе. Меня не поторопить, и тебя я торопить не стану. Держи, что имеешь, и пусть враг придёт к нам усталым.</translation>
+    </message>
+    <message>
+        <source>Welcome to my field. I say mine; I have not signed anything. I simply find that fields tend to become mine after a while.</source>
+        <translation>Добро пожаловать на моё поле. Говорю «моё»; я ничего не подписывал. Просто замечаю, что поля со временем становятся моими.</translation>
+    </message>
+    <message>
+        <source>Well. A field is lost. I have lost fields before and taken the harvest anyway. We shall see who is still here at the sowing.</source>
+        <translation>Что ж. Поле потеряно. Я и раньше терял поля и всё же снимал урожай. Посмотрим, кто останется здесь к севу.</translation>
+    </message>
+    <message>
+        <source>Won. Clean and fast. That is how it is done. Drink tonight; march tomorrow.</source>
+        <translation>Выиграно. Чисто и быстро. Вот как это делается. Пей сегодня; выступай завтра.</translation>
+    </message>
+    <message>
+        <source>Won. Good. Now let us eat before someone counts what it cost us.</source>
+        <translation>Выиграно. Хорошо. Теперь поедим, пока кто-нибудь не сосчитал, во что это обошлось.</translation>
+    </message>
+    <message>
+        <source>Won. I shall tell the Council it was my doing and yours was very expensive. They will believe half of it.</source>
+        <translation>Выиграно. Скажу Совету, что это моих рук дело, а твоё вышло очень дорого. Половине они поверят.</translation>
+    </message>
+    <message>
+        <source>Won. Neatly. Remember that half of it was the ground and the other half was the timing, and none of it was luck.</source>
+        <translation>Выиграно. Аккуратно. Помни, что наполовину это была земля, а наполовину — время, и ничего из этого не было удачей.</translation>
+    </message>
+    <message>
+        <source>Won. Not quickly, but won. Remember how it felt to wait; it is the part nobody else will remember for you.</source>
+        <translation>Выиграно. Не быстро, но выиграно. Помни, каково было ждать; эту часть за тебя никто не запомнит.</translation>
+    </message>
+    <message>
+        <source>You are a long way from your supply, and I can see your fires from here. A hunter does not chase the deer; he waits at the water.</source>
+        <translation>Ты далеко от обоза, а твои костры я вижу отсюда. Охотник не гонится за оленем; он ждёт у воды.</translation>
+    </message>
+    <message>
+        <source>You are at my camp. A camp is a tent with ambition; I have left better ones to wolves.</source>
+        <translation>Ты у моего лагеря. Лагерь — это шатёр с притязаниями; я оставлял волкам и получше.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. A camp is a hide, nothing more. I have others, and the hills have more still.</source>
+        <translation>Ты у моих стен. Лагерь — это логово, не более. У меня есть другие, а у холмов ещё больше.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Bold. My grandfather kept a dog that was bold; we buried it with honours and bought a better one.</source>
+        <translation>Ты у моих стен. Дерзко. У деда был дерзкий пёс; мы похоронили его с почестями и купили получше.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Do you have any idea what those walls cost? Of course not. Nobody who breaks things ever does.</source>
+        <translation>Ты у моих стен. Ты хоть представляешь, во что обошлись эти стены? Разумеется, нет. Тот, кто ломает, никогда не представляет.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Knock. My walls have been knocked on by better, and they have learned not to answer.</source>
+        <translation>Ты у моих стен. Стучи. В мои стены стучали и получше, и они выучились не открывать.</translation>
+    </message>
+    <message>
+        <source>You are bleeding. I am not pleased by it; I am merely not surprised.</source>
+        <translation>Ты истекаешь кровью. Меня это не радует; просто не удивляет.</translation>
+    </message>
+    <message>
+        <source>You are hitting my camp. Good. That means you are close enough for me to hit back.</source>
+        <translation>Ты бьёшь по моему лагерю. Хорошо. Значит, ты достаточно близко, чтобы я ударил в ответ.</translation>
+    </message>
+    <message>
+        <source>You brought numbers. I brought arithmetic. Do write to your people and tell them the difference, if any of them can read.</source>
+        <translation>Ты привёл числа. Я привёл арифметику. Напиши своим и объясни разницу, если кто-то из них умеет читать.</translation>
+    </message>
+    <message>
+        <source>You have a camp of mine. Feed it. Water it. I will watch you try to do both from the road you do not hold.</source>
+        <translation>У тебя мой лагерь. Корми его. Пои. Погляжу, как ты делаешь и то и другое с дороги, которой не владеешь.</translation>
+    </message>
+    <message>
+        <source>You have beaten a consul. Write it down somewhere; nobody in the city will believe you, and next year they will send two.</source>
+        <translation>Ты побил консула. Запиши это где-нибудь; в городе тебе никто не поверит, а на следующий год пришлют двоих.</translation>
+    </message>
+    <message>
+        <source>You have come a long way to stand in a field. Stand in it, then. I have wheat to bring in, and a great deal of time, and you have neither.</source>
+        <translation>Ты проделал долгий путь, чтобы постоять на поле. Так стой. У меня пшеница на уборке и очень много времени, а у тебя нет ни того ни другого.</translation>
+    </message>
+    <message>
+        <source>You have killed a consul. Rome keeps forty more in cupboards in the city, and I promise you the ones still in the cupboards are worse.</source>
+        <translation>Ты убил консула. У Рима в городе по шкафам ещё сорок таких, и уверяю тебя: те, что ещё в шкафах, хуже.</translation>
+    </message>
+    <message>
+        <source>You have taken a camp. It will need feeding, and I have noticed that you do not feed things well.</source>
+        <translation>Ты взял лагерь. Его придётся кормить, а я заметил, что ты плохо кормишь.</translation>
+    </message>
+    <message>
+        <source>You have taken a camp. Take the debts that come with it too; I was rather hoping someone would.</source>
+        <translation>Ты взял лагерь. Забери и долги, что к нему прилагаются; я как раз надеялся, что кто-нибудь заберёт.</translation>
+    </message>
+    <message>
+        <source>You have that camp. Congratulations - you now own its wells, its debts, and its sanitation. I shall want it back before the rains.</source>
+        <translation>Этот лагерь твой. Поздравляю — теперь тебе принадлежат его колодцы, его долги и его нечистоты. Я захочу его назад до дождей.</translation>
+    </message>
+    <message>
+        <source>You have the ground. Ground is patient; so am I. Winter will visit you here long before I do, and it does not negotiate.</source>
+        <translation>Земля твоя. Земля терпелива; я тоже. Зима навестит тебя здесь задолго до меня, и она не торгуется.</translation>
+    </message>
+    <message>
+        <source>You have won the field. Very well. I have lost cheaper things to worse men. The Council will hear that the Barcids&apos; war lost it, not mine.</source>
+        <translation>Ты выиграл поле. Хорошо. Я терял вещи подешевле людям похуже. Совет услышит, что проиграла война Баркидов, а не моя.</translation>
+    </message>
+    <message>
+        <source>You have won. I am almost pleased; a man learns nothing from beating fools. I shall learn from you, and I promise you will not enjoy the lesson.</source>
+        <translation>Ты выиграл. Я почти доволен; побеждая глупцов, ничему не научишься. У тебя научусь, и обещаю: урок тебе не понравится.</translation>
+    </message>
+    <message>
+        <source>You hurried. Men who hurry meet me exactly where I am waiting. Rest now. The ground is good for it.</source>
+        <translation>Ты поспешил. Те, кто спешит, встречают меня ровно там, где я жду. Отдыхай теперь. Земля для этого хороша.</translation>
+    </message>
+    <message>
+        <source>You took the camp. Fine. It was walls; I fight in the field. Come and find me there.</source>
+        <translation>Ты взял лагерь. Ладно. Это были стены; я дерусь в поле. Приходи и найди меня там.</translation>
+    </message>
+    <message>
+        <source>You win the field. Take it. I have hunted this country for years; the land will still feed me when you have eaten it bare.</source>
+        <translation>Ты выигрываешь поле. Бери. Я охотился в этом краю годами; земля прокормит меня и тогда, когда ты объешь её дочиста.</translation>
+    </message>
+    <message>
+        <source>You won. Do not gloat; it slows the feet. I will find you again on better ground.</source>
+        <translation>Ты победил. Не торжествуй; это утяжеляет ноги. Я найду тебя снова на лучшей земле.</translation>
+    </message>
+    <message>
+        <source>Your camp changes masters. They will find me a lenient landlord and a very poor tenant.</source>
+        <translation>Твой лагерь меняет хозяев. Меня сочтут снисходительным владельцем и весьма скверным постояльцем.</translation>
+    </message>
+    <message>
+        <source>Your camp is taken. My brother will say it was his idea. It usually is.</source>
+        <translation>Твой лагерь взят. Мой брат скажет, что это была его мысль. Обычно так и есть.</translation>
+    </message>
+    <message>
+        <source>Your camp, gone in a heartbeat. That is what tempo does. Learn it or lose the next one.</source>
+        <translation>Твой лагерь исчез в один удар сердца. Вот что делает темп. Выучи его или проиграй следующий.</translation>
+    </message>
+    <message>
+        <source>Your camp, under new management. I shall keep the wells and fire the garrison. Standard practice.</source>
+        <translation>Твой лагерь под новым управлением. Колодцы оставлю себе, гарнизон распущу. Обычное дело.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. A pity. I had a speech prepared for after, and he would have hated it.</source>
+        <translation>Твой военачальник пал. Жаль. У меня была заготовлена речь на потом, и она бы ему не понравилась.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Grief later; line now. The field does not pause for either of us.</source>
+        <translation>Твой военачальник пал. Горе после; строй сейчас. Поле не делает передышки ни для кого из нас.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Hasty men do. Bury him with honour; you will be joining him soon enough, and the ground here is soft.</source>
+        <translation>Твой военачальник пал. С поспешными так бывает. Похорони его с честью; скоро ты к нему присоединишься, а земля здесь мягкая.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. I know that grief. Keep your men together; scattered men are what the enemy is hunting.</source>
+        <translation>Твой военачальник пал. Мне знакомо это горе. Держи людей вместе; рассеянных враг и ловит.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Sorry. Keep your men moving; grief stands still and standing still kills.</source>
+        <translation>Твой военачальник пал. Сочувствую. Держи людей в движении; горе стоит на месте, а стоять на месте — умирать.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Unfortunate. Hold your line; I shall not hold mine for a leaderless ally very long.</source>
+        <translation>Твой военачальник пал. Досадно. Держи строй; ради союзника без головы я свой держать долго не стану.</translation>
+    </message>
+    <message>
+        <source>Your commander is dead. A costly man to lose. I have already calculated what it will cost you to replace him; the number is not kind.</source>
+        <translation>Твой военачальник мёртв. Дорогая потеря. Я уже подсчитал, во что обойдётся его замена; число недоброе.</translation>
+    </message>
+    <message>
+        <source>Your commander is dead. Unfortunate, and expensive. Keep your line; a leaderless ally is a liability I did not agree to insure.</source>
+        <translation>Твой военачальник мёртв. Досадно и дорого. Держи строй; союзник без головы — риск, страховать который я не соглашался.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. He led from the front; brave men do, and it is where the arrows go.</source>
+        <translation>Твой военачальник пал. Он вёл впереди; храбрые так и делают, а туда и летят стрелы.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. I did not enjoy it. I did not have to.</source>
+        <translation>Твой военачальник пал. Мне это не доставило удовольствия. Оно и не требовалось.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. Pity. I had meant to invite him to dinner after and explain where he went wrong.</source>
+        <translation>Твой военачальник пал. Жаль. Я собирался позвать его после на ужин и объяснить, где он ошибся.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. Their moment of joy is your moment of opportunity; nobody watches the flanks while they cheer.</source>
+        <translation>Твой военачальник пал. Их миг радости — твой миг возможности; за флангами никто не следит, пока ликует.</translation>
+    </message>
+    <message>
+        <source>Your line is breaking. I can hear it from here. Press or pull back - standing there is just dying slowly.</source>
+        <translation>Твой строй ломается. Мне слышно отсюда. Дави или отходи — стоять там значит просто медленно умирать.</translation>
+    </message>
+    <message>
+        <source>Your line is thinning nicely. I am told grief is easier when one has fewer names to remember.</source>
+        <translation>Твой строй славно редеет. Говорят, горевать легче, когда имён нужно помнить меньше.</translation>
+    </message>
+    <message>
+        <source>Your men are dropping in the open. A hunter feels no pride in it. Only a little pity, and a full quiver.</source>
+        <translation>Твои люди падают на открытом месте. Охотник не гордится этим. Лишь немного жалости и полный колчан.</translation>
+    </message>
+    <message>
+        <source>Your men are dying at a rate that would bankrupt a lesser treasury. I find that admirable and very stupid.</source>
+        <translation>Твои люди гибнут в темпе, который разорил бы казну поменьше. Нахожу это достойным восхищения и весьма глупым.</translation>
+    </message>
+    <message>
+        <source>Your men are falling faster than you are replacing them. That is not a battle. That is a harvest, and it is not yours.</source>
+        <translation>Твои люди падают быстрее, чем ты их восполняешь. Это не битва. Это жатва, и не твоя.</translation>
+    </message>
+    <message>
+        <source>Your men are falling in rows. That is what happens when you fight a wall&apos;s war against a river.</source>
+        <translation>Твои люди падают рядами. Так бывает, когда ведёшь войну стены против реки.</translation>
     </message>
 </context>
 <context>
@@ -5371,6 +6242,29 @@ to see preview</source>
     </message>
 </context>
 <context>
+    <name>MissionDeadline</name>
+    <message>
+        <source>FINAL MINUTE</source>
+        <translation>ПОСЛЕДНЯЯ МИНУТА</translation>
+    </message>
+    <message>
+        <source>CLOSING WINDOW</source>
+        <translation>ОКНО ЗАКРЫВАЕТСЯ</translation>
+    </message>
+    <message>
+        <source>MISSION CLOCK</source>
+        <translation>ЧАСЫ ЗАДАНИЯ</translation>
+    </message>
+    <message>
+        <source>Time left: %1</source>
+        <translation>Осталось времени: %1</translation>
+    </message>
+    <message>
+        <source>TIME LEFT</source>
+        <translation>ОСТАЛОСЬ ВРЕМЕНИ</translation>
+    </message>
+</context>
+<context>
     <name>MissionDetailPanel</name>
     <message>
         <source>Suffete Command</source>
@@ -5866,10 +6760,6 @@ to see preview</source>
         <translation>Сокрушите обе прорывающиеся римские колонны, прежде чем они выцарапаются по склону.</translation>
     </message>
     <message>
-        <source>Cut and carry home four hundred of timber and two hundred and ten of stone. The near stand will not cover it; the deep pines will.</source>
-        <translation>Нарубите и свезите домой четыреста древесины и двести десять камня. Ближняя роща этого не покроет; густые сосны — покроют.</translation>
-    </message>
-    <message>
         <source>Cut the stores for the road</source>
         <translation>Заготовьте припасы для дороги</translation>
     </message>
@@ -5926,10 +6816,6 @@ to see preview</source>
         <translation>Пятнадцать тысяч на отмелях, а гадатели скажут, что священные куры нас предупреждали. Убей консула — и Рим изберёт другого к базарному дню. В том и весь наш фокус: мы не один человек.</translation>
     </message>
     <message>
-        <source>Fill the levy out of the Pinewater cut: four hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through.</source>
-        <translation>Наполните набор с делянки над Сосновой Водой: четыреста древесины и двести десять камня, срубить и свезти домой, прежде чем колонна пройдёт обратно.</translation>
-    </message>
-    <message>
         <source>Final battle in Africa: blunt Scipio&apos;s line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.</source>
         <translation>Последняя битва в Африке: притупите линию Сципиона, переживите нумидийскую конницу и займите все четыре римских лагеря, сломив при этом оба восстания мёртвых.</translation>
     </message>
@@ -5968,10 +6854,6 @@ to see preview</source>
     <message>
         <source>Follow the valley floor east; the mountain peoples hold the switchbacks above.</source>
         <translation>Идите дном долины на восток; горцы держат серпантины выше.</translation>
-    </message>
-    <message>
-        <source>Four hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. Split the crew. Escort the far one.</source>
-        <translation>Четыреста древесины и двести камня, а ближнюю рощу обобрала прошлая бригада. Значит, густые сосны, значит, долгая дорога, значит, то, что живёт в густых соснах, как следует нас разглядит. Разделите бригаду. Дальнюю сопроводите.</translation>
     </message>
     <message>
         <source>Grave-lights move among the western orchards. The Iron Sepulcher is watching, but the legions remain the greater danger.</source>
@@ -6088,10 +6970,6 @@ to see preview</source>
     <message>
         <source>Learn to command before Rome comes looking for you: select and move troops, drive off a scouting party, put builders to work on timber, stone and ore, raise a Home, recruit an army, break a Roman raid, and take the enemy camp.</source>
         <translation>Научитесь командовать, пока Рим не отправился вас искать: выделяйте и двигайте отряды, отгоните разведку, поставьте строителей на древесину, камень и руду, возведите Дом, наберите армию, сломите римский набег и возьмите вражеский лагерь.</translation>
-    </message>
-    <message>
-        <source>Leave the axes. Leave the carts. A detail that cannot walk out of its own cut does not get to carry anything.</source>
-        <translation>Бросьте топоры. Бросьте телеги. Бригада, которая не может выйти со своей делянки, не понесёт ничего.</translation>
     </message>
     <message>
         <source>Levy filled. Stack it by the road and let the carts argue about it. We cut a wood down to feed a siege that has not started yet — remember that the next time somebody calls this the quiet posting.</source>
@@ -6593,6 +7471,294 @@ to see preview</source>
         <source>Your commander falls - and every line collapses behind him.</source>
         <translation>Ваш полководец падает — и каждая линия за ним рушится.</translation>
     </message>
+    <message>
+        <source>A few of the screen left, and me. My son is somewhere on this field; if he finds me, he will be insufferable about it for the rest of his life.</source>
+        <translation>От завесы осталась горстка, и я. Мой сын где-то на этом поле; если он меня найдёт, то будет невыносим с этим до конца своих дней.</translation>
+    </message>
+    <message>
+        <source>Cut and carry home eight hundred of timber and two hundred and ten of stone. The near stand was stripped bare; the deep pines and the east screen are the only timber left standing.</source>
+        <translation>Сруби и привези домой восемьсот дерева и двести десять камня. Ближнюю рощу свели подчистую; глубокие сосны и восточная завеса — единственный лес, что ещё стоит.</translation>
+    </message>
+    <message>
+        <source>Eight hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. The column comes back through at dusk and it does not wait. Split the crew. Escort the far one.</source>
+        <translation>Восемьсот дерева и двести камня, а ближнюю рощу свела прошлая артель. Значит, глубокие сосны, значит, долгая дорога, значит, то, что живёт в глубоких соснах, на нас поглядит. Колонна возвращается в сумерках и не ждёт. Раздели артель. Дай дальней охрану.</translation>
+    </message>
+    <message>
+        <source>Fill the levy out of the Pinewater cut: eight hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through at dusk.</source>
+        <translation>Выполни повинность на Сосновой Воде: восемьсот дерева и двести десять камня, срубить и привезти домой, пока колонна не вернётся в сумерках.</translation>
+    </message>
+    <message>
+        <source>First column on the cart gate. Spears up. Let them come to the stakes; the stakes do not get tired.</source>
+        <translation>Первая колонна у обозных ворот. Копья вверх. Пусть идут на колья; колья не устают.</translation>
+    </message>
+    <message>
+        <source>Hannibal dies in the snow. Then the elephants were for nothing, and so was the road. History will find that very tidy.</source>
+        <translation>Ганнибал гибнет в снегу. Тогда слоны были ни к чему, и дорога тоже. История сочтёт это весьма опрятным.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls at the Rhone. Then Rome never sees the elephants, and I never see Cannae. I shall spend the rest of my life not knowing what I was spared.</source>
+        <translation>Ганнибал падёт у Родана. Тогда Рим не увидит слонов, а я не увижу Канн. Всю оставшуюся жизнь я не буду знать, от чего меня избавили.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls in Campania, among the orchards, in a war he did not choose. There is a kind of mercy in that, and I did not intend it.</source>
+        <translation>Ганнибал падёт в Кампании, среди садов, на войне, которую не выбирал. В этом есть своего рода милость, и я её не замышлял.</translation>
+    </message>
+    <message>
+        <source>Hannibal has fallen at Zama. I wanted to meet him after, and ask him about Cannae. I shall have to ask the ground instead.</source>
+        <translation>Ганнибал пал при Заме. Я хотел встретиться с ним после и спросить о Каннах. Придётся спрашивать землю.</translation>
+    </message>
+    <message>
+        <source>Hannibal is down in the Trebia mud. Whatever Mago has hidden in the gullies, it will not bring him back.</source>
+        <translation>Ганнибал лежит в грязи Требии. Что бы Магон ни спрятал в оврагах, это его не вернёт.</translation>
+    </message>
+    <message>
+        <source>Hannibal is down. The Senate will strike a coin. I shall keep one and never spend it, which I am told is what he would have done.</source>
+        <translation>Ганнибал пал. Сенат отчеканит монету. Я оставлю себе одну и никогда её не потрачу — говорят, он поступил бы так же.</translation>
+    </message>
+    <message>
+        <source>Here they come - the whole consular line, in step, at Varro&apos;s tempo. Eighty thousand men do not turn. Remember that when you want them to.</source>
+        <translation>Вот и они — вся консульская линия, в ногу, в темпе Варрона. Восемьдесят тысяч человек не поворачивают. Помни об этом, когда захочешь, чтобы повернули.</translation>
+    </message>
+    <message>
+        <source>Leave the axes. Leave the carts. A detail that cannot fill its own levy before the column comes through does not get to carry anything.</source>
+        <translation>Оставь топоры. Оставь повозки. Артель, не выполнившая свою повинность до прохода колонны, не везёт ничего.</translation>
+    </message>
+    <message>
+        <source>Legionaries at your works. Not Varro&apos;s legions; mine. Men who were at Cannae and remember exactly how it felt.</source>
+        <translation>Легионеры у твоих укреплений. Не легионы Варрона; мои. Люди, которые были при Каннах и точно помнят, каково это было.</translation>
+    </message>
+    <message>
+        <source>Light is going. Five minutes of road left in the day, and whatever is on the carts when the column reaches us is what we levied. Bring them home.</source>
+        <translation>Свет уходит. В дне осталось пять минут дороги, и что окажется на повозках, когда колонна нас настигнет, то и будет нашей повинностью. Приведи их домой.</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s camp is yours. His riders will not care; they were never in it. Watch the horizon, not the tents.</source>
+        <translation>Лагерь Масиниссы твой. Его всадникам всё равно; они в нём и не были. Смотри на горизонт, а не на шатры.</translation>
+    </message>
+    <message>
+        <source>My forward town, taken by horsemen. Horsemen. My father would have said something cutting; I find I am simply cold.</source>
+        <translation>Мой передовой город, взятый всадниками. Всадниками. Отец сказал бы что-нибудь язвительное; я же просто холоден.</translation>
+    </message>
+    <message>
+        <source>My men are at your walls. Not to break them - to remind you they are walls, and that everything outside them is mine.</source>
+        <translation>Мои люди у твоих стен. Не чтобы сломать их — чтобы напомнить тебе, что это стены и что всё за ними моё.</translation>
+    </message>
+    <message>
+        <source>My scouting party is on the road. Cavalry, mostly, and a tribune who wants to be noticed. Do notice him.</source>
+        <translation>Мой разъезд на дороге. В основном конница и трибун, желающий, чтобы его заметили. Заметь его, будь любезен.</translation>
+    </message>
+    <message>
+        <source>My town. You have taken my town, at Zama, with Masinissa&apos;s horse behind you. I begin to think the gods have a sense of proportion after all.</source>
+        <translation>Мой город. Ты взял мой город, при Заме, с конницей Масиниссы за спиной. Я начинаю думать, что у богов всё же есть чувство меры.</translation>
+    </message>
+    <message>
+        <source>Patrols at your works. You are trying to cross a river with your back to my roads. It is bold. It is also how one drowns.</source>
+        <translation>Дозоры у твоих укреплений. Ты пытаешься перейти реку спиной к моим дорогам. Это смело. Это ещё и способ утонуть.</translation>
+    </message>
+    <message>
+        <source>Sempronius has a handful left and they are on the wrong side of a winter river. He will still call it a victory in Rome. He always does.</source>
+        <translation>У Семпрония осталась горстка, и они на неправильном берегу зимней реки. В Риме он всё равно назовёт это победой. Он всегда называет.</translation>
+    </message>
+    <message>
+        <source>Sempronius is crossing. Now, in the cold, without breakfast, because a consul&apos;s year ends in March and he wants his battle before it does.</source>
+        <translation>Семпроний переправляется. Сейчас, в холод, без завтрака, потому что год консула кончается в марте, а он хочет свою битву раньше.</translation>
+    </message>
+    <message>
+        <source>So he dies by his own lake in his own fog. Rome will call it justice. I call it weather, and I have always respected weather.</source>
+        <translation>Итак, он гибнет у собственного озера в собственном тумане. Рим назовёт это справедливостью. Я называю это погодой, а погоду я всегда уважал.</translation>
+    </message>
+    <message>
+        <source>Somebody is trying to cut a way out along the shore. Good. Somebody should get home and describe this accurately.</source>
+        <translation>Кто-то пробивается вдоль берега. Хорошо. Кому-то следует добраться домой и описать это точно.</translation>
+    </message>
+    <message>
+        <source>The Aufidus camp. So the ring closes. I told the Senate a ring was what he wanted. They told me I was old.</source>
+        <translation>Лагерь у Ауфида. Значит, кольцо смыкается. Я говорил Сенату, что кольцо — это то, чего он хочет. Мне сказали, что я стар.</translation>
+    </message>
+    <message>
+        <source>The Barcid falls at the Ticinus. Then this was the whole war, and it fit inside an afternoon. I expected more of it; I am not sure I wanted more.</source>
+        <translation>Баркид падёт при Тицине. Значит, это и была вся война, и она уместилась в один день. Я ждал от неё большего; не уверен, что хотел большего.</translation>
+    </message>
+    <message>
+        <source>The Numidians are riding. Your Numidians, once. Now they ride for Rome, and they ride the same way they always did - around you.</source>
+        <translation>Нумидийцы скачут. Когда-то твои нумидийцы. Теперь они скачут за Рим и скачут как всегда — вокруг тебя.</translation>
+    </message>
+    <message>
+        <source>The allied wing is at your works. Italians, mostly. They fight for Rome because the alternative is fighting Rome, which is a very persuasive argument.</source>
+        <translation>Союзное крыло у твоих укреплений. В основном италики. Они бьются за Рим, потому что иначе пришлось бы биться против Рима, а это довод весьма убедительный.</translation>
+    </message>
+    <message>
+        <source>The allied wing is down to a handful. I have counted them twice, because there was time. Whatever happens next on this field, remember someone counted.</source>
+        <translation>От союзного крыла осталась горстка. Я сосчитал их дважды, потому что было время. Что бы дальше ни случилось на этом поле, помни: кто-то считал.</translation>
+    </message>
+    <message>
+        <source>The allied wing is on the southern road. They know this country - they own most of it, or did, before you started eating it.</source>
+        <translation>Союзное крыло на южной дороге. Они знают этот край — почти весь он их, или был, пока ты не начал его поедать.</translation>
+    </message>
+    <message>
+        <source>The column came back through and the carts were still empty. A levy that misses the road is a levy nobody signed for.</source>
+        <translation>Колонна прошла обратно, а повозки всё ещё были пусты. Повинность, опоздавшая к дороге, — повинность, под которой никто не подписался.</translation>
+    </message>
+    <message>
+        <source>The column is nearly gone. What is left of it will hold until the fog lifts, because that is the only order anyone can still hear.</source>
+        <translation>Колонны почти не осталось. То, что от неё есть, продержится, пока не поднимется туман, потому что это единственный приказ, который ещё слышно.</translation>
+    </message>
+    <message>
+        <source>The column is on the lakeside road. In fog, in a defile, in a hurry. Every word of that sentence is a mistake and Flaminius owns them all.</source>
+        <translation>Колонна на прибрежной дороге. В тумане, в теснине, в спешке. Каждое слово этой фразы — ошибка, и все они принадлежат Фламинию.</translation>
+    </message>
+    <message>
+        <source>The final pass is nearly cleared. Whatever comes down the far side, I shall be in Italy waiting for it with a great many more men than this.</source>
+        <translation>Последний перевал почти расчищен. Что бы ни спустилось с той стороны, я буду ждать это в Италии с гораздо большим войском, чем это.</translation>
+    </message>
+    <message>
+        <source>The high pass is sending everything it has. They have been paid in Roman silver to hold that road, and mountain men earn their silver.</source>
+        <translation>Высокий перевал шлёт всё, что имеет. Им заплатили римским серебром за эту дорогу, а горцы своё серебро отрабатывают.</translation>
+    </message>
+    <message>
+        <source>The hill fort is yours. It was built to watch a river; now it will watch you cross one. Forts do not much care who is inside them.</source>
+        <translation>Крепость на холме твоя. Её строили, чтобы стеречь реку; теперь она будет смотреть, как ты её переходишь. Крепостям мало дела, кто внутри.</translation>
+    </message>
+    <message>
+        <source>The last column. Everything they have left is on the road. Hold this one and the ford is ours until the spring.</source>
+        <translation>Последняя колонна. Всё, что у них осталось, на дороге. Удержи эту — и брод наш до весны.</translation>
+    </message>
+    <message>
+        <source>The last of the legions is in the water. Everything Rome has north of the Apennines is coming at you wet. Hold this and you hold Italy for a winter.</source>
+        <translation>Последние легионы в воде. Всё, что есть у Рима к северу от Апеннин, идёт на тебя мокрым. Удержи это — и удержишь Италию на зиму.</translation>
+    </message>
+    <message>
+        <source>The last of the northern columns is moving. I have spent a year making you hold this quarter. Hold it one more hour and I will have spent it well.</source>
+        <translation>Последняя из северных колонн двинулась. Я потратил год, заставляя тебя держать эту четверть. Удержи ещё час — и год будет потрачен хорошо.</translation>
+    </message>
+    <message>
+        <source>The last pass camp. So you are through - what is left of you. Italy is below. Italy has been waiting, and Italy is not friendly.</source>
+        <translation>Последний лагерь на перевале. Значит, ты прошёл — то, что от тебя осталось. Италия внизу. Италия ждала, и Италия недружелюбна.</translation>
+    </message>
+    <message>
+        <source>The line is nearly broken. Nearly. I was at Cannae, you understand. I know exactly what nearly looks like from the other side, and I am still here.</source>
+        <translation>Строй почти сломлен. Почти. Я был при Каннах, понимаешь. Я в точности знаю, как «почти» выглядит с другой стороны, и я всё ещё здесь.</translation>
+    </message>
+    <message>
+        <source>The lower pass camp is yours. Keep it warm. The tribes will want it back in the spring and I will not be here to stop them.</source>
+        <translation>Нижний лагерь на перевале твой. Держи его тёплым. Весной племена захотят его назад, а меня здесь не будет, чтобы им помешать.</translation>
+    </message>
+    <message>
+        <source>The main line is advancing. No trumpets, no tricks, no gaps between the maniples for your elephants to find. I learned. You taught me.</source>
+        <translation>Главная линия наступает. Ни труб, ни хитростей, ни просветов между манипулами, куда бы нашли дорогу твои слоны. Я научился. Ты меня научил.</translation>
+    </message>
+    <message>
+        <source>The northern camp is gone. Fine. It was a camp. Scipio&apos;s line still stands, and that is the only thing on this plain that matters.</source>
+        <translation>Северный лагерь пал. Ладно. Это был лагерь. Строй Сципиона ещё стоит, и это единственное на этой равнине, что важно.</translation>
+    </message>
+    <message>
+        <source>The northern legion is coming down through the orchards. Slowly. I ordered slowly. Every tree they pass is one you will not harvest.</source>
+        <translation>Северный легион спускается через сады. Медленно. Я велел медленно. Каждое дерево, мимо которого они проходят, — то, что ты не соберёшь.</translation>
+    </message>
+    <message>
+        <source>The northern legion is spent. I have others. I have always had others. That is what the delaying was for.</source>
+        <translation>Северный легион истрачен. У меня есть другие. У меня всегда были другие. Ради этого и было промедление.</translation>
+    </message>
+    <message>
+        <source>The patrols are nearly finished. So be it. I shall take the fleet back to Italy and wait for you there with the rest of the Republic.</source>
+        <translation>Дозоры почти покончены. Пусть так. Я уведу флот обратно в Италию и подожду тебя там с остальной Республикой.</translation>
+    </message>
+    <message>
+        <source>The rearguard camp falls. I held it the way I hold everything - long enough, and no longer. Scipio will manage without an old man&apos;s tents.</source>
+        <translation>Лагерь арьергарда падает. Я держал его так, как держу всё: достаточно долго и ни мгновением дольше. Сципион обойдётся без шатров старика.</translation>
+    </message>
+    <message>
+        <source>The reserve camp is yours. It was never meant to fight - it was meant to be there afterwards. There is not going to be an afterwards, is there.</source>
+        <translation>Резервный лагерь твой. Он никогда не был для боя — он был для того, чтобы быть там после. А ведь никакого «после» не будет, правда?</translation>
+    </message>
+    <message>
+        <source>The reserve is moving, and moving fast. I do not hold men back for the look of the thing.</source>
+        <translation>Резерв двинулся, и двинулся быстро. Я не держу людей позади ради приличий.</translation>
+    </message>
+    <message>
+        <source>The screen is coming across the flats. Velites, cavalry, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
+        <translation>Завеса идёт через равнину. Велиты, конница, обычное построение. Постарайся стоять смирно; так отчёты выходят куда опрятнее.</translation>
+    </message>
+    <message>
+        <source>The second pass. You are buying road with men and paying in snow. I have never seen an army spend itself so willingly on scenery.</source>
+        <translation>Второй перевал. Ты покупаешь дорогу людьми и платишь снегом. Я не видел войска, которое так охотно тратит себя на пейзаж.</translation>
+    </message>
+    <message>
+        <source>The shore camp. That was the way out, and now there is only the lake. Romans are not, on the whole, a swimming people.</source>
+        <translation>Береговой лагерь. Это был путь наружу, а теперь остаётся только озеро. Римляне в целом не плавающий народ.</translation>
+    </message>
+    <message>
+        <source>The siege column is at the run. Engines behind, ladders in front. I do not besiege towns. I take them.</source>
+        <translation>Осадная колонна идёт бегом. Машины сзади, лестницы впереди. Я не осаждаю города. Я их беру.</translation>
+    </message>
+    <message>
+        <source>The tribes are coming down the slope. They do not fight in lines. They fight in rockfalls.</source>
+        <translation>Племена спускаются по склону. Они не дерутся линиями. Они дерутся камнепадом.</translation>
+    </message>
+    <message>
+        <source>The western reserve is moving, against my advice. I gave the advice knowing it would be ignored; it is still worth having given.</source>
+        <translation>Западный резерв двинулся, вопреки моему совету. Я дал совет, зная, что им пренебрегут; его всё равно стоило дать.</translation>
+    </message>
+    <message>
+        <source>They are hitting your camp, because it is the only thing on this road they can see. Men in fog attack whatever is nearest. Remember it.</source>
+        <translation>Они бьют по твоему лагерю, потому что это единственное, что они видят на этой дороге. Люди в тумане нападают на ближайшее. Запомни это.</translation>
+    </message>
+    <message>
+        <source>Varro&apos;s town. Varro is not in it; Varro is out front, being brave at other people. Enjoy the walls. I never needed them.</source>
+        <translation>Город Варрона. Варрона в нём нет; Варрон впереди, храбрится за чужой счёт. Наслаждайся стенами. Мне они никогда не были нужны.</translation>
+    </message>
+    <message>
+        <source>We are losing men on the goat path. Pull the wounded back and put fresh spears in the gap. Nobody dies standing in a hole.</source>
+        <translation>Мы теряем людей на козьей тропе. Оттяни раненых и поставь в брешь свежие копья. Никто не умирает, стоя в яме.</translation>
+    </message>
+    <message>
+        <source>We are on your bank and at your works. A river only stops men who are not already freezing.</source>
+        <translation>Мы на твоём берегу и у твоих укреплений. Река останавливает лишь тех, кто ещё не замерзает.</translation>
+    </message>
+    <message>
+        <source>You have the allied camp. Socii - allies. They were promised land for this war, and you have just handed them the first piece of it face down.</source>
+        <translation>У тебя союзный лагерь. Socii — союзники. Им обещали землю за эту войну, и ты только что вручил им первый её кусок лицом вниз.</translation>
+    </message>
+    <message>
+        <source>You have the marching town. Flaminius built it in a fog and never looked back. There is a lesson there; he will not be the one to learn it.</source>
+        <translation>У тебя походный город. Фламиний построил его в тумане и ни разу не оглянулся. В этом есть урок; выучит его не он.</translation>
+    </message>
+    <message>
+        <source>Your camp is under the screen&apos;s spears. A camp on the wrong bank of a cold river - I would not have chosen it, and now you cannot un-choose it.</source>
+        <translation>Твой лагерь под копьями завесы. Лагерь на неправильном берегу холодной реки — я бы его не выбрал, а ты теперь не можешь его развыбрать.</translation>
+    </message>
+    <message>
+        <source>Your garrison is bleeding. You cannot replace those men from Africa in time, and I can replace mine from the next valley. That is the whole war.</source>
+        <translation>Твой гарнизон истекает кровью. Ты не успеешь заменить этих людей из Африки, а я заменяю своих из соседней долины. В этом вся война.</translation>
+    </message>
+    <message>
+        <source>Your line is bleeding along the bank. Wet ground is slow ground, and slow men are what spears are for.</source>
+        <translation>Твой строй кровоточит вдоль берега. Мокрая земля — медленная земля, а медленные люди — то, для чего и нужны копья.</translation>
+    </message>
+    <message>
+        <source>Your men are dying on the ice. Not from spears - from cold, and hunger, and the arithmetic of a road that is longer than your grain.</source>
+        <translation>Твои люди гибнут на льду. Не от копий — от холода, голода и арифметики дороги, которая длиннее твоего зерна.</translation>
+    </message>
+    <message>
+        <source>Your men are dying too. A trap costs the trapper something; the good ones simply cost him less.</source>
+        <translation>Твои люди тоже гибнут. Ловушка чего-то стоит и ловчему; хорошие просто стоят ему меньше.</translation>
+    </message>
+    <message>
+        <source>Your men are falling at the water. The Rhone is not particular about whose bones it keeps; I did tell you.</source>
+        <translation>Твои люди падают у воды. Родану всё равно, чьи кости он оставит себе; я ведь говорил.</translation>
+    </message>
+    <message>
+        <source>Your men are going down in the centre. I know - that is where you put the Gauls, and Gauls are for spending. It is still a great many funerals.</source>
+        <translation>Твои люди валятся в центре. Знаю — туда ты поставил галлов, а галлы на то и есть, чтобы их тратить. Похорон всё равно очень много.</translation>
+    </message>
+    <message>
+        <source>Your riders are dying by the ford. Numidians, I think. They ride beautifully, and they die at the ordinary speed.</source>
+        <translation>Твои всадники гибнут у брода. Нумидийцы, полагаю. Скачут они прекрасно, а гибнут с обычной скоростью.</translation>
+    </message>
+    <message>
+        <source>Your veterans are dying. Italy&apos;s veterans, really; you took them from us sixteen years ago and now we are taking them back one at a time.</source>
+        <translation>Твои ветераны гибнут. По сути, ветераны Италии; вы забрали их у нас шестнадцать лет назад, а теперь мы забираем их обратно по одному.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -6625,14 +7791,6 @@ to see preview</source>
         <translation>Одно небольшое поле, один приказ к исполнению. Ни кампании, которую можно проиграть, ни второй армии, о которой надо помнить.</translation>
     </message>
     <message>
-        <source>carried out</source>
-        <translation>исполнено</translation>
-    </message>
-    <message>
-        <source>← Back</source>
-        <translation>← Назад</translation>
-    </message>
-    <message>
         <source>No missions are installed.</source>
         <translation>Ни одного задания не установлено.</translation>
     </message>
@@ -6653,10 +7811,6 @@ to see preview</source>
         <translation>Кончится плохо, если</translation>
     </message>
     <message>
-        <source>You have carried this one out before.</source>
-        <translation>Этот приказ вы уже исполняли.</translation>
-    </message>
-    <message>
         <source>Take it again</source>
         <translation>Исполнить снова</translation>
     </message>
@@ -6665,8 +7819,84 @@ to see preview</source>
         <translation>Выйти в поле</translation>
     </message>
     <message>
-        <source>Pick a mission.</source>
-        <translation>Выберите задание.</translation>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>Mission orders</source>
+        <translation>Приказы задания</translation>
+    </message>
+    <message>
+        <source>FIELD ORDERS  /  SECOND PUNIC WAR</source>
+        <translation>ПОЛЕВЫЕ ПРИКАЗЫ  /  ВТОРАЯ ПУНИЧЕСКАЯ ВОЙНА</translation>
+    </message>
+    <message>
+        <source>ORDERS FULFILLED</source>
+        <translation>ПРИКАЗЫ ИСПОЛНЕНЫ</translation>
+    </message>
+    <message>
+        <source>Mission completion</source>
+        <translation>Завершение задания</translation>
+    </message>
+    <message>
+        <source>Back ›</source>
+        <translation>Назад ›</translation>
+    </message>
+    <message>
+        <source>‹ Back</source>
+        <translation>‹ Назад</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Назад</translation>
+    </message>
+    <message>
+        <source>AVAILABLE DISPATCHES</source>
+        <translation>ДОСТУПНЫЕ ДЕПЕШИ</translation>
+    </message>
+    <message>
+        <source>DONE</source>
+        <translation>ГОТОВО</translation>
+    </message>
+    <message>
+        <source>MISSION BRIEF</source>
+        <translation>СВОДКА ЗАДАНИЯ</translation>
+    </message>
+    <message>
+        <source>ORDER FULFILLED</source>
+        <translation>ПРИКАЗ ИСПОЛНЕН</translation>
+    </message>
+    <message>
+        <source>OPEN ORDER</source>
+        <translation>ОТКРЫТЬ ПРИКАЗ</translation>
+    </message>
+    <message>
+        <source>COMMANDER&apos;S INTENT</source>
+        <translation>ЗАМЫСЕЛ КОМАНДУЮЩЕГО</translation>
+    </message>
+    <message>
+        <source>You start with</source>
+        <translation>Вы начинаете с</translation>
+    </message>
+    <message>
+        <source>Nothing in the stores. Everything you spend, you gather first.</source>
+        <translation>На складах пусто. Всё, что потратишь, сперва добудешь.</translation>
+    </message>
+    <message>
+        <source>FIELD RECONNAISSANCE</source>
+        <translation>ПОЛЕВАЯ РАЗВЕДКА</translation>
+    </message>
+    <message>
+        <source>Enter</source>
+        <translation>Начать</translation>
+    </message>
+    <message>
+        <source>Previously carried out</source>
+        <translation>Выполнено ранее</translation>
+    </message>
+    <message>
+        <source>Choose a dispatch to review its field orders.</source>
+        <translation>Выберите депешу, чтобы прочесть её полевые приказы.</translation>
     </message>
 </context>
 <context>
@@ -6918,6 +8148,22 @@ to see preview</source>
     <message>
         <source>Continue</source>
         <translation>Далее</translation>
+    </message>
+    <message>
+        <source>CAMPAIGN DECREE</source>
+        <translation>УКАЗ О КАМПАНИИ</translation>
+    </message>
+    <message>
+        <source>FIELD ASSESSMENT</source>
+        <translation>ПОЛЕВАЯ ОЦЕНКА</translation>
+    </message>
+    <message>
+        <source>BATTLEFIELD VERDICT</source>
+        <translation>ПРИГОВОР ПОЛЯ БОЯ</translation>
+    </message>
+    <message>
+        <source>COMMAND REPORT</source>
+        <translation>ДОНЕСЕНИЕ КОМАНДОВАНИЯ</translation>
     </message>
 </context>
 <context>

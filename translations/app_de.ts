@@ -790,6 +790,10 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>Click to dismiss</source>
         <translation>Zum Schließen klicken</translation>
     </message>
+    <message>
+        <source>ALLY</source>
+        <translation>VERBÜNDET</translation>
+    </message>
 </context>
 <context>
     <name>CommanderSystem</name>
@@ -800,6 +804,873 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>%1 has lost its commander. The host breaks and its camps stand empty.</source>
         <translation>%1 hat seinen Befehlshaber verloren. Das Heer zerbricht und seine Lager stehen leer.</translation>
+    </message>
+</context>
+<context>
+    <name>CommanderVoices</name>
+    <message>
+        <source>A camp gathered in. I shall keep it quiet and fed. That is what I am for.</source>
+        <translation>Ein Lager eingebracht. Ich werde es ruhig und satt halten. Dafür bin ich da.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I have a dozen more, and the one you hold is the one I liked least.</source>
+        <translation>Ein Lager verloren. Ich habe ein Dutzend weitere, und das, welches Ihr haltet, mochte ich am wenigsten.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I have slept in worse hides and woken to better mornings.</source>
+        <translation>Ein Lager verloren. Ich habe in schlechteren Verstecken geschlafen und bin zu besseren Morgen erwacht.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I shall claim it was never mine. That is the beauty of having good clerks.</source>
+        <translation>Ein Lager verloren. Ich werde behaupten, es sei nie meines gewesen. Das ist der Vorzug guter Schreiber.</translation>
+    </message>
+    <message>
+        <source>A fresh column is on the road to you. Treat them courteously; several of them owe me money.</source>
+        <translation>Eine frische Kolonne ist zu Euch unterwegs. Behandelt sie höflich; etliche von ihnen schulden mir Geld.</translation>
+    </message>
+    <message>
+        <source>A victory, and a tidy one. I shall write it up as mostly mine; you would have done the same.</source>
+        <translation>Ein Sieg, und ein sauberer. Ich werde ihn als überwiegend meinen verbuchen; Ihr hättet dasselbe getan.</translation>
+    </message>
+    <message>
+        <source>Advance. Double time. A slow attack is a gift to the enemy, and I am not generous.</source>
+        <translation>Vorwärts. Im Laufschritt. Ein langsamer Angriff ist ein Geschenk an den Feind, und ich bin nicht freigebig.</translation>
+    </message>
+    <message>
+        <source>Ah. Blades at last. I had begun to think you were a rumour with a baggage train.</source>
+        <translation>Ah. Endlich Klingen. Ich hielt Euch schon für ein Gerücht mit Trosswagen.</translation>
+    </message>
+    <message>
+        <source>An army, and someone paying for it. Let us not pretend this is about glory. I will make you an offer at the end; you will not like the terms.</source>
+        <translation>Ein Heer, und jemand, der dafür zahlt. Tun wir nicht so, als ginge es um Ruhm. Am Ende mache ich Euch ein Angebot; die Bedingungen werden Euch nicht gefallen.</translation>
+    </message>
+    <message>
+        <source>An assault on my camp. Every breach is coming out of someone&apos;s wages, and it will not be mine.</source>
+        <translation>Ein Sturm auf mein Lager. Jede Bresche geht jemandem vom Lohn ab, und meiner wird es nicht sein.</translation>
+    </message>
+    <message>
+        <source>An assault on my camp. Spend your men on it if you like; I have budgeted for exactly this kind of impatience.</source>
+        <translation>Ein Sturm auf mein Lager. Verbraucht Eure Leute daran, wenn Ihr mögt; genau diese Ungeduld habe ich eingeplant.</translation>
+    </message>
+    <message>
+        <source>Another camp for the Republic. Do stay and watch the standards go up; you will not see it done better.</source>
+        <translation>Noch ein Lager für die Republik. Bleibt doch und seht zu, wie die Feldzeichen aufgehen; besser bekommt Ihr es nicht zu sehen.</translation>
+    </message>
+    <message>
+        <source>Another camp gathered in. Slowly, like fruit. Rot takes the ones you leave on the branch.</source>
+        <translation>Noch ein Lager eingebracht. Langsam, wie Obst. Die Fäule holt jene, die man am Zweig lässt.</translation>
+    </message>
+    <message>
+        <source>Another column comes down the road. Rome walks slowly and never, ever stops.</source>
+        <translation>Noch eine Kolonne kommt die Straße herab. Rom geht langsam und hält niemals, niemals an.</translation>
+    </message>
+    <message>
+        <source>Another standard on my frontier. I have counted your tents from the ridge - it did not take long. Rome has surveyed better men than you and buried them in straighter rows.</source>
+        <translation>Noch ein Feldzeichen an meiner Grenze. Ich habe Eure Zelte vom Kamm aus gezählt - es dauerte nicht lange. Rom hat bessere Männer als Euch vermessen und in geraderen Reihen begraben.</translation>
+    </message>
+    <message>
+        <source>At my walls, are you. Keep swinging. Every man you put there is a man not guarding your own.</source>
+        <translation>An meinen Mauern also. Schlagt nur weiter. Jeder Mann, den Ihr dorthin stellt, bewacht Eure eigenen nicht.</translation>
+    </message>
+    <message>
+        <source>Beaten, on this ground, today. Note the qualifications. I have made a career of the ground and the day after.</source>
+        <translation>Geschlagen, auf diesem Boden, an diesem Tag. Beachtet die Einschränkungen. Ich habe eine Laufbahn aus dem Boden und dem Tag danach gemacht.</translation>
+    </message>
+    <message>
+        <source>Beaten. Beside you, which stings. I shall mention that the ground was poor and the allies poorer.</source>
+        <translation>Geschlagen. An Eurer Seite, was brennt. Ich werde erwähnen, der Boden sei schlecht gewesen und die Verbündeten schlechter.</translation>
+    </message>
+    <message>
+        <source>Beaten. Fair. You held when I thought you would run and you hit when I thought you would hold. I will not forget your standard.</source>
+        <translation>Geschlagen. Redlich. Ihr hieltet, als ich Euch fliehen sah, und schlugt zu, als ich Euch halten sah. Euer Feldzeichen vergesse ich nicht.</translation>
+    </message>
+    <message>
+        <source>Beaten. I shall write it down as an expense and you as a creditor. I pay my creditors. Eventually, and never in full.</source>
+        <translation>Geschlagen. Ich verbuche es als Ausgabe und Euch als Gläubiger. Ich zahle meine Gläubiger. Irgendwann, und niemals ganz.</translation>
+    </message>
+    <message>
+        <source>Beaten. My brother would have a speech for this. I have only a road home and a great many arrows still in the quiver.</source>
+        <translation>Geschlagen. Mein Bruder hätte dafür eine Rede. Ich habe nur einen Heimweg und noch sehr viele Pfeile im Köcher.</translation>
+    </message>
+    <message>
+        <source>Camp taken. At the run. Next one is yours, if you are quick.</source>
+        <translation>Lager genommen. Im Laufschritt. Das nächste gehört Euch, wenn Ihr schnell seid.</translation>
+    </message>
+    <message>
+        <source>Cohorts moving. Fast. Keep up if you can.</source>
+        <translation>Die Kohorten setzen sich in Bewegung. Schnell. Haltet Schritt, wenn Ihr könnt.</translation>
+    </message>
+    <message>
+        <source>Cohorts, forward. Fast. Hit them before they finish thinking.</source>
+        <translation>Kohorten, vorwärts. Schnell. Trefft sie, ehe sie zu Ende gedacht haben.</translation>
+    </message>
+    <message>
+        <source>Done. You came at the wrong tempo and I was already inside it. Lie down; the surgeons work through the fallen in the order they fell.</source>
+        <translation>Erledigt. Ihr kamt im falschen Takt, und ich war schon darin. Legt Euch hin; die Wundärzte arbeiten die Gefallenen in der Reihenfolge ihres Falls ab.</translation>
+    </message>
+    <message>
+        <source>Down, then. Tell them Marcellus died forward. Tell them the ground was worth it. Both are true.</source>
+        <translation>Also gefallen. Sagt ihnen, Marcellus starb nach vorn. Sagt ihnen, der Boden war es wert. Beides ist wahr.</translation>
+    </message>
+    <message>
+        <source>Down. You came in fast and hungry, and hungry things walk into snares. Rest. The country will not miss you.</source>
+        <translation>Gefallen. Ihr kamt schnell und hungrig, und hungrige Dinge laufen in Schlingen. Ruht. Das Land wird Euch nicht vermissen.</translation>
+    </message>
+    <message>
+        <source>Finished. I shall put your camp in the books as a purchase. Blood is a currency like any other; you simply overpaid.</source>
+        <translation>Beendet. Ich werde Euer Lager als Kauf in die Bücher setzen. Blut ist eine Währung wie jede andere; Ihr habt schlicht zu viel bezahlt.</translation>
+    </message>
+    <message>
+        <source>Finished. You fought like a wall - solid, honest, and completely unable to turn around.</source>
+        <translation>Beendet. Ihr habt gekämpft wie eine Mauer - fest, ehrlich und völlig unfähig, Euch umzudrehen.</translation>
+    </message>
+    <message>
+        <source>First blood. Good. I was beginning to worry you were one of those enemies who negotiate.</source>
+        <translation>Erstes Blut. Gut. Ich fürchtete schon, Ihr wärt einer jener Feinde, die verhandeln.</translation>
+    </message>
+    <message>
+        <source>Forward, in order. If you have a reserve, this would be the moment to discover it does not exist.</source>
+        <translation>Vorwärts, in Ordnung. Falls Ihr eine Reserve habt, wäre jetzt der Augenblick zu entdecken, dass es sie nicht gibt.</translation>
+    </message>
+    <message>
+        <source>Forward, in pay order. Mercenaries fight best when they can see the paymaster watching.</source>
+        <translation>Vorwärts, in Soldordnung. Söldner kämpfen am besten, wenn sie den Zahlmeister zusehen sehen.</translation>
+    </message>
+    <message>
+        <source>Forward, quietly. The best charge is the one the enemy hears about afterwards.</source>
+        <translation>Vorwärts, leise. Der beste Angriff ist der, von dem der Feind hinterher erfährt.</translation>
+    </message>
+    <message>
+        <source>Forward. If it seems too easy, that is because it is meant to.</source>
+        <translation>Vorwärts. Wenn es zu leicht scheint, dann weil es so gemeint ist.</translation>
+    </message>
+    <message>
+        <source>Fresh cohorts on the road. They march fast because I told them to.</source>
+        <translation>Frische Kohorten auf der Straße. Sie marschieren schnell, weil ich es befohlen habe.</translation>
+    </message>
+    <message>
+        <source>Good. An enemy who shows up. Half my career was spent chasing ones who did not. Let us get on with it.</source>
+        <translation>Gut. Ein Feind, der erscheint. Die Hälfte meiner Laufbahn verbrachte ich mit der Jagd auf solche, die es nicht taten. Fangen wir an.</translation>
+    </message>
+    <message>
+        <source>Hitting my camp, are we? Every stone you knock loose has already been invoiced to your treasury.</source>
+        <translation>Ihr greift also mein Lager an? Jeder Stein, den Ihr löst, ist Eurer Staatskasse bereits in Rechnung gestellt.</translation>
+    </message>
+    <message>
+        <source>Hitting my camp. Spend your strength there while my hunters spend theirs on your wagons.</source>
+        <translation>Ihr greift mein Lager an. Verbraucht Eure Kraft dort, während meine Jäger die ihre an Euren Wagen verbrauchen.</translation>
+    </message>
+    <message>
+        <source>Hitting my walls, are you. Every man you spend there is one I need not outwit later.</source>
+        <translation>An meinen Mauern also. Jeder Mann, den Ihr dort verbraucht, ist einer, den ich später nicht überlisten muss.</translation>
+    </message>
+    <message>
+        <source>I am advancing. It will not look like much. It is not meant to.</source>
+        <translation>Ich rücke vor. Es wird nach wenig aussehen. So ist es gemeint.</translation>
+    </message>
+    <message>
+        <source>I am at the end of what patience can buy. Come, or write to my family. Either will do; only one is useful.</source>
+        <translation>Ich bin am Ende dessen, was Geduld kaufen kann. Kommt, oder schreibt an meine Familie. Beides genügt; nur eines nützt.</translation>
+    </message>
+    <message>
+        <source>I am attacking. Do not take it personally; I am simply collecting on ground you owe me.</source>
+        <translation>Ich greife an. Nehmt es nicht persönlich; ich hole mir bloß Boden, den Ihr mir schuldet.</translation>
+    </message>
+    <message>
+        <source>I am attacking. Hold your side. If this is wasted, I shall be sending you the bill.</source>
+        <translation>Ich greife an. Haltet Eure Seite. Ist dies vergeudet, schicke ich Euch die Rechnung.</translation>
+    </message>
+    <message>
+        <source>I am attacking. If you wished to be consulted, you should have brought more men.</source>
+        <translation>Ich greife an. Wolltet Ihr befragt werden, hättet Ihr mehr Männer mitbringen sollen.</translation>
+    </message>
+    <message>
+        <source>I am bleeding men, and each one was paid in advance. This is not a battle, it is an audit, and it is going badly.</source>
+        <translation>Ich verliere Männer, und jeder war im Voraus bezahlt. Das ist keine Schlacht, das ist eine Prüfung der Bücher, und sie verläuft schlecht.</translation>
+    </message>
+    <message>
+        <source>I am coming at you now. All of it. Do not blink; you will miss the only part that matters.</source>
+        <translation>Ich komme jetzt auf Euch zu. Mit allem. Blinzelt nicht; Ihr verpasst sonst den einzigen Teil, der zählt.</translation>
+    </message>
+    <message>
+        <source>I am coming for you. Not from where you are looking. I never come from where you are looking.</source>
+        <translation>Ich komme zu Euch. Nicht von dort, wohin Ihr blickt. Ich komme nie von dort, wohin Ihr blickt.</translation>
+    </message>
+    <message>
+        <source>I am down to the last of them. If you are coming, run.</source>
+        <translation>Mir bleiben die Letzten. Wenn Ihr kommt, so lauft.</translation>
+    </message>
+    <message>
+        <source>I am going in. Now. Hit them from your side or watch me do it alone.</source>
+        <translation>Ich gehe hinein. Jetzt. Trefft sie von Eurer Seite oder seht mir zu, wie ich es allein tue.</translation>
+    </message>
+    <message>
+        <source>I am losing cohorts faster than the treasury can replace them, and the treasury is quicker than you think.</source>
+        <translation>Ich verliere Kohorten schneller, als die Staatskasse sie ersetzen kann, und die Staatskasse ist schneller, als Ihr denkt.</translation>
+    </message>
+    <message>
+        <source>I am losing men and I cannot replace them out here. If you have spare, I have work for them.</source>
+        <translation>Ich verliere Männer und kann sie hier draußen nicht ersetzen. Habt Ihr welche übrig, habe ich Arbeit für sie.</translation>
+    </message>
+    <message>
+        <source>I am losing men at a rate I do not care for. The ledger still balances. Do not let it stop balancing.</source>
+        <translation>Ich verliere Männer in einem Tempo, das mir missfällt. Die Bücher stimmen noch. Lasst nicht zu, dass sie aufhören zu stimmen.</translation>
+    </message>
+    <message>
+        <source>I am losing men fast. Faster than I like, and I like it fast. Something has to change.</source>
+        <translation>Ich verliere Männer schnell. Schneller, als mir lieb ist, und mir ist es schnell lieb. Etwas muss sich ändern.</translation>
+    </message>
+    <message>
+        <source>I am losing men. Not to cleverness, to weight. Lend me some of yours, or a distraction, or both.</source>
+        <translation>Ich verliere Männer. Nicht an Klugheit, an Gewicht. Leiht mir von den Euren, oder eine Ablenkung, oder beides.</translation>
+    </message>
+    <message>
+        <source>I am moving on them. Do not follow me directly; be where they run to.</source>
+        <translation>Ich rücke auf sie vor. Folgt mir nicht geradewegs; seid dort, wohin sie fliehen.</translation>
+    </message>
+    <message>
+        <source>I am moving on them. Slowly, from the high ground. Do not wait for me; be where they break to.</source>
+        <translation>Ich rücke auf sie vor. Langsam, von der Höhe. Wartet nicht auf mich; seid dort, wohin sie ausbrechen.</translation>
+    </message>
+    <message>
+        <source>I am nearly done here. Nearly. The last few are hunters, and hunters are patient about dying.</source>
+        <translation>Ich bin hier fast fertig. Fast. Die Letzten sind Jäger, und Jäger sind geduldig im Sterben.</translation>
+    </message>
+    <message>
+        <source>I am nearly done, they say. I have crossed mountains on nearly. Do not count what is left of me; count what it is still holding.</source>
+        <translation>Ich sei fast erledigt, heißt es. Ich habe Gebirge auf einem Fast überquert. Zählt nicht, was von mir übrig ist; zählt, was es noch hält.</translation>
+    </message>
+    <message>
+        <source>I am nearly finished, they say. Nearly. A fire is nearly out for a long time before it goes cold, and it burns fingers all the while.</source>
+        <translation>Ich sei fast am Ende, heißt es. Fast. Ein Feuer ist lange fast aus, ehe es kalt wird, und es verbrennt die ganze Zeit die Finger.</translation>
+    </message>
+    <message>
+        <source>I am nearly finished. I would rather not be. Consider this an invoice for immediate assistance.</source>
+        <translation>Ich bin fast am Ende. Das wäre mir lieber nicht. Betrachtet dies als Rechnung über sofortige Hilfe.</translation>
+    </message>
+    <message>
+        <source>I am nearly out of men. Nearly. The last handful are the ones who stayed, and those are the ones you should fear.</source>
+        <translation>Mir gehen die Männer aus. Fast. Die letzte Handvoll sind die, die blieben, und die solltet Ihr fürchten.</translation>
+    </message>
+    <message>
+        <source>I am sending men forward now. Not many. Enough. One does not empty the granary to kill a fox.</source>
+        <translation>Ich schicke jetzt Männer vor. Nicht viele. Genug. Man leert nicht den Speicher, um einen Fuchs zu töten.</translation>
+    </message>
+    <message>
+        <source>I am sending the cohorts down now. Count them as they come. It will give you something to do with your last minutes.</source>
+        <translation>Ich schicke jetzt die Kohorten hinab. Zählt sie, wie sie kommen. Das gibt Euch etwas für Eure letzten Minuten.</translation>
+    </message>
+    <message>
+        <source>I am sending the column now. It will not look like an attack until it is one.</source>
+        <translation>Ich schicke jetzt die Kolonne. Sie wird nicht wie ein Angriff aussehen, bis sie einer ist.</translation>
+    </message>
+    <message>
+        <source>I see your banners. I saw others like them, years ago; they made excellent kindling. Take your time. I intend to take mine.</source>
+        <translation>Ich sehe Eure Banner. Ich sah vor Jahren andere ihresgleichen; sie gaben vortreffliches Anzündholz. Lasst Euch Zeit. Ich gedenke mir meine zu nehmen.</translation>
+    </message>
+    <message>
+        <source>Keep the field, then. Rome does not lose provinces - she lends them, at interest. My accountants will be along in the spring, and they are far less pleasant than I am.</source>
+        <translation>Behaltet das Feld denn. Rom verliert keine Provinzen - sie verleiht sie, gegen Zins. Meine Rechnungsführer kommen im Frühjahr, und sie sind weit unangenehmer als ich.</translation>
+    </message>
+    <message>
+        <source>Look at that. You are bleeding out and still holding the ground. Brave. Wrong, but brave.</source>
+        <translation>Seht Euch das an. Ihr verblutet und haltet den Boden dennoch. Tapfer. Falsch, aber tapfer.</translation>
+    </message>
+    <message>
+        <source>Look at them fall. I did warn you that arithmetic is cruel, and I am only its clerk.</source>
+        <translation>Seht sie fallen. Ich warnte Euch, dass die Rechenkunst grausam ist, und ich bin nur ihr Schreiber.</translation>
+    </message>
+    <message>
+        <source>Look at your line. Brave men, standing where the arrows are. Whose idea was that?</source>
+        <translation>Seht Eure Linie an. Tapfere Männer, die dort stehen, wo die Pfeile sind. Wessen Einfall war das?</translation>
+    </message>
+    <message>
+        <source>Look at your line. Brave, disciplined, and in exactly the wrong place. Rome taught you well.</source>
+        <translation>Seht Eure Linie an. Tapfer, diszipliniert und genau am falschen Ort. Rom hat Euch gut gelehrt.</translation>
+    </message>
+    <message>
+        <source>Look at your losses. Whoever is paying for this war is getting very poor value.</source>
+        <translation>Seht Eure Verluste an. Wer diesen Krieg bezahlt, bekommt sehr wenig für sein Geld.</translation>
+    </message>
+    <message>
+        <source>Lost. I did say this was the Barcids&apos; kind of war. Nobody listens to the man who keeps the books until the books are empty.</source>
+        <translation>Verloren. Ich sagte doch, dies sei der Krieg der Barkiden. Niemand hört auf den Mann, der die Bücher führt, bis die Bücher leer sind.</translation>
+    </message>
+    <message>
+        <source>Lost. We fought their war instead of ours. Next time we choose the field before we choose the fight.</source>
+        <translation>Verloren. Wir kämpften ihren Krieg statt unseren. Nächstes Mal wählen wir das Feld, ehe wir den Kampf wählen.</translation>
+    </message>
+    <message>
+        <source>Lost. We ran out of arrows or out of time; in this country they are the same thing.</source>
+        <translation>Verloren. Uns gingen die Pfeile aus oder die Zeit; in diesem Land ist das dasselbe.</translation>
+    </message>
+    <message>
+        <source>Lost. We were quicker than we should have been, or slower. I shall spend the winter deciding which.</source>
+        <translation>Verloren. Wir waren schneller, als wir hätten sein sollen, oder langsamer. Ich werde den Winter damit verbringen, mich zu entscheiden.</translation>
+    </message>
+    <message>
+        <source>Lost. We were slow when it mattered. I will say so to anyone who asks, including you.</source>
+        <translation>Verloren. Wir waren langsam, als es darauf ankam. Ich sage das jedem, der fragt, auch Euch.</translation>
+    </message>
+    <message>
+        <source>More men are on the road. I did not send for them out of fear; I sent for them because there is room.</source>
+        <translation>Mehr Männer sind auf der Straße. Ich ließ sie nicht aus Furcht holen; ich ließ sie holen, weil Platz ist.</translation>
+    </message>
+    <message>
+        <source>More men coming. Not for you to see - for you to feel.</source>
+        <translation>Mehr Männer kommen. Nicht damit Ihr sie seht - damit Ihr sie spürt.</translation>
+    </message>
+    <message>
+        <source>More of mine are coming down the road. I know - I did not tell you. That was rather the idea.</source>
+        <translation>Mehr von den Meinen kommen die Straße herab. Ich weiß - ich habe es Euch nicht gesagt. Das war durchaus die Absicht.</translation>
+    </message>
+    <message>
+        <source>More of mine are coming. I sent for them before you arrived; a hunter sets the snare before he sees the deer.</source>
+        <translation>Mehr von den Meinen kommen. Ich ließ sie holen, ehe Ihr eintraft; ein Jäger stellt die Schlinge, bevor er das Wild sieht.</translation>
+    </message>
+    <message>
+        <source>More of my hired men are coming down the road. Fresh, fed, and paid. You cannot say the same for yours.</source>
+        <translation>Mehr meiner Gedungenen kommen die Straße herab. Frisch, satt und bezahlt. Von den Euren lässt sich das nicht sagen.</translation>
+    </message>
+    <message>
+        <source>My archers advance. When their line looks at me, it is not looking at you.</source>
+        <translation>Meine Bogenschützen rücken vor. Wenn ihre Linie mich ansieht, sieht sie Euch nicht an.</translation>
+    </message>
+    <message>
+        <source>My archers are moving up. Look to your flanks; that is where the country runs thin.</source>
+        <translation>Meine Bogenschützen rücken auf. Achtet auf Eure Flanken; dort wird das Land dünn.</translation>
+    </message>
+    <message>
+        <source>My camp is taking hits. I can hold. I would rather kill them with you than hold without you.</source>
+        <translation>Mein Lager nimmt Treffer. Ich kann halten. Lieber töte ich sie mit Euch, als ohne Euch zu halten.</translation>
+    </message>
+    <message>
+        <source>My camp is taking the weight of their attack. If you were planning to come, this is the day for planning to end.</source>
+        <translation>Mein Lager trägt das Gewicht ihres Angriffs. Falls Ihr zu kommen gedachtet, ist heute der Tag, an dem das Gedenken endet.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack, and my archers are better at giving than taking. If you can come, come along the ridge.</source>
+        <translation>Mein Lager wird angegriffen, und meine Bogenschützen sind besser im Geben als im Nehmen. Wenn Ihr kommen könnt, kommt über den Kamm.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack, and my men are paid to fight, not to die. If you want them alive tomorrow, come today.</source>
+        <translation>Mein Lager wird angegriffen, und meine Leute werden fürs Kämpfen bezahlt, nicht fürs Sterben. Wollt Ihr sie morgen lebend, kommt heute.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack. I would prefer not to be the one caught in a trap for once; if you can help, now would be poetic.</source>
+        <translation>Mein Lager wird angegriffen. Einmal wäre ich lieber nicht der in der Falle; wenn Ihr helfen könnt, wäre jetzt der dichterische Augenblick.</translation>
+    </message>
+    <message>
+        <source>My camp is under the hammer. If you have men to spare, spare them now; if not, I shall be curious to see what you were saving them for.</source>
+        <translation>Mein Lager liegt unter dem Hammer. Habt Ihr Männer übrig, so gebt sie jetzt; wenn nicht, bin ich neugierig, wofür Ihr sie aufspart.</translation>
+    </message>
+    <message>
+        <source>My cohorts are bleeding. Very well. Rome bleeds the way rivers do - it is how she reaches the sea.</source>
+        <translation>Meine Kohorten bluten. Nun gut. Rom blutet, wie Flüsse es tun - so erreicht es das Meer.</translation>
+    </message>
+    <message>
+        <source>My cohorts are marching on them. Watch the manoeuvre; it is not something one sees twice for free.</source>
+        <translation>Meine Kohorten marschieren auf sie zu. Seht Euch das Manöver an; so etwas bekommt man kein zweites Mal umsonst zu sehen.</translation>
+    </message>
+    <message>
+        <source>My cohorts are moving on them. Slowly. If you are quicker, be quicker where they can see it.</source>
+        <translation>Meine Kohorten rücken auf sie vor. Langsam. Seid Ihr schneller, so seid es dort, wo sie es sehen.</translation>
+    </message>
+    <message>
+        <source>My cohorts are thinning. It is a cost, and I keep the books honestly. There is still more field than you have men.</source>
+        <translation>Meine Kohorten dünnen aus. Es ist ein Preis, und ich führe die Bücher ehrlich. Es ist noch mehr Feld da, als Ihr Männer habt.</translation>
+    </message>
+    <message>
+        <source>My columns advance. Watch their reserve. It will move when they see me, and that is when it is yours.</source>
+        <translation>Meine Kolonnen rücken vor. Achtet auf ihre Reserve. Sie setzt sich in Bewegung, wenn sie mich sieht, und dann gehört sie Euch.</translation>
+    </message>
+    <message>
+        <source>My columns are moving. Watch the front, by all means; someone should, and it may as well be you.</source>
+        <translation>Meine Kolonnen setzen sich in Bewegung. Achtet ruhig auf die Front; irgendwer sollte es, und Ihr könnt es ebenso gut sein.</translation>
+    </message>
+    <message>
+        <source>My line advances. Do not look for the trick; there is no trick. There is only the next step, and then the one after.</source>
+        <translation>Meine Linie rückt vor. Sucht nicht nach der List; es gibt keine List. Es gibt nur den nächsten Schritt und dann den danach.</translation>
+    </message>
+    <message>
+        <source>My men are down in numbers. So be it. Blood is the coin, and I have always paid in full.</source>
+        <translation>Meine Männer fallen zahlreich. So sei es. Blut ist die Münze, und ich habe stets voll bezahlt.</translation>
+    </message>
+    <message>
+        <source>My men are dying. Good men, too. The enemy may take them; the enemy may not have my attention as well.</source>
+        <translation>Meine Männer sterben. Gute Männer noch dazu. Der Feind mag sie nehmen; meine Aufmerksamkeit soll er nicht auch noch bekommen.</translation>
+    </message>
+    <message>
+        <source>My men are falling. The line thins. I have fed armies on less and the hills have not run out of stone.</source>
+        <translation>Meine Männer fallen. Die Linie dünnt aus. Ich habe Heere mit weniger genährt, und den Hügeln ist der Stein nicht ausgegangen.</translation>
+    </message>
+    <message>
+        <source>My part is done. The hills kept me alive longer than the plain would have. Go on without me and win.</source>
+        <translation>Mein Teil ist getan. Die Hügel hielten mich länger am Leben, als die Ebene es getan hätte. Zieht ohne mich weiter und siegt.</translation>
+    </message>
+    <message>
+        <source>My part is over. I shall be in the Council chamber by morning, explaining how it was your fault. Win anyway.</source>
+        <translation>Mein Teil ist vorbei. Bis zum Morgen sitze ich im Rat und erkläre, wie es Eure Schuld war. Siegt trotzdem.</translation>
+    </message>
+    <message>
+        <source>My spears are falling. Every one is a contract I have to settle with a widow. Someone will pay for this, and it will not be me.</source>
+        <translation>Meine Speerträger fallen. Jeder ist ein Vertrag, den ich mit einer Witwe abzurechnen habe. Jemand wird dafür zahlen, und ich werde es nicht sein.</translation>
+    </message>
+    <message>
+        <source>My spears are marching on them. I do not do this cheaply, so kindly make it count.</source>
+        <translation>Meine Speerträger marschieren auf sie zu. Ich tue das nicht billig, also sorgt gefälligst dafür, dass es sich lohnt.</translation>
+    </message>
+    <message>
+        <source>My spears are moving. Every one of them is paid through the season, so they will not stop for a little dying.</source>
+        <translation>Meine Speerträger setzen sich in Bewegung. Jeder ist für die Jahreszeit bezahlt, also halten sie für ein wenig Sterben nicht an.</translation>
+    </message>
+    <message>
+        <source>Nearly bankrupt, then. In men, I mean. I have been bankrupt before; the trick is to owe so much that they cannot afford to finish you.</source>
+        <translation>Fast bankrott also. An Männern, meine ich. Ich war schon bankrott; der Kniff ist, so viel zu schulden, dass man es sich nicht leisten kann, einen zu erledigen.</translation>
+    </message>
+    <message>
+        <source>Nearly beaten, they tell me. I have been nearly beaten before. The word is doing a great deal of work in that sentence.</source>
+        <translation>Fast geschlagen, sagt man mir. Ich war schon fast geschlagen. Dieses Wort leistet in dem Satz sehr viel Arbeit.</translation>
+    </message>
+    <message>
+        <source>One camp changes hands. I have lost more to a dishonest quartermaster and slept perfectly well.</source>
+        <translation>Ein Lager wechselt den Besitzer. Ich habe an einen unehrlichen Quartiermeister mehr verloren und vortrefflich geschlafen.</translation>
+    </message>
+    <message>
+        <source>One camp gone. I have never yet lost a war to masonry.</source>
+        <translation>Ein Lager fort. Ich habe noch nie einen Krieg an Mauerwerk verloren.</translation>
+    </message>
+    <message>
+        <source>One camp lost. I have lost an eye, an army and a brother, and here I still am.</source>
+        <translation>Ein Lager verloren. Ich habe ein Auge, ein Heer und einen Bruder verloren, und hier bin ich noch immer.</translation>
+    </message>
+    <message>
+        <source>Reinforcements march. Rome has a great many sons and a very short memory for their names.</source>
+        <translation>Verstärkungen marschieren. Rom hat sehr viele Söhne und ein sehr kurzes Gedächtnis für ihre Namen.</translation>
+    </message>
+    <message>
+        <source>Reinforcements on the road. Not many. Enough to make you turn your head at the wrong moment.</source>
+        <translation>Verstärkungen auf der Straße. Nicht viele. Genug, damit Ihr im falschen Augenblick den Kopf wendet.</translation>
+    </message>
+    <message>
+        <source>Reinforcements. Bought this morning, delivered this afternoon. That is what a treasury is for.</source>
+        <translation>Verstärkungen. Heute Morgen gekauft, heute Nachmittag geliefert. Dafür ist eine Staatskasse da.</translation>
+    </message>
+    <message>
+        <source>Reinforcements. Mine, I am afraid. I collect them the way others collect debts.</source>
+        <translation>Verstärkungen. Meine, fürchte ich. Ich sammle sie, wie andere Schulden sammeln.</translation>
+    </message>
+    <message>
+        <source>Right. You are here, I am here. No speeches. Sharpen what you have; I do not like to fight dull men.</source>
+        <translation>Gut. Ihr seid hier, ich bin hier. Keine Reden. Schärft, was Ihr habt; ich kämpfe ungern gegen stumpfe Männer.</translation>
+    </message>
+    <message>
+        <source>So it begins. Spears touch, men fall, and the wheat grows regardless. I can wait longer than you can bleed.</source>
+        <translation>So beginnt es. Speere berühren sich, Männer fallen, und der Weizen wächst gleichwohl. Ich kann länger warten, als Ihr bluten könnt.</translation>
+    </message>
+    <message>
+        <source>So it ends with a blade after all. Tell Rome I was a wolf, not a bull. She never did learn the difference.</source>
+        <translation>So endet es doch mit einer Klinge. Sagt Rom, ich sei ein Wolf gewesen, kein Stier. Den Unterschied hat sie nie gelernt.</translation>
+    </message>
+    <message>
+        <source>So the Barcids&apos; war has found me a new opponent. Understand that I am here for the ledger, not the legend, and ledgers are much harder to kill.</source>
+        <translation>So hat der Krieg der Barkiden mir einen neuen Gegner gebracht. Versteht: ich bin für das Rechnungsbuch hier, nicht für die Legende, und Bücher sind weit schwerer zu töten.</translation>
+    </message>
+    <message>
+        <source>So the arrow finds me at last. Tell my brother I held the road as long as roads can be held.</source>
+        <translation>So findet mich der Pfeil zuletzt doch. Sagt meinem Bruder, ich hielt die Straße, solange Straßen zu halten sind.</translation>
+    </message>
+    <message>
+        <source>So the old man falls at last. Rome will call it a tragedy for a week and a lesson for a century. Mind the lesson.</source>
+        <translation>So fällt der alte Mann zuletzt. Rom wird es eine Woche lang eine Tragödie nennen und ein Jahrhundert lang eine Lehre. Achtet auf die Lehre.</translation>
+    </message>
+    <message>
+        <source>So this is the army. I make it three cohorts and some optimism. My clerks have already drawn up the receipt for your camp; we only need the date.</source>
+        <translation>Das also ist das Heer. Ich zähle drei Kohorten und etwas Zuversicht. Meine Schreiber haben die Quittung für Euer Lager bereits aufgesetzt; es fehlt nur das Datum.</translation>
+    </message>
+    <message>
+        <source>So. The Barcids get their wish and I get a spear. Tell the Council the books are in order. They always were.</source>
+        <translation>So. Die Barkiden bekommen ihren Wunsch und ich einen Speer. Sagt dem Rat, die Bücher seien in Ordnung. Das waren sie immer.</translation>
+    </message>
+    <message>
+        <source>So. You have come to fight me. How refreshing - most of my enemies prefer to wait behind their walls until I have finished with the countryside.</source>
+        <translation>So. Ihr seid gekommen, um mich zu bekämpfen. Wie erfrischend - die meisten meiner Feinde warten lieber hinter ihren Mauern, bis ich mit dem Land fertig bin.</translation>
+    </message>
+    <message>
+        <source>Steel meets steel. Now the costs begin. I do hope you are keeping accounts, because I am.</source>
+        <translation>Stahl trifft Stahl. Nun beginnen die Kosten. Ich hoffe, Ihr führt Buch, denn ich tue es.</translation>
+    </message>
+    <message>
+        <source>Steel. Finally. Now we find out what you are made of, and I already have a guess.</source>
+        <translation>Stahl. Endlich. Nun sehen wir, woraus Ihr gemacht seid, und ich habe bereits eine Vermutung.</translation>
+    </message>
+    <message>
+        <source>Take the camp. I have taken cities and given them back; the joy is in the taking, not the holding.</source>
+        <translation>Nehmt das Lager. Ich habe Städte genommen und zurückgegeben; die Freude liegt im Nehmen, nicht im Behalten.</translation>
+    </message>
+    <message>
+        <source>That camp is Rome&apos;s now. I shall let you have the wells, at the usual rate.</source>
+        <translation>Jenes Lager gehört nun Rom. Die Brunnen überlasse ich Euch, zum üblichen Satz.</translation>
+    </message>
+    <message>
+        <source>That camp is mine now. I have already sold the grain in it twice. Do not look so surprised; it is how one makes a profit on war.</source>
+        <translation>Jenes Lager gehört nun mir. Das Getreide darin habe ich bereits zweimal verkauft. Schaut nicht so überrascht; so macht man Gewinn im Krieg.</translation>
+    </message>
+    <message>
+        <source>That camp is mine now. I shall not do anything dramatic with it. I shall simply keep it, which is worse.</source>
+        <translation>Jenes Lager gehört nun mir. Ich werde nichts Aufsehenerregendes damit tun. Ich werde es schlicht behalten, was schlimmer ist.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. I did not even need the elephants. I am almost disappointed.</source>
+        <translation>Jenes Lager gehört mir. Ich brauchte nicht einmal die Elefanten. Ich bin beinahe enttäuscht.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. I did not storm it; I waited for it. There is a difference and you will feel it.</source>
+        <translation>Jenes Lager gehört mir. Ich habe es nicht gestürmt; ich habe darauf gewartet. Das ist ein Unterschied, und Ihr werdet ihn spüren.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. Took it at the run. Did you even see the standard change?</source>
+        <translation>Jenes Lager gehört mir. Im Laufschritt genommen. Habt Ihr das Feldzeichen überhaupt wechseln sehen?</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I have already leased the granary. To you, actually. We can discuss terms.</source>
+        <translation>Jenes Lager gehört uns. Den Kornspeicher habe ich bereits verpachtet. An Euch, um genau zu sein. Über die Bedingungen können wir reden.</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I took it from the side nobody guards, which is every side, eventually.</source>
+        <translation>Jenes Lager gehört uns. Ich nahm es von der Seite, die niemand bewacht, und das ist irgendwann jede Seite.</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I will hold it and keep the road open behind you. Somebody has to.</source>
+        <translation>Jenes Lager gehört uns. Ich halte es und lasse die Straße hinter Euch offen. Irgendwer muss es tun.</translation>
+    </message>
+    <message>
+        <source>That is all of me spent. It was a long war and I regret none of the slow parts. Finish it.</source>
+        <translation>Damit bin ich verbraucht. Es war ein langer Krieg, und ich bereue keinen der langsamen Teile. Beendet ihn.</translation>
+    </message>
+    <message>
+        <source>That is my part done. Went forward the whole way. Finish what is left of them.</source>
+        <translation>Damit ist mein Teil getan. Den ganzen Weg nach vorn gegangen. Erledigt, was von ihnen übrig ist.</translation>
+    </message>
+    <message>
+        <source>That is the end of it. You fought. That counts for something in my camp, if not in yours.</source>
+        <translation>Das ist das Ende. Ihr habt gekämpft. In meinem Lager zählt das etwas, wenn schon nicht in Eurem.</translation>
+    </message>
+    <message>
+        <source>That is the end of my army. Not of me - never that - but the war is in your hands now. Turn it.</source>
+        <translation>Das ist das Ende meines Heeres. Nicht meines - niemals das -, doch der Krieg liegt nun in Euren Händen. Wendet ihn.</translation>
+    </message>
+    <message>
+        <source>That is the end of my part. The rest of the war is yours. Do keep the receipts.</source>
+        <translation>Das ist das Ende meines Teils. Der Rest des Krieges gehört Euch. Hebt die Quittungen auf.</translation>
+    </message>
+    <message>
+        <source>That is the end. You fought hard and thought little. In the hills, that gets you eaten.</source>
+        <translation>Das ist das Ende. Ihr habt hart gekämpft und wenig gedacht. In den Hügeln wird man dafür gefressen.</translation>
+    </message>
+    <message>
+        <source>That was yours a moment ago. My surveyors are already renaming the streets. Something Latin, I think.</source>
+        <translation>Das war vor einem Augenblick noch Eures. Meine Vermesser benennen die Straßen bereits um. Etwas Lateinisches, denke ich.</translation>
+    </message>
+    <message>
+        <source>The cohorts are moving - slowly, in step. You will have time to see them coming. That is the point.</source>
+        <translation>Die Kohorten setzen sich in Bewegung - langsam, im Gleichschritt. Ihr werdet sie kommen sehen. Das ist der Sinn der Sache.</translation>
+    </message>
+    <message>
+        <source>The first arrows fly. Now we learn whether you can bleed and think at once.</source>
+        <translation>Die ersten Pfeile fliegen. Nun erfahren wir, ob Ihr bluten und zugleich denken könnt.</translation>
+    </message>
+    <message>
+        <source>The legion is moving. Do not trouble to form a line - it will only give my men something to step over.</source>
+        <translation>Die Legion setzt sich in Bewegung. Müht Euch nicht mit einer Linie - sie gäbe meinen Leuten nur etwas, worüber sie steigen.</translation>
+    </message>
+    <message>
+        <source>There it is. You came straight at me, like a bull at a red cloak, and now you are wondering where the cloak went.</source>
+        <translation>Da haben wir es. Ihr kamt geradewegs auf mich zu wie ein Stier auf ein rotes Tuch, und nun fragt Ihr Euch, wo das Tuch geblieben ist.</translation>
+    </message>
+    <message>
+        <source>There you are. I have been counting your wagons. Fewer than you need, more than you can guard. This will be a patient day.</source>
+        <translation>Da seid Ihr. Ich habe Eure Wagen gezählt. Weniger, als Ihr braucht, mehr, als Ihr bewachen könnt. Dies wird ein geduldiger Tag.</translation>
+    </message>
+    <message>
+        <source>There. It was never a battle, only a season, and seasons end. Go home if you have one; the road is long and I shall not follow.</source>
+        <translation>So. Es war nie eine Schlacht, nur eine Jahreszeit, und Jahreszeiten enden. Geht heim, wenn Ihr eines habt; der Weg ist weit, und ich folge nicht.</translation>
+    </message>
+    <message>
+        <source>There. That is what happens when amateurs march against a ledger. Sit down. My men will count you when they have counted the horses.</source>
+        <translation>So. Das geschieht, wenn Dilettanten gegen ein Rechnungsbuch marschieren. Setzt Euch. Meine Leute zählen Euch, wenn sie die Pferde gezählt haben.</translation>
+    </message>
+    <message>
+        <source>There. You are done, and I have lost fewer men than I budgeted for. That is a good day in my trade.</source>
+        <translation>So. Ihr seid erledigt, und ich habe weniger Männer verloren als veranschlagt. Das ist in meinem Gewerbe ein guter Tag.</translation>
+    </message>
+    <message>
+        <source>They are at my walls, and my walls were built by the lowest bidder. Some assistance would not go unrecorded.</source>
+        <translation>Sie stehen an meinen Mauern, und meine Mauern baute der billigste Anbieter. Etwas Beistand bliebe nicht unverzeichnet.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. Come now, hard, and we break them between us.</source>
+        <translation>Sie stehen an meinen Mauern. Kommt jetzt, hart, und wir zerbrechen sie zwischen uns.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I can hold a while - I always can - but a while is not forever, and I would rather not test the word.</source>
+        <translation>Sie stehen an meinen Mauern. Ich kann eine Weile halten - das kann ich immer -, doch eine Weile ist nicht ewig, und ich möchte das Wort ungern prüfen.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I can hold a while with what I have. A while, not long. Please hear the difference.</source>
+        <translation>Sie stehen an meinen Mauern. Mit dem, was ich habe, kann ich eine Weile halten. Eine Weile, nicht lange. Hört bitte den Unterschied.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I have been the hammer so often that I forget what the anvil feels like. It is unpleasant.</source>
+        <translation>Sie stehen an meinen Mauern. Ich war so oft der Hammer, dass ich vergessen habe, wie sich der Amboss anfühlt. Es ist unangenehm.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. Mercenaries have a fine sense of when a paymaster is about to become a corpse. Do hurry.</source>
+        <translation>Sie stehen an meinen Mauern. Söldner haben ein feines Gespür dafür, wann ein Zahlmeister zur Leiche wird. Beeilt Euch.</translation>
+    </message>
+    <message>
+        <source>This is the edge. I have stood on it before and walked back. I would rather not do it alone.</source>
+        <translation>Das ist der Rand. Ich stand schon darauf und ging zurück. Ich täte es ungern allein.</translation>
+    </message>
+    <message>
+        <source>This is the end of my line unless you reach me. I will not ask twice; there will not be time to.</source>
+        <translation>Das ist das Ende meiner Linie, wenn Ihr mich nicht erreicht. Ich frage nicht zweimal; dazu wird keine Zeit sein.</translation>
+    </message>
+    <message>
+        <source>This is what the end of a consulship looks like from the inside. Come quickly, or come for the funeral.</source>
+        <translation>So sieht das Ende eines Konsulats von innen aus. Kommt rasch, oder kommt zum Begräbnis.</translation>
+    </message>
+    <message>
+        <source>Together, then. I will do the clever part. You may do the brave part; it is honest work and someone must.</source>
+        <translation>Gemeinsam also. Ich übernehme den klugen Teil. Ihr dürft den tapferen übernehmen; es ist redliche Arbeit, und irgendwer muss sie tun.</translation>
+    </message>
+    <message>
+        <source>We are allies, so I am told. I did not vote for it. Keep your men off my supply lines and we shall get along splendidly.</source>
+        <translation>Wir sind Verbündete, so sagt man mir. Ich habe nicht dafür gestimmt. Haltet Eure Leute von meinen Nachschubwegen fern, und wir werden vortrefflich auskommen.</translation>
+    </message>
+    <message>
+        <source>We fight side by side. Keep pace with me or stay out of my way; either is fine, both at once is not.</source>
+        <translation>Wir kämpfen Seite an Seite. Haltet mit mir Schritt oder geht mir aus dem Weg; beides ist recht, beides zugleich nicht.</translation>
+    </message>
+    <message>
+        <source>We fight together, then. Do try to keep your line straight - I shall be watching from the good ground, and I have a very long memory for embarrassments.</source>
+        <translation>Wir kämpfen also gemeinsam. Bemüht Euch um eine gerade Linie - ich werde vom guten Boden aus zusehen, und ich habe ein sehr langes Gedächtnis für Peinlichkeiten.</translation>
+    </message>
+    <message>
+        <source>We fight together. I will hold the flanks and watch the roads. Keep your supply close; the enemy will not fight fair and neither will I.</source>
+        <translation>Wir kämpfen gemeinsam. Ich halte die Flanken und beobachte die Straßen. Haltet Euren Nachschub nah; der Feind wird nicht redlich kämpfen, und ich auch nicht.</translation>
+    </message>
+    <message>
+        <source>We stand together. I will not be hurried, and I will not hurry you. Hold what you have and let the enemy come to us tired.</source>
+        <translation>Wir stehen gemeinsam. Ich lasse mich nicht drängen, und ich dränge Euch nicht. Haltet, was Ihr habt, und lasst den Feind müde zu uns kommen.</translation>
+    </message>
+    <message>
+        <source>Welcome to my field. I say mine; I have not signed anything. I simply find that fields tend to become mine after a while.</source>
+        <translation>Willkommen auf meinem Feld. Ich sage meines; unterschrieben habe ich nichts. Ich stelle nur fest, dass Felder mit der Zeit die meinen zu werden pflegen.</translation>
+    </message>
+    <message>
+        <source>Well. A field is lost. I have lost fields before and taken the harvest anyway. We shall see who is still here at the sowing.</source>
+        <translation>Nun. Ein Feld ist verloren. Ich habe schon Felder verloren und die Ernte dennoch geholt. Wir werden sehen, wer zur Aussaat noch da ist.</translation>
+    </message>
+    <message>
+        <source>Won. Clean and fast. That is how it is done. Drink tonight; march tomorrow.</source>
+        <translation>Gewonnen. Sauber und schnell. So macht man das. Trinkt heute Nacht; marschiert morgen.</translation>
+    </message>
+    <message>
+        <source>Won. Good. Now let us eat before someone counts what it cost us.</source>
+        <translation>Gewonnen. Gut. Nun lasst uns essen, ehe jemand zählt, was es gekostet hat.</translation>
+    </message>
+    <message>
+        <source>Won. I shall tell the Council it was my doing and yours was very expensive. They will believe half of it.</source>
+        <translation>Gewonnen. Ich werde dem Rat sagen, es sei mein Werk gewesen und Eures sehr teuer. Die Hälfte davon werden sie glauben.</translation>
+    </message>
+    <message>
+        <source>Won. Neatly. Remember that half of it was the ground and the other half was the timing, and none of it was luck.</source>
+        <translation>Gewonnen. Sauber. Denkt daran, dass die Hälfte davon der Boden war und die andere Hälfte die Zeitwahl, und nichts davon Glück.</translation>
+    </message>
+    <message>
+        <source>Won. Not quickly, but won. Remember how it felt to wait; it is the part nobody else will remember for you.</source>
+        <translation>Gewonnen. Nicht rasch, aber gewonnen. Denkt daran, wie das Warten sich anfühlte; das ist der Teil, an den sich sonst niemand für Euch erinnert.</translation>
+    </message>
+    <message>
+        <source>You are a long way from your supply, and I can see your fires from here. A hunter does not chase the deer; he waits at the water.</source>
+        <translation>Ihr seid weit von Eurem Nachschub, und ich sehe Eure Feuer von hier. Ein Jäger jagt das Wild nicht; er wartet am Wasser.</translation>
+    </message>
+    <message>
+        <source>You are at my camp. A camp is a tent with ambition; I have left better ones to wolves.</source>
+        <translation>Ihr steht an meinem Lager. Ein Lager ist ein Zelt mit Ehrgeiz; ich habe bessere den Wölfen überlassen.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. A camp is a hide, nothing more. I have others, and the hills have more still.</source>
+        <translation>Ihr steht an meinen Mauern. Ein Lager ist ein Versteck, nicht mehr. Ich habe andere, und die Hügel haben noch mehr.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Bold. My grandfather kept a dog that was bold; we buried it with honours and bought a better one.</source>
+        <translation>Ihr steht an meinen Mauern. Kühn. Mein Großvater hielt einen kühnen Hund; wir begruben ihn mit Ehren und kauften einen besseren.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Do you have any idea what those walls cost? Of course not. Nobody who breaks things ever does.</source>
+        <translation>Ihr steht an meinen Mauern. Habt Ihr eine Vorstellung, was diese Mauern gekostet haben? Natürlich nicht. Wer Dinge zerbricht, hat sie nie.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Knock. My walls have been knocked on by better, and they have learned not to answer.</source>
+        <translation>Ihr steht an meinen Mauern. Klopft nur. An meine Mauern haben Bessere geklopft, und sie haben gelernt, nicht zu öffnen.</translation>
+    </message>
+    <message>
+        <source>You are bleeding. I am not pleased by it; I am merely not surprised.</source>
+        <translation>Ihr blutet. Es freut mich nicht; es überrascht mich bloß nicht.</translation>
+    </message>
+    <message>
+        <source>You are hitting my camp. Good. That means you are close enough for me to hit back.</source>
+        <translation>Ihr schlagt auf mein Lager ein. Gut. Das heißt, Ihr seid nah genug, dass ich zurückschlagen kann.</translation>
+    </message>
+    <message>
+        <source>You brought numbers. I brought arithmetic. Do write to your people and tell them the difference, if any of them can read.</source>
+        <translation>Ihr brachtet Zahlen. Ich brachte Rechenkunst. Schreibt Euren Leuten und erklärt den Unterschied, falls einer von ihnen lesen kann.</translation>
+    </message>
+    <message>
+        <source>You have a camp of mine. Feed it. Water it. I will watch you try to do both from the road you do not hold.</source>
+        <translation>Ihr habt ein Lager von mir. Nährt es. Tränkt es. Ich sehe Euch zu, wie Ihr beides von der Straße aus versucht, die Ihr nicht haltet.</translation>
+    </message>
+    <message>
+        <source>You have beaten a consul. Write it down somewhere; nobody in the city will believe you, and next year they will send two.</source>
+        <translation>Ihr habt einen Konsul geschlagen. Schreibt es irgendwo auf; in der Stadt wird es Euch niemand glauben, und nächstes Jahr schicken sie zwei.</translation>
+    </message>
+    <message>
+        <source>You have come a long way to stand in a field. Stand in it, then. I have wheat to bring in, and a great deal of time, and you have neither.</source>
+        <translation>Ihr seid weit gereist, um auf einem Feld zu stehen. So steht darauf. Ich habe Weizen einzubringen und sehr viel Zeit, und Ihr habt beides nicht.</translation>
+    </message>
+    <message>
+        <source>You have killed a consul. Rome keeps forty more in cupboards in the city, and I promise you the ones still in the cupboards are worse.</source>
+        <translation>Ihr habt einen Konsul getötet. Rom hält vierzig weitere in Schränken in der Stadt, und ich verspreche Euch: die noch in den Schränken sind schlimmer.</translation>
+    </message>
+    <message>
+        <source>You have taken a camp. It will need feeding, and I have noticed that you do not feed things well.</source>
+        <translation>Ihr habt ein Lager genommen. Es will genährt werden, und mir ist aufgefallen, dass Ihr Dinge nicht gut nährt.</translation>
+    </message>
+    <message>
+        <source>You have taken a camp. Take the debts that come with it too; I was rather hoping someone would.</source>
+        <translation>Ihr habt ein Lager genommen. Nehmt auch die Schulden, die dazugehören; ich hoffte durchaus, jemand täte es.</translation>
+    </message>
+    <message>
+        <source>You have that camp. Congratulations - you now own its wells, its debts, and its sanitation. I shall want it back before the rains.</source>
+        <translation>Ihr habt jenes Lager. Meinen Glückwunsch - Euch gehören nun seine Brunnen, seine Schulden und seine Abwässer. Ich will es vor den Regen zurück.</translation>
+    </message>
+    <message>
+        <source>You have the ground. Ground is patient; so am I. Winter will visit you here long before I do, and it does not negotiate.</source>
+        <translation>Ihr habt den Boden. Boden ist geduldig; ich auch. Der Winter besucht Euch hier lange vor mir, und er verhandelt nicht.</translation>
+    </message>
+    <message>
+        <source>You have won the field. Very well. I have lost cheaper things to worse men. The Council will hear that the Barcids&apos; war lost it, not mine.</source>
+        <translation>Ihr habt das Feld gewonnen. Nun gut. Ich habe Billigeres an Schlechtere verloren. Der Rat wird hören, der Krieg der Barkiden habe es verloren, nicht meiner.</translation>
+    </message>
+    <message>
+        <source>You have won. I am almost pleased; a man learns nothing from beating fools. I shall learn from you, and I promise you will not enjoy the lesson.</source>
+        <translation>Ihr habt gewonnen. Es freut mich beinahe; vom Schlagen von Narren lernt man nichts. Von Euch werde ich lernen, und ich verspreche Euch, die Lehre wird Euch nicht gefallen.</translation>
+    </message>
+    <message>
+        <source>You hurried. Men who hurry meet me exactly where I am waiting. Rest now. The ground is good for it.</source>
+        <translation>Ihr habt geeilt. Wer eilt, trifft mich genau dort, wo ich warte. Ruht nun. Der Boden ist gut dafür.</translation>
+    </message>
+    <message>
+        <source>You took the camp. Fine. It was walls; I fight in the field. Come and find me there.</source>
+        <translation>Ihr habt das Lager genommen. Gut. Es waren Mauern; ich kämpfe im Feld. Kommt und findet mich dort.</translation>
+    </message>
+    <message>
+        <source>You win the field. Take it. I have hunted this country for years; the land will still feed me when you have eaten it bare.</source>
+        <translation>Ihr gewinnt das Feld. Nehmt es. Ich habe dieses Land jahrelang bejagt; es wird mich noch nähren, wenn Ihr es kahl gefressen habt.</translation>
+    </message>
+    <message>
+        <source>You won. Do not gloat; it slows the feet. I will find you again on better ground.</source>
+        <translation>Ihr habt gewonnen. Frohlockt nicht; das macht die Füße schwer. Ich finde Euch auf besserem Boden wieder.</translation>
+    </message>
+    <message>
+        <source>Your camp changes masters. They will find me a lenient landlord and a very poor tenant.</source>
+        <translation>Euer Lager wechselt die Herren. Sie werden mich als milden Grundherrn und sehr schlechten Pächter kennenlernen.</translation>
+    </message>
+    <message>
+        <source>Your camp is taken. My brother will say it was his idea. It usually is.</source>
+        <translation>Euer Lager ist genommen. Mein Bruder wird sagen, es sei sein Einfall gewesen. Meistens ist er es.</translation>
+    </message>
+    <message>
+        <source>Your camp, gone in a heartbeat. That is what tempo does. Learn it or lose the next one.</source>
+        <translation>Euer Lager, fort im Herzschlag. Das bewirkt Tempo. Lernt es oder verliert das nächste.</translation>
+    </message>
+    <message>
+        <source>Your camp, under new management. I shall keep the wells and fire the garrison. Standard practice.</source>
+        <translation>Euer Lager, unter neuer Verwaltung. Die Brunnen behalte ich, die Besatzung entlasse ich. Übliches Vorgehen.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. A pity. I had a speech prepared for after, and he would have hated it.</source>
+        <translation>Euer Befehlshaber ist gefallen. Schade. Ich hatte eine Rede für danach vorbereitet, und er hätte sie gehasst.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Grief later; line now. The field does not pause for either of us.</source>
+        <translation>Euer Befehlshaber ist gefallen. Trauer später; jetzt die Linie. Das Feld hält für keinen von uns inne.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Hasty men do. Bury him with honour; you will be joining him soon enough, and the ground here is soft.</source>
+        <translation>Euer Befehlshaber ist gefallen. Übereilten geschieht das. Begrabt ihn mit Ehren; Ihr werdet ihm bald genug folgen, und der Boden ist hier weich.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. I know that grief. Keep your men together; scattered men are what the enemy is hunting.</source>
+        <translation>Euer Befehlshaber ist gefallen. Ich kenne diese Trauer. Haltet Eure Leute beisammen; zerstreute Männer sind es, die der Feind jagt.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Sorry. Keep your men moving; grief stands still and standing still kills.</source>
+        <translation>Euer Befehlshaber ist gefallen. Es tut mir leid. Haltet Eure Leute in Bewegung; Trauer steht still, und Stillstehen tötet.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Unfortunate. Hold your line; I shall not hold mine for a leaderless ally very long.</source>
+        <translation>Euer Befehlshaber ist gefallen. Bedauerlich. Haltet Eure Linie; für einen führerlosen Verbündeten halte ich meine nicht lange.</translation>
+    </message>
+    <message>
+        <source>Your commander is dead. A costly man to lose. I have already calculated what it will cost you to replace him; the number is not kind.</source>
+        <translation>Euer Befehlshaber ist tot. Ein teurer Verlust. Ich habe bereits errechnet, was sein Ersatz Euch kosten wird; die Zahl ist unfreundlich.</translation>
+    </message>
+    <message>
+        <source>Your commander is dead. Unfortunate, and expensive. Keep your line; a leaderless ally is a liability I did not agree to insure.</source>
+        <translation>Euer Befehlshaber ist tot. Bedauerlich und kostspielig. Haltet Eure Linie; ein führerloser Verbündeter ist ein Risiko, für das ich nicht zu bürgen zugesagt habe.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. He led from the front; brave men do, and it is where the arrows go.</source>
+        <translation>Euer Befehlshaber ist gefallen. Er führte von vorn; das tun Tapfere, und dorthin gehen die Pfeile.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. I did not enjoy it. I did not have to.</source>
+        <translation>Euer Befehlshaber ist gefallen. Es hat mir keine Freude gemacht. Das musste es auch nicht.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. Pity. I had meant to invite him to dinner after and explain where he went wrong.</source>
+        <translation>Euer Befehlshaber ist gefallen. Schade. Ich wollte ihn danach zum Mahl laden und ihm erklären, wo er sich irrte.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. Their moment of joy is your moment of opportunity; nobody watches the flanks while they cheer.</source>
+        <translation>Euer Befehlshaber ist gefallen. Ihr Augenblick der Freude ist Euer Augenblick der Gelegenheit; niemand achtet auf die Flanken, während er jubelt.</translation>
+    </message>
+    <message>
+        <source>Your line is breaking. I can hear it from here. Press or pull back - standing there is just dying slowly.</source>
+        <translation>Eure Linie bricht. Ich höre es von hier. Drängt nach oder zieht zurück - dort zu stehen ist nur langsames Sterben.</translation>
+    </message>
+    <message>
+        <source>Your line is thinning nicely. I am told grief is easier when one has fewer names to remember.</source>
+        <translation>Eure Linie dünnt hübsch aus. Man sagt mir, Trauer falle leichter, wenn man sich weniger Namen merken muss.</translation>
+    </message>
+    <message>
+        <source>Your men are dropping in the open. A hunter feels no pride in it. Only a little pity, and a full quiver.</source>
+        <translation>Eure Männer fallen im Offenen. Ein Jäger empfindet dabei keinen Stolz. Nur ein wenig Mitleid und einen vollen Köcher.</translation>
+    </message>
+    <message>
+        <source>Your men are dying at a rate that would bankrupt a lesser treasury. I find that admirable and very stupid.</source>
+        <translation>Eure Männer sterben in einem Tempo, das eine geringere Staatskasse ruinieren würde. Ich finde das bewundernswert und sehr dumm.</translation>
+    </message>
+    <message>
+        <source>Your men are falling faster than you are replacing them. That is not a battle. That is a harvest, and it is not yours.</source>
+        <translation>Eure Männer fallen schneller, als Ihr sie ersetzt. Das ist keine Schlacht. Das ist eine Ernte, und sie ist nicht die Eure.</translation>
+    </message>
+    <message>
+        <source>Your men are falling in rows. That is what happens when you fight a wall&apos;s war against a river.</source>
+        <translation>Eure Männer fallen in Reihen. So geht es aus, wenn man den Krieg einer Mauer gegen einen Fluss führt.</translation>
     </message>
 </context>
 <context>
@@ -5368,6 +6239,29 @@ um die Vorschau zu sehen</translation>
     </message>
 </context>
 <context>
+    <name>MissionDeadline</name>
+    <message>
+        <source>FINAL MINUTE</source>
+        <translation>LETZTE MINUTE</translation>
+    </message>
+    <message>
+        <source>CLOSING WINDOW</source>
+        <translation>FENSTER SCHLIESST</translation>
+    </message>
+    <message>
+        <source>MISSION CLOCK</source>
+        <translation>MISSIONSUHR</translation>
+    </message>
+    <message>
+        <source>Time left: %1</source>
+        <translation>Verbleibende Zeit: %1</translation>
+    </message>
+    <message>
+        <source>TIME LEFT</source>
+        <translation>VERBLEIBENDE ZEIT</translation>
+    </message>
+</context>
+<context>
     <name>MissionDetailPanel</name>
     <message>
         <source>Suffete Command</source>
@@ -6515,20 +7409,8 @@ um die Vorschau zu sehen</translation>
         <translation>Brich alle fünf Kolonnen. Die Furt ist gehalten, wenn die letzte von ihnen davor liegt, und keine Kolonne früher.</translation>
     </message>
     <message>
-        <source>Cut and carry home four hundred of timber and two hundred and ten of stone. The near stand will not cover it; the deep pines will.</source>
-        <translation>Schlage und schaffe vierhundert Holz und zweihundertzehn Stein heim. Der nahe Bestand deckt das nicht; die tiefen Kiefern schon.</translation>
-    </message>
-    <message>
-        <source>Fill the levy out of the Pinewater cut: four hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through.</source>
-        <translation>Erfülle das Soll aus dem Kiefernwasser-Schlag: vierhundert Holz und zweihundertzehn Stein, geschlagen und heimgeschafft, bevor die Kolonne wieder durchzieht.</translation>
-    </message>
-    <message>
         <source>Five columns and the ford still ours. Count the men twice and do not write the number down until morning; it is always worse in the dark and always worse again in daylight.</source>
         <translation>Fünf Kolonnen, und die Furt ist noch unsere. Zähl die Männer zweimal und schreib die Zahl erst am Morgen auf; im Dunkeln ist sie immer schlimmer und bei Tageslicht noch einmal schlimmer.</translation>
-    </message>
-    <message>
-        <source>Four hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. Split the crew. Escort the far one.</source>
-        <translation>Vierhundert Holz und zweihundert Stein, und der nahe Bestand wurde vom letzten Kommando abgeräumt. Das heißt die tiefen Kiefern, das heißt der lange Weg, das heißt, was auch immer in den tiefen Kiefern lebt, bekommt uns zu sehen. Teile den Trupp. Gib dem entfernten Geleit.</translation>
     </message>
     <message>
         <source>Hold the Sallow Ford</source>
@@ -6537,10 +7419,6 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Keep both towers standing. Lose one and the lane it watches is yours to walk yourself.</source>
         <translation>Halte beide Türme aufrecht. Verlierst du einen, gehört die Gasse, die er bewacht, dir zum Selbstablaufen.</translation>
-    </message>
-    <message>
-        <source>Leave the axes. Leave the carts. A detail that cannot walk out of its own cut does not get to carry anything.</source>
-        <translation>Lass die Äxte. Lass die Karren. Ein Kommando, das nicht aus dem eigenen Schlag herauskommt, trägt gar nichts mehr.</translation>
     </message>
     <message>
         <source>Levy filled. Stack it by the road and let the carts argue about it. We cut a wood down to feed a siege that has not started yet — remember that the next time somebody calls this the quiet posting.</source>
@@ -6590,6 +7468,294 @@ um die Vorschau zu sehen</translation>
         <source>The spur splits them for us, which is the only kindness this ground offers. Cart gate west, goat path east, and they only meet where we are standing. You cannot hold both mouths. Pick one, hold it, and move when the horns tell you to.</source>
         <translation>Der Sporn teilt sie für uns, und das ist die einzige Freundlichkeit, die dieser Boden bietet. Karrentor im Westen, Ziegenpfad im Osten, und sie treffen sich nur dort, wo wir stehen. Du kannst nicht beide Mündungen halten. Wähl eine, halte sie, und rühr dich, wenn die Hörner es sagen.</translation>
     </message>
+    <message>
+        <source>A few of the screen left, and me. My son is somewhere on this field; if he finds me, he will be insufferable about it for the rest of his life.</source>
+        <translation>Ein paar vom Schirm sind noch da, und ich. Mein Sohn ist irgendwo auf diesem Feld; findet er mich, wird er sein Leben lang unerträglich damit sein.</translation>
+    </message>
+    <message>
+        <source>Cut and carry home eight hundred of timber and two hundred and ten of stone. The near stand was stripped bare; the deep pines and the east screen are the only timber left standing.</source>
+        <translation>Schlagt und bringt achthundert Holz und zweihundertzehn Stein heim. Der nahe Bestand ist kahl geschlagen; die tiefen Kiefern und der Ostschirm sind das einzige Holz, das noch steht.</translation>
+    </message>
+    <message>
+        <source>Eight hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. The column comes back through at dusk and it does not wait. Split the crew. Escort the far one.</source>
+        <translation>Achthundert Holz und zweihundert Stein, und den nahen Bestand hat der letzte Trupp kahl geschlagen. Das heißt die tiefen Kiefern, das heißt der lange Weg, das heißt, was in den tiefen Kiefern lebt, bekommt uns zu sehen. Die Kolonne kommt in der Dämmerung zurück und sie wartet nicht. Teilt den Trupp. Gebt dem fernen Geleit.</translation>
+    </message>
+    <message>
+        <source>Fill the levy out of the Pinewater cut: eight hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through at dusk.</source>
+        <translation>Erfüllt die Abgabe aus dem Pinienwasser-Schlag: achthundert Holz und zweihundertzehn Stein, geschlagen und heimgebracht, ehe die Kolonne in der Dämmerung zurückkommt.</translation>
+    </message>
+    <message>
+        <source>First column on the cart gate. Spears up. Let them come to the stakes; the stakes do not get tired.</source>
+        <translation>Erste Kolonne am Karrentor. Speere hoch. Lasst sie an die Pfähle kommen; die Pfähle werden nicht müde.</translation>
+    </message>
+    <message>
+        <source>Hannibal dies in the snow. Then the elephants were for nothing, and so was the road. History will find that very tidy.</source>
+        <translation>Hannibal stirbt im Schnee. Dann waren die Elefanten umsonst, und die Straße auch. Die Geschichte wird das sehr ordentlich finden.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls at the Rhone. Then Rome never sees the elephants, and I never see Cannae. I shall spend the rest of my life not knowing what I was spared.</source>
+        <translation>Hannibal fällt an der Rhone. Dann sieht Rom die Elefanten nie, und ich sehe Cannae nie. Ich werde mein Leben lang nicht wissen, was mir erspart blieb.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls in Campania, among the orchards, in a war he did not choose. There is a kind of mercy in that, and I did not intend it.</source>
+        <translation>Hannibal fällt in Kampanien, zwischen den Obstgärten, in einem Krieg, den er nicht wählte. Darin liegt eine Art Gnade, und ich habe sie nicht beabsichtigt.</translation>
+    </message>
+    <message>
+        <source>Hannibal has fallen at Zama. I wanted to meet him after, and ask him about Cannae. I shall have to ask the ground instead.</source>
+        <translation>Hannibal ist bei Zama gefallen. Ich wollte ihn danach treffen und ihn nach Cannae fragen. Nun muss ich den Boden fragen.</translation>
+    </message>
+    <message>
+        <source>Hannibal is down in the Trebia mud. Whatever Mago has hidden in the gullies, it will not bring him back.</source>
+        <translation>Hannibal liegt im Schlamm der Trebia. Was Mago auch in den Rinnen verborgen hat, es bringt ihn nicht zurück.</translation>
+    </message>
+    <message>
+        <source>Hannibal is down. The Senate will strike a coin. I shall keep one and never spend it, which I am told is what he would have done.</source>
+        <translation>Hannibal ist gefallen. Der Senat wird eine Münze prägen. Ich behalte eine und gebe sie nie aus, was er, wie man mir sagt, ebenso gehalten hätte.</translation>
+    </message>
+    <message>
+        <source>Here they come - the whole consular line, in step, at Varro&apos;s tempo. Eighty thousand men do not turn. Remember that when you want them to.</source>
+        <translation>Da kommen sie - die ganze Konsularlinie, im Gleichschritt, in Varros Takt. Achtzigtausend Mann wenden nicht. Denkt daran, wenn Ihr es von ihnen wollt.</translation>
+    </message>
+    <message>
+        <source>Leave the axes. Leave the carts. A detail that cannot fill its own levy before the column comes through does not get to carry anything.</source>
+        <translation>Lasst die Äxte. Lasst die Karren. Ein Trupp, der seine Abgabe nicht erfüllt, ehe die Kolonne durchkommt, darf gar nichts tragen.</translation>
+    </message>
+    <message>
+        <source>Legionaries at your works. Not Varro&apos;s legions; mine. Men who were at Cannae and remember exactly how it felt.</source>
+        <translation>Legionäre an Euren Werken. Nicht Varros Legionen; meine. Männer, die bei Cannae waren und genau wissen, wie es war.</translation>
+    </message>
+    <message>
+        <source>Light is going. Five minutes of road left in the day, and whatever is on the carts when the column reaches us is what we levied. Bring them home.</source>
+        <translation>Das Licht geht. Fünf Minuten Straße bleiben vom Tag, und was auf den Karren liegt, wenn die Kolonne uns erreicht, ist unsere Abgabe. Bringt sie heim.</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s camp is yours. His riders will not care; they were never in it. Watch the horizon, not the tents.</source>
+        <translation>Masinissas Lager gehört Euch. Seine Reiter wird es nicht kümmern; sie waren nie darin. Achtet auf den Horizont, nicht auf die Zelte.</translation>
+    </message>
+    <message>
+        <source>My forward town, taken by horsemen. Horsemen. My father would have said something cutting; I find I am simply cold.</source>
+        <translation>Meine vordere Stadt, von Reitern genommen. Reitern. Mein Vater hätte etwas Schneidendes gesagt; ich bin bloß kalt.</translation>
+    </message>
+    <message>
+        <source>My men are at your walls. Not to break them - to remind you they are walls, and that everything outside them is mine.</source>
+        <translation>Meine Männer stehen an Euren Mauern. Nicht um sie zu brechen - um Euch daran zu erinnern, dass es Mauern sind und dass alles außerhalb mir gehört.</translation>
+    </message>
+    <message>
+        <source>My scouting party is on the road. Cavalry, mostly, and a tribune who wants to be noticed. Do notice him.</source>
+        <translation>Mein Spähtrupp ist auf der Straße. Meist Reiterei, und ein Tribun, der auffallen will. Fallt ihm bitte auf.</translation>
+    </message>
+    <message>
+        <source>My town. You have taken my town, at Zama, with Masinissa&apos;s horse behind you. I begin to think the gods have a sense of proportion after all.</source>
+        <translation>Meine Stadt. Ihr habt meine Stadt genommen, bei Zama, mit Masinissas Reitern im Rücken. Ich beginne zu glauben, die Götter haben doch Sinn für Verhältnisse.</translation>
+    </message>
+    <message>
+        <source>Patrols at your works. You are trying to cross a river with your back to my roads. It is bold. It is also how one drowns.</source>
+        <translation>Patrouillen an Euren Werken. Ihr wollt einen Fluss überqueren mit dem Rücken zu meinen Straßen. Das ist kühn. Es ist auch, wie man ertrinkt.</translation>
+    </message>
+    <message>
+        <source>Sempronius has a handful left and they are on the wrong side of a winter river. He will still call it a victory in Rome. He always does.</source>
+        <translation>Sempronius bleibt eine Handvoll, und die steht auf der falschen Seite eines Winterflusses. In Rom wird er es dennoch einen Sieg nennen. Das tut er immer.</translation>
+    </message>
+    <message>
+        <source>Sempronius is crossing. Now, in the cold, without breakfast, because a consul&apos;s year ends in March and he wants his battle before it does.</source>
+        <translation>Sempronius setzt über. Jetzt, in der Kälte, ohne Frühstück, weil das Jahr eines Konsuls im März endet und er seine Schlacht davor will.</translation>
+    </message>
+    <message>
+        <source>So he dies by his own lake in his own fog. Rome will call it justice. I call it weather, and I have always respected weather.</source>
+        <translation>So stirbt er an seinem eigenen See in seinem eigenen Nebel. Rom wird es Gerechtigkeit nennen. Ich nenne es Wetter, und Wetter habe ich stets geachtet.</translation>
+    </message>
+    <message>
+        <source>Somebody is trying to cut a way out along the shore. Good. Somebody should get home and describe this accurately.</source>
+        <translation>Jemand versucht, sich am Ufer entlang einen Weg hinaus zu schlagen. Gut. Jemand sollte heimkommen und dies genau beschreiben.</translation>
+    </message>
+    <message>
+        <source>The Aufidus camp. So the ring closes. I told the Senate a ring was what he wanted. They told me I was old.</source>
+        <translation>Das Aufidus-Lager. So schließt sich der Ring. Ich sagte dem Senat, ein Ring sei, was er wollte. Sie sagten mir, ich sei alt.</translation>
+    </message>
+    <message>
+        <source>The Barcid falls at the Ticinus. Then this was the whole war, and it fit inside an afternoon. I expected more of it; I am not sure I wanted more.</source>
+        <translation>Der Barkide fällt am Ticinus. Dann war dies der ganze Krieg, und er passte in einen Nachmittag. Ich hatte mehr erwartet; ob ich mehr wollte, weiß ich nicht.</translation>
+    </message>
+    <message>
+        <source>The Numidians are riding. Your Numidians, once. Now they ride for Rome, and they ride the same way they always did - around you.</source>
+        <translation>Die Numider reiten. Einst Eure Numider. Nun reiten sie für Rom, und sie reiten wie stets - um Euch herum.</translation>
+    </message>
+    <message>
+        <source>The allied wing is at your works. Italians, mostly. They fight for Rome because the alternative is fighting Rome, which is a very persuasive argument.</source>
+        <translation>Der Bundesgenossenflügel steht an Euren Werken. Meist Italiker. Sie kämpfen für Rom, weil die Alternative heißt, gegen Rom zu kämpfen, was ein sehr überzeugendes Argument ist.</translation>
+    </message>
+    <message>
+        <source>The allied wing is down to a handful. I have counted them twice, because there was time. Whatever happens next on this field, remember someone counted.</source>
+        <translation>Vom Bundesgenossenflügel bleibt eine Handvoll. Ich habe sie zweimal gezählt, weil Zeit war. Was auf diesem Feld auch geschieht, denkt daran, dass jemand gezählt hat.</translation>
+    </message>
+    <message>
+        <source>The allied wing is on the southern road. They know this country - they own most of it, or did, before you started eating it.</source>
+        <translation>Der Bundesgenossenflügel ist auf der Südstraße. Sie kennen dieses Land - das meiste gehört ihnen, oder gehörte, ehe Ihr anfingt, es zu fressen.</translation>
+    </message>
+    <message>
+        <source>The column came back through and the carts were still empty. A levy that misses the road is a levy nobody signed for.</source>
+        <translation>Die Kolonne kam zurück, und die Karren waren noch leer. Eine Abgabe, die die Straße verfehlt, hat niemand gezeichnet.</translation>
+    </message>
+    <message>
+        <source>The column is nearly gone. What is left of it will hold until the fog lifts, because that is the only order anyone can still hear.</source>
+        <translation>Die Kolonne ist beinahe dahin. Was von ihr bleibt, hält, bis der Nebel steigt, denn das ist der einzige Befehl, den noch jemand hört.</translation>
+    </message>
+    <message>
+        <source>The column is on the lakeside road. In fog, in a defile, in a hurry. Every word of that sentence is a mistake and Flaminius owns them all.</source>
+        <translation>Die Kolonne ist auf der Seestraße. Im Nebel, in einem Engpass, in Eile. Jedes Wort dieses Satzes ist ein Fehler, und Flaminius besitzt sie alle.</translation>
+    </message>
+    <message>
+        <source>The final pass is nearly cleared. Whatever comes down the far side, I shall be in Italy waiting for it with a great many more men than this.</source>
+        <translation>Der letzte Pass ist beinahe frei. Was auch die andere Seite herabkommt, ich werde in Italien darauf warten, mit sehr viel mehr Männern als diesen.</translation>
+    </message>
+    <message>
+        <source>The high pass is sending everything it has. They have been paid in Roman silver to hold that road, and mountain men earn their silver.</source>
+        <translation>Der hohe Pass schickt alles, was er hat. Sie sind mit römischem Silber bezahlt, jene Straße zu halten, und Bergleute verdienen ihr Silber.</translation>
+    </message>
+    <message>
+        <source>The hill fort is yours. It was built to watch a river; now it will watch you cross one. Forts do not much care who is inside them.</source>
+        <translation>Das Hügelfort gehört Euch. Es wurde gebaut, einen Fluss zu bewachen; nun wird es Euch beim Überqueren zusehen. Forts kümmert wenig, wer in ihnen sitzt.</translation>
+    </message>
+    <message>
+        <source>The last column. Everything they have left is on the road. Hold this one and the ford is ours until the spring.</source>
+        <translation>Die letzte Kolonne. Alles, was sie noch haben, ist auf der Straße. Haltet diese und die Furt gehört uns bis zum Frühjahr.</translation>
+    </message>
+    <message>
+        <source>The last of the legions is in the water. Everything Rome has north of the Apennines is coming at you wet. Hold this and you hold Italy for a winter.</source>
+        <translation>Die letzten Legionen sind im Wasser. Alles, was Rom nördlich des Apennins hat, kommt nass auf Euch zu. Haltet dies und Ihr haltet Italien für einen Winter.</translation>
+    </message>
+    <message>
+        <source>The last of the northern columns is moving. I have spent a year making you hold this quarter. Hold it one more hour and I will have spent it well.</source>
+        <translation>Die letzte der nördlichen Kolonnen setzt sich in Bewegung. Ich habe ein Jahr darauf verwandt, Euch dieses Viertel halten zu lassen. Haltet es eine Stunde länger, und das Jahr war gut verwandt.</translation>
+    </message>
+    <message>
+        <source>The last pass camp. So you are through - what is left of you. Italy is below. Italy has been waiting, and Italy is not friendly.</source>
+        <translation>Das letzte Passlager. Ihr seid also durch - was von Euch übrig ist. Italien liegt unten. Italien hat gewartet, und Italien ist nicht freundlich.</translation>
+    </message>
+    <message>
+        <source>The line is nearly broken. Nearly. I was at Cannae, you understand. I know exactly what nearly looks like from the other side, and I am still here.</source>
+        <translation>Die Linie ist beinahe gebrochen. Beinahe. Ich war bei Cannae, versteht Ihr. Ich weiß genau, wie Beinahe von der anderen Seite aussieht, und ich bin noch hier.</translation>
+    </message>
+    <message>
+        <source>The lower pass camp is yours. Keep it warm. The tribes will want it back in the spring and I will not be here to stop them.</source>
+        <translation>Das untere Passlager gehört Euch. Haltet es warm. Die Stämme wollen es im Frühjahr zurück, und ich werde nicht hier sein, sie aufzuhalten.</translation>
+    </message>
+    <message>
+        <source>The main line is advancing. No trumpets, no tricks, no gaps between the maniples for your elephants to find. I learned. You taught me.</source>
+        <translation>Die Hauptlinie rückt vor. Keine Trompeten, keine Kniffe, keine Lücken zwischen den Manipeln, die Eure Elefanten finden könnten. Ich habe gelernt. Ihr habt es mich gelehrt.</translation>
+    </message>
+    <message>
+        <source>The northern camp is gone. Fine. It was a camp. Scipio&apos;s line still stands, and that is the only thing on this plain that matters.</source>
+        <translation>Das Nordlager ist fort. Gut. Es war ein Lager. Scipios Linie steht noch, und das ist das Einzige auf dieser Ebene, was zählt.</translation>
+    </message>
+    <message>
+        <source>The northern legion is coming down through the orchards. Slowly. I ordered slowly. Every tree they pass is one you will not harvest.</source>
+        <translation>Die Nordlegion kommt durch die Obstgärten herab. Langsam. Ich befahl langsam. Jeder Baum, an dem sie vorbeigehen, ist einer, den Ihr nicht erntet.</translation>
+    </message>
+    <message>
+        <source>The northern legion is spent. I have others. I have always had others. That is what the delaying was for.</source>
+        <translation>Die Nordlegion ist verbraucht. Ich habe andere. Ich hatte immer andere. Dafür war das Hinhalten da.</translation>
+    </message>
+    <message>
+        <source>The patrols are nearly finished. So be it. I shall take the fleet back to Italy and wait for you there with the rest of the Republic.</source>
+        <translation>Die Patrouillen sind beinahe erledigt. So sei es. Ich bringe die Flotte nach Italien zurück und erwarte Euch dort mit dem Rest der Republik.</translation>
+    </message>
+    <message>
+        <source>The rearguard camp falls. I held it the way I hold everything - long enough, and no longer. Scipio will manage without an old man&apos;s tents.</source>
+        <translation>Das Nachhutlager fällt. Ich hielt es, wie ich alles halte - lange genug, und nicht länger. Scipio kommt ohne die Zelte eines alten Mannes aus.</translation>
+    </message>
+    <message>
+        <source>The reserve camp is yours. It was never meant to fight - it was meant to be there afterwards. There is not going to be an afterwards, is there.</source>
+        <translation>Das Reservelager gehört Euch. Es war nie zum Kämpfen gedacht - es sollte danach da sein. Es wird kein Danach geben, nicht wahr.</translation>
+    </message>
+    <message>
+        <source>The reserve is moving, and moving fast. I do not hold men back for the look of the thing.</source>
+        <translation>Die Reserve setzt sich in Bewegung, und zwar schnell. Ich halte Männer nicht des Anscheins wegen zurück.</translation>
+    </message>
+    <message>
+        <source>The screen is coming across the flats. Velites, cavalry, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
+        <translation>Der Schirm kommt über die Ebene. Veliten, Reiterei, die übliche Anordnung. Bitte versucht stillzustehen; es macht die Berichte so viel ordentlicher.</translation>
+    </message>
+    <message>
+        <source>The second pass. You are buying road with men and paying in snow. I have never seen an army spend itself so willingly on scenery.</source>
+        <translation>Der zweite Pass. Ihr kauft Straße mit Männern und zahlt in Schnee. Nie sah ich ein Heer sich so bereitwillig an Landschaft verausgaben.</translation>
+    </message>
+    <message>
+        <source>The shore camp. That was the way out, and now there is only the lake. Romans are not, on the whole, a swimming people.</source>
+        <translation>Das Uferlager. Das war der Weg hinaus, und nun bleibt nur der See. Römer sind im Großen und Ganzen kein schwimmendes Volk.</translation>
+    </message>
+    <message>
+        <source>The siege column is at the run. Engines behind, ladders in front. I do not besiege towns. I take them.</source>
+        <translation>Die Belagerungskolonne kommt im Laufschritt. Geschütze hinten, Leitern vorn. Ich belagere keine Städte. Ich nehme sie.</translation>
+    </message>
+    <message>
+        <source>The tribes are coming down the slope. They do not fight in lines. They fight in rockfalls.</source>
+        <translation>Die Stämme kommen den Hang herab. Sie kämpfen nicht in Linien. Sie kämpfen in Steinschlägen.</translation>
+    </message>
+    <message>
+        <source>The western reserve is moving, against my advice. I gave the advice knowing it would be ignored; it is still worth having given.</source>
+        <translation>Die westliche Reserve setzt sich in Bewegung, gegen meinen Rat. Ich gab den Rat im Wissen, dass er übergangen würde; er war dennoch wert, gegeben zu werden.</translation>
+    </message>
+    <message>
+        <source>They are hitting your camp, because it is the only thing on this road they can see. Men in fog attack whatever is nearest. Remember it.</source>
+        <translation>Sie schlagen auf Euer Lager ein, weil es das Einzige auf dieser Straße ist, das sie sehen. Männer im Nebel greifen an, was am nächsten ist. Denkt daran.</translation>
+    </message>
+    <message>
+        <source>Varro&apos;s town. Varro is not in it; Varro is out front, being brave at other people. Enjoy the walls. I never needed them.</source>
+        <translation>Varros Stadt. Varro ist nicht darin; Varro ist vorn und ist tapfer gegen andere Leute. Erfreut Euch der Mauern. Ich brauchte nie welche.</translation>
+    </message>
+    <message>
+        <source>We are losing men on the goat path. Pull the wounded back and put fresh spears in the gap. Nobody dies standing in a hole.</source>
+        <translation>Wir verlieren Männer auf dem Ziegenpfad. Zieht die Verwundeten zurück und setzt frische Speere in die Lücke. Niemand stirbt, indem er in einem Loch steht.</translation>
+    </message>
+    <message>
+        <source>We are on your bank and at your works. A river only stops men who are not already freezing.</source>
+        <translation>Wir stehen an Eurem Ufer und an Euren Werken. Ein Fluss hält nur Männer auf, die nicht schon frieren.</translation>
+    </message>
+    <message>
+        <source>You have the allied camp. Socii - allies. They were promised land for this war, and you have just handed them the first piece of it face down.</source>
+        <translation>Ihr habt das Bundesgenossenlager. Socii - Verbündete. Ihnen wurde Land für diesen Krieg versprochen, und Ihr habt ihnen soeben das erste Stück davon verkehrt herum überreicht.</translation>
+    </message>
+    <message>
+        <source>You have the marching town. Flaminius built it in a fog and never looked back. There is a lesson there; he will not be the one to learn it.</source>
+        <translation>Ihr habt die Marschstadt. Flaminius baute sie im Nebel und blickte nie zurück. Darin liegt eine Lehre; er wird nicht der sein, der sie lernt.</translation>
+    </message>
+    <message>
+        <source>Your camp is under the screen&apos;s spears. A camp on the wrong bank of a cold river - I would not have chosen it, and now you cannot un-choose it.</source>
+        <translation>Euer Lager liegt unter den Speeren des Schirms. Ein Lager am falschen Ufer eines kalten Flusses - ich hätte es nicht gewählt, und nun könnt Ihr es nicht abwählen.</translation>
+    </message>
+    <message>
+        <source>Your garrison is bleeding. You cannot replace those men from Africa in time, and I can replace mine from the next valley. That is the whole war.</source>
+        <translation>Eure Besatzung blutet. Ihr könnt jene Männer nicht rechtzeitig aus Afrika ersetzen, und ich ersetze meine aus dem nächsten Tal. Das ist der ganze Krieg.</translation>
+    </message>
+    <message>
+        <source>Your line is bleeding along the bank. Wet ground is slow ground, and slow men are what spears are for.</source>
+        <translation>Eure Linie blutet am Ufer entlang. Nasser Boden ist langsamer Boden, und langsame Männer sind das, wofür Speere da sind.</translation>
+    </message>
+    <message>
+        <source>Your men are dying on the ice. Not from spears - from cold, and hunger, and the arithmetic of a road that is longer than your grain.</source>
+        <translation>Eure Männer sterben auf dem Eis. Nicht an Speeren - an Kälte, Hunger und der Rechnung einer Straße, die länger ist als Euer Korn.</translation>
+    </message>
+    <message>
+        <source>Your men are dying too. A trap costs the trapper something; the good ones simply cost him less.</source>
+        <translation>Auch Eure Männer sterben. Eine Falle kostet den Fallensteller etwas; die guten kosten ihn bloß weniger.</translation>
+    </message>
+    <message>
+        <source>Your men are falling at the water. The Rhone is not particular about whose bones it keeps; I did tell you.</source>
+        <translation>Eure Männer fallen am Wasser. Die Rhone ist nicht wählerisch, wessen Knochen sie behält; ich habe es Euch gesagt.</translation>
+    </message>
+    <message>
+        <source>Your men are going down in the centre. I know - that is where you put the Gauls, and Gauls are for spending. It is still a great many funerals.</source>
+        <translation>Eure Männer gehen in der Mitte nieder. Ich weiß - dorthin habt Ihr die Gallier gestellt, und Gallier sind zum Ausgeben da. Es sind dennoch sehr viele Begräbnisse.</translation>
+    </message>
+    <message>
+        <source>Your riders are dying by the ford. Numidians, I think. They ride beautifully, and they die at the ordinary speed.</source>
+        <translation>Eure Reiter sterben an der Furt. Numider, denke ich. Sie reiten wunderschön, und sie sterben mit gewöhnlicher Geschwindigkeit.</translation>
+    </message>
+    <message>
+        <source>Your veterans are dying. Italy&apos;s veterans, really; you took them from us sixteen years ago and now we are taking them back one at a time.</source>
+        <translation>Eure Veteranen sterben. Eigentlich Italiens Veteranen; Ihr habt sie uns vor sechzehn Jahren genommen, und nun nehmen wir sie einen nach dem anderen zurück.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -6622,14 +7788,6 @@ um die Vorschau zu sehen</translation>
         <translation>Ein kleines Feld, ein Befehl. Kein Feldzug zu verlieren, keine zweite Armee im Nacken.</translation>
     </message>
     <message>
-        <source>carried out</source>
-        <translation>ausgeführt</translation>
-    </message>
-    <message>
-        <source>← Back</source>
-        <translation>← Zurück</translation>
-    </message>
-    <message>
         <source>No missions are installed.</source>
         <translation>Es sind keine Einsätze installiert.</translation>
     </message>
@@ -6650,10 +7808,6 @@ um die Vorschau zu sehen</translation>
         <translation>Es endet übel, wenn</translation>
     </message>
     <message>
-        <source>You have carried this one out before.</source>
-        <translation>Diesen hast du schon einmal ausgeführt.</translation>
-    </message>
-    <message>
         <source>Take it again</source>
         <translation>Noch einmal antreten</translation>
     </message>
@@ -6662,8 +7816,84 @@ um die Vorschau zu sehen</translation>
         <translation>Ins Feld ziehen</translation>
     </message>
     <message>
-        <source>Pick a mission.</source>
-        <translation>Wähle einen Einsatz.</translation>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>Mission orders</source>
+        <translation>Missionsbefehle</translation>
+    </message>
+    <message>
+        <source>FIELD ORDERS  /  SECOND PUNIC WAR</source>
+        <translation>FELDBEFEHLE  /  ZWEITER PUNISCHER KRIEG</translation>
+    </message>
+    <message>
+        <source>ORDERS FULFILLED</source>
+        <translation>BEFEHLE ERFÜLLT</translation>
+    </message>
+    <message>
+        <source>Mission completion</source>
+        <translation>Missionsabschluss</translation>
+    </message>
+    <message>
+        <source>Back ›</source>
+        <translation>Zurück ›</translation>
+    </message>
+    <message>
+        <source>‹ Back</source>
+        <translation>‹ Zurück</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Zurück</translation>
+    </message>
+    <message>
+        <source>AVAILABLE DISPATCHES</source>
+        <translation>VERFÜGBARE DEPESCHEN</translation>
+    </message>
+    <message>
+        <source>DONE</source>
+        <translation>ERLEDIGT</translation>
+    </message>
+    <message>
+        <source>MISSION BRIEF</source>
+        <translation>MISSIONSBRIEF</translation>
+    </message>
+    <message>
+        <source>ORDER FULFILLED</source>
+        <translation>BEFEHL ERFÜLLT</translation>
+    </message>
+    <message>
+        <source>OPEN ORDER</source>
+        <translation>BEFEHL ÖFFNEN</translation>
+    </message>
+    <message>
+        <source>COMMANDER&apos;S INTENT</source>
+        <translation>ABSICHT DES FELDHERRN</translation>
+    </message>
+    <message>
+        <source>You start with</source>
+        <translation>Ihr beginnt mit</translation>
+    </message>
+    <message>
+        <source>Nothing in the stores. Everything you spend, you gather first.</source>
+        <translation>Nichts in den Vorräten. Alles, was Ihr ausgebt, sammelt Ihr zuerst.</translation>
+    </message>
+    <message>
+        <source>FIELD RECONNAISSANCE</source>
+        <translation>FELDAUFKLÄRUNG</translation>
+    </message>
+    <message>
+        <source>Enter</source>
+        <translation>Beginnen</translation>
+    </message>
+    <message>
+        <source>Previously carried out</source>
+        <translation>Zuvor ausgeführt</translation>
+    </message>
+    <message>
+        <source>Choose a dispatch to review its field orders.</source>
+        <translation>Wählt eine Depesche, um ihre Feldbefehle zu lesen.</translation>
     </message>
 </context>
 <context>
@@ -6915,6 +8145,22 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Continue</source>
         <translation>Weiter</translation>
+    </message>
+    <message>
+        <source>CAMPAIGN DECREE</source>
+        <translation>FELDZUGSDEKRET</translation>
+    </message>
+    <message>
+        <source>FIELD ASSESSMENT</source>
+        <translation>FELDBEURTEILUNG</translation>
+    </message>
+    <message>
+        <source>BATTLEFIELD VERDICT</source>
+        <translation>SCHLACHTFELDURTEIL</translation>
+    </message>
+    <message>
+        <source>COMMAND REPORT</source>
+        <translation>GEFECHTSBERICHT</translation>
     </message>
 </context>
 <context>

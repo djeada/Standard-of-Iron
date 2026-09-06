@@ -1,22 +1,25 @@
 ---
 name: Pull Request
 
-# Pull requests are deliberately cheap: quality gates plus a Linux
-# test build. Packaging, the renderer self-test and the Windows/macOS
-# platform builds run in the weekly workflow and are gated again on every
-# release tag, which is where a break must be caught before shipping.
+# Pull requests are deliberately bounded: compiler-free policy/formatting gates
+# plus a fast Linux test lane. That lane builds and runs every test binary; what
+# it leaves out is the individual tests listed in tests/extended_tests.txt --
+# headless battles and sweeps over every shipped asset, which cost seconds each
+# and had grown to over ninety minutes. Simulation budgets, the terrain audit
+# and the excluded tests themselves run on scheduled/manual workflows and
+# release validation instead of occupying a PR runner for an hour or more.
 on:
   workflow_call:
   pull_request:
     branches: [main, develop]
   merge_group:
 
-# Least privilege by default; no job here needs more.
 permissions:
   contents: read
 
+# A push cancels only the obsolete run for this PR; unrelated PRs keep running.
 concurrency:
-  group: pr-${{ github.workflow }}-${{ github.ref }}
+  group: pr-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:
@@ -24,31 +27,24 @@ env:
   BUILD_TYPE: Debug
 
 jobs:
-  # ---------------------------------------------------------------------
-  # Lane 1: everything that needs no compiler. Fails in about a minute.
-  # Shared with the release preflight so both run the identical gate.
-  # ---------------------------------------------------------------------
   quality:
-    name: Quality
+    name: Quality and source policy
     uses: ./.github/workflows/quality.yml
 
-  # ---------------------------------------------------------------------
-  # Lane 2: compile and run the tests. Only the targets the tests and the
-  # content validator need are built - the game binary, map editor, arena
-  # and preview tools are not, which is the bulk of the link time. The
-  # full application build happens weekly and on every release tag.
-  # ---------------------------------------------------------------------
   test:
-    name: Build and test (ubuntu-24.04)
+    name: Fast build and test (ubuntu-24.04)
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    # Roughly ten minutes of work: a warm-ccache build, then a test run that
+    # measures in single-digit minutes. The ceiling is here to kill a hung run,
+    # not to leave room for a slow one.
+    timeout-minutes: 45
     env:
       CMAKE_CXX_COMPILER_LAUNCHER: ccache
       CMAKE_C_COMPILER_LAUNCHER: ccache
+      SOI_TEST_PROFILE: pr
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
-          fetch-depth: 0
           persist-credentials: false
 
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
@@ -71,7 +67,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
-          key: pr-ubuntu-24.04-${{ env.BUILD_TYPE }}
+          key: pr-fast-ubuntu-24.04-${{ env.BUILD_TYPE }}
           max-size: 1G
 
       - name: Cache CMake FetchContent dependencies
@@ -88,142 +84,79 @@ jobs:
             -DDEFAULT_LANG=en \
             -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
 
-      # terrain_probe is built alongside the test binaries because the authored
-      # placement audit below measures the ground the engine actually raises,
-      # not the hill ellipses the map JSON declares.
-      - name: Build test targets
+      # Every test binary, because linking them is not what made this lane
+      # slow: with a warm ccache the whole build is a couple of minutes, and
+      # dropping the renderer, application, arena and tool suites would have
+      # cost a pull request its only check on four of the nine domains.
+      - name: Build the test binaries
         run: |
           cmake --build build --parallel \
-            --target soi_test_binaries content_validator terrain_probe
+            --target soi_test_binaries content_validator
 
-      - name: Unit tests
+      # SOI_TEST_PROFILE=pr subtracts tests/extended_tests.txt; every binary in
+      # the suite list still runs. SOI_TEST_REPORT_DIR collects the GoogleTest
+      # JSON the speed gate below reads, which costs the run nothing.
+      - name: Fast PR tests
         env:
           QT_QPA_PLATFORM: offscreen
+          SOI_TEST_REPORT_DIR: artifacts/test-reports
         run: bash scripts/run-tests.sh build --gtest_brief=1
 
-      # The catalogues are tracked, so they drift the moment someone adds a
-      # qsTr() without rerunning `make translations`. They had drifted by 275
-      # strings before the v0.1.0 audit caught it, precisely because nothing
-      # here looked. This job already has a full Qt, so lupdate is available.
+      # The split is only worth anything while it stays true. This fails if a
+      # test that ran took longer than the per-test budget -- the way this lane
+      # grew to ninety minutes in the first place -- and if a pattern in the
+      # manifest has stopped matching anything, which would silently retire the
+      # gate it names.
+      - name: Fast profile stays fast
+        if: always()
+        run: |
+          python scripts/check-test-speed.py \
+            --build-dir build \
+            --report-dir artifacts/test-reports
+
       - name: Translation coverage
         run: make translations-check
 
-      # A cue can be declared, bound and shipped while nothing ever fires it, which sounds
-      # exactly like having no sound at all. This checks every link from the cue catalogue
-      # to the manifest, the file on disk and a real call site in the sources.
       - name: Audio wiring
         run: make audio-check
 
       - name: Content validation
         run: ./build/bin/content_validator assets
 
-      # A tent lying across the break of a hill, or standing in the ramp the
-      # engine cuts out of one, floats a corner of its model in the air. Neither
-      # is visible in the map JSON: a hill is authored as a centre and a radius,
-      # and what gets raised from that is warped, roughened, rotated and cut
-      # open. --surface require makes a missing terrain_probe a failure, because
-      # the fallback measures the authored ellipse and reports a clean map that
-      # is not clean.
-      - name: Authored placement audit
-        run: python scripts/fix-map-prop-overlaps.py --check --surface require
-
       - name: Validator integration tests
         run: bash tests/validator_integration_test.sh
 
-      # Frame zero of a published reel is the thumbnail every social platform
-      # picks up, and a black one has shipped three times now -- most recently
-      # because the advisory card faded its text up from an opaque black fill,
-      # which no reviewer sees without stepping the first sixteen frames. This
-      # needs no compiler, only the ffmpeg the job already installs.
       - name: Promo first-frame tests
         run: bash tests/promo_first_frame_test.sh
 
-  # ---------------------------------------------------------------------
-  # Lane 3: the deterministic simulation budget. Its own job, and its own
-  # build type, for two reasons.
-  #
-  # sim_benchmark links soi_runtime, soi_ai and game_sim and nothing else --
-  # no Qt Quick, no renderer -- so this builds a fraction of what the test
-  # job does. And it has to be Release: the budgets in
-  # tests/perf/sim_budgets.json are recorded from an optimised build, and a
-  # Debug run of 2,000 units for 240 ticks is minutes of CI time measuring a
-  # build nobody ships.
-  #
-  # scripts/check-sim-budgets.py existed for months and ran in no workflow,
-  # which is how position_tests per unit-tick sat at 2,120 with a budget that
-  # nothing read.
-  # ---------------------------------------------------------------------
-  simulation:
-    name: Simulation budgets (ubuntu-24.04)
+  readiness:
+    name: PR diagnostics complete
+    if: always()
+    needs: [quality, test]
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
-    env:
-      CMAKE_CXX_COMPILER_LAUNCHER: ccache
-      CMAKE_C_COMPILER_LAUNCHER: ccache
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-        with:
-          persist-credentials: false
-
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-        with:
-          python-version: "3.12"
-
-      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730 # v4.3.1
-        with:
-          version: ${{ env.QT_VERSION }}
-          host: linux
-          cache: true
-          modules: qt5compat qtmultimedia
-
-      - name: Install build dependencies
+      - name: Summarize required lanes
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          TEST_RESULT: ${{ needs.test.result }}
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            ninja-build libgl1-mesa-dev libegl1
+          {
+            echo "## PR diagnostics"
+            echo
+            echo "| Lane | Result |"
+            echo "| --- | --- |"
+            echo "| Quality and source policy | ${QUALITY_RESULT} |"
+            echo "| Fast build and test | ${TEST_RESULT} |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
-        with:
-          key: pr-ubuntu-24.04-sim-Release
-          max-size: 1G
-
-      - name: Cache CMake FetchContent dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: build/_deps
-          key: deps-ubuntu-24.04-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
-          restore-keys: deps-ubuntu-24.04-
-
-      - name: Configure
-        run: |
-          cmake -S . -B build -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DDEFAULT_LANG=en \
-            -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
-
-      - name: Build the benchmark
-        run: cmake --build build --parallel --target sim_benchmark
-
-      # Amplification counters only. The wall-clock budgets are recorded and
-      # printed but not gated (--check-timings turns that on), because a shared
-      # runner's tick p95 says more about its neighbours than about this commit
-      # -- recording a baseline and immediately re-checking it on a busy box
-      # moved tick p95 by 38% while every counter came back byte-identical.
-      #
-      # --check-digest is deliberately off too. The digest is stable for a given
-      # binary but not across builds: the release flags include -ffast-math, so
-      # a different compiler or -march moves it without anything being wrong.
-      # Same-binary determinism is what actually matters and it is gated in the
-      # test job, by the verifier's --determinism-runs and the headless replay
-      # round trip.
-      - name: Simulation budgets
-        run: python scripts/check-sim-budgets.py --binary build/bin/sim_benchmark
-
-      - name: Upload benchmark JSON
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: sim-benchmark-json
-          path: artifacts/perf/
-          if-no-files-found: ignore
+          status=0
+          for result in "$QUALITY_RESULT" "$TEST_RESULT"; do
+            if [ "$result" != "success" ]; then
+              status=1
+            fi
+          done
+          if [ "$status" -ne 0 ]; then
+            echo "One or more required PR lanes did not complete successfully."
+          fi
+          exit "$status"
