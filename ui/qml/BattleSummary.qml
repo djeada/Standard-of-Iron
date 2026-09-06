@@ -15,23 +15,61 @@ Item {
     property string missionName: ""
     property string durationText: ""
     property var armies: []
+    property bool prepared: false
+    property bool preparing: false
+    property bool returning_to_menu: false
+    property int preparation_generation: 0
 
     signal closed
     signal return_to_main_menu_requested
 
+    function reset_data() {
+        summaryOverlay.preparation_generation += 1;
+        summaryOverlay.prepared = false;
+        summaryOverlay.preparing = false;
+        summaryOverlay.returning_to_menu = false;
+        menuTransitionTimer.stop();
+        summaryOverlay.armies = [];
+        summaryOverlay.durationText = "";
+        summaryOverlay.missionName = "";
+    }
+
+    function prepare() {
+        if (summaryOverlay.prepared || summaryOverlay.preparing)
+            return;
+        summaryOverlay.preparing = true;
+        var generation = summaryOverlay.preparation_generation;
+        Qt.callLater(function () {
+                if (generation !== summaryOverlay.preparation_generation)
+                    return;
+                summaryOverlay.build_army_list();
+                if (generation !== summaryOverlay.preparation_generation)
+                    return;
+                summaryOverlay.prepared = true;
+                summaryOverlay.preparing = false;
+            });
+    }
+
     function show() {
+        summaryOverlay.returning_to_menu = false;
+        menuTransitionTimer.stop();
         visible = true;
-        build_army_list();
         report.forceActiveFocus();
+        summaryOverlay.prepare();
     }
 
     function hide() {
+        summaryOverlay.returning_to_menu = false;
+        menuTransitionTimer.stop();
         visible = false;
         summaryOverlay.closed();
     }
 
     function return_to_main_menu() {
-        summaryOverlay.return_to_main_menu_requested();
+        if (summaryOverlay.returning_to_menu)
+            return;
+        summaryOverlay.returning_to_menu = true;
+        menuTransitionTimer.restart();
     }
 
     function spectator_winning_team(roster) {
@@ -129,11 +167,23 @@ Item {
     visible: false
     z: 101
 
+    Timer {
+        id: menuTransitionTimer
+
+        interval: 16
+        repeat: false
+        onTriggered: {
+            if (summaryOverlay.returning_to_menu)
+                summaryOverlay.return_to_main_menu_requested();
+        }
+    }
+
     Design.BattleReportLayout {
         id: report
 
         objectName: "battleReport"
         anchors.fill: parent
+        enabled: !summaryOverlay.returning_to_menu
         outcome: summaryOverlay.outcome
         factionId: summaryOverlay.factionId
         headline: summaryOverlay.headline
@@ -143,5 +193,62 @@ Item {
         armies: summaryOverlay.armies
         onDismissed: summaryOverlay.hide()
         onMenuRequested: summaryOverlay.return_to_main_menu()
+    }
+
+    Rectangle {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Design.Metrics.space24
+        width: preparingLabel.implicitWidth + Design.Metrics.space24 * 2
+        height: Design.Metrics.controlHeight
+        radius: Design.Metrics.radiusSmall
+        color: Design.Theme.panelIron
+        border.width: Design.Metrics.borderThin
+        border.color: Design.Theme.borderStrong
+        visible: summaryOverlay.visible && summaryOverlay.preparing && !summaryOverlay.prepared && !summaryOverlay.returning_to_menu
+        z: 102
+
+        Text {
+            id: preparingLabel
+
+            anchors.centerIn: parent
+            text: "…"
+            color: Design.Theme.textSecondary
+            font.family: Design.Typography.family
+            font.pixelSize: Design.Typography.label
+        }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        visible: summaryOverlay.visible && summaryOverlay.returning_to_menu
+        z: 103
+        color: Qt.rgba(Design.Theme.backgroundDeep.r, Design.Theme.backgroundDeep.g, Design.Theme.backgroundDeep.b, 0.72)
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+        }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: returningLabel.implicitWidth + Design.Metrics.space24 * 2
+            height: Design.Metrics.controlHeight
+            radius: Design.Metrics.radiusSmall
+            color: Design.Theme.panelIron
+            border.width: Design.Metrics.borderThin
+            border.color: Design.Theme.accent
+
+            Text {
+                id: returningLabel
+
+                anchors.centerIn: parent
+                text: report.primaryAction + "…"
+                color: Design.Theme.textPrimary
+                font.family: Design.Typography.family
+                font.pixelSize: Design.Typography.label
+                font.weight: Design.Typography.medium
+            }
+        }
     }
 }

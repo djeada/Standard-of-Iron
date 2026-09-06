@@ -17,6 +17,7 @@ Item {
     property string primaryAction: qsTr("Battle Report")
 
     property bool showingSummary: false
+    property bool reportTransitioning: false
 
     property bool manuallyHidden: false
 
@@ -70,13 +71,24 @@ Item {
     signal secondaryRequested
 
     function reset() {
+        reportTransitionTimer.stop();
+        root.reportTransitioning = false;
         root.showingSummary = false;
         root.manuallyHidden = false;
     }
 
     function forceHide() {
+        reportTransitionTimer.stop();
+        root.reportTransitioning = false;
         root.showingSummary = false;
         root.manuallyHidden = true;
+    }
+
+    function request_report() {
+        if (root.reportTransitioning || root.showingSummary)
+            return;
+        root.reportTransitioning = true;
+        reportTransitionTimer.restart();
     }
 
     function onOutcomeChanged() {
@@ -92,8 +104,27 @@ Item {
 
     onVictoryStateChanged: root.onOutcomeChanged()
     onVisibleChanged: {
-        if (!visible)
+        if (!visible) {
+            reportTransitionTimer.stop();
+            root.reportTransitioning = false;
             root.showingSummary = false;
+        }
+    }
+
+    Timer {
+        id: reportTransitionTimer
+
+        interval: 16
+        repeat: false
+        onTriggered: {
+            if (!root.visible || !root.decided || root.manuallyHidden) {
+                root.reportTransitioning = false;
+                return;
+            }
+            root.showingSummary = true;
+            root.reportRequested();
+            root.reportTransitioning = false;
+        }
     }
 
     Loader {
@@ -103,6 +134,7 @@ Item {
         anchors.fill: parent
         active: !root.showingSummary
         visible: active
+        enabled: !root.reportTransitioning
 
         sourceComponent: Design.OutcomeLayout {
             outcome: root.outcomeKind
@@ -111,10 +143,7 @@ Item {
             subtitle: root.subtitle
             primaryAction: root.primaryAction
             secondaryAction: root.secondaryAction
-            onPrimaryActivated: {
-                root.showingSummary = true;
-                root.reportRequested();
-            }
+            onPrimaryActivated: root.request_report()
             onSecondaryActivated: root.secondaryRequested()
         }
     }
@@ -125,5 +154,38 @@ Item {
         objectName: "outcomeDetail"
         anchors.fill: parent
         visible: root.showingSummary
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        visible: root.reportTransitioning
+        z: 1
+        color: Qt.rgba(Design.Theme.backgroundDeep.r, Design.Theme.backgroundDeep.g, Design.Theme.backgroundDeep.b, 0.52)
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+        }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: transitionLabel.implicitWidth + Design.Metrics.space24 * 2
+            height: Design.Metrics.controlHeight
+            radius: Design.Metrics.radiusSmall
+            color: Design.Theme.panelIron
+            border.width: Design.Metrics.borderThin
+            border.color: Design.Theme.accent
+
+            Text {
+                id: transitionLabel
+
+                anchors.centerIn: parent
+                text: root.primaryAction + "…"
+                color: Design.Theme.textPrimary
+                font.family: Design.Typography.family
+                font.pixelSize: Design.Typography.label
+                font.weight: Design.Typography.medium
+            }
+        }
     }
 }
