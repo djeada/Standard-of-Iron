@@ -790,6 +790,10 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>Click to dismiss</source>
         <translation>Kapatmak için tıkla</translation>
     </message>
+    <message>
+        <source>ALLY</source>
+        <translation>MÜTTEFİK</translation>
+    </message>
 </context>
 <context>
     <name>CommanderSystem</name>
@@ -800,6 +804,873 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>%1 has lost its commander. The host breaks and its camps stand empty.</source>
         <translation>%1 komutanını yitirdi. Ordu dağılıyor ve kampları boş kalıyor.</translation>
+    </message>
+</context>
+<context>
+    <name>CommanderVoices</name>
+    <message>
+        <source>A camp gathered in. I shall keep it quiet and fed. That is what I am for.</source>
+        <translation>Bir ordugâh devralındı. Sessiz ve karnı tok tutacağım. Ben bunun içinim.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I have a dozen more, and the one you hold is the one I liked least.</source>
+        <translation>Bir ordugâh kaybedildi. Bir düzine daha var; elindeki, en az sevdiğimdi.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I have slept in worse hides and woken to better mornings.</source>
+        <translation>Bir ordugâh kaybedildi. Daha beter inlerde uyudum, daha güzel sabahlara uyandım.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I shall claim it was never mine. That is the beauty of having good clerks.</source>
+        <translation>Bir ordugâh kaybedildi. Hiç benim olmadığını söyleyeceğim. İyi kâtiplerin faydası budur.</translation>
+    </message>
+    <message>
+        <source>A fresh column is on the road to you. Treat them courteously; several of them owe me money.</source>
+        <translation>Taze bir kol sana doğru yolda. Onlara nazik davran; birkaçının bana borcu var.</translation>
+    </message>
+    <message>
+        <source>A victory, and a tidy one. I shall write it up as mostly mine; you would have done the same.</source>
+        <translation>Bir zafer, hem de derli toplu. Kayda çoğunlukla benim diye geçireceğim; sen de aynısını yapardın.</translation>
+    </message>
+    <message>
+        <source>Advance. Double time. A slow attack is a gift to the enemy, and I am not generous.</source>
+        <translation>İleri. Çabuk adım. Yavaş bir saldırı düşmana hediyedir, ben ise cömert değilim.</translation>
+    </message>
+    <message>
+        <source>Ah. Blades at last. I had begun to think you were a rumour with a baggage train.</source>
+        <translation>Ah. Nihayet çelik. Ağırlık arabalarıyla dolaşan bir söylenti olduğunu düşünmeye başlamıştım.</translation>
+    </message>
+    <message>
+        <source>An army, and someone paying for it. Let us not pretend this is about glory. I will make you an offer at the end; you will not like the terms.</source>
+        <translation>Bir ordu ve onu ödeyen biri. Bunun şan meselesi olduğunu farz etmeyelim. Sonunda sana bir teklif yapacağım; şartları hoşuna gitmeyecek.</translation>
+    </message>
+    <message>
+        <source>An assault on my camp. Every breach is coming out of someone&apos;s wages, and it will not be mine.</source>
+        <translation>Ordugâhıma bir hücum. Her gedik birinin maaşından düşer, o da benimki olmayacak.</translation>
+    </message>
+    <message>
+        <source>An assault on my camp. Spend your men on it if you like; I have budgeted for exactly this kind of impatience.</source>
+        <translation>Ordugâhıma bir hücum. İstersen adamlarını buna harca; tam da bu tür sabırsızlığı bütçeye koydum.</translation>
+    </message>
+    <message>
+        <source>Another camp for the Republic. Do stay and watch the standards go up; you will not see it done better.</source>
+        <translation>Cumhuriyet&apos;e bir ordugâh daha. Kal da sancakların yükselişini gör; daha iyi yapıldığını göremezsin.</translation>
+    </message>
+    <message>
+        <source>Another camp gathered in. Slowly, like fruit. Rot takes the ones you leave on the branch.</source>
+        <translation>Bir ordugâh daha devralındı. Yavaşça, meyve gibi. Çürüklük, dalda bıraktıklarını alır.</translation>
+    </message>
+    <message>
+        <source>Another column comes down the road. Rome walks slowly and never, ever stops.</source>
+        <translation>Yoldan bir kol daha iniyor. Roma yavaş yürür ve asla, asla durmaz.</translation>
+    </message>
+    <message>
+        <source>Another standard on my frontier. I have counted your tents from the ridge - it did not take long. Rome has surveyed better men than you and buried them in straighter rows.</source>
+        <translation>Sınırımda bir sancak daha. Çadırlarını sırttan saydım; uzun sürmedi. Roma senden iyilerini ölçtü ve daha düzgün sıralarla gömdü.</translation>
+    </message>
+    <message>
+        <source>At my walls, are you. Keep swinging. Every man you put there is a man not guarding your own.</source>
+        <translation>Demek surlarımdasın. Vurmaya devam et. Oraya koyduğun her adam, kendi adamlarını korumayan bir adamdır.</translation>
+    </message>
+    <message>
+        <source>Beaten, on this ground, today. Note the qualifications. I have made a career of the ground and the day after.</source>
+        <translation>Yenildim, bu toprakta, bugün. Kayıtlara dikkat et. Ben kariyerimi toprak ve ertesi gün üzerine kurdum.</translation>
+    </message>
+    <message>
+        <source>Beaten. Beside you, which stings. I shall mention that the ground was poor and the allies poorer.</source>
+        <translation>Yenildim. Hem de senin yanında; asıl acıtan bu. Zeminin kötü, müttefiklerin daha da kötü olduğunu söyleyeceğim.</translation>
+    </message>
+    <message>
+        <source>Beaten. Fair. You held when I thought you would run and you hit when I thought you would hold. I will not forget your standard.</source>
+        <translation>Yenildim. Adilce. Kaçacağını sandığımda durdun, duracağını sandığımda vurdun. Sancağını unutmayacağım.</translation>
+    </message>
+    <message>
+        <source>Beaten. I shall write it down as an expense and you as a creditor. I pay my creditors. Eventually, and never in full.</source>
+        <translation>Yenildim. Bunu gider, seni de alacaklı diye yazacağım. Alacaklılarıma öderim. Zamanla ve asla tamamını değil.</translation>
+    </message>
+    <message>
+        <source>Beaten. My brother would have a speech for this. I have only a road home and a great many arrows still in the quiver.</source>
+        <translation>Yenildim. Kardeşimin buna bir nutku olurdu. Benim yalnızca bir eve dönüş yolum ve sadağımda hâlâ pek çok okum var.</translation>
+    </message>
+    <message>
+        <source>Camp taken. At the run. Next one is yours, if you are quick.</source>
+        <translation>Ordugâh alındı. Koşarak. Sıradaki senin, çabuk olursan.</translation>
+    </message>
+    <message>
+        <source>Cohorts moving. Fast. Keep up if you can.</source>
+        <translation>Kohortlar hareket ediyor. Hızlı. Yetişebilirsen yetiş.</translation>
+    </message>
+    <message>
+        <source>Cohorts, forward. Fast. Hit them before they finish thinking.</source>
+        <translation>Kohortlar, ileri. Hızlı. Düşünmeleri bitmeden vurun.</translation>
+    </message>
+    <message>
+        <source>Done. You came at the wrong tempo and I was already inside it. Lie down; the surgeons work through the fallen in the order they fell.</source>
+        <translation>Bitti. Yanlış tempoyla geldin, ben zaten onun içindeydim. Uzan; cerrahlar düşenlere düştükleri sırayla bakar.</translation>
+    </message>
+    <message>
+        <source>Down, then. Tell them Marcellus died forward. Tell them the ground was worth it. Both are true.</source>
+        <translation>Demek düştüm. Onlara Marcellus&apos;un ileri giderken öldüğünü söyleyin. Toprağın buna değdiğini söyleyin. İkisi de doğru.</translation>
+    </message>
+    <message>
+        <source>Down. You came in fast and hungry, and hungry things walk into snares. Rest. The country will not miss you.</source>
+        <translation>Düştüm. Hızlı ve aç geldin; aç olanlar tuzağa yürür. Dinlen. Bu ülke seni aramaz.</translation>
+    </message>
+    <message>
+        <source>Finished. I shall put your camp in the books as a purchase. Blood is a currency like any other; you simply overpaid.</source>
+        <translation>Tamamlandı. Ordugâhını defterlere alım olarak geçireceğim. Kan da her para gibi bir paradır; sen sadece fazla ödedin.</translation>
+    </message>
+    <message>
+        <source>Finished. You fought like a wall - solid, honest, and completely unable to turn around.</source>
+        <translation>Tamamlandı. Bir duvar gibi dövüştün: sağlam, dürüst ve dönmeyi bütünüyle beceremeyen.</translation>
+    </message>
+    <message>
+        <source>First blood. Good. I was beginning to worry you were one of those enemies who negotiate.</source>
+        <translation>İlk kan. Güzel. Pazarlık eden düşmanlardan biri olmandan korkmaya başlamıştım.</translation>
+    </message>
+    <message>
+        <source>Forward, in order. If you have a reserve, this would be the moment to discover it does not exist.</source>
+        <translation>İleri, düzenle. İhtiyatın varsa, olmadığını keşfetmek için tam sırası.</translation>
+    </message>
+    <message>
+        <source>Forward, in pay order. Mercenaries fight best when they can see the paymaster watching.</source>
+        <translation>İleri, ödeme sırasıyla. Paralı askerler, ödeyicinin baktığını gördüklerinde daha iyi dövüşür.</translation>
+    </message>
+    <message>
+        <source>Forward, quietly. The best charge is the one the enemy hears about afterwards.</source>
+        <translation>İleri, sessizce. En iyi hücum, düşmanın sonradan haber aldığıdır.</translation>
+    </message>
+    <message>
+        <source>Forward. If it seems too easy, that is because it is meant to.</source>
+        <translation>İleri. Fazla kolay görünüyorsa, öyle görünmesi içindir.</translation>
+    </message>
+    <message>
+        <source>Fresh cohorts on the road. They march fast because I told them to.</source>
+        <translation>Yolda taze kohortlar var. Hızlı yürüyorlar, çünkü ben emrettim.</translation>
+    </message>
+    <message>
+        <source>Good. An enemy who shows up. Half my career was spent chasing ones who did not. Let us get on with it.</source>
+        <translation>Güzel. Ortaya çıkan bir düşman. Kariyerimin yarısını çıkmayanları kovalayarak geçirdim. Başlayalım.</translation>
+    </message>
+    <message>
+        <source>Hitting my camp, are we? Every stone you knock loose has already been invoiced to your treasury.</source>
+        <translation>Demek ordugâhıma vuruyorsun? Söktüğün her taş çoktan hazinene fatura edildi.</translation>
+    </message>
+    <message>
+        <source>Hitting my camp. Spend your strength there while my hunters spend theirs on your wagons.</source>
+        <translation>Ordugâhıma vuruyorsun. Gücünü orada harca; benim avcılarım da kendi güçlerini arabalarına harcasın.</translation>
+    </message>
+    <message>
+        <source>Hitting my walls, are you. Every man you spend there is one I need not outwit later.</source>
+        <translation>Demek surlarımdasın. Orada harcadığın her adam, sonradan alt etmek zorunda kalmayacağım biridir.</translation>
+    </message>
+    <message>
+        <source>I am advancing. It will not look like much. It is not meant to.</source>
+        <translation>İlerliyorum. Pek bir şeye benzemeyecek. Benzemesi de gerekmiyor.</translation>
+    </message>
+    <message>
+        <source>I am at the end of what patience can buy. Come, or write to my family. Either will do; only one is useful.</source>
+        <translation>Sabrın satın alabileceğinin sonuna geldim. Gel, ya da aileme yaz. İkisi de olur; yalnız biri işe yarar.</translation>
+    </message>
+    <message>
+        <source>I am attacking. Do not take it personally; I am simply collecting on ground you owe me.</source>
+        <translation>Saldırıyorum. Üstüne alınma; sadece bana borçlu olduğun toprağı tahsil ediyorum.</translation>
+    </message>
+    <message>
+        <source>I am attacking. Hold your side. If this is wasted, I shall be sending you the bill.</source>
+        <translation>Saldırıyorum. Kendi yanını tut. Bu boşa giderse hesabı sana yollarım.</translation>
+    </message>
+    <message>
+        <source>I am attacking. If you wished to be consulted, you should have brought more men.</source>
+        <translation>Saldırıyorum. Fikrin sorulsun istiyorduysan daha çok adam getirecektin.</translation>
+    </message>
+    <message>
+        <source>I am bleeding men, and each one was paid in advance. This is not a battle, it is an audit, and it is going badly.</source>
+        <translation>Adam kaybediyorum ve her biri peşin ödenmişti. Bu bir muharebe değil, bir teftiş, ve kötü gidiyor.</translation>
+    </message>
+    <message>
+        <source>I am coming at you now. All of it. Do not blink; you will miss the only part that matters.</source>
+        <translation>Şimdi üstüne geliyorum. Hepsiyle. Gözünü kırpma; önemli olan tek kısmı kaçırırsın.</translation>
+    </message>
+    <message>
+        <source>I am coming for you. Not from where you are looking. I never come from where you are looking.</source>
+        <translation>Peşinden geliyorum. Baktığın yerden değil. Ben hiç baktığın yerden gelmem.</translation>
+    </message>
+    <message>
+        <source>I am down to the last of them. If you are coming, run.</source>
+        <translation>Elimde son kalanlar var. Geliyorsan, koş.</translation>
+    </message>
+    <message>
+        <source>I am going in. Now. Hit them from your side or watch me do it alone.</source>
+        <translation>Giriyorum. Şimdi. Kendi tarafından vur ya da tek başıma yapışımı izle.</translation>
+    </message>
+    <message>
+        <source>I am losing cohorts faster than the treasury can replace them, and the treasury is quicker than you think.</source>
+        <translation>Kohortları hazinenin yerine koyabildiğinden hızlı kaybediyorum, hazine de sandığından hızlıdır.</translation>
+    </message>
+    <message>
+        <source>I am losing men and I cannot replace them out here. If you have spare, I have work for them.</source>
+        <translation>Adam kaybediyorum ve burada yerlerini dolduramam. Fazlan varsa, onlara işim var.</translation>
+    </message>
+    <message>
+        <source>I am losing men at a rate I do not care for. The ledger still balances. Do not let it stop balancing.</source>
+        <translation>Hoşuma gitmeyen bir hızla adam kaybediyorum. Defter hâlâ tutuyor. Tutmaz hâle gelmesine izin verme.</translation>
+    </message>
+    <message>
+        <source>I am losing men fast. Faster than I like, and I like it fast. Something has to change.</source>
+        <translation>Hızla adam kaybediyorum. Sevdiğimden de hızlı, ki ben hızlıyı severim. Bir şeyin değişmesi gerek.</translation>
+    </message>
+    <message>
+        <source>I am losing men. Not to cleverness, to weight. Lend me some of yours, or a distraction, or both.</source>
+        <translation>Adam kaybediyorum. Zekâdan değil, ağırlıktan. Bana kendi adamlarından ödünç ver, ya da bir oyalama, ya da ikisi.</translation>
+    </message>
+    <message>
+        <source>I am moving on them. Do not follow me directly; be where they run to.</source>
+        <translation>Üzerlerine gidiyorum. Ardımdan doğrudan gelme; kaçacakları yerde ol.</translation>
+    </message>
+    <message>
+        <source>I am moving on them. Slowly, from the high ground. Do not wait for me; be where they break to.</source>
+        <translation>Üzerlerine gidiyorum. Yavaşça, yüksekten. Beni bekleme; dağılacakları yerde ol.</translation>
+    </message>
+    <message>
+        <source>I am nearly done here. Nearly. The last few are hunters, and hunters are patient about dying.</source>
+        <translation>Burada neredeyse bitirdim. Neredeyse. Son kalanlar avcı, avcılar da ölmekte sabırlıdır.</translation>
+    </message>
+    <message>
+        <source>I am nearly done, they say. I have crossed mountains on nearly. Do not count what is left of me; count what it is still holding.</source>
+        <translation>Neredeyse bittiğimi söylüyorlar. Ben o &quot;neredeyse&quot; ile dağlar aştım. Benden geriye kalanı değil, onun hâlâ neyi tuttuğunu say.</translation>
+    </message>
+    <message>
+        <source>I am nearly finished, they say. Nearly. A fire is nearly out for a long time before it goes cold, and it burns fingers all the while.</source>
+        <translation>Neredeyse tükendiğimi söylüyorlar. Neredeyse. Bir ateş sönmeden çok önce neredeyse sönmüştür ve bu süre boyunca parmak yakar.</translation>
+    </message>
+    <message>
+        <source>I am nearly finished. I would rather not be. Consider this an invoice for immediate assistance.</source>
+        <translation>Neredeyse tükendim. Olmasam iyiydi. Bunu derhal yardım için kesilmiş bir fatura say.</translation>
+    </message>
+    <message>
+        <source>I am nearly out of men. Nearly. The last handful are the ones who stayed, and those are the ones you should fear.</source>
+        <translation>Neredeyse adamım kalmadı. Neredeyse. Son avuç, kalanlardır; korkman gerekenler de onlardır.</translation>
+    </message>
+    <message>
+        <source>I am sending men forward now. Not many. Enough. One does not empty the granary to kill a fox.</source>
+        <translation>Şimdi öne adam yolluyorum. Çok değil. Yeterince. Bir tilkiyi öldürmek için ambar boşaltılmaz.</translation>
+    </message>
+    <message>
+        <source>I am sending the cohorts down now. Count them as they come. It will give you something to do with your last minutes.</source>
+        <translation>Kohortları şimdi aşağı yolluyorum. Gelirken say. Son dakikalarında yapacak bir işin olur.</translation>
+    </message>
+    <message>
+        <source>I am sending the column now. It will not look like an attack until it is one.</source>
+        <translation>Kolu şimdi yolluyorum. Saldırıya dönüşene kadar saldırıya benzemeyecek.</translation>
+    </message>
+    <message>
+        <source>I see your banners. I saw others like them, years ago; they made excellent kindling. Take your time. I intend to take mine.</source>
+        <translation>Sancaklarını görüyorum. Yıllar önce benzerlerini gördüm; mükemmel çıra oldular. Acele etme. Ben de etmeye niyetli değilim.</translation>
+    </message>
+    <message>
+        <source>Keep the field, then. Rome does not lose provinces - she lends them, at interest. My accountants will be along in the spring, and they are far less pleasant than I am.</source>
+        <translation>Öyleyse meydan senin olsun. Roma eyalet kaybetmez; faiziyle ödünç verir. Muhasebecilerim baharda uğrar ve benden çok daha tatsızdırlar.</translation>
+    </message>
+    <message>
+        <source>Look at that. You are bleeding out and still holding the ground. Brave. Wrong, but brave.</source>
+        <translation>Şuna bak. Kan kaybediyorsun ve hâlâ toprağı tutuyorsun. Cesur. Yanlış, ama cesur.</translation>
+    </message>
+    <message>
+        <source>Look at them fall. I did warn you that arithmetic is cruel, and I am only its clerk.</source>
+        <translation>Düşüşlerini izle. Aritmetiğin zalim olduğunu söylemiştim, ben yalnızca onun kâtibiyim.</translation>
+    </message>
+    <message>
+        <source>Look at your line. Brave men, standing where the arrows are. Whose idea was that?</source>
+        <translation>Hattına bak. Okların düştüğü yerde duran cesur adamlar. Kimin fikriydi bu?</translation>
+    </message>
+    <message>
+        <source>Look at your line. Brave, disciplined, and in exactly the wrong place. Rome taught you well.</source>
+        <translation>Hattına bak. Cesur, disiplinli ve tam da yanlış yerde. Roma sana iyi öğretmiş.</translation>
+    </message>
+    <message>
+        <source>Look at your losses. Whoever is paying for this war is getting very poor value.</source>
+        <translation>Kayıplarına bak. Bu savaşı kim ödüyorsa parasının karşılığını çok kötü alıyor.</translation>
+    </message>
+    <message>
+        <source>Lost. I did say this was the Barcids&apos; kind of war. Nobody listens to the man who keeps the books until the books are empty.</source>
+        <translation>Kaybedildi. Bunun Barkaların savaşı olduğunu söylemiştim. Defterleri tutan adamı, defterler boşalana dek kimse dinlemez.</translation>
+    </message>
+    <message>
+        <source>Lost. We fought their war instead of ours. Next time we choose the field before we choose the fight.</source>
+        <translation>Kaybedildi. Kendi savaşımız yerine onlarınkini yaptık. Bir dahaki sefere kavgayı seçmeden meydanı seçelim.</translation>
+    </message>
+    <message>
+        <source>Lost. We ran out of arrows or out of time; in this country they are the same thing.</source>
+        <translation>Kaybedildi. Ya okumuz bitti ya vaktimiz; bu ülkede ikisi aynı şeydir.</translation>
+    </message>
+    <message>
+        <source>Lost. We were quicker than we should have been, or slower. I shall spend the winter deciding which.</source>
+        <translation>Kaybedildi. Ya olmamız gerekenden hızlıydık ya da yavaş. Kışı hangisi olduğuna karar vererek geçireceğim.</translation>
+    </message>
+    <message>
+        <source>Lost. We were slow when it mattered. I will say so to anyone who asks, including you.</source>
+        <translation>Kaybedildi. Önemli anda ağır kaldık. Soran herkese bunu söylerim, sana da.</translation>
+    </message>
+    <message>
+        <source>More men are on the road. I did not send for them out of fear; I sent for them because there is room.</source>
+        <translation>Yolda daha çok adam var. Onları korkudan çağırmadım; yer olduğu için çağırdım.</translation>
+    </message>
+    <message>
+        <source>More men coming. Not for you to see - for you to feel.</source>
+        <translation>Daha çok adam geliyor. Görmen için değil; hissetmen için.</translation>
+    </message>
+    <message>
+        <source>More of mine are coming down the road. I know - I did not tell you. That was rather the idea.</source>
+        <translation>Benimkilerden daha fazlası yoldan iniyor. Biliyorum, sana söylemedim. Maksat da buydu.</translation>
+    </message>
+    <message>
+        <source>More of mine are coming. I sent for them before you arrived; a hunter sets the snare before he sees the deer.</source>
+        <translation>Benimkilerden daha fazlası geliyor. Sen gelmeden önce çağırmıştım; avcı, geyiği görmeden tuzağı kurar.</translation>
+    </message>
+    <message>
+        <source>More of my hired men are coming down the road. Fresh, fed, and paid. You cannot say the same for yours.</source>
+        <translation>Paralı adamlarımdan daha fazlası yoldan iniyor. Dinç, tok ve ödenmiş. Seninkiler için aynısı söylenemez.</translation>
+    </message>
+    <message>
+        <source>My archers advance. When their line looks at me, it is not looking at you.</source>
+        <translation>Okçularım ilerliyor. Onların hattı bana baktığında sana bakmıyordur.</translation>
+    </message>
+    <message>
+        <source>My archers are moving up. Look to your flanks; that is where the country runs thin.</source>
+        <translation>Okçularım öne çıkıyor. Kanatlarına dikkat et; ülke orada incelir.</translation>
+    </message>
+    <message>
+        <source>My camp is taking hits. I can hold. I would rather kill them with you than hold without you.</source>
+        <translation>Ordugâhım darbe alıyor. Dayanabilirim. Ama sensiz dayanmaktansa seninle onları öldürmeyi yeğlerim.</translation>
+    </message>
+    <message>
+        <source>My camp is taking the weight of their attack. If you were planning to come, this is the day for planning to end.</source>
+        <translation>Ordugâhım saldırılarının ağırlığını taşıyor. Gelmeyi düşünüyorduysan, düşünmenin bittiği gün bugündür.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack, and my archers are better at giving than taking. If you can come, come along the ridge.</source>
+        <translation>Ordugâhım saldırı altında ve okçularım almaktan çok vermekte iyidir. Gelebilirsen sırttan gel.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack, and my men are paid to fight, not to die. If you want them alive tomorrow, come today.</source>
+        <translation>Ordugâhım saldırı altında ve adamlarıma dövüşmek için para veriliyor, ölmek için değil. Yarın sağ istiyorsan bugün gel.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack. I would prefer not to be the one caught in a trap for once; if you can help, now would be poetic.</source>
+        <translation>Ordugâhım saldırı altında. Bir kez olsun tuzağa düşen ben olmasam iyiydi; yardım edebilirsen şimdi tam şiirsel olurdu.</translation>
+    </message>
+    <message>
+        <source>My camp is under the hammer. If you have men to spare, spare them now; if not, I shall be curious to see what you were saving them for.</source>
+        <translation>Ordugâhım çekicin altında. Fazladan adamın varsa şimdi ver; yoksa onları ne için sakladığını merak edeceğim.</translation>
+    </message>
+    <message>
+        <source>My cohorts are bleeding. Very well. Rome bleeds the way rivers do - it is how she reaches the sea.</source>
+        <translation>Kohortlarım kanıyor. Olsun. Roma, nehirler gibi kanar; denize böyle ulaşır.</translation>
+    </message>
+    <message>
+        <source>My cohorts are marching on them. Watch the manoeuvre; it is not something one sees twice for free.</source>
+        <translation>Kohortlarım üzerlerine yürüyor. Manevrayı izle; böylesi ikinci kez bedavaya görülmez.</translation>
+    </message>
+    <message>
+        <source>My cohorts are moving on them. Slowly. If you are quicker, be quicker where they can see it.</source>
+        <translation>Kohortlarım üzerlerine gidiyor. Yavaşça. Sen daha hızlıysan, görebilecekleri yerde hızlı ol.</translation>
+    </message>
+    <message>
+        <source>My cohorts are thinning. It is a cost, and I keep the books honestly. There is still more field than you have men.</source>
+        <translation>Kohortlarım seyreliyor. Bu bir maliyet ve ben defteri dürüst tutarım. Hâlâ senin adamından çok meydan var.</translation>
+    </message>
+    <message>
+        <source>My columns advance. Watch their reserve. It will move when they see me, and that is when it is yours.</source>
+        <translation>Kollarım ilerliyor. İhtiyatlarını gözle. Beni görünce kımıldayacak, işte o zaman senindir.</translation>
+    </message>
+    <message>
+        <source>My columns are moving. Watch the front, by all means; someone should, and it may as well be you.</source>
+        <translation>Kollarım hareket ediyor. Cepheyi elbette gözle; birinin gözlemesi lazım, o da pekâlâ sen olabilirsin.</translation>
+    </message>
+    <message>
+        <source>My line advances. Do not look for the trick; there is no trick. There is only the next step, and then the one after.</source>
+        <translation>Hattım ilerliyor. Hile arama; hile yok. Yalnızca bir sonraki adım var, sonra ondan sonraki.</translation>
+    </message>
+    <message>
+        <source>My men are down in numbers. So be it. Blood is the coin, and I have always paid in full.</source>
+        <translation>Adamlarım sayıca düşüyor. Olsun. Kan paradır ve ben hep tam ödedim.</translation>
+    </message>
+    <message>
+        <source>My men are dying. Good men, too. The enemy may take them; the enemy may not have my attention as well.</source>
+        <translation>Adamlarım ölüyor. Hem de iyi adamlar. Düşman onları alabilir; dikkatimi de almasın.</translation>
+    </message>
+    <message>
+        <source>My men are falling. The line thins. I have fed armies on less and the hills have not run out of stone.</source>
+        <translation>Adamlarım düşüyor. Hat inceliyor. Daha azıyla ordular besledim ve tepelerin taşı tükenmedi.</translation>
+    </message>
+    <message>
+        <source>My part is done. The hills kept me alive longer than the plain would have. Go on without me and win.</source>
+        <translation>Benim payıma düşen bitti. Tepeler beni ovanın tutacağından uzun tuttu. Bensiz devam et ve kazan.</translation>
+    </message>
+    <message>
+        <source>My part is over. I shall be in the Council chamber by morning, explaining how it was your fault. Win anyway.</source>
+        <translation>Payım sona erdi. Sabaha Meclis salonunda, bunun nasıl senin suçun olduğunu anlatıyor olacağım. Yine de kazan.</translation>
+    </message>
+    <message>
+        <source>My spears are falling. Every one is a contract I have to settle with a widow. Someone will pay for this, and it will not be me.</source>
+        <translation>Mızraklılarım düşüyor. Her biri bir dulla kapatmam gereken bir sözleşme. Birileri bunun bedelini ödeyecek ve o ben olmayacağım.</translation>
+    </message>
+    <message>
+        <source>My spears are marching on them. I do not do this cheaply, so kindly make it count.</source>
+        <translation>Mızraklılarım üzerlerine yürüyor. Bunu ucuza yapmıyorum, o yüzden lütfen değsin.</translation>
+    </message>
+    <message>
+        <source>My spears are moving. Every one of them is paid through the season, so they will not stop for a little dying.</source>
+        <translation>Mızraklılarım hareket ediyor. Hepsinin mevsimlik ödemesi yapıldı, o yüzden azıcık ölüm için durmazlar.</translation>
+    </message>
+    <message>
+        <source>Nearly bankrupt, then. In men, I mean. I have been bankrupt before; the trick is to owe so much that they cannot afford to finish you.</source>
+        <translation>Demek neredeyse iflas. Adam bakımından yani. Daha önce de iflas ettim; hile, seni bitirmeye güçlerinin yetmeyeceği kadar borçlu olmaktır.</translation>
+    </message>
+    <message>
+        <source>Nearly beaten, they tell me. I have been nearly beaten before. The word is doing a great deal of work in that sentence.</source>
+        <translation>Neredeyse yenildim diyorlar. Daha önce de neredeyse yenilmiştim. O kelime bu cümlede çok ağır bir iş görüyor.</translation>
+    </message>
+    <message>
+        <source>One camp changes hands. I have lost more to a dishonest quartermaster and slept perfectly well.</source>
+        <translation>Bir ordugâh el değiştiriyor. Sahtekâr bir levazımcıya bundan fazlasını kaybettim ve mışıl mışıl uyudum.</translation>
+    </message>
+    <message>
+        <source>One camp gone. I have never yet lost a war to masonry.</source>
+        <translation>Bir ordugâh gitti. Hiçbir savaşı taş duvara kaybetmedim.</translation>
+    </message>
+    <message>
+        <source>One camp lost. I have lost an eye, an army and a brother, and here I still am.</source>
+        <translation>Bir ordugâh kaybedildi. Bir göz, bir ordu ve bir kardeş kaybettim, hâlâ buradayım.</translation>
+    </message>
+    <message>
+        <source>Reinforcements march. Rome has a great many sons and a very short memory for their names.</source>
+        <translation>Takviyeler yürüyor. Roma&apos;nın pek çok oğlu ve adlarına dair pek kısa bir hafızası vardır.</translation>
+    </message>
+    <message>
+        <source>Reinforcements on the road. Not many. Enough to make you turn your head at the wrong moment.</source>
+        <translation>Yolda takviyeler var. Çok değil. Yanlış anda başını çevirtmeye yetecek kadar.</translation>
+    </message>
+    <message>
+        <source>Reinforcements. Bought this morning, delivered this afternoon. That is what a treasury is for.</source>
+        <translation>Takviyeler. Sabah satın alındı, öğleden sonra teslim edildi. Hazine bunun içindir.</translation>
+    </message>
+    <message>
+        <source>Reinforcements. Mine, I am afraid. I collect them the way others collect debts.</source>
+        <translation>Takviyeler. Korkarım benimkiler. Onları başkalarının borç topladığı gibi toplarım.</translation>
+    </message>
+    <message>
+        <source>Right. You are here, I am here. No speeches. Sharpen what you have; I do not like to fight dull men.</source>
+        <translation>Pekâlâ. Sen buradasın, ben buradayım. Nutuk yok. Elindekini bile; kör adamlarla dövüşmeyi sevmem.</translation>
+    </message>
+    <message>
+        <source>So it begins. Spears touch, men fall, and the wheat grows regardless. I can wait longer than you can bleed.</source>
+        <translation>İşte başlıyor. Mızraklar değer, adamlar düşer, buğday yine de büyür. Ben senin kanayabileceğinden uzun bekleyebilirim.</translation>
+    </message>
+    <message>
+        <source>So it ends with a blade after all. Tell Rome I was a wolf, not a bull. She never did learn the difference.</source>
+        <translation>Demek sonunda bir bıçakla bitiyor. Roma&apos;ya bir kurt olduğumu söyleyin, boğa değil. Farkı hiç öğrenemedi.</translation>
+    </message>
+    <message>
+        <source>So the Barcids&apos; war has found me a new opponent. Understand that I am here for the ledger, not the legend, and ledgers are much harder to kill.</source>
+        <translation>Demek Barkaların savaşı bana yeni bir hasım buldu. Şunu anla: ben efsane için değil, defter için buradayım ve defterleri öldürmek çok daha zordur.</translation>
+    </message>
+    <message>
+        <source>So the arrow finds me at last. Tell my brother I held the road as long as roads can be held.</source>
+        <translation>Demek ok beni sonunda buldu. Kardeşime söyleyin: yolu, yollar tutulabildiği kadar tuttum.</translation>
+    </message>
+    <message>
+        <source>So the old man falls at last. Rome will call it a tragedy for a week and a lesson for a century. Mind the lesson.</source>
+        <translation>Demek yaşlı adam nihayet düşüyor. Roma buna bir hafta trajedi, bir yüzyıl ders diyecek. Derse kulak ver.</translation>
+    </message>
+    <message>
+        <source>So this is the army. I make it three cohorts and some optimism. My clerks have already drawn up the receipt for your camp; we only need the date.</source>
+        <translation>Demek ordu bu. Üç kohort ile biraz iyimserlik sayıyorum. Kâtiplerim ordugâhının makbuzunu şimdiden yazdı; sadece tarih eksik.</translation>
+    </message>
+    <message>
+        <source>So. The Barcids get their wish and I get a spear. Tell the Council the books are in order. They always were.</source>
+        <translation>Pekâlâ. Barkalar dileğini alıyor, ben de bir mızrak. Meclis&apos;e defterlerin düzgün olduğunu söyleyin. Hep düzgündü.</translation>
+    </message>
+    <message>
+        <source>So. You have come to fight me. How refreshing - most of my enemies prefer to wait behind their walls until I have finished with the countryside.</source>
+        <translation>Demek benimle dövüşmeye geldin. Ne ferahlatıcı; düşmanlarımın çoğu, ben kırla işimi bitirene dek surlarının ardında beklemeyi yeğler.</translation>
+    </message>
+    <message>
+        <source>Steel meets steel. Now the costs begin. I do hope you are keeping accounts, because I am.</source>
+        <translation>Çelik çeliğe değdi. Şimdi masraflar başlıyor. Umarım hesap tutuyorsundur, çünkü ben tutuyorum.</translation>
+    </message>
+    <message>
+        <source>Steel. Finally. Now we find out what you are made of, and I already have a guess.</source>
+        <translation>Çelik. Nihayet. Şimdi neyden yapıldığını öğreneceğiz, ki bir tahminim var.</translation>
+    </message>
+    <message>
+        <source>Take the camp. I have taken cities and given them back; the joy is in the taking, not the holding.</source>
+        <translation>Ordugâhı al. Şehirler alıp geri verdim; keyif almakta, tutmakta değil.</translation>
+    </message>
+    <message>
+        <source>That camp is Rome&apos;s now. I shall let you have the wells, at the usual rate.</source>
+        <translation>O ordugâh artık Roma&apos;nın. Kuyuları sana bırakırım, her zamanki bedelle.</translation>
+    </message>
+    <message>
+        <source>That camp is mine now. I have already sold the grain in it twice. Do not look so surprised; it is how one makes a profit on war.</source>
+        <translation>O ordugâh artık benim. İçindeki tahılı çoktan iki kez sattım. Öyle şaşırma; savaştan kâr böyle çıkarılır.</translation>
+    </message>
+    <message>
+        <source>That camp is mine now. I shall not do anything dramatic with it. I shall simply keep it, which is worse.</source>
+        <translation>O ordugâh artık benim. Onunla dramatik bir şey yapmayacağım. Sadece elimde tutacağım, ki bu daha kötüdür.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. I did not even need the elephants. I am almost disappointed.</source>
+        <translation>O ordugâh benim. Fillere bile gerek kalmadı. Neredeyse hayal kırıklığına uğradım.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. I did not storm it; I waited for it. There is a difference and you will feel it.</source>
+        <translation>O ordugâh benim. Onu basmadım; bekledim. Arada fark vardır ve onu hissedeceksin.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. Took it at the run. Did you even see the standard change?</source>
+        <translation>O ordugâh benim. Koşarak alındı. Sancağın değiştiğini görebildin mi?</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I have already leased the granary. To you, actually. We can discuss terms.</source>
+        <translation>O ordugâh bizim. Tahıl ambarını çoktan kiraya verdim. Aslında sana. Şartları konuşabiliriz.</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I took it from the side nobody guards, which is every side, eventually.</source>
+        <translation>O ordugâh bizim. Kimsenin korumadığı taraftan aldım, ki eninde sonunda her taraf öyledir.</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I will hold it and keep the road open behind you. Somebody has to.</source>
+        <translation>O ordugâh bizim. Onu tutacağım ve ardındaki yolu açık tutacağım. Birinin yapması lazım.</translation>
+    </message>
+    <message>
+        <source>That is all of me spent. It was a long war and I regret none of the slow parts. Finish it.</source>
+        <translation>Bendeki bu kadardı. Uzun bir savaştı ve yavaş kısımlarının hiçbirine pişman değilim. Sen bitir.</translation>
+    </message>
+    <message>
+        <source>That is my part done. Went forward the whole way. Finish what is left of them.</source>
+        <translation>Payım bu kadardı. Yolun tamamını ileri giderek yürüdüm. Onlardan kalanı bitir.</translation>
+    </message>
+    <message>
+        <source>That is the end of it. You fought. That counts for something in my camp, if not in yours.</source>
+        <translation>İşte sonu. Dövüştün. Benim ordugâhımda bunun bir değeri var, seninkinde olmasa da.</translation>
+    </message>
+    <message>
+        <source>That is the end of my army. Not of me - never that - but the war is in your hands now. Turn it.</source>
+        <translation>İşte ordumun sonu. Benim değil, asla, ama savaş artık senin ellerinde. Onu çevir.</translation>
+    </message>
+    <message>
+        <source>That is the end of my part. The rest of the war is yours. Do keep the receipts.</source>
+        <translation>İşte payımın sonu. Savaşın kalanı senin. Makbuzları sakla.</translation>
+    </message>
+    <message>
+        <source>That is the end. You fought hard and thought little. In the hills, that gets you eaten.</source>
+        <translation>İşte son. Sert dövüştün ve az düşündün. Tepelerde bu, yem olmak demektir.</translation>
+    </message>
+    <message>
+        <source>That was yours a moment ago. My surveyors are already renaming the streets. Something Latin, I think.</source>
+        <translation>Az önce bu seninken. Kadastrocularım şimdiden sokakların adını değiştiriyor. Latince bir şey, sanırım.</translation>
+    </message>
+    <message>
+        <source>The cohorts are moving - slowly, in step. You will have time to see them coming. That is the point.</source>
+        <translation>Kohortlar hareket ediyor; yavaşça, adım adım. Geldiklerini görmeye vaktin olacak. Amaç da bu.</translation>
+    </message>
+    <message>
+        <source>The first arrows fly. Now we learn whether you can bleed and think at once.</source>
+        <translation>İlk oklar uçuyor. Şimdi hem kanayıp hem düşünebiliyor musun öğreneceğiz.</translation>
+    </message>
+    <message>
+        <source>The legion is moving. Do not trouble to form a line - it will only give my men something to step over.</source>
+        <translation>Lejyon hareket ediyor. Hat kurmakla uğraşma; adamlarıma sadece üstünden geçecekleri bir şey verir.</translation>
+    </message>
+    <message>
+        <source>There it is. You came straight at me, like a bull at a red cloak, and now you are wondering where the cloak went.</source>
+        <translation>İşte bu. Kırmızı beze koşan boğa gibi doğrudan üstüme geldin ve şimdi bezin nereye gittiğini merak ediyorsun.</translation>
+    </message>
+    <message>
+        <source>There you are. I have been counting your wagons. Fewer than you need, more than you can guard. This will be a patient day.</source>
+        <translation>İşte oradasın. Arabalarını sayıyordum. İhtiyacından az, koruyabileceğinden çok. Bu, sabırlı bir gün olacak.</translation>
+    </message>
+    <message>
+        <source>There. It was never a battle, only a season, and seasons end. Go home if you have one; the road is long and I shall not follow.</source>
+        <translation>İşte bu kadar. Bu hiç muharebe değildi, sadece bir mevsimdi ve mevsimler biter. Varsa evine git; yol uzun ve ben peşinden gelmeyeceğim.</translation>
+    </message>
+    <message>
+        <source>There. That is what happens when amateurs march against a ledger. Sit down. My men will count you when they have counted the horses.</source>
+        <translation>İşte bu kadar. Acemiler bir hesap defterine yürüyünce böyle olur. Otur. Adamlarım atları saydıktan sonra sizi de sayar.</translation>
+    </message>
+    <message>
+        <source>There. You are done, and I have lost fewer men than I budgeted for. That is a good day in my trade.</source>
+        <translation>İşte bu kadar. Sen bittin ve ben bütçelediğimden az adam kaybettim. Benim işimde bu, iyi bir gündür.</translation>
+    </message>
+    <message>
+        <source>They are at my walls, and my walls were built by the lowest bidder. Some assistance would not go unrecorded.</source>
+        <translation>Surlarımdalar ve surlarımı en ucuz teklifi veren yaptı. Biraz yardım kayıtsız kalmazdı.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. Come now, hard, and we break them between us.</source>
+        <translation>Surlarımdalar. Şimdi gel, sert gel, ikimizin arasında kıralım onları.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I can hold a while - I always can - but a while is not forever, and I would rather not test the word.</source>
+        <translation>Surlarımdalar. Bir süre dayanabilirim, hep dayanırım, ama bir süre sonsuza dek değildir ve o kelimeyi sınamayı yeğlemem.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I can hold a while with what I have. A while, not long. Please hear the difference.</source>
+        <translation>Surlarımdalar. Elimdekiyle bir süre dayanabilirim. Bir süre, uzun değil. Lütfen farkı duy.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I have been the hammer so often that I forget what the anvil feels like. It is unpleasant.</source>
+        <translation>Surlarımdalar. O kadar sık çekiç oldum ki örs olmanın nasıl bir şey olduğunu unuttum. Hoş değilmiş.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. Mercenaries have a fine sense of when a paymaster is about to become a corpse. Do hurry.</source>
+        <translation>Surlarımdalar. Paralı askerlerin, bir ödeyicinin ne zaman ceset olacağına dair keskin bir burnu vardır. Acele et.</translation>
+    </message>
+    <message>
+        <source>This is the edge. I have stood on it before and walked back. I would rather not do it alone.</source>
+        <translation>Bu, kenar. Daha önce de üstünde durdum ve geri döndüm. Bunu yalnız yapmayı yeğlemem.</translation>
+    </message>
+    <message>
+        <source>This is the end of my line unless you reach me. I will not ask twice; there will not be time to.</source>
+        <translation>Bana ulaşamazsan hattımın sonu bu. İki kez istemeyeceğim; vakit olmayacak.</translation>
+    </message>
+    <message>
+        <source>This is what the end of a consulship looks like from the inside. Come quickly, or come for the funeral.</source>
+        <translation>Bir konsüllüğün sonu içeriden böyle görünür. Çabuk gel ya da cenazeye gel.</translation>
+    </message>
+    <message>
+        <source>Together, then. I will do the clever part. You may do the brave part; it is honest work and someone must.</source>
+        <translation>Birlikte öyleyse. Zekice kısmı ben yaparım. Cesur kısmı sen yapabilirsin; dürüst bir iştir ve birinin yapması gerekir.</translation>
+    </message>
+    <message>
+        <source>We are allies, so I am told. I did not vote for it. Keep your men off my supply lines and we shall get along splendidly.</source>
+        <translation>Müttefikiz, öyle diyorlar. Ben bunun için oy vermedim. Adamlarını ikmal hatlarımdan uzak tut, gayet iyi geçiniriz.</translation>
+    </message>
+    <message>
+        <source>We fight side by side. Keep pace with me or stay out of my way; either is fine, both at once is not.</source>
+        <translation>Omuz omuza dövüşüyoruz. Ya bana ayak uydur ya yolumdan çekil; ikisi de olur, ikisi birden olmaz.</translation>
+    </message>
+    <message>
+        <source>We fight together, then. Do try to keep your line straight - I shall be watching from the good ground, and I have a very long memory for embarrassments.</source>
+        <translation>Demek birlikte dövüşüyoruz. Hattını düz tutmaya çalış; ben iyi zeminden izliyor olacağım ve utançlara dair hafızam çok uzundur.</translation>
+    </message>
+    <message>
+        <source>We fight together. I will hold the flanks and watch the roads. Keep your supply close; the enemy will not fight fair and neither will I.</source>
+        <translation>Birlikte dövüşüyoruz. Kanatları ben tutar, yolları ben gözlerim. İkmalini yakın tut; düşman adil dövüşmeyecek, ben de.</translation>
+    </message>
+    <message>
+        <source>We stand together. I will not be hurried, and I will not hurry you. Hold what you have and let the enemy come to us tired.</source>
+        <translation>Birlikte duruyoruz. Acele ettirilmem ve seni de ettirmem. Elindekini tut, bırak düşman bize yorgun gelsin.</translation>
+    </message>
+    <message>
+        <source>Welcome to my field. I say mine; I have not signed anything. I simply find that fields tend to become mine after a while.</source>
+        <translation>Meydanıma hoş geldin. Meydanım diyorum; hiçbir şey imzalamadım. Sadece meydanların bir süre sonra benim olmaya eğilimli olduğunu görüyorum.</translation>
+    </message>
+    <message>
+        <source>Well. A field is lost. I have lost fields before and taken the harvest anyway. We shall see who is still here at the sowing.</source>
+        <translation>Eh. Bir meydan kaybedildi. Daha önce de meydan kaybettim ve hasadı yine de aldım. Ekim vakti kimin burada olduğunu göreceğiz.</translation>
+    </message>
+    <message>
+        <source>Won. Clean and fast. That is how it is done. Drink tonight; march tomorrow.</source>
+        <translation>Kazanıldı. Temiz ve hızlı. Böyle yapılır. Bu gece iç; yarın yürü.</translation>
+    </message>
+    <message>
+        <source>Won. Good. Now let us eat before someone counts what it cost us.</source>
+        <translation>Kazanıldı. Güzel. Şimdi biri bize kaça mal olduğunu saymadan yemek yiyelim.</translation>
+    </message>
+    <message>
+        <source>Won. I shall tell the Council it was my doing and yours was very expensive. They will believe half of it.</source>
+        <translation>Kazanıldı. Meclis&apos;e bunun benim işim, seninkinin de çok pahalı olduğunu söyleyeceğim. Yarısına inanırlar.</translation>
+    </message>
+    <message>
+        <source>Won. Neatly. Remember that half of it was the ground and the other half was the timing, and none of it was luck.</source>
+        <translation>Kazanıldı. Düzgünce. Bunun yarısının zemin, yarısının zamanlama olduğunu ve hiçbirinin şans olmadığını unutma.</translation>
+    </message>
+    <message>
+        <source>Won. Not quickly, but won. Remember how it felt to wait; it is the part nobody else will remember for you.</source>
+        <translation>Kazanıldı. Hızlı değil ama kazanıldı. Beklemenin nasıl olduğunu hatırla; onu senin yerine kimse hatırlamayacak.</translation>
+    </message>
+    <message>
+        <source>You are a long way from your supply, and I can see your fires from here. A hunter does not chase the deer; he waits at the water.</source>
+        <translation>İkmalinden çok uzaktasın ve ateşlerini buradan görüyorum. Avcı geyiği kovalamaz; suyun başında bekler.</translation>
+    </message>
+    <message>
+        <source>You are at my camp. A camp is a tent with ambition; I have left better ones to wolves.</source>
+        <translation>Ordugâhımdasın. Ordugâh, hırsı olan bir çadırdır; daha iyilerini kurtlara bıraktım.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. A camp is a hide, nothing more. I have others, and the hills have more still.</source>
+        <translation>Surlarımdasın. Ordugâh bir in, o kadar. Başkaları var, tepelerde daha da fazlası.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Bold. My grandfather kept a dog that was bold; we buried it with honours and bought a better one.</source>
+        <translation>Surlarımdasın. Cesur. Dedemin cesur bir köpeği vardı; onu törenle gömdük ve daha iyisini aldık.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Do you have any idea what those walls cost? Of course not. Nobody who breaks things ever does.</source>
+        <translation>Surlarımdasın. Bu surların neye mal olduğuna dair fikrin var mı? Elbette yok. Bir şeyi kıranların hiç olmaz.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Knock. My walls have been knocked on by better, and they have learned not to answer.</source>
+        <translation>Surlarımdasın. Vur kapıya. Surlarıma senden iyileri vurdu ve onlar açmamayı öğrendiler.</translation>
+    </message>
+    <message>
+        <source>You are bleeding. I am not pleased by it; I am merely not surprised.</source>
+        <translation>Kanıyorsun. Bu beni memnun etmiyor; sadece şaşırtmıyor.</translation>
+    </message>
+    <message>
+        <source>You are hitting my camp. Good. That means you are close enough for me to hit back.</source>
+        <translation>Ordugâhıma vuruyorsun. Güzel. Demek ki karşılık verebileceğim kadar yakınsın.</translation>
+    </message>
+    <message>
+        <source>You brought numbers. I brought arithmetic. Do write to your people and tell them the difference, if any of them can read.</source>
+        <translation>Sen sayı getirdin. Ben aritmetik getirdim. Halkına yaz ve farkı anlat, içlerinde okuyabilen varsa.</translation>
+    </message>
+    <message>
+        <source>You have a camp of mine. Feed it. Water it. I will watch you try to do both from the road you do not hold.</source>
+        <translation>Bir ordugâhım sende. Besle. Sula. İkisini de elinde olmayan bir yoldan yapmaya çalışmanı izleyeceğim.</translation>
+    </message>
+    <message>
+        <source>You have beaten a consul. Write it down somewhere; nobody in the city will believe you, and next year they will send two.</source>
+        <translation>Bir konsülü yendin. Bir yere yaz; şehirde kimse inanmaz ve seneye iki tane yollarlar.</translation>
+    </message>
+    <message>
+        <source>You have come a long way to stand in a field. Stand in it, then. I have wheat to bring in, and a great deal of time, and you have neither.</source>
+        <translation>Bir meydanda dikilmek için çok uzun yol geldin. Öyleyse dikil. Benim kaldıracak buğdayım ve pek çok vaktim var, senin ise ikisi de yok.</translation>
+    </message>
+    <message>
+        <source>You have killed a consul. Rome keeps forty more in cupboards in the city, and I promise you the ones still in the cupboards are worse.</source>
+        <translation>Bir konsül öldürdün. Roma şehirdeki dolaplarda kırk tane daha tutar ve söz veriyorum, dolaptakiler daha beterdir.</translation>
+    </message>
+    <message>
+        <source>You have taken a camp. It will need feeding, and I have noticed that you do not feed things well.</source>
+        <translation>Bir ordugâh aldın. Beslenmesi gerekecek ve fark ettim ki sen bir şeyleri iyi beslemiyorsun.</translation>
+    </message>
+    <message>
+        <source>You have taken a camp. Take the debts that come with it too; I was rather hoping someone would.</source>
+        <translation>Bir ordugâh aldın. Beraberinde gelen borçları da al; birinin almasını umuyordum zaten.</translation>
+    </message>
+    <message>
+        <source>You have that camp. Congratulations - you now own its wells, its debts, and its sanitation. I shall want it back before the rains.</source>
+        <translation>O ordugâh sende. Tebrikler; artık kuyuları, borçları ve lağımı senin. Yağmurlardan önce geri isteyeceğim.</translation>
+    </message>
+    <message>
+        <source>You have the ground. Ground is patient; so am I. Winter will visit you here long before I do, and it does not negotiate.</source>
+        <translation>Toprak sende. Toprak sabırlıdır; ben de. Kış seni burada benden çok önce ziyaret eder ve o pazarlık etmez.</translation>
+    </message>
+    <message>
+        <source>You have won the field. Very well. I have lost cheaper things to worse men. The Council will hear that the Barcids&apos; war lost it, not mine.</source>
+        <translation>Meydanı kazandın. Pekâlâ. Daha ucuz şeyleri daha kötü adamlara kaybettim. Meclis, kaybedenin Barkaların savaşı olduğunu duyacak, benimki değil.</translation>
+    </message>
+    <message>
+        <source>You have won. I am almost pleased; a man learns nothing from beating fools. I shall learn from you, and I promise you will not enjoy the lesson.</source>
+        <translation>Kazandın. Neredeyse memnunum; ahmakları yenerek insan bir şey öğrenmez. Senden öğreneceğim ve söz veriyorum, dersten hoşlanmayacaksın.</translation>
+    </message>
+    <message>
+        <source>You hurried. Men who hurry meet me exactly where I am waiting. Rest now. The ground is good for it.</source>
+        <translation>Acele ettin. Acele eden adamlar beni tam beklediğim yerde bulur. Şimdi dinlen. Toprak buna elverişlidir.</translation>
+    </message>
+    <message>
+        <source>You took the camp. Fine. It was walls; I fight in the field. Come and find me there.</source>
+        <translation>Ordugâhı aldın. Peki. Onlar surdu; ben meydanda dövüşürüm. Gel ve beni orada bul.</translation>
+    </message>
+    <message>
+        <source>You win the field. Take it. I have hunted this country for years; the land will still feed me when you have eaten it bare.</source>
+        <translation>Meydanı kazanıyorsun. Al. Bu ülkede yıllardır avlanırım; sen onu kemirip bitirdiğinde bile o beni doyurur.</translation>
+    </message>
+    <message>
+        <source>You won. Do not gloat; it slows the feet. I will find you again on better ground.</source>
+        <translation>Kazandın. Böbürlenme; ayakları ağırlaştırır. Seni daha iyi bir zeminde yeniden bulurum.</translation>
+    </message>
+    <message>
+        <source>Your camp changes masters. They will find me a lenient landlord and a very poor tenant.</source>
+        <translation>Ordugâhın el değiştiriyor. Beni hoşgörülü bir mal sahibi ve çok kötü bir kiracı olarak bulacaklar.</translation>
+    </message>
+    <message>
+        <source>Your camp is taken. My brother will say it was his idea. It usually is.</source>
+        <translation>Ordugâhın alındı. Kardeşim bunun kendi fikri olduğunu söyleyecek. Genelde öyledir.</translation>
+    </message>
+    <message>
+        <source>Your camp, gone in a heartbeat. That is what tempo does. Learn it or lose the next one.</source>
+        <translation>Ordugâhın, bir kalp atışında gitti. Tempo bunu yapar. Öğren ya da bir sonrakini kaybet.</translation>
+    </message>
+    <message>
+        <source>Your camp, under new management. I shall keep the wells and fire the garrison. Standard practice.</source>
+        <translation>Ordugâhın yeni yönetim altında. Kuyuları tutar, garnizonu dağıtırım. Alışılmış uygulama.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. A pity. I had a speech prepared for after, and he would have hated it.</source>
+        <translation>Komutanın düştü. Yazık. Sonrası için bir konuşma hazırlamıştım ve ondan nefret ederdi.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Grief later; line now. The field does not pause for either of us.</source>
+        <translation>Komutanın düştü. Yas sonra; şimdi hat. Meydan ikimiz için de durmaz.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Hasty men do. Bury him with honour; you will be joining him soon enough, and the ground here is soft.</source>
+        <translation>Komutanın düştü. Aceleci olanların başına gelir. Onu şerefle göm; yakında ona katılacaksın ve buranın toprağı yumuşak.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. I know that grief. Keep your men together; scattered men are what the enemy is hunting.</source>
+        <translation>Komutanın düştü. O yası bilirim. Adamlarını bir arada tut; düşmanın avladığı, dağılmış olanlardır.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Sorry. Keep your men moving; grief stands still and standing still kills.</source>
+        <translation>Komutanın düştü. Üzgünüm. Adamlarını hareket hâlinde tut; yas yerinde durur ve yerinde durmak öldürür.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Unfortunate. Hold your line; I shall not hold mine for a leaderless ally very long.</source>
+        <translation>Komutanın düştü. Talihsizlik. Hattını tut; başsız bir müttefik için kendi hattımı uzun süre tutmam.</translation>
+    </message>
+    <message>
+        <source>Your commander is dead. A costly man to lose. I have already calculated what it will cost you to replace him; the number is not kind.</source>
+        <translation>Komutanın öldü. Pahalı bir kayıp. Onun yerine birini koymanın sana neye mal olacağını çoktan hesapladım; rakam nazik değil.</translation>
+    </message>
+    <message>
+        <source>Your commander is dead. Unfortunate, and expensive. Keep your line; a leaderless ally is a liability I did not agree to insure.</source>
+        <translation>Komutanın öldü. Talihsiz ve pahalı. Hattını tut; başsız bir müttefik, sigortalamayı kabul etmediğim bir risktir.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. He led from the front; brave men do, and it is where the arrows go.</source>
+        <translation>Komutanın düştü. Önden komuta ediyordu; cesurlar öyle yapar ve oklar oraya gider.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. I did not enjoy it. I did not have to.</source>
+        <translation>Komutanın düştü. Zevk almadım. Almam da gerekmiyordu.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. Pity. I had meant to invite him to dinner after and explain where he went wrong.</source>
+        <translation>Komutanın düştü. Yazık. Onu sonrasında yemeğe çağırıp nerede yanıldığını anlatmayı düşünüyordum.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. Their moment of joy is your moment of opportunity; nobody watches the flanks while they cheer.</source>
+        <translation>Komutanın düştü. Onların sevinç anı senin fırsat anındır; kimse tezahürat ederken kanatlarını gözlemez.</translation>
+    </message>
+    <message>
+        <source>Your line is breaking. I can hear it from here. Press or pull back - standing there is just dying slowly.</source>
+        <translation>Hattın kırılıyor. Buradan duyuyorum. Ya bastır ya geri çekil; orada durmak yavaş yavaş ölmektir.</translation>
+    </message>
+    <message>
+        <source>Your line is thinning nicely. I am told grief is easier when one has fewer names to remember.</source>
+        <translation>Hattın güzelce inceliyor. Diyorlar ki hatırlanacak isim azalınca yas kolaylaşırmış.</translation>
+    </message>
+    <message>
+        <source>Your men are dropping in the open. A hunter feels no pride in it. Only a little pity, and a full quiver.</source>
+        <translation>Adamların açıkta düşüyor. Bir avcı bundan gurur duymaz. Yalnızca biraz acıma ve dolu bir sadak.</translation>
+    </message>
+    <message>
+        <source>Your men are dying at a rate that would bankrupt a lesser treasury. I find that admirable and very stupid.</source>
+        <translation>Adamların, daha küçük bir hazineyi iflasa sürükleyecek bir hızla ölüyor. Bunu hayranlık verici ve çok aptalca buluyorum.</translation>
+    </message>
+    <message>
+        <source>Your men are falling faster than you are replacing them. That is not a battle. That is a harvest, and it is not yours.</source>
+        <translation>Adamların, yerlerini doldurduğundan hızlı düşüyor. Bu bir muharebe değil. Bu bir hasat ve seninki değil.</translation>
+    </message>
+    <message>
+        <source>Your men are falling in rows. That is what happens when you fight a wall&apos;s war against a river.</source>
+        <translation>Adamların sıra sıra düşüyor. Bir duvarın savaşını bir nehre karşı verince böyle olur.</translation>
     </message>
 </context>
 <context>
@@ -5365,6 +6236,29 @@ bir harita seç</translation>
     </message>
 </context>
 <context>
+    <name>MissionDeadline</name>
+    <message>
+        <source>FINAL MINUTE</source>
+        <translation>SON DAKİKA</translation>
+    </message>
+    <message>
+        <source>CLOSING WINDOW</source>
+        <translation>PENCERE KAPANIYOR</translation>
+    </message>
+    <message>
+        <source>MISSION CLOCK</source>
+        <translation>GÖREV SAATİ</translation>
+    </message>
+    <message>
+        <source>Time left: %1</source>
+        <translation>Kalan süre: %1</translation>
+    </message>
+    <message>
+        <source>TIME LEFT</source>
+        <translation>KALAN SÜRE</translation>
+    </message>
+</context>
+<context>
     <name>MissionDetailPanel</name>
     <message>
         <source>Suffete Command</source>
@@ -5860,10 +6754,6 @@ bir harita seç</translation>
         <translation>İki Roma yarma kolunu da yamacı tırmalayarak geçmeden ez.</translation>
     </message>
     <message>
-        <source>Cut and carry home four hundred of timber and two hundred and ten of stone. The near stand will not cover it; the deep pines will.</source>
-        <translation>Dört yüz kereste ve iki yüz on taş kes ve eve taşı. Yakın koru bunu karşılamaz; derin çamlıklar karşılar.</translation>
-    </message>
-    <message>
         <source>Cut the stores for the road</source>
         <translation>Yol için erzağı kes</translation>
     </message>
@@ -5920,10 +6810,6 @@ bir harita seç</translation>
         <translation>Sığlıkta on beş bin ve kâhinler kutsal tavukların bizi uyardığını söyleyecek. Bir konsül öldür, Roma pazar gününe kalmadan bir yenisini seçer. Bizim hilemiz budur: biz bir adam değiliz.</translation>
     </message>
     <message>
-        <source>Fill the levy out of the Pinewater cut: four hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through.</source>
-        <translation>Levhayı Çampınar kesiminden tamamla: dört yüz kereste ve iki yüz on taş; kol geri dönmeden kesilip eve taşınmalı.</translation>
-    </message>
-    <message>
         <source>Final battle in Africa: blunt Scipio&apos;s line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.</source>
         <translation>Afrika&apos;daki son savaş: Scipio&apos;nun hattını körelt, Numidya süvarisine dayan ve ölülerin iki kalkışını da kırarken dört Roma kampını da ele geçir.</translation>
     </message>
@@ -5962,10 +6848,6 @@ bir harita seç</translation>
     <message>
         <source>Follow the valley floor east; the mountain peoples hold the switchbacks above.</source>
         <translation>Vadi tabanını doğuya izle; dağ halkları yukarıdaki virajları tutuyor.</translation>
-    </message>
-    <message>
-        <source>Four hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. Split the crew. Escort the far one.</source>
-        <translation>Dört yüz kereste ve iki yüz taş; yakın koruyu da son ekip soymuş. Bu, derin çamlıklar demek, o da uzun yol demek, o da derin çamlıklarda yaşayan her neyse bizi bir görecek demek. Ekibi böl. Uzaktakine muhafız ver.</translation>
     </message>
     <message>
         <source>Grave-lights move among the western orchards. The Iron Sepulcher is watching, but the legions remain the greater danger.</source>
@@ -6082,10 +6964,6 @@ bir harita seç</translation>
     <message>
         <source>Learn to command before Rome comes looking for you: select and move troops, drive off a scouting party, put builders to work on timber, stone and ore, raise a Home, recruit an army, break a Roman raid, and take the enemy camp.</source>
         <translation>Roma seni aramaya gelmeden komuta etmeyi öğren: birlikleri seç ve hareket ettir, bir keşif kolunu püskürt, inşaatçıları kereste, taş ve cevhere koş, bir Ev yükselt, bir ordu devşir, bir Roma baskınını kır ve düşman kampını al.</translation>
-    </message>
-    <message>
-        <source>Leave the axes. Leave the carts. A detail that cannot walk out of its own cut does not get to carry anything.</source>
-        <translation>Baltaları bırak. Arabaları bırak. Kendi kesim alanından yürüyerek çıkamayan bir ekip hiçbir şey taşıyamaz.</translation>
     </message>
     <message>
         <source>Levy filled. Stack it by the road and let the carts argue about it. We cut a wood down to feed a siege that has not started yet — remember that the next time somebody calls this the quiet posting.</source>
@@ -6587,6 +7465,294 @@ bir harita seç</translation>
         <source>Your commander falls - and every line collapses behind him.</source>
         <translation>Komutanın düşer - ve arkasındaki her hat çöker.</translation>
     </message>
+    <message>
+        <source>A few of the screen left, and me. My son is somewhere on this field; if he finds me, he will be insufferable about it for the rest of his life.</source>
+        <translation>Perdeden birkaç kişi kaldı, bir de ben. Oğlum bu meydanın bir yerinde; beni bulursa hayatının geri kalanında bunu başıma kakar.</translation>
+    </message>
+    <message>
+        <source>Cut and carry home eight hundred of timber and two hundred and ten of stone. The near stand was stripped bare; the deep pines and the east screen are the only timber left standing.</source>
+        <translation>Sekiz yüz kereste ve iki yüz on taş kesip eve getir. Yakın koruluk sıyrıldı; derin çamlar ile doğu perdesi ayakta kalan tek keresteliktir.</translation>
+    </message>
+    <message>
+        <source>Eight hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. The column comes back through at dusk and it does not wait. Split the crew. Escort the far one.</source>
+        <translation>Sekiz yüz kereste ve iki yüz taş; yakın koruluğu da son ekip sıyırdı. Bu, derin çamlar demek; o da uzun yol demek; o da derin çamlarda yaşayan neyse onun bize bir göz atması demek. Kol akşam karanlığında geri geçer ve beklemez. Ekibi böl. Uzağa gidene muhafız ver.</translation>
+    </message>
+    <message>
+        <source>Fill the levy out of the Pinewater cut: eight hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through at dusk.</source>
+        <translation>Vergiyi Çampınarı kesiminden karşıla: sekiz yüz kereste ve iki yüz on taş; kol akşam karanlığında geri geçmeden kesilip eve getirilecek.</translation>
+    </message>
+    <message>
+        <source>First column on the cart gate. Spears up. Let them come to the stakes; the stakes do not get tired.</source>
+        <translation>İlk kol araba kapısında. Mızraklar yukarı. Bırak kazıklara gelsinler; kazıklar yorulmaz.</translation>
+    </message>
+    <message>
+        <source>Hannibal dies in the snow. Then the elephants were for nothing, and so was the road. History will find that very tidy.</source>
+        <translation>Hannibal karda ölür. O zaman filler de boşunaydı, yol da. Tarih bunu çok derli toplu bulacak.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls at the Rhone. Then Rome never sees the elephants, and I never see Cannae. I shall spend the rest of my life not knowing what I was spared.</source>
+        <translation>Hannibal Rhone&apos;da düşer. O zaman Roma filleri hiç görmez, ben de Cannae&apos;yi hiç görmem. Hayatımın geri kalanını neden kurtulduğumu bilmeden geçiririm.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls in Campania, among the orchards, in a war he did not choose. There is a kind of mercy in that, and I did not intend it.</source>
+        <translation>Hannibal Campania&apos;da, meyve bahçelerinin arasında, seçmediği bir savaşta düşer. Bunda bir tür merhamet var ve ben onu amaçlamadım.</translation>
+    </message>
+    <message>
+        <source>Hannibal has fallen at Zama. I wanted to meet him after, and ask him about Cannae. I shall have to ask the ground instead.</source>
+        <translation>Hannibal Zama&apos;da düştü. Sonrasında onunla buluşup Cannae&apos;yi sormak istiyordum. Artık toprağa sormam gerekecek.</translation>
+    </message>
+    <message>
+        <source>Hannibal is down in the Trebia mud. Whatever Mago has hidden in the gullies, it will not bring him back.</source>
+        <translation>Hannibal Trebia&apos;nın çamurunda yatıyor. Mago&apos;nun dere yataklarına ne sakladıysa, onu geri getirmeyecek.</translation>
+    </message>
+    <message>
+        <source>Hannibal is down. The Senate will strike a coin. I shall keep one and never spend it, which I am told is what he would have done.</source>
+        <translation>Hannibal düştü. Senato bir sikke bastıracak. Birini saklayıp asla harcamayacağım; bana dedikleri kadarıyla o da böyle yapardı.</translation>
+    </message>
+    <message>
+        <source>Here they come - the whole consular line, in step, at Varro&apos;s tempo. Eighty thousand men do not turn. Remember that when you want them to.</source>
+        <translation>İşte geliyorlar: bütün konsül hattı, adım adım, Varro&apos;nun temposunda. Seksen bin adam dönmez. Dönmelerini istediğinde bunu hatırla.</translation>
+    </message>
+    <message>
+        <source>Leave the axes. Leave the carts. A detail that cannot fill its own levy before the column comes through does not get to carry anything.</source>
+        <translation>Baltaları bırak. Arabaları bırak. Kol geçmeden kendi vergisini karşılayamayan ekip hiçbir şey taşımaz.</translation>
+    </message>
+    <message>
+        <source>Legionaries at your works. Not Varro&apos;s legions; mine. Men who were at Cannae and remember exactly how it felt.</source>
+        <translation>Tabyalarında lejyonerler var. Varro&apos;nun lejyonları değil; benimkiler. Cannae&apos;de bulunmuş ve nasıl bir his olduğunu tam olarak hatırlayan adamlar.</translation>
+    </message>
+    <message>
+        <source>Light is going. Five minutes of road left in the day, and whatever is on the carts when the column reaches us is what we levied. Bring them home.</source>
+        <translation>Işık gidiyor. Günde beş dakikalık yol kaldı ve kol bize yetiştiğinde arabalarda ne varsa, vergimiz odur. Onları eve getir.</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s camp is yours. His riders will not care; they were never in it. Watch the horizon, not the tents.</source>
+        <translation>Masinissa&apos;nın ordugâhı senin. Süvarileri aldırmaz; zaten içinde değillerdi. Çadırlara değil, ufka bak.</translation>
+    </message>
+    <message>
+        <source>My forward town, taken by horsemen. Horsemen. My father would have said something cutting; I find I am simply cold.</source>
+        <translation>İleri kasabam, atlılarca alındı. Atlılarca. Babam iğneleyici bir şey söylerdi; ben sadece üşüyorum.</translation>
+    </message>
+    <message>
+        <source>My men are at your walls. Not to break them - to remind you they are walls, and that everything outside them is mine.</source>
+        <translation>Adamlarım surlarında. Onları kırmak için değil; onların sur olduğunu ve dışarıdaki her şeyin benim olduğunu hatırlatmak için.</translation>
+    </message>
+    <message>
+        <source>My scouting party is on the road. Cavalry, mostly, and a tribune who wants to be noticed. Do notice him.</source>
+        <translation>Keşif kolum yolda. Çoğunlukla süvari ve fark edilmek isteyen bir tribunus. Lütfen fark et onu.</translation>
+    </message>
+    <message>
+        <source>My town. You have taken my town, at Zama, with Masinissa&apos;s horse behind you. I begin to think the gods have a sense of proportion after all.</source>
+        <translation>Kasabam. Kasabamı aldın, Zama&apos;da, arkanda Masinissa&apos;nın süvarisiyle. Tanrıların sonuçta bir ölçü duygusu olduğunu düşünmeye başlıyorum.</translation>
+    </message>
+    <message>
+        <source>Patrols at your works. You are trying to cross a river with your back to my roads. It is bold. It is also how one drowns.</source>
+        <translation>Tabyalarında devriyeler var. Sırtın yollarıma dönükken bir nehri geçmeye çalışıyorsun. Cesurca. Aynı zamanda insanın boğulma şekli.</translation>
+    </message>
+    <message>
+        <source>Sempronius has a handful left and they are on the wrong side of a winter river. He will still call it a victory in Rome. He always does.</source>
+        <translation>Sempronius&apos;un elinde bir avuç kaldı ve kışlık bir nehrin yanlış tarafındalar. Yine de Roma&apos;da buna zafer diyecek. Hep der.</translation>
+    </message>
+    <message>
+        <source>Sempronius is crossing. Now, in the cold, without breakfast, because a consul&apos;s year ends in March and he wants his battle before it does.</source>
+        <translation>Sempronius geçiyor. Şimdi, soğukta, kahvaltısız; çünkü bir konsülün yılı mart&apos;ta biter ve o muharebesini ondan önce istiyor.</translation>
+    </message>
+    <message>
+        <source>So he dies by his own lake in his own fog. Rome will call it justice. I call it weather, and I have always respected weather.</source>
+        <translation>Demek kendi gölünün kıyısında, kendi sisinde ölüyor. Roma buna adalet diyecek. Ben hava diyorum ve havaya hep saygı duydum.</translation>
+    </message>
+    <message>
+        <source>Somebody is trying to cut a way out along the shore. Good. Somebody should get home and describe this accurately.</source>
+        <translation>Biri kıyı boyunca kendine bir çıkış açmaya çalışıyor. Güzel. Birinin eve varıp bunu doğru anlatması gerek.</translation>
+    </message>
+    <message>
+        <source>The Aufidus camp. So the ring closes. I told the Senate a ring was what he wanted. They told me I was old.</source>
+        <translation>Aufidus ordugâhı. Demek halka kapanıyor. Senato&apos;ya onun istediğinin bir halka olduğunu söylemiştim. Bana yaşlandığımı söylediler.</translation>
+    </message>
+    <message>
+        <source>The Barcid falls at the Ticinus. Then this was the whole war, and it fit inside an afternoon. I expected more of it; I am not sure I wanted more.</source>
+        <translation>Barka Ticinus&apos;ta düşer. O zaman bütün savaş buymuş ve bir öğleden sonraya sığmış. Ondan daha fazlasını bekliyordum; daha fazlasını istedim mi, emin değilim.</translation>
+    </message>
+    <message>
+        <source>The Numidians are riding. Your Numidians, once. Now they ride for Rome, and they ride the same way they always did - around you.</source>
+        <translation>Numidialılar at sürüyor. Bir zamanlar senin Numidialıların. Şimdi Roma için sürüyorlar ve hep yaptıkları gibi sürüyorlar: etrafından.</translation>
+    </message>
+    <message>
+        <source>The allied wing is at your works. Italians, mostly. They fight for Rome because the alternative is fighting Rome, which is a very persuasive argument.</source>
+        <translation>Müttefik kanadı tabyalarında. Çoğu İtalyalı. Roma için dövüşüyorlar, çünkü alternatif Roma&apos;ya karşı dövüşmek; bu da çok ikna edici bir gerekçe.</translation>
+    </message>
+    <message>
+        <source>The allied wing is down to a handful. I have counted them twice, because there was time. Whatever happens next on this field, remember someone counted.</source>
+        <translation>Müttefik kanadından bir avuç kaldı. Onları iki kez saydım, çünkü vakit vardı. Bu meydanda bundan sonra ne olursa olsun, birinin saydığını hatırla.</translation>
+    </message>
+    <message>
+        <source>The allied wing is on the southern road. They know this country - they own most of it, or did, before you started eating it.</source>
+        <translation>Müttefik kanadı güney yolunda. Bu ülkeyi bilirler; çoğu onlarındır, ya da sen onu yemeye başlamadan önce öyleydi.</translation>
+    </message>
+    <message>
+        <source>The column came back through and the carts were still empty. A levy that misses the road is a levy nobody signed for.</source>
+        <translation>Kol geri geçti ve arabalar hâlâ boştu. Yola yetişemeyen bir vergi, kimsenin imzalamadığı bir vergidir.</translation>
+    </message>
+    <message>
+        <source>The column is nearly gone. What is left of it will hold until the fog lifts, because that is the only order anyone can still hear.</source>
+        <translation>Kol neredeyse tükendi. Kalanı sis kalkana dek dayanacak, çünkü hâlâ duyulabilen tek emir bu.</translation>
+    </message>
+    <message>
+        <source>The column is on the lakeside road. In fog, in a defile, in a hurry. Every word of that sentence is a mistake and Flaminius owns them all.</source>
+        <translation>Kol göl kıyısı yolunda. Siste, bir boğazda, telaşla. Bu cümlenin her kelimesi bir hata ve hepsi Flaminius&apos;un.</translation>
+    </message>
+    <message>
+        <source>The final pass is nearly cleared. Whatever comes down the far side, I shall be in Italy waiting for it with a great many more men than this.</source>
+        <translation>Son geçit neredeyse temizlendi. Öbür yamaçtan ne inerse insin, İtalya&apos;da bundan çok daha kalabalık bir orduyla bekliyor olacağım.</translation>
+    </message>
+    <message>
+        <source>The high pass is sending everything it has. They have been paid in Roman silver to hold that road, and mountain men earn their silver.</source>
+        <translation>Yüksek geçit elindeki her şeyi gönderiyor. O yolu tutmaları için Roma gümüşüyle ödendiler ve dağ adamları gümüşünü hak eder.</translation>
+    </message>
+    <message>
+        <source>The hill fort is yours. It was built to watch a river; now it will watch you cross one. Forts do not much care who is inside them.</source>
+        <translation>Tepedeki hisar senin. Bir nehri gözlemek için yapılmıştı; şimdi senin bir nehri geçişini izleyecek. Hisarlar içindekinin kim olduğunu pek umursamaz.</translation>
+    </message>
+    <message>
+        <source>The last column. Everything they have left is on the road. Hold this one and the ford is ours until the spring.</source>
+        <translation>Son kol. Ellerinde ne varsa yolda. Bunu tut, geçit bahara kadar bizim.</translation>
+    </message>
+    <message>
+        <source>The last of the legions is in the water. Everything Rome has north of the Apennines is coming at you wet. Hold this and you hold Italy for a winter.</source>
+        <translation>Son lejyonlar suyun içinde. Roma&apos;nın Apeninler&apos;in kuzeyinde ne varsa ıslak hâlde üstüne geliyor. Bunu tut, İtalya&apos;yı bir kış boyunca tutmuş olursun.</translation>
+    </message>
+    <message>
+        <source>The last of the northern columns is moving. I have spent a year making you hold this quarter. Hold it one more hour and I will have spent it well.</source>
+        <translation>Kuzey kollarının sonuncusu hareket ediyor. Bu çeyreği tutturmak için bir yıl harcadım. Bir saat daha tut, o yılı iyi harcamış olurum.</translation>
+    </message>
+    <message>
+        <source>The last pass camp. So you are through - what is left of you. Italy is below. Italy has been waiting, and Italy is not friendly.</source>
+        <translation>Son geçit ordugâhı. Demek geçtin; senden geriye kalanı yani. İtalya aşağıda. İtalya bekliyordu ve İtalya dost değil.</translation>
+    </message>
+    <message>
+        <source>The line is nearly broken. Nearly. I was at Cannae, you understand. I know exactly what nearly looks like from the other side, and I am still here.</source>
+        <translation>Hat neredeyse kırıldı. Neredeyse. Ben Cannae&apos;deydim, anlarsın ya. &quot;Neredeyse&quot;nin öbür taraftan nasıl göründüğünü tam bilirim ve hâlâ buradayım.</translation>
+    </message>
+    <message>
+        <source>The lower pass camp is yours. Keep it warm. The tribes will want it back in the spring and I will not be here to stop them.</source>
+        <translation>Aşağı geçit ordugâhı senin. Sıcak tut. Kabileler baharda geri isteyecek ve onları durdurmak için burada olmayacağım.</translation>
+    </message>
+    <message>
+        <source>The main line is advancing. No trumpets, no tricks, no gaps between the maniples for your elephants to find. I learned. You taught me.</source>
+        <translation>Ana hat ilerliyor. Boru yok, hile yok, fillerinin bulacağı manipulus aralıkları yok. Öğrendim. Sen öğrettin.</translation>
+    </message>
+    <message>
+        <source>The northern camp is gone. Fine. It was a camp. Scipio&apos;s line still stands, and that is the only thing on this plain that matters.</source>
+        <translation>Kuzey ordugâhı gitti. Olsun. Bir ordugâhtı. Scipio&apos;nun hattı hâlâ ayakta ve bu ovada önemli olan tek şey o.</translation>
+    </message>
+    <message>
+        <source>The northern legion is coming down through the orchards. Slowly. I ordered slowly. Every tree they pass is one you will not harvest.</source>
+        <translation>Kuzey lejyonu meyve bahçelerinden aşağı iniyor. Yavaşça. Yavaş olsun dedim. Geçtikleri her ağaç, senin hasat edemeyeceğin bir ağaçtır.</translation>
+    </message>
+    <message>
+        <source>The northern legion is spent. I have others. I have always had others. That is what the delaying was for.</source>
+        <translation>Kuzey lejyonu tükendi. Başkaları var. Her zaman başkaları oldu. Oyalamanın amacı buydu.</translation>
+    </message>
+    <message>
+        <source>The patrols are nearly finished. So be it. I shall take the fleet back to Italy and wait for you there with the rest of the Republic.</source>
+        <translation>Devriyeler neredeyse bitti. Olsun. Donanmayı İtalya&apos;ya geri götürür, Cumhuriyet&apos;in kalanıyla orada beklerim.</translation>
+    </message>
+    <message>
+        <source>The rearguard camp falls. I held it the way I hold everything - long enough, and no longer. Scipio will manage without an old man&apos;s tents.</source>
+        <translation>Artçı ordugâhı düşüyor. Onu her şeyi tuttuğum gibi tuttum: yetecek kadar, bir an fazla değil. Scipio ihtiyar bir adamın çadırları olmadan da idare eder.</translation>
+    </message>
+    <message>
+        <source>The reserve camp is yours. It was never meant to fight - it was meant to be there afterwards. There is not going to be an afterwards, is there.</source>
+        <translation>İhtiyat ordugâhı senin. Hiç dövüşmek için düşünülmemişti; sonrasında orada olmak içindi. Bir &quot;sonrası&quot; olmayacak, değil mi?</translation>
+    </message>
+    <message>
+        <source>The reserve is moving, and moving fast. I do not hold men back for the look of the thing.</source>
+        <translation>İhtiyat hareket ediyor, hem de hızla. Ben adamları görüntü olsun diye geride tutmam.</translation>
+    </message>
+    <message>
+        <source>The screen is coming across the flats. Velites, cavalry, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
+        <translation>Perde düzlükten geçiyor. Velites, süvari, alışılmış düzen. Lütfen kıpırdamadan dur; raporları çok daha derli toplu yapıyor.</translation>
+    </message>
+    <message>
+        <source>The second pass. You are buying road with men and paying in snow. I have never seen an army spend itself so willingly on scenery.</source>
+        <translation>İkinci geçit. Yolu adamla satın alıyor, karla ödüyorsun. Kendini manzaraya bu kadar istekle harcayan bir ordu hiç görmedim.</translation>
+    </message>
+    <message>
+        <source>The shore camp. That was the way out, and now there is only the lake. Romans are not, on the whole, a swimming people.</source>
+        <translation>Kıyı ordugâhı. Çıkış yolu oydu, şimdi yalnızca göl var. Romalılar, genel olarak, yüzen bir halk değildir.</translation>
+    </message>
+    <message>
+        <source>The siege column is at the run. Engines behind, ladders in front. I do not besiege towns. I take them.</source>
+        <translation>Kuşatma kolu koşar adım geliyor. Makineler arkada, merdivenler önde. Ben şehirleri kuşatmam. Alırım.</translation>
+    </message>
+    <message>
+        <source>The tribes are coming down the slope. They do not fight in lines. They fight in rockfalls.</source>
+        <translation>Kabileler yamaçtan iniyor. Hat hâlinde dövüşmezler. Kaya düşer gibi dövüşürler.</translation>
+    </message>
+    <message>
+        <source>The western reserve is moving, against my advice. I gave the advice knowing it would be ignored; it is still worth having given.</source>
+        <translation>Batı ihtiyatı, tavsiyeme rağmen hareket ediyor. Tavsiyeyi göz ardı edileceğini bilerek verdim; yine de vermeye değerdi.</translation>
+    </message>
+    <message>
+        <source>They are hitting your camp, because it is the only thing on this road they can see. Men in fog attack whatever is nearest. Remember it.</source>
+        <translation>Ordugâhına vuruyorlar, çünkü bu yolda görebildikleri tek şey o. Sisteki adamlar en yakındakine saldırır. Bunu hatırla.</translation>
+    </message>
+    <message>
+        <source>Varro&apos;s town. Varro is not in it; Varro is out front, being brave at other people. Enjoy the walls. I never needed them.</source>
+        <translation>Varro&apos;nun kasabası. Varro içinde değil; Varro önde, başkaları üzerinden cesaret gösteriyor. Surların keyfini çıkar. Benim onlara hiç ihtiyacım olmadı.</translation>
+    </message>
+    <message>
+        <source>We are losing men on the goat path. Pull the wounded back and put fresh spears in the gap. Nobody dies standing in a hole.</source>
+        <translation>Keçi yolunda adam kaybediyoruz. Yaralıları geri çek ve gediğe taze mızrak koy. Kimse çukurda dikilerek ölmez.</translation>
+    </message>
+    <message>
+        <source>We are on your bank and at your works. A river only stops men who are not already freezing.</source>
+        <translation>Senin kıyındayız ve tabyalarındayız. Bir nehir yalnızca henüz donmayanları durdurur.</translation>
+    </message>
+    <message>
+        <source>You have the allied camp. Socii - allies. They were promised land for this war, and you have just handed them the first piece of it face down.</source>
+        <translation>Müttefik ordugâhı sende. Socii; müttefikler. Bu savaş için onlara toprak sözü verilmişti, sen de az önce ilk parçasını yüzüstü teslim ettin.</translation>
+    </message>
+    <message>
+        <source>You have the marching town. Flaminius built it in a fog and never looked back. There is a lesson there; he will not be the one to learn it.</source>
+        <translation>Yürüyüş kasabası sende. Flaminius onu siste kurdu ve arkasına hiç bakmadı. Bunda bir ders var; onu öğrenecek olan o değil.</translation>
+    </message>
+    <message>
+        <source>Your camp is under the screen&apos;s spears. A camp on the wrong bank of a cold river - I would not have chosen it, and now you cannot un-choose it.</source>
+        <translation>Ordugâhın perdenin mızrakları altında. Soğuk bir nehrin yanlış kıyısında bir ordugâh; ben seçmezdim ve artık sen de seçmemiş olamazsın.</translation>
+    </message>
+    <message>
+        <source>Your garrison is bleeding. You cannot replace those men from Africa in time, and I can replace mine from the next valley. That is the whole war.</source>
+        <translation>Garnizonun kanıyor. O adamların yerine Afrika&apos;dan zamanında yenilerini koyamazsın, ben ise kendimkileri yandaki vadiden koyarım. Bütün savaş bundan ibaret.</translation>
+    </message>
+    <message>
+        <source>Your line is bleeding along the bank. Wet ground is slow ground, and slow men are what spears are for.</source>
+        <translation>Hattın kıyı boyunca kanıyor. Islak zemin yavaş zemindir ve yavaş adamlar mızrakların işidir.</translation>
+    </message>
+    <message>
+        <source>Your men are dying on the ice. Not from spears - from cold, and hunger, and the arithmetic of a road that is longer than your grain.</source>
+        <translation>Adamların buzda ölüyor. Mızraktan değil; soğuktan, açlıktan ve tahılından uzun bir yolun aritmetiğinden.</translation>
+    </message>
+    <message>
+        <source>Your men are dying too. A trap costs the trapper something; the good ones simply cost him less.</source>
+        <translation>Senin adamların da ölüyor. Bir tuzak, tuzağı kurana da bir bedele mal olur; iyileri sadece daha aza mal olur.</translation>
+    </message>
+    <message>
+        <source>Your men are falling at the water. The Rhone is not particular about whose bones it keeps; I did tell you.</source>
+        <translation>Adamların suyun kıyısında düşüyor. Rhone kimin kemiğini alıkoyduğuna aldırmaz; söylemiştim.</translation>
+    </message>
+    <message>
+        <source>Your men are going down in the centre. I know - that is where you put the Gauls, and Gauls are for spending. It is still a great many funerals.</source>
+        <translation>Adamların merkezde düşüyor. Biliyorum; Galyalıları oraya koydun ve Galyalılar harcanmak içindir. Yine de pek çok cenaze eder.</translation>
+    </message>
+    <message>
+        <source>Your riders are dying by the ford. Numidians, I think. They ride beautifully, and they die at the ordinary speed.</source>
+        <translation>Süvarilerin geçidin başında ölüyor. Numidialılar sanırım. Muhteşem biniyorlar ve sıradan bir hızda ölüyorlar.</translation>
+    </message>
+    <message>
+        <source>Your veterans are dying. Italy&apos;s veterans, really; you took them from us sixteen years ago and now we are taking them back one at a time.</source>
+        <translation>Gazilerin ölüyor. Aslında İtalya&apos;nın gazileri; on altı yıl önce onları bizden aldınız, şimdi biz birer birer geri alıyoruz.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -6619,14 +7785,6 @@ bir harita seç</translation>
         <translation>Küçük bir meydan, yerine getirilecek tek bir emir. Yitirilecek bir sefer yok, kaygılanılacak ikinci bir ordu yok.</translation>
     </message>
     <message>
-        <source>carried out</source>
-        <translation>yerine getirildi</translation>
-    </message>
-    <message>
-        <source>← Back</source>
-        <translation>← Geri</translation>
-    </message>
-    <message>
         <source>No missions are installed.</source>
         <translation>Yüklü görev yok.</translation>
     </message>
@@ -6647,10 +7805,6 @@ bir harita seç</translation>
         <translation>Şu durumda kötü biter</translation>
     </message>
     <message>
-        <source>You have carried this one out before.</source>
-        <translation>Bunu daha önce yerine getirdin.</translation>
-    </message>
-    <message>
         <source>Take it again</source>
         <translation>Yeniden üstlen</translation>
     </message>
@@ -6659,8 +7813,84 @@ bir harita seç</translation>
         <translation>Meydana çık</translation>
     </message>
     <message>
-        <source>Pick a mission.</source>
-        <translation>Bir görev seç.</translation>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>Mission orders</source>
+        <translation>Görev emirleri</translation>
+    </message>
+    <message>
+        <source>FIELD ORDERS  /  SECOND PUNIC WAR</source>
+        <translation>SAHA EMİRLERİ  /  İKİNCİ PON SAVAŞI</translation>
+    </message>
+    <message>
+        <source>ORDERS FULFILLED</source>
+        <translation>EMİRLER YERİNE GETİRİLDİ</translation>
+    </message>
+    <message>
+        <source>Mission completion</source>
+        <translation>Görev tamamlanması</translation>
+    </message>
+    <message>
+        <source>Back ›</source>
+        <translation>Geri ›</translation>
+    </message>
+    <message>
+        <source>‹ Back</source>
+        <translation>‹ Geri</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Geri</translation>
+    </message>
+    <message>
+        <source>AVAILABLE DISPATCHES</source>
+        <translation>MEVCUT SEVK YAZILARI</translation>
+    </message>
+    <message>
+        <source>DONE</source>
+        <translation>TAMAM</translation>
+    </message>
+    <message>
+        <source>MISSION BRIEF</source>
+        <translation>GÖREV BRİFİNGİ</translation>
+    </message>
+    <message>
+        <source>ORDER FULFILLED</source>
+        <translation>EMİR YERİNE GETİRİLDİ</translation>
+    </message>
+    <message>
+        <source>OPEN ORDER</source>
+        <translation>EMRİ AÇ</translation>
+    </message>
+    <message>
+        <source>COMMANDER&apos;S INTENT</source>
+        <translation>KOMUTANIN NİYETİ</translation>
+    </message>
+    <message>
+        <source>You start with</source>
+        <translation>Şununla başlıyorsun</translation>
+    </message>
+    <message>
+        <source>Nothing in the stores. Everything you spend, you gather first.</source>
+        <translation>Ambarlarda hiçbir şey yok. Harcadığın her şeyi önce toplarsın.</translation>
+    </message>
+    <message>
+        <source>FIELD RECONNAISSANCE</source>
+        <translation>SAHA KEŞFİ</translation>
+    </message>
+    <message>
+        <source>Enter</source>
+        <translation>Başla</translation>
+    </message>
+    <message>
+        <source>Previously carried out</source>
+        <translation>Daha önce yerine getirildi</translation>
+    </message>
+    <message>
+        <source>Choose a dispatch to review its field orders.</source>
+        <translation>Saha emirlerini incelemek için bir sevk yazısı seç.</translation>
     </message>
 </context>
 <context>
@@ -6912,6 +8142,22 @@ bir harita seç</translation>
     <message>
         <source>Continue</source>
         <translation>Sürdür</translation>
+    </message>
+    <message>
+        <source>CAMPAIGN DECREE</source>
+        <translation>SEFER KARARNAMESİ</translation>
+    </message>
+    <message>
+        <source>FIELD ASSESSMENT</source>
+        <translation>SAHA DEĞERLENDİRMESİ</translation>
+    </message>
+    <message>
+        <source>BATTLEFIELD VERDICT</source>
+        <translation>MUHAREBE MEYDANI HÜKMÜ</translation>
+    </message>
+    <message>
+        <source>COMMAND REPORT</source>
+        <translation>KOMUTA RAPORU</translation>
     </message>
 </context>
 <context>

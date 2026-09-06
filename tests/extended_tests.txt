@@ -1,0 +1,89 @@
+# Tests that do not run in the fast pull-request profile.
+#
+# Every entry here is a GoogleTest filter pattern (`Suite.Test`, or `Suite.*`
+# for a whole fixture). `scripts/run-tests.sh` subtracts them when
+# SOI_TEST_PROFILE=pr, so a pull request still builds and runs every test
+# binary and every fast test in it. The full profile -- weekly sanitizer and
+# coverage lanes, extended validation and release verification -- runs the
+# complete set with no filter, so nothing listed here is unowned.
+#
+# The line is drawn by cost, not by importance. A test belongs here when it
+# spends seconds rather than milliseconds because it either
+#
+#   * simulates a battle, a siege or a whole AI match tick by tick, or
+#   * walks every shipped map, mission or creature asset on disk.
+#
+# Both are acceptance checks against content, and content does not change in
+# the pull requests these seconds are being spent on. Before this split the
+# pull-request lane spent over ninety minutes here and was killed by its own
+# timeout with `ai_tests` still running; six tests accounted for most of it.
+#
+# Adding a test here is a deliberate act: say which of the two reasons applies.
+# scripts/check-test-speed.py fails the fast lane if an unlisted test runs long,
+# and fails if a pattern here matches nothing, so a rename cannot quietly retire
+# a gate.
+
+# ---- headless battles, sieges and AI matches --------------------------------
+# Each of these runs a real world forward for thousands of ticks.
+
+# ai_tests
+AiTownPlanTest.*
+AiDuelMatchTest.*
+AiSkirmishOpeningTest.*
+MissionWaveAssaultTest.*
+CommanderVoiceSkirmishTest.*
+CaptureScenarios/MovementQualityGateTest.*
+
+# combat_balance_tests
+BattleSpeedLoadTest.*
+BattlefieldCaptureTest.*
+GateTraversalTest.*
+HillTraversalTest.*
+MapCrossingTraversalTest.*
+MovementMotorTest.*
+PlayableGroundTest.*
+SelectedUnitReadout.*
+TightGapNavigationTest.*
+WallSiegeTest.*
+WildlifeFightMotionTest.*
+FormationPlannerCacheTest.ReportsPlanCostAcrossArmySizes
+
+# app_tests
+AudioBattleLoadTest.*
+CampaignWaveAssaultTest.*
+
+# campaign_tests
+TutorialMissionTest.TheRaidClosesOnThePlayerCamp
+TutorialMissionTest.TheScoutingPartyWaitsToBeAttacked
+
+# tools_tests
+BalanceSimTest.*
+
+# ---- sweeps over every shipped map, mission or asset ------------------------
+# Each of these loads the whole content tree and measures the terrain the
+# engine actually raises from it.
+
+# simulation_tests
+CampaignMaps/CampaignMapNavigationTest.*
+MapHillEntranceSmoothnessTest.*
+MapSkirmishReachabilityTest.*
+CursedGoldVeinSystemTest.EveryShippedVeinStandsOnClearGround
+HillCrownGeometryTest.CrownHalfExtentTracksAuthoredDimension
+HillNavigationTest.HillEntrancesNeverOpenWaterOrMountain
+HillNavigationTest.RoutesAcrossOneHilltopKeepToTheHighGround
+MapBridgeCoverageTest.RuntimeDecksAreLongerThanTheyAreWide
+PathfindingTest.CrossingRhoneAuthoredBridgeRoutesAcrossRiver
+UndeadShrinePlacementTest.EveryShippedUndeadZoneCanPlaceItsShrine
+
+# campaign_tests
+CampaignContentIntegrationTest.*
+
+# render_tests
+BpatRegistry.*
+DrawQueueSortCost.*
+TemplatePrewarmRegression.*
+ScatterRuntimeTest.CampaniaCampaignMaintainsRichNaturalScatter
+
+# app_tests
+AmbienceAssetsTest.NoBedIsLouderInTheHarshBandThanInItsBody
+ShippedAudioTest.VariantPlayCountsAreReportedForTuning

@@ -790,6 +790,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Click to dismiss</source>
         <translation>Click to dismiss</translation>
     </message>
+    <message>
+        <source>ALLY</source>
+        <translation>ALLY</translation>
+    </message>
 </context>
 <context>
     <name>CommanderSystem</name>
@@ -800,6 +804,873 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>%1 has lost its commander. The host breaks and its camps stand empty.</source>
         <translation>%1 has lost its commander. The host breaks and its camps stand empty.</translation>
+    </message>
+</context>
+<context>
+    <name>CommanderVoices</name>
+    <message>
+        <source>A camp gathered in. I shall keep it quiet and fed. That is what I am for.</source>
+        <translation>A camp gathered in. I shall keep it quiet and fed. That is what I am for.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I have a dozen more, and the one you hold is the one I liked least.</source>
+        <translation>A camp lost. I have a dozen more, and the one you hold is the one I liked least.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I have slept in worse hides and woken to better mornings.</source>
+        <translation>A camp lost. I have slept in worse hides and woken to better mornings.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I shall claim it was never mine. That is the beauty of having good clerks.</source>
+        <translation>A camp lost. I shall claim it was never mine. That is the beauty of having good clerks.</translation>
+    </message>
+    <message>
+        <source>A fresh column is on the road to you. Treat them courteously; several of them owe me money.</source>
+        <translation>A fresh column is on the road to you. Treat them courteously; several of them owe me money.</translation>
+    </message>
+    <message>
+        <source>A victory, and a tidy one. I shall write it up as mostly mine; you would have done the same.</source>
+        <translation>A victory, and a tidy one. I shall write it up as mostly mine; you would have done the same.</translation>
+    </message>
+    <message>
+        <source>Advance. Double time. A slow attack is a gift to the enemy, and I am not generous.</source>
+        <translation>Advance. Double time. A slow attack is a gift to the enemy, and I am not generous.</translation>
+    </message>
+    <message>
+        <source>Ah. Blades at last. I had begun to think you were a rumour with a baggage train.</source>
+        <translation>Ah. Blades at last. I had begun to think you were a rumour with a baggage train.</translation>
+    </message>
+    <message>
+        <source>An army, and someone paying for it. Let us not pretend this is about glory. I will make you an offer at the end; you will not like the terms.</source>
+        <translation>An army, and someone paying for it. Let us not pretend this is about glory. I will make you an offer at the end; you will not like the terms.</translation>
+    </message>
+    <message>
+        <source>An assault on my camp. Every breach is coming out of someone&apos;s wages, and it will not be mine.</source>
+        <translation>An assault on my camp. Every breach is coming out of someone&apos;s wages, and it will not be mine.</translation>
+    </message>
+    <message>
+        <source>An assault on my camp. Spend your men on it if you like; I have budgeted for exactly this kind of impatience.</source>
+        <translation>An assault on my camp. Spend your men on it if you like; I have budgeted for exactly this kind of impatience.</translation>
+    </message>
+    <message>
+        <source>Another camp for the Republic. Do stay and watch the standards go up; you will not see it done better.</source>
+        <translation>Another camp for the Republic. Do stay and watch the standards go up; you will not see it done better.</translation>
+    </message>
+    <message>
+        <source>Another camp gathered in. Slowly, like fruit. Rot takes the ones you leave on the branch.</source>
+        <translation>Another camp gathered in. Slowly, like fruit. Rot takes the ones you leave on the branch.</translation>
+    </message>
+    <message>
+        <source>Another column comes down the road. Rome walks slowly and never, ever stops.</source>
+        <translation>Another column comes down the road. Rome walks slowly and never, ever stops.</translation>
+    </message>
+    <message>
+        <source>Another standard on my frontier. I have counted your tents from the ridge - it did not take long. Rome has surveyed better men than you and buried them in straighter rows.</source>
+        <translation>Another standard on my frontier. I have counted your tents from the ridge - it did not take long. Rome has surveyed better men than you and buried them in straighter rows.</translation>
+    </message>
+    <message>
+        <source>At my walls, are you. Keep swinging. Every man you put there is a man not guarding your own.</source>
+        <translation>At my walls, are you. Keep swinging. Every man you put there is a man not guarding your own.</translation>
+    </message>
+    <message>
+        <source>Beaten, on this ground, today. Note the qualifications. I have made a career of the ground and the day after.</source>
+        <translation>Beaten, on this ground, today. Note the qualifications. I have made a career of the ground and the day after.</translation>
+    </message>
+    <message>
+        <source>Beaten. Beside you, which stings. I shall mention that the ground was poor and the allies poorer.</source>
+        <translation>Beaten. Beside you, which stings. I shall mention that the ground was poor and the allies poorer.</translation>
+    </message>
+    <message>
+        <source>Beaten. Fair. You held when I thought you would run and you hit when I thought you would hold. I will not forget your standard.</source>
+        <translation>Beaten. Fair. You held when I thought you would run and you hit when I thought you would hold. I will not forget your standard.</translation>
+    </message>
+    <message>
+        <source>Beaten. I shall write it down as an expense and you as a creditor. I pay my creditors. Eventually, and never in full.</source>
+        <translation>Beaten. I shall write it down as an expense and you as a creditor. I pay my creditors. Eventually, and never in full.</translation>
+    </message>
+    <message>
+        <source>Beaten. My brother would have a speech for this. I have only a road home and a great many arrows still in the quiver.</source>
+        <translation>Beaten. My brother would have a speech for this. I have only a road home and a great many arrows still in the quiver.</translation>
+    </message>
+    <message>
+        <source>Camp taken. At the run. Next one is yours, if you are quick.</source>
+        <translation>Camp taken. At the run. Next one is yours, if you are quick.</translation>
+    </message>
+    <message>
+        <source>Cohorts moving. Fast. Keep up if you can.</source>
+        <translation>Cohorts moving. Fast. Keep up if you can.</translation>
+    </message>
+    <message>
+        <source>Cohorts, forward. Fast. Hit them before they finish thinking.</source>
+        <translation>Cohorts, forward. Fast. Hit them before they finish thinking.</translation>
+    </message>
+    <message>
+        <source>Done. You came at the wrong tempo and I was already inside it. Lie down; the surgeons work through the fallen in the order they fell.</source>
+        <translation>Done. You came at the wrong tempo and I was already inside it. Lie down; the surgeons work through the fallen in the order they fell.</translation>
+    </message>
+    <message>
+        <source>Down, then. Tell them Marcellus died forward. Tell them the ground was worth it. Both are true.</source>
+        <translation>Down, then. Tell them Marcellus died forward. Tell them the ground was worth it. Both are true.</translation>
+    </message>
+    <message>
+        <source>Down. You came in fast and hungry, and hungry things walk into snares. Rest. The country will not miss you.</source>
+        <translation>Down. You came in fast and hungry, and hungry things walk into snares. Rest. The country will not miss you.</translation>
+    </message>
+    <message>
+        <source>Finished. I shall put your camp in the books as a purchase. Blood is a currency like any other; you simply overpaid.</source>
+        <translation>Finished. I shall put your camp in the books as a purchase. Blood is a currency like any other; you simply overpaid.</translation>
+    </message>
+    <message>
+        <source>Finished. You fought like a wall - solid, honest, and completely unable to turn around.</source>
+        <translation>Finished. You fought like a wall - solid, honest, and completely unable to turn around.</translation>
+    </message>
+    <message>
+        <source>First blood. Good. I was beginning to worry you were one of those enemies who negotiate.</source>
+        <translation>First blood. Good. I was beginning to worry you were one of those enemies who negotiate.</translation>
+    </message>
+    <message>
+        <source>Forward, in order. If you have a reserve, this would be the moment to discover it does not exist.</source>
+        <translation>Forward, in order. If you have a reserve, this would be the moment to discover it does not exist.</translation>
+    </message>
+    <message>
+        <source>Forward, in pay order. Mercenaries fight best when they can see the paymaster watching.</source>
+        <translation>Forward, in pay order. Mercenaries fight best when they can see the paymaster watching.</translation>
+    </message>
+    <message>
+        <source>Forward, quietly. The best charge is the one the enemy hears about afterwards.</source>
+        <translation>Forward, quietly. The best charge is the one the enemy hears about afterwards.</translation>
+    </message>
+    <message>
+        <source>Forward. If it seems too easy, that is because it is meant to.</source>
+        <translation>Forward. If it seems too easy, that is because it is meant to.</translation>
+    </message>
+    <message>
+        <source>Fresh cohorts on the road. They march fast because I told them to.</source>
+        <translation>Fresh cohorts on the road. They march fast because I told them to.</translation>
+    </message>
+    <message>
+        <source>Good. An enemy who shows up. Half my career was spent chasing ones who did not. Let us get on with it.</source>
+        <translation>Good. An enemy who shows up. Half my career was spent chasing ones who did not. Let us get on with it.</translation>
+    </message>
+    <message>
+        <source>Hitting my camp, are we? Every stone you knock loose has already been invoiced to your treasury.</source>
+        <translation>Hitting my camp, are we? Every stone you knock loose has already been invoiced to your treasury.</translation>
+    </message>
+    <message>
+        <source>Hitting my camp. Spend your strength there while my hunters spend theirs on your wagons.</source>
+        <translation>Hitting my camp. Spend your strength there while my hunters spend theirs on your wagons.</translation>
+    </message>
+    <message>
+        <source>Hitting my walls, are you. Every man you spend there is one I need not outwit later.</source>
+        <translation>Hitting my walls, are you. Every man you spend there is one I need not outwit later.</translation>
+    </message>
+    <message>
+        <source>I am advancing. It will not look like much. It is not meant to.</source>
+        <translation>I am advancing. It will not look like much. It is not meant to.</translation>
+    </message>
+    <message>
+        <source>I am at the end of what patience can buy. Come, or write to my family. Either will do; only one is useful.</source>
+        <translation>I am at the end of what patience can buy. Come, or write to my family. Either will do; only one is useful.</translation>
+    </message>
+    <message>
+        <source>I am attacking. Do not take it personally; I am simply collecting on ground you owe me.</source>
+        <translation>I am attacking. Do not take it personally; I am simply collecting on ground you owe me.</translation>
+    </message>
+    <message>
+        <source>I am attacking. Hold your side. If this is wasted, I shall be sending you the bill.</source>
+        <translation>I am attacking. Hold your side. If this is wasted, I shall be sending you the bill.</translation>
+    </message>
+    <message>
+        <source>I am attacking. If you wished to be consulted, you should have brought more men.</source>
+        <translation>I am attacking. If you wished to be consulted, you should have brought more men.</translation>
+    </message>
+    <message>
+        <source>I am bleeding men, and each one was paid in advance. This is not a battle, it is an audit, and it is going badly.</source>
+        <translation>I am bleeding men, and each one was paid in advance. This is not a battle, it is an audit, and it is going badly.</translation>
+    </message>
+    <message>
+        <source>I am coming at you now. All of it. Do not blink; you will miss the only part that matters.</source>
+        <translation>I am coming at you now. All of it. Do not blink; you will miss the only part that matters.</translation>
+    </message>
+    <message>
+        <source>I am coming for you. Not from where you are looking. I never come from where you are looking.</source>
+        <translation>I am coming for you. Not from where you are looking. I never come from where you are looking.</translation>
+    </message>
+    <message>
+        <source>I am down to the last of them. If you are coming, run.</source>
+        <translation>I am down to the last of them. If you are coming, run.</translation>
+    </message>
+    <message>
+        <source>I am going in. Now. Hit them from your side or watch me do it alone.</source>
+        <translation>I am going in. Now. Hit them from your side or watch me do it alone.</translation>
+    </message>
+    <message>
+        <source>I am losing cohorts faster than the treasury can replace them, and the treasury is quicker than you think.</source>
+        <translation>I am losing cohorts faster than the treasury can replace them, and the treasury is quicker than you think.</translation>
+    </message>
+    <message>
+        <source>I am losing men and I cannot replace them out here. If you have spare, I have work for them.</source>
+        <translation>I am losing men and I cannot replace them out here. If you have spare, I have work for them.</translation>
+    </message>
+    <message>
+        <source>I am losing men at a rate I do not care for. The ledger still balances. Do not let it stop balancing.</source>
+        <translation>I am losing men at a rate I do not care for. The ledger still balances. Do not let it stop balancing.</translation>
+    </message>
+    <message>
+        <source>I am losing men fast. Faster than I like, and I like it fast. Something has to change.</source>
+        <translation>I am losing men fast. Faster than I like, and I like it fast. Something has to change.</translation>
+    </message>
+    <message>
+        <source>I am losing men. Not to cleverness, to weight. Lend me some of yours, or a distraction, or both.</source>
+        <translation>I am losing men. Not to cleverness, to weight. Lend me some of yours, or a distraction, or both.</translation>
+    </message>
+    <message>
+        <source>I am moving on them. Do not follow me directly; be where they run to.</source>
+        <translation>I am moving on them. Do not follow me directly; be where they run to.</translation>
+    </message>
+    <message>
+        <source>I am moving on them. Slowly, from the high ground. Do not wait for me; be where they break to.</source>
+        <translation>I am moving on them. Slowly, from the high ground. Do not wait for me; be where they break to.</translation>
+    </message>
+    <message>
+        <source>I am nearly done here. Nearly. The last few are hunters, and hunters are patient about dying.</source>
+        <translation>I am nearly done here. Nearly. The last few are hunters, and hunters are patient about dying.</translation>
+    </message>
+    <message>
+        <source>I am nearly done, they say. I have crossed mountains on nearly. Do not count what is left of me; count what it is still holding.</source>
+        <translation>I am nearly done, they say. I have crossed mountains on nearly. Do not count what is left of me; count what it is still holding.</translation>
+    </message>
+    <message>
+        <source>I am nearly finished, they say. Nearly. A fire is nearly out for a long time before it goes cold, and it burns fingers all the while.</source>
+        <translation>I am nearly finished, they say. Nearly. A fire is nearly out for a long time before it goes cold, and it burns fingers all the while.</translation>
+    </message>
+    <message>
+        <source>I am nearly finished. I would rather not be. Consider this an invoice for immediate assistance.</source>
+        <translation>I am nearly finished. I would rather not be. Consider this an invoice for immediate assistance.</translation>
+    </message>
+    <message>
+        <source>I am nearly out of men. Nearly. The last handful are the ones who stayed, and those are the ones you should fear.</source>
+        <translation>I am nearly out of men. Nearly. The last handful are the ones who stayed, and those are the ones you should fear.</translation>
+    </message>
+    <message>
+        <source>I am sending men forward now. Not many. Enough. One does not empty the granary to kill a fox.</source>
+        <translation>I am sending men forward now. Not many. Enough. One does not empty the granary to kill a fox.</translation>
+    </message>
+    <message>
+        <source>I am sending the cohorts down now. Count them as they come. It will give you something to do with your last minutes.</source>
+        <translation>I am sending the cohorts down now. Count them as they come. It will give you something to do with your last minutes.</translation>
+    </message>
+    <message>
+        <source>I am sending the column now. It will not look like an attack until it is one.</source>
+        <translation>I am sending the column now. It will not look like an attack until it is one.</translation>
+    </message>
+    <message>
+        <source>I see your banners. I saw others like them, years ago; they made excellent kindling. Take your time. I intend to take mine.</source>
+        <translation>I see your banners. I saw others like them, years ago; they made excellent kindling. Take your time. I intend to take mine.</translation>
+    </message>
+    <message>
+        <source>Keep the field, then. Rome does not lose provinces - she lends them, at interest. My accountants will be along in the spring, and they are far less pleasant than I am.</source>
+        <translation>Keep the field, then. Rome does not lose provinces - she lends them, at interest. My accountants will be along in the spring, and they are far less pleasant than I am.</translation>
+    </message>
+    <message>
+        <source>Look at that. You are bleeding out and still holding the ground. Brave. Wrong, but brave.</source>
+        <translation>Look at that. You are bleeding out and still holding the ground. Brave. Wrong, but brave.</translation>
+    </message>
+    <message>
+        <source>Look at them fall. I did warn you that arithmetic is cruel, and I am only its clerk.</source>
+        <translation>Look at them fall. I did warn you that arithmetic is cruel, and I am only its clerk.</translation>
+    </message>
+    <message>
+        <source>Look at your line. Brave men, standing where the arrows are. Whose idea was that?</source>
+        <translation>Look at your line. Brave men, standing where the arrows are. Whose idea was that?</translation>
+    </message>
+    <message>
+        <source>Look at your line. Brave, disciplined, and in exactly the wrong place. Rome taught you well.</source>
+        <translation>Look at your line. Brave, disciplined, and in exactly the wrong place. Rome taught you well.</translation>
+    </message>
+    <message>
+        <source>Look at your losses. Whoever is paying for this war is getting very poor value.</source>
+        <translation>Look at your losses. Whoever is paying for this war is getting very poor value.</translation>
+    </message>
+    <message>
+        <source>Lost. I did say this was the Barcids&apos; kind of war. Nobody listens to the man who keeps the books until the books are empty.</source>
+        <translation>Lost. I did say this was the Barcids&apos; kind of war. Nobody listens to the man who keeps the books until the books are empty.</translation>
+    </message>
+    <message>
+        <source>Lost. We fought their war instead of ours. Next time we choose the field before we choose the fight.</source>
+        <translation>Lost. We fought their war instead of ours. Next time we choose the field before we choose the fight.</translation>
+    </message>
+    <message>
+        <source>Lost. We ran out of arrows or out of time; in this country they are the same thing.</source>
+        <translation>Lost. We ran out of arrows or out of time; in this country they are the same thing.</translation>
+    </message>
+    <message>
+        <source>Lost. We were quicker than we should have been, or slower. I shall spend the winter deciding which.</source>
+        <translation>Lost. We were quicker than we should have been, or slower. I shall spend the winter deciding which.</translation>
+    </message>
+    <message>
+        <source>Lost. We were slow when it mattered. I will say so to anyone who asks, including you.</source>
+        <translation>Lost. We were slow when it mattered. I will say so to anyone who asks, including you.</translation>
+    </message>
+    <message>
+        <source>More men are on the road. I did not send for them out of fear; I sent for them because there is room.</source>
+        <translation>More men are on the road. I did not send for them out of fear; I sent for them because there is room.</translation>
+    </message>
+    <message>
+        <source>More men coming. Not for you to see - for you to feel.</source>
+        <translation>More men coming. Not for you to see - for you to feel.</translation>
+    </message>
+    <message>
+        <source>More of mine are coming down the road. I know - I did not tell you. That was rather the idea.</source>
+        <translation>More of mine are coming down the road. I know - I did not tell you. That was rather the idea.</translation>
+    </message>
+    <message>
+        <source>More of mine are coming. I sent for them before you arrived; a hunter sets the snare before he sees the deer.</source>
+        <translation>More of mine are coming. I sent for them before you arrived; a hunter sets the snare before he sees the deer.</translation>
+    </message>
+    <message>
+        <source>More of my hired men are coming down the road. Fresh, fed, and paid. You cannot say the same for yours.</source>
+        <translation>More of my hired men are coming down the road. Fresh, fed, and paid. You cannot say the same for yours.</translation>
+    </message>
+    <message>
+        <source>My archers advance. When their line looks at me, it is not looking at you.</source>
+        <translation>My archers advance. When their line looks at me, it is not looking at you.</translation>
+    </message>
+    <message>
+        <source>My archers are moving up. Look to your flanks; that is where the country runs thin.</source>
+        <translation>My archers are moving up. Look to your flanks; that is where the country runs thin.</translation>
+    </message>
+    <message>
+        <source>My camp is taking hits. I can hold. I would rather kill them with you than hold without you.</source>
+        <translation>My camp is taking hits. I can hold. I would rather kill them with you than hold without you.</translation>
+    </message>
+    <message>
+        <source>My camp is taking the weight of their attack. If you were planning to come, this is the day for planning to end.</source>
+        <translation>My camp is taking the weight of their attack. If you were planning to come, this is the day for planning to end.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack, and my archers are better at giving than taking. If you can come, come along the ridge.</source>
+        <translation>My camp is under attack, and my archers are better at giving than taking. If you can come, come along the ridge.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack, and my men are paid to fight, not to die. If you want them alive tomorrow, come today.</source>
+        <translation>My camp is under attack, and my men are paid to fight, not to die. If you want them alive tomorrow, come today.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack. I would prefer not to be the one caught in a trap for once; if you can help, now would be poetic.</source>
+        <translation>My camp is under attack. I would prefer not to be the one caught in a trap for once; if you can help, now would be poetic.</translation>
+    </message>
+    <message>
+        <source>My camp is under the hammer. If you have men to spare, spare them now; if not, I shall be curious to see what you were saving them for.</source>
+        <translation>My camp is under the hammer. If you have men to spare, spare them now; if not, I shall be curious to see what you were saving them for.</translation>
+    </message>
+    <message>
+        <source>My cohorts are bleeding. Very well. Rome bleeds the way rivers do - it is how she reaches the sea.</source>
+        <translation>My cohorts are bleeding. Very well. Rome bleeds the way rivers do - it is how she reaches the sea.</translation>
+    </message>
+    <message>
+        <source>My cohorts are marching on them. Watch the manoeuvre; it is not something one sees twice for free.</source>
+        <translation>My cohorts are marching on them. Watch the manoeuvre; it is not something one sees twice for free.</translation>
+    </message>
+    <message>
+        <source>My cohorts are moving on them. Slowly. If you are quicker, be quicker where they can see it.</source>
+        <translation>My cohorts are moving on them. Slowly. If you are quicker, be quicker where they can see it.</translation>
+    </message>
+    <message>
+        <source>My cohorts are thinning. It is a cost, and I keep the books honestly. There is still more field than you have men.</source>
+        <translation>My cohorts are thinning. It is a cost, and I keep the books honestly. There is still more field than you have men.</translation>
+    </message>
+    <message>
+        <source>My columns advance. Watch their reserve. It will move when they see me, and that is when it is yours.</source>
+        <translation>My columns advance. Watch their reserve. It will move when they see me, and that is when it is yours.</translation>
+    </message>
+    <message>
+        <source>My columns are moving. Watch the front, by all means; someone should, and it may as well be you.</source>
+        <translation>My columns are moving. Watch the front, by all means; someone should, and it may as well be you.</translation>
+    </message>
+    <message>
+        <source>My line advances. Do not look for the trick; there is no trick. There is only the next step, and then the one after.</source>
+        <translation>My line advances. Do not look for the trick; there is no trick. There is only the next step, and then the one after.</translation>
+    </message>
+    <message>
+        <source>My men are down in numbers. So be it. Blood is the coin, and I have always paid in full.</source>
+        <translation>My men are down in numbers. So be it. Blood is the coin, and I have always paid in full.</translation>
+    </message>
+    <message>
+        <source>My men are dying. Good men, too. The enemy may take them; the enemy may not have my attention as well.</source>
+        <translation>My men are dying. Good men, too. The enemy may take them; the enemy may not have my attention as well.</translation>
+    </message>
+    <message>
+        <source>My men are falling. The line thins. I have fed armies on less and the hills have not run out of stone.</source>
+        <translation>My men are falling. The line thins. I have fed armies on less and the hills have not run out of stone.</translation>
+    </message>
+    <message>
+        <source>My part is done. The hills kept me alive longer than the plain would have. Go on without me and win.</source>
+        <translation>My part is done. The hills kept me alive longer than the plain would have. Go on without me and win.</translation>
+    </message>
+    <message>
+        <source>My part is over. I shall be in the Council chamber by morning, explaining how it was your fault. Win anyway.</source>
+        <translation>My part is over. I shall be in the Council chamber by morning, explaining how it was your fault. Win anyway.</translation>
+    </message>
+    <message>
+        <source>My spears are falling. Every one is a contract I have to settle with a widow. Someone will pay for this, and it will not be me.</source>
+        <translation>My spears are falling. Every one is a contract I have to settle with a widow. Someone will pay for this, and it will not be me.</translation>
+    </message>
+    <message>
+        <source>My spears are marching on them. I do not do this cheaply, so kindly make it count.</source>
+        <translation>My spears are marching on them. I do not do this cheaply, so kindly make it count.</translation>
+    </message>
+    <message>
+        <source>My spears are moving. Every one of them is paid through the season, so they will not stop for a little dying.</source>
+        <translation>My spears are moving. Every one of them is paid through the season, so they will not stop for a little dying.</translation>
+    </message>
+    <message>
+        <source>Nearly bankrupt, then. In men, I mean. I have been bankrupt before; the trick is to owe so much that they cannot afford to finish you.</source>
+        <translation>Nearly bankrupt, then. In men, I mean. I have been bankrupt before; the trick is to owe so much that they cannot afford to finish you.</translation>
+    </message>
+    <message>
+        <source>Nearly beaten, they tell me. I have been nearly beaten before. The word is doing a great deal of work in that sentence.</source>
+        <translation>Nearly beaten, they tell me. I have been nearly beaten before. The word is doing a great deal of work in that sentence.</translation>
+    </message>
+    <message>
+        <source>One camp changes hands. I have lost more to a dishonest quartermaster and slept perfectly well.</source>
+        <translation>One camp changes hands. I have lost more to a dishonest quartermaster and slept perfectly well.</translation>
+    </message>
+    <message>
+        <source>One camp gone. I have never yet lost a war to masonry.</source>
+        <translation>One camp gone. I have never yet lost a war to masonry.</translation>
+    </message>
+    <message>
+        <source>One camp lost. I have lost an eye, an army and a brother, and here I still am.</source>
+        <translation>One camp lost. I have lost an eye, an army and a brother, and here I still am.</translation>
+    </message>
+    <message>
+        <source>Reinforcements march. Rome has a great many sons and a very short memory for their names.</source>
+        <translation>Reinforcements march. Rome has a great many sons and a very short memory for their names.</translation>
+    </message>
+    <message>
+        <source>Reinforcements on the road. Not many. Enough to make you turn your head at the wrong moment.</source>
+        <translation>Reinforcements on the road. Not many. Enough to make you turn your head at the wrong moment.</translation>
+    </message>
+    <message>
+        <source>Reinforcements. Bought this morning, delivered this afternoon. That is what a treasury is for.</source>
+        <translation>Reinforcements. Bought this morning, delivered this afternoon. That is what a treasury is for.</translation>
+    </message>
+    <message>
+        <source>Reinforcements. Mine, I am afraid. I collect them the way others collect debts.</source>
+        <translation>Reinforcements. Mine, I am afraid. I collect them the way others collect debts.</translation>
+    </message>
+    <message>
+        <source>Right. You are here, I am here. No speeches. Sharpen what you have; I do not like to fight dull men.</source>
+        <translation>Right. You are here, I am here. No speeches. Sharpen what you have; I do not like to fight dull men.</translation>
+    </message>
+    <message>
+        <source>So it begins. Spears touch, men fall, and the wheat grows regardless. I can wait longer than you can bleed.</source>
+        <translation>So it begins. Spears touch, men fall, and the wheat grows regardless. I can wait longer than you can bleed.</translation>
+    </message>
+    <message>
+        <source>So it ends with a blade after all. Tell Rome I was a wolf, not a bull. She never did learn the difference.</source>
+        <translation>So it ends with a blade after all. Tell Rome I was a wolf, not a bull. She never did learn the difference.</translation>
+    </message>
+    <message>
+        <source>So the Barcids&apos; war has found me a new opponent. Understand that I am here for the ledger, not the legend, and ledgers are much harder to kill.</source>
+        <translation>So the Barcids&apos; war has found me a new opponent. Understand that I am here for the ledger, not the legend, and ledgers are much harder to kill.</translation>
+    </message>
+    <message>
+        <source>So the arrow finds me at last. Tell my brother I held the road as long as roads can be held.</source>
+        <translation>So the arrow finds me at last. Tell my brother I held the road as long as roads can be held.</translation>
+    </message>
+    <message>
+        <source>So the old man falls at last. Rome will call it a tragedy for a week and a lesson for a century. Mind the lesson.</source>
+        <translation>So the old man falls at last. Rome will call it a tragedy for a week and a lesson for a century. Mind the lesson.</translation>
+    </message>
+    <message>
+        <source>So this is the army. I make it three cohorts and some optimism. My clerks have already drawn up the receipt for your camp; we only need the date.</source>
+        <translation>So this is the army. I make it three cohorts and some optimism. My clerks have already drawn up the receipt for your camp; we only need the date.</translation>
+    </message>
+    <message>
+        <source>So. The Barcids get their wish and I get a spear. Tell the Council the books are in order. They always were.</source>
+        <translation>So. The Barcids get their wish and I get a spear. Tell the Council the books are in order. They always were.</translation>
+    </message>
+    <message>
+        <source>So. You have come to fight me. How refreshing - most of my enemies prefer to wait behind their walls until I have finished with the countryside.</source>
+        <translation>So. You have come to fight me. How refreshing - most of my enemies prefer to wait behind their walls until I have finished with the countryside.</translation>
+    </message>
+    <message>
+        <source>Steel meets steel. Now the costs begin. I do hope you are keeping accounts, because I am.</source>
+        <translation>Steel meets steel. Now the costs begin. I do hope you are keeping accounts, because I am.</translation>
+    </message>
+    <message>
+        <source>Steel. Finally. Now we find out what you are made of, and I already have a guess.</source>
+        <translation>Steel. Finally. Now we find out what you are made of, and I already have a guess.</translation>
+    </message>
+    <message>
+        <source>Take the camp. I have taken cities and given them back; the joy is in the taking, not the holding.</source>
+        <translation>Take the camp. I have taken cities and given them back; the joy is in the taking, not the holding.</translation>
+    </message>
+    <message>
+        <source>That camp is Rome&apos;s now. I shall let you have the wells, at the usual rate.</source>
+        <translation>That camp is Rome&apos;s now. I shall let you have the wells, at the usual rate.</translation>
+    </message>
+    <message>
+        <source>That camp is mine now. I have already sold the grain in it twice. Do not look so surprised; it is how one makes a profit on war.</source>
+        <translation>That camp is mine now. I have already sold the grain in it twice. Do not look so surprised; it is how one makes a profit on war.</translation>
+    </message>
+    <message>
+        <source>That camp is mine now. I shall not do anything dramatic with it. I shall simply keep it, which is worse.</source>
+        <translation>That camp is mine now. I shall not do anything dramatic with it. I shall simply keep it, which is worse.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. I did not even need the elephants. I am almost disappointed.</source>
+        <translation>That camp is mine. I did not even need the elephants. I am almost disappointed.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. I did not storm it; I waited for it. There is a difference and you will feel it.</source>
+        <translation>That camp is mine. I did not storm it; I waited for it. There is a difference and you will feel it.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. Took it at the run. Did you even see the standard change?</source>
+        <translation>That camp is mine. Took it at the run. Did you even see the standard change?</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I have already leased the granary. To you, actually. We can discuss terms.</source>
+        <translation>That camp is ours. I have already leased the granary. To you, actually. We can discuss terms.</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I took it from the side nobody guards, which is every side, eventually.</source>
+        <translation>That camp is ours. I took it from the side nobody guards, which is every side, eventually.</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I will hold it and keep the road open behind you. Somebody has to.</source>
+        <translation>That camp is ours. I will hold it and keep the road open behind you. Somebody has to.</translation>
+    </message>
+    <message>
+        <source>That is all of me spent. It was a long war and I regret none of the slow parts. Finish it.</source>
+        <translation>That is all of me spent. It was a long war and I regret none of the slow parts. Finish it.</translation>
+    </message>
+    <message>
+        <source>That is my part done. Went forward the whole way. Finish what is left of them.</source>
+        <translation>That is my part done. Went forward the whole way. Finish what is left of them.</translation>
+    </message>
+    <message>
+        <source>That is the end of it. You fought. That counts for something in my camp, if not in yours.</source>
+        <translation>That is the end of it. You fought. That counts for something in my camp, if not in yours.</translation>
+    </message>
+    <message>
+        <source>That is the end of my army. Not of me - never that - but the war is in your hands now. Turn it.</source>
+        <translation>That is the end of my army. Not of me - never that - but the war is in your hands now. Turn it.</translation>
+    </message>
+    <message>
+        <source>That is the end of my part. The rest of the war is yours. Do keep the receipts.</source>
+        <translation>That is the end of my part. The rest of the war is yours. Do keep the receipts.</translation>
+    </message>
+    <message>
+        <source>That is the end. You fought hard and thought little. In the hills, that gets you eaten.</source>
+        <translation>That is the end. You fought hard and thought little. In the hills, that gets you eaten.</translation>
+    </message>
+    <message>
+        <source>That was yours a moment ago. My surveyors are already renaming the streets. Something Latin, I think.</source>
+        <translation>That was yours a moment ago. My surveyors are already renaming the streets. Something Latin, I think.</translation>
+    </message>
+    <message>
+        <source>The cohorts are moving - slowly, in step. You will have time to see them coming. That is the point.</source>
+        <translation>The cohorts are moving - slowly, in step. You will have time to see them coming. That is the point.</translation>
+    </message>
+    <message>
+        <source>The first arrows fly. Now we learn whether you can bleed and think at once.</source>
+        <translation>The first arrows fly. Now we learn whether you can bleed and think at once.</translation>
+    </message>
+    <message>
+        <source>The legion is moving. Do not trouble to form a line - it will only give my men something to step over.</source>
+        <translation>The legion is moving. Do not trouble to form a line - it will only give my men something to step over.</translation>
+    </message>
+    <message>
+        <source>There it is. You came straight at me, like a bull at a red cloak, and now you are wondering where the cloak went.</source>
+        <translation>There it is. You came straight at me, like a bull at a red cloak, and now you are wondering where the cloak went.</translation>
+    </message>
+    <message>
+        <source>There you are. I have been counting your wagons. Fewer than you need, more than you can guard. This will be a patient day.</source>
+        <translation>There you are. I have been counting your wagons. Fewer than you need, more than you can guard. This will be a patient day.</translation>
+    </message>
+    <message>
+        <source>There. It was never a battle, only a season, and seasons end. Go home if you have one; the road is long and I shall not follow.</source>
+        <translation>There. It was never a battle, only a season, and seasons end. Go home if you have one; the road is long and I shall not follow.</translation>
+    </message>
+    <message>
+        <source>There. That is what happens when amateurs march against a ledger. Sit down. My men will count you when they have counted the horses.</source>
+        <translation>There. That is what happens when amateurs march against a ledger. Sit down. My men will count you when they have counted the horses.</translation>
+    </message>
+    <message>
+        <source>There. You are done, and I have lost fewer men than I budgeted for. That is a good day in my trade.</source>
+        <translation>There. You are done, and I have lost fewer men than I budgeted for. That is a good day in my trade.</translation>
+    </message>
+    <message>
+        <source>They are at my walls, and my walls were built by the lowest bidder. Some assistance would not go unrecorded.</source>
+        <translation>They are at my walls, and my walls were built by the lowest bidder. Some assistance would not go unrecorded.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. Come now, hard, and we break them between us.</source>
+        <translation>They are at my walls. Come now, hard, and we break them between us.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I can hold a while - I always can - but a while is not forever, and I would rather not test the word.</source>
+        <translation>They are at my walls. I can hold a while - I always can - but a while is not forever, and I would rather not test the word.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I can hold a while with what I have. A while, not long. Please hear the difference.</source>
+        <translation>They are at my walls. I can hold a while with what I have. A while, not long. Please hear the difference.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I have been the hammer so often that I forget what the anvil feels like. It is unpleasant.</source>
+        <translation>They are at my walls. I have been the hammer so often that I forget what the anvil feels like. It is unpleasant.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. Mercenaries have a fine sense of when a paymaster is about to become a corpse. Do hurry.</source>
+        <translation>They are at my walls. Mercenaries have a fine sense of when a paymaster is about to become a corpse. Do hurry.</translation>
+    </message>
+    <message>
+        <source>This is the edge. I have stood on it before and walked back. I would rather not do it alone.</source>
+        <translation>This is the edge. I have stood on it before and walked back. I would rather not do it alone.</translation>
+    </message>
+    <message>
+        <source>This is the end of my line unless you reach me. I will not ask twice; there will not be time to.</source>
+        <translation>This is the end of my line unless you reach me. I will not ask twice; there will not be time to.</translation>
+    </message>
+    <message>
+        <source>This is what the end of a consulship looks like from the inside. Come quickly, or come for the funeral.</source>
+        <translation>This is what the end of a consulship looks like from the inside. Come quickly, or come for the funeral.</translation>
+    </message>
+    <message>
+        <source>Together, then. I will do the clever part. You may do the brave part; it is honest work and someone must.</source>
+        <translation>Together, then. I will do the clever part. You may do the brave part; it is honest work and someone must.</translation>
+    </message>
+    <message>
+        <source>We are allies, so I am told. I did not vote for it. Keep your men off my supply lines and we shall get along splendidly.</source>
+        <translation>We are allies, so I am told. I did not vote for it. Keep your men off my supply lines and we shall get along splendidly.</translation>
+    </message>
+    <message>
+        <source>We fight side by side. Keep pace with me or stay out of my way; either is fine, both at once is not.</source>
+        <translation>We fight side by side. Keep pace with me or stay out of my way; either is fine, both at once is not.</translation>
+    </message>
+    <message>
+        <source>We fight together, then. Do try to keep your line straight - I shall be watching from the good ground, and I have a very long memory for embarrassments.</source>
+        <translation>We fight together, then. Do try to keep your line straight - I shall be watching from the good ground, and I have a very long memory for embarrassments.</translation>
+    </message>
+    <message>
+        <source>We fight together. I will hold the flanks and watch the roads. Keep your supply close; the enemy will not fight fair and neither will I.</source>
+        <translation>We fight together. I will hold the flanks and watch the roads. Keep your supply close; the enemy will not fight fair and neither will I.</translation>
+    </message>
+    <message>
+        <source>We stand together. I will not be hurried, and I will not hurry you. Hold what you have and let the enemy come to us tired.</source>
+        <translation>We stand together. I will not be hurried, and I will not hurry you. Hold what you have and let the enemy come to us tired.</translation>
+    </message>
+    <message>
+        <source>Welcome to my field. I say mine; I have not signed anything. I simply find that fields tend to become mine after a while.</source>
+        <translation>Welcome to my field. I say mine; I have not signed anything. I simply find that fields tend to become mine after a while.</translation>
+    </message>
+    <message>
+        <source>Well. A field is lost. I have lost fields before and taken the harvest anyway. We shall see who is still here at the sowing.</source>
+        <translation>Well. A field is lost. I have lost fields before and taken the harvest anyway. We shall see who is still here at the sowing.</translation>
+    </message>
+    <message>
+        <source>Won. Clean and fast. That is how it is done. Drink tonight; march tomorrow.</source>
+        <translation>Won. Clean and fast. That is how it is done. Drink tonight; march tomorrow.</translation>
+    </message>
+    <message>
+        <source>Won. Good. Now let us eat before someone counts what it cost us.</source>
+        <translation>Won. Good. Now let us eat before someone counts what it cost us.</translation>
+    </message>
+    <message>
+        <source>Won. I shall tell the Council it was my doing and yours was very expensive. They will believe half of it.</source>
+        <translation>Won. I shall tell the Council it was my doing and yours was very expensive. They will believe half of it.</translation>
+    </message>
+    <message>
+        <source>Won. Neatly. Remember that half of it was the ground and the other half was the timing, and none of it was luck.</source>
+        <translation>Won. Neatly. Remember that half of it was the ground and the other half was the timing, and none of it was luck.</translation>
+    </message>
+    <message>
+        <source>Won. Not quickly, but won. Remember how it felt to wait; it is the part nobody else will remember for you.</source>
+        <translation>Won. Not quickly, but won. Remember how it felt to wait; it is the part nobody else will remember for you.</translation>
+    </message>
+    <message>
+        <source>You are a long way from your supply, and I can see your fires from here. A hunter does not chase the deer; he waits at the water.</source>
+        <translation>You are a long way from your supply, and I can see your fires from here. A hunter does not chase the deer; he waits at the water.</translation>
+    </message>
+    <message>
+        <source>You are at my camp. A camp is a tent with ambition; I have left better ones to wolves.</source>
+        <translation>You are at my camp. A camp is a tent with ambition; I have left better ones to wolves.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. A camp is a hide, nothing more. I have others, and the hills have more still.</source>
+        <translation>You are at my walls. A camp is a hide, nothing more. I have others, and the hills have more still.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Bold. My grandfather kept a dog that was bold; we buried it with honours and bought a better one.</source>
+        <translation>You are at my walls. Bold. My grandfather kept a dog that was bold; we buried it with honours and bought a better one.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Do you have any idea what those walls cost? Of course not. Nobody who breaks things ever does.</source>
+        <translation>You are at my walls. Do you have any idea what those walls cost? Of course not. Nobody who breaks things ever does.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Knock. My walls have been knocked on by better, and they have learned not to answer.</source>
+        <translation>You are at my walls. Knock. My walls have been knocked on by better, and they have learned not to answer.</translation>
+    </message>
+    <message>
+        <source>You are bleeding. I am not pleased by it; I am merely not surprised.</source>
+        <translation>You are bleeding. I am not pleased by it; I am merely not surprised.</translation>
+    </message>
+    <message>
+        <source>You are hitting my camp. Good. That means you are close enough for me to hit back.</source>
+        <translation>You are hitting my camp. Good. That means you are close enough for me to hit back.</translation>
+    </message>
+    <message>
+        <source>You brought numbers. I brought arithmetic. Do write to your people and tell them the difference, if any of them can read.</source>
+        <translation>You brought numbers. I brought arithmetic. Do write to your people and tell them the difference, if any of them can read.</translation>
+    </message>
+    <message>
+        <source>You have a camp of mine. Feed it. Water it. I will watch you try to do both from the road you do not hold.</source>
+        <translation>You have a camp of mine. Feed it. Water it. I will watch you try to do both from the road you do not hold.</translation>
+    </message>
+    <message>
+        <source>You have beaten a consul. Write it down somewhere; nobody in the city will believe you, and next year they will send two.</source>
+        <translation>You have beaten a consul. Write it down somewhere; nobody in the city will believe you, and next year they will send two.</translation>
+    </message>
+    <message>
+        <source>You have come a long way to stand in a field. Stand in it, then. I have wheat to bring in, and a great deal of time, and you have neither.</source>
+        <translation>You have come a long way to stand in a field. Stand in it, then. I have wheat to bring in, and a great deal of time, and you have neither.</translation>
+    </message>
+    <message>
+        <source>You have killed a consul. Rome keeps forty more in cupboards in the city, and I promise you the ones still in the cupboards are worse.</source>
+        <translation>You have killed a consul. Rome keeps forty more in cupboards in the city, and I promise you the ones still in the cupboards are worse.</translation>
+    </message>
+    <message>
+        <source>You have taken a camp. It will need feeding, and I have noticed that you do not feed things well.</source>
+        <translation>You have taken a camp. It will need feeding, and I have noticed that you do not feed things well.</translation>
+    </message>
+    <message>
+        <source>You have taken a camp. Take the debts that come with it too; I was rather hoping someone would.</source>
+        <translation>You have taken a camp. Take the debts that come with it too; I was rather hoping someone would.</translation>
+    </message>
+    <message>
+        <source>You have that camp. Congratulations - you now own its wells, its debts, and its sanitation. I shall want it back before the rains.</source>
+        <translation>You have that camp. Congratulations - you now own its wells, its debts, and its sanitation. I shall want it back before the rains.</translation>
+    </message>
+    <message>
+        <source>You have the ground. Ground is patient; so am I. Winter will visit you here long before I do, and it does not negotiate.</source>
+        <translation>You have the ground. Ground is patient; so am I. Winter will visit you here long before I do, and it does not negotiate.</translation>
+    </message>
+    <message>
+        <source>You have won the field. Very well. I have lost cheaper things to worse men. The Council will hear that the Barcids&apos; war lost it, not mine.</source>
+        <translation>You have won the field. Very well. I have lost cheaper things to worse men. The Council will hear that the Barcids&apos; war lost it, not mine.</translation>
+    </message>
+    <message>
+        <source>You have won. I am almost pleased; a man learns nothing from beating fools. I shall learn from you, and I promise you will not enjoy the lesson.</source>
+        <translation>You have won. I am almost pleased; a man learns nothing from beating fools. I shall learn from you, and I promise you will not enjoy the lesson.</translation>
+    </message>
+    <message>
+        <source>You hurried. Men who hurry meet me exactly where I am waiting. Rest now. The ground is good for it.</source>
+        <translation>You hurried. Men who hurry meet me exactly where I am waiting. Rest now. The ground is good for it.</translation>
+    </message>
+    <message>
+        <source>You took the camp. Fine. It was walls; I fight in the field. Come and find me there.</source>
+        <translation>You took the camp. Fine. It was walls; I fight in the field. Come and find me there.</translation>
+    </message>
+    <message>
+        <source>You win the field. Take it. I have hunted this country for years; the land will still feed me when you have eaten it bare.</source>
+        <translation>You win the field. Take it. I have hunted this country for years; the land will still feed me when you have eaten it bare.</translation>
+    </message>
+    <message>
+        <source>You won. Do not gloat; it slows the feet. I will find you again on better ground.</source>
+        <translation>You won. Do not gloat; it slows the feet. I will find you again on better ground.</translation>
+    </message>
+    <message>
+        <source>Your camp changes masters. They will find me a lenient landlord and a very poor tenant.</source>
+        <translation>Your camp changes masters. They will find me a lenient landlord and a very poor tenant.</translation>
+    </message>
+    <message>
+        <source>Your camp is taken. My brother will say it was his idea. It usually is.</source>
+        <translation>Your camp is taken. My brother will say it was his idea. It usually is.</translation>
+    </message>
+    <message>
+        <source>Your camp, gone in a heartbeat. That is what tempo does. Learn it or lose the next one.</source>
+        <translation>Your camp, gone in a heartbeat. That is what tempo does. Learn it or lose the next one.</translation>
+    </message>
+    <message>
+        <source>Your camp, under new management. I shall keep the wells and fire the garrison. Standard practice.</source>
+        <translation>Your camp, under new management. I shall keep the wells and fire the garrison. Standard practice.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. A pity. I had a speech prepared for after, and he would have hated it.</source>
+        <translation>Your commander has fallen. A pity. I had a speech prepared for after, and he would have hated it.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Grief later; line now. The field does not pause for either of us.</source>
+        <translation>Your commander has fallen. Grief later; line now. The field does not pause for either of us.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Hasty men do. Bury him with honour; you will be joining him soon enough, and the ground here is soft.</source>
+        <translation>Your commander has fallen. Hasty men do. Bury him with honour; you will be joining him soon enough, and the ground here is soft.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. I know that grief. Keep your men together; scattered men are what the enemy is hunting.</source>
+        <translation>Your commander has fallen. I know that grief. Keep your men together; scattered men are what the enemy is hunting.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Sorry. Keep your men moving; grief stands still and standing still kills.</source>
+        <translation>Your commander has fallen. Sorry. Keep your men moving; grief stands still and standing still kills.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Unfortunate. Hold your line; I shall not hold mine for a leaderless ally very long.</source>
+        <translation>Your commander has fallen. Unfortunate. Hold your line; I shall not hold mine for a leaderless ally very long.</translation>
+    </message>
+    <message>
+        <source>Your commander is dead. A costly man to lose. I have already calculated what it will cost you to replace him; the number is not kind.</source>
+        <translation>Your commander is dead. A costly man to lose. I have already calculated what it will cost you to replace him; the number is not kind.</translation>
+    </message>
+    <message>
+        <source>Your commander is dead. Unfortunate, and expensive. Keep your line; a leaderless ally is a liability I did not agree to insure.</source>
+        <translation>Your commander is dead. Unfortunate, and expensive. Keep your line; a leaderless ally is a liability I did not agree to insure.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. He led from the front; brave men do, and it is where the arrows go.</source>
+        <translation>Your commander is down. He led from the front; brave men do, and it is where the arrows go.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. I did not enjoy it. I did not have to.</source>
+        <translation>Your commander is down. I did not enjoy it. I did not have to.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. Pity. I had meant to invite him to dinner after and explain where he went wrong.</source>
+        <translation>Your commander is down. Pity. I had meant to invite him to dinner after and explain where he went wrong.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. Their moment of joy is your moment of opportunity; nobody watches the flanks while they cheer.</source>
+        <translation>Your commander is down. Their moment of joy is your moment of opportunity; nobody watches the flanks while they cheer.</translation>
+    </message>
+    <message>
+        <source>Your line is breaking. I can hear it from here. Press or pull back - standing there is just dying slowly.</source>
+        <translation>Your line is breaking. I can hear it from here. Press or pull back - standing there is just dying slowly.</translation>
+    </message>
+    <message>
+        <source>Your line is thinning nicely. I am told grief is easier when one has fewer names to remember.</source>
+        <translation>Your line is thinning nicely. I am told grief is easier when one has fewer names to remember.</translation>
+    </message>
+    <message>
+        <source>Your men are dropping in the open. A hunter feels no pride in it. Only a little pity, and a full quiver.</source>
+        <translation>Your men are dropping in the open. A hunter feels no pride in it. Only a little pity, and a full quiver.</translation>
+    </message>
+    <message>
+        <source>Your men are dying at a rate that would bankrupt a lesser treasury. I find that admirable and very stupid.</source>
+        <translation>Your men are dying at a rate that would bankrupt a lesser treasury. I find that admirable and very stupid.</translation>
+    </message>
+    <message>
+        <source>Your men are falling faster than you are replacing them. That is not a battle. That is a harvest, and it is not yours.</source>
+        <translation>Your men are falling faster than you are replacing them. That is not a battle. That is a harvest, and it is not yours.</translation>
+    </message>
+    <message>
+        <source>Your men are falling in rows. That is what happens when you fight a wall&apos;s war against a river.</source>
+        <translation>Your men are falling in rows. That is what happens when you fight a wall&apos;s war against a river.</translation>
     </message>
 </context>
 <context>
@@ -5368,6 +6239,29 @@ to see preview</translation>
     </message>
 </context>
 <context>
+    <name>MissionDeadline</name>
+    <message>
+        <source>FINAL MINUTE</source>
+        <translation>FINAL MINUTE</translation>
+    </message>
+    <message>
+        <source>CLOSING WINDOW</source>
+        <translation>CLOSING WINDOW</translation>
+    </message>
+    <message>
+        <source>MISSION CLOCK</source>
+        <translation>MISSION CLOCK</translation>
+    </message>
+    <message>
+        <source>Time left: %1</source>
+        <translation>Time left: %1</translation>
+    </message>
+    <message>
+        <source>TIME LEFT</source>
+        <translation>TIME LEFT</translation>
+    </message>
+</context>
+<context>
     <name>MissionDetailPanel</name>
     <message>
         <source>Suffete Command</source>
@@ -6515,20 +7409,8 @@ to see preview</translation>
         <translation>Break all five columns. The ford is held when the last of them is dead in front of it, and not one column sooner.</translation>
     </message>
     <message>
-        <source>Cut and carry home four hundred of timber and two hundred and ten of stone. The near stand will not cover it; the deep pines will.</source>
-        <translation>Cut and carry home four hundred of timber and two hundred and ten of stone. The near stand will not cover it; the deep pines will.</translation>
-    </message>
-    <message>
-        <source>Fill the levy out of the Pinewater cut: four hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through.</source>
-        <translation>Fill the levy out of the Pinewater cut: four hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through.</translation>
-    </message>
-    <message>
         <source>Five columns and the ford still ours. Count the men twice and do not write the number down until morning; it is always worse in the dark and always worse again in daylight.</source>
         <translation>Five columns and the ford still ours. Count the men twice and do not write the number down until morning; it is always worse in the dark and always worse again in daylight.</translation>
-    </message>
-    <message>
-        <source>Four hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. Split the crew. Escort the far one.</source>
-        <translation>Four hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. Split the crew. Escort the far one.</translation>
     </message>
     <message>
         <source>Hold the Sallow Ford</source>
@@ -6537,10 +7419,6 @@ to see preview</translation>
     <message>
         <source>Keep both towers standing. Lose one and the lane it watches is yours to walk yourself.</source>
         <translation>Keep both towers standing. Lose one and the lane it watches is yours to walk yourself.</translation>
-    </message>
-    <message>
-        <source>Leave the axes. Leave the carts. A detail that cannot walk out of its own cut does not get to carry anything.</source>
-        <translation>Leave the axes. Leave the carts. A detail that cannot walk out of its own cut does not get to carry anything.</translation>
     </message>
     <message>
         <source>Levy filled. Stack it by the road and let the carts argue about it. We cut a wood down to feed a siege that has not started yet — remember that the next time somebody calls this the quiet posting.</source>
@@ -6590,6 +7468,294 @@ to see preview</translation>
         <source>The spur splits them for us, which is the only kindness this ground offers. Cart gate west, goat path east, and they only meet where we are standing. You cannot hold both mouths. Pick one, hold it, and move when the horns tell you to.</source>
         <translation>The spur splits them for us, which is the only kindness this ground offers. Cart gate west, goat path east, and they only meet where we are standing. You cannot hold both mouths. Pick one, hold it, and move when the horns tell you to.</translation>
     </message>
+    <message>
+        <source>A few of the screen left, and me. My son is somewhere on this field; if he finds me, he will be insufferable about it for the rest of his life.</source>
+        <translation>A few of the screen left, and me. My son is somewhere on this field; if he finds me, he will be insufferable about it for the rest of his life.</translation>
+    </message>
+    <message>
+        <source>Cut and carry home eight hundred of timber and two hundred and ten of stone. The near stand was stripped bare; the deep pines and the east screen are the only timber left standing.</source>
+        <translation>Cut and carry home eight hundred of timber and two hundred and ten of stone. The near stand was stripped bare; the deep pines and the east screen are the only timber left standing.</translation>
+    </message>
+    <message>
+        <source>Eight hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. The column comes back through at dusk and it does not wait. Split the crew. Escort the far one.</source>
+        <translation>Eight hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. The column comes back through at dusk and it does not wait. Split the crew. Escort the far one.</translation>
+    </message>
+    <message>
+        <source>Fill the levy out of the Pinewater cut: eight hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through at dusk.</source>
+        <translation>Fill the levy out of the Pinewater cut: eight hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through at dusk.</translation>
+    </message>
+    <message>
+        <source>First column on the cart gate. Spears up. Let them come to the stakes; the stakes do not get tired.</source>
+        <translation>First column on the cart gate. Spears up. Let them come to the stakes; the stakes do not get tired.</translation>
+    </message>
+    <message>
+        <source>Hannibal dies in the snow. Then the elephants were for nothing, and so was the road. History will find that very tidy.</source>
+        <translation>Hannibal dies in the snow. Then the elephants were for nothing, and so was the road. History will find that very tidy.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls at the Rhone. Then Rome never sees the elephants, and I never see Cannae. I shall spend the rest of my life not knowing what I was spared.</source>
+        <translation>Hannibal falls at the Rhone. Then Rome never sees the elephants, and I never see Cannae. I shall spend the rest of my life not knowing what I was spared.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls in Campania, among the orchards, in a war he did not choose. There is a kind of mercy in that, and I did not intend it.</source>
+        <translation>Hannibal falls in Campania, among the orchards, in a war he did not choose. There is a kind of mercy in that, and I did not intend it.</translation>
+    </message>
+    <message>
+        <source>Hannibal has fallen at Zama. I wanted to meet him after, and ask him about Cannae. I shall have to ask the ground instead.</source>
+        <translation>Hannibal has fallen at Zama. I wanted to meet him after, and ask him about Cannae. I shall have to ask the ground instead.</translation>
+    </message>
+    <message>
+        <source>Hannibal is down in the Trebia mud. Whatever Mago has hidden in the gullies, it will not bring him back.</source>
+        <translation>Hannibal is down in the Trebia mud. Whatever Mago has hidden in the gullies, it will not bring him back.</translation>
+    </message>
+    <message>
+        <source>Hannibal is down. The Senate will strike a coin. I shall keep one and never spend it, which I am told is what he would have done.</source>
+        <translation>Hannibal is down. The Senate will strike a coin. I shall keep one and never spend it, which I am told is what he would have done.</translation>
+    </message>
+    <message>
+        <source>Here they come - the whole consular line, in step, at Varro&apos;s tempo. Eighty thousand men do not turn. Remember that when you want them to.</source>
+        <translation>Here they come - the whole consular line, in step, at Varro&apos;s tempo. Eighty thousand men do not turn. Remember that when you want them to.</translation>
+    </message>
+    <message>
+        <source>Leave the axes. Leave the carts. A detail that cannot fill its own levy before the column comes through does not get to carry anything.</source>
+        <translation>Leave the axes. Leave the carts. A detail that cannot fill its own levy before the column comes through does not get to carry anything.</translation>
+    </message>
+    <message>
+        <source>Legionaries at your works. Not Varro&apos;s legions; mine. Men who were at Cannae and remember exactly how it felt.</source>
+        <translation>Legionaries at your works. Not Varro&apos;s legions; mine. Men who were at Cannae and remember exactly how it felt.</translation>
+    </message>
+    <message>
+        <source>Light is going. Five minutes of road left in the day, and whatever is on the carts when the column reaches us is what we levied. Bring them home.</source>
+        <translation>Light is going. Five minutes of road left in the day, and whatever is on the carts when the column reaches us is what we levied. Bring them home.</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s camp is yours. His riders will not care; they were never in it. Watch the horizon, not the tents.</source>
+        <translation>Masinissa&apos;s camp is yours. His riders will not care; they were never in it. Watch the horizon, not the tents.</translation>
+    </message>
+    <message>
+        <source>My forward town, taken by horsemen. Horsemen. My father would have said something cutting; I find I am simply cold.</source>
+        <translation>My forward town, taken by horsemen. Horsemen. My father would have said something cutting; I find I am simply cold.</translation>
+    </message>
+    <message>
+        <source>My men are at your walls. Not to break them - to remind you they are walls, and that everything outside them is mine.</source>
+        <translation>My men are at your walls. Not to break them - to remind you they are walls, and that everything outside them is mine.</translation>
+    </message>
+    <message>
+        <source>My scouting party is on the road. Cavalry, mostly, and a tribune who wants to be noticed. Do notice him.</source>
+        <translation>My scouting party is on the road. Cavalry, mostly, and a tribune who wants to be noticed. Do notice him.</translation>
+    </message>
+    <message>
+        <source>My town. You have taken my town, at Zama, with Masinissa&apos;s horse behind you. I begin to think the gods have a sense of proportion after all.</source>
+        <translation>My town. You have taken my town, at Zama, with Masinissa&apos;s horse behind you. I begin to think the gods have a sense of proportion after all.</translation>
+    </message>
+    <message>
+        <source>Patrols at your works. You are trying to cross a river with your back to my roads. It is bold. It is also how one drowns.</source>
+        <translation>Patrols at your works. You are trying to cross a river with your back to my roads. It is bold. It is also how one drowns.</translation>
+    </message>
+    <message>
+        <source>Sempronius has a handful left and they are on the wrong side of a winter river. He will still call it a victory in Rome. He always does.</source>
+        <translation>Sempronius has a handful left and they are on the wrong side of a winter river. He will still call it a victory in Rome. He always does.</translation>
+    </message>
+    <message>
+        <source>Sempronius is crossing. Now, in the cold, without breakfast, because a consul&apos;s year ends in March and he wants his battle before it does.</source>
+        <translation>Sempronius is crossing. Now, in the cold, without breakfast, because a consul&apos;s year ends in March and he wants his battle before it does.</translation>
+    </message>
+    <message>
+        <source>So he dies by his own lake in his own fog. Rome will call it justice. I call it weather, and I have always respected weather.</source>
+        <translation>So he dies by his own lake in his own fog. Rome will call it justice. I call it weather, and I have always respected weather.</translation>
+    </message>
+    <message>
+        <source>Somebody is trying to cut a way out along the shore. Good. Somebody should get home and describe this accurately.</source>
+        <translation>Somebody is trying to cut a way out along the shore. Good. Somebody should get home and describe this accurately.</translation>
+    </message>
+    <message>
+        <source>The Aufidus camp. So the ring closes. I told the Senate a ring was what he wanted. They told me I was old.</source>
+        <translation>The Aufidus camp. So the ring closes. I told the Senate a ring was what he wanted. They told me I was old.</translation>
+    </message>
+    <message>
+        <source>The Barcid falls at the Ticinus. Then this was the whole war, and it fit inside an afternoon. I expected more of it; I am not sure I wanted more.</source>
+        <translation>The Barcid falls at the Ticinus. Then this was the whole war, and it fit inside an afternoon. I expected more of it; I am not sure I wanted more.</translation>
+    </message>
+    <message>
+        <source>The Numidians are riding. Your Numidians, once. Now they ride for Rome, and they ride the same way they always did - around you.</source>
+        <translation>The Numidians are riding. Your Numidians, once. Now they ride for Rome, and they ride the same way they always did - around you.</translation>
+    </message>
+    <message>
+        <source>The allied wing is at your works. Italians, mostly. They fight for Rome because the alternative is fighting Rome, which is a very persuasive argument.</source>
+        <translation>The allied wing is at your works. Italians, mostly. They fight for Rome because the alternative is fighting Rome, which is a very persuasive argument.</translation>
+    </message>
+    <message>
+        <source>The allied wing is down to a handful. I have counted them twice, because there was time. Whatever happens next on this field, remember someone counted.</source>
+        <translation>The allied wing is down to a handful. I have counted them twice, because there was time. Whatever happens next on this field, remember someone counted.</translation>
+    </message>
+    <message>
+        <source>The allied wing is on the southern road. They know this country - they own most of it, or did, before you started eating it.</source>
+        <translation>The allied wing is on the southern road. They know this country - they own most of it, or did, before you started eating it.</translation>
+    </message>
+    <message>
+        <source>The column came back through and the carts were still empty. A levy that misses the road is a levy nobody signed for.</source>
+        <translation>The column came back through and the carts were still empty. A levy that misses the road is a levy nobody signed for.</translation>
+    </message>
+    <message>
+        <source>The column is nearly gone. What is left of it will hold until the fog lifts, because that is the only order anyone can still hear.</source>
+        <translation>The column is nearly gone. What is left of it will hold until the fog lifts, because that is the only order anyone can still hear.</translation>
+    </message>
+    <message>
+        <source>The column is on the lakeside road. In fog, in a defile, in a hurry. Every word of that sentence is a mistake and Flaminius owns them all.</source>
+        <translation>The column is on the lakeside road. In fog, in a defile, in a hurry. Every word of that sentence is a mistake and Flaminius owns them all.</translation>
+    </message>
+    <message>
+        <source>The final pass is nearly cleared. Whatever comes down the far side, I shall be in Italy waiting for it with a great many more men than this.</source>
+        <translation>The final pass is nearly cleared. Whatever comes down the far side, I shall be in Italy waiting for it with a great many more men than this.</translation>
+    </message>
+    <message>
+        <source>The high pass is sending everything it has. They have been paid in Roman silver to hold that road, and mountain men earn their silver.</source>
+        <translation>The high pass is sending everything it has. They have been paid in Roman silver to hold that road, and mountain men earn their silver.</translation>
+    </message>
+    <message>
+        <source>The hill fort is yours. It was built to watch a river; now it will watch you cross one. Forts do not much care who is inside them.</source>
+        <translation>The hill fort is yours. It was built to watch a river; now it will watch you cross one. Forts do not much care who is inside them.</translation>
+    </message>
+    <message>
+        <source>The last column. Everything they have left is on the road. Hold this one and the ford is ours until the spring.</source>
+        <translation>The last column. Everything they have left is on the road. Hold this one and the ford is ours until the spring.</translation>
+    </message>
+    <message>
+        <source>The last of the legions is in the water. Everything Rome has north of the Apennines is coming at you wet. Hold this and you hold Italy for a winter.</source>
+        <translation>The last of the legions is in the water. Everything Rome has north of the Apennines is coming at you wet. Hold this and you hold Italy for a winter.</translation>
+    </message>
+    <message>
+        <source>The last of the northern columns is moving. I have spent a year making you hold this quarter. Hold it one more hour and I will have spent it well.</source>
+        <translation>The last of the northern columns is moving. I have spent a year making you hold this quarter. Hold it one more hour and I will have spent it well.</translation>
+    </message>
+    <message>
+        <source>The last pass camp. So you are through - what is left of you. Italy is below. Italy has been waiting, and Italy is not friendly.</source>
+        <translation>The last pass camp. So you are through - what is left of you. Italy is below. Italy has been waiting, and Italy is not friendly.</translation>
+    </message>
+    <message>
+        <source>The line is nearly broken. Nearly. I was at Cannae, you understand. I know exactly what nearly looks like from the other side, and I am still here.</source>
+        <translation>The line is nearly broken. Nearly. I was at Cannae, you understand. I know exactly what nearly looks like from the other side, and I am still here.</translation>
+    </message>
+    <message>
+        <source>The lower pass camp is yours. Keep it warm. The tribes will want it back in the spring and I will not be here to stop them.</source>
+        <translation>The lower pass camp is yours. Keep it warm. The tribes will want it back in the spring and I will not be here to stop them.</translation>
+    </message>
+    <message>
+        <source>The main line is advancing. No trumpets, no tricks, no gaps between the maniples for your elephants to find. I learned. You taught me.</source>
+        <translation>The main line is advancing. No trumpets, no tricks, no gaps between the maniples for your elephants to find. I learned. You taught me.</translation>
+    </message>
+    <message>
+        <source>The northern camp is gone. Fine. It was a camp. Scipio&apos;s line still stands, and that is the only thing on this plain that matters.</source>
+        <translation>The northern camp is gone. Fine. It was a camp. Scipio&apos;s line still stands, and that is the only thing on this plain that matters.</translation>
+    </message>
+    <message>
+        <source>The northern legion is coming down through the orchards. Slowly. I ordered slowly. Every tree they pass is one you will not harvest.</source>
+        <translation>The northern legion is coming down through the orchards. Slowly. I ordered slowly. Every tree they pass is one you will not harvest.</translation>
+    </message>
+    <message>
+        <source>The northern legion is spent. I have others. I have always had others. That is what the delaying was for.</source>
+        <translation>The northern legion is spent. I have others. I have always had others. That is what the delaying was for.</translation>
+    </message>
+    <message>
+        <source>The patrols are nearly finished. So be it. I shall take the fleet back to Italy and wait for you there with the rest of the Republic.</source>
+        <translation>The patrols are nearly finished. So be it. I shall take the fleet back to Italy and wait for you there with the rest of the Republic.</translation>
+    </message>
+    <message>
+        <source>The rearguard camp falls. I held it the way I hold everything - long enough, and no longer. Scipio will manage without an old man&apos;s tents.</source>
+        <translation>The rearguard camp falls. I held it the way I hold everything - long enough, and no longer. Scipio will manage without an old man&apos;s tents.</translation>
+    </message>
+    <message>
+        <source>The reserve camp is yours. It was never meant to fight - it was meant to be there afterwards. There is not going to be an afterwards, is there.</source>
+        <translation>The reserve camp is yours. It was never meant to fight - it was meant to be there afterwards. There is not going to be an afterwards, is there.</translation>
+    </message>
+    <message>
+        <source>The reserve is moving, and moving fast. I do not hold men back for the look of the thing.</source>
+        <translation>The reserve is moving, and moving fast. I do not hold men back for the look of the thing.</translation>
+    </message>
+    <message>
+        <source>The screen is coming across the flats. Velites, cavalry, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
+        <translation>The screen is coming across the flats. Velites, cavalry, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</translation>
+    </message>
+    <message>
+        <source>The second pass. You are buying road with men and paying in snow. I have never seen an army spend itself so willingly on scenery.</source>
+        <translation>The second pass. You are buying road with men and paying in snow. I have never seen an army spend itself so willingly on scenery.</translation>
+    </message>
+    <message>
+        <source>The shore camp. That was the way out, and now there is only the lake. Romans are not, on the whole, a swimming people.</source>
+        <translation>The shore camp. That was the way out, and now there is only the lake. Romans are not, on the whole, a swimming people.</translation>
+    </message>
+    <message>
+        <source>The siege column is at the run. Engines behind, ladders in front. I do not besiege towns. I take them.</source>
+        <translation>The siege column is at the run. Engines behind, ladders in front. I do not besiege towns. I take them.</translation>
+    </message>
+    <message>
+        <source>The tribes are coming down the slope. They do not fight in lines. They fight in rockfalls.</source>
+        <translation>The tribes are coming down the slope. They do not fight in lines. They fight in rockfalls.</translation>
+    </message>
+    <message>
+        <source>The western reserve is moving, against my advice. I gave the advice knowing it would be ignored; it is still worth having given.</source>
+        <translation>The western reserve is moving, against my advice. I gave the advice knowing it would be ignored; it is still worth having given.</translation>
+    </message>
+    <message>
+        <source>They are hitting your camp, because it is the only thing on this road they can see. Men in fog attack whatever is nearest. Remember it.</source>
+        <translation>They are hitting your camp, because it is the only thing on this road they can see. Men in fog attack whatever is nearest. Remember it.</translation>
+    </message>
+    <message>
+        <source>Varro&apos;s town. Varro is not in it; Varro is out front, being brave at other people. Enjoy the walls. I never needed them.</source>
+        <translation>Varro&apos;s town. Varro is not in it; Varro is out front, being brave at other people. Enjoy the walls. I never needed them.</translation>
+    </message>
+    <message>
+        <source>We are losing men on the goat path. Pull the wounded back and put fresh spears in the gap. Nobody dies standing in a hole.</source>
+        <translation>We are losing men on the goat path. Pull the wounded back and put fresh spears in the gap. Nobody dies standing in a hole.</translation>
+    </message>
+    <message>
+        <source>We are on your bank and at your works. A river only stops men who are not already freezing.</source>
+        <translation>We are on your bank and at your works. A river only stops men who are not already freezing.</translation>
+    </message>
+    <message>
+        <source>You have the allied camp. Socii - allies. They were promised land for this war, and you have just handed them the first piece of it face down.</source>
+        <translation>You have the allied camp. Socii - allies. They were promised land for this war, and you have just handed them the first piece of it face down.</translation>
+    </message>
+    <message>
+        <source>You have the marching town. Flaminius built it in a fog and never looked back. There is a lesson there; he will not be the one to learn it.</source>
+        <translation>You have the marching town. Flaminius built it in a fog and never looked back. There is a lesson there; he will not be the one to learn it.</translation>
+    </message>
+    <message>
+        <source>Your camp is under the screen&apos;s spears. A camp on the wrong bank of a cold river - I would not have chosen it, and now you cannot un-choose it.</source>
+        <translation>Your camp is under the screen&apos;s spears. A camp on the wrong bank of a cold river - I would not have chosen it, and now you cannot un-choose it.</translation>
+    </message>
+    <message>
+        <source>Your garrison is bleeding. You cannot replace those men from Africa in time, and I can replace mine from the next valley. That is the whole war.</source>
+        <translation>Your garrison is bleeding. You cannot replace those men from Africa in time, and I can replace mine from the next valley. That is the whole war.</translation>
+    </message>
+    <message>
+        <source>Your line is bleeding along the bank. Wet ground is slow ground, and slow men are what spears are for.</source>
+        <translation>Your line is bleeding along the bank. Wet ground is slow ground, and slow men are what spears are for.</translation>
+    </message>
+    <message>
+        <source>Your men are dying on the ice. Not from spears - from cold, and hunger, and the arithmetic of a road that is longer than your grain.</source>
+        <translation>Your men are dying on the ice. Not from spears - from cold, and hunger, and the arithmetic of a road that is longer than your grain.</translation>
+    </message>
+    <message>
+        <source>Your men are dying too. A trap costs the trapper something; the good ones simply cost him less.</source>
+        <translation>Your men are dying too. A trap costs the trapper something; the good ones simply cost him less.</translation>
+    </message>
+    <message>
+        <source>Your men are falling at the water. The Rhone is not particular about whose bones it keeps; I did tell you.</source>
+        <translation>Your men are falling at the water. The Rhone is not particular about whose bones it keeps; I did tell you.</translation>
+    </message>
+    <message>
+        <source>Your men are going down in the centre. I know - that is where you put the Gauls, and Gauls are for spending. It is still a great many funerals.</source>
+        <translation>Your men are going down in the centre. I know - that is where you put the Gauls, and Gauls are for spending. It is still a great many funerals.</translation>
+    </message>
+    <message>
+        <source>Your riders are dying by the ford. Numidians, I think. They ride beautifully, and they die at the ordinary speed.</source>
+        <translation>Your riders are dying by the ford. Numidians, I think. They ride beautifully, and they die at the ordinary speed.</translation>
+    </message>
+    <message>
+        <source>Your veterans are dying. Italy&apos;s veterans, really; you took them from us sixteen years ago and now we are taking them back one at a time.</source>
+        <translation>Your veterans are dying. Italy&apos;s veterans, really; you took them from us sixteen years ago and now we are taking them back one at a time.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -6622,14 +7788,6 @@ to see preview</translation>
         <translation>One small field, one order to carry out. No campaign to lose, no second army to worry about.</translation>
     </message>
     <message>
-        <source>carried out</source>
-        <translation>carried out</translation>
-    </message>
-    <message>
-        <source>← Back</source>
-        <translation>← Back</translation>
-    </message>
-    <message>
         <source>No missions are installed.</source>
         <translation>No missions are installed.</translation>
     </message>
@@ -6650,10 +7808,6 @@ to see preview</translation>
         <translation>It ends badly if</translation>
     </message>
     <message>
-        <source>You have carried this one out before.</source>
-        <translation>You have carried this one out before.</translation>
-    </message>
-    <message>
         <source>Take it again</source>
         <translation>Take it again</translation>
     </message>
@@ -6662,8 +7816,84 @@ to see preview</translation>
         <translation>Take the field</translation>
     </message>
     <message>
-        <source>Pick a mission.</source>
-        <translation>Pick a mission.</translation>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>Mission orders</source>
+        <translation>Mission orders</translation>
+    </message>
+    <message>
+        <source>FIELD ORDERS  /  SECOND PUNIC WAR</source>
+        <translation>FIELD ORDERS  /  SECOND PUNIC WAR</translation>
+    </message>
+    <message>
+        <source>ORDERS FULFILLED</source>
+        <translation>ORDERS FULFILLED</translation>
+    </message>
+    <message>
+        <source>Mission completion</source>
+        <translation>Mission completion</translation>
+    </message>
+    <message>
+        <source>Back ›</source>
+        <translation>Back ›</translation>
+    </message>
+    <message>
+        <source>‹ Back</source>
+        <translation>‹ Back</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Back</translation>
+    </message>
+    <message>
+        <source>AVAILABLE DISPATCHES</source>
+        <translation>AVAILABLE DISPATCHES</translation>
+    </message>
+    <message>
+        <source>DONE</source>
+        <translation>DONE</translation>
+    </message>
+    <message>
+        <source>MISSION BRIEF</source>
+        <translation>MISSION BRIEF</translation>
+    </message>
+    <message>
+        <source>ORDER FULFILLED</source>
+        <translation>ORDER FULFILLED</translation>
+    </message>
+    <message>
+        <source>OPEN ORDER</source>
+        <translation>OPEN ORDER</translation>
+    </message>
+    <message>
+        <source>COMMANDER&apos;S INTENT</source>
+        <translation>COMMANDER&apos;S INTENT</translation>
+    </message>
+    <message>
+        <source>You start with</source>
+        <translation>You start with</translation>
+    </message>
+    <message>
+        <source>Nothing in the stores. Everything you spend, you gather first.</source>
+        <translation>Nothing in the stores. Everything you spend, you gather first.</translation>
+    </message>
+    <message>
+        <source>FIELD RECONNAISSANCE</source>
+        <translation>FIELD RECONNAISSANCE</translation>
+    </message>
+    <message>
+        <source>Enter</source>
+        <translation>Enter</translation>
+    </message>
+    <message>
+        <source>Previously carried out</source>
+        <translation>Previously carried out</translation>
+    </message>
+    <message>
+        <source>Choose a dispatch to review its field orders.</source>
+        <translation>Choose a dispatch to review its field orders.</translation>
     </message>
 </context>
 <context>
@@ -6915,6 +8145,22 @@ to see preview</translation>
     <message>
         <source>Continue</source>
         <translation>Continue</translation>
+    </message>
+    <message>
+        <source>CAMPAIGN DECREE</source>
+        <translation>CAMPAIGN DECREE</translation>
+    </message>
+    <message>
+        <source>FIELD ASSESSMENT</source>
+        <translation>FIELD ASSESSMENT</translation>
+    </message>
+    <message>
+        <source>BATTLEFIELD VERDICT</source>
+        <translation>BATTLEFIELD VERDICT</translation>
+    </message>
+    <message>
+        <source>COMMAND REPORT</source>
+        <translation>COMMAND REPORT</translation>
     </message>
 </context>
 <context>

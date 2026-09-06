@@ -652,13 +652,16 @@ auto main(int argc, char* argv[]) -> int {
   std::set<QString> mission_ids;
 
   Game::Mission::CommanderVoiceLibrary voices;
-  {
+  const QDir voices_dir = base_dir.filePath("data/commanders/voices");
+  if (voices_dir.exists()) {
     std::cout << "\nValidating commander voice banks..." << '\n';
     const ValidationResult result = validateCommanderVoices(assets_dir, voices);
     printResults(result, QStringLiteral("data/commanders/voices"));
     if (!result.success) {
       all_valid = false;
     }
+  } else {
+    std::cout << "\nNo data/commanders/voices directory found (this is OK)" << '\n';
   }
 
   const QDir missions_dir = base_dir.filePath("missions");

@@ -34,7 +34,10 @@ Three rules keep the split meaningful:
   the module check rather than by the link step.)
 - **No test is quarantined.** Nothing is excluded from the default run, and no
   test source is listed behind an `if(EXISTS)`. A test that cannot build or
-  cannot pass is fixed or deleted with an issue.
+  cannot pass is fixed or deleted with an issue. The fast pull-request profile
+  below skips some tests, but the default run is still everything, and
+  `scripts/check-test-speed.py` fails if a skipped test's name has stopped
+  matching anything.
 
 All three are checked, not just asserted:
 `tests/architecture/module_boundary_test.cpp` fails if a production `.cpp`
@@ -110,9 +113,47 @@ test, or it will outlive the stack it captured.
   keeps meaning when the thing it measures is re-authored.
 - One behaviour per case; keep cases independent of ordering.
 
+## Profiles
+
+`scripts/run-tests.sh` runs the same nine binaries either way. `SOI_TEST_PROFILE`
+picks how much of them:
+
+|                                        | `full` (default) | `pr`                             |
+| -------------------------------------- | ---------------- | -------------------------------- |
+| binaries built and run                 | all nine         | all nine                         |
+| tests                                  | every one        | minus `tests/extended_tests.txt` |
+| verifier, QML suite, replay round trip | yes              | no                               |
+
+The `pr` profile exists because a few dozen tests are acceptance checks against
+content -- they simulate a battle tick by tick, or walk every shipped map and
+asset on disk. They cost seconds each, which in a Debug build is minutes, and
+they are answering questions about content that a pull request has usually not
+touched. Before the split the pull-request lane spent over ninety minutes here
+and was killed by its own timeout.
+
+`tests/extended_tests.txt` names them, one GoogleTest filter pattern per line
+with the reason. Add to it only for the reasons already listed there, and only
+after measuring. `scripts/check-test-speed.py` fails a fast run in which any
+test exceeded the per-test budget, and fails if a pattern in the manifest has
+stopped matching a real test:
+
+```bash
+SOI_TEST_PROFILE=pr SOI_TEST_REPORT_DIR=artifacts/test-reports \
+  bash scripts/run-tests.sh build --gtest_brief=1
+python3 scripts/check-test-speed.py --build-dir build \
+  --report-dir artifacts/test-reports
+```
+
+Fixtures leaving nothing behind is what makes the split safe. A test that only
+passes because a neighbour ran first passes in the full profile and fails in the
+fast one, which is how `FormationCombatGeometry` was found leaning on
+`MovementMotorTest` to seat the nation registry and the navigation grid for it.
+
 ## CI
 
 `.github/workflows/pr.yml` builds `soi_test_binaries` and runs
-`scripts/run-tests.sh`; the three platform build workflows run the same script
-after their build. A suite missing from the build directory is an error there,
-not a skip.
+`scripts/run-tests.sh` with `SOI_TEST_PROFILE=pr`;
+`.github/workflows/extended-validation.yml` and the weekly sanitizer and
+coverage lanes run the full profile, and the three platform build workflows run
+the same script after their build. A suite missing from the build directory is
+an error there, not a skip.
