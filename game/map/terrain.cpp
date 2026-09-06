@@ -950,10 +950,16 @@ void TerrainHeightMap::build_from_features(
 
         int const idx = indexAt(x, z);
 
+        constexpr float k_default_taper = 0.20F;
+        const float taper = feature.taper > 0.0F
+                                ? std::clamp(feature.taper, 0.01F, 1.0F)
+                                : k_default_taper;
         const float feather =
-            std::clamp((1.0F - normalized_distance) / 0.20F, 0.0F, 1.0F);
+            std::clamp((1.0F - normalized_distance) / taper, 0.0F, 1.0F);
         const float blend = feather * feather * (3.0F - 2.0F * feather);
-        m_heights[idx] = m_heights[idx] * (1.0F - blend) + feature.height * blend;
+        m_heights[idx] = feature.raise_only
+                             ? std::max(m_heights[idx], feature.height * blend)
+                             : m_heights[idx] * (1.0F - blend) + feature.height * blend;
         if (blend >= 0.5F) {
           m_terrain_types[idx] = TerrainType::Flat;
           m_hill_entrances[idx] = false;

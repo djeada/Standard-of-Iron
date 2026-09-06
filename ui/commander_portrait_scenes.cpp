@@ -135,6 +135,9 @@ auto CommanderPortraitScenes::acquire(const QString& troop_type) -> Scene {
 
   Entry entry;
   entry.world = std::make_unique<Engine::Core::World>();
+
+  m_next_entity_block += k_scene_entity_block;
+  entry.world->set_next_entity_id(Engine::Core::Handle::make(m_next_entity_block, 0U));
   entry.world->add_system(std::make_unique<Game::Systems::ShowcaseRoutineSystem>());
 
   entry.factory = std::make_unique<Game::Units::UnitFactoryRegistry>();

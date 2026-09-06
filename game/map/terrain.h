@@ -671,6 +671,8 @@ struct TerrainFeature {
   float sweep_degrees = 0.0F;
   float sweep_start_degrees = 0.0F;
   float taper = 0.0F;
+
+  bool raise_only = false;
   bool has_sweep = false;
   bool has_sweep_start = false;
   std::vector<QVector3D> shape_points;
