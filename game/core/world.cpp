@@ -269,6 +269,11 @@ void publish_movement_trace_frame(World& world) {
         sample.blocked_steps = facts.progress.blocked_steps;
         sample.repath_count = facts.progress.repath_count;
         sample.repath_reason = facts.progress.repath_reason;
+        sample.stalled_seconds = facts.progress.stall.stalled_seconds;
+        sample.recovery_rung = facts.progress.stall.rung;
+        sample.recovery_attempts = facts.progress.stall.recovery_attempts;
+        sample.abandon_count = facts.progress.stall.abandon_count;
+        sample.objective_abandoned = facts.progress.stall.objective_abandoned;
         sample.traversal_mode = facts.traversal.mode;
         sample.portal_id = facts.traversal.portal_id;
         sample.current_files = facts.traversal.current_files;
@@ -277,6 +282,10 @@ void publish_movement_trace_frame(World& world) {
         sample.mode_dwell_seconds = facts.traversal.mode_dwell_seconds;
         sample.soldier_body_radius = facts.traversal.soldier_body_radius;
         sample.corridor_half_width = facts.traversal.corridor_half_width;
+        sample.formation_half_width = facts.traversal.desired_half_width;
+        sample.file_spacing = facts.traversal.file_spacing;
+        sample.lateral_scale = facts.traversal.lateral_scale;
+        sample.normal_files = facts.traversal.normal_files;
         sample.direction_source = facts.direction_source;
         trace.record(sample);
       });

@@ -8,6 +8,8 @@ add_library(
     arena_city_scenarios.cpp
     arena_formation_scenarios.cpp
     arena_navigation_scenarios.cpp
+    arena_stuck_recovery_scenarios.cpp
+    arena_traversal_scenarios.cpp
     arena_showcase_scenarios.cpp
     arena_trailer_scenarios.cpp
     arena_wildlife_scenarios.cpp

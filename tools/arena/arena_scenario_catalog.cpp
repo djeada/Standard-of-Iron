@@ -14,7 +14,9 @@
 #include "arena_navigation_scenarios.h"
 #include "arena_scenarios.h"
 #include "arena_showcase_scenarios.h"
+#include "arena_stuck_recovery_scenarios.h"
 #include "arena_trailer_scenarios.h"
+#include "arena_traversal_scenarios.h"
 #include "arena_wildlife_scenarios.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/wildlife/wildlife_config.h"
@@ -11393,6 +11395,14 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(navigation.begin()),
                   std::make_move_iterator(navigation.end()));
+    auto stuck_recovery = build_stuck_recovery_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(stuck_recovery.begin()),
+                  std::make_move_iterator(stuck_recovery.end()));
+    auto traversal = build_traversal_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(traversal.begin()),
+                  std::make_move_iterator(traversal.end()));
     auto wildlife = build_wildlife_definitions();
     values.insert(values.end(),
                   std::make_move_iterator(wildlife.begin()),

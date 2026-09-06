@@ -131,6 +131,43 @@ struct MotorFacts {
   float penetration_depth{0.0F};
 };
 
+enum class MovementRecoveryRung : std::uint8_t {
+  None = 0,
+  Replan,
+  Sidestep,
+  RelaxFormation,
+  Abandoned
+};
+
+[[nodiscard]] auto
+movement_recovery_rung_name(MovementRecoveryRung rung) noexcept -> const char*;
+
+struct MovementStallFacts {
+  bool objective_valid{false};
+  float objective_x{0.0F};
+  float objective_z{0.0F};
+
+  float stalled_seconds{0.0F};
+  float window_seconds{0.0F};
+  float window_reference_x{0.0F};
+  float window_reference_z{0.0F};
+  bool window_valid{false};
+
+  float closest_approach{0.0F};
+  float no_closer_seconds{0.0F};
+
+  MovementRecoveryRung rung{MovementRecoveryRung::None};
+  std::uint32_t recovery_attempts{0};
+  float clearance_relief{1.0F};
+  std::uint64_t tracked_order{0};
+
+  bool objective_abandoned{false};
+  float abandoned_x{0.0F};
+  float abandoned_z{0.0F};
+
+  std::uint32_t abandon_count{0};
+};
+
 struct MovementProgressFacts {
   MovementOrderState state{MovementOrderState::Idle};
   MovementOrderState previous_state{MovementOrderState::Idle};
@@ -147,17 +184,22 @@ struct MovementProgressFacts {
   std::uint32_t repath_count{0};
   std::uint32_t repath_attempts{0};
   MovementRepathReason repath_reason{MovementRepathReason::None};
+
+  MovementStallFacts stall;
 };
 
 struct TraversalLayoutFacts {
   TraversalLayoutMode mode{TraversalLayoutMode::Normal};
   TraversalLayoutMode target_mode{TraversalLayoutMode::Normal};
   std::uint32_t portal_id{0};
+  std::uint32_t normal_files{0};
   std::uint32_t current_files{0};
   std::uint32_t target_files{0};
   float corridor_half_width{0.0F};
   float desired_half_width{0.0F};
   float soldier_body_radius{0.0F};
+  float file_spacing{0.0F};
+  float lateral_scale{1.0F};
   float transition_progress{1.0F};
   float mode_dwell_seconds{0.0F};
 };

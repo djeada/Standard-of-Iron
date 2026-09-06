@@ -9,6 +9,7 @@
 #include "../../units/spawn_type.h"
 #include "../../units/troop_type.h"
 #include "ai_doctrine_catalog.h"
+#include "ai_stall_recovery.h"
 #include "ai_utils.h"
 
 namespace Game::Systems::AI {
@@ -144,6 +145,10 @@ auto committable_units(const AISnapshot& snapshot,
   for (const auto& entity : snapshot.friendly_units) {
     if (!marches_with_a_wave(entity) || entity.is_assault ||
         is_harass_unit(entity.id, context)) {
+      continue;
+    }
+
+    if (is_stood_down(entity.id, context, snapshot.game_time)) {
       continue;
     }
     result.push_back(&entity);

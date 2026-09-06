@@ -744,17 +744,19 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
       walk.has_previous_mode = true;
       walk.previous_portal = sample.portal_id;
 
-      if (sample.current_files == 1U && sample.soldier_body_radius > 0.0F &&
-          sample.corridor_half_width > 2.0F * sample.soldier_body_radius) {
+      if (sample.current_files == 1U && sample.normal_files > 1U &&
+          sample.file_spacing > 0.01F &&
+          sample.corridor_half_width >
+              sample.soldier_body_radius + (0.5F * sample.file_spacing)) {
         sink.add(MovementFindingKind::LayoutAspectRatio,
                  entity_id,
                  0,
                  sample.tick,
                  sample.corridor_half_width,
-                 text("single file chosen where %.2fm half-width fits %d files",
+                 text("single file chosen where %.2fm of corridor holds two "
+                      "files %.2fm apart",
                       static_cast<double>(sample.corridor_half_width),
-                      static_cast<int>(sample.corridor_half_width /
-                                       std::max(0.01F, sample.soldier_body_radius))));
+                      static_cast<double>(sample.file_spacing)));
       }
 
       if (walk.active_seconds > thresholds.starvation_seconds) {
@@ -1043,10 +1045,11 @@ auto format_movement_timeline(const std::vector<MovementTroopSample>& troops,
 
   std::ostringstream out;
   out << "tick    state           root(x,z)         yaw     accepted(v)   "
-         "advance  remaining  wp     mode        gait\n";
+         "advance  remaining  wp     mode        files  corridor/needed  "
+         "spacing  gait\n";
   for (auto const* sample : window) {
     out << text("%-7llu %-15s (%7.2f,%7.2f) %7.1f (%6.2f,%6.2f) %8.3f %10.2f "
-                "%2u/%-2u %-11s %u\n",
+                "%2u/%-2u %-11s %2u/%-2u %6.2f/%-6.2f %6.2f  %u\n",
                 static_cast<unsigned long long>(sample->tick),
                 movement_state_name(sample->state),
                 static_cast<double>(sample->root_x),
@@ -1059,6 +1062,11 @@ auto format_movement_timeline(const std::vector<MovementTroopSample>& troops,
                 sample->waypoint_index,
                 sample->waypoint_count,
                 traversal_layout_mode_name(sample->traversal_mode),
+                sample->current_files,
+                sample->normal_files,
+                static_cast<double>(sample->corridor_half_width),
+                static_cast<double>(sample->formation_half_width),
+                static_cast<double>(sample->file_spacing),
                 static_cast<unsigned>(sample->presentation_state));
   }
   return out.str();

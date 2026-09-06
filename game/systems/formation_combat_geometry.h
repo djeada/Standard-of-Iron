@@ -125,6 +125,19 @@ void soldier_spatial_anchors_into(const Engine::Core::Entity& entity,
 formation_navigation_clearance(const Engine::Core::Entity& entity) -> float;
 
 [[nodiscard]] auto
+formation_lateral_half_extent(const FormationLayout& layout) -> float;
+
+[[nodiscard]] auto narrow_file_depth(const FormationLayout& layout,
+                                     std::uint32_t files,
+                                     float rank_spacing) -> float;
+
+void narrow_file_slots_into(const FormationLayout& layout,
+                            std::uint32_t files,
+                            float file_spacing,
+                            float rank_spacing,
+                            std::vector<SoldierSlot>& result);
+
+[[nodiscard]] auto
 resolve_contact_context(const Engine::Core::Entity& attacker,
                         const Engine::Core::Entity& target) -> FormationContactContext;
 

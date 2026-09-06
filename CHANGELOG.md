@@ -184,6 +184,31 @@ tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
 
 ### Fixed
 
+- **A troop that cannot reach where it was sent stops pretending it is going
+  there.** The recovery path rewrote the unit's own goal as it went: a sidestep
+  resolved `goal_x/goal_y` to a cell two metres away, the next repath planned
+  against _that_, and the requested goal -- the actual order -- was overwritten
+  with it. The unit then arrived somewhere it had never been sent, reported
+  `Arrived`, and the computer opponent, which reads nothing but "does it hold a
+  target", counted the job done and never looked again. That is how AI
+  formations ended up standing in a gateway for the rest of a match. The order
+  is now the only thing recovery may not edit, and reachability is re-checked at
+  a relaxed frontage before an objective is written off, so a block too wide for
+  a gate walks through it as a column instead of being told there is no route.
+  Movement carries a stuck clock that route churn cannot reset -- net
+  displacement over a rolling window, plus the closest the unit has ever come to
+  its objective, so walking laps counts as going nowhere just as standing still
+  does -- and a bounded four-rung ladder above it: replan, sidestep, relax the
+  frontage, then visibly abandon the objective rather than hold it forever. The
+  AI sees all of it (`MovementSnapshot`), counts a wedged unit as idle rather
+  than busy, tries a small fixed number of approaches from other sides, and then
+  stands the unit down so the next planning cycle gives it something else to do.
+  Nine `stuck_*` Arena scenarios cover gateways, streets, woods, hill pinches,
+  rock fields, half-blocked ruins, junction traffic, an objective ringed by
+  stone and an order changed mid-march, and every Arena report now prints what
+  each group's movement actually did: worst stall and when, the objective, the
+  state it was in, repaths, recovery attempts and anything left wedged.
+
 - **The recorded ambience beds are audible again.** The August refresh replaced
   all thirteen beds cut from field recordings with versions 11 to 29 dB below
   the -19.3 LUFS the mixer masters to, which is more make-up gain than decode

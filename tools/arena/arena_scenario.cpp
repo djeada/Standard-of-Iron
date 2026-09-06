@@ -627,6 +627,63 @@ auto battle_summary(const ArenaBattleOutcome& battle) -> QString {
 
 } // namespace
 
+namespace {
+
+auto movement_summary(const std::vector<ArenaGroupMovementDiagnostics>& rows)
+    -> QString {
+  if (rows.empty()) {
+    return {};
+  }
+  QStringList parts;
+  parts.reserve(static_cast<int>(rows.size()));
+  for (auto const& row : rows) {
+    QString const objective = row.has_objective ? QStringLiteral("(%1, %2)")
+                                                      .arg(row.objective_x, 0, 'f', 1)
+                                                      .arg(row.objective_z, 0, 'f', 1)
+                                                : QStringLiteral("none");
+    parts.push_back(
+        QStringLiteral("%1 stall %2 s@%3 s (%4) for %5, repaths %6, "
+                       "recoveries %7, abandoned %8, still wedged %9")
+            .arg(row.group)
+            .arg(row.worst_stalled_seconds, 0, 'f', 1)
+            .arg(row.worst_stalled_at, 0, 'f', 1)
+            .arg(row.worst_state.isEmpty() ? QStringLiteral("-") : row.worst_state,
+                 objective)
+            .arg(row.repaths)
+            .arg(row.recovery_attempts)
+            .arg(row.abandons)
+            .arg(row.units_holding_a_stalled_objective));
+  }
+  return QStringLiteral(" | movement: ") + parts.join(QStringLiteral("; "));
+}
+
+} // namespace
+
+auto narrow_layout_summary(const std::vector<ArenaNarrowLayoutOutcome>& outcomes)
+    -> QString {
+  if (outcomes.empty()) {
+    return {};
+  }
+  QStringList parts;
+  for (auto const& outcome : outcomes) {
+    parts.push_back(
+        QStringLiteral("%1 frontage %2m corridor %3m %4 %5/%6 files at %7m, "
+                       "narrowest %8m over %9m deep, reform %10m")
+            .arg(outcome.group)
+            .arg(outcome.formation_half_width * 2.0F, 0, 'f', 2)
+            .arg(outcome.narrowest_corridor_half_width * 2.0F, 0, 'f', 2)
+            .arg(outcome.engaged ? outcome.narrowest_mode
+                                 : QStringLiteral("Normal(idle)"))
+            .arg(outcome.narrowest_files)
+            .arg(outcome.normal_files)
+            .arg(outcome.tightest_file_spacing, 0, 'f', 2)
+            .arg(outcome.narrowest_frontage, 0, 'f', 2)
+            .arg(outcome.deepest_column, 0, 'f', 2)
+            .arg(outcome.worst_reform_error, 0, 'f', 2));
+  }
+  return QStringLiteral(" | narrow layout: ") + parts.join(QStringLiteral("; "));
+}
+
 auto ArenaScenarioReport::summary() const -> QString {
   if (passed()) {
     QString result = QStringLiteral("PASS %1: %2 frames, %3 s")
@@ -646,12 +703,16 @@ auto ArenaScenarioReport::summary() const -> QString {
                     .arg(peak_rigged_instanced_instances);
     }
     result += battle_summary(battle);
+    result += movement_summary(movement);
+    result += narrow_layout_summary(narrow_layout);
     return result;
   }
-  return QStringLiteral("FAIL %1: %2 issue(s); first: %3%4")
+  return QStringLiteral("FAIL %1: %2 issue(s); first: %3%4%5")
       .arg(scenario_id)
       .arg(issues.size())
-      .arg(issues.front().message, battle_summary(battle));
+      .arg(issues.front().message,
+           battle_summary(battle),
+           movement_summary(movement) + narrow_layout_summary(narrow_layout));
 }
 
 struct ArenaScenarioRunner::Impl {
@@ -934,6 +995,44 @@ struct ArenaScenarioRunner::Impl {
   };
   QHash<QString, OffGroundState> off_walkable_ground;
   QHash<QString, OffGroundState> off_walkable_soldiers;
+  struct StallObservation {
+    float worst_stalled_seconds{0.0F};
+    float worst_stalled_at{0.0F};
+    std::uint32_t recovery_attempts{0};
+    std::uint32_t repaths{0};
+    std::uint32_t abandons{0};
+    bool recovery_seen{false};
+    QString worst_state;
+    bool has_objective{false};
+    float objective_x{0.0F};
+    float objective_z{0.0F};
+  };
+  QHash<QString, StallObservation> stall_observations;
+
+  struct NarrowLayoutState {
+    bool seeded{false};
+    bool engaged{false};
+    float formation_half_width{0.0F};
+    float narrowest_corridor{0.0F};
+    std::uint32_t normal_files{0};
+    std::uint32_t narrowest_files{0};
+    float tightest_file_spacing{0.0F};
+    float narrowest_frontage{0.0F};
+    float deepest_column{0.0F};
+    float engaged_from{-1.0F};
+    float engaged_until{-1.0F};
+    Engine::Core::TraversalLayoutMode narrowest_mode{
+        Engine::Core::TraversalLayoutMode::Normal};
+    Engine::Core::TraversalLayoutMode previous_mode{
+        Engine::Core::TraversalLayoutMode::Normal};
+    std::uint32_t mode_changes{0};
+    float worst_reform_error{0.0F};
+    bool active_at_end{false};
+    std::uint32_t files_at_end{0};
+  };
+  QHash<QString, NarrowLayoutState> narrow_layout;
+  QSet<QString> narrow_layout_groups;
+  bool narrow_layout_groups_resolved{false};
   QHash<QString, bool> defensive_layout_locked;
   QHash<QString, bool> useful_bot_action;
   std::vector<BattleSideState> battle_sides;
@@ -2716,6 +2815,96 @@ struct ArenaScenarioRunner::Impl {
     }
   }
 
+  [[nodiscard]] auto tracks_narrow_layout(const QString& group) -> bool {
+    if (!narrow_layout_groups_resolved) {
+      narrow_layout_groups_resolved = true;
+      for (auto const& expectation : scenario.expectations) {
+        switch (expectation.kind) {
+        case ArenaExpectationKind::NarrowLayoutEngaged:
+        case ArenaExpectationKind::NarrowLayoutStaysWide:
+        case ArenaExpectationKind::NarrowLayoutKeepsFiles:
+        case ArenaExpectationKind::NarrowLayoutModeSettles:
+        case ArenaExpectationKind::NarrowLayoutRestores:
+          narrow_layout_groups.insert(expectation.group);
+          break;
+        default:
+          break;
+        }
+      }
+    }
+    return narrow_layout_groups.contains(group);
+  }
+
+  void observe_narrow_layout(const QString& group, Engine::Core::EntityID entity_id) {
+    if (!tracks_narrow_layout(group)) {
+      return;
+    }
+    auto const* traversal =
+        world.try_get<Engine::Core::UnitTraversalLayoutStateComponent>(entity_id);
+    if (traversal == nullptr) {
+      return;
+    }
+    auto& state = narrow_layout[group];
+    if (!state.seeded) {
+      state.seeded = true;
+      state.narrowest_corridor = std::numeric_limits<float>::max();
+      state.narrowest_files = traversal->normal_files;
+      state.tightest_file_spacing = traversal->authored_file_spacing;
+      state.previous_mode = traversal->mode;
+    }
+    state.formation_half_width =
+        std::max(state.formation_half_width, traversal->desired_half_width);
+    if (traversal->available_half_width > 0.0F) {
+      state.narrowest_corridor =
+          std::min(state.narrowest_corridor, traversal->available_half_width);
+    }
+    state.normal_files = std::max(state.normal_files, traversal->normal_files);
+    if (traversal->mode != state.previous_mode) {
+      ++state.mode_changes;
+      state.previous_mode = traversal->mode;
+    }
+    state.active_at_end = traversal->active;
+    state.files_at_end = traversal->target_files;
+
+    float frontage = 0.0F;
+    float front = 0.0F;
+    float back = 0.0F;
+    float reform_error = 0.0F;
+    for (auto const& slot : traversal->slot_states) {
+      if (!slot.alive) {
+        continue;
+      }
+      frontage = std::max(frontage, std::abs(slot.current_local_x) * 2.0F);
+      front = std::max(front, slot.current_local_z);
+      back = std::min(back, slot.current_local_z);
+      reform_error = std::max(reform_error,
+                              std::hypot(slot.current_local_x - slot.target_local_x,
+                                         slot.current_local_z - slot.target_local_z));
+    }
+    state.worst_reform_error = reform_error;
+    if (!traversal->active) {
+      return;
+    }
+    state.engaged = true;
+    if (state.engaged_from < 0.0F) {
+      state.engaged_from = elapsed;
+    }
+    state.engaged_until = elapsed;
+    state.deepest_column = std::max(state.deepest_column, front - back);
+    state.tightest_file_spacing =
+        std::min(state.tightest_file_spacing,
+                 traversal->authored_file_spacing * traversal->lateral_scale);
+    if (frontage > 0.0F) {
+      state.narrowest_frontage = state.narrowest_frontage > 0.0F
+                                     ? std::min(state.narrowest_frontage, frontage)
+                                     : frontage;
+    }
+    if (traversal->target_files < state.narrowest_files) {
+      state.narrowest_files = traversal->target_files;
+      state.narrowest_mode = traversal->target_mode;
+    }
+  }
+
   void observe_entity(Engine::Core::EntityID entity_id,
                       const QString& group,
                       TraceFrame& frame) {
@@ -2815,6 +3004,30 @@ struct ArenaScenarioRunner::Impl {
     }
     if (Game::Systems::DefensiveUnitLayoutService::is_formed(*entity)) {
       defensive_layout_locked[group] = true;
+    }
+    if (auto const* movement_facts =
+            world.try_get<Engine::Core::MovementFactsComponent>(entity_id)) {
+      auto const& stall = movement_facts->progress.stall;
+      auto& observation = stall_observations[group];
+      float const going_nowhere =
+          std::max(stall.stalled_seconds, stall.no_closer_seconds);
+      if (going_nowhere > observation.worst_stalled_seconds) {
+        observation.worst_stalled_seconds = going_nowhere;
+        observation.worst_stalled_at = elapsed;
+        observation.worst_state = QString::fromLatin1(
+            Engine::Core::movement_state_name(movement_facts->progress.state));
+        observation.has_objective = stall.objective_valid;
+        observation.objective_x = stall.objective_x;
+        observation.objective_z = stall.objective_z;
+      }
+      observation.recovery_attempts =
+          std::max(observation.recovery_attempts, stall.recovery_attempts);
+      observation.repaths =
+          std::max(observation.repaths, movement_facts->progress.repath_count);
+      observation.abandons = std::max(observation.abandons, stall.abandon_count);
+      observation.recovery_seen =
+          observation.recovery_seen ||
+          stall.rung != Engine::Core::MovementRecoveryRung::None;
     }
     QVector3D const position = vector_from_transform(*transform);
     if (!initial_elevation.contains(group)) {
@@ -4188,6 +4401,73 @@ struct ArenaScenarioRunner::Impl {
     }
   }
 
+  void publish_movement_diagnostics() {
+    report.movement.clear();
+    for (auto const& group : scenario.groups) {
+      auto const found = stall_observations.constFind(group.name);
+      if (found == stall_observations.constEnd()) {
+        continue;
+      }
+      ArenaGroupMovementDiagnostics row;
+      row.group = group.name;
+      row.worst_stalled_seconds = found->worst_stalled_seconds;
+      row.worst_stalled_at = found->worst_stalled_at;
+      row.recovery_attempts = found->recovery_attempts;
+      row.repaths = found->repaths;
+      row.abandons = found->abandons;
+      row.worst_state = found->worst_state;
+      row.has_objective = found->has_objective;
+      row.objective_x = found->objective_x;
+      row.objective_z = found->objective_z;
+      for (auto entity_id : ids(group.name)) {
+        auto const* movement =
+            world.try_get<Engine::Core::MovementComponent>(entity_id);
+        auto const* movement_facts =
+            world.try_get<Engine::Core::MovementFactsComponent>(entity_id);
+        if (movement == nullptr || movement_facts == nullptr ||
+            !entity_alive(entity_id)) {
+          continue;
+        }
+        if (movement->get_has_target() &&
+            movement_facts->progress.stall.rung !=
+                Engine::Core::MovementRecoveryRung::None) {
+          ++row.units_holding_a_stalled_objective;
+        }
+      }
+      if (row.worst_stalled_seconds <= 0.0F && row.recovery_attempts == 0U &&
+          row.repaths == 0U && row.abandons == 0U &&
+          row.units_holding_a_stalled_objective == 0) {
+        continue;
+      }
+      report.movement.push_back(std::move(row));
+    }
+  }
+
+  void publish_narrow_layout_outcome() {
+    report.narrow_layout.clear();
+    for (auto const& group : scenario.groups) {
+      if (!narrow_layout.contains(group.name)) {
+        continue;
+      }
+      auto const& state = narrow_layout.value(group.name);
+      ArenaNarrowLayoutOutcome outcome;
+      outcome.group = group.name;
+      outcome.engaged = state.engaged;
+      outcome.formation_half_width = state.formation_half_width;
+      outcome.narrowest_corridor_half_width = state.narrowest_corridor;
+      outcome.normal_files = state.normal_files;
+      outcome.narrowest_files = state.narrowest_files;
+      outcome.tightest_file_spacing = state.tightest_file_spacing;
+      outcome.narrowest_frontage = state.narrowest_frontage;
+      outcome.deepest_column = state.deepest_column;
+      outcome.narrowest_mode = QString::fromLatin1(
+          Engine::Core::traversal_layout_mode_name(state.narrowest_mode));
+      outcome.mode_changes = state.mode_changes;
+      outcome.worst_reform_error = state.worst_reform_error;
+      report.narrow_layout.push_back(std::move(outcome));
+    }
+  }
+
   void check_end_expectations() {
     if (end_expectations_checked) {
       return;
@@ -4195,6 +4475,8 @@ struct ArenaScenarioRunner::Impl {
     end_expectations_checked = true;
     observe_battle();
     publish_battle_outcome();
+    publish_movement_diagnostics();
+    publish_narrow_layout_outcome();
     for (auto const& expectation : scenario.expectations) {
       switch (expectation.kind) {
       case ArenaExpectationKind::BattleReachesDecision: {
@@ -5361,6 +5643,64 @@ struct ArenaScenarioRunner::Impl {
         }
         break;
       }
+      case ArenaExpectationKind::NoPermanentStall: {
+        float const budget =
+            expectation.threshold > 0.0F ? expectation.threshold : 12.0F;
+        QStringList wedged;
+        for (auto entity_id : ids(expectation.group)) {
+          if (!entity_alive(entity_id)) {
+            continue;
+          }
+          auto const* movement =
+              world.try_get<Engine::Core::MovementComponent>(entity_id);
+          auto const* movement_facts =
+              world.try_get<Engine::Core::MovementFactsComponent>(entity_id);
+          if (movement == nullptr || movement_facts == nullptr) {
+            continue;
+          }
+          auto const& stall = movement_facts->progress.stall;
+          float const going_nowhere =
+              std::max(stall.stalled_seconds, stall.no_closer_seconds);
+          if (movement->get_has_target() && going_nowhere > budget) {
+            wedged.push_back(
+                QStringLiteral("%1 (%2 s in %3)")
+                    .arg(entity_id)
+                    .arg(going_nowhere, 0, 'f', 1)
+                    .arg(QString::fromLatin1(Engine::Core::movement_state_name(
+                        movement_facts->progress.state))));
+          }
+        }
+        auto const observation = stall_observations.value(expectation.group);
+        if (!wedged.isEmpty()) {
+          add_issue(QStringLiteral("permanent_stall"),
+                    QStringLiteral("%1 ended the run holding an objective it had "
+                                   "stopped advancing on: %2")
+                        .arg(expectation.group, wedged.join(QStringLiteral(", "))));
+        } else if (observation.worst_stalled_seconds > budget &&
+                   observation.recovery_attempts == 0U && observation.abandons == 0U) {
+
+          add_issue(QStringLiteral("unnoticed_stall"),
+                    QStringLiteral("%1 went nowhere for %2 s at %3 s (%4) without "
+                                   "the recovery ladder ever engaging")
+                        .arg(expectation.group)
+                        .arg(observation.worst_stalled_seconds, 0, 'f', 1)
+                        .arg(observation.worst_stalled_at, 0, 'f', 1)
+                        .arg(observation.worst_state.isEmpty()
+                                 ? QStringLiteral("unknown state")
+                                 : observation.worst_state));
+        }
+        break;
+      }
+      case ArenaExpectationKind::StallRecoveryObserved: {
+        auto const observation = stall_observations.value(expectation.group);
+        if (!observation.recovery_seen && observation.abandons == 0U) {
+          add_issue(QStringLiteral("stall_recovery_not_exercised"),
+                    QStringLiteral("%1 never reached the recovery ladder, so this "
+                                   "scenario proved nothing about it")
+                        .arg(expectation.group));
+        }
+        break;
+      }
       case ArenaExpectationKind::GroupHeldOutsideDestination: {
         QVector3D centroid;
         int living = 0;
@@ -5497,6 +5837,99 @@ struct ArenaScenarioRunner::Impl {
                         .arg(floor.lowest_where.x(), 0, 'f', 2)
                         .arg(floor.lowest_where.z(), 0, 'f', 2)
                         .arg(expectation.threshold, 0, 'f', 2));
+        }
+        break;
+      }
+      case ArenaExpectationKind::NarrowLayoutEngaged: {
+        auto const state = narrow_layout.value(expectation.group);
+        if (!state.engaged) {
+          add_issue(QStringLiteral("narrow_layout_never_engaged"),
+                    QStringLiteral("%1 crossed with %2 m of corridor against a "
+                                   "%3 m frontage and never took narrow order")
+                        .arg(expectation.group)
+                        .arg(state.narrowest_corridor * 2.0F, 0, 'f', 2)
+                        .arg(state.formation_half_width * 2.0F, 0, 'f', 2));
+        }
+        break;
+      }
+      case ArenaExpectationKind::NarrowLayoutStaysWide: {
+        auto const state = narrow_layout.value(expectation.group);
+        if (state.engaged) {
+          add_issue(QStringLiteral("narrow_layout_false_positive"),
+                    QStringLiteral("%1 took narrow order at %2 s with %3 m of "
+                                   "corridor for a %4 m frontage; it went to %5 "
+                                   "files and %6 m between files")
+                        .arg(expectation.group)
+                        .arg(state.engaged_from, 0, 'f', 2)
+                        .arg(state.narrowest_corridor * 2.0F, 0, 'f', 2)
+                        .arg(state.formation_half_width * 2.0F, 0, 'f', 2)
+                        .arg(state.narrowest_files)
+                        .arg(state.tightest_file_spacing, 0, 'f', 2));
+        }
+        break;
+      }
+      case ArenaExpectationKind::NarrowLayoutKeepsFiles: {
+        auto const state = narrow_layout.value(expectation.group);
+        auto const floor_files =
+            static_cast<std::uint32_t>(std::max(1.0F, expectation.threshold));
+        if (state.engaged && state.narrowest_files < floor_files) {
+          add_issue(
+              QStringLiteral("narrow_layout_over_collapsed"),
+              QStringLiteral("%1 fell to %2 files (%3) in a %4 m corridor where "
+                             "%5 files fit; frontage %6 m, files %7 m apart, "
+                             "column %8 m deep")
+                  .arg(expectation.group)
+                  .arg(state.narrowest_files)
+                  .arg(QString::fromLatin1(
+                      Engine::Core::traversal_layout_mode_name(state.narrowest_mode)))
+                  .arg(state.narrowest_corridor * 2.0F, 0, 'f', 2)
+                  .arg(floor_files)
+                  .arg(state.narrowest_frontage, 0, 'f', 2)
+                  .arg(state.tightest_file_spacing, 0, 'f', 2)
+                  .arg(state.deepest_column, 0, 'f', 2));
+        }
+        break;
+      }
+      case ArenaExpectationKind::NarrowLayoutModeSettles: {
+        auto const state = narrow_layout.value(expectation.group);
+        auto const allowance =
+            static_cast<std::uint32_t>(std::max(1.0F, expectation.threshold));
+        if (state.mode_changes > allowance) {
+          add_issue(QStringLiteral("narrow_layout_oscillated"),
+                    QStringLiteral("%1 changed layout mode %2 times (allowed %3) "
+                                   "between %4 m of corridor and a %5 m frontage")
+                        .arg(expectation.group)
+                        .arg(state.mode_changes)
+                        .arg(allowance)
+                        .arg(state.narrowest_corridor * 2.0F, 0, 'f', 2)
+                        .arg(state.formation_half_width * 2.0F, 0, 'f', 2));
+        }
+        break;
+      }
+      case ArenaExpectationKind::NarrowLayoutRestores: {
+        auto const state = narrow_layout.value(expectation.group);
+        float const tolerance =
+            expectation.threshold > 0.0F ? expectation.threshold : 0.6F;
+        if (state.active_at_end) {
+          add_issue(QStringLiteral("narrow_layout_never_released"),
+                    QStringLiteral("%1 was still in narrow order at the end with "
+                                   "%2 m of corridor")
+                        .arg(expectation.group)
+                        .arg(state.narrowest_corridor * 2.0F, 0, 'f', 2));
+        } else if (state.files_at_end < state.normal_files) {
+          add_issue(QStringLiteral("narrow_layout_kept_files"),
+                    QStringLiteral("%1 finished on %2 of its %3 files")
+                        .arg(expectation.group)
+                        .arg(state.files_at_end)
+                        .arg(state.normal_files));
+        }
+        if (state.worst_reform_error > tolerance) {
+          add_issue(QStringLiteral("narrow_layout_left_disorder"),
+                    QStringLiteral("%1 left a soldier %2 m from its slot after "
+                                   "the passage (allowed %3 m)")
+                        .arg(expectation.group)
+                        .arg(state.worst_reform_error, 0, 'f', 2)
+                        .arg(tolerance, 0, 'f', 2));
         }
         break;
       }
@@ -6252,6 +6685,7 @@ void ArenaScenarioRunner::observe_rendered_frame(
   for (auto const& group : m_impl->scenario.groups) {
     for (auto entity_id : m_impl->ids(group.name)) {
       m_impl->observe_entity(entity_id, group.name, frame);
+      m_impl->observe_narrow_layout(group.name, entity_id);
       m_impl->observe_building_clearance(entity_id, group.name);
       m_impl->observe_soldiers(entity_id, group.name, frame);
     }
