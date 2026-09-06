@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <limits>
 #include <numbers>
 
 #include "animation/locomotion_manifest.h"
@@ -11,7 +10,7 @@
 #include "game/core/component_commander.h"
 #include "game/core/simulation_timing.h"
 #include "game/map/terrain_service.h"
-#include "game/systems/building_line_of_sight.h"
+#include "game/systems/camera_obstruction.h"
 #include "scene/camera.h"
 
 namespace App::Core {
@@ -65,8 +64,16 @@ constexpr float k_threat_bias_side = 0.30F;
 
 constexpr float k_camera_body_radius = 0.28F;
 
+constexpr float k_camera_min_boom = 0.55F;
+constexpr float k_camera_boom_backoff = 0.06F;
+
+constexpr float k_camera_boom_release_speed = 6.0F;
+
 constexpr float k_commander_near_plane = 0.05F;
 constexpr float k_camera_terrain_clearance = 0.55F;
+
+constexpr int k_camera_terrain_samples = 8;
+constexpr float k_camera_terrain_max_lift = 2.5F;
 
 auto smooth_alpha(float rate, float dt) -> float {
   return 1.0F - std::exp(-rate * std::max(dt, 0.0F));
@@ -332,42 +339,108 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   QVector3D const eye_unconstrained = eye_desired;
   QVector3D const target_unconstrained = target_desired;
 
-  float const blocked_fraction =
-      inputs.buildings != nullptr
-          ? Game::Systems::first_building_body_intersection_fraction(
-                *inputs.buildings, pivot, eye_desired, k_camera_body_radius)
-          : 1.0F;
+  Game::Systems::CameraObstructionField const obstruction{.buildings = inputs.buildings,
+                                                          .terrain = inputs.terrain,
+                                                          .radius =
+                                                              k_camera_body_radius};
+
+  float const boom_length = (eye_unconstrained - pivot).length();
+  float const boom_floor =
+      boom_length > k_camera_min_boom ? k_camera_min_boom / boom_length : 1.0F;
+
+  float terrain_clear = 1.0F;
+  if (inputs.terrain != nullptr && inputs.terrain->is_initialized()) {
+    QVector3D const boom = eye_unconstrained - pivot;
+    float const reach = boom.y() + k_camera_terrain_max_lift;
+
+    float previous_along = 0.0F;
+    float previous_gap = (inputs.terrain->resolve_surface_world_y(
+                              pivot.x(), pivot.z(), 0.0F, pivot.y()) +
+                          k_camera_terrain_clearance) -
+                         pivot.y();
+
+    for (int sample = 1; sample <= k_camera_terrain_samples; ++sample) {
+      float const along =
+          static_cast<float>(sample) / static_cast<float>(k_camera_terrain_samples);
+      QVector3D const point = pivot + (boom * along);
+      float const ground = inputs.terrain->resolve_surface_world_y(
+          point.x(), point.z(), 0.0F, point.y());
+      float const gap =
+          (ground + k_camera_terrain_clearance) - (pivot.y() + (reach * along));
+      if (gap > 0.0F) {
+        float const span = gap - previous_gap;
+        float const crossing =
+            span > 1.0e-5F
+                ? previous_along + ((along - previous_along) * (-previous_gap / span))
+                : previous_along;
+        terrain_clear = std::clamp(crossing, 0.0F, 1.0F);
+        break;
+      }
+      previous_along = along;
+      previous_gap = gap;
+    }
+  }
+
+  float const body_clear_fraction =
+      Game::Systems::camera_boom_clear_fraction(obstruction, pivot, eye_desired);
+  float const clear_fraction = std::min(body_clear_fraction, terrain_clear);
   float const occlusion_target =
-      blocked_fraction < 1.0F ? std::clamp(blocked_fraction - 0.06F,
-                                           inputs.close_camera_mode ? 0.12F : 0.22F,
-                                           1.0F)
-                              : 1.0F;
+      clear_fraction < 1.0F
+          ? std::clamp(clear_fraction - k_camera_boom_backoff, boom_floor, 1.0F)
+          : 1.0F;
   if (occlusion_target < m_occlusion_fraction) {
     m_occlusion_fraction = occlusion_target;
   } else {
-    m_occlusion_fraction += (occlusion_target - m_occlusion_fraction) *
-                            smooth_alpha(k_occlusion_follow, dt);
+    float const eased =
+        m_occlusion_fraction + (occlusion_target - m_occlusion_fraction) *
+                                   smooth_alpha(k_occlusion_follow, dt);
+    float const release_step =
+        boom_length > 1.0e-4F
+            ? (k_camera_boom_release_speed * std::max(dt, 0.0F)) / boom_length
+            : 1.0F;
+    m_occlusion_fraction = std::min(eased, m_occlusion_fraction + release_step);
   }
   if (m_occlusion_fraction < 0.999F) {
     eye_desired = pivot + (eye_desired - pivot) * m_occlusion_fraction;
   }
 
-  if (inputs.buildings != nullptr) {
-
-    QVector3D const cleared = Game::Systems::depenetrate_from_building_bodies(
-        *inputs.buildings, eye_desired, k_camera_body_radius);
-    eye_desired.setX(cleared.x());
-    eye_desired.setZ(cleared.z());
+  if (body_clear_fraction <= 0.0F) {
+    QVector3D const pushed =
+        Game::Systems::camera_depenetrated_point(obstruction, eye_desired);
+    float const planar_before =
+        std::hypot(eye_desired.x() - pivot.x(), eye_desired.z() - pivot.z());
+    float const push_x = pushed.x() - pivot.x();
+    float const push_z = pushed.z() - pivot.z();
+    float const planar_after = std::hypot(push_x, push_z);
+    if (planar_after > planar_before && planar_after > 1.0e-4F) {
+      float const shrink = planar_before / planar_after;
+      eye_desired.setX(pivot.x() + (push_x * shrink));
+      eye_desired.setZ(pivot.z() + (push_z * shrink));
+    } else {
+      eye_desired.setX(pushed.x());
+      eye_desired.setZ(pushed.z());
+    }
   }
 
   float terrain_lift = 0.0F;
+  bool terrain_sight_clear = true;
   if (inputs.terrain != nullptr && inputs.terrain->is_initialized()) {
-    float const eye_ground_y = inputs.terrain->resolve_surface_world_y(
-        eye_desired.x(), eye_desired.z(), 0.0F, eye_desired.y());
-    float const lifted =
-        std::max(eye_desired.y(), eye_ground_y + k_camera_terrain_clearance);
-    terrain_lift = lifted - eye_desired.y();
-    eye_desired.setY(lifted);
+    QVector3D const boom = eye_desired - pivot;
+    float required_lift = 0.0F;
+    for (int sample = 1; sample <= k_camera_terrain_samples; ++sample) {
+      float const along =
+          static_cast<float>(sample) / static_cast<float>(k_camera_terrain_samples);
+      QVector3D const point = pivot + (boom * along);
+      float const ground = inputs.terrain->resolve_surface_world_y(
+          point.x(), point.z(), 0.0F, point.y());
+      float const deficit = (ground + k_camera_terrain_clearance) - point.y();
+      if (deficit > 0.0F) {
+        required_lift = std::max(required_lift, deficit / along);
+      }
+    }
+    terrain_lift = std::min(required_lift, k_camera_terrain_max_lift);
+    terrain_sight_clear = required_lift <= k_camera_terrain_max_lift;
+    eye_desired.setY(eye_desired.y() + terrain_lift);
   }
 
   m_trace.valid = true;
@@ -381,13 +454,15 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   m_trace.target_resolved = target_desired;
   m_trace.boom_unconstrained = (eye_unconstrained - pivot).length();
   m_trace.boom_resolved = (eye_desired - pivot).length();
-  m_trace.building_blocked_fraction = blocked_fraction;
+  m_trace.boom_clear_fraction = clear_fraction;
+  m_trace.terrain_clear_fraction = terrain_clear;
   m_trace.occlusion_fraction = m_occlusion_fraction;
   m_trace.terrain_lift = terrain_lift;
-  m_trace.eye_clearance = inputs.buildings != nullptr
-                              ? Game::Systems::nearest_building_body_clearance(
-                                    *inputs.buildings, eye_desired)
-                              : std::numeric_limits<float>::max();
+  m_trace.eye_clearance =
+      Game::Systems::camera_body_clearance(obstruction, eye_desired);
+  m_trace.sight_line_clear =
+      terrain_sight_clear && Game::Systems::camera_boom_clear_fraction(
+                                 obstruction, pivot, eye_desired) >= 1.0F;
   m_trace.fov = m_fov_current;
   m_trace.yaw = m_state.yaw;
   m_trace.pitch = m_state.pitch;

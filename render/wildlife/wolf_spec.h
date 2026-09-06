@@ -54,6 +54,7 @@ struct WolfDrive {
 };
 
 [[nodiscard]] auto wolf_gait_advance(WolfGait gait) noexcept -> float;
+[[nodiscard]] auto wolf_bite_drive(float phase) noexcept -> WolfDrive;
 
 [[nodiscard]] auto wolf_bind_pose() noexcept -> const RigPose&;
 [[nodiscard]] auto wolf_pose(const WolfDrive& drive) noexcept -> RigPose;

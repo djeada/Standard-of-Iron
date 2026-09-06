@@ -184,6 +184,21 @@ void add_commander_control_metrics(ArenaScenarioDefinition& scenario,
       expectation(Expect::CommanderPresentedPoseAgrees, commander_group, {}, 0.01F));
 }
 
+auto sidestep_along_the_line(float time) -> ArenaScenarioStep {
+  auto step = at(time, Command::RpgMove, QStringLiteral("rpg_commander"));
+  step.destination = {1.0F, 0.0F, 0.0F};
+  step.value = 0;
+  step.rpg_view_yaw_degrees = 180.0F;
+  return step;
+}
+
+auto stop_moving(float time) -> ArenaScenarioStep {
+  auto step = at(time, Command::RpgMove, QStringLiteral("rpg_commander"));
+  step.destination = {};
+  step.value = 0;
+  return step;
+}
+
 void add_animation_quality(ArenaScenarioDefinition& scenario,
                            std::initializer_list<QString> groups) {
   for (auto const& name : groups) {
@@ -1510,6 +1525,181 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.expectations.push_back(slide);
     s.expectations.push_back(expectation(Expect::RpgLocomotionAnimationMatched,
                                          QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_camera_prop_gauntlet_id),
+        QStringLiteral("RPG Camera Prop Gauntlet"),
+        QStringLiteral(
+            "Behind-head commander sidesteps past a line of props with the view "
+            "held across his path, so the boom trails straight through each of them "
+            "in turn: ruins, a pine, a boulder, a fallen dead tree and a tent. The "
+            "lens "
+            "has to shorten toward him at the ruins, the pine and the tent, and it "
+            "has to ignore the boulder and the log it is already two metres above -- "
+            "collision the commander's own body would report is not the same as "
+            "collision a camera at head-and-a-half height can see."),
+        14.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.arena_floor_half_extent = 20.0F;
+    s.ground_type = QStringLiteral("soil_rocky");
+    s.suppress_terrain_features = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {-13.0F, 0.0F, -3.8F},
+                           1);
+    commander.facing_degrees = 180.0F;
+    s.groups = {commander};
+
+    s.resource_patches = {
+        patch("ruins", 1, {-9.0F, 0.0F, 0.8F}),
+        patch("pine_tree", 1, {-4.2F, 0.0F, -0.3F}),
+        patch("boulder", 1, {-1.0F, 0.0F, -0.3F}),
+        patch("dead_tree", 1, {3.2F, 0.0F, -0.3F}),
+        patch("tent", 1, {10.0F, 0.0F, 1.2F}, {2.5F, 0.0F, 0.0F}, 1.15F),
+    };
+
+    s.steps = {
+        sidestep_along_the_line(0.30F),
+        stop_moving(12.60F),
+    };
+    add_visual_stability(s, {QStringLiteral("rpg_commander")});
+    add_commander_control_metrics(s, QStringLiteral("rpg_commander"));
+
+    s.expectations.push_back(expectation(Expect::CommanderCameraKeepsCommanderInSight,
+                                         QStringLiteral("rpg_commander"),
+                                         {},
+                                         0.35F));
+    auto crossing = expectation(
+        Expect::RpgTravelObserved, QStringLiteral("rpg_commander"), {}, 18.0F, 0.40F);
+    crossing.end_seconds = 12.50F;
+    s.expectations.push_back(std::move(crossing));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_camera_wall_pocket_id),
+        QStringLiteral("RPG Camera Wall Pocket"),
+        QStringLiteral(
+            "The same sidestep with the view held across the path, this time along "
+            "a wall run that ends at a house. The boom trails into masonry "
+            "for the whole crossing. Shortening is the only move allowed: pushing the "
+            "lens sideways out of a wall puts it on the far side with the commander "
+            "hidden behind the thing it just left."),
+        14.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.arena_floor_half_extent = 20.0F;
+    s.ground_type = QStringLiteral("soil_rocky");
+    s.suppress_terrain_scatter = true;
+    s.suppress_terrain_features = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {-13.0F, 0.0F, -3.4F},
+                           1);
+    commander.facing_degrees = 180.0F;
+
+    auto wall = building(QStringLiteral("pocket_wall"),
+                         Game::Units::SpawnType::WallSegment,
+                         Nation::RomanRepublic,
+                         1,
+                         9,
+                         {-4.0F, 0.0F, 0.0F},
+                         {2.0F, 0.0F, 0.0F});
+    wall.health_override = wall.max_health_override = 6000;
+
+    auto home = building(QStringLiteral("pocket_home"),
+                         Game::Units::SpawnType::Home,
+                         Nation::RomanRepublic,
+                         1,
+                         1,
+                         {10.0F, 0.0F, 1.0F});
+    home.health_override = home.max_health_override = 6000;
+    s.groups = {commander, wall, home};
+
+    s.steps = {
+        sidestep_along_the_line(0.30F),
+        stop_moving(12.60F),
+    };
+    add_visual_stability(s, {QStringLiteral("rpg_commander")});
+    add_commander_control_metrics(s, QStringLiteral("rpg_commander"));
+
+    s.expectations.push_back(expectation(Expect::CommanderCameraKeepsCommanderInSight,
+                                         QStringLiteral("rpg_commander"),
+                                         {},
+                                         0.35F));
+    auto crossing = expectation(
+        Expect::RpgTravelObserved, QStringLiteral("rpg_commander"), {}, 18.0F, 0.40F);
+    crossing.end_seconds = 12.50F;
+    s.expectations.push_back(std::move(crossing));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_camera_hill_bank_id),
+        QStringLiteral("RPG Camera Hill Bank"),
+        QStringLiteral(
+            "The same sidestep along the foot of a steep bank, so the boom trails "
+            "into rising ground for the whole run. The ground is "
+            "sampled along the entire boom rather than under the eye alone: the lens "
+            "rides up the bank far enough that the whole sight line clears it, which "
+            "is what keeps the commander in front of the crest instead of behind "
+            "it."),
+        11.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.arena_floor_half_extent = 20.0F;
+    s.ground_type = QStringLiteral("soil_rocky");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.elevation_patches = {{{0.0F, 0.0F, 3.0F}, 5.0F, 5.0F, 2.0F}};
+
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {-8.0F, 0.0F, -2.2F},
+                           1);
+    commander.facing_degrees = 180.0F;
+    s.groups = {commander};
+
+    s.steps = {
+        sidestep_along_the_line(0.30F),
+        stop_moving(9.60F),
+    };
+    add_visual_stability(s, {QStringLiteral("rpg_commander")});
+    add_commander_control_metrics(s, QStringLiteral("rpg_commander"));
+
+    s.expectations.push_back(expectation(Expect::CommanderCameraKeepsCommanderInSight,
+                                         QStringLiteral("rpg_commander"),
+                                         {},
+                                         0.35F));
+    auto crossing = expectation(
+        Expect::RpgTravelObserved, QStringLiteral("rpg_commander"), {}, 11.0F, 0.40F);
+    crossing.end_seconds = 9.50F;
+    s.expectations.push_back(std::move(crossing));
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
     result.push_back(std::move(s));
   }

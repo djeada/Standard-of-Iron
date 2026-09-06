@@ -118,7 +118,6 @@ add_executable(
     systems/building_collision_test.cpp
     systems/pathfinding_test.cpp
     core/render_publication_test.cpp
-    core/system_access_verification_test.cpp
     headless/shared_match_setup_test.cpp
     systems/session_service_ownership_test.cpp
     systems/world_prop_navigation_test.cpp
@@ -184,6 +183,7 @@ add_executable(
     formation/formation_movement_test.cpp
     formation/formation_terrain_navigation_test.cpp
     map/map_crossing_traversal_test.cpp
+    core/system_access_verification_test.cpp
     systems/runtime_phase_order_test.cpp
     systems/movement_stage_ownership_test.cpp
     systems/movement_route_test.cpp

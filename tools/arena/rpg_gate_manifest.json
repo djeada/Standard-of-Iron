@@ -101,6 +101,24 @@
       "notes": "The locomotion script with 33/50/100/100 ms presented frames authored into it. Built while hunting the rpg_locomotion planted-foot slide; it ruled long frames out as the cause, which pointed at the animation clock instead. It stays as the hitch-resilience case and as the working example of ArenaPresentationHitch, which Gate 4's rpg_camera_hitch needs."
     },
     {
+      "id": "rpg_camera_prop_gauntlet",
+      "status": "required_green",
+      "gate": "4",
+      "notes": "Green on every camera contract, measured locally at 60 fps. Boom 3.44 m at rest; 2.54 m over the ruins, 2.48 m over the pine, 1.80 m over the tent, and 3.41/3.42 m -- untouched -- over the boulder and the fallen dead tree, whose tops are below one metre while the eye rides 2.62 m up. Zero frames with geometry between the lens and the commander, minimum eye clearance 0.285 m, one boom reversal. The only issues it reports are frame_budget_exceeded and performance_gpu_timing_missing, both from running the verification pass on llvmpipe under Xephyr rather than hardware GL. Camera collision used to be buildings only, so a commander walking a prop line had the lens inside ruins, tree trunks and tents with nothing reporting it. The boom is resolved against the solid world props too now, each extruded to its own occluder height, which is also why the boulder and the fallen dead tree in this scenario correctly do not move it: the eye rides 2.6 m up and both of those top out below a metre."
+    },
+    {
+      "id": "rpg_camera_wall_pocket",
+      "status": "required_green",
+      "gate": "4",
+      "notes": "Green on every camera contract. Boom 3.44 -> 2.37 m along the wall run and the house, zero occluded frames, minimum eye clearance 0.307 m, zero boom reversals; the only issues are the software-rendering frame budget. The Gate 4.2 depenetration was unconditional and unbounded: it left by whichever face was nearest, which for a lens inside a wall run is the far side, with the commander hidden behind the wall the camera had just left. The boom is shortened toward the pivot instead, down to 0.55 m, and the sideways push only survives for the case shortening cannot fix -- a pivot that is itself buried -- where it may no longer increase the distance to the commander."
+    },
+    {
+      "id": "rpg_camera_hill_bank",
+      "status": "required_green",
+      "gate": "4",
+      "notes": "Green on every camera contract, and it earned its place twice before it got there: it caught an unbounded terrain lift putting the eye 6.5 m over the commander, then caught the staircase from snapping the terrain limit to a sample index as ten boom reversals. Now boom 4.86 -> 0.92 m against the bank, lift peaking at 2.48 m under a 2.5 m cap, zero occluded frames, one reversal; the only issues are the software-rendering frame budget. The terrain clearance used to lift the eye off the ground under the eye alone, which clears the lens but leaves the crest between it and the commander. The ground is sampled along the whole boom now and the lift solved so the entire sight line clears it; the trace reports sight_line_clear false if the lift a frame needs exceeds the 4 m cap."
+    },
+    {
       "id": "rpg_close_quarters",
       "status": "required_green",
       "gate": "4",

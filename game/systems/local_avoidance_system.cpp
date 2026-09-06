@@ -139,6 +139,12 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
     } else if (const auto* target =
                    context.try_get<Engine::Core::AttackTargetComponent>(entry.id)) {
       body.engaged_target = target->target_id;
+    } else if (const auto* wildlife =
+                   context.try_get<Engine::Core::WildlifeComponent>(entry.id);
+               wildlife != nullptr &&
+               wildlife->behavior == Game::Wildlife::Behavior::Stalk) {
+
+      body.engaged_target = wildlife->focus_id;
     }
   }
 
@@ -339,6 +345,8 @@ auto LocalAvoidanceSystem::access() const -> Engine::Core::SystemAccess {
   return SystemAccess::declare(Reads<UnitComponent,
                                      TransformComponent,
                                      AttackComponent,
+                                     AttackTargetComponent,
+                                     WildlifeComponent,
                                      MovementIntentComponent,
                                      MovementComponent,
                                      FormationModeComponent,
