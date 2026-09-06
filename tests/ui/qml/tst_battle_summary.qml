@@ -54,14 +54,19 @@ TestCase {
         return testCase.fakeEngine(victoryState, owners, byOwner, missionTitle);
     }
 
-    function makeSummary(engine) {
+    function makeHost(engine) {
         var host = hostComponent.createObject(testCase, {
                 "width": 1280,
                 "height": 720
             });
         host.summary.engine = engine;
+        return host;
+    }
+
+    function makeSummary(engine) {
+        var host = testCase.makeHost(engine);
         host.summary.show();
-        wait(1);
+        tryCompare(host.summary, "prepared", true);
         return host;
     }
 
@@ -179,6 +184,21 @@ TestCase {
         host.destroy();
     }
 
+    function test_preparing_before_open_keeps_stats_off_the_click_path() {
+        var engine = testCase.standardMatch("victory");
+        var host = testCase.makeHost(engine);
+        verify(!host.summary.visible);
+        host.summary.prepare();
+        tryCompare(host.summary, "prepared", true);
+        var readsBeforeOpen = engine.stats_reads;
+        verify(readsBeforeOpen > 0, "the warm-up never read the battle statistics");
+        host.summary.show();
+        compare(engine.stats_reads, readsBeforeOpen, "opening the prepared report reread statistics on the click path");
+        verify(host.summary.visible);
+        engine.destroy();
+        host.destroy();
+    }
+
     function test_closing_the_report_calls_back() {
         var engine = testCase.standardMatch("victory");
         var host = testCase.makeSummary(engine);
@@ -194,7 +214,7 @@ TestCase {
         host.destroy();
     }
 
-    function test_asking_for_the_menu_calls_back() {
+    function test_asking_for_the_menu_calls_back_after_feedback() {
         var engine = testCase.standardMatch("victory");
         var host = testCase.makeSummary(engine);
         var asked = 0;
@@ -203,7 +223,32 @@ TestCase {
             });
         var report = findChild(host.summary, "battleReport");
         report.menuRequested();
-        compare(asked, 1);
+        verify(host.summary.returning_to_menu, "the report did not enter a visible transition state");
+        compare(asked, 0, "menu navigation fired before feedback could render");
+        tryCompare(host.summary, "returning_to_menu", true);
+        tryVerify(function () {
+                return asked === 1;
+            });
+        engine.destroy();
+        host.destroy();
+    }
+
+    function test_repeated_menu_requests_do_not_enqueue_duplicate_navigation() {
+        var engine = testCase.standardMatch("victory");
+        var host = testCase.makeSummary(engine);
+        var asked = 0;
+        host.summary.return_to_main_menu_requested.connect(function () {
+                asked += 1;
+            });
+        var report = findChild(host.summary, "battleReport");
+        report.menuRequested();
+        report.menuRequested();
+        verify(host.summary.returning_to_menu);
+        tryVerify(function () {
+                return asked === 1;
+            });
+        wait(20);
+        compare(asked, 1, "a repeated menu click enqueued duplicate navigation");
         engine.destroy();
         host.destroy();
     }
@@ -216,6 +261,7 @@ TestCase {
             property var owner_info: []
             property var stats_by_owner: ({})
             property string mission_title: ""
+            property int stats_reads: 0
             property QtObject setup: QtObject {
                 readonly property bool is_mission_match: mission_title !== ""
 
@@ -227,6 +273,7 @@ TestCase {
             }
 
             function get_player_stats(ownerId) {
+                stats_reads += 1;
                 return stats_by_owner[String(ownerId)];
             }
         }
