@@ -507,15 +507,50 @@ measures that same centerline and selects the widest safe file count. Shared com
 spacing constants live in `TraversalPolicy`; route cost and slot fitting do not keep
 independent copies.
 
-For a large roster, `formation_navigation_clearance` adds a bounded path-cost premium
-derived from the ratio between its normal depth and its possible single-file depth.
-Because pathfinding clearance is a graded cost rather than a hard exclusion, a
-reasonable wide detour wins while a one-body opening remains usable when it is the
-only route. Once a file count is selected, traversal asks the authoritative
-`UnitLayoutSystem` to generate that forced-file topology and scales only its lateral
-extent to the measured safe width. Authored doctrine spacing, stagger, arc, grouping,
-and deterministic variation therefore remain recognizable without duplicating their
-formulas in traversal code.
+The measurement is compared against the block's own frontage, not against its path
+clearance. `formation_lateral_half_extent` is what the live slots actually occupy;
+`formation_navigation_clearance` adds a bounded path-cost premium for a large roster,
+derived from the ratio between its normal depth and its possible single-file depth,
+and that premium belongs to route cost alone. Feeding it back into the layout rule is
+what used to make a block close ranks in a corridor it fitted through.
+
+The width rule is explicit and hysteretic:
+
+- narrow order is entered when the measured corridor is narrower than
+  `frontage + k_enter_clearance` (0.10 m) and left again only once it is at least
+  `frontage + k_exit_clearance` (0.60 m) wide, after the entry dwell, the minimum mode
+  dwell and the tail-clear window;
+- the probe envelope runs from the block's rear extent to its front extent plus the
+  distance it travels while it re-forms (pace times the reform time, clamped to
+  1.5-10 m), so a pinch far down the route does not narrow a block that is nowhere
+  near it;
+- inside the corridor the block first closes ranks: the authored lateral offsets are
+  scaled down to the measured width, with a floor at `minimum_lateral_scale`, the
+  scale at which files stand one body apart;
+- only when that floor still does not fit does the block give up files.
+  `files_that_fit` is the widest file count whose centres fit at that tightest
+  spacing, and a file is given back only once the corridor holds it with
+  `k_file_recovery_clearance` (0.30 m) to spare and the mode dwell has elapsed.
+
+Reflowing preserves order rather than topology-by-style. `narrow_file_slots_into`
+walks the block front rank first and centre file outward, deals that sequence into
+the chosen number of files at the compact rank spacing, and centres the result on the
+root. Rank and file ordering therefore survive the fold, and single file happens only
+where one file is all that fits. The traversal owner scales the reflowed shape to the
+measured width exactly as it scales the authored one; a rigid body with a single slot
+keeps the older behaviour of squeezing its rendered scale instead.
+
+While soldiers relocate they may pass each other at
+`k_transit_separation_scale` of the body separation, and a soldier whose clearance
+ring is inside cover may close to `k_cover_priority_scale` of that again: standing
+inside a wall is worse than brushing a comrade. A slot that has made no progress for
+`k_sidestep_after_seconds` also tries turned headings, so a block re-forming out of a
+column does not deadlock against the comrades who already reached their slots.
+
+`TraversalLayoutFacts` publishes what the rule decided -- corridor half width,
+frontage, chosen and normal file counts, presented file spacing, lateral scale and
+mode -- and the movement trace carries all of it, so a crossing can be read back from
+`movement_trace_report` rather than guessed at from the picture.
 
 ### Soldier-anchor composition and precedence
 

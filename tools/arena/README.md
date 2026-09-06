@@ -281,6 +281,36 @@ arena viewport does when it spawns scenario buildings. It found real overlaps in
 the trailer chapters on its first run, so treat a PASS as meaningful only after
 you have seen it go red at least once.
 
+## Narrow crossings keep their shape
+
+`arena_traversal_scenarios.cpp` holds one march, staged nine ways, against the
+one rule that decides how a block crosses a constriction: a street between two
+rows of houses, a back alley, a boulevard, a walled gate, a path through the
+pines, the saddle between two hills, a passage between boulder fields, an
+irregular field of ruins, and open ground. The same troop walks the same
+distance in all of them, so the only variable is the corridor.
+
+Five expectations read the traversal facts the simulation publishes:
+
+- `NarrowLayoutEngaged` -- narrow order has to be taken at all. Without it, a
+  scenario that asks the block to keep its files could pass by never noticing
+  the corridor.
+- `NarrowLayoutStaysWide` -- narrow order must never be taken. This is the
+  false-positive lane: open ground and the boulevard both fit the block, and a
+  block that closes ranks there is the bug.
+- `NarrowLayoutKeepsFiles` -- the block may not fall below the given number of
+  files. The gate is the only scenario allowed to reach single file.
+- `NarrowLayoutModeSettles` -- at most this many layout-mode changes for the
+  whole crossing, which is where a hysteresis regression shows up.
+- `NarrowLayoutRestores` -- the block leaves narrow order, gets its files back,
+  and no soldier is left stranded from its slot.
+
+Every scenario that carries one of them also reports its numbers in the summary
+line, pass or fail: frontage, narrowest corridor, mode, files taken against
+files owned, tightest file spacing, narrowest frontage, deepest column and the
+worst reform error. That is the record to compare between two runs; the
+expectations only say which of those numbers were out of bounds.
+
 ## Ambience scenarios
 
 `arena_ambience_scenarios.cpp` holds the long-form ambience lane: scenes staged

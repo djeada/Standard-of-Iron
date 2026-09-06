@@ -277,6 +277,10 @@ void publish_movement_trace_frame(World& world) {
         sample.mode_dwell_seconds = facts.traversal.mode_dwell_seconds;
         sample.soldier_body_radius = facts.traversal.soldier_body_radius;
         sample.corridor_half_width = facts.traversal.corridor_half_width;
+        sample.formation_half_width = facts.traversal.desired_half_width;
+        sample.file_spacing = facts.traversal.file_spacing;
+        sample.lateral_scale = facts.traversal.lateral_scale;
+        sample.normal_files = facts.traversal.normal_files;
         sample.direction_source = facts.direction_source;
         trace.record(sample);
       });
