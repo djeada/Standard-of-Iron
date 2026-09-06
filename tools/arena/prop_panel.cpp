@@ -5,11 +5,12 @@
 #include <QFormLayout>
 #include <QGridLayout>
 #include <QGroupBox>
-#include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
 #include <QToolButton>
 #include <QVBoxLayout>
+
+#include "panel_wheel_guard.h"
 
 namespace {
 
@@ -78,6 +79,8 @@ PropPanel::PropPanel(QWidget* parent)
   auto* settings_group = new QGroupBox("Placement Settings", this);
   auto* settings_layout = new QFormLayout(settings_group);
   settings_layout->setSpacing(6);
+  settings_layout->setRowWrapPolicy(QFormLayout::WrapLongRows);
+  settings_layout->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 
   m_scale_box = new QDoubleSpinBox(settings_group);
   m_scale_box->setRange(0.1, 8.0);
@@ -109,18 +112,12 @@ PropPanel::PropPanel(QWidget* parent)
 
   auto* actions_group = new QGroupBox("Actions", this);
   auto* actions_layout = new QVBoxLayout(actions_group);
-  auto* primary_row = new QWidget(actions_group);
-  auto* primary_row_layout = new QHBoxLayout(primary_row);
-  primary_row_layout->setContentsMargins(0, 0, 0, 0);
-  primary_row_layout->setSpacing(6);
   auto* place_button = new QPushButton("Place Prop", actions_group);
   place_button->setProperty("primary", true);
   auto* clear_selected_button = new QPushButton("Clear Selected Type", actions_group);
-  primary_row_layout->addWidget(place_button, 1);
-  primary_row_layout->addWidget(clear_selected_button, 1);
-  actions_layout->addWidget(primary_row);
-
   auto* clear_all_button = new QPushButton("Clear All Props", actions_group);
+  actions_layout->addWidget(place_button);
+  actions_layout->addWidget(clear_selected_button);
   actions_layout->addWidget(clear_all_button);
   layout->addWidget(actions_group);
   layout->addStretch(1);
@@ -167,6 +164,7 @@ PropPanel::PropPanel(QWidget* parent)
           &PropPanel::clear_world_props_of_type_requested);
 
   update_control_visibility();
+  Arena::Panels::guard_wheel_edits(this);
 }
 
 auto PropPanel::selected_prop_type_id() const -> QString {

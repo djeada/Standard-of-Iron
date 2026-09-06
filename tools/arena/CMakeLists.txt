@@ -62,7 +62,7 @@ target_link_libraries(
 # The two panels whose population rules the tests assert. Same reasoning as
 # map_editor_core: the test links the panel the arena ships, not a second copy
 # of its source.
-add_library(arena_panels STATIC unit_panel.cpp building_panel.cpp)
+add_library(arena_panels STATIC unit_panel.cpp building_panel.cpp panel_wheel_guard.cpp)
 target_include_directories(arena_panels PUBLIC "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(
     arena_panels

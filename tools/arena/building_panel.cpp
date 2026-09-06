@@ -14,6 +14,7 @@
 #include "game/systems/default_content.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
+#include "panel_wheel_guard.h"
 
 namespace {
 
@@ -47,6 +48,8 @@ BuildingPanel::BuildingPanel(Game::Systems::NationRegistry& nations, QWidget* pa
 
   auto* spawn_form = new QFormLayout();
   spawn_form->setSpacing(4);
+  spawn_form->setRowWrapPolicy(QFormLayout::WrapLongRows);
+  spawn_form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
   m_owner_box = new QComboBox(spawn_group);
   m_nation_box = new QComboBox(spawn_group);
   m_building_box = new QComboBox(spawn_group);
@@ -69,7 +72,7 @@ BuildingPanel::BuildingPanel(Game::Systems::NationRegistry& nations, QWidget* pa
   spawn_form->addRow("Side", m_owner_box);
   spawn_form->addRow("Nation", m_nation_box);
   spawn_form->addRow("Building", m_building_box);
-  spawn_form->addRow("Spawn Count", m_spawn_count_box);
+  spawn_form->addRow("Count", m_spawn_count_box);
   spawn_group_layout->addLayout(spawn_form);
 
   auto* spawn_buttons = new QWidget(spawn_group);
@@ -121,6 +124,8 @@ BuildingPanel::BuildingPanel(Game::Systems::NationRegistry& nations, QWidget* pa
           [this](int) { emit building_type_selected(selected_building_type_id()); });
 
   populate_nation_options();
+
+  Arena::Panels::guard_wheel_edits(this);
 }
 
 void BuildingPanel::set_selection_summary(const QString& summary) {
