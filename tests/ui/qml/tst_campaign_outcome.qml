@@ -141,10 +141,33 @@ TestCase {
                 "signalName": "reportRequested"
             });
         banner.item.primaryActivated();
-        compare(spy.count, 1);
+        verify(overlay.reportTransitioning, "the click was not acknowledged immediately");
+        verify(banner.visible, "the banner disappeared before transition feedback could render");
+        verify(!detail.visible);
+        tryCompare(spy, "count", 1);
         verify(overlay.showingSummary);
+        verify(!overlay.reportTransitioning);
         verify(!banner.visible, "the banner and the report must not stack");
         verify(detail.visible);
+        spy.destroy();
+        overlay.destroy();
+    }
+
+    function test_report_request_is_single_shot_while_transitioning() {
+        var overlay = makeOverlay({
+                "victoryState": "victory"
+            });
+        var banner = findChild(overlay, "outcomeBanner");
+        var spy = spyComponent.createObject(testCase, {
+                "target": overlay,
+                "signalName": "reportRequested"
+            });
+        banner.item.primaryActivated();
+        banner.item.primaryActivated();
+        verify(overlay.reportTransitioning);
+        tryCompare(spy, "count", 1);
+        wait(20);
+        compare(spy.count, 1, "a repeated click enqueued a second report transition");
         spy.destroy();
         overlay.destroy();
     }
