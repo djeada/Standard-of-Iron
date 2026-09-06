@@ -153,11 +153,14 @@ struct TraversalLayoutFacts {
   TraversalLayoutMode mode{TraversalLayoutMode::Normal};
   TraversalLayoutMode target_mode{TraversalLayoutMode::Normal};
   std::uint32_t portal_id{0};
+  std::uint32_t normal_files{0};
   std::uint32_t current_files{0};
   std::uint32_t target_files{0};
   float corridor_half_width{0.0F};
   float desired_half_width{0.0F};
   float soldier_body_radius{0.0F};
+  float file_spacing{0.0F};
+  float lateral_scale{1.0F};
   float transition_progress{1.0F};
   float mode_dwell_seconds{0.0F};
 };

@@ -13,6 +13,7 @@
 
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/formation/traversal_layout_policy.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
@@ -127,6 +128,87 @@ protected:
         position.z(),
         k_owner,
         {.width = 1.0F, .depth = 1.0F});
+  }
+
+  void wall_off_corridor(int centre_z, int clear_cells, int from_x, int to_x) {
+    int const half = (clear_cells - 1) / 2;
+    for (int grid_x = from_x; grid_x <= to_x; ++grid_x) {
+      block_cell(grid_x, centre_z - half - 1);
+      block_cell(grid_x, centre_z + half + 1);
+    }
+    refresh_grid();
+  }
+
+  struct CrossingObservation {
+    bool entered{false};
+    std::uint32_t normal_files{0};
+    std::uint32_t narrowest_files{std::numeric_limits<std::uint32_t>::max()};
+    float narrowest_scale{1.0F};
+    float narrowest_corridor{0.0F};
+    float closest_pair{std::numeric_limits<float>::infinity()};
+    int mode_changes{0};
+    float final_error{0.0F};
+    float final_x{0.0F};
+  };
+
+  auto watch_crossing(EntityID id, double seconds) -> CrossingObservation {
+    CrossingObservation seen;
+    auto* entity = m_session->world().get_entity(id);
+    EXPECT_NE(entity, nullptr);
+    auto previous_mode = Engine::Core::TraversalLayoutMode::Normal;
+    double const step = m_session->clock().tick_seconds();
+    for (double elapsed = 0.0; elapsed < seconds; elapsed += step) {
+      run_for(step);
+      auto const* traversal =
+          entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
+      if (traversal == nullptr) {
+        continue;
+      }
+      seen.normal_files = traversal->normal_files;
+      if (traversal->mode != previous_mode) {
+        ++seen.mode_changes;
+        previous_mode = traversal->mode;
+      }
+      if (!traversal->active) {
+        continue;
+      }
+      seen.entered = true;
+      seen.narrowest_files = std::min(seen.narrowest_files, traversal->target_files);
+      seen.narrowest_scale = std::min(seen.narrowest_scale, traversal->lateral_scale);
+      seen.narrowest_corridor = traversal->available_half_width;
+      for (std::size_t left = 0; left < traversal->slot_states.size(); ++left) {
+        auto const& first = traversal->slot_states[left];
+        if (!first.alive) {
+          continue;
+        }
+        for (std::size_t right = left + 1; right < traversal->slot_states.size();
+             ++right) {
+          auto const& second = traversal->slot_states[right];
+          if (!second.alive) {
+            continue;
+          }
+          seen.closest_pair =
+              std::min(seen.closest_pair,
+                       std::hypot(first.current_local_x - second.current_local_x,
+                                  first.current_local_z - second.current_local_z));
+        }
+      }
+    }
+    auto const* traversal =
+        entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
+    if (traversal != nullptr) {
+      for (auto const& slot : traversal->slot_states) {
+        if (!slot.alive) {
+          continue;
+        }
+        seen.final_error =
+            std::max(seen.final_error,
+                     std::hypot(slot.current_local_x - slot.target_local_x,
+                                slot.current_local_z - slot.target_local_z));
+      }
+    }
+    seen.final_x = position_of(id).x();
+    return seen;
   }
 
   void refresh_grid() {
@@ -408,7 +490,7 @@ TEST_F(TightGapNavigationTest, AnArmyFunnelsThroughAOneCellGap) {
       << arrived << " of " << army.size() << " made it through the gap";
 }
 
-TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLayout) {
+TEST_F(TightGapNavigationTest, NarrowLayoutChangesPresentationButNotCombatLayout) {
   open_field();
   m_session->world().set_presentation_enabled(true);
   constexpr int k_gap_z = 24;
@@ -437,6 +519,7 @@ TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLa
   std::vector<bool> previous_relocation_blocked(original_layout.all_slots.size(),
                                                 false);
   bool have_previous_relocation = false;
+  int brushed_cover_samples = 0;
   float narrowest_presented_half_width = original_half_width;
   float separation_at_narrowest = std::numeric_limits<float>::infinity();
   const double step = m_session->clock().tick_seconds();
@@ -490,8 +573,7 @@ TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLa
           (traversal->root_motion_blocked &&
            std::hypot(facts->motor.accepted_vx, facts->motor.accepted_vz) < 0.001F);
     }
-    if (traversal == nullptr || presentation == nullptr ||
-        traversal->target_lateral_scale >= 0.999F) {
+    if (traversal == nullptr || presentation == nullptr || !traversal->active) {
       continue;
     }
 
@@ -529,15 +611,18 @@ TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLa
         QVector3D const probe_position(world_x + probe.first * soldier_clearance,
                                        0.0F,
                                        world_z + probe.second * soldier_clearance);
-        if (!pathfinder->is_world_position_walkable(
+        if (pathfinder->is_world_position_walkable(
                 probe_position, Game::Systems::Pathfinding::Passability::Light)) {
+          continue;
+        }
+
+        ++brushed_cover_samples;
+        if (probe.first == 0.0F && probe.second == 0.0F) {
           ADD_FAILURE() << "elapsed=" << elapsed << " slot=" << first.slot_index
                         << " root=(" << transform->position.x << ","
                         << transform->position.z << ") local=(" << first.current_local_x
                         << "," << first.current_local_z << ") world=(" << world_x << ","
-                        << world_z << ") probe=(" << probe_position.x() << ","
-                        << probe_position.z()
-                        << ") progress=" << traversal->transition_progress
+                        << world_z << ") progress=" << traversal->transition_progress
                         << " blocked=" << traversal->blocked_slot_count
                         << " files=" << traversal->current_files << "->"
                         << traversal->target_files;
@@ -570,7 +655,8 @@ TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLa
         EXPECT_FLOAT_EQ(soldier.local_z, authoritative_slot->current_local_z);
         EXPECT_LE(
             std::hypot(soldier.relocation_velocity_x, soldier.relocation_velocity_z),
-            1.801F);
+            soldier.relocation_blocked ? 4.501F : 1.801F)
+            << "slot=" << soldier.slot_index << " t=" << elapsed;
         if (have_previous_relocation && !soldier.relocation_blocked &&
             soldier.slot_index < previous_relocation_vx.size()) {
           if (!previous_relocation_blocked[soldier.slot_index]) {
@@ -579,7 +665,11 @@ TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLa
                                  soldier.relocation_velocity_z -
                                      previous_relocation_vz[soldier.slot_index]) /
                           static_cast<float>(step),
-                      7.21F);
+                      7.21F)
+                << "slot=" << soldier.slot_index << " t=" << elapsed << " v=("
+                << soldier.relocation_velocity_x << "," << soldier.relocation_velocity_z
+                << ") prev=(" << previous_relocation_vx[soldier.slot_index] << ","
+                << previous_relocation_vz[soldier.slot_index] << ")";
           }
         }
         if (soldier.slot_index < previous_relocation_vx.size()) {
@@ -631,14 +721,22 @@ TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLa
   EXPECT_EQ(traversal_exits, 1);
   EXPECT_EQ(stable_mapping.size(), original_layout.all_slots.size());
   EXPECT_LT(narrowest_presented_half_width, original_half_width * 0.8F);
+  EXPECT_LE(brushed_cover_samples, 400)
+      << "soldiers scraped the gate jamb for longer than it takes to file through";
+  EXPECT_TRUE(observed_predictive_root_hold)
+      << "the block walked into the gate mouth instead of forming up first";
   auto const* final_traversal =
       entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   ASSERT_NE(final_traversal, nullptr);
 
   EXPECT_EQ(final_traversal->target_files, final_traversal->normal_files)
-      << "the block re-formed instead of squeezing";
+      << "the block never went back to its own frontage";
   EXPECT_EQ(final_traversal->current_files, final_traversal->normal_files);
-  EXPECT_GT(separation_at_narrowest, 0.0F);
+  EXPECT_GE(separation_at_narrowest,
+            Game::Formation::TraversalPolicy::k_minimum_soldier_separation *
+                Game::Formation::TraversalPolicy::k_transit_separation_scale *
+                Game::Formation::TraversalPolicy::k_cover_priority_scale)
+      << "soldiers stacked on each other while filing through";
   EXPECT_GT(position_of(id).x(), world_of(38, k_gap_z).x())
       << "progress=" << final_traversal->transition_progress
       << " blocked=" << final_traversal->blocked_slot_count
@@ -650,6 +748,73 @@ TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLa
   ASSERT_NE(restored, nullptr);
   EXPECT_FALSE(restored->active);
   EXPECT_NEAR(restored->lateral_scale, 1.0F, 0.001F);
+}
+
+TEST_F(TightGapNavigationTest, ACorridorThatFitsTheBlockLeavesItAlone) {
+  constexpr int k_size = 80;
+  constexpr int k_lane_z = 40;
+  open_field(k_size);
+  m_session->world().set_presentation_enabled(true);
+  wall_off_corridor(k_lane_z, 13, 30, 52);
+
+  EntityID const id =
+      spawn(Game::Units::SpawnType::Spearman, world_of(24, k_lane_z), 90.0F);
+  CommandService::move_unit(m_session->world(), id, world_of(58, k_lane_z));
+
+  auto const seen = watch_crossing(id, 30.0);
+  EXPECT_FALSE(seen.entered)
+      << "a lane wider than the block was mistaken for a narrow crossing";
+  EXPECT_LE(seen.mode_changes, 1);
+  EXPECT_GT(seen.final_x, world_of(54, k_lane_z).x());
+}
+
+TEST_F(TightGapNavigationTest, AModerateCorridorClosesRanksAndKeepsEveryFile) {
+  constexpr int k_size = 80;
+  constexpr int k_lane_z = 40;
+  open_field(k_size);
+  m_session->world().set_presentation_enabled(true);
+  wall_off_corridor(k_lane_z, 7, 30, 52);
+
+  EntityID const id =
+      spawn(Game::Units::SpawnType::Spearman, world_of(24, k_lane_z), 90.0F);
+  CommandService::move_unit(m_session->world(), id, world_of(58, k_lane_z));
+
+  auto const seen = watch_crossing(id, 34.0);
+  ASSERT_TRUE(seen.entered) << "the block ignored a lane narrower than itself";
+  EXPECT_EQ(seen.narrowest_files, seen.normal_files)
+      << "the block gave up files in a lane that could hold them; corridor="
+      << seen.narrowest_corridor;
+  EXPECT_LT(seen.narrowest_scale, 0.999F) << "the block never closed ranks";
+  EXPECT_GE(seen.closest_pair,
+            Game::Formation::TraversalPolicy::k_minimum_soldier_separation *
+                Game::Formation::TraversalPolicy::k_transit_separation_scale *
+                Game::Formation::TraversalPolicy::k_cover_priority_scale);
+  EXPECT_LE(seen.mode_changes, 2) << "the layout mode flickered inside one lane";
+  EXPECT_GT(seen.final_x, world_of(54, k_lane_z).x());
+  EXPECT_LT(seen.final_error, 0.6F) << "the block never re-formed after the lane";
+}
+
+TEST_F(TightGapNavigationTest, ATightCorridorGivesUpFilesWithoutGoingSingleFile) {
+  constexpr int k_size = 80;
+  constexpr int k_lane_z = 40;
+  open_field(k_size);
+  m_session->world().set_presentation_enabled(true);
+  wall_off_corridor(k_lane_z, 3, 30, 52);
+
+  EntityID const id =
+      spawn(Game::Units::SpawnType::Spearman, world_of(24, k_lane_z), 90.0F);
+  CommandService::move_unit(m_session->world(), id, world_of(58, k_lane_z));
+
+  auto const seen = watch_crossing(id, 70.0);
+  ASSERT_TRUE(seen.entered);
+  EXPECT_LT(seen.narrowest_files, seen.normal_files)
+      << "the block kept a frontage the lane cannot hold";
+  EXPECT_GT(seen.narrowest_files, 1U)
+      << "a three metre lane does not need single file; corridor="
+      << seen.narrowest_corridor;
+  EXPECT_LE(seen.mode_changes, 4) << "the layout mode oscillated in one lane";
+  EXPECT_GT(seen.final_x, world_of(54, k_lane_z).x());
+  EXPECT_LT(seen.final_error, 0.6F);
 }
 
 TEST_F(TightGapNavigationTest, PhysicalPassagesSelectTheWidestSafeFileCount) {
@@ -677,6 +842,7 @@ TEST_F(TightGapNavigationTest, PhysicalPassagesSelectTheWidestSafeFileCount) {
     std::uint32_t normal_files = 0U;
     float selected_half_width = 0.0F;
     float selected_file_spacing = 0.0F;
+    float selected_body_radius = 0.0F;
     bool entered = false;
     double const step = m_session->clock().tick_seconds();
     for (double elapsed = 0.0; elapsed < 12.0; elapsed += step) {
@@ -689,17 +855,35 @@ TEST_F(TightGapNavigationTest, PhysicalPassagesSelectTheWidestSafeFileCount) {
         if (traversal->target_files < narrowest_files) {
           narrowest_files = traversal->target_files;
           selected_half_width = traversal->available_half_width;
-          selected_file_spacing = traversal->file_spacing;
+          selected_file_spacing =
+              traversal->authored_file_spacing * traversal->minimum_lateral_scale;
+          selected_body_radius = traversal->soldier_body_radius * 0.88F;
         }
       }
     }
 
     EXPECT_TRUE(entered) << "passage files=" << passage_files;
+    ASSERT_GT(normal_files, 0U);
+    ASSERT_LE(narrowest_files, normal_files) << "passage files=" << passage_files;
 
-    EXPECT_EQ(narrowest_files, normal_files)
-        << "a " << passage_files
-        << "-cell passage re-formed the block; available_half_width="
-        << selected_half_width << " file_spacing=" << selected_file_spacing;
+    namespace Policy = Game::Formation::TraversalPolicy;
+    float const edge_margin = selected_body_radius + 0.05F;
+    float const tight_spacing = selected_file_spacing;
+    EXPECT_LE(Policy::required_half_width(narrowest_files, edge_margin, tight_spacing),
+              selected_half_width + 0.001F)
+        << "a " << passage_files << "-cell passage kept " << narrowest_files
+        << " files it cannot hold";
+    if (narrowest_files < normal_files) {
+      EXPECT_GT(
+          Policy::required_half_width(narrowest_files + 1U, edge_margin, tight_spacing),
+          selected_half_width)
+          << "a " << passage_files << "-cell passage gave up a file it could keep";
+    }
+    if (passage_files > 1U) {
+      EXPECT_GT(narrowest_files, 1U)
+          << "a " << passage_files
+          << "-cell passage collapsed the block into single file";
+    }
   }
 }
 

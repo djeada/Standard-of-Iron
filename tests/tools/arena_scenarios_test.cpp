@@ -238,6 +238,84 @@ TEST(ArenaScenariosTest, PerformanceBattlesHaveExactArmySizesAndOver100FpsBudget
   }
 }
 
+TEST(ArenaScenariosTest, NarrowCrossingScenariosCoverEveryKindOfPassage) {
+  using Kind = Arena::ArenaExpectationKind;
+
+  struct Passage {
+    const char* id;
+    bool narrows;
+    float minimum_files;
+  };
+
+  const Passage passages[] = {
+      {Arena::Scenarios::k_traversal_city_street_id, true, 5.0F},
+      {Arena::Scenarios::k_traversal_city_alley_id, true, 2.0F},
+      {Arena::Scenarios::k_traversal_wall_gate_id, true, 1.0F},
+      {Arena::Scenarios::k_traversal_forest_path_id, true, 0.0F},
+      {Arena::Scenarios::k_traversal_hill_gap_id, true, 0.0F},
+      {Arena::Scenarios::k_traversal_rock_cluster_id, true, 0.0F},
+      {Arena::Scenarios::k_traversal_ruins_field_id, true, 0.0F},
+      {Arena::Scenarios::k_traversal_wide_street_id, false, 0.0F},
+      {Arena::Scenarios::k_traversal_open_ground_id, false, 0.0F},
+  };
+
+  for (const auto& passage : passages) {
+    const auto* scenario =
+        Arena::Scenarios::find_definition(QString::fromLatin1(passage.id));
+    ASSERT_NE(scenario, nullptr) << passage.id;
+    EXPECT_TRUE(Arena::validate_scenario(*scenario).empty()) << passage.id;
+
+    const auto has = [&](Kind kind) {
+      return std::any_of(scenario->expectations.begin(),
+                         scenario->expectations.end(),
+                         [kind](const auto& e) { return e.kind == kind; });
+    };
+    const auto threshold_of = [&](Kind kind) {
+      const auto found = std::find_if(scenario->expectations.begin(),
+                                      scenario->expectations.end(),
+                                      [kind](const auto& e) { return e.kind == kind; });
+      return found != scenario->expectations.end() ? found->threshold : -1.0F;
+    };
+
+    EXPECT_TRUE(has(Kind::NarrowLayoutModeSettles)) << passage.id;
+    EXPECT_TRUE(has(Kind::GroupReachedDestination)) << passage.id;
+    EXPECT_TRUE(has(Kind::SoldiersStayOnWalkableGround)) << passage.id;
+
+    if (!passage.narrows) {
+      EXPECT_TRUE(has(Kind::NarrowLayoutStaysWide)) << passage.id;
+      EXPECT_FALSE(has(Kind::NarrowLayoutEngaged)) << passage.id;
+      continue;
+    }
+
+    EXPECT_TRUE(has(Kind::NarrowLayoutEngaged)) << passage.id;
+    EXPECT_TRUE(has(Kind::NarrowLayoutRestores)) << passage.id;
+    EXPECT_FALSE(has(Kind::NarrowLayoutStaysWide)) << passage.id;
+    if (passage.minimum_files > 0.0F) {
+
+      EXPECT_FLOAT_EQ(threshold_of(Kind::NarrowLayoutKeepsFiles), passage.minimum_files)
+          << passage.id;
+    } else {
+
+      EXPECT_FALSE(has(Kind::NarrowLayoutKeepsFiles))
+          << passage.id
+          << " authors an obstacle field, so a file floor would "
+             "be pinned to one machine's scatter";
+    }
+  }
+
+  const auto* gate = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_traversal_wall_gate_id));
+  ASSERT_NE(gate, nullptr);
+  for (const auto& passage : passages) {
+    if (!passage.narrows || passage.minimum_files <= 0.0F) {
+      continue;
+    }
+    EXPECT_TRUE(passage.minimum_files > 1.0F ||
+                QString::fromLatin1(passage.id) == gate->id)
+        << passage.id << " may not be allowed to fall to single file";
+  }
+}
+
 TEST(ArenaScenariosTest, WallGroupsSitOnTheWallNetworkLattice) {
 
   constexpr int k_spacing = Game::Systems::WallNetworkService::k_segment_spacing;
