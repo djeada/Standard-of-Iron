@@ -12,17 +12,17 @@ The gains below multiply the existing master, category, resource and cue gains.
 They are shared by live playback and the offline mix-review tool in
 `game/audio/gameplay_mix.h`. Volume sliders remain in [0, 1].
 
-| Bus | Trim, approximately | Source loudness policy |
-| --- | ---: | --- |
-| Music | -6 dB | -15 LUFS target, ±6 dB authority |
-| Ambience | -6 dB | -16.5 LUFS target, ±6 dB authority |
-| Combat and movement | -8 dB | Trim material above -18 estimated LUFS, never boost quiet variants |
-| Voice | -1 dB | -15.5 LUFS target, ±14 dB authority |
-| UI and orders | -4 dB | Existing +12 dB interface makeup, preserving authored contrast |
-| Construction and economy | -10 dB | Same downward-only effect mastering |
-| Weather | -10 dB | Ambience mastering |
-| Wildlife and environment | -12 dB | Effect or ambience mastering according to the resource category |
-| Alerts and state feedback | -2 dB | Effect mastering; voice resources remain on the voice bus |
+| Bus                       | Trim, approximately | Source loudness policy                                             |
+| ------------------------- | ------------------: | ------------------------------------------------------------------ |
+| Music                     |               -6 dB | -15 LUFS target, ±6 dB authority                                   |
+| Ambience                  |               -6 dB | -16.5 LUFS target, ±6 dB authority                                 |
+| Combat and movement       |               -8 dB | Trim material above -18 estimated LUFS, never boost quiet variants |
+| Voice                     |               -1 dB | -15.5 LUFS target, ±14 dB authority                                |
+| UI and orders             |               -4 dB | Existing +12 dB interface makeup, preserving authored contrast     |
+| Construction and economy  |              -10 dB | Same downward-only effect mastering                                |
+| Weather                   |              -10 dB | Ambience mastering                                                 |
+| Wildlife and environment  |              -12 dB | Effect or ambience mastering according to the resource category    |
+| Alerts and state feedback |               -2 dB | Effect mastering; voice resources remain on the voice bus          |
 
 Source processing happens on decoded PCM, avoiding lossy asset re-encoding.
 Music, voice and ambience keep their existing spectral treatment. Hot effects
@@ -80,11 +80,11 @@ limiter-envelope gain.
 The deterministic schedule is an asset-based DSP stress fixture, not a capture
 of the game simulation or the backend's admission path:
 
-| Scene | Schedule |
-| --- | --- |
-| Quiet | Menu music plus Mediterranean ambience, first-install sliders |
-| Normal | Same beds plus rain, four aligned sword impacts retriggered every 200 ms; UI, construction and wildlife every 2 s; voice and warning at 3 s; first-install sliders |
-| Worst-case | Normal schedule with 16 aligned impacts and all sliders at maximum; bypasses normal cue cooldowns intentionally |
+| Scene      | Schedule                                                                                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Quiet      | Menu music plus Mediterranean ambience, first-install sliders                                                                                                      |
+| Normal     | Same beds plus rain, four aligned sword impacts retriggered every 200 ms; UI, construction and wildlife every 2 s; voice and warning at 3 s; first-install sliders |
+| Worst-case | Normal schedule with 16 aligned impacts and all sliders at maximum; bypasses normal cue cooldowns intentionally                                                    |
 
 All source paths and onset rules are explicit in `mix_review` in
 `tools/audio_master/main.cpp`; no random seed or audio device is involved.
