@@ -40,17 +40,6 @@ constexpr std::uint32_t k_max_repath_attempts = 3U;
 
 constexpr std::uint32_t k_max_order_repaths = 24U;
 
-constexpr float k_stall_window_seconds = 1.0F;
-constexpr float k_stall_progress_fraction = 0.20F;
-constexpr float k_stall_progress_floor_metres = 0.10F;
-constexpr float k_stall_progress_ceiling_metres = 0.60F;
-constexpr float k_stall_rung_seconds = 2.5F;
-constexpr float k_stall_objective_change_metres = 1.5F;
-constexpr float k_stall_relaxed_clearance = 0.35F;
-
-constexpr float k_no_closer_rung_seconds = 9.0F;
-constexpr float k_no_closer_progress_metres = 0.5F;
-
 constexpr float k_lookahead_speed_seconds = 0.35F;
 constexpr float k_lookahead_min = 0.45F;
 constexpr float k_lookahead_max = 2.0F;
@@ -90,51 +79,6 @@ route_stops_short_of_the_order(const Engine::Core::MovementComponent& movement,
   return to_requested > arrive_radius + k_short_route_slack;
 }
 
-[[nodiscard]] auto
-order_goal_of(const Engine::Core::MovementComponent& movement) -> QVector3D {
-  if (movement.get_has_requested_goal()) {
-    return {movement.get_requested_goal_x(), 0.0F, movement.get_requested_goal_z()};
-  }
-  return {movement.get_goal_x(), 0.0F, movement.get_goal_y()};
-}
-
-void forget_stall_window(Engine::Core::MovementStallFacts& stall) {
-  stall.window_valid = false;
-  stall.window_seconds = 0.0F;
-}
-
-void restart_stall_ladder(Engine::Core::MovementStallFacts& stall) {
-  stall.stalled_seconds = 0.0F;
-  stall.no_closer_seconds = 0.0F;
-  stall.rung = Engine::Core::MovementRecoveryRung::None;
-  stall.clearance_relief = 1.0F;
-  forget_stall_window(stall);
-}
-
-[[nodiscard]] auto ladder_rung(float seconds,
-                               float per_rung) -> Engine::Core::MovementRecoveryRung {
-  using Rung = Engine::Core::MovementRecoveryRung;
-  if (seconds >= 4.0F * per_rung) {
-    return Rung::Abandoned;
-  }
-  if (seconds >= 3.0F * per_rung) {
-    return Rung::RelaxFormation;
-  }
-  if (seconds >= 2.0F * per_rung) {
-    return Rung::Sidestep;
-  }
-  if (seconds >= per_rung) {
-    return Rung::Replan;
-  }
-  return Rung::None;
-}
-
-[[nodiscard]] auto rung_for(const Engine::Core::MovementStallFacts& stall)
-    -> Engine::Core::MovementRecoveryRung {
-  return std::max(ladder_rung(stall.stalled_seconds, k_stall_rung_seconds),
-                  ladder_rung(stall.no_closer_seconds, k_no_closer_rung_seconds));
-}
-
 } // namespace
 
 auto is_movement_point_allowed(const QVector3D& pos,
@@ -167,8 +111,7 @@ auto is_movement_point_allowed(const QVector3D& pos,
 
 auto goal_is_reachable_from(const Engine::Core::MovementComponent& movement,
                             const QVector3D& current,
-                            const QVector3D& goal,
-                            float clearance = -1.0F) -> bool {
+                            const QVector3D& goal) -> bool {
   auto* pathfinder = NavGrid::get_pathfinder();
   if (pathfinder == nullptr) {
     return false;
@@ -180,10 +123,7 @@ auto goal_is_reachable_from(const Engine::Core::MovementComponent& movement,
                                ? Pathfinding::Passability::Light
                                : Pathfinding::Passability::Heavy;
   auto const route = pathfinder->find_path(
-      start_cell,
-      goal_cell,
-      passability,
-      clearance >= 0.0F ? clearance : movement.get_navigation_clearance());
+      start_cell, goal_cell, passability, movement.get_navigation_clearance());
   if (route.empty()) {
     return false;
   }
@@ -316,18 +256,12 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
     if (gate == MovementGate::Dead) {
       facts->progress.state = Engine::Core::MovementOrderState::Idle;
     }
-
-    forget_stall_window(facts->progress.stall);
-    facts->progress.stall.stalled_seconds = 0.0F;
-    facts->progress.stall.no_closer_seconds = 0.0F;
-    facts->progress.stall.rung = Engine::Core::MovementRecoveryRung::None;
     return;
   }
 
   float const previous_clearance = movement->get_navigation_clearance();
   movement->set_navigation_clearance(
-      FormationCombat::formation_navigation_clearance(entity) *
-      facts->progress.stall.clearance_relief);
+      FormationCombat::formation_navigation_clearance(entity));
   if (movement->get_has_target() && movement->get_has_requested_goal() &&
       std::abs(previous_clearance - movement->get_navigation_clearance()) >
           k_clearance_repath_threshold) {
@@ -368,22 +302,13 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
   facts->route.resolved_goal_x = movement->get_goal_x();
   facts->route.resolved_goal_z = movement->get_goal_y();
 
-  auto const* stamina = entity.get_component<Engine::Core::StaminaComponent>();
-  float const max_speed = formation_navigation_speed(entity, *unit, stamina);
-
-  if (track_objective_stall(
-          entity, world, *transform, *movement, *facts, max_speed, delta_time)) {
-    return;
-  }
-
   QVector3D const current_pos(transform->position.x, 0.0F, transform->position.z);
   QVector3D const final_goal(movement->get_goal_x(), 0.0F, movement->get_goal_y());
   bool const current_position_allowed = is_movement_point_allowed(current_pos, entity);
   bool const destination_allowed = is_movement_point_allowed(final_goal, entity);
 
   if (!current_position_allowed &&
-      MovementSystem::assign_local_recovery_move(
-          current_pos, order_goal_of(*movement), movement)) {
+      MovementSystem::assign_local_recovery_move(current_pos, final_goal, movement)) {
     facts->progress.state = Engine::Core::MovementOrderState::Recovering;
     facts->progress.repath_reason =
         Engine::Core::MovementRepathReason::RecoveryEscalation;
@@ -394,7 +319,7 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
     Point const requested_goal = NavGrid::world_to_grid(final_goal.x(), final_goal.z());
     auto const nearest_goal = NavGrid::find_nearest_walkable_grid(requested_goal, 32);
     if (!nearest_goal.has_value()) {
-      abandon_objective(entity, *movement, *facts, order_goal_of(*movement));
+      facts->progress.state = Engine::Core::MovementOrderState::Unreachable;
       return;
     }
 
@@ -417,6 +342,9 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
     }
     return;
   }
+
+  auto const* stamina = entity.get_component<Engine::Core::StaminaComponent>();
+  float const max_speed = formation_navigation_speed(entity, *unit, stamina);
 
   auto& route = m_routes[entity.get_id()];
   bool route_changed = false;
@@ -578,181 +506,6 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
   facts->desired.speed_limit = max_speed;
 }
 
-void RouteFollowSystem::abandon_objective(Engine::Core::Entity& entity,
-                                          Engine::Core::MovementComponent& movement,
-                                          Engine::Core::MovementFactsComponent& facts,
-                                          const QVector3D& objective) {
-  movement.stop();
-  OrderService::clear_player_order_intent(&entity);
-
-  auto& progress = facts.progress;
-  progress.state = Engine::Core::MovementOrderState::Unreachable;
-  progress.no_progress_seconds = 0.0F;
-  progress.no_progress_advance = 0.0F;
-  progress.remaining_arclength = 0.0F;
-
-  auto& stall = progress.stall;
-  if (!stall.objective_abandoned) {
-    ++stall.abandon_count;
-  }
-  stall.objective_abandoned = true;
-  stall.abandoned_x = objective.x();
-  stall.abandoned_z = objective.z();
-  stall.rung = Engine::Core::MovementRecoveryRung::Abandoned;
-  stall.clearance_relief = 1.0F;
-  forget_stall_window(stall);
-
-  m_routes.erase(entity.get_id());
-}
-
-auto RouteFollowSystem::track_objective_stall(
-    Engine::Core::Entity& entity,
-    Engine::Core::World& world,
-    const Engine::Core::TransformComponent& transform,
-    Engine::Core::MovementComponent& movement,
-    Engine::Core::MovementFactsComponent& facts,
-    float max_speed,
-    float delta_time) -> bool {
-  using Engine::Core::MovementOrderState;
-  using Engine::Core::MovementRecoveryRung;
-  using Engine::Core::MovementRepathReason;
-
-  auto& stall = facts.progress.stall;
-
-  if (!movement.get_has_target()) {
-
-    stall.objective_valid = false;
-    stall.stalled_seconds = 0.0F;
-    stall.no_closer_seconds = 0.0F;
-    if (!stall.objective_abandoned) {
-      stall.rung = MovementRecoveryRung::None;
-    }
-    stall.clearance_relief = 1.0F;
-    forget_stall_window(stall);
-    return false;
-  }
-
-  QVector3D const objective =
-      movement.get_has_requested_goal()
-          ? QVector3D(
-                movement.get_requested_goal_x(), 0.0F, movement.get_requested_goal_z())
-          : QVector3D(movement.get_goal_x(), 0.0F, movement.get_goal_y());
-
-  bool const objective_moved =
-      !stall.objective_valid ||
-      Game::Systems::planar_length(objective.x() - stall.objective_x,
-                                   objective.z() - stall.objective_z) >
-          k_stall_objective_change_metres;
-  QVector3D const here(transform.position.x, 0.0F, transform.position.z);
-  float const to_objective =
-      Game::Systems::planar_length(objective.x() - here.x(), objective.z() - here.z());
-
-  if (objective_moved) {
-    stall.objective_valid = true;
-    stall.objective_x = objective.x();
-    stall.objective_z = objective.z();
-    stall.recovery_attempts = 0;
-    stall.abandon_count = 0;
-    stall.objective_abandoned = false;
-    stall.closest_approach = to_objective;
-    restart_stall_ladder(stall);
-  }
-
-  if (stall.tracked_order != movement.get_order_sequence()) {
-    stall.tracked_order = movement.get_order_sequence();
-    stall.objective_abandoned = false;
-    stall.closest_approach = to_objective;
-    restart_stall_ladder(stall);
-  }
-
-  if (to_objective + k_no_closer_progress_metres < stall.closest_approach) {
-    stall.closest_approach = to_objective;
-    stall.no_closer_seconds = 0.0F;
-  } else {
-    stall.no_closer_seconds += delta_time;
-  }
-
-  if (!stall.window_valid) {
-    stall.window_valid = true;
-    stall.window_seconds = 0.0F;
-    stall.window_reference_x = here.x();
-    stall.window_reference_z = here.z();
-  }
-
-  stall.window_seconds += delta_time;
-  if (stall.window_seconds >= k_stall_window_seconds) {
-
-    float const moved = Game::Systems::planar_length(
-        here.x() - stall.window_reference_x, here.z() - stall.window_reference_z);
-    float const expected =
-        std::clamp(max_speed * stall.window_seconds * k_stall_progress_fraction,
-                   k_stall_progress_floor_metres,
-                   k_stall_progress_ceiling_metres);
-    float const window = stall.window_seconds;
-    stall.window_seconds = 0.0F;
-    stall.window_reference_x = here.x();
-    stall.window_reference_z = here.z();
-    if (moved >= expected) {
-      stall.stalled_seconds = 0.0F;
-    } else {
-      stall.stalled_seconds += window;
-    }
-  }
-
-  auto const wanted = rung_for(stall);
-  if (wanted < stall.rung) {
-
-    stall.rung = wanted;
-    return false;
-  }
-  if (wanted == stall.rung) {
-    return false;
-  }
-  stall.rung = wanted;
-  ++stall.recovery_attempts;
-
-  switch (wanted) {
-  case MovementRecoveryRung::None:
-    break;
-
-  case MovementRecoveryRung::Replan:
-    MovementSystem::retarget_unit(world, entity.get_id(), objective);
-    ++facts.progress.repath_count;
-    facts.progress.repath_reason = MovementRepathReason::Blocked;
-    facts.progress.state = MovementOrderState::Repathing;
-    break;
-
-  case MovementRecoveryRung::Sidestep:
-    if (MovementSystem::assign_local_recovery_move(
-            here, QVector3D(objective.x(), 0.0F, objective.z()), &movement)) {
-      facts.progress.state = MovementOrderState::Recovering;
-      facts.progress.repath_reason = MovementRepathReason::RecoveryEscalation;
-    } else {
-      MovementSystem::retarget_unit(world, entity.get_id(), objective);
-      ++facts.progress.repath_count;
-      facts.progress.repath_reason = MovementRepathReason::RecoveryEscalation;
-    }
-    break;
-
-  case MovementRecoveryRung::RelaxFormation:
-
-    stall.clearance_relief = k_stall_relaxed_clearance;
-    movement.set_navigation_clearance(movement.get_navigation_clearance() *
-                                      k_stall_relaxed_clearance);
-    MovementSystem::retarget_unit(world, entity.get_id(), objective);
-    ++facts.progress.repath_count;
-    facts.progress.repath_reason = MovementRepathReason::RecoveryEscalation;
-    facts.progress.state = MovementOrderState::Repathing;
-    break;
-
-  case MovementRecoveryRung::Abandoned:
-    abandon_objective(entity, movement, facts, objective);
-    return true;
-  }
-
-  return false;
-}
-
 auto RouteFollowSystem::route_for(Engine::Core::EntityID entity_id) const
     -> const MovementRoute* {
   auto const found = m_routes.find(entity_id);
@@ -861,42 +614,30 @@ auto RouteFollowSystem::update_progress(Engine::Core::Entity& entity,
 
   case MovementOrderState::Recovering: {
     QVector3D const current(transform.position.x, 0.0F, transform.position.z);
-    QVector3D const goal = order_goal_of(movement);
+    QVector3D const goal(movement.get_goal_x(), 0.0F, movement.get_goal_y());
     if (progress.state_seconds <= k_recovery_budget_seconds) {
       MovementSystem::assign_local_recovery_move(current, goal, &movement);
       break;
     }
 
-    if (progress.repath_count < k_max_order_repaths) {
-      if (goal_is_reachable_from(movement, current, goal)) {
-        progress.state = MovementOrderState::LocallyBlocked;
-        progress.repath_attempts = 0;
-        progress.no_progress_seconds = 0.0F;
-        progress.no_progress_advance = 0.0F;
-        MovementSystem::retarget_unit(world, entity.get_id(), goal);
-        ++progress.repath_count;
-        progress.repath_reason = MovementRepathReason::Blocked;
-        break;
-      }
-
-      float const relaxed =
-          movement.get_navigation_clearance() * k_stall_relaxed_clearance;
-      if (progress.stall.clearance_relief >= 1.0F &&
-          goal_is_reachable_from(movement, current, goal, relaxed)) {
-        progress.stall.clearance_relief = k_stall_relaxed_clearance;
-        progress.stall.rung = Engine::Core::MovementRecoveryRung::RelaxFormation;
-        movement.set_navigation_clearance(relaxed);
-        progress.state = MovementOrderState::LocallyBlocked;
-        progress.repath_attempts = 0;
-        progress.no_progress_seconds = 0.0F;
-        progress.no_progress_advance = 0.0F;
-        MovementSystem::retarget_unit(world, entity.get_id(), goal);
-        ++progress.repath_count;
-        progress.repath_reason = MovementRepathReason::RecoveryEscalation;
-        break;
-      }
+    if (progress.repath_count < k_max_order_repaths &&
+        goal_is_reachable_from(movement, current, goal)) {
+      progress.state = MovementOrderState::LocallyBlocked;
+      progress.repath_attempts = 0;
+      progress.no_progress_seconds = 0.0F;
+      progress.no_progress_advance = 0.0F;
+      MovementSystem::retarget_unit(world, entity.get_id(), goal);
+      ++progress.repath_count;
+      progress.repath_reason = MovementRepathReason::Blocked;
+      break;
     }
-    abandon_objective(entity, movement, facts, goal);
+    movement.stop();
+    OrderService::clear_player_order_intent(&entity);
+    progress.state = MovementOrderState::Unreachable;
+    progress.no_progress_seconds = 0.0F;
+    progress.no_progress_advance = 0.0F;
+    progress.remaining_arclength = 0.0F;
+    m_routes.erase(entity.get_id());
     break;
   }
 
