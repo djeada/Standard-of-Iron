@@ -1,5 +1,9 @@
 # Audio mastering
 
+For the current gameplay bus trims, effect loudness guard, listening presets and
+reproducible final-mix diagnostics, see [Gameplay mix review](GAMEPLAY_AUDIO_MIX.md).
+The measurements below document the earlier source-mastering pass.
+
 Almost every sample the game plays is generated: the music comes out of a model,
 the voices out of a text-to-speech model, and the interface and combat cues out
 of `tools/audio_synth`. Generated masters arrive with problems that recorded

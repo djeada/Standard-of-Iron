@@ -41,6 +41,7 @@ struct Analysis {
 struct Profile {
   bool normalise_loudness = false;
   bool detect_resonances = false;
+  bool attenuate_only = false;
   float target_lufs = -15.0F;
   float loudness_authority_db = 0.0F;
 

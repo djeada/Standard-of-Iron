@@ -1,0 +1,10 @@
+preset,scene,pre_peak_dbfs,post_peak_dbfs,rms_dbfs,estimated_lufs,min_limiter_gain
+headphones,quiet,-19.773,-19.773,-33.721,-35.236,1.00000
+headphones,normal,-3.036,-3.036,-21.315,-21.039,1.00000
+headphones,worst-case,4.597,-2.047,-16.141,-15.494,0.46552
+speakers,quiet,-19.773,-19.773,-33.721,-35.236,1.00000
+speakers,normal,-3.036,-6.070,-22.443,-22.094,0.70472
+speakers,worst-case,4.597,-2.218,-17.954,-17.326,0.45413
+night,quiet,-19.773,-19.773,-33.721,-35.236,1.00000
+night,normal,-3.426,-12.018,-26.741,-26.576,0.37154
+night,worst-case,2.048,-10.582,-24.246,-24.033,0.23164

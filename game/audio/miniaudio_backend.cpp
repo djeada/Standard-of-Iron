@@ -146,6 +146,7 @@ auto MiniaudioBackend::initialize(int device_rate,
   }
   m_active_channel_mask.store(0, std::memory_order_relaxed);
   m_bus_limiter.prepare(m_sample_rate, m_output_channels);
+  m_gameplay_mix.prepare(m_sample_rate);
   start_worker();
 
   if (!open_device) {
@@ -315,6 +316,10 @@ void MiniaudioBackend::finish_job(const DecodeJob& job, bool decoded) {
     command.type = Game::Audio::AudioCommand::Type::PlaySound;
     command.track = static_cast<std::int16_t>(job.track);
     command.volume = deferred->volume;
+    command.pan =
+        std::isfinite(deferred->pan) ? std::clamp(deferred->pan, -1.0F, 1.0F) : 0.0F;
+    command.mix_bus = deferred->mix_bus;
+    command.priority = deferred->priority;
     command.loop = true;
     submit(command);
   }
@@ -756,7 +761,9 @@ auto MiniaudioBackend::channel_playing(int channel) const -> bool {
 void MiniaudioBackend::play_sound(const QString& id,
                                   float volume,
                                   bool loop,
-                                  float pan) {
+                                  float pan,
+                                  Game::Audio::MixBus bus,
+                                  int priority) {
   if (m_offline_render && is_track_decode_pending(id)) {
     wait_for_track(id);
   }
@@ -766,7 +773,8 @@ void MiniaudioBackend::play_sound(const QString& id,
       if (loop) {
 
         QMutexLocker const locker(&m_decode_mutex);
-        m_deferred_loops.insert(slot, DeferredLoop{sanitize_backend_volume(volume)});
+        m_deferred_loops.insert(
+            slot, DeferredLoop{sanitize_backend_volume(volume), pan, bus, priority});
       } else {
         qDebug() << "MiniaudioBackend: Sound still decoding, skipping play:" << id;
       }
@@ -779,7 +787,9 @@ void MiniaudioBackend::play_sound(const QString& id,
   command.type = Game::Audio::AudioCommand::Type::PlaySound;
   command.track = static_cast<std::int16_t>(slot);
   command.volume = sanitize_backend_volume(volume);
-  command.pan = std::clamp(pan, -1.0F, 1.0F);
+  command.pan = std::isfinite(pan) ? std::clamp(pan, -1.0F, 1.0F) : 0.0F;
+  command.mix_bus = bus;
+  command.priority = priority;
   command.loop = loop;
   submit(command);
 }
@@ -902,6 +912,8 @@ void MiniaudioBackend::apply_command(const Game::Audio::AudioCommand& command) {
       if (effect.active) {
         continue;
       }
+      effect.mix_bus = command.mix_bus;
+      effect.priority = command.priority;
       effect.track = command.track;
       effect.frame_pos = 0;
       effect.volume = command.volume;
@@ -978,12 +990,51 @@ void MiniaudioBackend::publish_state() {
 void MiniaudioBackend::on_audio(float* output, unsigned frames) {
   static constexpr int STEREO_CHANNELS = 2;
 
+  constexpr unsigned k_mix_block = 256;
+  if (frames > k_mix_block) {
+    for (unsigned offset = 0; offset < frames; offset += k_mix_block) {
+      on_audio(output + offset * STEREO_CHANNELS,
+               std::min(k_mix_block, frames - offset));
+    }
+    return;
+  }
   const unsigned samples = frames * STEREO_CHANNELS;
   std::memset(output, 0, samples * sizeof(float));
 
   drain_commands();
 
   const float master = m_master_volume;
+  Game::Audio::MixCounts counts{};
+  bool voice = false;
+  bool critical = false;
+  for (const SoundEffect& effect : m_sound_effects) {
+    if (!effect.active || effect.volume * master <= 0.001F) {
+      continue;
+    }
+    const auto* track =
+        effect.track < 0 ? nullptr
+                         : m_track_table[static_cast<std::size_t>(effect.track)].load(
+                               std::memory_order_acquire);
+    if (track == nullptr || track->frames == 0 ||
+        (!effect.looping && effect.frame_pos >= track->frames)) {
+      continue;
+    }
+    ++counts[Game::Audio::mix_index(effect.mix_bus)];
+    voice = voice || effect.mix_bus == Game::Audio::MixBus::Voice;
+    critical = critical ||
+               (effect.priority >= 7 && (effect.mix_bus == Game::Audio::MixBus::Voice ||
+                                         effect.mix_bus == Game::Audio::MixBus::Alert));
+  }
+  const auto preset = m_listening_preset.load(std::memory_order_relaxed);
+  m_gameplay_mix.target(counts, voice, critical, preset);
+  std::array<Game::Audio::MixGains, k_mix_block> mix_gains;
+  for (unsigned i = 0; i < frames; ++i) {
+    mix_gains[i] = m_gameplay_mix.next();
+  }
+  const auto gain_at = [&](const float* destination, Game::Audio::MixBus bus) {
+    return mix_gains[static_cast<std::size_t>(destination - output) / STEREO_CHANNELS]
+                    [Game::Audio::mix_index(bus)];
+  };
 
   for (Channel& channel : m_channels) {
     if (!channel.active || channel.paused || channel.track < 0) {
@@ -1014,7 +1065,8 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
 
       const unsigned fading = std::min(run, channel.fade_samples);
       for (unsigned i = 0; i < fading; ++i) {
-        const float volume = channel.current_volume * master * k_pcm_scale_down;
+        const float volume = channel.current_volume * master * k_pcm_scale_down *
+                             gain_at(destination, Game::Audio::MixBus::Music);
         const float left = static_cast<float>(source[0]) * volume;
         destination[0] += left;
         destination[1] += (stride == 1) ? left : static_cast<float>(source[1]) * volume;
@@ -1027,9 +1079,10 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
       }
       const unsigned steady = run - fading;
       if (steady > 0) {
-        const float volume = channel.current_volume * master * k_pcm_scale_down;
         if (stride == 1) {
           for (unsigned i = 0; i < steady; ++i) {
+            const float volume = channel.current_volume * master * k_pcm_scale_down *
+                                 gain_at(destination, Game::Audio::MixBus::Music);
             const float value = static_cast<float>(source[i]) * volume;
             destination[0] += value;
             destination[1] += value;
@@ -1038,6 +1091,8 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
           source += steady;
         } else {
           for (unsigned i = 0; i < steady; ++i) {
+            const float volume = channel.current_volume * master * k_pcm_scale_down *
+                                 gain_at(destination, Game::Audio::MixBus::Music);
             destination[0] += static_cast<float>(source[0]) * volume;
             destination[1] += static_cast<float>(source[1]) * volume;
             destination += STEREO_CHANNELS;
@@ -1092,7 +1147,8 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
 
       const unsigned fading = std::min(run, effect.fade_samples);
       for (unsigned i = 0; i < fading; ++i) {
-        const float volume = effect.volume * master * k_pcm_scale_down;
+        const float volume = effect.volume * master * k_pcm_scale_down *
+                             gain_at(destination, effect.mix_bus);
         const float left = static_cast<float>(source[0]) * volume;
         destination[0] += left * effect.gain_left;
         destination[1] +=
@@ -1107,9 +1163,10 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
       }
       const unsigned steady = run - fading;
       if (steady > 0) {
-        const float volume = effect.volume * master * k_pcm_scale_down;
         if (stride == 1) {
           for (unsigned i = 0; i < steady; ++i) {
+            const float volume = effect.volume * master * k_pcm_scale_down *
+                                 gain_at(destination, effect.mix_bus);
             const float value = static_cast<float>(source[i]) * volume;
             destination[0] += value * effect.gain_left;
             destination[1] += value * effect.gain_right;
@@ -1117,6 +1174,8 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
           }
         } else {
           for (unsigned i = 0; i < steady; ++i) {
+            const float volume = effect.volume * master * k_pcm_scale_down *
+                                 gain_at(destination, effect.mix_bus);
             destination[0] += static_cast<float>(source[0]) * volume * effect.gain_left;
             destination[1] +=
                 static_cast<float>(source[1]) * volume * effect.gain_right;
@@ -1138,6 +1197,7 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
   publish_state();
 
   if (m_bus_limiter.is_ready()) {
+    m_bus_limiter.set_listening_preset(preset);
     m_bus_limiter.process(output, frames);
     return;
   }

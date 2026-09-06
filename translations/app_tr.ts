@@ -9887,6 +9887,22 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
         <source>ElevenLabs</source>
         <translation>ElevenLabs</translation>
     </message>
+    <message>
+        <source>Listening Preset:</source>
+        <translation>Dinleme Profili:</translation>
+    </message>
+    <message>
+        <source>Headphones</source>
+        <translation>Kulaklık</translation>
+    </message>
+    <message>
+        <source>Speakers</source>
+        <translation>Hoparlör</translation>
+    </message>
+    <message>
+        <source>Night</source>
+        <translation>Gece Modu</translation>
+    </message>
 </context>
 <context>
     <name>SkirmishLoader</name>

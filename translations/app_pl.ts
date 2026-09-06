@@ -9893,6 +9893,22 @@ Szerokie pole widzenia i trwała kotwica osady</translation>
         <source>ElevenLabs</source>
         <translation>ElevenLabs</translation>
     </message>
+    <message>
+        <source>Listening Preset:</source>
+        <translation>Profil odsłuchu:</translation>
+    </message>
+    <message>
+        <source>Headphones</source>
+        <translation>Słuchawki</translation>
+    </message>
+    <message>
+        <source>Speakers</source>
+        <translation>Głośniki</translation>
+    </message>
+    <message>
+        <source>Night</source>
+        <translation>Tryb nocny</translation>
+    </message>
 </context>
 <context>
     <name>SkirmishLoader</name>

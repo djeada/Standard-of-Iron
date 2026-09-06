@@ -9893,6 +9893,22 @@ Wide vision and a durable settlement anchor</source>
         <source>ElevenLabs</source>
         <translation>ElevenLabs</translation>
     </message>
+    <message>
+        <source>Listening Preset:</source>
+        <translation>Режим прослушивания:</translation>
+    </message>
+    <message>
+        <source>Headphones</source>
+        <translation>Наушники</translation>
+    </message>
+    <message>
+        <source>Speakers</source>
+        <translation>Колонки</translation>
+    </message>
+    <message>
+        <source>Night</source>
+        <translation>Ночной режим</translation>
+    </message>
 </context>
 <context>
     <name>SkirmishLoader</name>

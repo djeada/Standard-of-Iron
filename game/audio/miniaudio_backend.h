@@ -64,7 +64,15 @@ public:
   auto any_channel_playing() const -> bool;
   auto channel_playing(int channel) const -> bool;
 
-  void play_sound(const QString& id, float volume, bool loop = false, float pan = 0.0F);
+  void play_sound(const QString& id,
+                  float volume,
+                  bool loop = false,
+                  float pan = 0.0F,
+                  Game::Audio::MixBus bus = Game::Audio::MixBus::Unmixed,
+                  int priority = 0);
+  void set_listening_preset(Game::Audio::ListeningPreset preset) {
+    m_listening_preset.store(preset, std::memory_order_relaxed);
+  }
   void stop_sound(const QString& id);
   void set_sound_volume(const QString& id, float volume, int fade_ms);
   auto is_sound_active(const QString& id) const -> bool;
@@ -118,6 +126,8 @@ private:
   };
 
   struct SoundEffect {
+    Game::Audio::MixBus mix_bus = Game::Audio::MixBus::Unmixed;
+    int priority = 0;
     int track = -1;
     unsigned frame_pos = 0;
     float volume = DEFAULT_VOLUME;
@@ -176,6 +186,9 @@ private:
   std::vector<SoundEffect> m_sound_effects;
   float m_master_volume{DEFAULT_VOLUME};
   Game::Audio::BusLimiter m_bus_limiter;
+  Game::Audio::GameplayMix m_gameplay_mix;
+  std::atomic<Game::Audio::ListeningPreset> m_listening_preset{
+      Game::Audio::ListeningPreset::Speakers};
 
   std::atomic<std::uint32_t> m_active_channel_mask{0};
   std::array<std::atomic<int>, DEFAULT_SOUND_EFFECT_SLOTS> m_active_sfx_tracks{};
@@ -189,6 +202,9 @@ private:
 
   struct DeferredLoop {
     float volume = 1.0F;
+    float pan = 0.0F;
+    Game::Audio::MixBus mix_bus = Game::Audio::MixBus::Unmixed;
+    int priority = 0;
   };
   QHash<int, DeferredLoop> m_deferred_loops;
 

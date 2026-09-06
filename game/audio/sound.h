@@ -7,6 +7,7 @@
 #include <string>
 
 #include "audio_mastering.h"
+#include "gameplay_mix.h"
 
 class MiniaudioBackend;
 
@@ -24,7 +25,11 @@ public:
   [[nodiscard]] auto track_id() const -> const QString& { return m_track_id; }
   [[nodiscard]] auto is_registered() const -> bool;
   [[nodiscard]] auto is_playing() const -> bool;
-  void play(float volume = DEFAULT_VOLUME, bool loop = false, float pan = 0.0F);
+  void play(float volume = DEFAULT_VOLUME,
+            bool loop = false,
+            float pan = 0.0F,
+            Game::Audio::MixBus bus = Game::Audio::MixBus::Unmixed,
+            int priority = 0);
   void stop();
   void set_volume(float volume);
   void set_playing_volume(float volume, int fade_ms);

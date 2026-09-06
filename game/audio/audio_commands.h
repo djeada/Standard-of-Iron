@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "gameplay_mix.h"
+
 namespace Game::Audio {
 
 struct AudioCommand {
@@ -24,6 +26,8 @@ struct AudioCommand {
   };
 
   Type type = Type::None;
+  MixBus mix_bus = MixBus::Unmixed;
+  int priority = 0;
   bool loop = false;
   std::int16_t channel = -1;
   std::int16_t track = -1;

@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "audio_constants.h"
+#include "gameplay_mix.h"
 #include "music_transition.h"
 #include "spatial.h"
 
@@ -109,6 +110,8 @@ public:
 
   [[nodiscard]] auto is_sound_playing(const std::string& sound_id) const -> bool;
   void stop_music();
+  void set_listening_preset(int preset);
+  auto get_listening_preset() const -> int { return listening_preset.load(); }
   void set_master_volume(float volume);
   void set_sound_volume(float volume);
   void set_music_volume(float volume);
@@ -189,6 +192,7 @@ private:
   std::condition_variable queue_condition;
   std::atomic<bool> is_running;
 
+  std::atomic<int> listening_preset{1};
   std::atomic<float> master_volume;
   std::atomic<float> sound_volume;
   std::atomic<float> music_volume;

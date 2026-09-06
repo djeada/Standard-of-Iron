@@ -17,7 +17,9 @@
 #pragma pop_macro("TRUE")
 #define STB_VORBIS_INCLUDE_STB_VORBIS_H
 #include <algorithm>
+#include <array>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -27,6 +29,8 @@
 #include <vector>
 
 #include "game/audio/audio_mastering.h"
+#include "game/audio/bus_limiter.h"
+#include "game/audio/gameplay_mix.h"
 
 namespace {
 
@@ -233,17 +237,164 @@ void collect(const fs::path& root, std::vector<fs::path>& out) {
   }
 }
 
+auto mix_review(const fs::path& output_dir, bool write_audio) -> bool {
+  using namespace Game::Audio;
+  struct Layer {
+    const char* path;
+    MixBus bus;
+    float slider;
+    bool bed;
+    std::vector<float> pcm;
+  };
+  std::array<Layer, 9> layers{{
+      {"music/menu/main_theme_standard_of_iron.ogg", MixBus::Music, 0.45F, true, {}},
+      {"ambience/mediterranean_plains.ogg", MixBus::Ambience, 0.30F, true, {}},
+      {"sfx/combat/sword_hit_01.ogg", MixBus::Combat, 1.0F, false, {}},
+      {"voices/roman/archer.ogg", MixBus::Voice, 1.0F, false, {}},
+      {"sfx/ui/click_confirm.ogg", MixBus::Interface, 1.0F, false, {}},
+      {"sfx/build/construction_started.ogg", MixBus::Economy, 1.0F, false, {}},
+      {"ambience/weather_rain.ogg", MixBus::Weather, 0.30F, true, {}},
+      {"sfx/wildlife/wolf_howl_distant.ogg", MixBus::Environment, 1.0F, false, {}},
+      {"sfx/alerts/enemy_spotted_horn.ogg", MixBus::Alert, 1.0F, false, {}},
+  }};
+  for (auto& layer : layers) {
+    const fs::path path = fs::path("assets/audio") / layer.path;
+    if (!decode(path, layer.pcm)) {
+      std::fprintf(stderr, "mix review: cannot decode %s\n", path.string().c_str());
+      return false;
+    }
+    Mastering::restore(layer.pcm, CHANNELS, SAMPLE_RATE, classify(path));
+  }
+  fs::create_directories(output_dir);
+  const fs::path report_path = output_dir / "mix-review.csv";
+  std::FILE* report = std::fopen(report_path.string().c_str(), "w");
+  if (report == nullptr) {
+    return false;
+  }
+  const char* header = "preset,scene,pre_peak_dbfs,post_peak_dbfs,rms_dbfs,estimated_"
+                       "lufs,min_limiter_gain\n";
+  std::fputs(header, report);
+  std::fputs(header, stdout);
+  bool passed = true;
+  for (int preset = 0; preset < 3; ++preset) {
+    for (int scene = 0; scene < 3; ++scene) {
+      GameplayMix mix;
+      mix.prepare(SAMPLE_RATE);
+      BusLimiter limiter;
+      limiter.prepare(SAMPLE_RATE, CHANNELS);
+      limiter.set_listening_preset(preset_from_int(preset));
+      constexpr unsigned frames = SAMPLE_RATE * 8;
+      std::vector<float> pcm(frames * CHANNELS, 0.0F);
+      float pre_peak = 0.0F;
+      float min_gain = 1.0F;
+      for (unsigned frame = 0; frame < frames; ++frame) {
+        MixCounts counts{};
+        std::array<unsigned, 9> positions{};
+        std::array<unsigned, 9> instances{};
+        for (std::size_t index = 0; index < layers.size(); ++index) {
+          const auto& layer = layers[index];
+          const auto length = static_cast<unsigned>(layer.pcm.size() / CHANNELS);
+          unsigned count = 1;
+          unsigned position = frame % length;
+          if (!layer.bed) {
+            if (layer.bus == MixBus::Combat) {
+              count = scene == 0 ? 0U : (scene == 1 ? 4U : 16U);
+              position = frame % (SAMPLE_RATE / 5);
+            } else if (layer.bus == MixBus::Voice || layer.bus == MixBus::Alert) {
+              count = scene == 0 || frame < SAMPLE_RATE * 3U ? 0U : 1U;
+              position = frame >= SAMPLE_RATE * 3U ? frame - SAMPLE_RATE * 3U : 0U;
+            } else {
+              count = scene == 0 ? 0U : 1U;
+              position = frame % (SAMPLE_RATE * 2U);
+            }
+            if (position >= length) {
+              count = 0;
+            }
+          }
+          if (layer.bus == MixBus::Weather && scene == 0) {
+            count = 0;
+          }
+          counts[mix_index(layer.bus)] += count;
+          instances[index] = count;
+          positions[index] = position;
+        }
+        const bool speech = counts[mix_index(MixBus::Voice)] > 0;
+        const bool critical = speech || counts[mix_index(MixBus::Alert)] > 0;
+        mix.target(counts, speech, critical, preset_from_int(preset));
+        const auto& gains = mix.next();
+        for (std::size_t index = 0; index < layers.size(); ++index) {
+          if (instances[index] == 0) {
+            continue;
+          }
+          const auto& layer = layers[index];
+          // Worst case deliberately aligns 16 impacts and uses maximum sliders;
+          // normal/quiet use first-install sliders. This bypasses cue admission
+          // to stress the final bus even when all admitted sources correlate.
+          const float volume = (scene == 2 ? 1.0F : 0.70F * layer.slider) *
+                               float(instances[index]) * gains[mix_index(layer.bus)];
+          for (unsigned channel = 0; channel < CHANNELS; ++channel) {
+            pcm[frame * CHANNELS + channel] +=
+                layer.pcm[positions[index] * CHANNELS + channel] * volume;
+          }
+        }
+        for (unsigned channel = 0; channel < CHANNELS; ++channel) {
+          pre_peak = std::max(pre_peak, std::abs(pcm[frame * CHANNELS + channel]));
+        }
+        limiter.process(pcm.data() + frame * CHANNELS, 1);
+        min_gain = std::min(min_gain, limiter.gain());
+      }
+      const auto analysis =
+          Mastering::analyse(pcm.data(), frames, CHANNELS, SAMPLE_RATE);
+      double energy = 0.0;
+      for (const float sample : pcm) {
+        passed = passed && std::isfinite(sample) &&
+                 std::abs(sample) <= BusLimiter::GAMEPLAY_CEILING + 0.00001F;
+        energy += double(sample) * double(sample);
+      }
+      const auto db = [](double value) {
+        return 20.0 * std::log10(std::max(1e-12, value));
+      };
+      const char* preset_name =
+          preset == 0 ? "headphones" : (preset == 1 ? "speakers" : "night");
+      const char* scene_name =
+          scene == 0 ? "quiet" : (scene == 1 ? "normal" : "worst-case");
+      for (std::FILE* destination : {report, stdout}) {
+        std::fprintf(destination,
+                     "%s,%s,%.3f,%.3f,%.3f,%.3f,%.5f\n",
+                     preset_name,
+                     scene_name,
+                     db(pre_peak),
+                     db(analysis.peak),
+                     db(std::sqrt(energy / double(pcm.size()))),
+                     analysis.loudness_lufs,
+                     min_gain);
+      }
+      if (write_audio) {
+        passed = write_wav(output_dir /
+                               (std::string(preset_name) + "-" + scene_name + ".wav"),
+                           pcm) &&
+                 passed;
+      }
+    }
+  }
+  std::fclose(report);
+  return passed;
+}
+
 } // namespace
 
 auto main(int argc, char** argv) -> int {
   fs::path output_dir = "artifacts/audio_preview";
   fs::path render_target;
   bool write_audio = true;
+  bool review_mix = false;
   std::vector<fs::path> inputs;
 
   for (int i = 1; i < argc; ++i) {
     const std::string argument = argv[i];
-    if (argument == "--out" && i + 1 < argc) {
+    if (argument == "--mix-review") {
+      review_mix = true;
+    } else if (argument == "--out" && i + 1 < argc) {
       output_dir = argv[++i];
     } else if (argument == "--render" && i + 1 < argc) {
       render_target = argv[++i];
@@ -251,11 +402,14 @@ auto main(int argc, char** argv) -> int {
       write_audio = false;
     } else if (argument == "--help" || argument == "-h") {
       std::printf("usage: audio_master_preview [--out DIR] [--render FILE.wav] "
-                  "[--report-only] [files or directories]\n");
+                  "[--report-only] [--mix-review] [files or directories]\n");
       return 0;
     } else {
       inputs.emplace_back(argument);
     }
+  }
+  if (review_mix) {
+    return mix_review(output_dir, write_audio) ? 0 : 1;
   }
   if (inputs.empty()) {
     inputs.emplace_back("assets/audio");

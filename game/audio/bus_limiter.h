@@ -5,11 +5,14 @@
 #include <cstddef>
 #include <vector>
 
+#include "gameplay_mix.h"
+
 namespace Game::Audio {
 
 class BusLimiter {
 public:
   static constexpr float DEFAULT_CEILING = 0.97F;
+  static constexpr float GAMEPLAY_CEILING = 0.79F;
   static constexpr float DEFAULT_KNEE_DB = 6.0F;
   static constexpr float DEFAULT_LOOKAHEAD_MS = 3.0F;
   static constexpr float DEFAULT_RELEASE_MS = 120.0F;
@@ -43,6 +46,24 @@ public:
     m_gain = 1.0F;
   }
 
+  void set_listening_preset(ListeningPreset preset) {
+    m_ceiling = GAMEPLAY_CEILING; // -2 dBFS leaves reconstruction headroom.
+    switch (preset) {
+    case ListeningPreset::Headphones:
+      m_threshold = m_ceiling;
+      m_ratio = 1.0F;
+      break;
+    case ListeningPreset::Speakers:
+      m_threshold = 0.35F;
+      m_ratio = 2.0F;
+      break;
+    case ListeningPreset::Night:
+      m_threshold = 0.18F;
+      m_ratio = 4.0F;
+      break;
+    }
+  }
+
   [[nodiscard]] auto is_ready() const -> bool { return m_ready; }
 
   [[nodiscard]] auto gain() const -> float { return m_gain; }
@@ -67,15 +88,28 @@ public:
       }
 
       const float window_peak = std::max(m_current_block_peak, m_previous_block_peak);
-      const float target = target_gain(window_peak);
+      float target = target_gain(window_peak);
+      if (window_peak > m_threshold) {
+        const float compressed =
+            std::pow(window_peak / m_threshold, 1.0F / m_ratio - 1.0F);
+        target = std::min(target, compressed);
+      }
       const float coefficient = target < m_gain ? m_attack : m_release;
       m_gain = target + (coefficient * (m_gain - target));
 
       const std::size_t slot = m_write * channels;
+      float delayed_peak = 0.0F;
+      for (std::size_t channel = 0; channel < channels; ++channel) {
+        delayed_peak = std::max(delayed_peak, std::abs(m_delay[slot + channel]));
+      }
+      // Link the safety gain too: independently clamping L/R shifts the image.
+      const float output_gain = delayed_peak > m_ceiling
+                                    ? std::min(m_gain, m_ceiling / delayed_peak)
+                                    : m_gain;
       for (std::size_t channel = 0; channel < channels; ++channel) {
         const float delayed = m_delay[slot + channel];
         m_delay[slot + channel] = input[channel];
-        input[channel] = std::clamp(delayed * m_gain, -m_ceiling, m_ceiling);
+        input[channel] = std::clamp(delayed * output_gain, -m_ceiling, m_ceiling);
       }
       if (++m_write >= m_lookahead) {
         m_write = 0;
@@ -109,6 +143,8 @@ private:
   float m_release = 0.0F;
   float m_knee = 0.5F;
   float m_ceiling = DEFAULT_CEILING;
+  float m_threshold = DEFAULT_CEILING;
+  float m_ratio = 1.0F;
   int m_channels = MAX_CHANNELS;
   bool m_ready = false;
 };

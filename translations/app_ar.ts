@@ -9902,6 +9902,22 @@ Builders reap it for the food that recruits civilians</source>
         <source>Prompts and readouts:</source>
         <translation>التلميحات واللوحات:</translation>
     </message>
+    <message>
+        <source>Listening Preset:</source>
+        <translation>وضع الاستماع:</translation>
+    </message>
+    <message>
+        <source>Headphones</source>
+        <translation>سماعات الرأس</translation>
+    </message>
+    <message>
+        <source>Speakers</source>
+        <translation>مكبرات الصوت</translation>
+    </message>
+    <message>
+        <source>Night</source>
+        <translation>الوضع الليلي</translation>
+    </message>
 </context>
 <context>
     <name>SkirmishLoader</name>
