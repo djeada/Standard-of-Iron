@@ -10,8 +10,11 @@
 #include "systems/combat_system/combat_utils.h"
 #include "systems/combat_system/damage_application.h"
 #include "systems/combat_system/formation_contact_processor.h"
+#include "systems/default_content.h"
 #include "systems/formation_combat_geometry.h"
 #include "systems/movement_pipeline.h"
+#include "systems/nation_registry.h"
+#include "systems/nav_grid.h"
 #include "systems/troop_profile_service.h"
 
 namespace {
@@ -60,9 +63,25 @@ auto add_elephant(Engine::Core::World& world,
   return entity;
 }
 
+class FormationCombatGeometry : public ::testing::Test {
+protected:
+  static constexpr int k_map = 48;
+
+  void SetUp() override {
+    Game::Systems::NationRegistry::instance().clear();
+    Game::Systems::initialize_default_content(
+        Game::Systems::NationRegistry::instance());
+    Game::Systems::TroopProfileService::instance().clear();
+    Game::Systems::TroopProfileService::instance().prime();
+    Game::Systems::NavGrid::initialize(k_map, k_map);
+  }
+
+  void TearDown() override { Game::Systems::NationRegistry::instance().clear(); }
+};
+
 } // namespace
 
-TEST(FormationCombatGeometry, NationTroopProfileOwnsFormationShape) {
+TEST_F(FormationCombatGeometry, NationTroopProfileOwnsFormationShape) {
   Engine::Core::UnitComponent roman;
   roman.spawn_type = Game::Units::SpawnType::Spearman;
   roman.nation_id = Game::Systems::NationID::RomanRepublic;
@@ -90,7 +109,7 @@ TEST(FormationCombatGeometry, NationTroopProfileOwnsFormationShape) {
   EXPECT_EQ(carthage_definition.doctrine, "carthage");
 }
 
-TEST(FormationCombatGeometry, LargeDeepReflowRiskRaisesRouteCostClearance) {
+TEST_F(FormationCombatGeometry, LargeDeepReflowRiskRaisesRouteCostClearance) {
   Engine::Core::World world;
   auto* entity = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* unit = entity->get_component<Engine::Core::UnitComponent>();
@@ -106,7 +125,8 @@ TEST(FormationCombatGeometry, LargeDeepReflowRiskRaisesRouteCostClearance) {
   EXPECT_GT(large, small * 1.15F);
 }
 
-TEST(FormationCombatGeometry, TraversalAnchorsDriveSpatialQueriesWithoutPresentation) {
+TEST_F(FormationCombatGeometry,
+       TraversalAnchorsDriveSpatialQueriesWithoutPresentation) {
   Engine::Core::World world;
   auto* unit = add_spearmen(world, 1, 3.0F, 90.0F);
   auto const layout = Game::Systems::FormationCombat::resolve_layout(*unit);
@@ -132,7 +152,7 @@ TEST(FormationCombatGeometry, TraversalAnchorsDriveSpatialQueriesWithoutPresenta
   EXPECT_NEAR(anchors.front().world_z, 1.75F, 0.0001F);
 }
 
-TEST(FormationCombatGeometry, PresentationFactsComposeOverTraversalAnchors) {
+TEST_F(FormationCombatGeometry, PresentationFactsComposeOverTraversalAnchors) {
   Engine::Core::World world;
   auto* unit = add_spearmen(world, 1, 0.0F, 0.0F);
   auto const layout = Game::Systems::FormationCombat::resolve_layout(*unit);
@@ -163,7 +183,7 @@ TEST(FormationCombatGeometry, PresentationFactsComposeOverTraversalAnchors) {
   EXPECT_FLOAT_EQ(anchors.front().local_yaw, 31.0F);
 }
 
-TEST(FormationCombatGeometry, EngagementPairsMeasureComposedTraversalAnchors) {
+TEST_F(FormationCombatGeometry, EngagementPairsMeasureComposedTraversalAnchors) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 20.0F, 0.0F);
@@ -198,7 +218,7 @@ TEST(FormationCombatGeometry, EngagementPairsMeasureComposedTraversalAnchors) {
   EXPECT_NEAR(pair->root_distance, 0.0F, 0.0001F);
 }
 
-TEST(FormationCombatGeometry, CompactFixtureOverrideKeepsProfileFrontage) {
+TEST_F(FormationCombatGeometry, CompactFixtureOverrideKeepsProfileFrontage) {
   Engine::Core::UnitComponent unit;
   unit.spawn_type = Game::Units::SpawnType::Spearman;
   unit.nation_id = Game::Systems::NationID::RomanRepublic;
@@ -215,7 +235,7 @@ TEST(FormationCombatGeometry, CompactFixtureOverrideKeepsProfileFrontage) {
   EXPECT_EQ(definition.max_per_row, 3);
 }
 
-TEST(FormationCombatGeometry, DamageCarrierRotatesOnlyAcrossClosestContactBand) {
+TEST_F(FormationCombatGeometry, DamageCarrierRotatesOnlyAcrossClosestContactBand) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* action = attacker->add_component<Engine::Core::RpgCommanderActionComponent>();
@@ -245,7 +265,7 @@ TEST(FormationCombatGeometry, DamageCarrierRotatesOnlyAcrossClosestContactBand) 
   }
 }
 
-TEST(FormationCombatGeometry, MeleeUsesVisibleFormationContactNotEntityRange) {
+TEST_F(FormationCombatGeometry, MeleeUsesVisibleFormationContactNotEntityRange) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 3.0F, 180.0F);
@@ -268,7 +288,7 @@ TEST(FormationCombatGeometry, MeleeUsesVisibleFormationContactNotEntityRange) {
   EXPECT_TRUE(Game::Systems::Combat::is_in_range(attacker, target, 2.5F));
 }
 
-TEST(FormationCombatGeometry, ElephantChasePenetratesDeepIntoInfantryFootprint) {
+TEST_F(FormationCombatGeometry, ElephantChasePenetratesDeepIntoInfantryFootprint) {
   Engine::Core::World world;
   auto* elephant = add_elephant(world, 1, 0.0F);
   auto* infantry = add_spearmen(world, 2, 10.0F, 180.0F);
@@ -312,7 +332,7 @@ TEST(FormationCombatGeometry, ElephantChasePenetratesDeepIntoInfantryFootprint) 
   EXPECT_FALSE(elephant->get_component<Engine::Core::AttackComponent>()->in_melee_lock);
 }
 
-TEST(FormationCombatGeometry, ElephantFightStateClearsWhenOpponentIsGone) {
+TEST_F(FormationCombatGeometry, ElephantFightStateClearsWhenOpponentIsGone) {
   Engine::Core::World world;
   auto* elephant = add_elephant(world, 1, 0.0F);
   auto* infantry = add_spearmen(world, 2, 1.0F, 180.0F);
@@ -350,7 +370,7 @@ TEST(FormationCombatGeometry, ElephantFightStateClearsWhenOpponentIsGone) {
   EXPECT_FALSE(presentation->combat_active);
 }
 
-TEST(FormationCombatGeometry, DeepOverlapEngagesEveryLivingSoldier) {
+TEST_F(FormationCombatGeometry, DeepOverlapEngagesEveryLivingSoldier) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 3.0F, 180.0F);
@@ -407,7 +427,7 @@ TEST(FormationCombatGeometry, DeepOverlapEngagesEveryLivingSoldier) {
       << "a fully engaged formation should not animate as one synchronized block";
 }
 
-TEST(FormationCombatGeometry, EngagementWaitsForFormationFootprintsToMerge) {
+TEST_F(FormationCombatGeometry, EngagementWaitsForFormationFootprintsToMerge) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 6.0F, 180.0F);
@@ -433,7 +453,7 @@ TEST(FormationCombatGeometry, EngagementWaitsForFormationFootprintsToMerge) {
   EXPECT_LE(engaged.center_distance, minimum_spacing * 0.5F);
 }
 
-TEST(FormationCombatGeometry, LastLivingFormationBodyPublishesOwnedHitReaction) {
+TEST_F(FormationCombatGeometry, LastLivingFormationBodyPublishesOwnedHitReaction) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 3.0F, 180.0F);
@@ -462,7 +482,7 @@ TEST(FormationCombatGeometry, LastLivingFormationBodyPublishesOwnedHitReaction) 
   EXPECT_TRUE(presentation->allow_full_body_hit_reaction);
 }
 
-TEST(FormationCombatGeometry, PresentationPublishesStableSlotsBeforeContact) {
+TEST_F(FormationCombatGeometry, PresentationPublishesStableSlotsBeforeContact) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 6.0F, 180.0F);
@@ -483,8 +503,8 @@ TEST(FormationCombatGeometry, PresentationPublishesStableSlotsBeforeContact) {
   }
 }
 
-TEST(FormationCombatGeometry,
-     TargetDeathPublishesFollowThroughWithoutNewAttackPermission) {
+TEST_F(FormationCombatGeometry,
+       TargetDeathPublishesFollowThroughWithoutNewAttackPermission) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 3.0F, 180.0F);
@@ -572,7 +592,7 @@ TEST(CreaturePresentation, FormationAggregateHitCannotPublishAFullBodyInterrupt)
   EXPECT_FLOAT_EQ(presentation->hit_reaction_intensity, 0.0F);
 }
 
-TEST(FormationCombatGeometry, UnequalFormationsGiveEveryAttackerAnOpponentLane) {
+TEST_F(FormationCombatGeometry, UnequalFormationsGiveEveryAttackerAnOpponentLane) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 3.0F, 180.0F);
@@ -609,7 +629,7 @@ TEST(FormationCombatGeometry, UnequalFormationsGiveEveryAttackerAnOpponentLane) 
       << "opponent lanes may be shared when the target has fewer survivors";
 }
 
-TEST(FormationCombatGeometry, EngagementLeasePersistsUntilTargetDeath) {
+TEST_F(FormationCombatGeometry, EngagementLeasePersistsUntilTargetDeath) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 3.0F, 180.0F);
@@ -635,8 +655,8 @@ TEST(FormationCombatGeometry, EngagementLeasePersistsUntilTargetDeath) {
   EXPECT_FALSE(Game::Systems::Combat::is_in_range(attacker, target, 2.5F));
 }
 
-TEST(FormationCombatGeometry,
-     ReinforcementJoinsAnExistingFormationFightAtTheSharedCenter) {
+TEST_F(FormationCombatGeometry,
+       ReinforcementJoinsAnExistingFormationFightAtTheSharedCenter) {
   Engine::Core::World world;
   auto* primary = add_spearmen(world, 1, -6.0F, 0.0F);
   auto* defender = add_spearmen(world, 2, 0.0F, 180.0F);
@@ -706,7 +726,7 @@ TEST(FormationCombatGeometry,
       }));
 }
 
-TEST(FormationCombatGeometry, ChargeLockAtVisibleOverlapTransitionsToMeleeContact) {
+TEST_F(FormationCombatGeometry, ChargeLockAtVisibleOverlapTransitionsToMeleeContact) {
   Engine::Core::World world;
   auto* cavalry = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* infantry = add_spearmen(world, 2, 3.0F, 180.0F);
@@ -737,7 +757,7 @@ TEST(FormationCombatGeometry, ChargeLockAtVisibleOverlapTransitionsToMeleeContac
   EXPECT_TRUE(Game::Systems::Combat::is_in_range(cavalry, infantry, 2.5F));
 }
 
-TEST(FormationCombatGeometry, RtsMeleeLockSurvivesSeparationUntilTargetDeath) {
+TEST_F(FormationCombatGeometry, RtsMeleeLockSurvivesSeparationUntilTargetDeath) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 3.0F, 180.0F);
@@ -770,7 +790,7 @@ TEST(FormationCombatGeometry, RtsMeleeLockSurvivesSeparationUntilTargetDeath) {
   EXPECT_EQ(attack->melee_lock_target_id, 0U);
 }
 
-TEST(FormationCombatGeometry, MovementAndFacingAreFrozenDuringRtsMeleeLock) {
+TEST_F(FormationCombatGeometry, MovementAndFacingAreFrozenDuringRtsMeleeLock) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 12.0F);
   auto* target = add_spearmen(world, 2, 1.0F, 180.0F);
@@ -799,7 +819,7 @@ TEST(FormationCombatGeometry, MovementAndFacingAreFrozenDuringRtsMeleeLock) {
   EXPECT_FALSE(transform->has_desired_yaw);
 }
 
-TEST(FormationCombatGeometry, PlayerOrdersCannotCancelALiveMeleeOpponent) {
+TEST_F(FormationCombatGeometry, PlayerOrdersCannotCancelALiveMeleeOpponent) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 1.0F, 180.0F);
@@ -835,7 +855,7 @@ TEST(FormationCombatGeometry, PlayerOrdersCannotCancelALiveMeleeOpponent) {
             replacement->get_id());
 }
 
-TEST(FormationCombatGeometry, AuthoredImpactDamagesAtVisibleFormationContact) {
+TEST_F(FormationCombatGeometry, AuthoredImpactDamagesAtVisibleFormationContact) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 3.0F, 180.0F);
@@ -868,7 +888,7 @@ TEST(FormationCombatGeometry, AuthoredImpactDamagesAtVisibleFormationContact) {
   EXPECT_EQ(action->last_hit_target_id, target->get_id());
 }
 
-TEST(FormationCombatGeometry, ContactMaintenanceRunsDuringWeaponCooldown) {
+TEST_F(FormationCombatGeometry, ContactMaintenanceRunsDuringWeaponCooldown) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 3.0F, 180.0F);
@@ -894,7 +914,7 @@ TEST(FormationCombatGeometry, ContactMaintenanceRunsDuringWeaponCooldown) {
             nullptr);
 }
 
-TEST(FormationCombatGeometry, CasualtyCleanupNeverReusesADeadSoldierIdentity) {
+TEST_F(FormationCombatGeometry, CasualtyCleanupNeverReusesADeadSoldierIdentity) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 3.0F, 180.0F);
@@ -935,7 +955,7 @@ TEST(FormationCombatGeometry, CasualtyCleanupNeverReusesADeadSoldierIdentity) {
   EXPECT_GT(geometry.surface_gap, geometry.contact_tolerance);
 }
 
-TEST(FormationCombatGeometry, FormationHitDoesNotSteerTheSharedRoot) {
+TEST_F(FormationCombatGeometry, FormationHitDoesNotSteerTheSharedRoot) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 3.0F, 180.0F);
@@ -952,7 +972,7 @@ TEST(FormationCombatGeometry, FormationHitDoesNotSteerTheSharedRoot) {
   EXPECT_EQ(feedback->source_attacker_id, attacker->get_id());
 }
 
-TEST(FormationCombatGeometry, DefenderPublishesEveryIncomingMeleeFront) {
+TEST_F(FormationCombatGeometry, DefenderPublishesEveryIncomingMeleeFront) {
   Engine::Core::World world;
   auto* defender = add_spearmen(world, 2, 0.0F, 180.0F);
   auto* front_attacker = add_spearmen(world, 1, -3.0F, 0.0F);
@@ -1005,7 +1025,7 @@ TEST(FormationCombatGeometry, DefenderPublishesEveryIncomingMeleeFront) {
                           }));
 }
 
-TEST(FormationCombatGeometry, ACasualtyLeavesEverySurvivorWhereItStood) {
+TEST_F(FormationCombatGeometry, ACasualtyLeavesEverySurvivorWhereItStood) {
   Engine::Core::World world;
   auto* unit = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* stats = unit->get_component<Engine::Core::UnitComponent>();
@@ -1034,7 +1054,7 @@ TEST(FormationCombatGeometry, ACasualtyLeavesEverySurvivorWhereItStood) {
   }
 }
 
-TEST(FormationCombatGeometry, RepeatedCasualtiesNeverReorderTheSurvivingRanks) {
+TEST_F(FormationCombatGeometry, RepeatedCasualtiesNeverReorderTheSurvivingRanks) {
   Engine::Core::World world;
   auto* unit = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* stats = unit->get_component<Engine::Core::UnitComponent>();
@@ -1059,7 +1079,7 @@ TEST(FormationCombatGeometry, RepeatedCasualtiesNeverReorderTheSurvivingRanks) {
   }
 }
 
-TEST(FormationCombatGeometry, PublishedPresentationHoldsSlotsAcrossACasualty) {
+TEST_F(FormationCombatGeometry, PublishedPresentationHoldsSlotsAcrossACasualty) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 6.0F, 180.0F);
@@ -1094,7 +1114,7 @@ TEST(FormationCombatGeometry, PublishedPresentationHoldsSlotsAcrossACasualty) {
   EXPECT_EQ(fallen, 1U);
 }
 
-TEST(FormationCombatGeometry, FinalSurvivorsUseACompactCenteredLayout) {
+TEST_F(FormationCombatGeometry, FinalSurvivorsUseACompactCenteredLayout) {
   Engine::Core::World world;
   auto* unit = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* unit_stats = unit->get_component<Engine::Core::UnitComponent>();
@@ -1116,8 +1136,8 @@ TEST(FormationCombatGeometry, FinalSurvivorsUseACompactCenteredLayout) {
               layout.spacing * 0.25F);
 }
 
-TEST(FormationCombatGeometry,
-     CasualtyWithoutPresentationKeepsItsLastLivingLayoutAnchor) {
+TEST_F(FormationCombatGeometry,
+       CasualtyWithoutPresentationKeepsItsLastLivingLayoutAnchor) {
   Engine::Core::World world;
   auto* unit = add_spearmen(world, 1, 0.0F, 0.0F);
   auto const before = Game::Systems::FormationCombat::resolve_layout(*unit);
@@ -1138,7 +1158,7 @@ TEST(FormationCombatGeometry,
   EXPECT_FLOAT_EQ(casualty.local_yaw, expected.local_yaw);
 }
 
-TEST(FormationCombatGeometry, CasualtyFreezesAtItsTraversalAnchor) {
+TEST_F(FormationCombatGeometry, CasualtyFreezesAtItsTraversalAnchor) {
   Engine::Core::World world;
   auto* unit = add_spearmen(world, 1, 0.0F, 0.0F);
   auto const before = Game::Systems::FormationCombat::resolve_layout(*unit);
@@ -1182,7 +1202,7 @@ namespace {
 
 } // namespace
 
-TEST(FormationCombatGeometry, SoldiersWalkIntoContactInsteadOfSnapping) {
+TEST_F(FormationCombatGeometry, SoldiersWalkIntoContactInsteadOfSnapping) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 6.0F, 180.0F);
@@ -1228,7 +1248,7 @@ TEST(FormationCombatGeometry, SoldiersWalkIntoContactInsteadOfSnapping) {
       << "the rate limit slows the step into contact; it must not cancel it";
 }
 
-TEST(FormationCombatGeometry, ACasualtyFallsWhereItFought) {
+TEST_F(FormationCombatGeometry, ACasualtyFallsWhereItFought) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 3.0F, 180.0F);
