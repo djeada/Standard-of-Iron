@@ -250,14 +250,6 @@
         <translation>Select a barracks before setting a rally point</translation>
     </message>
     <message>
-        <source>RECRUIT UNITS</source>
-        <translation>RECRUIT UNITS</translation>
-    </message>
-    <message>
-        <source>Scroll for more</source>
-        <translation>Scroll for more</translation>
-    </message>
-    <message>
         <source>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</source>
         <translation>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</translation>
     </message>
@@ -8012,8 +8004,12 @@ to see preview</translation>
         <translation>That target is already gone.</translation>
     </message>
     <message>
-        <source>Cannot attack a friendly or neutral target.</source>
-        <translation>Cannot attack a friendly or neutral target.</translation>
+        <source>Cannot attack your own or an allied unit.</source>
+        <translation>Cannot attack your own or an allied unit.</translation>
+    </message>
+    <message>
+        <source>That target is not a threat.</source>
+        <translation>That target is not a threat.</translation>
     </message>
     <message>
         <source>That building no longer exists.</source>

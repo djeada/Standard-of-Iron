@@ -38,19 +38,31 @@ guarantees:
 - `is_troop_spawn` excludes both wildlife spawn types, so population counts, victory
   conditions and formation code ignore them.
 
-Neutrality decides who may be shot at, not what an animal _is_ to the combat code. An
-animal is an ordinary enemy of every owner (`is_valid_enemy_unit`), which is what makes an
-ordered hunt land, lets a wolf's bite provoke the retaliation every other hit provokes, and
-lets a soldier's swing connect with the wolf that is chewing on him. Civilians are the one
+Neutrality decides nothing about who may be shot at. That question has one answer,
+`Combat::evaluate_target` — see the target-validation section of
+[COMBAT_SYSTEM.md](COMBAT_SYSTEM.md) — and the only input it takes about an animal is
+whether the animal is currently in a fight, never who owns it. An animal is an ordinary
+enemy of every owner under `EngagementIntent::Ordered`, which is what makes an ordered hunt
+land, lets a wolf's bite provoke the retaliation every other hit provokes, and lets a
+soldier's swing connect with the wolf that is chewing on him. Civilians are the one
 exception: they never take a retaliation target, so a bitten villager runs instead of
-turning to fight — see [SETTLEMENT_LIFE.md](SETTLEMENT_LIFE.md). What neutrality buys
-is the second predicate, `is_auto_acquirable_enemy`: **passive** wildlife — every sheep, and
-any wolf that is not currently in a fight — is skipped by everything that picks a target on
-its own, so troops march past a herd, guard mode ignores it, towers do not waste bolts on
-it and the attack cursor does not paint a marker over every animal on the map. A wolf that
-has committed to a person, or that has been hit by one, carries `hostile_timer` for a few
-seconds; while it burns, that wolf is a target troops will take on their own initiative,
-which is what turns a pack rush into a fight instead of a massacre.
+turning to fight — see [SETTLEMENT_LIFE.md](SETTLEMENT_LIFE.md).
+
+The protection animals do get is `EngagementIntent::AutoAcquired`: **passive** wildlife —
+every sheep, and any wolf that is not currently in a fight — is refused to everything that
+picks a target on its own, so troops march past a herd, guard mode ignores it, towers do
+not waste bolts on it, the attack cursor does not paint a marker over every animal on the
+map, a right-click on a sheep is a move order rather than a hunt, and the faction AI never
+sees one in its threat list. A wolf that has committed to a person, or that has been hit by
+one, carries `hostile_timer` for a few seconds; while it burns, that wolf is a target
+troops will take on their own initiative, which is what turns a pack rush into a fight
+instead of a massacre — and it is equally a legal target for an explicit attack order, for
+retaliation and for the AI, because all four ask the same function.
+
+Getting that wrong is what issue #1414 was: the command validator asked `are_enemies`,
+a diplomacy question that is false for every neutral owner, and refused an attack order on
+a wolf that was mid-bite with "cannot attack a friendly or neutral target" — while the
+combat code the order would have fed was perfectly willing to swing at it.
 
 The retaliation hook is the one place where wildlife takes a different path from a troop:
 `assign_retaliation_target_if_needed` records the attacker in `WildlifeComponent`

@@ -4,6 +4,7 @@
 
 #include "app/orders/command_controller.h"
 #include "game/core/component_economy.h"
+#include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/picking_service.h"
@@ -11,6 +12,7 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/selection_system.h"
+#include "game/wildlife/wildlife_species.h"
 #include "scene/camera.h"
 
 namespace {
@@ -60,6 +62,25 @@ protected:
     unit->owner_id = owner_id;
     unit->spawn_type = spawn_type;
     unit->speed = 3.0F;
+    return entity;
+  }
+
+  auto create_animal(float x,
+                     float z,
+                     Game::Wildlife::Species species,
+                     bool hostile) -> Engine::Core::Entity* {
+    auto* entity = create_unit(x,
+                               z,
+                               Game::Core::NEUTRAL_OWNER_ID,
+                               species == Game::Wildlife::Species::Wolf
+                                   ? Game::Units::SpawnType::Wolf
+                                   : Game::Units::SpawnType::Sheep);
+    if (entity == nullptr) {
+      return nullptr;
+    }
+    auto* wildlife = entity->add_component<Engine::Core::WildlifeComponent>();
+    wildlife->species = species;
+    wildlife->hostile_timer = hostile ? 4.0F : 0.0F;
     return entity;
   }
 
@@ -373,6 +394,126 @@ TEST_F(CommandControllerTest, RightClickOnEnemyAttacksTheClickedTarget) {
   EXPECT_EQ(target->target_id, enemy->get_id());
   ASSERT_EQ(seen.size(), 1U);
   EXPECT_EQ(seen.front().kind, App::Core::OrderKind::Attack);
+}
+
+TEST_F(CommandControllerTest, RightClickOnAHostileWolfAttacksIt) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* wolf = create_animal(0.0F, 0.0F, Game::Wildlife::Species::Wolf, true);
+  ASSERT_NE(archer, nullptr);
+  ASSERT_NE(wolf, nullptr);
+  selection_system->select_unit(archer->get_id());
+
+  QPointF const wolf_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  auto const result = command_controller->on_move_or_attack_click(
+      wolf_screen.x(), wolf_screen.y(), viewport_width, viewport_height, &camera, 1);
+
+  EXPECT_TRUE(result.order.accepted());
+  EXPECT_EQ(result.order.kind, App::Core::OrderKind::Attack);
+  EXPECT_EQ(result.order.target, wolf->get_id());
+  auto* target = archer->get_component<Engine::Core::AttackTargetComponent>();
+  ASSERT_NE(target, nullptr);
+  EXPECT_EQ(target->target_id, wolf->get_id());
+}
+
+TEST_F(CommandControllerTest, RightClickOnAGrazingSheepIsAMoveOrder) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* sheep = create_animal(0.0F, 0.0F, Game::Wildlife::Species::Sheep, false);
+  ASSERT_NE(archer, nullptr);
+  ASSERT_NE(sheep, nullptr);
+  selection_system->select_unit(archer->get_id());
+
+  QPointF const sheep_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  auto const result = command_controller->on_move_or_attack_click(
+      sheep_screen.x(), sheep_screen.y(), viewport_width, viewport_height, &camera, 1);
+
+  EXPECT_TRUE(result.order.accepted());
+  EXPECT_EQ(result.order.kind, App::Core::OrderKind::Move);
+  EXPECT_EQ(archer->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+}
+
+TEST_F(CommandControllerTest, AttackClickOnAGrazingSheepStillHunts) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* sheep = create_animal(0.0F, 0.0F, Game::Wildlife::Species::Sheep, false);
+  ASSERT_NE(archer, nullptr);
+  ASSERT_NE(sheep, nullptr);
+  selection_system->select_unit(archer->get_id());
+
+  QPointF const sheep_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  auto const result = command_controller->on_attack_click(
+      sheep_screen.x(), sheep_screen.y(), viewport_width, viewport_height, &camera);
+
+  EXPECT_TRUE(result.order.accepted()) << result.order.reason.toStdString();
+  auto* target = archer->get_component<Engine::Core::AttackTargetComponent>();
+  ASSERT_NE(target, nullptr);
+  EXPECT_EQ(target->target_id, sheep->get_id());
+}
+
+TEST_F(CommandControllerTest, RightClickOnOneOfYourOwnUnitsIsAMoveOrder) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* comrade = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Knight);
+  ASSERT_NE(archer, nullptr);
+  ASSERT_NE(comrade, nullptr);
+  selection_system->select_unit(archer->get_id());
+
+  QPointF const comrade_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  auto const result = command_controller->on_move_or_attack_click(comrade_screen.x(),
+                                                                  comrade_screen.y(),
+                                                                  viewport_width,
+                                                                  viewport_height,
+                                                                  &camera,
+                                                                  1);
+
+  EXPECT_TRUE(result.order.accepted()) << result.order.reason.toStdString();
+  EXPECT_EQ(result.order.kind, App::Core::OrderKind::Move);
+  EXPECT_EQ(archer->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+}
+
+TEST_F(CommandControllerTest, ChainingMoveAndAttackLeavesExactlyOneLiveOrder) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* first = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* second = create_unit(3.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(archer, nullptr);
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+  selection_system->select_unit(archer->get_id());
+
+  const auto right_click = [&](const QVector3D& at) {
+    const QPointF screen = world_to_screen(at);
+    return command_controller->on_move_or_attack_click(
+        screen.x(), screen.y(), viewport_width, viewport_height, &camera, 1);
+  };
+
+  auto move = right_click(QVector3D(-6.0F, 0.0F, 4.0F));
+  ASSERT_TRUE(move.order.accepted()) << move.order.reason.toStdString();
+  EXPECT_EQ(move.order.kind, App::Core::OrderKind::Move);
+  auto* movement = archer->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  EXPECT_TRUE(movement->get_has_target());
+  EXPECT_EQ(archer->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+
+  auto attack = right_click(QVector3D(0.0F, 0.0F, 0.0F));
+  ASSERT_TRUE(attack.order.accepted()) << attack.order.reason.toStdString();
+  EXPECT_EQ(attack.order.kind, App::Core::OrderKind::Attack);
+  auto* target = archer->get_component<Engine::Core::AttackTargetComponent>();
+  ASSERT_NE(target, nullptr);
+  EXPECT_EQ(target->target_id, first->get_id());
+  EXPECT_TRUE(target->is_player_command);
+
+  auto retarget = right_click(QVector3D(3.0F, 0.0F, 0.0F));
+  ASSERT_TRUE(retarget.order.accepted()) << retarget.order.reason.toStdString();
+  target = archer->get_component<Engine::Core::AttackTargetComponent>();
+  ASSERT_NE(target, nullptr);
+  EXPECT_EQ(target->target_id, second->get_id());
+
+  auto move_again = right_click(QVector3D(-6.0F, 0.0F, 4.0F));
+  ASSERT_TRUE(move_again.order.accepted()) << move_again.order.reason.toStdString();
+  EXPECT_EQ(move_again.order.kind, App::Core::OrderKind::Move);
+  EXPECT_EQ(archer->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+
+  auto const stopped = command_controller->on_stop_command();
+  EXPECT_TRUE(stopped.order.accepted());
+  EXPECT_EQ(archer->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+  EXPECT_FALSE(movement->get_has_target());
 }
 
 TEST_F(CommandControllerTest, RightClickOnGroundReportsTheDestination) {

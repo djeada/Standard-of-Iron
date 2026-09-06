@@ -19,6 +19,7 @@
 #include "../../core/world.h"
 #include "../combat_rules.h"
 #include "../combat_system/combat_utils.h"
+#include "../combat_system/target_rules.h"
 #include "../rpg_combat_system/rpg_targeting.h"
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_playback.h"
@@ -1025,7 +1026,11 @@ auto find_weapon_trace_contact(
                       float& best_score,
                       WeaponTraceContact& best_contact) {
     if (candidate == nullptr || candidate == &attacker ||
-        !Game::Systems::Combat::is_valid_enemy_unit(attacker_unit, candidate, false)) {
+        !Game::Systems::Combat::may_attack(
+            attacker_unit,
+            candidate,
+            {.intent = Game::Systems::Combat::EngagementIntent::Ordered,
+             .allow_buildings = false})) {
       return;
     }
     if (std::find(ignored_target_ids.begin(),
@@ -1115,7 +1120,11 @@ auto find_weapon_trace_contact(
                       float& best_score,
                       WeaponTraceContact& best_contact) {
     if (candidate == nullptr || candidate == &attacker ||
-        !Game::Systems::Combat::is_valid_enemy_unit(attacker_unit, candidate, false)) {
+        !Game::Systems::Combat::may_attack(
+            attacker_unit,
+            candidate,
+            {.intent = Game::Systems::Combat::EngagementIntent::Ordered,
+             .allow_buildings = false})) {
       return;
     }
     if (std::find(ignored_target_ids.begin(),

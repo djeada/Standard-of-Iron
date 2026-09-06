@@ -7,6 +7,7 @@
 #include "game/command/command_queue.h"
 #include "game/command/command_validator.h"
 #include "game/core/component_economy.h"
+#include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
@@ -20,6 +21,7 @@
 #include "game/systems/structure_placement_service.h"
 #include "game/systems/wall_plan_service.h"
 #include "game/units/spawn_type.h"
+#include "game/wildlife/wildlife_species.h"
 
 namespace {
 
@@ -49,6 +51,19 @@ struct Match {
     owners.set_owner_team(2, 2);
   }
 
+  auto spawn_wildlife(Game::Wildlife::Species species,
+                      float x,
+                      float z,
+                      bool hostile) -> EntityID {
+    const EntityID id = spawn(Game::Core::NEUTRAL_OWNER_ID, x, z);
+    auto* wildlife = session.world()
+                         .get_entity(id)
+                         ->add_component<Engine::Core::WildlifeComponent>();
+    wildlife->species = species;
+    wildlife->hostile_timer = hostile ? 4.0F : 0.0F;
+    return id;
+  }
+
   auto spawn(int owner_id, float x, float z) -> EntityID {
     auto* entity = session.world().create_entity();
     auto* transform = entity->add_component<Engine::Core::TransformComponent>();
@@ -58,6 +73,18 @@ struct Match {
         entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 5.0F);
     unit->owner_id = owner_id;
     return entity->get_id();
+  }
+
+  auto spawn_typed(int owner_id,
+                   float x,
+                   float z,
+                   Game::Units::SpawnType spawn_type) -> EntityID {
+    const EntityID id = spawn(owner_id, x, z);
+    session.world()
+        .get_entity(id)
+        ->get_component<Engine::Core::UnitComponent>()
+        ->spawn_type = spawn_type;
+    return id;
   }
 
   SessionContext session;
@@ -145,6 +172,104 @@ TEST(CommandValidatorTest, RefusesToAttackAnAlly) {
 
   EXPECT_FALSE(validation.accepted());
   EXPECT_EQ(validation.rejection, Rejection::FriendlyTarget);
+}
+
+TEST(CommandValidatorTest, PlayerMayOrderAnAttackOnAHostileWolf) {
+  Match match;
+  const EntityID mine = match.spawn(1, 0.0F, 0.0F);
+  const EntityID wolf =
+      match.spawn_wildlife(Game::Wildlife::Species::Wolf, 3.0F, 0.0F, true);
+
+  const auto validation = Game::Command::validate(
+      match.session.world(),
+      Command{.source = Source::LocalPlayer,
+              .owner_id = 1,
+              .payload = Game::Command::AttackTarget{.units = {mine}, .target = wolf}});
+
+  EXPECT_TRUE(validation.accepted())
+      << Game::Command::rejection_name(validation.rejection);
+}
+
+TEST(CommandValidatorTest, PlayerMayOrderAHuntOnAPassiveAnimal) {
+  Match match;
+  const EntityID mine = match.spawn(1, 0.0F, 0.0F);
+  const EntityID sheep =
+      match.spawn_wildlife(Game::Wildlife::Species::Sheep, 3.0F, 0.0F, false);
+
+  const auto validation =
+      Game::Command::validate(match.session.world(),
+                              Command{.source = Source::LocalPlayer,
+                                      .owner_id = 1,
+                                      .payload = Game::Command::AttackTarget{
+                                          .units = {mine}, .target = sheep}});
+
+  EXPECT_TRUE(validation.accepted())
+      << Game::Command::rejection_name(validation.rejection);
+}
+
+TEST(CommandValidatorTest, AiMayNotOrderAnAttackOnAPassiveAnimal) {
+  Match match;
+  const EntityID theirs = match.spawn(2, 0.0F, 0.0F);
+  const EntityID sheep =
+      match.spawn_wildlife(Game::Wildlife::Species::Sheep, 3.0F, 0.0F, false);
+
+  const auto validation =
+      Game::Command::validate(match.session.world(),
+                              Command{.source = Source::AI,
+                                      .owner_id = 2,
+                                      .payload = Game::Command::AttackTarget{
+                                          .units = {theirs}, .target = sheep}});
+
+  EXPECT_FALSE(validation.accepted());
+  EXPECT_EQ(validation.rejection, Rejection::ProtectedTarget);
+}
+
+TEST(CommandValidatorTest, AiMayOrderAnAttackOnAWolfThatIsAlreadyFighting) {
+  Match match;
+  const EntityID theirs = match.spawn(2, 0.0F, 0.0F);
+  const EntityID wolf =
+      match.spawn_wildlife(Game::Wildlife::Species::Wolf, 3.0F, 0.0F, true);
+
+  const auto validation =
+      Game::Command::validate(match.session.world(),
+                              Command{.source = Source::AI,
+                                      .owner_id = 2,
+                                      .payload = Game::Command::AttackTarget{
+                                          .units = {theirs}, .target = wolf}});
+
+  EXPECT_TRUE(validation.accepted())
+      << Game::Command::rejection_name(validation.rejection);
+}
+
+TEST(CommandValidatorTest, AttackOrdersDropSubjectsThatCannotFightWhoeverAsked) {
+  Match match;
+  const EntityID archer = match.spawn(1, 0.0F, 0.0F);
+  const EntityID builder =
+      match.spawn_typed(1, 1.0F, 0.0F, Game::Units::SpawnType::Builder);
+  const EntityID enemy = match.spawn(2, 5.0F, 5.0F);
+
+  for (const auto source : {Source::LocalPlayer, Source::AI}) {
+    auto validation = Game::Command::validate(
+        match.session.world(),
+        Command{.source = source,
+                .owner_id = 1,
+                .payload = Game::Command::AttackTarget{.units = {archer, builder},
+                                                       .target = enemy}});
+    ASSERT_TRUE(validation.accepted())
+        << Game::Command::rejection_name(validation.rejection);
+    const auto& attack =
+        std::get<Game::Command::AttackTarget>(validation.command.payload);
+    EXPECT_EQ(attack.units, std::vector<EntityID>{archer});
+  }
+
+  const auto builders_only =
+      Game::Command::validate(match.session.world(),
+                              Command{.source = Source::AI,
+                                      .owner_id = 1,
+                                      .payload = Game::Command::AttackTarget{
+                                          .units = {builder}, .target = enemy}});
+  EXPECT_FALSE(builders_only.accepted());
+  EXPECT_EQ(builders_only.rejection, Rejection::NoSubjects);
 }
 
 TEST(CommandValidatorTest, RefusesToAttackAHandleThatNoLongerResolves) {

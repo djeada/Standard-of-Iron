@@ -5,7 +5,9 @@
 #include "../core/component_commander.h"
 #include "../core/world.h"
 #include "../session/session_context.h"
+#include "../systems/combat_system/target_rules.h"
 #include "../systems/owner_registry.h"
+#include "../units/spawn_type.h"
 
 namespace Game::Command {
 
@@ -78,22 +80,52 @@ auto validate_move(Engine::Core::World& world,
   return Rejection::None;
 }
 
+auto intent_for(Source source) -> Game::Systems::Combat::EngagementIntent {
+  return source == Source::AI ? Game::Systems::Combat::EngagementIntent::AutoAcquired
+                              : Game::Systems::Combat::EngagementIntent::Ordered;
+}
+
 auto validate_attack(Engine::Core::World& world,
                      int owner_id,
+                     Source source,
                      AttackTarget& payload) -> Rejection {
-  auto* target = world.get_entity(payload.target);
-  if (target == nullptr) {
+  using Game::Systems::Combat::TargetRefusal;
+
+  const auto ruling = Game::Systems::Combat::evaluate_target(
+      owners_for(world),
+      owner_id,
+      world.get_entity(payload.target),
+      {.intent = intent_for(source), .allow_buildings = true});
+
+  switch (ruling) {
+  case TargetRefusal::None:
+    break;
+  case TargetRefusal::NoTarget:
     return Rejection::DeadTarget;
-  }
-  const auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
-  if (target_unit == nullptr || target_unit->health <= 0) {
-    return Rejection::DeadTarget;
-  }
-  if (!owners_for(world).are_enemies(owner_id, target_unit->owner_id)) {
+  case TargetRefusal::SelfOrAllied:
     return Rejection::FriendlyTarget;
+  case TargetRefusal::Passive:
+  case TargetRefusal::Structure:
+    return Rejection::ProtectedTarget;
   }
-  return filter_subjects(world, owner_id, payload.units) ? Rejection::None
-                                                         : Rejection::NoSubjects;
+
+  auto& units = payload.units;
+  units.erase(
+      std::remove_if(units.begin(),
+                     units.end(),
+                     [&](Engine::Core::EntityID id) {
+                       auto* entity = world.get_entity(id);
+                       const auto* unit =
+                           entity != nullptr
+                               ? entity->get_component<Engine::Core::UnitComponent>()
+                               : nullptr;
+                       return unit == nullptr ||
+                              !Game::Units::can_use_attack_mode(unit->spawn_type);
+                     }),
+      units.end());
+
+  return filter_subjects(world, owner_id, units) ? Rejection::None
+                                                 : Rejection::NoSubjects;
 }
 
 auto validate_building_order(Engine::Core::World& world,
@@ -127,6 +159,8 @@ auto rejection_name(Rejection rejection) -> const char* {
     return "missing-building";
   case Rejection::NotOwnedBuilding:
     return "not-owned-building";
+  case Rejection::ProtectedTarget:
+    return "protected-target";
   case Rejection::NotPermittedForSource:
     return "not-permitted-for-source";
   case Rejection::MalformedPayload:
@@ -159,7 +193,7 @@ auto validate(Engine::Core::World& world, const Command& command) -> Validation 
         if constexpr (std::is_same_v<T, Move>) {
           return validate_move(world, owner_id, payload);
         } else if constexpr (std::is_same_v<T, AttackTarget>) {
-          return validate_attack(world, owner_id, payload);
+          return validate_attack(world, owner_id, command.source, payload);
         } else if constexpr (std::is_same_v<T, SetRallyPoint> ||
                              std::is_same_v<T, Produce>) {
           return validate_building_order(world, owner_id, payload.building);

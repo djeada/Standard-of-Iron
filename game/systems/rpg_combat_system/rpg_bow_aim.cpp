@@ -10,6 +10,7 @@
 #include "../../map/terrain_service.h"
 #include "../building_line_of_sight.h"
 #include "../combat_system/combat_utils.h"
+#include "../combat_system/target_rules.h"
 
 namespace Game::Systems::RpgCombat {
 
@@ -276,7 +277,11 @@ auto raycast_enemy_bodies(Engine::Core::World& world,
     (void)candidate_unit;
     Engine::Core::Entity* candidate = &candidate_ref;
     if (candidate == &commander ||
-        !Game::Systems::Combat::is_valid_enemy_unit(commander_unit, candidate, false)) {
+        !Game::Systems::Combat::may_attack(
+            commander_unit,
+            candidate,
+            {.intent = Game::Systems::Combat::EngagementIntent::Ordered,
+             .allow_buildings = false})) {
       continue;
     }
 

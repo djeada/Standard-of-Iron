@@ -33,6 +33,7 @@
 #include "game/systems/combat_system/damage_application.h"
 #include "game/systems/combat_system/damage_processor.h"
 #include "game/systems/combat_system/mounted_charge_processor.h"
+#include "game/systems/combat_system/target_rules.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
@@ -868,10 +869,15 @@ void CommanderControlController::cycle_lock_on_target(
     }
     auto* u = candidate->get_component<Engine::Core::UnitComponent>();
     auto* t = candidate->get_component<Engine::Core::TransformComponent>();
-    if (u == nullptr || t == nullptr || u->health <= 0) {
+    if (u == nullptr || t == nullptr) {
       continue;
     }
-    if (!owners.are_enemies(local_owner_id, u->owner_id)) {
+    if (Game::Systems::Combat::evaluate_target(
+            owners,
+            local_owner_id,
+            candidate,
+            {.intent = Game::Systems::Combat::EngagementIntent::AutoAcquired,
+             .allow_buildings = true}) != Game::Systems::Combat::TargetRefusal::None) {
       continue;
     }
     std::optional<Candidate> best_soldier;
@@ -1420,9 +1426,13 @@ auto CommanderControlController::find_primary_target(
     auto* unit = entity != nullptr
                      ? entity->get_component<Engine::Core::UnitComponent>()
                      : nullptr;
-    if (entity == nullptr || unit == nullptr || unit->health <= 0 ||
-        entity->has_component<Engine::Core::BuildingComponent>() ||
-        !owners.are_enemies(local_owner_id, unit->owner_id)) {
+    if (entity == nullptr || unit == nullptr ||
+        Game::Systems::Combat::evaluate_target(
+            owners,
+            local_owner_id,
+            entity,
+            {.intent = Game::Systems::Combat::EngagementIntent::AutoAcquired,
+             .allow_buildings = false}) != Game::Systems::Combat::TargetRefusal::None) {
       return {};
     }
     return Game::Systems::RpgCombat::live_soldier_targets(*entity);

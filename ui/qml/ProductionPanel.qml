@@ -344,7 +344,7 @@ Rectangle {
     function recruit_card_color(enabled, hovered) {
         if (!enabled)
             return Theme.bgShade;
-        return hovered ? hs.bannerNeutral : hs.parchmentDark;
+        return hovered ? Qt.lighter(hs.parchmentLight, 1.3) : hs.parchmentLight;
     }
 
     function recruit_card_border(enabled, hovered) {

@@ -253,14 +253,6 @@
         <source>Select a barracks before setting a rally point</source>
         <translation>Zaznacz koszary, zanim wyznaczysz punkt zbiórki</translation>
     </message>
-    <message>
-        <source>RECRUIT UNITS</source>
-        <translation>REKRUTUJ JEDNOSTKI</translation>
-    </message>
-    <message>
-        <source>Scroll for more</source>
-        <translation>Przewiń, by zobaczyć więcej</translation>
-    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -8019,8 +8011,12 @@ by zobaczyć podgląd</translation>
         <translation>Tego celu już nie ma.</translation>
     </message>
     <message>
-        <source>Cannot attack a friendly or neutral target.</source>
-        <translation>Nie można zaatakować celu sojuszniczego ani neutralnego.</translation>
+        <source>Cannot attack your own or an allied unit.</source>
+        <translation>Nie można zaatakować własnej ani sojuszniczej jednostki.</translation>
+    </message>
+    <message>
+        <source>That target is not a threat.</source>
+        <translation>Ten cel nie stanowi zagrożenia.</translation>
     </message>
     <message>
         <source>That building no longer exists.</source>

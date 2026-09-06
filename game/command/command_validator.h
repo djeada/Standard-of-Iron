@@ -16,6 +16,7 @@ enum class Rejection : std::uint8_t {
   NoSubjects,
   DeadTarget,
   FriendlyTarget,
+  ProtectedTarget,
   MissingBuilding,
   NotOwnedBuilding,
   NotPermittedForSource,

@@ -34,6 +34,7 @@
 #include "systems/combat_system/damage_processor.h"
 #include "systems/combat_system/mounted_charge_processor.h"
 #include "systems/combat_system/spear_brace_processor.h"
+#include "systems/combat_system/target_rules.h"
 #include "systems/command_service.h"
 #include "systems/formation_combat_geometry.h"
 #include "systems/healing_system.h"
@@ -912,10 +913,16 @@ TEST_F(CombatModeTest, EnemyValidityHelperAllowsBuildingsOnlyWhenRequested) {
   building_unit->owner_id = 2;
   building->add_component<BuildingComponent>();
 
-  EXPECT_FALSE(
-      Game::Systems::Combat::is_valid_enemy_unit(attacker_unit, building, false));
-  EXPECT_TRUE(
-      Game::Systems::Combat::is_valid_enemy_unit(attacker_unit, building, true));
+  EXPECT_FALSE(Game::Systems::Combat::may_attack(
+      attacker_unit,
+      building,
+      {.intent = Game::Systems::Combat::EngagementIntent::Ordered,
+       .allow_buildings = false}));
+  EXPECT_TRUE(Game::Systems::Combat::may_attack(
+      attacker_unit,
+      building,
+      {.intent = Game::Systems::Combat::EngagementIntent::Ordered,
+       .allow_buildings = true}));
 }
 
 TEST_F(CombatModeTest, OnlyHostileWildlifeIsAcquiredWithoutAnOrder) {
@@ -937,12 +944,26 @@ TEST_F(CombatModeTest, OnlyHostileWildlifeIsAcquiredWithoutAnOrder) {
   auto* wolf_state = wolf->add_component<WildlifeComponent>();
   wolf_state->species = Game::Wildlife::Species::Wolf;
 
-  EXPECT_TRUE(Game::Systems::Combat::is_valid_enemy_unit(attacker_unit, sheep, false));
-  EXPECT_TRUE(Game::Systems::Combat::is_valid_enemy_unit(attacker_unit, wolf, false));
-  EXPECT_FALSE(
-      Game::Systems::Combat::is_auto_acquirable_enemy(attacker_unit, sheep, false));
-  EXPECT_FALSE(
-      Game::Systems::Combat::is_auto_acquirable_enemy(attacker_unit, wolf, false));
+  EXPECT_TRUE(Game::Systems::Combat::may_attack(
+      attacker_unit,
+      sheep,
+      {.intent = Game::Systems::Combat::EngagementIntent::Ordered,
+       .allow_buildings = false}));
+  EXPECT_TRUE(Game::Systems::Combat::may_attack(
+      attacker_unit,
+      wolf,
+      {.intent = Game::Systems::Combat::EngagementIntent::Ordered,
+       .allow_buildings = false}));
+  EXPECT_FALSE(Game::Systems::Combat::may_attack(
+      attacker_unit,
+      sheep,
+      {.intent = Game::Systems::Combat::EngagementIntent::AutoAcquired,
+       .allow_buildings = false}));
+  EXPECT_FALSE(Game::Systems::Combat::may_attack(
+      attacker_unit,
+      wolf,
+      {.intent = Game::Systems::Combat::EngagementIntent::AutoAcquired,
+       .allow_buildings = false}));
 
   {
     auto const query_context =
@@ -952,8 +973,11 @@ TEST_F(CombatModeTest, OnlyHostileWildlifeIsAcquiredWithoutAnOrder) {
   }
 
   wolf_state->hostile_timer = 5.0F;
-  EXPECT_TRUE(
-      Game::Systems::Combat::is_auto_acquirable_enemy(attacker_unit, wolf, false));
+  EXPECT_TRUE(Game::Systems::Combat::may_attack(
+      attacker_unit,
+      wolf,
+      {.intent = Game::Systems::Combat::EngagementIntent::AutoAcquired,
+       .allow_buildings = false}));
 
   auto const query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());

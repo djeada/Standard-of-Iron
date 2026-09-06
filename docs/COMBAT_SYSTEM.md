@@ -79,24 +79,90 @@ Using the shared context:
 
 ## Target Validation
 
-All combat behaviors that select or damage targets should use the shared validation helper:
+There is exactly one answer to "may this owner attack that entity", and it lives in
+`game/systems/combat_system/target_rules.h`:
 
 ```cpp
-Combat::is_valid_enemy_unit(attacker_unit, target, allow_buildings)
+Combat::evaluate_target(owners, attacker_owner_id, target, {intent, allow_buildings})
 ```
 
-This helper rejects targets that are:
+It returns a `TargetRefusal` rather than a bool, so every caller can say _why_ a target was
+turned down instead of inventing its own wording:
 
-- null;
-- pending removal;
-- dead or missing a `UnitComponent`;
-- owned by the attacker;
-- owned by an allied player according to `OwnerRegistry`;
-- buildings when `allow_buildings == false`.
+| `TargetRefusal` | meaning                                                                  |
+| --------------- | ------------------------------------------------------------------------ |
+| `None`          | the target may be attacked                                               |
+| `NoTarget`      | null, pending removal, dead, or not a combat entity at all               |
+| `SelfOrAllied`  | the attacker's own unit, or an ally by team according to `OwnerRegistry` |
+| `Passive`       | a neutral animal that is not in a fight — see below                      |
+| `Structure`     | a building, for a query that passed `allow_buildings == false`           |
 
-Avoid implementing direct owner checks in individual combat processors. Team and alliance rules are easy to handle incorrectly when duplicated.
+`intent` is the only knob, and it decides one thing: what happens to a neutral animal
+minding its own business.
 
-`is_valid_enemy_of_owner` is the same rule set keyed on an owner id instead of an attacker component, for callers that have a player but no attacking unit — the attack-mode target highlighting uses it.
+- `EngagementIntent::Ordered` — somebody deliberately named this target. Anything that is
+  not the attacker's own or an ally's is fair game, wildlife included, because an ordered
+  hunt has to land (see [AMBIENT_WILDLIFE.md](AMBIENT_WILDLIFE.md)).
+- `EngagementIntent::AutoAcquired` — the game picked the target itself: opportunistic
+  combat, guard mode, tower fire, the attack-cursor markers, the right-click context
+  action, the AI's threat scan. Passive wildlife is refused, so a column marches past a
+  herd instead of butchering it and a right-click on a sheep is a move order, not a hunt.
+
+Diplomacy neutrality and gameplay hostility are deliberately separate questions. `owner_id
+== NEUTRAL_OWNER_ID` decides vision, population and victory; it never decides who may be
+shot at. That separation is what makes a wolf mid-attack a legal target for an explicit
+order, for retaliation, for auto-acquisition and for the AI at the same time — one rule,
+four callers, no drift.
+
+`Combat::may_attack` is the same function with the refusal collapsed to a bool, for the
+callers that only need yes or no. It takes the attacker as a `UnitComponent*`, an owner id,
+or an owner id plus the registry to ask — but the `TargetQuery` is always spelled out at the
+call site. That is deliberate. This file used to carry five predicates —
+`is_valid_enemy_unit`, `is_valid_enemy_of_owner`, `is_passive_wildlife`,
+`is_auto_acquirable_enemy`, `is_auto_acquirable_enemy_of_owner` — where the _name_ decided
+the intent, so picking the wrong one was a silent one-word mistake and no call site said
+which rule it wanted. They are gone. Write
+
+```cpp
+may_attack(attacker_unit, target, {.intent = EngagementIntent::AutoAcquired,
+                                   .allow_buildings = false})
+```
+
+and the decision is visible in the diff. Never write a direct owner comparison in a combat
+processor: team and alliance rules are easy to handle incorrectly when duplicated, which is
+precisely how the command validator ended up refusing an attack order on a wolf that was
+already biting the unit that received the order.
+
+The diplomacy half is likewise one expression, `Combat::owners_are_hostile`, and
+`CombatQueryContext` memoises exactly that function into a per-tick owner table rather than
+spelling the rule a second time. The hot scan (`find_nearest_enemy`) hands its cached answer
+straight back to the rule through the
+`evaluate_target(target, owners_are_hostile, query)` overload, so a scan that costs one
+table lookup per candidate still asks the same question as an attack order does. Adding a
+refusal to `evaluate_target` therefore reaches auto-engagement without touching the scan.
+
+The consumers outside `soi_combat` name the same function rather than a copy of the rule:
+
+| caller                                     | intent                                                      | what it is deciding                                                            |
+| ------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `Game::Command::validate` (`AttackTarget`) | `Ordered` for a player or script, `AutoAcquired` for the AI | whether an attack order is accepted, and which `Rejection` the player is shown |
+| `Game::Systems::classify_attack_target`    | `Ordered`                                                   | the attack cursor's verdict, so the cursor promises what the click will do     |
+| `collect_attack_target_highlights`         | `AutoAcquired`                                              | which enemies get a marker ring                                                |
+| `App::Utils::pick_enemy_unit_at_screen`    | `AutoAcquired`                                              | whether a right-click is an attack or a move                                   |
+| `Combat::collect_hostile_contacts`         | `AutoAcquired`                                              | the AI snapshot's `visible_enemies`                                            |
+
+Who may _receive_ an attack order is settled in the same one place. `validate_attack` drops
+every subject that fails `Game::Units::can_use_attack_mode` before it counts them, so a
+healer, a builder or a building is filtered out of an attack order whoever issued it, and an
+order made up entirely of them comes back `Rejection::NoSubjects`. The player-facing button
+state (`filter_selected_units_for_action`) and the AI's own pre-filter
+(`CombatRules::seeks_out_enemies`) still exist, but they can only ever be stricter than the
+engine; they cannot let something through that the engine would then quietly ignore.
+
+The AI gets the `AutoAcquired` intent even for an explicit `AttackTarget` order on purpose:
+an AI wave may finish off a wolf that is already fighting, but must never wander off to
+order a hunt on somebody's livestock. That is the one case where a passed-validation attack
+order comes back `Rejection::ProtectedTarget`.
 
 ## Firing distance
 
@@ -330,7 +396,7 @@ Trample damage applies only to valid enemies.
 Friendly and allied troops are rejected through:
 
 ```cpp
-Combat::is_valid_enemy_unit()
+Combat::may_attack()
 ```
 
 As a result, even a panicked elephant cannot damage units on its own side.
@@ -546,7 +612,7 @@ III. Call the processor from `CombatSystem::update()`:
 
 IV. Use `CombatQueryContext` for entity lookup and range scanning.
 
-V. Use `Combat::is_valid_enemy_unit()` for target validation.
+V. Use `Combat::may_attack()` / `Combat::evaluate_target()` for target validation.
 
 VI. Use `Combat::deal_damage()` for damage application.
 

@@ -18,6 +18,7 @@
 #include "combat_random.h"
 #include "combat_utils.h"
 #include "structure_combat.h"
+#include "target_rules.h"
 
 namespace Game::Systems::Combat {
 
@@ -307,7 +308,9 @@ void process_loading_siege_unit(Engine::Core::World* world,
         attack_target->target_id != loading->target_id) {
       auto* retarget =
           get_entity_from_query_context(query_context, attack_target->target_id);
-      if (is_valid_enemy_unit(unit, retarget, true) &&
+      if (may_attack(unit,
+                     retarget,
+                     {.intent = EngagementIntent::Ordered, .allow_buildings = true}) &&
           locked_target_is_in_range(siege, retarget)) {
         start_loading(siege, retarget, spawn_type, true);
       }
@@ -322,7 +325,9 @@ void process_loading_siege_unit(Engine::Core::World* world,
     }
     auto* target =
         get_entity_from_query_context(query_context, attack_target->target_id);
-    if (is_valid_enemy_unit(unit, target, true) &&
+    if (may_attack(unit,
+                   target,
+                   {.intent = EngagementIntent::Ordered, .allow_buildings = true}) &&
         locked_target_is_in_range(siege, target)) {
       start_loading(siege, target, spawn_type);
     }
@@ -379,7 +384,10 @@ find_nearest_tower_target(Engine::Core::Entity* tower,
     if (entity == tower) {
       continue;
     }
-    if (!is_auto_acquirable_enemy(tower_unit, entity, true)) {
+    if (!may_attack(
+            tower_unit,
+            entity,
+            {.intent = EngagementIntent::AutoAcquired, .allow_buildings = true})) {
       continue;
     }
     if (entity->has_component<Engine::Core::BuildingComponent>() &&

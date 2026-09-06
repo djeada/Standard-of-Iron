@@ -10,6 +10,7 @@
 #include "../map/render_visibility_rules.h"
 #include "../units/troop_config.h"
 #include "combat_system/combat_utils.h"
+#include "combat_system/target_rules.h"
 #include "owner_registry.h"
 
 namespace Game::Systems {
@@ -89,30 +90,28 @@ void append_blocked_hover_marker(const AttackTargetingRequest& request,
 auto classify_attack_target(Engine::Core::World* world,
                             int local_owner_id,
                             bool has_attackers,
-                            Engine::Core::EntityID target_id) -> AttackTargetVerdict {
+                            Engine::Core::EntityID target_id,
+                            Combat::EngagementIntent intent) -> AttackTargetVerdict {
   if (world == nullptr || target_id == 0) {
     return AttackTargetVerdict::NoTarget;
   }
 
-  auto* target = world->get_entity(target_id);
-  if (target == nullptr) {
-    return AttackTargetVerdict::NoTarget;
-  }
+  const auto ruling =
+      Combat::evaluate_target(*Game::Session::services_for(*world).owners,
+                              local_owner_id,
+                              world->get_entity(target_id),
+                              {.intent = intent, .allow_buildings = true});
 
-  const auto* unit = target->get_component<Engine::Core::UnitComponent>();
-  if (unit == nullptr || unit->health <= 0 ||
-      target->has_component<Engine::Core::PendingRemovalComponent>()) {
+  switch (ruling) {
+  case Combat::TargetRefusal::NoTarget:
     return AttackTargetVerdict::NoTarget;
-  }
-
-  if (unit->owner_id == local_owner_id ||
-      Game::Session::services_for(*world).owners->are_allies(local_owner_id,
-                                                             unit->owner_id)) {
+  case Combat::TargetRefusal::SelfOrAllied:
     return AttackTargetVerdict::Ally;
-  }
-
-  if (!Combat::is_valid_enemy_of_owner(local_owner_id, target, true)) {
+  case Combat::TargetRefusal::Passive:
+  case Combat::TargetRefusal::Structure:
     return AttackTargetVerdict::Neutral;
+  case Combat::TargetRefusal::None:
+    break;
   }
 
   return has_attackers ? AttackTargetVerdict::Valid : AttackTargetVerdict::NoAttackers;
@@ -125,7 +124,8 @@ auto collect_attack_target_highlights(const AttackTargetingRequest& request)
   highlights.hovered_verdict = classify_attack_target(request.world,
                                                       request.local_owner_id,
                                                       request.has_attackers,
-                                                      request.hovered_entity_id);
+                                                      request.hovered_entity_id,
+                                                      request.intent);
 
   if (request.world == nullptr) {
     return highlights;
@@ -150,11 +150,16 @@ auto collect_attack_target_highlights(const AttackTargetingRequest& request)
   };
   std::vector<ScoredMarker> candidates;
 
+  const auto& owners = *Game::Session::services_for(*request.world).owners;
   for (auto [entity, unit, transform] :
        request.world->entity_view<Engine::Core::UnitComponent,
                                   Engine::Core::TransformComponent>()) {
-    if (!Combat::is_auto_acquirable_enemy_of_owner(
-            request.local_owner_id, &entity, true)) {
+    if (Combat::evaluate_target(owners,
+                                request.local_owner_id,
+                                &entity,
+                                {.intent = Combat::EngagementIntent::AutoAcquired,
+                                 .allow_buildings = true}) !=
+        Combat::TargetRefusal::None) {
       continue;
     }
 

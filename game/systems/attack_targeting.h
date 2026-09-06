@@ -7,6 +7,7 @@
 
 #include "../core/entity.h"
 #include "../map/visibility_service.h"
+#include "combat_system/target_rules.h"
 
 namespace Engine::Core {
 class World;
@@ -47,6 +48,7 @@ struct AttackTargetingRequest {
   float max_distance{0.0F};
   std::size_t max_markers{0};
   const Game::Map::VisibilityService::Snapshot* visibility{nullptr};
+  Combat::EngagementIntent intent{Combat::EngagementIntent::Ordered};
 };
 
 struct AttackTargetingHighlights {
@@ -67,7 +69,9 @@ inline constexpr std::size_t k_attack_highlight_max_markers = 64;
 classify_attack_target(Engine::Core::World* world,
                        int local_owner_id,
                        bool has_attackers,
-                       Engine::Core::EntityID target_id) -> AttackTargetVerdict;
+                       Engine::Core::EntityID target_id,
+                       Combat::EngagementIntent intent =
+                           Combat::EngagementIntent::Ordered) -> AttackTargetVerdict;
 
 [[nodiscard]] auto collect_attack_target_highlights(
     const AttackTargetingRequest& request) -> AttackTargetingHighlights;

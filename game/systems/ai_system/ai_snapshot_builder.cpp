@@ -14,6 +14,7 @@
 #include "../../map/terrain_service.h"
 #include "../../session/session_context.h"
 #include "../../units/squad.h"
+#include "../combat_system/target_rules.h"
 #include "../nation_registry.h"
 #include "../owner_queries.h"
 #include "../player_resource_registry.h"
@@ -335,7 +336,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     snapshot.friendly_units.push_back(std::move(data));
   }
 
-  auto enemies = Game::Systems::enemy_units(world, ai_owner_id);
+  auto enemies = Game::Systems::Combat::collect_hostile_contacts(world, ai_owner_id);
   snapshot.visible_enemies.reserve(enemies.size());
   snapshot.strategic_objectives.reserve(enemies.size());
 

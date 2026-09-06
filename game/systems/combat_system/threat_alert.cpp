@@ -9,6 +9,7 @@
 #include "../defensive_unit_layout_service.h"
 #include "combat_types.h"
 #include "combat_utils.h"
+#include "target_rules.h"
 
 namespace Game::Systems::Combat {
 
@@ -177,7 +178,8 @@ auto has_active_engagement(Engine::Core::World* world,
     return false;
   }
   auto* current = world->get_entity(attack_target->target_id);
-  return is_valid_enemy_unit(unit, current, true);
+  return may_attack(
+      unit, current, {.intent = EngagementIntent::Ordered, .allow_buildings = true});
 }
 
 void engage_threat_target(Engine::Core::Entity* entity,

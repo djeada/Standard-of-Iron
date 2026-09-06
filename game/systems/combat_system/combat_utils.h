@@ -23,7 +23,6 @@ struct CandidateRecord {
   Engine::Core::Entity* entity{nullptr};
   int owner_id{0};
   bool is_building{false};
-  bool is_wildlife{false};
 };
 
 struct CombatQueryContext {
@@ -81,24 +80,6 @@ auto is_unit_in_hold_mode(Engine::Core::Entity* entity) -> bool;
 auto is_unit_in_guard_mode(Engine::Core::Entity* entity) -> bool;
 
 auto is_building(Engine::Core::Entity* entity) -> bool;
-
-auto is_valid_enemy_unit(const Engine::Core::UnitComponent* attacker_unit,
-                         Engine::Core::Entity* target,
-                         bool allow_buildings) -> bool;
-
-auto is_valid_enemy_of_owner(int attacker_owner_id,
-                             Engine::Core::Entity* target,
-                             bool allow_buildings) -> bool;
-
-auto is_passive_wildlife(Engine::Core::Entity* target) -> bool;
-
-auto is_auto_acquirable_enemy(const Engine::Core::UnitComponent* attacker_unit,
-                              Engine::Core::Entity* target,
-                              bool allow_buildings) -> bool;
-
-auto is_auto_acquirable_enemy_of_owner(int attacker_owner_id,
-                                       Engine::Core::Entity* target,
-                                       bool allow_buildings) -> bool;
 
 auto combat_radius(Engine::Core::Entity* entity) -> float;
 

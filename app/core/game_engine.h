@@ -64,6 +64,7 @@
 #include "app/world/player_defeat_watcher.h"
 #include "game/audio/audio_event_handler.h"
 #include "game/command/command.h"
+#include "game/command/command_validator.h"
 #include "game/command/replay.h"
 #include "game/core/event_manager.h"
 #include "game/map/mission_definition.h"
@@ -431,6 +432,8 @@ private:
   [[nodiscard]] auto
   attack_sync_context() const -> App::Core::PresentationSync::SelectionAttackContext;
   void handle_order_feedback(const App::Core::OrderOutcome& outcome);
+  void report_late_command_rejection(const Game::Command::Command& command,
+                                     Game::Command::Rejection reason);
 
   void report_affordability_refusal(App::Core::OrderFailure failure,
                                     const QString& message);

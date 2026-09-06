@@ -73,6 +73,7 @@
 #include "app/orders/action_vfx.h"
 #include "app/orders/command_controller.h"
 #include "app/orders/movement_utils.h"
+#include "app/orders/order_feedback.h"
 #include "app/orders/order_submission.h"
 #include "app/orders/rts_action_model.h"
 #include "app/persistence/game_state_restorer.h"
@@ -193,6 +194,10 @@ void GameEngine::build_client_and_view_models() {
   m_session = std::make_unique<Game::Session::SessionContext>();
   m_session_scope = std::make_unique<Game::Session::ScopedSession>(*m_session);
   m_world = &m_session->world();
+  m_session->commands().set_rejection_observer(
+      [this](const Game::Command::Command& command, Game::Command::Rejection reason) {
+        report_late_command_rejection(command, reason);
+      });
 
   App::Core::ClientHost& host = *this;
   publish_client_context();
