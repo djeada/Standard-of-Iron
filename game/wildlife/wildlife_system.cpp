@@ -539,14 +539,15 @@ void WildlifeSystem::collect_animals(Engine::Core::World& world) {
   }
 }
 
-static auto prey_escape_allowance(const PreyRef& prey) -> float {
+static auto prey_escape_allowance(Engine::Core::World& world,
+                                  const PreyRef& prey) -> float {
   constexpr float k_impact_delay =
       Engine::Core::WildlifeComponent::k_bite_animation_seconds *
       Engine::Core::WildlifeComponent::k_bite_impact_phase;
-  if (prey.entity == nullptr) {
+  if (!prey.valid()) {
     return 0.0F;
   }
-  const auto* unit = prey.entity->get_component<Engine::Core::UnitComponent>();
+  const auto* unit = world.try_get<Engine::Core::UnitComponent>(prey.id);
   float const speed = unit != nullptr ? std::max(0.0F, unit->speed) : 0.0F;
   return speed * k_impact_delay;
 }
@@ -1102,7 +1103,7 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
       if (prey.valid() && wolf_transform != nullptr && attack != nullptr) {
         float const dx = prey.x - wolf_transform->position.x;
         float const dz = prey.z - wolf_transform->position.z;
-        float const escape = prey_escape_allowance(prey);
+        float const escape = prey_escape_allowance(*world, prey);
         float const contact_reach = k_wolf_bite_range + prey.radius + escape;
         float const distance = std::sqrt((dx * dx) + (dz * dz));
         float const yaw = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
