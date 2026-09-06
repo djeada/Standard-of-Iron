@@ -240,6 +240,11 @@ auto to_json(const MovementTroopSample& s) -> std::string {
   w.field("blocked_steps", s.blocked_steps);
   w.field("repaths", s.repath_count);
   w.field("repath_reason", static_cast<std::uint32_t>(s.repath_reason));
+  w.field("stalled", s.stalled_seconds);
+  w.field("recovery_rung", static_cast<std::uint32_t>(s.recovery_rung));
+  w.field("recovery_attempts", s.recovery_attempts);
+  w.field("abandons", s.abandon_count);
+  w.field("abandoned", s.objective_abandoned ? 1U : 0U);
   w.field("neighbors", s.neighbor_count);
   w.field("body_overlap", s.body_overlap);
   w.field("solver", static_cast<std::uint32_t>(s.solver_result));
@@ -391,6 +396,15 @@ auto parse_troop_sample(const std::string& line, MovementTroopSample& out) -> bo
   read_small(line, "blocked_steps", out.blocked_steps);
   read_small(line, "repaths", out.repath_count);
   read_small(line, "repath_reason", out.repath_reason);
+  read_float(line, "stalled", out.stalled_seconds);
+  read_small(line, "recovery_rung", out.recovery_rung);
+  read_small(line, "recovery_attempts", out.recovery_attempts);
+  read_small(line, "abandons", out.abandon_count);
+  {
+    std::uint32_t abandoned = 0;
+    read_small(line, "abandoned", abandoned);
+    out.objective_abandoned = abandoned != 0U;
+  }
   read_small(line, "neighbors", out.neighbor_count);
   read_float(line, "body_overlap", out.body_overlap);
   read_small(line, "solver", out.solver_result);

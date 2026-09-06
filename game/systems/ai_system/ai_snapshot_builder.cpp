@@ -279,7 +279,21 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
 
     if (auto* movement =
             world.try_get<Engine::Core::MovementComponent>(entity->get_id())) {
-      data.movement = MovementSnapshot{true, movement->get_has_target()};
+      data.movement.has_component = true;
+      data.movement.has_target = movement->get_has_target();
+      data.movement.has_objective = movement->get_has_requested_goal();
+      data.movement.objective_x = movement->get_requested_goal_x();
+      data.movement.objective_z = movement->get_requested_goal_z();
+    }
+
+    if (auto* facts =
+            world.try_get<Engine::Core::MovementFactsComponent>(entity->get_id())) {
+      const auto& stall = facts->progress.stall;
+      data.movement.stalled_seconds = stall.stalled_seconds;
+      data.movement.stalled = stall.rung != Engine::Core::MovementRecoveryRung::None &&
+                              data.movement.has_target;
+      data.movement.objective_abandoned = stall.objective_abandoned;
+      data.movement.abandon_count = static_cast<int>(stall.abandon_count);
     }
 
     if (auto* production =

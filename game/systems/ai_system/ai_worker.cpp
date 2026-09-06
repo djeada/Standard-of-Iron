@@ -16,6 +16,7 @@
 #include "systems/ai_system/ai_behavior_registry.h"
 #include "systems/ai_system/ai_executor.h"
 #include "systems/ai_system/ai_reasoner.h"
+#include "systems/ai_system/ai_stall_recovery.h"
 #include "systems/ai_system/ai_types.h"
 
 namespace Game::Systems::AI {
@@ -204,6 +205,7 @@ void AIWorker::run_pending_job() {
     AIReasoner::update_context(job.snapshot, result.context);
     AIReasoner::update_state_machine(job.snapshot, result.context, job.delta_time);
     AIReasoner::validate_state(result.context);
+    update_stall_recovery(job.snapshot, result.context, result.commands);
     AIExecutor::run(
         job.snapshot, result.context, job.delta_time, m_registry, result.commands);
     result.context.nation = nullptr;

@@ -756,27 +756,49 @@ This can still happen without old stop reasons or cooldowns:
 4. A movement override outside pathfinding, such as melee lock, hold mode, direct commander control, builder bypass, or combat chase, keeps presentation state active while navigation progress is zero.
 5. The render/motion presentation layer treats intent or velocity as movement even when actual displacement has been zero for many frames.
 
-Because we control the whole stack, this state should not be allowed to persist forever. The mitigation should be deterministic and centralized, not another scattered cooldown.
+Because we control the whole stack, this state is not allowed to persist. The mitigation is deterministic and centralized, not another scattered cooldown.
 
-Recommended options:
+### The Stuck Clock
 
-1. **Authoritative Progress Watchdog**
+`RouteFollowSystem::track_objective_stall` runs before anything else in `follow()` and owns `MovementStallFacts` on `MovementFactsComponent`. It exists because `MovementProgressFacts::no_progress_seconds` is measured against the current route and therefore restarts every time anything repaths: a unit that is replanned once a second can stand still forever without ever tripping it.
 
-    Track per-unit progress inside `MovementSystem`: current grid cell, distance-to-goal, and actual displacement. If a unit has an active target but makes no meaningful progress for a fixed number of frames, force one deterministic resolution:
+Two clocks run instead, and neither can be reset by route churn, order churn, or an AI re-issuing the same march:
 
-    - if current cell is invalid, snap or move to nearest walkable cell
-    - if current cell is valid, recompute path once from current cell
-    - if the recomputed first step is still impossible, clear movement and mark animation idle
+| Clock               | Measured against                                        | Catches         |
+| ------------------- | ------------------------------------------------------- | --------------- |
+| `stalled_seconds`   | net world displacement over a rolling one-second window | wedged in place |
+| `no_closer_seconds` | the closest the unit has ever come to its objective     | walking laps    |
 
-    This is the most direct mitigation for "moving animation but no progress".
+The objective is the _requested_ goal, never the resolved one. Both clocks reset when the objective itself moves by more than 1.5 m, when a new order arrives, and when the unit is gated out of route following -- melee lock, hold mode, direct control and builder bypass mean standing still is the order, so the clock is not the unit's to run.
 
-2. **Hard Invalid-Cell Ejection**
+### The Recovery Ladder
+
+Whichever clock is further along picks the rung, and a rung only ever fires on the way up. Escalation costs a full rung interval of going nowhere (2.5 s of standstill, or 9 s of never getting closer), so a unit that starts moving again de-escalates without acting.
+
+| Rung             | Action                                                                         |
+| ---------------- | ------------------------------------------------------------------------------ |
+| `Replan`         | recompute the route to the requested goal                                      |
+| `Sidestep`       | local recovery move to a nearby free cell, then continue                       |
+| `RelaxFormation` | drop navigation clearance to 35% and replan, so a block can pass as a column   |
+| `Abandoned`      | stop, clear the order intent, state `Unreachable`, latch `objective_abandoned` |
+
+`RouteFollowSystem::abandon_objective` is the single implementation of the last rung, shared with the `Recovering` -> `Unreachable` path in `update_progress`, so there is exactly one way an objective is given up on and exactly one place that records it.
+
+Two rules keep this from oscillating. Recovery may not edit the requested goal: a sidestep resolves `goal_x/goal_y` to a cell metres away, and repathing against _that_ is how a unit forgets where it was sent and reports `Arrived` somewhere it was never ordered to. And before an objective is written off, reachability is re-checked at the relaxed frontage -- a gate too narrow for a block is still a gate, and refusing it is how a formation ends up standing outside its own objective.
+
+### What The AI Does With It
+
+`MovementSnapshot` carries the stall facts to the AI worker. A unit that is going nowhere counts as idle rather than busy in the census -- counting it as busy is what let a wedged formation sit out the rest of a match -- and `Game::Systems::AI::update_stall_recovery` gives it a small fixed number of approaches from alternating sides before standing it down from its task and dropping it from the wave, so the next planning cycle gives it something else to do. Workers are out of scope there: a builder at a site holds a movement target without moving as a matter of course.
+
+### Still Open
+
+1. **Hard Invalid-Cell Ejection**
 
     If a unit remains in an invalid cell after recovery assignment, do not keep trying ordinary steering forever. Move it smoothly but authoritatively toward the nearest walkable cell center, ignoring unit radius and formation offsets. If it cannot reduce invalid distance after a small frame budget, snap to that cell center.
 
     This makes invalid placement a temporary visual correction, not a navigation state.
 
-3. **Blocked-Step Retry Budget**
+2. **Blocked-Step Retry Budget**
 
     When movement integration reverts a step because the new grid cell is blocked, count consecutive reverts for that unit and target. After a small limit, invalidate the current path and choose one of:
 
@@ -786,25 +808,19 @@ Recommended options:
 
     This prevents a unit from requesting or following the same impossible first step forever.
 
-4. **Animation Gated By Displacement**
+3. **Animation Gated By Displacement**
 
     Make walk animation require recent actual displacement, not just `has_target` or non-zero desired velocity. A unit may keep an active target, but if it has not moved for several frames it should visually idle or play a blocked/recovering state.
 
     This does not solve navigation by itself, but it prevents false feedback where the unit looks like it is walking while physically stuck.
 
-5. **Scenario Regression Tests**
+### Coverage
 
-    Add frame-budget tests for the exact failure modes:
+`tests/headless/stuck_recovery_test.cpp` drives the ladder directly: an order into a sealed pen, an objective inside one seen from outside, a march that must not be mistaken for a stall, a gate narrower than the frontage, and a check that giving up does not turn into a repath loop.
 
-    - single unit crosses bridge
-    - ten selected units cross bridge
-    - unit starts inside blocked building footprint and exits
-    - group crosses one-cell building gap
-    - hill entrance crossing
-    - dynamic blocker appears under moving unit
-    - blocked first step cannot repeat forever
+The nine `stuck_*` Arena scenarios reproduce the geometry that wedges formations in play -- gateways, town streets, close woods, a hill pinch, a rock field, half-blocked ruins, junction traffic, an objective ringed by stone, and an order changed mid-march. Each asserts `NoPermanentStall`: no unit may end the run holding an objective it has stopped advancing on, and a long stall that nothing noticed is a failure even if it resolved. `stuck_hill_pinch` additionally asserts `StallRecoveryObserved`, so the ladder is proven to run rather than assumed to.
 
-    Each test should assert either "arrived/reached valid cell within N frames" or "movement cleared and animation idle within N frames". No test should accept an active moving state with zero displacement after the budget.
+Every Arena report prints a movement row per group whether or not it asserted anything: worst stall and when, the objective, the state it was in, repaths, recovery attempts, abandons, and anything left wedged.
 
 ## Melee Lock
 

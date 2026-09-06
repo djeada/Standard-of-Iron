@@ -627,6 +627,38 @@ auto battle_summary(const ArenaBattleOutcome& battle) -> QString {
 
 } // namespace
 
+namespace {
+
+auto movement_summary(const std::vector<ArenaGroupMovementDiagnostics>& rows)
+    -> QString {
+  if (rows.empty()) {
+    return {};
+  }
+  QStringList parts;
+  parts.reserve(static_cast<int>(rows.size()));
+  for (auto const& row : rows) {
+    QString const objective = row.has_objective ? QStringLiteral("(%1, %2)")
+                                                      .arg(row.objective_x, 0, 'f', 1)
+                                                      .arg(row.objective_z, 0, 'f', 1)
+                                                : QStringLiteral("none");
+    parts.push_back(
+        QStringLiteral("%1 stall %2 s@%3 s (%4) for %5, repaths %6, "
+                       "recoveries %7, abandoned %8, still wedged %9")
+            .arg(row.group)
+            .arg(row.worst_stalled_seconds, 0, 'f', 1)
+            .arg(row.worst_stalled_at, 0, 'f', 1)
+            .arg(row.worst_state.isEmpty() ? QStringLiteral("-") : row.worst_state,
+                 objective)
+            .arg(row.repaths)
+            .arg(row.recovery_attempts)
+            .arg(row.abandons)
+            .arg(row.units_holding_a_stalled_objective));
+  }
+  return QStringLiteral(" | movement: ") + parts.join(QStringLiteral("; "));
+}
+
+} // namespace
+
 auto narrow_layout_summary(const std::vector<ArenaNarrowLayoutOutcome>& outcomes)
     -> QString {
   if (outcomes.empty()) {
@@ -671,6 +703,7 @@ auto ArenaScenarioReport::summary() const -> QString {
                     .arg(peak_rigged_instanced_instances);
     }
     result += battle_summary(battle);
+    result += movement_summary(movement);
     result += narrow_layout_summary(narrow_layout);
     return result;
   }
@@ -679,7 +712,7 @@ auto ArenaScenarioReport::summary() const -> QString {
       .arg(issues.size())
       .arg(issues.front().message,
            battle_summary(battle),
-           narrow_layout_summary(narrow_layout));
+           movement_summary(movement) + narrow_layout_summary(narrow_layout));
 }
 
 struct ArenaScenarioRunner::Impl {
@@ -962,6 +995,20 @@ struct ArenaScenarioRunner::Impl {
   };
   QHash<QString, OffGroundState> off_walkable_ground;
   QHash<QString, OffGroundState> off_walkable_soldiers;
+  struct StallObservation {
+    float worst_stalled_seconds{0.0F};
+    float worst_stalled_at{0.0F};
+    std::uint32_t recovery_attempts{0};
+    std::uint32_t repaths{0};
+    std::uint32_t abandons{0};
+    bool recovery_seen{false};
+    QString worst_state;
+    bool has_objective{false};
+    float objective_x{0.0F};
+    float objective_z{0.0F};
+  };
+  QHash<QString, StallObservation> stall_observations;
+
   struct NarrowLayoutState {
     bool seeded{false};
     bool engaged{false};
@@ -2958,6 +3005,30 @@ struct ArenaScenarioRunner::Impl {
     if (Game::Systems::DefensiveUnitLayoutService::is_formed(*entity)) {
       defensive_layout_locked[group] = true;
     }
+    if (auto const* movement_facts =
+            world.try_get<Engine::Core::MovementFactsComponent>(entity_id)) {
+      auto const& stall = movement_facts->progress.stall;
+      auto& observation = stall_observations[group];
+      float const going_nowhere =
+          std::max(stall.stalled_seconds, stall.no_closer_seconds);
+      if (going_nowhere > observation.worst_stalled_seconds) {
+        observation.worst_stalled_seconds = going_nowhere;
+        observation.worst_stalled_at = elapsed;
+        observation.worst_state = QString::fromLatin1(
+            Engine::Core::movement_state_name(movement_facts->progress.state));
+        observation.has_objective = stall.objective_valid;
+        observation.objective_x = stall.objective_x;
+        observation.objective_z = stall.objective_z;
+      }
+      observation.recovery_attempts =
+          std::max(observation.recovery_attempts, stall.recovery_attempts);
+      observation.repaths =
+          std::max(observation.repaths, movement_facts->progress.repath_count);
+      observation.abandons = std::max(observation.abandons, stall.abandon_count);
+      observation.recovery_seen =
+          observation.recovery_seen ||
+          stall.rung != Engine::Core::MovementRecoveryRung::None;
+    }
     QVector3D const position = vector_from_transform(*transform);
     if (!initial_elevation.contains(group)) {
       initial_elevation[group] = position.y();
@@ -4330,6 +4401,48 @@ struct ArenaScenarioRunner::Impl {
     }
   }
 
+  void publish_movement_diagnostics() {
+    report.movement.clear();
+    for (auto const& group : scenario.groups) {
+      auto const found = stall_observations.constFind(group.name);
+      if (found == stall_observations.constEnd()) {
+        continue;
+      }
+      ArenaGroupMovementDiagnostics row;
+      row.group = group.name;
+      row.worst_stalled_seconds = found->worst_stalled_seconds;
+      row.worst_stalled_at = found->worst_stalled_at;
+      row.recovery_attempts = found->recovery_attempts;
+      row.repaths = found->repaths;
+      row.abandons = found->abandons;
+      row.worst_state = found->worst_state;
+      row.has_objective = found->has_objective;
+      row.objective_x = found->objective_x;
+      row.objective_z = found->objective_z;
+      for (auto entity_id : ids(group.name)) {
+        auto const* movement =
+            world.try_get<Engine::Core::MovementComponent>(entity_id);
+        auto const* movement_facts =
+            world.try_get<Engine::Core::MovementFactsComponent>(entity_id);
+        if (movement == nullptr || movement_facts == nullptr ||
+            !entity_alive(entity_id)) {
+          continue;
+        }
+        if (movement->get_has_target() &&
+            movement_facts->progress.stall.rung !=
+                Engine::Core::MovementRecoveryRung::None) {
+          ++row.units_holding_a_stalled_objective;
+        }
+      }
+      if (row.worst_stalled_seconds <= 0.0F && row.recovery_attempts == 0U &&
+          row.repaths == 0U && row.abandons == 0U &&
+          row.units_holding_a_stalled_objective == 0) {
+        continue;
+      }
+      report.movement.push_back(std::move(row));
+    }
+  }
+
   void publish_narrow_layout_outcome() {
     report.narrow_layout.clear();
     for (auto const& group : scenario.groups) {
@@ -4362,6 +4475,7 @@ struct ArenaScenarioRunner::Impl {
     end_expectations_checked = true;
     observe_battle();
     publish_battle_outcome();
+    publish_movement_diagnostics();
     publish_narrow_layout_outcome();
     for (auto const& expectation : scenario.expectations) {
       switch (expectation.kind) {
@@ -5525,6 +5639,64 @@ struct ArenaScenarioRunner::Impl {
                                 destination) > tolerance) {
           add_issue(QStringLiteral("group_missed_destination"),
                     QStringLiteral("%1 did not reach its scenario destination")
+                        .arg(expectation.group));
+        }
+        break;
+      }
+      case ArenaExpectationKind::NoPermanentStall: {
+        float const budget =
+            expectation.threshold > 0.0F ? expectation.threshold : 12.0F;
+        QStringList wedged;
+        for (auto entity_id : ids(expectation.group)) {
+          if (!entity_alive(entity_id)) {
+            continue;
+          }
+          auto const* movement =
+              world.try_get<Engine::Core::MovementComponent>(entity_id);
+          auto const* movement_facts =
+              world.try_get<Engine::Core::MovementFactsComponent>(entity_id);
+          if (movement == nullptr || movement_facts == nullptr) {
+            continue;
+          }
+          auto const& stall = movement_facts->progress.stall;
+          float const going_nowhere =
+              std::max(stall.stalled_seconds, stall.no_closer_seconds);
+          if (movement->get_has_target() && going_nowhere > budget) {
+            wedged.push_back(
+                QStringLiteral("%1 (%2 s in %3)")
+                    .arg(entity_id)
+                    .arg(going_nowhere, 0, 'f', 1)
+                    .arg(QString::fromLatin1(Engine::Core::movement_state_name(
+                        movement_facts->progress.state))));
+          }
+        }
+        auto const observation = stall_observations.value(expectation.group);
+        if (!wedged.isEmpty()) {
+          add_issue(QStringLiteral("permanent_stall"),
+                    QStringLiteral("%1 ended the run holding an objective it had "
+                                   "stopped advancing on: %2")
+                        .arg(expectation.group, wedged.join(QStringLiteral(", "))));
+        } else if (observation.worst_stalled_seconds > budget &&
+                   observation.recovery_attempts == 0U && observation.abandons == 0U) {
+
+          add_issue(QStringLiteral("unnoticed_stall"),
+                    QStringLiteral("%1 went nowhere for %2 s at %3 s (%4) without "
+                                   "the recovery ladder ever engaging")
+                        .arg(expectation.group)
+                        .arg(observation.worst_stalled_seconds, 0, 'f', 1)
+                        .arg(observation.worst_stalled_at, 0, 'f', 1)
+                        .arg(observation.worst_state.isEmpty()
+                                 ? QStringLiteral("unknown state")
+                                 : observation.worst_state));
+        }
+        break;
+      }
+      case ArenaExpectationKind::StallRecoveryObserved: {
+        auto const observation = stall_observations.value(expectation.group);
+        if (!observation.recovery_seen && observation.abandons == 0U) {
+          add_issue(QStringLiteral("stall_recovery_not_exercised"),
+                    QStringLiteral("%1 never reached the recovery ladder, so this "
+                                   "scenario proved nothing about it")
                         .arg(expectation.group));
         }
         break;
