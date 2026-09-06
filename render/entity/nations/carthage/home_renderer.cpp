@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 
+#include "building_palette.h"
 #include "game/core/component.h"
 #include "math/math_utils.h"
 #include "render/entity/building_archetype_desc.h"
@@ -24,19 +25,17 @@ using Render::Geom::clamp_vec_01;
 constexpr std::uint8_t k_home_team_slot = 0;
 constexpr std::uint8_t k_home_roof_slot = 1;
 
-constexpr float k_roof_owner_blend = 0.42F;
-
 struct CarthagePalette {
-  QVector3D stone_light{0.88F, 0.79F, 0.63F};
-  QVector3D stone_dark{0.38F, 0.32F, 0.24F};
-  QVector3D stone_base{0.74F, 0.64F, 0.48F};
-  QVector3D brick{0.71F, 0.43F, 0.27F};
-  QVector3D brick_dark{0.40F, 0.18F, 0.11F};
-  QVector3D tile_red{0.57F, 0.21F, 0.12F};
-  QVector3D tile_dark{0.43F, 0.18F, 0.11F};
-  QVector3D wood{0.46F, 0.30F, 0.16F};
-  QVector3D wood_dark{0.23F, 0.16F, 0.09F};
-  QVector3D bronze{0.72F, 0.43F, 0.12F};
+  QVector3D stone_light = BuildingPalette::k_sandstone_light;
+  QVector3D stone_dark = BuildingPalette::k_sandstone_dark;
+  QVector3D stone_base = BuildingPalette::k_sandstone;
+  QVector3D brick = BuildingPalette::k_brick;
+  QVector3D brick_dark = BuildingPalette::k_brick_dark;
+  QVector3D tile_red = BuildingPalette::k_tile_red;
+  QVector3D tile_dark = BuildingPalette::k_tile_dark;
+  QVector3D wood = BuildingPalette::k_wood;
+  QVector3D wood_dark = BuildingPalette::k_wood_dark;
+  QVector3D bronze = BuildingPalette::k_bronze;
   QVector3D ember{0.68F, 0.22F, 0.045F};
   QVector3D team{0.8F, 0.9F, 1.0F};
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
@@ -53,9 +52,7 @@ inline auto make_palette(const QVector3D& team) -> CarthagePalette {
 auto home_palette_slots(const QVector3D& team)
     -> std::array<QVector3D, k_home_palette_slots> {
   const auto palette = make_palette(team);
-  const QVector3D roof = clamp_vec_01(palette.tile_red * (1.0F - k_roof_owner_blend) +
-                                      palette.team * k_roof_owner_blend);
-  return {palette.team, roof};
+  return {palette.team, palette.tile_red};
 }
 
 auto build_home_archetype(BuildingState state) -> RenderArchetype {

@@ -1,5 +1,6 @@
 #include "wall_renderer.h"
 
+#include "building_palette.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/registry.h"
 #include "render/entity/wall_gate_renderer_common.h"
@@ -8,14 +9,14 @@
 namespace Render::GL::Carthage {
 namespace {
 
-const WallPalette k_wall_palette{.wood_light = QVector3D(0.34F, 0.22F, 0.11F),
-                                 .wood_mid = QVector3D(0.23F, 0.14F, 0.07F),
-                                 .wood_dark = QVector3D(0.11F, 0.065F, 0.035F),
+const WallPalette k_wall_palette{.wood_light = BuildingPalette::k_wood_light,
+                                 .wood_mid = BuildingPalette::k_wood,
+                                 .wood_dark = BuildingPalette::k_wood_dark,
                                  .rope = QVector3D(0.42F, 0.29F, 0.13F),
                                  .masonry_accent = QVector3D(0.58F, 0.34F, 0.09F),
                                  .earth_light = QVector3D(0.34F, 0.24F, 0.15F),
                                  .earth_dark = QVector3D(0.23F, 0.16F, 0.10F),
-                                 .rubble = QVector3D(0.33F, 0.30F, 0.27F),
+                                 .rubble = BuildingPalette::k_sandstone_dark,
                                  .alternate_starts_light = false,
                                  .horned_masonry = false};
 const WallGeometry k_wall_geometry{.earthwork_base = true,

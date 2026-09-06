@@ -7,6 +7,7 @@
 #include <array>
 #include <cstdint>
 
+#include "building_palette.h"
 #include "game/core/component.h"
 #include "game/visuals/team_colors.h"
 #include "render/entity/building_archetype_desc.h"
@@ -28,25 +29,25 @@ namespace Render::GL::Carthage {
 namespace {
 
 struct CarthageMarketPalette {
-  QVector3D sandstone{0.82F, 0.70F, 0.52F};
-  QVector3D sandstone_light{0.92F, 0.84F, 0.68F};
-  QVector3D sandstone_dark{0.55F, 0.44F, 0.31F};
+  QVector3D sandstone = BuildingPalette::k_sandstone;
+  QVector3D sandstone_light = BuildingPalette::k_sandstone_light;
+  QVector3D sandstone_dark = BuildingPalette::k_sandstone_dark;
   QVector3D mortar{0.63F, 0.55F, 0.42F};
-  QVector3D wood_dark{0.25F, 0.16F, 0.08F};
-  QVector3D wood_medium{0.45F, 0.29F, 0.14F};
-  QVector3D wood_light{0.60F, 0.42F, 0.21F};
-  QVector3D cloth_oxblood{0.47F, 0.10F, 0.08F};
+  QVector3D wood_dark = BuildingPalette::k_wood_dark;
+  QVector3D wood_medium = BuildingPalette::k_wood;
+  QVector3D wood_light = BuildingPalette::k_wood_light;
+  QVector3D cloth_oxblood = BuildingPalette::k_oxblood;
   QVector3D cloth_oxblood_faded{0.64F, 0.17F, 0.13F};
   QVector3D cloth_gold{0.66F, 0.38F, 0.085F};
-  QVector3D indigo{0.10F, 0.12F, 0.30F};
-  QVector3D brick{0.64F, 0.36F, 0.19F};
-  QVector3D brick_dark{0.42F, 0.18F, 0.10F};
-  QVector3D stone_light{0.86F, 0.76F, 0.60F};
-  QVector3D tile_red{0.58F, 0.21F, 0.11F};
+  QVector3D indigo = BuildingPalette::k_indigo;
+  QVector3D brick = BuildingPalette::k_brick;
+  QVector3D brick_dark = BuildingPalette::k_brick_dark;
+  QVector3D stone_light = BuildingPalette::k_sandstone_light;
+  QVector3D tile_red = BuildingPalette::k_tile_red;
   QVector3D ceramic{0.61F, 0.28F, 0.085F};
-  QVector3D bronze{0.48F, 0.27F, 0.075F};
+  QVector3D bronze = BuildingPalette::k_bronze;
   QVector3D rope{0.51F, 0.38F, 0.20F};
-  QVector3D saffron{0.76F, 0.36F, 0.035F};
+  QVector3D saffron = BuildingPalette::k_saffron;
   QVector3D spice_red{0.54F, 0.095F, 0.032F};
   QVector3D herb{0.20F, 0.29F, 0.085F};
   QVector3D ember{0.76F, 0.19F, 0.025F};

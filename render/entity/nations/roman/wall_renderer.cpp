@@ -1,5 +1,6 @@
 #include "wall_renderer.h"
 
+#include "building_palette.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/registry.h"
 #include "render/entity/wall_gate_renderer_common.h"
@@ -8,14 +9,14 @@
 namespace Render::GL::Roman {
 namespace {
 
-const WallPalette k_wall_palette{.wood_light = QVector3D(0.62F, 0.43F, 0.23F),
-                                 .wood_mid = QVector3D(0.46F, 0.30F, 0.15F),
-                                 .wood_dark = QVector3D(0.27F, 0.17F, 0.085F),
+const WallPalette k_wall_palette{.wood_light = BuildingPalette::k_cedar_light,
+                                 .wood_mid = BuildingPalette::k_cedar,
+                                 .wood_dark = BuildingPalette::k_cedar_dark,
                                  .rope = QVector3D(0.55F, 0.44F, 0.25F),
                                  .masonry_accent = QVector3D(0.46F, 0.30F, 0.15F),
                                  .earth_light = QVector3D(0.41F, 0.31F, 0.20F),
                                  .earth_dark = QVector3D(0.29F, 0.21F, 0.13F),
-                                 .rubble = QVector3D(0.42F, 0.39F, 0.35F),
+                                 .rubble = BuildingPalette::k_limestone_dark,
                                  .alternate_starts_light = true};
 const WallGeometry k_wall_geometry{.earthwork_base = true,
                                    .cross_braced = false,

@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstdint>
 
+#include "building_palette.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
@@ -19,21 +20,21 @@ namespace Render::GL::Carthage {
 namespace {
 
 struct CarthageTemplePalette {
-  QVector3D sandstone{0.82F, 0.70F, 0.52F};
-  QVector3D sandstone_light{0.92F, 0.84F, 0.68F};
-  QVector3D sandstone_dark{0.55F, 0.44F, 0.31F};
+  QVector3D sandstone = BuildingPalette::k_sandstone;
+  QVector3D sandstone_light = BuildingPalette::k_sandstone_light;
+  QVector3D sandstone_dark = BuildingPalette::k_sandstone_dark;
   QVector3D rubble{0.79F, 0.67F, 0.50F};
   QVector3D screed{0.77F, 0.71F, 0.59F};
   QVector3D mortar{0.63F, 0.55F, 0.42F};
   QVector3D basalt{0.22F, 0.21F, 0.22F};
   QVector3D basalt_light{0.34F, 0.33F, 0.34F};
-  QVector3D cedar{0.34F, 0.21F, 0.10F};
-  QVector3D cedar_light{0.52F, 0.35F, 0.17F};
-  QVector3D bronze{0.48F, 0.27F, 0.075F};
+  QVector3D cedar = BuildingPalette::k_wood;
+  QVector3D cedar_light = BuildingPalette::k_wood_light;
+  QVector3D bronze = BuildingPalette::k_bronze;
   QVector3D gold{0.70F, 0.47F, 0.13F};
-  QVector3D indigo{0.21F, 0.25F, 0.45F};
-  QVector3D oxblood{0.47F, 0.10F, 0.08F};
-  QVector3D saffron{0.76F, 0.36F, 0.035F};
+  QVector3D indigo = BuildingPalette::k_indigo;
+  QVector3D oxblood = BuildingPalette::k_oxblood;
+  QVector3D saffron = BuildingPalette::k_saffron;
   QVector3D ember{0.76F, 0.19F, 0.025F};
   QVector3D soot{0.15F, 0.13F, 0.12F};
   QVector3D verdigris{0.26F, 0.44F, 0.39F};
