@@ -246,8 +246,12 @@ auto to_json(const MovementTroopSample& s) -> std::string {
   w.field("envelope", s.envelope_radius);
   w.field("body_radius", s.soldier_body_radius);
   w.field("corridor_hw", s.corridor_half_width);
+  w.field("formation_hw", s.formation_half_width);
+  w.field("file_spacing", s.file_spacing);
+  w.field("lateral_scale", s.lateral_scale);
   w.field("portal", s.portal_id);
   w.field("mode", static_cast<std::uint32_t>(s.traversal_mode));
+  w.field("normal_files", s.normal_files);
   w.field("files", s.current_files);
   w.field("target_files", s.target_files);
   w.field("transition", s.transition_progress);
@@ -393,6 +397,10 @@ auto parse_troop_sample(const std::string& line, MovementTroopSample& out) -> bo
   read_float(line, "envelope", out.envelope_radius);
   read_float(line, "body_radius", out.soldier_body_radius);
   read_float(line, "corridor_hw", out.corridor_half_width);
+  read_float(line, "formation_hw", out.formation_half_width);
+  read_float(line, "file_spacing", out.file_spacing);
+  read_float(line, "lateral_scale", out.lateral_scale);
+  read_small(line, "normal_files", out.normal_files);
   read_small(line, "portal", out.portal_id);
   read_small(line, "mode", out.traversal_mode);
   read_small(line, "files", out.current_files);

@@ -9,6 +9,7 @@
 #include <iterator>
 #include <limits>
 #include <numbers>
+#include <numeric>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -727,6 +728,76 @@ auto formation_turn_radius(const Engine::Core::Entity& entity) -> float {
     cached = g_layout_cache.find(cache_key(entity));
   }
   return cached != g_layout_cache.end() ? cached->second.turn_radius : 0.0F;
+}
+
+auto formation_lateral_half_extent(const FormationLayout& layout) -> float {
+  float extent = layout.body_radius;
+  auto const& measured =
+      layout.live_slots.empty() ? layout.all_slots : layout.live_slots;
+  for (auto const& slot : measured) {
+    extent = std::max(extent, std::abs(slot.local_x) + layout.body_radius);
+  }
+  return extent;
+}
+
+auto narrow_file_depth(const FormationLayout& layout,
+                       std::uint32_t files,
+                       float rank_spacing) -> float {
+  int const count = std::max(1, static_cast<int>(layout.all_slots.size()));
+  int const cols = std::clamp(static_cast<int>(files), 1, count);
+  int const rows = (count + cols - 1) / cols;
+  return static_cast<float>(std::max(0, rows - 1)) * rank_spacing;
+}
+
+void narrow_file_slots_into(const FormationLayout& layout,
+                            std::uint32_t files,
+                            float file_spacing,
+                            float rank_spacing,
+                            std::vector<SoldierSlot>& result) {
+  result.assign(layout.all_slots.begin(), layout.all_slots.end());
+  if (result.empty()) {
+    return;
+  }
+  int const count = static_cast<int>(result.size());
+  int const base_rows = std::max(1, layout.rows);
+  int const cols = std::clamp(static_cast<int>(files), 1, count);
+  int const rows = (count + cols - 1) / cols;
+
+  thread_local std::vector<std::uint16_t> filing_order;
+  filing_order.resize(result.size());
+  std::iota(filing_order.begin(), filing_order.end(), std::uint16_t{0});
+  std::stable_sort(filing_order.begin(),
+                   filing_order.end(),
+                   [&result, base_rows](std::uint16_t left, std::uint16_t right) {
+                     auto const& first = result[left];
+                     auto const& second = result[right];
+                     int const first_rank = base_rows - 1 - first.row;
+                     int const second_rank = base_rows - 1 - second.row;
+                     if (first_rank != second_rank) {
+                       return first_rank < second_rank;
+                     }
+                     float const first_flank = std::abs(first.local_x);
+                     float const second_flank = std::abs(second.local_x);
+                     if (std::abs(first_flank - second_flank) > 0.01F) {
+                       return first_flank < second_flank;
+                     }
+                     return first.local_x < second.local_x;
+                   });
+
+  for (int position = 0; position < count; ++position) {
+    auto& slot = result[filing_order[static_cast<std::size_t>(position)]];
+    int const row = position / cols;
+    int const file = position % cols;
+    int const rank_files = std::min(cols, count - (row * cols));
+    slot.row = static_cast<std::uint16_t>(row);
+    slot.col = static_cast<std::uint16_t>(file);
+    slot.local_x =
+        (static_cast<float>(file) - (0.5F * static_cast<float>(rank_files - 1))) *
+        file_spacing;
+    slot.local_z = ((0.5F * static_cast<float>(rows - 1)) - static_cast<float>(row)) *
+                   rank_spacing;
+    slot.local_yaw = 0.0F;
+  }
 }
 
 auto formation_navigation_clearance(const Engine::Core::Entity& entity) -> float {

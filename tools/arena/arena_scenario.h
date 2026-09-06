@@ -249,6 +249,11 @@ enum class ArenaExpectationKind : std::uint8_t {
   NoFullscreenFlash,
   MovementIsContinuous,
   FormationOrderPreserved,
+  NarrowLayoutEngaged,
+  NarrowLayoutStaysWide,
+  NarrowLayoutKeepsFiles,
+  NarrowLayoutModeSettles,
+  NarrowLayoutRestores,
   FormationEngagementIsStable,
   DefensiveUnitLayoutLocked,
   FormationBodyOverlapObserved,
@@ -507,6 +512,21 @@ struct ArenaScenarioIssue {
 
 inline constexpr float k_arena_prewarm_seconds = 0.75F;
 
+struct ArenaNarrowLayoutOutcome {
+  QString group;
+  bool engaged{false};
+  float formation_half_width{0.0F};
+  float narrowest_corridor_half_width{0.0F};
+  std::uint32_t normal_files{0};
+  std::uint32_t narrowest_files{0};
+  float tightest_file_spacing{0.0F};
+  float narrowest_frontage{0.0F};
+  float deepest_column{0.0F};
+  QString narrowest_mode;
+  std::uint32_t mode_changes{0};
+  float worst_reform_error{0.0F};
+};
+
 struct ArenaScenarioReport {
   QString scenario_id;
   float elapsed_seconds{0.0F};
@@ -539,6 +559,7 @@ struct ArenaScenarioReport {
   std::uint64_t peak_shadow_rigged_instanced_instances{0};
   std::uint64_t peak_shadow_rigged_single_draws{0};
   ArenaBattleOutcome battle;
+  std::vector<ArenaNarrowLayoutOutcome> narrow_layout;
   std::vector<ArenaScenarioIssue> issues;
 
   [[nodiscard]] auto passed() const noexcept -> bool { return issues.empty(); }
