@@ -71,6 +71,22 @@ struct CommanderInputTrace {
   float view_pitch{0.0F};
 };
 
+enum class CommanderMovementMode : std::uint8_t {
+  Rts,
+  DirectControl
+};
+
+[[nodiscard]] inline auto movement_mode_name(CommanderMovementMode mode) -> const
+    char* {
+  switch (mode) {
+  case CommanderMovementMode::Rts:
+    return "rts";
+  case CommanderMovementMode::DirectControl:
+    return "direct_control";
+  }
+  return "unknown";
+}
+
 struct CommanderMotorTrace {
   QVector3D previous_position{};
   QVector3D position{};
@@ -83,6 +99,18 @@ struct CommanderMotorTrace {
   bool blocked{false};
   bool slid{false};
   float separation_push{0.0F};
+
+  CommanderMovementMode movement_mode{CommanderMovementMode::Rts};
+
+  const char* steering_source{"None"};
+
+  bool static_walkable{true};
+
+  QVector3D dynamic_push{};
+  std::uint32_t dynamic_neighbors{0};
+  float dynamic_overlap{0.0F};
+
+  float accepted_displacement{0.0F};
   float lunge_distance{0.0F};
   float snap_back_distance{0.0F};
   CommanderDisplacementSource displacement_source{CommanderDisplacementSource::None};

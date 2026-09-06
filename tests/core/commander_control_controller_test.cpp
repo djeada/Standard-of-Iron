@@ -231,13 +231,12 @@ TEST_F(CommanderControlControllerTest,
   controller.request_jump();
 
   Render::GL::Camera camera;
-  auto& session = Game::Session::session_for(world);
   for (int frame = 0; frame < 8; ++frame) {
     ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.2F));
   }
 
   EXPECT_TRUE(App::Core::CommanderMotor::is_walkable_at(
-      session, transform->position.x, transform->position.z))
+      *commander, transform->position.x, transform->position.z))
       << "landed at " << transform->position.x << ", " << transform->position.z;
 
   float const settled_x = transform->position.x;

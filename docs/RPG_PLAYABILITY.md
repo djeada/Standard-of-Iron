@@ -177,6 +177,59 @@ state, whether the step was blocked or slid, the separation push, strike-lunge
 distance, jump snap-back distance, and which of the eight displacement sources
 moved the body this tick.
 
+`motor` also carries the four fields that make an RPG-versus-RTS movement
+disagreement diagnosable from one line, in the order the pipeline produces them
+(issue #1417):
+
+| field                   | what it answers                                                                                     |
+| ----------------------- | --------------------------------------------------------------------------------------------------- |
+| `movement_mode`         | `direct_control` or `rts` -- which control mode the body was under this tick                        |
+| `steering_source`       | `DirectControl`, `Route` or `None`, read back from `MovementFacts::desired.source`                  |
+| `static_walkable`       | what the shared `Walkability` layer says about where the body ended up                              |
+| `dynamic_push`          | the correction `BodyContactSystem` actually applied, with `dynamic_neighbors` and `dynamic_overlap` |
+| `accepted_displacement` | how far the body really moved, against `requested_speed` and `dt`                                   |
+
+`dynamic_push` is read back from the shared facts rather than measured in the
+controller, which is the point: if it is ever non-zero while `movement_mode` is
+`direct_control` and `steering_source` is not `DirectControl`, something outside
+the shared pipeline is moving the commander. `separation_push` is the magnitude
+of the same vector and keeps its old meaning for `CommanderMotorCorrectionWithin`.
+
+## Movement is not mode-specific
+
+Direct control produces steering intent. It does not decide where the commander
+may go -- `Game::Systems::body_profile_for()`, `Walkability` and
+`BodyContactSystem` do, identically for an RTS-ordered commander. The full model
+and the reasoning behind it live in
+[PATHFINDING_ARCHITECTURE.md](PATHFINDING_ARCHITECTURE.md#the-direct-control-commander-is-a-body-like-any-other);
+what matters here is the failure it replaced.
+
+The commander controller used to run its own push-apart against every live
+soldier anchor within three metres. It summed the penetration of each anchor and
+then clamped the total to 2.4 m/s. In anything denser than a single rank the sum
+always exceeded the clamp, so the push saturated on every tick, pointing straight
+back out of the crowd -- against a walk speed of 2.7 m/s, a backpedal of 1.9 and
+a strafe of 2.3. Measured on a three-deep block of squads the commander advanced
+at 0.3-0.4 m/s instead of 2.7, roughly a sevenfold slowdown, and with soldiers on
+more sides than that the resultant simply cancelled the step. Nothing reported a
+blocker: `motor.blocked` stayed false the whole time, because as far as the motor
+was concerned the ground was walkable and the commander was walking on it.
+
+Three properties of the shared layer are what fix it, and none of them are new
+behaviour for anything else:
+
+- contact resolves **pairwise against one body per entity**, not against every
+  formation anchor, so a squad is one correction rather than eight;
+- the per-tick budget is **shared across all pairs** (`k_separation_speed`,
+  `k_max_separation_step`), so twenty neighbours cost what one costs;
+- a body under way takes its correction **sideways only**, so traffic deflects
+  it instead of braking it.
+
+`CommanderSharedTraversalTest` pins the outcome: crossing a dense friendly
+formation must cover at least 60% of the ground an unobstructed walk covers in
+the same window (it now covers all of it), and a commander standing still inside
+his own ranks must not drift more than a metre.
+
 `camera` -- commander position, visual anchor and its lag, pivot, the
 unconstrained eye and target, the resolved eye and target, boom length before
 and after collision, the raw building blocked fraction, the smoothed occlusion

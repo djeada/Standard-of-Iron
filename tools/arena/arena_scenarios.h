@@ -80,6 +80,13 @@ inline constexpr char k_rpg_skirmish_three_attackers_id[] =
     "rpg_skirmish_three_attackers";
 inline constexpr char k_rpg_lock_cycle_id[] = "rpg_lock_occlusion_death_cycle";
 inline constexpr char k_rpg_pass_ranks_id[] = "rpg_pass_ranks";
+
+inline constexpr char k_rpg_friendly_ranks_id[] = "rpg_friendly_ranks";
+inline constexpr char k_rpg_friendly_workers_id[] = "rpg_friendly_workers";
+inline constexpr char k_rpg_friendly_livestock_id[] = "rpg_friendly_livestock";
+inline constexpr char k_rpg_friendly_stream_id[] = "rpg_friendly_stream";
+inline constexpr char k_rpg_friendly_gauntlet_id[] = "rpg_friendly_gauntlet";
+inline constexpr char k_rts_friendly_ranks_id[] = "rts_friendly_ranks";
 inline constexpr char k_rpg_strike_lunge_id[] = "rpg_strike_lunge";
 inline constexpr char k_rpg_bow_volley_id[] = "rpg_bow_volley";
 inline constexpr char k_rpg_commander_sword_grammar_id[] =

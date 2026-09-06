@@ -5,8 +5,9 @@
 #include "app/commander/commander_presentation_trace.h"
 
 namespace Engine::Core {
+class Entity;
 class TransformComponent;
-}
+} // namespace Engine::Core
 
 namespace Game::Session {
 class SessionContext;
@@ -36,15 +37,16 @@ public:
   [[nodiscard]] static auto body_radius() -> float;
 
   [[nodiscard]] static auto
-  is_walkable_at(Game::Session::SessionContext& session, float x, float z) -> bool;
+  is_walkable_at(const Engine::Core::Entity& commander, float x, float z) -> bool;
 
   [[nodiscard]] static auto
   reachable_ground_position(Game::Session::SessionContext& session,
+                            const Engine::Core::Entity& commander,
                             const QVector3D& start,
                             const QVector3D& desired,
                             unsigned int ignore_entity_id = 0) -> QVector3D;
 
-  auto advance(Game::Session::SessionContext& session,
+  auto advance(const Engine::Core::Entity& commander,
                Engine::Core::TransformComponent& transform,
                const CommanderMotorRequest& request) -> CommanderMotorResult;
 

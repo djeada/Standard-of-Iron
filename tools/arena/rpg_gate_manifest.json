@@ -192,6 +192,51 @@
       "repeats": 3,
       "reproduction": "deterministic",
       "intermittent": false
+    },
+    {
+      "id": "rpg_friendly_ranks",
+      "status": "required_green",
+      "gate": "2",
+      "notes": "Issue #1417. Walks the commander the length of his own three-deep infantry block. Friendly bodies are traffic: RpgTravelObserved fails a commander who covers less ground than the layout allows. Before the fix the app layer ran its own per-soldier push-apart that summed every anchor in range and saturated its own clamp every tick, so the block advanced him at roughly a seventh of his open-ground speed while motor.blocked stayed false throughout.",
+      "repeats": 1,
+      "reproduction": "deterministic",
+      "intermittent": false
+    },
+    {
+      "id": "rpg_friendly_workers",
+      "status": "required_green",
+      "gate": "2",
+      "notes": "Issue #1417. The same crossing through builders and civilians. Worker bodies stand still far more often than soldiers do, and a body standing still is the case that anchors the contact pair, so this is the layout most likely to refuse the commander ground.",
+      "repeats": 1,
+      "reproduction": "deterministic",
+      "intermittent": false
+    },
+    {
+      "id": "rpg_friendly_livestock",
+      "status": "required_green",
+      "gate": "2",
+      "notes": "Issue #1417. Mixed humans and animals. Wildlife is a dynamic body under the same rule: something to flow around, not a blocker, unless a gameplay rule says otherwise.",
+      "repeats": 1,
+      "reproduction": "deterministic",
+      "intermittent": false
+    },
+    {
+      "id": "rpg_friendly_stream",
+      "status": "required_green",
+      "gate": "2",
+      "notes": "Issue #1417. Two friendly columns cross the commander's path in opposite directions while he walks the seam between them. Moving bodies share the correction with him, so the crossing has to stay possible in both directions at once.",
+      "repeats": 1,
+      "reproduction": "deterministic",
+      "intermittent": false
+    },
+    {
+      "id": "rpg_friendly_gauntlet",
+      "status": "required_green",
+      "gate": "2",
+      "notes": "Issue #1417. Friendly bodies packed into the gap between two houses, so both kinds of blocker are present at once. The houses stop him exactly as they do under an RTS order and the soldiers do not; rts_friendly_ranks is the control run for the same geometry.",
+      "repeats": 1,
+      "reproduction": "deterministic",
+      "intermittent": false
     }
   ]
 }

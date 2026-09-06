@@ -4,9 +4,11 @@
 #include <cmath>
 
 #include "game/core/component_core.h"
+#include "game/core/entity.h"
 #include "game/core/simulation_timing.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
+#include "game/systems/body_profile.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/building_line_of_sight.h"
 #include "game/systems/nav_grid.h"
@@ -17,19 +19,19 @@ namespace App::Core {
 
 namespace {
 
-constexpr float k_commander_body_radius = 0.34F;
-
-auto commander_profile() -> Game::Systems::BodyProfile {
-  Game::Systems::BodyProfile profile;
-  profile.radius = k_commander_body_radius;
-  profile.passability = Game::Systems::Pathfinding::Passability::Light;
-  profile.stops_at_building_facade = true;
-  return profile;
+auto walkable_point(const Game::Systems::BodyProfile& profile,
+                    float x,
+                    float z) -> bool {
+  return Game::Systems::Walkability::can_stand(QVector3D(x, 0.0F, z), profile);
 }
 
-auto walkable_point(float x, float z) -> bool {
-  return Game::Systems::Walkability::can_stand(QVector3D(x, 0.0F, z),
-                                               commander_profile());
+auto traversable_step(const Game::Systems::BodyProfile& profile,
+                      float from_x,
+                      float from_z,
+                      float to_x,
+                      float to_z) -> bool {
+  return Game::Systems::Walkability::can_traverse(
+      QVector3D(from_x, 0.0F, from_z), QVector3D(to_x, 0.0F, to_z), profile);
 }
 
 struct GroundMove {
@@ -42,18 +44,21 @@ auto airborne_step(float to_x, float to_z) -> GroundMove {
   return {.x = to_x, .z = to_z, .moved = true};
 }
 
-auto resolve_ground_step(float from_x,
+auto resolve_ground_step(const Game::Systems::BodyProfile& profile,
+                         float from_x,
                          float from_z,
                          float to_x,
                          float to_z) -> GroundMove {
-  if (walkable_point(to_x, to_z)) {
+  if (traversable_step(profile, from_x, from_z, to_x, to_z)) {
     return {.x = to_x, .z = to_z, .moved = true};
   }
 
   float const delta_x = to_x - from_x;
   float const delta_z = to_z - from_z;
-  bool const slide_x_free = std::abs(delta_x) > 1.0e-5F && walkable_point(to_x, from_z);
-  bool const slide_z_free = std::abs(delta_z) > 1.0e-5F && walkable_point(from_x, to_z);
+  bool const slide_x_free = std::abs(delta_x) > 1.0e-5F &&
+                            traversable_step(profile, from_x, from_z, to_x, from_z);
+  bool const slide_z_free = std::abs(delta_z) > 1.0e-5F &&
+                            traversable_step(profile, from_x, from_z, from_x, to_z);
 
   if (slide_x_free && (!slide_z_free || std::abs(delta_x) >= std::abs(delta_z))) {
     return {.x = to_x, .z = from_z, .moved = true};
@@ -62,7 +67,6 @@ auto resolve_ground_step(float from_x,
     return {.x = from_x, .z = to_z, .moved = true};
   }
 
-  auto const profile = commander_profile();
   QVector3D const here(from_x, 0.0F, from_z);
   if (Game::Systems::Walkability::penetration(here, profile) <= 0.0F) {
     return {.x = from_x, .z = from_z, .moved = false};
@@ -90,10 +94,12 @@ auto resolve_ground_step(float from_x,
 } // namespace
 
 auto CommanderMotor::reachable_ground_position(Game::Session::SessionContext& session,
+                                               const Engine::Core::Entity& commander,
                                                const QVector3D& start,
                                                const QVector3D& desired,
                                                unsigned int ignore_entity_id)
     -> QVector3D {
+  auto const profile = Game::Systems::body_profile_for(commander);
   QVector3D candidate = desired;
   const float blocked_fraction = Game::Systems::first_building_intersection_fraction(
       session.building_collision(), start, desired, ignore_entity_id);
@@ -108,7 +114,7 @@ auto CommanderMotor::reachable_ground_position(Game::Session::SessionContext& se
     const float sample_t =
         static_cast<float>(sample_index) / static_cast<float>(k_samples);
     const QVector3D sample = start + (candidate - start) * sample_t;
-    if (!walkable_point(sample.x(), sample.z())) {
+    if (!walkable_point(profile, sample.x(), sample.z())) {
       break;
     }
     best = sample;
@@ -117,26 +123,29 @@ auto CommanderMotor::reachable_ground_position(Game::Session::SessionContext& se
 }
 
 auto CommanderMotor::body_radius() -> float {
-  return k_commander_body_radius;
+  return Game::Systems::k_person_body_radius;
 }
 
-auto CommanderMotor::is_walkable_at(Game::Session::SessionContext&,
+auto CommanderMotor::is_walkable_at(const Engine::Core::Entity& commander,
                                     float x,
                                     float z) -> bool {
-  return walkable_point(x, z);
+  return walkable_point(Game::Systems::body_profile_for(commander), x, z);
 }
 
-auto CommanderMotor::advance(Game::Session::SessionContext&,
+auto CommanderMotor::advance(const Engine::Core::Entity& commander,
                              Engine::Core::TransformComponent& transform,
                              const CommanderMotorRequest& request)
     -> CommanderMotorResult {
   Engine::Core::Timing::ScopedAccumulator const scope(
       Engine::Core::Timing::commander_motor());
-  GroundMove const step =
-      request.airborne
-          ? airborne_step(request.to.x(), request.to.z())
-          : resolve_ground_step(
-                request.from.x(), request.from.z(), request.to.x(), request.to.z());
+  auto const profile = Game::Systems::body_profile_for(commander);
+  GroundMove const step = request.airborne
+                              ? airborne_step(request.to.x(), request.to.z())
+                              : resolve_ground_step(profile,
+                                                    request.from.x(),
+                                                    request.from.z(),
+                                                    request.to.x(),
+                                                    request.to.z());
 
   CommanderMotorResult result;
   result.source = request.source;

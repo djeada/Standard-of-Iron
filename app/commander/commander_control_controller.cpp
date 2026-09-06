@@ -109,128 +109,6 @@ auto directional_speed_scale(int forward_axis, int right_axis) -> float {
   return 1.0F;
 }
 
-constexpr float k_body_separation_scan_range = 3.0F;
-
-constexpr float k_body_separation_max_push_per_second = 2.4F;
-
-[[nodiscard]] auto
-strike_body_overlap_scale(const Engine::Core::Entity& commander) -> float {
-  auto const* action =
-      commander.get_component<Engine::Core::RpgCommanderActionComponent>();
-  if (action == nullptr || !action->action_running || action->combat_action_id == 0U) {
-    return 1.0F;
-  }
-  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
-      static_cast<Game::Systems::CombatActions::CombatActionId>(
-          action->combat_action_id));
-  if (definition == nullptr) {
-    return 1.0F;
-  }
-  using Game::Systems::CombatActions::MeleePhase;
-  switch (Game::Systems::CombatActions::melee_interruption_at(
-              *definition, action->normalized_action_time)
-              .phase) {
-  case MeleePhase::Windup:
-    return 0.92F;
-  case MeleePhase::EarlyStrike:
-    return 0.82F;
-  case MeleePhase::CommittedStrike:
-    return 0.72F;
-  case MeleePhase::FollowThrough:
-    return 0.92F;
-  case MeleePhase::Ready:
-    break;
-  }
-  return 1.0F;
-}
-
-void separate_commander_from_bodies(Engine::Core::World& world,
-                                    Engine::Core::Entity& commander,
-                                    Engine::Core::EntityID commander_id,
-                                    Engine::Core::TransformComponent& transform,
-                                    App::Core::CommanderMotor& motor,
-                                    float dt,
-                                    float overlap_scale) {
-  if (dt <= 0.0F || overlap_scale <= 0.0F) {
-    return;
-  }
-
-  const QVector3D origin(transform.position.x, 0.0F, transform.position.z);
-  QVector3D push(0.0F, 0.0F, 0.0F);
-
-  for (auto* candidate : world.collect_entities_with<Engine::Core::UnitComponent>()) {
-    if (candidate == nullptr || candidate->get_id() == commander_id ||
-        candidate->has_component<Engine::Core::BuildingComponent>() ||
-        candidate->has_component<Engine::Core::PendingRemovalComponent>()) {
-      continue;
-    }
-    auto const* unit = candidate->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr || unit->health <= 0) {
-      continue;
-    }
-    auto const* candidate_transform =
-        candidate->get_component<Engine::Core::TransformComponent>();
-    if (candidate_transform == nullptr) {
-      continue;
-    }
-    float const coarse_dx = candidate_transform->position.x - origin.x();
-    float const coarse_dz = candidate_transform->position.z - origin.z();
-
-    constexpr float k_formation_spread_slack = 6.0F;
-    float const coarse_range = k_body_separation_scan_range + k_formation_spread_slack;
-    if ((coarse_dx * coarse_dx) + (coarse_dz * coarse_dz) >
-        coarse_range * coarse_range) {
-      continue;
-    }
-
-    for (auto const& soldier :
-         Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
-      QVector3D offset =
-          origin - QVector3D(soldier.position.x(), 0.0F, soldier.position.z());
-      float const min_distance = (App::Core::CommanderMotor::body_radius() +
-                                  std::max(soldier.body_radius, 0.05F)) *
-                                 overlap_scale;
-      float const distance_sq = offset.lengthSquared();
-      if (distance_sq >= min_distance * min_distance) {
-        continue;
-      }
-
-      float distance = std::sqrt(std::max(distance_sq, 0.0F));
-      if (distance > 1.0e-4F) {
-        offset /= distance;
-      } else {
-
-        auto const seed = static_cast<std::uint32_t>((commander_id * 73856093U) ^
-                                                     (candidate->get_id() * 19349663U));
-        float const angle = static_cast<float>(seed % 6283U) * 0.001F;
-        offset = QVector3D(std::cos(angle), 0.0F, std::sin(angle));
-        distance = 0.0F;
-      }
-      push += offset * (min_distance - distance);
-    }
-  }
-
-  if (push.lengthSquared() <= 1.0e-8F) {
-    return;
-  }
-
-  float const max_push = k_body_separation_max_push_per_second * dt;
-  if (push.lengthSquared() > max_push * max_push) {
-    push = push.normalized() * max_push;
-  }
-
-  QVector3D const from(
-      transform.position.x, transform.position.y, transform.position.z);
-  static_cast<void>(
-      motor.advance(Game::Session::session_for(world),
-                    transform,
-                    {.from = from,
-                     .to = from + QVector3D(push.x(), 0.0F, push.z()),
-                     .source = App::Core::CommanderDisplacementSource::BodySeparation,
-                     .airborne = false,
-                     .dt = dt}));
-}
-
 } // namespace
 
 void CommanderControlController::publish_presentation_sample(
@@ -1189,7 +1067,7 @@ void CommanderControlController::apply_strike_lunge(
     QVector3D const from(
         transform.position.x, transform.position.y, transform.position.z);
     static_cast<void>(
-        m_motor.advance(Game::Session::session_for(world),
+        m_motor.advance(commander,
                         transform,
                         {.from = from,
                          .to = from + QVector3D(move_x, 0.0F, move_z),
@@ -1800,7 +1678,6 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   bool motor_blocked = false;
   bool motor_slid = false;
   float motor_requested_speed = 0.0F;
-  float motor_separation_push = 0.0F;
   float motor_lunge_distance = 0.0F;
   float motor_snap_back_distance = 0.0F;
 
@@ -1990,8 +1867,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   }
 
   auto mark_jump_safe_position = [&](float x, float z) {
-    if (!jump_active || !App::Core::CommanderMotor::is_walkable_at(
-                            Game::Session::session_for(world), x, z)) {
+    if (!jump_active || !App::Core::CommanderMotor::is_walkable_at(*commander, x, z)) {
       return;
     }
     m_jump_safe_position_valid = true;
@@ -2019,7 +1895,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     const float nz =
         transform->position.z + m_dodge_direction.z() * k_dodge_speed * roll_dt;
     auto const step = m_motor.advance(
-        Game::Session::session_for(world),
+        *commander,
         *transform,
         {.from = QVector3D(
              transform->position.x, transform->position.y, transform->position.z),
@@ -2059,7 +1935,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       const float nx = transform->position.x + move.x() * speed * dt;
       const float nz = transform->position.z + move.z() * speed * dt;
       auto const step = m_motor.advance(
-          Game::Session::session_for(world),
+          *commander,
           *transform,
           {.from = QVector3D(
                transform->position.x, transform->position.y, transform->position.z),
@@ -2125,7 +2001,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       const float nz =
           transform->position.z + direction.z() * m_planar_speed_smooth * dt;
       auto const step = m_motor.advance(
-          Game::Session::session_for(world),
+          *commander,
           *transform,
           {.from = QVector3D(
                transform->position.x, transform->position.y, transform->position.z),
@@ -2164,9 +2040,8 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     cmd_comp->dodge_phase = dodge_pose_phase;
   }
   if (m_jump_safe_position_valid && !jump_active) {
-    if (!App::Core::CommanderMotor::is_walkable_at(Game::Session::session_for(world),
-                                                   transform->position.x,
-                                                   transform->position.z)) {
+    if (!App::Core::CommanderMotor::is_walkable_at(
+            *commander, transform->position.x, transform->position.z)) {
       motor_snap_back_distance =
           std::hypot(m_jump_last_walkable_position.x() - transform->position.x,
                      m_jump_last_walkable_position.z() - transform->position.z);
@@ -2193,23 +2068,6 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
                                       transform->position.z - before_lunge_z);
     if (motor_lunge_distance > 1.0e-5F) {
       motor_source = App::Core::CommanderDisplacementSource::StrikeLunge;
-    }
-  }
-  if (!jump_active) {
-    float const before_push_x = transform->position.x;
-    float const before_push_z = transform->position.z;
-    separate_commander_from_bodies(world,
-                                   *commander,
-                                   commander_id,
-                                   *transform,
-                                   m_motor,
-                                   dt,
-                                   strike_body_overlap_scale(*commander));
-    motor_separation_push = std::hypot(transform->position.x - before_push_x,
-                                       transform->position.z - before_push_z);
-    if (motor_separation_push > 1.0e-5F &&
-        motor_source == App::Core::CommanderDisplacementSource::None) {
-      motor_source = App::Core::CommanderDisplacementSource::BodySeparation;
     }
   }
 
@@ -2689,7 +2547,32 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     m_trace.motor.grounded = !jump_active;
     m_trace.motor.blocked = motor_blocked;
     m_trace.motor.slid = motor_slid;
-    m_trace.motor.separation_push = motor_separation_push;
+
+    auto const* motor_facts =
+        commander->get_component<Engine::Core::MovementFactsComponent>();
+    QVector3D const contact_push = motor_facts != nullptr
+                                       ? QVector3D(motor_facts->steering.contact_push_x,
+                                                   0.0F,
+                                                   motor_facts->steering.contact_push_z)
+                                       : QVector3D();
+    m_trace.motor.separation_push = contact_push.length();
+    m_trace.motor.dynamic_push = contact_push;
+    m_trace.motor.dynamic_neighbors =
+        motor_facts != nullptr ? motor_facts->steering.neighbor_count : 0U;
+    m_trace.motor.dynamic_overlap =
+        motor_facts != nullptr ? motor_facts->steering.body_overlap : 0.0F;
+    m_trace.motor.movement_mode = cmd_comp != nullptr && cmd_comp->fpv_controlled
+                                      ? App::Core::CommanderMovementMode::DirectControl
+                                      : App::Core::CommanderMovementMode::Rts;
+    m_trace.motor.steering_source =
+        motor_facts != nullptr
+            ? Engine::Core::desired_motion_source_name(motor_facts->desired.source)
+            : "None";
+    m_trace.motor.static_walkable = App::Core::CommanderMotor::is_walkable_at(
+        *commander, transform->position.x, transform->position.z);
+    m_trace.motor.accepted_displacement =
+        std::hypot(motor_position.x() - motor_previous_position.x(),
+                   motor_position.z() - motor_previous_position.z());
     m_trace.motor.lunge_distance = motor_lunge_distance;
     m_trace.motor.snap_back_distance = motor_snap_back_distance;
     m_trace.motor.displacement_source = motor_source;
