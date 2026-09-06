@@ -35,7 +35,9 @@ namespace {
 knockback_moves_body(const Engine::Core::Entity& unit,
                      const Engine::Core::HitFeedbackComponent& feedback) -> bool {
   if (unit.has_component<Engine::Core::BuildingComponent>() ||
-      unit.has_component<Engine::Core::ElephantComponent>()) {
+      unit.has_component<Engine::Core::ElephantComponent>() ||
+      unit.has_component<Engine::Core::WildlifeComponent>()) {
+
     return false;
   }
   if (Game::Systems::CombatRules::uses_rpg_combat_rules(&unit)) {

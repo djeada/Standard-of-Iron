@@ -23,7 +23,6 @@ constexpr float k_graze_dwell_min = 3.0F;
 constexpr float k_graze_dwell_max = 8.5F;
 constexpr float k_alarm_duration = 3.5F;
 constexpr float k_wolf_detect_multiplier = 1.4F;
-constexpr float k_wolf_bite_range = 1.35F;
 constexpr float k_wolf_defend_leash_multiplier = 2.2F;
 constexpr float k_livestock_preference = 0.7F;
 constexpr float k_pack_slot_arc = 0.95F;
@@ -31,7 +30,6 @@ constexpr float k_pack_ring_reach_fraction = 0.82F;
 constexpr float k_pack_ring_min = 0.9F;
 constexpr float k_pack_ring_reach_margin = 0.92F;
 constexpr float k_pack_slot_jitter = 0.35F;
-constexpr float k_pack_orbit_step = 0.78F;
 constexpr float k_flee_arc_jitter = 0.55F;
 
 constexpr float k_flee_min_gain = 2.5F;
@@ -129,7 +127,7 @@ auto distance_to(const NatureContext& ctx, const PreyRef& prey) -> float {
 }
 
 auto bite_reach(const PreyRef& prey) -> float {
-  return k_wolf_bite_range + prey.radius;
+  return k_wolf_bite_windup_range + prey.radius;
 }
 
 auto overwhelmed(const NatureContext& ctx) -> bool {
@@ -192,16 +190,21 @@ void close_and_bite(const NatureContext& ctx,
   PackSlot const slot = actions.claim_pack_slot(ctx, prey);
   if (in_reach) {
 
-    wildlife.orbit += k_pack_orbit_step;
-    if (wildlife.orbit > k_two_pi) {
-      wildlife.orbit -= k_two_pi;
-    }
+    actions.halt(ctx);
     actions.face_toward(ctx, prey.x, prey.z);
+    return;
   }
   float const approach_angle = pack_slot_angle(ctx, slot) + wildlife.orbit;
   float const spacing = pack_ring_radius(prey, slot.count);
-  float const approach_x = prey.x + (std::cos(approach_angle) * spacing);
-  float const approach_z = prey.z + (std::sin(approach_angle) * spacing);
+  float approach_x = prey.x + (std::cos(approach_angle) * spacing);
+  float approach_z = prey.z + (std::sin(approach_angle) * spacing);
+  if (auto const* movement =
+          prey.entity->get_component<Engine::Core::MovementComponent>()) {
+
+    constexpr float lead_seconds = 0.5F;
+    approach_x += movement->get_vx() * lead_seconds;
+    approach_z += movement->get_vz() * lead_seconds;
+  }
   wildlife.target_x = approach_x;
   wildlife.target_z = approach_z;
   actions.move_to(ctx, approach_x, approach_z);

@@ -138,6 +138,7 @@
       ],
       "may_use": ["domain_types", "components", "unit_catalog", "registries"],
       "files": [
+        "game/systems/camera_obstruction",
         "game/wildlife/wildlife_config",
         "game/wildlife/wildlife_placement"
       ]

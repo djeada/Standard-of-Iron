@@ -283,7 +283,9 @@ auto commander_trace_json(const App::Core::CommanderPresentationTrace& trace)
       {QStringLiteral("target_resolved"), json_vector(camera.target_resolved)},
       {QStringLiteral("boom_unconstrained"), camera.boom_unconstrained},
       {QStringLiteral("boom_resolved"), camera.boom_resolved},
-      {QStringLiteral("building_blocked_fraction"), camera.building_blocked_fraction},
+      {QStringLiteral("boom_clear_fraction"), camera.boom_clear_fraction},
+      {QStringLiteral("terrain_clear_fraction"), camera.terrain_clear_fraction},
+      {QStringLiteral("sight_line_clear"), camera.sight_line_clear},
       {QStringLiteral("occlusion_fraction"), camera.occlusion_fraction},
       {QStringLiteral("terrain_lift"), camera.terrain_lift},
       {QStringLiteral("eye_clearance"), camera.eye_clearance},
@@ -783,6 +785,10 @@ struct ArenaScenarioRunner::Impl {
     float vx{0.0F};
     float vz{0.0F};
     bool biting{false};
+    float bite_phase{-1.0F};
+    float flinch_phase{-1.0F};
+    Engine::Core::EntityID bite_target_id{0};
+    bool impact_pending{false};
     bool dying{false};
   };
 
@@ -2050,6 +2056,18 @@ struct ArenaScenarioRunner::Impl {
       animal.vz = movement->get_vz();
     }
     animal.biting = wildlife.bite_timer > 0.0F;
+    animal.bite_phase =
+        animal.biting
+            ? 1.0F - wildlife.bite_timer /
+                         Engine::Core::WildlifeComponent::k_bite_animation_seconds
+            : -1.0F;
+    animal.flinch_phase =
+        wildlife.flinch_timer > 0.0F
+            ? 1.0F - wildlife.flinch_timer /
+                         Engine::Core::WildlifeComponent::k_flinch_animation_seconds
+            : -1.0F;
+    animal.bite_target_id = wildlife.bite_target_id;
+    animal.impact_pending = wildlife.bite_impact_pending;
     animal.dying = entity.has_component<Engine::Core::DeathAnimationComponent>();
     frame.animals.push_back(std::move(animal));
   }
@@ -4836,16 +4854,59 @@ struct ArenaScenarioRunner::Impl {
         }
         if (worst < 0.0F) {
           add_issue(QStringLiteral("commander_camera_penetrated"),
-                    QStringLiteral("camera eye was %1 m inside a building at %2 s")
+                    QStringLiteral("camera eye was %1 m inside an obstacle at %2 s")
                         .arg(-worst, 0, 'f', 3)
                         .arg(worst_time, 0, 'f', 2));
         } else if (worst < required) {
           add_issue(QStringLiteral("commander_camera_clearance"),
-                    QStringLiteral("camera eye came within %1 m of a building at %2 s "
+                    QStringLiteral("camera eye came within %1 m of an obstacle at %2 s "
                                    "(needs %3 m)")
                         .arg(worst, 0, 'f', 3)
                         .arg(worst_time, 0, 'f', 2)
                         .arg(required, 0, 'f', 3));
+        }
+        break;
+      }
+      case ArenaExpectationKind::CommanderCameraKeepsCommanderInSight: {
+
+        float const allowed =
+            expectation.threshold > 0.0F ? expectation.threshold : 0.35F;
+        auto const frames = commander_frames();
+        float blocked_run = 0.0F;
+        float worst_run = 0.0F;
+        float worst_run_end = 0.0F;
+        int sampled = 0;
+        for (auto const* frame : frames) {
+          auto const& shot = frame->commander.camera;
+          if (!shot.valid) {
+            continue;
+          }
+          ++sampled;
+          if (shot.sight_line_clear) {
+            blocked_run = 0.0F;
+            continue;
+          }
+          blocked_run += std::max(shot.dt, 0.0F);
+          if (blocked_run > worst_run) {
+            worst_run = blocked_run;
+            worst_run_end = frame->time_seconds;
+          }
+        }
+        if (sampled == 0) {
+          add_issue(QStringLiteral("commander_camera_not_traced"),
+                    QStringLiteral("%1 never published a camera trace")
+                        .arg(expectation.group));
+          break;
+        }
+        if (worst_run > allowed) {
+          add_issue(
+              QStringLiteral("commander_camera_lost_sight"),
+              QStringLiteral("geometry stood between the lens and the commander for "
+                             "%1 s, ending at %2 s (allowed %3 s); the boom has to "
+                             "shorten until he is in sight and recover on its own")
+                  .arg(worst_run, 0, 'f', 3)
+                  .arg(worst_run_end, 0, 'f', 2)
+                  .arg(allowed, 0, 'f', 3));
         }
         break;
       }
@@ -4879,7 +4940,7 @@ struct ArenaScenarioRunner::Impl {
             if (std::abs(step) > k_boom_reversal_floor &&
                 std::abs(previous_step) > k_boom_reversal_floor &&
                 ((step > 0.0F) != (previous_step > 0.0F)) &&
-                shot.building_blocked_fraction < 1.0F) {
+                shot.boom_clear_fraction < 1.0F) {
               ++reversals;
             }
             previous_step = step;
@@ -6539,6 +6600,11 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("has_desired_yaw"), animal.has_desired_yaw},
           {QStringLiteral("velocity"), QJsonArray{animal.vx, animal.vz}},
           {QStringLiteral("biting"), animal.biting},
+          {QStringLiteral("bite_phase"), animal.bite_phase},
+          {QStringLiteral("flinch_phase"), animal.flinch_phase},
+          {QStringLiteral("bite_target_id"),
+           static_cast<qint64>(animal.bite_target_id)},
+          {QStringLiteral("impact_pending"), animal.impact_pending},
           {QStringLiteral("dying"), animal.dying}});
     }
 

@@ -4,6 +4,7 @@
 #include <cmath>
 #include <vector>
 
+#include "game/core/component.h"
 #include "render/creature/assets/creature_lod_geometry.h"
 #include "render/creature/schema/creature_runtime_manifest.h"
 #include "wildlife_gait.h"
@@ -630,10 +631,20 @@ auto make_pose(const WolfDrive& drive) -> RigPose {
   pose.tail_tip += QVector3D(sway, (lift * 0.320F) + (tail_bounce * 1.8F), 0.0F);
 
   apply_idle_motion(pose, drive);
+  auto const planted_legs = pose.legs;
   apply_lunge(pose, drive);
   apply_collapse(pose, drive);
   reattach_head(pose, head_attachment);
   enforce_skeleton_lengths(pose, skeleton);
+  if (drive.gait == WolfGait::Stand && drive.lunge > 0.0F && drive.collapse <= 0.0F) {
+
+    for (std::size_t i = 2; i < k_leg_count; ++i) {
+      auto const& leg = planted_legs[i];
+      auto rest = make_leg_rest(leg.shoulder, leg.knee, leg.foot, leg.toe, 0.0F);
+      rest.hip = pose.legs[i].shoulder;
+      solve_leg(rest, GaitPlan{}, 0.0F, 0.0F, pose.legs[i]);
+    }
+  }
   return pose;
 }
 
@@ -970,6 +981,31 @@ auto wolf_gait_advance(WolfGait gait) noexcept -> float {
 auto wolf_bind_pose() noexcept -> const RigPose& {
   static const RigPose pose = make_pose(WolfDrive{});
   return pose;
+}
+
+auto wolf_bite_drive(float phase) noexcept -> WolfDrive {
+  auto window = [phase](float start, float end) {
+    float const t = std::clamp((phase - start) / (end - start), 0.0F, 1.0F);
+    return t * t * (3.0F - 2.0F * t);
+  };
+  constexpr float contact = Engine::Core::WildlifeComponent::k_bite_impact_phase;
+  float const coil = window(0.0F, 0.14F);
+  float const strike = window(0.14F, contact);
+  float const release = window(0.52F, 1.0F);
+  float const grip = window(contact, 0.36F) * (1.0F - window(0.52F, 0.76F));
+
+  WolfDrive drive;
+  drive.gait = WolfGait::Stand;
+  drive.ear_pin = 1.0F;
+  drive.crouch =
+      0.55F + 0.35F * coil * (1.0F - strike) - 0.20F * strike * (1.0F - release);
+  drive.lunge = strike * (1.0F - release);
+  drive.jaw_open = coil * (1.0F - strike);
+  drive.head_dip = -0.6F * coil * (1.0F - strike);
+  drive.rear = 0.18F * strike * (1.0F - release);
+  drive.head_shake = std::sin((phase - contact) * k_two_pi * 3.0F) * 0.5F * grip;
+  drive.head_roll = -0.20F * grip;
+  return drive;
 }
 
 auto wolf_pose(const WolfDrive& drive) noexcept -> RigPose {

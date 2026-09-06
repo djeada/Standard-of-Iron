@@ -20,13 +20,10 @@ struct GaitCursor {
   float elapsed{0.0F};
   float pending_distance{0.0F};
   float ambient{0.0F};
-  float action{0.0F};
   float graze_hold{0.0F};
   std::uint8_t tier{0U};
   bool sampled{false};
 };
-
-constexpr float k_action_restart_drop = 0.25F;
 
 constexpr float k_gait_speed_smoothing = 0.18F;
 constexpr float k_gait_max_step_seconds = 0.25F;
@@ -51,6 +48,7 @@ struct ClipCursor {
   float last_phase{0.0F};
   float outgoing_phase{0.0F};
   float blend_remaining{0.0F};
+  float blend_duration{k_clip_blend_seconds};
   float stamp{0.0F};
 };
 
@@ -293,18 +291,9 @@ auto ambient_phase(const DrawState& state, float period_seconds) -> float {
 }
 
 auto action_phase(const DrawState& state, float raw) -> float {
-  auto& cursors = gait_cursors();
-  auto const entry = cursors.find(state.seed);
-  if (entry == cursors.end()) {
-    return raw;
-  }
-  GaitCursor& cursor = entry->second;
-  if (raw + k_action_restart_drop < cursor.action) {
-    cursor.action = raw;
-  } else {
-    cursor.action = std::max(cursor.action, raw);
-  }
-  return cursor.action;
+
+  (void)state;
+  return std::clamp(raw, 0.0F, 1.0F);
 }
 
 auto resolve_clip_transition(const DrawState& state,
@@ -313,11 +302,12 @@ auto resolve_clip_transition(const DrawState& state,
   auto& cursors = clip_cursors();
   auto [entry, inserted] = cursors.try_emplace(state.seed);
   ClipCursor& cursor = entry->second;
-  if (inserted) {
+  if (inserted || state.time < cursor.stamp) {
     cursor.state = incoming;
     cursor.outgoing = incoming;
     cursor.last_phase = incoming_phase;
     cursor.stamp = state.time;
+    cursor.blend_remaining = 0.0F;
     if (cursors.size() >= k_cursor_prune_threshold) {
       std::erase_if(cursors, [now = state.time](const auto& item) {
         return now - item.second.stamp > k_cursor_max_age;
@@ -332,7 +322,12 @@ auto resolve_clip_transition(const DrawState& state,
   if (incoming != cursor.state) {
     cursor.outgoing = cursor.state;
     cursor.outgoing_phase = cursor.last_phase;
-    cursor.blend_remaining = k_clip_blend_seconds;
+
+    cursor.blend_duration =
+        incoming == Render::Creature::AnimationStateId::WildlifeStartle
+            ? 0.06F
+            : k_clip_blend_seconds;
+    cursor.blend_remaining = cursor.blend_duration;
     cursor.state = incoming;
   } else {
     cursor.blend_remaining = std::max(0.0F, cursor.blend_remaining - elapsed);
@@ -346,7 +341,8 @@ auto resolve_clip_transition(const DrawState& state,
   ClipTransition transition;
   transition.outgoing = cursor.outgoing;
   transition.phase = cursor.outgoing_phase;
-  transition.weight = cursor.blend_remaining / k_clip_blend_seconds;
+  float const weight = cursor.blend_remaining / cursor.blend_duration;
+  transition.weight = weight * weight * (3.0F - 2.0F * weight);
   return transition;
 }
 
