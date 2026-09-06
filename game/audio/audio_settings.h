@@ -9,11 +9,13 @@
 #include <optional>
 
 #include "audio_constants.h"
+#include "gameplay_mix.h"
 
 namespace Game::Audio::Settings {
 
 inline constexpr char k_organization[] = "djeada";
 inline constexpr char k_application[] = "StandardOfIron";
+inline constexpr char k_listening_preset_key[] = "audio/listening_preset";
 inline constexpr char k_master_volume_key[] = "audio/master_volume";
 inline constexpr char k_sound_volume_key[] = "audio/sound_volume";
 inline constexpr char k_music_volume_key[] = "audio/music_volume";
@@ -43,6 +45,19 @@ inline auto open() -> QSettings {
                    QSettings::UserScope,
                    QString::fromLatin1(k_organization),
                    QString::fromLatin1(k_application));
+}
+
+inline auto load_listening_preset() -> int {
+  auto settings = open();
+  bool ok = false;
+  const int value = settings.value(k_listening_preset_key, 1).toInt(&ok);
+  return ok && value >= 0 && value <= 2 ? value : 1;
+}
+
+inline void save_listening_preset(int preset) {
+  auto settings = open();
+  settings.setValue(k_listening_preset_key, static_cast<int>(preset_from_int(preset)));
+  settings.sync();
 }
 
 namespace Detail {

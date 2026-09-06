@@ -353,3 +353,41 @@ TEST_F(AudioBackendTest, ATightResidencyBudgetIsReportedRatherThanIgnored) {
       << "the budget reports pressure; it must not silently drop audio";
   EXPECT_GT(m_backend.pcm_budget_overruns(), 0U);
 }
+
+TEST_F(AudioBackendTest, CriticalInformationDucksAlreadyPlayingMusicAndRecovers) {
+  using Game::Audio::MixBus;
+  m_backend.set_listening_preset(Game::Audio::ListeningPreset::Headphones);
+  ASSERT_TRUE(m_backend.request_track(
+      QStringLiteral("bed"), m_path, Mastering::Material::Effect));
+  ASSERT_TRUE(m_backend.request_track(
+      QStringLiteral("alert"), m_path, Mastering::Material::Effect));
+  m_backend.wait_for_decodes();
+  m_backend.play(0, QStringLiteral("bed"), 0.5F, true, 0);
+  render(SAMPLE_RATE);
+  const float baseline = peak_of(render(4096));
+  ASSERT_GT(baseline, 0.01F);
+  m_backend.play_sound(QStringLiteral("alert"), 0.01F, true, 0.0F, MixBus::Alert, 7);
+  render(SAMPLE_RATE);
+  const float ducked = peak_of(render(4096));
+  EXPECT_LT(ducked, baseline * 0.8F);
+  EXPECT_GT(ducked, baseline * 0.5F);
+  m_backend.stop_sound(QStringLiteral("alert"));
+  render(SAMPLE_RATE * 2);
+  EXPECT_NEAR(peak_of(render(4096)), baseline, 0.001F);
+}
+
+TEST_F(AudioBackendTest, MutedCriticalVoicesDoNotDuckTheBattle) {
+  using Game::Audio::MixBus;
+  m_backend.set_listening_preset(Game::Audio::ListeningPreset::Headphones);
+  ASSERT_TRUE(m_backend.request_track(
+      QStringLiteral("bed"), m_path, Mastering::Material::Effect));
+  ASSERT_TRUE(m_backend.request_track(
+      QStringLiteral("voice"), m_path, Mastering::Material::Effect));
+  m_backend.wait_for_decodes();
+  m_backend.play_sound(QStringLiteral("bed"), 0.5F, true, 0.0F, MixBus::Combat);
+  render(SAMPLE_RATE);
+  const float baseline = peak_of(render(4096));
+  m_backend.play_sound(QStringLiteral("voice"), 0.0F, true, 0.0F, MixBus::Voice, 9);
+  render(SAMPLE_RATE);
+  EXPECT_NEAR(peak_of(render(4096)), baseline, 0.001F);
+}

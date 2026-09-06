@@ -74,6 +74,8 @@ auto AudioSystem::initialize() -> bool {
 
   m_music_player->set_volume(master_volume.load() * music_volume.load());
 
+  m_music_player->get_backend()->set_listening_preset(
+      Game::Audio::preset_from_int(listening_preset.load()));
   is_running = true;
   audio_thread = std::thread(&AudioSystem::audio_thread_func, this);
 
@@ -204,6 +206,15 @@ void AudioSystem::stop_music() {
   enqueue(AudioEvent(AudioEventType::STOP_MUSIC));
 }
 
+void AudioSystem::set_listening_preset(int preset) {
+  const auto selected = Game::Audio::preset_from_int(preset);
+  listening_preset = static_cast<int>(selected);
+  Game::Audio::Settings::save_listening_preset(listening_preset.load());
+  if (m_music_player != nullptr && m_music_player->get_backend() != nullptr) {
+    m_music_player->get_backend()->set_listening_preset(selected);
+  }
+}
+
 void AudioSystem::set_master_volume(float volume) {
   master_volume = sanitize_volume(volume);
   Game::Audio::Settings::save_master_volume(master_volume.load());
@@ -237,6 +248,7 @@ void AudioSystem::set_ambience_volume(float volume) {
 }
 
 void AudioSystem::load_persisted_volumes() {
+  listening_preset = Game::Audio::Settings::load_listening_preset();
   const auto volumes = Game::Audio::Settings::load_volumes();
   master_volume = volumes.master;
   sound_volume = volumes.sound;
@@ -442,6 +454,21 @@ void AudioSystem::process_event(const AudioEvent& event) {
         break;
       }
 
+      Game::Audio::SpatialGain spatial;
+      if (event.positioned) {
+        spatial = Game::Audio::spatialize(listener(), event.position);
+      }
+
+      float const effective_vol =
+          get_effective_volume(category, requested_volume) * spatial.volume_scale;
+      if (is_effectively_muted(effective_vol)) {
+        trace_cue_result(event.cue_id,
+                         resource_id,
+                         Game::Audio::CueOutcome::Muted,
+                         event.cue_source);
+        break;
+      }
+
       if (!should_accept_sound_locked(effective_priority)) {
         trace_cue_result(event.cue_id,
                          resource_id,
@@ -462,21 +489,19 @@ void AudioSystem::process_event(const AudioEvent& event) {
         evict_lowest_priority_sound_locked();
       }
 
-      Game::Audio::SpatialGain spatial;
-      if (event.positioned) {
-        spatial = Game::Audio::spatialize(listener(), event.position);
-      }
-
-      float const effective_vol =
-          get_effective_volume(category, requested_volume) * spatial.volume_scale;
-      if (is_effectively_muted(effective_vol)) {
-        trace_cue_result(event.cue_id,
-                         resource_id,
-                         Game::Audio::CueOutcome::Muted,
-                         event.cue_source);
-        break;
-      }
-      it->second->play(effective_vol, event.loop, spatial.pan);
+      using Game::Audio::MixBus;
+      const MixBus fallback =
+          category == AudioCategory::VOICE
+              ? MixBus::Voice
+              : (category == AudioCategory::AMBIENCE ? MixBus::Ambience
+                                                     : MixBus::Combat);
+      // Category wins for voice resources bound to generic feedback cues.
+      const MixBus bus =
+          category == AudioCategory::VOICE
+              ? MixBus::Voice
+              : Game::Audio::mix_bus_for(
+                    event.cue_id, Game::Audio::mix_bus_for(resource_id, fallback));
+      it->second->play(effective_vol, event.loop, spatial.pan, bus, effective_priority);
       mark_sound_played_locked(resource_id, now);
       trace_cue_result(event.cue_id,
                        resource_id,
