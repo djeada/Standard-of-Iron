@@ -1,11 +1,15 @@
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <vector>
 
 #include "app/commander/commander_camera_rig.h"
 #include "app/commander/rts_camera_bookmark.h"
 #include "core/component_commander.h"
 #include "game/accessibility/commander_input_settings.h"
+#include "game/map/map_definition.h"
+#include "game/map/terrain_service.h"
+#include "game/systems/building_collision_registry.h"
 #include "scene/camera.h"
 
 using App::Core::CommanderCameraInputs;
@@ -291,4 +295,156 @@ TEST(RtsCameraBookmarkTest, AnEmptyBookmarkLeavesTheCameraAlone) {
 
   EXPECT_NEAR(camera.get_position().x(), 3.0F, 1.0e-4F);
   EXPECT_NEAR(camera.get_position().z(), 5.0F, 1.0e-4F);
+}
+
+namespace {
+
+class CommanderCameraCollisionTest : public ::testing::Test {
+protected:
+  void SetUp() override {
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
+    Game::Map::TerrainService::instance().clear();
+  }
+
+  void TearDown() override {
+    Game::Map::TerrainService::instance().clear();
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
+  }
+
+  static void
+  load_flat_ground_with_props(const std::vector<Game::Map::WorldProp>& props) {
+    Game::Map::MapDefinition map_def;
+    map_def.grid.width = 64;
+    map_def.grid.height = 64;
+    map_def.grid.tile_size = 1.0F;
+    map_def.coordSystem = Game::Map::CoordSystem::World;
+    map_def.biome.procedural_trees_enabled = false;
+    map_def.biome.procedural_boulders_enabled = false;
+    map_def.biome.procedural_iron_ore_enabled = false;
+    map_def.world_props = props;
+    Game::Map::TerrainService::instance().initialize(map_def);
+  }
+
+  static auto
+  prop_at(Game::Map::WorldProp::Type type, float x, float z) -> Game::Map::WorldProp {
+    Game::Map::WorldProp prop;
+    prop.type = type;
+    prop.x = x;
+    prop.z = z;
+    prop.scale = 1.0F;
+    return prop;
+  }
+
+  static auto looking_south(const QVector3D& position,
+                            bool with_terrain) -> CommanderCameraInputs {
+    CommanderCameraInputs inputs;
+    inputs.dt = 1.0F / 60.0F;
+    inputs.view_yaw_degrees = 180.0F;
+    inputs.commander_position = position;
+    inputs.fight_context = FightContext::None;
+    inputs.buildings = &Game::Systems::BuildingCollisionRegistry::instance();
+    inputs.terrain = with_terrain ? &Game::Map::TerrainService::instance() : nullptr;
+    return inputs;
+  }
+
+  static auto settled_trace(const CommanderCameraInputs& inputs)
+      -> App::Core::CommanderCameraTrace {
+    CommanderCameraRig rig;
+    Render::GL::Camera camera;
+    for (int frame = 0; frame < 120; ++frame) {
+      static_cast<void>(rig.update(camera, inputs));
+    }
+    return rig.trace();
+  }
+};
+
+} // namespace
+
+TEST_F(CommanderCameraCollisionTest, ATallPropRetractsTheBoomAndAShortOneIsFlownOver) {
+  load_flat_ground_with_props({prop_at(Game::Map::WorldProp::Type::Ruins, 0.9F, 3.1F)});
+  auto const behind_ruins =
+      settled_trace(looking_south(QVector3D(0.0F, 0.0F, 0.0F), true));
+  EXPECT_LT(behind_ruins.boom_resolved, behind_ruins.boom_unconstrained - 0.5F)
+      << "ruins stand nearly six metres tall and the boom went straight through "
+         "them";
+  EXPECT_TRUE(behind_ruins.sight_line_clear);
+
+  load_flat_ground_with_props(
+      {prop_at(Game::Map::WorldProp::Type::Boulder, 0.9F, 3.1F)});
+  auto const behind_boulder =
+      settled_trace(looking_south(QVector3D(0.0F, 0.0F, 0.0F), true));
+  EXPECT_NEAR(behind_boulder.boom_resolved, behind_boulder.boom_unconstrained, 1.0e-3F)
+      << "the eye rides 2.6 m up and a boulder tops out below one, so nothing "
+         "about it may move the camera";
+}
+
+TEST_F(CommanderCameraCollisionTest, AFallenLogIsNotAnObstructionToAChaseLens) {
+  load_flat_ground_with_props(
+      {prop_at(Game::Map::WorldProp::Type::DeadTree, 0.9F, 3.1F)});
+  auto const trace = settled_trace(looking_south(QVector3D(0.0F, 0.0F, 0.0F), true));
+  EXPECT_NEAR(trace.boom_resolved, trace.boom_unconstrained, 1.0e-3F);
+  EXPECT_TRUE(trace.sight_line_clear);
+}
+
+TEST_F(CommanderCameraCollisionTest, TheBoomRetractsAtOnceButIsReleasedInMetres) {
+  Game::Systems::BuildingCollisionRegistry::instance().register_building(
+      1U, "temple", 0.0F, 0.0F, 1, 0.0F);
+
+  CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  auto const blocked = looking_south(QVector3D(0.0F, 0.0F, -4.0F), false);
+  for (int frame = 0; frame < 120; ++frame) {
+    static_cast<void>(rig.update(camera, blocked));
+  }
+  float const retracted = rig.trace().boom_resolved;
+  ASSERT_LT(retracted, 2.0F) << "the temple never retracted the boom at all";
+
+  Game::Systems::BuildingCollisionRegistry::instance().clear();
+  auto const clear = looking_south(QVector3D(0.0F, 0.0F, -4.0F), false);
+  float previous = retracted;
+  float worst_step = 0.0F;
+  for (int frame = 0; frame < 120; ++frame) {
+    static_cast<void>(rig.update(camera, clear));
+    float const boom = rig.trace().boom_resolved;
+    worst_step = std::max(worst_step, boom - previous);
+    previous = boom;
+  }
+  EXPECT_GT(previous, retracted + 1.0F) << "the boom never came back out";
+  EXPECT_LT(worst_step, 0.12F)
+      << "the boom extended " << worst_step
+      << " m in one frame; release is damped in metres so an obstruction "
+         "leaving the frame does not pop the camera";
+}
+
+TEST_F(CommanderCameraCollisionTest, AWallOnlyEverShortensTheBoomAlongItsOwnAxis) {
+  Game::Systems::BuildingCollisionRegistry::instance().register_building(
+      1U, "home", 0.0F, 0.0F, 1, 0.0F);
+
+  auto const trace = settled_trace(looking_south(QVector3D(0.0F, 0.0F, -3.0F), false));
+  ASSERT_TRUE(trace.valid);
+  EXPECT_LT(trace.boom_resolved, trace.boom_unconstrained - 0.5F);
+
+  QVector3D const wanted = trace.eye_unconstrained - trace.pivot;
+  QVector3D const resolved = trace.eye_resolved - trace.pivot;
+  float const off_axis = (wanted.x() * resolved.z()) - (wanted.z() * resolved.x());
+  EXPECT_NEAR(off_axis, 0.0F, 1.0e-3F)
+      << "the eye left the boom axis, so something pushed it sideways instead of "
+         "pulling it in toward the commander";
+}
+
+TEST_F(CommanderCameraCollisionTest, ABuriedPivotNeverPushesTheLensAwayFromTheBody) {
+  Game::Systems::BuildingCollisionRegistry::instance().register_building(
+      1U, "temple", 0.0F, 0.0F, 1, 0.0F);
+
+  auto const trace = settled_trace(looking_south(QVector3D(0.0F, 0.0F, 0.0F), false));
+  ASSERT_TRUE(trace.valid);
+  EXPECT_NEAR(trace.boom_clear_fraction, 0.0F, 1.0e-4F)
+      << "the commander was placed inside the temple body, so no part of the "
+         "boom is clear and this test is not measuring what it means to";
+
+  float const planar = std::hypot(trace.eye_resolved.x() - trace.pivot.x(),
+                                  trace.eye_resolved.z() - trace.pivot.z());
+  EXPECT_LT(planar, 0.75F)
+      << "depenetration carried the lens out to the nearest temple wall, which "
+         "is where it used to lose the commander entirely";
 }

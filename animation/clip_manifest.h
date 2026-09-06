@@ -297,6 +297,7 @@ inline constexpr std::uint16_t k_wolf_bite_clip = 4U;
 inline constexpr std::uint16_t k_wolf_die_clip = 5U;
 inline constexpr std::uint16_t k_wolf_dead_clip = 6U;
 inline constexpr std::uint16_t k_wolf_crouch_clip = 7U;
+inline constexpr std::uint16_t k_wolf_flinch_clip = 8U;
 
 struct ClipManifest {
   std::array<std::uint16_t, state_count()> clips{};
@@ -513,6 +514,7 @@ wolf_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
   t[state_index(StateId::Die)] = k_wolf_die_clip;
   t[state_index(StateId::Dead)] = k_wolf_dead_clip;
   t[state_index(StateId::WildlifeTense)] = k_wolf_crouch_clip;
+  t[state_index(StateId::WildlifeStartle)] = k_wolf_flinch_clip;
   return t;
 }
 

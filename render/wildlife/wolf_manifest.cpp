@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "animation/bpat/bpat_format.h"
+#include "game/core/component.h"
 #include "render/creature/bake/creature_bake_recipe.h"
 #include "wildlife_rig.h"
 #include "wolf_spec.h"
@@ -38,9 +39,10 @@ struct WolfClipSpec {
   bool holds_collapsed{false};
   WolfGait gait{WolfGait::Stand};
   WolfAmbient ambient{WolfAmbient::None};
+  bool flinches{false};
 };
 
-constexpr std::array<WolfClipSpec, 8> k_wolf_clips{{
+constexpr std::array<WolfClipSpec, 9> k_wolf_clips{{
     {{"idle", 96U, 24.0F, true},
      0.0F,
      0.0F,
@@ -86,6 +88,16 @@ constexpr std::array<WolfClipSpec, 8> k_wolf_clips{{
      false,
      WolfGait::Stand,
      WolfAmbient::Crouched},
+    {{"flinch", 20U, 36.0F, false},
+     0.0F,
+     0.55F,
+     1.0F,
+     false,
+     false,
+     false,
+     WolfGait::Stand,
+     WolfAmbient::None,
+     true},
 }};
 
 constexpr std::array<Render::Creature::BakeClipDescriptor, k_wolf_clips.size()>
@@ -98,6 +110,7 @@ constexpr std::array<Render::Creature::BakeClipDescriptor, k_wolf_clips.size()>
         k_wolf_clips[5].desc,
         k_wolf_clips[6].desc,
         k_wolf_clips[7].desc,
+        k_wolf_clips[8].desc,
     }};
 
 auto wave(float phase, float harmonic, float offset) -> float {
@@ -164,63 +177,17 @@ void bake_wolf_clip_frame(std::size_t clip_index,
   drive.gait = clip.gait;
   apply_ambient(drive, clip.ambient, phase);
   if (clip.bites) {
-
-    constexpr float k_coil_end = 0.16F;
-    constexpr float k_contact = 0.28F;
-    constexpr float k_wrench_end = 0.56F;
-    constexpr float k_worry_end = 0.86F;
-    constexpr float k_pi = std::numbers::pi_v<float>;
-
-    auto smoothstep = [](float value) {
-      float const t = std::clamp(value, 0.0F, 1.0F);
-      return t * t * (3.0F - (2.0F * t));
+    drive = wolf_bite_drive(phase);
+  }
+  if (clip.flinches) {
+    auto smooth = [](float t) {
+      t = std::clamp(t, 0.0F, 1.0F);
+      return t * t * (3.0F - 2.0F * t);
     };
-
-    if (phase < k_coil_end) {
-
-      float const t = smoothstep(phase / k_coil_end);
-      drive.lunge = -0.34F * t;
-      drive.jaw_open = t;
-      drive.head_dip = -1.1F * t;
-      drive.crouch = 0.55F + (0.45F * t);
-      drive.rear = 0.22F * t;
-    } else if (phase < k_contact) {
-
-      float const t = (phase - k_coil_end) / (k_contact - k_coil_end);
-      drive.lunge = -0.34F + (1.34F * (t * t));
-      drive.jaw_open = 1.0F - (0.65F * t * t * t);
-      drive.head_dip = -1.1F * (1.0F - t);
-      drive.crouch = 1.0F - (0.72F * t);
-      drive.rear = 0.22F + (0.78F * (t * t));
-    } else if (phase < k_wrench_end) {
-
-      float const t = (phase - k_contact) / (k_wrench_end - k_contact);
-      float const heave = std::sin(t * k_pi);
-      drive.lunge = 1.0F - (0.12F * t);
-      drive.jaw_open = 0.0F;
-      drive.crouch = 0.30F + (0.42F * smoothstep(t));
-      drive.rear = 1.0F - (0.88F * smoothstep(t));
-      drive.head_shake = std::sin(t * k_pi * 2.0F) * 0.75F;
-      drive.head_roll = -(0.45F + (0.42F * heave));
-    } else if (phase < k_worry_end) {
-
-      float const t = (phase - k_wrench_end) / (k_worry_end - k_wrench_end);
-      float const thrash = std::sin(t * k_pi * 5.0F);
-      float const decay = 1.0F - (0.45F * t);
-      drive.lunge = 0.88F - (0.20F * t);
-      drive.jaw_open = 0.0F;
-      drive.crouch = 0.42F + (0.26F * std::fabs(thrash));
-      drive.head_shake = thrash * decay * 1.70F;
-      drive.head_roll = thrash * decay * 0.70F;
-    } else {
-
-      float const t = smoothstep((phase - k_worry_end) / (1.0F - k_worry_end));
-      drive.lunge = 0.68F * (1.0F - t);
-      drive.jaw_open = 0.0F;
-      drive.crouch = (0.42F * (1.0F - t)) + (0.55F * t);
-      drive.head_roll = 0.20F * (1.0F - t);
-    }
-    drive.stride_phase = 0.0F;
+    float const recoil = smooth(phase / 0.14F) * (1.0F - smooth((phase - 0.2F) / 0.8F));
+    drive.crouch += 0.35F * recoil;
+    drive.head_dip = -0.75F * recoil;
+    drive.head_roll = 0.3F * recoil;
   }
   if (clip.collapses) {
     drive.collapse = clip.holds_collapsed ? 1.0F : phase;
@@ -272,6 +239,15 @@ auto wolf_bake_recipe() noexcept -> const Render::Creature::CreatureBakeRecipe& 
     r.runtime = &wolf_runtime_manifest();
     r.clips = std::span<const Render::Creature::BakeClipDescriptor>(k_wolf_clip_descs);
     r.bake_clip_frame = &bake_wolf_clip_frame;
+    r.clip_markers =
+        [](std::size_t, std::string_view name, Animation::ClipMarkers& out) {
+          out = Animation::authored_generic_clip_markers(name);
+          if (name == "bite") {
+            out.contact = Engine::Core::WildlifeComponent::k_bite_impact_phase;
+            out.recover_unlocked = 0.76F;
+            out.exit_safe = 1.0F;
+          }
+        };
     return r;
   }();
   return recipe;

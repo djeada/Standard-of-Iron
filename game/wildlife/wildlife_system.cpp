@@ -34,7 +34,6 @@ namespace Game::Wildlife {
 namespace {
 
 constexpr float k_two_pi = 6.28318530718F;
-constexpr float k_wolf_bite_range = 1.35F;
 constexpr float k_civilian_threat_strength = 0.3F;
 constexpr float k_civilian_quarry_preference = 0.5F;
 constexpr int k_pack_gang_size = 3;
@@ -42,6 +41,8 @@ constexpr float k_pack_join_gain = 30.0F;
 constexpr float k_pack_second_join_gain = 9.0F;
 constexpr float k_quarry_crowd_penalty = 400.0F;
 constexpr float k_wolf_bite_recovery = 0.35F;
+constexpr float k_wolf_bite_facing_degrees = 12.0F;
+constexpr float k_wolf_contact_facing_degrees = 15.0F;
 constexpr float k_wolf_bite_flinch_seconds = 0.30F;
 constexpr float k_wolf_bite_blood_chance = 0.34F;
 constexpr float k_wolf_bite_blood_spread = 0.55F;
@@ -555,30 +556,33 @@ auto WildlifeSystem::begin_bite(Engine::Core::Entity& entity,
     return false;
   }
 
+  auto* transform = entity.get_component<Engine::Core::TransformComponent>();
+  if (transform == nullptr) {
+    return false;
+  }
+  float const dx = prey.x - hunter_x;
+  float const dz = prey.z - hunter_z;
+  float const yaw = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
+  transform->desired_yaw = yaw;
+  transform->has_desired_yaw = true;
+  float const reach = k_wolf_bite_windup_range + prey.radius;
+  if (dx * dx + dz * dz > reach * reach ||
+      std::abs(std::remainder(yaw - transform->rotation.y, 360.0F)) >
+          k_wolf_bite_facing_degrees) {
+    return false;
+  }
+
   wildlife.state_timer = std::max(k_wolf_bite_recovery, attack->melee_cooldown);
   wildlife.bite_timer = Engine::Core::WildlifeComponent::k_bite_animation_seconds;
   wildlife.bite_target_id = prey.id;
   wildlife.bite_impact_pending = true;
   m_stats.bites += 1U;
-  auto bite = Engine::Core::AudioCueEvent::for_owner(
-      Engine::Core::owner_id_of(prey.entity), Game::Audio::Cue::k_wildlife_wolf_bite);
-  bite.at(prey.x, 0.0F, prey.z);
-  Engine::Core::EventManager::instance().publish(bite);
 
   if (auto* movement = entity.get_component<Engine::Core::MovementComponent>();
       movement != nullptr) {
     movement->stop();
   }
 
-  auto* transform = entity.get_component<Engine::Core::TransformComponent>();
-  if (transform != nullptr) {
-    float const dx = prey.x - transform->position.x;
-    float const dz = prey.z - transform->position.z;
-    if ((dx * dx) + (dz * dz) > 1.0e-4F) {
-      transform->desired_yaw = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
-      transform->has_desired_yaw = true;
-    }
-  }
   return true;
 }
 
@@ -597,7 +601,7 @@ void WildlifeSystem::try_contact_bite(Engine::Core::World& world,
 
   float const dx = prey.x - animal.x;
   float const dz = prey.z - animal.z;
-  float const reach = k_wolf_bite_range + prey.radius;
+  float const reach = k_wolf_bite_windup_range + prey.radius;
   if ((dx * dx) + (dz * dz) > reach * reach) {
     return;
   }
@@ -1085,19 +1089,28 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
       if (prey.valid() && wolf_transform != nullptr && attack != nullptr) {
         float const dx = prey.x - wolf_transform->position.x;
         float const dz = prey.z - wolf_transform->position.z;
-        float const contact_reach = k_wolf_bite_range + prey.radius + 0.30F;
+        float const contact_reach = k_wolf_bite_range + prey.radius;
+        float const yaw = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
+        bool const facing =
+            std::abs(std::remainder(yaw - wolf_transform->rotation.y, 360.0F)) <=
+            k_wolf_contact_facing_degrees;
 
         bool const walled_off = Game::Systems::Combat::structure_separates_positions(
             QVector3D(wolf_transform->position.x, 0.0F, wolf_transform->position.z),
             QVector3D(prey.x, 0.0F, prey.z));
-        if (!walled_off && (dx * dx) + (dz * dz) <= contact_reach * contact_reach) {
+        if (!walled_off && facing &&
+            (dx * dx) + (dz * dz) <= contact_reach * contact_reach) {
           const auto damage = Game::Systems::Combat::apply_unit_damage(
               world, prey.entity, attack->melee_damage, animal.entity->get_id());
+          auto bite = Engine::Core::AudioCueEvent::for_owner(
+              Engine::Core::owner_id_of(prey.entity),
+              Game::Audio::Cue::k_wildlife_wolf_bite);
+          bite.at(prey.x, 0.0F, prey.z);
+          Engine::Core::EventManager::instance().publish(bite);
 
           const auto* prey_unit =
               prey.entity->get_component<Engine::Core::UnitComponent>();
-          if (prey_unit != nullptr &&
-              prey_unit->spawn_type == Game::Units::SpawnType::Civilian) {
+          if (prey_unit != nullptr && is_civilian_spawn(prey_unit->spawn_type)) {
             Game::Systems::Combat::add_or_extend_stagger(
                 prey.entity,
                 k_wolf_bite_flinch_seconds,
@@ -1123,8 +1136,19 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
       wildlife->aggressor_id = 0;
     }
 
+    if (wildlife->bite_timer > 0.0F) {
+      if (auto* movement = world->try_get<Engine::Core::MovementComponent>(
+              animal.entity->get_id())) {
+        movement->stop();
+      }
+      continue;
+    }
+
     if (animal.species == Species::Wolf) {
       try_contact_bite(*world, animal, *wildlife);
+      if (wildlife->bite_timer > 0.0F) {
+        continue;
+      }
     }
 
     if (wildlife->held_timer > 0.0F) {

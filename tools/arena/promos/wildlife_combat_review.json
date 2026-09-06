@@ -1,0 +1,287 @@
+{
+  "id": "wildlife_combat_review",
+  "title": "Wildlife combat contact review",
+  "width": 960,
+  "height": 540,
+  "fps": 30,
+  "supersample": 1,
+  "audio": false,
+  "shots": [
+    {
+      "name": "wildlife_wolf_builder_contact_normal",
+      "scenario": "wildlife_wolf_builder_contact",
+      "seed": 1416,
+      "start": 0,
+      "duration": 18,
+      "slow_motion": 1,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0],
+        "smoothing": 0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 18,
+          "pitch": 32,
+          "yaw": 65,
+          "fov": 40,
+          "height": 0.5
+        }
+      ]
+    },
+    {
+      "name": "wildlife_wolf_builder_contact_slow",
+      "scenario": "wildlife_wolf_builder_contact",
+      "seed": 1416,
+      "start": 2,
+      "duration": 5,
+      "slow_motion": 3,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0],
+        "smoothing": 0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 9,
+          "pitch": 32,
+          "yaw": 65,
+          "fov": 40,
+          "height": 0.5
+        }
+      ]
+    },
+    {
+      "name": "wildlife_wolves_builders_surround_normal",
+      "scenario": "wildlife_wolves_builders_surround",
+      "seed": 1416,
+      "start": 0,
+      "duration": 18,
+      "slow_motion": 1,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0],
+        "smoothing": 0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 18,
+          "pitch": 32,
+          "yaw": 65,
+          "fov": 40,
+          "height": 0.5
+        }
+      ]
+    },
+    {
+      "name": "wildlife_wolves_builders_surround_slow",
+      "scenario": "wildlife_wolves_builders_surround",
+      "seed": 1416,
+      "start": 2,
+      "duration": 5,
+      "slow_motion": 3,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0],
+        "smoothing": 0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 9,
+          "pitch": 32,
+          "yaw": 65,
+          "fov": 40,
+          "height": 0.5
+        }
+      ]
+    },
+    {
+      "name": "wildlife_wolf_builder_chase_normal",
+      "scenario": "wildlife_wolf_builder_chase",
+      "seed": 1416,
+      "start": 0,
+      "duration": 18,
+      "slow_motion": 1,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0],
+        "smoothing": 0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 18,
+          "pitch": 32,
+          "yaw": 65,
+          "fov": 40,
+          "height": 0.5
+        }
+      ]
+    },
+    {
+      "name": "wildlife_wolf_builder_chase_slow",
+      "scenario": "wildlife_wolf_builder_chase",
+      "seed": 1416,
+      "start": 2,
+      "duration": 5,
+      "slow_motion": 3,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0],
+        "smoothing": 0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 9,
+          "pitch": 32,
+          "yaw": 65,
+          "fov": 40,
+          "height": 0.5
+        }
+      ]
+    },
+    {
+      "name": "wildlife_wolf_swordsman_contact_normal",
+      "scenario": "wildlife_wolf_swordsman_contact",
+      "seed": 1416,
+      "start": 0,
+      "duration": 18,
+      "slow_motion": 1,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0],
+        "smoothing": 0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 18,
+          "pitch": 32,
+          "yaw": 65,
+          "fov": 40,
+          "height": 0.5
+        }
+      ]
+    },
+    {
+      "name": "wildlife_wolf_swordsman_contact_slow",
+      "scenario": "wildlife_wolf_swordsman_contact",
+      "seed": 1416,
+      "start": 2,
+      "duration": 5,
+      "slow_motion": 3,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0],
+        "smoothing": 0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 9,
+          "pitch": 32,
+          "yaw": 65,
+          "fov": 40,
+          "height": 0.5
+        }
+      ]
+    },
+    {
+      "name": "wildlife_wolf_swordsman_exchange_normal",
+      "scenario": "wildlife_wolf_swordsman_exchange",
+      "seed": 1416,
+      "start": 0,
+      "duration": 18,
+      "slow_motion": 1,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0],
+        "smoothing": 0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 18,
+          "pitch": 32,
+          "yaw": 65,
+          "fov": 40,
+          "height": 0.5
+        }
+      ]
+    },
+    {
+      "name": "wildlife_wolf_swordsman_exchange_slow",
+      "scenario": "wildlife_wolf_swordsman_exchange",
+      "seed": 1416,
+      "start": 2,
+      "duration": 5,
+      "slow_motion": 3,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0],
+        "smoothing": 0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 9,
+          "pitch": 32,
+          "yaw": 65,
+          "fov": 40,
+          "height": 0.5
+        }
+      ]
+    },
+    {
+      "name": "wildlife_wolf_sheep_contact_normal",
+      "scenario": "wildlife_wolf_sheep_contact",
+      "seed": 1416,
+      "start": 0,
+      "duration": 24,
+      "slow_motion": 1,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0],
+        "smoothing": 0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 18,
+          "pitch": 32,
+          "yaw": 65,
+          "fov": 40,
+          "height": 0.5
+        }
+      ]
+    },
+    {
+      "name": "wildlife_wolf_sheep_contact_slow",
+      "scenario": "wildlife_wolf_sheep_contact",
+      "seed": 1416,
+      "start": 2,
+      "duration": 5,
+      "slow_motion": 3,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0],
+        "smoothing": 0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 9,
+          "pitch": 32,
+          "yaw": 65,
+          "fov": 40,
+          "height": 0.5
+        }
+      ]
+    }
+  ]
+}

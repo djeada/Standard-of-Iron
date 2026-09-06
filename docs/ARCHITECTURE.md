@@ -826,9 +826,23 @@ These are real and deliberate, not oversights:
   registry records the component types a system touches and `World::update`
   compares them against the declaration when
   `World::set_access_verification(true)` is on (`SOI_VERIFY_SYSTEM_ACCESS`
-  forces it into a Release build; Release compiles the recording out). Until
-  that check is green across a full match, `plan_phase_schedule`'s batches
-  describe what _could_ run together, and nothing is dispatched onto a thread.
+  forces it into a Release build; Release compiles the recording out).
+  `SystemAccessVerificationTest` runs the real registry for a tick and fails on
+  any system that reached a component it did not declare. It is green, so the
+  claims are now checked rather than asserted; nothing is dispatched onto a
+  thread yet regardless, because the single-writer work below is what that
+  waits on.
+- What the recorder can see is which registry accessor a system used, not what
+  it then did with the pointer, so the mutable accessor has to be counted as a
+  write. That makes view constness **per component, not per view**: a component
+  named `const T` in `view<>`/`entity_view<>` is fetched through the registry's
+  const accessor and recorded as a read, and a view opened on a `const World` is
+  read-only throughout. Without this, the ordinary shape of a system loop --
+  write one component while reading three others alongside it -- reports as
+  writing all four, which is how a read-only pass like the spatial index rebuild
+  came to look like a writer of `TransformComponent` and `UnitComponent` in
+  every system that asked it for a refresh. Mark the components a loop only
+  reads, and the declaration and the recording agree.
 - 76 full-world entity scans remain, of which 19 sit inside a loop
   body. `scripts/check-world-scans.py` budgets the first number per directory
   and refuses a new entry in the second; both are heuristics over source text,

@@ -149,6 +149,44 @@ type, units produced, peak units held within its home radius versus pushed past
 the midpoint, seconds spent in an attacking state, how far it advanced, and who
 won and when.
 
+## Wolf contact and sheep reactions
+
+The `wildlife_wolf_builder_contact`, `wildlife_wolves_builders_surround`, and
+`wildlife_wolf_builder_chase` fixtures cover a single builder, a pack, and a
+moving target. `wildlife_wolf_swordsman_contact` holds the soldier's attacks
+disabled for bite inspection; `wildlife_wolf_swordsman_exchange` enables normal
+retaliation. `wildlife_wolf_sheep_contact` follows acquisition through the
+sheep's reaction and death. Each uses wildlife seed 1416 with respawns disabled.
+
+Record the normal-speed and 3x slow-motion inspection windows with:
+
+```bash
+build-debug/bin/arena_app \
+  --promo-spec tools/arena/promos/wildlife_combat_review.json \
+  --promo-out artifacts/wildlife-combat-review
+```
+
+For gameplay assertions and frame-by-frame diagnostic data:
+
+```bash
+build-debug/bin/arena_app --batch --scenario wildlife_wolf_builder_contact \
+  --fps 60 --seed 1416 --capture-interval 0.1 --clean-capture \
+  --artifact-dir artifacts/wildlife-combat
+```
+
+Repeat the batch command for the other five IDs. `trace.jsonl` records each
+animal's bite phase, committed target, pending impact, flinch phase, health,
+facing, velocity and death state. Damage should coincide with bite phase 0.27;
+a target that leaves contact range during wind-up should take no damage while
+the wolf finishes recovery. The authored-pose tests check continuity and rear
+paw bracing, and the runtime motion tests check facing and movement during bites.
+
+Review the clips for muzzle contact, human retaliation, a visible sheep flinch,
+and a settled carcass. Use the normal views to judge gameplay readability and
+the slow close views to inspect paws and transitions. Keep the recorded clips
+and their manifest together when comparing later changes; periodic batch PNGs
+are sampled on a wall-clock timer and are not exact simulation-frame baselines.
+
 ## Local batch inspection
 
 Batch mode intentionally opens the real Arena OpenGL window. It requires a

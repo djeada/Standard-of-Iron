@@ -10,6 +10,7 @@
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_registry.h"
 #include "animation/clip_manifest.h"
+#include "game/core/component.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/entity/mounted_knight_pose.h"
 #include "render/equipment/weapons/sword_renderer.h"
@@ -91,10 +92,14 @@ TEST(BpatRegistry, WildlifeBakesArticulatedBiteAndContinuousDeaths) {
   auto const bite = wolf->clip(Animation::k_wolf_bite_clip);
   ASSERT_GE(bite.frame_count, 12U);
   EXPECT_FALSE(bite.loops);
+  EXPECT_FLOAT_EQ(bite.marker_contact,
+                  Engine::Core::WildlifeComponent::k_bite_impact_phase);
+  ASSERT_GT(wolf->clip_count(), Animation::k_wolf_flinch_clip);
+  EXPECT_FALSE(wolf->clip(Animation::k_wolf_flinch_clip).loops);
 
   std::uint32_t const jaw_open_frame = bite.frame_count / 6U;
-  std::uint32_t const contact_frame =
-      static_cast<std::uint32_t>(std::lround((bite.frame_count - 1U) * 0.34F));
+  std::uint32_t const contact_frame = static_cast<std::uint32_t>(std::lround(
+      (bite.frame_count - 1U) * Engine::Core::WildlifeComponent::k_bite_impact_phase));
   auto const bite_start = sample(k_species_wolf, Animation::k_wolf_bite_clip, 0U);
   auto const jaw_open =
       sample(k_species_wolf, Animation::k_wolf_bite_clip, jaw_open_frame);

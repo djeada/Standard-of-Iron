@@ -453,6 +453,51 @@ world_prop_ground_half_extents(WorldProp::Type type,
   return extents;
 }
 
+[[nodiscard]] constexpr auto world_prop_model_height(WorldProp::Type type) -> float {
+  switch (type) {
+  case WorldProp::Type::Ruins:
+    return 2.04F;
+  case WorldProp::Type::AbandonedHome:
+    return 1.63F;
+  case WorldProp::Type::SupplyCart:
+    return 1.35F;
+  case WorldProp::Type::WeaponRack:
+    return 1.88F;
+  case WorldProp::Type::MagicShrine:
+    return 1.96F;
+  case WorldProp::Type::CursedGoldVein:
+    return 1.26F;
+  case WorldProp::Type::Statue:
+    return 2.62F;
+  case WorldProp::Type::Tent:
+    return 0.88F;
+  case WorldProp::Type::FireCamp:
+    return 0.55F;
+  case WorldProp::Type::Boulder:
+    return 0.70F;
+  case WorldProp::Type::IronOre:
+    return 0.78F;
+  case WorldProp::Type::DeadTree:
+    return 0.50F;
+  case WorldProp::Type::PineTree:
+    return 1.42F;
+  case WorldProp::Type::OliveTree:
+    return 0.98F;
+  case WorldProp::Type::CypressTree:
+    return 1.64F;
+  case WorldProp::Type::PalmTree:
+    return 1.40F;
+  case WorldProp::Type::Plant:
+    break;
+  }
+  return 0.50F;
+}
+
+[[nodiscard]] constexpr auto world_prop_occluder_height(WorldProp::Type type,
+                                                        float authored_scale) -> float {
+  return world_prop_model_height(type) * world_prop_render_scale(type) * authored_scale;
+}
+
 [[nodiscard]] constexpr auto world_prop_ground_radius(WorldProp::Type type,
                                                       float authored_scale) -> float {
   const WorldPropHalfExtents extents =

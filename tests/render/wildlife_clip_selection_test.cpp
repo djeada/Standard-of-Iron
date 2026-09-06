@@ -50,6 +50,15 @@ TEST(WildlifeClipSelection, DeathOutranksEverySpeed) {
   EXPECT_EQ(resolve_sheep_clip(sheep, GaitTier::Run, false), AnimationStateId::Dead);
 }
 
+TEST(WildlifeClipSelection, WolfReactsWithoutInterruptingACommittedBite) {
+  DrawState state;
+  state.flinch_progress = 0.1F;
+  EXPECT_EQ(resolve_wolf_clip(state, GaitTier::Stand),
+            AnimationStateId::WildlifeStartle);
+  state.bite_progress = 0.2F;
+  EXPECT_EQ(resolve_wolf_clip(state, GaitTier::Stand), AnimationStateId::AttackMelee);
+}
+
 TEST(WildlifeClipSelection, AGrazingSheepStillHoldsItsGrazePose) {
   DrawState state;
   state.grazing = true;
@@ -100,6 +109,42 @@ TEST(WildlifeLocomotion, AStoppedWolfShowsItsBiteWindupImmediately) {
   auto const tier = resolve_gait_tier(state, speed / 4.6F, 0.02F, 0.55F);
   EXPECT_EQ(tier, GaitTier::Stand);
   EXPECT_EQ(resolve_wolf_clip(state, tier), AnimationStateId::AttackMelee);
+}
+
+TEST(WildlifeClipSelection, DeathStartsAtItsOwnPhaseAfterAnInterruptedBite) {
+  using namespace Render::GL::Wildlife;
+  DrawState state;
+  state.seed = 0xA17004U;
+  (void)gait_speed(state);
+  EXPECT_FLOAT_EQ(action_phase(state, 0.20F), 0.20F);
+  state.time = 0.1F;
+  state.death_progress = 0.0F;
+  EXPECT_FLOAT_EQ(action_phase(state, state.death_progress), 0.0F);
+}
+
+TEST(WildlifeClipSelection, FlinchIsFullyVisibleBeforeItsPeak) {
+  using namespace Render::GL::Wildlife;
+  DrawState state;
+  state.seed = 0xA17005U;
+  (void)resolve_clip_transition(state, AnimationStateId::Run, 0.4F);
+  state.time = 1.0F;
+  auto transition =
+      resolve_clip_transition(state, AnimationStateId::WildlifeStartle, 0.0F);
+  EXPECT_FLOAT_EQ(transition.weight, 1.0F);
+  state.time += 0.075F;
+  transition = resolve_clip_transition(state, AnimationStateId::WildlifeStartle, 0.14F);
+  EXPECT_FLOAT_EQ(transition.weight, 0.0F);
+}
+
+TEST(WildlifeClipSelection, ReplayingAScenarioDoesNotBlendFromItsPreviousDeath) {
+  using namespace Render::GL::Wildlife;
+  DrawState state;
+  state.seed = 0xA17006U;
+  state.time = 10.0F;
+  (void)resolve_clip_transition(state, AnimationStateId::Dead, 1.0F);
+  state.time = 0.0F;
+  EXPECT_FLOAT_EQ(resolve_clip_transition(state, AnimationStateId::Run, 0.0F).weight,
+                  0.0F);
 }
 
 } // namespace

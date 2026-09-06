@@ -204,7 +204,7 @@ TEST_F(CommanderPresentationTraceTest, CameraTraceCarriesBothTheDesiredAndResolv
   EXPECT_GT(shot.boom_resolved, 0.0F);
   EXPECT_LE(shot.boom_resolved, shot.boom_unconstrained + 1.0e-3F)
       << "collision may only retract the boom, never extend it";
-  EXPECT_NEAR(shot.building_blocked_fraction, 1.0F, 1.0e-3F)
+  EXPECT_NEAR(shot.boom_clear_fraction, 1.0F, 1.0e-3F)
       << "no building was registered, so nothing may report as blocking";
   EXPECT_NE(shot.eye_resolved, shot.target_resolved);
 }

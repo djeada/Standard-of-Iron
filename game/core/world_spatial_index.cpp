@@ -42,7 +42,7 @@ void WorldSpatialIndex::clear() {
   m_built_for_tick = 0;
 }
 
-void WorldSpatialIndex::refresh(World& world) {
+void WorldSpatialIndex::refresh(const World& world) {
   const std::uint64_t tick = world.tick_id();
   if (tick != 0 && m_ever_built && m_built_for_tick == tick) {
     return;
@@ -50,7 +50,7 @@ void WorldSpatialIndex::refresh(World& world) {
   rebuild(world);
 }
 
-void WorldSpatialIndex::rebuild(World& world) {
+void WorldSpatialIndex::rebuild(const World& world) {
   m_built_for_tick = world.tick_id();
   m_ever_built = true;
   ++m_stats.rebuilds;

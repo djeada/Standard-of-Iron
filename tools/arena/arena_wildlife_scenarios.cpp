@@ -111,6 +111,72 @@ auto sheep_only(int groups,
 auto build_wildlife_definitions() -> std::vector<ArenaScenarioDefinition> {
   std::vector<ArenaScenarioDefinition> result;
 
+  for (int fixture = 0; fixture < 6; ++fixture) {
+    static constexpr const char* ids[] = {"wildlife_wolf_builder_contact",
+                                          "wildlife_wolves_builders_surround",
+                                          "wildlife_wolf_builder_chase",
+                                          "wildlife_wolf_swordsman_contact",
+                                          "wildlife_wolf_swordsman_exchange",
+                                          "wildlife_wolf_sheep_contact"};
+    bool const sheep = fixture == 5;
+    bool const pack = fixture == 1;
+    bool const moving = fixture == 2;
+    auto s = definition(
+        QString::fromLatin1(ids[fixture]),
+        QStringLiteral("Wildlife Combat: %1")
+            .arg(QString::fromLatin1(ids[fixture]).mid(9)),
+        QStringLiteral("Fixed-seed contact inspection: approach, facing, "
+                       "bite impact, planted recovery and target reactions."),
+        sheep ? 24.0F : 18.0F,
+        {12.0F, 32.0F, 65.0F});
+    s.suppress_terrain_scatter = true;
+    s.suppress_terrain_features = true;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.suppress_combat_dust = true;
+    s.wildlife = sheep_only(1, 1, 4.0F);
+    s.wildlife.seed = 1416U;
+    s.wildlife.sheep.enabled = sheep;
+    s.wildlife.sheep.group_count = sheep ? 1 : 0;
+    s.wildlife.sheep.spawn_areas = {{0.0F, 0.0F, 0.0F}};
+    s.wildlife.sheep.respawn = false;
+    s.wildlife.wolves.enabled = true;
+    s.wildlife.wolves.group_count = 1;
+    s.wildlife.wolves.group_size_min = pack ? 3 : 1;
+    s.wildlife.wolves.group_size_max = pack ? 3 : 1;
+    s.wildlife.wolves.aggression = 1.0F;
+    s.wildlife.wolves.roam_radius = 16.0F;
+    s.wildlife.wolves.alert_radius = 8.0F;
+    s.wildlife.wolves.respawn = false;
+    s.wildlife.wolves.spawn_areas = {{moving ? 7.0F : 3.0F, 0.0F, 0.0F}};
+    if (sheep) {
+      s.groups = {observer_group({0.0F, 0.0F, -30.0F})};
+      s.expectations = {expectation(Expect::WildlifeHuntObserved),
+                        expectation(Expect::WildlifeFleeObserved),
+                        expectation(Expect::WildlifeCasualtyObserved)};
+    } else {
+      auto target = patrol_group(QStringLiteral("target"),
+                                 fixture >= 3 ? Troop::Swordsman : Troop::Builder,
+                                 {0.0F, 0.0F, 0.0F},
+                                 pack ? 2 : 1);
+      target.individuals_per_unit = 1;
+      target.health_override = 240;
+      target.max_health_override = 240;
+      target.attacks_disabled = fixture != 4;
+      s.groups = {target};
+      if (moving) {
+        s.steps = {move_step(0.0F, QStringLiteral("target"), {-4.0F, 0.0F, 0.0F})};
+      }
+      s.expectations = {
+          expectation(Expect::WildlifeHuntObserved),
+          expectation(Expect::GroupHealthReduced, QStringLiteral("target"))};
+      if (fixture == 4) {
+        s.expectations.push_back(expectation(Expect::WildlifeCasualtyObserved));
+      }
+    }
+    result.push_back(std::move(s));
+  }
+
   {
     auto s = definition(
         QString::fromLatin1(k_wildlife_grazing_herd_id),

@@ -20,6 +20,9 @@ using EntityID = std::uint64_t;
 
 namespace Game::Wildlife {
 
+inline constexpr float k_wolf_bite_range = 1.05F;
+inline constexpr float k_wolf_bite_windup_range = 0.80F;
+
 struct SpeciesConfig;
 
 enum class NaturePriority : std::uint8_t {
