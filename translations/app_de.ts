@@ -9890,6 +9890,22 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
         <source>Prompts and readouts:</source>
         <translation>Hinweise und Anzeigen:</translation>
     </message>
+    <message>
+        <source>Listening Preset:</source>
+        <translation>Wiedergabeprofil:</translation>
+    </message>
+    <message>
+        <source>Headphones</source>
+        <translation>Kopfhörer</translation>
+    </message>
+    <message>
+        <source>Speakers</source>
+        <translation>Lautsprecher</translation>
+    </message>
+    <message>
+        <source>Night</source>
+        <translation>Nachtmodus</translation>
+    </message>
 </context>
 <context>
     <name>SkirmishLoader</name>

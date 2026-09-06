@@ -72,6 +72,7 @@ Item {
     }
 
     function set_audio_slider_values() {
+        listening_preset.currentIndex = game.audio_system.get_listening_preset();
         master_volume_slider.value = game.audio_system.get_master_volume() * 100;
         music_volume_slider.value = game.audio_system.get_music_volume() * 100;
         sfx_volume_slider.value = game.audio_system.get_sound_volume() * 100;
@@ -208,6 +209,24 @@ Item {
                             columns: 2
                             rowSpacing: Theme.spacingMedium
                             columnSpacing: Theme.spacingMedium
+
+                            Label {
+                                text: qsTr("Listening Preset:")
+                                color: Theme.textSub
+                                font.pixelSize: Design.Typography.bodyLarge
+                            }
+
+                            StyledComboBox {
+                                id: listening_preset
+
+                                Layout.fillWidth: true
+                                model: [qsTr("Headphones"), qsTr("Speakers"), qsTr("Night")]
+                                currentIndex: 1
+                                onActivated: {
+                                    if (typeof game !== 'undefined' && game.audio_system)
+                                        game.audio_system.set_listening_preset(currentIndex);
+                                }
+                            }
 
                             Label {
                                 text: qsTr("Master Volume:")

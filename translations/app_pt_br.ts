@@ -9890,6 +9890,22 @@ Os construtores os ceifam pela comida que recruta civis</translation>
         <source>Prompts and readouts:</source>
         <translation>Avisos e painéis:</translation>
     </message>
+    <message>
+        <source>Listening Preset:</source>
+        <translation>Perfil de escuta:</translation>
+    </message>
+    <message>
+        <source>Headphones</source>
+        <translation>Fones de ouvido</translation>
+    </message>
+    <message>
+        <source>Speakers</source>
+        <translation>Alto-falantes</translation>
+    </message>
+    <message>
+        <source>Night</source>
+        <translation>Modo noturno</translation>
+    </message>
 </context>
 <context>
     <name>SkirmishLoader</name>

@@ -537,6 +537,7 @@ add_executable(
     core/audio_gameplay_scenarios_test.cpp
     core/audio_battle_load_test.cpp
     core/audio_mastering_test.cpp
+    core/gameplay_mix_test.cpp
     core/loop_seam_test.cpp
     core/resampler_test.cpp
     core/ambience_assets_test.cpp

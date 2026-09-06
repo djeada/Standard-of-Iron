@@ -365,3 +365,12 @@ TEST(BusLimiterTest, RecoversAfterATransient) {
 }
 
 } // namespace
+
+TEST(AudioMastering, HotEffectsAreTrimmedWithoutBoostingQuietVariants) {
+  auto hot = make_stereo(48000);
+  add_tone(hot, 900.0F, 0.90F);
+  const auto report = master(hot, Mastering::Material::Effect);
+  EXPECT_LT(report.loudness_gain_db, -6.0F);
+  const auto analysis = Mastering::analyse(hot.data(), 48000, 2, SAMPLE_RATE);
+  EXPECT_LE(analysis.loudness_lufs, -17.9F);
+}

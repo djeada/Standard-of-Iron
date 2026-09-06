@@ -949,7 +949,10 @@ auto profile_for(Material material) -> Profile {
     profile.ceiling_db = -1.0F;
     break;
   case Material::Effect:
-    profile.normalise_loudness = false;
+    profile.normalise_loudness = true;
+    profile.attenuate_only = true;
+    profile.target_lufs = -18.0F;
+    profile.loudness_authority_db = 24.0F;
     profile.presence_target_db = -8.0F;
     profile.air_target_db = -16.0F;
     profile.tilt_cut_db = 2.5F;
@@ -1131,6 +1134,9 @@ auto apply(float* pcm,
     float gain_db = std::clamp(profile.target_lufs - shaped_lufs,
                                -profile.loudness_authority_db,
                                profile.loudness_authority_db);
+    if (profile.attenuate_only) {
+      gain_db = std::min(0.0F, gain_db);
+    }
     gain_db = std::min(
         gain_db, profile.ceiling_db - to_db(context.shaped_peak) + MAX_LIMITING_DB);
     report.loudness_gain_db = gain_db;
