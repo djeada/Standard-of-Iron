@@ -6130,6 +6130,14 @@ to see preview</source>
         <source>Crossing the Rhone</source>
         <translation>Переправа через Рону</translation>
     </message>
+    <message>
+        <source>An enormous capital on a 768 m stage, built in rings. Farmland, orchards, quarries, lakes and a ruined old town fill the countryside; a great eight-gated wall encloses the new city with its circus, theatre, docks and insulae; an older Republican circuit holds the forum and the ancient core; and a walled citadel crowns the sacred mountain behind the whole thing, where the healers keep the temples.</source>
+        <translation>Огромная столица на сцене в 768 м, выстроенная кольцами. Пашни, сады, каменоломни, озёра и разрушенный старый город заполняют окрестности; великая стена с восемью воротами охватывает новый город с его цирком, театром, причалами и инсулами; более старый республиканский обвод держит форум и древнее ядро; а обнесённая стеной цитадель венчает священную гору позади всего этого, где целители хранят храмы.</translation>
+    </message>
+    <message>
+        <source>Aurelia Magna</source>
+        <translation>Аврелия Магна</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -7750,6 +7758,122 @@ to see preview</source>
     <message>
         <source>Your veterans are dying. Italy&apos;s veterans, really; you took them from us sixteen years ago and now we are taking them back one at a time.</source>
         <translation>Твои ветераны гибнут. По сути, ветераны Италии; вы забрали их у нас шестнадцать лет назад, а теперь мы забираем их обратно по одному.</translation>
+    </message>
+    <message>
+        <source>A raid on the pasture, then a landing at the quay. Nine gates and one garrison: the avenue and the decumanus are how you get from one to the other.</source>
+        <translation>Набег на пастбище, затем высадка у причала. Девять ворот и один гарнизон: проспект и декуманус — вот как попасть от одних к другим.</translation>
+    </message>
+    <message>
+        <source>Break all six assaults. They do not come at the same gate twice.</source>
+        <translation>Сломите все шесть приступов. Дважды к одним воротам они не приходят.</translation>
+    </message>
+    <message>
+        <source>Break the siege</source>
+        <translation>Сломите осаду</translation>
+    </message>
+    <message>
+        <source>Bring in the first harvest</source>
+        <translation>Соберите первый урожай</translation>
+    </message>
+    <message>
+        <source>Everything I have is on the roads, consul. East, west, and the bridge. Choose two.</source>
+        <translation>Всё, что у меня есть, — на дорогах, консул. Восток, запад и мост. Выбирай два.</translation>
+    </message>
+    <message>
+        <source>Grain from the river fields, timber from the groves, stone from the quarries beyond the north wall. Every assault you break early is a window to work.</source>
+        <translation>Зерно с приречных полей, древесина из рощ, камень из каменоломен за северной стеной. Каждый приступ, сломленный рано, — это окно для работы.</translation>
+    </message>
+    <message>
+        <source>Hold the outer gates</source>
+        <translation>Удержите внешние ворота</translation>
+    </message>
+    <message>
+        <source>Keep every hall. The two granges and the two quarry camps stand outside the wall, and they are the only stockpiles the work crews can reach.</source>
+        <translation>Сохраните каждые казармы. Два хутора и два лагеря каменоломен стоят вне стены, и это единственные склады, до которых доходят рабочие артели.</translation>
+    </message>
+    <message>
+        <source>Look at it. Three walls, seventeen gates, and not one stalk of grain growing inside any of them. The city was built to be admired, not besieged. Get the crews over the river while the road is still ours, and keep the garrison off the ramparts until you know which gate they want.</source>
+        <translation>Взгляни на него. Три стены, семнадцать ворот и ни одного колоса, растущего внутри хоть одной из них. Город строили, чтобы им любовались, а не чтобы его осаждали. Переправь артели через реку, пока дорога ещё наша, и держи гарнизон подальше от валов, пока не поймёшь, какие ворота им нужны.</translation>
+    </message>
+    <message>
+        <source>Lose every hall in the city and there is nothing left to recruit from, or carry a harvest to.</source>
+        <translation>Потеряйте все казармы в городе — и не останется ни откуда набирать, ни куда свозить урожай.</translation>
+    </message>
+    <message>
+        <source>One consul and an empty city is not a garrison.</source>
+        <translation>Один консул и пустой город — это не гарнизон.</translation>
+    </message>
+    <message>
+        <source>Provision the capital</source>
+        <translation>Снабдите столицу</translation>
+    </message>
+    <message>
+        <source>Provision the capital. The grain is across the river and the stone is past the quarry gate; neither will walk in by itself.</source>
+        <translation>Снабдите столицу. Зерно за рекой, а камень за воротами каменоломни; сами собой они не придут.</translation>
+    </message>
+    <message>
+        <source>Riders on the pasture gate. They are not here for the wall; they are here for the flocks. Whatever you send has to get there before the herds do.</source>
+        <translation>Всадники у пастбищных ворот. Они здесь не ради стены, а ради стад. Что бы ты ни послал, оно должно прийти туда раньше стад.</translation>
+    </message>
+    <message>
+        <source>Six assaults and the granaries full. The city will say the walls held. The walls did nothing -- the road to the river held, and the crews who walked it did not stop walking it. Write that down and let them carve the other version.</source>
+        <translation>Шесть приступов и полные житницы. Город скажет, что выстояли стены. Стены не сделали ничего — выстояла дорога к реке, и артели, что по ней ходили, не переставали по ней ходить. Запиши это и позволь им высечь другую версию.</translation>
+    </message>
+    <message>
+        <source>Six assaults, and the last one comes at three gates with elephants behind it.</source>
+        <translation>Шесть приступов, и последний придёт к трём воротам, а за ним слоны.</translation>
+    </message>
+    <message>
+        <source>Stone is the scarce one: the only boulders are at the two quarries outside the walls.</source>
+        <translation>Камень — вот чего мало: единственные валуны у двух каменоломен за стенами.</translation>
+    </message>
+    <message>
+        <source>That gate holds. Do not stand there admiring it -- the crews go out now, and they come back before the next horn.</source>
+        <translation>Эти ворота держат. Не стой и не любуйся — артели выходят сейчас и возвращаются до следующего рога.</translation>
+    </message>
+    <message>
+        <source>The Siege of Aurelia Magna</source>
+        <translation>Осада Аврелии Магны</translation>
+    </message>
+    <message>
+        <source>The consul falls and the gates answer to nobody.</source>
+        <translation>Консул падёт — и ворота никому не подчиняются.</translation>
+    </message>
+    <message>
+        <source>The fields are across the river and the roads are still open. Send the crews out now; they will not be open long.</source>
+        <translation>Поля за рекой, а дороги ещё открыты. Выводи артели сейчас; открытыми они пробудут недолго.</translation>
+    </message>
+    <message>
+        <source>The granges on the south bank are the nearest stockpiles to the grain.</source>
+        <translation>Хутора на южном берегу — ближайшие к зерну склады.</translation>
+    </message>
+    <message>
+        <source>The old Republican circuit and the citadel are still walls. Falling back is not losing.</source>
+        <translation>Старый республиканский обвод и цитадель — всё ещё стены. Отойти не значит проиграть.</translation>
+    </message>
+    <message>
+        <source>They are on a gate. A gate is one building and it is the only thing between them and a street they can walk down. Answer it or fall back to the old circuit; do not do half of each.</source>
+        <translation>Они у ворот. Ворота — это одно здание, и это единственное, что отделяет их от улицы, по которой можно идти. Ответь им или отходи на старый обвод; не делай половину того и половину другого.</translation>
+    </message>
+    <message>
+        <source>Three walls, seventeen gates, and not one field inside them. The capital cannot be held by standing on its ramparts and it cannot be fed without leaving them. Break six assaults and still bring the harvest in.</source>
+        <translation>Три стены, семнадцать ворот и ни одного поля внутри. Столицу не удержать, стоя на её валах, и не прокормить, не сходя с них. Сломите шесть приступов и всё же соберите урожай.</translation>
+    </message>
+    <message>
+        <source>Three walls. We only ever needed the fields. Open the granaries and put out the fires on the sacred way -- I want the citadel standing when they come to see what is left of it.</source>
+        <translation>Три стены. Нам всегда нужны были только поля. Откройте житницы и потушите пожары на священной дороге — я хочу, чтобы цитадель стояла, когда они придут смотреть, что от неё осталось.</translation>
+    </message>
+    <message>
+        <source>We are spending the garrison faster than the city makes it. Pull back inside the Republican wall. It is shorter, it is older, and it has four gates instead of nine.</source>
+        <translation>Мы тратим гарнизон быстрее, чем город его даёт. Отходи за республиканскую стену. Она короче, она старше, и у неё четверо ворот вместо девяти.</translation>
+    </message>
+    <message>
+        <source>We will not climb your wall, consul. We will stand on your fields and wait, and you will open the gate yourself to go and cut your own wheat.</source>
+        <translation>Мы не полезем на твою стену, консул. Мы встанем на твоих полях и подождём, а ты сам откроешь ворота, чтобы выйти и сжать собственную пшеницу.</translation>
+    </message>
+    <message>
+        <source>You cannot cover every gate. Watch the telegraph and move on interior lines.</source>
+        <translation>Все ворота не прикрыть. Следи за упреждающим знаком и перемещайся по внутренним линиям.</translation>
     </message>
 </context>
 <context>
@@ -9892,6 +10016,22 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>ElevenLabs</source>
         <translation>ElevenLabs</translation>
+    </message>
+    <message>
+        <source>Listening Preset:</source>
+        <translation>Режим прослушивания:</translation>
+    </message>
+    <message>
+        <source>Headphones</source>
+        <translation>Наушники</translation>
+    </message>
+    <message>
+        <source>Speakers</source>
+        <translation>Колонки</translation>
+    </message>
+    <message>
+        <source>Night</source>
+        <translation>Ночной режим</translation>
     </message>
 </context>
 <context>

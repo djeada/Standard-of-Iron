@@ -123,4 +123,20 @@ auto movement_repath_reason_name(MovementRepathReason reason) noexcept -> const 
   return "Unknown";
 }
 
+auto movement_recovery_rung_name(MovementRecoveryRung rung) noexcept -> const char* {
+  switch (rung) {
+  case MovementRecoveryRung::None:
+    return "None";
+  case MovementRecoveryRung::Replan:
+    return "Replan";
+  case MovementRecoveryRung::Sidestep:
+    return "Sidestep";
+  case MovementRecoveryRung::RelaxFormation:
+    return "RelaxFormation";
+  case MovementRecoveryRung::Abandoned:
+    return "Abandoned";
+  }
+  return "Unknown";
+}
+
 } // namespace Engine::Core

@@ -53,6 +53,19 @@ private:
   void
   follow(Engine::Core::Entity& entity, Engine::Core::World& world, float delta_time);
 
+  void abandon_objective(Engine::Core::Entity& entity,
+                         Engine::Core::MovementComponent& movement,
+                         Engine::Core::MovementFactsComponent& facts,
+                         const QVector3D& objective);
+
+  auto track_objective_stall(Engine::Core::Entity& entity,
+                             Engine::Core::World& world,
+                             const Engine::Core::TransformComponent& transform,
+                             Engine::Core::MovementComponent& movement,
+                             Engine::Core::MovementFactsComponent& facts,
+                             float max_speed,
+                             float delta_time) -> bool;
+
   auto update_progress(Engine::Core::Entity& entity,
                        Engine::Core::World& world,
                        Engine::Core::TransformComponent& transform,

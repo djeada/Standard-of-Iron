@@ -359,6 +359,10 @@ enum class ArenaExpectationKind : std::uint8_t {
   SideBuildsAtLeast,
   SideKeepsGarrison,
   SideFieldsArmy,
+
+  NoPermanentStall,
+
+  StallRecoveryObserved,
 };
 
 struct ArenaExpectation {
@@ -503,6 +507,20 @@ struct ArenaBattleOutcome {
   std::vector<ArenaBattleSideResult> sides;
 };
 
+struct ArenaGroupMovementDiagnostics {
+  QString group;
+  float worst_stalled_seconds{0.0F};
+  float worst_stalled_at{0.0F};
+  std::uint32_t recovery_attempts{0};
+  std::uint32_t repaths{0};
+  std::uint32_t abandons{0};
+  int units_holding_a_stalled_objective{0};
+  QString worst_state;
+  bool has_objective{false};
+  float objective_x{0.0F};
+  float objective_z{0.0F};
+};
+
 struct ArenaScenarioIssue {
   QString code;
   QString message;
@@ -560,6 +578,7 @@ struct ArenaScenarioReport {
   std::uint64_t peak_shadow_rigged_instanced_instances{0};
   std::uint64_t peak_shadow_rigged_single_draws{0};
   ArenaBattleOutcome battle;
+  std::vector<ArenaGroupMovementDiagnostics> movement;
   std::vector<ArenaNarrowLayoutOutcome> narrow_layout;
   std::vector<ArenaScenarioIssue> issues;
 

@@ -580,6 +580,10 @@ auto MovementSystem::assign_local_recovery_move(
   }
   movement->path.insert(
       movement->path.end(), recovery_waypoints.begin(), recovery_waypoints.end());
+  // The route follower caches a route per revision, so a rewritten path that
+  // leaves the revision alone is followed as if it had never happened -- the
+  // unit keeps steering down the route it was already wedged against.
+  movement->begin_route(pathfinder->navigation_revision());
   return true;
 }
 

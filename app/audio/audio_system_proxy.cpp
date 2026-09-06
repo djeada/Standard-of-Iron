@@ -22,6 +22,14 @@ AudioSystemProxy::AudioSystemProxy(QObject* parent)
     : QObject(parent) {
 }
 
+void AudioSystemProxy::set_listening_preset(int preset) {
+  AudioSystem::get_instance().set_listening_preset(preset);
+}
+
+auto AudioSystemProxy::get_listening_preset() -> int {
+  return AudioSystem::get_instance().get_listening_preset();
+}
+
 void AudioSystemProxy::set_master_volume(float volume) {
   AudioSystem::get_instance().set_master_volume(volume);
 }

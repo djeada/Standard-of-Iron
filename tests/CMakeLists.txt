@@ -220,6 +220,7 @@ add_executable(
     headless/gate_traversal_test.cpp
     headless/wall_siege_test.cpp
     headless/tight_gap_navigation_test.cpp
+    headless/stuck_recovery_test.cpp
     headless/hill_traversal_test.cpp
     headless/playable_ground_test.cpp
     headless/wildlife_fight_motion_test.cpp
@@ -251,6 +252,7 @@ soi_register_test_binary(combat_balance_tests)
 add_executable(
     ai_tests
     systems/ai_system_test.cpp
+    systems/ai_stall_recovery_test.cpp
     systems/ai_worker_pool_test.cpp
     systems/ai_commander_doctrine_test.cpp
     systems/ai_doctrine_catalog_test.cpp
@@ -535,6 +537,7 @@ add_executable(
     core/audio_gameplay_scenarios_test.cpp
     core/audio_battle_load_test.cpp
     core/audio_mastering_test.cpp
+    core/gameplay_mix_test.cpp
     core/loop_seam_test.cpp
     core/resampler_test.cpp
     core/ambience_assets_test.cpp
@@ -649,6 +652,7 @@ add_executable(
     tools/arena_video_encoder_test.cpp
     tools/settlement_layout_test.cpp
     tools/sacred_mountain_slope_test.cpp
+    tools/city_map_parity_test.cpp
     test_main.cpp
 )
 target_link_libraries(

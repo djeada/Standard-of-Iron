@@ -1,0 +1,559 @@
+{
+  "id": "siege_of_aurelia_magna",
+  "menu_order": 40,
+  "title": "The Siege of Aurelia Magna",
+  "summary": "Three walls, seventeen gates, and not one field inside them. The capital cannot be held by standing on its ramparts and it cannot be fed without leaving them. Break six assaults and still bring the harvest in.",
+  "theme": "A wall is a schedule, not a shelter. Every assault you break early is a window to work outside it.",
+  "map_path": ":/assets/maps/map_aurelia_magna.json",
+  "player_setup": {
+    "nation": "roman_republic",
+    "faction": "roman",
+    "color": "red",
+    "starting_units": [
+      {
+        "type": "spearman",
+        "count": 4,
+        "position": {
+          "x": -16.0,
+          "z": -46.0
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 4,
+        "position": {
+          "x": 16.0,
+          "z": -46.0
+        }
+      },
+      {
+        "type": "archer",
+        "count": 4,
+        "position": {
+          "x": 0.0,
+          "z": -56.0
+        }
+      },
+      {
+        "type": "healer",
+        "count": 2,
+        "position": {
+          "x": 0.0,
+          "z": -36.0
+        }
+      }
+    ],
+    "starting_buildings": [],
+    "starting_resources": {
+      "gold": 900,
+      "food": 600,
+      "wood": 500,
+      "stone": 400,
+      "iron": 150
+    }
+  },
+  "ai_setups": [
+    {
+      "id": "carthage_river_army",
+      "nation": "carthage",
+      "faction": "carthaginian",
+      "color": "brown",
+      "team_id": 2,
+      "difficulty": "medium",
+      "strategy": "aggressive",
+      "posture": "garrison",
+      "personality": {
+        "aggression": 0.85,
+        "defense": 0.25,
+        "harassment": 0.4
+      },
+      "starting_units": [],
+      "starting_buildings": [],
+      "wave_escalation": 0.12,
+      "waves": [
+        {
+          "timing": 320.0,
+          "phase": 2,
+          "label": "The landing at the quay",
+          "warning_seconds": 22.0,
+          "composition": [
+            {
+              "type": "swordsman",
+              "count": 8
+            },
+            {
+              "type": "archer",
+              "count": 6
+            },
+            {
+              "type": "spearman",
+              "count": 4
+            }
+          ],
+          "entry_points": [
+            {
+              "x": 186.0,
+              "z": 236.0
+            },
+            {
+              "x": 0.0,
+              "z": 300.0
+            }
+          ],
+          "clear_reward": {
+            "gold": 180,
+            "wood": 120
+          }
+        },
+        {
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 240.0,
+          "phase": 5,
+          "label": "The bridge column",
+          "warning_seconds": 26.0,
+          "archetype": "siege_column",
+          "composition": [
+            {
+              "type": "catapult",
+              "count": 2
+            },
+            {
+              "type": "swordsman",
+              "count": 10
+            },
+            {
+              "type": "spearman",
+              "count": 8
+            },
+            {
+              "type": "archer",
+              "count": 5
+            }
+          ],
+          "entry_point": {
+            "x": 0.0,
+            "z": 300.0
+          },
+          "clear_reward": {
+            "gold": 300,
+            "stone": 200,
+            "food": 200
+          }
+        }
+      ]
+    },
+    {
+      "id": "carthage_road_column",
+      "nation": "carthage",
+      "faction": "carthaginian",
+      "color": "purple",
+      "team_id": 2,
+      "difficulty": "medium",
+      "strategy": "aggressive",
+      "posture": "garrison",
+      "personality": {
+        "aggression": 0.8,
+        "defense": 0.3,
+        "harassment": 0.3
+      },
+      "starting_units": [],
+      "starting_buildings": [],
+      "wave_escalation": 0.12,
+      "waves": [
+        {
+          "timing": 520.0,
+          "phase": 3,
+          "label": "The via militaris",
+          "warning_seconds": 24.0,
+          "composition": [
+            {
+              "type": "spearman",
+              "count": 10
+            },
+            {
+              "type": "swordsman",
+              "count": 10
+            },
+            {
+              "type": "archer",
+              "count": 6
+            },
+            {
+              "type": "catapult",
+              "count": 1
+            }
+          ],
+          "entry_point": {
+            "x": 284.0,
+            "z": -216.0
+          },
+          "clear_reward": {
+            "gold": 220,
+            "iron": 120
+          }
+        },
+        {
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 240.0,
+          "phase": 6,
+          "label": "Everything they have left",
+          "warning_seconds": 30.0,
+          "archetype": "elite_guard",
+          "composition": [
+            {
+              "type": "swordsman",
+              "count": 12,
+              "elite": true
+            },
+            {
+              "type": "spearman",
+              "count": 10
+            },
+            {
+              "type": "archer",
+              "count": 8
+            },
+            {
+              "type": "elephant",
+              "count": 2
+            },
+            {
+              "type": "catapult",
+              "count": 2
+            }
+          ],
+          "entry_points": [
+            {
+              "x": 300.0,
+              "z": -32.0
+            },
+            {
+              "x": -300.0,
+              "z": -32.0
+            },
+            {
+              "x": 0.0,
+              "z": 300.0
+            }
+          ],
+          "clear_reward": {
+            "gold": 400,
+            "food": 300,
+            "stone": 200
+          }
+        }
+      ]
+    },
+    {
+      "id": "numidian_outriders",
+      "nation": "carthage",
+      "faction": "carthaginian",
+      "color": "yellow",
+      "team_id": 2,
+      "difficulty": "medium",
+      "strategy": "harasser",
+      "posture": "garrison",
+      "personality": {
+        "aggression": 0.7,
+        "defense": 0.2,
+        "harassment": 0.9
+      },
+      "starting_units": [],
+      "starting_buildings": [],
+      "wave_escalation": 0.15,
+      "waves": [
+        {
+          "timing": 150.0,
+          "phase": 1,
+          "label": "Riders in the pasture",
+          "warning_seconds": 20.0,
+          "composition": [
+            {
+              "type": "horse_spearman",
+              "count": 4
+            },
+            {
+              "type": "archer",
+              "count": 4
+            }
+          ],
+          "entry_point": {
+            "x": -292.0,
+            "z": 140.0
+          },
+          "clear_reward": {
+            "gold": 120,
+            "food": 100
+          }
+        },
+        {
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 330.0,
+          "phase": 4,
+          "label": "Two gates at once",
+          "warning_seconds": 24.0,
+          "composition": [
+            {
+              "type": "swordsman",
+              "count": 8
+            },
+            {
+              "type": "spearman",
+              "count": 8
+            },
+            {
+              "type": "horse_swordsman",
+              "count": 4
+            },
+            {
+              "type": "archer",
+              "count": 4
+            }
+          ],
+          "entry_points": [
+            {
+              "x": -180.0,
+              "z": 244.0
+            },
+            {
+              "x": 166.0,
+              "z": -276.0
+            }
+          ],
+          "clear_reward": {
+            "gold": 250,
+            "wood": 150
+          }
+        }
+      ]
+    }
+  ],
+  "victory_mode": "all",
+  "victory_conditions": [
+    {
+      "type": "survive_waves",
+      "wave_count": 6,
+      "description": "Break all six assaults. They do not come at the same gate twice."
+    },
+    {
+      "type": "accumulate_resources",
+      "resources": {
+        "food": 1500,
+        "wood": 1200,
+        "stone": 600
+      },
+      "description": "Provision the capital. The grain is across the river and the stone is past the quarry gate; neither will walk in by itself."
+    }
+  ],
+  "optional_objectives": [
+    {
+      "type": "control_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "min_count": 14,
+      "description": "Keep every hall. The two granges and the two quarry camps stand outside the wall, and they are the only stockpiles the work crews can reach."
+    }
+  ],
+  "defeat_conditions": [
+    {
+      "type": "lose_structure",
+      "structure_type": "barracks",
+      "description": "Lose every hall in the city and there is nothing left to recruit from, or carry a harvest to."
+    },
+    {
+      "type": "lose_commander",
+      "description": "The consul falls and the gates answer to nobody."
+    },
+    {
+      "type": "only_commander_remaining",
+      "description": "One consul and an empty city is not a garrison."
+    }
+  ],
+  "stages": [
+    {
+      "id": "first_harvest",
+      "type": "accumulate_resources",
+      "title": "Bring in the first harvest",
+      "description": "The fields are across the river and the roads are still open. Send the crews out now; they will not be open long.",
+      "hint": "The granges on the south bank are the nearest stockpiles to the grain.",
+      "resources": {
+        "food": 400
+      },
+      "target": {
+        "x": 0.0,
+        "z": 230.0
+      },
+      "target_radius": 60.0
+    },
+    {
+      "id": "hold_the_outer_gates",
+      "type": "survive_waves",
+      "wave_count": 2,
+      "title": "Hold the outer gates",
+      "description": "A raid on the pasture, then a landing at the quay. Nine gates and one garrison: the avenue and the decumanus are how you get from one to the other.",
+      "hint": "You cannot cover every gate. Watch the telegraph and move on interior lines."
+    },
+    {
+      "id": "provision_the_city",
+      "type": "accumulate_resources",
+      "title": "Provision the capital",
+      "description": "Grain from the river fields, timber from the groves, stone from the quarries beyond the north wall. Every assault you break early is a window to work.",
+      "hint": "Stone is the scarce one: the only boulders are at the two quarries outside the walls.",
+      "resources": {
+        "food": 1500,
+        "wood": 1200,
+        "stone": 600
+      },
+      "target": {
+        "x": 180.0,
+        "z": -266.0
+      },
+      "target_radius": 50.0
+    },
+    {
+      "id": "break_the_siege",
+      "type": "survive_waves",
+      "wave_count": 6,
+      "title": "Break the siege",
+      "description": "Six assaults, and the last one comes at three gates with elephants behind it.",
+      "hint": "The old Republican circuit and the citadel are still walls. Falling back is not losing."
+    }
+  ],
+  "events": [],
+  "commander_voices": {
+    "generic": false
+  },
+  "commander_messages": [
+    {
+      "id": "aurelia_open",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "text": "Look at it. Three walls, seventeen gates, and not one stalk of grain growing inside any of them. The city was built to be admired, not besieged. Get the crews over the river while the road is still ours, and keep the garrison off the ramparts until you know which gate they want.",
+      "voice_cue": "alert.commander_message",
+      "duration": 12.0,
+      "priority": 100
+    },
+    {
+      "id": "aurelia_besieger_open",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 15.0
+      },
+      "text": "We will not climb your wall, consul. We will stand on your fields and wait, and you will open the gate yourself to go and cut your own wheat.",
+      "voice_cue": "alert.commander_message",
+      "duration": 10.0,
+      "priority": 90
+    },
+    {
+      "id": "aurelia_first_assault",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 4,
+        "delay": 0.5,
+        "final_wave": false
+      },
+      "text": "Riders on the pasture gate. They are not here for the wall; they are here for the flocks. Whatever you send has to get there before the herds do.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "aurelia_wave_broken",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "wave_cleared",
+        "owner_id": 2,
+        "cooldown": 120,
+        "delay": 2.0
+      },
+      "once": false,
+      "text": "That gate holds. Do not stand there admiring it -- the crews go out now, and they come back before the next horn.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 55
+    },
+    {
+      "id": "aurelia_under_attack",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "under_attack",
+        "owner_id": "player",
+        "cooldown": 100,
+        "delay": 1.0
+      },
+      "once": false,
+      "text": "They are on a gate. A gate is one building and it is the only thing between them and a street they can walk down. Answer it or fall back to the old circuit; do not do half of each.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 70
+    },
+    {
+      "id": "aurelia_heavy_losses",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "heavy_losses",
+        "owner_id": "player",
+        "cooldown": 140,
+        "delay": 1.0
+      },
+      "once": false,
+      "text": "We are spending the garrison faster than the city makes it. Pull back inside the Republican wall. It is shorter, it is older, and it has four gates instead of nine.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 65
+    },
+    {
+      "id": "aurelia_last_assault",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 3,
+        "delay": 0.5,
+        "final_wave": true
+      },
+      "text": "Everything I have is on the roads, consul. East, west, and the bridge. Choose two.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "aurelia_victory",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "text": "Six assaults and the granaries full. The city will say the walls held. The walls did nothing -- the road to the river held, and the crews who walked it did not stop walking it. Write that down and let them carve the other version.",
+      "voice_cue": "alert.commander_message",
+      "duration": 12.0,
+      "priority": 120
+    },
+    {
+      "id": "aurelia_defeat",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "text": "Three walls. We only ever needed the fields. Open the granaries and put out the fires on the sacred way -- I want the citadel standing when they come to see what is left of it.",
+      "voice_cue": "alert.commander_message",
+      "duration": 11.0,
+      "priority": 120
+    }
+  ]
+}

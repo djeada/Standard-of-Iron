@@ -1,0 +1,56 @@
+[
+  {
+    "scene": "headphones-normal",
+    "lufs": "-17.41",
+    "true_peak_dbtp": "-2.94",
+    "lra_lu": "2.90"
+  },
+  {
+    "scene": "headphones-quiet",
+    "lufs": "-32.12",
+    "true_peak_dbtp": "-19.77",
+    "lra_lu": "1.30"
+  },
+  {
+    "scene": "headphones-worst-case",
+    "lufs": "-11.32",
+    "true_peak_dbtp": "-1.25",
+    "lra_lu": "0.40"
+  },
+  {
+    "scene": "night-normal",
+    "lufs": "-22.91",
+    "true_peak_dbtp": "-11.94",
+    "lra_lu": "1.90"
+  },
+  {
+    "scene": "night-quiet",
+    "lufs": "-32.12",
+    "true_peak_dbtp": "-19.77",
+    "lra_lu": "1.30"
+  },
+  {
+    "scene": "night-worst-case",
+    "lufs": "-20.09",
+    "true_peak_dbtp": "-10.42",
+    "lra_lu": "0.50"
+  },
+  {
+    "scene": "speakers-normal",
+    "lufs": "-18.30",
+    "true_peak_dbtp": "-5.97",
+    "lra_lu": "2.10"
+  },
+  {
+    "scene": "speakers-quiet",
+    "lufs": "-32.12",
+    "true_peak_dbtp": "-19.77",
+    "lra_lu": "1.30"
+  },
+  {
+    "scene": "speakers-worst-case",
+    "lufs": "-13.09",
+    "true_peak_dbtp": "-2.17",
+    "lra_lu": "0.80"
+  }
+]

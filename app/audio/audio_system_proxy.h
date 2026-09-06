@@ -12,6 +12,8 @@ public:
   explicit AudioSystemProxy(QObject* parent = nullptr);
   ~AudioSystemProxy() override = default;
 
+  Q_INVOKABLE void set_listening_preset(int preset);
+  Q_INVOKABLE int get_listening_preset();
   Q_INVOKABLE void set_master_volume(float volume);
   Q_INVOKABLE void set_music_volume(float volume);
   Q_INVOKABLE void set_sound_volume(float volume);

@@ -537,6 +537,7 @@ add_library(
     systems/ai_system/ai_commander_doctrine.cpp
     systems/ai_system/ai_doctrine_catalog.cpp
     systems/ai_system/ai_attack_wave.cpp
+    systems/ai_system/ai_stall_recovery.cpp
     systems/ai_system/behaviors/production_behavior.cpp
     systems/ai_system/behaviors/gather_behavior.cpp
     systems/ai_system/behaviors/harass_behavior.cpp
