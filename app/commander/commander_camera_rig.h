@@ -51,10 +51,13 @@ struct CommanderCameraTrace {
   QVector3D target_resolved{};
   float boom_unconstrained{0.0F};
   float boom_resolved{0.0F};
-  float building_blocked_fraction{1.0F};
+  float boom_clear_fraction{1.0F};
+  float terrain_clear_fraction{1.0F};
   float occlusion_fraction{1.0F};
   float terrain_lift{0.0F};
   float eye_clearance{0.0F};
+
+  bool sight_line_clear{true};
   float fov{0.0F};
   float yaw{0.0F};
   float pitch{0.0F};

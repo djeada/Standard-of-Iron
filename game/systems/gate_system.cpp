@@ -4,7 +4,7 @@
 #include <cmath>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
@@ -82,7 +82,8 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
   }
 
   auto gate_view =
-      world->entity_view<GateComponent, TransformComponent, UnitComponent>();
+      world
+          ->entity_view<GateComponent, const TransformComponent, const UnitComponent>();
   if (gate_view.empty()) {
     GateService::clear_blockers();
     return;
@@ -120,7 +121,7 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
   }
 
   for (auto [entity_id, unit_component, transform_component] :
-       world->view<UnitComponent, TransformComponent>()) {
+       world->view<const UnitComponent, const TransformComponent>()) {
     if (world->has<PendingRemovalComponent>(entity_id)) {
       continue;
     }

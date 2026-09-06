@@ -14,6 +14,7 @@
 #include "component_registry.h"
 #include "component_storage.h"
 #include "entity_id.h"
+#include "system_access_recorder.h"
 
 namespace Engine::Core {
 
@@ -154,6 +155,7 @@ public:
   template <typename T>
   [[nodiscard]] auto storage() -> ComponentStorage<T>& {
     const ComponentTypeId type_id = component_type_id<T>();
+    Detail::note_component_access(type_id, true);
     if (m_storages.size() <= type_id) {
       m_storages.resize(static_cast<std::size_t>(type_id) + 1U);
     }
@@ -166,6 +168,7 @@ public:
   template <typename T>
   [[nodiscard]] auto find_storage() noexcept -> ComponentStorage<T>* {
     const ComponentTypeId type_id = component_type_id<T>();
+    Detail::note_component_access(type_id, true);
     if (type_id >= m_storages.size() || m_storages[type_id] == nullptr) {
       return nullptr;
     }
@@ -175,6 +178,7 @@ public:
   template <typename T>
   [[nodiscard]] auto find_storage() const noexcept -> const ComponentStorage<T>* {
     const ComponentTypeId type_id = component_type_id<T>();
+    Detail::note_component_access(type_id, false);
     if (type_id >= m_storages.size() || m_storages[type_id] == nullptr) {
       return nullptr;
     }

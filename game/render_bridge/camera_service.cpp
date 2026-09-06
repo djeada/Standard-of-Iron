@@ -6,7 +6,7 @@
 #include <cmath>
 #include <memory>
 
-#include "../core/component.h"
+#include "../core/component_core.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../game_config.h"

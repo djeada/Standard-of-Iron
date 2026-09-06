@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "core/component.h"
+#include "core/component_gameplay.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "map/terrain_service.h"

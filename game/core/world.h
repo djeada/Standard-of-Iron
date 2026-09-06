@@ -23,6 +23,7 @@
 #include "entity.h"
 #include "registry.h"
 #include "system.h"
+#include "system_access_recorder.h"
 #include "system_profiler.h"
 #include "world_spatial_index.h"
 
@@ -34,6 +35,19 @@ class CreaturePresentationComponent;
 auto publish_creature_presentation(Entity* entity,
                                    World* world) -> CreaturePresentationComponent*;
 
+struct RenderPublicationStats {
+
+  std::uint64_t publications = 0;
+
+  std::uint64_t skipped_publications = 0;
+
+  std::uint64_t entities_copied = 0;
+
+  std::uint64_t entities_reused = 0;
+
+  std::uint64_t revisioned_components_skipped = 0;
+};
+
 class World {
 public:
   using ObserverHandle = std::uint64_t;
@@ -44,14 +58,20 @@ public:
 
   class EntityLock;
 
-  template <bool WithEntity, typename... Components>
+  template <bool WithEntity, bool Const, typename... Components>
   class BasicView;
 
   template <typename... Components>
-  using View = BasicView<false, Components...>;
+  using View = BasicView<false, false, Components...>;
 
   template <typename... Components>
-  using EntityView = BasicView<true, Components...>;
+  using EntityView = BasicView<true, false, Components...>;
+
+  template <typename... Components>
+  using ConstView = BasicView<false, true, Components...>;
+
+  template <typename... Components>
+  using ConstEntityView = BasicView<true, true, Components...>;
 
   World();
   ~World();
@@ -117,6 +137,24 @@ public:
   void ensure_render_snapshot();
 
   [[nodiscard]] auto acquire_render_snapshot() const -> std::shared_ptr<World>;
+
+  [[nodiscard]] auto render_publication_stats() const -> const RenderPublicationStats& {
+    return m_render_publication_stats;
+  }
+
+  struct AccessViolation {
+    const char* system_name = "";
+    ComponentTypeId type_id = 0;
+    bool write = false;
+  };
+
+  void set_access_verification(bool enabled) noexcept {
+    m_verify_system_access = enabled;
+  }
+
+  [[nodiscard]] auto access_violations() const -> const std::vector<AccessViolation>& {
+    return m_access_violations;
+  }
   [[nodiscard]] auto is_render_snapshot() const noexcept -> bool {
     return m_is_render_snapshot;
   }
@@ -185,8 +223,18 @@ public:
   }
 
   template <typename... Components>
+  [[nodiscard]] auto view() const -> ConstView<Components...> {
+    return ConstView<Components...>(*this);
+  }
+
+  template <typename... Components>
   [[nodiscard]] auto entity_view() -> EntityView<Components...> {
     return EntityView<Components...>(*this);
+  }
+
+  template <typename... Components>
+  [[nodiscard]] auto entity_view() const -> ConstEntityView<Components...> {
+    return ConstEntityView<Components...>(*this);
   }
 
   [[nodiscard]] auto
@@ -261,7 +309,7 @@ private:
   static auto system_display_name(const System& system) -> const char*;
   [[nodiscard]] auto current_query_counters() const -> SystemProfiler::QueryCounters;
 
-  void note_view_opened(std::size_t candidates) {
+  void note_view_opened(std::size_t candidates) const {
     ++m_query_counters.views;
     m_query_counters.view_candidates += candidates;
   }
@@ -270,6 +318,7 @@ private:
   [[nodiscard]] auto collect_units_matching(int owner_id,
                                             bool owned) const -> std::vector<Entity*>;
   void publish_render_snapshot();
+  void verify_system_access(std::size_t slot, System& system, float delta_time);
 
   Registry m_registry;
   mutable HandleTable m_handles;
@@ -291,20 +340,26 @@ private:
 
   WorldSpatialIndex m_spatial_index;
   SystemProfiler m_system_profiler;
-  SystemProfiler::QueryCounters m_query_counters;
+  mutable SystemProfiler::QueryCounters m_query_counters;
   std::uint64_t m_tick_id{0};
   std::uint64_t m_instance_id{0};
   bool m_presentation_enabled{true};
   bool m_is_render_snapshot{false};
   std::atomic<bool> m_render_snapshots_requested{false};
   std::shared_ptr<World> m_render_snapshot;
-  std::array<std::shared_ptr<World>, 2> m_render_snapshot_buffers;
+  static constexpr std::size_t k_render_snapshot_buffers = 3;
+  std::array<std::shared_ptr<World>, k_render_snapshot_buffers>
+      m_render_snapshot_buffers;
   std::size_t m_next_render_snapshot_buffer{0};
   std::vector<EntityID> m_render_unit_ids;
   std::vector<EntityID> m_render_building_ids;
   std::vector<EntityID> m_render_other_ids;
   std::vector<std::uint64_t> m_render_entity_signatures;
   std::uint64_t m_render_publish_revision{0};
+  RenderPublicationStats m_render_publication_stats;
+  bool m_verify_system_access = false;
+  SystemAccessRecorder m_access_recorder;
+  std::vector<AccessViolation> m_access_violations;
 };
 
 class World::EntityLock {
@@ -334,14 +389,30 @@ void World::for_each_entity(Fn&& fn) const {
   }
 }
 
-template <bool WithEntity, typename... Components>
+template <bool WithEntity, bool Const, typename... Components>
 class World::BasicView {
 public:
   static_assert(sizeof...(Components) > 0, "a view needs at least one component");
 
-  using Storages = std::tuple<ComponentStorage<Components>*...>;
+  template <typename T>
+  using Bare = std::remove_const_t<T>;
+
+  template <typename T>
+  static constexpr bool read_only = Const || std::is_const_v<T>;
+
+  template <typename T>
+  using Element = std::conditional_t<Const, const Bare<T>, T>;
+
+  template <typename T>
+  using StoragePtr = std::conditional_t<read_only<T>,
+                                        const ComponentStorage<Bare<T>>*,
+                                        ComponentStorage<Bare<T>>*>;
+
+  using WorldRef = std::conditional_t<Const, const World&, World&>;
+
+  using Storages = std::tuple<StoragePtr<Components>...>;
   using Head = std::conditional_t<WithEntity, Entity&, EntityID>;
-  using Reference = std::tuple<Head, Components&...>;
+  using Reference = std::tuple<Head, Element<Components>&...>;
 
   class Iterator {
   public:
@@ -389,7 +460,7 @@ public:
         m_id = m_owner->m_source->entities()[m_index];
         m_components = std::apply(
             [id = m_id](auto*... storages) {
-              return std::tuple<Components*...>(storages->try_get(id)...);
+              return std::tuple<Element<Components>*...>(storages->try_get(id)...);
             },
             m_owner->m_storages);
         const bool complete = std::apply(
@@ -415,13 +486,22 @@ public:
     std::size_t m_index{0};
     EntityID m_id{NULL_ENTITY};
     Entity* m_entity{nullptr};
-    std::tuple<Components*...> m_components{};
+    std::tuple<Element<Components>*...> m_components{};
   };
 
-  explicit BasicView(World& world)
+  template <typename T>
+  static auto acquire_storage(WorldRef world) -> StoragePtr<T> {
+    if constexpr (read_only<T>) {
+      return std::as_const(world.m_registry).template find_storage<Bare<T>>();
+    } else {
+      return world.m_registry.template find_storage<Bare<T>>();
+    }
+  }
+
+  explicit BasicView(WorldRef world)
       : m_world(&world)
       , m_lock(world) {
-    m_storages = Storages(world.m_registry.find_storage<Components>()...);
+    m_storages = Storages(acquire_storage<Components>(world)...);
     const bool complete = std::apply(
         [](auto*... storages) { return ((storages != nullptr) && ...); }, m_storages);
     if (!complete) {
@@ -456,7 +536,7 @@ private:
     return m_source == nullptr ? std::size_t{0} : std::min(m_limit, m_source->size());
   }
 
-  World* m_world{nullptr};
+  std::conditional_t<Const, const World*, World*> m_world{nullptr};
   Storages m_storages{};
   const IComponentStorage* m_source{nullptr};
   std::size_t m_limit{0};
@@ -464,7 +544,10 @@ private:
 };
 
 void copy_authoritative_snapshot_components(const Entity& source, Entity& destination);
-void copy_presentation_snapshot_components(const Entity& source, Entity& destination);
-void copy_render_components(const Entity& source, Entity& destination);
+
+auto copy_presentation_snapshot_components(const Entity& source,
+                                           Entity& destination) -> std::uint64_t;
+
+auto copy_render_components(const Entity& source, Entity& destination) -> std::uint64_t;
 
 } // namespace Engine::Core

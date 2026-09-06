@@ -6,7 +6,7 @@
 #include <algorithm>
 
 #include "app/world/unit_queries.h"
-#include "game/core/component.h"
+#include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "game/util/asset_text.h"

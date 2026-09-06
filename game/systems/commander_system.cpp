@@ -7,7 +7,7 @@
 #include <optional>
 
 #include "../core/ambient_session.h"
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "command_service.h"
@@ -192,7 +192,8 @@ auto try_trigger_rally(Engine::Core::World* world,
   bool restored_any = false;
   const Engine::Core::EntityID commander_id = commander_entity->get_id();
   for (auto [candidate_id, candidate_unit_ref, candidate_transform] :
-       world->view<Engine::Core::UnitComponent, Engine::Core::TransformComponent>()) {
+       world->view<const Engine::Core::UnitComponent,
+                   const Engine::Core::TransformComponent>()) {
     if (candidate_id == commander_id) {
       continue;
     }
@@ -281,7 +282,8 @@ void apply_commander_death_shock(Engine::Core::World* world,
       commander.death_shock_radius * commander.death_shock_radius;
   const Engine::Core::EntityID commander_id = commander_entity->get_id();
   for (auto [candidate_id, candidate_unit_ref, candidate_transform] :
-       world->view<Engine::Core::UnitComponent, Engine::Core::TransformComponent>()) {
+       world->view<const Engine::Core::UnitComponent,
+                   const Engine::Core::TransformComponent>()) {
     if (candidate_id == commander_id) {
       continue;
     }
@@ -318,7 +320,7 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
   for (auto [commander_ref, commander_component, unit_ref, transform_ref] :
        world->entity_view<Engine::Core::CommanderComponent,
                           Engine::Core::UnitComponent,
-                          Engine::Core::TransformComponent>()) {
+                          const Engine::Core::TransformComponent>()) {
     Engine::Core::Entity* commander_entity = &commander_ref;
     auto* commander = &commander_component;
     auto* unit = &unit_ref;
@@ -472,7 +474,7 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
     bool rallied_this_tick = false;
     for (auto [candidate_ref, candidate_unit_ref, candidate_transform_ref] :
          world->entity_view<Engine::Core::UnitComponent,
-                            Engine::Core::TransformComponent>()) {
+                            const Engine::Core::TransformComponent>()) {
       Engine::Core::Entity* candidate = &candidate_ref;
       auto* candidate_unit = &candidate_unit_ref;
       const auto* candidate_transform = &candidate_transform_ref;
@@ -570,14 +572,15 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
 
 auto CommanderSystem::access() const -> Engine::Core::SystemAccess {
   using namespace Engine::Core;
-  return SystemAccess::declare(Reads<UnitComponent,
-                                     TransformComponent,
+
+  return SystemAccess::declare(Reads<TransformComponent,
                                      ProductionComponent,
                                      CombatStateComponent,
                                      RpgCommanderActionComponent,
                                      BuildingComponent,
                                      PendingRemovalComponent>{},
-                               Writes<CommanderComponent,
+                               Writes<UnitComponent,
+                                      CommanderComponent,
                                       CommanderAuraBuffComponent,
                                       MoraleComponent,
                                       MovementComponent,

@@ -5,7 +5,7 @@
 #include <span>
 #include <vector>
 
-#include "../../core/component.h"
+#include "../../core/component_gameplay.h"
 #include "../../core/simulation_timing.h"
 #include "../../core/world.h"
 #include "../combat_actions/combat_action_definition.h"

@@ -4,6 +4,7 @@
 #include <QVector3D>
 
 #include <array>
+#include <cmath>
 #include <gtest/gtest.h>
 #include <span>
 

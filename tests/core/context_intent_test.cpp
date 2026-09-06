@@ -2,7 +2,7 @@
 #include <vector>
 
 #include "app/orders/context_intent.h"
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/world.h"
 
 namespace {

@@ -7,7 +7,7 @@
 
 #include "app/commander/commander_motor.h"
 #include "game/audio/audio_cues.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"

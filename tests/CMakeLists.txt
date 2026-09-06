@@ -117,6 +117,9 @@ add_executable(
     systems/home_manpower_system_test.cpp
     systems/building_collision_test.cpp
     systems/pathfinding_test.cpp
+    core/render_publication_test.cpp
+    headless/shared_match_setup_test.cpp
+    systems/session_service_ownership_test.cpp
     systems/world_prop_navigation_test.cpp
     systems/production_system_test.cpp
     systems/construction_cost_catalog_test.cpp
@@ -180,6 +183,7 @@ add_executable(
     formation/formation_movement_test.cpp
     formation/formation_terrain_navigation_test.cpp
     map/map_crossing_traversal_test.cpp
+    core/system_access_verification_test.cpp
     systems/runtime_phase_order_test.cpp
     systems/movement_stage_ownership_test.cpp
     systems/movement_route_test.cpp
@@ -246,6 +250,7 @@ soi_register_test_binary(combat_balance_tests)
 add_executable(
     ai_tests
     systems/ai_system_test.cpp
+    systems/ai_worker_pool_test.cpp
     systems/ai_commander_doctrine_test.cpp
     systems/ai_doctrine_catalog_test.cpp
     systems/squad_service_test.cpp
@@ -539,6 +544,7 @@ add_executable(
     core/settings_persistence_test.cpp
     core/minimap_manager_test.cpp
     core/commander_control_regression_test.cpp
+    core/mission_tick_ownership_test.cpp
     core/commander_camera_rig_test.cpp
     core/commander_control_controller_test.cpp
     core/commander_defense_windows_test.cpp

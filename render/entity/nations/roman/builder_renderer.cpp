@@ -20,7 +20,7 @@
 
 #include "animation/rig/humanoid_proportions.h"
 #include "builder_style.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "game/systems/nation_id.h"
 #include "math/math_utils.h"

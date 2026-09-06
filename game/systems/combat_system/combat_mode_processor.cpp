@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "../../core/ambient_session.h"
-#include "../../core/component.h"
+#include "../../core/component_structures.h"
 #include "../../core/world.h"
 #include "../combat_rules.h"
 #include "../formation_combat_geometry.h"

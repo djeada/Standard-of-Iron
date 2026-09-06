@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/registry.h"

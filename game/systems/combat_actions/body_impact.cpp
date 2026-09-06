@@ -5,7 +5,7 @@
 #include <limits>
 #include <numbers>
 
-#include "../../core/component.h"
+#include "../../core/component_core.h"
 #include "../../core/world.h"
 #include "../combat_system/combat_utils.h"
 

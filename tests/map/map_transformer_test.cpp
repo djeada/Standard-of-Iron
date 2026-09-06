@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "core/component.h"
+#include "core/component_gameplay.h"
 #include "core/world.h"
 #include "game/core/ownership_constants.h"
 #include "game/map/map_definition.h"

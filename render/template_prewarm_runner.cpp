@@ -35,7 +35,7 @@
 #include "entity/registry.h"
 #include "equipment/equipment_registry.h"
 #include "equipment/render_archetype_registry.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/render_visibility_rules.h"
 #include "game/map/terrain_service.h"

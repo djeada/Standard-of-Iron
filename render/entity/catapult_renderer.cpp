@@ -1,6 +1,6 @@
 #include "catapult_renderer.h"
 
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/systems/nation_id.h"
 #include "nations/carthage/catapult_renderer.h"
 #include "nations/roman/catapult_renderer.h"

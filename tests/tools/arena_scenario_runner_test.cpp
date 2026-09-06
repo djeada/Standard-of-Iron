@@ -1,11 +1,15 @@
 #include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QSet>
 #include <QTemporaryDir>
 
 #include <algorithm>
 #include <gtest/gtest.h>
 
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
@@ -920,6 +924,36 @@ TEST(ArenaScenarioRunnerTest, WritesStructuredReportAndRenderedTraceLocally) {
   ASSERT_TRUE(runner.write_artifacts(directory.path(), &error)) << error.toStdString();
   EXPECT_TRUE(QFile::exists(directory.filePath(QStringLiteral("report.json"))));
   EXPECT_TRUE(QFile::exists(directory.filePath(QStringLiteral("trace.jsonl"))));
+}
+
+TEST(ArenaScenarioRunnerTest, WildlifeTracePreservesTheCommittedContactPhase) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+  auto* animal = world.create_entity();
+  animal->add_component<Engine::Core::TransformComponent>();
+  animal->add_component<Engine::Core::UnitComponent>();
+  auto* wildlife = animal->add_component<Engine::Core::WildlifeComponent>();
+  wildlife->species = Game::Wildlife::Species::Wolf;
+  wildlife->bite_timer =
+      Engine::Core::WildlifeComponent::k_bite_animation_seconds * 0.75F;
+  wildlife->bite_target_id = 42;
+  wildlife->bite_impact_pending = true;
+  runner.observe_rendered_frame(5.0);
+  QTemporaryDir const directory;
+  ASSERT_TRUE(directory.isValid());
+  QString error;
+  ASSERT_TRUE(runner.write_artifacts(directory.path(), &error)) << error.toStdString();
+  QFile trace(directory.filePath(QStringLiteral("trace.jsonl")));
+  ASSERT_TRUE(trace.open(QIODevice::ReadOnly));
+  auto const animals =
+      QJsonDocument::fromJson(trace.readLine()).object().value("animals").toArray();
+  ASSERT_EQ(animals.size(), 1);
+  auto const sample = animals.first().toObject();
+  EXPECT_NEAR(sample.value("bite_phase").toDouble(), 0.25, 1e-5);
+  EXPECT_EQ(sample.value("bite_target_id").toInt(), 42);
+  EXPECT_TRUE(sample.value("impact_pending").toBool());
 }
 
 TEST(ArenaScenarioRunnerTest, FrameBudgetReportsMeasuredPercentilesAndFps) {

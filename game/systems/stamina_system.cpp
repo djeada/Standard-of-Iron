@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/system_context.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"
@@ -46,7 +46,7 @@ void StaminaSystem::run(Engine::Core::SystemContext& context) {
 
   for (auto [entity, stamina_ref, unit_ref] :
        context.entity_view<Engine::Core::StaminaComponent,
-                           Engine::Core::UnitComponent>()) {
+                           const Engine::Core::UnitComponent>()) {
     auto* stamina = &stamina_ref;
     const auto* unit = &unit_ref;
 

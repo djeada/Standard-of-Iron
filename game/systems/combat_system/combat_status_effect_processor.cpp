@@ -4,7 +4,7 @@
 #include <cmath>
 #include <vector>
 
-#include "../../core/component.h"
+#include "../../core/component_gameplay.h"
 #include "../../core/world.h"
 #include "../combat_actions/combat_action_definition.h"
 #include "../combat_rules.h"

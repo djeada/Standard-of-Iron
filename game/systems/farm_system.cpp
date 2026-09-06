@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "../core/component.h"
+#include "../core/component_economy.h"
 #include "../core/ownership_constants.h"
 #include "../core/system_context.h"
 #include "../core/world.h"
@@ -16,7 +16,7 @@ void FarmSystem::run(Engine::Core::SystemContext& context) {
   }
 
   for (auto [entity_id, farm, unit] :
-       context.view<Engine::Core::FarmComponent, Engine::Core::UnitComponent>()) {
+       context.view<Engine::Core::FarmComponent, const Engine::Core::UnitComponent>()) {
     if (farm.ripe() || unit.health <= 0 ||
         Game::Core::is_neutral_owner(unit.owner_id)) {
       continue;

@@ -5,7 +5,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/system_context.h"
 #include "../core/world.h"
 #include "../core/world_spatial_index.h"
@@ -43,8 +43,8 @@ void PatrolSystem::run(Engine::Core::SystemContext& context) {
   for (auto [entity, patrol_ref, movement_ref, transform_ref, unit_ref] :
        context.entity_view<Engine::Core::PatrolComponent,
                            Engine::Core::MovementComponent,
-                           Engine::Core::TransformComponent,
-                           Engine::Core::UnitComponent>()) {
+                           const Engine::Core::TransformComponent,
+                           const Engine::Core::UnitComponent>()) {
     auto* patrol = &patrol_ref;
     const auto& transform = transform_ref;
     const auto& unit = unit_ref;

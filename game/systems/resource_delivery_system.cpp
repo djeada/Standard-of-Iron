@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "../core/ambient_session.h"
-#include "../core/component.h"
+#include "../core/component_economy.h"
 #include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
@@ -52,8 +52,8 @@ auto find_nearest_depot(Engine::Core::World* world,
   float nearest_dist_sq = std::numeric_limits<float>::max();
 
   for (auto [candidate, unit, transform] :
-       world->entity_view<Engine::Core::UnitComponent,
-                          Engine::Core::TransformComponent>()) {
+       world->entity_view<const Engine::Core::UnitComponent,
+                          const Engine::Core::TransformComponent>()) {
     (void)unit;
     if (!is_live_depot(&candidate, owner_id)) {
       continue;
@@ -96,7 +96,7 @@ void approach_fill(float& current, float target, float delta_time) {
 void sync_stockpile_displays(Engine::Core::World* world, float delta_time) {
   auto& resources = *Game::Session::services_for(*world).economy;
 
-  for (auto [entity_id, unit_ref] : world->view<Engine::Core::UnitComponent>()) {
+  for (auto [entity_id, unit_ref] : world->view<const Engine::Core::UnitComponent>()) {
     const auto* unit = &unit_ref;
     if (unit->spawn_type != Game::Units::SpawnType::Barracks) {
       continue;

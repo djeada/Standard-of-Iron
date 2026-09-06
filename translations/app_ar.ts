@@ -790,6 +790,10 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Click to dismiss</source>
         <translation>انقر للإغلاق</translation>
     </message>
+    <message>
+        <source>ALLY</source>
+        <translation>حليف</translation>
+    </message>
 </context>
 <context>
     <name>CommanderSystem</name>
@@ -800,6 +804,873 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>%1 has lost its commander. The host breaks and its camps stand empty.</source>
         <translation>فقد %1 قائده. تتفكك الحشود وتخلو معسكراتها.</translation>
+    </message>
+</context>
+<context>
+    <name>CommanderVoices</name>
+    <message>
+        <source>A camp gathered in. I shall keep it quiet and fed. That is what I am for.</source>
+        <translation>معسكر ضُمّ إلينا. سأبقيه هادئاً ومُطعَماً. لهذا أنا هنا.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I have a dozen more, and the one you hold is the one I liked least.</source>
+        <translation>معسكر ضاع. عندي عشرة غيره، والذي أخذته كان أقلّها في نفسي.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I have slept in worse hides and woken to better mornings.</source>
+        <translation>معسكر ضاع. نمتُ في أوكار أسوأ واستيقظتُ على صباحات أفضل.</translation>
+    </message>
+    <message>
+        <source>A camp lost. I shall claim it was never mine. That is the beauty of having good clerks.</source>
+        <translation>معسكر ضاع. سأزعم أنه لم يكن لي قط. تلك فائدة الكتبة المهرة.</translation>
+    </message>
+    <message>
+        <source>A fresh column is on the road to you. Treat them courteously; several of them owe me money.</source>
+        <translation>رتل جديد في طريقه إليك. عاملهم بلطف؛ عدد منهم مدينون لي بمال.</translation>
+    </message>
+    <message>
+        <source>A victory, and a tidy one. I shall write it up as mostly mine; you would have done the same.</source>
+        <translation>نصر، ونظيف. سأقيّده على أنه في معظمه لي؛ وأنت كنت ستفعل المثل.</translation>
+    </message>
+    <message>
+        <source>Advance. Double time. A slow attack is a gift to the enemy, and I am not generous.</source>
+        <translation>تقدّم. خطوة مضاعفة. الهجوم البطيء هدية للعدو، وأنا لست كريماً.</translation>
+    </message>
+    <message>
+        <source>Ah. Blades at last. I had begun to think you were a rumour with a baggage train.</source>
+        <translation>آه. نصال أخيراً. كدتُ أظنّك إشاعةً تجرّ عرباتِ عتاد.</translation>
+    </message>
+    <message>
+        <source>An army, and someone paying for it. Let us not pretend this is about glory. I will make you an offer at the end; you will not like the terms.</source>
+        <translation>جيش، ومن يدفع ثمنه. لا ندّعِ أن الأمر يتعلق بالمجد. سأعرض عليك في النهاية عرضاً؛ لن تعجبك شروطه.</translation>
+    </message>
+    <message>
+        <source>An assault on my camp. Every breach is coming out of someone&apos;s wages, and it will not be mine.</source>
+        <translation>هجوم على معسكري. كل ثغرة تُقتطع من أجر أحدهم، ولن يكون أجري.</translation>
+    </message>
+    <message>
+        <source>An assault on my camp. Spend your men on it if you like; I have budgeted for exactly this kind of impatience.</source>
+        <translation>هجوم على معسكري. أنفق رجالك عليه إن شئت؛ لقد رصدتُ في حسابي هذا النفاد من الصبر بالضبط.</translation>
+    </message>
+    <message>
+        <source>Another camp for the Republic. Do stay and watch the standards go up; you will not see it done better.</source>
+        <translation>معسكر آخر للجمهورية. ابقَ وشاهد الرايات تُرفع؛ لن ترى ذلك يُصنع أفضل من هذا.</translation>
+    </message>
+    <message>
+        <source>Another camp gathered in. Slowly, like fruit. Rot takes the ones you leave on the branch.</source>
+        <translation>معسكر آخر ضُمّ. ببطء، كالثمر. العفن يأخذ ما تتركه على الغصن.</translation>
+    </message>
+    <message>
+        <source>Another column comes down the road. Rome walks slowly and never, ever stops.</source>
+        <translation>رتل آخر ينزل الطريق. روما تمشي ببطء ولا تتوقف أبداً.</translation>
+    </message>
+    <message>
+        <source>Another standard on my frontier. I have counted your tents from the ridge - it did not take long. Rome has surveyed better men than you and buried them in straighter rows.</source>
+        <translation>راية أخرى على تخومي. عددتُ خيامك من فوق الحرف، ولم يستغرق ذلك طويلاً. لقد مسحت روما رجالاً خيراً منك ودفنتهم في صفوف أكثر استقامة.</translation>
+    </message>
+    <message>
+        <source>At my walls, are you. Keep swinging. Every man you put there is a man not guarding your own.</source>
+        <translation>إذاً أنت عند أسواري. واصل الضرب. كل رجل تضعه هناك رجل لا يحرس رجالك.</translation>
+    </message>
+    <message>
+        <source>Beaten, on this ground, today. Note the qualifications. I have made a career of the ground and the day after.</source>
+        <translation>مهزوم، على هذه الأرض، اليوم. لاحظ القيود في العبارة. لقد بنيتُ مسيرتي على الأرض وعلى اليوم التالي.</translation>
+    </message>
+    <message>
+        <source>Beaten. Beside you, which stings. I shall mention that the ground was poor and the allies poorer.</source>
+        <translation>مهزوم. إلى جانبك، وهذا ما يوجع. سأقول إن الأرض كانت رديئة والحلفاء أردأ.</translation>
+    </message>
+    <message>
+        <source>Beaten. Fair. You held when I thought you would run and you hit when I thought you would hold. I will not forget your standard.</source>
+        <translation>مهزوم. بإنصاف. صمدتَ حين ظننتك ستفرّ، وضربتَ حين ظننتك ستصمد. لن أنسى رايتك.</translation>
+    </message>
+    <message>
+        <source>Beaten. I shall write it down as an expense and you as a creditor. I pay my creditors. Eventually, and never in full.</source>
+        <translation>مهزوم. سأقيّده نفقةً وأقيّدك دائناً. أنا أسدّد لدائنيّ. في وقتٍ ما، ولا أسدّد كاملاً أبداً.</translation>
+    </message>
+    <message>
+        <source>Beaten. My brother would have a speech for this. I have only a road home and a great many arrows still in the quiver.</source>
+        <translation>مهزوم. كان لأخي خطبة تليق بهذا. أما أنا فلي طريق إلى الديار وسهام كثيرة في الجعبة.</translation>
+    </message>
+    <message>
+        <source>Camp taken. At the run. Next one is yours, if you are quick.</source>
+        <translation>أُخذ المعسكر. ركضاً. التالي لك، إن كنت سريعاً.</translation>
+    </message>
+    <message>
+        <source>Cohorts moving. Fast. Keep up if you can.</source>
+        <translation>الكوهورتات تتحرك. بسرعة. جارِنا إن استطعت.</translation>
+    </message>
+    <message>
+        <source>Cohorts, forward. Fast. Hit them before they finish thinking.</source>
+        <translation>الكوهورتات، إلى الأمام. بسرعة. اضربوهم قبل أن يفرغوا من التفكير.</translation>
+    </message>
+    <message>
+        <source>Done. You came at the wrong tempo and I was already inside it. Lie down; the surgeons work through the fallen in the order they fell.</source>
+        <translation>انتهى. جئتَ على إيقاعٍ خاطئ وكنتُ داخله سلفاً. استلقِ؛ الجرّاحون يعالجون الصرعى بترتيب سقوطهم.</translation>
+    </message>
+    <message>
+        <source>Down, then. Tell them Marcellus died forward. Tell them the ground was worth it. Both are true.</source>
+        <translation>سقطتُ إذاً. قل لهم إن مارسيلوس مات متقدّماً. قل لهم إن الأرض كانت تستحق. كلا القولين صحيح.</translation>
+    </message>
+    <message>
+        <source>Down. You came in fast and hungry, and hungry things walk into snares. Rest. The country will not miss you.</source>
+        <translation>سقطتُ. جئتَ سريعاً جائعاً، والجائع يمشي إلى الشرك. استرح. لن تفتقدك البلاد.</translation>
+    </message>
+    <message>
+        <source>Finished. I shall put your camp in the books as a purchase. Blood is a currency like any other; you simply overpaid.</source>
+        <translation>انتهى الأمر. سأقيّد معسكرك شراءً في الدفاتر. الدم عملة كسائر العملات؛ أنت فقط دفعتَ أكثر مما يجب.</translation>
+    </message>
+    <message>
+        <source>Finished. You fought like a wall - solid, honest, and completely unable to turn around.</source>
+        <translation>انتهى الأمر. قاتلتَ كجدار: صلب، أمين، وعاجز تماماً عن الالتفات.</translation>
+    </message>
+    <message>
+        <source>First blood. Good. I was beginning to worry you were one of those enemies who negotiate.</source>
+        <translation>أول دم. جيد. كنتُ قد بدأتُ أخشى أنك من الأعداء الذين يفاوضون.</translation>
+    </message>
+    <message>
+        <source>Forward, in order. If you have a reserve, this would be the moment to discover it does not exist.</source>
+        <translation>إلى الأمام، بنظام. إن كان لديك احتياط، فهذه لحظة اكتشاف أنه غير موجود.</translation>
+    </message>
+    <message>
+        <source>Forward, in pay order. Mercenaries fight best when they can see the paymaster watching.</source>
+        <translation>إلى الأمام، بترتيب كشوف الأجر. المرتزقة يقاتلون أفضل حين يرون أمين الصندوق يراقب.</translation>
+    </message>
+    <message>
+        <source>Forward, quietly. The best charge is the one the enemy hears about afterwards.</source>
+        <translation>إلى الأمام، بهدوء. أفضل هجمة هي التي يسمع بها العدو بعد وقوعها.</translation>
+    </message>
+    <message>
+        <source>Forward. If it seems too easy, that is because it is meant to.</source>
+        <translation>إلى الأمام. إن بدا الأمر سهلاً أكثر مما ينبغي، فلأنه قُصد أن يبدو كذلك.</translation>
+    </message>
+    <message>
+        <source>Fresh cohorts on the road. They march fast because I told them to.</source>
+        <translation>كوهورتات جديدة على الطريق. تسير سريعاً لأنني أمرتُ بذلك.</translation>
+    </message>
+    <message>
+        <source>Good. An enemy who shows up. Half my career was spent chasing ones who did not. Let us get on with it.</source>
+        <translation>جيد. عدوٌّ يحضر. قضيتُ نصف مسيرتي أطارد من لا يحضرون. فلنشرع في الأمر.</translation>
+    </message>
+    <message>
+        <source>Hitting my camp, are we? Every stone you knock loose has already been invoiced to your treasury.</source>
+        <translation>إذاً تضرب معسكري؟ كل حجر تقلعه قد قُيّد فاتورةً على خزانتك.</translation>
+    </message>
+    <message>
+        <source>Hitting my camp. Spend your strength there while my hunters spend theirs on your wagons.</source>
+        <translation>تضرب معسكري. أنفق قوّتك هناك بينما ينفق صيّادوني قوّتهم على عرباتك.</translation>
+    </message>
+    <message>
+        <source>Hitting my walls, are you. Every man you spend there is one I need not outwit later.</source>
+        <translation>إذاً أنت عند أسواري. كل رجل تنفقه هناك رجل لن أضطر إلى مخادعته لاحقاً.</translation>
+    </message>
+    <message>
+        <source>I am advancing. It will not look like much. It is not meant to.</source>
+        <translation>أنا أتقدّم. لن يبدو الأمر كبيراً. وليس المقصود أن يبدو كذلك.</translation>
+    </message>
+    <message>
+        <source>I am at the end of what patience can buy. Come, or write to my family. Either will do; only one is useful.</source>
+        <translation>بلغتُ منتهى ما يشتريه الصبر. تعالَ، أو اكتب إلى أهلي. كلاهما يفي؛ واحد فقط ينفع.</translation>
+    </message>
+    <message>
+        <source>I am attacking. Do not take it personally; I am simply collecting on ground you owe me.</source>
+        <translation>أنا أهاجم. لا تأخذ الأمر على محمل شخصي؛ إنما أُحصّل أرضاً تدين لي بها.</translation>
+    </message>
+    <message>
+        <source>I am attacking. Hold your side. If this is wasted, I shall be sending you the bill.</source>
+        <translation>أنا أهاجم. امسك جانبك. إن ضاع هذا هدراً فسأرسل إليك الفاتورة.</translation>
+    </message>
+    <message>
+        <source>I am attacking. If you wished to be consulted, you should have brought more men.</source>
+        <translation>أنا أهاجم. لو أردتَ أن تُستشار لجئتَ برجالٍ أكثر.</translation>
+    </message>
+    <message>
+        <source>I am bleeding men, and each one was paid in advance. This is not a battle, it is an audit, and it is going badly.</source>
+        <translation>أفقد رجالاً، وكل واحد دُفع أجره مقدّماً. هذه ليست معركة، بل مراجعة حسابات، وهي تسير سيئاً.</translation>
+    </message>
+    <message>
+        <source>I am coming at you now. All of it. Do not blink; you will miss the only part that matters.</source>
+        <translation>أنا آتٍ إليك الآن. بكل شيء. لا تطرف؛ ستفوتك الجزئية الوحيدة المهمة.</translation>
+    </message>
+    <message>
+        <source>I am coming for you. Not from where you are looking. I never come from where you are looking.</source>
+        <translation>أنا آتٍ إليك. لا من حيث تنظر. لا آتي أبداً من حيث تنظر.</translation>
+    </message>
+    <message>
+        <source>I am down to the last of them. If you are coming, run.</source>
+        <translation>لم يبقَ لي إلا آخرهم. إن كنتَ قادماً فاركض.</translation>
+    </message>
+    <message>
+        <source>I am going in. Now. Hit them from your side or watch me do it alone.</source>
+        <translation>أنا داخل. الآن. اضربهم من جهتك أو راقبني أفعلها وحدي.</translation>
+    </message>
+    <message>
+        <source>I am losing cohorts faster than the treasury can replace them, and the treasury is quicker than you think.</source>
+        <translation>أفقد الكوهورتات أسرع مما تستطيع الخزانة تعويضه، والخزانة أسرع مما تظن.</translation>
+    </message>
+    <message>
+        <source>I am losing men and I cannot replace them out here. If you have spare, I have work for them.</source>
+        <translation>أفقد رجالاً ولا أستطيع تعويضهم هنا. إن كان لديك فائض فعندي لهم عمل.</translation>
+    </message>
+    <message>
+        <source>I am losing men at a rate I do not care for. The ledger still balances. Do not let it stop balancing.</source>
+        <translation>أفقد رجالاً بوتيرة لا تروقني. الدفاتر ما تزال متوازنة. لا تدعها تكفّ عن التوازن.</translation>
+    </message>
+    <message>
+        <source>I am losing men fast. Faster than I like, and I like it fast. Something has to change.</source>
+        <translation>أفقد رجالاً بسرعة. أسرع مما أحب، وأنا أحب السرعة. لا بدّ أن يتغير شيء.</translation>
+    </message>
+    <message>
+        <source>I am losing men. Not to cleverness, to weight. Lend me some of yours, or a distraction, or both.</source>
+        <translation>أفقد رجالاً. لا بالدهاء، بل بالثقل. أعِرني من رجالك، أو تشتيتاً، أو كليهما.</translation>
+    </message>
+    <message>
+        <source>I am moving on them. Do not follow me directly; be where they run to.</source>
+        <translation>أنا متجه إليهم. لا تتبعني مباشرة؛ كن حيث يفرّون.</translation>
+    </message>
+    <message>
+        <source>I am moving on them. Slowly, from the high ground. Do not wait for me; be where they break to.</source>
+        <translation>أنا متجه إليهم. ببطء، من المرتفع. لا تنتظرني؛ كن حيث ينكسرون.</translation>
+    </message>
+    <message>
+        <source>I am nearly done here. Nearly. The last few are hunters, and hunters are patient about dying.</source>
+        <translation>أوشكتُ على الفراغ هنا. أوشكتُ. آخرهم صيّادون، والصيّادون صبورون في الموت.</translation>
+    </message>
+    <message>
+        <source>I am nearly done, they say. I have crossed mountains on nearly. Do not count what is left of me; count what it is still holding.</source>
+        <translation>يقولون إنني أوشكتُ على النهاية. عبرتُ الجبال على كلمة «أوشك». لا تعُدّ ما بقي مني؛ عُدّ ما يظل يمسكه ذلك.</translation>
+    </message>
+    <message>
+        <source>I am nearly finished, they say. Nearly. A fire is nearly out for a long time before it goes cold, and it burns fingers all the while.</source>
+        <translation>يقولون إنني أوشكتُ على الانتهاء. أوشكت. تظل النار «أوشكت على الانطفاء» طويلاً قبل أن تبرد، وهي تحرق الأصابع طوال ذلك.</translation>
+    </message>
+    <message>
+        <source>I am nearly finished. I would rather not be. Consider this an invoice for immediate assistance.</source>
+        <translation>أوشكتُ على الانتهاء. وددتُ لو لم يكن كذلك. اعتبر هذا فاتورةً بمساعدة فورية.</translation>
+    </message>
+    <message>
+        <source>I am nearly out of men. Nearly. The last handful are the ones who stayed, and those are the ones you should fear.</source>
+        <translation>كاد رجالي ينفدون. كادوا. آخر حفنة هم من بقوا، وهؤلاء من ينبغي أن تخشاهم.</translation>
+    </message>
+    <message>
+        <source>I am sending men forward now. Not many. Enough. One does not empty the granary to kill a fox.</source>
+        <translation>أرسل رجالاً إلى الأمام الآن. ليسوا كثيرين. بل يكفون. لا يُفرَّغ المخزن لقتل ثعلب.</translation>
+    </message>
+    <message>
+        <source>I am sending the cohorts down now. Count them as they come. It will give you something to do with your last minutes.</source>
+        <translation>أُنزل الكوهورتات الآن. عُدّها وهي قادمة. سيشغلك ذلك في دقائقك الأخيرة.</translation>
+    </message>
+    <message>
+        <source>I am sending the column now. It will not look like an attack until it is one.</source>
+        <translation>أرسل الرتل الآن. لن يبدو هجوماً حتى يصير هجوماً.</translation>
+    </message>
+    <message>
+        <source>I see your banners. I saw others like them, years ago; they made excellent kindling. Take your time. I intend to take mine.</source>
+        <translation>أرى راياتك. رأيتُ مثلها قبل سنين؛ كانت حطباً ممتازاً. خذ وقتك. وأنا أنوي أخذ وقتي.</translation>
+    </message>
+    <message>
+        <source>Keep the field, then. Rome does not lose provinces - she lends them, at interest. My accountants will be along in the spring, and they are far less pleasant than I am.</source>
+        <translation>احتفظ بالميدان إذاً. روما لا تخسر الولايات، بل تُقرضها بفائدة. سيمرّ محاسبيّ في الربيع، وهم أقلّ لطفاً مني بكثير.</translation>
+    </message>
+    <message>
+        <source>Look at that. You are bleeding out and still holding the ground. Brave. Wrong, but brave.</source>
+        <translation>انظر إلى هذا. تنزف حتى الموت وما زلت ممسكاً بالأرض. شجاع. مخطئ، لكنه شجاع.</translation>
+    </message>
+    <message>
+        <source>Look at them fall. I did warn you that arithmetic is cruel, and I am only its clerk.</source>
+        <translation>انظر إليهم يسقطون. حذّرتُك أن الحساب قاسٍ، وما أنا إلا كاتبه.</translation>
+    </message>
+    <message>
+        <source>Look at your line. Brave men, standing where the arrows are. Whose idea was that?</source>
+        <translation>انظر إلى صفّك. رجال شجعان واقفون حيث تسقط السهام. فكرة من كانت؟</translation>
+    </message>
+    <message>
+        <source>Look at your line. Brave, disciplined, and in exactly the wrong place. Rome taught you well.</source>
+        <translation>انظر إلى صفّك. شجاع، منضبط، وفي المكان الخطأ تماماً. لقد علّمتك روما جيداً.</translation>
+    </message>
+    <message>
+        <source>Look at your losses. Whoever is paying for this war is getting very poor value.</source>
+        <translation>انظر إلى خسائرك. أياً كان من يموّل هذه الحرب فهو يحصل على قيمة زهيدة جداً لماله.</translation>
+    </message>
+    <message>
+        <source>Lost. I did say this was the Barcids&apos; kind of war. Nobody listens to the man who keeps the books until the books are empty.</source>
+        <translation>خسرنا. قلتُ إن هذه حرب البرقيين. لا أحد يصغي إلى صاحب الدفاتر حتى تفرغ الدفاتر.</translation>
+    </message>
+    <message>
+        <source>Lost. We fought their war instead of ours. Next time we choose the field before we choose the fight.</source>
+        <translation>خسرنا. خضنا حربهم بدل حربنا. في المرة القادمة نختار الميدان قبل أن نختار القتال.</translation>
+    </message>
+    <message>
+        <source>Lost. We ran out of arrows or out of time; in this country they are the same thing.</source>
+        <translation>خسرنا. نفدت السهام أو نفد الوقت؛ وفي هذه البلاد هما شيء واحد.</translation>
+    </message>
+    <message>
+        <source>Lost. We were quicker than we should have been, or slower. I shall spend the winter deciding which.</source>
+        <translation>خسرنا. كنا أسرع مما ينبغي، أو أبطأ. سأقضي الشتاء أقرّر أيّهما.</translation>
+    </message>
+    <message>
+        <source>Lost. We were slow when it mattered. I will say so to anyone who asks, including you.</source>
+        <translation>خسرنا. تباطأنا حين كان الأمر مهماً. سأقول ذلك لكل من يسأل، ولك أيضاً.</translation>
+    </message>
+    <message>
+        <source>More men are on the road. I did not send for them out of fear; I sent for them because there is room.</source>
+        <translation>رجال آخرون على الطريق. لم أستدعِهم خوفاً؛ استدعيتهم لأن ثمة متسعاً.</translation>
+    </message>
+    <message>
+        <source>More men coming. Not for you to see - for you to feel.</source>
+        <translation>رجال آخرون قادمون. لا لتراهم، بل لتشعر بهم.</translation>
+    </message>
+    <message>
+        <source>More of mine are coming down the road. I know - I did not tell you. That was rather the idea.</source>
+        <translation>المزيد من رجالي ينزلون الطريق. أعلم، لم أخبرك. وكان ذلك هو المقصود.</translation>
+    </message>
+    <message>
+        <source>More of mine are coming. I sent for them before you arrived; a hunter sets the snare before he sees the deer.</source>
+        <translation>المزيد من رجالي قادمون. استدعيتهم قبل وصولك؛ الصيّاد ينصب الشرك قبل أن يرى الغزال.</translation>
+    </message>
+    <message>
+        <source>More of my hired men are coming down the road. Fresh, fed, and paid. You cannot say the same for yours.</source>
+        <translation>المزيد من مرتزقتي ينزلون الطريق. مرتاحون، شباعى، ومدفوعو الأجر. ولا يُقال ذلك عن رجالك.</translation>
+    </message>
+    <message>
+        <source>My archers advance. When their line looks at me, it is not looking at you.</source>
+        <translation>رماتي يتقدمون. حين ينظر صفّهم إليّ فهو لا ينظر إليك.</translation>
+    </message>
+    <message>
+        <source>My archers are moving up. Look to your flanks; that is where the country runs thin.</source>
+        <translation>رماتي يتقدمون. احرس جناحيك؛ هناك تنحل البلاد.</translation>
+    </message>
+    <message>
+        <source>My camp is taking hits. I can hold. I would rather kill them with you than hold without you.</source>
+        <translation>معسكري يتلقى الضربات. أستطيع الصمود. لكنني أوثر قتلهم معك على الصمود بدونك.</translation>
+    </message>
+    <message>
+        <source>My camp is taking the weight of their attack. If you were planning to come, this is the day for planning to end.</source>
+        <translation>معسكري يحمل ثقل هجومهم. إن كنتَ تنوي المجيء، فاليوم هو اليوم الذي تنتهي فيه النوايا.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack, and my archers are better at giving than taking. If you can come, come along the ridge.</source>
+        <translation>معسكري تحت الهجوم، ورماتي أبرع في العطاء منهم في الأخذ. إن استطعت المجيء فتعالَ من فوق الحرف.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack, and my men are paid to fight, not to die. If you want them alive tomorrow, come today.</source>
+        <translation>معسكري تحت الهجوم، ورجالي يتقاضون أجراً على القتال لا على الموت. إن أردتهم أحياءً غداً فتعالَ اليوم.</translation>
+    </message>
+    <message>
+        <source>My camp is under attack. I would prefer not to be the one caught in a trap for once; if you can help, now would be poetic.</source>
+        <translation>معسكري تحت الهجوم. أوثر لمرة ألا أكون أنا الواقع في الفخ؛ إن استطعت العون فالآن يكون ذلك شاعرياً.</translation>
+    </message>
+    <message>
+        <source>My camp is under the hammer. If you have men to spare, spare them now; if not, I shall be curious to see what you were saving them for.</source>
+        <translation>معسكري تحت المطرقة. إن كان لديك رجال فائضون فابذلهم الآن؛ وإلا فسأتساءل لأي شيء كنت تدّخرهم.</translation>
+    </message>
+    <message>
+        <source>My cohorts are bleeding. Very well. Rome bleeds the way rivers do - it is how she reaches the sea.</source>
+        <translation>كوهورتاتي تنزف. فليكن. روما تنزف كما تنزف الأنهار؛ هكذا تبلغ البحر.</translation>
+    </message>
+    <message>
+        <source>My cohorts are marching on them. Watch the manoeuvre; it is not something one sees twice for free.</source>
+        <translation>كوهورتاتي تزحف عليهم. راقب المناورة؛ ليست مما يُرى مرتين مجاناً.</translation>
+    </message>
+    <message>
+        <source>My cohorts are moving on them. Slowly. If you are quicker, be quicker where they can see it.</source>
+        <translation>كوهورتاتي تتقدم عليهم. ببطء. إن كنتَ أسرع فكن أسرع حيث يرون.</translation>
+    </message>
+    <message>
+        <source>My cohorts are thinning. It is a cost, and I keep the books honestly. There is still more field than you have men.</source>
+        <translation>كوهورتاتي تخفّ. تلك كلفة، وأنا أمسك الدفاتر بأمانة. وما زال الميدان أوسع من عدد رجالك.</translation>
+    </message>
+    <message>
+        <source>My columns advance. Watch their reserve. It will move when they see me, and that is when it is yours.</source>
+        <translation>أرتالي تتقدم. راقب احتياطهم. سيتحرك حين يراني، وعندها يكون لك.</translation>
+    </message>
+    <message>
+        <source>My columns are moving. Watch the front, by all means; someone should, and it may as well be you.</source>
+        <translation>أرتالي تتحرك. راقب المقدمة بالطبع؛ ينبغي لأحدٍ أن يفعل، وليكن أنت.</translation>
+    </message>
+    <message>
+        <source>My line advances. Do not look for the trick; there is no trick. There is only the next step, and then the one after.</source>
+        <translation>صفّي يتقدم. لا تبحث عن الحيلة؛ لا حيلة هناك. هناك الخطوة التالية فحسب، ثم التي بعدها.</translation>
+    </message>
+    <message>
+        <source>My men are down in numbers. So be it. Blood is the coin, and I have always paid in full.</source>
+        <translation>رجالي يسقطون بأعداد. فليكن. الدم هو العملة، وأنا سدّدتُ دائماً كاملاً.</translation>
+    </message>
+    <message>
+        <source>My men are dying. Good men, too. The enemy may take them; the enemy may not have my attention as well.</source>
+        <translation>رجالي يموتون. ورجال طيبون أيضاً. ليأخذهم العدو؛ فلن يأخذ انتباهي معهم.</translation>
+    </message>
+    <message>
+        <source>My men are falling. The line thins. I have fed armies on less and the hills have not run out of stone.</source>
+        <translation>رجالي يسقطون. الصفّ يرقّ. أطعمتُ جيوشاً بأقل من هذا، ولم ينفد الحجر من التلال.</translation>
+    </message>
+    <message>
+        <source>My part is done. The hills kept me alive longer than the plain would have. Go on without me and win.</source>
+        <translation>انتهى دوري. أبقتني التلال حياً أطول مما كان سيفعل السهل. امضِ من دوني وانتصر.</translation>
+    </message>
+    <message>
+        <source>My part is over. I shall be in the Council chamber by morning, explaining how it was your fault. Win anyway.</source>
+        <translation>انتهى دوري. سأكون في قاعة المجلس صباحاً أشرح كيف كان الذنب ذنبك. انتصر على أي حال.</translation>
+    </message>
+    <message>
+        <source>My spears are falling. Every one is a contract I have to settle with a widow. Someone will pay for this, and it will not be me.</source>
+        <translation>رماحي تسقط. كل واحدة عقد سأسوّيه مع أرملة. سيدفع أحدهم ثمن هذا، ولن أكون أنا.</translation>
+    </message>
+    <message>
+        <source>My spears are marching on them. I do not do this cheaply, so kindly make it count.</source>
+        <translation>رماحي تزحف عليهم. لا أفعل هذا رخيصاً، فتفضّل واجعله يستحق.</translation>
+    </message>
+    <message>
+        <source>My spears are moving. Every one of them is paid through the season, so they will not stop for a little dying.</source>
+        <translation>رماحي تتحرك. كلهم مدفوع أجرهم حتى نهاية الموسم، فلن يتوقفوا من أجل قليل من الموت.</translation>
+    </message>
+    <message>
+        <source>Nearly bankrupt, then. In men, I mean. I have been bankrupt before; the trick is to owe so much that they cannot afford to finish you.</source>
+        <translation>شبه مفلس إذاً. في الرجال، أعني. سبق أن أفلستُ؛ والحيلة أن تدين بما يجعل إجهازهم عليك مكلفاً أكثر مما يحتملون.</translation>
+    </message>
+    <message>
+        <source>Nearly beaten, they tell me. I have been nearly beaten before. The word is doing a great deal of work in that sentence.</source>
+        <translation>يقولون إنني شبه مهزوم. سبق أن كنتُ شبه مهزوم. تلك الكلمة تؤدي عملاً كبيراً في هذه الجملة.</translation>
+    </message>
+    <message>
+        <source>One camp changes hands. I have lost more to a dishonest quartermaster and slept perfectly well.</source>
+        <translation>معسكر يتبدّل مالكه. خسرتُ أكثر من هذا بسبب أمين مؤن غشّاش، ونمتُ ملء جفوني.</translation>
+    </message>
+    <message>
+        <source>One camp gone. I have never yet lost a war to masonry.</source>
+        <translation>معسكر واحد راح. لم أخسر حرباً قط بسبب بناءٍ من حجر.</translation>
+    </message>
+    <message>
+        <source>One camp lost. I have lost an eye, an army and a brother, and here I still am.</source>
+        <translation>معسكر ضاع. فقدتُ عيناً وجيشاً وأخاً، وها أنا ما زلتُ هنا.</translation>
+    </message>
+    <message>
+        <source>Reinforcements march. Rome has a great many sons and a very short memory for their names.</source>
+        <translation>التعزيزات تسير. لروما أبناء كثيرون جداً وذاكرة قصيرة جداً بأسمائهم.</translation>
+    </message>
+    <message>
+        <source>Reinforcements on the road. Not many. Enough to make you turn your head at the wrong moment.</source>
+        <translation>تعزيزات على الطريق. ليست كثيرة. تكفي لتلفت رأسك في اللحظة الخطأ.</translation>
+    </message>
+    <message>
+        <source>Reinforcements. Bought this morning, delivered this afternoon. That is what a treasury is for.</source>
+        <translation>تعزيزات. اشتُريت صباحاً وسُلّمت عصراً. لهذا تكون الخزانة.</translation>
+    </message>
+    <message>
+        <source>Reinforcements. Mine, I am afraid. I collect them the way others collect debts.</source>
+        <translation>تعزيزات. لي، للأسف. أجمعها كما يجمع غيري الديون.</translation>
+    </message>
+    <message>
+        <source>Right. You are here, I am here. No speeches. Sharpen what you have; I do not like to fight dull men.</source>
+        <translation>حسناً. أنت هنا وأنا هنا. لا خطب. اشحذ ما لديك؛ لا أحب قتال الرجال الكليلين.</translation>
+    </message>
+    <message>
+        <source>So it begins. Spears touch, men fall, and the wheat grows regardless. I can wait longer than you can bleed.</source>
+        <translation>هكذا يبدأ. تتلامس الرماح، ويسقط الرجال، وينمو القمح رغم ذلك. أستطيع الانتظار أطول مما تستطيع النزف.</translation>
+    </message>
+    <message>
+        <source>So it ends with a blade after all. Tell Rome I was a wolf, not a bull. She never did learn the difference.</source>
+        <translation>إذاً ينتهي الأمر بنصلٍ في النهاية. قولوا لروما إنني كنتُ ذئباً لا ثوراً. لم تتعلم الفرق قط.</translation>
+    </message>
+    <message>
+        <source>So the Barcids&apos; war has found me a new opponent. Understand that I am here for the ledger, not the legend, and ledgers are much harder to kill.</source>
+        <translation>إذاً وجدت لي حرب البرقيين خصماً جديداً. افهم أنني هنا من أجل الدفتر لا من أجل الأسطورة، والدفاتر أصعب قتلاً بكثير.</translation>
+    </message>
+    <message>
+        <source>So the arrow finds me at last. Tell my brother I held the road as long as roads can be held.</source>
+        <translation>إذاً وجدني السهم أخيراً. قولوا لأخي إنني أمسكتُ الطريق ما دامت الطرق تُمسك.</translation>
+    </message>
+    <message>
+        <source>So the old man falls at last. Rome will call it a tragedy for a week and a lesson for a century. Mind the lesson.</source>
+        <translation>إذاً يسقط الشيخ أخيراً. ستسمّيها روما مأساةً أسبوعاً ودرساً قرناً. انتبه للدرس.</translation>
+    </message>
+    <message>
+        <source>So this is the army. I make it three cohorts and some optimism. My clerks have already drawn up the receipt for your camp; we only need the date.</source>
+        <translation>إذاً هذا هو الجيش. أحصي ثلاث كوهورتات وشيئاً من التفاؤل. كتبتي حرّروا وصل معسكرك سلفاً؛ ينقصنا التاريخ فقط.</translation>
+    </message>
+    <message>
+        <source>So. The Barcids get their wish and I get a spear. Tell the Council the books are in order. They always were.</source>
+        <translation>حسناً. ينال البرقيون مرادهم وأنال أنا رمحاً. قولوا للمجلس إن الدفاتر سليمة. لطالما كانت سليمة.</translation>
+    </message>
+    <message>
+        <source>So. You have come to fight me. How refreshing - most of my enemies prefer to wait behind their walls until I have finished with the countryside.</source>
+        <translation>إذاً جئتَ لتقاتلني. يا له من أمر منعش؛ أكثر أعدائي يفضلون الانتظار خلف أسوارهم حتى أفرغ من الريف.</translation>
+    </message>
+    <message>
+        <source>Steel meets steel. Now the costs begin. I do hope you are keeping accounts, because I am.</source>
+        <translation>التقى الفولاذ بالفولاذ. الآن تبدأ الكلفة. أرجو أنك تمسك الحساب، فأنا أمسكه.</translation>
+    </message>
+    <message>
+        <source>Steel. Finally. Now we find out what you are made of, and I already have a guess.</source>
+        <translation>فولاذ. أخيراً. الآن نعرف مِمَّ صُنعت، ولديّ تخمين سلفاً.</translation>
+    </message>
+    <message>
+        <source>Take the camp. I have taken cities and given them back; the joy is in the taking, not the holding.</source>
+        <translation>خذ المعسكر. أخذتُ مدناً وأعدتها؛ المتعة في الأخذ لا في الإمساك.</translation>
+    </message>
+    <message>
+        <source>That camp is Rome&apos;s now. I shall let you have the wells, at the usual rate.</source>
+        <translation>ذلك المعسكر لروما الآن. سأترك لك الآبار، بالسعر المعتاد.</translation>
+    </message>
+    <message>
+        <source>That camp is mine now. I have already sold the grain in it twice. Do not look so surprised; it is how one makes a profit on war.</source>
+        <translation>ذلك المعسكر لي الآن. بعتُ الحبوب التي فيه مرتين سلفاً. لا تُظهر هذه الدهشة؛ هكذا يُجنى الربح من الحرب.</translation>
+    </message>
+    <message>
+        <source>That camp is mine now. I shall not do anything dramatic with it. I shall simply keep it, which is worse.</source>
+        <translation>ذلك المعسكر لي الآن. لن أفعل به شيئاً درامياً. سأحتفظ به فحسب، وهذا أسوأ.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. I did not even need the elephants. I am almost disappointed.</source>
+        <translation>ذلك المعسكر لي. لم أحتج حتى إلى الفيلة. كدتُ أشعر بخيبة.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. I did not storm it; I waited for it. There is a difference and you will feel it.</source>
+        <translation>ذلك المعسكر لي. لم أقتحمه؛ انتظرته. ثمة فرق وستشعر به.</translation>
+    </message>
+    <message>
+        <source>That camp is mine. Took it at the run. Did you even see the standard change?</source>
+        <translation>ذلك المعسكر لي. أُخذ ركضاً. هل لمحتَ الراية وهي تتبدّل أصلاً؟</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I have already leased the granary. To you, actually. We can discuss terms.</source>
+        <translation>ذلك المعسكر لنا. أجّرتُ المخزن سلفاً. لك أنت، في الواقع. يمكننا مناقشة الشروط.</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I took it from the side nobody guards, which is every side, eventually.</source>
+        <translation>ذلك المعسكر لنا. أخذته من الجهة التي لا يحرسها أحد، وهي كل جهة في نهاية المطاف.</translation>
+    </message>
+    <message>
+        <source>That camp is ours. I will hold it and keep the road open behind you. Somebody has to.</source>
+        <translation>ذلك المعسكر لنا. سأمسكه وأُبقي الطريق خلفك مفتوحاً. لا بدّ لأحدٍ أن يفعل.</translation>
+    </message>
+    <message>
+        <source>That is all of me spent. It was a long war and I regret none of the slow parts. Finish it.</source>
+        <translation>هذا كل ما فيّ. كانت حرباً طويلة ولا أندم على شيء من أجزائها البطيئة. أنهِها أنت.</translation>
+    </message>
+    <message>
+        <source>That is my part done. Went forward the whole way. Finish what is left of them.</source>
+        <translation>انتهى دوري. مضيتُ إلى الأمام الطريق كله. أجهِز على ما بقي منهم.</translation>
+    </message>
+    <message>
+        <source>That is the end of it. You fought. That counts for something in my camp, if not in yours.</source>
+        <translation>هذه هي النهاية. قاتلتَ. لذلك قيمة في معسكري، إن لم تكن له قيمة في معسكرك.</translation>
+    </message>
+    <message>
+        <source>That is the end of my army. Not of me - never that - but the war is in your hands now. Turn it.</source>
+        <translation>هذه نهاية جيشي. لا نهايتي، أبداً، لكن الحرب في يديك الآن. اقلبها.</translation>
+    </message>
+    <message>
+        <source>That is the end of my part. The rest of the war is yours. Do keep the receipts.</source>
+        <translation>هذه نهاية دوري. بقية الحرب لك. احتفظ بالإيصالات.</translation>
+    </message>
+    <message>
+        <source>That is the end. You fought hard and thought little. In the hills, that gets you eaten.</source>
+        <translation>هذه النهاية. قاتلتَ بقوة وفكّرتَ قليلاً. في التلال، هذا يجعلك طعاماً.</translation>
+    </message>
+    <message>
+        <source>That was yours a moment ago. My surveyors are already renaming the streets. Something Latin, I think.</source>
+        <translation>كان ذلك لك قبل لحظة. مسّاحو أرضي يعيدون تسمية الشوارع سلفاً. شيء لاتيني، أظن.</translation>
+    </message>
+    <message>
+        <source>The cohorts are moving - slowly, in step. You will have time to see them coming. That is the point.</source>
+        <translation>الكوهورتات تتحرك؛ ببطء، على خطى واحدة. سيتسع لك الوقت لتراها قادمة. وذلك هو المقصود.</translation>
+    </message>
+    <message>
+        <source>The first arrows fly. Now we learn whether you can bleed and think at once.</source>
+        <translation>طارت أول السهام. الآن نعرف إن كنتَ تستطيع النزف والتفكير معاً.</translation>
+    </message>
+    <message>
+        <source>The legion is moving. Do not trouble to form a line - it will only give my men something to step over.</source>
+        <translation>الفيلق يتحرك. لا تُتعب نفسك بتشكيل صفّ؛ لن يمنح رجالي إلا شيئاً يخطون فوقه.</translation>
+    </message>
+    <message>
+        <source>There it is. You came straight at me, like a bull at a red cloak, and now you are wondering where the cloak went.</source>
+        <translation>ها هو ذا. جئتَ إليّ مباشرةً كثورٍ إلى رداء أحمر، وأنت الآن تتساءل أين ذهب الرداء.</translation>
+    </message>
+    <message>
+        <source>There you are. I have been counting your wagons. Fewer than you need, more than you can guard. This will be a patient day.</source>
+        <translation>ها أنت ذا. كنتُ أعدّ عرباتك. أقل مما تحتاج، وأكثر مما تستطيع حراسته. سيكون هذا يوماً صبوراً.</translation>
+    </message>
+    <message>
+        <source>There. It was never a battle, only a season, and seasons end. Go home if you have one; the road is long and I shall not follow.</source>
+        <translation>ها قد انتهى. لم تكن معركة قط، بل موسماً، والمواسم تنتهي. اذهب إلى الديار إن كانت لك ديار؛ الطريق طويل ولن أتبعك.</translation>
+    </message>
+    <message>
+        <source>There. That is what happens when amateurs march against a ledger. Sit down. My men will count you when they have counted the horses.</source>
+        <translation>ها قد انتهى. هذا ما يحدث حين يزحف الهواة على دفتر حسابات. اجلس. سيعدّكم رجالي بعد أن يعدّوا الخيول.</translation>
+    </message>
+    <message>
+        <source>There. You are done, and I have lost fewer men than I budgeted for. That is a good day in my trade.</source>
+        <translation>ها قد انتهى. أنت منتهٍ، وقد فقدتُ رجالاً أقل مما رصدتُ في الحساب. في مهنتي، هذا يوم جيد.</translation>
+    </message>
+    <message>
+        <source>They are at my walls, and my walls were built by the lowest bidder. Some assistance would not go unrecorded.</source>
+        <translation>هم عند أسواري، وأسواري بناها صاحب أرخص عطاء. بعض العون لن يمرّ دون تقييد.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. Come now, hard, and we break them between us.</source>
+        <translation>هم عند أسواري. تعالَ الآن، بقوة، ونكسرهم بيننا.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I can hold a while - I always can - but a while is not forever, and I would rather not test the word.</source>
+        <translation>هم عند أسواري. أستطيع الصمود حيناً، أستطيع دائماً، لكن الحين ليس أبداً، وأوثر ألا أختبر الكلمة.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I can hold a while with what I have. A while, not long. Please hear the difference.</source>
+        <translation>هم عند أسواري. أستطيع الصمود حيناً بما لديّ. حيناً، لا طويلاً. أرجو أن تسمع الفرق.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. I have been the hammer so often that I forget what the anvil feels like. It is unpleasant.</source>
+        <translation>هم عند أسواري. كنتُ المطرقة مراراً حتى نسيتُ كيف يكون شعور السندان. إنه غير سارّ.</translation>
+    </message>
+    <message>
+        <source>They are at my walls. Mercenaries have a fine sense of when a paymaster is about to become a corpse. Do hurry.</source>
+        <translation>هم عند أسواري. للمرتزقة أنف حسّاس لمعرفة متى يوشك أمين الصندوق أن يصير جثة. عجّل.</translation>
+    </message>
+    <message>
+        <source>This is the edge. I have stood on it before and walked back. I would rather not do it alone.</source>
+        <translation>هذه هي الحافة. وقفتُ عليها من قبل وعدت. أوثر ألا أفعلها وحدي.</translation>
+    </message>
+    <message>
+        <source>This is the end of my line unless you reach me. I will not ask twice; there will not be time to.</source>
+        <translation>هذه نهاية صفّي إن لم تبلغني. لن أطلب مرتين؛ لن يكون هناك وقت.</translation>
+    </message>
+    <message>
+        <source>This is what the end of a consulship looks like from the inside. Come quickly, or come for the funeral.</source>
+        <translation>هكذا تبدو نهاية القنصلية من الداخل. تعالَ سريعاً، أو تعالَ إلى الجنازة.</translation>
+    </message>
+    <message>
+        <source>Together, then. I will do the clever part. You may do the brave part; it is honest work and someone must.</source>
+        <translation>معاً إذاً. أنا أتولى الجزء الذكي. ولك أن تتولى الجزء الشجاع؛ إنه عمل شريف ولا بدّ لأحدٍ أن يقوم به.</translation>
+    </message>
+    <message>
+        <source>We are allies, so I am told. I did not vote for it. Keep your men off my supply lines and we shall get along splendidly.</source>
+        <translation>نحن حليفان، هكذا قيل لي. لم أصوّت لذلك. أبقِ رجالك بعيداً عن خطوط إمدادي ونتفق أحسن اتفاق.</translation>
+    </message>
+    <message>
+        <source>We fight side by side. Keep pace with me or stay out of my way; either is fine, both at once is not.</source>
+        <translation>نقاتل جنباً إلى جنب. جارِ خطاي أو ابتعد عن طريقي؛ كلاهما مقبول، وكلاهما معاً غير مقبول.</translation>
+    </message>
+    <message>
+        <source>We fight together, then. Do try to keep your line straight - I shall be watching from the good ground, and I have a very long memory for embarrassments.</source>
+        <translation>إذاً نقاتل معاً. حاول أن تُبقي صفّك مستقيماً؛ سأراقب من الأرض العالية، ولي ذاكرة طويلة جداً للمواقف المخجلة.</translation>
+    </message>
+    <message>
+        <source>We fight together. I will hold the flanks and watch the roads. Keep your supply close; the enemy will not fight fair and neither will I.</source>
+        <translation>نقاتل معاً. أمسك أنا الجناحين وأراقب الطرق. أبقِ إمدادك قريباً؛ لن يقاتل العدو بشرف، ولا أنا.</translation>
+    </message>
+    <message>
+        <source>We stand together. I will not be hurried, and I will not hurry you. Hold what you have and let the enemy come to us tired.</source>
+        <translation>نقف معاً. لن أُستعجل ولن أستعجلك. أمسك ما لديك ودع العدو يأتينا مُتعباً.</translation>
+    </message>
+    <message>
+        <source>Welcome to my field. I say mine; I have not signed anything. I simply find that fields tend to become mine after a while.</source>
+        <translation>أهلاً بك في ميداني. أقول ميداني؛ ولم أوقّع شيئاً. إنما ألاحظ أن الميادين تميل إلى أن تصير لي بعد حين.</translation>
+    </message>
+    <message>
+        <source>Well. A field is lost. I have lost fields before and taken the harvest anyway. We shall see who is still here at the sowing.</source>
+        <translation>حسناً. ضاع ميدان. ضاعت مني ميادين من قبل وأخذتُ الحصاد رغم ذلك. سنرى من يبقى هنا وقت البذار.</translation>
+    </message>
+    <message>
+        <source>Won. Clean and fast. That is how it is done. Drink tonight; march tomorrow.</source>
+        <translation>انتصرنا. نظيفاً وسريعاً. هكذا يُفعل الأمر. اشرب الليلة؛ وسِر غداً.</translation>
+    </message>
+    <message>
+        <source>Won. Good. Now let us eat before someone counts what it cost us.</source>
+        <translation>انتصرنا. جيد. فلنأكل الآن قبل أن يحصي أحدهم ما كلّفنا.</translation>
+    </message>
+    <message>
+        <source>Won. I shall tell the Council it was my doing and yours was very expensive. They will believe half of it.</source>
+        <translation>انتصرنا. سأقول للمجلس إنه صنيعي وإن صنيعك كان باهظاً جداً. سيصدّقون نصف ذلك.</translation>
+    </message>
+    <message>
+        <source>Won. Neatly. Remember that half of it was the ground and the other half was the timing, and none of it was luck.</source>
+        <translation>انتصرنا. بإتقان. تذكّر أن نصفه كان الأرض ونصفه الآخر التوقيت، ولم يكن شيء منه حظاً.</translation>
+    </message>
+    <message>
+        <source>Won. Not quickly, but won. Remember how it felt to wait; it is the part nobody else will remember for you.</source>
+        <translation>انتصرنا. لا بسرعة، لكننا انتصرنا. تذكّر كيف كان الانتظار؛ فهو الجزء الذي لن يتذكره أحد عنك.</translation>
+    </message>
+    <message>
+        <source>You are a long way from your supply, and I can see your fires from here. A hunter does not chase the deer; he waits at the water.</source>
+        <translation>أنت بعيد جداً عن إمدادك، وأرى نيرانك من هنا. الصيّاد لا يطارد الغزال؛ ينتظره عند الماء.</translation>
+    </message>
+    <message>
+        <source>You are at my camp. A camp is a tent with ambition; I have left better ones to wolves.</source>
+        <translation>أنت عند معسكري. المعسكر خيمة ذات طموح؛ تركتُ أفضل منه للذئاب.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. A camp is a hide, nothing more. I have others, and the hills have more still.</source>
+        <translation>أنت عند أسواري. المعسكر وكرٌ لا أكثر. عندي غيره، وفي التلال ما هو أكثر.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Bold. My grandfather kept a dog that was bold; we buried it with honours and bought a better one.</source>
+        <translation>أنت عند أسواري. جريء. كان لجدي كلب جريء؛ دفنّاه بتشريف واشترينا أفضل منه.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Do you have any idea what those walls cost? Of course not. Nobody who breaks things ever does.</source>
+        <translation>أنت عند أسواري. أعندك فكرة كم كلّفت هذه الأسوار؟ بالطبع لا. من يكسر الأشياء لا تكون عنده فكرة أبداً.</translation>
+    </message>
+    <message>
+        <source>You are at my walls. Knock. My walls have been knocked on by better, and they have learned not to answer.</source>
+        <translation>أنت عند أسواري. اطرق. طرق أسواري من هم خير منك، وتعلّمت ألا تجيب.</translation>
+    </message>
+    <message>
+        <source>You are bleeding. I am not pleased by it; I am merely not surprised.</source>
+        <translation>أنت تنزف. لا يسرّني ذلك؛ إنما لا يفاجئني.</translation>
+    </message>
+    <message>
+        <source>You are hitting my camp. Good. That means you are close enough for me to hit back.</source>
+        <translation>أنت تضرب معسكري. جيد. هذا يعني أنك قريب بما يكفي لأردّ الضربة.</translation>
+    </message>
+    <message>
+        <source>You brought numbers. I brought arithmetic. Do write to your people and tell them the difference, if any of them can read.</source>
+        <translation>جئتَ بالأعداد. وجئتُ أنا بالحساب. اكتب إلى قومك واشرح الفرق، إن كان فيهم من يقرأ.</translation>
+    </message>
+    <message>
+        <source>You have a camp of mine. Feed it. Water it. I will watch you try to do both from the road you do not hold.</source>
+        <translation>عندك معسكر لي. أطعمه. اسقه. سأراقبك تحاول الأمرين من طريقٍ لا تملكه.</translation>
+    </message>
+    <message>
+        <source>You have beaten a consul. Write it down somewhere; nobody in the city will believe you, and next year they will send two.</source>
+        <translation>هزمتَ قنصلاً. دوّن ذلك في مكان ما؛ لن يصدّقك أحد في المدينة، وفي العام القادم سيرسلون اثنين.</translation>
+    </message>
+    <message>
+        <source>You have come a long way to stand in a field. Stand in it, then. I have wheat to bring in, and a great deal of time, and you have neither.</source>
+        <translation>قطعتَ طريقاً طويلاً لتقف في ميدان. فقف إذاً. عندي قمح أجمعه ووقت كثير جداً، وليس عندك أيّهما.</translation>
+    </message>
+    <message>
+        <source>You have killed a consul. Rome keeps forty more in cupboards in the city, and I promise you the ones still in the cupboards are worse.</source>
+        <translation>قتلتَ قنصلاً. تحتفظ روما بأربعين آخرين في خزائن المدينة، وأعدك أن من بقي في الخزائن أسوأ.</translation>
+    </message>
+    <message>
+        <source>You have taken a camp. It will need feeding, and I have noticed that you do not feed things well.</source>
+        <translation>أخذتَ معسكراً. سيحتاج إلى إطعام، وقد لاحظتُ أنك لا تُحسن إطعام الأشياء.</translation>
+    </message>
+    <message>
+        <source>You have taken a camp. Take the debts that come with it too; I was rather hoping someone would.</source>
+        <translation>أخذتَ معسكراً. خذ معه ديونه أيضاً؛ كنتُ أرجو أن يأخذها أحد.</translation>
+    </message>
+    <message>
+        <source>You have that camp. Congratulations - you now own its wells, its debts, and its sanitation. I shall want it back before the rains.</source>
+        <translation>ذلك المعسكر لك. تهانيّ؛ صرتَ تملك آباره وديونه ومجاريه. سأطلبه قبل الأمطار.</translation>
+    </message>
+    <message>
+        <source>You have the ground. Ground is patient; so am I. Winter will visit you here long before I do, and it does not negotiate.</source>
+        <translation>الأرض لك. الأرض صبورة، وأنا كذلك. سيزورك الشتاء هنا قبلي بكثير، وهو لا يفاوض.</translation>
+    </message>
+    <message>
+        <source>You have won the field. Very well. I have lost cheaper things to worse men. The Council will hear that the Barcids&apos; war lost it, not mine.</source>
+        <translation>ربحتَ الميدان. حسناً. خسرتُ أشياء أرخص لرجال أسوأ. سيسمع المجلس أن الخاسر هو حرب البرقيين لا حربي.</translation>
+    </message>
+    <message>
+        <source>You have won. I am almost pleased; a man learns nothing from beating fools. I shall learn from you, and I promise you will not enjoy the lesson.</source>
+        <translation>انتصرت. أكاد أُسرّ؛ فالمرء لا يتعلم شيئاً من هزيمة الحمقى. منك سأتعلم، وأعدك أن الدرس لن يروقك.</translation>
+    </message>
+    <message>
+        <source>You hurried. Men who hurry meet me exactly where I am waiting. Rest now. The ground is good for it.</source>
+        <translation>استعجلت. المستعجلون يلاقونني تماماً حيث أنتظر. استرح الآن. الأرض صالحة لذلك.</translation>
+    </message>
+    <message>
+        <source>You took the camp. Fine. It was walls; I fight in the field. Come and find me there.</source>
+        <translation>أخذتَ المعسكر. حسناً. كانت أسواراً؛ وأنا أقاتل في الميدان. تعالَ وجدني هناك.</translation>
+    </message>
+    <message>
+        <source>You win the field. Take it. I have hunted this country for years; the land will still feed me when you have eaten it bare.</source>
+        <translation>تربح الميدان. خذه. صِدتُ في هذه البلاد سنين؛ ستظل تطعمني بعد أن تأكلها أنت حتى العظم.</translation>
+    </message>
+    <message>
+        <source>You won. Do not gloat; it slows the feet. I will find you again on better ground.</source>
+        <translation>انتصرت. لا تتباهَ؛ فذلك يُثقل القدمين. سأجدك مرة أخرى على أرضٍ أفضل.</translation>
+    </message>
+    <message>
+        <source>Your camp changes masters. They will find me a lenient landlord and a very poor tenant.</source>
+        <translation>معسكرك يبدّل أسياده. سيجدونني مالكاً متساهلاً ومستأجراً بائساً.</translation>
+    </message>
+    <message>
+        <source>Your camp is taken. My brother will say it was his idea. It usually is.</source>
+        <translation>أُخذ معسكرك. سيقول أخي إنها كانت فكرته. وهي كذلك عادةً.</translation>
+    </message>
+    <message>
+        <source>Your camp, gone in a heartbeat. That is what tempo does. Learn it or lose the next one.</source>
+        <translation>معسكرك، راح في خفقة قلب. هذا ما يفعله الإيقاع. تعلّمه أو اخسر التالي.</translation>
+    </message>
+    <message>
+        <source>Your camp, under new management. I shall keep the wells and fire the garrison. Standard practice.</source>
+        <translation>معسكرك، تحت إدارة جديدة. سأحتفظ بالآبار وأسرّح الحامية. إجراء معتاد.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. A pity. I had a speech prepared for after, and he would have hated it.</source>
+        <translation>سقط قائدك. يا للأسف. كانت لديّ خطبة معدّة لما بعد، وكان سيمقتها.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Grief later; line now. The field does not pause for either of us.</source>
+        <translation>سقط قائدك. الحزن لاحقاً؛ الصفّ الآن. الميدان لا يتوقف لأيٍّ منا.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Hasty men do. Bury him with honour; you will be joining him soon enough, and the ground here is soft.</source>
+        <translation>سقط قائدك. هكذا يحدث للمتعجّلين. ادفنه بشرف؛ ستلحق به عمّا قريب، وتربة هذا المكان ليّنة.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. I know that grief. Keep your men together; scattered men are what the enemy is hunting.</source>
+        <translation>سقط قائدك. أعرف ذلك الحزن. أبقِ رجالك مجتمعين؛ فالمتفرّقون هم ما يصطاده العدو.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Sorry. Keep your men moving; grief stands still and standing still kills.</source>
+        <translation>سقط قائدك. آسف. أبقِ رجالك متحركين؛ الحزن يقف مكانه، والوقوف مكانك يقتل.</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen. Unfortunate. Hold your line; I shall not hold mine for a leaderless ally very long.</source>
+        <translation>سقط قائدك. أمر مؤسف. أمسك صفّك؛ لن أمسك صفّي طويلاً من أجل حليفٍ بلا رأس.</translation>
+    </message>
+    <message>
+        <source>Your commander is dead. A costly man to lose. I have already calculated what it will cost you to replace him; the number is not kind.</source>
+        <translation>قائدك ميت. خسارة باهظة. حسبتُ سلفاً ما سيكلّفك استبداله؛ الرقم ليس رحيماً.</translation>
+    </message>
+    <message>
+        <source>Your commander is dead. Unfortunate, and expensive. Keep your line; a leaderless ally is a liability I did not agree to insure.</source>
+        <translation>قائدك ميت. مؤسف، ومكلف. أمسك صفّك؛ الحليف بلا رأس مخاطرة لم أوافق على تأمينها.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. He led from the front; brave men do, and it is where the arrows go.</source>
+        <translation>سقط قائدك. كان يقود من المقدمة؛ الشجعان يفعلون ذلك، وهناك تذهب السهام.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. I did not enjoy it. I did not have to.</source>
+        <translation>سقط قائدك. لم أستمتع بذلك. ولم يكن عليّ أن أستمتع.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. Pity. I had meant to invite him to dinner after and explain where he went wrong.</source>
+        <translation>سقط قائدك. يا للأسف. كنتُ أنوي دعوته إلى العشاء بعدها لأشرح له أين أخطأ.</translation>
+    </message>
+    <message>
+        <source>Your commander is down. Their moment of joy is your moment of opportunity; nobody watches the flanks while they cheer.</source>
+        <translation>سقط قائدك. لحظة فرحهم هي لحظة فرصتك؛ لا أحد يراقب الجناحين وهو يهلّل.</translation>
+    </message>
+    <message>
+        <source>Your line is breaking. I can hear it from here. Press or pull back - standing there is just dying slowly.</source>
+        <translation>صفّك ينكسر. أسمعه من هنا. اضغط أو انسحب؛ الوقوف هناك موت بطيء لا غير.</translation>
+    </message>
+    <message>
+        <source>Your line is thinning nicely. I am told grief is easier when one has fewer names to remember.</source>
+        <translation>صفّك يرقّ رقّةً جميلة. يقولون إن الحزن أهون حين تقلّ الأسماء التي تُذكر.</translation>
+    </message>
+    <message>
+        <source>Your men are dropping in the open. A hunter feels no pride in it. Only a little pity, and a full quiver.</source>
+        <translation>رجالك يسقطون في العراء. لا يجد الصيّاد في ذلك فخراً. بل شيئاً من الشفقة وجعبةً ممتلئة.</translation>
+    </message>
+    <message>
+        <source>Your men are dying at a rate that would bankrupt a lesser treasury. I find that admirable and very stupid.</source>
+        <translation>رجالك يموتون بوتيرة تُفلس خزانةً أصغر. أجد ذلك جديراً بالإعجاب وشديد الغباء.</translation>
+    </message>
+    <message>
+        <source>Your men are falling faster than you are replacing them. That is not a battle. That is a harvest, and it is not yours.</source>
+        <translation>رجالك يسقطون أسرع مما تعوّضهم. هذه ليست معركة. هذا حصاد، وليس حصادك.</translation>
+    </message>
+    <message>
+        <source>Your men are falling in rows. That is what happens when you fight a wall&apos;s war against a river.</source>
+        <translation>رجالك يسقطون صفوفاً. هكذا يحدث حين تخوض حرب جدارٍ ضد نهر.</translation>
     </message>
 </context>
 <context>
@@ -5380,6 +6251,29 @@ to see preview</source>
     </message>
 </context>
 <context>
+    <name>MissionDeadline</name>
+    <message>
+        <source>FINAL MINUTE</source>
+        <translation>الدقيقة الأخيرة</translation>
+    </message>
+    <message>
+        <source>CLOSING WINDOW</source>
+        <translation>النافذة تُغلق</translation>
+    </message>
+    <message>
+        <source>MISSION CLOCK</source>
+        <translation>ساعة المهمة</translation>
+    </message>
+    <message>
+        <source>Time left: %1</source>
+        <translation>الوقت المتبقي: %1</translation>
+    </message>
+    <message>
+        <source>TIME LEFT</source>
+        <translation>الوقت المتبقي</translation>
+    </message>
+</context>
+<context>
     <name>MissionDetailPanel</name>
     <message>
         <source>Suffete Command</source>
@@ -6527,20 +7421,8 @@ to see preview</source>
         <translation>اكسر الأرتال الخمسة جميعًا. تُعدّ المخاضة محفوظة حين يسقط آخرها أمامها، ولا رتلًا واحدًا قبل ذلك.</translation>
     </message>
     <message>
-        <source>Cut and carry home four hundred of timber and two hundred and ten of stone. The near stand will not cover it; the deep pines will.</source>
-        <translation>اقطع واحمل إلى الديار أربعمئة من الخشب ومئتين وعشرة من الحجر. الأجمة القريبة لن تكفي؛ أما الصنوبر العميق فيكفي.</translation>
-    </message>
-    <message>
-        <source>Fill the levy out of the Pinewater cut: four hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through.</source>
-        <translation>استوفِ الحصة من مقطع ماء الصنوبر: أربعمئة من الخشب ومئتان وعشرة من الحجر، تُقطع وتُحمل قبل أن يعود الرتل من هنا.</translation>
-    </message>
-    <message>
         <source>Five columns and the ford still ours. Count the men twice and do not write the number down until morning; it is always worse in the dark and always worse again in daylight.</source>
         <translation>خمسة أرتال والمخاضة ما زالت لنا. عُدّ الرجال مرتين ولا تدوّن العدد حتى الصباح؛ فهو أسوأ دائمًا في الظلام، وأسوأ منه في ضوء النهار.</translation>
-    </message>
-    <message>
-        <source>Four hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. Split the crew. Escort the far one.</source>
-        <translation>أربعمئة من الخشب ومئتان من الحجر، والأجمة القريبة جرّدها الكمين السابق. هذا يعني الصنوبر العميق، ويعني الطريق الطويل، ويعني أن ما يسكن الصنوبر العميق سيرانا. اقسم الطاقم، وارفق بالبعيد حراسة.</translation>
     </message>
     <message>
         <source>Hold the Sallow Ford</source>
@@ -6549,10 +7431,6 @@ to see preview</source>
     <message>
         <source>Keep both towers standing. Lose one and the lane it watches is yours to walk yourself.</source>
         <translation>أبقِ البرجين قائمين. إن خسرت أحدهما صار الممر الذي يحرسه ممرًا تمشيه بنفسك.</translation>
-    </message>
-    <message>
-        <source>Leave the axes. Leave the carts. A detail that cannot walk out of its own cut does not get to carry anything.</source>
-        <translation>اترك الفؤوس. اترك العربات. الكمين الذي لا يستطيع الخروج من مقطعه سيرًا لا يحمل شيئًا.</translation>
     </message>
     <message>
         <source>Levy filled. Stack it by the road and let the carts argue about it. We cut a wood down to feed a siege that has not started yet — remember that the next time somebody calls this the quiet posting.</source>
@@ -6602,6 +7480,294 @@ to see preview</source>
         <source>The spur splits them for us, which is the only kindness this ground offers. Cart gate west, goat path east, and they only meet where we are standing. You cannot hold both mouths. Pick one, hold it, and move when the horns tell you to.</source>
         <translation>النتوء يقسمهم عنّا، وهذه هي الرحمة الوحيدة التي تمنحها هذه الأرض. بوابة العربات غربًا، ودرب الماعز شرقًا، ولا يلتقيان إلا حيث نقف. لا تستطيع سدّ الفوهتين. اختر واحدة، والزمها، وتحرّك حين تأمرك الأبواق.</translation>
     </message>
+    <message>
+        <source>A few of the screen left, and me. My son is somewhere on this field; if he finds me, he will be insufferable about it for the rest of his life.</source>
+        <translation>بقيت حفنة من الستار، وأنا. ابني في مكان ما من هذا الميدان؛ إن وجدني فسيظل يعيّرني بذلك بقية عمره.</translation>
+    </message>
+    <message>
+        <source>Cut and carry home eight hundred of timber and two hundred and ten of stone. The near stand was stripped bare; the deep pines and the east screen are the only timber left standing.</source>
+        <translation>اقطع واحمل إلى الديار ثمانمئة من الخشب ومئتين وعشرة من الحجر. الأجمة القريبة جُرّدت؛ الصنوبر العميق والستار الشرقي هما الخشب الوحيد الذي ما زال قائماً.</translation>
+    </message>
+    <message>
+        <source>Eight hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. The column comes back through at dusk and it does not wait. Split the crew. Escort the far one.</source>
+        <translation>ثمانمئة من الخشب ومئتان من الحجر، والأجمة القريبة جرّدها الفريق السابق. هذا يعني الصنوبر العميق، ويعني الطريق الطويل، ويعني أن ما يعيش في الصنوبر العميق سيلقي علينا نظرة. الرتل يعود مع الغسق ولا ينتظر. اقسم الفريق. وأرسل حرساً مع البعيد.</translation>
+    </message>
+    <message>
+        <source>Fill the levy out of the Pinewater cut: eight hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through at dusk.</source>
+        <translation>استوفِ الجباية من قطع ماء الصنوبر: ثمانمئة من الخشب ومئتان وعشرة من الحجر، تُقطع وتُحمل إلى الديار قبل أن يعود الرتل مع الغسق.</translation>
+    </message>
+    <message>
+        <source>First column on the cart gate. Spears up. Let them come to the stakes; the stakes do not get tired.</source>
+        <translation>الرتل الأول عند بوابة العربات. الرماح مرفوعة. دعهم يأتون إلى الأوتاد؛ الأوتاد لا تتعب.</translation>
+    </message>
+    <message>
+        <source>Hannibal dies in the snow. Then the elephants were for nothing, and so was the road. History will find that very tidy.</source>
+        <translation>يموت حنبعل في الثلج. عندئذٍ كانت الفيلة عبثاً، وكذلك الطريق. سيجد التاريخ ذلك مرتّباً جداً.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls at the Rhone. Then Rome never sees the elephants, and I never see Cannae. I shall spend the rest of my life not knowing what I was spared.</source>
+        <translation>يسقط حنبعل عند الرون. عندئذٍ لا ترى روما الفيلة أبداً، ولا أرى أنا كانّاي أبداً. سأقضي بقية عمري لا أدري مِمَّ نجوت.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls in Campania, among the orchards, in a war he did not choose. There is a kind of mercy in that, and I did not intend it.</source>
+        <translation>يسقط حنبعل في كامبانيا، بين البساتين، في حربٍ لم يخترها. في ذلك ضربٌ من الرحمة، ولم أقصدها.</translation>
+    </message>
+    <message>
+        <source>Hannibal has fallen at Zama. I wanted to meet him after, and ask him about Cannae. I shall have to ask the ground instead.</source>
+        <translation>سقط حنبعل في زاما. أردتُ لقاءه بعدها وسؤاله عن كانّاي. سيلزمني أن أسأل الأرض بدلاً منه.</translation>
+    </message>
+    <message>
+        <source>Hannibal is down in the Trebia mud. Whatever Mago has hidden in the gullies, it will not bring him back.</source>
+        <translation>حنبعل صريع في وحل التريبيا. مهما أخفى ماغو في الأودية فلن يعيده.</translation>
+    </message>
+    <message>
+        <source>Hannibal is down. The Senate will strike a coin. I shall keep one and never spend it, which I am told is what he would have done.</source>
+        <translation>سقط حنبعل. سيسكّ مجلس الشيوخ عملة. سأحتفظ بواحدة ولن أنفقها أبداً، وهو ما قيل لي إنه كان سيفعله.</translation>
+    </message>
+    <message>
+        <source>Here they come - the whole consular line, in step, at Varro&apos;s tempo. Eighty thousand men do not turn. Remember that when you want them to.</source>
+        <translation>ها هم قادمون: الصفّ القنصلي كله، على خطى واحدة، بإيقاع فارّو. ثمانون ألف رجل لا يستديرون. تذكّر ذلك حين تريدهم أن يستديروا.</translation>
+    </message>
+    <message>
+        <source>Leave the axes. Leave the carts. A detail that cannot fill its own levy before the column comes through does not get to carry anything.</source>
+        <translation>اترك الفؤوس. اترك العربات. الفريق الذي لا يستوفي جبايته قبل مرور الرتل لا يحمل شيئاً.</translation>
+    </message>
+    <message>
+        <source>Legionaries at your works. Not Varro&apos;s legions; mine. Men who were at Cannae and remember exactly how it felt.</source>
+        <translation>جنود الفيلق عند متاريسك. لا فيالق فارّو؛ بل فيالقي. رجال شهدوا كانّاي ويتذكرون تماماً كيف كان شعورها.</translation>
+    </message>
+    <message>
+        <source>Light is going. Five minutes of road left in the day, and whatever is on the carts when the column reaches us is what we levied. Bring them home.</source>
+        <translation>الضوء يذهب. بقيت خمس دقائق من الطريق في هذا النهار، وما يكون على العربات حين يبلغنا الرتل هو ما جبيناه. أعِدهم إلى الديار.</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s camp is yours. His riders will not care; they were never in it. Watch the horizon, not the tents.</source>
+        <translation>معسكر ماسينيسا لك. لن يبالي فرسانه؛ لم يكونوا فيه أصلاً. راقب الأفق لا الخيام.</translation>
+    </message>
+    <message>
+        <source>My forward town, taken by horsemen. Horsemen. My father would have said something cutting; I find I am simply cold.</source>
+        <translation>بلدتي الأمامية، أخذها فرسان. فرسان. كان أبي سيقول شيئاً لاذعاً؛ أما أنا فأشعر بالبرد فحسب.</translation>
+    </message>
+    <message>
+        <source>My men are at your walls. Not to break them - to remind you they are walls, and that everything outside them is mine.</source>
+        <translation>رجالي عند أسوارك. لا ليكسروها، بل ليذكّروك أنها أسوار وأن كل ما خارجها لي.</translation>
+    </message>
+    <message>
+        <source>My scouting party is on the road. Cavalry, mostly, and a tribune who wants to be noticed. Do notice him.</source>
+        <translation>طليعتي الاستطلاعية على الطريق. فرسان في معظمهم، وتريبيون يريد أن يُلاحَظ. لاحِظه من فضلك.</translation>
+    </message>
+    <message>
+        <source>My town. You have taken my town, at Zama, with Masinissa&apos;s horse behind you. I begin to think the gods have a sense of proportion after all.</source>
+        <translation>بلدتي. أخذتَ بلدتي، في زاما، وخلفك خيّالة ماسينيسا. بدأتُ أظن أن للآلهة حسّاً بالتناسب بعد كل شيء.</translation>
+    </message>
+    <message>
+        <source>Patrols at your works. You are trying to cross a river with your back to my roads. It is bold. It is also how one drowns.</source>
+        <translation>دوريات عند متاريسك. تحاول عبور نهر وظهرك إلى طرقي. أمر جريء. وهو أيضاً كيف يغرق المرء.</translation>
+    </message>
+    <message>
+        <source>Sempronius has a handful left and they are on the wrong side of a winter river. He will still call it a victory in Rome. He always does.</source>
+        <translation>لم يبقَ لسمبرونيوس إلا حفنة، وهم على الضفة الخطأ من نهر شتوي. وسيسمّي ذلك نصراً في روما رغم ذلك. هو يفعل دائماً.</translation>
+    </message>
+    <message>
+        <source>Sempronius is crossing. Now, in the cold, without breakfast, because a consul&apos;s year ends in March and he wants his battle before it does.</source>
+        <translation>سمبرونيوس يعبر. الآن، في البرد، بلا فطور، لأن سنة القنصل تنتهي في آذار وهو يريد معركته قبلها.</translation>
+    </message>
+    <message>
+        <source>So he dies by his own lake in his own fog. Rome will call it justice. I call it weather, and I have always respected weather.</source>
+        <translation>إذاً يموت عند بحيرته وفي ضبابه. ستسمّي روما ذلك عدلاً. أما أنا فأسمّيه طقساً، ولطالما احترمتُ الطقس.</translation>
+    </message>
+    <message>
+        <source>Somebody is trying to cut a way out along the shore. Good. Somebody should get home and describe this accurately.</source>
+        <translation>أحدهم يحاول أن يشقّ طريقاً للخروج على طول الشاطئ. جيد. ينبغي لأحدٍ أن يبلغ الديار ويصف هذا بدقة.</translation>
+    </message>
+    <message>
+        <source>The Aufidus camp. So the ring closes. I told the Senate a ring was what he wanted. They told me I was old.</source>
+        <translation>معسكر الأوفيدوس. إذاً تُطبق الحلقة. قلتُ لمجلس الشيوخ إن الحلقة هي ما يريده. قالوا لي إنني شخت.</translation>
+    </message>
+    <message>
+        <source>The Barcid falls at the Ticinus. Then this was the whole war, and it fit inside an afternoon. I expected more of it; I am not sure I wanted more.</source>
+        <translation>يسقط البرقي عند التيتشينو. إذاً كانت هذه الحرب كلها، ووسعتها أصيلة واحدة. كنتُ أتوقع منها أكثر؛ ولستُ واثقاً أنني أردتُ أكثر.</translation>
+    </message>
+    <message>
+        <source>The Numidians are riding. Your Numidians, once. Now they ride for Rome, and they ride the same way they always did - around you.</source>
+        <translation>النوميديون يركبون. نوميديوك ذات يوم. الآن يركبون لروما، ويركبون كما ركبوا دائماً: حولك.</translation>
+    </message>
+    <message>
+        <source>The allied wing is at your works. Italians, mostly. They fight for Rome because the alternative is fighting Rome, which is a very persuasive argument.</source>
+        <translation>جناح الحلفاء عند متاريسك. إيطاليون في معظمهم. يقاتلون من أجل روما لأن البديل هو قتال روما، وتلك حجة مقنعة جداً.</translation>
+    </message>
+    <message>
+        <source>The allied wing is down to a handful. I have counted them twice, because there was time. Whatever happens next on this field, remember someone counted.</source>
+        <translation>لم يبقَ من جناح الحلفاء إلا حفنة. عددتهم مرتين، لأن الوقت أسعف. مهما حدث بعد ذلك في هذا الميدان، تذكّر أن أحداً قد عدّ.</translation>
+    </message>
+    <message>
+        <source>The allied wing is on the southern road. They know this country - they own most of it, or did, before you started eating it.</source>
+        <translation>جناح الحلفاء على الطريق الجنوبي. يعرفون هذه البلاد؛ معظمها لهم، أو كان كذلك قبل أن تبدأ بالتهامها.</translation>
+    </message>
+    <message>
+        <source>The column came back through and the carts were still empty. A levy that misses the road is a levy nobody signed for.</source>
+        <translation>عاد الرتل مارّاً والعربات ما زالت فارغة. جبايةٌ تفوتها الطريق جبايةٌ لم يوقّع عليها أحد.</translation>
+    </message>
+    <message>
+        <source>The column is nearly gone. What is left of it will hold until the fog lifts, because that is the only order anyone can still hear.</source>
+        <translation>كاد الرتل يفنى. ما بقي منه سيصمد حتى ينقشع الضباب، لأن ذلك هو الأمر الوحيد الذي ما زال أحد يسمعه.</translation>
+    </message>
+    <message>
+        <source>The column is on the lakeside road. In fog, in a defile, in a hurry. Every word of that sentence is a mistake and Flaminius owns them all.</source>
+        <translation>الرتل على طريق البحيرة. في ضباب، في مضيق، على عجل. كل كلمة في هذه الجملة خطأ، وكلها من نصيب فلامينيوس.</translation>
+    </message>
+    <message>
+        <source>The final pass is nearly cleared. Whatever comes down the far side, I shall be in Italy waiting for it with a great many more men than this.</source>
+        <translation>كاد الممر الأخير يُفتح. مهما نزل من الجانب الآخر، سأكون في إيطاليا في انتظاره برجالٍ أكثر من هؤلاء بكثير.</translation>
+    </message>
+    <message>
+        <source>The high pass is sending everything it has. They have been paid in Roman silver to hold that road, and mountain men earn their silver.</source>
+        <translation>الممر العالي يرسل كل ما لديه. دُفع لهم بفضة رومانية ليمسكوا ذلك الطريق، ورجال الجبال يستحقون فضتهم.</translation>
+    </message>
+    <message>
+        <source>The hill fort is yours. It was built to watch a river; now it will watch you cross one. Forts do not much care who is inside them.</source>
+        <translation>حصن التل لك. بُني ليراقب نهراً؛ وسيراقبك الآن وأنت تعبر نهراً. لا تعبأ الحصون كثيراً بمن في داخلها.</translation>
+    </message>
+    <message>
+        <source>The last column. Everything they have left is on the road. Hold this one and the ford is ours until the spring.</source>
+        <translation>الرتل الأخير. كل ما بقي لهم على الطريق. أمسك هذا ويكون المخاضة لنا حتى الربيع.</translation>
+    </message>
+    <message>
+        <source>The last of the legions is in the water. Everything Rome has north of the Apennines is coming at you wet. Hold this and you hold Italy for a winter.</source>
+        <translation>آخر الفيالق في الماء. كل ما لروما شمال الأبنين قادم عليك مبلّلاً. أمسك هذا وتمسك إيطاليا شتاءً كاملاً.</translation>
+    </message>
+    <message>
+        <source>The last of the northern columns is moving. I have spent a year making you hold this quarter. Hold it one more hour and I will have spent it well.</source>
+        <translation>آخر الأرتال الشمالية يتحرك. أنفقتُ سنة أجعلك تمسك هذا الربع. أمسكه ساعة أخرى وأكون قد أنفقتها حسناً.</translation>
+    </message>
+    <message>
+        <source>The last pass camp. So you are through - what is left of you. Italy is below. Italy has been waiting, and Italy is not friendly.</source>
+        <translation>آخر معسكر في الممر. إذاً عبرت، ما بقي منك. إيطاليا في الأسفل. إيطاليا كانت تنتظر، وإيطاليا ليست ودودة.</translation>
+    </message>
+    <message>
+        <source>The line is nearly broken. Nearly. I was at Cannae, you understand. I know exactly what nearly looks like from the other side, and I am still here.</source>
+        <translation>كاد الصفّ ينكسر. كاد. كنتُ في كانّاي، لتفهم. أعرف تماماً كيف يبدو «كاد» من الجهة الأخرى، وما زلتُ هنا.</translation>
+    </message>
+    <message>
+        <source>The lower pass camp is yours. Keep it warm. The tribes will want it back in the spring and I will not be here to stop them.</source>
+        <translation>معسكر الممر الأسفل لك. أبقه دافئاً. ستريده القبائل في الربيع ولن أكون هنا لأمنعها.</translation>
+    </message>
+    <message>
+        <source>The main line is advancing. No trumpets, no tricks, no gaps between the maniples for your elephants to find. I learned. You taught me.</source>
+        <translation>الصفّ الرئيسي يتقدم. لا أبواق، ولا حيل، ولا فجوات بين المانيبولات تجدها فيلتك. لقد تعلّمت. أنت علّمتني.</translation>
+    </message>
+    <message>
+        <source>The northern camp is gone. Fine. It was a camp. Scipio&apos;s line still stands, and that is the only thing on this plain that matters.</source>
+        <translation>ذهب المعسكر الشمالي. لا بأس. كان معسكراً. صفّ سكيبيو ما زال قائماً، وهو الشيء الوحيد المهم في هذا السهل.</translation>
+    </message>
+    <message>
+        <source>The northern legion is coming down through the orchards. Slowly. I ordered slowly. Every tree they pass is one you will not harvest.</source>
+        <translation>الفيلق الشمالي ينزل عبر البساتين. ببطء. أمرتُ بالبطء. كل شجرة يمرّون بها شجرة لن تحصدها أنت.</translation>
+    </message>
+    <message>
+        <source>The northern legion is spent. I have others. I have always had others. That is what the delaying was for.</source>
+        <translation>استُنفد الفيلق الشمالي. عندي غيره. كان عندي غيره دائماً. لهذا كان التأجيل.</translation>
+    </message>
+    <message>
+        <source>The patrols are nearly finished. So be it. I shall take the fleet back to Italy and wait for you there with the rest of the Republic.</source>
+        <translation>كادت الدوريات تنتهي. فليكن. سأعيد الأسطول إلى إيطاليا وأنتظرك هناك مع بقية الجمهورية.</translation>
+    </message>
+    <message>
+        <source>The rearguard camp falls. I held it the way I hold everything - long enough, and no longer. Scipio will manage without an old man&apos;s tents.</source>
+        <translation>معسكر المؤخرة يسقط. أمسكته كما أمسك كل شيء: بما يكفي، ولا لحظة أطول. سيدبّر سكيبيو أمره دون خيام شيخ.</translation>
+    </message>
+    <message>
+        <source>The reserve camp is yours. It was never meant to fight - it was meant to be there afterwards. There is not going to be an afterwards, is there.</source>
+        <translation>معسكر الاحتياط لك. لم يُقصد به القتال قط؛ قُصد به أن يكون هناك بعد الأمر. ولن يكون هناك «بعد»، أليس كذلك؟</translation>
+    </message>
+    <message>
+        <source>The reserve is moving, and moving fast. I do not hold men back for the look of the thing.</source>
+        <translation>الاحتياط يتحرك، ويتحرك سريعاً. أنا لا أُبقي الرجال في الخلف من أجل المظهر.</translation>
+    </message>
+    <message>
+        <source>The screen is coming across the flats. Velites, cavalry, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
+        <translation>الستار يعبر السهول. ڤيليتيس، خيّالة، الترتيب المعتاد. تفضّل وحاول أن تقف ساكناً؛ فذلك يجعل التقارير أكثر ترتيباً.</translation>
+    </message>
+    <message>
+        <source>The second pass. You are buying road with men and paying in snow. I have never seen an army spend itself so willingly on scenery.</source>
+        <translation>الممر الثاني. تشتري الطريق بالرجال وتدفع بالثلج. لم أرَ جيشاً ينفق نفسه على المناظر بهذه الرغبة.</translation>
+    </message>
+    <message>
+        <source>The shore camp. That was the way out, and now there is only the lake. Romans are not, on the whole, a swimming people.</source>
+        <translation>معسكر الشاطئ. كان ذلك مخرجك، ولم تعد إلا البحيرة. والرومان، في الجملة، ليسوا قوماً سبّاحين.</translation>
+    </message>
+    <message>
+        <source>The siege column is at the run. Engines behind, ladders in front. I do not besiege towns. I take them.</source>
+        <translation>رتل الحصار قادم ركضاً. الآلات في الخلف والسلالم في المقدمة. أنا لا أحاصر المدن. أنا آخذها.</translation>
+    </message>
+    <message>
+        <source>The tribes are coming down the slope. They do not fight in lines. They fight in rockfalls.</source>
+        <translation>القبائل تنزل المنحدر. لا يقاتلون في صفوف. يقاتلون كانهيار صخري.</translation>
+    </message>
+    <message>
+        <source>The western reserve is moving, against my advice. I gave the advice knowing it would be ignored; it is still worth having given.</source>
+        <translation>الاحتياط الغربي يتحرك، خلافاً لمشورتي. أسديتُ المشورة وأنا أعلم أنها ستُهمل؛ وتظل مشورةً كان يستحق إسداؤها.</translation>
+    </message>
+    <message>
+        <source>They are hitting your camp, because it is the only thing on this road they can see. Men in fog attack whatever is nearest. Remember it.</source>
+        <translation>يضربون معسكرك لأنه الشيء الوحيد الذي يرونه على هذا الطريق. الرجال في الضباب يهاجمون أقرب شيء. تذكّر ذلك.</translation>
+    </message>
+    <message>
+        <source>Varro&apos;s town. Varro is not in it; Varro is out front, being brave at other people. Enjoy the walls. I never needed them.</source>
+        <translation>بلدة فارّو. فارّو ليس فيها؛ فارّو في المقدمة يُظهر الشجاعة على حساب غيره. استمتع بالأسوار. أنا لم أحتجها قط.</translation>
+    </message>
+    <message>
+        <source>We are losing men on the goat path. Pull the wounded back and put fresh spears in the gap. Nobody dies standing in a hole.</source>
+        <translation>نفقد رجالاً على درب المعز. اسحب الجرحى وضع رماحاً جديدة في الثغرة. لا أحد يموت واقفاً في حفرة.</translation>
+    </message>
+    <message>
+        <source>We are on your bank and at your works. A river only stops men who are not already freezing.</source>
+        <translation>نحن على ضفتك وعند متاريسك. النهر لا يوقف إلا من لم يكن متجمداً أصلاً.</translation>
+    </message>
+    <message>
+        <source>You have the allied camp. Socii - allies. They were promised land for this war, and you have just handed them the first piece of it face down.</source>
+        <translation>عندك معسكر الحلفاء. سوكي، أي الحلفاء. وُعدوا بأرضٍ مقابل هذه الحرب، وأنت سلّمتهم للتو أول قطعة منها مقلوبةً على وجهها.</translation>
+    </message>
+    <message>
+        <source>You have the marching town. Flaminius built it in a fog and never looked back. There is a lesson there; he will not be the one to learn it.</source>
+        <translation>عندك بلدة المسير. بناها فلامينيوس في ضباب ولم يلتفت وراءه قط. في ذلك درس؛ ولن يكون هو من يتعلمه.</translation>
+    </message>
+    <message>
+        <source>Your camp is under the screen&apos;s spears. A camp on the wrong bank of a cold river - I would not have chosen it, and now you cannot un-choose it.</source>
+        <translation>معسكرك تحت رماح الستار. معسكر على الضفة الخطأ من نهر بارد؛ ما كنتُ لأختاره، ولم يعد بوسعك أن تُلغي اختياره.</translation>
+    </message>
+    <message>
+        <source>Your garrison is bleeding. You cannot replace those men from Africa in time, and I can replace mine from the next valley. That is the whole war.</source>
+        <translation>حاميتك تنزف. لا تستطيع تعويض أولئك الرجال من أفريقيا في الوقت المناسب، وأنا أعوّض رجالي من الوادي المجاور. تلك هي الحرب كلها.</translation>
+    </message>
+    <message>
+        <source>Your line is bleeding along the bank. Wet ground is slow ground, and slow men are what spears are for.</source>
+        <translation>صفّك ينزف على طول الضفة. الأرض المبتلة أرض بطيئة، والبطيئون هم ما وُجدت الرماح من أجله.</translation>
+    </message>
+    <message>
+        <source>Your men are dying on the ice. Not from spears - from cold, and hunger, and the arithmetic of a road that is longer than your grain.</source>
+        <translation>رجالك يموتون على الجليد. لا من الرماح، بل من البرد والجوع وحساب طريقٍ أطول من قمحك.</translation>
+    </message>
+    <message>
+        <source>Your men are dying too. A trap costs the trapper something; the good ones simply cost him less.</source>
+        <translation>رجالك يموتون أيضاً. الفخ يكلّف ناصبه شيئاً؛ الفخاخ الجيدة تكلّفه أقل فحسب.</translation>
+    </message>
+    <message>
+        <source>Your men are falling at the water. The Rhone is not particular about whose bones it keeps; I did tell you.</source>
+        <translation>رجالك يسقطون عند الماء. لا يبالي الرون بعظام من يحتفظ؛ لقد أخبرتك.</translation>
+    </message>
+    <message>
+        <source>Your men are going down in the centre. I know - that is where you put the Gauls, and Gauls are for spending. It is still a great many funerals.</source>
+        <translation>رجالك يسقطون في المركز. أعلم؛ هناك وضعتَ الغالّيين، والغالّيون للإنفاق. ويظل ذلك جنائز كثيرة جداً.</translation>
+    </message>
+    <message>
+        <source>Your riders are dying by the ford. Numidians, I think. They ride beautifully, and they die at the ordinary speed.</source>
+        <translation>فرسانك يموتون عند المخاضة. نوميديون، على ما أظن. يركبون ركوباً بديعاً، ويموتون بالسرعة المعتادة.</translation>
+    </message>
+    <message>
+        <source>Your veterans are dying. Italy&apos;s veterans, really; you took them from us sixteen years ago and now we are taking them back one at a time.</source>
+        <translation>قدامى محاربيك يموتون. قدامى إيطاليا في الحقيقة؛ أخذتموهم منا قبل ستة عشر عاماً ونحن نستردّهم الآن واحداً واحداً.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -6634,14 +7800,6 @@ to see preview</source>
         <translation>ميدان صغير وأمر واحد يُنفَّذ. لا حملة تخسرها ولا جيش ثانٍ تقلق بشأنه.</translation>
     </message>
     <message>
-        <source>carried out</source>
-        <translation>مُنفَّذة</translation>
-    </message>
-    <message>
-        <source>← Back</source>
-        <translation>← رجوع</translation>
-    </message>
-    <message>
         <source>No missions are installed.</source>
         <translation>لا توجد مهام مثبَّتة.</translation>
     </message>
@@ -6662,10 +7820,6 @@ to see preview</source>
         <translation>تنتهي بسوء إذا</translation>
     </message>
     <message>
-        <source>You have carried this one out before.</source>
-        <translation>لقد نفّذت هذه من قبل.</translation>
-    </message>
-    <message>
         <source>Take it again</source>
         <translation>نفّذها مجددًا</translation>
     </message>
@@ -6674,8 +7828,84 @@ to see preview</source>
         <translation>انطلق إلى الميدان</translation>
     </message>
     <message>
-        <source>Pick a mission.</source>
-        <translation>اختر مهمة.</translation>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>Mission orders</source>
+        <translation>أوامر المهمة</translation>
+    </message>
+    <message>
+        <source>FIELD ORDERS  /  SECOND PUNIC WAR</source>
+        <translation>أوامر ميدانية  /  الحرب البونيقية الثانية</translation>
+    </message>
+    <message>
+        <source>ORDERS FULFILLED</source>
+        <translation>نُفّذت الأوامر</translation>
+    </message>
+    <message>
+        <source>Mission completion</source>
+        <translation>إتمام المهمة</translation>
+    </message>
+    <message>
+        <source>Back ›</source>
+        <translation>رجوع ›</translation>
+    </message>
+    <message>
+        <source>‹ Back</source>
+        <translation>‹ رجوع</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>رجوع</translation>
+    </message>
+    <message>
+        <source>AVAILABLE DISPATCHES</source>
+        <translation>الإرساليات المتاحة</translation>
+    </message>
+    <message>
+        <source>DONE</source>
+        <translation>تم</translation>
+    </message>
+    <message>
+        <source>MISSION BRIEF</source>
+        <translation>إحاطة المهمة</translation>
+    </message>
+    <message>
+        <source>ORDER FULFILLED</source>
+        <translation>نُفّذ الأمر</translation>
+    </message>
+    <message>
+        <source>OPEN ORDER</source>
+        <translation>أمر مفتوح</translation>
+    </message>
+    <message>
+        <source>COMMANDER&apos;S INTENT</source>
+        <translation>مقصد القيادة</translation>
+    </message>
+    <message>
+        <source>You start with</source>
+        <translation>تبدأ بـ</translation>
+    </message>
+    <message>
+        <source>Nothing in the stores. Everything you spend, you gather first.</source>
+        <translation>لا شيء في المخازن. كل ما تنفقه تجمعه أولاً.</translation>
+    </message>
+    <message>
+        <source>FIELD RECONNAISSANCE</source>
+        <translation>استطلاع ميداني</translation>
+    </message>
+    <message>
+        <source>Enter</source>
+        <translation>ادخل</translation>
+    </message>
+    <message>
+        <source>Previously carried out</source>
+        <translation>نُفّذت سابقاً</translation>
+    </message>
+    <message>
+        <source>Choose a dispatch to review its field orders.</source>
+        <translation>اختر إرسالية لمراجعة أوامرها الميدانية.</translation>
     </message>
 </context>
 <context>
@@ -6927,6 +8157,22 @@ to see preview</source>
     <message>
         <source>Continue</source>
         <translation>متابعة</translation>
+    </message>
+    <message>
+        <source>CAMPAIGN DECREE</source>
+        <translation>مرسوم الحملة</translation>
+    </message>
+    <message>
+        <source>FIELD ASSESSMENT</source>
+        <translation>تقييم ميداني</translation>
+    </message>
+    <message>
+        <source>BATTLEFIELD VERDICT</source>
+        <translation>حكم ساحة المعركة</translation>
+    </message>
+    <message>
+        <source>COMMAND REPORT</source>
+        <translation>تقرير القيادة</translation>
     </message>
 </context>
 <context>

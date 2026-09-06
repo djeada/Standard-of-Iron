@@ -15,6 +15,23 @@
 #include "tools/arena/arena_scenario.h"
 #include "tools/arena/arena_scenarios.h"
 
+TEST(ArenaScenariosTest, WildlifeContactFixturesCoverBuildersSoldiersAndSheep) {
+  for (auto const* id : {"wildlife_wolf_builder_contact",
+                         "wildlife_wolves_builders_surround",
+                         "wildlife_wolf_builder_chase",
+                         "wildlife_wolf_swordsman_contact",
+                         "wildlife_wolf_swordsman_exchange",
+                         "wildlife_wolf_sheep_contact"}) {
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    EXPECT_TRUE(Arena::validate_scenario(*scenario).empty()) << id;
+    EXPECT_EQ(scenario->wildlife.seed, 1416U);
+    EXPECT_FALSE(scenario->wildlife.wolves.respawn);
+    EXPECT_FALSE(scenario->wildlife.sheep.respawn);
+    EXPECT_GE(scenario->duration_seconds, 18.0F);
+  }
+}
+
 TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
   std::vector<QString> ids;
   ids.reserve(Arena::Scenarios::options().size());

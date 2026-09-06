@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "core/component.h"
+#include "core/component_economy.h"
 #include "core/entity.h"
 #include "core/event_manager.h"
 #include "core/ownership_constants.h"
@@ -91,9 +91,13 @@ auto lone_wolf_settings() -> WildlifeSettings {
   return settings;
 }
 
-auto beside(Entity* entity, float offset_x) -> QVector3D {
+auto in_front(Entity* entity, float distance) -> QVector3D {
   const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-  return {transform->position.x + offset_x, 0.0F, transform->position.z};
+
+  float const yaw = transform->rotation.y * 3.14159265F / 180.0F;
+  return {transform->position.x + std::sin(yaw) * distance,
+          0.0F,
+          transform->position.z + std::cos(yaw) * distance};
 }
 
 auto count_species(World& world, Species species) -> int {
@@ -340,8 +344,8 @@ TEST_F(WildlifeSystemTest, WolvesHuntIsolatedPeople) {
 
   auto wolves = collect_species(world, Species::Wolf);
   ASSERT_EQ(wolves.size(), 1U);
-  auto* victim =
-      add_troop(world, beside(wolves.front(), 1.0F), Game::Units::SpawnType::Civilian);
+  auto* victim = add_troop(
+      world, in_front(wolves.front(), 1.0F), Game::Units::SpawnType::Civilian);
   auto* victim_unit = victim->get_component<Engine::Core::UnitComponent>();
   ASSERT_NE(victim_unit, nullptr);
 
@@ -366,8 +370,8 @@ TEST_F(WildlifeSystemTest, WolfBiteDamageLandsAtTheAnimatedContactFrame) {
   ASSERT_EQ(wolves.size(), 1U);
   auto* wolf = wolves.front()->get_component<Engine::Core::WildlifeComponent>();
   ASSERT_NE(wolf, nullptr);
-  auto* victim =
-      add_troop(world, beside(wolves.front(), 1.0F), Game::Units::SpawnType::Civilian);
+  auto* victim = add_troop(
+      world, in_front(wolves.front(), 1.0F), Game::Units::SpawnType::Civilian);
   auto* victim_unit = victim->get_component<Engine::Core::UnitComponent>();
   ASSERT_NE(victim_unit, nullptr);
   int const starting_health = victim_unit->health;
@@ -393,6 +397,79 @@ TEST_F(WildlifeSystemTest, WolfBiteDamageLandsAtTheAnimatedContactFrame) {
   EXPECT_LT(victim_unit->health, starting_health);
   EXPECT_FALSE(wolf->bite_impact_pending);
   EXPECT_EQ(wolf->bite_target_id, 0U);
+}
+
+TEST_F(WildlifeSystemTest, WolfWaitsForFacingBeforeCommittingAndRejectsEscapedContact) {
+  World world;
+  WildlifeSystem system;
+  system.configure(lone_wolf_settings(), 1U);
+  system.update(&world, 0.1F);
+  auto wolves = collect_species(world, Species::Wolf);
+  ASSERT_EQ(wolves.size(), 1U);
+  auto* entity = wolves.front();
+  auto* wolf = entity->get_component<Engine::Core::WildlifeComponent>();
+  auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+  auto* victim =
+      add_troop(world, in_front(entity, 1.0F), Game::Units::SpawnType::Builder);
+  auto* health = victim->get_component<Engine::Core::UnitComponent>();
+  transform->rotation.y += 180.0F;
+  wolf->focus_id = victim->get_id();
+  wolf->state_timer = 0.0F;
+  wolf->think_cooldown = 5.0F;
+  system.update(&world, 0.1F);
+  EXPECT_FLOAT_EQ(wolf->bite_timer, 0.0F);
+  EXPECT_TRUE(transform->has_desired_yaw);
+
+  transform->rotation.y = transform->desired_yaw;
+  system.update(&world, 0.1F);
+  ASSERT_TRUE(wolf->bite_impact_pending);
+  auto* target_transform = victim->get_component<Engine::Core::TransformComponent>();
+  target_transform->position.x += 5.0F;
+  system.update(&world, 0.35F);
+  EXPECT_EQ(health->health, health->max_health);
+  EXPECT_FALSE(wolf->bite_impact_pending);
+  EXPECT_GT(wolf->bite_timer, 0.0F) << "a miss still completes recovery";
+}
+
+TEST_F(WildlifeSystemTest, SheepReactAtDamageAndDoNotRestartForSimultaneousBites) {
+  World world;
+  WildlifeSystem system;
+  system.configure(make_settings(), 1U);
+  system.update(&world, 0.1F);
+  auto sheep = collect_species(world, Species::Sheep);
+  ASSERT_FALSE(sheep.empty());
+  auto* target = sheep.front();
+  auto* wildlife = target->get_component<Engine::Core::WildlifeComponent>();
+  auto const first = Game::Systems::Combat::apply_unit_damage(&world, target, 1, 0);
+  ASSERT_GT(first.applied_damage, 0);
+  EXPECT_GT(wildlife->flinch_timer, 0.0F);
+  EXPECT_GT(wildlife->held_timer, 0.0F);
+  wildlife->flinch_timer -= 0.1F;
+  float const remaining = wildlife->flinch_timer;
+  (void)Game::Systems::Combat::apply_unit_damage(&world, target, 1, 0);
+  EXPECT_FLOAT_EQ(wildlife->flinch_timer, remaining);
+}
+
+TEST_F(WildlifeSystemTest, SheepKeepTheirEscapeFacingWhileReactingAwayFromTheBite) {
+  World world;
+  WildlifeSystem system;
+  system.configure(make_settings(), 1U);
+  system.update(&world, 0.1F);
+  auto sheep = collect_species(world, Species::Sheep);
+  ASSERT_FALSE(sheep.empty());
+  auto* target = sheep.front();
+  auto* transform = target->get_component<Engine::Core::TransformComponent>();
+  transform->desired_yaw = 15.0F;
+  transform->has_desired_yaw = true;
+  auto* attacker =
+      add_troop(world,
+                {transform->position.x + 1.0F, 0.0F, transform->position.z},
+                Game::Units::SpawnType::Wolf);
+  (void)Game::Systems::Combat::apply_unit_damage(&world, target, 1, attacker->get_id());
+  EXPECT_FLOAT_EQ(transform->desired_yaw, 15.0F);
+  auto const* feedback = target->get_component<Engine::Core::HitFeedbackComponent>();
+  ASSERT_NE(feedback, nullptr);
+  EXPECT_LT(feedback->hit_direction_x, -0.9F);
 }
 
 TEST_F(WildlifeSystemTest, AWolfCannotBiteThroughASolidProp) {
@@ -470,8 +547,10 @@ TEST_F(WildlifeSystemTest, BittenAnimalsFlinchSoTheHitIsVisible) {
   system.update(&world, 0.1F);
 
   bool flinched = false;
+  Game::Systems::MovementPipeline movement;
   for (int step = 0; step < 600 && !flinched; ++step) {
     system.update(&world, 0.05F);
+    movement.update(&world, 0.05F);
     for (const auto* animal : collect_species(world, Species::Sheep)) {
       const auto* wildlife = animal->get_component<Engine::Core::WildlifeComponent>();
       if (wildlife != nullptr && wildlife->flinch_timer > 0.0F) {
@@ -532,7 +611,7 @@ TEST_F(WildlifeSystemTest, WolvesLeaveEscortedPeopleAlone) {
 
   auto wolves = collect_species(world, Species::Wolf);
   ASSERT_EQ(wolves.size(), 1U);
-  const QVector3D victim_position = beside(wolves.front(), 1.0F);
+  const QVector3D victim_position = in_front(wolves.front(), 1.0F);
   auto* victim = add_troop(world, victim_position, Game::Units::SpawnType::Civilian);
   auto* victim_unit = victim->get_component<Engine::Core::UnitComponent>();
   ASSERT_NE(victim_unit, nullptr);
@@ -561,7 +640,7 @@ TEST_F(WildlifeSystemTest, WoundedWolvesTurnOnTheirAttacker) {
   auto wolves = collect_species(world, Species::Wolf);
   ASSERT_EQ(wolves.size(), 1U);
   auto* wolf_entity = wolves.front();
-  auto* hunter = add_troop(world, beside(wolf_entity, 1.0F));
+  auto* hunter = add_troop(world, in_front(wolf_entity, 1.0F));
   auto* hunter_unit = hunter->get_component<Engine::Core::UnitComponent>();
   ASSERT_NE(hunter_unit, nullptr);
 
@@ -591,7 +670,7 @@ TEST_F(WildlifeSystemTest, TroopsAnswerAWolfThatBitesThem) {
   auto* wolf_entity = wolves.front();
   auto* wolf_unit = wolf_entity->get_component<Engine::Core::UnitComponent>();
   ASSERT_NE(wolf_unit, nullptr);
-  auto* soldier = add_armed_troop(world, beside(wolf_entity, 1.2F));
+  auto* soldier = add_armed_troop(world, in_front(wolf_entity, 1.2F));
   soldier->get_component<Engine::Core::UnitComponent>()
       ->render_individuals_per_unit_override = 1;
   wolf_unit->render_individuals_per_unit_override = 1;
@@ -604,7 +683,9 @@ TEST_F(WildlifeSystemTest, TroopsAnswerAWolfThatBitesThem) {
   EXPECT_EQ(order->target_id, wolf_entity->get_id());
 
   auto* soldier_transform = soldier->get_component<Engine::Core::TransformComponent>();
-  soldier_transform->rotation.y = 270.0F;
+  soldier_transform->rotation.y =
+      wolf_entity->get_component<Engine::Core::TransformComponent>()->rotation.y +
+      180.0F;
   auto* soldier_attack = soldier->get_component<Engine::Core::AttackComponent>();
   soldier_attack->time_since_last = soldier_attack->melee_cooldown;
 

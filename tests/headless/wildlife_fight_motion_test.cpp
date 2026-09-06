@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
@@ -335,4 +335,100 @@ TEST_F(WildlifeFightMotionTest, WildlifeNeverFightsThroughTheRtsMeleeLock) {
 
   EXPECT_EQ(locked_ticks, 0);
   EXPECT_EQ(ordered_ticks, 0);
+}
+
+TEST_F(WildlifeFightMotionTest, ASingleWolfClosesOnFleeingSheepAndFinishesTheHunt) {
+  field();
+  auto* system = m_session->world().get_system<Game::Wildlife::WildlifeSystem>();
+  ASSERT_NE(system, nullptr);
+  auto settings = Game::Wildlife::default_settings();
+  settings.enabled = true;
+  settings.seed = 1416U;
+  settings.birds.enabled = false;
+  settings.sheep.group_count = 1;
+  settings.sheep.group_size_min = settings.sheep.group_size_max = 1;
+  settings.sheep.roam_radius = 4.0F;
+  settings.sheep.spawn_areas = {{0.0F, 0.0F, 1.0F}};
+  settings.sheep.respawn = false;
+  settings.wolves.group_count = 1;
+  settings.wolves.group_size_min = settings.wolves.group_size_max = 1;
+  settings.wolves.aggression = 1.0F;
+  settings.wolves.roam_radius = 16.0F;
+  settings.wolves.spawn_areas = {{3.0F, 0.0F, 1.0F}};
+  settings.wolves.respawn = false;
+  system->configure(settings, 1416U);
+  step_once();
+  EntityID prey_id = 0;
+  for (auto* animal : animals()) {
+    if (animal->get_component<WildlifeComponent>()->species ==
+        Game::Wildlife::Species::Sheep) {
+      prey_id = animal->get_id();
+    }
+  }
+  ASSERT_NE(prey_id, 0U);
+  bool killed = false;
+  std::string history;
+  int last_second = -1;
+  for (float elapsed = 0.0F; elapsed < 45.0F; elapsed += tick_seconds()) {
+    step_once();
+    if (static_cast<int>(elapsed) / 5 != last_second) {
+      last_second = static_cast<int>(elapsed) / 5;
+      history += "\nt=" + std::to_string(elapsed);
+      for (auto* animal : animals()) {
+        auto const* tr = animal->get_component<TransformComponent>();
+        auto const* wc = animal->get_component<WildlifeComponent>();
+        history +=
+            " species=" + std::to_string(static_cast<int>(wc->species)) +
+            " hp=" + std::to_string(animal->get_component<UnitComponent>()->health) +
+            " pos=" + std::to_string(tr->position.x) + "," +
+            std::to_string(tr->position.z) + " yaw=" + std::to_string(tr->rotation.y) +
+            " bites=" + std::to_string(bites());
+      }
+    }
+    auto const* prey = m_session->world().get_entity(prey_id);
+    if (prey == nullptr || prey->get_component<UnitComponent>()->health <= 0) {
+      killed = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(killed) << "a faster predator must not orbit stale positions indefinitely"
+                      << history;
+  EXPECT_GE(bites(), 4U);
+}
+
+TEST_F(WildlifeFightMotionTest, EveryBiteStartsFacingItsCommittedTargetAtContactRange) {
+  stage_a_fight();
+  std::map<EntityID, float> timers;
+  unsigned checked = 0;
+  for (float elapsed = 0.0F; elapsed < 60.0F; elapsed += tick_seconds()) {
+    step_once();
+    for (auto* animal : animals()) {
+      auto const* wildlife = animal->get_component<WildlifeComponent>();
+      if (wildlife->species != Game::Wildlife::Species::Wolf) {
+        continue;
+      }
+      float& previous = timers[animal->get_id()];
+      bool const started = wildlife->bite_timer > previous;
+      previous = wildlife->bite_timer;
+      if (!started) {
+        continue;
+      }
+      auto const* target = m_session->world().get_entity(wildlife->bite_target_id);
+      ASSERT_NE(target, nullptr);
+      auto const* prey = target->get_component<TransformComponent>();
+      auto const* hunter = animal->get_component<TransformComponent>();
+      float const dx = prey->position.x - hunter->position.x;
+      float const dz = prey->position.z - hunter->position.z;
+      float const yaw = std::atan2(dx, dz) * 180.0F / 3.14159265F;
+
+      EXPECT_LE(std::abs(std::remainder(yaw - hunter->rotation.y, 360.0F)),
+                12.0F +
+                    Game::Units::body_turn_speed_degrees(Game::Units::SpawnType::Wolf) *
+                        tick_seconds());
+      float const radius = std::max(prey->scale.x, prey->scale.z) * 0.5F;
+      EXPECT_LE(std::hypot(dx, dz), Game::Wildlife::k_wolf_bite_range + radius + 0.15F);
+      ++checked;
+    }
+  }
+  EXPECT_GT(checked, 3U) << "the fixture must exercise repeated commitments";
 }

@@ -3,7 +3,7 @@
 #include <QVector3D>
 
 #include "app/session/level_orchestrator.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/session/session_context.h"

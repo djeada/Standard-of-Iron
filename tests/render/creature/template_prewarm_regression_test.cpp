@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "game/core/component.h"
+#include "game/core/component_combat.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"

@@ -10,7 +10,7 @@
 #include <set>
 
 #include "game/audio/cue_ids.h"
-#include "game/core/component.h"
+#include "game/core/component_structures.h"
 #include "game/core/world.h"
 #include "game/mission/mission_waves.h"
 

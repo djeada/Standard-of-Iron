@@ -57,37 +57,37 @@ ArenaWindow::ArenaWindow(Game::Session::SessionContext& session, QWidget* parent
   splitter->addWidget(m_viewport);
 
   auto* tab_widget = new QTabWidget(splitter);
-  tab_widget->setMinimumWidth(280);
-  tab_widget->setMaximumWidth(480);
+  tab_widget->setMinimumWidth(340);
+  tab_widget->setMaximumWidth(640);
 
   auto* terrain_scroll = new QScrollArea();
   terrain_scroll->setWidget(m_terrain_panel);
   terrain_scroll->setWidgetResizable(true);
-  terrain_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  terrain_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   tab_widget->addTab(terrain_scroll, "Terrain");
 
   auto* unit_scroll = new QScrollArea();
   unit_scroll->setWidget(m_unit_panel);
   unit_scroll->setWidgetResizable(true);
-  unit_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  unit_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   tab_widget->addTab(unit_scroll, "Units");
 
   auto* building_scroll = new QScrollArea();
   building_scroll->setWidget(m_building_panel);
   building_scroll->setWidgetResizable(true);
-  building_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  building_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   tab_widget->addTab(building_scroll, "Buildings");
 
   auto* prop_scroll = new QScrollArea();
   prop_scroll->setWidget(m_prop_panel);
   prop_scroll->setWidgetResizable(true);
-  prop_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  prop_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   tab_widget->addTab(prop_scroll, "Props");
 
   splitter->addWidget(tab_widget);
   splitter->setStretchFactor(0, 1);
   splitter->setStretchFactor(1, 0);
-  splitter->setSizes({1200, 360});
+  splitter->setSizes({1160, 420});
 
   main_layout->addWidget(splitter);
   setCentralWidget(central);

@@ -1,6 +1,6 @@
 #include "wildlife_unit_common.h"
 
-#include "../core/component.h"
+#include "../core/component_economy.h"
 #include "../core/entity.h"
 #include "../core/ownership_constants.h"
 #include "../systems/troop_profile_service.h"

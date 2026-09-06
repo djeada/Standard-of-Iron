@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "nav_grid_types.h"
 
 namespace Engine::Core {
@@ -15,19 +15,6 @@ using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Game::Systems {
-
-struct GateBlocker {
-  float min_x{0.0F};
-  float max_x{0.0F};
-  float min_z{0.0F};
-  float max_z{0.0F};
-  int owner_id{0};
-  Engine::Core::EntityID entity_id{0};
-
-  [[nodiscard]] auto contains(float world_x, float world_z) const -> bool {
-    return world_x >= min_x && world_x <= max_x && world_z >= min_z && world_z <= max_z;
-  }
-};
 
 class GateService {
 public:

@@ -5,7 +5,7 @@
 #include <cmath>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/system_context.h"
 #include "../core/world.h"
 #include "command_service.h"
@@ -16,8 +16,8 @@ void GuardSystem::run(Engine::Core::SystemContext& context) {
   for (auto [entity_id, guard_mode_ref, movement_ref, transform_ref, unit_ref] :
        context.view<Engine::Core::GuardModeComponent,
                     Engine::Core::MovementComponent,
-                    Engine::Core::TransformComponent,
-                    Engine::Core::UnitComponent>()) {
+                    const Engine::Core::TransformComponent,
+                    const Engine::Core::UnitComponent>()) {
     auto* guard_mode = &guard_mode_ref;
     const auto* movement = &movement_ref;
     const auto* transform = &transform_ref;

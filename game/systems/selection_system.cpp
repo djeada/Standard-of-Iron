@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_core.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "units/spawn_type.h"

@@ -2,7 +2,7 @@
 
 #include <QObject>
 
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/world.h"
 
 namespace App::Core {

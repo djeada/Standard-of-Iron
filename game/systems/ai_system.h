@@ -2,6 +2,7 @@
 
 #include <queue>
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -56,6 +57,20 @@ public:
     return m_refused_command_count;
   }
 
+  [[nodiscard]] auto deferred_decision_count() const -> std::uint64_t {
+    return m_deferred_decision_count;
+  }
+
+  [[nodiscard]] auto longest_decision_wait_us() const -> std::uint64_t {
+    return m_longest_decision_wait_us;
+  }
+
+  [[nodiscard]] auto decision_thread_count() const -> std::size_t;
+
+  void set_decision_wait_budget(std::chrono::microseconds budget) {
+    m_decision_wait_budget = budget;
+  }
+
   void set_ai_profile(int player_id, const AI::AIPlayerProfile& profile);
 
   struct AIPlayerState {
@@ -88,8 +103,10 @@ private:
   };
 
   static constexpr std::uint64_t k_decision_latency_updates = 6;
+  static constexpr std::chrono::microseconds k_default_decision_wait_budget{4000};
   std::uint64_t m_update_count = 0;
 
+  std::unique_ptr<AI::AIWorkerPool> m_worker_pool;
   std::vector<AIInstance> m_ai_instances;
 
   AI::AICommandFilter m_command_filter;
@@ -100,6 +117,9 @@ private:
   std::uint64_t m_completed_decision_count{0};
   std::uint64_t m_applied_command_count{0};
   std::uint64_t m_refused_command_count{0};
+  std::uint64_t m_deferred_decision_count{0};
+  std::uint64_t m_longest_decision_wait_us{0};
+  std::chrono::microseconds m_decision_wait_budget{k_default_decision_wait_budget};
 
   Engine::Core::ScopedEventSubscription<Engine::Core::BuildingAttackedEvent>
       m_building_attacked_subscription;

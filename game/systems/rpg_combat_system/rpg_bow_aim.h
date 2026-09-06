@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <optional>
 
-#include "../../core/component.h"
+#include "../../core/component_combat.h"
 #include "../../core/entity.h"
 #include "rpg_targeting.h"
 

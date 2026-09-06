@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../../core/component.h"
+#include "../../core/component_gameplay.h"
 #include "../../core/world.h"
 #include "../combat_rules.h"
 #include "../formation_combat_geometry.h"
@@ -34,8 +34,12 @@ namespace {
 [[nodiscard]] auto
 knockback_moves_body(const Engine::Core::Entity& unit,
                      const Engine::Core::HitFeedbackComponent& feedback) -> bool {
+  const auto* registry = unit.registry();
   if (unit.has_component<Engine::Core::BuildingComponent>() ||
-      unit.has_component<Engine::Core::ElephantComponent>()) {
+      unit.has_component<Engine::Core::ElephantComponent>() ||
+      (registry != nullptr &&
+       registry->has<Engine::Core::WildlifeComponent>(unit.get_id()))) {
+
     return false;
   }
   if (Game::Systems::CombatRules::uses_rpg_combat_rules(&unit)) {

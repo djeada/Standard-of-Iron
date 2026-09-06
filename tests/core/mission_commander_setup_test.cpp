@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include "game/core/component.h"
+#include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/map/campaign_loader.h"
 #include "game/map/map_transformer.h"

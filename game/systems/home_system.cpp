@@ -4,7 +4,7 @@
 #include <cmath>
 #include <limits>
 
-#include "../core/component.h"
+#include "../core/component_economy.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"
 #include "player_feedback.h"
@@ -36,8 +36,8 @@ void HomeSystem::update(Engine::Core::World* world, float delta_time) {
 
   for (auto [home_id, home_comp_ref, home_transform_ref, home_unit_ref] :
        world->view<Engine::Core::HomeComponent,
-                   Engine::Core::TransformComponent,
-                   Engine::Core::UnitComponent>()) {
+                   const Engine::Core::TransformComponent,
+                   const Engine::Core::UnitComponent>()) {
     auto* home_comp = &home_comp_ref;
     const auto* home_transform = &home_transform_ref;
     const auto* home_unit = &home_unit_ref;
@@ -56,8 +56,8 @@ void HomeSystem::update(Engine::Core::World* world, float delta_time) {
 
     for (auto [barracks_id, production, barracks_transform, barracks_unit] :
          world->view<Engine::Core::ProductionComponent,
-                     Engine::Core::TransformComponent,
-                     Engine::Core::UnitComponent>()) {
+                     const Engine::Core::TransformComponent,
+                     const Engine::Core::UnitComponent>()) {
       (void)production;
       if (barracks_unit.spawn_type != Game::Units::SpawnType::Barracks) {
         continue;

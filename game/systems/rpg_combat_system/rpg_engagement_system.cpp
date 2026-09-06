@@ -1,6 +1,6 @@
 #include "rpg_engagement_system.h"
 
-#include "../../core/component.h"
+#include "../../core/component_commander.h"
 #include "../../core/simulation_timing.h"
 #include "../../core/world.h"
 #include "rpg_combat_processor.h"

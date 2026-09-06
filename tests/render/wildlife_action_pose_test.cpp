@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <gtest/gtest.h>
 
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "render/entity/registry.h"
@@ -62,6 +62,37 @@ TEST(WildlifeActionPose, WolfLungeDrivesTheWholeBodyForward) {
   EXPECT_GT(snap.body_rear.y(), still.body_rear.y() + 0.01F);
 
   EXPECT_GT(snap.legs[0].toe.z() - still.legs[0].toe.z(), 0.15F);
+}
+
+TEST(WildlifeActionPose, AuthoredBiteHasContinuousContactAndRecovery) {
+  using namespace Render::Wildlife;
+  auto previous = wolf_pose(wolf_bite_drive(0.0F));
+  for (int frame = 1; frame <= 1080; ++frame) {
+    auto const pose = wolf_pose(wolf_bite_drive(static_cast<float>(frame) / 1080.0F));
+    EXPECT_LT((pose.muzzle - previous.muzzle).length(), 0.018F) << frame;
+    EXPECT_LT((pose.jaw_tip - previous.jaw_tip).length(), 0.018F) << frame;
+    for (std::size_t i = 0; i < k_leg_count; ++i) {
+      EXPECT_LT((pose.legs[i].toe - previous.legs[i].toe).length(), 0.018F) << frame;
+    }
+    previous = pose;
+  }
+  auto const ready = wolf_pose(wolf_bite_drive(0.0F));
+  EXPECT_LT((previous.muzzle - ready.muzzle).length(), 0.001F);
+  auto const contact =
+      wolf_bite_drive(Engine::Core::WildlifeComponent::k_bite_impact_phase);
+  EXPECT_FLOAT_EQ(contact.lunge, 1.0F);
+  EXPECT_FLOAT_EQ(contact.jaw_open, 0.0F);
+}
+
+TEST(WildlifeActionPose, BiteRearPawsBraceInsteadOfFollowingTheChest) {
+  using namespace Render::Wildlife;
+  auto const ready = wolf_pose(wolf_bite_drive(0.0F));
+  auto const contact =
+      wolf_pose(wolf_bite_drive(Engine::Core::WildlifeComponent::k_bite_impact_phase));
+  EXPECT_GT(contact.body_front.z() - ready.body_front.z(), 0.25F);
+  for (std::size_t i = 2; i < k_leg_count; ++i) {
+    EXPECT_LT((contact.legs[i].toe - ready.legs[i].toe).length(), 0.08F);
+  }
 }
 
 TEST(WildlifeActionPose, WolfLungeKeepsTheHeadAttached) {

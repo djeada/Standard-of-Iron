@@ -10,7 +10,7 @@
 #include "building_archetype_desc.h"
 #include "building_decay.h"
 #include "building_render_common.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
 #include "render/gl/resources.h"
 

@@ -14,7 +14,7 @@
 #include "game/audio/audio_cues.h"
 #include "game/audio/audio_event_handler.h"
 #include "game/audio/cue_trace.h"
-#include "game/core/component.h"
+#include "game/core/component_combat.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"

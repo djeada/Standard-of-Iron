@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "app/commander/commander_presentation_trace.h"
-#include "game/core/component.h"
+#include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
@@ -157,10 +157,28 @@ TEST(ArenaCommanderMetricsTest, AlternatingBoomUnderOneObstructionIsPumping) {
   auto const report =
       run_with_trace({metric(Expect::CommanderBoomIsContinuous, 0.35F, 2.0F)},
                      [](int frame, App::Core::CommanderPresentationTrace& trace) {
-                       trace.camera.building_blocked_fraction = 0.4F;
+                       trace.camera.boom_clear_fraction = 0.4F;
                        trace.camera.boom_resolved = (frame % 2 == 0) ? 2.0F : 2.2F;
                      });
   EXPECT_TRUE(has_code(report, QStringLiteral("commander_boom_pumping")));
+}
+
+TEST(ArenaCommanderMetricsTest, ABriefObstructionIsAllowedButASustainedOneIsNot) {
+  auto const glancing =
+      run_with_trace({metric(Expect::CommanderCameraKeepsCommanderInSight, 0.35F)},
+                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                       trace.camera.sight_line_clear = frame < 10 || frame >= 20;
+                     });
+  EXPECT_FALSE(has_code(glancing, QStringLiteral("commander_camera_lost_sight")))
+      << "a tenth of a second behind a corner post is the boom catching up, not "
+         "the camera losing the commander";
+
+  auto const buried =
+      run_with_trace({metric(Expect::CommanderCameraKeepsCommanderInSight, 0.35F)},
+                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                       trace.camera.sight_line_clear = frame < 10;
+                     });
+  EXPECT_TRUE(has_code(buried, QStringLiteral("commander_camera_lost_sight")));
 }
 
 TEST(ArenaCommanderMetricsTest, ViewThatTurnsWithoutLookInputIsUncommanded) {

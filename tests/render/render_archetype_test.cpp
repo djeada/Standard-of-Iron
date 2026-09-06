@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "animation/rig/horse_attachment_frames.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
 #include "render/entity/nations/carthage/ballista_renderer.h"
 #include "render/entity/nations/carthage/barracks_renderer.h"

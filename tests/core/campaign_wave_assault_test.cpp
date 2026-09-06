@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "app/session/skirmish_loader.h"
-#include "core/component.h"
+#include "core/component_commander.h"
 #include "core/world.h"
 #include "game/audio/cue_ids.h"
 #include "game/map/campaign_definition.h"

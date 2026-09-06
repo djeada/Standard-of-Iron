@@ -4,6 +4,7 @@
 
 #include <array>
 #include <gtest/gtest.h>
+#include <utility>
 
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/unit_visual_spec.h"

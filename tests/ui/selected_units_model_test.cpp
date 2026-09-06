@@ -6,7 +6,7 @@
 
 #include "app/core/client_context.h"
 #include "app/models/selected_units_model.h"
-#include "game/core/component.h"
+#include "game/core/component_structures.h"
 #include "game/core/world.h"
 #include "game/render_bridge/selection_controller.h"
 #include "game/systems/selection_system.h"

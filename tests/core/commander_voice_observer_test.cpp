@@ -2,7 +2,7 @@
 #include <optional>
 #include <vector>
 
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/mission/commander_voice_observer.h"

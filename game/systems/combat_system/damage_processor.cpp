@@ -1,6 +1,6 @@
 #include "damage_processor.h"
 
-#include "../../core/component.h"
+#include "../../core/component_core.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
 #include "../combat_rules.h"

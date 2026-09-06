@@ -138,6 +138,7 @@
       ],
       "may_use": ["domain_types", "components", "unit_catalog", "registries"],
       "files": [
+        "game/systems/camera_obstruction",
         "game/wildlife/wildlife_config",
         "game/wildlife/wildlife_placement"
       ]
@@ -155,6 +156,7 @@
         "game/systems/walkability",
         "game/systems/route_corridor_planner",
         "game/systems/nav_grid",
+        "game/systems/navigation_service",
         "game/systems/gate_service",
         "game/systems/wall_network_service",
         "game/systems/terrain_alignment_system"
@@ -339,6 +341,7 @@
     "session": {
       "targets": ["game_sim"],
       "paths": ["game/session/", "game/command/"],
+      "files": ["game/map/match_loader"],
       "may_use": [
         "domain_types",
         "components",
@@ -398,7 +401,11 @@
         "game/mission/mission_waves.cpp",
         "game/mission/mission_waves.h",
         "game/mission/mission_wave_director.cpp",
-        "game/mission/mission_wave_director.h"
+        "game/mission/mission_wave_director.h",
+        "game/mission/commander_speaker_roster.cpp",
+        "game/mission/commander_speaker_roster.h",
+        "game/mission/commander_voice_observer.cpp",
+        "game/mission/commander_voice_observer.h"
       ],
       "files": [
         "game/map/mission_loader",
@@ -406,7 +413,8 @@
         "game/map/mission_victory_rules",
         "game/map/wave_archetype_catalog",
         "game/map/map_catalog",
-        "game/map/mission_catalog"
+        "game/map/mission_catalog",
+        "game/map/commander_message_grammar"
       ],
       "may_use": [
         "domain_types",
@@ -497,7 +505,9 @@
         "game/mission/commander_message_director",
         "game/mission/mission_setup_coordinator",
         "game/mission/mission_waves",
-        "game/mission/mission_wave_director"
+        "game/mission/mission_wave_director",
+        "game/mission/commander_speaker_roster",
+        "game/mission/commander_voice_observer"
       ],
       "may_use": [
         "domain_types",
