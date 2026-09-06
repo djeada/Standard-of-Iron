@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstdint>
 
+#include "building_palette.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
@@ -22,18 +23,18 @@ constexpr float k_pi = 3.14159265F;
 constexpr float k_rad_to_deg = 180.0F / k_pi;
 
 struct RomanTemplePalette {
-  QVector3D marble{0.94F, 0.92F, 0.85F};
-  QVector3D marble_shade{0.81F, 0.78F, 0.70F};
-  QVector3D limestone{0.84F, 0.78F, 0.66F};
-  QVector3D limestone_dark{0.50F, 0.46F, 0.38F};
+  QVector3D marble = BuildingPalette::k_marble;
+  QVector3D marble_shade = BuildingPalette::k_marble_shade;
+  QVector3D limestone = BuildingPalette::k_limestone;
+  QVector3D limestone_dark = BuildingPalette::k_limestone_dark;
   QVector3D mortar{0.56F, 0.52F, 0.45F};
-  QVector3D terracotta{0.70F, 0.32F, 0.15F};
-  QVector3D terracotta_light{0.81F, 0.45F, 0.24F};
-  QVector3D terracotta_dark{0.44F, 0.17F, 0.085F};
+  QVector3D terracotta = BuildingPalette::k_terracotta;
+  QVector3D terracotta_light = BuildingPalette::k_terracotta_light;
+  QVector3D terracotta_dark = BuildingPalette::k_terracotta_dark;
   QVector3D cloth_red{0.53F, 0.075F, 0.052F};
-  QVector3D gold{0.72F, 0.53F, 0.20F};
-  QVector3D bronze{0.48F, 0.30F, 0.11F};
-  QVector3D blue_accent{0.24F, 0.40F, 0.55F};
+  QVector3D gold = BuildingPalette::k_gold;
+  QVector3D bronze = BuildingPalette::k_bronze;
+  QVector3D blue_accent = BuildingPalette::k_blue_accent;
   QVector3D soot{0.16F, 0.14F, 0.12F};
   QVector3D flame{0.88F, 0.47F, 0.12F};
 };

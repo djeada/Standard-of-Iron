@@ -7,6 +7,7 @@
 #include <cmath>
 #include <numbers>
 
+#include "building_palette.h"
 #include "game/core/component.h"
 #include "math/math_utils.h"
 #include "render/entity/barracks_flag_renderer.h"
@@ -26,21 +27,21 @@ namespace {
 using Render::Geom::clamp_vec_01;
 
 struct TowerPalette {
-  QVector3D limestone{0.96F, 0.94F, 0.88F};
-  QVector3D limestone_shade{0.88F, 0.85F, 0.78F};
-  QVector3D limestone_dark{0.80F, 0.76F, 0.70F};
+  QVector3D limestone = BuildingPalette::k_limestone;
+  QVector3D limestone_shade = BuildingPalette::k_limestone_shade;
+  QVector3D limestone_dark = BuildingPalette::k_limestone_dark;
   QVector3D sandstone_light{0.82F, 0.75F, 0.62F};
   QVector3D sandstone_dark{0.70F, 0.62F, 0.50F};
   QVector3D sandstone_base{0.75F, 0.68F, 0.56F};
-  QVector3D marble{0.98F, 0.97F, 0.95F};
-  QVector3D terracotta{0.78F, 0.32F, 0.18F};
-  QVector3D terracotta_dark{0.46F, 0.12F, 0.07F};
-  QVector3D cedar{0.52F, 0.38F, 0.26F};
-  QVector3D cedar_dark{0.38F, 0.26F, 0.16F};
-  QVector3D blue_accent{0.28F, 0.48F, 0.68F};
-  QVector3D blue_light{0.40F, 0.60F, 0.80F};
-  QVector3D bronze{0.60F, 0.45F, 0.25F};
-  QVector3D gold{0.85F, 0.72F, 0.35F};
+  QVector3D marble = BuildingPalette::k_marble;
+  QVector3D terracotta = BuildingPalette::k_terracotta;
+  QVector3D terracotta_dark = BuildingPalette::k_terracotta_dark;
+  QVector3D cedar = BuildingPalette::k_cedar;
+  QVector3D cedar_dark = BuildingPalette::k_cedar_dark;
+  QVector3D blue_accent = BuildingPalette::k_blue_accent;
+  QVector3D blue_light = BuildingPalette::k_blue_light;
+  QVector3D bronze = BuildingPalette::k_bronze;
+  QVector3D gold = BuildingPalette::k_gold;
   QVector3D team{0.8F, 0.9F, 1.0F};
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };

@@ -5,6 +5,7 @@
 #include <cmath>
 #include <string>
 
+#include "building_palette.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
@@ -18,16 +19,16 @@ namespace Render::GL::Roman {
 namespace {
 
 struct RomanFarmPalette {
-  QVector3D limestone{0.76F, 0.71F, 0.61F};
-  QVector3D limestone_shade{0.58F, 0.54F, 0.46F};
-  QVector3D limestone_dark{0.40F, 0.37F, 0.31F};
-  QVector3D plaster{0.84F, 0.80F, 0.69F};
-  QVector3D plaster_shade{0.70F, 0.65F, 0.54F};
-  QVector3D terracotta{0.58F, 0.25F, 0.12F};
-  QVector3D terracotta_dark{0.39F, 0.16F, 0.08F};
-  QVector3D cedar{0.38F, 0.24F, 0.13F};
-  QVector3D cedar_light{0.51F, 0.34F, 0.19F};
-  QVector3D cedar_dark{0.24F, 0.15F, 0.08F};
+  QVector3D limestone = BuildingPalette::k_limestone;
+  QVector3D limestone_shade = BuildingPalette::k_limestone_shade;
+  QVector3D limestone_dark = BuildingPalette::k_limestone_dark;
+  QVector3D plaster = BuildingPalette::k_plaster;
+  QVector3D plaster_shade = BuildingPalette::k_plaster_shade;
+  QVector3D terracotta = BuildingPalette::k_terracotta;
+  QVector3D terracotta_dark = BuildingPalette::k_terracotta_dark;
+  QVector3D cedar = BuildingPalette::k_cedar;
+  QVector3D cedar_light = BuildingPalette::k_cedar_light;
+  QVector3D cedar_dark = BuildingPalette::k_cedar_dark;
   QVector3D iron{0.16F, 0.16F, 0.16F};
   QVector3D straw{0.76F, 0.62F, 0.31F};
   QVector3D cloth{0.46F, 0.11F, 0.08F};

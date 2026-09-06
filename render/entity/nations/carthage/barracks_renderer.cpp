@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 
+#include "building_palette.h"
 #include "game/core/component.h"
 #include "game/visuals/team_colors.h"
 #include "math/math_utils.h"
@@ -38,20 +39,20 @@ constexpr auto k_mask_normal = BuildingStateMask::Normal;
 constexpr float k_pi = 3.14159265F;
 
 struct CarthagePalette {
-  QVector3D sandstone{0.82F, 0.70F, 0.52F};
-  QVector3D sandstone_light{0.92F, 0.84F, 0.68F};
-  QVector3D sandstone_dark{0.55F, 0.44F, 0.31F};
-  QVector3D stone_dark{0.38F, 0.32F, 0.24F};
-  QVector3D plaster{0.90F, 0.83F, 0.68F};
-  QVector3D plaster_shade{0.80F, 0.73F, 0.58F};
-  QVector3D brick_dark{0.40F, 0.18F, 0.11F};
-  QVector3D indigo{0.21F, 0.25F, 0.45F};
-  QVector3D oxblood{0.47F, 0.10F, 0.08F};
-  QVector3D saffron{0.76F, 0.36F, 0.035F};
-  QVector3D wood{0.46F, 0.30F, 0.16F};
-  QVector3D wood_dark{0.23F, 0.16F, 0.09F};
+  QVector3D sandstone = BuildingPalette::k_sandstone;
+  QVector3D sandstone_light = BuildingPalette::k_sandstone_light;
+  QVector3D sandstone_dark = BuildingPalette::k_sandstone_dark;
+  QVector3D stone_dark = BuildingPalette::k_sandstone_dark;
+  QVector3D plaster = BuildingPalette::k_plaster;
+  QVector3D plaster_shade = BuildingPalette::k_plaster_shade;
+  QVector3D brick_dark = BuildingPalette::k_brick_dark;
+  QVector3D indigo = BuildingPalette::k_indigo;
+  QVector3D oxblood = BuildingPalette::k_oxblood;
+  QVector3D saffron = BuildingPalette::k_saffron;
+  QVector3D wood = BuildingPalette::k_wood;
+  QVector3D wood_dark = BuildingPalette::k_wood_dark;
   QVector3D iron{0.24F, 0.23F, 0.21F};
-  QVector3D bronze{0.72F, 0.43F, 0.12F};
+  QVector3D bronze = BuildingPalette::k_bronze;
   QVector3D ember{0.68F, 0.22F, 0.045F};
   QVector3D flame{0.95F, 0.55F, 0.12F};
   QVector3D shadow{0.10F, 0.08F, 0.06F};

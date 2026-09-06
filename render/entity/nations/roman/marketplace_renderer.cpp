@@ -7,6 +7,7 @@
 #include <array>
 #include <cstdint>
 
+#include "building_palette.h"
 #include "game/core/component.h"
 #include "game/visuals/team_colors.h"
 #include "render/entity/building_archetype_desc.h"
@@ -28,26 +29,26 @@ namespace Render::GL::Roman {
 namespace {
 
 struct RomanMarketPalette {
-  QVector3D limestone{0.78F, 0.74F, 0.65F};
-  QVector3D limestone_shade{0.60F, 0.56F, 0.49F};
-  QVector3D limestone_dark{0.43F, 0.40F, 0.35F};
-  QVector3D marble{0.86F, 0.84F, 0.78F};
+  QVector3D limestone = BuildingPalette::k_limestone;
+  QVector3D limestone_shade = BuildingPalette::k_limestone_shade;
+  QVector3D limestone_dark = BuildingPalette::k_limestone_dark;
+  QVector3D marble = BuildingPalette::k_marble;
   QVector3D mortar{0.52F, 0.49F, 0.43F};
-  QVector3D cedar{0.40F, 0.25F, 0.13F};
-  QVector3D cedar_light{0.56F, 0.37F, 0.20F};
-  QVector3D cedar_dark{0.27F, 0.16F, 0.09F};
+  QVector3D cedar = BuildingPalette::k_cedar;
+  QVector3D cedar_light = BuildingPalette::k_cedar_light;
+  QVector3D cedar_dark = BuildingPalette::k_cedar_dark;
   QVector3D cloth_red{0.53F, 0.075F, 0.052F};
   QVector3D cloth_red_faded{0.68F, 0.16F, 0.10F};
   QVector3D cloth_gold{0.72F, 0.52F, 0.16F};
-  QVector3D terracotta{0.63F, 0.25F, 0.105F};
-  QVector3D terracotta_dark{0.43F, 0.15F, 0.08F};
-  QVector3D blue_accent{0.15F, 0.31F, 0.47F};
-  QVector3D bronze{0.48F, 0.30F, 0.11F};
+  QVector3D terracotta = BuildingPalette::k_terracotta;
+  QVector3D terracotta_dark = BuildingPalette::k_terracotta_dark;
+  QVector3D blue_accent = BuildingPalette::k_blue_accent;
+  QVector3D bronze = BuildingPalette::k_bronze;
   QVector3D iron{0.12F, 0.13F, 0.13F};
   QVector3D olive{0.25F, 0.31F, 0.10F};
   QVector3D grape{0.24F, 0.08F, 0.18F};
   QVector3D ochre{0.66F, 0.38F, 0.09F};
-  QVector3D gold{0.72F, 0.53F, 0.20F};
+  QVector3D gold = BuildingPalette::k_gold;
 };
 
 constexpr std::uint8_t k_marketplace_team_slot = 0;
