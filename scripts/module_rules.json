@@ -216,6 +216,7 @@
         "game/systems/movement_orders",
         "game/systems/local_avoidance_system",
         "game/systems/body_contact_system",
+        "game/systems/body_profile",
         "game/systems/command_service",
         "game/systems/order_service",
         "game/systems/formation_move_dispatch_system",

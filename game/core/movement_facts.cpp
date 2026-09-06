@@ -56,6 +56,18 @@ auto movement_state_name(MovementOrderState state) noexcept -> const char* {
   return "Unknown";
 }
 
+auto desired_motion_source_name(DesiredMotionSource source) noexcept -> const char* {
+  switch (source) {
+  case DesiredMotionSource::None:
+    return "None";
+  case DesiredMotionSource::Route:
+    return "Route";
+  case DesiredMotionSource::DirectControl:
+    return "DirectControl";
+  }
+  return "Unknown";
+}
+
 auto movement_direction_source_name(MovementDirectionSource source) noexcept -> const
     char* {
   switch (source) {

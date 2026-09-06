@@ -6,10 +6,13 @@
 #include <cmath>
 #include <vector>
 
+#include "../core/component_economy.h"
 #include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../core/system_context.h"
 #include "../core/world.h"
+#include "../wildlife/wildlife_config.h"
+#include "body_profile.h"
 #include "command_service.h"
 #include "walkability.h"
 
@@ -25,9 +28,17 @@ struct ContactBody {
   bool movable{false};
   float separation_remaining{0.0F};
   Engine::Core::EntityID melee_intent{0};
+
+  bool has_travel{false};
+  float travel_x{0.0F};
+  float travel_z{0.0F};
 };
 
 auto melee_intent_of(const Engine::Core::Entity& entity) -> Engine::Core::EntityID {
+  if (const auto* wildlife = entity.get_component<Engine::Core::WildlifeComponent>();
+      wildlife != nullptr && wildlife->behavior == Game::Wildlife::Behavior::Stalk) {
+    return wildlife->focus_id;
+  }
   const auto* attack = entity.get_component<Engine::Core::AttackComponent>();
   if (attack == nullptr ||
       attack->current_mode != Engine::Core::AttackComponent::CombatMode::Melee) {
@@ -59,18 +70,27 @@ auto body_is_movable(const Engine::Core::Entity& entity,
   return entity.get_component<Engine::Core::MovementComponent>() != nullptr;
 }
 
-auto profile_for(const Engine::Core::Entity& entity) -> BodyProfile {
-  BodyProfile profile;
-  if (const auto* movement = entity.get_component<Engine::Core::MovementComponent>()) {
-    profile.radius = movement->get_navigation_clearance();
-    profile.passability = movement->get_can_enter_forest()
-                              ? Pathfinding::Passability::Light
-                              : Pathfinding::Passability::Heavy;
+void slide_along_travel(const ContactBody& body, float& dx, float& dz) {
+  if (!body.has_travel) {
+    return;
   }
-  return profile;
+  float const along = (dx * body.travel_x) + (dz * body.travel_z);
+  if (along >= 0.0F) {
+    return;
+  }
+
+  float const perpendicular_x = -body.travel_z;
+  float const perpendicular_z = body.travel_x;
+  float lateral = (dx * perpendicular_x) + (dz * perpendicular_z);
+  float const side = lateral >= 0.0F ? 1.0F : -1.0F;
+  lateral += side * -along;
+
+  dx = perpendicular_x * lateral;
+  dz = perpendicular_z * lateral;
 }
 
 auto try_push(ContactBody& body, float dx, float dz) -> bool {
+  slide_along_travel(body, dx, dz);
   float const distance = std::hypot(dx, dz);
   float const step = std::min(distance, body.separation_remaining);
   if (step <= 1.0e-6F || distance <= 1.0e-6F) {
@@ -86,6 +106,10 @@ auto try_push(ContactBody& body, float dx, float dz) -> bool {
   body.transform->position.x = destination.x();
   body.transform->position.z = destination.z();
   body.separation_remaining -= step;
+  if (body.facts != nullptr) {
+    body.facts->steering.contact_push_x += dx;
+    body.facts->steering.contact_push_z += dz;
+  }
   return true;
 }
 
@@ -128,9 +152,22 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
     ContactBody& body = bodies[slot];
     body.transform = transform;
     body.facts = world.try_get<Engine::Core::MovementFactsComponent>(entity->get_id());
+    if (body.facts != nullptr) {
+      body.facts->steering.contact_push_x = 0.0F;
+      body.facts->steering.contact_push_z = 0.0F;
+    }
     body.radius = CommandService::get_unit_radii(world, entry.id).core;
-    body.profile = profile_for(*entity);
+    body.profile = body_profile_for(*entity);
     body.movable = body_is_movable(*entity, body.facts);
+    if (body.facts != nullptr && body.facts->desired.valid) {
+      float const speed =
+          std::hypot(body.facts->desired.velocity_x, body.facts->desired.velocity_z);
+      if (speed > 1.0e-4F) {
+        body.has_travel = true;
+        body.travel_x = body.facts->desired.velocity_x / speed;
+        body.travel_z = body.facts->desired.velocity_z / speed;
+      }
+    }
     body.separation_remaining =
         std::min(k_separation_speed * delta_time, k_max_separation_step);
     body.melee_intent = melee_intent_of(*entity);
@@ -227,6 +264,7 @@ auto BodyContactSystem::access() const -> Engine::Core::SystemAccess {
                                      BuildingComponent,
                                      AttackComponent,
                                      AttackTargetComponent,
+                                     WildlifeComponent,
                                      HoldModeComponent,
                                      MovementComponent,
                                      PendingRemovalComponent>{},
