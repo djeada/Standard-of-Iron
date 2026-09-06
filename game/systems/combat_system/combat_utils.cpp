@@ -17,6 +17,7 @@
 #include "../owner_registry.h"
 #include "../pathfinding.h"
 #include "structure_combat.h"
+#include "target_rules.h"
 
 namespace Game::Systems::Combat {
 
@@ -58,13 +59,11 @@ void CombatQueryContext::record_candidate(Engine::Core::Entity* entity,
   if (index >= m_records.size()) {
     m_records.resize(index + 1U);
   }
-  m_records[index] = CandidateRecord{
-      .stamp = m_stamp,
-      .id = id,
-      .entity = entity,
-      .owner_id = owner_id,
-      .is_building = building,
-      .is_wildlife = entity->has_component<Engine::Core::WildlifeComponent>()};
+  m_records[index] = CandidateRecord{.stamp = m_stamp,
+                                     .id = id,
+                                     .entity = entity,
+                                     .owner_id = owner_id,
+                                     .is_building = building};
 
   if (std::find(m_present_owner_ids.begin(), m_present_owner_ids.end(), owner_id) ==
       m_present_owner_ids.end()) {
@@ -102,8 +101,7 @@ void CombatQueryContext::rebuild_hostility_table() {
       if (target < 0 || target > k_max_cached_owner_id) {
         continue;
       }
-      const bool is_hostile =
-          attacker != target && !owner_registry.are_allies(attacker, target);
+      const bool is_hostile = owners_are_hostile(owner_registry, attacker, target);
       m_hostility[static_cast<std::size_t>(attacker) * k_owner_axis +
                   static_cast<std::size_t>(target)] =
           static_cast<std::uint8_t>(is_hostile ? k_hostility_hostile
@@ -124,9 +122,8 @@ auto CombatQueryContext::hostile(int attacker_owner_id,
       return cached == k_hostility_hostile;
     }
   }
-  return attacker_owner_id != target_owner_id &&
-         !Game::Systems::OwnerRegistry::instance().are_allies(attacker_owner_id,
-                                                              target_owner_id);
+  return owners_are_hostile(
+      Game::Systems::OwnerRegistry::instance(), attacker_owner_id, target_owner_id);
 }
 
 void collect_unit_ids_near(Engine::Core::World& world,
@@ -203,70 +200,6 @@ auto is_building(Engine::Core::Entity* entity) -> bool {
     return false;
   }
   return entity->has_component<Engine::Core::BuildingComponent>();
-}
-
-auto is_valid_enemy_unit(const Engine::Core::UnitComponent* attacker_unit,
-                         Engine::Core::Entity* target,
-                         bool allow_buildings) -> bool {
-  if (attacker_unit == nullptr) {
-    return false;
-  }
-  return is_valid_enemy_of_owner(attacker_unit->owner_id, target, allow_buildings);
-}
-
-auto is_valid_enemy_of_owner(int attacker_owner_id,
-                             Engine::Core::Entity* target,
-                             bool allow_buildings) -> bool {
-  if (target == nullptr) {
-    return false;
-  }
-  if (target->has_component<Engine::Core::PendingRemovalComponent>()) {
-    return false;
-  }
-
-  auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
-  if ((target_unit == nullptr) || (target_unit->health <= 0)) {
-    return false;
-  }
-  if (target_unit->owner_id == attacker_owner_id) {
-    return false;
-  }
-
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
-  if (owner_registry.are_allies(attacker_owner_id, target_unit->owner_id)) {
-    return false;
-  }
-
-  if (!allow_buildings && is_building(target)) {
-    return false;
-  }
-
-  return true;
-}
-
-auto is_passive_wildlife(Engine::Core::Entity* target) -> bool {
-  if (target == nullptr) {
-    return false;
-  }
-  const auto* wildlife = target->get_component<Engine::Core::WildlifeComponent>();
-  return (wildlife != nullptr) && !wildlife->is_hostile();
-}
-
-auto is_auto_acquirable_enemy(const Engine::Core::UnitComponent* attacker_unit,
-                              Engine::Core::Entity* target,
-                              bool allow_buildings) -> bool {
-  if (attacker_unit == nullptr) {
-    return false;
-  }
-  return is_auto_acquirable_enemy_of_owner(
-      attacker_unit->owner_id, target, allow_buildings);
-}
-
-auto is_auto_acquirable_enemy_of_owner(int attacker_owner_id,
-                                       Engine::Core::Entity* target,
-                                       bool allow_buildings) -> bool {
-  return is_valid_enemy_of_owner(attacker_owner_id, target, allow_buildings) &&
-         !is_passive_wildlife(target);
 }
 
 auto combat_radius(Engine::Core::Entity* entity) -> float {
@@ -503,7 +436,10 @@ auto may_engage(Engine::Core::Entity* unit,
     return false;
   }
 
-  if (!is_auto_acquirable_enemy(unit_comp, enemy, true)) {
+  if (!may_attack(
+          unit_comp,
+          enemy,
+          {.intent = EngagementIntent::AutoAcquired, .allow_buildings = true})) {
     return false;
   }
   if (melee_walled_off_from(unit, enemy)) {
@@ -606,7 +542,7 @@ auto find_nearest_enemy(Engine::Core::Entity* unit,
       *scan_iterations += 1;
     }
     const CandidateRecord* record = query_context.find_record(target_id);
-    if (record == nullptr || record->is_building) {
+    if (record == nullptr) {
       continue;
     }
 
@@ -614,19 +550,16 @@ auto find_nearest_enemy(Engine::Core::Entity* unit,
     if (target == unit) {
       continue;
     }
-    if (target->has_component<Engine::Core::PendingRemovalComponent>()) {
-      continue;
-    }
 
     auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
-    if ((target_unit == nullptr) || (target_unit->health <= 0)) {
-      continue;
-    }
-    if (!query_context.hostile(attacker_owner_id, target_unit->owner_id)) {
+    if (target_unit == nullptr) {
       continue;
     }
 
-    if (record->is_wildlife && is_passive_wildlife(target)) {
+    if (evaluate_target(target,
+                        query_context.hostile(attacker_owner_id, target_unit->owner_id),
+                        {.intent = EngagementIntent::AutoAcquired,
+                         .allow_buildings = false}) != TargetRefusal::None) {
       continue;
     }
 

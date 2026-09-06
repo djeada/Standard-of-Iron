@@ -250,14 +250,6 @@
         <translation>Toplanma noktası belirlemeden önce bir kışla seç</translation>
     </message>
     <message>
-        <source>RECRUIT UNITS</source>
-        <translation>BİRİM DEVŞİR</translation>
-    </message>
-    <message>
-        <source>Scroll for more</source>
-        <translation>Devamı için kaydır</translation>
-    </message>
-    <message>
         <source>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</source>
         <translation>Bu kışlanın hâlâ elinde tuttuğu insan gücü. Her asker alımı bundan harcar; Evde yetiştirilen siviller daha fazlasını getirir.</translation>
     </message>
@@ -8013,8 +8005,12 @@ bir harita seç</translation>
         <translation>O hedef çoktan yok oldu.</translation>
     </message>
     <message>
-        <source>Cannot attack a friendly or neutral target.</source>
-        <translation>Dost ya da tarafsız bir hedefe saldırılamaz.</translation>
+        <source>Cannot attack your own or an allied unit.</source>
+        <translation>Kendi ya da müttefik birliğe saldırılamaz.</translation>
+    </message>
+    <message>
+        <source>That target is not a threat.</source>
+        <translation>Bu hedef bir tehdit değil.</translation>
     </message>
     <message>
         <source>That building no longer exists.</source>

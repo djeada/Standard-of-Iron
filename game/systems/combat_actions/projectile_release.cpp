@@ -11,6 +11,7 @@
 #include "../combat_system/combat_types.h"
 #include "../combat_system/combat_utils.h"
 #include "../combat_system/structure_combat.h"
+#include "../combat_system/target_rules.h"
 #include "../projectile_system.h"
 
 namespace Game::Systems::CombatActions {
@@ -56,7 +57,11 @@ resolve_target(Engine::Core::World* world,
   auto const* attacker_unit = attacker.get_component<Engine::Core::UnitComponent>();
   auto* target = world->get_entity(target_hint_id);
   if (attacker_unit == nullptr ||
-      !Game::Systems::Combat::is_valid_enemy_unit(attacker_unit, target, true)) {
+      !Game::Systems::Combat::may_attack(
+          attacker_unit,
+          target,
+          {.intent = Game::Systems::Combat::EngagementIntent::Ordered,
+           .allow_buildings = true})) {
     return nullptr;
   }
   return target;

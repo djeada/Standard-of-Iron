@@ -46,6 +46,7 @@ auto failure_for(Game::Command::Rejection rejection) -> OrderFailure {
     return OrderFailure::NoSelection;
   case Game::Command::Rejection::DeadTarget:
   case Game::Command::Rejection::FriendlyTarget:
+  case Game::Command::Rejection::ProtectedTarget:
   case Game::Command::Rejection::MissingBuilding:
     return OrderFailure::InvalidTarget;
   case Game::Command::Rejection::NotOwnedBuilding:
@@ -144,7 +145,9 @@ auto rejection_reason_text(Game::Command::Rejection rejection,
     return QCoreApplication::translate("OrderFeedback", "That target is already gone.");
   case Game::Command::Rejection::FriendlyTarget:
     return QCoreApplication::translate("OrderFeedback",
-                                       "Cannot attack a friendly or neutral target.");
+                                       "Cannot attack your own or an allied unit.");
+  case Game::Command::Rejection::ProtectedTarget:
+    return QCoreApplication::translate("OrderFeedback", "That target is not a threat.");
   case Game::Command::Rejection::MissingBuilding:
     return QCoreApplication::translate("OrderFeedback",
                                        "That building no longer exists.");

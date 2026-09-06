@@ -60,38 +60,38 @@ struct EntityLine {
 auto collect(const Engine::Core::World& world) -> std::vector<EntityLine> {
   std::vector<EntityLine> lines;
   lines.reserve(world.entity_count());
-  world.for_each_entity([&lines](const Engine::Core::Entity& entity) {
+  world.for_each_entity([&lines, &world](const Engine::Core::Entity& entity) {
     EntityLine line;
     line.id = entity.get_id();
     if (const auto* transform =
-            entity.get_component<Engine::Core::TransformComponent>()) {
+            world.try_get<Engine::Core::TransformComponent>(line.id)) {
       line.x = quantise(transform->position.x);
       line.y = quantise(transform->position.y);
       line.z = quantise(transform->position.z);
       line.yaw = quantise(transform->rotation.y);
     }
-    if (const auto* unit = entity.get_component<Engine::Core::UnitComponent>()) {
+    if (const auto* unit = world.try_get<Engine::Core::UnitComponent>(line.id)) {
       line.owner = unit->owner_id;
       line.kind = static_cast<int>(unit->spawn_type);
       line.health = unit->health;
       line.max_health = unit->max_health;
     }
     if (const auto* movement =
-            entity.get_component<Engine::Core::MovementComponent>()) {
+            world.try_get<Engine::Core::MovementComponent>(line.id)) {
       line.goal_x = quantise(movement->get_goal_x());
       line.goal_z = quantise(movement->get_goal_y());
       line.path_index = static_cast<std::int64_t>(movement->get_path_index());
       line.movement_state = static_cast<int>(movement->get_state());
     }
     if (const auto* target =
-            entity.get_component<Engine::Core::AttackTargetComponent>()) {
+            world.try_get<Engine::Core::AttackTargetComponent>(line.id)) {
       line.attack_target = target->target_id;
     }
-    if (const auto* attack = entity.get_component<Engine::Core::AttackComponent>()) {
+    if (const auto* attack = world.try_get<Engine::Core::AttackComponent>(line.id)) {
       line.attack_cooldown = quantise(attack->time_since_last);
     }
     if (const auto* production =
-            entity.get_component<Engine::Core::ProductionComponent>()) {
+            world.try_get<Engine::Core::ProductionComponent>(line.id)) {
       line.production_remaining = quantise(production->time_remaining);
       line.production_queue = static_cast<int>(production->production_queue.size());
       line.produced_count = production->produced_count;

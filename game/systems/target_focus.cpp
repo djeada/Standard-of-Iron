@@ -8,17 +8,26 @@
 #include "../core/world.h"
 #include "../map/render_visibility_rules.h"
 #include "attack_targeting.h"
+#include "combat_system/target_rules.h"
 #include "owner_registry.h"
 
 namespace Game::Systems {
 
 namespace {
 
-auto hostile_to(const OwnerRegistry* owners, int local_owner_id, int owner_id) -> bool {
-  if (owner_id == local_owner_id) {
-    return false;
+auto hostile_to(const OwnerRegistry* owners,
+                int local_owner_id,
+                Engine::Core::Entity& entity) -> bool {
+  if (owners == nullptr) {
+    const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
+    return unit != nullptr && unit->owner_id != local_owner_id;
   }
-  return owners == nullptr || owners->are_enemies(local_owner_id, owner_id);
+  return Combat::evaluate_target(
+             *owners,
+             local_owner_id,
+             &entity,
+             {.intent = Combat::EngagementIntent::Ordered, .allow_buildings = true}) ==
+         Combat::TargetRefusal::None;
 }
 
 auto visible(const Game::Map::VisibilityService::Snapshot* visibility,
@@ -80,8 +89,7 @@ auto collect_target_focus_markers(const TargetFocusRequest& request)
 
   if (request.inspected != Engine::Core::NULL_ENTITY) {
     if (auto* entity = alive_unit(request.inspected)) {
-      const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-      const bool hostile = hostile_to(owners, request.local_owner_id, unit->owner_id);
+      const bool hostile = hostile_to(owners, request.local_owner_id, *entity);
       markers.push_back(make_marker(*entity, TargetFocusRole::Inspected, hostile));
     }
   }
@@ -128,11 +136,9 @@ auto collect_target_focus_markers(const TargetFocusRequest& request)
     if (entity == nullptr) {
       continue;
     }
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    auto marker =
-        make_marker(*entity,
-                    TargetFocusRole::LockedTarget,
-                    hostile_to(owners, request.local_owner_id, unit->owner_id));
+    auto marker = make_marker(*entity,
+                              TargetFocusRole::LockedTarget,
+                              hostile_to(owners, request.local_owner_id, *entity));
     marker.weight = weight;
     markers.push_back(marker);
     ++locked_count;
@@ -148,7 +154,7 @@ auto collect_target_focus_markers(const TargetFocusRequest& request)
     if (unit.health <= 0) {
       continue;
     }
-    if (!hostile_to(owners, request.local_owner_id, unit.owner_id)) {
+    if (!hostile_to(owners, request.local_owner_id, entity)) {
       continue;
     }
     if (selected.count(attack.target_id) == 0) {

@@ -10,10 +10,15 @@ Item {
     property var panel: null
     property var prod: ({})
 
+    readonly property int queueSlots: 5
     readonly property int queueTotal: (root.prod.in_progress ? 1 : 0) + (root.prod.queue_size || 0)
-    readonly property int cardHeight: Design.A11y.scaled(60)
+    readonly property int cardHeight: Math.max(Design.A11y.scaled(48), Design.Typography.caption * 3 + Design.Metrics.space8)
     readonly property int cardGap: Design.Metrics.space4
+    readonly property int listGutter: Design.Metrics.scrollBarThickness + Design.Metrics.space4
+    readonly property int minCardWidth: Design.A11y.scaled(172)
+    readonly property int maxColumns: 3
     readonly property var cards: root.filtered_cards()
+    readonly property int costColumns: root.max_cost_entries()
 
     signal recruit_requested(string unit_type)
     signal details_requested(string unit_type, string nation)
@@ -30,6 +35,20 @@ Item {
             out.push(entry);
         }
         return out;
+    }
+
+    function max_cost_entries() {
+        if (!root.panel)
+            return 1;
+        var widest = 1;
+        var list = root.cards;
+        for (var i = 0; i < list.length; ++i) {
+            var info = root.panel.get_unit_production_info(list[i].unit_type, root.prod.nation_id);
+            var count = root.panel.cost_entries(root.panel.reserve_cost(info), (info && info.resource_costs) || {}, true).length;
+            if (count > widest)
+                widest = count;
+        }
+        return widest;
     }
 
     function queue_type(slot) {
@@ -58,18 +77,21 @@ Item {
 
             objectName: "barracksHeader"
             Layout.fillWidth: true
-            Layout.preferredHeight: Design.A11y.scaled(42)
+            Layout.preferredHeight: headerRow.implicitHeight + barracksHeader.contentPadding * 2
             contentPadding: Design.Metrics.space4
             raised: true
             accessibleName: qsTr("Barracks production queue")
 
             RowLayout {
+                id: headerRow
+
                 anchors.fill: parent
-                anchors.bottomMargin: productionProgress.visible ? Design.Metrics.space4 : 0
                 spacing: Design.Metrics.space8
 
                 Column {
-                    Layout.preferredWidth: Math.max(Design.A11y.scaled(94), barracksHeader.width * 0.29)
+                    id: identityColumn
+
+                    Layout.preferredWidth: Math.min(Math.max(Design.A11y.scaled(92), reserveReadout.implicitWidth), Math.round(barracksHeader.width * 0.4))
                     Layout.alignment: Qt.AlignVCenter
                     spacing: 0
 
@@ -81,6 +103,7 @@ Item {
                         font.pixelSize: Design.Typography.caption
                         font.weight: Design.Typography.bold
                         font.letterSpacing: Design.Typography.trackingWide
+                        elide: Text.ElideRight
                     }
 
                     Text {
@@ -107,62 +130,89 @@ Item {
                     }
                 }
 
-                Row {
+                Item {
                     Layout.fillWidth: true
+                    Layout.preferredHeight: 1
+                }
+
+                Column {
+                    id: queueColumn
+
+                    readonly property int slotSize: Design.A11y.scaled(22)
+
                     Layout.alignment: Qt.AlignVCenter
-                    spacing: Design.Metrics.space4
+                    spacing: Design.Metrics.space2
 
-                    Repeater {
-                        model: 5
+                    Row {
+                        id: queueRow
 
-                        delegate: Rectangle {
-                            id: queueSlot
+                        objectName: "barracksQueueRow"
+                        spacing: Design.Metrics.space4
 
-                            required property int index
-                            readonly property string unitType: root.queue_type(index)
-                            readonly property bool occupied: unitType !== ""
-                            readonly property bool producing: index === 0 && root.prod.in_progress === true
+                        Repeater {
+                            model: root.queueSlots
 
-                            width: Design.A11y.scaled(24)
-                            height: width
-                            radius: Design.Metrics.radiusSmall
-                            color: producing ? Design.Theme.panelLeather : Design.Theme.backgroundDeep
-                            border.width: producing ? Design.Metrics.borderFocus : Design.Metrics.borderThin
-                            border.color: producing ? Design.Theme.accent : occupied ? Design.Theme.borderStrong : Design.Theme.borderSubtle
+                            delegate: Rectangle {
+                                id: queueSlot
 
-                            Image {
-                                id: queueArt
+                                required property int index
+                                readonly property string unitType: root.queue_type(index)
+                                readonly property bool occupied: unitType !== ""
+                                readonly property bool producing: index === 0 && root.prod.in_progress === true
 
-                                anchors.fill: parent
-                                anchors.margins: Design.Metrics.space2
-                                source: queueSlot.occupied && root.panel ? root.panel.unit_icon_source(queueSlot.unitType, root.prod.nation_id) : ""
-                                fillMode: Image.PreserveAspectFit
-                                smooth: true
-                                mipmap: true
-                                visible: status === Image.Ready
-                            }
+                                width: queueColumn.slotSize
+                                height: width
+                                radius: Design.Metrics.radiusSmall
+                                color: queueSlot.occupied ? Design.Theme.panelIron : Design.Theme.backgroundDeep
+                                border.width: queueSlot.producing ? Design.Metrics.borderFocus : Design.Metrics.borderThin
+                                border.color: queueSlot.producing ? Design.Theme.accent : (queueSlot.occupied ? Design.Theme.borderStrong : Design.Theme.borderSubtle)
+                                opacity: queueSlot.occupied ? 1 : 0.6
 
-                            Text {
-                                anchors.centerIn: parent
-                                visible: !queueArt.visible
-                                text: queueSlot.occupied && root.panel ? root.panel.unit_icon_emoji(queueSlot.unitType) : "·"
-                                color: queueSlot.occupied ? Design.Theme.textSecondary : Design.Theme.textDisabled
-                                font.family: Design.Typography.family
-                                font.pixelSize: Design.Typography.caption
-                            }
+                                Image {
+                                    id: queueArt
 
-                            ToolTip.visible: queueMouse.containsMouse && queueSlot.occupied
-                            ToolTip.text: queueSlot.producing ? qsTr("Recruiting now") : qsTr("Queued unit %1").arg(index + 1)
-                            ToolTip.delay: Design.Metrics.tooltipDelay
+                                    anchors.fill: parent
+                                    anchors.margins: Design.Metrics.space2
+                                    source: queueSlot.occupied && root.panel ? root.panel.unit_icon_source(queueSlot.unitType, root.prod.nation_id) : ""
+                                    fillMode: Image.PreserveAspectFit
+                                    smooth: true
+                                    mipmap: true
+                                    visible: status === Image.Ready
+                                }
 
-                            MouseArea {
-                                id: queueMouse
+                                Text {
+                                    anchors.centerIn: parent
+                                    visible: queueSlot.occupied && !queueArt.visible
+                                    text: root.panel ? root.panel.unit_icon_emoji(queueSlot.unitType) : ""
+                                    color: Design.Theme.textSecondary
+                                    font.family: Design.Typography.family
+                                    font.pixelSize: Design.Typography.caption
+                                }
 
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                acceptedButtons: Qt.NoButton
+                                ToolTip.visible: queueMouse.containsMouse && queueSlot.occupied
+                                ToolTip.text: queueSlot.producing ? qsTr("Recruiting now") : qsTr("Queued unit %1").arg(index + 1)
+                                ToolTip.delay: Design.Metrics.tooltipDelay
+
+                                MouseArea {
+                                    id: queueMouse
+
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    acceptedButtons: Qt.NoButton
+                                }
                             }
                         }
+                    }
+
+                    Design.IronProgressBar {
+                        id: productionProgress
+
+                        objectName: "barracksProductionProgress"
+                        width: queueRow.width
+                        height: Design.Metrics.space4
+                        visible: root.prod.in_progress === true
+                        value: root.progress_value()
+                        fillColor: Design.Theme.accent
                     }
                 }
 
@@ -178,55 +228,6 @@ Item {
                     onClicked: root.rally_requested()
                 }
             }
-
-            Design.IronProgressBar {
-                id: productionProgress
-
-                objectName: "barracksProductionProgress"
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                anchors.leftMargin: Design.Metrics.space4
-                anchors.rightMargin: Design.Metrics.space4
-                anchors.bottomMargin: Design.Metrics.space2
-                height: Design.Metrics.space4
-                visible: root.prod.in_progress === true
-                value: root.progress_value()
-                fillColor: Design.Theme.accent
-            }
-        }
-
-        RowLayout {
-            id: recruitHeadingRow
-
-            Layout.fillWidth: true
-            Layout.preferredHeight: Math.max(recruitHeading.implicitHeight, scrollHint.implicitHeight)
-            spacing: Design.Metrics.space8
-
-            Text {
-                id: recruitHeading
-
-                text: qsTr("RECRUIT UNITS")
-                color: Design.Theme.textSecondary
-                font.family: Design.Typography.family
-                font.pixelSize: Design.Typography.caption
-                font.weight: Design.Typography.bold
-                font.letterSpacing: Design.Typography.trackingWide
-            }
-
-            Item {
-                Layout.fillWidth: true
-            }
-
-            Text {
-                id: scrollHint
-
-                visible: recruitGrid.contentHeight > recruitGrid.height
-                text: qsTr("Scroll for more")
-                color: Design.Theme.textDisabled
-                font.family: Design.Typography.family
-                font.pixelSize: Design.Typography.caption
-            }
         }
 
         Item {
@@ -239,8 +240,13 @@ Item {
                 id: recruitGrid
 
                 objectName: "barracksRecruitGrid"
-                readonly property int columns: width >= Design.A11y.scaled(440) ? 3 : 2
+                readonly property int trackWidth: Math.max(root.minCardWidth, width - root.listGutter)
+                readonly property int columns: Math.max(1, Math.min(root.maxColumns, Math.floor(trackWidth / root.minCardWidth)))
+                readonly property int cardWidth: cellWidth - root.cardGap
+                readonly property int bodyWidth: Math.max(Design.A11y.scaled(40), cardWidth - root.cardHeight - Design.Metrics.space4 * 2)
+                readonly property int costPitch: Math.min(Design.A11y.scaled(46), Math.floor(bodyWidth / Math.max(1, root.costColumns)))
                 readonly property int wholeRows: Math.max(1, Math.floor(gridViewport.height / cellHeight))
+                readonly property bool overflowing: contentHeight > height
 
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -253,7 +259,7 @@ Item {
                 model: root.cards
 
                 cacheBuffer: contentHeight
-                cellWidth: Math.floor((width - Design.Metrics.scrollBarThickness) / columns)
+                cellWidth: Math.floor(trackWidth / columns)
                 cellHeight: root.cardHeight + root.cardGap
 
                 ScrollBar.vertical: Design.IronScrollBar {
@@ -270,7 +276,7 @@ Item {
                         objectName: "recruitCard_" + modelData.unit_type
                         anchors.left: parent.left
                         anchors.top: parent.top
-                        width: parent.width - root.cardGap
+                        width: recruitGrid.cardWidth
                         height: root.cardHeight
 
                         panel: root.panel
@@ -278,6 +284,7 @@ Item {
                         unit_type: modelData.unit_type
                         fallback_name: modelData.fallback_name
                         fallback_build_time: modelData.build_time
+                        cost_pitch: recruitGrid.costPitch
                         tooltip_text: panel ? panel.recruit_tooltip(unit_info, modelData.fallback_name, modelData.build_time, modelData.carthage_only === true) : ""
                         onRecruit_requested: function (unitType) {
                             root.recruit_requested(unitType);

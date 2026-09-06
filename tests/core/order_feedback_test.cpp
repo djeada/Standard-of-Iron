@@ -363,6 +363,7 @@ TEST(OrderFailureTest, EveryValidatorRejectionMapsToAPlayerFacingFailure) {
                                    Rejection::NoSubjects,
                                    Rejection::DeadTarget,
                                    Rejection::FriendlyTarget,
+                                   Rejection::ProtectedTarget,
                                    Rejection::MissingBuilding,
                                    Rejection::NotOwnedBuilding,
                                    Rejection::NotPermittedForSource,

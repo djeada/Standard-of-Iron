@@ -250,14 +250,6 @@
         <translation>اختر ثكنة قبل تعيين نقطة التجمع</translation>
     </message>
     <message>
-        <source>RECRUIT UNITS</source>
-        <translation>تدريب الوحدات</translation>
-    </message>
-    <message>
-        <source>Scroll for more</source>
-        <translation>مرّر لعرض المزيد</translation>
-    </message>
-    <message>
         <source>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</source>
         <translation>القوى البشرية التي ما زالت هذه الثكنة تحتفظ بها. كل تجنيد ينفق منها؛ والمدنيون الذين يُنشأون في المسكن يجلبون المزيد.</translation>
     </message>
@@ -8024,8 +8016,12 @@ to see preview</source>
         <translation>هذا الهدف لم يعد موجودًا.</translation>
     </message>
     <message>
-        <source>Cannot attack a friendly or neutral target.</source>
-        <translation>لا يمكن مهاجمة هدف صديق أو محايد.</translation>
+        <source>Cannot attack your own or an allied unit.</source>
+        <translation>لا يمكن مهاجمة وحدة تابعة لك أو لحليف.</translation>
+    </message>
+    <message>
+        <source>That target is not a threat.</source>
+        <translation>هذا الهدف لا يشكّل تهديدًا.</translation>
     </message>
     <message>
         <source>That building no longer exists.</source>

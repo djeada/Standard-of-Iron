@@ -1203,6 +1203,38 @@ void GameEngine::report_affordability_refusal(App::Core::OrderFailure failure,
   handle_order_feedback(outcome);
 }
 
+void GameEngine::report_late_command_rejection(const Game::Command::Command& command,
+                                               Game::Command::Rejection reason) {
+  if (command.source != Game::Command::Source::LocalPlayer) {
+    return;
+  }
+
+  const auto kind = std::visit(
+      [](const auto& payload) {
+        using T = std::decay_t<decltype(payload)>;
+        if constexpr (std::is_same_v<T, Game::Command::AttackTarget>) {
+          return App::Core::OrderKind::Attack;
+        } else if constexpr (std::is_same_v<T, Game::Command::Move>) {
+          return App::Core::OrderKind::Move;
+        } else {
+          return App::Core::OrderKind::None;
+        }
+      },
+      command.payload);
+
+  App::Core::OrderOutcome outcome;
+  outcome.kind = kind;
+  outcome.status = App::Core::OrderStatus::Rejected;
+  outcome.rejection = reason;
+  outcome.failure = App::Core::failure_for(reason);
+  outcome.reason = App::Core::rejection_reason_text(reason, kind);
+
+  QMetaObject::invokeMethod(
+      this,
+      [this, outcome]() { handle_order_feedback(outcome); },
+      Qt::QueuedConnection);
+}
+
 void GameEngine::handle_order_feedback(const App::Core::OrderOutcome& outcome) {
   if (!outcome.issued()) {
     return;

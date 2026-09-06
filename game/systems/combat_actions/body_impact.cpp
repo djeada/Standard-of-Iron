@@ -8,6 +8,7 @@
 #include "../../core/component_core.h"
 #include "../../core/world.h"
 #include "../combat_system/combat_utils.h"
+#include "../combat_system/target_rules.h"
 
 namespace Game::Systems::CombatActions {
 
@@ -95,7 +96,11 @@ auto find_body_impact_contact(
                       float& best_score,
                       BodyImpactContact& best_contact) {
     if (candidate == nullptr || candidate == &attacker ||
-        !Game::Systems::Combat::is_valid_enemy_unit(attacker_unit, candidate, false)) {
+        !Game::Systems::Combat::may_attack(
+            attacker_unit,
+            candidate,
+            {.intent = Game::Systems::Combat::EngagementIntent::Ordered,
+             .allow_buildings = false})) {
       return;
     }
     if (std::find(ignored_target_ids.begin(),

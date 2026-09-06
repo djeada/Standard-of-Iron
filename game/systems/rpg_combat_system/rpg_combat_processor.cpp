@@ -13,6 +13,7 @@
 #include "../../core/world.h"
 #include "../combat_system/combat_random.h"
 #include "../combat_system/combat_utils.h"
+#include "../combat_system/target_rules.h"
 #include "../command_service.h"
 #include "../formation_combat_geometry.h"
 #include "../owner_registry.h"
@@ -173,8 +174,12 @@ void refresh_commander_engagement(Engine::Core::World* world,
       continue;
     }
 
-    if (unit->health <= 0 ||
-        !owners.are_enemies(commander_unit->owner_id, unit->owner_id)) {
+    if (Game::Systems::Combat::evaluate_target(
+            owners,
+            commander_unit->owner_id,
+            candidate,
+            {.intent = Game::Systems::Combat::EngagementIntent::AutoAcquired,
+             .allow_buildings = true}) != Game::Systems::Combat::TargetRefusal::None) {
       continue;
     }
 

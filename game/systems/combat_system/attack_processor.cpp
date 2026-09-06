@@ -37,6 +37,7 @@
 #include "damage_processor.h"
 #include "melee_exchange.h"
 #include "structure_combat.h"
+#include "target_rules.h"
 
 namespace Game::Systems::Combat {
 
@@ -506,7 +507,8 @@ auto has_valid_melee_lock(Engine::Core::Entity* entity,
   }
 
   auto* target = world->get_entity(attack->melee_lock_target_id);
-  return is_valid_enemy_unit(unit, target, true);
+  return may_attack(
+      unit, target, {.intent = EngagementIntent::Ordered, .allow_buildings = true});
 }
 
 auto is_ranged_mode(Engine::Core::AttackComponent* attack_comp) -> bool {
@@ -560,7 +562,9 @@ void release_structure_lock_for_troop_target(Engine::Core::Entity* attacker,
 
   auto* ordered_target = world->get_entity(attack_target->target_id);
   auto const* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
-  if (!is_valid_enemy_unit(attacker_unit, ordered_target, false)) {
+  if (!may_attack(attacker_unit,
+                  ordered_target,
+                  {.intent = EngagementIntent::Ordered, .allow_buildings = false})) {
     return;
   }
 
@@ -671,7 +675,9 @@ auto locked_target_for_attack(Engine::Core::Entity* attacker,
   auto* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
   if ((target == nullptr) || (attacker_unit == nullptr) ||
       !Game::Systems::CombatRules::participates_in_rts_melee_lock(target) ||
-      !is_valid_enemy_unit(attacker_unit, target, true)) {
+      !may_attack(attacker_unit,
+                  target,
+                  {.intent = EngagementIntent::Ordered, .allow_buildings = true})) {
     return nullptr;
   }
 
@@ -1105,7 +1111,9 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
       bool const has_valid_existing_lock =
           target_atk->in_melee_lock && existing_target != nullptr &&
           target_unit != nullptr &&
-          is_valid_enemy_unit(target_unit, existing_target, true);
+          may_attack(target_unit,
+                     existing_target,
+                     {.intent = EngagementIntent::Ordered, .allow_buildings = true});
       if (!has_valid_existing_lock ||
           target_atk->melee_lock_target_id == attacker->get_id()) {
         target_atk->in_melee_lock = true;
@@ -1127,7 +1135,9 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
     bool const has_valid_existing_lock =
         target_atk->in_melee_lock && existing_target != nullptr &&
         target_unit != nullptr &&
-        is_valid_enemy_unit(target_unit, existing_target, true);
+        may_attack(target_unit,
+                   existing_target,
+                   {.intent = EngagementIntent::Ordered, .allow_buildings = true});
     if (!has_valid_existing_lock) {
       target_atk->in_melee_lock = true;
       target_atk->melee_lock_target_id = attacker->get_id();
@@ -1269,7 +1279,10 @@ auto rts_commander_action(Engine::Core::World& world,
       for (auto [candidate_ref, candidate_unit, candidate_transform] :
            world.entity_view<Engine::Core::UnitComponent,
                              Engine::Core::TransformComponent>()) {
-        if (!is_valid_enemy_unit(attacker_unit, &candidate_ref, false)) {
+        if (!may_attack(
+                attacker_unit,
+                &candidate_ref,
+                {.intent = EngagementIntent::AutoAcquired, .allow_buildings = false})) {
           continue;
         }
         float const dx =
@@ -1505,7 +1518,9 @@ bool release_rts_arrow_volley(Engine::Core::World& world,
   auto* attacker_unit = attacker.get_component<Engine::Core::UnitComponent>();
   auto* target = world.get_entity(target_id);
   if (attacker_unit == nullptr || attacker_unit->health <= 0 ||
-      !is_valid_enemy_unit(attacker_unit, target, true)) {
+      !may_attack(attacker_unit,
+                  target,
+                  {.intent = EngagementIntent::Ordered, .allow_buildings = true})) {
     return false;
   }
   auto* projectile_system = world.get_system<ProjectileSystem>();
@@ -1632,9 +1647,12 @@ void process_attacks(Engine::Core::World* world,
     if ((best_target == nullptr) && (attack_target != nullptr) &&
         attack_target->target_id != 0) {
       auto* target = world->get_entity(attack_target->target_id);
-      auto* target_unit = is_valid_enemy_unit(attacker_unit, target, true)
-                              ? target->get_component<Engine::Core::UnitComponent>()
-                              : nullptr;
+      auto* target_unit =
+          may_attack(attacker_unit,
+                     target,
+                     {.intent = EngagementIntent::Ordered, .allow_buildings = true})
+              ? target->get_component<Engine::Core::UnitComponent>()
+              : nullptr;
       auto* target_transform =
           (target_unit != nullptr)
               ? target->get_component<Engine::Core::TransformComponent>()

@@ -29,6 +29,7 @@
 #include "elephant_special_processor.h"
 #include "melee_exchange.h"
 #include "mounted_charge_processor.h"
+#include "target_rules.h"
 
 namespace Game::Systems::Combat {
 
@@ -232,7 +233,9 @@ void deal_radial_action_damage(
        world.entity_view<Engine::Core::UnitComponent>()) {
     (void)candidate_unit;
     if (action.hit_target_count >= capacity || &candidate == &attacker ||
-        !is_valid_enemy_unit(attacker_unit, &candidate, false)) {
+        !may_attack(attacker_unit,
+                    &candidate,
+                    {.intent = EngagementIntent::Ordered, .allow_buildings = false})) {
       continue;
     }
     for (auto const& soldier :

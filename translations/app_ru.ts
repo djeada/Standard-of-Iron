@@ -253,14 +253,6 @@
         <source>Select a barracks before setting a rally point</source>
         <translation>Выберите казармы, прежде чем задавать точку сбора</translation>
     </message>
-    <message>
-        <source>RECRUIT UNITS</source>
-        <translation>НАБОР ВОЙСК</translation>
-    </message>
-    <message>
-        <source>Scroll for more</source>
-        <translation>Прокрутите, чтобы увидеть больше</translation>
-    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -8019,8 +8011,12 @@ to see preview</source>
         <translation>Этой цели уже нет.</translation>
     </message>
     <message>
-        <source>Cannot attack a friendly or neutral target.</source>
-        <translation>Нельзя атаковать союзную или нейтральную цель.</translation>
+        <source>Cannot attack your own or an allied unit.</source>
+        <translation>Нельзя атаковать свой или союзный отряд.</translation>
+    </message>
+    <message>
+        <source>That target is not a threat.</source>
+        <translation>Эта цель не представляет угрозы.</translation>
     </message>
     <message>
         <source>That building no longer exists.</source>

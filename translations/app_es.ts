@@ -250,14 +250,6 @@
         <translation>Selecciona un cuartel antes de fijar un punto de reunión</translation>
     </message>
     <message>
-        <source>RECRUIT UNITS</source>
-        <translation>RECLUTAR UNIDADES</translation>
-    </message>
-    <message>
-        <source>Scroll for more</source>
-        <translation>Desplázate para ver más</translation>
-    </message>
-    <message>
         <source>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</source>
         <translation>Los efectivos que aún guarda este cuartel. Cada recluta gasta parte; los civiles criados en un Hogar traen más.</translation>
     </message>
@@ -8012,8 +8004,12 @@ para ver la vista previa</translation>
         <translation>Ese objetivo ya no existe.</translation>
     </message>
     <message>
-        <source>Cannot attack a friendly or neutral target.</source>
-        <translation>No se puede atacar a un objetivo aliado o neutral.</translation>
+        <source>Cannot attack your own or an allied unit.</source>
+        <translation>No se puede atacar a una unidad propia o aliada.</translation>
+    </message>
+    <message>
+        <source>That target is not a threat.</source>
+        <translation>Ese objetivo no es una amenaza.</translation>
     </message>
     <message>
         <source>That building no longer exists.</source>

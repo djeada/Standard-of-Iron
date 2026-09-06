@@ -31,7 +31,7 @@ auto build_commander_speaker_roster(Engine::Core::World& world,
     if (entity == nullptr) {
       continue;
     }
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(entity->get_id());
     if (unit == nullptr || unit->health <= 0) {
       continue;
     }
@@ -61,7 +61,7 @@ auto build_commander_speaker_roster(Engine::Core::World& world,
 
       Game::Systems::NationID nation = Game::Systems::NationID::RomanRepublic;
       for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
-        const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+        const auto* unit = world.try_get<Engine::Core::UnitComponent>(entity->get_id());
         if (unit != nullptr && unit->owner_id == owner.owner_id) {
           nation = unit->nation_id;
           break;
