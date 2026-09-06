@@ -5,13 +5,15 @@
 #include <QVector4D>
 
 #include <array>
+#include <charconv>
 #include <cmath>
 #include <cstdint>
-#include <cstdlib>
 #include <fstream>
 #include <gtest/gtest.h>
+#include <locale>
 #include <sstream>
 #include <string>
+#include <system_error>
 #include <vector>
 
 #include "animation/pose_manifest.h"
@@ -502,6 +504,7 @@ void write_record(std::ostream& out, const std::string& prefix, const QMatrix4x4
 }
 
 void write_golden(std::ostream& out) {
+  out.imbue(std::locale::classic());
   out.setf(std::ios::fixed);
   out.precision(6);
   out << "schema " << Render::Humanoid::humanoid_skeleton_schema_hash() << '\n';
@@ -585,6 +588,13 @@ auto read_lines(const std::string& text) -> std::vector<std::string> {
   return lines;
 }
 
+auto parse_number(const std::string& token, double& value) -> bool {
+  const char* first = token.data();
+  const char* last = first + token.size();
+  const auto result = std::from_chars(first, last, value);
+  return result.ec == std::errc() && result.ptr == last;
+}
+
 auto tolerance_for(const std::string& kind) -> float {
   if (kind == "world" || kind == "bone" || kind == "socket" || kind == "requestworld") {
     return k_matrix_tolerance;
@@ -639,12 +649,10 @@ TEST(HumanoidGoldenParity, PipelineMatchesRecordedGolden) {
       if (want == got) {
         continue;
       }
-      char* want_end = nullptr;
-      char* got_end = nullptr;
-      const double want_value = std::strtod(want.c_str(), &want_end);
-      const double got_value = std::strtod(got.c_str(), &got_end);
-      const bool numeric = want_end != want.c_str() && *want_end == '\0' &&
-                           got_end != got.c_str() && *got_end == '\0';
+      double want_value = 0.0;
+      double got_value = 0.0;
+      const bool numeric =
+          parse_number(want, want_value) && parse_number(got, got_value);
       ASSERT_TRUE(numeric) << "line " << i << " token " << t << ": expected '" << want
                            << "' got '" << got << "'";
       EXPECT_NEAR(want_value, got_value, tolerance)
