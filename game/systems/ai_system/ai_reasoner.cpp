@@ -13,6 +13,7 @@
 #include "ai_attack_wave.h"
 #include "ai_base_manager.h"
 #include "ai_doctrine_catalog.h"
+#include "ai_stall_recovery.h"
 #include "ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
@@ -912,7 +913,8 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
       }
     }
 
-    if (!entity.movement.has_component || !entity.movement.has_target) {
+    if (!entity.movement.has_component || !entity.movement.has_target ||
+        is_going_nowhere(entity) || is_stood_down(entity.id, ctx, snapshot.game_time)) {
       ctx.idle_units++;
     } else {
       ctx.combat_units++;

@@ -269,6 +269,11 @@ void publish_movement_trace_frame(World& world) {
         sample.blocked_steps = facts.progress.blocked_steps;
         sample.repath_count = facts.progress.repath_count;
         sample.repath_reason = facts.progress.repath_reason;
+        sample.stalled_seconds = facts.progress.stall.stalled_seconds;
+        sample.recovery_rung = facts.progress.stall.rung;
+        sample.recovery_attempts = facts.progress.stall.recovery_attempts;
+        sample.abandon_count = facts.progress.stall.abandon_count;
+        sample.objective_abandoned = facts.progress.stall.objective_abandoned;
         sample.traversal_mode = facts.traversal.mode;
         sample.portal_id = facts.traversal.portal_id;
         sample.current_files = facts.traversal.current_files;

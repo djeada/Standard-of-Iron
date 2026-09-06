@@ -74,6 +74,11 @@ struct MovementTroopSample {
   std::uint32_t blocked_steps{0};
   std::uint32_t repath_count{0};
   MovementRepathReason repath_reason{MovementRepathReason::None};
+  float stalled_seconds{0.0F};
+  MovementRecoveryRung recovery_rung{MovementRecoveryRung::None};
+  std::uint32_t recovery_attempts{0};
+  std::uint32_t abandon_count{0};
+  bool objective_abandoned{false};
 
   std::uint32_t neighbor_count{0};
   float body_overlap{0.0F};

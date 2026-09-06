@@ -93,6 +93,14 @@ enum class BehaviorPriority {
 struct MovementSnapshot {
   bool has_component = false;
   bool has_target = false;
+
+  bool stalled = false;
+  float stalled_seconds = 0.0F;
+  bool objective_abandoned = false;
+  int abandon_count = 0;
+  float objective_x = 0.0F;
+  float objective_z = 0.0F;
+  bool has_objective = false;
 };
 
 struct ProductionSnapshot {
@@ -430,6 +438,14 @@ struct AIContext {
   AttackWave wave;
 
   std::vector<Engine::Core::EntityID> garrison_unit_ids;
+
+  struct StallRecord {
+    float first_seen = 0.0F;
+    float last_nudge = -1000.0F;
+    int nudges = 0;
+    float stood_down_until = -1000.0F;
+  };
+  std::unordered_map<Engine::Core::EntityID, StallRecord> stalled_units;
 
   int consecutive_no_progress_cycles = 0;
   float last_meaningful_action_time = 0.0F;
