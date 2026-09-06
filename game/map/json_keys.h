@@ -90,6 +90,7 @@ inline constexpr const char* TEAM_ID = "team_id";
 inline constexpr const char* MAX_POPULATION = "max_population";
 inline constexpr const char* NATION = "nation";
 inline constexpr const char* ID = "id";
+inline constexpr const char* GROUP = "group";
 inline constexpr const char* ANCHOR_TYPE = "anchor_type";
 inline constexpr const char* FOG_DENSITY = "fog_density";
 inline constexpr const char* WAVE_TIMEOUT = "wave_timeout";
