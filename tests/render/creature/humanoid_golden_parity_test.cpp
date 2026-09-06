@@ -8,6 +8,7 @@
 #include <charconv>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <locale>
