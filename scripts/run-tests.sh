@@ -1,10 +1,21 @@
 #!/usr/bin/env bash
 # Runs the project's C++ test binaries.
 #
-# The default profile is the complete suite used by weekly/release validation.
-# Pull requests set SOI_TEST_PROFILE=pr to run only the fast headless/core suites;
-# renderer/application/arena/tool suites and long acceptance checks stay in the
-# scheduled/manual workflows.
+# There is one suite list, below, and both profiles build and run all of it.
+# The profiles differ only in which individual tests they execute:
+#
+#   full  everything. Weekly sanitizer and coverage lanes, extended validation
+#         and release verification use this, plus the acceptance binaries that
+#         are not GoogleTest suites (the gameplay verifier, the QML suite and
+#         the headless replay round trip).
+#   pr    everything except the tests named in tests/extended_tests.txt: the
+#         headless battles and the sweeps over every shipped asset. Those spend
+#         seconds each and had grown to over ninety minutes, which is longer
+#         than a pull-request lane is allowed to take. Every test binary is
+#         still built and still run.
+#
+# Set SOI_TEST_REPORT_DIR to collect GoogleTest JSON reports, one per suite;
+# scripts/check-test-speed.py reads them to keep the fast profile fast.
 #
 # usage: scripts/run-tests.sh [build-dir] [extra gtest args...]
 
@@ -15,10 +26,11 @@ if [ $# -gt 0 ]; then
   shift
 fi
 bin_dir="${build_dir}/bin"
+repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 
 # Keep in step with soi_test_binaries in tests/CMakeLists.txt.
 # tests/architecture/module_boundary_test.cpp parses the first suite-array
-# declaration below and fails if the complete default suite drifts from CMake.
+# declaration below and fails if it drifts from CMake.
 suites=(
   simulation_tests
   combat_balance_tests
@@ -37,13 +49,6 @@ case "${profile}" in
     run_extended=1
     ;;
   pr)
-    suites=(
-      simulation_tests
-      combat_balance_tests
-      ai_tests
-      campaign_tests
-      persistence_tests
-    )
     run_extended=0
     ;;
   *)
@@ -52,7 +57,29 @@ case "${profile}" in
     ;;
 esac
 
+manifest="${repo_root}/tests/extended_tests.txt"
+gtest_filter=()
+if [ "${run_extended}" -eq 0 ]; then
+  if [ ! -f "${manifest}" ]; then
+    echo "error: ${manifest} is missing; the pr profile cannot subtract from it." >&2
+    exit 2
+  fi
+  # Comments and blank lines out, one ':'-joined negative filter in.
+  excluded=$(sed -e 's/#.*//' -e 's/[[:space:]]//g' "${manifest}" |
+    grep -v '^$' | paste -sd:)
+  if [ -z "${excluded}" ]; then
+    echo "error: ${manifest} lists no patterns." >&2
+    exit 2
+  fi
+  gtest_filter=("--gtest_filter=-${excluded}")
+fi
+
 export QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-offscreen}
+
+report_dir=${SOI_TEST_REPORT_DIR:-}
+if [ -n "${report_dir}" ]; then
+  mkdir -p "${report_dir}"
+fi
 
 resolve() {
   if [ -x "${bin_dir}/$1" ]; then
@@ -68,22 +95,30 @@ failed=()
 for suite in "${suites[@]}"; do
   binary=$(resolve "${suite}")
   if [ -z "${binary}" ]; then
-    echo "error: ${bin_dir}/${suite} not built for ${profile} profile." >&2
+    echo "error: ${bin_dir}/${suite} not built." >&2
     status=1
     failed+=("${suite} (not built)")
     continue
   fi
 
+  report=()
+  if [ -n "${report_dir}" ]; then
+    report=("--gtest_output=json:${report_dir}/${suite}.json")
+  fi
+
   echo "--- ${suite} (${profile}) ---"
-  if ! "${binary}" "$@"; then
+  # The profile filter goes first so an explicit --gtest_filter in "$@" -- the
+  # way a developer narrows a run by hand -- still wins.
+  if ! "${binary}" "${gtest_filter[@]+"${gtest_filter[@]}"}" \
+    "${report[@]+"${report[@]}"}" "$@"; then
     status=1
     failed+=("${suite}")
   fi
 done
 
-# The complete profile owns the expensive acceptance and presentation suites.
-# They are intentionally absent from pull-request CI: weekly/release validation
-# still runs them with the same script, so there is one full-suite definition.
+# The acceptance and presentation binaries below are not GoogleTest suites, so
+# there is nothing in them for a test-level filter to subtract. They are whole
+# scenarios measured in minutes and belong to the full profile only.
 if [ "${run_extended}" -eq 1 ]; then
   verifier=$(resolve battlefield_gameplay_verifier)
   if [ -n "${verifier}" ]; then

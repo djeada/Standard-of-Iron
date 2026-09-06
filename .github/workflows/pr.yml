@@ -2,8 +2,11 @@
 name: Pull Request
 
 # Pull requests are deliberately bounded: compiler-free policy/formatting gates
-# plus a fast Linux core test profile. Full presentation/application/tool suites,
-# simulation budgets and terrain audits run on scheduled/manual workflows and
+# plus a fast Linux test lane. That lane builds and runs every test binary; what
+# it leaves out is the individual tests listed in tests/extended_tests.txt --
+# headless battles and sweeps over every shipped asset, which cost seconds each
+# and had grown to over ninety minutes. Simulation budgets, the terrain audit
+# and the excluded tests themselves run on scheduled/manual workflows and
 # release validation instead of occupying a PR runner for an hour or more.
 on:
   workflow_call:
@@ -31,7 +34,10 @@ jobs:
   test:
     name: Fast build and test (ubuntu-24.04)
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    # Roughly ten minutes of work: a warm-ccache build, then a test run that
+    # measures in single-digit minutes. The ceiling is here to kill a hung run,
+    # not to leave room for a slow one.
+    timeout-minutes: 45
     env:
       CMAKE_CXX_COMPILER_LAUNCHER: ccache
       CMAKE_C_COMPILER_LAUNCHER: ccache
@@ -78,23 +84,35 @@ jobs:
             -DDEFAULT_LANG=en \
             -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
 
-      # PRs compile and run the core/headless suites only. The full target also
-      # links renderer, application, arena and tool tests and is intentionally
-      # reserved for weekly/manual/release validation.
-      - name: Build fast PR test targets
+      # Every test binary, because linking them is not what made this lane
+      # slow: with a warm ccache the whole build is a couple of minutes, and
+      # dropping the renderer, application, arena and tool suites would have
+      # cost a pull request its only check on four of the nine domains.
+      - name: Build the test binaries
         run: |
-          cmake --build build --parallel --target \
-            simulation_tests \
-            combat_balance_tests \
-            ai_tests \
-            campaign_tests \
-            persistence_tests \
-            content_validator
+          cmake --build build --parallel \
+            --target soi_test_binaries content_validator
 
+      # SOI_TEST_PROFILE=pr subtracts tests/extended_tests.txt; every binary in
+      # the suite list still runs. SOI_TEST_REPORT_DIR collects the GoogleTest
+      # JSON the speed gate below reads, which costs the run nothing.
       - name: Fast PR tests
         env:
           QT_QPA_PLATFORM: offscreen
+          SOI_TEST_REPORT_DIR: artifacts/test-reports
         run: bash scripts/run-tests.sh build --gtest_brief=1
+
+      # The split is only worth anything while it stays true. This fails if a
+      # test that ran took longer than the per-test budget -- the way this lane
+      # grew to ninety minutes in the first place -- and if a pattern in the
+      # manifest has stopped matching anything, which would silently retire the
+      # gate it names.
+      - name: Fast profile stays fast
+        if: always()
+        run: |
+          python scripts/check-test-speed.py \
+            --build-dir build \
+            --report-dir artifacts/test-reports
 
       - name: Translation coverage
         run: make translations-check

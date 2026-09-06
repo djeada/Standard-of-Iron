@@ -139,3 +139,68 @@ jobs:
 
       - name: Authored placement audit
         run: python scripts/fix-map-prop-overlaps.py --check --surface require
+
+  # ---------------------------------------------------------------------
+  # The tests a pull request does not run: everything in
+  # tests/extended_tests.txt, plus the acceptance binaries that are not
+  # GoogleTest suites at all. weekly.yml runs the same full profile under
+  # sanitizers and coverage, which is thorough and takes hours; this is the
+  # plain Debug run, so a content change can be checked against it on demand
+  # through workflow_dispatch before it merges rather than after.
+  # ---------------------------------------------------------------------
+  full-tests:
+    name: Full test profile (ubuntu-24.04)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730 # v4.3.1
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: linux
+          cache: true
+          modules: qt5compat qtmultimedia
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build libgl1-mesa-dev libegl1 ffmpeg
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          key: extended-tests-debug
+          max-size: 1G
+
+      - name: Cache CMake FetchContent dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: build/_deps
+          key: deps-ubuntu-24.04-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
+          restore-keys: deps-ubuntu-24.04-
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DDEFAULT_LANG=en \
+            -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
+
+      - name: Build the test binaries
+        run: cmake --build build --parallel --target soi_test_binaries
+
+      - name: Full test profile
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: bash scripts/run-tests.sh build --gtest_brief=1

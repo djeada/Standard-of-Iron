@@ -15,16 +15,36 @@ The required pull-request path has three parts:
   Actions summary.
 - **Formatting/static validation**: formatting, lint, quality markers,
   typography, static resource validation and compiler-free portability checks.
-- **Fast build/test**: Debug-build only the core/headless suites
-  (`simulation_tests`, `combat_balance_tests`, `ai_tests`, `campaign_tests`,
-  `persistence_tests`) plus `content_validator`, then run
-  `SOI_TEST_PROFILE=pr scripts/run-tests.sh`. The job has a 90-minute ceiling so
-  normal cold builds have enough headroom while genuinely stuck runs remain
-  bounded.
+- **Fast build/test**: Debug-build `soi_test_binaries` and `content_validator`,
+  then run `SOI_TEST_PROFILE=pr scripts/run-tests.sh`. All nine test binaries
+  are built and run; the profile subtracts the individual tests named in
+  `tests/extended_tests.txt`.
 
-The PR path deliberately does **not** build renderer, application, arena or tool
-test binaries, run the battlefield verifier, run the replay round-trip, execute
-simulation performance budgets, or build the terrain probe.
+## What the fast profile leaves out, and why
+
+Linking the test binaries was never the expensive part -- with a warm ccache the
+whole build is a couple of minutes. Running them was. A handful of tests
+simulate a battle, a siege or a whole AI match tick by tick, and another handful
+walk every shipped map, mission or creature asset on disk; each costs seconds,
+and in a Debug build that becomes minutes. The lane reached 90 minutes and was
+killed by its own timeout with `ai_tests` still on its first test, which had
+been running for over an hour.
+
+`tests/extended_tests.txt` names those tests, one GoogleTest filter pattern per
+line with the reason it is there. Everything else -- every binary, and the
+thousands of tests that measure in milliseconds -- runs on every pull request.
+
+Two checks keep the split honest, both in `scripts/check-test-speed.py`:
+
+- a test that ran in the fast profile and took longer than the per-test budget
+  fails the lane, so the next slow test is caught when it is written rather
+  than when the lane times out; and
+- a manifest pattern that matches no test fails the lane, so renaming a fixture
+  cannot quietly retire the gate the pattern named.
+
+The PR path also does **not** run the battlefield verifier, the replay
+round-trip or the QML suite, execute simulation performance budgets, or build
+the terrain probe.
 
 ## Weekly and manual validation
 
@@ -35,8 +55,12 @@ portability runs, and all supported platforms perform packaging validation.
 `.github/workflows/extended-validation.yml` runs every Monday and through
 `workflow_dispatch`. It owns the expensive gates removed from pull requests:
 
-- the Release `sim_benchmark` amplification budgets; and
-- the engine-backed terrain-surface authored-placement audit.
+- the Release `sim_benchmark` amplification budgets;
+- the engine-backed terrain-surface authored-placement audit; and
+- the full test profile, which is the fast profile plus everything in
+  `tests/extended_tests.txt` and the acceptance binaries that are not
+  GoogleTest suites. Dispatch this one by hand when a change touches shipped
+  content: those are the tests that read it.
 
 Release validation remains the final exhaustive ship gate.
 
