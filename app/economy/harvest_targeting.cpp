@@ -7,7 +7,7 @@
 #include <limits>
 
 #include "app/input/input_command_handler.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/session/session_context.h"

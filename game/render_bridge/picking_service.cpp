@@ -9,7 +9,7 @@
 #include <limits>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_structures.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
 #include "scene/camera.h"

@@ -1,6 +1,6 @@
 #include "run_stamina.h"
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"

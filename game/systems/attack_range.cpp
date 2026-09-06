@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/world.h"
 #include "combat_system/combat_types.h"
 #include "combat_system/combat_utils.h"

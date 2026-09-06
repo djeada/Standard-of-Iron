@@ -13,7 +13,7 @@
 #include "app/orders/command_controller.h"
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/render_bridge/selection_controller.h"
 #include "game/session/session_context.h"

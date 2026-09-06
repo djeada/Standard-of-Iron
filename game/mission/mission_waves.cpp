@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "game/command/command_queue.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_loader.h"

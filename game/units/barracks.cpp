@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <memory>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"

@@ -6,7 +6,7 @@
 #include <limits>
 #include <vector>
 
-#include "core/component.h"
+#include "core/component_gameplay.h"
 #include "core/system.h"
 #include "core/world.h"
 #include "game/formation/army_formation_registry.h"

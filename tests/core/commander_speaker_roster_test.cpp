@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "game/core/component.h"
+#include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/mission/commander_speaker_roster.h"
 #include "game/systems/nation_id.h"

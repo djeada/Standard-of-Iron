@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-#include "../../core/component.h"
+#include "../../core/component_economy.h"
 #include "../../core/world.h"
 #include "../../game_config.h"
 #include "../../map/terrain_service.h"

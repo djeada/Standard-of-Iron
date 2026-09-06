@@ -6,7 +6,7 @@
 #include <gtest/gtest.h>
 #include <unordered_set>
 
-#include "core/component.h"
+#include "core/component_structures.h"
 #include "core/world.h"
 #include "game/core/ownership_constants.h"
 #include "game/map/map_definition.h"

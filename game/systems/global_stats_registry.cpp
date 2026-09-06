@@ -3,7 +3,7 @@
 #include <unordered_map>
 
 #include "../core/ambient_session.h"
-#include "../core/component.h"
+#include "../core/component_core.h"
 #include "../core/world.h"
 #include "../session/simulation_clock.h"
 #include "core/event_manager.h"

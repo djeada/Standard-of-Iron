@@ -9,11 +9,12 @@
 #include <memory>
 
 #include "app/session/environment.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
+#include "game/map/match_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/nation_registry.h"
@@ -36,139 +37,39 @@ auto LevelLoader::loadFromAssets(const QString& map_path,
                                  Render::GL::Camera& camera,
                                  bool allow_default_player_barracks)
     -> LevelLoadResult {
+  const Game::Map::MatchLoadResult match =
+      Game::Map::load_match(map_path, world, allow_default_player_barracks);
+
   LevelLoadResult res;
+  res.ok = match.ok;
+  res.map_name = match.map_name;
+  res.error_message = match.error_message;
+  res.player_unit_id = match.player_unit_id;
+  res.grid_width = match.grid_width;
+  res.grid_height = match.grid_height;
+  res.tile_size = match.tile_size;
+  res.max_troops_per_player = match.max_troops_per_player;
+  res.victory_config = match.victory_config;
+  res.rain_settings = match.rain_settings;
+  res.fog_zones = match.fog_zones;
+  res.rivers = match.rivers;
+  res.lakes = match.lakes;
+  res.biome_seed = match.biome_seed;
+  res.lighting_state = match.lighting_state;
+  res.environment = match.environment;
 
-  auto& session = Game::Session::session_for(world);
-  auto& owners = session.owners();
-
-  auto unit_reg = std::make_shared<Game::Units::UnitFactoryRegistry>();
-  Game::Units::register_built_in_units(*unit_reg);
-  Game::Map::MapTransformer::setFactoryRegistry(unit_reg);
-
-  const QString resolved_map_path = Utils::Resources::resolve_resource_path(map_path);
-
-  Game::Map::MapDefinition def;
-  QString err;
-  if (Game::Map::MapLoader::load_from_json_file(resolved_map_path, def, &err)) {
-    res.ok = true;
-    res.map_name = def.name;
-    res.rain_settings = def.rain;
-    res.fog_zones = def.fog_zones;
-    res.rivers = def.rivers;
-    res.lakes = def.lakes;
-    res.biome_seed = def.biome.seed;
-    res.environment = def.environment;
-    EnvironmentClock initial_clock(def.environment);
-    res.lighting_state = initial_clock.lighting(
-        {.rain = def.rain.enabled && def.rain.type == WeatherType::Rain
-                     ? def.rain.intensity
-                     : 0.0F,
-         .snow = def.rain.enabled && def.rain.type == WeatherType::Snow
-                     ? def.rain.intensity
-                     : 0.0F});
-
-    session.terrain().initialize(def);
-
-    App::Core::Environment::apply(def, renderer, camera);
-    res.cam_fov = def.camera.fov_y;
-    res.cam_near = def.camera.near_plane;
-    res.cam_far = def.camera.far_plane;
-    res.grid_width = def.grid.width;
-    res.grid_height = def.grid.height;
-    res.tile_size = def.grid.tile_size;
-    res.max_troops_per_player = def.max_troops_per_player;
-    res.victory_config = def.victory;
-
-    auto rt = Game::Map::MapTransformer::apply_to_world(def, world);
-    if (!rt.unit_ids.empty()) {
-      res.player_unit_id = rt.unit_ids.front();
-    } else {
-
-      auto& nationRegistry = session.nations();
-      auto reg = Game::Map::MapTransformer::get_factory_registry();
-      if (reg) {
-        Game::Units::SpawnParams sp;
-        sp.position = QVector3D(0.0F, 0.0F, 0.0F);
-        sp.player_id = 0;
-        sp.spawn_type = Game::Units::SpawnType::Archer;
-        sp.ai_controlled = !owners.is_player(sp.player_id);
-        if (const auto* nation = nationRegistry.get_nation_for_player(sp.player_id)) {
-          sp.nation_id = nation->id;
-        } else {
-          sp.nation_id = nationRegistry.default_nation_id();
-        }
-        if (auto unit = reg->create(Game::Units::SpawnType::Archer, world, sp)) {
-          res.player_unit_id = unit->id();
-        } else {
-          qWarning() << "LevelLoader: Fallback archer spawn failed";
-        }
-      }
-    }
-
-    if (allow_default_player_barracks) {
-      bool has_barracks = false;
-      for (auto* e : world.collect_entities_with<Engine::Core::UnitComponent>()) {
-        if (auto* u = e->get_component<Engine::Core::UnitComponent>()) {
-          if (u->spawn_type == Game::Units::SpawnType::Barracks &&
-              owners.is_player(u->owner_id)) {
-            has_barracks = true;
-            break;
-          }
-        }
-      }
-      if (!has_barracks) {
-        auto& nationRegistry = session.nations();
-        auto reg2 = Game::Map::MapTransformer::get_factory_registry();
-        if (reg2) {
-          Game::Units::SpawnParams sp;
-          sp.position = QVector3D(-4.0F, 0.0F, -3.0F);
-          sp.player_id = owners.get_local_player_id();
-          sp.spawn_type = Game::Units::SpawnType::Barracks;
-          sp.ai_controlled = !owners.is_player(sp.player_id);
-          if (const auto* nation = nationRegistry.get_nation_for_player(sp.player_id)) {
-            sp.nation_id = nation->id;
-          } else {
-            sp.nation_id = nationRegistry.default_nation_id();
-          }
-          reg2->create(Game::Units::SpawnType::Barracks, world, sp);
-        }
-      }
-    }
-  } else {
-    res.ok = false;
-    res.error_message =
-        QCoreApplication::translate("LevelLoader", "Map load failed: %1").arg(err);
-    qWarning() << "LevelLoader: Map load failed:" << err
-               << "(path:" << resolved_map_path << ')'
-               << "- applying default environment";
-    App::Core::Environment::apply_default(renderer, camera);
-    res.ok = false;
-    res.cam_fov = camera.get_fov();
-    res.cam_near = camera.get_near();
-    res.cam_far = camera.get_far();
-    res.grid_width = 50;
-    res.grid_height = 50;
-    res.tile_size = 1.0F;
-
-    auto& nationRegistry = session.nations();
-    auto reg = Game::Map::MapTransformer::get_factory_registry();
-    if (reg) {
-      Game::Units::SpawnParams sp;
-      sp.position = QVector3D(0.0F, 0.0F, 0.0F);
-      sp.player_id = 0;
-      sp.spawn_type = Game::Units::SpawnType::Archer;
-      sp.ai_controlled = !owners.is_player(sp.player_id);
-      if (const auto* nation = nationRegistry.get_nation_for_player(sp.player_id)) {
-        sp.nation_id = nation->id;
-      } else {
-        sp.nation_id = nationRegistry.default_nation_id();
-      }
-      if (auto unit = reg->create(Game::Units::SpawnType::Archer, world, sp)) {
-        res.player_unit_id = unit->id();
-      }
-    }
+  if (match.ok) {
+    App::Core::Environment::apply(match.definition, renderer, camera);
+    res.cam_fov = match.definition.camera.fov_y;
+    res.cam_near = match.definition.camera.near_plane;
+    res.cam_far = match.definition.camera.far_plane;
+    return res;
   }
 
+  App::Core::Environment::apply_default(renderer, camera);
+  res.cam_fov = camera.get_fov();
+  res.cam_near = camera.get_near();
+  res.cam_far = camera.get_far();
   return res;
 }
 

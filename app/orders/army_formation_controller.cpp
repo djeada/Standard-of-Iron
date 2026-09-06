@@ -22,7 +22,7 @@
 #include "game/audio/audio_cues.h"
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "game/formation/army_formation_registry.h"
@@ -750,7 +750,7 @@ auto ArmyFormationController::selected_formation_status() const -> QVariantMap {
   }
 
   const auto& selected = m_selection_system->get_selected_units();
-  auto& registry = Game::Formation::ArmyFormationRegistry::instance();
+  auto& registry = Game::Formation::ArmyFormationRegistry::for_world(*m_world);
 
   Game::Formation::FormationGroupID group = Game::Formation::k_invalid_group;
   int in_group = 0;
@@ -836,8 +836,9 @@ void ArmyFormationController::refresh_formation_preview() {
   request.doctrine = m_formation_doctrine_override;
   request.options = m_formation_options;
   request.spacing = Game::GameConfig::instance().gameplay().formation_spacing_default;
-  request.group_id = Game::Formation::ArmyFormationRegistry::instance().group_of(
-      m_formation_units.front());
+  request.group_id =
+      Game::Formation::ArmyFormationRegistry::for_world(*m_world).group_of(
+          m_formation_units.front());
 
   constexpr float k_anchor_epsilon = 0.05F;
   constexpr float k_facing_epsilon = 0.25F;
@@ -853,11 +854,16 @@ void ArmyFormationController::refresh_formation_preview() {
         *m_world, m_formation_units);
   }
 
+  const auto* previous_group =
+      request.group_id != Game::Formation::k_invalid_group
+          ? Game::Formation::ArmyFormationRegistry::for_world(*m_world).find(
+                request.group_id)
+          : nullptr;
   auto const signature = Game::Formation::ArmyFormationPlanner::layout_signature(
-      m_formation_members, request);
+      m_formation_members, request, previous_group);
   if (!m_formation_layout_valid || m_formation_layout.signature != signature) {
     m_formation_layout = Game::Formation::ArmyFormationPlanner::build_layout(
-        m_formation_members, request);
+        m_formation_members, request, previous_group);
     m_formation_layout_valid = true;
   }
 

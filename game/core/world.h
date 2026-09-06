@@ -23,6 +23,7 @@
 #include "entity.h"
 #include "registry.h"
 #include "system.h"
+#include "system_access_recorder.h"
 #include "system_profiler.h"
 #include "world_spatial_index.h"
 
@@ -33,6 +34,19 @@ class CreaturePresentationComponent;
 
 auto publish_creature_presentation(Entity* entity,
                                    World* world) -> CreaturePresentationComponent*;
+
+struct RenderPublicationStats {
+
+  std::uint64_t publications = 0;
+
+  std::uint64_t skipped_publications = 0;
+
+  std::uint64_t entities_copied = 0;
+
+  std::uint64_t entities_reused = 0;
+
+  std::uint64_t revisioned_components_skipped = 0;
+};
 
 class World {
 public:
@@ -117,6 +131,24 @@ public:
   void ensure_render_snapshot();
 
   [[nodiscard]] auto acquire_render_snapshot() const -> std::shared_ptr<World>;
+
+  [[nodiscard]] auto render_publication_stats() const -> const RenderPublicationStats& {
+    return m_render_publication_stats;
+  }
+
+  struct AccessViolation {
+    const char* system_name = "";
+    ComponentTypeId type_id = 0;
+    bool write = false;
+  };
+
+  void set_access_verification(bool enabled) noexcept {
+    m_verify_system_access = enabled;
+  }
+
+  [[nodiscard]] auto access_violations() const -> const std::vector<AccessViolation>& {
+    return m_access_violations;
+  }
   [[nodiscard]] auto is_render_snapshot() const noexcept -> bool {
     return m_is_render_snapshot;
   }
@@ -270,6 +302,7 @@ private:
   [[nodiscard]] auto collect_units_matching(int owner_id,
                                             bool owned) const -> std::vector<Entity*>;
   void publish_render_snapshot();
+  void verify_system_access(std::size_t slot, System& system, float delta_time);
 
   Registry m_registry;
   mutable HandleTable m_handles;
@@ -298,13 +331,19 @@ private:
   bool m_is_render_snapshot{false};
   std::atomic<bool> m_render_snapshots_requested{false};
   std::shared_ptr<World> m_render_snapshot;
-  std::array<std::shared_ptr<World>, 2> m_render_snapshot_buffers;
+  static constexpr std::size_t k_render_snapshot_buffers = 3;
+  std::array<std::shared_ptr<World>, k_render_snapshot_buffers>
+      m_render_snapshot_buffers;
   std::size_t m_next_render_snapshot_buffer{0};
   std::vector<EntityID> m_render_unit_ids;
   std::vector<EntityID> m_render_building_ids;
   std::vector<EntityID> m_render_other_ids;
   std::vector<std::uint64_t> m_render_entity_signatures;
   std::uint64_t m_render_publish_revision{0};
+  RenderPublicationStats m_render_publication_stats;
+  bool m_verify_system_access = false;
+  SystemAccessRecorder m_access_recorder;
+  std::vector<AccessViolation> m_access_violations;
 };
 
 class World::EntityLock {
@@ -464,7 +503,10 @@ private:
 };
 
 void copy_authoritative_snapshot_components(const Entity& source, Entity& destination);
-void copy_presentation_snapshot_components(const Entity& source, Entity& destination);
-void copy_render_components(const Entity& source, Entity& destination);
+
+auto copy_presentation_snapshot_components(const Entity& source,
+                                           Entity& destination) -> std::uint64_t;
+
+auto copy_render_components(const Entity& source, Entity& destination) -> std::uint64_t;
 
 } // namespace Engine::Core

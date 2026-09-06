@@ -4,7 +4,7 @@
 
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/session/deterministic_rng.h"
 #include "game/session/session_context.h"

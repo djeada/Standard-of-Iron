@@ -411,12 +411,7 @@ TEST(CommanderControlRegressionTest, SaveAndLoadForceCommanderModeBackToRts) {
                        "if (m_commander_view_model->active()) {\n"
                        "    m_commander_view_model->exit_mode();\n"
                        "  }\n\n"
-                       "  App::Core::SaveToSlotEffects effects;\n"
-                       "  {\n"
-                       "    const std::unique_lock<std::recursive_mutex> capture_lock "
-                       "= lock_frame();\n\n"
-                       "    const Game::Systems::RuntimeSnapshot runtime_snapshot = "
-                       "to_runtime_snapshot();"));
+                       "  m_save_progress_slot = slot_name;"));
 }
 
 TEST(CommanderControlRegressionTest,
@@ -836,7 +831,9 @@ TEST(CommanderControlRegressionTest, CommanderAbilityKitReachesTheController) {
 
 TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamera) {
   const auto root = find_repo_root();
-  const auto component_source = read_text(root / "game" / "core" / "component.h");
+  const auto component_source =
+      read_text(root / "game" / "core" / "component_commander.h") +
+      read_text(root / "game" / "core" / "component_presentation.h");
   const auto controller_source = app_source(root, "commander_control_controller.cpp");
   const auto commander_mode_source = app_source(root, "commander_mode_coordinator.cpp");
   const auto prepare_submission_source =

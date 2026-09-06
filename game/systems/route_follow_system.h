@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <unordered_map>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/system.h"
 #include "../core/world.h"
 #include "movement_route.h"

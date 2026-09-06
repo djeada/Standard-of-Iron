@@ -46,6 +46,7 @@ add_library(
     core/system_schedule.cpp
     core/deferred_mutations.cpp
     core/ambient_session.cpp
+    core/system_access_recorder.cpp
     core/event_manager.cpp
     core/simulation_timing.cpp
     core/movement_facts.cpp
@@ -149,6 +150,7 @@ add_library(
     soi_navigation
     STATIC
     systems/nav_grid.cpp
+    systems/navigation_service.cpp
     systems/pathfinding.cpp
     systems/walkability.cpp
     systems/route_corridor_planner.cpp
@@ -358,11 +360,13 @@ add_library(
     STATIC
     command/command.cpp
     command/command_codec.cpp
+    command/commander_input.cpp
     command/command_dispatcher.cpp
     command/command_queue.cpp
     command/command_system.cpp
     command/command_validator.cpp
     command/replay.cpp
+    map/match_loader.cpp
     session/session_context.cpp
     session/world_digest.cpp
     systems/default_content.cpp

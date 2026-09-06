@@ -31,7 +31,7 @@
 #include <vector>
 
 #include "app/session/level_loader.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/map/json_keys.h"
 #include "game/map/map_transformer.h"

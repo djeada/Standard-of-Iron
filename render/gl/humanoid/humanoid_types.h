@@ -12,7 +12,7 @@
 #include "animation/locomotion_manifest.h"
 #include "animation/playback_manifest.h"
 #include "animation/rig/side.h"
-#include "game/core/component.h"
+#include "game/core/component_combat.h"
 #include "render/creature/combat_visual_state.h"
 #include "render/creature/movement_state.h"
 #include "render/palette.h"

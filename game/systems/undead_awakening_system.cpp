@@ -12,7 +12,7 @@
 #include <cmath>
 #include <numbers>
 
-#include "core/component.h"
+#include "core/component_gameplay.h"
 #include "core/entity.h"
 #include "core/event_manager.h"
 #include "core/local_audience.h"

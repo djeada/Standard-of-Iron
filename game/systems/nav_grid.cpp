@@ -7,69 +7,73 @@
 #include "../map/terrain_service.h"
 #include "building_collision_registry.h"
 #include "gate_service.h"
+#include "navigation_service.h"
 #include "pathfinding.h"
 #include "walkability.h"
 
 namespace Game::Systems {
 
-std::unique_ptr<Pathfinding> NavGrid::s_pathfinder = nullptr;
+namespace {
+
+auto active_pathfinder() -> Pathfinding* {
+  auto* navigation = NavigationService::active_or_null();
+  return navigation != nullptr ? navigation->pathfinder() : nullptr;
+}
+
+} // namespace
 
 void NavGrid::initialize(int world_width, int world_height) {
 
   GateService::clear_blockers();
-  s_pathfinder = std::make_unique<Pathfinding>(world_width, world_height);
-
-  float const offset_x = -(world_width * 0.5F - 0.5F);
-  float const offset_z = -(world_height * 0.5F - 0.5F);
-  s_pathfinder->set_grid_offset(offset_x, offset_z);
+  NavigationService::active().initialize(world_width, world_height);
 
   BuildingCollisionRegistry::set_region_dirty_hook(
       [](float center_x, float center_z, float width, float depth) {
-        if (s_pathfinder != nullptr) {
-          s_pathfinder->mark_building_region_dirty(center_x, center_z, width, depth);
+        if (auto* pathfinder = active_pathfinder()) {
+          pathfinder->mark_building_region_dirty(center_x, center_z, width, depth);
         }
       });
   BuildingCollisionRegistry::set_grid_dirty_hook([]() {
-    if (s_pathfinder != nullptr) {
-      s_pathfinder->mark_navigation_grid_dirty();
+    if (auto* pathfinder = active_pathfinder()) {
+      pathfinder->mark_navigation_grid_dirty();
     }
   });
   BuildingCollisionRegistry::set_obstruction_released_hook(
       [](const BuildingCollisionRegistry::ObstructionRelease& release) {
-        if (s_pathfinder == nullptr) {
+        auto* pathfinder = active_pathfinder();
+        if (pathfinder == nullptr) {
           return;
         }
         if (release.located) {
-          s_pathfinder->mark_obstruction_released_at(release.center_x,
-                                                     release.center_z);
+          pathfinder->mark_obstruction_released_at(release.center_x, release.center_z);
         } else {
-          s_pathfinder->mark_obstruction_released();
+          pathfinder->mark_obstruction_released();
         }
       });
 }
 
 auto NavGrid::get_pathfinder() -> Pathfinding* {
-  return s_pathfinder.get();
+  return active_pathfinder();
 }
 auto NavGrid::world_to_grid(float world_x, float world_z) -> Point {
-  if (s_pathfinder) {
-    return s_pathfinder->world_to_grid(world_x, world_z);
+  if (auto* pathfinder = active_pathfinder()) {
+    return pathfinder->world_to_grid(world_x, world_z);
   }
 
   return {static_cast<int>(std::round(world_x)), static_cast<int>(std::round(world_z))};
 }
 
 auto NavGrid::grid_to_world(const Point& grid_pos) -> QVector3D {
-  if (s_pathfinder) {
-    return s_pathfinder->grid_to_world(grid_pos);
+  if (auto* pathfinder = active_pathfinder()) {
+    return pathfinder->grid_to_world(grid_pos);
   }
   return {static_cast<float>(grid_pos.x), 0.0F, static_cast<float>(grid_pos.y)};
 }
 
 auto NavGrid::is_grid_walkable(const Point& grid_pos) -> bool {
-  if (s_pathfinder != nullptr) {
-    s_pathfinder->update_navigation_grid();
-    return s_pathfinder->is_walkable(grid_pos.x, grid_pos.y);
+  if (auto* pathfinder = active_pathfinder()) {
+    pathfinder->update_navigation_grid();
+    return pathfinder->is_walkable(grid_pos.x, grid_pos.y);
   }
 
   auto& terrain_service = Game::Map::TerrainService::instance();

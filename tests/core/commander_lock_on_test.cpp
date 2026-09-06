@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include "app/commander/commander_control_controller.h"
-#include "game/core/component.h"
+#include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"

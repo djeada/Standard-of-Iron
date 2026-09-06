@@ -5,7 +5,7 @@
 #include <cmath>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/system_context.h"
 #include "../core/world.h"
 #include "command_service.h"

@@ -5,7 +5,7 @@
 
 #include "app/commander/commander_camera_rig.h"
 #include "app/commander/rts_camera_bookmark.h"
-#include "core/component.h"
+#include "core/component_commander.h"
 #include "game/accessibility/commander_input_settings.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"

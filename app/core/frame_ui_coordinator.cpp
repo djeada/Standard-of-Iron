@@ -9,7 +9,7 @@
 #include "app/orders/order_markers.h"
 #include "app/orders/rts_action_model.h"
 #include "game/accessibility/motion_settings.h"
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"

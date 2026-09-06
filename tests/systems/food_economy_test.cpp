@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "core/component.h"
+#include "core/component_economy.h"
 #include "core/ownership_constants.h"
 #include "core/world.h"
 #include "game/command/command_dispatcher.h"

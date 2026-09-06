@@ -6,7 +6,7 @@
 #include <cmath>
 #include <numbers>
 
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/visuals/team_colors.h"
 #include "math/math_utils.h"
 #include "nations/siege_anim_types.h"

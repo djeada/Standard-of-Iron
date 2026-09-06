@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../core/component.h"
+#include "../../core/component_combat.h"
 
 namespace Game::Systems::CombatActions {
 struct CombatActionDefinition;

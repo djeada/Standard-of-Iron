@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/world.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/civilian_delivery_system.h"
