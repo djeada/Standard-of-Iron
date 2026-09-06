@@ -333,6 +333,7 @@ enum class ArenaExpectationKind : std::uint8_t {
   RangeIndicatorCountAtMost,
   CommanderBoomIsContinuous,
   CommanderCameraClearanceAtLeast,
+  CommanderCameraKeepsCommanderInSight,
   CommanderPresentedPoseAgrees,
   NoUncommandedViewRotation,
   CommanderMotorCorrectionWithin,

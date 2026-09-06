@@ -933,6 +933,23 @@ apply_unit_damage(Engine::Core::World* world,
   }
 
   if (unit->health > 0) {
+    auto* const registry = target->registry();
+    if (auto* wildlife =
+            registry->try_get<Engine::Core::WildlifeComponent>(target->get_id())) {
+
+      if (wildlife->flinch_timer <= 0.0F) {
+        wildlife->flinch_timer =
+            Engine::Core::WildlifeComponent::k_flinch_animation_seconds;
+      }
+      wildlife->watched_health = unit->health;
+      if (wildlife->species == Game::Wildlife::Species::Sheep) {
+        wildlife->held_timer = std::max(wildlife->held_timer, 0.22F);
+        if (auto* movement =
+                registry->try_get<Engine::Core::MovementComponent>(target->get_id())) {
+          movement->stop();
+        }
+      }
+    }
     apply_hit_feedback(target,
                        attacker_id,
                        world,
@@ -1141,8 +1158,10 @@ void apply_hit_feedback(Engine::Core::Entity* target,
           feedback->knockback_z = (dz / dist) * knockback;
 
           bool const hit_controls_root_facing =
-              Game::Systems::CombatRules::uses_rpg_combat_rules(target) ||
-              !Game::Systems::FormationCombat::has_formation_slots(*target);
+              !target->registry()->has<Engine::Core::WildlifeComponent>(
+                  target->get_id()) &&
+              (Game::Systems::CombatRules::uses_rpg_combat_rules(target) ||
+               !Game::Systems::FormationCombat::has_formation_slots(*target));
           if (hit_controls_root_facing) {
             float const face_dx =
                 attacker_transform->position.x - target_transform->position.x;

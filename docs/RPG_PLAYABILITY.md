@@ -204,14 +204,15 @@ Six Arena expectation kinds read the commander trace and turn it into pass/fail.
 Three of them are attached to every `rpg_mode` scenario automatically, in
 `definitions()`, so a new RPG scenario inherits them without remembering to:
 
-| kind                             | issue codes                                                                                                                            | what it means                                                                                         |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `CommanderInputEdgesAllConsumed` | `commander_attack_edge_unaccounted`, `commander_attack_edge_dropped`, `commander_dodge_edge_unaccounted`, `commander_input_not_traced` | every press lands in exactly one of consumed or dropped, and drops stay within budget                 |
-| `CommanderBoomIsContinuous`      | `commander_boom_discontinuity`, `commander_boom_pumping`                                                                               | the boom may retract instantly but must extend smoothly, and must not alternate under one obstruction |
-| `CommanderMotorCorrectionWithin` | `commander_motor_correction`                                                                                                           | per-tick separation push and jump snap-back stay within budget                                        |
-| `NoUncommandedViewRotation`      | `commander_view_rotated_uncommanded`                                                                                                   | the view does not turn without look input, a framing change, or an active lock                        |
-| `CommanderSpeedIsContinuous`     | `commander_speed_discontinuity`                                                                                                        | planar speed change per tick, expressed as acceleration                                               |
-| `CommanderContactCountAtMost`    | `commander_contact_multiplicity`                                                                                                       | one running action lands no more contacts than it authors                                             |
+| kind                                   | issue codes                                                                                                                            | what it means                                                                                         |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `CommanderInputEdgesAllConsumed`       | `commander_attack_edge_unaccounted`, `commander_attack_edge_dropped`, `commander_dodge_edge_unaccounted`, `commander_input_not_traced` | every press lands in exactly one of consumed or dropped, and drops stay within budget                 |
+| `CommanderBoomIsContinuous`            | `commander_boom_discontinuity`, `commander_boom_pumping`                                                                               | the boom may retract instantly but must extend smoothly, and must not alternate under one obstruction |
+| `CommanderMotorCorrectionWithin`       | `commander_motor_correction`                                                                                                           | per-tick separation push and jump snap-back stay within budget                                        |
+| `NoUncommandedViewRotation`            | `commander_view_rotated_uncommanded`                                                                                                   | the view does not turn without look input, a framing change, or an active lock                        |
+| `CommanderSpeedIsContinuous`           | `commander_speed_discontinuity`                                                                                                        | planar speed change per tick, expressed as acceleration                                               |
+| `CommanderContactCountAtMost`          | `commander_contact_multiplicity`                                                                                                       | one running action lands no more contacts than it authors                                             |
+| `CommanderCameraKeepsCommanderInSight` | `commander_camera_lost_sight`, `commander_camera_not_traced`                                                                           | opaque geometry never stands between the lens and the commander for longer than the allowed run       |
 
 Each one is unit-tested against a synthetic trace in `ArenaCommanderMetricsTest`:
 a shaped trace that should fire it, and one that should not. A metric that has
@@ -765,6 +766,110 @@ causes, both needed fixing:
 look: the reversals were 0.2 mm. A reversal below 5 mm is numerical noise, not
 pumping -- at a 3.4 m boom and a 75 degree field of view that is under a pixel
 at 1080p -- so the metric now needs both steps to clear that floor.
+
+## Camera collision against the rest of the world, Gate 4.2
+
+The first pass at Gate 4.2 was correct and incomplete in two separate ways, both
+of which the issue "camera clips into buildings and obstacles" names directly.
+
+**It only knew about buildings.** `BuildingCollisionRegistry` holds houses,
+walls, towers and the authored structure obstacles -- not the 200-270 world props
+a campaign map carries, and not the scatter trees the sim adopted when props
+started blocking navigation. So a commander walking a treeline had the lens
+inside trunks, ruins and tents with nothing reporting it. `camera_obstruction`
+answers the same three questions -- boom clear fraction, body clearance,
+depenetration -- over buildings **and** every solid world prop, from an index
+rebuilt off `TerrainService::world_props_revision` rather than per frame.
+
+Props are not buildings, and the difference is vertical. A building is taller
+than the boom ever reaches, so it blocks at any height; a prop blocks only up to
+`world_prop_occluder_height`, its model height carried through the same scale
+chain as its ground extents. The eye sits about 2.6 m above the commander's
+ground, so this is what decides that ruins (5.9 m) and a pine trunk (6.4 m) pull
+the lens in while a boulder (0.84 m), an iron ore seam (0.86 m) and a fallen dead
+tree (0.78 m) do not. Tree canopies are deliberately excluded: the trunk is what
+the simulation calls solid, and colliding with foliage would pump the boom on
+every step through a wood.
+
+**Depenetration could put the lens on the far side of the wall.** The resolved
+eye used to be pushed out of any body it overlapped along the shallower axis,
+unconditionally. That is the right move for a point that has to end up outside
+something; it is the wrong move for a camera, because "outside" includes the face
+away from the commander. With the commander in a temple footprint the old code
+retracted to the 22% floor, was still inside, and pushed 2.6 m out to the nearest
+temple wall -- with the commander behind it. The boom is resolved by shortening
+now, floored at a metric 0.55 m instead of a fraction, and the sideways push
+survives only for the one case shortening cannot fix -- a pivot that is itself
+buried -- where it may no longer increase the planar distance to the commander.
+`ABuriedPivotNeverPushesTheLensAwayFromTheBody` pins it: with the commander
+inside a temple footprint the resolved eye stays within 0.75 m of him, where the
+old rule's escape distance was the half-depth of whichever face was nearest.
+
+**Terrain was cleared under the eye, not along the boom.** Lifting the eye to
+`ground + 0.55` at its own position keeps the lens out of a hill and puts the
+crest between it and the commander. Lifting the eye by `L` raises the boom point
+at `t` by `L * t`, so the ground is sampled along the boom and the lift solved
+for the worst sample; the whole sight line clears the ground, which is the thing
+the player actually needs.
+
+The bound on that lift is the part worth keeping. The first version solved it
+unbounded up to a 4 m cap, and `rpg_camera_hill_bank` -- written for this issue
+-- caught what that does: against a 5 m bank a boom's length behind him, the
+solve saturated the cap for half a second and put the eye at `y = 7.86` with the
+commander standing at `y = 1.34`. That is a helicopter shot, not a chase camera,
+and it fails the same "keep him in sight" contract it was trying to satisfy.
+Metres of lift is the wrong answer to a steep bank; a shorter boom is. The lift
+is capped at 2.5 m now -- enough to ride ordinary rolling ground -- and past
+that the ground feeds the _same shortening path_ the bodies use: the boom is
+sampled once against the highest sight line a bounded lift can reach, and where
+it crosses caps the fraction. A tight bank pulls the lens in instead of
+launching it, which is what "tight spaces should reduce camera distance
+gracefully" asks for. On the bank the boom now works between 4.86 and 0.92 m
+with the lift peaking at 2.48 m, and the commander is never behind the crest.
+
+Read the crossing, not the sample index. The first version snapped the limit
+back to the last clear sample, which quantised the boom target to eighths and
+turned a smooth walk past the bank into ten `commander_boom_pumping` reversals
+-- the same scenario catching the fix for its own first failure. Interpolating
+the crossing between the two bracketing samples takes it to one.
+
+**Release had to move from a rate to a speed.** `m_occlusion_fraction` retracts
+instantly and eases back out at 18/s, which is fine while an obstruction
+approaches and clears gradually -- the commander walking toward and away from a
+facade, which is all `rpg_close_quarters` ever asked for. Walking the lens
+_past_ the corner of a body is different: the clear fraction steps from about a
+half to 1.0 between two frames, and an 18/s follow on that step is 0.48 m of
+boom in one frame on a 3.4 m boom. That is the pop `CommanderBoomIsContinuous`
+exists to catch, and adding discrete props to the collision set is what made it
+reachable. Extension is now capped at 6 m/s on top of the ease; retraction is
+still immediate.
+
+Three scenarios cover it, all the same shot -- the commander sidesteps with the
+view held across his path, so the boom trails through whatever is there:
+
+| scenario                   | what it drives the lens through                         | boom, rest -> worst |
+| -------------------------- | ------------------------------------------------------- | ------------------- |
+| `rpg_camera_prop_gauntlet` | ruins, a pine, a boulder, a fallen dead tree and a tent | 3.44 -> 1.80 m      |
+| `rpg_camera_wall_pocket`   | a nine-segment wall run ending at a house               | 3.44 -> 2.37 m      |
+| `rpg_camera_hill_bank`     | the flank of a 5 m bank                                 | 4.86 -> 0.92 m      |
+
+All three run zero frames with geometry between the lens and the commander, and
+the gauntlet's minimum eye clearance is 0.285 m against a 0.10 m contract.
+
+The boulder and the log in the gauntlet are not filler: they are the half of the
+contract that says the camera must _not_ react to geometry it is already two
+metres above. Measured, with the eye riding 2.62 m over the commander:
+
+| prop      | top    | boom while the lens is over it |
+| --------- | ------ | ------------------------------ |
+| ruins     | 5.92 m | 2.54 m                         |
+| pine      | 6.39 m | 2.48 m                         |
+| tent      | 3.04 m | 1.80 m                         |
+| boulder   | 0.84 m | 3.41 m -- untouched            |
+| dead tree | 0.78 m | 3.42 m -- untouched            |
+
+A collision model without the height lid would have fired on the bottom two and
+pumped the boom across every rocky map in the game.
 
 ## The gait was being advanced twice per frame
 

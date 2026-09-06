@@ -19,6 +19,8 @@ void MovementPipeline::update(Engine::Core::World* world, float delta_time) {
 auto MovementPipeline::access() const -> Engine::Core::SystemAccess {
   using namespace Engine::Core;
   return SystemAccess::declare(Reads<UnitComponent,
+                                     WildlifeComponent,
+                                     AttackTargetComponent,
                                      BuildingComponent,
                                      CommanderComponent,
                                      ElephantComponent,

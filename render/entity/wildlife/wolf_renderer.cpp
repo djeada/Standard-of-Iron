@@ -96,6 +96,9 @@ auto resolve_wolf_clip(const DrawState& state,
   if (state.bite_progress >= 0.0F && tier == GaitTier::Stand) {
     return Render::Creature::AnimationStateId::AttackMelee;
   }
+  if (state.flinch_progress >= 0.0F && tier == GaitTier::Stand) {
+    return Render::Creature::AnimationStateId::WildlifeStartle;
+  }
   return state_for_gait(state, resolve_gait(state, tier));
 }
 
@@ -124,6 +127,9 @@ void draw_wolf(const DrawContext& ctx, ISubmitter& out) {
     break;
   case Render::Creature::AnimationStateId::AttackMelee:
     inputs.phase = action_phase(state, state.bite_progress);
+    break;
+  case Render::Creature::AnimationStateId::WildlifeStartle:
+    inputs.phase = action_phase(state, state.flinch_progress);
     break;
   case Render::Creature::AnimationStateId::Idle:
     inputs.phase = ambient_phase(state, k_idle_period_seconds);
