@@ -9,6 +9,7 @@
 #include <limits>
 #include <ostream>
 #include <unordered_map>
+#include <utility>
 
 #include "mesh_asset_io.h"
 

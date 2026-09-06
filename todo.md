@@ -16,7 +16,7 @@ possible defect has been discovered.
 
 ## P0 — Correctness before optimization
 
-- [ ] **01. Make world replacement wait for actual reader/writer quiescence.**
+- [x] **01. Make world replacement wait for actual reader/writer quiescence.**
       `GameEngine::WorldFreeze` waits up to two seconds, then explicitly logs
       "rebuilding the world anyway" even if rendering or simulation remains active.
       Its callers can subsequently reset session and renderer state. A slow frame
@@ -28,7 +28,7 @@ possible defect has been discovered.
       Evidence: [game_engine.cpp](app/core/game_engine.cpp), `WorldFreeze`,
       `load_game_from_slot`, and `start_skirmish_internal`'s freeze lifetime.
 
-- [ ] **02. Capture saves at one simulation tick, including session metadata.**
+- [x] **02. Capture saves at one simulation tick, including session metadata.**
       `begin_save` reads clock/RNG/economy, mission state, and world data in separate
       operations without acquiring the frame mutex or freezing simulation. Autosave
       reaches it directly from a GUI timer. `serialize_world` locks entity iteration,
@@ -42,7 +42,7 @@ possible defect has been discovered.
       `begin_save_to_slot`; [serialization.cpp](game/save/serialization.cpp),
       `serialize_world`.
 
-- [ ] **03. Do not recycle GPU buffer storage after an unsuccessful fence wait.**
+- [x] **03. Do not recycle GPU buffer storage after an unsuccessful fence wait.**
       `PersistentRingBuffer::begin_frame` ignores the result of a one-second
       `glClientWaitSync`, deletes the fence, and makes the region writable. A timeout
       or wait failure does not establish that previous GPU reads have finished.
@@ -64,6 +64,12 @@ possible defect has been discovered.
       simulation state. Measure input latency, lock wait, skipped presentation, and
       p95 frame time during a large battle; moving simulation to a thread has not
       eliminated these dependencies.
+      Progress (2026-09-06): the contention is now measured rather than guessed --
+      `lock_frame` counts uncontended and contended acquisitions, total and longest
+      wait, and `update_presentation` counts deferred frames and forced waits
+      (`GameEngine::frame_lock_stats()`). The lock itself is unchanged: 127 call
+      sites across the view models still take it, and separating them needs the
+      immutable UI snapshot this item asks for. Not done.
       Evidence: [game_engine.cpp](app/core/game_engine.cpp), `run_simulation_thread`,
       `update_presentation`, `render`;
       [client_context.h](app/core/client_context.h), `ClientHost::lock_frame`.
@@ -78,10 +84,19 @@ possible defect has been discovered.
       revisions, and define bounded buffer/back-pressure behavior. Measure publication
       time, copied bytes, allocations, and retained memory with moving armies and a
       deliberately slow renderer.
+      Progress (2026-09-06): the vector-backed presentation components
+      (`FormationPresentation`, `FormationRosterPresentation`,
+      `FormationHitPresentation`) are copied only when their content revision moves,
+      so a squad that is moving or fighting no longer re-copies its whole soldier
+      layout every frame. Buffers are a fixed ring of three with real back-pressure:
+      when every buffer is retained the publication is skipped and counted instead of
+      allocating another `World`. `RenderPublicationStats` reports publications,
+      skips, entities copied and reused, and layouts skipped. Still outstanding:
+      publishing only render-consumed fields rather than the whole component set.
       Evidence: [world.cpp](game/core/world.cpp), `copy_authoritative_snapshot_components`,
       `copy_presentation_snapshot_components`, `publish_render_snapshot`.
 
-- [ ] **06. Make navigation and its invalidation hooks belong to a session.**
+- [x] **06. Make navigation and its invalidation hooks belong to a session.**
       `NavGrid::s_pathfinder` is a process-wide `unique_ptr`; initialization replaces
       it, clears gate blockers, and installs static collision callbacks. A second
       match cannot have independent navigation simply by constructing another
@@ -103,12 +118,21 @@ possible defect has been discovered.
       Cover accessors outside the checker's named list as well, such as
       `ArmyFormationRegistry::instance()` in serialization. Finish by testing two
       sessions and shrinking the ambient budget to zero, not merely renaming calls.
+      Progress (2026-09-06): `ArmyFormationRegistry` was a function-local process
+      static; it is now owned by `SessionContext` and reachable per world through
+      `ArmyFormationRegistry::for_world`. Ten of its twelve call sites take a world
+      or a session, and the checker now counts the accessor, so the pattern is
+      covered rather than invisible. `services_for` still falls back to the ambient
+      session for an unbound world, but the fallback is counted
+      (`unbound_world_lookups()`) and fatal under `SOI_STRICT_WORLD_BINDING=1`.
+      The budget is still 58: what is left are per-entity helpers handed an
+      `Entity&` and no world, which need a service threaded from their entry points.
       Evidence: [ambient_session.cpp](game/core/ambient_session.cpp);
       [ambient_instance_budget.json](scripts/ambient_instance_budget.json);
       [check-ambient-instances.py](scripts/check-ambient-instances.py);
       [serialization.cpp](game/save/serialization.cpp).
 
-- [ ] **08. Put mission spawns, rewards, and progression on the fixed tick.**
+- [x] **08. Put mission spawns, rewards, and progression on the fixed tick.**
       `simulate` advances mission waves/stages with the variable wall delta times the
       time scale before consuming fixed simulation steps. `MissionWaveRuntime`
       accumulates that delta and spawns units; the engine also grants rewards there.
@@ -130,11 +154,17 @@ possible defect has been discovered.
       Verify a replay containing movement, jump/dodge, attacks, target changes, and
       enter/exit transitions. This is required for complete gameplay replay and a
       renderer-independent host, even though ordinary RTS orders already use a queue.
+      Progress (2026-09-06): `Game::Command::CommanderInputFrame` is the tick-stamped
+      record -- every button, the view yaw and the dodge direction -- written to the
+      replay at the tick the controller applies it (`replay_format` 3) and read back
+      from the replay in place of live input during playback. Commander mode is
+      therefore inside the replay contract. Still outstanding: the controller itself
+      lives in `app/`, so a renderer-independent host cannot yet drive it.
       Evidence: [commander_control_controller.cpp](app/commander/commander_control_controller.cpp);
       [commander_mode_coordinator.cpp](app/commander/commander_mode_coordinator.cpp);
       [check-command-boundary.py](scripts/check-command-boundary.py).
 
-- [ ] **10. Fix formation-cache identity and lifetime before expanding caching.**
+- [x] **10. Fix formation-cache identity and lifetime before expanding caching.**
       Layout, spatial-layout, slot, and contact caches are `thread_local` maps keyed
       by raw `Entity*` or pairs of pointers. Their signatures lack a world/session
       identity and content revision; address reuse across worlds can satisfy the
@@ -146,7 +176,7 @@ possible defect has been discovered.
       Evidence: [formation_combat_geometry.cpp](game/systems/formation_combat_geometry.cpp),
       `g_layout_cache`, `g_spatial_layout_cache`, `g_contact_cache`, and prune helpers.
 
-- [ ] **11. Reduce formation-contact pair work with exact spatial pruning.**
+- [x] **11. Reduce formation-contact pair work with exact spatial pruning.**
       A contact-cache miss still sorts attacker slots and can compare every attacker
       slot against every target slot. Existing bounding checks and revision caches
       help, but moving/contact-changing formations invalidate results, and the worst
@@ -159,7 +189,7 @@ possible defect has been discovered.
       [sim_budgets.json](tests/perf/sim_budgets.json) records historical simulation costs
       already exceeding a 16.67 ms tick budget at its large-unit fixtures.
 
-- [ ] **12. Eliminate repeated all-pairs work in AI snapshot construction.**
+- [x] **12. Eliminate repeated all-pairs work in AI snapshot construction.**
       Each AI snapshot scans resource props, collects friendlies/enemies, tests enemy
       visibility against friendly vision sources, then checks each friendly against
       visible enemies for engagement. Snapshot building happens on the simulation
@@ -172,7 +202,7 @@ possible defect has been discovered.
       `build`, `is_visible_to_sources`;
       [ai_system.cpp](game/systems/ai_system.cpp), `update`.
 
-- [ ] **13. Bound deterministic AI decision work without blocking the whole tick indefinitely.**
+- [x] **13. Bound deterministic AI decision work without blocking the whole tick indefinitely.**
       At a decision's due update, `AISystem::process_results` calls `wait_idle()`;
       that wait has no deadline. A slow AI job stalls simulation while it holds the
       world/frame locks. Each AI also owns a dedicated thread, independently of the
@@ -183,7 +213,7 @@ possible defect has been discovered.
       Evidence: [ai_system.cpp](game/systems/ai_system.cpp), `process_results`;
       [ai_worker.cpp](game/systems/ai_system/ai_worker.cpp), `wait_idle`, constructor.
 
-- [ ] **14. Stop globally invalidating navigation caches for local changes.**
+- [x] **14. Stop globally invalidating navigation caches for local changes.**
       A navigation revision change clears the entire path cache, and reaching 256
       cached paths clears it again. Connectivity maps rebuild when the global
       revision changes. Thus local construction/gate/topology changes can discard
@@ -205,6 +235,13 @@ possible defect has been discovered.
       measured independent work with deterministic merges. Completion means replay
       equivalence, race checks, and a measured scaling benefit, not merely dispatching
       existing systems onto threads.
+      Progress (2026-09-06): the prerequisite this item names first -- complete access
+      footprints -- is now checkable. `Registry` records the component types a system
+      actually touches (compiled in for Debug, out for Release, or forced with
+      `SOI_VERIFY_SYSTEM_ACCESS`), `World::verify_system_access` compares that against
+      the system's declaration, and a test runs a real tick and fails on any system
+      that reaches a component it does not declare. No system is dispatched onto a
+      thread yet, and should not be until that check is green on a full match.
       Evidence: [world.cpp](game/core/world.cpp), `plan_phase_schedule`, `update`;
       [system.h](game/core/system.h), `access`;
       [system_schedule.h](game/core/system_schedule.h).
@@ -219,6 +256,12 @@ possible defect has been discovered.
       then evaluate exact pose reuse/pre-skinning and packed vertex/palette formats.
       Preserve the repo's full-LOD geometry, equipment, and shadow requirements in
       comparisons; publish warmed p50/p95 and memory costs on named hardware.
+      Progress (2026-09-06): the far shadow cascades -- the ones already rendered into
+      a lower-resolution texture -- now skin with the primary bone only
+      (`rg_clip_position_rigid`) instead of blending up to four palette matrices per
+      vertex, in both the GPU-driven and the full-mesh shadow paths. Not measured:
+      the completion criterion asks for warmed p50/p95 on named hardware, and this
+      machine cannot produce a trustworthy GPU timing.
       Evidence: [character_skinned_gpu_instanced.vert](assets/shaders/character_skinned_gpu_instanced.vert);
       [directional_shadow_rigged_gpu_instanced.vert](assets/shaders/directional_shadow_rigged_gpu_instanced.vert);
       [MASSED_BATTLE_PERFORMANCE.md](docs/MASSED_BATTLE_PERFORMANCE.md), historical
@@ -232,13 +275,18 @@ possible defect has been discovered.
       and immutable palette streaming where supported. Compare GL 3.3/4.1 with the
       fast path at equivalent quality, including body/equipment and shadow passes;
       fast-path measurements alone do not characterize supported fallback hardware.
+      Progress (2026-09-06): the fallback wrote every palette to offset zero of one
+      UBO, so consecutive draws serialised on the same range. It now streams through a
+      64-slot ring aligned to `GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT` and orphans the
+      buffer on wrap, which is the immutable palette streaming this item asks for and
+      is portable to GL 3.3. Not measured against the fast path on fallback hardware.
       Evidence: [rigged_character_pipeline.cpp](render/gl/backend/rigged_character_pipeline.cpp),
       `pack_cmd_palette` and draw submission;
       [backend.cpp](render/gl/backend.cpp), rigged shadow fallback.
 
 ## P2 — Memory, maintainability, and verification
 
-- [ ] **18. Add byte-based residency limits for creature render assets.**
+- [x] **18. Add byte-based residency limits for creature render assets.**
       `RiggedMeshCache` retains entries, base meshes, attachment meshes, and skin
       atlases until an explicit whole-cache clear. It exposes counts and upload
       counters but no residency budget or incremental eviction. Shared geometry
@@ -259,11 +307,17 @@ possible defect has been discovered.
       and long ambience from short resident effects; set byte budgets and preserve
       the existing mastering, looping, and callback constraints. Measure peak memory,
       first-play latency, and underruns across mission transitions.
+      Progress (2026-09-06): resident decoded bytes, a peak high-water mark and a
+      byte budget (`SOI_AUDIO_PCM_BUDGET_MB`, 192 MB default) are tracked and
+      reported, and the compressed source buffer is released as soon as the decoder
+      stops referencing it. The track is still fully materialised: mastering
+      analysis and loop sealing both need the whole track, so streaming playback
+      needs those made incremental first. Not done.
       Evidence: [miniaudio_backend.cpp](game/audio/miniaudio_backend.cpp),
       `decode_into_slot` and PCM conversion;
       [miniaudio_backend.h](game/audio/miniaudio_backend.h), track storage.
 
-- [ ] **20. Move expensive save encoding off the GUI thread after coherent capture.**
+- [x] **20. Move expensive save encoding off the GUI thread after coherent capture.**
       `begin_save_to_slot` constructs the complete world/terrain JSON document before
       `SaveLoadService::begin_save` queues background storage. Therefore asynchronous
       database writing does not remove capture/JSON stalls. After item 02 establishes
@@ -274,7 +328,7 @@ possible defect has been discovered.
       `begin_save_to_slot`; [serialization.cpp](game/save/serialization.cpp);
       [save_load_service.cpp](game/systems/save_load_service.cpp), `begin_save`.
 
-- [ ] **21. Make replay compatibility and divergence checking explicit.**
+- [x] **21. Make replay compatibility and divergence checking explicit.**
       The replay header has a format version but no simulation-build/content
       fingerprint. Release floating-point options also permit differences between
       builds. The digest hashes a limited summary: transforms, ownership/kind/health,
@@ -288,7 +342,7 @@ possible defect has been discovered.
       [world_digest.cpp](game/session/world_digest.cpp);
       [CMakeLists.txt](CMakeLists.txt), floating-point flags.
 
-- [ ] **22. Split component definitions and consolidate state-projection schemas.**
+- [x] **22. Split component definitions and consolidate state-projection schemas.**
       `component.h` is 2,790 lines and is directly included by hundreds of source
       files. It combines core, combat, economy, commander, and presentation types;
       changing one domain can trigger broad rebuilds. Serialization, snapshot copy
@@ -312,12 +366,18 @@ possible defect has been discovered.
       coordination, simulation commander logic, and reusable data-backed QML cards;
       give collaborators narrow dependencies. Preserve interaction tests and measure
       QML creation/binding costs before claiming a runtime improvement.
+      Progress (2026-09-06): the save orchestration came out of `GameEngine` into
+      `App::Core::SaveOrchestrator`, which owns the queued request, its mutex and the
+      capture timing and depends on nothing but three callbacks. `GameEngine` keeps
+      the thin Q_INVOKABLE surface. `CommanderControlController` and
+      `ProductionPanel.qml` are untouched, and `ClientContext` still exposes the same
+      broad set of pointers. Barely started.
       Evidence: [game_engine.cpp](app/core/game_engine.cpp);
       [commander_control_controller.cpp](app/commander/commander_control_controller.cpp);
       [ProductionPanel.qml](ui/qml/ProductionPanel.qml);
       [client_context.h](app/core/client_context.h).
 
-- [ ] **24. Share real match initialization with the headless host.**
+- [x] **24. Share real match initialization with the headless host.**
       `soi_headless` accepts a predefined battlefield scenario and only its own replay
       kind. Real skirmish setup remains in `app/session/skirmish_loader.cpp`, alongside
       client setup. This limits how faithfully headless tests can exercise shipped
@@ -328,7 +388,7 @@ possible defect has been discovered.
       Evidence: [main.cpp](tools/headless/main.cpp);
       [skirmish_loader.cpp](app/session/skirmish_loader.cpp).
 
-- [ ] **25. Measure the complete tick and make GPU timing collection nonblocking.**
+- [x] **25. Measure the complete tick and make GPU timing collection nonblocking.**
       `World::update` starts its tick timer after initial motion presentation work and
       ends it before final presentation, movement tracing, and render-snapshot
       publication. Those costs can be significant but are absent from its reported
@@ -341,7 +401,7 @@ possible defect has been discovered.
       [backend.cpp](render/gl/backend.cpp), `wait_for_frame_slot`, `execute_scene`;
       [backend.h](render/gl/backend.h), `k_frames_in_flight`.
 
-- [ ] **26. Extend regression budgets beyond simulation amplification counts.**
+- [x] **26. Extend regression budgets beyond simulation amplification counts.**
       PR CI runs `check-sim-budgets.py`, but deliberately does not gate timing or
       cross-build digests. The checked-in fixtures cover 1,000/2,000 simulation units;
       they do not establish hardware rendering, fallback, allocation, save-stall,
@@ -353,7 +413,7 @@ possible defect has been discovered.
       [sim_budgets.json](tests/perf/sim_budgets.json);
       [PERFORMANCE_INSTRUMENTATION.md](docs/PERFORMANCE_INSTRUMENTATION.md).
 
-- [ ] **27. Update architecture claims and broaden guards that miss current patterns.**
+- [x] **27. Update architecture claims and broaden guards that miss current patterns.**
       `ARCHITECTURE.md` still states 65 ambient sites and zero in the app; the current
       checker reports 58 and the budget contains two in `app/world`. It says the pair
       contact cache was removed, but `g_contact_cache` now exists. It also describes

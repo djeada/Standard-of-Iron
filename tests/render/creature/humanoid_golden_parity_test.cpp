@@ -18,7 +18,7 @@
 #include <vector>
 
 #include "animation/pose_manifest.h"
-#include "game/core/component.h"
+#include "game/core/component_combat.h"
 #include "game/core/entity.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"

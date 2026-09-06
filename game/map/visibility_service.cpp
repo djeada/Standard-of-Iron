@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "../core/ambient_session.h"
-#include "../core/component.h"
+#include "../core/component_commander.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../systems/owner_registry.h"

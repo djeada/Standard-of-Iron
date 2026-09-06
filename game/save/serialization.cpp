@@ -23,7 +23,7 @@
 #include <memory>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_economy.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../formation/army_formation_registry.h"
@@ -2385,8 +2385,7 @@ auto Serialization::serialize_world(const World* world) -> QJsonDocument {
   world_obj["captureTick"] = static_cast<qint64>(session.clock().tick());
   world_obj["captureRngDraws"] = static_cast<qint64>(session.rng().draw_count());
   world_obj["owner_registry"] = session.owners().to_json();
-  world_obj["army_formations"] =
-      Game::Formation::ArmyFormationRegistry::instance().to_json();
+  world_obj["army_formations"] = session.army_formations().to_json();
 
   const auto& terrain_service = session.terrain();
   if (terrain_service.is_initialized() &&
@@ -2426,8 +2425,7 @@ void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
     session.owners().from_json(world_obj["owner_registry"].toObject());
   }
 
-  Game::Formation::ArmyFormationRegistry::instance().from_json(
-      world_obj["army_formations"].toObject());
+  session.army_formations().from_json(world_obj["army_formations"].toObject());
 
   if (world_obj.contains("terrain")) {
     const auto terrain_obj = world_obj["terrain"].toObject();

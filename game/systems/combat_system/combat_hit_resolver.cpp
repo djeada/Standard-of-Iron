@@ -6,7 +6,7 @@
 #include <numbers>
 #include <optional>
 
-#include "../../core/component.h"
+#include "../../core/component_gameplay.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
 #include "../combat_rules.h"

@@ -288,7 +288,8 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
       entity.get_component<Engine::Core::ArmyFormationMembershipComponent>();
   if (membership != nullptr && membership->is_valid()) {
     const auto* formation =
-        Game::Formation::ArmyFormationRegistry::instance().find(membership->group_id);
+        Game::Formation::ArmyFormationRegistry::for_world(world).find(
+            membership->group_id);
     if (formation != nullptr) {
       facts->route.cohesion_pace = formation->cohesion_pace;
     }

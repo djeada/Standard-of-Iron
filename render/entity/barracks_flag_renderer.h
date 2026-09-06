@@ -5,7 +5,7 @@
 
 #include <algorithm>
 
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/visuals/team_colors.h"
 #include "render/geom/banner_cloth.h"
 #include "render/geom/flag.h"

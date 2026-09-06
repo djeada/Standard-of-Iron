@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "animation/bpat/bpat_registry.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
@@ -416,7 +416,7 @@ auto run_battle(Game::Session::SessionContext& session,
   nations.set_player_nation(k_side_a_owner, side_a_def.nation);
   nations.set_player_nation(k_side_b_owner, side_b_def.nation);
 
-  Game::Formation::ArmyFormationRegistry::instance().clear();
+  session.army_formations().clear();
   session.building_collision().clear();
   Game::Systems::FormationCombat::invalidate_layout_cache();
 

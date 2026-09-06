@@ -4,7 +4,7 @@
 #include "render/scene_renderer.h"
 #undef private
 
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/visibility_service.h"
 #include "render/camera_visibility.h"

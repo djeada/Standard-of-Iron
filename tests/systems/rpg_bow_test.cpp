@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "core/component.h"
+#include "core/component_commander.h"
 #include "core/world.h"
 #include "systems/combat_actions/combat_action_definition.h"
 #include "systems/combat_system/combat_action_processor.h"

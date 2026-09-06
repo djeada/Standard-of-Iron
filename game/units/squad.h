@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "../core/component.h"
+#include "../core/component_core.h"
 #include "spawn_type.h"
 #include "troop_config.h"
 

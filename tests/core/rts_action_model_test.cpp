@@ -2,7 +2,7 @@
 
 #include "app/input/cursor_mode.h"
 #include "app/orders/rts_action_model.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/selection_system.h"

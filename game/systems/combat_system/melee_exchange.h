@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "../../core/component.h"
+#include "../../core/component_combat.h"
 #include "../../core/entity.h"
 
 namespace Game::Systems::Combat {

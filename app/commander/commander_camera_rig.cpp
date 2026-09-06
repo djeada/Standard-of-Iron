@@ -8,7 +8,7 @@
 #include "animation/locomotion_manifest.h"
 #include "game/accessibility/commander_input_settings.h"
 #include "game/accessibility/motion_settings.h"
-#include "game/core/component.h"
+#include "game/core/component_commander.h"
 #include "game/core/simulation_timing.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_line_of_sight.h"

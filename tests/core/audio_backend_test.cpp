@@ -322,3 +322,34 @@ TEST_F(AudioBackendTest, ReloadingAClipDoesNotAnalyseItAgain) {
   m_backend.play_sound(QStringLiteral("tone"), 1.0F, false);
   EXPECT_GT(peak_of(render(256)), 0.01F);
 }
+
+TEST_F(AudioBackendTest, DecodedTrackBytesAreCountedAndReleased) {
+  EXPECT_GT(m_backend.pcm_budget_bytes(), 0U);
+  EXPECT_EQ(m_backend.resident_pcm_bytes(), 0U);
+
+  ASSERT_TRUE(m_backend.request_track(
+      QStringLiteral("tone"), m_path, Mastering::Material::Effect));
+  m_backend.wait_for_decodes();
+
+  const std::uint64_t resident = m_backend.resident_pcm_bytes();
+  EXPECT_GT(resident, 0U);
+  EXPECT_GE(m_backend.peak_pcm_bytes(), resident);
+  EXPECT_EQ(m_backend.pcm_budget_overruns(), 0U);
+
+  m_backend.unload(QStringLiteral("tone"));
+
+  EXPECT_EQ(m_backend.resident_pcm_bytes(), 0U);
+  EXPECT_GE(m_backend.peak_pcm_bytes(), resident);
+}
+
+TEST_F(AudioBackendTest, ATightResidencyBudgetIsReportedRatherThanIgnored) {
+  m_backend.set_pcm_budget_bytes(1);
+
+  ASSERT_TRUE(m_backend.request_track(
+      QStringLiteral("tone"), m_path, Mastering::Material::Effect));
+  m_backend.wait_for_decodes();
+
+  EXPECT_TRUE(m_backend.is_track_ready(QStringLiteral("tone")))
+      << "the budget reports pressure; it must not silently drop audio";
+  EXPECT_GT(m_backend.pcm_budget_overruns(), 0U);
+}

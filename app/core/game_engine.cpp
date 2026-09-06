@@ -101,7 +101,7 @@
 #include "game/audio/audio_system.h"
 #include "game/audio/cue_trace.h"
 #include "game/command/command_queue.h"
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/event_manager.h"
 #include "game/core/system.h"
 #include "game/core/world.h"
@@ -745,6 +745,7 @@ void GameEngine::run_simulation_thread() {
       }
       auto const tick_start = std::chrono::steady_clock::now();
       simulate(dt);
+      drain_pending_save_capture();
       auto const tick_end = std::chrono::steady_clock::now();
       end_simulation_tick();
       m_simulation_tick_us.fetch_add(
@@ -779,8 +780,7 @@ void GameEngine::simulate(float dt) {
   }
   m_simulation_time_scale.store(simulation_time_scale, std::memory_order_release);
 
-  update_mission_waves(dt * simulation_time_scale);
-  update_mission_stages(dt * simulation_time_scale);
+  publish_mission_deadline();
 
   update_commander_messages(
       m_runtime.victory_state.isEmpty() ? dt * simulation_time_scale : dt);
@@ -788,6 +788,8 @@ void GameEngine::simulate(float dt) {
   RuntimeFrameState frame_state{.simulation_time_scale = simulation_time_scale};
   m_frame_orchestrator.advance_simulation(
       scene_context(), frame_state, dt, [this](float step_dt) {
+        update_mission_waves(step_dt);
+        update_mission_stages(step_dt);
         update_active_runtime_simulation(step_dt);
       });
   note_dropped_simulation_ticks(frame_state.dropped_simulation_ticks, dt);
@@ -798,9 +800,12 @@ void GameEngine::update_presentation(float dt) {
   if (!frame_lock.owns_lock()) {
     if (m_deferred_presentation_dt < k_max_deferred_presentation_seconds) {
       m_deferred_presentation_dt += dt;
+      m_frame_lock_stats.deferred_presentations.fetch_add(1, std::memory_order_relaxed);
       return;
     }
     const FrameLockWaiter waiter(m_frame_lock_waiters);
+    m_frame_lock_stats.forced_presentation_waits.fetch_add(1,
+                                                           std::memory_order_relaxed);
     frame_lock.lock();
   }
   dt = std::min(dt + m_deferred_presentation_dt, k_simulation_max_frame_seconds);
@@ -2121,8 +2126,6 @@ void GameEngine::restore_mission_stages(const QJsonObject& stage_state) {
 }
 
 void GameEngine::update_mission_stages(float delta_time) {
-  publish_mission_deadline();
-
   if (!m_mission_stage_tracker.has_stages() || !m_session) {
     return;
   }
@@ -2477,7 +2480,7 @@ void GameEngine::begin_save(const QString& slot_name,
     return;
   }
 
-  if (m_active_save_job != 0) {
+  if (m_active_save_job != 0 || pending_save_capture_queued()) {
     set_error(tr("A save is already in progress"));
     return;
   }
@@ -2486,42 +2489,79 @@ void GameEngine::begin_save(const QString& slot_name,
     m_commander_view_model->exit_mode();
   }
 
+  m_save_progress_slot = slot_name;
+  m_save_slots_view_model->set_save_progress(true, 0, tr("Queued"), slot_name);
+
+  if (queue_save_capture(slot_name, kind, autosave_retention)) {
+    return;
+  }
+
   App::Core::SaveToSlotEffects effects;
   {
     const std::unique_lock<std::recursive_mutex> capture_lock = lock_frame();
-
-    const Game::Systems::RuntimeSnapshot runtime_snapshot = to_runtime_snapshot();
-    Game::Systems::LevelSnapshot level_snapshot = m_level;
-    if (m_environment_clock) {
-      level_snapshot.environment = m_environment_clock->definition();
-      level_snapshot.environment_clock = m_environment_clock->snapshot();
-    }
-    if (m_rain_manager) {
-      level_snapshot.weather_runtime = m_rain_manager->snapshot();
-    }
-    std::optional<Game::Mission::MissionContext> mission_context;
-    if (m_campaign_manager) {
-      mission_context = m_campaign_manager->current_mission_context();
-    }
-
-    effects = m_save_load_coordinator->begin_save_to_slot(
-        {.world = *m_world,
-         .save_load_service = *m_save_load_service,
-         .camera = m_camera,
-         .level = level_snapshot,
-         .runtime_snapshot = runtime_snapshot,
-         .slot = slot_name,
-         .title = slot_name,
-         .map_name = m_level.map_name,
-         .mission_context = std::move(mission_context),
-         .kind = kind,
-         .play_time_seconds = m_mission_waves.elapsed(),
-         .autosave_retention = autosave_retention,
-         .mission_wave_state = m_mission_waves.director().serialize(),
-         .mission_stage_state = m_mission_stage_tracker.serialize(),
-         .commander_message_state = commander_message_state()});
+    effects = capture_save_to_slot(slot_name, kind, autosave_retention);
   }
+  finish_save_request(slot_name, effects);
+}
+
+auto GameEngine::pending_save_capture_queued() const -> bool {
+  return m_save_orchestrator != nullptr && m_save_orchestrator->queued();
+}
+
+auto GameEngine::queue_save_capture(const QString& slot_name,
+                                    Game::Systems::Save::SlotKind kind,
+                                    int autosave_retention) -> bool {
+  return m_save_orchestrator != nullptr &&
+         m_save_orchestrator->queue(slot_name, kind, autosave_retention);
+}
+
+void GameEngine::drain_pending_save_capture() {
+  if (m_save_orchestrator != nullptr) {
+    m_save_orchestrator->drain();
+  }
+}
+
+auto GameEngine::capture_save_to_slot(const QString& slot_name,
+                                      Game::Systems::Save::SlotKind kind,
+                                      int autosave_retention)
+    -> App::Core::SaveToSlotEffects {
+  const Game::Systems::RuntimeSnapshot runtime_snapshot = to_runtime_snapshot();
+  Game::Systems::LevelSnapshot level_snapshot = m_level;
+  if (m_environment_clock) {
+    level_snapshot.environment = m_environment_clock->definition();
+    level_snapshot.environment_clock = m_environment_clock->snapshot();
+  }
+  if (m_rain_manager) {
+    level_snapshot.weather_runtime = m_rain_manager->snapshot();
+  }
+  std::optional<Game::Mission::MissionContext> mission_context;
+  if (m_campaign_manager) {
+    mission_context = m_campaign_manager->current_mission_context();
+  }
+
+  return m_save_load_coordinator->begin_save_to_slot(
+      {.world = *m_world,
+       .save_load_service = *m_save_load_service,
+       .camera = m_camera,
+       .level = level_snapshot,
+       .runtime_snapshot = runtime_snapshot,
+       .slot = slot_name,
+       .title = slot_name,
+       .map_name = m_level.map_name,
+       .mission_context = std::move(mission_context),
+       .kind = kind,
+       .play_time_seconds = m_mission_waves.elapsed(),
+       .autosave_retention = autosave_retention,
+       .mission_wave_state = m_mission_waves.director().serialize(),
+       .mission_stage_state = m_mission_stage_tracker.serialize(),
+       .commander_message_state = commander_message_state()});
+}
+
+void GameEngine::finish_save_request(const QString& slot_name,
+                                     const App::Core::SaveToSlotEffects& effects) {
   if (!effects.queued) {
+    m_save_slots_view_model->set_save_progress(false, 0, QString(), QString());
+    m_save_progress_slot.clear();
     set_error(effects.error);
     return;
   }
@@ -2557,6 +2597,12 @@ void GameEngine::autosave() {
 }
 
 void GameEngine::cancel_active_save() {
+  if (m_save_orchestrator != nullptr && m_save_orchestrator->cancel_queued()) {
+    m_save_slots_view_model->set_save_progress(false, 0, QString(), QString());
+    m_save_progress_slot.clear();
+    return;
+  }
+
   if (m_active_save_job == 0 || (m_save_load_service == nullptr)) {
     return;
   }

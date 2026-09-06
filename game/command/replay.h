@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "command.h"
+#include "commander_input.h"
 
 class QFile;
 
@@ -16,7 +17,7 @@ namespace Game::Command {
 
 class CommandQueue;
 
-inline constexpr int k_replay_format_version = 2;
+inline constexpr int k_replay_format_version = 3;
 
 [[nodiscard]] auto simulation_build_id() -> QString;
 
@@ -54,6 +55,8 @@ public:
 
   void record_digest(std::uint64_t tick, std::uint64_t digest);
 
+  void record_commander_input(std::uint64_t tick, const CommanderInputFrame& frame);
+
   void finish();
 
   [[nodiscard]] auto recording() const -> bool;
@@ -73,6 +76,11 @@ struct RecordedDigest {
   std::uint64_t digest = 0;
 };
 
+struct RecordedCommanderInput {
+  std::uint64_t tick = 0;
+  CommanderInputFrame frame;
+};
+
 struct ReplayDivergence {
   std::uint64_t tick = 0;
   std::uint64_t recorded = 0;
@@ -83,6 +91,7 @@ struct ReplayFile {
   ReplayHeader header;
   std::vector<Command> commands;
   std::vector<RecordedDigest> digests;
+  std::vector<RecordedCommanderInput> commander_inputs;
 
   static auto load(const QString& path,
                    QString* error = nullptr) -> std::optional<ReplayFile>;
@@ -97,6 +106,13 @@ public:
   void feed(std::uint64_t tick, CommandQueue& queue);
 
   auto check(std::uint64_t tick, std::uint64_t digest) -> bool;
+
+  [[nodiscard]] auto
+  commander_input(std::uint64_t tick) const -> const CommanderInputFrame*;
+
+  [[nodiscard]] auto commander_input_count() const -> std::size_t {
+    return m_file.commander_inputs.size();
+  }
 
   [[nodiscard]] auto finished() const -> bool {
     return m_next >= m_file.commands.size();

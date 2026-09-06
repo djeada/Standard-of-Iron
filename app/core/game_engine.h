@@ -43,6 +43,7 @@
 #include "app/orders/order_feedback.h"
 #include "app/orders/order_markers.h"
 #include "app/persistence/save_load_coordinator.h"
+#include "app/persistence/save_orchestrator.h"
 #include "app/session/renderer_bootstrap.h"
 #include "app/utils/engine_view_helpers.h"
 #include "app/viewmodels/activity_view_model.h"
@@ -305,7 +306,42 @@ public:
 
   void ensure_initialized() override;
   [[nodiscard]] auto lock_frame() -> std::unique_lock<std::recursive_mutex> override {
-    return std::unique_lock<std::recursive_mutex>(m_frame_mutex);
+    std::unique_lock<std::recursive_mutex> lock(m_frame_mutex, std::try_to_lock);
+    if (lock.owns_lock()) {
+      m_frame_lock_stats.uncontended.fetch_add(1, std::memory_order_relaxed);
+      return lock;
+    }
+
+    const auto started = std::chrono::steady_clock::now();
+    m_frame_lock_waiters.fetch_add(1, std::memory_order_release);
+    lock.lock();
+    m_frame_lock_waiters.fetch_sub(1, std::memory_order_release);
+    const auto waited_us = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now() - started)
+            .count());
+    m_frame_lock_stats.contended.fetch_add(1, std::memory_order_relaxed);
+    m_frame_lock_stats.waited_us.fetch_add(waited_us, std::memory_order_relaxed);
+    std::uint64_t longest =
+        m_frame_lock_stats.longest_wait_us.load(std::memory_order_relaxed);
+    while (waited_us > longest &&
+           !m_frame_lock_stats.longest_wait_us.compare_exchange_weak(
+               longest, waited_us, std::memory_order_relaxed)) {
+    }
+    return lock;
+  }
+
+  struct FrameLockStats {
+    std::atomic<std::uint64_t> uncontended{0};
+    std::atomic<std::uint64_t> contended{0};
+    std::atomic<std::uint64_t> waited_us{0};
+    std::atomic<std::uint64_t> longest_wait_us{0};
+    std::atomic<std::uint64_t> deferred_presentations{0};
+    std::atomic<std::uint64_t> forced_presentation_waits{0};
+  };
+
+  [[nodiscard]] auto frame_lock_stats() const -> const FrameLockStats& {
+    return m_frame_lock_stats;
   }
   [[nodiscard]] bool renderer_initialized() const { return m_runtime.initialized; }
   [[nodiscard]] auto commander_message_speakers() const -> const QStringList& {
@@ -477,6 +513,24 @@ private:
   void begin_save(const QString& slot_name,
                   Game::Systems::Save::SlotKind kind,
                   int autosave_retention);
+  [[nodiscard]] auto pending_save_capture_queued() const -> bool;
+  auto queue_save_capture(const QString& slot_name,
+                          Game::Systems::Save::SlotKind kind,
+                          int autosave_retention) -> bool;
+  void drain_pending_save_capture();
+  [[nodiscard]] auto
+  capture_save_to_slot(const QString& slot_name,
+                       Game::Systems::Save::SlotKind kind,
+                       int autosave_retention) -> App::Core::SaveToSlotEffects;
+  void finish_save_request(const QString& slot_name,
+                           const App::Core::SaveToSlotEffects& effects);
+
+public:
+  [[nodiscard]] auto last_save_capture_us() const -> std::uint64_t {
+    return m_save_orchestrator != nullptr ? m_save_orchestrator->last_capture_us() : 0U;
+  }
+
+private:
   void connect_save_service_signals();
   void save_game_to_slot(const QString& slot_name);
   void quicksave();
@@ -603,6 +657,7 @@ private:
 
   static constexpr std::chrono::milliseconds k_render_effects_lock_budget{8};
   std::atomic<int> m_frame_lock_waiters{0};
+  mutable FrameLockStats m_frame_lock_stats;
 
   int m_loading_overlay_frames_remaining = 0;
   qint64 m_loading_overlay_last_frame_ms = 0;
@@ -610,6 +665,7 @@ private:
   QElapsedTimer m_loading_overlay_timer;
   bool m_finalize_progress_after_overlay = false;
   bool m_show_objectives_after_loading = false;
+  std::unique_ptr<App::Core::SaveOrchestrator> m_save_orchestrator;
   quint64 m_active_save_job = 0;
   std::atomic_bool m_screenshot_requested{false};
   QString m_screenshot_target_slot;

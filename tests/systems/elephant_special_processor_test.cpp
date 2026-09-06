@@ -2,7 +2,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
-#include "core/component.h"
+#include "core/component_gameplay.h"
 #include "core/world.h"
 #include "systems/combat_system/combat_utils.h"
 #include "systems/combat_system/elephant_special_processor.h"

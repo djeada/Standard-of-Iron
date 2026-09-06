@@ -7,7 +7,8 @@
 #include <limits>
 #include <numbers>
 
-#include "../core/component.h"
+#include "../core/ambient_session.h"
+#include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../systems/nav_grid.h"
@@ -166,8 +167,12 @@ auto options_from_json(const QJsonObject& obj) -> ArmyFormationOptions {
 } // namespace
 
 auto ArmyFormationRegistry::instance() -> ArmyFormationRegistry& {
-  static ArmyFormationRegistry registry;
-  return registry;
+  return *Game::Session::ambient_services().army_formations;
+}
+
+auto ArmyFormationRegistry::for_world(const Engine::Core::World& world)
+    -> ArmyFormationRegistry& {
+  return *Game::Session::services_for(world).army_formations;
 }
 
 auto ArmyFormationRegistry::create_group(FormationDoctrineId doctrine,

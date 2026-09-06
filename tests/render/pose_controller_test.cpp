@@ -7,7 +7,7 @@
 
 #include "animation/ambient_pose_manifest.h"
 #include "animation/rig/humanoid_proportions.h"
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/entity.h"
 #include "game/session/session_context.h"
 #include "render/entity/registry.h"

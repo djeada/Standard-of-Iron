@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <unordered_map>
 
-#include "game/core/component.h"
+#include "game/core/component_structures.h"
 #include "game/core/world.h"
 
 namespace App::Core {

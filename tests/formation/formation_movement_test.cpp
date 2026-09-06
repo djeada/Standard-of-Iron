@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "core/component.h"
+#include "core/component_core.h"
 #include "core/world.h"
 #include "formation/army_formation_registry.h"
 #include "formation/army_formation_service.h"

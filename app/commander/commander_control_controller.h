@@ -163,6 +163,9 @@ public:
   }
 
 private:
+  void exchange_recorded_input(Engine::Core::World& world,
+                               Engine::Core::EntityID commander_id);
+
   [[nodiscard]] auto take_input_snapshot() -> CommanderInputSnapshot;
   void discard_input_edges(CommanderInputSnapshot& snapshot);
   void publish_presentation_sample(Engine::Core::Entity& commander,

@@ -3,7 +3,7 @@
 #include <QDebug>
 
 #include "app/core/game_engine.h"
-#include "game/core/component.h"
+#include "game/core/component_combat.h"
 #include "game/core/world.h"
 
 AmbientStateManager::AmbientStateManager() = default;

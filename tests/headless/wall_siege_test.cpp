@@ -53,6 +53,8 @@ protected:
 
   auto make_match() -> std::unique_ptr<SessionContext> {
     auto session = std::make_unique<SessionContext>();
+    const Game::Session::ScopedSession scope(*session);
+    Game::Systems::NavGrid::initialize(k_map_size, k_map_size);
     auto& owners = session->owners();
     owners.register_owner_with_id(k_defender, Game::Systems::OwnerType::Player, "blue");
     owners.register_owner_with_id(k_raider, Game::Systems::OwnerType::AI, "red");

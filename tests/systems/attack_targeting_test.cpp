@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <gtest/gtest.h>
 
-#include "core/component.h"
+#include "core/component_economy.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "map/visibility_service.h"

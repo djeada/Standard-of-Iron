@@ -871,6 +871,27 @@ void copy_snapshot_component(const Entity& source, Entity& destination) {
   destination.add_component<ComponentType>(*component);
 }
 
+template <typename ComponentType>
+auto copy_revisioned_snapshot_component(const Entity& source,
+                                        Entity& destination) -> bool {
+  auto const* component = source.get_component<ComponentType>();
+  if (component == nullptr) {
+    if (destination.get_component<ComponentType>() != nullptr) {
+      destination.remove_component<ComponentType>();
+    }
+    return false;
+  }
+  if (auto* existing = destination.get_component<ComponentType>()) {
+    if (existing->revision == component->revision) {
+      return true;
+    }
+    *existing = *component;
+    return false;
+  }
+  destination.add_component<ComponentType>(*component);
+  return false;
+}
+
 } // namespace
 
 void copy_authoritative_snapshot_components(const Entity& source, Entity& destination) {
@@ -919,13 +940,24 @@ void copy_authoritative_snapshot_components(const Entity& source, Entity& destin
   copy_snapshot_component<FarmComponent>(source, destination);
 }
 
-void copy_presentation_snapshot_components(const Entity& source, Entity& destination) {
+auto copy_presentation_snapshot_components(const Entity& source,
+                                           Entity& destination) -> std::uint64_t {
+  std::uint64_t skipped = 0;
   copy_snapshot_component<MotionPresentationComponent>(source, destination);
   copy_snapshot_component<CommanderPresentationSampleComponent>(source, destination);
   copy_snapshot_component<CreaturePresentationComponent>(source, destination);
-  copy_snapshot_component<FormationRosterPresentationComponent>(source, destination);
-  copy_snapshot_component<FormationPresentationComponent>(source, destination);
-  copy_snapshot_component<FormationHitPresentationComponent>(source, destination);
+  skipped += copy_revisioned_snapshot_component<FormationRosterPresentationComponent>(
+                 source, destination)
+                 ? 1U
+                 : 0U;
+  skipped += copy_revisioned_snapshot_component<FormationPresentationComponent>(
+                 source, destination)
+                 ? 1U
+                 : 0U;
+  skipped += copy_revisioned_snapshot_component<FormationHitPresentationComponent>(
+                 source, destination)
+                 ? 1U
+                 : 0U;
   copy_snapshot_component<SoldierCasualtyAnimationComponent>(source, destination);
   copy_snapshot_component<DeathAnimationComponent>(source, destination);
   copy_snapshot_component<ConstructionPreviewComponent>(source, destination);
@@ -933,11 +965,14 @@ void copy_presentation_snapshot_components(const Entity& source, Entity& destina
   copy_snapshot_component<RpgContactPresentationComponent>(source, destination);
   copy_snapshot_component<BloodStainComponent>(source, destination);
   copy_snapshot_component<StockpileComponent>(source, destination);
+  return skipped;
 }
 
-void copy_render_components(const Entity& source, Entity& destination) {
+auto copy_render_components(const Entity& source,
+                            Entity& destination) -> std::uint64_t {
   copy_authoritative_snapshot_components(source, destination);
-  copy_presentation_snapshot_components(source, destination);
+  const std::uint64_t skipped =
+      copy_presentation_snapshot_components(source, destination);
 
   auto const* traversal = source.get_component<UnitTraversalLayoutStateComponent>();
   auto const* formation = source.get_component<FormationPresentationComponent>();
@@ -948,6 +983,7 @@ void copy_render_components(const Entity& source, Entity& destination) {
       !formation_handles_squeeze) {
     transform->scale.x *= std::clamp(traversal->lateral_scale, 0.1F, 1.0F);
   }
+  return skipped;
 }
 
 namespace {
@@ -1343,6 +1379,48 @@ auto World::current_query_counters() const -> SystemProfiler::QueryCounters {
   return counters;
 }
 
+void World::verify_system_access(std::size_t slot, System& system, float delta_time) {
+  const SystemAccess declared = system.access();
+  m_access_recorder.clear();
+  {
+    const ScopedAccessRecording recording(&m_access_recorder);
+    system.update(this, delta_time);
+  }
+
+  if (declared.exclusive) {
+    return;
+  }
+
+  auto declares = [&](ComponentTypeId type_id, bool write) {
+    const auto& list = write ? declared.writes : declared.reads;
+    if (std::find(list.begin(), list.end(), type_id) != list.end()) {
+      return true;
+    }
+
+    return !write &&
+           std::find(declared.writes.begin(), declared.writes.end(), type_id) !=
+               declared.writes.end();
+  };
+
+  const auto report = [&](const std::vector<std::uint8_t>& touched, bool write) {
+    for (std::size_t type_id = 0; type_id < touched.size(); ++type_id) {
+      if (touched[type_id] == 0U) {
+        continue;
+      }
+      const auto id = static_cast<ComponentTypeId>(type_id);
+      if (declares(id, write)) {
+        continue;
+      }
+      m_access_violations.push_back(
+          {.system_name = system_display_name(system), .type_id = id, .write = write});
+    }
+  };
+
+  report(m_access_recorder.writes(), true);
+  report(m_access_recorder.reads(), false);
+  (void)slot;
+}
+
 void World::update(float delta_time) {
   const bool profiling = m_system_profiler.enabled();
   const auto update_entered = std::chrono::steady_clock::now();
@@ -1369,6 +1447,11 @@ void World::update(float delta_time) {
     if (slot_phase != current_phase) {
       m_deferred.apply(*this);
       current_phase = slot_phase;
+    }
+
+    if (m_verify_system_access) {
+      verify_system_access(slot, system, delta_time);
+      continue;
     }
 
     if (!profiling) {
@@ -1436,15 +1519,37 @@ void World::ensure_render_snapshot() {
 }
 
 void World::publish_render_snapshot() {
-  std::size_t const buffer_index = m_next_render_snapshot_buffer;
-  m_next_render_snapshot_buffer =
-      (m_next_render_snapshot_buffer + 1U) % m_render_snapshot_buffers.size();
-  auto& buffer = m_render_snapshot_buffers[buffer_index];
   auto const published = acquire_render_snapshot();
-  if (buffer == nullptr || buffer == published || buffer.use_count() > 1) {
-    buffer = std::shared_ptr<World>(new World(false, true));
+
+  auto free_buffer = [&](std::size_t index) {
+    auto& candidate = m_render_snapshot_buffers[index];
+    if (candidate == nullptr) {
+      candidate = std::shared_ptr<World>(new World(false, true));
+      return true;
+    }
+    return candidate != published && candidate.use_count() <= 1;
+  };
+
+  std::size_t buffer_index = m_render_snapshot_buffers.size();
+  for (std::size_t offset = 0; offset < m_render_snapshot_buffers.size(); ++offset) {
+    const std::size_t candidate =
+        (m_next_render_snapshot_buffer + offset) % m_render_snapshot_buffers.size();
+    if (free_buffer(candidate)) {
+      buffer_index = candidate;
+      break;
+    }
   }
-  auto snapshot = buffer;
+
+  if (buffer_index == m_render_snapshot_buffers.size()) {
+
+    ++m_render_publication_stats.skipped_publications;
+    return;
+  }
+
+  m_next_render_snapshot_buffer =
+      (buffer_index + 1U) % m_render_snapshot_buffers.size();
+  ++m_render_publication_stats.publications;
+  auto snapshot = m_render_snapshot_buffers[buffer_index];
   snapshot->m_render_unit_ids.clear();
   snapshot->m_render_building_ids.clear();
   snapshot->m_render_other_ids.clear();
@@ -1493,8 +1598,12 @@ void World::publish_render_snapshot() {
           continue;
         }
       }
-      copy_render_components(source, *destination);
+      m_render_publication_stats.revisioned_components_skipped +=
+          copy_render_components(source, *destination);
       snapshot->m_render_entity_signatures[index] = signature;
+      ++m_render_publication_stats.entities_copied;
+    } else {
+      ++m_render_publication_stats.entities_reused;
     }
 
     if (!destination->has_component<RenderableComponent>() ||

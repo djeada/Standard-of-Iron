@@ -2,7 +2,7 @@
 
 #include "app/world/focus_target.h"
 #include "app/world/world_feedback.h"
-#include "game/core/component.h"
+#include "game/core/component_structures.h"
 #include "game/core/world.h"
 
 namespace {

@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-#include "core/component.h"
+#include "core/component_combat.h"
 #include "core/event_manager.h"
 #include "core/local_audience.h"
 #include "core/world.h"

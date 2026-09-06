@@ -5,7 +5,7 @@
 #include <string>
 #include <utility>
 
-#include "../core/component.h"
+#include "../core/component_gameplay.h"
 #include "../core/world.h"
 #include "../systems/nation_id.h"
 #include "../systems/nation_registry.h"

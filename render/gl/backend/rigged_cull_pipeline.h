@@ -59,7 +59,8 @@ public:
   auto draw_shadow(const RiggedCreatureCmd* const* cmds,
                    std::size_t count,
                    const QMatrix4x4& light_view_proj,
-                   const QVector2D& shadow_extent) -> bool;
+                   const QVector2D& shadow_extent,
+                   bool coarse_skinning = false) -> bool;
 
   auto draw_full_mesh(const RiggedCreatureCmd* const* cmds,
                       std::size_t count,
@@ -68,7 +69,8 @@ public:
 
   auto draw_full_mesh_shadow(const RiggedCreatureCmd* const* cmds,
                              std::size_t count,
-                             const QMatrix4x4& light_view_proj) -> bool;
+                             const QMatrix4x4& light_view_proj,
+                             bool coarse_skinning = false) -> bool;
 
   [[nodiscard]] auto has_shadow_path() const -> bool {
     return m_available && m_shadow_shader != nullptr;
@@ -92,7 +94,8 @@ private:
                 const QMatrix4x4& view_proj,
                 const QVector3D& camera_position,
                 const QVector2D& viewport,
-                Pass pass) -> bool;
+                Pass pass,
+                bool coarse_skinning = false) -> bool;
   auto ensure_buffers(std::size_t instance_count,
                       std::size_t bone_count,
                       std::size_t candidate_triangles) -> bool;
@@ -102,7 +105,8 @@ private:
                            std::size_t count,
                            const QMatrix4x4& view_proj,
                            const QVector3D& camera_position,
-                           Pass pass) -> bool;
+                           Pass pass,
+                           bool coarse_skinning = false) -> bool;
   auto ensure_stream_capacity(GLuint buffer,
                               std::size_t& capacity_bytes,
                               std::size_t& cursor_bytes,

@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <utility>
 
-#include "game/core/component.h"
+#include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_types.h"

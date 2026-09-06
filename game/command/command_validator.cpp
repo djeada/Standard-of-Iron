@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "../core/component.h"
+#include "../core/component_commander.h"
 #include "../core/world.h"
 #include "../session/session_context.h"
 #include "../systems/owner_registry.h"

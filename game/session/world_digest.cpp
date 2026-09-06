@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <vector>
 
-#include "../core/component.h"
+#include "../core/component_structures.h"
 #include "../core/world.h"
 #include "../systems/owner_registry.h"
 #include "../systems/player_resource_registry.h"

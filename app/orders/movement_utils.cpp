@@ -7,7 +7,7 @@
 #include "app/orders/order_submission.h"
 #include "app/orders/rts_action_model.h"
 #include "game/command/command.h"
-#include "game/core/component.h"
+#include "game/core/component_economy.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/systems/civilian_delivery_system.h"

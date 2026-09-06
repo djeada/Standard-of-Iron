@@ -21,6 +21,9 @@ class ArmyFormationRegistry {
 public:
   static auto instance() -> ArmyFormationRegistry&;
 
+  [[nodiscard]] static auto
+  for_world(const Engine::Core::World& world) -> ArmyFormationRegistry&;
+
   auto create_group(FormationDoctrineId doctrine,
                     ArmyFormationIntent intent,
                     std::vector<EntityID> members) -> FormationGroupID;

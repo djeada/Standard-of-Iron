@@ -12,7 +12,7 @@
 
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_registry.h"
-#include "game/core/component.h"
+#include "game/core/component_combat.h"
 #include "game/core/entity.h"
 #include "game/session/session_context.h"
 #include "game/units/spawn_type.h"

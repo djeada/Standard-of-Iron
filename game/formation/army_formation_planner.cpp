@@ -8,7 +8,7 @@
 #include <numbers>
 #include <unordered_map>
 
-#include "../core/component.h"
+#include "../core/component_core.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../systems/nation_registry.h"
@@ -836,12 +836,18 @@ auto ArmyFormationPlanner::make_member(EntityID entity_id,
 auto ArmyFormationPlanner::plan(Engine::Core::World& world,
                                 const ArmyFormationRequest& request)
     -> ArmyFormationPlan {
-  return plan(collect_members(world, request.members), request);
+  const ArmyFormation* previous =
+      request.group_id != k_invalid_group
+          ? ArmyFormationRegistry::for_world(world).find(request.group_id)
+          : nullptr;
+  const auto members = collect_members(world, request.members);
+  return place(build_layout(members, request, previous), request);
 }
 
 auto ArmyFormationPlanner::layout_signature(
     const std::vector<ArmyFormationMember>& members,
-    const ArmyFormationRequest& request) -> std::uint64_t {
+    const ArmyFormationRequest& request,
+    const ArmyFormation* previous_group) -> std::uint64_t {
   Hasher hasher;
   for (const auto& member : members) {
     hasher.mix(member.entity_id);
@@ -873,7 +879,7 @@ auto ArmyFormationPlanner::layout_signature(
   hasher.mix(static_cast<std::uint64_t>(options.doctrine_locked));
 
   if (request.preserve_previous_slots && request.group_id != k_invalid_group) {
-    const auto* previous = ArmyFormationRegistry::instance().find(request.group_id);
+    const auto* previous = previous_group;
     if (previous != nullptr) {
       for (const auto& slot : previous->slot_list) {
         hasher.mix(slot.occupant);
@@ -886,11 +892,12 @@ auto ArmyFormationPlanner::layout_signature(
 }
 
 auto ArmyFormationPlanner::build_layout(const std::vector<ArmyFormationMember>& members,
-                                        const ArmyFormationRequest& request)
+                                        const ArmyFormationRequest& request,
+                                        const ArmyFormation* previous_group)
     -> ArmyFormationLayout {
   ArmyFormationLayout layout;
   layout.intent = request.intent;
-  layout.signature = layout_signature(members, request);
+  layout.signature = layout_signature(members, request, previous_group);
 
   if (members.empty()) {
     layout.rejection_reason =
@@ -934,7 +941,7 @@ auto ArmyFormationPlanner::build_layout(const std::vector<ArmyFormationMember>& 
   }
 
   if (request.preserve_previous_slots && request.group_id != k_invalid_group) {
-    const auto* previous = ArmyFormationRegistry::instance().find(request.group_id);
+    const auto* previous = previous_group;
     if (previous != nullptr) {
       std::vector<FormationSlot> reordered = layout.slot_list;
       std::vector<bool> claimed(reordered.size(), false);

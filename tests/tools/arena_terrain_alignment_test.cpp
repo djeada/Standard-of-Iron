@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "game/core/component.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"

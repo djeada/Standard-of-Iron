@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "../../core/component.h"
+#include "../../core/component_economy.h"
 #include "../../core/world.h"
 #include "combat_types.h"
 #include "combat_utils.h"

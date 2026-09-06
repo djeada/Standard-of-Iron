@@ -2,7 +2,6 @@
 
 #include <QVector3D>
 
-#include <memory>
 #include <optional>
 
 #include "nav_grid_types.h"
@@ -34,9 +33,6 @@ public:
   snap_to_walkable_ground(const QVector3D& world_position) -> QVector3D;
   [[nodiscard]] static auto snap_to_walkable_ground(const QVector3D& world_position,
                                                     int max_search_radius) -> QVector3D;
-
-private:
-  static std::unique_ptr<Pathfinding> s_pathfinder;
 };
 
 } // namespace Game::Systems
