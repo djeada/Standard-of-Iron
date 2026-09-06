@@ -3,10 +3,13 @@
 
 #include "core/component_economy.h"
 #include "core/entity.h"
+#include "core/ownership_constants.h"
 #include "core/world.h"
 #include "map/visibility_service.h"
 #include "systems/attack_targeting.h"
+#include "systems/combat_system/target_rules.h"
 #include "systems/owner_registry.h"
+#include "wildlife/wildlife_species.h"
 
 using namespace Engine::Core;
 using namespace Game::Systems;
@@ -96,6 +99,41 @@ TEST_F(AttackTargetingTest, OwnAlliedNeutralAndDeadUnitsAreNotHighlighted) {
   EXPECT_FALSE(contains_marker(highlights, ally->get_id()));
   EXPECT_FALSE(contains_marker(highlights, wildlife->get_id()));
   EXPECT_FALSE(contains_marker(highlights, corpse->get_id()));
+}
+
+TEST_F(AttackTargetingTest, AHostileWolfIsHighlightedButAGrazingSheepIsNot) {
+  auto* wolf = spawn_unit(*world, Game::Core::NEUTRAL_OWNER_ID, 3.0F, 0.0F);
+  auto* wolf_wildlife = wolf->add_component<WildlifeComponent>();
+  wolf_wildlife->species = Game::Wildlife::Species::Wolf;
+  wolf_wildlife->hostile_timer = 4.0F;
+
+  auto* sheep = spawn_unit(*world, Game::Core::NEUTRAL_OWNER_ID, 4.0F, 0.0F);
+  auto* sheep_wildlife = sheep->add_component<WildlifeComponent>();
+  sheep_wildlife->species = Game::Wildlife::Species::Sheep;
+
+  const auto highlights = collect_attack_target_highlights(make_request());
+
+  EXPECT_TRUE(contains_marker(highlights, wolf->get_id()));
+  EXPECT_FALSE(contains_marker(highlights, sheep->get_id()));
+}
+
+TEST_F(AttackTargetingTest, TheAttackCursorAcceptsAnAnimalThatAutoAcquireWouldRefuse) {
+  auto* sheep = spawn_unit(*world, Game::Core::NEUTRAL_OWNER_ID, 4.0F, 0.0F);
+  auto* wildlife = sheep->add_component<WildlifeComponent>();
+  wildlife->species = Game::Wildlife::Species::Sheep;
+
+  EXPECT_EQ(classify_attack_target(world.get(),
+                                   k_local_owner,
+                                   true,
+                                   sheep->get_id(),
+                                   Combat::EngagementIntent::Ordered),
+            AttackTargetVerdict::Valid);
+  EXPECT_EQ(classify_attack_target(world.get(),
+                                   k_local_owner,
+                                   true,
+                                   sheep->get_id(),
+                                   Combat::EngagementIntent::AutoAcquired),
+            AttackTargetVerdict::Neutral);
 }
 
 TEST_F(AttackTargetingTest, NothingIsHighlightedWithoutAttackers) {

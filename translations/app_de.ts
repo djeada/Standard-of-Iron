@@ -250,14 +250,6 @@
         <translation>Wähle eine Kaserne, bevor du einen Sammelpunkt setzt</translation>
     </message>
     <message>
-        <source>RECRUIT UNITS</source>
-        <translation>EINHEITEN AUSBILDEN</translation>
-    </message>
-    <message>
-        <source>Scroll for more</source>
-        <translation>Weiterscrollen</translation>
-    </message>
-    <message>
         <source>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</source>
         <translation>Manneskraft, die diese Kaserne noch hält. Jede Rekrutierung verbraucht davon; in einem Heim ausgehobene Zivilisten liefern Nachschub.</translation>
     </message>
@@ -8012,8 +8004,12 @@ um die Vorschau zu sehen</translation>
         <translation>Dieses Ziel ist bereits verschwunden.</translation>
     </message>
     <message>
-        <source>Cannot attack a friendly or neutral target.</source>
-        <translation>Ein freundliches oder neutrales Ziel kann nicht angegriffen werden.</translation>
+        <source>Cannot attack your own or an allied unit.</source>
+        <translation>Eigene oder verbündete Einheiten können nicht angegriffen werden.</translation>
+    </message>
+    <message>
+        <source>That target is not a threat.</source>
+        <translation>Dieses Ziel stellt keine Bedrohung dar.</translation>
     </message>
     <message>
         <source>That building no longer exists.</source>

@@ -155,8 +155,7 @@ auto AICommandApplier::apply(Engine::Core::World& world,
       attackers.reserve(command.units.size());
       for (const auto unit_id : command.units) {
         auto* attacker = world.get_entity(unit_id);
-        if (Game::Systems::CombatRules::seeks_out_enemies(attacker) &&
-            !Game::Systems::Combat::melee_walled_off_from(attacker, target)) {
+        if (!Game::Systems::Combat::melee_walled_off_from(attacker, target)) {
           attackers.push_back(unit_id);
         }
       }

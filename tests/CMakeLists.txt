@@ -196,6 +196,7 @@ add_executable(
     systems/stamina_system_test.cpp
     systems/attack_range_test.cpp
     systems/attack_targeting_test.cpp
+    systems/target_rules_test.cpp
     systems/target_focus_test.cpp
     systems/combat_mode_test.cpp
     systems/hold_mode_test.cpp

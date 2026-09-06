@@ -16,6 +16,7 @@
 #include "combat_random.h"
 #include "combat_utils.h"
 #include "damage_application.h"
+#include "target_rules.h"
 
 namespace Game::Systems::Combat {
 
@@ -97,7 +98,9 @@ auto apply_stomp_damage(Engine::Core::Entity& elephant,
   bool hit_any = false;
   for (auto* other_entity : units) {
     if (other_entity == nullptr || other_entity == &elephant ||
-        !is_valid_enemy_unit(unit, other_entity, false)) {
+        !may_attack(unit,
+                    other_entity,
+                    {.intent = EngagementIntent::Ordered, .allow_buildings = false})) {
       continue;
     }
 
@@ -205,7 +208,9 @@ void process_charge_attack(Engine::Core::Entity* elephant,
 
     auto* target =
         get_entity_from_query_context(query_context, attack_target->target_id);
-    if (!is_valid_enemy_unit(unit, target, false)) {
+    if (!may_attack(unit,
+                    target,
+                    {.intent = EngagementIntent::Ordered, .allow_buildings = false})) {
       break;
     }
 

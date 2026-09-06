@@ -273,6 +273,7 @@ add_library(
     STATIC
     systems/combat_system.cpp
     systems/combat_system/combat_utils.cpp
+    systems/combat_system/target_rules.cpp
     systems/combat_system/structure_fire.cpp
     systems/combat_system/damage_application.cpp
     systems/combat_system/damage_processor.cpp

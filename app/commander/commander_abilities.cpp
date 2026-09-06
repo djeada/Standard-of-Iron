@@ -13,6 +13,7 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/building_line_of_sight.h"
 #include "game/systems/combat_system/mounted_charge_processor.h"
+#include "game/systems/combat_system/target_rules.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/rpg_combat_system/rpg_commander_damage.h"
 #include "game/units/spawn_type.h"
@@ -143,8 +144,12 @@ auto CommanderAbilities::resolve_target(const CommanderAbilityContext& context,
             ? candidate->get_component<Engine::Core::TransformComponent>()
             : nullptr;
     if (candidate_unit == nullptr || candidate_transform == nullptr ||
-        candidate_unit->health <= 0 ||
-        !owners.are_enemies(context.local_owner_id, candidate_unit->owner_id)) {
+        Game::Systems::Combat::evaluate_target(
+            owners,
+            context.local_owner_id,
+            candidate,
+            {.intent = Game::Systems::Combat::EngagementIntent::AutoAcquired,
+             .allow_buildings = true}) != Game::Systems::Combat::TargetRefusal::None) {
       return false;
     }
 
@@ -190,8 +195,13 @@ auto CommanderAbilities::try_shield_bash(const CommanderAbilityContext& context)
     }
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     auto* ent_tf = entity->get_component<Engine::Core::TransformComponent>();
-    if (unit == nullptr || ent_tf == nullptr || unit->health <= 0 ||
-        !owners.are_enemies(context.local_owner_id, unit->owner_id)) {
+    if (unit == nullptr || ent_tf == nullptr ||
+        Game::Systems::Combat::evaluate_target(
+            owners,
+            context.local_owner_id,
+            entity,
+            {.intent = Game::Systems::Combat::EngagementIntent::AutoAcquired,
+             .allow_buildings = true}) != Game::Systems::Combat::TargetRefusal::None) {
       continue;
     }
     const QVector3D epos(ent_tf->position.x, ent_tf->position.y, ent_tf->position.z);

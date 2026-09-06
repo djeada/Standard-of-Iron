@@ -7,10 +7,12 @@
 #include "app/orders/order_submission.h"
 #include "app/orders/rts_action_model.h"
 #include "game/command/command.h"
+#include "game/core/ambient_session.h"
 #include "game/core/component_economy.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/systems/civilian_delivery_system.h"
+#include "game/systems/combat_system/target_rules.h"
 #include "game/systems/command_service.h"
 #include "game/systems/construction_cost_catalog.h"
 #include "game/systems/nav_grid.h"
@@ -310,17 +312,13 @@ auto pick_enemy_unit_at_screen(Engine::Core::World* world,
   if (target_id == 0U) {
     return 0;
   }
-  auto* target_entity = world->get_entity(target_id);
-  auto* target_unit = target_entity != nullptr
-                          ? target_entity->get_component<Engine::Core::UnitComponent>()
-                          : nullptr;
-  if (target_unit == nullptr) {
-    return 0;
-  }
-  bool const is_enemy = (target_unit->owner_id != local_owner_id);
-  bool const is_building =
-      target_entity->has_component<Engine::Core::BuildingComponent>();
-  return (is_enemy && !is_building) ? target_id : 0;
+  const auto ruling = Game::Systems::Combat::evaluate_target(
+      *Game::Session::services_for(*world).owners,
+      local_owner_id,
+      world->get_entity(target_id),
+      {.intent = Game::Systems::Combat::EngagementIntent::AutoAcquired,
+       .allow_buildings = false});
+  return ruling == Game::Systems::Combat::TargetRefusal::None ? target_id : 0;
 }
 
 auto issue_attack_command(Engine::Core::World* world,
