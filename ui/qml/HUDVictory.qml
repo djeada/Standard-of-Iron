@@ -42,6 +42,9 @@ Design.IronOutcomeOverlay {
     Connections {
         function onVictory_state_changed() {
             victoryOverlay.onOutcomeChanged();
+            battleSummary.reset_data();
+            if (victoryOverlay.victory_state() !== "")
+                battleSummary.prepare();
         }
 
         target: victoryOverlay.game_ready() ? game : null
