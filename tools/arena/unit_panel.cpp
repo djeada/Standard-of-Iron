@@ -21,6 +21,7 @@
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/units/troop_type.h"
+#include "panel_wheel_guard.h"
 #include "unit_spawn_options.h"
 
 namespace {
@@ -55,12 +56,15 @@ UnitPanel::UnitPanel(Game::Systems::NationRegistry& nations, QWidget* parent)
 
   auto* spawn_form = new QFormLayout();
   spawn_form->setSpacing(4);
+  spawn_form->setRowWrapPolicy(QFormLayout::WrapLongRows);
+  spawn_form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
   m_owner_box = new QComboBox(spawn_group);
   m_nation_box = new QComboBox(spawn_group);
   m_unit_box = new QComboBox(spawn_group);
   m_spawn_count_box = new QSpinBox(spawn_group);
   m_individuals_per_unit_box = new QSpinBox(spawn_group);
-  m_render_rider_checkbox = new QCheckBox("Render Rider On Mounted Units", spawn_group);
+  m_render_rider_checkbox = new QCheckBox("Render rider", spawn_group);
+  m_render_rider_checkbox->setToolTip("Render the rider on mounted units");
 
   m_owner_box->addItem(QStringLiteral("Local Player"), k_arena_local_owner_id);
   m_owner_box->addItem(QStringLiteral("Arena Opponent"), k_arena_opponent_owner_id);
@@ -76,9 +80,9 @@ UnitPanel::UnitPanel(Game::Systems::NationRegistry& nations, QWidget* parent)
   spawn_form->addRow("Side", m_owner_box);
   spawn_form->addRow("Nation", m_nation_box);
   spawn_form->addRow("Unit", m_unit_box);
-  spawn_form->addRow("Spawn Count", m_spawn_count_box);
-  spawn_form->addRow("Members / Unit", m_individuals_per_unit_box);
-  spawn_form->addRow("", m_render_rider_checkbox);
+  spawn_form->addRow("Count", m_spawn_count_box);
+  spawn_form->addRow("Members", m_individuals_per_unit_box);
+  spawn_form->addRow(m_render_rider_checkbox);
   spawn_group_layout->addLayout(spawn_form);
 
   auto* spawn_buttons = new QWidget(spawn_group);
@@ -94,8 +98,8 @@ UnitPanel::UnitPanel(Game::Systems::NationRegistry& nations, QWidget* parent)
   apply_visuals_button->setToolTip("Apply visual overrides to selected units");
   spawn_buttons_layout->addWidget(spawn_button, 1);
   spawn_buttons_layout->addWidget(clear_button, 1);
-  spawn_buttons_layout->addWidget(apply_visuals_button, 1);
   spawn_group_layout->addWidget(spawn_buttons);
+  spawn_group_layout->addWidget(apply_visuals_button);
 
   layout->addWidget(spawn_group);
 
@@ -105,6 +109,8 @@ UnitPanel::UnitPanel(Game::Systems::NationRegistry& nations, QWidget* parent)
 
   auto* anim_form = new QFormLayout();
   anim_form->setSpacing(4);
+  anim_form->setRowWrapPolicy(QFormLayout::WrapLongRows);
+  anim_form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
   auto* animation_box = new QComboBox(anim_group);
   animation_box->addItems({QStringLiteral("Idle"),
                            QStringLiteral("Walk"),
@@ -139,10 +145,13 @@ UnitPanel::UnitPanel(Game::Systems::NationRegistry& nations, QWidget* parent)
   anim_buttons_layout->addWidget(move_button, 1);
   anim_group_layout->addWidget(anim_buttons);
 
-  m_pause_checkbox = new QCheckBox("Pause Simulation", anim_group);
-  auto* skeleton_debug_box = new QCheckBox("Skeleton / Pose Overlay", anim_group);
-  m_combat_debug_checkbox = new QCheckBox("Combat Animation Debug Overlay", anim_group);
-  m_attack_scrub_checkbox = new QCheckBox("Freeze Selected Attack Phase", anim_group);
+  m_pause_checkbox = new QCheckBox("Pause simulation", anim_group);
+  auto* skeleton_debug_box = new QCheckBox("Skeleton overlay", anim_group);
+  skeleton_debug_box->setToolTip("Draw the skeleton / pose overlay");
+  m_combat_debug_checkbox = new QCheckBox("Combat debug", anim_group);
+  m_combat_debug_checkbox->setToolTip("Draw the combat animation debug overlay");
+  m_attack_scrub_checkbox = new QCheckBox("Freeze attack", anim_group);
+  m_attack_scrub_checkbox->setToolTip("Freeze the selected attack phase");
   auto* scrub_container = new QWidget(anim_group);
   auto* scrub_layout = new QHBoxLayout(scrub_container);
   scrub_layout->setContentsMargins(0, 0, 0, 0);
@@ -170,6 +179,8 @@ UnitPanel::UnitPanel(Game::Systems::NationRegistry& nations, QWidget* parent)
   quick_setup_layout->setSpacing(4);
   auto* scenario_form = new QFormLayout();
   scenario_form->setSpacing(4);
+  scenario_form->setRowWrapPolicy(QFormLayout::WrapLongRows);
+  scenario_form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
   m_scenario_box = new QComboBox(quick_setup_group);
   for (const Arena::Scenarios::ScenarioOption& option : Arena::Scenarios::options()) {
     m_scenario_box->addItem(option.label, option.id);
@@ -180,7 +191,7 @@ UnitPanel::UnitPanel(Game::Systems::NationRegistry& nations, QWidget* parent)
   load_scenario_button->setToolTip(
       "Reset the arena and load a Phase 1 combat animation scenario.");
   scenario_form->addRow("Scenario", m_scenario_box);
-  scenario_form->addRow("", load_scenario_button);
+  scenario_form->addRow(load_scenario_button);
   quick_setup_layout->addLayout(scenario_form);
   m_scenario_description_label = new QLabel(quick_setup_group);
   m_scenario_description_label->setWordWrap(true);
@@ -357,6 +368,8 @@ UnitPanel::UnitPanel(Game::Systems::NationRegistry& nations, QWidget* parent)
         m_scenario_box->itemData(m_scenario_box->currentIndex(), Qt::ToolTipRole)
             .toString());
   }
+
+  Arena::Panels::guard_wheel_edits(this);
 }
 
 void UnitPanel::apply_special_unit_defaults(const QString& unit_id) {

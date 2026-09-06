@@ -14,6 +14,8 @@
 
 #include <functional>
 
+#include "panel_wheel_guard.h"
+
 namespace {
 
 void bind_slider_to_double(QSlider* slider,
@@ -55,6 +57,8 @@ TerrainPanel::TerrainPanel(QWidget* parent)
   noise_layout->setSpacing(6);
   auto* form = new QFormLayout();
   form->setSpacing(4);
+  form->setRowWrapPolicy(QFormLayout::WrapLongRows);
+  form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 
   auto* seed_box = new QSpinBox(noise_group);
   seed_box->setRange(0, 999999);
@@ -128,6 +132,8 @@ TerrainPanel::TerrainPanel(QWidget* parent)
   rain_vlayout->setSpacing(6);
   auto* rain_form = new QFormLayout();
   rain_form->setSpacing(4);
+  rain_form->setRowWrapPolicy(QFormLayout::WrapLongRows);
+  rain_form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
   auto* rain_box = new QCheckBox("Enable Rain", rain_section);
   auto* rain_intensity_container = new QWidget(rain_section);
   auto* rain_intensity_layout = new QHBoxLayout(rain_intensity_container);
@@ -142,13 +148,15 @@ TerrainPanel::TerrainPanel(QWidget* parent)
   rain_intensity_spin->setValue(0.5);
   rain_intensity_layout->addWidget(rain_intensity_slider, 1);
   rain_intensity_layout->addWidget(rain_intensity_spin);
-  rain_form->addRow("", rain_box);
+  rain_form->addRow(rain_box);
   rain_form->addRow("Intensity", rain_intensity_container);
   rain_vlayout->addLayout(rain_form);
   layout->addWidget(rain_section);
 
   auto* lighting_section = new QGroupBox("Environment Lighting", this);
   auto* lighting_form = new QFormLayout(lighting_section);
+  lighting_form->setRowWrapPolicy(QFormLayout::WrapLongRows);
+  lighting_form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
   auto* time_spin = new QDoubleSpinBox(lighting_section);
   time_spin->setRange(0.0, 23.99);
   time_spin->setDecimals(2);
@@ -238,4 +246,6 @@ TerrainPanel::TerrainPanel(QWidget* parent)
       rain_intensity_slider, rain_intensity_spin, 100.0, [this](double value) {
         emit rain_intensity_changed(static_cast<float>(value));
       });
+
+  Arena::Panels::guard_wheel_edits(this);
 }
