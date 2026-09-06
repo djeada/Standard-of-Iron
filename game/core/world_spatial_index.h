@@ -35,9 +35,9 @@ public:
 
   explicit WorldSpatialIndex(float cell_size = 8.0F);
 
-  void refresh(World& world);
+  void refresh(const World& world);
 
-  void rebuild(World& world);
+  void rebuild(const World& world);
 
   void clear();
 

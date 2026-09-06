@@ -198,8 +198,11 @@ void close_and_bite(const NatureContext& ctx,
   float const spacing = pack_ring_radius(prey, slot.count);
   float approach_x = prey.x + (std::cos(approach_angle) * spacing);
   float approach_z = prey.z + (std::sin(approach_angle) * spacing);
+  auto const* prey_registry = prey.entity->registry();
   if (auto const* movement =
-          prey.entity->get_component<Engine::Core::MovementComponent>()) {
+          prey_registry == nullptr
+              ? nullptr
+              : prey_registry->try_get<Engine::Core::MovementComponent>(prey.id)) {
 
     constexpr float lead_seconds = 0.5F;
     approach_x += movement->get_vx() * lead_seconds;

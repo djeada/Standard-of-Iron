@@ -1137,8 +1137,8 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     if (wildlife->bite_timer > 0.0F) {
-      if (auto* movement =
-              animal.entity->get_component<Engine::Core::MovementComponent>()) {
+      if (auto* movement = world->try_get<Engine::Core::MovementComponent>(
+              animal.entity->get_id())) {
         movement->stop();
       }
       continue;
