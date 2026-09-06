@@ -66,6 +66,10 @@ auto healthy_run(std::uint32_t ticks = 120U) -> std::vector<MovementTroopSample>
     sample.waypoint_index = 0U;
     sample.waypoint_count = 1U;
     sample.current_files = 3U;
+    sample.normal_files = 3U;
+    sample.file_spacing = 1.2F;
+    sample.lateral_scale = 1.0F;
+    sample.formation_half_width = 1.2F;
     sample.soldier_body_radius = 0.25F;
     sample.corridor_half_width = 2.0F;
     samples.push_back(sample);
