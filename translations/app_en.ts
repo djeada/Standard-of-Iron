@@ -9890,6 +9890,22 @@ Builders reap it for the food that recruits civilians</translation>
         <source>Prompts and readouts:</source>
         <translation>Prompts and readouts:</translation>
     </message>
+    <message>
+        <source>Listening Preset:</source>
+        <translation>Listening Preset:</translation>
+    </message>
+    <message>
+        <source>Headphones</source>
+        <translation>Headphones</translation>
+    </message>
+    <message>
+        <source>Speakers</source>
+        <translation>Speakers</translation>
+    </message>
+    <message>
+        <source>Night</source>
+        <translation>Night</translation>
+    </message>
 </context>
 <context>
     <name>SkirmishLoader</name>
