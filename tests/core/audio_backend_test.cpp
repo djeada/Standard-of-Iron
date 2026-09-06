@@ -101,6 +101,10 @@ protected:
     return buffer;
   }
 
+  // One whole loop of the clip covers every sample exactly once, so this peak
+  // does not depend on where in the loop the measuring window happens to start.
+  auto looped_peak() -> float { return peak_of(render(TONE_FRAMES)); }
+
   QTemporaryDir m_directory;
   QString m_path;
   MiniaudioBackend m_backend;
@@ -364,16 +368,16 @@ TEST_F(AudioBackendTest, CriticalInformationDucksAlreadyPlayingMusicAndRecovers)
   m_backend.wait_for_decodes();
   m_backend.play(0, QStringLiteral("bed"), 0.5F, true, 0);
   render(SAMPLE_RATE);
-  const float baseline = peak_of(render(4096));
+  const float baseline = looped_peak();
   ASSERT_GT(baseline, 0.01F);
   m_backend.play_sound(QStringLiteral("alert"), 0.01F, true, 0.0F, MixBus::Alert, 7);
   render(SAMPLE_RATE);
-  const float ducked = peak_of(render(4096));
+  const float ducked = looped_peak();
   EXPECT_LT(ducked, baseline * 0.8F);
   EXPECT_GT(ducked, baseline * 0.5F);
   m_backend.stop_sound(QStringLiteral("alert"));
   render(SAMPLE_RATE * 2);
-  EXPECT_NEAR(peak_of(render(4096)), baseline, 0.001F);
+  EXPECT_NEAR(looped_peak(), baseline, 0.001F);
 }
 
 TEST_F(AudioBackendTest, MutedCriticalVoicesDoNotDuckTheBattle) {
@@ -386,8 +390,8 @@ TEST_F(AudioBackendTest, MutedCriticalVoicesDoNotDuckTheBattle) {
   m_backend.wait_for_decodes();
   m_backend.play_sound(QStringLiteral("bed"), 0.5F, true, 0.0F, MixBus::Combat);
   render(SAMPLE_RATE);
-  const float baseline = peak_of(render(4096));
+  const float baseline = looped_peak();
   m_backend.play_sound(QStringLiteral("voice"), 0.0F, true, 0.0F, MixBus::Voice, 9);
   render(SAMPLE_RATE);
-  EXPECT_NEAR(peak_of(render(4096)), baseline, 0.001F);
+  EXPECT_NEAR(looped_peak(), baseline, 0.001F);
 }
