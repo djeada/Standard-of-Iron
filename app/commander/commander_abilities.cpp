@@ -281,8 +281,12 @@ auto CommanderAbilities::try_vanguard_rush(const CommanderAbilityContext& contex
   }
 
   const QVector3D desired = start + rush_direction * rush_distance;
-  const QVector3D resolved = CommanderMotor::reachable_ground_position(
-      Game::Session::session_for(world), start, desired, context.commander_id);
+  const QVector3D resolved =
+      CommanderMotor::reachable_ground_position(Game::Session::session_for(world),
+                                                commander,
+                                                start,
+                                                desired,
+                                                context.commander_id);
   if (context.motor != nullptr) {
     static_cast<void>(context.motor->teleport(
         *transform, resolved, CommanderDisplacementSource::StrikeLunge));

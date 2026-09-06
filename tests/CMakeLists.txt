@@ -548,6 +548,7 @@ add_executable(
     core/mission_tick_ownership_test.cpp
     core/commander_camera_rig_test.cpp
     core/commander_control_controller_test.cpp
+    core/commander_shared_traversal_test.cpp
     core/commander_defense_windows_test.cpp
     core/commander_accessibility_test.cpp
     core/commander_lifecycle_soak_test.cpp

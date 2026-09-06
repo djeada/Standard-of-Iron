@@ -901,11 +901,45 @@ TEST(CommanderControlRegressionTest, OnlyTheMotorTranslatesTheCommander) {
                                    "CommanderDisplacementSource::Airborne",
                                    "CommanderDisplacementSource::DodgeRoll",
                                    "CommanderDisplacementSource::DodgeRecover",
-                                   "CommanderDisplacementSource::StrikeLunge",
-                                   "CommanderDisplacementSource::BodySeparation"}) {
+                                   "CommanderDisplacementSource::StrikeLunge"}) {
     EXPECT_TRUE(contains(controller_source, source))
         << source << " has to reach the motor as a named displacement source";
   }
+
+  for (const std::string banned : {"separate_commander_from_bodies",
+                                   "k_body_separation_scan_range",
+                                   "k_body_separation_max_push_per_second"}) {
+    EXPECT_FALSE(contains(controller_source, banned))
+        << banned
+        << " is back. Dynamic body overlap is BodyContactSystem's for every unit "
+           "in the game; the per-anchor push that used to live here summed every "
+           "soldier in range, saturated its own clamp every tick and walled the "
+           "commander into his own formation.";
+  }
+  EXPECT_TRUE(contains(controller_source, "steering.contact_push_x"))
+      << "the commander trace has to report the shared contact correction so an "
+         "RPG-versus-RTS movement disagreement stays diagnosable";
+}
+
+TEST(CommanderControlRegressionTest, DirectControlOwnsSteeringIntentAndNothingElse) {
+  const auto root = find_repo_root();
+  const auto motor_source = app_source(root, "commander_motor.cpp");
+  const auto route_follow_source =
+      read_text(root / "game" / "systems" / "route_follow_system.cpp");
+  ASSERT_FALSE(motor_source.empty());
+  ASSERT_FALSE(route_follow_source.empty());
+
+  EXPECT_TRUE(contains(motor_source, "Game::Systems::body_profile_for(commander)"))
+      << "the commander motor has to take its body profile from the same place "
+         "MovementSystem does, or entering RPG mode changes what is traversable";
+  EXPECT_TRUE(contains(motor_source, "Walkability::can_traverse"));
+  EXPECT_TRUE(contains(motor_source, "Walkability::can_stand"));
+  EXPECT_FALSE(contains(motor_source, "Passability::Light"))
+      << "the motor is choosing a passability of its own instead of reading the "
+         "one body_profile_for() derived from the commander";
+
+  EXPECT_TRUE(contains(route_follow_source, "publish_direct_control_intent"));
+  EXPECT_TRUE(contains(route_follow_source, "DesiredMotionSource::DirectControl"));
 }
 
 TEST(CommanderControlRegressionTest,

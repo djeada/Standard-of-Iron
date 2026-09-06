@@ -43,6 +43,7 @@ constexpr float k_quarry_crowd_penalty = 400.0F;
 constexpr float k_wolf_bite_recovery = 0.35F;
 constexpr float k_wolf_bite_facing_degrees = 12.0F;
 constexpr float k_wolf_contact_facing_degrees = 15.0F;
+constexpr float k_wolf_contact_facing_max_degrees = 60.0F;
 constexpr float k_wolf_bite_flinch_seconds = 0.30F;
 constexpr float k_wolf_bite_blood_chance = 0.34F;
 constexpr float k_wolf_bite_blood_spread = 0.55F;
@@ -536,6 +537,18 @@ void WildlifeSystem::collect_animals(Engine::Core::World& world) {
       runtime.center_z = m_groups[index].home_z;
     }
   }
+}
+
+static auto prey_escape_allowance(const PreyRef& prey) -> float {
+  constexpr float k_impact_delay =
+      Engine::Core::WildlifeComponent::k_bite_animation_seconds *
+      Engine::Core::WildlifeComponent::k_bite_impact_phase;
+  if (prey.entity == nullptr) {
+    return 0.0F;
+  }
+  const auto* unit = prey.entity->get_component<Engine::Core::UnitComponent>();
+  float const speed = unit != nullptr ? std::max(0.0F, unit->speed) : 0.0F;
+  return speed * k_impact_delay;
 }
 
 auto WildlifeSystem::begin_bite(Engine::Core::Entity& entity,
@@ -1089,11 +1102,18 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
       if (prey.valid() && wolf_transform != nullptr && attack != nullptr) {
         float const dx = prey.x - wolf_transform->position.x;
         float const dz = prey.z - wolf_transform->position.z;
-        float const contact_reach = k_wolf_bite_range + prey.radius;
+        float const escape = prey_escape_allowance(prey);
+        float const contact_reach = k_wolf_bite_range + prey.radius + escape;
+        float const distance = std::sqrt((dx * dx) + (dz * dz));
         float const yaw = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
-        bool const facing =
-            std::abs(std::remainder(yaw - wolf_transform->rotation.y, 360.0F)) <=
-            k_wolf_contact_facing_degrees;
+
+        float const swing_degrees = std::atan2(escape, std::max(distance, 0.05F)) *
+                                    180.0F / std::numbers::pi_v<float>;
+        float const facing_allowance =
+            std::min(k_wolf_contact_facing_degrees + swing_degrees,
+                     k_wolf_contact_facing_max_degrees);
+        bool const facing = std::abs(std::remainder(yaw - wolf_transform->rotation.y,
+                                                    360.0F)) <= facing_allowance;
 
         bool const walled_off = Game::Systems::Combat::structure_separates_positions(
             QVector3D(wolf_transform->position.x, 0.0F, wolf_transform->position.z),

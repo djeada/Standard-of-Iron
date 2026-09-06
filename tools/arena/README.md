@@ -1300,6 +1300,22 @@ Four behind-head scenes cover commander (FPV) control:
   `RpgFormationSurvivesLensGap` fails a frame that drops more than half of a
   unit's living soldiers to the lens gap, and also fails a unit that vanishes
   from submission entirely for any reason other than the frustum or the fog.
+- `rpg_friendly_ranks`, `rpg_friendly_workers`, `rpg_friendly_livestock`,
+  `rpg_friendly_stream` and `rpg_friendly_gauntlet` put live friendly bodies
+  between the commander and ground he has to reach: a three-deep infantry block,
+  a work party of builders and civilians, a mixed group of people and sheep, two
+  columns marching across his path in opposite directions, and a plug of soldiers
+  wedged into the gap between two houses. Friendly bodies are traffic, so
+  `RpgTravelObserved` fails the run when the commander covers less ground than the
+  layout allows — which is what "a rank became a wall" looks like from outside.
+  The gauntlet is the one that has to tell the two kinds of blocker apart: the
+  houses stop him exactly as they do under an RTS order and the soldiers do not.
+- `rts_friendly_ranks` is the control for those five. Same commander, same start,
+  same friendly block, same destination, steered by the route follower instead of
+  by a player, with `GroupReachedDestination` as the contract. One of the pair
+  passing while the other fails means the two control modes are not sharing a
+  traversal model; see
+  [PATHFINDING_ARCHITECTURE.md](../../docs/PATHFINDING_ARCHITECTURE.md#the-direct-control-commander-is-a-body-like-any-other).
 - `rpg_strike_lunge` attacks an enemy standing just outside planted reach with no
   movement input at all. A swing has to carry the body into the target, so
   `RpgTravelObserved` fails a commander who swings from a planted stance and

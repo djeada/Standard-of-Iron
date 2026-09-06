@@ -13,6 +13,7 @@
 #include "../map/terrain_service.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_config.h"
+#include "body_profile.h"
 #include "combat_rules.h"
 #include "combat_system/structure_combat.h"
 #include "command_service.h"
@@ -645,20 +646,7 @@ public:
 
   [[nodiscard]] static auto
   body_profile(const Engine::Core::Entity& entity) -> BodyProfile {
-    BodyProfile profile;
-    if (auto const* movement = entity.get_component<Engine::Core::MovementComponent>();
-        movement != nullptr) {
-      profile.radius = movement->get_navigation_clearance();
-      profile.passability = movement->get_can_enter_forest()
-                                ? Pathfinding::Passability::Light
-                                : Pathfinding::Passability::Heavy;
-    }
-    if (auto const* commander =
-            entity.get_component<Engine::Core::CommanderComponent>();
-        commander != nullptr && commander->fpv_controlled) {
-      profile.stops_at_building_facade = true;
-    }
-    return profile;
+    return body_profile_for(entity);
   }
 
 private:

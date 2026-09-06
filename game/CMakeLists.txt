@@ -234,6 +234,7 @@ add_library(
     soi_movement
     STATIC
     systems/order_service.cpp
+    systems/body_profile.cpp
     systems/command_service.cpp
     systems/movement_route.cpp
     systems/route_follow_system.cpp

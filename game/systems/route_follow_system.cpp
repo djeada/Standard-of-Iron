@@ -79,6 +79,29 @@ route_stops_short_of_the_order(const Engine::Core::MovementComponent& movement,
   return to_requested > arrive_radius + k_short_route_slack;
 }
 
+void publish_direct_control_intent(const Engine::Core::Entity& entity,
+                                   const Engine::Core::TransformComponent& transform,
+                                   Engine::Core::MovementFactsComponent& facts) {
+  auto const* commander = entity.get_component<Engine::Core::CommanderComponent>();
+  if (commander == nullptr || !commander->fpv_motion_requested) {
+    return;
+  }
+  float const speed =
+      Game::Systems::planar_length(commander->fpv_motion_vx, commander->fpv_motion_vz);
+  if (speed <= 1.0e-4F) {
+    return;
+  }
+  facts.desired.valid = true;
+  facts.desired.velocity_x = commander->fpv_motion_vx;
+  facts.desired.velocity_z = commander->fpv_motion_vz;
+  facts.desired.tangent_x = commander->fpv_motion_vx / speed;
+  facts.desired.tangent_z = commander->fpv_motion_vz / speed;
+  facts.desired.lookahead_x = transform.position.x + commander->fpv_motion_vx;
+  facts.desired.lookahead_z = transform.position.z + commander->fpv_motion_vz;
+  facts.desired.speed_limit = speed;
+  facts.desired.source = Engine::Core::DesiredMotionSource::DirectControl;
+}
+
 } // namespace
 
 auto is_movement_point_allowed(const QVector3D& pos,
@@ -255,6 +278,8 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
   if (gate != MovementGate::RouteFollowing) {
     if (gate == MovementGate::Dead) {
       facts->progress.state = Engine::Core::MovementOrderState::Idle;
+    } else if (gate == MovementGate::DirectControl) {
+      publish_direct_control_intent(entity, *transform, *facts);
     }
     return;
   }
@@ -497,6 +522,7 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
   }
 
   facts->desired.valid = true;
+  facts->desired.source = Engine::Core::DesiredMotionSource::Route;
   facts->desired.velocity_x = nx * desired_speed;
   facts->desired.velocity_z = nz * desired_speed;
   facts->desired.tangent_x = tangent_x;

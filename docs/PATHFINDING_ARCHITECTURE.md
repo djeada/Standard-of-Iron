@@ -352,8 +352,57 @@ its site, a worker at a resource, a rank holding its ground, a duellist in a
 melee lock all anchor the pair, and whoever is moving takes the whole correction
 and goes around.
 
+**A moving body's correction is taken sideways, never along its own travel.**
+`slide_along_travel` projects the push perpendicular to the direction the body
+wants to go, so contact can move it aside but cannot brake it. The anchor still
+takes the whole push, unprojected, which is what stops crowds stacking. Without
+that projection a body standing dead ahead subtracts from the mover's step every
+tick at roughly the mover's own speed, and the pair reaches a standstill that
+looks exactly like terrain. Route followers mostly avoided the corner because
+avoidance leans them aside first; a body steered by a player's hand cannot lean,
+which is how the missing rule was found (issue #1417).
+
 Neither stage keeps a spatial structure of its own. Both query
 `Engine::Core::WorldSpatialIndex`, which is the one dynamic index over units.
+
+### The direct-control commander is a body like any other
+
+There is one traversal model, and the camera the player is looking through does
+not select between variants of it. In RPG mode the player replaces the route
+follower and nothing else:
+
+| question                                 | answered by                                  |
+| ---------------------------------------- | -------------------------------------------- |
+| where does the body want to go?          | the player, via `CommanderControlController` |
+| how wide is the body, what can it cross? | `Game::Systems::body_profile_for()`          |
+| may it stand here? may it step there?    | `Walkability::can_stand` / `can_traverse`    |
+| what happens when bodies overlap?        | `BodyContactSystem`                          |
+
+`body_profile_for()` (`game/systems/body_profile.cpp`) is the only place a body's
+radius, passability and facade rule are derived from its entity. `MovementSystem`,
+`BodyContactSystem` and `App::Core::CommanderMotor` all call it, so an RPG
+commander and an RTS-ordered commander are the same body against the same
+blockers. A commander is person-scale in both modes -- `k_person_body_radius`,
+and `stops_at_building_facade` so he walks to the drawn wall rather than to the
+navigation padding. That is a property of _being a commander_, not of the camera;
+keying it off `fpv_controlled` would mean entering RPG mode changed what is
+traversable.
+
+`RouteFollowSystem::publish_direct_control_intent` is the seam. Under the
+`DirectControl` gate there is no route, so the commander's accepted velocity is
+written into `MovementFacts::desired` (tagged `DesiredMotionSource::DirectControl`)
+before avoidance and contact run. That single write is what puts him inside the
+shared dynamic-body layer: walking, he is _under way_ and takes his own
+correction sideways; standing, he publishes nothing, anchors the pair, and
+friendly traffic flows around him instead of shoving him out of his own ranks.
+
+The rule that follows from all of this: **direct control may own how steering
+intent is produced and nothing else.** An RPG-only walkability check, blocker
+lookup, clearance constant, occupancy grid, collision response or recovery path
+is a second source of truth even when it happens to agree today. There used to be
+one -- a per-soldier push-apart in the commander controller that summed every
+anchor in range and saturated its own clamp every tick, which is what made a
+friendly rank impassable. `CommanderSharedTraversalTest` fails if one comes back.
 
 ### The motor and how fast a body may gain speed
 

@@ -84,8 +84,18 @@ struct RouteIntentFacts {
   bool has_goal{false};
 };
 
+enum class DesiredMotionSource : std::uint8_t {
+  None = 0,
+  Route,
+  DirectControl
+};
+
+[[nodiscard]] auto
+desired_motion_source_name(DesiredMotionSource source) noexcept -> const char*;
+
 struct DesiredMotionFacts {
   bool valid{false};
+  DesiredMotionSource source{DesiredMotionSource::None};
   float velocity_x{0.0F};
   float velocity_z{0.0F};
   float tangent_x{0.0F};
@@ -112,6 +122,9 @@ struct SteeringFacts {
   std::uint32_t neighbor_count{0};
 
   float body_overlap{0.0F};
+
+  float contact_push_x{0.0F};
+  float contact_push_z{0.0F};
   SteeringResult result{SteeringResult::Unconstrained};
 };
 
