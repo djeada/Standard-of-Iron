@@ -517,6 +517,8 @@ void read_spawns(const QJsonArray& arr, std::vector<UnitSpawn>& out) {
       qWarning() << "MapLoader: unknown spawn type" << type_str << "- skipping";
       continue;
     }
+    spawn.id = spawn_obj.value(ID).toString();
+    spawn.group = spawn_obj.value(GROUP).toString();
     spawn.x = float(spawn_obj.value(X).toDouble(0.0));
     spawn.z = float(spawn_obj.value(Z).toDouble(0.0));
 
@@ -824,6 +826,11 @@ void read_terrain(const QJsonArray& arr,
     feature.height =
         float(terrain_obj.value("height").toDouble(default_feature_height));
     feature.rotation_deg = float(terrain_obj.value("rotation").toDouble(0.0));
+
+    if (feature.type == TerrainType::Flat) {
+      feature.taper = float(terrain_obj.value("taper").toDouble(0.0));
+      feature.raise_only = terrain_obj.value("raise").toBool(false);
+    }
 
     if (feature.type == TerrainType::Hill) {
       feature.crown = float(terrain_obj.value("crown").toDouble(0.0));
@@ -1319,6 +1326,7 @@ auto read_structures(const QJsonArray& arr,
       return false;
     }
     entry.id = obj.value("id").toString();
+    entry.group = obj.value(GROUP).toString();
     entry.player_id = obj.value("player_id").toInt(0);
     entry.team_id = obj.value(TEAM_ID).toInt(0);
     entry.max_population = obj.value(MAX_POPULATION).toInt(60);

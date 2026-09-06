@@ -3,6 +3,7 @@
 #include <QString>
 #include <QStringList>
 
+#include <cstdint>
 #include <map>
 #include <memory>
 
@@ -64,11 +65,14 @@ private:
   [[nodiscard]] auto ensure_renderer() -> bool;
   void release_all();
 
+  static constexpr std::uint32_t k_scene_entity_block = 256U;
+
   std::unique_ptr<Render::GL::Renderer> m_renderer;
   std::unique_ptr<Render::GL::Camera> m_camera;
   std::map<QString, Entry> m_entries;
   QString m_warmed_signature;
   int m_references{0};
+  std::uint32_t m_next_entity_block{0};
   bool m_renderer_failed{false};
 };
 

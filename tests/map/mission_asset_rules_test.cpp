@@ -583,6 +583,13 @@ TEST(MissionAssetRulesTest, GatherObjectivesFitTheHarvestActuallyOnTheMap) {
     }
     Game::Map::TerrainService::instance().clear();
 
+    for (const auto& structure : map.structures) {
+      if (structure.type == Game::Units::SpawnType::Farm) {
+        on_the_map.add(Game::Systems::ResourceType::Food,
+                       Game::Systems::harvest_yield(Game::Systems::ResourceType::Food));
+      }
+    }
+
     Game::Systems::ResourceAmounts stock = map.starting_resources;
     mission.player_setup.starting_resources.apply_to(stock);
 

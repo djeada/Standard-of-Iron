@@ -6124,6 +6124,14 @@ bir harita seç</translation>
         <source>Crossing the Rhone</source>
         <translation>Rhône Geçişi</translation>
     </message>
+    <message>
+        <source>An enormous capital on a 768 m stage, built in rings. Farmland, orchards, quarries, lakes and a ruined old town fill the countryside; a great eight-gated wall encloses the new city with its circus, theatre, docks and insulae; an older Republican circuit holds the forum and the ancient core; and a walled citadel crowns the sacred mountain behind the whole thing, where the healers keep the temples.</source>
+        <translation>768 m&apos;lik bir sahnede, halkalar hâlinde kurulmuş devasa bir başkent. Tarlalar, meyve bahçeleri, taş ocakları, göller ve yıkık bir eski kasaba kırlığı doldurur; sekiz kapılı büyük bir sur, sirki, tiyatrosu, rıhtımları ve insulae&apos;siyle yeni şehri kuşatır; daha eski bir Cumhuriyet suru forumu ve kadim çekirdeği tutar; hepsinin ardındaki kutsal dağı ise, şifacıların tapınakları koruduğu surlu bir iç kale taçlandırır.</translation>
+    </message>
+    <message>
+        <source>Aurelia Magna</source>
+        <translation>Aurelia Magna</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -7744,6 +7752,122 @@ bir harita seç</translation>
     <message>
         <source>Your veterans are dying. Italy&apos;s veterans, really; you took them from us sixteen years ago and now we are taking them back one at a time.</source>
         <translation>Gazilerin ölüyor. Aslında İtalya&apos;nın gazileri; on altı yıl önce onları bizden aldınız, şimdi biz birer birer geri alıyoruz.</translation>
+    </message>
+    <message>
+        <source>A raid on the pasture, then a landing at the quay. Nine gates and one garrison: the avenue and the decumanus are how you get from one to the other.</source>
+        <translation>Önce meraya bir akın, sonra rıhtıma bir çıkarma. Dokuz kapı ve tek bir garnizon: birinden ötekine ancak bulvardan ve decumanus&apos;tan geçersin.</translation>
+    </message>
+    <message>
+        <source>Break all six assaults. They do not come at the same gate twice.</source>
+        <translation>Altı taarruzun hepsini kır. Aynı kapıya iki kez gelmezler.</translation>
+    </message>
+    <message>
+        <source>Break the siege</source>
+        <translation>Kuşatmayı kır</translation>
+    </message>
+    <message>
+        <source>Bring in the first harvest</source>
+        <translation>İlk hasadı içeri al</translation>
+    </message>
+    <message>
+        <source>Everything I have is on the roads, consul. East, west, and the bridge. Choose two.</source>
+        <translation>Elimde ne varsa yollarda, konsül. Doğu, batı ve köprü. İkisini seç.</translation>
+    </message>
+    <message>
+        <source>Grain from the river fields, timber from the groves, stone from the quarries beyond the north wall. Every assault you break early is a window to work.</source>
+        <translation>Tahıl nehir tarlalarından, kereste korulardan, taş kuzey surunun ötesindeki ocaklardan. Erken kırdığın her taarruz, çalışmak için bir pencere.</translation>
+    </message>
+    <message>
+        <source>Hold the outer gates</source>
+        <translation>Dış kapıları tut</translation>
+    </message>
+    <message>
+        <source>Keep every hall. The two granges and the two quarry camps stand outside the wall, and they are the only stockpiles the work crews can reach.</source>
+        <translation>Her kışlayı elde tut. İki çiftlik ve iki taş ocağı kampı surun dışında kalır; iş ekiplerinin ulaşabildiği tek ambarlar onlar.</translation>
+    </message>
+    <message>
+        <source>Look at it. Three walls, seventeen gates, and not one stalk of grain growing inside any of them. The city was built to be admired, not besieged. Get the crews over the river while the road is still ours, and keep the garrison off the ramparts until you know which gate they want.</source>
+        <translation>Şuna bak. Üç sur, on yedi kapı ve hiçbirinin içinde bir tek başak yok. Bu şehir hayran olunmak için kuruldu, kuşatılmak için değil. Yol hâlâ bizimken ekipleri nehrin karşısına geçir ve hangi kapıyı istediklerini öğrenene kadar garnizonu siperlerden uzak tut.</translation>
+    </message>
+    <message>
+        <source>Lose every hall in the city and there is nothing left to recruit from, or carry a harvest to.</source>
+        <translation>Şehirdeki her kışlayı yitirirsen, ne asker devşirecek bir yer kalır ne de hasat taşıyacak.</translation>
+    </message>
+    <message>
+        <source>One consul and an empty city is not a garrison.</source>
+        <translation>Bir konsül ve boş bir şehir garnizon etmez.</translation>
+    </message>
+    <message>
+        <source>Provision the capital</source>
+        <translation>Başkenti ikmal et</translation>
+    </message>
+    <message>
+        <source>Provision the capital. The grain is across the river and the stone is past the quarry gate; neither will walk in by itself.</source>
+        <translation>Başkenti ikmal et. Tahıl nehrin karşısında, taş ise ocak kapısının ötesinde; ikisi de kendi ayağıyla içeri girmez.</translation>
+    </message>
+    <message>
+        <source>Riders on the pasture gate. They are not here for the wall; they are here for the flocks. Whatever you send has to get there before the herds do.</source>
+        <translation>Mera kapısında atlılar var. Sur için gelmediler; sürüler için geldiler. Ne gönderirsen gönder, sürülerden önce oraya varmalı.</translation>
+    </message>
+    <message>
+        <source>Six assaults and the granaries full. The city will say the walls held. The walls did nothing -- the road to the river held, and the crews who walked it did not stop walking it. Write that down and let them carve the other version.</source>
+        <translation>Altı taarruz ve ambarlar dolu. Şehir, surlar dayandı diyecek. Surlar hiçbir şey yapmadı; nehre giden yol dayandı ve o yolu yürüyen ekipler yürümeyi bırakmadı. Bunu yaz, öteki sürümü onlar kazısın.</translation>
+    </message>
+    <message>
+        <source>Six assaults, and the last one comes at three gates with elephants behind it.</source>
+        <translation>Altı taarruz; sonuncusu üç kapıdan, arkasında fillerle geliyor.</translation>
+    </message>
+    <message>
+        <source>Stone is the scarce one: the only boulders are at the two quarries outside the walls.</source>
+        <translation>Kıt olan taş: tek kayalar surların dışındaki iki taş ocağında.</translation>
+    </message>
+    <message>
+        <source>That gate holds. Do not stand there admiring it -- the crews go out now, and they come back before the next horn.</source>
+        <translation>O kapı dayanıyor. Orada durup hayranlıkla bakma; ekipler şimdi çıkıyor ve bir sonraki boru sesinden önce dönüyorlar.</translation>
+    </message>
+    <message>
+        <source>The Siege of Aurelia Magna</source>
+        <translation>Aurelia Magna Kuşatması</translation>
+    </message>
+    <message>
+        <source>The consul falls and the gates answer to nobody.</source>
+        <translation>Konsül düşer ve kapılar kimseye hesap vermez olur.</translation>
+    </message>
+    <message>
+        <source>The fields are across the river and the roads are still open. Send the crews out now; they will not be open long.</source>
+        <translation>Tarlalar nehrin karşısında ve yollar hâlâ açık. Ekipleri şimdi çıkar; uzun süre açık kalmayacaklar.</translation>
+    </message>
+    <message>
+        <source>The granges on the south bank are the nearest stockpiles to the grain.</source>
+        <translation>Güney kıyısındaki çiftlikler tahıla en yakın ambarlardır.</translation>
+    </message>
+    <message>
+        <source>The old Republican circuit and the citadel are still walls. Falling back is not losing.</source>
+        <translation>Eski Cumhuriyet suru ve iç kale hâlâ birer sur. Geri çekilmek yenilmek değildir.</translation>
+    </message>
+    <message>
+        <source>They are on a gate. A gate is one building and it is the only thing between them and a street they can walk down. Answer it or fall back to the old circuit; do not do half of each.</source>
+        <translation>Bir kapının üstündeler. Kapı tek bir yapıdır ve onlarla yürüyebilecekleri bir sokak arasındaki tek şeydir. Ya karşılık ver ya da eski sura çekil; ikisinin yarısını birden yapma.</translation>
+    </message>
+    <message>
+        <source>Three walls, seventeen gates, and not one field inside them. The capital cannot be held by standing on its ramparts and it cannot be fed without leaving them. Break six assaults and still bring the harvest in.</source>
+        <translation>Üç sur, on yedi kapı ve içlerinde tek bir tarla yok. Başkent siperlerinde durarak tutulamaz, siperlerden inmeden de beslenemez. Altı taarruzu kır ve yine de hasadı içeri al.</translation>
+    </message>
+    <message>
+        <source>Three walls. We only ever needed the fields. Open the granaries and put out the fires on the sacred way -- I want the citadel standing when they come to see what is left of it.</source>
+        <translation>Üç sur. Bize hep yalnızca tarlalar gerekmişti. Ambarları açın ve kutsal yoldaki yangınları söndürün; ondan geriye ne kaldığını görmeye geldiklerinde iç kalenin ayakta olmasını istiyorum.</translation>
+    </message>
+    <message>
+        <source>We are spending the garrison faster than the city makes it. Pull back inside the Republican wall. It is shorter, it is older, and it has four gates instead of nine.</source>
+        <translation>Garnizonu şehrin ürettiğinden hızlı harcıyoruz. Cumhuriyet surunun içine çekil. Daha kısa, daha eski ve dokuz yerine dört kapısı var.</translation>
+    </message>
+    <message>
+        <source>We will not climb your wall, consul. We will stand on your fields and wait, and you will open the gate yourself to go and cut your own wheat.</source>
+        <translation>Surunu tırmanmayacağız, konsül. Tarlalarının üstünde durup bekleyeceğiz; kapıyı, kendi buğdayını biçmeye gitmek için sen kendin açacaksın.</translation>
+    </message>
+    <message>
+        <source>You cannot cover every gate. Watch the telegraph and move on interior lines.</source>
+        <translation>Her kapıyı örtemezsin. Ön uyarıyı izle ve iç hatlardan kaydır.</translation>
     </message>
 </context>
 <context>

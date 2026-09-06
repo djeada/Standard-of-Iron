@@ -89,6 +89,8 @@ constexpr QVector3D k_lip{0.38F, 0.16F, 0.11F};
 constexpr QVector3D k_default_skin{0.78F, 0.62F, 0.49F};
 constexpr float k_lid_shade = 0.90F;
 constexpr float k_lid_visible_close = 0.02F;
+constexpr float k_eye_half_height = k_head_radius * 0.27F;
+constexpr float k_lid_rim = k_head_radius * 0.008F;
 
 struct PortraitDebug {
   bool trace = false;
@@ -125,6 +127,11 @@ auto portrait_debug() -> const PortraitDebug& {
     return out;
   }();
   return debug;
+}
+
+auto next_portrait_instance_id() -> int {
+  static int counter = 0;
+  return counter++;
 }
 
 auto hash01(std::uint32_t n) -> float {
@@ -391,7 +398,8 @@ public:
     const QString troop_type = view->troop_type();
     const QString pose = view->pose();
     m_nation = view->nation();
-    m_speaking = view->speaking();
+
+    m_speaking = view->speaking() && view->isVisible();
     m_talking = view->talking();
 
     qreal ratio = 1.0;
@@ -460,6 +468,7 @@ private:
   float m_render_ms = 0.0F;
   QVector3D m_last_head{};
   bool m_has_last_head = false;
+  int m_instance_id = next_portrait_instance_id();
 };
 
 void CommanderPortraitView::PortraitRenderer::release_scene() {
@@ -590,7 +599,7 @@ void CommanderPortraitView::PortraitRenderer::submit_face(
                      face_disc_model(eye_frame,
                                      QVector3D(0.0F, 0.0F, k_eye_shell_bias),
                                      k_head_radius * 0.33F,
-                                     k_head_radius * 0.27F,
+                                     k_eye_half_height,
                                      k_head_radius * 0.012F),
                      k_eye_white);
     const QVector3D gaze_offset(gaze.x(), gaze.y(), 0.0F);
@@ -627,17 +636,18 @@ void CommanderPortraitView::PortraitRenderer::submit_face(
         k_catchlight);
 
     if (lid_close > k_lid_visible_close) {
-      const float lid_height = k_head_radius * 0.31F;
-      const float lid_rest = lid_height * 2.0F;
+
+      const float lid_reach = k_eye_half_height * lid_close;
+      const float lid_height = k_lid_rim + lid_reach;
+      const float lid_centre = k_eye_half_height + k_lid_rim - lid_reach;
       m_renderer->mesh(
           disc,
-          face_disc_model(eye_frame,
-                          QVector3D(0.0F,
-                                    lid_rest * (1.0F - lid_close),
-                                    k_eye_shell_bias + (k_head_radius * 0.040F)),
-                          k_head_radius * 0.37F,
-                          lid_height,
-                          k_head_radius * 0.008F),
+          face_disc_model(
+              eye_frame,
+              QVector3D(0.0F, lid_centre, k_eye_shell_bias + (k_head_radius * 0.040F)),
+              k_head_radius * 0.37F,
+              lid_height,
+              k_head_radius * 0.008F),
           m_skin * k_lid_shade);
     }
 
@@ -693,7 +703,7 @@ auto CommanderPortraitView::PortraitRenderer::advance_focus(float delta) -> QVec
 void CommanderPortraitView::PortraitRenderer::debug_after_frame(
     const Render::Creature::Pipeline::BoneProbe& probe) {
   const auto& debug = portrait_debug();
-  if (debug.trace && probe.resolved) {
+  if (debug.trace) {
     const QVector3D head = probe.world.column(3).toVector3D();
     float step_mm = 0.0F;
     if (m_has_last_head) {
@@ -702,8 +712,13 @@ void CommanderPortraitView::PortraitRenderer::debug_after_frame(
     m_last_head = head;
     m_has_last_head = true;
     std::fprintf(stderr,
-                 "SOI_PORTRAIT_TRACE t=%.3f wall_ms=%.1f render_ms=%.1f "
-                 "head=(%.4f,%.4f,%.4f) step_mm=%.2f mouth=%.2f lid=%.2f\n",
+                 "SOI_PORTRAIT_TRACE id=%d troop=%s resolved=%d t=%.3f wall_ms=%.1f "
+                 "render_ms=%.1f "
+                 "head=(%.4f,%.4f,%.4f) step_mm=%.2f mouth=%.2f lid=%.2f "
+                 "gaze=(%.2f,%.2f)\n",
+                 m_instance_id,
+                 m_troop_type.toUtf8().constData(),
+                 probe.resolved ? 1 : 0,
                  static_cast<double>(m_expression.time),
                  static_cast<double>(m_wall_ms),
                  static_cast<double>(m_render_ms),
@@ -712,13 +727,16 @@ void CommanderPortraitView::PortraitRenderer::debug_after_frame(
                  static_cast<double>(head.z()),
                  static_cast<double>(step_mm),
                  static_cast<double>(m_expression.mouth),
-                 static_cast<double>(m_expression.lid));
+                 static_cast<double>(m_expression.lid),
+                 static_cast<double>(m_expression.gaze.x()),
+                 static_cast<double>(m_expression.gaze.y()));
   }
   if (!debug.dump_dir.isEmpty() && m_dumped_frames < debug.dump_frames) {
     if (auto* fbo = framebufferObject()) {
       QDir().mkpath(debug.dump_dir);
-      const QString path = QStringLiteral("%1/portrait_%2.png")
+      const QString path = QStringLiteral("%1/portrait_r%2_%3.png")
                                .arg(debug.dump_dir)
+                               .arg(m_instance_id)
                                .arg(m_dumped_frames, 4, 10, QLatin1Char('0'));
       fbo->toImage().save(path);
       ++m_dumped_frames;
@@ -809,6 +827,7 @@ void CommanderPortraitView::PortraitRenderer::render() {
 CommanderPortraitView::CommanderPortraitView() {
   setMirrorVertically(true);
   setTextureFollowsItemSize(false);
+  connect(this, &QQuickItem::visibleChanged, this, [this]() { update(); });
 }
 
 CommanderPortraitView::~CommanderPortraitView() = default;

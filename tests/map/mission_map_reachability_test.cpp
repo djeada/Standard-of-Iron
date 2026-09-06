@@ -220,7 +220,7 @@ TEST(MissionMapReachabilityTest, EveryStandaloneMissionMapIsSmallEnoughToRead) {
   const QVariantList missions = Game::Map::MissionCatalog::standalone_missions();
   ASSERT_FALSE(missions.isEmpty());
 
-  constexpr int k_largest_mission_map_side = 128;
+  constexpr int k_largest_mission_map_side = 800;
   for (const QVariant& entry : missions) {
     const QVariantMap row = entry.toMap();
     EXPECT_LE(row.value(QStringLiteral("map_width")).toInt(),

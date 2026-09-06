@@ -289,6 +289,22 @@ TEST(CommanderControlRegressionTest, CommanderPortraitBakesItsOwnBodyMeshes) {
   EXPECT_TRUE(contains(view, "Render::Creature::RuntimeBakeAllowScope"));
 }
 
+TEST(CommanderControlRegressionTest, HiddenCommanderPortraitRendersNothing) {
+  const auto root = find_repo_root();
+  const auto view = read_text(root / "ui" / "commander_portrait_view.cpp");
+  ASSERT_FALSE(view.empty());
+
+  EXPECT_TRUE(contains(view, "m_speaking = view->speaking() && view->isVisible();"));
+}
+
+TEST(CommanderControlRegressionTest, CommanderPortraitScenesTakeDistinctEntityIds) {
+  const auto root = find_repo_root();
+  const auto scenes = read_text(root / "ui" / "commander_portrait_scenes.cpp");
+  ASSERT_FALSE(scenes.empty());
+
+  EXPECT_TRUE(contains(scenes, "entry.world->set_next_entity_id("));
+}
+
 TEST(CommanderControlRegressionTest, CommanderRallyKeyReachesTheCommanderSlice) {
   const auto root = find_repo_root();
   const auto layer_source = read_text(root / "ui" / "qml" / "CommanderInputLayer.qml");

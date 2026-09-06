@@ -40,6 +40,9 @@ struct CameraDefinition {
 
 struct UnitSpawn {
   Game::Units::SpawnType type = Game::Units::SpawnType::Archer;
+  QString id;
+
+  QString group;
   float x = 0.0F;
   float z = 0.0F;
   int player_id = 0;
@@ -67,6 +70,8 @@ struct StructureEntry {
   Game::Units::SpawnType type = Game::Units::SpawnType::Barracks;
   StructureGeometry geometry = PointStructureGeometry{};
   QString id;
+
+  QString group;
   int player_id = 0;
   int team_id = 0;
   int max_population = 60;

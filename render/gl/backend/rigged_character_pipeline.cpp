@@ -263,7 +263,7 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
       if (m_palette_ubo != 0) {
         if (m_palette_slot_stride_bytes == 0) {
           GLint alignment = 256;
-          glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &alignment);
+          fn->glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &alignment);
           const auto step = static_cast<std::size_t>(std::max(alignment, 1));
           m_palette_slot_stride_bytes =
               ((BonePaletteArena::k_palette_bytes + step - 1U) / step) * step;
