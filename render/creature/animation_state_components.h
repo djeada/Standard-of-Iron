@@ -32,6 +32,12 @@ struct HumanoidAnimationStateComponent {
   Animation::HumanoidConstructionTransitionState construction_transition{};
   CombatVisualPersistentState combat_visual{};
   Render::Humanoid::CombatRootSmoothingState combat_root{};
+
+  std::uint16_t action_link_clip{Animation::k_unmapped_clip};
+  float action_link_phase{0.0F};
+  float action_link_until{-1.0F};
+  std::uint16_t last_action_clip{Animation::k_unmapped_clip};
+  float last_action_phase{0.0F};
 };
 
 struct HorseAnimationStateComponent {

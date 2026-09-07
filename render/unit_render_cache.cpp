@@ -174,21 +174,16 @@ auto UnitRenderCache::update_model_matrix(CachedUnitData& data,
 
   auto const* sample = data.presentation;
   if (sample != nullptr && sample->valid) {
-    if (sample->tick_sequence != data.presentation_seen_sequence) {
-      data.presentation_seen_sequence = sample->tick_sequence;
-      data.presentation_age = 0.0F;
+    if (sample->presented_valid) {
+
+      pos = sample->presented_position;
+      rot.y = sample->presented_yaw;
+    } else {
+      const float age = data.presentation_clock.advance(*sample, frame_delta_seconds);
+      const auto pose = Engine::Core::resolve_presentation_pose(*sample, age);
+      pos = pose.position;
+      rot.y = pose.yaw;
     }
-    const float frame_dt = std::max(0.0F, frame_delta_seconds);
-    const float max_age =
-        frame_dt >= sample->tick_seconds
-            ? sample->tick_seconds
-            : sample->tick_seconds *
-                  (1.0F + Engine::Core::k_presentation_max_extrapolation);
-    data.presentation_age = std::min(data.presentation_age + frame_dt, max_age);
-    const auto pose =
-        Engine::Core::resolve_presentation_pose(*sample, data.presentation_age);
-    pos = pose.position;
-    rot.y = pose.yaw;
   }
 
   if (data.model_matrix_valid && pos.x == data.last_pos_x && pos.y == data.last_pos_y &&

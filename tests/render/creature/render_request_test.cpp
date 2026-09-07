@@ -793,10 +793,13 @@ TEST(SubmitRequests, ExplicitSwordAssetUsesSwordReadyHumanoidPalette) {
 
   auto const hand_r_index =
       static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandR);
+
+  QVector3D const bind_hand_r =
+      Render::Humanoid::humanoid_bind_palette()[hand_r_index].column(3).toVector3D();
   QVector3D const default_hand_r =
-      default_sink.last_bone_palette[hand_r_index].column(3).toVector3D();
+      default_sink.last_bone_palette[hand_r_index].map(bind_hand_r);
   QVector3D const sword_hand_r =
-      sword_sink.last_bone_palette[hand_r_index].column(3).toVector3D();
+      sword_sink.last_bone_palette[hand_r_index].map(bind_hand_r);
   EXPECT_GT(sword_hand_r.z(), default_hand_r.z());
   EXPECT_GT((sword_hand_r - default_hand_r).length(), 0.05F);
 }
@@ -861,3 +864,97 @@ TEST(ArchetypeRegistry, RegisterArchetypeAssignsStableId) {
 }
 
 } // namespace
+
+TEST(SubmitRequests, AuthoredSwordStepsLeaveTheGroundInsteadOfSkating) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid_sword.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+
+  auto const bind = Render::Humanoid::humanoid_bind_palette();
+  auto const foot_l = static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootL);
+  auto const foot_r = static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootR);
+  ASSERT_GT(bind.size(), foot_r);
+  QVector3D const bind_l = bind[foot_l].column(3).toVector3D();
+  QVector3D const bind_r = bind[foot_r].column(3).toVector3D();
+
+  CreaturePipeline const pipeline;
+  for (auto const state : {AnimationStateId::RpgSwordSlashLeft,
+                           AnimationStateId::RpgSwordSlashRight,
+                           AnimationStateId::RpgSwordOverhead,
+                           AnimationStateId::RpgSwordThrust,
+                           AnimationStateId::RpgSwordFinisher}) {
+    constexpr int k_samples = 48;
+    std::vector<QVector3D> left;
+    std::vector<QVector3D> right;
+    for (int sample = 0; sample <= k_samples; ++sample) {
+      CreatureRenderRequest req{};
+      req.archetype = ArchetypeRegistry::k_humanoid_base;
+      req.state = state;
+      req.phase = static_cast<float>(sample) / static_cast<float>(k_samples);
+      req.lod = Render::Creature::CreatureLOD::Full;
+      req.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
+      CountingSubmitter sink;
+      std::array<CreatureRenderRequest, 1> reqs{req};
+      pipeline.submit_requests(reqs, sink);
+      ASSERT_GT(sink.last_bone_palette.size(), foot_r)
+          << "state " << static_cast<int>(state);
+      left.push_back(sink.last_bone_palette[foot_l].map(bind_l));
+      right.push_back(sink.last_bone_palette[foot_r].map(bind_r));
+    }
+
+    auto lowest = [](const std::vector<QVector3D>& track) {
+      float low = track.front().y();
+      for (auto const& p : track) {
+        low = std::min(low, p.y());
+      }
+      return low;
+    };
+    float const ground = std::min(lowest(left), lowest(right));
+
+    constexpr float k_planted_height = 0.05F;
+
+    struct Skate {
+      float step{0.0F};
+      float phase{0.0F};
+      float height{0.0F};
+    };
+    auto worst_skate = [&](const std::vector<QVector3D>& track) {
+      Skate worst;
+      for (std::size_t i = 1; i < track.size(); ++i) {
+        float const step = std::hypot(track[i].x() - track[i - 1].x(),
+                                      track[i].z() - track[i - 1].z());
+        float const height = std::min(track[i].y(), track[i - 1].y()) - ground;
+        if (height <= k_planted_height && step > worst.step) {
+          worst = {.step = step,
+                   .phase = static_cast<float>(i) / static_cast<float>(k_samples),
+                   .height = height};
+        }
+      }
+      return worst;
+    };
+
+    Skate const skate_l = worst_skate(left);
+    Skate const skate_r = worst_skate(right);
+    Skate const skate = skate_l.step >= skate_r.step ? skate_l : skate_r;
+
+    EXPECT_LT(skate.step, 0.040F)
+        << "state " << static_cast<int>(state) << ": a foot the clip keeps on the "
+        << "ground travels " << skate.step << " m in one sampled step at phase "
+        << skate.phase << " (height " << skate.height << " m)";
+
+    auto peak_lift = [&](const std::vector<QVector3D>& track) {
+      float peak = 0.0F;
+      for (auto const& p : track) {
+        peak = std::max(peak, p.y() - ground);
+      }
+      return peak;
+    };
+    EXPECT_GT(std::max(peak_lift(left), peak_lift(right)), 0.030F)
+        << "state " << static_cast<int>(state)
+        << ": neither foot ever leaves the ground, so the step is a slide";
+  }
+}

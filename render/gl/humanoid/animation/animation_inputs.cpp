@@ -85,6 +85,8 @@ void reset_humanoid_animation_state(
   state.has_chase_intent = motion.has_chase_intent;
   state.forced_displacement =
       motion.source == Engine::Core::MotionPresentationSource::ForcedDisplacement;
+  state.facing_independent_of_travel =
+      motion.source == Engine::Core::MotionPresentationSource::DirectControl;
   state.attack_target_in_range = motion.attack_target_in_range;
   state.movement_state = motion_presentation_to_animation_state(motion.state);
   state.has_movement_target = motion.has_movement_target;

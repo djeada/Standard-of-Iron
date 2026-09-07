@@ -447,6 +447,27 @@ auto finalize_visible_humanoid_spec(UnitVisualSpec spec,
 
 namespace {
 
+void apply_action_link_blend(
+    HumanoidAnimationSelection& selection,
+    const Render::GL::HumanoidAnimationContext& anim) noexcept {
+  if (!anim.inputs.has_action_link ||
+      anim.inputs.action_link_clip == Animation::k_unmapped_clip ||
+      anim.inputs.action_link_weight <= 0.001F || !selection.clip_id.has_value() ||
+      selection.clip_id == anim.inputs.action_link_clip) {
+    return;
+  }
+  HumanoidAnimationSelection outgoing = selection;
+  outgoing.clip_id = anim.inputs.action_link_clip;
+  outgoing.phase = std::clamp(anim.inputs.action_link_phase, 0.0F, 1.0F);
+  outgoing.clip_variant = 0U;
+  outgoing.full_body_blend = {};
+  outgoing.upper_body_overlay = {};
+  selection.full_body_blend = playback_layer_from_selection(
+      outgoing,
+      std::clamp(anim.inputs.action_link_weight, 0.0F, 1.0F),
+      Render::Creature::PlaybackLayerMode::FullBodyBlend);
+}
+
 auto apply_ambient_idle_crossfade(HumanoidAnimationSelection& selection,
                                   const Render::GL::HumanoidAnimationContext& anim,
                                   const UnitVisualSpec& spec,
@@ -488,6 +509,14 @@ auto locomotion_pose_intent(Render::Creature::AnimationStateId state) noexcept
     return Animation::PoseIntent::Walk;
   case Render::Creature::AnimationStateId::Run:
     return Animation::PoseIntent::Run;
+  case Render::Creature::AnimationStateId::WalkStrafeLeft:
+    return Animation::PoseIntent::WalkStrafeLeft;
+  case Render::Creature::AnimationStateId::WalkStrafeRight:
+    return Animation::PoseIntent::WalkStrafeRight;
+  case Render::Creature::AnimationStateId::RunStrafeLeft:
+    return Animation::PoseIntent::RunStrafeLeft;
+  case Render::Creature::AnimationStateId::RunStrafeRight:
+    return Animation::PoseIntent::RunStrafeRight;
   default:
     return Animation::PoseIntent::Idle;
   }
@@ -520,6 +549,9 @@ auto apply_locomotion_crossfade(HumanoidAnimationSelection& selection,
       .resolved = selection.state,
       .locomotion_presence = anim.gait.locomotion_presence,
       .run_presence = anim.gait.run_presence,
+      .lateral_share = anim.inputs.visual_movement.facing_independent_of_travel
+                           ? anim.gait.turn_amount
+                           : 0.0F,
   });
   if (!crossfade.active) {
     return false;
@@ -708,6 +740,7 @@ auto resolve_humanoid_animation_selection(
       anim.inputs.combat_visual.authoritative ? &anim.inputs.combat_visual : nullptr;
   if (combat == nullptr || anim.inputs.is_hit_reacting || anim.inputs.is_dying ||
       anim.inputs.is_dead || anim.inputs.is_constructing || anim.inputs.is_healing) {
+    apply_action_link_blend(selection, anim);
     return selection;
   }
 
@@ -757,6 +790,8 @@ auto resolve_humanoid_animation_selection(
         policy.upper_body_weight,
         Render::Creature::PlaybackLayerMode::UpperBodyOverlay);
   }
+
+  apply_action_link_blend(selection, anim);
   return selection;
 }
 

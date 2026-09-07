@@ -293,6 +293,12 @@ void apply_held_pose_sample(HumanoidPoseController& controller,
   apply_held_pose_body_deltas(pose, sample);
   controller.place_hand_at(Side::Right, hand_r_target);
   controller.place_hand_at(Side::Left, hand_l_target);
+  if (sample.has_blade_direction) {
+    aim_held_weapon(pose, to_qvec(sample.blade_direction), baked_sword_direction());
+  }
+  if (sample.has_offhand_axis) {
+    pose.grip_axis_l = to_qvec(sample.offhand_axis).normalized();
+  }
 }
 
 } // namespace

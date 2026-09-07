@@ -336,7 +336,7 @@ TEST_F(CommanderMotorTest, AnAttackFacesTheViewImmediately) {
          "happened to be resting";
 }
 
-TEST_F(CommanderMotorTest, TurningAwayFromAWallKeepsTheSpeedAlreadyBuilt) {
+TEST_F(CommanderMotorTest, TurningAwayFromAWallStartsAtTheAccelerationLimit) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);
   ASSERT_NE(commander, nullptr);
@@ -390,10 +390,86 @@ TEST_F(CommanderMotorTest, TurningAwayFromAWallKeepsTheSpeedAlreadyBuilt) {
   float const standing_start =
       std::abs(open_transform->position.x - open_before) / k_dt;
 
-  EXPECT_GT(first_step, standing_start * 2.0F)
-      << "three frames of wall contact restarted the motor from a standstill: "
-      << first_step << " m/s against " << standing_start
-      << " m/s from a genuine standing start";
+  EXPECT_NEAR(first_step, standing_start, 0.02F)
+      << "turning away from a wall must start at the same acceleration limit as "
+         "a standing start: "
+      << first_step << " m/s against " << standing_start << " m/s";
+  EXPECT_NEAR(standing_start, k_commander_ground_acceleration_mps2 / 60.0F, 0.02F)
+      << "a standing start must spend exactly one tick of the documented "
+         "acceleration budget";
+}
+
+TEST_F(CommanderMotorTest, AReversalPassesThroughZeroAtTheAccelerationLimit) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, -20.0F);
+  ASSERT_NE(commander, nullptr);
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+
+  CommanderControlController controller;
+  controller.set_presentation_trace_enabled(true);
+  Render::GL::Camera camera;
+  constexpr float k_dt = 1.0F / 60.0F;
+
+  controller.input().forward = true;
+  controller.input().run = true;
+  for (int frame = 0; frame < 150; ++frame) {
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
+  }
+  float const sprint_speed = controller.presentation_trace().motor.actual_velocity.z();
+  ASSERT_GT(sprint_speed, 3.0F) << "the commander has to be sprinting first";
+
+  controller.input().forward = false;
+  controller.input().backward = true;
+
+  float previous = sprint_speed;
+  float worst_step = 0.0F;
+  float most_negative = 0.0F;
+  bool crossed_zero_continuously = false;
+  for (int frame = 0; frame < 90; ++frame) {
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
+    float const now = controller.presentation_trace().motor.actual_velocity.z();
+    worst_step = std::max(worst_step, std::abs(now - previous));
+    if (previous > 0.0F && now <= 0.0F && std::abs(now - previous) < 1.0F) {
+      crossed_zero_continuously = true;
+    }
+    most_negative = std::min(most_negative, now);
+    previous = now;
+  }
+
+  EXPECT_TRUE(crossed_zero_continuously)
+      << "the reversal has to pass through zero rather than jump across it";
+  EXPECT_LT(most_negative, -1.0F) << "the commander must end up backpedalling";
+
+  float const budget = (k_commander_ground_deceleration_mps2 * k_dt) + 0.05F;
+  EXPECT_LT(worst_step, budget) << "largest single-tick velocity change " << worst_step
+                                << " m/s against a budget of " << budget << " m/s";
+}
+
+TEST_F(CommanderMotorTest, TheAccelerationLimitDoesNotDependOnTheTickRate) {
+  auto run = [](float tick_seconds, int ticks) {
+    Engine::Core::World world;
+    auto* commander = create_commander(world, 0.0F, -20.0F);
+    EXPECT_NE(commander, nullptr);
+    CommanderControlController controller;
+    controller.set_presentation_trace_enabled(true);
+    Render::GL::Camera camera;
+    controller.input().forward = true;
+    for (int frame = 0; frame < ticks; ++frame) {
+      EXPECT_TRUE(
+          controller.update(world, commander->get_id(), 1, camera, tick_seconds));
+    }
+    return controller.presentation_trace().motor.actual_velocity.length();
+  };
+
+  float const at_60 = run(1.0F / 60.0F, 6);
+  float const at_120 = run(1.0F / 120.0F, 12);
+  float const at_30 = run(1.0F / 30.0F, 3);
+
+  EXPECT_NEAR(at_60, at_120, 0.05F)
+      << "the same tenth of a second must build the same speed at 60 and 120 Hz";
+  EXPECT_NEAR(at_60, at_30, 0.05F)
+      << "the same tenth of a second must build the same speed at 60 and 30 Hz";
 }
 
 TEST_F(CommanderMotorTest, CrowdSeparationIsBoundedAndRepeatable) {

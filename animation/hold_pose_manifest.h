@@ -34,6 +34,12 @@ struct HumanoidHeldPoseInputs {
 struct HumanoidHeldPoseSample {
   PoseVec3 right_hand{};
   PoseVec3 left_hand{};
+
+  bool has_blade_direction{false};
+  PoseVec3 blade_direction{};
+
+  bool has_offhand_axis{false};
+  PoseVec3 offhand_axis{};
   bool use_offhand_spear_grip{false};
   PoseVec3 offhand_spear_direction{0.05F, 0.55F, 0.85F};
   float offhand_along_offset{0.0F};

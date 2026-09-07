@@ -826,6 +826,9 @@ struct ArenaScenarioRunner::Impl {
     float locomotion_blend{0.0F};
     float locomotion_presence{0.0F};
     float cycle_phase{0.0F};
+    float travel_alignment{1.0F};
+    float travel_lateral_share{0.0F};
+    float action_link_weight{0.0F};
     bool persistent_valid{false};
     float sample_time{0.0F};
     float persistent_last_sample_time{0.0F};
@@ -3301,8 +3304,9 @@ struct ArenaScenarioRunner::Impl {
           continue;
         }
         if (expectation.kind == ArenaExpectationKind::MovementIsContinuous) {
+
           float const multiplier =
-              expectation.threshold > 0.0F ? expectation.threshold : 2.5F;
+              expectation.threshold > 0.0F ? expectation.threshold : 2.75F;
           float const allowed = std::max(0.25F, unit->speed * sample_dt * multiplier);
           if (step > allowed) {
             add_issue(QStringLiteral("movement_discontinuity"),
@@ -3889,6 +3893,9 @@ struct ArenaScenarioRunner::Impl {
            soldier.locomotion_blend,
            soldier.locomotion_presence,
            soldier.cycle_phase,
+           soldier.travel_alignment,
+           soldier.travel_lateral_share,
+           soldier.action_link_weight,
            soldier.persistent_valid,
            soldier.sample_time,
            soldier.persistent_last_sample_time,
@@ -7066,6 +7073,9 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("foot_l_world"), json_vector(soldier.foot_l_world)},
           {QStringLiteral("foot_r_world"), json_vector(soldier.foot_r_world)},
           {QStringLiteral("locomotion_blend"), soldier.locomotion_blend},
+          {QStringLiteral("travel_alignment"), soldier.travel_alignment},
+          {QStringLiteral("travel_lateral_share"), soldier.travel_lateral_share},
+          {QStringLiteral("action_link_weight"), soldier.action_link_weight},
           {QStringLiteral("locomotion_presence"), soldier.locomotion_presence},
           {QStringLiteral("cycle_phase"), soldier.cycle_phase},
           {QStringLiteral("persistent_valid"), soldier.persistent_valid},

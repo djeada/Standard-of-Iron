@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "game/core/presentation_clock.h"
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "render/world_view.h"
@@ -64,8 +65,7 @@ struct CachedUnitData {
   float last_scale_y{0.0F};
   float last_scale_z{0.0F};
   bool model_matrix_valid{false};
-  std::uint32_t presentation_seen_sequence{0};
-  float presentation_age{0.0F};
+  Engine::Core::PresentationClock presentation_clock;
   bool renderer_key_valid{false};
   bool last_is_building{false};
   Game::Units::SpawnType last_spawn_type{Game::Units::SpawnType::Archer};

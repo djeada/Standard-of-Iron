@@ -246,8 +246,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                       k_building_state_mask_intact);
   }
 
-  // One tiled portico gives the market a civic Roman silhouette.
-  // The side tables remain open so their produce can be read from above.
   const float portico_eave = entab_y + 0.08F;
   for (const float z : {-0.80F, 0.80F}) {
     desc.add_box(
