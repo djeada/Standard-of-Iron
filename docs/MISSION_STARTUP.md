@@ -57,9 +57,18 @@ The consumers now share one parse:
 | `AudioCoordinator::apply_mission_ambience()`                | ambience query terms                                     |
 | `GameStateRestorer` / `SaveLoadCoordinator`                 | the same, on the save/load path                          |
 
-`MissionStartupTest.ParsesTheMissionMapOnce` is the guard: it drives a campaign start and
+`MissionStartupTest.ParsesTheMissionMapOnce` is the guard: it drives a mission start and
 fails if `MapContextStore::statistics().parses` is anything but 1. A new subsystem that
 opens the map JSON itself will fail that test rather than quietly costing another parse.
+
+Both `MissionStartupTest` cases load `hold_the_sallow_ford`, a standalone mission on the
+smallest authored map that still fields an AI opponent, rather than a campaign
+battlefield. Neither invariant is map-specific — the store is either reused or it is not,
+and the AI either prepared its snapshots during loading or it did not — but the map is what
+the test pays for. On `battle_of_ticino` the two cases measured 4.7 s and 4.9 s in a Debug
+build, the two slowest tests in the whole fast pull-request profile and close enough to the
+ten-second per-test budget in `scripts/check-test-speed.py` that a shared runner went over
+it. On the ford they measure about 30 ms each and assert exactly the same things.
 
 ## AI initial state
 
@@ -169,9 +178,10 @@ inside the loading phase. What remains after this change is a first-second frame
 phase timings do not explain, because it happens after the overlay lifts. Attributing that
 is the next piece of work and needs the frame-level instrument, not the phase one.
 
-The two counters that need a world scan to fill (`world.units` and the `items=` on
-`world.map_and_spawns`) are only collected when a report is actually wanted, so a plain run
-pays nothing for them.
+The two counters that have to walk the unit storage to fill (`world.units` and the `items=`
+on `world.map_and_spawns`) are only collected when a report is actually wanted, so a plain
+run pays nothing for them. They count through a component view rather than
+`collect_entities_with`, so neither materialises a vector of every unit.
 
 `SOI_STARTUP_TRACE_FILE=<path>` writes the same report as JSON — phases, counters, the
 overlay-release and first-frame timestamps, and both frame-time distributions — which is

@@ -45,6 +45,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -1733,10 +1734,12 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
       profiler.add_counter("map.reuses",
                            static_cast<std::int64_t>(map_statistics.reuses));
       if (Engine::Core::StartupProfiler::reporting_enabled()) {
-        profiler.add_counter(
-            "world.units",
-            static_cast<std::int64_t>(
-                m_world->collect_entities_with<Engine::Core::UnitComponent>().size()));
+        std::int64_t unit_count = 0;
+        for ([[maybe_unused]] auto entry :
+             m_world->view<Engine::Core::UnitComponent>()) {
+          ++unit_count;
+        }
+        profiler.add_counter("world.units", unit_count);
       }
     }
 

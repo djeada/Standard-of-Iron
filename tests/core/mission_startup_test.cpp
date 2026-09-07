@@ -23,7 +23,7 @@
 
 namespace {
 
-constexpr char k_mission[] = "second_punic_war/battle_of_ticino";
+constexpr char k_mission_file[] = "assets/missions/hold_the_sallow_ford.json";
 constexpr int k_local_owner = 1;
 constexpr float k_tick = 1.0F / 60.0F;
 
@@ -54,8 +54,10 @@ protected:
     Game::Systems::register_runtime_systems(m_world);
 
     int selected_player_id = k_local_owner;
-    m_campaign.start_campaign_mission(QString::fromLatin1(k_mission),
-                                      selected_player_id);
+    if (!m_campaign.start_mission_file(
+            QString::fromLatin1(k_mission_file), selected_player_id, &m_error)) {
+      return false;
+    }
     if (!m_campaign.current_mission_definition().has_value()) {
       return false;
     }
@@ -89,6 +91,7 @@ protected:
     return true;
   }
 
+  QString m_error;
   Engine::Core::World m_world;
   Render::GL::Renderer m_renderer{Render::ShaderQuality::None};
   Render::GL::Camera m_camera;
@@ -99,11 +102,11 @@ protected:
 };
 
 TEST_F(MissionStartupTest, ParsesTheMissionMapOnce) {
-  ASSERT_TRUE(prepare_mission());
+  ASSERT_TRUE(prepare_mission()) << m_error.toStdString();
 
   const auto after_setup = Game::Map::MapContextStore::statistics();
   EXPECT_EQ(after_setup.parses, 1U)
-      << "campaign startup reparsed the mission map " << after_setup.parses
+      << "mission startup reparsed the mission map " << after_setup.parses
       << " times; every consumer must reuse Game::Map::MapContextStore";
   EXPECT_GT(after_setup.reuses, 0U)
       << "no consumer reused the loaded map context - the store is not on the "
@@ -120,7 +123,7 @@ TEST_F(MissionStartupTest, ParsesTheMissionMapOnce) {
 }
 
 TEST_F(MissionStartupTest, InitialAiSnapshotsAreBuiltBeforeTheFirstPlayableFrame) {
-  ASSERT_TRUE(prepare_mission());
+  ASSERT_TRUE(prepare_mission()) << m_error.toStdString();
 
   auto* ai_system = m_world.get_system<Game::Systems::AISystem>();
   ASSERT_NE(ai_system, nullptr);

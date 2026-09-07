@@ -131,8 +131,11 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
                                   allow_default_player_barracks,
                                   result.updated_player_id);
   if (Engine::Core::StartupProfiler::reporting_enabled()) {
-    spawn_phase->add_items(static_cast<std::int64_t>(
-        world.collect_entities_with<Engine::Core::UnitComponent>().size()));
+    std::int64_t spawned_units = 0;
+    for ([[maybe_unused]] auto entry : world.view<Engine::Core::UnitComponent>()) {
+      ++spawned_units;
+    }
+    spawn_phase->add_items(spawned_units);
   }
   spawn_phase.reset();
 
