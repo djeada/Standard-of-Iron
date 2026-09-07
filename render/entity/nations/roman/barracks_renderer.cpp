@@ -599,8 +599,7 @@ void add_quarters(BuildingArchetypeDesc& desc,
 void add_watchtower(BuildingArchetypeDesc& desc,
                     const RomanPalette& c,
                     BuildingState state) {
-  // A compact masonry castrum tower, with an open lookout under a tiled roof.
-  // Keep its original footprint so it stays clear of the barracks range.
+
   const float shaft_half = k_tower_half + 0.04F;
   const float shaft_top =
       state == BuildingState::Destroyed ? k_platform_top + 0.60F : k_tower_deck_y;
@@ -619,7 +618,6 @@ void add_watchtower(BuildingArchetypeDesc& desc,
     return;
   }
 
-  // Narrow recessed openings and a red dado tie the tower to the quarters.
   for (const float y : {1.08F, 1.78F}) {
     desc.add_box(QVector3D(k_tower_x, y, k_tower_z + shaft_half + 0.006F),
                  QVector3D(0.045F, 0.14F, 0.008F),

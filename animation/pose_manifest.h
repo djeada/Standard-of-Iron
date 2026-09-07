@@ -44,6 +44,10 @@ enum class PoseIntent : std::uint8_t {
   Idle = 0,
   Walk,
   Run,
+  WalkStrafeLeft,
+  WalkStrafeRight,
+  RunStrafeLeft,
+  RunStrafeRight,
   Hold,
 
   AttackMelee,
@@ -182,6 +186,10 @@ is_locomotion_pose_intent(PoseIntent intent) noexcept -> bool {
   case StateId::RidingBowShot:
   case StateId::WildlifeTense:
   case StateId::WildlifeStartle:
+  case StateId::WalkStrafeLeft:
+  case StateId::WalkStrafeRight:
+  case StateId::RunStrafeLeft:
+  case StateId::RunStrafeRight:
   case StateId::Count:
     return false;
   }
@@ -255,6 +263,26 @@ resolve_pose(PoseIntent intent) noexcept -> PoseResolution {
     break;
   case PoseIntent::Run:
     resolved.animation_state = StateId::Run;
+    resolved.semantic.action = ActionIntent::None;
+    resolved.semantic.locomotion = MovementState::Run;
+    break;
+  case PoseIntent::WalkStrafeLeft:
+    resolved.animation_state = StateId::WalkStrafeLeft;
+    resolved.semantic.action = ActionIntent::None;
+    resolved.semantic.locomotion = MovementState::Walk;
+    break;
+  case PoseIntent::WalkStrafeRight:
+    resolved.animation_state = StateId::WalkStrafeRight;
+    resolved.semantic.action = ActionIntent::None;
+    resolved.semantic.locomotion = MovementState::Walk;
+    break;
+  case PoseIntent::RunStrafeLeft:
+    resolved.animation_state = StateId::RunStrafeLeft;
+    resolved.semantic.action = ActionIntent::None;
+    resolved.semantic.locomotion = MovementState::Run;
+    break;
+  case PoseIntent::RunStrafeRight:
+    resolved.animation_state = StateId::RunStrafeRight;
     resolved.semantic.action = ActionIntent::None;
     resolved.semantic.locomotion = MovementState::Run;
     break;

@@ -107,6 +107,14 @@ auto animation_state_name(Render::Creature::AnimationStateId state) noexcept -> 
     return "Walk";
   case A::Run:
     return "Run";
+  case A::WalkStrafeLeft:
+    return "WalkStrafeLeft";
+  case A::WalkStrafeRight:
+    return "WalkStrafeRight";
+  case A::RunStrafeLeft:
+    return "RunStrafeLeft";
+  case A::RunStrafeRight:
+    return "RunStrafeRight";
   case A::Hold:
     return "Hold";
   case A::AttackMelee:

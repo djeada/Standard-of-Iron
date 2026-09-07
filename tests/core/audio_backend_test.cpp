@@ -101,8 +101,6 @@ protected:
     return buffer;
   }
 
-  // One whole loop of the clip covers every sample exactly once, so this peak
-  // does not depend on where in the loop the measuring window happens to start.
   auto looped_peak() -> float { return peak_of(render(TONE_FRAMES)); }
 
   QTemporaryDir m_directory;

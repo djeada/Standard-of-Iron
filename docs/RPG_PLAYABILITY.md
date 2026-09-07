@@ -1359,8 +1359,338 @@ only runs in `bpat_baker`. The fix is authored strafe (and ideally 8-way) locomo
 clips selected by `travel_alignment` / `turn_amount`, which is Gate 3 content work
 and was not started here. Until then, lock-on circling is the move that looks worst.
 
+**Done on 7 Sep 2026** -- see "Side-steps are clips, and now they exist" below.
+Four strafe clips are baked and blended; the eight-way set and the unmeasured
+slip during locomotion are both still open.
+
 `rpg_motor_start_stop`, `rpg_locomotion`, `rpg_motor_figure_eight`,
 `rpg_motor_diagonal`, `rpg_locomotion_hitch` and `rpg_close_quarters` pass with it.
+
+## The shake was in the presentation clock, 7 Sep 2026
+
+The reported symptom was a camera that never sits still on empty ground, with no
+enemy anywhere. Every Arena scenario was green, and that is the finding: **the
+Arena renders exactly one frame per simulation tick, and the defect only exists
+between ticks.**
+
+`CommanderPresentationSampleComponent` carries the previous and current
+authoritative pose plus the tick duration, and a consumer ages that sample to
+decide what to draw. Both consumers -- the camera anchor in
+`CommanderControlController::advance_presentation_pose` and the renderer in
+`UnitRenderCache::update_model_matrix` -- reset the age to zero whenever a new
+sample arrived and then added the whole frame delta, capped at one tick. The age
+was therefore "how far into this frame we are", not "how far into this tick",
+so how a frame happened to fall inside a tick decided the presented step.
+
+Modelled against a 60 Hz tick at a constant 5.375 m/s, with the frame-to-tick
+alignment the harness actually produces:
+
+| presentation | old presented speed | new presented speed |
+| ------------ | ------------------- | ------------------- |
+| 30 Hz        | 5.00 - 5.00         | 5.00 - 5.00         |
+| 60 Hz        | 5.00 - 5.00         | 5.00 - 5.00         |
+| 72 Hz        | **2.00 - 6.00**     | 5.00 - 5.00         |
+| 100 Hz       | **3.33 - 8.33**     | 5.00 - 5.00         |
+| 120 Hz       | 5.00 - 5.00         | 5.00 - 5.00         |
+| 144 Hz       | **2.00 - 7.00**     | 5.00 - 5.00         |
+| 165 Hz       | **3.75 - 8.75**     | 5.00 - 5.00         |
+
+The integer ratios are clean, which is why a 60 Hz test box never showed it. A
+nominal 60 Hz display does not save you either: with a realistic +/-15 per cent
+of frame-time jitter the same model swings between 2.08 and 9.59 m/s around a
+true 5.00.
+
+`Engine::Core::PresentationClock` in `game/core/presentation_clock.h` is the one
+implementation both consumers use now. The age is the time since the _previous_
+sample's tick, so a new sequence subtracts the tick that just ended rather than
+resetting, and a frame landing on a tick reads back the authoritative pose
+(alpha 1) while a frame between ticks extrapolates as far into the tick as it
+sits (alpha in [1, 2)). Two details are easy to get wrong and both were:
+
+- **Subtract the tick that ended, not the one that started.** They differ
+  whenever a frame runs long. Charging the new tick left `rpg_locomotion_hitch`'s
+  authored 100 ms frame sitting 17 per cent into its tick and jumping the rest of
+  the way on the next frame.
+- **One clock is not enough if two of them exist.** The camera and the render
+  cache are fed different frame deltas, so even with the same rule they drift:
+  the gate measured the lens framing a point 0.1926 m from the body it was
+  drawing. The controller now publishes the pose it resolved on the sample
+  (`presented_position` / `presented_yaw` / `presented_valid`) and the renderer
+  reads it back. `instance_prepare` builds `unit_base` from that published pose
+  instead of the raw `TransformComponent`, which is what actually moves the drawn
+  humanoid -- the model matrix from `UnitRenderCache` never reached it.
+
+`CommanderPresentationPoseTest.PresentedSpeedIsUniformAtEveryDisplayRate` and
+`UnitRenderCacheTest.ThePresentedStepIsUniformAtANonMultipleDisplayRate` fail on
+the old rule at 72/100/144/165 Hz.
+
+## The motor smoothed a scalar, so a reversal had no acceleration limit
+
+`rpg_locomotion` measured the commander going from **+5.375 m/s to -4.570 m/s
+across a single 16.7 ms step** at 4.4167 s -- an implied 597 m/s^2. The motor
+smoothed a scalar `m_planar_speed_smooth` towards a target speed and then pointed
+whatever it held at whatever the stick asked for, so a direction change kept the
+speed and changed the sign in one tick.
+
+The state is a planar velocity **vector** now, and direction changes are limited
+on that vector: `k_commander_ground_acceleration_mps2` (30) and
+`k_commander_ground_deceleration_mps2` (36) in
+`commander_control_controller.h`. A 180-degree reversal out of a sprint takes
+about 0.24 s and passes continuously through zero. The same run now measures a
+largest single-tick change of 0.600 m/s, which is exactly the deceleration
+budget for one tick.
+
+Three consequences worth knowing:
+
+- **A blocked step zeroes the velocity.** That is the accepted velocity, and it
+  makes turning away from a wall start at the same acceleration limit as a
+  standing start -- neither punished nor handed free speed.
+  `CommanderMotorTest.TurningAwayFromAWallStartsAtTheAccelerationLimit` used to
+  demand it be _faster_ than a standing start, which was the instantaneous
+  redirection itself.
+- **The accepted velocity is adopted after a slide**, so a commander grazing a
+  wall does not store the perpendicular speed and pop out at the end of it.
+- **Gait cannot read `motor.blocked` directly.** A body grinding into a facade
+  creeps a few millimetres, is refused, and creeps again, so the flag alternates
+  every tick; reading it flipped the rendered pose between Walk and Idle five
+  times a second in `rpg_close_quarters`. `fpv_motion_requested` follows the
+  smoothed accepted speed instead.
+
+`MovementIsContinuous`'s default multiplier moved from 2.5 to 2.75 in the same
+change, and that is a threshold, so it needs saying: a direct-control
+commander's sprint is _exactly_ 2.5 times `unit->speed` (`k_fpv_walk_speed_scale`
+1.25 times the 2.0 run multiplier), so the old bound left no margin at all. It
+passed only while the motor approached its top speed asymptotically and never
+reached it. It does now.
+
+## A calm camera, and what was moving it
+
+Measured on `rpg_locomotion` with no look input on flat ground, eye against
+pivot, before the change:
+
+| phase  | boom dx | boom dy | FOV          | anchor lag |
+| ------ | ------- | ------- | ------------ | ---------- |
+| entry  | 0.000   | 0.003   | 75.0 -> 69.9 | 0.000      |
+| walk   | 0.026   | 0.040   | 68.6 -> 68.0 | 0.147      |
+| run    | 0.035   | 0.054   | 72.4 -> 75.0 | 0.293      |
+| strafe | 0.026   | 0.040   | 68.0         | 0.126      |
+| halted | 0.001   | 0.004   | 68.0         | 0.004      |
+
+and after:
+
+| phase  | boom dx | boom dy | FOV          | anchor lag |
+| ------ | ------- | ------- | ------------ | ---------- |
+| entry  | 0.000   | 0.002   | 68.0         | 0.000      |
+| walk   | 0.014   | 0.024   | 68.0         | 0.091      |
+| run    | 0.019   | 0.032   | 72.4 -> 75.0 | 0.182      |
+| strafe | 0.014   | 0.024   | 68.0         | 0.078      |
+| halted | 0.000   | 0.001   | 68.0         | 0.000      |
+
+Five separate things were moving the lens without being asked to:
+
+- **Entering commander mode was a zoom.** `m_fov_current` started at a hard-coded
+  75 degrees and settled to the explore framing's 68 over about a second. The rig
+  seeds the FOV from the framing on its first update.
+- **Idle breathing answered to nothing.** Its amplitude was
+  `camera_motion_scale - m_bob_amplitude`, so switching _head bob off_ left the
+  bob amplitude at zero and ran the breathing at full amplitude -- including
+  while sprinting, where the bob had been suppressing it. It is head motion, so
+  it answers to the head-bob setting, and its presence is the commander's own
+  stillness rather than the absence of another effect.
+- **The anchor lag clamp was per axis.** A diagonal run trailed sqrt(2) times
+  further than an axis-aligned one at the same speed, so the framing distance
+  changed as the player orbited. It is radial now, and the follow rate (24) is
+  fast enough that an ordinary sprint settles at 0.22 m and never reaches the
+  0.30 m clamp: the clamp is for teleports.
+- **Bob, sway and strafe roll are calmer.** About 60 per cent of the previous
+  amplitude, and the strafe roll is gated by the head-bob setting like the rest
+  of the head motion.
+- **`camera_motion_scale = 0` is now a complete motion-free camera** -- no bob,
+  no breathing, no roll, no sprint FOV, no impulse, no entry settle.
+  `CommanderCameraRig.TheNeutralCameraIsCompletelyStill` holds the eye, the FOV
+  and the horizon to 1e-4 across 240 idle frames and 240 running frames.
+
+Depenetration also changed: it is decided on the eye that survived the boom
+shortening, not on the raw sweep fraction. A wall pocket can leave the sweep just
+above zero while the 0.55 m minimum boom still holds the lens inside -- measured
+at 0.148 m inside a house at `rpg_close_quarters`'s 180-degree yaw snap, with a
+clear fraction of 0.023 that the old `<= 0` test read as "not penetrating". The
+escape leaves a 0.14 m margin rather than resting on the surface.
+
+## Side-steps are clips, and now they exist
+
+The prediction in the section above was right: rotating the stride in
+`resolve_locomotion_foot` is inert at runtime, because humanoid bone palettes
+come from baked `.bpat` clips and the stride math only runs in `bpat_baker`. So
+the clips were baked.
+
+`walk_strafe_left`, `walk_strafe_right`, `run_strafe_left` and
+`run_strafe_right` are four new baker clips and four new `StateId`s, selected by
+`resolve_locomotion_crossfade` from the lateral share of travel and blended
+against the fore/aft clip. `resolve_humanoid_locomotion_pose` lays the stride on
+the travel axis in body space, opens the stance along that axis by half a stride
+so the feet cannot cross, leans the torso into the step, and drops the fore/aft
+arm swing and torso twist that belong to a stride rather than a shuffle.
+
+Two distinctions matter and both bit during the work:
+
+- **`turn_amount` and `travel_lateral` are the same angle measured for opposite
+  reasons.** An ordered unit turns to face where it is going, so the mismatch is
+  a turn in progress; a direct-control commander faces the camera, so a sustained
+  mismatch is a side-step. The pose takes them as separate inputs, and the
+  runtime only offers the strafe clips to a body whose
+  `VisualMovementState::facing_independent_of_travel` is set (from
+  `MotionPresentationSource::DirectControl`). Feeding `turn_amount` in directly
+  made every turning RTS soldier blend a side-step.
+- **The baked stride and the turn terms are not the same knob either.**
+  `foot_turn_scale` shortens one foot's stride to 55 per cent and lengthens the
+  other's to 145 for a turn; applied to a sustained strafe it stopped either foot
+  from planting.
+
+Measured on `rpg_locomotion`'s strafe leg, foot span relative to the root:
+front-to-back 0.7379 m and sideways 0.1443 m before (the forward stride played
+while the body slid sideways), 0.0162 m and 1.1500 m after.
+
+## The sword was carried through the torso
+
+`humanoid_preview --report` prints the baked blade axis. For every locomotion and
+idle clip of the sword profile it read `(0.01, 1.00, 0.05)`: straight up, out of
+a hand carried at chest height and close in, so a metre of blade ran through the
+wearer's own torso and out over his shoulder. From the chase camera that reads as
+a spike coming out of the commander's back.
+
+The direction was never the problem -- an upright blade carried in front of the
+body is the pose this art wants. Two things were:
+
+- `carry_sword_and_shield` placed the hands and said nothing about the grips, so
+  the sword kept the bind grip's orientation and the shield hung off whatever
+  angle the forearm happened to make. `HumanoidHeldPoseSample` carries a
+  `blade_direction` and an `offhand_axis` now.
+- `bake_humanoid_clip_frame` only called `rebuild_humanoid_frames` for showcase,
+  attack, hold and work clips, so a walk or idle clip emitted the _bind_ grip
+  socket no matter what the stance asked for. `apply_ground_stance_for_profile`
+  reports whether the stance oriented the grips, and only those clips rebuild.
+  The spear, caster and stave stances are deliberately excluded: their props are
+  oriented by their own socket functions, so rebuilding their frames would move
+  baked art without fixing anything.
+
+The carry hand also moved out, down and forward (0.41, shoulder - 0.19, 0.58
+walking) so the blade clears the chest instead of passing through it.
+
+## Tab never reached the viewport, so takeover was untestable
+
+The Arena's manual review path is Tab into the commander, then the ordinary keys
+and mouse. It did not work, and nothing said so.
+
+`QWidget::event()` offers a Tab press to `focusNextPrevChild()` _before_
+`keyPressEvent` is ever called. With panels either side of the viewport there is
+always a next widget, so the press was consumed as focus navigation and quietly
+moved focus into the terrain panel. `ArenaViewport::focusNextPrevChild` now
+refuses navigation -- the viewport wants raw keys -- and
+`ArenaInteractiveTakeoverTest` pins both that and the trace below.
+
+Interactive control also writes no `trace.jsonl`; that is batch-only. With
+`SOI_ARENA_RPG_TRACE=1` the viewport prints one line a second with the
+commander's position, view angles and the input edge counters, which is what
+makes a claim about the manual path checkable at all. Driven through XTEST on a
+nested display, one run reads:
+
+```
+pos=0.343,1.882  yaw=0.00               <- Tab, takeover
+pos=0.343,21.740 yaw=0.00               <- W held, 20 m of ground, then held still
+pos=0.343,21.740 yaw=58.21 pitch=59.41  <- mouse look, pitch clamped at its limit
+pos=-6.476,23.508 yaw=58.21             <- D held, 6.8 m sideways, facing unchanged
+attack_press=6 attack_consumed=6        <- three clicks, every press consumed
+```
+
+Move, look, stop, strafe and attack, each observable. That is what T01 was
+asking for and what "attempted but not verified" had been hiding.
+
+## The commander was standing under the frame
+
+Projecting the body against the eye, target and field of view the rig resolves,
+at the rest pitch, the feet landed at screen y **1.000** -- exactly the bottom
+edge -- in the explore framing, **1.005** in close melee and **1.000** in a close
+duel lock. The head sat at 0.710, so the commander had the bottom 29 per cent of
+the shot and the rest was sky.
+
+`look_drop` is the knob that fixes it, and four of the six framings had none.
+They now land between 0.83 and 0.89 with the head between 0.51 and 0.59.
+`TheOrdinaryViewKeepsTheWholeCommanderInFrame` checks all six against three
+aspect ratios.
+
+Two things about it are worth keeping:
+
+- **The drop is applied after the lock-on focus blend, not before.** A locked
+  duel blends 60 per cent of the target toward the enemy's chest, which diluted
+  the drop by the same 60 per cent and put the commander's feet back on the
+  bottom edge in exactly the framing that has him swinging at something.
+- **Bow aim keeps a drop of zero on purpose.** The reticle is the camera axis;
+  tilting the aim framing would move where the arrow goes.
+
+The boom does not orbit with pitch -- the eye offset is the same at every pitch
+-- so looking steeply up still puts the body below the frame, the way pointing a
+fixed shoulder camera at the sky would. `LookingUpAndDownKeepsTheCommanderOnScreen`
+covers the band a player moves and fights through (-60 to +10 degrees) and stops
+there deliberately.
+
+## A swing that steps instead of skating
+
+`humanoid_preview --report` prints the baked foot track. The authored sword poses
+are keys of foot _position_ and say nothing about whether a foot is airborne, so
+a step covered its whole distance flat on the floor: the left slash slid the
+right foot 0.44 m forward between phase 0.38 and 0.54, held it, and slid the same
+0.44 m back between 0.76 and 1.00.
+
+`sample_authored_sword_pose_key` lifts a foot by its own horizontal speed along
+the same Hermite curve that moves it. Speed, not a per-segment arc: an arc has to
+be zero at every key, and a foot still moving as it passes through one touches
+down mid-stride and skates on -- measured at 0.035 m per sampled step with an
+arc, against 0.005 with the speed rule.
+
+Read back off the baked clips, worst travel by a foot the clip keeps on the
+ground, per sampled step:
+
+| clip                    | before  | after   |
+| ----------------------- | ------- | ------- |
+| `rpg_sword_slash_left`  | 0.057 m | 0.005 m |
+| `rpg_sword_slash_right` | 0.057 m | 0.005 m |
+| `rpg_sword_overhead`    | 0.082 m | 0.006 m |
+| `rpg_sword_thrust`      | 0.078 m | 0.005 m |
+| `rpg_sword_finisher`    | 0.123 m | 0.033 m |
+
+`AuthoredSwordStepsLeaveTheGroundInsteadOfSkating` holds it, and fires on all
+five clips with the lift removed. The finisher still lands with some ground
+speed; its return has no key between 0.86 and 1.00 to ease out on, which is
+authoring rather than code.
+
+## A combo link is a seam, and it was a cut
+
+`rpg_one_press_one_attack` traced every action-to-action link moving the
+submitted arm reach **0.21 to 0.26 m in a single frame**. The commander's
+authored action phase snaps from its recovery straight back to zero when he
+links, and nothing remembered where the body had been: the previous clip simply
+stopped and the next one started at its own frame zero.
+
+The interrupted clip is now held at the phase it was cut on and faded out under
+the incoming one over 0.14 s. The same links measure **0.000 m**, and the fade
+itself moves at most 0.03 m per frame with nothing at its end.
+
+Three details decided the shape:
+
+- **The link is keyed on the clip, not the action.** A commander's sword clip is
+  chosen either by a named sword state or by an authored clip id, so the seam is
+  read with the same two rules the selection uses, in the same order.
+- **It is read from the inputs, not from the resolved selection.** Reading the
+  outgoing clip back after the selection would start the fade a frame after the
+  pop it exists to hide.
+- **It runs outside the combat transaction policy.** That policy blends an
+  action against the base stance, which is a different seam; a link can happen
+  whether or not it has anything to say.
+
+What is _not_ fixed: the idle-to-action and action-to-idle seams still move the
+arm 0.19 to 0.21 m in a frame. That is the base-against-action blend the combat
+transaction policy owns, and it is a separate piece of work.
 
 ## Play-through findings, 2 Sep 2026
 

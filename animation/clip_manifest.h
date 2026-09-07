@@ -119,6 +119,11 @@ enum class StateId : std::uint8_t {
   WildlifeTense = 21,
   WildlifeStartle = 22,
 
+  WalkStrafeLeft = 23,
+  WalkStrafeRight = 24,
+  RunStrafeLeft = 25,
+  RunStrafeRight = 26,
+
   Count
 };
 
@@ -230,7 +235,12 @@ inline constexpr std::uint16_t k_humanoid_rpg_spear_sweep_clip = 75U;
 inline constexpr std::uint16_t k_humanoid_rpg_spear_launcher_clip = 76U;
 inline constexpr std::uint16_t k_humanoid_rpg_spear_finisher_clip = 77U;
 
-inline constexpr std::uint16_t k_humanoid_clip_count = 78U;
+inline constexpr std::uint16_t k_humanoid_walk_strafe_left_clip = 78U;
+inline constexpr std::uint16_t k_humanoid_walk_strafe_right_clip = 79U;
+inline constexpr std::uint16_t k_humanoid_run_strafe_left_clip = 80U;
+inline constexpr std::uint16_t k_humanoid_run_strafe_right_clip = 81U;
+
+inline constexpr std::uint16_t k_humanoid_clip_count = 82U;
 
 inline constexpr float k_humanoid_combat_ready_cycle_time = 2.2F;
 inline constexpr std::uint32_t k_humanoid_combat_ready_frames = 48U;
@@ -370,6 +380,10 @@ humanoid_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
   t[state_index(StateId::RpgSwordOverhead)] = k_humanoid_rpg_sword_overhead_clip;
   t[state_index(StateId::RpgSwordThrust)] = k_humanoid_rpg_sword_thrust_clip;
   t[state_index(StateId::RpgSwordFinisher)] = k_humanoid_rpg_sword_finisher_clip;
+  t[state_index(StateId::WalkStrafeLeft)] = k_humanoid_walk_strafe_left_clip;
+  t[state_index(StateId::WalkStrafeRight)] = k_humanoid_walk_strafe_right_clip;
+  t[state_index(StateId::RunStrafeLeft)] = k_humanoid_run_strafe_left_clip;
+  t[state_index(StateId::RunStrafeRight)] = k_humanoid_run_strafe_right_clip;
   return t;
 }
 
@@ -390,6 +404,10 @@ humanoid_snapshot_table() noexcept -> std::array<bool, state_count()> {
   auto t = make_snapshot_table_for_clips(humanoid_clip_table());
   t[state_index(StateId::Walk)] = false;
   t[state_index(StateId::Run)] = false;
+  t[state_index(StateId::WalkStrafeLeft)] = false;
+  t[state_index(StateId::WalkStrafeRight)] = false;
+  t[state_index(StateId::RunStrafeLeft)] = false;
+  t[state_index(StateId::RunStrafeRight)] = false;
   return t;
 }
 

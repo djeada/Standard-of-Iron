@@ -76,7 +76,9 @@ auto buildings_of(const Engine::Core::World& world)
 
 constexpr float k_fpv_walk_speed_scale = 1.25F;
 
-constexpr float k_move_blocked_decay_rate = 16.0F;
+constexpr float k_commander_rest_speed = 0.05F;
+
+constexpr float k_accepted_speed_follow_rate = 8.0F;
 
 constexpr float k_turn_in_place_threshold_degrees = 50.0F;
 constexpr float k_turn_in_place_rate_degrees = 260.0F;
@@ -136,6 +138,7 @@ void CommanderControlController::publish_presentation_sample(
   sample->tick_seconds = dt;
   sample->snap = teleported || m_presentation_snap_requested;
   sample->valid = true;
+  sample->presented_valid = false;
   ++sample->tick_sequence;
   m_presentation_snap_requested = false;
 }
@@ -144,7 +147,7 @@ auto CommanderControlController::advance_presentation_pose(
     Engine::Core::Entity& commander,
     const Engine::Core::TransformComponent& transform,
     float dt) -> Engine::Core::PresentationPose {
-  auto const* sample =
+  auto* sample =
       commander.get_component<Engine::Core::CommanderPresentationSampleComponent>();
   if (sample == nullptr || !sample->valid) {
     m_presentation_pose.position = transform.position;
@@ -154,26 +157,17 @@ auto CommanderControlController::advance_presentation_pose(
     return m_presentation_pose;
   }
 
-  if (sample->tick_sequence != m_presentation_seen_sequence) {
-    m_presentation_seen_sequence = sample->tick_sequence;
-    m_presentation_age = 0.0F;
-  }
-
-  float const frame_dt = std::max(0.0F, dt);
-  float const max_age =
-      frame_dt >= sample->tick_seconds
-          ? sample->tick_seconds
-          : sample->tick_seconds *
-                (1.0F + Engine::Core::k_presentation_max_extrapolation);
-  m_presentation_age = std::min(m_presentation_age + frame_dt, max_age);
-  m_presentation_pose =
-      Engine::Core::resolve_presentation_pose(*sample, m_presentation_age);
+  float const age = m_presentation_clock.advance(*sample, dt);
+  m_presentation_pose = Engine::Core::resolve_presentation_pose(*sample, age);
+  sample->presented_position = m_presentation_pose.position;
+  sample->presented_yaw = m_presentation_pose.yaw;
+  sample->presented_valid = true;
   return m_presentation_pose;
 }
 
 void CommanderControlController::snap_presentation_pose() {
   m_presentation_snap_requested = true;
-  m_presentation_age = 0.0F;
+  m_presentation_clock.reset();
 }
 
 void CommanderControlController::exchange_recorded_input(
@@ -295,7 +289,6 @@ void CommanderControlController::release_all_input() {
 void CommanderControlController::reset() {
   release_all_input();
   snap_presentation_pose();
-  m_presentation_seen_sequence = 0;
   m_body_yaw_valid = false;
   m_turning_in_place = false;
   m_frame_intent = {};
@@ -307,7 +300,8 @@ void CommanderControlController::reset() {
   m_camera_rig.reset();
   m_observed_action_hit_count = 0;
   m_move_speed = 0.0F;
-  m_planar_speed_smooth = 0.0F;
+  m_planar_velocity = QVector3D(0.0F, 0.0F, 0.0F);
+  m_accepted_speed_smooth = 0.0F;
   m_last_move_direction = QVector3D(0.0F, 0.0F, 1.0F);
   m_move_right_axis = 0;
   m_move_forward_axis = 0;
@@ -1612,6 +1606,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     }
     m_tick_input = {};
     m_move_speed = 0.0F;
+    m_planar_velocity = QVector3D(0.0F, 0.0F, 0.0F);
     m_move_right_axis = 0;
     m_move_forward_axis = 0;
     m_move_running = false;
@@ -1907,6 +1902,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     motor_requested_speed = k_dodge_speed;
     motor_blocked = step.blocked;
     motor_slid = step.slid;
+    m_planar_velocity = m_dodge_direction * k_dodge_speed;
     if (movement != nullptr) {
       movement->set_manual_velocity(m_dodge_direction.x() * k_dodge_speed,
                                     m_dodge_direction.z() * k_dodge_speed);
@@ -1948,23 +1944,30 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       motor_blocked = step.blocked;
       motor_slid = step.slid;
       if (step.moved) {
+        m_planar_velocity = QVector3D(step.velocity.x(), 0.0F, step.velocity.z());
         if (movement != nullptr) {
           movement->set_manual_velocity(step.velocity.x(), step.velocity.z());
         }
         actual_speed_for_bob = step.velocity.length();
       } else if (movement != nullptr) {
+        m_planar_velocity = QVector3D(0.0F, 0.0F, 0.0F);
         movement->set_manual_velocity(0.0F, 0.0F);
       }
-    } else if (movement != nullptr) {
-      movement->set_manual_velocity(0.0F, 0.0F);
+    } else {
+      m_planar_velocity = QVector3D(0.0F, 0.0F, 0.0F);
+      if (movement != nullptr) {
+        movement->set_manual_velocity(0.0F, 0.0F);
+      }
     }
   } else {
 
     float target_speed = 0.0F;
     bool running = false;
+    QVector3D desired_direction;
     if (move.lengthSquared() > 0.0001F) {
       move.normalize();
       m_last_move_direction = move;
+      desired_direction = move;
       float speed = std::max(0.1F, unit->speed) * k_fpv_walk_speed_scale;
 
       auto const* stamina = Game::Systems::ensure_run_stamina(*commander);
@@ -1982,24 +1985,28 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       target_speed = speed;
     }
 
-    constexpr float k_move_accel_rate = 12.0F;
-    constexpr float k_move_decel_rate = 16.0F;
-    float const approach_rate =
-        target_speed > m_planar_speed_smooth ? k_move_accel_rate : k_move_decel_rate;
-    m_planar_speed_smooth += (target_speed - m_planar_speed_smooth) *
-                             (1.0F - std::exp(-approach_rate * std::max(dt, 0.0F)));
-    if (target_speed <= 0.0F && m_planar_speed_smooth < 0.05F) {
-      m_planar_speed_smooth = 0.0F;
+    QVector3D const desired_velocity = desired_direction * target_speed;
+    QVector3D const velocity_delta = desired_velocity - m_planar_velocity;
+    float const velocity_delta_length = velocity_delta.length();
+    float const acceleration_limit =
+        (target_speed > 0.0F ? k_commander_ground_acceleration_mps2
+                             : k_commander_ground_deceleration_mps2) *
+        std::max(dt, 0.0F);
+    if (velocity_delta_length <= acceleration_limit ||
+        velocity_delta_length <= 1.0e-5F) {
+      m_planar_velocity = desired_velocity;
+    } else {
+      m_planar_velocity +=
+          velocity_delta * (acceleration_limit / velocity_delta_length);
+    }
+    if (target_speed <= 0.0F && m_planar_velocity.length() < k_commander_rest_speed) {
+      m_planar_velocity = QVector3D(0.0F, 0.0F, 0.0F);
     }
     motor_requested_speed = target_speed;
 
-    if (m_planar_speed_smooth > 0.01F) {
-      QVector3D const direction =
-          move.lengthSquared() > 0.0001F ? move : m_last_move_direction;
-      const float nx =
-          transform->position.x + direction.x() * m_planar_speed_smooth * dt;
-      const float nz =
-          transform->position.z + direction.z() * m_planar_speed_smooth * dt;
+    if (m_planar_velocity.length() > 0.01F) {
+      const float nx = transform->position.x + m_planar_velocity.x() * dt;
+      const float nz = transform->position.z + m_planar_velocity.z() * dt;
       auto const step = m_motor.advance(
           *commander,
           *transform,
@@ -2015,6 +2022,8 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       motor_slid = step.slid;
       if (step.moved) {
         mark_jump_safe_position(step.position.x(), step.position.z());
+
+        m_planar_velocity = QVector3D(step.velocity.x(), 0.0F, step.velocity.z());
         if (movement != nullptr) {
           movement->set_manual_velocity(step.velocity.x(), step.velocity.z());
         }
@@ -2022,11 +2031,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
         run_for_bob = running;
       } else {
 
-        m_planar_speed_smooth *=
-            std::exp(-k_move_blocked_decay_rate * std::max(dt, 0.0F));
-        if (m_planar_speed_smooth < 0.05F) {
-          m_planar_speed_smooth = 0.0F;
-        }
+        m_planar_velocity = QVector3D(0.0F, 0.0F, 0.0F);
         if (movement != nullptr) {
           movement->set_manual_velocity(0.0F, 0.0F);
         }
@@ -2072,6 +2077,9 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   }
 
   m_move_speed = actual_speed_for_bob;
+  m_accepted_speed_smooth +=
+      (actual_speed_for_bob - m_accepted_speed_smooth) *
+      (1.0F - std::exp(-k_accepted_speed_follow_rate * std::max(dt, 0.0F)));
   m_move_right_axis = right_axis;
   m_move_forward_axis = forward_axis;
   m_move_running = run_for_bob;
@@ -2093,7 +2101,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       m_tick_input.primary_held || m_tick_input.guard_held ||
       m_dodge_state != DodgeState::None || jump_active || drawing_bow ||
       m_locked_target_id != 0 || attack_animation_active;
-  bool const body_follows_travel = m_planar_speed_smooth > 0.05F;
+  bool const body_follows_travel = m_planar_velocity.length() > k_commander_rest_speed;
 
   if (!m_body_yaw_valid) {
     m_body_yaw = m_view_yaw;
@@ -2166,9 +2174,13 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   if (cmd_comp != nullptr) {
     cmd_comp->fpv_motion_vx = (movement != nullptr) ? movement->get_vx() : 0.0F;
     cmd_comp->fpv_motion_vz = (movement != nullptr) ? movement->get_vz() : 0.0F;
+
     cmd_comp->fpv_motion_requested =
-        motor_requested_speed > 0.0F ||
-        m_planar_speed_smooth >
+        (motor_requested_speed > 0.0F &&
+         m_accepted_speed_smooth >
+             Engine::Core::CommanderComponent::k_direct_control_gait_floor_speed *
+                 0.5F) ||
+        m_planar_velocity.length() >
             Engine::Core::CommanderComponent::k_direct_control_gait_floor_speed;
   }
 
@@ -2541,7 +2553,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     m_trace.motor.actual_velocity =
         dt > 0.0F ? (motor_position - motor_previous_position) / dt : QVector3D();
     m_trace.motor.requested_speed = motor_requested_speed;
-    m_trace.motor.smoothed_speed = m_planar_speed_smooth;
+    m_trace.motor.smoothed_speed = m_planar_velocity.length();
     m_trace.motor.speed_error =
         m_trace.motor.actual_velocity.length() - motor_requested_speed;
     m_trace.motor.grounded = !jump_active;

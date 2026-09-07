@@ -8,8 +8,6 @@
 
 namespace Render::GL::Roman {
 
-// Dimensions are measured at the eaves; the caller chooses the ridge axis.
-// Use the same tile pitch, ridge caps and restrained highlights at every scale.
 inline void add_tiled_roof(BuildingArchetypeDesc& desc,
                            const QVector3D& eave_center,
                            float half_length,
@@ -60,7 +58,7 @@ inline void add_tiled_roof(BuildingArchetypeDesc& desc,
                     states);
 
   if (close_gables) {
-    // Fine courses fill the triangle without the old oversized stair-step blocks.
+
     constexpr int k_courses = 16;
     const float course_h = rise / static_cast<float>(k_courses);
     for (const float end : {-1.0F, 1.0F}) {

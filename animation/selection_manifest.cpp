@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <utility>
 
 namespace Animation {
@@ -197,15 +198,23 @@ auto resolve_locomotion_crossfade(const LocomotionCrossfadeInputs& inputs) noexc
     -> LocomotionCrossfade {
   float const locomotion = std::clamp(inputs.locomotion_presence, 0.0F, 1.0F);
   float const run = std::clamp(inputs.run_presence, 0.0F, 1.0F);
+  float const lateral = std::clamp(std::abs(inputs.lateral_share), 0.0F, 1.0F);
+  bool const strafing_left = inputs.lateral_share < 0.0F;
+  StateId const walk_strafe =
+      strafing_left ? StateId::WalkStrafeLeft : StateId::WalkStrafeRight;
+  StateId const run_strafe =
+      strafing_left ? StateId::RunStrafeLeft : StateId::RunStrafeRight;
 
   struct Candidate {
     StateId state;
     float weight;
   };
-  std::array<Candidate, 3> const candidates{{
+  std::array<Candidate, 5> const candidates{{
       {StateId::Idle, 1.0F - locomotion},
-      {StateId::Walk, locomotion * (1.0F - run)},
-      {StateId::Run, locomotion * run},
+      {StateId::Walk, locomotion * (1.0F - run) * (1.0F - lateral)},
+      {walk_strafe, locomotion * (1.0F - run) * lateral},
+      {StateId::Run, locomotion * run * (1.0F - lateral)},
+      {run_strafe, locomotion * run * lateral},
   }};
 
   LocomotionCrossfade crossfade{};

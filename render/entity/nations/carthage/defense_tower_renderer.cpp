@@ -229,8 +229,6 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
       }
     }
 
-    // Leave an open military terrace, framed by the same sandstone cornice
-    // as the barracks. The parapet already supplies its stepped silhouette.
     for (const float side : {-1.0F, 1.0F}) {
       desc.add_box(QVector3D(0.0F, deck_y - 0.02F, side * parapet_half),
                    QVector3D(parapet_half + 0.08F, 0.055F, 0.065F),

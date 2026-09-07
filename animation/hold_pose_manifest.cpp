@@ -119,9 +119,9 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
   }
   case HumanoidHeldPoseKind::SwordShieldCarry: {
     float const moving_mix = inputs.moving ? 1.0F : 0.0F;
-    sample.right_hand = {0.34F + moving_mix * 0.03F - run_mix * 0.09F,
-                         shoulder_y - 0.06F - moving_mix * 0.05F - run_mix * 0.07F,
-                         0.44F + moving_mix * 0.06F + run_mix * 0.09F};
+    sample.right_hand = {0.38F + moving_mix * 0.03F - run_mix * 0.09F,
+                         shoulder_y - 0.14F - moving_mix * 0.05F - run_mix * 0.07F,
+                         0.52F + moving_mix * 0.06F + run_mix * 0.09F};
     sample.left_hand = {-0.32F - moving_mix * 0.03F + run_mix * 0.07F,
                         shoulder_y - 0.02F - moving_mix * 0.03F + run_mix * 0.03F,
                         0.28F + moving_mix * 0.05F + run_mix * 0.13F};
@@ -132,6 +132,12 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     sample.neck_z_delta = 0.035F * run_mix;
     sample.head_y_delta = -0.010F * run_mix;
     sample.head_z_delta = 0.030F * run_mix;
+
+    sample.has_blade_direction = true;
+    sample.blade_direction = {0.05F, 0.985F, 0.17F + 0.03F * run_mix};
+
+    sample.has_offhand_axis = true;
+    sample.offhand_axis = {-0.10F - 0.04F * run_mix, 0.98F, 0.17F + 0.06F * run_mix};
     break;
   }
   case HumanoidHeldPoseKind::ResourceCarry: {

@@ -173,9 +173,10 @@ struct HumanoidLocomotionPoseInputs {
   float stride_distance{0.0F};
   float locomotion_blend{0.0F};
   float run_blend{0.0F};
-  float turn_amount{0.0F};
 
+  float turn_amount{0.0F};
   float travel_alignment{1.0F};
+  float travel_lateral{0.0F};
   float acceleration{0.0F};
   float walk_speed_multiplier{1.0F};
   float stance_width{1.0F};

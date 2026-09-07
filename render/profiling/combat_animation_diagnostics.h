@@ -128,6 +128,11 @@ struct SoldierAnimationDebugSample {
   float locomotion_blend{0.0F};
   float locomotion_presence{0.0F};
   float cycle_phase{0.0F};
+
+  float travel_alignment{1.0F};
+  float travel_lateral_share{0.0F};
+
+  float action_link_weight{0.0F};
   bool persistent_valid{false};
   float persistent_last_sample_time{0.0F};
   float hit_reaction_tilt_degrees{0.0F};

@@ -218,7 +218,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                       k_building_state_mask_intact);
   }
 
-  // One shaded bazaar aisle echoes the flat-roofed domestic terraces.
   const float canopy_y = 0.24F + 0.92F * height_multiplier;
   for (const float x : {-0.96F, 0.34F}) {
     for (const float z : {-0.90F, 0.90F}) {

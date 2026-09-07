@@ -35,7 +35,6 @@ inline auto mix_index(MixBus bus) -> std::size_t {
   return static_cast<std::size_t>(bus);
 }
 
-// Resolve semantic cue names before falling back to the resource category.
 inline auto mix_bus_for(std::string_view id, MixBus fallback) -> MixBus {
   if (id.starts_with("sound_")) {
     id.remove_prefix(6);
@@ -73,7 +72,6 @@ inline auto preset_from_int(int value) -> ListeningPreset {
   return static_cast<ListeningPreset>(std::clamp(value, 0, 2));
 }
 
-// Audio-thread-owned. No allocation, locks or wall-clock timing in the callback.
 class GameplayMix {
 public:
   void prepare(int sample_rate) {
@@ -88,8 +86,7 @@ public:
   target(const MixCounts& counts, bool voice, bool critical, ListeningPreset preset) {
     m_targets = base_gains();
     const bool night = preset == ListeningPreset::Night;
-    // Shared density budget prevents a storm spread across different cue IDs
-    // from bypassing per-resource concurrency and cooldown rules.
+
     const unsigned foreground = counts[mix_index(MixBus::Combat)] +
                                 counts[mix_index(MixBus::Economy)] +
                                 counts[mix_index(MixBus::Environment)];
@@ -103,10 +100,10 @@ public:
                        MixBus::Combat,
                        MixBus::Economy,
                        MixBus::Environment}) {
-      // Routine acknowledgements make a small pocket; critical cues get 4 dB.
+
       m_targets[mix_index(bus)] *= critical ? 0.63F : (voice ? 0.85F : 1.0F);
     }
-    // Two simultaneous voices/alerts must not double the information bus.
+
     for (MixBus bus : {MixBus::Voice, MixBus::Alert}) {
       m_targets[mix_index(bus)] /=
           std::sqrt(float(std::max(1U, counts[mix_index(bus)])));
@@ -122,7 +119,7 @@ public:
   }
 
   static auto base_gains() -> MixGains {
-    // Linear gains: 0, -6, -6, -8, -1, -4, -10, -10, -12, -2 dB.
+
     return {1.0F, 0.50F, 0.50F, 0.40F, 0.89F, 0.63F, 0.32F, 0.32F, 0.25F, 0.79F};
   }
 

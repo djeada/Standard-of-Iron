@@ -173,6 +173,8 @@ struct HumanoidUnitAnimationRuntime {
 
   DrawContext inst_ctx{};
   QMatrix4x4 unit_base{};
+  QVector3D root_position{};
+  float root_yaw{0.0F};
   Animation::HumanoidLocomotionActionOverrideSample locomotion_override{};
 
   float turn_smoothing_dt{0.0F};
@@ -607,12 +609,31 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
 
   constexpr float k_formation_fog_radius = 6.0F;
   DrawContext inst_ctx = ctx;
+
+  QVector3D root_position;
+  float root_yaw = 0.0F;
+  if (transform_comp != nullptr) {
+    root_position = QVector3D(transform_comp->position.x,
+                              transform_comp->position.y,
+                              transform_comp->position.z);
+    root_yaw = transform_comp->rotation.y;
+    if (ctx.world != nullptr && ctx.entity != nullptr) {
+      if (auto const* presented =
+              ctx.world->try_get<Engine::Core::CommanderPresentationSampleComponent>(
+                  ctx.entity->get_id());
+          presented != nullptr && presented->presented_valid) {
+        root_position = QVector3D(presented->presented_position.x,
+                                  presented->presented_position.y,
+                                  presented->presented_position.z);
+        root_yaw = presented->presented_yaw;
+      }
+    }
+  }
+
   QMatrix4x4 unit_base = k_identity_matrix;
   if (transform_comp != nullptr) {
-    unit_base.translate(transform_comp->position.x,
-                        transform_comp->position.y,
-                        transform_comp->position.z);
-    unit_base.rotate(transform_comp->rotation.y, 0.0F, 1.0F, 0.0F);
+    unit_base.translate(root_position.x(), root_position.y(), root_position.z());
+    unit_base.rotate(root_yaw, 0.0F, 1.0F, 0.0F);
   }
   const auto locomotion_override =
       Animation::resolve_humanoid_locomotion_action_override({
@@ -692,6 +713,8 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
   result.formation_fight_active = formation_fight_active;
   result.inst_ctx = inst_ctx;
   result.unit_base = unit_base;
+  result.root_position = root_position;
+  result.root_yaw = root_yaw;
   result.locomotion_override = locomotion_override;
   result.turn_smoothing_dt = turn_smoothing_dt;
   result.turn_smoothing_active = turn_smoothing_active;
@@ -762,6 +785,8 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   const bool formation_fight_active = u.formation_fight_active;
   DrawContext& inst_ctx = u.inst_ctx;
   const QMatrix4x4& unit_base = u.unit_base;
+  const QVector3D& root_position = u.root_position;
+  float const root_yaw = u.root_yaw;
   const auto& locomotion_override = u.locomotion_override;
   const float turn_smoothing_dt = u.turn_smoothing_dt;
   const bool turn_smoothing_active = u.turn_smoothing_active;
@@ -795,6 +820,9 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
                                   float locomotion_blend,
                                   float locomotion_presence,
                                   float cycle_phase,
+                                  float travel_alignment,
+                                  float travel_lateral_share,
+                                  float action_link_weight,
                                   bool persistent_valid,
                                   float persistent_last_sample_time) {
     if (!record_animation_diagnostics || ctx.entity == nullptr) {
@@ -827,6 +855,9 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     sample.locomotion_blend = locomotion_blend;
     sample.locomotion_presence = locomotion_presence;
     sample.cycle_phase = cycle_phase;
+    sample.travel_alignment = travel_alignment;
+    sample.travel_lateral_share = travel_lateral_share;
+    sample.action_link_weight = action_link_weight;
     sample.persistent_valid = persistent_valid;
     sample.persistent_last_sample_time = persistent_last_sample_time;
     animation_diagnostics.record_soldier_sample(ctx.entity->get_id(), sample);
@@ -966,12 +997,12 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   if (transform_comp != nullptr && soldier_turn_smoothed) {
     applied_yaw = turn_smoothing.yaw_degrees;
     QMatrix4x4 m;
-    m.translate(turn_smoothing.x, transform_comp->position.y, turn_smoothing.z);
+    m.translate(turn_smoothing.x, root_position.y(), turn_smoothing.z);
     m.rotate(turn_smoothing.yaw_degrees, 0.0F, 1.0F, 0.0F);
     m.scale(transform_comp->scale.x, transform_comp->scale.y, transform_comp->scale.z);
     inst_model = m;
   } else if (transform_comp != nullptr) {
-    applied_yaw = transform_comp->rotation.y + applied_yaw_offset;
+    applied_yaw = root_yaw + applied_yaw_offset;
     QMatrix4x4 m = unit_base;
     m.translate(
         offset_x + casualty_offset_x, casualty_offset_y, offset_z + casualty_offset_z);
@@ -1054,6 +1085,9 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
           0.0F,
           0.0F,
           0.0F,
+          0.0F,
+          0.0F,
+          1.0F,
           0.0F,
           0.0F,
           false,
@@ -1298,6 +1332,51 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     locomotion_persistent_state->combat_visual = combat_resolution.persistent;
   }
   sync_combat_visual_inputs(soldier_render_anim, combat_resolution.resolved);
+
+  constexpr float k_action_link_seconds = 0.14F;
+  if (locomotion_persistent_state != nullptr) {
+    auto& link_state = *locomotion_persistent_state;
+
+    std::uint16_t current_clip = Animation::k_unmapped_clip;
+    if (soldier_render_anim.is_attacking) {
+      if (soldier_render_anim.has_sword_attack_animation &&
+          soldier_render_anim.attack_family ==
+              Engine::Core::CombatAttackFamily::Sword) {
+        auto const state = Animation::state_for_sword_attack_animation(
+            soldier_render_anim.sword_attack_animation);
+        if (state != Render::Creature::AnimationStateId::AttackSword) {
+          current_clip =
+              Animation::humanoid_clip_manifest().clips[Animation::state_index(state)];
+        }
+      }
+      if (current_clip == Animation::k_unmapped_clip &&
+          soldier_render_anim.has_authored_action_clip) {
+        current_clip = soldier_render_anim.authored_action_clip;
+      }
+    }
+
+    if (allow_animation_persistence) {
+      if (current_clip != link_state.last_action_clip &&
+          link_state.last_action_clip != Animation::k_unmapped_clip &&
+          current_clip != Animation::k_unmapped_clip) {
+        link_state.action_link_clip = link_state.last_action_clip;
+        link_state.action_link_phase = link_state.last_action_phase;
+        link_state.action_link_until = anim.time + k_action_link_seconds;
+      }
+      link_state.last_action_clip = current_clip;
+      link_state.last_action_phase = soldier_render_anim.authored_action_phase;
+    }
+
+    float const remaining = link_state.action_link_until - anim.time;
+    if (remaining > 0.0F && remaining <= k_action_link_seconds &&
+        link_state.action_link_clip != Animation::k_unmapped_clip &&
+        current_clip != Animation::k_unmapped_clip) {
+      soldier_render_anim.has_action_link = true;
+      soldier_render_anim.action_link_clip = link_state.action_link_clip;
+      soldier_render_anim.action_link_phase = link_state.action_link_phase;
+      soldier_render_anim.action_link_weight = remaining / k_action_link_seconds;
+    }
+  }
 
   soldier_render_anim.melee_intent = Animation::melee_intent_rotated(
       soldier_render_anim.melee_intent, individuality.swing_plane_offset);
@@ -1678,6 +1757,9 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
           anim_ctx.gait.locomotion_blend,
           anim_ctx.gait.locomotion_presence,
           anim_ctx.gait.cycle_phase,
+          anim_ctx.gait.travel_alignment,
+          anim_ctx.gait.turn_amount,
+          anim_ctx.inputs.action_link_weight,
           anim_ctx.gait.persistent_valid,
           anim_ctx.gait.persistent_last_sample_time);
     }
@@ -1764,6 +1846,9 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
                          anim_ctx.gait.locomotion_blend,
                          anim_ctx.gait.locomotion_presence,
                          anim_ctx.gait.cycle_phase,
+                         anim_ctx.gait.travel_alignment,
+                         anim_ctx.gait.turn_amount,
+                         anim_ctx.inputs.action_link_weight,
                          anim_ctx.gait.persistent_valid,
                          anim_ctx.gait.persistent_last_sample_time);
   }

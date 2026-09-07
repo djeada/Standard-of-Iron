@@ -944,6 +944,30 @@ The `rpg_*` scenarios run the production `CommanderControlController`, so the
 camera in those captures is the game's own chase camera and the commander
 answers scenario steps the way he answers a player.
 
+### Driving the commander by hand
+
+```bash
+DISPLAY=:0 SOI_ARENA_RPG_TRACE=1 build/bin/arena_app --scenario rpg_strike_lunge
+```
+
+Click in the viewport, then press **Tab** to take control of the local
+commander. WASD moves, the mouse looks, Shift runs, left click attacks, and Tab
+again gives control back. There is no on-screen prompt for it.
+
+Two things make this path work and neither is obvious:
+
+- Tab reaches the viewport only because it overrides `focusNextPrevChild`.
+  `QWidget::event()` offers a Tab press to focus navigation _before_
+  `keyPressEvent` is called, and with panels either side of the viewport there is
+  always a next widget, so before that override Tab quietly moved focus into the
+  terrain panel and takeover never happened. `ArenaInteractiveTakeoverTest`
+  pins it.
+- Interactive control writes no `trace.jsonl`; that is batch-only.
+  `SOI_ARENA_RPG_TRACE=1` prints one `SOI_RPG_INTERACTIVE` line a second with the
+  commander's position, view angles and the attack/dodge/jump edge counters, so
+  a reviewer can say whether an input actually reached the controller rather
+  than guessing from a 1 fps software-rendered window.
+
 `rpg_bow_volley` is the bow contract: a bow commander against nine charging
 swordsmen, one drawn arrow apiece, with `GroupDestroyed` asserted for every one
 of them. It uses two steps that matter for any aimed weapon:

@@ -1,12 +1,16 @@
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 #include <vector>
 
 #include "app/commander/commander_camera_rig.h"
+#include "app/commander/commander_control_controller.h"
 #include "app/commander/rts_camera_bookmark.h"
 #include "core/component_commander.h"
 #include "game/accessibility/commander_input_settings.h"
+#include "game/accessibility/motion_settings.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
@@ -76,6 +80,165 @@ TEST(CommanderCameraRig, AimingTightensTheFieldOfView) {
   EXPECT_EQ(rig.framing_state(), CommanderFramingState::BowAim);
 }
 
+namespace {
+
+struct LensExcursion {
+  float boom_span{0.0F};
+  float vertical_span{0.0F};
+  float lateral_span{0.0F};
+  float fov_span{0.0F};
+  float roll_span{0.0F};
+};
+
+auto measure(CommanderCameraRig& rig,
+             Render::GL::Camera& camera,
+             CommanderCameraInputs inputs,
+             int frames) -> LensExcursion {
+  float min_x = 0.0F;
+  float max_x = 0.0F;
+  float min_y = 0.0F;
+  float max_y = 0.0F;
+  float min_boom = 0.0F;
+  float max_boom = 0.0F;
+  float min_fov = 0.0F;
+  float max_fov = 0.0F;
+  float min_up = 0.0F;
+  float max_up = 0.0F;
+  for (int frame = 0; frame < frames; ++frame) {
+    rig.update(camera, inputs);
+    auto const& trace = rig.trace();
+    QVector3D const boom = trace.eye_resolved - trace.pivot;
+    float const up_x = camera.get_up_vector().x();
+    if (frame == 0) {
+      min_x = max_x = boom.x();
+      min_y = max_y = boom.y();
+      min_boom = max_boom = boom.length();
+      min_fov = max_fov = trace.fov;
+      min_up = max_up = up_x;
+      continue;
+    }
+    min_x = std::min(min_x, boom.x());
+    max_x = std::max(max_x, boom.x());
+    min_y = std::min(min_y, boom.y());
+    max_y = std::max(max_y, boom.y());
+    min_boom = std::min(min_boom, boom.length());
+    max_boom = std::max(max_boom, boom.length());
+    min_fov = std::min(min_fov, trace.fov);
+    max_fov = std::max(max_fov, trace.fov);
+    min_up = std::min(min_up, up_x);
+    max_up = std::max(max_up, up_x);
+  }
+  return {.boom_span = max_boom - min_boom,
+          .vertical_span = max_y - min_y,
+          .lateral_span = max_x - min_x,
+          .fov_span = max_fov - min_fov,
+          .roll_span = max_up - min_up};
+}
+
+} // namespace
+
+TEST(CommanderCameraRig, EnteringCommanderModeIsNotAZoom) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+  CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  auto const inputs = default_inputs();
+
+  rig.update(camera, inputs);
+  float const first_fov = rig.fov();
+  settle(rig, camera, inputs);
+
+  EXPECT_NEAR(first_fov, rig.fov(), 0.01F)
+      << "entering commander mode moved the field of view from " << first_fov << " to "
+      << rig.fov() << " with no input asking for it";
+}
+
+TEST(CommanderCameraRig, TheNeutralCameraIsCompletelyStill) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+  Game::Accessibility::MotionSettings::set_camera_motion_scale(0.0F);
+
+  CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  auto inputs = default_inputs();
+  settle(rig, camera, inputs);
+
+  auto const idle = measure(rig, camera, inputs, 240);
+  EXPECT_LT(idle.vertical_span, 1.0e-4F) << "a neutral lens must not breathe";
+  EXPECT_LT(idle.fov_span, 1.0e-4F);
+  EXPECT_LT(idle.roll_span, 1.0e-4F);
+
+  inputs.move_speed = 5.375F;
+  inputs.move_running = true;
+  inputs.move_right_axis = 1;
+  settle(rig, camera, inputs, 120);
+  auto const running = measure(rig, camera, inputs, 240);
+  EXPECT_LT(running.vertical_span, 1.0e-4F)
+      << "a neutral lens must not bob while the commander runs";
+  EXPECT_LT(running.lateral_span, 1.0e-4F);
+  EXPECT_LT(running.fov_span, 1.0e-4F)
+      << "a neutral lens must not take the sprint field-of-view boost";
+  EXPECT_LT(running.roll_span, 1.0e-4F)
+      << "a neutral lens must not roll the horizon into a strafe";
+
+  Game::Accessibility::MotionSettings::set_camera_motion_scale(1.0F);
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+}
+
+TEST(CommanderCameraRig, TurningOffHeadBobAlsoStopsTheIdleBreathing) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+  Game::Accessibility::CommanderInput::set_head_bob_enabled(false);
+
+  CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  auto inputs = default_inputs();
+  settle(rig, camera, inputs);
+
+  auto const idle = measure(rig, camera, inputs, 400);
+  EXPECT_LT(idle.vertical_span, 1.0e-4F)
+      << "head bob off still breathed the lens by " << idle.vertical_span << " m";
+
+  inputs.move_speed = 5.375F;
+  inputs.move_running = true;
+  settle(rig, camera, inputs, 120);
+  auto const running = measure(rig, camera, inputs, 400);
+  EXPECT_LT(running.vertical_span, 1.0e-4F)
+      << "head bob off still breathed the lens while running by "
+      << running.vertical_span << " m";
+
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+}
+
+TEST(CommanderCameraRig, TheAnchorTrailsTheSameDistanceInEveryDirection) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+
+  auto lag_along = [](float dir_x, float dir_z) {
+    CommanderCameraRig rig;
+    Render::GL::Camera camera;
+    auto inputs = default_inputs();
+    inputs.move_speed = 5.375F;
+    inputs.move_running = true;
+    QVector3D position;
+    QVector3D const step =
+        QVector3D(dir_x, 0.0F, dir_z).normalized() * (5.375F / 60.0F);
+    for (int frame = 0; frame < 400; ++frame) {
+      inputs.commander_position = position;
+      rig.update(camera, inputs);
+      position += step;
+    }
+    return rig.trace().anchor_lag;
+  };
+
+  float const axis_lag = lag_along(0.0F, 1.0F);
+  float const diagonal_lag = lag_along(1.0F, 1.0F);
+
+  EXPECT_GT(axis_lag, 0.0F);
+  EXPECT_NEAR(diagonal_lag, axis_lag, 0.005F)
+      << "diagonal travel lags " << diagonal_lag << " m against " << axis_lag
+      << " m along an axis";
+  EXPECT_LT(axis_lag, 0.30F)
+      << "an ordinary sprint must be governed by the follow filter, not by the "
+         "teleport clamp";
+}
+
 TEST(CommanderCameraRig, ImpactKickDecaysBackToRest) {
   CommanderCameraRig rig;
   Render::GL::Camera camera;
@@ -134,6 +297,116 @@ TEST(CommanderCameraRig, ImpactKickIsOffWhenTheCameraImpulseIsDisabled) {
   Game::Accessibility::CommanderInput::reset_to_defaults();
 }
 
+namespace {
+
+[[nodiscard]] auto screen_fraction_y(const App::Core::CommanderCameraTrace& trace,
+                                     const QVector3D& world,
+                                     float aspect) -> float {
+  QVector3D const forward = (trace.target_resolved - trace.eye_resolved).normalized();
+  QVector3D const right =
+      QVector3D::crossProduct(forward, QVector3D(0.0F, 1.0F, 0.0F)).normalized();
+  QVector3D const up = QVector3D::crossProduct(right, forward);
+  QVector3D const offset = world - trace.eye_resolved;
+  float const depth = QVector3D::dotProduct(offset, forward);
+  if (depth <= 1.0e-4F) {
+    return std::numeric_limits<float>::quiet_NaN();
+  }
+  float const half = std::tan(trace.fov * 0.5F * 0.017453292519943295F);
+  static_cast<void>(aspect);
+  float const ndc_y = (QVector3D::dotProduct(offset, up) / depth) / half;
+  return 0.5F - (ndc_y * 0.5F);
+}
+
+inline constexpr float k_commander_render_height = 1.36F;
+
+struct BodyFraming {
+  float feet{0.0F};
+  float head{0.0F};
+};
+
+[[nodiscard]] auto body_framing(CommanderCameraRig& rig,
+                                Render::GL::Camera& camera,
+                                CommanderCameraInputs inputs,
+                                float aspect) -> BodyFraming {
+  settle(rig, camera, inputs);
+  auto const& trace = rig.trace();
+  QVector3D const feet = inputs.commander_position;
+  QVector3D const head = feet + QVector3D(0.0F, k_commander_render_height, 0.0F);
+  return {.feet = screen_fraction_y(trace, feet, aspect),
+          .head = screen_fraction_y(trace, head, aspect)};
+}
+
+} // namespace
+
+TEST(CommanderCameraRig, TheOrdinaryViewKeepsTheWholeCommanderInFrame) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+
+  struct Case {
+    const char* name;
+    FightContext context;
+    bool close_mode;
+  };
+  std::array<Case, 6> const cases{{
+      {"explore", FightContext::None, false},
+      {"explore close", FightContext::None, true},
+      {"melee", FightContext::Skirmish, false},
+      {"melee close", FightContext::Skirmish, true},
+      {"duel lock", FightContext::Duel, false},
+      {"duel lock close", FightContext::Duel, true},
+  }};
+
+  for (float const aspect : {16.0F / 9.0F, 21.0F / 9.0F, 4.0F / 3.0F}) {
+    for (auto const& one : cases) {
+      CommanderCameraRig rig;
+      Render::GL::Camera camera;
+      auto inputs = default_inputs();
+      inputs.view_pitch_degrees = k_commander_rest_view_pitch_degrees;
+      inputs.close_camera_mode = one.close_mode;
+      inputs.fight_context = one.context;
+      inputs.lock_target_active = one.context == FightContext::Duel;
+      if (inputs.lock_target_active) {
+        inputs.lock_target_position = QVector3D(0.0F, 0.0F, 4.0F);
+      }
+      auto const framing = body_framing(rig, camera, inputs, aspect);
+
+      EXPECT_LT(framing.feet, 0.94F)
+          << one.name << " at aspect " << aspect << ": the feet sit at screen y "
+          << framing.feet << ", against the bottom edge";
+      EXPECT_GT(framing.feet, 0.55F)
+          << one.name << " at aspect " << aspect
+          << ": the commander is stranded in the middle of the frame at "
+          << framing.feet;
+      EXPECT_GT(framing.head, 0.15F)
+          << one.name << " at aspect " << aspect
+          << ": the head is crowding the top edge at " << framing.head;
+      EXPECT_GT(framing.feet - framing.head, 0.20F)
+          << one.name << " at aspect " << aspect << ": the commander only fills "
+          << (framing.feet - framing.head) << " of the frame height";
+    }
+  }
+}
+
+TEST(CommanderCameraRig, LookingUpAndDownKeepsTheCommanderOnScreen) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+
+  for (float const pitch :
+       {-60.0F, -40.0F, -20.0F, k_commander_rest_view_pitch_degrees, 0.0F, 10.0F}) {
+    CommanderCameraRig rig;
+    Render::GL::Camera camera;
+    auto inputs = default_inputs();
+    inputs.view_pitch_degrees = pitch;
+    auto const framing = body_framing(rig, camera, inputs, 16.0F / 9.0F);
+
+    EXPECT_TRUE(std::isfinite(framing.feet))
+        << "pitch " << pitch << ": the commander fell behind the lens";
+    EXPECT_LT(framing.head, 0.98F) << "pitch " << pitch
+                                   << ": the whole commander left the bottom of the "
+                                      "frame";
+    EXPECT_GT(framing.feet, 0.02F)
+        << "pitch " << pitch << ": the whole commander left the top of the frame";
+  }
+}
+
 TEST(CommanderCameraRig, MeleeFramingLooksDownAtTheFightButAimingDoesNot) {
   CommanderCameraRig melee_rig;
   CommanderCameraRig explore_rig;
@@ -157,8 +430,13 @@ TEST(CommanderCameraRig, MeleeFramingLooksDownAtTheFightButAimingDoesNot) {
   settle(aim_rig, camera, aiming);
 
   ASSERT_EQ(aim_rig.framing_state(), CommanderFramingState::BowAim);
-  EXPECT_NEAR(aim_rig.forward().y(), explore_rig.forward().y(), 0.02F)
+
+  EXPECT_NEAR(aim_rig.forward().y(),
+              std::sin(aiming.view_pitch_degrees * 0.017453292519943295F),
+              0.02F)
       << "the bow reticle is the camera axis; aiming may never be tilted off it";
+  EXPECT_LT(explore_rig.forward().y(), aim_rig.forward().y() - 0.05F)
+      << "the exploring framing does look down; the aiming one does not";
 }
 
 TEST(CommanderCameraRig, ResetClearsSmoothedState) {

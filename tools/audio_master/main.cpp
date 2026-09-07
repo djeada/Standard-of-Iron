@@ -327,9 +327,7 @@ auto mix_review(const fs::path& output_dir, bool write_audio) -> bool {
             continue;
           }
           const auto& layer = layers[index];
-          // Worst case deliberately aligns 16 impacts and uses maximum sliders;
-          // normal/quiet use first-install sliders. This bypasses cue admission
-          // to stress the final bus even when all admitted sources correlate.
+
           const float volume = (scene == 2 ? 1.0F : 0.70F * layer.slider) *
                                float(instances[index]) * gains[mix_index(layer.bus)];
           for (unsigned channel = 0; channel < CHANNELS; ++channel) {

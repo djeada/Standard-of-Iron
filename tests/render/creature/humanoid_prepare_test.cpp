@@ -3157,9 +3157,9 @@ TEST(AnimationCoreHoldPoseManifest, BowReadyAndSwordShieldCarryExposeStableTarge
   EXPECT_LT(bow.right_hand.y, 1.20F);
   EXPECT_LT(bow.left_hand.y, 1.20F);
 
-  EXPECT_FLOAT_EQ(shield_moving.right_hand.x, 0.37F);
-  EXPECT_FLOAT_EQ(shield_moving.right_hand.y, 1.09F);
-  EXPECT_FLOAT_EQ(shield_moving.right_hand.z, 0.50F);
+  EXPECT_FLOAT_EQ(shield_moving.right_hand.x, 0.41F);
+  EXPECT_FLOAT_EQ(shield_moving.right_hand.y, 1.01F);
+  EXPECT_FLOAT_EQ(shield_moving.right_hand.z, 0.58F);
   EXPECT_FLOAT_EQ(shield_moving.left_hand.x, -0.35F);
   EXPECT_FLOAT_EQ(shield_moving.left_hand.y, 1.15F);
   EXPECT_FLOAT_EQ(shield_moving.left_hand.z, 0.33F);
@@ -3171,6 +3171,23 @@ TEST(AnimationCoreHoldPoseManifest, BowReadyAndSwordShieldCarryExposeStableTarge
   EXPECT_GT(shield_running.left_hand.y, shield_moving.left_hand.y);
   EXPECT_GT(shield_running.left_hand.z, shield_moving.left_hand.z);
   EXPECT_GT(shield_running.shoulder_l_z_delta, 0.05F);
+
+  ASSERT_TRUE(shield_moving.has_blade_direction);
+  QVector3D const blade(shield_moving.blade_direction.x,
+                        shield_moving.blade_direction.y,
+                        shield_moving.blade_direction.z);
+  ASSERT_GT(blade.length(), 0.5F);
+  EXPECT_GT(blade.normalized().y(), 0.95F)
+      << "the carried blade is upright and parallel to the body, not lowered "
+         "or swung out to the side";
+
+  ASSERT_TRUE(shield_moving.has_offhand_axis);
+  QVector3D const offhand(shield_moving.offhand_axis.x,
+                          shield_moving.offhand_axis.y,
+                          shield_moving.offhand_axis.z);
+  ASSERT_GT(offhand.length(), 0.5F);
+  EXPECT_GT(offhand.normalized().y(), 0.95F)
+      << "the shield hangs upright off the forearm";
 }
 
 TEST(AnimationCoreHoldPoseManifest, RunningCompactsEveryWeaponCarrySilhouette) {
@@ -4230,6 +4247,108 @@ TEST(AnimationCoreLocomotionManifest, StrafingKeepsTheForwardStepCycle) {
 
   EXPECT_FALSE(sample.reverse_gait);
   EXPECT_NEAR(sample.travel_alignment, 0.0F, 0.10F);
+  EXPECT_NEAR(sample.turn_amount, 1.0F, 0.10F)
+      << "travel straight along the body's own X axis is a full lateral share";
+}
+
+TEST(AnimationCoreLocomotionManifest, TheLateralShareIsSignedAgainstTheBodyAxis) {
+
+  auto const one_way =
+      step_locomotion(walking_inputs(), 0.0F, 1.0F, 1.0F, 0.0F, 40, 1.0F / 60.0F);
+  auto const other_way =
+      step_locomotion(walking_inputs(), 0.0F, 1.0F, -1.0F, 0.0F, 40, 1.0F / 60.0F);
+
+  EXPECT_GT(one_way.turn_amount, 0.9F);
+  EXPECT_LT(other_way.turn_amount, -0.9F);
+  EXPECT_NEAR(one_way.travel_alignment, 0.0F, 0.10F);
+  EXPECT_NEAR(other_way.travel_alignment, 0.0F, 0.10F);
+}
+
+namespace {
+
+struct FootTrack {
+  float x_span{0.0F};
+  float z_span{0.0F};
+  float closest_approach{1.0F};
+};
+
+auto walk_one_cycle(float travel_alignment, float lateral_share) -> FootTrack {
+  Animation::HumanoidLocomotionPoseInputs pose{};
+  pose.state = Animation::HumanoidMotionState::Walk;
+  pose.normalized_speed = 1.0F;
+  pose.stride_distance = 1.4F;
+  pose.locomotion_blend = 1.0F;
+  pose.travel_alignment = travel_alignment;
+  pose.travel_lateral = lateral_share;
+  pose.base_foot_l = {-0.09F, 0.0F, 0.018F};
+  pose.base_foot_r = {0.09F, 0.0F, -0.018F};
+
+  FootTrack track;
+  float min_x = 0.0F;
+  float max_x = 0.0F;
+  float min_z = 0.0F;
+  float max_z = 0.0F;
+  bool seeded = false;
+  constexpr int k_samples = 64;
+  for (int sample = 0; sample < k_samples; ++sample) {
+    pose.cycle_phase = static_cast<float>(sample) / static_cast<float>(k_samples);
+    auto const result = Animation::resolve_humanoid_locomotion_pose(pose);
+    if (!result.active) {
+      continue;
+    }
+    for (auto const& foot : {result.foot_l, result.foot_r}) {
+      if (!seeded) {
+        min_x = max_x = foot.x;
+        min_z = max_z = foot.z;
+        seeded = true;
+        continue;
+      }
+      min_x = std::min(min_x, foot.x);
+      max_x = std::max(max_x, foot.x);
+      min_z = std::min(min_z, foot.z);
+      max_z = std::max(max_z, foot.z);
+    }
+    track.closest_approach =
+        std::min(track.closest_approach, result.foot_r.x - result.foot_l.x);
+  }
+  track.x_span = max_x - min_x;
+  track.z_span = max_z - min_z;
+  return track;
+}
+
+} // namespace
+
+TEST(AnimationCoreLocomotionManifest, SideTravelStepsSidewaysInsteadOfForwards) {
+  auto const forward = walk_one_cycle(1.0F, 0.0F);
+  auto const sideways = walk_one_cycle(0.0F, 1.0F);
+
+  ASSERT_GT(forward.z_span, 0.4F) << "the forward reference has to take real steps";
+  EXPECT_LT(sideways.z_span, forward.z_span * 0.25F)
+      << "side travel still swings the feet fore and aft by " << sideways.z_span
+      << " m against " << forward.z_span << " m walking forward";
+  EXPECT_GT(sideways.x_span, forward.z_span * 0.5F)
+      << "side travel has to put the stride on the sideways axis: " << sideways.x_span
+      << " m";
+}
+
+TEST(AnimationCoreLocomotionManifest, SideSteppingFeetDoNotCross) {
+  auto const sideways = walk_one_cycle(0.0F, 1.0F);
+  auto const other_way = walk_one_cycle(0.0F, -1.0F);
+
+  EXPECT_GT(sideways.closest_approach, 0.0F)
+      << "the swinging foot passed through the planted one, closest approach "
+      << sideways.closest_approach << " m";
+  EXPECT_GT(other_way.closest_approach, 0.0F)
+      << "the swinging foot passed through the planted one, closest approach "
+      << other_way.closest_approach << " m";
+}
+
+TEST(AnimationCoreLocomotionManifest, DiagonalTravelStepsOnBothAxes) {
+  constexpr float k_diagonal = 0.70710678F;
+  auto const diagonal = walk_one_cycle(k_diagonal, k_diagonal);
+
+  EXPECT_GT(diagonal.z_span, 0.2F) << "a diagonal step still travels forward";
+  EXPECT_GT(diagonal.x_span, 0.2F) << "a diagonal step also travels sideways";
 }
 
 TEST(AnimationCoreLocomotionManifest, ReverseGaitHoldsThroughASidewaysDrift) {
@@ -5369,6 +5488,60 @@ TEST(AnimationCoreSelectionManifest, CombatLayerPolicyOwnsBlendAndOverlayRules) 
   EXPECT_TRUE(settled_exit.use_base_selection);
   EXPECT_EQ(settled_exit.full_body_source, Animation::PlaybackLayerSource::None);
   EXPECT_EQ(settled_exit.upper_body_source, Animation::PlaybackLayerSource::None);
+}
+
+TEST(HumanoidPrepare, AComboLinkFadesOutOfTheActionItInterrupted) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::ArchetypeRegistry;
+  using Render::Creature::Pipeline::resolve_humanoid_animation_selection;
+  using Render::Creature::Pipeline::UnitVisualSpec;
+
+  UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "tests/combo_link_selection";
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  auto const& registry = ArchetypeRegistry::instance();
+  auto const outgoing = registry.bpat_clip(ArchetypeRegistry::k_humanoid_base,
+                                           AnimationStateId::RpgSwordSlashRight);
+  auto const incoming = registry.bpat_clip(ArchetypeRegistry::k_humanoid_base,
+                                           AnimationStateId::RpgSwordSlashLeft);
+  ASSERT_NE(outgoing, incoming);
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  anim.inputs.has_sword_attack_animation = true;
+  anim.inputs.sword_attack_animation = Animation::SwordAttackAnimation::RpgSlashLeft;
+  anim.inputs.has_authored_action_phase = true;
+  anim.inputs.authored_action_phase = 0.05F;
+
+  auto const without_link = resolve_humanoid_animation_selection(spec, anim, 7U);
+  ASSERT_TRUE(without_link.clip_id.has_value());
+  EXPECT_EQ(*without_link.clip_id, incoming);
+  EXPECT_FALSE(without_link.full_body_blend.active())
+      << "nothing to blend when no action was interrupted";
+
+  anim.inputs.has_action_link = true;
+  anim.inputs.action_link_clip = outgoing;
+  anim.inputs.action_link_phase = 0.82F;
+  anim.inputs.action_link_weight = 0.75F;
+
+  auto const linked = resolve_humanoid_animation_selection(spec, anim, 7U);
+  ASSERT_TRUE(linked.clip_id.has_value());
+  EXPECT_EQ(*linked.clip_id, incoming) << "the incoming action still leads";
+  ASSERT_TRUE(linked.full_body_blend.active())
+      << "the interrupted action has to be blended out from under it";
+  ASSERT_TRUE(linked.full_body_blend.clip_id.has_value());
+  EXPECT_EQ(*linked.full_body_blend.clip_id, outgoing);
+  EXPECT_FLOAT_EQ(linked.full_body_blend.phase, 0.82F)
+      << "the outgoing clip is held at the phase it was cut on";
+  EXPECT_FLOAT_EQ(linked.full_body_blend.weight, 0.75F);
+
+  anim.inputs.action_link_clip = incoming;
+  auto const self_link = resolve_humanoid_animation_selection(spec, anim, 7U);
+  EXPECT_FALSE(self_link.full_body_blend.active());
 }
 
 TEST(HumanoidPrepare, HealingSelectionStillUsesIdleClipFamily) {

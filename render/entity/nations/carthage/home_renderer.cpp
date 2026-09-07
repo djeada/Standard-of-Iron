@@ -84,7 +84,6 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   desc.add_box(
       QVector3D(0.92F, wall_cy, 0.0F), QVector3D(0.10F, wall_hy, 0.82F), c.plaster);
 
-  // A single sandstone base course keeps the plaster facades quiet.
   for (const float side : {-1.0F, 1.0F}) {
     desc.add_box(QVector3D(0.0F, 0.28F, side * 0.92F),
                  QVector3D(0.90F, 0.06F, 0.12F),
@@ -117,7 +116,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                        QVector3D(1.02F, 0.05F, 1.02F),
                        k_home_roof_slot,
                        k_building_state_mask_intact);
-  // Domestic terraces use continuous low parapets, not military battlements.
+
   const float parapet_y = roof_y + 0.13F;
   for (const float side : {-1.0F, 1.0F}) {
     desc.add_box(QVector3D(0.0F, parapet_y, side * 0.96F),
@@ -199,7 +198,6 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                     QVector3D(0.25F, 0.42F, 0.55F),
                     k_building_state_mask_intact);
 
-  // A small roof-access room and shaded terrace replace the oversized crown.
   desc.add_box(QVector3D(0.48F, roof_y + 0.22F, -0.46F),
                QVector3D(0.24F, 0.17F, 0.24F),
                c.plaster,

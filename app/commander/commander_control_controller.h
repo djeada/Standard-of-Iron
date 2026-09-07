@@ -40,6 +40,9 @@ enum class DodgeState {
 
 inline constexpr float k_commander_rest_view_pitch_degrees = -6.0F;
 
+inline constexpr float k_commander_ground_acceleration_mps2 = 30.0F;
+inline constexpr float k_commander_ground_deceleration_mps2 = 36.0F;
+
 class CommanderControlController {
 public:
   struct InputState {
@@ -224,7 +227,8 @@ private:
   App::Core::CommanderMotor m_motor;
 
   float m_move_speed = 0.0F;
-  float m_planar_speed_smooth = 0.0F;
+  QVector3D m_planar_velocity{0.0F, 0.0F, 0.0F};
+  float m_accepted_speed_smooth = 0.0F;
   QVector3D m_last_move_direction{0.0F, 0.0F, 1.0F};
   int m_move_right_axis = 0;
   int m_move_forward_axis = 0;
@@ -262,8 +266,7 @@ private:
   bool m_turning_in_place = false;
   Engine::Core::PresentationPose m_presentation_pose;
   bool m_presentation_snap_requested = true;
-  std::uint32_t m_presentation_seen_sequence = 0;
-  float m_presentation_age = 0.0F;
+  Engine::Core::PresentationClock m_presentation_clock;
   CommanderInputSnapshot m_tick_input;
   std::uint64_t m_input_snapshot_sequence = 0;
   mutable std::mutex m_input_mutex;

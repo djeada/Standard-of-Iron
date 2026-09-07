@@ -21,6 +21,7 @@
 #include "entity.h"
 #include "melee_intent.h"
 #include "movement_facts.h"
+#include "presentation_clock.h"
 
 namespace Game::Systems {
 class MovementSystem;
@@ -205,6 +206,10 @@ public:
   float previous_yaw{0.0F};
   Vec3 position{0.0F, 0.0F, 0.0F};
   float yaw{0.0F};
+
+  bool presented_valid{false};
+  Vec3 presented_position{0.0F, 0.0F, 0.0F};
+  float presented_yaw{0.0F};
 };
 
 struct PresentationPose {
@@ -213,10 +218,6 @@ struct PresentationPose {
   float alpha{1.0F};
   bool extrapolated{false};
 };
-
-inline constexpr float k_presentation_max_extrapolation = 0.5F;
-
-inline constexpr float k_presentation_teleport_threshold = 2.0F;
 
 [[nodiscard]] inline auto
 resolve_presentation_pose(const CommanderPresentationSampleComponent& sample,

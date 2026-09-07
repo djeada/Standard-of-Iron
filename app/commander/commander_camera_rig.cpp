@@ -25,24 +25,25 @@ constexpr float k_focus_height = 1.45F;
 constexpr float k_walk_bob_freq =
     2.0F * k_pi / Animation::k_humanoid_walk_cycle_distance;
 constexpr float k_run_bob_freq = 2.0F * k_pi / Animation::k_humanoid_run_cycle_distance;
-constexpr float k_bob_vert_amp = 0.020F;
+
+constexpr float k_bob_vert_amp = 0.012F;
 constexpr float k_bob_run_mult = 1.35F;
-constexpr float k_bob_lat_amp = 0.013F;
+constexpr float k_bob_lat_amp = 0.007F;
 constexpr float k_bob_decay = 5.5F;
 
 constexpr float k_ground_follow_rate = 4.0F;
 constexpr float k_ground_follow_max_lag = 0.55F;
 
 constexpr float k_breath_freq = 0.2F;
-constexpr float k_breath_vert_amp = 0.008F;
+constexpr float k_breath_vert_amp = 0.005F;
 
-constexpr float k_anchor_follow_rate = 16.0F;
+constexpr float k_anchor_follow_rate = 24.0F;
 constexpr float k_anchor_max_lag = 0.30F;
 constexpr float k_focus_point_follow = 12.0F;
 constexpr float k_focus_weight_follow = 6.0F;
 constexpr float k_occlusion_follow = 18.0F;
 
-constexpr float k_lean_max_deg = 2.2F;
+constexpr float k_lean_max_deg = 1.1F;
 constexpr float k_lean_follow = 6.5F;
 
 constexpr float k_fov_run_boost = 7.0F;
@@ -63,6 +64,8 @@ constexpr float k_threat_bias_follow = 3.0F;
 constexpr float k_threat_bias_side = 0.30F;
 
 constexpr float k_camera_body_radius = 0.28F;
+
+constexpr float k_camera_depenetration_margin = 0.14F;
 
 constexpr float k_camera_min_boom = 0.55F;
 constexpr float k_camera_boom_backoff = 0.06F;
@@ -114,16 +117,16 @@ auto CommanderCameraRig::framing_for(CommanderFramingState state,
   case CommanderFramingState::BowAim:
     return {2.10F, 0.58F, 0.70F, 14.0F, 48.0F, 0.0F};
   case CommanderFramingState::DuelLock:
-    return close_camera_mode ? Framing{2.30F, 0.95F, 0.95F, 4.6F, 60.0F, 0.85F}
-                             : Framing{2.70F, 1.05F, 1.10F, 5.0F, 62.0F, 0.85F};
+    return close_camera_mode ? Framing{2.30F, 0.95F, 0.95F, 4.6F, 60.0F, 1.45F}
+                             : Framing{2.70F, 1.05F, 1.10F, 5.0F, 62.0F, 1.20F};
   case CommanderFramingState::Melee:
-    return close_camera_mode ? Framing{2.45F, 1.20F, 1.02F, 5.0F, 61.0F, 0.95F}
-                             : Framing{3.20F, 1.34F, 1.30F, 5.6F, 63.0F, 1.05F};
+    return close_camera_mode ? Framing{2.45F, 1.20F, 1.02F, 5.0F, 61.0F, 1.55F}
+                             : Framing{3.20F, 1.34F, 1.30F, 5.6F, 63.0F, 1.35F};
   case CommanderFramingState::Explore:
     break;
   }
-  return close_camera_mode ? Framing{2.25F, 1.05F, 0.72F, 5.2F, 64.0F, 0.0F}
-                           : Framing{3.10F, 1.15F, 0.90F, 6.0F, 68.0F, 0.0F};
+  return close_camera_mode ? Framing{2.25F, 0.75F, 0.72F, 5.2F, 64.0F, 1.30F}
+                           : Framing{3.10F, 1.15F, 0.90F, 6.0F, 68.0F, 1.00F};
 }
 
 void CommanderCameraRig::reset() {
@@ -133,6 +136,7 @@ void CommanderCameraRig::reset() {
   m_bob_phase = 0.0F;
   m_bob_amplitude = 0.0F;
   m_breath_phase = 0.0F;
+  m_idle_presence = 1.0F;
   m_strafe_lean = 0.0F;
   m_fov_current = 75.0F;
   m_aim_blend = 0.0F;
@@ -180,6 +184,8 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   if (!m_framing_valid) {
     m_framing_current = framing_target;
     m_framing_valid = true;
+
+    m_fov_current = framing_target.fov * fov_scale;
   } else {
     float const framing_alpha = smooth_alpha(k_framing_blend_rate, dt);
     m_framing_current.back +=
@@ -216,12 +222,14 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
                       m_bob_amplitude * sway_scale;
 
   m_breath_phase += k_breath_freq * 2.0F * k_pi * std::max(dt, 0.0F);
-  float const breath_idle = motion_scale - m_bob_amplitude;
-  float const breath_v =
-      std::sin(m_breath_phase) * k_breath_vert_amp * breath_idle * sway_scale;
+
+  float const idle_target = (inputs.move_speed > 0.05F) ? 0.0F : 1.0F;
+  m_idle_presence += (idle_target - m_idle_presence) * smooth_alpha(k_bob_decay, dt);
+  float const breath_v = std::sin(m_breath_phase) * k_breath_vert_amp * bob_scale *
+                         m_idle_presence * sway_scale;
 
   float const lean_target = -static_cast<float>(inputs.move_right_axis) *
-                            k_lean_max_deg * motion_scale * sway_scale;
+                            k_lean_max_deg * bob_scale * sway_scale;
   m_strafe_lean += (lean_target - m_strafe_lean) * smooth_alpha(k_lean_follow, dt);
 
   m_threat_bias_smooth += (inputs.threat_side_bias - m_threat_bias_smooth) *
@@ -259,15 +267,18 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     anchor.setX(anchor.x() + (commander_position.x() - anchor.x()) * planar_alpha);
     anchor.setY(anchor.y() + (commander_position.y() - anchor.y()) * vertical_alpha);
     anchor.setZ(anchor.z() + (commander_position.z() - anchor.z()) * planar_alpha);
-    anchor.setX(std::clamp(anchor.x(),
-                           commander_position.x() - k_anchor_max_lag,
-                           commander_position.x() + k_anchor_max_lag));
+
+    float const lag_x = anchor.x() - commander_position.x();
+    float const lag_z = anchor.z() - commander_position.z();
+    float const planar_lag = std::hypot(lag_x, lag_z);
+    if (planar_lag > k_anchor_max_lag) {
+      float const shrink = k_anchor_max_lag / planar_lag;
+      anchor.setX(commander_position.x() + (lag_x * shrink));
+      anchor.setZ(commander_position.z() + (lag_z * shrink));
+    }
     anchor.setY(std::clamp(anchor.y(),
                            commander_position.y() - k_ground_follow_max_lag,
                            commander_position.y() + k_ground_follow_max_lag));
-    anchor.setZ(std::clamp(anchor.z(),
-                           commander_position.z() - k_anchor_max_lag,
-                           commander_position.z() + k_anchor_max_lag));
     m_state.visual_anchor = anchor;
   }
   m_ground_y = m_state.visual_anchor.y();
@@ -320,8 +331,7 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   eye_desired += flat_right * m_focus_side_nudge_smooth;
 
   QVector3D const free_look_target =
-      eye_desired + forward_vec * m_framing_current.distance -
-      QVector3D(0.0F, m_framing_current.look_drop * (1.0F - aim_blend), 0.0F);
+      eye_desired + forward_vec * m_framing_current.distance;
   QVector3D target_desired = free_look_target;
 
   if (m_focus_point_valid && focus_weight > 0.001F) {
@@ -335,6 +345,9 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
               focus_weight;
     }
   }
+
+  target_desired -=
+      QVector3D(0.0F, m_framing_current.look_drop * (1.0F - aim_blend), 0.0F);
 
   QVector3D const eye_unconstrained = eye_desired;
   QVector3D const target_unconstrained = target_desired;
@@ -404,9 +417,14 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     eye_desired = pivot + (eye_desired - pivot) * m_occlusion_fraction;
   }
 
-  if (body_clear_fraction <= 0.0F) {
+  if (Game::Systems::camera_body_clearance(obstruction, eye_desired) <
+      k_camera_depenetration_margin) {
+    Game::Systems::CameraObstructionField const escape{
+        .buildings = inputs.buildings,
+        .terrain = inputs.terrain,
+        .radius = k_camera_body_radius + k_camera_depenetration_margin};
     QVector3D const pushed =
-        Game::Systems::camera_depenetrated_point(obstruction, eye_desired);
+        Game::Systems::camera_depenetrated_point(escape, eye_desired);
     float const planar_before =
         std::hypot(eye_desired.x() - pivot.x(), eye_desired.z() - pivot.z());
     float const push_x = pushed.x() - pivot.x();

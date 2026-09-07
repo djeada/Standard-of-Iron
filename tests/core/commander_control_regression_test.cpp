@@ -337,8 +337,8 @@ TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
   const auto source = app_source(root, "commander_camera_rig.cpp");
   ASSERT_FALSE(source.empty());
 
-  EXPECT_TRUE(contains(source, "Framing{3.10F, 1.15F, 0.90F, 6.0F, 68.0F, 0.0F}"));
-  EXPECT_TRUE(contains(source, "Framing{2.25F, 1.05F, 0.72F, 5.2F, 64.0F, 0.0F}"));
+  EXPECT_TRUE(contains(source, "Framing{3.10F, 1.15F, 0.90F, 6.0F, 68.0F, 1.00F}"));
+  EXPECT_TRUE(contains(source, "Framing{2.25F, 0.75F, 0.72F, 5.2F, 64.0F, 1.30F}"));
   EXPECT_TRUE(contains(source, "constexpr float k_commander_near_plane = 0.05F;"));
   EXPECT_TRUE(contains(source, "QVector3D const flat_forward("));
   EXPECT_TRUE(contains(source, "pivot - flat_forward * m_framing_current.back"));
@@ -346,9 +346,12 @@ TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
   EXPECT_TRUE(
       contains(source,
                "QVector3D const free_look_target =\n"
-               "      eye_desired + forward_vec * m_framing_current.distance -"));
+               "      eye_desired + forward_vec * m_framing_current.distance;"));
 
-  EXPECT_TRUE(contains(source, "m_framing_current.look_drop * (1.0F - aim_blend)"));
+  EXPECT_TRUE(contains(source,
+                       "  target_desired -=\n"
+                       "      QVector3D(0.0F, m_framing_current.look_drop * "
+                       "(1.0F - aim_blend), 0.0F);"));
   EXPECT_FALSE(contains(source, "target_desired = pivot + forward_vec"));
 
   EXPECT_TRUE(

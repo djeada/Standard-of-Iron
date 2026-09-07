@@ -822,6 +822,11 @@ void ArenaViewport::paintGL() {
   emit frame_rendered();
 }
 
+auto ArenaViewport::focusNextPrevChild(bool next) -> bool {
+  static_cast<void>(next);
+  return false;
+}
+
 void ArenaViewport::keyPressEvent(QKeyEvent* event) {
   if (event == nullptr) {
     return;
@@ -4673,7 +4678,39 @@ void ArenaViewport::publish_animation_clock() {
   }
 }
 
+void ArenaViewport::report_rpg_interactive_state(float simulation_dt) {
+  static bool const enabled = qEnvironmentVariableIntValue("SOI_ARENA_RPG_TRACE") > 0;
+  if (!enabled || !m_rpg_interactive || m_rpg_commander_controller == nullptr ||
+      m_world == nullptr) {
+    return;
+  }
+  m_rpg_trace_accumulator += std::max(0.0F, simulation_dt);
+  if (m_rpg_trace_accumulator < 1.0F) {
+    return;
+  }
+  m_rpg_trace_accumulator = 0.0F;
+
+  auto const* transform =
+      m_world->try_get<Engine::Core::TransformComponent>(m_rpg_commander_id);
+  if (transform == nullptr) {
+    return;
+  }
+  auto const& edges = m_rpg_commander_controller->input_edges();
+  qInfo().noquote() << QStringLiteral(
+                           "SOI_RPG_INTERACTIVE pos=%1,%2 yaw=%3 pitch=%4 "
+                           "attack_press=%5 attack_consumed=%6 dodge=%7 jump=%8")
+                           .arg(transform->position.x, 0, 'f', 3)
+                           .arg(transform->position.z, 0, 'f', 3)
+                           .arg(m_rpg_commander_controller->view_yaw(), 0, 'f', 2)
+                           .arg(m_rpg_commander_controller->view_pitch(), 0, 'f', 2)
+                           .arg(edges.primary_press_sequence)
+                           .arg(edges.primary_consumed_sequence)
+                           .arg(edges.dodge_consumed_sequence)
+                           .arg(edges.jump_consumed_sequence);
+}
+
 void ArenaViewport::update_rpg_scenario_controller(float simulation_dt) {
+  report_rpg_interactive_state(simulation_dt);
   if (simulation_dt <= 0.0F || m_rpg_commander_id == 0 ||
       m_rpg_commander_controller == nullptr || m_world == nullptr ||
       m_camera == nullptr) {

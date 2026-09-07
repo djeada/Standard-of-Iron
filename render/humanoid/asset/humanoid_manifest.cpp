@@ -219,6 +219,8 @@ struct HumanoidClipSpec {
   bool loops{};
   BakerWorkType work_type{BakerWorkType::None};
   BakerCombatPoseType combat_pose_type{BakerCombatPoseType::None};
+
+  float travel_lateral{0.0F};
 };
 
 [[nodiscard]] auto is_rpg_sword_clip(const HumanoidClipSpec& clip) noexcept -> bool {
@@ -1283,6 +1285,70 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      24.0F,
      1.25F,
      false},
+    {"walk_strafe_left",
+     Render::GL::HumanoidMotionState::Walk,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     0.92F,
+     true,
+     BakerWorkType::None,
+     BakerCombatPoseType::None,
+     -1.0F},
+    {"walk_strafe_right",
+     Render::GL::HumanoidMotionState::Walk,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     0.92F,
+     true,
+     BakerWorkType::None,
+     BakerCombatPoseType::None,
+     1.0F},
+    {"run_strafe_left",
+     Render::GL::HumanoidMotionState::Run,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     0.56F,
+     true,
+     BakerWorkType::None,
+     BakerCombatPoseType::None,
+     -1.0F},
+    {"run_strafe_right",
+     Render::GL::HumanoidMotionState::Run,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     0.56F,
+     true,
+     BakerWorkType::None,
+     BakerCombatPoseType::None,
+     1.0F},
 }};
 
 struct HumanoidSocketSpec {
@@ -1813,6 +1879,33 @@ auto sample_authored_sword_pose_key(const AuthoredSwordPoseKeys& keys,
   bool const terminal_segment = segment == 1U || segment + 1U == keys.size();
   float const blade_t = terminal_segment ? (t * t * (3.0F - 2.0F * t)) : t;
 
+  float const dh00 = (6.0F * t2) - (6.0F * t);
+  float const dh10 = (3.0F * t2) - (4.0F * t) + 1.0F;
+  float const dh01 = (-6.0F * t2) + (6.0F * t);
+  float const dh11 = (3.0F * t2) - (2.0F * t);
+  auto step_lift = [&](Channel channel) -> float {
+    QVector3D const velocity =
+        ((from.*channel * dh00) + (tangent(segment - 1U, channel) * span * dh10) +
+         (to.*channel * dh01) + (tangent(segment, channel) * span * dh11)) /
+        span;
+
+    constexpr float k_full_lift_speed = 1.20F;
+    constexpr float k_max_lift = 0.10F;
+    float const speed = std::hypot(velocity.x(), velocity.z());
+    return std::clamp(speed / k_full_lift_speed, 0.0F, 1.0F) * k_max_lift;
+  };
+
+  QVector3D foot_r = hermite(&AuthoredSwordPoseKey::foot_r_delta);
+  QVector3D foot_l = hermite(&AuthoredSwordPoseKey::foot_l_delta);
+  QVector3D knee_r = hermite(&AuthoredSwordPoseKey::knee_r_delta);
+  QVector3D knee_l = hermite(&AuthoredSwordPoseKey::knee_l_delta);
+  float const lift_r = step_lift(&AuthoredSwordPoseKey::foot_r_delta);
+  float const lift_l = step_lift(&AuthoredSwordPoseKey::foot_l_delta);
+  foot_r.setY(foot_r.y() + lift_r);
+  foot_l.setY(foot_l.y() + lift_l);
+  knee_r.setY(knee_r.y() + lift_r * 0.55F);
+  knee_l.setY(knee_l.y() + lift_l * 0.55F);
+
   return {
       .phase = clamped,
       .right_hand = hermite(&AuthoredSwordPoseKey::right_hand),
@@ -1823,10 +1916,10 @@ auto sample_authored_sword_pose_key(const AuthoredSwordPoseKeys& keys,
       .shoulder_l_delta = hermite(&AuthoredSwordPoseKey::shoulder_l_delta),
       .neck_delta = hermite(&AuthoredSwordPoseKey::neck_delta),
       .head_delta = hermite(&AuthoredSwordPoseKey::head_delta),
-      .foot_r_delta = hermite(&AuthoredSwordPoseKey::foot_r_delta),
-      .knee_r_delta = hermite(&AuthoredSwordPoseKey::knee_r_delta),
-      .foot_l_delta = hermite(&AuthoredSwordPoseKey::foot_l_delta),
-      .knee_l_delta = hermite(&AuthoredSwordPoseKey::knee_l_delta),
+      .foot_r_delta = foot_r,
+      .knee_r_delta = knee_r,
+      .foot_l_delta = foot_l,
+      .knee_l_delta = knee_l,
   };
 }
 
@@ -1970,12 +2063,12 @@ to_ambient_idle_type(BakerAmbientIdleType t) noexcept -> Render::GL::AmbientIdle
   return Animation::HumanoidReadyWeapon::None;
 }
 
-void apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
-                                     BakeProfile profile) {
+auto apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
+                                     BakeProfile profile) -> bool {
   switch (profile) {
   case BakeProfile::SwordReady:
     ctrl.carry_sword_and_shield();
-    break;
+    return true;
   case BakeProfile::SpearReady:
     ctrl.hold_spear_idle();
     break;
@@ -1989,6 +2082,7 @@ void apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
   case BakeProfile::Skeleton:
     break;
   }
+  return false;
 }
 
 void bake_humanoid_clip_frame(BakeProfile profile,
@@ -2011,6 +2105,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
           : static_cast<float>(frame_index) / static_cast<float>(clip.frames);
 
   Render::GL::HumanoidPose pose{};
+  bool grip_oriented_by_stance = false;
 
   if (clip.death_collapse != Animation::HumanoidDeathCollapse::None) {
 
@@ -2108,7 +2203,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
     float const sword_reach_scale = profile == BakeProfile::Skeleton ? 0.88F : 1.0F;
     auto const weapon = ready_weapon_for_profile(profile);
     if (weapon == Animation::HumanoidReadyWeapon::None) {
-      apply_ground_stance_for_profile(ctrl, profile);
+      static_cast<void>(apply_ground_stance_for_profile(ctrl, profile));
     }
     float const pose_phase =
         clip.loops ? phase : transition_phase(frame_index, clip.frames);
@@ -2238,6 +2333,10 @@ void bake_humanoid_clip_frame(BakeProfile profile,
     gait.state = clip.state;
     gait.cycle_time = clip.cycle_time;
 
+    gait.travel_lateral = clip.travel_lateral;
+    gait.travel_alignment =
+        std::sqrt(std::max(0.0F, 1.0F - (clip.travel_lateral * clip.travel_lateral)));
+
     switch (clip.state) {
     case Render::GL::HumanoidMotionState::Idle:
       gait.speed = 0.0F;
@@ -2312,7 +2411,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       anim_ctx.gait.state = Render::GL::HumanoidMotionState::Idle;
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
 
-      apply_ground_stance_for_profile(ctrl, profile);
+      grip_oriented_by_stance = apply_ground_stance_for_profile(ctrl, profile);
 
       ctrl.apply_idle_breath(ambient_phase * clip.cycle_time /
                                  Animation::k_humanoid_idle_breath_cycle_time,
@@ -2334,15 +2433,16 @@ void bake_humanoid_clip_frame(BakeProfile profile,
         anim_ctx.inputs.movement_state = Render::Creature::MovementAnimationState::Idle;
       }
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
-      apply_ground_stance_for_profile(ctrl, profile);
+      grip_oriented_by_stance = apply_ground_stance_for_profile(ctrl, profile);
       if (clip.state == Render::GL::HumanoidMotionState::Idle) {
         ctrl.apply_idle_breath(phase, false);
       }
     }
   }
 
-  if (clip.showcase_type != BakerShowcaseType::None || is_rpg_sword_clip(clip) ||
-      is_rpg_spear_clip(clip) || clip.work_type != BakerWorkType::None ||
+  if (grip_oriented_by_stance || clip.showcase_type != BakerShowcaseType::None ||
+      is_rpg_sword_clip(clip) || is_rpg_spear_clip(clip) ||
+      clip.work_type != BakerWorkType::None ||
       clip.combat_pose_type != BakerCombatPoseType::None ||
       clip.attack_type == BakerAttackType::Unarmed ||
       clip.attack_type == BakerAttackType::Sword ||
