@@ -29,6 +29,7 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_system/damage_application.h"
+#include "game/systems/combat_system/engagement_trace.h"
 #include "game/systems/combat_system/mounted_charge_processor.h"
 #include "game/systems/combat_system/structure_combat.h"
 #include "game/systems/combat_system/structure_fire.h"
@@ -810,6 +811,11 @@ struct ArenaScenarioRunner::Impl {
     int rpg_aim_soldier_slot{-1};
     int rpg_action_phase{0};
     float rpg_action_normalized_time{0.0F};
+    Engine::Core::EntityID engagement_candidate_id{0};
+    Engine::Core::EntityID engagement_target_id{0};
+    float engagement_range{0.0F};
+    QString engagement_reason;
+    QString command_source;
   };
 
   struct TraceSoldier {
@@ -960,6 +966,8 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, bool> launched_casualties;
   QHash<QString, bool> charge_impacts;
   QHash<QString, bool> melee_locks_after_charge;
+  QSet<Engine::Core::EntityID> auto_engaged_entities;
+  QSet<Engine::Core::EntityID> reported_engagement_windows;
   QHash<QString, bool> paired_visible_attacks;
   QHash<QString, bool> projectile_flights;
   QHash<QString, bool> flaming_projectile_flights;
@@ -3279,6 +3287,62 @@ struct ArenaScenarioRunner::Impl {
                world.try_get<Engine::Core::RpgCommanderActionComponent>(entity_id);
            return action != nullptr ? action->normalized_action_time : 0.0F;
          }()});
+
+    {
+      auto& traced = frame.units.back();
+      auto const& engagement_trace = Game::Systems::Combat::EngagementTrace::instance();
+      if (auto const* record = engagement_trace.find(entity_id)) {
+        traced.engagement_candidate_id = record->candidate_id;
+        traced.engagement_target_id = record->target_id;
+        traced.engagement_range = record->acquisition_range;
+        auto const reason =
+            Game::Systems::Combat::engagement_outcome_key(record->outcome);
+        traced.engagement_reason =
+            QString::fromUtf8(reason.data(), static_cast<qsizetype>(reason.size()));
+      } else {
+        traced.engagement_reason = QStringLiteral("not_evaluated");
+      }
+      auto const command_source =
+          Game::Systems::Combat::command_source_of(world.get_entity(entity_id));
+      auto const source = Game::Systems::Combat::command_source_key(command_source);
+      traced.command_source =
+          QString::fromUtf8(source.data(), static_cast<qsizetype>(source.size()));
+
+      bool const holds_automatic_target =
+          traced.target_id != 0 &&
+          command_source == Game::Systems::Combat::CommandSource::Auto;
+      if (holds_automatic_target) {
+        auto_engaged_entities.insert(entity_id);
+        for (auto const& expectation : scenario.expectations) {
+          bool const windowed =
+              expectation.kind == ArenaExpectationKind::EngagementReleasedByOrder ||
+              expectation.kind == ArenaExpectationKind::NoAutoEngagementObserved;
+          if (!windowed || !expectation_active(expectation) ||
+              !applies_to(expectation, group) ||
+              reported_engagement_windows.contains(entity_id)) {
+            continue;
+          }
+          reported_engagement_windows.insert(entity_id);
+          if (expectation.kind == ArenaExpectationKind::EngagementReleasedByOrder) {
+            add_issue(QStringLiteral("order_did_not_release_engagement"),
+                      QStringLiteral("%1 entity %2 still held automatic target %3 "
+                                     "after an explicit order")
+                          .arg(group)
+                          .arg(entity_id)
+                          .arg(traced.target_id),
+                      entity_id);
+          } else {
+            add_issue(QStringLiteral("unexpected_auto_engagement"),
+                      QStringLiteral("%1 entity %2 picked its own fight with %3 when "
+                                     "it should not have")
+                          .arg(group)
+                          .arg(entity_id)
+                          .arg(traced.target_id),
+                      entity_id);
+          }
+        }
+      }
+    }
 
     auto& previous = entity_states[entity_id];
 
@@ -5629,6 +5693,29 @@ struct ArenaScenarioRunner::Impl {
                         .arg(expectation.group));
         }
         break;
+      case ArenaExpectationKind::AutoEngagementObserved: {
+        QStringList passive;
+        for (auto entity_id : ids(expectation.group)) {
+          if (!auto_engaged_entities.contains(entity_id)) {
+            passive.append(QString::number(entity_id));
+          }
+        }
+        if (passive.isEmpty() && ids(expectation.group).empty()) {
+          passive.append(QStringLiteral("none spawned"));
+        }
+        if (!passive.isEmpty()) {
+          add_issue(QStringLiteral("no_auto_engagement"),
+                    QStringLiteral("%1 never engaged a hostile on its own initiative "
+                                   "(passive: %2)")
+                        .arg(expectation.group, passive.join(QStringLiteral(", "))));
+        }
+        break;
+      }
+      case ArenaExpectationKind::NoAutoEngagementObserved:
+      case ArenaExpectationKind::EngagementReleasedByOrder:
+
+        break;
+
       case ArenaExpectationKind::GroupDestroyed:
         if (!group_destroyed(expectation.group)) {
           add_issue(QStringLiteral("group_not_destroyed"),
@@ -6536,7 +6623,9 @@ ArenaScenarioRunner::ArenaScenarioRunner(Engine::Core::World& world,
     : m_impl(std::make_unique<Impl>(world, std::move(host), definition, world_origin)) {
 }
 
-ArenaScenarioRunner::~ArenaScenarioRunner() = default;
+ArenaScenarioRunner::~ArenaScenarioRunner() {
+  Game::Systems::Combat::EngagementTrace::instance().set_enabled(false);
+}
 
 auto ArenaScenarioRunner::start() -> bool {
   if (m_impl->started) {
@@ -6554,6 +6643,9 @@ auto ArenaScenarioRunner::start() -> bool {
     return false;
   }
   m_impl->started = true;
+
+  Game::Systems::Combat::EngagementTrace::instance().set_enabled(true);
+  Game::Systems::Combat::EngagementTrace::instance().clear();
   for (auto const& group : m_impl->scenario.groups) {
     if (group.spawn_at_start) {
       m_impl->spawn_group(group);
@@ -7034,7 +7126,14 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
            static_cast<qint64>(unit.rpg_aim_target_id)},
           {QStringLiteral("rpg_aim_soldier_slot"), unit.rpg_aim_soldier_slot},
           {QStringLiteral("rpg_action_phase"), unit.rpg_action_phase},
-          {QStringLiteral("rpg_action_time"), unit.rpg_action_normalized_time}});
+          {QStringLiteral("rpg_action_time"), unit.rpg_action_normalized_time},
+          {QStringLiteral("engagement_candidate_id"),
+           static_cast<qint64>(unit.engagement_candidate_id)},
+          {QStringLiteral("engagement_target_id"),
+           static_cast<qint64>(unit.engagement_target_id)},
+          {QStringLiteral("engagement_range"), unit.engagement_range},
+          {QStringLiteral("engagement_reason"), unit.engagement_reason},
+          {QStringLiteral("command_source"), unit.command_source}});
     }
     QJsonArray animals;
     for (auto const& animal : frame.animals) {

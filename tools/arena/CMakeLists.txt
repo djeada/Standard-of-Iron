@@ -6,6 +6,7 @@ add_library(
     arena_ai_duel_scenarios.cpp
     arena_ambience_scenarios.cpp
     arena_city_scenarios.cpp
+    arena_engagement_scenarios.cpp
     arena_formation_scenarios.cpp
     arena_navigation_scenarios.cpp
     arena_stuck_recovery_scenarios.cpp

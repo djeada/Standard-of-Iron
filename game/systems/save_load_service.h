@@ -65,7 +65,8 @@ public:
   void shutdown();
 
   auto load_game_from_slot(Engine::Core::World& world,
-                           const QString& slot_name) -> bool;
+                           const QString& slot_name,
+                           bool* out_world_discarded = nullptr) -> bool;
 
   [[nodiscard]] auto verify_save_slot(const QString& slot_name,
                                       QString* out_error = nullptr) const -> bool;
@@ -91,6 +92,11 @@ public:
 
   [[nodiscard]] auto get_last_error() const -> QString;
   void clear_error();
+
+  [[nodiscard]] auto storage_healthy() const -> bool;
+  [[nodiscard]] auto storage_error() const -> QString;
+
+  [[nodiscard]] auto quarantined_database_path() const -> QString;
 
   [[nodiscard]] auto get_last_record() const -> const Save::Record& {
     return m_last_record;
@@ -163,6 +169,7 @@ private:
   static void ensure_directories();
 
   mutable QString m_last_error;
+  QString m_quarantined_database;
   Save::Record m_last_record;
   std::unique_ptr<SaveStorage> m_storage;
 

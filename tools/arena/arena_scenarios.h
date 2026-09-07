@@ -289,6 +289,15 @@ inline constexpr char k_weather_rain_budget_ultra_id[] = "weather_rain_budget_ul
 inline constexpr char k_wildlife_grazing_herd_id[] = "wildlife_grazing_herd";
 inline constexpr char k_wildlife_herd_flees_troops_id[] = "wildlife_herd_flees_troops";
 inline constexpr char k_wildlife_wolf_hunt_id[] = "wildlife_wolf_hunt";
+inline constexpr char k_engagement_wolves_maul_an_ally_id[] =
+    "engagement_wolves_maul_an_ally";
+inline constexpr char k_engagement_infantry_under_fire_id[] =
+    "engagement_infantry_under_fire";
+inline constexpr char k_engagement_village_defense_id[] = "engagement_village_defense";
+inline constexpr char k_engagement_melee_assist_id[] = "engagement_melee_assist";
+inline constexpr char k_engagement_ranged_awareness_id[] =
+    "engagement_ranged_awareness";
+inline constexpr char k_engagement_order_overrides_id[] = "engagement_order_overrides";
 inline constexpr char k_wildlife_wolf_pack_id[] = "wildlife_wolf_pack";
 inline constexpr char k_wildlife_wolf_ambush_id[] = "wildlife_wolf_ambush";
 inline constexpr char k_wildlife_pack_takedown_id[] = "wildlife_pack_takedown";

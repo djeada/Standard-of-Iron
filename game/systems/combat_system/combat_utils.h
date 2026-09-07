@@ -2,12 +2,15 @@
 
 #include <QVector3D>
 
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <type_traits>
 #include <vector>
 
 #include "../../core/entity.h"
+#include "../../units/combat_role.h"
 
 namespace Engine::Core {
 class World;
@@ -92,6 +95,8 @@ auto structure_separates_positions(const QVector3D& from, const QVector3D& to) -
 auto structure_separates_combatants(Engine::Core::Entity* attacker,
                                     Engine::Core::Entity* target) -> bool;
 
+inline constexpr float k_min_bypass_clearance = 0.6F;
+
 auto melee_bypass_destination(const QVector3D& attacker_position,
                               const QVector3D& target_position,
                               float standoff_distance,
@@ -100,7 +105,22 @@ auto melee_bypass_destination(const QVector3D& attacker_position,
 auto melee_walled_off_from(Engine::Core::Entity* attacker,
                            Engine::Core::Entity* target) -> bool;
 
+auto melee_can_walk_around(Engine::Core::Entity* attacker,
+                           Engine::Core::Entity* target) -> bool;
+
 auto suppresses_opportunistic_combat(Engine::Core::Entity* unit) -> bool;
+
+auto combat_role_of(const Engine::Core::Entity* entity) -> Game::Units::CombatRole;
+
+auto auto_acquires_targets(Engine::Core::Entity* entity) -> bool;
+
+auto answers_threat_alerts(Engine::Core::Entity* entity) -> bool;
+
+auto pursues_targets(const Engine::Core::Entity* entity) -> bool;
+
+auto opens_fire_without_closing(const Engine::Core::Entity* entity) -> bool;
+
+auto acquisition_range(Engine::Core::Entity* entity) -> float;
 
 auto is_unit_idle(Engine::Core::Entity* unit) -> bool;
 
@@ -115,12 +135,35 @@ auto may_engage(Engine::Core::Entity* unit,
                 Engine::Core::Entity* enemy,
                 EngagementTrigger trigger) -> bool;
 
+class TargetFilter {
+public:
+  TargetFilter() = default;
+
+  template <typename Fn>
+    requires(!std::same_as<std::decay_t<Fn>, TargetFilter>)
+  TargetFilter(const Fn& predicate)
+      : m_context(&predicate)
+      , m_invoke([](const void* context, Engine::Core::Entity* candidate) {
+        return (*static_cast<const Fn*>(context))(candidate);
+      }) {}
+
+  [[nodiscard]] explicit operator bool() const { return m_invoke != nullptr; }
+
+  auto operator()(Engine::Core::Entity* candidate) const -> bool {
+    return m_invoke(m_context, candidate);
+  }
+
+private:
+  const void* m_context{nullptr};
+  bool (*m_invoke)(const void*, Engine::Core::Entity*){nullptr};
+};
+
 auto find_nearest_enemy(Engine::Core::Entity* unit,
                         const CombatQueryContext& query_context,
                         float max_range,
-                        std::uint64_t* scan_iterations = nullptr)
+                        std::uint64_t* scan_iterations = nullptr,
+                        const TargetFilter& accept = {},
+                        Engine::Core::Entity** nearest_considered = nullptr)
     -> Engine::Core::Entity*;
-
-auto should_auto_engage_melee(Engine::Core::Entity* unit) -> bool;
 
 } // namespace Game::Systems::Combat

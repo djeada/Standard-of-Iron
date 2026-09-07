@@ -76,10 +76,9 @@ Item {
             root.game.saves.quicksave();
             return true;
         case "global.quickload":
-            if (!root.game.saves.has_save_slot || !root.game.saves.has_save_slot("quicksave"))
+            if (typeof root.mainWindowRef === 'undefined')
                 return false;
-            root.game.saves.load_from_slot("quicksave");
-            return true;
+            return root.mainWindowRef.request_quickload();
         case "rts.pause":
             if (typeof root.mainWindowRef === 'undefined')
                 return false;

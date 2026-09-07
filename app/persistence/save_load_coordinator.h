@@ -68,6 +68,8 @@ struct SaveToSlotContext {
   QString title;
   QString map_name;
   std::optional<Game::Mission::MissionContext> mission_context;
+
+  QString mission_title;
   Game::Systems::Save::SlotKind kind = Game::Systems::Save::SlotKind::Manual;
   double play_time_seconds = 0.0;
   int autosave_retention = 0;
@@ -109,6 +111,10 @@ struct LoadFromSlotEffects {
   bool emit_selected_units_changed = false;
   bool emit_owner_info_changed = false;
   QString error;
+
+  bool world_discarded = false;
+
+  QString warning;
 };
 
 class SaveLoadCoordinator {

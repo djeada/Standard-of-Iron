@@ -17,9 +17,62 @@ CampaignManager::CampaignManager(QObject* parent)
     : QObject(parent) {
 }
 
+namespace {
+
+auto find_mission_file(const QString& mission_id) -> QString {
+  const QStringList search_paths = {
+      QString("assets/missions/%1.json").arg(mission_id),
+      QString("../assets/missions/%1.json").arg(mission_id),
+      QString("../../assets/missions/%1.json").arg(mission_id),
+      QCoreApplication::applicationDirPath() +
+          QString("/assets/missions/%1.json").arg(mission_id),
+      QCoreApplication::applicationDirPath() +
+          QString("/../assets/missions/%1.json").arg(mission_id)};
+
+  for (const QString& path : search_paths) {
+    if (QFile::exists(path)) {
+      return path;
+    }
+  }
+  return QString(":/assets/missions/%1.json").arg(mission_id);
+}
+
+} // namespace
+
 auto CampaignManager::save_service() const -> Game::Systems::SaveLoadService* {
   return m_save_service != nullptr ? m_save_service
                                    : Game::Systems::SaveLoadService::instance();
+}
+
+void CampaignManager::restore_mission_context(
+    const Game::Mission::MissionContext& context) {
+  m_current_mission_context = context;
+  m_current_campaign_id = context.campaign_id;
+  m_current_mission_id = context.mission_id;
+  m_campaign_completed = false;
+
+  if (!context.has_mission() || context.mission_id.isEmpty()) {
+    m_current_mission_definition.reset();
+    emit current_campaign_changed();
+    emit current_mission_changed();
+    return;
+  }
+
+  const QString mission_file = find_mission_file(context.mission_id);
+  Game::Mission::MissionDefinition mission;
+  QString error;
+  if (Game::Mission::MissionLoader::load_from_json_file(
+          mission_file, mission, &error)) {
+    m_current_mission_definition = mission;
+  } else {
+    m_current_mission_definition.reset();
+    qWarning() << "CampaignManager: could not reload mission" << context.mission_id
+               << "after loading a save:" << error
+               << "- victory conditions and campaign progression will not apply";
+  }
+
+  emit current_campaign_changed();
+  emit current_mission_changed();
 }
 
 void CampaignManager::load_campaigns() {
@@ -41,31 +94,8 @@ void CampaignManager::start_campaign_mission(const QString& mission_path, int&) 
   const QString& campaign_id = parts[0];
   const QString& mission_id = parts[1];
 
-  QStringList const search_paths = {
-      QString("assets/missions/%1.json").arg(mission_id),
-      QString("../assets/missions/%1.json").arg(mission_id),
-      QString("../../assets/missions/%1.json").arg(mission_id),
-      QCoreApplication::applicationDirPath() +
-          QString("/assets/missions/%1.json").arg(mission_id),
-      QCoreApplication::applicationDirPath() +
-          QString("/../assets/missions/%1.json").arg(mission_id)};
-
-  QString mission_file_path;
-  bool found = false;
-
-  for (const QString& path : search_paths) {
-    if (QFile::exists(path)) {
-      mission_file_path = path;
-      found = true;
-      qInfo() << "Loading mission from filesystem:" << mission_file_path;
-      break;
-    }
-  }
-
-  if (!found) {
-    mission_file_path = QString(":/assets/missions/%1.json").arg(mission_id);
-    qInfo() << "Loading mission from Qt resources:" << mission_file_path;
-  }
+  const QString mission_file_path = find_mission_file(mission_id);
+  qInfo() << "Loading mission from" << mission_file_path;
 
   Game::Mission::MissionDefinition mission;
   QString error;

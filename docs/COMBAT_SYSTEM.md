@@ -178,7 +178,9 @@ Refusing the blow is only half the answer. A unit ordered onto a target behind a
 
 If no bearing clears — a target pressed into a corner, or ringed by its own buildings — the bypass returns nothing and the attacker keeps whatever the ordinary chase decided, rather than grinding into the stonework. It answers only "where could someone stand and reach this target", never "can this attacker get there": reachability stays with pathfinding, and a unit with no route simply never arrives.
 
-Opportunistic combat does not go around walls. Auto-engagement, AI attack orders and retaliation all drop a walled-off enemy through `Combat::melee_walled_off_from`: marching a squad around a wall is a decision the player makes with an attack order, not something a unit does on its own because it heard fighting.
+Opportunistic combat does not go around walls. A unit scanning for something to do drops a walled-off enemy through `Combat::melee_walled_off_from`: marching a squad around a wall is a decision the player makes with an attack order, not something a unit does on its own because it liked the look of a target.
+
+Answering a blow is different, and the rule bends exactly that far. When the trigger is retaliation or a squad or sight alert — the unit is being hit, or a neighbour is — `may_engage` accepts a walled-off aggressor provided `Combat::melee_can_walk_around` finds somewhere to stand beside it. This is what stops a village going quiet: a raider standing on the far side of a hut from the garrison is separated by `structure_separates_combatants` like any wall, and under the strict rule the defenders never answered a man shooting into their own square. The bypass check is only asked once the strict rule has already refused, so it costs nothing on the ordinary path.
 
 Ranged attackers are untouched by all of this. They shoot over walls, and only the commander's own bow consults `has_clear_building_los`.
 
@@ -418,6 +420,80 @@ A unit is not considered freely idle when it has:
 - hold or guard constraints;
 - an active patrol;
 - an active attack target.
+
+### Who fights on its own initiative
+
+`game/units/combat_role.h` is the single answer. `Game::Units::combat_role` is one
+exhaustive switch over `SpawnType` onto Noncombatant / Support / Fighter /
+Emplacement / Wildlife, and three predicates read it: `acquires_targets` (Fighter
+and Emplacement), `answers_threat_alerts` (Fighter only) and `pursues_targets`
+(Fighter only). Every acquisition path is gated on that table rather than on its
+own list of spawn types — `auto_engagement.cpp`, `threat_alert.cpp`,
+`attack_processor.cpp`'s in-reach acquisition and `patrol_system.cpp` — and
+`CombatRules::seeks_out_enemies`, `ai_utils`'s `is_combat_role_unit` and
+`picks_its_own_fights` all delegate to it as well. Six lists used to disagree,
+and commanders fell through every one of them.
+
+Reach comes from `Combat::acquisition_range`: a unit that opens fire without
+closing, or that does not pursue, reaches exactly as far as its weapon; anything
+that closes reaches the greater of its vision and its weapon range. A commander
+is clamped to seven metres so it defends itself without being pulled across the
+field.
+
+`find_nearest_enemy` takes an optional `TargetFilter`, and auto-engagement passes
+`may_engage` through it. Without that, the scan picks the single nearest body,
+`may_engage` refuses it, and the unit stands there with a reachable enemy two
+metres behind the one it refused.
+
+After a scan that finds nothing the unit goes on a jittered 0.3-0.5 s cooldown
+(`quiet_rescan_delay`), so a quiet field costs one spatial query per unit per
+third of a second rather than one per frame.
+
+### A player order outranks an automatic one
+
+`AttackTargetComponent::is_player_command` is the record of who chose the fight.
+Auto-engagement, retaliation and squad alerts all clear it;
+`CommandService::attack_target` sets it, for the AI's orders as much as the
+player's. The engagement trace reads it that way round: the flag says whether
+the target came from an _order at all_, and only then does ownership decide
+whether that order reads as `player` or `ai`. Asking `AIControlledComponent`
+first would report every AI unit as `ai` even when it picked the fight on its
+own initiative, which is the opposite of what the field is for.
+
+An automatic target is not a lock. Any order kind that clears the attack target
+drops it outright, and the `ManualMove` intent it leaves behind sets
+`suppress_opportunistic_combat`, so the unit does not re-acquire while it is
+carrying out the order — it marches, rather than turning back to the enemy it had
+picked for itself. Attack-move is the deliberate exception: `MoveOrderKind::AttackMove`
+records `PlayerOrderIntentKind::AttackMove` with suppression _off_, and
+auto-engagement treats that intent like guard mode, scanning while the unit
+advances.
+
+What an order does not do is pull a unit out of a melee an opponent is pressing
+on it. `CommandService::attack_target` still refuses a new target while the unit
+holds a live melee lock, and a move order does not clear that lock. This is a
+deliberate rule with a test on it
+(`FormationCombatGeometry.PlayerOrdersCannotCancelALiveMeleeOpponent`) and it is
+about contact, not about who chose the fight: the lock is reciprocal, so a unit
+that walks away would be walking out of a fight the enemy is still in. Once the
+opponent dies or the contact breaks, the pending order takes effect.
+
+### Reading the decision
+
+`combat_system/engagement_trace.h` records, per entity, the last engagement
+decision: the nearest awareness candidate, the chosen target, the range the scan
+used, why it engaged or did not (`engaged`, `holding_target`, `no_combat_role`,
+`busy`, `suppressed`, `no_candidate_in_range`, `candidate_unreachable`,
+`assisted_ally`, `retaliated`) and whether the current order came from the player,
+the AI or auto-engagement. It is off by default and costs nothing when off.
+
+`SOI_ENGAGEMENT_TRACE=1` turns it on for a live run and prints one
+`SOI_ENGAGEMENT` line per decision. The arena turns it on for every scenario and
+writes the same fields into `trace.jsonl` as `engagement_candidate_id`,
+`engagement_target_id`, `engagement_range`, `engagement_reason` and
+`command_source`. `candidate_unreachable` is the one worth looking for first: it
+means the unit saw the enemy and refused it, which is where a wall, a melee lock
+or a guard leash is hiding.
 
 ## Calling For Help
 

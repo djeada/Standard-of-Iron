@@ -13,27 +13,26 @@ Item {
     signal cancelled
     signal load_requested(string slot_name)
 
+    readonly property var saves: (typeof game !== 'undefined' && game) ? game.saves : null
+    readonly property bool storage_ready: root.saves ? root.saves.storage_healthy : false
+
     property string status_message: ""
     property string verify_result_title: ""
     property string verify_result_message: ""
     property bool verify_result_success: false
 
-    function format_play_time(seconds) {
-        if (!seconds || seconds <= 0)
-            return "";
-        var total = Math.floor(seconds);
-        var hours = Math.floor(total / 3600);
-        var minutes = Math.floor((total % 3600) / 60);
-        return hours > 0 ? qsTr("%1h %2m").arg(Design.Numerals.roman(hours)).arg(Design.Numerals.roman(minutes)) : qsTr("%1m").arg(Design.Numerals.roman(minutes));
+    readonly property var selected_slot: (loadListView.selected_index >= 0 && loadListView.selected_index < loadListModel.count) ? loadListModel.get(loadListView.selected_index) : null
+    readonly property bool can_load: root.selected_slot !== null && root.selected_slot.loadable
+
+    function set_status(text) {
+        root.status_message = text;
+        status_timer.restart();
     }
 
-    function describe_mode(mode, kind) {
-        var mode_text = mode === "campaign" ? qsTr("Campaign") : qsTr("Skirmish");
-        if (kind === "autosave")
-            return qsTr("%1 - autosave").arg(mode_text);
-        if (kind === "quicksave")
-            return qsTr("%1 - quicksave").arg(mode_text);
-        return mode_text;
+    function load_selected() {
+        if (!root.can_load)
+            return;
+        root.load_requested(root.selected_slot.slot_name);
     }
 
     anchors.fill: parent
@@ -41,10 +40,9 @@ Item {
     onVisibleChanged: {
         if (!visible)
             return;
-        if (typeof loadListModel !== 'undefined')
-            loadListModel.load_from_game();
-        if (typeof loadListView !== 'undefined')
-            loadListView.selected_index = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? 0 : -1;
+        root.status_message = "";
+        loadListModel.load_from_game();
+        loadListView.selected_index = loadListModel.first_loadable_index();
     }
     Keys.onPressed: function (event) {
         if (event.key === Qt.Key_Escape) {
@@ -59,48 +57,39 @@ Item {
                 loadListView.selected_index--;
             event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-            if (loadListView.selected_index >= 0 && !loadListModel.get(loadListView.selected_index).isEmpty)
-                root.load_requested(loadListModel.get(loadListView.selected_index).slot_name);
+            root.load_selected();
             event.accepted = true;
         }
     }
     Component.onCompleted: {
         forceActiveFocus();
-        if (loadListModel.count > 0 && !loadListModel.get(0).isEmpty)
-            loadListView.selected_index = 0;
+        loadListView.selected_index = loadListModel.first_loadable_index();
+    }
+
+    Timer {
+        id: status_timer
+
+        interval: 8000
+        onTriggered: root.status_message = ""
     }
 
     Connections {
         function onSave_slots_changed() {
-            if (typeof loadListModel === 'undefined')
-                return;
-            var previousSlot = "";
-            if (typeof loadListView !== 'undefined' && loadListView.selected_index >= 0 && loadListView.selected_index < loadListModel.count) {
-                var current = loadListModel.get(loadListView.selected_index);
-                if (current && !current.isEmpty)
-                    previousSlot = current.slot_name;
-            }
+            var previous = root.selected_slot ? root.selected_slot.slot_name : "";
             loadListModel.load_from_game();
-            if (typeof loadListView === 'undefined')
-                return;
-            var newIndex = -1;
-            if (previousSlot !== "") {
+            var restored = -1;
+            if (previous !== "") {
                 for (var i = 0; i < loadListModel.count; ++i) {
-                    var slot = loadListModel.get(i);
-                    if (!slot.isEmpty && slot.slot_name === previousSlot) {
-                        newIndex = i;
+                    if (loadListModel.get(i).slot_name === previous) {
+                        restored = i;
                         break;
                     }
                 }
             }
-            if (newIndex === -1) {
-                if (loadListModel.count > 0 && !loadListModel.get(0).isEmpty)
-                    newIndex = 0;
-            }
-            loadListView.selected_index = newIndex;
+            loadListView.selected_index = restored >= 0 ? restored : loadListModel.first_loadable_index();
         }
 
-        target: typeof game !== 'undefined' ? game.saves : null
+        target: root.saves
     }
 
     MouseArea {
@@ -119,7 +108,7 @@ Item {
         id: container
 
         width: Math.min(parent.width * 0.7, 900)
-        height: Math.min(parent.height * 0.8, 600)
+        height: Math.min(parent.height * 0.8, 640)
         anchors.centerIn: parent
         radius: Theme.radiusPanel
         color: Theme.panelBase
@@ -159,11 +148,45 @@ Item {
 
             Rectangle {
                 Layout.fillWidth: true
+                visible: !root.storage_ready || (root.saves && root.saves.recovered_database_path !== "")
+                radius: Theme.radiusMedium
+                color: Qt.rgba(0.55, 0.16, 0.14, 0.18)
+                border.color: Theme.dangerBr
+                border.width: 1
+                implicitHeight: storage_notice.implicitHeight + Theme.spacingMedium * 2
+
+                Label {
+                    id: storage_notice
+
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.margins: Theme.spacingMedium
+                    text: !root.storage_ready ? qsTr("Saves are unavailable: %1").arg(root.saves ? root.saves.storage_error : "") : qsTr("The save database could not be read and a new one was started. Your previous file was kept at %1.").arg(root.saves ? root.saves.recovered_database_path : "")
+                    color: Theme.textMain
+                    font.pixelSize: Design.Typography.body
+                    wrapMode: Text.WordWrap
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
                 Layout.fillHeight: true
                 color: Theme.cardBase
                 border.color: Theme.border
                 border.width: 1
                 radius: Theme.radiusLarge
+
+                Label {
+                    anchors.centerIn: parent
+                    width: parent.width - Theme.spacingXLarge * 2
+                    visible: loadListModel.count === 0
+                    text: qsTr("No saved games yet. Save a battle from the menu, or press the quicksave key while you play.")
+                    color: Theme.textHint
+                    font.pixelSize: Design.Typography.bodyLarge
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                }
 
                 ScrollView {
                     anchors.fill: parent
@@ -180,217 +203,100 @@ Item {
                         model: ListModel {
                             id: loadListModel
 
+                            function first_loadable_index() {
+                                for (var i = 0; i < count; ++i) {
+                                    if (get(i).loadable)
+                                        return i;
+                                }
+                                return -1;
+                            }
+
                             function load_from_game() {
                                 clear();
-                                if (typeof game === 'undefined' || !game.saves.get_save_slots) {
-                                    append({
-                                            "slot_name": qsTr("No saves found"),
-                                            "title": "",
-                                            "timestamp": "",
-                                            "map_name": "",
-                                            "mode": "",
-                                            "kind": "",
-                                            "playTime": "",
-                                            "thumbnail": "",
-                                            "isEmpty": true
-                                        });
+                                if (!root.saves || !root.saves.get_save_slots)
                                     return;
-                                }
-                                var entries = game.saves.get_save_slots();
+                                var entries = root.saves.get_save_slots();
                                 for (var i = 0; i < entries.length; i++) {
+                                    var entry = entries[i];
                                     append({
-                                            "slot_name": entries[i].slot_name,
-                                            "title": entries[i].title || entries[i].slot_name || qsTr("Untitled Save"),
-                                            "timestamp": entries[i].timestamp,
-                                            "map_name": entries[i].map_name || qsTr("Unknown Map"),
-                                            "mode": entries[i].mode || "",
-                                            "kind": entries[i].kind || "manual",
-                                            "playTime": root.format_play_time(entries[i].play_time_seconds),
-                                            "thumbnail": entries[i].thumbnail || "",
-                                            "isEmpty": false
+                                            "slot_name": entry.slot_name,
+                                            "title": entry.title || entry.slot_name || qsTr("Untitled save"),
+                                            "timestamp": entry.timestamp || "",
+                                            "map_name": entry.map_name || qsTr("Unknown map"),
+                                            "mode": entry.mode || "",
+                                            "mission_label": (entry.metadata && entry.metadata.mission_title) ? entry.metadata.mission_title : "",
+                                            "kind": entry.kind || "manual",
+                                            "play_time_seconds": entry.play_time_seconds || 0,
+                                            "loadable": entry.loadable === undefined ? true : entry.loadable,
+                                            "thumbnail": entry.thumbnail || ""
                                         });
                                 }
-                                if (count === 0)
-                                    append({
-                                            "slot_name": qsTr("No saves found"),
-                                            "title": "",
-                                            "timestamp": "",
-                                            "map_name": "",
-                                            "mode": "",
-                                            "kind": "",
-                                            "playTime": "",
-                                            "thumbnail": "",
-                                            "isEmpty": true
-                                        });
                             }
 
-                            Component.onCompleted: {
-                                load_from_game();
-                            }
+                            Component.onCompleted: load_from_game()
                         }
 
-                        delegate: Rectangle {
+                        delegate: SaveSlotRow {
+                            id: load_row
+
                             width: loadListView.width
-                            height: model.isEmpty ? 100 : 130
-                            color: loadListView.selected_index === index ? Qt.rgba(0.86, 0.72, 0.40, 0.15) : mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.04) : Qt.rgba(0, 0, 0, 0)
-                            radius: Theme.radiusMedium
-                            border.color: loadListView.selected_index === index ? Theme.accent : mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : Theme.cardBorder
-                            border.width: loadListView.selected_index === index ? 2 : 1
-                            visible: !model.isEmpty || loadListModel.count === 1
-
-                            MouseArea {
-                                id: mouseArea
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: {
-                                    if (model.isEmpty) {
-                                        Design.UiSound.warning();
-                                        return;
-                                    }
-                                    Design.UiSound.activate();
-                                    loadListView.selected_index = index;
-                                }
-                                onDoubleClicked: {
-                                    if (!model.isEmpty)
-                                        root.load_requested(model.slot_name);
-                                }
-                                onContainsMouseChanged: {
-                                    if (containsMouse)
-                                        Design.UiSound.hover();
-                                }
+                            selected: loadListView.selected_index === index
+                            slot_name: model.slot_name
+                            title: model.title
+                            map_name: model.map_name
+                            mode: model.mode
+                            mission_label: model.mission_label
+                            kind: model.kind
+                            timestamp: model.timestamp
+                            play_time_seconds: model.play_time_seconds
+                            thumbnail: model.thumbnail
+                            loadable: model.loadable
+                            blocked_reason: qsTr("Saved by a different version of the game. It is kept on disk, but this build cannot open it.")
+                            onClicked: loadListView.selected_index = index
+                            onDouble_clicked: {
+                                if (model.loadable)
+                                    root.load_requested(model.slot_name);
+                                else
+                                    Design.UiSound.warning();
                             }
 
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: Theme.spacingMedium
-                                spacing: Theme.spacingMedium
+                            actions: RowLayout {
+                                spacing: Theme.spacingTiny
 
-                                Rectangle {
-                                    id: loadThumbnail
-
-                                    Layout.preferredWidth: 128
-                                    Layout.preferredHeight: 80
-                                    radius: Theme.radiusSmall
-                                    color: Theme.cardBase
-                                    border.color: Theme.cardBorder
-                                    border.width: 1
-                                    clip: true
-                                    visible: !model.isEmpty
-
-                                    Image {
-                                        id: loadThumbnailImage
-
-                                        anchors.fill: parent
-                                        anchors.margins: 2
-                                        fillMode: Image.PreserveAspectFit
-                                        source: model.thumbnail && model.thumbnail.length > 0 ? "data:image/png;base64," + model.thumbnail : ""
-                                        visible: source !== ""
-                                    }
-
-                                    Rectangle {
-                                        anchors.fill: parent
-                                        visible: !loadThumbnailImage.visible
-                                        color: Theme.cardBase
-
-                                        Label {
-                                            anchors.centerIn: parent
-                                            text: qsTr("No Preview")
-                                            color: Theme.textHint
-                                            font.pixelSize: Design.Typography.label
-                                        }
+                                StyledButton {
+                                    text: qsTr("Export")
+                                    button_style: "secondary"
+                                    implicitWidth: 84
+                                    onClicked: {
+                                        if (!root.saves || !root.saves.export_save_slot)
+                                            return;
+                                        var exported = root.saves.export_save_slot(load_row.slot_name);
+                                        root.set_status(exported.ok ? qsTr("Exported to %1").arg(exported.path) : qsTr("Export failed: %1").arg(exported.reason));
                                     }
                                 }
 
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: Theme.spacingTiny
-                                    visible: !model.isEmpty
-
-                                    Label {
-                                        text: model.title
-                                        color: Theme.textMain
-                                        font.pixelSize: Design.Typography.subheading
-                                        font.bold: true
-                                        Layout.fillWidth: true
-                                        elide: Label.ElideRight
-                                    }
-
-                                    Label {
-                                        text: qsTr("%1 · %2").arg(model.map_name).arg(root.describe_mode(model.mode, model.kind))
-                                        color: Theme.textSub
-                                        font.pixelSize: Design.Typography.bodyLarge
-                                        Layout.fillWidth: true
-                                        elide: Label.ElideRight
-                                    }
-
-                                    RowLayout {
-                                        Layout.fillWidth: true
-                                        spacing: Theme.spacingLarge
-
-                                        Label {
-                                            text: qsTr("Saved %1").arg(Qt.formatDateTime(new Date(model.timestamp), "MMM d, yyyy · h:mm AP"))
-                                            color: Theme.textHint
-                                            font.pixelSize: Design.Typography.body
-                                            Layout.fillWidth: true
-                                            elide: Label.ElideRight
-                                        }
-
-                                        Label {
-                                            text: model.playTime !== "" ? qsTr("Played %1").arg(model.playTime) : ""
-                                            color: Theme.textHint
-                                            font.pixelSize: Design.Typography.body
-                                            visible: model.playTime !== ""
-                                        }
+                                StyledButton {
+                                    text: qsTr("Verify")
+                                    button_style: "secondary"
+                                    implicitWidth: 84
+                                    onClicked: {
+                                        if (!root.saves || !root.saves.check_save_slot)
+                                            return;
+                                        var check = root.saves.check_save_slot(load_row.slot_name);
+                                        root.verify_result_success = check.ok;
+                                        root.verify_result_title = check.ok ? qsTr("This save will load") : qsTr("This save will not load");
+                                        root.verify_result_message = check.ok ? qsTr("\"%1\" decompressed cleanly and contains a complete battlefield.").arg(load_row.slot_name) : check.reason;
+                                        verifyResultDialog.open();
                                     }
                                 }
 
-                                Label {
-                                    text: model.slot_name
-                                    color: Theme.textDim
-                                    font.pixelSize: Design.Typography.subheading
-                                    Layout.fillWidth: true
-                                    horizontalAlignment: Text.AlignHCenter
-                                    visible: model.isEmpty
-                                }
-
-                                RowLayout {
-                                    spacing: Theme.spacingTiny
-                                    visible: !model.isEmpty
-
-                                    StyledButton {
-                                        text: qsTr("Export")
-                                        button_style: "secondary"
-                                        onClicked: {
-                                            if (typeof game === 'undefined' || !game.saves.export_save_slot)
-                                                return;
-                                            var path = game.saves.export_save_slot(model.slot_name);
-                                            root.status_message = path !== "" ? qsTr("Exported to %1").arg(path) : qsTr("Export failed");
-                                        }
-                                    }
-
-                                    StyledButton {
-                                        text: qsTr("Verify")
-                                        button_style: "secondary"
-                                        onClicked: {
-                                            if (typeof game === 'undefined' || !game.saves.verify_save_slot)
-                                                return;
-                                            var ok = game.saves.verify_save_slot(model.slot_name);
-                                            root.verify_result_title = ok ? qsTr("Verification Passed") : qsTr("Verification Failed");
-                                            root.verify_result_message = ok ? qsTr("\"%1\" is intact. The save file has not been corrupted.").arg(model.slot_name) : qsTr("\"%1\" is corrupted and cannot be loaded. The save failed its integrity check.").arg(model.slot_name);
-                                            root.verify_result_success = ok;
-                                            verifyResultDialog.open();
-                                        }
-                                    }
-
-                                    StyledButton {
-                                        text: qsTr("Delete")
-                                        button_style: "danger"
-                                        onClicked: {
-                                            confirmDeleteDialog.slot_name = model.slot_name;
-                                            confirmDeleteDialog.slot_index = index;
-                                            confirmDeleteDialog.open();
-                                        }
+                                StyledButton {
+                                    text: qsTr("Delete")
+                                    button_style: "danger"
+                                    implicitWidth: 84
+                                    onClicked: {
+                                        confirmDeleteDialog.slot_name = load_row.slot_name;
+                                        confirmDeleteDialog.open();
                                     }
                                 }
                             }
@@ -414,109 +320,49 @@ Item {
                     color: Theme.textHint
                     font.pixelSize: Design.Typography.body
                     Layout.fillWidth: true
-                    elide: Label.ElideRight
+                    elide: Label.ElideMiddle
                 }
 
                 StyledButton {
                     text: qsTr("Load")
                     button_style: "primary"
-                    blocked: loadListView.selected_index < 0 || loadListModel.get(loadListView.selected_index).isEmpty
-                    disabledReason: qsTr("Pick a saved game first.")
-                    onClicked: root.load_requested(loadListModel.get(loadListView.selected_index).slot_name)
+                    blocked: !root.can_load
+                    disabledReason: root.selected_slot === null ? qsTr("Pick a saved game first.") : qsTr("This save was written by a different version of the game.")
+                    onClicked: root.load_selected()
                 }
             }
         }
     }
 
-    Dialog {
+    Design.IronDialog {
         id: confirmDeleteDialog
 
         property string slot_name: ""
-        property int slot_index: -1
 
         anchors.centerIn: parent
-        width: Math.min(parent.width * 0.5, 400)
-
-        height: 260
-        title: qsTr("Confirm Delete")
-        modal: true
-        standardButtons: Dialog.Yes | Dialog.No
-        onRejected: UiAudio.play_back(typeof game !== 'undefined' ? game.audio_system : null)
-        onAccepted: {
+        width: Math.min(parent.width * 0.5, 460)
+        title: qsTr("Delete this save?")
+        tone: "danger"
+        message: qsTr("\"%1\" will be deleted. This cannot be undone.").arg(confirmDeleteDialog.slot_name)
+        primaryAction: qsTr("Delete")
+        secondaryAction: qsTr("Keep it")
+        onPrimaryActivated: {
             UiAudio.play_confirm(typeof game !== 'undefined' ? game.audio_system : null);
-            if (typeof game !== 'undefined' && game.saves.delete_save_slot) {
-                if (game.saves.delete_save_slot(slot_name)) {
-                    loadListModel.remove(slot_index);
-                    if (loadListModel.count === 0)
-                        loadListModel.append({
-                                "slot_name": qsTr("No saves found"),
-                                "title": "",
-                                "timestamp": "",
-                                "map_name": "",
-                                "mode": "",
-                                "kind": "",
-                                "playTime": "",
-                                "thumbnail": "",
-                                "isEmpty": true
-                            });
-                    if (loadListView.selected_index >= loadListModel.count)
-                        loadListView.selected_index = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? loadListModel.count - 1 : -1;
-                }
-            }
+            if (root.saves && root.saves.delete_save_slot && root.saves.delete_save_slot(confirmDeleteDialog.slot_name))
+                root.set_status(qsTr("Deleted \"%1\"").arg(confirmDeleteDialog.slot_name));
         }
-
-        contentItem: Rectangle {
-            color: Theme.cardBase
-
-            Label {
-                id: warningText
-
-                x: Theme.spacingMedium
-                y: Theme.spacingMedium
-                width: confirmDeleteDialog.availableWidth - Theme.spacingMedium * 2
-                text: qsTr("Are you sure you want to delete the save:\n\"%1\"?\n\nThis action cannot be undone.").arg(confirmDeleteDialog.slot_name)
-                color: Theme.textMain
-                wrapMode: Text.WordWrap
-                font.pixelSize: Design.Typography.bodyLarge
-            }
-        }
+        onSecondaryActivated: UiAudio.play_back(typeof game !== 'undefined' ? game.audio_system : null)
     }
 
-    Dialog {
+    Design.IronDialog {
         id: verifyResultDialog
 
         anchors.centerIn: parent
-        width: Math.min(parent.width * 0.5, 420)
-        title: qsTr("Save Verification")
-        modal: true
-        standardButtons: Dialog.Close
-
-        contentItem: Rectangle {
-            color: Theme.cardBase
-            implicitHeight: 140
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Theme.spacingXLarge
-                spacing: Theme.spacingMedium
-
-                Label {
-                    text: root.verify_result_title
-                    color: root.verify_result_success ? Theme.success : Theme.danger
-                    font.pixelSize: Design.Typography.hero
-                    font.bold: true
-                    Layout.fillWidth: true
-                }
-
-                Label {
-                    text: root.verify_result_message
-                    color: Theme.textMain
-                    font.pixelSize: Design.Typography.bodyLarge
-                    Layout.fillWidth: true
-                    wrapMode: Text.WordWrap
-                }
-            }
-        }
+        width: Math.min(parent.width * 0.6, 520)
+        title: root.verify_result_title
+        tone: root.verify_result_success ? "info" : "danger"
+        message: root.verify_result_message
+        primaryAction: qsTr("Close")
     }
 
     Dialog {
@@ -524,7 +370,7 @@ Item {
 
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.6, 520)
-        title: qsTr("Import Save")
+        title: qsTr("Import save")
         modal: true
         standardButtons: Dialog.Close
         onOpened: importModel.reload()
@@ -557,9 +403,9 @@ Item {
 
                         function reload() {
                             clear();
-                            if (typeof game === 'undefined' || !game.saves.list_exported_saves)
+                            if (!root.saves || !root.saves.list_exported_saves)
                                 return;
-                            var files = game.saves.list_exported_saves();
+                            var files = root.saves.list_exported_saves();
                             for (var i = 0; i < files.length; i++)
                                 append({
                                         "path": files[i].path,
@@ -584,9 +430,9 @@ Item {
                             text: qsTr("Import")
                             button_style: "small"
                             onClicked: {
-                                var slot = game.saves.import_save_file(model.path);
-                                root.status_message = slot !== "" ? qsTr("Imported as \"%1\"").arg(slot) : qsTr("Import failed");
-                                if (slot !== "")
+                                var imported = root.saves.import_save_file(model.path);
+                                root.set_status(imported.ok ? qsTr("Imported as \"%1\"").arg(imported.slot_name) : qsTr("Import failed: %1").arg(imported.reason));
+                                if (imported.ok)
                                     importDialog.close();
                             }
                         }
@@ -594,7 +440,7 @@ Item {
                 }
 
                 Label {
-                    text: importModel.count === 0 ? qsTr("No importable save files were found.") : ""
+                    text: qsTr("No importable save files were found.")
                     color: Theme.textHint
                     font.pixelSize: Design.Typography.body
                     visible: importModel.count === 0

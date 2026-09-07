@@ -5,13 +5,17 @@
 #include <QDebug>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonParseError>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QSqlRecord>
 #include <QVariant>
 
 #include <utility>
+#include <vector>
 
 #include "../map/campaign_definition.h"
 #include "../map/campaign_loader.h"
@@ -21,6 +25,57 @@ namespace Game::Systems {
 
 namespace {
 constexpr const char* k_driver_name = "QSQLITE";
+
+struct TableShape {
+  const char* table;
+  std::vector<const char*> columns;
+};
+
+auto required_shape() -> const std::vector<TableShape>& {
+  static const std::vector<TableShape> shape = {
+      {"saves",
+       {"slot_name",
+        "title",
+        "map_name",
+        "map_path",
+        "mode",
+        "campaign_id",
+        "mission_id",
+        "difficulty",
+        "kind",
+        "play_time_seconds",
+        "created_at",
+        "updated_at",
+        "format_version",
+        "snapshot_version",
+        "compression",
+        "world_raw_size",
+        "world_raw_checksum",
+        "world_blob_checksum",
+        "metadata",
+        "world_state",
+        "screenshot"}},
+      {"campaign_progress", {"campaign_id", "completed", "unlocked", "completed_at"}},
+      {"campaign_missions",
+       {"campaign_id",
+        "mission_id",
+        "order_index",
+        "unlocked",
+        "completed",
+        "completed_at"}},
+      {"mission_results",
+       {"mission_id",
+        "mode",
+        "campaign_id",
+        "completed",
+        "completion_time",
+        "difficulty",
+        "result",
+        "completed_at",
+        "created_at",
+        "updated_at"}}};
+  return shape;
+}
 
 auto build_connection_name(const SaveStorage* instance) -> QString {
   return QStringLiteral("SaveStorage_%1")
@@ -247,14 +302,50 @@ auto SaveStorage::initialize(QString* out_error) const -> bool {
   if (m_initialized && m_database.isValid() && m_database.isOpen()) {
     return true;
   }
-  if (!open(out_error)) {
+
+  QString error;
+  bool ready = open(&error);
+
+  if (!ready && !is_memory_database() && QFile::exists(m_database_path)) {
+    QString quarantine_error;
+    if (quarantine_and_recreate(error, &quarantine_error)) {
+      m_health_error.clear();
+      m_initialized = true;
+      return true;
+    }
+    error = quarantine_error;
+  }
+
+  if (!ready || !ensure_schema(&error)) {
+    m_health_error = error.isEmpty()
+                         ? QCoreApplication::translate(
+                               "SaveStorage", "The save database could not be opened.")
+                         : error;
+    if (out_error != nullptr) {
+      *out_error = m_health_error;
+    }
     return false;
   }
-  if (!ensure_schema(out_error)) {
-    return false;
-  }
+
+  m_health_error.clear();
   m_initialized = true;
   return true;
+}
+
+auto SaveStorage::is_memory_database() const -> bool {
+  return m_database_path.startsWith(QStringLiteral(":memory:")) ||
+         m_database_path.contains(QStringLiteral("mode=memory"));
+}
+
+void SaveStorage::close_connection() const {
+  if (m_database.isValid()) {
+    if (m_database.isOpen()) {
+      m_database.close();
+    }
+    m_database = QSqlDatabase();
+    QSqlDatabase::removeDatabase(m_connection_name);
+  }
+  m_initialized = false;
 }
 
 auto SaveStorage::open(QString* out_error) const -> bool {
@@ -276,12 +367,178 @@ auto SaveStorage::open(QString* out_error) const -> bool {
   }
 
   QSqlQuery pragma(m_database);
-  pragma.exec(QStringLiteral("PRAGMA journal_mode=WAL"));
+  if (pragma.exec(QStringLiteral("PRAGMA journal_mode=WAL")) && pragma.next()) {
+    const QString mode = pragma.value(0).toString();
+    if (mode.compare(QStringLiteral("wal"), Qt::CaseInsensitive) != 0 &&
+        !is_memory_database()) {
+      qWarning() << "SaveStorage: journal_mode is" << mode
+                 << "not WAL; a crash mid-save may leave the database behind";
+    }
+  }
+  pragma.finish();
   pragma.exec(QStringLiteral("PRAGMA synchronous=FULL"));
+  pragma.finish();
+  constexpr int k_synchronous_full = 2;
+  if (pragma.exec(QStringLiteral("PRAGMA synchronous")) && pragma.next() &&
+      pragma.value(0).toInt() != k_synchronous_full) {
+    qWarning() << "SaveStorage: synchronous is" << pragma.value(0).toInt()
+               << "not FULL; a commit may not have reached the disk when it "
+                  "reports success";
+  }
+  pragma.finish();
+  pragma.exec(QStringLiteral("PRAGMA foreign_keys=ON"));
+  return true;
+}
+
+auto SaveStorage::passes_integrity_check(QString* out_reason) const -> bool {
+  QSqlQuery check(m_database);
+  if (!check.exec(QStringLiteral("PRAGMA quick_check(4)"))) {
+    if (out_reason != nullptr) {
+      *out_reason = check.lastError().text();
+    }
+    return false;
+  }
+
+  QStringList problems;
+  while (check.next()) {
+    const QString line = check.value(0).toString();
+    if (line.compare(QStringLiteral("ok"), Qt::CaseInsensitive) != 0) {
+      problems.append(line);
+    }
+  }
+
+  if (problems.isEmpty()) {
+    return true;
+  }
+  if (out_reason != nullptr) {
+    *out_reason = problems.join(QStringLiteral("; "));
+  }
+  return false;
+}
+
+auto SaveStorage::database_is_empty() const -> bool {
+  QSqlQuery query(m_database);
+  if (!query.exec(QStringLiteral(
+          "SELECT COUNT(*) FROM sqlite_master WHERE type IN ('table', 'view') "
+          "AND name NOT LIKE 'sqlite_%'")) ||
+      !query.next()) {
+    return false;
+  }
+  return query.value(0).toInt() == 0;
+}
+
+auto SaveStorage::schema_shape_is_current() const -> bool {
+  for (const auto& [table, columns] : required_shape()) {
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral("SELECT * FROM %1 LIMIT 0").arg(table));
+    if (!query.exec()) {
+      return false;
+    }
+    const QSqlRecord record = query.record();
+    for (const auto* column : columns) {
+      if (record.indexOf(QLatin1String(column)) < 0) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+void SaveStorage::backup_before_migration(int from_version) const {
+  if (is_memory_database() || !QFile::exists(m_database_path)) {
+    return;
+  }
+
+  const QString backup_path =
+      QStringLiteral("%1.v%2-backup").arg(m_database_path).arg(from_version);
+  QFile::remove(backup_path);
+  if (QFile::copy(m_database_path, backup_path)) {
+    qInfo() << "SaveStorage: copied the pre-migration database to" << backup_path;
+  } else {
+    qWarning() << "SaveStorage: could not back up" << m_database_path << "before "
+               << "migrating from version" << from_version;
+  }
+}
+
+auto SaveStorage::quarantine_and_recreate(const QString& reason,
+                                          QString* out_error) const -> bool {
+  qWarning() << "SaveStorage: the save database at" << m_database_path
+             << "cannot be used:" << reason;
+
+  if (is_memory_database()) {
+
+    close_connection();
+    return open(out_error) && create_fresh_schema(out_error);
+  }
+
+  close_connection();
+
+  const QString stamp =
+      QDateTime::currentDateTimeUtc().toString(QStringLiteral("yyyyMMdd-HHmmss"));
+  QString quarantine = QStringLiteral("%1.unreadable-%2").arg(m_database_path, stamp);
+  for (int attempt = 2; QFile::exists(quarantine) && attempt < 100; ++attempt) {
+    quarantine =
+        QStringLiteral("%1.unreadable-%2-%3").arg(m_database_path, stamp).arg(attempt);
+  }
+
+  if (!QFile::rename(m_database_path, quarantine)) {
+    if (out_error != nullptr) {
+      *out_error = QCoreApplication::translate(
+                       "SaveStorage",
+                       "The save database is unreadable and could not be moved "
+                       "aside: %1")
+                       .arg(reason);
+    }
+    return false;
+  }
+
+  for (const QString& sidecar :
+       {QStringLiteral("-wal"), QStringLiteral("-shm"), QStringLiteral("-journal")}) {
+    const QString source = m_database_path + sidecar;
+    if (QFile::exists(source) && !QFile::rename(source, quarantine + sidecar)) {
+      QFile::remove(source);
+    }
+  }
+
+  m_quarantined_path = quarantine;
+  qWarning() << "SaveStorage: moved it to" << quarantine << "and started a fresh one";
+
+  return open(out_error) && create_fresh_schema(out_error);
+}
+
+auto SaveStorage::create_fresh_schema(QString* out_error) const -> bool {
+  TransactionGuard transaction(m_database);
+  if (!transaction.begin(out_error)) {
+    return false;
+  }
+  if (!create_schema(out_error) || !stamp_schema_version(out_error)) {
+    transaction.rollback();
+    return false;
+  }
+  return transaction.commit(out_error);
+}
+
+auto SaveStorage::stamp_schema_version(QString* out_error) const -> bool {
+  QSqlQuery set_version(m_database);
+  if (!set_version.exec(QStringLiteral("PRAGMA user_version = %1")
+                            .arg(Save::k_database_schema_version))) {
+    return fail(
+        out_error,
+        QCoreApplication::translate("SaveStorage", "Failed to record schema version"),
+        set_version.lastError());
+  }
   return true;
 }
 
 auto SaveStorage::ensure_schema(QString* out_error) const -> bool {
+  QString integrity_reason;
+  if (!passes_integrity_check(&integrity_reason)) {
+    return quarantine_and_recreate(
+        QCoreApplication::translate("SaveStorage", "integrity check failed: %1")
+            .arg(integrity_reason),
+        out_error);
+  }
+
   int version = 0;
   {
     QSqlQuery version_query(m_database);
@@ -297,29 +554,80 @@ auto SaveStorage::ensure_schema(QString* out_error) const -> bool {
     version_query.finish();
   }
 
-  if (version == Save::k_schema_version) {
-    return true;
+  if (version == 0 && database_is_empty()) {
+    TransactionGuard transaction(m_database);
+    if (!transaction.begin(out_error)) {
+      return false;
+    }
+    if (!create_schema(out_error) || !stamp_schema_version(out_error)) {
+      transaction.rollback();
+      return false;
+    }
+    return transaction.commit(out_error);
   }
 
-  if (version != 0) {
-    qWarning() << "Save database schema version" << version
-               << "is not supported; rebuilding a clean database (previous saves are "
-                  "discarded)";
+  if (version > Save::k_database_schema_version || version <= 0) {
+    return quarantine_and_recreate(
+        version > Save::k_database_schema_version
+            ? QCoreApplication::translate(
+                  "SaveStorage",
+                  "it was written by a newer version of the game (schema %1)")
+                  .arg(version)
+            : QCoreApplication::translate("SaveStorage",
+                                          "it is not a Standard of Iron save database"),
+        out_error);
   }
+
+  if (version < Save::k_database_schema_version) {
+    backup_before_migration(version);
+    if (!migrate_schema(version, out_error)) {
+      return quarantine_and_recreate(
+          QCoreApplication::translate("SaveStorage",
+                                      "it could not be upgraded from schema %1: %2")
+              .arg(version)
+              .arg(out_error != nullptr ? *out_error : QString()),
+          out_error);
+    }
+  }
+
+  if (!schema_shape_is_current()) {
+    return quarantine_and_recreate(
+        QCoreApplication::translate("SaveStorage", "its tables do not match schema %1")
+            .arg(Save::k_database_schema_version),
+        out_error);
+  }
+
+  return true;
+}
+
+auto SaveStorage::migrate_schema(int from_version, QString* out_error) const -> bool {
+  qInfo() << "SaveStorage: upgrading the save database from schema" << from_version
+          << "to" << Save::k_database_schema_version;
 
   TransactionGuard transaction(m_database);
   if (!transaction.begin(out_error)) {
     return false;
   }
 
-  if (!drop_schema(out_error) || !create_schema(out_error)) {
-    transaction.rollback();
-    return false;
+  int version = from_version;
+
+  if (version < 3) {
+    QSqlQuery add_column(m_database);
+    if (!add_column.exec(QStringLiteral("ALTER TABLE saves ADD COLUMN "
+                                        "snapshot_version INTEGER NOT NULL DEFAULT %1")
+                             .arg(version))) {
+      fail(out_error,
+           QCoreApplication::translate("SaveStorage",
+                                       "Failed to add the snapshot version column"),
+           add_column.lastError());
+      transaction.rollback();
+      return false;
+    }
+    version = 3;
   }
 
   QSqlQuery set_version(m_database);
-  if (!set_version.exec(
-          QStringLiteral("PRAGMA user_version = %1").arg(Save::k_schema_version))) {
+  if (!set_version.exec(QStringLiteral("PRAGMA user_version = %1").arg(version))) {
     fail(out_error,
          QCoreApplication::translate("SaveStorage", "Failed to record schema version"),
          set_version.lastError());
@@ -328,26 +636,6 @@ auto SaveStorage::ensure_schema(QString* out_error) const -> bool {
   }
 
   return transaction.commit(out_error);
-}
-
-auto SaveStorage::drop_schema(QString* out_error) const -> bool {
-  const QStringList tables = {QStringLiteral("saves"),
-                              QStringLiteral("campaigns"),
-                              QStringLiteral("campaign_progress"),
-                              QStringLiteral("campaign_missions"),
-                              QStringLiteral("mission_progress"),
-                              QStringLiteral("mission_results")};
-
-  for (const QString& table : tables) {
-    QSqlQuery query(m_database);
-    if (!query.exec(QStringLiteral("DROP TABLE IF EXISTS %1").arg(table))) {
-      return fail(out_error,
-                  QCoreApplication::translate("SaveStorage", "Failed to drop table %1")
-                      .arg(table),
-                  query.lastError());
-    }
-  }
-  return true;
 }
 
 auto SaveStorage::create_schema(QString* out_error) const -> bool {
@@ -366,6 +654,7 @@ auto SaveStorage::create_schema(QString* out_error) const -> bool {
                      "created_at TEXT NOT NULL, "
                      "updated_at TEXT NOT NULL, "
                      "format_version INTEGER NOT NULL, "
+                     "snapshot_version INTEGER NOT NULL, "
                      "compression TEXT NOT NULL, "
                      "world_raw_size INTEGER NOT NULL, "
                      "world_raw_checksum TEXT NOT NULL, "
@@ -419,11 +708,34 @@ auto SaveStorage::write_slot(const Save::Record& record, QString* out_error) -> 
     return false;
   }
 
-  if (record.slot_name.isEmpty()) {
+  if (const QString rejection = Save::slot_name_rejection(record.slot_name);
+      !rejection.isEmpty() && record.kind == Save::SlotKind::Manual) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Refusing to write a save with an empty slot name");
+      *out_error = rejection;
     }
     return false;
+  }
+  if (record.slot_name.trimmed().isEmpty()) {
+    if (out_error != nullptr) {
+      *out_error = QCoreApplication::translate(
+          "SaveStorage", "Refusing to write a save with an empty slot name");
+    }
+    return false;
+  }
+
+  if (record.kind != Save::SlotKind::Manual) {
+    Save::SlotKind existing = Save::SlotKind::Manual;
+    if (slot_kind(record.slot_name, existing) && existing != record.kind) {
+      if (out_error != nullptr) {
+        *out_error = QCoreApplication::translate(
+                         "SaveStorage",
+                         "'%1' holds a save that was not written by this "
+                         "rotation, so it will not be overwritten automatically. "
+                         "Delete it from the Load menu to free the slot.")
+                         .arg(record.slot_name);
+      }
+      return false;
+    }
   }
 
   TransactionGuard transaction(m_database);
@@ -435,14 +747,14 @@ auto SaveStorage::write_slot(const Save::Record& record, QString* out_error) -> 
   if (!query.prepare(QStringLiteral(
           "INSERT INTO saves (slot_name, title, map_name, map_path, mode, "
           "campaign_id, mission_id, difficulty, kind, play_time_seconds, "
-          "created_at, updated_at, format_version, compression, world_raw_size, "
-          "world_raw_checksum, world_blob_checksum, metadata, world_state, "
-          "screenshot) "
+          "created_at, updated_at, format_version, snapshot_version, compression, "
+          "world_raw_size, world_raw_checksum, world_blob_checksum, metadata, "
+          "world_state, screenshot) "
           "VALUES (:slot_name, :title, :map_name, :map_path, :mode, :campaign_id, "
           ":mission_id, :difficulty, :kind, :play_time_seconds, :created_at, "
-          ":updated_at, :format_version, :compression, :world_raw_size, "
-          ":world_raw_checksum, :world_blob_checksum, :metadata, :world_state, "
-          ":screenshot) "
+          ":updated_at, :format_version, :snapshot_version, :compression, "
+          ":world_raw_size, :world_raw_checksum, :world_blob_checksum, :metadata, "
+          ":world_state, :screenshot) "
           "ON CONFLICT(slot_name) DO UPDATE SET "
           "title = excluded.title, "
           "map_name = excluded.map_name, "
@@ -455,6 +767,7 @@ auto SaveStorage::write_slot(const Save::Record& record, QString* out_error) -> 
           "play_time_seconds = excluded.play_time_seconds, "
           "updated_at = excluded.updated_at, "
           "format_version = excluded.format_version, "
+          "snapshot_version = excluded.snapshot_version, "
           "compression = excluded.compression, "
           "world_raw_size = excluded.world_raw_size, "
           "world_raw_checksum = excluded.world_raw_checksum, "
@@ -484,6 +797,7 @@ auto SaveStorage::write_slot(const Save::Record& record, QString* out_error) -> 
   query.bindValue(QStringLiteral(":created_at"), created);
   query.bindValue(QStringLiteral(":updated_at"), timestamp);
   query.bindValue(QStringLiteral(":format_version"), Save::k_format_version);
+  query.bindValue(QStringLiteral(":snapshot_version"), record.snapshot_version);
   query.bindValue(QStringLiteral(":compression"),
                   Save::compression_to_string(record.world.compression));
   query.bindValue(QStringLiteral(":world_raw_size"),
@@ -505,7 +819,51 @@ auto SaveStorage::write_slot(const Save::Record& record, QString* out_error) -> 
     return false;
   }
 
-  return transaction.commit(out_error);
+  if (!transaction.commit(out_error)) {
+    return false;
+  }
+
+  if (!read_back_matches(record, out_error)) {
+    return false;
+  }
+
+  return true;
+}
+
+auto SaveStorage::read_back_matches(const Save::Record& record,
+                                    QString* out_error) const -> bool {
+  QSqlQuery query(m_database);
+  query.prepare(QStringLiteral("SELECT world_state, world_raw_checksum, "
+                               "snapshot_version FROM saves WHERE "
+                               "slot_name = :slot_name"));
+  query.bindValue(QStringLiteral(":slot_name"), record.slot_name);
+
+  if (!query.exec() || !query.next()) {
+    return fail(out_error,
+                QCoreApplication::translate(
+                    "SaveStorage", "The save was written but could not be read back"),
+                query.lastError());
+  }
+
+  const QByteArray stored = query.value(0).toByteArray();
+  if (stored != record.world.blob) {
+    if (out_error != nullptr) {
+      *out_error = QCoreApplication::translate(
+          "SaveStorage",
+          "The save did not survive being written to disk. Nothing was lost in "
+          "the match; try saving again.");
+    }
+    return false;
+  }
+  if (query.value(1).toString() != record.world.raw_checksum ||
+      query.value(2).toInt() != record.snapshot_version) {
+    if (out_error != nullptr) {
+      *out_error = QCoreApplication::translate(
+          "SaveStorage", "The save was written with the wrong header; try again.");
+    }
+    return false;
+  }
+  return true;
 }
 
 auto SaveStorage::read_slot(const QString& slot_name,
@@ -520,7 +878,7 @@ auto SaveStorage::read_slot(const QString& slot_name,
       "SELECT title, map_name, map_path, mode, campaign_id, mission_id, "
       "difficulty, kind, play_time_seconds, created_at, updated_at, "
       "compression, world_raw_size, world_raw_checksum, world_blob_checksum, "
-      "metadata, world_state, screenshot, format_version "
+      "metadata, world_state, screenshot, format_version, snapshot_version "
       "FROM saves WHERE slot_name = :slot_name"));
   query.bindValue(QStringLiteral(":slot_name"), slot_name);
 
@@ -551,7 +909,20 @@ auto SaveStorage::read_slot(const QString& slot_name,
     return false;
   }
 
+  const int snapshot_version = query.value(19).toInt();
+  if (snapshot_version != Save::k_snapshot_version) {
+    if (out_error != nullptr) {
+      *out_error = QCoreApplication::translate(
+                       "SaveStorage",
+                       "'%1' was saved by a different version of Standard of Iron "
+                       "and cannot be loaded by this one. It has been left alone.")
+                       .arg(slot_name);
+    }
+    return false;
+  }
+
   Save::Record record;
+  record.snapshot_version = snapshot_version;
   record.slot_name = slot_name;
   record.title = query.value(0).toString();
   record.map_name = query.value(1).toString();
@@ -595,7 +966,52 @@ auto SaveStorage::verify_slot(const QString& slot_name,
   if (!read_slot(slot_name, record, out_error)) {
     return false;
   }
-  return Save::verify_blob(record.world, out_error);
+
+  QByteArray world_bytes;
+  if (!Save::unpack(record.world, world_bytes, out_error)) {
+    return false;
+  }
+
+  QJsonParseError parse_error{};
+  const QJsonDocument document = QJsonDocument::fromJson(world_bytes, &parse_error);
+  if (parse_error.error != QJsonParseError::NoError || !document.isObject()) {
+    if (out_error != nullptr) {
+      *out_error = QCoreApplication::translate(
+                       "SaveStorage", "'%1' does not contain a readable world: %2")
+                       .arg(slot_name, parse_error.errorString());
+    }
+    return false;
+  }
+  if (!document.object().contains(QStringLiteral("entities"))) {
+    if (out_error != nullptr) {
+      *out_error = QCoreApplication::translate(
+                       "SaveStorage", "'%1' is missing the units it should contain")
+                       .arg(slot_name);
+    }
+    return false;
+  }
+  return true;
+}
+
+auto SaveStorage::slot_kind(const QString& slot_name,
+                            Save::SlotKind& out_kind,
+                            QString* out_error) const -> bool {
+  if (!initialize(out_error)) {
+    return false;
+  }
+
+  QSqlQuery query(m_database);
+  query.prepare(
+      QStringLiteral("SELECT kind FROM saves WHERE slot_name = :slot_name LIMIT 1"));
+  query.bindValue(QStringLiteral(":slot_name"), slot_name);
+
+  if (!query.exec() || !query.next()) {
+    return false;
+  }
+  if (!Save::slot_kind_from_string(query.value(0).toString(), out_kind)) {
+    out_kind = Save::SlotKind::Manual;
+  }
+  return true;
 }
 
 auto SaveStorage::list_slots(QString* out_error) const -> QVariantList {
@@ -608,7 +1024,8 @@ auto SaveStorage::list_slots(QString* out_error) const -> QVariantList {
   if (!query.exec(QStringLiteral(
           "SELECT slot_name, title, map_name, mode, campaign_id, mission_id, "
           "difficulty, kind, play_time_seconds, updated_at, world_raw_size, "
-          "length(world_state), metadata, screenshot "
+          "length(world_state), metadata, screenshot, snapshot_version, "
+          "mission_id, created_at "
           "FROM saves ORDER BY datetime(updated_at) DESC"))) {
     fail(out_error,
          QCoreApplication::translate("SaveStorage", "Failed to enumerate save slots"),
@@ -638,6 +1055,14 @@ auto SaveStorage::list_slots(QString* out_error) const -> QVariantList {
     slot.insert(QStringLiteral("thumbnail"),
                 screenshot.isEmpty() ? QString()
                                      : QString::fromLatin1(screenshot.toBase64()));
+
+    const int snapshot_version = query.value(14).toInt();
+    slot.insert(QStringLiteral("snapshot_version"), snapshot_version);
+
+    slot.insert(QStringLiteral("loadable"),
+                snapshot_version == Save::k_snapshot_version);
+    slot.insert(QStringLiteral("mission_id"), query.value(15).toString());
+    slot.insert(QStringLiteral("created_at"), query.value(16).toString());
 
     result.append(slot);
   }
@@ -1030,9 +1455,9 @@ auto SaveStorage::ensure_campaign_missions_in_db(
   const QString sql =
       campaign.missions.empty()
           ? QStringLiteral("DELETE FROM campaign_missions WHERE campaign_id = "
-                           ":campaign_id")
+                           ":campaign_id AND completed = 0")
           : QStringLiteral("DELETE FROM campaign_missions WHERE campaign_id = "
-                           ":campaign_id AND mission_id NOT IN (%1)")
+                           ":campaign_id AND completed = 0 AND mission_id NOT IN (%1)")
                 .arg(placeholders.join(QStringLiteral(", ")));
   prune.prepare(sql);
   prune.bindValue(QStringLiteral(":campaign_id"), campaign.id);

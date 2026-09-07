@@ -1,6 +1,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QElapsedTimer>
+#include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -9,6 +10,10 @@
 
 #include <gtest/gtest.h>
 
+#include "core/component_core.h"
+#include "core/entity.h"
+#include "core/world.h"
+#include "save/serialization.h"
 #include "systems/save_format.h"
 #include "systems/save_load_service.h"
 
@@ -270,4 +275,151 @@ TEST_F(SaveLoadServiceTest, EmptyScreenshotIsIgnored) {
   wait_for_saves(*service);
 
   EXPECT_TRUE(service->slot_exists("no_preview"));
+}
+
+TEST_F(SaveLoadServiceTest, AManualSaveCannotUseANameTheGameRotates) {
+  for (const QString& reserved : {QStringLiteral("quicksave"),
+                                  QStringLiteral("autosave_1"),
+                                  QStringLiteral("AUTOSAVE_12")}) {
+    EXPECT_FALSE(Save::slot_name_rejection(reserved).isEmpty())
+        << reserved.toStdString() << " should be refused";
+  }
+  EXPECT_TRUE(Save::slot_name_rejection(QStringLiteral("Before Cannae")).isEmpty());
+  EXPECT_TRUE(Save::slot_name_rejection(QStringLiteral("autosaves of Rome")).isEmpty())
+      << "only the exact rotation names are reserved";
+
+  SaveRequest request = make_request(QStringLiteral("quicksave"));
+  request.kind = Save::SlotKind::Manual;
+  ASSERT_NE(service->begin_save(request), 0U);
+  wait_for_saves(*service);
+  EXPECT_FALSE(service->slot_exists("quicksave"));
+  EXPECT_FALSE(service->get_last_error().isEmpty());
+}
+
+TEST_F(SaveLoadServiceTest, TheRotationStepsPastASlotHoldingAnotherKind) {
+  SaveRequest quick = make_request(QStringLiteral("autosave_1"));
+  quick.kind = Save::SlotKind::Quicksave;
+  ASSERT_NE(service->begin_save(quick), 0U);
+  wait_for_saves(*service);
+  ASSERT_TRUE(service->slot_exists("autosave_1"));
+
+  EXPECT_EQ(service->next_autosave_slot(3), QStringLiteral("autosave_2"))
+      << "the rotation must not choose a slot another kind is holding";
+}
+
+TEST_F(SaveLoadServiceTest, AnImportedSaveIsNeverGivenARotatedName) {
+  SaveRequest request = make_request(QStringLiteral("keeper"));
+  request.kind = Save::SlotKind::Quicksave;
+  ASSERT_NE(service->begin_save(request), 0U);
+  wait_for_saves(*service);
+
+  const QString package =
+      SaveLoadService::exports_directory() + QStringLiteral("/quicksave.soisave");
+  QString error;
+  ASSERT_TRUE(service->export_slot(QStringLiteral("keeper"), package, &error))
+      << error.toStdString();
+
+  Save::Record record;
+  QFile file(package);
+  ASSERT_TRUE(file.open(QIODevice::ReadOnly));
+  ASSERT_TRUE(Save::decode_package(file.readAll(), record, &error))
+      << error.toStdString();
+  file.close();
+  record.slot_name = QStringLiteral("autosave_1");
+  QFile rewritten(package);
+  ASSERT_TRUE(rewritten.open(QIODevice::WriteOnly));
+  rewritten.write(Save::encode_package(record));
+  rewritten.close();
+
+  QString imported;
+  ASSERT_TRUE(service->import_package(package, imported, &error))
+      << error.toStdString();
+  EXPECT_TRUE(Save::slot_name_rejection(imported).isEmpty())
+      << imported.toStdString() << " is a name the game rotates";
+}
+
+TEST_F(SaveLoadServiceTest, APackageFromAnotherSnapshotVersionIsRefusedOnImport) {
+  SaveRequest request = make_request(QStringLiteral("travelling"));
+  ASSERT_NE(service->begin_save(request), 0U);
+  wait_for_saves(*service);
+
+  const QString package =
+      SaveLoadService::exports_directory() + QStringLiteral("/travelling.soisave");
+  QString error;
+  ASSERT_TRUE(service->export_slot(QStringLiteral("travelling"), package, &error))
+      << error.toStdString();
+
+  Save::Record record;
+  QFile file(package);
+  ASSERT_TRUE(file.open(QIODevice::ReadOnly));
+  ASSERT_TRUE(Save::decode_package(file.readAll(), record, &error));
+  file.close();
+  record.snapshot_version = Save::k_snapshot_version + 3;
+  QFile rewritten(package);
+  ASSERT_TRUE(rewritten.open(QIODevice::WriteOnly));
+  rewritten.write(Save::encode_package(record));
+  rewritten.close();
+
+  QString imported;
+  EXPECT_FALSE(service->import_package(package, imported, &error));
+  EXPECT_TRUE(error.contains("different version")) << error.toStdString();
+}
+
+TEST_F(SaveLoadServiceTest, ALoadThatCannotStartLeavesTheWorldAlone) {
+  Engine::Core::World world;
+  const auto entity = world.create_entity();
+  ASSERT_NE(entity, nullptr);
+
+  EXPECT_FALSE(service->load_game_from_slot(world, QStringLiteral("no_such_slot")));
+  EXPECT_EQ(world.entity_count(), 1U) << "a failed load cleared the live match";
+}
+
+TEST_F(SaveLoadServiceTest, ARefusedLoadReportsThatTheWorldWasNotTouched) {
+  Engine::Core::World world;
+  ASSERT_NE(world.create_entity(), nullptr);
+
+  bool discarded = true;
+  EXPECT_FALSE(
+      service->load_game_from_slot(world, QStringLiteral("no_such_slot"), &discarded));
+  EXPECT_FALSE(discarded)
+      << "a load that never reached the world must not claim it destroyed one";
+  EXPECT_EQ(world.entity_count(), 1U);
+}
+
+TEST_F(SaveLoadServiceTest, APayloadWithoutABattlefieldIsRefusedBeforeTheClear) {
+  SaveRequest request = make_request(QStringLiteral("no_entities"));
+  request.world = QJsonDocument(QJsonObject{{"players", QJsonArray{}}});
+  ASSERT_NE(service->begin_save(request), 0U);
+  wait_for_saves(*service);
+
+  Engine::Core::World world;
+  ASSERT_NE(world.create_entity(), nullptr);
+
+  bool discarded = true;
+  EXPECT_FALSE(
+      service->load_game_from_slot(world, QStringLiteral("no_entities"), &discarded));
+  EXPECT_FALSE(discarded);
+  EXPECT_EQ(world.entity_count(), 1U) << "the live match was cleared for a bad save";
+  EXPECT_TRUE(service->get_last_error().contains("battlefield"))
+      << service->get_last_error().toStdString();
+}
+
+TEST_F(SaveLoadServiceTest, ASaveThatRestoresNoUnitsIsRefused) {
+  SaveRequest request = make_request(QStringLiteral("hollow"));
+  QJsonObject hollow;
+  hollow["entities"] = QJsonArray{1, 2, 3};
+  hollow["nextEntityId"] = 4;
+  request.world = QJsonDocument(hollow);
+  ASSERT_NE(service->begin_save(request), 0U);
+  wait_for_saves(*service);
+
+  Engine::Core::World world;
+  bool discarded = false;
+  EXPECT_FALSE(
+      service->load_game_from_slot(world, QStringLiteral("hollow"), &discarded));
+  EXPECT_TRUE(discarded)
+      << "the caller must be told the previous match is gone so it can end it";
+  EXPECT_EQ(world.entity_count(), 0U);
+  EXPECT_TRUE(service->get_last_error().contains("restored no units"))
+      << service->get_last_error().toStdString();
 }

@@ -6,6 +6,7 @@ StyledComboBox 1.0 StyledComboBox.qml
 ProductionPanel 1.0 ProductionPanel.qml
 SaveGamePanel 1.0 SaveGamePanel.qml
 LoadGamePanel 1.0 LoadGamePanel.qml
+SaveSlotRow 1.0 SaveSlotRow.qml
 SaveProgressOverlay 1.0 SaveProgressOverlay.qml
 MapPreview 1.0 MapPreview.qml
 SkirmishChip 1.0 SkirmishChip.qml
