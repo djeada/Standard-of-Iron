@@ -58,6 +58,7 @@
 #include "game/units/commander_catalog.h"
 #include "render/profiling/allocation_tracker.h"
 #include "render/profiling/asset_counters.h"
+#include "render/profiling/frame_swap_clock.h"
 #include "render/profiling/performance_report.h"
 #include "render/profiling/presentation_cycle.h"
 #include "utils/percentile.h"
@@ -494,6 +495,7 @@ void GLView::GLRenderer::observe_runtime_continuity() {
 
 void GLView::GLRenderer::reset_runtime_benchmark_samples() {
   m_frame_pacing.reset();
+  m_pacing_previous_swap_ns = Render::Profiling::frame_swap_clock().latest();
   m_previous_pacing_sample = {};
   m_pacing_upload_bytes = Render::Profiling::asset_counters().total(
       Render::Profiling::AssetCounter::GlUploadBytes);
@@ -553,11 +555,17 @@ void GLView::GLRenderer::observe_runtime_benchmark(
   const auto& pacing_profile = Render::Profiling::global_profile();
   const auto upload_bytes = Render::Profiling::asset_counters().total(
       Render::Profiling::AssetCounter::GlUploadBytes);
+  const double swap_interval =
+      Render::Profiling::frame_swap_clock().interval_ms(m_pacing_previous_swap_ns);
   if (m_benchmark_ready_time.time_since_epoch().count() != 0) {
+    m_previous_pacing_sample.presentation_timed = swap_interval > 0;
     m_previous_pacing_sample.interval_ms =
         std::chrono::duration<double, std::milli>(frame_start -
                                                   m_benchmark_previous_frame_time)
             .count();
+    if (swap_interval > 0) {
+      m_previous_pacing_sample.interval_ms = swap_interval;
+    }
     m_frame_pacing.observe(m_previous_pacing_sample);
   }
   m_previous_pacing_sample = {};
@@ -867,9 +875,18 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
              static_cast<qint64>(progress.completed_cycles.load())}});
   }
 
-  report.insert(QStringLiteral("frame_pacing"),
-                m_frame_pacing.report(QString::fromLatin1(
-                    Render::graphics_quality_key(graphics.quality()))));
+  auto pacing = m_frame_pacing.report(
+      QString::fromLatin1(Render::graphics_quality_key(graphics.quality())));
+  if (m_benchmark_visible_soldiers == 0) {
+    auto failures = pacing.value(QStringLiteral("failures")).toArray();
+    failures.append(QStringLiteral("no visible soldiers were measured"));
+    pacing.insert(QStringLiteral("passed"), false);
+    pacing.insert(QStringLiteral("failures"), failures);
+  }
+  report.insert(QStringLiteral("frame_pacing"), pacing);
+  report.insert(QStringLiteral("render_target_pixels"),
+                QJsonObject{{QStringLiteral("width"), m_size.width()},
+                            {QStringLiteral("height"), m_size.height()}});
 
   if (m_continuity_probe != nullptr) {
     QJsonArray continuity_issues;

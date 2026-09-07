@@ -34,6 +34,7 @@
 #include <qurl.h>
 
 #include <array>
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <memory>
@@ -41,6 +42,7 @@
 #include <string_view>
 
 #include "render/gl/context_requirements.h"
+#include "render/profiling/frame_swap_clock.h"
 #include "render/profiling/presentation_cycle.h"
 
 #ifdef Q_OS_WIN
@@ -1038,6 +1040,18 @@ auto main(int argc, char* argv[]) -> int {
     return -2;
   }
   qInfo() << "QQuickWindow found";
+  if (qEnvironmentVariable("SOI_RUNTIME_BENCHMARK_SECONDS").toDouble() > 0.0) {
+    QObject::connect(
+        window,
+        &QQuickWindow::frameSwapped,
+        window,
+        [] {
+          const auto now = std::chrono::steady_clock::now().time_since_epoch();
+          Render::Profiling::frame_swap_clock().observe(
+              std::chrono::duration_cast<std::chrono::nanoseconds>(now).count());
+        },
+        Qt::DirectConnection);
+  }
 
   if (component_gallery_requested) {
 
@@ -1351,11 +1365,12 @@ auto main(int argc, char* argv[]) -> int {
     auto* cycle_timer = new QTimer(game_engine.get());
     auto elapsed = std::make_shared<QElapsedTimer>();
     auto previous = std::make_shared<Render::Profiling::PresentationCyclePosition>();
+    auto origin = std::make_shared<QVector3D>();
     QObject::connect(
         cycle_timer,
         &QTimer::timeout,
         game_engine.get(),
-        [game_ptr = game_engine.get(), elapsed, previous]() {
+        [game_ptr = game_engine.get(), elapsed, previous, origin]() {
           auto& progress = Render::Profiling::presentation_cycle_progress();
           if (game_ptr->is_loading() || !game_ptr->simulation_thread_running()) {
             elapsed->invalidate();
@@ -1364,15 +1379,16 @@ auto main(int argc, char* argv[]) -> int {
             progress.completed_cycles = 0;
             return;
           }
+          auto* camera = static_cast<App::ViewModels::CameraViewModel*>(
+              game_ptr->camera_view_model());
           if (!elapsed->isValid()) {
+            *origin = camera->world_target();
             elapsed->start();
           }
           const double seconds = static_cast<double>(elapsed->elapsed()) / 1000.0;
           const auto position = Render::Profiling::presentation_cycle_position(seconds);
-          auto* camera = static_cast<App::ViewModels::CameraViewModel*>(
-              game_ptr->camera_view_model());
-          camera->look_at_world(static_cast<float>(position.x),
-                                static_cast<float>(position.z));
+          camera->look_at_world(origin->x() + static_cast<float>(position.x),
+                                origin->z() + static_cast<float>(position.z));
           camera->zoom(static_cast<float>(position.zoom - previous->zoom));
           *previous = position;
           ++progress.updates;

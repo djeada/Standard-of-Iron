@@ -1,5 +1,9 @@
 #include "edge_scroll.h"
 
+#include <QCursor>
+#include <QQuickItem>
+#include <QQuickWindow>
+
 #include <algorithm>
 #include <cmath>
 
@@ -35,6 +39,14 @@ auto vertical_zone(double sensitivity, double ui_scale) -> double {
                       sane_scale(ui_scale));
 }
 
+auto push_ramp(double approach_amount) -> double {
+  if (!(approach_amount > 0.0)) {
+    return 0.0;
+  }
+  const double amount = std::min(approach_amount, 1.0);
+  return k_entry_push + (1.0 - k_entry_push) * amount * amount;
+}
+
 auto vector_at(double x,
                double y,
                double width,
@@ -60,15 +72,17 @@ auto vector_at(double x,
   const double up = approach(y, vertical);
   const double down = approach(height - y, vertical);
 
-  const auto horizontal_curve = [](double amount) {
-    return amount * amount;
-  };
-  const auto vertical_curve = [](double amount) {
-    return amount * amount * amount;
-  };
+  double dx = (push_ramp(right) - push_ramp(left)) * speed;
+  double dz = (push_ramp(up) - push_ramp(down)) * speed;
 
-  return {.dx = (horizontal_curve(right) - horizontal_curve(left)) * speed,
-          .dz = (vertical_curve(up) - vertical_curve(down)) * speed};
+  const double magnitude = std::hypot(dx, dz);
+  if (magnitude > speed && magnitude > 0.0) {
+    const double trim = speed / magnitude;
+    dx *= trim;
+    dz *= trim;
+  }
+
+  return {.dx = dx, .dz = dz};
 }
 
 } // namespace Ui::EdgeScrollGeometry
@@ -107,4 +121,21 @@ QPointF EdgeScroll::vector(
   const auto result =
       Ui::EdgeScrollGeometry::vector_at(x, y, width, height, sensitivity, ui_scale);
   return {result.dx, result.dz};
+}
+
+QPointF EdgeScroll::cursorIn(QQuickItem* item) {
+  static const QPointF k_unknown{-1.0, -1.0};
+  if (item == nullptr) {
+    return k_unknown;
+  }
+  QQuickWindow* window = item->window();
+  if (window == nullptr || !window->isVisible()) {
+    return k_unknown;
+  }
+  const QPointF scene = QPointF(window->mapFromGlobal(QCursor::pos()));
+  const QPointF local = item->mapFromScene(scene);
+  if (!std::isfinite(local.x()) || !std::isfinite(local.y())) {
+    return k_unknown;
+  }
+  return local;
 }

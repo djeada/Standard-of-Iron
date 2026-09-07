@@ -7,6 +7,7 @@ import argparse
 import datetime
 import hashlib
 import json
+import math
 import os
 import platform
 import shutil
@@ -32,6 +33,9 @@ def read_report(path: Path, preset: str, camera_cycle: bool = False) -> list[str
     if not isinstance(pacing, dict):
         return ["frame pacing was not measured"]
     failures = []
+    visible = report.get("visible_soldiers_average")
+    if type(visible) not in (int, float) or not math.isfinite(visible) or visible <= 0:
+        failures.append("no visible soldiers were measured")
     if pacing.get("preset") != preset:
         failures.append("measured preset does not match requested preset")
     if pacing.get("passed") is not True:
@@ -42,6 +46,17 @@ def read_report(path: Path, preset: str, camera_cycle: bool = False) -> list[str
         failures.append("post-load asset work was not measured")
 
     checks = pacing.get("checks", {})
+    swap_check = (
+        checks.get("untimed_presentation_frames", {})
+        if isinstance(checks, dict)
+        else {}
+    )
+    if (
+        pacing.get("interval_source") != "QQuickWindow.frameSwapped"
+        or not isinstance(swap_check, dict)
+        or swap_check.get("passed") is not True
+    ):
+        failures.append("presentation timing failed or was not measured")
     asset_check = (
         checks.get("post_playable_asset_work", {}) if isinstance(checks, dict) else {}
     )

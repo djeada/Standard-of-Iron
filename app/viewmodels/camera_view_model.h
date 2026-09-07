@@ -51,6 +51,7 @@ public:
   void publish_frame();
 
   [[nodiscard]] auto distance() const -> float;
+  [[nodiscard]] auto world_target() const -> QVector3D;
   [[nodiscard]] auto following_selection() const -> bool {
     return m_following_selection;
   }

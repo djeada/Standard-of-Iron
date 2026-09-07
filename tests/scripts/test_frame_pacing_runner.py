@@ -24,10 +24,15 @@ class PacingRunnerTest(unittest.TestCase):
     def good(self):
         return {
             "valid": True,
+            "visible_soldiers_average": 224,
             "frame_pacing": {
                 "passed": True,
                 "preset": "medium",
-                "checks": {"post_playable_asset_work": {"passed": True, "measured": 0}},
+                "interval_source": "QQuickWindow.frameSwapped",
+                "checks": {
+                    "post_playable_asset_work": {"passed": True, "measured": 0},
+                    "untimed_presentation_frames": {"passed": True, "measured": 0},
+                },
             },
             "asset_counters": {
                 "load_barrier_marked": True,
@@ -52,6 +57,21 @@ class PacingRunnerTest(unittest.TestCase):
             {"load_barrier_marked": False},
         ):
             self.assertTrue(self.check({**self.good(), "asset_counters": assets}))
+
+    def test_missing_presentation_timing_cannot_pass(self):
+        report = self.good()
+        del report["frame_pacing"]["interval_source"]
+        self.assertTrue(self.check(report))
+        for check in ({}, {"passed": False, "measured": 1}):
+            report = self.good()
+            report["frame_pacing"]["checks"]["untimed_presentation_frames"] = check
+            self.assertTrue(self.check(report))
+
+    def test_empty_battle_cannot_pass(self):
+        for visible in (0, -1, None, float("nan")):
+            self.assertTrue(
+                self.check({**self.good(), "visible_soldiers_average": visible})
+            )
 
     def test_playable_asset_gate_is_required(self):
         for check in ({}, {"passed": False, "measured": 1}):

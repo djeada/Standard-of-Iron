@@ -18,6 +18,8 @@ Item {
 
     readonly property int right_stack_bottom: topPanel.height + Design.Metrics.space8 + (Design.Metrics.space24 * 8) + Design.Metrics.space8 + hudTop.minimapLegendHeight
 
+    readonly property bool minimap_drag_active: hudTop.minimapDragActive
+
     property bool overlay_active: false
 
     function right_stack_margin(card_height) {
@@ -57,6 +59,13 @@ Item {
         return local.x >= 0 && local.y >= 0 && local.x < item.width && local.y < item.height;
     }
 
+    function blocks_edge_scroll(x, y) {
+        if (!hud.visible)
+            return false;
+        var minimapZone = hudTop.minimapZone;
+        return minimapZone.width > 0 && x >= minimapZone.x && y >= minimapZone.y && x < minimapZone.x + minimapZone.width && y < minimapZone.y + minimapZone.height;
+    }
+
     function blocks_world_pointer(x, y) {
         if (!hud.visible)
             return false;
@@ -64,8 +73,7 @@ Item {
             return true;
         if (y > (hud.height - hud.bottom_panel_height))
             return true;
-        var minimapZone = hudTop.minimapZone;
-        if (minimapZone.width > 0 && x >= minimapZone.x && y >= minimapZone.y && x < minimapZone.x + minimapZone.width && y < minimapZone.y + minimapZone.height)
+        if (hud.blocks_edge_scroll(x, y))
             return true;
         var floating = [cameraLegend, commanderMessage, waveTracker, economyCoach];
         for (var i = 0; i < floating.length; ++i) {

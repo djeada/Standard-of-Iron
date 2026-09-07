@@ -109,43 +109,64 @@ just resell the same motion twice.
 The maths lives in `ui/edge_scroll.cpp` rather than inline in QML so it can be
 tested (`tests/ui/edge_scroll_test.cpp`).
 
-- The band is 12 logical px along the sides and 10 along the top and bottom at
-  the default sensitivity, multiplied by **both** the edge-scroll sensitivity
-  and the interface scale, and never narrower than 4 px.
-- Push grows toward the edge — squared horizontally, cubed vertically — so a
-  cursor resting just inside the band creeps and a cursor pinned to the edge
-  runs.
+- The band is 26 logical px on **every** side at the default sensitivity,
+  multiplied by both the edge-scroll sensitivity and the interface scale, and
+  never narrower than 10 px.
+- Push grows toward the edge on the same square curve on both axes, and starts
+  at `k_entry_push` (35%) rather than at nothing: crossing into the band moves
+  the camera at once, and pinning the cursor to the edge runs it.
+- A corner is clamped to the magnitude of a single edge, so rounding one does
+  not lurch the view by a factor of sqrt(2).
 - An unknown cursor position (`-1`), a zero-sized surface or a cursor past the
   surface all yield no movement, so a stale pointer cannot scroll the map.
 
-Scaling the band by the interface scale is what keeps a 12 px band reachable on
-a 4K panel at 200%; without it the band stays 12 physical px while every other
-target doubles.
+Scaling the band by the interface scale is what keeps it reachable on a 4K panel
+at 200%; without it the band stays 26 physical px while every other target
+doubles.
 
-### The minimap clearance
+The two axes are deliberately symmetric. They were not: the vertical band was
+10 px against 12 horizontally and ramped as a **cube** against a square, so the
+middle of the top band moved the camera at an eighth of the pace the middle of a
+side band did. Pushing the cursor up read as broken, because for all but the
+last pixel or two it was.
 
-The minimap is the one HUD control that is itself a camera move, so a band
-reaching under it would leave a minimap drag and edge scroll pushing the same
-camera at once. It does not, but only just. Clicking along the minimap's right
-edge in a running battle puts the last responsive pixel 25 logical px from the
-right of the surface — `hudZoneMargin` plus the panel's own padding — while the
-widest band the settings allow is `12 * 2.0 = 24`. Both sides scale with the
-interface, so the clearance stays proportional: measured at interface scale 1.0
-the minimap stops at 1255 and the band starts at 1256, and at 1.5 it stops at
-1243 and the band starts at 1244.
+### Where the cursor comes from
 
-One logical pixel of headroom is not a margin anyone chose. Widening the base
-band, raising `kMaxEdgeScrollSensitivity` or trimming the minimap's padding
-closes it, and then a minimap drag and edge scroll fight over the camera.
-`EdgeScrollTest.TheStrongestBandStaysClearOfTheMinimap` guards the C++ half;
-the QML half is a hand measurement, so re-measure it if you touch either.
+`EdgeScroll.cursorIn(item)` reads `QCursor::pos()` and maps it into the overlay,
+and the overlay's 16 ms timer polls that. It deliberately does **not** use the
+overlay's own hover events.
+
+The overlay is a full-screen `hoverEnabled` MouseArea sitting _below_ the HUD
+(`z: 0.5` against the HUD's `z: 1`), because Qt stops hover delivery at the
+first item that accepts it and an overlay above the HUD swallowed every HUD
+tooltip. But the same rule cuts the other way: while the overlay drove edge
+scroll from its own `positionChanged`, the top bar, the command panel, the
+minimap and the commander overlay each ate the cursor before it arrived. The
+top edge, the bottom edge and all four corners simply did not scroll. Polling
+the platform cursor gives both — HUD tooltips open, and every screen edge
+scrolls.
+
+### The minimap
+
+The minimap is the one HUD control that is itself a camera move, so edge scroll
+has to keep off it. It is refused by state rather than by geometry:
+`HUD.blocks_edge_scroll()` returns true for the minimap's own rectangle, and
+`mainWindow.edge_scroll_disabled` covers a drag that wanders out of it
+(`hud.minimap_drag_active`).
+
+This replaced a one-pixel geometric clearance — the band's widest setting was
+`12 * 2.0 = 24` px against a minimap whose hit area ended 25 px from the right —
+which is what pinned the base band at 12 px in the first place. A margin nobody
+chose is not a margin; the band is now free to be as wide as it needs to be.
 
 ## What suppresses edge scroll
 
 `mainWindow.edge_scroll_disabled` is **derived**, never assigned:
 
 ```qml
-readonly property bool edge_scroll_disabled: gameViewItem.camera_pan_active || !mainWindow.active
+readonly property bool edge_scroll_disabled: gameViewItem.camera_pan_active
+    || !mainWindow.active || mainWindow.overlay_active
+    || hud.commander_rpg_mode || hud.minimap_drag_active
 ```
 
 `camera_pan_active` is in turn derived from the live pan state
@@ -153,6 +174,12 @@ readonly property bool edge_scroll_disabled: gameViewItem.camera_pan_active || !
 the flag used to be set on right-press and cleared on right-release, so a drag
 interrupted by a lost grab — a modal opening, the window losing focus — left it
 latched and killed edge scrolling for the rest of the session. Keep it derived.
+
+The last three terms are what a hover-driven overlay used to get for free: an
+open panel, the commander's own full-screen cursor overlay and the minimap each
+took the cursor away from it. A cursor read straight from the platform sees none
+of that, so every reason to _not_ scroll now has to be stated. Anything new that
+covers the map and wants the pointer to itself belongs in this list.
 
 The overlay's timer is likewise bound to a live condition rather than started
 from `onEntered`, because an item that becomes visible under a stationary cursor
@@ -168,9 +195,13 @@ The function reads `hud.top_panel_height` and `hud.bottom_panel_height` — note
 the snake_case; the camelCase spellings do not exist and silently evaluate to
 `undefined`, which is how world hover used to leak through the HUD.
 
-The overlay sits above the HUD (`z: 2` against `z: 1`) but accepts
-`Qt.NoButton`, so it never takes a click from a HUD button, and `MouseArea` does
-not consume hover events, so HUD hover states still work underneath it.
+`HUD.blocks_edge_scroll()` is the much smaller sibling that decides where
+**scrolling** stops, and it covers the minimap alone. Do not fold the two
+together: `blocks_world_pointer()` claims both full-width panels, and scrolling
+has to reach through them or the top and bottom edges are dead.
+
+The overlay accepts `Qt.NoButton`, so it never takes a click from a HUD button,
+and it sits below the HUD so HUD hover states and tooltips work.
 
 ## Manual regression checklist
 
@@ -194,6 +225,9 @@ by hand when touching anything above. Every row should behave identically.
 - [ ] Scrolling **stops** as soon as the cursor leaves the band.
 - [ ] The band feels reachable — no hunting for a sliver of pixels. On a
       high-DPI panel confirm the band grew with the interface scale.
+- [ ] The top and bottom edges feel exactly as strong as the sides, at the very
+      edge and halfway into the band alike.
+- [ ] Rounding a corner does not speed the camera up.
 - [ ] Settings › Accessibility shows the band width in px and it **matches** what
       you have to reach for.
 - [ ] Turning **edge scrolling off** stops it everywhere; the legend then reads
@@ -206,8 +240,10 @@ by hand when touching anything above. Every row should behave identically.
 - [ ] Right-drag pans; edge scroll does **not** fight it mid-drag.
 - [ ] With **edge scroll strength at maximum**, drag the camera around by the
       minimap: the camera goes where the minimap says and does **not** also
-      creep sideways. See "The minimap clearance" above — this passes on a
-      single pixel.
+      creep sideways, including when the drag wanders off the minimap onto the
+      screen edge beside it.
+- [ ] In the commander's first-person mode the screen edges do **not** scroll
+      the RTS camera.
 - [ ] Right-drag, then press `Esc` / open the menu mid-drag, then return to the
       battle: edge scroll still works. (This is the regression that used to
       latch it off permanently.)

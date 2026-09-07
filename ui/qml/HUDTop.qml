@@ -22,6 +22,8 @@ Item {
 
     readonly property real minimapLegendHeight: fogLegend.visible ? Design.Metrics.space4 + fogLegend.implicitHeight + Design.Metrics.space8 : 0
 
+    readonly property bool minimapDragActive: minimap.visible && minimapMouse.pressed
+
     property bool camera_legend_visible: false
 
     signal pause_toggled

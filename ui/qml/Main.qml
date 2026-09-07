@@ -13,7 +13,7 @@ ApplicationWindow {
     property bool menu_visible: true
     property bool game_started: false
     property bool game_paused: false
-    readonly property bool edge_scroll_disabled: gameViewItem.camera_pan_active || !mainWindow.active
+    readonly property bool edge_scroll_disabled: gameViewItem.camera_pan_active || !mainWindow.active || mainWindow.overlay_active || hud.commander_rpg_mode || hud.minimap_drag_active
 
     property bool suppress_modals: false
 
@@ -876,9 +876,44 @@ ApplicationWindow {
         readonly property real vert_threshold: EdgeScroll.verticalZone(Design.A11y.edgeScrollSensitivity, Design.A11y.uiScale)
         property real x_pos: -1
         property real y_pos: -1
+        property bool hover_cleared: true
 
         function in_hud_zone(x, y) {
             return hud.blocks_world_pointer(x, y);
+        }
+
+        function clear_world_hover() {
+            if (edge_scroll_overlay.hover_cleared)
+                return;
+            edge_scroll_overlay.hover_cleared = true;
+            if (typeof game !== 'undefined' && game.orders.set_hover_at_screen)
+                game.orders.set_hover_at_screen(-1, -1);
+        }
+
+        function publish_world_hover(x, y) {
+            if (typeof game === 'undefined' || !game.orders.set_hover_at_screen)
+                return;
+            if (x < 0 || y < 0 || mainWindow.edge_scroll_disabled || edge_scroll_overlay.in_hud_zone(x, y)) {
+                edge_scroll_overlay.clear_world_hover();
+                return;
+            }
+            edge_scroll_overlay.hover_cleared = false;
+            game.orders.set_hover_at_screen(x, y);
+        }
+
+        function edge_scroll_step() {
+            if (typeof game === 'undefined' || !game.camera.move)
+                return;
+            if (!Design.A11y.edgeScrollEnabled || mainWindow.edge_scroll_disabled)
+                return;
+            const cursor = EdgeScroll.cursorIn(edge_scroll_overlay);
+            if (cursor.x < 0 || cursor.y < 0)
+                return;
+            if (hud.visible && hud.blocks_edge_scroll(cursor.x, cursor.y))
+                return;
+            const step = EdgeScroll.vector(cursor.x, cursor.y, edge_scroll_overlay.width, edge_scroll_overlay.height, Design.A11y.edgeScrollSensitivity, Design.A11y.uiScale);
+            if (step.x !== 0 || step.y !== 0)
+                game.camera.move(step.x, step.y);
         }
 
         anchors.fill: parent
@@ -895,12 +930,7 @@ ApplicationWindow {
             onPositionChanged: function (mouse) {
                 edge_scroll_overlay.x_pos = mouse.x;
                 edge_scroll_overlay.y_pos = mouse.y;
-                if (typeof game !== 'undefined' && game.orders.set_hover_at_screen) {
-                    if (!edge_scroll_overlay.in_hud_zone(mouse.x, mouse.y))
-                        game.orders.set_hover_at_screen(mouse.x, mouse.y);
-                    else
-                        game.orders.set_hover_at_screen(-1, -1);
-                }
+                edge_scroll_overlay.publish_world_hover(mouse.x, mouse.y);
                 if (typeof game !== 'undefined' && game.placement.is_placing_formation && game.placement.on_formation_mouse_move) {
                     if (!edge_scroll_overlay.in_hud_zone(mouse.x, mouse.y))
                         game.placement.on_formation_mouse_move(mouse.x, mouse.y);
@@ -928,19 +958,20 @@ ApplicationWindow {
                 w.accepted = false;
             }
             onEntered: function () {
-                edge_scroll_timer.start();
-                if (typeof game !== 'undefined' && game.orders.set_hover_at_screen) {
-                    if (!edge_scroll_overlay.in_hud_zone(edge_scroll_overlay.x_pos, edge_scroll_overlay.y_pos))
-                        game.orders.set_hover_at_screen(edge_scroll_overlay.x_pos, edge_scroll_overlay.y_pos);
-                    else
-                        game.orders.set_hover_at_screen(-1, -1);
-                }
+                edge_scroll_overlay.publish_world_hover(edge_scroll_overlay.x_pos, edge_scroll_overlay.y_pos);
             }
             onExited: function () {
                 edge_scroll_overlay.x_pos = -1;
                 edge_scroll_overlay.y_pos = -1;
-                if (typeof game !== 'undefined' && game.orders.set_hover_at_screen)
-                    game.orders.set_hover_at_screen(-1, -1);
+                edge_scroll_overlay.clear_world_hover();
+            }
+        }
+
+        onEnabledChanged: {
+            if (!enabled) {
+                edge_scroll_overlay.x_pos = -1;
+                edge_scroll_overlay.y_pos = -1;
+                edge_scroll_overlay.clear_world_hover();
             }
         }
 
@@ -949,29 +980,10 @@ ApplicationWindow {
 
             interval: 16
             repeat: true
-            running: edge_scroll_overlay.enabled && edge_scroll_overlay.x_pos >= 0 && edge_scroll_overlay.y_pos >= 0
+            running: edge_scroll_overlay.enabled && mainWindow.active
             onTriggered: {
-                if (typeof game === 'undefined')
-                    return;
-                const w = edge_scroll_overlay.width;
-                const h = edge_scroll_overlay.height;
-                const x = edge_scroll_overlay.x_pos;
-                const y = edge_scroll_overlay.y_pos;
-                if (x < 0 || y < 0)
-                    return;
-                if (mainWindow.edge_scroll_disabled) {
-                    if (game.orders.set_hover_at_screen)
-                        game.orders.set_hover_at_screen(-1, -1);
-                    return;
-                }
-                const over_hud = edge_scroll_overlay.in_hud_zone(x, y);
-                if (game.orders.set_hover_at_screen)
-                    game.orders.set_hover_at_screen(over_hud ? -1 : x, over_hud ? -1 : y);
-                if (!Design.A11y.edgeScrollEnabled)
-                    return;
-                const step = EdgeScroll.vector(x, y, w, h, Design.A11y.edgeScrollSensitivity, Design.A11y.uiScale);
-                if (step.x !== 0 || step.y !== 0)
-                    game.camera.move(step.x, step.y);
+                edge_scroll_overlay.publish_world_hover(edge_scroll_overlay.x_pos, edge_scroll_overlay.y_pos);
+                edge_scroll_overlay.edge_scroll_step();
             }
         }
     }

@@ -182,6 +182,12 @@ void CameraViewModel::reset() {
   emit distance_changed();
 }
 
+auto CameraViewModel::world_target() const -> QVector3D {
+  const auto frame_lock = m_host.lock_frame();
+  return m_context.active_camera != nullptr ? m_context.active_camera->get_target()
+                                            : QVector3D{};
+}
+
 void CameraViewModel::look_at_world(float x, float z) {
   m_host.ensure_initialized();
   const auto frame_lock = m_host.lock_frame();

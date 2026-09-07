@@ -20,6 +20,7 @@ struct PacingSample {
   std::array<std::uint64_t, static_cast<std::size_t>(Phase::_Count)> phase_us{};
   std::uint64_t asset_work{0};
   double render_elapsed_ms{0};
+  bool presentation_timed{true};
 };
 
 struct PacingBudget {
@@ -58,10 +59,17 @@ public:
     const auto budget = pacing_budget(preset);
     std::vector<double> intervals, cpu, gpu;
     QJsonArray failures, clusters;
+    struct Window {
+      std::uint64_t asset_work{0};
+      std::size_t hitches{0};
+      double worst_ms{0};
+    };
+    std::vector<Window> windows;
     double elapsed_ms = 0, upload_max = 0;
     std::uint64_t asset_work = 0;
     std::size_t hitches = 0, longest = 0, cluster_size = 0, cluster_start = 0;
     std::size_t gpu_timed_frames = 0;
+    std::size_t untimed_presentation_frames = 0;
     double cluster_max = 0;
     QJsonObject worst_evidence;
     auto finish_cluster = [&] {
@@ -88,9 +96,18 @@ public:
         continue;
       }
       intervals.push_back(sample.interval_ms);
+      untimed_presentation_frames += sample.presentation_timed ? 0 : 1;
       cpu.push_back(sample.cpu_ms);
       gpu.push_back(sample.gpu_ms);
       gpu_timed_frames += sample.gpu_ms > 0 ? 1 : 0;
+      const auto window_index = static_cast<std::size_t>(elapsed_ms / 10000.0);
+      if (windows.size() <= window_index) {
+        windows.resize(window_index + 1);
+      }
+      auto& window = windows[window_index];
+      window.asset_work += sample.asset_work;
+      window.hitches += sample.interval_ms > budget.hitch_ms ? 1 : 0;
+      window.worst_ms = std::max(window.worst_ms, sample.interval_ms);
       elapsed_ms += sample.interval_ms;
       upload_max = std::max(upload_max, sample.upload_bytes);
       asset_work += sample.asset_work;
@@ -144,6 +161,9 @@ public:
         failures.append(name + QStringLiteral(" exceeded budget"));
       }
     };
+    check("untimed_presentation_frames",
+          static_cast<double>(untimed_presentation_frames),
+          0);
     check("interval_p95_ms", spread.p95, budget.interval_p95_ms);
     check("interval_p99_ms", spread.p99, budget.interval_p99_ms);
     check("interval_max_ms", spread.maximum, budget.spike_max_ms);
@@ -169,7 +189,17 @@ public:
         preset != "ultra") {
       failures.append(QStringLiteral("unknown graphics preset"));
     }
+    QJsonArray window_json;
+    for (std::size_t i = 0; i < windows.size(); ++i) {
+      window_json.append(
+          QJsonObject{{"start_seconds", static_cast<double>(i) * 10},
+                      {"asset_work", static_cast<qint64>(windows[i].asset_work)},
+                      {"hitch_frames", static_cast<qint64>(windows[i].hitches)},
+                      {"worst_ms", windows[i].worst_ms}});
+    }
     return QJsonObject{{"passed", failures.isEmpty()},
+                       {"ten_second_windows", window_json},
+                       {"interval_source", "QQuickWindow.frameSwapped"},
                        {"preset", preset},
                        {"frames", static_cast<qint64>(intervals.size())},
                        {"elapsed_seconds", elapsed_ms / 1000.0},

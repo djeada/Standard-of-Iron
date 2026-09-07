@@ -6,6 +6,7 @@
 
 #include "render/profiling/frame_pacing.h"
 #include "render/profiling/frame_profile.h"
+#include "render/profiling/frame_swap_clock.h"
 #include "render/profiling/presentation_cycle.h"
 
 using Render::Profiling::format_overlay;
@@ -314,4 +315,42 @@ TEST(FramePacingTest, OneGpuSampleCannotCertifyAnOtherwiseUntimedRun) {
                    .toObject()["missing_gpu_sample_fraction"]
                    .toObject()["passed"]
                    .toBool());
+}
+
+TEST(FramePacingTest, SwapClockKeepsSkippedFrameTimeAndRejectsMissingSwaps) {
+  Render::Profiling::FrameSwapClock clock;
+  std::int64_t previous = 0;
+  EXPECT_DOUBLE_EQ(clock.interval_ms(previous), 0);
+  clock.observe(1000000000);
+  EXPECT_DOUBLE_EQ(clock.interval_ms(previous), 0);
+  clock.observe(1016000000);
+  EXPECT_DOUBLE_EQ(clock.interval_ms(previous), 16);
+  EXPECT_DOUBLE_EQ(clock.interval_ms(previous), 0);
+  clock.observe(1032000000);
+  clock.observe(1048000000);
+  EXPECT_DOUBLE_EQ(clock.interval_ms(previous), 32);
+}
+
+TEST(FramePacingTest, RenderStartFallbackCannotCertifyPresentationTiming) {
+  Render::Profiling::FramePacing pacing;
+  for (int i = 0; i < 1800; ++i) {
+    pacing.observe({16.67, 8, 8, 0, {}});
+  }
+  Render::Profiling::PacingSample sample{16.67, 8, 8, 0, {}};
+  sample.presentation_timed = false;
+  pacing.observe(sample);
+  EXPECT_FALSE(pacing.report("high")["passed"].toBool());
+}
+
+TEST(FramePacingTest, WindowsDistinguishFirstUseWorkFromRecurringWork) {
+  Render::Profiling::FramePacing pacing;
+  for (int i = 0; i < 2000; ++i) {
+    Render::Profiling::PacingSample sample{10, 5, 5, 0, {}};
+    sample.asset_work = i == 0 ? 3 : (i == 1000 ? 1 : 0);
+    pacing.observe(sample);
+  }
+  const auto windows = pacing.report("high")["ten_second_windows"].toArray();
+  ASSERT_EQ(windows.size(), 2);
+  EXPECT_EQ(windows[0].toObject()["asset_work"].toInt(), 3);
+  EXPECT_EQ(windows[1].toObject()["asset_work"].toInt(), 1);
 }
