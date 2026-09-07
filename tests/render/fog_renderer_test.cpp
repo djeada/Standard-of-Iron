@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <vector>
@@ -104,4 +105,25 @@ TEST(FogRenderer, EmptyGridClearsEverything) {
   fog.update_mask(0, 0, 1.0F, {});
 
   EXPECT_EQ(fog.patch_count(), 0U);
+}
+
+TEST(FogRenderer, UnexploredPatchesAreNeutralHazeNotABlueSlab) {
+  FogRenderer fog;
+  fog.update_mask(28, 28, 1.0F, filled_grid(28, 28, VisibilityState::Unseen));
+  ASSERT_GT(fog.patch_count(), 0U);
+
+  const auto patch = fog.patch_at(0);
+  const float red = patch.color.x();
+  const float green = patch.color.y();
+  const float blue = patch.color.z();
+  const float widest = std::max({red, green, blue}) - std::min({red, green, blue});
+
+  EXPECT_LE(widest, 0.06F)
+      << "the haze over unexplored ground must be a neutral grey; a saturated tint "
+         "paints the map's own terrain a flat colour instead of shading it";
+  EXPECT_LE(blue - red, 0.06F)
+      << "a blue-dominant haze is the dark-blue floor players reported instead of "
+         "the real ground seen through fog";
+  EXPECT_LE(patch.alpha, 0.30F)
+      << "the haze is a veil over readable terrain, not a cover that replaces it";
 }

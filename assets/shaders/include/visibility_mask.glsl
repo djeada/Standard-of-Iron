@@ -11,9 +11,9 @@ const float k_visibility_unseen_cutoff = 0.06;
 
 const float k_visibility_unseen_blend_end = 0.52;
 
-const vec3 k_visibility_unseen_shade = vec3(0.22, 0.23, 0.25);
-const vec3 k_visibility_unseen_lift = vec3(0.030, 0.036, 0.048);
-const float k_visibility_unseen_chroma = 0.70;
+const vec3 k_visibility_unseen_shade = vec3(0.50, 0.50, 0.51);
+const vec3 k_visibility_unseen_lift = vec3(0.012, 0.012, 0.013);
+const float k_visibility_unseen_chroma = 0.55;
 
 struct VisibilityMask {
   float seen_now;
