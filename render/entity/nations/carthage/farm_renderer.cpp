@@ -19,6 +19,7 @@ namespace Render::GL::Carthage {
 namespace {
 
 struct CarthageFarmPalette {
+  QVector3D sandstone_light = BuildingPalette::k_sandstone_light;
   QVector3D sandstone = BuildingPalette::k_sandstone;
   QVector3D sandstone_shade = BuildingPalette::k_sandstone_shade;
   QVector3D sandstone_dark = BuildingPalette::k_sandstone_dark;
@@ -139,18 +140,18 @@ void add_storehouse(BuildingArchetypeDesc& desc, const CarthageFarmPalette& c) {
   }
   desc.add_box(centre + QVector3D(0.0F, roof_y + 0.045F, 0.0F),
                QVector3D(k_half_x + 0.03F, 0.014F, k_half_z + 0.03F),
-               c.thatch,
+               c.lime_wash,
                k_building_state_mask_intact);
-  for (float const sx : {-1.0F, 1.0F}) {
-    desc.add_box(centre + QVector3D(sx * (k_half_x + 0.015F), roof_y + 0.075F, 0.0F),
-                 QVector3D(0.015F, 0.03F, k_half_z + 0.03F),
-                 c.mudbrick,
+  for (const float side : {-1.0F, 1.0F}) {
+    desc.add_box(centre + QVector3D(side * (k_half_x + 0.015F), roof_y + 0.085F, 0.0F),
+                 QVector3D(0.022F, 0.035F, k_half_z + 0.04F),
+                 c.sandstone_light,
+                 k_building_state_mask_intact);
+    desc.add_box(centre + QVector3D(0.0F, roof_y + 0.085F, side * (k_half_z + 0.015F)),
+                 QVector3D(k_half_x + 0.04F, 0.035F, 0.022F),
+                 c.sandstone_light,
                  k_building_state_mask_intact);
   }
-  desc.add_box(centre + QVector3D(0.0F, roof_y + 0.075F, k_half_z + 0.015F),
-               QVector3D(k_half_x + 0.03F, 0.03F, 0.015F),
-               c.mudbrick,
-               k_building_state_mask_intact);
 
   desc.add_cylinder(centre + QVector3D(-k_half_x - 0.10F, 0.09F, 0.06F),
                     centre + QVector3D(-k_half_x + 0.03F, roof_y + 0.09F, 0.06F),

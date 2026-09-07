@@ -7,6 +7,7 @@
 #include <cmath>
 #include <numbers>
 
+#include "building_architecture.h"
 #include "building_palette.h"
 #include "game/core/component.h"
 #include "math/math_utils.h"
@@ -30,9 +31,9 @@ struct TowerPalette {
   QVector3D limestone = BuildingPalette::k_limestone;
   QVector3D limestone_shade = BuildingPalette::k_limestone_shade;
   QVector3D limestone_dark = BuildingPalette::k_limestone_dark;
-  QVector3D sandstone_light{0.82F, 0.75F, 0.62F};
-  QVector3D sandstone_dark{0.70F, 0.62F, 0.50F};
-  QVector3D sandstone_base{0.75F, 0.68F, 0.56F};
+  QVector3D sandstone_light = BuildingPalette::k_limestone_shade;
+  QVector3D sandstone_dark = BuildingPalette::k_limestone_dark;
+  QVector3D sandstone_base = BuildingPalette::k_limestone;
   QVector3D marble = BuildingPalette::k_marble;
   QVector3D terracotta = BuildingPalette::k_terracotta;
   QVector3D terracotta_dark = BuildingPalette::k_terracotta_dark;
@@ -143,7 +144,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
     const float angle = static_cast<float>(index) * 1.57F + 0.785F;
     const float ox = std::sin(angle) * (shaft_radius - 0.04F);
     const float oz = std::cos(angle) * (shaft_radius - 0.04F);
-    const float column_top = destroyed ? 0.0F : shaft_top - 0.15F;
+    const float column_top = destroyed ? 0.82F : shaft_top - 0.15F;
 
     desc.add_cylinder(
         QVector3D(ox, 0.52F, oz), QVector3D(ox, column_top, oz), 0.09F, c.marble);
@@ -222,20 +223,13 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                    c.cedar_dark,
                    BuildingStateMask::Normal);
 
-      constexpr int k_roof_steps = 6;
-      const QVector3D tile = c.terracotta * 0.94F;
-      for (int i = 0; i < k_roof_steps; ++i) {
-        const float t = static_cast<float>(i) / static_cast<float>(k_roof_steps);
-        const float half = 1.14F - (1.14F - 0.26F) * t;
-        desc.add_box(QVector3D(0.0F, roof_y + 0.056F * static_cast<float>(i), 0.0F),
-                     QVector3D(half, 0.032F, half),
-                     (i % 2 == 0) ? tile : tile * 0.93F,
+      add_tiled_roof(desc,
+                     QVector3D(0.0F, roof_y, 0.0F),
+                     1.14F,
+                     1.14F,
+                     0.42F,
+                     false,
                      BuildingStateMask::Normal);
-      }
-      desc.add_box(QVector3D(0.0F, roof_y + 0.34F, 0.0F),
-                   QVector3D(0.14F, 0.04F, 0.14F),
-                   c.terracotta_dark,
-                   BuildingStateMask::Normal);
     }
   }
 

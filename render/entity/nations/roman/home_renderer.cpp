@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 
+#include "building_architecture.h"
 #include "building_palette.h"
 #include "game/core/component.h"
 #include "math/math_utils.h"
@@ -23,20 +24,17 @@ namespace {
 using Render::Geom::clamp_vec_01;
 
 constexpr std::uint8_t k_home_team_slot = 0;
-constexpr std::uint8_t k_home_roof_slot = 1;
 
 struct RomanPalette {
   QVector3D limestone = BuildingPalette::k_limestone;
   QVector3D limestone_shade = BuildingPalette::k_limestone_shade;
   QVector3D limestone_dark = BuildingPalette::k_limestone_dark;
   QVector3D marble = BuildingPalette::k_marble;
-  QVector3D cedar = BuildingPalette::k_cedar;
   QVector3D cedar_dark = BuildingPalette::k_cedar_dark;
   QVector3D terracotta = BuildingPalette::k_terracotta;
   QVector3D terracotta_dark = BuildingPalette::k_terracotta_dark;
   QVector3D blue_accent = BuildingPalette::k_blue_accent;
   QVector3D blue_light = BuildingPalette::k_blue_light;
-  QVector3D gold = BuildingPalette::k_gold;
   QVector3D team{0.8F, 0.9F, 1.0F};
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };
@@ -143,11 +141,9 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
 
   float const col_height = 0.88F;
   float const col_radius = 0.055F;
-  QVector3D const front_cols[6] = {QVector3D(-0.72F, 0.0F, 0.92F),
-                                   QVector3D(-0.43F, 0.0F, 0.92F),
-                                   QVector3D(-0.14F, 0.0F, 0.92F),
-                                   QVector3D(0.14F, 0.0F, 0.92F),
-                                   QVector3D(0.43F, 0.0F, 0.92F),
+  QVector3D const front_cols[4] = {QVector3D(-0.72F, 0.0F, 0.92F),
+                                   QVector3D(-0.38F, 0.0F, 0.92F),
+                                   QVector3D(0.38F, 0.0F, 0.92F),
                                    QVector3D(0.72F, 0.0F, 0.92F)};
 
   for (const QVector3D& col : front_cols) {
@@ -227,111 +223,21 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                c.blue_light,
                k_building_state_mask_intact);
 
-  auto add_rot = [&](const QVector3D& center,
-                     const QVector3D& scale,
-                     const QVector3D& euler,
-                     const QVector3D& color) {
-    desc.add_rotated_box(center, scale, euler, color, k_building_state_mask_intact);
-  };
+  // A low domestic roof and clear doorway distinguish homes from temples.
   float const eave_y = cornice_y + 0.02F;
-  float const roof_rise = 0.55F * height_multiplier;
-  auto add_roof_slab = [&](const QVector3D& center,
-                           const QVector3D& scale,
-                           const QVector3D& euler,
-                           const QVector3D&) {
-    desc.add_palette_rotated_box(
-        center, scale, euler, k_home_roof_slot, k_building_state_mask_intact);
-  };
-  add_gable_roof_z(add_roof_slab,
-                   0.0F,
-                   0.0F,
-                   eave_y,
-                   0.98F,
-                   0.98F,
-                   roof_rise,
-                   0.05F,
-                   c.terracotta,
-                   0.07F);
-
-  desc.add_box(QVector3D(0.0F, eave_y + roof_rise + 0.01F, 0.0F),
-               QVector3D(0.05F, 0.03F, 1.04F),
-               c.terracotta_dark,
-               k_building_state_mask_intact);
-
-  desc.add_box(QVector3D(0.99F, eave_y, 0.0F),
-               QVector3D(0.04F, 0.04F, 1.05F),
-               c.terracotta_dark,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(-0.99F, eave_y, 0.0F),
-               QVector3D(0.04F, 0.04F, 1.05F),
-               c.terracotta_dark,
-               k_building_state_mask_intact);
-
-  desc.add_box(QVector3D(0.0F, eave_y + 0.14F, -0.97F),
-               QVector3D(0.68F, 0.14F, 0.05F),
-               c.limestone_shade,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(0.0F, eave_y + 0.36F, -0.97F),
-               QVector3D(0.42F, 0.10F, 0.05F),
-               c.limestone,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(0.0F, eave_y + 0.50F, -0.97F),
-               QVector3D(0.16F, 0.06F, 0.05F),
-               c.limestone_shade,
-               k_building_state_mask_intact);
-
-  desc.add_box(QVector3D(0.0F, eave_y + 0.18F, 0.93F),
-               QVector3D(0.60F, 0.16F, 0.05F),
-               c.limestone,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(0.0F, eave_y + 0.42F, 0.93F),
-               QVector3D(0.30F, 0.10F, 0.05F),
-               c.limestone_shade,
-               k_building_state_mask_intact);
-
-  if (state != BuildingState::Destroyed) {
-    desc.add_box(QVector3D(0.0F, cornice_y + 0.20F, 0.96F),
-                 QVector3D(0.66F, 0.06F, 0.06F),
-                 c.terracotta_dark,
-                 k_building_state_mask_intact);
-    desc.add_box(QVector3D(0.0F, cornice_y + 0.28F, 0.96F),
-                 QVector3D(0.46F, 0.05F, 0.05F),
-                 c.terracotta,
-                 k_building_state_mask_intact);
-    if (state == BuildingState::Normal) {
-
-      desc.add_box(QVector3D(0.0F, cornice_y + 0.36F, 0.96F),
-                   QVector3D(0.22F, 0.05F, 0.04F),
-                   c.blue_accent,
-                   BuildingStateMask::Normal);
-
-      desc.add_box(QVector3D(-0.62F, cornice_y + 0.24F, 0.96F),
-                   QVector3D(0.05F, 0.07F, 0.05F),
-                   c.gold,
-                   BuildingStateMask::Normal);
-      desc.add_box(QVector3D(0.62F, cornice_y + 0.24F, 0.96F),
-                   QVector3D(0.05F, 0.07F, 0.05F),
-                   c.gold,
-                   BuildingStateMask::Normal);
-    }
-  }
+  add_tiled_roof(desc,
+                 QVector3D(0.0F, eave_y, 0.0F),
+                 1.05F,
+                 1.02F,
+                 0.40F * height_multiplier,
+                 true,
+                 k_building_state_mask_intact,
+                 true);
 
   desc.add_palette_box(QVector3D(0.0F, 0.76F, 0.97F),
                        QVector3D(0.28F, 0.12F, 0.02F),
                        k_home_team_slot,
                        BuildingStateMask::All);
-
-  add_roman_aquila_relief(desc,
-                          QVector3D(0.0F, cornice_y - 0.30F, 1.00F),
-                          BuildingFacadePlane::XY,
-                          0.46F,
-                          c.gold,
-                          c.terracotta_dark);
-  add_roman_roof_standard(desc,
-                          QVector3D(0.0F, eave_y + roof_rise + 0.04F, 0.0F),
-                          0.62F,
-                          c.gold,
-                          c.terracotta_dark);
 
   add_ruin_dressing(desc,
                     RuinDressing{.extent = QVector3D(0.98F, 0.0F, 0.98F),

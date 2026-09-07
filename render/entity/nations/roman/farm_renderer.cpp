@@ -5,6 +5,7 @@
 #include <cmath>
 #include <string>
 
+#include "building_architecture.h"
 #include "building_palette.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_decay.h"
@@ -131,32 +132,14 @@ void add_granary_shed(BuildingArchetypeDesc& desc, const RomanFarmPalette& c) {
                QVector3D(k_half_x + 0.05F, 0.012F, k_half_z + 0.05F),
                c.cedar,
                k_building_state_mask_intact);
-  add_gable_roof_x(
-      [&](const QVector3D& pos,
-          const QVector3D& scale,
-          const QVector3D& euler,
-          const QVector3D& color) {
-        desc.add_rotated_box(pos, scale, euler, color, k_building_state_mask_intact);
-      },
-      centre.x(),
-      centre.z(),
-      eave_y + 0.02F,
-      k_half_x + 0.05F,
-      k_half_z + 0.05F,
-      0.15F,
-      0.016F,
-      c.terracotta,
-      0.02F);
-  desc.add_box(centre + QVector3D(0.0F, eave_y + 0.02F + 0.15F, 0.0F),
-               QVector3D(k_half_x + 0.07F, 0.014F, 0.022F),
-               c.terracotta_dark,
-               k_building_state_mask_intact);
-  for (float const sx : {-1.0F, 1.0F}) {
-    desc.add_box(centre + QVector3D(sx * (k_half_x + 0.02F), eave_y + 0.08F, 0.0F),
-                 QVector3D(0.012F, 0.06F, k_half_z * 0.55F),
-                 c.plaster_shade,
-                 k_building_state_mask_intact);
-  }
+  add_tiled_roof(desc,
+                 centre + QVector3D(0.0F, eave_y + 0.02F, 0.0F),
+                 k_half_x + 0.07F,
+                 k_half_z + 0.07F,
+                 0.15F,
+                 false,
+                 k_building_state_mask_intact,
+                 true);
 
   for (int i = 0; i < 3; ++i) {
     float const x = centre.x() - k_half_x + 0.08F + static_cast<float>(i) * 0.11F;

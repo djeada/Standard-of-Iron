@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 
+#include "building_architecture.h"
 #include "building_palette.h"
 #include "game/core/component.h"
 #include "game/visuals/team_colors.h"
@@ -601,9 +602,8 @@ void add_watchtower(BuildingArchetypeDesc& desc,
   // A compact masonry castrum tower, with an open lookout under a tiled roof.
   // Keep its original footprint so it stays clear of the barracks range.
   const float shaft_half = k_tower_half + 0.04F;
-  const float shaft_top = state == BuildingState::Destroyed
-                              ? k_platform_top + 0.60F
-                              : k_tower_deck_y;
+  const float shaft_top =
+      state == BuildingState::Destroyed ? k_platform_top + 0.60F : k_tower_deck_y;
   desc.add_box(QVector3D(k_tower_x, k_platform_top + 0.06F, k_tower_z),
                QVector3D(shaft_half + 0.04F, 0.06F, shaft_half + 0.04F),
                c.limestone_dark);
@@ -651,43 +651,26 @@ void add_watchtower(BuildingArchetypeDesc& desc,
                  c.plaster,
                  k_mask_intact);
     for (const float other : {-1.0F, 1.0F}) {
-      desc.add_box(
-          QVector3D(k_tower_x + side * k_tower_half,
-                    mid(k_tower_deck_y, k_tower_eave_y),
-                    k_tower_z + other * k_tower_half),
-          QVector3D(0.04F, half(k_tower_deck_y, k_tower_eave_y), 0.04F),
-          c.limestone,
-          k_mask_intact);
+      desc.add_box(QVector3D(k_tower_x + side * k_tower_half,
+                             mid(k_tower_deck_y, k_tower_eave_y),
+                             k_tower_z + other * k_tower_half),
+                   QVector3D(0.04F, half(k_tower_deck_y, k_tower_eave_y), 0.04F),
+                   c.limestone,
+                   k_mask_intact);
     }
   }
-  desc.add_palette_box(
-      QVector3D(k_tower_x, par_y, k_tower_z + par_half + 0.045F),
-      QVector3D(0.12F, 0.10F, 0.010F),
-      k_team_slot,
-      k_mask_normal);
+  desc.add_palette_box(QVector3D(k_tower_x, par_y, k_tower_z + par_half + 0.045F),
+                       QVector3D(0.12F, 0.10F, 0.010F),
+                       k_team_slot,
+                       k_mask_normal);
 
-  const float roof_half = k_tower_half + 0.18F;
-  const float roof_rise = 0.26F;
-  add_gable_roof_x(
-      [&](const QVector3D& center,
-          const QVector3D& scale,
-          const QVector3D& euler,
-          const QVector3D& color) {
-        desc.add_rotated_box(center, scale, euler, color, k_mask_normal);
-      },
-      k_tower_x,
-      k_tower_z,
-      k_tower_eave_y,
-      roof_half,
-      roof_half,
-      roof_rise,
-      0.035F,
-      c.terracotta,
-      0.02F);
-  desc.add_box(QVector3D(k_tower_x, k_tower_eave_y + roof_rise + 0.02F, k_tower_z),
-               QVector3D(roof_half + 0.04F, 0.03F, 0.05F),
-               c.terracotta_dark,
-               k_mask_normal);
+  add_tiled_roof(desc,
+                 QVector3D(k_tower_x, k_tower_eave_y, k_tower_z),
+                 k_tower_half + 0.18F,
+                 k_tower_half + 0.18F,
+                 0.26F,
+                 false,
+                 k_mask_normal);
   desc.add_box(QVector3D(k_tower_x, k_tower_eave_y - 0.01F, k_tower_z),
                QVector3D(k_tower_half + 0.04F, 0.025F, k_tower_half + 0.04F),
                c.cedar_dark,

@@ -7,6 +7,7 @@
 #include <array>
 #include <cstdint>
 
+#include "building_architecture.h"
 #include "building_palette.h"
 #include "game/core/component.h"
 #include "game/visuals/team_colors.h"
@@ -128,48 +129,6 @@ void add_produce_basket(BuildingArchetypeDesc& desc,
   }
 }
 
-void add_stall_canopy(BuildingArchetypeDesc& desc,
-                      const RomanMarketPalette& c,
-                      const QVector3D& center,
-                      float half_x,
-                      float half_z,
-                      float post_h,
-                      const QVector3D& cloth,
-                      const QVector3D& cloth_shade) {
-  constexpr float post_r = 0.016F;
-  float const top = center.y() + post_h;
-
-  for (float const sx : {-1.0F, 1.0F}) {
-    for (float const sz : {-1.0F, 1.0F}) {
-      desc.add_cylinder(
-          QVector3D(center.x() + sx * half_x, center.y(), center.z() + sz * half_z),
-          QVector3D(center.x() + sx * half_x, top, center.z() + sz * half_z),
-          post_r,
-          c.cedar_dark,
-          k_building_state_mask_intact);
-    }
-  }
-
-  desc.add_cylinder(QVector3D(center.x(), top + 0.055F, center.z() - half_z),
-                    QVector3D(center.x(), top + 0.055F, center.z() + half_z),
-                    0.010F,
-                    c.cedar,
-                    k_building_state_mask_intact);
-  for (float const side : {-1.0F, 1.0F}) {
-    desc.add_rotated_box(
-        QVector3D(center.x() + side * half_x * 0.52F, top + 0.028F, center.z()),
-        QVector3D(half_x * 0.60F, 0.011F, half_z * 1.04F),
-        QVector3D(0.0F, 0.0F, side * 15.0F),
-        side < 0.0F ? cloth : cloth_shade,
-        BuildingStateMask::Normal | BuildingStateMask::Damaged);
-  }
-
-  desc.add_box(QVector3D(center.x() - half_x * 0.98F, top + 0.006F, center.z()),
-               QVector3D(0.012F, 0.026F, half_z * 1.02F),
-               c.cloth_gold,
-               BuildingStateMask::Normal | BuildingStateMask::Damaged);
-}
-
 auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
   RomanMarketPalette const c;
   float height_multiplier = 1.0F;
@@ -287,25 +246,28 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                       k_building_state_mask_intact);
   }
 
-  float const awning_y = col_height + 0.20F;
-  for (float const z : {-0.56F, 0.0F, 0.56F}) {
-    add_stall_canopy(desc,
-                     c,
-                     QVector3D(-0.20F, counter_h + 0.06F, z),
-                     0.27F,
-                     0.18F,
-                     0.30F * height_multiplier,
-                     c.cloth_gold,
-                     c.ochre);
-  }
-
-  for (float const z : {-0.86F, 0.86F}) {
-    desc.add_cylinder(QVector3D(-0.83F, awning_y - 0.02F, z),
-                      QVector3D(-0.76F, 0.20F, z),
-                      0.009F,
-                      c.cloth_gold,
+  // One tiled portico gives the market a civic Roman silhouette.
+  // The side tables remain open so their produce can be read from above.
+  const float portico_eave = entab_y + 0.08F;
+  for (const float z : {-0.80F, 0.80F}) {
+    desc.add_box(
+        QVector3D(0.32F, 0.18F, z), QVector3D(0.085F, 0.04F, 0.085F), c.marble);
+    desc.add_cylinder(QVector3D(0.32F, 0.20F, z),
+                      QVector3D(0.32F, portico_eave - 0.05F, z),
+                      0.055F,
+                      c.limestone,
                       k_building_state_mask_intact);
+    desc.add_box(QVector3D(0.32F, portico_eave - 0.04F, z),
+                 QVector3D(0.085F, 0.04F, 0.085F),
+                 c.marble,
+                 k_building_state_mask_intact);
   }
+  desc.add_box(QVector3D(0.32F, portico_eave - 0.025F, 0.0F),
+               QVector3D(0.08F, 0.035F, 0.94F),
+               c.limestone,
+               k_building_state_mask_intact);
+  add_tiled_roof(
+      desc, QVector3D(-0.32F, portico_eave, 0.0F), 1.02F, 0.72F, 0.32F, true);
 
   for (float const z : {-0.74F, 0.0F, 0.74F}) {
     desc.add_box(
@@ -316,14 +278,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                    c.cedar_dark,
                    k_building_state_mask_intact);
     }
-    add_stall_canopy(desc,
-                     c,
-                     QVector3D(0.46F, 0.16F, z),
-                     0.24F,
-                     0.21F,
-                     0.58F * height_multiplier,
-                     c.cloth_red,
-                     c.cloth_red_faded);
   }
 
   for (float const z : {-0.52F, 0.52F}) {
@@ -418,14 +372,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                           0.72F,
                           c.gold,
                           c.terracotta_dark);
-
-  desc.add_cylinder(QVector3D(0.92F, wall_h + 0.20F, -1.02F),
-                    QVector3D(0.92F, wall_h + 0.86F, -1.02F),
-                    0.020F,
-                    c.cedar_dark,
-                    k_building_state_mask_intact);
-  add_roman_roof_standard(
-      desc, QVector3D(0.92F, wall_h + 0.86F, -1.02F), 0.58F, c.gold, c.cloth_red);
 
   add_ruin_dressing(desc,
                     RuinDressing{.extent = QVector3D(1.16F, 0.0F, 1.16F),

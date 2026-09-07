@@ -548,14 +548,6 @@ void add_donjon(BuildingArchetypeDesc& desc,
       c.bronze,
       c.brick_dark,
       k_mask_intact);
-
-  add_punic_horned_crown(desc,
-                         QVector3D(0.0F, top + 0.03F, cz),
-                         0.92F,
-                         c.iron,
-                         c.bronze,
-                         c.ember,
-                         k_mask_normal);
 }
 
 void add_gatehouse(BuildingArchetypeDesc& desc,

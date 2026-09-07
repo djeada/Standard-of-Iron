@@ -60,7 +60,6 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
   const float core_top = 0.5F + core_half_y * 2.0F;
   const float upper_drum_y = destroyed ? 0.0F : (damaged ? 1.86F : 2.16F);
   const float deck_y = destroyed ? 0.0F : (damaged ? 2.20F : 2.52F);
-  const float roof_y = destroyed ? 0.0F : (damaged ? 2.50F : 2.94F);
 
   desc.add_box(
       QVector3D(0.0F, 0.04F, 0.0F), QVector3D(1.24F, 0.04F, 1.24F), c.stone_dark);
@@ -230,23 +229,18 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
       }
     }
 
-    const float canopy_y = roof_y + (damaged ? 0.22F : 0.30F);
-    const float post_half = parapet_half - 0.12F;
-    for (const float px : {-post_half, post_half}) {
-      for (const float pz : {-post_half, post_half}) {
-        desc.add_box(QVector3D(px, (merlon_y + canopy_y) * 0.5F, pz),
-                     QVector3D(0.055F, (canopy_y - merlon_y) * 0.5F, 0.055F),
-                     c.wood_dark,
-                     BuildingStateMask::All);
-      }
+    // Leave an open military terrace, framed by the same sandstone cornice
+    // as the barracks. The parapet already supplies its stepped silhouette.
+    for (const float side : {-1.0F, 1.0F}) {
+      desc.add_box(QVector3D(0.0F, deck_y - 0.02F, side * parapet_half),
+                   QVector3D(parapet_half + 0.08F, 0.055F, 0.065F),
+                   c.stone_light,
+                   k_building_state_mask_intact);
+      desc.add_box(QVector3D(side * parapet_half, deck_y - 0.02F, 0.0F),
+                   QVector3D(0.065F, 0.055F, parapet_half + 0.08F),
+                   c.stone_light,
+                   k_building_state_mask_intact);
     }
-    desc.add_box(QVector3D(0.0F, canopy_y, 0.0F),
-                 QVector3D(damaged ? 0.70F : 0.80F, 0.03F, damaged ? 0.70F : 0.80F),
-                 c.tile_red);
-    desc.add_box(QVector3D(0.0F, canopy_y + 0.05F, 0.0F),
-                 QVector3D(damaged ? 0.48F : 0.56F, 0.03F, damaged ? 0.48F : 0.56F),
-                 c.tile_red,
-                 BuildingStateMask::All);
   }
 
   if (damaged) {
@@ -275,12 +269,6 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
         damaged ? 0.58F : 0.72F,
         c.brick,
         c.stone_dark);
-    add_punic_horned_crown(desc,
-                           QVector3D(0.0F, roof_y + 0.05F, 0.0F),
-                           damaged ? 0.54F : 0.78F,
-                           c.iron,
-                           c.bronze,
-                           c.ember);
   }
 
   add_broken_rim(desc,
