@@ -868,6 +868,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/ProductionPanel.qml
             ui/qml/SaveGamePanel.qml
             ui/qml/LoadGamePanel.qml
+            ui/qml/SaveSlotRow.qml
             ui/qml/SaveProgressOverlay.qml
             ui/qml/ObjectivesPanel.qml
             ui/qml/CommanderMessagePanel.qml

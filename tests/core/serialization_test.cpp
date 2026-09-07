@@ -2244,3 +2244,178 @@ TEST_F(SerializationTest, WildlifeComponentRoundTrip) {
   EXPECT_EQ(restored->focus_id, 42U);
   EXPECT_EQ(restored->rng_state, 987654321U);
 }
+
+namespace {
+
+auto build_populated_world(Engine::Core::World& world) -> std::vector<EntityID> {
+  std::vector<EntityID> ids;
+
+  auto* archer = world.create_entity();
+  ids.push_back(archer->get_id());
+  auto* archer_transform = archer->add_component<TransformComponent>();
+  archer_transform->position = {12.5F, 0.25F, 34.75F};
+  archer_transform->rotation.y = 47.0F;
+  auto* archer_unit = archer->add_component<UnitComponent>();
+  archer_unit->health = 63;
+  archer_unit->max_health = 100;
+  archer_unit->owner_id = 1;
+  archer_unit->spawn_type = Game::Units::SpawnType::Archer;
+  archer_unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  auto* archer_attack = archer->add_component<AttackComponent>();
+  archer_attack->damage = 21;
+  archer_attack->range = 14.5F;
+  archer_attack->current_mode = AttackComponent::CombatMode::Ranged;
+
+  auto* mover = world.create_entity();
+  ids.push_back(mover->get_id());
+  mover->add_component<TransformComponent>()->position = {40.0F, 0.0F, 8.0F};
+  auto* mover_unit = mover->add_component<UnitComponent>();
+  mover_unit->health = 88;
+  mover_unit->max_health = 120;
+  mover_unit->owner_id = 2;
+  mover_unit->spawn_type = Game::Units::SpawnType::Spearman;
+  auto* movement = mover->add_component<MovementComponent>();
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 45.0F);
+  MovementTestAccess::set_target_y(*movement, 12.0F);
+  MovementTestAccess::set_goal_x(*movement, 45.0F);
+  MovementTestAccess::set_goal_y(*movement, 12.0F);
+  MovementTestAccess::set_vx(*movement, 1.5F);
+  MovementTestAccess::set_vz(*movement, -0.75F);
+
+  auto* building = world.create_entity();
+  ids.push_back(building->get_id());
+  building->add_component<TransformComponent>()->position = {70.0F, 0.0F, 70.0F};
+  auto* building_unit = building->add_component<UnitComponent>();
+  building_unit->health = 400;
+  building_unit->max_health = 400;
+  building_unit->owner_id = 2;
+  building_unit->spawn_type = Game::Units::SpawnType::Barracks;
+  auto* building_component = building->add_component<BuildingComponent>();
+  building_component->original_nation_id = Game::Systems::NationID::Carthage;
+
+  return ids;
+}
+
+} // namespace
+
+TEST_F(SerializationTest, AWorldSurvivesFiveRoundTripsUnchanged) {
+  build_populated_world(*world);
+
+  const QJsonDocument first = Serialization::serialize_world(world.get());
+  ASSERT_FALSE(first.isNull());
+
+  QJsonDocument previous = first;
+  for (int round = 1; round <= 5; ++round) {
+    auto restored = std::make_unique<World>();
+    Serialization::deserialize_world(restored.get(), previous);
+
+    const QJsonDocument again = Serialization::serialize_world(restored.get());
+    EXPECT_EQ(again.toJson(QJsonDocument::Compact),
+              first.toJson(QJsonDocument::Compact))
+        << "round " << round << " of the save/load cycle changed the world";
+    previous = again;
+  }
+}
+
+TEST_F(SerializationTest, ReloadingIntoTheSameWorldDoesNotAccumulate) {
+  const std::vector<EntityID> ids = build_populated_world(*world);
+  const QJsonDocument save = Serialization::serialize_world(world.get());
+  const std::size_t expected = world->entity_count();
+  ASSERT_EQ(expected, ids.size());
+
+  auto live = std::make_unique<World>();
+  for (int load = 1; load <= 5; ++load) {
+    live->clear();
+    Serialization::deserialize_world(live.get(), save);
+
+    EXPECT_EQ(live->entity_count(), expected)
+        << "load " << load << " left entities behind from the previous one";
+
+    for (const EntityID id : ids) {
+      auto* entity = live->get_entity(id);
+      ASSERT_NE(entity, nullptr) << "load " << load << " lost entity " << id;
+      EXPECT_NE(entity->get_component<TransformComponent>(), nullptr)
+          << "load " << load << " lost the transform on " << id;
+      EXPECT_NE(entity->get_component<UnitComponent>(), nullptr)
+          << "load " << load << " lost the unit on " << id;
+    }
+
+    EXPECT_EQ(Serialization::serialize_world(live.get()).toJson(QJsonDocument::Compact),
+              save.toJson(QJsonDocument::Compact))
+        << "load " << load << " produced a different world than the save it read";
+  }
+}
+
+TEST_F(SerializationTest, LoadingADifferentSaveReplacesTheWorldEntirely) {
+  build_populated_world(*world);
+  const QJsonDocument first_save = Serialization::serialize_world(world.get());
+  const std::size_t first_count = world->entity_count();
+
+  auto other = std::make_unique<World>();
+  auto* lone = other->create_entity();
+  const EntityID lone_id = lone->get_id();
+  lone->add_component<TransformComponent>()->position = {1.0F, 0.0F, 1.0F};
+  auto* lone_unit = lone->add_component<UnitComponent>();
+  lone_unit->health = 10;
+  lone_unit->max_health = 10;
+  lone_unit->owner_id = 1;
+  lone_unit->spawn_type = Game::Units::SpawnType::Archer;
+  const QJsonDocument second_save = Serialization::serialize_world(other.get());
+
+  auto live = std::make_unique<World>();
+  live->clear();
+  Serialization::deserialize_world(live.get(), first_save);
+  ASSERT_EQ(live->entity_count(), first_count);
+
+  live->clear();
+  Serialization::deserialize_world(live.get(), second_save);
+  EXPECT_EQ(live->entity_count(), 1U)
+      << "the previous save's units survived loading a different one";
+  EXPECT_NE(live->get_entity(lone_id), nullptr);
+}
+
+TEST_F(SerializationTest, AlternatingBetweenTwoSavesKeepsEachMapsProps) {
+  const auto snapshot_of = [this](Game::Map::WorldProp::Type prop_type,
+                                  float scale) -> QJsonDocument {
+    Game::Map::MapDefinition map_def;
+    map_def.grid.width = 6;
+    map_def.grid.height = 6;
+    map_def.grid.tile_size = 1.0F;
+    map_def.world_props.push_back(
+        {.type = prop_type, .x = 2.0F, .z = 2.0F, .scale = scale});
+    Game::Map::TerrainService::instance().initialize(map_def);
+
+    auto source = std::make_unique<World>();
+    auto* entity = source->create_entity();
+    entity->add_component<TransformComponent>()->position = {2.0F, 0.0F, 2.0F};
+    auto* unit = entity->add_component<UnitComponent>();
+    unit->health = 50;
+    unit->max_health = 50;
+    unit->owner_id = 1;
+    unit->spawn_type = Game::Units::SpawnType::Archer;
+    return Serialization::serialize_world(source.get());
+  };
+
+  const QJsonDocument save_a = snapshot_of(Game::Map::WorldProp::Type::DeadTree, 1.4F);
+  const QJsonDocument save_b = snapshot_of(Game::Map::WorldProp::Type::FireCamp, 0.8F);
+
+  auto live = std::make_unique<World>();
+  for (int round = 1; round <= 3; ++round) {
+    live->clear();
+    Serialization::deserialize_world(live.get(), save_a);
+    const auto& after_a = Game::Map::TerrainService::instance().world_props();
+    ASSERT_EQ(after_a.size(), 1U) << "round " << round << ": props accumulated on A";
+    EXPECT_EQ(after_a.front().type, Game::Map::WorldProp::Type::DeadTree)
+        << "round " << round << ": A came back with the other map's prop";
+    EXPECT_FLOAT_EQ(after_a.front().scale, 1.4F);
+
+    live->clear();
+    Serialization::deserialize_world(live.get(), save_b);
+    const auto& after_b = Game::Map::TerrainService::instance().world_props();
+    ASSERT_EQ(after_b.size(), 1U) << "round " << round << ": props accumulated on B";
+    EXPECT_EQ(after_b.front().type, Game::Map::WorldProp::Type::FireCamp)
+        << "round " << round << ": B kept a prop from A";
+    EXPECT_FLOAT_EQ(after_b.front().scale, 0.8F);
+  }
+}

@@ -9,6 +9,7 @@
 #include "../defensive_unit_layout_service.h"
 #include "combat_types.h"
 #include "combat_utils.h"
+#include "engagement_trace.h"
 #include "target_rules.h"
 
 namespace Game::Systems::Combat {
@@ -16,6 +17,9 @@ namespace Game::Systems::Combat {
 namespace {
 
 auto retaliation_should_chase(Engine::Core::Entity* entity) -> bool {
+  if (!pursues_targets(entity) || opens_fire_without_closing(entity)) {
+    return false;
+  }
   if (Game::Systems::DefensiveUnitLayoutService::holds_position(*entity)) {
     return false;
   }
@@ -29,13 +33,8 @@ auto responder_budget(Engine::Core::ThreatAlertComponent::Kind kind) -> int {
              : Constants::k_sight_responders_per_aggressor;
 }
 
-auto answers_alerts(Engine::Core::Entity* ally,
-                    const Engine::Core::UnitComponent& ally_unit) -> bool {
-  if (ally->has_component<Engine::Core::CommanderComponent>()) {
-    return false;
-  }
-  return ally_unit.spawn_type != Game::Units::SpawnType::Builder &&
-         ally_unit.spawn_type != Game::Units::SpawnType::Civilian;
+auto answers_alerts(Engine::Core::Entity* ally) -> bool {
+  return answers_threat_alerts(ally);
 }
 
 auto is_committed_to(Engine::Core::Entity* ally,
@@ -114,7 +113,7 @@ auto alert_nearby_allies(Engine::Core::World* world,
       ++committed;
       continue;
     }
-    if (!answers_alerts(ally, *ally_unit)) {
+    if (!answers_alerts(ally)) {
       continue;
     }
     if (informing_only &&
@@ -151,6 +150,12 @@ auto alert_nearby_allies(Engine::Core::World* world,
       break;
     }
     engage_threat_target(ally, aggressor_id);
+    note_engagement(ally,
+                    {.candidate_id = aggressor_id,
+                     .target_id = aggressor_id,
+                     .acquisition_range = radius,
+                     .outcome = EngagementOutcome::AssistedAlly,
+                     .source = CommandSource::Auto});
     ++alerted;
   }
   return alerted;

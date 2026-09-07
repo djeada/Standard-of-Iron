@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
 #include <QJsonParseError>
 #include <QSaveFile>
 #include <QStandardPaths>
@@ -14,6 +15,7 @@
 #include <chrono>
 #include <exception>
 
+#include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/save/serialization.h"
 #include "save_storage.h"
@@ -22,7 +24,6 @@ namespace Game::Systems {
 
 namespace {
 
-constexpr const char* k_autosave_prefix = "autosave_";
 constexpr int k_min_autosave_retention = 1;
 constexpr int k_max_autosave_retention = 20;
 
@@ -43,7 +44,27 @@ SaveLoadService::SaveLoadService() {
   if (!m_storage->initialize(&init_error)) {
     set_last_error(init_error);
     qWarning() << "SaveLoadService: failed to initialize storage" << init_error;
+    return;
   }
+  m_quarantined_database = m_storage->quarantined_path();
+  if (!m_quarantined_database.isEmpty()) {
+    qWarning() << "SaveLoadService: started a fresh save database; the previous one "
+                  "is at"
+               << m_quarantined_database;
+  }
+}
+
+auto SaveLoadService::storage_healthy() const -> bool {
+  return m_storage != nullptr && m_storage->health_error().isEmpty();
+}
+
+auto SaveLoadService::storage_error() const -> QString {
+  return m_storage == nullptr ? tr("Save storage unavailable")
+                              : m_storage->health_error();
+}
+
+auto SaveLoadService::quarantined_database_path() const -> QString {
+  return m_quarantined_database;
 }
 
 SaveLoadService::~SaveLoadService() {
@@ -300,8 +321,12 @@ void SaveLoadService::run_write_job(SaveStorage& storage, const Job& job) {
 }
 
 auto SaveLoadService::load_game_from_slot(Engine::Core::World& world,
-                                          const QString& slot_name) -> bool {
+                                          const QString& slot_name,
+                                          bool* out_world_discarded) -> bool {
   qInfo() << "Loading game from slot:" << slot_name;
+  if (out_world_discarded != nullptr) {
+    *out_world_discarded = false;
+  }
 
   if (!m_storage) {
     set_last_error(tr("Save storage unavailable"));
@@ -337,8 +362,48 @@ auto SaveLoadService::load_game_from_slot(Engine::Core::World& world,
       return false;
     }
 
+    if (!doc.object().value(QStringLiteral("entities")).isArray()) {
+      const QString message =
+          tr("Save slot '%1' does not contain a battlefield and was not loaded.")
+              .arg(slot_name);
+      set_last_error(message);
+      qWarning() << message;
+      return false;
+    }
+
+    if (out_world_discarded != nullptr) {
+      *out_world_discarded = true;
+    }
     world.clear();
-    Engine::Core::Serialization::deserialize_world(&world, doc);
+    try {
+      Engine::Core::Serialization::deserialize_world(&world, doc);
+    } catch (const std::exception& exception) {
+      const QString message = tr("'%1' could not be restored (%2). The battle that "
+                                 "was running could not be kept.")
+                                  .arg(slot_name, QString::fromUtf8(exception.what()));
+      set_last_error(message);
+      qWarning() << message;
+      world.clear();
+      return false;
+    }
+
+    int restored_units = 0;
+    for (auto&& [id, unit] : world.view<Engine::Core::UnitComponent>()) {
+      (void)id;
+      (void)unit;
+      ++restored_units;
+    }
+
+    if (restored_units == 0) {
+      const QString message =
+          tr("'%1' restored no units at all, so there is no battle to return "
+             "to. The save is unusable.")
+              .arg(slot_name);
+      set_last_error(message);
+      qWarning() << message;
+      world.clear();
+      return false;
+    }
 
     m_last_record = record;
     set_last_error({});
@@ -402,25 +467,38 @@ auto SaveLoadService::delete_save_slot(const QString& slot_name) -> bool {
 auto SaveLoadService::next_autosave_slot(int retention) const -> QString {
   const int slot_count = clamp_retention(retention);
   if (!m_storage) {
-    return QStringLiteral("%1%2").arg(QString::fromLatin1(k_autosave_prefix)).arg(1);
+    return QStringLiteral("%1%2")
+        .arg(QString::fromLatin1(Save::k_autosave_slot_prefix))
+        .arg(1);
   }
 
   const QStringList existing = m_storage->slot_names_by_kind(Save::SlotKind::Autosave);
   for (int index = 1; index <= slot_count; ++index) {
     const QString candidate =
-        QStringLiteral("%1%2").arg(QString::fromLatin1(k_autosave_prefix)).arg(index);
-    if (!existing.contains(candidate)) {
-      return candidate;
+        QStringLiteral("%1%2")
+            .arg(QString::fromLatin1(Save::k_autosave_slot_prefix))
+            .arg(index);
+    if (existing.contains(candidate)) {
+      continue;
     }
+
+    Save::SlotKind occupant = Save::SlotKind::Autosave;
+    if (m_storage->slot_kind(candidate, occupant) &&
+        occupant != Save::SlotKind::Autosave) {
+      continue;
+    }
+    return candidate;
   }
 
   for (const QString& candidate : existing) {
-    if (candidate.startsWith(QString::fromLatin1(k_autosave_prefix))) {
+    if (candidate.startsWith(QString::fromLatin1(Save::k_autosave_slot_prefix))) {
       return candidate;
     }
   }
 
-  return QStringLiteral("%1%2").arg(QString::fromLatin1(k_autosave_prefix)).arg(1);
+  return QStringLiteral("%1%2")
+      .arg(QString::fromLatin1(Save::k_autosave_slot_prefix))
+      .arg(1);
 }
 
 auto SaveLoadService::prune_autosaves(int retention) -> int {
@@ -511,13 +589,26 @@ auto SaveLoadService::import_package(const QString& file_path,
     return false;
   }
 
+  if (record.snapshot_version != Save::k_snapshot_version) {
+    if (out_error != nullptr) {
+      *out_error = tr("'%1' was saved by a different version of Standard of Iron "
+                      "(snapshot %2, this build reads %3) and cannot be imported.")
+                       .arg(QFileInfo(file_path).fileName())
+                       .arg(record.snapshot_version)
+                       .arg(Save::k_snapshot_version);
+    }
+    return false;
+  }
+
   QString base = Save::sanitize_file_stem(record.slot_name);
   if (base.isEmpty()) {
     base = Save::sanitize_file_stem(QFileInfo(file_path).completeBaseName());
   }
-  if (base.isEmpty()) {
-    base = QStringLiteral("imported_save");
+  if (base.isEmpty() || Save::is_reserved_slot_name(base)) {
+    base = base.isEmpty() ? QStringLiteral("imported_save")
+                          : QStringLiteral("imported_%1").arg(base);
   }
+  base.truncate(Save::k_max_slot_name_length);
 
   QString slot_name = base;
   int suffix = 2;

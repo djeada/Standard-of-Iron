@@ -453,7 +453,7 @@ TEST_F(CampaignProgressionTest, TheCompletionTimestampIsNotRewrittenByAReplay) {
       << "replaying a mission moved the date the campaign was won";
 }
 
-TEST_F(CampaignProgressionTest, AnEmptiedCampaignLeavesNoProgressBehind) {
+TEST_F(CampaignProgressionTest, AnEmptiedCampaignKeepsOnlyWhatWasFinished) {
   ASSERT_TRUE(complete(mission_at(0)).has_value());
 
   Game::Campaign::CampaignDefinition emptied;
@@ -462,7 +462,13 @@ TEST_F(CampaignProgressionTest, AnEmptiedCampaignLeavesNoProgressBehind) {
   QString error;
   ASSERT_TRUE(storage->ensure_campaign_missions_in_db(emptied, &error))
       << error.toStdString();
-  EXPECT_TRUE(storage->get_campaign_mission_progress(campaign.id).isEmpty());
+
+  const QVariantList remaining = storage->get_campaign_mission_progress(campaign.id);
+  ASSERT_EQ(remaining.size(), 1)
+      << "only the finished mission should have survived the prune";
+  const QVariantMap row = remaining.front().toMap();
+  EXPECT_EQ(row.value(QStringLiteral("mission_id")).toString(), mission_at(0));
+  EXPECT_TRUE(row.value(QStringLiteral("completed")).toBool());
 }
 
 } // namespace

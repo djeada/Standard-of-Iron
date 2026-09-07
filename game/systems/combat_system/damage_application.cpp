@@ -28,6 +28,7 @@
 #include "animation/death_pose_manifest.h"
 #include "combat_types.h"
 #include "combat_utils.h"
+#include "engagement_trace.h"
 #include "structure_combat.h"
 #include "threat_alert.h"
 
@@ -602,6 +603,12 @@ void assign_retaliation_target_if_needed(Engine::Core::World* world,
   if (!has_active_engagement(world, target, unit) &&
       may_engage(target, attacker, EngagementTrigger::Retaliation)) {
     engage_threat_target(target, attacker->get_id());
+    note_engagement(target,
+                    {.candidate_id = attacker->get_id(),
+                     .target_id = attacker->get_id(),
+                     .acquisition_range = 0.0F,
+                     .outcome = EngagementOutcome::Retaliated,
+                     .source = CommandSource::Auto});
   }
 
   note_threat(

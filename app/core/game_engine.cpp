@@ -2513,7 +2513,9 @@ void GameEngine::begin_save(const QString& slot_name,
   }
 
   if (m_active_save_job != 0 || pending_save_capture_queued()) {
-    set_error(tr("A save is already in progress"));
+
+    emit m_save_slots_view_model->save_completed(
+        slot_name, false, tr("A save is already in progress."));
     return;
   }
 
@@ -2567,8 +2569,13 @@ auto GameEngine::capture_save_to_slot(const QString& slot_name,
     level_snapshot.weather_runtime = m_rain_manager->snapshot();
   }
   std::optional<Game::Mission::MissionContext> mission_context;
+  QString mission_title;
   if (m_campaign_manager) {
     mission_context = m_campaign_manager->current_mission_context();
+    if (const auto& definition = m_campaign_manager->current_mission_definition();
+        definition.has_value()) {
+      mission_title = definition->title;
+    }
   }
 
   return m_save_load_coordinator->begin_save_to_slot(
@@ -2581,6 +2588,7 @@ auto GameEngine::capture_save_to_slot(const QString& slot_name,
        .title = slot_name,
        .map_name = m_level.map_name,
        .mission_context = std::move(mission_context),
+       .mission_title = mission_title,
        .kind = kind,
        .play_time_seconds = m_mission_waves.elapsed(),
        .autosave_retention = autosave_retention,
@@ -2646,6 +2654,33 @@ void GameEngine::cancel_active_save() {
       m_save_progress_slot);
 }
 
+void GameEngine::end_match_after_failed_load() {
+
+  if (m_victory_service) {
+    m_victory_service->reset();
+  }
+  if (m_world) {
+    m_world->clear();
+  }
+  m_entity_cache.reset();
+  m_level = Game::Systems::LevelSnapshot{};
+  m_runtime.initialized = false;
+  if (!m_runtime.victory_state.isEmpty()) {
+    m_runtime.victory_state.clear();
+    m_runtime.defeat_reason.clear();
+
+    emit victory_state_changed();
+  }
+  reset_mission_runtime_state();
+  if (m_campaign_manager) {
+    m_campaign_manager->restore_mission_context(Game::Mission::MissionContext{});
+  }
+  m_autosave_timer.stop();
+  emit troop_count_changed();
+  emit selected_units_changed();
+  emit match_ended();
+}
+
 void GameEngine::load_game_from_slot(const QString& slot_name) {
   if ((m_save_load_service == nullptr) || !m_world) {
     set_error(tr("Load: not initialized"));
@@ -2704,6 +2739,10 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
                [this](const QJsonObject& message_state) {
                  restore_commander_message_state(message_state);
                }});
+  if (effects.success && !effects.warning.isEmpty()) {
+
+    emit m_save_slots_view_model->save_completed(slot_name, false, effects.warning);
+  }
   if (!effects.success) {
     set_error(effects.error);
     m_runtime.loading = false;
@@ -2712,6 +2751,10 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
     m_finalize_progress_after_overlay = false;
     m_show_objectives_after_loading = false;
     emit is_loading_changed();
+    if (effects.world_discarded) {
+
+      end_match_after_failed_load();
+    }
     return;
   }
   if (m_environment_clock) {

@@ -57,6 +57,8 @@ public:
     m_current_mission_context = context;
   }
 
+  void restore_mission_context(const Game::Mission::MissionContext& context);
+
   void set_save_service(Game::Systems::SaveLoadService* service) {
     m_save_service = service;
   }

@@ -125,7 +125,7 @@ TEST_F(CommandControllerTest, AttackClickAppliesOnlyToEligibleUnits) {
 
   QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
   auto const result = command_controller->on_attack_click(
-      enemy_screen.x(), enemy_screen.y(), viewport_width, viewport_height, &camera);
+      enemy_screen.x(), enemy_screen.y(), viewport_width, viewport_height, &camera, 1);
 
   EXPECT_TRUE(result.input_consumed);
   auto* archer_target = archer->get_component<Engine::Core::AttackTargetComponent>();
@@ -274,7 +274,7 @@ TEST_F(CommandControllerTest, LeftClickAttackModeReportsTheClickedTarget) {
 
   QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
   auto const result = command_controller->on_attack_click(
-      enemy_screen.x(), enemy_screen.y(), viewport_width, viewport_height, &camera);
+      enemy_screen.x(), enemy_screen.y(), viewport_width, viewport_height, &camera, 1);
 
   EXPECT_TRUE(result.input_consumed);
   EXPECT_TRUE(result.reset_cursor_to_normal);
@@ -289,27 +289,33 @@ TEST_F(CommandControllerTest, LeftClickAttackModeReportsTheClickedTarget) {
   EXPECT_EQ(seen.front().target, enemy->get_id());
 }
 
-TEST_F(CommandControllerTest, AttackClickOnEmptyGroundIsRejectedWithAReason) {
+TEST_F(CommandControllerTest, AttackClickOnEmptyGroundIssuesAnAttackMove) {
   auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
   ASSERT_NE(archer, nullptr);
   selection_system->select_unit(archer->get_id());
   auto& seen = capture_feedback();
 
   QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
-  auto const result = command_controller->on_attack_click(
-      ground_screen.x(), ground_screen.y(), viewport_width, viewport_height, &camera);
+  auto const result = command_controller->on_attack_click(ground_screen.x(),
+                                                          ground_screen.y(),
+                                                          viewport_width,
+                                                          viewport_height,
+                                                          &camera,
+                                                          1);
 
-  EXPECT_FALSE(result.input_consumed);
+  EXPECT_TRUE(result.input_consumed);
   EXPECT_TRUE(result.reset_cursor_to_normal);
-  EXPECT_TRUE(result.order.rejected());
-  EXPECT_EQ(result.order.kind, App::Core::OrderKind::Attack);
-  EXPECT_EQ(result.order.target, 0U);
+  EXPECT_TRUE(result.order.accepted());
   EXPECT_TRUE(result.order.has_destination);
-  EXPECT_FALSE(result.order.reason.isEmpty());
   EXPECT_EQ(archer->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
 
+  auto* intent = archer->get_component<Engine::Core::PlayerOrderIntentComponent>();
+  ASSERT_NE(intent, nullptr);
+  EXPECT_EQ(intent->kind, Engine::Core::PlayerOrderIntentKind::AttackMove);
+  EXPECT_FALSE(intent->suppress_opportunistic_combat);
+
   ASSERT_EQ(seen.size(), 1U);
-  EXPECT_TRUE(seen.front().rejected());
+  EXPECT_TRUE(seen.front().accepted());
 }
 
 TEST_F(CommandControllerTest, AttackClickOnAFriendlyUnitIsRejectedWithAReason) {
@@ -325,7 +331,8 @@ TEST_F(CommandControllerTest, AttackClickOnAFriendlyUnitIsRejectedWithAReason) {
                                                           friendly_screen.y(),
                                                           viewport_width,
                                                           viewport_height,
-                                                          &camera);
+                                                          &camera,
+                                                          1);
 
   EXPECT_FALSE(result.input_consumed);
   EXPECT_TRUE(result.order.rejected());
@@ -347,7 +354,7 @@ TEST_F(CommandControllerTest, AttackClickWithNonCombatSelectionExplainsWhy) {
 
   QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
   auto const result = command_controller->on_attack_click(
-      enemy_screen.x(), enemy_screen.y(), viewport_width, viewport_height, &camera);
+      enemy_screen.x(), enemy_screen.y(), viewport_width, viewport_height, &camera, 1);
 
   EXPECT_TRUE(result.order.rejected());
   EXPECT_EQ(result.order.target, enemy->get_id());
@@ -364,7 +371,7 @@ TEST_F(CommandControllerTest, AttackClickWithEmptySelectionIsRejectedNotSilent) 
 
   QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
   auto const result = command_controller->on_attack_click(
-      enemy_screen.x(), enemy_screen.y(), viewport_width, viewport_height, &camera);
+      enemy_screen.x(), enemy_screen.y(), viewport_width, viewport_height, &camera, 1);
 
   EXPECT_FALSE(result.input_consumed);
   EXPECT_TRUE(result.reset_cursor_to_normal);
@@ -440,7 +447,7 @@ TEST_F(CommandControllerTest, AttackClickOnAGrazingSheepStillHunts) {
 
   QPointF const sheep_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
   auto const result = command_controller->on_attack_click(
-      sheep_screen.x(), sheep_screen.y(), viewport_width, viewport_height, &camera);
+      sheep_screen.x(), sheep_screen.y(), viewport_width, viewport_height, &camera, 1);
 
   EXPECT_TRUE(result.order.accepted()) << result.order.reason.toStdString();
   auto* target = archer->get_component<Engine::Core::AttackTargetComponent>();

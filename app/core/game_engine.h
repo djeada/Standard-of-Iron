@@ -538,6 +538,8 @@ private:
   void save_game_to_slot(const QString& slot_name);
   void quicksave();
   void autosave();
+
+  void end_match_after_failed_load();
   void cancel_active_save();
   void load_game_from_slot(const QString& slot_name);
   void restart_autosave_timer();
@@ -729,4 +731,6 @@ signals:
   void player_defeated(QString text, bool ally, int owner_id);
   void order_feedback(QString kind, bool accepted, QString message, QString failure);
   void autosave_settings_changed();
+
+  void match_ended();
 };

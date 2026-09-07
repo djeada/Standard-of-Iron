@@ -173,8 +173,15 @@ TEST(SnapshotContractTest, SessionStoresAreAllAccountedFor) {
   }
 }
 
-TEST(SnapshotContractTest, ThereIsOnlyOneVersionNumber) {
-  EXPECT_EQ(Game::Systems::Save::k_schema_version, Game::Save::k_snapshot_version);
+TEST(SnapshotContractTest, TheSaveLayerRecordsTheContractsSnapshotVersion) {
+  EXPECT_EQ(Game::Systems::Save::k_snapshot_version, Game::Save::k_snapshot_version);
+}
+
+TEST(SnapshotContractTest, TheDatabaseSchemaVersionIsNotTheSnapshotVersion) {
+  Game::Systems::Save::Record record;
+  EXPECT_EQ(record.snapshot_version, Game::Save::k_snapshot_version)
+      << "a new save must be stamped with the snapshot version it was written by";
+  EXPECT_GT(Game::Systems::Save::k_database_schema_version, 0);
 }
 
 TEST(SnapshotContractTest, EveryEntryExplainsItself) {

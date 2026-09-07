@@ -47,27 +47,76 @@ auto SaveSlotsViewModel::has_save_slot(const QString& slot_name) const -> bool {
 }
 
 auto SaveSlotsViewModel::verify_save_slot(const QString& slot_name) -> bool {
+  return check_save_slot(slot_name).value(QStringLiteral("ok"), false).toBool();
+}
+
+auto SaveSlotsViewModel::check_save_slot(const QString& slot_name) -> QVariantMap {
+  QVariantMap result;
   if (m_service == nullptr) {
-    return false;
+    result.insert(QStringLiteral("ok"), false);
+    result.insert(QStringLiteral("reason"), tr("Save storage unavailable"));
+    return result;
   }
 
   QString error;
-  if (!m_service->verify_save_slot(slot_name, &error)) {
-    emit error_occurred(error);
-    return false;
-  }
-  return true;
+  const bool ok = m_service->verify_save_slot(slot_name, &error);
+  result.insert(QStringLiteral("ok"), ok);
+  result.insert(QStringLiteral("reason"), ok ? QString() : error);
+  return result;
 }
 
-auto SaveSlotsViewModel::export_save_slot(const QString& slot_name) -> QString {
+auto SaveSlotsViewModel::slot_name_rejection(const QString& slot_name) const
+    -> QString {
+  return Game::Systems::Save::slot_name_rejection(slot_name);
+}
+
+auto SaveSlotsViewModel::most_recent_loadable_slot() const -> QVariantMap {
   if (m_service == nullptr) {
     return {};
   }
 
-  const QString file_stem = Game::Systems::Save::sanitize_file_stem(slot_name);
+  for (const QVariant& entry : m_service->get_save_slots()) {
+    const QVariantMap slot = entry.toMap();
+    if (slot.value(QStringLiteral("loadable"), true).toBool()) {
+      return slot;
+    }
+  }
+  return {};
+}
+
+auto SaveSlotsViewModel::storage_healthy() const -> bool {
+  return m_service != nullptr && m_service->storage_healthy();
+}
+
+auto SaveSlotsViewModel::storage_error() const -> QString {
+  return m_service == nullptr ? tr("Save storage unavailable")
+                              : m_service->storage_error();
+}
+
+auto SaveSlotsViewModel::recovered_database_path() const -> QString {
+  return m_service == nullptr ? QString() : m_service->quarantined_database_path();
+}
+
+auto SaveSlotsViewModel::export_save_slot(const QString& slot_name) -> QVariantMap {
+  QVariantMap result;
+  result.insert(QStringLiteral("ok"), false);
+  result.insert(QStringLiteral("path"), QString());
+
+  if (m_service == nullptr) {
+    result.insert(QStringLiteral("reason"), tr("Save storage unavailable"));
+    return result;
+  }
+
+  QString file_stem = Game::Systems::Save::sanitize_file_stem(slot_name);
   if (file_stem.isEmpty()) {
-    emit error_occurred(tr("Cannot export a save with an empty name"));
-    return {};
+    result.insert(QStringLiteral("reason"),
+                  tr("Cannot export a save with an empty name"));
+    return result;
+  }
+
+  if (file_stem != slot_name) {
+    file_stem += QStringLiteral("_") +
+                 Game::Systems::Save::checksum_of(slot_name.toUtf8()).left(6);
   }
 
   const QString file_path =
@@ -78,10 +127,13 @@ auto SaveSlotsViewModel::export_save_slot(const QString& slot_name) -> QString {
 
   QString error;
   if (!m_service->export_slot(slot_name, file_path, &error)) {
-    emit error_occurred(error);
-    return {};
+    result.insert(QStringLiteral("reason"), error);
+    return result;
   }
-  return file_path;
+
+  result.insert(QStringLiteral("ok"), true);
+  result.insert(QStringLiteral("path"), file_path);
+  return result;
 }
 
 auto SaveSlotsViewModel::list_exported_saves() const -> QVariantList {
@@ -99,18 +151,26 @@ auto SaveSlotsViewModel::list_exported_saves() const -> QVariantList {
   return result;
 }
 
-auto SaveSlotsViewModel::import_save_file(const QString& file_path) -> QString {
+auto SaveSlotsViewModel::import_save_file(const QString& file_path) -> QVariantMap {
+  QVariantMap result;
+  result.insert(QStringLiteral("ok"), false);
+  result.insert(QStringLiteral("slot_name"), QString());
+
   if (m_service == nullptr) {
-    return {};
+    result.insert(QStringLiteral("reason"), tr("Save storage unavailable"));
+    return result;
   }
 
   QString slot_name;
   QString error;
   if (!m_service->import_package(file_path, slot_name, &error)) {
-    emit error_occurred(error);
-    return {};
+    result.insert(QStringLiteral("reason"), error);
+    return result;
   }
-  return slot_name;
+
+  result.insert(QStringLiteral("ok"), true);
+  result.insert(QStringLiteral("slot_name"), slot_name);
+  return result;
 }
 
 auto SaveSlotsViewModel::autosave_slot_count() const -> int {

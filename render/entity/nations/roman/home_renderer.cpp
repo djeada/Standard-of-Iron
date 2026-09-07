@@ -223,7 +223,6 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                c.blue_light,
                k_building_state_mask_intact);
 
-  // A low domestic roof and clear doorway distinguish homes from temples.
   float const eave_y = cornice_y + 0.02F;
   add_tiled_roof(desc,
                  QVector3D(0.0F, eave_y, 0.0F),

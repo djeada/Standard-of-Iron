@@ -259,6 +259,8 @@ add_executable(
     systems/squad_service_test.cpp
     systems/wall_system_test.cpp
     headless/mission_wave_assault_test.cpp
+    headless/sepulcher_guard_response_test.cpp
+    headless/auto_engagement_response_test.cpp
     headless/ai_skirmish_opening_test.cpp
     headless/ai_duel_match_test.cpp
     headless/commander_voice_skirmish_test.cpp

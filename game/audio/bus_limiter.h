@@ -47,7 +47,7 @@ public:
   }
 
   void set_listening_preset(ListeningPreset preset) {
-    m_ceiling = GAMEPLAY_CEILING; // -2 dBFS leaves reconstruction headroom.
+    m_ceiling = GAMEPLAY_CEILING;
     switch (preset) {
     case ListeningPreset::Headphones:
       m_threshold = m_ceiling;
@@ -102,7 +102,7 @@ public:
       for (std::size_t channel = 0; channel < channels; ++channel) {
         delayed_peak = std::max(delayed_peak, std::abs(m_delay[slot + channel]));
       }
-      // Link the safety gain too: independently clamping L/R shifts the image.
+
       const float output_gain = delayed_peak > m_ceiling
                                     ? std::min(m_gain, m_ceiling / delayed_peak)
                                     : m_gain;

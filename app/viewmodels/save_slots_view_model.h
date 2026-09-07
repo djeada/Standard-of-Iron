@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QString>
 #include <QVariantList>
+#include <QVariantMap>
 
 namespace Game::Systems {
 class SaveLoadService;
@@ -24,6 +25,11 @@ class SaveSlotsViewModel : public QObject {
   Q_PROPERTY(
       QString save_progress_slot READ save_progress_slot NOTIFY save_progress_changed)
 
+  Q_PROPERTY(bool storage_healthy READ storage_healthy NOTIFY save_slots_changed)
+  Q_PROPERTY(QString storage_error READ storage_error NOTIFY save_slots_changed)
+  Q_PROPERTY(QString recovered_database_path READ recovered_database_path NOTIFY
+                 save_slots_changed)
+
 public:
   explicit SaveSlotsViewModel(Game::Systems::SaveLoadService* service,
                               QObject* parent = nullptr);
@@ -33,9 +39,16 @@ public:
   Q_INVOKABLE bool delete_save_slot(const QString& slot_name);
   Q_INVOKABLE [[nodiscard]] bool has_save_slot(const QString& slot_name) const;
   Q_INVOKABLE [[nodiscard]] bool verify_save_slot(const QString& slot_name);
-  Q_INVOKABLE [[nodiscard]] QString export_save_slot(const QString& slot_name);
+
+  Q_INVOKABLE [[nodiscard]] QVariantMap check_save_slot(const QString& slot_name);
+
+  Q_INVOKABLE [[nodiscard]] QString slot_name_rejection(const QString& slot_name) const;
+
+  Q_INVOKABLE [[nodiscard]] QVariantMap most_recent_loadable_slot() const;
+
+  Q_INVOKABLE [[nodiscard]] QVariantMap export_save_slot(const QString& slot_name);
   Q_INVOKABLE [[nodiscard]] QVariantList list_exported_saves() const;
-  Q_INVOKABLE [[nodiscard]] QString import_save_file(const QString& file_path);
+  Q_INVOKABLE [[nodiscard]] QVariantMap import_save_file(const QString& file_path);
 
   Q_INVOKABLE void save_to_slot(const QString& slot_name);
   Q_INVOKABLE void quicksave();
@@ -51,6 +64,10 @@ public:
                          int percent,
                          const QString& stage,
                          const QString& slot);
+
+  [[nodiscard]] bool storage_healthy() const;
+  [[nodiscard]] QString storage_error() const;
+  [[nodiscard]] QString recovered_database_path() const;
 
   [[nodiscard]] int autosave_slot_count() const;
   void set_autosave_slot_count(int count);
