@@ -41,6 +41,9 @@ public:
   void advance_reveal(float dt_seconds);
 
   [[nodiscard]] auto patch_count() const -> std::size_t { return m_instances.size(); }
+  [[nodiscard]] auto patch_at(std::size_t index) const -> FogInstanceData {
+    return index < m_instances.size() ? m_instances[index] : FogInstanceData{};
+  }
   [[nodiscard]] auto fog_amount_at(int grid_x, int grid_z) const -> float;
   [[nodiscard]] auto is_settled() const -> bool { return m_settled; }
 

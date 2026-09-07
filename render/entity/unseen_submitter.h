@@ -6,9 +6,9 @@
 
 namespace Render::GL {
 
-inline constexpr float k_unseen_chroma = 0.70F;
-inline constexpr QVector3D k_unseen_shade{0.32F, 0.33F, 0.36F};
-inline constexpr QVector3D k_unseen_lift{0.040F, 0.046F, 0.058F};
+inline constexpr float k_unseen_chroma = 0.55F;
+inline constexpr QVector3D k_unseen_shade{0.50F, 0.50F, 0.51F};
+inline constexpr QVector3D k_unseen_lift{0.012F, 0.012F, 0.013F};
 
 [[nodiscard]] inline auto unseen_surface_color(const QVector3D& color) -> QVector3D {
   const float luminance =
