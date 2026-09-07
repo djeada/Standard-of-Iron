@@ -484,6 +484,8 @@ private:
                                bool set_skirmish_context);
   void apply_skirmish_commander_setup(const QVariantList& player_configs);
   void apply_mission_setup();
+  void prepare_mission_ai_state();
+  [[nodiscard]] auto mission_startup_pending_components() const -> QStringList;
   void configure_mission_victory_conditions();
   void configure_rain_system();
   void reset_preload_interaction_state();

@@ -67,6 +67,15 @@ Burned-in arena text goes through `Arena::Typography` (`number`,
 afterwards by `promo-edit.py`, which owns its own sizing and resolves the same
 file by path.
 
+The reel cutter composites text at twice the output resolution and downsamples
+once with Lanczos filtering. Unhinted outline rendering preserves the display
+face's wedge serifs; a thin dark outline and close shadow separate the letters
+from footage without filling their counters. Colour stays at 4:4:4 during text
+compositing, before the final video encode. This costs extra encoding time;
+`--text-scale 1` selects faster drafts, while `--text-scale 3` provides a higher
+sampling option. These script changes apply when re-cutting existing clips and
+do not require rebuilding the game or regenerating the font.
+
 ## Testing coverage: fallback or no fallback
 
 Two different questions, two different instruments, and using the wrong one
@@ -102,6 +111,14 @@ loses the change the next time anyone regenerates.
 
 The `.ttf` is committed anyway, because the game loads it at runtime and a
 contributor should not need a font toolchain to run the game.
+
+Version 1.200 uses longer tapered wedge serifs, a spear-shaped A with a low
+crossbar, a deeper central M and a swept blade foot on R. These silhouettes
+carry the ancient and dark-fantasy character while keeping the letter interiors
+open. S is one continuous curved ribbon; U's bowl meets its unequal stem
+weights without a ledge. A, E, K and R lose the small decorative notches that
+read as damaged edges at caption sizes. Accented composites and Cyrillic
+aliases inherit their base outlines automatically.
 
 ### How the letters are built
 

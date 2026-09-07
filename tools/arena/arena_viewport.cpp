@@ -3177,43 +3177,89 @@ float fbm(vec2 p) {
     return sum;
 }
 
+// Separate sheets give the fire depth: broad rolling flames behind sharper,
+// faster tongues. Positive screen Y is up, so noise travels toward negative Y.
+float flame_sheet(vec2 p, float time, float seed) {
+    vec2 flow = p * vec2(5.2, 2.4) + vec2(seed, -time);
+    vec2 curl = vec2(fbm(flow * 0.65 + 13.7),
+                     fbm(flow * 0.65 + 39.1)) - 0.47;
+    flow += curl * vec2(2.3, 1.1);
+    float billow = fbm(flow);
+    float lace = value_noise(flow * vec2(2.8, 1.7) + curl * 2.0);
+    float fuel = value_noise(vec2(p.x * 3.6 + seed, time * 0.23));
+    float envelope = 0.76 - p.y + (fuel - 0.5) * 0.24;
+    return max(envelope + (billow - 0.48) * 1.2
+               + (lace - 0.5) * 0.12, 0.0);
+}
+
+vec3 fire_colour(float heat) {
+    vec3 colour = mix(vec3(0.65, 0.018, 0.001), vec3(2.8, 0.38, 0.015),
+                      smoothstep(0.04, 0.28, heat));
+    colour = mix(colour, vec3(4.5, 1.8, 0.28), smoothstep(0.24, 0.55, heat));
+    colour = mix(colour, vec3(5.5, 4.2, 2.1), smoothstep(0.52, 0.85, heat));
+    return colour * smoothstep(0.0, 0.12, heat);
+}
+
 void main() {
     vec2 uv = v_uv;
     float aspect = u_resolution.x / max(u_resolution.y, 1.0);
     vec2 p = vec2((uv.x - 0.5) * aspect, uv.y);
+    float intensity = max(u_intensity, 0.0);
+    float sides = smoothstep(0.0, 0.22, uv.x)
+                * (1.0 - smoothstep(0.78, 1.0, uv.x));
+    float edge_fuel = mix(0.55, 1.0, sides);
+    float rear = flame_sheet(p, u_time * 0.72, 7.3) * edge_fuel;
+    float front = flame_sheet(p * vec2(1.35, 1.15), u_time * 1.08, 31.8)
+                * edge_fuel;
 
-    // Tall cells plus an upward scroll: fire rises far faster than it drifts.
-    vec2 rise = vec2(0.0, -u_time * 0.55);
-    vec2 warp = vec2(fbm(p * vec2(2.2, 1.1) + rise * 0.6),
-                     fbm(p * vec2(2.2, 1.1) + rise * 0.6 + 17.3));
-    float body = fbm(p * vec2(3.1, 1.35) + rise + (warp - 0.5) * 0.85);
+    // Warm light scatters into rolling smoke, with dark soot between tongues.
+    vec2 smoke_flow = p * vec2(3.0, 2.2) + vec2(0.0, -u_time * 0.24);
+    float smoke = fbm(smoke_flow + vec2(fbm(smoke_flow + 8.1), 0.0));
+    float soot = smoothstep(0.38, 0.75, smoke) * smoothstep(0.15, 0.85, uv.y);
+    vec3 colour = vec3(0.13, 0.029, 0.008) * exp(-uv.y * 3.4)
+                * (0.6 + smoke) * edge_fuel;
+    colour += fire_colour(rear) * 0.65 * exp(-soot * 2.5);
+    float front_alpha = smoothstep(0.0, 0.22, front);
+    colour = colour * (1.0 - front_alpha * 0.72) + fire_colour(front);
+    colour += vec3(0.11, 0.065, 0.038) * soot * exp(-uv.y * 1.8);
 
-    // Hotter and denser toward the floor of the frame, thinning as it climbs.
-    float height_falloff = smoothstep(1.05, -0.15, uv.y);
-    float heat = body * height_falloff * 1.9 * u_intensity;
+    // Individually seeded embers rise, drift and cool. Two depth layers keep
+    // them sparse; pixel-aware cores remain visible in supersampled captures.
+    vec3 ember_light = vec3(0.0);
+    float pixel = 1.0 / max(u_resolution.y, 1.0);
+    for (int layer = 0; layer < 2; ++layer) {
+        float depth = float(layer);
+        float spacing = 0.12 + depth * 0.07;
+        float column = floor(p.x / spacing);
+        for (int neighbour = -1; neighbour <= 1; ++neighbour) {
+            float id = column + float(neighbour);
+            float seed = hash(vec2(id, depth + 19.0));
+            float age = u_time * (0.18 + seed * 0.17) + seed * 13.0;
+            float cycle = floor(age);
+            float life = fract(age);
+            float jitter = hash(vec2(id + cycle * 17.0, depth + 41.0));
+            float x = (id + 0.5) * spacing
+                    + sin(life * 7.0 + seed * 31.0) * spacing * 0.32;
+            float y = -0.04 + life * (1.15 + jitter * 0.25);
+            vec2 delta = p - vec2(x, y);
+            float radius = max(pixel * 0.8, 0.0015 + jitter * 0.0018)
+                         / (1.0 + depth * 0.5);
+            vec2 core = delta / vec2(radius, radius * (2.0 + seed * 3.0));
+            float spark = exp(-dot(core, core));
+            float halo = exp(-dot(delta, delta) / (radius * radius * 22.0));
+            float fade = smoothstep(0.0, 0.08, life)
+                       * (1.0 - smoothstep(0.45, 1.0, life));
+            ember_light += mix(vec3(3.8, 1.6, 0.35), vec3(0.7, 0.06, 0.003), life)
+                         * (spark + halo * 0.12) * fade / (1.0 + depth);
+        }
+    }
 
-    // Edges fall away so the card is a fire in a dark field, not a flat wash.
-    float sides = smoothstep(0.0, 0.32, uv.x) * smoothstep(1.0, 0.68, uv.x);
-    heat *= mix(0.55, 1.0, sides);
-
-    // Black -> ember red -> orange -> straw, with the core clipping to near
-    // white only where the noise is genuinely hot.
-    vec3 colour = vec3(0.0);
-    colour = mix(colour, vec3(0.34, 0.03, 0.006), smoothstep(0.08, 0.34, heat));
-    colour = mix(colour, vec3(0.86, 0.24, 0.03), smoothstep(0.26, 0.58, heat));
-    colour = mix(colour, vec3(1.0, 0.58, 0.13), smoothstep(0.50, 0.82, heat));
-    colour = mix(colour, vec3(1.0, 0.88, 0.55), smoothstep(0.76, 1.04, heat));
-
-    // Sparks: a sparse, faster layer of the same noise, punched to points.
-    float spark_field = value_noise(p * 26.0 + vec2(0.0, -u_time * 2.4));
-    float sparks = smoothstep(0.93, 1.0, spark_field) * height_falloff;
-    colour += vec3(1.0, 0.62, 0.22) * sparks * 0.85;
-
-    // A little smoke haze above the flame so the title has something to sit on.
-    float smoke = fbm(p * vec2(1.6, 0.9) + vec2(0.0, -u_time * 0.22));
-    colour += vec3(0.06, 0.05, 0.05) * smoke * smoothstep(0.1, 0.9, uv.y);
-
-    frag_colour = vec4(colour, 1.0);
+    colour += ember_light;
+    // Soft exposure retains orange detail in hot cores. Keep the upper field
+    // dark enough for act titles, and avoid undefined reversed smoothstep edges.
+    float vignette = 1.0 - smoothstep(0.35, 1.1, length((uv - 0.5) * vec2(1.1, 0.8)));
+    colour = vec3(1.0) - exp(-colour * intensity * 0.85);
+    frag_colour = vec4(colour * mix(0.65, 1.0, vignette), 1.0);
 }
 )";
 

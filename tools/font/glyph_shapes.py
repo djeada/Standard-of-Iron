@@ -22,7 +22,6 @@ from glyph_geometry import (
     STEM,
     THIN,
     bar,
-    cut,
     cw,
     diagonal,
     ellipse,
@@ -192,28 +191,32 @@ def apex_pair(
 
 
 def letter_a() -> Glyph:
-    """The crossbar sits low -- around the lower third rather than at midline.
-    It is the single loudest proportion in the alphabet: dropping it opens the
-    counter into a broad triangle and makes ROMA and CARTHAGE read as monumental
-    rather than as ordinary type. One bite marks the thin stroke near the bar.
+    """A narrow spear apex above a low crossbar and a clear triangular counter.
+
+    The silhouette carries the motif at small sizes. A tiny flat at the tip
+    survives rasterization, while the continuous legs need no decorative cuts.
     """
     width = 664
-    apex, over = width / 2.0, 42.0
-    left_foot, right_foot = 96.0, width - 96.0
-    contours = apex_pair(apex, over, left_foot, right_foot, THIN, STEM)
-    contours.append(foot_serif(left_foot, THIN + 26))
-    contours.append(foot_serif(right_foot, STEM + 26))
-    bar_bottom = CAP * 0.31
-    contours.append(bar(140, width - 140, bar_bottom, bar_bottom + THIN))
-    counter = [
-        (apex - 58, CAP - 96),
-        (apex + 58, CAP - 96),
-        (apex + 150, bar_bottom + THIN),
-        (apex - 150, bar_bottom + THIN),
+    apex = width / 2.0
+    contours = [
+        cw(
+            [
+                (38, 0),
+                (apex - 12, CAP + CURVE_OVERSHOOT),
+                (apex + 12, CAP + CURVE_OVERSHOOT),
+                (650, 0),
+                (484, 0),
+                (apex, 548),
+                (154, 0),
+            ]
+        )
     ]
+    contours.append(foot_serif(96, 116))
+    contours.append(foot_serif(567, 166))
+    bar_bottom = CAP * 0.28
+    contours.append(bar(140, width - 140, bar_bottom, bar_bottom + THIN * 0.86))
     return Glyph(
         contours=contours,
-        holes=[cw(counter), cut(212, CAP * 0.49, 46, facing="right")],
         advance=width + 2 * SIDEBEARING,
     )
 
@@ -272,7 +275,6 @@ def letter_e() -> Glyph:
     )
     return Glyph(
         contours=contours,
-        holes=[cut(STEM + 44, mid + THIN * 0.46, 40, facing="right")],
         advance=width + 2 * SIDEBEARING,
     )
 
@@ -377,7 +379,6 @@ def letter_k() -> Glyph:
     ]
     return Glyph(
         contours=contours,
-        holes=[cut(width - 128, junction + 148, 42, facing="right")],
         advance=width + 2 * SIDEBEARING,
     )
 
@@ -401,8 +402,8 @@ def letter_m() -> Glyph:
     contours = [
         diagonal(left_head, CAP, left_foot, 0, THIN, THIN),
         diagonal(right_head, CAP, right_foot, 0, STEM, STEM),
-        diagonal(THIN, CAP, width / 2.0, 124, STEM - 26, STEM - 50),
-        diagonal(width - THIN, CAP, width / 2.0, 124, THIN, STEM - 50),
+        diagonal(THIN, CAP, width / 2.0, 64, STEM - 26, STEM - 50),
+        diagonal(width - THIN, CAP, width / 2.0, 64, THIN, STEM - 50),
         head_serif(left_head, THIN),
         head_serif(right_head, STEM),
         foot_serif(left_foot, THIN),
@@ -470,8 +471,9 @@ def letter_q() -> Glyph:
 
 
 def letter_r() -> Glyph:
-    """The leg: a spear, not a curve. It leaves the bowl where the bowl closes
-    and runs straight to the baseline, heavier than the bowl's own stroke.
+    """A straight blade leg with a single swept wedge at the baseline.
+
+    Its pointed foot echoes Q's tail without a notch or an attached ornament.
     """
     width = 614
     glyph = Glyph(contours=[stem(0, STEM, head=True)], advance=width + 2 * SIDEBEARING)
@@ -480,52 +482,48 @@ def letter_r() -> Glyph:
     cy, ry = (bowl_bottom + bowl_top) / 2.0, (bowl_top - bowl_bottom) / 2.0
     stem_bowl(glyph, STEM, width - 90, cy, ry)
     glyph.contours.append(
-        diagonal(STEM + 40, cy - ry + 30, width, 0, STEM - 20, STEM + 20)
+        cw(
+            [
+                (STEM - 20, cy - ry + 30),
+                (STEM + 100, cy - ry + 30),
+                (width - 16, 64),
+                (width + 76, 0),
+                (width - 80, 0),
+            ]
+        )
     )
-    glyph.holes.append(cut(width - 30, 120, 44, facing="left"))
     return glyph
 
 
 def letter_s() -> Glyph:
-    """Not geometric. The two bowls are deliberately unequal -- the lower one is
-    wider and sits lower than a mirrored S would -- because a perfectly even S
-    is the one thing that makes a classical face look manufactured. Each bowl
-    loses a different quadrant, and each cut has to reach only its own bowl --
-    run either against the finished letter and it takes the other bowl's spine
-    with it. The upper bowl opens to the right and the lower to the left; the
-    two cuts are angled so the terminals come out sharpened. The upper bowl
-    loses its lower right, the lower bowl its upper left. Each cut is angled
-    so the terminal it leaves comes out sharpened rather than sawn off square.
+    """A continuous spine with tangent-matched curves and a fuller lower bowl.
+
+    Joining two cut rings left a pinched, stepped waist. Drawing the complete
+    ribbon keeps both sides smooth through the inflection, with wedge tips
+    confined to the two terminals.
     """
-    width = 548
-    glyph = Glyph(advance=width + 2 * SIDEBEARING)
-    upper_cy = CAP * 0.73 + CURVE_OVERSHOOT / 2.0
-    upper_r = CAP * 0.27 + CURVE_OVERSHOOT / 2.0
-    lower_cy = CAP * 0.285 - CURVE_OVERSHOOT / 2.0
-    lower_r = CAP * 0.285 + CURVE_OVERSHOOT / 2.0
-    upper = ring_parts(width * 0.50, upper_cy, width * 0.50, upper_r, glyph)
-    lower = ring_parts(width * 0.50, lower_cy, width * 0.50, lower_r, glyph)
-    upper.holes.append(
-        cw(
+    return Glyph(
+        paths=[
             [
-                (width * 0.46, upper_cy + upper_r * 0.16),
-                (width * 1.8, upper_cy - upper_r * 0.30),
-                (width * 1.8, upper_cy - upper_r * 3.0),
-                (width * 0.46, upper_cy - upper_r * 3.0),
+                ("move", (510, 574)),
+                ("curve", ((470, 662), (386, 714), (282, 714))),
+                ("curve", ((132, 714), (30, 638), (30, 520))),
+                ("curve", ((30, 410), (112, 362), (258, 306))),
+                ("curve", ((366, 265), (418, 230), (418, 166))),
+                ("curve", ((418, 105), (357, 74), (274, 74))),
+                ("curve", ((170, 74), (92, 126), (38, 220))),
+                ("curve", ((38, 176), (34, 126), (26, 82))),
+                ("curve", ((82, 22), (168, -14), (276, -14))),
+                ("curve", ((441, -14), (548, 64), (548, 186))),
+                ("curve", ((548, 306), (450, 362), (304, 418))),
+                ("curve", ((202, 457), (156, 490), (156, 542))),
+                ("curve", ((156, 596), (207, 626), (282, 626))),
+                ("curve", ((364, 626), (432, 584), (488, 506))),
+                ("curve", ((493, 530), (501, 554), (510, 574))),
+                ("close", ()),
             ]
-        )
+        ]
     )
-    lower.holes.append(
-        cw(
-            [
-                (width * 0.54, lower_cy - lower_r * 0.16),
-                (-width * 0.8, lower_cy + lower_r * 0.30),
-                (-width * 0.8, lower_cy + lower_r * 3.0),
-                (width * 0.54, lower_cy + lower_r * 3.0),
-            ]
-        )
-    )
-    return glyph
 
 
 def letter_t() -> Glyph:
@@ -545,15 +543,30 @@ def letter_t() -> Glyph:
 
 
 def letter_u() -> Glyph:
+    """One continuous bowl, tangent to stems of unequal optical weight.
+
+    A symmetric ring cannot meet both the heavy left and light right stem:
+    its counter left a shelf at one join. These curves meet each stem exactly.
+    """
     width = 628
     bowl_cy = CAP * 0.305
     glyph = Glyph(advance=width + 2 * SIDEBEARING)
-    bowl = ring_parts(
-        width / 2.0, bowl_cy, width / 2.0, bowl_cy + CURVE_OVERSHOOT, glyph
+    glyph.paths.append(
+        [
+            ("move", (0, bowl_cy)),
+            ("curve", ((0, 52), (126, -14), (314, -14))),
+            ("curve", ((502, -14), (width, 52), (width, bowl_cy))),
+            (
+                "curve",
+                ((width - 30, bowl_cy), (width - 60, bowl_cy), (width - THIN, bowl_cy)),
+            ),
+            ("curve", ((width - THIN, 118), (450, 74), (330, 74))),
+            ("curve", ((210, 74), (STEM, 118), (STEM, bowl_cy))),
+            ("close", ()),
+        ]
     )
-    bowl.holes.append(mask(-100, bowl_cy, width + 100, CAP + 100))
-    glyph.contours.append(stem(0, STEM, y_bottom=bowl_cy - 10, foot=False))
-    glyph.contours.append(stem(width - THIN, width, y_bottom=bowl_cy - 10, foot=False))
+    glyph.contours.append(stem(0, STEM, y_bottom=bowl_cy, foot=False))
+    glyph.contours.append(stem(width - THIN, width, y_bottom=bowl_cy, foot=False))
     return glyph
 
 

@@ -15,6 +15,7 @@ class QOpenGLDebugLogger;
 #include <memory>
 #include <vector>
 
+#include "render/profiling/frame_pacing.h"
 #include "render/profiling/frame_profile.h"
 
 class GameEngine;
@@ -69,6 +70,10 @@ private:
     std::chrono::steady_clock::time_point m_benchmark_created_time{};
     std::chrono::steady_clock::time_point m_benchmark_ready_time{};
     std::chrono::steady_clock::time_point m_benchmark_previous_frame_time{};
+    Render::Profiling::FramePacing m_frame_pacing;
+    Render::Profiling::PacingSample m_previous_pacing_sample;
+    std::uint64_t m_pacing_upload_bytes = 0;
+    std::uint64_t m_pacing_asset_work = 0;
     double m_benchmark_seconds = 0.0;
     QString m_benchmark_output;
     bool m_benchmark_complete = false;

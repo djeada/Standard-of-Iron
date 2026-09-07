@@ -324,3 +324,7 @@ process start, so it excludes Qt and process startup.
 (`-DSOI_PROFILE_ALLOCATIONS=ON`, which replaces global `operator new`/`delete`) and, when
 it was, the render thread's allocation count and bytes since the first playable frame.
 The default build reports `tracked: false` and zeroes rather than paying for the hook.
+
+The separate [`frame_pacing` gate](FRAME_PACING.md) now checks render-start wall
+intervals, including playable warm-up frames, and retains hitch clusters with
+phase/upload evidence. The existing `budget` above still measures CPU headroom.

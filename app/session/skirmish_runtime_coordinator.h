@@ -46,6 +46,7 @@ struct PerformSkirmishLoadContext {
   MinimapManager* minimap_manager = nullptr;
   VisibilityCoordinator* visibility_coordinator = nullptr;
   bool allow_default_player_barracks = true;
+  bool defer_ai_initialization = false;
   LoadingProgressTracker* loading_progress_tracker = nullptr;
   std::function<void()> emit_owner_info_changed;
 };

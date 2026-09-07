@@ -40,7 +40,7 @@ from pathops import PathOp, op
 
 FAMILY = "Standard Iron Display"
 STYLE = "Bold"
-VERSION = "1.100"
+VERSION = "1.200"
 
 OUTPUT = (
     Path(__file__).resolve().parents[2]
@@ -365,7 +365,7 @@ def build() -> Path:
             ),
             "designer": "Standard of Iron contributors",
             "description": (
-                "Roman monumental capitals cut in damaged iron. "
+                "Roman monumental capitals with tapered wedges and blade terminals. "
                 "The display face of Standard of Iron."
             ),
             "licenseDescription": (

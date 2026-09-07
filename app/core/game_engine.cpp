@@ -45,6 +45,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -103,12 +104,14 @@
 #include "game/command/command_queue.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/event_manager.h"
+#include "game/core/startup_profiler.h"
 #include "game/core/system.h"
 #include "game/core/world.h"
 #include "game/formation/army_formation_registry.h"
 #include "game/game_config.h"
 #include "game/map/campaign_loader.h"
 #include "game/map/map_catalog.h"
+#include "game/map/map_context.h"
 #include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
 #include "game/map/mission_context.h"
@@ -924,6 +927,8 @@ void GameEngine::render(int pixel_width, int pixel_height) {
     return;
   }
 
+  const auto frame_started = std::chrono::steady_clock::now();
+
   if (pixel_width > 0 && pixel_height > 0) {
     m_viewport.width = pixel_width;
     m_viewport.height = pixel_height;
@@ -950,6 +955,10 @@ void GameEngine::render(int pixel_width, int pixel_height) {
 
   m_renderer->set_world_view(Render::WorldView::of(*m_session));
 
+  if (m_loading_overlay_active) {
+
+    (void)m_renderer->rigged_mesh_cache().prewarm_gpu_resources();
+  }
   m_renderer->begin_frame();
 
   if (m_terrain_scene) {
@@ -997,6 +1006,11 @@ void GameEngine::render(int pixel_width, int pixel_height) {
   }
   m_renderer->end_frame();
 
+  if (auto& profiler = Engine::Core::StartupProfiler::instance(); profiler.active()) {
+    profiler.record_playable_frame(std::chrono::duration<double, std::milli>(
+                                       std::chrono::steady_clock::now() - frame_started)
+                                       .count());
+  }
   update_loading_overlay();
   update_cursor_position();
 }
@@ -1047,23 +1061,24 @@ void GameEngine::update_loading_overlay() {
   const bool exceeded_max_wait = m_loading_overlay_timer.isValid() &&
                                  (elapsed_ms >= k_loading_overlay_max_wait_ms);
 
-  QStringList pending_components;
-  const bool scatter_ready = !m_scatter || m_scatter->is_gpu_ready();
-
-  if (!scatter_ready) {
-    pending_components << QStringLiteral("terrain scatter");
-  }
-
-  const bool biome_gpu_ready = pending_components.isEmpty();
+  const QStringList pending_components = mission_startup_pending_components();
+  const bool startup_ready = pending_components.isEmpty();
 
   if (enough_time && m_loading_overlay_frames_remaining <= 0 &&
-      (biome_gpu_ready || exceeded_max_wait)) {
-    if (exceeded_max_wait && !biome_gpu_ready) {
-      qWarning() << "Loading overlay timed out waiting for GPU readiness"
+      (startup_ready || exceeded_max_wait)) {
+    if (exceeded_max_wait && !startup_ready) {
+      qWarning() << "Loading overlay timed out waiting for startup readiness"
                  << pending_components.join(", ");
     }
     m_loading_overlay_wait_for_first_frame.store(false, std::memory_order_release);
     m_loading_overlay_active = false;
+    Engine::Core::StartupProfiler::instance().mark_overlay_released();
+    if (Engine::Core::StartupProfiler::reporting_enabled()) {
+      constexpr int k_startup_report_delay_ms = 5200;
+      QTimer::singleShot(k_startup_report_delay_ms, this, []() {
+        Engine::Core::StartupProfiler::instance().log_report();
+      });
+    }
     if (m_finalize_progress_after_overlay && m_loading_progress_tracker) {
       m_loading_progress_tracker->set_stage(
           LoadingProgressTracker::LoadingStage::COMPLETED);
@@ -1603,12 +1618,16 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
     m_loading_progress_tracker->start_loading();
   }
 
+  Engine::Core::StartupProfiler::instance().begin_run(map_path.toStdString());
+  Game::Map::MapContextStore::reset_statistics();
+
   QCoreApplication::processEvents(QEventLoop::AllEvents);
   if (m_release_self_test_mode) {
 
     qInfo() << "SOI_AUDIO_SELF_TEST: mission preload skipped after manifest "
                "validation";
   } else {
+    const Engine::Core::ScopedStartupPhase phase("audio.mission_preload");
     AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
   }
   QTimer::singleShot(50, this, [this, map_path, player_configs, world_freeze]() {
@@ -1623,9 +1642,12 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
       m_hover_tracker->update_hover(-1, -1, *m_world, *m_camera, 0, 0);
     }
 
-    const bool allow_default_player_barracks =
-        !m_campaign_manager ||
-        !m_campaign_manager->current_mission_context().has_mission();
+    const bool is_campaign_mission =
+        m_campaign_manager &&
+        m_campaign_manager->current_mission_context().has_mission();
+    const bool allow_default_player_barracks = !is_campaign_mission;
+    std::optional<Engine::Core::ScopedStartupPhase> world_phase;
+    world_phase.emplace("world.load");
     const auto load_effects =
         m_skirmish_runtime->perform_load({*m_world,
                                           m_level,
@@ -1638,10 +1660,12 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
                                           m_minimap_manager.get(),
                                           m_visibility_coordinator.get(),
                                           allow_default_player_barracks,
+                                          is_campaign_mission,
                                           m_loading_progress_tracker.get(),
                                           [this]() {
                                             emit owner_info_changed();
                                           }});
+    world_phase.reset();
 
     if (load_effects.selected_player_changed) {
       m_selected_player_id = load_effects.updated_player_id;
@@ -1673,11 +1697,20 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
         m_campaign_manager->current_mission_definition().has_value()) {
       authored_mission_def = &*m_campaign_manager->current_mission_definition();
     }
-    m_audio_coordinator->apply_mission_ambience(
-        mission_def, map_path, m_runtime.local_owner_id);
+    {
+      const Engine::Core::ScopedStartupPhase phase("audio.mission_ambience");
+      m_audio_coordinator->apply_mission_ambience(
+          mission_def, map_path, m_runtime.local_owner_id);
+    }
 
-    apply_skirmish_commander_setup(player_configs);
-    apply_mission_setup();
+    {
+      const Engine::Core::ScopedStartupPhase phase("mission.commander_setup");
+      apply_skirmish_commander_setup(player_configs);
+    }
+    {
+      const Engine::Core::ScopedStartupPhase phase("mission.setup");
+      apply_mission_setup();
+    }
     m_skirmish_runtime->initialize_player_resources(
         {*m_session, m_level, m_runtime.local_owner_id, authored_mission_def});
     configure_mission_victory_conditions();
@@ -1687,6 +1720,27 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
     configure_rain_system();
     if (m_environment_clock) {
       m_environment_clock->reset(m_level.environment);
+    }
+
+    prepare_mission_ai_state();
+
+    {
+      const auto map_statistics = Game::Map::MapContextStore::statistics();
+      auto& profiler = Engine::Core::StartupProfiler::instance();
+      profiler.add_counter("map.requests",
+                           static_cast<std::int64_t>(map_statistics.requests));
+      profiler.add_counter("map.parses",
+                           static_cast<std::int64_t>(map_statistics.parses));
+      profiler.add_counter("map.reuses",
+                           static_cast<std::int64_t>(map_statistics.reuses));
+      if (Engine::Core::StartupProfiler::reporting_enabled()) {
+        std::int64_t unit_count = 0;
+        for ([[maybe_unused]] auto entry :
+             m_world->view<Engine::Core::UnitComponent>()) {
+          ++unit_count;
+        }
+        profiler.add_counter("world.units", unit_count);
+      }
     }
 
     const auto finalize_effects = m_skirmish_runtime->finalize_load(
@@ -1775,6 +1829,49 @@ void GameEngine::apply_mission_setup() {
   if (effects.owner_info_changed) {
     emit owner_info_changed();
   }
+}
+
+void GameEngine::prepare_mission_ai_state() {
+  if (!m_world || !m_session) {
+    return;
+  }
+
+  auto* ai_system = m_world->get_system<Game::Systems::AISystem>();
+  if (ai_system == nullptr) {
+    return;
+  }
+
+  const Engine::Core::ScopedStartupPhase phase("ai.initial_preparation");
+
+  const auto& ai_owner_ids = m_session->owners().get_ai_owner_ids();
+  if (ai_system->ai_player_count() != ai_owner_ids.size()) {
+    ai_system->reinitialize();
+  }
+
+  ai_system->prepare_initial_decisions(*m_world);
+
+  constexpr auto k_initial_decision_budget = std::chrono::milliseconds(1500);
+  if (!ai_system->await_initial_decisions(k_initial_decision_budget)) {
+    qWarning() << "Mission startup: AI initial decisions were still running after"
+               << k_initial_decision_budget.count() << "ms";
+  }
+
+  Engine::Core::StartupProfiler::instance().add_counter(
+      "ai.owners", static_cast<std::int64_t>(ai_system->ai_player_count()));
+}
+
+auto GameEngine::mission_startup_pending_components() const -> QStringList {
+  QStringList pending;
+  if (m_scatter != nullptr && !m_scatter->is_gpu_ready()) {
+    pending << QStringLiteral("terrain scatter");
+  }
+  if (m_world != nullptr) {
+    if (const auto* ai_system = m_world->get_system<Game::Systems::AISystem>();
+        ai_system != nullptr && !ai_system->initial_decisions_ready()) {
+      pending << QStringLiteral("AI initial decisions");
+    }
+  }
+  return pending;
 }
 
 void GameEngine::configure_mission_victory_conditions() {

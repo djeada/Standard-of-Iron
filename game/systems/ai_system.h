@@ -2,6 +2,7 @@
 
 #include <queue>
 
+#include <atomic>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -39,6 +40,12 @@ public:
   void reinitialize();
   void shutdown_workers();
 
+  void prepare_initial_decisions(Engine::Core::World& world);
+
+  [[nodiscard]] auto await_initial_decisions(std::chrono::milliseconds budget) -> bool;
+
+  [[nodiscard]] auto initial_decisions_ready() const -> bool;
+
   void set_update_interval(float interval) { m_update_interval = interval; }
   [[nodiscard]] auto ai_player_count() const -> std::size_t {
     return m_ai_instances.size();
@@ -48,6 +55,9 @@ public:
   }
   [[nodiscard]] auto completed_decision_count() const -> std::uint64_t {
     return m_completed_decision_count;
+  }
+  [[nodiscard]] auto snapshot_build_count() const -> std::uint64_t {
+    return m_snapshot_build_count;
   }
   [[nodiscard]] auto applied_command_count() const -> std::uint64_t {
     return m_applied_command_count;
@@ -115,6 +125,7 @@ private:
   float m_update_interval = 0.3F;
   float m_next_trace_time = 0.0F;
   std::uint64_t m_completed_decision_count{0};
+  std::uint64_t m_snapshot_build_count{0};
   std::uint64_t m_applied_command_count{0};
   std::uint64_t m_refused_command_count{0};
   std::uint64_t m_deferred_decision_count{0};
@@ -125,9 +136,15 @@ private:
       m_building_attacked_subscription;
 
   Services m_services;
+  bool m_initial_decisions_prepared = false;
+  std::atomic<bool> m_initial_decisions_ready{false};
 
   void initialize_ai_players();
   void trace_progress(const Engine::Core::World& world);
+
+  auto submit_decision_job(AIInstance& ai,
+                           Engine::Core::World& world,
+                           float delta_time) -> bool;
 
   static void populate_behavior_registry(AI::AIBehaviorRegistry& registry);
 

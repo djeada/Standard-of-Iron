@@ -1,9 +1,12 @@
 
 
 #include <gtest/gtest.h>
+#include <limits>
 #include <thread>
 
+#include "render/profiling/frame_pacing.h"
 #include "render/profiling/frame_profile.h"
+#include "render/profiling/presentation_cycle.h"
 
 using Render::Profiling::format_overlay;
 using Render::Profiling::FrameProfile;
@@ -207,4 +210,108 @@ TEST(FrameProfileTest, SimulationPhaseSurvivesARendererOpenedFrame) {
   p.add_phase_us(Phase::Collection, 1000);
   EXPECT_EQ(p.phase_us[static_cast<std::size_t>(Phase::Simulation)], 4000U);
   EXPECT_EQ(p.total_us(), 5000U);
+}
+
+TEST(FramePacingTest, SmoothSixtyHzPasses) {
+  Render::Profiling::FramePacing pacing;
+  for (int i = 0; i < 1800; ++i) {
+    pacing.observe({16.67, 8, 8, 1024, {}});
+  }
+  EXPECT_TRUE(pacing.report("high")["passed"].toBool());
+}
+
+TEST(FramePacingTest, ConsecutiveHitchesIncludeTrailingClusterAndEvidence) {
+  Render::Profiling::FramePacing pacing;
+  for (int i = 0; i < 1800; ++i) {
+    pacing.observe({16.67, 8, 8, 0, {}});
+  }
+  Render::Profiling::PacingSample hitch{45, 40, 8, 0, {}};
+  hitch.phase_us[static_cast<std::size_t>(Phase::Submit)] = 35000;
+  pacing.observe(hitch);
+  pacing.observe(hitch);
+  const auto report = pacing.report("high");
+  EXPECT_FALSE(report["passed"].toBool());
+  EXPECT_EQ(report["hitch_frames"].toInt(), 2);
+  const auto clusters = report["clusters"].toArray();
+  ASSERT_EQ(clusters.size(), 1);
+  EXPECT_EQ(clusters[0].toObject()["frames"].toInt(), 2);
+  EXPECT_EQ(clusters[0]
+                .toObject()["worst_frame_evidence"]
+                .toObject()["largest_cpu_phase"]
+                .toString(),
+            "submit");
+}
+
+TEST(FramePacingTest, MissingMeasurementsAndInvalidValuesFailClosed) {
+  Render::Profiling::FramePacing pacing;
+  EXPECT_FALSE(pacing.report("high")["passed"].toBool());
+  for (int i = 0; i < 1800; ++i) {
+    pacing.observe({16.67, 8, 0, 0, {}});
+  }
+  EXPECT_FALSE(pacing.report("high")["passed"].toBool());
+  pacing.reset();
+  for (int i = 0; i < 1800; ++i) {
+    pacing.observe({16.67, 8, 8, 0, {}});
+  }
+  EXPECT_FALSE(pacing.report("unknown")["passed"].toBool());
+  pacing.observe({std::numeric_limits<double>::quiet_NaN(), 8, 8, 0, {}});
+  EXPECT_FALSE(pacing.report("high")["passed"].toBool());
+}
+
+TEST(FramePacingTest, UploadBudgetsDependOnPresetAndResetClearsHitches) {
+  Render::Profiling::FramePacing pacing;
+  for (int i = 0; i < 1800; ++i) {
+    pacing.observe({16.67, 8, 8, 3 * 1024 * 1024, {}});
+  }
+  EXPECT_FALSE(pacing.report("low")["passed"].toBool());
+  EXPECT_TRUE(pacing.report("medium")["passed"].toBool());
+  pacing.observe({100, 90, 8, 0, {}});
+  EXPECT_FALSE(pacing.report("medium")["passed"].toBool());
+  pacing.reset();
+  EXPECT_EQ(pacing.report("medium")["hitch_frames"].toInt(), 0);
+}
+
+TEST(FramePacingTest, PresentationInputCycleRepeatsAndDoesNotDependOnFrameCount) {
+  using Render::Profiling::presentation_cycle_position;
+  const auto start = presentation_cycle_position(0);
+  const auto end = presentation_cycle_position(20);
+  EXPECT_NEAR(start.x, end.x, 1e-9);
+  EXPECT_NEAR(start.z, end.z, 1e-9);
+  EXPECT_NEAR(start.zoom, end.zoom, 1e-9);
+  const auto first = presentation_cycle_position(7.25);
+  const auto repeat = presentation_cycle_position(27.25);
+  EXPECT_NEAR(first.x, repeat.x, 1e-9);
+  EXPECT_NEAR(first.z, repeat.z, 1e-9);
+  EXPECT_NEAR(first.zoom, repeat.zoom, 1e-9);
+}
+
+TEST(FramePacingTest, AssetWorkFailsEvenWhenFrameTimeIsWithinBudget) {
+  Render::Profiling::FramePacing pacing;
+  for (int i = 0; i < 1800; ++i) {
+    pacing.observe({16.67, 8, 8, 0, {}});
+  }
+  Render::Profiling::PacingSample sample{16.67, 8, 8, 0, {}};
+  sample.asset_work = 1;
+  pacing.observe(sample);
+  const auto report = pacing.report("high");
+  EXPECT_FALSE(report["passed"].toBool());
+  EXPECT_DOUBLE_EQ(report["checks"]
+                       .toObject()["post_playable_asset_work"]
+                       .toObject()["measured"]
+                       .toDouble(),
+                   1);
+}
+
+TEST(FramePacingTest, OneGpuSampleCannotCertifyAnOtherwiseUntimedRun) {
+  Render::Profiling::FramePacing pacing;
+  for (int i = 0; i < 1800; ++i) {
+    pacing.observe({16.67, 8, 0, 0, {}});
+  }
+  pacing.observe({16.67, 8, 8, 0, {}});
+  const auto report = pacing.report("high");
+  EXPECT_FALSE(report["passed"].toBool());
+  EXPECT_FALSE(report["checks"]
+                   .toObject()["missing_gpu_sample_fraction"]
+                   .toObject()["passed"]
+                   .toBool());
 }

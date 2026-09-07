@@ -116,6 +116,8 @@ public:
 
   void upload_pending_skin_ubos();
 
+  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+
   auto get_or_bake(const Render::Creature::CreatureSpec& spec,
                    Render::Creature::CreatureLOD lod,
                    std::span<const QMatrix4x4> rest_palette,
