@@ -18,9 +18,10 @@
 
 #include "game/command/command_queue.h"
 #include "game/core/component_gameplay.h"
+#include "game/core/startup_profiler.h"
 #include "game/core/world.h"
+#include "game/map/map_context.h"
 #include "game/map/map_definition.h"
-#include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
 #include "game/map/mission_context.h"
 #include "game/map/wave_archetype_catalog.h"
@@ -81,22 +82,18 @@ auto mission_position_to_world(const Game::Mission::Position& position,
 
 auto make_mission_position_to_world(const Game::Systems::LevelSnapshot& level)
     -> Game::Mission::MissionPositionToWorld {
-  auto map_def = std::make_shared<Game::Map::MapDefinition>();
-  bool map_loaded = false;
+  Game::Map::MapContext context;
   if (!level.map_path.isEmpty()) {
     QString map_error;
-    const QString resolved = Utils::Resources::resolve_resource_path(level.map_path);
-    map_loaded =
-        Game::Map::MapLoader::load_from_json_file(resolved, *map_def, &map_error);
-    if (!map_loaded) {
+    context = Game::Map::MapContextStore::acquire(level.map_path, &map_error);
+    if (!context.valid()) {
       qWarning() << "Mission stages: failed to load map definition for"
                  << level.map_path << "-" << map_error;
     }
   }
 
-  return [map_def, map_loaded, level](const Game::Mission::Position& position) {
-    return mission_position_to_world(
-        position, map_loaded ? map_def.get() : nullptr, level);
+  return [context, level](const Game::Mission::Position& position) {
+    return mission_position_to_world(position, context.definition(), level);
   };
 }
 
@@ -122,17 +119,18 @@ auto MissionSetupCoordinator::apply_mission_setup(
   auto& owner_registry = session.owners();
   auto& nation_registry = session.nations();
 
-  Game::Map::MapDefinition map_def;
   QString map_error;
-  const QString resolved_map_path =
-      Utils::Resources::resolve_resource_path(ctx.level.map_path);
-  bool map_loaded =
-      Game::Map::MapLoader::load_from_json_file(resolved_map_path, map_def, &map_error);
+  const Game::Map::MapContext map_context =
+      Game::Map::MapContextStore::acquire(ctx.level.map_path, &map_error);
+  const bool map_loaded = map_context.valid();
   if (!map_loaded) {
     qWarning() << "Mission setup: failed to load map definition for"
-               << ctx.level.map_path << "resolved to" << resolved_map_path << "-"
-               << map_error;
+               << ctx.level.map_path << "resolved to" << map_context.resolved_path()
+               << "-" << map_error;
   }
+  static const Game::Map::MapDefinition k_empty_map_definition;
+  const Game::Map::MapDefinition& map_def =
+      map_loaded ? *map_context.definition() : k_empty_map_definition;
 
   bool has_map_spawns = true;
   if (map_loaded) {
@@ -495,6 +493,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
   }
 
   {
+    const Engine::Core::ScopedStartupPhase phase("mission.pending_waves");
     auto built = build_pending_mission_waves(
         {.mission = mission,
          .mission_difficulty = ctx.campaign.current_mission_context().difficulty,
@@ -507,6 +506,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
   }
 
   if (auto* ai_system = ctx.world.get_system<Game::Systems::AISystem>()) {
+    const Engine::Core::ScopedStartupPhase phase("ai.reinitialize");
     ai_system->reinitialize();
 
     int ai_id = 2;
@@ -529,8 +529,12 @@ auto MissionSetupCoordinator::apply_mission_setup(
     }
   }
 
-  const auto restored =
-      Game::Persistence::rebuild_registries_after_load(&ctx.world, ctx.local_owner_id);
+  Game::Persistence::WorldRestoreResult restored;
+  {
+    const Engine::Core::ScopedStartupPhase phase("mission.registry_rebuild");
+    restored = Game::Persistence::rebuild_registries_after_load(&ctx.world,
+                                                                ctx.local_owner_id);
+  }
   ctx.level.player_unit_id = restored.player_unit_id;
   effects.rebuild_entity_cache = true;
 
@@ -597,16 +601,17 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
   auto& owner_registry = session.owners();
   auto& nation_registry = session.nations();
 
-  Game::Map::MapDefinition map_def;
   QString map_error;
-  const QString resolved_map_path =
-      Utils::Resources::resolve_resource_path(ctx.level.map_path);
-  const bool map_loaded =
-      Game::Map::MapLoader::load_from_json_file(resolved_map_path, map_def, &map_error);
+  const Game::Map::MapContext map_context =
+      Game::Map::MapContextStore::acquire(ctx.level.map_path, &map_error);
+  const bool map_loaded = map_context.valid();
   if (!map_loaded) {
     qWarning() << "Skirmish commander setup: failed to load map definition for"
                << ctx.level.map_path << "-" << map_error;
   }
+  static const Game::Map::MapDefinition k_empty_skirmish_map;
+  const Game::Map::MapDefinition& map_def =
+      map_loaded ? *map_context.definition() : k_empty_skirmish_map;
 
   auto existing_owner_spawn_anchors = [&](int owner_id) {
     std::vector<Game::Mission::ExistingOwnerSpawnAnchor> anchors;

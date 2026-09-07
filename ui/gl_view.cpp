@@ -55,9 +55,11 @@
 #include "app/core/game_engine.h"
 #include "commander_portrait_scenes.h"
 #include "game/core/nav_profile.h"
+#include "game/units/commander_catalog.h"
 #include "render/profiling/allocation_tracker.h"
 #include "render/profiling/asset_counters.h"
 #include "render/profiling/performance_report.h"
+#include "render/profiling/presentation_cycle.h"
 #include "utils/percentile.h"
 
 namespace {
@@ -206,6 +208,17 @@ GLView::GLRenderer::GLRenderer(QPointer<GLView> view, QPointer<GameEngine> engin
   }
   m_benchmark_output = qEnvironmentVariable("SOI_RUNTIME_BENCHMARK_OUTPUT");
   if (m_benchmark_seconds > 0.0) {
+
+    const auto capacity = static_cast<std::size_t>(
+        std::min((m_benchmark_seconds + 3.0) * 240.0, 1000000.0));
+    m_frame_pacing.reserve(capacity);
+    m_benchmark_render_ms.reserve(capacity);
+    m_benchmark_update_ms.reserve(capacity);
+    m_benchmark_thread_cpu_ms.reserve(capacity);
+    m_benchmark_wall_interval_ms.reserve(capacity);
+    m_benchmark_gpu_shadow_ms.reserve(capacity);
+    m_benchmark_gpu_color_ms.reserve(capacity);
+    m_benchmark_gpu_wait_ms.reserve(capacity);
     Render::Profiling::global_profile().enabled = true;
     Engine::Core::nav_profile().set_enabled(true);
     m_benchmark_created_time = std::chrono::steady_clock::now();
@@ -288,8 +301,15 @@ void GLView::GLRenderer::render() {
     auto const frame_work_start = std::chrono::steady_clock::now();
     const double thread_cpu_start_ms = render_thread_cpu_ms();
 
+    const auto portrait_start = std::chrono::steady_clock::now();
+    warm_commander_portraits();
+    const auto portrait_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                                 std::chrono::steady_clock::now() - portrait_start)
+                                 .count();
     auto& profile = Render::Profiling::global_profile();
     profile.begin_frame();
+    profile.add_phase_us(Render::Profiling::Phase::PortraitPrewarm,
+                         static_cast<std::uint64_t>(portrait_us));
     if (m_last_render_end.time_since_epoch().count() != 0) {
       profile.add_phase_us(Render::Profiling::Phase::Present,
                            static_cast<std::uint64_t>(
@@ -336,7 +356,6 @@ void GLView::GLRenderer::render() {
       QMetaObject::invokeMethod(m_view, "notify_renderer_ready", Qt::QueuedConnection);
     }
 
-    warm_commander_portraits();
   } catch (const std::exception& e) {
     qCritical() << "GLRenderer::render() exception:" << e.what();
     return;
@@ -349,10 +368,21 @@ void GLView::GLRenderer::render() {
 }
 
 void GLView::GLRenderer::warm_commander_portraits() {
+  auto& scenes = UI::CommanderPortraitScenes::instance();
+
+  if (scenes.warmed_signature().isEmpty() && m_engine != nullptr &&
+      m_engine->is_loading()) {
+    for (const auto& commander : Game::Units::all_commander_definitions()) {
+      const auto type = Game::Units::troop_typeToQString(commander.troop_type);
+      if (!m_pending_commander_speakers.contains(type)) {
+        m_pending_commander_speakers.push_back(type);
+      }
+    }
+  }
   if (m_pending_commander_speakers.isEmpty()) {
     return;
   }
-  UI::CommanderPortraitScenes::instance().warm(m_pending_commander_speakers);
+  scenes.warm(m_pending_commander_speakers);
   m_pending_commander_speakers.clear();
 }
 
@@ -463,6 +493,11 @@ void GLView::GLRenderer::observe_runtime_continuity() {
 }
 
 void GLView::GLRenderer::reset_runtime_benchmark_samples() {
+  m_frame_pacing.reset();
+  m_previous_pacing_sample = {};
+  m_pacing_upload_bytes = Render::Profiling::asset_counters().total(
+      Render::Profiling::AssetCounter::GlUploadBytes);
+  m_pacing_asset_work = Render::Profiling::asset_counters().post_barrier_asset_work();
   m_benchmark_ready_time = {};
   m_benchmark_render_ms.clear();
   m_benchmark_update_ms.clear();
@@ -514,6 +549,32 @@ void GLView::GLRenderer::observe_runtime_benchmark(
     reset_runtime_benchmark_samples();
     return;
   }
+
+  const auto& pacing_profile = Render::Profiling::global_profile();
+  const auto upload_bytes = Render::Profiling::asset_counters().total(
+      Render::Profiling::AssetCounter::GlUploadBytes);
+  if (m_benchmark_ready_time.time_since_epoch().count() != 0) {
+    m_previous_pacing_sample.interval_ms =
+        std::chrono::duration<double, std::milli>(frame_start -
+                                                  m_benchmark_previous_frame_time)
+            .count();
+    m_frame_pacing.observe(m_previous_pacing_sample);
+  }
+  m_previous_pacing_sample = {};
+  m_previous_pacing_sample.cpu_ms = thread_cpu_ms;
+  m_previous_pacing_sample.render_elapsed_ms = render_ms;
+  m_previous_pacing_sample.gpu_ms =
+      pacing_profile.gpu_shadow_ms + pacing_profile.gpu_color_ms;
+  m_previous_pacing_sample.phase_us = pacing_profile.phase_us;
+  m_previous_pacing_sample.upload_bytes =
+      upload_bytes >= m_pacing_upload_bytes
+          ? static_cast<double>(upload_bytes - m_pacing_upload_bytes)
+          : 0.0;
+  m_pacing_upload_bytes = upload_bytes;
+  const auto asset_work = Render::Profiling::asset_counters().post_barrier_asset_work();
+  m_previous_pacing_sample.asset_work =
+      asset_work >= m_pacing_asset_work ? asset_work - m_pacing_asset_work : 0;
+  m_pacing_asset_work = asset_work;
 
   if (m_benchmark_ready_time.time_since_epoch().count() == 0) {
     m_benchmark_ready_time = frame_start;
@@ -795,6 +856,21 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
                 Render::Profiling::budget_verdict_json(
                     Render::Profiling::PerformanceBudget::release_gate(), measurement));
 
+  if (qEnvironmentVariableIntValue("SOI_BENCHMARK_CAMERA_CYCLE") != 0) {
+    const auto& progress = Render::Profiling::presentation_cycle_progress();
+    report.insert(
+        QStringLiteral("presentation_cycle"),
+        QJsonObject{
+            {QStringLiteral("name"), QStringLiteral("camera_pan_zoom_20s")},
+            {QStringLiteral("updates"), static_cast<qint64>(progress.updates.load())},
+            {QStringLiteral("completed_cycles"),
+             static_cast<qint64>(progress.completed_cycles.load())}});
+  }
+
+  report.insert(QStringLiteral("frame_pacing"),
+                m_frame_pacing.report(QString::fromLatin1(
+                    Render::graphics_quality_key(graphics.quality()))));
+
   if (m_continuity_probe != nullptr) {
     QJsonArray continuity_issues;
     for (const auto& issue : m_continuity_probe->issues) {
@@ -860,7 +936,7 @@ void GLView::GLRenderer::synchronize(QQuickFramebufferObject* item) {
     m_engine->set_input_viewport_size(view->width(), view->height());
   }
 
-  if (m_engine != nullptr && !m_engine->is_loading()) {
+  if (m_engine != nullptr) {
     m_pending_commander_speakers = m_engine->commander_message_speakers();
   }
 

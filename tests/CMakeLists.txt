@@ -568,6 +568,7 @@ add_executable(
     core/input_command_handler_test.cpp
     core/tutorial_mission_test.cpp
     core/campaign_wave_assault_test.cpp
+    core/mission_startup_test.cpp
     core/production_manager_test.cpp
     core/economy_overview_test.cpp
     core/unit_profile_test.cpp

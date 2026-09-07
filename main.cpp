@@ -4,6 +4,7 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QGuiApplication>
 #include <QImage>
@@ -40,6 +41,7 @@
 #include <string_view>
 
 #include "render/gl/context_requirements.h"
+#include "render/profiling/presentation_cycle.h"
 
 #ifdef Q_OS_WIN
 #include <gl/gl.h>
@@ -1342,6 +1344,41 @@ auto main(int argc, char* argv[]) -> int {
   if (!screenshot_path.isEmpty()) {
     capture_screenshot_and_exit(
         window, screenshot_path, screenshot_view, screenshot_delay_ms);
+  }
+
+  if (runtime_benchmark_seconds > 0.0 &&
+      qEnvironmentVariableIntValue("SOI_BENCHMARK_CAMERA_CYCLE") != 0) {
+    auto* cycle_timer = new QTimer(game_engine.get());
+    auto elapsed = std::make_shared<QElapsedTimer>();
+    auto previous = std::make_shared<Render::Profiling::PresentationCyclePosition>();
+    QObject::connect(
+        cycle_timer,
+        &QTimer::timeout,
+        game_engine.get(),
+        [game_ptr = game_engine.get(), elapsed, previous]() {
+          auto& progress = Render::Profiling::presentation_cycle_progress();
+          if (game_ptr->is_loading() || !game_ptr->simulation_thread_running()) {
+            elapsed->invalidate();
+            *previous = {};
+            progress.updates = 0;
+            progress.completed_cycles = 0;
+            return;
+          }
+          if (!elapsed->isValid()) {
+            elapsed->start();
+          }
+          const double seconds = static_cast<double>(elapsed->elapsed()) / 1000.0;
+          const auto position = Render::Profiling::presentation_cycle_position(seconds);
+          auto* camera = static_cast<App::ViewModels::CameraViewModel*>(
+              game_ptr->camera_view_model());
+          camera->look_at_world(static_cast<float>(position.x),
+                                static_cast<float>(position.z));
+          camera->zoom(static_cast<float>(position.zoom - previous->zoom));
+          *previous = position;
+          ++progress.updates;
+          progress.completed_cycles = static_cast<std::uint64_t>(seconds / 20.0);
+        });
+    cycle_timer->start(16);
   }
 
   qInfo() << "Starting event loop...";

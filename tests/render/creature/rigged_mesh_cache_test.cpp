@@ -270,6 +270,19 @@ TEST(RiggedMeshCache, FrameStatsTrackSkinUploadCounters) {
   EXPECT_EQ(cache.frame_stats().skin_ubo_bytes_uploaded, 0U);
 }
 
+TEST(RiggedMeshCache, GpuPrewarmWithoutContextPreservesGuardAndCpuCache) {
+  RuntimeBakeGuardReset guard_reset;
+  RiggedMeshCache cache;
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
+  auto const bind = Render::Humanoid::humanoid_bind_palette();
+  ASSERT_NE(cache.get_or_bake(spec, CreatureLOD::Full, bind), nullptr);
+  const auto count = cache.size();
+  Render::Creature::set_runtime_bake_forbidden(true);
+  EXPECT_FALSE(cache.prewarm_gpu_resources());
+  EXPECT_EQ(cache.size(), count);
+  EXPECT_TRUE(Render::Creature::runtime_bake_forbidden());
+}
+
 TEST(RiggedMeshCache, DeferredSkinUploadRemainsQueuedWithoutRenderContext) {
   RuntimeBakeGuardReset guard_reset;
   RiggedMeshCache cache;

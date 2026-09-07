@@ -8,7 +8,7 @@
 #include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
-#include "game/map/map_loader.h"
+#include "game/map/map_context.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/session/session_context.h"
@@ -86,44 +86,42 @@ void GameStateRestorer::restore_environment_from_metadata(
 
   auto& terrain_service = Game::Session::session_for(*world).terrain();
 
-  Game::Map::MapDefinition def;
-  QString map_error;
-  bool loaded_definition = false;
+  Game::Map::MapContext map_context;
   const QString& map_path = level.map_path;
 
   if (!map_path.isEmpty()) {
-    const QString resolved_map_path = Utils::Resources::resolve_resource_path(map_path);
-    loaded_definition =
-        Game::Map::MapLoader::load_from_json_file(resolved_map_path, def, &map_error);
-    if (!loaded_definition) {
+    QString map_error;
+    map_context = Game::Map::MapContextStore::acquire(map_path, &map_error);
+    if (!map_context.valid()) {
       qWarning() << "GameStateRestorer: Failed to load map definition from" << map_path
-                 << "(resolved:" << resolved_map_path << "):" << map_error;
+                 << "(resolved:" << map_context.resolved_path() << "):" << map_error;
     }
   }
 
-  if (loaded_definition) {
+  const Game::Map::MapDefinition* def = map_context.definition();
+  if (def != nullptr) {
     terrain_service.clear();
-    terrain_service.initialize(def);
+    terrain_service.initialize(*def);
 
-    if (!def.name.isEmpty()) {
-      level.map_name = def.name;
+    if (!def->name.isEmpty()) {
+      level.map_name = def->name;
     }
 
-    level.cam_fov = def.camera.fov_y;
-    level.cam_near = def.camera.near_plane;
-    level.cam_far = def.camera.far_plane;
+    level.cam_fov = def->camera.fov_y;
+    level.cam_near = def->camera.near_plane;
+    level.cam_far = def->camera.far_plane;
   }
 
   if ((scene.renderer != nullptr) && (scene.active_camera != nullptr)) {
-    if (loaded_definition) {
-      App::Core::Environment::apply(def, *scene.renderer, *scene.active_camera);
+    if (def != nullptr) {
+      App::Core::Environment::apply(*def, *scene.renderer, *scene.active_camera);
     } else {
       App::Core::Environment::apply_default(*scene.renderer, *scene.active_camera);
     }
   }
 
-  if (loaded_definition && minimap_manager != nullptr) {
-    minimap_manager->generate_for_map(def);
+  if (def != nullptr && minimap_manager != nullptr) {
+    minimap_manager->generate_for_map(*def);
   }
 
   if (terrain_service.is_initialized()) {

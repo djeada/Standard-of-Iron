@@ -495,7 +495,7 @@ void AudioSystem::process_event(const AudioEvent& event) {
               ? MixBus::Voice
               : (category == AudioCategory::AMBIENCE ? MixBus::Ambience
                                                      : MixBus::Combat);
-      // Category wins for voice resources bound to generic feedback cues.
+
       const MixBus bus =
           category == AudioCategory::VOICE
               ? MixBus::Voice

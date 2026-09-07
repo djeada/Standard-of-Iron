@@ -23,6 +23,7 @@ enum class Phase : std::uint8_t {
   Shadow = 6,
   Playback = 7,
   Present = 8,
+  PortraitPrewarm = 9,
   _Count
 };
 
@@ -46,6 +47,8 @@ enum class Phase : std::uint8_t {
     return "play";
   case Phase::Present:
     return "present";
+  case Phase::PortraitPrewarm:
+    return "portrait_prewarm";
   case Phase::_Count:
     break;
   }

@@ -4,8 +4,6 @@
 
 namespace Render::GL::Carthage::BuildingPalette {
 
-// Shared architectural materials keep civilian and military buildings cohesive.
-// Player colors belong on banners and trim, never on the roof materials.
 inline constexpr QVector3D k_sandstone{0.82F, 0.70F, 0.52F};
 inline constexpr QVector3D k_sandstone_light{0.92F, 0.84F, 0.68F};
 inline constexpr QVector3D k_sandstone_dark{0.55F, 0.44F, 0.31F};

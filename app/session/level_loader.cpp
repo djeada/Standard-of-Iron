@@ -58,11 +58,12 @@ auto LevelLoader::loadFromAssets(const QString& map_path,
   res.lighting_state = match.lighting_state;
   res.environment = match.environment;
 
-  if (match.ok) {
-    App::Core::Environment::apply(match.definition, renderer, camera);
-    res.cam_fov = match.definition.camera.fov_y;
-    res.cam_near = match.definition.camera.near_plane;
-    res.cam_far = match.definition.camera.far_plane;
+  if (match.ok && match.map_context.valid()) {
+    const auto& definition = *match.map_context.definition();
+    App::Core::Environment::apply(definition, renderer, camera);
+    res.cam_fov = definition.camera.fov_y;
+    res.cam_near = definition.camera.near_plane;
+    res.cam_far = definition.camera.far_plane;
     return res;
   }
 

@@ -4,8 +4,6 @@
 
 namespace Render::GL::Roman::BuildingPalette {
 
-// Shared architectural materials keep civilian and military buildings cohesive.
-// Player colors belong on banners and trim, never on the roof materials.
 inline constexpr QVector3D k_limestone{0.96F, 0.94F, 0.88F};
 inline constexpr QVector3D k_limestone_shade{0.88F, 0.85F, 0.78F};
 inline constexpr QVector3D k_limestone_dark{0.66F, 0.62F, 0.55F};

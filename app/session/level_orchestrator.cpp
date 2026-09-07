@@ -3,15 +3,18 @@
 #include <QCoreApplication>
 #include <QDebug>
 
+#include <cstdint>
+#include <optional>
 #include <utility>
 
 #include "app/session/loading_progress_tracker.h"
 #include "app/session/skirmish_loader.h"
 #include "app/world/minimap_manager.h"
 #include "app/world/visibility_coordinator.h"
+#include "game/core/startup_profiler.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
-#include "game/map/map_loader.h"
+#include "game/map/map_context.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
@@ -39,6 +42,7 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
                                       VisibilityCoordinator* visibility_coordinator,
                                       OwnerUpdateCallback owner_update,
                                       bool allow_default_player_barracks,
+                                      bool defer_ai_initialization,
                                       LoadingProgressTracker* progress_tracker)
     -> LevelLoadResult {
 
@@ -119,11 +123,18 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
     QCoreApplication::processEvents();
   }
 
+  std::optional<Engine::Core::ScopedStartupPhase> spawn_phase;
+  spawn_phase.emplace("world.map_and_spawns");
   auto load_result = loader.start(map_path,
                                   player_configs,
                                   selected_player_id,
                                   allow_default_player_barracks,
                                   result.updated_player_id);
+  if (Engine::Core::StartupProfiler::reporting_enabled()) {
+    spawn_phase->add_items(static_cast<std::int64_t>(
+        world.collect_entities_with<Engine::Core::UnitComponent>().size()));
+  }
+  spawn_phase.reset();
 
   if (!load_result.ok) {
     result.success = false;
@@ -173,11 +184,13 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
     QCoreApplication::processEvents();
   }
 
-  Game::Map::MapDefinition map_def;
+  std::optional<Engine::Core::ScopedStartupPhase> map_systems_phase;
+  map_systems_phase.emplace("world.map_systems");
   QString map_error;
-  const QString resolved_map_path = Utils::Resources::resolve_resource_path(map_path);
-  if (Game::Map::MapLoader::load_from_json_file(
-          resolved_map_path, map_def, &map_error)) {
+  const Game::Map::MapContext map_context =
+      Game::Map::MapContextStore::acquire(map_path, &map_error);
+  if (map_context.valid()) {
+    const auto& map_def = *map_context.definition();
     level.starting_resources = map_def.starting_resources;
     if (auto* undead_system =
             world.get_system<Game::Systems::UndeadAwakeningSystem>()) {
@@ -207,6 +220,7 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
     qWarning()
         << "LevelOrchestrator: no session in scene context; terrain left unsealed";
   }
+  map_systems_phase.reset();
 
   if (progress_tracker != nullptr) {
     progress_tracker->set_stage(
@@ -214,27 +228,33 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
     QCoreApplication::processEvents();
   }
 
-  if (auto* ai_system = world.get_system<Game::Systems::AISystem>()) {
-    ai_system->reinitialize();
+  if (!defer_ai_initialization) {
+    if (auto* ai_system = world.get_system<Game::Systems::AISystem>()) {
+      ai_system->reinitialize();
+    }
   }
 
-  auto& session = Game::Session::session_for(world);
-  auto& troops = session.troop_counts();
-  troops.rebuild_from_world(world);
+  {
+    const Engine::Core::ScopedStartupPhase registry_phase("world.registry_rebuild");
+    auto& session = Game::Session::session_for(world);
+    auto& troops = session.troop_counts();
+    troops.rebuild_from_world(world);
 
-  auto& stats_registry = session.stats();
-  stats_registry.rebuild_from_world(world);
+    auto& stats_registry = session.stats();
+    stats_registry.rebuild_from_world(world);
 
-  auto& owner_registry = session.owners();
-  const auto& all_owners = owner_registry.get_all_owners();
-  for (const auto& owner : all_owners) {
-    if (owner.type == Game::Systems::OwnerType::Player ||
-        owner.type == Game::Systems::OwnerType::AI) {
-      stats_registry.mark_game_start(owner.owner_id);
+    auto& owner_registry = session.owners();
+    const auto& all_owners = owner_registry.get_all_owners();
+    for (const auto& owner : all_owners) {
+      if (owner.type == Game::Systems::OwnerType::Player ||
+          owner.type == Game::Systems::OwnerType::AI) {
+        stats_registry.mark_game_start(owner.owner_id);
+      }
     }
   }
 
   if (scene.renderer != nullptr) {
+    const Engine::Core::ScopedStartupPhase prewarm_phase("render.template_prewarm");
     scene.renderer->prewarm_unit_templates(
         &world,
         [progress_tracker](
