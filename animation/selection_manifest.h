@@ -93,6 +93,8 @@ struct LocomotionCrossfadeInputs {
 
   float locomotion_presence{0.0F};
   float run_presence{0.0F};
+
+  float lateral_share{0.0F};
 };
 
 struct LocomotionCrossfade {

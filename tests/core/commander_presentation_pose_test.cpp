@@ -23,6 +23,8 @@ struct PresentedSample {
   float presented_yaw{0.0F};
   float yaw{0.0F};
   float largest_presented_step{0.0F};
+  float slowest_presented_speed{0.0F};
+  float fastest_presented_speed{0.0F};
   int presented_frames{0};
 };
 
@@ -96,8 +98,18 @@ protected:
         auto const& pose = controller.presentation_pose();
         QVector3D const presented(pose.position.x, pose.position.y, pose.position.z);
         if (have_previous_presented) {
-          sample.largest_presented_step = std::max(
-              sample.largest_presented_step, (presented - previous_presented).length());
+          float const step = (presented - previous_presented).length();
+          sample.largest_presented_step = std::max(sample.largest_presented_step, step);
+
+          if (sample.presented_frames > 20) {
+            float const speed = step / frame_seconds;
+            sample.slowest_presented_speed =
+                sample.slowest_presented_speed > 0.0F
+                    ? std::min(sample.slowest_presented_speed, speed)
+                    : speed;
+            sample.fastest_presented_speed =
+                std::max(sample.fastest_presented_speed, speed);
+          }
         }
         previous_presented = presented;
         have_previous_presented = true;
@@ -144,6 +156,20 @@ TEST_F(CommanderPresentationPoseTest, PresentationPoseIsFrameRateInvariant) {
         << presentation_hz << " Hz: the presented pose depends on the display rate";
     EXPECT_NEAR(std::abs(sample.presented_yaw - reference.presented_yaw), 0.0F, 0.25F)
         << presentation_hz << " Hz: presented yaw depends on the display rate";
+  }
+}
+
+TEST_F(CommanderPresentationPoseTest, PresentedSpeedIsUniformAtEveryDisplayRate) {
+
+  for (float const presentation_hz : {72.0F, 100.0F, 120.0F, 144.0F, 165.0F}) {
+    const auto sample = run_scripted_second(presentation_hz);
+    ASSERT_GT(sample.presented_frames, 30) << presentation_hz << " Hz";
+    ASSERT_GT(sample.slowest_presented_speed, 0.0F) << presentation_hz << " Hz";
+
+    EXPECT_LT(sample.fastest_presented_speed, sample.slowest_presented_speed * 1.35F)
+        << presentation_hz << " Hz: the presented speed swings between "
+        << sample.slowest_presented_speed << " and " << sample.fastest_presented_speed
+        << " m/s while the simulation runs at one speed";
   }
 }
 

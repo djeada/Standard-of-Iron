@@ -42,6 +42,8 @@ struct VisualMovementState {
   bool has_navigation_intent{false};
   bool has_chase_intent{false};
   bool forced_displacement{false};
+
+  bool facing_independent_of_travel{false};
   bool attack_target_in_range{false};
   bool has_movement_target{false};
   QVector3D locomotion_direction{0.0F, 0.0F, 1.0F};
@@ -54,6 +56,11 @@ struct AnimationInputs {
   Render::Creature::MovementAnimationState movement_state{
       Render::Creature::MovementAnimationState::Idle};
   VisualMovementState visual_movement{};
+
+  bool has_action_link{false};
+  std::uint16_t action_link_clip{Animation::k_unmapped_clip};
+  float action_link_phase{0.0F};
+  float action_link_weight{0.0F};
   bool is_mounted{false};
   bool is_attacking;
   bool is_melee;
@@ -313,6 +320,8 @@ struct HumanoidGaitDescriptor {
   float turn_amount{0.0F};
 
   float travel_alignment{1.0F};
+
+  float travel_lateral{0.0F};
   bool reverse_gait{false};
   float acceleration{0.0F};
 

@@ -143,6 +143,7 @@ private:
   float m_bob_phase{0.0F};
   float m_bob_amplitude{0.0F};
   float m_breath_phase{0.0F};
+  float m_idle_presence{1.0F};
   float m_strafe_lean{0.0F};
   float m_fov_current{75.0F};
   float m_aim_blend{0.0F};

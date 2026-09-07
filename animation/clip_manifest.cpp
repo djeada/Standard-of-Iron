@@ -430,6 +430,10 @@ auto requested_humanoid_clip_variant(const HumanoidClipVariantInputs& inputs) no
   case StateId::RpgSwordFinisher:
   case StateId::WildlifeTense:
   case StateId::WildlifeStartle:
+  case StateId::WalkStrafeLeft:
+  case StateId::WalkStrafeRight:
+  case StateId::RunStrafeLeft:
+  case StateId::RunStrafeRight:
   case StateId::Count:
     break;
   }

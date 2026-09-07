@@ -286,6 +286,8 @@ protected:
   void resizeGL(int width, int height) override;
   void paintGL() override;
 
+  auto focusNextPrevChild(bool next) -> bool override;
+
   void keyPressEvent(QKeyEvent* event) override;
   void keyReleaseEvent(QKeyEvent* event) override;
   void focusOutEvent(QFocusEvent* event) override;
@@ -340,6 +342,7 @@ private:
   [[nodiscard]] auto take_due_presentation_hitch() -> float;
   void publish_animation_clock();
   void publish_commander_presentation_trace();
+  void report_rpg_interactive_state(float simulation_dt);
   void update_rpg_scenario_controller(float simulation_dt);
   void clear_rpg_scenario_state();
   [[nodiscard]] auto rpg_interactive_key_press(QKeyEvent* event) -> bool;
@@ -444,6 +447,7 @@ private:
   Engine::Core::EntityID m_rpg_commander_id{0};
   int m_rpg_initial_enemy_units{0};
   bool m_rpg_interactive{false};
+  float m_rpg_trace_accumulator{0.0F};
   bool m_rpg_mouse_captured{false};
   QPoint m_rpg_mouse_center;
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_unit_factory;
