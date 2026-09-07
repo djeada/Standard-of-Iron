@@ -1,16 +1,21 @@
 #include <QByteArray>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QString>
+#include <QStringList>
 #include <QTemporaryDir>
 
 #include <gtest/gtest.h>
 #include <memory>
 #include <numbers>
 
+#include "map/campaign_definition.h"
 #include "systems/save_format.h"
 #include "systems/save_storage.h"
 
@@ -393,4 +398,272 @@ TEST_F(SaveStorageTest, AttachingAScreenshotToAMissingSlotFails) {
   QString error;
   EXPECT_FALSE(storage->update_screenshot("nope", QByteArray("png"), &error));
   EXPECT_FALSE(error.isEmpty());
+}
+
+namespace {
+
+void write_legacy_v2_database(const QString& database_path) {
+  const QString connection = QStringLiteral("legacy_v2_fixture");
+  {
+    QSqlDatabase legacy =
+        QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), connection);
+    legacy.setDatabaseName(database_path);
+    ASSERT_TRUE(legacy.open());
+
+    QSqlQuery query(legacy);
+    ASSERT_TRUE(query.exec(QStringLiteral(
+        "CREATE TABLE saves (slot_name TEXT PRIMARY KEY NOT NULL, title TEXT NOT "
+        "NULL, map_name TEXT NOT NULL, map_path TEXT NOT NULL, mode TEXT NOT NULL, "
+        "campaign_id TEXT NOT NULL, mission_id TEXT NOT NULL, difficulty TEXT NOT "
+        "NULL, kind TEXT NOT NULL, play_time_seconds REAL NOT NULL, created_at TEXT "
+        "NOT NULL, updated_at TEXT NOT NULL, format_version INTEGER NOT NULL, "
+        "compression TEXT NOT NULL, world_raw_size INTEGER NOT NULL, "
+        "world_raw_checksum TEXT NOT NULL, world_blob_checksum TEXT NOT NULL, "
+        "metadata BLOB NOT NULL, world_state BLOB NOT NULL, screenshot BLOB)")))
+        << query.lastError().text().toStdString();
+    ASSERT_TRUE(query.exec(QStringLiteral(
+        "CREATE TABLE campaign_progress (campaign_id TEXT PRIMARY KEY NOT NULL, "
+        "completed INTEGER NOT NULL DEFAULT 0, unlocked INTEGER NOT NULL DEFAULT 0, "
+        "completed_at TEXT)")));
+    ASSERT_TRUE(query.exec(QStringLiteral(
+        "CREATE TABLE campaign_missions (campaign_id TEXT NOT NULL, mission_id TEXT "
+        "NOT NULL, order_index INTEGER NOT NULL, unlocked INTEGER NOT NULL DEFAULT "
+        "0, completed INTEGER NOT NULL DEFAULT 0, completed_at TEXT, PRIMARY KEY "
+        "(campaign_id, mission_id))")));
+    ASSERT_TRUE(query.exec(QStringLiteral(
+        "CREATE TABLE mission_results (mission_id TEXT NOT NULL, mode TEXT NOT NULL, "
+        "campaign_id TEXT NOT NULL, completed INTEGER NOT NULL DEFAULT 0, "
+        "completion_time REAL, difficulty TEXT, result TEXT, completed_at TEXT, "
+        "created_at TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY (mission_id, "
+        "mode, campaign_id))")));
+
+    const Save::Payload payload = Save::pack(QByteArray("{\"entities\":[]}"));
+    QSqlQuery insert(legacy);
+    ASSERT_TRUE(insert.prepare(QStringLiteral(
+        "INSERT INTO saves VALUES ('old_campaign_save', 'Before Cannae', 'Apulia', "
+        "'assets/maps/apulia.json', 'campaign', 'second_punic_war', 'cannae', "
+        "'normal', 'manual', 900.0, '2026-01-01T00:00:00.000Z', "
+        "'2026-01-01T00:00:00.000Z', 1, :compression, :raw_size, :raw_checksum, "
+        ":blob_checksum, '{}', :blob, NULL)")));
+    insert.bindValue(QStringLiteral(":compression"),
+                     Save::compression_to_string(payload.compression));
+    insert.bindValue(QStringLiteral(":raw_size"), payload.raw_size);
+    insert.bindValue(QStringLiteral(":raw_checksum"), payload.raw_checksum);
+    insert.bindValue(QStringLiteral(":blob_checksum"), payload.blob_checksum);
+    insert.bindValue(QStringLiteral(":blob"), payload.blob);
+    ASSERT_TRUE(insert.exec()) << insert.lastError().text().toStdString();
+
+    ASSERT_TRUE(query.exec(QStringLiteral(
+        "INSERT INTO campaign_missions VALUES ('second_punic_war', 'ticinus', 0, 1, "
+        "1, '2026-01-01T00:00:00.000Z')")));
+    ASSERT_TRUE(query.exec(QStringLiteral(
+        "INSERT INTO campaign_missions VALUES ('second_punic_war', 'cannae', 1, 1, "
+        "0, NULL)")));
+    ASSERT_TRUE(query.exec(QStringLiteral("PRAGMA user_version = 2")));
+    legacy.close();
+  }
+  QSqlDatabase::removeDatabase(connection);
+}
+
+auto quarantined_siblings(const QString& database_path) -> QStringList {
+  const QFileInfo info(database_path);
+  return QDir(info.absolutePath())
+      .entryList({info.fileName() + QStringLiteral(".unreadable-*")}, QDir::Files);
+}
+
+} // namespace
+
+TEST(SaveStorageSafetyTest, UpgradingFromTheOldSchemaKeepsSavesAndCampaignProgress) {
+  QTemporaryDir const temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+  const QString database_path = temp_dir.filePath(QStringLiteral("saves.sqlite"));
+  write_legacy_v2_database(database_path);
+
+  SaveStorage storage(database_path);
+  QString error;
+  ASSERT_TRUE(storage.initialize(&error)) << error.toStdString();
+
+  EXPECT_TRUE(storage.quarantined_path().isEmpty())
+      << "a database we can upgrade must not be moved aside";
+  EXPECT_TRUE(storage.slot_exists("old_campaign_save"))
+      << "the upgrade dropped the player's save";
+
+  const QVariantList missions =
+      storage.get_campaign_mission_progress(QStringLiteral("second_punic_war"), &error);
+  ASSERT_EQ(missions.size(), 2) << "the upgrade dropped campaign progress";
+  EXPECT_TRUE(missions.at(0).toMap()[QStringLiteral("completed")].toBool());
+
+  const QVariantList listing = storage.list_slots(&error);
+  ASSERT_EQ(listing.size(), 1);
+  EXPECT_EQ(listing.at(0).toMap()[QStringLiteral("snapshot_version")].toInt(), 2)
+      << "a row carried over from schema 2 was written by snapshot 2";
+}
+
+TEST_F(SaveStorageTest, ASaveFromAnotherSnapshotVersionIsRefusedButKept) {
+  QString error;
+  ASSERT_TRUE(storage->write_slot(make_record("mine", "This Build"), &error));
+  ASSERT_TRUE(storage->write_slot(make_record("theirs", "Another Build"), &error));
+
+  QSqlQuery bump(QSqlDatabase::database(
+      QStringLiteral("SaveStorage_%1")
+          .arg(reinterpret_cast<quintptr>(storage.get()), 0, 16)));
+  ASSERT_TRUE(bump.exec(QStringLiteral("UPDATE saves SET snapshot_version = %1 "
+                                       "WHERE slot_name = 'theirs'")
+                            .arg(Save::k_snapshot_version + 7)))
+      << bump.lastError().text().toStdString();
+
+  Save::Record loaded;
+  EXPECT_FALSE(storage->read_slot("theirs", loaded, &error));
+  EXPECT_TRUE(error.contains("different version")) << error.toStdString();
+
+  EXPECT_TRUE(storage->slot_exists("theirs")) << "the refused save was deleted";
+  EXPECT_TRUE(storage->read_slot("mine", loaded, &error)) << error.toStdString();
+
+  const QVariantList listing = storage->list_slots(&error);
+  ASSERT_EQ(listing.size(), 2);
+  for (const QVariant& entry : listing) {
+    const QVariantMap slot = entry.toMap();
+    EXPECT_EQ(slot[QStringLiteral("loadable")].toBool(),
+              slot[QStringLiteral("slot_name")].toString() == QStringLiteral("mine"))
+        << "the listing must say which rows this build can open";
+  }
+}
+
+TEST(SaveStorageSafetyTest, ADatabaseFromANewerBuildIsMovedAsideNotDeleted) {
+  QTemporaryDir const temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+  const QString database_path = temp_dir.filePath(QStringLiteral("saves.sqlite"));
+
+  {
+    SaveStorage storage(database_path);
+    QString error;
+    ASSERT_TRUE(storage.initialize(&error)) << error.toStdString();
+    ASSERT_TRUE(storage.write_slot(make_record("from_the_future", "Later"), &error));
+  }
+  {
+    QSqlDatabase future = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"),
+                                                    QStringLiteral("future_fixture"));
+    future.setDatabaseName(database_path);
+    ASSERT_TRUE(future.open());
+    QSqlQuery query(future);
+    ASSERT_TRUE(query.exec(QStringLiteral("PRAGMA user_version = %1")
+                               .arg(Save::k_database_schema_version + 5)));
+    future.close();
+  }
+  QSqlDatabase::removeDatabase(QStringLiteral("future_fixture"));
+
+  SaveStorage storage(database_path);
+  QString error;
+  ASSERT_TRUE(storage.initialize(&error)) << error.toStdString();
+
+  EXPECT_FALSE(storage.quarantined_path().isEmpty())
+      << "the newer database should have been moved aside";
+  EXPECT_TRUE(QFile::exists(storage.quarantined_path()))
+      << "the player's file was deleted instead of preserved";
+  EXPECT_FALSE(quarantined_siblings(database_path).isEmpty());
+  EXPECT_TRUE(storage.list_slots(&error).isEmpty());
+  EXPECT_TRUE(storage.write_slot(make_record("fresh_start", "Fresh"), &error))
+      << error.toStdString();
+}
+
+TEST(SaveStorageSafetyTest, AnUnreadableFileIsMovedAsideAndReplaced) {
+  QTemporaryDir const temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+  const QString database_path = temp_dir.filePath(QStringLiteral("saves.sqlite"));
+
+  {
+    QFile rubbish(database_path);
+    ASSERT_TRUE(rubbish.open(QIODevice::WriteOnly));
+    rubbish.write(QByteArray(8192, '\x7f'));
+    rubbish.close();
+  }
+
+  SaveStorage storage(database_path);
+  QString error;
+  ASSERT_TRUE(storage.initialize(&error)) << error.toStdString();
+  EXPECT_TRUE(storage.health_error().isEmpty());
+  EXPECT_FALSE(storage.quarantined_path().isEmpty());
+  EXPECT_TRUE(QFile::exists(storage.quarantined_path()));
+  EXPECT_TRUE(storage.write_slot(make_record("after_repair", "Repaired"), &error))
+      << error.toStdString();
+  EXPECT_TRUE(storage.verify_slot("after_repair", &error)) << error.toStdString();
+}
+
+TEST_F(SaveStorageTest, AManualSaveCannotTakeASlotNameTheGameRotates) {
+  QString error;
+  EXPECT_FALSE(storage->write_slot(make_record("quicksave", "Mine"), &error));
+  EXPECT_TRUE(error.contains("reserved")) << error.toStdString();
+  EXPECT_FALSE(storage->write_slot(make_record("autosave_3", "Mine"), &error));
+  EXPECT_TRUE(error.contains("reserved")) << error.toStdString();
+
+  Save::Record autosave = make_record("autosave_3", "Rotation");
+  autosave.kind = Save::SlotKind::Autosave;
+  EXPECT_TRUE(storage->write_slot(autosave, &error)) << error.toStdString();
+}
+
+TEST_F(SaveStorageTest, TheRotationRefusesToOverwriteASaveOfADifferentKind) {
+  QString error;
+  Save::Record manual = make_record("autosave_1", "Hand Written");
+  manual.kind = Save::SlotKind::Quicksave;
+  ASSERT_TRUE(storage->write_slot(manual, &error)) << error.toStdString();
+
+  Save::Record autosave = make_record("autosave_1", "Rotation");
+  autosave.kind = Save::SlotKind::Autosave;
+  EXPECT_FALSE(storage->write_slot(autosave, &error));
+  EXPECT_TRUE(error.contains("Delete it from the Load menu")) << error.toStdString();
+
+  Save::Record kept;
+  ASSERT_TRUE(storage->read_slot("autosave_1", kept, &error));
+  EXPECT_EQ(kept.title, QString("Hand Written"));
+}
+
+TEST_F(SaveStorageTest, VerifyRejectsAPayloadThatIsNotAWorld) {
+  QString error;
+  ASSERT_TRUE(storage->write_slot(
+      make_record("not_a_world", "Nonsense", QByteArray("not json at all")), &error));
+  EXPECT_FALSE(storage->verify_slot("not_a_world", &error));
+  EXPECT_TRUE(error.contains("readable world")) << error.toStdString();
+
+  ASSERT_TRUE(storage->write_slot(
+      make_record("no_units", "Empty", QByteArray("{\"players\":[]}")), &error));
+  EXPECT_FALSE(storage->verify_slot("no_units", &error));
+  EXPECT_TRUE(error.contains("units")) << error.toStdString();
+
+  ASSERT_TRUE(storage->write_slot(make_record("good", "Good"), &error));
+  EXPECT_TRUE(storage->verify_slot("good", &error)) << error.toStdString();
+}
+
+TEST_F(SaveStorageTest, PruningRemovedMissionsNeverDropsAFinishedOne) {
+  QString error;
+  Game::Campaign::CampaignDefinition campaign;
+  campaign.id = QStringLiteral("punic");
+  campaign.missions.push_back(
+      {.mission_id = QStringLiteral("rhone"), .order_index = 0});
+  campaign.missions.push_back({.mission_id = QStringLiteral("alps"), .order_index = 1});
+  ASSERT_TRUE(storage->ensure_campaign_missions_in_db(campaign, &error))
+      << error.toStdString();
+
+  ASSERT_TRUE(
+      storage->complete_campaign_mission(campaign.id, QStringLiteral("rhone"), &error)
+          .has_value())
+      << error.toStdString();
+
+  Game::Campaign::CampaignDefinition broken;
+  broken.id = campaign.id;
+  ASSERT_TRUE(storage->ensure_campaign_missions_in_db(broken, &error))
+      << error.toStdString();
+
+  const QVariantList rows = storage->get_campaign_mission_progress(campaign.id);
+  bool kept_the_win = false;
+  for (const QVariant& entry : rows) {
+    const QVariantMap row = entry.toMap();
+    if (row.value(QStringLiteral("mission_id")).toString() == QStringLiteral("rhone")) {
+      kept_the_win = row.value(QStringLiteral("completed")).toBool();
+    }
+    EXPECT_NE(row.value(QStringLiteral("mission_id")).toString(),
+              QStringLiteral("alps"))
+        << "an unfinished mission the definition dropped should still be pruned";
+  }
+  EXPECT_TRUE(kept_the_win)
+      << "a finished mission was erased because the definition stopped listing it";
 }

@@ -26,25 +26,27 @@ auto build_commander_speaker_roster(Engine::Core::World& world,
     Game::Systems::NationID nation = Game::Systems::NationID::RomanRepublic;
   };
   std::map<int, Fielded> fielded_by_owner;
+  std::map<int, Game::Systems::NationID> nation_by_owner;
 
-  for (auto* entity : world.collect_entities_with<Engine::Core::CommanderComponent>()) {
-    if (entity == nullptr) {
+  for (auto [entity_id, unit] : world.view<const Engine::Core::UnitComponent>()) {
+    if (unit.health <= 0) {
       continue;
     }
-    const auto* unit = world.try_get<Engine::Core::UnitComponent>(entity->get_id());
-    if (unit == nullptr || unit->health <= 0) {
+    nation_by_owner.try_emplace(unit.owner_id, unit.nation_id);
+
+    if (!world.has<Engine::Core::CommanderComponent>(entity_id)) {
       continue;
     }
-    const auto troop_type = Game::Units::spawn_typeToTroopType(unit->spawn_type);
+    const auto troop_type = Game::Units::spawn_typeToTroopType(unit.spawn_type);
     if (!troop_type.has_value() || !Game::Units::is_commander_troop(*troop_type)) {
       continue;
     }
-    if (fielded_by_owner.contains(unit->owner_id)) {
-      continue;
-    }
-    fielded_by_owner[unit->owner_id] = {
-        .troop_type = Game::Units::troop_typeToQString(*troop_type),
-        .nation = unit->nation_id};
+    fielded_by_owner.try_emplace(
+        unit.owner_id,
+        Fielded{
+            .troop_type = Game::Units::troop_typeToQString(*troop_type),
+            .nation = unit.nation_id,
+        });
   }
 
   std::vector<CommanderSpeaker> roster;
@@ -58,15 +60,10 @@ auto build_commander_speaker_roster(Engine::Core::World& world,
         it != fielded_by_owner.end()) {
       troop_type = it->second.troop_type;
     } else if (owner.type == Game::Systems::OwnerType::AI) {
-
-      Game::Systems::NationID nation = Game::Systems::NationID::RomanRepublic;
-      for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
-        const auto* unit = world.try_get<Engine::Core::UnitComponent>(entity->get_id());
-        if (unit != nullptr && unit->owner_id == owner.owner_id) {
-          nation = unit->nation_id;
-          break;
-        }
-      }
+      const auto nation_it = nation_by_owner.find(owner.owner_id);
+      const auto nation = nation_it != nation_by_owner.end()
+                              ? nation_it->second
+                              : Game::Systems::NationID::RomanRepublic;
       troop_type = resolve_commander_troop(Game::Systems::nation_id_to_qstring(nation),
                                            std::nullopt);
     }

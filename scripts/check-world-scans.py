@@ -94,21 +94,45 @@ def nested_scans(text: str) -> list[int]:
     docstring warns about: one scan per asker, once per iteration. Indentation
     is a heuristic -- it cannot see a scan called through a helper -- so this is
     reported rather than budgeted, and a false positive is cheap to read past.
+
+    One false positive is not cheap, though, because it is systematic:
+    clang-format wraps a long `for (auto* e : world.collect_entities_with<T>())`
+    onto two lines, and read one line at a time the scan then looks like the
+    body of the loop it is the header of. A wrapped header is tracked to its
+    closing parenthesis so the scan is attributed to the header instead.
     """
     lines = text.splitlines()
     open_loops: list[int] = []
     nested: list[int] = []
+    header_indent: int | None = None
+    header_depth = 0
     for number, line in enumerate(lines, start=1):
         stripped = line.lstrip()
         if stripped.startswith("//") or stripped.startswith("*"):
             continue
+
+        if header_indent is not None:
+
+            header_depth += line.count("(") - line.count(")")
+            if header_depth <= 0:
+                open_loops.append(header_indent)
+                header_indent = None
+                header_depth = 0
+            continue
+
         indent = indent_of(line)
         while open_loops and indent <= open_loops[-1]:
             open_loops.pop()
         if SCAN.search(line) and open_loops:
             nested.append(number)
         if LOOP_HEADER.match(line):
-            open_loops.append(indent)
+            depth = line.count("(") - line.count(")")
+            if depth > 0:
+
+                header_indent = indent
+                header_depth = depth
+            else:
+                open_loops.append(indent)
     return nested
 
 

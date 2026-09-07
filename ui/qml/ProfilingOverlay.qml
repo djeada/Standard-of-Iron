@@ -59,7 +59,7 @@ Item {
     }
 
     Shortcut {
-        sequence: "F9"
+        sequence: "Ctrl+Shift+F9"
         context: Qt.ApplicationShortcut
         onActivated: profiling_overlay.toggle_audio()
     }

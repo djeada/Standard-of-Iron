@@ -32,6 +32,61 @@ TEST(ArenaScenariosTest, WildlifeContactFixturesCoverBuildersSoldiersAndSheep) {
   }
 }
 
+TEST(ArenaScenariosTest, EngagementFixturesCoverEveryValidationCaseInTheIssue) {
+
+  struct Fixture {
+    const char* id;
+    const char* group;
+    Arena::ArenaExpectationKind expectation;
+  };
+
+  const std::vector<Fixture> fixtures{
+      {"engagement_wolves_maul_an_ally",
+       "escort",
+       Arena::ArenaExpectationKind::AutoEngagementObserved},
+      {"engagement_infantry_under_fire",
+       "shieldwall",
+       Arena::ArenaExpectationKind::AutoEngagementObserved},
+      {"engagement_village_defense",
+       "garrison",
+       Arena::ArenaExpectationKind::AutoEngagementObserved},
+      {"engagement_melee_assist",
+       "reserve",
+       Arena::ArenaExpectationKind::AutoEngagementObserved},
+      {"engagement_ranged_awareness",
+       "archers",
+       Arena::ArenaExpectationKind::NoAutoEngagementObserved},
+      {"engagement_order_overrides",
+       "column",
+       Arena::ArenaExpectationKind::EngagementReleasedByOrder},
+  };
+
+  for (auto const& fixture : fixtures) {
+    auto const* scenario =
+        Arena::Scenarios::find_definition(QString::fromLatin1(fixture.id));
+    ASSERT_NE(scenario, nullptr) << fixture.id;
+    EXPECT_TRUE(Arena::validate_scenario(*scenario).empty()) << fixture.id;
+
+    const bool has_expectation =
+        std::any_of(scenario->expectations.begin(),
+                    scenario->expectations.end(),
+                    [&fixture](const Arena::ArenaExpectation& expectation) {
+                      return expectation.kind == fixture.expectation &&
+                             expectation.group == QString::fromLatin1(fixture.group);
+                    });
+    EXPECT_TRUE(has_expectation)
+        << fixture.id << " no longer asserts anything about " << fixture.group;
+
+    const bool has_two_sides = std::any_of(scenario->groups.begin(),
+                                           scenario->groups.end(),
+                                           [](const Arena::ArenaScenarioGroup& group) {
+                                             return group.owner_id == 2;
+                                           }) ||
+                               scenario->wildlife.wolves.enabled;
+    EXPECT_TRUE(has_two_sides) << fixture.id << " has nobody to engage";
+  }
+}
+
 TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
   std::vector<QString> ids;
   ids.reserve(Arena::Scenarios::options().size());

@@ -165,9 +165,9 @@ Item {
                 game.saves.quicksave();
             return true;
         case "global.quickload":
-            if (game.saves.has_save_slot && game.saves.has_save_slot("quicksave"))
-                game.saves.load_from_slot("quicksave");
-            return true;
+            if (typeof mainWindow === 'undefined')
+                return false;
+            return mainWindow.request_quickload();
         }
         return false;
     }

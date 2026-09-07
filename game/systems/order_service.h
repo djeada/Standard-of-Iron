@@ -12,6 +12,7 @@ namespace Game::Systems {
 enum class MoveOrderKind : std::uint8_t {
   PlayerMove,
   FormationMove,
+  AttackMove,
   AttackChase,
   GuardReturn,
   RecoveryMove,

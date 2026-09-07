@@ -43,8 +43,6 @@ namespace Game::Systems::Combat {
 
 namespace {
 
-constexpr float k_min_bypass_clearance = 0.6F;
-
 auto deterministic_attack_delay(Engine::Core::EntityID attacker_id,
                                 Engine::Core::EntityID target_id,
                                 float cooldown) -> float {
@@ -1899,7 +1897,7 @@ void process_attacks(Engine::Core::World* world,
         attacker->has_component<Engine::Core::AttackTargetComponent>();
     if ((best_target == nullptr) && !has_attack_target &&
         !suppress_opportunistic_combat) {
-      if (Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker)) {
+      if (auto_acquires_targets(attacker)) {
         best_target = find_nearest_enemy(attacker, query_context, range);
         if (best_target != nullptr && !is_ranged_mode(attacker_atk) &&
             structure_separates_combatants(attacker, best_target)) {

@@ -565,6 +565,39 @@ TEST_F(PathfindingTest, BridgeApproachSegmentIsWalkableThroughGridCells) {
                                                     QVector3D(-1.5F, 0.0F, 0.0F)));
 }
 
+TEST_F(PathfindingTest, DiagonalSegmentsOverOpenGroundAreWalkableBothWays) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 21;
+  map_def.grid.height = 21;
+  map_def.grid.tile_size = 1.0F;
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  Game::Systems::Pathfinding pathfinding(map_def.grid.width, map_def.grid.height);
+  pathfinding.set_grid_offset(-(static_cast<float>(map_def.grid.width) * 0.5F - 0.5F),
+                              -(static_cast<float>(map_def.grid.height) * 0.5F - 0.5F));
+  pathfinding.update_navigation_grid();
+
+  for (int offset_x = -3; offset_x <= 3; ++offset_x) {
+    for (int offset_z = -3; offset_z <= 3; ++offset_z) {
+      if (offset_x == 0 && offset_z == 0) {
+        continue;
+      }
+      const QVector3D from(0.0F, 0.0F, 0.0F);
+      const QVector3D to(
+          static_cast<float>(offset_x), 0.0F, static_cast<float>(offset_z));
+
+      EXPECT_TRUE(pathfinding.is_world_segment_walkable(
+          from, to, Game::Systems::Pathfinding::Passability::Light, 0.0F))
+          << "open ground reported a wall from (0,0) to (" << offset_x << ","
+          << offset_z << ")";
+      EXPECT_TRUE(pathfinding.is_world_segment_walkable(
+          to, from, Game::Systems::Pathfinding::Passability::Light, 0.0F))
+          << "the same open ground was walkable one way only: (" << offset_x << ","
+          << offset_z << ") to (0,0)";
+    }
+  }
+}
+
 TEST_F(PathfindingTest, ASegmentWithClearanceStillWalksEveryCellItCrosses) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 21;

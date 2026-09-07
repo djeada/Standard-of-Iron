@@ -23,6 +23,20 @@ Item {
     readonly property color ink: "#0B0806"
     readonly property color bronze: hs.bronze
 
+    property bool has_continue_save: false
+    property string continue_label: ""
+
+    function reselect_if_unavailable() {
+        if (typeof commandList === 'undefined' || !commandList)
+            return;
+        if (!root.entry_available(menuModel.get(commandList.currentIndex)))
+            commandList.select_first_available();
+    }
+
+    onHas_continue_saveChanged: reselect_if_unavailable()
+    onGame_startedChanged: reselect_if_unavailable()
+
+    signal continue_requested
     signal open_skirmish
     signal open_missions
     signal open_campaign
@@ -39,11 +53,25 @@ Item {
     z: 10
     focus: true
 
+    function entry_available(entry) {
+        if (!entry)
+            return false;
+        if (entry.requiresGame && !root.game_started)
+            return false;
+        if (entry.requiresSave && !root.has_continue_save)
+            return false;
+        if (entry.idStr === "continue" && root.game_started)
+            return false;
+        return true;
+    }
+
     function trigger_selection(index) {
         var m = menuModel.get(index);
-        if (!m || (m.requiresGame && !root.game_started))
+        if (!entry_available(m))
             return;
-        if (m.idStr === "skirmish")
+        if (m.idStr === "continue")
+            root.continue_requested();
+        else if (m.idStr === "skirmish")
             root.open_skirmish();
         else if (m.idStr === "missions")
             root.open_missions();
@@ -68,8 +96,7 @@ Item {
     function move_selection(direction) {
         var next = commandList.currentIndex + direction;
         while (next >= 0 && next < menuModel.count) {
-            var m = menuModel.get(next);
-            if (!m.requiresGame || root.game_started) {
+            if (entry_available(menuModel.get(next))) {
                 commandList.currentIndex = next;
                 return;
             }
@@ -99,11 +126,22 @@ Item {
         id: menuModel
 
         ListElement {
+            idStr: "continue"
+            title: QT_TR_NOOP("Continue")
+            subtitle: QT_TR_NOOP("Return to the most recent save")
+            detail: QT_TR_NOOP("Resume")
+            requiresGame: false
+            requiresSave: true
+            accent: "#C29555"
+        }
+
+        ListElement {
             idStr: "skirmish"
             title: QT_TR_NOOP("Play Skirmish")
             subtitle: QT_TR_NOOP("Choose the field and deploy armies")
             detail: QT_TR_NOOP("Battle")
             requiresGame: false
+            requiresSave: false
             accent: "#B6362F"
         }
 
@@ -113,6 +151,7 @@ Item {
             subtitle: QT_TR_NOOP("One small field, one order to carry out")
             detail: QT_TR_NOOP("Detail")
             requiresGame: false
+            requiresSave: false
             accent: "#7C5F8F"
         }
 
@@ -122,6 +161,7 @@ Item {
             subtitle: QT_TR_NOOP("March through the Second Punic War")
             detail: QT_TR_NOOP("War Map")
             requiresGame: false
+            requiresSave: false
             accent: "#C29555"
         }
 
@@ -131,6 +171,7 @@ Item {
             subtitle: QT_TR_NOOP("Learn to command in a guided first battle")
             detail: QT_TR_NOOP("Training")
             requiresGame: false
+            requiresSave: false
             accent: "#7E8F4E"
         }
 
@@ -140,6 +181,7 @@ Item {
             subtitle: QT_TR_NOOP("Review active orders")
             detail: QT_TR_NOOP("Orders")
             requiresGame: true
+            requiresSave: false
             accent: "#8C6A3E"
         }
 
@@ -149,6 +191,7 @@ Item {
             subtitle: QT_TR_NOOP("Record the current campaign state")
             detail: QT_TR_NOOP("Archive")
             requiresGame: true
+            requiresSave: false
             accent: "#A7814A"
         }
 
@@ -158,6 +201,7 @@ Item {
             subtitle: QT_TR_NOOP("Return to a saved command")
             detail: QT_TR_NOOP("Return")
             requiresGame: false
+            requiresSave: false
             accent: "#8A7047"
         }
 
@@ -167,6 +211,7 @@ Item {
             subtitle: QT_TR_NOOP("Display, audio, and controls")
             detail: QT_TR_NOOP("Options")
             requiresGame: false
+            requiresSave: false
             accent: "#8C6A3E"
         }
 
@@ -176,6 +221,7 @@ Item {
             subtitle: QT_TR_NOOP("How selection, economy, buildings and armies work")
             detail: QT_TR_NOOP("Help")
             requiresGame: false
+            requiresSave: false
             accent: "#6F7F8C"
         }
 
@@ -185,6 +231,7 @@ Item {
             subtitle: QT_TR_NOOP("Leave the war table")
             detail: QT_TR_NOOP("Retire")
             requiresGame: false
+            requiresSave: false
             accent: "#6E2B25"
         }
     }
@@ -555,15 +602,25 @@ Item {
                 model: menuModel
                 currentIndex: 0
 
-                Component.onCompleted: {
-                    if (!root.tutorial_pending)
-                        return;
+                function select_first_available() {
                     for (var i = 0; i < menuModel.count; ++i) {
-                        if (menuModel.get(i).idStr === "tutorial") {
-                            commandList.currentIndex = i;
+                        if (root.entry_available(menuModel.get(i))) {
+                            currentIndex = i;
                             return;
                         }
                     }
+                }
+
+                Component.onCompleted: {
+                    if (root.tutorial_pending) {
+                        for (var i = 0; i < menuModel.count; ++i) {
+                            if (menuModel.get(i).idStr === "tutorial") {
+                                commandList.currentIndex = i;
+                                return;
+                            }
+                        }
+                    }
+                    select_first_available();
                 }
                 spacing: root.command_row_spacing
                 clip: true
@@ -582,9 +639,14 @@ Item {
                     required property string subtitle
                     required property string detail
                     required property bool requiresGame
+                    required property bool requiresSave
                     required property string accent
 
-                    readonly property bool item_enabled: !requiresGame || root.game_started
+                    readonly property bool item_enabled: root.entry_available({
+                            "idStr": idStr,
+                            "requiresGame": requiresGame,
+                            "requiresSave": requiresSave
+                        })
                     readonly property bool selected: ListView.isCurrentItem && item_enabled
                     readonly property bool hovered: menuMouse.containsMouse && item_enabled
 
@@ -730,7 +792,7 @@ Item {
                                 Text {
                                     Layout.fillWidth: true
                                     visible: root.command_row_height >= 50
-                                    text: qsTr(commandItem.subtitle)
+                                    text: commandItem.idStr === "continue" && root.continue_label !== "" ? root.continue_label : qsTr(commandItem.subtitle)
                                     color: commandItem.selected ? Theme.accentBright : Theme.textDim
                                     font.pixelSize: root.narrow ? Design.Typography.caption : Design.Typography.label
                                     elide: Text.ElideRight

@@ -363,6 +363,12 @@ enum class ArenaExpectationKind : std::uint8_t {
   NoPermanentStall,
 
   StallRecoveryObserved,
+
+  AutoEngagementObserved,
+
+  NoAutoEngagementObserved,
+
+  EngagementReleasedByOrder,
 };
 
 struct ArenaExpectation {

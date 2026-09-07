@@ -13,6 +13,7 @@ would load an outdated map.
 
 import os
 import pathlib
+import shutil
 import sqlite3
 import sys
 from datetime import datetime, timezone
@@ -79,6 +80,14 @@ def main() -> int:
             stale_slots.append((slot_name, map_file.name, map_mtime, save_time))
 
     if not stale_slots:
+        return 0
+
+    backup_path = db_path.with_suffix(".sqlite.pre-purge-backup")
+    try:
+        shutil.copy2(db_path, backup_path)
+        print(f"  Backed up the save database to {backup_path}")
+    except OSError as error:
+        print(f"  Could not back up the save database ({error}); nothing purged.")
         return 0
 
     conn = sqlite3.connect(db_path)

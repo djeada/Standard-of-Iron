@@ -582,6 +582,33 @@ auto authored_plan_step(const AIContext& context,
   return true;
 }
 
+auto plan_still_sites_this_itself(const AIContext& context,
+                                  const SettlementCensus& standing,
+                                  const SettlementTargets& targets,
+                                  const std::vector<int>& blocked_slots,
+                                  const char* building) -> bool {
+  const auto* doctrine = context.strategy_config.doctrine;
+  if (doctrine == nullptr || doctrine->town_plan == nullptr || building == nullptr) {
+    return false;
+  }
+  if (plan_step_is_already_met(standing, targets, building)) {
+    return false;
+  }
+
+  int slot = -1;
+  for (const auto& step : doctrine->town_plan->steps) {
+    ++slot;
+    if (building_type_name(step.building) != building) {
+      continue;
+    }
+    if (std::find(blocked_slots.begin(), blocked_slots.end(), slot) ==
+        blocked_slots.end()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 auto site_is_free(const AISnapshot& snapshot,
                   const char* building_type,
                   float world_x,
@@ -1444,9 +1471,19 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     intents.push_back(step);
   }
 
-  if (context.barracks_under_threat && standing.towers < target_towers) {
+  if (context.barracks_under_threat && standing.towers < target_towers &&
+      !plan_still_sites_this_itself(context,
+                                    standing,
+                                    settlement,
+                                    m_blocked_plan_slots,
+                                    BUILDING_TYPE_DEFENSE_TOWER)) {
     wish(BUILDING_TYPE_DEFENSE_TOWER);
   }
+
+  const auto plan_owns_the_ground_for = [&](const char* type) {
+    return plan_still_sites_this_itself(
+        context, standing, settlement, m_blocked_plan_slots, type);
+  };
 
   for (const char* candidate : unmet_candidates({
            {BUILDING_TYPE_FARM, standing.farms, target_farms},
@@ -1458,6 +1495,9 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
            {BUILDING_TYPE_HOME, standing.homes, target_homes},
            {siege_engine, siege_count, target_catapults},
        })) {
+    if (plan_owns_the_ground_for(candidate)) {
+      continue;
+    }
     wish(candidate);
   }
 

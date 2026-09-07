@@ -1,9 +1,9 @@
 {
-  "app/commander": 4,
+  "app/commander": 3,
   "app/economy": 1,
   "app/mission": 2,
   "app/persistence": 1,
-  "app/session": 3,
+  "app/session": 2,
   "app/viewmodels": 1,
   "app/world": 3,
   "game/formation": 1,

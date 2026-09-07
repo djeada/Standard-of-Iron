@@ -48,7 +48,7 @@ void restore_mission_context(const Game::Systems::Save::Record& record,
   mission_context.campaign_id = record.campaign_id;
   mission_context.mission_id = record.mission_id;
   mission_context.difficulty = record.difficulty;
-  campaign_manager->set_mission_context(mission_context);
+  campaign_manager->restore_mission_context(mission_context);
 }
 
 } // namespace
@@ -96,6 +96,9 @@ auto SaveLoadCoordinator::begin_save_to_slot(const SaveToSlotContext& context) c
   QJsonObject metadata = Game::Systems::GameStateSerializer::build_metadata(
       context.world, context.camera, context.level, context.runtime_snapshot);
   metadata["title"] = context.title;
+  if (!context.mission_title.isEmpty()) {
+    metadata["mission_title"] = context.mission_title;
+  }
   if (auto* undead_system =
           context.world.get_system<Game::Systems::UndeadAwakeningSystem>()) {
     metadata["undead_zones"] = undead_system->serialize_state();
@@ -162,13 +165,17 @@ auto SaveLoadCoordinator::begin_save_to_slot(const SaveToSlotContext& context) c
 
 auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) const
     -> LoadFromSlotEffects {
+  QString partial_restore_warning;
 
   if (context.scene.renderer != nullptr) {
     context.scene.renderer->clear_entity_render_caches();
   }
 
-  if (!context.save_load_service.load_game_from_slot(context.world, context.slot)) {
-    return {.error = context.save_load_service.get_last_error()};
+  bool world_discarded = false;
+  if (!context.save_load_service.load_game_from_slot(
+          context.world, context.slot, &world_discarded)) {
+    return {.error = context.save_load_service.get_last_error(),
+            .world_discarded = world_discarded};
   }
 
   const Game::Systems::Save::Record& record =
@@ -237,7 +244,17 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
         wildlife_system->restore_state(metadata["wildlife"].toObject());
       }
     } else {
-      qWarning() << "GameEngine: failed to load undead zone map data:" << map_error;
+
+      const QString map_warning =
+          QObject::tr("Loaded, but '%1' could not be read, so wildlife, undead "
+                      "zones and cursed veins were not restored.")
+              .arg(context.level.map_path);
+      partial_restore_warning =
+          partial_restore_warning.isEmpty()
+              ? map_warning
+              : partial_restore_warning + QStringLiteral(" ") + map_warning;
+      qWarning() << "SaveLoadCoordinator: failed to load map data for the save:"
+                 << map_error;
     }
   }
   if (context.scene.session != nullptr) {
@@ -280,7 +297,8 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
 
   return {.success = true,
           .emit_selected_units_changed = true,
-          .emit_owner_info_changed = true};
+          .emit_owner_info_changed = true,
+          .warning = partial_restore_warning};
 }
 
 } // namespace App::Core

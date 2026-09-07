@@ -11,7 +11,9 @@ namespace Game::Systems::Save {
 
 inline constexpr int k_format_version = 1;
 
-inline constexpr int k_schema_version = Game::Save::k_snapshot_version;
+inline constexpr int k_database_schema_version = 3;
+
+inline constexpr int k_snapshot_version = Game::Save::k_snapshot_version;
 
 enum class Compression {
   None,
@@ -32,6 +34,15 @@ auto slot_kind_from_string(const QString& value, SlotKind& out) -> bool;
 
 auto checksum_of(const QByteArray& bytes) -> QString;
 
+inline constexpr const char* k_quicksave_slot_name = "quicksave";
+inline constexpr const char* k_autosave_slot_prefix = "autosave_";
+
+auto is_reserved_slot_name(const QString& slot_name) -> bool;
+
+auto slot_name_rejection(const QString& slot_name) -> QString;
+
+inline constexpr int k_max_slot_name_length = 64;
+
 struct Payload {
   QByteArray blob;
   Compression compression = Compression::Zlib;
@@ -51,6 +62,7 @@ auto verify_blob(const Payload& payload, QString* out_error) -> bool;
 
 struct Record {
   QString slot_name;
+  int snapshot_version = k_snapshot_version;
   QString title;
   QString map_name;
   QString map_path;

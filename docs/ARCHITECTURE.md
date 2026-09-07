@@ -843,11 +843,16 @@ These are real and deliberate, not oversights:
   came to look like a writer of `TransformComponent` and `UnitComponent` in
   every system that asked it for a refresh. Mark the components a loop only
   reads, and the declaration and the recording agree.
-- 76 full-world entity scans remain, of which 19 sit inside a loop
-  body. `scripts/check-world-scans.py` budgets the first number per directory
-  and refuses a new entry in the second; both are heuristics over source text,
-  so passing them is evidence that no _new_ scan was introduced in a recognised
-  spelling, not proof that every costly query is covered.
+- 74 full-world entity scans remain, of which 0 sit inside a loop body.
+  `scripts/check-world-scans.py` budgets the first number per directory and
+  refuses a new entry in the second; both are heuristics over source text, so
+  passing them is evidence that no _new_ scan was introduced in a recognised
+  spelling, not proof that every costly query is covered. The nested list read
+  19 until 2026-09-07 and every entry was the same false positive: clang-format
+  wraps a long `for (auto* e : world.collect_entities_with<T>())` onto two
+  lines, and the guard, reading one line at a time, took the scan for the body
+  of the loop it heads. It now follows a wrapped header to its closing
+  parenthesis, so the nested check means what it says.
 - Navigation is session-owned. `NavigationService` holds the `Pathfinding` grid
   and the gate blockers, `SessionContext` owns one, and `NavGrid`'s static API
   is a facade that resolves the active session's service — including the

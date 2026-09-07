@@ -10,6 +10,7 @@
 #include "arena_ai_duel_scenarios.h"
 #include "arena_ambience_scenarios.h"
 #include "arena_city_scenarios.h"
+#include "arena_engagement_scenarios.h"
 #include "arena_formation_scenarios.h"
 #include "arena_navigation_scenarios.h"
 #include "arena_scenarios.h"
@@ -11782,6 +11783,10 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(ai_duels.begin()),
                   std::make_move_iterator(ai_duels.end()));
+    auto engagement = build_engagement_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(engagement.begin()),
+                  std::make_move_iterator(engagement.end()));
 
     for (auto& scenario : values) {
       if (scenario.rpg_mode && !scenario.rpg_commander_group.isEmpty()) {

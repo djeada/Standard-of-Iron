@@ -30,6 +30,9 @@ auto cluster_threats(const AISnapshot& snapshot) -> std::vector<ThreatCluster> {
     if (enemy.is_building || enemy.health <= 0) {
       continue;
     }
+    if (!is_war_contact(enemy)) {
+      continue;
+    }
 
     ThreatCluster* best = nullptr;
     float best_distance_sq = radius_sq;

@@ -292,15 +292,27 @@ TEST_F(AiSkirmishOpeningTest, TheComputerSpendsWhatItGathers) {
   auto& session = make_match();
   auto& economy = session.economy();
 
+  const auto spend_since = [&economy](Game::Systems::ResourceType type,
+                                      int opening_stock,
+                                      int opening_harvest) {
+    const int harvested = economy.get_harvested_all(k_left).get(type) - opening_harvest;
+    return (opening_stock + harvested) - economy.get(k_left, type);
+  };
+
   const int opening_wood = economy.get(k_left, Game::Systems::ResourceType::Wood);
   const int opening_iron = economy.get(k_left, Game::Systems::ResourceType::Iron);
+  const auto opening_harvest = economy.get_harvested_all(k_left);
 
   run_for(session, 180.0);
 
   const int spent_wood =
-      opening_wood - economy.get(k_left, Game::Systems::ResourceType::Wood);
+      spend_since(Game::Systems::ResourceType::Wood,
+                  opening_wood,
+                  opening_harvest.get(Game::Systems::ResourceType::Wood));
   const int spent_iron =
-      opening_iron - economy.get(k_left, Game::Systems::ResourceType::Iron);
+      spend_since(Game::Systems::ResourceType::Iron,
+                  opening_iron,
+                  opening_harvest.get(Game::Systems::ResourceType::Iron));
 
   EXPECT_GT(spent_wood + spent_iron, 0)
       << "the computer sat on its whole opening stock for three minutes";

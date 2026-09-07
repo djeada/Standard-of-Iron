@@ -299,160 +299,142 @@ All persistent data lives in a SQLite database at `~/.local/share/StandardOfIron
 
 ### Database schema
 
-The current schema (version 3) has five tables:
+There are two version numbers, and keeping them apart is the point.
+
+- **`PRAGMA user_version`** is the _database schema_ version (`k_database_schema_version`,
+  currently 3). It describes the tables. It changes only when a table changes.
+- **`saves.snapshot_version`** is the _world snapshot_ version (`k_snapshot_version`,
+  from `game/save/snapshot_contract.h`), stored on each save row. It describes what
+  that one row's `world_state` blob contains.
+
+They used to be the same number, and that cost players their campaigns: bumping the
+snapshot format made every existing database "unsupported", and the unsupported path
+dropped every table — saves, campaign progress and mission results alike. Now a
+snapshot bump makes exactly the affected _rows_ unloadable, and touches nothing else.
+
+The tables:
 
 ```sql
--- Game save slots
 CREATE TABLE saves (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    slot_name TEXT UNIQUE NOT NULL,
+    slot_name TEXT PRIMARY KEY NOT NULL,
     title TEXT NOT NULL,
-    map_name TEXT,
-    timestamp TEXT NOT NULL,
-    metadata BLOB NOT NULL,        -- JSON with game metadata
-    world_state BLOB NOT NULL,     -- Serialized world JSON
-    screenshot BLOB,               -- PNG screenshot for UI
+    map_name TEXT NOT NULL,
+    map_path TEXT NOT NULL,
+    mode TEXT NOT NULL,               -- skirmish | mission | campaign
+    campaign_id TEXT NOT NULL,
+    mission_id TEXT NOT NULL,
+    difficulty TEXT NOT NULL,
+    kind TEXT NOT NULL,               -- manual | quicksave | autosave
+    play_time_seconds REAL NOT NULL,
     created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
+    updated_at TEXT NOT NULL,
+    format_version INTEGER NOT NULL,  -- the on-disk record format
+    snapshot_version INTEGER NOT NULL,-- what wrote world_state
+    compression TEXT NOT NULL,        -- none | zlib
+    world_raw_size INTEGER NOT NULL,
+    world_raw_checksum TEXT NOT NULL, -- SHA-256 of the uncompressed world
+    world_blob_checksum TEXT NOT NULL,-- SHA-256 of what is stored
+    metadata BLOB NOT NULL,           -- JSON: camera, level, runtime, mission title
+    world_state BLOB NOT NULL,        -- compressed world JSON
+    screenshot BLOB                   -- PNG preview, attached after the write
 );
 CREATE INDEX idx_saves_updated_at ON saves (updated_at DESC);
+CREATE INDEX idx_saves_kind ON saves (kind, updated_at);
 
--- Campaign definitions
-CREATE TABLE campaigns (
-    id TEXT PRIMARY KEY NOT NULL,
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    map_path TEXT NOT NULL,
-    order_index INTEGER NOT NULL DEFAULT 0
-);
-
--- Campaign completion status
 CREATE TABLE campaign_progress (
     campaign_id TEXT PRIMARY KEY NOT NULL,
     completed INTEGER NOT NULL DEFAULT 0,
     unlocked INTEGER NOT NULL DEFAULT 0,
-    completed_at TEXT,
-    FOREIGN KEY(campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+    completed_at TEXT
 );
 
--- Individual mission progress within campaigns
 CREATE TABLE campaign_missions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
     campaign_id TEXT NOT NULL,
     mission_id TEXT NOT NULL,
     order_index INTEGER NOT NULL,
     unlocked INTEGER NOT NULL DEFAULT 0,
     completed INTEGER NOT NULL DEFAULT 0,
     completed_at TEXT,
-    UNIQUE(campaign_id, mission_id)
+    PRIMARY KEY (campaign_id, mission_id)
 );
-CREATE INDEX idx_campaign_missions_campaign_id ON campaign_missions (campaign_id);
 
--- Mission results (any mode)
-CREATE TABLE mission_progress (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE mission_results (
     mission_id TEXT NOT NULL,
-    mode TEXT NOT NULL,            -- 'campaign' or 'skirmish'
-    campaign_id TEXT,
+    mode TEXT NOT NULL,
+    campaign_id TEXT NOT NULL,
     completed INTEGER NOT NULL DEFAULT 0,
     completion_time REAL,
     difficulty TEXT,
-    result TEXT,                   -- 'victory' or 'defeat'
+    result TEXT,
     completed_at TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
-    UNIQUE(mission_id, mode, campaign_id)
+    PRIMARY KEY (mission_id, mode, campaign_id)
 );
-CREATE INDEX idx_mission_progress_mission_id ON mission_progress (mission_id);
 ```
 
-### Example data
+## Schema versioning, migration and recovery
 
-Here's what real data looks like in each table:
-
-**saves table:**
-
-```
-┌────┬─────────────┬──────────────────────┬─────────────┬──────────────────────────┐
-│ id │ slot_name   │ title                │ map_name    │ timestamp                │
-├────┼─────────────┼──────────────────────┼─────────────┼──────────────────────────┤
-│ 1  │ autosave    │ Autosave             │ Forest Map  │ 2024-01-15T14:30:00.000Z │
-│ 2  │ slot_1      │ Before Final Battle  │ Rivers Map  │ 2024-01-15T13:45:22.500Z │
-│ 3  │ slot_2      │ Early Game           │ Mountain    │ 2024-01-14T20:15:00.000Z │
-└────┴─────────────┴──────────────────────┴─────────────┴──────────────────────────┘
-
-metadata (JSON blob for slot_1):
-{
-  "slotName": "slot_1",
-  "title": "Before Final Battle",
-  "timestamp": "2024-01-15T13:45:22.500Z",
-  "map_name": "Rivers Map",
-  "version": "1.0",
-  "playTime": "01:45:22",
-  "camera": {
-    "position": {"x": 150, "y": 50, "z": 200},
-    "rotation": {"yaw": 45, "pitch": -30}
-  }
-}
-```
-
-**campaigns table:**
+`SaveStorage::initialize` opens the file, then decides what it is looking at. Every
+branch either upgrades the file in place or moves it aside; none of them delete it.
 
 ```
-┌────────────────────┬────────────────────┬─────────────────────────────────┬─────────────────────────────┐
-│ id                 │ title              │ description                     │ map_path                    │
-├────────────────────┼────────────────────┼─────────────────────────────────┼─────────────────────────────┤
-│ second_punic_war   │ Second Punic War   │ Campaign across Mediterranean   │ :/assets/campaigns/spw.json │
-│ carthage_vs_rome   │ Carthage vs Rome   │ Historic battle...              │ :/assets/maps/rivers.json   │
-└────────────────────┴────────────────────┴─────────────────────────────────┴─────────────────────────────┘
+open()                     ── fails ──▶ move the file aside, start a fresh one
+   │
+PRAGMA quick_check         ── not ok ─▶ move the file aside, start a fresh one
+   │
+user_version == 0 && empty ───────────▶ create the current schema
+user_version >  current    ───────────▶ move aside (a newer build wrote it)
+user_version <  current    ───────────▶ back up, then migrate step by step
+   │
+table shape check          ── wrong ──▶ move the file aside, start a fresh one
 ```
 
-**campaign_missions table:**
+"Move the file aside" renames it to `saves.sqlite.unreadable-<timestamp>` and reports
+the path through `SaveLoadService::quarantined_database_path()`, which both the save
+and load panels show. The player is told where their file went; they are never told
+it is gone. A migration first copies the database to `saves.sqlite.v<N>-backup`.
 
-```
-┌────┬────────────────────┬─────────────────┬─────────────┬──────────┬───────────┐
-│ id │ campaign_id        │ mission_id      │ order_index │ unlocked │ completed │
-├────┼────────────────────┼─────────────────┼─────────────┼──────────┼───────────┤
-│ 1  │ second_punic_war   │ forest_ambush   │ 0           │ 1        │ 1         │
-│ 2  │ second_punic_war   │ river_crossing  │ 1           │ 1        │ 1         │
-│ 3  │ second_punic_war   │ siege_warfare   │ 2           │ 1        │ 0         │
-│ 4  │ second_punic_war   │ final_battle    │ 3           │ 0        │ 0         │
-└────┴────────────────────┴─────────────────┴─────────────┴──────────┴───────────┘
-```
-
-## Schema versioning and migrations
-
-The database uses SQLite's `PRAGMA user_version` to track schema version. When SaveStorage initializes, it checks the version and runs migrations if needed:
-
-```cpp
-auto SaveStorage::ensure_schema(QString *out_error) const -> bool {
-  int version = schema_version(out_error);
-  if (version < 0) {
-    return false;
-  }
-
-  if (version < k_current_schema_version) {
-    if (!migrate_schema(version, out_error)) {
-      return false;
-    }
-    if (!set_schema_version(k_current_schema_version, out_error)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-```
+The table shape check matters as much as the version: a file can claim the current
+`user_version` and still not be ours. Every column the code reads is checked before
+anything is written.
 
 ### Migration history
 
-| Version | Changes                                          |
-| ------- | ------------------------------------------------ |
-| 0 → 1   | Initial schema: saves table                      |
-| 1 → 2   | Added campaigns, campaign_progress tables        |
-| 2 → 3   | Added mission_progress, campaign_missions tables |
+| user_version | Changes                                                                |
+| ------------ | ---------------------------------------------------------------------- |
+| 0 → 3        | Fresh database at the current schema                                   |
+| 1, 2 → 3     | `ALTER TABLE saves ADD COLUMN snapshot_version` — additive, no deletes |
 
-Migrations run in order. If a player has a version 1 database, they'll run migrate_to_2, then migrate_to_3.
+Each step is additive and runs inside one transaction, so an interrupted upgrade
+leaves the old database exactly as it was.
+
+## What the save database refuses to lose
+
+These are enforced in code and covered by `SaveStorageSafetyTest` and
+`SaveLoadServiceTest` in `tests/db/`:
+
+- **A snapshot format bump never costs campaign progress.** It makes the affected
+  save rows unloadable; `list_slots` reports `loadable: false` for them and the load
+  panel greys them out with the reason.
+- **A save from another build is refused, not deleted.** `read_slot` compares the
+  row's `snapshot_version` and fails that one read.
+- **A downgraded build cannot destroy a newer database.** A higher `user_version` is
+  quarantined, not rebuilt.
+- **A corrupt file leaves a working save system behind.** `quick_check` runs on every
+  open; a file that fails it, or that SQLite will not open at all, is quarantined and
+  replaced with an empty database.
+- **A write is proved before it is reported as done.** `write_slot` commits, then
+  re-reads the row and compares the stored blob byte for byte against what was handed
+  in. `synchronous=FULL` and WAL cover durability past that point; both pragmas are
+  read back rather than assumed.
+- **The game never overwrites a save the player made.** `quicksave` and `autosave_N`
+  are reserved names: a manual save cannot take one, and the autosave rotation steps
+  past any slot holding a different kind.
+- **A failed load leaves the match alone.** Checksums, decompression, JSON parsing and
+  a structural check all run before `world.clear()`.
+- **Verify means "this will load".** It decompresses, re-hashes and parses the world,
+  not just the stored checksum.
 
 ## Transaction handling
 

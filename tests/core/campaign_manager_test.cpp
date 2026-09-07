@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 
+#include "game/map/mission_context.h"
 #include "game/mission/campaign_manager.h"
 #include "game/systems/save_load_service.h"
 
@@ -203,3 +204,56 @@ TEST_F(CampaignManagerTest, AMissionPathWithoutACampaignIsRejected) {
 }
 
 } // namespace
+
+TEST_F(CampaignManagerTest, LoadingACampaignSaveRestoresTheMissionItWasIn) {
+  Game::Mission::MissionContext context;
+  context.mode = QStringLiteral("campaign");
+  context.campaign_id = QLatin1String(k_campaign_id);
+  context.mission_id = QLatin1String(k_first_mission);
+  context.difficulty = QStringLiteral("normal");
+
+  manager->restore_mission_context(context);
+
+  EXPECT_EQ(manager->current_campaign_id(), QLatin1String(k_campaign_id));
+  EXPECT_EQ(manager->current_mission_id(), QLatin1String(k_first_mission));
+  ASSERT_TRUE(manager->current_mission_definition().has_value())
+      << "without the mission definition a loaded save has no victory conditions";
+  EXPECT_EQ(manager->current_mission_definition()->id, QLatin1String(k_first_mission));
+}
+
+TEST_F(CampaignManagerTest, ACampaignWonFromASaveStillUnlocksTheNextMission) {
+  Game::Mission::MissionContext context;
+  context.mode = QStringLiteral("campaign");
+  context.campaign_id = QLatin1String(k_campaign_id);
+  context.mission_id = QLatin1String(k_first_mission);
+  context.difficulty = QStringLiteral("normal");
+  manager->restore_mission_context(context);
+
+  manager->mark_current_mission_completed();
+
+  EXPECT_TRUE(mission_state(QLatin1String(k_first_mission))
+                  .value(QStringLiteral("completed"))
+                  .toBool())
+      << "winning after a load did not record the mission";
+  EXPECT_TRUE(mission_state(QLatin1String(k_second_mission))
+                  .value(QStringLiteral("unlocked"))
+                  .toBool())
+      << "winning after a load did not unlock the next mission";
+}
+
+TEST_F(CampaignManagerTest, LoadingASkirmishSaveLeavesNoMissionBehind) {
+  Game::Mission::MissionContext campaign_context;
+  campaign_context.mode = QStringLiteral("campaign");
+  campaign_context.campaign_id = QLatin1String(k_campaign_id);
+  campaign_context.mission_id = QLatin1String(k_first_mission);
+  manager->restore_mission_context(campaign_context);
+  ASSERT_TRUE(manager->current_mission_definition().has_value());
+
+  Game::Mission::MissionContext skirmish;
+  skirmish.mode = QStringLiteral("skirmish");
+  manager->restore_mission_context(skirmish);
+
+  EXPECT_FALSE(manager->current_mission_definition().has_value())
+      << "a skirmish save left the previous mission's rules in place";
+  EXPECT_TRUE(manager->current_mission_id().isEmpty());
+}

@@ -1,10 +1,16 @@
 #include <QCoreApplication>
+#include <QSet>
 #include <QSettings>
 #include <QTemporaryDir>
 #include <QTranslator>
 #include <Qt>
 
+#include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
+#include <regex>
+#include <sstream>
+#include <string>
 
 #include "app/core/user_settings.h"
 #include "ui/input_bindings.h"
@@ -12,6 +18,17 @@
 namespace {
 
 namespace UserSettings = App::Core::UserSettings;
+
+auto find_repo_root() -> std::filesystem::path {
+  auto path = std::filesystem::current_path();
+  for (int depth = 0; depth < 8; ++depth) {
+    if (std::filesystem::exists(path / "ui" / "input_bindings.cpp")) {
+      return path;
+    }
+    path = path.parent_path();
+  }
+  return std::filesystem::current_path();
+}
 
 class InputBindingsTest : public ::testing::Test {
 protected:
@@ -589,6 +606,48 @@ TEST_F(InputBindingsTest, EveryCommandBarChipResolvesToARealAction) {
     EXPECT_FALSE(bindings->default_shortcut_for(id).isEmpty()) << action_id;
     EXPECT_FALSE(bindings->display_shortcut_for(id).isEmpty()) << action_id;
   }
+}
+
+TEST_F(InputBindingsTest, NoQmlShortcutStealsAPlayerBinding) {
+  const std::filesystem::path qml_dir = find_repo_root() / "ui" / "qml";
+  ASSERT_TRUE(std::filesystem::exists(qml_dir)) << qml_dir.string();
+
+  QSet<QString> reserved;
+  for (const auto& spec : InputBindings::catalog()) {
+    if (!spec.default_shortcut.isEmpty()) {
+      reserved.insert(spec.default_shortcut.trimmed().toUpper());
+    }
+    if (!spec.default_alternate.isEmpty()) {
+      reserved.insert(spec.default_alternate.trimmed().toUpper());
+    }
+  }
+  ASSERT_FALSE(reserved.isEmpty());
+
+  const std::regex pattern(R"RX(sequence\s*:\s*"([^"]+)")RX");
+  int shortcuts_seen = 0;
+  for (const auto& entry : std::filesystem::recursive_directory_iterator(qml_dir)) {
+    if (!entry.is_regular_file() || entry.path().extension() != ".qml") {
+      continue;
+    }
+    std::ifstream stream(entry.path());
+    std::ostringstream buffer;
+    buffer << stream.rdbuf();
+    const std::string source = buffer.str();
+
+    for (auto it = std::sregex_iterator(source.begin(), source.end(), pattern);
+         it != std::sregex_iterator();
+         ++it) {
+      ++shortcuts_seen;
+      const QString sequence =
+          QString::fromStdString((*it)[1].str()).trimmed().toUpper();
+      EXPECT_FALSE(reserved.contains(sequence))
+          << entry.path().filename().string() << " binds a QML Shortcut to \""
+          << sequence.toStdString()
+          << "\", which the player's key bindings already use. An application "
+             "shortcut is delivered first, so that player binding can never fire.";
+    }
+  }
+  EXPECT_GT(shortcuts_seen, 0) << "the QML shortcut scan found nothing to check";
 }
 
 } // namespace

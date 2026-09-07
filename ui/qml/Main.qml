@@ -196,6 +196,57 @@ ApplicationWindow {
             mainWindow.menu_visible = false;
     }
 
+    property var continue_slot: null
+
+    function refresh_continue_slot() {
+        if (typeof game === 'undefined' || !game.saves || !game.saves.most_recent_loadable_slot) {
+            mainWindow.continue_slot = null;
+            return;
+        }
+        var slot = game.saves.most_recent_loadable_slot();
+        mainWindow.continue_slot = (slot && slot.slot_name) ? slot : null;
+    }
+
+    function describe_slot(slot) {
+        if (!slot)
+            return "";
+        var when = new Date(slot.timestamp);
+        var stamp = isNaN(when.getTime()) ? "" : Qt.formatDateTime(when, "d MMM hh:mm");
+        var name = slot.title || slot.slot_name;
+        return stamp === "" ? name : qsTr("%1 · %2").arg(name).arg(stamp);
+    }
+
+    property bool load_ended_the_match: false
+
+    function start_load(slot_name) {
+        if (typeof game === 'undefined' || !game.saves.load_from_slot)
+            return;
+        mainWindow.load_ended_the_match = false;
+        game.saves.load_from_slot(slot_name);
+        if (mainWindow.load_ended_the_match)
+            return;
+        load_game_panel.visible = false;
+        mainWindow.menu_visible = false;
+        mainWindow.game_started = true;
+        mainWindow.game_paused = false;
+        gameViewItem.forceActiveFocus();
+    }
+
+    function request_quickload() {
+        if (typeof game === 'undefined' || !game.saves.has_save_slot)
+            return false;
+        if (!game.saves.has_save_slot("quicksave")) {
+            save_progress_overlay.show_notice(qsTr("There is no quicksave to load."), true);
+            return true;
+        }
+        if (!mainWindow.game_started) {
+            mainWindow.start_load("quicksave");
+            return true;
+        }
+        quickload_dialog.open();
+        return true;
+    }
+
     function return_to_main_menu() {
         mainWindow.menu_visible = true;
         mainMenu.forceActiveFocus();
@@ -264,11 +315,14 @@ ApplicationWindow {
         mainWindow.theme_shared_tooltip();
         Design.UiSound.audioSystem = (typeof game !== 'undefined') ? game.audio_system : null;
         sync_audio_context();
+        mainWindow.refresh_continue_slot();
     }
 
     onMenu_visibleChanged: {
-        if (menu_visible)
+        if (menu_visible) {
             Design.Notifications.clear();
+            mainWindow.refresh_continue_slot();
+        }
     }
 
     onSimulation_suspendedChanged: {
@@ -457,9 +511,19 @@ ApplicationWindow {
                 gameViewItem.forceActiveFocus();
             mainWindow.sync_audio_context();
         }
+        has_continue_save: mainWindow.continue_slot !== null
+        continue_label: mainWindow.describe_slot(mainWindow.continue_slot)
         onResume_requested: function () {
             if (mainWindow.game_started)
                 mainWindow.menu_visible = false;
+        }
+        onContinue_requested: function () {
+            if (mainWindow.continue_slot === null)
+                return;
+            var slot_name = mainWindow.continue_slot.slot_name;
+            mainWindow.confirm_leaving_battle(function () {
+                    mainWindow.start_load(slot_name);
+                });
         }
         onOpen_skirmish: function () {
             mapSelect.visible = true;
@@ -636,7 +700,6 @@ ApplicationWindow {
             mainWindow.sync_audio_context();
         }
         onSave_requested: function (slot_name) {
-            console.log("Main: Save requested for slot:", slot_name);
             if (typeof game !== 'undefined' && game.saves.save_to_slot)
                 game.saves.save_to_slot(slot_name);
             save_game_panel.visible = false;
@@ -665,17 +728,9 @@ ApplicationWindow {
             mainWindow.sync_audio_context();
         }
         onLoad_requested: function (slot_name) {
-            console.log("Main: Load requested for slot:", slot_name);
-            if (typeof game !== 'undefined' && game.saves.load_from_slot) {
-                mainWindow.confirm_leaving_battle(function () {
-                        game.saves.load_from_slot(slot_name);
-                        load_game_panel.visible = false;
-                        mainWindow.menu_visible = false;
-                        mainWindow.game_started = true;
-                        mainWindow.game_paused = false;
-                        gameViewItem.forceActiveFocus();
-                    });
-            }
+            mainWindow.confirm_leaving_battle(function () {
+                    mainWindow.start_load(slot_name);
+                });
         }
         onCancelled: function () {
             Design.UiSound.back();
@@ -939,6 +994,43 @@ ApplicationWindow {
         }
         onSecondaryActivated: mainWindow.pending_launch = null
         onClosed: mainWindow.pending_launch = null
+    }
+
+    Design.IronDialog {
+        id: quickload_dialog
+
+        anchors.centerIn: parent
+        width: Math.min(parent.width * 0.6, 520)
+        title: qsTr("Load the quicksave?")
+        tone: "warning"
+        message: qsTr("The battle in progress will be replaced by the quicksave. Anything since then is lost.")
+        primaryAction: qsTr("Load the quicksave")
+        secondaryAction: qsTr("Keep fighting")
+        onPrimaryActivated: mainWindow.start_load("quicksave")
+    }
+
+    Connections {
+        function onSave_slots_changed() {
+            mainWindow.refresh_continue_slot();
+        }
+
+        target: (typeof game !== 'undefined' && game) ? game.saves : null
+    }
+
+    Connections {
+        function onMatch_ended() {
+            mainWindow.load_ended_the_match = true;
+            mainWindow.game_started = false;
+            mainWindow.game_paused = false;
+            save_game_panel.visible = false;
+            load_game_panel.visible = false;
+            objectivesPanel.visible = false;
+            mainWindow.menu_visible = true;
+            mainWindow.refresh_continue_slot();
+            mainMenu.forceActiveFocus();
+        }
+
+        target: game
     }
 
     Design.IronDialog {

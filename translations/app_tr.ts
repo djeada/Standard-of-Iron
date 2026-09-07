@@ -3264,6 +3264,22 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>Cannot read &apos;%1&apos;: %2</source>
         <translation>&apos;%1&apos; okunamıyor: %2</translation>
     </message>
+    <message>
+        <source>Save slot &apos;%1&apos; does not contain a battlefield and was not loaded.</source>
+        <translation>Save slot &apos;%1&apos; does not contain a battlefield and was not loaded.</translation>
+    </message>
+    <message>
+        <source>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</source>
+        <translation>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</translation>
+    </message>
+    <message>
+        <source>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable.</source>
+        <translation>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable.</translation>
+    </message>
+    <message>
+        <source>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</source>
+        <translation>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</translation>
+    </message>
 </context>
 <context>
     <name>GameEngine</name>
@@ -3300,10 +3316,6 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <translation>Kaydetme: hazırlanmadı</translation>
     </message>
     <message>
-        <source>A save is already in progress</source>
-        <translation>Zaten süren bir kaydetme var</translation>
-    </message>
-    <message>
         <source>Queued</source>
         <translation>Sırada</translation>
     </message>
@@ -3326,6 +3338,10 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>The previous frame is still running; the match could not be changed. Please try again.</source>
         <translation>Önceki kare hâlâ çalışıyor; maç değiştirilemedi. Lütfen tekrar deneyin.</translation>
+    </message>
+    <message>
+        <source>A save is already in progress.</source>
+        <translation>A save is already in progress.</translation>
     </message>
 </context>
 <context>
@@ -5012,64 +5028,12 @@ Görülmemiş: hiç gözetlenmedi.</translation>
 <context>
     <name>LoadGamePanel</name>
     <message>
-        <source>%1h %2m</source>
-        <translation>%1sa %2dk</translation>
-    </message>
-    <message>
-        <source>%1m</source>
-        <translation>%1dk</translation>
-    </message>
-    <message>
-        <source>Campaign</source>
-        <translation>Sefer</translation>
-    </message>
-    <message>
-        <source>Skirmish</source>
-        <translation>Çatışma</translation>
-    </message>
-    <message>
-        <source>%1 - autosave</source>
-        <translation>%1 - otomatik kayıt</translation>
-    </message>
-    <message>
-        <source>%1 - quicksave</source>
-        <translation>%1 - hızlı kayıt</translation>
-    </message>
-    <message>
         <source>Load game</source>
         <translation>Oyun yükle</translation>
     </message>
     <message>
         <source>Cancel</source>
         <translation>İptal</translation>
-    </message>
-    <message>
-        <source>No saves found</source>
-        <translation>Kayıt bulunamadı</translation>
-    </message>
-    <message>
-        <source>Untitled Save</source>
-        <translation>Adsız Kayıt</translation>
-    </message>
-    <message>
-        <source>Unknown Map</source>
-        <translation>Bilinmeyen Harita</translation>
-    </message>
-    <message>
-        <source>No Preview</source>
-        <translation>Önizleme Yok</translation>
-    </message>
-    <message>
-        <source>%1 · %2</source>
-        <translation>%1 · %2</translation>
-    </message>
-    <message>
-        <source>Saved %1</source>
-        <translation>Kaydedildi %1</translation>
-    </message>
-    <message>
-        <source>Played %1</source>
-        <translation>Oynandı %1</translation>
     </message>
     <message>
         <source>Export</source>
@@ -5080,28 +5044,8 @@ Görülmemiş: hiç gözetlenmedi.</translation>
         <translation>%1 konumuna aktarıldı</translation>
     </message>
     <message>
-        <source>Export failed</source>
-        <translation>Dışa aktarma başarısız</translation>
-    </message>
-    <message>
         <source>Verify</source>
         <translation>Doğrula</translation>
-    </message>
-    <message>
-        <source>Verification Passed</source>
-        <translation>Doğrulama Başarılı</translation>
-    </message>
-    <message>
-        <source>Verification Failed</source>
-        <translation>Doğrulama Başarısız</translation>
-    </message>
-    <message>
-        <source>&quot;%1&quot; is intact. The save file has not been corrupted.</source>
-        <translation>&quot;%1&quot; sağlam. Kayıt dosyası bozulmamış.</translation>
-    </message>
-    <message>
-        <source>&quot;%1&quot; is corrupted and cannot be loaded. The save failed its integrity check.</source>
-        <translation>&quot;%1&quot; bozuk ve yüklenemiyor. Kayıt bütünlük denetiminden geçemedi.</translation>
     </message>
     <message>
         <source>Delete</source>
@@ -5120,28 +5064,6 @@ Görülmemiş: hiç gözetlenmedi.</translation>
         <translation>Önce kayıtlı bir oyun seç.</translation>
     </message>
     <message>
-        <source>Confirm Delete</source>
-        <translation>Silmeyi Onayla</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to delete the save:
-&quot;%1&quot;?
-
-This action cannot be undone.</source>
-        <translation>Şu kaydı silmek istediğine emin misin:
-&quot;%1&quot;?
-
-Bu işlem geri alınamaz.</translation>
-    </message>
-    <message>
-        <source>Save Verification</source>
-        <translation>Kayıt Doğrulaması</translation>
-    </message>
-    <message>
-        <source>Import Save</source>
-        <translation>Kayıt İçe Aktar</translation>
-    </message>
-    <message>
         <source>Save files found in the exports folder:</source>
         <translation>Dışa aktarma klasöründe bulunan kayıt dosyaları:</translation>
     </message>
@@ -5154,12 +5076,80 @@ Bu işlem geri alınamaz.</translation>
         <translation>&quot;%1&quot; olarak içe aktarıldı</translation>
     </message>
     <message>
-        <source>Import failed</source>
-        <translation>İçe aktarma başarısız</translation>
-    </message>
-    <message>
         <source>No importable save files were found.</source>
         <translation>İçe aktarılabilir kayıt dosyası bulunamadı.</translation>
+    </message>
+    <message>
+        <source>Saves are unavailable: %1</source>
+        <translation>Saves are unavailable: %1</translation>
+    </message>
+    <message>
+        <source>The save database could not be read and a new one was started. Your previous file was kept at %1.</source>
+        <translation>The save database could not be read and a new one was started. Your previous file was kept at %1.</translation>
+    </message>
+    <message>
+        <source>No saved games yet. Save a battle from the menu, or press the quicksave key while you play.</source>
+        <translation>No saved games yet. Save a battle from the menu, or press the quicksave key while you play.</translation>
+    </message>
+    <message>
+        <source>Untitled save</source>
+        <translation>Untitled save</translation>
+    </message>
+    <message>
+        <source>Unknown map</source>
+        <translation>Unknown map</translation>
+    </message>
+    <message>
+        <source>Saved by a different version of the game. It is kept on disk, but this build cannot open it.</source>
+        <translation>Saved by a different version of the game. It is kept on disk, but this build cannot open it.</translation>
+    </message>
+    <message>
+        <source>Export failed: %1</source>
+        <translation>Export failed: %1</translation>
+    </message>
+    <message>
+        <source>This save will load</source>
+        <translation>This save will load</translation>
+    </message>
+    <message>
+        <source>This save will not load</source>
+        <translation>This save will not load</translation>
+    </message>
+    <message>
+        <source>&quot;%1&quot; decompressed cleanly and contains a complete battlefield.</source>
+        <translation>&quot;%1&quot; decompressed cleanly and contains a complete battlefield.</translation>
+    </message>
+    <message>
+        <source>This save was written by a different version of the game.</source>
+        <translation>This save was written by a different version of the game.</translation>
+    </message>
+    <message>
+        <source>Delete this save?</source>
+        <translation>Delete this save?</translation>
+    </message>
+    <message>
+        <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
+        <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
+    </message>
+    <message>
+        <source>Keep it</source>
+        <translation>Keep it</translation>
+    </message>
+    <message>
+        <source>Deleted &quot;%1&quot;</source>
+        <translation>Deleted &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Close</translation>
+    </message>
+    <message>
+        <source>Import save</source>
+        <translation>Import save</translation>
+    </message>
+    <message>
+        <source>Import failed: %1</source>
+        <translation>Import failed: %1</translation>
     </message>
 </context>
 <context>
@@ -5485,6 +5475,26 @@ Bu işlem geri alınamaz.</translation>
         <source>Keep fighting</source>
         <translation>Savaşmaya devam et</translation>
     </message>
+    <message>
+        <source>%1 · %2</source>
+        <translation>%1 · %2</translation>
+    </message>
+    <message>
+        <source>There is no quicksave to load.</source>
+        <translation>There is no quicksave to load.</translation>
+    </message>
+    <message>
+        <source>Load the quicksave?</source>
+        <translation>Load the quicksave?</translation>
+    </message>
+    <message>
+        <source>The battle in progress will be replaced by the quicksave. Anything since then is lost.</source>
+        <translation>The battle in progress will be replaced by the quicksave. Anything since then is lost.</translation>
+    </message>
+    <message>
+        <source>Load the quicksave</source>
+        <translation>Load the quicksave</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -5671,6 +5681,18 @@ Bu işlem geri alınamaz.</translation>
     <message>
         <source>ROME</source>
         <translation>ROMA</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation>Continue</translation>
+    </message>
+    <message>
+        <source>Return to the most recent save</source>
+        <translation>Return to the most recent save</translation>
+    </message>
+    <message>
+        <source>Resume</source>
+        <translation>Resume</translation>
     </message>
 </context>
 <context>
@@ -9310,6 +9332,10 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
         <source>Save: the match advanced while it was being captured. Please try again.</source>
         <translation>Kaydetme: maç yakalanırken ilerledi. Lütfen tekrar deneyin.</translation>
     </message>
+    <message>
+        <source>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</source>
+        <translation>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -9458,6 +9484,22 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
         <source>Save file preview image is corrupted</source>
         <translation>Kayıt dosyası önizleme görüntüsü bozuk</translation>
     </message>
+    <message>
+        <source>Name the save first.</source>
+        <translation>Name the save first.</translation>
+    </message>
+    <message>
+        <source>That name is too long. Keep it under %1 characters.</source>
+        <translation>That name is too long. Keep it under %1 characters.</translation>
+    </message>
+    <message>
+        <source>That name is reserved for quicksaves and autosaves, which would overwrite it without asking. Pick another one.</source>
+        <translation>That name is reserved for quicksaves and autosaves, which would overwrite it without asking. Pick another one.</translation>
+    </message>
+    <message>
+        <source>Names cannot contain slashes or control characters.</source>
+        <translation>Names cannot contain slashes or control characters.</translation>
+    </message>
 </context>
 <context>
     <name>SaveGamePanel</name>
@@ -9470,70 +9512,88 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
         <translation>İptal</translation>
     </message>
     <message>
-        <source>Save Name:</source>
-        <translation>Kayıt Adı:</translation>
-    </message>
-    <message>
-        <source>Enter save name...</source>
-        <translation>Kayıt adını gir...</translation>
-    </message>
-    <message>
         <source>Save</source>
         <translation>Kaydet</translation>
-    </message>
-    <message>
-        <source>Name the save first.</source>
-        <translation>Önce kayda bir ad ver.</translation>
-    </message>
-    <message>
-        <source>Existing Saves</source>
-        <translation>Var Olan Kayıtlar</translation>
-    </message>
-    <message>
-        <source>Untitled Save</source>
-        <translation>Adsız Kayıt</translation>
-    </message>
-    <message>
-        <source>Unknown Map</source>
-        <translation>Bilinmeyen Harita</translation>
-    </message>
-    <message>
-        <source>No Preview</source>
-        <translation>Önizleme Yok</translation>
-    </message>
-    <message>
-        <source>Slot: %1</source>
-        <translation>Yuva: %1</translation>
-    </message>
-    <message>
-        <source>%1 - %2 (%3 KB on disk)</source>
-        <translation>%1 - %2 (diskte %3 KB)</translation>
-    </message>
-    <message>
-        <source>Campaign</source>
-        <translation>Sefer</translation>
-    </message>
-    <message>
-        <source>Skirmish</source>
-        <translation>Çatışma</translation>
-    </message>
-    <message>
-        <source>Last saved: %1</source>
-        <translation>Son kayıt: %1</translation>
     </message>
     <message>
         <source>Overwrite</source>
         <translation>Üzerine yaz</translation>
     </message>
     <message>
-        <source>Confirm Overwrite</source>
-        <translation>Üzerine Yazmayı Onayla</translation>
+        <source>Saves are unavailable: %1</source>
+        <translation>Saves are unavailable: %1</translation>
     </message>
     <message>
-        <source>Are you sure you want to overwrite the save:
-&quot;%1&quot;?</source>
-        <translation>Şu kaydın üzerine yazmak istediğine emin misin:
-&quot;%1&quot;?</translation>
+        <source>Save name</source>
+        <translation>Save name</translation>
+    </message>
+    <message>
+        <source>Name this save...</source>
+        <translation>Name this save...</translation>
+    </message>
+    <message>
+        <source>A save called &quot;%1&quot; already exists. Saving replaces it.</source>
+        <translation>A save called &quot;%1&quot; already exists. Saving replaces it.</translation>
+    </message>
+    <message>
+        <source>Press Enter to save.</source>
+        <translation>Press Enter to save.</translation>
+    </message>
+    <message>
+        <source>Existing saves</source>
+        <translation>Existing saves</translation>
+    </message>
+    <message>
+        <source>%1 save</source>
+        <translation>%1 save</translation>
+    </message>
+    <message>
+        <source>%1 saves</source>
+        <translation>%1 saves</translation>
+    </message>
+    <message>
+        <source>No saves yet. The name above will create the first one.</source>
+        <translation>No saves yet. The name above will create the first one.</translation>
+    </message>
+    <message>
+        <source>Untitled save</source>
+        <translation>Untitled save</translation>
+    </message>
+    <message>
+        <source>Unknown map</source>
+        <translation>Unknown map</translation>
+    </message>
+    <message>
+        <source>Saved by a different version of the game. It is kept, but this build cannot open it.</source>
+        <translation>Saved by a different version of the game. It is kept, but this build cannot open it.</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>Delete</translation>
+    </message>
+    <message>
+        <source>Replace this save?</source>
+        <translation>Replace this save?</translation>
+    </message>
+    <message>
+        <source>&quot;%1&quot; will be replaced by the current battle. The version stored now cannot be recovered.</source>
+        <translation>&quot;%1&quot; will be replaced by the current battle. The version stored now cannot be recovered.</translation>
+    </message>
+    <message>
+        <source>Replace</source>
+        <translation>Replace</translation>
+    </message>
+    <message>
+        <source>Keep it</source>
+        <translation>Keep it</translation>
+    </message>
+    <message>
+        <source>Delete this save?</source>
+        <translation>Delete this save?</translation>
+    </message>
+    <message>
+        <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
+        <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
     </message>
 </context>
 <context>
@@ -9550,12 +9610,87 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
         <source>Cancel</source>
         <translation>İptal</translation>
     </message>
+    <message>
+        <source>Saved &quot;%1&quot;</source>
+        <translation>Saved &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <source>Saving &quot;%1&quot; failed.</source>
+        <translation>Saving &quot;%1&quot; failed.</translation>
+    </message>
+    <message>
+        <source>Saved</source>
+        <translation>Saved</translation>
+    </message>
+</context>
+<context>
+    <name>SaveSlotRow</name>
+    <message>
+        <source>%1h %2m</source>
+        <translation>%1h %2m</translation>
+    </message>
+    <message>
+        <source>%1m</source>
+        <translation>%1m</translation>
+    </message>
+    <message>
+        <source>under a minute</source>
+        <translation>under a minute</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Unknown</translation>
+    </message>
+    <message>
+        <source>Campaign</source>
+        <translation>Campaign</translation>
+    </message>
+    <message>
+        <source>Mission</source>
+        <translation>Mission</translation>
+    </message>
+    <message>
+        <source>Skirmish</source>
+        <translation>Skirmish</translation>
+    </message>
+    <message>
+        <source>Autosave</source>
+        <translation>Autosave</translation>
+    </message>
+    <message>
+        <source>Quicksave</source>
+        <translation>Quicksave</translation>
+    </message>
+    <message>
+        <source>No preview</source>
+        <translation>No preview</translation>
+    </message>
+    <message>
+        <source>%1 · %2 · %3</source>
+        <translation>%1 · %2 · %3</translation>
+    </message>
+    <message>
+        <source>%1 · %2</source>
+        <translation>%1 · %2</translation>
+    </message>
+    <message>
+        <source>Saved %1</source>
+        <translation>Saved %1</translation>
+    </message>
+    <message>
+        <source>Played %1</source>
+        <translation>Played %1</translation>
+    </message>
 </context>
 <context>
     <name>SaveSlotsViewModel</name>
     <message>
         <source>Cannot export a save with an empty name</source>
         <translation>Adı boş bir kayıt dışa aktarılamaz</translation>
+    </message>
+    <message>
+        <source>Save storage unavailable</source>
+        <translation>Save storage unavailable</translation>
     </message>
 </context>
 <context>
@@ -9579,10 +9714,6 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <message>
         <source>Failed to record schema version</source>
         <translation>Şema sürümü kaydedilemedi</translation>
-    </message>
-    <message>
-        <source>Failed to drop table %1</source>
-        <translation>%1 tablosu silinemedi</translation>
     </message>
     <message>
         <source>Failed to create save schema</source>
@@ -9683,6 +9814,70 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <message>
         <source>Failed to count remaining missions</source>
         <translation>Kalan görevler sayılamadı</translation>
+    </message>
+    <message>
+        <source>The save database could not be opened.</source>
+        <translation>The save database could not be opened.</translation>
+    </message>
+    <message>
+        <source>The save database is unreadable and could not be moved aside: %1</source>
+        <translation>The save database is unreadable and could not be moved aside: %1</translation>
+    </message>
+    <message>
+        <source>integrity check failed: %1</source>
+        <translation>integrity check failed: %1</translation>
+    </message>
+    <message>
+        <source>it was written by a newer version of the game (schema %1)</source>
+        <translation>it was written by a newer version of the game (schema %1)</translation>
+    </message>
+    <message>
+        <source>it is not a Standard of Iron save database</source>
+        <translation>it is not a Standard of Iron save database</translation>
+    </message>
+    <message>
+        <source>it could not be upgraded from schema %1: %2</source>
+        <translation>it could not be upgraded from schema %1: %2</translation>
+    </message>
+    <message>
+        <source>its tables do not match schema %1</source>
+        <translation>its tables do not match schema %1</translation>
+    </message>
+    <message>
+        <source>Failed to add the snapshot version column</source>
+        <translation>Failed to add the snapshot version column</translation>
+    </message>
+    <message>
+        <source>Refusing to write a save with an empty slot name</source>
+        <translation>Refusing to write a save with an empty slot name</translation>
+    </message>
+    <message>
+        <source>&apos;%1&apos; holds a save that was not written by this rotation, so it will not be overwritten automatically. Delete it from the Load menu to free the slot.</source>
+        <translation>&apos;%1&apos; holds a save that was not written by this rotation, so it will not be overwritten automatically. Delete it from the Load menu to free the slot.</translation>
+    </message>
+    <message>
+        <source>The save was written but could not be read back</source>
+        <translation>The save was written but could not be read back</translation>
+    </message>
+    <message>
+        <source>The save did not survive being written to disk. Nothing was lost in the match; try saving again.</source>
+        <translation>The save did not survive being written to disk. Nothing was lost in the match; try saving again.</translation>
+    </message>
+    <message>
+        <source>The save was written with the wrong header; try again.</source>
+        <translation>The save was written with the wrong header; try again.</translation>
+    </message>
+    <message>
+        <source>&apos;%1&apos; was saved by a different version of Standard of Iron and cannot be loaded by this one. It has been left alone.</source>
+        <translation>&apos;%1&apos; was saved by a different version of Standard of Iron and cannot be loaded by this one. It has been left alone.</translation>
+    </message>
+    <message>
+        <source>&apos;%1&apos; does not contain a readable world: %2</source>
+        <translation>&apos;%1&apos; does not contain a readable world: %2</translation>
+    </message>
+    <message>
+        <source>&apos;%1&apos; is missing the units it should contain</source>
+        <translation>&apos;%1&apos; is missing the units it should contain</translation>
     </message>
 </context>
 <context>

@@ -45,6 +45,10 @@ public:
   auto verify_slot(const QString& slot_name,
                    QString* out_error = nullptr) const -> bool;
 
+  auto slot_kind(const QString& slot_name,
+                 Save::SlotKind& out_kind,
+                 QString* out_error = nullptr) const -> bool;
+
   auto list_slots(QString* out_error = nullptr) const -> QVariantList;
 
   auto slot_names_by_kind(Save::SlotKind kind,
@@ -91,16 +95,32 @@ public:
   ensure_campaign_missions_in_db(const Game::Campaign::CampaignDefinition& campaign,
                                  QString* out_error = nullptr) -> bool;
 
+  [[nodiscard]] auto health_error() const -> QString { return m_health_error; }
+
+  [[nodiscard]] auto quarantined_path() const -> QString { return m_quarantined_path; }
+
 private:
   auto open(QString* out_error) const -> bool;
   auto ensure_schema(QString* out_error) const -> bool;
   auto create_schema(QString* out_error) const -> bool;
-  auto drop_schema(QString* out_error) const -> bool;
+  auto create_fresh_schema(QString* out_error) const -> bool;
+  auto stamp_schema_version(QString* out_error) const -> bool;
+  auto migrate_schema(int from_version, QString* out_error) const -> bool;
+  [[nodiscard]] auto schema_shape_is_current() const -> bool;
+  [[nodiscard]] auto database_is_empty() const -> bool;
+  [[nodiscard]] auto passes_integrity_check(QString* out_reason) const -> bool;
+  [[nodiscard]] auto is_memory_database() const -> bool;
+  auto quarantine_and_recreate(const QString& reason, QString* out_error) const -> bool;
+  void backup_before_migration(int from_version) const;
+  auto read_back_matches(const Save::Record& record, QString* out_error) const -> bool;
+  void close_connection() const;
 
   QString m_database_path;
   QString m_connection_name;
   mutable bool m_initialized = false;
   mutable QSqlDatabase m_database;
+  mutable QString m_health_error;
+  mutable QString m_quarantined_path;
 };
 
 } // namespace Game::Systems

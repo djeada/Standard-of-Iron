@@ -80,6 +80,51 @@ auto slot_kind_from_string(const QString& value, SlotKind& out) -> bool {
   return false;
 }
 
+auto is_reserved_slot_name(const QString& slot_name) -> bool {
+  const QString trimmed = slot_name.trimmed();
+  if (trimmed.compare(QLatin1String(k_quicksave_slot_name), Qt::CaseInsensitive) == 0) {
+    return true;
+  }
+  const auto prefix = QLatin1String(k_autosave_slot_prefix);
+  if (!trimmed.startsWith(prefix, Qt::CaseInsensitive)) {
+    return false;
+  }
+  const QString tail = trimmed.mid(prefix.size());
+  if (tail.isEmpty()) {
+    return true;
+  }
+  bool numeric = false;
+  tail.toInt(&numeric);
+  return numeric;
+}
+
+auto slot_name_rejection(const QString& slot_name) -> QString {
+  const QString trimmed = slot_name.trimmed();
+  if (trimmed.isEmpty()) {
+    return QCoreApplication::translate("SaveFile", "Name the save first.");
+  }
+  if (trimmed.size() > k_max_slot_name_length) {
+    return QCoreApplication::translate(
+               "SaveFile", "That name is too long. Keep it under %1 characters.")
+        .arg(k_max_slot_name_length);
+  }
+  if (is_reserved_slot_name(trimmed)) {
+    return QCoreApplication::translate(
+        "SaveFile",
+        "That name is reserved for quicksaves and autosaves, which would "
+        "overwrite it without asking. Pick another one.");
+  }
+  for (const QChar character : trimmed) {
+    if (character.isPrint() && character != QLatin1Char('/') &&
+        character != QLatin1Char('\\')) {
+      continue;
+    }
+    return QCoreApplication::translate(
+        "SaveFile", "Names cannot contain slashes or control characters.");
+  }
+  return {};
+}
+
 auto checksum_of(const QByteArray& bytes) -> QString {
   return QString::fromLatin1(
       QCryptographicHash::hash(bytes, QCryptographicHash::Sha256).toHex());
@@ -192,6 +237,7 @@ auto sanitize_file_stem(const QString& name) -> QString {
 auto encode_package(const Record& record) -> QByteArray {
   QJsonObject header;
   header[QStringLiteral("format_version")] = k_format_version;
+  header[QStringLiteral("snapshot_version")] = record.snapshot_version;
   header[QStringLiteral("slot_name")] = record.slot_name;
   header[QStringLiteral("title")] = record.title;
   header[QStringLiteral("map_name")] = record.map_name;
@@ -287,6 +333,8 @@ auto decode_package(const QByteArray& bytes, Record& out, QString* out_error) ->
   const QJsonObject header = header_doc.object();
 
   Record record;
+  record.snapshot_version =
+      header.value(QStringLiteral("snapshot_version")).toInt(k_snapshot_version);
   record.slot_name = header.value(QStringLiteral("slot_name")).toString();
   record.title = header.value(QStringLiteral("title")).toString();
   record.map_name = header.value(QStringLiteral("map_name")).toString();

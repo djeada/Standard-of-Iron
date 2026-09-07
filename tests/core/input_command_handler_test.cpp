@@ -761,7 +761,7 @@ TEST_F(InputCommandHandlerTest, AttackModeClickPublishesFeedbackAndResetsTheCurs
   auto& seen = capture_feedback();
 
   QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
-  input_handler->on_attack_click(enemy_screen.x(), enemy_screen.y(), viewport);
+  input_handler->on_attack_click(enemy_screen.x(), enemy_screen.y(), 1, viewport);
 
   EXPECT_EQ(cursor_manager.mode(), CursorMode::Normal);
   ASSERT_EQ(seen.size(), 1U);
@@ -769,7 +769,7 @@ TEST_F(InputCommandHandlerTest, AttackModeClickPublishesFeedbackAndResetsTheCurs
   EXPECT_EQ(seen.front().target, enemy->get_id());
 }
 
-TEST_F(InputCommandHandlerTest, AttackModeClickOnNothingExplainsTheRefusal) {
+TEST_F(InputCommandHandlerTest, AttackModeClickOnGroundIssuesAttackMove) {
   auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
   ASSERT_NE(unit, nullptr);
   selection_system->select_unit(unit->get_id());
@@ -777,12 +777,15 @@ TEST_F(InputCommandHandlerTest, AttackModeClickOnNothingExplainsTheRefusal) {
   auto& seen = capture_feedback();
 
   QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
-  input_handler->on_attack_click(ground_screen.x(), ground_screen.y(), viewport);
+  input_handler->on_attack_click(ground_screen.x(), ground_screen.y(), 1, viewport);
 
   EXPECT_EQ(cursor_manager.mode(), CursorMode::Normal);
   ASSERT_EQ(seen.size(), 1U);
-  EXPECT_TRUE(seen.front().rejected());
-  EXPECT_FALSE(seen.front().reason.isEmpty());
+  EXPECT_TRUE(seen.front().accepted());
+  auto* intent = unit->get_component<Engine::Core::PlayerOrderIntentComponent>();
+  ASSERT_NE(intent, nullptr);
+  EXPECT_EQ(intent->kind, Engine::Core::PlayerOrderIntentKind::AttackMove);
+  EXPECT_FALSE(intent->suppress_opportunistic_combat);
   EXPECT_EQ(unit->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
 }
 

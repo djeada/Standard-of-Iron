@@ -7,6 +7,7 @@
 
 #include "app/orders/order_feedback.h"
 #include "game/core/entity.h"
+#include "game/systems/order_service.h"
 
 namespace Engine::Core {
 class World;
@@ -54,10 +55,13 @@ auto issue_builder_dismantle_command(
     int viewport_height,
     int local_owner_id) -> App::Core::OrderOutcome;
 
-auto submit_ground_move(Engine::Core::World& world,
-                        const std::vector<Engine::Core::EntityID>& units,
-                        const QVector3D& destination,
-                        int owner_id) -> App::Core::OrderOutcome;
+auto submit_ground_move(
+    Engine::Core::World& world,
+    const std::vector<Engine::Core::EntityID>& units,
+    const QVector3D& destination,
+    int owner_id,
+    Game::Systems::MoveOrderKind kind = Game::Systems::MoveOrderKind::FormationMove)
+    -> App::Core::OrderOutcome;
 
 [[nodiscard]] auto
 pick_enemy_unit_at_screen(Engine::Core::World* world,
