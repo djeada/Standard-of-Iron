@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
@@ -165,6 +166,52 @@ auto parse_std140_block(const std::string& glsl,
     parsed.float_count += elements * slots_per_element * 4U;
   }
   return parsed;
+}
+
+auto parse_vec3(const std::string& source,
+                const std::string& pattern) -> std::array<float, 3> {
+  std::smatch match;
+  const std::regex declaration(pattern);
+  if (!std::regex_search(source, match, declaration)) {
+    return {-1.0F, -1.0F, -1.0F};
+  }
+  return {parse_glsl_float(match[1].str()),
+          parse_glsl_float(match[2].str()),
+          parse_glsl_float(match[3].str())};
+}
+
+auto glsl_vec3_constant(const std::string& glsl,
+                        const std::string& name) -> std::array<float, 3> {
+  return parse_vec3(
+      glsl,
+      R"(const\s+vec3\s+)" + name +
+          R"(\s*=\s*vec3\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)\s*\)\s*;)");
+}
+
+auto cpp_vec3_constant(const std::string& source,
+                       const std::string& name) -> std::array<float, 3> {
+  return parse_vec3(source,
+                    R"(QVector3D\s+)" + name +
+                        R"(\{\s*([0-9.]+)F\s*,\s*([0-9.]+)F\s*,\s*([0-9.]+)F\s*\})");
+}
+
+auto glsl_float_constant(const std::string& glsl, const std::string& name) -> float {
+  std::smatch match;
+  const std::regex declaration(R"(const\s+float\s+)" + name +
+                               R"(\s*=\s*([0-9.]+)\s*;)");
+  if (!std::regex_search(glsl, match, declaration)) {
+    return -1.0F;
+  }
+  return parse_glsl_float(match[1].str());
+}
+
+auto cpp_float_constant(const std::string& source, const std::string& name) -> float {
+  std::smatch match;
+  const std::regex declaration(R"(float\s+)" + name + R"(\s*=\s*([0-9.]+)F\s*;)");
+  if (!std::regex_search(source, match, declaration)) {
+    return -1.0F;
+  }
+  return parse_glsl_float(match[1].str());
 }
 
 auto glsl_int_constant(const std::string& glsl, const std::string& name) -> int {
@@ -884,6 +931,70 @@ TEST(ShaderSource, FogRevealShadesWhateverStoneItStarted) {
   EXPECT_NE(flat.find("smoothstep(0.04, 0.94, reveal)"), std::string::npos)
       << "the fade must reach full brightness before the tile is completely clear, or "
          "a settled fog frontier leaves the far end permanently dimmed";
+}
+
+TEST(ShaderSource, UnexploredGroundShadesTheMapInsteadOfPaintingItBlue) {
+  const auto root = find_repo_root();
+  const auto glsl =
+      read_text(root / "assets" / "shaders" / "include" / "visibility_mask.glsl");
+  ASSERT_FALSE(glsl.empty());
+
+  const auto shade = glsl_vec3_constant(glsl, "k_visibility_unseen_shade");
+  const auto lift = glsl_vec3_constant(glsl, "k_visibility_unseen_lift");
+  const float chroma = glsl_float_constant(glsl, "k_visibility_unseen_chroma");
+  ASSERT_GE(shade[0], 0.0F);
+  ASSERT_GE(lift[0], 0.0F);
+  ASSERT_GE(chroma, 0.0F);
+
+  const float darkest = *std::min_element(shade.begin(), shade.end());
+  EXPECT_GE(darkest, 0.35F)
+      << "unexplored ground is the map's own terrain dimmed, not a slab: crushing it "
+         "below a third of its lit value hides the grass, rock and soil underneath";
+
+  const float shade_spread = *std::max_element(shade.begin(), shade.end()) - darkest;
+  EXPECT_LE(shade_spread, 0.05F)
+      << "the dimming must be neutral; a cool-biased shade is what turned fogged "
+         "ground into a blue floor";
+
+  const float lift_spread = *std::max_element(lift.begin(), lift.end()) -
+                            *std::min_element(lift.begin(), lift.end());
+  EXPECT_LE(lift_spread, 0.01F)
+      << "the black lift keeps dark stone off zero; a blue-heavy lift tints every "
+         "unexplored tile instead";
+  EXPECT_LE(*std::max_element(lift.begin(), lift.end()), 0.05F)
+      << "a large lift washes the terrain out into flat haze";
+
+  EXPECT_GE(chroma, 0.40F)
+      << "fogged ground stays recognisably the same terrain, so it keeps a good part "
+         "of its colour rather than going fully grey";
+}
+
+TEST(ShaderSource, EveryUnexploredSurfaceUsesTheSameShading) {
+  const auto root = find_repo_root();
+  const auto mask =
+      read_text(root / "assets" / "shaders" / "include" / "visibility_mask.glsl");
+  const auto reveal =
+      read_text(root / "assets" / "shaders" / "include" / "fog_reveal.glsl");
+  const auto submitter = read_text(root / "render" / "entity" / "unseen_submitter.h");
+  ASSERT_FALSE(mask.empty());
+  ASSERT_FALSE(reveal.empty());
+  ASSERT_FALSE(submitter.empty());
+
+  const auto ground_shade = glsl_vec3_constant(mask, "k_visibility_unseen_shade");
+  const auto ground_lift = glsl_vec3_constant(mask, "k_visibility_unseen_lift");
+  const float ground_chroma = glsl_float_constant(mask, "k_visibility_unseen_chroma");
+
+  EXPECT_EQ(glsl_vec3_constant(reveal, "k_fog_reveal_shade"), ground_shade)
+      << "a bridge deck in the fog must dim exactly as far as the ground it crosses";
+  EXPECT_EQ(glsl_vec3_constant(reveal, "k_fog_reveal_lift"), ground_lift);
+  EXPECT_EQ(glsl_float_constant(reveal, "k_fog_reveal_chroma"), ground_chroma);
+
+  EXPECT_EQ(cpp_vec3_constant(submitter, "k_unseen_shade"), ground_shade)
+      << "meshes shaded on the CPU for unexplored ground must match the terrain "
+         "shader, or a remembered building sits at a different brightness than the "
+         "tile it stands on";
+  EXPECT_EQ(cpp_vec3_constant(submitter, "k_unseen_lift"), ground_lift);
+  EXPECT_EQ(cpp_float_constant(submitter, "k_unseen_chroma"), ground_chroma);
 }
 
 TEST(ShaderSource, DirectionalShadowBlockMatchesTheUploadedStruct) {

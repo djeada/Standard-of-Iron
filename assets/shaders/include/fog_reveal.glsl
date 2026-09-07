@@ -3,9 +3,9 @@ uniform vec2 u_fog_mask_size;
 uniform float u_fog_mask_tile_size;
 uniform int u_has_fog_mask;
 
-const vec3 k_fog_reveal_shade = vec3(0.22, 0.23, 0.25);
-const vec3 k_fog_reveal_lift = vec3(0.030, 0.036, 0.048);
-const float k_fog_reveal_chroma = 0.70;
+const vec3 k_fog_reveal_shade = vec3(0.50, 0.50, 0.51);
+const vec3 k_fog_reveal_lift = vec3(0.012, 0.012, 0.013);
+const float k_fog_reveal_chroma = 0.55;
 
 bool fog_reveal_active() {
   return u_has_fog_mask == 1 && u_fog_mask_size.x > 0.0 && u_fog_mask_size.y > 0.0;
