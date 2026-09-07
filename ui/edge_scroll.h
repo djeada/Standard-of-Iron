@@ -4,12 +4,14 @@
 #include <QObject>
 #include <QPointF>
 #include <QQmlEngine>
+#include <QQuickItem>
 
 namespace Ui::EdgeScrollGeometry {
 
-inline constexpr double k_base_horizontal_zone = 12.0;
-inline constexpr double k_base_vertical_zone = 10.0;
-inline constexpr double k_min_zone = 4.0;
+inline constexpr double k_base_horizontal_zone = 26.0;
+inline constexpr double k_base_vertical_zone = 26.0;
+inline constexpr double k_min_zone = 10.0;
+inline constexpr double k_entry_push = 0.35;
 
 struct Vector {
   double dx = 0.0;
@@ -20,6 +22,8 @@ struct Vector {
 
 [[nodiscard]] auto horizontal_zone(double sensitivity, double ui_scale) -> double;
 [[nodiscard]] auto vertical_zone(double sensitivity, double ui_scale) -> double;
+
+[[nodiscard]] auto push_ramp(double approach) -> double;
 
 [[nodiscard]] auto vector_at(double x,
                              double y,
@@ -55,6 +59,8 @@ public:
 
   Q_INVOKABLE [[nodiscard]] static QPointF vector(
       qreal x, qreal y, qreal width, qreal height, qreal sensitivity, qreal ui_scale);
+
+  Q_INVOKABLE [[nodiscard]] static QPointF cursorIn(QQuickItem* item);
 };
 
 #endif

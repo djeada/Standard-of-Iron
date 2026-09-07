@@ -1,6 +1,5 @@
 #include <cmath>
 #include <gtest/gtest.h>
-#include <string>
 
 #include "app/core/user_settings.h"
 #include "ui/edge_scroll.h"
@@ -149,34 +148,72 @@ TEST(EdgeScrollTest, AHighResolutionSurfaceStillScrollsAtItsEdges) {
       Edge::vector_at(k_wide / 2.0, k_tall / 2.0, k_wide, k_tall, 1.0, 2.0).is_zero());
 }
 
-TEST(EdgeScrollTest, TheStrongestBandStaysClearOfTheMinimap) {
-  constexpr double k_minimap_hit_area_ends_px_from_right = 25.0;
-  constexpr double k_widest_band = 24.0;
+TEST(EdgeScrollTest, TheBandIsWideEnoughToAimAt) {
+  const auto why =
+      "a band you have to hunt for is the single loudest complaint about edge "
+      "scrolling. The default reaches 26 logical px on every side, and the "
+      "weakest setting still leaves a band you can land on without looking. "
+      "The minimap no longer needs this band to stay narrow: HUD.blocks_edge_"
+      "scroll() refuses the minimap's own rectangle outright and "
+      "mainWindow.edge_scroll_disabled covers a drag that leaves it. See "
+      "docs/CAMERA_CONTROLS.md.";
+
+  EXPECT_GE(Edge::horizontal_zone(1.0, 1.0), 24.0) << why;
+  EXPECT_GE(Edge::vertical_zone(1.0, 1.0), 24.0) << why;
+
+  const double weakest = App::Core::UserSettings::kMinEdgeScrollSensitivity;
+  EXPECT_GE(Edge::horizontal_zone(weakest, 1.0), Edge::k_min_zone) << why;
+  EXPECT_GE(Edge::vertical_zone(weakest, 1.0), Edge::k_min_zone) << why;
+}
+
+TEST(EdgeScrollTest, TopAndBottomAreAsReachableAsTheSides) {
+  const auto why =
+      "the vertical band used to be 10 px against 12 horizontally and ramped "
+      "as a cube against a square, so the middle of the top band moved the "
+      "camera at an eighth of the pace the middle of a side band did. Pushing "
+      "up read as broken. Keep the two axes symmetric.";
+
+  EXPECT_DOUBLE_EQ(Edge::vertical_zone(1.0, 1.0), Edge::horizontal_zone(1.0, 1.0))
+      << why;
+
+  const double zone = Edge::vertical_zone(1.0, 1.0);
+  const auto side = at(zone / 2.0, k_height / 2.0);
+  const auto top = at(k_width / 2.0, zone / 2.0);
+  EXPECT_DOUBLE_EQ(top.dz, -side.dx) << why;
+}
+
+TEST(EdgeScrollTest, CrossingIntoTheBandMovesTheCameraAtOnce) {
+  const auto why =
+      "a ramp that starts at zero gives the outer half of the band no usable "
+      "speed, which is indistinguishable from a band half as wide. Entering "
+      "the band commits to a visible push.";
+
+  const double zone = Edge::horizontal_zone(1.0, 1.0);
+  const double just_inside = at(zone - 0.5, k_height / 2.0).dx;
+  EXPECT_LT(just_inside, 0.0) << why;
+  EXPECT_GE(std::abs(just_inside), Edge::k_entry_push * 0.9) << why;
+  EXPECT_LT(std::abs(just_inside), 1.0) << why;
+}
+
+TEST(EdgeScrollTest, ACornerIsNoFasterThanAnEdge) {
+  const auto why =
+      "the two axes are summed, so an unclamped corner runs the camera sqrt(2) "
+      "times faster than either edge next to it and the view lurches as the "
+      "cursor rounds it.";
+
+  const double edge = std::abs(at(0.0, k_height / 2.0).dx);
+  for (const auto& corner :
+       {at(0.0, 0.0), at(k_width, 0.0), at(0.0, k_height), at(k_width, k_height)}) {
+    EXPECT_NEAR(std::hypot(corner.dx, corner.dz), edge, 1e-9) << why;
+  }
+}
+
+TEST(EdgeScrollTest, TheStrongestSettingStillHasAnUnscrolledMiddle) {
   const double strongest = App::Core::UserSettings::kMaxEdgeScrollSensitivity;
-
-  const auto why = [](double scale) {
-    return "at interface scale " + std::to_string(scale) +
-           ": the minimap is itself a camera move, so a band reaching under it "
-           "leaves a minimap drag and edge scroll pushing the same camera. Its "
-           "hit area ends 25 logical px from the right (hudZoneMargin plus the "
-           "panel's padding), measured by hand in a running battle, and the "
-           "widest band is 24 - one pixel of headroom. See the minimap "
-           "clearance in docs/CAMERA_CONTROLS.md and re-measure the QML side.";
-  };
-
-  EXPECT_DOUBLE_EQ(Edge::horizontal_zone(strongest, 1.0), k_widest_band);
-
   for (const double scale : {1.0, 1.5, 2.0}) {
-    EXPECT_LT(Edge::horizontal_zone(strongest, scale),
-              k_minimap_hit_area_ends_px_from_right * scale)
-        << why(scale);
-
-    const double minimap_edge =
-        k_width - (k_minimap_hit_area_ends_px_from_right * scale);
     EXPECT_TRUE(Edge::vector_at(
-                    minimap_edge, k_height / 2.0, k_width, k_height, strongest, scale)
-                    .is_zero())
-        << why(scale);
+                    k_width / 2.0, k_height / 2.0, k_width, k_height, strongest, scale)
+                    .is_zero());
   }
 }
 

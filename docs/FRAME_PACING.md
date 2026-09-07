@@ -44,9 +44,12 @@ fail the gate. The older `budget` remains an Ultra/Full-LOD certification, so
 non-Ultra reports should inspect `frame_pacing` independently of that verdict.
 
 The pacing window starts at the first playable frame and includes the legacy
-benchmark's warm-up. Loading itself is excluded. Frame intervals measure render
-start to render start, not display scanout; compositor/display latency is outside
-this instrumentation. CPU and upload evidence belongs to the preceding frame.
+benchmark's warm-up. Loading itself is excluded. Frame intervals use `QQuickWindow::frameSwapped`, connected directly on the
+scene-graph render thread. This measures queuing for presentation, not physical
+display scanout ([Qt signal contract](https://doc.qt.io/qt-6/qquickwindow.html#frameSwapped)).
+The clock is consumed for each rendered gameplay frame, retaining time across
+skipped gameplay renders. Missing swaps fail the gate; render-start intervals
+remain separately reported in `wall_interval_ms`. CPU and upload evidence belongs to the preceding frame.
 Asset/upload deltas are baselined during loading, then checked from the first
 playable frame. `post_playable_asset_work` must be zero. The legacy asset barrier
 is armed earlier, before overlay prewarming, so its cumulative totals remain
@@ -56,6 +59,9 @@ has no following interval and is not included.
 CPU budgets use render-thread CPU time; `render_elapsed_ms` in hitch evidence
 also includes driver waits. Simulation time and the preceding Present interval
 are excluded from CPU phase attribution because they belong to other work.
+
+Ten-second windows retain asset-work counts, hitch counts and worst intervals
+to distinguish first-use work from recurring work.
 
 Reports contain median, percentile and maximum intervals, normalized hitch
 frequency, consecutive clusters and the worst frame's CPU phases/upload bytes in
@@ -83,8 +89,9 @@ Qualify each preset with a 60-second-or-longer scenario containing:
 Repeat the sequence to distinguish first-use work from recurring stalls. The
 `--camera-cycle` option drives a repeating 20-second pan/zoom input path on the
 GUI thread, starting after loading; its completed-cycle count is reported and
-gated. The camera target follows an absolute, closed world-space path around the
-map origin, so zoom-dependent pan scaling cannot make repeated traversals drift.
+gated. Runs with no visible soldiers fail qualification; the report also records
+the actual render-target dimensions. The camera target follows an absolute, closed world-space path around the
+mission's starting camera target, so zoom-dependent pan scaling cannot make repeated traversals drift.
 Zoom uses the normal camera controller. The path is a function of elapsed time. This does not
 issue simulation commands. The campaign suite exercises real missions, but does
 **not** yet automate all the UI/weather/destruction actions. A passing
@@ -119,3 +126,37 @@ those buffers, which deferred their uploads until a camera first exposed them.
 The pass retries on subsequent loading frames if a GL context is unavailable;
 ordinary gameplay retains the existing lazy fallback and the pacing gate reports
 any remaining asset work instead of hiding it.
+
+## Local investigation: issue #1398
+
+The 2026-09-07 `anchored-camera` run used the isolated RelWithDebInfo build,
+Ultra, Battle of Ticino, a 60-second benchmark (62 seconds including playable
+warm-up), and three camera cycles. It rendered at 1280 × 720 on an RTX 5060
+with NVIDIA 590.48.01. This is an investigation, not reference qualification.
+Raw reports, hardware/build manifest and logs are retained locally under
+`artifacts/frame-pacing-1398/anchored-camera/`.
+
+| Measurement                              |                   Result | Gate            |
+| ---------------------------------------- | -----------------------: | --------------- |
+| Average visible soldiers                 |                   144.96 | Nonempty battle |
+| Presentation interval median / p95 / p99 | 16.68 / 27.41 / 34.91 ms | Fail            |
+| Maximum presentation interval            |                272.39 ms | Fail            |
+| Render-thread CPU / GPU p95              |          10.63 / 9.61 ms | Pass            |
+| Maximum upload                           |            102,504 bytes | Pass            |
+| Hitch frames                             |        50 (48.39/minute) | Fail            |
+| Post-playable asset work                 |            97 operations | Fail            |
+| Missing presentation samples             |                        0 | Pass            |
+
+All asset work occurred in the first 20 seconds; all hitches occurred in the
+first 30 seconds. Later windows had no hitches or asset work. The worst interval
+contained 249.17 ms in presentation update but only 6.68 ms of render-thread CPU
+time and no asset work. That is evidence of waiting or scheduling within
+presentation update; it does not yet prove which lock or subsystem caused it.
+The remaining work is to attribute and remove that wait and the first-use asset
+operations, then rerun identical fixtures across presets and complete the
+UI/weather/destruction coverage above. The gate remains failing.
+
+Earlier `swap-timed` results had zero visible soldiers because the camera path
+was centered on world origin. They cannot qualify battle performance. The
+corrected path uses the mission's starting camera target, and both the report
+and runner reject empty-battle measurements.
