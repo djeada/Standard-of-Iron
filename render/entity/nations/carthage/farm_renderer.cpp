@@ -5,6 +5,7 @@
 #include <cmath>
 #include <string>
 
+#include "building_palette.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
@@ -18,19 +19,20 @@ namespace Render::GL::Carthage {
 namespace {
 
 struct CarthageFarmPalette {
-  QVector3D sandstone{0.78F, 0.68F, 0.51F};
-  QVector3D sandstone_shade{0.63F, 0.53F, 0.39F};
-  QVector3D sandstone_dark{0.37F, 0.31F, 0.23F};
-  QVector3D mudbrick{0.63F, 0.43F, 0.28F};
-  QVector3D mudbrick_dark{0.44F, 0.28F, 0.18F};
-  QVector3D lime_wash{0.85F, 0.81F, 0.72F};
+  QVector3D sandstone_light = BuildingPalette::k_sandstone_light;
+  QVector3D sandstone = BuildingPalette::k_sandstone;
+  QVector3D sandstone_shade = BuildingPalette::k_sandstone_shade;
+  QVector3D sandstone_dark = BuildingPalette::k_sandstone_dark;
+  QVector3D mudbrick = BuildingPalette::k_brick;
+  QVector3D mudbrick_dark = BuildingPalette::k_brick_dark;
+  QVector3D lime_wash = BuildingPalette::k_plaster;
   QVector3D basalt{0.24F, 0.23F, 0.22F};
-  QVector3D palm_wood{0.42F, 0.29F, 0.17F};
-  QVector3D palm_dark{0.24F, 0.16F, 0.09F};
+  QVector3D palm_wood = BuildingPalette::k_wood;
+  QVector3D palm_dark = BuildingPalette::k_wood_dark;
   QVector3D thatch{0.70F, 0.56F, 0.30F};
   QVector3D thatch_dark{0.50F, 0.39F, 0.21F};
-  QVector3D indigo{0.18F, 0.21F, 0.36F};
-  QVector3D oxblood{0.39F, 0.11F, 0.09F};
+  QVector3D indigo = BuildingPalette::k_indigo;
+  QVector3D oxblood = BuildingPalette::k_oxblood;
   QVector3D clay{0.63F, 0.40F, 0.24F};
   QVector3D clay_band{0.32F, 0.15F, 0.10F};
   QVector3D sack{0.72F, 0.62F, 0.44F};
@@ -138,18 +140,18 @@ void add_storehouse(BuildingArchetypeDesc& desc, const CarthageFarmPalette& c) {
   }
   desc.add_box(centre + QVector3D(0.0F, roof_y + 0.045F, 0.0F),
                QVector3D(k_half_x + 0.03F, 0.014F, k_half_z + 0.03F),
-               c.thatch,
+               c.lime_wash,
                k_building_state_mask_intact);
-  for (float const sx : {-1.0F, 1.0F}) {
-    desc.add_box(centre + QVector3D(sx * (k_half_x + 0.015F), roof_y + 0.075F, 0.0F),
-                 QVector3D(0.015F, 0.03F, k_half_z + 0.03F),
-                 c.mudbrick,
+  for (const float side : {-1.0F, 1.0F}) {
+    desc.add_box(centre + QVector3D(side * (k_half_x + 0.015F), roof_y + 0.085F, 0.0F),
+                 QVector3D(0.022F, 0.035F, k_half_z + 0.04F),
+                 c.sandstone_light,
+                 k_building_state_mask_intact);
+    desc.add_box(centre + QVector3D(0.0F, roof_y + 0.085F, side * (k_half_z + 0.015F)),
+                 QVector3D(k_half_x + 0.04F, 0.035F, 0.022F),
+                 c.sandstone_light,
                  k_building_state_mask_intact);
   }
-  desc.add_box(centre + QVector3D(0.0F, roof_y + 0.075F, k_half_z + 0.015F),
-               QVector3D(k_half_x + 0.03F, 0.03F, 0.015F),
-               c.mudbrick,
-               k_building_state_mask_intact);
 
   desc.add_cylinder(centre + QVector3D(-k_half_x - 0.10F, 0.09F, 0.06F),
                     centre + QVector3D(-k_half_x + 0.03F, roof_y + 0.09F, 0.06F),

@@ -7,6 +7,7 @@
 #include <cmath>
 #include <numbers>
 
+#include "building_palette.h"
 #include "game/core/component.h"
 #include "math/math_utils.h"
 #include "render/entity/barracks_flag_renderer.h"
@@ -26,16 +27,16 @@ namespace {
 using Render::Geom::clamp_vec_01;
 
 struct TowerPalette {
-  QVector3D stone_light{0.88F, 0.79F, 0.63F};
-  QVector3D stone_dark{0.38F, 0.32F, 0.24F};
-  QVector3D stone_base{0.74F, 0.64F, 0.48F};
-  QVector3D brick{0.71F, 0.43F, 0.27F};
-  QVector3D brick_dark{0.40F, 0.18F, 0.11F};
-  QVector3D tile_red{0.57F, 0.21F, 0.12F};
-  QVector3D wood{0.46F, 0.30F, 0.16F};
-  QVector3D wood_dark{0.23F, 0.16F, 0.09F};
+  QVector3D stone_light = BuildingPalette::k_sandstone_light;
+  QVector3D stone_dark = BuildingPalette::k_sandstone_dark;
+  QVector3D stone_base = BuildingPalette::k_sandstone;
+  QVector3D brick = BuildingPalette::k_brick;
+  QVector3D brick_dark = BuildingPalette::k_brick_dark;
+  QVector3D tile_red = BuildingPalette::k_tile_red;
+  QVector3D wood = BuildingPalette::k_wood;
+  QVector3D wood_dark = BuildingPalette::k_wood_dark;
   QVector3D iron{0.24F, 0.23F, 0.21F};
-  QVector3D bronze{0.72F, 0.43F, 0.12F};
+  QVector3D bronze = BuildingPalette::k_bronze;
   QVector3D ember{0.68F, 0.22F, 0.045F};
   QVector3D team{0.8F, 0.9F, 1.0F};
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
@@ -59,7 +60,6 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
   const float core_top = 0.5F + core_half_y * 2.0F;
   const float upper_drum_y = destroyed ? 0.0F : (damaged ? 1.86F : 2.16F);
   const float deck_y = destroyed ? 0.0F : (damaged ? 2.20F : 2.52F);
-  const float roof_y = destroyed ? 0.0F : (damaged ? 2.50F : 2.94F);
 
   desc.add_box(
       QVector3D(0.0F, 0.04F, 0.0F), QVector3D(1.24F, 0.04F, 1.24F), c.stone_dark);
@@ -229,23 +229,18 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
       }
     }
 
-    const float canopy_y = roof_y + (damaged ? 0.22F : 0.30F);
-    const float post_half = parapet_half - 0.12F;
-    for (const float px : {-post_half, post_half}) {
-      for (const float pz : {-post_half, post_half}) {
-        desc.add_box(QVector3D(px, (merlon_y + canopy_y) * 0.5F, pz),
-                     QVector3D(0.055F, (canopy_y - merlon_y) * 0.5F, 0.055F),
-                     c.wood_dark,
-                     BuildingStateMask::All);
-      }
+    // Leave an open military terrace, framed by the same sandstone cornice
+    // as the barracks. The parapet already supplies its stepped silhouette.
+    for (const float side : {-1.0F, 1.0F}) {
+      desc.add_box(QVector3D(0.0F, deck_y - 0.02F, side * parapet_half),
+                   QVector3D(parapet_half + 0.08F, 0.055F, 0.065F),
+                   c.stone_light,
+                   k_building_state_mask_intact);
+      desc.add_box(QVector3D(side * parapet_half, deck_y - 0.02F, 0.0F),
+                   QVector3D(0.065F, 0.055F, parapet_half + 0.08F),
+                   c.stone_light,
+                   k_building_state_mask_intact);
     }
-    desc.add_box(QVector3D(0.0F, canopy_y, 0.0F),
-                 QVector3D(damaged ? 0.70F : 0.80F, 0.03F, damaged ? 0.70F : 0.80F),
-                 c.tile_red);
-    desc.add_box(QVector3D(0.0F, canopy_y + 0.05F, 0.0F),
-                 QVector3D(damaged ? 0.48F : 0.56F, 0.03F, damaged ? 0.48F : 0.56F),
-                 c.tile_red,
-                 BuildingStateMask::All);
   }
 
   if (damaged) {
@@ -274,12 +269,6 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
         damaged ? 0.58F : 0.72F,
         c.brick,
         c.stone_dark);
-    add_punic_horned_crown(desc,
-                           QVector3D(0.0F, roof_y + 0.05F, 0.0F),
-                           damaged ? 0.54F : 0.78F,
-                           c.iron,
-                           c.bronze,
-                           c.ember);
   }
 
   add_broken_rim(desc,
