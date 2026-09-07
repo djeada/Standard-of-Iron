@@ -56,5 +56,6 @@ public:
                                 VisibilityCoordinator* visibility_coordinator,
                                 OwnerUpdateCallback owner_update,
                                 bool allow_default_player_barracks,
+                                bool defer_ai_initialization,
                                 LoadingProgressTracker* progress_tracker = nullptr);
 };

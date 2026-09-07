@@ -12,7 +12,7 @@
 #include "app/persistence/game_state_restorer.h"
 #include "app/world/visibility_coordinator.h"
 #include "game/core/world.h"
-#include "game/map/map_loader.h"
+#include "game/map/map_context.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/mission/campaign_manager.h"
@@ -219,12 +219,11 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
   GameStateRestorer::rebuild_entity_cache(
       &context.world, context.entity_cache, context.runtime_snapshot.local_owner_id);
   if (!context.level.map_path.isEmpty()) {
-    Game::Map::MapDefinition map_def;
     QString map_error;
-    const QString resolved_map_path =
-        Utils::Resources::resolve_resource_path(context.level.map_path);
-    if (Game::Map::MapLoader::load_from_json_file(
-            resolved_map_path, map_def, &map_error)) {
+    const Game::Map::MapContext map_context =
+        Game::Map::MapContextStore::acquire(context.level.map_path, &map_error);
+    if (map_context.valid()) {
+      const auto& map_def = *map_context.definition();
       if (auto* undead_system =
               context.world.get_system<Game::Systems::UndeadAwakeningSystem>()) {
         undead_system->configure(map_def);

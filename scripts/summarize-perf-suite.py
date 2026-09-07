@@ -89,11 +89,20 @@ def runtime_row(label: str, runs: list[dict]) -> dict:
     )
 
     failures: list[str] = []
+    if len(valid) != len(runs):
+        failures.append("one or more repeats produced an invalid report")
     for run in valid:
+        pacing = run.get("frame_pacing")
+        if not isinstance(pacing, dict) or pacing.get("passed") is not True:
+            failures.append("frame pacing failed or was not measured")
+            if isinstance(pacing, dict):
+                failures.extend(pacing.get("failures", []))
         verdict = run.get("budget")
         if not isinstance(verdict, dict):
             failures.append("run produced no budget verdict")
             continue
+        if verdict.get("passed") is not True:
+            failures.append("runtime budget failed")
         for failure in verdict.get("failures", []):
             if failure not in failures:
                 failures.append(failure)

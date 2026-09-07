@@ -18,8 +18,8 @@
 #include "game/command/command_queue.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
+#include "game/map/map_context.h"
 #include "game/map/map_definition.h"
-#include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
 #include "game/map/mission_context.h"
 #include "game/map/wave_archetype_catalog.h"
@@ -382,22 +382,18 @@ auto build_pending_mission_waves(const MissionWaveBuildContext& ctx)
     -> std::vector<PendingMissionWave> {
   std::vector<PendingMissionWave> waves;
 
-  Game::Map::MapDefinition map_def;
-  QString map_error;
-  bool map_loaded = false;
+  Game::Map::MapContext map_context;
   if (!ctx.level.map_path.isEmpty()) {
-    const QString resolved_map_path =
-        Utils::Resources::resolve_resource_path(ctx.level.map_path);
-    map_loaded = Game::Map::MapLoader::load_from_json_file(
-        resolved_map_path, map_def, &map_error);
-    if (!map_loaded) {
+    QString map_error;
+    map_context = Game::Map::MapContextStore::acquire(ctx.level.map_path, &map_error);
+    if (!map_context.valid()) {
       qWarning() << "Mission wave build: failed to load map definition for"
                  << ctx.level.map_path << "-" << map_error;
     }
   }
 
   auto to_world = [&](const Game::Mission::Position& pos) {
-    return mission_position_to_world(pos, map_loaded ? &map_def : nullptr, ctx.level);
+    return mission_position_to_world(pos, map_context.definition(), ctx.level);
   };
 
   const auto& nation_registry = ctx.nations;

@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "map_context.h"
 #include "map_definition.h"
 
 namespace Engine::Core {
@@ -18,7 +19,7 @@ struct MatchLoadResult {
   bool ok = false;
   QString map_name;
   QString error_message;
-  MapDefinition definition;
+  MapContext map_context;
   Engine::Core::EntityID player_unit_id = 0;
   int grid_width = 50;
   int grid_height = 50;

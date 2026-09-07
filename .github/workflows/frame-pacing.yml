@@ -1,0 +1,65 @@
+---
+name: Battle Frame Pacing
+
+# Dedicated hardware only. Generic hosted/software-rendered runners cannot
+# certify this budget. Configure the soi-performance label on a reference host.
+on:
+  workflow_dispatch:
+    inputs:
+      preset:
+        description: Graphics preset
+        type: choice
+        options: [low, medium, high, ultra]
+        default: ultra
+      repeats:
+        description: Repeats per mission
+        type: choice
+        options: ["3", "5"]
+        default: "3"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: soi-reference-performance-host
+  cancel-in-progress: false
+
+jobs:
+  pacing:
+    runs-on: [self-hosted, linux, x64, soi-performance]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Configure
+        run: cmake -S . -B build-pacing-ci -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEFAULT_LANG=en
+
+      - name: Build
+        run: cmake --build build-pacing-ci --target standard_of_iron render_tests --parallel 4
+
+      - name: Check gate logic
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          build-pacing-ci/bin/render_tests --gtest_filter='FramePacingTest.*'
+          python3 -m unittest discover -s tests/scripts
+
+      - name: Measure real missions and repeated camera movement
+        env:
+          PACING_PRESET: ${{ inputs.preset }}
+          PACING_REPEATS: ${{ inputs.repeats }}
+        run: |
+          python3 scripts/check-frame-pacing.py \
+            --binary build-pacing-ci/bin/standard_of_iron \
+            --preset "$PACING_PRESET" --repeats "$PACING_REPEATS" \
+            --seconds 60 --camera-cycle --output artifacts/pacing-ci
+
+      - name: Preserve reports, logs and hardware metadata
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: frame-pacing-${{ inputs.preset }}-${{ github.run_attempt }}
+          path: artifacts/pacing-ci/
+          if-no-files-found: warn

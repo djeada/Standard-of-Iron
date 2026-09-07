@@ -30,6 +30,7 @@ auto SkirmishRuntimeCoordinator::perform_load(
                                  ctx.visibility_coordinator,
                                  ctx.emit_owner_info_changed,
                                  ctx.allow_default_player_barracks,
+                                 ctx.defer_ai_initialization,
                                  ctx.loading_progress_tracker);
 
   return {.success = load_result.success,

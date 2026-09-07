@@ -674,12 +674,13 @@ def drawtext(
         fade_in = f"min(1,(t-{start:.3f})/{fade:.3f})"
         visible = f"min({fade_in},{fade_out})"
     alpha = f"if(between(t,{start:.3f},{end:.3f}),{visible},0)"
-    border = max(3, round(size * 0.07))
+    border = max(1, round(size * 0.022))
     return (
         f"drawtext=fontfile='{font}':text='{escape_text(text)}'"
         f":fontcolor={color}:fontsize={size}:x=(w-text_w)/2:y={y_expr}"
-        f":borderw={border}:bordercolor=black@0.85"
-        f":shadowcolor=black@0.55:shadowx=0:shadowy={max(4, round(size * 0.09))}"
+        f":ft_load_flags=no_hinting+no_bitmap"
+        f":borderw={border}:bordercolor=black@0.70"
+        f":shadowcolor=black@0.45:shadowx=0:shadowy={max(1, round(size * 0.035))}"
         f":alpha='{alpha}'"
     )
 
@@ -946,6 +947,13 @@ def main() -> int:
     parser.add_argument("--out", type=Path, help="output file (default: <clips>.mp4)")
     parser.add_argument("--font", help="path to a bold .ttf for captions")
     parser.add_argument(
+        "--text-scale",
+        type=int,
+        choices=(1, 2, 3),
+        default=2,
+        help="text compositing resolution multiplier (default: 2; 1 for faster drafts)",
+    )
+    parser.add_argument(
         "--no-captions", action="store_true", help="skip all text overlays"
     )
     parser.add_argument(
@@ -1074,10 +1082,17 @@ def main() -> int:
     stage = "graded"
     if not args.no_captions:
 
+        output_width, output_height = width, height
+        text_scale = args.text_scale
+        width, height = width * text_scale, height * text_scale
+        chain.append(
+            f"[{stage}]scale={width}:{height}:flags=lanczos,format=yuv444p[textbase]"
+        )
+        stage = "textbase"
         type_base = min(width, height)
-        caption_size = max(46, int(type_base * 0.075))
-        title_size = max(60, int(type_base * 0.105))
-        subtitle_size = max(30, int(type_base * 0.040))
+        caption_size = max(46 * text_scale, int(type_base * 0.075))
+        title_size = max(60 * text_scale, int(type_base * 0.105))
+        subtitle_size = max(30 * text_scale, int(type_base * 0.040))
         caption_y = f"h*{CAPTION_Y_FRACTION}"
         safe_width = int(width * 0.88)
 
@@ -1090,7 +1105,7 @@ def main() -> int:
             advisory_seconds = max(1.2, float(spec.get("advisory_seconds", 3.0)))
             advisory_end = advisory_seconds
             hold = advisory_seconds - 0.45
-            advisory_size = max(24, int(type_base * 0.034))
+            advisory_size = max(24 * text_scale, int(type_base * 0.034))
 
             chain.append(
                 f"[{stage}]"
@@ -1274,7 +1289,7 @@ def main() -> int:
         credit_lines = list(spec.get("end_card_lines", []))
         if credit_lines:
 
-            credit_size = max(24, int(type_base * 0.032))
+            credit_size = max(24 * text_scale, int(type_base * 0.032))
             credit_top = card_gap + int(subtitle_size * 2.4)
             for line_index, line in enumerate(credit_lines):
                 offset = credit_top + int(credit_size * 1.7 * line_index)
@@ -1294,6 +1309,12 @@ def main() -> int:
                     + f"[credit{line_index}]"
                 )
                 stage = f"credit{line_index}"
+
+        chain.append(
+            f"[{stage}]scale={output_width}:{output_height}:flags=lanczos[textdone]"
+        )
+        stage = "textdone"
+        width, height = output_width, output_height
 
     opening = max(0.0, args.opening_fade)
     fades = []

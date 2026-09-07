@@ -14,7 +14,7 @@
 #include "app/audio/audio_resource_loader.h"
 #include "game/audio/audio_event_handler.h"
 #include "game/audio/audio_system.h"
-#include "game/map/map_loader.h"
+#include "game/map/map_context.h"
 #include "game/map/mission_definition.h"
 #include "game/systems/nation_registry.h"
 #include "utils/resource_utils.h"
@@ -432,21 +432,15 @@ void AudioCoordinator::apply_mission_ambience(
     }
   }
 
-  std::optional<Game::Map::MapDefinition> map_def;
+  Game::Map::MapContext map_context;
   if (!map_path.isEmpty()) {
-    Game::Map::MapDefinition loaded_map_def;
-    QString map_error;
-    const QString resolved_map_path = Utils::Resources::resolve_resource_path(map_path);
-    if (Game::Map::MapLoader::load_from_json_file(
-            resolved_map_path, loaded_map_def, &map_error)) {
-      map_def = std::move(loaded_map_def);
-    }
+    map_context = Game::Map::MapContextStore::acquire(map_path);
   }
 
   const QStringList ambience_candidates = collect_matching_resource_ids(
       AudioCategory::AMBIENCE,
       build_mission_ambience_queries(
-          mission, map_path, map_def ? &*map_def : nullptr, faction_tag),
+          mission, map_path, map_context.definition(), faction_tag),
       true);
   QString ambience_id = choose_seeded_track(
       ambience_candidates,

@@ -14,7 +14,7 @@
 #include "../units/spawn_type.h"
 #include "../units/unit.h"
 #include "environment_lighting.h"
-#include "map_loader.h"
+#include "map_context.h"
 #include "map_transformer.h"
 #include "terrain_service.h"
 #include "utils/resource_utils.h"
@@ -94,18 +94,17 @@ auto load_match(const QString& map_path,
   Game::Units::register_built_in_units(*units);
   MapTransformer::setFactoryRegistry(units);
 
-  const QString resolved = Utils::Resources::resolve_resource_path(map_path);
-
-  MapDefinition definition;
   QString error;
-  if (!MapLoader::load_from_json_file(resolved, definition, &error)) {
+  const MapContext context = MapContextStore::acquire(map_path, &error);
+  if (!context.valid()) {
     result.ok = false;
     result.error_message =
         QCoreApplication::translate("LevelLoader", "Map load failed: %1").arg(error);
-    qWarning() << "MatchLoader: map load failed:" << error << "(path:" << resolved
-               << ')';
+    qWarning() << "MatchLoader: map load failed:" << error
+               << "(path:" << context.resolved_path() << ')';
     return result;
   }
+  const MapDefinition& definition = *context.definition();
 
   result.ok = true;
   result.map_name = definition.name;
@@ -144,7 +143,7 @@ auto load_match(const QString& map_path,
     spawn_default_barracks(world);
   }
 
-  result.definition = std::move(definition);
+  result.map_context = context;
   return result;
 }
 

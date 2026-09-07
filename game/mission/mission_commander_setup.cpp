@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <limits>
 
-#include "game/map/map_loader.h"
+#include "game/map/map_context.h"
 #include "game/map/spawn_cluster.h"
 #include "game/systems/nation_id.h"
 #include "game/units/commander_catalog.h"
@@ -111,14 +111,14 @@ auto commander_troops_by_owner(const Game::Map::MapDefinition& map)
 }
 
 auto commander_troops_for_map(const QString& map_path) -> std::map<int, QString> {
-  Game::Map::MapDefinition map;
   QString error;
-  const QString resolved = Utils::Resources::resolve_resource_path(map_path);
-  if (!Game::Map::MapLoader::load_from_json_file(resolved, map, &error)) {
+  const Game::Map::MapContext context =
+      Game::Map::MapContextStore::acquire(map_path, &error);
+  if (!context.valid()) {
     qWarning() << "Commander lookup: failed to load map" << map_path << "-" << error;
     return {};
   }
-  return commander_troops_by_owner(map);
+  return commander_troops_by_owner(*context.definition());
 }
 
 auto resolve_commander_position(

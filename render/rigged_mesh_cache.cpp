@@ -381,6 +381,36 @@ RiggedMeshCache::~RiggedMeshCache() {
   release_skin_atlases();
 }
 
+auto RiggedMeshCache::prewarm_gpu_resources() -> bool {
+  if (rigged_cache_gl_funcs() == nullptr) {
+    return false;
+  }
+  Render::Creature::RuntimeBakeAllowScope const loading_scope;
+  bool ready = true;
+  for (auto& [_, entry] : m_entries) {
+    if (entry.mesh != nullptr) {
+      ready = entry.mesh->ensure_gl_buffers() && ready;
+    }
+    for (const auto& attachment : entry.attachment_meshes) {
+      if (attachment != nullptr) {
+        ready = attachment->ensure_gl_buffers() && ready;
+      }
+    }
+    const auto* atlas = entry.skin_atlas.get();
+    if (atlas != nullptr && atlas->palette_ubo == 0U && !atlas->palettes.empty() &&
+        atlas->frame_total > 0 && atlas->bone_count > 0) {
+      rigged_entry_ensure_skin_ubo(entry);
+      if (atlas->palette_ubo != 0U) {
+        record_skin_ubo_upload(static_cast<std::uint64_t>(atlas->frame_total) *
+                               BonePaletteArena::k_palette_bytes);
+      } else {
+        ready = false;
+      }
+    }
+  }
+  return ready;
+}
+
 void RiggedMeshCache::upload_pending_skin_ubos() {
   if (!m_has_pending_skin_ubo_uploads || rigged_cache_gl_funcs() == nullptr) {
     return;

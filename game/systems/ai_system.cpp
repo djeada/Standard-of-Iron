@@ -105,8 +105,84 @@ void AISystem::reinitialize() {
   m_applied_command_count = 0;
   m_deferred_decision_count = 0;
   m_longest_decision_wait_us = 0;
+  m_snapshot_build_count = 0;
+  m_initial_decisions_prepared = false;
+  m_initial_decisions_ready.store(false, std::memory_order_release);
 
   initialize_ai_players();
+}
+
+auto AISystem::submit_decision_job(AIInstance& ai,
+                                   Engine::Core::World& world,
+                                   float delta_time) -> bool {
+  AI::AISnapshot snapshot =
+      Game::Systems::AI::AISnapshotBuilder::build(world, ai.context.player_id);
+  snapshot.game_time = m_total_game_time;
+  ++m_snapshot_build_count;
+
+  AI::AIJob job;
+  job.snapshot = std::move(snapshot);
+  job.context = ai.context;
+  job.context.nation = nullptr;
+  job.delta_time = delta_time;
+  merge_building_attacks(ai, job.context);
+
+  if (!ai.worker->try_submit(std::move(job))) {
+    return false;
+  }
+
+  ai.job_pending = true;
+  ai.job_due_update = m_update_count + k_decision_latency_updates;
+  return true;
+}
+
+void AISystem::prepare_initial_decisions(Engine::Core::World& world) {
+  m_initial_decisions_prepared = true;
+  if (m_ai_instances.empty()) {
+    m_initial_decisions_ready.store(true, std::memory_order_release);
+    return;
+  }
+
+  const std::size_t count = m_ai_instances.size();
+  for (std::size_t index = 0; index < count; ++index) {
+    auto& ai = m_ai_instances[index];
+    if (ai.job_pending) {
+      continue;
+    }
+    const float stagger = initial_ai_update_timer(index, count, m_update_interval);
+    if (submit_decision_job(ai, world, m_update_interval)) {
+      ai.update_timer = -stagger;
+    }
+  }
+}
+
+auto AISystem::await_initial_decisions(std::chrono::milliseconds budget) -> bool {
+  if (!m_initial_decisions_prepared) {
+    return false;
+  }
+
+  const auto deadline = std::chrono::steady_clock::now() + budget;
+  bool all_idle = true;
+  for (auto& ai : m_ai_instances) {
+    if (!ai.job_pending) {
+      continue;
+    }
+    const auto now = std::chrono::steady_clock::now();
+    const auto remaining =
+        now >= deadline
+            ? std::chrono::microseconds{0}
+            : std::chrono::duration_cast<std::chrono::microseconds>(deadline - now);
+    if (!ai.worker->wait_idle(remaining)) {
+      all_idle = false;
+    }
+  }
+
+  m_initial_decisions_ready.store(all_idle, std::memory_order_release);
+  return all_idle;
+}
+
+auto AISystem::initial_decisions_ready() const -> bool {
+  return m_initial_decisions_ready.load(std::memory_order_acquire);
 }
 
 void AISystem::shutdown_workers() {
@@ -211,21 +287,8 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
-    AI::AISnapshot snapshot =
-        Game::Systems::AI::AISnapshotBuilder::build(*world, ai.context.player_id);
-    snapshot.game_time = m_total_game_time;
-
-    AI::AIJob job;
-    job.snapshot = std::move(snapshot);
-    job.context = ai.context;
-    job.context.nation = nullptr;
-    job.delta_time = ai.update_timer;
-    merge_building_attacks(ai, job.context);
-
-    if (ai.worker->try_submit(std::move(job))) {
+    if (submit_decision_job(ai, *world, ai.update_timer)) {
       ai.update_timer = 0.0F;
-      ai.job_pending = true;
-      ai.job_due_update = m_update_count + k_decision_latency_updates;
     }
   }
 }

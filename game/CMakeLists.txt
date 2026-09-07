@@ -42,6 +42,7 @@ add_library(
     core/world.cpp
     core/world_spatial_index.cpp
     core/system_profiler.cpp
+    core/startup_profiler.cpp
     core/nav_profile.cpp
     core/system_schedule.cpp
     core/deferred_mutations.cpp
@@ -116,6 +117,7 @@ add_library(
     map/base_options.cpp
     map/environment_lighting.cpp
     map/explored_mask_codec.cpp
+    map/map_context.cpp
     map/map_loader.cpp
     map/procedural_tree_generation.cpp
     map/scatter/spawn_validator.cpp
