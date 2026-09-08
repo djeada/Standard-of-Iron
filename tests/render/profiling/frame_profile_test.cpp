@@ -354,3 +354,20 @@ TEST(FramePacingTest, WindowsDistinguishFirstUseWorkFromRecurringWork) {
   EXPECT_EQ(windows[0].toObject()["asset_work"].toInt(), 3);
   EXPECT_EQ(windows[1].toObject()["asset_work"].toInt(), 1);
 }
+
+TEST(FramePacingTest, PresentationWaitIsAttributedSeparatelyFromCpuWork) {
+  Render::Profiling::FramePacing pacing;
+  Render::Profiling::PacingSample hitch{270, 7, 8, 0, {}};
+  hitch.phase_us[static_cast<std::size_t>(Phase::Frame)] = 1000;
+  hitch.phase_us[static_cast<std::size_t>(Phase::PresentationLockWait)] = 249000;
+  hitch.render_elapsed_ms = 265;
+  pacing.observe(hitch);
+  const auto evidence = pacing.report("high")["clusters"]
+                            .toArray()[0]
+                            .toObject()["worst_frame_evidence"]
+                            .toObject();
+  EXPECT_EQ(evidence["largest_cpu_phase"].toString(), "presentation_lock_wait");
+  EXPECT_DOUBLE_EQ(evidence["cpu_ms"].toDouble(), 7);
+  EXPECT_DOUBLE_EQ(evidence["phase_ms"].toObject()["presentation_lock_wait"].toDouble(),
+                   249);
+}

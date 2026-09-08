@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QOpenGLContext>
 #include <QVector3D>
 #include <QVector4D>
 
@@ -34,6 +35,22 @@ public:
   }
 
   void clear() override { m_state.reset_instances(); }
+
+  [[nodiscard]] auto prewarm_gpu_resources() -> bool override {
+    if (QOpenGLContext::currentContext() == nullptr) {
+      return false;
+    }
+    bool ready = true;
+    for (auto& chunk : m_state.spatial_chunks) {
+      if (chunk.buffer == nullptr) {
+        chunk.buffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
+      }
+      chunk.buffer->bind();
+      chunk.buffer->unbind();
+      ready = chunk.buffer->id() != 0U && ready;
+    }
+    return ready;
+  }
 
 protected:
   using State = Render::Ground::Scatter::FilteredRendererState<Instance, Params>;

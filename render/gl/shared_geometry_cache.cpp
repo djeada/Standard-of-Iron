@@ -1,5 +1,7 @@
 #include "render/gl/shared_geometry_cache.h"
 
+#include <QOpenGLContext>
+
 #include <utility>
 
 #include "render/gl/mesh.h"
@@ -23,6 +25,22 @@ auto SharedGeometryCache::get_or_build(std::uint64_t key,
     return nullptr;
   }
   return m_meshes.emplace(key, std::move(mesh)).first->second.get();
+}
+
+auto SharedGeometryCache::prewarm_gpu_resources() -> bool {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    return false;
+  }
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  bool ready = true;
+  for (auto& [key, mesh] : m_meshes) {
+    if (mesh->bind_vao()) {
+      mesh->unbind_vao();
+    } else {
+      ready = false;
+    }
+  }
+  return ready;
 }
 
 void SharedGeometryCache::release_all() {

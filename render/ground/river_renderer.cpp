@@ -19,10 +19,15 @@
 #include "map/terrain.h"
 #include "render/draw_commands.h"
 #include "render/gl/mesh.h"
+#include "render/gl/mesh_prewarmer.h"
 #include "render/gl/resources.h"
 #include "render/scene_renderer.h"
 
 namespace Render::GL {
+
+auto WaterRenderer::prewarm_gpu_resources() -> bool {
+  return prewarm_mesh_buffers(m_meshes, [](auto& entry) { return entry.mesh.get(); });
+}
 
 WaterRenderer::WaterRenderer() = default;
 WaterRenderer::~WaterRenderer() = default;

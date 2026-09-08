@@ -13,6 +13,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 MISSIONS = (
@@ -80,6 +81,92 @@ def capture(command: list[str]) -> str:
         return str(error)
 
 
+def copy_mission_fixture(source: Path, output: Path, index: int):
+    source = source.resolve()
+    raw = source.read_bytes()
+    mission = json.loads(raw)
+    map_path = mission.get("map_path") if isinstance(mission, dict) else None
+    if not isinstance(map_path, str) or not map_path:
+        raise ValueError(f"mission has no map_path: {source}")
+    original = output / f"fixture{index}.source.json"
+    original.write_bytes(raw)
+    dependencies = []
+    if not map_path.startswith(":/"):
+        map_source = Path(map_path)
+        if not map_source.is_absolute():
+            map_source = source.parent / map_source
+        map_bytes = map_source.read_bytes()
+        map_artifact = output / f"fixture{index}.map.json"
+        map_artifact.write_bytes(map_bytes)
+        mission["map_path"] = str(map_artifact.resolve())
+        dependencies.append(
+            {
+                "artifact": map_artifact.name,
+                "sha256": hashlib.sha256(map_bytes).hexdigest(),
+            }
+        )
+    destination = output / f"fixture{index}.mission.json"
+    destination.write_text(json.dumps(mission, indent=2) + "\n")
+    return destination, {
+        "source": str(source),
+        "original": original.name,
+        "source_sha256": hashlib.sha256(raw).hexdigest(),
+        "artifact": destination.name,
+        "sha256": hashlib.sha256(destination.read_bytes()).hexdigest(),
+        "maps": dependencies,
+    }
+
+
+def competing_processes(excluded=(), proc_root=Path("/proc")) -> list[dict]:
+    """Linux qualification lane: detect competing games and build workers."""
+    names = {
+        "standard_of_iron",
+        "arena_app",
+        "soi_pacing_probe",
+        "cc1plus",
+        "cc1",
+        "lto1",
+        "ninja",
+        "make",
+        "ld",
+        "ld.lld",
+    }
+    found = []
+    if not proc_root.is_dir():
+        return found
+    for entry in proc_root.iterdir():
+        if not entry.name.isdigit() or int(entry.name) in excluded:
+            continue
+        try:
+            executable = Path(os.readlink(entry / "exe")).name.removesuffix(
+                " (deleted)"
+            )
+        except OSError:
+            continue
+        if executable in names:
+            found.append({"pid": int(entry.name), "executable": executable})
+    return sorted(found, key=lambda item: item["pid"])
+
+
+def run_monitored(command, log, environment, timeout, competitors) -> int:
+    with subprocess.Popen(
+        command, stdout=log, stderr=subprocess.STDOUT, env=environment
+    ) as process:
+        deadline = time.monotonic() + timeout
+        while True:
+            for rival in competing_processes({process.pid}):
+                competitors[rival["pid"]] = rival
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                process.kill()
+                process.wait()
+                raise subprocess.TimeoutExpired(command, timeout)
+            try:
+                return process.wait(timeout=min(1.0, remaining))
+            except subprocess.TimeoutExpired:
+                pass
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -98,8 +185,19 @@ def main() -> int:
         type=Path,
         help="recorded runtime replay; repeatable, copied into artifacts",
     )
+    fixtures.add_argument(
+        "--mission-file",
+        action="append",
+        type=Path,
+        help="custom mission JSON; copied and hashed with its local map",
+    )
     parser.add_argument(
         "--camera-cycle", action="store_true", help="repeat a 20-second pan/zoom path"
+    )
+    parser.add_argument(
+        "--allow-contended",
+        action="store_true",
+        help="collect diagnostic data despite competitors; the gate still fails",
     )
     parser.add_argument("--seconds", type=int, default=60)
     parser.add_argument("--repeats", type=int, default=3)
@@ -125,6 +223,16 @@ def main() -> int:
     presets = args.preset or ["low", "medium", "high", "ultra"]
     missions = args.mission or list(MISSIONS)
     replay_manifest = []
+    mission_manifest = []
+    if args.mission_file:
+        missions = []
+        for index, source in enumerate(args.mission_file):
+            try:
+                destination, metadata = copy_mission_fixture(source, output, index)
+            except (OSError, ValueError) as error:
+                parser.error(str(error))
+            missions.append(str(destination))
+            mission_manifest.append(metadata)
     if args.replay:
         missions = []
         for index, source in enumerate(args.replay):
@@ -141,12 +249,29 @@ def main() -> int:
                 }
             )
             missions.append(str(destination))
+    environment = os.environ.copy()
+    environment["SOI_BENCHMARK_CAMERA_CYCLE"] = "1" if args.camera_cycle else "0"
+    environment["SOI_SWAP_INTERVAL"] = "1"
     manifest = {
         "utc": stamp,
         "binary": str(binary),
         "binary_sha256": hashlib.sha256(binary.read_bytes()).hexdigest(),
         "load_average": os.getloadavg() if hasattr(os, "getloadavg") else None,
         "platform": platform.platform(),
+        "graphics_environment": {
+            key: environment.get(key)
+            for key in (
+                "DISPLAY",
+                "WAYLAND_DISPLAY",
+                "SOI_SWAP_INTERVAL",
+                "QSG_RENDER_LOOP",
+                "QT_XCB_GL_INTEGRATION",
+                "__GL_SYNC_TO_VBLANK",
+                "__GL_MaxFramesAllowed",
+                "vblank_mode",
+                "SOI_PROFILE_SIMULATION",
+            )
+        },
         "cpu": capture(["lscpu"]),
         "gpu": capture(["glxinfo", "-B"]),
         "display": capture(["xrandr", "--current"]),
@@ -155,17 +280,16 @@ def main() -> int:
         "presets": presets,
         "missions": missions,
         "replays": replay_manifest,
+        "mission_files": mission_manifest,
         "seconds": args.seconds,
         "repeats": args.repeats,
         "coverage": {
-            "campaign": True,
+            "campaign": not bool(args.replay or args.mission_file),
             "camera_cycle": args.camera_cycle,
             "ui_actions": False,
         },
     }
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    environment = os.environ.copy()
-    environment["SOI_BENCHMARK_CAMERA_CYCLE"] = "1" if args.camera_cycle else "0"
     rows = []
     for mission_index, mission in enumerate(missions):
         for repeat in range(args.repeats):
@@ -174,7 +298,15 @@ def main() -> int:
                 report_path = output / f"{label}.json"
                 command = [
                     str(binary),
-                    "--replay" if args.replay else "--campaign-mission",
+                    (
+                        "--replay"
+                        if args.replay
+                        else (
+                            "--mission-file"
+                            if args.mission_file
+                            else "--campaign-mission"
+                        )
+                    ),
                     mission,
                     "--skip-briefing",
                     "--graphics-preset",
@@ -189,19 +321,23 @@ def main() -> int:
                 )
                 failures = []
                 load_before = os.getloadavg() if hasattr(os, "getloadavg") else None
+                competitors = {item["pid"]: item for item in competing_processes()}
                 with (output / f"{label}.log").open("w") as log:
-                    try:
-                        result = subprocess.run(
-                            command,
-                            stdout=log,
-                            stderr=subprocess.STDOUT,
-                            timeout=args.timeout,
-                            env=environment,
+                    if competitors and not args.allow_contended:
+                        log.write(
+                            "Skipped: competing game or build processes detected.\n"
                         )
-                        if result.returncode != 0:
-                            failures.append(f"process exited {result.returncode}")
-                    except (OSError, subprocess.TimeoutExpired) as error:
-                        failures.append(str(error))
+                    else:
+                        try:
+                            returncode = run_monitored(
+                                command, log, environment, args.timeout, competitors
+                            )
+                            if returncode != 0:
+                                failures.append(f"process exited {returncode}")
+                        except (OSError, subprocess.TimeoutExpired) as error:
+                            failures.append(str(error))
+                if competitors:
+                    failures.append("competing game or build processes detected")
                 failures.extend(read_report(report_path, preset, args.camera_cycle))
                 rows.append(
                     {
@@ -213,6 +349,7 @@ def main() -> int:
                         "load_average_after": (
                             os.getloadavg() if hasattr(os, "getloadavg") else None
                         ),
+                        "competing_workloads": list(competitors.values()),
                         "report": report_path.name,
                         "passed": not failures,
                         "failures": failures,

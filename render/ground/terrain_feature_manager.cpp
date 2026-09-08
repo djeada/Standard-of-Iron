@@ -18,6 +18,14 @@ TerrainFeatureManager::TerrainFeatureManager()
 
 TerrainFeatureManager::~TerrainFeatureManager() = default;
 
+auto TerrainFeatureManager::prewarm_gpu_resources() -> bool {
+  bool ready = m_water->prewarm_gpu_resources();
+  ready = m_road->prewarm_gpu_resources() && ready;
+  ready = m_shoreline->prewarm_gpu_resources() && ready;
+  ready = m_bridge->prewarm_gpu_resources() && ready;
+  return ready;
+}
+
 void TerrainFeatureManager::configure(
     const Game::Map::TerrainHeightMap& height_map,
     const std::vector<Game::Map::RoadSegment>& road_segments,

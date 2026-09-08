@@ -500,6 +500,10 @@ void GLView::GLRenderer::reset_runtime_benchmark_samples() {
   m_pacing_upload_bytes = Render::Profiling::asset_counters().total(
       Render::Profiling::AssetCounter::GlUploadBytes);
   m_pacing_asset_work = Render::Profiling::asset_counters().post_barrier_asset_work();
+  for (std::size_t i = 0; i < m_playable_asset_baseline.size(); ++i) {
+    m_playable_asset_baseline[i] = Render::Profiling::asset_counters().total(
+        static_cast<Render::Profiling::AssetCounter>(i));
+  }
   m_benchmark_ready_time = {};
   m_benchmark_render_ms.clear();
   m_benchmark_update_ms.clear();
@@ -839,6 +843,31 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
                    static_cast<qint64>(m_benchmark_last_post_load_frame)}});
   report.insert(QStringLiteral("asset_counters"),
                 Render::Profiling::asset_counters_json());
+  report.insert(QStringLiteral("simulation_profile"),
+                m_engine->simulation_profile_report());
+  QJsonObject playable_assets;
+  for (std::size_t i = 0; i < m_playable_asset_baseline.size(); ++i) {
+    const auto counter = static_cast<Render::Profiling::AssetCounter>(i);
+    const auto now = Render::Profiling::asset_counters().total(counter);
+    const auto name = Render::Profiling::asset_counter_name(counter);
+    playable_assets.insert(
+        QString::fromLatin1(name.data(), static_cast<qsizetype>(name.size())),
+        static_cast<qint64>(now >= m_playable_asset_baseline[i]
+                                ? now - m_playable_asset_baseline[i]
+                                : 0));
+  }
+  report.insert(QStringLiteral("playable_asset_counters"), playable_assets);
+  const auto& lock_stats = m_engine->frame_lock_stats();
+  report.insert(
+      QStringLiteral("frame_lock_stats"),
+      QJsonObject{
+          {"contended", static_cast<qint64>(lock_stats.contended.load())},
+          {"waited_us", static_cast<qint64>(lock_stats.waited_us.load())},
+          {"longest_wait_us", static_cast<qint64>(lock_stats.longest_wait_us.load())},
+          {"deferred_presentations",
+           static_cast<qint64>(lock_stats.deferred_presentations.load())},
+          {"forced_presentation_waits",
+           static_cast<qint64>(lock_stats.forced_presentation_waits.load())}});
   report.insert(QStringLiteral("navigation"),
                 Render::Profiling::navigation_counters_json());
   const auto& graphics = Render::GraphicsSettings::instance();

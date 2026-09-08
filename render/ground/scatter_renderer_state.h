@@ -275,10 +275,7 @@ auto sync_filtered_state(FilteredRendererState<Instance, Params>& state,
     any_chunk_changed = true;
 
     if (chunk.visible_count == 0) {
-      if (chunk.buffer != nullptr) {
-        chunk.buffer.reset();
-        ++state.last_sync_stats.buffer_resets;
-      }
+
       continue;
     }
     if (!chunk.buffer) {

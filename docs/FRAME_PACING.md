@@ -7,6 +7,8 @@ run fails pacing or lacks a pacing verdict. Never average away a failed repeat.
 `scripts/check-frame-pacing.py` is the dedicated lane for all four presets,
 independent of the older Ultra-only budget. Run on an idle GPU-equipped machine,
 with a Release/RelWithDebInfo build, a fixed 60 Hz display, resolution and driver.
+The dedicated runner requests swap interval 1 regardless of saved preferences
+and records graphics environment overrides in the manifest.
 
 ```sh
 python3 scripts/check-frame-pacing.py --binary build/bin/standard_of_iron \
@@ -15,12 +17,19 @@ python3 scripts/check-frame-pacing.py --binary build/bin/standard_of_iron \
 
 Retain the entire `artifacts/frame-pacing/<run-id>/` directory, including the
 manifest, logs, summary and individual reports. Each process has a watchdog;
-missing/invalid reports, wrong presets, unmeasured asset barriers and failed
+the Linux lane samples `/proc` once per second for competing games and build
+workers and rejects contaminated runs. It skips a run when a competitor is
+already present; `--allow-contended` collects diagnostics but still fails the
+gate. Competitor PIDs and executable names are retained per run.
+Missing/invalid reports, wrong presets, unmeasured asset barriers and failed
 repeats fail the lane. The existing `run-perf-suite.sh` additionally records
 simulation replays for repeat comparisons. Pass `--replay path/to/mission.soireplay`
 to this runner to measure an identical recorded simulation across presets and
 repeats. Replays are copied into the artifact directory and SHA-256 hashed in the
-manifest; live campaign mode is useful for investigation but does not certify
+manifest. `--mission-file path/to/mission.json` also accepts custom scenarios;
+the runner retains the original mission, copies a local map relative to the
+mission file, and records their hashes. Embedded `:/` maps remain tied to the
+binary and its bundled assets. Live campaign mode is useful for investigation but does not certify
 identical simulation inputs across runs. Software-rendered CI cannot certify GPU
 budgets. Existing simulation and replay-determinism checks remain separate;
 profiling does not alter simulation stepping or drop simulation work.
@@ -160,3 +169,55 @@ Earlier `swap-timed` results had zero visible soldiers because the camera path
 was centered on world origin. They cannot qualify battle performance. The
 corrected path uses the mission's starting camera target, and both the report
 and runner reject empty-battle measurements.
+
+The follow-up `wait-attribution` run did not reproduce the earlier long hitches:
+maximum 24.64 ms, p95 23.47 ms, p99 23.90 ms, and zero hitch frames. It still
+failed p95 and the asset gate. New `playable_asset_counters` identified exactly
+65 buffers and 32 vertex arrays, with no playable shader compilation, texture
+creation, or mesh baking. Presentation and effects mutex waits now have separate
+phases in cluster evidence; `frame_lock_stats` provides process-lifetime lock
+statistics (including startup), distinct from the playable phase measurements.
+Terrain chunk buffers are now prewarmed under the loading overlay because their
+previous first-draw allocation allowed camera traversal to trigger uploads.
+
+The `terrain-prewarmed` run reduced playable GPU creation from 97 to 52
+operations (35 buffers, 17 vertex arrays). It still failed p95 at 23.66 ms and
+recorded seven hitches. Its worst interval, 71.19 ms, contained 56.63 ms in
+`presentation_lock_wait` and 8 ms in `effects_lock_wait`, with no asset work.
+This directly attributes that particular hitch to lock waiting; the waiting
+thread's total CPU time was 13.01 ms.
+
+Set `SOI_PROFILE_SIMULATION=1` for a diagnostic run to include per-system
+simulation times in `simulation_profile`. The report is read under the frame
+lock after timing collection finishes. This opt-in profiler adds simulation
+instrumentation overhead; rerun without it for acceptance measurements.
+
+The `shared-prewarmed-profiled` diagnostic reduced playable asset operations
+further to 40 (27 buffers and 13 vertex arrays). A separate game process was
+active during this run, so its timing is **not** an acceptance result. This
+observation prompted the runner's continuous competitor check. Resource
+initialization and remaining scenario coverage can still be investigated under
+contention, but timing qualification requires an idle machine.
+
+The `features-prewarmed` diagnostic reduced playable resource creation from 40
+to 10 operations by uploading authored road, water, shoreline, and bridge meshes
+under the loading overlay. `projectiles-prewarmed` reduced this to seven.
+Both runs detected competing compiler processes and cannot qualify timing.
+The loading pass now also prepares projectile geometry. Fog buffers are retained
+when no fog patches are visible, and their GL handles are explicitly initialized
+under the overlay. The resource manager prepares its basic meshes during
+initialization rather than waiting for their first draw.
+
+The final `scatter-prewarmed` diagnostic recorded three playable creation
+operations (two buffers and one vertex array), down from four in
+`basic-resources-prewarmed`. Scatter handles are now prepared during loading
+and retained through visibility changes. The hidden-chunk regression test
+verifies that retention does not submit stale instances. The focused rendering
+suite passed 89 tests and the Python runner suite passed 14 tests.
+
+The final diagnostic detected competing games and build workers, including a
+concurrent test build, and failed the gate. It cannot qualify presentation timing.
+Remaining resource creation and presentation waits are unresolved. Direct GL
+uploads in backend pipelines still need a coverage audit: wrapper counters alone
+do not account for all GPU transfers or prove absence of runtime allocation.
+The ordered remaining tasks and acceptance commands are in `todo.md`.

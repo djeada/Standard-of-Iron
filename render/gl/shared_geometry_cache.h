@@ -31,6 +31,8 @@ public:
 
   [[nodiscard]] auto get_or_build(std::uint64_t key, const Builder& build) -> Mesh*;
 
+  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+
   void release_all();
 
   [[nodiscard]] auto size() const -> std::size_t;

@@ -1,5 +1,7 @@
 #include "terrain_renderer.h"
 
+#include <QOpenGLContext>
+
 #include <algorithm>
 #include <cstddef>
 
@@ -67,6 +69,24 @@ auto TerrainRenderer::compute_ground_fog(const std::vector<float>& heights)
   fog.strength = std::clamp(
       (relief - k_ground_fog_min_relief) / k_ground_fog_full_relief, 0.0F, 1.0F);
   return fog;
+}
+
+auto TerrainRenderer::prewarm_gpu_resources() -> bool {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    return false;
+  }
+  bool ready = true;
+  for (auto& chunk : m_chunks) {
+    if (chunk.mesh == nullptr) {
+      continue;
+    }
+    if (chunk.mesh->bind_vao()) {
+      chunk.mesh->unbind_vao();
+    } else {
+      ready = false;
+    }
+  }
+  return ready;
 }
 
 void TerrainRenderer::set_light_direction(const QVector3D& dir) {

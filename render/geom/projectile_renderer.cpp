@@ -1,6 +1,7 @@
 #include "projectile_renderer.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <numbers>
 
@@ -8,12 +9,25 @@
 #include "game/systems/arrow_projectile.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/stone_projectile.h"
+#include "render/gl/mesh_prewarmer.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
 #include "render/scene_renderer.h"
 #include "stone.h"
 
 namespace Render::GL {
+
+auto prewarm_projectile_geometry() -> bool {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    return false;
+  }
+  std::array meshes{Geom::Arrow::get_shaft(),
+                    Geom::Arrow::get_tip(),
+                    Geom::Arrow::get_fletching(),
+                    Geom::Stone::get(),
+                    get_unit_sphere()};
+  return prewarm_mesh_buffers(meshes, [](auto* mesh) { return mesh; });
+}
 
 auto classify_projectile_relation(int local_owner_id,
                                   int attacker_owner_id,

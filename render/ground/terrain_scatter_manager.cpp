@@ -198,6 +198,15 @@ void TerrainScatterManager::submit(Renderer& renderer, ResourceManager* resource
       previous_filter);
 }
 
+auto TerrainScatterManager::prewarm_gpu_resources() -> bool {
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  bool ready = true;
+  for (const auto& entry : m_scatter_passes) {
+    ready = entry.pass->prewarm_gpu_resources() && ready;
+  }
+  return ready;
+}
+
 void TerrainScatterManager::clear() {
   std::lock_guard<std::mutex> const lock(m_mutex);
 

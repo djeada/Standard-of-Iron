@@ -24,6 +24,8 @@ public:
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
+  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+
   [[nodiscard]] auto surface_count() const -> std::size_t { return m_surfaces.size(); }
 
 private:

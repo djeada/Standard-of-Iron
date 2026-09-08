@@ -17,6 +17,8 @@ struct IScatterPass : IRenderPass {
 
   virtual void clear() = 0;
 
+  [[nodiscard]] virtual auto prewarm_gpu_resources() -> bool { return true; }
+
   virtual void set_light_direction(const QVector3D& dir) { (void)dir; }
 };
 

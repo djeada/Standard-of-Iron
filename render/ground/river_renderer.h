@@ -25,6 +25,8 @@ public:
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
+  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+
 private:
   void build_meshes();
 

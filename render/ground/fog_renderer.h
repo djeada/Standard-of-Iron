@@ -36,6 +36,8 @@ public:
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
+  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+
   auto prepare_mask(Renderer& renderer) -> FogMaskResources;
 
   void advance_reveal(float dt_seconds);
