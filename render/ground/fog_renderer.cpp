@@ -345,9 +345,21 @@ void FogRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   }
 }
 
+auto FogRenderer::prewarm_gpu_resources() -> bool {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    return false;
+  }
+  if (!m_instance_buffer) {
+    m_instance_buffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
+  }
+  m_instance_buffer->bind();
+  m_instance_buffer->unbind();
+  return m_instance_buffer->id() != 0U;
+}
+
 void FogRenderer::upload_instances() {
   if (m_instances.empty()) {
-    m_instance_buffer.reset();
+
     m_instances_dirty = false;
     return;
   }

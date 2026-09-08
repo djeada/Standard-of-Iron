@@ -18,10 +18,15 @@
 #include "linear_feature_geometry.h"
 #include "map/terrain.h"
 #include "render/gl/mesh.h"
+#include "render/gl/mesh_prewarmer.h"
 #include "render/gl/resources.h"
 #include "render/scene_renderer.h"
 
 namespace Render::GL {
+
+auto ShorelineRenderer::prewarm_gpu_resources() -> bool {
+  return prewarm_mesh_buffers(m_meshes, [](auto& entry) { return entry.get(); });
+}
 
 ShorelineRenderer::ShorelineRenderer() = default;
 ShorelineRenderer::~ShorelineRenderer() = default;

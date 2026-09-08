@@ -48,6 +48,8 @@ public:
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
+  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+
   void set_wireframe(bool enable) { m_wireframe = enable; }
 
 private:

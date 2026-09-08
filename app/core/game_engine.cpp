@@ -178,8 +178,10 @@
 #include "game/util/selection_utils.h"
 #include "game/visuals/team_colors.h"
 #include "render/camera_visibility.h"
+#include "render/geom/projectile_renderer.h"
 #include "render/geom/stone.h"
 #include "render/gl/bootstrap.h"
+#include "render/gl/shared_geometry_cache.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/firecamp_renderer.h"
@@ -194,6 +196,7 @@
 #include "render/ground/terrain_surface_manager.h"
 #include "render/ground/tree_renderer.h"
 #include "render/profiling/frame_profile.h"
+#include "render/profiling/performance_report.h"
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
 #include "scene/camera.h"
@@ -590,11 +593,24 @@ void GameEngine::note_dropped_simulation_ticks(std::uint64_t dropped, float real
              << m_dropped_simulation_ticks << "since the mission started";
 }
 
+auto GameEngine::simulation_profile_report() -> QJsonObject {
+  const auto frame_lock = lock_frame();
+  if (m_world == nullptr || !m_world->system_profiler().enabled()) {
+    return {};
+  }
+  return Render::Profiling::system_profiler_json(m_world->system_profiler());
+}
+
 void GameEngine::update_active_runtime_simulation(float dt) {
   if (m_world == nullptr) {
     return;
   }
 
+  static const bool profile_simulation =
+      qEnvironmentVariableIntValue("SOI_PROFILE_SIMULATION") != 0;
+  if (profile_simulation) {
+    m_world->system_profiler().set_enabled(true);
+  }
   if (m_commander_view_model->active()) {
     m_commander_view_model->update_control_mode(dt);
     m_world->update(dt);
@@ -809,6 +825,9 @@ void GameEngine::update_presentation(float dt) {
     const FrameLockWaiter waiter(m_frame_lock_waiters);
     m_frame_lock_stats.forced_presentation_waits.fetch_add(1,
                                                            std::memory_order_relaxed);
+    const Render::Profiling::PhaseScope wait_scope(
+        &Render::Profiling::global_profile(),
+        Render::Profiling::Phase::PresentationLockWait);
     frame_lock.lock();
   }
   dt = std::min(dt + m_deferred_presentation_dt, k_simulation_max_frame_seconds);
@@ -958,11 +977,26 @@ void GameEngine::render(int pixel_width, int pixel_height) {
   if (m_loading_overlay_active) {
 
     (void)m_renderer->rigged_mesh_cache().prewarm_gpu_resources();
+    (void)Render::GL::prewarm_projectile_geometry();
+    (void)Render::GL::SharedGeometryCache::instance().prewarm_gpu_resources();
+    if (m_fog != nullptr) {
+      (void)m_fog->prewarm_gpu_resources();
+    }
+    if (m_features != nullptr) {
+      (void)m_features->prewarm_gpu_resources();
+    }
+    if (m_surface != nullptr && m_surface->terrain() != nullptr) {
+      (void)m_surface->terrain()->prewarm_gpu_resources();
+    }
   }
   m_renderer->begin_frame();
 
   if (m_terrain_scene) {
     m_terrain_scene->submit(*m_renderer, m_renderer->resources());
+    if (m_loading_overlay_active && m_scatter != nullptr) {
+
+      (void)m_scatter->prewarm_gpu_resources();
+    }
   }
 
   if (m_renderer && m_hover_tracker) {
@@ -978,6 +1012,9 @@ void GameEngine::render(int pixel_width, int pixel_height) {
     std::unique_lock<std::recursive_mutex> frame_lock(m_frame_mutex, std::defer_lock);
     {
       const FrameLockWaiter waiter(m_frame_lock_waiters);
+      const Render::Profiling::PhaseScope wait_scope(
+          &Render::Profiling::global_profile(),
+          Render::Profiling::Phase::EffectsLockWait);
       auto const deadline =
           std::chrono::steady_clock::now() + k_render_effects_lock_budget;
       while (!frame_lock.try_lock()) {
