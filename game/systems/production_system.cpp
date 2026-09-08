@@ -12,6 +12,7 @@
 
 #include "../core/ambient_session.h"
 #include "../core/component_economy.h"
+#include "../core/component_presentation.h"
 #include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
@@ -41,6 +42,23 @@
 namespace Game::Systems {
 
 namespace {
+
+void start_completion_effect(Engine::Core::World& world,
+                             const Game::Units::Unit& unit,
+                             Game::Units::SpawnType spawn_type) {
+  auto* entity = world.get_entity(unit.id());
+  if (entity == nullptr) {
+    return;
+  }
+  auto* effect = entity->add_component<Engine::Core::ProductionCompletionComponent>();
+  effect->radius = std::max(
+      1.0F, Game::Units::TroopConfig::instance().get_selection_ring_size(spawn_type));
+  if (entity->has_component<Engine::Core::BuildingComponent>()) {
+    const auto size = BuildingCollisionRegistry::get_building_size(
+        Game::Units::spawn_typeToString(spawn_type));
+    effect->radius = std::max(effect->radius, 0.6F * std::hypot(size.width, size.depth));
+  }
+}
 
 void face_work_target(Engine::Core::TransformComponent& transform,
                       const Engine::Core::BuilderProductionComponent& builder) {
@@ -550,6 +568,16 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
+  // Collect before removing components so expiration cannot invalidate a view.
+  for (auto* entity :
+       world->collect_entities_with<Engine::Core::ProductionCompletionComponent>()) {
+    auto* effect = entity->get_component<Engine::Core::ProductionCompletionComponent>();
+    effect->remaining -= std::max(delta_time, 0.0F);
+    if (effect->remaining <= 0.0F) {
+      entity->remove_component<Engine::Core::ProductionCompletionComponent>();
+    }
+  }
+
   for (auto [entity_ref, prod_ref] :
        world->entity_view<Engine::Core::ProductionComponent>()) {
     Engine::Core::Entity* e = &entity_ref;
@@ -633,6 +661,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
                                       rally);
           }
           if (unit) {
+            start_completion_effect(*world, *unit, sp.spawn_type);
             Engine::Core::EventManager::instance().publish(
                 Engine::Core::AudioCueEvent::for_owner(u->owner_id,
                                                        "build.unit_ready"));
@@ -1075,7 +1104,9 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
                          << sp.position.x() << sp.position.z() << "yaw"
                          << sp.rotation_y;
             }
-            reg->create(sp.spawn_type, *world, sp);
+            if (auto completed = reg->create(sp.spawn_type, *world, sp)) {
+              start_completion_effect(*world, *completed, sp.spawn_type);
+            }
 
             if (is_wall_network_product(builder_prod->product_type) &&
                 builder_prod->construction_site_entity_id != 0) {

@@ -1,5 +1,6 @@
 # Entity/nation renderers (Phase 2 owner). Edit ONLY this file for render/entity/* sources.
 set(RENDER_ENTITY_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/production_completion_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/registry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/formation_instance_layout.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/humanoid_pose_policies.cpp
