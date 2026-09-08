@@ -19,10 +19,15 @@
 #include "linear_feature_visibility.h"
 #include "map/terrain.h"
 #include "render/gl/mesh.h"
+#include "render/gl/mesh_prewarmer.h"
 #include "render/gl/resources.h"
 #include "render/scene_renderer.h"
 
 namespace Render::GL {
+
+auto BridgeRenderer::prewarm_gpu_resources() -> bool {
+  return prewarm_mesh_buffers(m_meshes, [](auto& entry) { return entry.get(); });
+}
 
 BridgeRenderer::BridgeRenderer() = default;
 BridgeRenderer::~BridgeRenderer() = default;

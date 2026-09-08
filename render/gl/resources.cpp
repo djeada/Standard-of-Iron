@@ -3,6 +3,7 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <memory>
@@ -11,6 +12,7 @@
 #include "gl/mesh.h"
 #include "gl/texture.h"
 #include "platform_gl.h"
+#include "render/gl/mesh_prewarmer.h"
 #include "render_constants.h"
 
 namespace Render::GL {
@@ -74,6 +76,10 @@ auto ResourceManager::initialize() -> bool {
   m_quad_mesh = create_quad_mesh();
   m_ground_mesh = create_plane_mesh(1.0F, 1.0F, ground_plane_subdivisions);
   m_unit_mesh = create_cube_mesh();
+  std::array meshes{m_quad_mesh.get(), m_ground_mesh.get(), m_unit_mesh.get()};
+  if (!prewarm_mesh_buffers(meshes, [](auto* mesh) { return mesh; })) {
+    return false;
+  }
 
   m_white_texture = std::make_unique<Texture>();
   m_white_texture->create_empty(1, 1, Texture::Format::RGBA);

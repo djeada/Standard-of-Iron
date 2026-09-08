@@ -21,6 +21,8 @@ class StoneProjectile;
 
 namespace Render::GL {
 
+[[nodiscard]] auto prewarm_projectile_geometry() -> bool;
+
 enum class ProjectileRelation : std::uint8_t {
   Neutral,
   Outgoing,
