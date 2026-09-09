@@ -193,6 +193,6 @@ void main() {
 
   color = apply_directional_shadow(color, v_world_pos, v_normal);
   color += albedo * local_lighting(v_world_pos, normalize(v_normal));
-  color = apply_visibility_memory(color, v_world_pos.xz);
+  color = apply_visibility_world_shading(color, v_world_pos.xz);
   frag_color = vec4(color, coverage);
 }

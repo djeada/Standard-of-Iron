@@ -113,12 +113,12 @@ void main() {
   float rim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.055;
 
   vec3 color = stone * illumination * crevice_ao;
-  // Tiny scatter should not retain full-strength bright rims and specular dots.
+
   color += soi_rim_light(N_face, V) * (1.0 - skirt * 0.6) * detail_weight;
   color += sun * (dry_spec + wet_spec) * detail_weight;
   color += sky * rim * detail_weight;
   color = apply_directional_shadow(color, v_world_pos, v_normal);
   color += stone * crevice_ao * local_lighting(v_world_pos, N);
-  color = apply_visibility_memory(color, v_world_pos.xz);
+  color = apply_visibility_world_shading(color, v_world_pos.xz);
   frag_color = vec4(color, 1.0);
 }

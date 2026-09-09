@@ -1,8 +1,34 @@
 #include <gtest/gtest.h>
 
 #include "game/map/visibility_service.h"
+#include "render/ground/boulder_renderer.h"
+#include "render/ground/dead_tree_renderer.h"
+#include "render/ground/iron_ore_renderer.h"
+#include "render/ground/plant_renderer.h"
+#include "render/ground/stone_renderer.h"
+#include "render/ground/supply_cart_renderer.h"
+#include "render/ground/tree_renderer.h"
+#include "render/ground/weapon_rack_renderer.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
+
+TEST(RendererVisibilityPolicyTest, LandscapeScatterIsNeverCulledByFog) {
+  EXPECT_FALSE(Render::GL::StoneRenderer{}.fog_culls_instances())
+      << "boulders, trees, plants and ore are the map itself: they stay on screen "
+         "under the fog, shaded by the visibility mask, so unexplored ground is "
+         "recognisable terrain rather than an empty plain";
+  EXPECT_FALSE(Render::GL::BoulderRenderer{}.fog_culls_instances());
+  EXPECT_FALSE(
+      Render::GL::TreeRenderer{Game::Map::TreeSpecies::Pine}.fog_culls_instances());
+  EXPECT_FALSE(Render::GL::DeadTreeRenderer{}.fog_culls_instances());
+  EXPECT_FALSE(Render::GL::PlantRenderer{}.fog_culls_instances());
+  EXPECT_FALSE(Render::GL::IronOreRenderer{}.fog_culls_instances());
+
+  EXPECT_TRUE(Render::GL::SupplyCartRenderer{}.fog_culls_instances())
+      << "encampment dressing is activity, not landscape; it only appears once the "
+         "ground under it has been explored";
+  EXPECT_TRUE(Render::GL::WeaponRackRenderer{}.fog_culls_instances());
+}
 
 TEST(RendererVisibilityPolicyTest, ModeConfigUsesTotalVisibilityRules) {
   Render::GL::Renderer renderer;

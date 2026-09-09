@@ -1,6 +1,7 @@
 #version 330 core
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
+#include "foliage_bump.glsl"
 #include "local_lighting.glsl"
 #include "noise.glsl"
 #include "visibility_mask.glsl"
@@ -21,16 +22,6 @@ out vec4 frag_color;
 
 const float PI = 3.14159265359;
 const float TWO_PI = 6.28318530718;
-
-vec3 perturb_normal(vec3 n, vec3 world_pos, float height, float strength) {
-  vec3 dpdx = dFdx(world_pos);
-  vec3 dpdy = dFdy(world_pos);
-  vec3 r1 = cross(dpdy, n);
-  vec3 r2 = cross(n, dpdx);
-  float det = dot(dpdx, r1);
-  vec3 gradient = sign(det) * (dFdx(height) * r1 + dFdy(height) * r2);
-  return normalize(abs(det) * n - strength * gradient);
-}
 
 void main() {
 
@@ -143,6 +134,6 @@ void main() {
 
   color = apply_directional_shadow(color, v_world_pos, geometric_normal);
   color += base_color * ao * local_lighting(v_world_pos, n);
-  color = apply_visibility_memory(color, v_world_pos.xz);
+  color = apply_visibility_world_shading(color, v_world_pos.xz);
   frag_color = vec4(color, 1.0);
 }

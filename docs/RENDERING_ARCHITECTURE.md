@@ -920,30 +920,49 @@ some point". Both channels pass through a 3x3 tent kernel and the texture is
 sampled with linear filtering, which is what turns the tile grid into a
 feathered edge instead of a staircase.
 
-Everything that belongs to the permanent map -- terrain chunks, roads, rivers,
-riverbanks, and the scattered props -- includes
+Unexplored ground is the map in shadow, not a hole in it. Everything that is
+the landscape -- terrain chunks, roads, rivers, riverbanks, bridges, and the
+natural scatter (boulders, trees, plants, grass, ore) plus authored landmarks
+(ruins, statues, shrines) -- is drawn under the fog and darkened per fragment.
+Those shaders include
 [`visibility_mask.glsl`](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders/include/visibility_mask.glsl)
-and calls `apply_visibility_memory()`. That one call discards fragments the
-player has never seen and, on ground that is explored but not currently
-watched, replaces the lit colour with a drained, cooled, dimmed version of
-itself. Remembered terrain is therefore the real terrain rendered from memory,
-props included -- not a grey sheet laid over it.
+and call `apply_visibility_world_shading()`, which blends three looks by the
+mask: `unseen_surface_color()` on never-seen tiles (a neutral dim with most of
+the chroma kept, so a meadow is still a meadow), the drained memory colour on
+explored-but-unwatched tiles, and the lit colour under live sight. The three
+shading constants are duplicated in `fog_reveal.glsl` (bridges) and
+`render/entity/unseen_submitter.h` (CPU-shaded landmark meshes) and a shader
+source test keeps the copies equal. `terrain_chunk.frag` takes an early-out on
+never-seen tiles and shades a cheap albedo (base ground colours, the baked
+noise atlas, hue/wear/saturation passes, no shadows or micro-detail), so the
+whole unexplored map costs less per pixel than one lit tile. Landscape scatter
+renderers override `fog_culls_instances()` to `false`, so the CPU never
+repacks their instance buffers as sight moves; the fog is entirely a fragment
+term for them.
+
+Encampment dressing (tents, supply carts, weapon racks, campfires) is
+activity, not landscape. It is CPU-culled to explored ground
+(`ScatterMemoryMode::Remembered`) and its shaders call
+`apply_visibility_revealed()`, which discards on never-seen tiles as a backstop
+at the mask's feathered edge. Campfires stay `ScatterMemoryMode::VisibleOnly`
+so nothing keeps playing where nobody is looking.
 
 Only never-seen ground gets a fog layer. `FogRenderer` submits one instanced
 batch of chunk-sized quads covering the unexplored regions and hands the
 shader its own mask, so cost scales with the unexplored area in chunks rather
-than with map size or unit count. Newly revealed tiles dissolve rather than
-pop, and the layer subtracts live sight from its own opacity: soldiers stand
-above the fog plane, so fog creeping past the sight edge would show them
-apparently standing in it.
+than with map size or unit count. The quads are a dark, near-neutral colour at
+a low alpha whose opacity drifts with noise: a mottled shadow that darkens the
+shaded terrain a little more without lowering its contrast the way a grey haze
+did. Newly revealed tiles dissolve rather than pop, and the layer subtracts
+live sight from its own opacity: soldiers stand above the fog plane, so fog
+creeping past the sight edge would show them apparently standing in it.
 
 Two rules keep hidden activity hidden. Enemy units, enemy construction
 previews and combat effects are gated with `FogExtent::Anchor`, which asks
 about the tile the thing stands on rather than its whole bounding sphere -- the
 footprint rule would render an entire formation whose flank merely clipped the
-sight edge. Animated scatter (campfires) stays `ScatterMemoryMode::VisibleOnly`
-so nothing keeps playing where nobody is looking, while static props use
-`Remembered`.
+sight edge. Enemy buildings are drawn only on revealed ground, and units only
+under live sight.
 
 Per-update cost stays small because the mask is uploaded by dirty rectangle:
 the helper compares against the previous grid, grows a box by the blur's reach,

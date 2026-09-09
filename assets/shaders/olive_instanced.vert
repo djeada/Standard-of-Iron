@@ -1,4 +1,5 @@
 #version 330 core
+#include "noise.glsl"
 
 layout(location = 0) in vec3 a_pos;
 layout(location = 1) in vec2 a_tex_coord;
@@ -21,7 +22,7 @@ out vec2 v_tex_coord;
 out float v_foliage_mask;
 out float v_leaf_seed;
 out float v_bark_seed;
-out float v_branch_id;
+flat out float v_branch_id;
 out vec2 v_local_pos_xz;
 out vec3 v_local_pos;
 
@@ -63,12 +64,12 @@ void main() {
 
   if (foliage_mask > 0.1) {
     float ang = atan(model_pos.z, model_pos.x);
-    float lump_base = sin(ang * 2.6 + silhouette_seed * TWO_PI) * 0.085;
-    float lump_fine = sin(ang * 5.4 + leaf_seed * TWO_PI * 1.9) * 0.042;
+    float lump_base = sin(ang * 2.6 + silhouette_seed * TWO_PI) * 0.100;
+    float lump_fine = sin(ang * 5.4 + leaf_seed * TWO_PI * 1.9) * 0.050;
     float lump_ragged =
-        sin(ang * 5.0 + a_pos.y * 16.0 + leaf_seed * TWO_PI * 3.1) * 0.040;
+        sin(ang * 5.0 + a_pos.y * 16.0 + leaf_seed * TWO_PI * 3.1) * 0.056;
     float lump_tuft =
-        sin(ang * 3.0 - a_pos.y * 23.0 + silhouette_seed * TWO_PI * 2.3) * 0.030;
+        sin(ang * 3.0 - a_pos.y * 23.0 + silhouette_seed * TWO_PI * 2.3) * 0.042;
     float lump_mag = (lump_base + lump_fine + lump_ragged + lump_tuft) * foliage_mask;
     model_pos.xz *= (1.0 + lump_mag);
     model_pos.y += (lump_ragged + lump_tuft) * 0.55 * foliage_mask;
@@ -89,6 +90,12 @@ void main() {
 
     float spread = mix(0.96, 1.14, fract(silhouette_seed * 7.31 + leaf_seed * 3.17));
     model_pos.xz *= mix(1.0, spread, foliage_mask);
+
+    vec3 lobe_seed = vec3(leaf_seed * 23.0, silhouette_seed * 17.0, leaf_seed * 41.0);
+    float lobe = soi_noise3(model_pos * 6.5 + lobe_seed) - 0.5;
+    float tuft = soi_noise3(model_pos * 14.0 + lobe_seed.zxy) - 0.5;
+    float billow = (lobe * 0.05 + tuft * 0.02) * foliage_mask;
+    model_pos += a_normal * billow;
   }
 
   vec3 local_pos = model_pos * scale;

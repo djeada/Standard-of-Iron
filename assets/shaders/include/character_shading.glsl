@@ -64,8 +64,6 @@ vec3 shade_readable_character(vec3 base,
   vec3 sun_color = environment_primary_color();
   vec3 sky_color = environment_sky_color();
 
-  // Warm sunlight should not turn every armor/cloth surface the same gold as
-  // masonry. Preserve light intensity and authored team hues at tactical zoom.
   if (material_id == 0) {
     float sun_luma = dot(sun_color, vec3(0.299, 0.587, 0.114));
     sun_color = mix(sun_color, vec3(sun_luma), 0.30 * zoom);
@@ -231,8 +229,7 @@ vec3 soi_finish_character(vec3 color,
   }
 #endif
   if (material_id == 0) {
-    // Keep cloth identifiable without saturating skin, leather and armor into
-    // competing orange/yellow flecks. Leave other creature materials unchanged.
+
     bool cloth =
         color_role == k_humanoid_role_cloth || color_role == k_humanoid_role_cloth_dark;
     float luma = dot(color, vec3(0.299, 0.587, 0.114));
@@ -248,9 +245,7 @@ vec3 soi_finish_character(vec3 color,
     color = mix(vec3(hide_luma), color, k_elephant_hide_saturation);
   }
 #endif
-  // Preserve wool's light/dark modeling while removing the warm cast introduced
-  // by sunlight, ground bounce and the generic wildlife finish. The material
-  // mask excludes brown coats, dirty wool, faces and hooves.
+
 #if SOI_CHARACTER_WANTS(SOI_CHARACTER_WILDLIFE)
   if (material_id == k_wildlife_material) {
     float white_coat = wildlife_white_coat_weight(base);

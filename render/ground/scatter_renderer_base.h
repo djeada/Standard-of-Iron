@@ -123,9 +123,9 @@ public:
     return m_procedural_generations;
   }
 
-protected:
   [[nodiscard]] virtual auto fog_culls_instances() const -> bool { return true; }
 
+protected:
   void set_light_direction_common(const QVector3D& dir,
                                   const QVector3D& default_direction) {
     m_light_direction = dir.isNull() ? default_direction : dir.normalized();

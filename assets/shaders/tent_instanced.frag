@@ -216,6 +216,6 @@ void main() {
              k_lantern_gain;
   }
 
-  color = apply_visibility_memory(color, v_world_pos.xz);
+  color = apply_visibility_revealed(color, v_world_pos.xz);
   frag_color = vec4(color, 1.0);
 }

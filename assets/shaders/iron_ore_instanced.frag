@@ -82,7 +82,8 @@ void main() {
   rock_color = mix(rock_color, warm_mineral, mineral_noise * 0.12);
 
   float magic_strength = max(u_magic_strength, 0.0);
-  float magic_mix = clamp(magic_strength, 0.0, 1.0);
+
+  float magic_mix = clamp(magic_strength * 0.74, 0.0, 1.0);
 
   vec3 hematite_core = vec3(0.055, 0.055, 0.070);
   vec3 limonite_rim = vec3(0.30, 0.26, 0.24);
@@ -91,9 +92,11 @@ void main() {
   vec3 natural_ore = mix(rock_color, seam, vein_wide * 0.85);
   natural_ore = mix(natural_ore, rust_bloom, mineral_noise * 0.14 * (1.0 - vein_wide));
 
-  vec3 magic_a = vec3(0.14, 0.85, 1.35);
-  vec3 magic_b = vec3(0.82, 0.24, 1.45);
+  vec3 magic_a = vec3(0.70, 0.06, 1.28);
+  vec3 magic_b = vec3(0.06, 0.52, 1.20);
+  vec3 sanctum_gold = vec3(1.02, 0.54, 0.18);
   vec3 magic_color = mix(magic_a, magic_b, fbm(q * 1.7 + vec3(v_seed)));
+  vec3 sanctum_color = mix(magic_color, sanctum_gold, 0.30);
 
   vec3 stained_ore = mix(rock_color, magic_color * 0.55, vein_wide * 0.45);
   vec3 albedo = mix(natural_ore, stained_ore, magic_mix);
@@ -130,20 +133,24 @@ void main() {
 
   float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.0);
 
-  float pulse = 0.78 + 0.22 * sin(u_time * 2.1 + v_seed * 12.0 + fbm(q * 2.0) * 5.0);
+  float pulse = 0.74 + 0.26 * sin(u_time * 1.9 + v_seed * 6.28318 +
+                                  fbm(q * 1.7 + vec3(u_time * 0.28)) * 4.8);
 
   vec3 glow = magic_color * magic_strength * pulse *
               (vein_core * 1.75 + vein_wide * 0.22 + fresnel * vein_wide * 0.45 +
                crystal * 1.35);
+  vec3 aura = mix(magic_color, sanctum_color, 0.45) * magic_strength * fresnel *
+              (0.20 + 0.16 * pulse) * (0.45 + 0.55 * vein_wide);
 
   vec3 color = albedo * illumination * ao;
   color += sun_color * vec3(0.82, 0.86, 1.00) * ore_spec * ao;
-  vec3 glint_color = mix(sun_color * vec3(0.78, 0.83, 0.96), magic_color, magic_mix);
+  vec3 glint_color = mix(sun_color * vec3(0.78, 0.83, 0.96), sanctum_color, magic_mix);
   color += glint_color * crystal_spec;
   color += glow;
+  color += aura;
 
   color = apply_directional_shadow(color, v_world_pos, v_normal);
   color += albedo * ao * local_lighting(v_world_pos, normalize(v_normal));
-  color = apply_visibility_memory(color, v_world_pos.xz);
+  color = apply_visibility_world_shading(color, v_world_pos.xz);
   frag_color = vec4(color, 1.0);
 }

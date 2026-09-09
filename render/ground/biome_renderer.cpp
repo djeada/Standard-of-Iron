@@ -110,9 +110,7 @@ void BiomeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       [](const GrassInstanceGpu& instance) -> const QVector4D& {
         return instance.pos_height;
       },
-      renderer.static_world_visibility_filter_enabled()
-          ? renderer.submission_visibility().snapshot()
-          : nullptr,
+      nullptr,
       Scatter::ScatterMemoryMode::Remembered);
   if (visible_count == 0) {
     return;

@@ -37,6 +37,6 @@ void main() {
   color += v_color * sun * backlit * 0.45 * fold * detail_weight;
 #endif
 
-  color = apply_visibility_memory(color, v_world_pos.xz);
+  color = apply_visibility_world_shading(color, v_world_pos.xz);
   frag_color = vec4(color, alpha);
 }

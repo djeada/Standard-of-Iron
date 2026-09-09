@@ -57,15 +57,12 @@ void main() {
     discard;
   }
 
-  float alpha = v_alpha * body * mix(0.97, 1.0, large);
+  float mottle = large * 0.55 + erosion * 0.30 + detail * 0.15;
+  float alpha = v_alpha * body * mix(0.45, 1.0, mottle);
 
   if (alpha <= 0.004) {
     discard;
   }
 
-  vec3 lit = v_color * mix(0.86, 1.14, detail);
-  lit *= 0.94 + 0.10 * large;
-  lit = mix(lit * 0.82, lit, smoothstep(0.30, 0.90, fog));
-
-  frag_color = vec4(lit, clamp(alpha, 0.0, 1.0));
+  frag_color = vec4(v_color, clamp(alpha, 0.0, 1.0));
 }

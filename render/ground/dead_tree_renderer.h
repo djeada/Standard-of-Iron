@@ -30,6 +30,8 @@ public:
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
+  [[nodiscard]] auto fog_culls_instances() const -> bool override { return false; }
+
 private:
   void rebuild_dead_tree_instances();
   void append_world_prop_dead_trees();
