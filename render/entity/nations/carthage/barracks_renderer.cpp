@@ -133,12 +133,13 @@ void add_platform(BuildingArchetypeDesc& desc, const CarthagePalette& c) {
       QVector3D(0.0F, 0.18F, 0.0F), QVector3D(1.78F, 0.04F, 1.48F), c.sandstone);
 
   desc.add_box(
-      QVector3D(0.0F, 0.06F, 1.68F), QVector3D(0.86F, 0.04F, 0.20F), c.stone_dark);
+      QVector3D(0.0F, 0.056F, 1.68F), QVector3D(0.86F, 0.04F, 0.20F), c.stone_dark);
   desc.add_box(QVector3D(0.0F, 0.13F, 1.52F),
                QVector3D(0.72F, 0.04F, 0.16F),
                c.sandstone_dark,
                k_mask_intact);
-  desc.add_box(QVector3D(0.0F, 0.20F, 1.40F),
+
+  desc.add_box(QVector3D(0.0F, 0.20F, 1.38F),
                QVector3D(0.60F, 0.04F, 0.12F),
                c.sandstone,
                k_mask_intact);
@@ -542,7 +543,7 @@ void add_donjon(BuildingArchetypeDesc& desc,
 
   add_punic_tanit_relief(
       desc,
-      QVector3D(0.0F, mid(base_y, top) + 0.02F, k_donjon_z1 + 0.012F),
+      QVector3D(0.0F, mid(base_y, top) - 0.02F, k_donjon_z1 + 0.012F),
       BuildingFacadePlane::XY,
       0.34F,
       c.bronze,
@@ -598,7 +599,7 @@ void add_gatehouse(BuildingArchetypeDesc& desc,
   }
 
   desc.add_box(QVector3D(0.0F, mid(k_gate_arch_y, h.gate), cz),
-               QVector3D(k_gate_hx, half(k_gate_arch_y, h.gate), hz),
+               QVector3D(k_gate_hx - 0.02F, half(k_gate_arch_y, h.gate), hz - 0.02F),
                c.sandstone,
                k_mask_intact);
   desc.add_cylinder(QVector3D(0.0F, k_gate_arch_y, k_gate_z0 + 0.02F),
@@ -611,7 +612,8 @@ void add_gatehouse(BuildingArchetypeDesc& desc,
                     0.345F,
                     c.stone_dark,
                     k_mask_intact);
-  desc.add_box(QVector3D(0.0F, k_gate_arch_y + 0.36F, k_gate_z1 + 0.02F),
+
+  desc.add_box(QVector3D(0.0F, k_gate_arch_y + 0.36F, k_gate_z1 + 0.026F),
                QVector3D(0.06F, 0.07F, 0.02F),
                c.brick_dark,
                k_mask_intact);
@@ -718,7 +720,8 @@ void add_drill_yard(BuildingArchetypeDesc& desc,
                  c.wood_dark,
                  k_mask_intact);
   }
-  desc.add_box(QVector3D(rack_x, 1.02F, rack_z),
+
+  desc.add_box(QVector3D(rack_x, 1.08F, rack_z),
                QVector3D(0.34F, 0.02F, 0.03F),
                c.wood_dark,
                k_mask_intact);
@@ -790,7 +793,8 @@ void add_drill_yard(BuildingArchetypeDesc& desc,
                QVector3D(0.09F, 0.19F, 0.09F),
                c.sack,
                k_mask_normal);
-  desc.add_box(QVector3D(post_x + 0.30F, k_platform_top + 1.07F, post_z),
+
+  desc.add_box(QVector3D(post_x + 0.30F, k_platform_top + 1.10F, post_z),
                QVector3D(0.05F, 0.02F, 0.05F),
                c.wood_dark,
                k_mask_normal);
@@ -930,7 +934,7 @@ void add_roof_canopy(BuildingArchetypeDesc& desc,
                k_mask_normal);
 }
 
-auto build_barracks_archetype(BuildingState state) -> RenderArchetype {
+auto build_barracks_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   CarthagePalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
   BuildingArchetypeDesc desc("carthage_barracks");
   const Heights h = heights_for(state);
@@ -965,7 +969,11 @@ auto build_barracks_archetype(BuildingState state) -> RenderArchetype {
                                  .scale = 1.25F,
                                  .seed = 487});
 
-  return build_building_archetype(desc, state);
+  return desc;
+}
+
+auto build_barracks_archetype(BuildingState state) -> RenderArchetype {
+  return build_building_archetype(build_barracks_desc_impl(state), state);
 }
 
 auto barracks_archetype(BuildingState state,
@@ -1056,6 +1064,10 @@ void draw_barracks_ornaments(const DrawContext& p,
 }
 
 } // namespace
+
+auto build_barracks_desc(BuildingState state) -> BuildingArchetypeDesc {
+  return build_barracks_desc_impl(state);
+}
 
 void register_barracks_renderer(Render::GL::EntityRendererRegistry& registry) {
   register_barracks_renderer_variant(

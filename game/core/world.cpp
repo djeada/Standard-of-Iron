@@ -1295,6 +1295,11 @@ void World::clear() {
   m_deferred.clear();
   m_spatial_index.clear();
 
+  if (!m_is_render_snapshot) {
+
+    ++m_content_epoch;
+  }
+
   const auto observers = m_world_cleared_observers;
   for (const auto& observer : observers) {
     observer.callback();
@@ -1563,6 +1568,11 @@ void World::publish_render_snapshot() {
   snapshot->m_render_building_ids.clear();
   snapshot->m_render_other_ids.clear();
   std::size_t const slot_count = m_registry.slot_count();
+  if (snapshot->m_render_snapshot_epoch != m_content_epoch) {
+
+    snapshot->m_render_entity_signatures.assign(slot_count, 0U);
+    snapshot->m_render_snapshot_epoch = m_content_epoch;
+  }
   if (snapshot->m_render_entity_signatures.size() < slot_count) {
     snapshot->m_render_entity_signatures.resize(slot_count, 0U);
   }

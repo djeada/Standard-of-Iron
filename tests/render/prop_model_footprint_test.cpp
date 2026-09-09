@@ -8,14 +8,14 @@
 
 #include "game/map/map_definition.h"
 #include "render/gl/backend/abandoned_home_parts.h"
-#include "render/gl/backend/cursed_gold_vein_parts.h"
+#include "render/gl/backend/cursed_gold_vein_mesh.h"
 #include "render/gl/backend/dead_tree_mesh.h"
 #include "render/gl/backend/magic_shrine_parts.h"
 #include "render/gl/backend/prop_parts.h"
 #include "render/gl/backend/ruins_parts.h"
 #include "render/gl/backend/statue_parts.h"
 #include "render/gl/backend/supply_cart_parts.h"
-#include "render/gl/backend/tent_parts.h"
+#include "render/gl/backend/tent_mesh.h"
 #include "render/gl/backend/weapon_rack_parts.h"
 
 namespace {
@@ -103,6 +103,22 @@ auto dead_tree_reach() -> GroundReach {
   return reach;
 }
 
+auto cursed_gold_vein_reach() -> GroundReach {
+  GroundReach reach;
+  for (auto const& vertex : build_cursed_gold_vein_mesh().vertices) {
+    reach.widen(vertex.first.x(), vertex.first.z());
+  }
+  return reach;
+}
+
+auto tent_reach() -> GroundReach {
+  GroundReach reach;
+  for (auto const& vertex : build_tent_mesh().vertices) {
+    reach.widen(vertex.first.x(), vertex.first.z());
+  }
+  return reach;
+}
+
 auto measured_props() -> std::vector<MeasuredProp> {
   return {
       {"ruins",
@@ -119,11 +135,7 @@ auto measured_props() -> std::vector<MeasuredProp> {
        model_reach(MagicShrineParts::k_magic_shrine_boxes,
                    MagicShrineParts::k_magic_shrine_prisms,
                    MagicShrineParts::k_magic_shrine_oriented_boxes)},
-      {"cursed_gold_vein",
-       WorldProp::Type::CursedGoldVein,
-       model_reach(CursedGoldVeinParts::k_cursed_gold_vein_mounds,
-                   CursedGoldVeinParts::k_cursed_gold_vein_rubble,
-                   CursedGoldVeinParts::k_cursed_gold_vein_shards)},
+      {"cursed_gold_vein", WorldProp::Type::CursedGoldVein, cursed_gold_vein_reach()},
       {"supply_cart",
        WorldProp::Type::SupplyCart,
        model_reach(SupplyCartParts::k_supply_cart_boxes,
@@ -140,9 +152,7 @@ auto measured_props() -> std::vector<MeasuredProp> {
                    StatueParts::k_statue_beams,
                    StatueParts::k_statue_limbs,
                    StatueParts::k_statue_frustums)},
-      {"tent",
-       WorldProp::Type::Tent,
-       GroundReach{TentParts::k_ground_half_x, TentParts::k_ground_half_z}},
+      {"tent", WorldProp::Type::Tent, tent_reach()},
       {"dead_tree", WorldProp::Type::DeadTree, dead_tree_reach()},
   };
 }

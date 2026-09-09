@@ -53,7 +53,7 @@ auto home_palette_slots(const QVector3D& team)
   return {palette.team, palette.terracotta};
 }
 
-auto build_home_archetype(BuildingState state) -> RenderArchetype {
+auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   RomanPalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
   float const wall_height = 1.0F;
   float height_multiplier = 1.0F;
@@ -84,20 +84,21 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
       QVector3D(0.88F, wall_cy, 0.0F), QVector3D(0.08F, wall_hy, 0.78F), c.limestone);
 
   float const cornice_y = wall_height * height_multiplier + 0.18F;
+
   desc.add_box(QVector3D(0.0F, cornice_y, -0.88F),
-               QVector3D(0.90F, 0.05F, 0.10F),
+               QVector3D(0.78F, 0.05F, 0.10F),
                c.limestone_shade,
                k_building_state_mask_intact);
   desc.add_box(QVector3D(0.0F, cornice_y, 0.88F),
-               QVector3D(0.90F, 0.05F, 0.10F),
+               QVector3D(0.78F, 0.05F, 0.10F),
                c.limestone_shade,
                k_building_state_mask_intact);
   desc.add_box(QVector3D(-0.88F, cornice_y, 0.0F),
-               QVector3D(0.10F, 0.05F, 0.84F),
+               QVector3D(0.10F, 0.05F, 0.98F),
                c.limestone_shade,
                k_building_state_mask_intact);
   desc.add_box(QVector3D(0.88F, cornice_y, 0.0F),
-               QVector3D(0.10F, 0.05F, 0.84F),
+               QVector3D(0.10F, 0.05F, 0.98F),
                c.limestone_shade,
                k_building_state_mask_intact);
 
@@ -167,7 +168,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   }
 
   float const entab_y = 0.16F + col_height * height_multiplier + 0.12F;
-  desc.add_box(QVector3D(0.0F, entab_y, 0.92F),
+  desc.add_box(QVector3D(0.0F, entab_y, 0.96F),
                QVector3D(0.82F, 0.04F, 0.06F),
                c.limestone,
                k_building_state_mask_intact);
@@ -179,7 +180,8 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
 
   desc.add_box(
       QVector3D(0.0F, 0.48F, 0.92F), QVector3D(0.28F, 0.42F, 0.05F), c.cedar_dark);
-  desc.add_box(QVector3D(0.0F, 0.72F, 0.94F),
+
+  desc.add_box(QVector3D(0.0F, 0.72F, 0.968F),
                QVector3D(0.32F, 0.04F, 0.02F),
                c.blue_accent,
                BuildingStateMask::All);
@@ -197,7 +199,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                  k_building_state_mask_intact);
   }
 
-  desc.add_box(QVector3D(0.0F, 0.155F, 0.0F),
+  desc.add_box(QVector3D(0.0F, 0.1625F, 0.0F),
                QVector3D(0.54F, 0.005F, 0.54F),
                c.marble,
                k_building_state_mask_intact);
@@ -209,12 +211,13 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                QVector3D(0.48F, 0.02F, 0.03F),
                c.limestone_dark,
                k_building_state_mask_intact);
+
   desc.add_box(QVector3D(0.34F, 0.158F, 0.0F),
-               QVector3D(0.03F, 0.02F, 0.40F),
+               QVector3D(0.03F, 0.02F, 0.31F),
                c.limestone_dark,
                k_building_state_mask_intact);
   desc.add_box(QVector3D(-0.34F, 0.158F, 0.0F),
-               QVector3D(0.03F, 0.02F, 0.40F),
+               QVector3D(0.03F, 0.02F, 0.31F),
                c.limestone_dark,
                k_building_state_mask_intact);
 
@@ -247,7 +250,11 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                                  .scale = 1.0F,
                                  .seed = 101});
 
-  return build_building_archetype(desc, state);
+  return desc;
+}
+
+auto build_home_archetype(BuildingState state) -> RenderArchetype {
+  return build_building_archetype(build_home_desc_impl(state), state);
 }
 
 auto home_archetype(BuildingState state) -> const RenderArchetype& {
@@ -257,6 +264,10 @@ auto home_archetype(BuildingState state) -> const RenderArchetype& {
 }
 
 } // namespace
+
+auto build_home_desc(BuildingState state) -> BuildingArchetypeDesc {
+  return build_home_desc_impl(state);
+}
 
 void register_home_renderer(Render::GL::EntityRendererRegistry& registry) {
   register_home_renderer_variant(

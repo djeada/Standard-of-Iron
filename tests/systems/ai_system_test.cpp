@@ -9,6 +9,7 @@
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
+#include "game/systems/ai_system/ai_attack_wave.h"
 #include "game/systems/ai_system/ai_base_manager.h"
 #include "game/systems/ai_system/ai_behavior_registry.h"
 #include "game/systems/ai_system/ai_command_applier.h"
@@ -16,6 +17,7 @@
 #include "game/systems/ai_system/ai_doctrine_catalog.h"
 #include "game/systems/ai_system/ai_executor.h"
 #include "game/systems/ai_system/ai_reasoner.h"
+#include "game/systems/ai_system/ai_settlement_frame.h"
 #include "game/systems/ai_system/ai_snapshot_builder.h"
 #include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/ai_system/ai_utils.h"
@@ -1276,11 +1278,35 @@ TEST_F(AISystemTest, GatherBehaviorDoesNotPullReserveUnitsToRally) {
   std::vector<Game::Systems::AI::AICommand> commands;
   behavior.execute(snapshot, context, 1.1F, commands);
 
-  ASSERT_EQ(commands.size(), 1U);
-  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::MoveUnits);
-  EXPECT_TRUE(std::find(commands.front().units.begin(),
-                        commands.front().units.end(),
-                        1U) == commands.front().units.end());
+  ASSERT_FALSE(commands.empty());
+  bool rally_order_seen = false;
+  for (const auto& command : commands) {
+    EXPECT_EQ(command.type, Game::Systems::AI::AICommandType::MoveUnits);
+    const bool has_reserve =
+        std::find(command.units.begin(), command.units.end(), 1U) !=
+        command.units.end();
+    const bool has_attack_force =
+        std::find(command.units.begin(), command.units.end(), 2U) !=
+        command.units.end();
+    EXPECT_FALSE(has_reserve && has_attack_force)
+        << "the reserve marched off with the attack force";
+    if (has_attack_force) {
+      rally_order_seen = true;
+    }
+    if (has_reserve) {
+      for (std::size_t i = 0; i < command.units.size(); ++i) {
+        if (command.units[i] != 1U) {
+          continue;
+        }
+        const float dx = command.move_target_x[i] - context.base_pos_x;
+        const float dz = command.move_target_z[i] - context.base_pos_z;
+        EXPECT_LE(std::sqrt(dx * dx + dz * dz),
+                  context.strategy_config.reserve_hold_radius + 2.0F)
+            << "the reserve was posted away from the base it holds";
+      }
+    }
+  }
+  EXPECT_TRUE(rally_order_seen);
 }
 
 TEST_F(AISystemTest, ExpandBehaviorMovesAttackForceToExpansionSite) {
@@ -3572,4 +3598,193 @@ TEST_F(AISystemTest, BuilderBehaviorTurnsPlannedWallsIntoTheSettlementFrame) {
   EXPECT_TRUE(context.settlement_facing_locked);
   EXPECT_NEAR(context.settlement_facing_x, -1.0F, 0.001F);
   EXPECT_NEAR(context.settlement_facing_z, 0.0F, 0.001F);
+}
+
+namespace {
+
+auto make_castrum_plan() -> Game::Systems::AI::TownPlan {
+  Game::Systems::AI::TownPlan plan;
+  plan.id = "test_castrum";
+  plan.steps.push_back({.building = "wall_gate", .x = 0.0F, .z = -18.0F});
+  for (float x = -20.0F; x <= 20.0F; x += 4.0F) {
+    if (std::abs(x) > 3.0F) {
+      plan.steps.push_back({.building = "wall_segment", .x = x, .z = -18.0F});
+    }
+    plan.steps.push_back({.building = "wall_segment", .x = x, .z = 18.0F});
+  }
+  for (float z = -16.0F; z <= 16.0F; z += 4.0F) {
+    plan.steps.push_back({.building = "wall_segment", .x = -20.0F, .z = z});
+    plan.steps.push_back({.building = "wall_segment", .x = 20.0F, .z = z});
+  }
+  plan.steps.push_back({.building = "home", .x = -12.0F, .z = 12.0F});
+  plan.steps.push_back({.building = "defense_tower", .x = -8.0F, .z = -14.0F});
+  return plan;
+}
+
+} // namespace
+
+TEST_F(AISystemTest, SettlementStationsComeFromTheTownPlan) {
+  const auto plan = make_castrum_plan();
+  Game::Systems::AI::AIDoctrine doctrine;
+  doctrine.town_plan = &plan;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 30.0F;
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  context.settlement_facing_locked = true;
+  context.settlement_facing_x = 0.0F;
+  context.settlement_facing_z = -1.0F;
+  context.rally_x = 35.0F;
+  context.rally_z = 50.0F;
+  context.strategy_config.doctrine = &doctrine;
+  context.strategy_config.posture = Game::Systems::AI::AIPosture::Garrison;
+  context.strategy_config.personality.aggression = 0.25F;
+
+  Game::Systems::AI::apply_settlement_stations(snapshot, context);
+  ASSERT_TRUE(context.has_settlement_stations);
+  EXPECT_FALSE(context.musters_outside) << "a garrison doctrine musters in its ward";
+
+  const auto inside = plan.muster_offset(Game::Systems::AI::MusterSide::Inside);
+  const auto expected = Game::Systems::AI::plan_offset_to_world(
+      QVector2D(0.0F, -1.0F), inside.x, inside.z);
+  EXPECT_NEAR(context.rally_x, 40.0F + expected.x(), 0.01F);
+  EXPECT_NEAR(context.rally_z, 50.0F + expected.z(), 0.01F);
+  EXPECT_GT(inside.z, -18.0F) << "the ward is behind the front wall";
+  EXPECT_LT(inside.z, -Game::Systems::AI::TownPlan::k_anchor_clearance);
+
+  context.strategy_config.posture = Game::Systems::AI::AIPosture::Field;
+  context.strategy_config.personality.aggression = 0.85F;
+  Game::Systems::AI::apply_settlement_stations(snapshot, context);
+  EXPECT_TRUE(context.musters_outside) << "a bold doctrine forms up before its gate";
+  const auto outside = plan.muster_offset(Game::Systems::AI::MusterSide::Outside);
+  EXPECT_LT(outside.z, -18.0F);
+  EXPECT_NEAR(context.rally_x, context.muster_outside_x, 0.01F);
+  EXPECT_NEAR(context.rally_z, context.muster_outside_z, 0.01F);
+  EXPECT_NEAR(context.muster_inside_x, 40.0F + expected.x(), 0.01F);
+}
+
+TEST_F(AISystemTest, GatherGivesEveryUnstationedSoldierARankEvenOnTheRallyDot) {
+  Game::Systems::AI::GatherBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 6.0F;
+  snapshot.friendly_units = {
+      make_unit(1, 60.0F, 50.0F),
+      make_unit(2, 60.0F, 50.0F),
+      make_unit(3, 60.3F, 50.2F),
+      make_unit(4, 40.0F, 52.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.state = Game::Systems::AI::AIState::Gathering;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  context.has_settlement_stations = true;
+  context.musters_outside = true;
+  context.rally_x = 60.0F;
+  context.rally_z = 50.0F;
+  context.muster_outside_x = 60.0F;
+  context.muster_outside_z = 50.0F;
+  context.muster_inside_x = 46.0F;
+  context.muster_inside_z = 50.0F;
+  context.garrison_unit_ids = {4U};
+  context.strategy_config.posture = Game::Systems::AI::AIPosture::Field;
+  context.strategy_config.personality.aggression = 0.85F;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.1F, commands);
+
+  std::vector<Engine::Core::EntityID> moved;
+  bool garrison_posted_inside = false;
+  for (const auto& command : commands) {
+    ASSERT_EQ(command.type, Game::Systems::AI::AICommandType::MoveUnits);
+    for (std::size_t i = 0; i < command.units.size(); ++i) {
+      moved.push_back(command.units[i]);
+      const float rally_dx = command.move_target_x[i] - 60.0F;
+      const float rally_dz = command.move_target_z[i] - 50.0F;
+      const float ward_dx = command.move_target_x[i] - 46.0F;
+      const float ward_dz = command.move_target_z[i] - 50.0F;
+      if (command.units[i] == 4U) {
+        garrison_posted_inside = std::hypot(ward_dx, ward_dz) < 6.0F;
+        EXPECT_GT(std::hypot(rally_dx, rally_dz), 6.0F)
+            << "the garrison marched out to the field muster";
+      } else {
+        EXPECT_LT(std::hypot(rally_dx, rally_dz), 6.0F)
+            << "unit " << command.units[i] << " was posted away from the rally";
+      }
+    }
+  }
+  std::sort(moved.begin(), moved.end());
+  EXPECT_EQ(moved, (std::vector<Engine::Core::EntityID>{1U, 2U, 3U, 4U}))
+      << "every soldier gets a slot, including the ones standing on the dot";
+  EXPECT_TRUE(garrison_posted_inside) << "the garrison holds the ward behind the wall";
+  const auto claim = context.assigned_units.find(4U);
+  ASSERT_NE(claim, context.assigned_units.end());
+  EXPECT_EQ(std::string_view(claim->second.assigned_task), "garrison");
+}
+
+TEST_F(AISystemTest, AttackWaveAssemblesAtTheRallyBeforeItCommits) {
+  Game::Systems::AI::AIDoctrine doctrine;
+  doctrine.wave.size = 3;
+  doctrine.wave.target_priority = {Game::Systems::AI::DoctrineTarget::Any};
+  doctrine.garrison.minimum_units = 0;
+  doctrine.garrison.fraction = 0.0F;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 500.0F;
+  snapshot.friendly_units = {
+      make_unit(1, 40.0F, 52.0F),
+      make_unit(2, 42.0F, 52.0F),
+      make_unit(3, 44.0F, 52.0F),
+  };
+  snapshot.visible_enemies = {make_enemy_building(90, 140.0F, 55.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  context.rally_x = 40.0F;
+  context.rally_z = 30.0F;
+  context.macro_targets.assembly_radius = 8.0F;
+  context.strategy_config.doctrine = &doctrine;
+  context.strategy_config.aggression_modifier = 1.0F;
+
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  EXPECT_TRUE(context.wave.assembling)
+      << "three soldiers make the wave; it should form";
+  EXPECT_FALSE(context.wave.committed) << "nobody stands at the rally yet";
+  EXPECT_EQ(context.wave.assembled, 0);
+  EXPECT_EQ(context.wave.assembly_required, 2);
+
+  snapshot.game_time = 510.0F;
+  snapshot.friendly_units[0].pos_z = 31.0F;
+  snapshot.friendly_units[1].pos_z = 32.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  EXPECT_TRUE(context.wave.committed)
+      << "two of three in ranks at the rally is enough; the third joins on the road";
+  EXPECT_FALSE(context.wave.assembling);
+  EXPECT_EQ(context.wave.members.size(), 3U);
+
+  Game::Systems::AI::AIContext patient = context;
+  patient.wave = {};
+  snapshot.friendly_units[0].pos_z = 52.0F;
+  snapshot.friendly_units[1].pos_z = 52.0F;
+  snapshot.game_time = 600.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, patient);
+  EXPECT_FALSE(patient.wave.committed);
+  snapshot.game_time = 631.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, patient);
+  EXPECT_TRUE(patient.wave.committed)
+      << "a wave that has waited half a minute marches with what it has";
 }

@@ -272,9 +272,9 @@ void add_piers(BuildingArchetypeDesc& desc,
 
 } // namespace
 
-auto build_wall_gate_archetype(std::string_view name_prefix,
-                               const WallPalette& palette,
-                               const WallGeometry& geometry) -> BuildingArchetypeSet {
+auto build_wall_gate_desc(std::string_view name_prefix,
+                          const WallPalette& palette,
+                          const WallGeometry& geometry) -> BuildingArchetypeDesc {
   BuildingArchetypeDesc desc(std::string(name_prefix) + "_gate");
 
   if (geometry.earthwork_base) {
@@ -353,6 +353,14 @@ auto build_wall_gate_archetype(std::string_view name_prefix,
                       static_cast<std::uint8_t>(BuildingStateMask::Damaged) |
                       static_cast<std::uint8_t>(BuildingStateMask::Destroyed))});
 
+  return desc;
+}
+
+auto build_wall_gate_archetype(std::string_view name_prefix,
+                               const WallPalette& palette,
+                               const WallGeometry& geometry) -> BuildingArchetypeSet {
+  const BuildingArchetypeDesc desc =
+      build_wall_gate_desc(name_prefix, palette, geometry);
   return build_stateful_building_archetype_set(
       [&](BuildingState state) { return build_building_archetype(desc, state); });
 }

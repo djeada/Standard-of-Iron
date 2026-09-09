@@ -121,7 +121,7 @@ void add_spice_basket(BuildingArchetypeDesc& desc,
                 BuildingStateMask::Normal);
 }
 
-auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
+auto build_marketplace_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   CarthageMarketPalette const c;
   float height_multiplier = 1.0F;
   if (state == BuildingState::Damaged) {
@@ -246,7 +246,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                  k_building_state_mask_intact);
   }
 
-  desc.add_box(QVector3D(0.70F, wall_h * 0.52F + 0.14F, -0.82F),
+  desc.add_box(QVector3D(0.70F, wall_h * 0.52F + 0.14F, -0.80F),
                QVector3D(0.32F, wall_h * 0.52F, 0.28F),
                c.brick,
                k_building_state_mask_intact);
@@ -258,9 +258,10 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                QVector3D(0.34F, 0.07F, 0.30F),
                c.brick_dark,
                k_building_state_mask_intact);
+
   for (float const z : {-0.94F, -0.70F}) {
     desc.add_box(QVector3D(0.34F, 0.52F, z),
-                 QVector3D(0.025F, 0.30F, 0.15F),
+                 QVector3D(0.025F, 0.30F, 0.115F),
                  c.wood_dark,
                  k_building_state_mask_intact);
   }
@@ -348,7 +349,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                        BuildingStateMask::Normal | BuildingStateMask::Damaged);
 
   add_punic_tanit_relief(desc,
-                         QVector3D(1.01F, 0.55F * height_multiplier, 0.28F),
+                         QVector3D(1.06F, 0.55F * height_multiplier, 0.28F),
                          BuildingFacadePlane::ZY,
                          0.68F,
                          c.cloth_gold,
@@ -369,7 +370,11 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                                  .scale = 1.0F,
                                  .seed = 223});
 
-  return build_building_archetype(desc, state);
+  return desc;
+}
+
+auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
+  return build_building_archetype(build_marketplace_desc_impl(state), state);
 }
 
 auto marketplace_archetype(BuildingState state) -> const RenderArchetype& {
@@ -379,6 +384,10 @@ auto marketplace_archetype(BuildingState state) -> const RenderArchetype& {
 }
 
 } // namespace
+
+auto build_marketplace_desc(BuildingState state) -> BuildingArchetypeDesc {
+  return build_marketplace_desc_impl(state);
+}
 
 void register_marketplace_renderer(EntityRendererRegistry& registry) {
   register_marketplace_renderer_variant(

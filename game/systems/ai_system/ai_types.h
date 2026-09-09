@@ -340,6 +340,25 @@ struct AIContext {
   float settlement_facing_x = 0.0F;
   float settlement_facing_z = -1.0F;
   bool settlement_facing_locked = false;
+
+  bool has_settlement_stations = false;
+  bool musters_outside = false;
+  float muster_inside_x = 0.0F;
+  float muster_inside_z = 0.0F;
+  float muster_outside_x = 0.0F;
+  float muster_outside_z = 0.0F;
+  float detachment_x = 0.0F;
+  float detachment_z = 0.0F;
+
+  struct StationReport {
+    int combat_units = 0;
+    int marching = 0;
+    int fighting = 0;
+    int stationed = 0;
+    int at_spawn = 0;
+    int adrift = 0;
+  };
+  StationReport station_report;
   bool anchor_is_structural = false;
   bool has_expansion_site = false;
   float expansion_site_x = 0.0F;
@@ -429,6 +448,11 @@ struct AIContext {
     Engine::Core::EntityID target_id = 0;
     float target_x = 0.0F;
     float target_z = 0.0F;
+
+    bool assembling = false;
+    float assembling_since = -1000.0F;
+    int assembled = 0;
+    int assembly_required = 0;
     bool committed = false;
     int initial_size = 0;
     float committed_at = -1000.0F;

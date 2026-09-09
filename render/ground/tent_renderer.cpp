@@ -90,14 +90,19 @@ void TentRenderer::generate_instances(
     uint32_t state = hash_coords(static_cast<int>(prop.x),
                                  static_cast<int>(prop.z),
                                  m_biome_settings.seed ^ 0xA7124D93U);
+
     float const dye = rand_01(state);
     QVector3D canvas_color;
-    if (dye < 0.34F) {
-      canvas_color = QVector3D(0.48F, 0.18F, 0.13F);
-    } else if (dye < 0.68F) {
-      canvas_color = QVector3D(0.58F, 0.43F, 0.23F);
+    if (dye < 0.28F) {
+      canvas_color = QVector3D(0.50F, 0.16F, 0.12F);
+    } else if (dye < 0.52F) {
+      canvas_color = QVector3D(0.60F, 0.42F, 0.20F);
+    } else if (dye < 0.72F) {
+      canvas_color = QVector3D(0.16F, 0.30F, 0.36F);
+    } else if (dye < 0.88F) {
+      canvas_color = QVector3D(0.22F, 0.33F, 0.19F);
     } else {
-      canvas_color = QVector3D(0.17F, 0.32F, 0.34F);
+      canvas_color = QVector3D(0.36F, 0.23F, 0.15F);
     }
     canvas_color *= remap(rand_01(state), 0.88F, 1.06F);
 

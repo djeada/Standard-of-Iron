@@ -12,6 +12,7 @@
 #include "arena_city_scenarios.h"
 #include "arena_economy_scenarios.h"
 #include "arena_engagement_scenarios.h"
+#include "arena_facade_scenarios.h"
 #include "arena_formation_scenarios.h"
 #include "arena_navigation_scenarios.h"
 #include "arena_scenarios.h"
@@ -7751,10 +7752,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     auto s = definition(
         QString::fromLatin1(k_world_prop_lineup_id),
         QStringLiteral("World Prop Lineup"),
-        QStringLiteral("Every authored world prop on clean ground in two rows for "
-                       "direct mesh, silhouette, scale, and material review."),
+        QStringLiteral("Every authored world prop on clean ground in three rows "
+                       "for direct mesh, silhouette, scale, and material review."),
         12.0F,
-        {17.0F, 24.0F, 0.0F});
+        {30.0F, 34.0F, 2.0F});
     s.select_spawned_units = false;
     s.suppress_spawn_anchor = true;
     s.suppress_ui_overlays = true;
@@ -7767,20 +7768,26 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                       1)};
     add_visual_stability(s, {QStringLiteral("scale_reference")});
     s.resource_patches = {
-        {QStringLiteral("firecamp"), 1, {-7.5F, 0.0F, -3.0F}, {}, 1.0F},
-        {QStringLiteral("tent"), 1, {-4.5F, 0.0F, -3.0F}, {}, 1.0F},
-        {QStringLiteral("supply_cart"), 1, {-1.5F, 0.0F, -3.0F}, {}, 1.0F},
-        {QStringLiteral("weapon_rack"), 1, {1.5F, 0.0F, -3.0F}, {}, 1.0F},
-        {QStringLiteral("ruins"), 1, {4.5F, 0.0F, -3.0F}, {}, 1.0F},
-        {QStringLiteral("magic_shrine"), 1, {7.5F, 0.0F, -3.0F}, {}, 1.0F},
-        {QStringLiteral("dead_tree"), 1, {-7.5F, 0.0F, 3.0F}, {}, 1.0F},
-        {QStringLiteral("boulder"), 1, {-4.5F, 0.0F, 3.0F}, {}, 1.0F},
-        {QStringLiteral("iron_ore"), 1, {-1.5F, 0.0F, 3.0F}, {}, 1.0F},
-        {QStringLiteral("plant"), 1, {1.5F, 0.0F, 3.0F}, {}, 1.0F},
-        {QStringLiteral("pine_tree"), 1, {4.5F, 0.0F, 3.0F}, {}, 1.0F},
-        {QStringLiteral("olive_tree"), 1, {7.5F, 0.0F, 3.0F}, {}, 1.0F},
-        {QStringLiteral("abandoned_home"), 1, {-4.5F, 0.0F, 9.0F}, {}, 1.0F},
-        {QStringLiteral("statue"), 1, {1.5F, 0.0F, 9.0F}, {}, 1.0F},
+
+        {QStringLiteral("pine_tree"), 1, {-7.5F, 0.0F, -6.0F}, {}, 1.0F, true},
+        {QStringLiteral("cypress_tree"), 1, {-4.5F, 0.0F, -6.0F}, {}, 1.0F, true},
+        {QStringLiteral("olive_tree"), 1, {-1.5F, 0.0F, -6.0F}, {}, 1.0F, true},
+        {QStringLiteral("palm_tree"), 1, {1.5F, 0.0F, -6.0F}, {}, 1.0F, true},
+        {QStringLiteral("ruins"), 1, {4.5F, 0.0F, -6.0F}, {}, 1.0F, true},
+        {QStringLiteral("abandoned_home"), 1, {7.5F, 0.0F, -6.0F}, {}, 1.0F, true},
+
+        {QStringLiteral("dead_tree"), 1, {-7.5F, 0.0F, 0.0F}, {}, 1.0F, true},
+        {QStringLiteral("tent"), 1, {-4.5F, 0.0F, 0.0F}, {}, 1.0F, true},
+        {QStringLiteral("statue"), 1, {-1.5F, 0.0F, 0.0F}, {}, 1.0F, true},
+        {QStringLiteral("magic_shrine"), 1, {1.5F, 0.0F, 0.0F}, {}, 1.0F, true},
+        {QStringLiteral("supply_cart"), 1, {4.5F, 0.0F, 0.0F}, {}, 1.0F, true},
+        {QStringLiteral("weapon_rack"), 1, {7.5F, 0.0F, 0.0F}, {}, 1.0F, true},
+
+        {QStringLiteral("firecamp"), 1, {-7.5F, 0.0F, 6.0F}, {}, 1.0F, true},
+        {QStringLiteral("boulder"), 1, {-4.5F, 0.0F, 6.0F}, {}, 1.0F, true},
+        {QStringLiteral("iron_ore"), 1, {-1.5F, 0.0F, 6.0F}, {}, 1.0F, true},
+        {QStringLiteral("cursed_gold_vein"), 1, {1.5F, 0.0F, 6.0F}, {}, 1.0F, true},
+        {QStringLiteral("plant"), 1, {4.5F, 0.0F, 6.0F}, {}, 1.0F, true},
     };
     result.push_back(std::move(s));
   }
@@ -11748,6 +11755,10 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(showcase.begin()),
                   std::make_move_iterator(showcase.end()));
+    auto facades = build_facade_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(facades.begin()),
+                  std::make_move_iterator(facades.end()));
     auto formation = build_formation_definitions();
     values.insert(values.end(),
                   std::make_move_iterator(formation.begin()),

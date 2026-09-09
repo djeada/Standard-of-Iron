@@ -10,6 +10,7 @@
 #include "math/math_utils.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_decay.h"
+#include "render/entity/building_facade_depth.h"
 #include "render/entity/building_ornaments.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/building_state.h"
@@ -53,7 +54,7 @@ auto home_palette_slots(const QVector3D& team)
   return {palette.team, palette.tile_red};
 }
 
-auto build_home_archetype(BuildingState state) -> RenderArchetype {
+auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   CarthagePalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
   float const wall_height = 0.9F;
   float height_multiplier = 1.0F;
@@ -65,6 +66,8 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   }
 
   BuildingArchetypeDesc desc("carthage_home");
+
+  constexpr float k_front_wall_face = 1.02F;
 
   desc.add_box(
       QVector3D(0.0F, 0.06F, 0.0F), QVector3D(1.14F, 0.06F, 1.14F), c.stone_dark);
@@ -131,27 +134,49 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                  QVector3D(1.02F, 0.025F, 0.065F),
                  c.stone_light,
                  k_building_state_mask_intact);
+
     desc.add_box(QVector3D(side * 0.96F, parapet_y + 0.11F, 0.0F),
-                 QVector3D(0.065F, 0.025F, 0.92F),
+                 QVector3D(0.065F, 0.025F, 0.895F),
                  c.stone_light,
                  k_building_state_mask_intact);
   }
 
-  desc.add_box(
-      QVector3D(0.0F, 0.44F, 0.97F), QVector3D(0.32F, 0.44F, 0.06F), c.wood_dark);
-  desc.add_box(QVector3D(0.0F, 0.92F, 0.98F),
-               QVector3D(0.36F, 0.05F, 0.08F),
-               c.stone_light,
-               BuildingStateMask::All);
+  {
+    BuildingPartLabel const label(desc, "front_door");
+    add_facade_box(desc,
+                   FacadeBox{.normal = FacadeNormal::PlusZ,
+                             .surface = k_front_wall_face,
+                             .layer = BuildingDepth::k_inlay,
+                             .thickness = 0.10F,
+                             .center = QVector3D(0.0F, 0.44F, 0.0F),
+                             .half_size = QVector3D(0.32F, 0.44F, 0.0F)},
+                   c.wood_dark);
+  }
+  {
+    BuildingPartLabel const label(desc, "front_door_lintel");
+    add_facade_box(desc,
+                   FacadeBox{.normal = FacadeNormal::PlusZ,
+                             .surface = k_front_wall_face,
+                             .layer = BuildingDepth::k_trim,
+                             .thickness = 0.16F,
+                             .center = QVector3D(0.0F, 0.92F, 0.0F),
+                             .half_size = QVector3D(0.36F, 0.05F, 0.0F)},
+                   c.stone_light,
+                   BuildingStateMask::All);
+  }
 
-  desc.add_box(QVector3D(-0.34F, 0.52F, 0.96F),
-               QVector3D(0.04F, 0.32F, 0.04F),
-               c.stone_light,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(0.34F, 0.52F, 0.96F),
-               QVector3D(0.04F, 0.32F, 0.04F),
-               c.stone_light,
-               k_building_state_mask_intact);
+  for (const float side : {-1.0F, 1.0F}) {
+    BuildingPartLabel const label(desc, "front_door_jamb");
+    add_facade_box(desc,
+                   FacadeBox{.normal = FacadeNormal::PlusZ,
+                             .surface = k_front_wall_face,
+                             .layer = BuildingDepth::k_trim,
+                             .thickness = 0.14F,
+                             .center = QVector3D(side * 0.34F, 0.535F, 0.0F),
+                             .half_size = QVector3D(0.04F, 0.335F, 0.0F)},
+                   c.stone_light,
+                   k_building_state_mask_intact);
+  }
 
   desc.add_box(
       QVector3D(0.0F, 0.10F, 1.06F), QVector3D(0.40F, 0.04F, 0.14F), c.stone_light);
@@ -233,10 +258,19 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                c.stone_light,
                k_building_state_mask_intact);
 
-  desc.add_palette_box(QVector3D(0.0F, 0.80F, 1.01F),
-                       QVector3D(0.30F, 0.12F, 0.02F),
-                       k_home_team_slot,
-                       BuildingStateMask::All);
+  {
+
+    BuildingPartLabel const label(desc, "front_door_team_panel");
+    add_facade_palette_box(desc,
+                           FacadeBox{.normal = FacadeNormal::PlusZ,
+                                     .surface = k_front_wall_face,
+                                     .layer = BuildingDepth::k_panel,
+                                     .thickness = 0.05F,
+                                     .center = QVector3D(0.0F, 0.76F, 0.0F),
+                                     .half_size = QVector3D(0.30F, 0.10F, 0.0F)},
+                           k_home_team_slot,
+                           BuildingStateMask::All);
+  }
 
   add_punic_tanit_relief(desc,
                          QVector3D(1.025F, 0.80F, 0.0F),
@@ -253,7 +287,11 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                                  .scale = 1.0F,
                                  .seed = 137});
 
-  return build_building_archetype(desc, state);
+  return desc;
+}
+
+auto build_home_archetype(BuildingState state) -> RenderArchetype {
+  return build_building_archetype(build_home_desc_impl(state), state);
 }
 
 auto home_archetype(BuildingState state) -> const RenderArchetype& {
@@ -263,6 +301,10 @@ auto home_archetype(BuildingState state) -> const RenderArchetype& {
 }
 
 } // namespace
+
+auto build_home_desc(BuildingState state) -> BuildingArchetypeDesc {
+  return build_home_desc_impl(state);
+}
 
 void register_home_renderer(Render::GL::EntityRendererRegistry& registry) {
   register_home_renderer_variant(

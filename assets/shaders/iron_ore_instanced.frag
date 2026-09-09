@@ -72,23 +72,24 @@ void main() {
   float vein_wide = clamp(max(wide1, wide2), 0.0, 1.0);
   float vein_core = clamp(max(core1, core2), 0.0, 1.0);
 
-  vec3 deep_rock = v_color * vec3(0.66, 0.64, 0.66);
-  vec3 cool_rock = v_color * vec3(1.02, 0.99, 1.00);
-  vec3 warm_mineral = vec3(0.48, 0.30, 0.20);
+  vec3 deep_rock = v_color * vec3(0.34, 0.37, 0.44);
+  vec3 cool_rock = v_color * vec3(0.86, 0.89, 0.99);
+  vec3 warm_mineral = vec3(0.26, 0.17, 0.14);
 
   vec3 rock_color = mix(deep_rock, cool_rock, stone_large);
   rock_color *= mix(0.72, 1.08, stone_grain);
-  rock_color = mix(rock_color, warm_mineral, mineral_noise * 0.18);
+
+  rock_color = mix(rock_color, warm_mineral, mineral_noise * 0.12);
 
   float magic_strength = max(u_magic_strength, 0.0);
   float magic_mix = clamp(magic_strength, 0.0, 1.0);
 
-  vec3 hematite_core = vec3(0.23, 0.11, 0.08);
-  vec3 limonite_rim = vec3(0.56, 0.34, 0.16);
-  vec3 rust_bloom = vec3(0.50, 0.26, 0.13);
+  vec3 hematite_core = vec3(0.055, 0.055, 0.070);
+  vec3 limonite_rim = vec3(0.30, 0.26, 0.24);
+  vec3 rust_bloom = vec3(0.30, 0.15, 0.11);
   vec3 seam = mix(limonite_rim, hematite_core, vein_core);
   vec3 natural_ore = mix(rock_color, seam, vein_wide * 0.85);
-  natural_ore = mix(natural_ore, rust_bloom, mineral_noise * 0.24 * (1.0 - vein_wide));
+  natural_ore = mix(natural_ore, rust_bloom, mineral_noise * 0.14 * (1.0 - vein_wide));
 
   vec3 magic_a = vec3(0.14, 0.85, 1.35);
   vec3 magic_b = vec3(0.82, 0.24, 1.45);
@@ -136,8 +137,8 @@ void main() {
                crystal * 1.35);
 
   vec3 color = albedo * illumination * ao;
-  color += sun_color * ore_spec * ao;
-  vec3 glint_color = mix(sun_color * vec3(0.95, 0.88, 0.80), magic_color, magic_mix);
+  color += sun_color * vec3(0.82, 0.86, 1.00) * ore_spec * ao;
+  vec3 glint_color = mix(sun_color * vec3(0.78, 0.83, 0.96), magic_color, magic_mix);
   color += glint_color * crystal_spec;
   color += glow;
 

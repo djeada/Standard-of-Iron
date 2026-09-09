@@ -377,7 +377,16 @@ void AISystem::trace_progress(const Engine::Core::World& world) {
                       << " food=" << resources.get(ResourceType::Food)
                       << " wood=" << resources.get(ResourceType::Wood)
                       << " stone=" << resources.get(ResourceType::Stone)
-                      << " iron=" << resources.get(ResourceType::Iron)
+                      << " iron=" << resources.get(ResourceType::Iron) << " wave="
+                      << (context.wave.committed    ? "marching"
+                          : context.wave.assembling ? "assembling"
+                                                    : "forming")
+                      << " wave_members=" << context.wave.members.size()
+                      << " stationed=" << context.station_report.stationed
+                      << " marching=" << context.station_report.marching
+                      << " fighting=" << context.station_report.fighting
+                      << " at_spawn=" << context.station_report.at_spawn
+                      << " adrift=" << context.station_report.adrift
                       << " decisions=" << m_completed_decision_count
                       << " commands=" << m_applied_command_count
                       << " refused=" << m_refused_command_count;

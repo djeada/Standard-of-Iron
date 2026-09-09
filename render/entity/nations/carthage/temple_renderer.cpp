@@ -285,10 +285,11 @@ void add_cavetto_cornice(BuildingArchetypeDesc& desc,
                QVector3D(k_shrine_half_x + 0.100F, 0.008F, k_shrine_half_z + 0.100F),
                c.screed,
                k_building_state_mask_intact);
+
   for (float const side : {-1.0F, 1.0F}) {
     desc.add_box(
         QVector3D(k_shrine_x, cornice_y + 0.302F, side * (k_shrine_half_z + 0.086F)),
-        QVector3D(k_shrine_half_x + 0.100F, 0.006F, 0.018F),
+        QVector3D(k_shrine_half_x + 0.060F, 0.006F, 0.018F),
         c.verdigris,
         k_building_state_mask_intact);
   }
@@ -398,15 +399,17 @@ void add_carthage_temple_ruin(BuildingArchetypeDesc& desc,
 
   constexpr std::array<float, 6> k_rise{0.14F, 0.05F, 0.20F, 0.08F, 0.16F, 0.03F};
   for (int i = 0; i < 9; ++i) {
-    float const px = -0.26F + (0.19F * static_cast<float>(i));
+
+    float const px = -0.26F + (0.16F * static_cast<float>(i));
     for (float const side : {-1.0F, 1.0F}) {
       float const rise =
           k_rise[static_cast<std::size_t>(i + (side > 0 ? 2 : 0)) % k_rise.size()];
       if (rise < 0.04F) {
         continue;
       }
+
       desc.add_box(QVector3D(px, wall_top + (rise * 0.5F), side * 0.86F),
-                   QVector3D(0.088F, rise * 0.5F, 0.062F),
+                   QVector3D(0.062F, rise * 0.5F, 0.062F),
                    c.sandstone,
                    k_ruin);
     }
@@ -479,7 +482,7 @@ void add_carthage_temple_ruin(BuildingArchetypeDesc& desc,
   }
 }
 
-auto build_temple_archetype(BuildingState state) -> RenderArchetype {
+auto build_temple_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   CarthageTemplePalette const c;
   float height_multiplier = 1.0F;
   if (state == BuildingState::Damaged) {
@@ -535,9 +538,11 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
 
   for (int step = 0; step < 6; ++step) {
     float const step_index = static_cast<float>(step);
+
     float const top = 0.082F * (step_index + 1.0F);
-    desc.add_box(QVector3D(-1.700F + (0.078F * step_index), top * 0.5F, 0.0F),
-                 QVector3D(0.041F, top * 0.5F, 0.66F),
+    float const riser_top = top - 0.012F;
+    desc.add_box(QVector3D(-1.700F + (0.078F * step_index), riser_top * 0.5F, 0.0F),
+                 QVector3D(0.041F, riser_top * 0.5F, 0.66F),
                  (step % 2 == 0) ? c.sandstone_dark : c.sandstone,
                  k_building_state_mask_intact);
     desc.add_box(QVector3D(-1.700F + (0.078F * step_index), top - 0.006F, 0.0F),
@@ -597,7 +602,8 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                QVector3D(0.34F, wall_h * 0.030F, 0.74F),
                c.sandstone_light,
                k_building_state_mask_intact);
-  desc.add_box(QVector3D(-0.895F, podium_y + (wall_h * 0.86F), 0.0F),
+
+  desc.add_box(QVector3D(-0.895F, podium_y + (wall_h * 0.845F), 0.0F),
                QVector3D(0.014F, wall_h * 0.070F, 0.74F),
                c.basalt,
                k_building_state_mask_intact);
@@ -607,10 +613,11 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                  c.basalt,
                  k_building_state_mask_intact);
   }
+
   for (int rafter = 0; rafter < 5; ++rafter) {
     float const z = -0.56F + (0.28F * static_cast<float>(rafter));
     desc.add_box(QVector3D(-0.58F, podium_y + (wall_h * 0.70F), z),
-                 QVector3D(0.30F, wall_h * 0.022F, 0.030F),
+                 QVector3D(0.284F, wall_h * 0.022F, 0.030F),
                  c.cedar_light,
                  k_building_state_mask_intact);
   }
@@ -817,7 +824,9 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                          BuildingFacadePlane::ZY,
                          0.40F,
                          c.gold,
-                         c.basalt);
+                         c.basalt,
+                         k_building_state_mask_intact,
+                         -1.0F);
 
   add_punic_horned_crown(desc,
                          QVector3D(0.62F, cornice_y + 0.664F, 0.0F),
@@ -841,7 +850,11 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
 
   desc.scale_uniformly(k_temple_mesh_scale);
 
-  return build_building_archetype(desc, state);
+  return desc;
+}
+
+auto build_temple_archetype(BuildingState state) -> RenderArchetype {
+  return build_building_archetype(build_temple_desc_impl(state), state);
 }
 
 auto temple_archetype(BuildingState state) -> const RenderArchetype& {
@@ -851,6 +864,10 @@ auto temple_archetype(BuildingState state) -> const RenderArchetype& {
 }
 
 } // namespace
+
+auto build_temple_desc(BuildingState state) -> BuildingArchetypeDesc {
+  return build_temple_desc_impl(state);
+}
 
 void register_temple_renderer(EntityRendererRegistry& registry) {
   register_temple_renderer_variant(

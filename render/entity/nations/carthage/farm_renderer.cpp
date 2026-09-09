@@ -52,8 +52,16 @@ void add_mudbrick_boundary(BuildingArchetypeDesc& desc, const CarthageFarmPalett
                  half,
                  c.mudbrick,
                  BuildingStateMask::All);
+
+    constexpr float k_coping_corner_setback = 0.040F;
+    QVector3D const coping_half(
+        span.x() != 0.0F ? std::max(half.x() - k_coping_corner_setback, 0.02F)
+                         : half.x() + 0.004F,
+        0.008F,
+        span.z() != 0.0F ? std::max(half.z() - k_coping_corner_setback, 0.02F)
+                         : half.z() + 0.004F);
     desc.add_box(mid + QVector3D(0.0F, k_wall_h + 0.008F, 0.0F),
-                 QVector3D(half.x() + 0.004F, 0.008F, half.z() + 0.004F),
+                 coping_half,
                  c.lime_wash,
                  k_building_state_mask_intact);
 
@@ -142,13 +150,15 @@ void add_storehouse(BuildingArchetypeDesc& desc, const CarthageFarmPalette& c) {
                QVector3D(k_half_x + 0.03F, 0.014F, k_half_z + 0.03F),
                c.lime_wash,
                k_building_state_mask_intact);
+
+  const float eave_x_inner = k_half_x + 0.015F - 0.022F;
   for (const float side : {-1.0F, 1.0F}) {
     desc.add_box(centre + QVector3D(side * (k_half_x + 0.015F), roof_y + 0.085F, 0.0F),
                  QVector3D(0.022F, 0.035F, k_half_z + 0.04F),
                  c.sandstone_light,
                  k_building_state_mask_intact);
     desc.add_box(centre + QVector3D(0.0F, roof_y + 0.085F, side * (k_half_z + 0.015F)),
-                 QVector3D(k_half_x + 0.04F, 0.035F, 0.022F),
+                 QVector3D(eave_x_inner, 0.035F, 0.022F),
                  c.sandstone_light,
                  k_building_state_mask_intact);
   }
@@ -318,7 +328,7 @@ void add_grain_sacks(BuildingArchetypeDesc& desc, const CarthageFarmPalette& c) 
   }
 }
 
-auto build_farm_archetype(BuildingState state, int stage) -> RenderArchetype {
+auto build_farm_desc_impl(BuildingState state, int stage) -> BuildingArchetypeDesc {
   CarthageFarmPalette const c;
   BuildingArchetypeDesc desc("carthage_farm_stage_" + std::to_string(stage));
 
@@ -362,7 +372,11 @@ auto build_farm_archetype(BuildingState state, int stage) -> RenderArchetype {
                                  .count = 4,
                                  .seed = 457});
 
-  return build_building_archetype(desc, state);
+  return desc;
+}
+
+auto build_farm_archetype(BuildingState state, int stage) -> RenderArchetype {
+  return build_building_archetype(build_farm_desc_impl(state, stage), state);
 }
 
 auto farm_archetype(BuildingState state, int stage) -> const RenderArchetype& {
@@ -371,6 +385,10 @@ auto farm_archetype(BuildingState state, int stage) -> const RenderArchetype& {
 }
 
 } // namespace
+
+auto build_farm_desc(BuildingState state, int stage) -> BuildingArchetypeDesc {
+  return build_farm_desc_impl(state, stage);
+}
 
 void register_farm_renderer(EntityRendererRegistry& registry) {
   register_farm_renderer_variant(

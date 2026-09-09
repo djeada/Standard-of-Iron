@@ -50,7 +50,7 @@ auto make_palette(const QVector3D& team) -> TowerPalette {
   return p;
 }
 
-auto build_tower_archetype(BuildingState state) -> RenderArchetype {
+auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   TowerPalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
   BuildingArchetypeDesc desc("carthage_defense_tower");
 
@@ -78,7 +78,8 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                  c.brick_dark,
                  BuildingStateMask::All);
   }
-  for (float z = -0.84F; z <= 0.84F; z += 0.42F) {
+
+  for (float z = -0.65F; z <= 0.65F; z += 0.325F) {
     desc.add_box(QVector3D(-0.90F, 0.38F, z),
                  QVector3D(0.10F, 0.08F, 0.14F),
                  c.brick_dark,
@@ -175,7 +176,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
     }
 
     desc.add_box(QVector3D(0.0F, upper_drum_y, 0.0F),
-                 QVector3D(damaged ? 0.78F : 0.86F, 0.08F, damaged ? 0.78F : 0.86F),
+                 QVector3D(damaged ? 0.74F : 0.83F, 0.08F, damaged ? 0.74F : 0.83F),
                  c.brick_dark);
 
     for (int i = 0; i < (damaged ? 2 : 4); ++i) {
@@ -197,7 +198,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                  QVector3D(damaged ? 0.90F : 1.00F, 0.05F, damaged ? 0.90F : 1.00F),
                  c.wood);
 
-    const float parapet_half = damaged ? 0.78F : 0.88F;
+    const float parapet_half = damaged ? 0.755F : 0.855F;
     const float merlon_y = damaged ? 2.44F : 2.72F;
     auto add_part =
         [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
@@ -260,13 +261,13 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
   }
 
   if (!destroyed) {
-    add_punic_tanit_relief(
-        desc,
-        QVector3D(0.0F, damaged ? 1.36F : 1.52F, damaged ? 0.70F : 0.80F),
-        BuildingFacadePlane::XY,
-        damaged ? 0.58F : 0.72F,
-        c.brick,
-        c.stone_dark);
+    add_punic_tanit_relief(desc,
+
+                           QVector3D(0.0F, damaged ? 1.36F : 1.52F, 0.82F),
+                           BuildingFacadePlane::XY,
+                           damaged ? 0.58F : 0.72F,
+                           c.brick,
+                           c.stone_dark);
   }
 
   add_broken_rim(desc,
@@ -288,7 +289,11 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                                  .scale = 0.95F,
                                  .seed = 397});
 
-  return build_building_archetype(desc, state);
+  return desc;
+}
+
+auto build_tower_archetype(BuildingState state) -> RenderArchetype {
+  return build_building_archetype(build_tower_desc_impl(state), state);
 }
 
 auto tower_archetype(BuildingState state) -> const RenderArchetype& {
@@ -387,6 +392,10 @@ void draw_tower_banner_for_team(const DrawContext& p,
 }
 
 } // namespace
+
+auto build_tower_desc(BuildingState state) -> BuildingArchetypeDesc {
+  return build_tower_desc_impl(state);
+}
 
 void register_defense_tower_renderer(Render::GL::EntityRendererRegistry& registry) {
   register_defense_tower_renderer_variant(

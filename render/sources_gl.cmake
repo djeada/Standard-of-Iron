@@ -13,7 +13,11 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/instance_draw_guard.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mesh_buffers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/cylinder_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/cursed_gold_vein_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/dead_tree_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/iron_ore_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rock_outcrop_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/tent_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/prop_mesh_builder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/prop_parts.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/ring_loft_builder.cpp

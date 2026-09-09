@@ -292,7 +292,8 @@ protected:
   static void draw_town(const char* name,
                         const std::vector<Standing>& town,
                         const TownCensus& census,
-                        const ArmyCensus& army) {
+                        const ArmyCensus& army,
+                        const std::vector<Standing>& soldiers = {}) {
     if (!qEnvironmentVariableIsSet("SOI_TOWN_MAP")) {
       return;
     }
@@ -339,6 +340,15 @@ protected:
                 army.missile,
                 army.horse,
                 army.engines);
+    for (const auto& soldier : soldiers) {
+      const int gx = static_cast<int>((soldier.x - centre) / 2.2F) + (k_span / 2);
+      const int gz = static_cast<int>((soldier.z - centre) / 4.0F) + (k_rows / 2);
+      if (gx < 0 || gx >= k_span || gz < 0 || gz >= k_rows) {
+        continue;
+      }
+      auto& cell = canvas[static_cast<std::size_t>(gz)][static_cast<std::size_t>(gx)];
+      cell = cell == ' ' ? 's' : cell;
+    }
     for (const auto& row : canvas) {
       std::printf("|%s|\n", row.c_str());
     }
@@ -347,7 +357,51 @@ protected:
   struct Settlement {
     TownCensus census;
     ArmyCensus army;
+
+    float fortification_coverage = 0.0F;
+    Game::Systems::AI::AIContext::StationReport stations;
   };
+
+  static auto soldiers_of(SessionContext& session) -> std::vector<Standing> {
+    std::vector<Standing> soldiers;
+    for (auto [id, unit] : session.world().view<UnitComponent>()) {
+      if (unit.owner_id != k_owner || unit.health <= 0 ||
+          Game::Units::is_building_spawn(unit.spawn_type) ||
+          unit.spawn_type == Game::Units::SpawnType::Builder ||
+          unit.spawn_type == Game::Units::SpawnType::Civilian) {
+        continue;
+      }
+      const auto* transform =
+          session.world().try_get<Engine::Core::TransformComponent>(id);
+      if (transform == nullptr) {
+        continue;
+      }
+      soldiers.push_back(Standing{
+          .type = "soldier", .x = transform->position.x, .z = transform->position.z});
+    }
+    return soldiers;
+  }
+
+  static auto fortification_coverage(const std::vector<Standing>& town) -> float {
+    const Standing* anchor = nullptr;
+    for (const auto& building : town) {
+      if (building.type == "barracks") {
+        anchor = &building;
+        break;
+      }
+    }
+    if (anchor == nullptr) {
+      return 0.0F;
+    }
+    std::vector<Game::Systems::AI::TownPlanOffset> offsets;
+    for (const auto& building : town) {
+      if (building.type == "wall_segment" || building.type == "wall_gate" ||
+          building.type == "defense_tower") {
+        offsets.push_back({building.x - anchor->x, building.z - anchor->z});
+      }
+    }
+    return Game::Systems::AI::TownPlan::compass_coverage(offsets);
+  }
 
   static auto barracks_manpower(SessionContext& session) -> int {
     int manpower = 0;
@@ -373,9 +427,39 @@ protected:
     const auto town = standing_town(session);
     const auto census = census_of(town);
     const auto army = army_of(session);
+    Settlement settlement{.census = census, .army = army};
+    settlement.fortification_coverage = fortification_coverage(town);
+    if (auto* ai = session.world().get_system<Game::Systems::AISystem>()) {
+      if (const auto* plan = ai->plan_for(k_owner); plan != nullptr) {
+        settlement.stations = plan->station_report;
+      }
+    }
     if (qEnvironmentVariableIsSet("SOI_TOWN_MAP")) {
       if (auto* ai = session.world().get_system<Game::Systems::AISystem>()) {
         if (const auto* plan = ai->plan_for(k_owner); plan != nullptr) {
+          const auto& stations = plan->station_report;
+          std::printf("   stations: %s form %s | soldiers %d stationed %d marching %d "
+                      "fighting %d at_spawn %d adrift %d | rally %.0f,%.0f%s\n",
+                      plan->strategy_config.doctrine != nullptr &&
+                              plan->strategy_config.doctrine->town_plan != nullptr
+                          ? plan->strategy_config.doctrine->town_plan->id.c_str()
+                          : "-",
+                      plan->strategy_config.doctrine != nullptr &&
+                              plan->strategy_config.doctrine->town_plan != nullptr
+                          ? Game::Systems::AI::settlement_form_name(
+                                plan->strategy_config.doctrine->town_plan->form())
+                          : "-",
+                      stations.combat_units,
+                      stations.stationed,
+                      stations.marching,
+                      stations.fighting,
+                      stations.at_spawn,
+                      stations.adrift,
+                      static_cast<double>(plan->rally_x),
+                      static_cast<double>(plan->rally_z),
+                      plan->musters_outside ? " (before the gate)" : " (in the ward)");
+          std::printf("   outline: %.0f%% of the compass fortified\n",
+                      static_cast<double>(settlement.fortification_coverage * 100.0F));
           const auto* doctrine = plan->strategy_config.doctrine;
           std::printf(
               "   doctrine: %s cav %.2f ranged %.2f siege %.2f | counts melee "
@@ -402,8 +486,8 @@ protected:
                   economy.get(k_owner, Game::Systems::ResourceType::Gold),
                   barracks_manpower(session));
     }
-    draw_town(name, town, census, army);
-    return Settlement{.census = census, .army = army};
+    draw_town(name, town, census, army, soldiers_of(session));
+    return settlement;
   }
 
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory;
@@ -468,6 +552,31 @@ TEST_F(AiTownPlanTest, EveryCommanderRaisesItsOwnTownFromAnEmptyField) {
     by_shape.emplace(signature, name);
   }
 
+  for (const char* castle : {"fabius", "scipio", "hanno", "hannibal"}) {
+    const auto& census = towns.at(castle).census;
+    const int fortifications = census.walls + census.towers;
+    const float sectors = towns.at(castle).fortification_coverage * 24.0F;
+    EXPECT_GE(fortifications, 8) << castle << " raised almost no fortification";
+    EXPECT_GE(sectors + 0.01F, 0.5F * static_cast<float>(std::min(fortifications, 24)))
+        << castle << " spread " << fortifications << " walls and towers over only "
+        << sectors
+        << " of 24 compass sectors; a part-built ring or castrum must "
+           "still draw its outline";
+  }
+
+  for (const auto& [name, settlement] : towns) {
+    const auto& stations = settlement.stations;
+    if (stations.combat_units < 4) {
+      continue;
+    }
+    EXPECT_LE(stations.at_spawn, 1) << name << " left " << stations.at_spawn
+                                    << " soldiers standing by its barracks";
+    EXPECT_GE((stations.stationed + stations.marching + stations.fighting) * 10,
+              stations.combat_units * 7)
+        << name << " has " << stations.adrift << " of " << stations.combat_units
+        << " soldiers adrift between spawn and station";
+  }
+
   EXPECT_EQ(towns.at("hasdrubal").census.walls, 0)
       << "the Barcid raider camp is authored without a wall; it must stay open";
   EXPECT_GE(towns.at("fabius").census.walls, 3)
@@ -513,6 +622,10 @@ TEST_F(AiTownPlanTest, AWalledCommanderClosesItsCircuitGivenTime) {
         << castle.name << " has no towers to speak of";
     EXPECT_GE(settlement.census.gates, 1)
         << castle.name << " closed its ring without a gate to march out of";
+    EXPECT_GE(settlement.fortification_coverage, 0.60F)
+        << castle.name << " fortified only "
+        << settlement.fortification_coverage * 100.0F
+        << "% of the compass after fifty minutes; its outline should be closed by now";
     TearDown();
     SetUp();
   }

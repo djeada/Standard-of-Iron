@@ -73,10 +73,15 @@ load does not raise a second anchor.
 
 ## Presentation
 
-- Mesh: `render/gl/backend/cursed_gold_vein_parts.h`, built by
-  `VegetationPipeline::initialize_cursed_gold_vein_pipeline`. Rock parts stay
-  below `y = 0.70`; everything above is crystal. `prop_model_footprint_test`
-  keeps the declared half-extents honest against the parts.
+- Mesh: `render/gl/backend/cursed_gold_vein_mesh.cpp`, built through the shared
+  `rock_outcrop_mesh` helpers (also used by iron ore) and uploaded by
+  `VegetationPipeline::initialize_cursed_gold_vein_pipeline`. The rock is a set
+  of jittered lofted masses rather than stacked frustums, and each shard is an
+  irregular prism whose facets run its whole length. Rock parts stay below
+  `k_cursed_gold_vein_rock_crown` (0.46); everything above it is crystal.
+  `prop_model_footprint_test` measures the built mesh against the declared half
+  extents, and `rock_prop_mesh_test` keeps the crown in the header and the one
+  in the shader from drifting apart.
 - Shader: `assets/shaders/cursed_gold_vein_instanced.{vert,frag}`. Dark rusted
   rock, an fbm ore seam threaded through it, gold keyed on local height with a
   metallic specular, and a slow blood-red pulse crawling along the seam driven by
