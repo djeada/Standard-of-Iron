@@ -9,10 +9,23 @@
 #include "../../units/spawn_type.h"
 #include "../../units/troop_type.h"
 #include "ai_doctrine_catalog.h"
+#include "ai_settlement_frame.h"
 #include "ai_stall_recovery.h"
 #include "ai_utils.h"
 
 namespace Game::Systems::AI {
+
+namespace {
+
+auto minimum_deployable_strength(const AIContext& context, int required) -> int {
+  const auto* doctrine = context.strategy_config.doctrine;
+  const int floor = doctrine != nullptr && doctrine->wave.size > 0
+                        ? std::max(1, doctrine->wave.size / 2)
+                        : std::max(1, required / 2);
+  return floor;
+}
+
+} // namespace
 
 namespace {
 
@@ -363,6 +376,7 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
   if (!wave.assembling) {
     wave.assembling = true;
     wave.assembling_since = snapshot.game_time;
+    wave.ready_since = -1000.0F;
   }
   constexpr float k_assembled_share = 0.60F;
   constexpr float k_assembly_patience_seconds = 30.0F;
@@ -372,19 +386,36 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
     if (distance_squared(entity->pos_x,
                          0.0F,
                          entity->pos_z,
-                         context.rally_x,
+                         context.station.x,
                          0.0F,
-                         context.rally_z) <= assembly_radius * assembly_radius) {
+                         context.station.z) > assembly_radius * assembly_radius) {
+      continue;
+    }
+    if (station_standing(*entity, context, snapshot.game_time) ==
+        StationStanding::Ready) {
       ++assembled;
     }
   }
   wave.assembled = assembled;
   wave.assembly_required =
       static_cast<int>(std::ceil(k_assembled_share * static_cast<float>(required)));
-  if (assembled < wave.assembly_required &&
-      snapshot.game_time - wave.assembling_since < k_assembly_patience_seconds) {
+  constexpr float k_settle_seconds = 2.0F;
+  if (assembled >= wave.assembly_required) {
+    if (wave.ready_since < 0.0F) {
+      wave.ready_since = snapshot.game_time;
+    }
+  } else {
+    wave.ready_since = -1000.0F;
+  }
+
+  const bool settled = wave.ready_since >= 0.0F &&
+                       snapshot.game_time - wave.ready_since >= k_settle_seconds;
+  const bool out_of_patience =
+      snapshot.game_time - wave.assembling_since >= k_assembly_patience_seconds;
+  if (!settled && !out_of_patience) {
     return;
   }
+  wave.departed_under_strength = !settled;
 
   float centre_x = 0.0F;
   float centre_z = 0.0F;
@@ -401,10 +432,45 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
     return;
   }
 
+  std::vector<const EntitySnapshot*> marching;
+  marching.reserve(available.size());
+  for (const auto* entity : available) {
+    if (station_standing(*entity, context, snapshot.game_time) ==
+        StationStanding::Ready) {
+      marching.push_back(entity);
+    }
+  }
+  if (!settled) {
+
+    marching = available;
+    std::stable_sort(marching.begin(),
+                     marching.end(),
+                     [&context](const EntitySnapshot* a, const EntitySnapshot* b) {
+                       return distance_squared(a->pos_x,
+                                               0.0F,
+                                               a->pos_z,
+                                               context.station.x,
+                                               0.0F,
+                                               context.station.z) <
+                              distance_squared(b->pos_x,
+                                               0.0F,
+                                               b->pos_z,
+                                               context.station.x,
+                                               0.0F,
+                                               context.station.z);
+                     });
+  }
+  if (static_cast<int>(marching.size()) <
+      minimum_deployable_strength(context, required)) {
+    wave.assembling_since = snapshot.game_time;
+    wave.departed_under_strength = false;
+    return;
+  }
+
   const int wave_capacity = wave_capacity_for(context, required);
   wave.members.clear();
-  wave.members.reserve(available.size());
-  for (const auto* entity : available) {
+  wave.members.reserve(marching.size());
+  for (const auto* entity : marching) {
     if (static_cast<int>(wave.members.size()) >= wave_capacity) {
       break;
     }
@@ -417,6 +483,7 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
   wave.committed = true;
   wave.committed_at = snapshot.game_time;
   wave.assembling = false;
+  wave.ready_since = -1000.0F;
 }
 
 auto wave_objective(const AISnapshot& snapshot,

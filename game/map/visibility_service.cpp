@@ -16,6 +16,7 @@
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../systems/owner_registry.h"
+#include "game/core/presentation_coverage.h"
 
 namespace Game::Map {
 
@@ -150,6 +151,7 @@ void VisibilityService::compute_immediate(Engine::Core::World& world, int player
     m_cells = std::move(result.cells);
     const auto next_version = m_version.fetch_add(1, std::memory_order_release) + 1ULL;
     publish_snapshot_locked(next_version);
+    Engine::Core::note_coverage(Engine::Core::CoverageEvent::FogReveal);
   }
   reset_throttle();
 }
@@ -287,6 +289,7 @@ void VisibilityService::integrate_result(JobResult&& result) {
     m_cells = std::move(result.cells);
     const auto next_version = m_version.fetch_add(1, std::memory_order_release) + 1ULL;
     publish_snapshot_locked(next_version);
+    Engine::Core::note_coverage(Engine::Core::CoverageEvent::FogReveal);
   }
 }
 

@@ -51,7 +51,12 @@ float environment_cloud_cover() {
 }
 
 vec3 environment_shadow_tint() {
-  return u_env_shadow_tint_strength.rgb;
+  // Shadow receivers multiply their complete lighting result by this tint.
+  // Retain some indirect-light value instead of crushing it a second time.
+  // Preserve the authored night palette and the tint's relative channel balance.
+  vec3 primary = environment_primary_color();
+  float daylight = 1.0 - smoothstep(0.05, 0.40, primary.b - primary.r);
+  return mix(u_env_shadow_tint_strength.rgb, vec3(1.0), 0.20 * daylight);
 }
 
 float environment_shadow_strength() {

@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <cstddef>
 
+#include "render/gl/gl_resource_tracking.h"
+
 namespace Render::GL::BackendPipelines {
 
 namespace {
@@ -48,6 +50,7 @@ auto PostProcessPipeline::initialize() -> bool {
   }
 
   glGenVertexArrays(1, &m_empty_vao);
+  note_vertex_arrays_created(1);
   m_initialized = true;
   return true;
 }
@@ -71,8 +74,13 @@ auto PostProcessPipeline::create_color_target(RenderTarget& target,
                                               int width,
                                               int height,
                                               unsigned int internal_format) -> bool {
-  glGenFramebuffers(1, &target.fbo);
-  glGenTextures(1, &target.color);
+  if (target.fbo == 0) {
+    glGenFramebuffers(1, &target.fbo);
+  }
+  if (target.color == 0) {
+    glGenTextures(1, &target.color);
+    note_textures_created(1);
+  }
 
   glBindTexture(GL_TEXTURE_2D, target.color);
   glTexImage2D(GL_TEXTURE_2D,
@@ -84,6 +92,11 @@ auto PostProcessPipeline::create_color_target(RenderTarget& target,
                GL_RGBA,
                internal_format == k_format_rgba16f ? GL_FLOAT : GL_UNSIGNED_BYTE,
                nullptr);
+  note_texture_storage(
+      texture_transfer_bytes(static_cast<std::size_t>(width),
+                             static_cast<std::size_t>(height),
+                             internal_format == k_format_rgba16f ? 8U : 4U),
+      false);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -104,7 +117,11 @@ auto PostProcessPipeline::ensure_targets(int width, int height) -> bool {
     return true;
   }
 
-  release_targets();
+  qInfo() << "PostProcessPipeline: building" << width << "x" << height
+          << "targets; previous" << m_scene.width << "x" << m_scene.height
+          << "passes changed" << !attachments_match(m_target_passes, m_passes);
+
+  release_disabled_targets();
 
   const int bloom_width = std::max(width / k_bloom_divisor, 1);
   const int bloom_height = std::max(height / k_bloom_divisor, 1);
@@ -119,7 +136,10 @@ auto PostProcessPipeline::ensure_targets(int width, int height) -> bool {
     }
   }
 
-  glGenTextures(1, &m_scene_depth);
+  if (m_scene_depth == 0) {
+    glGenTextures(1, &m_scene_depth);
+    note_textures_created(1);
+  }
   glBindTexture(GL_TEXTURE_2D, m_scene_depth);
   glTexImage2D(GL_TEXTURE_2D,
                0,
@@ -130,6 +150,10 @@ auto PostProcessPipeline::ensure_targets(int width, int height) -> bool {
                GL_DEPTH_COMPONENT,
                GL_FLOAT,
                nullptr);
+  note_texture_storage(texture_transfer_bytes(static_cast<std::size_t>(width),
+                                              static_cast<std::size_t>(height),
+                                              4U),
+                       false);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -168,6 +192,30 @@ auto PostProcessPipeline::ensure_targets(int width, int height) -> bool {
 
   m_target_passes = m_passes;
   return true;
+}
+
+void PostProcessPipeline::release_disabled_targets() {
+  auto drop = [this](RenderTarget& target) {
+    if (target.color != 0) {
+      glDeleteTextures(1, &target.color);
+    }
+    if (target.fbo != 0) {
+      glDeleteFramebuffers(1, &target.fbo);
+    }
+    target = RenderTarget{};
+  };
+
+  if (!m_passes.bloom) {
+    for (auto& target : m_bloom) {
+      drop(target);
+    }
+  }
+  if (!m_passes.fxaa) {
+    drop(m_composite);
+  }
+  if (!m_passes.godrays) {
+    drop(m_rays);
+  }
 }
 
 void PostProcessPipeline::release_targets() {

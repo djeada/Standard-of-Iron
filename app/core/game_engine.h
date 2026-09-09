@@ -339,6 +339,7 @@ public:
     std::atomic<std::uint64_t> longest_wait_us{0};
     std::atomic<std::uint64_t> deferred_presentations{0};
     std::atomic<std::uint64_t> forced_presentation_waits{0};
+    std::atomic<std::uint64_t> simulation_handoff_yields{0};
   };
 
   [[nodiscard]] auto simulation_profile_report() -> QJsonObject;
@@ -663,6 +664,7 @@ private:
   float m_deferred_presentation_dt = 0.0F;
 
   static constexpr int k_frame_lock_handoff_yields = 64;
+  std::atomic<bool> m_presentation_awaiting_frame_lock{false};
 
   static constexpr std::chrono::milliseconds k_render_effects_lock_budget{8};
   std::atomic<int> m_frame_lock_waiters{0};

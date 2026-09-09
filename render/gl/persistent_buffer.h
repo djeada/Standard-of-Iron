@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstring>
 
+#include "gl_resource_tracking.h"
 #include "platform_gl.h"
 #include "render_constants.h"
 
@@ -43,6 +44,7 @@ public:
     m_frame_offset = 0;
 
     glGenBuffers(1, &m_buffer);
+    note_buffers_created(1);
     glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
 
     QOpenGLContext* ctx = QOpenGLContext::currentContext();
@@ -196,6 +198,7 @@ public:
                                    write_offset,
                                    count * sizeof(T),
                                    GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+      note_mapped_buffer_range(ptr != nullptr ? count * sizeof(T) : 0U);
 
       if (ptr == nullptr) {
         qWarning() << "PersistentRingBuffer: Failed to map buffer for write";
@@ -204,6 +207,7 @@ public:
       }
 
       std::memcpy(ptr, data, count * sizeof(T));
+      note_buffer_transfer(count * sizeof(T));
       glUnmapBuffer(GL_ARRAY_BUFFER);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -219,6 +223,7 @@ public:
     std::size_t const write_offset = m_frame_offset + m_current_count * sizeof(T);
     void* dest = static_cast<char*>(m_mapped_ptr) + write_offset;
     std::memcpy(dest, data, count * sizeof(T));
+    note_buffer_transfer(count * sizeof(T));
 
     std::size_t const element_offset = m_current_count;
     m_current_count += count;

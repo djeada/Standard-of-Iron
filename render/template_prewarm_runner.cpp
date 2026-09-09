@@ -1,4 +1,5 @@
 #include <QDebug>
+#include <QStringList>
 #include <qglobal.h>
 #include <qvectornd.h>
 
@@ -578,10 +579,22 @@ void Renderer::prewarm_unit_templates(
     }
   }
 
-  if (owner_ids.empty() && world_view().owners() != nullptr) {
+  if (world_view().owners() != nullptr) {
     const auto& owners = world_view().owners()->get_all_owners();
     for (const auto& owner : owners) {
+      if (owner.type != Game::Systems::OwnerType::Player &&
+          owner.type != Game::Systems::OwnerType::AI) {
+        continue;
+      }
       add_owner(owner.owner_id);
+      if (world_view().nations() == nullptr) {
+        continue;
+      }
+      const auto* nation =
+          world_view().nations()->get_nation_for_player(owner.owner_id);
+      if (nation != nullptr) {
+        active_nation_ids.insert(nation->id);
+      }
     }
   }
   if (owner_ids.empty()) {
@@ -594,7 +607,19 @@ void Renderer::prewarm_unit_templates(
     const auto& nations = world_view().nations() != nullptr
                               ? world_view().nations()->get_all_nations()
                               : k_no_nations;
-    const bool restrict_to_active_nations = !active_nation_ids.empty();
+    const std::unordered_set<Game::Systems::NationID> observed_nation_ids =
+        active_nation_ids;
+    const bool roster_is_known = observed_nation_ids.size() > 1U;
+    if (!roster_is_known) {
+      for (const auto& nation : nations) {
+        active_nation_ids.insert(nation.id);
+      }
+    }
+    qInfo().noquote() << "Template prewarm: owners" << owner_ids.size() << "nations"
+                      << active_nation_ids.size()
+                      << (roster_is_known
+                              ? "(match roster)"
+                              : "(roster unknown, prewarming every nation)");
     const bool has_catalog_entries = !troops.empty();
 
     auto add_troop_profile = [&](const Game::Systems::Nation& nation,
@@ -616,11 +641,11 @@ void Renderer::prewarm_unit_templates(
     };
 
     for (const auto& nation : nations) {
-      if (restrict_to_active_nations &&
-          (active_nation_ids.find(nation.id) == active_nation_ids.end())) {
+      if (active_nation_ids.find(nation.id) == active_nation_ids.end()) {
         continue;
       }
-      if (!restrict_to_active_nations && nation.available_troops.empty()) {
+      if (observed_nation_ids.find(nation.id) == observed_nation_ids.end() &&
+          nation.available_troops.empty()) {
         continue;
       }
       if (has_catalog_entries) {

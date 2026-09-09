@@ -12,6 +12,7 @@
 #include <random>
 
 #include "gl_error_check.h"
+#include "render/gl/gl_resource_tracking.h"
 #include "render/gl/shader_cache.h"
 #include "render/rain_gpu.h"
 #include "scene/camera.h"
@@ -217,35 +218,47 @@ auto RainPipeline::create_geometry() -> bool {
   constexpr std::array<unsigned int, k_quad_index_count> quad_indices{0, 1, 2, 0, 2, 3};
 
   glGenVertexArrays(1, &m_vao);
+  note_vertex_arrays_created(1);
   if (!check_gl_error("glGenVertexArrays") || m_vao == 0) {
     return false;
   }
   glBindVertexArray(m_vao);
 
   glGenBuffers(1, &m_quad_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ARRAY_BUFFER, m_quad_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(quad_corners.size() * sizeof(float)),
                quad_corners.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(quad_corners.size() * sizeof(float)),
+                      quad_corners.data() != nullptr);
 
   glEnableVertexAttribArray(k_corner_attrib);
   glVertexAttribPointer(
       k_corner_attrib, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
   glGenBuffers(1, &m_index_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(quad_indices.size() * sizeof(unsigned int)),
                quad_indices.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(
+      static_cast<std::size_t>(quad_indices.size() * sizeof(unsigned int)),
+      quad_indices.data() != nullptr);
 
   glGenBuffers(1, &m_instance_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(m_particles.size() * sizeof(WeatherParticleGpu)),
                m_particles.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(
+      static_cast<std::size_t>(m_particles.size() * sizeof(WeatherParticleGpu)),
+      m_particles.data() != nullptr);
 
   glEnableVertexAttribArray(k_seed_attrib);
   glVertexAttribPointer(k_seed_attrib,

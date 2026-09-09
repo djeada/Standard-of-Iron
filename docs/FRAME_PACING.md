@@ -81,11 +81,115 @@ query results are delayed and explicitly labeled; they must not be interpreted
 as exact attribution to that frame. GPU timing currently covers shadow and color
 passes, not the entire Qt compositor. Upload deltas use process-wide counters.
 
+## What the counters measure, and where they stop
+
+Every direct GL resource call under `render/`, `ui/`, `scene/` and `app/` now
+reports to `Render::Profiling::asset_counters()` through the small helpers in
+`render/gl/gl_resource_tracking.h`. `GlCounterCoverage.EveryDirectGlResourceCallReportsToTheAssetCounters`
+scans those trees and fails if a `glGenBuffers`, `glGenVertexArrays`,
+`glGenTextures`, `glBufferData`, `glBufferSubData`, `glBufferStorage`,
+`glMapBufferRange`, `glTexImage2D/3D`, `glTexSubImage2D` or `glTexStorage2D` call
+appears without an adjacent note. Before this the counters covered only the
+`Buffer`, `VertexArray`, `Texture` and `Shader` wrappers, so every backend
+pipeline, the terrain submission path, the fog and visibility textures and the
+campaign map view were invisible.
+
+Allocation and transfer are now separate, because conflating them made
+per-frame stream orphaning look like upload traffic:
+
+| Counter                     | What it counts                                                                                   |
+| --------------------------- | ------------------------------------------------------------------------------------------------ |
+| `gl_buffer_storage_bytes`   | bytes of buffer storage allocated by `glBufferData`/`glBufferStorage`, including orphaning       |
+| `gl_buffer_orphans`         | `glBufferData` calls with no data: storage reallocation, not a transfer                          |
+| `gl_buffer_transfer_bytes`  | bytes actually copied into buffers, including writes into a mapped range                         |
+| `gl_texture_storage_bytes`  | bytes of texture storage allocated                                                               |
+| `gl_texture_transfer_bytes` | bytes actually copied into textures                                                              |
+| `gl_mapped_buffer_bytes`    | bytes mapped for writing; a mapping is not itself a transfer                                     |
+| `gl_upload_bytes`           | the aggregate of buffer and texture transfer bytes; what the pacing sample's `upload_bytes` uses |
+
+A mapped range is counted once when it is mapped and once when it is written,
+under two different counters, so nothing is double counted in `gl_upload_bytes`.
+
+Measurement boundaries that remain, and must not be read as zero work:
+
+- Qt's own scene graph allocates and uploads on the same context for the QML
+  overlay, and Qt does not route through these helpers. Only the game's own
+  resources are counted.
+- A buffer that stays persistently mapped is counted when it is written through
+  `PersistentRingBuffer`, but a driver that services that mapping lazily can
+  move the real cost to a later frame.
+- GPU-side costs of an allocation — driver-side residency, migration, eviction —
+  are not visible to a client-side counter at all.
+- Framebuffer objects (`glGenFramebuffers`, `glRenderbufferStorage`) and the
+  shadow depth arrays' attachments are counted through their textures, not as
+  framebuffers.
+- `glGenerateMipmap` does GPU work that no byte counter attributes.
+
+`SOI_TRACE_PLAYABLE_GL=1` records a backtrace for every buffer, vertex array and
+texture created after the first playable frame and writes the aggregated sites
+to `playable_gl_creation_sites` in the report. The addresses stay raw so tracing
+costs nothing at capture time; resolve them with
+
+```sh
+python3 scripts/symbolize-gl-sites.py REPORT.json --binary build/bin/standard_of_iron
+```
+
+Keep `SOI_KEEP_SYMBOLS=ON` in the build being traced, and rerun without the
+variable for acceptance measurements.
+
+## Reproducible battle and UI coverage
+
+A camera-only run does not exercise the game. On Battle of Ticino a 40-second
+camera cycle observed one fog reveal and nothing else: no orders, no selection,
+no contact, no projectiles, no production. `presentation_coverage` in the report
+now counts what actually happened during the playable window, from the places
+the events really occur — `WorldFeedbackStore::push` for damage and killing
+blows, `VisibilityService` for fog reveals, `ArrowProjectile` for volleys,
+`damage_application` for structure destruction, the orders and production view
+models for player intent, and the rain manager for weather.
+
+`--action-fixture PATH` drives a versioned, hashed action fixture on the GUI
+thread while the benchmark runs. The format is documented by
+`app/core/benchmark_action_fixture.cpp` and validated on load: version 1 only,
+every action name known, every `required_coverage` name a real event, and every
+action inside the loop. `assets/benchmarks/battle_coverage.action.json` drives
+selection, attack-moves, guard and hold, the build cursor, the production panel,
+recruitment and rally points on a 20-second loop.
+`assets/benchmarks/first_contact.mission.json` is the mission it is authored
+against, with its own `assets/benchmarks/first_contact.map.json`: two armies
+twelve metres apart, builders and a barracks on each side, weather on a
+thirty-second cycle so rain is active almost immediately, and two sacrificial
+farms. A mission's relative `map_path` now resolves against the mission file
+rather than the working directory, so a fixture is self-contained and the runner
+copies and hashes its map alongside it.
+
+The runner copies and SHA-256 hashes the fixture into the artifact directory,
+records it in the manifest, sets `coverage.ui_actions`, and **fails the run when
+a required behaviour was never observed**. `summary.json` also carries an
+`outcome_comparison` block naming any behaviour that appeared on one preset and
+not another.
+
+Sixty-second runs of that pair observe every behaviour the fixture requires:
+formation moves, selection changes, melee contact, projectile volleys, fog
+reveals, the build cursor, production orders, killing blows and active weather.
+The same fixture on Battle of Ticino observes no contact at all, because that
+mission's first wave lands at 180 seconds — which is exactly the rejection the
+gate is for.
+
+`structure_destroyed` is deliberately **not** in that contract. It is observed
+and reported, but no fixture yet drives it: see the note in `todo.md`.
+
 ## Reference qualification still required
 
-Record exact CPU, GPU, RAM, OS, driver, resolution and refresh rate for low,
-midrange and high-end reference machines before accepting a tier. No reference
-hardware has been designated or certified by this change. Keep the same fixture,
+`docs/PERFORMANCE_REFERENCE.md` holds the tier matrix, the qualification
+commands and the runner provisioning runbook.
+`scripts/check-perf-host.py` is the machine-checkable half: it rejects a host
+with no graphical session, a software renderer, a non-60 Hz mode, a competing
+game or build, or a load average above the threshold, and the workflow runs it
+before it configures anything. Record exact CPU, GPU, RAM, OS, driver,
+resolution and refresh rate for low, midrange and high-end reference machines
+before accepting a tier. No reference hardware has been designated or certified
+by this change. Keep the same fixture,
 seed, replay and camera/UI actions across comparisons.
 
 Qualify each preset with a 60-second-or-longer scenario containing:
@@ -220,4 +324,137 @@ concurrent test build, and failed the gate. It cannot qualify presentation timin
 Remaining resource creation and presentation waits are unresolved. Direct GL
 uploads in backend pipelines still need a coverage audit: wrapper counters alone
 do not account for all GPU transfers or prove absence of runtime allocation.
+
+### 2026-09-09: complete counter coverage and its consequences
+
+Instrumenting the previously uncounted backend paths changed the picture the
+earlier entries were built on. The `scatter-prewarmed` run's "three playable
+creation operations" was an artifact of incomplete instrumentation. The same
+mission and preset, measured with full coverage, reported **136** post-playable
+creation operations: 129 buffers, 1 vertex array and 6 textures.
+
+`SOI_TRACE_PLAYABLE_GL=1` attributed all 129 buffers to scatter chunk buffers
+allocated on first reveal inside `sync_filtered_state`. `prewarm_gpu_resources`
+had walked `spatial_chunks`, but that partition is built by the first submit, so
+during loading it was usually empty and the prewarm allocated nothing; anything
+it did allocate was then dropped when `refresh_runtime_world_props` reconfigured
+the prop renderers on the first playable frame and `reset_instances()` cleared
+the chunks.
+
+Three changes followed. `prewarm_filtered_state` builds the spatial partition
+itself rather than depending on a prior submit, and reserves each chunk's full
+`count * sizeof(Instance)` storage. `sync_filtered_state` now reserves once and
+updates in place with `Buffer::update_sub_data`, so a visibility change re-packs
+without reallocating. `FilteredRendererState` keeps a retired-buffer pool, so a
+rebuild or a `reset_instances()` hands its buffers to the new chunks instead of
+deleting them.
+
+Post-playable creation went 136 → 99 → **10** across those changes, measured on
+the same mission and preset. The remaining ten are attributed, not guessed:
+
+- 6 textures and 1 buffer: the commander portrait's own `PostProcessPipeline`
+  rebuilding its targets from 64 × 64 to 232 × 280 when the HUD lays the panel
+  out. The portrait prewarm runs under the loading overlay, but the QML item has
+  no real size until gameplay, so the first real-size target is built inside the
+  playable window.
+- 2 buffers and 1 vertex array: a static mesh whose `Mesh::setup_buffers` runs
+  on its first draw in the shadow pass, through `MeshInstancingPipeline::flush`.
+
+`gl_buffer_orphans` also came into view: about 6.4 buffer orphans per frame,
+roughly 2.8 GB/s of storage reallocation, almost all of it
+`RiggedCullPipeline::begin_frame` re-orphaning its three stream buffers every
+frame. That is the standard orphaning idiom rather than transfer traffic, which
+is why storage and transfer are now counted separately: real transfer over the
+same window is about 11 MB/s.
+
+The presentation lock handoff was made fair: `update_presentation` now publishes
+that it wants the frame lock when it defers, and the simulation thread yields to
+that flag as well as to blocked waiters after it unlocks. Forced presentation
+waits fell from 1–31 per run to 0–2. Deferred presentations did not change
+measurably.
+
+None of the timing in this entry is qualification evidence. Every run was made
+while other sessions were compiling on the same machine; GPU p95 for the same
+binary and mission varied between 19.6 ms and 32.9 ms across five runs, and
+`scripts/check-perf-host.py` rejects this host outright. The resource counts are
+reported instead because they are deterministic under contention.
+
+### 2026-09-09: what the action fixture found
+
+Running the first real scripted battle through the gate immediately exposed two
+defects that a camera-only run cannot reach.
+
+**Enemy troops were never prewarmed, so they did not render at all.**
+`prewarm_unit_templates` restricted its troop catalogue to the nations it could
+see at that instant, and it runs before the AI player is registered: the owner
+registry held one owner, the nation registry held three nations, and there was
+exactly one player-nation assignment. Every Carthaginian archetype — archer,
+both spearman beard variants, swordsman and builder — therefore had no template.
+`set_runtime_bake_forbidden(true)` is armed after the prewarm in every build, not
+only in benchmarks, so `submit_rigged` refused those creatures and returned
+without drawing; the units' selection rings, health plates and damage numbers
+still drew, which is exactly how it looked in play. This was not specific to the
+new fixture: `hold_the_sallow_ford` reproduces it as soon as its 75-second
+Carthaginian wave lands, with 149,592 refused submissions in a 110-second run.
+
+The prewarm now separates the nations it _observed_ from the nations it will
+_prepare_: when it can see fewer than two nations the match roster is not yet
+known, so it prepares every registered nation instead of guessing. Nations it did
+not observe are still skipped when they declare no troops, which is what the
+existing world-supplement regression test pins. Both missions now report zero
+missing preloaded assets and zero forbidden bakes. The cost is 0.74 s of extra
+loading on Battle of the Sallow Ford (10.20 s to 10.94 s to first playable
+frame). The creature-miss log now names the archetype, so the next occurrence is
+one line to diagnose.
+
+**The bottom HUD's activity icon flickered during combat.** The selected-units
+model is refreshed four times a second and each refresh re-derives the squad's
+activity from scratch. Two things made that unstable. The dominant activity was
+chosen with a strict `>` over a `std::map`, so an evenly split squad resolved to
+whichever `(activity, state)` pair sorted first and flipped as counts wobbled;
+it is now resolved by a fixed precedence that puts the fight first. More
+importantly a unit's `AttackTargetComponent` comes and goes as it retargets, so
+the sampled activity alternates between attack and move or guard. The model now
+holds the displayed activity until the same new value has been sampled twice in
+a row, so a one-sample blip cannot change the icon while a real change still
+appears within half a second.
+
+The battle fixture also reports far more first-use GPU work than a camera run:
+942 post-playable operations against Ticino's 10, including 230 rigged meshes
+constructed during combat. Those are poses and variants the prewarm's core clip
+budget does not cover and only a real engagement reaches. They are recorded in
+`todo.md` as remaining work.
+
+### 2026-09-09: closing out the resource work
+
+Two more first-use owners were removed and the last one identified.
+
+`PostProcessPipeline::ensure_targets` released and re-created every render
+target whenever the size or the pass set changed. The commander portrait's own
+pipeline does that on the first playable frame, when the HUD lays its panel out
+and the target goes from 64 × 64 to 232 × 280, so six textures and a buffer were
+created inside the measured window; a main-window resize did the same. The
+targets now keep their texture and framebuffer ids and re-specify storage
+instead, and only targets whose pass has been switched off are released. Ticino's
+post-playable operations fell from 10 to **4**.
+
+The remaining four are three buffers and one vertex array: two buffers and the
+vertex array are a single `Mesh::setup_buffers` reached from
+`MeshInstancingPipeline::flush` in the shadow pass, and one buffer is on the
+post-process path inside `Renderer::end_frame`. `SOI_TRACE_PLAYABLE_GL=1` now
+also records a fingerprint (vertex count, index count, bounds radius) for every
+mesh uploaded in the playable window, reported as `playable_mesh_uploads`, so
+the next idle run can name that mesh without a debugger.
+
+A replay of the action fixture was recorded and played back. It is **not** a
+usable cross-preset comparison fixture, for two measured reasons: playback
+reports `digest diverged at tick 30` on both a campaign replay and a mission-file
+replay, so the simulation is not reproduced identically; and playback drives
+recorded commands rather than the view models, so the selection, production and
+build-panel coverage hooks never fire and a replay cannot satisfy the same
+`required_coverage` contract. The runner's `outcome_comparison` over the live
+fixture is the mechanism that does work. One playback segfaulted during
+shutdown under heavy load and did not reproduce in three further runs; it is
+recorded in `todo.md` rather than diagnosed here.
+
 The ordered remaining tasks and acceptance commands are in `todo.md`.

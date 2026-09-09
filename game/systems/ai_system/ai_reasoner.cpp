@@ -653,9 +653,9 @@ void update_harass_unit_ids(const Game::Systems::AI::AISnapshot& snapshot,
             [&ctx, assembly_radius_sq](const Game::Systems::AI::EntitySnapshot* a,
                                        const Game::Systems::AI::EntitySnapshot* b) {
               const float rally_distance_a = Game::Systems::AI::distance_squared(
-                  a->pos_x, a->pos_y, a->pos_z, ctx.rally_x, 0.0F, ctx.rally_z);
+                  a->pos_x, a->pos_y, a->pos_z, ctx.station.x, 0.0F, ctx.station.z);
               const float rally_distance_b = Game::Systems::AI::distance_squared(
-                  b->pos_x, b->pos_y, b->pos_z, ctx.rally_x, 0.0F, ctx.rally_z);
+                  b->pos_x, b->pos_y, b->pos_z, ctx.station.x, 0.0F, ctx.station.z);
               const bool a_outside_assembly = rally_distance_a > assembly_radius_sq;
               const bool b_outside_assembly = rally_distance_b > assembly_radius_sq;
               if (a_outside_assembly != b_outside_assembly) {
@@ -714,8 +714,8 @@ auto committed_army_count(const Game::Systems::AI::AISnapshot& snapshot,
       continue;
     }
 
-    const float dx = entity.pos_x - ctx.rally_x;
-    const float dz = entity.pos_z - ctx.rally_z;
+    const float dx = entity.pos_x - ctx.station.x;
+    const float dz = entity.pos_z - ctx.station.z;
     const float dist_sq = dx * dx + dz * dz;
     if (dist_sq <= assembly_radius_sq ||
         Game::Systems::AI::is_entity_engaged(entity, snapshot.visible_enemies)) {
@@ -789,8 +789,9 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   ctx.civilian_count = 0;
   ctx.damaged_units_count = 0;
   ctx.average_health = 1.0F;
-  ctx.rally_x = 0.0F;
-  ctx.rally_z = 0.0F;
+  ctx.anchor_station.offered = false;
+  ctx.anchor_station.x = 0.0F;
+  ctx.anchor_station.z = 0.0F;
   ctx.barracks_under_threat = false;
   ctx.nearby_threat_count = 0;
   ctx.base_pos_x = 0.0F;
@@ -937,8 +938,9 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
                                                         : fallback_primary_barracks;
   if (primary_barracks_snapshot != nullptr) {
     ctx.primary_barracks = primary_barracks_snapshot->id;
-    ctx.rally_x = primary_barracks_snapshot->pos_x - 5.0F;
-    ctx.rally_z = primary_barracks_snapshot->pos_z;
+    ctx.anchor_station.offered = true;
+    ctx.anchor_station.x = primary_barracks_snapshot->pos_x - 5.0F;
+    ctx.anchor_station.z = primary_barracks_snapshot->pos_z;
     ctx.base_pos_x = primary_barracks_snapshot->pos_x;
     ctx.base_pos_y = primary_barracks_snapshot->pos_y;
     ctx.base_pos_z = primary_barracks_snapshot->pos_z;
@@ -951,8 +953,9 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
       ctx.base_pos_x = anchor->x;
       ctx.base_pos_y = 0.0F;
       ctx.base_pos_z = anchor->z;
-      ctx.rally_x = anchor->x;
-      ctx.rally_z = anchor->z;
+      ctx.anchor_station.offered = true;
+      ctx.anchor_station.x = anchor->x;
+      ctx.anchor_station.z = anchor->z;
       ctx.has_base_anchor = true;
       ctx.anchor_is_structural = true;
     }
@@ -973,8 +976,9 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
       ctx.base_pos_x = anchor->x;
       ctx.base_pos_y = 0.0F;
       ctx.base_pos_z = anchor->z;
-      ctx.rally_x = anchor->x - 5.0F;
-      ctx.rally_z = anchor->z;
+      ctx.anchor_station.offered = true;
+      ctx.anchor_station.x = anchor->x - 5.0F;
+      ctx.anchor_station.z = anchor->z;
       ctx.has_base_anchor = true;
     }
   }
@@ -984,6 +988,7 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
 
   AIBaseManager::update(snapshot, ctx);
   apply_settlement_stations(snapshot, ctx);
+  resolve_station(snapshot, ctx);
   update_station_report(snapshot, ctx);
 
   int catapult_count = 0;

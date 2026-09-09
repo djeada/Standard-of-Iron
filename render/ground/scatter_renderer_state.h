@@ -64,11 +64,30 @@ struct FilteredRendererState {
   std::vector<Instance> visible_instances;
 
   std::vector<SpatialChunk<Instance>> spatial_chunks;
+  std::vector<std::unique_ptr<Render::GL::Buffer>> retired_buffers;
   std::uint64_t cached_visibility_version = 0;
   bool visibility_dirty = true;
   SyncStats last_sync_stats{};
 
+  void retire_chunk_buffers() {
+    for (auto& chunk : spatial_chunks) {
+      if (chunk.buffer != nullptr) {
+        retired_buffers.push_back(std::move(chunk.buffer));
+      }
+    }
+  }
+
+  [[nodiscard]] auto take_retired_buffer() -> std::unique_ptr<Render::GL::Buffer> {
+    if (retired_buffers.empty()) {
+      return nullptr;
+    }
+    auto buffer = std::move(retired_buffers.back());
+    retired_buffers.pop_back();
+    return buffer;
+  }
+
   void reset_instances() {
+    retire_chunk_buffers();
     instances.clear();
     visible_instances.clear();
     spatial_chunks.clear();
@@ -108,9 +127,20 @@ enum class ScatterMemoryMode : std::uint8_t {
 };
 
 template <typename Instance, typename PositionAccessor>
-void rebuild_spatial_partition(std::vector<Instance>& instances,
-                               std::vector<SpatialChunk<Instance>>& chunks,
-                               PositionAccessor position_accessor) {
+void rebuild_spatial_partition(
+    std::vector<Instance>& instances,
+    std::vector<SpatialChunk<Instance>>& chunks,
+    PositionAccessor position_accessor,
+    std::vector<std::unique_ptr<Render::GL::Buffer>>* recycled_buffers = nullptr) {
+  std::vector<std::unique_ptr<Render::GL::Buffer>> local_recycled;
+  std::vector<std::unique_ptr<Render::GL::Buffer>>& recycled =
+      recycled_buffers != nullptr ? *recycled_buffers : local_recycled;
+  recycled.reserve(recycled.size() + chunks.size());
+  for (auto& chunk : chunks) {
+    if (chunk.buffer != nullptr) {
+      recycled.push_back(std::move(chunk.buffer));
+    }
+  }
   chunks.clear();
   if (instances.empty()) {
     return;
@@ -175,7 +205,12 @@ void rebuild_spatial_partition(std::vector<Instance>& instances,
     chunk.accepted.assign(chunk.count, 0U);
     chunk.visible_count = 0;
     chunk.all_accepted = false;
-    chunk.buffer.reset();
+    if (!recycled.empty()) {
+      chunk.buffer = std::move(recycled.back());
+      recycled.pop_back();
+    } else {
+      chunk.buffer.reset();
+    }
   }
 }
 
@@ -214,6 +249,38 @@ auto refresh_chunk_acceptance(const std::vector<Instance>& instances,
 }
 
 template <typename Instance, typename Params, typename PositionAccessor>
+auto prewarm_filtered_state(FilteredRendererState<Instance, Params>& state,
+                            PositionAccessor position_accessor) -> bool {
+  if (state.instances.empty()) {
+    return true;
+  }
+  if (state.spatial_chunks.empty()) {
+    rebuild_spatial_partition(state.instances,
+                              state.spatial_chunks,
+                              position_accessor,
+                              &state.retired_buffers);
+    state.instances_dirty = false;
+    state.visibility_dirty = true;
+  }
+  bool ready = true;
+  for (auto& chunk : state.spatial_chunks) {
+    if (chunk.count == 0) {
+      continue;
+    }
+    if (chunk.buffer == nullptr) {
+      chunk.buffer = state.take_retired_buffer();
+    }
+    if (chunk.buffer == nullptr) {
+      chunk.buffer =
+          std::make_unique<Render::GL::Buffer>(Render::GL::Buffer::Type::Vertex);
+    }
+    chunk.buffer->reserve(chunk.count * sizeof(Instance));
+    ready = chunk.buffer->id() != 0U && ready;
+  }
+  return ready;
+}
+
+template <typename Instance, typename Params, typename PositionAccessor>
 auto sync_filtered_state(FilteredRendererState<Instance, Params>& state,
                          PositionAccessor position_accessor,
                          const Game::Map::VisibilityService::Snapshot* snapshot,
@@ -239,7 +306,10 @@ auto sync_filtered_state(FilteredRendererState<Instance, Params>& state,
 
   ++state.last_sync_stats.visibility_rebuilds;
   if (structure_dirty) {
-    rebuild_spatial_partition(state.instances, state.spatial_chunks, position_accessor);
+    rebuild_spatial_partition(state.instances,
+                              state.spatial_chunks,
+                              position_accessor,
+                              &state.retired_buffers);
   }
 
   const bool remembered = memory_mode == ScatterMemoryMode::Remembered;
@@ -279,10 +349,14 @@ auto sync_filtered_state(FilteredRendererState<Instance, Params>& state,
       continue;
     }
     if (!chunk.buffer) {
+      chunk.buffer = state.take_retired_buffer();
+    }
+    if (!chunk.buffer) {
       chunk.buffer =
           std::make_unique<Render::GL::Buffer>(Render::GL::Buffer::Type::Vertex);
     }
-    chunk.buffer->set_data(packed, Render::GL::Buffer::Usage::Static);
+    chunk.buffer->reserve(chunk.count * sizeof(Instance));
+    chunk.buffer->update_sub_data(packed);
     ++state.last_sync_stats.buffer_uploads;
   }
 

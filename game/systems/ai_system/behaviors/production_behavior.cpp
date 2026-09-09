@@ -438,15 +438,19 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
       }
       queued++;
 
+      const bool sends_to_the_muster = context.station.source != StationSource::None &&
+                                       base->id == context.main_base_id;
+      const float rally_x = sends_to_the_muster ? context.station.x : base->rally_x;
+      const float rally_z = sends_to_the_muster ? context.station.z : base->rally_z;
+
       if (!prod.rally_set ||
-          distance_squared(
-              prod.rally_x, 0.0F, prod.rally_z, base->rally_x, 0.0F, base->rally_z) >
+          distance_squared(prod.rally_x, 0.0F, prod.rally_z, rally_x, 0.0F, rally_z) >
               k_rally_tolerance_sq) {
         AICommand rally_command;
         rally_command.type = AICommandType::SetRallyPoint;
         rally_command.building_id = entity->id;
-        rally_command.rally_x = base->rally_x;
-        rally_command.rally_z = base->rally_z;
+        rally_command.rally_x = rally_x;
+        rally_command.rally_z = rally_z;
         out_commands.push_back(std::move(rally_command));
       }
     }

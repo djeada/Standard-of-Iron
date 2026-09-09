@@ -210,28 +210,11 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
       formation_request.anchor = scout_center;
       formation_request.spacing = context.strategy_config.attack_formation_spacing;
       formation_request.intent = select_ai_intent(snapshot, context, false, false);
-      auto formation_positions = plan_ai_formation(formation_request, ready_units);
-
-      std::vector<float> target_x;
-      std::vector<float> target_y;
-      std::vector<float> target_z;
-      target_x.reserve(ready_units.size());
-      target_y.reserve(ready_units.size());
-      target_z.reserve(ready_units.size());
-
-      for (size_t i = 0; i < ready_units.size(); ++i) {
-        target_x.push_back(formation_positions[i].x());
-        target_y.push_back(formation_positions[i].y());
-        target_z.push_back(formation_positions[i].z());
+      auto cmd =
+          move_to_slots(unit_ids, plan_ai_formation(formation_request, ready_units));
+      if (!cmd.units.empty()) {
+        out_commands.push_back(std::move(cmd));
       }
-
-      AICommand cmd;
-      cmd.type = AICommandType::MoveUnits;
-      cmd.units = std::move(unit_ids);
-      cmd.move_target_x = std::move(target_x);
-      cmd.move_target_y = std::move(target_y);
-      cmd.move_target_z = std::move(target_z);
-      out_commands.push_back(cmd);
     }
     return;
   }
@@ -351,28 +334,11 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
           formation_request.anchor = attack_center;
           formation_request.spacing = context.strategy_config.attack_formation_spacing;
           formation_request.intent = select_ai_intent(snapshot, context, false, false);
-          auto formation_positions = plan_ai_formation(formation_request, ready_units);
-
-          std::vector<float> target_x;
-          std::vector<float> target_y;
-          std::vector<float> target_z;
-          target_x.reserve(ready_units.size());
-          target_y.reserve(ready_units.size());
-          target_z.reserve(ready_units.size());
-
-          for (size_t i = 0; i < ready_units.size(); ++i) {
-            target_x.push_back(formation_positions[i].x());
-            target_y.push_back(formation_positions[i].y());
-            target_z.push_back(formation_positions[i].z());
+          auto cmd = move_to_slots(unit_ids,
+                                   plan_ai_formation(formation_request, ready_units));
+          if (!cmd.units.empty()) {
+            out_commands.push_back(std::move(cmd));
           }
-
-          AICommand cmd;
-          cmd.type = AICommandType::MoveUnits;
-          cmd.units = std::move(unit_ids);
-          cmd.move_target_x = std::move(target_x);
-          cmd.move_target_y = std::move(target_y);
-          cmd.move_target_z = std::move(target_z);
-          out_commands.push_back(cmd);
         }
       }
     }
@@ -498,30 +464,11 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
     formation_request.anchor = attack_center;
     formation_request.spacing = context.strategy_config.attack_formation_spacing;
     formation_request.intent = select_ai_intent(snapshot, context, false, true);
-    auto formation_positions =
-        plan_ai_formation(formation_request, claimed_units, snapshot);
-
-    std::vector<float> target_x;
-    std::vector<float> target_y;
-    std::vector<float> target_z;
-    target_x.reserve(claimed_units.size());
-    target_y.reserve(claimed_units.size());
-    target_z.reserve(claimed_units.size());
-
-    for (size_t i = 0; i < claimed_units.size(); ++i) {
-      target_x.push_back(formation_positions[i].x());
-      target_y.push_back(formation_positions[i].y());
-      target_z.push_back(formation_positions[i].z());
+    auto move_command = move_to_slots(
+        claimed_units, plan_ai_formation(formation_request, claimed_units, snapshot));
+    if (!move_command.units.empty()) {
+      out_commands.push_back(std::move(move_command));
     }
-
-    AICommand move_command;
-    move_command.type = AICommandType::MoveUnits;
-    move_command.units = claimed_units;
-    move_command.move_target_x = std::move(target_x);
-    move_command.move_target_y = std::move(target_y);
-    move_command.move_target_z = std::move(target_z);
-
-    out_commands.push_back(std::move(move_command));
   }
 
   AICommand attack_command;

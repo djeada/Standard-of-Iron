@@ -1,6 +1,7 @@
 #version 330 core
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
+#include "ground_readability.glsl"
 #include "local_lighting.glsl"
 #include "visibility_mask.glsl"
 
@@ -55,6 +56,8 @@ void main() {
   vec3 L = environment_primary_direction();
   vec3 V = normalize(u_camera_pos - v_world_pos);
   vec3 H = normalize(L + V);
+  float detail_weight =
+      mix(1.0, 0.25, ground_tactical_distance(length(u_camera_pos - v_world_pos)));
 
   vec3 p = v_local_pos;
   vec3 seed_offset = vec3(v_seed * 7.3, v_seed * 3.1, v_seed * 11.7);
@@ -66,12 +69,12 @@ void main() {
       abs(sin(p.x * 13.0 - p.z * 9.0 + p.y * 6.0 + broad * 4.0 + v_seed * 4.0));
   float fissures = 1.0 - smoothstep(0.035, 0.14, fissure_field);
 
-  vec3 N = relief_normal(N_face, p, 0.10);
+  vec3 N = relief_normal(N_face, p, 0.10 * detail_weight);
 
   vec3 stone = v_color * mix(0.70, 1.08, broad);
-  stone *= mix(0.86, 1.08, grain * 0.65 + strata * 0.35);
-  stone *= mix(0.93, 1.05, speckle);
-  stone = mix(stone, stone * vec3(0.58, 0.58, 0.57), fissures * 0.72);
+  stone *= mix(1.0, mix(0.86, 1.08, grain * 0.65 + strata * 0.35), detail_weight);
+  stone *= mix(1.0, mix(0.93, 1.05, speckle), detail_weight);
+  stone = mix(stone, stone * vec3(0.58, 0.58, 0.57), fissures * 0.72 * detail_weight);
 
   float upward = smoothstep(0.28, 0.86, N.y);
   float lichen_noise = stone_noise3(v_world_pos * 1.8 + vec3(3.0, 8.0, 1.0));
@@ -101,8 +104,8 @@ void main() {
   vec3 sky = environment_sky_color();
   vec3 sun = environment_primary_color() * environment_primary_intensity();
   vec3 illumination = soi_surface_lighting_scaled(N, 0.72);
-  float crevice_ao =
-      mix(1.0, 0.62, fissures) * mix(0.58, 1.0, hemi) * mix(1.0, 0.72, skirt);
+  float crevice_ao = mix(1.0, 0.62, fissures * detail_weight) * mix(0.70, 1.0, hemi) *
+                     mix(1.0, 0.80, skirt);
 
   float wet_surface = max(ground_damp, rain_damp);
   float wet_spec = wet_surface * pow(max(dot(N, H), 0.0), 38.0) * 0.22;
@@ -110,9 +113,10 @@ void main() {
   float rim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.055;
 
   vec3 color = stone * illumination * crevice_ao;
-  color += soi_rim_light(N_face, V) * (1.0 - skirt * 0.6);
-  color += sun * (dry_spec + wet_spec);
-  color += sky * rim;
+  // Tiny scatter should not retain full-strength bright rims and specular dots.
+  color += soi_rim_light(N_face, V) * (1.0 - skirt * 0.6) * detail_weight;
+  color += sun * (dry_spec + wet_spec) * detail_weight;
+  color += sky * rim * detail_weight;
   color = apply_directional_shadow(color, v_world_pos, v_normal);
   color += stone * crevice_ao * local_lighting(v_world_pos, N);
   color = apply_visibility_memory(color, v_world_pos.xz);

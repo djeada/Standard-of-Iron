@@ -14,6 +14,7 @@
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
 #include "game/core/component_core.h"
+#include "game/core/presentation_coverage.h"
 #include "game/core/world.h"
 #include "game/render_bridge/selection_controller.h"
 #include "game/session/session_context.h"
@@ -101,6 +102,7 @@ auto ProductionViewModel::has_selected_type(const QString& type) const -> bool {
 }
 
 void ProductionViewModel::recruit_near_selected(const QString& unit_type) {
+  Engine::Core::note_coverage(Engine::Core::CoverageEvent::ProductionOrder);
   m_host.ensure_initialized();
   const auto frame_lock = m_host.lock_frame();
   if (m_context.commands != nullptr) {

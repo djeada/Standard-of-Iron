@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "render/geom/ground_marker_pattern.h"
+#include "render/gl/gl_resource_tracking.h"
 #include "render/gl/mesh.h"
 #include "render/gl/render_constants.h"
 
@@ -118,21 +119,28 @@ void GroundMarkerPipeline::build_mesh() {
   }
 
   glGenVertexArrays(1, &m_mesh.vao);
+  note_vertex_arrays_created(1);
   glBindVertexArray(m_mesh.vao);
 
   glGenBuffers(1, &m_mesh.vertex_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ARRAY_BUFFER, m_mesh.vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(Vertex)),
                vertices.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(vertices.size() * sizeof(Vertex)),
+                      vertices.data() != nullptr);
 
   glGenBuffers(1, &m_mesh.index_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_mesh.index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
                indices.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(indices.size() * sizeof(unsigned int)),
+                      indices.data() != nullptr);
   m_mesh.index_count = static_cast<GLsizei>(indices.size());
   m_mesh.vertex_count = static_cast<GLsizei>(vertices.size());
 
@@ -159,12 +167,15 @@ void GroundMarkerPipeline::build_mesh() {
                         reinterpret_cast<void*>(offsetof(Vertex, tex_coord)));
 
   glGenBuffers(1, &m_mesh.instance_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ARRAY_BUFFER, m_mesh.instance_buffer);
   m_instance_capacity = k_default_instance_capacity;
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(m_instance_capacity * sizeof(InstanceGpu)),
                nullptr,
                GL_DYNAMIC_DRAW);
+  note_buffer_storage(
+      static_cast<std::size_t>(m_instance_capacity * sizeof(InstanceGpu)), false);
 
   const auto stride = static_cast<GLsizei>(sizeof(InstanceGpu));
   glEnableVertexAttribArray(VertexAttrib::instance_position);
@@ -243,12 +254,15 @@ void GroundMarkerPipeline::upload_instances(std::size_t count) {
                  static_cast<GLsizeiptr>(m_instance_capacity * sizeof(InstanceGpu)),
                  nullptr,
                  GL_DYNAMIC_DRAW);
+    note_buffer_storage(
+        static_cast<std::size_t>(m_instance_capacity * sizeof(InstanceGpu)), false);
     m_scratch.reserve(m_instance_capacity);
   }
   glBufferSubData(GL_ARRAY_BUFFER,
                   0,
                   static_cast<GLsizeiptr>(count * sizeof(InstanceGpu)),
                   m_scratch.data());
+  note_buffer_transfer(static_cast<std::size_t>(count * sizeof(InstanceGpu)));
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   m_instances_resident = count;
 }

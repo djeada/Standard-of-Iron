@@ -71,6 +71,7 @@ private:
 
   auto ensure_targets(int width, int height) -> bool;
   void release_targets();
+  void release_disabled_targets();
   auto create_color_target(RenderTarget& target,
                            int width,
                            int height,

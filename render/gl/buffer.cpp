@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "gl_lifetime.h"
+#include "gl_resource_tracking.h"
 #include "platform_gl.h"
 #include "render/profiling/asset_counters.h"
 
@@ -32,7 +33,7 @@ void Buffer::bind() {
   if (m_buffer == 0U) {
     initializeOpenGLFunctions();
     glGenBuffers(1, &m_buffer);
-    Render::Profiling::count_asset(Render::Profiling::AssetCounter::GlBufferCreated);
+    note_buffers_created();
   }
   glBindBuffer(get_gl_type(), m_buffer);
 }
@@ -44,8 +45,28 @@ void Buffer::unbind() {
 void Buffer::set_data(const void* data, size_t size, Usage usage) {
   bind();
   glBufferData(get_gl_type(), static_cast<GLsizeiptr>(size), data, get_gl_usage(usage));
-  Render::Profiling::count_asset(Render::Profiling::AssetCounter::GlUploadBytes, size);
+  note_buffer_storage(size, data != nullptr);
   m_size_bytes = size;
+}
+
+void Buffer::reserve(size_t size, Usage usage) {
+  if (m_size_bytes >= size && m_buffer != 0U) {
+    return;
+  }
+  set_data(nullptr, size, usage);
+}
+
+void Buffer::update_sub_data(const void* data, size_t size) {
+  if (size == 0) {
+    return;
+  }
+  if (size > m_size_bytes || m_buffer == 0U) {
+    set_data(data, size, Usage::Dynamic);
+    return;
+  }
+  bind();
+  glBufferSubData(get_gl_type(), 0, static_cast<GLsizeiptr>(size), data);
+  note_buffer_transfer(size);
 }
 
 auto Buffer::get_gl_type() const -> GLenum {
@@ -93,8 +114,7 @@ void VertexArray::bind() {
     }
 #endif
     glGenVertexArrays(1, &m_vao);
-    Render::Profiling::count_asset(
-        Render::Profiling::AssetCounter::GlVertexArrayCreated);
+    note_vertex_arrays_created();
 #ifndef NDEBUG
     GLenum gen_err = glGetError();
     if (gen_err != GL_NO_ERROR) {

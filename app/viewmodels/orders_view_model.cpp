@@ -10,6 +10,7 @@
 #include "app/orders/rts_action_model.h"
 #include "app/viewmodels/commander_view_model.h"
 #include "app/viewmodels/placement_view_model.h"
+#include "game/core/presentation_coverage.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/systems/match_snapshot.h"
@@ -68,6 +69,7 @@ void OrdersViewModel::on_area_selected(
 }
 
 void OrdersViewModel::select_all_troops() {
+  Engine::Core::note_coverage(Engine::Core::CoverageEvent::SelectionChange);
   m_host.ensure_initialized();
   const auto frame_lock = m_host.lock_frame();
   if (m_context.input != nullptr) {
@@ -218,6 +220,7 @@ void OrdersViewModel::on_right_click(qreal sx, qreal sy) {
   if (m_context.window == nullptr) {
     return;
   }
+  Engine::Core::note_coverage(Engine::Core::CoverageEvent::FormationMove);
   m_host.ensure_initialized();
   const auto frame_lock = m_host.lock_frame();
   if (m_context.input != nullptr) {
@@ -436,6 +439,7 @@ void OrdersViewModel::build() {
   m_host.ensure_initialized();
   const auto frame_lock = m_host.lock_frame();
   if (m_context.cursor != nullptr && action_enabled(QStringLiteral("build"))) {
+    Engine::Core::note_coverage(Engine::Core::CoverageEvent::BuildPanel);
     m_host.set_cursor_mode(CursorMode::Build);
   }
 }

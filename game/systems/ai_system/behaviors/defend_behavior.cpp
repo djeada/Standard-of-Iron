@@ -393,7 +393,10 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
 
   for (size_t i = 0; i < unclaimed_defenders.size(); ++i) {
     const auto* entity = unclaimed_defenders[i];
-    const auto& target = targets[i];
+    if (!targets[i].usable) {
+      continue;
+    }
+    const auto& target = targets[i].position;
 
     float const dx = entity->pos_x - target.x();
     float const dz = entity->pos_z - target.z();

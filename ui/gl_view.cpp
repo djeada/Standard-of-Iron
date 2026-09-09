@@ -55,16 +55,19 @@
 #include "app/core/game_engine.h"
 #include "commander_portrait_scenes.h"
 #include "game/core/nav_profile.h"
+#include "game/core/presentation_coverage.h"
 #include "game/units/commander_catalog.h"
 #include "render/profiling/allocation_tracker.h"
 #include "render/profiling/asset_counters.h"
 #include "render/profiling/frame_swap_clock.h"
+#include "render/profiling/gl_creation_trace.h"
 #include "render/profiling/performance_report.h"
 #include "render/profiling/presentation_cycle.h"
 #include "utils/percentile.h"
 
 namespace {
 constexpr double k_runtime_benchmark_warmup_seconds = 2.0;
+constexpr std::size_t k_playable_gl_creation_sites_reported = 24;
 constexpr std::size_t k_runtime_benchmark_min_frames = 30;
 constexpr std::uint64_t k_visibility_churn_window_frames = 120U;
 constexpr std::uint32_t k_visibility_churn_threshold = 4U;
@@ -494,6 +497,7 @@ void GLView::GLRenderer::observe_runtime_continuity() {
 }
 
 void GLView::GLRenderer::reset_runtime_benchmark_samples() {
+  Render::Profiling::set_playable_window_open(false);
   m_frame_pacing.reset();
   m_pacing_previous_swap_ns = Render::Profiling::frame_swap_clock().latest();
   m_previous_pacing_sample = {};
@@ -503,6 +507,11 @@ void GLView::GLRenderer::reset_runtime_benchmark_samples() {
   for (std::size_t i = 0; i < m_playable_asset_baseline.size(); ++i) {
     m_playable_asset_baseline[i] = Render::Profiling::asset_counters().total(
         static_cast<Render::Profiling::AssetCounter>(i));
+  }
+  Render::Profiling::reset_gl_creation_trace();
+  for (std::size_t i = 0; i < m_playable_coverage_baseline.size(); ++i) {
+    m_playable_coverage_baseline[i] = Engine::Core::presentation_coverage().count(
+        static_cast<Engine::Core::CoverageEvent>(i));
   }
   m_benchmark_ready_time = {};
   m_benchmark_render_ms.clear();
@@ -552,6 +561,7 @@ void GLView::GLRenderer::observe_runtime_benchmark(
   }
 
   if (m_engine->is_loading()) {
+    Render::Profiling::set_playable_window_open(false);
     reset_runtime_benchmark_samples();
     return;
   }
@@ -589,6 +599,7 @@ void GLView::GLRenderer::observe_runtime_benchmark(
   m_pacing_asset_work = asset_work;
 
   if (m_benchmark_ready_time.time_since_epoch().count() == 0) {
+    Render::Profiling::set_playable_window_open(true);
     m_benchmark_ready_time = frame_start;
     m_benchmark_previous_frame_time = frame_start;
     m_benchmark_loading_seconds =
@@ -857,6 +868,26 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
                                 : 0));
   }
   report.insert(QStringLiteral("playable_asset_counters"), playable_assets);
+  QJsonObject coverage;
+  for (std::size_t i = 0; i < m_playable_coverage_baseline.size(); ++i) {
+    const auto event = static_cast<Engine::Core::CoverageEvent>(i);
+    const auto now = Engine::Core::presentation_coverage().count(event);
+    const auto name = Engine::Core::coverage_event_name(event);
+    coverage.insert(
+        QString::fromLatin1(name.data(), static_cast<qsizetype>(name.size())),
+        static_cast<qint64>(now >= m_playable_coverage_baseline[i]
+                                ? now - m_playable_coverage_baseline[i]
+                                : 0));
+  }
+  report.insert(QStringLiteral("presentation_coverage"), coverage);
+  if (Render::Profiling::gl_creation_trace_enabled()) {
+    report.insert(QStringLiteral("playable_gl_creation_sites"),
+                  Render::Profiling::gl_creation_trace_report(
+                      k_playable_gl_creation_sites_reported));
+    report.insert(
+        QStringLiteral("playable_mesh_uploads"),
+        Render::Profiling::mesh_upload_report(k_playable_gl_creation_sites_reported));
+  }
   const auto& lock_stats = m_engine->frame_lock_stats();
   report.insert(
       QStringLiteral("frame_lock_stats"),
@@ -867,7 +898,9 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
           {"deferred_presentations",
            static_cast<qint64>(lock_stats.deferred_presentations.load())},
           {"forced_presentation_waits",
-           static_cast<qint64>(lock_stats.forced_presentation_waits.load())}});
+           static_cast<qint64>(lock_stats.forced_presentation_waits.load())},
+          {"simulation_handoff_yields",
+           static_cast<qint64>(lock_stats.simulation_handoff_yields.load())}});
   report.insert(QStringLiteral("navigation"),
                 Render::Profiling::navigation_counters_json());
   const auto& graphics = Render::GraphicsSettings::instance();
@@ -902,6 +935,42 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
             {QStringLiteral("updates"), static_cast<qint64>(progress.updates.load())},
             {QStringLiteral("completed_cycles"),
              static_cast<qint64>(progress.completed_cycles.load())}});
+  }
+
+  const QString fixture_name =
+      QString::fromUtf8(qgetenv("SOI_ACTION_FIXTURE_NAME")).trimmed();
+  if (!fixture_name.isEmpty()) {
+    const auto& progress = Render::Profiling::presentation_cycle_progress();
+    const QStringList required =
+        QString::fromUtf8(qgetenv("SOI_ACTION_FIXTURE_REQUIRED"))
+            .split(QLatin1Char(','), Qt::SkipEmptyParts);
+    QJsonArray unmet;
+    for (const QString& name : required) {
+      const auto event = Engine::Core::coverage_event_from_name(name.toStdString());
+      const auto observed =
+          event == Engine::Core::CoverageEvent::_Count
+              ? 0U
+              : Engine::Core::presentation_coverage().count(event) -
+                    m_playable_coverage_baseline[static_cast<std::size_t>(event)];
+      if (observed == 0U) {
+        unmet.append(name);
+      }
+    }
+    QJsonArray required_json;
+    for (const QString& name : required) {
+      required_json.append(name);
+    }
+    report.insert(
+        QStringLiteral("action_fixture"),
+        QJsonObject{{QStringLiteral("name"), fixture_name},
+                    {QStringLiteral("path"),
+                     QString::fromUtf8(qgetenv("SOI_ACTION_FIXTURE_PATH"))},
+                    {QStringLiteral("actions_executed"),
+                     static_cast<qint64>(progress.actions_executed.load())},
+                    {QStringLiteral("required_coverage"), required_json},
+                    {QStringLiteral("unmet_coverage"), unmet},
+                    {QStringLiteral("passed"),
+                     unmet.isEmpty() && progress.actions_executed.load() > 0}});
   }
 
   auto pacing = m_frame_pacing.report(

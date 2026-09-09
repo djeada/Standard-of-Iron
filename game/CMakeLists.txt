@@ -51,6 +51,7 @@ add_library(
     core/event_manager.cpp
     core/simulation_timing.cpp
     core/movement_facts.cpp
+    core/presentation_coverage.cpp
     core/movement_trace.cpp
     core/movement_trace_analysis.cpp
     session/simulation_clock.cpp

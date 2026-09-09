@@ -34,6 +34,15 @@ public:
     set_data(data.data(), data.size() * sizeof(T), usage);
   }
 
+  void reserve(size_t size, Usage usage = Usage::Dynamic);
+
+  void update_sub_data(const void* data, size_t size);
+
+  template <typename T>
+  void update_sub_data(const std::vector<T>& data) {
+    update_sub_data(data.data(), data.size() * sizeof(T));
+  }
+
   [[nodiscard]] auto size_bytes() const -> std::size_t { return m_size_bytes; }
 
   [[nodiscard]] auto id() const -> GLuint { return m_buffer; }

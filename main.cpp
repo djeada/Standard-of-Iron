@@ -41,6 +41,10 @@
 #include <optional>
 #include <string_view>
 
+#include "app/core/benchmark_action_fixture.h"
+#include "app/viewmodels/orders_view_model.h"
+#include "app/viewmodels/production_view_model.h"
+#include "game/core/presentation_coverage.h"
 #include "render/gl/context_requirements.h"
 #include "render/profiling/frame_swap_clock.h"
 #include "render/profiling/presentation_cycle.h"
@@ -706,6 +710,8 @@ auto main(int argc, char* argv[]) -> int {
   int screenshot_delay_ms = 0;
   double runtime_benchmark_seconds = 0.0;
   QString runtime_benchmark_output;
+  QString runtime_action_fixture_path;
+  std::optional<App::Core::BenchmarkActionFixture> runtime_action_fixture;
 
   {
     QCommandLineParser parser;
@@ -788,6 +794,10 @@ auto main(int argc, char* argv[]) -> int {
         "benchmark-output",
         "Write the runtime benchmark JSON report to this path.",
         "path");
+    QCommandLineOption const action_fixture_opt(
+        "action-fixture",
+        "Drive a versioned battle/UI action fixture during the benchmark.",
+        "path");
     parser.addOption(force_software_opt);
     parser.addOption(quality_opt);
     parser.addOption(renderer_self_test_opt);
@@ -807,6 +817,7 @@ auto main(int argc, char* argv[]) -> int {
     parser.addOption(screenshot_delay_opt);
     parser.addOption(benchmark_seconds_opt);
     parser.addOption(benchmark_output_opt);
+    parser.addOption(action_fixture_opt);
     parser.process(app);
 
     component_gallery_requested = parser.isSet(component_gallery_opt);
@@ -876,6 +887,22 @@ auto main(int argc, char* argv[]) -> int {
       if (!runtime_benchmark_output.isEmpty()) {
         qputenv("SOI_RUNTIME_BENCHMARK_OUTPUT", runtime_benchmark_output.toUtf8());
       }
+    }
+
+    runtime_action_fixture_path = parser.value(action_fixture_opt).trimmed();
+    if (!runtime_action_fixture_path.isEmpty()) {
+      QString fixture_error;
+      runtime_action_fixture = App::Core::load_benchmark_action_fixture(
+          runtime_action_fixture_path, &fixture_error);
+      if (!runtime_action_fixture.has_value()) {
+        qCritical().noquote() << "Invalid --action-fixture:" << fixture_error;
+        return 2;
+      }
+      qputenv("SOI_ACTION_FIXTURE_NAME", runtime_action_fixture->name.toUtf8());
+      qputenv("SOI_ACTION_FIXTURE_PATH", runtime_action_fixture_path.toUtf8());
+      qputenv(
+          "SOI_ACTION_FIXTURE_REQUIRED",
+          runtime_action_fixture->required_coverage.join(QLatin1Char(',')).toUtf8());
     }
 
     std::optional<Render::ShaderQuality> requested;
@@ -1395,6 +1422,90 @@ auto main(int argc, char* argv[]) -> int {
           progress.completed_cycles = static_cast<std::uint64_t>(seconds / 20.0);
         });
     cycle_timer->start(16);
+  }
+
+  if (runtime_benchmark_seconds > 0.0 && runtime_action_fixture.has_value()) {
+    auto* action_timer = new QTimer(game_engine.get());
+    auto elapsed = std::make_shared<QElapsedTimer>();
+    auto previous_seconds = std::make_shared<double>(0.0);
+    auto fixture =
+        std::make_shared<App::Core::BenchmarkActionFixture>(*runtime_action_fixture);
+    QObject::connect(
+        action_timer,
+        &QTimer::timeout,
+        game_engine.get(),
+        [game_ptr = game_engine.get(), window, elapsed, previous_seconds, fixture]() {
+          if (game_ptr->is_loading() || !game_ptr->simulation_thread_running()) {
+            elapsed->invalidate();
+            *previous_seconds = 0.0;
+            return;
+          }
+          if (!elapsed->isValid()) {
+            elapsed->start();
+            *previous_seconds = 0.0;
+            return;
+          }
+          const double seconds = static_cast<double>(elapsed->elapsed()) / 1000.0;
+          const auto due =
+              App::Core::actions_between(*fixture, *previous_seconds, seconds);
+          *previous_seconds = seconds;
+          if (due.empty()) {
+            return;
+          }
+          auto* orders = qobject_cast<App::ViewModels::OrdersViewModel*>(
+              game_ptr->orders_view_model());
+          auto* production = qobject_cast<App::ViewModels::ProductionViewModel*>(
+              game_ptr->production_view_model());
+          if (orders == nullptr || window == nullptr) {
+            return;
+          }
+          const qreal width = window->width();
+          const qreal height = window->height();
+          for (const auto& action : due) {
+            const qreal sx = action.x * width;
+            const qreal sy = action.y * height;
+            if (action.action == QLatin1String("select_all")) {
+              orders->select_all_troops();
+            } else if (action.action == QLatin1String("select_at")) {
+              orders->on_click_select(sx, sy, false);
+            } else if (action.action == QLatin1String("select_by_type")) {
+              orders->select_by_type(action.argument);
+            } else if (action.action == QLatin1String("move_to")) {
+              orders->on_right_click(sx, sy);
+            } else if (action.action == QLatin1String("attack_at")) {
+              orders->attack_at(sx, sy);
+            } else if (action.action == QLatin1String("guard_at")) {
+              orders->guard_at(sx, sy);
+            } else if (action.action == QLatin1String("patrol_at")) {
+              orders->patrol_at(sx, sy);
+            } else if (action.action == QLatin1String("hover_at")) {
+              orders->set_hover_at_screen(sx, sy);
+            } else if (action.action == QLatin1String("stop")) {
+              orders->stop();
+            } else if (action.action == QLatin1String("hold")) {
+              orders->hold();
+            } else if (action.action == QLatin1String("run")) {
+              orders->run();
+            } else if (action.action == QLatin1String("guard")) {
+              orders->guard();
+            } else if (action.action == QLatin1String("build_panel")) {
+              orders->build();
+            } else if (production != nullptr) {
+              if (action.action == QLatin1String("production_panel")) {
+                (void)production->selected_state();
+                Engine::Core::note_coverage(
+                    Engine::Core::CoverageEvent::ProductionOrder, 0U);
+              } else if (action.action == QLatin1String("recruit")) {
+                production->recruit_near_selected(action.argument);
+              } else if (action.action == QLatin1String("set_rally")) {
+                production->set_rally_at_screen(sx, sy);
+              }
+            }
+            Render::Profiling::presentation_cycle_progress().actions_executed.fetch_add(
+                1);
+          }
+        });
+    action_timer->start(16);
   }
 
   qInfo() << "Starting event loop...";

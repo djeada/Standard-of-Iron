@@ -12,6 +12,7 @@
 #include "character_wear_binding.h"
 #include "render/bone_palette_arena.h"
 #include "render/draw_commands.h"
+#include "render/gl/gl_resource_tracking.h"
 #include "render/gl/shader_cache.h"
 #include "render/gl/texture.h"
 #include "render/gl/ubo_bindings.h"
@@ -259,6 +260,7 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
     } else {
       if (m_palette_ubo == 0) {
         fn->glGenBuffers(1, &m_palette_ubo);
+        note_buffers_created(1);
       }
       if (m_palette_ubo != 0) {
         if (m_palette_slot_stride_bytes == 0) {
@@ -277,6 +279,7 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
                            static_cast<GLsizeiptr>(ring_bytes),
                            nullptr,
                            GL_STREAM_DRAW);
+          note_buffer_storage(static_cast<std::size_t>(ring_bytes), false);
           m_palette_ubo_capacity_bytes = ring_bytes;
           m_palette_ring_cursor = 0;
         }
@@ -288,6 +291,8 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
                            static_cast<GLsizeiptr>(m_palette_ubo_capacity_bytes),
                            nullptr,
                            GL_STREAM_DRAW);
+          note_buffer_storage(static_cast<std::size_t>(m_palette_ubo_capacity_bytes),
+                              false);
           m_palette_ring_cursor = 0;
           ++m_palette_ring_orphans;
         }
@@ -299,6 +304,8 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
                             offset,
                             static_cast<GLsizeiptr>(BonePaletteArena::k_palette_bytes),
                             m_palette_scratch.data());
+        note_buffer_transfer(
+            static_cast<std::size_t>(BonePaletteArena::k_palette_bytes));
         fn->glBindBufferRange(
             GL_UNIFORM_BUFFER,
             k_bone_palette_binding_point,

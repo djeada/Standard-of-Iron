@@ -144,8 +144,9 @@ auto SelectedUnitsModel::grouped_by_type() const -> QVariantList {
     unit[QStringLiteral("activity_state")] = activity_text(activity, true);
     units.append(unit);
   }
-  return App::Models::selection_groups_to_variant(
-      App::Models::group_selection_by_type(units));
+  auto groups = App::Models::group_selection_by_type(units);
+  m_activity_dwell.settle(groups);
+  return App::Models::selection_groups_to_variant(groups);
 }
 
 void SelectedUnitsModel::refresh() {

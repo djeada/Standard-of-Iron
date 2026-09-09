@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -10,12 +12,77 @@
 
 namespace Game::Systems::AI {
 
+auto AICommandFilter::arbitrate_move_ownership(const std::vector<AICommand>& commands)
+    -> std::vector<AICommand> {
+  std::unordered_map<Engine::Core::EntityID, std::size_t> winner;
+  winner.reserve(commands.size());
+
+  for (std::size_t index = 0; index < commands.size(); ++index) {
+    const auto& cmd = commands[index];
+    if (cmd.type != AICommandType::MoveUnits) {
+      continue;
+    }
+    for (const auto unit : cmd.units) {
+      auto standing = winner.find(unit);
+      if (standing == winner.end()) {
+        winner.emplace(unit, index);
+        continue;
+      }
+      if (cmd.owner > commands[standing->second].owner) {
+        standing->second = index;
+      }
+    }
+  }
+
+  std::vector<AICommand> arbitrated;
+  arbitrated.reserve(commands.size());
+
+  for (std::size_t index = 0; index < commands.size(); ++index) {
+    const auto& cmd = commands[index];
+    if (cmd.type != AICommandType::MoveUnits) {
+      arbitrated.push_back(cmd);
+      continue;
+    }
+
+    AICommand kept = cmd;
+    kept.units.clear();
+    kept.move_target_x.clear();
+    kept.move_target_y.clear();
+    kept.move_target_z.clear();
+
+    for (std::size_t i = 0; i < cmd.units.size(); ++i) {
+      auto standing = winner.find(cmd.units[i]);
+      if (standing == winner.end() || standing->second != index) {
+        continue;
+      }
+      kept.units.push_back(cmd.units[i]);
+      if (i < cmd.move_target_x.size()) {
+        kept.move_target_x.push_back(cmd.move_target_x[i]);
+      }
+      if (i < cmd.move_target_y.size()) {
+        kept.move_target_y.push_back(cmd.move_target_y[i]);
+      }
+      if (i < cmd.move_target_z.size()) {
+        kept.move_target_z.push_back(cmd.move_target_z[i]);
+      }
+    }
+
+    if (!kept.units.empty()) {
+      arbitrated.push_back(std::move(kept));
+    }
+  }
+
+  return arbitrated;
+}
+
 auto AICommandFilter::filter(const std::vector<AICommand>& commands,
                              float current_time) -> std::vector<AICommand> {
-  std::vector<AICommand> filtered;
-  filtered.reserve(commands.size());
+  const auto arbitrated = arbitrate_move_ownership(commands);
 
-  for (const auto& cmd : commands) {
+  std::vector<AICommand> filtered;
+  filtered.reserve(arbitrated.size());
+
+  for (const auto& cmd : arbitrated) {
 
     if (cmd.type == AICommandType::StartProduction ||
         cmd.type == AICommandType::SetRallyPoint || cmd.units.empty()) {

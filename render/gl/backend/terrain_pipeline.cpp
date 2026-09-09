@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <numbers>
 
+#include "render/gl/gl_resource_tracking.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/shader_cache.h"
@@ -309,12 +310,16 @@ void TerrainPipeline::initialize_grass_geometry() {
   }
 
   gl->glGenVertexArrays(1, &m_grass_vao);
+  note_vertex_arrays_created(1);
   gl->glBindVertexArray(m_grass_vao);
 
   gl->glGenBuffers(1, &m_grass_vertex_buffer);
+  note_buffers_created(1);
   gl->glBindBuffer(GL_ARRAY_BUFFER, m_grass_vertex_buffer);
   gl->glBufferData(
       GL_ARRAY_BUFFER, sizeof(blade_vertices), blade_vertices, GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(sizeof(blade_vertices)),
+                      blade_vertices != nullptr);
   m_grass_vertex_count = grass_blade_vertex_count;
 
   gl->glEnableVertexAttribArray(position);

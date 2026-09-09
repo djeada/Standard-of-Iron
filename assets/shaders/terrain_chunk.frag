@@ -223,8 +223,7 @@ float terrain_sky_openness(vec2 uv, float center_height) {
   return clamp(1.0 - horizon_sum / 6.0, 0.0, 1.0);
 }
 
-const float k_soi_tactical_near = 58.0;
-const float k_soi_tactical_far = 115.0;
+#include "ground_readability.glsl"
 
 vec3 unseen_terrain_color() {
 
@@ -275,7 +274,7 @@ void main() {
   vec3 to_camera = u_camera_pos - v_world_pos;
   float view_distance = max(length(to_camera), 1e-4);
   vec3 view_dir = to_camera / view_distance;
-  float tactical = smoothstep(k_soi_tactical_near, k_soi_tactical_far, view_distance);
+  float tactical = ground_tactical_distance(view_distance);
   float biome_forest = float(u_ground_type == 0);
   float biome_dry = float(u_ground_type == 1);
   float biome_rocky = float(u_ground_type == 2);
@@ -473,9 +472,9 @@ void main() {
   }
 #endif
 
-  surface_grain *= mix(1.0, 0.62, tactical);
-  granular *= mix(1.0, 0.68, tactical);
-  speckle *= mix(1.0, 0.58, tactical);
+  surface_grain *= mix(1.0, 0.25, tactical);
+  granular *= mix(1.0, 0.30, tactical);
+  speckle *= mix(1.0, 0.20, tactical);
 
   surface_grain *= k_soi_terrain_detail_damping;
   granular *= k_soi_terrain_detail_damping;
@@ -1082,7 +1081,7 @@ void main() {
             0.96);
   float relief_amp = 0.055 + (0.055 + 0.060 * u_soil_roughness) * soil_mix +
                      0.07 * rock_mask + 0.025 * exposed_ground + 0.040 * bare_patch;
-  relief_amp *= mix(1.0, 0.78, tactical);
+  relief_amp *= mix(1.0, 0.45, tactical);
   relief_amp *= k_soi_terrain_relief_damping;
   vec3 relief_offset =
       mix(vec3(relief_gradient.x, 0.0, relief_gradient.y),

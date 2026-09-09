@@ -17,6 +17,8 @@ struct ApplyReport {
   int refused_production = 0;
 
   int refused_construction = 0;
+
+  int stale_subjects = 0;
 };
 
 auto apply(Engine::Core::World& world,
