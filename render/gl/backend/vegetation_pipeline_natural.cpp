@@ -20,6 +20,7 @@
 #include "gl/shader_cache.h"
 #include "mesh_buffers.h"
 #include "prop_mesh_builder.h"
+#include "render/gl/backend/iron_ore_mesh.h"
 #include "render/gl/backend/ring_loft_builder.h"
 #include "render/gl/backend/static_mesh_upload.h"
 #include "render/gl/platform_gl.h"
@@ -563,23 +564,8 @@ void VegetationPipeline::initialize_iron_ore_pipeline() {
   initializeOpenGLFunctions();
   release_mesh_buffers(*this, m_iron_ore_mesh);
 
-  std::vector<std::pair<QVector3D, QVector3D>> verts;
-  std::vector<uint16_t> idx;
-
-  append_oriented_box(
-      verts, idx, {-0.58F, 0.02F, -0.20F}, {0.48F, 0.12F, 0.18F}, 0.24F, 0.18F);
-  append_oriented_box(
-      verts, idx, {-0.42F, 0.10F, -0.18F}, {0.26F, 0.38F, 0.08F}, 0.20F, 0.17F);
-  append_oriented_box(
-      verts, idx, {-0.30F, 0.34F, -0.12F}, {-0.04F, 0.66F, 0.02F}, 0.13F, 0.12F);
-  append_oriented_box(
-      verts, idx, {0.00F, 0.30F, -0.06F}, {0.30F, 0.56F, 0.10F}, 0.12F, 0.10F);
-  append_oriented_box(
-      verts, idx, {-0.18F, 0.10F, 0.24F}, {0.20F, 0.31F, 0.42F}, 0.14F, 0.10F);
-  append_oriented_box(
-      verts, idx, {-0.32F, 0.09F, -0.38F}, {0.08F, 0.27F, -0.30F}, 0.12F, 0.09F);
-
-  upload_prop_mesh_impl(verts, idx, m_iron_ore_mesh);
+  PropMeshData mesh = build_iron_ore_mesh();
+  upload_prop_mesh_impl(mesh.vertices, mesh.indices, m_iron_ore_mesh);
 }
 
 void VegetationPipeline::initialize_cypress_pipeline() {

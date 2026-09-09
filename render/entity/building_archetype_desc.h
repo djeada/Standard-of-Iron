@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cstdint>
+#include <source_location>
 #include <string>
 #include <vector>
 
@@ -39,6 +40,9 @@ inline constexpr auto k_building_state_mask_intact =
 
 struct BuildingPartDesc {
   BuildingPartKind kind{BuildingPartKind::Box};
+
+  std::string name;
+  std::source_location origin{};
   QVector3D point_a{0.0F, 0.0F, 0.0F};
   QVector3D point_b{1.0F, 1.0F, 1.0F};
   QVector3D color{1.0F, 1.0F, 1.0F};
@@ -56,41 +60,53 @@ class BuildingArchetypeDesc {
 public:
   explicit BuildingArchetypeDesc(std::string name);
 
+  void set_label(std::string label);
+  [[nodiscard]] auto label() const -> const std::string& { return m_label; }
+
   void add_box(const QVector3D& center,
                const QVector3D& scale,
                const QVector3D& color,
-               BuildingStateMask states = BuildingStateMask::All);
+               BuildingStateMask states = BuildingStateMask::All,
+               std::source_location origin = std::source_location::current());
   void add_palette_box(const QVector3D& center,
                        const QVector3D& scale,
                        std::uint8_t palette_slot,
-                       BuildingStateMask states = BuildingStateMask::All);
+                       BuildingStateMask states = BuildingStateMask::All,
+                       std::source_location origin = std::source_location::current());
 
-  void add_palette_rotated_box(const QVector3D& center,
-                               const QVector3D& scale,
-                               const QVector3D& euler_deg,
-                               std::uint8_t palette_slot,
-                               BuildingStateMask states = BuildingStateMask::All);
+  void add_palette_rotated_box(
+      const QVector3D& center,
+      const QVector3D& scale,
+      const QVector3D& euler_deg,
+      std::uint8_t palette_slot,
+      BuildingStateMask states = BuildingStateMask::All,
+      std::source_location origin = std::source_location::current());
 
   void add_rotated_box(const QVector3D& center,
                        const QVector3D& scale,
                        const QVector3D& euler_deg,
                        const QVector3D& color,
-                       BuildingStateMask states = BuildingStateMask::All);
+                       BuildingStateMask states = BuildingStateMask::All,
+                       std::source_location origin = std::source_location::current());
   void add_cylinder(const QVector3D& start,
                     const QVector3D& end,
                     float radius,
                     const QVector3D& color,
-                    BuildingStateMask states = BuildingStateMask::All);
+                    BuildingStateMask states = BuildingStateMask::All,
+                    std::source_location origin = std::source_location::current());
   void add_cone(const QVector3D& base,
                 const QVector3D& tip,
                 float radius,
                 const QVector3D& color,
-                BuildingStateMask states = BuildingStateMask::All);
-  void add_palette_cylinder(const QVector3D& start,
-                            const QVector3D& end,
-                            float radius,
-                            std::uint8_t palette_slot,
-                            BuildingStateMask states = BuildingStateMask::All);
+                BuildingStateMask states = BuildingStateMask::All,
+                std::source_location origin = std::source_location::current());
+  void
+  add_palette_cylinder(const QVector3D& start,
+                       const QVector3D& end,
+                       float radius,
+                       std::uint8_t palette_slot,
+                       BuildingStateMask states = BuildingStateMask::All,
+                       std::source_location origin = std::source_location::current());
 
   void scale_uniformly(float factor);
 
@@ -101,7 +117,26 @@ public:
 
 private:
   std::string m_name;
+  std::string m_label;
   std::vector<BuildingPartDesc> m_parts;
+};
+
+class BuildingPartLabel {
+public:
+  BuildingPartLabel(BuildingArchetypeDesc& desc, std::string label)
+      : m_desc(&desc)
+      , m_previous(desc.label()) {
+    desc.set_label(std::move(label));
+  }
+  BuildingPartLabel(const BuildingPartLabel&) = delete;
+  auto operator=(const BuildingPartLabel&) -> BuildingPartLabel& = delete;
+  BuildingPartLabel(BuildingPartLabel&&) = delete;
+  auto operator=(BuildingPartLabel&&) -> BuildingPartLabel& = delete;
+  ~BuildingPartLabel() { m_desc->set_label(std::move(m_previous)); }
+
+private:
+  BuildingArchetypeDesc* m_desc;
+  std::string m_previous;
 };
 
 auto build_building_archetype(const BuildingArchetypeDesc& desc,

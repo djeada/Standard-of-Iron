@@ -354,6 +354,35 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
 
   if (static_cast<int>(available.size()) < required ||
       !commander_may_attack(context.strategy_config)) {
+    wave.assembling = false;
+    wave.assembled = 0;
+    wave.assembly_required = 0;
+    return;
+  }
+
+  if (!wave.assembling) {
+    wave.assembling = true;
+    wave.assembling_since = snapshot.game_time;
+  }
+  constexpr float k_assembled_share = 0.60F;
+  constexpr float k_assembly_patience_seconds = 30.0F;
+  const float assembly_radius = std::max(8.0F, context.macro_targets.assembly_radius);
+  int assembled = 0;
+  for (const auto* entity : available) {
+    if (distance_squared(entity->pos_x,
+                         0.0F,
+                         entity->pos_z,
+                         context.rally_x,
+                         0.0F,
+                         context.rally_z) <= assembly_radius * assembly_radius) {
+      ++assembled;
+    }
+  }
+  wave.assembled = assembled;
+  wave.assembly_required =
+      static_cast<int>(std::ceil(k_assembled_share * static_cast<float>(required)));
+  if (assembled < wave.assembly_required &&
+      snapshot.game_time - wave.assembling_since < k_assembly_patience_seconds) {
     return;
   }
 
@@ -387,6 +416,7 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
   wave.target_z = target->pos_z;
   wave.committed = true;
   wave.committed_at = snapshot.game_time;
+  wave.assembling = false;
 }
 
 auto wave_objective(const AISnapshot& snapshot,

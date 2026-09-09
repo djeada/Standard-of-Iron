@@ -112,7 +112,7 @@ void add_granary_shed(BuildingArchetypeDesc& desc, const RomanFarmPalette& c) {
 
   for (float const sx : {-1.0F, 1.0F}) {
     desc.add_box(centre +
-                     QVector3D(sx * (k_half_x - 0.02F), 0.11F + k_wall_h * 0.5F, 0.0F),
+                     QVector3D(sx * (k_half_x - 0.006F), 0.11F + k_wall_h * 0.5F, 0.0F),
                  QVector3D(0.02F, k_wall_h * 0.5F, k_half_z + 0.01F),
                  c.cedar,
                  k_building_state_mask_intact);
@@ -276,7 +276,7 @@ void add_haystack(BuildingArchetypeDesc& desc, const RomanFarmPalette& c) {
                     BuildingStateMask::Destroyed);
 }
 
-auto build_farm_archetype(BuildingState state, int stage) -> RenderArchetype {
+auto build_farm_desc_impl(BuildingState state, int stage) -> BuildingArchetypeDesc {
   RomanFarmPalette const c;
   BuildingArchetypeDesc desc("roman_farm_stage_" + std::to_string(stage));
 
@@ -316,7 +316,11 @@ auto build_farm_archetype(BuildingState state, int stage) -> RenderArchetype {
                                  .count = 4,
                                  .seed = 353});
 
-  return build_building_archetype(desc, state);
+  return desc;
+}
+
+auto build_farm_archetype(BuildingState state, int stage) -> RenderArchetype {
+  return build_building_archetype(build_farm_desc_impl(state, stage), state);
 }
 
 auto farm_archetype(BuildingState state, int stage) -> const RenderArchetype& {
@@ -325,6 +329,10 @@ auto farm_archetype(BuildingState state, int stage) -> const RenderArchetype& {
 }
 
 } // namespace
+
+auto build_farm_desc(BuildingState state, int stage) -> BuildingArchetypeDesc {
+  return build_farm_desc_impl(state, stage);
+}
 
 void register_farm_renderer(EntityRendererRegistry& registry) {
   register_farm_renderer_variant(

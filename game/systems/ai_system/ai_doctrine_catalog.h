@@ -63,16 +63,61 @@ struct TownPlanStep {
   float rotation = 0.0F;
 };
 
+enum class SettlementForm {
+
+  OpenCamp,
+
+  ClosedFort,
+
+  RingTown,
+};
+
+[[nodiscard]] auto settlement_form_name(SettlementForm form) -> const char*;
+
+enum class MusterSide {
+  Inside,
+  Outside
+};
+
+struct TownPlanOffset {
+  float x = 0.0F;
+  float z = 0.0F;
+};
+
 struct TownPlan {
+
+  static constexpr float k_anchor_clearance = 9.0F;
+
   std::string id;
   std::string display_name;
   std::vector<TownPlanStep> steps;
+
+  int silhouette_steps = 0;
+
+  [[nodiscard]] auto is_silhouette_step(int slot) const -> bool {
+    return slot >= 0 && slot < silhouette_steps;
+  }
 
   [[nodiscard]] auto wall_step_count() const -> int;
 
   [[nodiscard]] auto step_count(std::string_view building) const -> int;
 
   [[nodiscard]] auto engine_step_count() const -> int;
+
+  [[nodiscard]] auto tower_step_count() const -> int;
+
+  [[nodiscard]] auto gate_step_count() const -> int;
+
+  [[nodiscard]] auto form() const -> SettlementForm;
+
+  [[nodiscard]] auto front_gate() const -> const TownPlanStep*;
+
+  [[nodiscard]] auto front_line_z() const -> float;
+
+  [[nodiscard]] auto muster_offset(MusterSide side) const -> TownPlanOffset;
+
+  [[nodiscard]] static auto
+  compass_coverage(const std::vector<TownPlanOffset>& steps) -> float;
 };
 
 struct AIDoctrine {

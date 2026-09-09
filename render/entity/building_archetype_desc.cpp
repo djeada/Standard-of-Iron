@@ -138,12 +138,19 @@ BuildingArchetypeDesc::BuildingArchetypeDesc(std::string name)
     : m_name(std::move(name)) {
 }
 
+void BuildingArchetypeDesc::set_label(std::string label) {
+  m_label = std::move(label);
+}
+
 void BuildingArchetypeDesc::add_box(const QVector3D& center,
                                     const QVector3D& scale,
                                     const QVector3D& color,
-                                    BuildingStateMask states) {
+                                    BuildingStateMask states,
+                                    std::source_location origin) {
   BuildingPartDesc part;
   part.kind = BuildingPartKind::Box;
+  part.name = m_label;
+  part.origin = origin;
   part.point_a = center;
   part.point_b = scale;
   part.color = color;
@@ -154,9 +161,12 @@ void BuildingArchetypeDesc::add_box(const QVector3D& center,
 void BuildingArchetypeDesc::add_palette_box(const QVector3D& center,
                                             const QVector3D& scale,
                                             std::uint8_t palette_slot,
-                                            BuildingStateMask states) {
+                                            BuildingStateMask states,
+                                            std::source_location origin) {
   BuildingPartDesc part;
   part.kind = BuildingPartKind::PaletteBox;
+  part.name = m_label;
+  part.origin = origin;
   part.point_a = center;
   part.point_b = scale;
   part.palette_slot = palette_slot;
@@ -168,9 +178,12 @@ void BuildingArchetypeDesc::add_palette_rotated_box(const QVector3D& center,
                                                     const QVector3D& scale,
                                                     const QVector3D& euler_deg,
                                                     std::uint8_t palette_slot,
-                                                    BuildingStateMask states) {
+                                                    BuildingStateMask states,
+                                                    std::source_location origin) {
   BuildingPartDesc part;
   part.kind = BuildingPartKind::PaletteRotatedBox;
+  part.name = m_label;
+  part.origin = origin;
   part.point_a = center;
   part.point_b = scale;
   part.euler_deg = euler_deg;
@@ -183,9 +196,12 @@ void BuildingArchetypeDesc::add_rotated_box(const QVector3D& center,
                                             const QVector3D& scale,
                                             const QVector3D& euler_deg,
                                             const QVector3D& color,
-                                            BuildingStateMask states) {
+                                            BuildingStateMask states,
+                                            std::source_location origin) {
   BuildingPartDesc part;
   part.kind = BuildingPartKind::RotatedBox;
+  part.name = m_label;
+  part.origin = origin;
   part.point_a = center;
   part.point_b = scale;
   part.euler_deg = euler_deg;
@@ -198,9 +214,12 @@ void BuildingArchetypeDesc::add_cylinder(const QVector3D& start,
                                          const QVector3D& end,
                                          float radius,
                                          const QVector3D& color,
-                                         BuildingStateMask states) {
+                                         BuildingStateMask states,
+                                         std::source_location origin) {
   BuildingPartDesc part;
   part.kind = BuildingPartKind::Cylinder;
+  part.name = m_label;
+  part.origin = origin;
   part.point_a = start;
   part.point_b = end;
   part.color = color;
@@ -213,9 +232,12 @@ void BuildingArchetypeDesc::add_cone(const QVector3D& base,
                                      const QVector3D& tip,
                                      float radius,
                                      const QVector3D& color,
-                                     BuildingStateMask states) {
+                                     BuildingStateMask states,
+                                     std::source_location origin) {
   BuildingPartDesc part;
   part.kind = BuildingPartKind::Cone;
+  part.name = m_label;
+  part.origin = origin;
   part.point_a = base;
   part.point_b = tip;
   part.color = color;
@@ -228,9 +250,12 @@ void BuildingArchetypeDesc::add_palette_cylinder(const QVector3D& start,
                                                  const QVector3D& end,
                                                  float radius,
                                                  std::uint8_t palette_slot,
-                                                 BuildingStateMask states) {
+                                                 BuildingStateMask states,
+                                                 std::source_location origin) {
   BuildingPartDesc part;
   part.kind = BuildingPartKind::PaletteCylinder;
+  part.name = m_label;
+  part.origin = origin;
   part.point_a = start;
   part.point_b = end;
   part.radius = radius;

@@ -8,6 +8,9 @@
 #include <QLoggingCategory>
 
 #include <algorithm>
+#include <array>
+#include <cmath>
+#include <limits>
 #include <mutex>
 #include <unordered_map>
 #include <utility>
@@ -107,6 +110,8 @@ void parse_town_plans(const QJsonObject& root,
     TownPlan plan;
     plan.id = it.key().toStdString();
     plan.display_name = read_string(plan_object, "display_name", plan.id);
+    plan.silhouette_steps = std::max(
+        0, static_cast<int>(read_float(plan_object, "silhouette_steps", 0.0F)));
 
     const auto steps = plan_object.value(QLatin1String("steps"));
     if (!steps.isArray()) {
@@ -127,12 +132,20 @@ void parse_town_plans(const QJsonObject& root,
       step.x = read_float(step_object, "x", 0.0F);
       step.z = read_float(step_object, "z", 0.0F);
       step.rotation = read_float(step_object, "rotation", 0.0F);
+      if (std::hypot(step.x, step.z) < TownPlan::k_anchor_clearance) {
+
+        qCWarning(logger) << "town plan" << it.key() << "puts a"
+                          << QString::fromStdString(step.building) << "at" << step.x
+                          << step.z << "inside the base anchor; it will never be built";
+      }
       plan.steps.push_back(std::move(step));
     }
     if (plan.steps.empty()) {
       qCWarning(logger) << "town plan" << it.key() << "has no usable steps; skipped";
       continue;
     }
+    plan.silhouette_steps =
+        std::min(plan.silhouette_steps, static_cast<int>(plan.steps.size()));
     out.emplace(plan.id, std::move(plan));
   }
 }
@@ -360,6 +373,212 @@ auto TownPlan::wall_step_count() const -> int {
     }
   }
   return count;
+}
+
+auto TownPlan::tower_step_count() const -> int {
+  return step_count("defense_tower");
+}
+
+auto TownPlan::gate_step_count() const -> int {
+  return step_count("wall_gate");
+}
+
+namespace {
+
+constexpr int k_compass_sectors = 24;
+
+auto is_wall_step(const TownPlanStep& step) -> bool {
+  return step.building == "wall_segment" || step.building == "wall_gate";
+}
+
+auto is_fortification_step(const TownPlanStep& step) -> bool {
+  return is_wall_step(step) || step.building == "defense_tower";
+}
+
+auto sector_of(float x, float z) -> int {
+  const float angle = std::atan2(x, -z);
+  const float turn = (angle + 3.14159265F) / (2.0F * 3.14159265F);
+  return std::clamp(
+      static_cast<int>(turn * k_compass_sectors), 0, k_compass_sectors - 1);
+}
+
+} // namespace
+
+auto settlement_form_name(SettlementForm form) -> const char* {
+  switch (form) {
+  case SettlementForm::OpenCamp:
+    return "open_camp";
+  case SettlementForm::ClosedFort:
+    return "closed_fort";
+  case SettlementForm::RingTown:
+    return "ring_town";
+  }
+  return "open_camp";
+}
+
+auto TownPlan::compass_coverage(const std::vector<TownPlanOffset>& offsets) -> float {
+  std::array<bool, k_compass_sectors> covered{};
+  for (const auto& offset : offsets) {
+    covered[static_cast<std::size_t>(sector_of(offset.x, offset.z))] = true;
+  }
+  int count = 0;
+  for (const bool hit : covered) {
+    count += hit ? 1 : 0;
+  }
+  return static_cast<float>(count) / static_cast<float>(k_compass_sectors);
+}
+
+namespace {
+
+auto outer_wall_radii(const std::vector<TownPlanStep>& steps)
+    -> std::array<float, k_compass_sectors> {
+  std::array<float, k_compass_sectors> outer_radius{};
+  for (const auto& step : steps) {
+    if (!is_wall_step(step)) {
+      continue;
+    }
+    auto& radius = outer_radius[static_cast<std::size_t>(sector_of(step.x, step.z))];
+    radius = std::max(radius, std::hypot(step.x, step.z));
+  }
+  return outer_radius;
+}
+
+} // namespace
+
+auto TownPlan::form() const -> SettlementForm {
+
+  const auto outer_radius = outer_wall_radii(steps);
+  std::vector<TownPlanOffset> walls;
+  for (const auto& step : steps) {
+    if (is_wall_step(step)) {
+      walls.push_back({step.x, step.z});
+    }
+  }
+  constexpr float k_closed_coverage = 0.85F;
+  if (walls.empty() || compass_coverage(walls) < k_closed_coverage) {
+    return SettlementForm::OpenCamp;
+  }
+  float nearest = std::numeric_limits<float>::infinity();
+  float farthest = 0.0F;
+  float sum = 0.0F;
+  int sectors = 0;
+  for (const float radius : outer_radius) {
+    if (radius <= 0.0F) {
+      continue;
+    }
+    nearest = std::min(nearest, radius);
+    farthest = std::max(farthest, radius);
+    sum += radius;
+    ++sectors;
+  }
+
+  constexpr float k_ring_radial_swing = 0.14F;
+  const float mean = sum / static_cast<float>(std::max(1, sectors));
+  const bool round = mean > 0.0F && (farthest - nearest) / mean < k_ring_radial_swing;
+  return round ? SettlementForm::RingTown : SettlementForm::ClosedFort;
+}
+
+auto TownPlan::front_gate() const -> const TownPlanStep* {
+  const TownPlanStep* gate = nullptr;
+  for (const auto& step : steps) {
+    if (step.building == "wall_gate" && (gate == nullptr || step.z < gate->z)) {
+      gate = &step;
+    }
+  }
+  return gate;
+}
+
+auto TownPlan::front_line_z() const -> float {
+  if (const auto* gate = front_gate(); gate != nullptr) {
+    return gate->z;
+  }
+  float fortified = std::numeric_limits<float>::infinity();
+  float any = std::numeric_limits<float>::infinity();
+  for (const auto& step : steps) {
+    any = std::min(any, step.z);
+    if (is_fortification_step(step)) {
+      fortified = std::min(fortified, step.z);
+    }
+  }
+  if (std::isfinite(fortified)) {
+    return fortified;
+  }
+  return std::isfinite(any) ? any : -k_anchor_clearance;
+}
+
+auto TownPlan::muster_offset(MusterSide side) const -> TownPlanOffset {
+  const auto* gate = front_gate();
+  const float axis_x = gate != nullptr ? gate->x : 0.0F;
+  const float front = front_line_z();
+
+  constexpr float k_outside_reach = 7.0F;
+  if (side == MusterSide::Outside) {
+    return {axis_x, front - k_outside_reach};
+  }
+
+  constexpr float k_behind_front = 3.0F;
+  constexpr float k_inner_margin = 1.5F;
+  constexpr float k_scan_step = 0.5F;
+  const float innermost = -(k_anchor_clearance + k_inner_margin);
+  const float outermost = std::min(front + k_behind_front, innermost);
+
+  TownPlanOffset best{axis_x, innermost};
+  float best_clearance = -1.0F;
+
+  for (const float side : {0.0F, -3.0F, 3.0F, -6.0F, 6.0F}) {
+    const float x = axis_x + side;
+    for (float z = outermost; z <= innermost + 1.0e-3F; z += k_scan_step) {
+      if (std::hypot(x, z) < k_anchor_clearance + k_inner_margin) {
+        continue;
+      }
+      float clearance = std::numeric_limits<float>::infinity();
+      for (const auto& step : steps) {
+        clearance = std::min(clearance, std::hypot(step.x - x, step.z - z));
+      }
+
+      const float scored = clearance - std::abs(side) * 0.15F;
+      if (scored > best_clearance + 1.0e-3F) {
+        best_clearance = scored;
+        best = {x, z};
+      }
+    }
+  }
+
+  constexpr float k_yard_clearance = 2.5F;
+  if (best_clearance >= k_yard_clearance) {
+    return best;
+  }
+  const auto outer_radius = outer_wall_radii(steps);
+  float wall_front = 0.0F;
+  for (const auto& step : steps) {
+    if (is_wall_step(step)) {
+      wall_front = std::min(wall_front, step.z);
+    }
+  }
+  constexpr float k_inside_wall = 2.5F;
+  constexpr float k_grid = 1.0F;
+  for (float z = wall_front + k_inside_wall; z <= innermost + 1.0e-3F; z += k_grid) {
+    for (float x = -30.0F; x <= 30.0F; x += k_grid) {
+      const float radius = std::hypot(x, z);
+      if (radius < k_anchor_clearance + k_inner_margin) {
+        continue;
+      }
+      const float trace = outer_radius[static_cast<std::size_t>(sector_of(x, z))];
+      if (trace <= 0.0F || radius > trace - k_inside_wall) {
+        continue;
+      }
+      float clearance = std::numeric_limits<float>::infinity();
+      for (const auto& step : steps) {
+        clearance = std::min(clearance, std::hypot(step.x - x, step.z - z));
+      }
+      const float scored = std::min(clearance, 5.0F) - std::abs(x - axis_x) * 0.05F;
+      if (scored > best_clearance + 1.0e-3F) {
+        best_clearance = scored;
+        best = {x, z};
+      }
+    }
+  }
+  return best;
 }
 
 auto authored_town_plan(std::string_view plan_id) -> const TownPlan* {

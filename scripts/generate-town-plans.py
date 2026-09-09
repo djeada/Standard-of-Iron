@@ -69,6 +69,8 @@ The runtime snaps every link to its own 2 m lattice, which can move it a metre
 and a half from where the plan put it; a building that stood 3 m from the
 link on paper then finds its slot occupied and is never raised."""
 ANCHOR_CLEARANCE = 9.0
+CORNER_RUN_CELLS = 4
+SKELETON_POSTS = 18
 WALL_CAP = 128
 TOWER_CAP = 12
 HOME_CAP = 12
@@ -80,6 +82,8 @@ class Step:
     x: float
     z: float
     rotation: float | None = None
+    corner: bool = False
+    """A link at the end of a straight run: where the outline turns."""
 
     def to_json(self) -> dict:
         entry: dict = {
@@ -98,6 +102,14 @@ class Blueprint:
     display_name: str
     steps: list[Step] = field(default_factory=list)
     links: list[Step] = field(default_factory=list)
+    silhouette_steps: int = 0
+    """How many opening steps carry the town's identity: the front towers, the
+    skeleton of every wall run and the front gate. The builder lets these go up
+    as soon as the town can feed itself, and holds the infill behind them until
+    the roofs are on, so a fifth of a plan already reads as its shape."""
+
+    def close_silhouette(self) -> None:
+        self.silhouette_steps = len(self.steps)
 
     def add(
         self, building: str, x: float, z: float, rotation: float | None = None
@@ -171,11 +183,34 @@ def wall_steps(
     links: list[Step] = []
     for run in runs:
         rotation = 0.0 if run_is_horizontal(run) else 90.0
-        for cell in run:
-            links.append(Step("wall_segment", float(cell[0]), float(cell[1]), rotation))
+        ordered = sorted(run)
+        for cell in ordered:
+            corner = len(run) >= CORNER_RUN_CELLS and cell in (ordered[0], ordered[-1])
+            links.append(
+                Step("wall_segment", float(cell[0]), float(cell[1]), rotation, corner)
+            )
 
     links.sort(key=lambda step: (step.z, abs(step.x)))
     return links, gate_steps
+
+
+def skeleton(
+    links: list[Step], posts: int = SKELETON_POSTS
+) -> tuple[list[Step], list[Step]]:
+    """Split a circuit into the few links that draw its outline and the infill.
+
+    The outline is every corner plus a post every so often round the trace,
+    front first. Twenty links laid this way already show a rectangle, a star or
+    a ring; the same twenty laid end to end show one straight wall."""
+    if not links:
+        return [], []
+    by_angle = sorted(links, key=lambda step: math.atan2(step.x, -step.z))
+    stride = max(3, len(by_angle) // posts)
+    chosen = {id(step) for index, step in enumerate(by_angle) if index % stride == 0}
+    chosen.update(id(step) for step in links if step.corner)
+    outline = [step for step in links if id(step) in chosen]
+    infill = [step for step in links if id(step) not in chosen]
+    return outline, infill
 
 
 def ring_cells(region: Region) -> set[Cell]:
@@ -195,13 +230,16 @@ def fabian_bulwark() -> Blueprint:
     for x, z in ((-12, 14), (12, 14)):
         plan.add("home", x, z)
     plan.add("marketplace", -17, 0)
-    front = [s for s in outer_links if s.z <= -16]
-    rest = [s for s in outer_links if s.z > -16]
+    outline, infill = skeleton(outer_links)
+    front = [s for s in infill if s.z <= -16]
+    rest = [s for s in infill if s.z > -16]
     for x, z in ((-17, -14), (17, -14), (-8, -14)):
         plan.add("defense_tower", x, z)
+    plan.steps.extend(outline)
+    plan.steps.extend(outer_gates[:1])
+    plan.close_silhouette()
     for step in front:
         plan.steps.append(step)
-    plan.steps.extend(outer_gates[:1])
     for step in rest:
         plan.steps.append(step)
     plan.steps.extend(outer_gates[1:])
@@ -228,18 +266,22 @@ def consular_star() -> Blueprint:
     for x, z in ((-9, 0), (9, 0)):
         plan.add("home", x, z)
     plan.add("marketplace", 0, 8)
-    front = [s for s in links if s.z <= -9]
-    rest = [s for s in links if s.z > -9]
+    outline, infill = skeleton(links)
+    front = [s for s in infill if s.z <= -9]
+    rest = [s for s in infill if s.z > -9]
     towers = sorted(bastion_apexes(0, 0, half_x, half_z, 4, -5.0), key=lambda t: t[1])
     for x, z in towers[:2]:
         plan.add("defense_tower", x, z)
-    plan.steps.extend(front)
+    plan.steps.extend(outline)
     plan.steps.extend(gates[:1])
+    plan.close_silhouette()
+    plan.steps.extend(front)
     for x, z in towers[2:]:
         plan.add("defense_tower", x, z)
     plan.steps.extend(rest)
     plan.steps.extend(gates[1:])
-    for x, z in ((-8, -7), (8, -7), (0, 11), (0, -11)):
+
+    for x, z in ((-8, -7), (8, -7), (0, 11), (6, -10)):
         plan.add("home", x, z)
     plan.add("catapult", -8, 5)
     plan.add("catapult", 8, 5)
@@ -258,8 +300,11 @@ def vanguard_chevron() -> Blueprint:
     plan.add("barracks", 12, 6)
     for x, z in ((-6, 12), (6, 12)):
         plan.add("home", x, z)
-    plan.steps.extend(links)
+    outline, infill = skeleton(links)
     plan.add("defense_tower", 0, -13)
+    plan.steps.extend(outline)
+    plan.close_silhouette()
+    plan.steps.extend(infill)
     plan.add("defense_tower", -22, 3)
     plan.add("defense_tower", 22, 3)
     plan.add("barracks", 0, 16)
@@ -288,13 +333,16 @@ def punic_ring_town() -> Blueprint:
         ),
         key=lambda t: t[1],
     )
+    outline, infill = skeleton(links)
     for x, z in ring_towers[:3]:
         plan.add("defense_tower", x, z)
-    plan.steps.extend([s for s in links if s.z <= -12])
+    plan.steps.extend(outline)
     plan.steps.extend(gates[:1])
+    plan.close_silhouette()
+    plan.steps.extend([s for s in infill if s.z <= -12])
     for x, z in ring_towers[3:]:
         plan.add("defense_tower", x, z)
-    plan.steps.extend([s for s in links if s.z > -12])
+    plan.steps.extend([s for s in infill if s.z > -12])
     plan.steps.extend(gates[1:])
     for x, z in (
         (-13, 1),
@@ -323,6 +371,7 @@ def barcid_raider_camp() -> Blueprint:
     plan.add("defense_tower", 0, -24)
     plan.add("defense_tower", -22, 12)
     plan.add("defense_tower", 22, 12)
+    plan.close_silhouette()
     for x, z in ((-14, 16), (14, 16), (-20, 2), (20, 2), (-8, -8), (8, -8)):
         plan.add("home", x, z)
     return plan
@@ -346,14 +395,17 @@ def hannibalic_hexagon() -> Blueprint:
         for index in range(6)
     ]
     corners.sort(key=lambda corner: corner[1])
+    outline, infill = skeleton(links)
     for x, z in corners[:3]:
         plan.add("defense_tower", x, z)
-    plan.steps.extend([s for s in links if s.z <= -10])
+    plan.steps.extend(outline)
     plan.steps.extend(gates[:1])
+    plan.close_silhouette()
+    plan.steps.extend([s for s in infill if s.z <= -10])
     for x, z in corners[3:]:
         plan.add("defense_tower", x, z)
     plan.add("marketplace", 11, 1)
-    plan.steps.extend([s for s in links if s.z > -10])
+    plan.steps.extend([s for s in infill if s.z > -10])
     plan.steps.extend(gates[1:])
     plan.add("barracks", -28, 4)
     plan.add("barracks", 28, 4)
@@ -433,13 +485,15 @@ def main(argv: list[str] | None = None) -> int:
             if plan.count(name)
         )
         print(
-            f"{plan.id:24s} {plan.display_name:22s} {len(plan.steps):3d} steps: {summary}"
+            f"{plan.id:24s} {plan.display_name:22s} {len(plan.steps):3d} steps "
+            f"({plan.silhouette_steps} silhouette): {summary}"
         )
         for problem in problems:
             print(f"  ERROR: {problem}", file=sys.stderr)
             failures += 1
         plans[plan.id] = {
             "display_name": plan.display_name,
+            "silhouette_steps": plan.silhouette_steps,
             "steps": [step.to_json() for step in plan.steps],
         }
     if failures:

@@ -121,8 +121,9 @@ void add_platform(BuildingArchetypeDesc& desc, const RomanPalette& c) {
   desc.add_box(
       QVector3D(0.0F, 0.14F, 0.0F), QVector3D(1.60F, 0.02F, 1.42F), c.limestone);
 
-  desc.add_box(
-      QVector3D(0.0F, 0.04F, 1.68F), QVector3D(1.02F, 0.04F, 0.20F), c.limestone_dark);
+  desc.add_box(QVector3D(0.0F, 0.032F, 1.68F),
+               QVector3D(1.02F, 0.032F, 0.20F),
+               c.limestone_dark);
   desc.add_box(QVector3D(0.0F, 0.10F, 1.54F),
                QVector3D(0.88F, 0.04F, 0.14F),
                c.limestone_shade,
@@ -154,10 +155,12 @@ void add_walls_and_dado(BuildingArchetypeDesc& desc,
   desc.add_box(QVector3D(cx, k_platform_top + 0.34F, cz),
                QVector3D(hx + 0.010F, 0.24F, hz + 0.010F),
                c.dado);
+
   for (const float qx : {x0, x1}) {
     for (const float qz : {z0, z1}) {
-      desc.add_box(QVector3D(qx, mid(k_platform_top, wall_top), qz),
-                   QVector3D(0.065F, half(k_platform_top, wall_top), 0.065F),
+
+      desc.add_box(QVector3D(qx, mid(k_platform_top, wall_top - 0.05F), qz),
+                   QVector3D(0.040F, half(k_platform_top, wall_top - 0.05F), 0.040F),
                    c.limestone_shade);
     }
   }
@@ -669,8 +672,9 @@ void add_watchtower(BuildingArchetypeDesc& desc,
                  0.26F,
                  false,
                  k_mask_normal);
+
   desc.add_box(QVector3D(k_tower_x, k_tower_eave_y - 0.01F, k_tower_z),
-               QVector3D(k_tower_half + 0.04F, 0.025F, k_tower_half + 0.04F),
+               QVector3D(k_tower_half + 0.075F, 0.025F, k_tower_half + 0.075F),
                c.cedar_dark,
                k_mask_intact);
 }
@@ -682,10 +686,11 @@ void add_rampart(BuildingArchetypeDesc& desc,
 
   desc.add_box(QVector3D(0.0F, 0.09F, -1.66F), QVector3D(1.72F, 0.07F, 0.15F), c.earth);
   desc.add_box(QVector3D(0.0F, 0.17F, -1.66F), QVector3D(1.68F, 0.012F, 0.11F), c.turf);
+
   desc.add_box(
-      QVector3D(-1.66F, 0.09F, -0.16F), QVector3D(0.15F, 0.07F, 1.52F), c.earth);
+      QVector3D(-1.66F, 0.09F, -0.01F), QVector3D(0.15F, 0.07F, 1.37F), c.earth);
   desc.add_box(
-      QVector3D(-1.66F, 0.17F, -0.16F), QVector3D(0.11F, 0.012F, 1.48F), c.turf);
+      QVector3D(-1.66F, 0.17F, -0.01F), QVector3D(0.11F, 0.012F, 1.33F), c.turf);
   desc.add_box(
       QVector3D(1.74F, 0.09F, -0.05F), QVector3D(0.13F, 0.07F, 1.02F), c.earth);
   desc.add_box(
@@ -771,7 +776,8 @@ void add_drill_yard(BuildingArchetypeDesc& desc,
                  c.cedar_dark,
                  k_mask_intact);
   }
-  desc.add_box(QVector3D(rack_x, k_platform_top + 0.70F, rack_z),
+
+  desc.add_box(QVector3D(rack_x, k_platform_top + 0.74F, rack_z),
                QVector3D(0.38F, 0.02F, 0.03F),
                c.cedar_dark,
                k_mask_intact);
@@ -801,7 +807,7 @@ void add_drill_yard(BuildingArchetypeDesc& desc,
                  c.cedar_dark,
                  k_mask_intact);
   }
-  desc.add_box(QVector3D(shield_x, k_platform_top + 0.58F, shield_z),
+  desc.add_box(QVector3D(shield_x, k_platform_top + 0.62F, shield_z),
                QVector3D(0.34F, 0.02F, 0.03F),
                c.cedar_dark,
                k_mask_intact);
@@ -949,7 +955,7 @@ void add_imbrex_lines(BuildingArchetypeDesc& desc,
   }
 }
 
-auto build_barracks_archetype(BuildingState state) -> RenderArchetype {
+auto build_barracks_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   RomanPalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
   BuildingArchetypeDesc desc("roman_barracks");
 
@@ -984,7 +990,11 @@ auto build_barracks_archetype(BuildingState state) -> RenderArchetype {
                                  .scale = 1.25F,
                                  .seed = 443});
 
-  return build_building_archetype(desc, state);
+  return desc;
+}
+
+auto build_barracks_archetype(BuildingState state) -> RenderArchetype {
+  return build_building_archetype(build_barracks_desc_impl(state), state);
 }
 
 auto barracks_archetype(BuildingState state,
@@ -1075,6 +1085,10 @@ void draw_barracks_ornaments(const DrawContext& p,
 }
 
 } // namespace
+
+auto build_barracks_desc(BuildingState state) -> BuildingArchetypeDesc {
+  return build_barracks_desc_impl(state);
+}
 
 void register_barracks_renderer(Render::GL::EntityRendererRegistry& registry) {
   register_barracks_renderer_variant(

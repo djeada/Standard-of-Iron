@@ -47,6 +47,14 @@ auto gate_archetype() -> const BuildingArchetypeSet& {
 
 } // namespace
 
+auto wall_palette() -> const WallPalette& {
+  return k_wall_palette;
+}
+
+auto wall_geometry() -> const WallGeometry& {
+  return k_wall_geometry;
+}
+
 void register_wall_renderer(Render::GL::EntityRendererRegistry& registry) {
   for (const auto& [name, variant] : wall_renderer_variants()) {
     register_building_renderer(

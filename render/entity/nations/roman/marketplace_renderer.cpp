@@ -129,7 +129,7 @@ void add_produce_basket(BuildingArchetypeDesc& desc,
   }
 }
 
-auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
+auto build_marketplace_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   RomanMarketPalette const c;
   float height_multiplier = 1.0F;
   if (state == BuildingState::Damaged) {
@@ -380,7 +380,11 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                                  .scale = 1.0F,
                                  .seed = 181});
 
-  return build_building_archetype(desc, state);
+  return desc;
+}
+
+auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
+  return build_building_archetype(build_marketplace_desc_impl(state), state);
 }
 
 auto marketplace_archetype(BuildingState state) -> const RenderArchetype& {
@@ -390,6 +394,10 @@ auto marketplace_archetype(BuildingState state) -> const RenderArchetype& {
 }
 
 } // namespace
+
+auto build_marketplace_desc(BuildingState state) -> BuildingArchetypeDesc {
+  return build_marketplace_desc_impl(state);
+}
 
 void register_marketplace_renderer(EntityRendererRegistry& registry) {
   register_marketplace_renderer_variant(

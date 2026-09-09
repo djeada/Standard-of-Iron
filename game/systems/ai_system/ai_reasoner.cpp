@@ -13,6 +13,7 @@
 #include "ai_attack_wave.h"
 #include "ai_base_manager.h"
 #include "ai_doctrine_catalog.h"
+#include "ai_settlement_frame.h"
 #include "ai_stall_recovery.h"
 #include "ai_utils.h"
 #include "systems/ai_system/ai_types.h"
@@ -982,6 +983,8 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
       snapshot, ctx, had_previous_site, previous_site_x, previous_site_z);
 
   AIBaseManager::update(snapshot, ctx);
+  apply_settlement_stations(snapshot, ctx);
+  update_station_report(snapshot, ctx);
 
   int catapult_count = 0;
   for (const auto& entity : snapshot.friendly_units) {

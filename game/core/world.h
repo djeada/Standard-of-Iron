@@ -356,6 +356,9 @@ private:
   std::vector<EntityID> m_render_other_ids;
   std::vector<std::uint64_t> m_render_entity_signatures;
   std::uint64_t m_render_publish_revision{0};
+
+  std::uint64_t m_content_epoch{0};
+  std::uint64_t m_render_snapshot_epoch{0};
   RenderPublicationStats m_render_publication_stats;
   bool m_verify_system_access = false;
   SystemAccessRecorder m_access_recorder;

@@ -20,6 +20,7 @@
 #include "../../nation_registry.h"
 #include "../ai_base_manager.h"
 #include "../ai_doctrine_catalog.h"
+#include "../ai_settlement_frame.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
@@ -318,75 +319,6 @@ auto preferred_siege_engine(const AIContext& context) -> const char* {
   return BUILDING_TYPE_CATAPULT;
 }
 
-auto settlement_facing(const AIContext& context,
-                       const AISnapshot& snapshot) -> QVector2D {
-  float sum_x = 0.0F;
-  float sum_z = 0.0F;
-  int count = 0;
-  for (const auto& objective : snapshot.strategic_objectives) {
-    if (objective.health <= 0 || !objective.is_building) {
-      continue;
-    }
-    sum_x += objective.pos_x;
-    sum_z += objective.pos_z;
-    count++;
-  }
-  if (count == 0) {
-    for (const auto& contact : snapshot.visible_enemies) {
-      if (contact.health <= 0) {
-        continue;
-      }
-      const float weight = contact.is_building ? 4.0F : 1.0F;
-      sum_x += contact.pos_x * weight;
-      sum_z += contact.pos_z * weight;
-      count += static_cast<int>(weight);
-    }
-  }
-  if (count == 0) {
-    return {0.0F, -1.0F};
-  }
-
-  const float dx = (sum_x / static_cast<float>(count)) - context.base_pos_x;
-  const float dz = (sum_z / static_cast<float>(count)) - context.base_pos_z;
-  const float length = std::sqrt(std::max(0.0F, dx * dx + dz * dz));
-  if (length < 1.0F) {
-    return {0.0F, -1.0F};
-  }
-
-  if (std::abs(dx) >= std::abs(dz)) {
-    return {dx > 0.0F ? -1.0F : 1.0F, 0.0F};
-  }
-  return {0.0F, dz > 0.0F ? -1.0F : 1.0F};
-}
-
-auto plan_offset_to_world(const QVector2D& facing,
-                          float local_x,
-                          float local_z) -> QVector3D {
-  const QVector2D forward = facing;
-  const QVector2D right(forward.y(), -forward.x());
-  return QVector3D(local_z * forward.x() + local_x * right.x(),
-                   0.0F,
-                   local_z * forward.y() + local_x * right.y());
-}
-
-auto plan_rotation_to_world(const QVector2D& facing, float local_rotation) -> float {
-  constexpr float k_rad_to_deg = 180.0F / 3.14159265358979323846F;
-  const float frame_yaw = std::atan2(facing.x(), facing.y()) * k_rad_to_deg;
-  float yaw = std::fmod(frame_yaw + local_rotation, 360.0F);
-  if (yaw < 0.0F) {
-    yaw += 360.0F;
-  }
-  return yaw;
-}
-
-auto locked_settlement_facing(const AIContext& context,
-                              const AISnapshot& snapshot) -> QVector2D {
-  if (context.settlement_facing_locked) {
-    return {context.settlement_facing_x, context.settlement_facing_z};
-  }
-  return settlement_facing(context, snapshot);
-}
-
 auto is_fortification(const char* building_type) -> bool {
   if (building_type == nullptr) {
     return false;
@@ -473,7 +405,7 @@ auto authored_plan_step(const AIContext& context,
     return false;
   }
 
-  constexpr float k_anchor_clearance = 9.0F;
+  constexpr float k_anchor_clearance = TownPlan::k_anchor_clearance;
   constexpr float k_anchor_clearance_sq = k_anchor_clearance * k_anchor_clearance;
 
   const QVector2D facing = locked_settlement_facing(context, snapshot);
@@ -624,6 +556,46 @@ auto site_is_free(const AISnapshot& snapshot,
     }
   }
   return true;
+}
+
+auto plan_reserves_ground(const AIContext& context,
+                          const AISnapshot& snapshot,
+                          const char* building_type,
+                          float world_x,
+                          float world_z) -> bool {
+  const auto* doctrine = context.strategy_config.doctrine;
+  if (doctrine == nullptr || doctrine->town_plan == nullptr ||
+      building_type == nullptr) {
+    return false;
+  }
+  const auto half_extent = [](const std::string& type) {
+    if (type == BUILDING_TYPE_WALL_GATE) {
+      return k_gate_half_span;
+    }
+    const auto size = BuildingCollisionRegistry::get_building_size(type);
+    return 0.5F * std::max(size.width, size.depth);
+  };
+  constexpr float k_slot_gap = 0.2F;
+  const float own_half = half_extent(std::string(building_type));
+  const QVector2D facing = locked_settlement_facing(context, snapshot);
+  for (const auto& step : doctrine->town_plan->steps) {
+    const char* resolved = building_type_name(step.building);
+    if (resolved == nullptr || resolved == BUILDING_TYPE_CATAPULT ||
+        resolved == BUILDING_TYPE_BALLISTA) {
+      continue;
+    }
+    const QVector3D offset = plan_offset_to_world(facing, step.x, step.z);
+    const float clearance = own_half + half_extent(step.building) + k_slot_gap;
+    if (distance_squared(context.base_pos_x + offset.x(),
+                         0.0F,
+                         context.base_pos_z + offset.z(),
+                         world_x,
+                         0.0F,
+                         world_z) <= clearance * clearance) {
+      return true;
+    }
+  }
+  return false;
 }
 
 auto expanding_ring_offset(int index,
@@ -1384,7 +1356,12 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
       const float candidate_x = exposed->center_x + offset.x();
       const float candidate_z = exposed->center_z + offset.z();
       if (!site_is_free(
-              snapshot, BUILDING_TYPE_DEFENSE_TOWER, candidate_x, candidate_z)) {
+              snapshot, BUILDING_TYPE_DEFENSE_TOWER, candidate_x, candidate_z) ||
+          plan_reserves_ground(context,
+                               snapshot,
+                               BUILDING_TYPE_DEFENSE_TOWER,
+                               candidate_x,
+                               candidate_z)) {
         continue;
       }
       ConstructionIntent relief;
@@ -1450,9 +1427,12 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
       snapshot.resources.get(ResourceType::Gold) >= k_treasury_worth_a_market) {
     wish(BUILDING_TYPE_MARKETPLACE);
   }
+
   constexpr int k_roofs_before_the_castle = 4;
+  const bool plan_step_is_silhouette = has_plan_step && town_plan != nullptr &&
+                                       town_plan->is_silhouette_step(planned.slot);
   const bool plan_step_is_a_fortification =
-      has_plan_step && is_fortification(planned.building);
+      has_plan_step && is_fortification(planned.building) && !plan_step_is_silhouette;
   if (targets.raise_homes_first && standing.homes < MAX_HOMES &&
       (!has_plan_step || standing.homes < k_roofs_before_the_castle ||
        plan_step_is_a_fortification)) {
@@ -1555,19 +1535,31 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
       site_resolved = true;
     } else {
       constexpr int k_site_search_attempts = 24;
-      for (int attempt = 0; attempt < k_site_search_attempts; ++attempt) {
-        const QVector3D offset = planned_settlement_offset(
-            context, building_to_construct, m_construction_counter + attempt);
-        const float candidate_x = context.base_pos_x + offset.x();
-        const float candidate_z = context.base_pos_z + offset.z();
-        if (!site_is_free(snapshot, building_to_construct, candidate_x, candidate_z)) {
-          continue;
+
+      for (const bool honour_plan : {true, false}) {
+        for (int attempt = 0; attempt < k_site_search_attempts && !site_resolved;
+             ++attempt) {
+          const QVector3D offset = planned_settlement_offset(
+              context, building_to_construct, m_construction_counter + attempt);
+          const float candidate_x = context.base_pos_x + offset.x();
+          const float candidate_z = context.base_pos_z + offset.z();
+          if (!site_is_free(
+                  snapshot, building_to_construct, candidate_x, candidate_z)) {
+            continue;
+          }
+          if (honour_plan &&
+              plan_reserves_ground(
+                  context, snapshot, building_to_construct, candidate_x, candidate_z)) {
+            continue;
+          }
+          construction_x = candidate_x;
+          construction_z = candidate_z;
+          m_construction_counter += attempt;
+          site_resolved = true;
         }
-        construction_x = candidate_x;
-        construction_z = candidate_z;
-        m_construction_counter += attempt;
-        site_resolved = true;
-        break;
+        if (site_resolved) {
+          break;
+        }
       }
       if (!site_resolved) {
         m_construction_counter += k_site_search_attempts;
@@ -1584,10 +1576,19 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     clamp_to_map_bounds(snapshot, construction_x, construction_z);
 
     if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
+      const auto* traced_plan = context.strategy_config.doctrine != nullptr
+                                    ? context.strategy_config.doctrine->town_plan
+                                    : nullptr;
       qWarning() << "BUILDTRACE p" << context.player_id << "wants"
                  << building_to_construct << "at" << construction_x << construction_z
                  << "base" << context.base_pos_x << context.base_pos_z << "homes"
-                 << context.home_count << "barracks" << context.barracks_count;
+                 << context.home_count << "barracks" << context.barracks_count << "plan"
+                 << (traced_plan != nullptr ? traced_plan->id.c_str() : "-") << "slot"
+                 << plan_slot
+                 << (traced_plan != nullptr &&
+                             traced_plan->is_silhouette_step(plan_slot)
+                         ? "silhouette"
+                         : "");
     }
 
     const auto builder = take_strongest_builder(construction_x, construction_z);

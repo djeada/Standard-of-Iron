@@ -55,7 +55,7 @@ auto make_palette(const QVector3D& team) -> TowerPalette {
   return p;
 }
 
-auto build_tower_archetype(BuildingState state) -> RenderArchetype {
+auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   TowerPalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
   BuildingArchetypeDesc desc("roman_defense_tower");
 
@@ -286,7 +286,11 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                                  .scale = 0.95F,
                                  .seed = 353});
 
-  return build_building_archetype(desc, state);
+  return desc;
+}
+
+auto build_tower_archetype(BuildingState state) -> RenderArchetype {
+  return build_building_archetype(build_tower_desc_impl(state), state);
 }
 
 auto tower_archetype(BuildingState state) -> const RenderArchetype& {
@@ -385,6 +389,10 @@ void draw_tower_banner_for_team(const DrawContext& p,
 }
 
 } // namespace
+
+auto build_tower_desc(BuildingState state) -> BuildingArchetypeDesc {
+  return build_tower_desc_impl(state);
+}
 
 void register_defense_tower_renderer(Render::GL::EntityRendererRegistry& registry) {
   register_defense_tower_renderer_variant(

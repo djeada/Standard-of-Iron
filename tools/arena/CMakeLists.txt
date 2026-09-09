@@ -12,6 +12,7 @@ add_library(
     arena_stuck_recovery_scenarios.cpp
     arena_traversal_scenarios.cpp
     arena_showcase_scenarios.cpp
+    arena_facade_scenarios.cpp
     arena_trailer_scenarios.cpp
     arena_wildlife_scenarios.cpp
     terrain_alignment.cpp
