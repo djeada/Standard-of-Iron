@@ -100,6 +100,8 @@ public:
 
   float site_approach_seconds{0.0F};
 
+  float site_closest_approach{0.0F};
+
   EntityID structure_task_entity_id{0};
 
   bool has_gather_order{false};

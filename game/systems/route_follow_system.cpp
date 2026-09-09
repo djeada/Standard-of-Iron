@@ -160,6 +160,8 @@ void restart_stall_ladder(Engine::Core::MovementStallFacts& stall) {
 
 } // namespace
 
+constexpr float k_work_anchor_reach = 1.75F;
+
 auto is_movement_point_allowed(const QVector3D& pos,
                                const Engine::Core::Entity& entity) -> bool {
 
@@ -168,10 +170,18 @@ auto is_movement_point_allowed(const QVector3D& pos,
       builder_prod != nullptr &&
       (builder_prod->has_construction_site || builder_prod->in_progress) &&
       is_gather_builder_product(builder_prod->product_type)) {
-    Point const position_grid = NavGrid::world_to_grid(pos.x(), pos.z());
-    Point const target_grid = NavGrid::world_to_grid(builder_prod->task_target_x,
-                                                     builder_prod->task_target_z);
-    if (position_grid.x == target_grid.x && position_grid.y == target_grid.y) {
+    auto const stands_at = [&pos](float x, float z) {
+      float const dx = pos.x() - x;
+      float const dz = pos.z() - z;
+      return (dx * dx) + (dz * dz) <= k_work_anchor_reach * k_work_anchor_reach;
+    };
+    if (stands_at(builder_prod->task_target_x, builder_prod->task_target_z)) {
+      return true;
+    }
+
+    if (builder_prod->has_construction_site &&
+        stands_at(builder_prod->construction_site_x,
+                  builder_prod->construction_site_z)) {
       return true;
     }
   }

@@ -4,6 +4,7 @@ add_library(
     arena_scenario.cpp
     arena_scenario_catalog.cpp
     arena_ai_duel_scenarios.cpp
+    arena_economy_scenarios.cpp
     arena_ambience_scenarios.cpp
     arena_city_scenarios.cpp
     arena_engagement_scenarios.cpp

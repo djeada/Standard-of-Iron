@@ -31,7 +31,6 @@ class RouteFollowSystem;
 
 namespace Engine::Core {
 
-// Transient presentation state: only successful production starts this effect.
 class ProductionCompletionComponent {
 public:
   static constexpr float k_duration = 2.2F;

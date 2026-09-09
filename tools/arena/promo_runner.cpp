@@ -644,6 +644,11 @@ public:
     }
 
     m_viewport.set_promo_mode(true);
+
+    if (!m_viewport.has_graphics_quality_override()) {
+      m_viewport.set_graphics_quality_override(Render::GraphicsQuality::Ultra);
+    }
+
     m_viewport.set_capture_resolution(m_spec.width * m_spec.supersample,
                                       m_spec.height * m_spec.supersample);
     m_viewport.set_capture_sink([this](const QImage& frame) { on_frame(frame); });
