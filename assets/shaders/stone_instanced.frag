@@ -119,6 +119,6 @@ void main() {
   color += sky * rim * detail_weight;
   color = apply_directional_shadow(color, v_world_pos, v_normal);
   color += stone * crevice_ao * local_lighting(v_world_pos, N);
-  color = apply_visibility_memory(color, v_world_pos.xz);
+  color = apply_visibility_world_shading(color, v_world_pos.xz);
   frag_color = vec4(color, 1.0);
 }

@@ -256,7 +256,22 @@ vec3 unseen_terrain_color() {
   ground = mix(ground,
                u_snow_color,
                clamp(u_snow_coverage, 0.0, 1.0) * smoothstep(0.42, 0.86, normal.y));
-  ground *= u_tint;
+
+  vec3 hue_shift = mix(k_soi_terrain_hue_cool,
+                       k_soi_terrain_hue_warm,
+                       smoothstep(0.35, 0.65, detail_field.b));
+  ground *= mix(vec3(1.0), hue_shift, k_soi_terrain_hue_amount);
+  float worn_ground = smoothstep(0.16, 0.52, detail_field.a) * (1.0 - slope * 1.5) *
+                      (1.0 - u_snow_coverage);
+  vec3 worn_color = mix(u_grass_dry, u_soil_color, 0.42) * 0.92;
+  ground = mix(ground, worn_color, worn_ground * k_soi_terrain_earth_amount);
+  ground *= 0.94 + 0.12 * detail_field.r;
+
+  vec3 gray_level = vec3(dot(ground, vec3(0.299, 0.587, 0.114)));
+  float grounded_saturation =
+      clamp(u_grass_saturation * k_soi_terrain_saturation, 0.0, 1.16);
+  ground = mix(gray_level, ground, grounded_saturation);
+  ground *= vec3(1.012, 0.992, 0.965) * u_tint;
 
   return unseen_surface_color(ground * soi_surface_lighting(normal) *
                               (u_ambient_boost * cavity));

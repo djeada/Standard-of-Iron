@@ -21,6 +21,9 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
+constexpr float k_arcane_ore_glow = 1.05F;
+constexpr float k_haunted_ore_bonus = 0.30F;
+
 } // namespace
 
 namespace Render::GL {
@@ -32,11 +35,12 @@ void IronOreRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
                                 const Game::Map::BiomeSettings& biome_settings,
                                 const std::vector<Game::Map::WorldProp>& world_props) {
   configure_biome_common(biome_settings);
+  m_state.track_visible_instances = true;
   m_state.params.light_direction = m_light_direction;
 
-  constexpr float k_haunted_ore_glow = 1.15F;
   m_state.params.magic_strength =
-      k_haunted_ore_glow * world().terrain_or_empty().supernatural_presence();
+      k_arcane_ore_glow +
+      k_haunted_ore_bonus * world().terrain_or_empty().supernatural_presence();
   generate_instances(world_props, height_map);
 }
 
@@ -45,7 +49,24 @@ void IronOreRenderer::set_light_direction(const QVector3D& dir) {
 }
 
 void IronOreRenderer::submit(Renderer& renderer, ResourceManager* resources) {
-  submit_prop_common(renderer, resources, TerrainScatterCmd::Species::IronOre);
+  if (submit_prop_common(renderer, resources, TerrainScatterCmd::Species::IronOre) ==
+      0) {
+    return;
+  }
+
+  for (const auto& inst : m_state.visible_instances) {
+    const QVector3D ore_pos = inst.pos_scale.toVector3D();
+    const float scale = std::max(inst.pos_scale.w(), 0.1F);
+    const float phase = inst.color_rot.w();
+    const float time = m_state.params.time;
+    const float pulse = 0.84F + 0.16F * std::sin((time * 1.9F) + phase);
+    Render::LocalLight votive;
+    votive.position = ore_pos + QVector3D(0.0F, scale * 0.6F, 0.0F);
+    votive.color = QVector3D(0.48F, 0.54F, 0.92F);
+    votive.radius = std::clamp(scale * 2.8F, 3.0F, 8.0F);
+    votive.intensity = 0.52F * pulse;
+    renderer.local_light(votive);
+  }
 }
 
 void IronOreRenderer::generate_instances(

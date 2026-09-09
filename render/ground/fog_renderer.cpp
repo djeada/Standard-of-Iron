@@ -22,13 +22,13 @@ namespace {
 
 constexpr int k_chunk_cells = 14;
 constexpr float k_fog_y = 0.62F;
-constexpr float k_fog_alpha = 0.14F;
+constexpr float k_fog_alpha = 0.18F;
 constexpr float k_reveal_seconds = 0.22F;
 constexpr float k_soft_reveal_seconds = 0.55F;
 
 constexpr float k_fog_epsilon = 0.004F;
 
-const QVector3D k_fog_color{0.48F, 0.49F, 0.50F};
+const QVector3D k_fog_color{0.09F, 0.10F, 0.12F};
 
 auto chunk_count(int cells) -> int {
   return (std::max(0, cells) + k_chunk_cells - 1) / k_chunk_cells;
