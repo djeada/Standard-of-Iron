@@ -29,6 +29,7 @@
 #include "combat_types.h"
 #include "combat_utils.h"
 #include "engagement_trace.h"
+#include "game/core/presentation_coverage.h"
 #include "structure_combat.h"
 #include "threat_alert.h"
 
@@ -985,6 +986,9 @@ apply_unit_damage(Engine::Core::World* world,
                                     unit->spawn_type,
                                     attacker_id,
                                     killer_owner_id));
+    if (Game::Units::is_building_spawn(unit->spawn_type)) {
+      Engine::Core::note_coverage(Engine::Core::CoverageEvent::StructureDestroyed);
+    }
 
     auto* target_atk = target->get_component<Engine::Core::AttackComponent>();
     if ((target_atk != nullptr) && target_atk->in_melee_lock &&

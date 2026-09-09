@@ -1,5 +1,6 @@
 #version 330 core
 #include "environment_lighting.glsl"
+#include "ground_readability.glsl"
 
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec2 a_uv;
@@ -64,14 +65,16 @@ void main() {
   float height_px = length((top_clip.xy / max(abs(top_clip.w), 1e-4) - base_ndc) *
                            u_viewport_size * 0.5);
 
-  const float k_min_width_px = 1.30;
-  const float k_min_height_px = 2.20;
+  const float k_min_width_px = 0.85;
+  const float k_min_height_px = 1.20;
   float widen = clamp(k_min_width_px / max(width_px, 1e-4), 1.0, 6.0);
 
   float heighten = clamp(k_min_height_px / max(height_px, 1e-4), 1.0, 4.0);
   blade_height *= heighten;
 
-  float coverage_fade = smoothstep(0.10, 0.60, max(height_px, width_px));
+  float tactical = ground_tactical_distance(length(u_camera_pos - base_pos));
+  float coverage_fade = smoothstep(0.35, 1.40, max(height_px, width_px));
+  coverage_fade *= mix(1.0, 0.45, tactical);
   if (coverage_fade <= 0.002) {
     gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
     v_color = vec3(0.0);

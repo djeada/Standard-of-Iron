@@ -45,6 +45,8 @@ public:
     return m_grass_state.last_sync_stats;
   }
 
+  [[nodiscard]] auto prewarm_gpu_resources() -> bool override;
+
 private:
   struct GrassScatterContext {
     const Game::Map::TerrainScatterProfile& scatter_profile;

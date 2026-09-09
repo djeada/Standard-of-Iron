@@ -28,6 +28,7 @@
 
 # ai_tests
 AiTownPlanTest.*
+AiEstateEconomyTest.*
 AiDuelMatchTest.*
 AiSkirmishOpeningTest.*
 MissionWaveAssaultTest.*

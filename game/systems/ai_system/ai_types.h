@@ -57,6 +57,42 @@ enum class BaseRole {
   Forward
 };
 
+enum class StationSource {
+  None,
+  SettlementMuster,
+  MainBaseRally,
+  Anchor
+};
+
+struct StationCandidate {
+  bool offered = false;
+  float x = 0.0F;
+  float z = 0.0F;
+};
+
+struct AIStation {
+  StationSource source = StationSource::None;
+
+  float x = 0.0F;
+  float z = 0.0F;
+  float facing_deg = 180.0F;
+
+  bool fits = true;
+  bool relocated = false;
+  float required_radius = 0.0F;
+
+  float measured_candidate_x = 0.0F;
+  float measured_candidate_z = 0.0F;
+  int measured_strength = -1;
+  float measured_at = -1000.0F;
+  std::uint64_t measured_navigation_revision = 0U;
+
+  bool turn_pending = false;
+  float turn_pending_deg = 0.0F;
+  float turn_pending_since = -1000.0F;
+  int turns = 0;
+};
+
 enum class AICommandType {
   MoveUnits,
   AttackTarget,
@@ -204,6 +240,8 @@ struct AISnapshot {
   float map_min_z = 0.0F;
   float map_max_z = 0.0F;
 
+  std::uint64_t navigation_revision = 0U;
+
   float game_time = 0.0F;
 };
 
@@ -322,8 +360,8 @@ struct AIContext {
   std::vector<Engine::Core::EntityID> commander_ids;
   Engine::Core::EntityID primary_barracks = 0;
 
-  float rally_x = 0.0F;
-  float rally_z = 0.0F;
+  StationCandidate anchor_station;
+  AIStation station;
 
   int total_units = 0;
   int idle_units = 0;
@@ -357,8 +395,24 @@ struct AIContext {
     int stationed = 0;
     int at_spawn = 0;
     int adrift = 0;
+
+    int ready = 0;
+    int reforming = 0;
+    int arriving = 0;
+    int blocked = 0;
   };
   StationReport station_report;
+
+  struct GatherReport {
+    int stations = 0;
+    int members = 0;
+    int settled = 0;
+    int holding = 0;
+    int ordered = 0;
+    int unplaceable = 0;
+    int refused_stations = 0;
+  };
+  GatherReport gather_report;
   bool anchor_is_structural = false;
   bool has_expansion_site = false;
   float expansion_site_x = 0.0F;
@@ -453,6 +507,8 @@ struct AIContext {
     float assembling_since = -1000.0F;
     int assembled = 0;
     int assembly_required = 0;
+    bool departed_under_strength = false;
+    float ready_since = -1000.0F;
     bool committed = false;
     int initial_size = 0;
     float committed_at = -1000.0F;
@@ -478,6 +534,7 @@ struct AIContext {
 
 struct AICommand {
   AICommandType type = AICommandType::MoveUnits;
+  BehaviorPriority owner = BehaviorPriority::Normal;
   std::vector<Engine::Core::EntityID> units;
 
   std::vector<float> move_target_x;

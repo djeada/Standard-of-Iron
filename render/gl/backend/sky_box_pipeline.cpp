@@ -8,6 +8,7 @@
 #include <array>
 #include <cstdint>
 
+#include "render/gl/gl_resource_tracking.h"
 #include "render/gl/shader_cache.h"
 
 namespace Render::GL::BackendPipelines {
@@ -77,8 +78,11 @@ auto SkyBoxPipeline::build_cube() -> bool {
   release_cube();
 
   glGenVertexArrays(1, &m_vao);
+  note_vertex_arrays_created(1);
   glGenBuffers(1, &m_vertex_buffer);
+  note_buffers_created(1);
   glGenBuffers(1, &m_index_buffer);
+  note_buffers_created(1);
   if (m_vao == 0U || m_vertex_buffer == 0U || m_index_buffer == 0U) {
     release_cube();
     return false;
@@ -90,11 +94,16 @@ auto SkyBoxPipeline::build_cube() -> bool {
                static_cast<GLsizeiptr>(k_cube_corners.size() * sizeof(float)),
                k_cube_corners.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(k_cube_corners.size() * sizeof(float)),
+                      k_cube_corners.data() != nullptr);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(k_cube_indices.size() * sizeof(std::uint16_t)),
                k_cube_indices.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(
+      static_cast<std::size_t>(k_cube_indices.size() * sizeof(std::uint16_t)),
+      k_cube_indices.data() != nullptr);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(
       0, k_position_components, GL_FLOAT, GL_FALSE, k_position_stride, nullptr);

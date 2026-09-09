@@ -6,6 +6,7 @@
 #include <cstddef>
 
 #include "render/gl/draw_tally.h"
+#include "render/gl/gl_resource_tracking.h"
 #include "render/gl/mesh.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/primitives.h"
@@ -119,21 +120,28 @@ void PrimitiveBatchPipeline::initialize_sphere_vao() {
   }
 
   glGenVertexArrays(1, &m_sphere_mesh.vao);
+  note_vertex_arrays_created(1);
   glBindVertexArray(m_sphere_mesh.vao);
 
   glGenBuffers(1, &m_sphere_mesh.vertex_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ARRAY_BUFFER, m_sphere_mesh.vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                vertices.size() * sizeof(Vertex),
                vertices.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(vertices.size() * sizeof(Vertex)),
+                      vertices.data() != nullptr);
 
   glGenBuffers(1, &m_sphere_mesh.index_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_sphere_mesh.index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                indices.size() * sizeof(unsigned int),
                indices.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(indices.size() * sizeof(unsigned int)),
+                      indices.data() != nullptr);
   m_sphere_mesh.index_count = static_cast<GLsizei>(indices.size());
 
   apply_vertex_attrib_layout(
@@ -147,12 +155,16 @@ void PrimitiveBatchPipeline::initialize_sphere_vao() {
         offsetof(Vertex, tex_coord)}});
 
   glGenBuffers(1, &m_sphere_mesh.instance_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ARRAY_BUFFER, m_sphere_mesh.instance_buffer);
   m_sphere_instance_capacity = k_default_instance_capacity;
   glBufferData(GL_ARRAY_BUFFER,
                m_sphere_instance_capacity * sizeof(GL::PrimitiveInstanceGpu),
                nullptr,
                GL_DYNAMIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(m_sphere_instance_capacity *
+                                               sizeof(GL::PrimitiveInstanceGpu)),
+                      false);
 
   setup_instance_attributes(m_sphere_mesh.vao, m_sphere_mesh.instance_buffer);
   glBindVertexArray(0);
@@ -171,21 +183,28 @@ void PrimitiveBatchPipeline::initialize_cylinder_vao() {
   }
 
   glGenVertexArrays(1, &m_cylinder_mesh.vao);
+  note_vertex_arrays_created(1);
   glBindVertexArray(m_cylinder_mesh.vao);
 
   glGenBuffers(1, &m_cylinder_mesh.vertex_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_mesh.vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                vertices.size() * sizeof(Vertex),
                vertices.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(vertices.size() * sizeof(Vertex)),
+                      vertices.data() != nullptr);
 
   glGenBuffers(1, &m_cylinder_mesh.index_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cylinder_mesh.index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                indices.size() * sizeof(unsigned int),
                indices.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(indices.size() * sizeof(unsigned int)),
+                      indices.data() != nullptr);
   m_cylinder_mesh.index_count = static_cast<GLsizei>(indices.size());
 
   apply_vertex_attrib_layout(
@@ -199,12 +218,16 @@ void PrimitiveBatchPipeline::initialize_cylinder_vao() {
         offsetof(Vertex, tex_coord)}});
 
   glGenBuffers(1, &m_cylinder_mesh.instance_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_mesh.instance_buffer);
   m_cylinder_instance_capacity = k_default_instance_capacity;
   glBufferData(GL_ARRAY_BUFFER,
                m_cylinder_instance_capacity * sizeof(GL::PrimitiveInstanceGpu),
                nullptr,
                GL_DYNAMIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(m_cylinder_instance_capacity *
+                                               sizeof(GL::PrimitiveInstanceGpu)),
+                      false);
 
   setup_instance_attributes(m_cylinder_mesh.vao, m_cylinder_mesh.instance_buffer);
   glBindVertexArray(0);
@@ -223,21 +246,28 @@ void PrimitiveBatchPipeline::initialize_cone_vao() {
   }
 
   glGenVertexArrays(1, &m_cone_mesh.vao);
+  note_vertex_arrays_created(1);
   glBindVertexArray(m_cone_mesh.vao);
 
   glGenBuffers(1, &m_cone_mesh.vertex_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ARRAY_BUFFER, m_cone_mesh.vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                vertices.size() * sizeof(Vertex),
                vertices.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(vertices.size() * sizeof(Vertex)),
+                      vertices.data() != nullptr);
 
   glGenBuffers(1, &m_cone_mesh.index_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cone_mesh.index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                indices.size() * sizeof(unsigned int),
                indices.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(indices.size() * sizeof(unsigned int)),
+                      indices.data() != nullptr);
   m_cone_mesh.index_count = static_cast<GLsizei>(indices.size());
 
   apply_vertex_attrib_layout(
@@ -251,12 +281,16 @@ void PrimitiveBatchPipeline::initialize_cone_vao() {
         offsetof(Vertex, tex_coord)}});
 
   glGenBuffers(1, &m_cone_mesh.instance_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ARRAY_BUFFER, m_cone_mesh.instance_buffer);
   m_cone_instance_capacity = k_default_instance_capacity;
   glBufferData(GL_ARRAY_BUFFER,
                m_cone_instance_capacity * sizeof(GL::PrimitiveInstanceGpu),
                nullptr,
                GL_DYNAMIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(m_cone_instance_capacity *
+                                               sizeof(GL::PrimitiveInstanceGpu)),
+                      false);
 
   setup_instance_attributes(m_cone_mesh.vao, m_cone_mesh.instance_buffer);
   glBindVertexArray(0);
@@ -283,9 +317,14 @@ void PrimitiveBatchPipeline::upload_sphere_instances(
                  m_sphere_instance_capacity * sizeof(GL::PrimitiveInstanceGpu),
                  nullptr,
                  GL_DYNAMIC_DRAW);
+    note_buffer_storage(static_cast<std::size_t>(m_sphere_instance_capacity *
+                                                 sizeof(GL::PrimitiveInstanceGpu)),
+                        false);
   }
 
   glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(GL::PrimitiveInstanceGpu), data);
+  note_buffer_transfer(
+      static_cast<std::size_t>(count * sizeof(GL::PrimitiveInstanceGpu)));
   m_sphere_instances_resident = count;
 }
 
@@ -304,9 +343,14 @@ void PrimitiveBatchPipeline::upload_cylinder_instances(
                  m_cylinder_instance_capacity * sizeof(GL::PrimitiveInstanceGpu),
                  nullptr,
                  GL_DYNAMIC_DRAW);
+    note_buffer_storage(static_cast<std::size_t>(m_cylinder_instance_capacity *
+                                                 sizeof(GL::PrimitiveInstanceGpu)),
+                        false);
   }
 
   glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(GL::PrimitiveInstanceGpu), data);
+  note_buffer_transfer(
+      static_cast<std::size_t>(count * sizeof(GL::PrimitiveInstanceGpu)));
   m_cylinder_instances_resident = count;
 }
 
@@ -325,9 +369,14 @@ void PrimitiveBatchPipeline::upload_cone_instances(const GL::PrimitiveInstanceGp
                  m_cone_instance_capacity * sizeof(GL::PrimitiveInstanceGpu),
                  nullptr,
                  GL_DYNAMIC_DRAW);
+    note_buffer_storage(static_cast<std::size_t>(m_cone_instance_capacity *
+                                                 sizeof(GL::PrimitiveInstanceGpu)),
+                        false);
   }
 
   glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(GL::PrimitiveInstanceGpu), data);
+  note_buffer_transfer(
+      static_cast<std::size_t>(count * sizeof(GL::PrimitiveInstanceGpu)));
   m_cone_instances_resident = count;
 }
 

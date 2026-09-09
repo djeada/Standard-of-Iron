@@ -4,11 +4,15 @@
 #include <QOpenGLContext>
 #include <QOpenGLExtraFunctions>
 
+#include <cstddef>
+
 #if defined(Q_OS_MACOS)
 #include <OpenGL/gl3.h>
 #else
 #include <GL/gl.h>
 #endif
+
+#include "gl_resource_tracking.h"
 
 #ifndef GL_DRAW_INDIRECT_BUFFER
 #define GL_DRAW_INDIRECT_BUFFER 0x8F3F
@@ -117,6 +121,7 @@ public:
         GLenum const err =
             QOpenGLContext::currentContext()->extraFunctions()->glGetError();
         if (err == GL_NO_ERROR) {
+          note_buffer_storage(static_cast<std::size_t>(size), false);
           if (out_mode != nullptr) {
             *out_mode = Mode::Persistent;
           }
@@ -129,6 +134,7 @@ public:
     qInfo() << "BufferStorageHelper: Using fallback buffer mode (glBufferData)";
     QOpenGLContext::currentContext()->extraFunctions()->glBufferData(
         GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+    note_buffer_storage(static_cast<std::size_t>(size), false);
 
     if (out_mode != nullptr) {
       *out_mode = Mode::Fallback;
@@ -144,12 +150,17 @@ public:
           GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
       void* ptr = gl->glMapBufferRange(GL_ARRAY_BUFFER, 0, size, map_flags);
       if (ptr != nullptr) {
+        note_mapped_buffer_range(static_cast<std::size_t>(size));
         return ptr;
       }
       qWarning() << "BufferStorageHelper: Persistent mapping failed, falling back";
     }
 
-    return gl->glMapBufferRange(GL_ARRAY_BUFFER, 0, size, GL_MAP_WRITE_BIT);
+    void* fallback = gl->glMapBufferRange(GL_ARRAY_BUFFER, 0, size, GL_MAP_WRITE_BIT);
+    if (fallback != nullptr) {
+      note_mapped_buffer_range(static_cast<std::size_t>(size));
+    }
+    return fallback;
   }
 };
 

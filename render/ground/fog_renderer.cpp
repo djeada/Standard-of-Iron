@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "game/map/visibility_service.h"
+#include "render/gl/gl_resource_tracking.h"
 #include "render/scene_renderer.h"
 #include "visibility_mask_encoder.h"
 
@@ -290,6 +291,10 @@ void FogRenderer::upload_mask(Renderer& renderer) {
                                 GL_RGBA,
                                 GL_UNSIGNED_BYTE,
                                 m_mask_texels.data());
+  Render::GL::note_texture_transfer(
+      Render::GL::texture_transfer_bytes(static_cast<std::size_t>(m_mask_dirty.width),
+                                         static_cast<std::size_t>(m_mask_dirty.height),
+                                         4U));
   m_mask_dirty = {};
 }
 

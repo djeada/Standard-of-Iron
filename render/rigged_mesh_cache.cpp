@@ -20,6 +20,7 @@
 #include "creature/runtime_bake_guard.h"
 #include "creature/spec.h"
 #include "gl/platform_gl.h"
+#include "render/gl/gl_resource_tracking.h"
 
 namespace Render::GL {
 
@@ -97,6 +98,7 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry) {
   }
   GLuint ubo = 0;
   fn->glGenBuffers(1, &ubo);
+  note_buffers_created(1);
   if (ubo == 0) {
     return;
   }
@@ -105,6 +107,8 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry) {
                    static_cast<GLsizeiptr>(staging.size() * sizeof(float)),
                    staging.data(),
                    GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(staging.size() * sizeof(float)),
+                      staging.data() != nullptr);
   fn->glBindBuffer(GL_UNIFORM_BUFFER, 0);
   atlas.palette_ubo = ubo;
   atlas.frame_stride_bytes = stride;

@@ -716,6 +716,6 @@ TEST_F(ProductionSystemTest, RecruitmentGlowsOnTheRecruitOnly) {
   const auto* recruit = glowing.front()->get_component<Engine::Core::UnitComponent>();
   ASSERT_NE(recruit, nullptr);
   EXPECT_EQ(recruit->owner_id, 1);
-  EXPECT_EQ(recruit->spawn_type, Game::Units::SpawnType::Swordsman);
+  EXPECT_EQ(recruit->spawn_type, Game::Units::SpawnType::Knight);
   EXPECT_FALSE(barracks->has_component<Engine::Core::ProductionCompletionComponent>());
 }

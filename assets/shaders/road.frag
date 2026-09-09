@@ -1,6 +1,7 @@
 #version 330 core
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
+#include "ground_readability.glsl"
 #include "local_lighting.glsl"
 #include "visibility_mask.glsl"
 
@@ -183,6 +184,14 @@ void main() {
     ao = 0.88 + aggregate * 0.10 - wear * 0.018 - shoulder * 0.035;
     material_roughness = 0.94;
   }
+
+  // Derivative filtering handles subpixel edges; distance attenuation also
+  // prevents resolved paving/gravel contrast from competing with small troops.
+  float ground_detail =
+      mix(1.0, 0.40, ground_tactical_distance(length(u_camera_pos - v_world_pos)));
+  base_color = mix(u_color * 0.92, base_color, ground_detail);
+  ao = mix(1.0, ao, ground_detail);
+  h *= ground_detail;
 
   float shoulder_grit =
       1.0 - smoothstep(0.045, 0.19, edge_distance + edge_noise * 0.025);

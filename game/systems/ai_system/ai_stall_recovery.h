@@ -12,11 +12,17 @@ inline constexpr float k_stall_stand_down_seconds = 20.0F;
 inline constexpr float k_stall_detour_metres = 7.0F;
 inline constexpr int k_stall_abandon_patience = 2;
 
+inline constexpr float k_stall_detour_lifetime = 6.0F;
+
 [[nodiscard]] auto is_stood_down(Engine::Core::EntityID unit_id,
                                  const AIContext& context,
                                  float current_time) -> bool;
 
 [[nodiscard]] auto is_going_nowhere(const EntitySnapshot& entity) -> bool;
+
+[[nodiscard]] auto is_under_recovery(Engine::Core::EntityID unit_id,
+                                     const AIContext& context,
+                                     float current_time) -> bool;
 
 void update_stall_recovery(const AISnapshot& snapshot,
                            AIContext& context,

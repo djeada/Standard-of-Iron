@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <cstring>
 
+#include "render/gl/gl_resource_tracking.h"
 #include "render/gl/mesh.h"
 #include "render/gl/texture.h"
 
@@ -46,6 +47,7 @@ auto MeshInstancingPipeline::initialize() -> bool {
   initializeOpenGLFunctions();
 
   glGenBuffers(1, &m_instance_buffer);
+  note_buffers_created(1);
   if (m_instance_buffer == 0) {
     qWarning() << "MeshInstancingPipeline: failed to create instance buffer";
     return false;
@@ -59,6 +61,7 @@ auto MeshInstancingPipeline::initialize() -> bool {
                static_cast<GLsizeiptr>(m_ring_capacity_bytes),
                nullptr,
                GL_STREAM_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(m_ring_capacity_bytes), false);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   m_initialized = true;
@@ -235,6 +238,7 @@ auto MeshInstancingPipeline::upload_instances(const MeshInstanceGpu* data,
                  static_cast<GLsizeiptr>(m_ring_capacity_bytes),
                  nullptr,
                  GL_STREAM_DRAW);
+    note_buffer_storage(static_cast<std::size_t>(m_ring_capacity_bytes), false);
     m_ring_offset_bytes = 0;
   }
 
@@ -244,13 +248,16 @@ auto MeshInstancingPipeline::upload_instances(const MeshInstanceGpu* data,
                                   GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT |
                                       GL_MAP_UNSYNCHRONIZED_BIT);
   if (mapped != nullptr) {
+    note_mapped_buffer_range(upload_bytes);
     std::memcpy(mapped, data, upload_bytes);
+    note_buffer_transfer(upload_bytes);
     glUnmapBuffer(GL_ARRAY_BUFFER);
   } else {
     glBufferSubData(GL_ARRAY_BUFFER,
                     static_cast<GLintptr>(m_ring_offset_bytes),
                     static_cast<GLsizeiptr>(upload_bytes),
                     data);
+    note_buffer_transfer(static_cast<std::size_t>(upload_bytes));
   }
 
   byte_offset = m_ring_offset_bytes;

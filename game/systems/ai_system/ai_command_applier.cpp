@@ -68,6 +68,13 @@ void submit(Engine::Core::World& world, int owner_id, Game::Command::Payload pay
   return "unknown";
 }
 
+[[nodiscard]] auto owns_living_unit(Engine::Core::World& world,
+                                    int owner_id,
+                                    Engine::Core::EntityID unit_id) -> bool {
+  const auto* unit = world.try_get<Engine::Core::UnitComponent>(unit_id);
+  return unit != nullptr && unit->owner_id == owner_id && unit->health > 0;
+}
+
 void trace_refused_production(int owner_id,
                               Game::Units::TroopType product,
                               ProductionResult ruling,
@@ -136,10 +143,18 @@ auto AICommandApplier::apply(Engine::Core::World& world,
 
       Game::Command::Move move;
       move.kind = MoveOrderKind::PlannerMove;
-      move.units = command.units;
+      move.units.reserve(command.units.size());
       move.targets.reserve(command.units.size());
       for (std::size_t idx = 0; idx < command.units.size(); ++idx) {
+        if (!owns_living_unit(world, ai_owner_id, command.units[idx])) {
+          ++report.stale_subjects;
+          continue;
+        }
+        move.units.push_back(command.units[idx]);
         move.targets.emplace_back(expanded_x[idx], expanded_y[idx], expanded_z[idx]);
+      }
+      if (move.units.empty()) {
+        break;
       }
       submit(world, ai_owner_id, std::move(move));
       break;
@@ -154,6 +169,10 @@ auto AICommandApplier::apply(Engine::Core::World& world,
       std::vector<Engine::Core::EntityID> attackers;
       attackers.reserve(command.units.size());
       for (const auto unit_id : command.units) {
+        if (!owns_living_unit(world, ai_owner_id, unit_id)) {
+          ++report.stale_subjects;
+          continue;
+        }
         auto* attacker = world.get_entity(unit_id);
         if (!Game::Systems::Combat::melee_walled_off_from(attacker, target)) {
           attackers.push_back(unit_id);

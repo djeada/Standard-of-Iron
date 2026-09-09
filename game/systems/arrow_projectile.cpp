@@ -1,5 +1,7 @@
 #include "arrow_projectile.h"
 
+#include "game/core/presentation_coverage.h"
+
 namespace Game::Systems {
 
 ArrowProjectile::ArrowProjectile(const QVector3D& start,
@@ -45,6 +47,7 @@ ArrowProjectile::ArrowProjectile(const QVector3D& start,
     , m_trail_alpha(visual_profile.trail_alpha)
     , m_trail_length(visual_profile.trail_length)
     , m_brightness(visual_profile.brightness) {
+  Engine::Core::note_coverage(Engine::Core::CoverageEvent::ProjectileVolley);
 }
 
 void ArrowProjectile::update(float delta_time) {

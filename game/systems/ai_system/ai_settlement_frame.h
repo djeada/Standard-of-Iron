@@ -31,8 +31,26 @@ namespace Game::Systems::AI {
 
 void apply_settlement_stations(const AISnapshot& snapshot, AIContext& context);
 
+void resolve_station(const AISnapshot& snapshot, AIContext& context);
+
+[[nodiscard]] auto station_facing_degrees(const AIContext& context,
+                                          const AISnapshot& snapshot) -> float;
+
+[[nodiscard]] auto shortest_angle_between(float left, float right) -> float;
+
 void update_station_report(const AISnapshot& snapshot, AIContext& context);
 
 [[nodiscard]] auto station_radius(const AIContext& context) -> float;
+
+enum class StationStanding {
+  Arriving,
+  Reforming,
+  Ready,
+  Blocked
+};
+
+[[nodiscard]] auto station_standing(const EntitySnapshot& entity,
+                                    const AIContext& context,
+                                    float current_time) -> StationStanding;
 
 } // namespace Game::Systems::AI

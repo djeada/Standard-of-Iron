@@ -10,6 +10,7 @@
 
 #include "../../core/ownership_constants.h"
 #include "../../units/combat_role.h"
+#include "ai_stall_recovery.h"
 #include "ai_types.h"
 
 namespace Game::Systems::AI {
@@ -98,6 +99,39 @@ inline auto is_combat_role_unit(const EntitySnapshot& entity) -> bool {
 inline auto marches_with_the_army(const EntitySnapshot& entity) -> bool {
 
   return is_combat_role_unit(entity) && !entity.is_commander;
+}
+
+inline auto stands_in_the_muster(const EntitySnapshot& entity) -> bool {
+
+  return marches_with_the_army(entity) && !entity.is_assault && entity.health > 0;
+}
+
+inline auto muster_strength(const AISnapshot& snapshot) -> int {
+  return static_cast<int>(std::count_if(
+      snapshot.friendly_units.begin(),
+      snapshot.friendly_units.end(),
+      [](const EntitySnapshot& entity) { return stands_in_the_muster(entity); }));
+}
+
+enum class SoldierMotion {
+  Blocked,
+  UnderWay,
+  Standing
+};
+
+inline auto soldier_motion(const EntitySnapshot& entity,
+                           const AIContext& context,
+                           float current_time) -> SoldierMotion {
+  if (is_stood_down(entity.id, context, current_time)) {
+    return SoldierMotion::Blocked;
+  }
+  if (entity.movement.stalled || entity.movement.objective_abandoned) {
+    return SoldierMotion::Blocked;
+  }
+  if (entity.movement.has_component && entity.movement.has_target) {
+    return SoldierMotion::UnderWay;
+  }
+  return SoldierMotion::Standing;
 }
 
 inline auto picks_its_own_fights(const EntitySnapshot& entity) -> bool {

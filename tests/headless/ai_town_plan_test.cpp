@@ -455,8 +455,8 @@ protected:
                       stations.fighting,
                       stations.at_spawn,
                       stations.adrift,
-                      static_cast<double>(plan->rally_x),
-                      static_cast<double>(plan->rally_z),
+                      static_cast<double>(plan->station.x),
+                      static_cast<double>(plan->station.z),
                       plan->musters_outside ? " (before the gate)" : " (in the ward)");
           std::printf("   outline: %.0f%% of the compass fortified\n",
                       static_cast<double>(settlement.fortification_coverage * 100.0F));

@@ -20,6 +20,7 @@
 #include "gl/shader_cache.h"
 #include "mesh_buffers.h"
 #include "prop_mesh_builder.h"
+#include "render/gl/gl_resource_tracking.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/render_constants.h"
 
@@ -205,14 +206,18 @@ void VegetationPipeline::upload_prop_mesh_impl(
   }
 
   glGenVertexArrays(1, &mesh.vao);
+  note_vertex_arrays_created(1);
   glBindVertexArray(mesh.vao);
 
   glGenBuffers(1, &mesh.vertex_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(flat.size() * sizeof(V)),
                flat.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(flat.size() * sizeof(V)),
+                      flat.data() != nullptr);
   mesh.vertex_count = static_cast<GLsizei>(flat.size());
 
   glEnableVertexAttribArray(position);
@@ -231,11 +236,14 @@ void VegetationPipeline::upload_prop_mesh_impl(
                         reinterpret_cast<void*>(offsetof(V, nrm)));
 
   glGenBuffers(1, &mesh.index_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(idx.size() * sizeof(uint16_t)),
                idx.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(idx.size() * sizeof(uint16_t)),
+                      idx.data() != nullptr);
   mesh.index_count = static_cast<GLsizei>(idx.size());
 
   glEnableVertexAttribArray(tex_coord);

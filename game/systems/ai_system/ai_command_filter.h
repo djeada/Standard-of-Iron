@@ -15,6 +15,9 @@ public:
   auto filter(const std::vector<AICommand>& commands,
               float current_time) -> std::vector<AICommand>;
 
+  [[nodiscard]] static auto arbitrate_move_ownership(
+      const std::vector<AICommand>& commands) -> std::vector<AICommand>;
+
   void update(float current_time);
 
   void reset();

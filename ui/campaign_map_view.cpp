@@ -33,6 +33,7 @@
 #include "../render/gl/shader.h"
 #include "../utils/resource_utils.h"
 #include "campaign_map_render_utils.h"
+#include "render/gl/gl_resource_tracking.h"
 
 namespace {
 
@@ -703,11 +704,15 @@ void main() {
     };
 
     glGenVertexArrays(1, &vao);
+    Render::GL::note_vertex_arrays_created(1);
     glGenBuffers(1, &vbo);
+    Render::GL::note_buffers_created(1);
 
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+    Render::GL::note_buffer_storage(static_cast<std::size_t>(sizeof(verts)),
+                                    verts != nullptr);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(
         0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
@@ -754,7 +759,9 @@ void main() {
     }
 
     glGenVertexArrays(1, &m_land_vao);
+    Render::GL::note_vertex_arrays_created(1);
     glGenBuffers(1, &m_land_vbo);
+    Render::GL::note_buffers_created(1);
 
     glBindVertexArray(m_land_vao);
     glBindBuffer(GL_ARRAY_BUFFER, m_land_vbo);
@@ -762,6 +769,8 @@ void main() {
                  static_cast<GLsizeiptr>(data.size()),
                  verts.data(),
                  GL_STATIC_DRAW);
+    Render::GL::note_buffer_storage(static_cast<std::size_t>(data.size()),
+                                    verts.data() != nullptr);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(
         0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
@@ -821,7 +830,9 @@ void main() {
     }
 
     glGenVertexArrays(1, &layer.vao);
+    Render::GL::note_vertex_arrays_created(1);
     glGenBuffers(1, &layer.vbo);
+    Render::GL::note_buffers_created(1);
 
     glBindVertexArray(layer.vao);
     glBindBuffer(GL_ARRAY_BUFFER, layer.vbo);
@@ -829,6 +840,9 @@ void main() {
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
                  verts.data(),
                  GL_STATIC_DRAW);
+    Render::GL::note_buffer_storage(
+        static_cast<std::size_t>(verts.size() * sizeof(float)),
+        verts.data() != nullptr);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(
         0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
@@ -902,7 +916,9 @@ void main() {
     }
 
     glGenVertexArrays(1, &layer.vao);
+    Render::GL::note_vertex_arrays_created(1);
     glGenBuffers(1, &layer.vbo);
+    Render::GL::note_buffers_created(1);
 
     glBindVertexArray(layer.vao);
     glBindBuffer(GL_ARRAY_BUFFER, layer.vbo);
@@ -910,6 +926,9 @@ void main() {
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
                  verts.data(),
                  GL_STATIC_DRAW);
+    Render::GL::note_buffer_storage(
+        static_cast<std::size_t>(verts.size() * sizeof(float)),
+        verts.data() != nullptr);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(
         0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
@@ -972,7 +991,9 @@ void main() {
     }
 
     glGenVertexArrays(1, &layer.vao);
+    Render::GL::note_vertex_arrays_created(1);
     glGenBuffers(1, &layer.vbo);
+    Render::GL::note_buffers_created(1);
 
     glBindVertexArray(layer.vao);
     glBindBuffer(GL_ARRAY_BUFFER, layer.vbo);
@@ -980,6 +1001,9 @@ void main() {
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
                  verts.data(),
                  GL_STATIC_DRAW);
+    Render::GL::note_buffer_storage(
+        static_cast<std::size_t>(verts.size() * sizeof(float)),
+        verts.data() != nullptr);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(
         0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
@@ -1164,7 +1188,9 @@ void main() {
 
     if (layer.vao == 0) {
       glGenVertexArrays(1, &layer.vao);
+      Render::GL::note_vertex_arrays_created(1);
       glGenBuffers(1, &layer.vbo);
+      Render::GL::note_buffers_created(1);
     }
 
     glBindVertexArray(layer.vao);
@@ -1173,6 +1199,9 @@ void main() {
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
                  verts.data(),
                  GL_STATIC_DRAW);
+    Render::GL::note_buffer_storage(
+        static_cast<std::size_t>(verts.size() * sizeof(float)),
+        verts.data() != nullptr);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(
@@ -1364,7 +1393,9 @@ void main() {
 
     if (mesh.vao == 0) {
       glGenVertexArrays(1, &mesh.vao);
+      Render::GL::note_vertex_arrays_created(1);
       glGenBuffers(1, &mesh.vbo);
+      Render::GL::note_buffers_created(1);
     }
 
     glBindVertexArray(mesh.vao);
@@ -1373,6 +1404,9 @@ void main() {
                  static_cast<GLsizeiptr>(vertices.size() * sizeof(float)),
                  vertices.data(),
                  GL_STATIC_DRAW);
+    Render::GL::note_buffer_storage(
+        static_cast<std::size_t>(vertices.size() * sizeof(float)),
+        vertices.data() != nullptr);
 
     const int stride = 8 * sizeof(float);
 
@@ -1413,6 +1447,7 @@ void main() {
 
     if (layer.texture_id == 0) {
       glGenTextures(1, &layer.texture_id);
+      Render::GL::note_textures_created(1);
     }
 
     glBindTexture(GL_TEXTURE_2D, layer.texture_id);
@@ -1425,6 +1460,10 @@ void main() {
                  GL_RGBA,
                  GL_UNSIGNED_BYTE,
                  pixels.data());
+    Render::GL::note_texture_storage(
+        Render::GL::texture_transfer_bytes(
+            static_cast<std::size_t>(width), static_cast<std::size_t>(height), 4U),
+        true);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1588,7 +1627,9 @@ void main() {
 
     if (layer.vao == 0) {
       glGenVertexArrays(1, &layer.vao);
+      Render::GL::note_vertex_arrays_created(1);
       glGenBuffers(1, &layer.vbo);
+      Render::GL::note_buffers_created(1);
     }
 
     glBindVertexArray(layer.vao);
@@ -1597,6 +1638,9 @@ void main() {
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
                  verts.data(),
                  GL_STATIC_DRAW);
+    Render::GL::note_buffer_storage(
+        static_cast<std::size_t>(verts.size() * sizeof(float)),
+        verts.data() != nullptr);
 
     const int stride = 6 * sizeof(float);
 
@@ -1909,7 +1953,9 @@ void main() {
 
     if (mesh.vao == 0) {
       glGenVertexArrays(1, &mesh.vao);
+      Render::GL::note_vertex_arrays_created(1);
       glGenBuffers(1, &mesh.vbo);
+      Render::GL::note_buffers_created(1);
     }
 
     glBindVertexArray(mesh.vao);
@@ -1918,6 +1964,9 @@ void main() {
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
                  verts.data(),
                  GL_DYNAMIC_DRAW);
+    Render::GL::note_buffer_storage(
+        static_cast<std::size_t>(verts.size() * sizeof(float)),
+        verts.data() != nullptr);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(
         0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
@@ -2090,7 +2139,9 @@ void main() {
 
     if (badge.vao == 0) {
       glGenVertexArrays(1, &badge.vao);
+      Render::GL::note_vertex_arrays_created(1);
       glGenBuffers(1, &badge.vbo);
+      Render::GL::note_buffers_created(1);
     }
 
     glBindVertexArray(badge.vao);
@@ -2099,6 +2150,9 @@ void main() {
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
                  verts.data(),
                  GL_DYNAMIC_DRAW);
+    Render::GL::note_buffer_storage(
+        static_cast<std::size_t>(verts.size() * sizeof(float)),
+        verts.data() != nullptr);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(

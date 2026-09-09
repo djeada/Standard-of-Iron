@@ -18,6 +18,7 @@
 #include "render/gl/buffer.h"
 #include "render/gl/draw_tally.h"
 #include "render/gl/gl_capabilities.h"
+#include "render/gl/gl_resource_tracking.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/shader_cache.h"
 #include "render/rigged_mesh.h"
@@ -177,12 +178,16 @@ auto RiggedCullPipeline::initialize() -> bool {
   }
 
   glGenVertexArrays(1, &m_vao);
+  note_vertex_arrays_created(1);
   glGenBuffers(1, &m_command_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_command_buffer);
   glBufferData(GL_SHADER_STORAGE_BUFFER,
                static_cast<GLsizeiptr>(k_command_words * sizeof(GLuint)),
                nullptr,
                GL_DYNAMIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(k_command_words * sizeof(GLuint)),
+                      false);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
   m_available = m_vao != 0 && m_command_buffer != 0;
@@ -244,10 +249,12 @@ void RiggedCullPipeline::begin_frame() {
                                     std::size_t wanted) {
     if (buffer == 0U) {
       glGenBuffers(1, &buffer);
+      note_buffers_created(1);
     }
     const std::size_t retained = std::max(wanted, capacity);
     glBindBuffer(target, buffer);
     glBufferData(target, static_cast<GLsizeiptr>(retained), nullptr, GL_STREAM_DRAW);
+    note_buffer_storage(static_cast<std::size_t>(retained), false);
     capacity = retained;
   };
   orphan_stream(GL_SHADER_STORAGE_BUFFER,
@@ -266,6 +273,7 @@ void RiggedCullPipeline::begin_frame() {
                     RiggedCreatureCmd::k_max_role_colors * 4U * sizeof(float));
   if (m_role_color_texture == 0U) {
     glGenTextures(1, &m_role_color_texture);
+    note_textures_created(1);
   }
   glBindTexture(GL_TEXTURE_BUFFER, m_role_color_texture);
   glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, m_role_color_buffer);
@@ -277,6 +285,7 @@ void RiggedCullPipeline::begin_frame() {
                   0,
                   static_cast<GLsizeiptr>(k_empty_palette_bytes),
                   empty_palette.data());
+  note_buffer_transfer(static_cast<std::size_t>(k_empty_palette_bytes));
   m_role_color_stream_cursor_bytes = k_empty_palette_bytes;
   glBindBuffer(GL_TEXTURE_BUFFER, 0);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -308,12 +317,14 @@ auto RiggedCullPipeline::ensure_buffers(std::size_t instance_count,
   if (wanted > m_out_capacity_triangles || m_out_index_buffer == 0) {
     if (m_out_index_buffer == 0) {
       glGenBuffers(1, &m_out_index_buffer);
+      note_buffers_created(1);
     }
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_out_index_buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER,
                  static_cast<GLsizeiptr>(wanted * 3 * sizeof(GLuint)),
                  nullptr,
                  GL_DYNAMIC_DRAW);
+    note_buffer_storage(static_cast<std::size_t>(wanted * 3 * sizeof(GLuint)), false);
     m_out_capacity_triangles = wanted;
 
     glBindVertexArray(m_vao);
@@ -343,6 +354,7 @@ auto RiggedCullPipeline::ensure_stream_capacity(GLuint buffer,
                static_cast<GLsizeiptr>(grown),
                nullptr,
                GL_STREAM_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(grown), false);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
   capacity_bytes = grown;
   cursor_bytes = 0U;
@@ -402,6 +414,7 @@ auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
                     static_cast<GLintptr>(m_palette_stream_cursor_bytes),
                     static_cast<GLsizeiptr>(bytes),
                     m_palette_scratch.data());
+    note_buffer_transfer(static_cast<std::size_t>(bytes));
     palette_matrix_base =
         m_palette_stream_cursor_bytes / (k_matrix_floats * sizeof(float));
     m_palette_stream_cursor_bytes += bytes;
@@ -464,6 +477,7 @@ auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
                   static_cast<GLintptr>(m_instance_stream_cursor_bytes),
                   static_cast<GLsizeiptr>(instance_bytes),
                   m_instance_scratch.data());
+  note_buffer_transfer(static_cast<std::size_t>(instance_bytes));
   m_instance_stream_cursor_bytes += instance_bytes;
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
   return true;
@@ -502,6 +516,7 @@ auto RiggedCullPipeline::role_color_palette_index(const RiggedCreatureCmd& cmd)
                   static_cast<GLintptr>(m_role_color_stream_cursor_bytes),
                   static_cast<GLsizeiptr>(k_bytes),
                   packed.data());
+  note_buffer_transfer(static_cast<std::size_t>(k_bytes));
   m_role_color_stream_cursor_bytes += k_bytes;
   m_role_color_palette_indices.emplace(key, palette_index);
   return palette_index;
@@ -768,6 +783,7 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
                   0,
                   static_cast<GLsizeiptr>(reset.size() * sizeof(GLuint)),
                   reset.data());
+  note_buffer_transfer(static_cast<std::size_t>(reset.size() * sizeof(GLuint)));
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
   Shader* finalize = m_finalize_shader_storage.get();

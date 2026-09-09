@@ -6,10 +6,36 @@
 #include <qhashfunctions.h>
 #include <qimage.h>
 
+#include <cstddef>
+
+#include "gl_resource_tracking.h"
 #include "platform_gl.h"
 #include "render/profiling/asset_counters.h"
 
 namespace Render::GL {
+
+namespace {
+
+constexpr std::size_t k_rgba8_bytes_per_texel = 4;
+
+auto bytes_per_texel(GLenum internal_format, GLenum type) -> std::size_t {
+  switch (internal_format) {
+  case GL_R32F:
+    return 4;
+  case GL_RG16F:
+    return 4;
+  case GL_RGBA16F:
+    return 8;
+  case GL_DEPTH_COMPONENT:
+    return type == GL_FLOAT ? 4 : 2;
+  case GL_RGB:
+    return 3;
+  default:
+    return k_rgba8_bytes_per_texel;
+  }
+}
+
+} // namespace
 
 Texture::Texture() = default;
 
@@ -44,6 +70,10 @@ auto Texture::load_from_file(const QString& path) -> bool {
                GL_RGBA,
                GL_UNSIGNED_BYTE,
                image.constBits());
+  note_texture_storage(texture_transfer_bytes(static_cast<std::size_t>(m_width),
+                                              static_cast<std::size_t>(m_height),
+                                              k_rgba8_bytes_per_texel),
+                       true);
 
   set_filter(Filter::Linear, Filter::Linear);
   set_wrap(Wrap::Repeat, Wrap::Repeat);
@@ -83,6 +113,10 @@ auto Texture::create_empty(int width, int height, Format format) -> bool {
 
   glTexImage2D(
       GL_TEXTURE_2D, 0, internal_format, width, height, 0, gl_format, type, nullptr);
+  note_texture_storage(texture_transfer_bytes(static_cast<std::size_t>(width),
+                                              static_cast<std::size_t>(height),
+                                              bytes_per_texel(internal_format, type)),
+                       false);
 
   set_filter(Filter::Linear, Filter::Linear);
   set_wrap(Wrap::ClampToEdge, Wrap::ClampToEdge);
@@ -96,7 +130,7 @@ void Texture::bind(int unit) {
   initializeOpenGLFunctions();
   if (m_texture == 0U) {
     glGenTextures(1, &m_texture);
-    Render::Profiling::count_asset(Render::Profiling::AssetCounter::GlTextureCreated);
+    note_textures_created();
   }
   glActiveTexture(GL_TEXTURE0 + unit);
   glBindTexture(GL_TEXTURE_2D, m_texture);

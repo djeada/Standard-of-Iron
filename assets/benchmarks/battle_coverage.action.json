@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "name": "battle_coverage",
+  "loop_seconds": 20.0,
+  "required_coverage": [
+    "formation_move",
+    "selection_change",
+    "melee_contact",
+    "projectile_volley",
+    "fog_reveal",
+    "build_panel",
+    "production_order",
+    "killing_blow",
+    "weather_active"
+  ],
+  "actions": [
+    {
+      "at": 1.0,
+      "action": "select_all"
+    },
+    {
+      "at": 1.5,
+      "action": "hover_at",
+      "x": 0.5,
+      "y": 0.45
+    },
+    {
+      "at": 2.0,
+      "action": "move_to",
+      "x": 0.5,
+      "y": 0.42
+    },
+    {
+      "at": 3.5,
+      "action": "select_all"
+    },
+    {
+      "at": 4.0,
+      "action": "select_by_type",
+      "argument": "swordsman"
+    },
+    {
+      "at": 4.5,
+      "action": "attack_at",
+      "x": 0.5,
+      "y": 0.44
+    },
+    {
+      "at": 5.5,
+      "action": "select_all"
+    },
+    {
+      "at": 6.0,
+      "action": "select_by_type",
+      "argument": "spearman"
+    },
+    {
+      "at": 6.5,
+      "action": "attack_at",
+      "x": 0.5,
+      "y": 0.44
+    },
+    {
+      "at": 7.5,
+      "action": "select_all"
+    },
+    {
+      "at": 8.0,
+      "action": "run"
+    },
+    {
+      "at": 8.5,
+      "action": "attack_at",
+      "x": 0.5,
+      "y": 0.3
+    },
+    {
+      "at": 9.5,
+      "action": "select_all"
+    },
+    {
+      "at": 10.0,
+      "action": "select_by_type",
+      "argument": "builder"
+    },
+    {
+      "at": 10.5,
+      "action": "build_panel"
+    },
+    {
+      "at": 11.0,
+      "action": "select_at",
+      "x": 0.5,
+      "y": 0.68
+    },
+    {
+      "at": 12.0,
+      "action": "production_panel"
+    },
+    {
+      "at": 12.5,
+      "action": "recruit",
+      "argument": "archer"
+    },
+    {
+      "at": 13.5,
+      "action": "set_rally",
+      "x": 0.5,
+      "y": 0.4
+    },
+    {
+      "at": 14.5,
+      "action": "select_all"
+    },
+    {
+      "at": 15.0,
+      "action": "move_to",
+      "x": 0.5,
+      "y": 0.35
+    },
+    {
+      "at": 16.5,
+      "action": "guard_at",
+      "x": 0.5,
+      "y": 0.4
+    },
+    {
+      "at": 17.5,
+      "action": "hold"
+    },
+    {
+      "at": 18.5,
+      "action": "stop"
+    },
+    {
+      "at": 19.0,
+      "action": "attack_at",
+      "x": 0.5,
+      "y": 0.3
+    }
+  ]
+}

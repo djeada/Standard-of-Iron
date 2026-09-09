@@ -1,6 +1,9 @@
 #version 330 core
 #include "directional_shadows.glsl"
+#include "ground_readability.glsl"
 #include "visibility_mask.glsl"
+
+uniform vec3 u_camera_pos;
 
 in vec3 v_color;
 in vec3 v_world_pos;
@@ -19,7 +22,9 @@ void main() {
 
   float across = clamp(abs(v_edge), 0.0, 1.0);
   float fold = 1.0 - across * across;
-  vec3 color = v_color * mix(0.82, 1.12, fold);
+  float tactical = ground_tactical_distance(length(u_camera_pos - v_world_pos));
+  float detail_weight = mix(1.0, 0.30, tactical);
+  vec3 color = v_color * mix(1.0, mix(0.82, 1.12, fold), detail_weight);
 
 #if SOI_ULTRA_EFFECTS
 
@@ -29,7 +34,7 @@ void main() {
       pow(max(dot(view_dir, -sun_dir), 0.0), 3.0) * clamp(sun_dir.y * 2.0, 0.0, 1.0);
   vec3 sun = environment_primary_color() * environment_primary_intensity();
   color = apply_directional_shadow(color, v_world_pos, vec3(0.0, 1.0, 0.0));
-  color += v_color * sun * backlit * 0.45 * fold;
+  color += v_color * sun * backlit * 0.45 * fold * detail_weight;
 #endif
 
   color = apply_visibility_memory(color, v_world_pos.xz);

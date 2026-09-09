@@ -1,13 +1,13 @@
 const float k_soi_grade_exposure = 2.15;
 const float k_soi_grade_white_point = 3.70;
-const float k_soi_grade_contrast = 1.18;
+const float k_soi_grade_contrast = 1.10;
 const float k_soi_grade_pivot = 0.38;
-const float k_soi_grade_saturation = 1.20;
+const float k_soi_grade_saturation = 1.08;
 const vec3 k_soi_grade_shadow_lift = vec3(0.017, 0.022, 0.040);
-const vec3 k_soi_grade_highlight_tint = vec3(1.035, 0.990, 0.915);
+const vec3 k_soi_grade_highlight_tint = vec3(1.012, 1.000, 0.980);
 const vec3 k_soi_grade_shadow_tone = vec3(0.86, 0.94, 1.14);
-const vec3 k_soi_grade_highlight_tone = vec3(1.08, 1.005, 0.88);
-const float k_soi_grade_split_strength = 0.64;
+const vec3 k_soi_grade_highlight_tone = vec3(1.035, 1.005, 0.955);
+const float k_soi_grade_split_strength = 0.38;
 const float k_soi_grade_split_balance = 0.36;
 const vec3 k_soi_grade_luma = vec3(0.2126, 0.7152, 0.0722);
 
@@ -42,14 +42,28 @@ vec3 soi_split_tone(vec3 color, float strength) {
 }
 
 vec3 soi_grade(vec3 mapped_color) {
-  vec3 contrasted =
-      (mapped_color - k_soi_grade_pivot) * k_soi_grade_contrast + k_soi_grade_pivot;
+  // Keep contrast in the midtones without clipping shaded equipment and faces
+  // to black before the shadow lift. Scene lighting already supplies the mood.
+  float mapped_luma = max(dot(mapped_color, k_soi_grade_luma), 0.0);
+  float contrast_weight =
+      smoothstep(0.04, 0.24, mapped_luma) * (1.0 - smoothstep(0.72, 1.0, mapped_luma));
+  float contrast = mix(1.0, k_soi_grade_contrast, contrast_weight);
+  vec3 contrasted = (mapped_color - k_soi_grade_pivot) * contrast + k_soi_grade_pivot;
   contrasted = max(contrasted, vec3(0.0));
   float luma = dot(contrasted, k_soi_grade_luma);
-  vec3 saturated = mix(vec3(luma), contrasted, k_soi_grade_saturation);
+  // Avoid turning bright cloth and metal into clipped patches of primary color.
+  float saturation = mix(k_soi_grade_saturation, 1.0, smoothstep(0.55, 0.95, luma));
+  vec3 saturated = mix(vec3(luma), contrasted, saturation);
   saturated = max(saturated, vec3(0.0));
-  vec3 tinted = mix(saturated, saturated * k_soi_grade_highlight_tint, luma);
+  vec3 tinted =
+      mix(saturated, saturated * k_soi_grade_highlight_tint, clamp(luma, 0.0, 1.0));
   tinted = soi_split_tone(tinted, k_soi_grade_split_strength);
+  // Neutral materials (notably white wool) must survive the artistic warm
+  // grade as neutral. Retain the grade's luminance and leave colored cloth alone.
+  float chroma = max(max(mapped_color.r, mapped_color.g), mapped_color.b) -
+                 min(min(mapped_color.r, mapped_color.g), mapped_color.b);
+  float neutral = 1.0 - smoothstep(0.015, 0.06, chroma);
+  tinted = mix(tinted, vec3(dot(tinted, k_soi_grade_luma)), neutral);
   vec3 lifted =
       k_soi_grade_shadow_lift + tinted * (vec3(1.0) - k_soi_grade_shadow_lift);
   return clamp(lifted, 0.0, 1.0);
@@ -84,6 +98,10 @@ vec3 soi_time_of_day_grade(vec3 color, float night, float dusk) {
   dusk_tone = mix(dusk_tone, k_soi_dusk_highlight_tone, highlight_weight);
   vec3 dusk_color = color * dusk_tone;
   dusk_color = mix(vec3(luma), dusk_color, 1.0 + k_soi_dusk_saturation);
+  float chroma =
+      max(max(color.r, color.g), color.b) - min(min(color.r, color.g), color.b);
+  float neutral = 1.0 - smoothstep(0.015, 0.06, chroma);
+  dusk_color = mix(dusk_color, vec3(dot(dusk_color, k_soi_grade_luma)), neutral);
   color = mix(color, max(dusk_color, vec3(0.0)), clamp(dusk, 0.0, 1.0));
   return clamp(color, 0.0, 1.0);
 }

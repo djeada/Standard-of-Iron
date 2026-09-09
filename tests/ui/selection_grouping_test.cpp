@@ -282,3 +282,140 @@ TEST(SelectionGroupingTest, AGroupWithOneMindIsNotFlaggedAsMixed) {
 }
 
 } // namespace
+
+TEST(SelectionGroupingTest, ASplitSquadReportsTheFightRatherThanFlickering) {
+  QVariantList units;
+  const auto soldier = [](const char* activity, const char* state) {
+    QVariantMap row = unit("swordsman", "Swordsman", 1.0).toMap();
+    row[QStringLiteral("activity")] = QString::fromLatin1(activity);
+    row[QStringLiteral("activity_state")] = QString::fromLatin1(state);
+    return QVariant(row);
+  };
+  units.append(soldier("attack", "active"));
+  units.append(soldier("attack", "active"));
+  units.append(soldier("guard", "active"));
+  units.append(soldier("guard", "active"));
+
+  const auto groups = group_selection_by_type(units);
+
+  ASSERT_EQ(groups.size(), 1U);
+  EXPECT_EQ(groups[0].activity, QStringLiteral("attack"))
+      << "an even split must resolve to the fight, not to whichever id sorts first";
+  EXPECT_TRUE(groups[0].mixed_activity);
+}
+
+TEST(SelectionGroupingTest, TiedActivityStatesResolveToTheEngagedOne) {
+  QVariantList units;
+  const auto soldier = [](const char* state) {
+    QVariantMap row = unit("archer", "Archer", 1.0).toMap();
+    row[QStringLiteral("activity")] = QStringLiteral("attack");
+    row[QStringLiteral("activity_state")] = QString::fromLatin1(state);
+    return QVariant(row);
+  };
+  units.append(soldier("queued"));
+  units.append(soldier("active"));
+
+  const auto groups = group_selection_by_type(units);
+
+  ASSERT_EQ(groups.size(), 1U);
+  EXPECT_EQ(groups[0].activity, QStringLiteral("attack"));
+  EXPECT_EQ(groups[0].activity_state, QStringLiteral("active"))
+      << "a unit swinging and a unit closing must not swap the badge each frame";
+}
+
+TEST(SelectionGroupingTest, ATrueMajorityStillWinsOverThePriorityOrder) {
+  QVariantList units;
+  const auto soldier = [](const char* activity) {
+    QVariantMap row = unit("spearman", "Spearman", 1.0).toMap();
+    row[QStringLiteral("activity")] = QString::fromLatin1(activity);
+    row[QStringLiteral("activity_state")] = QStringLiteral("active");
+    return QVariant(row);
+  };
+  units.append(soldier("attack"));
+  units.append(soldier("move"));
+  units.append(soldier("move"));
+
+  const auto groups = group_selection_by_type(units);
+
+  ASSERT_EQ(groups.size(), 1U);
+  EXPECT_EQ(groups[0].activity, QStringLiteral("move"));
+  EXPECT_EQ(groups[0].activity_count, 2);
+}
+
+namespace {
+
+auto squad(const char* activity, const char* state) -> App::Models::SelectionGroup {
+  App::Models::SelectionGroup group;
+  group.type_key = QStringLiteral("swordsman");
+  group.activity = QString::fromLatin1(activity);
+  group.activity_state = QString::fromLatin1(state);
+  return group;
+}
+
+auto settled(App::Models::SelectionActivityDwell& dwell,
+             const char* activity,
+             const char* state) -> QString {
+  std::vector<App::Models::SelectionGroup> groups{squad(activity, state)};
+  dwell.settle(groups);
+  return groups[0].activity;
+}
+
+} // namespace
+
+TEST(SelectionActivityDwellTest, TheFirstSampleIsShownImmediately) {
+  App::Models::SelectionActivityDwell dwell;
+  EXPECT_EQ(settled(dwell, "attack", "active"), QStringLiteral("attack"));
+}
+
+TEST(SelectionActivityDwellTest, AlternatingSamplesNeverChangeTheIcon) {
+  App::Models::SelectionActivityDwell dwell;
+  ASSERT_EQ(settled(dwell, "attack", "active"), QStringLiteral("attack"));
+  for (int i = 0; i < 20; ++i) {
+    EXPECT_EQ(settled(dwell, "move", "active"), QStringLiteral("attack"));
+    EXPECT_EQ(settled(dwell, "attack", "active"), QStringLiteral("attack"));
+  }
+}
+
+TEST(SelectionActivityDwellTest, ASustainedChangeIsAdopted) {
+  App::Models::SelectionActivityDwell dwell;
+  ASSERT_EQ(settled(dwell, "attack", "active"), QStringLiteral("attack"));
+  EXPECT_EQ(settled(dwell, "move", "active"), QStringLiteral("attack"))
+      << "one sample is not enough to move the icon";
+  EXPECT_EQ(settled(dwell, "move", "active"), QStringLiteral("move"))
+      << "a change that persists must be shown";
+  EXPECT_EQ(settled(dwell, "move", "active"), QStringLiteral("move"));
+}
+
+TEST(SelectionActivityDwellTest, AStateFlipAloneIsAlsoDebounced) {
+  App::Models::SelectionActivityDwell dwell;
+  std::vector<App::Models::SelectionGroup> groups{squad("attack", "active")};
+  dwell.settle(groups);
+  for (int i = 0; i < 10; ++i) {
+    groups = {squad("attack", "queued")};
+    dwell.settle(groups);
+    EXPECT_EQ(groups[0].activity_state, QStringLiteral("active"));
+    groups = {squad("attack", "active")};
+    dwell.settle(groups);
+    EXPECT_EQ(groups[0].activity_state, QStringLiteral("active"));
+  }
+}
+
+TEST(SelectionActivityDwellTest, ANewSquadTypeStartsFresh) {
+  App::Models::SelectionActivityDwell dwell;
+  std::vector<App::Models::SelectionGroup> groups{squad("attack", "active")};
+  dwell.settle(groups);
+
+  App::Models::SelectionGroup archers;
+  archers.type_key = QStringLiteral("archer");
+  archers.activity = QStringLiteral("move");
+  archers.activity_state = QStringLiteral("active");
+  groups = {archers};
+  dwell.settle(groups);
+  EXPECT_EQ(groups[0].activity, QStringLiteral("move"))
+      << "a type the player just selected must show its real activity at once";
+
+  groups = {squad("move", "active")};
+  dwell.settle(groups);
+  EXPECT_EQ(groups[0].activity, QStringLiteral("move"))
+      << "a type that left the selection must not keep its old held value";
+}

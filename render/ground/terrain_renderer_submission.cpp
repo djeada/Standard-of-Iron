@@ -9,6 +9,7 @@
 #include <cstddef>
 
 #include "game/map/visibility_service.h"
+#include "render/gl/gl_resource_tracking.h"
 #include "render/gl/shader.h"
 #include "render/gl/texture.h"
 #include "render/scene_renderer.h"
@@ -141,6 +142,7 @@ void TerrainRenderer::bake_terrain_microdetail() {
 
   GLuint texture = 0U;
   gl->glGenTextures(1, &texture);
+  note_textures_created(1);
   gl->glBindTexture(GL_TEXTURE_2D, texture);
   gl->glTexImage2D(GL_TEXTURE_2D,
                    0,
@@ -151,6 +153,11 @@ void TerrainRenderer::bake_terrain_microdetail() {
                    GL_RGBA,
                    GL_FLOAT,
                    nullptr);
+  note_texture_storage(
+      texture_transfer_bytes(static_cast<std::size_t>(k_microdetail_size),
+                             static_cast<std::size_t>(k_microdetail_size),
+                             8U),
+      false);
   gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -161,6 +168,7 @@ void TerrainRenderer::bake_terrain_microdetail() {
   gl->glGenFramebuffers(1, &fbo);
   if (m_noise_atlas_vao == 0U) {
     context->extraFunctions()->glGenVertexArrays(1, &m_noise_atlas_vao);
+    note_vertex_arrays_created(1);
   }
 
   GLint previous_fbo = 0;
@@ -255,6 +263,7 @@ void TerrainRenderer::bake_terrain_noise_atlas() {
     }
     const auto allocate_atlas = [&](unsigned int& target) {
       gl->glGenTextures(1, &target);
+      note_textures_created(1);
       gl->glBindTexture(GL_TEXTURE_2D, target);
       gl->glTexImage2D(GL_TEXTURE_2D,
                        0,
@@ -265,6 +274,10 @@ void TerrainRenderer::bake_terrain_noise_atlas() {
                        GL_RGBA,
                        GL_FLOAT,
                        nullptr);
+      note_texture_storage(texture_transfer_bytes(static_cast<std::size_t>(atlas_size),
+                                                  static_cast<std::size_t>(atlas_size),
+                                                  8U),
+                           false);
       gl->glTexParameteri(
           GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
       gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -282,6 +295,7 @@ void TerrainRenderer::bake_terrain_noise_atlas() {
   }
   if (m_noise_atlas_vao == 0U) {
     context->extraFunctions()->glGenVertexArrays(1, &m_noise_atlas_vao);
+    note_vertex_arrays_created(1);
   }
 
   GLint previous_fbo = 0;
@@ -398,6 +412,8 @@ auto TerrainRenderer::update_height_texture() -> TerrainSurfaceCmd::HeightResour
                         GL_RED,
                         GL_FLOAT,
                         m_height_data.data());
+    note_texture_transfer(texture_transfer_bytes(
+        static_cast<std::size_t>(m_width), static_cast<std::size_t>(m_height), 4U));
     m_height_texture_dirty = false;
   }
 
@@ -430,6 +446,8 @@ auto TerrainRenderer::update_height_texture() -> TerrainSurfaceCmd::HeightResour
                         GL_RGBA,
                         GL_FLOAT,
                         m_terrain_field_data.data());
+    note_texture_transfer(texture_transfer_bytes(
+        static_cast<std::size_t>(m_width), static_cast<std::size_t>(m_height), 16U));
     m_terrain_fields_dirty = false;
   }
 

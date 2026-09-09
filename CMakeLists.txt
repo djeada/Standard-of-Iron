@@ -648,6 +648,7 @@ add_library(
     app_core
     STATIC
     # app/core -- the composition root and the frame it drives.
+    app/core/benchmark_action_fixture.cpp
     app/core/frame_ui_coordinator.cpp
     app/core/game_engine.cpp
     app/core/game_engine_composition.cpp

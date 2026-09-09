@@ -9,12 +9,15 @@
 #include <cstddef>
 #include <limits>
 #include <memory>
+#include <sstream>
 #include <vector>
 
 #include "gl/buffer.h"
 #include "gl_lifetime.h"
 #include "platform_gl.h"
 #include "render/gl/draw_tally.h"
+#include "render/profiling/asset_counters.h"
+#include "render/profiling/gl_creation_trace.h"
 #include "render_constants.h"
 #include "vertex_attrib_layout.h"
 
@@ -69,6 +72,12 @@ void Mesh::setup_buffers() {
       qWarning() << "Mesh::setup_buffers inherited GL error" << stale
                  << "from an earlier call";
     }
+  }
+  if (Render::Profiling::gl_creation_trace_enabled()) {
+    std::ostringstream fingerprint;
+    fingerprint << "vertices=" << m_vertices.size() << " indices=" << m_indices.size()
+                << " radius=" << m_bounds_radius;
+    Render::Profiling::record_mesh_upload(fingerprint.str());
   }
   m_vao = std::make_unique<VertexArray>();
   m_vbo = std::make_unique<Buffer>(Buffer::Type::Vertex);

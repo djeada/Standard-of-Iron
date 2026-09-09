@@ -10,6 +10,7 @@
 #include "../core/component_core.h"
 #include "../core/entity.h"
 #include "../core/world.h"
+#include "../systems/nav_grid.h"
 #include "army_formation_registry.h"
 #include "formation_doctrine.h"
 
@@ -70,22 +71,24 @@ auto rank_and_file(const std::vector<FormationSlot>& slot_list,
 auto ArmyFormationService::spread(int count,
                                   const QVector3D& centre,
                                   float spacing) -> std::vector<QVector3D> {
+  auto const offsets = ArmyFormationPlanner::scatter_offsets(count, spacing);
   std::vector<QVector3D> out;
-  if (count <= 0) {
-    return out;
-  }
-  out.reserve(static_cast<std::size_t>(count));
-  int const side = static_cast<int>(std::ceil(std::sqrt(static_cast<float>(count))));
-  for (int i = 0; i < count; ++i) {
-    int const gx = i % side;
-    int const gy = i / side;
-    float const ox =
-        (static_cast<float>(gx) - static_cast<float>(side - 1) * 0.5F) * spacing;
-    float const oz =
-        (static_cast<float>(gy) - static_cast<float>(side - 1) * 0.5F) * spacing;
-    out.emplace_back(centre.x() + ox, centre.y(), centre.z() + oz);
+  out.reserve(offsets.size());
+  for (const auto& offset : offsets) {
+    out.emplace_back(centre.x() + offset.x(), centre.y(), centre.z() + offset.z());
   }
   return out;
+}
+
+auto ArmyFormationService::facing_from(const QVector3D& centroid,
+                                       const QVector3D& anchor) -> float {
+  QVector3D forward = anchor - centroid;
+  forward.setY(0.0F);
+  if (forward.lengthSquared() <= 1.0e-4F) {
+    return 0.0F;
+  }
+  forward.normalize();
+  return std::atan2(forward.x(), forward.z()) * k_rad_to_deg;
 }
 
 auto ArmyFormationService::auto_facing(Engine::Core::World& world,
@@ -109,13 +112,7 @@ auto ArmyFormationService::auto_facing(Engine::Core::World& world,
   if (count == 0) {
     return 0.0F;
   }
-  QVector3D forward = anchor - (sum / static_cast<float>(count));
-  forward.setY(0.0F);
-  if (forward.lengthSquared() <= 1.0e-4F) {
-    return 0.0F;
-  }
-  forward.normalize();
-  return std::atan2(forward.x(), forward.z()) * k_rad_to_deg;
+  return facing_from(sum / static_cast<float>(count), anchor);
 }
 
 auto ArmyFormationService::doctrine_for_selection(Engine::Core::World& world,
@@ -151,20 +148,20 @@ auto ArmyFormationService::availability(Engine::Core::World& world,
       static_cast<int>(collected.size()));
 }
 
-auto ArmyFormationService::positions_for(
+auto ArmyFormationService::placements_for(
     const std::vector<ArmyFormationMember>& members,
-    const ArmyFormationRequest& request) -> std::vector<QVector3D> {
-  std::vector<QVector3D> positions;
-  positions.assign(members.size(), request.anchor);
+    const ArmyFormationRequest& request) -> std::vector<PlacedSlot> {
+  std::vector<PlacedSlot> placements;
+  placements.assign(members.size(), PlacedSlot{request.anchor, SlotStatus::Blocked});
   if (members.empty()) {
-    return positions;
+    return placements;
   }
 
-  auto const plan = ArmyFormationPlanner::plan(members, request);
+  auto plan = ArmyFormationPlanner::plan(members, request);
   if (!plan.valid) {
-    return spread(static_cast<int>(members.size()),
-                  request.anchor,
-                  std::max(0.5F, request.spacing));
+    plan = ArmyFormationPlanner::place(
+        ArmyFormationPlanner::scatter_layout(members, std::max(0.5F, request.spacing)),
+        request);
   }
 
   std::unordered_map<EntityID, std::size_t> index_of;
@@ -175,10 +172,10 @@ auto ArmyFormationService::positions_for(
   for (const auto& slot : plan.slot_list) {
     auto it = index_of.find(slot.occupant);
     if (it != index_of.end()) {
-      positions[it->second] = slot.world_position;
+      placements[it->second] = {slot.world_position, slot.status};
     }
   }
-  return positions;
+  return placements;
 }
 
 auto ArmyFormationService::preview(Engine::Core::World& world,

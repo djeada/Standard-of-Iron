@@ -4,7 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
-#include <numbers>
+#include <cstddef>
 #include <optional>
 #include <unordered_map>
 
@@ -16,8 +16,6 @@
 namespace Game::Systems::AI {
 
 namespace {
-
-constexpr float k_rad_to_deg = 180.0F / std::numbers::pi_v<float>;
 
 auto formation_ai_logger() -> QLoggingCategory& {
   static QLoggingCategory category("soi.ai.formation", QtWarningMsg);
@@ -52,13 +50,8 @@ auto facing_towards(const std::vector<Game::Formation::ArmyFormationMember>& mem
   for (const auto& member : members) {
     sum += member.current_position;
   }
-  QVector3D forward = anchor - (sum / static_cast<float>(members.size()));
-  forward.setY(0.0F);
-  if (forward.lengthSquared() <= 1.0e-4F) {
-    return 0.0F;
-  }
-  forward.normalize();
-  return std::atan2(forward.x(), forward.z()) * k_rad_to_deg;
+  return Game::Formation::ArmyFormationService::facing_from(
+      sum / static_cast<float>(members.size()), anchor);
 }
 
 } // namespace
@@ -71,28 +64,61 @@ auto doctrine_for_nation(const Game::Systems::Nation* nation)
   return Game::Formation::k_neutral_doctrine;
 }
 
-auto plan_ai_formation(const AIFormationRequest& request,
-                       const std::vector<const EntitySnapshot*>& units)
-    -> std::vector<QVector3D> {
-  auto const doctrine = doctrine_for_nation(request.nation);
-  auto const members = build_members(units, doctrine);
+namespace {
 
+auto to_plan_request(const AIFormationRequest& request,
+                     const std::vector<Game::Formation::ArmyFormationMember>& members,
+                     const Game::Formation::FormationDoctrineId& doctrine)
+    -> Game::Formation::ArmyFormationRequest {
   Game::Formation::ArmyFormationRequest plan_request;
   plan_request.anchor = request.anchor;
-  plan_request.facing = facing_towards(members, request.anchor);
+  plan_request.facing =
+      request.facing.value_or(facing_towards(members, request.anchor));
   plan_request.intent = request.intent;
   plan_request.doctrine = doctrine;
   plan_request.spacing = request.spacing;
   plan_request.resolve_terrain = request.resolve_terrain;
   plan_request.preserve_previous_slots = false;
   plan_request.options.movement_policy = request.movement;
+  plan_request.options.preserve_member_order = request.preserve_member_order;
   plan_request.members.reserve(members.size());
   for (const auto& member : members) {
     plan_request.members.push_back(member.entity_id);
   }
+  return plan_request;
+}
+
+} // namespace
+
+auto muster_footprint(const AIFormationRequest& request,
+                      const std::vector<const EntitySnapshot*>& units)
+    -> MusterFootprint {
+  auto const doctrine = doctrine_for_nation(request.nation);
+  auto const members = build_members(units, doctrine);
+  if (members.empty()) {
+    return {};
+  }
+  auto plan_request = to_plan_request(request, members, doctrine);
+  plan_request.resolve_terrain = false;
+  auto const layout =
+      Game::Formation::ArmyFormationPlanner::build_layout(members, plan_request);
+  if (layout.valid) {
+    return {layout.frontage, layout.depth, true};
+  }
+  auto const scattered = Game::Formation::ArmyFormationPlanner::scatter_layout(
+      members, std::max(0.5F, request.spacing));
+  return {scattered.frontage, scattered.depth, scattered.valid};
+}
+
+auto plan_ai_formation(const AIFormationRequest& request,
+                       const std::vector<const EntitySnapshot*>& units)
+    -> std::vector<AIFormationSlot> {
+  auto const doctrine = doctrine_for_nation(request.nation);
+  auto const members = build_members(units, doctrine);
+  auto const plan_request = to_plan_request(request, members, doctrine);
 
   auto planned =
-      Game::Formation::ArmyFormationService::positions_for(members, plan_request);
+      Game::Formation::ArmyFormationService::placements_for(members, plan_request);
 
   if (formation_ai_logger().isDebugEnabled()) {
     auto const plan =
@@ -108,27 +134,31 @@ auto plan_ai_formation(const AIFormationRequest& request,
         << (plan.valid ? "" : QString::fromStdString(plan.rejection_reason));
   }
 
-  std::vector<QVector3D> out;
+  std::vector<AIFormationSlot> out;
   out.reserve(units.size());
-  std::unordered_map<Engine::Core::EntityID, QVector3D> by_id;
+  std::unordered_map<Engine::Core::EntityID, AIFormationSlot> by_id;
   by_id.reserve(members.size());
   for (std::size_t i = 0; i < members.size() && i < planned.size(); ++i) {
-    by_id.emplace(members[i].entity_id, planned[i]);
+    by_id.emplace(
+        members[i].entity_id,
+        AIFormationSlot{planned[i].position,
+                        planned[i].status != Game::Formation::SlotStatus::Blocked});
   }
   for (const auto* unit : units) {
     if (unit == nullptr) {
-      out.push_back(request.anchor);
+      out.push_back({request.anchor, false});
       continue;
     }
     auto it = by_id.find(unit->id);
-    out.push_back(it == by_id.end() ? request.anchor : it->second);
+    out.push_back(it == by_id.end() ? AIFormationSlot{request.anchor, false}
+                                    : it->second);
   }
   return out;
 }
 
 auto plan_ai_formation(const AIFormationRequest& request,
                        const std::vector<Engine::Core::EntityID>& unit_ids,
-                       const AISnapshot& snapshot) -> std::vector<QVector3D> {
+                       const AISnapshot& snapshot) -> std::vector<AIFormationSlot> {
   std::unordered_map<Engine::Core::EntityID, const EntitySnapshot*> lookup;
   lookup.reserve(snapshot.friendly_units.size());
   for (const auto& unit : snapshot.friendly_units) {
@@ -142,6 +172,26 @@ auto plan_ai_formation(const AIFormationRequest& request,
     units.push_back(it == lookup.end() ? nullptr : it->second);
   }
   return plan_ai_formation(request, units);
+}
+
+auto move_to_slots(const std::vector<Engine::Core::EntityID>& unit_ids,
+                   const std::vector<AIFormationSlot>& slot_list) -> AICommand {
+  AICommand command;
+  command.type = AICommandType::MoveUnits;
+  command.units.reserve(unit_ids.size());
+  command.move_target_x.reserve(unit_ids.size());
+  command.move_target_y.reserve(unit_ids.size());
+  command.move_target_z.reserve(unit_ids.size());
+  for (std::size_t i = 0; i < unit_ids.size() && i < slot_list.size(); ++i) {
+    if (!slot_list[i].usable) {
+      continue;
+    }
+    command.units.push_back(unit_ids[i]);
+    command.move_target_x.push_back(slot_list[i].position.x());
+    command.move_target_y.push_back(slot_list[i].position.y());
+    command.move_target_z.push_back(slot_list[i].position.z());
+  }
+  return command;
 }
 
 namespace {

@@ -306,8 +306,8 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
         target_z = (target_z + army.z) * 0.5F;
       }
     } else if (context.has_base_anchor) {
-      target_x = context.rally_x;
-      target_z = context.rally_z;
+      target_x = context.station.x;
+      target_z = context.station.z;
     } else {
       continue;
     }

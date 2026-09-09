@@ -30,7 +30,11 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   } else if (breed > 0.70F) {
     wool = mixed(wool, QVector3D(0.50F, 0.42F, 0.33F), 0.42F);
   } else {
-    wool = mixed(wool, QVector3D(0.70F, 0.65F, 0.55F), 0.28F + (breed * 0.46F));
+
+    float const value = wool.x() * 0.299F + wool.y() * 0.587F + wool.z() * 0.114F;
+    wool = mixed(QVector3D(value, value, value),
+                 QVector3D(0.86F, 0.86F, 0.85F),
+                 0.28F + (breed * 0.46F));
   }
 
   bool const dark_faced = breed > 0.70F || hash_unit_float(state.seed, 23U) < 0.50F;
@@ -40,14 +44,19 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
                                      hash_unit_float(state.seed, 29U))
                              : mixed(wool, QVector3D(0.50F, 0.40F, 0.30F), 0.74F);
 
-  wool = mixed(wool, QVector3D(0.73F, 0.69F, 0.61F), 0.36F);
-  QVector3D const shade =
-      mixed(tinted(wool, 0.66F), QVector3D(0.32F, 0.28F, 0.24F), 0.26F);
+  wool = mixed(wool,
+               breed <= 0.70F ? QVector3D(0.83F, 0.83F, 0.82F)
+                              : QVector3D(0.73F, 0.69F, 0.61F),
+               0.36F);
+  QVector3D const shade = mixed(tinted(wool, 0.66F),
+                                breed <= 0.70F ? QVector3D(0.36F, 0.36F, 0.35F)
+                                               : QVector3D(0.32F, 0.28F, 0.24F),
+                                0.26F);
 
   Render::GL::WildlifeVariant variant;
   variant.roles[Render::Wildlife::k_sheep_role_wool - 1U] = wool;
   variant.roles[Render::Wildlife::k_sheep_role_wool_light - 1U] =
-      mixed(tinted(wool, 1.10F), QVector3D(0.97F, 0.95F, 0.89F), 0.16F);
+      mixed(tinted(wool, 1.10F), QVector3D(0.97F, 0.97F, 0.96F), 0.16F);
   variant.roles[Render::Wildlife::k_sheep_role_wool_shade - 1U] = shade;
   variant.roles[Render::Wildlife::k_sheep_role_wool_grubby - 1U] =
       mixed(shade, QVector3D(0.46F, 0.39F, 0.28F), 0.60F);

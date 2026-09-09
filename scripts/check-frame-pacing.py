@@ -23,7 +23,12 @@ MISSIONS = (
 )
 
 
-def read_report(path: Path, preset: str, camera_cycle: bool = False) -> list[str]:
+def read_report(
+    path: Path,
+    preset: str,
+    camera_cycle: bool = False,
+    action_fixture: bool = False,
+) -> list[str]:
     try:
         report = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
@@ -68,7 +73,91 @@ def read_report(path: Path, preset: str, camera_cycle: bool = False) -> list[str
         completed = cycle.get("completed_cycles") if isinstance(cycle, dict) else None
         if type(completed) is not int or completed < 1:
             failures.append("camera cycle did not complete")
+    if action_fixture:
+        failures.extend(read_action_coverage(report))
     return failures
+
+
+def read_action_coverage(report: dict) -> list[str]:
+    """Reject a run whose fixture never exercised the behaviour it claims."""
+    fixture = report.get("action_fixture")
+    if not isinstance(fixture, dict):
+        return ["the action fixture did not report its coverage"]
+    failures = []
+    executed = fixture.get("actions_executed")
+    if type(executed) is not int or executed < 1:
+        failures.append("the action fixture executed no actions")
+    observed = report.get("presentation_coverage")
+    if not isinstance(observed, dict):
+        failures.append("presentation coverage was not measured")
+        return failures
+    for name in fixture.get("required_coverage", []):
+        count = observed.get(name)
+        if type(count) is not int or count < 1:
+            failures.append(f"required behaviour was never observed: {name}")
+    return failures
+
+
+def copy_action_fixture(source: Path, output: Path):
+    source = source.resolve()
+    raw = source.read_bytes()
+    fixture = json.loads(raw)
+    if not isinstance(fixture, dict) or not fixture.get("required_coverage"):
+        raise ValueError(f"action fixture declares no required_coverage: {source}")
+    destination = output / "action_fixture.json"
+    destination.write_bytes(raw)
+    return destination, {
+        "source": str(source),
+        "artifact": destination.name,
+        "sha256": hashlib.sha256(raw).hexdigest(),
+        "name": fixture.get("name"),
+        "version": fixture.get("version"),
+        "required_coverage": fixture.get("required_coverage"),
+    }
+
+
+def compare_outcomes(rows: list[dict]) -> list[dict]:
+    """Report how the same fixture's simulation outcome moved across presets."""
+    grouped = {}
+    for row in rows:
+        coverage = row.get("coverage")
+        if not isinstance(coverage, dict):
+            continue
+        grouped.setdefault(row["mission"], []).append((row["preset"], coverage))
+    comparisons = []
+    for mission, entries in grouped.items():
+        keys = sorted({key for _, coverage in entries for key in coverage})
+        spread = {}
+        for key in keys:
+            values = [coverage.get(key, 0) for _, coverage in entries]
+            low, high = min(values), max(values)
+            spread[key] = {
+                "min": low,
+                "max": high,
+                "observed_everywhere": low > 0,
+            }
+        comparisons.append(
+            {
+                "mission": mission,
+                "presets": [preset for preset, _ in entries],
+                "coverage_spread": spread,
+                "behaviour_missing_somewhere": sorted(
+                    key
+                    for key, value in spread.items()
+                    if not value["observed_everywhere"]
+                ),
+            }
+        )
+    return comparisons
+
+
+def observed_coverage(report_path: Path) -> dict | None:
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    coverage = report.get("presentation_coverage")
+    return coverage if isinstance(coverage, dict) else None
 
 
 def capture(command: list[str]) -> str:
@@ -195,6 +284,11 @@ def main() -> int:
         "--camera-cycle", action="store_true", help="repeat a 20-second pan/zoom path"
     )
     parser.add_argument(
+        "--action-fixture",
+        type=Path,
+        help="versioned battle/UI action fixture; copied, hashed and gated on coverage",
+    )
+    parser.add_argument(
         "--allow-contended",
         action="store_true",
         help="collect diagnostic data despite competitors; the gate still fails",
@@ -249,6 +343,15 @@ def main() -> int:
                 }
             )
             missions.append(str(destination))
+    action_fixture_manifest = None
+    action_fixture_path = None
+    if args.action_fixture:
+        try:
+            action_fixture_path, action_fixture_manifest = copy_action_fixture(
+                args.action_fixture, output
+            )
+        except (OSError, ValueError) as error:
+            parser.error(str(error))
     environment = os.environ.copy()
     environment["SOI_BENCHMARK_CAMERA_CYCLE"] = "1" if args.camera_cycle else "0"
     environment["SOI_SWAP_INTERVAL"] = "1"
@@ -283,10 +386,11 @@ def main() -> int:
         "mission_files": mission_manifest,
         "seconds": args.seconds,
         "repeats": args.repeats,
+        "action_fixture": action_fixture_manifest,
         "coverage": {
             "campaign": not bool(args.replay or args.mission_file),
             "camera_cycle": args.camera_cycle,
-            "ui_actions": False,
+            "ui_actions": bool(action_fixture_manifest),
         },
     }
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
@@ -316,6 +420,8 @@ def main() -> int:
                     "--benchmark-output",
                     str(report_path),
                 ]
+                if action_fixture_path is not None:
+                    command += ["--action-fixture", str(action_fixture_path)]
                 print(
                     f"Measuring {mission} / {preset} / repeat {repeat + 1}", flush=True
                 )
@@ -338,7 +444,14 @@ def main() -> int:
                             failures.append(str(error))
                 if competitors:
                     failures.append("competing game or build processes detected")
-                failures.extend(read_report(report_path, preset, args.camera_cycle))
+                failures.extend(
+                    read_report(
+                        report_path,
+                        preset,
+                        args.camera_cycle,
+                        action_fixture_path is not None,
+                    )
+                )
                 rows.append(
                     {
                         "mission": mission,
@@ -351,6 +464,7 @@ def main() -> int:
                         ),
                         "competing_workloads": list(competitors.values()),
                         "report": report_path.name,
+                        "coverage": observed_coverage(report_path),
                         "passed": not failures,
                         "failures": failures,
                     }
@@ -362,7 +476,16 @@ def main() -> int:
                 )
     passed = all(row["passed"] for row in rows)
     (output / "summary.json").write_text(
-        json.dumps({"passed": passed, "complete": True, "runs": rows}, indent=2) + "\n"
+        json.dumps(
+            {
+                "passed": passed,
+                "complete": True,
+                "runs": rows,
+                "outcome_comparison": compare_outcomes(rows),
+            },
+            indent=2,
+        )
+        + "\n"
     )
     print(f"{'PASS' if passed else 'FAIL'}: {output / 'summary.json'}")
     return 0 if passed else 1

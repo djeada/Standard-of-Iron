@@ -49,6 +49,7 @@
 #include "draw_tally.h"
 #include "gl/resources.h"
 #include "gl_lifetime.h"
+#include "gl_resource_tracking.h"
 #include "mesh.h"
 #include "platform_gl.h"
 #include "render/draw_queue.h"
@@ -164,36 +165,46 @@ auto Backend::initialize() -> bool {
   apply_graphics_profile(Render::GraphicsSettings::instance().profile(), true);
 
   glGenBuffers(1, &m_frame_ubo);
+  note_buffers_created(1);
   glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
   glBufferData(GL_UNIFORM_BUFFER, 64, nullptr, GL_DYNAMIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(64), false);
   glBindBufferBase(GL_UNIFORM_BUFFER, k_frame_data_binding_point, m_frame_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   qInfo() << "Backend: Frame UBO created at binding 0";
   glGenBuffers(1, &m_environment_lighting_ubo);
+  note_buffers_created(1);
   glBindBuffer(GL_UNIFORM_BUFFER, m_environment_lighting_ubo);
   constexpr GLsizeiptr environment_ubo_size =
       sizeof(float) * EnvironmentLightingState::k_packed_float_count;
   glBufferData(GL_UNIFORM_BUFFER, environment_ubo_size, nullptr, GL_DYNAMIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(environment_ubo_size), false);
   glBindBufferBase(GL_UNIFORM_BUFFER,
                    k_environment_lighting_binding_point,
                    m_environment_lighting_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   qInfo() << "Backend: Environment lighting UBO created at binding 1";
   glGenBuffers(1, &m_local_lighting_ubo);
+  note_buffers_created(1);
   glBindBuffer(GL_UNIFORM_BUFFER, m_local_lighting_ubo);
   constexpr GLsizeiptr local_lighting_ubo_size =
       sizeof(float) * Render::LocalLightingBlock::k_float_count;
   glBufferData(GL_UNIFORM_BUFFER, local_lighting_ubo_size, nullptr, GL_DYNAMIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(local_lighting_ubo_size), false);
   glBindBufferBase(
       GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   qInfo() << "Backend: Local lighting UBO created at binding 2";
   glGenBuffers(1, &m_directional_shadow_ubo);
+  note_buffers_created(1);
   glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
   glBufferData(GL_UNIFORM_BUFFER,
                sizeof(float) * DirectionalShadowBlock::k_float_count,
                nullptr,
                GL_DYNAMIC_DRAW);
+  note_buffer_storage(
+      static_cast<std::size_t>(sizeof(float) * DirectionalShadowBlock::k_float_count),
+      false);
   glBindBufferBase(
       GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -546,6 +557,7 @@ auto allocate_shadow_array(QOpenGLFunctions_3_3_Core& gl,
                            int layers) -> void {
 
   gl.glGenTextures(1, &texture);
+  note_textures_created(1);
   gl.glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
   gl.glTexImage3D(GL_TEXTURE_2D_ARRAY,
                   0,
@@ -557,6 +569,10 @@ auto allocate_shadow_array(QOpenGLFunctions_3_3_Core& gl,
                   GL_DEPTH_COMPONENT,
                   GL_FLOAT,
                   nullptr);
+  note_texture_storage(texture_transfer_bytes(static_cast<std::size_t>(resolution),
+                                              static_cast<std::size_t>(resolution),
+                                              static_cast<std::size_t>(layers) * 4U),
+                       false);
   gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -677,6 +693,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
                     0,
                     static_cast<GLsizeiptr>(sizeof(float) * packed.size()),
                     packed.data());
+    note_buffer_transfer(static_cast<std::size_t>(sizeof(float) * packed.size()));
     glBindBufferBase(GL_UNIFORM_BUFFER,
                      k_directional_shadow_binding_point,
                      m_directional_shadow_ubo);
@@ -847,6 +864,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
     }
     glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, matrix.constData());
+    note_buffer_transfer(static_cast<std::size_t>(64));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   };
 
@@ -1103,10 +1121,12 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
                static_cast<GLsizeiptr>(sizeof(float) * complete.size()),
                nullptr,
                GL_DYNAMIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(sizeof(float) * complete.size()), false);
   glBufferSubData(GL_UNIFORM_BUFFER,
                   0,
                   static_cast<GLsizeiptr>(sizeof(float) * complete.size()),
                   complete.data());
+  note_buffer_transfer(static_cast<std::size_t>(sizeof(float) * complete.size()));
   glBindBufferBase(
       GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -1127,6 +1147,7 @@ void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
   if (m_frame_ubo != 0) {
     glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, view_proj.constData());
+    note_buffer_transfer(static_cast<std::size_t>(64));
 
     glBindBufferBase(GL_UNIFORM_BUFFER, k_frame_data_binding_point, m_frame_ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -1138,6 +1159,7 @@ void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
                     0,
                     static_cast<GLsizeiptr>(packed.size() * sizeof(float)),
                     packed.data());
+    note_buffer_transfer(static_cast<std::size_t>(packed.size() * sizeof(float)));
     glBindBufferBase(GL_UNIFORM_BUFFER,
                      k_environment_lighting_binding_point,
                      m_environment_lighting_ubo);
@@ -1176,6 +1198,7 @@ void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
                     0,
                     static_cast<GLsizeiptr>(packed.size() * sizeof(float)),
                     packed.data());
+    note_buffer_transfer(static_cast<std::size_t>(packed.size() * sizeof(float)));
     glBindBufferBase(
         GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);

@@ -775,9 +775,13 @@ void GameEngine::run_simulation_thread() {
           std::memory_order_acq_rel);
     }
 
-    for (int spin = 0; spin < k_frame_lock_handoff_yields &&
-                       m_frame_lock_waiters.load(std::memory_order_acquire) > 0;
+    for (int spin = 0;
+         spin < k_frame_lock_handoff_yields &&
+         (m_frame_lock_waiters.load(std::memory_order_acquire) > 0 ||
+          m_presentation_awaiting_frame_lock.load(std::memory_order_acquire));
          ++spin) {
+      m_frame_lock_stats.simulation_handoff_yields.fetch_add(1,
+                                                             std::memory_order_relaxed);
       std::this_thread::yield();
     }
   }
@@ -820,6 +824,7 @@ void GameEngine::update_presentation(float dt) {
     if (m_deferred_presentation_dt < k_max_deferred_presentation_seconds) {
       m_deferred_presentation_dt += dt;
       m_frame_lock_stats.deferred_presentations.fetch_add(1, std::memory_order_relaxed);
+      m_presentation_awaiting_frame_lock.store(true, std::memory_order_release);
       return;
     }
     const FrameLockWaiter waiter(m_frame_lock_waiters);
@@ -830,6 +835,7 @@ void GameEngine::update_presentation(float dt) {
         Render::Profiling::Phase::PresentationLockWait);
     frame_lock.lock();
   }
+  m_presentation_awaiting_frame_lock.store(false, std::memory_order_release);
   dt = std::min(dt + m_deferred_presentation_dt, k_simulation_max_frame_seconds);
   m_deferred_presentation_dt = 0.0F;
   if (m_runtime.loading) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QAbstractListModel>
+#include <QHash>
 #include <QVariantList>
 
 #include <vector>
@@ -38,6 +39,28 @@ group_selection_by_type(const QVariantList& units) -> std::vector<SelectionGroup
 [[nodiscard]] auto
 selection_groups_to_variant(const std::vector<SelectionGroup>& groups) -> QVariantList;
 
+class SelectionActivityDwell {
+public:
+  static constexpr int k_confirmations = 2;
+
+  void settle(std::vector<SelectionGroup>& groups);
+
+  void forget_missing(const std::vector<SelectionGroup>& groups);
+
+  void clear() { m_held.clear(); }
+
+private:
+  struct Held {
+    QString activity;
+    QString activity_state;
+    QString candidate_activity;
+    QString candidate_activity_state;
+    int candidate_seen = 0;
+  };
+
+  QHash<QString, Held> m_held;
+};
+
 } // namespace App::Models
 
 class SelectedUnitsModel : public QAbstractListModel {
@@ -71,10 +94,13 @@ public:
 
   Q_INVOKABLE [[nodiscard]] QVariantList grouped_by_type() const;
 
+  void reset_activity_dwell() { m_activity_dwell.clear(); }
+
 public slots:
   void refresh();
 
 private:
   const App::Core::ClientContext& m_context;
   std::vector<Engine::Core::EntityID> m_ids;
+  mutable App::Models::SelectionActivityDwell m_activity_dwell;
 };

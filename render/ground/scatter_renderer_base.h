@@ -36,20 +36,22 @@ public:
 
   void clear() override { m_state.reset_instances(); }
 
+  [[nodiscard]] static auto
+  instance_position(const Instance& instance) -> const QVector4D& {
+    if constexpr (requires { instance.pos_scale; }) {
+      return instance.pos_scale;
+    } else if constexpr (requires { instance.pos_intensity; }) {
+      return instance.pos_intensity;
+    } else {
+      return instance.pos_height;
+    }
+  }
+
   [[nodiscard]] auto prewarm_gpu_resources() -> bool override {
     if (QOpenGLContext::currentContext() == nullptr) {
       return false;
     }
-    bool ready = true;
-    for (auto& chunk : m_state.spatial_chunks) {
-      if (chunk.buffer == nullptr) {
-        chunk.buffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
-      }
-      chunk.buffer->bind();
-      chunk.buffer->unbind();
-      ready = chunk.buffer->id() != 0U && ready;
-    }
-    return ready;
+    return Render::Ground::Scatter::prewarm_filtered_state(m_state, &instance_position);
   }
 
 protected:
@@ -140,7 +142,7 @@ protected:
 
     const auto visible_count = Render::Ground::Scatter::sync_filtered_state(
         m_state,
-        [](const Instance& instance) -> const QVector4D& { return instance.pos_scale; },
+        &instance_position,
         (fog_culls_instances() && renderer.static_world_visibility_filter_enabled())
             ? renderer.submission_visibility().snapshot()
             : nullptr,

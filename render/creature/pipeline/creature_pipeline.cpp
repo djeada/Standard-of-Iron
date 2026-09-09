@@ -88,9 +88,12 @@ void report_submit_cache_miss(std::string_view path,
     return;
   }
 
+  const auto* descriptor =
+      Render::Creature::ArchetypeRegistry::instance().get(archetype);
   std::ostringstream detail;
   detail << "path=" << path << " archetype=" << static_cast<std::uint32_t>(archetype)
-         << " asset=" << asset_id << " lod=" << static_cast<int>(lod)
+         << " (" << (descriptor != nullptr ? descriptor->debug_name : std::string("?"))
+         << ")" << " asset=" << asset_id << " lod=" << static_cast<int>(lod)
          << " state=" << static_cast<int>(state) << " clip=" << clip_id
          << " frame_in_clip=" << frame_in_clip
          << " variant=" << static_cast<std::uint32_t>(variant)

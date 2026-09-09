@@ -1,5 +1,4 @@
-
-
+#include "ground_readability.glsl"
 uniform sampler2D u_material_detail;
 uniform bool u_has_material_detail;
 uniform vec3 u_camera_pos;
@@ -102,6 +101,14 @@ vec3 soi_material_variation(vec3 base_color,
                             vec3 world_pos,
                             vec3 normal,
                             int material_id) {
+  float tactical = ground_tactical_distance(length(u_camera_pos - world_pos));
+  // Mineral and wood surfaces should support, rather than compete with, troop
+  // cloth colors. Apply this even when material-detail textures are disabled.
+  if (material_id == k_material_mineral || material_id == k_material_wood) {
+    float luma = dot(base_color, vec3(0.299, 0.587, 0.114));
+    float saturation = material_id == k_material_mineral ? 0.86 : 0.92;
+    base_color = mix(vec3(luma), base_color, mix(1.0, saturation, tactical));
+  }
   if (!u_has_material_detail) {
     return base_color;
   }
@@ -119,6 +126,8 @@ vec3 soi_material_variation(vec3 base_color,
   } else if (material_id == k_material_leather) {
     variation = soi_leather_variation(base_color, uv);
   }
+  // Retain close-up texture while reducing grain and sheen at army-view scale.
+  variation = mix(base_color, variation, mix(1.0, 0.55, tactical));
   return clamp(variation, 0.0, 1.0);
 }
 
