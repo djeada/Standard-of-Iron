@@ -75,7 +75,8 @@ auto SaveLoadCoordinator::to_runtime_snapshot(const SaveRuntimeContext& context)
 
 void SaveLoadCoordinator::apply_runtime_snapshot(
     const Game::Systems::RuntimeSnapshot& snapshot, ApplyRuntimeContext context) const {
-  context.paused = snapshot.paused;
+
+  context.paused = false;
   context.time_scale = snapshot.time_scale;
   context.local_owner_id = snapshot.local_owner_id;
   context.victory_state = snapshot.victory_state;

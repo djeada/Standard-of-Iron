@@ -647,14 +647,37 @@ blueprints, one per commander, in the way Stronghold gives each lord a castle
 of his own, and rasterises their walls onto the 2 m lattice with the gates cut
 and the front wall ordered first:
 
-| Plan                 | Commander                | Shape                                                                             |
-| -------------------- | ------------------------ | --------------------------------------------------------------------------------- |
-| `fabian_bulwark`     | roman_veteran_consul     | 22x18 outer rectangle round a 12x10 keep, five towers, three gates, two ballistae |
-| `consular_star`      | roman_legion_organizer   | bastioned trace, curtain 15x13, four towers, two gates, two catapults             |
-| `vanguard_chevron`   | roman_field_commander    | an open V of wall toward the enemy, three barracks behind it, no ring             |
-| `punic_ring_town`    | carthage_bow_commander   | 19x17 oval, six towers on the ring, two gates, a ballista                         |
-| `barcid_raider_camp` | carthage_sword_commander | no walls: three barracks and three towers, a camp that fights in the field        |
-| `hannibalic_hexagon` | carthage_spear_commander | hexagon with a flat side to the enemy, six towers, two gates, barracks outside it |
+| Plan id               | Commander                           | Form          | Shape                                                                             |
+| --------------------- | ----------------------------------- | ------------- | --------------------------------------------------------------------------------- |
+| `roman_bulwark`       | roman_legion_organizer (Fabius)     | `closed_fort` | 22x18 outer rectangle round a 12x10 keep, five towers, three gates, two ballistae |
+| `roman_assault_camp`  | roman_veteran_consul (Scipio)       | `closed_fort` | bastioned star trace, curtain 15x13, four towers, two gates, two catapults        |
+| `roman_vanguard_camp` | roman_field_commander (Marcellus)   | `open_camp`   | an open V of wall toward the enemy, three barracks behind it, no ring             |
+| `punic_trade_town`    | carthage_spear_commander (Hanno)    | `ring_town`   | 19x17 oval, six towers on the ring, two gates, a ballista                         |
+| `punic_raider_camp`   | carthage_bow_commander (Hasdrubal)  | `open_camp`   | no walls: three barracks and three towers, a camp that fights in the field        |
+| `punic_grand_camp`    | carthage_sword_commander (Hannibal) | `closed_fort` | hexagon with a flat side to the enemy, six towers, two gates, barracks outside it |
+
+The **form** is not authored: `TownPlan::form()` derives it from the wall slots
+(share of the compass the trace covers, and how much its radius swings), so a
+plan cannot claim one shape and build another. There is one plan per
+settlement; construction, the army's stations, the diagnostics and the tests all
+read the same slots. `TownPlan::front_gate()`, `front_line_z()` and
+`muster_offset()` are likewise computed from the slots.
+
+**The silhouette comes first.** A settle raises twenty-odd buildings in half an
+hour, a fifth of a hundred-step plan, so the _order_ of the first fifth is what a
+player sees. The generator emits each walled plan as: front towers, then the
+skeleton of every wall run (every corner and a post every so often round the
+trace), then the front gate - and records how many steps that took as
+`silhouette_steps`. The infill of the front wall, the rear towers, the rest of
+the wall and the homes follow. Twenty posts laid this way already show a dotted
+rectangle, a star or a ring; the same twenty laid end to end showed one straight
+wall. The builder lets a silhouette step go up as soon as the town can feed
+itself (a farm and two homes) and holds the infill behind the four-roof rule;
+`AIDoctrineCatalogTest.ASilhouetteAlreadyDrawsTheOutline` pins the silhouette to
+at least 70% of the compass for every closed plan, and
+`AiTownPlanTest.EveryCommanderRaisesItsOwnTownFromAnEmptyField` checks the
+outline a real settle draws, sector for sector, against the fortification it
+raised.
 
 `Blueprint.add` nudges a building off the 9 m anchor circle, off other
 buildings and off the wall lines (a gate reaches 4.5 m either side), so a plan
@@ -691,6 +714,34 @@ Scipio and Hannibal fifty minutes and expects at least 15% of the plan's links,
 three towers and a gate. `SOI_TOWN_MAP=1` makes that test print an ASCII map of
 what stood; `SOI_BUILD_TRACE=1` traces each build order and its verdict.
 
+### Where the army stands
+
+Spawn is never a station. Every combat unit that nothing higher has claimed is
+walked into ranks by `GatherBehavior`, which runs concurrently and last, claims
+at `Low` (the detachment and reserve at `VeryLow`) and so never outranks Defend,
+Attack, Expand or Harass. Its stations all come from the town plan through the
+settlement frame (`ai_settlement_frame.h`), written onto `AIContext` by
+`apply_settlement_stations` right after the base manager:
+
+| Station        | Who                                           | Where                                                                                                                                           |
+| -------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| rally / muster | the attack force, in the doctrine's formation | `muster_offset(Inside)` - the clearest ground behind the front gate - or `Outside` before the gate for a `field` posture with aggression >= 0.7 |
+| garrison       | `garrison_unit_ids`, `Defensive` intent       | the inside muster whenever the attack force musters outside                                                                                     |
+| reserve        | `reserve_unit_ids`                            | the base anchor, within `reserve_hold_radius`                                                                                                   |
+| detachment     | idle harass units                             | ten metres to the right of the outside muster                                                                                                   |
+
+Ranks are stable because each station's units are sorted by id before
+`plan_ai_formation`, and a soldier already standing on the rally dot still gets
+its slot (the old tolerance ring is what heaped recruits on one point). The
+muster intent is `select_ai_intent`, so a `shield_wall` doctrine musters in a
+shield wall and a `wedge` doctrine in a wedge, not only when it attacks.
+
+`AIContext::station_report` (in `SOI_AI_TRACE` as `stationed/marching/fighting/
+at_spawn/adrift`) counts where every soldier stood at the last decision; the
+"no fake army" clause of `EveryCommanderRaisesItsOwnTownFromAnEmptyField`
+allows at most one soldier by a barracks and wants seven in ten stationed,
+marching or fighting after a 26-minute peaceful settle.
+
 ### Attack waves
 
 `game/systems/ai_system/ai_attack_wave.cpp` forms, holds and retires one
@@ -720,6 +771,12 @@ Two rules are load-bearing:
   back to `strategic_objectives`, which carries every enemy building and
   commander regardless of vision, the way a player knows where the enemy castle
   is. Without that fallback a wave never forms and no AI ever attacks.
+- A wave **assembles before it marches.** Once the headcount is met the wave is
+  `assembling`: GatherBehavior is already forming those soldiers at the rally,
+  and the wave commits when 60% of the required size stands within the assembly
+  radius of it, or after thirty seconds regardless - stragglers join on the
+  road (`AISystemTest.AttackWaveAssemblesAtTheRallyBeforeItCommits`). There is
+  no exact-slot condition to deadlock on.
 - A wave **disbands at or below** its spent threshold, rounded up and never
   below two. One survivor still walking into a town is a casualty, not an
   attack.

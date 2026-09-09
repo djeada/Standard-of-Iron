@@ -35,6 +35,11 @@ constexpr std::size_t k_dir_count = 4U;
 constexpr float k_connected_span_length = 1.0F;
 constexpr float k_stake_spacing = 0.2F;
 
+constexpr float k_span_end_berm = 0.000F;
+constexpr float k_span_end_bank = -0.024F;
+constexpr float k_span_end_plank = 0.008F;
+constexpr float k_span_end_seam = -0.012F;
+
 struct PlanarDir {
   float x{0.0F};
   float z{0.0F};
@@ -196,6 +201,7 @@ void add_stake_bindings(BuildingArchetypeDesc& desc,
                         float radius,
                         BuildingStateMask states) {
   const float lateral_half = rail_offset(geometry) + (geometry.rail_radius * 0.9F);
+  BuildingPartLabel const label(desc, "stake_binding");
   for (const float height : {geometry.lower_rail_y, geometry.upper_rail_y}) {
     desc.add_box(point_at(dir, along, 0.0F, height),
                  extents_at(dir, radius * 0.95F, 0.042F, lateral_half),
@@ -404,18 +410,24 @@ void add_span_backing(BuildingArchetypeDesc& desc,
   const float bottom = geometry.earthwork_base ? geometry.berm_height * 0.5F : 0.02F;
   const float top = geometry.upper_rail_y + 0.16F;
   const float half_height = (top - bottom) * 0.5F;
-  const float along_half = reach * 0.5F;
   const float lateral_half = geometry.stake_radius * 0.62F;
   const QVector3D plank = palette.wood_dark * 0.92F;
-  desc.add_box(point_at(dir, along_half, 0.0F, bottom + half_height),
-               extents_at(dir, along_half, half_height, lateral_half),
+
+  BuildingPartLabel const label(desc, "span_backing");
+
+  const float plank_start = lateral_half + 0.03F;
+  const float plank_half = (reach + k_span_end_plank - plank_start) * 0.5F;
+  desc.add_box(point_at(dir, plank_start + plank_half, 0.0F, bottom + half_height),
+               extents_at(dir, plank_half, half_height, lateral_half),
                plank,
                k_mask_intact);
 
+  const float seam_start = plank_start + 0.018F;
+  const float seam_half = (reach + k_span_end_seam - seam_start) * 0.5F;
   for (const float seam_y :
        {bottom + (top - bottom) * 0.36F, bottom + (top - bottom) * 0.68F}) {
-    desc.add_box(point_at(dir, along_half, 0.0F, seam_y),
-                 extents_at(dir, along_half, 0.012F, lateral_half + 0.006F),
+    desc.add_box(point_at(dir, seam_start + seam_half, 0.0F, seam_y),
+                 extents_at(dir, seam_half, 0.012F, lateral_half + 0.006F),
                  palette.wood_dark * 0.62F,
                  k_mask_intact);
   }
@@ -433,8 +445,9 @@ void add_span_braces(BuildingArchetypeDesc& desc,
   const float head_y = geometry.upper_rail_y - 0.04F;
 
   const std::array<float, 2> k_strut_t = geometry.cross_braced
-                                             ? std::array<float, 2>{0.30F, 0.72F}
-                                             : std::array<float, 2>{0.52F, -1.0F};
+                                             ? std::array<float, 2>{0.42F, 0.78F}
+                                             : std::array<float, 2>{0.56F, -1.0F};
+  BuildingPartLabel const label(desc, "span_brace");
   for (const float t : k_strut_t) {
     if (t < 0.0F) {
       continue;
@@ -521,12 +534,13 @@ void add_earth_berm(BuildingArchetypeDesc& desc,
       continue;
     }
 
-    const float along_half = (length - half_width) * 0.5F;
+    BuildingPartLabel const label(desc, "earthwork");
+    const float along_half = (length + k_span_end_berm - half_width) * 0.5F;
     const float along_center = half_width + along_half;
     desc.add_box(point_at(dir, along_center, 0.0F, center_y),
                  extents_at(dir, along_half, half_height, half_width),
                  palette.earth_light);
-    const float bank_along_half = (length - bank_half_width) * 0.5F;
+    const float bank_along_half = (length + k_span_end_bank - bank_half_width) * 0.5F;
     if (bank_along_half > 0.02F) {
       desc.add_box(
           point_at(dir, bank_half_width + bank_along_half, 0.0F, bank_center_y),
@@ -534,12 +548,14 @@ void add_earth_berm(BuildingArchetypeDesc& desc,
           bank_color);
     }
 
+    const float bank_top = bank_center_y + bank_half_height;
     for (std::size_t i = 0; i < k_rubble_t.size(); ++i) {
       const float along = half_width + ((length - half_width) * k_rubble_t[i]);
+
       const float lateral =
-          (i % 2 == 0) ? bank_half_width - 0.08F : -(bank_half_width - 0.08F);
+          (i % 2 == 0) ? bank_half_width - 0.13F : -(bank_half_width - 0.13F);
       const float size = 0.055F + (0.015F * static_cast<float>((dir + i) % 3U));
-      desc.add_box(point_at(dir, along, lateral, size * 0.7F),
+      desc.add_box(point_at(dir, along, lateral, bank_top),
                    QVector3D(size, size * 0.7F, size),
                    (i % 2 == 0) ? palette.rubble : palette.earth_dark,
                    BuildingStateMask::All);
@@ -650,21 +666,31 @@ void add_palisade(BuildingArchetypeDesc& desc,
 
 } // namespace
 
+auto build_wall_variant_desc(std::string_view name_prefix,
+                             const WallPalette& palette,
+                             const WallGeometry& geometry,
+                             WallVariant variant) -> BuildingArchetypeDesc {
+  const auto layout = layout_for(variant);
+  BuildingArchetypeDesc desc(std::string(name_prefix) + "_" +
+                             std::to_string(static_cast<int>(variant)));
+
+  if (geometry.solid_masonry) {
+    add_masonry(desc, palette, geometry, layout);
+  } else {
+    add_palisade(desc, palette, geometry, layout);
+  }
+
+  return desc;
+}
+
 auto build_wall_archetype_set(std::string_view name_prefix,
                               const WallPalette& palette,
                               const WallGeometry& geometry) -> WallArchetypeSet {
   WallArchetypeSet out{};
 
   for (int i = 0; i < static_cast<int>(out.variants.size()); ++i) {
-    const auto variant = static_cast<WallVariant>(i);
-    const auto layout = layout_for(variant);
-    BuildingArchetypeDesc desc(std::string(name_prefix) + "_" + std::to_string(i));
-
-    if (geometry.solid_masonry) {
-      add_masonry(desc, palette, geometry, layout);
-    } else {
-      add_palisade(desc, palette, geometry, layout);
-    }
+    const BuildingArchetypeDesc desc = build_wall_variant_desc(
+        name_prefix, palette, geometry, static_cast<WallVariant>(i));
 
     out.variants[static_cast<std::size_t>(i)] = build_stateful_building_archetype_set(
         [&](BuildingState state) { return build_building_archetype(desc, state); });

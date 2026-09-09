@@ -17,7 +17,7 @@ uniform float u_magic_strength;
 
 out vec4 frag_color;
 
-const float k_rock_crown = 0.26;
+const float k_rock_crown = 0.46;
 
 float fbm(vec3 p) {
   float v = 0.0;
@@ -62,10 +62,10 @@ void main() {
   rock_color = mix(rock_color, vec3(0.58, 0.42, 0.14), fleck * 0.45);
 
   float seam_field = fbm(p * 2.6 + vec3(v_seed * 3.0, 1.0, 7.0));
-  float seam = 1.0 - smoothstep(0.0, 0.03, abs(seam_field - 0.5));
+  float seam = 1.0 - smoothstep(0.0, 0.055, abs(seam_field - 0.5));
   float fine_vein =
-      1.0 - smoothstep(0.0, 0.02, abs(fbm(p * 6.0 + vec3(4.0, v_seed, 2.0)) - 0.5));
-  float ore = max(seam, fine_vein * 0.5) * smoothstep(0.02, 0.20, v_local_pos.y);
+      1.0 - smoothstep(0.0, 0.035, abs(fbm(p * 6.0 + vec3(4.0, v_seed, 2.0)) - 0.5));
+  float ore = max(seam, fine_vein * 0.4) * smoothstep(0.02, 0.20, v_local_pos.y);
 
   float crown = k_rock_crown + 0.05 * (rock_large - 0.5);
   float crystal = smoothstep(crown, crown + 0.10, v_local_pos.y);
@@ -75,7 +75,7 @@ void main() {
 
   float facet_key = soi_hash13_1c8396(floor(N * 5.0) + vec3(v_seed, 0.0, 0.0));
 
-  vec3 gold_root = vec3(0.38, 0.22, 0.05);
+  vec3 gold_root = vec3(0.48, 0.31, 0.10);
   vec3 gold_body = vec3(0.86, 0.62, 0.20);
   vec3 gold_tip = vec3(1.24, 1.02, 0.60);
   vec3 gold =
@@ -84,7 +84,7 @@ void main() {
       mix(gold, gold_tip, smoothstep(0.62, 1.05, (shard_height * 0.8) + (facet * 0.4)));
   gold *= 0.78 + 0.40 * facet_key;
 
-  vec3 base_color = mix(rock_color, gold, max(crystal, ore * 0.42));
+  vec3 base_color = mix(rock_color, gold, max(crystal, ore * 0.28));
 
   vec3 sun_color = environment_primary_color() * environment_primary_intensity();
   vec3 sky_color = environment_sky_color();
@@ -93,7 +93,7 @@ void main() {
   vec3 ambient = environment_ambient_light(N);
   vec3 direct = soi_key_light(N) * 0.80;
 
-  float metal = max(crystal, ore * 0.6);
+  float metal = max(crystal, ore * 0.32);
   float spec_power = mix(24.0, 140.0, metal);
   float spec_gain = mix(0.07, 0.85, metal);
   float specular = pow(max(dot(N, H), 0.0), spec_power) * spec_gain;
@@ -114,8 +114,9 @@ void main() {
   float core = (1.0 - smoothstep(0.10, 0.36, length(v_local_pos.xz))) *
                smoothstep(0.50, 0.80, v_local_pos.y);
   float seam_glow = seam * (1.0 - crystal) * smoothstep(0.02, 0.20, v_local_pos.y);
+
   color += mix(ember, curse, pulse * 0.8) * strength *
-           ((seam_glow * (0.18 + 0.20 * pulse)) + (core * 0.22 * pulse));
+           ((seam_glow * (0.06 + 0.08 * pulse)) + (core * 0.13 * pulse));
 
   color += gold * crystal * (0.08 + 0.14 * shard_height + 0.04 * pulse);
   color += gold_tip * strength * crystal * (0.10 + 0.10 * pulse) * fresnel;

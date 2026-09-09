@@ -18,7 +18,7 @@ public:
     return BehaviorPriority::Low;
   }
 
-  [[nodiscard]] auto can_run_concurrently() const -> bool override { return false; }
+  [[nodiscard]] auto can_run_concurrently() const -> bool override { return true; }
 
 private:
   float m_gather_timer = 0.0F;

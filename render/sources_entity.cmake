@@ -48,6 +48,8 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/commander_aura_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/combat_dust_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/building_archetype_desc.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/building_archetype_catalog.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/building_geometry_audit.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/building_decay.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/building_render_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wall_renderer_common.cpp

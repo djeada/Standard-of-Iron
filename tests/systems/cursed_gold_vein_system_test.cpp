@@ -7,6 +7,7 @@
 #include <unordered_set>
 
 #include "core/component_structures.h"
+#include "core/event_manager.h"
 #include "core/world.h"
 #include "game/core/ownership_constants.h"
 #include "game/map/map_definition.h"
@@ -190,6 +191,39 @@ TEST_F(CursedGoldVeinSystemTest, ClaimedVeinPaysGoldAndBleedsItsOwnersNearbyTroo
   EXPECT_EQ(economy.get(1, Game::Systems::ResourceType::Gold),
             gold_before + 2 * k_cursed_gold_vein_gold_per_tick);
   EXPECT_EQ(health_of(near_own), 100 - 2 * k_cursed_gold_vein_curse_damage);
+}
+
+TEST_F(CursedGoldVeinSystemTest, EachGoldTickFloatsANumberOverTheClaimFlag) {
+  Engine::Core::World world;
+  Game::Systems::CursedGoldVeinSystem system(services());
+
+  const auto map_definition = make_vein_map();
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  system.configure(map_definition);
+  system.update(&world, 0.1F);
+
+  auto* unit = anchor_unit(world, system);
+  ASSERT_NE(unit, nullptr);
+  unit->owner_id = 1;
+
+  std::vector<Engine::Core::WorldFeedbackEvent> announced;
+  Engine::Core::ScopedEventSubscription<Engine::Core::WorldFeedbackEvent> const
+      subscription([&announced](const Engine::Core::WorldFeedbackEvent& event) {
+        announced.push_back(event);
+      });
+
+  system.update(&world, k_cursed_gold_vein_tick_seconds + 0.01F);
+
+  ASSERT_EQ(announced.size(), 1U) << "one tick, one floating number";
+  const auto& event = announced.front();
+  EXPECT_EQ(event.owner_id, 1) << "the number belongs to the owner, not everyone";
+  EXPECT_EQ(event.amount, k_cursed_gold_vein_gold_per_tick);
+  EXPECT_EQ(event.kind, Engine::Core::WorldFeedbackKind::Resource);
+  EXPECT_EQ(event.resource,
+            static_cast<int>(
+                Game::Systems::resource_type_index(Game::Systems::ResourceType::Gold)));
+  EXPECT_EQ(event.anchor_id, system.anchor_entity(0))
+      << "the number is anchored to the claim flag, so it floats at the vein";
 }
 
 TEST_F(CursedGoldVeinSystemTest, ClaimedVeinNeverKeepsAProductionLine) {

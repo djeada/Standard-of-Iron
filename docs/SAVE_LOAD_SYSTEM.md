@@ -166,6 +166,39 @@ Loading reverses the process:
 
 The crucial step is clearing the world before deserializing. This ensures no stale entities remain. The deserialization then recreates every entity with its components exactly as they were when saved.
 
+### A loaded battle has to reach the screen, and it has to run
+
+The renderer and the minimap never read the live world. They draw a _render snapshot_: a
+detached copy of the world that `World::publish_render_snapshot()` produces at the end of
+every simulation tick. Picking and selection, on the other hand, do read the live world.
+That split is why a broken load looks so strange - the troops and buildings are there,
+they select and they show in the orders panel, but nothing is drawn.
+
+Nothing but a tick publishes a snapshot, so **a loaded match has to run**, and that is
+the rule the load flow has to keep. Every menu suspends the match, so a save written from
+the save panel - and any autosave that lands while a menu is up - records
+`paused: true`. `SaveLoadCoordinator::apply_runtime_snapshot()` ignores that field and
+resumes, because the load flow reopens the battlefield unpaused on the UI side: restoring
+the pause would leave the engine frozen behind a HUD that says the battle is running, and
+a frozen world publishes nothing, so the renderer keeps drawing the match the load
+replaced. `Main.qml` pushes the pause state to the engine after a load rather than relying
+on its own `simulation_suspended` binding to change - which it does not when the load
+starts from the main menu, because it was already false.
+
+Publishing is left to the tick that follows the load. It is deliberately not forced from
+the loading thread: `ensure_render_snapshot()` runs on the render thread, and a render
+thread that blocks on the entity lock stops presenting, which stops the loading overlay,
+which stops the match.
+
+Emptying a world also bumps its content epoch, which throws away the per-slot entity
+signatures each snapshot buffer caches to skip copying entities that have not changed.
+Entity ids are a slot index plus a generation and a save restores them verbatim, so a
+reloaded match lands on the very slots the previous one held; without the epoch, an entity
+could be served from the cache of the entity that used to live there.
+
+`tests/core/save_load_render_snapshot_test.cpp` and
+`tests/core/save_runtime_restore_test.cpp` hold these rules.
+
 ### Exploration comes back with the world
 
 One thing the world's entities cannot tell you is where the player has already been. Fog that has been cleared is player knowledge, so `GameStateSerializer` writes it into the save metadata as `visibility`: the grid size plus a run-length-encoded, base64 explored mask (`game/map/explored_mask_codec.h`). Exploration is large and uniform, so the runs squash a 650x650 map into a few hundred bytes.

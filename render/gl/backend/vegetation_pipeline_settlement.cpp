@@ -19,14 +19,14 @@
 #include "mesh_buffers.h"
 #include "prop_mesh_builder.h"
 #include "render/gl/backend/abandoned_home_parts.h"
-#include "render/gl/backend/cursed_gold_vein_parts.h"
+#include "render/gl/backend/cursed_gold_vein_mesh.h"
 #include "render/gl/backend/magic_shrine_parts.h"
 #include "render/gl/backend/prop_parts.h"
 #include "render/gl/backend/ruins_parts.h"
 #include "render/gl/backend/static_mesh_upload.h"
 #include "render/gl/backend/statue_parts.h"
 #include "render/gl/backend/supply_cart_parts.h"
-#include "render/gl/backend/tent_parts.h"
+#include "render/gl/backend/tent_mesh.h"
 #include "render/gl/backend/weapon_rack_parts.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/render_constants.h"
@@ -93,109 +93,8 @@ void VegetationPipeline::initialize_tent_pipeline() {
   initializeOpenGLFunctions();
   release_mesh_buffers(*this, m_tent_mesh);
 
-  std::vector<std::pair<QVector3D, QVector3D>> verts;
-  std::vector<uint16_t> idx;
-
-  constexpr float H = TentParts::k_ridge_height;
-  constexpr float W = TentParts::k_half_width;
-  constexpr float Dp = TentParts::k_half_depth;
-
-  const QVector3D A(-W, 0.0F, -Dp);
-  const QVector3D B(W, 0.0F, -Dp);
-  const QVector3D C(0.0F, H, -Dp);
-  const QVector3D D(-W, 0.0F, Dp);
-  const QVector3D E(W, 0.0F, Dp);
-  const QVector3D F(0.0F, H, Dp);
-
-  constexpr float inv_sqrt2 = 0.70711F;
-  const QVector3D nL(-inv_sqrt2, inv_sqrt2, 0.0F);
-  const QVector3D nR(inv_sqrt2, inv_sqrt2, 0.0F);
-
-  using P = std::pair<QVector3D, QVector3D>;
-
-  {
-    auto b = static_cast<uint16_t>(verts.size());
-    verts.insert(verts.end(), {P{A, nL}, P{D, nL}, P{F, nL}, P{C, nL}});
-    idx.insert(
-        idx.end(),
-        {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
-  }
-
-  {
-    auto b = static_cast<uint16_t>(verts.size());
-    verts.insert(verts.end(), {P{B, nR}, P{C, nR}, P{F, nR}, P{E, nR}});
-    idx.insert(
-        idx.end(),
-        {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
-  }
-
-  {
-    const QVector3D nF(0.0F, 0.0F, -1.0F);
-    auto b = static_cast<uint16_t>(verts.size());
-    verts.insert(verts.end(), {P{A, nF}, P{C, nF}, P{B, nF}});
-    idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2)});
-  }
-
-  {
-    const QVector3D nBk(0.0F, 0.0F, 1.0F);
-    auto b = static_cast<uint16_t>(verts.size());
-    verts.insert(verts.end(), {P{D, nBk}, P{E, nBk}, P{F, nBk}});
-    idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2)});
-  }
-
-  append_box(verts, idx, {-W, -0.02F, -Dp}, {W, 0.00F, Dp});
-
-  append_box(verts, idx, {-0.030F, 0.00F, -0.035F}, {0.030F, H * 0.90F, 0.035F});
-
-  append_box(verts, idx, {-0.24F, 0.00F, -Dp - 0.02F}, {-0.16F, 0.44F, -Dp + 0.02F});
-  append_box(verts, idx, {0.16F, 0.00F, -Dp - 0.02F}, {0.24F, 0.44F, -Dp + 0.02F});
-  append_box(verts, idx, {-0.24F, 0.41F, -Dp - 0.02F}, {0.24F, 0.47F, -Dp + 0.02F});
-
-  {
-    constexpr float aw_ext = TentParts::k_awning_extent;
-    constexpr float aw_y = H * 0.46F;
-    constexpr float inv_aw = 0.83205F;
-    const QVector3D nAw(0.0F, inv_aw, -inv_aw);
-
-    const QVector3D al(-W * 0.72F, aw_y, -Dp);
-    const QVector3D ar(W * 0.72F, aw_y, -Dp);
-    const QVector3D bl(-W * 0.72F, 0.04F, -Dp - aw_ext);
-    const QVector3D br(W * 0.72F, 0.04F, -Dp - aw_ext);
-
-    auto b = static_cast<uint16_t>(verts.size());
-    verts.insert(verts.end(), {P{al, nAw}, P{ar, nAw}, P{br, nAw}, P{bl, nAw}});
-    idx.insert(
-        idx.end(),
-        {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
-
-    const QVector3D nAwU(0.0F, -inv_aw, inv_aw);
-    auto bu = static_cast<uint16_t>(verts.size());
-    verts.insert(verts.end(), {P{bl, nAwU}, P{br, nAwU}, P{ar, nAwU}, P{al, nAwU}});
-    idx.insert(idx.end(),
-               {bu,
-                uint16_t(bu + 1),
-                uint16_t(bu + 2),
-                bu,
-                uint16_t(bu + 2),
-                uint16_t(bu + 3)});
-
-    append_box(verts,
-               idx,
-               {-W * 0.72F - 0.025F, 0.00F, -Dp - aw_ext},
-               {-W * 0.72F + 0.025F, aw_y, -Dp - aw_ext + 0.025F});
-    append_box(verts,
-               idx,
-               {W * 0.72F - 0.025F, 0.00F, -Dp - aw_ext},
-               {W * 0.72F + 0.025F, aw_y, -Dp - aw_ext + 0.025F});
-  }
-
-  constexpr float sk = TentParts::k_skirt;
-  append_box(verts, idx, {-W - sk, 0.00F, -Dp - sk}, {-W, 0.07F, -Dp});
-  append_box(verts, idx, {W, 0.00F, -Dp - sk}, {W + sk, 0.07F, -Dp});
-  append_box(verts, idx, {-W - sk, 0.00F, Dp}, {-W, 0.07F, Dp + sk});
-  append_box(verts, idx, {W, 0.00F, Dp}, {W + sk, 0.07F, Dp + sk});
-
-  upload_prop_mesh_impl(verts, idx, m_tent_mesh);
+  PropMeshData mesh = build_tent_mesh();
+  upload_prop_mesh_impl(mesh.vertices, mesh.indices, m_tent_mesh);
 }
 
 void VegetationPipeline::initialize_supply_cart_pipeline() {
@@ -766,16 +665,8 @@ void VegetationPipeline::initialize_cursed_gold_vein_pipeline() {
   initializeOpenGLFunctions();
   release_mesh_buffers(*this, m_cursed_gold_vein_mesh);
 
-  std::vector<std::pair<QVector3D, QVector3D>> verts;
-  std::vector<uint16_t> idx;
-
-  using namespace Render::GL::BackendPipelines::CursedGoldVeinParts;
-
-  append_parts(verts, idx, std::span{k_cursed_gold_vein_mounds});
-  append_parts(verts, idx, std::span{k_cursed_gold_vein_rubble});
-  append_parts(verts, idx, std::span{k_cursed_gold_vein_shards});
-
-  upload_prop_mesh_impl(verts, idx, m_cursed_gold_vein_mesh);
+  PropMeshData mesh = build_cursed_gold_vein_mesh();
+  upload_prop_mesh_impl(mesh.vertices, mesh.indices, m_cursed_gold_vein_mesh);
 }
 
 } // namespace Render::GL::BackendPipelines

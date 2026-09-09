@@ -186,11 +186,12 @@ inline auto facade_point(const QVector3D& center,
                          BuildingFacadePlane plane,
                          float horizontal,
                          float vertical,
-                         float normal_offset = 0.0F) -> QVector3D {
+                         float normal_offset = 0.0F,
+                         float outward = 1.0F) -> QVector3D {
   if (plane == BuildingFacadePlane::XY) {
-    return center + QVector3D(horizontal, vertical, normal_offset);
+    return center + QVector3D(horizontal, vertical, normal_offset * outward);
   }
-  return center + QVector3D(normal_offset, vertical, horizontal);
+  return center + QVector3D(normal_offset * outward, vertical, horizontal);
 }
 
 inline auto facade_scale(BuildingFacadePlane plane,
@@ -208,6 +209,17 @@ inline auto facade_rotation(BuildingFacadePlane plane, float degrees) -> QVector
     return {0.0F, 0.0F, degrees};
   }
   return {degrees, 0.0F, 0.0F};
+}
+
+inline constexpr float k_relief_layer_step = 0.013F;
+
+inline constexpr float k_relief_embed = 0.022F;
+
+inline auto relief_layer_depth(int step) -> std::pair<float, float> {
+  const float front = k_relief_layer_step * static_cast<float>(step);
+  const float back =
+      -k_relief_embed + (k_relief_layer_step * 0.5F * static_cast<float>(step - 1));
+  return {(front + back) * 0.5F, (front - back) * 0.5F};
 }
 
 struct EagleFeather {
@@ -283,19 +295,31 @@ inline void add_eagle_silhouette(BuildingArchetypeDesc& desc,
     }
   }
 
-  desc.add_box(
-      point(0.0F, -0.015F, depth), size(0.072F, 0.155F, depth * 1.25F), bronze, states);
-  desc.add_box(point(0.0F, 0.075F, depth * 1.15F),
-               size(0.055F, 0.070F, depth * 1.35F),
+  const float body_front = depth * 2.25F;
+  const auto stacked = [&](float back, float front) {
+    return std::pair<float, float>{(front + back) * 0.5F, (front - back) * 0.5F};
+  };
+  const auto [body_offset, body_half] = stacked(-depth * 0.25F, body_front);
+  const auto [chest_offset, chest_half] =
+      stacked(-depth * 0.20F, body_front + k_relief_layer_step);
+  const auto [head_offset, head_half] =
+      stacked(-depth * 0.20F, body_front + (2.0F * k_relief_layer_step));
+
+  desc.add_box(point(0.0F, -0.015F, body_offset),
+               size(0.072F, 0.155F, body_half),
+               bronze,
+               states);
+  desc.add_box(point(0.0F, 0.075F, chest_offset),
+               size(0.055F, 0.070F, chest_half),
                bronze,
                states);
 
-  desc.add_box(point(0.018F, 0.180F, depth * 1.2F),
-               size(0.046F, 0.055F, depth * 1.4F),
+  desc.add_box(point(0.018F, 0.180F, head_offset),
+               size(0.046F, 0.055F, head_half),
                bronze,
                states);
-  desc.add_cone(point(0.048F, 0.184F, depth * 1.2F),
-                point(0.104F, 0.156F, depth * 1.2F),
+  desc.add_cone(point(0.048F, 0.184F, head_offset),
+                point(0.104F, 0.156F, head_offset),
                 0.020F * scale,
                 bronze,
                 states);
@@ -332,32 +356,40 @@ inline void add_tanit_sign(BuildingArchetypeDesc& desc,
                            const QVector3D& center,
                            BuildingFacadePlane plane,
                            float scale,
-                           float depth,
+                           int symbol_step,
+                           int shade_step,
                            const QVector3D& symbol,
                            const QVector3D& shade,
-                           BuildingStateMask states) {
+                           BuildingStateMask states,
+                           float outward) {
+  const auto [symbol_offset, symbol_half] = relief_layer_depth(symbol_step);
+  const auto [shade_offset, shade_half] = relief_layer_depth(shade_step);
+
   const auto point = [&](float horizontal, float vertical, float normal) {
-    return facade_point(center, plane, horizontal * scale, vertical * scale, normal);
+    return facade_point(
+        center, plane, horizontal * scale, vertical * scale, normal, outward);
   };
   const auto size = [&](float horizontal, float vertical, float thickness) {
     return facade_scale(plane, horizontal * scale, vertical * scale, thickness);
   };
 
-  desc.add_cylinder(point(0.0F, 0.235F, depth * 0.2F),
-                    point(0.0F, 0.235F, depth * 1.9F),
+  desc.add_cylinder(point(0.0F, 0.235F, -k_relief_embed),
+                    point(0.0F, 0.235F, symbol_offset + symbol_half),
                     0.098F * scale,
                     symbol,
                     states);
-  desc.add_cylinder(point(0.0F, 0.235F, 0.0F),
-                    point(0.0F, 0.235F, depth * 0.35F),
+  desc.add_cylinder(point(0.0F, 0.235F, -k_relief_embed),
+                    point(0.0F, 0.235F, shade_offset + shade_half),
                     0.114F * scale,
                     shade,
                     states);
 
-  desc.add_box(point(0.0F, 0.085F, depth), size(0.235F, 0.032F, depth), symbol, states);
+  const auto [bar_offset, bar_half] = relief_layer_depth(symbol_step + 1);
+  desc.add_box(
+      point(0.0F, 0.085F, bar_offset), size(0.235F, 0.032F, bar_half), symbol, states);
   for (float const side : {-1.0F, 1.0F}) {
-    desc.add_rotated_box(point(side * 0.272F, 0.124F, depth),
-                         size(0.075F, 0.030F, depth),
+    desc.add_rotated_box(point(side * 0.272F, 0.124F, bar_offset),
+                         size(0.075F, 0.030F, bar_half),
                          facade_rotation(plane, side * -38.0F),
                          symbol,
                          states);
@@ -366,12 +398,15 @@ inline void add_tanit_sign(BuildingArchetypeDesc& desc,
   constexpr std::array<std::pair<float, float>, 4> k_body{
       {{0.060F, 0.020F}, {0.104F, -0.058F}, {0.148F, -0.136F}, {0.192F, -0.214F}}};
   for (auto const& course : k_body) {
-    desc.add_box(point(0.0F, course.second, depth),
-                 size(course.first, 0.042F, depth),
+    desc.add_box(point(0.0F, course.second, symbol_offset),
+                 size(course.first, 0.042F, symbol_half),
                  symbol,
                  states);
   }
-  desc.add_box(point(0.0F, -0.262F, depth), size(0.215F, 0.030F, depth), shade, states);
+  desc.add_box(point(0.0F, -0.262F, shade_offset),
+               size(0.215F, 0.030F, shade_half),
+               shade,
+               states);
 }
 
 } // namespace Detail
@@ -386,8 +421,11 @@ add_roman_aquila_relief(BuildingArchetypeDesc& desc,
                         BuildingStateMask states = k_building_state_mask_intact) {
   const float depth = 0.028F * scale;
 
-  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.0F),
-               Detail::facade_scale(plane, 0.58F * scale, 0.54F * scale, depth * 0.5F),
+  BuildingPartLabel const label(desc, "roman_aquila_relief");
+
+  const auto [plate_offset, plate_half] = Detail::relief_layer_depth(1);
+  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.0F, plate_offset),
+               Detail::facade_scale(plane, 0.58F * scale, 0.54F * scale, plate_half),
                weathered(shadow, 3, 0.10F),
                states);
 
@@ -403,27 +441,35 @@ add_punic_tanit_relief(BuildingArchetypeDesc& desc,
                        float scale,
                        const QVector3D& symbol,
                        const QVector3D& backing,
-                       BuildingStateMask states = k_building_state_mask_intact) {
-  const float depth = 0.028F * scale;
+                       BuildingStateMask states = k_building_state_mask_intact,
+                       float outward = 1.0F) {
 
-  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.0F),
-               Detail::facade_scale(plane, 0.58F * scale, 0.74F * scale, depth * 0.7F),
+  const auto [plate_offset, plate_half] = Detail::relief_layer_depth(1);
+  const auto [field_offset, field_half] = Detail::relief_layer_depth(2);
+  const auto [border_offset, border_half] = Detail::relief_layer_depth(3);
+
+  BuildingPartLabel const label(desc, "punic_tanit_relief");
+
+  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.0F, plate_offset, outward),
+               Detail::facade_scale(plane, 0.58F * scale, 0.74F * scale, plate_half),
                backing,
                states);
-  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.0F, depth * 0.25F),
-               Detail::facade_scale(plane, 0.48F * scale, 0.64F * scale, depth * 0.35F),
+  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.0F, field_offset, outward),
+               Detail::facade_scale(plane, 0.48F * scale, 0.64F * scale, field_half),
                weathered(backing, 7, 0.12F),
                states);
 
   for (float const side : {-1.0F, 1.0F}) {
     desc.add_box(
-        Detail::facade_point(center, plane, side * 0.52F * scale, 0.0F, depth * 0.3F),
-        Detail::facade_scale(plane, 0.032F * scale, 0.72F * scale, depth * 0.45F),
+        Detail::facade_point(
+            center, plane, side * 0.52F * scale, 0.0F, border_offset, outward),
+        Detail::facade_scale(plane, 0.032F * scale, 0.72F * scale, border_half),
         symbol,
         states);
   }
 
-  Detail::add_tanit_sign(desc, center, plane, scale, depth, symbol, backing, states);
+  Detail::add_tanit_sign(
+      desc, center, plane, scale, 4, 3, symbol, backing, states, outward);
 }
 
 inline void

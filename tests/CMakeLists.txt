@@ -348,6 +348,7 @@ add_executable(
     save/snapshot_contract_test.cpp
     core/serialization_test.cpp
     core/save_capture_coherence_test.cpp
+    core/save_load_render_snapshot_test.cpp
     core/commander_state_round_trip_test.cpp
     db/save_storage_test.cpp
     db/save_format_test.cpp
@@ -375,6 +376,8 @@ add_executable(
     render_tests
     ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
     render/prop_model_footprint_test.cpp
+    render/rock_prop_mesh_test.cpp
+    render/tent_mesh_test.cpp
     render/gl_deferred_delete_test.cpp
     render/asset_counters_test.cpp
     render/unit_primitive_convention_test.cpp
@@ -401,6 +404,7 @@ add_executable(
     render/barracks_flag_renderer_test.cpp
     render/carried_load_renderer_test.cpp
     render/building_archetype_desc_test.cpp
+    render/building_facade_coplanarity_test.cpp
     render/building_body_footprint_test.cpp
     render/building_render_common_test.cpp
     render/mode_indicator_test.cpp
@@ -550,6 +554,7 @@ add_executable(
     core/audio_backend_test.cpp
     db/save_preview_test.cpp
     core/settings_persistence_test.cpp
+    core/save_runtime_restore_test.cpp
     core/minimap_manager_test.cpp
     core/commander_control_regression_test.cpp
     core/mission_tick_ownership_test.cpp

@@ -214,8 +214,9 @@ void add_votive_altar(BuildingArchetypeDesc& desc,
                  c.marble,
                  k_building_state_mask_intact);
   }
+
   desc.add_box(base + QVector3D(0.0F, 0.186F, 0.0F),
-               QVector3D(0.150F, 0.020F, 0.130F),
+               QVector3D(0.150F, 0.020F, 0.118F),
                c.limestone,
                k_building_state_mask_intact);
   for (float const side : {-1.0F, 1.0F}) {
@@ -736,7 +737,7 @@ void add_roman_temple_ruin(BuildingArchetypeDesc& desc,
   }
 }
 
-auto build_temple_archetype(BuildingState state) -> RenderArchetype {
+auto build_temple_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   RomanTemplePalette const c;
   float height_multiplier = 1.0F;
   if (state == BuildingState::Damaged) {
@@ -798,9 +799,11 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
 
   for (int step = 0; step < 6; ++step) {
     float const step_index = static_cast<float>(step);
+
     float const top = 0.082F * (step_index + 1.0F);
-    desc.add_box(QVector3D(-1.700F + (0.078F * step_index), top * 0.5F, 0.0F),
-                 QVector3D(0.041F, top * 0.5F, 0.80F),
+    float const riser_top = top - 0.012F;
+    desc.add_box(QVector3D(-1.700F + (0.078F * step_index), riser_top * 0.5F, 0.0F),
+                 QVector3D(0.041F, riser_top * 0.5F, 0.80F),
                  (step % 2 == 0) ? c.marble_shade : c.limestone,
                  k_building_state_mask_intact);
     desc.add_box(QVector3D(-1.700F + (0.078F * step_index), top - 0.006F, 0.0F),
@@ -942,7 +945,11 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
 
   desc.scale_uniformly(k_temple_mesh_scale);
 
-  return build_building_archetype(desc, state);
+  return desc;
+}
+
+auto build_temple_archetype(BuildingState state) -> RenderArchetype {
+  return build_building_archetype(build_temple_desc_impl(state), state);
 }
 
 auto temple_archetype(BuildingState state) -> const RenderArchetype& {
@@ -952,6 +959,10 @@ auto temple_archetype(BuildingState state) -> const RenderArchetype& {
 }
 
 } // namespace
+
+auto build_temple_desc(BuildingState state) -> BuildingArchetypeDesc {
+  return build_temple_desc_impl(state);
+}
 
 void register_temple_renderer(EntityRendererRegistry& registry) {
   register_temple_renderer_variant(

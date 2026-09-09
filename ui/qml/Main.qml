@@ -218,6 +218,10 @@ ApplicationWindow {
 
     property bool load_ended_the_match: false
 
+    function push_simulation_suspended() {
+        gameViewItem.set_paused(mainWindow.simulation_suspended);
+    }
+
     function start_load(slot_name) {
         if (typeof game === 'undefined' || !game.saves.load_from_slot)
             return;
@@ -229,6 +233,7 @@ ApplicationWindow {
         mainWindow.menu_visible = false;
         mainWindow.game_started = true;
         mainWindow.game_paused = false;
+        mainWindow.push_simulation_suspended();
         gameViewItem.forceActiveFocus();
     }
 
@@ -326,7 +331,7 @@ ApplicationWindow {
     }
 
     onSimulation_suspendedChanged: {
-        gameViewItem.set_paused(mainWindow.simulation_suspended);
+        mainWindow.push_simulation_suspended();
     }
 
     Design.GameShell {
