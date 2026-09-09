@@ -247,6 +247,22 @@ void AudioSystem::set_ambience_volume(float volume) {
   Game::Audio::Settings::save_ambience_volume(ambience_volume.load());
 }
 
+void AudioSystem::apply_offline_reference_mix() {
+  const auto reference = Game::Audio::Settings::first_run_volumes();
+  master_volume = reference.master;
+  sound_volume = reference.sound;
+  music_volume = reference.music;
+  voice_volume = reference.voice;
+  ambience_volume = reference.ambience;
+
+  if (m_music_player != nullptr) {
+    m_music_player->set_volume(master_volume.load() * music_volume.load());
+  }
+
+  qInfo() << "AudioSystem: offline reference mix, master" << master_volume.load()
+          << "music" << music_volume.load() << "ambience" << ambience_volume.load();
+}
+
 void AudioSystem::load_persisted_volumes() {
   listening_preset = Game::Audio::Settings::load_listening_preset();
   const auto volumes = Game::Audio::Settings::load_volumes();

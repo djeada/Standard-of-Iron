@@ -113,7 +113,7 @@ void main() {
   float rim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.055;
 
   vec3 color = stone * illumination * crevice_ao;
-  // Tiny scatter should not retain full-strength bright rims and specular dots.
+
   color += soi_rim_light(N_face, V) * (1.0 - skirt * 0.6) * detail_weight;
   color += sun * (dry_spec + wet_spec) * detail_weight;
   color += sky * rim * detail_weight;

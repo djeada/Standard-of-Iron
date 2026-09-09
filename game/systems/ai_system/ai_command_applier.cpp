@@ -4,7 +4,9 @@
 #include <QVector3D>
 #include <qvectornd.h>
 
+#include <cmath>
 #include <cstddef>
+#include <limits>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -12,6 +14,7 @@
 #include "../../command/command.h"
 #include "../../command/command_dispatcher.h"
 #include "../../command/command_queue.h"
+#include "../../core/ambient_session.h"
 #include "../../core/component_structures.h"
 #include "../../core/world.h"
 #include "../../game_config.h"
@@ -273,7 +276,7 @@ auto AICommandApplier::apply(Engine::Core::World& world,
 
       constexpr float k_site_nudge_radius = 12.0F;
 
-      constexpr float k_wall_link_nudge_radius = 1.0F;
+      constexpr float k_wall_link_nudge_radius = 0.0F;
       const bool wall_link =
           Game::Systems::is_wall_link_building_type(command.construction_type);
       const auto site = Game::Systems::find_clear_site(
@@ -282,7 +285,8 @@ auto AICommandApplier::apply(Engine::Core::World& world,
           QVector3D(command.construction_site_x, 0.0F, command.construction_site_z),
           wall_link ? k_wall_link_nudge_radius : k_site_nudge_radius,
           command.construction_rotation_y,
-          command.units);
+          command.units,
+          command.construction_keep_out);
       if (!site.has_value()) {
 
         ++report.refused_construction;
@@ -296,6 +300,23 @@ auto AICommandApplier::apply(Engine::Core::World& world,
                                                          command.construction_type,
                                                          command.construction_site_x,
                                                          command.construction_site_z));
+          const auto& terrain = *Game::Session::services_for(world).terrain;
+          float nearest = std::numeric_limits<float>::infinity();
+          const Game::Map::WorldProp* culprit = nullptr;
+          for (const auto& prop : terrain.world_props()) {
+            const QVector3D at = terrain.world_prop_world_position(prop);
+            const float d = std::hypot(at.x() - command.construction_site_x,
+                                       at.z() - command.construction_site_z);
+            if (d < nearest) {
+              nearest = d;
+              culprit = &prop;
+            }
+          }
+          if (culprit != nullptr) {
+            qWarning() << "BUILDTRACE p" << ai_owner_id << "  nearest prop type"
+                       << static_cast<int>(culprit->type) << "scale" << culprit->scale
+                       << "at" << nearest << "m";
+          }
         }
         break;
       }

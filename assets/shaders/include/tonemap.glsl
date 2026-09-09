@@ -42,8 +42,7 @@ vec3 soi_split_tone(vec3 color, float strength) {
 }
 
 vec3 soi_grade(vec3 mapped_color) {
-  // Keep contrast in the midtones without clipping shaded equipment and faces
-  // to black before the shadow lift. Scene lighting already supplies the mood.
+
   float mapped_luma = max(dot(mapped_color, k_soi_grade_luma), 0.0);
   float contrast_weight =
       smoothstep(0.04, 0.24, mapped_luma) * (1.0 - smoothstep(0.72, 1.0, mapped_luma));
@@ -51,15 +50,14 @@ vec3 soi_grade(vec3 mapped_color) {
   vec3 contrasted = (mapped_color - k_soi_grade_pivot) * contrast + k_soi_grade_pivot;
   contrasted = max(contrasted, vec3(0.0));
   float luma = dot(contrasted, k_soi_grade_luma);
-  // Avoid turning bright cloth and metal into clipped patches of primary color.
+
   float saturation = mix(k_soi_grade_saturation, 1.0, smoothstep(0.55, 0.95, luma));
   vec3 saturated = mix(vec3(luma), contrasted, saturation);
   saturated = max(saturated, vec3(0.0));
   vec3 tinted =
       mix(saturated, saturated * k_soi_grade_highlight_tint, clamp(luma, 0.0, 1.0));
   tinted = soi_split_tone(tinted, k_soi_grade_split_strength);
-  // Neutral materials (notably white wool) must survive the artistic warm
-  // grade as neutral. Retain the grade's luminance and leave colored cloth alone.
+
   float chroma = max(max(mapped_color.r, mapped_color.g), mapped_color.b) -
                  min(min(mapped_color.r, mapped_color.g), mapped_color.b);
   float neutral = 1.0 - smoothstep(0.015, 0.06, chroma);

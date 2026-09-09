@@ -124,6 +124,8 @@ struct Spec {
   QString music_track;
   float music_volume{0.18F};
 
+  float reel_loudness_lufs{-16.0F};
+
   QString report_sound_decided;
   QString report_sound_undecided;
   float report_sound_volume{0.45F};

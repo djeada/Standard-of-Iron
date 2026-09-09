@@ -691,6 +691,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
 
   constexpr float CONSTRUCTION_ARRIVAL_DISTANCE_SQ = 0.0225F;
 
+  constexpr float k_wall_site_arrival_distance_sq = 1.0F * 1.0F;
+
   constexpr float k_site_approach_limit_seconds = 30.0F;
 
   constexpr float k_orphaned_task_limit_seconds = 8.0F;
@@ -788,7 +790,10 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         float const dz = builder_prod->construction_site_z - transform->position.z;
         float const dist_sq = dx * dx + dz * dz;
 
-        if (dist_sq < CONSTRUCTION_ARRIVAL_DISTANCE_SQ) {
+        const float arrival_sq = is_wall_network_product(builder_prod->product_type)
+                                     ? k_wall_site_arrival_distance_sq
+                                     : CONSTRUCTION_ARRIVAL_DISTANCE_SQ;
+        if (dist_sq < arrival_sq) {
 
           builder_prod->at_construction_site = true;
           builder_prod->in_progress = true;

@@ -284,6 +284,11 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
                                         .toDouble(spec.report_sound_volume)),
                  0.0F,
                  1.0F);
+  spec.reel_loudness_lufs =
+      std::clamp(static_cast<float>(root.value(QStringLiteral("reel_loudness_lufs"))
+                                        .toDouble(spec.reel_loudness_lufs)),
+                 -70.0F,
+                 0.0F);
   spec.music_volume = std::clamp(
       static_cast<float>(
           root.value(QStringLiteral("music_volume")).toDouble(spec.music_volume)),

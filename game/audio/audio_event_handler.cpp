@@ -1,5 +1,8 @@
 #include "audio_event_handler.h"
 
+#include <QDebug>
+#include <QString>
+
 #include <algorithm>
 #include <chrono>
 #include <random>
@@ -450,20 +453,33 @@ void AudioEventHandler::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
   }
 }
 
+auto AudioEventHandler::rotate_ambient_music(Engine::Core::AmbientState state) -> bool {
+  auto it = m_ambient_music_map.find(state);
+  if (it == m_ambient_music_map.end() || it->second.empty()) {
+    return false;
+  }
+
+  const std::string group_key = ambient_music_group_key(state);
+  const std::string last_id = m_current_music_id.empty()
+                                  ? m_last_sound_group_id[group_key]
+                                  : m_current_music_id;
+  const std::string music_id = choose_loaded_variant(it->second, last_id);
+  if (music_id.empty() || music_id == m_current_music_id) {
+    return false;
+  }
+
+  AudioSystem::get_instance().play_music(music_id);
+  m_last_sound_group_id[group_key] = music_id;
+  m_current_music_id = music_id;
+  qInfo().noquote() << QStringLiteral("Ambient music: %1 (%2)")
+                           .arg(QString::fromStdString(music_id),
+                                QString::fromStdString(group_key));
+  return true;
+}
+
 void AudioEventHandler::on_ambient_state_changed(
     const Engine::Core::AmbientStateChangedEvent& event) {
-  auto it = m_ambient_music_map.find(event.new_state);
-  if (it != m_ambient_music_map.end() && !it->second.empty()) {
-    const std::string group_key = ambient_music_group_key(event.new_state);
-    const std::string last_id = m_last_sound_group_id[group_key];
-    const std::string music_id = choose_loaded_variant(it->second, last_id);
-
-    if (!music_id.empty() && music_id != m_current_music_id) {
-      AudioSystem::get_instance().play_music(music_id);
-      m_last_sound_group_id[group_key] = music_id;
-      m_current_music_id = music_id;
-    }
-  }
+  rotate_ambient_music(event.new_state);
 
   auto sfx_it = m_ambient_state_sfx_map.find(event.new_state);
   if (sfx_it != m_ambient_state_sfx_map.end() && !sfx_it->second.empty()) {

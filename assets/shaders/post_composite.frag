@@ -39,8 +39,7 @@ const int k_ao_ring_count = 3;
 const float k_ao_ring_spread[3] = float[3](2.5, 6.0, 12.0);
 const float k_ao_ring_weight[3] = float[3](1.0, 0.65, 0.24);
 const float k_ao_ring_reach = 1.7;
-// Depth-separated buildings must not cast broad screen-space occlusion halos.
-// Directional shadows handle their cast shadow; AO supplies local grounding.
+
 const float k_ao_far_cutoff = 4.0;
 const vec3 k_ao_tint = vec3(0.80, 0.83, 0.89);
 

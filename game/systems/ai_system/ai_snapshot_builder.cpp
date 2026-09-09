@@ -182,12 +182,12 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       continue;
     }
     const QVector3D position = terrain_service.world_prop_world_position(prop);
-    snapshot.resource_nodes.push_back(
-        {prop.id,
-         prop.type,
-         position.x(),
-         position.z(),
-         terrain_service.is_world_prop_reserved(prop.id)});
+    snapshot.resource_nodes.push_back({prop.id,
+                                       prop.type,
+                                       position.x(),
+                                       position.z(),
+                                       terrain_service.is_world_prop_reserved(prop.id),
+                                       prop.scale});
   }
 
   auto friendlies = world.get_units_owned_by(ai_owner_id);

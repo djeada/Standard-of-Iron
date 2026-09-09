@@ -329,12 +329,24 @@ auto find_clear_site(const Engine::Core::World& world,
                      const QVector3D& wanted,
                      float search_radius,
                      float facing_degrees,
-                     std::span<const Engine::Core::EntityID> crew)
+                     std::span<const Engine::Core::EntityID> crew,
+                     std::span<const SiteKeepOut> keep_out)
     -> std::optional<QVector3D> {
   const auto reserved = pending_sites(world, crew);
-  if (assess_ground(
+  const auto size = BuildingCollisionRegistry::get_building_size(building_type);
+  const float own_reach = (0.5F * std::max(size.width, size.depth)) + k_site_margin;
+  const auto kept_out = [&](float x, float z) {
+    return std::any_of(keep_out.begin(), keep_out.end(), [&](const SiteKeepOut& disc) {
+      const float dx = disc.x - x;
+      const float dz = disc.z - z;
+      const float reach = disc.radius + own_reach;
+      return (dx * dx) + (dz * dz) < reach * reach;
+    });
+  };
+  if (!kept_out(wanted.x(), wanted.z()) &&
+      assess_ground(
           world, reserved, building_type, wanted.x(), wanted.z(), 0, facing_degrees) ==
-      GroundVerdict::Clear) {
+          GroundVerdict::Clear) {
     return wanted;
   }
   if (search_radius <= 0.0F) {
@@ -353,7 +365,8 @@ auto find_clear_site(const Engine::Core::World& world,
       const QVector3D candidate(wanted.x() + (radius * std::cos(angle)),
                                 wanted.y(),
                                 wanted.z() + (radius * std::sin(angle)));
-      if (assess_ground(world,
+      if (!kept_out(candidate.x(), candidate.z()) &&
+          assess_ground(world,
                         reserved,
                         building_type,
                         candidate.x(),

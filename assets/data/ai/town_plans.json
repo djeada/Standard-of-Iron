@@ -13,7 +13,9 @@
     "A step's optional 'rotation' is degrees in that same frame: 0 runs a wall",
     "along x (parallel to the front), 90 runs it along z. Wall links stand 2m",
     "apart along their line; a wall_gate spans 9m of a run and is the only way",
-    "through a closed ring. The front wall and its towers come first in the list.",
+    "through a closed ring. A circuit is listed as one growing run: the front",
+    "gate, then links outward along both arms, round the corners, down the",
+    "flanks, closing at the rear, so any prefix of it is a wall with two ends.",
     "Caps: 128 wall links, 12 towers, 12 homes, 4 gates per plan.",
     "An unknown building name is skipped with a warning; an unknown plan name",
     "falls back to the built-in layout table."
@@ -21,17 +23,17 @@
   "plans": {
     "roman_bulwark": {
       "display_name": "Fabian Bulwark",
-      "silhouette_steps": 34,
+      "silhouette_steps": 33,
       "steps": [
         {
           "building": "home",
-          "x": -12,
-          "z": 14
+          "x": -16.8,
+          "z": 12.5
         },
         {
           "building": "home",
-          "x": 12,
-          "z": 14
+          "x": 16.8,
+          "z": 12.5
         },
         {
           "building": "marketplace",
@@ -54,170 +56,20 @@
           "z": -14
         },
         {
-          "building": "wall_segment",
-          "x": -4.0,
-          "z": -18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 4.0,
-          "z": -18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 10.0,
-          "z": -18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -12.0,
-          "z": -18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 18.0,
-          "z": -18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -20.0,
-          "z": -18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -22.0,
-          "z": -18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 22.0,
-          "z": -18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -22.0,
-          "z": -16.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 22.0,
-          "z": -16.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 22.0,
-          "z": -14.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -22.0,
-          "z": -12.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 22.0,
-          "z": -6.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -22.0,
-          "z": -4.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 22.0,
-          "z": 2.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -22.0,
-          "z": 4.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 22.0,
-          "z": 10.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -22.0,
-          "z": 12.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -4.0,
-          "z": 18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 4.0,
-          "z": 18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 6.0,
-          "z": 18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -12.0,
-          "z": 18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 14.0,
-          "z": 18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -20.0,
-          "z": 18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 20.0,
-          "z": 18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -22.0,
-          "z": 18.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 22.0,
-          "z": 18.0,
-          "rotation": 90.0
-        },
-        {
           "building": "wall_gate",
           "x": 0.0,
+          "z": -18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -4.0,
+          "z": -18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 4.0,
           "z": -18.0,
           "rotation": 0.0
         },
@@ -248,6 +100,18 @@
         {
           "building": "wall_segment",
           "x": -10.0,
+          "z": -18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 10.0,
+          "z": -18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -12.0,
           "z": -18.0,
           "rotation": 0.0
         },
@@ -289,6 +153,18 @@
         },
         {
           "building": "wall_segment",
+          "x": 18.0,
+          "z": -18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -20.0,
+          "z": -18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
           "x": 20.0,
           "z": -18.0,
           "rotation": 0.0
@@ -296,7 +172,43 @@
         {
           "building": "wall_segment",
           "x": -22.0,
+          "z": -16.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -22.0,
+          "z": -18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 22.0,
+          "z": -16.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 22.0,
+          "z": -18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -22.0,
           "z": -14.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 22.0,
+          "z": -14.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -22.0,
+          "z": -12.0,
           "rotation": 90.0
         },
         {
@@ -338,6 +250,18 @@
         {
           "building": "wall_segment",
           "x": 22.0,
+          "z": -6.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -22.0,
+          "z": -4.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 22.0,
           "z": -4.0,
           "rotation": 90.0
         },
@@ -369,6 +293,18 @@
           "building": "wall_segment",
           "x": -22.0,
           "z": 2.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 22.0,
+          "z": 2.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -22.0,
+          "z": 4.0,
           "rotation": 90.0
         },
         {
@@ -410,6 +346,18 @@
         {
           "building": "wall_segment",
           "x": 22.0,
+          "z": 10.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -22.0,
+          "z": 12.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 22.0,
           "z": 12.0,
           "rotation": 90.0
         },
@@ -439,43 +387,37 @@
         },
         {
           "building": "wall_segment",
-          "x": -6.0,
+          "x": -22.0,
+          "z": 18.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -20.0,
           "z": 18.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": -8.0,
+          "x": 20.0,
           "z": 18.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": 8.0,
+          "x": 22.0,
+          "z": 18.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -18.0,
           "z": 18.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": -10.0,
-          "z": 18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 10.0,
-          "z": 18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 12.0,
-          "z": 18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -14.0,
+          "x": 18.0,
           "z": 18.0,
           "rotation": 0.0
         },
@@ -493,13 +435,73 @@
         },
         {
           "building": "wall_segment",
-          "x": -18.0,
+          "x": -14.0,
           "z": 18.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": 18.0,
+          "x": 14.0,
+          "z": 18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -12.0,
+          "z": 18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 12.0,
+          "z": 18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -10.0,
+          "z": 18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 10.0,
+          "z": 18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -8.0,
+          "z": 18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 8.0,
+          "z": 18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -6.0,
+          "z": 18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 6.0,
+          "z": 18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -4.0,
+          "z": 18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 4.0,
           "z": 18.0,
           "rotation": 0.0
         },
@@ -511,13 +513,19 @@
         },
         {
           "building": "defense_tower",
-          "x": -17,
-          "z": 14
+          "x": -13.0,
+          "z": 14.0
         },
         {
           "building": "defense_tower",
-          "x": 17,
-          "z": 14
+          "x": 13.0,
+          "z": 14.0
+        },
+        {
+          "building": "wall_gate",
+          "x": 0.0,
+          "z": -10.0,
+          "rotation": 0.0
         },
         {
           "building": "wall_segment",
@@ -570,26 +578,26 @@
         {
           "building": "wall_segment",
           "x": -12.0,
-          "z": -10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 12.0,
-          "z": -10.0,
-          "rotation": 0.0
+          "z": -8.0,
+          "rotation": 90.0
         },
         {
           "building": "wall_segment",
           "x": -12.0,
-          "z": -8.0,
-          "rotation": 90.0
+          "z": -10.0,
+          "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": 12.0,
           "z": -8.0,
           "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 12.0,
+          "z": -10.0,
+          "rotation": 0.0
         },
         {
           "building": "wall_segment",
@@ -689,7 +697,61 @@
         },
         {
           "building": "wall_segment",
-          "x": 0.0,
+          "x": -12.0,
+          "z": 10.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -10.0,
+          "z": 10.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 10.0,
+          "z": 10.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 12.0,
+          "z": 10.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -8.0,
+          "z": 10.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 8.0,
+          "z": 10.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -6.0,
+          "z": 10.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 6.0,
+          "z": 10.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -4.0,
+          "z": 10.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 4.0,
           "z": 10.0,
           "rotation": 0.0
         },
@@ -707,68 +769,8 @@
         },
         {
           "building": "wall_segment",
-          "x": -4.0,
-          "z": 10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 4.0,
-          "z": 10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -6.0,
-          "z": 10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 6.0,
-          "z": 10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -8.0,
-          "z": 10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 8.0,
-          "z": 10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -10.0,
-          "z": 10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 10.0,
-          "z": 10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -12.0,
-          "z": 10.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 12.0,
-          "z": 10.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_gate",
           "x": 0.0,
-          "z": -10.0,
+          "z": 10.0,
           "rotation": 0.0
         },
         {
@@ -793,13 +795,13 @@
         },
         {
           "building": "home",
-          "x": -17,
-          "z": 9
+          "x": -17.0,
+          "z": 8.0
         },
         {
           "building": "home",
-          "x": 17,
-          "z": 9
+          "x": 17.0,
+          "z": 8.0
         },
         {
           "building": "ballista",
@@ -815,259 +817,157 @@
     },
     "roman_assault_camp": {
       "display_name": "Consular Star Camp",
-      "silhouette_steps": 43,
+      "silhouette_steps": 42,
       "steps": [
         {
           "building": "home",
-          "x": -9.8,
-          "z": 3.9
+          "x": -10.4,
+          "z": 1.4
         },
         {
           "building": "home",
-          "x": 9.8,
-          "z": 3.9
+          "x": 11.0,
+          "z": 0.0
         },
         {
           "building": "marketplace",
-          "x": 8.0,
+          "x": 7.0,
           "z": 8.0
         },
         {
           "building": "defense_tower",
-          "x": 9.4,
-          "z": -7.4
+          "x": 11.4,
+          "z": -9.3
         },
         {
           "building": "defense_tower",
-          "x": -9.4,
-          "z": -7.4
+          "x": -11.4,
+          "z": -9.3
         },
         {
-          "building": "wall_segment",
-          "x": 16.0,
-          "z": -16.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -18.0,
-          "z": -16.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 18.0,
-          "z": -16.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -12.0,
-          "z": -14.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -14.0,
-          "z": -14.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 18.0,
-          "z": -14.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -18.0,
+          "building": "wall_gate",
+          "x": 0.0,
           "z": -14.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": -4.0,
-          "z": -12.0,
+          "z": -14.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": 4.0,
-          "z": -12.0,
+          "z": -14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -6.0,
+          "z": -14.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": 6.0,
-          "z": -12.0,
+          "z": -14.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": -8.0,
-          "z": -12.0,
+          "z": -14.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": 14.0,
-          "z": -12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -16.0,
-          "z": -12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 14.0,
-          "z": -10.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 16.0,
-          "z": -10.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 14.0,
-          "z": -8.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -14.0,
-          "z": -8.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -14.0,
-          "z": -6.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 14.0,
-          "z": 0.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -14.0,
-          "z": 2.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 14.0,
-          "z": 8.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -12.0,
-          "z": 10.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -14.0,
-          "z": 10.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -16.0,
-          "z": 10.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 16.0,
-          "z": 10.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -4.0,
-          "z": 12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 4.0,
-          "z": 12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 6.0,
-          "z": 12.0,
+          "x": 8.0,
+          "z": -14.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": -10.0,
-          "z": 12.0,
+          "z": -14.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": 12.0,
-          "z": 12.0,
+          "x": 10.0,
+          "z": -14.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": -12.0,
-          "z": 14.0,
-          "rotation": 90.0
+          "z": -14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 12.0,
+          "z": -14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -14.0,
+          "z": -16.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -14.0,
+          "z": -14.0,
+          "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": 14.0,
-          "z": 14.0,
-          "rotation": 90.0
+          "z": -16.0,
+          "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": 18.0,
-          "z": 14.0,
-          "rotation": 90.0
+          "x": 14.0,
+          "z": -14.0,
+          "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": -16.0,
-          "z": 16.0,
+          "z": -16.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
+          "z": -12.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
+          "z": -14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 16.0,
+          "z": -16.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 16.0,
+          "z": -12.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
           "x": 16.0,
-          "z": 16.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 18.0,
-          "z": 16.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -18.0,
-          "z": 18.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_gate",
-          "x": 0.0,
-          "z": -12.0,
+          "z": -14.0,
           "rotation": 0.0
         },
         {
@@ -1075,6 +975,60 @@
           "x": -18.0,
           "z": -18.0,
           "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -18.0,
+          "z": -16.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -18.0,
+          "z": -12.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -18.0,
+          "z": -14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
+          "z": -10.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 16.0,
+          "z": -10.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 18.0,
+          "z": -18.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 18.0,
+          "z": -16.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 18.0,
+          "z": -14.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 18.0,
+          "z": -12.0,
+          "rotation": 90.0
         },
         {
           "building": "wall_segment",
@@ -1084,227 +1038,169 @@
         },
         {
           "building": "wall_segment",
+          "x": -20.0,
+          "z": -16.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
+          "z": -8.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 16.0,
+          "z": -8.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
           "x": 20.0,
           "z": -18.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": -16.0,
-          "z": -16.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
           "x": 20.0,
           "z": -16.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": 12.0,
-          "z": -14.0,
-          "rotation": 0.0
+          "x": -22.0,
+          "z": -20.0,
+          "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": 14.0,
-          "z": -14.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 16.0,
-          "z": -14.0,
+          "x": -22.0,
+          "z": -18.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
           "x": -16.0,
-          "z": -14.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -6.0,
-          "z": -12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 8.0,
-          "z": -12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -10.0,
-          "z": -12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 10.0,
-          "z": -12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -12.0,
-          "z": -12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 12.0,
-          "z": -12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -14.0,
-          "z": -12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 16.0,
-          "z": -12.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -14.0,
-          "z": -10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -16.0,
-          "z": -10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "defense_tower",
-          "x": 18.0,
-          "z": 6.2
-        },
-        {
-          "building": "defense_tower",
-          "x": -8.0,
-          "z": 7.7
-        },
-        {
-          "building": "wall_segment",
-          "x": 14.0,
           "z": -6.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": 14.0,
+          "x": 16.0,
+          "z": -6.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 22.0,
+          "z": -20.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 22.0,
+          "z": -18.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
           "z": -4.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": -14.0,
+          "x": 16.0,
           "z": -4.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": 14.0,
+          "x": -16.0,
           "z": -2.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": -14.0,
+          "x": 16.0,
           "z": -2.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": -14.0,
+          "x": -16.0,
           "z": 0.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": 14.0,
+          "x": 16.0,
+          "z": 0.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
           "z": 2.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": 14.0,
+          "x": 16.0,
+          "z": 2.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
           "z": 4.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": -14.0,
+          "x": 16.0,
           "z": 4.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": 14.0,
+          "x": -16.0,
           "z": 6.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": -14.0,
+          "x": 16.0,
           "z": 6.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": -14.0,
+          "x": -16.0,
           "z": 8.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": 14.0,
+          "x": 16.0,
+          "z": 8.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
           "z": 10.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": -6.0,
-          "z": 12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -8.0,
-          "z": 12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 8.0,
-          "z": 12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 10.0,
-          "z": 12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -12.0,
-          "z": 12.0,
+          "x": 16.0,
+          "z": 10.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": 14.0,
+          "x": -18.0,
           "z": 12.0,
           "rotation": 90.0
         },
@@ -1316,9 +1212,39 @@
         },
         {
           "building": "wall_segment",
+          "x": 14.0,
+          "z": 12.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
           "x": 16.0,
           "z": 12.0,
           "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 18.0,
+          "z": 12.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -18.0,
+          "z": 14.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
+          "z": 14.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -14.0,
+          "z": 14.0,
+          "rotation": 0.0
         },
         {
           "building": "wall_segment",
@@ -1328,31 +1254,67 @@
         },
         {
           "building": "wall_segment",
+          "x": 14.0,
+          "z": 14.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 18.0,
+          "z": 14.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -20.0,
+          "z": 16.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -18.0,
+          "z": 16.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
+          "z": 16.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
           "x": -14.0,
+          "z": 16.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -12.0,
           "z": 14.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": -16.0,
+          "x": 10.0,
           "z": 14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 14.0,
+          "z": 16.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
           "x": 16.0,
-          "z": 14.0,
-          "rotation": 90.0
+          "z": 16.0,
+          "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": -18.0,
-          "z": 14.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -18.0,
+          "x": 18.0,
           "z": 16.0,
           "rotation": 90.0
         },
@@ -1364,7 +1326,7 @@
         },
         {
           "building": "wall_segment",
-          "x": 20.0,
+          "x": -22.0,
           "z": 18.0,
           "rotation": 90.0
         },
@@ -1372,43 +1334,126 @@
           "building": "wall_segment",
           "x": -20.0,
           "z": 18.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -18.0,
+          "z": 18.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -10.0,
+          "z": 14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 8.0,
+          "z": 14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 18.0,
+          "z": 18.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 20.0,
+          "z": 18.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 22.0,
+          "z": 18.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -22.0,
+          "z": 20.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -8.0,
+          "z": 14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 6.0,
+          "z": 14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 22.0,
+          "z": 20.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -6.0,
+          "z": 14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 4.0,
+          "z": 14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -4.0,
+          "z": 14.0,
           "rotation": 0.0
         },
         {
           "building": "wall_gate",
           "x": 0.0,
-          "z": 12.0,
+          "z": 14.0,
           "rotation": 0.0
         },
         {
-          "building": "home",
-          "x": -8.0,
-          "z": -16.0
+          "building": "defense_tower",
+          "x": 10.6,
+          "z": 8.7
+        },
+        {
+          "building": "defense_tower",
+          "x": -11.4,
+          "z": 9.3
         },
         {
           "building": "home",
-          "x": 8.0,
-          "z": -16.0
+          "x": -9.0,
+          "z": -6.0
         },
         {
           "building": "home",
-          "x": 8.5,
-          "z": 16.2
+          "x": 9.0,
+          "z": -6.0
         },
         {
           "building": "home",
-          "x": 5.2,
-          "z": -19.0
+          "x": -7.4,
+          "z": 7.9
         },
         {
           "building": "catapult",
-          "x": -18.0,
+          "x": -10.0,
           "z": 5.0
         },
         {
           "building": "catapult",
-          "x": 18.0,
-          "z": 0.4
+          "x": 10.0,
+          "z": 5.0
         }
       ]
     },
@@ -1449,14 +1494,8 @@
         },
         {
           "building": "wall_segment",
-          "x": 6.0,
-          "z": -20.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 8.0,
-          "z": -20.0,
+          "x": -2.0,
+          "z": -18.0,
           "rotation": 0.0
         },
         {
@@ -1467,8 +1506,14 @@
         },
         {
           "building": "wall_segment",
-          "x": 10.0,
-          "z": -18.0,
+          "x": 2.0,
+          "z": -20.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -4.0,
+          "z": -16.0,
           "rotation": 0.0
         },
         {
@@ -1479,20 +1524,56 @@
         },
         {
           "building": "wall_segment",
+          "x": 4.0,
+          "z": -20.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
           "x": -6.0,
           "z": -14.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": 12.0,
+          "x": -4.0,
           "z": -14.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": 16.0,
+          "x": 6.0,
+          "z": -20.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -8.0,
           "z": -12.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -6.0,
+          "z": -12.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 8.0,
+          "z": -20.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 8.0,
+          "z": -18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -10.0,
+          "z": -10.0,
           "rotation": 0.0
         },
         {
@@ -1503,20 +1584,68 @@
         },
         {
           "building": "wall_segment",
+          "x": 10.0,
+          "z": -18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 10.0,
+          "z": -16.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
           "x": -12.0,
           "z": -8.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": 18.0,
+          "x": -10.0,
           "z": -8.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": 22.0,
+          "x": 12.0,
+          "z": -16.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 12.0,
+          "z": -14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -14.0,
           "z": -6.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -12.0,
+          "z": -6.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 14.0,
+          "z": -14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 14.0,
+          "z": -12.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
+          "z": -4.0,
           "rotation": 0.0
         },
         {
@@ -1527,14 +1656,74 @@
         },
         {
           "building": "wall_segment",
-          "x": -16.0,
-          "z": -2.0,
+          "x": 16.0,
+          "z": -12.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 16.0,
+          "z": -10.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": -18.0,
           "z": -2.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
+          "z": -2.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 18.0,
+          "z": -10.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 18.0,
+          "z": -8.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -20.0,
+          "z": -2.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 20.0,
+          "z": -8.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 20.0,
+          "z": -6.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -22.0,
+          "z": -2.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 22.0,
+          "z": -6.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 22.0,
+          "z": -4.0,
           "rotation": 0.0
         },
         {
@@ -1546,156 +1735,12 @@
         {
           "building": "wall_segment",
           "x": 24.0,
-          "z": -2.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 2.0,
-          "z": -20.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 4.0,
-          "z": -20.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -2.0,
-          "z": -18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 8.0,
-          "z": -18.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -4.0,
-          "z": -16.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 10.0,
-          "z": -16.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 12.0,
-          "z": -16.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -4.0,
-          "z": -14.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 14.0,
-          "z": -14.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -6.0,
-          "z": -12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -8.0,
-          "z": -12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 14.0,
-          "z": -12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -10.0,
-          "z": -10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 16.0,
-          "z": -10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 18.0,
-          "z": -10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -10.0,
-          "z": -8.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 20.0,
-          "z": -8.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -12.0,
-          "z": -6.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -14.0,
-          "z": -6.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 20.0,
-          "z": -6.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -16.0,
-          "z": -4.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 22.0,
           "z": -4.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": 24.0,
-          "z": -4.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -20.0,
-          "z": -2.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -22.0,
           "z": -2.0,
           "rotation": 0.0
         },
@@ -1747,181 +1792,43 @@
       "steps": [
         {
           "building": "marketplace",
-          "x": 5.8,
-          "z": -9.4
+          "x": 6.6,
+          "z": -8.7
         },
         {
           "building": "home",
-          "x": -9.2,
-          "z": -6.4
+          "x": -8.0,
+          "z": -7.0
         },
         {
           "building": "home",
-          "x": 9.2,
-          "z": -6.4
+          "x": 10.0,
+          "z": -5.0
         },
         {
           "building": "defense_tower",
-          "x": -5.9,
-          "z": -8.8
+          "x": -11.0,
+          "z": -4.9
         },
         {
           "building": "defense_tower",
-          "x": -11.8,
-          "z": -3.4
+          "x": 9.6,
+          "z": -18.5
         },
         {
           "building": "defense_tower",
-          "x": 11.8,
-          "z": -3.4
+          "x": -13.5,
+          "z": -0.0
         },
         {
-          "building": "wall_segment",
-          "x": -4.0,
+          "building": "wall_gate",
+          "x": 0.0,
           "z": -16.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": 6.0,
-          "z": -14.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -8.0,
-          "z": -14.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 10.0,
-          "z": -12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -12.0,
-          "z": -12.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 14.0,
-          "z": -10.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -14.0,
-          "z": -8.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 16.0,
-          "z": -6.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -16.0,
-          "z": -4.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -18.0,
-          "z": -4.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 18.0,
-          "z": -4.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 18.0,
-          "z": -2.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -18.0,
-          "z": 0.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -16.0,
-          "z": 4.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -18.0,
-          "z": 4.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 18.0,
-          "z": 4.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -14.0,
-          "z": 8.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 16.0,
-          "z": 8.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 12.0,
-          "z": 10.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -12.0,
-          "z": 12.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -8.0,
-          "z": 14.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 10.0,
-          "z": 14.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
           "x": -4.0,
-          "z": 16.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 6.0,
-          "z": 16.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_gate",
-          "x": 0.0,
           "z": -16.0,
           "rotation": 0.0
         },
@@ -1934,7 +1841,19 @@
         {
           "building": "wall_segment",
           "x": -6.0,
+          "z": -14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -6.0,
           "z": -16.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 6.0,
+          "z": -14.0,
           "rotation": 0.0
         },
         {
@@ -1945,7 +1864,7 @@
         },
         {
           "building": "wall_segment",
-          "x": -6.0,
+          "x": -8.0,
           "z": -14.0,
           "rotation": 0.0
         },
@@ -1963,41 +1882,38 @@
         },
         {
           "building": "wall_segment",
-          "x": 10.0,
-          "z": -14.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
           "x": -10.0,
           "z": -12.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": 12.0,
+          "x": 10.0,
+          "z": -14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 10.0,
           "z": -12.0,
           "rotation": 0.0
         },
         {
-          "building": "defense_tower",
-          "x": -10.8,
-          "z": 5.4
-        },
-        {
-          "building": "defense_tower",
-          "x": 10.8,
-          "z": 5.4
-        },
-        {
-          "building": "defense_tower",
-          "x": -6.3,
-          "z": 9.5
+          "building": "wall_segment",
+          "x": -12.0,
+          "z": -12.0,
+          "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": -12.0,
           "z": -10.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 12.0,
+          "z": -12.0,
           "rotation": 0.0
         },
         {
@@ -2009,6 +1925,18 @@
         {
           "building": "wall_segment",
           "x": -14.0,
+          "z": -10.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -14.0,
+          "z": -8.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 14.0,
           "z": -10.0,
           "rotation": 0.0
         },
@@ -2026,14 +1954,32 @@
         },
         {
           "building": "wall_segment",
+          "x": -16.0,
+          "z": -6.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
           "x": 16.0,
           "z": -8.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": -16.0,
+          "x": 16.0,
           "z": -6.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -18.0,
+          "z": -4.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
+          "z": -4.0,
           "rotation": 90.0
         },
         {
@@ -2044,8 +1990,26 @@
         },
         {
           "building": "wall_segment",
+          "x": 18.0,
+          "z": -4.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
           "x": -18.0,
           "z": -2.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 18.0,
+          "z": -2.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -18.0,
+          "z": 0.0,
           "rotation": 90.0
         },
         {
@@ -2068,7 +2032,25 @@
         },
         {
           "building": "wall_segment",
+          "x": -18.0,
+          "z": 4.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
+          "z": 4.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
           "x": 16.0,
+          "z": 4.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 18.0,
           "z": 4.0,
           "rotation": 90.0
         },
@@ -2086,20 +2068,26 @@
         },
         {
           "building": "wall_segment",
-          "x": 14.0,
-          "z": 8.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
           "x": -16.0,
           "z": 8.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": -12.0,
-          "z": 10.0,
+          "x": -14.0,
+          "z": 8.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 14.0,
+          "z": 8.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 16.0,
+          "z": 8.0,
           "rotation": 90.0
         },
         {
@@ -2110,8 +2098,26 @@
         },
         {
           "building": "wall_segment",
+          "x": -12.0,
+          "z": 10.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 12.0,
+          "z": 10.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
           "x": 14.0,
           "z": 10.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -12.0,
+          "z": 12.0,
           "rotation": 90.0
         },
         {
@@ -2134,8 +2140,38 @@
         },
         {
           "building": "wall_segment",
+          "x": -10.0,
+          "z": 14.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -8.0,
+          "z": 14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 8.0,
+          "z": 14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 10.0,
+          "z": 14.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
           "x": -6.0,
           "z": 14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -6.0,
+          "z": 16.0,
           "rotation": 0.0
         },
         {
@@ -2146,25 +2182,19 @@
         },
         {
           "building": "wall_segment",
-          "x": 8.0,
-          "z": 14.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -10.0,
-          "z": 14.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 4.0,
+          "x": 6.0,
           "z": 16.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": -6.0,
+          "x": -4.0,
+          "z": 16.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 4.0,
           "z": 16.0,
           "rotation": 0.0
         },
@@ -2175,44 +2205,49 @@
           "rotation": 0.0
         },
         {
-          "building": "home",
-          "x": -13,
-          "z": 1
+          "building": "defense_tower",
+          "x": 13.5,
+          "z": 0.0
+        },
+        {
+          "building": "defense_tower",
+          "x": -6.1,
+          "z": 9.2
+        },
+        {
+          "building": "defense_tower",
+          "x": 6.1,
+          "z": 9.2
         },
         {
           "building": "home",
-          "x": 13,
-          "z": 1
+          "x": -10.4,
+          "z": 2.5
         },
         {
           "building": "home",
-          "x": -14.2,
-          "z": 15.4
+          "x": 10.9,
+          "z": 3.1
         },
         {
           "building": "home",
-          "x": 8.0,
-          "z": 8.0
+          "x": -9.0,
+          "z": 6.0
         },
         {
           "building": "home",
-          "x": -22.0,
+          "x": 16.6,
+          "z": 14.5
+        },
+        {
+          "building": "home",
+          "x": -23.0,
           "z": -3.0
         },
         {
           "building": "home",
-          "x": 22.0,
+          "x": 23.0,
           "z": -3.0
-        },
-        {
-          "building": "home",
-          "x": -9.3,
-          "z": 18.7
-        },
-        {
-          "building": "home",
-          "x": 9.9,
-          "z": 18.3
         },
         {
           "building": "ballista",
@@ -2304,12 +2339,12 @@
     },
     "punic_grand_camp": {
       "display_name": "Hannibalic Hexagon",
-      "silhouette_steps": 34,
+      "silhouette_steps": 30,
       "steps": [
         {
           "building": "home",
-          "x": 8.4,
-          "z": 6.8
+          "x": 9.2,
+          "z": 7.4
         },
         {
           "building": "home",
@@ -2318,41 +2353,59 @@
         },
         {
           "building": "defense_tower",
-          "x": 7.2,
-          "z": -10.9
+          "x": -7.8,
+          "z": -12.4
         },
         {
           "building": "defense_tower",
-          "x": -7.2,
-          "z": -10.9
+          "x": 7.8,
+          "z": -12.4
         },
         {
           "building": "defense_tower",
-          "x": 13.5,
+          "x": 15.1,
           "z": 0.0
+        },
+        {
+          "building": "wall_gate",
+          "x": 0.0,
+          "z": -18.0,
+          "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": -4.0,
-          "z": -16.0,
+          "z": -18.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": 4.0,
-          "z": -16.0,
+          "z": -18.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": -6.0,
-          "z": -16.0,
+          "z": -18.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": 6.0,
-          "z": -16.0,
+          "z": -18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -8.0,
+          "z": -18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 8.0,
+          "z": -18.0,
           "rotation": 0.0
         },
         {
@@ -2363,44 +2416,134 @@
         },
         {
           "building": "wall_segment",
+          "x": -10.0,
+          "z": -18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
           "x": 10.0,
           "z": -16.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
-          "x": -10.0,
-          "z": -14.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
           "x": 10.0,
-          "z": -14.0,
+          "z": -18.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": -12.0,
-          "z": -10.0,
-          "rotation": 90.0
+          "z": -16.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -12.0,
+          "z": -14.0,
+          "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": 12.0,
+          "z": -16.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 12.0,
+          "z": -14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -14.0,
+          "z": -14.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -14.0,
+          "z": -12.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 14.0,
+          "z": -14.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 14.0,
+          "z": -12.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
           "z": -10.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
           "x": -14.0,
-          "z": -6.0,
+          "z": -10.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
           "x": 14.0,
+          "z": -10.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 16.0,
+          "z": -10.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
+          "z": -8.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 16.0,
+          "z": -8.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -18.0,
           "z": -6.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
+          "z": -6.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 16.0,
+          "z": -6.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 18.0,
+          "z": -6.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -20.0,
+          "z": -4.0,
           "rotation": 90.0
         },
         {
@@ -2417,7 +2560,31 @@
         },
         {
           "building": "wall_segment",
-          "x": -18.0,
+          "x": 20.0,
+          "z": -4.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -20.0,
+          "z": -2.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 20.0,
+          "z": -2.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -22.0,
+          "z": 0.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -20.0,
           "z": 0.0,
           "rotation": 90.0
         },
@@ -2425,235 +2592,53 @@
           "building": "wall_segment",
           "x": 20.0,
           "z": 0.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -16.0,
-          "z": 4.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": 16.0,
-          "z": 4.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -18.0,
-          "z": 4.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 18.0,
-          "z": 4.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -14.0,
-          "z": 8.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 14.0,
-          "z": 8.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -12.0,
-          "z": 12.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 12.0,
-          "z": 12.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -4.0,
-          "z": 16.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 4.0,
-          "z": 16.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -10.0,
-          "z": 16.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 10.0,
-          "z": 16.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_gate",
-          "x": 0.0,
-          "z": -16.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -8.0,
-          "z": -16.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 8.0,
-          "z": -16.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -12.0,
-          "z": -14.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 12.0,
-          "z": -14.0,
-          "rotation": 0.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -12.0,
-          "z": -12.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 12.0,
-          "z": -12.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -14.0,
-          "z": -10.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 14.0,
-          "z": -10.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "defense_tower",
-          "x": -11.3,
-          "z": -3.0
-        },
-        {
-          "building": "defense_tower",
-          "x": 7.2,
-          "z": 10.9
-        },
-        {
-          "building": "defense_tower",
-          "x": -7.2,
-          "z": 10.9
-        },
-        {
-          "building": "marketplace",
-          "x": 11.0,
-          "z": 3.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -14.0,
-          "z": -8.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 14.0,
-          "z": -8.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -16.0,
-          "z": -6.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 16.0,
-          "z": -6.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -16.0,
-          "z": -4.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 16.0,
-          "z": -4.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": -18.0,
-          "z": -2.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 18.0,
-          "z": -2.0,
-          "rotation": 90.0
-        },
-        {
-          "building": "wall_segment",
-          "x": 18.0,
+          "x": 22.0,
           "z": 0.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -20.0,
+          "z": 2.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 20.0,
+          "z": 2.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
           "x": -20.0,
-          "z": 0.0,
-          "rotation": 0.0
+          "z": 4.0,
+          "rotation": 90.0
         },
         {
           "building": "wall_segment",
           "x": -18.0,
-          "z": 2.0,
+          "z": 4.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
           "x": 18.0,
-          "z": 2.0,
+          "z": 4.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": -14.0,
-          "z": 6.0,
+          "x": 20.0,
+          "z": 4.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": 14.0,
+          "x": -18.0,
           "z": 6.0,
           "rotation": 90.0
         },
@@ -2671,13 +2656,25 @@
         },
         {
           "building": "wall_segment",
-          "x": -12.0,
-          "z": 10.0,
+          "x": 18.0,
+          "z": 6.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": 12.0,
+          "x": -16.0,
+          "z": 8.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 16.0,
+          "z": 8.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.0,
           "z": 10.0,
           "rotation": 90.0
         },
@@ -2695,13 +2692,25 @@
         },
         {
           "building": "wall_segment",
-          "x": -10.0,
-          "z": 14.0,
+          "x": 16.0,
+          "z": 10.0,
           "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": 10.0,
+          "x": -14.0,
+          "z": 12.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 14.0,
+          "z": 12.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -14.0,
           "z": 14.0,
           "rotation": 90.0
         },
@@ -2719,63 +2728,137 @@
         },
         {
           "building": "wall_segment",
-          "x": -6.0,
-          "z": 16.0,
-          "rotation": 0.0
+          "x": 14.0,
+          "z": 14.0,
+          "rotation": 90.0
         },
         {
           "building": "wall_segment",
-          "x": 6.0,
+          "x": -12.0,
           "z": 16.0,
-          "rotation": 0.0
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -10.0,
+          "z": 16.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 10.0,
+          "z": 16.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 12.0,
+          "z": 16.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -10.0,
+          "z": 18.0,
+          "rotation": 90.0
         },
         {
           "building": "wall_segment",
           "x": -8.0,
-          "z": 16.0,
+          "z": 18.0,
           "rotation": 0.0
         },
         {
           "building": "wall_segment",
           "x": 8.0,
-          "z": 16.0,
+          "z": 18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 10.0,
+          "z": 18.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -6.0,
+          "z": 18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 6.0,
+          "z": 18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -4.0,
+          "z": 18.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 4.0,
+          "z": 18.0,
           "rotation": 0.0
         },
         {
           "building": "wall_gate",
           "x": 0.0,
-          "z": 16.0,
+          "z": 18.0,
           "rotation": 0.0
         },
         {
-          "building": "barracks",
-          "x": -28,
-          "z": 4
+          "building": "defense_tower",
+          "x": -15.1,
+          "z": 0.0
         },
         {
-          "building": "barracks",
-          "x": 28,
-          "z": 4
-        },
-        {
-          "building": "home",
-          "x": -9.2,
-          "z": -6.8
-        },
-        {
-          "building": "home",
-          "x": -7.8,
-          "z": 20.1
-        },
-        {
-          "building": "home",
+          "building": "defense_tower",
           "x": 7.8,
-          "z": 20.1
+          "z": 12.4
+        },
+        {
+          "building": "defense_tower",
+          "x": -7.8,
+          "z": 12.4
+        },
+        {
+          "building": "marketplace",
+          "x": 11,
+          "z": 1
+        },
+        {
+          "building": "barracks",
+          "x": -30,
+          "z": 4
+        },
+        {
+          "building": "barracks",
+          "x": 30,
+          "z": 4
+        },
+        {
+          "building": "home",
+          "x": -10,
+          "z": -5
+        },
+        {
+          "building": "home",
+          "x": -5.5,
+          "z": 9.3
+        },
+        {
+          "building": "home",
+          "x": 5.5,
+          "z": 9.3
         },
         {
           "building": "catapult",
-          "x": -8.0,
-          "z": 7.0
+          "x": -8.8,
+          "z": 7.8
         },
         {
           "building": "catapult",

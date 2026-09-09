@@ -5,10 +5,16 @@ Each commander raises its own settlement at runtime from a town plan: an
 ordered list of buildings at offsets in the settlement's frame (x right, -z
 toward the enemy, origin on the primary barracks, which nothing may stand within
 9 m of). The builder walks the steps in order, skipping any that already stand
-or cannot be afforded, so the *order* is the shape of a half-built town - the
-front wall and its gate first, then the towers that cover it, then the flanks,
-then the rear, then the keep. A player who sees two towers and a gate knows
-which commander is behind them before the rest goes up.
+or cannot be afforded, so the *order* is the shape of a half-built town.
+
+A circuit is laid the way a wall is actually built: as one growing run. The
+walk starts at the front gate and adds links outward along both arms, round
+the front corners, down the flanks, and closes at the rear, where the rear
+gate is cut when the arms reach it. Whatever the economy has paid for at any
+moment is therefore a solid wall with two ends, never a ring of posts with a
+gap between every pair - a half-built castle is half a castle, not a fence
+with holes. The front towers and the front gate go first, so the enemy-facing
+side is the part that exists earliest.
 
 The circuits come from settlement_geometry, the same rasteriser that stamps the
 campaign maps' pre-built towns, so a commander's runtime castle and its authored
@@ -31,7 +37,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from settlement_geometry import (
+    WALL_SEGMENT_SPACING,
     Cell,
+    Point,
     Region,
     bastion_apexes,
     bastioned_polygon,
@@ -57,20 +65,24 @@ FOOTPRINT = {
 
 STANDOFF = {
     "defense_tower": 4.0,
-    "home": 4.0,
-    "marketplace": 4.0,
-    "barracks": 6.0,
+    "home": 5.0,
+    "marketplace": 4.5,
+    "barracks": 6.5,
     "catapult": 4.0,
     "ballista": 4.0,
 }
 """How far a building keeps from a wall link in the plan frame.
 
-The runtime snaps every link to its own 2 m lattice, which can move it a metre
-and a half from where the plan put it; a building that stood 3 m from the
-link on paper then finds its slot occupied and is never raised."""
+A crew raises a link standing within a metre of its centre, and reaches that
+spot along the wall's own line only while the run is still open; once the
+neighbours stand it must come at the slot from inside or outside the ring. A
+house (4.4 m across, plus the nav grid's padding) 4 m off the line left no
+walkable cell on the inside, and Scipio's crews abandoned the same front slots
+thirty times in a row while standing six metres from them."""
 ANCHOR_CLEARANCE = 9.0
-CORNER_RUN_CELLS = 4
-SKELETON_POSTS = 18
+FRONT_SHARE = 1.0 / 3.0
+"""How much of a circuit, walked outward from the front gate, is its silhouette:
+the front curtain, its corners and the start of the flanks."""
 WALL_CAP = 128
 TOWER_CAP = 12
 HOME_CAP = 12
@@ -82,8 +94,8 @@ class Step:
     x: float
     z: float
     rotation: float | None = None
-    corner: bool = False
-    """A link at the end of a straight run: where the outline turns."""
+    dist: int = 0
+    """How many links along the circuit this stands from the front gate."""
 
     def to_json(self) -> dict:
         entry: dict = {
@@ -104,9 +116,9 @@ class Blueprint:
     links: list[Step] = field(default_factory=list)
     silhouette_steps: int = 0
     """How many opening steps carry the town's identity: the front towers, the
-    skeleton of every wall run and the front gate. The builder lets these go up
-    as soon as the town can feed itself, and holds the infill behind them until
-    the roofs are on, so a fifth of a plan already reads as its shape."""
+    front gate and the front third of the circuit walked outward from it. The
+    builder lets these go up as soon as the town can feed itself, and holds the
+    rest of the ring behind them until the roofs are on."""
 
     def close_silhouette(self) -> None:
         self.silhouette_steps = len(self.steps)
@@ -162,10 +174,19 @@ class Blueprint:
         return sum(1 for step in self.steps if step.building == building)
 
 
-def wall_steps(
-    cells: set[Cell], gates: list[tuple[float, float]]
-) -> tuple[list[Step], list[Step]]:
-    """Cut the gates, then order the wall so the enemy-facing side goes up first."""
+def circuit_walk(
+    cells: set[Cell], gates: list[tuple[float, float]], root: Point | None = None
+) -> list[Step]:
+    """Cut the gates, then order the circuit as a walk outward from the front gate.
+
+    Every link and gate comes back in build order with ``dist`` set to its
+    distance along the trace from the walk's root: the first gate if there is
+    one, else the cell nearest ``root``, else the front-most cell. Links at the
+    same distance on the two arms alternate, left arm first, so the wall grows
+    symmetrically and stays one connected run at every prefix. A gate other
+    than the root is emitted the moment the walk reaches it, so the arms close
+    through it rather than leaving a hole for it.
+    """
     runs = partition_runs(cells)
     gate_steps: list[Step] = []
     for target in gates:
@@ -183,38 +204,70 @@ def wall_steps(
     links: list[Step] = []
     for run in runs:
         rotation = 0.0 if run_is_horizontal(run) else 90.0
-        ordered = sorted(run)
-        for cell in ordered:
-            corner = len(run) >= CORNER_RUN_CELLS and cell in (ordered[0], ordered[-1])
-            links.append(
-                Step("wall_segment", float(cell[0]), float(cell[1]), rotation, corner)
-            )
+        for cell in sorted(run):
+            links.append(Step("wall_segment", float(cell[0]), float(cell[1]), rotation))
 
-    links.sort(key=lambda step: (step.z, abs(step.x)))
-    return links, gate_steps
+    if gate_steps:
+        origin: Cell = (int(gate_steps[0].x), int(gate_steps[0].z))
+    elif root is not None:
+        origin = min(
+            cells, key=lambda cell: math.hypot(cell[0] - root[0], cell[1] - root[1])
+        )
+    else:
+        origin = min(cells, key=lambda cell: (cell[1], abs(cell[0])))
+
+    distance: dict[Cell, int] = {origin: 0}
+    frontier = [origin]
+    while frontier:
+        following: list[Cell] = []
+        for x, z in frontier:
+            for dx in (-WALL_SEGMENT_SPACING, 0, WALL_SEGMENT_SPACING):
+                for dz in (-WALL_SEGMENT_SPACING, 0, WALL_SEGMENT_SPACING):
+                    neighbour = (x + dx, z + dz)
+                    if neighbour == (x, z) or neighbour not in cells:
+                        continue
+                    if neighbour in distance:
+                        continue
+                    distance[neighbour] = distance[(x, z)] + 1
+                    following.append(neighbour)
+        frontier = following
+
+    far = len(cells) + 1
+    for step in links + gate_steps:
+        step.dist = distance.get((int(step.x), int(step.z)), far)
+    walk = links + gate_steps
+
+    walk.sort(key=lambda step: (step.dist, step.building != "wall_gate", step.x))
+    return walk
 
 
-def skeleton(
-    links: list[Step], posts: int = SKELETON_POSTS
+def split_front(
+    walk: list[Step], share: float = FRONT_SHARE
 ) -> tuple[list[Step], list[Step]]:
-    """Split a circuit into the few links that draw its outline and the infill.
-
-    The outline is every corner plus a post every so often round the trace,
-    front first. Twenty links laid this way already show a rectangle, a star or
-    a ring; the same twenty laid end to end show one straight wall."""
-    if not links:
-        return [], []
-    by_angle = sorted(links, key=lambda step: math.atan2(step.x, -step.z))
-    stride = max(3, len(by_angle) // posts)
-    chosen = {id(step) for index, step in enumerate(by_angle) if index % stride == 0}
-    chosen.update(id(step) for step in links if step.corner)
-    outline = [step for step in links if id(step) in chosen]
-    infill = [step for step in links if id(step) not in chosen]
-    return outline, infill
+    """The front of a circuit walk - the gate and the nearest ``share`` of the
+    links either side of it - and everything behind that."""
+    links = [step for step in walk if step.building == "wall_segment"]
+    wanted = max(1, math.ceil(len(links) * share))
+    cutoff = links[wanted - 1].dist if links else 0
+    front = [step for step in walk if step.dist <= cutoff]
+    rest = [step for step in walk if step.dist > cutoff]
+    return front, rest
 
 
 def ring_cells(region: Region) -> set[Cell]:
     return region_cells(region, None)
+
+
+def inside_corner(region: Region, x: float, z: float, clearance: float) -> Point:
+    """The spot on the line from a polygon corner to the anchor that stands
+    ``clearance`` inside the trace: where a corner tower goes, whatever the
+    corner's angle. The wall's links sit within a lattice step of the polygon
+    edge, so callers add that step to the standoff they want from the links."""
+    px, pz = x, z
+    while region.edge_distance(px, pz) < clearance and math.hypot(px, pz) > 1.0:
+        px -= x * 0.02
+        pz -= z * 0.02
+    return px, pz
 
 
 def fabian_bulwark() -> Blueprint:
@@ -224,30 +277,21 @@ def fabian_bulwark() -> Blueprint:
     keep = ring_cells(Region([rectangle_polygon(0, 0, 12, 10)]))
     """Outer 40x32, keep 24x20: the keep's links stand 10 m off the anchor, which
     is the least the builder will accept, and the ward between is one house deep."""
-    outer_links, outer_gates = wall_steps(outer, [(0, -18), (0, 18)])
-    keep_links, keep_gates = wall_steps(keep, [(0, -10)])
-    plan.links = outer_links + outer_gates + keep_links + keep_gates
+    outer_walk = circuit_walk(outer, [(0, -18), (0, 18)])
+    keep_walk = circuit_walk(keep, [(0, -10)])
+    plan.links = outer_walk + keep_walk
     for x, z in ((-12, 14), (12, 14)):
         plan.add("home", x, z)
     plan.add("marketplace", -17, 0)
-    outline, infill = skeleton(outer_links)
-    front = [s for s in infill if s.z <= -16]
-    rest = [s for s in infill if s.z > -16]
+    front, rest = split_front(outer_walk)
     for x, z in ((-17, -14), (17, -14), (-8, -14)):
         plan.add("defense_tower", x, z)
-    plan.steps.extend(outline)
-    plan.steps.extend(outer_gates[:1])
+    plan.steps.extend(front)
     plan.close_silhouette()
-    for step in front:
-        plan.steps.append(step)
-    for step in rest:
-        plan.steps.append(step)
-    plan.steps.extend(outer_gates[1:])
+    plan.steps.extend(rest)
     for x, z in ((-17, 14), (17, 14)):
         plan.add("defense_tower", x, z)
-    for step in keep_links:
-        plan.steps.append(step)
-    plan.steps.extend(keep_gates)
+    plan.steps.extend(keep_walk)
     for x, z in ((-17, 4), (17, 4), (-17, -4), (17, -4), (-17, 9), (17, 9)):
         plan.add("home", x, z)
     plan.add("ballista", -17, -9)
@@ -259,29 +303,27 @@ def consular_star() -> Blueprint:
     """A bastioned trace with a tower behind every point and engines inside."""
     plan = Blueprint("roman_assault_camp", "Consular Star Camp")
     stretch = 1.0 / math.cos(math.pi / 4)
-    half_x, half_z = 15.0 * stretch, 13.0 * stretch
+    half_x, half_z = 17.0 * stretch, 15.0 * stretch
+    """17x15: at 15x13 the ward could not hold two homes and a market five
+    metres off the curtain, and a house any nearer leaves no walkable cell
+    between it and the wall for the crew raising the last links."""
     cells = ring_cells(Region([bastioned_polygon(0, 0, half_x, half_z, 4, 9.0, 5.0)]))
-    links, gates = wall_steps(cells, [(0, -13), (0, 13)])
-    plan.links = links + gates
+    walk = circuit_walk(cells, [(0, -15), (0, 15)])
+    plan.links = walk
     for x, z in ((-9, 0), (9, 0)):
         plan.add("home", x, z)
     plan.add("marketplace", 0, 8)
-    outline, infill = skeleton(links)
-    front = [s for s in infill if s.z <= -9]
-    rest = [s for s in infill if s.z > -9]
+    front, rest = split_front(walk)
     towers = sorted(bastion_apexes(0, 0, half_x, half_z, 4, -5.0), key=lambda t: t[1])
     for x, z in towers[:2]:
         plan.add("defense_tower", x, z)
-    plan.steps.extend(outline)
-    plan.steps.extend(gates[:1])
-    plan.close_silhouette()
     plan.steps.extend(front)
+    plan.close_silhouette()
+    plan.steps.extend(rest)
     for x, z in towers[2:]:
         plan.add("defense_tower", x, z)
-    plan.steps.extend(rest)
-    plan.steps.extend(gates[1:])
 
-    for x, z in ((-8, -7), (8, -7), (0, 11), (6, -10)):
+    for x, z in ((-7, -6), (7, -6), (0, 11)):
         plan.add("home", x, z)
     plan.add("catapult", -8, 5)
     plan.add("catapult", 8, 5)
@@ -294,17 +336,17 @@ def vanguard_chevron() -> Blueprint:
     left = path_cells([(-24, -2), (0, -20)], None)
     right = path_cells([(0, -20), (24, -2)], None)
     cells = left | right
-    links, _gates = wall_steps(cells, [])
-    plan.links = links
+    walk = circuit_walk(cells, [], root=(0, -20))
+    plan.links = walk
     plan.add("barracks", -12, 6)
     plan.add("barracks", 12, 6)
     for x, z in ((-6, 12), (6, 12)):
         plan.add("home", x, z)
-    outline, infill = skeleton(links)
+    front, rest = split_front(walk)
     plan.add("defense_tower", 0, -13)
-    plan.steps.extend(outline)
+    plan.steps.extend(front)
     plan.close_silhouette()
-    plan.steps.extend(infill)
+    plan.steps.extend(rest)
     plan.add("defense_tower", -22, 3)
     plan.add("defense_tower", 22, 3)
     plan.add("barracks", 0, 16)
@@ -318,32 +360,33 @@ def punic_ring_town() -> Blueprint:
     """A round town: market at the heart, homes against the wall, towers all round."""
     plan = Blueprint("punic_trade_town", "Punic Ring Town")
     cells = ring_cells(Region([ellipse_polygon(0, 0, 19, 17)]))
-    links, gates = wall_steps(cells, [(0, -17), (0, 17)])
-    plan.links = links + gates
+    walk = circuit_walk(cells, [(0, -17), (0, 17)])
+    plan.links = walk
     plan.add("marketplace", 0, -11)
     for x, z in ((-10, -7), (10, -7)):
         plan.add("home", x, z)
     ring_towers = sorted(
         (
             (
-                math.cos(math.pi * 0.5 + 2.0 * math.pi * index / 6) * 14.5,
-                -math.sin(math.pi * 0.5 + 2.0 * math.pi * index / 6) * 12.5,
+                math.cos(math.pi * (0.5 + 1.0 / 6.0) + 2.0 * math.pi * index / 6)
+                * 14.5,
+                -math.sin(math.pi * (0.5 + 1.0 / 6.0) + 2.0 * math.pi * index / 6)
+                * 12.5,
             )
             for index in range(6)
         ),
         key=lambda t: t[1],
     )
-    outline, infill = skeleton(links)
+    """Towers thirty degrees off the gate axis: one on the axis stood between
+    the front gate and the market with room for neither."""
+    front, rest = split_front(walk)
     for x, z in ring_towers[:3]:
         plan.add("defense_tower", x, z)
-    plan.steps.extend(outline)
-    plan.steps.extend(gates[:1])
+    plan.steps.extend(front)
     plan.close_silhouette()
-    plan.steps.extend([s for s in infill if s.z <= -12])
+    plan.steps.extend(rest)
     for x, z in ring_towers[3:]:
         plan.add("defense_tower", x, z)
-    plan.steps.extend([s for s in infill if s.z > -12])
-    plan.steps.extend(gates[1:])
     for x, z in (
         (-13, 1),
         (13, 1),
@@ -351,8 +394,6 @@ def punic_ring_town() -> Blueprint:
         (9, 8),
         (-13, -3),
         (13, -3),
-        (-4, 9),
-        (4, 9),
     ):
         plan.add("home", x, z)
     plan.add("ballista", -7, -7)
@@ -381,34 +422,34 @@ def hannibalic_hexagon() -> Blueprint:
     """Six sides, six towers, engines inside; the gate faces the enemy."""
     plan = Blueprint("punic_grand_camp", "Hannibalic Hexagon")
     hexagon = [
-        (math.cos(math.pi * index / 3) * 21.0, math.sin(math.pi * index / 3) * 19.0)
+        (math.cos(math.pi * index / 3) * 23.0, math.sin(math.pi * index / 3) * 21.0)
         for index in range(6)
     ]
-    """Vertices on the x axis, so a flat side faces the enemy and carries the gate."""
-    cells = ring_cells(Region([hexagon]))
-    links, gates = wall_steps(cells, [(0, -19), (0, 19)])
-    plan.links = links + gates
+    """Vertices on the x axis, so a flat side faces the enemy and carries the gate.
+    23x21: the flat sides of a 21x19 hexagon stand only 16 m out, and a ward
+    that shallow could not hold the six towers, the homes and the engines at
+    the standoff a crew needs to reach the last links of the ring."""
+    region = Region([hexagon])
+    cells = ring_cells(region)
+    walk = circuit_walk(cells, [(0, -21), (0, 21)])
+    plan.links = walk
     plan.add("home", 10, 8)
     plan.add("home", -11, 1)
     corners = [
-        (math.cos(math.pi * index / 3) * 16.5, math.sin(math.pi * index / 3) * 14.5)
-        for index in range(6)
+        inside_corner(region, x, z, STANDOFF["defense_tower"] + 1.5) for x, z in hexagon
     ]
     corners.sort(key=lambda corner: corner[1])
-    outline, infill = skeleton(links)
+    front, rest = split_front(walk)
     for x, z in corners[:3]:
         plan.add("defense_tower", x, z)
-    plan.steps.extend(outline)
-    plan.steps.extend(gates[:1])
+    plan.steps.extend(front)
     plan.close_silhouette()
-    plan.steps.extend([s for s in infill if s.z <= -10])
+    plan.steps.extend(rest)
     for x, z in corners[3:]:
         plan.add("defense_tower", x, z)
     plan.add("marketplace", 11, 1)
-    plan.steps.extend([s for s in infill if s.z > -10])
-    plan.steps.extend(gates[1:])
-    plan.add("barracks", -28, 4)
-    plan.add("barracks", 28, 4)
+    plan.add("barracks", -30, 4)
+    plan.add("barracks", 30, 4)
     for x, z in ((-10, -5), (-4, 13), (4, 13)):
         plan.add("home", x, z)
     plan.add("catapult", -7, 7)

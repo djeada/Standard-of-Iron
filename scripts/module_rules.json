@@ -30,6 +30,7 @@
       "files": [
         "game/systems/nation_id",
         "game/systems/ground_verdict",
+        "game/systems/site_keep_out",
         "game/systems/projectile_kind",
         "game/systems/resource_types",
         "game/systems/resource_json",

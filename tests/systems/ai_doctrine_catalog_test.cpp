@@ -301,13 +301,94 @@ TEST_F(AIDoctrineCatalogTest, ASilhouetteAlreadyDrawsTheOutline) {
       continue;
     }
     const auto silhouette = fortification_offsets(*plan, plan->silhouette_steps);
-    EXPECT_GE(TownPlan::compass_coverage(silhouette), 0.70F)
-        << plan->id << "'s silhouette leaves most of the compass open";
+    EXPECT_GE(TownPlan::compass_coverage(silhouette), 0.25F)
+        << plan->id << "'s silhouette shows almost nothing of its front";
+    for (const auto& offset : silhouette) {
+      EXPECT_LE(offset.z, 0.0F)
+          << plan->id << " puts a rear fortification at " << offset.x << "," << offset.z
+          << " in its silhouette; the front goes up first";
+    }
     const auto* gate = plan->front_gate();
     ASSERT_NE(gate, nullptr) << plan->id;
     const auto gate_slot = static_cast<int>(gate - plan->steps.data());
     EXPECT_TRUE(plan->is_silhouette_step(gate_slot))
         << plan->id << " leaves its front gate for later";
+  }
+}
+
+namespace {
+
+using WallCell = std::pair<int, int>;
+
+auto wall_cells_of(const TownPlan& plan, int first_steps) -> std::vector<WallCell> {
+  std::vector<WallCell> cells;
+  const int limit = std::min(first_steps, static_cast<int>(plan.steps.size()));
+  for (int slot = 0; slot < limit; ++slot) {
+    const auto& step = plan.steps[static_cast<std::size_t>(slot)];
+    const int x = static_cast<int>(std::lround(step.x));
+    const int z = static_cast<int>(std::lround(step.z));
+    if (step.building == "wall_segment") {
+      cells.emplace_back(x, z);
+    } else if (step.building == "wall_gate") {
+
+      const bool along_x = std::fmod(std::abs(step.rotation), 180.0F) < 45.0F;
+      for (int span = -2; span <= 2; span += 2) {
+        cells.emplace_back(along_x ? x + span : x, along_x ? z : z + span);
+      }
+    }
+  }
+  return cells;
+}
+
+auto connected_runs(const std::vector<WallCell>& cells) -> int {
+  const std::set<WallCell> standing(cells.begin(), cells.end());
+  std::set<WallCell> seen;
+  int runs = 0;
+  for (const auto& cell : standing) {
+    if (seen.contains(cell)) {
+      continue;
+    }
+    ++runs;
+    std::vector<WallCell> frontier{cell};
+    seen.insert(cell);
+    while (!frontier.empty()) {
+      const auto [x, z] = frontier.back();
+      frontier.pop_back();
+      for (int dx = -2; dx <= 2; dx += 2) {
+        for (int dz = -2; dz <= 2; dz += 2) {
+          const WallCell next{x + dx, z + dz};
+          if (standing.contains(next) && seen.insert(next).second) {
+            frontier.push_back(next);
+          }
+        }
+      }
+    }
+  }
+  return runs;
+}
+
+} // namespace
+
+TEST_F(AIDoctrineCatalogTest, AWallGoesUpAsOneGrowingRunNotAsPosts) {
+  reset_ai_doctrine_catalog();
+  ASSERT_TRUE(load_default_ai_doctrine_catalog());
+
+  for (const auto& definition : Game::Units::all_commander_definitions()) {
+    const auto* plan = authored_doctrine(definition.id)->town_plan;
+    ASSERT_NE(plan, nullptr);
+    const int circuits = plan->id == "roman_bulwark" ? 2 : 1;
+    int worst = 0;
+    for (int built = 1; built <= static_cast<int>(plan->steps.size()); ++built) {
+      const auto cells = wall_cells_of(*plan, built);
+      if (cells.empty()) {
+        continue;
+      }
+      worst = std::max(worst, connected_runs(cells));
+    }
+    EXPECT_LE(worst, circuits)
+        << plan->id << " has a moment where its wall stands as " << worst
+        << " separate runs; a half-built ring must be one wall with two ends, "
+           "not posts with gaps between them";
   }
 }
 

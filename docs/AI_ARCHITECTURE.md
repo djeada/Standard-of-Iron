@@ -650,7 +650,7 @@ and the front wall ordered first:
 | Plan id               | Commander                           | Form          | Shape                                                                             |
 | --------------------- | ----------------------------------- | ------------- | --------------------------------------------------------------------------------- |
 | `roman_bulwark`       | roman_legion_organizer (Fabius)     | `closed_fort` | 22x18 outer rectangle round a 12x10 keep, five towers, three gates, two ballistae |
-| `roman_assault_camp`  | roman_veteran_consul (Scipio)       | `closed_fort` | bastioned star trace, curtain 15x13, four towers, two gates, two catapults        |
+| `roman_assault_camp`  | roman_veteran_consul (Scipio)       | `closed_fort` | bastioned star trace, curtain 17x15, four towers, two gates, two catapults        |
 | `roman_vanguard_camp` | roman_field_commander (Marcellus)   | `open_camp`   | an open V of wall toward the enemy, three barracks behind it, no ring             |
 | `punic_trade_town`    | carthage_spear_commander (Hanno)    | `ring_town`   | 19x17 oval, six towers on the ring, two gates, a ballista                         |
 | `punic_raider_camp`   | carthage_bow_commander (Hasdrubal)  | `open_camp`   | no walls: three barracks and three towers, a camp that fights in the field        |
@@ -663,21 +663,24 @@ settlement; construction, the army's stations, the diagnostics and the tests all
 read the same slots. `TownPlan::front_gate()`, `front_line_z()` and
 `muster_offset()` are likewise computed from the slots.
 
-**The silhouette comes first.** A settle raises twenty-odd buildings in half an
-hour, a fifth of a hundred-step plan, so the _order_ of the first fifth is what a
-player sees. The generator emits each walled plan as: front towers, then the
-skeleton of every wall run (every corner and a post every so often round the
-trace), then the front gate - and records how many steps that took as
-`silhouette_steps`. The infill of the front wall, the rear towers, the rest of
-the wall and the homes follow. Twenty posts laid this way already show a dotted
-rectangle, a star or a ring; the same twenty laid end to end showed one straight
-wall. The builder lets a silhouette step go up as soon as the town can feed
-itself (a farm and two homes) and holds the infill behind the four-roof rule;
-`AIDoctrineCatalogTest.ASilhouetteAlreadyDrawsTheOutline` pins the silhouette to
-at least 70% of the compass for every closed plan, and
-`AiTownPlanTest.EveryCommanderRaisesItsOwnTownFromAnEmptyField` checks the
-outline a real settle draws, sector for sector, against the fortification it
-raised.
+**A wall is one growing run.** A settle raises twenty-odd buildings in half an
+hour, a fifth of a hundred-step plan, so the _order_ of the steps is what a
+player sees for most of a match. The generator lists each circuit as a walk
+outward from the front gate: the gate, then links along both arms at once,
+round the front corners, down the flanks, closing at the rear where the rear
+gate is cut when the arms reach it. Whatever has been paid for at any moment is
+therefore a solid wall with two ends. (Until Sep 2026 the generator laid a
+"skeleton" first - every corner and a post every so often round the whole
+trace - and filled in behind it; after fifty unopposed minutes not one ring had
+closed, and every partial ring read as a fence with a gap between each pair of
+posts. That was what the player saw the whole game.) The front towers, the
+front gate and the front third of the walk are the plan's `silhouette_steps`;
+the builder lets those go up as soon as the town can feed itself (a farm and
+two homes) and holds the rest of the ring behind the four-roof rule.
+`AIDoctrineCatalogTest.AWallGoesUpAsOneGrowingRunNotAsPosts` checks every
+prefix of every plan's wall steps is one connected run (two for the bulwark,
+whose keep starts after the outer ring), and `ASilhouetteAlreadyDrawsTheOutline`
+that the silhouette is the front and carries the gate.
 
 `Blueprint.add` nudges a building off the 9 m anchor circle, off other
 buildings and off the wall lines (a gate reaches 4.5 m either side), so a plan
@@ -703,16 +706,49 @@ How the builder walks a plan (`behaviors/builder_behavior.cpp`), and why:
   while the rest of the town waits.
 - **Slot clearance.** A wall link's slot counts as filled by a wall within
   1.45 m (the lattice pitch is 2 m; 1.0 m let two links stack on one cell) and a
-  gate's by anything within its 4.5 m half span.
+  gate's by anything within its 4.5 m half span. A gate whose ground a house
+  took slides along its own run; a gate whose slot already holds a wall piece
+  does not - sliding past a standing gate once raised three gates side by side
+  and left the plan's other gate slots counted as met.
+- **A wall link is never nudged.** The command applier moves a refused site up
+  to 12 m to find clear ground, but a link a metre off its lattice slot reads
+  as occupying the next slot too, and the ring closed with a one-metre hole
+  where that neighbour should stand. A link's slot is exact; if it is not clear
+  the order is refused and the plan retries or clears the ground.
+- **The wall line is kept.** Every other construction order carries the plan's
+  unbuilt wall, gate and tower footprints as `construction_keep_out`
+  (`site_keep_out.h`), which `find_clear_site` refuses to nudge into; and the
+  wishlist's own site search never sites a home, field or barracks on that
+  ground even in the pass that otherwise ignores the plan. Before this, homes,
+  a 13.6 m farm and an outpost barracks stood on ring slots in every soak and
+  those slots read `occupied` for the rest of the match.
+- **Clearing the line.** A planned wall, gate or tower slot with a tree,
+  boulder or ore node standing on it (measured with the same footprint-plus-
+  margin geometry the ground check refuses with, at the prop's authored scale)
+  gets that node cut by the crew instead of being ordered, refused four times
+  and abandoned; the link goes up once the ground is clear.
+- **Arrival at a link.** A crew raises a link on its site, not where it stands,
+  so it may start from within 1 m of the slot centre (other buildings need
+  15 cm). The slot between two standing links is a metre-wide notch, and crews
+  hovered 16-19 cm out until the approach timer gave the link up.
 - The gate exists at all since 2 Sep 2026: `production_system.cpp` spawned the
   `wall_gate` product as a plain wall segment before, so no AI town ever had a
   way out of its own ring.
 
-`tests/headless/ai_town_plan_test.cpp` raises every commander's town from an
-empty field and, in `AWalledCommanderClosesItsCircuitGivenTime`, gives Fabius,
-Scipio and Hannibal fifty minutes and expects at least 15% of the plan's links,
-three towers and a gate. `SOI_TOWN_MAP=1` makes that test print an ASCII map of
-what stood; `SOI_BUILD_TRACE=1` traces each build order and its verdict.
+`tests/headless/ai_town_plan_test.cpp` raises every commander's town from a
+barracks and a handful of builders and, in
+`AWalledCommanderClosesItsCircuitGivenTime`, gives Fabius, Scipio and Hannibal
+fifty minutes and expects half the plan's links, two towers, a gate and a
+**closed ring**: a flood fill over the nav grid from inside the anchor
+clearance, with gates treated as shut, must not reach the field. The
+empty-field test checks a part-built wall stands as at most three runs
+(boulders and trees still standing in the line count as part of it).
+`SOI_TOWN_MAP=1` prints a per-minute census, a 1 m nav map of the town, the
+run count and the enclosure verdict; `SOI_TOWN_ONLY=<name>` runs one castle;
+`SOI_TOWN_ENEMY_BEARING=<degrees>` plants a rival barracks 54 m out on that
+bearing so the plan is laid facing a different axis; `SOI_BUILD_TRACE=1`
+traces each build order and its verdict, and names the nearest prop when a
+site is refused.
 
 ### Where the army stands
 

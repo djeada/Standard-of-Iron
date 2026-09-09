@@ -54,8 +54,7 @@ vec4 soi_wear_fetch(vec3 lattice, vec4 salts) {
 }
 
 #if SOI_CHARACTER_WANTS(SOI_CHARACTER_WILDLIFE)
-// Select pale neutral coats by authored color, not by shared wildlife role IDs
-// (wolves and sheep use the same material). Brown fur and dirt remain colored.
+
 float wildlife_white_coat_weight(vec3 base) {
   float luma = dot(base, vec3(0.299, 0.587, 0.114));
   float chroma = max(max(base.r, base.g), base.b) - min(min(base.r, base.g), base.b);
