@@ -1,11 +1,16 @@
+#include <QVector3D>
+
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <string_view>
+#include <unordered_map>
+#include <vector>
 
 #include "game/core/component_gameplay.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
+#include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
@@ -34,24 +39,28 @@
 #include "game/systems/ai_system/behaviors/squad_discipline_behavior.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/navigation_service.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
+#include "systems/nav_grid.h"
+#include "systems/pathfinding.h"
 
 namespace {
 
 class AISystemTest : public ::testing::Test {
 protected:
-  void SetUp() override {
+  static void clear_shared_state() {
     Game::Systems::OwnerRegistry::instance().clear();
     Game::Systems::NationRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
+    if (auto* navigation = Game::Systems::NavigationService::active_or_null()) {
+      navigation->clear();
+    }
   }
 
-  void TearDown() override {
-    Game::Systems::OwnerRegistry::instance().clear();
-    Game::Systems::NationRegistry::instance().clear();
-    Game::Map::TerrainService::instance().clear();
-  }
+  void SetUp() override { clear_shared_state(); }
+
+  void TearDown() override { clear_shared_state(); }
 
   static auto make_unit(Engine::Core::EntityID id,
                         float x,
@@ -207,6 +216,15 @@ protected:
   }
 };
 
+auto destination_for(const Game::Systems::AI::AICommand& command,
+                     std::size_t index) -> QVector3D {
+  return {command.move_target_x[index], 0.0F, command.move_target_z[index]};
+}
+
+auto steers_units(const Game::Systems::AI::AICommand& command) -> bool {
+  return command.type == Game::Systems::AI::AICommandType::MoveUnits;
+}
+
 TEST_F(AISystemTest, ReinitializePicksUpOwnersRegisteredAfterConstruction) {
   Game::Systems::AISystem ai_system(Game::Systems::AISystem::Services{
       .owners = Game::Systems::OwnerRegistry::instance(),
@@ -342,8 +360,8 @@ TEST_F(AISystemTest, AIReasonerBuildsBaseAnchorFromUnitClusterWithoutBarracks) {
   EXPECT_EQ(context.primary_barracks, 0U);
   EXPECT_FLOAT_EQ(context.base_pos_x, 52.0F);
   EXPECT_FLOAT_EQ(context.base_pos_z, 58.0F);
-  EXPECT_FLOAT_EQ(context.rally_x, 47.0F);
-  EXPECT_FLOAT_EQ(context.rally_z, 58.0F);
+  EXPECT_FLOAT_EQ(context.station.x, 47.0F);
+  EXPECT_FLOAT_EQ(context.station.z, 58.0F);
 }
 
 TEST_F(AISystemTest, AIReasonerKeepsPrimaryBarracksAnchoredToOriginalBase) {
@@ -427,8 +445,8 @@ TEST_F(AISystemTest, GatherBehaviorUsesUnitAnchorWithoutBarracks) {
   Game::Systems::AI::AIContext context;
   context.state = Game::Systems::AI::AIState::Gathering;
   context.has_base_anchor = true;
-  context.rally_x = 40.0F;
-  context.rally_z = 50.0F;
+  context.station.x = 40.0F;
+  context.station.z = 50.0F;
 
   ASSERT_TRUE(behavior.should_execute(snapshot, context));
 
@@ -875,8 +893,8 @@ TEST_F(AISystemTest, SepulcherReasonerPrefersStructuralShrineAnchorWithoutBarrac
   EXPECT_EQ(context.primary_barracks, 0U);
   EXPECT_FLOAT_EQ(context.base_pos_x, 12.0F);
   EXPECT_FLOAT_EQ(context.base_pos_z, 10.0F);
-  EXPECT_FLOAT_EQ(context.rally_x, 12.0F);
-  EXPECT_FLOAT_EQ(context.rally_z, 10.0F);
+  EXPECT_FLOAT_EQ(context.station.x, 12.0F);
+  EXPECT_FLOAT_EQ(context.station.z, 10.0F);
 }
 
 TEST_F(AISystemTest, NoEconomyBehaviorsDoNotRequestProductionBuildersOrExpansion) {
@@ -1267,8 +1285,8 @@ TEST_F(AISystemTest, GatherBehaviorDoesNotPullReserveUnitsToRally) {
   context.anchor_is_structural = true;
   context.base_pos_x = 40.0F;
   context.base_pos_z = 40.0F;
-  context.rally_x = 55.0F;
-  context.rally_z = 40.0F;
+  context.station.x = 55.0F;
+  context.station.z = 40.0F;
   context.reserve_unit_ids = {1U};
   context.effective_reserve_units = 1;
   context.macro_targets.gather_spacing = 1.5F;
@@ -1281,7 +1299,7 @@ TEST_F(AISystemTest, GatherBehaviorDoesNotPullReserveUnitsToRally) {
   ASSERT_FALSE(commands.empty());
   bool rally_order_seen = false;
   for (const auto& command : commands) {
-    EXPECT_EQ(command.type, Game::Systems::AI::AICommandType::MoveUnits);
+    EXPECT_TRUE(steers_units(command));
     const bool has_reserve =
         std::find(command.units.begin(), command.units.end(), 1U) !=
         command.units.end();
@@ -1298,8 +1316,9 @@ TEST_F(AISystemTest, GatherBehaviorDoesNotPullReserveUnitsToRally) {
         if (command.units[i] != 1U) {
           continue;
         }
-        const float dx = command.move_target_x[i] - context.base_pos_x;
-        const float dz = command.move_target_z[i] - context.base_pos_z;
+        const auto destination = destination_for(command, i);
+        const float dx = destination.x() - context.base_pos_x;
+        const float dz = destination.z() - context.base_pos_z;
         EXPECT_LE(std::sqrt(dx * dx + dz * dz),
                   context.strategy_config.reserve_hold_radius + 2.0F)
             << "the reserve was posted away from the base it holds";
@@ -1357,8 +1376,8 @@ TEST_F(AISystemTest, GatherBehaviorDoesNotPullHarassUnitsToRally) {
   context.player_id = 3;
   context.state = Game::Systems::AI::AIState::Gathering;
   context.has_base_anchor = true;
-  context.rally_x = 40.0F;
-  context.rally_z = 40.0F;
+  context.station.x = 40.0F;
+  context.station.z = 40.0F;
   context.harass_unit_ids = {3U};
   context.effective_harass_units = 1;
 
@@ -1366,7 +1385,7 @@ TEST_F(AISystemTest, GatherBehaviorDoesNotPullHarassUnitsToRally) {
   behavior.execute(snapshot, context, 1.1F, commands);
 
   ASSERT_EQ(commands.size(), 1U);
-  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::MoveUnits);
+  EXPECT_TRUE(steers_units(commands.front()));
   EXPECT_EQ(commands.front().units, (std::vector<Engine::Core::EntityID>{1U, 2U}));
 }
 
@@ -3640,32 +3659,34 @@ TEST_F(AISystemTest, SettlementStationsComeFromTheTownPlan) {
   context.settlement_facing_locked = true;
   context.settlement_facing_x = 0.0F;
   context.settlement_facing_z = -1.0F;
-  context.rally_x = 35.0F;
-  context.rally_z = 50.0F;
+  context.station.x = 35.0F;
+  context.station.z = 50.0F;
   context.strategy_config.doctrine = &doctrine;
   context.strategy_config.posture = Game::Systems::AI::AIPosture::Garrison;
   context.strategy_config.personality.aggression = 0.25F;
 
   Game::Systems::AI::apply_settlement_stations(snapshot, context);
+  Game::Systems::AI::resolve_station(snapshot, context);
   ASSERT_TRUE(context.has_settlement_stations);
   EXPECT_FALSE(context.musters_outside) << "a garrison doctrine musters in its ward";
 
   const auto inside = plan.muster_offset(Game::Systems::AI::MusterSide::Inside);
   const auto expected = Game::Systems::AI::plan_offset_to_world(
       QVector2D(0.0F, -1.0F), inside.x, inside.z);
-  EXPECT_NEAR(context.rally_x, 40.0F + expected.x(), 0.01F);
-  EXPECT_NEAR(context.rally_z, 50.0F + expected.z(), 0.01F);
+  EXPECT_NEAR(context.station.x, 40.0F + expected.x(), 0.01F);
+  EXPECT_NEAR(context.station.z, 50.0F + expected.z(), 0.01F);
   EXPECT_GT(inside.z, -18.0F) << "the ward is behind the front wall";
   EXPECT_LT(inside.z, -Game::Systems::AI::TownPlan::k_anchor_clearance);
 
   context.strategy_config.posture = Game::Systems::AI::AIPosture::Field;
   context.strategy_config.personality.aggression = 0.85F;
   Game::Systems::AI::apply_settlement_stations(snapshot, context);
+  Game::Systems::AI::resolve_station(snapshot, context);
   EXPECT_TRUE(context.musters_outside) << "a bold doctrine forms up before its gate";
   const auto outside = plan.muster_offset(Game::Systems::AI::MusterSide::Outside);
   EXPECT_LT(outside.z, -18.0F);
-  EXPECT_NEAR(context.rally_x, context.muster_outside_x, 0.01F);
-  EXPECT_NEAR(context.rally_z, context.muster_outside_z, 0.01F);
+  EXPECT_NEAR(context.station.x, context.muster_outside_x, 0.01F);
+  EXPECT_NEAR(context.station.z, context.muster_outside_z, 0.01F);
   EXPECT_NEAR(context.muster_inside_x, 40.0F + expected.x(), 0.01F);
 }
 
@@ -3690,8 +3711,8 @@ TEST_F(AISystemTest, GatherGivesEveryUnstationedSoldierARankEvenOnTheRallyDot) {
   context.base_pos_z = 50.0F;
   context.has_settlement_stations = true;
   context.musters_outside = true;
-  context.rally_x = 60.0F;
-  context.rally_z = 50.0F;
+  context.station.x = 60.0F;
+  context.station.z = 50.0F;
   context.muster_outside_x = 60.0F;
   context.muster_outside_z = 50.0F;
   context.muster_inside_x = 46.0F;
@@ -3706,13 +3727,14 @@ TEST_F(AISystemTest, GatherGivesEveryUnstationedSoldierARankEvenOnTheRallyDot) {
   std::vector<Engine::Core::EntityID> moved;
   bool garrison_posted_inside = false;
   for (const auto& command : commands) {
-    ASSERT_EQ(command.type, Game::Systems::AI::AICommandType::MoveUnits);
+    ASSERT_TRUE(steers_units(command));
     for (std::size_t i = 0; i < command.units.size(); ++i) {
       moved.push_back(command.units[i]);
-      const float rally_dx = command.move_target_x[i] - 60.0F;
-      const float rally_dz = command.move_target_z[i] - 50.0F;
-      const float ward_dx = command.move_target_x[i] - 46.0F;
-      const float ward_dz = command.move_target_z[i] - 50.0F;
+      const auto destination = destination_for(command, i);
+      const float rally_dx = destination.x() - 60.0F;
+      const float rally_dz = destination.z() - 50.0F;
+      const float ward_dx = destination.x() - 46.0F;
+      const float ward_dz = destination.z() - 50.0F;
       if (command.units[i] == 4U) {
         garrison_posted_inside = std::hypot(ward_dx, ward_dz) < 6.0F;
         EXPECT_GT(std::hypot(rally_dx, rally_dz), 6.0F)
@@ -3724,8 +3746,12 @@ TEST_F(AISystemTest, GatherGivesEveryUnstationedSoldierARankEvenOnTheRallyDot) {
     }
   }
   std::sort(moved.begin(), moved.end());
-  EXPECT_EQ(moved, (std::vector<Engine::Core::EntityID>{1U, 2U, 3U, 4U}))
-      << "every soldier gets a slot, including the ones standing on the dot";
+  EXPECT_EQ(moved.size() + static_cast<std::size_t>(context.gather_report.settled), 4U)
+      << "every soldier is either given ranks or already standing in one";
+  for (const Engine::Core::EntityID id : {1U, 2U, 3U, 4U}) {
+    EXPECT_NE(context.assigned_units.find(id), context.assigned_units.end())
+        << "unit " << id << " was left off the muster roll";
+  }
   EXPECT_TRUE(garrison_posted_inside) << "the garrison holds the ward behind the wall";
   const auto claim = context.assigned_units.find(4U);
   ASSERT_NE(claim, context.assigned_units.end());
@@ -3754,8 +3780,8 @@ TEST_F(AISystemTest, AttackWaveAssemblesAtTheRallyBeforeItCommits) {
   context.anchor_is_structural = true;
   context.base_pos_x = 40.0F;
   context.base_pos_z = 50.0F;
-  context.rally_x = 40.0F;
-  context.rally_z = 30.0F;
+  context.station.x = 40.0F;
+  context.station.z = 30.0F;
   context.macro_targets.assembly_radius = 8.0F;
   context.strategy_config.doctrine = &doctrine;
   context.strategy_config.aggression_modifier = 1.0F;
@@ -3771,10 +3797,17 @@ TEST_F(AISystemTest, AttackWaveAssemblesAtTheRallyBeforeItCommits) {
   snapshot.friendly_units[0].pos_z = 31.0F;
   snapshot.friendly_units[1].pos_z = 32.0F;
   Game::Systems::AI::update_attack_wave(snapshot, context);
+  EXPECT_FALSE(context.wave.committed)
+      << "the ranks have only just formed; a wave settles before it marches";
+
+  snapshot.game_time = 513.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
   EXPECT_TRUE(context.wave.committed)
       << "two of three in ranks at the rally is enough; the third joins on the road";
   EXPECT_FALSE(context.wave.assembling);
-  EXPECT_EQ(context.wave.members.size(), 3U);
+  EXPECT_EQ(context.wave.members.size(), 2U)
+      << "the wave marches with the soldiers that are ready; the third is staged "
+         "for the next one rather than counted and trailed";
 
   Game::Systems::AI::AIContext patient = context;
   patient.wave = {};
@@ -3787,4 +3820,713 @@ TEST_F(AISystemTest, AttackWaveAssemblesAtTheRallyBeforeItCommits) {
   Game::Systems::AI::update_attack_wave(snapshot, patient);
   EXPECT_TRUE(patient.wave.committed)
       << "a wave that has waited half a minute marches with what it has";
+}
+
+namespace {
+
+struct StationPlan {
+  std::unordered_map<Engine::Core::EntityID, QVector3D> slot_of;
+  int commands = 0;
+  std::vector<Game::Systems::AI::AICommand> raw;
+  Game::Systems::AI::AIContext::GatherReport report;
+};
+
+auto run_gather(const Game::Systems::AI::AIContext& seed,
+                const Game::Systems::AI::AISnapshot& snapshot) -> StationPlan {
+  Game::Systems::AI::GatherBehavior behavior;
+  Game::Systems::AI::AIContext context = seed;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.1F, commands);
+
+  StationPlan plan;
+  plan.report = context.gather_report;
+  plan.raw = commands;
+  for (const auto& command : commands) {
+    if (command.type != Game::Systems::AI::AICommandType::MoveUnits) {
+      continue;
+    }
+    ++plan.commands;
+    for (std::size_t i = 0; i < command.units.size(); ++i) {
+      plan.slot_of.emplace(command.units[i],
+                           QVector3D(command.move_target_x[i],
+                                     command.move_target_y[i],
+                                     command.move_target_z[i]));
+    }
+  }
+  return plan;
+}
+
+auto muster_context() -> Game::Systems::AI::AIContext {
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.state = Game::Systems::AI::AIState::Gathering;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  context.station.x = 40.0F;
+  context.station.z = 50.0F;
+  context.station.facing_deg = 180.0F;
+  context.macro_targets.gather_spacing = 1.5F;
+  return context;
+}
+
+} // namespace
+
+TEST_F(AISystemTest, GatherPlansTheSameRanksWhereverTheTroopsStand) {
+  const auto context = muster_context();
+
+  Game::Systems::AI::AISnapshot approaching_from_the_north;
+  approaching_from_the_north.game_time = 10.0F;
+  Game::Systems::AI::AISnapshot approaching_from_the_south;
+  approaching_from_the_south.game_time = 10.0F;
+  for (int i = 0; i < 8; ++i) {
+    const auto id = static_cast<Engine::Core::EntityID>(i + 1);
+    const float lateral = 20.0F + static_cast<float>(i) * 2.0F;
+    approaching_from_the_north.friendly_units.push_back(make_unit(id, lateral, 20.0F));
+    approaching_from_the_south.friendly_units.push_back(
+        make_unit(id, 80.0F - lateral, 80.0F));
+  }
+
+  const auto north = run_gather(context, approaching_from_the_north);
+  const auto south = run_gather(context, approaching_from_the_south);
+
+  ASSERT_EQ(north.slot_of.size(), 8U);
+  ASSERT_EQ(south.slot_of.size(), 8U);
+  for (const auto& [id, slot] : north.slot_of) {
+    const auto other = south.slot_of.find(id);
+    ASSERT_NE(other, south.slot_of.end());
+    EXPECT_NEAR(slot.x(), other->second.x(), 0.001F)
+        << "the muster plan must not turn under the troops walking into it, unit "
+        << id;
+    EXPECT_NEAR(slot.z(), other->second.z(), 0.001F);
+  }
+}
+
+TEST_F(AISystemTest, GatherStopsOrderingOnceTheArmyStandsInItsRanks) {
+  const auto context = muster_context();
+
+  Game::Systems::AI::AISnapshot marching;
+  marching.game_time = 10.0F;
+  for (int i = 0; i < 8; ++i) {
+    marching.friendly_units.push_back(
+        make_unit(static_cast<Engine::Core::EntityID>(i + 1),
+                  20.0F + static_cast<float>(i) * 2.0F,
+                  20.0F));
+  }
+
+  const auto first = run_gather(context, marching);
+  ASSERT_EQ(first.slot_of.size(), 8U);
+  EXPECT_EQ(first.report.ordered, 8);
+
+  Game::Systems::AI::AISnapshot in_ranks;
+  in_ranks.game_time = 24.0F;
+  for (const auto& unit : marching.friendly_units) {
+    auto standing = unit;
+    const auto slot = first.slot_of.at(unit.id);
+    standing.pos_x = slot.x();
+    standing.pos_z = slot.z();
+    in_ranks.friendly_units.push_back(standing);
+  }
+
+  const auto settled = run_gather(context, in_ranks);
+  EXPECT_EQ(settled.commands, 0)
+      << "a settled muster must not be given the same order every second";
+  EXPECT_EQ(settled.report.settled, 8);
+  EXPECT_EQ(settled.report.ordered, 0);
+}
+
+TEST_F(AISystemTest, GatherLeavesAUnitThatIsStillWalkingToItsSlotAlone) {
+  const auto context = muster_context();
+
+  Game::Systems::AI::AISnapshot marching;
+  marching.game_time = 10.0F;
+  for (int i = 0; i < 6; ++i) {
+    marching.friendly_units.push_back(
+        make_unit(static_cast<Engine::Core::EntityID>(i + 1),
+                  20.0F + static_cast<float>(i) * 2.0F,
+                  20.0F));
+  }
+
+  const auto first = run_gather(context, marching);
+  ASSERT_EQ(first.slot_of.size(), 6U);
+
+  Game::Systems::AI::AISnapshot underway = marching;
+  underway.game_time = 12.0F;
+  for (auto& unit : underway.friendly_units) {
+    const auto slot = first.slot_of.at(unit.id);
+    unit.movement.has_objective = true;
+    unit.movement.has_target = true;
+    unit.movement.objective_x = slot.x();
+    unit.movement.objective_z = slot.z();
+  }
+
+  const auto second = run_gather(context, underway);
+  EXPECT_EQ(second.commands, 0);
+  EXPECT_EQ(second.report.holding, 6);
+
+  Game::Systems::AI::AISnapshot stuck = underway;
+  stuck.game_time = 20.0F;
+  for (auto& unit : stuck.friendly_units) {
+    unit.movement.has_target = false;
+  }
+  const auto third = run_gather(context, stuck);
+  EXPECT_EQ(third.report.ordered, 6)
+      << "a goal nobody is walking towards is not a hold";
+}
+
+TEST_F(AISystemTest, GatherDoesNotOverrideAnInFlightStallDetour) {
+  auto context = muster_context();
+  Game::Systems::AI::AIContext::StallRecord record;
+  record.first_seen = 8.0F;
+  record.last_nudge = 9.0F;
+  record.nudges = 1;
+  context.stalled_units.emplace(3U, record);
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 10.0F;
+  for (int i = 0; i < 6; ++i) {
+    snapshot.friendly_units.push_back(
+        make_unit(static_cast<Engine::Core::EntityID>(i + 1),
+                  20.0F + static_cast<float>(i) * 2.0F,
+                  20.0F));
+  }
+  const auto plan = run_gather(context, snapshot);
+  EXPECT_EQ(plan.slot_of.count(3U), 0U)
+      << "gathering must not steer a unit whose detour is still in flight";
+  EXPECT_EQ(plan.slot_of.size(), 5U);
+}
+
+TEST_F(AISystemTest, OneMoveOwnerPerUnitInABatch) {
+  Game::Systems::AI::AICommand detour;
+  detour.type = Game::Systems::AI::AICommandType::MoveUnits;
+  detour.units = {5U};
+  detour.move_target_x = {11.0F};
+  detour.move_target_y = {0.0F};
+  detour.move_target_z = {12.0F};
+
+  Game::Systems::AI::AICommand muster;
+  muster.type = Game::Systems::AI::AICommandType::MoveUnits;
+  muster.units = {5U, 6U};
+  muster.move_target_x = {40.0F, 41.0F};
+  muster.move_target_y = {0.0F, 0.0F};
+  muster.move_target_z = {50.0F, 51.0F};
+
+  const auto arbitrated =
+      Game::Systems::AI::AICommandFilter::arbitrate_move_ownership({detour, muster});
+
+  ASSERT_EQ(arbitrated.size(), 2U);
+  EXPECT_EQ(arbitrated[0].units, (std::vector<Engine::Core::EntityID>{5U}));
+  EXPECT_FLOAT_EQ(arbitrated[0].move_target_x.front(), 11.0F);
+  EXPECT_EQ(arbitrated[1].units, (std::vector<Engine::Core::EntityID>{6U}));
+  ASSERT_EQ(arbitrated[1].move_target_x.size(), 1U);
+  EXPECT_FLOAT_EQ(arbitrated[1].move_target_x.front(), 41.0F);
+  EXPECT_FLOAT_EQ(arbitrated[1].move_target_z.front(), 51.0F);
+}
+
+TEST_F(AISystemTest, StationFacingWaitsOutAWobblingThreatFrame) {
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.anchor_station.offered = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  context.anchor_station.x = 40.0F;
+  context.anchor_station.z = 50.0F;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 10.0F;
+  snapshot.visible_enemies = {make_enemy(90, 40.0F, 10.0F)};
+
+  Game::Systems::AI::resolve_station(snapshot, context);
+  EXPECT_EQ(context.station.source, Game::Systems::AI::StationSource::Anchor);
+  const float locked = context.station.facing_deg;
+  EXPECT_EQ(context.station.turns, 0);
+
+  snapshot.visible_enemies = {make_enemy(91, 90.0F, 50.0F)};
+  snapshot.game_time = 12.0F;
+  Game::Systems::AI::resolve_station(snapshot, context);
+  EXPECT_FLOAT_EQ(context.station.facing_deg, locked)
+      << "the ranks do not turn the moment a contact appears on another flank";
+
+  snapshot.game_time = 15.0F;
+  Game::Systems::AI::resolve_station(snapshot, context);
+  EXPECT_FLOAT_EQ(context.station.facing_deg, locked);
+
+  snapshot.game_time = 21.0F;
+  Game::Systems::AI::resolve_station(snapshot, context);
+  EXPECT_GT(
+      Game::Systems::AI::shortest_angle_between(context.station.facing_deg, locked),
+      45.0F)
+      << "a threat that persists past the dwell does turn the station";
+  EXPECT_EQ(context.station.turns, 1);
+}
+
+TEST_F(AISystemTest, TheSettlementMusterOutranksTheBaseRallyAsTheStation) {
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.anchor_station.offered = true;
+  context.anchor_station.x = 12.0F;
+  context.anchor_station.z = 13.0F;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 5.0F;
+
+  Game::Systems::AI::resolve_station(snapshot, context);
+  EXPECT_EQ(context.station.source, Game::Systems::AI::StationSource::Anchor);
+  EXPECT_FLOAT_EQ(context.station.x, 12.0F);
+
+  Game::Systems::AI::AIBase base;
+  base.id = 1;
+  base.role = Game::Systems::AI::BaseRole::Main;
+  base.rally_x = 30.0F;
+  base.rally_z = 31.0F;
+  context.bases.push_back(base);
+  context.main_base_id = 1;
+
+  Game::Systems::AI::resolve_station(snapshot, context);
+  EXPECT_EQ(context.station.source, Game::Systems::AI::StationSource::MainBaseRally);
+  EXPECT_FLOAT_EQ(context.station.x, 30.0F);
+
+  context.has_settlement_stations = true;
+  context.musters_outside = true;
+  context.muster_outside_x = 55.0F;
+  context.muster_outside_z = 56.0F;
+
+  Game::Systems::AI::resolve_station(snapshot, context);
+  EXPECT_EQ(context.station.source, Game::Systems::AI::StationSource::SettlementMuster);
+  EXPECT_FLOAT_EQ(context.station.x, 55.0F);
+  EXPECT_FLOAT_EQ(context.bases.front().rally_x, 30.0F)
+      << "the base keeps its own rally; only the resolver owns the station";
+}
+
+TEST_F(AISystemTest, AWaveCountsSoldiersStandingInRanksNotSoldiersInTheRadius) {
+  Game::Systems::AI::AIDoctrine doctrine;
+  doctrine.wave.size = 3;
+  doctrine.wave.target_priority = {Game::Systems::AI::DoctrineTarget::Any};
+  doctrine.garrison.minimum_units = 0;
+  doctrine.garrison.fraction = 0.0F;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 500.0F;
+  snapshot.friendly_units = {
+      make_unit(1, 40.0F, 31.0F),
+      make_unit(2, 40.0F, 32.0F),
+      make_unit(3, 44.0F, 52.0F),
+  };
+  snapshot.visible_enemies = {make_enemy_building(90, 140.0F, 55.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  context.station.x = 40.0F;
+  context.station.z = 30.0F;
+  context.macro_targets.assembly_radius = 8.0F;
+  context.strategy_config.doctrine = &doctrine;
+  context.strategy_config.aggression_modifier = 1.0F;
+
+  Game::Systems::AI::AIContext walking = context;
+  walking.wave = {};
+  snapshot.friendly_units[0].movement.has_target = true;
+  snapshot.friendly_units[1].movement.has_target = true;
+  Game::Systems::AI::update_attack_wave(snapshot, walking);
+  EXPECT_EQ(walking.wave.assembled, 0)
+      << "two soldiers still crossing the muster ground are not two soldiers in ranks";
+  EXPECT_FALSE(walking.wave.committed);
+
+  Game::Systems::AI::AIContext standing = context;
+  standing.wave = {};
+  snapshot.friendly_units[0].movement.has_target = false;
+  snapshot.friendly_units[1].movement.has_target = false;
+  Game::Systems::AI::update_attack_wave(snapshot, standing);
+  EXPECT_EQ(standing.wave.assembled, 2);
+  EXPECT_FALSE(standing.wave.committed) << "the ranks must hold before they march";
+
+  snapshot.game_time = 503.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, standing);
+  EXPECT_TRUE(standing.wave.committed);
+  EXPECT_FALSE(standing.wave.departed_under_strength);
+}
+
+TEST_F(AISystemTest, AWaveThatRunsOutOfPatienceRecordsThatItLeftUnderStrength) {
+  Game::Systems::AI::AIDoctrine doctrine;
+  doctrine.wave.size = 3;
+  doctrine.wave.target_priority = {Game::Systems::AI::DoctrineTarget::Any};
+  doctrine.garrison.minimum_units = 0;
+  doctrine.garrison.fraction = 0.0F;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 500.0F;
+  snapshot.friendly_units = {
+      make_unit(1, 40.0F, 60.0F),
+      make_unit(2, 42.0F, 60.0F),
+      make_unit(3, 44.0F, 60.0F),
+  };
+  snapshot.visible_enemies = {make_enemy_building(90, 140.0F, 55.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  context.station.x = 40.0F;
+  context.station.z = 30.0F;
+  context.macro_targets.assembly_radius = 8.0F;
+  context.strategy_config.doctrine = &doctrine;
+  context.strategy_config.aggression_modifier = 1.0F;
+
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  ASSERT_TRUE(context.wave.assembling);
+  ASSERT_FALSE(context.wave.committed);
+
+  snapshot.game_time = 531.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  EXPECT_TRUE(context.wave.committed);
+  EXPECT_TRUE(context.wave.departed_under_strength)
+      << "a timeout may reduce the force, but it must not call it ready";
+}
+
+TEST_F(AISystemTest, StationStandingSeparatesArrivingReformingAndReady) {
+  using Game::Systems::AI::StationStanding;
+
+  Game::Systems::AI::AIContext context;
+  context.station.x = 40.0F;
+  context.station.z = 50.0F;
+  context.macro_targets.assembly_radius = 8.0F;
+
+  auto standing = make_unit(1, 40.0F, 51.0F);
+  EXPECT_EQ(Game::Systems::AI::station_standing(standing, context, 10.0F),
+            StationStanding::Ready);
+
+  auto reforming = standing;
+  reforming.movement.has_target = true;
+  EXPECT_EQ(Game::Systems::AI::station_standing(reforming, context, 10.0F),
+            StationStanding::Reforming);
+
+  auto arriving = make_unit(2, 90.0F, 90.0F);
+  arriving.movement.has_target = true;
+  EXPECT_EQ(Game::Systems::AI::station_standing(arriving, context, 10.0F),
+            StationStanding::Arriving);
+
+  auto wedged = standing;
+  wedged.movement.stalled = true;
+  EXPECT_EQ(Game::Systems::AI::station_standing(wedged, context, 10.0F),
+            StationStanding::Blocked);
+
+  Game::Systems::AI::AIContext stood_down = context;
+  Game::Systems::AI::AIContext::StallRecord record;
+  record.stood_down_until = 40.0F;
+  stood_down.stalled_units.emplace(1U, record);
+  EXPECT_EQ(Game::Systems::AI::station_standing(standing, stood_down, 10.0F),
+            StationStanding::Blocked);
+}
+
+TEST_F(AISystemTest, AMusterWithNoWalkableGroundIsRefusedNotDispatched) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 121;
+  map_def.grid.height = 121;
+  map_def.grid.tile_size = 1.0F;
+  map_def.coordSystem = Game::Map::CoordSystem::World;
+  map_def.rivers.push_back(
+      {QVector3D(-60.0F, 0.0F, 0.0F), QVector3D(60.0F, 0.0F, 0.0F), 70.0F});
+  Game::Map::TerrainService::instance().initialize(map_def);
+  Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+
+  const QVector3D drowned(0.0F, 0.0F, 0.0F);
+  ASSERT_FALSE(Game::Systems::NavGrid::is_world_position_walkable(drowned))
+      << "the fixture must put the muster in the water";
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.state = Game::Systems::AI::AIState::Gathering;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.anchor_station.offered = true;
+  context.anchor_station.x = drowned.x();
+  context.anchor_station.z = drowned.z();
+  context.base_pos_x = drowned.x();
+  context.base_pos_z = drowned.z();
+  context.macro_targets.gather_spacing = 1.5F;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 5.0F;
+  for (int i = 0; i < 12; ++i) {
+    snapshot.friendly_units.push_back(
+        make_unit(static_cast<Engine::Core::EntityID>(i + 1),
+                  -20.0F + static_cast<float>(i),
+                  -50.0F));
+  }
+
+  Game::Systems::AI::resolve_station(snapshot, context);
+  EXPECT_FALSE(context.station.fits)
+      << "a muster drowned in a river, with every relocation probe also drowned, "
+         "cannot hold the army";
+  EXPECT_FALSE(context.station.relocated);
+  EXPECT_GT(context.station.required_radius, 0.0F);
+
+  Game::Systems::AI::GatherBehavior behavior;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.1F, commands);
+  EXPECT_TRUE(commands.empty())
+      << "a station that cannot hold the army must not be marched into";
+  EXPECT_EQ(context.gather_report.refused_stations, 1);
+  EXPECT_EQ(context.gather_report.ordered, 0);
+}
+
+TEST_F(AISystemTest, AMusterBesideAnObstructionIsRelocatedOntoGroundThatHoldsIt) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 121;
+  map_def.grid.height = 121;
+  map_def.grid.tile_size = 1.0F;
+  map_def.coordSystem = Game::Map::CoordSystem::World;
+  map_def.rivers.push_back(
+      {QVector3D(-60.0F, 0.0F, -6.0F), QVector3D(60.0F, 0.0F, -6.0F), 24.0F});
+  Game::Map::TerrainService::instance().initialize(map_def);
+  Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+
+  ASSERT_FALSE(
+      Game::Systems::NavGrid::is_world_position_walkable(QVector3D(0.0F, 0.0F, -6.0F)));
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.anchor_station.offered = true;
+  context.anchor_station.x = 0.0F;
+  context.anchor_station.z = -6.0F;
+  context.base_pos_x = 0.0F;
+  context.base_pos_z = -6.0F;
+  context.macro_targets.gather_spacing = 1.5F;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 5.0F;
+  for (int i = 0; i < 8; ++i) {
+    snapshot.friendly_units.push_back(
+        make_unit(static_cast<Engine::Core::EntityID>(i + 1),
+                  -20.0F + static_cast<float>(i),
+                  30.0F));
+  }
+
+  Game::Systems::AI::resolve_station(snapshot, context);
+  EXPECT_TRUE(context.station.fits);
+  EXPECT_TRUE(context.station.relocated)
+      << "the muster must step out of the river rather than stand in it";
+  EXPECT_TRUE(Game::Systems::NavGrid::is_world_position_walkable(
+      QVector3D(context.station.x, 0.0F, context.station.z)));
+}
+
+TEST_F(AISystemTest, AStationThatCannotHoldTheArmyIsReportedNotSilentlyUsed) {
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.anchor_station.offered = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  context.anchor_station.x = 40.0F;
+  context.anchor_station.z = 50.0F;
+  context.macro_targets.gather_spacing = 1.5F;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 5.0F;
+  for (int i = 0; i < 16; ++i) {
+    snapshot.friendly_units.push_back(
+        make_unit(static_cast<Engine::Core::EntityID>(i + 1),
+                  40.0F + static_cast<float>(i),
+                  50.0F));
+  }
+
+  Game::Systems::AI::resolve_station(snapshot, context);
+  EXPECT_TRUE(context.station.fits)
+      << "open ground with no navigation loaded holds any muster";
+  EXPECT_FALSE(context.station.relocated);
+  EXPECT_GT(context.station.required_radius, 1.5F)
+      << "sixteen soldiers need more ground than one file";
+  EXPECT_FLOAT_EQ(context.station.x, 40.0F);
+
+  const float first_radius = context.station.required_radius;
+  const float checked_at = context.station.measured_at;
+  snapshot.game_time = 6.0F;
+  Game::Systems::AI::resolve_station(snapshot, context);
+  EXPECT_FLOAT_EQ(context.station.measured_at, checked_at)
+      << "an unchanged station and roster must not be re-measured every tick";
+  EXPECT_FLOAT_EQ(context.station.required_radius, first_radius);
+}
+
+TEST_F(AISystemTest, ApplierDropsSubjectsAStaleSnapshotNoLongerOwns) {
+  Engine::Core::World world;
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "AI");
+  owners.register_owner_with_id(7, Game::Systems::OwnerType::AI, "Rival");
+
+  auto* mine = add_world_unit(world, 3, 10.0F, 10.0F, 10.0F, true);
+  auto* theirs = add_world_unit(world, 7, 20.0F, 20.0F, 10.0F, true);
+  ASSERT_NE(mine, nullptr);
+  ASSERT_NE(theirs, nullptr);
+  const auto ghost = theirs->get_id() + 1000U;
+
+  Game::Systems::AI::AICommand move;
+  move.type = Game::Systems::AI::AICommandType::MoveUnits;
+  move.units = {mine->get_id(), theirs->get_id(), ghost};
+  move.move_target_x = {50.0F, 51.0F, 52.0F};
+  move.move_target_y = {0.0F, 0.0F, 0.0F};
+  move.move_target_z = {50.0F, 51.0F, 52.0F};
+
+  const auto report = Game::Systems::AI::AICommandApplier::apply(world, 3, {move});
+  EXPECT_EQ(report.stale_subjects, 2)
+      << "a rival's unit and a dead id are not this AI's to steer";
+
+  const auto* rival_movement = theirs->get_component<Engine::Core::MovementComponent>();
+  EXPECT_TRUE(rival_movement == nullptr || !rival_movement->get_has_requested_goal())
+      << "the rival unit must not have been given an order";
+}
+
+TEST_F(AISystemTest, TheBaseKeepsItsOwnRallyWhileTheStationIsResolvedSeparately) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 20.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 60.0F, 60.0F),
+      make_unit(1, 62.0F, 60.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  ASSERT_FALSE(context.bases.empty());
+  EXPECT_EQ(context.station.source, Game::Systems::AI::StationSource::MainBaseRally);
+  EXPECT_FLOAT_EQ(context.station.x, context.bases.front().rally_x)
+      << "with no town plan the station is the main base's rally";
+
+  const float base_rally = context.bases.front().rally_x;
+  context.station.x = base_rally - 40.0F;
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  EXPECT_FLOAT_EQ(context.bases.front().rally_x, base_rally)
+      << "moving the station must not write back onto the base";
+}
+
+TEST_F(AISystemTest, ArbitrationGivesAUnitToTheHighestPriorityClaimNotTheFirst) {
+  Game::Systems::AI::AICommand muster;
+  muster.type = Game::Systems::AI::AICommandType::MoveUnits;
+  muster.owner = Game::Systems::AI::BehaviorPriority::Low;
+  muster.units = {5U, 6U};
+  muster.move_target_x = {40.0F, 41.0F};
+  muster.move_target_y = {0.0F, 0.0F};
+  muster.move_target_z = {50.0F, 51.0F};
+
+  Game::Systems::AI::AICommand detour;
+  detour.type = Game::Systems::AI::AICommandType::MoveUnits;
+  detour.owner = Game::Systems::AI::BehaviorPriority::High;
+  detour.units = {5U};
+  detour.move_target_x = {11.0F};
+  detour.move_target_y = {0.0F};
+  detour.move_target_z = {12.0F};
+
+  const auto arbitrated =
+      Game::Systems::AI::AICommandFilter::arbitrate_move_ownership({muster, detour});
+
+  ASSERT_EQ(arbitrated.size(), 2U);
+  EXPECT_EQ(arbitrated[0].units, (std::vector<Engine::Core::EntityID>{6U}))
+      << "the low-priority muster keeps only the unit nobody outranked it for";
+  EXPECT_FLOAT_EQ(arbitrated[0].move_target_x.front(), 41.0F);
+  EXPECT_EQ(arbitrated[1].units, (std::vector<Engine::Core::EntityID>{5U}));
+  EXPECT_FLOAT_EQ(arbitrated[1].move_target_x.front(), 11.0F);
+}
+
+TEST_F(AISystemTest, ADetourKeepsItsUnitAfterTheStallFlagClears) {
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 10.0F;
+  auto wedged = make_unit(1, 20.0F, 20.0F);
+  wedged.movement.has_objective = true;
+  wedged.movement.objective_x = 60.0F;
+  wedged.movement.objective_z = 20.0F;
+  wedged.movement.has_target = true;
+  wedged.movement.stalled = true;
+  snapshot.friendly_units = {wedged};
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  Game::Systems::AI::update_stall_recovery(snapshot, context, commands);
+  ASSERT_EQ(commands.size(), 1U) << "a wedged soldier is given a detour";
+  EXPECT_EQ(commands.front().owner, Game::Systems::AI::BehaviorPriority::High);
+  EXPECT_TRUE(Game::Systems::AI::is_under_recovery(1U, context, snapshot.game_time));
+
+  snapshot.friendly_units[0].movement.stalled = false;
+  snapshot.game_time = 12.0F;
+  commands.clear();
+  Game::Systems::AI::update_stall_recovery(snapshot, context, commands);
+  EXPECT_TRUE(Game::Systems::AI::is_under_recovery(1U, context, snapshot.game_time))
+      << "the detour keeps the unit while it is walking it, not only while stalled";
+
+  snapshot.game_time = 10.0F + Game::Systems::AI::k_stall_detour_lifetime + 1.0F;
+  commands.clear();
+  Game::Systems::AI::update_stall_recovery(snapshot, context, commands);
+  EXPECT_FALSE(Game::Systems::AI::is_under_recovery(1U, context, snapshot.game_time))
+      << "and lets go once the detour has had its time";
+  EXPECT_TRUE(context.stalled_units.empty());
+}
+
+TEST_F(AISystemTest, AnUnreachableDetourIsNotIssued) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 121;
+  map_def.grid.height = 121;
+  map_def.grid.tile_size = 1.0F;
+  map_def.coordSystem = Game::Map::CoordSystem::World;
+  map_def.rivers.push_back(
+      {QVector3D(-60.0F, 0.0F, 0.0F), QVector3D(60.0F, 0.0F, 0.0F), 30.0F});
+  Game::Map::TerrainService::instance().initialize(map_def);
+  Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+
+  const QVector3D north(0.0F, 0.0F, -30.0F);
+  const QVector3D south(0.0F, 0.0F, 30.0F);
+  ASSERT_TRUE(Game::Systems::NavGrid::is_world_position_walkable(north));
+  ASSERT_TRUE(Game::Systems::NavGrid::is_world_position_walkable(south));
+  ASSERT_FALSE(pathfinder->can_reach(
+      Game::Systems::NavGrid::world_to_grid(north.x(), north.z()),
+      Game::Systems::NavGrid::world_to_grid(south.x(), south.z())))
+      << "the fixture must cut the map in two";
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 10.0F;
+  auto wedged = make_unit(1, north.x(), north.z());
+  wedged.movement.has_objective = true;
+  wedged.movement.objective_x = south.x();
+  wedged.movement.objective_z = south.z();
+  wedged.movement.has_target = true;
+  wedged.movement.stalled = true;
+  snapshot.friendly_units = {wedged};
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  Game::Systems::AI::update_stall_recovery(snapshot, context, commands);
+  for (const auto& command : commands) {
+    for (std::size_t i = 0; i < command.units.size(); ++i) {
+      EXPECT_TRUE(pathfinder->can_reach(
+          Game::Systems::NavGrid::world_to_grid(north.x(), north.z()),
+          Game::Systems::NavGrid::world_to_grid(command.move_target_x[i],
+                                                command.move_target_z[i])))
+          << "a detour must be somewhere the soldier can actually walk to";
+    }
+  }
 }

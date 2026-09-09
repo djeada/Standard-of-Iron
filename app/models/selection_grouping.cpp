@@ -1,7 +1,9 @@
 #include <QRegularExpression>
+#include <QSet>
 #include <qvariant.h>
 
 #include <algorithm>
+#include <array>
 #include <iterator>
 #include <map>
 #include <utility>
@@ -10,6 +12,69 @@
 #include "app/models/selected_units_model.h"
 
 namespace App::Models {
+
+namespace {
+
+auto activity_rank(const QString& activity) -> int {
+  static const std::array k_order =
+      std::to_array<QLatin1String>({QLatin1String("attack"),
+                                    QLatin1String("blocked"),
+                                    QLatin1String("heal"),
+                                    QLatin1String("construct"),
+                                    QLatin1String("repair"),
+                                    QLatin1String("dismantle"),
+                                    QLatin1String("chop_wood"),
+                                    QLatin1String("mine_stone"),
+                                    QLatin1String("mine_iron"),
+                                    QLatin1String("harvest_grain"),
+                                    QLatin1String("slaughter_sheep"),
+                                    QLatin1String("deliver"),
+                                    QLatin1String("auto_gather"),
+                                    QLatin1String("train"),
+                                    QLatin1String("guard"),
+                                    QLatin1String("hold"),
+                                    QLatin1String("patrol"),
+                                    QLatin1String("move"),
+                                    QLatin1String("idle")});
+  for (std::size_t index = 0; index < k_order.size(); ++index) {
+    if (activity == k_order[index]) {
+      return static_cast<int>(index);
+    }
+  }
+  return static_cast<int>(k_order.size());
+}
+
+auto activity_state_rank(const QString& state) -> int {
+  static const std::array k_order =
+      std::to_array<QLatin1String>({QLatin1String("active"),
+                                    QLatin1String("interrupted"),
+                                    QLatin1String("unavailable"),
+                                    QLatin1String("locked"),
+                                    QLatin1String("queued")});
+  for (std::size_t index = 0; index < k_order.size(); ++index) {
+    if (state == k_order[index]) {
+      return static_cast<int>(index);
+    }
+  }
+  return static_cast<int>(k_order.size());
+}
+
+auto outranks(const std::pair<QString, QString>& candidate,
+              int candidate_count,
+              const std::pair<QString, QString>& incumbent,
+              int incumbent_count) -> bool {
+  if (candidate_count != incumbent_count) {
+    return candidate_count > incumbent_count;
+  }
+  const int candidate_activity = activity_rank(candidate.first);
+  const int incumbent_activity = activity_rank(incumbent.first);
+  if (candidate_activity != incumbent_activity) {
+    return candidate_activity < incumbent_activity;
+  }
+  return activity_state_rank(candidate.second) < activity_state_rank(incumbent.second);
+}
+
+} // namespace
 
 auto group_selection_by_type(const QVariantList& units) -> std::vector<SelectionGroup> {
   std::vector<SelectionGroup> groups;
@@ -96,7 +161,7 @@ auto group_selection_by_type(const QVariantList& units) -> std::vector<Selection
     const auto& tally = activity_tallies[i];
     auto dominant = tally.begin();
     for (auto it = tally.begin(); it != tally.end(); ++it) {
-      if (it->second > dominant->second) {
+      if (outranks(it->first, it->second, dominant->first, dominant->second)) {
         dominant = it;
       }
     }
@@ -108,6 +173,55 @@ auto group_selection_by_type(const QVariantList& units) -> std::vector<Selection
     }
   }
   return groups;
+}
+
+void SelectionActivityDwell::settle(std::vector<SelectionGroup>& groups) {
+  for (auto& group : groups) {
+    auto& held = m_held[group.type_key];
+    if (held.activity.isEmpty()) {
+      held.activity = group.activity;
+      held.activity_state = group.activity_state;
+      held.candidate_activity = group.activity;
+      held.candidate_activity_state = group.activity_state;
+      held.candidate_seen = 0;
+      continue;
+    }
+    if (group.activity == held.activity &&
+        group.activity_state == held.activity_state) {
+      held.candidate_activity = group.activity;
+      held.candidate_activity_state = group.activity_state;
+      held.candidate_seen = 0;
+      continue;
+    }
+    if (group.activity == held.candidate_activity &&
+        group.activity_state == held.candidate_activity_state) {
+      ++held.candidate_seen;
+    } else {
+      held.candidate_activity = group.activity;
+      held.candidate_activity_state = group.activity_state;
+      held.candidate_seen = 1;
+    }
+    if (held.candidate_seen >= k_confirmations) {
+      held.activity = held.candidate_activity;
+      held.activity_state = held.candidate_activity_state;
+      held.candidate_seen = 0;
+      continue;
+    }
+    group.activity = held.activity;
+    group.activity_state = held.activity_state;
+  }
+  forget_missing(groups);
+}
+
+void SelectionActivityDwell::forget_missing(const std::vector<SelectionGroup>& groups) {
+  QSet<QString> present;
+  present.reserve(static_cast<int>(groups.size()));
+  for (const auto& group : groups) {
+    present.insert(group.type_key);
+  }
+  for (auto it = m_held.begin(); it != m_held.end();) {
+    it = present.contains(it.key()) ? std::next(it) : m_held.erase(it);
+  }
 }
 
 auto selection_groups_to_variant(const std::vector<SelectionGroup>& groups)

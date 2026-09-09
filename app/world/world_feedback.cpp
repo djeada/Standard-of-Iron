@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <mutex>
 
+#include "game/core/presentation_coverage.h"
+
 namespace App::Core {
 
 auto feedback_kind_key(FeedbackKind kind) -> const char* {
@@ -139,6 +141,14 @@ auto WorldFeedbackStore::make_room_for(const WorldFeedbackTick& tick) -> bool {
 }
 
 void WorldFeedbackStore::push(WorldFeedbackTick tick) {
+  if (tick.kind == FeedbackKind::Damage) {
+    Engine::Core::note_coverage(Engine::Core::CoverageEvent::MeleeContact);
+    if (tick.killing_blow) {
+      Engine::Core::note_coverage(Engine::Core::CoverageEvent::KillingBlow);
+    }
+  } else if (tick.kind == FeedbackKind::Resource) {
+    Engine::Core::note_coverage(Engine::Core::CoverageEvent::ResourceFlow);
+  }
   const std::lock_guard<std::mutex> guard(m_mutex);
   tick.age = 0.0F;
   tick.hits = std::max(1, tick.hits);

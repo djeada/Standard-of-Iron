@@ -29,18 +29,20 @@ out vec4 frag_color;
 
 const float k_vignette_inner = 0.55;
 const float k_vignette_outer = 1.35;
-const vec3 k_vignette_tint = vec3(0.92, 0.84, 0.72);
-const float k_grain_strength = 0.028;
+const vec3 k_vignette_tint = vec3(0.97, 0.97, 0.98);
+const float k_grain_strength = 0.006;
 const float k_night_exposure_lift = 1.55;
 const float k_dusk_exposure_lift = 1.45;
 const float k_grain_shadow_bias = 0.65;
 const int k_ao_tap_count = 8;
 const int k_ao_ring_count = 3;
-const float k_ao_ring_spread[3] = float[3](2.5, 8.0, 18.0);
-const float k_ao_ring_weight[3] = float[3](1.0, 0.78, 0.46);
+const float k_ao_ring_spread[3] = float[3](2.5, 6.0, 12.0);
+const float k_ao_ring_weight[3] = float[3](1.0, 0.65, 0.24);
 const float k_ao_ring_reach = 1.7;
-const float k_ao_far_cutoff = 26.0;
-const vec3 k_ao_tint = vec3(0.72, 0.76, 0.86);
+// Depth-separated buildings must not cast broad screen-space occlusion halos.
+// Directional shadows handle their cast shadow; AO supplies local grounding.
+const float k_ao_far_cutoff = 4.0;
+const vec3 k_ao_tint = vec3(0.80, 0.83, 0.89);
 
 const float k_fog_horizon_weight = 0.46;
 const float k_fog_horizon_gain = 0.48;

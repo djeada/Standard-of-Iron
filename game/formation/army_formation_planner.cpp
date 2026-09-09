@@ -558,11 +558,25 @@ public:
       }
     }
 
+    auto const origin = Game::Systems::NavGrid::world_to_grid(ideal.x(), ideal.z());
+    if (auto const nearest =
+            Game::Systems::NavGrid::find_nearest_walkable_grid(origin, k_wide_cells)) {
+      QVector3D const grounded = Game::Systems::NavGrid::grid_to_world(*nearest);
+      QVector3D const candidate(grounded.x(), ideal.y(), grounded.z());
+      if (m_grid.is_free(candidate)) {
+        m_grid.claim(candidate);
+        status = SlotStatus::Adjusted;
+        return candidate;
+      }
+    }
+
     status = SlotStatus::Blocked;
     return ideal;
   }
 
 private:
+  static constexpr int k_wide_cells = 12;
+
   ClaimGrid m_grid;
   float m_separation{1.0F};
   bool m_enabled{true};
@@ -1056,6 +1070,49 @@ auto ArmyFormationPlanner::place(const ArmyFormationLayout& layout,
 
   plan.valid = true;
   return plan;
+}
+
+auto ArmyFormationPlanner::scatter_offsets(int count,
+                                           float spacing) -> std::vector<QVector3D> {
+  std::vector<QVector3D> offsets;
+  if (count <= 0) {
+    return offsets;
+  }
+  offsets.reserve(static_cast<std::size_t>(count));
+  int const side = static_cast<int>(std::ceil(std::sqrt(static_cast<float>(count))));
+  for (int i = 0; i < count; ++i) {
+    float const column = static_cast<float>(i % side);
+    float const row = static_cast<float>(i / side);
+    float const half = static_cast<float>(side - 1) * 0.5F;
+    offsets.emplace_back((column - half) * spacing, 0.0F, (row - half) * spacing);
+  }
+  return offsets;
+}
+
+auto ArmyFormationPlanner::scatter_layout(
+    const std::vector<ArmyFormationMember>& members,
+    float spacing) -> ArmyFormationLayout {
+  ArmyFormationLayout layout;
+  layout.spacing = spacing;
+  layout.doctrine = k_neutral_doctrine;
+  auto const offsets = scatter_offsets(static_cast<int>(members.size()), spacing);
+  layout.slot_list.reserve(members.size());
+  Bounds bounds;
+  for (std::size_t i = 0; i < members.size() && i < offsets.size(); ++i) {
+    FormationSlot slot;
+    slot.id = static_cast<int>(i);
+    slot.occupant = members[i].entity_id;
+    slot.local_offset = offsets[i];
+    layout.slot_list.push_back(slot);
+    bounds.expand(offsets[i]);
+  }
+  layout.frontage = bounds.width();
+  layout.depth = bounds.depth();
+  layout.valid = !layout.slot_list.empty();
+  if (!layout.valid) {
+    layout.rejection_reason = "No members to scatter.";
+  }
+  return layout;
 }
 
 auto ArmyFormationPlanner::plan(const std::vector<ArmyFormationMember>& members,

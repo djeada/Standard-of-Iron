@@ -229,6 +229,11 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"CommanderSignaturePresentationComponent",
      PresentationOnly,
      "Short-lived burst marking where a commander's signature move landed."},
+    {"ProductionCompletionComponent",
+     PresentationOnly,
+     "Short-lived glow on a freshly recruited unit. It is a countdown the "
+     "production system re-attaches when a recruit appears, so a restored "
+     "match simply shows no glow rather than a stale one."},
     {"StockpileComponent",
      PresentationOnly,
      "Pile heights drawn on the barracks stone yard, resampled each tick from "

@@ -36,6 +36,11 @@ struct ArmyFormationResult {
   std::string rejection_reason;
 };
 
+struct PlacedSlot {
+  QVector3D position;
+  SlotStatus status{SlotStatus::Blocked};
+};
+
 class ArmyFormationService {
 public:
   [[nodiscard]] static auto spread(int count,
@@ -43,8 +48,8 @@ public:
                                    float spacing = 1.0F) -> std::vector<QVector3D>;
 
   [[nodiscard]] static auto
-  positions_for(const std::vector<ArmyFormationMember>& members,
-                const ArmyFormationRequest& request) -> std::vector<QVector3D>;
+  placements_for(const std::vector<ArmyFormationMember>& members,
+                 const ArmyFormationRequest& request) -> std::vector<PlacedSlot>;
 
   [[nodiscard]] static auto
   preview(Engine::Core::World& world,
@@ -53,6 +58,9 @@ public:
   [[nodiscard]] static auto
   commit(Engine::Core::World& world,
          const ArmyFormationRequest& request) -> ArmyFormationResult;
+
+  [[nodiscard]] static auto facing_from(const QVector3D& centroid,
+                                        const QVector3D& anchor) -> float;
 
   [[nodiscard]] static auto auto_facing(Engine::Core::World& world,
                                         const std::vector<EntityID>& members,

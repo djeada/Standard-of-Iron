@@ -179,28 +179,11 @@ void HarassBehavior::execute(const AISnapshot& snapshot,
       formation_request.spacing =
           std::max(1.5F, context.strategy_config.attack_formation_spacing * 0.8F);
       formation_request.intent = Game::Formation::ArmyFormationIntent::Assault;
-      auto formation_positions =
-          plan_ai_formation(formation_request, claimed_units, snapshot);
-
-      std::vector<float> target_x;
-      std::vector<float> target_y;
-      std::vector<float> target_z;
-      target_x.reserve(claimed_units.size());
-      target_y.reserve(claimed_units.size());
-      target_z.reserve(claimed_units.size());
-      for (size_t i = 0; i < claimed_units.size(); ++i) {
-        target_x.push_back(formation_positions[i].x());
-        target_y.push_back(formation_positions[i].y());
-        target_z.push_back(formation_positions[i].z());
+      auto move_command = move_to_slots(
+          claimed_units, plan_ai_formation(formation_request, claimed_units, snapshot));
+      if (!move_command.units.empty()) {
+        out_commands.push_back(std::move(move_command));
       }
-
-      AICommand move_command;
-      move_command.type = AICommandType::MoveUnits;
-      move_command.units = claimed_units;
-      move_command.move_target_x = std::move(target_x);
-      move_command.move_target_y = std::move(target_y);
-      move_command.move_target_z = std::move(target_z);
-      out_commands.push_back(std::move(move_command));
     }
 
     AICommand attack_command;
@@ -239,27 +222,11 @@ void HarassBehavior::execute(const AISnapshot& snapshot,
   formation_request.anchor = move_center;
   formation_request.spacing = std::max(1.4F, context.strategy_config.gather_spacing);
   formation_request.intent = Game::Formation::ArmyFormationIntent::Line;
-  auto formation_positions =
-      plan_ai_formation(formation_request, claimed_units, snapshot);
-
-  std::vector<float> target_x;
-  std::vector<float> target_y;
-  std::vector<float> target_z;
-  target_x.reserve(claimed_units.size());
-  target_y.reserve(claimed_units.size());
-  target_z.reserve(claimed_units.size());
-  for (size_t i = 0; i < claimed_units.size(); ++i) {
-    target_x.push_back(formation_positions[i].x());
-    target_y.push_back(formation_positions[i].y());
-    target_z.push_back(formation_positions[i].z());
+  AICommand move_command = move_to_slots(
+      claimed_units, plan_ai_formation(formation_request, claimed_units, snapshot));
+  if (move_command.units.empty()) {
+    return;
   }
-
-  AICommand move_command;
-  move_command.type = AICommandType::MoveUnits;
-  move_command.units = std::move(claimed_units);
-  move_command.move_target_x = std::move(target_x);
-  move_command.move_target_y = std::move(target_y);
-  move_command.move_target_z = std::move(target_z);
   out_commands.push_back(std::move(move_command));
   m_last_target = objective->id;
 }

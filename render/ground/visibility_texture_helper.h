@@ -12,6 +12,7 @@
 
 #include "game/map/visibility_service.h"
 #include "render/draw_commands.h"
+#include "render/gl/gl_resource_tracking.h"
 #include "render/gl/texture.h"
 #include "visibility_mask_encoder.h"
 
@@ -80,6 +81,10 @@ public:
                                         GL_RGBA,
                                         GL_UNSIGNED_BYTE,
                                         m_texels.data());
+          Render::GL::note_texture_transfer(
+              Render::GL::texture_transfer_bytes(static_cast<std::size_t>(dirty.width),
+                                                 static_cast<std::size_t>(dirty.height),
+                                                 4U));
         }
       }
       m_previous_cells = snapshot.cells;

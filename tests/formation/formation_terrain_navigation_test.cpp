@@ -409,3 +409,43 @@ TEST_F(FormationTerrainTest, DeploymentAcrossABridgeKeepsSlotsOffTheRiverbank) {
   }
   expect_no_shared_positions(placed_positions(result), 0.4F);
 }
+
+TEST_F(FormationTerrainTest, TheScatterFallbackNeverSeatsTwoMenOnOneCell) {
+  auto map_def = base_map();
+  map_def.rivers.push_back(
+      {QVector3D(0.0F, 0.0F, -28.0F), QVector3D(0.0F, 0.0F, 28.0F), 8.0F});
+  activate(map_def);
+
+  Engine::Core::World world;
+  auto const units = squad(world, NationID::RomanRepublic, -22.0F, 0.0F, 12);
+  auto const members =
+      Game::Formation::ArmyFormationPlanner::collect_members(world, units);
+
+  ArmyFormationRequest request;
+  request.members = units;
+  request.anchor = QVector3D(-4.0F, 0.0F, 0.0F);
+  request.spacing = 1.4F;
+  request.resolve_terrain = true;
+
+  auto const plan = Game::Formation::ArmyFormationPlanner::place(
+      Game::Formation::ArmyFormationPlanner::scatter_layout(members, request.spacing),
+      request);
+
+  ASSERT_GT(plan.adjusted_count, 0)
+      << "the fixture must force at least one slot off its ideal ground";
+
+  std::vector<QVector3D> seated;
+  for (const auto& slot : plan.slot_list) {
+    if (slot.status == SlotStatus::Blocked) {
+      continue;
+    }
+    EXPECT_TRUE(NavGrid::is_world_position_walkable(slot.world_position))
+        << "an unblocked fallback slot must be on walkable ground";
+    for (const auto& taken : seated) {
+      EXPECT_GT((slot.world_position - taken).lengthSquared(), 0.25F)
+          << "two soldiers were seated on the same fallback cell";
+    }
+    seated.push_back(slot.world_position);
+  }
+  EXPECT_FALSE(seated.empty()) << "the fallback seated nobody at all";
+}

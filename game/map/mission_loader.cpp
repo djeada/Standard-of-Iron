@@ -1,7 +1,9 @@
 #include "mission_loader.h"
 
 #include <QDebug>
+#include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -333,6 +335,26 @@ auto MissionLoader::parse_commander_message(const QJsonObject& obj)
   return Game::Mission::parse_commander_message(obj);
 }
 
+namespace {
+
+auto resolve_mission_relative_path(const QString& map_path,
+                                   const QString& mission_path) -> QString {
+  if (map_path.isEmpty() || map_path.startsWith(QLatin1String(":/"))) {
+    return map_path;
+  }
+  const QFileInfo declared(map_path);
+  if (declared.isAbsolute() || declared.exists()) {
+    return map_path;
+  }
+  const QFileInfo beside(QFileInfo(mission_path).absoluteDir(), map_path);
+  if (beside.exists()) {
+    return beside.absoluteFilePath();
+  }
+  return map_path;
+}
+
+} // namespace
+
 auto MissionLoader::load_from_json_file(const QString& file_path,
                                         MissionDefinition& out_mission,
                                         QString* error_msg) -> bool {
@@ -367,7 +389,8 @@ auto MissionLoader::load_from_json_file(const QString& file_path,
   out_mission.id = root["id"].toString();
   out_mission.title = root["title"].toString();
   out_mission.summary = root["summary"].toString();
-  out_mission.map_path = root["map_path"].toString();
+  out_mission.map_path =
+      resolve_mission_relative_path(root["map_path"].toString(), file_path);
 
   if (root.contains("teaching_goal")) {
     out_mission.teaching_goal = root["teaching_goal"].toString();

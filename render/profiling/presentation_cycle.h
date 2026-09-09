@@ -22,6 +22,7 @@ inline auto presentation_cycle_position(double seconds) -> PresentationCyclePosi
 struct PresentationCycleProgress {
   std::atomic<std::uint64_t> updates{0};
   std::atomic<std::uint64_t> completed_cycles{0};
+  std::atomic<std::uint64_t> actions_executed{0};
 };
 
 inline auto presentation_cycle_progress() -> PresentationCycleProgress& {

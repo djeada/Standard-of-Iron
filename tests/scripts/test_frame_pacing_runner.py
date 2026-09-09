@@ -182,3 +182,98 @@ class PacingRunnerTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ActionFixtureCoverageTest(unittest.TestCase):
+    """A fixture that never exercised its behaviour must not certify anything."""
+
+    def report(self, coverage, executed=12):
+        return {
+            "action_fixture": {
+                "name": "battle_coverage",
+                "actions_executed": executed,
+                "required_coverage": ["melee_contact", "formation_move"],
+            },
+            "presentation_coverage": coverage,
+        }
+
+    def test_observed_behaviour_passes(self):
+        self.assertEqual(
+            runner.read_action_coverage(
+                self.report({"melee_contact": 51, "formation_move": 4})
+            ),
+            [],
+        )
+
+    def test_unobserved_behaviour_is_rejected_by_name(self):
+        failures = runner.read_action_coverage(
+            self.report({"melee_contact": 0, "formation_move": 4})
+        )
+        self.assertEqual(
+            failures, ["required behaviour was never observed: melee_contact"]
+        )
+
+    def test_a_fixture_that_never_ran_is_rejected(self):
+        failures = runner.read_action_coverage(
+            self.report({"melee_contact": 3, "formation_move": 1}, executed=0)
+        )
+        self.assertIn("the action fixture executed no actions", failures)
+
+    def test_a_missing_fixture_block_is_rejected(self):
+        self.assertEqual(
+            runner.read_action_coverage({"presentation_coverage": {}}),
+            ["the action fixture did not report its coverage"],
+        )
+
+    def test_missing_coverage_measurement_is_rejected(self):
+        failures = runner.read_action_coverage(
+            {"action_fixture": {"actions_executed": 3, "required_coverage": ["x"]}}
+        )
+        self.assertIn("presentation coverage was not measured", failures)
+
+    def test_fixture_copy_hashes_and_rejects_an_empty_contract(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "fixture.json"
+            source.write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "name": "battle",
+                        "required_coverage": ["melee_contact"],
+                        "actions": [{"at": 1.0, "action": "select_all"}],
+                    }
+                )
+            )
+            output = root / "out"
+            output.mkdir()
+            destination, manifest = runner.copy_action_fixture(source, output)
+            self.assertTrue(destination.is_file())
+            self.assertEqual(manifest["name"], "battle")
+            self.assertEqual(len(manifest["sha256"]), 64)
+
+            empty = root / "empty.json"
+            empty.write_text(json.dumps({"version": 1, "name": "x"}))
+            with self.assertRaises(ValueError):
+                runner.copy_action_fixture(empty, output)
+
+    def test_outcome_comparison_flags_behaviour_missing_on_one_preset(self):
+        rows = [
+            {
+                "mission": "m",
+                "preset": "low",
+                "coverage": {"melee_contact": 40, "killing_blow": 2},
+            },
+            {
+                "mission": "m",
+                "preset": "ultra",
+                "coverage": {"melee_contact": 44, "killing_blow": 0},
+            },
+        ]
+        comparison = runner.compare_outcomes(rows)
+        self.assertEqual(len(comparison), 1)
+        self.assertEqual(comparison[0]["behaviour_missing_somewhere"], ["killing_blow"])
+        self.assertEqual(
+            comparison[0]["coverage_spread"]["melee_contact"],
+            {"min": 40, "max": 44, "observed_everywhere": True},
+        )

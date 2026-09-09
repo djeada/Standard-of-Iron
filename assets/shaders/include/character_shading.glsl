@@ -64,6 +64,13 @@ vec3 shade_readable_character(vec3 base,
   vec3 sun_color = environment_primary_color();
   vec3 sky_color = environment_sky_color();
 
+  // Warm sunlight should not turn every armor/cloth surface the same gold as
+  // masonry. Preserve light intensity and authored team hues at tactical zoom.
+  if (material_id == 0) {
+    float sun_luma = dot(sun_color, vec3(0.299, 0.587, 0.114));
+    sun_color = mix(sun_color, vec3(sun_luma), 0.30 * zoom);
+  }
+
   float ndl = dot(surface_normal, light_dir);
 #if SOI_CHARACTER_WANTS(SOI_CHARACTER_ELEPHANT)
   float diffuse_wrap =
@@ -223,12 +230,32 @@ vec3 soi_finish_character(vec3 color,
                 vec3(k_elephant_highlight_knee) + over * shoulder / (shoulder + over));
   }
 #endif
-  color = apply_zoom_readability(color, zoom);
+  if (material_id == 0) {
+    // Keep cloth identifiable without saturating skin, leather and armor into
+    // competing orange/yellow flecks. Leave other creature materials unchanged.
+    bool cloth =
+        color_role == k_humanoid_role_cloth || color_role == k_humanoid_role_cloth_dark;
+    float luma = dot(color, vec3(0.299, 0.587, 0.114));
+    color = mix(vec3(luma), color, mix(1.0, cloth ? 1.08 : 0.82, zoom));
+    color = clamp(color, 0.0, 1.0);
+  } else {
+    color = apply_zoom_readability(color, zoom);
+  }
 #if SOI_CHARACTER_WANTS(SOI_CHARACTER_ELEPHANT)
   if (material_id == k_elephant_material) {
 
     float hide_luma = dot(color, vec3(0.299, 0.587, 0.114));
     color = mix(vec3(hide_luma), color, k_elephant_hide_saturation);
+  }
+#endif
+  // Preserve wool's light/dark modeling while removing the warm cast introduced
+  // by sunlight, ground bounce and the generic wildlife finish. The material
+  // mask excludes brown coats, dirty wool, faces and hooves.
+#if SOI_CHARACTER_WANTS(SOI_CHARACTER_WILDLIFE)
+  if (material_id == k_wildlife_material) {
+    float white_coat = wildlife_white_coat_weight(base);
+    float luma = dot(color, vec3(0.299, 0.587, 0.114));
+    color = mix(color, vec3(luma), white_coat * (1.0 - environment_night_amount()));
   }
 #endif
   return color;

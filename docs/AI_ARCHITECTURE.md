@@ -742,6 +742,246 @@ at_spawn/adrift`) counts where every soldier stood at the last decision; the
 allows at most one soldier by a barracks and wants seven in ten stationed,
 marching or fighting after a 26-minute peaceful settle.
 
+#### One owner for the station
+
+There used to be no such thing as "the station". `AIContext::rally_x/rally_z`
+was written by the reasoner's anchor stage, then overwritten by
+`AIBaseManager::update`, then overwritten again by `apply_settlement_stations`,
+and whatever survived that sequence was the answer. There is now one struct,
+`AIContext::station`, and one function that writes it:
+
+```cpp
+struct AIStation {
+  StationSource source;                 // which candidate won
+  float x, z, facing_deg;               // the station itself
+  bool fits, relocated;                 // what the fit found
+  float required_radius;
+  float measured_candidate_x, measured_candidate_z;   // the inputs that
+  int measured_strength;                              // decision was
+  float measured_at;                                  // made from
+  bool turn_pending; float turn_pending_deg, turn_pending_since; int turns;
+};
+```
+
+`resolve_station` in `ai_settlement_frame.cpp` is its only writer. Everything
+else _offers a candidate_, and `choose_candidate` picks in a stated order:
+
+| Rank | Candidate                   | Offered by                                       |
+| ---- | --------------------------- | ------------------------------------------------ |
+| 1    | the settlement muster       | `apply_settlement_stations`, from the town plan  |
+| 2    | the main base rally         | `AIBaseManager::update`, per base                |
+| 3    | `AIContext::anchor_station` | the anchor stage of `AIReasoner::update_context` |
+
+The precedence is the one the three old writers produced by overwriting each
+other; the difference is that it is stated once and the losers no longer write.
+
+`AIBase::rally_x/rally_z` is a genuinely different thing -- a production
+building's spawn rally -- and stays owned by `AIBaseManager` alone. It used to
+be overwritten with the muster point so recruits would walk there, which made
+the main base's rally a second copy of the station with two writers. Now
+`ProductionBehavior` resolves it at the point of use: the main base's buildings
+rally on `context.station`, every other base on its own rally. Nothing is
+copied.
+
+Gathering still plans its own ranks rather than committing a group to
+`ArmyFormationRegistry`. Routing it through the existing `DeployFormation`
+command was built and measured, and reverted: it regressed
+`AiTownPlanTest.AWalledCommanderClosesItsCircuitGivenTime` (fabius fell from
+three towers to one) and `AiEstateEconomyTest.ItsBuildersAreNeverLeftWithNothingToDo`,
+and damping the re-commit rate did not recover either. Persistent registry-owned
+slots across roster changes therefore remain **open work**; what the muster has
+today is order stability (`preserve_member_order` over an id-sorted roster and a
+locked station facing), not slot ownership.
+
+`ArmyFormationService::facing_from` is likewise the one implementation of
+"which way does a group closing on an anchor face"; `auto_facing` (from a world)
+and `ai_formation.cpp`'s `facing_towards` (from a snapshot) now differ only in
+where they get the centroid. `stands_in_the_muster` and `muster_strength` in
+`ai_utils.h` are the one answer to "which soldiers count", used by both the
+station fit and the station report.
+
+When no candidate exists the last station is retained rather than reset to the
+world origin.
+
+#### The station frame does not turn under the troops
+
+A muster used to take its facing from the members' own centroid pointed at the
+anchor. As the troops close on the anchor that vector shrinks toward zero and
+its direction becomes noise, so the whole formation rotated every second, every
+soldier was handed a new slot, and the army orbited its own rally point. Two
+things fix it, and both are about making the plan a function of the roster
+rather than of where the roster happens to be standing:
+
+- `resolve_station` locks `station.facing_deg` from the settlement frame -- the
+  same axis-snapped outward direction the town plan is laid out along. It is
+  re-locked without ceremony when the station itself moves more than six metres,
+  which `resolve_station` knows because it just placed it. Otherwise a different
+  desired facing has to persist for eight seconds before it is adopted, and each
+  adoption bumps `station.turns`. `GatherBehavior` passes that angle to the
+  planner instead of letting it derive one.
+- Gather stations plan with `preserve_member_order`, over members already
+  sorted by entity id. Without it the planner sorts each line by the members'
+  lateral position, so any drift re-dealt the slots. With it the _n_-th
+  smallest id always takes the _n_-th slot, so a recruit joining changes the
+  row arithmetic and nothing else.
+
+#### Settled troops are not re-ordered
+
+`GatherBehavior` still re-plans every second, but planning is not commanding.
+Each claimed soldier is classified against its own slot before anything is
+emitted, and `AIContext::gather_report` counts the outcomes
+(`stations/members/settled/holding/ordered/unplaceable`):
+
+| State         | Test                                                                                                         | Result          |
+| ------------- | ------------------------------------------------------------------------------------------------------------ | --------------- |
+| `unplaceable` | the planner could not seat this member on walkable ground                                                    | no order        |
+| `holding`     | it already has a movement objective within half a metre of its slot, or a stall detour is still in flight    | no order        |
+| `settled`     | it has no objective, is inside one spacing of its slot, and is unambiguously nearer that slot than any other | no order        |
+| `ordered`     | anything else                                                                                                | one `MoveUnits` |
+
+The "unambiguously nearer" clause is what keeps a heap of soldiers standing on
+the rally dot from each declaring itself settled in a neighbour's rank: a slot
+counts as this soldier's only if it is at least sqrt(2) times closer than the
+nearest rival slot. The old duplicate-command cooldown in `AICommandFilter` is
+not a substitute for this -- it suppresses a repeat of the _same_ order, and
+the whole problem was that the order kept changing.
+
+#### One movement owner per unit per batch
+
+`update_stall_recovery` runs before the behaviors and appends its detours to the
+same command list, so a nudged unit used to be re-steered by gathering in the
+same tick. Every `AICommand` now carries the `BehaviorPriority` of the task that
+raised it, and `AICommandFilter::arbitrate_move_ownership` -- which runs first in
+`filter` -- gives each unit to the **highest-priority** claim, not merely the
+first one in the list. Recovery claims at `High`; a gather station claims at its
+own station priority. `GatherBehavior` also skips units with a detour still in
+flight, so the arbitration is a backstop rather than the only guard.
+
+#### Blocked slots are reported, not dispatched
+
+`ArmyFormationService::placements_for` replaces `positions_for` and returns a
+`SlotStatus` beside every position. An invalid plan no longer scatters the
+members over unvalidated ground: the fallback spread is snapped onto walkable
+cells and anything that cannot be is returned `Blocked`. Every AI caller --
+gather, attack, defend, harass -- drops blocked members from its `MoveUnits`
+command through `move_to_slots` instead of ordering a soldier into a wall.
+
+Because a dropped member receives no order at all, `Blocked` has to mean what it
+says. `SlotTerrainFitter` therefore ends its six-ring search with one wide
+`find_nearest_walkable_grid` pass before giving up, and still claims the cell so
+two displaced slots cannot land on top of each other. A soldier is only left
+without an order when there is no free walkable cell within twelve grid cells of
+its rank.
+
+The invalid-plan fallback goes through the same machinery. It used to snap each
+scattered position to its own nearest walkable cell, with no reservation and no
+separation, so several blocked slots could resolve onto one point -- the bunching
+this work exists to remove, arriving by a different road. `placements_for` now
+builds a `scatter_layout` and hands it to the ordinary `place()`, so the fallback
+gets the fitter's claim grid for free and `ArmyFormationService::spread` and the
+scatter share one implementation of the grid arithmetic.
+
+Both of those read `NavGrid` from the AI worker thread, which
+`SlotTerrainFitter` already did before this change: `is_grid_walkable` calls
+`update_navigation_grid()`, so the AI worker mutates navigation state off the
+simulation thread. That hazard is older than this work and is not fixed here --
+`placements_for` merely avoids widening it, using grid queries rather than
+`snap_to_walkable_ground`, whose terrain-height lookup would have pulled
+`TerrainService` onto the worker as well.
+
+#### A station has to be big enough to stand on
+
+Choosing a point is not choosing an assembly area. `fitted_position`, which
+`resolve_station` calls on the winning candidate, asks the formation planner for
+the muster's real geometry -- `muster_footprint` builds the layout the doctrine
+and intent would actually produce for this roster and returns its frontage and
+depth -- widens it by two metres of manoeuvre margin, and samples that
+**rectangle, oriented along the station facing**, on the navigation grid at slot
+spacing. A station passes when its centre is walkable and the rectangle holds at
+least one walkable sample per soldier. There is no percentage threshold: the
+test is "is there a place for every man".
+
+When it fails the whole layout is _translated_, not deformed: eight compass
+directions at 1.0, 1.8 and 2.6 times the required radius are tried in a fixed
+order and the first that fits becomes the station, with `station.relocated` set.
+
+If none of the 24 probes fits, `station.fits` goes false, and that flag is
+**actionable, not decorative**: `GatherBehavior` refuses to dispatch any station
+anchored on the resolved one, counts it in `gather_report.refused_stations`, and
+leaves the troops where they are. An army is not marched into ground that cannot
+hold it. `gather_report.unplaceable` separately counts soldiers the planner could
+not seat inside a station that otherwise fits.
+
+This is the expensive check in the AI tick, so it is cached against the inputs
+it was computed from -- `measured_candidate_x/z`, `measured_strength`,
+`measured_navigation_revision` and `measured_at`, all inside the same struct as
+the answer. It re-runs when the candidate moves more than 2 m, the muster's
+strength changes by more than a quarter, the navigation grid's revision changes
+(a building raised or razed), or ten seconds pass. The revision reaches the AI
+through `AISnapshot`, so the worker never reads live navigation state to decide
+whether its own measurement is stale.
+
+#### One answer to "what is this soldier doing"
+
+`soldier_motion` in `ai_utils.h` is the only place that decides it, and both
+consumers switch on the same three-valued answer:
+
+| Motion     | Test                                                            |
+| ---------- | --------------------------------------------------------------- |
+| `Blocked`  | stood down by recovery, stalled, or its objective was abandoned |
+| `UnderWay` | it has a live movement target                                   |
+| `Standing` | neither                                                         |
+
+`GatherBehavior` reads it relative to a soldier's **slot** and
+`update_station_report` relative to the **station**; the reference point is the
+only difference, and it used to be the reason two hand-written copies of the
+same three tests had drifted apart.
+
+#### Readiness is a standing, not a radius
+
+`station_standing` layers the station's reference point onto `soldier_motion`,
+and is the single predicate behind both the station report and the attack wave:
+
+| Standing    | From `soldier_motion`                      |
+| ----------- | ------------------------------------------ |
+| `Blocked`   | `Blocked`                                  |
+| `Arriving`  | `UnderWay`, and outside the station radius |
+| `Reforming` | `UnderWay`, and already inside it          |
+| `Ready`     | `Standing`                                 |
+
+`AIContext::StationReport` carries all four as one partition of the soldiers
+that are neither marching with a wave nor fighting, beside the older
+`stationed/at_spawn/adrift` location counts, and `update_attack_wave` counts `Ready`
+soldiers instead of soldiers inside a circle. A body still shuffling into its
+rank no longer signs the muster roll. The thirty-second patience is unchanged
+but it now records what it did: a wave that leaves with fewer than the required
+share sets `departed_under_strength`, so a deliberate degraded-force departure
+can be told apart from a prepared one.
+
+#### Recovery detours are checked before they are issued
+
+`ai_stall_recovery.cpp` used to clamp its lateral waypoint to the map bounds and
+issue it, which is how a wedged soldier got sent into the next building along.
+The waypoint is now resolved against the navigation grid _and against the
+pathfinder's regions_: `Pathfinding::can_reach` decides it, so a detour on the
+far bank of a river is rejected rather than walked at. A detour with nowhere to
+go is not issued at all -- it still counts as an attempt, so three of them stand
+the unit down instead of looping.
+
+The detour also has a lifetime now. The record used to be erased on the first
+snapshot where the unit no longer looked stalled, which is exactly when it starts
+walking the detour, so gathering could immediately steer it back. The record is
+kept for `k_stall_detour_lifetime` past the last nudge, and `is_under_recovery`
+answers over that window.
+
+#### The applier is the ownership boundary
+
+AI commands are built from a snapshot on a worker thread and applied a tick or
+more later, and `apply_move` in the dispatcher filters by nothing at all. The
+applier therefore drops any subject the AI does not currently own and alive --
+a dead id, a recycled id, another player's unit -- and counts them in
+`ApplyReport::stale_subjects`.
+
 ### Attack waves
 
 `game/systems/ai_system/ai_attack_wave.cpp` forms, holds and retires one

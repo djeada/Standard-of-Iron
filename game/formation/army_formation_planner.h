@@ -102,6 +102,13 @@ public:
   place(const ArmyFormationLayout& layout,
         const ArmyFormationRequest& request) -> ArmyFormationPlan;
 
+  [[nodiscard]] static auto scatter_offsets(int count,
+                                            float spacing) -> std::vector<QVector3D>;
+
+  [[nodiscard]] static auto
+  scatter_layout(const std::vector<ArmyFormationMember>& members,
+                 float spacing) -> ArmyFormationLayout;
+
   [[nodiscard]] static auto
   layout_signature(const std::vector<ArmyFormationMember>& members,
                    const ArmyFormationRequest& request,

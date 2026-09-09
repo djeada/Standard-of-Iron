@@ -17,6 +17,7 @@ class QOpenGLDebugLogger;
 #include <memory>
 #include <vector>
 
+#include "game/core/presentation_coverage.h"
 #include "render/profiling/frame_pacing.h"
 #include "render/profiling/frame_profile.h"
 
@@ -78,6 +79,8 @@ private:
     std::uint64_t m_pacing_asset_work = 0;
     std::array<std::uint64_t, Render::Profiling::AssetCounters::k_count>
         m_playable_asset_baseline{};
+    std::array<std::uint64_t, Engine::Core::PresentationCoverage::k_count>
+        m_playable_coverage_baseline{};
     std::int64_t m_pacing_previous_swap_ns = 0;
     double m_benchmark_seconds = 0.0;
     QString m_benchmark_output;

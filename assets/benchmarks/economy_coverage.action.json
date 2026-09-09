@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "name": "economy_coverage",
+  "loop_seconds": 15.0,
+  "required_coverage": [
+    "selection_change",
+    "production_order",
+    "build_panel",
+    "fog_reveal"
+  ],
+  "actions": [
+    { "at": 1.0, "action": "select_at", "x": 0.5, "y": 0.5 },
+    { "at": 2.0, "action": "production_panel" },
+    { "at": 3.0, "action": "recruit", "argument": "villager" },
+    { "at": 5.0, "action": "build_panel" },
+    { "at": 6.0, "action": "set_rally", "x": 0.58, "y": 0.52 },
+    { "at": 8.0, "action": "select_all" },
+    { "at": 9.0, "action": "move_to", "x": 0.42, "y": 0.58 },
+    { "at": 11.0, "action": "select_by_type", "argument": "villager" },
+    { "at": 12.0, "action": "move_to", "x": 0.6, "y": 0.45 },
+    { "at": 14.0, "action": "stop" }
+  ]
+}

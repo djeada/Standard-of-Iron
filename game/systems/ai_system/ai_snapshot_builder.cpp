@@ -16,7 +16,9 @@
 #include "../../units/squad.h"
 #include "../combat_system/target_rules.h"
 #include "../nation_registry.h"
+#include "../nav_grid.h"
 #include "../owner_queries.h"
+#include "../pathfinding.h"
 #include "../player_resource_registry.h"
 #include "ai_utils.h"
 #include "systems/ai_system/ai_types.h"
@@ -433,6 +435,10 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     }
     engagement_grid.insert(enemy.pos_x, enemy.pos_z, index);
   }
+  if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
+    snapshot.navigation_revision = pathfinder->navigation_revision();
+  }
+
   for (auto& friendly : snapshot.friendly_units) {
     friendly.engagement_resolved = true;
     friendly.engaged = engagement_grid.any_near(

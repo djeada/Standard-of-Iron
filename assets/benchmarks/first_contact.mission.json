@@ -1,0 +1,135 @@
+{
+  "id": "benchmark_first_contact",
+  "title": "Benchmark: first contact",
+  "summary": "A fixed two-army engagement with weather and a sacrificial enemy tower, used only by the frame-pacing lane.",
+  "teaching_goal": "None. This fixture exists to exercise orders, contact, projectiles, production and destruction inside a sixty-second measurement.",
+  "narrative_intent": "Benchmark fixture.",
+  "historical_context": "Benchmark fixture.",
+  "terrain_type": "river_ford",
+  "map_path": "first_contact.map.json",
+  "player_setup": {
+    "nation": "roman_republic",
+    "faction": "roman",
+    "color": "red",
+    "starting_units": [
+      {
+        "type": "spearman",
+        "count": 6,
+        "position": {
+          "x": 30.0,
+          "z": 58.0
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 6,
+        "position": {
+          "x": 40.0,
+          "z": 58.0
+        }
+      },
+      {
+        "type": "archer",
+        "count": 6,
+        "position": {
+          "x": 35.0,
+          "z": 61.0
+        }
+      },
+      {
+        "type": "builder",
+        "count": 3,
+        "position": {
+          "x": 30.0,
+          "z": 64.0
+        }
+      }
+    ],
+    "starting_buildings": [
+      {
+        "type": "barracks",
+        "position": {
+          "x": 34.0,
+          "z": 66.0
+        }
+      }
+    ],
+    "starting_resources": {
+      "gold": 900,
+      "food": 700,
+      "wood": 500,
+      "stone": 300
+    }
+  },
+  "ai_setups": [
+    {
+      "id": "benchmark_opposition",
+      "nation": "carthage",
+      "faction": "carthaginian",
+      "color": "brown",
+      "team_id": 1,
+      "difficulty": "medium",
+      "strategy": "aggressive",
+      "personality": {
+        "aggression": 1.0,
+        "defense": 0.2,
+        "harassment": 0.6
+      },
+      "starting_units": [
+        {
+          "type": "spearman",
+          "count": 6,
+          "position": {
+            "x": 32.0,
+            "z": 46.0
+          }
+        },
+        {
+          "type": "swordsman",
+          "count": 6,
+          "position": {
+            "x": 40.0,
+            "z": 46.0
+          }
+        },
+        {
+          "type": "archer",
+          "count": 5,
+          "position": {
+            "x": 36.0,
+            "z": 43.0
+          }
+        }
+      ],
+      "starting_buildings": [
+        {
+          "type": "barracks",
+          "position": {
+            "x": 36.0,
+            "z": 39.0
+          }
+        }
+      ],
+      "waves": []
+    }
+  ],
+  "victory_conditions": [
+    {
+      "type": "eliminate_all",
+      "description": "Break the opposing column."
+    }
+  ],
+  "defeat_conditions": [
+    {
+      "type": "lose_commander",
+      "description": "The measured army is destroyed."
+    }
+  ],
+  "optional_objectives": [],
+  "stages": [],
+  "events": [],
+  "commander_messages": [],
+  "include_ambient_undead": false,
+  "theme": "The ground does half the work. The other half is knowing when to leave the lane you are winning.",
+  "victory_mode": "all"
+}

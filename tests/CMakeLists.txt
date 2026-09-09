@@ -434,6 +434,7 @@ add_executable(
     render/weather_particle_budget_test.cpp
     render/graphics_lighting_settings_test.cpp
     render/scatter_composition_test.cpp
+    render/scatter_gpu_retention_test.cpp
     render/scatter_runtime_test.cpp
     render/terrain_scene_proxy_test.cpp
     render/render_thread_boundary_test.cpp
@@ -511,6 +512,7 @@ add_executable(
     render/software/software_backend_integration_test.cpp
     render/software/render_backend_factory_test.cpp
     render/profiling/frame_profile_test.cpp
+    render/profiling/gl_counter_coverage_test.cpp
     test_main.cpp
 )
 target_link_libraries(
@@ -538,6 +540,7 @@ endif()
 add_executable(
     app_tests
     ${SOI_TRANSLATIONS_QRC}
+    app/benchmark_action_fixture_test.cpp
     core/audio_system_test.cpp
     world/ambient_state_hysteresis_test.cpp
     core/audio_cues_test.cpp

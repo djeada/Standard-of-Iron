@@ -434,8 +434,6 @@ void AIBaseManager::update(const AISnapshot& snapshot, AIContext& ctx) {
   const AIBase* main = main_base(ctx);
   if (main != nullptr) {
     ctx.primary_barracks = main->primary_barracks;
-    ctx.rally_x = main->rally_x;
-    ctx.rally_z = main->rally_z;
     ctx.base_pos_x = main->center_x;
     ctx.base_pos_y = 0.0F;
     ctx.base_pos_z = main->center_z;

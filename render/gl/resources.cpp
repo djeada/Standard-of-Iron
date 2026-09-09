@@ -11,6 +11,7 @@
 
 #include "gl/mesh.h"
 #include "gl/texture.h"
+#include "gl_resource_tracking.h"
 #include "platform_gl.h"
 #include "render/gl/mesh_prewarmer.h"
 #include "render_constants.h"
@@ -86,6 +87,7 @@ auto ResourceManager::initialize() -> bool {
   unsigned char white_pixel[4] = {max_value, max_value, max_value, max_value};
   m_white_texture->bind();
   glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, white_pixel);
+  note_texture_transfer(texture_transfer_bytes(1U, 1U, 4U));
 
   std::vector<unsigned char> detail(
       static_cast<std::size_t>(k_material_detail_size) *
@@ -122,6 +124,10 @@ auto ResourceManager::initialize() -> bool {
                   GL_RGBA,
                   GL_UNSIGNED_BYTE,
                   detail.data());
+  note_texture_transfer(
+      texture_transfer_bytes(static_cast<std::size_t>(k_material_detail_size),
+                             static_cast<std::size_t>(k_material_detail_size),
+                             4U));
   glGenerateMipmap(GL_TEXTURE_2D);
   m_material_detail_texture->set_filter(Texture::Filter::Linear,
                                         Texture::Filter::Linear);
@@ -152,6 +158,7 @@ auto ResourceManager::initialize() -> bool {
   }
 
   glGenTextures(1, &m_wear_volume);
+  note_textures_created(1);
   glBindTexture(GL_TEXTURE_3D, m_wear_volume);
   glTexImage3D(GL_TEXTURE_3D,
                0,
@@ -163,6 +170,11 @@ auto ResourceManager::initialize() -> bool {
                GL_RGBA,
                GL_UNSIGNED_BYTE,
                wear.data());
+  note_texture_storage(
+      texture_transfer_bytes(static_cast<std::size_t>(k_wear_volume_size),
+                             static_cast<std::size_t>(k_wear_volume_size),
+                             static_cast<std::size_t>(k_wear_volume_size) * 4U),
+      true);
 
   glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

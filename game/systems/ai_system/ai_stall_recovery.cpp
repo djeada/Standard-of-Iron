@@ -1,10 +1,15 @@
 #include "ai_stall_recovery.h"
 
+#include <QVector3D>
+
 #include <algorithm>
 #include <cmath>
+#include <optional>
 #include <unordered_set>
 #include <utility>
 
+#include "../nav_grid.h"
+#include "../pathfinding.h"
 #include "ai_utils.h"
 
 namespace Game::Systems::AI {
@@ -14,6 +19,43 @@ namespace {
 void drop_from(std::vector<Engine::Core::EntityID>& roster,
                Engine::Core::EntityID unit_id) {
   roster.erase(std::remove(roster.begin(), roster.end(), unit_id), roster.end());
+}
+
+[[nodiscard]] auto reachable_detour(const EntitySnapshot& entity,
+                                    float x,
+                                    float z) -> std::optional<QVector3D> {
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  const auto from = Game::Systems::NavGrid::world_to_grid(entity.pos_x, entity.pos_z);
+
+  const auto usable = [&](const Game::Systems::Point& cell) {
+    if (!Game::Systems::NavGrid::is_grid_walkable(cell)) {
+      return false;
+    }
+    return pathfinder == nullptr || pathfinder->can_reach(from, cell);
+  };
+
+  const auto candidate = Game::Systems::NavGrid::world_to_grid(x, z);
+  if (usable(candidate)) {
+    return QVector3D(x, 0.0F, z);
+  }
+
+  constexpr int k_search_cells = 6;
+  for (int ring = 1; ring <= k_search_cells; ++ring) {
+    for (int dz = -ring; dz <= ring; ++dz) {
+      for (int dx = -ring; dx <= ring; ++dx) {
+        if (std::max(std::abs(dx), std::abs(dz)) != ring) {
+          continue;
+        }
+        const Game::Systems::Point cell{candidate.x + dx, candidate.y + dz};
+        if (!usable(cell)) {
+          continue;
+        }
+        const QVector3D grounded = Game::Systems::NavGrid::grid_to_world(cell);
+        return QVector3D(grounded.x(), 0.0F, grounded.z());
+      }
+    }
+  }
+  return std::nullopt;
 }
 
 [[nodiscard]] auto alternate_approach(const EntitySnapshot& entity,
@@ -71,6 +113,18 @@ auto is_stood_down(Engine::Core::EntityID unit_id,
          current_time < found->second.stood_down_until;
 }
 
+auto is_under_recovery(Engine::Core::EntityID unit_id,
+                       const AIContext& context,
+                       float current_time) -> bool {
+  const auto found = context.stalled_units.find(unit_id);
+  if (found == context.stalled_units.end()) {
+    return false;
+  }
+  const auto& record = found->second;
+  return record.nudges > 0 &&
+         current_time - record.last_nudge < k_stall_detour_lifetime;
+}
+
 auto is_going_nowhere(const EntitySnapshot& entity) -> bool {
 
   return is_combat_role_unit(entity) && entity.movement.has_component &&
@@ -93,7 +147,8 @@ void update_stall_recovery(const AISnapshot& snapshot,
 
       const auto found = context.stalled_units.find(entity.id);
       if (found != context.stalled_units.end() &&
-          snapshot.game_time >= found->second.stood_down_until) {
+          snapshot.game_time >= found->second.stood_down_until &&
+          snapshot.game_time - found->second.last_nudge >= k_stall_detour_lifetime) {
         context.stalled_units.erase(found);
       }
       continue;
@@ -126,13 +181,24 @@ void update_stall_recovery(const AISnapshot& snapshot,
 
     const auto [waypoint_x, waypoint_z] =
         alternate_approach(entity, snapshot, record.nudges);
+    const auto detour = reachable_detour(entity, waypoint_x, waypoint_z);
+    if (!detour.has_value()) {
+
+      ++record.nudges;
+      record.last_nudge = snapshot.game_time;
+      if (record.nudges >= k_max_stall_nudges) {
+        stand_down(entity.id, context, record, snapshot.game_time);
+      }
+      continue;
+    }
 
     AICommand command;
     command.type = AICommandType::MoveUnits;
+    command.owner = BehaviorPriority::High;
     command.units = {entity.id};
-    command.move_target_x = {waypoint_x};
+    command.move_target_x = {detour->x()};
     command.move_target_y = {0.0F};
-    command.move_target_z = {waypoint_z};
+    command.move_target_z = {detour->z()};
     out_commands.push_back(std::move(command));
 
     ++record.nudges;

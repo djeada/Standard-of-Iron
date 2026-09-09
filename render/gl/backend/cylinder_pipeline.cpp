@@ -10,6 +10,7 @@
 
 #include "gl/shader_cache.h"
 #include "render/gl/draw_tally.h"
+#include "render/gl/gl_resource_tracking.h"
 #include "render/gl/mesh.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/primitives.h"
@@ -238,21 +239,28 @@ void CylinderPipeline::initialize_cylinder_pipeline() {
   }
 
   glGenVertexArrays(1, &m_cylinder_mesh.vao);
+  note_vertex_arrays_created(1);
   glBindVertexArray(m_cylinder_mesh.vao);
 
   glGenBuffers(1, &m_cylinder_mesh.vertex_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_mesh.vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                vertices.size() * sizeof(Vertex),
                vertices.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(vertices.size() * sizeof(Vertex)),
+                      vertices.data() != nullptr);
 
   glGenBuffers(1, &m_cylinder_mesh.index_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cylinder_mesh.index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                indices.size() * sizeof(unsigned int),
                indices.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(indices.size() * sizeof(unsigned int)),
+                      indices.data() != nullptr);
   m_cylinder_mesh.index_count = static_cast<GLsizei>(indices.size());
 
   apply_mesh_vertex_layout(*this);
@@ -264,12 +272,16 @@ void CylinderPipeline::initialize_cylinder_pipeline() {
   } else {
     m_use_persistent_buffers = false;
     glGenBuffers(1, &m_cylinder_mesh.instance_buffer);
+    note_buffers_created(1);
     glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_mesh.instance_buffer);
     m_cylinder_instance_capacity = BufferCapacity::default_cylinder_instances;
     glBufferData(GL_ARRAY_BUFFER,
                  m_cylinder_instance_capacity * sizeof(CylinderInstanceGpu),
                  nullptr,
                  GL_DYNAMIC_DRAW);
+    note_buffer_storage(static_cast<std::size_t>(m_cylinder_instance_capacity *
+                                                 sizeof(CylinderInstanceGpu)),
+                        false);
   }
 
   point_cylinder_instance_attributes(0);
@@ -331,12 +343,16 @@ void CylinderPipeline::upload_cylinder_instances(std::size_t count) {
                  m_cylinder_instance_capacity * sizeof(CylinderInstanceGpu),
                  nullptr,
                  GL_DYNAMIC_DRAW);
+    note_buffer_storage(static_cast<std::size_t>(m_cylinder_instance_capacity *
+                                                 sizeof(CylinderInstanceGpu)),
+                        false);
     m_cylinder_scratch.reserve(m_cylinder_instance_capacity);
   }
   glBufferSubData(GL_ARRAY_BUFFER,
                   0,
                   count * sizeof(CylinderInstanceGpu),
                   m_cylinder_scratch.data());
+  note_buffer_transfer(static_cast<std::size_t>(count * sizeof(CylinderInstanceGpu)));
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   m_cylinder_instances_resident = count;
 }
@@ -395,31 +411,42 @@ void CylinderPipeline::initialize_fog_pipeline() {
   }
 
   glGenVertexArrays(1, &m_fog_mesh.vao);
+  note_vertex_arrays_created(1);
   glBindVertexArray(m_fog_mesh.vao);
 
   glGenBuffers(1, &m_fog_mesh.vertex_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ARRAY_BUFFER, m_fog_mesh.vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                vertices.size() * sizeof(Vertex),
                vertices.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(vertices.size() * sizeof(Vertex)),
+                      vertices.data() != nullptr);
 
   glGenBuffers(1, &m_fog_mesh.index_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_fog_mesh.index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                indices.size() * sizeof(unsigned int),
                indices.data(),
                GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(indices.size() * sizeof(unsigned int)),
+                      indices.data() != nullptr);
   m_fog_mesh.index_count = static_cast<GLsizei>(indices.size());
 
   apply_mesh_vertex_layout(*this);
   glGenBuffers(1, &m_fog_mesh.instance_buffer);
+  note_buffers_created(1);
   glBindBuffer(GL_ARRAY_BUFFER, m_fog_mesh.instance_buffer);
   m_fog_instance_capacity = BufferCapacity::default_fog_instances;
   glBufferData(GL_ARRAY_BUFFER,
                m_fog_instance_capacity * sizeof(FogInstanceGpu),
                nullptr,
                GL_DYNAMIC_DRAW);
+  note_buffer_storage(
+      static_cast<std::size_t>(m_fog_instance_capacity * sizeof(FogInstanceGpu)),
+      false);
 
   apply_fog_instance_layout(*this);
   glBindVertexArray(0);
@@ -458,10 +485,14 @@ void CylinderPipeline::upload_fog_instances(std::size_t count) {
                  m_fog_instance_capacity * sizeof(FogInstanceGpu),
                  nullptr,
                  GL_DYNAMIC_DRAW);
+    note_buffer_storage(
+        static_cast<std::size_t>(m_fog_instance_capacity * sizeof(FogInstanceGpu)),
+        false);
     m_fog_scratch.reserve(m_fog_instance_capacity);
   }
   glBufferSubData(
       GL_ARRAY_BUFFER, 0, count * sizeof(FogInstanceGpu), m_fog_scratch.data());
+  note_buffer_transfer(static_cast<std::size_t>(count * sizeof(FogInstanceGpu)));
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   m_fog_instances_resident = count;
 }

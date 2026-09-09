@@ -33,6 +33,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Verify this is a reference host
+        run: |
+          python3 scripts/check-perf-host.py \
+            --output artifacts/pacing-ci/reference-host.json
+
       - name: Configure
         run: cmake -S . -B build-pacing-ci -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEFAULT_LANG=en
 
@@ -43,7 +48,8 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
         run: |
-          build-pacing-ci/bin/render_tests --gtest_filter='FramePacingTest.*'
+          build-pacing-ci/bin/render_tests \
+            --gtest_filter='FramePacingTest.*:GlCounterCoverage.*:ScatterGpuRetention.*'
           python3 -m unittest discover -s tests/scripts
 
       - name: Measure real missions and repeated camera movement
@@ -54,7 +60,19 @@ jobs:
           python3 scripts/check-frame-pacing.py \
             --binary build-pacing-ci/bin/standard_of_iron \
             --preset "$PACING_PRESET" --repeats "$PACING_REPEATS" \
-            --seconds 60 --camera-cycle --output artifacts/pacing-ci
+            --seconds 60 --camera-cycle --output artifacts/pacing-ci/campaign
+
+      - name: Measure the scripted battle and UI action fixture
+        env:
+          PACING_PRESET: ${{ inputs.preset }}
+          PACING_REPEATS: ${{ inputs.repeats }}
+        run: |
+          python3 scripts/check-frame-pacing.py \
+            --binary build-pacing-ci/bin/standard_of_iron \
+            --mission-file assets/benchmarks/first_contact.mission.json \
+            --action-fixture assets/benchmarks/battle_coverage.action.json \
+            --preset "$PACING_PRESET" --repeats "$PACING_REPEATS" \
+            --seconds 60 --output artifacts/pacing-ci/actions
 
       - name: Preserve reports, logs and hardware metadata
         if: always()
