@@ -56,7 +56,8 @@ void start_completion_effect(Engine::Core::World& world,
   if (entity->has_component<Engine::Core::BuildingComponent>()) {
     const auto size = BuildingCollisionRegistry::get_building_size(
         Game::Units::spawn_typeToString(spawn_type));
-    effect->radius = std::max(effect->radius, 0.6F * std::hypot(size.width, size.depth));
+    effect->radius =
+        std::max(effect->radius, 0.6F * std::hypot(size.width, size.depth));
   }
 }
 
@@ -183,6 +184,11 @@ auto site_bypass_radius_sq(const Engine::Core::BuilderProductionComponent& build
     radius += std::max(0.0F, movement->get_navigation_clearance());
   }
   return radius * radius;
+}
+
+void reset_site_approach(Engine::Core::BuilderProductionComponent& builder) {
+  builder.site_approach_seconds = 0.0F;
+  builder.site_closest_approach = 0.0F;
 }
 
 void activate_bypass_movement(Engine::Core::BuilderProductionComponent* builder,
@@ -568,7 +574,6 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  // Collect before removing components so expiration cannot invalidate a view.
   for (auto* entity :
        world->collect_entities_with<Engine::Core::ProductionCompletionComponent>()) {
     auto* effect = entity->get_component<Engine::Core::ProductionCompletionComponent>();
@@ -803,8 +808,17 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
           }
 
           face_work_target(*transform, *builder_prod);
-          builder_prod->site_approach_seconds = 0.0F;
+          reset_site_approach(*builder_prod);
         } else {
+
+          constexpr float k_site_progress_epsilon = 0.75F;
+          float const distance = std::sqrt(dist_sq);
+          if (builder_prod->site_closest_approach <= 0.0F ||
+              distance <
+                  builder_prod->site_closest_approach - k_site_progress_epsilon) {
+            builder_prod->site_closest_approach = distance;
+            builder_prod->site_approach_seconds = 0.0F;
+          }
           builder_prod->site_approach_seconds += delta_time;
 
           if (dist_sq > site_bypass_radius_sq(*builder_prod, movement)) {
@@ -826,12 +840,22 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
           }
 
           if (builder_prod->site_approach_seconds > k_site_approach_limit_seconds) {
+            if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
+              qWarning() << "BUILDTRACE p" << builder_owner_id << "gave up reaching"
+                         << builder_prod->product_type.c_str() << "site at"
+                         << builder_prod->construction_site_x
+                         << builder_prod->construction_site_z << "from"
+                         << transform->position.x << transform->position.z << "still"
+                         << std::sqrt(dist_sq) << "m out bypass"
+                         << builder_prod->bypass_movement_active << "routed"
+                         << (movement != nullptr && movement->get_has_target());
+            }
             abandon_site_route(*builder_prod, movement);
             builder_prod->has_construction_site = false;
             builder_prod->at_construction_site = false;
             builder_prod->in_progress = false;
             builder_prod->bypass_movement_active = false;
-            builder_prod->site_approach_seconds = 0.0F;
+            reset_site_approach(*builder_prod);
             clear_builder_task_target(*world, builder_prod);
             builder_prod->report_fault(Engine::Core::BuilderTaskFault::Unreachable);
           }
@@ -846,11 +870,11 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         builder_prod->site_approach_seconds += delta_time;
         if (builder_prod->site_approach_seconds > k_orphaned_task_limit_seconds) {
           clear_builder_task_target(*world, builder_prod);
-          builder_prod->site_approach_seconds = 0.0F;
+          reset_site_approach(*builder_prod);
           builder_prod->report_fault(Engine::Core::BuilderTaskFault::TargetLost);
         }
       } else if (!builder_prod->has_construction_site) {
-        builder_prod->site_approach_seconds = 0.0F;
+        reset_site_approach(*builder_prod);
       }
       continue;
     }

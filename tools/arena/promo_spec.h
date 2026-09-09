@@ -118,7 +118,8 @@ struct Spec {
   int height{1920};
   int fps{60};
   int supersample{1};
-  bool audio{false};
+
+  bool audio{true};
 
   QString music_track;
   float music_volume{0.18F};
@@ -126,7 +127,8 @@ struct Spec {
   QString report_sound_decided;
   QString report_sound_undecided;
   float report_sound_volume{0.45F};
-  bool gameplay_ui{false};
+
+  bool gameplay_ui{true};
   bool gameplay_ui_all_owners{false};
   bool casting_overlay{false};
 

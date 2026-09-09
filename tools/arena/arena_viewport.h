@@ -97,6 +97,9 @@ public:
   void set_graphics_quality_override(Render::GraphicsQuality quality) {
     m_graphics_quality_override = quality;
   }
+  [[nodiscard]] auto has_graphics_quality_override() const -> bool {
+    return m_graphics_quality_override.has_value();
+  }
 
 public slots:
   void regenerate_terrain();
@@ -370,7 +373,8 @@ private:
                              Game::Systems::NationID nation_id,
                              Game::Units::SpawnType building_type,
                              std::optional<QVector3D> requested_position = std::nullopt,
-                             bool ai_controlled = false) -> Engine::Core::EntityID;
+                             bool ai_controlled = false,
+                             int max_population = 0) -> Engine::Core::EntityID;
   auto owner_display_name(int owner_id) const -> QString;
   auto nation_display_name(Game::Systems::NationID nation_id) const -> QString;
   auto troop_display_name(Game::Systems::NationID nation_id,

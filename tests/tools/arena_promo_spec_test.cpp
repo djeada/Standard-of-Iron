@@ -189,7 +189,7 @@ auto write_spec(const QTemporaryDir& dir, const char* body) -> QString {
 
 } // namespace
 
-TEST(ArenaPromoSpecTest, AnAuthoredReelKeepsTheGameplayUiOffUnlessItAsks) {
+TEST(ArenaPromoSpecTest, AReelCarriesTheGameplayUiUnlessItOptsOut) {
   QTemporaryDir dir;
   ASSERT_TRUE(dir.isValid());
 
@@ -206,10 +206,12 @@ TEST(ArenaPromoSpecTest, AnAuthoredReelKeepsTheGameplayUiOffUnlessItAsks) {
   const auto spec = Arena::Promo::load(path, &error);
   ASSERT_TRUE(spec.has_value()) << error.toStdString();
   ASSERT_EQ(spec->shots.size(), 1U);
-  EXPECT_FALSE(spec->shots[0].gameplay_ui)
-      << "an authored reel is a cinematic: its scenario suppresses the overlays, "
-         "and a default of on put crossed swords and damage pills over every "
-         "shot of them";
+  EXPECT_TRUE(spec->shots[0].gameplay_ui)
+      << "a reel without the floating numbers reads as a dead world -- nothing "
+         "acknowledges a blow landing or a load coming home. This default was "
+         "off until Sep 8 2026, because a cinematic reel does not want damage "
+         "pills over a duel; a shot that wants the world alone now says so with "
+         "\"gameplay_ui\": false, which the next test covers.";
 }
 
 TEST(ArenaPromoSpecTest, AReelCanTurnTheGameplayUiOnWholeOrPerShot) {

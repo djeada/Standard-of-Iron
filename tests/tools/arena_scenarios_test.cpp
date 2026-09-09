@@ -1012,6 +1012,37 @@ TEST(ArenaScenariosTest, RetargetScenarioChecksBothAmmunitionTypes) {
   EXPECT_GT(retarget->trigger.time_seconds, 0.0F);
 }
 
+TEST(ArenaScenariosTest, TheKingdomEstateKeepsItsWorkOutsideTheTown) {
+  const auto* scene = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_ai_kingdom_rise_id));
+  ASSERT_NE(scene, nullptr);
+  EXPECT_TRUE(Arena::validate_scenario(*scene).empty());
+
+  ASSERT_EQ(scene->battle_sides.size(), 1U);
+  for (const auto& group : scene->groups) {
+    EXPECT_EQ(group.owner_id, scene->battle_sides.front().owner_id)
+        << group.name.toStdString() << " gives the estate an opponent";
+    EXPECT_TRUE(group.ai_controlled) << group.name.toStdString();
+  }
+
+  constexpr float k_town_reach = 34.0F;
+  const auto is_harvestable = [](const QString& type) {
+    return type.endsWith(QStringLiteral("_tree")) ||
+           type == QStringLiteral("boulder") || type == QStringLiteral("iron_ore");
+  };
+  for (const auto& patch : scene->resource_patches) {
+    if (!is_harvestable(patch.prop_type)) {
+      continue;
+    }
+    for (int index = 0; index < patch.count; ++index) {
+      const QVector3D at = patch.origin + (patch.spacing * index);
+      EXPECT_GE(std::hypot(at.x(), at.z()), k_town_reach)
+          << patch.prop_type.toStdString() << " " << index << " at " << at.x() << ", "
+          << at.z() << " stands where the town will be built";
+    }
+  }
+}
+
 TEST(ArenaScenariosTest, ListsEverySettlementAndEconomyScenario) {
   for (auto const* settlement_id : {Arena::Scenarios::k_village_harvest_cycle_id,
                                     Arena::Scenarios::k_village_day_life_id,
