@@ -120,6 +120,8 @@ struct ArenaScenarioGroup {
   int health_override{0};
   int max_health_override{0};
 
+  int max_population{0};
+
   float stamina_override{0.0F};
   float max_stamina_override{0.0F};
 

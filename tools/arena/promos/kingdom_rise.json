@@ -1,0 +1,394 @@
+{
+  "id": "kingdom_rise",
+  "title": "THE RISE OF A TOWN",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "supersample": 1,
+  "shots": [
+    {
+      "name": "00_0000s",
+      "scenario": "ai_kingdom_rise",
+      "seed": 1337,
+      "start": 0.5,
+      "duration": 149.5,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 3.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 30.0,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        },
+        {
+          "time": 150.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 32.17,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "01_0150s",
+      "scenario": "ai_kingdom_rise",
+      "seed": 1337,
+      "start": 150.0,
+      "duration": 150.0,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 3.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 32.17,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        },
+        {
+          "time": 150.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 34.33,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "02_0300s",
+      "scenario": "ai_kingdom_rise",
+      "seed": 1337,
+      "start": 300.0,
+      "duration": 150.0,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 3.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 34.33,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        },
+        {
+          "time": 150.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 36.5,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "03_0450s",
+      "scenario": "ai_kingdom_rise",
+      "seed": 1337,
+      "start": 450.0,
+      "duration": 150.0,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 3.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 36.5,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        },
+        {
+          "time": 150.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 38.67,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "04_0600s",
+      "scenario": "ai_kingdom_rise",
+      "seed": 1337,
+      "start": 600.0,
+      "duration": 150.0,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 3.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 38.67,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        },
+        {
+          "time": 150.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 40.83,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "05_0750s",
+      "scenario": "ai_kingdom_rise",
+      "seed": 1337,
+      "start": 750.0,
+      "duration": 150.0,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 3.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 40.83,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        },
+        {
+          "time": 150.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 43.0,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "06_0900s",
+      "scenario": "ai_kingdom_rise",
+      "seed": 1337,
+      "start": 900.0,
+      "duration": 150.0,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 3.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 43.0,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        },
+        {
+          "time": 150.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 45.17,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "07_1050s",
+      "scenario": "ai_kingdom_rise",
+      "seed": 1337,
+      "start": 1050.0,
+      "duration": 150.0,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 3.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 45.17,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        },
+        {
+          "time": 150.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 47.33,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "08_1200s",
+      "scenario": "ai_kingdom_rise",
+      "seed": 1337,
+      "start": 1200.0,
+      "duration": 150.0,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 3.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 47.33,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        },
+        {
+          "time": 150.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 49.5,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "09_1350s",
+      "scenario": "ai_kingdom_rise",
+      "seed": 1337,
+      "start": 1350.0,
+      "duration": 150.0,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 3.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 49.5,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        },
+        {
+          "time": 150.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 51.67,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "10_1500s",
+      "scenario": "ai_kingdom_rise",
+      "seed": 1337,
+      "start": 1500.0,
+      "duration": 150.0,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 3.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 51.67,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        },
+        {
+          "time": 150.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 53.83,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "11_1650s",
+      "scenario": "ai_kingdom_rise",
+      "seed": 1337,
+      "start": 1650.0,
+      "duration": 150.0,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 3.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 53.83,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        },
+        {
+          "time": 150.0,
+          "distance": 78.0,
+          "pitch": 42.0,
+          "yaw": 56.0,
+          "fov": 36.0,
+          "height": 2.0,
+          "ease": "linear"
+        }
+      ]
+    }
+  ]
+}

@@ -10,6 +10,7 @@
 #include "arena_ai_duel_scenarios.h"
 #include "arena_ambience_scenarios.h"
 #include "arena_city_scenarios.h"
+#include "arena_economy_scenarios.h"
 #include "arena_engagement_scenarios.h"
 #include "arena_facade_scenarios.h"
 #include "arena_formation_scenarios.h"
@@ -11794,6 +11795,10 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(ai_duels.begin()),
                   std::make_move_iterator(ai_duels.end()));
+    auto economy = build_economy_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(economy.begin()),
+                  std::make_move_iterator(economy.end()));
     auto engagement = build_engagement_definitions();
     values.insert(values.end(),
                   std::make_move_iterator(engagement.begin()),

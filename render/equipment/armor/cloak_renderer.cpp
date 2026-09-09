@@ -196,7 +196,8 @@ auto make_cloak_shoulder_surface() -> ClothSurface {
 
   for (int z = 0; z <= k_depth_segments; ++z) {
     float const v = static_cast<float>(z) / static_cast<float>(k_depth_segments);
-    float const depth = v * 1.14F - 0.44F;
+
+    float const depth = 0.44F - v * 1.14F;
     for (int x = 0; x <= k_width_segments; ++x) {
       float const u = static_cast<float>(x) / static_cast<float>(k_width_segments);
       float const x_norm = u * 2.0F - 1.0F;
@@ -207,7 +208,7 @@ auto make_cloak_shoulder_surface() -> ClothSurface {
       float const collar_rise =
           std::max(0.0F, 0.26F - v) * 0.020F * (1.0F - x_abs * 0.60F);
       float const shoulder_round = -0.012F * std::sin(v * k_pi);
-      surface.positions.emplace_back(x_norm * 0.5F,
+      surface.positions.emplace_back(-x_norm * 0.5F,
                                      lateral_drop + front_drop + back_drape +
                                          collar_rise + shoulder_round,
                                      depth);

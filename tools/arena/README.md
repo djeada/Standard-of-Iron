@@ -149,6 +149,139 @@ type, units produced, peak units held within its home radius versus pushed past
 the midpoint, seconds spent in an attacking state, how far it advanced, and who
 won and when.
 
+## One commander, no opponent: the economy alone
+
+```bash
+# Acceptance: five minutes is enough to exercise every expectation.
+build/bin/arena_app --batch --scenario ai_kingdom_rise \
+  --fps 30 --duration 300 --watchdog-multiplier 20 \
+  --artifact-dir artifacts/arena
+
+# The full half hour as video, on a real GPU (llvmpipe cannot do this):
+#   twelve contiguous 150 s shots collapse into ONE continuous pass, so the
+#   scenario runs once and the clips concatenate with `-c copy` into a
+#   seamless 30 minute master.
+DISPLAY=:0 build/bin/arena_app \
+  --promo-spec tools/arena/promos/kingdom_rise.json \
+  --promo-out artifacts/kingdom-rise
+```
+
+`ai_kingdom_rise` is the duel lane with the fighting taken out: one
+Carthaginian commander, twelve thousand gold, an estate with wood west, stone
+south and iron east, sheep on the meadows, a river along the northern rim, and
+**nothing hostile anywhere on the map**. Everything that happens in it is the
+computer running its own economy, which is what makes it the place to see
+whether an AI town looks like a place or like a pile of buildings.
+
+Three things about this lane.
+
+**A single battle side is tracked now.** `initialize_battle_sides` used to
+return early below two sides, so every `Side*` expectation on a one-owner
+scenario reported `battle_side_unknown`. Only `BattleReachesDecision` needs an
+opponent and it guards the count itself; the census, the building tally and the
+production count are exactly what a scenario with no enemy is asking about.
+
+**With nothing to face, the AI orients its town on (0, -1).** `settlement_facing`
+falls back to that when it can see no enemy and no strategic objective, and
+`plan_offset_to_world` then maps an authored step at `(x, z)` to world
+`(-x, -z)`. So the wall line and its towers -- authored at negative local z --
+grow toward **+z**, and the housing at the rear grows toward -z. Every distance
+in `arena_economy_scenarios.cpp` is chosen against that, and a resource patch
+inside the town's reach would be built over.
+
+**Arena video is Ultra, with audio and the floating numbers, by default.**
+`PromoRunner::start` raises the graphics quality to Ultra unless
+`--graphics-quality` says otherwise, and `Spec::audio` and `Spec::gameplay_ui`
+both default to on. Three things about that:
+
+- A scenario's own `graphics_quality` is a _review_ setting and its struct
+  default is High; a reel should not inherit it.
+- The recorder runs the real `AudioCoordinator` over the scenario and muxes a
+  WAV per clip. Both post-production scripts map their own bed over `0:v` and
+  ignore an embedded track, so a scored reel cannot end up with two.
+- `gameplay_ui` was default _off_ until Sep 8 2026, because a cinematic reel
+  does not want damage pills over a duel. A shot that wants the world alone
+  says `"gameplay_ui": false`.
+
+**Author a road as a network, not as tracks.** Two rules, and both fail
+silently if you break them: every segment must share an endpoint with its
+neighbour _exactly_ (a one metre gap draws as a break in the middle of the
+road), and a free end must be off the map or at something (a road stops in a
+hard rectangle of cracked paving and reads as a stain). A road also deletes any
+scatter prop within its half width plus the prop's radius plus 0.25 m, without
+a word -- the first routing of `ai_kingdom_rise`'s network would have quietly
+eaten three pines, four plants and a palm. Check a layout arithmetically before
+rendering it; the numbers are cheaper than a capture.
+
+**Do not put `UnitsClearOfBuildings` on a builder group here.** A build crew's
+`construction_site` is the future building's own centre -- the gang encircles
+what it raises -- so on the frame the building appears the crew is inside its
+footprint and the check fires. Measured on this scene: the builder holds the
+site from 5.2 s to 16.6 s raising a home and is five metres away on a farm by
+21 s. That check is for marching troops, and its contract already carves out
+the gateway case for the same reason.
+
+**Iterate headlessly.** `build/bin/ai_tests
+--gtest_filter='AiEstateEconomyTest.*'` is the same estate in forty seconds a
+run, deterministic, with `SOI_ESTATE_LOG=1` printing a per-minute census,
+muster, work sample and purse, and `SOI_BUILD_TRACE=1` printing every site the
+AI wants, submits, raises, refuses and gives up on. Four economy defects came
+out of that lane, none of them visible from the census alone:
+
+- the settlement ring in `planned_settlement_offset` had no cap, and because
+  `m_construction_counter` grows by 24 on every refused site, within eight
+  minutes the AI was asking for a field a hundred metres out, which
+  `clamp_to_map_bounds` pinned to the corner of the map -- **68 of 74 farm
+  requests in half an hour went to a map edge**;
+- the exemption that lets a harvest crew stand on its own node was written in
+  grid cells, and a cell is 1 m while a scaled olive blocks a square whose
+  corner is 1.6 m out, so `unstick_body` shoved the crew off every tick from
+  just outside the anchor cell and production gave up thirty seconds later --
+  **78 abandoned harvests in half an hour**, on screen a crew loitering at the
+  tree line;
+- `k_site_approach_limit_seconds` was thirty seconds of wall clock rather than
+  thirty seconds of no progress, so any errand more than about sixty metres of
+  walking away was cancelled while the builder was still on its way to it;
+- and once the trees, the boulders and the seams were behaving, the _fields_
+  were not -- a farm blocks a 13.6 m square while a reaper's work position sits
+  on that square's edge, so the anchor exemption never covered grain and every
+  reaper was shoved off the field it was cutting. Forty abandoned
+  `harvest_grain` errands a run. The exemption now covers the work position the
+  job assigned, not only the node.
+
+Together those took the same estate from 6 homes, 1 barracks and 24 wall links
+in thirty minutes to 10 homes, 3 barracks and 41 links, with a third more
+carried home, and Fabius from 81 wall links to 96 and Scipio from 64 to 76 --
+and the estate to 19 homes, 8 farms and 10,600 resources hauled once the fields
+were cutting too.
+
+**A faster economy then exposed a fifth one, in the town plan.** The wishlist
+sites a house from a ring around the base and knows nothing about the
+blueprint; `slot_clearance(wall_gate, home)` is 6.9 m; and the punic near-slot
+home array puts its first house about 6.7 m from where `punic_grand_camp`
+authors a gate. That gate slot reports `occupied` for the rest of the match.
+It had always been marginal -- what changed is that the economy got fast enough
+to raise the _second_ house too, and Hannibal lost both gateways.
+
+Reserving that ground against the wishlist does not work, and it is worth
+knowing why: `context.base_pos` is a centroid that moves several metres when
+the barracks goes up, so the houses and the blueprint are laid out in two
+different frames and the reservation is computed around the wrong point. The
+plan gives instead -- **a gate may slide along its own run** (`gate_slide` in
+`authored_plan_step`), because a gateway anywhere on the line opens the circuit
+just as well. Every other step still stands where the blueprint says or not at
+all.
+
+**What is left, and it is one class rather than several.** A site that a crew
+stops closing on while still well away from it: about ninety wall links a run
+inside a ring the town is halfway through shutting, and about thirty-five
+reapers on the wrong side of a farm's field. Nothing is sited against whether a
+builder can actually reach it, and that pre-dates this scene. What _is_ fixed is
+the visible half of it -- a crew standing within arm's reach of its own node and
+not working it now never happens at all, for any gather type, and
+`AiEstateEconomyTest.ItsBuildersAreNeverLeftWithNothingToDo` asserts exactly
+that rather than counting fault codes.
+
 ## Wolf contact and sheep reactions
 
 The `wildlife_wolf_builder_contact`, `wildlife_wolves_builders_surround`, and

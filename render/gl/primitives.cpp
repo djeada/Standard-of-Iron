@@ -612,7 +612,7 @@ auto create_unit_torso_mesh(int radial_segments,
       QVector3D const du = pu - p;
       QVector3D const dv = pv - p;
 
-      QVector3D n = QVector3D::crossProduct(du, dv);
+      QVector3D n = QVector3D::crossProduct(dv, du);
       if (n.lengthSquared() > 0.0F) {
         n.normalize();
       }
@@ -630,11 +630,11 @@ auto create_unit_torso_mesh(int radial_segments,
       int d = (y + 1) * row + i;
 
       idx.push_back(a);
+      idx.push_back(c);
       idx.push_back(b);
       idx.push_back(c);
-      idx.push_back(c);
-      idx.push_back(d);
       idx.push_back(a);
+      idx.push_back(d);
     }
   }
 
@@ -658,8 +658,8 @@ auto create_unit_torso_mesh(int radial_segments,
     }
     for (int i = 1; i <= radial_segments; ++i) {
       idx.push_back(base_top);
-      idx.push_back(base_top + i);
       idx.push_back(base_top + i + 1);
+      idx.push_back(base_top + i);
     }
   }
   {
@@ -675,8 +675,8 @@ auto create_unit_torso_mesh(int radial_segments,
 
     for (int i = 0; i < radial_segments; ++i) {
       idx.push_back(apex_idx);
-      idx.push_back(i + 1);
       idx.push_back(i);
+      idx.push_back(i + 1);
     }
   }
 

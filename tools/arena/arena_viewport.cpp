@@ -2346,7 +2346,8 @@ auto ArenaViewport::spawn_single_building(int owner_id,
                                           Game::Systems::NationID nation_id,
                                           Game::Units::SpawnType building_type,
                                           std::optional<QVector3D> requested_position,
-                                          bool ai_controlled)
+                                          bool ai_controlled,
+                                          int max_population)
     -> Engine::Core::EntityID {
   if (m_unit_factory == nullptr || m_world == nullptr) {
     return 0U;
@@ -2366,6 +2367,9 @@ auto ArenaViewport::spawn_single_building(int owner_id,
   params.spawn_type = building_type;
   params.ai_controlled = ai_controlled;
   params.nation_id = nation_id;
+  if (max_population > 0) {
+    params.max_population = max_population;
+  }
 
   auto unit = m_unit_factory->create(building_type, *m_world, params);
   if (unit == nullptr) {
@@ -4045,7 +4049,8 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
                                                group.nation_id,
                                                *group.spawn_type,
                                                position,
-                                               group.ai_controlled)
+                                               group.ai_controlled,
+                                               group.max_population)
                        : spawn_single_unit(group.owner_id,
                                            group.nation_id,
                                            group.troop_type,

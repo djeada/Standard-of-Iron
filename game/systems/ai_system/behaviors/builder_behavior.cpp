@@ -446,52 +446,89 @@ auto authored_plan_step(const AIContext& context,
 
       continue;
     }
-    if ((resolved == BUILDING_TYPE_WALL_SEGMENT ||
-         resolved == BUILDING_TYPE_WALL_GATE) &&
-        fields_come_before_walls) {
+
+    if (resolved == BUILDING_TYPE_WALL_SEGMENT && fields_come_before_walls) {
 
       continue;
     }
 
-    const QVector3D offset = plan_offset_to_world(facing, step.x, step.z);
-    const float world_x = context.base_pos_x + offset.x();
-    const float world_z = context.base_pos_z + offset.z();
+    std::array<float, 5> const gate_slide{0.0F, 2.4F, -2.4F, 4.8F, -4.8F};
+    std::size_t const placements =
+        resolved == BUILDING_TYPE_WALL_GATE ? gate_slide.size() : 1U;
 
-    if ((offset.x() * offset.x() + offset.z() * offset.z()) < k_anchor_clearance_sq) {
-      continue;
-    }
+    float world_x = 0.0F;
+    float world_z = 0.0F;
+    bool occupied = true;
+    std::string occupied_by;
+    float occupied_x = 0.0F;
+    float occupied_z = 0.0F;
+    bool too_close_to_the_anchor = false;
 
-    bool occupied = false;
-    for (const auto& entity : snapshot.friendly_units) {
-      if (entity.is_building) {
-        const float clearance = slot_clearance(resolved, entity.spawn_type);
-        if (distance_squared(
-                entity.pos_x, 0.0F, entity.pos_z, world_x, 0.0F, world_z) <=
-            clearance * clearance) {
+    for (std::size_t placement = 0; placement < placements && occupied; ++placement) {
+      constexpr float k_deg_to_rad = 3.14159265358979323846F / 180.0F;
+      float const along = gate_slide.at(placement);
+      float const run = step.rotation * k_deg_to_rad;
+      const QVector3D offset = plan_offset_to_world(
+          facing, step.x + (along * std::cos(run)), step.z + (along * std::sin(run)));
+      world_x = context.base_pos_x + offset.x();
+      world_z = context.base_pos_z + offset.z();
+
+      if ((offset.x() * offset.x() + offset.z() * offset.z()) < k_anchor_clearance_sq) {
+        too_close_to_the_anchor = true;
+        continue;
+      }
+      too_close_to_the_anchor = false;
+
+      occupied = false;
+      for (const auto& entity : snapshot.friendly_units) {
+        if (entity.is_building) {
+          const float clearance = slot_clearance(resolved, entity.spawn_type);
+          if (distance_squared(
+                  entity.pos_x, 0.0F, entity.pos_z, world_x, 0.0F, world_z) <=
+              clearance * clearance) {
+            occupied = true;
+            occupied_by = Game::Units::spawn_typeToString(entity.spawn_type);
+            occupied_x = entity.pos_x;
+            occupied_z = entity.pos_z;
+            break;
+          }
+          continue;
+        }
+        const auto& raising = entity.builder_production;
+        if (!raising.raising_a_building || !raising.has_construction_site) {
+          continue;
+        }
+
+        const float clearance = slot_clearance(resolved, raising.building_under_way);
+        if (distance_squared(raising.construction_site_x,
+                             0.0F,
+                             raising.construction_site_z,
+                             world_x,
+                             0.0F,
+                             world_z) <= clearance * clearance) {
           occupied = true;
+          occupied_by = Game::Units::spawn_typeToString(raising.building_under_way);
+          occupied_x = raising.construction_site_x;
+          occupied_z = raising.construction_site_z;
           break;
         }
-        continue;
-      }
-      const auto& raising = entity.builder_production;
-      if (!raising.raising_a_building || !raising.has_construction_site) {
-        continue;
-      }
-
-      const float clearance = slot_clearance(resolved, raising.building_under_way);
-      if (distance_squared(raising.construction_site_x,
-                           0.0F,
-                           raising.construction_site_z,
-                           world_x,
-                           0.0F,
-                           world_z) <= clearance * clearance) {
-        occupied = true;
-        break;
       }
     }
-    if (occupied) {
+
+    if (too_close_to_the_anchor) {
       continue;
     }
+    if (occupied) {
+      if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
+        qWarning() << "BUILDTRACE p" << context.player_id << "plan slot" << slot
+                   << resolved << "at" << world_x << world_z << "occupied by"
+                   << occupied_by.c_str() << "at" << occupied_x << occupied_z;
+      }
+      continue;
+    }
+
+    const QVector3D offset(
+        world_x - context.base_pos_x, 0.0F, world_z - context.base_pos_z);
 
     const float rotation_y = plan_rotation_to_world(facing, step.rotation);
     if (preferred != nullptr && resolved != preferred) {
@@ -598,13 +635,36 @@ auto plan_reserves_ground(const AIContext& context,
   return false;
 }
 
-auto expanding_ring_offset(int index,
+auto plan_footprint_radius(const AIContext& context) -> float {
+  const auto* doctrine = context.strategy_config.doctrine;
+  const auto* plan = doctrine != nullptr ? doctrine->town_plan : nullptr;
+  if (plan == nullptr) {
+    return 0.0F;
+  }
+  float reach = 0.0F;
+  for (const auto& step : plan->steps) {
+    reach = std::max(reach, std::hypot(step.x, step.z));
+  }
+  return reach;
+}
+
+auto expanding_ring_offset(const AIContext& context,
+                           int index,
                            int per_ring,
                            float first_radius,
                            float radius_step) -> QVector3D {
+  constexpr float k_plan_clearance = 6.0F;
+  constexpr int k_rings_before_the_cap = 3;
+
+  const float inner =
+      std::max(first_radius, plan_footprint_radius(context) + k_plan_clearance);
+  const float outer =
+      inner + (radius_step * static_cast<float>(k_rings_before_the_cap));
+
   const int ring = index / std::max(1, per_ring);
   const int step = index % std::max(1, per_ring);
-  const float radius = first_radius + static_cast<float>(ring) * radius_step;
+  const float radius =
+      std::min(inner + (static_cast<float>(ring) * radius_step), outer);
   const float angle = (6.2831853F * static_cast<float>(step) /
                        static_cast<float>(std::max(1, per_ring))) +
                       (static_cast<float>(ring) * 0.4F);
@@ -646,7 +706,7 @@ auto planned_settlement_offset(const AIContext& context,
       return offsets[static_cast<std::size_t>(construction_index)];
     }
     return expanding_ring_offset(
-        construction_index - static_cast<int>(offsets.size()), 7, 12.0F, 4.0F);
+        context, construction_index - static_cast<int>(offsets.size()), 7, 12.0F, 4.0F);
   }
   if (building_type == BUILDING_TYPE_FARM) {
 
@@ -660,7 +720,7 @@ auto planned_settlement_offset(const AIContext& context,
       return fields[static_cast<std::size_t>(construction_index)];
     }
     return expanding_ring_offset(
-        construction_index - static_cast<int>(fields.size()), 6, 28.0F, 8.0F);
+        context, construction_index - static_cast<int>(fields.size()), 6, 28.0F, 8.0F);
   }
   if (building_type == BUILDING_TYPE_MARKETPLACE) {
     static const std::array<QVector3D, 4> roman = {QVector3D{3.0F, 0.0F, 9.0F},
@@ -676,7 +736,7 @@ auto planned_settlement_offset(const AIContext& context,
       return offsets[static_cast<std::size_t>(construction_index)];
     }
     return expanding_ring_offset(
-        construction_index - static_cast<int>(offsets.size()), 6, 16.0F, 5.0F);
+        context, construction_index - static_cast<int>(offsets.size()), 6, 16.0F, 5.0F);
   }
   if (building_type == BUILDING_TYPE_BARRACKS) {
     static const std::array<QVector3D, 5> roman = {QVector3D{0.0F, 0.0F, -8.0F},
@@ -694,7 +754,7 @@ auto planned_settlement_offset(const AIContext& context,
       return offsets[static_cast<std::size_t>(construction_index)];
     }
     return expanding_ring_offset(
-        construction_index - static_cast<int>(offsets.size()), 6, 20.0F, 6.0F);
+        context, construction_index - static_cast<int>(offsets.size()), 6, 20.0F, 6.0F);
   }
   if (building_type == BUILDING_TYPE_WALL_SEGMENT) {
     const int slot = construction_index % 11;
@@ -1351,8 +1411,8 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
   if (const AIBase* exposed = exposed_secondary_base(context); exposed != nullptr) {
     constexpr int k_outpost_site_attempts = 12;
     for (int attempt = 0; attempt < k_outpost_site_attempts; ++attempt) {
-      const QVector3D offset =
-          expanding_ring_offset(m_construction_counter + attempt, 6, 9.0F, 4.0F);
+      const QVector3D offset = expanding_ring_offset(
+          context, m_construction_counter + attempt, 6, 9.0F, 4.0F);
       const float candidate_x = exposed->center_x + offset.x();
       const float candidate_z = exposed->center_z + offset.z();
       if (!site_is_free(

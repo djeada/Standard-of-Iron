@@ -265,6 +265,7 @@ add_executable(
     headless/ai_duel_match_test.cpp
     headless/commander_voice_skirmish_test.cpp
     headless/ai_town_plan_test.cpp
+    headless/ai_estate_economy_test.cpp
     headless/movement_quality_gate_test.cpp
     simulation_main.cpp
 )
@@ -494,6 +495,7 @@ add_executable(
     render/arrow_cloud_render_test.cpp
     render/projectile_relation_test.cpp
     render/orientation_arrow_mesh_test.cpp
+    render/unit_torso_orientation_test.cpp
     render/creature/rigged_mesh_asset_test.cpp
     render/creature/snapshot_mesh_asset_test.cpp
     render/creature/snapshot_mesh_cache_test.cpp

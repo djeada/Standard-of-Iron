@@ -2250,9 +2250,10 @@ struct ArenaScenarioRunner::Impl {
 
   void initialize_battle_sides() {
     battle_sides.clear();
-    if (scenario.battle_sides.size() < 2U) {
+    if (scenario.battle_sides.empty()) {
       return;
     }
+
     for (auto const& side : scenario.battle_sides) {
       BattleSideState state;
       state.owner_id = side.owner_id;
