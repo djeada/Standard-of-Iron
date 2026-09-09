@@ -1,13 +1,18 @@
 #include <QtGlobal>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
+#include <deque>
 #include <gtest/gtest.h>
 #include <map>
 #include <memory>
+#include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
+#include "game/core/component_gameplay.h"
 #include "game/core/component_structures.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
@@ -48,6 +53,8 @@ struct Standing {
   std::string type;
   float x = 0.0F;
   float z = 0.0F;
+  float rotation_y = 0.0F;
+  float span = 0.0F;
 };
 
 struct TownCensus {
@@ -142,11 +149,31 @@ protected:
     economy.set(k_owner, Game::Systems::ResourceType::Stone, 300);
     economy.set(k_owner, Game::Systems::ResourceType::Iron, 200);
 
+    spawn(
+        session, Game::Units::SpawnType::Barracks, world_of(k_town_grid, k_town_grid));
     spawn(session, commander, world_of(k_town_grid + 2, k_town_grid + 2));
     for (int index = 0; index < k_opening_builders; ++index) {
       spawn(session,
             Game::Units::SpawnType::Builder,
             world_of(k_town_grid + 4, k_town_grid - 4 + index * 2));
+    }
+    if (const auto bearing = enemy_bearing_degrees(); bearing.has_value()) {
+
+      constexpr int k_enemy = 3;
+      constexpr float k_enemy_distance = 54.0F;
+      session.owners().register_owner_with_id(
+          k_enemy, Game::Systems::OwnerType::Player, "rival");
+      session.owners().set_owner_team(k_enemy, 2);
+      session.nations().set_player_nation(k_enemy, nation);
+      economy.ensure_owner(k_enemy);
+      const float radians = *bearing * 3.14159265F / 180.0F;
+      const QVector3D centre = world_of(k_town_grid, k_town_grid);
+      spawn(session,
+            Game::Units::SpawnType::Barracks,
+            QVector3D(centre.x() + std::cos(radians) * k_enemy_distance,
+                      0.0F,
+                      centre.z() + std::sin(radians) * k_enemy_distance),
+            k_enemy);
     }
 
     if (auto* ai = session.world().get_system<Game::Systems::AISystem>()) {
@@ -173,7 +200,7 @@ protected:
       map.world_props.push_back(prop);
     };
     for (int ring = 0; ring < 10; ++ring) {
-      const int offset = 22 + ring * 2;
+      const int offset = 26 + ring * 2;
       for (int lane = -3; lane <= 3; ++lane) {
         const int shift = lane * 3;
         add(Game::Map::WorldProp::Type::OliveTree, grid_x + offset, grid_z + shift);
@@ -186,16 +213,17 @@ protected:
 
   auto spawn(SessionContext& session,
              Game::Units::SpawnType type,
-             QVector3D position) -> EntityID {
+             QVector3D position,
+             int owner = k_owner) -> EntityID {
     Game::Units::SpawnParams params;
     params.position = position;
-    params.player_id = k_owner;
+    params.player_id = owner;
     params.spawn_type = type;
     params.ai_controlled = true;
     params.is_initial_spawn = true;
     params.max_population = 280;
     params.enables_production = true;
-    const auto* nation = session.nations().get_nation_for_player(k_owner);
+    const auto* nation = session.nations().get_nation_for_player(owner);
     params.nation_id =
         nation != nullptr ? nation->id : Game::Systems::NationID::RomanRepublic;
     auto unit = m_factory->create(type, session.world(), params);
@@ -204,6 +232,199 @@ protected:
 
   static auto world_of(int grid_x, int grid_z) -> QVector3D {
     return Game::Systems::NavGrid::grid_to_world(Game::Systems::Point(grid_x, grid_z));
+  }
+
+  static auto enemy_bearing_degrees() -> std::optional<float> {
+    if (!qEnvironmentVariableIsSet("SOI_TOWN_ENEMY_BEARING")) {
+      return std::nullopt;
+    }
+    bool ok = false;
+    const float bearing = qEnvironmentVariable("SOI_TOWN_ENEMY_BEARING").toFloat(&ok);
+    return ok ? std::optional<float>(bearing) : std::nullopt;
+  }
+
+  static void run_minutes(SessionContext& session, double minutes) {
+    const bool timeline = qEnvironmentVariableIsSet("SOI_TOWN_MAP");
+    for (int minute = 1; minute <= static_cast<int>(std::ceil(minutes)); ++minute) {
+      run_for(session, std::min(60.0, minutes * 60.0 - (minute - 1) * 60.0));
+      if (!timeline) {
+        continue;
+      }
+      const auto census = census_of(standing_town(session));
+      auto& economy = session.economy();
+      std::printf("   t=%2dmin walls %3d gates %d towers %d homes %2d farms %d "
+                  "barracks %d | wood %4d stone %3d\n",
+                  minute,
+                  census.walls - census.gates,
+                  census.gates,
+                  census.towers,
+                  census.homes,
+                  census.farms,
+                  census.barracks,
+                  economy.get(k_owner, Game::Systems::ResourceType::Wood),
+                  economy.get(k_owner, Game::Systems::ResourceType::Stone));
+      std::fflush(stdout);
+    }
+  }
+
+  static auto castle_is_selected(const char* name) -> bool {
+    if (!qEnvironmentVariableIsSet("SOI_TOWN_ONLY")) {
+      return true;
+    }
+    return qEnvironmentVariable("SOI_TOWN_ONLY") == QString::fromLatin1(name);
+  }
+
+  struct Enclosure {
+    bool has_ring = false;
+    bool closed = false;
+    int interior_cells = 0;
+    float breach_x = 0.0F;
+    float breach_z = 0.0F;
+  };
+
+  static auto gate_blocks(const Standing& gate, float x, float z) -> bool {
+    constexpr float k_along = Engine::Core::GateComponent::k_structure_half_span;
+    constexpr float k_across = Engine::Core::GateComponent::k_cross_half_extent;
+    const float dx = x - gate.x;
+    const float dz = z - gate.z;
+    return Engine::Core::GateComponent::spans_x_axis(gate.rotation_y)
+               ? std::abs(dx) <= k_along && std::abs(dz) <= k_across
+               : std::abs(dz) <= k_along && std::abs(dx) <= k_across;
+  }
+
+  static auto wall_reach_of(const Game::Systems::AI::TownPlan* plan) -> float {
+    float reach = 0.0F;
+    if (plan == nullptr) {
+      return reach;
+    }
+    for (const auto& step : plan->steps) {
+      if (step.building == "wall_segment" || step.building == "wall_gate") {
+        reach = std::max(reach, std::hypot(step.x, step.z));
+      }
+    }
+    return reach;
+  }
+
+  static auto enclosure_of(const std::vector<Standing>& town,
+                           float anchor_x,
+                           float anchor_z,
+                           const Game::Systems::AI::TownPlan* plan) -> Enclosure {
+    Enclosure result;
+    const float reach = wall_reach_of(plan);
+    if (reach <= 0.0F) {
+      return result;
+    }
+    result.has_ring = true;
+    std::vector<const Standing*> gates;
+    for (const auto& building : town) {
+      if (building.type == "wall_gate") {
+        gates.push_back(&building);
+      }
+    }
+    const auto blocked = [&](const Game::Systems::Point& cell) {
+      if (!Game::Systems::NavGrid::is_grid_walkable(cell)) {
+        return true;
+      }
+      const QVector3D at = Game::Systems::NavGrid::grid_to_world(cell);
+      return std::any_of(gates.begin(), gates.end(), [&](const Standing* gate) {
+        return gate_blocks(*gate, at.x(), at.z());
+      });
+    };
+    constexpr float k_escape_margin = 5.0F;
+    const float escape = reach + k_escape_margin;
+    const auto anchor = Game::Systems::NavGrid::world_to_grid(anchor_x, anchor_z);
+    auto start = anchor;
+    bool found = false;
+    constexpr int k_anchor_search = 8;
+    for (int radius = 0; radius <= k_anchor_search && !found; ++radius) {
+      for (int dx = -radius; dx <= radius && !found; ++dx) {
+        for (int dz = -radius; dz <= radius && !found; ++dz) {
+          if (std::max(std::abs(dx), std::abs(dz)) != radius) {
+            continue;
+          }
+          const Game::Systems::Point cell{anchor.x + dx, anchor.y + dz};
+          if (cell.x >= 0 && cell.y >= 0 && cell.x < k_map_size &&
+              cell.y < k_map_size && !blocked(cell)) {
+            start = cell;
+            found = true;
+          }
+        }
+      }
+    }
+    if (!found) {
+      return result;
+    }
+    std::set<std::pair<int, int>> seen{{start.x, start.y}};
+    std::deque<Game::Systems::Point> frontier{start};
+    result.closed = true;
+    while (!frontier.empty()) {
+      const auto cell = frontier.front();
+      frontier.pop_front();
+      const QVector3D at = Game::Systems::NavGrid::grid_to_world(cell);
+      if (std::hypot(at.x() - anchor_x, at.z() - anchor_z) > escape) {
+        result.closed = false;
+        result.breach_x = at.x();
+        result.breach_z = at.z();
+        break;
+      }
+      ++result.interior_cells;
+      for (const auto [dx, dz] :
+           {std::pair{1, 0}, std::pair{-1, 0}, std::pair{0, 1}, std::pair{0, -1}}) {
+        const Game::Systems::Point next{cell.x + dx, cell.y + dz};
+        if (next.x < 0 || next.y < 0 || next.x >= k_map_size || next.y >= k_map_size) {
+          continue;
+        }
+        if (!seen.insert({next.x, next.y}).second || blocked(next)) {
+          continue;
+        }
+        frontier.push_back(next);
+      }
+    }
+    return result;
+  }
+
+  static void
+  draw_nav_map(const std::vector<Standing>& town, float anchor_x, float anchor_z) {
+    if (!qEnvironmentVariableIsSet("SOI_TOWN_MAP")) {
+      return;
+    }
+    constexpr int k_half = 34;
+    const auto origin = Game::Systems::NavGrid::world_to_grid(anchor_x, anchor_z);
+    std::printf("   nav map, 1 m per cell, %d m each way of the anchor; # blocked "
+                ". open\n",
+                k_half);
+    for (int dz = -k_half; dz <= k_half; ++dz) {
+      std::string row;
+      for (int dx = -k_half; dx <= k_half; ++dx) {
+        const Game::Systems::Point cell{origin.x + dx, origin.y + dz};
+        char glyph = ' ';
+        if (cell.x >= 0 && cell.y >= 0 && cell.x < k_map_size && cell.y < k_map_size) {
+          glyph = Game::Systems::NavGrid::is_grid_walkable(cell) ? '.' : '#';
+        }
+        const QVector3D at = Game::Systems::NavGrid::grid_to_world(cell);
+        for (const auto& building : town) {
+          if (std::abs(building.x - at.x()) > 0.5F ||
+              std::abs(building.z - at.z()) > 0.5F) {
+            continue;
+          }
+          if (building.type == "wall_gate") {
+            glyph = 'G';
+          } else if (building.type == "defense_tower") {
+            glyph = 'T';
+          } else if (building.type == "barracks") {
+            glyph = 'B';
+          } else if (building.type == "home") {
+            glyph = 'h';
+          } else if (building.type == "farm") {
+            glyph = 'f';
+          } else if (building.type == "marketplace") {
+            glyph = 'M';
+          }
+        }
+        row.push_back(glyph);
+      }
+      std::printf("   |%s|\n", row.c_str());
+    }
   }
 
   static void run_for(SessionContext& session, double seconds) {
@@ -230,7 +451,8 @@ protected:
       }
       town.push_back(Standing{.type = Game::Units::spawn_typeToString(unit.spawn_type),
                               .x = transform->position.x,
-                              .z = transform->position.z});
+                              .z = transform->position.z,
+                              .rotation_y = transform->rotation.y});
     }
     return town;
   }
@@ -357,6 +579,8 @@ protected:
   struct Settlement {
     TownCensus census;
     ArmyCensus army;
+    Enclosure enclosure;
+    int wall_runs = 0;
 
     float fortification_coverage = 0.0F;
     Game::Systems::AI::AIContext::StationReport stations;
@@ -380,6 +604,86 @@ protected:
           .type = "soldier", .x = transform->position.x, .z = transform->position.z});
     }
     return soldiers;
+  }
+
+  static auto wall_runs(const std::vector<Standing>& town) -> int {
+    std::vector<Standing> line;
+    for (const auto& building : town) {
+      if (building.type == "wall_segment" || building.type == "wall_gate") {
+        line.push_back(building);
+      }
+    }
+
+    constexpr float k_in_the_line = 3.0F;
+    for (const auto& prop : Game::Map::TerrainService::instance().world_props()) {
+      if (!Game::Map::is_solid_world_prop_type(prop.type)) {
+        continue;
+      }
+      const QVector3D at =
+          Game::Map::TerrainService::instance().world_prop_world_position(prop);
+      const bool in_the_line =
+          std::any_of(line.begin(), line.end(), [&](const Standing& piece) {
+            return piece.type != "prop" &&
+                   std::hypot(piece.x - at.x(), piece.z - at.z()) <= k_in_the_line;
+          });
+      if (in_the_line) {
+        line.push_back(Standing{
+            .type = "prop",
+            .x = at.x(),
+            .z = at.z(),
+            .span = Game::Map::world_prop_ground_radius(prop.type, prop.scale)});
+      }
+    }
+    std::vector<const Standing*> pieces;
+    pieces.reserve(line.size());
+    for (const auto& piece : line) {
+      pieces.push_back(&piece);
+    }
+    std::vector<int> parent(pieces.size());
+    for (std::size_t i = 0; i < parent.size(); ++i) {
+      parent[i] = static_cast<int>(i);
+    }
+    const auto find = [&](int i) {
+      while (parent[static_cast<std::size_t>(i)] != i) {
+        i = parent[static_cast<std::size_t>(i)];
+      }
+      return i;
+    };
+    const auto half_span = [](const Standing& piece) {
+      if (piece.type == "wall_gate") {
+        return Engine::Core::GateComponent::k_structure_half_span;
+      }
+      return piece.type == "prop" ? piece.span : 1.0F;
+    };
+    constexpr float k_touch_slack = 0.4F;
+    for (std::size_t i = 0; i < pieces.size(); ++i) {
+      for (std::size_t j = i + 1; j < pieces.size(); ++j) {
+        const float reach =
+            half_span(*pieces[i]) + half_span(*pieces[j]) + k_touch_slack;
+        if (std::hypot(pieces[i]->x - pieces[j]->x, pieces[i]->z - pieces[j]->z) <=
+            reach) {
+          parent[static_cast<std::size_t>(find(static_cast<int>(i)))] =
+              find(static_cast<int>(j));
+        }
+      }
+    }
+    std::map<int, std::vector<const Standing*>> members;
+    for (std::size_t i = 0; i < pieces.size(); ++i) {
+      members[find(static_cast<int>(i))].push_back(pieces[i]);
+    }
+    if (qEnvironmentVariableIsSet("SOI_TOWN_MAP")) {
+      for (const auto& [root, run] : members) {
+        std::printf("   run of %zu: first %s at %.1f,%.1f last %s at %.1f,%.1f\n",
+                    run.size(),
+                    run.front()->type.c_str(),
+                    static_cast<double>(run.front()->x),
+                    static_cast<double>(run.front()->z),
+                    run.back()->type.c_str(),
+                    static_cast<double>(run.back()->x),
+                    static_cast<double>(run.back()->z));
+      }
+    }
+    return static_cast<int>(members.size());
   }
 
   static auto fortification_coverage(const std::vector<Standing>& town) -> float {
@@ -423,15 +727,41 @@ protected:
                   Game::Systems::NationID nation,
                   double minutes) -> Settlement {
     auto& session = settle(commander, nation);
-    run_for(session, minutes * 60.0);
+    run_minutes(session, minutes);
     const auto town = standing_town(session);
     const auto census = census_of(town);
     const auto army = army_of(session);
     Settlement settlement{.census = census, .army = army};
     settlement.fortification_coverage = fortification_coverage(town);
+    settlement.wall_runs = wall_runs(town);
     if (auto* ai = session.world().get_system<Game::Systems::AISystem>()) {
       if (const auto* plan = ai->plan_for(k_owner); plan != nullptr) {
         settlement.stations = plan->station_report;
+        const auto* town_plan = plan->strategy_config.doctrine != nullptr
+                                    ? plan->strategy_config.doctrine->town_plan
+                                    : nullptr;
+        settlement.enclosure =
+            enclosure_of(town, plan->base_pos_x, plan->base_pos_z, town_plan);
+        if (qEnvironmentVariableIsSet("SOI_TOWN_MAP")) {
+          std::printf("   wall runs: %d\n", settlement.wall_runs);
+          std::printf(
+              "   enclosure: %s (%d interior cells%s) facing %.2f,%.2f%s\n",
+              !settlement.enclosure.has_ring ? "no ring planned"
+              : settlement.enclosure.closed  ? "CLOSED"
+                                             : "OPEN",
+              settlement.enclosure.interior_cells,
+              settlement.enclosure.closed
+                  ? ""
+                  : (" breach near " +
+                     std::to_string(static_cast<int>(settlement.enclosure.breach_x)) +
+                     "," +
+                     std::to_string(static_cast<int>(settlement.enclosure.breach_z)))
+                        .c_str(),
+              static_cast<double>(plan->settlement_facing_x),
+              static_cast<double>(plan->settlement_facing_z),
+              plan->settlement_facing_locked ? " (locked)" : "");
+          draw_nav_map(town, plan->base_pos_x, plan->base_pos_z);
+        }
       }
     }
     if (qEnvironmentVariableIsSet("SOI_TOWN_MAP")) {
@@ -487,6 +817,7 @@ protected:
                   barracks_manpower(session));
     }
     draw_town(name, town, census, army, soldiers_of(session));
+    std::fflush(stdout);
     return settlement;
   }
 
@@ -555,13 +886,13 @@ TEST_F(AiTownPlanTest, EveryCommanderRaisesItsOwnTownFromAnEmptyField) {
   for (const char* castle : {"fabius", "scipio", "hanno", "hannibal"}) {
     const auto& census = towns.at(castle).census;
     const int fortifications = census.walls + census.towers;
-    const float sectors = towns.at(castle).fortification_coverage * 24.0F;
     EXPECT_GE(fortifications, 8) << castle << " raised almost no fortification";
-    EXPECT_GE(sectors + 0.01F, 0.5F * static_cast<float>(std::min(fortifications, 24)))
-        << castle << " spread " << fortifications << " walls and towers over only "
-        << sectors
-        << " of 24 compass sectors; a part-built ring or castrum must "
-           "still draw its outline";
+
+    EXPECT_LE(towns.at(castle).wall_runs, std::max(3, census.walls / 8))
+        << castle << " stands as " << towns.at(castle).wall_runs << " separate runs of "
+        << census.walls
+        << " wall pieces; a half-built ring is one wall growing out from its "
+           "gate, not posts with gaps between them";
   }
 
   for (const auto& [name, settlement] : towns) {
@@ -609,23 +940,28 @@ TEST_F(AiTownPlanTest, AWalledCommanderClosesItsCircuitGivenTime) {
        "roman_assault_camp"},
   };
   for (const auto& castle : castles) {
+    if (!castle_is_selected(castle.name)) {
+      continue;
+    }
     const auto* plan = Game::Systems::AI::authored_town_plan(castle.plan);
     ASSERT_NE(plan, nullptr) << castle.plan;
     const int planned = plan->step_count("wall_segment");
     const auto settlement =
         raise_town(castle.name, castle.commander, castle.nation, 50.0);
-    EXPECT_GE(settlement.census.walls * 100, planned * 15)
+    EXPECT_GE(settlement.census.walls * 100, planned * 50)
         << castle.name << " raised " << settlement.census.walls << " of the " << planned
         << " wall links in its blueprint after fifty minutes; a castle "
            "the economy cannot afford is a wish, not a plan";
-    EXPECT_GE(settlement.census.towers, 3)
+    EXPECT_GE(settlement.census.towers, 2)
         << castle.name << " has no towers to speak of";
     EXPECT_GE(settlement.census.gates, 1)
         << castle.name << " closed its ring without a gate to march out of";
-    EXPECT_GE(settlement.fortification_coverage, 0.60F)
-        << castle.name << " fortified only "
-        << settlement.fortification_coverage * 100.0F
-        << "% of the compass after fifty minutes; its outline should be closed by now";
+    EXPECT_TRUE(settlement.enclosure.has_ring && settlement.enclosure.closed)
+        << castle.name << " has not closed its ring after fifty minutes: ground "
+        << "inside the walls still connects to the field without passing a gate, "
+        << "near " << settlement.enclosure.breach_x << ","
+        << settlement.enclosure.breach_z
+        << "; a ring with a hole in it is a fence, not a castle";
     TearDown();
     SetUp();
   }

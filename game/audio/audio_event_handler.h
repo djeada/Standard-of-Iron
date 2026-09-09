@@ -37,6 +37,8 @@ public:
   void load_ambient_state_sfx(Engine::Core::AmbientState state,
                               const std::vector<std::string>& sound_ids);
 
+  auto rotate_ambient_music(Engine::Core::AmbientState state) -> bool;
+
   void set_voice_sound_category(bool use_voice_category);
   void set_local_owner_id(int owner_id);
 

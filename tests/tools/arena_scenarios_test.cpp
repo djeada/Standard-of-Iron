@@ -1043,6 +1043,57 @@ TEST(ArenaScenariosTest, TheKingdomEstateKeepsItsWorkOutsideTheTown) {
   }
 }
 
+TEST(ArenaScenariosTest, TheKingdomEstateRoadsRunFromEdgeToEdge) {
+  const auto* scene = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_ai_kingdom_rise_id));
+  ASSERT_NE(scene, nullptr);
+  ASSERT_FALSE(scene->roads.empty());
+
+  const float map_reach = static_cast<float>(scene->terrain_grid_extent) * 0.5F;
+  constexpr float k_join = 0.01F;
+
+  const auto shares_endpoint = [&](const QVector3D& point) {
+    int touches = 0;
+    for (const auto& road : scene->roads) {
+      touches += static_cast<int>((road.start - point).length() <= k_join);
+      touches += static_cast<int>((road.end - point).length() <= k_join);
+    }
+    return touches > 1;
+  };
+  const auto lands_on_a_bridge = [&](const QVector3D& point) {
+    return std::any_of(scene->bridges.begin(),
+                       scene->bridges.end(),
+                       [&](const Game::Map::Bridge& bridge) {
+                         return (bridge.start - point).length() <= k_join ||
+                                (bridge.end - point).length() <= k_join;
+                       });
+  };
+  const auto leaves_the_map = [&](const QVector3D& point) {
+    return std::abs(point.x()) >= map_reach || std::abs(point.z()) >= map_reach;
+  };
+
+  for (const auto& road : scene->roads) {
+    for (const QVector3D& end : {road.start, road.end}) {
+      EXPECT_TRUE(shares_endpoint(end) || lands_on_a_bridge(end) || leaves_the_map(end))
+          << "a road ends at " << end.x() << ", " << end.z()
+          << ", which is neither a junction, a bridge, nor off the map";
+    }
+  }
+
+  for (const auto& bridge : scene->bridges) {
+    for (const QVector3D& landing : {bridge.start, bridge.end}) {
+      EXPECT_TRUE(std::any_of(scene->roads.begin(),
+                              scene->roads.end(),
+                              [&](const Game::Map::RoadSegment& road) {
+                                return (road.start - landing).length() <= k_join ||
+                                       (road.end - landing).length() <= k_join;
+                              }))
+          << "the bridge landing at " << landing.x() << ", " << landing.z()
+          << " has no road on it";
+    }
+  }
+}
+
 TEST(ArenaScenariosTest, ListsEverySettlementAndEconomyScenario) {
   for (auto const* settlement_id : {Arena::Scenarios::k_village_harvest_cycle_id,
                                     Arena::Scenarios::k_village_day_life_id,

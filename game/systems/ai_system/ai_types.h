@@ -12,6 +12,7 @@
 #include "../../units/spawn_type.h"
 #include "../../units/troop_type.h"
 #include "../resource_types.h"
+#include "../site_keep_out.h"
 
 namespace Engine::Core {
 using EntityID = std::uint64_t;
@@ -116,6 +117,7 @@ struct ResourceNodeSnapshot {
   float pos_x = 0.0F;
   float pos_z = 0.0F;
   bool reserved = false;
+  float scale = 1.0F;
 };
 
 enum class BehaviorPriority {
@@ -551,6 +553,8 @@ struct AICommand {
   float construction_site_z = 0.0F;
   float construction_rotation_y = 0.0F;
   std::uint64_t resource_target_id = 0;
+
+  std::vector<Game::Systems::SiteKeepOut> construction_keep_out;
 
   float rally_x = 0.0F;
   float rally_z = 0.0F;

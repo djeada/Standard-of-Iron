@@ -464,7 +464,10 @@ auto authored_plan_step(const AIContext& context,
     float occupied_z = 0.0F;
     bool too_close_to_the_anchor = false;
 
-    for (std::size_t placement = 0; placement < placements && occupied; ++placement) {
+    bool occupied_by_the_wall_itself = false;
+    for (std::size_t placement = 0;
+         placement < placements && occupied && !occupied_by_the_wall_itself;
+         ++placement) {
       constexpr float k_deg_to_rad = 3.14159265358979323846F / 180.0F;
       float const along = gate_slide.at(placement);
       float const run = step.rotation * k_deg_to_rad;
@@ -487,6 +490,8 @@ auto authored_plan_step(const AIContext& context,
                   entity.pos_x, 0.0F, entity.pos_z, world_x, 0.0F, world_z) <=
               clearance * clearance) {
             occupied = true;
+            occupied_by_the_wall_itself =
+                Game::Units::is_wall_network_spawn(entity.spawn_type);
             occupied_by = Game::Units::spawn_typeToString(entity.spawn_type);
             occupied_x = entity.pos_x;
             occupied_z = entity.pos_z;
@@ -507,6 +512,8 @@ auto authored_plan_step(const AIContext& context,
                              0.0F,
                              world_z) <= clearance * clearance) {
           occupied = true;
+          occupied_by_the_wall_itself =
+              Game::Units::is_wall_network_spawn(raising.building_under_way);
           occupied_by = Game::Units::spawn_typeToString(raising.building_under_way);
           occupied_x = raising.construction_site_x;
           occupied_z = raising.construction_site_z;
@@ -595,11 +602,17 @@ auto site_is_free(const AISnapshot& snapshot,
   return true;
 }
 
+auto is_fortification_or_tower(const std::string& building) -> bool {
+  return building == BUILDING_TYPE_WALL_SEGMENT ||
+         building == BUILDING_TYPE_WALL_GATE || building == BUILDING_TYPE_DEFENSE_TOWER;
+}
+
 auto plan_reserves_ground(const AIContext& context,
                           const AISnapshot& snapshot,
                           const char* building_type,
                           float world_x,
-                          float world_z) -> bool {
+                          float world_z,
+                          bool fortifications_only = false) -> bool {
   const auto* doctrine = context.strategy_config.doctrine;
   if (doctrine == nullptr || doctrine->town_plan == nullptr ||
       building_type == nullptr) {
@@ -621,6 +634,9 @@ auto plan_reserves_ground(const AIContext& context,
         resolved == BUILDING_TYPE_BALLISTA) {
       continue;
     }
+    if (fortifications_only && !is_fortification_or_tower(step.building)) {
+      continue;
+    }
     const QVector3D offset = plan_offset_to_world(facing, step.x, step.z);
     const float clearance = own_half + half_extent(step.building) + k_slot_gap;
     if (distance_squared(context.base_pos_x + offset.x(),
@@ -633,6 +649,36 @@ auto plan_reserves_ground(const AIContext& context,
     }
   }
   return false;
+}
+
+auto plan_keep_out(const AIContext& context,
+                   const AISnapshot& snapshot) -> std::vector<SiteKeepOut> {
+  std::vector<SiteKeepOut> keep_out;
+  const auto* doctrine = context.strategy_config.doctrine;
+  if (doctrine == nullptr || doctrine->town_plan == nullptr ||
+      !context.has_base_anchor) {
+    return keep_out;
+  }
+  constexpr float k_slot_gap = 0.2F;
+  const QVector2D facing = locked_settlement_facing(context, snapshot);
+  for (const auto& step : doctrine->town_plan->steps) {
+    if (!is_fortification_or_tower(step.building)) {
+      continue;
+    }
+    const QVector3D offset = plan_offset_to_world(facing, step.x, step.z);
+    const float x = context.base_pos_x + offset.x();
+    const float z = context.base_pos_z + offset.z();
+    const float half =
+        step.building == BUILDING_TYPE_WALL_GATE
+            ? k_gate_half_span
+            : 0.5F *
+                  std::max(
+                      BuildingCollisionRegistry::get_building_size(step.building).width,
+                      BuildingCollisionRegistry::get_building_size(step.building)
+                          .depth);
+    keep_out.push_back({x, z, half + k_slot_gap});
+  }
+  return keep_out;
 }
 
 auto plan_footprint_radius(const AIContext& context) -> float {
@@ -770,6 +816,48 @@ using SourNodes = std::unordered_map<std::uint64_t, float>;
 auto node_is_sour(const SourNodes& sour, std::uint64_t node_id, float now) -> bool {
   const auto it = sour.find(node_id);
   return it != sour.end() && now < it->second;
+}
+
+struct NodeOnTheGround {
+  const ResourceNodeSnapshot* node = nullptr;
+  ResourceType resource = ResourceType::Count;
+};
+
+auto node_on_the_ground(const AISnapshot& snapshot,
+                        const SourNodes& sour,
+                        const char* building_type,
+                        float world_x,
+                        float world_z) -> NodeOnTheGround {
+
+  const auto size = BuildingCollisionRegistry::get_building_size(building_type);
+  constexpr float k_site_margin = 0.35F;
+  constexpr float k_root_margin = 0.1F;
+  const float own_reach = std::hypot((0.5F * size.width) + k_site_margin,
+                                     (0.5F * size.depth) + k_site_margin);
+  NodeOnTheGround found;
+  float nearest_sq = std::numeric_limits<float>::infinity();
+  for (const auto& node : snapshot.resource_nodes) {
+    if (node.reserved || node_is_sour(sour, node.id, snapshot.game_time)) {
+      continue;
+    }
+    const float reach = own_reach +
+                        Game::Map::world_prop_ground_radius(node.type, node.scale) +
+                        k_root_margin;
+    const float distance_sq =
+        distance_squared(node.pos_x, 0.0F, node.pos_z, world_x, 0.0F, world_z);
+    if (distance_sq > reach * reach || distance_sq >= nearest_sq) {
+      continue;
+    }
+    for (const ResourceType resource :
+         {ResourceType::Wood, ResourceType::Stone, ResourceType::Iron}) {
+      if (node_matches_resource(node, resource)) {
+        found = {&node, resource};
+        nearest_sq = distance_sq;
+        break;
+      }
+    }
+  }
+  return found;
 }
 
 auto entity_is_worked(const AISnapshot& snapshot,
@@ -1607,9 +1695,13 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
                   snapshot, building_to_construct, candidate_x, candidate_z)) {
             continue;
           }
-          if (honour_plan &&
-              plan_reserves_ground(
-                  context, snapshot, building_to_construct, candidate_x, candidate_z)) {
+          if (plan_reserves_ground(context,
+                                   snapshot,
+                                   building_to_construct,
+                                   candidate_x,
+                                   candidate_z,
+                                   !honour_plan)) {
+
             continue;
           }
           construction_x = candidate_x;
@@ -1631,6 +1723,35 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
   order_field_work(
       snapshot, context, available_builders, 1, take_builder, out_commands);
   order_repairs(snapshot, available_builders, 1, take_builder, out_commands);
+
+  if (building_to_construct != nullptr && site_resolved && plan_slot >= 0 &&
+      is_fortification_or_tower(building_to_construct)) {
+
+    const auto in_the_way = node_on_the_ground(
+        snapshot, m_sour_nodes, building_to_construct, construction_x, construction_z);
+    if (in_the_way.node != nullptr) {
+      const auto builder = take_builder(in_the_way.node->pos_x, in_the_way.node->pos_z);
+      if (builder != 0) {
+        if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
+          qWarning() << "BUILDTRACE p" << context.player_id << "clears the line for"
+                     << building_to_construct << "at" << construction_x
+                     << construction_z << "node" << in_the_way.node->pos_x
+                     << in_the_way.node->pos_z;
+        }
+        AICommand clearing;
+        clearing.type = AICommandType::StartBuilderHarvest;
+        clearing.units.push_back(builder);
+        clearing.construction_type = harvest_type_for_resource(in_the_way.resource);
+        clearing.construction_site_x = in_the_way.node->pos_x;
+        clearing.construction_site_z = in_the_way.node->pos_z;
+        clearing.resource_target_id = in_the_way.node->id;
+        out_commands.push_back(std::move(clearing));
+      } else {
+        wanted_a_builder = true;
+      }
+      building_to_construct = nullptr;
+    }
+  }
 
   if (building_to_construct != nullptr && site_resolved) {
     clamp_to_map_bounds(snapshot, construction_x, construction_z);
@@ -1662,6 +1783,10 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
       command.construction_site_x = construction_x;
       command.construction_site_z = construction_z;
       command.construction_rotation_y = construction_rotation_y;
+      if (!is_fortification_or_tower(building_to_construct)) {
+
+        command.construction_keep_out = plan_keep_out(context, snapshot);
+      }
       out_commands.push_back(std::move(command));
 
       if (expansion_order) {

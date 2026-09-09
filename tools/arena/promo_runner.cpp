@@ -1430,19 +1430,15 @@ private:
     m_encoder.reset();
 
     if (m_audio != nullptr && m_frames_written > 0) {
+
       const QString wav_path = m_clip_path + QStringLiteral(".wav");
-      QString audio_error;
       if (!m_audio->write_clip(wav_path)) {
         qWarning().noquote() << QStringLiteral(
                                     "Promo shot '%1': audio track not written")
                                     .arg(shot.name);
-      } else if (!AudioRecorder::mux(m_clip_path, wav_path, &audio_error)) {
-        qWarning().noquote()
-            << QStringLiteral("Promo shot '%1': %2").arg(shot.name, audio_error);
       } else {
-        qInfo().noquote() << QStringLiteral("  muxed %1 s of game audio into %2")
-                                 .arg(QString::number(m_audio->clip_seconds(), 'f', 2))
-                                 .arg(QFileInfo(m_clip_path).fileName());
+        m_pending_audio.push_back(
+            PendingAudio{m_clip_path, wav_path, shot.name, m_audio->clip_seconds()});
       }
       m_audio->begin_clip();
     }
@@ -1499,11 +1495,77 @@ private:
     begin_shot();
   }
 
+  void mux_pass_audio() {
+    if (m_pending_audio.empty()) {
+      return;
+    }
+
+    float gain_db = 0.0F;
+    if (m_spec.reel_loudness_lufs < 0.0F) {
+      QStringList wav_paths;
+      wav_paths.reserve(static_cast<int>(m_pending_audio.size()));
+      for (const PendingAudio& pending : m_pending_audio) {
+        wav_paths << pending.wav_path;
+      }
+      QString measure_error;
+      const std::optional<float> measured =
+          AudioRecorder::measure_loudness(wav_paths, &measure_error);
+      if (!measured.has_value()) {
+
+        qCritical().noquote() << QStringLiteral(
+                                     "Promo pass audio could not be measured, so it "
+                                     "stays at the game's own level: %1")
+                                     .arg(measure_error);
+        m_failed = true;
+      } else {
+        gain_db = std::clamp(m_spec.reel_loudness_lufs - *measured, 0.0F, 30.0F);
+        qInfo().noquote()
+            << QStringLiteral("  pass audio measured %1 LUFS, lifting %2 dB to %3 LUFS")
+                   .arg(QString::number(*measured, 'f', 1),
+                        QString::number(gain_db, 'f', 1),
+                        QString::number(m_spec.reel_loudness_lufs, 'f', 1));
+      }
+    }
+
+    for (const PendingAudio& pending : m_pending_audio) {
+      QString audio_error;
+      if (!AudioRecorder::mux(
+              pending.clip_path, pending.wav_path, gain_db, &audio_error)) {
+        qWarning().noquote() << QStringLiteral("Promo shot '%1': %2")
+                                    .arg(pending.shot_name, audio_error);
+      } else {
+        qInfo().noquote() << QStringLiteral("  muxed %1 s of game audio into %2")
+                                 .arg(QString::number(pending.seconds, 'f', 2),
+                                      QFileInfo(pending.clip_path).fileName());
+
+        QString peak_error;
+        const std::optional<float> peak =
+            AudioRecorder::measure_true_peak(pending.clip_path, &peak_error);
+        const float ceiling = AudioRecorder::delivered_peak_ceiling_dbfs();
+        if (!peak.has_value()) {
+          qWarning().noquote()
+              << QStringLiteral("Promo shot '%1': true peak not measured: %2")
+                     .arg(pending.shot_name, peak_error);
+        } else if (*peak > ceiling) {
+          qCritical().noquote()
+              << QStringLiteral("Promo shot '%1' is delivered at %2 dBFS, over the "
+                                "%3 dBFS ceiling; it will clip")
+                     .arg(pending.shot_name,
+                          QString::number(*peak, 'f', 1),
+                          QString::number(ceiling, 'f', 1));
+          m_failed = true;
+        }
+      }
+    }
+    m_pending_audio.clear();
+  }
+
   void end_pass() {
     if (!m_pass_active) {
       return;
     }
     m_pass_active = false;
+    mux_pass_audio();
     m_audio.reset();
     ++m_pass_index;
     QTimer::singleShot(0, [this]() { begin_next_pass(); });
@@ -1592,6 +1654,14 @@ private:
   bool m_shot_armed{false};
   bool m_focus_valid{false};
   bool m_logged_framing{false};
+  struct PendingAudio {
+    QString clip_path;
+    QString wav_path;
+    QString shot_name;
+    float seconds{0.0F};
+  };
+
+  std::vector<PendingAudio> m_pending_audio;
   std::unique_ptr<AudioRecorder> m_audio;
   int m_logged_bucket{-1};
   bool m_failed{false};

@@ -185,8 +185,6 @@ void main() {
     material_roughness = 0.94;
   }
 
-  // Derivative filtering handles subpixel edges; distance attenuation also
-  // prevents resolved paving/gravel contrast from competing with small troops.
   float ground_detail =
       mix(1.0, 0.40, ground_tactical_distance(length(u_camera_pos - v_world_pos)));
   base_color = mix(u_color * 0.92, base_color, ground_detail);

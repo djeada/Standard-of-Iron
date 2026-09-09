@@ -203,6 +203,55 @@ both default to on. Three things about that:
   does not want damage pills over a duel. A shot that wants the world alone
   says `"gameplay_ui": false`.
 
+**A reel is mixed as the game ships, not as this machine is configured.** The
+first half hour of `kingdom_rise` went out at a mean of -54 dB, effectively
+silent, and the cause was not the wiring: `AudioSystem` loads the persisted
+volume sliders in its constructor, and the box it was rendered on had
+`master_volume=0.18` from a playtest. `AudioRecorder::start` now calls
+`AudioSystem::apply_offline_reference_mix()`, which puts the five volumes back
+to the shipped first-run values in memory and _does not_ write them back --
+the `set_*_volume` setters all persist, so a recorder must never use them.
+
+**And then it is lifted once, per pass.** At the reference mix the game sits
+near -25 to -30 LUFS, which is correct for a game and far too quiet for a video
+file. `Spec::reel_loudness_lufs` (default -16, `0` to leave the recording
+alone) makes `PromoRunner` hold every clip of a pass until the pass ends,
+measure the clips played back to back with `ebur128`, and mux them all with the
+same gain and a -1.5 dBFS limiter. Measuring per clip would be more accurate
+and would be wrong: twelve contiguous clips that each hit -16 exactly have a
+level step at every join, and this reel concatenates.
+
+Two things about the measuring pass, both learned the expensive way. **ffmpeg's
+concat demuxer resolves a relative entry against the list file's own directory,
+not the working directory**, so with `--promo-out artifacts/kingdom-rise` --
+relative, the way the README itself spells it -- every path in the list pointed
+at nothing and the pass exited 254. It passed in testing only because that run
+used an absolute `--promo-out`. The list now holds absolute paths. And a
+measuring pass that fails now **fails the run**: it used to warn and mux at the
+game's own level, which is how a whole half hour came out 10 dB under a second
+time without anything looking wrong until the file was measured.
+
+**`alimiter` auto-levels by default, and that makes `limit` look inert.** Its
+`level` option is on unless you say `level=disabled`, and it normalises the
+output back up to 0 dB -- so the ceiling was doing nothing, the delivered master
+peaked at +0.6 dBFS, and dropping the cap from -1.5 to -3 dBFS changed the peak
+by 0.2 dB. With `level=disabled` a -2 dBFS cap delivers about -1.2 after the
+AAC encode overshoots it by ~0.8 dB. `PromoRunner` now measures the _delivered_
+clip -- the only thing worth measuring, since the limiter runs before the
+encoder -- and fails the run above -1 dBFS. Expect a clip's own integrated
+loudness to vary a few LU across a long reel once the auto-level is off; that
+spread is the content, and the pass as a whole is what lands on -16.
+
+**Music comes from the ambient state, so a scenario with no enemy needs to say
+so.** The recorder used to open every pass in `TENSE` and toggle
+`TENSE <-> COMBAT`, so a half-hour of a town being built was scored out of the
+tense set. `AudioRecorder::resting_state` now answers `PEACEFUL` when the world
+holds no two hostile owners, which is the whole of `ai_kingdom_rise`. The base
+tracks are 60 s loops, so the recorder also calls
+`AudioEventHandler::rotate_ambient_music` every two minutes; without it a
+thirty minute reel repeats one minute of music thirty times. An explicit
+`music_track` bed switches the rotation off -- that spec owns the score.
+
 **Author a road as a network, not as tracks.** Two rules, and both fail
 silently if you break them: every segment must share an endpoint with its
 neighbour _exactly_ (a one metre gap draws as a break in the middle of the
@@ -212,6 +261,18 @@ scatter prop within its half width plus the prop's radius plus 0.25 m, without
 a word -- the first routing of `ai_kingdom_rise`'s network would have quietly
 eaten three pines, four plants and a palm. Check a layout arithmetically before
 rendering it; the numbers are cheaper than a capture.
+
+The first shipped routing broke the second rule twice, and neither showed up
+in a shot at battle zoom -- it takes a top-down pass over the whole map to see
+a road network. The town approach left the northern trunk at the bridge and
+stopped dead in open grass at `(-4, -20)`, and the bridge itself had no road on
+its northern bank, so it crossed the river to nothing. The lane through the
+estate now runs the length of the map: off the northern edge at `(-8, -96)`,
+over the bridge, past the seat on its western side, and into the southern trunk
+at `(-4, 53.4)` -- which is why that trunk is split there rather than running
+`(-30, 52)` straight to `(24, 55)`. `ArenaScenariosTest.TheKingdomEstateRoadsRunFromEdgeToEdge`
+holds both rules: every free end is off the map, at a junction or on a bridge,
+and every bridge landing has a road on it.
 
 **Do not put `UnitsClearOfBuildings` on a builder group here.** A build crew's
 `construction_site` is the future building's own centre -- the gang encircles

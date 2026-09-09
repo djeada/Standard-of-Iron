@@ -8,6 +8,7 @@
 
 #include "../core/entity.h"
 #include "ground_verdict.h"
+#include "site_keep_out.h"
 #include "wall_network_service.h"
 
 namespace Engine::Core {
@@ -25,13 +26,14 @@ assess_ground(const Engine::Core::World& world,
               float facing_degrees = 0.0F,
               std::span<const Engine::Core::EntityID> crew = {}) -> GroundVerdict;
 
-[[nodiscard]] auto find_clear_site(const Engine::Core::World& world,
-                                   const std::string& building_type,
-                                   const QVector3D& wanted,
-                                   float search_radius,
-                                   float facing_degrees = 0.0F,
-                                   std::span<const Engine::Core::EntityID> crew = {})
-    -> std::optional<QVector3D>;
+[[nodiscard]] auto
+find_clear_site(const Engine::Core::World& world,
+                const std::string& building_type,
+                const QVector3D& wanted,
+                float search_radius,
+                float facing_degrees = 0.0F,
+                std::span<const Engine::Core::EntityID> crew = {},
+                std::span<const SiteKeepOut> keep_out = {}) -> std::optional<QVector3D>;
 
 [[nodiscard]] auto wall_ground_probe(const Engine::Core::World& world) -> GroundProbe;
 
