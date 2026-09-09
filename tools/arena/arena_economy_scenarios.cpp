@@ -111,7 +111,8 @@ void add_the_land(ArenaScenarioDefinition& scenario) {
   lane({34.0F, 0.0F, -45.0F}, {96.0F, 0.0F, -42.0F}, k_lane);
 
   lane({-96.0F, 0.0F, 54.0F}, {-30.0F, 0.0F, 52.0F}, k_lane);
-  lane({-30.0F, 0.0F, 52.0F}, {24.0F, 0.0F, 55.0F}, k_lane);
+  lane({-30.0F, 0.0F, 52.0F}, {-4.0F, 0.0F, 53.4F}, k_lane);
+  lane({-4.0F, 0.0F, 53.4F}, {24.0F, 0.0F, 55.0F}, k_lane);
   lane({24.0F, 0.0F, 55.0F}, {70.0F, 0.0F, 53.5F}, k_lane);
   lane({70.0F, 0.0F, 53.5F}, {96.0F, 0.0F, 53.0F}, k_lane);
 
@@ -119,7 +120,12 @@ void add_the_land(ArenaScenarioDefinition& scenario) {
   lane({62.0F, 0.0F, -20.0F}, {68.0F, 0.0F, 18.0F}, k_lane);
   lane({68.0F, 0.0F, 18.0F}, {70.0F, 0.0F, 53.5F}, k_lane);
 
-  lane({-8.0F, 0.0F, -43.0F}, {-4.0F, 0.0F, -20.0F}, 3.2F);
+  constexpr float k_town_lane = 3.2F;
+  lane({-8.0F, 0.0F, -96.0F}, {-8.0F, 0.0F, -57.0F}, k_town_lane);
+  lane({-8.0F, 0.0F, -43.0F}, {-4.0F, 0.0F, -20.0F}, k_town_lane);
+  lane({-4.0F, 0.0F, -20.0F}, {-6.0F, 0.0F, 4.0F}, k_town_lane);
+  lane({-6.0F, 0.0F, 4.0F}, {-5.0F, 0.0F, 30.0F}, k_town_lane);
+  lane({-5.0F, 0.0F, 30.0F}, {-4.0F, 0.0F, 53.4F}, k_town_lane);
 
   const auto grove = [&scenario](const char* type,
                                  QVector3D at,
@@ -168,7 +174,7 @@ void add_the_land(ArenaScenarioDefinition& scenario) {
   grove("iron_ore", {30.0F, 0.0F, -20.0F}, 1.0F, {{0.0F, 3.0F, 0.0F}});
 
   scenario.resource_patches.push_back(
-      patch("plant", 9, {-30.0F, 0.0F, 26.0F}, {3.0F, 0.0F, 1.2F}, 0.9F));
+      patch("plant", 9, {-34.0F, 0.0F, 26.0F}, {3.0F, 0.0F, 1.2F}, 0.9F));
   scenario.resource_patches.push_back(
       patch("plant", 8, {20.0F, 0.0F, -26.0F}, {2.8F, 0.0F, -0.8F}, 0.9F));
   scenario.resource_patches.push_back(

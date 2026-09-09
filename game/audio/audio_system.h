@@ -117,6 +117,8 @@ public:
   void set_music_volume(float volume);
   void set_voice_volume(float volume);
   void set_ambience_volume(float volume);
+
+  void apply_offline_reference_mix();
   auto load_sound(const std::string& sound_id,
                   const std::string& file_path,
                   const AudioResourceConfig& config = {}) -> bool;
