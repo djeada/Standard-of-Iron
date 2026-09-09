@@ -1,5 +1,7 @@
 #pragma once
 
+#include "render/profiling/asset_counters.h"
+
 class QOpenGLDebugLogger;
 
 #include <QPointer>
@@ -74,6 +76,8 @@ private:
     Render::Profiling::PacingSample m_previous_pacing_sample;
     std::uint64_t m_pacing_upload_bytes = 0;
     std::uint64_t m_pacing_asset_work = 0;
+    std::array<std::uint64_t, Render::Profiling::AssetCounters::k_count>
+        m_playable_asset_baseline{};
     std::int64_t m_pacing_previous_swap_ns = 0;
     double m_benchmark_seconds = 0.0;
     QString m_benchmark_output;

@@ -341,6 +341,8 @@ public:
     std::atomic<std::uint64_t> forced_presentation_waits{0};
   };
 
+  [[nodiscard]] auto simulation_profile_report() -> QJsonObject;
+
   [[nodiscard]] auto frame_lock_stats() const -> const FrameLockStats& {
     return m_frame_lock_stats;
   }

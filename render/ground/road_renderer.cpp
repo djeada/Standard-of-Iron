@@ -17,11 +17,16 @@
 #include "game/map/visibility_service.h"
 #include "render/draw_commands.h"
 #include "render/gl/mesh.h"
+#include "render/gl/mesh_prewarmer.h"
 #include "render/gl/resources.h"
 #include "render/scene_renderer.h"
 #include "road_network_geometry.h"
 
 namespace Render::GL {
+
+auto RoadRenderer::prewarm_gpu_resources() -> bool {
+  return prewarm_mesh_buffers(m_surfaces, [](auto& entry) { return entry.mesh.get(); });
+}
 
 namespace {
 

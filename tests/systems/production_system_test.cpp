@@ -2,6 +2,7 @@
 #include <memory>
 
 #include "core/component_economy.h"
+#include "core/component_presentation.h"
 #include "core/world.h"
 #include "game/command/command_dispatcher.h"
 #include "game/map/map_definition.h"
@@ -425,6 +426,13 @@ TEST_F(ProductionSystemTest, BuilderCompletesMarketplaceConstruction) {
 
   ASSERT_NE(marketplace, nullptr);
   EXPECT_TRUE(marketplace->has_component<Engine::Core::BuildingComponent>());
+  auto* completion =
+      marketplace->get_component<Engine::Core::ProductionCompletionComponent>();
+  ASSERT_NE(completion, nullptr);
+  EXPECT_FLOAT_EQ(completion->remaining,
+                  Engine::Core::ProductionCompletionComponent::k_duration);
+  EXPECT_GT(completion->radius, 1.0F);
+  EXPECT_FALSE(builder->has_component<Engine::Core::ProductionCompletionComponent>());
   EXPECT_TRUE(Game::Systems::MarketplaceSystem::owner_has_marketplace(world, 1));
 
   auto* marketplace_transform =
@@ -670,3 +678,44 @@ TEST_F(ProductionSystemTest, ACollectOrderStandsTheCrewOnTheNodeAndLeavesItThere
 }
 
 } // namespace
+
+TEST_F(ProductionSystemTest, CompletionEffectExpiresAndIgnoresNegativeDelta) {
+  Engine::Core::World world;
+  auto* entity = world.create_entity();
+  auto* effect = entity->add_component<Engine::Core::ProductionCompletionComponent>();
+  Game::Systems::ProductionSystem system;
+  system.update(&world, -1.0F);
+  EXPECT_FLOAT_EQ(effect->remaining,
+                  Engine::Core::ProductionCompletionComponent::k_duration);
+  system.update(&world, 0.5F);
+  EXPECT_FLOAT_EQ(effect->remaining,
+                  Engine::Core::ProductionCompletionComponent::k_duration - 0.5F);
+  system.update(&world, 10.0F);
+  EXPECT_FALSE(entity->has_component<Engine::Core::ProductionCompletionComponent>());
+}
+
+TEST_F(ProductionSystemTest, RecruitmentGlowsOnTheRecruitOnly) {
+  Engine::Core::World world;
+  auto* barracks = world.create_entity();
+  barracks->add_component<Engine::Core::TransformComponent>();
+  auto* unit = barracks->add_component<Engine::Core::UnitComponent>();
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Barracks;
+  auto* production = barracks->add_component<Engine::Core::ProductionComponent>();
+  production->product_type = Game::Units::TroopType::Swordsman;
+  production->in_progress = true;
+  production->time_remaining = 0.0F;
+
+  Game::Systems::ProductionSystem system;
+  system.update(&world, 0.1F);
+
+  const auto glowing =
+      world.collect_entities_with<Engine::Core::ProductionCompletionComponent>();
+  ASSERT_EQ(glowing.size(), 1U);
+  EXPECT_NE(glowing.front()->get_id(), barracks->get_id());
+  const auto* recruit = glowing.front()->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(recruit, nullptr);
+  EXPECT_EQ(recruit->owner_id, 1);
+  EXPECT_EQ(recruit->spawn_type, Game::Units::SpawnType::Swordsman);
+  EXPECT_FALSE(barracks->has_component<Engine::Core::ProductionCompletionComponent>());
+}

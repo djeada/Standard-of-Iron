@@ -1,5 +1,6 @@
 #include "rock_outcrop_mesh.h"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>

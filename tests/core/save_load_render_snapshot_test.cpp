@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <gtest/gtest.h>
+#include <ranges>
 #include <vector>
 
 #include "game/core/component.h"

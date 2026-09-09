@@ -788,3 +788,35 @@ TEST(StoneGroundFit, RockFieldsAreNotOneColour) {
   EXPECT_GT(max_spread, 0.08F)
       << "iron stains and lichen greys should split the palette";
 }
+
+TEST(ScatterRuntimeTest, HidingAChunkRetainsItsBufferWithoutDrawingStaleInstances) {
+  Render::Ground::Scatter::FilteredRendererState<QVector3D, int> state;
+  state.instances = {QVector3D{0, 0, 0}};
+  state.visible_instances = state.instances;
+  state.track_visible_instances = true;
+  state.instance_count = 1;
+  state.cached_visibility_version = 1;
+  auto& chunk = state.spatial_chunks.emplace_back();
+  chunk.count = 1;
+  chunk.accepted = {1};
+  chunk.visible_count = 1;
+  chunk.all_accepted = true;
+  chunk.buffer = std::make_unique<Render::GL::Buffer>(Render::GL::Buffer::Type::Vertex);
+  auto* retained_buffer = chunk.buffer.get();
+
+  Game::Map::VisibilityService::Snapshot hidden;
+  hidden.initialized = true;
+  hidden.version = 2;
+  hidden.width = hidden.height = 4;
+  hidden.half_width = hidden.half_height = 2;
+  hidden.cells.assign(16,
+                      static_cast<std::uint8_t>(Game::Map::VisibilityState::Unseen));
+  const auto count = Render::Ground::Scatter::sync_filtered_state(
+      state, [](const QVector3D& position) { return position; }, &hidden);
+
+  EXPECT_EQ(count, 0U);
+  EXPECT_TRUE(state.visible_instances.empty());
+  EXPECT_EQ(chunk.visible_count, 0U);
+  EXPECT_EQ(chunk.buffer.get(), retained_buffer);
+  EXPECT_EQ(state.last_sync_stats.buffer_resets, 0U);
+}

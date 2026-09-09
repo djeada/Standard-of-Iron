@@ -28,6 +28,8 @@ public:
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
+  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+
   [[nodiscard]] auto water() const -> WaterRenderer*;
   [[nodiscard]] auto road() const -> RoadRenderer*;
   [[nodiscard]] auto shoreline() const -> ShorelineRenderer*;

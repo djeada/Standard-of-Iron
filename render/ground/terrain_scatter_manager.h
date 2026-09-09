@@ -53,6 +53,7 @@ public:
   void refresh_grass();
 
   [[nodiscard]] bool is_gpu_ready() const;
+  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
 
   [[nodiscard]] auto biome() const -> BiomeRenderer*;
   [[nodiscard]] auto stone() const -> StoneRenderer*;
