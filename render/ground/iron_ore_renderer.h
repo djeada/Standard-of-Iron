@@ -24,6 +24,8 @@ public:
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
+  [[nodiscard]] auto fog_culls_instances() const -> bool override { return false; }
+
 private:
   void generate_instances(const std::vector<Game::Map::WorldProp>& world_props,
                           const Game::Map::TerrainHeightMap& height_map);

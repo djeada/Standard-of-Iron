@@ -34,6 +34,8 @@ public:
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
+  [[nodiscard]] auto fog_culls_instances() const -> bool override { return false; }
+
   [[nodiscard]] auto species() const -> Game::Map::TreeSpecies { return m_species; }
 
   [[nodiscard]] auto instances_for_test() const -> const std::vector<TreeInstanceGpu>& {

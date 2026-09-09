@@ -17,6 +17,7 @@
         <file>assets/shaders/include/visibility_mask.glsl</file>
         <file>assets/shaders/include/fog_reveal.glsl</file>
         <file>assets/shaders/include/noise.glsl</file>
+        <file>assets/shaders/include/foliage_bump.glsl</file>
         <file>assets/shaders/include/material_detail.glsl</file>
         <file>assets/shaders/include/ground_readability.glsl</file>
         <file>assets/shaders/include/character_wear.glsl</file>

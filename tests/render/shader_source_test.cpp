@@ -964,9 +964,56 @@ TEST(ShaderSource, UnexploredGroundShadesTheMapInsteadOfPaintingItBlue) {
   EXPECT_LE(*std::max_element(lift.begin(), lift.end()), 0.05F)
       << "a large lift washes the terrain out into flat haze";
 
-  EXPECT_GE(chroma, 0.40F)
-      << "fogged ground stays recognisably the same terrain, so it keeps a good part "
-         "of its colour rather than going fully grey";
+  EXPECT_GE(chroma, 0.70F)
+      << "fogged ground stays recognisably the same terrain, so it keeps most of its "
+         "colour; draining it further turned green meadows into grey-brown mud that "
+         "made the explored area read as an island";
+}
+
+TEST(ShaderSource, LandscapeScatterIsShadedUnderFogNotDeleted) {
+  const auto root = find_repo_root();
+  const auto mask =
+      read_text(root / "assets" / "shaders" / "include" / "visibility_mask.glsl");
+  ASSERT_FALSE(mask.empty());
+  const auto flat_mask = collapse_whitespace(mask);
+  const auto shading_begin = flat_mask.find("vec3 apply_visibility_world_shading(");
+  ASSERT_NE(shading_begin, std::string::npos);
+  const auto revealed_begin = flat_mask.find("vec3 apply_visibility_revealed(");
+  ASSERT_NE(revealed_begin, std::string::npos);
+  EXPECT_EQ(flat_mask.find("discard", shading_begin, revealed_begin - shading_begin),
+            std::string::npos)
+      << "world shading darkens what the player has not explored; a discard there "
+         "deletes the landscape and leaves the explored area floating on nothing";
+
+  const std::array<const char*, 7> landscape = {
+      "stone", "pine", "olive", "plant", "grass", "dead_tree", "iron_ore"};
+  for (const auto* name : landscape) {
+    const auto frag = read_text(root / "assets" / "shaders" /
+                                (std::string(name) + "_instanced.frag"));
+    ASSERT_FALSE(frag.empty()) << name;
+    const auto flat = collapse_whitespace(frag);
+    EXPECT_NE(flat.find("apply_visibility_world_shading(color, v_world_pos.xz)"),
+              std::string::npos)
+        << name
+        << " is part of the map itself: boulders, trees, plants and ore stay visible "
+           "in shadow under the fog so the terrain is recognisable before it is "
+           "explored";
+    EXPECT_EQ(flat.find("apply_visibility_revealed("), std::string::npos) << name;
+  }
+
+  const std::array<const char*, 3> camp_dressing = {
+      "tent", "supply_cart", "weapon_rack"};
+  for (const auto* name : camp_dressing) {
+    const auto frag = read_text(root / "assets" / "shaders" /
+                                (std::string(name) + "_instanced.frag"));
+    ASSERT_FALSE(frag.empty()) << name;
+    const auto flat = collapse_whitespace(frag);
+    EXPECT_NE(flat.find("apply_visibility_revealed(color, v_world_pos.xz)"),
+              std::string::npos)
+        << name
+        << " is encampment dressing, which is activity: it stays hidden until the "
+           "ground it stands on has been explored";
+  }
 }
 
 TEST(ShaderSource, EveryUnexploredSurfaceUsesTheSameShading) {

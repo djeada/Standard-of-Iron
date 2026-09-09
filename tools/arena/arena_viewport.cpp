@@ -41,6 +41,7 @@
 #include "arena_casting.h"
 #include "arena_scenario.h"
 #include "arena_scenarios.h"
+#include "game/accessibility/motion_settings.h"
 #include "game/core/component.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
@@ -90,6 +91,7 @@
 #include "render/entity/healer_aura_renderer.h"
 #include "render/entity/healing_beam_renderer.h"
 #include "render/entity/healing_waves_renderer.h"
+#include "render/entity/production_completion_renderer.h"
 #include "render/geom/arrow.h"
 #include "render/geom/projectile_renderer.h"
 #include "render/geom/range_rings.h"
@@ -684,6 +686,11 @@ void ArenaViewport::paintGL() {
       Render::GL::render_healing_beams(m_renderer.get(), res, *healing_beam_system);
       Render::GL::render_healing_waves(m_renderer.get(), res, *healing_beam_system);
     }
+    Render::GL::render_production_completions(
+        m_renderer.get(),
+        m_world.get(),
+        k_local_owner_id,
+        Game::Accessibility::MotionSettings::reduced_motion());
     Render::GL::render_healer_auras(m_renderer.get(), res, m_world.get());
     Render::GL::render_commander_auras(m_renderer.get(), res, m_world.get());
 

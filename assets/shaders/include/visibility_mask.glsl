@@ -11,9 +11,9 @@ const float k_visibility_unseen_cutoff = 0.06;
 
 const float k_visibility_unseen_blend_end = 0.52;
 
-const vec3 k_visibility_unseen_shade = vec3(0.50, 0.50, 0.51);
-const vec3 k_visibility_unseen_lift = vec3(0.012, 0.012, 0.013);
-const float k_visibility_unseen_chroma = 0.55;
+const vec3 k_visibility_unseen_shade = vec3(0.56, 0.56, 0.58);
+const vec3 k_visibility_unseen_lift = vec3(0.010, 0.010, 0.012);
+const float k_visibility_unseen_chroma = 0.80;
 
 struct VisibilityMask {
   float seen_now;
@@ -122,7 +122,7 @@ vec3 apply_visibility_world_shading(vec3 lit_color, vec2 world_xz) {
   return apply_visibility_world_shading(lit_color, visibility_mask_fetch(world_xz));
 }
 
-vec3 apply_visibility_memory(vec3 lit_color, vec2 world_xz) {
+vec3 apply_visibility_revealed(vec3 lit_color, vec2 world_xz) {
   if (!visibility_mask_active()) {
     return lit_color;
   }

@@ -107,7 +107,7 @@ TEST(FogRenderer, EmptyGridClearsEverything) {
   EXPECT_EQ(fog.patch_count(), 0U);
 }
 
-TEST(FogRenderer, UnexploredPatchesAreNeutralHazeNotABlueSlab) {
+TEST(FogRenderer, UnexploredPatchesAreADarkNeutralShadowNotAHaze) {
   FogRenderer fog;
   fog.update_mask(28, 28, 1.0F, filled_grid(28, 28, VisibilityState::Unseen));
   ASSERT_GT(fog.patch_count(), 0U);
@@ -124,6 +124,9 @@ TEST(FogRenderer, UnexploredPatchesAreNeutralHazeNotABlueSlab) {
   EXPECT_LE(blue - red, 0.06F)
       << "a blue-dominant haze is the dark-blue floor players reported instead of "
          "the real ground seen through fog";
+  EXPECT_LE(std::max({red, green, blue}), 0.25F)
+      << "the veil darkens the ground like a shadow; a bright grey at any alpha "
+         "lowers contrast and blurs the terrain underneath into a featureless smudge";
   EXPECT_LE(patch.alpha, 0.30F)
-      << "the haze is a veil over readable terrain, not a cover that replaces it";
+      << "the veil is a shadow over readable terrain, not a cover that replaces it";
 }

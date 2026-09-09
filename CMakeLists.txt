@@ -894,6 +894,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         assets/shaders/include/directional_shadows.glsl
         assets/shaders/include/visibility_mask.glsl
         assets/shaders/include/noise.glsl
+        assets/shaders/include/foliage_bump.glsl
         assets/shaders/include/terrain_noise.glsl
         assets/shaders/directional_shadow_depth.vert
         assets/shaders/directional_shadow_depth_instanced.vert
