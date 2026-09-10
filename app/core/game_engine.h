@@ -36,7 +36,6 @@
 #include "app/input/hover_tracker.h"
 #include "app/input/input_command_handler.h"
 #include "app/input/rts_camera_controller.h"
-#include "app/mission/mission_wave_runtime.h"
 #include "app/mission/tutorial_observation.h"
 #include "app/models/selected_units_model.h"
 #include "app/orders/movement_utils.h"
@@ -75,6 +74,7 @@
 #include "game/mission/commander_voice_observer.h"
 #include "game/mission/mission_setup_coordinator.h"
 #include "game/mission/mission_wave_director.h"
+#include "game/mission/mission_wave_runtime.h"
 #include "game/mission/mission_waves.h"
 #include "game/mission/tutorial_director.h"
 #include "game/render_bridge/selection_controller.h"
@@ -494,7 +494,7 @@ private:
   void reset_preload_interaction_state();
   void reset_mission_runtime_state();
   void update_mission_waves(float dt);
-  [[nodiscard]] auto mission_wave_binding() -> App::Mission::MissionWaveBinding;
+  [[nodiscard]] auto mission_wave_binding() -> Game::Mission::MissionWaveBinding;
   void publish_wave_status();
   void configure_mission_stages();
   void configure_commander_messages();
@@ -690,7 +690,7 @@ private:
   bool m_mission_start_cue_pending = false;
   float m_mission_stage_poll_accumulator = 0.0F;
   float m_minimap_landmark_poll_accumulator = 0.0F;
-  App::Mission::MissionWaveRuntime m_mission_waves;
+  Game::Mission::MissionWaveRuntime m_mission_waves;
   App::Mission::TutorialFrameNotes m_tutorial_notes;
   float m_tutorial_observe_accumulator = 0.0F;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>

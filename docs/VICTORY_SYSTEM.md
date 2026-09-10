@@ -152,6 +152,48 @@ That summary is built only when the world is dirty for world-based rules. The se
 
 The service evaluates non-timer victory rules first, then defeat rules. Time-based victory is checked earlier in the update loop using elapsed time. In other words, if both a world-based victory and defeat become true in the same reevaluation, victory currently wins because it is checked first.
 
+## Who calls `update()`
+
+`VictoryService::update(world, dt)` is driven from inside the fixed simulation tick.
+`RuntimeFrameOrchestrator::advance_simulation()` calls it from the per-tick callback it
+hands to `SessionContext::advance()`, immediately after the world has been stepped, so
+`dt` is always the session's `tick_seconds` and never a presentation frame time.
+
+It used to be called from `RuntimeFrameOrchestrator::update()` — the presentation path —
+with the frame's own delta. That made every real match rule that owns a clock (survive
+time, and the time-limit defeat) a function of how fast the machine happened to be
+drawing: `m_elapsed_time` accumulated presentation frames, so a mission held out for the
+same wall-clock span but a different number of ticks on a 15 fps machine and a 60 fps one,
+and a dropped simulation tick moved the deadline. Now the deadline lands on a fixed tick
+count. A paused match advances no ticks and therefore no objective clock, which is what
+was wanted anyway.
+
+`RuntimeFrameOrchestratorTest.TheObjectiveClockRunsOnTicksNotOnFrames` pins this: the same
+survive-time rule fires on the same tick at 60 fps, at 15 fps, and on a stuttering
+alternation of the two.
+
+The consequence for callers is that the victory callback now runs on the simulation
+thread, not the render thread. Both are serialised by `GameEngine`'s frame mutex, so the
+callback sees the same world it always did.
+
+## Victory state is saved
+
+`VictoryService::serialize_state()` / `restore_state()` put the elapsed time, the
+startup delay, the spectator poll timer, the two arming flags, the per-objective
+completion flags and the decided outcome into the match snapshot, through the
+`Game::Session::SessionSnapshot` contributor `GameEngine` registers for it. Before
+that the timer restarted from zero on load, so a survive-time mission reloaded
+near its deadline had to be survived twice.
+
+## Victory state is saved
+
+`VictoryService::serialize_state()` / `restore_state()` put the elapsed time, the
+startup delay, the spectator poll timer, the two arming flags, the per-objective
+completion flags and the decided outcome into the match snapshot, through the
+`Game::Session::SessionSnapshot` contributor `GameEngine` registers for it. Before
+that the timer restarted from zero on load, so a survive-time mission reloaded near
+its deadline had to be survived twice.
+
 ## Event-driven reevaluation
 
 World-based rules do not need a full scan every tick. The service marks itself dirty and reevaluates on the events that matter to current rules:

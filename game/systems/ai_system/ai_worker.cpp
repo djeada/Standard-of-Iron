@@ -69,12 +69,17 @@ void AIWorkerPool::stop() {
 }
 
 void AIWorkerPool::enqueue(AIWorker& worker) {
+  bool stopping = false;
   {
     const std::lock_guard<std::mutex> lock(m_mutex);
-    if (m_stopping) {
-      return;
+    stopping = m_stopping;
+    if (!stopping) {
+      m_queue.push_back(&worker);
     }
-    m_queue.push_back(&worker);
+  }
+  if (stopping) {
+    worker.discard_pending_job();
+    return;
   }
   m_condition.notify_one();
 }

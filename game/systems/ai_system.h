@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QJsonObject>
 #include <queue>
 
 #include <atomic>
@@ -67,8 +68,8 @@ public:
     return m_refused_command_count;
   }
 
-  [[nodiscard]] auto deferred_decision_count() const -> std::uint64_t {
-    return m_deferred_decision_count;
+  [[nodiscard]] auto decisions_over_wait_budget() const -> std::uint64_t {
+    return m_decisions_over_wait_budget;
   }
 
   [[nodiscard]] auto longest_decision_wait_us() const -> std::uint64_t {
@@ -97,6 +98,9 @@ public:
   [[nodiscard]] auto ai_player_state(int player_id) const -> AIPlayerState;
 
   [[nodiscard]] auto plan_for(int player_id) const -> const AI::AIContext*;
+
+  [[nodiscard]] auto serialize_state() const -> QJsonObject;
+  void restore_state(const QJsonObject& state);
 
 private:
   struct AIInstance {
@@ -128,7 +132,7 @@ private:
   std::uint64_t m_snapshot_build_count{0};
   std::uint64_t m_applied_command_count{0};
   std::uint64_t m_refused_command_count{0};
-  std::uint64_t m_deferred_decision_count{0};
+  std::uint64_t m_decisions_over_wait_budget{0};
   std::uint64_t m_longest_decision_wait_us{0};
   std::chrono::microseconds m_decision_wait_budget{k_default_decision_wait_budget};
 

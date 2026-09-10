@@ -125,6 +125,7 @@
 #include "game/render_bridge/minimap/unit_layer.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/render_bridge/selection_controller.h"
+#include "game/session/session_snapshot.h"
 #include "game/session/simulation_clock.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_strategy.h"
@@ -348,6 +349,21 @@ void GameEngine::build_services_and_controllers() {
                                               .owners = session.owners(),
                                               .nations = session.nations(),
                                               .economy = session.economy()});
+
+  Game::Session::SessionSnapshot::register_contributor(
+      {.key = "victory",
+       .capture = [service = m_victory_service.get()](
+                      const Game::Session::SnapshotScope&) -> QJsonValue {
+         return service != nullptr ? QJsonValue(service->serialize_state())
+                                   : QJsonValue();
+       },
+       .restore =
+           [service = m_victory_service.get()](const Game::Session::SnapshotScope&,
+                                               const QJsonValue& value) {
+             if (service != nullptr) {
+               service->restore_state(value.toObject());
+             }
+           }});
 
   connect_save_service_signals();
   m_camera_service = std::make_unique<Game::Systems::CameraService>(

@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "app/input/input_command_handler.h"
+#include "game/command/command_queue.h"
 #include "game/systems/nav_grid.h"
 #define private public
 #include "app/economy/production_manager.h"
@@ -271,6 +272,7 @@ protected:
     EXPECT_STREQ(builder_prod->product_type.c_str(), expected_product_type);
   }
 
+  Game::Command::ScopedImmediateDispatch immediate_orders;
   Engine::Core::World world;
   Game::Systems::SelectionSystem* selection = nullptr;
   Game::Systems::PickingService picking_service;

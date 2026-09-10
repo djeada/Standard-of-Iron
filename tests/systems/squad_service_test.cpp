@@ -27,17 +27,17 @@ protected:
     Game::Systems::NavGrid::initialize(64, 64);
     m_factory = std::make_shared<Game::Units::UnitFactoryRegistry>();
     Game::Units::register_built_in_units(*m_factory);
-    Game::Map::MapTransformer::setFactoryRegistry(m_factory);
 
     m_session = std::make_unique<Game::Session::SessionContext>();
     m_session->world().set_presentation_enabled(false);
     m_scope = std::make_unique<Game::Session::ScopedSession>(*m_session);
+    Game::Map::MapTransformer::setFactoryRegistry(m_factory);
   }
 
   void TearDown() override {
+    Game::Map::MapTransformer::setFactoryRegistry(nullptr);
     m_scope.reset();
     m_session.reset();
-    Game::Map::MapTransformer::setFactoryRegistry(nullptr);
   }
 
   auto spawn(SpawnType type, float x, float z) -> EntityID {

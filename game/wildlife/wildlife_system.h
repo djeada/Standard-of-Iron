@@ -69,8 +69,8 @@ public:
   void configure(const Game::Map::MapDefinition& map_definition);
   void configure(const WildlifeSettings& settings, std::uint32_t map_seed);
 
-  void set_focus(float world_x, float world_z) noexcept;
-  void clear_focus() noexcept;
+  void set_cosmetic_focus(float world_x, float world_z) noexcept;
+  void clear_cosmetic_focus() noexcept;
 
   void update(Engine::Core::World* world, float delta_time) override;
 
@@ -164,7 +164,7 @@ private:
                         const SpeciesConfig& config,
                         bool urgent);
 
-  [[nodiscard]] auto tier_for(float world_x, float world_z) const noexcept -> Tier;
+  [[nodiscard]] auto tier_for(float world_x, float world_z) const -> Tier;
   [[nodiscard]] auto find_group(std::uint16_t group_id) -> GroupState*;
   [[nodiscard]] auto pick_open_point(std::uint32_t& rng,
                                      float origin_x,
@@ -194,6 +194,7 @@ private:
   std::vector<AnimalRef> m_animals;
   std::vector<QuarryRef> m_quarry;
   ThreatField m_threats;
+  ThreatField m_interest;
   WildlifeStats m_stats{};
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory_registry;
   NatureBrain m_sheep_brain{make_sheep_brain()};
@@ -201,9 +202,6 @@ private:
   std::uint32_t m_seed{1U};
   std::uint16_t m_next_group_id{0U};
   float m_threat_refresh{0.0F};
-  float m_focus_x{0.0F};
-  float m_focus_z{0.0F};
-  bool m_has_focus{false};
   bool m_enabled{false};
   bool m_spawn_pending{false};
   bool m_restored{false};

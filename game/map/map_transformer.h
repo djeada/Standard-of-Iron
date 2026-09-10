@@ -23,10 +23,17 @@ struct MapRuntime {
   std::vector<Engine::Core::EntityID> unit_ids;
 };
 
+struct MapTransformOptions {
+  std::unordered_map<int, int> player_team_overrides;
+  std::unordered_map<int, QString> base_assignments;
+  bool spectator_mode = false;
+};
+
 class MapTransformer {
 public:
   static auto apply_to_world(const MapDefinition& def,
-                             Engine::Core::World& world) -> MapRuntime;
+                             Engine::Core::World& world,
+                             const MapTransformOptions& options = {}) -> MapRuntime;
 
   static void setFactoryRegistry(std::shared_ptr<Game::Units::UnitFactoryRegistry> reg);
   static auto
@@ -34,15 +41,6 @@ public:
 
   static void set_local_owner_id(int owner_id);
   static auto local_owner_id() -> int;
-
-  static void set_spectator_mode(bool enabled);
-  static auto spectator_mode() -> bool;
-
-  static void setPlayerTeamOverrides(const std::unordered_map<int, int>& overrides);
-  static void clear_player_team_overrides();
-
-  static void set_base_assignments(const std::unordered_map<int, QString>& assignments);
-  static void clear_base_assignments();
 };
 
 } // namespace Game::Map

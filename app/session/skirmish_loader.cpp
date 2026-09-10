@@ -202,8 +202,6 @@ SkirmishLoader::SkirmishLoader(Engine::Core::World& world,
 }
 
 void SkirmishLoader::reset_game_state() {
-  Game::Map::MapTransformer::set_spectator_mode(false);
-
   if (auto* selection_system = m_world.get_system<Game::Systems::SelectionSystem>()) {
     selection_system->clear_selection();
   }
@@ -227,9 +225,6 @@ void SkirmishLoader::reset_game_state() {
   session.building_collision().clear();
 
   session.owners().clear();
-
-  Game::Map::MapTransformer::clear_player_team_overrides();
-  Game::Map::MapTransformer::clear_base_assignments();
 
   session.visibility().reset();
 
@@ -396,9 +391,10 @@ auto SkirmishLoader::start(const QString& map_path,
   }
 
   Game::Map::MapTransformer::set_local_owner_id(player_owner_id);
-  Game::Map::MapTransformer::set_spectator_mode(is_spectator_mode);
-  Game::Map::MapTransformer::setPlayerTeamOverrides(team_overrides);
-  Game::Map::MapTransformer::set_base_assignments(base_assignments);
+  const Game::Map::MapTransformOptions transform_options{
+      .player_team_overrides = team_overrides,
+      .base_assignments = base_assignments,
+      .spectator_mode = is_spectator_mode};
 
   auto& nation_registry = session.nations();
 
@@ -421,8 +417,13 @@ auto SkirmishLoader::start(const QString& map_path,
     }
   }
 
-  auto level_result = App::Core::LevelLoader::loadFromAssets(
-      map_path, m_world, m_renderer, m_camera, allow_default_player_barracks);
+  auto level_result =
+      App::Core::LevelLoader::loadFromAssets(map_path,
+                                             m_world,
+                                             m_renderer,
+                                             m_camera,
+                                             allow_default_player_barracks,
+                                             transform_options);
   pump_events();
 
   if (!level_result.ok && !level_result.error_message.isEmpty()) {

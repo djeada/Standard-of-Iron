@@ -20,6 +20,7 @@
 #include "game/save/serialization.h"
 #include "game/session/deterministic_rng.h"
 #include "game/session/session_context.h"
+#include "game/session/session_snapshot.h"
 #include "game/session/simulation_clock.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/cursed_gold_vein_system.h"
@@ -100,18 +101,8 @@ auto SaveLoadCoordinator::begin_save_to_slot(const SaveToSlotContext& context) c
   if (!context.mission_title.isEmpty()) {
     metadata["mission_title"] = context.mission_title;
   }
-  if (auto* undead_system =
-          context.world.get_system<Game::Systems::UndeadAwakeningSystem>()) {
-    metadata["undead_zones"] = undead_system->serialize_state();
-  }
-  if (auto* vein_system =
-          context.world.get_system<Game::Systems::CursedGoldVeinSystem>()) {
-    metadata["cursed_gold_veins"] = vein_system->serialize_state();
-  }
-  if (auto* wildlife_system =
-          context.world.get_system<Game::Wildlife::WildlifeSystem>()) {
-    metadata["wildlife"] = wildlife_system->serialize_state();
-  }
+  metadata["session_snapshot"] = Game::Session::SessionSnapshot::capture(
+      Game::Session::SnapshotScope{.world = &context.world, .map = nullptr});
   if (!context.mission_wave_state.isEmpty()) {
     metadata["mission_waves"] = context.mission_wave_state;
   }
@@ -225,23 +216,22 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
         Game::Map::MapContextStore::acquire(context.level.map_path, &map_error);
     if (map_context.valid()) {
       const auto& map_def = *map_context.definition();
-      if (auto* undead_system =
-              context.world.get_system<Game::Systems::UndeadAwakeningSystem>()) {
-        undead_system->configure(map_def);
-        undead_system->restore_state(metadata["undead_zones"].toArray());
-        if (context.victory_service != nullptr) {
+      const auto report = Game::Session::SessionSnapshot::restore(
+          Game::Session::SnapshotScope{.world = &context.world, .map = &map_def},
+          metadata.value("session_snapshot").toObject());
+      for (const auto& key : report.missing_from_save) {
+        qWarning() << "SaveLoadCoordinator: the save carries no state for"
+                   << QString::fromStdString(key);
+      }
+      for (const auto& key : report.unclaimed_in_save) {
+        qWarning() << "SaveLoadCoordinator: nothing in this build claims the saved"
+                   << QString::fromStdString(key) << "state";
+      }
+      if (context.victory_service != nullptr) {
+        if (auto* undead_system =
+                context.world.get_system<Game::Systems::UndeadAwakeningSystem>()) {
           context.victory_service->set_undead_zone_query(undead_system);
         }
-      }
-      if (auto* vein_system =
-              context.world.get_system<Game::Systems::CursedGoldVeinSystem>()) {
-        vein_system->configure(map_def);
-        vein_system->restore_state(metadata["cursed_gold_veins"].toArray());
-      }
-      if (auto* wildlife_system =
-              context.world.get_system<Game::Wildlife::WildlifeSystem>()) {
-        wildlife_system->configure(map_def);
-        wildlife_system->restore_state(metadata["wildlife"].toObject());
       }
     } else {
 

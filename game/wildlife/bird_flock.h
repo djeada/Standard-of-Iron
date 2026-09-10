@@ -96,6 +96,8 @@ public:
 
   static auto instance() -> BirdFlockManager&;
 
+  static auto process_flock() -> BirdFlockManager&;
+
   void set_terrain_probe(ITerrainProbe* probe) noexcept;
 
   void configure(const SpeciesConfig& config,
