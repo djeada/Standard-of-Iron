@@ -7,6 +7,7 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/nation_id.h"
+#include "render/draw_commands.h"
 #include "render/scene_renderer.h"
 #include "render/selection_ring_layout.h"
 
@@ -24,6 +25,15 @@ auto get_commander_aura_color(Game::Systems::NationID nation_id) -> QVector3D {
     return {1.0F, 0.7F, 0.2F};
   }
 }
+
+constexpr float k_aura_ring_lift = 0.06F;
+constexpr float k_aura_boundary_thickness = 0.22F;
+constexpr float k_aura_boundary_alpha = 0.62F;
+constexpr float k_aura_boundary_pulse = 0.14F;
+constexpr float k_aura_pulse_seconds = 0.9F;
+constexpr float k_aura_pulse_thickness = 0.9F;
+constexpr float k_aura_pulse_alpha = 0.95F;
+constexpr float k_buff_ring_thickness = 0.10F;
 
 } // namespace
 
@@ -94,9 +104,34 @@ void render_commander_auras(Renderer* renderer,
     QVector3D const position(
         transform->position.x, transform->position.y + 0.1F, transform->position.z);
     float const radius = commander->aura_radius;
-    float const intensity = 0.10F;
+    float const elapsed = std::max(
+        0.0F, commander->aura_ability_duration - commander->aura_ability_remaining);
 
-    renderer->healer_aura(position, banner_color, radius, intensity, animation_time);
+    renderer->healer_aura(position, banner_color, radius, 1.0F, animation_time);
+
+    GroundMarkerCmd boundary;
+    boundary.center = QVector3D(transform->position.x,
+                                transform->position.y + k_aura_ring_lift,
+                                transform->position.z);
+    boundary.outer_radius = radius;
+    boundary.thickness = k_aura_boundary_thickness;
+    boundary.color = banner_color;
+    boundary.alpha =
+        k_aura_boundary_alpha + k_aura_boundary_pulse * std::sin(animation_time * 3.0F);
+    renderer->ground_marker(boundary);
+
+    if (elapsed < k_aura_pulse_seconds) {
+      float const t = elapsed / k_aura_pulse_seconds;
+      float const eased = 1.0F - (1.0F - t) * (1.0F - t);
+      GroundMarkerCmd pulse;
+      pulse.center = boundary.center;
+      pulse.outer_radius = std::max(0.4F, radius * eased);
+      pulse.thickness = k_aura_pulse_thickness * (1.0F - 0.5F * t);
+      pulse.color = banner_color;
+      pulse.alpha = k_aura_pulse_alpha * (1.0F - t);
+      pulse.focused = true;
+      renderer->ground_marker(pulse);
+    }
   }
 
   for (auto* entity :
@@ -123,7 +158,7 @@ void render_commander_auras(Renderer* renderer,
       }
     }
 
-    const float pulse = 0.26F + 0.08F * std::sin(animation_time * 5.5F +
+    const float pulse = 0.72F + 0.18F * std::sin(animation_time * 5.5F +
                                                  static_cast<float>(entity->get_id()));
     std::span<const Engine::Core::FormationSoldierPresentation> soldiers;
     if (auto const* formation =
@@ -139,13 +174,15 @@ void render_commander_auras(Renderer* renderer,
              transform->position.x, transform->position.y, transform->position.z),
          .yaw_degrees = transform->rotation.y});
     for (auto const& placement : placements) {
-      renderer->healer_aura(QVector3D(placement.world_x,
-                                      transform->position.y + 0.35F,
-                                      placement.world_z),
-                            get_commander_aura_color(glow_nation),
-                            placement.ring_size,
-                            pulse,
-                            animation_time);
+      GroundMarkerCmd ring;
+      ring.center = QVector3D(placement.world_x,
+                              transform->position.y + k_aura_ring_lift,
+                              placement.world_z);
+      ring.outer_radius = placement.ring_size;
+      ring.thickness = k_buff_ring_thickness;
+      ring.color = get_commander_aura_color(glow_nation);
+      ring.alpha = pulse;
+      renderer->ground_marker(ring);
     }
   }
 }

@@ -1,0 +1,180 @@
+{
+  "id": "trailer_open_proof",
+  "title": "STANDARD OF IRON",
+  "subtitle": "COMMAND IT. FIGHT IN IT.",
+  "end_card_seconds": 0.0,
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "supersample": 2,
+  "gameplay_ui": true,
+  "transition": {
+    "type": "cut"
+  },
+  "grade": {
+    "contrast": 1.1,
+    "saturation": 1.14,
+    "brightness": 0.04,
+    "gamma": 1.12,
+    "grain": 4,
+    "vignette": 0.08
+  },
+  "shots": [
+    {
+      "name": "field_order",
+      "scenario": "trailer_open",
+      "start": 2.0,
+      "duration": 3.0,
+      "gameplay_ui": true,
+      "focus": {
+        "mode": "point",
+        "point": [-14.0, 0.0, 23.5]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 30.0,
+          "pitch": 27,
+          "yaw": 348,
+          "fov": 40,
+          "height": 1.5
+        },
+        {
+          "time": 3.0,
+          "distance": 25.0,
+          "pitch": 25,
+          "yaw": 352,
+          "fov": 40,
+          "height": 1.5,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "COMMAND IT."
+    },
+    {
+      "name": "into_the_saddle",
+      "scenario": "trailer_open",
+      "start": 5.0,
+      "duration": 1.6,
+      "gameplay_ui": true,
+      "focus": {
+        "mode": "group",
+        "group": "scipio",
+        "smoothing": 0.1,
+        "offset": [0.64, 0.71, -2.9]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 23.0,
+          "pitch": 25,
+          "yaw": 352,
+          "fov": 40,
+          "height": 1.0
+        },
+        {
+          "time": 1.6,
+          "distance": 6.23,
+          "pitch": 17.7,
+          "yaw": 5.2,
+          "fov": 68,
+          "height": 0.0,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "commander_view",
+      "scenario": "trailer_open",
+      "start": 6.6,
+      "duration": 1.9,
+      "gameplay_camera": true,
+      "gameplay_ui": true,
+      "caption": "FIGHT IN IT."
+    },
+    {
+      "name": "the_line_answers",
+      "scenario": "trailer_open",
+      "start": 8.5,
+      "duration": 1.5,
+      "gameplay_ui": true,
+      "focus": {
+        "mode": "group",
+        "group": "scipio",
+        "smoothing": 0.1,
+        "offset": [0.64, 0.71, -2.9]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 6.23,
+          "pitch": 17.7,
+          "yaw": 5.2,
+          "fov": 68,
+          "height": 0.0
+        },
+        {
+          "time": 1.5,
+          "distance": 26.0,
+          "pitch": 32,
+          "yaw": 4,
+          "fov": 46,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    }
+  ],
+  "sfx": [
+    {
+      "file": "assets/audio/sfx/combat/battlefield_distant_mass_01.ogg",
+      "at": 0.05,
+      "gain": 0.7
+    },
+    {
+      "file": "assets/audio/sfx/combat/roman_war_horns_orders.ogg",
+      "at": 0.6,
+      "gain": 0.9
+    },
+    {
+      "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
+      "at": 1.2,
+      "gain": 0.6
+    },
+    {
+      "file": "assets/audio/sfx/combat/vanguard_rush.ogg",
+      "at": 4.55,
+      "gain": 0.8
+    },
+    {
+      "file": "assets/audio/sfx/combat/charge_roar.ogg",
+      "at": 4.95,
+      "gain": 0.9
+    },
+    {
+      "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
+      "at": 5.4,
+      "gain": 0.9
+    },
+    {
+      "file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
+      "at": 6.6,
+      "gain": 0.7
+    },
+    {
+      "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
+      "at": 6.9,
+      "gain": 0.6
+    }
+  ],
+  "motion_limits": {
+    "yaw_degrees_per_second": 40.0,
+    "pitch_degrees_per_second": 16.0,
+    "fov_degrees_per_second": 20.0,
+    "minimum_clip_seconds": 1.5,
+    "mean_clip_seconds": 1.8
+  },
+  "music": "artifacts/promo/trailer_score.ogg",
+  "music_start": 0.0,
+  "music_volume": 0.2
+}

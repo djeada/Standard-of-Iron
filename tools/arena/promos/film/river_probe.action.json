@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "name": "river_probe",
+  "loop_seconds": 0.0,
+  "required_coverage": ["selection_change"],
+  "actions": [
+    {
+      "at": 0.05,
+      "action": "camera_look_at",
+      "argument": "-8,-22"
+    },
+    {
+      "at": 0.06,
+      "action": "camera_zoom",
+      "argument": "-4"
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "name": "trailer_river",
+  "loop_seconds": 0.0,
+  "required_coverage": ["formation_move"],
+  "actions": [
+    {
+      "at": 0.05,
+      "action": "camera_look_at",
+      "argument": "-8,-22"
+    },
+    {
+      "at": 0.06,
+      "action": "camera_zoom",
+      "argument": "-5"
+    },
+    {
+      "at": 0.5,
+      "action": "select_all"
+    },
+    {
+      "at": 1.2,
+      "action": "formation_begin_world",
+      "argument": "-16,-18"
+    },
+    {
+      "at": 1.6,
+      "action": "formation_drag_world",
+      "argument": "-10,-22"
+    },
+    {
+      "at": 2.0,
+      "action": "formation_drag_world",
+      "argument": "-4,-26"
+    },
+    {
+      "at": 2.4,
+      "action": "formation_drag_world",
+      "argument": "0,-28"
+    },
+    {
+      "at": 3.0,
+      "action": "formation_end"
+    },
+    {
+      "at": 4.5,
+      "action": "attack_at_world",
+      "argument": "6,-36"
+    },
+    {
+      "at": 13.0,
+      "action": "select_id",
+      "argument": "1"
+    },
+    {
+      "at": 13.5,
+      "action": "commander_enter"
+    },
+    {
+      "at": 14.0,
+      "action": "commander_key_down",
+      "argument": "w"
+    },
+    {
+      "at": 17.5,
+      "action": "commander_key_up",
+      "argument": "w"
+    },
+    {
+      "at": 18.0,
+      "action": "commander_attack"
+    },
+    {
+      "at": 19.0,
+      "action": "commander_attack"
+    },
+    {
+      "at": 20.0,
+      "action": "commander_vanguard"
+    },
+    {
+      "at": 21.0,
+      "action": "commander_attack"
+    },
+    {
+      "at": 22.5,
+      "action": "commander_aura"
+    },
+    {
+      "at": 26.5,
+      "action": "commander_exit"
+    },
+    {
+      "at": 27.0,
+      "action": "camera_zoom",
+      "argument": "-4"
+    },
+    {
+      "at": 27.5,
+      "action": "camera_zoom",
+      "argument": "-4"
+    },
+    {
+      "at": 28.0,
+      "action": "camera_zoom",
+      "argument": "-4"
+    }
+  ]
+}

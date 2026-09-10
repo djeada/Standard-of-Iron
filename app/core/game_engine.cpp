@@ -789,6 +789,16 @@ void GameEngine::run_simulation_thread() {
   }
 }
 
+void GameEngine::film_step(float dt) {
+  const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
+  if (!try_begin_simulation_tick()) {
+    return;
+  }
+  simulate(dt);
+  drain_pending_save_capture();
+  end_simulation_tick();
+}
+
 void GameEngine::simulate(float dt) {
   if (m_runtime.loading) {
     return;

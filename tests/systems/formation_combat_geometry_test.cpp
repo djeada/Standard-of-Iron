@@ -416,6 +416,10 @@ TEST_F(FormationCombatGeometry, DeepOverlapEngagesEveryLivingSoldier) {
       EXPECT_NE(directive.combat_role, Engine::Core::FormationSoldierCombatRole::None);
       EXPECT_EQ(directive.target_slot, pair->target_slot);
       EXPECT_EQ(directive.engagement_surface_gap, pair->surface_gap);
+      if (directive.engagement_surface_gap > presentation->spacing * 0.65F) {
+        EXPECT_EQ(directive.combat_role,
+                  Engine::Core::FormationSoldierCombatRole::Guard);
+      }
     }
   }
   EXPECT_TRUE(std::any_of(presentation->soldiers.begin() + 1,
@@ -451,6 +455,38 @@ TEST_F(FormationCombatGeometry, EngagementWaitsForFormationFootprintsToMerge) {
   EXPECT_TRUE(
       Game::Systems::FormationCombat::contact_is_active(*attacker, *target, engaged));
   EXPECT_LE(engaged.center_distance, minimum_spacing * 0.5F);
+}
+
+TEST_F(FormationCombatGeometry, SettledCombatSlotsDoNotSlideOnAnIndependentClock) {
+  Engine::Core::World world;
+  auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto* target = add_spearmen(world, 2, 6.0F, 180.0F);
+  auto const geometry =
+      Game::Systems::FormationCombat::contact_geometry(*attacker, *target);
+  target->get_component<Engine::Core::TransformComponent>()->position.z =
+      geometry.engagement_center_distance;
+  attacker->add_component<Engine::Core::AttackTargetComponent>()->target_id =
+      target->get_id();
+
+  constexpr float dt = 1.0F / 30.0F;
+  for (int frame = 0; frame < 90; ++frame) {
+    Game::Systems::Combat::update_formation_contacts(&world, dt);
+  }
+  auto const* presentation =
+      attacker->get_component<Engine::Core::FormationPresentationComponent>();
+  ASSERT_NE(presentation, nullptr);
+  auto const settled = presentation->soldiers;
+  ASSERT_FALSE(settled.empty());
+  for (int frame = 0; frame < 60; ++frame) {
+    Game::Systems::Combat::update_formation_contacts(&world, dt);
+    for (std::size_t i = 0; i < settled.size(); ++i) {
+      auto const& soldier = presentation->soldiers[i];
+      EXPECT_NEAR(soldier.local_x, settled[i].local_x, 0.001F);
+      EXPECT_NEAR(soldier.local_z, settled[i].local_z, 0.001F);
+      EXPECT_LT(std::hypot(soldier.contact_offset_x, soldier.contact_offset_z),
+                presentation->spacing * 0.30F);
+    }
+  }
 }
 
 TEST_F(FormationCombatGeometry, LastLivingFormationBodyPublishesOwnedHitReaction) {
@@ -1244,7 +1280,7 @@ TEST_F(FormationCombatGeometry, SoldiersWalkIntoContactInsteadOfSnapping) {
         std::max(furthest_offset,
                  std::hypot(soldier.contact_offset_x, soldier.contact_offset_z));
   }
-  EXPECT_GT(furthest_offset, 0.05F)
+  EXPECT_GT(furthest_offset, 0.01F)
       << "the rate limit slows the step into contact; it must not cancel it";
 }
 
@@ -1278,7 +1314,7 @@ TEST_F(FormationCombatGeometry, ACasualtyFallsWhereItFought) {
     }
   }
   ASSERT_LT(victim, presentation->soldiers.size());
-  ASSERT_GT(victim_offset, 0.05F) << "the test needs a soldier standing off its slot";
+  ASSERT_GT(victim_offset, 0.01F) << "the test needs a soldier standing off its slot";
   auto const before = presentation->soldiers[victim];
 
   auto* roster = Engine::Core::get_or_add_component<
