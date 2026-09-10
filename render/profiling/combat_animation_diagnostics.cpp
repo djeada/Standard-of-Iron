@@ -34,6 +34,9 @@ auto visual_state_from_sample(const SoldierAnimationDebugSample& sample) noexcep
   if (sample.is_attacking) {
     return SoldierVisualState::Attack;
   }
+  if (sample.animation_state == Render::Creature::AnimationStateId::Hold) {
+    return SoldierVisualState::Hold;
+  }
   switch (sample.locomotion_state) {
   case Render::Creature::MovementAnimationState::Run:
     return SoldierVisualState::Run;

@@ -33,6 +33,7 @@
 #include <qsurfaceformat.h>
 #include <qurl.h>
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <cstdio>
@@ -42,6 +43,8 @@
 #include <string_view>
 
 #include "app/core/benchmark_action_fixture.h"
+#include "app/core/film_action_dispatch.h"
+#include "app/core/film_recorder.h"
 #include "app/viewmodels/orders_view_model.h"
 #include "app/viewmodels/production_view_model.h"
 #include "game/core/presentation_coverage.h"
@@ -712,6 +715,7 @@ auto main(int argc, char* argv[]) -> int {
   QString runtime_benchmark_output;
   QString runtime_action_fixture_path;
   std::optional<App::Core::BenchmarkActionFixture> runtime_action_fixture;
+  std::optional<App::Core::FilmConfig> film_config;
 
   {
     QCommandLineParser parser;
@@ -796,8 +800,30 @@ auto main(int argc, char* argv[]) -> int {
         "path");
     QCommandLineOption const action_fixture_opt(
         "action-fixture",
-        "Drive a versioned battle/UI action fixture during the benchmark.",
+        "Drive a versioned battle/UI action fixture during the benchmark or the film.",
         "path");
+    QCommandLineOption const film_opt(
+        "film",
+        "Film the directly launched mission one simulation step per frame into "
+        "numbered PNGs in this directory, then exit. Wall-clock speed does not "
+        "matter, so a software GL display still yields full-rate footage.",
+        "dir");
+    QCommandLineOption const film_fps_opt(
+        "film-fps", "Frames (and simulation steps) per second of film.", "fps", "60");
+    QCommandLineOption const film_seconds_opt(
+        "film-seconds", "Seconds of footage to write.", "seconds", "8");
+    QCommandLineOption const film_start_opt(
+        "film-start",
+        "Simulate this many seconds (running the fixture) before the first frame "
+        "is written.",
+        "seconds",
+        "0");
+    QCommandLineOption const film_size_opt(
+        "film-size", "Frame size as WIDTHxHEIGHT.", "size", "1920x1080");
+    QCommandLineOption const film_visible_opt(
+        "film-visible",
+        "Film in a normal window (default: a frameless window pinned to the "
+        "bottom of the stack that never takes focus).");
     parser.addOption(force_software_opt);
     parser.addOption(quality_opt);
     parser.addOption(renderer_self_test_opt);
@@ -818,6 +844,12 @@ auto main(int argc, char* argv[]) -> int {
     parser.addOption(benchmark_seconds_opt);
     parser.addOption(benchmark_output_opt);
     parser.addOption(action_fixture_opt);
+    parser.addOption(film_opt);
+    parser.addOption(film_fps_opt);
+    parser.addOption(film_seconds_opt);
+    parser.addOption(film_start_opt);
+    parser.addOption(film_size_opt);
+    parser.addOption(film_visible_opt);
     parser.process(app);
 
     component_gallery_requested = parser.isSet(component_gallery_opt);
@@ -881,6 +913,29 @@ auto main(int argc, char* argv[]) -> int {
       runtime_benchmark_seconds = 0.0;
     }
     runtime_benchmark_output = parser.value(benchmark_output_opt).trimmed();
+    if (parser.isSet(film_opt)) {
+      App::Core::FilmConfig config;
+      config.directory = parser.value(film_opt).trimmed();
+      config.fps = std::clamp(parser.value(film_fps_opt).toInt(), 1, 240);
+      config.seconds = std::max(0.1, parser.value(film_seconds_opt).toDouble());
+      config.start_seconds = std::max(0.0, parser.value(film_start_opt).toDouble());
+      const QStringList size = parser.value(film_size_opt).split(QLatin1Char('x'));
+      if (size.size() == 2) {
+        config.width = std::clamp(size[0].toInt(), 320, 7680);
+        config.height = std::clamp(size[1].toInt(), 240, 4320);
+      }
+      config.background = !parser.isSet(film_visible_opt);
+      if (config.directory.isEmpty()) {
+        qCritical() << "--film needs a directory";
+        return 2;
+      }
+      qputenv("SOI_FILM_FPS", QByteArray::number(config.fps));
+
+      qputenv("QSG_RENDER_LOOP", "basic");
+
+      qputenv("QSG_FIXED_ANIMATION_STEP", "1");
+      film_config = config;
+    }
     if (runtime_benchmark_seconds > 0.0) {
       qputenv("SOI_RUNTIME_BENCHMARK_SECONDS",
               QByteArray::number(runtime_benchmark_seconds, 'f', 3));
@@ -1449,63 +1504,26 @@ auto main(int argc, char* argv[]) -> int {
           const auto due =
               App::Core::actions_between(*fixture, *previous_seconds, seconds);
           *previous_seconds = seconds;
-          if (due.empty()) {
-            return;
-          }
-          auto* orders = qobject_cast<App::ViewModels::OrdersViewModel*>(
-              game_ptr->orders_view_model());
-          auto* production = qobject_cast<App::ViewModels::ProductionViewModel*>(
-              game_ptr->production_view_model());
-          if (orders == nullptr || window == nullptr) {
-            return;
-          }
-          const qreal width = window->width();
-          const qreal height = window->height();
           for (const auto& action : due) {
-            const qreal sx = action.x * width;
-            const qreal sy = action.y * height;
-            if (action.action == QLatin1String("select_all")) {
-              orders->select_all_troops();
-            } else if (action.action == QLatin1String("select_at")) {
-              orders->on_click_select(sx, sy, false);
-            } else if (action.action == QLatin1String("select_by_type")) {
-              orders->select_by_type(action.argument);
-            } else if (action.action == QLatin1String("move_to")) {
-              orders->on_right_click(sx, sy);
-            } else if (action.action == QLatin1String("attack_at")) {
-              orders->attack_at(sx, sy);
-            } else if (action.action == QLatin1String("guard_at")) {
-              orders->guard_at(sx, sy);
-            } else if (action.action == QLatin1String("patrol_at")) {
-              orders->patrol_at(sx, sy);
-            } else if (action.action == QLatin1String("hover_at")) {
-              orders->set_hover_at_screen(sx, sy);
-            } else if (action.action == QLatin1String("stop")) {
-              orders->stop();
-            } else if (action.action == QLatin1String("hold")) {
-              orders->hold();
-            } else if (action.action == QLatin1String("run")) {
-              orders->run();
-            } else if (action.action == QLatin1String("guard")) {
-              orders->guard();
-            } else if (action.action == QLatin1String("build_panel")) {
-              orders->build();
-            } else if (production != nullptr) {
-              if (action.action == QLatin1String("production_panel")) {
-                (void)production->selected_state();
-                Engine::Core::note_coverage(
-                    Engine::Core::CoverageEvent::ProductionOrder, 0U);
-              } else if (action.action == QLatin1String("recruit")) {
-                production->recruit_near_selected(action.argument);
-              } else if (action.action == QLatin1String("set_rally")) {
-                production->set_rally_at_screen(sx, sy);
-              }
-            }
+            App::Core::apply_benchmark_action(game_ptr, window, action);
             Render::Profiling::presentation_cycle_progress().actions_executed.fetch_add(
                 1);
           }
         });
     action_timer->start(16);
+  }
+
+  std::unique_ptr<App::Core::FilmRecorder> film_recorder;
+  if (film_config.has_value()) {
+    if (direct_campaign_mission.isEmpty() && direct_mission_file.isEmpty() &&
+        observe_map_file.isEmpty() && replay_path.isEmpty()) {
+      qCritical() << "--film needs a directly launched match (--mission-file, "
+                     "--campaign-mission, --observe or --replay)";
+      return 2;
+    }
+    film_recorder = std::make_unique<App::Core::FilmRecorder>(
+        game_engine.get(), window, *film_config, runtime_action_fixture);
+    film_recorder->start();
   }
 
   qInfo() << "Starting event loop...";

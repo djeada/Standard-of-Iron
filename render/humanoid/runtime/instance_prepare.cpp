@@ -1332,6 +1332,12 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     locomotion_persistent_state->combat_visual = combat_resolution.persistent;
   }
   sync_combat_visual_inputs(soldier_render_anim, combat_resolution.resolved);
+  if (soldier_in_formation_fight && !soldier_render_anim.is_attacking &&
+      !soldier_render_anim.is_hit_reacting) {
+    soldier_render_anim.is_guarding = true;
+    soldier_render_anim.guard_pose_progress =
+        std::clamp(soldier_directive->target_held_seconds / 0.18F, 0.0F, 1.0F);
+  }
 
   constexpr float k_action_link_seconds = 0.14F;
   if (locomotion_persistent_state != nullptr) {

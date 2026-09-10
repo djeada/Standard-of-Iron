@@ -1112,6 +1112,28 @@ TEST(CombatAnimationDiagnosticsTest, NormalAttackCadenceIsNotPoseChurn) {
   diagnostics.set_enabled(false);
 }
 
+TEST(CombatAnimationDiagnosticsTest, RenderedGuardIsDistinguishedFromOrdinaryIdle) {
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  diagnostics.begin_frame(1);
+  constexpr std::uint32_t entity_id = 900005U;
+  Render::Profiling::SoldierAnimationDebugSample sample;
+  sample.animation_state = Render::Creature::AnimationStateId::Hold;
+  diagnostics.record_soldier_sample(entity_id, sample);
+  auto const* unit = diagnostics.find_unit(entity_id);
+  ASSERT_NE(unit, nullptr);
+  ASSERT_FALSE(unit->soldiers.empty());
+  EXPECT_EQ(unit->soldiers.back().visual_state,
+            Render::Profiling::SoldierVisualState::Hold);
+
+  sample.sample_time = 0.1F;
+  sample.animation_state = Render::Creature::AnimationStateId::Idle;
+  diagnostics.record_soldier_sample(entity_id, sample);
+  EXPECT_EQ(diagnostics.find_unit(entity_id)->soldiers.back().visual_state,
+            Render::Profiling::SoldierVisualState::Idle);
+  diagnostics.set_enabled(false);
+}
+
 TEST(CombatAnimationDiagnosticsTest, RapidStateReversalsArePoseChurn) {
   auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
   diagnostics.set_enabled(true);

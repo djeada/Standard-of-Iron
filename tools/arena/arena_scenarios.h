@@ -276,6 +276,7 @@ inline constexpr char k_trailer_siege_walls_id[] = "trailer_siege_walls";
 inline constexpr char k_trailer_night_snow_id[] = "trailer_night_snow";
 inline constexpr char k_trailer_last_breath_id[] = "trailer_last_breath";
 inline constexpr char k_trailer_wolf_rain_id[] = "trailer_wolf_rain";
+inline constexpr char k_trailer_open_id[] = "trailer_open";
 
 inline constexpr char k_weather_rain_light_id[] = "weather_rain_light";
 inline constexpr char k_weather_rain_medium_id[] = "weather_rain_medium";

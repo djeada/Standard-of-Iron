@@ -45,6 +45,8 @@ struct ProjectileViewContext {
 
 inline constexpr int k_projectile_impact_effect_budget = 40;
 
+[[nodiscard]] auto fireball_impact_envelope(float progress) -> float;
+
 void render_projectiles(Renderer* renderer,
                         ResourceManager* resources,
                         const Game::Systems::ProjectileSystem& projectile_system,

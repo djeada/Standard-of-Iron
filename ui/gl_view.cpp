@@ -211,6 +211,7 @@ GLView::GLRenderer::GLRenderer(QPointer<GLView> view, QPointer<GameEngine> engin
     m_benchmark_seconds = 0.0;
   }
   m_benchmark_output = qEnvironmentVariable("SOI_RUNTIME_BENCHMARK_OUTPUT");
+  m_film_fps = qEnvironmentVariableIntValue("SOI_FILM_FPS");
   if (m_benchmark_seconds > 0.0) {
 
     const auto capacity = static_cast<std::size_t>(
@@ -298,7 +299,7 @@ void GLView::GLRenderer::render() {
       qCritical() << "GLRenderer::render() - gameplay renderer initialization failed";
       return;
     }
-    if (!m_engine->simulation_thread_running()) {
+    if (m_film_fps <= 0 && !m_engine->simulation_thread_running()) {
       m_engine->start_simulation_thread();
     }
 
@@ -326,7 +327,9 @@ void GLView::GLRenderer::render() {
     profile.add_phase_us(Render::Profiling::Phase::Simulation, simulation_us);
 
     float dt = 1.0F / 60.0F;
-    if (m_last_frame_time.time_since_epoch().count() != 0) {
+    if (m_film_fps > 0) {
+      dt = 1.0F / static_cast<float>(m_film_fps);
+    } else if (m_last_frame_time.time_since_epoch().count() != 0) {
       dt = std::chrono::duration<float>(frame_work_start - m_last_frame_time).count();
       dt = std::min(dt, 0.1F);
     }

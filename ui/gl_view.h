@@ -128,6 +128,8 @@ private:
 
     void reset_runtime_benchmark_samples();
 
+    int m_film_fps{0};
+
     void warm_commander_portraits();
     void observe_runtime_continuity();
     void observe_runtime_benchmark(std::chrono::steady_clock::time_point frame_start,

@@ -294,6 +294,21 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
           root.value(QStringLiteral("music_volume")).toDouble(spec.music_volume)),
       0.0F,
       1.0F);
+  if (const QJsonValue limits_value = root.value(QStringLiteral("motion_limits"));
+      limits_value.isObject()) {
+    const QJsonObject limits = limits_value.toObject();
+    auto read_rate = [&limits](const char* key, float& field) {
+      field = std::max(
+          0.0F, static_cast<float>(limits.value(QLatin1String(key)).toDouble(field)));
+    };
+    read_rate("yaw_degrees_per_second", spec.motion_limits.yaw_degrees_per_second);
+    read_rate("pitch_degrees_per_second", spec.motion_limits.pitch_degrees_per_second);
+    read_rate("fov_degrees_per_second", spec.motion_limits.fov_degrees_per_second);
+    read_rate("roll_degrees_per_second", spec.motion_limits.roll_degrees_per_second);
+    read_rate("roll_magnitude_degrees", spec.motion_limits.roll_magnitude_degrees);
+    read_rate("minimum_clip_seconds", spec.motion_limits.minimum_clip_seconds);
+    read_rate("mean_clip_seconds", spec.motion_limits.mean_clip_seconds);
+  }
   spec.gameplay_ui = root.value(QStringLiteral("gameplay_ui")).toBool(spec.gameplay_ui);
   spec.gameplay_ui_all_owners = root.value(QStringLiteral("gameplay_ui_all_owners"))
                                     .toBool(spec.gameplay_ui_all_owners);
@@ -343,6 +358,10 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
 
   for (const QJsonValue shot_value : shots) {
     const QJsonObject shot_object = shot_value.toObject();
+    if (shot_object.contains(QStringLiteral("clip"))) {
+
+      continue;
+    }
     Shot shot;
     shot.gameplay_ui = spec.gameplay_ui;
     shot.gameplay_ui_all_owners = spec.gameplay_ui_all_owners;
@@ -509,7 +528,8 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
     spec.shots.push_back(std::move(shot));
   }
 
-  if (auto const breaches = motion_violations(spec); !breaches.empty()) {
+  if (auto const breaches = motion_violations(spec, spec.motion_limits);
+      !breaches.empty()) {
     if (error != nullptr) {
       QStringList lines;
       lines.reserve(static_cast<int>(breaches.size()));

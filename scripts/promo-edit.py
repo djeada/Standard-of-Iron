@@ -292,35 +292,62 @@ def shot_slow_motion(shot: dict) -> float:
     return float(shot.get("slow_motion", 1.0))
 
 
+MOTION_LIMIT_KEYS = {
+    "yaw_degrees_per_second": "yaw",
+    "pitch_degrees_per_second": "pitch",
+    "fov_degrees_per_second": "fov",
+    "roll_degrees_per_second": "roll_rate",
+    "roll_magnitude_degrees": "roll",
+    "minimum_clip_seconds": "min_clip",
+    "mean_clip_seconds": "mean_clip",
+}
+
+
+def spec_motion_limits(spec: dict) -> dict[str, float]:
+    """The phone-short ceilings, raised where the spec's `motion_limits` says so.
+
+    Mirrors `Arena::Promo::load`: a widescreen trailer that needs a crane-to-
+    shoulder dive names its own ceilings, and only the ceilings it names move."""
+    limits = dict(MOTION_LIMITS)
+    overrides = spec.get("motion_limits")
+    if isinstance(overrides, dict):
+        for key, field in MOTION_LIMIT_KEYS.items():
+            if key in overrides:
+                limits[field] = max(0.0, float(overrides[key]))
+    return limits
+
+
 def camera_offences(spec: dict) -> list[str]:
     """Author-time camera limits, mirrored from `Arena::Promo::motion_violations`."""
     offences: list[str] = []
     clips: list[float] = []
+    limits = spec_motion_limits(spec)
     for shot in spec.get("shots", []):
-        if shot.get("flame_card"):
+        if shot.get("flame_card") or "clip" in shot:
+
             continue
         name = shot.get("name", "?")
         slow_motion = shot_slow_motion(shot)
         clip = float(shot.get("duration", 0.0)) * slow_motion
         clips.append(clip)
-        if clip + 1e-3 < MOTION_LIMITS["min_clip"]:
+        if clip + 1e-3 < limits["min_clip"]:
             offences.append(
                 f"{name}: is on screen for {clip:.2f}s, under the "
-                f"{MOTION_LIMITS['min_clip']:.2f}s a viewer needs to read a frame"
+                f"{limits['min_clip']:.2f}s a viewer needs to read a frame"
             )
-        if float(shot.get("shake", 0.0)) > MOTION_LIMITS["shake"] + 1e-4:
+        if float(shot.get("shake", 0.0)) > limits["shake"] + 1e-4:
             offences.append(
                 f"{name}: shakes at {float(shot['shake']):.3f}, over the "
-                f"{MOTION_LIMITS['shake']:.3f} ceiling"
+                f"{limits['shake']:.3f} ceiling"
             )
         if shot.get("gameplay_camera"):
             continue
         keys = shot.get("camera", [])
         for key in keys:
-            if abs(float(key.get("roll", 0.0))) > MOTION_LIMITS["roll"] + 1e-4:
+            if abs(float(key.get("roll", 0.0))) > limits["roll"] + 1e-4:
                 offences.append(
                     f"{name}: rolls the horizon {abs(float(key['roll'])):.1f} degrees, "
-                    f"over the {MOTION_LIMITS['roll']:.1f} ceiling"
+                    f"over the {limits['roll']:.1f} ceiling"
                 )
                 break
         for before, after in zip(keys, keys[1:], strict=False):
@@ -333,24 +360,24 @@ def camera_offences(spec: dict) -> list[str]:
             for axis, limit, delta in (
                 (
                     "yaw",
-                    MOTION_LIMITS["yaw"],
+                    limits["yaw"],
                     shorter_arc(
                         float(before.get("yaw", 0.0)), float(after.get("yaw", 0.0))
                     ),
                 ),
                 (
                     "pitch",
-                    MOTION_LIMITS["pitch"],
+                    limits["pitch"],
                     float(after.get("pitch", 0.0)) - float(before.get("pitch", 0.0)),
                 ),
                 (
                     "fov",
-                    MOTION_LIMITS["fov"],
+                    limits["fov"],
                     float(after.get("fov", 40.0)) - float(before.get("fov", 40.0)),
                 ),
                 (
                     "roll",
-                    MOTION_LIMITS["roll_rate"],
+                    limits["roll_rate"],
                     float(after.get("roll", 0.0)) - float(before.get("roll", 0.0)),
                 ),
             ):
@@ -362,10 +389,10 @@ def camera_offences(spec: dict) -> list[str]:
                     )
     if clips:
         mean = sum(clips) / len(clips)
-        if mean + 1e-3 < MOTION_LIMITS["mean_clip"]:
+        if mean + 1e-3 < limits["mean_clip"]:
             offences.append(
                 f"the cut averages {mean:.2f}s a shot, under the "
-                f"{MOTION_LIMITS['mean_clip']:.2f}s that keeps a reel from reading "
+                f"{limits['mean_clip']:.2f}s that keeps a reel from reading "
                 "as strobing"
             )
     return offences
@@ -494,6 +521,29 @@ hairline serifs disappear under it. So the display face leads, and EB
 Garamond's bold -- old-style enough to read as carved rather than typed, with
 stem weight the border cannot swallow -- backs it up and covers everything the
 display face has no glyph for."""
+
+
+def external_clip_seconds(path: Path) -> float:
+    """Measured duration of footage the arena did not record."""
+    probe = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "csv=p=0",
+            str(path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    try:
+        return float(probe.stdout.strip())
+    except ValueError:
+        return 0.0
 
 
 def fail(message: str) -> None:
@@ -1016,6 +1066,30 @@ def main() -> int:
     manifest = json.loads(manifest_path.read_text())
 
     shots = manifest.get("shots", [])
+    if any("clip" in shot for shot in spec.get("shots", [])):
+
+        by_name = {shot.get("name"): shot for shot in shots}
+        ordered: list[dict] = []
+        for spec_shot in spec.get("shots", []):
+            name = spec_shot.get("name", "")
+            if "clip" in spec_shot:
+                clip_path = Path(spec_shot["clip"])
+                if not clip_path.is_absolute():
+                    clip_path = REPO_ROOT / clip_path
+                if not clip_path.is_file():
+                    fail(f"shot '{name}' names a clip that does not exist: {clip_path}")
+                ordered.append(
+                    {
+                        "name": name,
+                        "clip": str(clip_path),
+                        "clip_seconds": external_clip_seconds(clip_path),
+                    }
+                )
+            elif name in by_name:
+                ordered.append(by_name[name])
+            else:
+                fail(f"shot '{name}' has no captured clip in {args.clips}")
+        shots = ordered
     if not shots:
         fail("the capture manifest contains no shots")
 

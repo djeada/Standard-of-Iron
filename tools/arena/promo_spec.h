@@ -139,6 +139,8 @@ struct Spec {
   bool forbid_world_edge{false};
 
   ReportCardStyle report_card_style{ReportCardStyle::Reel};
+
+  MotionLimits motion_limits;
   std::vector<Shot> shots;
 };
 

@@ -1425,8 +1425,8 @@ shore contact, and water/terrain overlap after renderer changes.
 It fails when any of these rules are violated:
 
 - Formation roots lock only after deep formation overlap, not first-rank contact.
-- Every living soldier receives an opponent lane and is observed in a fight
-  animation during the engagement.
+- Every living soldier receives an opponent lane and is observed striking or
+  guarding during the engagement. An ordinary idle pose does not count as guarding.
 - Per-soldier fight phases must contain visible deterministic staggering.
 - A melee lock cannot disappear, change target, navigate, translate, or rotate
   while the locked opponent remains alive.

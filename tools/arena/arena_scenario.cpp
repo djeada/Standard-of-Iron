@@ -979,6 +979,7 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, QSet<std::uint64_t>> living_soldiers_by_group;
   QHash<QString, QSet<std::uint64_t>> engaged_soldiers_by_group;
   QHash<QString, QSet<std::uint64_t>> attacking_soldiers_by_group;
+  QHash<QString, QSet<std::uint64_t>> guarding_soldiers_by_group;
   QHash<std::uint64_t, int> attack_entries_by_soldier;
   QHash<QString, bool> staggered_attack_phases;
   QHash<QString, bool> damage_seen;
@@ -4037,6 +4038,12 @@ struct ArenaScenarioRunner::Impl {
       }
       bool const living_formation_fighter =
           formation_fight_active && directive != nullptr && directive->alive && !culled;
+      bool const observed_guard =
+          living_formation_fighter &&
+          soldier.visual_state == Render::Profiling::SoldierVisualState::Hold;
+      if (observed_guard) {
+        guarding_soldiers_by_group[group].insert(key);
+      }
       if (!living_formation_fighter) {
         previous.fight_idle_since = -1.0F;
         previous.terminal_pose_since = -1.0F;
@@ -4278,7 +4285,9 @@ struct ArenaScenarioRunner::Impl {
 
         if (expectation.kind == ArenaExpectationKind::AllLivingSoldiersFight &&
             living_formation_fighter) {
-          if (observed_attack) {
+          if (observed_attack || observed_guard ||
+              soldier.visual_state ==
+                  Render::Profiling::SoldierVisualState::HitReaction) {
             previous.fight_idle_since = -1.0F;
           } else if (previous.fight_idle_since < 0.0F) {
             previous.fight_idle_since = elapsed;
@@ -5058,6 +5067,7 @@ struct ArenaScenarioRunner::Impl {
       case ArenaExpectationKind::AllLivingSoldiersFight: {
         auto missing = living_soldiers_by_group.value(expectation.group);
         missing.subtract(attacking_soldiers_by_group.value(expectation.group));
+        missing.subtract(guarding_soldiers_by_group.value(expectation.group));
         if (!missing.isEmpty()) {
           add_issue(QStringLiteral("soldiers_never_fought"),
                     QStringLiteral("%1 had %2 living soldiers that never "

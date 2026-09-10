@@ -1,0 +1,1444 @@
+{
+  "name": "Trailer: the valley of the Lethe",
+  "description": "A fertile valley for two. One channel runs the whole map north to south and only two fords cross it. A cross spur on each bank means you either hug the water or swing wide to reach them, and the boomerang ridge cupping each start makes the back door terrain rather than a wall. Nothing haunts this valley: it is the plain match, with no Sepulcher to distract either side.",
+  "theme": "Two armies share one river and disagree about who owns its fords.",
+  "coord_system": "grid",
+  "grid": {
+    "width": 176,
+    "height": 176,
+    "tile_size": 1.0
+  },
+  "max_troops_per_player": 400,
+  "camera": {
+    "center": [88.0, 0, 88.0],
+    "distance": 194.0,
+    "tilt_deg": 48.0,
+    "yaw": 225.0,
+    "fov_y": 45.0,
+    "near": 1.0,
+    "far": 492.8
+  },
+  "time_of_day": "day",
+  "environment": {
+    "start_time": 14.5,
+    "time_mode": "locked",
+    "day_length_seconds": 2400.0,
+    "lighting_profile": "river_mist"
+  },
+  "biome": {
+    "ground_type": "soil_fertile",
+    "seed": 40217,
+    "patch_density": 4.8,
+    "patch_jitter": 0.92,
+    "plant_density": 0.92,
+    "grass_primary": [0.16, 0.36, 0.22],
+    "grass_secondary": [0.22, 0.45, 0.28],
+    "grass_dry": [0.42, 0.39, 0.27],
+    "soil_color": [0.13, 0.11, 0.09],
+    "height_noise": [0.2, 0.06],
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.15,
+    "irregularity_amplitude": 0.07,
+    "moisture_level": 0.95,
+    "grass_saturation": 0.9,
+    "soil_roughness": 0.68
+  },
+  "rain": {
+    "enabled": false,
+    "type": "rain",
+    "intensity": 0.0
+  },
+  "terrain": [
+    {
+      "id": "p1_clearing",
+      "type": "flat",
+      "x": 36.0,
+      "z": 124.0,
+      "width": 44.0,
+      "depth": 38.0,
+      "description": "Player 1 camp floor."
+    },
+    {
+      "id": "p2_clearing",
+      "type": "flat",
+      "x": 140.0,
+      "z": 52.0,
+      "width": 44.0,
+      "depth": 38.0,
+      "description": "Player 2 camp floor."
+    },
+    {
+      "id": "p1_shoulder",
+      "type": "hill",
+      "x": 36.0,
+      "z": 124.0,
+      "width": 56.0,
+      "depth": 68.0,
+      "height": 2.4,
+      "shape": "arc",
+      "thickness": 16.0,
+      "arc": 170.0,
+      "rotation": 145.3,
+      "taper": 0.2,
+      "description": "Boomerang ridge cupping player 1's camp; its horseshoe mouth opens north-east onto the valley floor.",
+      "entrances": [
+        {
+          "x": 34.31,
+          "z": 138.22
+        },
+        {
+          "x": 6.17,
+          "z": 122.16
+        }
+      ]
+    },
+    {
+      "id": "p2_shoulder",
+      "type": "hill",
+      "x": 140.0,
+      "z": 52.0,
+      "width": 56.0,
+      "depth": 68.0,
+      "height": 2.4,
+      "shape": "arc",
+      "thickness": 16.0,
+      "arc": 170.0,
+      "rotation": 325.3,
+      "taper": 0.2,
+      "description": "Boomerang ridge cupping player 2's camp.",
+      "entrances": [
+        {
+          "x": 141.69,
+          "z": 37.78
+        },
+        {
+          "x": 169.83,
+          "z": 53.84
+        }
+      ]
+    },
+    {
+      "id": "west_spur",
+      "type": "hill",
+      "x": 48.0,
+      "z": 88.0,
+      "width": 44.0,
+      "depth": 24.0,
+      "height": 2.3,
+      "shape": "corridor",
+      "thickness": 12.0,
+      "description": "Cross spur splitting the west bank: hug the water or swing wide, but not both.",
+      "entrances": [
+        {
+          "x": 40.96,
+          "z": 94.0
+        },
+        {
+          "x": 55.04,
+          "z": 82.0
+        }
+      ]
+    },
+    {
+      "id": "east_spur",
+      "type": "hill",
+      "x": 128.0,
+      "z": 88.0,
+      "width": 44.0,
+      "depth": 24.0,
+      "height": 2.3,
+      "shape": "corridor",
+      "thickness": 12.0,
+      "rotation": 180.0,
+      "description": "Cross spur splitting the east bank.",
+      "entrances": [
+        {
+          "x": 135.04,
+          "z": 82.0
+        },
+        {
+          "x": 120.96,
+          "z": 94.0
+        }
+      ]
+    },
+    {
+      "id": "north_elbow",
+      "type": "hill",
+      "x": 36.0,
+      "z": 40.0,
+      "width": 56.0,
+      "depth": 44.0,
+      "height": 2.6,
+      "shape": "elbow",
+      "thickness": 14.0,
+      "arc": 100.0,
+      "description": "Elbow spur folding the north-west corner into two lanes.",
+      "entrances": [
+        {
+          "x": 36.84,
+          "z": 18.0
+        },
+        {
+          "x": 20.18,
+          "z": 35.91
+        }
+      ]
+    },
+    {
+      "id": "south_elbow",
+      "type": "hill",
+      "x": 140.0,
+      "z": 136.0,
+      "width": 56.0,
+      "depth": 44.0,
+      "height": 2.6,
+      "shape": "elbow",
+      "thickness": 14.0,
+      "arc": 100.0,
+      "rotation": 180.0,
+      "description": "Elbow spur folding the south-east corner into two lanes.",
+      "entrances": [
+        {
+          "x": 139.16,
+          "z": 158.0
+        },
+        {
+          "x": 155.82,
+          "z": 140.09
+        }
+      ]
+    },
+    {
+      "id": "nw_range",
+      "type": "mountain",
+      "x": 30.0,
+      "z": 8.0,
+      "width": 58.0,
+      "depth": 28.0,
+      "height": 7.0,
+      "description": "North wall of the valley."
+    },
+    {
+      "id": "ne_range",
+      "type": "mountain",
+      "x": 146.0,
+      "z": 8.0,
+      "width": 58.0,
+      "depth": 28.0,
+      "height": 7.0,
+      "description": "North wall of the valley."
+    },
+    {
+      "id": "sw_range",
+      "type": "mountain",
+      "x": 30.0,
+      "z": 168.0,
+      "width": 58.0,
+      "depth": 28.0,
+      "height": 7.0,
+      "description": "South wall of the valley."
+    },
+    {
+      "id": "se_range",
+      "type": "mountain",
+      "x": 146.0,
+      "z": 168.0,
+      "width": 58.0,
+      "depth": 28.0,
+      "height": 7.0,
+      "description": "South wall of the valley."
+    }
+  ],
+  "forests": [
+    {
+      "id": "upper_holt",
+      "x": 68.0,
+      "z": 26.0,
+      "radius": 14.0
+    },
+    {
+      "id": "lower_holt",
+      "x": 108.0,
+      "z": 150.0,
+      "radius": 14.0
+    },
+    {
+      "id": "west_wood",
+      "x": 14.0,
+      "z": 72.0,
+      "radius": 15.0
+    },
+    {
+      "id": "east_wood",
+      "x": 162.0,
+      "z": 104.0,
+      "radius": 15.0
+    },
+    {
+      "id": "east_copse",
+      "x": 140.0,
+      "z": 110.0,
+      "radius": 15.0
+    },
+    {
+      "id": "west_copse",
+      "x": 36.0,
+      "z": 66.0,
+      "radius": 15.0
+    }
+  ],
+  "rivers": [
+    {
+      "start": [88.0, 0.0],
+      "end": [88.0, 175.0],
+      "width": 7.0,
+      "waypoints": [
+        [88.0, 0.0],
+        [80.0, 44.0],
+        [96.0, 132.0],
+        [88.0, 175.0]
+      ],
+      "id": "the_lethe"
+    }
+  ],
+  "lakes": [],
+  "bridges": [
+    {
+      "id": "north_ford",
+      "start": [79.47, 60.62],
+      "end": [86.35, 59.37],
+      "width": 10.0,
+      "height": 0.6
+    },
+    {
+      "id": "south_ford",
+      "start": [89.65, 116.63],
+      "end": [96.53, 115.38],
+      "width": 10.0,
+      "height": 0.6
+    }
+  ],
+  "roads": [
+    {
+      "id": "p1_to_north_ford",
+      "start": [36, 124],
+      "end": [66, 60],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [41.23, 119.74],
+        [47.94, 114.26],
+        [59.89, 104.51],
+        [71.83, 94.77],
+        [74, 90.2],
+        [74, 85.8],
+        [73.08, 80.36],
+        [69.54, 70.18],
+        [66, 60]
+      ]
+    },
+    {
+      "id": "p1_west_leg",
+      "start": [36, 124],
+      "end": [18, 88],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [40.88, 120.02],
+        [48.01, 114.2],
+        [60.02, 104.41],
+        [72.02, 94.61],
+        [74, 90.45],
+        [74, 85.19],
+        [72.32, 81.6],
+        [69.68, 79.4],
+        [65.81, 78],
+        [53.73, 78],
+        [41.64, 78],
+        [29.55, 78],
+        [25.29, 79.9],
+        [18, 88]
+      ]
+    },
+    {
+      "id": "west_flank_leg",
+      "start": [18, 88],
+      "end": [66, 60],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [18, 88],
+        [25.2941, 79.8954],
+        [29.3153, 76.9314],
+        [41.5435, 71.2876],
+        [53.7718, 65.6438],
+        [66, 60]
+      ]
+    },
+    {
+      "id": "north_ford_crossing",
+      "start": [66, 60],
+      "end": [110, 60],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [66, 60],
+        [74.2016, 61.5815],
+        [79.4653, 60.6245],
+        [86.3523, 59.3723],
+        [91.616, 58.4153],
+        [100.808, 59.2076],
+        [110, 60]
+      ]
+    },
+    {
+      "id": "north_ford_to_p2",
+      "start": [110, 60],
+      "end": [140, 52],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [110, 60],
+        [125, 56],
+        [133.44, 53.75]
+      ]
+    },
+    {
+      "id": "p2_to_south_ford",
+      "start": [140, 52],
+      "end": [110, 116],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [134.77, 56.26],
+        [128.06, 61.74],
+        [116.11, 71.49],
+        [104.17, 81.23],
+        [102, 85.8],
+        [102, 90.2],
+        [102.92, 95.64],
+        [106.46, 105.82],
+        [110, 116]
+      ]
+    },
+    {
+      "id": "p2_east_leg",
+      "start": [140, 52],
+      "end": [158, 88],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [135.12, 55.98],
+        [127.99, 61.8],
+        [115.98, 71.59],
+        [103.98, 81.39],
+        [102, 85.55],
+        [102, 90.81],
+        [103.68, 94.4],
+        [106.32, 96.6],
+        [110.19, 98],
+        [122.27, 98],
+        [134.36, 98],
+        [146.45, 98],
+        [150.71, 96.1],
+        [158, 88]
+      ]
+    },
+    {
+      "id": "east_flank_leg",
+      "start": [158, 88],
+      "end": [110, 116],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [158, 88],
+        [150.7059, 96.1046],
+        [146.6847, 99.0686],
+        [134.4565, 104.7124],
+        [122.2282, 110.3562],
+        [110, 116]
+      ]
+    },
+    {
+      "id": "south_ford_crossing",
+      "start": [110, 116],
+      "end": [66, 116],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [110, 116],
+        [101.7984, 114.4185],
+        [96.5347, 115.3755],
+        [89.6477, 116.6277],
+        [84.384, 117.5847],
+        [75.192, 116.7924],
+        [66, 116]
+      ]
+    },
+    {
+      "id": "south_ford_to_p1",
+      "start": [66, 116],
+      "end": [36, 124],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [66, 116],
+        [51, 120],
+        [42.56, 122.25]
+      ]
+    },
+    {
+      "id": "west_gate",
+      "start": [18, 88],
+      "end": [1, 88],
+      "width": 3.0,
+      "style": "default",
+      "waypoints": [
+        [18, 88],
+        [1, 88]
+      ]
+    },
+    {
+      "id": "east_gate",
+      "start": [158, 88],
+      "end": [174, 88],
+      "width": 3.0,
+      "style": "default",
+      "waypoints": [
+        [158, 88],
+        [174, 88]
+      ]
+    },
+    {
+      "id": "north_gate",
+      "start": [110, 60],
+      "end": [110, 1],
+      "width": 2.8,
+      "style": "default",
+      "waypoints": [
+        [110, 60],
+        [110, 45.25],
+        [110, 30.5],
+        [110, 15.75],
+        [110, 1]
+      ]
+    },
+    {
+      "id": "south_gate",
+      "start": [66, 116],
+      "end": [66, 174],
+      "width": 2.8,
+      "style": "default",
+      "waypoints": [
+        [66, 116],
+        [66, 130.5],
+        [66, 145],
+        [66, 159.5],
+        [66, 174]
+      ]
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "upper_sanctuary",
+      "kind": "sanctuary",
+      "x": 100.0,
+      "z": 20.0,
+      "facing": "south"
+    },
+    {
+      "id": "lower_sanctuary",
+      "kind": "sanctuary",
+      "x": 76.0,
+      "z": 156.0,
+      "facing": "north"
+    },
+    {
+      "id": "west_hamlet",
+      "kind": "hamlet",
+      "x": 26.0,
+      "z": 60.0,
+      "facing": "east"
+    },
+    {
+      "id": "east_hamlet",
+      "kind": "hamlet",
+      "x": 150.0,
+      "z": 116.0,
+      "facing": "west"
+    }
+  ],
+  "structures": [
+    {
+      "id": "p1_barracks",
+      "type": "barracks",
+      "x": 36.0,
+      "z": 124.0,
+      "player_id": 1,
+      "max_population": 140,
+      "team_id": 1,
+      "description": "Player 1 barracks."
+    },
+    {
+      "id": "p2_barracks",
+      "type": "barracks",
+      "x": 140.0,
+      "z": 52.0,
+      "player_id": 2,
+      "max_population": 140,
+      "team_id": 2,
+      "description": "Player 2 barracks."
+    },
+    {
+      "id": "north_toll_barracks",
+      "type": "barracks",
+      "x": 50.0,
+      "z": 60.0,
+      "player_id": 0,
+      "max_population": 50,
+      "description": "Neutral toll barracks either side can take."
+    },
+    {
+      "id": "south_toll_barracks",
+      "type": "barracks",
+      "x": 126.0,
+      "z": 116.0,
+      "player_id": 0,
+      "max_population": 50,
+      "description": "Neutral toll barracks either side can take."
+    },
+    {
+      "type": "temple",
+      "x": 100.0,
+      "z": 20.0,
+      "player_id": -1,
+      "landmark": "upper_sanctuary"
+    },
+    {
+      "type": "temple",
+      "x": 76.0,
+      "z": 156.0,
+      "player_id": -1,
+      "landmark": "lower_sanctuary"
+    }
+  ],
+  "spawns": [
+    {
+      "id": "p1_commander",
+      "type": "roman_veteran_consul",
+      "x": 70.0,
+      "z": 78.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p2_commander",
+      "type": "carthage_sword_commander",
+      "x": 92.0,
+      "z": 50.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p1_swordsman_0",
+      "type": "swordsman",
+      "x": 64.0,
+      "z": 74.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_1",
+      "type": "swordsman",
+      "x": 68.0,
+      "z": 76.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_2",
+      "type": "swordsman",
+      "x": 72.0,
+      "z": 78.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_3",
+      "type": "spearman",
+      "x": 60.0,
+      "z": 72.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_4",
+      "type": "spearman",
+      "x": 76.0,
+      "z": 80.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_archer_5",
+      "type": "archer",
+      "x": 62.0,
+      "z": 80.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_archer_6",
+      "type": "archer",
+      "x": 70.0,
+      "z": 84.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_horse_swordsman_7",
+      "type": "horse_swordsman",
+      "x": 54.0,
+      "z": 70.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_horse_swordsman_8",
+      "type": "horse_swordsman",
+      "x": 80.0,
+      "z": 86.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p2_swordsman_0",
+      "type": "swordsman",
+      "x": 88.0,
+      "z": 52.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_swordsman_1",
+      "type": "swordsman",
+      "x": 92.0,
+      "z": 54.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_swordsman_2",
+      "type": "swordsman",
+      "x": 96.0,
+      "z": 56.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_spearman_3",
+      "type": "spearman",
+      "x": 84.0,
+      "z": 50.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_spearman_4",
+      "type": "spearman",
+      "x": 100.0,
+      "z": 58.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_archer_5",
+      "type": "archer",
+      "x": 90.0,
+      "z": 46.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_archer_6",
+      "type": "archer",
+      "x": 96.0,
+      "z": 48.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_elephant_7",
+      "type": "elephant",
+      "x": 102.0,
+      "z": 52.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_horse_swordsman_8",
+      "type": "horse_swordsman",
+      "x": 106.0,
+      "z": 60.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p1_builder",
+      "type": "builder",
+      "x": 40.55,
+      "z": 114.77,
+      "player_id": 1
+    },
+    {
+      "id": "p1_healer",
+      "type": "healer",
+      "x": 46.25,
+      "z": 122.99,
+      "player_id": 1
+    },
+    {
+      "id": "p2_builder",
+      "type": "builder",
+      "x": 135.45,
+      "z": 61.23,
+      "player_id": 2
+    },
+    {
+      "id": "p2_healer",
+      "type": "healer",
+      "x": 129.75,
+      "z": 53.01,
+      "player_id": 2
+    }
+  ],
+  "world_props": [
+    {
+      "id": "p1_tent_a",
+      "type": "tent",
+      "x": 25.25,
+      "z": 121.19,
+      "rotation": 325.3
+    },
+    {
+      "id": "p1_tent_b",
+      "type": "tent",
+      "x": 43.58,
+      "z": 133.63,
+      "rotation": 325.3
+    },
+    {
+      "id": "p1_cart",
+      "type": "supply_cart",
+      "x": 42.42,
+      "z": 137.89,
+      "rotation": 415.3
+    },
+    {
+      "id": "p1_rack",
+      "type": "weapon_rack",
+      "x": 31.64,
+      "z": 112.43,
+      "rotation": 325.3
+    },
+    {
+      "id": "p1_statue",
+      "type": "statue",
+      "x": 49.5,
+      "z": 116.9,
+      "rotation": 325.3
+    },
+    {
+      "id": "p2_tent_a",
+      "type": "tent",
+      "x": 152,
+      "z": 54.4,
+      "rotation": 145.3
+    },
+    {
+      "id": "p2_tent_b",
+      "type": "tent",
+      "x": 134.22,
+      "z": 45.61,
+      "rotation": 145.3
+    },
+    {
+      "id": "p2_cart",
+      "type": "supply_cart",
+      "x": 133.96,
+      "z": 40.33,
+      "rotation": 235.3
+    },
+    {
+      "id": "p2_rack",
+      "type": "weapon_rack",
+      "x": 144.36,
+      "z": 63.57,
+      "rotation": 145.3
+    },
+    {
+      "id": "p2_statue",
+      "type": "statue",
+      "x": 126.61,
+      "z": 59.24,
+      "rotation": 145.3
+    },
+    {
+      "id": "north_toll_ruin",
+      "type": "ruins",
+      "x": 35.13,
+      "z": 68.56,
+      "scale": 0.9,
+      "rotation": 40.0
+    },
+    {
+      "id": "north_toll_deadtree",
+      "type": "dead_tree",
+      "x": 59.0,
+      "z": 52.0,
+      "rotation": 120.0
+    },
+    {
+      "id": "south_toll_ruin",
+      "type": "ruins",
+      "x": 117.0,
+      "z": 123.0,
+      "scale": 0.9,
+      "rotation": 40.0
+    },
+    {
+      "id": "south_toll_deadtree",
+      "type": "dead_tree",
+      "x": 135.33,
+      "z": 108.71,
+      "rotation": 120.0
+    },
+    {
+      "id": "p1_vein_0",
+      "type": "iron_ore",
+      "x": 57.28,
+      "z": 143.27,
+      "rotation": 34.38
+    },
+    {
+      "id": "p1_vein_1",
+      "type": "iron_ore",
+      "x": 48.94,
+      "z": 146.13,
+      "rotation": 106.38
+    },
+    {
+      "id": "p1_vein_2",
+      "type": "iron_ore",
+      "x": 46.03,
+      "z": 139.95,
+      "rotation": 178.38
+    },
+    {
+      "id": "p1_vein_3",
+      "type": "iron_ore",
+      "x": 49.99,
+      "z": 134.35,
+      "rotation": 250.38
+    },
+    {
+      "id": "p1_vein_4",
+      "type": "iron_ore",
+      "x": 56.75,
+      "z": 136.34,
+      "rotation": 322.38
+    },
+    {
+      "id": "p2_vein_0",
+      "type": "iron_ore",
+      "x": 128.95,
+      "z": 39.39,
+      "rotation": 34.38
+    },
+    {
+      "id": "p2_vein_1",
+      "type": "iron_ore",
+      "x": 122.31,
+      "z": 41.76,
+      "rotation": 106.38
+    },
+    {
+      "id": "p2_vein_2",
+      "type": "iron_ore",
+      "x": 118.0,
+      "z": 36.17,
+      "rotation": 178.38
+    },
+    {
+      "id": "p2_vein_3",
+      "type": "iron_ore",
+      "x": 118.06,
+      "z": 30.26,
+      "rotation": 250.38
+    },
+    {
+      "id": "p2_vein_4",
+      "type": "iron_ore",
+      "x": 130.43,
+      "z": 29.43,
+      "rotation": 322.38
+    },
+    {
+      "id": "north_vein_0",
+      "type": "iron_ore",
+      "x": 104.95,
+      "z": 39.39,
+      "rotation": 34.38
+    },
+    {
+      "id": "north_vein_1",
+      "type": "iron_ore",
+      "x": 96.61,
+      "z": 40.95,
+      "rotation": 124.38
+    },
+    {
+      "id": "north_vein_2",
+      "type": "iron_ore",
+      "x": 95.05,
+      "z": 32.61,
+      "rotation": 214.38
+    },
+    {
+      "id": "north_vein_3",
+      "type": "iron_ore",
+      "x": 103.39,
+      "z": 31.05,
+      "rotation": 304.38
+    },
+    {
+      "id": "south_vein_0",
+      "type": "iron_ore",
+      "x": 80.95,
+      "z": 143.39,
+      "rotation": 34.38
+    },
+    {
+      "id": "south_vein_1",
+      "type": "iron_ore",
+      "x": 72.61,
+      "z": 144.95,
+      "rotation": 124.38
+    },
+    {
+      "id": "south_vein_2",
+      "type": "iron_ore",
+      "x": 71.05,
+      "z": 136.61,
+      "rotation": 214.38
+    },
+    {
+      "id": "south_vein_3",
+      "type": "iron_ore",
+      "x": 79.39,
+      "z": 135.05,
+      "rotation": 304.38
+    },
+    {
+      "type": "statue",
+      "x": 93.09,
+      "z": 27.59,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "upper_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 103.97,
+      "z": 25.3,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "upper_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 92.5,
+      "z": 38.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "upper_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 99.7,
+      "z": 36.45,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "upper_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 93.22,
+      "z": 11.04,
+      "scale": 1.1,
+      "rotation": 270.0,
+      "landmark": "upper_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 105.67,
+      "z": 9,
+      "scale": 0.9,
+      "rotation": 90.0,
+      "landmark": "upper_sanctuary"
+    },
+    {
+      "type": "dead_tree",
+      "x": 99.0,
+      "z": 6.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "upper_sanctuary"
+    },
+    {
+      "type": "firecamp",
+      "x": 100.0,
+      "z": 26.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "upper_sanctuary",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "statue",
+      "x": 82.91,
+      "z": 148.41,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "lower_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 72.03,
+      "z": 150.7,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "lower_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 83.5,
+      "z": 138.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "lower_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 76.3,
+      "z": 139.55,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "lower_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 83.0,
+      "z": 165.0,
+      "scale": 1.1,
+      "rotation": 90.0,
+      "landmark": "lower_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 70.35,
+      "z": 167,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "lower_sanctuary"
+    },
+    {
+      "type": "dead_tree",
+      "x": 77.0,
+      "z": 170.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "lower_sanctuary"
+    },
+    {
+      "type": "firecamp",
+      "x": 76.0,
+      "z": 150.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "lower_sanctuary",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "abandoned_home",
+      "x": 26.0,
+      "z": 66.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 33.0,
+      "z": 55.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 18.93,
+      "z": 53.33,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 14.0,
+      "z": 65.0,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 38.0,
+      "z": 63.0,
+      "scale": 1.1,
+      "rotation": 180.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 22.0,
+      "z": 47.0,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 30.0,
+      "z": 72.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 12.84,
+      "z": 61.33,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 150.0,
+      "z": 110.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 143.0,
+      "z": 121.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 157.47,
+      "z": 122.91,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 162.0,
+      "z": 111.0,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 138.0,
+      "z": 113.0,
+      "scale": 1.1,
+      "rotation": 0.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 154.0,
+      "z": 129.0,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 146.0,
+      "z": 104.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 160.93,
+      "z": 115.18,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "cursed_gold_vein",
+      "x": 98,
+      "z": 80,
+      "scale": 1.0,
+      "rotation": 4.7
+    },
+    {
+      "type": "cursed_gold_vein",
+      "x": 78,
+      "z": 128,
+      "scale": 1.0,
+      "rotation": 3.26
+    }
+  ],
+  "firecamps": [
+    {
+      "id": "p1_fire",
+      "x": 31.47,
+      "z": 127.17,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "p2_fire",
+      "x": 144.53,
+      "z": 48.83,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "north_toll_fire",
+      "x": 57.55,
+      "z": 67.51,
+      "radius": 3.0
+    },
+    {
+      "id": "south_toll_fire",
+      "x": 130,
+      "z": 121,
+      "radius": 3.0
+    }
+  ],
+  "undead_zones": [],
+  "wildlife": {
+    "enabled": true,
+    "seed": 40217,
+    "near_simulation_radius": 60.0,
+    "far_simulation_radius": 120.0,
+    "sheep": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 5,
+      "group_size_max": 8,
+      "roam_radius": 13.0,
+      "respawn": true,
+      "respawn_delay": 120.0,
+      "spawn_areas": [
+        {
+          "x": 56.0,
+          "z": 104.0,
+          "radius": 14.0
+        },
+        {
+          "x": 120.0,
+          "z": 72.0,
+          "radius": 14.0
+        }
+      ],
+      "alert_radius": 11.0
+    },
+    "wolves": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 3,
+      "group_size_max": 5,
+      "roam_radius": 26.0,
+      "respawn": true,
+      "respawn_delay": 160.0,
+      "spawn_areas": [
+        {
+          "x": 150.0,
+          "z": 140.0,
+          "radius": 16.0
+        },
+        {
+          "x": 26.0,
+          "z": 36.0,
+          "radius": 16.0
+        }
+      ],
+      "aggression": 0.45
+    },
+    "birds": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 3,
+      "group_size_max": 7,
+      "flight_height": 9.0,
+      "flyover_interval_min": 18.0,
+      "flyover_interval_max": 46.0
+    }
+  },
+  "starting_resources": {
+    "gold": 250,
+    "food": 200,
+    "wood": 250,
+    "stone": 120,
+    "iron": 80
+  },
+  "victory": {
+    "type": "elimination",
+    "key_structures": ["barracks"],
+    "defeat_conditions": [
+      "no_key_structures",
+      "no_commander",
+      "only_commander_remaining"
+    ]
+  }
+}

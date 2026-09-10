@@ -6,6 +6,24 @@ using Render::GL::classify_projectile_relation;
 using Render::GL::ProjectileRelation;
 using Render::GL::ProjectileViewContext;
 
+TEST(FireballPresentationTest, ImpactKeepsItsFlashAndFadesToZeroBeforeRetirement) {
+  using Render::GL::fireball_impact_envelope;
+  EXPECT_FLOAT_EQ(fireball_impact_envelope(-0.1F), 1.0F);
+  EXPECT_FLOAT_EQ(fireball_impact_envelope(0.0F), 1.0F);
+  EXPECT_FLOAT_EQ(fireball_impact_envelope(0.25F), 1.0F);
+  EXPECT_FLOAT_EQ(fireball_impact_envelope(1.0F), 0.0F);
+  EXPECT_FLOAT_EQ(fireball_impact_envelope(1.1F), 0.0F);
+  float previous = 1.0F;
+  for (int frame = 1; frame <= 120; ++frame) {
+    float const current = fireball_impact_envelope(frame / 120.0F);
+    EXPECT_GE(current, 0.0F);
+    EXPECT_LE(current, previous);
+    EXPECT_LT(previous - current, 0.02F);
+    previous = current;
+  }
+  EXPECT_LT(fireball_impact_envelope(0.99F), 0.001F);
+}
+
 TEST(ProjectileRelationTest, ArrowsShotByTheLocalPlayerAreOutgoing) {
   EXPECT_EQ(classify_projectile_relation(1, 1, 2), ProjectileRelation::Outgoing);
   EXPECT_EQ(classify_projectile_relation(1, 1, 0), ProjectileRelation::Outgoing);

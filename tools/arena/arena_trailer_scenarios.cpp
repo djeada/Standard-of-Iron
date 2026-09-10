@@ -604,6 +604,10 @@ struct ValleyOptions {
   bool fort{true};
   bool village_residents{true};
   bool cursed_grove{false};
+
+  bool south_camps{true};
+
+  bool plain_pines{true};
 };
 
 void dress_valley(ArenaScenarioDefinition& scenario, const ValleyOptions& options) {
@@ -661,21 +665,23 @@ void dress_valley(ArenaScenarioDefinition& scenario, const ValleyOptions& option
                   .walled = true,
                   .acropolis = true});
 
-  add_settlement(scenario,
-                 {.prefix = QStringLiteral("punic_camp"),
-                  .nation = Nation::Carthage,
-                  .owner = 2,
-                  .center = {k_punic_camp_x, 0.0F, k_punic_camp_z},
-                  .scale = SettlementScale::Camp,
-                  .add_residents = false});
+  if (options.south_camps) {
+    add_settlement(scenario,
+                   {.prefix = QStringLiteral("punic_camp"),
+                    .nation = Nation::Carthage,
+                    .owner = 2,
+                    .center = {k_punic_camp_x, 0.0F, k_punic_camp_z},
+                    .scale = SettlementScale::Camp,
+                    .add_residents = false});
 
-  add_settlement(scenario,
-                 {.prefix = QStringLiteral("roman_camp"),
-                  .nation = Nation::RomanRepublic,
-                  .owner = 1,
-                  .center = {k_roman_camp_x, 0.0F, k_roman_camp_z},
-                  .scale = SettlementScale::Camp,
-                  .add_residents = false});
+    add_settlement(scenario,
+                   {.prefix = QStringLiteral("roman_camp"),
+                    .nation = Nation::RomanRepublic,
+                    .owner = 1,
+                    .center = {k_roman_camp_x, 0.0F, k_roman_camp_z},
+                    .scale = SettlementScale::Camp,
+                    .add_residents = false});
+  }
 
   scenario.resource_patches.push_back(
       patch("olive_tree", 5, {-34.0F, 0.0F, -14.0F}, {0.0F, 0.0F, 4.2F}, 1.15F));
@@ -711,7 +717,7 @@ void dress_valley(ArenaScenarioDefinition& scenario, const ValleyOptions& option
         patch("dead_tree", 3, {-16.0F, 0.0F, 40.0F}, {4.2F, 0.0F, 2.6F}, 1.2F));
     scenario.resource_patches.push_back(
         patch("ruins", 2, {-28.0F, 0.0F, 39.0F}, {5.0F, 0.0F, 2.0F}, 1.1F));
-  } else {
+  } else if (options.plain_pines) {
     scenario.resource_patches.push_back(
         patch("pine_tree", 4, {-34.0F, 0.0F, 30.0F}, {4.4F, 0.0F, 3.0F}, 1.2F));
   }
@@ -1393,6 +1399,144 @@ auto trailer_pov() -> ArenaScenarioDefinition {
   s.expectations = {
       expectation(Expect::GroupExists, QStringLiteral("rpg_commander")),
       expectation(Expect::GroupHealthReduced, QStringLiteral("enemy_wave")),
+  };
+  return s;
+}
+
+auto trailer_open() -> ArenaScenarioDefinition {
+  auto s = definition(
+      QString::fromLatin1(k_trailer_open_id),
+      QStringLiteral("Trailer: Command It. Fight In It."),
+      QStringLiteral("The opening beat. A battle already developing on the south "
+                     "plain: the legion is ordered into assault formation, the "
+                     "camera drops behind Scipio's shoulders, his command aura "
+                     "lights the line, and the line goes in."),
+      18.0F,
+      {88.0F, 36.0F, 0.0F});
+  s.camera_focus = QVector3D(-14.0F, 0.0F, 25.0F);
+  s.collect_animation_diagnostics = true;
+  s.environment.start_time = 18.1F;
+  s.environment.fog_density_override = 0.024F;
+  s.environment.exposure_override = 1.7F;
+  s.rpg_mode = true;
+  s.rpg_commander_group = QStringLiteral("scipio");
+
+  s.wildlife = default_wildlife(20260910U);
+  dress_valley(s,
+               {.fort = true,
+                .village_residents = false,
+                .cursed_grove = false,
+                .south_camps = false,
+                .plain_pines = false});
+
+  auto scipio = group(QStringLiteral("scipio"),
+                      Troop::RomanVeteranConsul,
+                      1,
+                      1,
+                      {-14.0F, 0.0F, 29.6F},
+                      1);
+  scipio.facing_degrees = 180.0F;
+  scipio.health_override = scipio.max_health_override = 9000;
+
+  auto roman_swords = group(QStringLiteral("roman_line"),
+                            Troop::Swordsman,
+                            1,
+                            6,
+                            {-14.0F, 0.0F, 25.5F},
+                            12,
+                            {3.3F, 0.0F, 0.0F});
+  auto roman_spears = group(QStringLiteral("roman_spears"),
+                            Troop::Spearman,
+                            1,
+                            3,
+                            {0.0F, 0.0F, 28.0F},
+                            12,
+                            {3.3F, 0.0F, 0.0F});
+  auto roman_horse = group(QStringLiteral("roman_horse"),
+                           Troop::MountedKnight,
+                           1,
+                           3,
+                           {-29.0F, 0.0F, 30.0F},
+                           6,
+                           {3.4F, 0.0F, 0.0F});
+
+  auto punic_swords = group(QStringLiteral("punic_line"),
+                            Troop::Swordsman,
+                            2,
+                            6,
+                            {-14.0F, 0.0F, 22.5F},
+                            12,
+                            {3.3F, 0.0F, 0.0F});
+  auto punic_spears = group(QStringLiteral("punic_spears"),
+                            Troop::Spearman,
+                            2,
+                            4,
+                            {-14.0F, 0.0F, 20.5F},
+                            12,
+                            {3.3F, 0.0F, 0.0F});
+  auto punic_horse = group(QStringLiteral("punic_horse"),
+                           Troop::MountedKnight,
+                           2,
+                           3,
+                           {-34.0F, 0.0F, 22.0F},
+                           6,
+                           {3.4F, 0.0F, 0.0F});
+
+  for (auto* line : {&roman_swords, &roman_spears, &punic_swords, &punic_spears}) {
+    line->health_override = line->max_health_override = 2600;
+  }
+
+  s.groups.push_back(scipio);
+  s.groups.push_back(roman_swords);
+  s.groups.push_back(roman_spears);
+  s.groups.push_back(roman_horse);
+  s.groups.push_back(punic_swords);
+  s.groups.push_back(punic_spears);
+  s.groups.push_back(punic_horse);
+
+  const QStringList legion = {QStringLiteral("roman_line"),
+                              QStringLiteral("roman_spears"),
+                              QStringLiteral("roman_horse")};
+
+  auto aura = at(6.9F, Command::TriggerCommanderAura, QStringLiteral("scipio"));
+  aura.value = 20;
+
+  s.steps = {
+      at(0.2F, Command::Hold, QStringLiteral("scipio")),
+      at(0.3F, Command::Hold, QStringLiteral("roman_line")),
+      at(0.3F, Command::Hold, QStringLiteral("roman_spears")),
+      at(0.3F, Command::Hold, QStringLiteral("roman_horse")),
+      at(0.4F,
+         Command::AttackMove,
+         QStringLiteral("punic_line"),
+         QStringLiteral("roman_line")),
+      at(0.6F,
+         Command::AttackMove,
+         QStringLiteral("punic_spears"),
+         QStringLiteral("roman_line")),
+      form_step(2.6F, legion, Intent::Assault, {-14.0F, 0.0F, 25.5F}, 180.0F, 30.0F),
+      at(6.4F, Command::RpgAim, QStringLiteral("scipio"), QStringLiteral("punic_line")),
+      aura,
+      at(7.2F,
+         Command::AttackMove,
+         QStringLiteral("roman_line"),
+         QStringLiteral("punic_line")),
+      at(7.2F,
+         Command::AttackMove,
+         QStringLiteral("roman_spears"),
+         QStringLiteral("punic_spears")),
+      at(7.4F,
+         Command::Charge,
+         QStringLiteral("roman_horse"),
+         QStringLiteral("punic_horse")),
+  };
+
+  s.expectations = {
+      expectation(Expect::GroupExists, QStringLiteral("scipio")),
+      expectation(Expect::CommanderAuraActivated, QStringLiteral("scipio")),
+      expectation(Expect::CommanderAuraBuffObserved, QStringLiteral("roman_line")),
+      expectation(Expect::GroupIsRendered, QStringLiteral("roman_line")),
+      expectation(Expect::GroupIsRendered, QStringLiteral("punic_line")),
   };
   return s;
 }
@@ -2909,6 +3053,7 @@ auto build_trailer_definitions() -> std::vector<ArenaScenarioDefinition> {
   result.push_back(trailer_night_snow());
   result.push_back(trailer_last_breath());
   result.push_back(trailer_wolf_rain());
+  result.push_back(trailer_open());
   return result;
 }
 
