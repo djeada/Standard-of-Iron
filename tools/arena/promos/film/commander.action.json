@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "name": "trailer_commander",
+  "loop_seconds": 0.0,
+  "required_coverage": ["selection_change"],
+  "actions": [
+    {
+      "at": 0.05,
+      "action": "camera_look_at",
+      "argument": "-16,20"
+    },
+    {
+      "at": 0.06,
+      "action": "camera_zoom",
+      "argument": "3"
+    },
+    {
+      "at": 0.8,
+      "action": "select_id",
+      "argument": "1"
+    },
+    {
+      "at": 3.2,
+      "action": "camera_follow",
+      "argument": "on"
+    },
+    {
+      "at": 3.4,
+      "action": "attack_at_world",
+      "argument": "-12,22"
+    },
+    {
+      "at": 8.0,
+      "action": "attack_at_world",
+      "argument": "-10,26"
+    }
+  ]
+}

@@ -355,6 +355,8 @@ public:
     m_release_self_test_mode = enabled;
   }
   void simulate(float dt);
+
+  void film_step(float dt);
   void update_presentation(float dt);
   void publish_frame_snapshots();
   void announce_player_defeats(float dt);

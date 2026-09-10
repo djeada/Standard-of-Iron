@@ -17,6 +17,12 @@
 
 namespace Render::GL {
 
+auto fireball_impact_envelope(float progress) -> float {
+
+  float const t = std::clamp((progress - 0.25F) / 0.75F, 0.0F, 1.0F);
+  return 1.0F - t * t * (3.0F - 2.0F * t);
+}
+
 auto prewarm_projectile_geometry() -> bool {
   if (QOpenGLContext::currentContext() == nullptr) {
     return false;
@@ -327,6 +333,7 @@ void render_projectile_impact(Renderer* renderer,
 
   if (impact.kind == Game::Systems::ProjectileKind::Fireball) {
 
+    float const flame_envelope = fireball_impact_envelope(progress);
     float const growth = 1.0F - std::pow(1.0F - progress, 2.4F);
     float const cooling = 1.0F - progress;
     float const flash_life = std::clamp(1.0F - progress * 3.2F, 0.0F, 1.0F);
@@ -338,19 +345,19 @@ void render_projectile_impact(Renderer* renderer,
     renderer->fireball(impact.position + QVector3D(0.0F, 0.26F * growth, 0.0F),
                        QVector3D(0.34F, 0.085F, 0.02F),
                        outer_radius * 1.12F,
-                       (0.40F + 1.05F * cooling * cooling) * 1.25F,
+                       (0.40F + 1.05F * cooling * cooling) * 1.25F * flame_envelope,
                        time + impact.age * 1.9F);
 
     renderer->fireball(impact.position + QVector3D(0.0F, 0.22F * growth, 0.0F),
                        QVector3D(0.92F, 0.30F, 0.05F),
                        outer_radius,
-                       (0.45F + 1.25F * cooling * cooling) * 1.35F,
+                       (0.45F + 1.25F * cooling * cooling) * 1.35F * flame_envelope,
                        time * 1.13F + impact.age * 2.3F);
 
     renderer->fireball(impact.position + QVector3D(0.0F, 0.14F * growth, 0.0F),
                        QVector3D(1.0F, 0.52F, 0.10F),
                        outer_radius * 0.58F,
-                       (0.35F + 1.55F * cooling) * 1.25F,
+                       (0.35F + 1.55F * cooling) * 1.25F * flame_envelope,
                        time * 1.37F + impact.age);
 
     if (flash_life > 0.0F) {

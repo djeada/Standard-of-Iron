@@ -9597,7 +9597,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.expectations.push_back(expectation(Expect::ProjectileImpactSynchronized,
                                          QStringLiteral("grave_priest"),
                                          QStringLiteral("roman_target")));
-    s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
+    add_visual_stability(s,
+                         {QStringLiteral("grave_priest"),
+                          QStringLiteral("skeleton_guard"),
+                          QStringLiteral("roman_target")});
     result.push_back(std::move(s));
   }
 
@@ -9649,7 +9652,8 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.expectations.push_back(expectation(Expect::ProjectileImpactObserved,
                                          QStringLiteral("fireball_caster"),
                                          QStringLiteral("fireball_target")));
-    s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
+    add_visual_stability(
+        s, {QStringLiteral("fireball_caster"), QStringLiteral("fireball_target")});
     result.push_back(std::move(s));
   }
 

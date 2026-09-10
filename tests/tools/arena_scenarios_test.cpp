@@ -15,6 +15,29 @@
 #include "tools/arena/arena_scenario.h"
 #include "tools/arena/arena_scenarios.h"
 
+TEST(ArenaScenariosTest, MagicReviewsAssertBodyContinuityAsWellAsProjectileTiming) {
+  using Expect = Arena::ArenaExpectationKind;
+  for (auto const* id : {"sepulcher_spell_fx_showcase", "sepulcher_fireball_review"}) {
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    for (auto const& group : scenario->groups) {
+      for (auto const kind : {Expect::NoPoseOscillation,
+                              Expect::NoRootTeleport,
+                              Expect::NoUnexpectedFallPose,
+                              Expect::MovementIsContinuous,
+                              Expect::GroupIsRendered}) {
+        EXPECT_TRUE(std::any_of(scenario->expectations.begin(),
+                                scenario->expectations.end(),
+                                [&](auto const& check) {
+                                  return check.kind == kind &&
+                                         check.group == group.name;
+                                }))
+            << id << ": " << group.name.toStdString();
+      }
+    }
+  }
+}
+
 TEST(ArenaScenariosTest, WildlifeContactFixturesCoverBuildersSoldiersAndSheep) {
   for (auto const* id : {"wildlife_wolf_builder_contact",
                          "wildlife_wolves_builders_surround",
