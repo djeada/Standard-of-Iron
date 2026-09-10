@@ -267,6 +267,45 @@ TEST(ArenaPromoSpecTest, TimeLapseIsSlowMotionWrittenTheFriendlyWayRound) {
       << "a ten-minute shot shown in thirty seconds is a legal clip";
 }
 
+TEST(ArenaPromoSpecTest, AReelMayRaiseItsOwnMotionCeilings) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+
+  const char* dive = R"({
+    "id": "probe",
+    %1
+    "shots": [
+      { "name": "dive", "scenario": "arena", "duration": 1.6,
+        "focus": { "mode": "point", "point": [0, 0, 0] },
+        "camera": [ { "time": 0.0, "distance": 30, "pitch": 30, "yaw": 340, "fov": 42 },
+                    { "time": 1.6, "distance": 6, "pitch": 15, "yaw": 0, "fov": 68 } ] }
+    ]
+  })";
+
+  QString error;
+  const auto refused = Arena::Promo::load(
+      write_spec(dir, QString::fromLatin1(dive).arg("").toUtf8().constData()), &error);
+  EXPECT_FALSE(refused.has_value())
+      << "a crane-to-shoulder dive breaks the phone-short ceilings by default";
+  EXPECT_TRUE(error.contains(QStringLiteral("swings fov")));
+
+  const auto accepted = Arena::Promo::load(
+      write_spec(dir,
+                 QString::fromLatin1(dive)
+                     .arg(
+                         R"("motion_limits": { "pitch_degrees_per_second": 16,
+                                            "fov_degrees_per_second": 20,
+                                            "yaw_degrees_per_second": 40,
+                                            "mean_clip_seconds": 1.5 },)")
+                     .toUtf8()
+                     .constData()),
+      &error);
+  ASSERT_TRUE(accepted.has_value()) << error.toStdString();
+  EXPECT_NEAR(accepted->motion_limits.fov_degrees_per_second, 20.0F, 1e-5F);
+  EXPECT_NEAR(accepted->motion_limits.minimum_clip_seconds, 1.5F, 1e-5F)
+      << "ceilings the reel does not name keep their defaults";
+}
+
 TEST(ArenaPromoSpecTest, TimeLapseAndSlowMotionTogetherAreRefused) {
   QTemporaryDir dir;
   ASSERT_TRUE(dir.isValid());

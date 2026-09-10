@@ -684,6 +684,147 @@ whole clip rather than the poster: the poster is the shot's _last_ frame, after
 the camera has finished moving, and routinely reads ten to twenty points darker
 than the shot it represents.
 
+## The opening proof
+
+`tools/arena/promos/trailer_open_proof.json` over `trailer_open` is the eight-second
+proof of the next trailer's first promise -- order the army, drop into the
+commander's shoulder, fire the command aura, watch the line answer -- and it is the
+standard the rest of that trailer is cut to. Four shots over one scenario: a crane
+over both lines at the river (`field_order`), a continuous dive that ends on the
+chase camera's exact pose (`into_the_saddle`), the chase camera itself
+(`commander_view`, `gameplay_camera`), and a pullback from that same pose
+(`the_line_answers`). Five things about it are worth copying.
+
+**Match the cut to the chase camera by measuring it, not by eye.** The chase rig
+sits behind the commander with a framing that depends on whether enemies are near
+(`Explore` versus `Melee`), so its pose is not a constant. `--batch` the scenario
+and read `commander.camera` out of `trace.jsonl` at the cut: `target_resolved -
+commander_position` is the shot's `focus.offset`, `|eye - target|` is `distance`,
+`asin(dy / distance)` is `pitch`, `atan2(dx, dz)` is `yaw` and `fov` is the rig's
+own. A dive whose last key carries those numbers, and a pullback whose first key
+does, cut against the `gameplay_camera` shot without a visible jump.
+
+**A widescreen trailer names its own motion ceilings.** The phone-short limits
+(12 deg/s yaw, 6 deg/s pitch and fov, 1.5 s clips averaging 2 s) refuse a crane-to-
+shoulder dive outright. A spec-level `motion_limits` object raises only the
+ceilings it names, in both the arena (`Arena::Promo::load`) and `promo-edit.py`:
+
+```json
+"motion_limits": { "pitch_degrees_per_second": 16, "fov_degrees_per_second": 20,
+                   "yaw_degrees_per_second": 40, "mean_clip_seconds": 1.8 }
+```
+
+The shorts keep the defaults; nothing without the key changes.
+
+**The south plain is narrower than the floor.** `dress_valley` levels 56 m, but
+the walkable ground south of the river ends around `z` 30 at `x` -14 and every
+spawn is snapped to the nearest walkable cell, so a commander authored at `z` 35
+stood inside his own line at `z` 30.5. Read the spawned extents out of the trace
+(`units[].position` at 0.05 s) before authoring a camera against an origin.
+
+**Protect the frame in the scenario, not the shot list.** The first crane was
+dwarfed by the Carthaginian camp in the foreground and the first chase frame had
+the Punic city rampart across its right third. `ValleyOptions::south_camps` and
+`plain_pines` turn both off for this scenario, `default_wildlife` keeps the bird
+flocks out of the lens, and the engagement sits 12 m west of the bridge road so
+the chase camera's 100-degree horizontal field holds the river, the bridge and
+the walled town and nothing nearer.
+
+**The aura has to be visible before it can be filmed.** The command aura used to
+draw one healer dome at intensity 0.10 -- invisible in evening light -- and a
+per-soldier dome the shader caps at alpha 0.12. `render_commander_auras` now
+draws an expanding pulse ring on activation, a boundary ring at `aura_radius`,
+and a gold ground ring under every buffed soldier, all through `ground_marker`.
+The buff itself was always applied (`commander_aura_buffed` in the trace); only
+the picture was missing.
+
+The reel is cut with `gameplay_ui` on, so the mode indicators and floating
+numbers are the game's own. What the arena cannot record is the QML HUD, the
+formation planner's slot ghosts and selection rings, so the "real UI" beats of
+the trailer that need those come from the game itself, not from this pipeline.
+
+## Filming the real game
+
+The arena cannot record the HUD: it builds no QML engine, so a shot of the
+resource bar, the orders panel, the formation planner or a selection ring has
+to come from `standard_of_iron` itself. `--film` does that, and
+`scripts/film-game.sh` wraps it:
+
+```sh
+scripts/film-game.sh out.mp4 \
+  --mission-file tools/arena/promos/film/river.mission.json \
+  --action-fixture tools/arena/promos/film/river.action.json \
+  --fps 60 --seconds 32
+```
+
+**One simulation step per frame.** The simulation thread stays stopped and
+`GameEngine::film_step` advances the world by exactly `1/fps` per grabbed
+frame, so the footage is 60 fps however slowly the machine renders it, and the
+scripted actions fire on the same clock rather than on the wall. That is the
+whole reason this works: a 1080p frame costs about 70 ms on this box, and the
+result is still smooth 60 fps footage.
+
+**The action fixture is the script.** `--action-fixture` takes the same
+versioned format the frame-pacing benchmark uses, and both now dispatch through
+`App::Core::apply_benchmark_action`, so the vocabulary grew rather than forked:
+camera (`camera_look_at`, `camera_zoom`, `camera_orbit`, `camera_follow`),
+placement (`formation_begin/drag/end`, `build_start/hover/place`), commander
+(`commander_enter/exit/aura/attack/heavy/special/vanguard/dodge/key_down/key_up`),
+plus `game_speed`, `pause`, `select_id`. Any action may be suffixed `_world`
+and take `x,z` world coordinates in its argument; the dispatcher projects them
+through the live camera, which is what lets a fixture aim at a building site or
+a unit without guessing screen pixels.
+
+Four things about the window were each measured before being fixed, and all
+four are load-bearing:
+
+- **Xvfb is 20 s per 1080p frame** under llvmpipe. `--display xvfb` still works
+  for very short clips; everything else films on the GPU display.
+- **A hidden window cannot be grabbed.** Qt tears the scene graph down after
+  every `grabWindow` of an unexposed window, and the gameplay renderer refuses
+  to re-initialise. `QT_QPA_PLATFORM=offscreen` never builds it at all.
+- **An occluded window costs five seconds a frame.** The threaded render loop
+  spends them inside the NVIDIA driver in `QRhi::endFrame`, swapping a window
+  the compositor is throttling. The film window is therefore parked almost
+  entirely off the bottom-right of the screen -- unmanaged, unfocusable, never
+  covered -- and `QSG_RENDER_LOOP=basic` grabs on the GUI thread.
+- **Only grabs may render.** An event filter eats the window's own
+  `UpdateRequest` once the match is loaded, so nothing presents between frames.
+  It has to stay off during loading: the loading overlay counts five presented
+  frames before it lets the match begin.
+
+`QSG_FIXED_ANIMATION_STEP=1` keeps QML animations on the film clock. QML
+`Timer`s still run on the wall clock, so a HUD element driven by one drifts
+against the picture; nothing in the shots below depends on that.
+
+The throwaway `XDG_CONFIG_HOME` the script writes also silences the hint cards
+(`ui/camera_legend_seen=true`, `economy_coach=false`, `formation_hints=false`)
+-- the camera legend otherwise sits over the right third of every frame.
+
+### Filming the editor
+
+`scripts/film-editor.py` drives `map_editor` on its own Xvfb display and records
+it with `ffmpeg -f x11grab`. The editor is a widget app, so software GL is fine.
+Input goes through python-xlib's XTEST extension (there is no `xdotool` here),
+and a 0.4 s dwell is inserted between a move and a press because Qt otherwise
+processes the press at the previous pointer position. Steps are JSON: `click`,
+`dblclick`, `drag`, `wheel`, `key`, `type`, `sleep`, `record`, `stop`,
+`screenshot`. The whole folder of JSON beside the opened file is copied into the
+session directory first, because a mission names its battlefield map by a
+sibling path.
+
+### The clips a spec did not record
+
+`trailer_v2.json` cuts arena shots together with footage filmed from the game
+and the editor. A shot with a `clip` path instead of a `scenario` is skipped by
+the arena entirely and laid on the timeline by `promo-edit.py`, which measures
+its length off the file. `scripts/trailer-v2-clips.py` is the in/out list that
+cuts the long recordings down to the clips the spec names, and
+`scripts/place-trailer-v2-cues.py` writes the `sfx` list against shot names the
+same way `place-trailer-cues.py` does -- including the commander voice lines,
+which are real assets under `assets/audio/voices/` and play in game when a
+commander is selected.
+
 ## Render defects this reel exposed
 
 A trailer holds a shot for four seconds at 1080p, which is a far harsher test

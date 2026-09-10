@@ -739,7 +739,13 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         directive.engagement_surface_gap =
             assignment.pair->surface_gap +
             (retained.root_distance - assignment.pair->root_distance);
-        directive.combat_role = combat_role_for(layout.seed, original_slot.index, true);
+
+        bool const opponent_within_reach =
+            directive.engagement_surface_gap <= layout.spacing * 0.65F;
+        directive.combat_role =
+            opponent_within_reach
+                ? combat_role_for(layout.seed, original_slot.index, true)
+                : Engine::Core::FormationSoldierCombatRole::Guard;
         directive.action = action_for_role(directive.combat_role);
 
         auto const* target_slot = find_live_slot(opponent_layout, retained.slot);
@@ -770,7 +776,7 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
           float const pull_distance =
               std::clamp(contact_vector.distance - k_weapon_contact_distance,
                          0.0F,
-                         layout.spacing * 1.35F);
+                         layout.spacing * 0.20F);
           if (contact_vector.distance > 0.0001F) {
             directive.local_x +=
                 contact_vector.x / contact_vector.distance * pull_distance;
@@ -786,37 +792,11 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
           std::uint32_t const soldier_seed =
               layout.seed ^
               (static_cast<std::uint32_t>(original_slot.index) * 0x9e3779b9U);
-          float lateral = (hash_unit_float(soldier_seed, 0x4f1bbcdcU) - 0.5F) *
-                          std::min(0.45F, layout.spacing * 0.48F);
-          float depth = (hash_unit_float(soldier_seed, 0x94d049bbU) - 0.5F) *
-                        std::min(0.34F, layout.spacing * 0.36F);
-          float const motion_phase =
-              combat_motion_time * directive.combat_speed_scale *
-                  (2.0F * std::numbers::pi_v<float> / 0.95F) +
-              directive.combat_phase_bias * 2.0F * std::numbers::pi_v<float>;
-          float const forward_pulse = std::max(0.0F, std::sin(motion_phase));
-          using Role = Engine::Core::FormationSoldierCombatRole;
-          switch (directive.combat_role) {
-          case Role::LeadStrike:
-            depth += forward_pulse * 0.14F;
-            break;
-          case Role::SupportStrike:
-            depth += forward_pulse * 0.09F;
-            break;
-          case Role::StepIn:
-            depth += 0.08F + forward_pulse * 0.08F;
-            break;
-          case Role::StepOut:
-            depth -= 0.08F + forward_pulse * 0.06F;
-            break;
-          case Role::Guard:
-            depth -= 0.03F;
-            break;
-          case Role::Ready:
-          case Role::None:
-            break;
-          }
-          lateral += std::sin(motion_phase * 0.47F) * 0.035F;
+
+          float const lateral = (hash_unit_float(soldier_seed, 0x4f1bbcdcU) - 0.5F) *
+                                std::min(0.08F, layout.spacing * 0.08F);
+          float const depth = (hash_unit_float(soldier_seed, 0x94d049bbU) - 0.5F) *
+                              std::min(0.06F, layout.spacing * 0.06F);
           directive.local_x += right_x * lateral + forward_x * depth;
           directive.local_z += right_z * lateral + forward_z * depth;
         }

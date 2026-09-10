@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "name": "trailer_build",
+  "loop_seconds": 0.0,
+  "required_coverage": ["build_panel"],
+  "actions": [
+    {
+      "at": 0.05,
+      "action": "camera_look_at",
+      "argument": "-9,20"
+    },
+    {
+      "at": 0.06,
+      "action": "camera_zoom",
+      "argument": "-2"
+    },
+    {
+      "at": 0.6,
+      "action": "select_id",
+      "argument": "2"
+    },
+    {
+      "at": 1.2,
+      "action": "build_start_world",
+      "argument": "home,-9,12"
+    },
+    {
+      "at": 1.7,
+      "action": "build_hover_world",
+      "argument": "-8,12"
+    },
+    {
+      "at": 2.1,
+      "action": "build_place_world",
+      "argument": "-8,12"
+    },
+    {
+      "at": 2.7,
+      "action": "select_id",
+      "argument": "3"
+    },
+    {
+      "at": 3.2,
+      "action": "build_start_world",
+      "argument": "farm,-8,30"
+    },
+    {
+      "at": 3.6,
+      "action": "build_hover_world",
+      "argument": "-7,30"
+    },
+    {
+      "at": 4.0,
+      "action": "build_place_world",
+      "argument": "-7,30"
+    },
+    {
+      "at": 4.6,
+      "action": "select_id",
+      "argument": "7"
+    },
+    {
+      "at": 5.1,
+      "action": "build_start_world",
+      "argument": "home,-3,20"
+    },
+    {
+      "at": 5.5,
+      "action": "build_place_world",
+      "argument": "-2,20"
+    },
+    {
+      "at": 6.1,
+      "action": "select_id",
+      "argument": "8"
+    },
+    {
+      "at": 6.6,
+      "action": "build_start_world",
+      "argument": "defense_tower,3,8"
+    },
+    {
+      "at": 7.0,
+      "action": "build_place_world",
+      "argument": "3,8"
+    },
+    {
+      "at": 7.4,
+      "action": "deselect_world",
+      "argument": "-2,26"
+    },
+    {
+      "at": 7.6,
+      "action": "game_speed",
+      "argument": "4"
+    },
+    {
+      "at": 10.6,
+      "action": "select_id",
+      "argument": "2"
+    },
+    {
+      "at": 10.9,
+      "action": "build_start_world",
+      "argument": "cut_tree,2,26"
+    },
+    {
+      "at": 11.2,
+      "action": "build_place_world",
+      "argument": "2,26"
+    },
+    {
+      "at": 11.5,
+      "action": "deselect_world",
+      "argument": "-2,30"
+    },
+    {
+      "at": 15.0,
+      "action": "game_speed",
+      "argument": "1"
+    },
+    {
+      "at": 15.2,
+      "action": "camera_zoom",
+      "argument": "-3"
+    },
+    {
+      "at": 15.5,
+      "action": "camera_zoom",
+      "argument": "-3"
+    },
+    {
+      "at": 15.8,
+      "action": "camera_zoom",
+      "argument": "-3"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "id": "trailer_river",
+  "title": "Trailer: the ford",
+  "summary": "Filming fixture.",
+  "teaching_goal": "None.",
+  "narrative_intent": "Trailer fixture.",
+  "historical_context": "Trailer fixture.",
+  "terrain_type": "river_valley",
+  "map_path": "river.map.json",
+  "player_setup": {
+    "nation": "roman_republic",
+    "faction": "roman",
+    "color": "red",
+    "starting_units": [],
+    "starting_buildings": [],
+    "starting_resources": {
+      "gold": 1200,
+      "food": 900,
+      "wood": 600,
+      "stone": 300,
+      "iron": 200
+    }
+  },
+  "ai_setups": [
+    {
+      "id": "punic_host",
+      "nation": "carthage",
+      "faction": "carthaginian",
+      "color": "brown",
+      "team_id": 2,
+      "difficulty": "hard",
+      "strategy": "aggressive",
+      "posture": "field",
+      "personality": {
+        "aggression": 1.0,
+        "defense": 0.2,
+        "harassment": 0.3
+      },
+      "starting_units": [],
+      "starting_buildings": [],
+      "waves": []
+    }
+  ],
+  "victory_conditions": [
+    {
+      "type": "eliminate_commanders",
+      "description": "Break Hannibal at the ford."
+    }
+  ],
+  "defeat_conditions": [
+    {
+      "type": "lose_commander",
+      "description": "Scipio falls."
+    }
+  ],
+  "optional_objectives": [],
+  "stages": [],
+  "events": [],
+  "commander_messages": [],
+  "include_ambient_undead": false,
+  "theme": "Trailer fixture.",
+  "victory_mode": "all",
+  "commander_voices": {
+    "generic": true
+  }
+}
