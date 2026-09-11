@@ -27,6 +27,7 @@
 #include <qt_windows.h>
 #endif
 
+#include "animation/elephant_gait_manifest.h"
 #include "animation/rig/horse_attachment_frames.h"
 #include "render/creature/quadruped/attachment_resolver.h"
 #include "render/elephant/elephant_source_asset.h"
@@ -1052,8 +1053,10 @@ auto elephant_source_sample_clip(std::string_view source_clip,
     return sample_elephant_locomotion(
         asset, normalized_phase, source_clip == "Run", out);
   }
-  return sample_source_clip(
-      asset, k_elephant_config, source_clip, normalized_phase, out);
+  float const source_phase =
+      source_clip == "Angry" ? Animation::elephant_attack_source_phase(normalized_phase)
+                             : normalized_phase;
+  return sample_source_clip(asset, k_elephant_config, source_clip, source_phase, out);
 }
 
 auto elephant_source_pose_howdah(std::string_view source_clip,
