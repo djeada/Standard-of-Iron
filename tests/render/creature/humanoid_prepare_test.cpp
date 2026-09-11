@@ -1088,6 +1088,40 @@ TEST(HumanoidPrepare, PoseLayerNeverRunsDuringRuntimePreparation) {
   EXPECT_LT(pose.head_pos.y(), untouched.head_pos.y());
 }
 
+TEST(WeaponPoseContinuity, FireballGestureStartsAndFinishesAtTheUncastPose) {
+  auto sample = [](float phase, bool casting) {
+    Render::GL::HumanoidPose pose{};
+    pose.neck_base = {0.0F, 1.4F, 0.0F};
+    pose.head_pos = {0.0F, 1.6F, 0.0F};
+    pose.hand_r = {0.25F, 1.0F, 0.0F};
+    pose.hand_l = {-0.25F, 1.0F, 0.0F};
+    pose.elbow_r = {0.22F, 1.15F, 0.0F};
+    pose.elbow_l = {-0.22F, 1.15F, 0.0F};
+    Render::GL::HumanoidAnimationContext anim{};
+    anim.inputs.is_casting = casting;
+    anim.inputs.cast_kind = Render::GL::CastVisualKind::Fireball;
+    anim.attack_phase = phase;
+    Render::Entity::HumanoidPosePolicyInputs inputs;
+    inputs.animation = &anim;
+    Render::Entity::apply_humanoid_pose_policy(
+        Render::Humanoid::HumanoidPosePolicy::GravePriestCast, inputs, pose);
+    return std::array{pose.hand_r,
+                      pose.hand_l,
+                      pose.elbow_r,
+                      pose.elbow_l,
+                      pose.head_pos,
+                      pose.neck_base};
+  };
+  auto const rest = sample(0, false);
+  for (float phase : {0.0F, 0.00001F, 0.99999F, 1.0F}) {
+    auto const pose = sample(phase, true);
+    for (std::size_t i = 0; i < rest.size(); ++i) {
+      EXPECT_LT((pose[i] - rest[i]).length(), 0.0001F) << phase << ": " << i;
+    }
+  }
+  EXPECT_GT((sample(0.52F, true)[0] - rest[0]).length(), 0.20F);
+}
+
 TEST(HumanoidPrepare, EveryPosePolicyResolvesToADefinitionThatMovesThePose) {
   Render::GL::HumanoidPose base{};
   base.neck_base = QVector3D(0.0F, 1.4F, 0.0F);
@@ -2574,6 +2608,150 @@ TEST(AnimationCoreGuardManifest, AttachmentProfilesExposeShieldTurns) {
   EXPECT_GT(roman_front.translate_z, 0.0F);
 }
 
+namespace {
+
+template <typename Sample>
+void expect_pose_channel_continuity(Sample sample,
+                                    std::initializer_list<float> boundaries) {
+  for (float const phase : boundaries) {
+    auto const before = sample(phase - 0.00001F);
+    auto const after = sample(phase + 0.00001F);
+    ASSERT_EQ(before.size(), after.size());
+    for (std::size_t i = 0; i < before.size(); ++i) {
+      EXPECT_NEAR(before[i], after[i], 0.001F) << "phase " << phase << " channel " << i;
+      EXPECT_TRUE(std::isfinite(after[i]));
+    }
+  }
+  auto const start = sample(0.0F);
+  auto const finish = sample(1.0F);
+  for (std::size_t i = 0; i < start.size(); ++i) {
+    EXPECT_NEAR(start[i], finish[i], 0.0001F) << "loop channel " << i;
+  }
+}
+
+} // namespace
+
+TEST(WeaponPoseContinuity, InfantryCutsAndThrustsJoinWithoutHandOrBodyPops) {
+  using Kind = Animation::HumanoidWeaponAttackKind;
+  for (auto kind : {Kind::SwordSlash,
+                    Kind::CombatSwordSlash,
+                    Kind::SpearThrust,
+                    Kind::SpearThrustClassic}) {
+    for (std::uint8_t variant = 0; variant < 3; ++variant) {
+      SCOPED_TRACE(static_cast<int>(kind));
+      SCOPED_TRACE(static_cast<int>(variant));
+      expect_pose_channel_continuity(
+          [&](float phase) {
+            auto const s =
+                Animation::resolve_humanoid_weapon_attack_pose({.kind = kind,
+                                                                .attack_phase = phase,
+                                                                .variant = variant,
+                                                                .shoulder_y = 1.2F,
+                                                                .waist_y = 0.75F});
+            return std::array{s.right_hand.x,
+                              s.right_hand.y,
+                              s.right_hand.z,
+                              s.left_hand.x,
+                              s.left_hand.y,
+                              s.left_hand.z,
+                              s.blade_direction.x,
+                              s.blade_direction.y,
+                              s.blade_direction.z,
+                              s.shoulder_r_z_delta,
+                              s.shoulder_l_z_delta,
+                              s.shoulder_r_y_delta,
+                              s.shoulder_l_y_delta,
+                              s.pelvis_z_delta,
+                              s.pelvis_y_delta,
+                              s.head_z_delta,
+                              s.foot_r_z_delta,
+                              s.foot_l_z_delta};
+          },
+          {0.10F, 0.18F, 0.32F, 0.34F, 0.42F, 0.58F, 0.62F, 0.76F, 0.90F});
+    }
+  }
+}
+
+TEST(WeaponPoseContinuity, MountedCutsKeepReinHeadAndTorsoThroughRecovery) {
+  expect_pose_channel_continuity(
+      [](float phase) {
+        auto const s =
+            Animation::resolve_mounted_sword_strike_pose({.attack_phase = phase});
+        return std::array{s.right_hand.forward,
+                          s.right_hand.right,
+                          s.right_hand.up,
+                          s.torso_twist,
+                          s.side_lean,
+                          s.forward_lean,
+                          s.torso_commit,
+                          s.counter_lift,
+                          s.shoulder_dip,
+                          s.left_hand_up_offset,
+                          s.head_forward_tilt,
+                          s.head_side_tilt};
+      },
+      {0.22F, 0.42F, 0.68F, 0.84F});
+}
+
+TEST(WeaponPoseContinuity, MountedThrustKeepsBothHandsAndHeadThroughRecovery) {
+  expect_pose_channel_continuity(
+      [](float phase) {
+        auto const s =
+            Animation::resolve_mounted_spear_thrust_pose({.attack_phase = phase});
+        return std::array{s.right_hand.forward,
+                          s.right_hand.right,
+                          s.right_hand.up,
+                          s.left_hand.forward,
+                          s.left_hand.right,
+                          s.left_hand.up,
+                          s.forward_lean,
+                          s.torso_twist,
+                          s.shoulder_drop,
+                          s.torso_compression,
+                          s.head_forward_tilt};
+      },
+      {0.20F, 0.30F, 0.50F, 0.65F});
+}
+
+TEST(WeaponPoseContinuity, BowsReleaseBackwardsBeforeReturningToNock) {
+  expect_pose_channel_continuity(
+      [](float phase) {
+        auto const s = Animation::resolve_humanoid_bow_draw_pose(
+            {.draw_phase = phase, .jitter_seed = 0.35F, .shoulder_y = 1.2F});
+        return std::array{s.right_hand.x,
+                          s.right_hand.y,
+                          s.right_hand.z,
+                          s.left_hand.x,
+                          s.left_hand.y,
+                          s.left_hand.z,
+                          s.shoulder_l_y_delta,
+                          s.shoulder_r_y_delta,
+                          s.pelvis_z_delta,
+                          s.head_z_delta};
+      },
+      {0.20F, 0.50F, 0.58F});
+  expect_pose_channel_continuity(
+      [](float phase) {
+        auto const s = Animation::resolve_mounted_bow_draw_pose({.draw_phase = phase});
+        return std::array{s.right_hand.forward,
+                          s.right_hand.right,
+                          s.right_hand.up,
+                          s.left_hand.forward,
+                          s.left_hand.right,
+                          s.left_hand.up,
+                          s.right_hand_world_y_offset};
+      },
+      {0.30F, 0.65F, 0.72F});
+  auto const draw = Animation::resolve_humanoid_bow_draw_pose({.draw_phase = 0.50F});
+  auto const release = Animation::resolve_humanoid_bow_draw_pose({.draw_phase = 0.58F});
+  EXPECT_LT(release.left_hand.z, draw.left_hand.z);
+  auto const mounted_draw =
+      Animation::resolve_mounted_bow_draw_pose({.draw_phase = 0.65F});
+  auto const mounted_release =
+      Animation::resolve_mounted_bow_draw_pose({.draw_phase = 0.72F});
+  EXPECT_LT(mounted_release.right_hand.forward, mounted_draw.right_hand.forward);
+}
+
 TEST(AnimationCoreAttackPoseManifest, CombatSwordVariantOwnsReachAndBodyDrive) {
   auto const sample = Animation::resolve_humanoid_weapon_attack_pose({
       .kind = Animation::HumanoidWeaponAttackKind::CombatSwordSlash,
@@ -3747,11 +3925,11 @@ TEST(AnimationCoreAttackPoseManifest, MountedSpearThrustCouchesBeforeStrike) {
       .attack_phase = 0.10F,
   });
 
-  EXPECT_NEAR(sample.right_hand.forward, 0.1025F, 0.0001F);
-  EXPECT_NEAR(sample.right_hand.right, 0.1425F, 0.0001F);
-  EXPECT_NEAR(sample.right_hand.up, 0.1325F, 0.0001F);
-  EXPECT_NEAR(sample.left_hand.forward, 0.1095F, 0.0001F);
-  EXPECT_NEAR(sample.left_hand.right, -0.1045F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.forward, 0.085F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.right, 0.135F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.up, 0.115F, 0.0001F);
+  EXPECT_NEAR(sample.left_hand.forward, 0.085F, 0.0001F);
+  EXPECT_NEAR(sample.left_hand.right, -0.10F, 0.0001F);
   EXPECT_GT(sample.torso_compression, 0.0F);
   EXPECT_GT(sample.forward_lean, 0.0F);
   EXPECT_STREQ(sample.debug_label, "spear_couch");
@@ -3812,12 +3990,12 @@ TEST(AnimationCoreAttackPoseManifest, MountedSwordStrikeChambers) {
       .attack_phase = 0.11F,
   });
 
-  EXPECT_NEAR(sample.right_hand.forward, 0.0375F, 0.0001F);
-  EXPECT_NEAR(sample.right_hand.right, 0.265F, 0.0001F);
-  EXPECT_NEAR(sample.right_hand.up, 0.20F, 0.0001F);
-  EXPECT_NEAR(sample.torso_twist, -0.0125F, 0.0001F);
-  EXPECT_NEAR(sample.torso_commit, -0.005F, 0.0001F);
-  EXPECT_NEAR(sample.shoulder_dip, 0.01F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.forward, -0.005F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.right, 0.29F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.up, 0.28F, 0.0001F);
+  EXPECT_NEAR(sample.torso_twist, -0.025F, 0.0001F);
+  EXPECT_NEAR(sample.torso_commit, -0.01F, 0.0001F);
+  EXPECT_NEAR(sample.shoulder_dip, 0.02F, 0.0001F);
   EXPECT_FLOAT_EQ(sample.left_hand_up_offset, -0.02F);
   EXPECT_STREQ(sample.debug_label, "sword_chamber");
 }
@@ -3830,11 +4008,11 @@ TEST(AnimationCoreAttackPoseManifest, MountedSwordStrikeCommitsBodyAtImpact) {
   EXPECT_NEAR(sample.right_hand.forward, 0.27F, 0.0001F);
   EXPECT_NEAR(sample.right_hand.right, 0.48F, 0.0001F);
   EXPECT_NEAR(sample.right_hand.up, 0.35F, 0.0001F);
-  EXPECT_NEAR(sample.torso_twist, 0.045F, 0.0001F);
-  EXPECT_NEAR(sample.side_lean, 0.07F, 0.0001F);
-  EXPECT_NEAR(sample.forward_lean, 0.065F, 0.0001F);
-  EXPECT_NEAR(sample.torso_commit, 0.105F, 0.0001F);
-  EXPECT_NEAR(sample.counter_lift, 0.055F, 0.0001F);
+  EXPECT_NEAR(sample.torso_twist, 0.035F, 0.0001F);
+  EXPECT_NEAR(sample.side_lean, 0.055F, 0.0001F);
+  EXPECT_NEAR(sample.forward_lean, 0.06F, 0.0001F);
+  EXPECT_NEAR(sample.torso_commit, 0.10F, 0.0001F);
+  EXPECT_NEAR(sample.counter_lift, 0.05F, 0.0001F);
   EXPECT_NEAR(sample.left_hand_up_offset, -0.045F, 0.0001F);
   EXPECT_NEAR(sample.head_forward_tilt, 0.20F, 0.0001F);
   EXPECT_NEAR(sample.head_side_tilt, 0.08F, 0.0001F);
@@ -3892,10 +4070,10 @@ TEST(AnimationCoreAttackPoseManifest, MountedBowDrawOwnsDrawHandCurve) {
   });
 
   EXPECT_FLOAT_EQ(prepare.left_hand.forward, 0.38F);
-  EXPECT_NEAR(prepare.right_hand.forward, 0.265F, 0.0001F);
-  EXPECT_NEAR(prepare.right_hand.right, 0.055F, 0.0001F);
-  EXPECT_NEAR(prepare.right_hand.up, 0.415F, 0.0001F);
-  EXPECT_NEAR(prepare.right_hand_world_y_offset, -0.01125F, 0.0001F);
+  EXPECT_NEAR(prepare.right_hand.forward, 0.19F, 0.0001F);
+  EXPECT_NEAR(prepare.right_hand.right, 0.09F, 0.0001F);
+  EXPECT_NEAR(prepare.right_hand.up, 0.43F, 0.0001F);
+  EXPECT_NEAR(prepare.right_hand_world_y_offset, -0.0075F, 0.0001F);
   EXPECT_FLOAT_EQ(hold.right_hand.forward, 0.04F);
   EXPECT_FLOAT_EQ(hold.right_hand.right, 0.16F);
   EXPECT_FLOAT_EQ(hold.right_hand.up, 0.46F);
@@ -4672,6 +4850,7 @@ namespace {
 struct SwingSample {
   QVector3D hand;
   QVector3D blade_axis;
+  QVector3D lead_foot;
 };
 
 auto bake_sword_swing(std::string_view clip_name) -> std::vector<SwingSample> {
@@ -4690,17 +4869,21 @@ auto bake_sword_swing(std::string_view clip_name) -> std::vector<SwingSample> {
 
   constexpr auto k_hand_r =
       static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandR);
+  auto const lead_foot = static_cast<std::size_t>(
+      clip_name == "rpg_sword_slash_right" ? Render::Humanoid::HumanoidBone::FootL
+                                           : Render::Humanoid::HumanoidBone::FootR);
   std::vector<SwingSample> samples;
   samples.reserve(manifest.clips[clip_index].frame_count);
   for (std::uint32_t frame = 0; frame < manifest.clips[clip_index].frame_count;
        ++frame) {
     std::vector<QMatrix4x4> palettes;
     manifest.bake_clip_frame(clip_index, frame, palettes, nullptr);
-    if (palettes.size() <= k_hand_r) {
+    if (palettes.size() <= std::max(k_hand_r, lead_foot)) {
       return {};
     }
     samples.push_back({palettes[k_hand_r].column(3).toVector3D(),
-                       palettes[k_hand_r].column(1).toVector3D().normalized()});
+                       palettes[k_hand_r].column(1).toVector3D().normalized(),
+                       palettes[lead_foot].column(3).toVector3D()});
   }
   return samples;
 }
@@ -4710,6 +4893,22 @@ auto angle_between(const QVector3D& a, const QVector3D& b) -> float {
 }
 
 } // namespace
+
+TEST(HumanoidSwordSwing, RpgCutsPlantTheLeadFootThroughContact) {
+  for (auto const* clip : {"rpg_sword_slash_left", "rpg_sword_slash_right"}) {
+    auto const samples = bake_sword_swing(clip);
+    ASSERT_GE(samples.size(), 8U);
+    std::size_t const start = static_cast<std::size_t>(
+        std::ceil(0.56F * static_cast<float>(samples.size() - 1)));
+    std::size_t const end = static_cast<std::size_t>(
+        std::floor(0.74F * static_cast<float>(samples.size() - 1)));
+    ASSERT_GT(end, start);
+    for (std::size_t i = start + 1; i <= end; ++i) {
+      EXPECT_LT((samples[i].lead_foot - samples[start].lead_foot).length(), 0.002F)
+          << clip << " frame " << i;
+    }
+  }
+}
 
 TEST(HumanoidSwordSwing, RpgCutsSweepWithoutStallingOnAKey) {
   for (auto const* clip : {"rpg_sword_slash_left",

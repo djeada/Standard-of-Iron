@@ -508,11 +508,15 @@ TEST(ElephantSpecTest, BakedFightUsesAuthoredTrunkAndLegAttack) {
 
   std::vector<QMatrix4x4> idle;
   std::vector<QMatrix4x4> fight;
-  constexpr std::uint32_t frame = 6U;
-  manifest.bake_clip_frame(
-      static_cast<std::size_t>(idle_it - manifest.clips.begin()), frame, idle, nullptr);
+
+  auto const idle_frame = idle_it->frame_count / 2U;
+  auto const fight_frame = fight_it->frame_count / 2U;
+  manifest.bake_clip_frame(static_cast<std::size_t>(idle_it - manifest.clips.begin()),
+                           idle_frame,
+                           idle,
+                           nullptr);
   manifest.bake_clip_frame(static_cast<std::size_t>(fight_it - manifest.clips.begin()),
-                           frame,
+                           fight_frame,
                            fight,
                            nullptr);
   ASSERT_EQ(idle.size(), Render::Elephant::k_elephant_bone_count);

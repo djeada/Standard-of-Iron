@@ -4,7 +4,22 @@
 #include <cmath>
 #include <numbers>
 
+#include "pose_curve.h"
+
 namespace Animation {
+
+auto elephant_attack_source_phase(float phase) noexcept -> float {
+  struct Key {
+    float phase, source;
+  };
+
+  constexpr std::array keys{Key{0.0F, 0.0F},
+                            Key{0.28F, 0.16F},
+                            Key{0.58F, 0.68F},
+                            Key{0.76F, 0.90F},
+                            Key{1.0F, 1.0F}};
+  return sample_pose_channel(keys, phase, [](auto const& key) { return key.source; });
+}
 
 namespace {
 

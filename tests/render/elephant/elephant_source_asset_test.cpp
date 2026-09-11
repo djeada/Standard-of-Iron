@@ -8,6 +8,7 @@
 #include <variant>
 #include <vector>
 
+#include "animation/elephant_gait_manifest.h"
 #include "render/creature/schema/creature_runtime_manifest.h"
 #include "render/creature/skeleton.h"
 #include "render/elephant/elephant_manifest.h"
@@ -90,6 +91,22 @@ TEST(ElephantSourceAssetTest, ManifestRendersTheSourceMeshUnmodified) {
       EXPECT_EQ(std::get<CustomMeshNode>(lod.mesh_nodes[index].data).indices.size(),
                 std::get<CustomMeshNode>(source[index].data).indices.size());
     }
+  }
+}
+
+TEST(ElephantSourceAssetTest, AttackLoadsCommitsAndSettlesWithoutPhaseJumps) {
+  using Animation::elephant_attack_source_phase;
+  EXPECT_FLOAT_EQ(elephant_attack_source_phase(0.0F), 0.0F);
+  EXPECT_FLOAT_EQ(elephant_attack_source_phase(1.0F), 1.0F);
+  EXPECT_LT(elephant_attack_source_phase(0.28F), 0.28F);
+  EXPECT_GT(elephant_attack_source_phase(0.58F), 0.58F);
+  float previous = 0.0F;
+  for (int frame = 1; frame <= 240; ++frame) {
+    float const phase = elephant_attack_source_phase(frame / 240.0F);
+    EXPECT_GE(phase, previous);
+    EXPECT_LT(phase - previous, 0.015F);
+    EXPECT_LE(phase, 1.0F);
+    previous = phase;
   }
 }
 

@@ -50,7 +50,7 @@ const std::array<ElephantClipSpec, 6> k_elephant_clips{{
      false,
      false,
      0.75F},
-    {{"fight", 24U, 24.0F, true},
+    {{"fight", 48U, 48.0F, true},
      false,
      Render::GL::ElephantGait{1.15F, 0.0F, 0.0F, 0.30F, 0.06F},
      true,

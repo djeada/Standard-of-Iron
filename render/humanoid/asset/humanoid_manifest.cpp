@@ -17,6 +17,7 @@
 #include "animation/clip_manifest.h"
 #include "animation/commander_spear_manifest.h"
 #include "animation/death_pose_manifest.h"
+#include "animation/pose_curve.h"
 #include "animation/showcase_pose_manifest.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/movement_state.h"
@@ -1872,26 +1873,38 @@ auto sample_authored_sword_pose_key(const AuthoredSwordPoseKeys& keys,
   float const h01 = (-2.0F * t3) + (3.0F * t2);
   float const h11 = t3 - t2;
   auto hermite = [&](Channel channel) -> QVector3D {
+    if (channel == &AuthoredSwordPoseKey::foot_r_delta ||
+        channel == &AuthoredSwordPoseKey::foot_l_delta) {
+
+      return {Animation::sample_pose_channel(
+                  keys, clamped, [&](auto const& k) { return (k.*channel).x(); }),
+              Animation::sample_pose_channel(
+                  keys, clamped, [&](auto const& k) { return (k.*channel).y(); }),
+              Animation::sample_pose_channel(
+                  keys, clamped, [&](auto const& k) { return (k.*channel).z(); })};
+    }
     return (from.*channel * h00) + (tangent(segment - 1U, channel) * span * h10) +
            (to.*channel * h01) + (tangent(segment, channel) * span * h11);
   };
 
-  bool const terminal_segment = segment == 1U || segment + 1U == keys.size();
-  float const blade_t = terminal_segment ? (t * t * (3.0F - 2.0F * t)) : t;
+  QVector3D blade = hermite(&AuthoredSwordPoseKey::blade_dir);
+  blade = blade.lengthSquared() > 1.0e-6F ? blade.normalized()
+                                          : slerp_dir(from.blade_dir, to.blade_dir, t);
 
-  float const dh00 = (6.0F * t2) - (6.0F * t);
-  float const dh10 = (3.0F * t2) - (4.0F * t) + 1.0F;
-  float const dh01 = (-6.0F * t2) + (6.0F * t);
-  float const dh11 = (3.0F * t2) - (2.0F * t);
   auto step_lift = [&](Channel channel) -> float {
-    QVector3D const velocity =
-        ((from.*channel * dh00) + (tangent(segment - 1U, channel) * span * dh10) +
-         (to.*channel * dh01) + (tangent(segment, channel) * span * dh11)) /
-        span;
+    constexpr float epsilon = 0.0001F;
+    auto speed_on_axis = [&](int axis) {
+      auto value = [&](auto const& k) {
+        return (k.*channel)[axis];
+      };
+      return (Animation::sample_pose_channel(keys, clamped + epsilon, value) -
+              Animation::sample_pose_channel(keys, clamped - epsilon, value)) /
+             (2.0F * epsilon);
+    };
 
     constexpr float k_full_lift_speed = 1.20F;
     constexpr float k_max_lift = 0.10F;
-    float const speed = std::hypot(velocity.x(), velocity.z());
+    float const speed = std::hypot(speed_on_axis(0), speed_on_axis(2));
     return std::clamp(speed / k_full_lift_speed, 0.0F, 1.0F) * k_max_lift;
   };
 
@@ -1910,7 +1923,7 @@ auto sample_authored_sword_pose_key(const AuthoredSwordPoseKeys& keys,
       .phase = clamped,
       .right_hand = hermite(&AuthoredSwordPoseKey::right_hand),
       .left_hand = hermite(&AuthoredSwordPoseKey::left_hand),
-      .blade_dir = slerp_dir(from.blade_dir, to.blade_dir, blade_t),
+      .blade_dir = blade,
       .pelvis_delta = hermite(&AuthoredSwordPoseKey::pelvis_delta),
       .shoulder_r_delta = hermite(&AuthoredSwordPoseKey::shoulder_r_delta),
       .shoulder_l_delta = hermite(&AuthoredSwordPoseKey::shoulder_l_delta),

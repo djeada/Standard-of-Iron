@@ -7,6 +7,8 @@
 
 namespace Animation {
 
+[[nodiscard]] auto elephant_attack_source_phase(float phase) noexcept -> float;
+
 inline constexpr float k_elephant_reference_speed = 2.2F;
 
 struct ElephantLegGaitState {
