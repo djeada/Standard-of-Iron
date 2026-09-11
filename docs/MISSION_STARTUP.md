@@ -101,18 +101,29 @@ world.
 `submit_decision_job()`, which `prepare_initial_decisions()` shares — the steady-state
 decision cadence, delta times and job latency are the same as before.
 
+**The apply tick is chosen by the simulation, not by the clock on the wall.**
+`submit_decision_job()` stamps the job with `job_due_update = m_update_count +
+k_decision_latency_updates`, and `process_results()` applies it on exactly that update: it
+blocks on `AIWorker::wait_idle()` until the result exists rather than giving the worker a
+wall-clock budget and slipping the job to a later update when it overruns. A busy machine
+therefore costs frame time, never a different decision — the same seed and the same
+commands apply the same plan on the same tick on every machine.
+`m_decision_wait_budget` survives only as a diagnostic threshold:
+`decisions_over_wait_budget()` counts the waits that exceeded it, and
+`longest_decision_wait_us()` reports the worst one. Neither reading feeds back into the
+simulation. `AIWorkerPool::enqueue()` hands a job straight back to
+`AIWorker::discard_pending_job()` when the pool is already stopping, so a blocking wait
+can never outlive the pool that was supposed to satisfy it.
+
 **Buffer recycling was tried and rejected.** Handing the spent snapshot back from the
 worker so the next `build()` could refill its vectors is the obvious third change, and it
-works, but it makes each decision measurably quicker to submit, and the AI worker's result
-is collected under a wall-clock budget (`process_results()` waits
-`m_decision_wait_budget`, 4 ms). Making the snapshot cheaper therefore lands AI commands a
-tick or so earlier, which `CommanderDuelTest.CommanderArrowsCarryTheCommanderStyle`
-detects: the AI-ordered rival staggers the commander sooner and it looses two signature
-volleys in twenty seconds instead of three. The measured prize was not worth it —
-`ai.initial_preparation` costs 0.26 ms for Ticino's three AI owners and 0.56 ms for
-Campania's four, so snapshot allocation is not where campaign startup spends its time.
-Recycling only becomes worth revisiting alongside a fix for the wall-clock-sensitive
-result collection.
+works, but it makes each decision measurably quicker to submit. Before the apply tick was
+pinned that showed up as AI commands landing a tick or so earlier, which
+`CommanderDuelTest.CommanderArrowsCarryTheCommanderStyle` detects: the AI-ordered rival
+staggers the commander sooner and it looses two signature volleys in twenty seconds
+instead of three. The measured prize was not worth it — `ai.initial_preparation` costs
+0.26 ms for Ticino's three AI owners and 0.56 ms for Campania's four, so snapshot
+allocation is not where campaign startup spends its time.
 
 `AISystem::reinitialize()` used to run twice per campaign start — once in
 `LevelOrchestrator` for the skirmish case and again in `MissionSetupCoordinator` after the

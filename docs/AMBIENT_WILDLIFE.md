@@ -192,9 +192,32 @@ the same frame.
 Ambient means "free". Three mechanisms keep it that way:
 
 1. **Staggered thinking.** Animals think on their own timers, not in a synchronised sweep.
-2. **Distance tiers.** Every animal is classified against the camera focus each tick:
+2. **Distance tiers.** Every animal is classified against the _interest field_ each tick:
    `Near` thinks at full rate, `Far` at a quarter of it, and `Dormant` — beyond the far
    radius — is skipped entirely. Both radii are per-map settings.
+
+    The interest field is the set of live non-wildlife units and buildings, rebuilt from
+    the world alongside the threat field. It is deliberately **not** the camera. Sheep and
+    wolves are ordinary entities and a wolf can take a bite out of a civilian, so which
+    animals get to think is an authoritative decision: tying it to the viewer would let
+    panning the camera change the outcome of a match, and would make a headless run — which
+    has no camera at all — diverge from the same match played on screen. Anchoring the
+    tiers to units and buildings keeps the saving (an animal nobody can reach cannot affect
+    anything soon) while leaving the decision a pure function of world state. A world with
+    no anchors at all — an arena of nothing but animals — treats every animal as `Near`.
+
+    `WildlifeSystem::set_cosmetic_focus()` still takes the camera target, and it feeds
+    **only** `BirdFlockManager`: birds are not entities, run no brain and damage nothing,
+    so their LOD may follow the viewer.
+
+    `BirdFlockManager::instance()` is the session's flock, not a process singleton:
+    `SessionContext` owns one and the ambient binding resolves the accessor to it, so
+    two matches in one process keep separate skies and `WorldView::of(session)` hands
+    the renderer the flock belonging to the match it is drawing. Code with no session --
+    `bird_flock_test`, a tool -- gets `BirdFlockManager::process_flock()`, which behaves
+    the way the singleton used to. The flock lives in the session rather than in the
+    renderer because `WildlifeSystem::serialize_state()` writes it into the save.
+
 3. **Render culling.** Birds are frustum- and fog-culled before submission and drop their
    head, beak and tail beyond a detail distance; sheep and wolves ride the shared creature
    pipeline, which batches them and swaps to the minimal baked LOD with distance.

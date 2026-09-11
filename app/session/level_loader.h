@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "game/map/map_definition.h"
+#include "game/map/map_transformer.h"
 
 namespace Engine::Core {
 class World;
@@ -43,12 +44,13 @@ struct LevelLoadResult {
 
 class LevelLoader {
 public:
-  static auto
-  loadFromAssets(const QString& map_path,
-                 Engine::Core::World& world,
-                 Render::GL::Renderer& renderer,
-                 Render::GL::Camera& camera,
-                 bool allow_default_player_barracks = true) -> LevelLoadResult;
+  static auto loadFromAssets(
+      const QString& map_path,
+      Engine::Core::World& world,
+      Render::GL::Renderer& renderer,
+      Render::GL::Camera& camera,
+      bool allow_default_player_barracks = true,
+      const Game::Map::MapTransformOptions& transform_options = {}) -> LevelLoadResult;
 };
 
 } // namespace App::Core

@@ -1,6 +1,7 @@
 #include "ai_system.h"
 
 #include <QDebug>
+#include <QJsonArray>
 #include <queue>
 
 #include <algorithm>
@@ -103,7 +104,7 @@ void AISystem::reinitialize() {
 
   m_completed_decision_count = 0;
   m_applied_command_count = 0;
-  m_deferred_decision_count = 0;
+  m_decisions_over_wait_budget = 0;
   m_longest_decision_wait_us = 0;
   m_snapshot_build_count = 0;
   m_initial_decisions_prepared = false;
@@ -257,6 +258,46 @@ auto AISystem::ai_player_state(int player_id) const -> AIPlayerState {
   return {};
 }
 
+auto AISystem::serialize_state() const -> QJsonObject {
+  QJsonObject state;
+  state["update_count"] = static_cast<double>(m_update_count);
+  state["total_game_time"] = static_cast<double>(m_total_game_time);
+  state["next_trace_time"] = static_cast<double>(m_next_trace_time);
+  QJsonArray players;
+  for (const auto& ai : m_ai_instances) {
+    QJsonObject entry;
+    entry["player_id"] = ai.context.player_id;
+    entry["update_timer"] = static_cast<double>(ai.update_timer);
+    entry["state"] = static_cast<int>(ai.context.state);
+    players.append(entry);
+  }
+  state["players"] = players;
+  return state;
+}
+
+void AISystem::restore_state(const QJsonObject& state) {
+  if (state.isEmpty()) {
+    return;
+  }
+  m_update_count =
+      static_cast<std::uint64_t>(state.value("update_count").toDouble(0.0));
+  m_total_game_time = static_cast<float>(state.value("total_game_time").toDouble(0.0));
+  m_next_trace_time = static_cast<float>(state.value("next_trace_time").toDouble(0.0));
+  for (const auto value : state.value("players").toArray()) {
+    const auto entry = value.toObject();
+    const int player_id = entry.value("player_id").toInt(-1);
+    for (auto& ai : m_ai_instances) {
+      if (ai.context.player_id != player_id) {
+        continue;
+      }
+      ai.update_timer = static_cast<float>(entry.value("update_timer").toDouble(0.0));
+      ai.context.state = static_cast<AI::AIState>(
+          entry.value("state").toInt(static_cast<int>(AI::AIState::Idle)));
+      break;
+    }
+  }
+}
+
 void AISystem::update(Engine::Core::World* world, float delta_time) {
   if (world == nullptr) {
     return;
@@ -301,16 +342,13 @@ void AISystem::process_results(Engine::Core::World& world) {
     }
 
     const auto wait_started = std::chrono::steady_clock::now();
-    const bool finished = ai.worker->wait_idle(m_decision_wait_budget);
+    ai.worker->wait_idle();
     const auto waited = std::chrono::duration_cast<std::chrono::microseconds>(
         std::chrono::steady_clock::now() - wait_started);
     m_longest_decision_wait_us = std::max(m_longest_decision_wait_us,
                                           static_cast<std::uint64_t>(waited.count()));
-
-    if (!finished) {
-      ++m_deferred_decision_count;
-      ai.job_due_update = m_update_count + 1;
-      continue;
+    if (waited > m_decision_wait_budget) {
+      ++m_decisions_over_wait_budget;
     }
 
     ai.job_pending = false;

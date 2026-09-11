@@ -133,9 +133,6 @@ public:
                                  QString* out_error = nullptr)
       -> std::optional<CampaignAdvance>;
 
-  static void open_settings();
-  static void exit_game();
-
 signals:
   void save_progress(quint64 job_id,
                      const QString& slot_name,

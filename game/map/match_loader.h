@@ -7,6 +7,7 @@
 
 #include "map_context.h"
 #include "map_definition.h"
+#include "map_transformer.h"
 
 namespace Engine::Core {
 class World;
@@ -38,6 +39,7 @@ struct MatchLoadResult {
 [[nodiscard]] auto
 load_match(const QString& map_path,
            Engine::Core::World& world,
-           bool allow_default_player_barracks = true) -> MatchLoadResult;
+           bool allow_default_player_barracks = true,
+           const MapTransformOptions& transform_options = {}) -> MatchLoadResult;
 
 } // namespace Game::Map

@@ -309,6 +309,106 @@ reproduce. Statistics and play time both come from it.
 reproducible. Purely cosmetic randomness belongs to the renderer and must not
 draw from it.
 
+The same rule holds for the viewer. Where the camera is pointed is presentation
+state, so nothing that can change a future authoritative outcome may read it.
+Two paths used to:
+
+- `WildlifeSystem` tiered its animals by distance to the camera target and
+  skipped the `Dormant` ones entirely. Sheep and wolves are ordinary entities
+  and a wolf applies damage, so panning the camera changed the match — and a
+  headless run, which has no camera, could not reproduce a played one. The tiers
+  are anchored to live non-wildlife units and buildings now; the camera target
+  reaches only `BirdFlockManager`, whose birds are not entities.
+  See [docs/AMBIENT_WILDLIFE.md](AMBIENT_WILDLIFE.md).
+- `VictoryService` progressed its survive-time and time-limit clocks from the
+  presentation frame delta. It runs inside the fixed tick now.
+  See [docs/VICTORY_SYSTEM.md](VICTORY_SYSTEM.md).
+
+Each has a regression test that fails if the dependency comes back:
+`WildlifeSystemTest.WhereTheCameraLooksDoesNotChangeWhatTheAnimalsDo`,
+`RuntimeFrameOrchestratorTest.TheObjectiveClockRunsOnTicksNotOnFrames` and
+`AISystemTest.ADecisionThatOverrunsItsWallClockBudgetStillLandsOnItsOwnTick`.
+
+## What belongs to a session
+
+`SessionContext` owns every mutable thing a match has: the world, the terrain and
+visibility services, the owner/nation/economy/stats registries, navigation, army
+formations, the clock, the RNG, the command queue, the unit factory registry, the
+domain event bus and the bird flock. Two sessions in one process share none of it.
+
+Three of those were process singletons until the session-isolation pass:
+
+- **The event bus.** `Engine::Core::EventManager::instance()` resolves through the
+  ambient binding now, so a death in one match is not announced to the other's audio,
+  victory or AI listeners. Code running with no session at all — a tool, a test that
+  never built one — gets `EventManager::process_bus()`, a real bus with the old
+  process-wide behaviour, rather than an abort.
+- **The unit factory registry.** `MapTransformer::setFactoryRegistry()` writes into the
+  active session (`SessionContext::units()`), so loading a second match cannot hand the
+  first one a different set of factories mid-flight.
+- **The bird flock.** `BirdFlockManager::instance()` resolves the same way, and
+  `WorldView::of(session)` takes the flock from the session rather than the singleton,
+  so a renderer cannot draw one match's birds over another's ground. Bird state is
+  saved and restored with the match, which is why it belongs to the session rather than
+  to the renderer even though birds are cosmetic.
+
+Match _setup_ is a value, not process state: `MapTransformOptions` carries the team
+overrides, base assignments and spectator flag from the setup screen to
+`MapTransformer::apply_to_world()`. They used to be file-static and had to be cleared
+by hand between matches; two tests are still named after the leak they used to catch.
+
+### One snapshot contract for authoritative state
+
+`Game::Session::SessionSnapshot` (`game/session/session_snapshot.h`) is the one
+place a match's non-entity authoritative state is written down. Subsystems
+register a contributor -- a key, a `capture` and a `restore` -- and the save
+stack calls `capture()`/`restore()` instead of naming each system. The built-in
+contributors (undead zones, cursed veins, wildlife) are compiled into `game_sim`;
+the AI registers itself from `register_runtime_systems()`, and the victory
+service from `GameEngine`'s composition, because both live above the kernel.
+
+`SnapshotRestoreReport` says what happened: which keys were restored, which the
+save did not carry (`missing_from_save`), and which the save carried that no
+contributor claimed (`unclaimed_in_save`). The coordinator logs both, so a save
+written by a build with a subsystem this one lacks says so instead of silently
+dropping it. The snapshot carries `k_session_snapshot_version`.
+
+Two subsystems the issue named as missing now contribute: `VictoryService`
+writes its elapsed time, startup delay, arming flags and per-objective
+completion, and `AISystem` writes its update count, game time and each player's
+update timer and state -- the scheduling clock that decides _when_ the next
+decision lands.
+
+### Loading is staged before it is destructive
+
+`SaveLoadService::load_game_from_slot()` deserializes the incoming world into a
+throwaway `SessionContext` first and checks it has units. Only when that passes
+does it clear the live world and deserialize for real. The staging session is a
+real session, so `deserialize_world()`'s writes to the owner registry, the
+formation registry and the terrain service land there rather than in the running
+match: a corrupt or empty save now leaves the battle you were playing alone.
+
+The swap is still not atomic -- the second deserialize writes into the live world
+rather than a prepared session being swapped in -- so a failure _after_ the
+staging pass still ends the match. What it buys is that every failure the save
+format can actually produce is caught while the match is intact.
+
+### The runtime loop says what to do with a tick it could not run
+
+`SessionContext::advance(real_dt, max_steps, overload, per_tick)` takes the
+overload policy by name. `DiscardBacklog` throws away ticks past the step budget
+-- the spiral-of-death protection the frame loop wants, and what the old
+signature did silently -- and `KeepBacklog` leaves them pending for the next
+call. `RuntimeFrameOrchestrator` and `soi_headless` both name `DiscardBacklog`,
+so no authoritative system can end up observing an elapsed-time model the loop
+did not choose.
+
+`WorldView` names its content dependencies in a `WorldView::Content` aggregate.
+`WorldView::shipped_content()` is the one place the immutable content catalogues
+(troop profiles, troop config, the troop catalog, unit layouts, soldier offsets) are
+resolved through `instance()`, and `of(session, content)` takes them explicitly so a
+caller can substitute them.
+
 ## The command pipeline
 
 Every order, from any source, takes one path:
@@ -333,6 +433,19 @@ input / AI / replay  ->  CommandQueue::submit
   network transport would carry the same objects.
 - `command_validator.cpp` is the single place ownership, liveness and target
   legality are checked, which is what stops player and AI orders drifting apart.
+- `Game::Command::submit(world, ...)` requires the world to belong to a session
+  and returns false if it does not. It used to fall back to validating and
+  dispatching the order there and then, which meant a world that had accidentally
+  been created outside a `SessionContext` ran a different pipeline from the game:
+  no queue, no tick stamp, no observer, no replay line, and different ordering.
+  Skipping the queue now has to be asked for by name:
+  `Game::Command::dispatch_immediately()` for a direct call, or a
+  `Game::Command::ScopedImmediateDispatch` for a test fixture whose subject
+  submits orders through code it does not control (the client controllers, the AI
+  applier, the melee target switch). The scope is thread-local and RAII, so it is
+  visible in the fixture that opens it and cannot leak into the runtime.
+  `unqueued_submissions()` counts the refusals, so a test can assert the runtime
+  never bypasses the queue.
 - `command_dispatcher.cpp` is the only code that turns an order into calls on
   the movement, order, production, marketplace, formation and builder
   services. App code (`app/`), the AI applier and the arena harness submit
@@ -368,13 +481,27 @@ pipeline above. `ReplayRecorder` attaches to the queue's observer and writes
 the launch (`ReplayHeader`: what was started and how) followed by every
 accepted command with the tick it was applied on, as JSON lines. Every
 `digest_interval` ticks it also writes the session digest
-(`game/session/world_digest.h`: every entity's id, owner, kind, position,
-heading and health, every owner's stock, the tick, the rng draw count).
-`ReplayPlayer` submits the recorded commands at the top of the tick they were
-recorded on and compares the live digest against each recorded one; the first
-tick that differs is kept as `divergence()`. While a player is set on a session
-the queue is _replay-only_: local input and the AI are dropped at the door, so
-the file is the only input the simulation sees.
+(`game/session/world_digest.h`), which is split into seven parts -- identity,
+movement, combat, status, economy, wildlife and session -- and a root that mixes
+them. Each part is written to the replay file alongside the root, so a
+divergence report can name the subsystem that moved first as well as the tick:
+`ReplayDivergence::subsystem`. `ReplayPlayer` submits the recorded commands at
+the top of the tick they were recorded on and compares the live digest against
+each recorded one; the first tick that differs is kept as `divergence()`. While
+a player is set on a session the queue is _replay-only_: local input and the AI
+are dropped at the door, so the file is the only input the simulation sees.
+
+**The digest is a sentinel, not a canonical hash of the match.** It covers the
+component fields listed in `world_digest.cpp` -- identity and health, movement
+and stamina, hold/guard/formation mode, attack target and cooldown, stagger,
+poise, morale, capture, production, home, and every wildlife field -- plus the
+clock, the rng draw count and every owner's stock. It does **not** cover the AI's
+plans, mission-wave runtime, the victory timer, projectiles in flight, or the
+system-local scratch several systems keep. So "the first divergent tick" means
+"the first tick at which the digest noticed"; the real divergence may be
+earlier. Closing that gap means hashing the canonical
+`Game::Session::SessionSnapshot` rather than a hand-written field list, which is
+why the snapshot contract exists.
 
 The game exposes this as `--record-replay <file>` and
 `--replay <file> [--replay-verify]` (exit 0 if every digest matched, 12 at the
@@ -810,6 +937,23 @@ merely moved:
 - `MissionSetupCoordinator` set a mission up _and_ ran its attack waves.
   Waves are `game/mission/mission_waves.h`.
 
+### The domain ladder is narrower than it links
+
+`engine_core -> world -> navigation -> units -> formations -> movement -> economy
+-> combat -> wildlife -> game_sim` is the enforced direction, and every rung used
+to link the one below `PUBLIC`, so the top of the ladder compiled against the
+whole stack whether it named it or not. Five of the seven rungs are `PRIVATE`
+now: `soi_navigation -> soi_world`, `soi_units -> soi_navigation`,
+`soi_economy -> soi_movement`, `soi_combat -> soi_economy` and
+`soi_wildlife -> soi_combat`. Those five were checked rather than guessed --
+nothing in the public headers of the rung above names a type from the rung below.
+
+The two that stay `PUBLIC` are the two that genuinely leak:
+`soi_formations -> soi_units` (a formation header names `TroopType`) and
+`soi_movement -> soi_formations` (movement headers name the army formation types
+and the combat geometry). Narrowing those means giving formations a unit-kind
+value type of its own, which is a content change rather than a build change.
+
 ## Known limitations
 
 These are real and deliberate, not oversights:
@@ -822,6 +966,17 @@ These are real and deliberate, not oversights:
   goal rather than a fact. `scripts/check-architecture-doc.py` fails when these
   numbers drift from the budgets, so the sentence you are reading is checked
   rather than remembered.
+- An unbound world still falls back. `Game::Session::services_for(world)` on a world
+  that was created outside a `SessionContext` counts the lookup, reports the world once
+  by address, and hands back the ambient session's services. Setting
+  `SOI_STRICT_WORLD_BINDING=1`, or calling
+  `Game::Session::set_strict_world_binding(true)`, makes it abort instead, and
+  `SessionServiceOwnershipDeathTest.StrictBindingRefusesAWorldWithNoSession` pins that.
+  Fatal is not yet the default because the game and its tools deliberately build worlds
+  with no match behind them — `ui/commander_portrait_scenes.cpp` raises one per troop
+  type to pose a portrait, and the arena and balance-sim tools do the same. Those need
+  an explicit "detached world" marking before the default can flip; until then the
+  fallback is a silent way to touch the wrong match.
 - A system's `access()` is a claim, not a fact, so Debug builds check it: the
   registry records the component types a system touches and `World::update`
   compares them against the declaration when

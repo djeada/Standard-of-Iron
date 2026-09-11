@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "core/component_economy.h"
+#include "core/component_structures.h"
 #include "core/entity.h"
 #include "core/event_manager.h"
 #include "core/ownership_constants.h"
@@ -742,7 +743,30 @@ TEST_F(WildlifeSystemTest, RespawnCanBeDisabled) {
   EXPECT_EQ(count_species(world, Species::Sheep), 3);
 }
 
-TEST_F(WildlifeSystemTest, DistantAnimalsStopThinking) {
+TEST_F(WildlifeSystemTest, AnimalsFarFromEveryArmyStopThinking) {
+  World world;
+  WildlifeSystem system;
+  WildlifeSettings settings = make_settings();
+  settings.near_simulation_radius = 12.0F;
+  settings.far_simulation_radius = 24.0F;
+  system.configure(settings, 1U);
+
+  auto* outrider = add_troop(world, QVector3D(400.0F, 0.0F, 400.0F));
+  system.update(&world, 0.1F);
+  advance(system, world, 2.0F);
+
+  EXPECT_GT(system.stats().dormant_skips, 0U);
+  EXPECT_EQ(system.stats().near_thinks, 0U);
+
+  auto* outrider_transform =
+      outrider->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(outrider_transform, nullptr);
+  outrider_transform->position = {0.0F, 0.0F, 0.0F};
+  advance(system, world, 2.0F);
+  EXPECT_GT(system.stats().near_thinks, 0U);
+}
+
+TEST_F(WildlifeSystemTest, AKeepKeepsItsWildlifeAwakeEvenWithNoGarrison) {
   World world;
   WildlifeSystem system;
   WildlifeSettings settings = make_settings();
@@ -751,15 +775,49 @@ TEST_F(WildlifeSystemTest, DistantAnimalsStopThinking) {
   system.configure(settings, 1U);
   system.update(&world, 0.1F);
 
-  system.set_focus(400.0F, 400.0F);
+  auto* keep = add_troop(world, QVector3D(2.0F, 0.0F, 2.0F));
+  keep->add_component<Engine::Core::BuildingComponent>();
+
   advance(system, world, 2.0F);
 
-  EXPECT_GT(system.stats().dormant_skips, 0U);
-  EXPECT_EQ(system.stats().near_thinks, 0U);
-
-  system.set_focus(0.0F, 0.0F);
-  advance(system, world, 2.0F);
   EXPECT_GT(system.stats().near_thinks, 0U);
+  EXPECT_EQ(system.stats().dormant_skips, 0U);
+}
+
+TEST_F(WildlifeSystemTest, WhereTheCameraLooksDoesNotChangeWhatTheAnimalsDo) {
+  const auto run = [](float focus_x, float focus_z) {
+    World world;
+    WildlifeSystem system;
+    WildlifeSettings settings = make_settings();
+    settings.near_simulation_radius = 12.0F;
+    settings.far_simulation_radius = 24.0F;
+    system.configure(settings, 7U);
+    system.update(&world, 0.1F);
+    add_troop(world, QVector3D(4.0F, 0.0F, 4.0F));
+    system.set_cosmetic_focus(focus_x, focus_z);
+    advance(system, world, 4.0F);
+
+    std::vector<float> trace;
+    for (auto* entity : collect_species(world, Species::Sheep)) {
+      const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+      const auto* wildlife = entity->get_component<Engine::Core::WildlifeComponent>();
+      trace.push_back(transform->position.x);
+      trace.push_back(transform->position.z);
+      trace.push_back(wildlife->target_x);
+      trace.push_back(wildlife->target_z);
+      trace.push_back(static_cast<float>(static_cast<int>(wildlife->behavior)));
+    }
+    trace.push_back(static_cast<float>(system.stats().near_thinks));
+    trace.push_back(static_cast<float>(system.stats().far_thinks));
+    trace.push_back(static_cast<float>(system.stats().dormant_skips));
+    return trace;
+  };
+
+  const auto watching_the_herd = run(0.0F, 0.0F);
+  const auto watching_the_far_hills = run(400.0F, 400.0F);
+
+  ASSERT_FALSE(watching_the_herd.empty());
+  EXPECT_EQ(watching_the_herd, watching_the_far_hills);
 }
 
 TEST_F(WildlifeSystemTest, MoveTargetsStayOnWalkableGround) {

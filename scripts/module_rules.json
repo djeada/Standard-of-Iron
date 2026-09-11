@@ -405,6 +405,8 @@
         "game/mission/mission_waves.h",
         "game/mission/mission_wave_director.cpp",
         "game/mission/mission_wave_director.h",
+        "game/mission/mission_wave_runtime.cpp",
+        "game/mission/mission_wave_runtime.h",
         "game/mission/commander_speaker_roster.cpp",
         "game/mission/commander_speaker_roster.h",
         "game/mission/commander_voice_observer.cpp",
@@ -509,6 +511,7 @@
         "game/mission/mission_setup_coordinator",
         "game/mission/mission_waves",
         "game/mission/mission_wave_director",
+        "game/mission/mission_wave_runtime",
         "game/mission/commander_speaker_roster",
         "game/mission/commander_voice_observer"
       ],

@@ -39,9 +39,6 @@ auto set_up_match(std::uint64_t seed, int local_owner) -> SetupOutcome {
   session.owners().set_local_player_id(local_owner);
 
   Game::Map::MapTransformer::set_local_owner_id(local_owner);
-  Game::Map::MapTransformer::set_spectator_mode(false);
-  Game::Map::MapTransformer::setPlayerTeamOverrides({});
-  Game::Map::MapTransformer::set_base_assignments({});
 
   const auto loaded =
       Game::Map::load_match(QString::fromLatin1(k_map), session.world());

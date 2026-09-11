@@ -2627,7 +2627,7 @@ void ArenaViewport::configure_scenario_wildlife(
     }
   }
   wildlife->configure(settings, 1337U);
-  wildlife->set_focus(scenario_origin.x(), scenario_origin.z());
+  wildlife->set_cosmetic_focus(scenario_origin.x(), scenario_origin.z());
 }
 
 void ArenaViewport::configure_scenario_undead_zones(

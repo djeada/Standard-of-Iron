@@ -3273,12 +3273,16 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</translation>
     </message>
     <message>
-        <source>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable.</source>
-        <translation>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable.</translation>
-    </message>
-    <message>
         <source>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</source>
         <translation>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</translation>
+    </message>
+    <message>
+        <source>&apos;%1&apos; could not be restored (%2). The battle that was running was left alone.</source>
+        <translation>&apos;%1&apos; could not be restored (%2). The battle that was running was left alone.</translation>
+    </message>
+    <message>
+        <source>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable and the battle that was running was left alone.</source>
+        <translation>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable and the battle that was running was left alone.</translation>
     </message>
 </context>
 <context>

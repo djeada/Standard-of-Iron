@@ -68,6 +68,7 @@ protected:
     auto& session = *m_session;
     session.world().set_presentation_enabled(false);
     m_scope = std::make_unique<Game::Session::ScopedSession>(session);
+    Game::Map::MapTransformer::setFactoryRegistry(m_factory);
     Game::Systems::NavGrid::initialize(k_map_size, k_map_size);
 
     auto& owners = session.owners();

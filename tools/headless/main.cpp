@@ -99,9 +99,6 @@ auto run_real_match_setup(Game::Session::SessionContext& session,
   session.owners().set_local_player_id(options.local_owner);
 
   Game::Map::MapTransformer::set_local_owner_id(options.local_owner);
-  Game::Map::MapTransformer::set_spectator_mode(false);
-  Game::Map::MapTransformer::setPlayerTeamOverrides({});
-  Game::Map::MapTransformer::set_base_assignments({});
 
   const auto loaded =
       Game::Map::load_match(QString::fromStdString(options.map), session.world());
@@ -213,7 +210,10 @@ int main(int argc, char** argv) {
   std::uint64_t ticks = 0;
   while (ticks < total_ticks) {
 
-    ticks += static_cast<std::uint64_t>(session.advance(tick_seconds, 1));
+    ticks += static_cast<std::uint64_t>(
+        session.advance(tick_seconds,
+                        1,
+                        Game::Session::SessionContext::OverloadPolicy::DiscardBacklog));
     if (options.realtime) {
       std::this_thread::sleep_for(std::chrono::duration<double>(tick_seconds));
     }

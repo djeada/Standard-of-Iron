@@ -62,9 +62,15 @@ void RuntimeFrameOrchestrator::advance_simulation(
         &Render::Profiling::global_profile().world_update_us);
     session.advance(static_cast<double>(frame_seconds),
                     simulation_step_budget(time_scale),
+                    Game::Session::SessionContext::OverloadPolicy::DiscardBacklog,
                     [&](float step) {
                       if (simulation_step) {
                         simulation_step(step);
+                      }
+                      if (scene.victory_service != nullptr) {
+                        Render::Profiling::AccumulatorScope const victory_scope(
+                            &Render::Profiling::global_profile().victory_update_us);
+                        scene.victory_service->update(*scene.world, step);
                       }
                     });
   }
@@ -108,7 +114,7 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
   if (scene.world != nullptr && scene.active_camera != nullptr) {
     if (auto* wildlife = scene.world->get_system<Game::Wildlife::WildlifeSystem>()) {
       const QVector3D focus = scene.active_camera->get_target();
-      wildlife->set_focus(focus.x(), focus.z());
+      wildlife->set_cosmetic_focus(focus.x(), focus.z());
     }
   }
 
@@ -198,12 +204,6 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
     }
     scene.renderer->set_environment_lighting(
         scene.environment_clock->lighting(weather));
-  }
-
-  if (scene.victory_service != nullptr && scene.world != nullptr) {
-    Render::Profiling::AccumulatorScope const victory_scope(
-        &Render::Profiling::global_profile().victory_update_us);
-    scene.victory_service->update(*scene.world, dt);
   }
 
   if (!state.selection_refresh_enabled || scene.world == nullptr) {

@@ -662,7 +662,6 @@ add_library(
     # app/mission -- the client's half of running a mission. The mission logic
     # itself is game/mission (soi_mission_runtime); what is left here is reading
     # the frame the tutorial director is about to be advanced through.
-    app/mission/mission_wave_runtime.cpp
     app/mission/tutorial_observation.cpp
     # app/session -- bringing one match up: world, renderer, level, skirmish.
     app/session/environment.cpp

@@ -22,7 +22,7 @@ class VictoryService;
 
 class CampaignManager;
 
-namespace App::Mission {
+namespace Game::Mission {
 
 struct MissionFrameEffects {
   QStringList announcements;
@@ -75,4 +75,4 @@ private:
   Game::Mission::MissionWaves m_spawner;
 };
 
-} // namespace App::Mission
+} // namespace Game::Mission

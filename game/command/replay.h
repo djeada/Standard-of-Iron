@@ -8,6 +8,7 @@
 #include <optional>
 #include <vector>
 
+#include "../session/world_digest.h"
 #include "command.h"
 #include "commander_input.h"
 
@@ -17,7 +18,7 @@ namespace Game::Command {
 
 class CommandQueue;
 
-inline constexpr int k_replay_format_version = 3;
+inline constexpr int k_replay_format_version = 4;
 
 [[nodiscard]] auto simulation_build_id() -> QString;
 
@@ -53,7 +54,8 @@ public:
 
   void record(const Command& command);
 
-  void record_digest(std::uint64_t tick, std::uint64_t digest);
+  void record_digest(std::uint64_t tick,
+                     const Game::Session::SubsystemDigests& digests);
 
   void record_commander_input(std::uint64_t tick, const CommanderInputFrame& frame);
 
@@ -74,6 +76,8 @@ private:
 struct RecordedDigest {
   std::uint64_t tick = 0;
   std::uint64_t digest = 0;
+  Game::Session::SubsystemDigests parts;
+  bool has_parts = false;
 };
 
 struct RecordedCommanderInput {
@@ -85,6 +89,8 @@ struct ReplayDivergence {
   std::uint64_t tick = 0;
   std::uint64_t recorded = 0;
   std::uint64_t observed = 0;
+
+  const char* subsystem = nullptr;
 };
 
 struct ReplayFile {
@@ -105,7 +111,8 @@ public:
 
   void feed(std::uint64_t tick, CommandQueue& queue);
 
-  auto check(std::uint64_t tick, std::uint64_t digest) -> bool;
+  auto check(std::uint64_t tick,
+             const Game::Session::SubsystemDigests& digests) -> bool;
 
   [[nodiscard]] auto
   commander_input(std::uint64_t tick) const -> const CommanderInputFrame*;

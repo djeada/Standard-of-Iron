@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QHash>
+#include <QJsonObject>
 #include <QSet>
 #include <QString>
 
@@ -218,6 +219,9 @@ public:
   }
 
   [[nodiscard]] auto objectives() const -> std::vector<ObjectiveStatus>;
+
+  [[nodiscard]] auto serialize_state() const -> QJsonObject;
+  void restore_state(const QJsonObject& state);
 
 private:
   struct WorldSummary {

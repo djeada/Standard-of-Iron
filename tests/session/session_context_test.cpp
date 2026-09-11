@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <thread>
+#include <utility>
 
 #include "game/core/component_core.h"
 #include "game/core/world.h"
@@ -292,3 +293,24 @@ TEST(SessionContextTest, TerrainIsSessionScoped) {
 }
 
 } // namespace
+
+TEST(SessionContextTest, TheRuntimeLoopSaysWhatToDoWithATickItCouldNotRun) {
+  using Policy = Game::Session::SessionContext::OverloadPolicy;
+
+  const auto run = [](Policy overload) {
+    Game::Session::SessionContext session;
+    const int first = session.advance(0.25, 4, overload, [](float) {});
+    const int second = session.advance(1.0 / 60.0, 64, overload, [](float) {});
+    return std::pair<int, int>{first, second};
+  };
+
+  const auto discarded = run(Policy::DiscardBacklog);
+  EXPECT_EQ(discarded.first, 4);
+  EXPECT_EQ(discarded.second, 1)
+      << "a discarded backlog must not come back on the next frame";
+
+  const auto kept = run(Policy::KeepBacklog);
+  EXPECT_EQ(kept.first, 4);
+  EXPECT_EQ(kept.second, 12)
+      << "a kept backlog must be waiting for the next turn of the loop";
+}

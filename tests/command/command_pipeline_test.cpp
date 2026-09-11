@@ -415,7 +415,7 @@ TEST(CommandSubmitTest, RoutesThroughTheSessionQueueWhenThereIsOne) {
   EXPECT_EQ(match.session.commands().pending(), 1U);
 }
 
-TEST(CommandSubmitTest, AppliesImmediatelyForAWorldWithNoSession) {
+TEST(CommandSubmitTest, AWorldWithNoSessionHasNoQueueToTakeAnOrder) {
 
   Engine::Core::World world;
   auto* entity = world.create_entity();
@@ -423,11 +423,45 @@ TEST(CommandSubmitTest, AppliesImmediatelyForAWorldWithNoSession) {
   auto* unit = entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 5.0F);
   unit->owner_id = 1;
 
-  Game::Command::submit(world,
-                        Source::Script,
-                        1,
-                        Game::Command::Move{.units = {entity->get_id()},
-                                            .targets = {QVector3D(4.0F, 0.0F, 4.0F)}});
+  Game::Command::reset_unqueued_submissions();
+  EXPECT_FALSE(Game::Command::submit(
+      world,
+      Source::Script,
+      1,
+      Game::Command::Move{.units = {entity->get_id()},
+                          .targets = {QVector3D(4.0F, 0.0F, 4.0F)}}));
+
+  EXPECT_EQ(entity->get_component<Engine::Core::MovementComponent>(), nullptr)
+      << "an order reached the world without passing the queue";
+  EXPECT_EQ(Game::Command::unqueued_submissions(), 1U);
+  Game::Command::reset_unqueued_submissions();
+}
+
+TEST(CommandSubmitTest, NothingSkipsTheQueueUnlessAFixtureSaidSo) {
+  EXPECT_FALSE(Game::Command::immediate_dispatch_allowed())
+      << "immediate dispatch is a test seam and must be off unless a fixture opens it";
+  {
+    const Game::Command::ScopedImmediateDispatch open;
+    EXPECT_TRUE(Game::Command::immediate_dispatch_allowed());
+  }
+  EXPECT_FALSE(Game::Command::immediate_dispatch_allowed())
+      << "the seam outlived the scope that opened it";
+}
+
+TEST(CommandSubmitTest, SkippingTheQueueHasToBeAskedForByName) {
+
+  Engine::Core::World world;
+  auto* entity = world.create_entity();
+  entity->add_component<Engine::Core::TransformComponent>();
+  auto* unit = entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 5.0F);
+  unit->owner_id = 1;
+
+  EXPECT_TRUE(Game::Command::dispatch_immediately(
+      world,
+      Source::Script,
+      1,
+      Game::Command::Move{.units = {entity->get_id()},
+                          .targets = {QVector3D(4.0F, 0.0F, 4.0F)}}));
 
   EXPECT_NE(entity->get_component<Engine::Core::MovementComponent>(), nullptr);
 }

@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <vector>
 
+#include "gl_lifetime.h"
+
 namespace Render::GL {
 
 class Buffer : protected QOpenGLFunctions_3_3_Core {
@@ -49,6 +51,7 @@ public:
 
 private:
   GLuint m_buffer = 0;
+  GlShareGroup m_share_group = k_unknown_share_group;
   std::size_t m_size_bytes = 0;
   Type m_type;
   [[nodiscard]] auto get_gl_type() const -> GLenum;
@@ -69,6 +72,7 @@ public:
 
 private:
   GLuint m_vao = 0;
+  GlShareGroup m_share_group = k_unknown_share_group;
   int m_current_attrib_index = 0;
 };
 

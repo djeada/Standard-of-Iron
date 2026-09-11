@@ -22,12 +22,24 @@ auto empty_terrain() -> const Game::Map::TerrainService& {
 
 } // namespace
 
+auto WorldView::shipped_content() -> Content {
+  return Content{.troop_profiles = &Game::Systems::TroopProfileService::instance(),
+                 .troop_config = &Game::Units::TroopConfig::instance(),
+                 .troop_catalog = &Game::Units::TroopCatalog::instance(),
+                 .unit_layouts = &Game::Formation::UnitLayoutLibrary::instance(),
+                 .soldier_offsets = &Game::Formation::UnitLayoutSystem::instance()};
+}
+
 WorldView::WorldView()
-    : m_troop_profiles(&Game::Systems::TroopProfileService::instance())
-    , m_troop_config(&Game::Units::TroopConfig::instance())
-    , m_troop_catalog(&Game::Units::TroopCatalog::instance())
-    , m_unit_layouts(&Game::Formation::UnitLayoutLibrary::instance())
-    , m_soldier_offsets(&Game::Formation::UnitLayoutSystem::instance()) {
+    : WorldView(shipped_content()) {
+}
+
+WorldView::WorldView(const Content& content)
+    : m_troop_profiles(content.troop_profiles)
+    , m_troop_config(content.troop_config)
+    , m_troop_catalog(content.troop_catalog)
+    , m_unit_layouts(content.unit_layouts)
+    , m_soldier_offsets(content.soldier_offsets) {
 }
 
 auto WorldView::has_terrain() const noexcept -> bool {
@@ -55,17 +67,21 @@ auto WorldView::has_visibility() const noexcept -> bool {
   return m_visibility != nullptr && m_visibility->is_initialized();
 }
 
-auto WorldView::of(const Game::Session::SessionContext& session) -> WorldView {
-  WorldView view;
+auto WorldView::of(const Game::Session::SessionContext& session,
+                   const Content& content) -> WorldView {
+  WorldView view(content);
 
   view.m_terrain = &session.terrain();
   view.m_visibility = &session.visibility();
   view.m_owners = &session.owners();
   view.m_nations = &session.nations();
-
-  view.m_birds = &Game::Wildlife::BirdFlockManager::instance();
+  view.m_birds = &session.birds();
 
   return view;
+}
+
+auto WorldView::of(const Game::Session::SessionContext& session) -> WorldView {
+  return of(session, shipped_content());
 }
 
 } // namespace Render

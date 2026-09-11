@@ -31,14 +31,15 @@ namespace App::Core {
 
 using namespace Game::Map;
 
-auto LevelLoader::loadFromAssets(const QString& map_path,
-                                 Engine::Core::World& world,
-                                 Render::GL::Renderer& renderer,
-                                 Render::GL::Camera& camera,
-                                 bool allow_default_player_barracks)
-    -> LevelLoadResult {
-  const Game::Map::MatchLoadResult match =
-      Game::Map::load_match(map_path, world, allow_default_player_barracks);
+auto LevelLoader::loadFromAssets(
+    const QString& map_path,
+    Engine::Core::World& world,
+    Render::GL::Renderer& renderer,
+    Render::GL::Camera& camera,
+    bool allow_default_player_barracks,
+    const Game::Map::MapTransformOptions& transform_options) -> LevelLoadResult {
+  const Game::Map::MatchLoadResult match = Game::Map::load_match(
+      map_path, world, allow_default_player_barracks, transform_options);
 
   LevelLoadResult res;
   res.ok = match.ok;

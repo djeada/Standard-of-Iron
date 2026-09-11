@@ -1,6 +1,7 @@
 #include "victory_service.h"
 
 #include <QDebug>
+#include <QJsonArray>
 #include <qglobal.h>
 
 #include <algorithm>
@@ -266,6 +267,46 @@ void VictoryService::configure(const VictoryRuleSet& rules, int local_owner_id) 
   refresh_rule_metadata();
   m_world_state_dirty = true;
   m_startup_delay = k_startup_delay_seconds;
+}
+
+auto VictoryService::serialize_state() const -> QJsonObject {
+  QJsonObject state;
+  state["elapsed_time"] = static_cast<double>(m_elapsed_time);
+  state["startup_delay"] = static_cast<double>(m_startup_delay);
+  state["spectator_poll_timer"] = static_cast<double>(m_spectator_poll_timer);
+  state["only_commander_defeat_armed"] = m_only_commander_defeat_armed;
+  state["eliminate_commanders_armed"] = m_eliminate_commanders_armed;
+  state["spectator_saw_rivals"] = m_spectator_saw_rivals;
+  state["victory_state"] = m_victory_state;
+  state["defeat_description"] = m_defeat_description;
+  QJsonArray complete;
+  for (const bool done : m_objective_complete) {
+    complete.append(done);
+  }
+  state["objective_complete"] = complete;
+  return state;
+}
+
+void VictoryService::restore_state(const QJsonObject& state) {
+  if (state.isEmpty()) {
+    return;
+  }
+  m_elapsed_time = static_cast<float>(state.value("elapsed_time").toDouble(0.0));
+  m_startup_delay = static_cast<float>(state.value("startup_delay").toDouble(0.0));
+  m_spectator_poll_timer =
+      static_cast<float>(state.value("spectator_poll_timer").toDouble(0.0));
+  m_only_commander_defeat_armed =
+      state.value("only_commander_defeat_armed").toBool(false);
+  m_eliminate_commanders_armed =
+      state.value("eliminate_commanders_armed").toBool(false);
+  m_spectator_saw_rivals = state.value("spectator_saw_rivals").toBool(false);
+  m_victory_state = state.value("victory_state").toString();
+  m_defeat_description = state.value("defeat_description").toString();
+  m_objective_complete.clear();
+  for (const auto value : state.value("objective_complete").toArray()) {
+    m_objective_complete.push_back(value.toBool(false));
+  }
+  mark_world_dirty();
 }
 
 void VictoryService::update(Engine::Core::World& world, float delta_time) {

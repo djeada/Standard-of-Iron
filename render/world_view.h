@@ -39,7 +39,21 @@ namespace Render {
 
 class WorldView {
 public:
+  struct Content {
+    const Game::Systems::TroopProfileService* troop_profiles = nullptr;
+    const Game::Units::TroopConfig* troop_config = nullptr;
+    const Game::Units::TroopCatalog* troop_catalog = nullptr;
+    const Game::Formation::UnitLayoutLibrary* unit_layouts = nullptr;
+    const Game::Formation::UnitLayoutSystem* soldier_offsets = nullptr;
+  };
+
+  [[nodiscard]] static auto shipped_content() -> Content;
+
   WorldView();
+  explicit WorldView(const Content& content);
+
+  [[nodiscard]] static auto of(const Game::Session::SessionContext& session,
+                               const Content& content) -> WorldView;
 
   [[nodiscard]] static auto
   of(const Game::Session::SessionContext& session) -> WorldView;

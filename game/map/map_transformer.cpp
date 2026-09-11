@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "../core/ambient_session.h"
 #include "../core/component_gameplay.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
@@ -36,10 +37,19 @@
 namespace Game::Map {
 
 namespace {
-std::shared_ptr<Game::Units::UnitFactoryRegistry> s_registry;
-std::unordered_map<int, int> s_player_team_overrides;
-std::unordered_map<int, QString> s_base_assignments;
-bool s_spectator_mode = false;
+std::shared_ptr<Game::Units::UnitFactoryRegistry> s_unbound_registry;
+
+auto session_registry_slot() -> std::shared_ptr<Game::Units::UnitFactoryRegistry>* {
+  const auto* services = Game::Session::ambient_services_or_null();
+  return services != nullptr ? services->units : nullptr;
+}
+
+auto active_registry() -> const std::shared_ptr<Game::Units::UnitFactoryRegistry>& {
+  if (const auto* slot = session_registry_slot()) {
+    return *slot;
+  }
+  return s_unbound_registry;
+}
 
 struct ResolvedBaseSeating {
   std::unordered_map<std::size_t, int> structure_owner;
@@ -63,9 +73,11 @@ struct ResolvedBaseSeating {
   }
 };
 
-auto resolve_base_seating(const MapDefinition& def) -> ResolvedBaseSeating {
+auto resolve_base_seating(const MapDefinition& def,
+                          const std::unordered_map<int, QString>& base_assignments)
+    -> ResolvedBaseSeating {
   ResolvedBaseSeating seating;
-  if (s_base_assignments.empty()) {
+  if (base_assignments.empty()) {
     return seating;
   }
 
@@ -84,7 +96,7 @@ auto resolve_base_seating(const MapDefinition& def) -> ResolvedBaseSeating {
   std::unordered_map<QString, int> claimed_by;
   std::set<int> seated_players;
 
-  for (const auto& [player_id, key] : s_base_assignments) {
+  for (const auto& [player_id, key] : base_assignments) {
     if (player_id <= 0) {
       continue;
     }
@@ -159,9 +171,10 @@ auto runtime_grid_to_world(int grid_coord, int grid_size) -> float {
   return static_cast<float>(grid_coord) + runtime_grid_offset(grid_size);
 }
 
-auto effective_player_id_for_map_owner(int player_id) -> int {
-  if (!s_player_team_overrides.empty() && player_id != Game::Core::NEUTRAL_OWNER_ID &&
-      s_player_team_overrides.find(player_id) == s_player_team_overrides.end()) {
+auto effective_player_id_for_map_owner(
+    int player_id, const std::unordered_map<int, int>& team_overrides) -> int {
+  if (!team_overrides.empty() && player_id != Game::Core::NEUTRAL_OWNER_ID &&
+      team_overrides.find(player_id) == team_overrides.end()) {
     return Game::Core::NEUTRAL_OWNER_ID;
   }
   return player_id;
@@ -284,12 +297,13 @@ auto spawn_map_unit(const Game::Units::SpawnParams& params,
                     Engine::Core::World& world,
                     std::vector<Engine::Core::EntityID>* runtime_unit_ids = nullptr)
     -> Engine::Core::Entity* {
-  if (!s_registry) {
+  const auto& registry = active_registry();
+  if (!registry) {
     qWarning() << "MapTransformer: no factory registry set; skipping spawn";
     return nullptr;
   }
 
-  auto obj = s_registry->create(params.spawn_type, world, params);
+  auto obj = registry->create(params.spawn_type, world, params);
   if (!obj) {
     qWarning() << "MapTransformer: no factory for spawn type"
                << Game::Units::spawn_typeToQString(params.spawn_type)
@@ -312,11 +326,15 @@ auto spawn_map_unit(const Game::Units::SpawnParams& params,
 
 void MapTransformer::setFactoryRegistry(
     std::shared_ptr<Game::Units::UnitFactoryRegistry> reg) {
-  s_registry = std::move(reg);
+  if (auto* slot = session_registry_slot()) {
+    *slot = std::move(reg);
+    return;
+  }
+  s_unbound_registry = std::move(reg);
 }
 auto MapTransformer::get_factory_registry()
     -> std::shared_ptr<Game::Units::UnitFactoryRegistry> {
-  return s_registry;
+  return active_registry();
 }
 
 void MapTransformer::set_local_owner_id(int owner_id) {
@@ -329,38 +347,14 @@ auto MapTransformer::local_owner_id() -> int {
   return owners.get_local_player_id();
 }
 
-void MapTransformer::set_spectator_mode(bool enabled) {
-  s_spectator_mode = enabled;
-}
-
-auto MapTransformer::spectator_mode() -> bool {
-  return s_spectator_mode;
-}
-
-void MapTransformer::setPlayerTeamOverrides(
-    const std::unordered_map<int, int>& overrides) {
-  s_player_team_overrides = overrides;
-}
-
-void MapTransformer::clear_player_team_overrides() {
-  s_player_team_overrides.clear();
-}
-
-void MapTransformer::set_base_assignments(
-    const std::unordered_map<int, QString>& assignments) {
-  s_base_assignments = assignments;
-}
-
-void MapTransformer::clear_base_assignments() {
-  s_base_assignments.clear();
-}
-
 auto MapTransformer::apply_to_world(const MapDefinition& def,
-                                    Engine::Core::World& world) -> MapRuntime {
+                                    Engine::Core::World& world,
+                                    const MapTransformOptions& options) -> MapRuntime {
   MapRuntime rt;
   rt.unit_ids.reserve(def.spawns.size());
 
-  const ResolvedBaseSeating seating = resolve_base_seating(def);
+  const ResolvedBaseSeating seating =
+      resolve_base_seating(def, options.base_assignments);
 
   auto& owner_registry = Game::Systems::OwnerRegistry::instance();
   std::set<int> unique_player_ids;
@@ -391,17 +385,17 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
   }
 
   for (int const player_id : unique_player_ids) {
-    bool const has_team_override =
-        (s_player_team_overrides.find(player_id) != s_player_team_overrides.end());
+    bool const has_team_override = (options.player_team_overrides.find(player_id) !=
+                                    options.player_team_overrides.end());
 
-    if (!s_player_team_overrides.empty() && !has_team_override) {
+    if (!options.player_team_overrides.empty() && !has_team_override) {
       continue;
     }
 
     if (owner_registry.get_owner_type(player_id) == Game::Systems::OwnerType::Neutral) {
 
-      bool const is_local_player =
-          !s_spectator_mode && (player_id == owner_registry.get_local_player_id());
+      bool const is_local_player = !options.spectator_mode &&
+                                   (player_id == owner_registry.get_local_player_id());
       Game::Systems::OwnerType const owner_type = is_local_player
                                                       ? Game::Systems::OwnerType::Player
                                                       : Game::Systems::OwnerType::AI;
@@ -417,8 +411,8 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     }
 
     int final_team_id = 0;
-    auto override_it = s_player_team_overrides.find(player_id);
-    if (override_it != s_player_team_overrides.end()) {
+    auto override_it = options.player_team_overrides.find(player_id);
+    if (override_it != options.player_team_overrides.end()) {
 
       final_team_id = override_it->second;
     } else {
@@ -439,7 +433,8 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
       continue;
     }
 
-    int const effective_player_id = effective_player_id_for_map_owner(s.player_id);
+    int const effective_player_id =
+        effective_player_id_for_map_owner(s.player_id, options.player_team_overrides);
 
     float world_x = s.x;
     float world_z = s.z;
@@ -516,7 +511,8 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
         seating.owner_for(structure_index, structure.player_id);
 
     Game::Units::SpawnParams sp;
-    sp.player_id = effective_player_id_for_map_owner(seated_player_id);
+    sp.player_id = effective_player_id_for_map_owner(seated_player_id,
+                                                     options.player_team_overrides);
     sp.spawn_type = structure.type;
     sp.ai_controlled = !owner_registry.is_player(sp.player_id);
     sp.max_population =
@@ -566,7 +562,7 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     }
   }
 
-  if (s_registry) {
+  if (active_registry()) {
 
     Game::Systems::BuildingCollisionRegistry::instance().clear_authored_obstacles();
   }

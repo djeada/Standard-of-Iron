@@ -1,6 +1,5 @@
 #include "save_load_service.h"
 
-#include <QCoreApplication>
 #include <QDateTime>
 #include <QDebug>
 #include <QDir>
@@ -18,6 +17,7 @@
 #include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/save/serialization.h"
+#include "game/session/session_context.h"
 #include "save_storage.h"
 
 namespace Game::Systems {
@@ -371,6 +371,39 @@ auto SaveLoadService::load_game_from_slot(Engine::Core::World& world,
       return false;
     }
 
+    {
+      Game::Session::SessionContext staging;
+      try {
+        Engine::Core::Serialization::deserialize_world(&staging.world(), doc);
+      } catch (const std::exception& exception) {
+        const QString message =
+            tr("'%1' could not be restored (%2). The battle that was running was "
+               "left alone.")
+                .arg(slot_name, QString::fromUtf8(exception.what()));
+        set_last_error(message);
+        qWarning() << message;
+        return false;
+      }
+
+      int staged_units = 0;
+      for (auto&& [id, unit] : staging.world().view<Engine::Core::UnitComponent>()) {
+        (void)id;
+        (void)unit;
+        ++staged_units;
+      }
+
+      if (staged_units == 0) {
+        const QString message =
+            tr("'%1' restored no units at all, so there is no battle to return "
+               "to. The save is unusable and the battle that was running was left "
+               "alone.")
+                .arg(slot_name);
+        set_last_error(message);
+        qWarning() << message;
+        return false;
+      }
+    }
+
     if (out_world_discarded != nullptr) {
       *out_world_discarded = true;
     }
@@ -381,24 +414,6 @@ auto SaveLoadService::load_game_from_slot(Engine::Core::World& world,
       const QString message = tr("'%1' could not be restored (%2). The battle that "
                                  "was running could not be kept.")
                                   .arg(slot_name, QString::fromUtf8(exception.what()));
-      set_last_error(message);
-      qWarning() << message;
-      world.clear();
-      return false;
-    }
-
-    int restored_units = 0;
-    for (auto&& [id, unit] : world.view<Engine::Core::UnitComponent>()) {
-      (void)id;
-      (void)unit;
-      ++restored_units;
-    }
-
-    if (restored_units == 0) {
-      const QString message =
-          tr("'%1' restored no units at all, so there is no battle to return "
-             "to. The save is unusable.")
-              .arg(slot_name);
       set_last_error(message);
       qWarning() << message;
       world.clear();
@@ -721,15 +736,6 @@ auto SaveLoadService::complete_campaign_mission(const QString& campaign_id,
     return std::nullopt;
   }
   return m_storage->complete_campaign_mission(campaign_id, mission_id, out_error);
-}
-
-void SaveLoadService::open_settings() {
-  qInfo() << "Open settings requested";
-}
-
-void SaveLoadService::exit_game() {
-  qInfo() << "Exit game requested";
-  QCoreApplication::quit();
 }
 
 } // namespace Game::Systems

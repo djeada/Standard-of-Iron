@@ -1,4 +1,4 @@
-#include "app/mission/mission_wave_runtime.h"
+#include "game/mission/mission_wave_runtime.h"
 
 #include "game/core/world.h"
 #include "game/mission/campaign_manager.h"
@@ -7,7 +7,7 @@
 #include "game/systems/victory_service.h"
 #include "game/util/asset_text.h"
 
-namespace App::Mission {
+namespace Game::Mission {
 
 auto MissionWaveRuntime::owner_has_unspawned_waves(int owner_id) const -> bool {
   for (const auto& wave : m_waves) {
@@ -138,4 +138,4 @@ auto MissionWaveRuntime::advance(const MissionWaveBinding& binding,
   return effects;
 }
 
-} // namespace App::Mission
+} // namespace Game::Mission

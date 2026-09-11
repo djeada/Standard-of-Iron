@@ -5,8 +5,9 @@
 #include <memory>
 
 namespace Engine::Core {
+class EventManager;
 class World;
-}
+} // namespace Engine::Core
 
 namespace Game::Map {
 class TerrainService;
@@ -26,6 +27,14 @@ class TroopCountRegistry;
 
 namespace Game::Formation {
 class ArmyFormationRegistry;
+}
+
+namespace Game::Units {
+class UnitFactoryRegistry;
+}
+
+namespace Game::Wildlife {
+class BirdFlockManager;
 }
 
 namespace Game::Command {
@@ -58,6 +67,8 @@ public:
   [[nodiscard]] auto world() -> Engine::Core::World&;
   [[nodiscard]] auto world() const -> const Engine::Core::World&;
 
+  [[nodiscard]] auto events() -> Engine::Core::EventManager&;
+
   [[nodiscard]] auto terrain() -> Game::Map::TerrainService&;
   [[nodiscard]] auto terrain() const -> const Game::Map::TerrainService&;
 
@@ -86,6 +97,12 @@ public:
 
   [[nodiscard]] auto army_formations() -> Game::Formation::ArmyFormationRegistry&;
 
+  [[nodiscard]] auto birds() const -> const Game::Wildlife::BirdFlockManager&;
+
+  [[nodiscard]] auto
+  units() const -> const std::shared_ptr<Game::Units::UnitFactoryRegistry>&;
+  void set_units(std::shared_ptr<Game::Units::UnitFactoryRegistry> units);
+
   [[nodiscard]] auto clock() -> SimulationClock&;
   [[nodiscard]] auto clock() const -> const SimulationClock&;
 
@@ -101,8 +118,18 @@ public:
 
   [[nodiscard]] auto rng_seed() const -> std::uint64_t;
 
+  enum class OverloadPolicy : std::uint8_t {
+
+    DiscardBacklog,
+
+    KeepBacklog,
+  };
+
   using TickFn = std::function<void(float tick_seconds)>;
-  auto advance(double real_dt, int max_steps, const TickFn& per_tick = {}) -> int;
+  auto advance(double real_dt,
+               int max_steps,
+               OverloadPolicy overload,
+               const TickFn& per_tick = {}) -> int;
 
   void step();
 

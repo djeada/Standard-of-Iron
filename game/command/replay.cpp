@@ -143,12 +143,23 @@ void ReplayRecorder::record(const Command& command) {
   ++m_count;
 }
 
-void ReplayRecorder::record_digest(std::uint64_t tick, std::uint64_t digest) {
+void ReplayRecorder::record_digest(std::uint64_t tick,
+                                   const Game::Session::SubsystemDigests& digests) {
   if (!m_file || m_digest_interval == 0 || tick % m_digest_interval != 0) {
     return;
   }
   QJsonObject object;
-  object["digest"] = QString::number(digest);
+  object["digest"] = QString::number(digests.root);
+  QJsonObject parts;
+  parts["identity"] = QString::number(digests.identity);
+  parts["movement"] = QString::number(digests.movement);
+  parts["combat"] = QString::number(digests.combat);
+  parts["status"] = QString::number(digests.status);
+  parts["economy"] = QString::number(digests.economy);
+  parts["wildlife"] = QString::number(digests.wildlife);
+  parts["session"] = QString::number(digests.session);
+  object["parts"] = parts;
+
   object["tick"] = static_cast<qint64>(tick);
   m_file->write(QJsonDocument(object).toJson(QJsonDocument::Compact));
   m_file->write("\n");
@@ -243,7 +254,25 @@ auto ReplayFile::load(const QString& path,
         }
         return std::nullopt;
       }
-      replay.digests.push_back({static_cast<std::uint64_t>(tick.toDouble()), digest});
+      RecordedDigest recorded;
+      recorded.tick = static_cast<std::uint64_t>(tick.toDouble());
+      recorded.digest = digest;
+      if (const auto parts = object.value(QLatin1String("parts")); parts.isObject()) {
+        const auto values = parts.toObject();
+        const auto read = [&values](const char* key) {
+          return values.value(QLatin1String(key)).toString().toULongLong();
+        };
+        recorded.parts.identity = read("identity");
+        recorded.parts.movement = read("movement");
+        recorded.parts.combat = read("combat");
+        recorded.parts.status = read("status");
+        recorded.parts.economy = read("economy");
+        recorded.parts.wildlife = read("wildlife");
+        recorded.parts.session = read("session");
+        recorded.parts.root = digest;
+        recorded.has_parts = true;
+      }
+      replay.digests.push_back(recorded);
       continue;
     }
     if (object.contains(QLatin1String("commander_input"))) {
@@ -295,7 +324,8 @@ ReplayPlayer::ReplayPlayer(ReplayFile file)
                    });
 }
 
-auto ReplayPlayer::check(std::uint64_t tick, std::uint64_t digest) -> bool {
+auto ReplayPlayer::check(std::uint64_t tick,
+                         const Game::Session::SubsystemDigests& digests) -> bool {
   while (m_next_digest < m_file.digests.size() &&
          m_file.digests[m_next_digest].tick < tick) {
     ++m_next_digest;
@@ -304,15 +334,20 @@ auto ReplayPlayer::check(std::uint64_t tick, std::uint64_t digest) -> bool {
       m_file.digests[m_next_digest].tick != tick) {
     return true;
   }
-  const auto recorded = m_file.digests[m_next_digest].digest;
+  const auto& entry = m_file.digests[m_next_digest];
+  const auto recorded = entry.digest;
+  const std::uint64_t digest = digests.root;
+  const char* subsystem =
+      entry.has_parts ? Game::Session::name_of_first_difference(entry.parts, digests)
+                      : nullptr;
   ++m_next_digest;
   ++m_checked;
   if (recorded == digest) {
     return true;
   }
   if (!m_divergence.has_value()) {
-    m_divergence =
-        ReplayDivergence{.tick = tick, .recorded = recorded, .observed = digest};
+    m_divergence = ReplayDivergence{
+        .tick = tick, .recorded = recorded, .observed = digest, .subsystem = subsystem};
   }
   return false;
 }
