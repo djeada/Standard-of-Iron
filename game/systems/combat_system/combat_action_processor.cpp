@@ -10,6 +10,7 @@
 #include "../../core/entity.h"
 #include "../../core/event_manager.h"
 #include "../../core/world.h"
+#include "../../util/planar_math.h"
 #include "../combat_actions/body_impact.h"
 #include "../combat_actions/combat_action_definition.h"
 #include "../combat_actions/combat_action_events.h"
@@ -1045,13 +1046,11 @@ void apply_rts_commander_root_motion(
                                   std::numbers::pi_v<float> / 180.0F);
       if (facing >= cone) {
 
-        float const target_yaw =
-            std::atan2(to_x, to_z) * 180.0F / std::numbers::pi_v<float>;
-        float const diff =
-            std::fmod(target_yaw - transform->rotation.y + 540.0F, 360.0F) - 180.0F;
-        float const max_step =
-            k_rts_commander_assist_turn_degrees_per_second * std::max(0.0F, delta_time);
-        transform->rotation.y += std::clamp(diff, -max_step, max_step);
+        transform->rotation.y = Game::Systems::turn_yaw_toward(
+            transform->rotation.y,
+            Game::Systems::yaw_degrees_from_direction(to_x, to_z),
+            k_rts_commander_assist_turn_degrees_per_second *
+                std::max(0.0F, delta_time));
         transform->desired_yaw = transform->rotation.y;
         float const yaw_rad =
             transform->rotation.y * std::numbers::pi_v<float> / 180.0F;

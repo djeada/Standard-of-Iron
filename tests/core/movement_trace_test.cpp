@@ -126,6 +126,16 @@ TEST(MovementTraceTest, MemorySessionCapturesBothStreams) {
   EXPECT_EQ(trace.manifest().seed, 1234U);
 }
 
+TEST(MovementTraceTest, TheManifestTakesTheStepTheWorldActuallyRuns) {
+
+  auto& trace = MovementTrace::instance();
+  trace.begin_memory_session(manifest());
+  EXPECT_FLOAT_EQ(trace.manifest().fixed_step_seconds, k_step);
+  trace.set_fixed_step_seconds(1.0F / 30.0F);
+  EXPECT_FLOAT_EQ(trace.manifest().fixed_step_seconds, 1.0F / 30.0F);
+  trace.end_session();
+}
+
 TEST(MovementTraceTest, AFileTraceKeepsOnlyEveryNthTick) {
   const auto directory =
       std::filesystem::temp_directory_path() / "soi_movement_trace_stride";
@@ -257,6 +267,12 @@ TEST(MovementTraceTest, TroopSampleSurvivesAJsonRoundTrip) {
   EXPECT_TRUE(parsed.has_contact);
   EXPECT_FLOAT_EQ(parsed.body_overlap, original.body_overlap);
   EXPECT_EQ(parsed.direction_source, original.direction_source);
+  EXPECT_FALSE(parsed.about_faced);
+
+  original.about_faced = true;
+  ASSERT_TRUE(
+      Engine::Core::parse_troop_sample(Engine::Core::to_json(original), parsed));
+  EXPECT_TRUE(parsed.about_faced);
 }
 
 TEST(MovementTraceTest, SoldierSampleSurvivesAJsonRoundTrip) {
@@ -359,6 +375,56 @@ TEST(MovementAnalysisTest, AlternatingHeadingIsRejected) {
   thresholds.fixed_step_seconds = k_step;
   auto const analysis = analyze_movement_trace(samples, {}, thresholds);
   EXPECT_GE(analysis.count(MovementFindingKind::HeadingOscillation), 1U);
+}
+
+namespace {
+
+auto half_turn_run(bool reports_about_face) -> std::vector<MovementTroopSample> {
+  std::vector<MovementTroopSample> samples;
+  float z = 0.0F;
+  for (std::uint32_t tick = 0; tick < 60U; ++tick) {
+    MovementTroopSample sample;
+    sample.tick = tick;
+    sample.entity_id = 6U;
+    sample.command_sequence = 1U;
+    sample.state = MovementOrderState::Following;
+    sample.previous_root_z = z;
+    z += (tick < 30U ? 2.0F : -2.0F) * k_step;
+    sample.root_z = z;
+    sample.route_advance = 2.0F * k_step;
+    sample.remaining_arclength = 20.0F;
+    sample.order_seconds = static_cast<float>(tick) * k_step;
+    sample.accepted_vz = tick < 30U ? 2.0F : -2.0F;
+    sample.presentation_valid = true;
+    sample.presentation_state = 1U;
+    sample.direction_source = MovementDirectionSource::AcceptedVelocity;
+    sample.root_yaw = tick < 30U ? 0.0F : 180.0F;
+    sample.about_faced = reports_about_face && tick >= 30U;
+    samples.push_back(sample);
+  }
+  return samples;
+}
+
+} // namespace
+
+TEST(MovementAnalysisTest, AnAboutFaceIsNotABodySpinningOnTheSpot) {
+
+  MovementGateThresholds thresholds;
+  thresholds.fixed_step_seconds = k_step;
+  auto const analysis = analyze_movement_trace(half_turn_run(true), {}, thresholds);
+  EXPECT_EQ(analysis.count(MovementFindingKind::AngularSpeedExceeded), 0U)
+      << Engine::Core::format_movement_findings(analysis);
+  EXPECT_EQ(analysis.count(MovementFindingKind::AngularAccelerationExceeded), 0U)
+      << Engine::Core::format_movement_findings(analysis);
+  EXPECT_EQ(analysis.count(MovementFindingKind::HeadingOscillation), 0U)
+      << Engine::Core::format_movement_findings(analysis);
+}
+
+TEST(MovementAnalysisTest, AHalfTurnInOneTickWithoutAnAboutFaceIsStillASpin) {
+  MovementGateThresholds thresholds;
+  thresholds.fixed_step_seconds = k_step;
+  auto const analysis = analyze_movement_trace(half_turn_run(false), {}, thresholds);
+  EXPECT_GE(analysis.count(MovementFindingKind::AngularSpeedExceeded), 1U);
 }
 
 TEST(MovementAnalysisTest, RingOffTheBodyAnchorIsRejectedAtTinyError) {

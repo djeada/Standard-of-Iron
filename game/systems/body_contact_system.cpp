@@ -6,14 +6,18 @@
 #include <cmath>
 #include <vector>
 
+#include "../core/ambient_session.h"
 #include "../core/component_economy.h"
 #include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../core/system_context.h"
 #include "../core/world.h"
+#include "../map/terrain_service.h"
 #include "../wildlife/wildlife_config.h"
 #include "body_profile.h"
+#include "building_collision_registry.h"
 #include "command_service.h"
+#include "nav_grid.h"
 #include "walkability.h"
 
 namespace Game::Systems {
@@ -26,12 +30,17 @@ struct ContactBody {
   float radius{0.0F};
   BodyProfile profile;
   bool movable{false};
+  bool locked_in_melee{false};
+
+  bool yields_when_idle{false};
   float separation_remaining{0.0F};
   Engine::Core::EntityID melee_intent{0};
 
   bool has_travel{false};
   float travel_x{0.0F};
   float travel_z{0.0F};
+
+  bool in_one_lane_passage{false};
 };
 
 auto melee_intent_of(const Engine::Core::Entity& entity) -> Engine::Core::EntityID {
@@ -51,12 +60,34 @@ auto melee_intent_of(const Engine::Core::Entity& entity) -> Engine::Core::Entity
   return target != nullptr ? target->target_id : 0;
 }
 
+auto body_yields_when_idle(const Engine::Core::Entity& entity) -> bool {
+  if (entity.has_component<Engine::Core::BuildingComponent>() ||
+      entity.has_component<Engine::Core::WildlifeComponent>() ||
+      entity.has_component<Engine::Core::BuilderProductionComponent>()) {
+    return false;
+  }
+  if (const auto* attack = entity.get_component<Engine::Core::AttackComponent>();
+      attack != nullptr && attack->in_melee_lock) {
+    return false;
+  }
+  if (const auto* hold = entity.get_component<Engine::Core::HoldModeComponent>();
+      hold != nullptr && hold->active) {
+    return false;
+  }
+  const auto* movement = entity.get_component<Engine::Core::MovementComponent>();
+  return movement != nullptr && !movement->get_has_target();
+}
+
 auto body_is_movable(const Engine::Core::Entity& entity,
                      const Engine::Core::MovementFactsComponent* facts) -> bool {
   if (facts == nullptr || !facts->desired.valid) {
     return false;
   }
   if (entity.has_component<Engine::Core::BuildingComponent>()) {
+    return false;
+  }
+
+  if (entity.has_component<Engine::Core::WildlifeComponent>()) {
     return false;
   }
   if (const auto* attack = entity.get_component<Engine::Core::AttackComponent>();
@@ -75,6 +106,13 @@ void slide_along_travel(const ContactBody& body, float& dx, float& dz) {
     return;
   }
   float const along = (dx * body.travel_x) + (dz * body.travel_z);
+  if (body.in_one_lane_passage) {
+
+    float const forward = std::max(along, 0.0F);
+    dx = body.travel_x * forward;
+    dz = body.travel_z * forward;
+    return;
+  }
   if (along >= 0.0F) {
     return;
   }
@@ -130,6 +168,9 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
   if (entries.size() < 2U) {
     return;
   }
+  const auto& services = Game::Session::services_for(world);
+  const auto& terrain = *services.terrain;
+  const auto& buildings = *services.building_collision;
 
   std::vector<ContactBody> bodies(entries.size());
   float widest_radius = 0.0F;
@@ -153,12 +194,18 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
     body.transform = transform;
     body.facts = world.try_get<Engine::Core::MovementFactsComponent>(entity->get_id());
     if (body.facts != nullptr) {
+
       body.facts->steering.contact_push_x = 0.0F;
       body.facts->steering.contact_push_z = 0.0F;
+      body.facts->steering.body_overlap = 0.0F;
     }
     body.radius = CommandService::get_unit_radii(world, entry.id).core;
     body.profile = body_profile_for(*entity);
     body.movable = body_is_movable(*entity, body.facts);
+    if (const auto* attack = entity->get_component<Engine::Core::AttackComponent>()) {
+      body.locked_in_melee = attack->in_melee_lock;
+    }
+    body.yields_when_idle = !body.movable && body_yields_when_idle(*entity);
     if (body.facts != nullptr && body.facts->desired.valid) {
       float const speed =
           std::hypot(body.facts->desired.velocity_x, body.facts->desired.velocity_z);
@@ -170,6 +217,15 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
     }
     body.separation_remaining =
         std::min(k_separation_speed * delta_time, k_max_separation_step);
+    {
+      auto const cell =
+          NavGrid::world_to_grid(transform->position.x, transform->position.z);
+      body.in_one_lane_passage =
+          terrain.is_on_bridge(transform->position.x, transform->position.z) ||
+          terrain.is_hill_entrance(cell.x, cell.y) ||
+          buildings.point_in_navigation_passage(transform->position.x,
+                                                transform->position.z);
+    }
     body.melee_intent = melee_intent_of(*entity);
     widest_radius = std::max(widest_radius, body.radius);
   }
@@ -203,6 +259,10 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
             return;
           }
 
+          bool const me_pushable = me.movable || (them.movable && me.yields_when_idle);
+          bool const them_pushable =
+              them.movable || (me.movable && them.yields_when_idle);
+
           const float combined = me.radius + them.radius;
           if (combined <= 1.0e-4F) {
             return;
@@ -230,20 +290,48 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
           }
 
           const float overlap = combined - distance;
+
+          bool const combat_press = me.locked_in_melee || them.locked_in_melee ||
+                                    (me.melee_intent != 0 && them.melee_intent != 0) ||
+                                    (other.owner_id != entries[slot].owner_id &&
+                                     (me.melee_intent != 0 || them.melee_intent != 0));
           m_diagnostics.deepest_overlap =
               std::max(m_diagnostics.deepest_overlap, overlap);
           ++m_diagnostics.pairs_resolved;
-          if (me.facts != nullptr) {
+          if (me.facts != nullptr && !combat_press) {
             me.facts->steering.body_overlap =
                 std::max(me.facts->steering.body_overlap, overlap);
           }
-          if (them.facts != nullptr) {
+          if (them.facts != nullptr && !combat_press) {
             them.facts->steering.body_overlap =
                 std::max(them.facts->steering.body_overlap, overlap);
           }
 
-          const float my_share = me.movable ? (them.movable ? 0.5F : 1.0F) : 0.0F;
-          const float their_share = them.movable ? (me.movable ? 0.5F : 1.0F) : 0.0F;
+          constexpr float k_idle_share = 0.35F;
+          float my_share = 0.0F;
+          float their_share = 0.0F;
+          if (me.movable && them.movable) {
+            my_share = 0.5F;
+            their_share = 0.5F;
+          } else if (me.movable) {
+            their_share = them_pushable ? k_idle_share : 0.0F;
+            my_share = 1.0F - their_share;
+          } else if (them.movable) {
+            my_share = me_pushable ? k_idle_share : 0.0F;
+            their_share = 1.0F - my_share;
+          }
+          if (me.in_one_lane_passage || them.in_one_lane_passage) {
+
+            float const me_ahead_of_them =
+                me.has_travel ? (px * me.travel_x) + (pz * me.travel_z) : 0.0F;
+            if (me_ahead_of_them > 0.0F) {
+              my_share = 0.0F;
+              their_share = them.movable ? 1.0F : 0.0F;
+            } else if (me_ahead_of_them < 0.0F) {
+              their_share = 0.0F;
+              my_share = me.movable ? 1.0F : 0.0F;
+            }
+          }
 
           if (my_share > 0.0F &&
               !try_push(me, nx * overlap * my_share, nz * overlap * my_share)) {

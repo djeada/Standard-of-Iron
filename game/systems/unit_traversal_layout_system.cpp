@@ -299,6 +299,7 @@ void publish_facts(const Engine::Core::UnitTraversalLayoutStateComponent& state,
   facts.mode_dwell_seconds = state.mode_dwell_seconds;
   facts.normal_files = state.normal_files;
   facts.lateral_scale = state.lateral_scale;
+  facts.about_faced = state.about_faced;
   facts.file_spacing = state.authored_file_spacing * state.lateral_scale;
 }
 
@@ -319,9 +320,7 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
           ? *narrow_shape
           : layout.all_slots;
 
-  float const corridor_half_width = state.available_half_width -
-                                    (layout.body_radius * k_soldier_probe_reach) -
-                                    k_width_epsilon;
+  float const frame_sign = state.about_faced ? -1.0F : 1.0F;
   for (std::size_t index = 0; index < layout.all_slots.size(); ++index) {
     auto const& slot = layout.all_slots[index];
     auto const& placed = shape[index];
@@ -330,12 +329,12 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
       target = *previous;
     } else {
       target.slot_index = slot.index;
-      target.start_local_x = slot.local_x;
-      target.start_local_z = slot.local_z;
-      target.previous_local_x = slot.local_x;
-      target.previous_local_z = slot.local_z;
-      target.current_local_x = slot.local_x;
-      target.current_local_z = slot.local_z;
+      target.start_local_x = frame_sign * slot.local_x;
+      target.start_local_z = frame_sign * slot.local_z;
+      target.previous_local_x = target.start_local_x;
+      target.previous_local_z = target.start_local_z;
+      target.current_local_x = target.start_local_x;
+      target.current_local_z = target.start_local_z;
     }
     target.row = placed.row;
     target.col = placed.col;
@@ -343,8 +342,8 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
         layout.live_slots.begin(),
         layout.live_slots.end(),
         [&slot](auto const& candidate) { return candidate.index == slot.index; });
-    target.target_local_x = placed.local_x;
-    target.target_local_z = placed.local_z;
+    target.target_local_x = frame_sign * placed.local_x;
+    target.target_local_z = frame_sign * placed.local_z;
     if (state.active) {
 
       target.target_local_x *= state.lateral_scale;
@@ -396,6 +395,9 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
 
   auto const limits = relocation_limits(unit.spawn_type);
 
+  float const corridor_half_width = state.available_half_width -
+                                    (layout.body_radius * k_soldier_probe_reach) -
+                                    k_width_epsilon;
   if (state.active && corridor_half_width > 0.0F) {
     float widest = 0.0F;
     for (auto const& slot : next) {
@@ -403,9 +405,9 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
         widest = std::max(widest, std::abs(slot.target_local_x));
       }
     }
-    float const floor_correction = k_minimum_squeeze_scale;
     if (widest > corridor_half_width) {
-      float const correction = std::max(corridor_half_width / widest, floor_correction);
+      float const correction =
+          std::max(corridor_half_width / widest, k_minimum_squeeze_scale);
       for (auto& slot : next) {
         slot.target_local_x *= correction;
       }
@@ -424,6 +426,21 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
                                                   passability);
   };
 
+  auto slot_is_in_sight_of_root = [&](float local_x, float local_z) {
+    if (pathfinder == nullptr) {
+      return true;
+    }
+    float const world_x =
+        transform.position.x + (cos_yaw * local_x) + (sin_yaw * local_z);
+    float const world_z =
+        transform.position.z - (sin_yaw * local_x) + (cos_yaw * local_z);
+    return pathfinder->is_world_segment_walkable(
+        QVector3D(transform.position.x, 0.0F, transform.position.z),
+        QVector3D(world_x, 0.0F, world_z),
+        passability,
+        0.0F);
+  };
+
   auto slot_terrain_is_open = [&](float local_x, float local_z) {
     if (pathfinder == nullptr) {
       return true;
@@ -436,35 +453,110 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
     return pathfinder->is_terrain_walkable(cell.x, cell.y);
   };
 
-  auto onto_walkable_ground = [&](float& local_x, float& local_z) {
-    if (slot_ground_is_open(local_x, local_z)) {
-      return false;
-    }
-    float low = 0.0F;
-    float high = 1.0F;
-    for (int bisection = 0; bisection < k_slot_recovery_bisections; ++bisection) {
-      float const middle = (low + high) * 0.5F;
-      if (slot_ground_is_open(local_x * middle, local_z * middle)) {
-        low = middle;
-      } else {
-        high = middle;
-      }
-    }
-    float const corrected_x = local_x * low;
-    float const corrected_z = local_z * low;
-    float const correction =
-        Game::Systems::planar_length(corrected_x - local_x, corrected_z - local_z);
-    float const budget = k_ground_clamp_speed * step;
-    if (correction > budget && correction > 0.0001F) {
-      float const share = budget / correction;
-      local_x += (corrected_x - local_x) * share;
-      local_z += (corrected_z - local_z) * share;
-      return true;
-    }
-    local_x = corrected_x;
-    local_z = corrected_z;
-    return true;
-  };
+  float const minimum_separation =
+      std::max(Game::Formation::TraversalPolicy::k_minimum_soldier_separation,
+               layout.body_radius * 2.0F * 1.04F);
+
+  auto nearest_open_ground =
+      [&](std::size_t self, float local_x, float local_z, float& out_x, float& out_z) {
+        constexpr std::array<float, 4> k_rings{{0.5F, 1.0F, 1.5F, 2.25F}};
+        constexpr int k_ring_probes = 12;
+        float best_distance = std::numeric_limits<float>::infinity();
+        bool found = false;
+        for (float const ring : k_rings) {
+          for (int probe = 0; probe < k_ring_probes; ++probe) {
+            float const angle = static_cast<float>(probe) * 2.0F *
+                                std::numbers::pi_v<float> /
+                                static_cast<float>(k_ring_probes);
+            float const candidate_x = local_x + std::cos(angle) * ring;
+            float const candidate_z = local_z + std::sin(angle) * ring;
+            if (!slot_ground_is_open(candidate_x, candidate_z) ||
+                !slot_is_in_sight_of_root(candidate_x, candidate_z)) {
+              continue;
+            }
+            bool clear_of_others = true;
+            for (std::size_t other = 0; other < next.size(); ++other) {
+              if (other == self || !next[other].alive) {
+                continue;
+              }
+              if (Game::Systems::planar_length(
+                      candidate_x - next[other].target_local_x,
+                      candidate_z - next[other].target_local_z) < minimum_separation) {
+                clear_of_others = false;
+                break;
+              }
+            }
+            if (!clear_of_others) {
+              continue;
+            }
+            float const distance = Game::Systems::planar_length(candidate_x - local_x,
+                                                                candidate_z - local_z);
+            if (distance < best_distance) {
+              best_distance = distance;
+              out_x = candidate_x;
+              out_z = candidate_z;
+              found = true;
+            }
+          }
+          if (found) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+  auto onto_walkable_ground =
+      [&](std::size_t self, float& local_x, float& local_z, float speed_budget) {
+        if (slot_ground_is_open(local_x, local_z)) {
+          return false;
+        }
+
+        float low = 0.0F;
+        float high = 1.0F;
+        for (int bisection = 0; bisection < k_slot_recovery_bisections; ++bisection) {
+          float const middle = (low + high) * 0.5F;
+          if (slot_ground_is_open(local_x * middle, local_z * middle)) {
+            low = middle;
+          } else {
+            high = middle;
+          }
+        }
+        float corrected_x = local_x * low;
+        float corrected_z = local_z * low;
+        bool stacked = false;
+        for (std::size_t other = 0; other < next.size(); ++other) {
+          if (other == self || !next[other].alive) {
+            continue;
+          }
+          if (Game::Systems::planar_length(corrected_x - next[other].target_local_x,
+                                           corrected_z - next[other].target_local_z) <
+              minimum_separation * 0.5F) {
+            stacked = true;
+            break;
+          }
+        }
+        if (stacked) {
+
+          float ring_x = 0.0F;
+          float ring_z = 0.0F;
+          if (nearest_open_ground(self, local_x, local_z, ring_x, ring_z)) {
+            corrected_x = ring_x;
+            corrected_z = ring_z;
+          }
+        }
+        float const correction =
+            Game::Systems::planar_length(corrected_x - local_x, corrected_z - local_z);
+        float const budget = speed_budget * step;
+        if (correction > budget && correction > 0.0001F) {
+          float const share = budget / correction;
+          local_x += (corrected_x - local_x) * share;
+          local_z += (corrected_z - local_z) * share;
+          return true;
+        }
+        local_x = corrected_x;
+        local_z = corrected_z;
+        return true;
+      };
 
   std::vector<std::uint8_t> recovering_to_ground(next.size(), 0U);
   for (std::size_t index = 0; index < next.size(); ++index) {
@@ -472,13 +564,10 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
     if (!slot.alive) {
       continue;
     }
-    recovering_to_ground[index] = static_cast<std::uint8_t>(
-        onto_walkable_ground(slot.target_local_x, slot.target_local_z));
+    recovering_to_ground[index] = static_cast<std::uint8_t>(onto_walkable_ground(
+        index, slot.target_local_x, slot.target_local_z, k_ground_clamp_speed));
   }
 
-  float const minimum_separation =
-      std::max(Game::Formation::TraversalPolicy::k_minimum_soldier_separation,
-               layout.body_radius * 2.0F * 1.04F);
   state.blocked_slot_count = 0U;
   for (std::size_t slot_index = 0; slot_index < next.size(); ++slot_index) {
     auto& slot = next[slot_index];
@@ -616,8 +705,10 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
                                ? 0.0F
                                : slot.blocked_seconds + step;
 
-    if (slot.alive &&
-        onto_walkable_ground(slot.current_local_x, slot.current_local_z)) {
+    if (slot.alive && onto_walkable_ground(slot_index,
+                                           slot.current_local_x,
+                                           slot.current_local_z,
+                                           k_ground_recovery_speed)) {
       slot.velocity_x = 0.0F;
       slot.velocity_z = 0.0F;
       if (!slot.blocked) {

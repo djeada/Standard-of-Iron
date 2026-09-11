@@ -113,6 +113,8 @@ void soldier_spatial_anchors_into(const Engine::Core::Entity& entity,
                                   const FormationLayout& base_layout,
                                   std::vector<SoldierSpatialAnchor>& result);
 
+auto face_about_in_place(Engine::Core::Entity& entity) -> bool;
+
 [[nodiscard]] auto living_slot_indices(const Engine::Core::Entity& entity,
                                        int total_count) -> std::vector<std::uint16_t>;
 

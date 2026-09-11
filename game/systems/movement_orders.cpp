@@ -11,6 +11,7 @@
 #include "../core/component_gameplay.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
+#include "body_profile.h"
 #include "combat_rules.h"
 #include "command_service.h"
 #include "formation_combat_geometry.h"
@@ -78,6 +79,36 @@ auto resolve_walkable_direct_target(const QVector3D& target,
   constexpr float k_target_search_radius = 64.0F;
   return nearest_standable_world(target, passability, k_target_search_radius)
       .value_or(target);
+}
+
+auto resolve_walkable_target_toward(const QVector3D& target,
+                                    const QVector3D& from,
+                                    Pathfinding::Passability passability) -> QVector3D {
+  BodyProfile profile;
+  profile.radius = 0.0F;
+  profile.passability = passability;
+  if (Walkability::can_stand(target, profile)) {
+    return target;
+  }
+  QVector3D const nearest = resolve_walkable_direct_target(target, passability);
+  QVector3D toward = from - target;
+  toward.setY(0.0F);
+  float const span = toward.length();
+  if (span <= 1.0e-3F) {
+    return nearest;
+  }
+  toward /= span;
+  constexpr float k_step = 0.25F;
+  constexpr float k_side_slack = 1.5F;
+  float const nearest_gap = (nearest - target).length();
+  for (float travelled = k_step; travelled <= span; travelled += k_step) {
+    QVector3D const probe = target + toward * travelled;
+    if (!Walkability::can_stand(probe, profile)) {
+      continue;
+    }
+    return travelled <= nearest_gap + k_side_slack ? probe : nearest;
+  }
+  return nearest;
 }
 
 auto segment_traverses_navigation_portal(const QVector3D& from,
@@ -203,6 +234,11 @@ struct PreparedMove {
   float previous_vz{0.0F};
   bool preserve_velocity{false};
 };
+
+[[nodiscard]] auto issuer_retargets(MoveOrderKind kind) -> bool {
+  return kind == MoveOrderKind::AttackChase || kind == MoveOrderKind::ScriptedMove ||
+         kind == MoveOrderKind::GuardReturn || kind == MoveOrderKind::RecoveryMove;
+}
 
 auto prepare_move(Engine::Core::World& world,
                   Engine::Core::EntityID unit_id,
@@ -470,28 +506,31 @@ void MovementSystem::assign_navigation_target(
     return;
   }
 
+  QVector3D const current_pos(transform.position.x, 0.0F, transform.position.z);
+  QVector3D const planned_target = resolve_walkable_target_toward(
+      requested_target, current_pos, passability_for(movement));
+
   Point const start =
       NavGrid::world_to_grid(transform.position.x, transform.position.z);
-  Point const end = NavGrid::world_to_grid(requested_target.x(), requested_target.z());
-  QVector3D const current_pos(transform.position.x, 0.0F, transform.position.z);
+  Point const end = NavGrid::world_to_grid(planned_target.x(), planned_target.z());
 
   bool const portal_route =
-      segment_traverses_navigation_portal(current_pos, requested_target);
+      segment_traverses_navigation_portal(current_pos, planned_target);
   bool const direct_clear =
       is_direct_path_walkable(current_pos,
-                              requested_target,
+                              planned_target,
                               passability_for(movement),
                               movement.get_navigation_clearance());
   if ((start == end && direct_clear) || (direct_clear && !portal_route)) {
     assign_direct_target(
         movement,
-        resolve_walkable_direct_target(requested_target, passability_for(movement)));
+        resolve_walkable_direct_target(planned_target, passability_for(movement)));
     return;
   }
 
   auto const corridor = RouteCorridorPlanner::plan(*pathfinder,
                                                    current_pos,
-                                                   requested_target,
+                                                   planned_target,
                                                    passability_for(movement),
                                                    movement.get_navigation_clearance());
   if (!corridor.reachable() || !assign_waypoints_to_movement(*pathfinder,
@@ -499,10 +538,10 @@ void MovementSystem::assign_navigation_target(
                                                              corridor.centerline.back(),
                                                              transform,
                                                              movement)) {
-    QVector3D const fallback = corridor.centerline.empty()
-                                   ? resolve_walkable_direct_target(
-                                         requested_target, passability_for(movement))
-                                   : corridor.centerline.back();
+    QVector3D const fallback =
+        corridor.centerline.empty()
+            ? resolve_walkable_direct_target(planned_target, passability_for(movement))
+            : corridor.centerline.back();
     assign_direct_target(movement, fallback);
   }
 
@@ -603,6 +642,7 @@ auto MovementSystem::retarget_unit(Engine::Core::World& world,
     return false;
   }
 
+  movement->has_requested_goal = false;
   assign_navigation_target(NavGrid::get_pathfinder(), *transform, *movement, goal);
   return true;
 }
@@ -625,6 +665,7 @@ void MovementSystem::issue_move(Engine::Core::World& world,
     return;
   }
   prepared.movement->precise_arrival = options.kind == MoveOrderKind::AttackChase;
+  prepared.movement->issuer_retargets = issuer_retargets(options.kind);
   assign_navigation_target(
       NavGrid::get_pathfinder(), *prepared.transform, *prepared.movement, target);
   if (prepared.preserve_velocity && prepared.movement->get_has_target()) {
@@ -661,6 +702,7 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
     if (prepared.back().movement != nullptr) {
       prepared.back().movement->precise_arrival =
           options.kind == MoveOrderKind::AttackChase;
+      prepared.back().movement->issuer_retargets = issuer_retargets(options.kind);
     }
   }
 

@@ -9,6 +9,7 @@
 
 #include "../core/ambient_session.h"
 #include "../core/component.h"
+#include "../core/component_economy.h"
 #include "../core/entity.h"
 #include "../core/system_context.h"
 #include "../core/world.h"
@@ -23,6 +24,13 @@ namespace Game::Systems {
 
 namespace {
 
+constexpr float k_press_patience_seconds = 0.5F;
+
+constexpr float k_stop_patience_seconds = 1.0F;
+
+constexpr float k_leader_min_pace = 0.2F;
+constexpr float k_leader_heading_agreement = 0.5F;
+
 struct Body {
   float core_radius{0.5F};
   float navigation_clearance{0.0F};
@@ -33,6 +41,13 @@ struct Body {
   bool is_moving{false};
   bool can_enter_forest{true};
   bool considered{false};
+  bool has_travel{false};
+  float travel_x{0.0F};
+  float travel_z{0.0F};
+
+  float pace{0.0F};
+
+  bool gives_way_when_standing{false};
 };
 
 auto compute_avoidance_priority(Engine::Core::SystemContext& context,
@@ -54,18 +69,6 @@ auto compute_avoidance_priority(Engine::Core::SystemContext& context,
     return 1;
   }
   return 2;
-}
-
-auto point_is_in_navigation_passage(const BuildingCollisionRegistry& buildings,
-                                    float x,
-                                    float z) -> bool {
-  for (const auto& passage : buildings.navigation_passages()) {
-    if (std::abs(x - passage.center_x) <= passage.width * 0.5F + 0.5F &&
-        std::abs(z - passage.center_z) <= passage.depth * 0.5F + 0.5F) {
-      return true;
-    }
-  }
-  return false;
 }
 
 auto response_share(const Body& me, const Body& them) -> float {
@@ -128,6 +131,14 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
     if (const auto* facts =
             context.try_get<Engine::Core::MovementFactsComponent>(entry.id)) {
       body.avoids = facts->desired.valid;
+      body.pace = facts->last_accepted_speed;
+      float const speed = Game::Systems::planar_length(facts->desired.velocity_x,
+                                                       facts->desired.velocity_z);
+      if (facts->desired.valid && speed > 1.0e-4F) {
+        body.has_travel = true;
+        body.travel_x = facts->desired.velocity_x / speed;
+        body.travel_z = facts->desired.velocity_z / speed;
+      }
     }
     if (const auto* formation =
             context.try_get<Engine::Core::FormationModeComponent>(entry.id)) {
@@ -146,6 +157,14 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
 
       body.engaged_target = wildlife->focus_id;
     }
+    body.gives_way_when_standing =
+        !body.is_moving && body.engaged_target == 0 &&
+        !context.has<Engine::Core::WildlifeComponent>(entry.id) &&
+        !context.has<Engine::Core::BuilderProductionComponent>(entry.id) &&
+        [&context, &entry] {
+          const auto* hold = context.try_get<Engine::Core::HoldModeComponent>(entry.id);
+          return hold == nullptr || !hold->active;
+        }();
   }
 
   const Engine::Core::WorldSpatialIndex::Entry* const first = entries.data();
@@ -196,6 +215,9 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
     float lean_z = 0.0F;
     std::uint32_t neighbor_count = 0;
     bool rank_ahead = false;
+    bool touching_ahead = false;
+    bool touching_a_standing_body = false;
+    float leader_pace = 1.0e9F;
 
     index.for_each_in_radius(entry.x, entry.z, query_radius, [&](const auto& other) {
       ++neighbors_examined;
@@ -239,6 +261,27 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
         return;
       }
       ++neighbor_count;
+      if (along <= lane) {
+
+        bool const they_see_me_ahead =
+            them.has_travel && ((-px * them.travel_x) + (-pz * them.travel_z)) > 0.0F;
+        bool const i_go_first = they_see_me_ahead && entry.id < other.id;
+        if (!i_go_first) {
+          touching_ahead = true;
+          float const heading_agreement =
+              them.has_travel ? (them.travel_x * tx) + (them.travel_z * tz) : 0.0F;
+          if (them.avoids && them.pace > k_leader_min_pace &&
+              heading_agreement > k_leader_heading_agreement) {
+            leader_pace = std::min(leader_pace, them.pace * heading_agreement);
+          }
+
+          bool const pressed_in_vain =
+              facts->progress.no_progress_seconds > k_press_patience_seconds;
+          if (!them.avoids && (!them.gives_way_when_standing || pressed_in_vain)) {
+            touching_a_standing_body = true;
+          }
+        }
+      }
       if (me.formation_id != 0U && them.formation_id == me.formation_id) {
 
         rank_ahead = true;
@@ -267,11 +310,10 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
     });
 
     facts->steering.neighbor_count = neighbor_count;
+    facts->steering.blocked_by_standing_body = touching_a_standing_body;
     if (neighbor_count == 0U) {
       continue;
     }
-
-    speed_scale = std::clamp(speed_scale, k_min_speed_fraction, 1.0F);
 
     if (const float leaned = Game::Systems::planar_length(lean_x, lean_z);
         leaned > k_lean_gain) {
@@ -283,7 +325,7 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
     Point const own_cell = NavGrid::world_to_grid(entry.x, entry.z);
     bool has_room = !rank_ahead && !terrain.is_on_bridge(entry.x, entry.z) &&
                     !terrain.is_hill_entrance(own_cell.x, own_cell.y) &&
-                    !point_is_in_navigation_passage(buildings, entry.x, entry.z);
+                    !buildings.point_in_navigation_passage(entry.x, entry.z);
 
     float lean_magnitude = Game::Systems::planar_length(lean_x, lean_z);
     if (has_room && lean_magnitude > 1.0e-4F) {
@@ -304,6 +346,16 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
       lean_x = 0.0F;
       lean_z = 0.0F;
       lean_magnitude = 0.0F;
+    }
+
+    bool const waits_its_turn =
+        ((!has_room && touching_ahead) || touching_a_standing_body) &&
+        facts->progress.stall.stalled_seconds <= k_stop_patience_seconds;
+    float const speed_floor = waits_its_turn ? 0.0F : k_min_speed_fraction;
+    speed_scale = std::clamp(speed_scale, speed_floor, 1.0F);
+
+    if (leader_pace < desired_speed * speed_scale) {
+      speed_scale = leader_pace / desired_speed;
     }
 
     float steered_vx = (desired_vx * speed_scale) + (lean_x * desired_speed);
@@ -350,6 +402,8 @@ auto LocalAvoidanceSystem::access() const -> Engine::Core::SystemAccess {
                                      MovementIntentComponent,
                                      MovementComponent,
                                      FormationModeComponent,
+                                     HoldModeComponent,
+                                     BuilderProductionComponent,
                                      BuildingComponent,
                                      PendingRemovalComponent>{},
                                Writes<MovementFactsComponent>{});

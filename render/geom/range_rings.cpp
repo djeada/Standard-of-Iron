@@ -15,6 +15,8 @@ constexpr float k_group_alpha = 0.5F;
 constexpr float k_minimum_alpha_scale = 0.9F;
 constexpr float k_minimum_phase = 1.6F;
 
+constexpr float k_occluded_alpha = 0.34F;
+
 const QVector3D k_max_range_color(0.90F, 0.82F, 0.46F);
 const QVector3D k_min_range_color(0.86F, 0.34F, 0.24F);
 
@@ -98,6 +100,7 @@ void render_range_rings(Renderer* renderer,
     marker.pattern = marker_pattern(ring.pattern);
     marker.focused = ring.focused;
     marker.phase = ring.minimum ? k_minimum_phase : 0.0F;
+    marker.occluded_alpha = k_occluded_alpha;
     renderer->ground_marker(marker);
   }
 }

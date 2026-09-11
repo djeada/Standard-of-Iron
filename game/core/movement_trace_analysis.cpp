@@ -10,6 +10,8 @@
 #include <sstream>
 #include <unordered_map>
 
+#include "../util/planar_math.h"
+
 namespace Engine::Core {
 
 namespace {
@@ -26,7 +28,7 @@ state_claims_stillness(std::uint8_t presentation_state) -> bool {
 }
 
 auto shortest_angle(float from_degrees, float to_degrees) -> float {
-  return std::fmod((to_degrees - from_degrees + 540.0F), 360.0F) - 180.0F;
+  return Game::Systems::signed_yaw_delta(from_degrees, to_degrees);
 }
 
 auto is_active_state(MovementOrderState state) -> bool {
@@ -141,6 +143,7 @@ struct EntityWalkState {
   float previous_heading_delta{0.0F};
   bool has_previous_yaw{false};
   float previous_yaw{0.0F};
+  bool previous_about_faced{false};
   float previous_angular_speed{0.0F};
   bool has_previous_angular_speed{false};
   bool has_previous_direction{false};
@@ -528,7 +531,11 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
       }
 
       if (walk.has_previous_yaw) {
-        float const delta = shortest_angle(walk.previous_yaw, sample.root_yaw);
+
+        float const frame_flip =
+            sample.about_faced != walk.previous_about_faced ? 180.0F : 0.0F;
+        float const delta =
+            shortest_angle(walk.previous_yaw + frame_flip, sample.root_yaw);
         float const angular_speed = std::fabs(delta) / dt;
         if (angular_speed > thresholds.max_angular_speed_degrees) {
           sink.add(
@@ -582,6 +589,7 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         }
       }
       walk.previous_yaw = sample.root_yaw;
+      walk.previous_about_faced = sample.about_faced;
       walk.has_previous_yaw = true;
 
       float const speed = accepted_speed(sample);

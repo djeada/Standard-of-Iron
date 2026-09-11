@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "../../game/core/movement_facts.h"
 #include "core/component_gameplay.h"
 #include "core/entity.h"
 #include "core/world.h"
@@ -370,8 +371,32 @@ TEST_F(BuildingObstructionLifecycleTest, UnitsRerouteThroughNewlyOpenedBreach) {
   for (auto* soldier : soldiers) {
     auto const* transform = soldier->get_component<TransformComponent>();
     ASSERT_NE(transform, nullptr);
+    auto const* movement = soldier->get_component<Engine::Core::MovementComponent>();
+    auto const* facts = soldier->get_component<Engine::Core::MovementFactsComponent>();
     EXPECT_GT(transform->position.x, 0.0F)
-        << "units should walk through the breach once the wall is destroyed";
+        << "units should walk through the breach once the wall is destroyed; at ("
+        << transform->position.x << ", " << transform->position.z << ") state "
+        << (facts != nullptr ? Engine::Core::movement_state_name(facts->progress.state)
+                             : "?")
+        << " rung "
+        << (facts != nullptr ? static_cast<int>(facts->progress.stall.rung) : -1)
+        << " holding " << (facts != nullptr && facts->progress.holding_at_obstruction)
+        << " abandoned "
+        << (facts != nullptr && facts->progress.stall.objective_abandoned)
+        << " repaths " << (facts != nullptr ? facts->progress.repath_count : 0U)
+        << " target " << (movement != nullptr && movement->get_has_target())
+        << " goal (" << (movement != nullptr ? movement->get_goal_x() : 0.0F) << ", "
+        << (movement != nullptr ? movement->get_goal_y() : 0.0F) << ") desired "
+        << (facts != nullptr && facts->desired.valid) << " steer "
+        << (facts != nullptr ? static_cast<int>(facts->steering.result) : -1)
+        << " neighbours " << (facts != nullptr ? facts->steering.neighbor_count : 0U)
+        << " motor_blocked " << (facts != nullptr && facts->motor.blocked)
+        << " blocked_steps " << (facts != nullptr ? facts->progress.blocked_steps : 0U)
+        << " clearance "
+        << (movement != nullptr ? movement->get_navigation_clearance() : -1.0F)
+        << " path " << (movement != nullptr ? movement->get_path_index() : 0U) << "/"
+        << (movement != nullptr ? movement->get_path().size() : 0U) << " relief "
+        << (facts != nullptr ? facts->progress.stall.clearance_relief : -1.0F);
   }
 }
 

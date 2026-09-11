@@ -158,13 +158,17 @@ void apply_authoritative_formation_slots(
   }
 
   auto const layout = Game::Systems::FormationCombat::resolve_layout(*entity);
+  auto const* traversal =
+      entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
+  float const frame_sign =
+      traversal != nullptr && traversal->about_faced ? -1.0F : 1.0F;
   for (auto const& slot : layout.occupied_slots) {
     if (slot.index >= instances.size()) {
       continue;
     }
     auto& instance = instances[slot.index];
-    instance.offset_x = slot.local_x;
-    instance.offset_z = slot.local_z;
+    instance.offset_x = frame_sign * slot.local_x;
+    instance.offset_z = frame_sign * slot.local_z;
     instance.yaw_offset = slot.local_yaw;
     instance.row_index = static_cast<std::uint8_t>(slot.row);
     instance.col_index = static_cast<std::uint8_t>(slot.col);

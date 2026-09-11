@@ -122,6 +122,11 @@ protected:
     return Game::Systems::Walkability::nearest_standable(position, profile, 24.0F);
   }
 
+  static auto facts_no_progress(const Engine::Core::Entity& entity) -> float {
+    const auto* facts = entity.get_component<Engine::Core::MovementFactsComponent>();
+    return facts == nullptr ? 0.0F : facts->progress.no_progress_seconds;
+  }
+
   static auto
   worst_stuck_time(Engine::Core::World& world,
                    const std::vector<Engine::Core::EntityID>& ids) -> float {
@@ -131,9 +136,9 @@ protected:
       if (entity == nullptr) {
         continue;
       }
-      const auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-      if (movement != nullptr) {
-        worst = std::max(worst, movement->get_stuck_time());
+      const auto* facts = entity->get_component<Engine::Core::MovementFactsComponent>();
+      if (facts != nullptr) {
+        worst = std::max(worst, facts->progress.no_progress_seconds);
       }
     }
     return worst;
@@ -241,7 +246,7 @@ TEST_F(MapCrossingTraversalTest, ASquadOrderedOverEveryShippedFordReachesTheFarB
                    m->get_goal_x(),
                    m->get_goal_y(),
                    static_cast<int>(m->get_has_target()),
-                   m->get_stuck_time(),
+                   facts_no_progress(*first),
                    m->get_path_index(),
                    m->get_path().size(),
                    m->get_vx(),

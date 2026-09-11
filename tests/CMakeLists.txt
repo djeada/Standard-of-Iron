@@ -493,6 +493,7 @@ add_executable(
     render/creature/render_request_test.cpp
     render/selection_ring_layout_test.cpp
     render/ground_marker_pattern_test.cpp
+    render/ground_marker_tessellation_test.cpp
     render/arrow_cloud_render_test.cpp
     render/projectile_relation_test.cpp
     render/orientation_arrow_mesh_test.cpp

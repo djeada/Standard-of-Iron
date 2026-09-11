@@ -238,9 +238,9 @@ public:
     return structure_approach_target_id;
   }
 
-  [[nodiscard]] auto get_stuck_time() const -> float { return stuck_timer; }
-
   [[nodiscard]] auto get_precise_arrival() const -> bool { return precise_arrival; }
+
+  [[nodiscard]] auto get_issuer_retargets() const -> bool { return issuer_retargets; }
 
   [[nodiscard]] auto get_order_sequence() const -> std::uint64_t {
     return order_sequence;
@@ -268,6 +268,7 @@ public:
 
   void begin_order() {
     ++order_sequence;
+    issuer_retargets = false;
     route_id = 0U;
     route_lane_offset = 0.0F;
     route_lane_min_scale = 1.0F;
@@ -311,11 +312,8 @@ private:
 
   float navigation_clearance{0.5F};
 
-  bool stuck_ref_valid{false};
-  float stuck_ref_x{0.0F}, stuck_ref_z{0.0F};
-  float stuck_timer{0.0F};
-
   bool precise_arrival{false};
+  bool issuer_retargets{false};
   EntityID structure_approach_target_id{0};
   bool can_enter_forest{true};
 

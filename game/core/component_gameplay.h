@@ -553,6 +553,8 @@ public:
   std::vector<UnitTraversalSlotState> slot_states;
   std::uint32_t slot_states_revision{0U};
 
+  bool about_faced{false};
+
   float entry_progress{0.0F};
   float exit_progress{1.0F};
   float transition_progress{1.0F};

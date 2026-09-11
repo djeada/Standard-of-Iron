@@ -967,7 +967,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     smoothing_inputs.max_speed =
         turn_smoothing_cap * turn_variation.catch_up_speed_scale;
     smoothing_inputs.turn_rate_degrees =
-        (is_mounted_spawn ? 150.0F : 300.0F) * turn_variation.turn_rate_scale;
+        (is_mounted_spawn ? 150.0F : 200.0F) * turn_variation.turn_rate_scale;
     smoothing_inputs.response_delay_seconds =
         turn_smoothing_stagger ? turn_variation.response_delay_seconds : 0.0F;
     smoothing_inputs.allow_travel_yaw = turn_smoothing_travel_yaw;

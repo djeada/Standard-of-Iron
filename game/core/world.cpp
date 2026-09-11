@@ -173,12 +173,13 @@ void begin_motion_presentation_frame(World& world, float delta_time) {
   }
 }
 
-void publish_movement_trace_frame(World& world) {
+void publish_movement_trace_frame(World& world, float delta_time) {
   auto& trace = MovementTrace::instance();
   trace.configure_from_environment();
   if (!trace.enabled()) {
     return;
   }
+  trace.set_fixed_step_seconds(delta_time);
 
   world.each<MovementFactsComponent, TransformComponent, UnitComponent>(
       [&world, &trace](EntityID id,
@@ -285,6 +286,7 @@ void publish_movement_trace_frame(World& world) {
         sample.formation_half_width = facts.traversal.desired_half_width;
         sample.file_spacing = facts.traversal.file_spacing;
         sample.lateral_scale = facts.traversal.lateral_scale;
+        sample.about_faced = facts.traversal.about_faced;
         sample.normal_files = facts.traversal.normal_files;
         sample.direction_source = facts.direction_source;
         trace.record(sample);
@@ -1492,7 +1494,7 @@ void World::update(float delta_time) {
     finalize_motion_presentation_frame(*this, delta_time);
     publish_creature_presentation_frame(*this);
   }
-  publish_movement_trace_frame(*this);
+  publish_movement_trace_frame(*this, delta_time);
   const auto presentation_ended = std::chrono::steady_clock::now();
   if (!m_is_render_snapshot &&
       m_render_snapshots_requested.load(std::memory_order_acquire)) {
