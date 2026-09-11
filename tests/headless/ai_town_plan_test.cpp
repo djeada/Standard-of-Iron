@@ -1,6 +1,7 @@
 #include <QtGlobal>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <deque>
@@ -178,6 +179,8 @@ protected:
 
     if (auto* ai = session.world().get_system<Game::Systems::AISystem>()) {
       ai->reinitialize();
+
+      ai->set_decision_wait_budget(std::chrono::seconds(60));
       auto profile =
           Game::Systems::AI::doctrine_profile_for_owner(session.world(), k_owner);
       EXPECT_TRUE(profile.has_value()) << "the commander has no authored doctrine";

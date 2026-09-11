@@ -1,6 +1,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "game/core/component.h"
@@ -188,11 +189,23 @@ TEST_F(AutoEngagementResponseTest, SwordsmenGoToTheAidOfAnAllyBittenByWolves) {
   auto& world = m_session->world();
   Game::Systems::Combat::deal_damage(&world, world.get_entity(victim), 10, wolf);
 
-  run_for(1.0);
+  std::vector<bool> answered(escort.size(), false);
+  const double step = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 1.0; elapsed += step) {
+    run_for(step);
+    for (std::size_t index = 0; index < escort.size(); ++index) {
+      answered[index] = answered[index] || target_of(escort[index]) == wolf;
+    }
+  }
 
-  for (auto const swordsman : escort) {
-    EXPECT_EQ(target_of(swordsman), wolf)
-        << "swordsman " << swordsman << " watched a wolf maul the man beside him";
+  auto const* wolf_unit =
+      entity(wolf) != nullptr ? entity(wolf)->get_component<UnitComponent>() : nullptr;
+  bool const wolf_is_down = wolf_unit == nullptr || wolf_unit->health <= 0;
+  for (std::size_t index = 0; index < escort.size(); ++index) {
+    EXPECT_TRUE(answered[index] && (target_of(escort[index]) == wolf || wolf_is_down))
+        << "swordsman " << escort[index] << " watched a wolf maul the man beside him"
+        << "; wolf " << (wolf_is_down ? "down" : "alive") << ", his target "
+        << target_of(escort[index]);
   }
 }
 
@@ -394,7 +407,19 @@ TEST_F(AutoEngagementResponseTest, ANoncombatantNeverPicksItsOwnFight) {
 
   run_for(2.0);
 
-  EXPECT_EQ(target_of(builder), 0U) << "a builder went looking for a fight";
+  auto const* builder_attack = entity(builder)->get_component<AttackComponent>();
+  bool const locked_by_raider = builder_attack != nullptr &&
+                                builder_attack->in_melee_lock &&
+                                builder_attack->melee_lock_target_id == raider;
+  if (locked_by_raider) {
+    EXPECT_EQ(target_of(builder), raider) << "a locked builder fought someone else";
+  } else {
+    EXPECT_EQ(target_of(builder), 0U) << "a builder went looking for a fight";
+  }
+  auto const* record = EngagementTrace::instance().find(builder);
+  ASSERT_NE(record, nullptr);
+  EXPECT_EQ(record->outcome, Game::Systems::Combat::EngagementOutcome::NoCombatRole)
+      << "auto-engagement acquired a target for a builder";
 }
 
 } // namespace

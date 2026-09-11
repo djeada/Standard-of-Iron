@@ -28,7 +28,6 @@ struct MovementTestAccess {
     m.route_opening_waypoint_index = opening_waypoint;
     m.route_reform_waypoint_index = reform_waypoint;
   }
-  static void set_stuck_time(MovementComponent& m, float v) { m.stuck_timer = v; }
 };
 
 } // namespace Engine::Core

@@ -667,13 +667,15 @@ void soldier_spatial_anchors_into(const Engine::Core::Entity& entity,
                                                  : nullptr;
   };
 
+  float const frame_sign =
+      traversal != nullptr && traversal->about_faced ? -1.0F : 1.0F;
   for (auto const& base : base_layout.live_slots) {
     SoldierSpatialAnchor anchor{
         .slot_index = base.index,
         .row = base.row,
         .col = base.col,
-        .local_x = base.local_x,
-        .local_z = base.local_z,
+        .local_x = frame_sign * base.local_x,
+        .local_z = frame_sign * base.local_z,
         .local_yaw = base.local_yaw,
         .source = SoldierAnchorSource::BaseLayout,
     };
@@ -716,6 +718,59 @@ auto soldier_spatial_anchors(const Engine::Core::Entity& entity,
 auto soldier_spatial_anchors(const Engine::Core::Entity& entity)
     -> std::vector<SoldierSpatialAnchor> {
   return soldier_spatial_anchors(entity, resolve_layout(entity));
+}
+
+auto face_about_in_place(Engine::Core::Entity& entity) -> bool {
+  auto* traversal =
+      entity.get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
+  auto* transform = entity.get_component<Engine::Core::TransformComponent>();
+  if (traversal == nullptr || transform == nullptr) {
+    return false;
+  }
+
+  transform->rotation.y += transform->rotation.y > 0.0F ? -180.0F : 180.0F;
+  traversal->about_faced = !traversal->about_faced;
+  for (auto& slot : traversal->slot_states) {
+    slot.start_local_x = -slot.start_local_x;
+    slot.start_local_z = -slot.start_local_z;
+    slot.previous_local_x = -slot.previous_local_x;
+    slot.previous_local_z = -slot.previous_local_z;
+    slot.current_local_x = -slot.current_local_x;
+    slot.current_local_z = -slot.current_local_z;
+    slot.target_local_x = -slot.target_local_x;
+    slot.target_local_z = -slot.target_local_z;
+    slot.velocity_x = -slot.velocity_x;
+    slot.velocity_z = -slot.velocity_z;
+  }
+  ++traversal->slot_states_revision;
+
+  if (auto* presentation =
+          entity.get_component<Engine::Core::FormationPresentationComponent>()) {
+    for (auto& soldier : presentation->soldiers) {
+      soldier.local_x = -soldier.local_x;
+      soldier.local_z = -soldier.local_z;
+      soldier.previous_local_x = -soldier.previous_local_x;
+      soldier.previous_local_z = -soldier.previous_local_z;
+      soldier.relocation_velocity_x = -soldier.relocation_velocity_x;
+      soldier.relocation_velocity_z = -soldier.relocation_velocity_z;
+      soldier.contact_offset_x = -soldier.contact_offset_x;
+      soldier.contact_offset_z = -soldier.contact_offset_z;
+    }
+    ++presentation->revision;
+  }
+
+  if (auto* casualties =
+          entity.get_component<Engine::Core::SoldierCasualtyAnimationComponent>()) {
+
+    for (auto& entry : casualties->entries) {
+      entry.local_x = -entry.local_x;
+      entry.local_z = -entry.local_z;
+      entry.local_yaw += 180.0F;
+      entry.launch_velocity_x = -entry.launch_velocity_x;
+      entry.launch_velocity_z = -entry.launch_velocity_z;
+    }
+  }
+  return true;
 }
 
 auto formation_turn_radius(const Engine::Core::Entity& entity) -> float {

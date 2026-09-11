@@ -8,6 +8,7 @@
 #include "../core/entity.h"
 #include "../formation/unit_layout.h"
 #include "../units/spawn_type.h"
+#include "../util/planar_math.h"
 
 namespace Game::Systems {
 
@@ -18,7 +19,7 @@ namespace {
 }
 
 [[nodiscard]] auto signed_angle_delta(float from_degrees, float to_degrees) -> float {
-  return std::fmod((to_degrees - from_degrees + 540.0F), 360.0F) - 180.0F;
+  return Game::Systems::signed_yaw_delta(from_degrees, to_degrees);
 }
 
 [[nodiscard]] auto troop_type_of(const Engine::Core::Entity& entity)

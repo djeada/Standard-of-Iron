@@ -5,12 +5,15 @@
 #include <cmath>
 #include <cstdio>
 #include <gtest/gtest.h>
+#include <ios>
 #include <limits>
 #include <memory>
 #include <numbers>
 #include <utility>
 #include <vector>
 
+#include "game/command/command.h"
+#include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/formation/traversal_layout_policy.h"
@@ -274,6 +277,107 @@ protected:
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory;
 };
 
+TEST_F(TightGapNavigationTest, AGangOrderedBehindItselfFacesAboutAndSetsOffAtOnce) {
+
+  open_field();
+  m_session->world().set_presentation_enabled(true);
+  const EntityID gang = spawn(Game::Units::SpawnType::Builder, world_of(20, 20), 0.0F);
+  ASSERT_NE(gang, 0U);
+  run_for(2.0);
+
+  auto* entity = m_session->world().get_entity(gang);
+  ASSERT_NE(entity, nullptr);
+  const float walk_speed = entity->get_component<UnitComponent>()->speed;
+  const auto soldiers = [&] {
+    std::vector<std::pair<std::uint16_t, QVector3D>> result;
+    for (const auto& anchor :
+         Game::Systems::FormationCombat::soldier_spatial_anchors(*entity)) {
+      result.emplace_back(anchor.slot_index,
+                          QVector3D(anchor.world_x, 0.0F, anchor.world_z));
+    }
+    return result;
+  };
+  ASSERT_GT(soldiers().size(), 4U);
+
+  const QVector3D start = position_of(gang);
+  const QVector3D behind = world_of(20, 8);
+  const auto plan =
+      CommandService::plan_ground_move(m_session->world(), {gang}, behind);
+  Game::Command::Move move;
+  move.units = {gang};
+  move.targets = plan.target_positions();
+  move.facing_angles = plan.facing_angles();
+  move.kind = Game::Systems::MoveOrderKind::PlayerMove;
+  move.preserve_formation_mode = plan.preserve_formation_mode;
+  Game::Command::submit(
+      m_session->world(), Game::Command::Source::LocalPlayer, k_owner, std::move(move));
+
+  const double step = m_session->clock().tick_seconds();
+  auto last = soldiers();
+  double set_off = -1.0;
+  float fastest_soldier = 0.0F;
+  for (double elapsed = step; elapsed <= 1.5 + 1e-6; elapsed += step) {
+    run_for(step);
+    if (set_off < 0.0 && (position_of(gang) - start).length() > 0.3F) {
+      set_off = elapsed;
+    }
+    const auto now = soldiers();
+    for (const auto& [slot, position] : now) {
+      for (const auto& [previous_slot, previous] : last) {
+        if (previous_slot == slot) {
+          fastest_soldier =
+              std::max(fastest_soldier,
+                       (position - previous).length() / static_cast<float>(step));
+        }
+      }
+    }
+    last = now;
+  }
+
+  EXPECT_GE(set_off, 0.0) << "the gang had not moved 0.3 m after 1.5 s";
+  EXPECT_LE(set_off, 0.4) << "the gang stood turning for " << set_off
+                          << " s before it walked away from its own back";
+  EXPECT_LE(fastest_soldier, walk_speed + 0.75F)
+      << "a builder was swept round the gang at " << fastest_soldier
+      << " m/s while it turned (walking pace " << walk_speed << " m/s)";
+}
+
+TEST_F(TightGapNavigationTest, AGangOrderedWellRoundItsShoulderSetsOffAtOnce) {
+
+  open_field();
+  m_session->world().set_presentation_enabled(true);
+  const EntityID gang = spawn(Game::Units::SpawnType::Builder, world_of(20, 20), 0.0F);
+  ASSERT_NE(gang, 0U);
+  run_for(2.0);
+
+  const QVector3D start = position_of(gang);
+  const float bearing = 125.0F * std::numbers::pi_v<float> / 180.0F;
+  const QVector3D destination =
+      start + QVector3D(std::sin(bearing), 0.0F, std::cos(bearing)) * 12.0F;
+  const auto plan =
+      CommandService::plan_ground_move(m_session->world(), {gang}, destination);
+  Game::Command::Move move;
+  move.units = {gang};
+  move.targets = plan.target_positions();
+  move.facing_angles = plan.facing_angles();
+  move.kind = Game::Systems::MoveOrderKind::PlayerMove;
+  move.preserve_formation_mode = plan.preserve_formation_mode;
+  Game::Command::submit(
+      m_session->world(), Game::Command::Source::LocalPlayer, k_owner, std::move(move));
+
+  const double step = m_session->clock().tick_seconds();
+  double set_off = -1.0;
+  for (double elapsed = step; elapsed <= 1.5 + 1e-6 && set_off < 0.0; elapsed += step) {
+    run_for(step);
+    if ((position_of(gang) - start).length() > 0.3F) {
+      set_off = elapsed;
+    }
+  }
+  EXPECT_GE(set_off, 0.0) << "the gang had not moved 0.3 m after 1.5 s";
+  EXPECT_LE(set_off, 0.4) << "the gang stood turning for " << set_off
+                          << " s before it walked off round its shoulder";
+}
+
 TEST_F(TightGapNavigationTest, RouteTakesTheMiddleOfAWideCorridor) {
   open_field(k_bare_field);
   constexpr int k_corridor_z = 15;
@@ -471,6 +575,172 @@ TEST_F(TightGapNavigationTest, EveryUnitFitsThroughTheSameOneCellGap) {
   }
 }
 
+TEST_F(TightGapNavigationTest, ASoldierSweptIntoCoverWalksOutInsteadOfPopping) {
+
+  open_field();
+  constexpr int k_gap_z = 24;
+  wall_off_column(24, k_gap_z);
+
+  const EntityID id = spawn(Game::Units::SpawnType::Spearman, world_of(14, k_gap_z));
+  ASSERT_NE(id, 0U);
+  auto* entity = m_session->world().get_entity(id);
+  ASSERT_NE(entity, nullptr);
+  CommandService::move_unit(m_session->world(), id, world_of(34, k_gap_z));
+
+  const double step = m_session->clock().tick_seconds();
+  constexpr float k_recovery_pace = 4.5F;
+  float worst_step = 0.0F;
+  float closest_pair = std::numeric_limits<float>::infinity();
+  int slot_samples = 0;
+  for (double elapsed = 0.0; elapsed < 30.0; elapsed += step) {
+    run_for(step);
+    auto const* traversal =
+        entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
+    if (traversal == nullptr) {
+      continue;
+    }
+    for (std::size_t left = 0; left < traversal->slot_states.size(); ++left) {
+      auto const& slot = traversal->slot_states[left];
+      if (!slot.alive) {
+        continue;
+      }
+      ++slot_samples;
+      worst_step = std::max(worst_step,
+                            std::hypot(slot.current_local_x - slot.previous_local_x,
+                                       slot.current_local_z - slot.previous_local_z));
+      for (std::size_t right = left + 1; right < traversal->slot_states.size();
+           ++right) {
+        auto const& other = traversal->slot_states[right];
+        if (!other.alive) {
+          continue;
+        }
+        closest_pair =
+            std::min(closest_pair,
+                     std::hypot(slot.current_local_x - other.current_local_x,
+                                slot.current_local_z - other.current_local_z));
+      }
+    }
+  }
+  ASSERT_GT(slot_samples, 0);
+  EXPECT_GT(closest_pair, 0.2F)
+      << "two soldiers were stacked " << closest_pair
+      << " m apart: slots swept into cover collapsed onto the root";
+  EXPECT_LE(worst_step, k_recovery_pace * static_cast<float>(step) + 0.01F)
+      << "a soldier's slot moved " << worst_step << " m in one tick";
+  EXPECT_GT(position_of(id).x(), world_of(30, k_gap_z).x())
+      << "the block never made it through the gap, so the bound proves little";
+}
+
+TEST_F(TightGapNavigationTest, TwoBodiesConvergingOnOneGapDoNotWaitForEachOther) {
+
+  open_field();
+  constexpr int k_gap_z = 24;
+  wall_off_column(24, k_gap_z);
+
+  const EntityID north =
+      spawn(Game::Units::SpawnType::Spearman, world_of(21, k_gap_z + 2));
+  const EntityID south =
+      spawn(Game::Units::SpawnType::Spearman, world_of(21, k_gap_z - 2));
+  ASSERT_NE(north, 0U);
+  ASSERT_NE(south, 0U);
+  std::vector<EntityID> const pair{north, south};
+  std::vector<QVector3D> const targets(2, world_of(34, k_gap_z));
+  CommandService::move_units(m_session->world(), pair, targets);
+  run_for(30.0);
+
+  for (auto const id : pair) {
+    EXPECT_GT(position_of(id).x(), world_of(28, k_gap_z).x())
+        << "unit " << id << " never got through the gap it shared";
+  }
+}
+
+TEST_F(TightGapNavigationTest, AQueueAtAGapWaitsItsTurnInsteadOfReplanning) {
+
+  open_field();
+  constexpr int k_gap_z = 24;
+  wall_off_column(24, k_gap_z);
+
+  std::vector<EntityID> army;
+  for (int i = 0; i < 20; ++i) {
+    const EntityID id = spawn(Game::Units::SpawnType::Spearman,
+                              world_of(10 + (i / 9), k_gap_z - 4 + (i % 9)));
+    ASSERT_NE(id, 0U);
+    army.push_back(id);
+  }
+  std::vector<QVector3D> const targets(army.size(), world_of(36, k_gap_z));
+  CommandService::move_units(m_session->world(), army, targets);
+
+  std::map<EntityID, std::uint32_t> most_repaths;
+  std::map<EntityID, double> queued_seconds;
+  const double step = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 90.0; elapsed += step) {
+    run_for(step);
+    for (auto const id : army) {
+      auto* entity = m_session->world().get_entity(id);
+      auto const* facts =
+          entity != nullptr
+              ? entity->get_component<Engine::Core::MovementFactsComponent>()
+              : nullptr;
+      if (facts == nullptr) {
+        continue;
+      }
+      most_repaths[id] = std::max(most_repaths[id], facts->progress.repath_count);
+      if (facts->progress.state == Engine::Core::MovementOrderState::Yielding) {
+        queued_seconds[id] += step;
+      }
+    }
+  }
+
+  double longest_queue = 0.0;
+  for (auto const id : army) {
+    longest_queue = std::max(longest_queue, queued_seconds[id]);
+    EXPECT_LE(most_repaths[id], 1U)
+        << "unit " << id << " replanned " << most_repaths[id] << " times after "
+        << queued_seconds[id] << " s queued at the gap";
+    EXPECT_GT(position_of(id).x(), world_of(28, k_gap_z).x())
+        << "unit " << id << " never got through the gap";
+  }
+  EXPECT_GT(longest_queue, 2.0) << "no queue formed; the test is not testing a queue";
+}
+
+TEST_F(TightGapNavigationTest, AnIdleBodyDoesNotKeepAnOverlapItNoLongerHas) {
+
+  open_field();
+  const EntityID standing = spawn(Game::Units::SpawnType::Spearman, world_of(20, 24));
+  const EntityID mover = spawn(Game::Units::SpawnType::Spearman, world_of(20, 24));
+  ASSERT_NE(standing, 0U);
+  ASSERT_NE(mover, 0U);
+  CommandService::move_unit(m_session->world(), mover, world_of(40, 24));
+
+  auto const* facts = m_session->world()
+                          .get_entity(standing)
+                          ->get_component<Engine::Core::MovementFactsComponent>();
+  float deepest = 0.0F;
+  const double step = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 1.0; elapsed += step) {
+    run_for(step);
+    facts = m_session->world()
+                .get_entity(standing)
+                ->get_component<Engine::Core::MovementFactsComponent>();
+    if (facts != nullptr) {
+      deepest = std::max(deepest, facts->steering.body_overlap);
+    }
+  }
+  ASSERT_GT(deepest, 0.0F)
+      << "the two units never touched; the test is not testing contact";
+
+  run_for(8.0);
+  ASSERT_GT(position_of(mover).x() - position_of(standing).x(), 6.0F)
+      << "the mover never left";
+  facts = m_session->world()
+              .get_entity(standing)
+              ->get_component<Engine::Core::MovementFactsComponent>();
+  ASSERT_NE(facts, nullptr);
+  EXPECT_EQ(facts->steering.body_overlap, 0.0F)
+      << "the standing unit still reports the overlap of a unit " << std::fixed
+      << position_of(mover).x() - position_of(standing).x() << " m away";
+}
+
 TEST_F(TightGapNavigationTest, AnArmyFunnelsThroughAOneCellGap) {
   open_field();
   constexpr int k_gap_z = 24;
@@ -510,6 +780,7 @@ TEST_F(TightGapNavigationTest, NarrowLayoutChangesPresentationButNotCombatLayout
   bool squeezed = false;
   bool traversal_was_active = false;
   bool observed_predictive_root_hold = false;
+  bool root_stood_still_while_holding = false;
   int traversal_enters = 0;
   int traversal_exits = 0;
   std::uint32_t active_portal = 0U;
@@ -568,10 +839,15 @@ TEST_F(TightGapNavigationTest, NarrowLayoutChangesPresentationButNotCombatLayout
         expected_progress = 1.0F;
       }
       EXPECT_NEAR(traversal->transition_progress, expected_progress, 0.0001F);
-      observed_predictive_root_hold =
-          observed_predictive_root_hold ||
-          (traversal->root_motion_blocked &&
-           std::hypot(facts->motor.accepted_vx, facts->motor.accepted_vz) < 0.001F);
+      if (traversal->root_motion_blocked &&
+          facts->progress.state != Engine::Core::MovementOrderState::Arrived) {
+        observed_predictive_root_hold = true;
+
+        if (std::hypot(facts->motor.accepted_vx, facts->motor.accepted_vz) < 0.001F &&
+            facts->motor.valid && !facts->motor.blocked) {
+          root_stood_still_while_holding = true;
+        }
+      }
     }
     if (traversal == nullptr || presentation == nullptr || !traversal->active) {
       continue;
@@ -725,6 +1001,8 @@ TEST_F(TightGapNavigationTest, NarrowLayoutChangesPresentationButNotCombatLayout
       << "soldiers scraped the gate jamb for longer than it takes to file through";
   EXPECT_TRUE(observed_predictive_root_hold)
       << "the block walked into the gate mouth instead of forming up first";
+  EXPECT_FALSE(root_stood_still_while_holding)
+      << "the block stood still in front of the gap while it folded";
   auto const* final_traversal =
       entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   ASSERT_NE(final_traversal, nullptr);
@@ -1014,6 +1292,78 @@ TEST_F(TightGapNavigationTest, SiegeBodyTurnsAtABoundedRateBeforeFullSpeed) {
   EXPECT_GT(transform->position.x, start.x() + 0.5F);
 }
 
+TEST_F(TightGapNavigationTest, BlocksMarchingShoulderToShoulderHoldTheirHeading) {
+
+  open_field();
+  const EntityID north =
+      spawn(Game::Units::SpawnType::Spearman, world_of(8, 25), 90.0F);
+  const EntityID south =
+      spawn(Game::Units::SpawnType::Spearman, world_of(8, 24), 90.0F);
+  ASSERT_NE(north, 0U);
+  ASSERT_NE(south, 0U);
+  CommandService::move_unit(m_session->world(), north, world_of(40, 25));
+  CommandService::move_unit(m_session->world(), south, world_of(40, 24));
+
+  auto* north_transform =
+      m_session->world().get_entity(north)->get_component<TransformComponent>();
+  auto* south_transform =
+      m_session->world().get_entity(south)->get_component<TransformComponent>();
+  ASSERT_NE(north_transform, nullptr);
+  ASSERT_NE(south_transform, nullptr);
+
+  const double step = m_session->clock().tick_seconds();
+  run_for(1.5);
+  float north_previous = north_transform->rotation.y;
+  float south_previous = south_transform->rotation.y;
+  int flicker_ticks = 0;
+  int ticks = 0;
+  for (double elapsed = 0.0; elapsed < 6.0; elapsed += step) {
+    run_for(step);
+    for (auto [transform, previous] : {std::pair{north_transform, &north_previous},
+                                       std::pair{south_transform, &south_previous}}) {
+      float const turned = std::fabs(
+          std::fmod(transform->rotation.y - *previous + 540.0F, 360.0F) - 180.0F);
+      if (turned > 1.5F) {
+        ++flicker_ticks;
+      }
+      *previous = transform->rotation.y;
+      ++ticks;
+    }
+  }
+  EXPECT_LE(flicker_ticks, ticks / 50)
+      << flicker_ticks << " of " << ticks
+      << " ticks turned a marching block by more than 1.5 degrees on a straight road";
+  EXPECT_GT(position_of(north).x(), world_of(20, 25).x()) << "the blocks never marched";
+}
+
+TEST_F(TightGapNavigationTest, AReversedBlockWheelsFastAndStepsOffAtOnce) {
+
+  open_field();
+  const QVector3D start = world_of(24, 24);
+  const EntityID id = spawn(Game::Units::SpawnType::Spearman, start);
+  auto* entity = m_session->world().get_entity(id);
+  ASSERT_NE(entity, nullptr);
+  auto* transform = entity->get_component<TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  const float initial_yaw = transform->rotation.y;
+  ASSERT_NEAR(initial_yaw, 0.0F, 0.5F);
+
+  CommandService::move_unit(m_session->world(), id, world_of(24, 6));
+
+  run_for(1.0);
+  float const turned = std::fabs(
+      std::fmod(transform->rotation.y - initial_yaw + 540.0F, 360.0F) - 180.0F);
+  EXPECT_GE(turned, 150.0F) << "one second after a reversal the block had wheeled only "
+                            << turned << " degrees";
+  float const early_travel =
+      std::hypot(transform->position.x - start.x(), transform->position.z - start.z());
+  EXPECT_GT(early_travel, 0.1F) << "a second after a reversal the block had not moved";
+
+  run_for(3.0);
+  EXPECT_LT(transform->position.z, start.z() - 3.0F)
+      << "four seconds after a reversal the block was still not on its way back";
+}
+
 TEST_F(TightGapNavigationTest, AnArmyCrossesARiverOnTheBridgeDeck) {
   Game::Map::MapDefinition map;
   map.grid.width = k_map;
@@ -1154,8 +1504,22 @@ TEST_F(TightGapNavigationTest, AnArmyClimbsAHillThroughItsEntrance) {
                           [](bool used) { return used; }))
       << "not every unit traversed the hill entrance independently";
   for (std::size_t index = 0; index < army.size(); ++index) {
+    auto const* facts =
+        m_session->world().try_get<Engine::Core::MovementFactsComponent>(army[index]);
+    auto const* movement =
+        m_session->world().try_get<Engine::Core::MovementComponent>(army[index]);
     EXPECT_LE(closest_entrance_distance[index], 0.25F)
-        << "unit " << index << " never crossed the hill entrance throat";
+        << "unit " << index << " never crossed the hill entrance throat; ended at ("
+        << position_of(army[index]).x() << ", " << position_of(army[index]).z()
+        << ") state "
+        << (facts != nullptr ? Engine::Core::movement_state_name(facts->progress.state)
+                             : "?")
+        << " rung "
+        << (facts != nullptr ? static_cast<int>(facts->progress.stall.rung) : -1)
+        << " steer "
+        << (facts != nullptr ? static_cast<int>(facts->steering.result) : -1)
+        << " overlap " << (facts != nullptr ? facts->steering.body_overlap : -1.0F)
+        << " target " << (movement != nullptr && movement->get_has_target());
     EXPECT_LE(entrance_offset[index], 0.75F)
         << "unit " << index << " drifted off the hill entrance centerline";
   }
