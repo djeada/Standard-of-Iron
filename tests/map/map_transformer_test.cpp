@@ -42,15 +42,10 @@ protected:
     Game::Units::register_built_in_units(*registry);
     Game::Map::MapTransformer::setFactoryRegistry(std::move(registry));
     Game::Map::MapTransformer::set_local_owner_id(1);
-    Game::Map::MapTransformer::clear_player_team_overrides();
-    Game::Map::MapTransformer::clear_base_assignments();
   }
 
   void TearDown() override {
     Game::Map::MapTransformer::setFactoryRegistry(nullptr);
-    Game::Map::MapTransformer::set_spectator_mode(false);
-    Game::Map::MapTransformer::clear_player_team_overrides();
-    Game::Map::MapTransformer::clear_base_assignments();
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Systems::OwnerRegistry::instance().clear();
     Game::Systems::NationRegistry::instance().clear();
@@ -135,12 +130,13 @@ auto barracks_owner_at(Engine::Core::World& world,
 
 TEST_F(MapTransformerStructureTest, SeatsAPlayerAtTheBaseTheSetupScreenPicked) {
   Engine::Core::World world;
-  Game::Map::MapTransformer::setPlayerTeamOverrides({{1, 0}, {2, 1}});
-  Game::Map::MapTransformer::set_base_assignments(
-      {{1, QStringLiteral("north_toll_barracks")}, {2, QStringLiteral("p2_barracks")}});
+  const Game::Map::MapTransformOptions options{
+      .player_team_overrides = {{1, 0}, {2, 1}},
+      .base_assignments = {{1, QStringLiteral("north_toll_barracks")},
+                           {2, QStringLiteral("p2_barracks")}}};
 
   auto def = contested_outpost_map();
-  Game::Map::MapTransformer::apply_to_world(def, world);
+  Game::Map::MapTransformer::apply_to_world(def, world, options);
 
   EXPECT_EQ(barracks_owner_at(world,
                               runtime_world_from_grid(12, def.grid.width),
@@ -161,12 +157,13 @@ TEST_F(MapTransformerStructureTest, SeatsAPlayerAtTheBaseTheSetupScreenPicked) {
 
 TEST_F(MapTransformerStructureTest, ReseatedPlayersStartingTroopsFollowTheirBase) {
   Engine::Core::World world;
-  Game::Map::MapTransformer::setPlayerTeamOverrides({{1, 0}, {2, 1}});
-  Game::Map::MapTransformer::set_base_assignments(
-      {{1, QStringLiteral("north_toll_barracks")}, {2, QStringLiteral("p2_barracks")}});
+  const Game::Map::MapTransformOptions options{
+      .player_team_overrides = {{1, 0}, {2, 1}},
+      .base_assignments = {{1, QStringLiteral("north_toll_barracks")},
+                           {2, QStringLiteral("p2_barracks")}}};
 
   auto def = contested_outpost_map();
-  Game::Map::MapTransformer::apply_to_world(def, world);
+  Game::Map::MapTransformer::apply_to_world(def, world, options);
 
   const Engine::Core::TransformComponent* moved = nullptr;
   const Engine::Core::TransformComponent* stayed = nullptr;
@@ -190,12 +187,13 @@ TEST_F(MapTransformerStructureTest, ReseatedPlayersStartingTroopsFollowTheirBase
 
 TEST_F(MapTransformerStructureTest, AClaimedOutpostGetsAStartingBasesTroopCap) {
   Engine::Core::World world;
-  Game::Map::MapTransformer::setPlayerTeamOverrides({{1, 0}, {2, 1}});
-  Game::Map::MapTransformer::set_base_assignments(
-      {{1, QStringLiteral("north_toll_barracks")}, {2, QStringLiteral("p2_barracks")}});
+  const Game::Map::MapTransformOptions options{
+      .player_team_overrides = {{1, 0}, {2, 1}},
+      .base_assignments = {{1, QStringLiteral("north_toll_barracks")},
+                           {2, QStringLiteral("p2_barracks")}}};
 
   auto def = contested_outpost_map();
-  Game::Map::MapTransformer::apply_to_world(def, world);
+  Game::Map::MapTransformer::apply_to_world(def, world, options);
 
   const Engine::Core::ProductionComponent* claimed = nullptr;
   for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
@@ -214,10 +212,11 @@ TEST_F(MapTransformerStructureTest, AClaimedOutpostGetsAStartingBasesTroopCap) {
 
 TEST_F(MapTransformerStructureTest, WithoutAnAssignmentTheMapKeepsItsAuthoredSeating) {
   Engine::Core::World world;
-  Game::Map::MapTransformer::setPlayerTeamOverrides({{1, 0}, {2, 1}});
+  const Game::Map::MapTransformOptions options{
+      .player_team_overrides = {{1, 0}, {2, 1}}};
 
   auto def = contested_outpost_map();
-  Game::Map::MapTransformer::apply_to_world(def, world);
+  Game::Map::MapTransformer::apply_to_world(def, world, options);
 
   EXPECT_EQ(barracks_owner_at(world,
                               runtime_world_from_grid(4, def.grid.width),
@@ -235,12 +234,12 @@ TEST_F(MapTransformerStructureTest, WithoutAnAssignmentTheMapKeepsItsAuthoredSea
 
 TEST_F(MapTransformerStructureTest, AnUnknownBaseKeyLeavesTheAuthoredSeatingAlone) {
   Engine::Core::World world;
-  Game::Map::MapTransformer::setPlayerTeamOverrides({{1, 0}, {2, 1}});
-  Game::Map::MapTransformer::set_base_assignments(
-      {{1, QStringLiteral("a_base_this_map_does_not_have")}});
+  const Game::Map::MapTransformOptions options{
+      .player_team_overrides = {{1, 0}, {2, 1}},
+      .base_assignments = {{1, QStringLiteral("a_base_this_map_does_not_have")}}};
 
   auto def = contested_outpost_map();
-  Game::Map::MapTransformer::apply_to_world(def, world);
+  Game::Map::MapTransformer::apply_to_world(def, world, options);
 
   EXPECT_EQ(barracks_owner_at(world,
                               runtime_world_from_grid(4, def.grid.width),
@@ -250,28 +249,38 @@ TEST_F(MapTransformerStructureTest, AnUnknownBaseKeyLeavesTheAuthoredSeatingAlon
 }
 
 TEST_F(MapTransformerStructureTest, BaseAssignmentsDoNotLeakIntoTheNextMatch) {
-  Game::Map::MapTransformer::set_base_assignments(
-      {{1, QStringLiteral("north_toll_barracks")}});
-  Game::Map::MapTransformer::clear_base_assignments();
+  auto def = contested_outpost_map();
+
+  {
+    Engine::Core::World seated;
+    Game::Map::MapTransformer::apply_to_world(
+        def,
+        seated,
+        {.player_team_overrides = {{1, 0}, {2, 1}},
+         .base_assignments = {{1, QStringLiteral("north_toll_barracks")}}});
+    ASSERT_EQ(barracks_owner_at(seated,
+                                runtime_world_from_grid(12, def.grid.width),
+                                runtime_world_from_grid(2, def.grid.height)),
+              1);
+  }
 
   Engine::Core::World world;
-  Game::Map::MapTransformer::setPlayerTeamOverrides({{1, 0}, {2, 1}});
-  auto def = contested_outpost_map();
-  Game::Map::MapTransformer::apply_to_world(def, world);
+  Game::Map::MapTransformer::apply_to_world(
+      def, world, {.player_team_overrides = {{1, 0}, {2, 1}}});
 
   EXPECT_EQ(barracks_owner_at(world,
                               runtime_world_from_grid(4, def.grid.width),
                               runtime_world_from_grid(4, def.grid.height)),
-            1);
+            1)
+      << "the previous match's seating followed the player into the next one";
 }
 
 TEST_F(MapTransformerStructureTest, AnObservedMatchPutsEverySlotUnderAiControl) {
   Engine::Core::World world;
   Game::Map::MapTransformer::set_local_owner_id(1);
-  Game::Map::MapTransformer::set_spectator_mode(true);
 
   auto def = two_camp_map();
-  Game::Map::MapTransformer::apply_to_world(def, world);
+  Game::Map::MapTransformer::apply_to_world(def, world, {.spectator_mode = true});
 
   auto& owners = Game::Systems::OwnerRegistry::instance();
   EXPECT_TRUE(owners.is_ai(1)) << "the followed slot was left without an AI";
@@ -283,10 +292,9 @@ TEST_F(MapTransformerStructureTest, AnObservedMatchPutsEverySlotUnderAiControl) 
 TEST_F(MapTransformerStructureTest, APlayedMatchStillSeatsTheLocalPlayer) {
   Engine::Core::World world;
   Game::Map::MapTransformer::set_local_owner_id(1);
-  Game::Map::MapTransformer::set_spectator_mode(false);
 
   auto def = two_camp_map();
-  Game::Map::MapTransformer::apply_to_world(def, world);
+  Game::Map::MapTransformer::apply_to_world(def, world, {.spectator_mode = false});
 
   auto& owners = Game::Systems::OwnerRegistry::instance();
   EXPECT_TRUE(owners.is_player(1));
@@ -294,11 +302,23 @@ TEST_F(MapTransformerStructureTest, APlayedMatchStillSeatsTheLocalPlayer) {
 }
 
 TEST_F(MapTransformerStructureTest, SpectatorModeDoesNotLeakIntoTheNextMatch) {
-  Game::Map::MapTransformer::set_spectator_mode(true);
-  ASSERT_TRUE(Game::Map::MapTransformer::spectator_mode());
+  Game::Map::MapTransformer::set_local_owner_id(1);
+  auto def = two_camp_map();
 
-  Game::Map::MapTransformer::set_spectator_mode(false);
-  EXPECT_FALSE(Game::Map::MapTransformer::spectator_mode())
+  {
+    Engine::Core::World watched;
+    Game::Map::MapTransformer::apply_to_world(def, watched, {.spectator_mode = true});
+    ASSERT_TRUE(
+        Game::Systems::OwnerRegistry::instance().get_player_owner_ids().empty());
+  }
+
+  Game::Systems::OwnerRegistry::instance().clear();
+  Game::Map::MapTransformer::set_local_owner_id(1);
+
+  Engine::Core::World world;
+  Game::Map::MapTransformer::apply_to_world(def, world);
+
+  EXPECT_TRUE(Game::Systems::OwnerRegistry::instance().is_player(1))
       << "a watched match would turn the next player into a bot";
 }
 

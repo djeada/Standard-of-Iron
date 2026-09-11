@@ -1,10 +1,12 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 namespace Engine::Core {
+class EventManager;
 class World;
-}
+} // namespace Engine::Core
 
 namespace Game::Map {
 class TerrainService;
@@ -26,6 +28,14 @@ namespace Game::Formation {
 class ArmyFormationRegistry;
 }
 
+namespace Game::Units {
+class UnitFactoryRegistry;
+}
+
+namespace Game::Wildlife {
+class BirdFlockManager;
+}
+
 namespace Game::Command {
 class CommandQueue;
 }
@@ -39,6 +49,7 @@ class SimulationClock;
 struct AmbientServices {
   SessionContext* session = nullptr;
   Engine::Core::World* world = nullptr;
+  Engine::Core::EventManager* events = nullptr;
   Game::Map::TerrainService* terrain = nullptr;
   Game::Map::VisibilityService* visibility = nullptr;
   Game::Systems::OwnerRegistry* owners = nullptr;
@@ -50,6 +61,8 @@ struct AmbientServices {
   Game::Systems::MarketplaceSystem* marketplace = nullptr;
   Game::Systems::NavigationService* navigation = nullptr;
   Game::Formation::ArmyFormationRegistry* army_formations = nullptr;
+  std::shared_ptr<Game::Units::UnitFactoryRegistry>* units = nullptr;
+  Game::Wildlife::BirdFlockManager* birds = nullptr;
   SimulationClock* clock = nullptr;
   DeterministicRng* rng = nullptr;
   Game::Command::CommandQueue* commands = nullptr;
@@ -69,6 +82,10 @@ void bind_world_services(const Engine::Core::World& world,
 void unbind_world_services(const Engine::Core::World& world);
 
 [[nodiscard]] auto unbound_world_lookups() -> std::uint64_t;
+
+[[nodiscard]] auto strict_world_binding() -> bool;
+
+void set_strict_world_binding(bool strict);
 
 void reset_unbound_world_lookups();
 

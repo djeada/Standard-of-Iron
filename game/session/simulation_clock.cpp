@@ -47,8 +47,9 @@ auto SimulationClock::advance(double real_delta_seconds) -> int {
   }
   m_accumulator += clamped * m_time_scale;
 
-  m_pending_ticks = static_cast<int>(m_accumulator / m_tick_seconds);
-  m_accumulator -= static_cast<double>(m_pending_ticks) * m_tick_seconds;
+  const int fresh = static_cast<int>(m_accumulator / m_tick_seconds);
+  m_accumulator -= static_cast<double>(fresh) * m_tick_seconds;
+  m_pending_ticks += fresh;
   return m_pending_ticks;
 }
 

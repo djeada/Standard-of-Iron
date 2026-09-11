@@ -1,11 +1,13 @@
 #include "ambient_session.h"
 
 #include <atomic>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <mutex>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace Game::Session {
 
@@ -22,6 +24,21 @@ std::atomic<std::uint64_t> g_unbound_world_lookups{0};
 auto strict_world_binding_requested() -> bool {
   const char* value = std::getenv("SOI_STRICT_WORLD_BINDING");
   return value != nullptr && value[0] != '\0' && value[0] != '0';
+}
+
+std::atomic<bool> g_strict_world_binding{strict_world_binding_requested()};
+
+std::mutex g_reported_worlds_mutex;
+std::unordered_set<const Engine::Core::World*> g_reported_worlds;
+
+constexpr std::size_t k_max_reported_worlds = 256;
+
+auto first_report_for(const Engine::Core::World& world) -> bool {
+  const std::lock_guard<std::mutex> lock(g_reported_worlds_mutex);
+  if (g_reported_worlds.size() >= k_max_reported_worlds) {
+    g_reported_worlds.clear();
+  }
+  return g_reported_worlds.insert(&world).second;
 }
 
 std::atomic<const Engine::Core::World*> g_solo_world{nullptr};
@@ -70,23 +87,30 @@ auto services_for(const Engine::Core::World& world) -> const AmbientServices& {
   }
 
   g_unbound_world_lookups.fetch_add(1, std::memory_order_relaxed);
-  static const bool strict = strict_world_binding_requested();
-  if (strict) {
+  if (g_strict_world_binding.load(std::memory_order_relaxed)) {
     std::fputs("A world with no bound session was asked for per-match services "
-               "while SOI_STRICT_WORLD_BINDING is set. The world was created "
-               "outside a SessionContext, so the services below belong to a "
+               "while strict world binding is on. The world was created outside "
+               "a SessionContext, so the services it would be handed belong to a "
                "different match.\n",
                stderr);
     std::abort();
   }
-  static std::once_flag warned;
-  std::call_once(warned, []() {
-    std::fputs("A world with no bound session was asked for per-match services; "
-               "falling back to the ambient session. Set "
-               "SOI_STRICT_WORLD_BINDING=1 to make this fatal.\n",
-               stderr);
-  });
+  if (first_report_for(world)) {
+    std::fprintf(stderr,
+                 "A world with no bound session (%p) was asked for per-match "
+                 "services; falling back to the ambient session. Set "
+                 "SOI_STRICT_WORLD_BINDING=1 to make this fatal.\n",
+                 static_cast<const void*>(&world));
+  }
   return ambient_services();
+}
+
+auto strict_world_binding() -> bool {
+  return g_strict_world_binding.load(std::memory_order_relaxed);
+}
+
+void set_strict_world_binding(bool strict) {
+  g_strict_world_binding.store(strict, std::memory_order_relaxed);
 }
 
 auto unbound_world_lookups() -> std::uint64_t {
@@ -95,6 +119,8 @@ auto unbound_world_lookups() -> std::uint64_t {
 
 void reset_unbound_world_lookups() {
   g_unbound_world_lookups.store(0, std::memory_order_relaxed);
+  const std::lock_guard<std::mutex> lock(g_reported_worlds_mutex);
+  g_reported_worlds.clear();
 }
 
 auto ambient_services_or_null() -> const AmbientServices* {

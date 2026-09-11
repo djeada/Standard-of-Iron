@@ -131,6 +131,7 @@
 #include "game/render_bridge/minimap/unit_layer.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/render_bridge/selection_controller.h"
+#include "game/session/session_snapshot.h"
 #include "game/session/simulation_clock.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_strategy.h"
@@ -255,6 +256,7 @@ GameEngine::GameEngine(QObject* parent)
 }
 
 GameEngine::~GameEngine() {
+  Game::Session::SessionSnapshot::forget_contributor("victory");
   stop_simulation_thread();
 
   m_autosave_timer.stop();
@@ -2121,7 +2123,7 @@ void GameEngine::restore_mission_waves(const QJsonObject& wave_state) {
   publish_wave_status();
 }
 
-auto GameEngine::mission_wave_binding() -> App::Mission::MissionWaveBinding {
+auto GameEngine::mission_wave_binding() -> Game::Mission::MissionWaveBinding {
   return {.world = m_world,
           .level = &m_level,
           .campaign = m_campaign_manager.get(),
@@ -2592,9 +2594,7 @@ void GameEngine::apply_skirmish_commander_setup(const QVariantList& player_confi
 }
 
 void GameEngine::open_settings() {
-  if (m_save_load_service != nullptr) {
-    Game::Systems::SaveLoadService::open_settings();
-  }
+  qInfo() << "Open settings requested";
 }
 
 void GameEngine::connect_save_service_signals() {
@@ -3291,9 +3291,8 @@ void GameEngine::on_frame_image_captured(const QImage& image) {
 }
 
 void GameEngine::exit_game() {
-  if (m_save_load_service != nullptr) {
-    Game::Systems::SaveLoadService::exit_game();
-  }
+  qInfo() << "Exit game requested";
+  QCoreApplication::quit();
 }
 
 auto GameEngine::get_owner_info() const -> QVariantList {

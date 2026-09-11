@@ -3,6 +3,7 @@
 #include "../command/command_queue.h"
 #include "../command/replay.h"
 #include "../core/ambient_session.h"
+#include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../formation/army_formation_registry.h"
 #include "../map/terrain_service.h"
@@ -15,6 +16,7 @@
 #include "../systems/owner_registry.h"
 #include "../systems/player_resource_registry.h"
 #include "../systems/troop_count_registry.h"
+#include "../wildlife/bird_flock.h"
 #include "deterministic_rng.h"
 #include "simulation_clock.h"
 
@@ -30,6 +32,7 @@ struct SessionContext::State {
   DeterministicRng rng;
   std::uint64_t seed;
 
+  Engine::Core::EventManager events;
   Engine::Core::World world;
   Game::Map::TerrainService terrain;
   Game::Systems::OwnerRegistry owners;
@@ -41,6 +44,8 @@ struct SessionContext::State {
   Game::Systems::MarketplaceSystem marketplace;
   Game::Systems::NavigationService navigation;
   Game::Formation::ArmyFormationRegistry army_formations;
+  std::shared_ptr<Game::Units::UnitFactoryRegistry> units;
+  Game::Wildlife::BirdFlockManager birds;
   Game::Map::VisibilityService visibility;
   Game::Command::CommandQueue commands;
   std::unique_ptr<Game::Command::ReplayPlayer> replay_player;
@@ -58,6 +63,7 @@ SessionContext::SessionContext(const Config& config)
   auto& services = m_state->services;
   services.session = this;
   services.world = &m_state->world;
+  services.events = &m_state->events;
   services.terrain = &m_state->terrain;
   services.visibility = &m_state->visibility;
   services.owners = &m_state->owners;
@@ -69,6 +75,8 @@ SessionContext::SessionContext(const Config& config)
   services.marketplace = &m_state->marketplace;
   services.navigation = &m_state->navigation;
   services.army_formations = &m_state->army_formations;
+  services.units = &m_state->units;
+  services.birds = &m_state->birds;
   services.clock = &m_state->clock;
   services.rng = &m_state->rng;
   services.commands = &m_state->commands;
@@ -85,6 +93,20 @@ auto SessionContext::army_formations() -> Game::Formation::ArmyFormationRegistry
   return m_state->army_formations;
 }
 
+auto SessionContext::birds() const -> const Game::Wildlife::BirdFlockManager& {
+  return m_state->birds;
+}
+
+auto SessionContext::units() const
+    -> const std::shared_ptr<Game::Units::UnitFactoryRegistry>& {
+  return m_state->units;
+}
+
+void SessionContext::set_units(
+    std::shared_ptr<Game::Units::UnitFactoryRegistry> units) {
+  m_state->units = std::move(units);
+}
+
 auto SessionContext::navigation() -> Game::Systems::NavigationService& {
   return m_state->navigation;
 }
@@ -95,6 +117,10 @@ auto SessionContext::navigation() const -> const Game::Systems::NavigationServic
 
 auto SessionContext::world() -> Engine::Core::World& {
   return m_state->world;
+}
+
+auto SessionContext::events() -> Engine::Core::EventManager& {
+  return m_state->events;
 }
 
 auto SessionContext::world() const -> const Engine::Core::World& {
@@ -198,6 +224,7 @@ auto SessionContext::rng_seed() const -> std::uint64_t {
 
 auto SessionContext::advance(double real_dt,
                              int max_steps,
+                             OverloadPolicy overload,
                              const TickFn& per_tick) -> int {
   auto& clock = m_state->clock;
   clock.advance(real_dt);
@@ -210,7 +237,9 @@ auto SessionContext::advance(double real_dt,
     }
     ++steps;
   }
-  clock.drop_pending_ticks();
+  if (overload == OverloadPolicy::DiscardBacklog) {
+    clock.drop_pending_ticks();
+  }
   return steps;
 }
 

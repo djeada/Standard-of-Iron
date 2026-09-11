@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "app/orders/command_controller.h"
+#include "game/command/command_queue.h"
 #include "game/core/component_economy.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
@@ -102,6 +103,7 @@ protected:
     return feedback;
   }
 
+  Game::Command::ScopedImmediateDispatch immediate_orders;
   Engine::Core::World world;
   Game::Systems::SelectionSystem* selection_system = nullptr;
   Game::Systems::PickingService picking_service;

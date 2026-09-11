@@ -85,7 +85,8 @@ void spawn_default_barracks(Engine::Core::World& world) {
 
 auto load_match(const QString& map_path,
                 Engine::Core::World& world,
-                bool allow_default_player_barracks) -> MatchLoadResult {
+                bool allow_default_player_barracks,
+                const MapTransformOptions& transform_options) -> MatchLoadResult {
   MatchLoadResult result;
 
   auto& session = Game::Session::session_for(world);
@@ -132,7 +133,8 @@ auto load_match(const QString& map_path,
   result.max_troops_per_player = definition.max_troops_per_player;
   result.victory_config = definition.victory;
 
-  auto transformed = MapTransformer::apply_to_world(definition, world);
+  auto transformed =
+      MapTransformer::apply_to_world(definition, world, transform_options);
   if (!transformed.unit_ids.empty()) {
     result.player_unit_id = transformed.unit_ids.front();
   } else {

@@ -6,6 +6,7 @@
 #include "app/orders/order_markers.h"
 #include "app/orders/order_submission.h"
 #include "game/command/command.h"
+#include "game/command/command_queue.h"
 #include "game/command/command_validator.h"
 #include "game/core/component_economy.h"
 #include "game/core/world.h"
@@ -35,6 +36,7 @@ protected:
     return entity;
   }
 
+  Game::Command::ScopedImmediateDispatch immediate_orders;
   Engine::Core::World world;
 };
 
