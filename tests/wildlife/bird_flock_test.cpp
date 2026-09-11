@@ -43,11 +43,13 @@ protected:
     m_probe = std::make_unique<Game::Wildlife::FlatTerrainProbe>(
         WorldBounds{-60.0F, -60.0F, 60.0F, 60.0F}, 0.0F);
     BirdFlockManager::instance().set_terrain_probe(m_probe.get());
+    BirdFlockManager::instance().clear_focus();
     BirdFlockManager::instance().reset();
   }
 
   void TearDown() override {
     BirdFlockManager::instance().reset();
+    BirdFlockManager::instance().clear_focus();
     BirdFlockManager::instance().set_terrain_probe(nullptr);
   }
 
