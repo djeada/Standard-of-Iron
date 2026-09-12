@@ -138,7 +138,8 @@ TEST_F(BalanceSimTest, EliteCommanderLosesToEqualCostLineInfantry) {
 }
 
 TEST_F(BalanceSimTest, FactionsAreEvenAtEqualCost) {
-  const auto summary = run(load(QStringLiteral("faction_line_rome_vs_carthage")), 4);
+
+  const auto summary = run(load(QStringLiteral("faction_line_rome_vs_carthage")), 8);
   EXPECT_GE(summary.a_win_rate, 0.3);
   EXPECT_LE(summary.a_win_rate, 0.7);
   EXPECT_LE(summary.timeout_rate, 0.25);

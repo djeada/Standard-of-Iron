@@ -90,6 +90,8 @@ struct MovementTroopSample {
   float formation_half_width{0.0F};
   float file_spacing{0.0F};
   float lateral_scale{1.0F};
+
+  bool about_faced{false};
   std::uint32_t portal_id{0};
   TraversalLayoutMode traversal_mode{TraversalLayoutMode::Normal};
   std::uint32_t normal_files{0};
@@ -178,6 +180,8 @@ public:
                           const MovementTraceManifest& manifest) -> bool;
 
   void begin_memory_session(const MovementTraceManifest& manifest);
+
+  void set_fixed_step_seconds(float seconds);
 
   void end_session();
 

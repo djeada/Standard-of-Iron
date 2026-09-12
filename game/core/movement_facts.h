@@ -100,6 +100,9 @@ struct DesiredMotionFacts {
   float velocity_z{0.0F};
   float tangent_x{0.0F};
   float tangent_z{1.0F};
+
+  float heading_x{0.0F};
+  float heading_z{0.0F};
   float lookahead_x{0.0F};
   float lookahead_z{0.0F};
   float speed_limit{0.0F};
@@ -148,8 +151,7 @@ enum class MovementRecoveryRung : std::uint8_t {
   None = 0,
   Replan,
   Sidestep,
-  RelaxFormation,
-  Abandoned
+  Abandoned = 4
 };
 
 [[nodiscard]] auto
@@ -169,9 +171,10 @@ struct MovementStallFacts {
   float closest_approach{0.0F};
   float no_closer_seconds{0.0F};
 
+  float queued_seconds{0.0F};
+
   MovementRecoveryRung rung{MovementRecoveryRung::None};
   std::uint32_t recovery_attempts{0};
-  float clearance_relief{1.0F};
   std::uint64_t tracked_order{0};
 
   bool objective_abandoned{false};
@@ -198,6 +201,13 @@ struct MovementProgressFacts {
   std::uint32_t repath_attempts{0};
   MovementRepathReason repath_reason{MovementRepathReason::None};
 
+  bool arrived_short{false};
+  std::uint32_t short_route_replans{0};
+
+  bool holding_at_obstruction{false};
+  float holding_seconds{0.0F};
+  float holding_recheck_seconds{0.0F};
+
   MovementStallFacts stall;
 };
 
@@ -215,6 +225,7 @@ struct TraversalLayoutFacts {
   float lateral_scale{1.0F};
   float transition_progress{1.0F};
   float mode_dwell_seconds{0.0F};
+  bool about_faced{false};
 };
 
 } // namespace Engine::Core

@@ -22,6 +22,8 @@ Item {
 
     property bool overlay_active: false
 
+    readonly property Item keyboard_owner: hudVictory.visible ? hudVictory : null
+
     function right_stack_margin(card_height) {
         var preferred = hud.right_stack_bottom - topPanel.height;
         var latest = hud.height - topPanel.height - hud.bottom_panel_height - Design.Metrics.space8 - card_height;

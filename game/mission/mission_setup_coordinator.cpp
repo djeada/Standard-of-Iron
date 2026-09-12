@@ -36,6 +36,7 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/walkability.h"
 #include "game/systems/world_restore.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
@@ -255,22 +256,84 @@ auto MissionSetupCoordinator::apply_mission_setup(
       }
 
       const int count = std::max(1, unit_setup.count);
-      const int grid =
-          static_cast<int>(std::ceil(std::sqrt(static_cast<float>(count))));
       const QVector3D base_pos = position_to_world(unit_setup.position);
-      float base_tile_size = ctx.level.tile_size;
-      if (map_loaded && map_def.coordSystem == Game::Map::CoordSystem::Grid) {
-        base_tile_size = map_def.grid.tile_size;
-      }
-      const float spacing = std::max(0.5F, base_tile_size * 1.2F);
+
+      auto place_clear_of_units = [&ctx, &base_pos](Engine::Core::Entity& placed) {
+        constexpr float k_gap = 0.3F;
+        constexpr int k_max_rings = 48;
+        constexpr int k_footprint_probes = 8;
+        constexpr float k_two_pi = 6.2831853F;
+        const float radius =
+            Game::Systems::CommandService::get_unit_radius(ctx.world, placed.get_id());
+        Game::Systems::BodyProfile ground;
+        if (const auto* movement =
+                ctx.world.try_get<Engine::Core::MovementComponent>(placed.get_id())) {
+          ground.passability = movement->get_can_enter_forest()
+                                   ? Game::Systems::Pathfinding::Passability::Light
+                                   : Game::Systems::Pathfinding::Passability::Heavy;
+        }
+        struct Occupied {
+          QVector3D centre;
+          float radius;
+        };
+        std::vector<Occupied> occupied;
+        ctx.world.each<Engine::Core::MovementComponent>(
+            [&](Engine::Core::EntityID other, Engine::Core::MovementComponent&) {
+              const auto* other_transform =
+                  ctx.world.try_get<Engine::Core::TransformComponent>(other);
+              if (other == placed.get_id() || other_transform == nullptr ||
+                  ctx.world.has<Engine::Core::BuildingComponent>(other)) {
+                return;
+              }
+              occupied.push_back(
+                  {QVector3D(
+                       other_transform->position.x, 0.0F, other_transform->position.z),
+                   Game::Systems::CommandService::get_unit_radius(ctx.world, other)});
+            });
+        const auto fits = [&](const QVector3D& centre) {
+          if (!Game::Systems::Walkability::can_stand(centre, ground)) {
+            return false;
+          }
+          for (int probe = 0; probe < k_footprint_probes; ++probe) {
+            const float angle = static_cast<float>(probe) * k_two_pi /
+                                static_cast<float>(k_footprint_probes);
+            const QVector3D edge(centre.x() + std::sin(angle) * radius * 0.6F,
+                                 0.0F,
+                                 centre.z() + std::cos(angle) * radius * 0.6F);
+            if (!Game::Systems::Walkability::can_stand(edge, ground)) {
+              return false;
+            }
+          }
+          return std::none_of(
+              occupied.begin(), occupied.end(), [&](const Occupied& other) {
+                return (other.centre - centre).length() < other.radius + radius + k_gap;
+              });
+        };
+        const QVector3D origin(base_pos.x(), 0.0F, base_pos.z());
+        const float step = std::max(0.5F, radius * 0.5F);
+        for (int ring = 0; ring <= k_max_rings; ++ring) {
+          const float distance = step * static_cast<float>(ring);
+          const int samples =
+              ring == 0
+                  ? 1
+                  : std::max(6,
+                             static_cast<int>(std::ceil(k_two_pi * distance / step)));
+          for (int sample = 0; sample < samples; ++sample) {
+            const float angle =
+                static_cast<float>(sample) * k_two_pi / static_cast<float>(samples);
+            const QVector3D candidate(origin.x() + std::sin(angle) * distance,
+                                      0.0F,
+                                      origin.z() + std::cos(angle) * distance);
+            if (fits(candidate)) {
+              return std::optional<QVector3D>(candidate);
+            }
+          }
+        }
+        return std::optional<QVector3D>();
+      };
 
       for (int i = 0; i < count; ++i) {
-        const int row = i / grid;
-        const int col = i % grid;
-        const float offset_x = (float(col) - (grid - 1) * 0.5F) * spacing;
-        const float offset_z = (float(row) - (grid - 1) * 0.5F) * spacing;
-        const QVector3D pos =
-            QVector3D(base_pos.x() + offset_x, base_pos.y(), base_pos.z() + offset_z);
+        QVector3D pos = base_pos;
 
         Game::Units::SpawnParams sp;
         sp.position = pos;
@@ -289,6 +352,15 @@ auto MissionSetupCoordinator::apply_mission_setup(
         auto* entity = ctx.world.get_entity(unit->id());
         if (entity == nullptr) {
           continue;
+        }
+        if (auto* transform =
+                ctx.world.try_get<Engine::Core::TransformComponent>(entity->get_id())) {
+          if (const auto placed = place_clear_of_units(*entity)) {
+            transform->position.x = placed->x();
+            transform->position.z = placed->z();
+            pos.setX(placed->x());
+            pos.setZ(placed->z());
+          }
         }
 
         if (unit_setup.behavior == Game::Mission::UnitBehavior::Guard) {

@@ -248,7 +248,7 @@ auto Pathfinding::is_world_position_walkable(const QVector3D& world_position,
     return true;
   }
 
-  float const radius = std::min(clearance_radius, k_max_body_clearance);
+  float const radius = clearance_radius;
   float const half_cell = m_grid_cell_size * 0.5F;
   float const center_u = world_position.x() - m_grid_offset_x;
   float const center_v = world_position.z() - m_grid_offset_z;
@@ -1148,16 +1148,32 @@ auto Pathfinding::find_path_internal(const Point& start,
   SearchBuffers& buffers = search_buffers_for(this);
   ensure_working_buffers(buffers);
 
-  auto const is_walkableFunc = [this, passability](int x, int y) -> bool {
-    return is_world_position_walkable(grid_to_world({x, y}), passability, 0.0F);
+  auto const is_walkableFunc = [this, passability, clearance_radius](int x,
+                                                                     int y) -> bool {
+    return is_world_position_walkable(
+        grid_to_world({x, y}), passability, clearance_radius);
   };
 
-  int const clearance_weight =
-      clearance_radius > 0.0F
-          ? std::max(1,
-                     static_cast<int>(
-                         std::lround(clearance_radius * k_clearance_avoid_weight)))
-          : 1;
+  float const cell_size = std::max(1.0e-3F, m_grid_cell_size);
+  float const costed_clearance = std::min(clearance_radius, k_max_cost_clearance);
+  auto const clearance_cost = [this, costed_clearance, cell_size](int x, int y) -> int {
+    int const reach = clearance_penalty(x, y);
+    if (reach == 0) {
+      return 0;
+    }
+    float const free_metres = (static_cast<float>(reach) - 0.5F) * cell_size;
+    float const overlap = costed_clearance - free_metres;
+    int cost = 0;
+    if (overlap > 0.0F) {
+      cost =
+          static_cast<int>(std::lround((overlap * k_rigid_overlap_cost) +
+                                       (overlap * overlap * k_clearance_overlap_cost)));
+    }
+    if (reach <= 1) {
+      cost = std::max(cost, k_edge_step_penalty);
+    }
+    return cost;
+  };
 
   if (!is_walkableFunc(start.x, start.y) || !is_walkableFunc(end.x, end.y)) {
     Point resolved_start = start;
@@ -1267,7 +1283,7 @@ auto Pathfinding::find_path_internal(const Point& start,
       const int tentative_gcost =
           current.g_cost +
           ((step_x != 0 && step_z != 0) ? k_diagonal_step_cost : k_straight_step_cost) +
-          (clearance_penalty(neighbor.x, neighbor.y) * clearance_weight) +
+          clearance_cost(neighbor.x, neighbor.y) +
           climb_penalty(current.index, neighbor_idx) + (turns ? k_turn_penalty : 0);
       if (tentative_gcost >= get_g_cost(buffers, neighbor_idx, generation)) {
         continue;
@@ -1524,10 +1540,8 @@ void Pathfinding::rebuild_clearance(int min_x, int max_x, int min_z, int max_z) 
       if (reach == 0 || reach > k_clearance_radius) {
         continue;
       }
-      int const graded = (k_clearance_ring_penalty * (k_clearance_radius + 1 - reach)) /
-                         k_clearance_radius;
       m_clearance_penalty[static_cast<std::size_t>(to_index(x, z))] =
-          static_cast<std::uint8_t>(std::max(graded, k_edge_step_penalty));
+          static_cast<std::uint8_t>(reach);
     }
   }
 }

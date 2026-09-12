@@ -322,19 +322,31 @@ do, and they are deliberately kept apart:
 contact, then the traversal layout — contact after the motor, because only then
 is it known where bodies actually ended up.
 
-**Avoidance is two rules and no state.** For each neighbour in front and inside
-the lane — the two body radii plus a little personal space — a body slows in
-proportion to how close the neighbour is (squared, so only imminent traffic
-really bites) and leans towards the side the neighbour is not on. Dead ahead is
-the head-on case, and there both bodies lean to their own right, which is
-opposite in world space, so they pass. There is no velocity-obstacle search, no
-candidate sampling, and nothing remembered between ticks.
+**Avoidance is one rule and no state.** For each friendly neighbour in front
+and inside the lane — the two body radii plus a little personal space — a body
+leans towards the side the neighbour is not on; dead ahead is the head-on
+case, and there both bodies lean to their own right, which is opposite in
+world space, so they pass. A neighbour walking the same way is followed,
+car-fashion: the body matches that neighbour's pace only when the gap to its
+disc is about to close, and never drops below `k_min_speed_fraction` of its
+own pace. There is no velocity-obstacle search, no candidate sampling, and
+nothing remembered between ticks.
 
-Three rules bound it, and each exists for a reason:
+Four rules bound it, and each exists for a reason:
 
-- **A body is never brought to a stop by traffic.** Speed is floored at
-  `k_min_speed_fraction`. Soldiers are something to flow around, never a wall;
-  only terrain stops anyone, and that is the motor's sweep.
+- **A friend is never a wall.** A standing friend — idle, holding ground, at
+  work on a site, in a fight — does not slow a body at all; the body leans
+  round it where there is room and otherwise walks on, and the contact pass
+  never pushes the mover back (an idle friend steps out of the way, anything
+  else is walked through). A standing enemy still stops a body. A friend coming the other way, or crossing, gets the lean
+  and nothing else: slowing for it would gain nothing but the delay. The only
+  thing that can bring a body to a stop behind a friend is terrain: a leader
+  whose motor sweep is blocked has been stopped by the ground, and then the
+  ground has stopped the body behind it too. Adam's rule, given more than
+  once: troops never block other troops' movement.
+- **When two bodies converge, one goes first.** If each has the other ahead in
+  its lane, the lower id keeps its pace and the other follows; otherwise both
+  crawl until they have crossed.
 - **Traffic rules apply to your own side only.** An enemy is something to fight
   or be stopped by. Giving way to one lets a body slide through the line it was
   meant to meet and end up deep in hostile ground.
@@ -343,8 +355,11 @@ Three rules bound it, and each exists for a reason:
   to things it was never going to touch, and fans a stalled group sideways along
   whatever it is queued at instead of pressing.
 
-**Contact is one symmetric relaxation.** Overlapping pairs are pushed apart by
-half the overlap each, and every push is probed against `Walkability` first, so
+**Contact is one relaxation.** Two overlapping bodies under way are pushed
+apart by half the overlap each; a body overlapping a standing friend is only
+eased on along its own travel, never back or sideways (the friend steps aside if
+it is idle, or is walked through), and
+every push is probed against `Walkability` first, so
 a crowd can never shove a body into a wall or off a bridge; a push that would
 land somewhere unstandable is dropped and the overlap survives the tick, which
 is always recoverable. Only a body that is _under way_ is pushed — a builder at

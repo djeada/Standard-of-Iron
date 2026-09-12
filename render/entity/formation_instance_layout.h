@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
 #include <cstdint>
 #include <span>
 #include <vector>
@@ -10,9 +13,28 @@
 
 namespace Engine::Core {
 class FormationPresentationComponent;
-}
+class Entity;
+class TransformComponent;
+} // namespace Engine::Core
 
 namespace Render::Entity {
+
+struct FormationRoot {
+  QVector3D position;
+  float yaw{0.0F};
+};
+
+[[nodiscard]] auto resolve_formation_root(
+    const Engine::Core::Entity* entity,
+    const Engine::Core::TransformComponent& transform) -> FormationRoot;
+
+[[nodiscard]] inline auto formation_world_frame(const QVector3D& position,
+                                                float yaw_degrees) -> QMatrix4x4 {
+  QMatrix4x4 frame;
+  frame.translate(position);
+  frame.rotate(yaw_degrees, 0.0F, 1.0F, 0.0F);
+  return frame;
+}
 
 struct FormationInstance {
   float offset_x{0.0F};
@@ -104,6 +126,7 @@ void apply_authoritative_formation_slots(
     std::span<FormationInstance> instances,
     const Engine::Core::FormationPresentationComponent* presentation,
     Engine::Core::Entity* entity,
+    bool about_faced,
     bool force_single_soldier);
 
 } // namespace Render::Entity

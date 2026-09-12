@@ -481,11 +481,19 @@ auto prepare_formation_runtime(const HumanoidUnitSnapshot& s,
   auto& soldier_layouts = *soldier_layout_storage;
 
   if (!anim.is_constructing) {
+    bool about_faced = false;
+    if (ctx.world != nullptr && ctx.entity != nullptr) {
+      auto const* traversal =
+          ctx.world->try_get<Engine::Core::UnitTraversalLayoutStateComponent>(
+              ctx.entity->get_id());
+      about_faced = traversal != nullptr && traversal->about_faced;
+    }
     Render::Entity::apply_authoritative_formation_slots(
         std::span<Render::Entity::FormationInstance>(soldier_layouts.data(),
                                                      soldier_layouts.size()),
         has_shared_formation_layout ? formation_presentation : nullptr,
         ctx.entity,
+        about_faced,
         ctx.force_single_soldier);
   }
 
@@ -613,28 +621,15 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
   QVector3D root_position;
   float root_yaw = 0.0F;
   if (transform_comp != nullptr) {
-    root_position = QVector3D(transform_comp->position.x,
-                              transform_comp->position.y,
-                              transform_comp->position.z);
-    root_yaw = transform_comp->rotation.y;
-    if (ctx.world != nullptr && ctx.entity != nullptr) {
-      if (auto const* presented =
-              ctx.world->try_get<Engine::Core::CommanderPresentationSampleComponent>(
-                  ctx.entity->get_id());
-          presented != nullptr && presented->presented_valid) {
-        root_position = QVector3D(presented->presented_position.x,
-                                  presented->presented_position.y,
-                                  presented->presented_position.z);
-        root_yaw = presented->presented_yaw;
-      }
-    }
+    auto const root =
+        Render::Entity::resolve_formation_root(ctx.entity, *transform_comp);
+    root_position = root.position;
+    root_yaw = root.yaw;
   }
 
-  QMatrix4x4 unit_base = k_identity_matrix;
-  if (transform_comp != nullptr) {
-    unit_base.translate(root_position.x(), root_position.y(), root_position.z());
-    unit_base.rotate(root_yaw, 0.0F, 1.0F, 0.0F);
-  }
+  QMatrix4x4 const unit_base =
+      Render::Entity::formation_world_frame(root_position, root_yaw);
+
   const auto locomotion_override =
       Animation::resolve_humanoid_locomotion_action_override({
           .commander_jump_active = commander_jump.active,
@@ -959,19 +954,18 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     SoldierTurnSmoothingInputs smoothing_inputs{};
     smoothing_inputs.target_x = turn_slot_world.x();
     smoothing_inputs.target_z = turn_slot_world.z();
-    smoothing_inputs.formation_yaw_degrees =
-        transform_comp->rotation.y + applied_yaw_offset;
-    smoothing_inputs.formation_center_x = transform_comp->position.x;
-    smoothing_inputs.formation_center_z = transform_comp->position.z;
+    smoothing_inputs.formation_yaw_degrees = root_yaw + applied_yaw_offset;
+    smoothing_inputs.formation_center_x = root_position.x();
+    smoothing_inputs.formation_center_z = root_position.z();
     smoothing_inputs.dt = turn_smoothing_dt;
     smoothing_inputs.max_speed =
         turn_smoothing_cap * turn_variation.catch_up_speed_scale;
     smoothing_inputs.turn_rate_degrees =
-        (is_mounted_spawn ? 150.0F : 300.0F) * turn_variation.turn_rate_scale;
+        (is_mounted_spawn ? 150.0F : 200.0F) * turn_variation.turn_rate_scale;
     smoothing_inputs.response_delay_seconds =
         turn_smoothing_stagger ? turn_variation.response_delay_seconds : 0.0F;
     smoothing_inputs.allow_travel_yaw = turn_smoothing_travel_yaw;
-    smoothing_inputs.position_is_authoritative = formation_presentation != nullptr;
+    smoothing_inputs.position_is_authoritative = has_shared_formation_layout;
     smoothing_inputs.allow_pivot_wheel = turn_smoothing_pivot_wheel;
 
     smoothing_inputs.frame_index = frame_index + 1U;
@@ -1677,7 +1671,8 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   {
     CombatRootSmoothingTarget root_target{};
     root_target.time = anim.time;
-    if (root_motion.active && !soldier_render_anim.simulation_owns_root_motion) {
+    if (root_motion.active && !soldier_render_anim.simulation_owns_root_motion &&
+        !has_shared_formation_layout) {
       root_target.offset_x =
           root_motion.world_offset_x + forward.x() * root_motion.forward_offset;
       root_target.offset_z =

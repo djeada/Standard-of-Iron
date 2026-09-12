@@ -10,6 +10,7 @@
 #include <span>
 #include <vector>
 
+#include "entity/formation_instance_layout.h"
 #include "game/core/component.h"
 #include "game/units/spawn_type.h"
 #include "humanoid/runtime/unit_layout_spacing.h"
@@ -63,19 +64,15 @@ selection_ring_visual_size(const Game::Units::TroopConfig& config,
   }
 
   placements.reserve(input.soldiers.size());
-  float const yaw = input.yaw_degrees * std::numbers::pi_v<float> / 180.0F;
-  float const sin_yaw = std::sin(yaw);
-  float const cos_yaw = std::cos(yaw);
+  auto const frame =
+      Render::Entity::formation_world_frame(input.position, input.yaw_degrees);
   for (auto const& soldier : input.soldiers) {
     if (!soldier.alive) {
       continue;
     }
 
-    float const world_x =
-        input.position.x() + cos_yaw * soldier.local_x + sin_yaw * soldier.local_z;
-    float const world_z =
-        input.position.z() - sin_yaw * soldier.local_x + cos_yaw * soldier.local_z;
-    placements.push_back({world_x, world_z, input.ring_size});
+    auto const anchor = frame.map(QVector3D(soldier.local_x, 0.0F, soldier.local_z));
+    placements.push_back({anchor.x(), anchor.z(), input.ring_size});
   }
 
   return placements;

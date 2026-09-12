@@ -549,6 +549,10 @@ auto ArmyFormationRuntime::move_speed_multiplier(const Engine::Core::Entity& ent
       error < 0.0F ? 0.0F
                    : std::clamp((error - in_slot_radius) / recovery_span, 0.0F, 0.25F);
   float const target_speed = pace * (1.0F + recovery);
+
+  if (!std::isfinite(target_speed)) {
+    return k_maintain_speed_multiplier;
+  }
   return std::clamp(target_speed / unit->speed, 0.1F, 1.0F);
 }
 

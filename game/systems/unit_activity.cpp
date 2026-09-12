@@ -7,13 +7,22 @@
 #include "builder_product_types.h"
 #include "game/core/component_economy.h"
 #include "game/core/entity.h"
+#include "game/core/movement_facts.h"
 #include "game/core/world.h"
 
 namespace Game::Systems {
 
 namespace {
 
-constexpr float k_blocked_after_seconds = 1.2F;
+[[nodiscard]] auto movement_is_wedged(const Engine::Core::Entity& entity) -> bool {
+  const auto* movement = entity.get_component<Engine::Core::MovementComponent>();
+  const auto* facts = entity.get_component<Engine::Core::MovementFactsComponent>();
+  if (movement == nullptr || facts == nullptr || !movement->get_has_target()) {
+    return false;
+  }
+  return facts->progress.holding_at_obstruction ||
+         facts->progress.stall.rung >= Engine::Core::MovementRecoveryRung::Sidestep;
+}
 
 struct KindName {
   ActivityKind kind;
@@ -108,8 +117,7 @@ auto builder_activity(const Engine::Core::Entity& entity,
   }
 
   if (has_job || !builder.queued_construction_site_ids.empty()) {
-    const auto* movement = entity.get_component<Engine::Core::MovementComponent>();
-    if (movement != nullptr && movement->get_stuck_time() >= k_blocked_after_seconds) {
+    if (movement_is_wedged(entity)) {
       activity.state = ActivityState::Unavailable;
       return activity;
     }
@@ -224,7 +232,7 @@ auto classify_unit_activity(const Engine::Core::Entity& entity) -> UnitActivity 
 
   if (const auto* movement = entity.get_component<Engine::Core::MovementComponent>()) {
     if (movement->get_has_target()) {
-      if (movement->get_stuck_time() >= k_blocked_after_seconds) {
+      if (movement_is_wedged(entity)) {
         return {ActivityKind::Blocked, ActivityState::Unavailable, 0};
       }
       return {ActivityKind::Move, ActivityState::Active, 0};

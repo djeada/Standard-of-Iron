@@ -11,6 +11,7 @@
 #include "../wildlife/wildlife_system.h"
 #include "ai_system.h"
 #include "arrow_system.h"
+#include "body_contact_system.h"
 #include "capture_system.h"
 #include "civilian_delivery_system.h"
 #include "cleanup_system.h"
@@ -83,6 +84,8 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<LocalAvoidanceSystem>(),
                    Engine::Core::SystemPhase::Movement);
   world.add_system(std::make_unique<MovementSystem>(),
+                   Engine::Core::SystemPhase::Movement);
+  world.add_system(std::make_unique<BodyContactSystem>(),
                    Engine::Core::SystemPhase::Movement);
   world.add_system(std::make_unique<UnitTraversalLayoutSystem>(),
                    Engine::Core::SystemPhase::Movement);

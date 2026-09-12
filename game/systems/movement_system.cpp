@@ -13,6 +13,7 @@
 #include "../map/terrain_service.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_config.h"
+#include "../util/planar_math.h"
 #include "body_profile.h"
 #include "combat_rules.h"
 #include "combat_system/structure_combat.h"
@@ -52,13 +53,22 @@ constexpr float desired_yaw_turn_speed_degrees = 720.0F;
 constexpr float k_formation_heading_min_speed = 0.4F;
 constexpr float k_formation_heading_speed_fraction = 0.25F;
 constexpr float k_formation_intent_min_distance = 1.0F;
+
 constexpr float full_translation_heading_error_degrees = 20.0F;
-constexpr float stopped_translation_heading_error_degrees = 100.0F;
+constexpr float k_formation_about_face_degrees = 100.0F;
+constexpr float k_about_face_cooldown_seconds = 0.5F;
+
+constexpr float k_formation_turn_speed_floor_degrees = 20.0F;
+constexpr float k_formation_heading_deadband_degrees = 6.0F;
+constexpr float k_heading_hold_speed = 0.25F;
+
+constexpr float k_formation_outer_file_speed_floor = 1.8F;
+constexpr float k_formation_outer_file_speed_scale = 1.0F;
 
 constexpr float k_motor_substep_cells = 0.45F;
 constexpr int k_max_motor_substeps = 8;
 
-constexpr float k_turning_translation_threshold = 0.35F;
+constexpr float k_motor_ramp_seconds = 0.12F;
 
 auto formation_turn_speed_degrees(const Engine::Core::Entity& entity,
                                   const Engine::Core::UnitComponent& unit,
@@ -68,10 +78,15 @@ auto formation_turn_speed_degrees(const Engine::Core::Entity& entity,
     return single_body_turn_speed;
   }
 
-  float const max_outer_speed = std::max(2.0F, unit.speed * 1.5F);
+  float const max_outer_speed =
+      std::max(k_formation_outer_file_speed_floor,
+               unit.speed * k_formation_outer_file_speed_scale);
   float const derived =
       max_outer_speed / turn_radius * 180.0F / std::numbers::pi_v<float>;
-  return std::clamp(derived, 30.0F, single_body_turn_speed);
+  return std::clamp(
+      derived,
+      std::min(k_formation_turn_speed_floor_degrees, single_body_turn_speed),
+      std::min(75.0F, single_body_turn_speed));
 }
 
 struct HeadingReference {
@@ -82,17 +97,20 @@ struct HeadingReference {
 auto heading_reference(const Engine::Core::Entity& entity,
                        const Engine::Core::TransformComponent& transform,
                        const Engine::Core::MovementComponent& movement,
+                       const Engine::Core::MovementFactsComponent* facts,
                        const Engine::Core::UnitComponent* unit) -> HeadingReference {
   bool const formation =
       unit != nullptr && FormationCombat::has_formation_slots(entity);
   if (formation && movement.get_has_target()) {
-
-    auto const* facts = entity.get_component<Engine::Core::MovementFactsComponent>();
     if (facts != nullptr && facts->desired.valid) {
-      float const dx = facts->desired.velocity_x;
-      float const dz = facts->desired.velocity_z;
+      float dx = facts->desired.heading_x;
+      float dz = facts->desired.heading_z;
+      if (dx * dx + dz * dz <= 1.0e-5F) {
+        dx = facts->desired.velocity_x;
+        dz = facts->desired.velocity_z;
+      }
       if (dx * dx + dz * dz > 1.0e-5F) {
-        return {true, std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>};
+        return {true, Game::Systems::yaw_degrees_from_direction(dx, dz)};
       }
     }
     float const intent_x = movement.get_target_x() - transform.position.x;
@@ -116,17 +134,21 @@ auto heading_reference(const Engine::Core::Entity& entity,
   return {true, std::atan2(vx, vz) * 180.0F / std::numbers::pi_v<float>};
 }
 
-auto heading_translation_scale(float yaw_degrees, HeadingReference reference) -> float {
-  if (!reference.valid) {
-    return 1.0F;
+auto wheel_within_free_band(float body_yaw_degrees, float& vx, float& vz) -> void {
+  float const speed = std::hypot(vx, vz);
+  if (speed <= 1.0e-5F) {
+    return;
   }
-  float const error =
-      std::fabs(std::fmod((reference.yaw - yaw_degrees + 540.0F), 360.0F) - 180.0F);
-  return 1.0F - std::clamp((error - full_translation_heading_error_degrees) /
-                               (stopped_translation_heading_error_degrees -
-                                full_translation_heading_error_degrees),
-                           0.0F,
-                           1.0F);
+  float const travel_yaw = Game::Systems::yaw_degrees_from_direction(vx, vz);
+  float const error = Game::Systems::signed_yaw_delta(body_yaw_degrees, travel_yaw);
+  if (std::fabs(error) <= full_translation_heading_error_degrees) {
+    return;
+  }
+  float const clamped_yaw =
+      body_yaw_degrees + std::copysign(full_translation_heading_error_degrees, error);
+  float const radians = clamped_yaw * std::numbers::pi_v<float> / 180.0F;
+  vx = std::sin(radians) * speed;
+  vz = std::cos(radians) * speed;
 }
 
 void apply_desired_yaw(Engine::Core::TransformComponent* transform,
@@ -136,15 +158,12 @@ void apply_desired_yaw(Engine::Core::TransformComponent* transform,
     return;
   }
 
-  float const current = transform->rotation.y;
   float const target_yaw = transform->desired_yaw;
-  float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
-  float const step = std::clamp(
-      diff, -turn_speed_degrees * delta_time, turn_speed_degrees * delta_time);
-  transform->rotation.y = current + step;
+  transform->rotation.y = Game::Systems::turn_yaw_toward(
+      transform->rotation.y, target_yaw, turn_speed_degrees * delta_time);
 
   float const remaining_diff =
-      std::fmod((target_yaw - transform->rotation.y + 540.0F), 360.0F) - 180.0F;
+      Game::Systems::signed_yaw_delta(transform->rotation.y, target_yaw);
   if (std::fabs(remaining_diff) < 0.5F) {
     transform->rotation.y = target_yaw;
     transform->has_desired_yaw = false;
@@ -190,6 +209,19 @@ auto face_locked_structure(Engine::Core::World* world,
 
 namespace {
 
+void publish_displacement(Engine::Core::MovementFactsComponent& facts,
+                          const Engine::Core::TransformComponent& transform,
+                          float previous_x,
+                          float previous_z,
+                          float delta_time) {
+  float const seconds = std::max(1.0e-5F, delta_time);
+  facts.motor.valid = true;
+  facts.motor.accepted_dx = transform.position.x - previous_x;
+  facts.motor.accepted_dz = transform.position.z - previous_z;
+  facts.motor.accepted_vx = facts.motor.accepted_dx / seconds;
+  facts.motor.accepted_vz = facts.motor.accepted_dz / seconds;
+}
+
 void clamp_to_map_bounds(Engine::Core::TransformComponent& transform) {
   auto& terrain = Game::Map::TerrainService::instance();
   if (!terrain.is_initialized()) {
@@ -213,23 +245,26 @@ void clamp_to_map_bounds(Engine::Core::TransformComponent& transform) {
       std::clamp(transform.position.z, -half_h * tile, half_h * tile);
 }
 
-void finalize_orientation(Engine::Core::Entity* entity,
+auto finalize_orientation(Engine::Core::World& world,
+                          Engine::Core::Entity* entity,
                           Engine::Core::TransformComponent* transform,
                           Engine::Core::MovementComponent* movement,
-                          float delta_time) {
+                          const Engine::Core::MovementFactsComponent* facts,
+                          float delta_time) -> bool {
   clamp_to_map_bounds(*transform);
+  Engine::Core::EntityID const id = entity->get_id();
 
-  auto* terrain_ctx = entity->get_component<Engine::Core::TerrainContextComponent>();
+  auto* terrain_ctx = world.try_get<Engine::Core::TerrainContextComponent>(id);
   if (terrain_ctx != nullptr && terrain_ctx->audio_cooldown > 0.0F) {
     terrain_ctx->audio_cooldown =
         std::max(0.0F, terrain_ctx->audio_cooldown - delta_time);
   }
 
-  if (entity->has_component<Engine::Core::BuildingComponent>()) {
-    return;
+  if (world.has<Engine::Core::BuildingComponent>(id)) {
+    return false;
   }
 
-  auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+  auto const* unit = world.try_get<Engine::Core::UnitComponent>(id);
   float const body_turn_speed =
       unit != nullptr ? Game::Units::body_turn_speed_degrees(unit->spawn_type)
                       : desired_yaw_turn_speed_degrees;
@@ -240,25 +275,58 @@ void finalize_orientation(Engine::Core::Entity* entity,
 
   bool const shell_holds_its_face =
       DefensiveUnitLayoutService::holds_position(*entity) && transform->has_desired_yaw;
-  auto const reference = heading_reference(*entity, *transform, *movement, unit);
+  bool const formation =
+      unit != nullptr && FormationCombat::has_formation_slots(*entity);
+
+  auto* traversal = world.try_get<Engine::Core::UnitTraversalLayoutStateComponent>(id);
+  if (traversal != nullptr && traversal->about_face_cooldown_seconds > 0.0F) {
+    traversal->about_face_cooldown_seconds =
+        std::max(0.0F, traversal->about_face_cooldown_seconds - delta_time);
+  }
+  bool faced_about = false;
+  auto const face_about_toward = [&](float yaw) {
+    bool const may_face_about =
+        traversal == nullptr || traversal->about_face_cooldown_seconds <= 0.0F;
+    faced_about =
+        formation && may_face_about && !shell_holds_its_face &&
+        std::fabs(Game::Systems::signed_yaw_delta(transform->rotation.y, yaw)) >
+            k_formation_about_face_degrees &&
+        FormationCombat::face_about_in_place(*entity);
+    if (faced_about && traversal != nullptr) {
+      traversal->about_face_cooldown_seconds = k_about_face_cooldown_seconds;
+    }
+    return faced_about;
+  };
+  auto const reference = heading_reference(*entity, *transform, *movement, facts, unit);
   if (reference.valid && !shell_holds_its_face) {
-    float const target_yaw = reference.yaw;
-    float const current = transform->rotation.y;
-    float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
-    float const step =
-        std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
-    transform->rotation.y = current + step;
+    (void)face_about_toward(reference.yaw);
+
+    bool const standing_still = formation && facts != nullptr &&
+                                facts->last_accepted_speed < k_heading_hold_speed;
+    bool const jostled = formation && facts != nullptr &&
+                         (facts->steering.contact_push_x != 0.0F ||
+                          facts->steering.contact_push_z != 0.0F);
+    float const deadband = (standing_still || jostled)
+                               ? full_translation_heading_error_degrees
+                           : formation ? k_formation_heading_deadband_degrees
+                                       : 0.0F;
+    if (std::fabs(Game::Systems::signed_yaw_delta(transform->rotation.y,
+                                                  reference.yaw)) > deadband) {
+      transform->rotation.y = Game::Systems::turn_yaw_toward(
+          transform->rotation.y, reference.yaw, turn_speed * delta_time);
+    }
   } else if (transform->has_desired_yaw) {
-    float const current = transform->rotation.y;
     float const target_yaw = transform->desired_yaw;
-    float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
-    float const step =
-        std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
-    transform->rotation.y = current + step;
+    (void)face_about_toward(target_yaw);
+    float const diff =
+        Game::Systems::signed_yaw_delta(transform->rotation.y, target_yaw);
+    transform->rotation.y = Game::Systems::turn_yaw_toward(
+        transform->rotation.y, target_yaw, turn_speed * delta_time);
     if (std::fabs(diff) < 0.5F && !shell_holds_its_face) {
       transform->has_desired_yaw = false;
     }
   }
+  return faced_about;
 }
 
 } // namespace
@@ -435,9 +503,6 @@ void MovementSystem::repath_after_obstruction_release(
                                              movement->get_order_sequence())) {
       continue;
     }
-
-    movement->stuck_ref_valid = false;
-    movement->stuck_timer = 0.0F;
   }
 }
 
@@ -587,6 +652,7 @@ auto sweep_body(float origin_x,
 struct MotorLimits {
   float max_speed{0.0F};
   float acceleration{0.0F};
+  float slew{0.0F};
   float damping{6.0F};
 };
 
@@ -596,6 +662,7 @@ auto motor_limits(const Engine::Core::Entity& entity,
   MotorLimits limits;
   limits.max_speed = formation_navigation_speed(entity, unit, stamina);
   limits.acceleration = limits.max_speed * 4.0F;
+  limits.slew = limits.max_speed / k_motor_ramp_seconds;
   return limits;
 }
 
@@ -608,6 +675,13 @@ public:
       : m_entity(&entity)
       , m_respect_body_radius(respect_body_radius) {
     QVector3D const origin(origin_x, 0.0F, origin_z);
+    auto const layout = FormationCombat::resolve_layout(entity);
+    m_soldier_radius = layout.body_radius;
+    for (auto const& anchor :
+         FormationCombat::soldier_spatial_anchors(entity, layout)) {
+      QVector3D const position(anchor.world_x, 0.0F, anchor.world_z);
+      m_slots.push_back({position - origin, soldier_ground_open(position)});
+    }
     m_valid_tile = allowed_here(origin);
     if (!m_valid_tile) {
       m_trapped_depth = Walkability::penetration(origin, body_profile(entity));
@@ -650,7 +724,20 @@ public:
   }
 
 private:
+  [[nodiscard]] auto soldier_ground_open(const QVector3D& point) const -> bool {
+    auto const* pathfinder = NavGrid::get_pathfinder();
+    return pathfinder == nullptr ||
+           pathfinder->is_world_position_walkable(
+               point, body_profile(*m_entity).passability, m_soldier_radius);
+  }
+
   [[nodiscard]] auto allowed_here(const QVector3D& point) const -> bool {
+
+    if (!std::all_of(m_slots.begin(), m_slots.end(), [&](auto const& slot) {
+          return !slot.second || soldier_ground_open(point + slot.first);
+        })) {
+      return false;
+    }
     if (m_respect_body_radius) {
       return Walkability::can_stand(point, body_profile(*m_entity));
     }
@@ -658,6 +745,8 @@ private:
   }
 
   const Engine::Core::Entity* m_entity;
+  std::vector<std::pair<QVector3D, bool>> m_slots;
+  float m_soldier_radius{0.0F};
   bool m_respect_body_radius{false};
   bool m_valid_tile{true};
   float m_trapped_depth{0.0F};
@@ -816,19 +905,15 @@ auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
 
   float const face_x = opponent_transform->position.x - transform.position.x;
   float const face_z = opponent_transform->position.z - transform.position.z;
-  float const target_yaw =
-      std::atan2(face_x, face_z) * 180.0F / std::numbers::pi_v<float>;
-  float const current = transform.rotation.y;
-  float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
+  float const target_yaw = Game::Systems::yaw_degrees_from_direction(face_x, face_z);
   auto const* footwork_unit = entity->get_component<Engine::Core::UnitComponent>();
   float const footwork_turn_speed =
       footwork_unit != nullptr
           ? std::min(k_duel_footwork_turn_degrees_per_second,
                      Game::Units::body_turn_speed_degrees(footwork_unit->spawn_type))
           : k_duel_footwork_turn_degrees_per_second;
-  transform.rotation.y = current + std::clamp(diff,
-                                              -footwork_turn_speed * delta_time,
-                                              footwork_turn_speed * delta_time);
+  transform.rotation.y = Game::Systems::turn_yaw_toward(
+      transform.rotation.y, target_yaw, footwork_turn_speed * delta_time);
   transform.desired_yaw = transform.rotation.y;
   transform.has_desired_yaw = false;
   return true;
@@ -837,9 +922,10 @@ auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
 void MovementSystem::move_unit(Engine::Core::Entity* entity,
                                Engine::Core::World* world,
                                float delta_time) {
-  auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-  auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+  Engine::Core::EntityID const id = entity->get_id();
+  auto* transform = world->try_get<Engine::Core::TransformComponent>(id);
+  auto* movement = world->try_get<Engine::Core::MovementComponent>(id);
+  auto* unit = world->try_get<Engine::Core::UnitComponent>(id);
 
   if ((transform == nullptr) || (movement == nullptr) || (unit == nullptr)) {
     return;
@@ -854,8 +940,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   float const previous_x = transform->position.x;
   float const previous_z = transform->position.z;
 
-  if (unit->health <= 0 ||
-      entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+  if (unit->health <= 0 || world->has<Engine::Core::PendingRemovalComponent>(id)) {
     return;
   }
 
@@ -864,8 +949,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   MovementGate const gate = classify_movement_gate(*entity);
 
   if (gate == MovementGate::DirectControl) {
-    if (auto const* commander =
-            entity->get_component<Engine::Core::CommanderComponent>();
+    if (auto const* commander = world->try_get<Engine::Core::CommanderComponent>(id);
         commander != nullptr && commander->fpv_controlled && !commander->jump_active) {
       movement->has_target = false;
       movement->clear_path();
@@ -877,7 +961,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     return;
   }
 
-  auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
+  auto* hold_mode = world->try_get<Engine::Core::HoldModeComponent>(id);
   if (gate == MovementGate::HoldMode) {
     bool in_hold_mode = false;
     if (hold_mode != nullptr) {
@@ -913,7 +997,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
     if (in_hold_mode) {
       facts->progress.state = Engine::Core::MovementOrderState::Idle;
-      if (!entity->has_component<Engine::Core::BuildingComponent>()) {
+      if (!world->has<Engine::Core::BuildingComponent>(id)) {
         apply_desired_yaw(
             transform,
             delta_time,
@@ -928,7 +1012,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   }
 
   if (gate == MovementGate::MeleeLock) {
-    auto* atk = entity->get_component<Engine::Core::AttackComponent>();
+    auto* atk = world->try_get<Engine::Core::AttackComponent>(id);
     movement->has_target = false;
     OrderService::clear_player_order_intent(entity);
     movement->vx = 0.0F;
@@ -943,17 +1027,12 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     }
 
     clamp_to_map_bounds(*transform);
-    facts->motor.valid = true;
-    facts->motor.accepted_dx = transform->position.x - previous_x;
-    facts->motor.accepted_dz = transform->position.z - previous_z;
-    facts->motor.accepted_vx = facts->motor.accepted_dx / std::max(1.0e-5F, delta_time);
-    facts->motor.accepted_vz = facts->motor.accepted_dz / std::max(1.0e-5F, delta_time);
+    publish_displacement(*facts, *transform, previous_x, previous_z, delta_time);
     return;
   }
 
   if (gate == MovementGate::BuilderBypass) {
-    auto* builder_prod =
-        entity->get_component<Engine::Core::BuilderProductionComponent>();
+    auto* builder_prod = world->try_get<Engine::Core::BuilderProductionComponent>(id);
     float const dx = builder_prod->bypass_target_x - transform->position.x;
     float const dz = builder_prod->bypass_target_z - transform->position.z;
     float const dist_sq = dx * dx + dz * dz;
@@ -983,25 +1062,19 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       transform->position.z += movement->vz * delta_time;
 
       float const target_yaw =
-          std::atan2(movement->vx, movement->vz) * 180.0F / std::numbers::pi_v<float>;
-      float const current = transform->rotation.y;
-      float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
-      float const turn_speed = Game::Units::body_turn_speed_degrees(unit->spawn_type);
-      float const step =
-          std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
-      transform->rotation.y = current + step;
+          Game::Systems::yaw_degrees_from_direction(movement->vx, movement->vz);
+      float const turn_speed = formation_turn_speed_degrees(
+          *entity, *unit, Game::Units::body_turn_speed_degrees(unit->spawn_type));
+      transform->rotation.y = Game::Systems::turn_yaw_toward(
+          transform->rotation.y, target_yaw, turn_speed * delta_time);
       facts->progress.state = Engine::Core::MovementOrderState::Following;
     }
 
-    facts->motor.valid = true;
-    facts->motor.accepted_dx = transform->position.x - previous_x;
-    facts->motor.accepted_dz = transform->position.z - previous_z;
-    facts->motor.accepted_vx = facts->motor.accepted_dx / std::max(1.0e-5F, delta_time);
-    facts->motor.accepted_vz = facts->motor.accepted_dz / std::max(1.0e-5F, delta_time);
+    publish_displacement(*facts, *transform, previous_x, previous_z, delta_time);
     return;
   }
 
-  auto* stamina = entity->get_component<Engine::Core::StaminaComponent>();
+  auto* stamina = world->try_get<Engine::Core::StaminaComponent>(id);
   MotorLimits const limits = motor_limits(*entity, *unit, stamina);
 
   float target_vx = 0.0F;
@@ -1021,12 +1094,25 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     movement->vx *= std::max(0.0F, 1.0F - limits.damping * delta_time);
     movement->vz *= std::max(0.0F, 1.0F - limits.damping * delta_time);
   } else {
-    float const ax = (target_vx - movement->vx) * limits.acceleration;
-    float const az = (target_vz - movement->vz) * limits.acceleration;
-    movement->vx += ax * delta_time;
-    movement->vz += az * delta_time;
-    movement->vx *= std::max(0.0F, 1.0F - 0.5F * limits.damping * delta_time);
-    movement->vz *= std::max(0.0F, 1.0F - 0.5F * limits.damping * delta_time);
+    if (movement->get_issuer_retargets()) {
+
+      movement->vx += (target_vx - movement->vx) * limits.acceleration * delta_time;
+      movement->vz += (target_vz - movement->vz) * limits.acceleration * delta_time;
+      movement->vx *= std::max(0.0F, 1.0F - 0.5F * limits.damping * delta_time);
+      movement->vz *= std::max(0.0F, 1.0F - 0.5F * limits.damping * delta_time);
+    } else {
+
+      float delta_vx = target_vx - movement->vx;
+      float delta_vz = target_vz - movement->vz;
+      float const delta_speed = std::hypot(delta_vx, delta_vz);
+      float const max_delta = limits.slew * delta_time;
+      if (delta_speed > max_delta && delta_speed > 1.0e-6F) {
+        delta_vx *= max_delta / delta_speed;
+        delta_vz *= max_delta / delta_speed;
+      }
+      movement->vx += delta_vx;
+      movement->vz += delta_vz;
+    }
   }
 
   QVector3D const current_pos_3d(transform->position.x, 0.0F, transform->position.z);
@@ -1035,17 +1121,12 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   float const old_x = transform->position.x;
   float const old_z = transform->position.z;
 
-  auto const heading = heading_reference(*entity, *transform, *movement, unit);
-  float const translation_scale =
-      was_on_valid_tile ? heading_translation_scale(transform->rotation.y, heading)
-                        : 1.0F;
-  if (translation_scale < k_turning_translation_threshold &&
-      facts->progress.state == Engine::Core::MovementOrderState::Following) {
-    facts->progress.state = Engine::Core::MovementOrderState::Turning;
-  }
+  float translated_vx = movement->vx;
+  float translated_vz = movement->vz;
+  if (was_on_valid_tile && FormationCombat::has_formation_slots(*entity)) {
 
-  float translated_vx = movement->vx * translation_scale;
-  float translated_vz = movement->vz * translation_scale;
+    wheel_within_free_band(transform->rotation.y, translated_vx, translated_vz);
+  }
 
   float const body_acceleration = Game::Units::body_acceleration(unit->spawn_type);
   if (body_acceleration > 0.0F) {
@@ -1057,18 +1138,6 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       translated_vx *= scale;
       translated_vz *= scale;
     }
-  }
-
-  if (auto const* traversal =
-          entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
-      traversal != nullptr && traversal->root_motion_blocked && world != nullptr &&
-      world->presentation_enabled() &&
-      entity->has_component<Engine::Core::RenderableComponent>()) {
-    translated_vx = 0.0F;
-    translated_vz = 0.0F;
-    movement->vx = 0.0F;
-    movement->vz = 0.0F;
-    facts->progress.state = Engine::Core::MovementOrderState::Yielding;
   }
 
   MotorCollision const collision(*entity, old_x, old_z);
@@ -1108,11 +1177,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     movement->travelled -= k_travelled_wrap;
   }
 
-  facts->motor.valid = true;
-  facts->motor.accepted_dx = stepped_x;
-  facts->motor.accepted_dz = stepped_z;
-  facts->motor.accepted_vx = stepped_x / std::max(1.0e-5F, delta_time);
-  facts->motor.accepted_vz = stepped_z / std::max(1.0e-5F, delta_time);
+  publish_displacement(*facts, *transform, old_x, old_z, delta_time);
   facts->last_accepted_speed =
       std::hypot(facts->motor.accepted_vx, facts->motor.accepted_vz);
   facts->motor.rejected_dx = sweep.rejected_dx;
@@ -1136,7 +1201,10 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     facts->progress.blocked_steps = 0;
   }
 
-  finalize_orientation(entity, transform, movement, delta_time);
+  if (finalize_orientation(*world, entity, transform, movement, facts, delta_time)) {
+    movement->vx = -movement->vx;
+    movement->vz = -movement->vz;
+  }
 }
 
 auto MovementSystem::access() const -> Engine::Core::SystemAccess {
@@ -1149,7 +1217,6 @@ auto MovementSystem::access() const -> Engine::Core::SystemAccess {
                                      ElephantComponent,
                                      RpgCommanderActionComponent,
                                      BuilderProductionComponent,
-                                     UnitTraversalLayoutStateComponent,
                                      RenderableComponent,
                                      PendingRemovalComponent>{},
                                Writes<MovementComponent,
@@ -1157,7 +1224,10 @@ auto MovementSystem::access() const -> Engine::Core::SystemAccess {
                                       TransformComponent,
                                       AttackComponent,
                                       StaminaComponent,
-                                      TerrainContextComponent>{});
+                                      TerrainContextComponent,
+                                      UnitTraversalLayoutStateComponent,
+                                      FormationPresentationComponent,
+                                      SoldierCasualtyAnimationComponent>{});
 }
 
 } // namespace Game::Systems

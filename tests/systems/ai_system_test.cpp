@@ -1913,6 +1913,32 @@ TEST_F(AISystemTest, BaseManagerSeparatesProductionAndDefensiveResponsibilities)
   EXPECT_NE(production->role, Game::Systems::AI::BaseRole::Defensive);
 }
 
+TEST_F(AISystemTest, ASoldierOnTheOuterSlotOfAWideStationIsStationedNotLeftAtSpawn) {
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 0.0F, 10.0F),
+      make_unit(60, 0.0F, 11.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.station.x = 0.0F;
+  context.station.z = 22.0F;
+  context.macro_targets.assembly_radius = 9.0F;
+  context.station.required_radius = 12.0F;
+
+  Game::Systems::AI::update_station_report(snapshot, context);
+
+  EXPECT_EQ(context.station_report.stationed, 1)
+      << "a soldier on its outer slot, inside the ground the formation needs, "
+         "was not counted at its station";
+  EXPECT_EQ(context.station_report.at_spawn, 0)
+      << "a soldier the AI stationed was reported as left by its barracks";
+}
+
 TEST_F(AISystemTest, BaseManagerKeepsBaseIdentityAcrossUpdates) {
   Game::Systems::AI::AISnapshot snapshot;
   snapshot.player_id = 3;

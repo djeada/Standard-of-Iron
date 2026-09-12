@@ -13,6 +13,7 @@
 
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../../util/planar_math.h"
 #include "../formation_combat_geometry.h"
 #include "combat_utils.h"
 #include "structure_combat.h"
@@ -643,6 +644,26 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         structure_shift_local_z = sin_yaw * world_shift.x() + cos_yaw * world_shift.z();
       }
     }
+
+    float nearest_facade_anchor = std::numeric_limits<float>::infinity();
+    if (display_opponent != nullptr && actor_transform != nullptr &&
+        is_building(display_opponent)) {
+      for (auto const& slot : layout.live_slots) {
+        float anchor_x = slot.local_x;
+        float anchor_z = slot.local_z;
+        if (traversal != nullptr) {
+          if (auto const* moved = traversal->slot_for(slot.index); moved != nullptr) {
+            anchor_x = moved->current_local_x;
+            anchor_z = moved->current_local_z;
+          }
+        }
+        nearest_facade_anchor = std::min(
+            nearest_facade_anchor,
+            closest_structure_surface(
+                *display_opponent, local_to_world(*actor_transform, anchor_x, anchor_z))
+                .distance);
+      }
+    }
     struct DamageCarrier {
       const Engine::Core::FormationContactFront* front{nullptr};
       std::optional<std::uint16_t> attacker_slot;
@@ -667,6 +688,8 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
     std::size_t const previous_directive_count = directives.size();
     bool soldiers_changed = previous_directive_count != layout.all_slots.size();
     directives.resize(layout.all_slots.size());
+    float const frame_sign =
+        traversal != nullptr && traversal->about_faced ? -1.0F : 1.0F;
     for (auto const& original_slot : layout.all_slots) {
       auto const* live_slot = find_live_slot(layout, original_slot.index);
       std::optional<Engine::Core::FormationSoldierPresentation> previous_value;
@@ -679,10 +702,10 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
       directive.slot_index = original_slot.index;
       directive.row = live_slot != nullptr ? live_slot->row : original_slot.row;
       directive.col = live_slot != nullptr ? live_slot->col : original_slot.col;
-      directive.local_x =
-          live_slot != nullptr ? live_slot->local_x : original_slot.local_x;
-      directive.local_z =
-          live_slot != nullptr ? live_slot->local_z : original_slot.local_z;
+      directive.local_x = frame_sign * (live_slot != nullptr ? live_slot->local_x
+                                                             : original_slot.local_x);
+      directive.local_z = frame_sign * (live_slot != nullptr ? live_slot->local_z
+                                                             : original_slot.local_z);
       auto const* traversal_slot =
           traversal != nullptr ? traversal->slot_for(original_slot.index) : nullptr;
       if (live_slot != nullptr && traversal != nullptr) {
@@ -740,8 +763,24 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
             assignment.pair->surface_gap +
             (retained.root_distance - assignment.pair->root_distance);
 
+        bool const opponent_is_structure = opponent != nullptr && is_building(opponent);
+        StructureSurfaceContact facade_surface{};
+        bool structure_facade_rank = false;
+        if (opponent_is_structure && actor_transform != nullptr) {
+          facade_surface = closest_structure_surface(
+              *opponent,
+              local_to_world(*actor_transform, directive.local_x, directive.local_z));
+          structure_facade_rank = opponent != display_opponent ||
+                                  !std::isfinite(nearest_facade_anchor) ||
+                                  facade_surface.distance <=
+                                      nearest_facade_anchor + structure_render_shift +
+                                          layout.spacing * 0.55F;
+        }
+
         bool const opponent_within_reach =
-            directive.engagement_surface_gap <= layout.spacing * 0.65F;
+            opponent_is_structure
+                ? structure_facade_rank
+                : directive.engagement_surface_gap <= layout.spacing * 0.65F;
         directive.combat_role =
             opponent_within_reach
                 ? combat_role_for(layout.seed, original_slot.index, true)
@@ -754,10 +793,12 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
                 ? world.try_get<Engine::Core::TransformComponent>(opponent->get_id())
                 : nullptr;
         if (actor_transform != nullptr && opponent_transform != nullptr) {
-          float const target_x = target_slot != nullptr
+          float const target_x = structure_facade_rank ? facade_surface.point.x()
+                                 : target_slot != nullptr
                                      ? target_slot->world_x
                                      : opponent_transform->position.x;
-          float const target_z = target_slot != nullptr
+          float const target_z = structure_facade_rank ? facade_surface.point.z()
+                                 : target_slot != nullptr
                                      ? target_slot->world_z
                                      : opponent_transform->position.z;
           auto const contact_vector = local_contact_vector(*actor_transform,
@@ -768,15 +809,21 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
           float const desired_yaw = contact_vector.yaw;
           float const prior_yaw =
               previous != nullptr ? previous->local_yaw : directive.local_yaw;
-          float const yaw_delta = std::remainder(desired_yaw - prior_yaw, 360.0F);
-          float const max_turn = k_contact_turn_degrees * std::max(0.0F, delta_time);
-          directive.local_yaw = prior_yaw + std::clamp(yaw_delta, -max_turn, max_turn);
+          directive.local_yaw = Game::Systems::turn_yaw_toward(
+              prior_yaw,
+              desired_yaw,
+              k_contact_turn_degrees * std::max(0.0F, delta_time));
 
           constexpr float k_weapon_contact_distance = 0.72F;
           float const pull_distance =
-              std::clamp(contact_vector.distance - k_weapon_contact_distance,
-                         0.0F,
-                         layout.spacing * 0.20F);
+              structure_facade_rank
+                  ? std::clamp(facade_surface.distance -
+                                   structure_attack_profile(entity).contact_clearance,
+                               0.0F,
+                               layout.spacing * 1.6F)
+                  : std::clamp(contact_vector.distance - k_weapon_contact_distance,
+                               0.0F,
+                               layout.spacing * 0.20F);
           if (contact_vector.distance > 0.0001F) {
             directive.local_x +=
                 contact_vector.x / contact_vector.distance * pull_distance;
@@ -834,11 +881,10 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
                                                              surface.point.z());
             float const prior_yaw =
                 previous != nullptr ? previous->local_yaw : directive.local_yaw;
-            float const yaw_delta =
-                std::remainder(contact_vector.yaw - prior_yaw, 360.0F);
-            float const max_turn = k_contact_turn_degrees * std::max(0.0F, delta_time);
-            directive.local_yaw =
-                prior_yaw + std::clamp(yaw_delta, -max_turn, max_turn);
+            directive.local_yaw = Game::Systems::turn_yaw_toward(
+                prior_yaw,
+                contact_vector.yaw,
+                k_contact_turn_degrees * std::max(0.0F, delta_time));
 
             float const desired_gap =
                 structure_attack_profile(entity).contact_clearance;
@@ -873,11 +919,10 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         if (directive.unassigned_seconds < k_contact_yaw_hold_seconds) {
           directive.local_yaw = previous->local_yaw;
         } else {
-          float const yaw_delta =
-              std::remainder(directive.local_yaw - previous->local_yaw, 360.0F);
-          float const max_turn = k_disengage_turn_degrees * std::max(0.0F, delta_time);
-          directive.local_yaw =
-              previous->local_yaw + std::clamp(yaw_delta, -max_turn, max_turn);
+          directive.local_yaw = Game::Systems::turn_yaw_toward(
+              previous->local_yaw,
+              directive.local_yaw,
+              k_disengage_turn_degrees * std::max(0.0F, delta_time));
         }
       }
 

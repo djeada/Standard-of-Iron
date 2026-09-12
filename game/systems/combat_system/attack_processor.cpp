@@ -14,6 +14,7 @@
 #include "../../units/spawn_type.h"
 #include "../../units/squad.h"
 #include "../../units/troop_config.h"
+#include "../../util/planar_math.h"
 #include "../../visuals/team_colors.h"
 #include "../attack_range.h"
 #include "../combat_actions/combat_action_definition.h"
@@ -371,11 +372,10 @@ void lock_facing(Engine::Core::TransformComponent* actor_transform,
   float const dx = target_transform->position.x - actor_transform->position.x;
   float const dz = target_transform->position.z - actor_transform->position.z;
   if (dx * dx + dz * dz > 0.000001F) {
-    float const target_yaw = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
-    float const diff =
-        std::fmod(target_yaw - actor_transform->rotation.y + 540.0F, 360.0F) - 180.0F;
-    float const max_step = turn_rate_degrees * std::max(0.0F, delta_time);
-    actor_transform->rotation.y += std::clamp(diff, -max_step, max_step);
+    actor_transform->rotation.y = Game::Systems::turn_yaw_toward(
+        actor_transform->rotation.y,
+        Game::Systems::yaw_degrees_from_direction(dx, dz),
+        turn_rate_degrees * std::max(0.0F, delta_time));
   }
   actor_transform->desired_yaw = actor_transform->rotation.y;
   actor_transform->has_desired_yaw = false;

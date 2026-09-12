@@ -553,6 +553,9 @@ public:
   std::vector<UnitTraversalSlotState> slot_states;
   std::uint32_t slot_states_revision{0U};
 
+  bool about_faced{false};
+  float about_face_cooldown_seconds{0.0F};
+
   float entry_progress{0.0F};
   float exit_progress{1.0F};
   float transition_progress{1.0F};
@@ -563,14 +566,12 @@ public:
   float mode_dwell_seconds{0.0F};
   float tail_clear_seconds{0.0F};
   std::uint32_t blocked_slot_count{0U};
-  bool root_motion_blocked{false};
 
   float lateral_scale{1.0F};
   float target_lateral_scale{1.0F};
   float available_half_width{0.0F};
   float desired_half_width{0.0F};
   float constriction_distance{0.0F};
-  float root_hold_seconds{0.0F};
   float soldier_body_radius{0.0F};
   float file_spacing{0.0F};
   float rank_spacing{0.0F};
