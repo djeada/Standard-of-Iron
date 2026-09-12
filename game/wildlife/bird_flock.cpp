@@ -4,6 +4,8 @@
 #include <cmath>
 #include <utility>
 
+#include "../core/ambient_session.h"
+
 namespace Game::Wildlife {
 
 namespace {
@@ -80,9 +82,18 @@ BirdFlockManager::BirdFlockManager()
     : m_terrain(&terrain_service_probe()) {
 }
 
-auto BirdFlockManager::instance() -> BirdFlockManager& {
+auto BirdFlockManager::process_flock() -> BirdFlockManager& {
   static BirdFlockManager manager;
   return manager;
+}
+
+auto BirdFlockManager::instance() -> BirdFlockManager& {
+  if (const auto* services = Game::Session::ambient_services_or_null()) {
+    if (services->birds != nullptr) {
+      return *services->birds;
+    }
+  }
+  return process_flock();
 }
 
 void BirdFlockManager::set_terrain_probe(ITerrainProbe* probe) noexcept {

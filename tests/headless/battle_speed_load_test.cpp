@@ -115,7 +115,11 @@ protected:
 
     const auto started = std::chrono::steady_clock::now();
     for (int frame = 0; frame < frames; ++frame) {
-      const int steps = session->advance(real_dt, budget, {});
+      const int steps = session->advance(
+          real_dt,
+          budget,
+          Game::Session::SessionContext::OverloadPolicy::DiscardBacklog,
+          {});
       result.ticks += static_cast<std::uint64_t>(steps);
       result.dropped += session->clock().consume_dropped_ticks();
     }
@@ -216,7 +220,11 @@ TEST_F(BattleSpeedLoadTest, AStalledFrameAtQuadrupleSpeedReportsWhatItCouldNotRu
   const ScopedSession scope(*session);
   session->clock().set_time_scale(4.0);
 
-  const int steps = session->advance(2.0, step_budget(4.0), {});
+  const int steps =
+      session->advance(2.0,
+                       step_budget(4.0),
+                       Game::Session::SessionContext::OverloadPolicy::DiscardBacklog,
+                       {});
 
   EXPECT_EQ(steps, step_budget(4.0));
   EXPECT_GT(session->clock().dropped_ticks(), 0U);

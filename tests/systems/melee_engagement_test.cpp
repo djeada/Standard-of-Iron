@@ -5,6 +5,7 @@
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
+#include "game/command/command_queue.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_system/combat_utils.h"
@@ -27,6 +28,8 @@ using Engine::Core::UnitComponent;
 
 class MeleeEngagementTest : public ::testing::Test {
 protected:
+  Game::Command::ScopedImmediateDispatch immediate_orders;
+
   void SetUp() override {
     auto& owners = Game::Systems::OwnerRegistry::instance();
     owners.clear();

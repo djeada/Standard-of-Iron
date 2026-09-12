@@ -23,6 +23,7 @@
 #include "engagement_slot_system.h"
 #include "farm_system.h"
 #include "formation_move_dispatch_system.h"
+#include "game/session/session_snapshot.h"
 #include "gate_system.h"
 #include "gather_loop_system.h"
 #include "guard_system.h"
@@ -49,6 +50,24 @@ namespace Game::Systems {
 
 void register_runtime_systems(Engine::Core::World& world) {
   auto& session = Game::Session::session_for(world);
+
+  Game::Session::register_built_in_snapshot_contributors();
+  Game::Session::SessionSnapshot::register_contributor(
+      {.key = "ai",
+       .capture = [](const Game::Session::SnapshotScope& scope) -> QJsonValue {
+         auto* system =
+             scope.world != nullptr ? scope.world->get_system<AISystem>() : nullptr;
+         return system != nullptr ? QJsonValue(system->serialize_state())
+                                  : QJsonValue();
+       },
+       .restore =
+           [](const Game::Session::SnapshotScope& scope, const QJsonValue& value) {
+             auto* system =
+                 scope.world != nullptr ? scope.world->get_system<AISystem>() : nullptr;
+             if (system != nullptr) {
+               system->restore_state(value.toObject());
+             }
+           }});
 
   world.add_system(std::make_unique<Game::Command::CommandSystem>(),
                    Engine::Core::SystemPhase::Input);

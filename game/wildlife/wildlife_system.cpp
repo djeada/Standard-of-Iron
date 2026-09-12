@@ -186,34 +186,27 @@ void WildlifeSystem::configure(const WildlifeSettings& settings,
   }
 }
 
-void WildlifeSystem::set_focus(float world_x, float world_z) noexcept {
-  m_focus_x = world_x;
-  m_focus_z = world_z;
-  m_has_focus = true;
+void WildlifeSystem::set_cosmetic_focus(float world_x, float world_z) noexcept {
   BirdFlockManager::instance().set_focus(world_x, world_z);
 }
 
-void WildlifeSystem::clear_focus() noexcept {
-  m_has_focus = false;
+void WildlifeSystem::clear_cosmetic_focus() noexcept {
   BirdFlockManager::instance().clear_focus();
 }
 
-auto WildlifeSystem::tier_for(float world_x, float world_z) const noexcept -> Tier {
-  if (!m_has_focus) {
+auto WildlifeSystem::tier_for(float world_x, float world_z) const -> Tier {
+  if (m_interest.empty()) {
     return Tier::Near;
   }
-  float const dx = world_x - m_focus_x;
-  float const dz = world_z - m_focus_z;
-  float const distance_sq = (dx * dx) + (dz * dz);
-  if (distance_sq <=
-      m_settings.near_simulation_radius * m_settings.near_simulation_radius) {
+  const auto anchor =
+      m_interest.nearest(world_x, world_z, m_settings.far_simulation_radius);
+  if (!anchor.found) {
+    return Tier::Dormant;
+  }
+  if (anchor.distance <= m_settings.near_simulation_radius) {
     return Tier::Near;
   }
-  if (distance_sq <=
-      m_settings.far_simulation_radius * m_settings.far_simulation_radius) {
-    return Tier::Far;
-  }
-  return Tier::Dormant;
+  return Tier::Far;
 }
 
 auto WildlifeSystem::find_group(std::uint16_t group_id) -> GroupState* {
@@ -453,6 +446,7 @@ void WildlifeSystem::release_due_packs(Engine::Core::World& world, float delta_t
 void WildlifeSystem::rebuild_threats(Engine::Core::World& world) {
   m_threats.clear();
   m_quarry.clear();
+  m_interest.clear();
   for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == nullptr || is_wildlife_entity(*entity)) {
       continue;
@@ -465,6 +459,14 @@ void WildlifeSystem::rebuild_threats(Engine::Core::World& world) {
     if (unit == nullptr || transform == nullptr || unit->health <= 0) {
       continue;
     }
+
+    ThreatSource anchor;
+    anchor.x = transform->position.x;
+    anchor.z = transform->position.z;
+    anchor.strength = 1.0F;
+    anchor.civilian = false;
+    m_interest.add(anchor);
+
     if (entity->has_component<Engine::Core::BuildingComponent>()) {
       continue;
     }
@@ -484,6 +486,7 @@ void WildlifeSystem::rebuild_threats(Engine::Core::World& world) {
     m_quarry.push_back(quarry);
   }
   m_threats.finalize();
+  m_interest.finalize();
 }
 
 void WildlifeSystem::collect_animals(Engine::Core::World& world) {

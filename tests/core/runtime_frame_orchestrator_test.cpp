@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <vector>
 
@@ -15,10 +16,13 @@
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
 #include "game/session/world_digest.h"
+#include "game/systems/default_content.h"
 #include "game/systems/movement_pipeline.h"
+#include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/selection_system.h"
+#include "game/systems/victory_service.h"
 #include "game/units/spawn_type.h"
 #include "scene/camera.h"
 
@@ -536,4 +540,61 @@ TEST(RuntimeFrameOrchestratorTest, MinimapReadsThePublishedSnapshotNotTheLiveWor
   run_frame();
   EXPECT_NE(minimap_manager.get_image(), from_snapshot)
       << "publishing the move must reach the minimap on the next frame";
+}
+
+TEST(RuntimeFrameOrchestratorTest, TheObjectiveClockRunsOnTicksNotOnFrames) {
+  const auto victory_tick = [](const std::vector<float>& frame_pattern) {
+    Game::Session::SessionContext session;
+    auto& owners = session.owners();
+    owners.register_owner_with_id(1, Game::Systems::OwnerType::Player, "Player");
+    owners.register_owner_with_id(2, Game::Systems::OwnerType::AI, "Enemy");
+    owners.set_owner_team(1, 1);
+    owners.set_owner_team(2, 2);
+    owners.set_local_player_id(1);
+
+    auto& nations = session.nations();
+    Game::Systems::initialize_default_content(nations);
+    nations.set_player_nation(1, Game::Systems::NationID::RomanRepublic);
+    nations.set_player_nation(2, Game::Systems::NationID::Carthage);
+
+    Engine::Core::World world;
+    (void)add_unit(world, 1.0F, 1.0F, 1);
+    (void)add_unit(world, 6.0F, 6.0F, 2);
+
+    Game::Systems::VictoryService victory(Game::Systems::VictoryService::Services{
+        session.stats(), owners, nations, session.economy()});
+    Game::Systems::VictoryRuleSet rules;
+    rules.victory_rules.emplace_back(Game::Systems::SurviveTimeVictoryRule{2.0F},
+                                     QStringLiteral("hold_the_line"),
+                                     QStringLiteral("Hold the line"));
+    victory.configure(rules, 1);
+
+    std::uint64_t decided_on_tick = 0;
+    victory.set_victory_callback([&](const QString&) {
+      if (decided_on_tick == 0) {
+        decided_on_tick = session.clock().tick();
+      }
+    });
+
+    RuntimeFrameOrchestrator orchestrator;
+    RuntimeFrameState state{.simulation_time_scale = 1.0F};
+    const AppSceneContext scene{
+        .session = &session, .world = &world, .victory_service = &victory};
+
+    for (int frame = 0; frame < 2000 && decided_on_tick == 0; ++frame) {
+      const float frame_seconds =
+          frame_pattern[static_cast<std::size_t>(frame) % frame_pattern.size()];
+      orchestrator.advance_simulation(scene, state, frame_seconds, [](float) {});
+    }
+    return decided_on_tick;
+  };
+
+  const std::uint64_t at_sixty = victory_tick({1.0F / 60.0F});
+  const std::uint64_t at_fifteen = victory_tick({1.0F / 15.0F});
+  const std::uint64_t while_stuttering = victory_tick({1.0F / 60.0F, 1.0F / 20.0F});
+
+  EXPECT_GT(at_sixty, 0U);
+  EXPECT_EQ(at_sixty, at_fifteen)
+      << "the survive timer must be spent by the fixed tick, not by the frame";
+  EXPECT_EQ(at_sixty, while_stuttering);
 }

@@ -23,21 +23,28 @@ void CommandSystem::update(Engine::Core::World* world, float) {
 
   const auto tick = session->clock().tick();
 
-  if (auto* recorder = session->replay_recorder()) {
-    recorder->record_digest(tick, Game::Session::session_digest(*session));
-  }
-  if (auto* replay = session->replay_player()) {
-    if (!replay->check(tick, Game::Session::session_digest(*session))) {
+  auto* recorder = session->replay_recorder();
+  auto* replay = session->replay_player();
+  if (recorder != nullptr || replay != nullptr) {
+    const auto digests = Game::Session::subsystem_digests(*session);
+    if (recorder != nullptr) {
+      recorder->record_digest(tick, digests);
+    }
+    if (replay != nullptr && !replay->check(tick, digests)) {
       const auto& divergence = *replay->divergence();
       if (divergence.tick == tick) {
-        std::fprintf(
-            stderr,
-            "replay: digest diverged at tick %llu (recorded %llu, observed %llu)\n",
-            static_cast<unsigned long long>(tick),
-            static_cast<unsigned long long>(divergence.recorded),
-            static_cast<unsigned long long>(divergence.observed));
+        std::fprintf(stderr,
+                     "replay: digest diverged at tick %llu in %s (recorded %llu, "
+                     "observed %llu)\n",
+                     static_cast<unsigned long long>(tick),
+                     divergence.subsystem != nullptr ? divergence.subsystem
+                                                     : "an unrecorded subsystem",
+                     static_cast<unsigned long long>(divergence.recorded),
+                     static_cast<unsigned long long>(divergence.observed));
       }
     }
+  }
+  if (replay != nullptr) {
     replay->feed(tick, session->commands());
   }
   session->commands().drain(*world, tick);

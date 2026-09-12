@@ -57,6 +57,7 @@ protected:
     m_session = std::make_unique<SessionContext>();
     m_session->world().set_presentation_enabled(false);
     m_scope = std::make_unique<Game::Session::ScopedSession>(*m_session);
+    Game::Map::MapTransformer::setFactoryRegistry(m_factory);
 
     auto& owners = m_session->owners();
     owners.register_owner_with_id(k_player, Game::Systems::OwnerType::Player, "player");

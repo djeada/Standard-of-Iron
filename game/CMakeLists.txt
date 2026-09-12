@@ -162,7 +162,17 @@ add_library(
     systems/terrain_alignment_system.cpp
 )
 target_include_directories(soi_navigation PUBLIC .)
-target_link_libraries(soi_navigation PUBLIC soi_world)
+# The rung below is PRIVATE and engine_core is PUBLIC: no header in
+# soi_navigation names a soi_world type, so a consumer of the nav grid does not
+# inherit the terrain and registry stack with it, but its headers do name
+# Engine::Core types and Qt value types, so that half of the interface is
+# declared rather than inherited through the ladder. Five of the seven ladder rungs are PRIVATE for the same reason; the two
+# that are not (soi_formations -> soi_units for TroopType, soi_movement ->
+# soi_formations for the army formation types and combat geometry) really do
+# expose the rung below in their public headers. Static libraries still
+# propagate the link, so this narrows what a dependent *compiles against*, not
+# what it links.
+target_link_libraries(soi_navigation PUBLIC engine_core PRIVATE soi_world)
 
 # ---- soi_units: the factories ------------------------------------------------
 #
@@ -204,7 +214,7 @@ add_library(
     map/map_transformer.cpp
 )
 target_include_directories(soi_units PUBLIC .)
-target_link_libraries(soi_units PUBLIC soi_navigation)
+target_link_libraries(soi_units PUBLIC engine_core PRIVATE soi_navigation)
 
 # ---- soi_formations: layouts and army formations -----------------------------
 #
@@ -270,7 +280,7 @@ add_library(
     systems/nation_collapse_service.cpp
 )
 target_include_directories(soi_economy PUBLIC .)
-target_link_libraries(soi_economy PUBLIC soi_movement)
+target_link_libraries(soi_economy PUBLIC engine_core PRIVATE soi_movement)
 
 # ---- soi_combat: every way a unit hurts or heals another --------------------
 add_library(
@@ -334,7 +344,7 @@ add_library(
     systems/stamina_system.cpp
 )
 target_include_directories(soi_combat PUBLIC .)
-target_link_libraries(soi_combat PUBLIC soi_economy)
+target_link_libraries(soi_combat PUBLIC engine_core PRIVATE soi_economy)
 
 # ---- soi_wildlife: the ambient creatures -------------------------------------
 add_library(
@@ -347,7 +357,7 @@ add_library(
     wildlife/nature_ai.cpp
 )
 target_include_directories(soi_wildlife PUBLIC .)
-target_link_libraries(soi_wildlife PUBLIC soi_combat)
+target_link_libraries(soi_wildlife PUBLIC engine_core PRIVATE soi_combat)
 
 # ---- game_sim: the session and the systems that compose a match --------------
 #
@@ -374,6 +384,7 @@ add_library(
     command/replay.cpp
     map/match_loader.cpp
     session/session_context.cpp
+    session/session_snapshot.cpp
     session/world_digest.cpp
     systems/default_content.cpp
     systems/dismantle_system.cpp
@@ -583,6 +594,7 @@ add_library(
     mission/commander_voice_observer.cpp
     mission/mission_setup_coordinator.cpp
     mission/mission_wave_director.cpp
+    mission/mission_wave_runtime.cpp
     mission/mission_waves.cpp
 )
 target_include_directories(soi_mission_runtime PUBLIC .)

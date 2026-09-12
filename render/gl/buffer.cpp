@@ -22,8 +22,8 @@ Buffer::~Buffer() {
   if (m_buffer == 0) {
     return;
   }
-  if (!gl_objects_can_be_released()) {
-    defer_gl_delete(DeferredGlObject::Buffer, m_buffer);
+  if (!gl_objects_can_be_released(m_share_group)) {
+    defer_gl_delete(DeferredGlObject::Buffer, m_buffer, m_share_group);
     return;
   }
   glDeleteBuffers(1, &m_buffer);
@@ -33,6 +33,7 @@ void Buffer::bind() {
   if (m_buffer == 0U) {
     initializeOpenGLFunctions();
     glGenBuffers(1, &m_buffer);
+    m_share_group = current_gl_share_group();
     note_buffers_created();
   }
   glBindBuffer(get_gl_type(), m_buffer);
@@ -99,8 +100,8 @@ VertexArray::~VertexArray() {
   if (m_vao == 0) {
     return;
   }
-  if (!gl_objects_can_be_released()) {
-    defer_gl_delete(DeferredGlObject::VertexArray, m_vao);
+  if (!gl_objects_can_be_released(m_share_group)) {
+    defer_gl_delete(DeferredGlObject::VertexArray, m_vao, m_share_group);
     return;
   }
   glDeleteVertexArrays(1, &m_vao);
@@ -114,6 +115,7 @@ void VertexArray::bind() {
     }
 #endif
     glGenVertexArrays(1, &m_vao);
+    m_share_group = current_gl_share_group();
     note_vertex_arrays_created();
 #ifndef NDEBUG
     GLenum gen_err = glGetError();

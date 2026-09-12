@@ -1,12 +1,14 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
 
+#include "game/command/command_queue.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
@@ -49,6 +51,8 @@ namespace {
 
 class AISystemTest : public ::testing::Test {
 protected:
+  Game::Command::ScopedImmediateDispatch immediate_orders;
+
   static void clear_shared_state() {
     Game::Systems::OwnerRegistry::instance().clear();
     Game::Systems::NationRegistry::instance().clear();
@@ -4555,4 +4559,51 @@ TEST_F(AISystemTest, AnUnreachableDetourIsNotIssued) {
           << "a detour must be somewhere the soldier can actually walk to";
     }
   }
+}
+
+TEST_F(AISystemTest, ADecisionThatOverrunsItsWallClockBudgetStillLandsOnItsOwnTick) {
+  const auto first_decision_update = [](std::chrono::microseconds budget) {
+    auto& owners = Game::Systems::OwnerRegistry::instance();
+    owners.clear();
+    owners.register_owner_with_id(1, Game::Systems::OwnerType::Player, "Player");
+    owners.register_owner_with_id(2, Game::Systems::OwnerType::AI, "Opponent");
+    owners.set_owner_team(1, 1);
+    owners.set_owner_team(2, 2);
+    owners.set_local_player_id(1);
+
+    auto& nations = Game::Systems::NationRegistry::instance();
+    nations.clear();
+    Game::Systems::initialize_default_content(nations);
+    nations.set_player_nation(1, Game::Systems::NationID::RomanRepublic);
+    nations.set_player_nation(2, Game::Systems::NationID::Carthage);
+
+    Engine::Core::World world;
+    constexpr int k_host = 900;
+    for (int index = 0; index < k_host; ++index) {
+      const float x = static_cast<float>(index % 30);
+      const float z = static_cast<float>(index / 30);
+      (void)add_world_unit(world, 2, x, z, 20.0F, true);
+      (void)add_world_unit(world, 1, x + 40.0F, z, 20.0F, false);
+    }
+
+    Game::Systems::AISystem ai_system(
+        Game::Systems::AISystem::Services{.owners = owners, .nations = nations});
+    ai_system.reinitialize();
+    ai_system.set_update_interval(0.1F);
+    ai_system.set_decision_wait_budget(budget);
+
+    int updates = 0;
+    while (updates < 400 && ai_system.completed_decision_count() == 0) {
+      ai_system.update(&world, 0.1F);
+      ++updates;
+    }
+    return updates;
+  };
+
+  const int with_room_to_spare = first_decision_update(std::chrono::seconds{5});
+  const int with_no_budget_at_all = first_decision_update(std::chrono::microseconds{0});
+
+  EXPECT_LT(with_room_to_spare, 400);
+  EXPECT_EQ(with_room_to_spare, with_no_budget_at_all)
+      << "how long the worker took must not decide which update applies its plan";
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <deque>
 #include <functional>
 #include <mutex>
@@ -60,6 +61,34 @@ private:
   bool m_replay_only = false;
 };
 
-void submit(Engine::Core::World& world, Source source, int owner_id, Payload payload);
+auto submit(Engine::Core::World& world,
+            Source source,
+            int owner_id,
+            Payload payload) -> bool;
+
+auto dispatch_immediately(Engine::Core::World& world,
+                          Source source,
+                          int owner_id,
+                          Payload payload) -> bool;
+
+class ScopedImmediateDispatch {
+public:
+  ScopedImmediateDispatch();
+  ~ScopedImmediateDispatch();
+
+  ScopedImmediateDispatch(const ScopedImmediateDispatch&) = delete;
+  ScopedImmediateDispatch(ScopedImmediateDispatch&&) = delete;
+  auto operator=(const ScopedImmediateDispatch&) -> ScopedImmediateDispatch& = delete;
+  auto operator=(ScopedImmediateDispatch&&) -> ScopedImmediateDispatch& = delete;
+
+private:
+  bool m_previous;
+};
+
+[[nodiscard]] auto immediate_dispatch_allowed() -> bool;
+
+[[nodiscard]] auto unqueued_submissions() -> std::uint64_t;
+
+void reset_unqueued_submissions();
 
 } // namespace Game::Command

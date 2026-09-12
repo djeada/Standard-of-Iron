@@ -404,7 +404,7 @@ TEST_F(SaveLoadServiceTest, APayloadWithoutABattlefieldIsRefusedBeforeTheClear) 
       << service->get_last_error().toStdString();
 }
 
-TEST_F(SaveLoadServiceTest, ASaveThatRestoresNoUnitsIsRefused) {
+TEST_F(SaveLoadServiceTest, ASaveThatRestoresNoUnitsIsRefusedWithTheMatchIntact) {
   SaveRequest request = make_request(QStringLiteral("hollow"));
   QJsonObject hollow;
   hollow["entities"] = QJsonArray{1, 2, 3};
@@ -414,12 +414,17 @@ TEST_F(SaveLoadServiceTest, ASaveThatRestoresNoUnitsIsRefused) {
   wait_for_saves(*service);
 
   Engine::Core::World world;
+  (void)world.create_entity();
+  const std::size_t before = world.entity_count();
+  ASSERT_GT(before, 0U);
+
   bool discarded = false;
   EXPECT_FALSE(
       service->load_game_from_slot(world, QStringLiteral("hollow"), &discarded));
-  EXPECT_TRUE(discarded)
-      << "the caller must be told the previous match is gone so it can end it";
-  EXPECT_EQ(world.entity_count(), 0U);
+  EXPECT_FALSE(discarded)
+      << "an unusable save must be found out about before the live match is cleared";
+  EXPECT_EQ(world.entity_count(), before)
+      << "the battle that was running was thrown away for a save that had no units";
   EXPECT_TRUE(service->get_last_error().contains("restored no units"))
       << service->get_last_error().toStdString();
 }
