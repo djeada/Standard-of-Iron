@@ -50,6 +50,9 @@ public:
   route_for(Engine::Core::EntityID entity_id) const -> const MovementRoute*;
 
 private:
+  void report_idle_order(const Engine::Core::Entity& entity,
+                         const Engine::Core::World& world);
+
   void
   follow(Engine::Core::Entity& entity, Engine::Core::World& world, float delta_time);
 

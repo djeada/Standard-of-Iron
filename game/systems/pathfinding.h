@@ -184,9 +184,9 @@ private:
   static constexpr int k_edge_step_penalty = 1;
 
   static constexpr int k_clearance_radius = 3;
-  static constexpr float k_max_body_clearance = 1.5F;
-  static constexpr int k_clearance_ring_penalty = 4;
-  static constexpr int k_clearance_avoid_weight = 6;
+  static constexpr float k_clearance_overlap_cost = 10.0F;
+  static constexpr float k_max_cost_clearance = 3.0F;
+  static constexpr float k_rigid_overlap_cost = 100.0F;
   static constexpr int k_turn_penalty = 1;
 
   static constexpr float k_climb_noise_floor_metres = 0.05F;

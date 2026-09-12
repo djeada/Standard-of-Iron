@@ -390,12 +390,11 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
         soldiers = formation_presentation->soldiers;
       }
 
-      placements = build_selection_ring_layout(
-          {.soldiers = soldiers,
-           .ring_size = ring_size,
-           .position = QVector3D(
-               transform->position.x, transform->position.y, transform->position.z),
-           .yaw_degrees = transform->rotation.y});
+      auto const root = Render::Entity::resolve_formation_root(entity, *transform);
+      placements = build_selection_ring_layout({.soldiers = soldiers,
+                                                .ring_size = ring_size,
+                                                .position = root.position,
+                                                .yaw_degrees = root.yaw});
     } else {
 
       ring_size = config.get_selection_ring_size(unit_comp->spawn_type);

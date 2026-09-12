@@ -115,7 +115,14 @@ auto MovementRoute::project(float x, float z, float window) const -> Projection 
     auto const hit = closest_on_segment(a.x, a.z, b.x, b.z, x, z);
     float const s =
         std::clamp(a.cumulative + (b.cumulative - a.cumulative) * hit.t, low, high);
-    if (best_distance_sq < 0.0F || hit.distance_sq < best_distance_sq) {
+
+    constexpr float k_same_point_sq = 1.0e-4F;
+    bool const closer =
+        best_distance_sq < 0.0F || hit.distance_sq + k_same_point_sq < best_distance_sq;
+    bool const same_point_further_along =
+        best_distance_sq >= 0.0F &&
+        std::fabs(hit.distance_sq - best_distance_sq) <= k_same_point_sq && s > best.s;
+    if (closer || same_point_further_along) {
       best_distance_sq = hit.distance_sq;
       best.s = s;
       best.segment = index;

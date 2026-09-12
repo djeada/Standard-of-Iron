@@ -26,6 +26,7 @@
 #include "../systems/walkability.h"
 #include "../units/factory.h"
 #include "../units/spawn_type.h"
+#include "../util/planar_math.h"
 #include "bird_flock.h"
 #include "wildlife_terrain_probe.h"
 
@@ -581,7 +582,7 @@ auto WildlifeSystem::begin_bite(Engine::Core::Entity& entity,
   transform->has_desired_yaw = true;
   float const reach = k_wolf_bite_windup_range + prey.radius;
   if (dx * dx + dz * dz > reach * reach ||
-      std::abs(std::remainder(yaw - transform->rotation.y, 360.0F)) >
+      std::abs(Game::Systems::signed_yaw_delta(transform->rotation.y, yaw)) >
           k_wolf_bite_facing_degrees) {
     return false;
   }

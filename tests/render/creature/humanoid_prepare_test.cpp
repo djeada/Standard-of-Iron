@@ -4531,6 +4531,46 @@ TEST(AnimationCoreLocomotionManifest, RunHasACompactAirborneSilhouette) {
   EXPECT_GT(run_pose.shoulder_l_delta.z, walk_pose.shoulder_l_delta.z + 0.08F);
 }
 
+TEST(AnimationCoreLocomotionManifest, RunFoldsTheTrailingLegBeforeBringingItForward) {
+  auto run = run_pose_inputs();
+  run.cycle_phase = 0.52F;
+  auto const recovery = Animation::resolve_humanoid_locomotion_pose(run);
+  run.cycle_phase = 0.88F;
+  auto const landing = Animation::resolve_humanoid_locomotion_pose(run);
+
+  EXPECT_GT(recovery.foot_l.y, run.foot_y_offset + 0.35F);
+  EXPECT_LT(recovery.foot_l.z, 0.0F);
+  EXPECT_GT(landing.foot_l.z, recovery.foot_l.z);
+  EXPECT_LT(landing.foot_l.y, recovery.foot_l.y - 0.15F);
+}
+
+TEST(AnimationCoreHoldPoseManifest, RunningCarriesFollowTheStrideAndLoopCleanly) {
+  for (auto kind : {Animation::HumanoidHeldPoseKind::SwordShieldCarry,
+                    Animation::HumanoidHeldPoseKind::SpearIdle,
+                    Animation::HumanoidHeldPoseKind::CasterChannel,
+                    Animation::HumanoidHeldPoseKind::StaveCarry}) {
+    Animation::HumanoidHeldPoseInputs inputs{};
+    inputs.kind = kind;
+    inputs.running = true;
+    inputs.cycle_phase = 0.05F;
+    auto const first = Animation::resolve_humanoid_held_pose(inputs);
+    inputs.cycle_phase = 0.55F;
+    auto const opposite = Animation::resolve_humanoid_held_pose(inputs);
+    EXPECT_GT(std::abs(first.right_hand.z - opposite.right_hand.z), 0.08F);
+    inputs.cycle_phase = 1.05F;
+    auto const loop = Animation::resolve_humanoid_held_pose(inputs);
+    EXPECT_NEAR(first.right_hand.z, loop.right_hand.z, 1.0e-5F);
+    EXPECT_NEAR(first.right_hand.y, loop.right_hand.y, 1.0e-5F);
+
+    inputs.running = false;
+    inputs.cycle_phase = 0.05F;
+    auto const walk = Animation::resolve_humanoid_held_pose(inputs);
+    inputs.cycle_phase = 0.55F;
+    auto const walk_opposite = Animation::resolve_humanoid_held_pose(inputs);
+    EXPECT_FLOAT_EQ(walk.right_hand.z, walk_opposite.right_hand.z);
+  }
+}
+
 TEST(AnimationCoreLocomotionManifest, WalkHeelStrikesWhileRunLandsMidfoot) {
   auto walk = walk_pose_inputs();
   auto run = run_pose_inputs();

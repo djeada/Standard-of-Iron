@@ -1,5 +1,7 @@
 #include "production_completion_renderer.h"
 
+#include <QtGlobal>
+
 #include <algorithm>
 #include <cmath>
 #include <numbers>
@@ -7,9 +9,12 @@
 #include "game/core/component_presentation.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
+#include "game/map/render_visibility_rules.h"
+#include "game/map/visibility_service.h"
 #include "render/draw_commands.h"
 #include "render/local_lighting.h"
 #include "render/scene_renderer.h"
+#include "render/world_view.h"
 
 namespace Render::GL {
 
@@ -80,18 +85,32 @@ void render_production_completions(Renderer* renderer,
                                    Engine::Core::World* world,
                                    int local_owner_id,
                                    bool reduced_motion) {
-  if (renderer == nullptr || world == nullptr ||
-      Game::Core::is_neutral_owner(local_owner_id)) {
+  if (renderer == nullptr || world == nullptr) {
     return;
   }
+
+  static const bool trace = qEnvironmentVariableIsSet("SOI_FX_TRACE");
+
+  const auto& world_view = renderer->world_view();
+  const auto visibility = world_view.has_visibility()
+                              ? world_view.visibility()->snapshot_ptr()
+                              : Game::Map::VisibilityService::SnapshotPtr{};
+  const bool fog_applies = visibility != nullptr && visibility->initialized &&
+                           !Game::Core::is_neutral_owner(local_owner_id);
 
   for (auto [entity, effect, transform, unit] :
        world->entity_view<Engine::Core::ProductionCompletionComponent,
                           Engine::Core::TransformComponent,
                           Engine::Core::UnitComponent>()) {
-    if (unit.owner_id != local_owner_id || unit.health <= 0 ||
+    if (unit.health <= 0 ||
         entity.has_component<Engine::Core::PendingRemovalComponent>() ||
         effect.remaining <= 0.0F) {
+      continue;
+    }
+    if (fog_applies && unit.owner_id != local_owner_id &&
+        Game::Map::classify_world_visibility(
+            *visibility, transform.position.x, transform.position.z) !=
+            Game::Map::RenderVisibilityState::Visible) {
       continue;
     }
 
@@ -109,6 +128,14 @@ void render_production_completions(Renderer* renderer,
     const float time = reduced_motion ? 0.0F : age;
     const float radius =
         effect.radius * (reduced_motion ? 1.0F : 1.0F + 0.18F * progress);
+    if (trace) {
+      qWarning("FXTRACE completion p%d age %.2f radius %.2f at %.1f %.1f",
+               unit.owner_id,
+               static_cast<double>(age),
+               static_cast<double>(effect.radius),
+               static_cast<double>(ground.x()),
+               static_cast<double>(ground.z()));
+    }
 
     submit_ground_disc(
         renderer, ground, effect.radius, 0.16F * intensity * intensity + 0.22F * flare);

@@ -11,6 +11,7 @@
 #include "../../core/ambient_session.h"
 #include "../../core/component_commander.h"
 #include "../../core/world.h"
+#include "../../util/planar_math.h"
 #include "../combat_system/combat_random.h"
 #include "../combat_system/combat_utils.h"
 #include "../combat_system/target_rules.h"
@@ -94,11 +95,8 @@ void turn_body_toward(Engine::Core::TransformComponent& transform,
                       float delta_time) {
   float const current =
       transform.has_desired_yaw ? transform.desired_yaw : transform.rotation.y;
-  float gap = std::fmod((target_yaw_degrees - current + 540.0F), 360.0F) - 180.0F;
-  float const step = std::clamp(gap,
-                                -k_engaged_turn_rate_degrees * delta_time,
-                                k_engaged_turn_rate_degrees * delta_time);
-  transform.desired_yaw = current + step;
+  transform.desired_yaw = Game::Systems::turn_yaw_toward(
+      current, target_yaw_degrees, k_engaged_turn_rate_degrees * delta_time);
   transform.has_desired_yaw = true;
 }
 
@@ -293,8 +291,8 @@ void refresh_commander_engagement(Engine::Core::World* world,
     }
     bool sector_taken = false;
     for (float const bearing : taken_bearings) {
-      float gap = std::fmod(slot.signed_angle_degrees - bearing + 540.0F, 360.0F);
-      gap -= 180.0F;
+      float const gap =
+          Game::Systems::signed_yaw_delta(bearing, slot.signed_angle_degrees);
       if (std::abs(gap) < k_press_sector_degrees) {
         sector_taken = true;
         break;

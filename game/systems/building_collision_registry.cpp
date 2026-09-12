@@ -653,6 +653,17 @@ auto BuildingCollisionRegistry::is_circle_overlapping_building(
   return false;
 }
 
+auto BuildingCollisionRegistry::point_in_navigation_passage(float x,
+                                                            float z) const -> bool {
+  for (const auto& passage : m_navigation_passages) {
+    if (std::abs(x - passage.center_x) <= passage.width * 0.5F + 0.5F &&
+        std::abs(z - passage.center_z) <= passage.depth * 0.5F + 0.5F) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void BuildingCollisionRegistry::set_navigation_passages(
     std::vector<NavigationPassage> passages) {
   auto same_rect = [](const NavigationPassage& lhs, const NavigationPassage& rhs) {

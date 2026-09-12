@@ -20,6 +20,12 @@ float soft_band(float value, float low, float high, float feather) {
          (1.0 - smoothstep(high - feather, high + feather, value));
 }
 
+float band_coverage(float value, float low, float high, float pixel_span) {
+  float feather = max(pixel_span * 0.75, 0.02);
+  float fill = clamp((high - low) / max(pixel_span, 1e-4), 0.0, 1.0);
+  return soft_band(value, low, high, feather) * fill;
+}
+
 float dash_gate(float angle, float dash_count, float duty, float feather) {
   if (dash_count <= 1.0 && duty >= 0.999) {
     return 1.0;
@@ -43,29 +49,32 @@ void main() {
   float angle = v_shape_coord.x;
   float radial = v_shape_coord.y;
 
-  float radial_feather = max(fwidth(radial) * 0.75, 0.02);
+  float radial_span = fwidth(radial);
   float angular_feather = max(fwidth(angle) * dash_count, 0.004);
 
-  float main_band = soft_band(radial, k_band_inner, k_band_outer, radial_feather);
+  float main_band = band_coverage(radial, k_band_inner, k_band_outer, radial_span);
   main_band *= dash_gate(angle, dash_count, dash_duty, angular_feather);
 
   float coverage = main_band;
 
   if (second_end > second_start) {
     coverage =
-        max(coverage, soft_band(radial, second_start, second_end, radial_feather));
+        max(coverage, band_coverage(radial, second_start, second_end, radial_span));
   }
 
   if (tick_count > 0.0) {
     float tick_slot = abs(fract(angle * tick_count + 0.5) - 0.5) * 2.0;
     float tick_gate = 1.0 - smoothstep(0.12, 0.2, tick_slot);
     float tick_band =
-        soft_band(radial, k_band_inner, k_band_outer + tick_length, radial_feather);
+        band_coverage(radial, k_band_inner, k_band_outer + tick_length, radial_span);
     coverage = max(coverage, tick_band * tick_gate);
   }
 
   float glow_center = (k_band_inner + k_band_outer) * 0.5;
-  float glow = exp(-pow(abs(radial - glow_center) / 1.5, 2.0)) * 0.32;
+
+  float glow = exp(-pow(abs(radial - glow_center) / 1.05, 2.0)) * 0.28;
+
+  glow *= clamp(2.5 / max(radial_span, 1e-4), 0.0, 1.0);
 
   bool focused = v_flags >= 0.5;
   float pulse = focused ? 0.86 + 0.14 * sin(u_time * 3.6 + v_phase) : 1.0;

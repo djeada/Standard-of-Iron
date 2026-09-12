@@ -86,6 +86,8 @@ ApplicationWindow {
             if (overlays[i].visible)
                 return overlays[i];
         }
+        if (hud.visible && hud.keyboard_owner)
+            return hud.keyboard_owner;
         if (mainWindow.game_started)
             return gameViewItem;
         return null;

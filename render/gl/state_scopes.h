@@ -97,6 +97,15 @@ struct CullFaceScope {
   }
 };
 
+struct DepthFuncScope {
+  GLint prev{GL_LESS};
+  explicit DepthFuncScope(GLenum func) {
+    glGetIntegerv(GL_DEPTH_FUNC, &prev);
+    glDepthFunc(func);
+  }
+  ~DepthFuncScope() { glDepthFunc(static_cast<GLenum>(prev)); }
+};
+
 struct DepthTestScope {
   GLboolean prev_enable;
   explicit DepthTestScope(bool enable)

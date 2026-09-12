@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <charconv>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -254,6 +255,7 @@ auto to_json(const MovementTroopSample& s) -> std::string {
   w.field("formation_hw", s.formation_half_width);
   w.field("file_spacing", s.file_spacing);
   w.field("lateral_scale", s.lateral_scale);
+  w.field("about_faced", s.about_faced);
   w.field("portal", s.portal_id);
   w.field("mode", static_cast<std::uint32_t>(s.traversal_mode));
   w.field("normal_files", s.normal_files);
@@ -414,6 +416,7 @@ auto parse_troop_sample(const std::string& line, MovementTroopSample& out) -> bo
   read_float(line, "formation_hw", out.formation_half_width);
   read_float(line, "file_spacing", out.file_spacing);
   read_float(line, "lateral_scale", out.lateral_scale);
+  read_bool(line, "about_faced", out.about_faced);
   read_small(line, "normal_files", out.normal_files);
   read_small(line, "portal", out.portal_id);
   read_small(line, "mode", out.traversal_mode);
@@ -487,6 +490,7 @@ struct MovementTrace::Session {
   std::size_t troop_limit{k_default_troop_limit};
   std::size_t soldier_limit{k_default_soldier_limit};
 
+  std::string directory;
   std::uint64_t tick_stride{1};
   std::uint64_t byte_budget{k_default_file_byte_budget};
   std::uint64_t bytes_written{0};
@@ -539,6 +543,33 @@ void MovementTrace::configure_from_environment() {
   m_session->byte_budget = byte_budget;
 }
 
+namespace {
+
+void write_manifest_file(const std::string& directory,
+                         const MovementTraceManifest& manifest) {
+  std::ofstream manifest_stream(directory + "/manifest.json", std::ios::trunc);
+  if (manifest_stream.is_open()) {
+    manifest_stream << to_json(manifest) << '\n';
+  }
+}
+
+} // namespace
+
+void MovementTrace::set_fixed_step_seconds(float seconds) {
+  if (!(seconds > 0.0F)) {
+    return;
+  }
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  if (!m_session ||
+      std::abs(m_session->manifest.fixed_step_seconds - seconds) < 1.0e-6F) {
+    return;
+  }
+  m_session->manifest.fixed_step_seconds = seconds;
+  if (m_session->to_file && !m_session->directory.empty()) {
+    write_manifest_file(m_session->directory, m_session->manifest);
+  }
+}
+
 auto MovementTrace::begin_file_session(const std::string& directory,
                                        const MovementTraceManifest& manifest) -> bool {
   end_session();
@@ -550,6 +581,7 @@ auto MovementTrace::begin_file_session(const std::string& directory,
 
   auto session = std::make_unique<Session>();
   session->manifest = manifest;
+  session->directory = directory;
   session->to_file = true;
   session->troop_stream.open(directory + "/troops.jsonl", std::ios::trunc);
   session->soldier_stream.open(directory + "/soldiers.jsonl", std::ios::trunc);
