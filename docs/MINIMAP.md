@@ -1,176 +1,168 @@
-# Minimap
+# Minimap Architecture
 
-The HUD minimap is composed from four independent layers plus a QML overlay. Each
-layer has its own invalidation rule, and the split exists to keep the per-frame
-CPU cost near zero when nothing the player can see has changed.
+The HUD minimap combines four cached raster layers with one live QML overlay. The split is designed around invalidation: stable pictures of world state are rebuilt only when their inputs change, while continuously animated signals stay on the scene graph.
 
-## Layers
+That keeps the normal per-frame CPU cost close to zero when nothing visible on the minimap has changed.
+
+## Rendering layers
 
 | Layer                           | Owner                  | Rebuilt when                                       |
 | ------------------------------- | ---------------------- | -------------------------------------------------- |
-| Parchment base                  | `MinimapGenerator`     | once, on map load                                  |
-| Fog                             | `MinimapFogCompositor` | the visibility snapshot's cells change             |
-| Units                           | `UnitLayer`            | the quantised marker hash changes                  |
+| Parchment base                  | `MinimapGenerator`     | once, when the map loads                           |
+| Fog                             | `MinimapFogCompositor` | visibility cells change                            |
+| Units                           | `UnitLayer`            | the quantized marker hash changes                  |
 | Camera viewport                 | `CameraViewportLayer`  | the camera target or frustum footprint moves       |
-| Events, destinations, landmarks | `MinimapOverlay.qml`   | driven by signals and properties, never rasterised |
+| Events, destinations, landmarks | `MinimapOverlay.qml`   | driven by properties and signals; never rasterized |
 
-The first four are `QImage`s composited by `MinimapManager`. The fifth is
-vector QML: blips animate on the scene graph and cost the simulation thread
-nothing.
+The first four layers are `QImage` surfaces composited by `MinimapManager`. The fifth is vector QML, allowing blips and other transient elements to animate on the scene graph without asking the simulation thread to repaint an image.
 
-Anything that animates continuously belongs in the QML overlay. Anything that
-is a stable picture of world state belongs in a raster layer.
+The division rule is simple:
 
-## Symbol vocabulary
+> Stable world state belongs in a raster layer. Continuously animated or transient information belongs in the QML overlay.
 
-`MarkerClass` (`game/render_bridge/minimap/unit_layer.h`) sets the visual
-hierarchy. Draw order runs from least to most important so a village is never
-buried under the troops standing on it.
+## Marker hierarchy
 
-| Class            | Spawn types                         | Drawn as                                 |
+`MarkerClass` in `game/render_bridge/minimap/unit_layer.h` defines the visual and draw-order hierarchy. Less important markers are drawn first so strategic landmarks remain readable even when troops stand directly on top of them.
+
+| Class            | Spawn types                         | Presentation                             |
 | ---------------- | ----------------------------------- | ---------------------------------------- |
-| `MinorStructure` | home, farm, wall segment, wall gate | small dot, blended toward ink, no border |
-| `Troop`          | everything that fights              | pigment disc under an ink rim            |
-| `Tower`          | defense tower                       | slim tower with a pitched roof           |
-| `Landmark`       | temple, marketplace                 | pediment                                 |
-| `Stronghold`     | barracks (a.k.a. village)           | twin-turret keep with an ink cast shadow |
+| `MinorStructure` | home, farm, wall segment, wall gate | small ink-blended dot without a border   |
+| `Troop`          | fighting units                      | pigment disc with an ink rim             |
+| `Tower`          | defense tower                       | narrow tower with a pitched roof         |
+| `Landmark`       | temple, marketplace                 | pediment glyph                           |
+| `Stronghold`     | barracks / village                  | twin-turret keep with an ink cast shadow |
 
-An unclaimed village is drawn in bone under a heavy ink border, so it reads
-differently from one that already belongs to somebody without ever becoming
-faint.
+An unclaimed village uses a bone-colored fill under a heavy ink border. This keeps neutral strongholds distinct from owned ones without making them visually weak.
 
-### Villages are always charted
+## Strongholds stay visible through fog
 
-Villages are the thing the match is fought over, so they are the one marker
-class exempt from the fog visibility cull in `UnitLayer::update`. Every village
-is drawn wherever it stands, in the colour of whichever faction holds it right
-now, even under unseen fog. Enemy troops are still hidden by fog — that
-exemption is for strongholds only.
+Villages are the primary territorial objective, so `Stronghold` is the only marker class exempt from the fog visibility cull in `UnitLayer::update`.
 
-Because the live marker is always drawn, it has to cover the stone keep baked
-into the parchment beneath it; `k_stronghold_scale` is sized against
-`structure_icon_size` for exactly that reason. Change one and check the other,
-or every village grows a stone halo.
+Every village is shown at its known location and in the color of its current owner even when the surrounding ground is unexplored. Enemy troops remain hidden by fog; the exception applies only to strongholds.
 
-### Art direction
+Because the live stronghold marker must cover the stone keep baked into the parchment base, `k_stronghold_scale` is sized relative to `structure_icon_size`. Changes to either value should be reviewed together or the underlying baked icon can appear as an unintended halo.
 
-The base is an aged parchment in warm browns, so the markers are drawn as if
-inked onto it rather than composited over it:
+## Cartographic art direction
 
-- **Pigments, not primaries.** `TeamColors` is a set of historical pigments —
-  woad, iron oxide, verdigris, orpiment, tyrian purple, celadon — not saturated
-  screen primaries. Every marker is outlined in a near-black ink tinted toward
-  its own hue, which is what makes it sit on the parchment instead of floating
-  above it.
-- **Silhouettes, not primitives.** Buildings are cartographic glyphs, not
-  rectangles. The keep silhouette lives in `keep_polygon`
-  (`minimap_utils.h`) and is shared by the live layer and the baked landmark
-  icon, so the two can never drift apart.
-- **Detail must survive the pen.** At roughly 13 px a glyph carries about two
-  bold features and no more. An earlier keep had three merlons with 1 px gaps;
-  the ink stroke swallowed them and it read as a dark trident. Bold steps of a
-  third of the glyph width or wider are the floor.
-- **Baked landmarks are stone.** Villages baked into the parchment carry no
-  player colour, because a baked image cannot follow a capture. They say "a
-  settlement stands here"; the live layer, drawn over them, says who holds it.
-  The map-select preview is unaffected — `MapPreviewGenerator` paints its own
-  lobby-coloured bases on top.
-- **A compass rose** sits in the lower-left of the baked image, its long ray
-  pointing at true map north. It is drawn once at map load, so it costs nothing
-  per frame — and it answers the question the 225° rotation always raises.
+The minimap is styled as an inked military chart rather than a modern radar panel.
 
-Wildlife is filtered out before it reaches the layer. Sheep and wolves wander
-constantly; drawing them added noise to the picture and churned the marker hash
-every single update.
+### Pigments instead of screen primaries
 
-### Capture rings
+`TeamColors` uses historical-pigment-inspired colors such as woad, iron oxide, verdigris, orpiment, Tyrian purple, and celadon. Each marker receives a near-black outline tinted toward its own hue so it reads as ink applied to parchment rather than a floating UI element.
 
-A stronghold with an active `CaptureComponent` gets a progress arc outside its
-footprint, sweeping clockwise from twelve o'clock in the capturing player's
-colour. A blocked capture (`capture_blocked`) draws the ring in the contested
-amber instead.
+### Silhouettes instead of generic primitives
 
-Progress is quantised to `k_capture_steps` (12) before it enters the marker
-hash. Without that, a capture in progress would repaint the whole unit overlay
-on every update for as long as it lasted.
+Buildings use recognizable cartographic glyphs rather than rectangles. The keep silhouette is defined once in `keep_polygon` in `minimap_utils.h` and shared between the baked landmark and live ownership layer so the two representations cannot drift apart.
 
-## The event channel
+### Detail has to survive at minimap scale
 
-`MinimapViewModel::note_alert` is the single entry point for everything that
-blinks. It resolves the world position to normalized minimap coordinates,
-decides the relation, throttles, and emits one `event_blip` signal that
-`MinimapOverlay.qml` styles by kind.
+A glyph around 13 px across can carry only a few bold features. Tiny notches and one-pixel gaps disappear beneath the outline stroke, so readable shapes should use broad steps and strong negative space rather than miniature architectural detail.
 
-Add new blinking events here. Do not add another `Repeater` to `HUDTop.qml`.
+### Baked landmarks show place; live markers show ownership
 
-Kinds: `troops_attacked`, `structure_attacked`, `capture_started`,
-`capture_contested`, `capture_finished`, `shrine`.
+The parchment base can permanently show that a settlement exists, but it cannot encode an owner because ownership changes during the match. Live unit-layer markers are drawn over the baked landmark and provide the current faction color.
 
-Relations answer "who does this hurt or help", not "who owns it":
+The map-selection preview is separate: `MapPreviewGenerator` draws its own lobby-colored base markers.
 
-| Relation   | Meaning                              | Colour         |
-| ---------- | ------------------------------------ | -------------- |
-| `self`     | our units or holdings are the target | danger         |
-| `ally`     | an ally's are                        | warning        |
-| `friendly` | we or an ally are the ones gaining   | success        |
-| `enemy`    | two other parties, neither ours      | secondary text |
+### Compass orientation is explicit
 
-An `enemy` blip is suppressed unless the position passes the same visibility
-test the unit markers use, so a fight between two AI players in unscouted fog
-stays invisible.
+A compass rose is baked into the lower-left of the base image, with its long ray aligned to true map north. It is generated once at load time and clarifies orientation on maps whose minimap is rotated by the default 225° camera yaw.
 
-### Throttling
+Wildlife is excluded from the unit layer. Sheep and wolves move frequently, add little strategic value to the chart, and would otherwise invalidate the marker hash continuously.
 
-Two independent gates keep a large battle from turning the minimap into a
-strobe:
+## Capture progress
 
-- `consume_alert_budget()` — a 60 ms gate callers check _before_ resolving an
-  event. The combat hit path uses it so that a busy melee costs one boolean
-  comparison per hit instead of a component lookup.
-- `accept_alert()` — a direct-mapped 32-slot cache keyed by (kind, 12×12 map
-  cell) with a per-kind cooldown. A hash collision costs at most one extra blip.
+A stronghold with an active `CaptureComponent` receives an arc outside its footprint. The arc sweeps clockwise from twelve o'clock in the capturing player's color.
 
-Capture completions and shrine events have a zero cooldown; they are rare and
-always worth showing.
+If `capture_blocked` is true, the ring switches to the contested amber treatment.
 
-## Where troops are going
+Progress is quantized to `k_capture_steps`, currently 12, before entering the unit-layer hash. Without quantization, every small capture-progress change would force the entire raster layer to repaint on every update.
 
-Selected troops with a movement goal publish their destinations as
-`MinimapViewModel.destinations`. Goals within two world units of each other
-collapse into one marker, capped at eight. Each entry carries the selection
-centroid so the overlay can draw a leash from the squad to where it is headed.
+## The minimap event channel
 
-The selection centroid is quantised before it enters the destination hash, so
-a marching squad republishes the property a few times a second rather than at
-the full update rate.
+`MinimapViewModel::note_alert` is the single entry point for transient events that blink or pulse on the map.
 
-## Iron Sepulcher shrines
+It:
 
-Shrines are world props, not units, so they never appear in the unit layer.
-`UndeadAwakeningSystem::shrine_markers()` reports them and `GameEngine` polls it
-twice a second into `MinimapViewModel.landmarks`. Dormant, awakened and cleared
-each get their own tint; an awakened shrine pulses.
+1. converts the world position to normalized minimap coordinates;
+2. determines the event's relation to the local player;
+3. applies throttling; and
+4. emits one `event_blip` signal consumed by `MinimapOverlay.qml`.
 
-Cursed gold veins ride the same feed: `CursedGoldVeinSystem::vein_markers()`
-lands as landmark kind `gold_vein` with state `neutral`, `owned`, `enemy` or
-`destroyed` (gold, success, danger, disabled). See `docs/CURSED_GOLD_VEIN.md`.
+New blinking event types should be added through this path rather than by adding another independent `Repeater` to `HUDTop.qml`.
 
-## Coordinates
+Current event kinds are:
 
-`Game::Map::Minimap::world_to_pixel` takes **grid** coordinates — world
-coordinates divided by `tile_size` — and rotates them by the map's camera yaw
-(225° by default) before normalising. Passing raw world coordinates is wrong on
-any map whose `tile_size` is not 1.
+- `troops_attacked`;
+- `structure_attacked`;
+- `capture_started`;
+- `capture_contested`;
+- `capture_finished`; and
+- `shrine`.
 
-Use `MinimapManager::world_to_normalized`, which applies the tile division and
-the clamp for you. Every pin publisher goes through it.
+### Event relation describes impact, not ownership
 
-## Rules for changes
+| Relation   | Meaning                                      | Presentation   |
+| ---------- | -------------------------------------------- | -------------- |
+| `self`     | our units or holdings are the target         | danger         |
+| `ally`     | an ally's units or holdings are the target   | warning        |
+| `friendly` | we or an ally are gaining                    | success        |
+| `enemy`    | two other parties are involved               | secondary text |
 
-- Anything you add to a marker must also go into the hash in
-  `MinimapManager::update_units`, or the layer will silently stop refreshing.
-- Anything continuous you add to the hash must be quantised first, or the layer
-  will repaint on every update.
-- Prefer the QML overlay for anything that moves on its own.
-- Every animation must be gated on `Design.A11y.reducedMotion`, and kinds must
-  differ in shape, not only colour.
+An `enemy` event is hidden unless its position passes the same visibility test as unit markers. Battles between AI players remain invisible when they occur inside unscouted fog.
+
+## Alert throttling
+
+Two independent mechanisms keep large fights from turning the minimap into a strobe.
+
+### Early budget gate
+
+`consume_alert_budget()` applies a 60 ms gate that callers can check before resolving an event. The combat-hit path uses it so a dense melee pays only a boolean check per hit instead of repeated component lookups.
+
+### Spatial and per-kind cooldown
+
+`accept_alert()` uses a direct-mapped 32-slot cache keyed by event kind and a 12 × 12 minimap cell. Each event type has its own cooldown. A cache collision can produce at most one extra blip.
+
+Capture-completion and shrine events use a zero cooldown because they are rare and important enough to always show.
+
+## Showing movement destinations
+
+Selected troops with a movement goal publish their destinations through `MinimapViewModel.destinations`.
+
+Goals within two world units of one another collapse into one marker, and the list is capped at eight destinations. Each item also carries the selection centroid, allowing the overlay to draw a visual leash from the squad toward its goal.
+
+The centroid is quantized before it contributes to the destination hash. A marching formation therefore republishes the QML property only a few times per second instead of at full simulation update frequency.
+
+## Landmark feed
+
+Some strategic objects are world props rather than entities in the unit layer.
+
+### Iron Sepulcher shrines
+
+`UndeadAwakeningSystem::shrine_markers()` reports shrine landmarks. `GameEngine` polls the feed twice per second and publishes the result through `MinimapViewModel.landmarks`.
+
+Dormant, awakened, and cleared shrines receive different treatments, and awakened shrines pulse in the overlay.
+
+### Cursed gold veins
+
+`CursedGoldVeinSystem::vein_markers()` uses the same landmark channel with kind `gold_vein` and state `neutral`, `owned`, `enemy`, or `destroyed`. Those states map to gold, success, danger, and disabled treatments respectively. See [CURSED_GOLD_VEIN.md](CURSED_GOLD_VEIN.md).
+
+## Coordinate conversion
+
+`Game::Map::Minimap::world_to_pixel` expects **grid coordinates**, not raw world coordinates. Before normalization, the coordinates are rotated by the map's camera yaw, which is 225° by default.
+
+Passing raw world coordinates is incorrect on any map where `tile_size != 1`.
+
+Call `MinimapManager::world_to_normalized` instead. It performs the world-to-grid division, rotation, normalization, and clamp in one shared path. Every pin publisher should use that helper.
+
+## Rules for extending the minimap
+
+When adding new minimap state, preserve the invalidation model:
+
+- If a marker gains a visual property, include that property in the marker hash in `MinimapManager::update_units`; otherwise changes can fail to repaint.
+- Quantize continuously changing values before hashing them, or the whole raster layer will refresh every update.
+- Put continuously animated elements in the QML overlay rather than a raster image.
+- Gate every animation on `Design.A11y.reducedMotion`.
+- Differentiate event kinds and strategic states by shape or structure as well as color.
+
+The minimap stays inexpensive because every layer has a clear ownership and invalidation rule. Preserving those boundaries matters as much as the appearance of any individual marker.
