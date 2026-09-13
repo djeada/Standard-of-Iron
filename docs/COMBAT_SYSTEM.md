@@ -1,1055 +1,204 @@
 # Combat System
 
-This document describes the RTS combat system in **Standard of Iron**, including:
+RTS combat is coordinated by `Game::Systems::CombatSystem`. It owns the shared combat query context and runs the normal attack, formation-contact, siege, elephant, auto-engagement, hit-feedback, and threat-alert processors in a fixed order.
 
-- the per-frame update pipeline;
-- shared target lookup and validation;
-- normal, siege, tower, and elephant attacks;
-- combat animation and visual feedback;
-- the recommended approach for adding new combat behavior.
+The combat code is split under `game/systems/combat_system/`; `game/systems/combat_system.cpp` is the orchestration entry point.
 
-## Overview
+## Update order
 
-RTS combat is coordinated by `Game::Systems::CombatSystem`, implemented in:
+`CombatSystem::update(world, delta_time)` currently runs:
 
 ```text
-game/systems/combat_system.cpp
+rebuild_combat_query_context
+TargetCommitment::update
+process_hit_feedback
+process_combat_state
+process_attacks
+update_formation_contacts
+process_siege_specials
+process_elephant_specials
+AutoEngagement::process
+tick_threat_alerts
+TargetCommitment::update(world, 0)
 ```
 
-Combat-related side effects should flow through this system whenever possible. Normal unit attacks, siege and tower attacks, elephant trample damage, target selection, and auto-engagement all rely on the same combat query context and enemy-validation rules.
+That order defines the combat tick contract. Processors that need target lookup reuse the query context built at the start of the update.
 
-This shared path helps keep combat behavior consistent and prevents individual processors from implementing conflicting targeting or damage logic.
+## Shared combat query context
 
-## Per-Frame Update Pipeline
+`CombatQueryContext` is built once per combat update and carries the shared entity/spatial lookup data used by attack/special/auto-engagement code.
 
-Each frame, `CombatSystem::update()` runs the following pipeline:
+The context avoids independent full-world target scans inside each processor and keeps hostility/target filtering consistent across normal and special attacks.
 
-```text
-CombatSystem::update
-  |
-  |-- rebuild_combat_query_context
-  |-- process_hit_feedback
-  |-- process_combat_state
-  |-- process_attacks
-  |-- process_siege_specials
-  |-- process_elephant_specials
-  |-- AutoEngagement::process
-```
+Combat code that already receives `CombatQueryContext` should use it rather than rebuilding a second combat view from `World`.
 
-The order matters:
+## Target rules
 
-1. The shared query context is rebuilt.
-2. Temporary hit feedback and combat animation state are updated.
-3. Normal attacks are resolved.
-4. Special siege and elephant behaviors are processed.
-5. Eligible idle units may automatically acquire nearby enemies.
-
-## Shared Combat Query Context
-
-`CombatQueryContext` is defined in:
-
-```text
-combat_utils.h
-```
-
-It is rebuilt once at the beginning of each combat update and provides shared lookup data for combat processors.
-
-### Contents
-
-The context contains:
-
-- `units`: alive unit entities that are not pending removal;
-- `entities_by_id`: fast lookup of entities by target ID;
-- `unit_grid`: spatial lookup for nearby non-building units;
-- `nearby_unit_ids`: reusable scratch storage for range queries.
-
-### Why It Matters
-
-Combat processors should receive and reuse this context instead of repeatedly calling:
+`game/systems/combat_system/target_rules.h` defines the common target decision API.
 
 ```cpp
-World::collect_entities_with<UnitComponent>()
+Combat::evaluate_target(
+    owners,
+    attacker_owner_id,
+    target,
+    {.intent = ..., .allow_buildings = ...});
 ```
 
-Using the shared context:
+The result is a `TargetRefusal`:
 
-- keeps target selection consistent across combat behaviors;
-- avoids rebuilding the same view of the world in multiple processors;
-- reduces unnecessary entity queries during each frame.
+| Result | Meaning |
+| --- | --- |
+| `None` | target is allowed |
+| `NoTarget` | null, dead, pending removal, or not a combat target |
+| `SelfOrAllied` | target belongs to the attacker or an allied team |
+| `Passive` | passive wildlife is protected from auto-acquisition |
+| `Structure` | target is a building but the query disallows buildings |
 
-## Target Validation
+`may_attack()` exposes the same rule as a boolean for callers that do not need the refusal reason.
 
-There is exactly one answer to "may this owner attack that entity", and it lives in
-`game/systems/combat_system/target_rules.h`:
+### Ordered vs auto-acquired intent
 
-```cpp
-Combat::evaluate_target(owners, attacker_owner_id, target, {intent, allow_buildings})
-```
+`EngagementIntent` has two values:
 
-It returns a `TargetRefusal` rather than a bool, so every caller can say _why_ a target was
-turned down instead of inventing its own wording:
+- `Ordered` — a player/script deliberately chose a target;
+- `AutoAcquired` — combat logic selected a target opportunistically.
 
-| `TargetRefusal` | meaning                                                                  |
-| --------------- | ------------------------------------------------------------------------ |
-| `None`          | the target may be attacked                                               |
-| `NoTarget`      | null, pending removal, dead, or not a combat entity at all               |
-| `SelfOrAllied`  | the attacker's own unit, or an ally by team according to `OwnerRegistry` |
-| `Passive`       | a neutral animal that is not in a fight — see below                      |
-| `Structure`     | a building, for a query that passed `allow_buildings == false`           |
+Passive wildlife is the main distinction. Ordered targeting may deliberately attack wildlife. Auto-acquired targeting does not turn nearby passive animals into ordinary enemy contacts.
 
-`intent` is the only knob, and it decides one thing: what happens to a neutral animal
-minding its own business.
+The same intent model is used by command validation, attack-cursor classification, target highlights, right-click attack picking, and AI hostile-contact collection.
 
-- `EngagementIntent::Ordered` — somebody deliberately named this target. Anything that is
-  not the attacker's own or an ally's is fair game, wildlife included, because an ordered
-  hunt has to land (see [AMBIENT_WILDLIFE.md](AMBIENT_WILDLIFE.md)).
-- `EngagementIntent::AutoAcquired` — the game picked the target itself: opportunistic
-  combat, guard mode, tower fire, the attack-cursor markers, the right-click context
-  action, the AI's threat scan. Passive wildlife is refused, so a column marches past a
-  herd instead of butchering it and a right-click on a sheep is a move order, not a hunt.
+### Ownership and hostility
 
-Diplomacy neutrality and gameplay hostility are deliberately separate questions. `owner_id
-== NEUTRAL_OWNER_ID` decides vision, population and victory; it never decides who may be
-shot at. That separation is what makes a wolf mid-attack a legal target for an explicit
-order, for retaliation, for auto-acquisition and for the AI at the same time — one rule,
-four callers, no drift.
+Team/alliance hostility is resolved through `OwnerRegistry` and `Combat::owners_are_hostile()`. Neutral ownership by itself is not equivalent to combat hostility; target intent and wildlife state still participate in the target decision.
 
-`Combat::may_attack` is the same function with the refusal collapsed to a bool, for the
-callers that only need yes or no. It takes the attacker as a `UnitComponent*`, an owner id,
-or an owner id plus the registry to ask — but the `TargetQuery` is always spelled out at the
-call site. That is deliberate. This file used to carry five predicates —
-`is_valid_enemy_unit`, `is_valid_enemy_of_owner`, `is_passive_wildlife`,
-`is_auto_acquirable_enemy`, `is_auto_acquirable_enemy_of_owner` — where the _name_ decided
-the intent, so picking the wrong one was a silent one-word mistake and no call site said
-which rule it wanted. They are gone. Write
+Combat processors should not replace this rule with direct owner-ID comparisons.
 
-```cpp
-may_attack(attacker_unit, target, {.intent = EngagementIntent::AutoAcquired,
-                                   .allow_buildings = false})
-```
+## Attack capability
 
-and the decision is visible in the diff. Never write a direct owner comparison in a combat
-processor: team and alliance rules are easy to handle incorrectly when duplicated, which is
-precisely how the command validator ended up refusing an attack order on a wolf that was
-already biting the unit that received the order.
+Attack commands also validate the attacking subjects. Units that cannot use attack mode are filtered before the order is accepted. Healers, builders, structures, or other non-attacking subjects therefore do not silently pass command validation as ordinary attackers.
 
-The diplomacy half is likewise one expression, `Combat::owners_are_hostile`, and
-`CombatQueryContext` memoises exactly that function into a per-tick owner table rather than
-spelling the rule a second time. The hot scan (`find_nearest_enemy`) hands its cached answer
-straight back to the rule through the
-`evaluate_target(target, owners_are_hostile, query)` overload, so a scan that costs one
-table lookup per candidate still asks the same question as an attack order does. Adding a
-refusal to `evaluate_target` therefore reaches auto-engagement without touching the scan.
+## Attack range
 
-The consumers outside `soi_combat` name the same function rather than a copy of the rule:
+`AttackComponent::range` is the outer attack range. `AttackComponent::min_range` is an optional inner dead zone for ranged attacks.
 
-| caller                                     | intent                                                      | what it is deciding                                                            |
-| ------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `Game::Command::validate` (`AttackTarget`) | `Ordered` for a player or script, `AutoAcquired` for the AI | whether an attack order is accepted, and which `Rejection` the player is shown |
-| `Game::Systems::classify_attack_target`    | `Ordered`                                                   | the attack cursor's verdict, so the cursor promises what the click will do     |
-| `collect_attack_target_highlights`         | `AutoAcquired`                                              | which enemies get a marker ring                                                |
-| `App::Utils::pick_enemy_unit_at_screen`    | `AutoAcquired`                                              | whether a right-click is an attack or a move                                   |
-| `Combat::collect_hostile_contacts`         | `AutoAcquired`                                              | the AI snapshot's `visible_enemies`                                            |
+`Combat::is_in_range()` resolves the actual combat reach after the relevant melee/ranged, structure, formation, and stance rules.
 
-Who may _receive_ an attack order is settled in the same one place. `validate_attack` drops
-every subject that fails `Game::Units::can_use_attack_mode` before it counts them, so a
-healer, a builder or a building is filtered out of an attack order whoever issued it, and an
-order made up entirely of them comes back `Rejection::NoSubjects`. The player-facing button
-state (`filter_selected_units_for_action`) and the AI's own pre-filter
-(`CombatRules::seeks_out_enemies`) still exist, but they can only ever be stricter than the
-engine; they cannot let something through that the engine would then quietly ignore.
+UI and targeting code that needs the range a unit will actually use should call `Game::Systems::resolve_attack_range()` rather than reading the base range directly, because hold-mode bonuses can change effective reach.
 
-The AI gets the `AutoAcquired` intent even for an explicit `AttackTarget` order on purpose:
-an AI wave may finish off a wolf that is already fighting, but must never wander off to
-order a hunt on somebody's livestock. That is the one case where a passed-validation attack
-order comes back `Rejection::ProtectedTarget`.
+## Structures between combatants
 
-## Firing distance
+Melee combat checks whether a blocking building footprint or closed gate separates the attacker and target.
 
-`AttackComponent::range` is the outer reach and `AttackComponent::min_range` the inner one. A ranged attacker whose planar distance to the target falls below `min_range` fails `Combat::is_in_range` outright, before any structure, formation or height rule is consulted; melee contact ignores it. No shipped unit sets a minimum today — the field exists so siege weapons can be given a dead zone in data or by an upgrade without the UI and the combat check disagreeing about where it is.
+`Combat::structure_separates_combatants()` and the related melee-wall helpers prevent melee damage and formation contact from passing through blocking structures.
 
-Anything that needs the reach a unit will actually fire with — the range indicator, a UI verdict, a future ability — should go through `Game::Systems::resolve_attack_range`, which applies `hold_mode_range_multiplier` exactly as `apply_hold_mode_bonuses` does inside the attack processor. Reading `attack->range` directly skips the Hold bonus and drifts from combat the moment a stance changes.
+An explicit ordered melee chase can request a bypass destination around a separating structure. The bypass helper searches for a walkable contact position near the target and leaves route feasibility to pathfinding.
 
-## Walls between combatants
+Ordinary opportunistic auto-engagement does not turn every enemy visible through/around a wall into a long pathing detour. Retaliation/local-threat logic has its own reachability path for responding to an aggressor that can be walked around to.
 
-A melee attacker cannot reach a target on the far side of a structure. `Combat::structure_separates_combatants` draws the centre-to-centre segment and asks the building collision registry whether it crosses a footprint that blocks navigation, and `GateService` whether a shut gate stands on it. `Combat::is_in_range` consults that rule before any formation or height check, so no melee damage crosses a wall; the same rule refuses to open a melee lock through one, drops a lock the moment a wall is raised between two units already fighting, and keeps `update_formation_contacts` from publishing a front, so soldiers do not swing at an enemy they cannot touch.
+Ranged attacks use their ranged targeting/line-of-fire rules rather than the melee separation rule.
 
-Refusing the blow is only half the answer. A unit ordered onto a target behind a wall used to stand still: `is_in_range` said no, while the chase step measured plain distance, decided the engagement was already reached, and stopped it there. It walks around instead. When a structure separates the pair, the chase asks `Combat::melee_bypass_destination` for somewhere to stand beside the target: twelve bearings around the target at contact distance, tried outwards from the attacker's own approach, and the first one taken that has clear reach to the target, is walkable, and leaves the attacker's formation footprint clear of the structure. Pathfinding does the rest, and once the attacker rounds the wall the separation lifts and the ordinary approach takes over. The footprint margin matters more than it looks: a spot that merely clears the wall by a hair fails `formation_pose_allowed` in the movement system, which then refuses the destination and freezes the unit where it stands.
+## Normal attacks
 
-If no bearing clears — a target pressed into a corner, or ringed by its own buildings — the bypass returns nothing and the attacker keeps whatever the ordinary chase decided, rather than grinding into the stonework. It answers only "where could someone stand and reach this target", never "can this attacker get there": reachability stays with pathfinding, and a unit with no route simply never arrives.
-
-Opportunistic combat does not go around walls. A unit scanning for something to do drops a walled-off enemy through `Combat::melee_walled_off_from`: marching a squad around a wall is a decision the player makes with an attack order, not something a unit does on its own because it liked the look of a target.
-
-Answering a blow is different, and the rule bends exactly that far. When the trigger is retaliation or a squad or sight alert — the unit is being hit, or a neighbour is — `may_engage` accepts a walled-off aggressor provided `Combat::melee_can_walk_around` finds somewhere to stand beside it. This is what stops a village going quiet: a raider standing on the far side of a hut from the garrison is separated by `structure_separates_combatants` like any wall, and under the strict rule the defenders never answered a man shooting into their own square. The bypass check is only asked once the strict rule has already refused, so it costs nothing on the ordinary path.
-
-Ranged attackers are untouched by all of this. They shoot over walls, and only the commander's own bow consults `has_clear_building_los`.
-
-## Normal Attacks
-
-Normal attacks are processed by:
-
-```text
-combat_system/attack_processor.cpp
-```
-
-The `process_attacks()` processor handles:
+`combat_system/attack_processor.cpp` handles the ordinary attack path, including:
 
 - target resolution;
-- melee and ranged attack behavior;
-- attack cooldowns;
-- melee lock behavior;
-- tactical damage multipliers;
-- ranged arrow visuals;
-- projectile-based attacks configured through `SpecialAttackComponent`;
-- combat animation triggers.
-
-### Melee exchanges
-
-An RTS melee swing is not a guaranteed hit. `begin_rts_melee_action` asks
-`resolve_melee_exchange_beat` (`combat_system/melee_exchange.cpp`) what this
-swing is, and stores the answer on `RpgCommanderActionComponent::exchange_outcome`
-so that `deal_rts_melee_contact_damage` and the renderer read the same verdict:
-
-| Outcome   | Damage | Defender shows           | Attacker shows        |
-| --------- | ------ | ------------------------ | --------------------- |
-| `Clean`   | ×1.375 | flinch, knock-step back  | the cut, a lunge      |
-| `Heavy`   | ×1.70  | stagger, long knock-step | a deeper lunge        |
-| `Blocked` | ×0.40  | shield/parry, spark      | recoil off the guard  |
-| `Evaded`  | ×0     | lean and sidestep back   | an overextended whiff |
-
-The outcome is not a dice roll. One eight-beat pattern
-(`Clean, Blocked, Clean, Clean, Evaded, Heavy, Blocked, Clean`) is walked by
-`melee_attack_sequence`, rotated per attacker/target pair so the two sides of a
-duel are never on the same beat. `static_assert`s in `melee_exchange.cpp` pin the
-contract: the damage multipliers of one cycle sum to eight, so over any eight
-consecutive swings a unit deals exactly what it dealt before the exchanges
-existed, and replays stay deterministic.
-
-The same beat carries the **cadence**. `resolve_melee_swing_cadence` scales the
-gap before the next swing by the beat's `interval_weight` (quick doubles at 0.7,
-a long measure at 1.75 after the whiff) and the old per-pair delay by its
-`delay_weight`; both weights also sum to eight, so DPS is untouched. A swing is
-played over `min(cooldown, interval)`, and whatever is left of a long beat is
-spent in the ready stance — that gap, not the swing, is what stops a fight
-reading as a metronome.
-
-Targets that cannot defend — buildings, elephants, anything on RPG combat rules,
-a staggered or unarmed unit — always take the clean blow at ×1.0 with the old
-cadence, so structure and siege contracts are unchanged.
-`melee_target_can_defend` is the single place that decides it.
-
-Outcomes are published as `HitReactionKind` on `HitFeedbackComponent` (and on
-`FormationHitPresentationComponent` for the struck soldier slot), together with
-a per-kind `reaction_duration`. `apply_melee_reaction_feedback` is how a blocked
-or evaded blow — one that applied no or little damage — still gets a reaction on
-screen; blocked blows also push a `RpgContactOutcome::Block` burst so the shield
-throws sparks. The attacker of a blocked blow gets a `Recoil` reaction, which the
-renderer layers over the swing instead of cancelling it.
-
-`process_hit_feedback` turns the `knockback_x/z` a hit stores into an actual
-eased knock-step of the body, but only for single bodies outside a formation
-and off the RPG rules (`knockback_moves_body`): formations keep their slots and
-show the step through presentation alone.
+- cooldowns;
+- melee/ranged range checks;
+- melee lock state;
+- stance/terrain/counter multipliers;
+- ranged projectile/visual submission hooks;
+- combat animation state; and
+- damage application.
 
-### Duel footwork
+Special attacks configured through the relevant attack components are dispatched by the same combat update rather than through a separate world-combat authority.
 
-`MovementSystem::move_unit` zeroes velocity for the whole time a unit is in a
-melee lock, which is what stops a mass melee sliding around. For a single body
-locked one-on-one that read as two statues trading blows, so
-`apply_duel_footwork` gives every such pair footwork. It applies when both
-duellists are single bodies (`duel_footwork_body`: no formation slots, not
-cavalry, not an elephant) and locked onto each other, so line infantry ranks and
-any crowd around a shared target are untouched.
+## Deterministic melee exchange
 
-Two motions are layered:
+RTS melee bodies that can defend use the deterministic exchange system in `combat_system/melee_exchange.*`.
 
-- **Circling.** Each duellist turns about its opponent's position; rotation
-  about the other man preserves the distance between them exactly, whichever
-  order the two are updated in. Both derive the same direction from the pair's
-  ids so the pair turns rigidly, at `k_duel_footwork_degrees_per_second` each,
-  and the rate is a sine that reverses every `k_duel_footwork_period_seconds`.
-- **The measure.** `duel_measure_target` reads the duellist's own
-  `RpgCommanderActionComponent`: the body closes by `k_duel_measure_advance`
-  through the wind-up and contact of its swing and falls back by
-  `k_duel_measure_retreat` through the recovery; between swings it breathes
-  about the guard distance. The target is a _separation_
-  (`melee_range × k_duel_base_separation_fraction`, clamped), approached at
-  `k_duel_measure_gain_per_second` and no faster than `k_duel_measure_step_speed`,
-  so a knock-step or a drift is closed again within a few ticks and the pair can
-  never walk out of reach or into each other (`k_duel_min_separation`).
+A swing can resolve as:
 
-Footwork inside a lock is not locomotion: `begin_motion_presentation_frame`
-ignores the displacement of a locked body (`melee_footwork`) so the feet do not
-break into a walk cycle under a fighter who is only shuffling.
+| Outcome | Damage behavior | Presentation |
+| --- | --- | --- |
+| `Clean` | boosted clean contact | normal hit/flinch |
+| `Heavy` | stronger contact | heavier stagger |
+| `Blocked` | reduced damage | guard/block response |
+| `Evaded` | no contact damage | evade/whiff response |
 
-The arena trace is how to check it: post-contact `position` should circle the
-pair's centre slowly, and the separation should breathe by a few tenths of a
-metre without drifting.
+The exchange sequence is deterministic rather than random. Attacker/target identity selects the phase of the sequence, keeping replay behavior stable.
 
-### Applying Damage
+The melee-exchange constants are constructed so the multi-beat damage/cadence cycle preserves the intended long-run combat rate rather than adding an uncontrolled random DPS modifier.
 
-Resolved attacks should apply damage through:
+Targets that do not participate in the defensive exchange model use the ordinary clean-contact path.
 
-```cpp
-Combat::deal_damage(world, target, damage, attacker_id)
-```
+## Hit feedback
 
-This is the preferred damage entry point because it centralizes:
+`process_hit_feedback()` updates short-lived combat reaction state. Damage outcomes can publish reaction kinds, knock-step presentation, block/evade feedback, and formation-slot hit presentation.
 
-- health reduction and death handling;
-- retaliation behavior;
-- hit feedback;
-- blood and fire status side effects;
-- combat event publication.
+Authoritative health/damage is separate from presentation. Formations can show a hit/reaction without moving the authoritative slot assignment for every visual knockback.
 
-New attack behaviors should avoid modifying health directly unless there is a strong architectural reason to bypass the standard combat flow.
+## Melee locks and footwork
 
-## Siege Weapons and Defense Towers
+Melee locks keep engaged units from being simultaneously driven by ordinary movement logic.
 
-Siege weapons and defensive-building combat are handled by:
+Single-body one-on-one combat can use duel footwork around that lock while formation members retain their formation constraints. The current footwork logic changes relative presentation/position within the melee contract without turning formation combat into free-form per-soldier circling.
 
-```text
-combat_system/siege_special_processor.cpp
-```
+## Formation contact
 
-This processor owns:
+`update_formation_contacts()` publishes the combat-front/contact information used by formation combat and presentation.
 
-- catapult loading, firing, and stone projectile spawning;
-- ballista loading, firing, bolt visuals, and delayed hit checks;
-- defense tower target selection, arrow volleys, and damage application.
+Formation contact only exists when the combatants can physically engage; blocking structures and other reach constraints therefore affect the contact geometry as well as direct damage.
 
-### Siege Loading State
+See [FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md) for group/slot ownership and formation movement.
 
-Catapults and ballistas share `CatapultLoadingComponent` for their loading state.
+## Siege specials
 
-Their state machine is:
+`process_siege_specials()` handles siege-specific behavior after ordinary attacks/formation contacts and before elephant specials/auto-engagement.
 
-```text
-Idle -> Loading -> ReadyToFire -> Firing -> Idle
-```
+Siege counter multipliers and current unit data are documented from the combat constants and troop assets in [UNIT_BALANCE.md](UNIT_BALANCE.md).
 
-If a siege unit begins moving while loading or firing, its loading state is reset. This prevents the unit from firing at a previously locked target after changing position.
+## Elephant specials
 
-### Siege Ammunition
+`process_elephant_specials()` handles elephant-specific combat behavior, including the special contact/trample path defined by the elephant combat components.
 
-A catapult picks its ammunition when the shot is locked in, and picks it again whenever the order swings the arm onto a different target:
+Elephant counter rules use the same damage/target ownership model as other combat rather than bypassing alliance/target validation.
 
-- structures the catapult can damage receive `ProjectileKind::FlamingStone`;
-- troops, and anything else, receive `ProjectileKind::Stone`.
+## Auto engagement
 
-The kind is stored on `CatapultLoadingComponent::loaded_projectile_kind` and copied into the projectile at launch, so a shot already in the air keeps the kind it was fired with even if the catapult retargets behind it. Ballistas and defense towers are unaffected.
+`AutoEngagement::process()` lets eligible idle/available combat units acquire nearby hostile targets after explicit attack processing.
 
-## Structure Fire
+Auto engagement uses `EngagementIntent::AutoAcquired`, so passive wildlife remains excluded and the same team/hostility rules used by ordered attacks are reused.
 
-Structures do not catch fire from being damaged. Fire is a separate track, owned by:
+Target commitment state helps prevent constant target churn across repeated scans.
 
-```text
-combat_system/structure_fire.cpp
-```
+## Threat alerts
 
-Incendiary impacts - flaming siege stones and fireballs - add their applied damage to `StructureFireComponent::ignition_progress`. Once the accumulated damage passes a fraction of the structure's maximum health the structure ignites, burns for a fixed duration, and takes light burn damage per tick. Progress that never reaches the threshold decays away, so scattered incendiary chip damage does not eventually set a building alight.
+`tick_threat_alerts()` updates the combat-threat notification state after attack/auto-engagement processing. Those alerts feed higher-level systems such as local AI response and presentation warnings without becoming a second damage system.
 
-Every other damage path - melee, ballista bolts, ordinary siege stones, script removal - leaves the structure without the component, and therefore without flames: the renderer draws structure fire only from `structure_fire_intensity()`, never from a health ratio. A fire ends when it burns out, when the structure collapses, or when the entity is removed.
+## Terrain and counter multipliers
 
-### Defense Tower Targeting
+Terrain/role counters are defined in `game/systems/combat_system/combat_types.h`. Current values include the cavalry/spear, siege/infantry, elephant/archer, high-ground, and hold-mode multipliers.
 
-Defense towers select the nearest valid enemy within range.
+The combat code is the source of truth for how those multipliers are applied. [UNIT_BALANCE.md](UNIT_BALANCE.md) documents the current relationships and deterministic balance fixtures.
 
-They may attack:
+## Command integration
 
-- enemy units;
-- enemy defense towers.
+Player, AI, mission, and replay attack commands enter through the typed command pipeline. Command validation uses the shared combat target rules before the combat system executes the resulting attack state.
 
-They ignore ordinary buildings.
+This keeps replay/AI/player targeting under the same ownership and target-validity semantics.
 
-Tower arrow spread is generated deterministically from entity IDs, ensuring that repeated runs produce stable visual results.
+## Tests
 
-## Elephant Combat Behavior
+Combat behavior is covered across system, command, movement/formation, balance, and replay tests. Important contracts include:
 
-Elephant-specific combat behavior is handled by:
+- target refusal/hostility rules;
+- ordered vs auto-acquired wildlife behavior;
+- attack-command subject validation;
+- range/hold-mode agreement;
+- wall/gate melee separation;
+- melee exchange determinism;
+- siege/elephant special behavior;
+- formation contact; and
+- auto-engagement/target commitment.
 
-```text
-combat_system/elephant_special_processor.cpp
-```
-
-This processor owns:
-
-- low-health panic checks;
-- charge state transitions;
-- trample damage;
-- stomp-impact records used by visual effects.
-
-### Panic State
-
-Panic state is stored in:
-
-```cpp
-ElephantPanicComponent
-```
-
-`ElephantComponent` remains focused on combat statistics and charge/trample state.
-
-Panic behavior does not create hidden movement targets. Instead, it influences the elephant's combat decisions directly.
-
-### Trample Damage
-
-Trample damage applies only to valid enemies.
-
-Friendly and allied troops are rejected through:
-
-```cpp
-Combat::may_attack()
-```
-
-As a result, even a panicked elephant cannot damage units on its own side.
-
-## Auto-Engagement
-
-`AutoEngagement` runs after explicit attacks and special combat processors.
-
-Its purpose is to allow eligible idle units to acquire nearby enemies without requiring a direct attack command.
-
-Auto-engagement uses:
-
-- the shared `CombatQueryContext`;
-- the common enemy-validation helpers.
-
-A unit is not considered freely idle when it has:
-
-- suppressing player intent;
-- hold or guard constraints;
-- an active patrol;
-- an active attack target.
-
-### Who fights on its own initiative
-
-`game/units/combat_role.h` is the single answer. `Game::Units::combat_role` is one
-exhaustive switch over `SpawnType` onto Noncombatant / Support / Fighter /
-Emplacement / Wildlife, and three predicates read it: `acquires_targets` (Fighter
-and Emplacement), `answers_threat_alerts` (Fighter only) and `pursues_targets`
-(Fighter only). Every acquisition path is gated on that table rather than on its
-own list of spawn types — `auto_engagement.cpp`, `threat_alert.cpp`,
-`attack_processor.cpp`'s in-reach acquisition and `patrol_system.cpp` — and
-`CombatRules::seeks_out_enemies`, `ai_utils`'s `is_combat_role_unit` and
-`picks_its_own_fights` all delegate to it as well. Six lists used to disagree,
-and commanders fell through every one of them.
-
-Reach comes from `Combat::acquisition_range`: a unit that opens fire without
-closing, or that does not pursue, reaches exactly as far as its weapon; anything
-that closes reaches the greater of its vision and its weapon range. A commander
-is clamped to seven metres so it defends itself without being pulled across the
-field.
-
-`find_nearest_enemy` takes an optional `TargetFilter`, and auto-engagement passes
-`may_engage` through it. Without that, the scan picks the single nearest body,
-`may_engage` refuses it, and the unit stands there with a reachable enemy two
-metres behind the one it refused.
-
-After a scan that finds nothing the unit goes on a jittered 0.3-0.5 s cooldown
-(`quiet_rescan_delay`), so a quiet field costs one spatial query per unit per
-third of a second rather than one per frame.
-
-### A player order outranks an automatic one
-
-`AttackTargetComponent::is_player_command` is the record of who chose the fight.
-Auto-engagement, retaliation and squad alerts all clear it;
-`CommandService::attack_target` sets it, for the AI's orders as much as the
-player's. The engagement trace reads it that way round: the flag says whether
-the target came from an _order at all_, and only then does ownership decide
-whether that order reads as `player` or `ai`. Asking `AIControlledComponent`
-first would report every AI unit as `ai` even when it picked the fight on its
-own initiative, which is the opposite of what the field is for.
-
-An automatic target is not a lock. Any order kind that clears the attack target
-drops it outright, and the `ManualMove` intent it leaves behind sets
-`suppress_opportunistic_combat`, so the unit does not re-acquire while it is
-carrying out the order — it marches, rather than turning back to the enemy it had
-picked for itself. Attack-move is the deliberate exception: `MoveOrderKind::AttackMove`
-records `PlayerOrderIntentKind::AttackMove` with suppression _off_, and
-auto-engagement treats that intent like guard mode, scanning while the unit
-advances.
-
-What an order does not do is pull a unit out of a melee an opponent is pressing
-on it. `CommandService::attack_target` still refuses a new target while the unit
-holds a live melee lock, and a move order does not clear that lock. This is a
-deliberate rule with a test on it
-(`FormationCombatGeometry.PlayerOrdersCannotCancelALiveMeleeOpponent`) and it is
-about contact, not about who chose the fight: the lock is reciprocal, so a unit
-that walks away would be walking out of a fight the enemy is still in. Once the
-opponent dies or the contact breaks, the pending order takes effect.
-
-### Reading the decision
-
-`combat_system/engagement_trace.h` records, per entity, the last engagement
-decision: the nearest awareness candidate, the chosen target, the range the scan
-used, why it engaged or did not (`engaged`, `holding_target`, `no_combat_role`,
-`busy`, `suppressed`, `no_candidate_in_range`, `candidate_unreachable`,
-`assisted_ally`, `retaliated`) and whether the current order came from the player,
-the AI or auto-engagement. It is off by default and costs nothing when off.
-
-`SOI_ENGAGEMENT_TRACE=1` turns it on for a live run and prints one
-`SOI_ENGAGEMENT` line per decision. The arena turns it on for every scenario and
-writes the same fields into `trace.jsonl` as `engagement_candidate_id`,
-`engagement_target_id`, `engagement_range`, `engagement_reason` and
-`command_source`. `candidate_unreachable` is the one worth looking for first: it
-means the unit saw the enemy and refused it, which is where a wall, a melee lock
-or a guard leash is hiding.
-
-## Calling For Help
-
-Auto-engagement only reaches as far as a unit can see for itself. On its own that
-loses fights the player never saw start: two swordsmen standing a few metres
-apart in a village are killed one after the other because the second one never
-had the attacker inside its own vision cone. The same hole let a player walk into
-an AI settlement, kill a guard, and find the rest of the garrison asleep.
-
-`threat_alert.cpp` closes it. One entity raises an alert, its neighbours answer,
-and both sides of the match go through the same code -- there is no separate
-player path and no separate AI path.
-
-An alert is raised from two places:
-
-- `assign_retaliation_target_if_needed`, when anything takes damage. Buildings
-  raise alerts too, which is how an attacked barracks pulls its garrison; they
-  never answer one, because `may_engage` refuses a building.
-- `AutoEngagement`, the moment a unit acquires an enemy on its own. This is the
-  "enemy in sight" half, and it costs nothing extra -- the scan has already
-  happened.
-
-The two are not equally loud, and that difference is what keeps the mechanism
-from fighting the orders above it:
-
-| Raised by         | Trigger      | Who answers                                                                                                                    |
-| ----------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| Taking damage     | `SquadAlert` | Anyone eligible, including a unit under a move order. A man being cut down beside you outranks your marching orders.           |
-| Sighting an enemy | `SightAlert` | Only genuinely idle units -- the same gate as `Opportunity` -- and only those who cannot already see the enemy for themselves. |
-
-### The budget is per aggressor, not per alert
-
-This is the part that keeps a skirmish from emptying a town. An alert does not
-recruit _n_ more men every time it fires; it tops the response up to a fixed
-number of defenders **per attacker**, counting the men already fighting that
-attacker, including the victim itself:
-
-| Trigger        | Defenders per attacker |
-| -------------- | ---------------------- |
-| `UnderAttack`  | 3                      |
-| `EnemySighted` | 1                      |
-
-So one enemy under sustained fire draws three defenders and no more, however long
-the fight lasts, while a ten-man assault can pull thirty. The response scales with
-the size of the threat rather than with the duration of the fight, which mirrors
-`LocalEngagementBehavior::k_responders_per_threat` on the AI side. Candidates are
-sorted by distance to the attacker, so the nearest men answer.
-
-Three kinds of unit never answer an alert at all:
-
-- **Commanders.** A lord is not dragged into a skirmish by a shout; where the
-  commander goes is `CommanderBehavior`'s decision.
-- **Builders and civilians.** Pulling a worker off a half-built farm is how an AI
-  nation starves.
-- **Anyone already fighting.** `has_active_engagement` drops them.
-
-Every one of these restrictions was forced by a test that already existed.
-Without the per-aggressor budget,
-`MissionWaveAssaultTest.GarrisonAnswersAScoutWithAFewUnitsAndHoldsTheRest` fails --
-one enemy builder walking past mobilises an entire eight-man garrison. Without
-the commander and worker exclusions,
-`AiDuelMatchTest.ScipioAndFabiusBothPlayTheirDoctrine` fails, in one run because
-Scipio threw its lord away 55 m from home and in another because Fabius never
-broke ground on a field and starved.
-
-Responders get `is_player_command = false`, so the next explicit order from the
-player or from `AICommandApplier` takes the unit straight back. Nothing here
-duplicates `LocalEngagementBehavior`, which remains the AI's own budgeted answer
-to a visible threat cluster.
-
-### Radius, and why it is the fog radius
-
-`threat_alert_radius` is `max(vision_range, k_unit_default_vision_range) *
-k_vision_reveal_scale` -- the same expression `VisibilityService` uses to decide
-how much fog a unit lifts. Both read the constants from
-`Engine::Core::Defaults`, so they cannot drift apart. The rule the player can
-learn is one sentence: if a man is close enough that you can see through his
-eyes, he is close enough to hear a fight.
-
-### Cost
-
-The radius scan is the expensive part, so it is rate-limited rather than run per
-hit. `ThreatAlertComponent::cooldown` lets one entity raise at most one alert per
-`k_threat_alert_interval` (one second); `tick_threat_alerts` decays it once per
-frame over the entities that actually hold the component. Under sustained fire
-this is cheaper than what it replaced, which rescanned on every landed hit. A
-sighting that arrives inside another entity's cooldown is dropped, but a hit
-escalates past a sighting raised in the same second -- being attacked is never
-muted by having looked at something.
-
-The alert itself is synchronous -- `note_threat` broadcasts and returns the
-number of responders -- so there is no frame of latency between a hit landing and
-the neighbours turning around.
-
-## Combat State and Visual Feedback
-
-Combat animation state is stored in:
-
-```cpp
-CombatStateComponent
-```
-
-It is advanced by:
-
-```cpp
-process_combat_state()
-```
-
-Transient hit feedback, such as hit flashes, is handled by:
-
-```cpp
-process_hit_feedback()
-```
-
-Combat processors may spawn projectile, arrow, or impact visuals. However, final damage resolution should still go through:
-
-```cpp
-Combat::deal_damage()
-```
-
-when the attack connects.
-
-### Soldiers do not whip when an engagement drops
-
-`publish_formation_presentation` turns each engaged soldier toward its
-opponent's slot at 300 degrees per second. Engagement pairs are re-derived every
-tick, so in a dense press a soldier's pair can vanish for a few ticks and come
-back; the first version turned him straight back to the rank's facing the tick
-the pair dropped and out again when it returned — measured at ~6,400
-turn-and-return whips over one `massed_battle_1000` run, ±70 degrees in 0.2 s.
-An unassigned soldier now holds his last contact yaw for
-`k_contact_yaw_hold_seconds` (0.6 s) and only then turns back at
-`k_disengage_turn_degrees` (120 deg/s); `FormationSoldierPresentation::
-unassigned_seconds` carries the timer between ticks. Position already eased
-(`k_max_reposition_speed`), yaw was the only value that snapped.
-
-The formation's own facing has a related rule in `MovementSystem`
-(`heading_reference`): a formation with a movement target faces its
-**intended travel direction** — the current waypoint — not its instantaneous
-velocity, and without a target velocity steers it only above
-`k_formation_heading_min_speed` (0.4 m/s, or a quarter of the unit's speed).
-The first cut of the massed reel showed formations jammed behind their own
-front line pivoting on every shove local avoidance gave them: they were
-stopped, lurching at 0-1 m/s, and their yaw tracked whatever direction the
-last push had. The moonwalk guard (`heading_translation_scale`) measures the
-body's facing against the same reference, so a formation facing its waypoint
-still slides freely when the crowd pushes it sideways, while a body that has
-been ordered about-face still turns before it walks. Measured with
-`arena_app --animation-diagnostics` on `massed_battle_1000`: soldier
-turn-and-return whips over the run went from ~6,400 to ~1,850.
-
-## Deterministic Visual Variation
-
-Combat visuals may appear random, but their variation should remain deterministic.
-
-The current combat code uses hash-based values derived from entity IDs and target IDs for effects such as:
-
-- attack animation offsets;
-- arrow counts;
-- arrow spread.
-
-Avoid introducing:
-
-```cpp
-std::random_device
-```
-
-or global:
-
-```cpp
-std::rand()
-```
-
-into combat code. Non-deterministic randomness makes combat tests, debugging, and replay behavior harder to reason about.
-
-## Adding New Combat Behavior
-
-Use the following approach when introducing new combat functionality:
-
-I. Add a dedicated component when the behavior requires persistent state.
-
-II. Add a processor under:
-
-```text
-game/systems/combat_system/
-```
-
-III. Call the processor from `CombatSystem::update()`:
-
-- after normal attacks when it applies special damage;
-- before normal attacks when it changes attack eligibility.
-
-IV. Use `CombatQueryContext` for entity lookup and range scanning.
-
-V. Use `Combat::may_attack()` / `Combat::evaluate_target()` for target validation.
-
-VI. Use `Combat::deal_damage()` for damage application.
-
-VII. Add focused tests under:
-
-```text
-tests/systems/
-```
-
-Avoid creating a new top-level `System` for combat damage unless the behavior is genuinely outside the combat simulation. Separate damage systems tend to develop inconsistent targeting, validation, and damage rules.
-
-## Commander signature moves
-
-Every commander owns one duel move that no other commander has, declared beside
-its aura in `game/units/commander_catalog.cpp`:
-
-| Commander       | Signature          | Form                                         |
-| --------------- | ------------------ | -------------------------------------------- |
-| Fabius Maximus  | Bracing Thrust     | `RtsCommanderThrust`, long reach, staggers   |
-| Scipio          | Consular Riposte   | `RtsCommanderCut`, heaviest single blow      |
-| Marcellus       | Point-blank Volley | `RtsCommanderShot`, bow loosed in the clinch |
-| Hanno (spear)   | Phalanx Sweep      | `RtsCommanderThrust`, catches four fighters  |
-| Hasdrubal (bow) | Hunting Shot       | `RtsCommanderShot`, heaviest arrow           |
-| Hannibal        | Encircling Cut     | `RtsCommanderCut`, two fighters, fast cycle  |
-
-The move is claimed in `begin_rts_melee_action` when the commander's signature
-cooldown has run out: the action id, the damage multiplier, the extra reach and
-the stagger all come from the catalogue, so a duel reads as _that_ commander
-fighting rather than two officers trading the same swing. Cooldowns start at half
-so a commander does not open a fight with its signature, and the routine swing is
-still the common case.
-
-### How a signature reads on screen
-
-Two cues carry the move, and both are presentation only - nothing in them feeds
-back into the simulation:
-
-- **The commander's own glow** (`render/entity/commander_aura_renderer.cpp`).
-  Nothing shows for most of the cooldown; a glow gathers over the last quarter of
-  it, so an enemy gets a moment's warning that the move is coming back, and it
-  flares wide while `signature_strike_active` is set. The aura mesh is a standing
-  column rather than a flat ring, which is why it is kept off the field except in
-  those moments - left on permanently it reads as a haze curtain from a low
-  camera.
-- **The contact burst** (`CommanderSignaturePresentationComponent`). When the
-  signature lands, `record_signature_contact` stores the contact point, the
-  direction the blow travelled and one of three forms; the entry ages out in
-  `process_signature_presentations`. `combat_dust_renderer` draws a line of cold
-  glints down the shaft for `Thrust`, a warm arc plus a kick of dust for `Cut`,
-  and a single hard point with a short back-fan for `Shot`.
-
-`metal_spark` takes the spark's _own age_ as its time argument - its life ends at
-t = 0.28 in the shader - so bursts must be driven by the entry's age, never by the
-rolling animation clock, or they never appear at all.
-
-It also takes an optional `direction`. The spark mesh is a fan of rays pointing
-every which way, which on its own reads as a twinkle; given a direction,
-`spark_model_matrix` (`render/gl/backend/spark_orientation.h`) lays that fan along
-the line the blow travelled and squeezes it across, so the burst streaks. Signature
-bursts pass the blow's line, arrow and bolt impacts pass the shaft's flight, and
-fireball embers pass their own outward throw. Leave it zero for a spark with
-nothing behind it - a squeezed burst also covers less screen, so a directional
-spark needs roughly a third more radius to read at the same distance.
-
-The impact debris shader (`u_effect_type == 2`) used to ignore `u_dust_color`
-entirely, so every strike threw the same tan grit no matter what hit what. It now
-tints the debris by the caller's chroma, which is what makes a grave priest's
-`StructureImpactStyle::Magic` hit throw violet shards while a catapult stone stays
-tan.
-
-Anything the signature staggers recovers through `process_stagger_recovery` in
-the status-effect pass. Before that existed, staggers were only wound down by the
-RPG combat tick, which does not run unless a first-person commander is on the
-field - anything staggered in a plain RTS battle stayed staggered forever and
-never swung again.
-
-## Authored Combat Actions
-
-Every commander swing is an _authored action_: one entry in
-
-```text
-game/systems/combat_actions/combat_action_definition.cpp
-```
-
-that owns a normalized timeline (`duration_seconds` plus event markers for
-wind-up, weapon trace, recovery, and exit). The action is the single source of
-truth for that swing. Three consumers read the same timeline, and none of them
-may derive a second one:
-
-- **Gameplay** advances the action in `process_authored_combat_action` and
-  applies damage inside the weapon-trace window.
-- **The presentation phase machine** (`CombatStateComponent`) takes its per-phase
-  durations from `authored_phase_duration()`, so `Advance`, `WindUp`, `Strike`,
-  `Impact`, `Recover`, and `Reposition` line up with the authored markers
-  exactly instead of running on their own clock.
-- **The renderer** plays the action's clip at the action's own normalized time.
-  `CombatRawInputs::has_authored_action_phase` makes the visual transaction
-  machine defer to that timeline; without it the phase would be re-derived from
-  the generic attack windows, which never reach the authored contact pose and
-  cannot rewind when a player chains one swing into the next.
-
-Retuning a swing therefore means editing its definition and nothing else.
-
-### Player Commitment
-
-Timing constants encode how much control the player has:
-
-- Contact lands roughly a quarter of a second after the click for a light slash,
-  and later for the heavier actions, so weight reads as weight rather than lag.
-- Once `RecoveryStart` fires, `CombatActionService::request_attack` cancels a
-  player-driven commander's current action straight into the next one, so a held
-  attack chains as a combo with the correct variant progression.
-- A `LightFlinch` never takes a swing away from the player: the blow is shown as
-  recoil layered over the swing. Anything heavier cancels the action in the
-  simulation, and the renderer follows.
-
-`rpg_combo_cadence` in the arena catalog is the regression contract for all of
-this.
-
-### A commander cannot be stagger-locked
-
-Because anything heavier than a `LightFlinch` cancels the action, whatever
-decides the tier decides whether the player gets to play. `has_punish_opening()`
-used to answer yes for anything carrying a `StaggerComponent`, and the punish
-reaction applied a `HeavyStagger` — so the first blow that caught a wind-up
-staggered the commander, the stagger made him permanently punishable, and every
-later blow re-applied and extended it. Surrounded by six swordsmen the player
-never completed a swing again. `rpg_melee_contact` had been failing on exactly
-that: the commander swung twice in 5.4 s and the enemy formation never lost a
-point of health.
-
-Being staggered is now the _result_ of a punish, not a fresh opening: the
-`StaggerComponent` branch is gone from `has_punish_opening()`, so a punish is a
-wind-up, an authored punish window, or a broken guard. An ordinary blow that
-catches a commander mid-wind-up gives him a `LightFlinch` — recoil over the
-swing, and the swing survives — and only a guard break still takes the action
-away. A commander who is already staggered is not re-staggered at all, which
-puts a hard ceiling on how long a crowd can hold him.
-
-`ABeatenCommanderIsNeverStaggerLocked` and `AStaggeredCommanderIsNotAPunishOpening`
-pin both halves.
-
-## The Commander's Bow
-
-A commander who carries a bow shoots it the way an archer would: the player
-draws, aims, and lets go. Everything that makes that true lives beside the
-other RPG combat code, in `game/systems/rpg_combat_system/`:
-
-- `rpg_bow_aim` — where the shot is pointed and what it can hit.
-- `rpg_bow_draw` — the draw, the hold, and what the string is worth when it is
-  released.
-- `rpg_bow_shot` — loosing the arrow itself.
-
-`RpgCommanderAimComponent` carries the state all three read: the view angles,
-the camera the player is sighting from, the draw stage, and the weapon stance.
-
-### Weapon Stance
-
-Commanders such as Marcellus and Hasdrubal carry a bow and a blade, and the
-tactical layer leaves `AttackComponent::preferred_mode` on `Auto` so the RTS can
-pick per range. Under direct control that would have meant a bow commander
-swinging steel forever, so `CombatActionService::request_attack` asks the aim
-component instead. The opening stance is the commander's stronger weapon, and
-`commander.toggle_weapon` (`X`) switches it.
-
-### Draw and Hold
-
-Holding the attack button nocks and draws. The bow shot's authored timeline is
-stopped a hair before its `ProjectileRelease` marker for as long as the string
-is held, which is what makes the commander stand at full draw instead of
-snapping off a shot the moment the animation reaches it. The presentation phase
-machine is frozen with it - those phases are cut from the same timeline, so
-letting them run on would walk the commander back to idle with the string still
-back.
-
-Releasing early looses immediately at whatever the draw was worth, floored at
-`k_min_shot_power`; the animation covers the remaining distance to the release
-marker at a few times speed so a snap shot still reads as a shot. Draw power
-scales damage and arrow speed. Holding at full draw past
-`k_steady_hold_seconds` widens the aim cone and bleeds the shot's power; past
-`k_max_hold_seconds` the arm gives out, the string relaxes, and the player has
-to release the button before the commander will nock another arrow.
-
-The draw is scored as well as animated. `BowDrawTick` reports the three moments
-worth hearing — the string starting back, the draw reaching the wall, and the
-hold crossing `k_steady_hold_seconds` — as one-frame edges rather than states,
-so `combat.bow_draw`, `combat.bow_full_draw` and `combat.bow_strain` fire once
-each instead of every frame. The loose picks its cue from the arrow's visual
-style, so a commander's shot leaves on `combat.bow_loose_heavy` while a rank of
-archers still gets `combat.arrow_launch`. All four are synthesised recipes in
-`tools/audio_synth/cues.py`.
-
-### Free Aim
-
-Nothing about the shot consults a locked target. The arrow is aimed at whatever
-the crosshair covers, resolved by ray-casting enemy soldier bodies as upright
-cylinders, and an arrow that hits nothing still flies its full range and plants
-itself in the ground - a miss has to be legible.
-
-Four details keep aiming honest:
-
-- **The camera axis is the truth.** The reticle is drawn at the centre of the
-  screen, so the only line that can be aimed with is the one the projection
-  puts there: the axis from the camera's eye to the point it is looking at.
-  `CommanderControlController` writes that axis into the aim component every
-  frame after `update_camera`, and `crosshair_ray` uses it in preference to the
-  raw view angles. Yaw and pitch alone would be a different line whenever the
-  camera is still settling, is pushed off a wall, or is being pulled toward a
-  lock-on target, and every one of those cases used to move the shot away from
-  the reticle without telling the player.
-- **The shot is resolved along that line, the arrow is drawn from the bow.**
-  `commander_aim_ray` slides the sight ray forward to the commander's eye plane
-  so bodies beside and behind him are not in front of the crosshair, and
-  `resolve_bow_shot` hit-scans along it. The impact point it finds becomes the
-  arrow's destination; the arrow itself launches from `bow_muzzle`. What the
-  reticle covers is what dies, and the projectile still leaves the weapon.
-- **Aiming settles the view.** Drawing blends the camera to a tighter
-  over-the-shoulder framing at `k_fov_aim`, stiffens the camera spring, damps
-  head bob and strafe lean, drops the lock-on pull on the camera target, and
-  scales look sensitivity by the FOV ratio so the same mouse travel means the
-  same on-screen travel zoomed or not. The framing is held for the whole bow
-  action, recovery included, so the impact is watched from the same shot the
-  player aimed with.
-- **The aim cone is earned.** `aim_spread_degrees` opens the cone for movement,
-  sprinting, a half-drawn string, a long hold, and low stamina, and the reticle
-  draws that same cone in pixels — projected through the live vertical FOV, not
-  a hard-coded one. The cone is kept current in bow stance even when the string
-  is down, so the penalty for moving is visible before the shot rather than
-  after it. A planted archer at full draw is nearly a laser; one shooting on the
-  run is not.
-
-### The Aimed Arrow
-
-A commander's shot is not one of the arrows in a volley and does not look like
-one. `ArrowVisualStyle::Aimed` gives it a heavier, longer shaft, a six-segment
-streak, a hot glow and a light that travels with it, and draw power scales its
-size, brightness and trail on top of the damage and speed it already scaled.
-
-The impact is built to be read at a glance: a cone of sparks thrown back along
-the incoming direction — red off a body, white-hot off ground and stone — dark
-blood mist on a body hit, a short flash with its own light, and a hit-confirm
-ring on the target. Landing a shot bumps `hit_confirm_sequence` on the shooter's
-`RpgCommanderTargetComponent`, which is what kicks the camera; a kill kicks it
-harder.
-
-`rpg_bow_volley` in the arena catalog is the regression contract: nine
-chargers, nine drawn shots, nine bodies, with `GroupDestroyed` asserted for
-every one of them.
-
-## The Engagement Ring
-
-`refresh_commander_engagement` (in `rpg_combat_system/rpg_combat_processor.cpp`)
-builds the ring around a first-person commander each RPG tick: every living enemy
-inside `ring_radius` gets a slot, and three of them get active roles — one front
-attacker plus a left and a right threat. Everyone else is support.
-
-Three rules keep the ring from breaking the picture on screen:
-
-- **Fight context is derived, not guessed.** The refresh classifies the ring
-  onto `RpgEngagementComponent::fight_context`: `Duel` when every opponent in
-  the ring is a single body, `Skirmish` the moment any opponent is a formation
-  unit (`FormationCombat::has_formation_slots`), `None` when the ring is empty.
-  Camera, HUD, and behavior variants key off this one value instead of each
-  deriving their own answer.
-
-- **Roles are sticky.** An incumbent front attacker or side threat keeps its
-  role for as long as it stays inside a slightly widened sector (front ±80°
-  against ±65° for a fresh pick; sides 20°–145° against 30°–135°). Re-picking
-  from scratch every frame made near-tied candidates swap roles on tiny
-  position jitter, which read as enemies teleporting between stances. Because
-  the roles persist on the component, `find_primary_target` in the controller
-  reads last tick's ring instead of forcing a second full refresh per frame.
-
-- **Formation units are pinned.** The ring never issues movement orders to a
-  formation unit and never writes its facing. Dragging the squad anchor around
-  the commander made the formation layer re-resolve every soldier's slot around
-  a moving, rotating origin — soldiers slid sideways, swapped slots, and popped
-  between animation clips. A formation that enters the ring holds where the RTS
-  combat systems put it; only its engaged soldiers step out, which is the
-  formation presentation layer's job. Single-body enemies still approach and
-  orbit, but their facing goes through `desired_yaw` so turning is animated by
-  the movement system rather than snapped.
-
-`RpgEngagementSystemTest` pins all three rules.
-
-### The ring runs as a system, not from the app layer
-
-`RpgEngagementSystem` (registered in `runtime_system_registry.cpp`, just before
-`CombatSystem`) finds the fpv-controlled commander itself and runs the tick.
-It used to be called from `CommanderModeCoordinator::update_commander_control_mode`,
-which meant only `GameEngine` ever ran it: the arena drove `CommanderControlController`
-directly, so every arena capture and promo ran with an empty engagement component —
-no fight context, no camera framing, no threat pips — while the shipped game had them.
-Anything that hosts a first-person commander now gets the ring for free, and the
-duplicate per-frame refresh the controller used to do is gone with it.
-
-### The unblockable heavy
-
-Every enemy swing used to be answerable the same way: raise the guard. `RtsHeavyOverhead`
-is the exception the player has to read. Roughly every fourth swing a swordsman throws at
-a first-person commander is this action instead of `RtsSwordStrike`: a slower wind-up
-(contact at 0.56 of a 1.55 s action against 0.40 of 1.0 s), half again the damage, and
-`DamageProfile::unblockable`.
-
-Unblockable is a property of the damage, not of the action, so it travels the existing
-path — `request.damage_profile` into `commander_damage_profile()` into
-`CommanderDamageProfile` — without a new parameter anywhere. In
-`resolve_commander_guard` an unblockable blow skips the block entirely and spends its
-guard pressure on posture, so holding block against one is actively worse than moving;
-`resolve_perfect_guard` is skipped for the same reason. The dodge is the answer:
-`dodge_invincible` is checked before any of this, so i-frames still work.
-
-The cadence advances on `melee_attack_sequence`, which `begin_rts_melee_action` now
-increments. It previously never moved for RTS attackers, so a cadence keyed on it was
-constant per attacker — a soldier either threw a heavy on every swing or never threw one
-at all. Hashing the attacker id only phases _where_ in the cycle each soldier starts.
-
-The tell is the telegraph ring. An ordinary wind-up warms orange to red as it winds; an
-unblockable is red from the first frame, half again as wide, and pulses faster.
-`AnUnblockableHeavyGoesStraightThroughARaisedGuard`, `ADodgeStillBeatsAnUnblockableHeavy`
-and `AnOrdinaryStrikeIsStillStoppedByTheGuard` pin all three halves of the rule.
-
-### One contact, one spark, on the body
-
-A contact spark is drawn at the contact point, and the contact point is sampled from
-the weapon socket. For an overhead swing that socket is the blade tip, two to three
-metres in the air, so every landed blow threw a starburst that hung above the
-fighters' heads and read as a bug from a low camera. `queue_rpg_contact_presentation`
-now treats the contact as a mark on the body it landed on: the point is snapped to
-the target when it is implausibly far in plan, and its height is clamped into the
-impact band between 0.35 m and 1.55 m above the target's feet.
-
-The strike flash that follows an enemy's wind-up is a single quick ground ring. It
-used to be two concentric expanding rings in the same visual language the aim and
-lock markers use, which put a second highlight under whatever the player was already
-aiming at. Ground rings mean _target state_; impact is carried by the spark.
-
-## Known Boundaries
-
-### RPG Commander Combat
-
-The RPG commander combat resolver has its own implementation under:
-
-```text
-game/systems/rpg_combat_system/
-```
-
-Although it is related to combat, it represents a different abstraction from RTS unit combat and does not share the same processing path.
-
-### Projectile and Arrow Systems
-
-Projectile movement remains the responsibility of:
-
-```text
-ProjectileSystem
-```
-
-Arrow trail visuals remain the responsibility of:
-
-```text
-ArrowSystem
-```
-
-The combat system decides when these effects are created. The projectile and arrow systems own their subsequent simulation and rendering-facing data.
+The authoritative processor order is `CombatSystem::update()`. Target semantics are defined by `target_rules.*`, and numerical counter tuning is defined by `combat_types.h` plus troop data.
