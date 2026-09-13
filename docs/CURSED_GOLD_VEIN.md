@@ -1,100 +1,128 @@
 # Cursed Gold Vein
 
-A capturable world element: a crag of dark rock split by a seam of ore, with gold
-crystals growing out of the crack and a claim flag planted beside it. Neutral, it
-is scenery. Held, it pays its owner gold on a fixed cadence - and on the same
-cadence bleeds every one of the owner's troops standing near it. The gold is real
-and the curse is real; whoever holds the vein has to decide how much of an army
-they are willing to feed to it.
+The cursed gold vein is a capturable world element built around a deliberate trade-off. Visually, it is a crag of dark rock split by an ore seam, with gold crystals growing from the fracture and a claim flag planted beside it. Mechanically, it rewards ownership with a steady income while damaging the owner's nearby troops on the same cadence.
 
-## Authoring
+Neutral, the vein is scenery and an opportunity. Captured, it becomes an economic asset with a real military cost. The player must decide how much of an army they are willing to expose in exchange for reliable gold.
 
-A vein is an ordinary world prop:
+## Authoring a vein
+
+A cursed gold vein is authored as an ordinary world prop:
 
 ```json
 {
-    "type": "cursed_gold_vein",
-    "x": 262,
-    "z": 512,
-    "scale": 1.0,
-    "rotation": 1.2
+  "type": "cursed_gold_vein",
+  "x": 262,
+  "z": 512,
+  "scale": 1.0,
+  "rotation": 1.2
 }
 ```
 
-`x`/`z` are grid coordinates like every other prop. The prop is solid (it has a
-ground body, see `world_prop_model_half_extents` in `game/map/map_definition.h`) and
-scatter treats it as a hard obstacle, so grass and trees keep clear of the crag.
+`x` and `z` use the same grid coordinates as other props. The vein has a solid ground body; see `world_prop_model_half_extents` in `game/map/map_definition.h`. Scatter placement also treats it as a hard obstacle, keeping grass and trees clear of the crag.
 
-`scripts/place-cursed-gold-veins.py` lays veins across every shipped map (the
-tutorial is skipped: its scripted stages should not gain a neutral capture point).
-It is deterministic and idempotent - it strips existing veins and re-places them -
-and it aims for contested ground: open flat land, clear of water, roads, bridges,
-hills, camps, settlements, spawns, props and undead zones, at about the same
-distance from two players' bases. Quota scales with map size (1 on a 48-cell
-scenario map, 5 on Zama). `CursedGoldVeinSystemTest.EveryShippedVeinStandsOnClearGround`
-runs the engine's own clearance check (`is_undead_shrine_site_clear`) over every
-shipped site, so a hand-moved vein that lands in a river fails the suite.
+The map editor exposes the prop as **Cursed Gold Vein** in the props group, and the Arena prop panel can place it as well.
 
-The map editor (`Cursed Gold Vein` tool in the props group) and the arena prop
-panel both place it.
+### Automatic placement on shipped maps
 
-## Runtime
+`scripts/place-cursed-gold-veins.py` distributes veins across shipped maps. The tutorial is intentionally excluded because its scripted stages should not acquire an unscripted neutral capture point.
 
-`Game::Systems::CursedGoldVeinSystem` (`Strategy` phase) owns the behaviour. It
-follows the magic shrine's pattern exactly: the prop is drawn by the terrain
-scatter pass, and the _capturable_ part is a real `Barracks` entity raised on the
-prop at level start. That entity is neutral (`NEUTRAL_OWNER_ID`), has no
-production line, and its renderable is stamped with
-`Game::Visuals::k_cursed_gold_vein_flag_asset_key` so it draws only the claim flag
-(`render/entity/cursed_gold_vein_flag_renderer.cpp`) instead of a nation's
-barracks model. Everything about capture comes for free from `CaptureSystem`: the
-flag lowers and recolours while a capture is in progress, and a neutral vein needs
-no troop advantage - one soldier standing beside it for the capture time takes it.
+The placement pass is deterministic and idempotent: it removes existing veins before placing the computed set again. Candidate sites favor contested ground that is:
 
-Each tick (`k_cursed_gold_vein_tick_seconds`, 6 s) while a player holds the vein:
+- open and flat;
+- clear of water, roads, bridges, and hills;
+- away from camps, settlements, spawns, props, and undead zones; and
+- roughly comparable in distance from two players' bases.
 
-- `k_cursed_gold_vein_gold_per_tick` (25) gold is added to the owner through
-  `PlayerResourceRegistry::add` (not `add_harvested`, so it does not count toward
-  harvest objectives), with the floating "+gold" feedback on the flag.
-- every troop of the owner within `k_cursed_gold_vein_curse_radius` (9 m) takes
-  `k_cursed_gold_vein_curse_damage` (10) through `Combat::deal_damage`. Health is
-  manpower, so this is a steady trickle of casualties. Buildings, wildlife and
-  other players' troops are untouched. The query is radius-bounded through the
-  world spatial index; the system never scans the whole world.
+The quota scales with map size, from one vein on a 48-cell scenario map to five on Zama.
 
-Ownership changes reset the tick clock. Capture hands a barracks a production
-line; the system strips it every frame, so the vein never trains anything. If the
-anchor is razed (health reaches zero) the vein goes inert for the rest of the
-match - the gold is buried again - and its minimap marker greys out.
+`CursedGoldVeinSystemTest.EveryShippedVeinStandsOnClearGround` runs the engine's own clearance check, `is_undead_shrine_site_clear`, against every shipped site. A manually moved vein that ends up in a river or another invalid location therefore fails the test suite.
 
-State (`anchor_entity_id`, owner, tick clock, ticks paid) is saved under
-`cursed_gold_veins` by `SaveLoadCoordinator` and restored after `configure()`, so a
-load does not raise a second anchor.
+## Runtime behavior
+
+`Game::Systems::CursedGoldVeinSystem`, executed during the `Strategy` phase, owns the gameplay behavior.
+
+The implementation follows the magic shrine pattern. The terrain-scatter pass draws the physical prop, while the capturable component is represented by a real `Barracks` entity created on top of the prop at level start.
+
+The anchor begins neutral under `NEUTRAL_OWNER_ID`, has no production line, and receives `Game::Visuals::k_cursed_gold_vein_flag_asset_key`. That renderable causes `render/entity/cursed_gold_vein_flag_renderer.cpp` to draw only the claim flag rather than a nation's barracks model.
+
+Because the anchor is a normal capturable entity, `CaptureSystem` supplies the capture behavior automatically. The flag lowers and changes colour during capture, and a neutral vein does not require troop superiority: one soldier remaining beside it for the capture duration is enough to claim it.
+
+## The gold-and-curse cycle
+
+While a player owns the vein, the system fires once every `k_cursed_gold_vein_tick_seconds`—currently 6 seconds.
+
+Each tick has two effects.
+
+### Income
+
+`k_cursed_gold_vein_gold_per_tick`, currently 25 gold, is added through `PlayerResourceRegistry::add`.
+
+The system deliberately does not call `add_harvested`, so cursed-gold income does not count toward resource-harvest objectives. The flag also shows the floating `+gold` feedback used to communicate the payout.
+
+### Casualties
+
+Every troop belonging to the owner within `k_cursed_gold_vein_curse_radius`, currently 9 metres, takes `k_cursed_gold_vein_curse_damage`, currently 10 damage, through `Combat::deal_damage`.
+
+Health represents manpower, so the curse produces a steady trickle of casualties rather than a separate status effect. Buildings, wildlife, and other players' troops are unaffected.
+
+The query is bounded by the world spatial index. The system searches only the relevant radius and never scans the entire world for victims.
+
+## Ownership changes and destruction
+
+Changing ownership resets the tick clock, preventing a newly captured vein from inheriting a partially elapsed payout interval.
+
+Capture normally gives a barracks a production line. The cursed-gold system removes that line every frame so the anchor can never train units.
+
+If the anchor is razed and reaches zero health, the vein becomes inert for the remainder of the match. Its income stops—the gold is effectively buried again—and its minimap marker changes to the destroyed state.
+
+## Save and load behavior
+
+Persistent state is stored under `cursed_gold_veins` by `SaveLoadCoordinator`. The saved data includes:
+
+- `anchor_entity_id`;
+- current owner;
+- tick clock; and
+- number of ticks paid.
+
+The state is restored after `configure()`, ensuring that loading a save reconnects the existing anchor instead of spawning a second one.
 
 ## Presentation
 
-- Mesh: `render/gl/backend/cursed_gold_vein_mesh.cpp`, built through the shared
-  `rock_outcrop_mesh` helpers (also used by iron ore) and uploaded by
-  `VegetationPipeline::initialize_cursed_gold_vein_pipeline`. The rock is a set
-  of jittered lofted masses rather than stacked frustums, and each shard is an
-  irregular prism whose facets run its whole length. Rock parts stay below
-  `k_cursed_gold_vein_rock_crown` (0.46); everything above it is crystal.
-  `prop_model_footprint_test` measures the built mesh against the declared half
-  extents, and `rock_prop_mesh_test` keeps the crown in the header and the one
-  in the shader from drifting apart.
-- Shader: `assets/shaders/cursed_gold_vein_instanced.{vert,frag}`. Dark rusted
-  rock, an fbm ore seam threaded through it, gold keyed on local height with a
-  metallic specular, and a slow blood-red pulse crawling along the seam driven by
-  `u_magic_strength` - warm and uneasy where the shrine is cool and steady.
-- Light: `CursedGoldVeinRenderer` emits one flickering warm `LocalLight` per
-  visible vein, lower and dimmer than the shrine's votive light.
-- Minimap: landmark kind `gold_vein`, state `neutral` / `owned` / `enemy` /
-  `destroyed`, tinted gold, success, danger and disabled respectively.
+The vein's presentation reinforces the same risk-reward idea as its mechanics.
 
-## Tuning
+### Mesh
 
-All four numbers live at the top of `game/systems/cursed_gold_vein_system.h`.
-The tests assert against the constants, not literals, so retuning does not
-require touching them. A sensible balance envelope: at 25 gold / 6 s a vein is
-worth 250 gold a minute, and a single guard squad of 100 manpower parked on it
-is dead in a minute - which is the point.
+`render/gl/backend/cursed_gold_vein_mesh.cpp` builds the mesh through the shared `rock_outcrop_mesh` helpers also used by iron ore. `VegetationPipeline::initialize_cursed_gold_vein_pipeline` uploads it.
+
+The rock is constructed from jittered, lofted masses rather than stacked frustums. Gold shards are irregular prisms whose facets run along their full length. Rock geometry stays below `k_cursed_gold_vein_rock_crown` (`0.46`); geometry above that height is crystal.
+
+`prop_model_footprint_test` checks the generated mesh against the declared half-extents, while `rock_prop_mesh_test` prevents the crown constant in the header from drifting away from the value used by the shader.
+
+### Shader
+
+`assets/shaders/cursed_gold_vein_instanced.{vert,frag}` combines dark, rusted rock with an FBM ore seam, height-keyed gold, and metallic specular response. A slow blood-red pulse travels along the seam through `u_magic_strength`.
+
+The visual target is warm but uneasy, deliberately contrasting with the cooler, steadier presentation of the magic shrine.
+
+### Light
+
+`CursedGoldVeinRenderer` emits one flickering warm `LocalLight` for each visible vein. It is lower and dimmer than the shrine's votive light.
+
+### Minimap
+
+The minimap uses landmark kind `gold_vein` with four states:
+
+| State       | Presentation |
+| ----------- | ------------ |
+| `neutral`   | gold         |
+| `owned`     | success      |
+| `enemy`     | danger       |
+| `destroyed` | disabled     |
+
+## Tuning the risk and reward
+
+All four gameplay values live at the top of `game/systems/cursed_gold_vein_system.h`. Tests assert against those constants rather than duplicating literal values, so balance changes do not require test rewrites.
+
+At the current values, 25 gold every 6 seconds produces 250 gold per minute. A single 100-manpower guard squad left inside the curse radius also dies in roughly a minute.
+
+That tension is intentional. The cursed gold vein should be valuable enough to contest, but expensive enough that holding it thoughtlessly is not free income.
