@@ -196,17 +196,39 @@ TEST(UnitActivityTest, AWedgedUnitReportsBlockedRatherThanMoving) {
   MovementTestAccess::set_has_target(*movement, true);
   MovementTestAccess::set_target_x(*movement, 10.0F);
   MovementTestAccess::set_target_y(*movement, 10.0F);
+  auto* facts = entity->add_component<Engine::Core::MovementFactsComponent>();
 
   auto activity = classify_unit_activity(*entity);
   EXPECT_EQ(activity.kind, ActivityKind::Move);
   EXPECT_FALSE(Game::Systems::activity_is_noteworthy(activity))
       << "an ordinary march must not put a marker over every soldier";
 
-  MovementTestAccess::set_stuck_time(*movement, 5.0F);
+  facts->progress.no_progress_seconds = 5.0F;
+  facts->progress.state = Engine::Core::MovementOrderState::Yielding;
+  facts->progress.stall.rung = Engine::Core::MovementRecoveryRung::Replan;
+  activity = classify_unit_activity(*entity);
+  EXPECT_EQ(activity.kind, ActivityKind::Move)
+      << "a unit that is merely slow, or that replanned once, is still moving";
+
+  facts->progress.stall.rung = Engine::Core::MovementRecoveryRung::Sidestep;
   activity = classify_unit_activity(*entity);
   EXPECT_EQ(activity.kind, ActivityKind::Blocked);
   EXPECT_EQ(activity.state, ActivityState::Unavailable);
   EXPECT_TRUE(Game::Systems::activity_is_noteworthy(activity));
+}
+
+TEST(UnitActivityTest, ArrivingShortOfAnUnreachablePointIsNotBlocked) {
+  Engine::Core::World world;
+  auto* entity = make_unit(world);
+  entity->add_component<Engine::Core::MovementComponent>();
+  auto* facts = entity->add_component<Engine::Core::MovementFactsComponent>();
+  facts->progress.state = Engine::Core::MovementOrderState::Arrived;
+  facts->progress.arrived_short = true;
+
+  const auto activity = classify_unit_activity(*entity);
+  EXPECT_NE(activity.kind, ActivityKind::Blocked)
+      << "walking to the nearest reachable point and stopping is a finished order";
+  EXPECT_FALSE(Game::Systems::activity_is_noteworthy(activity));
 }
 
 TEST(UnitActivityTest, IdsRoundTripSoQmlAndCppNameTheSameThing) {

@@ -335,7 +335,7 @@ TEST_F(CommandServiceTest, NewlyRetargetedChasePublishesWalkWithoutIdleFrame) {
   EXPECT_TRUE(motion->is_walk_state());
 }
 
-TEST_F(CommandServiceTest, SharpWaypointTurnLimitsSidewaysTranslation) {
+TEST_F(CommandServiceTest, ASidewaysOrderSetsOffDownTheRouteAndTurnsIntoIt) {
   Engine::Core::World world;
   auto* entity = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
   ASSERT_NE(entity, nullptr);
@@ -354,12 +354,46 @@ TEST_F(CommandServiceTest, SharpWaypointTurnLimitsSidewaysTranslation) {
   Game::Systems::MovementPipeline movement_system;
   movement_system.update(&world, 0.1F);
 
-  EXPECT_LT(transform->position.x, 0.05F);
-  EXPECT_GT(transform->rotation.y, 0.0F);
+  EXPECT_GT(transform->position.x, 0.0F) << "the block did not set off down its route";
+  EXPECT_GT(transform->rotation.y, 0.0F) << "the block did not turn into its route";
+  EXPECT_LT(transform->rotation.y, 90.0F)
+      << "the turn is rate limited, not snapped onto the route";
 
   movement_system.update(&world, 0.1F);
   EXPECT_GT(transform->position.x, 0.0F);
   EXPECT_GT(std::hypot(movement->get_vx(), movement->get_vz()), 0.0F);
+}
+
+TEST_F(CommandServiceTest, AnOrderedUnitMarchesAtItsOwnPace) {
+
+  Engine::Core::World world;
+  auto* entity = create_unit(world, -12.0F, 0.0F, Game::Units::SpawnType::Spearman);
+  ASSERT_NE(entity, nullptr);
+  auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+  transform->rotation.y = 90.0F;
+  Game::Systems::CommandService::move_unit(
+      world, entity->get_id(), QVector3D(14.0F, 0.0F, 0.0F));
+
+  Game::Systems::MovementPipeline movement_system;
+  constexpr float k_step = 1.0F / 60.0F;
+  float peak_speed = 0.0F;
+  float desired_speed = 0.0F;
+  for (int frame = 0; frame < 120; ++frame) {
+    movement_system.update(&world, k_step);
+    const auto* facts = entity->get_component<Engine::Core::MovementFactsComponent>();
+    ASSERT_NE(facts, nullptr);
+    if (facts->desired.valid) {
+      desired_speed =
+          std::max(desired_speed,
+                   std::hypot(facts->desired.velocity_x, facts->desired.velocity_z));
+    }
+    peak_speed = std::max(
+        peak_speed, std::hypot(facts->motor.accepted_vx, facts->motor.accepted_vz));
+  }
+  ASSERT_GT(desired_speed, 0.5F);
+  EXPECT_GE(peak_speed, desired_speed * 0.95F)
+      << "two seconds into a march across open ground the unit made " << peak_speed
+      << " m/s of the " << desired_speed << " m/s its route asked for";
 }
 
 TEST_F(CommandServiceTest, FormationFacesItsRouteAroundAnObstacleInsteadOfTheGoal) {
@@ -581,7 +615,7 @@ TEST_F(CommandServiceTest, NewMoveOrderAssignsFreshTarget) {
   EXPECT_TRUE(movement->get_has_target());
 }
 
-TEST_F(CommandServiceTest, ReverseMoveTurnsThenResumesTranslation) {
+TEST_F(CommandServiceTest, ReverseMoveTravelsWhileItComesAbout) {
   Engine::Core::World world;
   auto* entity = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Knight);
   ASSERT_NE(entity, nullptr);
@@ -594,14 +628,18 @@ TEST_F(CommandServiceTest, ReverseMoveTurnsThenResumesTranslation) {
   Game::Systems::CommandService::move_unit(
       world, entity->get_id(), QVector3D(0.0F, 0.0F, -6.0F));
   Game::Systems::MovementPipeline movement_system;
-  for (int frame = 0; frame < 20; ++frame) {
+  for (int frame = 0; frame < 3; ++frame) {
     movement_system.update(&world, 0.10F);
   }
+  EXPECT_LT(transform->position.z, -0.05F)
+      << "the unit waited to come about before setting off";
 
-  EXPECT_TRUE(movement->get_has_target());
-  EXPECT_GT(std::abs(transform->rotation.y), 90.0F);
-  EXPECT_LT(transform->position.z, -0.25F);
-  EXPECT_LT(movement->get_vz(), 0.0F);
+  for (int frame = 3; frame < 20; ++frame) {
+    movement_system.update(&world, 0.10F);
+  }
+  EXPECT_LT(transform->position.z, -5.0F) << "the unit never walked its reversal";
+  EXPECT_GT(std::abs(transform->rotation.y), 90.0F)
+      << "the unit never came about onto its route";
 }
 
 TEST_F(CommandServiceTest, BlockedSegmentKeepsDirectOrderForRecovery) {

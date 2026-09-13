@@ -389,7 +389,9 @@ void resolve_station(const AISnapshot& snapshot, AIContext& context) {
 }
 
 auto station_radius(const AIContext& context) -> float {
-  return std::max(8.0F, context.macro_targets.assembly_radius);
+
+  return std::max(
+      {8.0F, context.macro_targets.assembly_radius, context.station.required_radius});
 }
 
 auto station_standing(const EntitySnapshot& entity,

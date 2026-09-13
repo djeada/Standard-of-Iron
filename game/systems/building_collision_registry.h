@@ -237,6 +237,8 @@ public:
 
   void set_navigation_passages(std::vector<NavigationPassage> passages);
 
+  [[nodiscard]] auto point_in_navigation_passage(float x, float z) const -> bool;
+
   [[nodiscard]] auto
   navigation_passages() const -> const std::vector<NavigationPassage>& {
     return m_navigation_passages;

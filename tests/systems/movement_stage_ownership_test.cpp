@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
@@ -14,6 +15,7 @@
 #include "game/core/system_schedule.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
+#include "game/systems/body_contact_system.h"
 #include "game/systems/local_avoidance_system.h"
 #include "game/systems/movement_pipeline.h"
 #include "game/systems/movement_system.h"
@@ -21,6 +23,7 @@
 #include "game/systems/route_follow_system.h"
 #include "game/systems/runtime_system_registry.h"
 #include "game/systems/unit_traversal_layout_system.h"
+#include "game/util/planar_math.h"
 
 namespace {
 
@@ -110,6 +113,57 @@ TEST(MovementStageOwnershipTest, SteeringDoesNotTouchTheIntegratedVelocity) {
   EXPECT_EQ(source.find("->vz ="), std::string::npos);
 }
 
+TEST(MovementStageOwnershipTest, TheYawHelpersAreExactForUnwrappedAngles) {
+
+  for (float const from : {-1260.0F, -900.0F, -30.0F, 0.0F, 355.0F, 1085.0F}) {
+    for (float const to : {-1000.0F, -181.0F, 0.0F, 179.0F, 720.0F, 2000.0F}) {
+      float const delta = Game::Systems::signed_yaw_delta(from, to);
+      EXPECT_LE(std::fabs(delta), 180.0F + 1.0e-3F) << from << " -> " << to;
+      EXPECT_NEAR(std::remainder(from + delta - to, 360.0F), 0.0F, 1.0e-2F)
+          << from << " -> " << to;
+    }
+  }
+  EXPECT_NEAR(Game::Systems::turn_yaw_toward(-900.0F, 10.0F, 5.0F), -905.0F, 1.0e-3F);
+}
+
+TEST(MovementStageOwnershipTest, EverySimulationYawTurnsThroughOneHelper) {
+
+  const auto root = find_repo_root();
+  std::vector<std::string> offenders;
+  for (const auto& entry :
+       std::filesystem::recursive_directory_iterator(root / "game")) {
+    if (!entry.is_regular_file()) {
+      continue;
+    }
+    const auto extension = entry.path().extension().string();
+    if (extension != ".cpp" && extension != ".h") {
+      continue;
+    }
+    const auto relative =
+        std::filesystem::relative(entry.path(), root).generic_string();
+    if (relative == "game/util/planar_math.h") {
+      continue;
+    }
+    std::ifstream stream(entry.path());
+    std::string line;
+    int number = 0;
+    while (std::getline(stream, line)) {
+      ++number;
+      if (line.find("540.0F") != std::string::npos ||
+          (line.find("std::remainder(") != std::string::npos &&
+           line.find("360") != std::string::npos)) {
+        offenders.push_back(relative + ":" + std::to_string(number));
+      }
+    }
+  }
+  std::string listing;
+  for (const auto& offender : offenders) {
+    listing += "\n  " + offender;
+  }
+  EXPECT_TRUE(offenders.empty())
+      << "private yaw-wrap arithmetic outside planar_math.h:" << listing;
+}
+
 TEST(MovementStageOwnershipTest, TheRegistryOrdersFollowThenSteerThenMotor) {
   SessionContext session;
   const ScopedSession scope(session);
@@ -120,17 +174,23 @@ TEST(MovementStageOwnershipTest, TheRegistryOrdersFollowThenSteerThenMotor) {
   const auto steer =
       index_of_system<Game::Systems::LocalAvoidanceSystem>(session.world());
   const auto motor = index_of_system<Game::Systems::MovementSystem>(session.world());
+  const auto contact =
+      index_of_system<Game::Systems::BodyContactSystem>(session.world());
   const auto traversal =
       index_of_system<Game::Systems::UnitTraversalLayoutSystem>(session.world());
 
   ASSERT_NE(follow, std::string::npos);
   ASSERT_NE(steer, std::string::npos);
   ASSERT_NE(motor, std::string::npos);
+  ASSERT_NE(contact, std::string::npos)
+      << "the shipped game runs no body-contact pass: bodies walk through each "
+         "other and the BodyOverlap gate measures nothing";
   ASSERT_NE(traversal, std::string::npos);
   EXPECT_LT(follow, steer) << "steering ran before there was an intent to steer";
   EXPECT_LT(steer, motor) << "the motor ran before steering could correct it";
-  EXPECT_LT(motor, traversal)
-      << "traversal layout ran before the motor published its accepted pose";
+  EXPECT_LT(motor, contact) << "contact separated bodies the motor had not moved yet";
+  EXPECT_LT(contact, traversal)
+      << "traversal layout ran before the motor and contact published the root";
 
   const auto phases = session.world().system_phases();
   EXPECT_EQ(phases[follow], SystemPhase::Movement);

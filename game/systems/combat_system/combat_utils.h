@@ -11,6 +11,7 @@
 
 #include "../../core/entity.h"
 #include "../../units/combat_role.h"
+#include "target_rules.h"
 
 namespace Engine::Core {
 class World;
@@ -163,7 +164,9 @@ auto find_nearest_enemy(Engine::Core::Entity* unit,
                         float max_range,
                         std::uint64_t* scan_iterations = nullptr,
                         const TargetFilter& accept = {},
-                        Engine::Core::Entity** nearest_considered = nullptr)
-    -> Engine::Core::Entity*;
+                        Engine::Core::Entity** nearest_considered = nullptr,
+                        TargetQuery query = {
+                            .intent = EngagementIntent::AutoAcquired,
+                            .allow_buildings = false}) -> Engine::Core::Entity*;
 
 } // namespace Game::Systems::Combat

@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <limits>
 #include <map>
+#include <memory>
 #include <vector>
 
 #include "app/session/skirmish_loader.h"
@@ -18,6 +19,7 @@
 #include "game/mission/mission_setup_coordinator.h"
 #include "game/mission/mission_wave_director.h"
 #include "game/mission/mission_waves.h"
+#include "game/session/session_context.h"
 #include "game/systems/default_content.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/match_snapshot.h"
@@ -250,7 +252,10 @@ private:
     return engagement;
   }
 
-  Engine::Core::World m_world;
+  std::unique_ptr<Game::Session::SessionContext> m_session{
+      std::make_unique<Game::Session::SessionContext>()};
+  Game::Session::ScopedSession m_scope{*m_session};
+  Engine::Core::World& m_world{m_session->world()};
   Render::GL::Renderer m_renderer{Render::ShaderQuality::None};
   Render::GL::Camera m_camera;
   CampaignManager m_campaign;
@@ -371,7 +376,11 @@ TEST_F(CampaignWaveAssaultTest, EveryCampaignMissionWaveClosesOnThePlayerCamp) {
     }
 
     const auto& wave = mission.waves().front();
-    const auto march = mission.march(wave, 30);
+
+    const float spawn_reach =
+        (wave.entry_world_position - wave.defense_reference_world_position).length();
+    const int seconds = std::clamp(static_cast<int>(spawn_reach / 3.0F), 30, 150);
+    const auto march = mission.march(wave, seconds);
     ASSERT_FALSE(mission.spawned().empty()) << "the wave spawned nothing";
     ASSERT_GT(march.spawn_distance, 1.0F);
 

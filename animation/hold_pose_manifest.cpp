@@ -154,6 +154,35 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
   }
   }
 
+  if (inputs.running) {
+
+    float const pump =
+        std::sin((inputs.cycle_phase - 0.30F) * 2.0F * std::numbers::pi_v<float>);
+    float const bounce = 0.018F * std::cos((inputs.cycle_phase - 0.40F) * 4.0F *
+                                           std::numbers::pi_v<float>);
+    switch (inputs.kind) {
+    case HumanoidHeldPoseKind::SwordShieldCarry:
+      sample.right_hand.z -= 0.10F * pump;
+      sample.right_hand.y -= 0.035F * pump;
+      sample.left_hand.z += 0.045F * pump;
+      sample.left_hand.y += 0.020F * pump;
+      break;
+    case HumanoidHeldPoseKind::SpearIdle:
+      sample.right_hand.z -= 0.045F * pump;
+      sample.right_hand.y += bounce;
+      break;
+    case HumanoidHeldPoseKind::CasterChannel:
+    case HumanoidHeldPoseKind::StaveCarry:
+      sample.right_hand.z -= 0.065F * pump;
+      sample.left_hand.z += 0.065F * pump;
+      sample.right_hand.y += bounce - 0.025F * pump;
+      sample.left_hand.y += bounce + 0.025F * pump;
+      break;
+    default:
+      break;
+    }
+  }
+
   return sample;
 }
 

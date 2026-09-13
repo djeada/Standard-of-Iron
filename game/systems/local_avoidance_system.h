@@ -40,6 +40,10 @@ public:
 
   static constexpr float k_yield_speed_fraction = 0.5F;
 
+  static constexpr float k_follow_gap = 0.25F;
+
+  static constexpr float k_follow_close_seconds = 0.35F;
+
 private:
   LocalAvoidanceDiagnostics m_diagnostics;
 };

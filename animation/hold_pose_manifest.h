@@ -29,6 +29,7 @@ struct HumanoidHeldPoseInputs {
   bool moving{false};
   bool running{false};
   float sample_time{0.0F};
+  float cycle_phase{0.0F};
 };
 
 struct HumanoidHeldPoseSample {

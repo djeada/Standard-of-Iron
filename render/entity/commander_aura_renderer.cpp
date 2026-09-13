@@ -49,13 +49,14 @@ void render_commander_auras(Renderer* renderer,
   auto commanders = world->collect_entities_with<Engine::Core::CommanderComponent>();
 
   for (auto* entity : commanders) {
-    if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+    Engine::Core::EntityID const id = entity->get_id();
+    if (world->has<Engine::Core::PendingRemovalComponent>(id)) {
       continue;
     }
 
-    auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    auto* unit_comp = entity->get_component<Engine::Core::UnitComponent>();
+    auto* commander = world->try_get<Engine::Core::CommanderComponent>(id);
+    auto* transform = world->try_get<Engine::Core::TransformComponent>(id);
+    auto* unit_comp = world->try_get<Engine::Core::UnitComponent>(id);
 
     if (commander == nullptr || transform == nullptr) {
       continue;
@@ -167,12 +168,11 @@ void render_commander_auras(Renderer* renderer,
     }
     const float footprint = std::max(transform->scale.x, transform->scale.z);
     const float glow_radius = std::clamp(0.72F + footprint * 0.35F, 0.78F, 1.15F);
-    const auto placements = build_selection_ring_layout(
-        {.soldiers = soldiers,
-         .ring_size = glow_radius,
-         .position = QVector3D(
-             transform->position.x, transform->position.y, transform->position.z),
-         .yaw_degrees = transform->rotation.y});
+    auto const root = Render::Entity::resolve_formation_root(entity, *transform);
+    const auto placements = build_selection_ring_layout({.soldiers = soldiers,
+                                                         .ring_size = glow_radius,
+                                                         .position = root.position,
+                                                         .yaw_degrees = root.yaw});
     for (auto const& placement : placements) {
       GroundMarkerCmd ring;
       ring.center = QVector3D(placement.world_x,

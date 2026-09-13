@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <memory>
+#include <vector>
 
 #include "core/component_economy.h"
 #include "core/component_presentation.h"
@@ -514,6 +515,37 @@ TEST_F(ProductionSystemTest, RepairingAStructureThatIsGoneReportsALostTarget) {
 
   EXPECT_TRUE(production->has_active_fault());
   EXPECT_EQ(production->fault, Engine::Core::BuilderTaskFault::TargetLost);
+}
+
+TEST_F(ProductionSystemTest, TwoCrewsHeldApartOnOneSiteBothStartWork) {
+
+  auto const site = Game::Systems::NavGrid::grid_to_world({4, 4});
+  Engine::Core::World world;
+  std::vector<Engine::Core::BuilderProductionComponent*> crews;
+  for (float const side : {-0.25F, 0.25F}) {
+    auto* builder = world.create_entity();
+    builder->add_component<Engine::Core::TransformComponent>(
+        site.x() + side, 0.0F, site.z());
+    builder->add_component<Engine::Core::MovementComponent>();
+    builder->add_component<Engine::Core::UnitComponent>()->owner_id = 1;
+    auto* production =
+        builder->add_component<Engine::Core::BuilderProductionComponent>();
+    production->product_type = "defense_tower";
+    production->build_time = 10.0F;
+    production->time_remaining = 10.0F;
+    production->has_construction_site = true;
+    production->construction_site_x = site.x();
+    production->construction_site_z = site.z();
+    crews.push_back(production);
+  }
+
+  Game::Systems::ProductionSystem system;
+  system.update(&world, 0.1F);
+
+  for (auto const* crew : crews) {
+    EXPECT_TRUE(crew->at_construction_site)
+        << "a crew held 0.25 m from its site by another crew never started work";
+  }
 }
 
 TEST_F(ProductionSystemTest, WalkingOffASiteIsRecordedAsAnInterruption) {

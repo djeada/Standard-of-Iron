@@ -660,6 +660,16 @@ TEST_F(AudioGameplayScenarioTest, ADistantBattleIsCarriedAsOneMassNotAsSilence) 
   auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Knight, 400.0F);
   auto* target = add_soldier(k_local_owner, Game::Units::SpawnType::Spearman, 402.0F);
 
+  constexpr const char* k_distant_mass = "sfx.combat.battlefield_distant_mass_01";
+  bool ready = false;
+  for (int attempt = 0; attempt < 2000 && !ready; ++attempt) {
+    ready = AudioSystem::get_instance().is_resource_ready(k_distant_mass);
+    if (!ready) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+  }
+  ASSERT_TRUE(ready) << k_distant_mass << " never finished loading";
+
   for (int blow = 0; blow < 8; ++blow) {
     Game::Systems::Combat::apply_unit_damage(&m_world, target, 1, attacker->get_id());
   }

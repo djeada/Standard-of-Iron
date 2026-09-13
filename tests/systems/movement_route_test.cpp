@@ -95,6 +95,51 @@ TEST(MovementRouteTest, SteeringNeverAimsPastTheCorner) {
   EXPECT_NEAR(tangent.second, 0.0F, 1.0e-3F);
 }
 
+TEST(MovementRouteTest, TheAimLooksPastCloseCornersOnlyWhereTheWayIsClear) {
+
+  MovementRoute route;
+  std::vector<std::pair<float, float>> zigzag;
+  for (int step = 1; step <= 12; ++step) {
+    zigzag.emplace_back(static_cast<float>(step), (step % 2 == 1) ? 0.4F : 0.0F);
+  }
+  ASSERT_TRUE(route.build(1U, 0U, 0.0F, 0.0F, zigzag, 0U, 12.0F, 0.0F));
+  route.advance_to(route.project(0.8F, 0.3F, 2.0F).s);
+
+  auto const always_clear = [](float, float, float, float) {
+    return true;
+  };
+  auto const heading_from = [&](float x, float z, const auto& clear) {
+    float const aim_s = route.steering_aim_s(x, z, 1.6F, 1.2F, clear);
+    auto const aim = route.point_at(aim_s);
+    return std::atan2(aim.first - x, aim.second - z) * 180.0F / 3.14159265F;
+  };
+  float const left = heading_from(0.8F, 0.38F, always_clear);
+  float const right = heading_from(0.8F, 0.22F, always_clear);
+  EXPECT_LT(std::fabs(left - right), 15.0F)
+      << "a 16 cm sideways nudge swung the aim by " << std::fabs(left - right)
+      << " degrees";
+  float const aim_s = route.steering_aim_s(0.8F, 0.3F, 1.6F, 1.2F, always_clear);
+  EXPECT_GT(aim_s, route.next_vertex_s(route.travelled()))
+      << "with the way clear the aim still stopped at the nearest corner";
+
+  auto const never_clear = [](float, float, float, float) {
+    return false;
+  };
+  float const blocked_s = route.steering_aim_s(0.8F, 0.3F, 1.6F, 1.2F, never_clear);
+  EXPECT_LE(blocked_s, route.next_vertex_s(route.travelled()) + 1.0e-4F)
+      << "the aim went past a corner the body cannot see round";
+}
+
+TEST(MovementRouteTest, ANonFiniteLookaheadStillAimsDownTheRoute) {
+
+  const auto route = corner_route();
+  float const nan = std::numeric_limits<float>::quiet_NaN();
+  float const aim_s = route.steering_aim_s(
+      0.0F, 0.0F, nan, nan, [](float, float, float, float) { return true; });
+  EXPECT_GT(aim_s, route.travelled() + 0.1F)
+      << "a non-finite look-ahead put the aim point on the body";
+}
+
 TEST(MovementRouteTest, ADirectTargetIsAOneSegmentRoute) {
   MovementRoute route;
   ASSERT_TRUE(route.build(1U, 0U, 0.0F, 0.0F, {}, 0U, 3.0F, 4.0F));

@@ -109,20 +109,27 @@ TEST_F(FormationCombatGeometry, NationTroopProfileOwnsFormationShape) {
   EXPECT_EQ(carthage_definition.doctrine, "carthage");
 }
 
-TEST_F(FormationCombatGeometry, LargeDeepReflowRiskRaisesRouteCostClearance) {
+TEST_F(FormationCombatGeometry, NavigationUsesTheCompressedAuthoredWidth) {
   Engine::Core::World world;
   auto* entity = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-  ASSERT_NE(unit, nullptr);
-  unit->render_individuals_per_unit_override = 12;
-  float const small =
-      Game::Systems::FormationCombat::formation_navigation_clearance(*entity);
-
   unit->render_individuals_per_unit_override = 30;
-  float const large =
-      Game::Systems::FormationCombat::formation_navigation_clearance(*entity);
-
-  EXPECT_GT(large, small * 1.15F);
+  namespace Geometry = Game::Systems::FormationCombat;
+  auto const layout = Geometry::resolve_layout(*entity);
+  float const scale = Geometry::minimum_formation_scale(layout);
+  float const clearance = Geometry::formation_navigation_clearance(*entity);
+  EXPECT_LE(clearance, Geometry::formation_lateral_half_extent(layout));
+  for (auto const& slot : layout.live_slots) {
+    EXPECT_LE(std::abs(slot.local_x) * scale + layout.body_radius, clearance + 1e-5F);
+  }
+  for (auto const& a : layout.live_slots) {
+    for (auto const& b : layout.live_slots) {
+      if (a.index != b.index) {
+        EXPECT_GE(std::hypot(a.local_x - b.local_x, a.local_z - b.local_z) * scale,
+                  layout.body_radius * 2.0F);
+      }
+    }
+  }
 }
 
 TEST_F(FormationCombatGeometry,
