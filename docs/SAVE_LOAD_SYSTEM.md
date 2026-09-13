@@ -1,696 +1,171 @@
-# How the Save/Load System Actually Works
-
-Imagine you've been playing a campaign for two hours. You've built up an army of 500 soldiers, captured strategic positions, and you're about to launch your final assault. Then life happens—dinner's ready, or you need to close your laptop. You need to save your progress and come back later with everything exactly as you left it.
-
-This is the story of how Standard of Iron captures your entire game state, stores it in a database, and brings it back to life when you load. We'll walk through the journey from clicking "Save Game" to seeing your army restored on the battlefield.
-
-## What we'll cover
-
-We'll start with the high-level architecture: how the three layers work together to persist game state. Then we'll dig into each component: the serialization layer that converts game objects to JSON, the storage layer that manages the SQLite database, and the service layer that coordinates everything. We'll look at the database schema with concrete examples, understand how campaigns track progress, and cover debugging and common issues.
-
-## The three-layer architecture
-
-The save/load system is built in three layers, each with a specific responsibility:
-
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                           APPLICATION LAYER                                  │
-│                                                                              │
-│   ┌────────────────┐     ┌────────────────────────────────────────────────┐  │
-│   │  GameEngine    │────▶│              SaveLoadService                   │  │
-│   │  ::save_game() │     │                                                │  │
-│   │  ::load_game() │     │  • Coordinates save/load operations            │  │
-│   └────────────────┘     │  • Manages save directory                      │  │
-│                          │  • Caches metadata after operations            │  │
-│                          │  • Provides error tracking                     │  │
-│                          └───────────────────────┬────────────────────────┘  │
-│                                                  │                           │
-└──────────────────────────────────────────────────┼───────────────────────────┘
-                                                   │
-┌──────────────────────────────────────────────────┼───────────────────────────┐
-│                          SERIALIZATION LAYER     │                           │
-│                                                  ▼                           │
-│   ┌────────────────────────────────────────────────────────────────────────┐ │
-│   │                          Serialization                                 │ │
-│   │                                                                        │ │
-│   │  World ◀─────▶ QJsonDocument                                           │ │
-│   │    │                                                                   │ │
-│   │    ├── Entities ◀─────▶ QJsonObject                                    │ │
-│   │    │     └── Components (Transform, Unit, Attack, Movement, etc.)      │ │
-│   │    │                                                                   │ │
-│   │    └── Terrain ◀─────▶ QJsonObject                                     │ │
-│   │          ├── Height map data                                           │ │
-│   │          ├── Biome settings                                            │ │
-│   │          └── Roads, rivers, bridges                                    │ │
-│   └────────────────────────────────────────────────────────────────────────┘ │
-│                                                                              │
-└──────────────────────────────────────────────────┬───────────────────────────┘
-                                                   │
-┌──────────────────────────────────────────────────┼───────────────────────────┐
-│                           STORAGE LAYER          │                           │
-│                                                  ▼                           │
-│   ┌────────────────────────────────────────────────────────────────────────┐ │
-│   │                          SaveStorage                                   │ │
-│   │                                                                        │ │
-│   │  SQLite Database (saves.sqlite)                                        │ │
-│   │    │                                                                   │ │
-│   │    ├── saves              # Game save slots                            │ │
-│   │    ├── campaigns          # Campaign definitions                       │ │
-│   │    ├── campaign_progress  # Campaign completion status                 │ │
-│   │    ├── campaign_missions  # Mission unlock/completion                  │ │
-│   │    └── mission_progress   # Individual mission results                 │ │
-│   │                                                                        │ │
-│   │  Features:                                                             │ │
-│   │    • ACID transactions                                                 │ │
-│   │    • Schema versioning and migrations                                  │ │
-│   │    • BLOB storage for large data                                       │ │
-│   └────────────────────────────────────────────────────────────────────────┘ │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
-
-The key insight is separation of concerns. The serialization layer knows how to convert game objects but doesn't care where they're stored. The storage layer knows how to persist data but doesn't understand game objects. The service layer coordinates between them and handles the plumbing.
-
-## The save flow
-
-When you click "Save Game," here's what happens:
-
-```
-┌───────────────┐     ┌────────────────────┐     ┌──────────────────┐
-│  User clicks  │────▶│  GameEngine::      │────▶│ SaveLoadService::│
-│  "Save Game"  │     │  save_game()       │     │ save_game_to_slot│
-└───────────────┘     └────────────────────┘     └────────┬─────────┘
-                                                          │
-                                                          ▼
-                      ┌────────────────────────────────────────────────────┐
-                      │  1. Serialize world to JSON                        │
-                      │     Serialization::serialize_world(&world)         │
-                      │                                                    │
-                      │  2. Build metadata                                 │
-                      │     { slotName, title, timestamp, map_name, ... }  │
-                      │                                                    │
-                      │  3. Convert JSON to compact bytes                  │
-                      │     world_doc.toJson(QJsonDocument::Compact)       │
-                      │                                                    │
-                      │  4. Persist to SQLite                              │
-                      │     SaveStorage::save_slot(...)                    │
-                      │                                                    │
-                      │  5. Update cached metadata                         │
-                      │     m_last_metadata = combined_metadata            │
-                      └────────────────────────────────────────────────────┘
-```
-
-The serialization happens entirely in memory. We walk through every entity in the world, serialize each component to JSON, then combine it all into a QJsonDocument. This gets converted to compact JSON bytes and handed to the storage layer.
-
-From [save_load_service.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/save_load_service.cpp):
-
-```cpp
-auto SaveLoadService::save_game_to_slot(Engine::Core::World &world,
-                                        const QString &slot_name,
-                                        const QString &title,
-                                        const QString &map_name,
-                                        const QJsonObject &metadata,
-                                        const QByteArray &screenshot) -> bool {
-  // Serialize entire world to JSON
-  QJsonDocument const world_doc =
-      Engine::Core::Serialization::serialize_world(&world);
-  const QByteArray world_bytes = world_doc.toJson(QJsonDocument::Compact);
-
-  // Build combined metadata
-  QJsonObject combined_metadata = metadata;
-  combined_metadata["slotName"] = slot_name;
-  combined_metadata["title"] = title;
-  combined_metadata["timestamp"] =
-      QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
-
-  // Persist to database
-  if (!m_storage->save_slot(slot_name, title, combined_metadata,
-                            world_bytes, screenshot, &storage_error)) {
-    m_last_error = storage_error;
-    return false;
-  }
-
-  return true;
-}
-```
-
-## The load flow
-
-Loading reverses the process:
-
-```
-┌───────────────┐     ┌────────────────────┐     ┌──────────────────┐
-│  User clicks  │────▶│  GameEngine::      │────▶│ SaveLoadService::│
-│  saved slot   │     │  load_game()       │     │ load_game_from_  │
-└───────────────┘     └────────────────────┘     │ slot             │
-                                                 └────────┬─────────┘
-                                                          │
-                                                          ▼
-                      ┌────────────────────────────────────────────────────┐
-                      │  1. Load from SQLite                               │
-                      │     SaveStorage::load_slot(slot_name, ...)         │
-                      │                                                    │
-                      │  2. Parse JSON                                     │
-                      │     QJsonDocument::fromJson(world_bytes)           │
-                      │                                                    │
-                      │  3. Clear existing world                           │
-                      │     world.clear()                                  │
-                      │                                                    │
-                      │  4. Deserialize world from JSON                    │
-                      │     Serialization::deserialize_world(&world, doc)  │
-                      │                                                    │
-                      │  5. Cache metadata for restoration                 │
-                      │     m_last_metadata = metadata                     │
-                      └────────────────────────────────────────────────────┘
-```
-
-The crucial step is clearing the world before deserializing. This ensures no stale entities remain. The deserialization then recreates every entity with its components exactly as they were when saved.
-
-### A loaded battle has to reach the screen, and it has to run
-
-The renderer and the minimap never read the live world. They draw a _render snapshot_: a
-detached copy of the world that `World::publish_render_snapshot()` produces at the end of
-every simulation tick. Picking and selection, on the other hand, do read the live world.
-That split is why a broken load looks so strange - the troops and buildings are there,
-they select and they show in the orders panel, but nothing is drawn.
-
-Nothing but a tick publishes a snapshot, so **a loaded match has to run**, and that is
-the rule the load flow has to keep. Every menu suspends the match, so a save written from
-the save panel - and any autosave that lands while a menu is up - records
-`paused: true`. `SaveLoadCoordinator::apply_runtime_snapshot()` ignores that field and
-resumes, because the load flow reopens the battlefield unpaused on the UI side: restoring
-the pause would leave the engine frozen behind a HUD that says the battle is running, and
-a frozen world publishes nothing, so the renderer keeps drawing the match the load
-replaced. `Main.qml` pushes the pause state to the engine after a load rather than relying
-on its own `simulation_suspended` binding to change - which it does not when the load
-starts from the main menu, because it was already false.
-
-Publishing is left to the tick that follows the load. It is deliberately not forced from
-the loading thread: `ensure_render_snapshot()` runs on the render thread, and a render
-thread that blocks on the entity lock stops presenting, which stops the loading overlay,
-which stops the match.
-
-Emptying a world also bumps its content epoch, which throws away the per-slot entity
-signatures each snapshot buffer caches to skip copying entities that have not changed.
-Entity ids are a slot index plus a generation and a save restores them verbatim, so a
-reloaded match lands on the very slots the previous one held; without the epoch, an entity
-could be served from the cache of the entity that used to live there.
-
-`tests/core/save_load_render_snapshot_test.cpp` and
-`tests/core/save_runtime_restore_test.cpp` hold these rules.
-
-### Exploration comes back with the world
-
-One thing the world's entities cannot tell you is where the player has already been. Fog that has been cleared is player knowledge, so `GameStateSerializer` writes it into the save metadata as `visibility`: the grid size plus a run-length-encoded, base64 explored mask (`game/map/explored_mask_codec.h`). Exploration is large and uniform, so the runs squash a 650x650 map into a few hundred bytes.
-
-On load the mask is folded back in _after_ the world and the visibility grid exist, by `GameStateSerializer::restore_visibility_from_metadata()`. The restore is additive: it can only turn `Unseen` tiles into `Explored`, never take away what the restored units can already see. A mask whose dimensions do not match the restored map is ignored with a warning, and the match simply starts with fog recomputed from unit sight rather than refusing to load.
-
-## Entity serialization
-
-Each entity is serialized as a JSON object containing all its components. Here's what a serialized soldier looks like:
-
-```json
-{
-    "id": 42,
-    "transform": {
-        "pos_x": 150.5,
-        "pos_y": 0.0,
-        "pos_z": 200.3,
-        "rot_x": 0.0,
-        "rot_y": 1.57,
-        "rot_z": 0.0,
-        "scale_x": 1.0,
-        "scale_y": 1.0,
-        "scale_z": 1.0,
-        "has_desired_yaw": false,
-        "desired_yaw": 0.0
-    },
-    "unit": {
-        "health": 85,
-        "max_health": 100,
-        "speed": 3.5,
-        "vision_range": 12.0,
-        "unit_type": "spearman",
-        "owner_id": 1,
-        "nation_id": "roman_republic"
-    },
-    "movement": {
-        "has_target": true,
-        "target_x": 180.0,
-        "target_y": 210.0,
-        "goal_x": 180.0,
-        "goal_y": 210.0,
-        "vx": 2.5,
-        "vz": 1.8,
-        "path_pending": false,
-        "path": [
-            { "x": 160.0, "y": 205.0 },
-            { "x": 170.0, "y": 208.0 },
-            { "x": 180.0, "y": 210.0 }
-        ]
-    },
-    "attack": {
-        "range": 2.0,
-        "damage": 15,
-        "cooldown": 1.2,
-        "time_since_last": 0.8,
-        "melee_range": 1.5,
-        "melee_damage": 15,
-        "preferred_mode": "auto",
-        "current_mode": "melee",
-        "can_melee": true,
-        "can_ranged": false
-    },
-    "stamina": {
-        "stamina": 75.0,
-        "max_stamina": 100.0,
-        "regen_rate": 10.0,
-        "depletion_rate": 20.0,
-        "is_running": false,
-        "run_requested": false
-    }
-}
-```
-
-The serialization code in [serialization.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/core/serialization.cpp) handles each component type:
-
-```cpp
-auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
-  QJsonObject entity_obj;
-  entity_obj["id"] = static_cast<qint64>(entity->get_id());
-
-  if (const auto *transform = entity->get_component<TransformComponent>()) {
-    QJsonObject transform_obj;
-    transform_obj["pos_x"] = transform->position.x;
-    transform_obj["pos_y"] = transform->position.y;
-    transform_obj["pos_z"] = transform->position.z;
-    // ... rotation and scale
-    entity_obj["transform"] = transform_obj;
-  }
-
-  if (const auto *unit = entity->get_component<UnitComponent>()) {
-    QJsonObject unit_obj;
-    unit_obj["health"] = unit->health;
-    unit_obj["max_health"] = unit->max_health;
-    unit_obj["speed"] = unit->speed;
-    // ... other fields
-    entity_obj["unit"] = unit_obj;
-  }
-
-  // ... 20+ more component types
-
-  return entity_obj;
-}
-```
-
-### Supported components
-
-The serialization system supports all game components:
-
-| Component                  | Key Fields                       | Purpose                               |
-| -------------------------- | -------------------------------- | ------------------------------------- |
-| TransformComponent         | position, rotation, scale        | Entity location and orientation       |
-| RenderableComponent        | mesh_path, texture_path, visible | Visual representation                 |
-| UnitComponent              | health, speed, nation_id         | Unit stats and ownership              |
-| MovementComponent          | target, path, velocity           | Movement state                        |
-| AttackComponent            | damage, range, cooldown          | Combat capabilities                   |
-| PatrolComponent            | waypoints, current_waypoint      | Patrol behavior                       |
-| ProductionComponent        | queue, build_time, rally_point   | Building production                   |
-| CaptureComponent           | progress, capturing_player       | Capture state                         |
-| StaminaComponent           | stamina, regen_rate, is_running  | Stamina system                        |
-| HealerComponent            | healing_range, healing_amount    | Healer units                          |
-| ElephantComponent          | charge_state, trample_damage     | War elephants                         |
-| CombatStateComponent       | animation_state, hit_pause       | Combat animation states and hit pause |
-| FormationModeComponent     | active, formation_center         | Unit formations                       |
-| BuilderProductionComponent | construction_site, progress      | Builder units                         |
-| HomeComponent              | population_contribution          | Population buildings                  |
-| TerrainContextComponent    | is_on_bridge, is_at_hill         | Terrain awareness                     |
-
-## The SQLite database
-
-All persistent data lives in a SQLite database at `~/.local/share/StandardOfIron/saves/saves.sqlite` (on Linux) or the equivalent AppData location on other platforms.
-
-### Database schema
-
-There are two version numbers, and keeping them apart is the point.
-
-- **`PRAGMA user_version`** is the _database schema_ version (`k_database_schema_version`,
-  currently 3). It describes the tables. It changes only when a table changes.
-- **`saves.snapshot_version`** is the _world snapshot_ version (`k_snapshot_version`,
-  from `game/save/snapshot_contract.h`), stored on each save row. It describes what
-  that one row's `world_state` blob contains.
-
-They used to be the same number, and that cost players their campaigns: bumping the
-snapshot format made every existing database "unsupported", and the unsupported path
-dropped every table — saves, campaign progress and mission results alike. Now a
-snapshot bump makes exactly the affected _rows_ unloadable, and touches nothing else.
-
-The tables:
-
-```sql
-CREATE TABLE saves (
-    slot_name TEXT PRIMARY KEY NOT NULL,
-    title TEXT NOT NULL,
-    map_name TEXT NOT NULL,
-    map_path TEXT NOT NULL,
-    mode TEXT NOT NULL,               -- skirmish | mission | campaign
-    campaign_id TEXT NOT NULL,
-    mission_id TEXT NOT NULL,
-    difficulty TEXT NOT NULL,
-    kind TEXT NOT NULL,               -- manual | quicksave | autosave
-    play_time_seconds REAL NOT NULL,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    format_version INTEGER NOT NULL,  -- the on-disk record format
-    snapshot_version INTEGER NOT NULL,-- what wrote world_state
-    compression TEXT NOT NULL,        -- none | zlib
-    world_raw_size INTEGER NOT NULL,
-    world_raw_checksum TEXT NOT NULL, -- SHA-256 of the uncompressed world
-    world_blob_checksum TEXT NOT NULL,-- SHA-256 of what is stored
-    metadata BLOB NOT NULL,           -- JSON: camera, level, runtime, mission title
-    world_state BLOB NOT NULL,        -- compressed world JSON
-    screenshot BLOB                   -- PNG preview, attached after the write
-);
-CREATE INDEX idx_saves_updated_at ON saves (updated_at DESC);
-CREATE INDEX idx_saves_kind ON saves (kind, updated_at);
-
-CREATE TABLE campaign_progress (
-    campaign_id TEXT PRIMARY KEY NOT NULL,
-    completed INTEGER NOT NULL DEFAULT 0,
-    unlocked INTEGER NOT NULL DEFAULT 0,
-    completed_at TEXT
-);
-
-CREATE TABLE campaign_missions (
-    campaign_id TEXT NOT NULL,
-    mission_id TEXT NOT NULL,
-    order_index INTEGER NOT NULL,
-    unlocked INTEGER NOT NULL DEFAULT 0,
-    completed INTEGER NOT NULL DEFAULT 0,
-    completed_at TEXT,
-    PRIMARY KEY (campaign_id, mission_id)
-);
-
-CREATE TABLE mission_results (
-    mission_id TEXT NOT NULL,
-    mode TEXT NOT NULL,
-    campaign_id TEXT NOT NULL,
-    completed INTEGER NOT NULL DEFAULT 0,
-    completion_time REAL,
-    difficulty TEXT,
-    result TEXT,
-    completed_at TEXT,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    PRIMARY KEY (mission_id, mode, campaign_id)
-);
-```
-
-## Schema versioning, migration and recovery
-
-`SaveStorage::initialize` opens the file, then decides what it is looking at. Every
-branch either upgrades the file in place or moves it aside; none of them delete it.
-
-```
-open()                     ── fails ──▶ move the file aside, start a fresh one
-   │
-PRAGMA quick_check         ── not ok ─▶ move the file aside, start a fresh one
-   │
-user_version == 0 && empty ───────────▶ create the current schema
-user_version >  current    ───────────▶ move aside (a newer build wrote it)
-user_version <  current    ───────────▶ back up, then migrate step by step
-   │
-table shape check          ── wrong ──▶ move the file aside, start a fresh one
-```
-
-"Move the file aside" renames it to `saves.sqlite.unreadable-<timestamp>` and reports
-the path through `SaveLoadService::quarantined_database_path()`, which both the save
-and load panels show. The player is told where their file went; they are never told
-it is gone. A migration first copies the database to `saves.sqlite.v<N>-backup`.
-
-The table shape check matters as much as the version: a file can claim the current
-`user_version` and still not be ours. Every column the code reads is checked before
-anything is written.
-
-### Migration history
-
-| user_version | Changes                                                                |
-| ------------ | ---------------------------------------------------------------------- |
-| 0 → 3        | Fresh database at the current schema                                   |
-| 1, 2 → 3     | `ALTER TABLE saves ADD COLUMN snapshot_version` — additive, no deletes |
-
-Each step is additive and runs inside one transaction, so an interrupted upgrade
-leaves the old database exactly as it was.
-
-## What the save database refuses to lose
-
-These are enforced in code and covered by `SaveStorageSafetyTest` and
-`SaveLoadServiceTest` in `tests/db/`:
-
-- **A snapshot format bump never costs campaign progress.** It makes the affected
-  save rows unloadable; `list_slots` reports `loadable: false` for them and the load
-  panel greys them out with the reason.
-- **A save from another build is refused, not deleted.** `read_slot` compares the
-  row's `snapshot_version` and fails that one read.
-- **A downgraded build cannot destroy a newer database.** A higher `user_version` is
-  quarantined, not rebuilt.
-- **A corrupt file leaves a working save system behind.** `quick_check` runs on every
-  open; a file that fails it, or that SQLite will not open at all, is quarantined and
-  replaced with an empty database.
-- **A write is proved before it is reported as done.** `write_slot` commits, then
-  re-reads the row and compares the stored blob byte for byte against what was handed
-  in. `synchronous=FULL` and WAL cover durability past that point; both pragmas are
-  read back rather than assumed.
-- **The game never overwrites a save the player made.** `quicksave` and `autosave_N`
-  are reserved names: a manual save cannot take one, and the autosave rotation steps
-  past any slot holding a different kind.
-- **A failed load leaves the match alone.** Checksums, decompression, JSON parsing and
-  a structural check all run before `world.clear()`.
-- **Verify means "this will load".** It decompresses, re-hashes and parses the world,
-  not just the stored checksum.
-
-## Transaction handling
-
-All database writes use transactions to ensure data integrity. The TransactionGuard class provides RAII-style transaction management:
-
-```cpp
-class TransactionGuard {
-public:
-  explicit TransactionGuard(QSqlDatabase &database) : m_database(database) {}
-
-  auto begin(QString *out_error) -> bool {
-    if (!m_database.transaction()) {
-      // Handle error
-      return false;
-    }
-    m_active = true;
-    return true;
-  }
-
-  auto commit(QString *out_error) -> bool {
-    if (!m_active) return true;
-    if (!m_database.commit()) {
-      rollback();
-      return false;
-    }
-    m_active = false;
-    return true;
-  }
-
-  ~TransactionGuard() {
-    if (m_active) rollback();  // Auto-rollback if not committed
-  }
-};
-```
-
-This ensures that if anything goes wrong during a save, the database rolls back to a consistent state.
-
-## The service layer API
-
-SaveLoadService provides the high-level API that game code interacts with:
-
-```cpp
-class SaveLoadService {
-public:
-  // Save/load operations
-  auto save_game_to_slot(World &world, const QString &slot_name,
-                         const QString &title, const QString &map_name,
-                         const QJsonObject &metadata = {},
-                         const QByteArray &screenshot = {}) -> bool;
-
-  auto load_game_from_slot(World &world, const QString &slot_name) -> bool;
-
-  auto get_save_slots() const -> QVariantList;
-  auto delete_save_slot(const QString &slot_name) -> bool;
-
-  // Error handling
-  auto get_last_error() const -> QString;
-  void clear_error();
-
-  // Metadata from last operation
-  auto get_last_metadata() const -> QJsonObject;
-  auto get_last_title() const -> QString;
-  auto get_last_screenshot() const -> QByteArray;
-
-  // Campaign management
-  auto list_campaigns(QString *out_error = nullptr) -> QVariantList;
-  auto get_campaign_progress(const QString &campaign_id) const -> QVariantMap;
-  auto mark_campaign_completed(const QString &campaign_id) -> bool;
-
-  // Mission tracking
-  auto save_mission_result(const QString &mission_id, const QString &mode,
-                           const QString &campaign_id, bool completed,
-                           const QString &result, const QString &difficulty,
-                           float completion_time) -> bool;
-  auto unlock_next_campaign_mission(const QString &campaign_id,
-                                    const QString &completed_mission_id) -> bool;
-
-  // Singleton access
-  static SaveLoadService *instance();
-};
-```
-
-### Usage example
-
-```cpp
-// Save current game
-auto *service = SaveLoadService::instance();
-if (!service->save_game_to_slot(world, "quicksave", "Quick Save",
-                                 current_map_name)) {
-  qWarning() << "Save failed:" << service->get_last_error();
-}
-
-// Load saved game
-if (!service->load_game_from_slot(world, "quicksave")) {
-  qWarning() << "Load failed:" << service->get_last_error();
-}
-
-// Get list of saves for UI
-QVariantList saves = service->get_save_slots();
-for (const QVariant &save : saves) {
-  QVariantMap slot = save.toMap();
-  qInfo() << slot["title"].toString()
-          << "saved at" << slot["timestamp"].toString();
-}
-```
-
-## File locations
-
-The save system stores data in platform-appropriate locations:
-
-| Platform | Location                                                          |
-| -------- | ----------------------------------------------------------------- |
-| Linux    | `~/.local/share/StandardOfIron/saves/saves.sqlite`                |
-| macOS    | `~/Library/Application Support/StandardOfIron/saves/saves.sqlite` |
-| Windows  | `%APPDATA%/StandardOfIron/saves/saves.sqlite`                     |
-
-The directory is created automatically on first save.
-
-## Debugging
-
-### Common issues
-
-**"Save storage unavailable"**
-
-- Database file might be locked by another process
-- Check file permissions on saves directory
-- Delete corrupted database file to reset
-
-**"Corrupted save data"**
-
-- JSON parsing failed—save file may be truncated
-- Check disk space during save
-- Look for `QJsonParseError` in logs
-
-**"Save slot not found"**
-
-- Slot name doesn't exist in database
-- Case-sensitive matching—check exact name
-
-**"Failed to begin transaction"**
-
-- SQLite is locked
-- Check for other processes accessing the database
-
-### Logging
-
-Enable debug logging to trace save/load operations:
-
-```bash
-QT_LOGGING_RULES="*.debug=true" ./standard_of_iron
-```
-
-Key log messages to look for:
-
-```
-Saving game to slot: quicksave
-Loading game from slot: quicksave
-SaveLoadService: failed to persist slot <error>
-SaveLoadService: failed to load slot <error>
-```
-
-### Database inspection
-
-You can inspect the database directly with the `sqlite3` command:
-
-```bash
-sqlite3 ~/.local/share/StandardOfIron/saves/saves.sqlite
-
--- List all saves
-SELECT slot_name, title, timestamp FROM saves ORDER BY timestamp DESC;
-
--- Check schema version
-PRAGMA user_version;
-
--- View campaign progress
-SELECT * FROM campaign_missions WHERE campaign_id = 'second_punic_war';
-```
-
-## Performance characteristics
-
-| Operation        | Typical Time | Notes                             |
-| ---------------- | ------------ | --------------------------------- |
-| Save (small map) | 50-100ms     | ~1000 entities                    |
-| Save (large map) | 200-500ms    | ~5000 entities                    |
-| Load (small map) | 100-200ms    | Includes entity creation          |
-| Load (large map) | 500-1000ms   | Entity creation is the bottleneck |
-| List slots       | <10ms        | Metadata only, no world_state     |
-
-The main bottleneck is JSON parsing/generation. For very large maps, consider:
-
-- Reducing entity count through LOD systems
-- Compressing world_state with zlib before storage
-- Async save/load with progress UI
-
-## Finding your way around
-
-| What you want to do             | Where to look                                                                                                                        |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Modify save/load flow           | [save_load_service.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/save_load_service.cpp)                     |
-| Add new component serialization | [serialization.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/core/serialization.cpp)                                |
-| Change database schema          | [save_storage.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/save_storage.cpp) - add migration               |
-| Modify metadata fields          | [save_load_service.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/save_load_service.cpp) - combined_metadata |
-| Add new campaign table          | [save_storage.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/save_storage.cpp) - migrate_to_N                |
-| Test save/load                  | [tests/db/save_storage_test.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/tests/db/save_storage_test.cpp)                |
-| Test serialization              | [tests/core/serialization_test.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/tests/core/serialization_test.cpp)          |
-
-## Future improvements
-
-Planned enhancements to the save system:
-
-- [ ] Compressed world_state using zlib/gzip
-- [ ] Async save/load with progress callbacks
-- [ ] Save file validation and checksums
-- [ ] Cloud save synchronization
-- [ ] Save file export/import for sharing
-- [ ] Replay system integration
-- [ ] Differential saves for faster autosave
-
-## API Reference
-
-See also:
-
-- `game/systems/save_storage.h` - Database layer API
-- `game/systems/save_load_service.h` - Service layer API
-- `game/core/serialization.h` - Serialization API
-- `game/core/component.h` - Component definitions
+# Save and Load System
+
+Standard of Iron stores match saves in a versioned SQLite database. A save combines the serialized battlefield with non-entity session state, campaign metadata, and a preview image. The storage layer adds compression, checksums, schema migration, database recovery, autosave retention, and background save writes.
+
+The authoritative implementation is split across:
+
+- `game/save/serialization.*` — entity and world serialization;
+- `game/session/session_snapshot.*` — authoritative non-entity match state;
+- `game/save/snapshot_contract.*` — classification of serialized, rebuilt, and presentation-only state;
+- `app/persistence/save_load_coordinator.*` — application-level capture and restoration;
+- `game/systems/save_load_service.*` — queued save jobs and slot operations;
+- `game/systems/save_storage.*` — SQLite schema, migration, validation, and recovery; and
+- `game/systems/save_format.*` — compression and payload integrity.
+
+## What a save contains
+
+The snapshot contract divides state into four classes.
+
+### Authoritative serialized state
+
+State that changes the meaning of the match is written explicitly. Examples include:
+
+- world entities and authoritative components;
+- terrain and authored props;
+- owner, team, colour, and nation assignments;
+- resource balances and harvested-resource totals;
+- match statistics;
+- simulation clock state;
+- deterministic RNG state;
+- explored visibility; and
+- subsystem state contributed through `Game::Session::SessionSnapshot`, including AI and victory state.
+
+### Derived state
+
+State that can be reconstructed from authoritative data is rebuilt instead of treated as a second source of truth. Examples include troop-count registries, building-collision indexes, movement facts, engagement assignments, and other one-tick caches.
+
+The command queue is also rebuilt empty. Orders that have not executed when the save is taken are not replayed after loading.
+
+### Presentation-only state
+
+Transient renderer state is not authoritative. Animation interpolation, short-lived hit effects, placement ghosts, and similar presentation data are recreated by normal runtime systems.
+
+Some player-facing presentation state, such as camera state, is restored separately as a convenience without making it part of simulation authority.
+
+### Campaign-level metadata
+
+The save row also carries campaign and slot information such as campaign ID, mission ID, difficulty, play time, title, timestamps, save kind, and screenshot.
+
+`game/save/snapshot_contract.cpp` is the maintained field-by-field inventory of these classifications.
+
+## Save flow
+
+`SaveLoadCoordinator` captures the world and session metadata on the owning thread, then submits a `SaveLoadService::SaveRequest`.
+
+`SaveLoadService` queues the write on its worker thread. A save job reports these stages through `save_progress`:
+
+1. **Queued** — the request is waiting for the worker.
+2. **Serializing world** — the captured world document is converted to compact JSON bytes.
+3. **Compressing** — `Save::pack()` builds the stored payload.
+4. **Writing** — `SaveStorage` writes the slot transactionally.
+5. **Done** — the slot is committed and `save_finished` is emitted.
+
+The service supports cancellation by job ID, exposes `pending_save_count()`, and provides `wait_for_pending_saves()` for shutdown and other synchronization points.
+
+Screenshots can be attached as a separate queued job after the save row exists.
+
+## Compression and integrity
+
+Save payloads are packed by `game/systems/save_format.cpp`.
+
+The stored row records:
+
+- compression mode;
+- uncompressed world size;
+- SHA-256 checksum of the uncompressed world;
+- SHA-256 checksum of the stored blob; and
+- the compressed world payload.
+
+The format supports zlib compression. `Save::unpack()` verifies the stored representation and reconstructs the raw world bytes before JSON deserialization.
+
+`SaveLoadService::verify_save_slot()` exposes slot verification through the storage layer.
+
+## Load flow
+
+Loading is staged so an invalid save does not destroy the match already in memory.
+
+`SaveLoadService::load_game_from_slot()`:
+
+1. reads the slot from SQLite;
+2. verifies and unpacks the stored world payload;
+3. parses the world JSON;
+4. rejects a document that does not contain an entity array;
+5. restores the world into a temporary `SessionContext` first;
+6. verifies that the staged world contains units; and only then
+7. clears the live world and deserializes the verified document into it.
+
+If staging fails, the running battle is left untouched. Once the live world has been cleared, a failure during the final restore is reported and the world remains cleared rather than pretending the previous battle still exists.
+
+`SaveLoadCoordinator` then restores the remaining session snapshot against the loaded map and rebuilds derived runtime services.
+
+## The first tick after loading
+
+Rendering consumes published render snapshots rather than the mutable simulation world. A loaded match therefore has to resume simulation so a tick can publish the newly restored state.
+
+The load path restores the battlefield into an unpaused runtime state. The first simulation tick publishes the new render snapshot and rebuilds transient systems from the restored authoritative data.
+
+World clearing also advances the world's content epoch, invalidating render-snapshot slot caches. Saved entity IDs can reuse the same slots and generations as entities from the previous world, so this epoch change prevents stale render data from being reused for a newly restored entity.
+
+`tests/core/save_load_render_snapshot_test.cpp` and `tests/core/save_runtime_restore_test.cpp` cover this behavior.
+
+## Visibility restoration
+
+Explored fog is player knowledge and cannot be reconstructed only from current unit sight.
+
+`GameStateSerializer` stores exploration in save metadata as a run-length-encoded, base64 mask. `GameStateSerializer::restore_visibility_from_metadata()` applies it after the world and visibility grid exist.
+
+Restoration is additive: saved exploration can turn `Unseen` cells into `Explored`, but it does not remove cells that restored units can currently see. A mask whose dimensions do not match the restored map is ignored with a warning instead of making the entire save unloadable.
+
+## Database schema and migration
+
+The save database is `saves.sqlite` under the application save directory. `SaveStorage` enables SQLite WAL mode, `synchronous=FULL`, and foreign-key enforcement.
+
+Two version numbers describe different contracts:
+
+- `PRAGMA user_version` is the SQLite database-schema version. `game/systems/save_format.h` defines `k_database_schema_version`, currently `3`.
+- each save row has a `snapshot_version`, which describes the world/session snapshot written into that row.
+
+When an older supported database schema is opened, `SaveStorage`:
+
+1. copies the database to `<path>.v<version>-backup`;
+2. runs `migrate_schema()` inside a transaction; and
+3. updates `PRAGMA user_version` to the current schema.
+
+The repository therefore has an in-place migration path for older supported save databases. A schema mismatch is not automatically a destructive reset.
+
+## Database recovery
+
+`SaveStorage::initialize()` runs an integrity check and validates the schema shape.
+
+A database that cannot be opened, has a failed integrity check, has an invalid or future schema version, or cannot be upgraded is moved aside rather than silently deleted. The replacement path uses a timestamped `.unreadable-...` name and creates a fresh database.
+
+`SaveLoadService::quarantined_database_path()` exposes the path of a database moved aside during initialization so the application can report where the original data was preserved.
+
+## Autosaves
+
+Autosaves use the same storage format as manual saves. The service clamps autosave retention to the supported range and prunes the oldest autosave slots after a successful write.
+
+Manual, quick-save, and autosave behavior differ by slot naming and retention policy, not by world serialization format.
+
+## Storage tables
+
+The current schema includes:
+
+- `saves` — saved matches and their metadata, payload, and preview;
+- `campaign_progress` — campaign completion state;
+- `campaign_missions` — per-mission unlock/completion state; and
+- `mission_results` — recorded mission outcomes.
+
+`SaveStorage::schema_shape_is_current()` validates the required columns for these tables.
+
+## Tests
+
+The save contract is covered by several layers of tests, including:
+
+- `tests/db/save_storage_test.cpp` — schema, migration, recovery, slot storage, and database behavior;
+- `tests/save/snapshot_contract_test.cpp` — snapshot versioning and field classification;
+- `tests/core/serialization_test.cpp` — world/component serialization;
+- `tests/core/save_load_render_snapshot_test.cpp` — render publication after load; and
+- `tests/core/save_runtime_restore_test.cpp` — runtime restoration behavior.
+
+Compression, background save jobs, progress signals, schema migration, and database quarantine are all present in the current repository.
