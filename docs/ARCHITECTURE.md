@@ -958,9 +958,9 @@ value type of its own, which is a content change rather than a build change.
 
 These are real and deliberate, not oversights:
 
-- 58 call sites still reach per-match state through the ambient `instance()`
+- 56 call sites still reach per-match state through the ambient `instance()`
   accessors rather than a named service, budgeted per directory in
-  `scripts/ambient_instance_budget.json`: `game/systems` 24, `game/map` 14, `game/units` 9, `game/formation` 4, `game/wildlife` 3, `app/world` 2, `game/core` 1, `game/visuals` 1. `ui/`, `render/`,
+  `scripts/ambient_instance_budget.json`: `game/systems` 22, `game/map` 14, `game/units` 9, `game/formation` 4, `game/wildlife` 3, `app/world` 2, `game/core` 1, `game/visuals` 1. `ui/`, `render/`,
   `tools/` and the `game/` modules above the session are at zero and pinned
   there. `app/` is not: `app/world` still holds two, so "zero in the app" is a
   goal rather than a fact. `scripts/check-architecture-doc.py` fails when these
