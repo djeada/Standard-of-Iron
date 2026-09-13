@@ -1,149 +1,149 @@
-# Mission startup
+# Mission Startup Architecture
 
-A campaign mission has two distinct spans of time: **loading**, which prepares the
-mission, and **playable time**, which runs it. Everything a mission needs in order to
-deliver a stable first frame belongs in the first span. This document describes the
-boundary, the pieces that were on the wrong side of it, and the instruments that keep
-them there.
+A campaign mission has two distinct spans of time: **loading**, when the game prepares a stable first playable frame, and **playable time**, when the simulation is allowed to become the player's problem.
 
-## The boundary
+The startup architecture exists to keep expensive one-time work on the loading side of that boundary without changing deterministic simulation behavior. It also provides instrumentation for deciding which startup costs are actually worth optimizing.
 
-`GameEngine::start_skirmish_internal()` raises the loading overlay, then does the whole
-of mission preparation inside a single deferred slot before
-`SkirmishRuntimeCoordinator::finalize_load()` clears `m_runtime.loading`:
+## The loading boundary
 
-1. `world.load` — `LevelOrchestrator::load_skirmish()`: map parse, terrain, spawns,
-   biome/scatter/fog renderers, minimap, registry rebuilds, unit template prewarm.
-2. `mission.commander_setup` / `mission.setup` — owners, nations, teams, authored
-   starting units and buildings, wave metadata, mission stages, commander speakers.
-3. `ai.initial_preparation` — AI workers, profiles, and the first decision snapshot for
-   every AI owner.
-4. `finalize_load()` — the simulation starts stepping; the overlay stays up until the
-   readiness gate in `GameEngine::update_loading_overlay()` is satisfied.
+`GameEngine::start_skirmish_internal()` raises the loading overlay and performs mission preparation in one deferred slot before `SkirmishRuntimeCoordinator::finalize_load()` clears `m_runtime.loading`.
 
-The simulation _does_ run for the last stretch of the overlay, which is why the readiness
-gate matters: `GameEngine::mission_startup_pending_components()` names what is still
-missing, and the overlay only lifts when that list is empty (or after the 15 s escape
-hatch, which logs what it gave up on). Today the list covers terrain scatter GPU upload
-and AI initial decisions. Anything added there must be genuinely required for the first
-playable frame — the gate is not a place to hide work that should have finished earlier.
+The startup sequence is:
 
-## One parse of the map
+1. **`world.load`** — `LevelOrchestrator::load_skirmish()` parses the map, creates terrain and spawns, configures biome/scatter/fog rendering, initializes the minimap, rebuilds registries, and prewarms unit templates.
+2. **`mission.commander_setup` / `mission.setup`** — registers owners, nations, teams, starting units and structures, wave metadata, mission stages, and commander speakers.
+3. **`ai.initial_preparation`** — creates AI workers and profiles and prepares the first decision snapshot for every AI owner.
+4. **`finalize_load()`** — allows the simulation to begin stepping while the loading overlay remains visible until the readiness gate is satisfied.
 
-`Game::Map::MapContextStore` (`game/map/map_context.h`) is the only place a mission map is
-parsed from JSON during a match. It hands out a `MapContext`: an immutable
-`shared_ptr<const MapDefinition>` plus the source and resolved paths. Callers ask for a
-map by path and get the already-parsed one back; the store keeps the three most recent
-maps and re-parses only when the file's size or modification time has changed, so an
-edited map is never served stale.
+The last distinction matters: the simulation can already be running while the loading overlay is still present.
 
-Before this existed, a campaign start parsed the same map six or seven times: the match
-loader, the minimap/environment configuration, mission setup, the skirmish commander
-setup, the wave builder, the mission-stage coordinate helper, the commander lookup, and
-the audio ambience picker each opened the file for themselves. On a large authored map
-that is the single largest avoidable cost in the load.
+`GameEngine::mission_startup_pending_components()` reports anything that is still required for the first playable frame. The overlay is released only when that list becomes empty, or after the 15-second escape hatch logs the components that failed to become ready.
 
-The consumers now share one parse:
+The current gate covers terrain-scatter GPU upload and initial AI decisions. New entries should be added only when the component is genuinely required for a stable first playable frame. The readiness gate is not a substitute for moving ordinary setup work into the loading phase.
 
-| Consumer                                                    | What it needs the map for                                |
-| ----------------------------------------------------------- | -------------------------------------------------------- |
-| `Game::Map::load_match()`                                   | terrain, spawns, camera, environment, victory config     |
-| `LevelOrchestrator::load_skirmish()`                        | starting resources, undead/vein/wildlife config, minimap |
-| `MissionSetupCoordinator::apply_mission_setup()`            | authored spawns, coordinate space, commanders            |
-| `MissionSetupCoordinator::apply_skirmish_commander_setup()` | spawn anchors                                            |
-| `build_pending_mission_waves()`                             | wave entry coordinate conversion                         |
-| `make_mission_position_to_world()`                          | mission-stage coordinate conversion                      |
-| `commander_troops_for_map()`                                | which force fields which commander                       |
-| `AudioCoordinator::apply_mission_ambience()`                | ambience query terms                                     |
-| `GameStateRestorer` / `SaveLoadCoordinator`                 | the same, on the save/load path                          |
+## Parse the mission map once
 
-`MissionStartupTest.ParsesTheMissionMapOnce` is the guard: it drives a mission start and
-fails if `MapContextStore::statistics().parses` is anything but 1. A new subsystem that
-opens the map JSON itself will fail that test rather than quietly costing another parse.
+`Game::Map::MapContextStore` in `game/map/map_context.h` is the shared owner of parsed mission-map data during a match.
 
-Both `MissionStartupTest` cases load `hold_the_sallow_ford`, a standalone mission on the
-smallest authored map that still fields an AI opponent, rather than a campaign
-battlefield. Neither invariant is map-specific — the store is either reused or it is not,
-and the AI either prepared its snapshots during loading or it did not — but the map is what
-the test pays for. On `battle_of_ticino` the two cases measured 4.7 s and 4.9 s in a Debug
-build, the two slowest tests in the whole fast pull-request profile and close enough to the
-ten-second per-test budget in `scripts/check-test-speed.py` that a shared runner went over
-it. On the ford they measure about 30 ms each and assert exactly the same things.
+A `MapContext` contains:
 
-## AI initial state
+- an immutable `shared_ptr<const MapDefinition>`;
+- the source path; and
+- the resolved path.
 
-`AISnapshotBuilder::build()` walks the whole world for one owner: economy, harvestable
-props, friendly units and a dozen components each, hostile contacts, vision sources and a
-point grid, strategic objectives. It is not a cheap call, and `AISystem::update()` used to
-make it synchronously on the simulation thread the first time each AI came due — which,
-with the initial timers staggered across the update interval, landed N of them inside the
-first few hundred milliseconds of play.
+Consumers request a map by path and receive the existing parsed context when possible. The store keeps the three most recent maps and reparses only when the file size or modification time changes, so edited maps are not served from a stale cache.
 
-Two changes moved that work:
+### Shared consumers
 
-- **Prepared during loading.** `AISystem::prepare_initial_decisions(world)` builds every
-  owner's first snapshot and submits it to that owner's worker;
-  `await_initial_decisions()` blocks until the workers are done. `GameEngine`
-  calls both from `prepare_mission_ai_state()`, before `finalize_load()`. The decisions
-  themselves are applied by the normal `process_results()` path a few updates into the
-  match, so nothing about AI behaviour timing changes — only where the snapshot was built.
-- **Staggering moved to the second round.** Every owner has just decided, so resetting all
-  the timers to zero would make the next round arrive as one burst. `prepare_initial_decisions()`
-  instead seeds each timer with the _negative_ of its stagger, which puts owner `i`'s next
-  decision at `interval + stagger(i)`: past the first update interval of play, and still
-  spread across the interval after that.
+The following systems all reuse the same parsed map:
 
-The ownership model is unchanged and there is no second source of truth: a snapshot is
-built on the thread that owns the world and moved into the worker. Workers never read the
-world.
+| Consumer                                                    | Why it needs the map                                      |
+| ----------------------------------------------------------- | --------------------------------------------------------- |
+| `Game::Map::load_match()`                                   | terrain, spawns, camera, environment, victory config      |
+| `LevelOrchestrator::load_skirmish()`                        | resources, undead/vein/wildlife config, minimap           |
+| `MissionSetupCoordinator::apply_mission_setup()`            | authored spawns, coordinate space, commanders             |
+| `MissionSetupCoordinator::apply_skirmish_commander_setup()` | spawn anchors                                             |
+| `build_pending_mission_waves()`                             | wave-entry coordinate conversion                          |
+| `make_mission_position_to_world()`                          | mission-stage coordinate conversion                       |
+| `commander_troops_for_map()`                                | commander ownership                                       |
+| `AudioCoordinator::apply_mission_ambience()`                | ambience query terms                                      |
+| `GameStateRestorer` / `SaveLoadCoordinator`                 | the same information on the save/load path                |
 
-`AISystem::update()`'s submit path is unchanged apart from being factored into
-`submit_decision_job()`, which `prepare_initial_decisions()` shares — the steady-state
-decision cadence, delta times and job latency are the same as before.
+Before `MapContextStore`, those subsystems could each reopen and parse the same JSON. On a large authored map, repeated parsing was one of the clearest avoidable startup costs.
 
-**The apply tick is chosen by the simulation, not by the clock on the wall.**
-`submit_decision_job()` stamps the job with `job_due_update = m_update_count +
-k_decision_latency_updates`, and `process_results()` applies it on exactly that update: it
-blocks on `AIWorker::wait_idle()` until the result exists rather than giving the worker a
-wall-clock budget and slipping the job to a later update when it overruns. A busy machine
-therefore costs frame time, never a different decision — the same seed and the same
-commands apply the same plan on the same tick on every machine.
-`m_decision_wait_budget` survives only as a diagnostic threshold:
-`decisions_over_wait_budget()` counts the waits that exceeded it, and
-`longest_decision_wait_us()` reports the worst one. Neither reading feeds back into the
-simulation. `AIWorkerPool::enqueue()` hands a job straight back to
-`AIWorker::discard_pending_job()` when the pool is already stopping, so a blocking wait
-can never outlive the pool that was supposed to satisfy it.
+`MissionStartupTest.ParsesTheMissionMapOnce` protects the contract. It starts a mission and requires `MapContextStore::statistics().parses == 1`. A subsystem that independently opens the mission JSON will therefore fail the test instead of quietly adding another parse.
 
-**Buffer recycling was tried and rejected.** Handing the spent snapshot back from the
-worker so the next `build()` could refill its vectors is the obvious third change, and it
-works, but it makes each decision measurably quicker to submit. Before the apply tick was
-pinned that showed up as AI commands landing a tick or so earlier, which
-`CommanderDuelTest.CommanderArrowsCarryTheCommanderStyle` detects: the AI-ordered rival
-staggers the commander sooner and it looses two signature volleys in twenty seconds
-instead of three. The measured prize was not worth it — `ai.initial_preparation` costs
-0.26 ms for Ticino's three AI owners and 0.56 ms for Campania's four, so snapshot
-allocation is not where campaign startup spends its time.
+### Keep the startup test cheap
 
-`AISystem::reinitialize()` used to run twice per campaign start — once in
-`LevelOrchestrator` for the skirmish case and again in `MissionSetupCoordinator` after the
-mission's owners exist. `load_skirmish()` now takes `defer_ai_initialization`, which
-`GameEngine` sets for campaign missions; `prepare_mission_ai_state()` re-runs
-`reinitialize()` itself if the instance count does not match the registered AI owners, so
-a malformed mission definition cannot leave the AI uninitialised.
+The startup tests use `hold_the_sallow_ford`, a standalone mission on the smallest authored map that still includes an AI opponent.
 
-## Instrumentation
+The invariants under test are not map-specific: the parsed context must be reused and initial AI decisions must be prepared during loading. Using a small representative map keeps those tests in the fast pull-request profile without weakening what they prove.
 
-`Engine::Core::StartupProfiler` (`game/core/startup_profiler.h`) accumulates a phase
-timeline for one mission start. `ScopedStartupPhase` records a named span; phases with the
-same name accumulate. `add_counter()` records integers. The profiler also records the
-overlay release timestamp and, from that point, per-frame presentation times, from which
-it derives first-frame, first-1-second and first-5-second distributions.
+On `battle_of_ticino`, the same two tests measured roughly 4.7 and 4.9 seconds in a Debug build and approached the ten-second per-test budget in `scripts/check-test-speed.py` on shared runners. On the ford they take roughly 30 ms while checking the same contracts.
 
-Set `SOI_STARTUP_TRACE=1` to have the report logged about five seconds after the overlay
-lifts:
+## Prepare the first AI decision during loading
 
+`AISnapshotBuilder::build()` is an expensive world read. For one owner it gathers economy state, harvestable props, friendly and hostile units, component state, vision sources, strategic objectives, and a point grid.
+
+Building that snapshot synchronously on the simulation thread during the opening seconds of play would front-load AI work into the exact period in which the player is first interacting with the mission.
+
+The startup path moves only the **first** round of that work into loading.
+
+### Initial preparation
+
+`AISystem::prepare_initial_decisions(world)` builds every owner's first snapshot on the world-owning thread and submits each snapshot to the corresponding AI worker.
+
+`await_initial_decisions()` waits for those worker jobs to finish. `GameEngine::prepare_mission_ai_state()` calls both functions before `finalize_load()`.
+
+The resulting decisions still enter the simulation through the ordinary `process_results()` path a few updates into the match. AI behavior timing therefore remains the same; only the expensive snapshot construction has moved to a time when the loading overlay is still present.
+
+Workers never read the live world. The ownership model remains single-source: the world-owning thread constructs a snapshot and transfers that immutable decision input to the worker.
+
+### Stagger the second round, not the first
+
+After loading, every AI owner has already completed one decision round. If all owner timers were reset to zero, the next round would arrive as one synchronized burst.
+
+`prepare_initial_decisions()` instead initializes each timer to the negative of its normal stagger. Owner `i` therefore becomes due at:
+
+```text
+interval + stagger(i)
 ```
+
+The first post-load round begins after the initial interval and remains spread across the following decision window.
+
+`AISystem::update()` still uses the same submission path, factored through `submit_decision_job()`. Steady-state cadence, delta times, and worker latency semantics remain unchanged.
+
+## Deterministic AI timing beats wall-clock timing
+
+The simulation, not machine speed, decides when an AI result becomes visible.
+
+`submit_decision_job()` stamps every decision with:
+
+```text
+job_due_update = m_update_count + k_decision_latency_updates
+```
+
+`process_results()` applies that result on exactly the due update. If the worker is late, the simulation waits through `AIWorker::wait_idle()` rather than slipping the decision to a later update.
+
+That means a slow machine can pay more frame time, but it cannot produce a different command schedule from the same seed. The same plan applies on the same simulation tick.
+
+`m_decision_wait_budget` is diagnostic only. `decisions_over_wait_budget()` counts waits that exceeded the threshold and `longest_decision_wait_us()` reports the longest observed wait. Neither value feeds back into simulation behavior.
+
+`AIWorkerPool::enqueue()` also returns a job to `AIWorker::discard_pending_job()` when the pool is already stopping, ensuring that a blocking wait cannot outlive the worker pool expected to satisfy it.
+
+## Avoid optimizations that change timing semantics
+
+Snapshot-buffer recycling was tested because reusing the worker's previous allocation can make `AISnapshotBuilder::build()` cheaper.
+
+The optimization worked mechanically, but it also made decision submission measurably faster. Before the apply tick was pinned deterministically, that changed when some AI commands landed. `CommanderDuelTest.CommanderArrowsCarryTheCommanderStyle` exposed the behavior difference through a changed number of signature volleys in a fixed twenty-second duel.
+
+The measured startup benefit did not justify the semantic risk. `ai.initial_preparation` is already a small cost—about 0.26 ms for Ticino's three AI owners and 0.56 ms for Campania's four in the recorded captures—so allocation recycling is not where campaign startup time is spent.
+
+The lesson is broader than this particular experiment: startup optimization should target measured bottlenecks, and deterministic timing is part of the behavioral contract.
+
+## Reinitialize campaign AI once
+
+Campaign startup once invoked `AISystem::reinitialize()` twice: first through `LevelOrchestrator`'s skirmish path and again in `MissionSetupCoordinator` after mission owners had been registered.
+
+`load_skirmish()` now accepts `defer_ai_initialization`, which `GameEngine` enables for campaign missions. `prepare_mission_ai_state()` performs the eventual reinitialization after mission ownership is known.
+
+It also checks that the resulting instance count matches the registered AI owners and reinitializes if necessary, preventing malformed mission data from leaving AI state incomplete.
+
+## Startup instrumentation
+
+`Engine::Core::StartupProfiler` in `game/core/startup_profiler.h` records a timeline for one mission start.
+
+`ScopedStartupPhase` records named spans, and repeated spans with the same name accumulate. `add_counter()` records integer diagnostics. The profiler also marks the loading-overlay release and then samples presentation-frame times, producing distributions for the first frame, first second, and first five seconds of play.
+
+Enable the text report with:
+
+```sh
+SOI_STARTUP_TRACE=1
+```
+
+A representative capture looks like this:
+
+```text
 SOI_STARTUP mission=:/assets/maps/map_battle_ticino.json
   phase audio.mission_preload = 7985.93 ms
   phase world.map_and_spawns = 2307.37 ms items=316
@@ -170,45 +170,46 @@ SOI_STARTUP mission=:/assets/maps/map_battle_ticino.json
   frames first 5s n=220 avg=7.40 p95=17.81 p99=21.44 worst=58.57
 ```
 
-That is a real capture of `second_punic_war/battle_of_ticino` on a contended developer
-machine, not an illustration. `world.load` and `mission.setup` are outer spans that contain
-the phases listed above them, so the `phase total` line double-counts; read the nesting,
-not the sum.
+This is a real capture of `second_punic_war/battle_of_ticino` on a contended developer machine, not a target budget.
 
-Read it and the picture the issue assumed changes. On this mission the whole of mission
-setup, AI reinitialisation and AI initial preparation together cost under 6 ms, against
-7986 ms of audio preload and 4287 ms of unit-template prewarm. `map.reuses = 6` is the
-six JSON parses the shared context removed. The same shape holds on Campania, the largest
-authored map: `world.map_and_spawns` 3090 ms, `render.template_prewarm` 5625 ms,
-`mission.setup` 15 ms, `ai.initial_preparation` 0.56 ms for four AI owners.
+`world.load` and `mission.setup` are outer spans that contain some of the named phases above them, so `phase total` double-counts nested work. Read the hierarchy rather than treating the total as a simple sum of every line.
 
-So the AI snapshots the issue nominated as the likely cause of the startup hitch were
-worth well under a millisecond, and the phases that dominate a campaign start were already
-inside the loading phase. What remains after this change is a first-second frame-time tail
-(Ticino p99 58 ms against a 7.6 ms average; Campania p99 119 ms against 42 ms) that the
-phase timings do not explain, because it happens after the overlay lifts. Attributing that
-is the next piece of work and needs the frame-level instrument, not the phase one.
+### What the trace showed
 
-The two counters that have to walk the unit storage to fill (`world.units` and the `items=`
-on `world.map_and_spawns`) are only collected when a report is actually wanted, so a plain
-run pays nothing for them. They count through a component view rather than
-`collect_entities_with`, so neither materialises a vector of every unit.
+For that capture, mission setup, AI reinitialization, and initial AI preparation together cost under 6 ms. Audio preload consumed roughly 8 seconds and template prewarm roughly 4.3 seconds.
 
-`SOI_STARTUP_TRACE_FILE=<path>` writes the same report as JSON — phases, counters, the
-overlay-release and first-frame timestamps, and both frame-time distributions — which is
-the form a benchmark harness should collect as an artifact. The two variables are
-independent: either one alone produces its output.
+Campania showed the same shape: expensive map/spawn and template-prewarm phases, while mission setup and initial AI work remained small.
 
-`map.parses` is the duplicate-parse detector. `map.requests` minus `map.parses` is how
-many consumers were served from the shared context.
+The instrumentation therefore changed the optimization priority. The initial AI snapshots were not the startup bottleneck; the larger remaining problem was the first-second frame-time tail after the overlay lifted, which requires frame-level analysis rather than another startup-phase optimization.
 
-## What is deliberately not here
+Counters that require walking unit storage, such as `world.units` and the `items=` count on `world.map_and_spawns`, are collected only when a report is requested. Normal startup does not pay for those diagnostics.
 
-- Wave spawning. Pending waves are metadata at startup; the units appear when the wave
-  director reaches the authored ready time, which for most missions is tens or hundreds of
-  seconds in. A spawn spike is a real cost but a separate one, and moving spawns earlier to
-  flatten a trace would change the mission.
-- A shared world snapshot that all AI owners derive from. It is the right long-term shape
-  (`AISnapshotBuilder` walks the same friendly/enemy sets once per owner), but the
-  instrumentation says it would buy well under a millisecond at startup, which is not what
-  a change to the snapshot contract should be justified by.
+## Machine-readable startup traces
+
+Set:
+
+```sh
+SOI_STARTUP_TRACE_FILE=<path>
+```
+
+The profiler writes the same information as JSON: phases, counters, overlay release, first-frame time, and the frame-time distributions for the first second and first five seconds.
+
+`SOI_STARTUP_TRACE` and `SOI_STARTUP_TRACE_FILE` are independent. Either one can be enabled alone.
+
+`map.parses` is the duplicate-parse guard. `map.requests - map.parses` is the number of map requests served from the shared context.
+
+## Work deliberately excluded from startup
+
+### Future mission waves
+
+Pending waves are only metadata at startup. Their units should spawn when the wave director reaches the authored ready time, often tens or hundreds of seconds later.
+
+Pre-spawning those units merely to flatten a startup or runtime trace would change the mission and is therefore not a valid optimization.
+
+### One shared multi-owner AI world snapshot
+
+A single world snapshot from which every AI owner derives its view may be a useful long-term architecture because `AISnapshotBuilder` currently walks overlapping friendly and hostile sets once per owner.
+
+Startup instrumentation does not justify that redesign, however: initial preparation costs well under a millisecond in the measured campaign examples. A change to the snapshot contract should be motivated by broader steady-state or scalability evidence rather than startup alone.
+
+The mission-startup rule is therefore straightforward: perform first-frame prerequisites while the player is still loading, preserve deterministic simulation timing, and optimize the phases the profiler actually identifies as expensive.

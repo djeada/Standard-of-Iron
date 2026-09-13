@@ -1,167 +1,171 @@
-# Typography
+# Typography System
 
-Standard of Iron ships its own type. Nothing in the game or its tools asks the
-operating system for a font by name.
+Standard of Iron controls its typography explicitly so the game, tools, and promotional output can render the same text consistently on every machine. UI code does not rely on an arbitrary operating-system font lookup for branded text, and the custom title face is built and tested as part of the repository.
 
-## Why it is bundled
+The typography system has three distinct jobs: long-form readability, symbol-capable interface display text, and a tightly controlled brand face for titles and large figures.
 
-The reels are the most-seen thing this project produces, and they used to be
-lettered by whatever the capture machine happened to have installed.
-`scripts/promo-edit.py` walked an eight-deep list of `/usr/share/fonts` paths —
-EB Garamond, then Latin Modern, then Linux Libertine, down to Liberation Serif —
-and captioned the video with the first hit. The same promo spec cut on a build
-box, a laptop and CI could publish three differently-lettered videos from
-identical inputs, and nothing in the output said which face it got.
+## Why typography is controlled by the project
 
-The game had a quieter version of the same problem: `Typography.family` and
-`Typography.displayFamily` were bare family names resolved by fontconfig.
+Promotional reels and in-game screenshots are reproducible only when the same text is rendered with the same face. Relying on whatever font happens to exist on a build machine can produce visibly different output from identical inputs.
 
-## The three families
+The same concern applies inside the application. Family names resolved indirectly through the host font stack can change appearance or coverage across development machines, CI, and packaged builds.
 
-| Token                      | Face                                | Job                                                                      |
-| -------------------------- | ----------------------------------- | ------------------------------------------------------------------------ |
-| `Typography.family`        | Noto Sans (system)                  | Body text, settings, debug, anything the player reads at length.         |
-| `Typography.displayFamily` | Noto Serif (system)                 | Serif headings, **and the interface's symbol glyphs** — `⚔ ⚑ ⚒ ♛ ⛏ ◈ ☾`. |
-| `Typography.titleFamily`   | **Standard Iron Display** (bundled) | Titles, outcome headlines, big numbers, reel captions.                   |
+The project therefore treats font selection as part of its visual contract rather than an environmental detail.
 
-`displayFamily` is deliberately _not_ the brand face. It carries the command and
-faction glyphs that `tests/ui/qml/tst_glyph_coverage.qml` asserts, and a
-caps-and-figures display face has none of them.
+## The three font families
 
-## The one rule: `titleFamily` is capitals and figures only
+| Token                      | Face                                | Role                                                                      |
+| -------------------------- | ----------------------------------- | ------------------------------------------------------------------------- |
+| `Typography.family`        | Noto Sans                           | Body text, settings, debug UI, and text read at length                    |
+| `Typography.displayFamily` | Noto Serif                          | Serif headings and interface symbols such as `⚔ ⚑ ⚒ ♛ ⛏ ◈ ☾`           |
+| `Typography.titleFamily`   | **Standard Iron Display**           | Titles, outcome headlines, large numbers, and promotional reel captions   |
 
-**The display face has no lowercase.** Qt falls back per glyph, so binding
-`titleFamily` to mixed-case text renders half a word in one typeface and half in
-another — legible enough that nobody notices in review, and obviously wrong in a
-screenshot.
+`displayFamily` is deliberately separate from the brand face. It must carry command and faction symbols verified by `tests/ui/qml/tst_glyph_coverage.qml`, while the title face is optimized for capitals and figures rather than broad symbol coverage.
 
-Bind it only where the text is numeric, or alongside:
+## The central rule: `titleFamily` is for capitals and figures
+
+**Standard Iron Display does not contain lowercase letters.**
+
+Qt can fall back per glyph. If mixed-case text is assigned to `titleFamily`, one word can therefore be assembled from two different physical faces while remaining technically legible. That kind of fallback is easy to miss in ordinary review and obvious in a polished screenshot.
+
+Use the title face only for numeric text or pair it with forced uppercase:
 
 ```qml
 font.family: Design.Typography.titleFamily
 font.capitalization: Font.AllUppercase
 ```
 
-`TitleFamilyUsageTest.EveryBindingIsUppercasedOrNumeric` in
-`tests/ui/brand_fonts_test.cpp` scans `ui/qml` and fails on any binding that
-does neither. That guard exists in a test rather than in a comment next to the
-property because `make format` strips C++ and QML comments
-(`scripts/remove-comments.sh`), so a comment there would not survive.
+`TitleFamilyUsageTest.EveryBindingIsUppercasedOrNumeric` in `tests/ui/brand_fonts_test.cpp` scans `ui/qml` and rejects title-family bindings that are neither numeric nor uppercased.
 
-## How each consumer loads the fonts
+The rule is enforced in a test rather than a nearby comment because `make format` removes C++ and QML comments through `scripts/remove-comments.sh`. The invariant therefore lives somewhere formatting cannot erase it.
 
-Three paths, all of which must keep working:
+## How fonts are loaded
 
-- **QML** loads from qrc via `FontLoader` in `ui/qml/design/Typography.qml`.
-  This is why the files are listed in `assets.qrc`.
-- **The Qt Widgets tools** (arena, map editor) register from disk in
-  `Ui::BrandFonts::register_bundled()`, called from `UiShell::apply()`. It
-  resolves through `Utils::Resources::resolve_resource_path`, which finds the
-  staged `build/bin/assets/fonts` copy before the qrc one — the staged copy is
-  what a dev build actually reads, so a qrc-only load is not enough.
-- **The reel cutter** `scripts/promo-edit.py` resolves repo-relative and fails
-  loudly rather than falling back to a system font.
+Three consumers load the project fonts through different runtime environments. All three paths must remain valid.
 
-Burned-in arena text goes through `Arena::Typography` (`number`,
-`small_label`). Act cards and subtitles are not there: those are composited
-afterwards by `promo-edit.py`, which owns its own sizing and resolves the same
-file by path.
+### QML application UI
 
-The reel cutter composites text at twice the output resolution and downsamples
-once with Lanczos filtering. Unhinted outline rendering preserves the display
-face's wedge serifs; a thin dark outline and close shadow separate the letters
-from footage without filling their counters. Colour stays at 4:4:4 during text
-compositing, before the final video encode. This costs extra encoding time;
-`--text-scale 1` selects faster drafts, while `--text-scale 3` provides a higher
-sampling option. These script changes apply when re-cutting existing clips and
-do not require rebuilding the game or regenerating the font.
+QML loads the packaged fonts through `FontLoader` in `ui/qml/design/Typography.qml`. The font assets are therefore listed in `assets.qrc`.
 
-## Testing coverage: fallback or no fallback
+### Qt Widgets tools
 
-Two different questions, two different instruments, and using the wrong one
-makes a test pass forever:
+Arena and the map editor register fonts from disk through `Ui::BrandFonts::register_bundled()`, called by `UiShell::apply()`.
 
-- `QFontMetrics::inFont()` answers through the font engine, **fallbacks
-  included**. Right for the interface glyphs — what matters is that the player
-  sees the mark, not which family drew it. This is `GlyphProbe.missing()`.
-- `QRawFont::supportsCharacter()` asks one physical face with nothing behind
-  it. Right for the brand face, where a fallback _is_ the failure. This is
-  `GlyphProbe.missingWithoutFallback()` and `missing_from()` in
-  `tests/ui/brand_fonts_test.cpp`.
+The path resolves through `Utils::Resources::resolve_resource_path`, which prefers the staged `build/bin/assets/fonts` copy used by a normal development build. A resource existing only inside qrc is therefore not sufficient for the tools path.
 
-The display face's own coverage test was written with `QFontMetrics` first and
-passed while proving nothing, because the system serif quietly supplied every
-character it asked about.
+### Promotional reel compositor
 
-## The display face is generated
+`scripts/promo-edit.py` resolves the font from the repository and fails explicitly if it cannot find the required asset. It does not silently substitute a system font.
 
-`assets/fonts/StandardIronDisplay-Bold.ttf` is compiled from geometry in
-`tools/font/`, not drawn in an editor:
+Arena's burned-in labels use `Arena::Typography` helpers such as `number` and `small_label`. Act cards and subtitles are added later by `promo-edit.py`, which owns its own sizing while resolving the same physical title-face asset.
 
-```
+## Promotional text rendering
+
+The reel compositor renders text above final output resolution and downsamples once with Lanczos filtering. This preserves the unhinted display face's wedge serifs while reducing jagged edges.
+
+A thin dark outline and close shadow separate text from footage without filling the counters. Text composition remains in 4:4:4 color before the final video encode.
+
+The sampling level is configurable:
+
+- `--text-scale 1` for faster drafts;
+- the normal higher-resolution path for release output; and
+- `--text-scale 3` for an even denser sampling option.
+
+These choices affect reel compositing only. Recutting footage does not require rebuilding the game or regenerating the font.
+
+## Test fallback and physical coverage separately
+
+Font testing has to answer two different questions.
+
+### Does the interface display the glyph somehow?
+
+`QFontMetrics::inFont()` goes through the active font engine **with fallback available**.
+
+That is appropriate for ordinary interface symbols. The important result is that the player sees the glyph, not necessarily which physical face provided it. `GlyphProbe.missing()` uses this behavior.
+
+### Does this exact brand face contain the glyph?
+
+`QRawFont::supportsCharacter()` queries one physical face without fallback.
+
+That is the correct test for Standard Iron Display because fallback is precisely the failure mode being guarded against. `GlyphProbe.missingWithoutFallback()` and `missing_from()` in `tests/ui/brand_fonts_test.cpp` use this path.
+
+A brand-face coverage test that allows fallback can pass while proving nothing about the bundled face itself.
+
+## Standard Iron Display is generated from source
+
+`assets/fonts/StandardIronDisplay-Bold.ttf` is produced from deterministic geometry in `tools/font/` rather than maintained manually in a font editor.
+
+Create the font-tool environment and rebuild the asset with:
+
+```sh
 python3 -m venv .venv
 .venv/bin/pip install -r tools/font/requirements.txt
-.venv/bin/python tools/font/build_standard_iron.py     # rebuild the .ttf
-.venv/bin/python tools/font/proof.py proof.png         # look at it
+.venv/bin/python tools/font/build_standard_iron.py
+.venv/bin/python tools/font/proof.py proof.png
 ```
 
-The build is deterministic — same source, same bytes. Fix letters in
-`tools/font/glyph_shapes.py` and rebuild; editing the binary in a font editor
-loses the change the next time anyone regenerates.
+The build is deterministic: identical source produces identical font bytes.
 
-The `.ttf` is committed anyway, because the game loads it at runtime and a
-contributor should not need a font toolchain to run the game.
+Make outline changes in `tools/font/glyph_shapes.py` and regenerate the `.ttf`. Editing the compiled binary directly creates changes that disappear the next time the source-driven build runs.
 
-Version 1.200 uses longer tapered wedge serifs, a spear-shaped A with a low
-crossbar, a deeper central M and a swept blade foot on R. These silhouettes
-carry the ancient and dark-fantasy character while keeping the letter interiors
-open. S is one continuous curved ribbon; U's bowl meets its unequal stem
-weights without a ledge. A, E, K and R lose the small decorative notches that
-read as damaged edges at caption sizes. Accented composites and Cyrillic
-aliases inherit their base outlines automatically.
+The generated `.ttf` is still committed because the game needs it at runtime and contributors should not need the font toolchain merely to launch the project.
 
-### How the letters are built
+## Visual language of the title face
 
-Every glyph is assembled from three recurring forms and nothing else — a
-**wedge** (the flared Roman serif), a **cut** (a 35° chisel bite, one angle for
-the whole font), and a **point** (a blade terminal). That is what makes the
-alphabet read as one alphabet; adding a fourth form is a decision about the
-game's identity, not a drawing convenience.
+Version 1.200 uses a small vocabulary of repeated forms to give the alphabet one coherent identity:
 
-Every terminal is served, including the diagonal ones. `stem()` grows its own
-serifs, but a diagonal cannot — its terminal is cut horizontally at whatever x
-the slope reaches — so `foot_serif()` and `head_serif()` place them explicitly
-on A, V, W, X, Y, K and M. Without those, X and V had bare cuts and read as a
-second, sans-serif alphabet sitting inside the serifed one, which was the
-single most visible flaw in the first draft.
+- a **wedge** for flared Roman serifs;
+- a **cut** using a consistent 35° chisel angle; and
+- a **point** for blade-like terminals.
 
-A glyph is material added and material taken away, resolved with real boolean
-geometry (`skia-pathops`) at build time. Bowls that grow out of a stem are
-`Part`s that resolve _before_ they merge, so trimming a bowl back to its stem
-cannot eat the stem — that scoping is what B, D, P and R depend on.
+The face combines those forms with open interiors and bold silhouettes suitable for titles and caption-sized use. Character-specific details include the spear-shaped `A`, deep central `M`, swept foot on `R`, and longer tapered wedge serifs.
 
-Kerning is a legacy `kern` table (`tools/font/glyph_kerning.py`), not GPOS:
-the font has no other OpenType layout, and HarfBuzz — which is what Qt shapes
-with — reads `kern` when there is no GPOS kerning to prefer. All 72 pairs are
-negative, because kerning here only ever closes a gap; the reel presets add
-tracking on top, and a pair aggressive enough to look right at default spacing
-collides once tracking is applied.
-`BrandFontsTest.QtAppliesTheDisplayFacesKerning` asserts the pairs actually
-reach Qt, because a shaper that ignored them would cost nothing visible except
-a hole in the middle of SURVIVE.
+Adding a fourth recurring construction form should be treated as a visual-language decision, not merely as a convenient way to solve one difficult glyph.
 
-Coverage is A–Z, 0–9, punctuation, the Latin-1 accented capitals German,
-Spanish and Brazilian Portuguese need, `Ğ İ Ş` for Turkish, `Ą Ć Ę Ł Ń Ś Ź Ż`
-for Polish and the Russian capitals `А–Я` — all outside Latin-1, so the breve,
-the dot above, the ogonek and the Ł stroke are drawn here rather than borrowed.
-Accented forms are composites (base + mark), so correcting `O` corrects
-`Ó Ò Ô Õ Ö` at once. Eleven Cyrillic capitals — `А В Е К М Н О Р С Т Х` — are
-not drawn at all: `ALIASES` in `tools/font/glyph_cyrillic.py` points their code
-points at the Latin outline, so `О` and `O` cannot drift apart. Arabic is not
-covered and is not meant to be; it falls to the bundled text face.
+### Diagonal terminals need explicit treatment
+
+Vertical stems can generate their own serifs through `stem()`. Diagonal strokes cannot: their terminal is cut horizontally wherever the slope reaches the boundary.
+
+`foot_serif()` and `head_serif()` therefore add explicit terminals to diagonal-heavy letters such as `A`, `V`, `W`, `X`, `Y`, `K`, and `M`.
+
+Without those shared terminal forms, diagonal letters read like a separate sans-serif alphabet embedded inside the serif face.
+
+### Glyphs are constructive geometry
+
+Each glyph is built from material added and removed through boolean geometry using `skia-pathops`.
+
+Bowls attached to a stem are represented as scoped `Part`s that resolve before being merged with the stem. That ordering allows the bowl to be trimmed without accidentally carving into the structural stem, which is important for letters such as `B`, `D`, `P`, and `R`.
+
+## Kerning
+
+The face uses a legacy `kern` table generated by `tools/font/glyph_kerning.py` rather than GPOS positioning.
+
+The font contains no other OpenType layout system, and HarfBuzz—the shaper used by Qt—honors the `kern` table when no GPOS kerning takes precedence.
+
+All 72 pairs are negative because kerning in this face is used only to close visually excessive gaps. Promotional presets add tracking separately, so the pair adjustments must remain conservative enough not to collide once tracking is applied.
+
+`BrandFontsTest.QtAppliesTheDisplayFacesKerning` verifies that the kerning information reaches Qt rather than merely existing in the binary.
+
+## Character coverage
+
+Standard Iron Display covers:
+
+- `A–Z`;
+- `0–9`;
+- required punctuation;
+- Latin-1 accented capitals used by supported German, Spanish, and Brazilian Portuguese text;
+- `Ğ İ Ş` for Turkish;
+- `Ą Ć Ę Ł Ń Ś Ź Ż` for Polish; and
+- Russian capitals `А–Я`.
+
+Accented letters are composed from a base glyph and mark where possible, so correcting the base outline also fixes its accented variants.
+
+Several Cyrillic capitals share the same form as Latin characters. `ALIASES` in `tools/font/glyph_cyrillic.py` maps those code points to the Latin outline so visually identical forms cannot drift apart.
+
+Arabic is intentionally outside the title face's coverage and falls back to the bundled text family.
 
 ## Licensing
 
-Both bundled faces are OFL-1.1 and neither restricts commercial use. See
-[THIRD_PARTY_LICENSES.md](../THIRD_PARTY_LICENSES.md) and the license files in
-[assets/fonts/](../assets/fonts/).
+The bundled third-party font families use OFL-1.1 and permit commercial use under that license. See [THIRD_PARTY_LICENSES.md](../THIRD_PARTY_LICENSES.md) and the license files in [assets/fonts/](../assets/fonts/).
+
+The typography system is successful when the same content looks intentional in a game build, an editor tool, a screenshot, and a promotional reel—and when a missing glyph or accidental fallback fails loudly instead of becoming machine-dependent visual drift.

@@ -1,93 +1,99 @@
-# Choosing a starting base
+# Choosing a Starting Base in Skirmish
 
-Every skirmish map authors its barracks in the map JSON's `structures` array.
-Historically the `player_id` on each entry was the whole story: player 1 always
-began at `p1_barracks`, and the only choice the setup screen offered was which
-authored slot you sat in. The skirmish screen now lets each player pick which
-of the map's barracks they start from — always exactly one apiece.
+Every skirmish map authors its barracks in the map JSON `structures` array. Originally, the `player_id` on each barracks determined the starting position completely: player 1 began at `p1_barracks`, player 2 at `p2_barracks`, and so on. The setup screen could change which player occupied a seat, but not which authored base that seat used.
+
+Skirmish setup now separates those two ideas. Each player can choose any available barracks on the map as a starting base, while the game still guarantees **exactly one starting base per player**.
 
 ## What the player sees
 
-`ui/qml/MapSelect.qml` gives every seat in the Order of Battle a **Base** chip
-next to Colour, Nation, Commander and Team. Clicking the chip cycles to the next
-base nobody has claimed. The seat that is currently _armed_ is shown with a
-lighter card, a brighter border and a `▸` caret; clicking anywhere on a card
-arms it.
+`ui/qml/MapSelect.qml` gives every seat in the Order of Battle a **Base** chip next to Colour, Nation, Commander, and Team. Clicking the chip cycles through bases that no other seat currently claims.
 
-The map preview (`ui/qml/MapPreview.qml`) is the other half of the control.
-Claimed bases are drawn in their owner's colour; unclaimed ones as a ringed
-dark disc. Hovering a marker names it and says who holds it; clicking one gives
-it to the armed seat. If that base was already held, the two seats **swap**, so
-the roster never ends up with a player who has no start.
+One seat is always _armed_ for direct selection. The UI marks it with a lighter card, brighter border, and `▸` caret; clicking anywhere on a player card arms that seat.
 
-Both paths are off when a map offers only one base (Iron Sepulcher Watch), and
-the Play button refuses a roster where a seat has no base.
+The map preview in `ui/qml/MapPreview.qml` provides the spatial half of the same control:
 
-## Naming
+- claimed bases are drawn in the owning player's colour;
+- unclaimed bases appear as ringed dark discs;
+- hovering a marker shows the base name and current owner; and
+- clicking a marker assigns it to the armed seat.
 
-`MapPreviewGenerator::base_markers()` names each base:
+If the selected base is already occupied, the two seats **swap bases**. Swapping instead of stealing preserves the one-base-per-player invariant and prevents a roster from ending up with a player who has no start.
 
-- A barracks with an authored `id` that reads as a place keeps it, humanised —
-  `east_lodge_barracks` becomes "East Lodge".
-- `p<N>_barracks` and unnamed entries are bookkeeping, not names, so they get a
-  **world-space bearing** instead: "South-West", "North-East", "Centre".
+Base selection is disabled when a map offers only one base, as on Iron Sepulcher Watch. The **Play** button also rejects any roster in which a seat has no base assignment.
 
-Bearings are computed against the world (north is `-z`), not against the
-rotated preview image. That is deliberate: the map's own authored place names
-use world north, and so does the battlefield the player ends up looking at, so
-a base the author called the _north_ toll is never labelled "South" because the
-minimap happens to be rotated 225°.
+## How bases are named
 
-Duplicate names are suffixed with a number. `BaseMarkersTest` asserts no
-shipped skirmish map produces two bases under one name.
+`MapPreviewGenerator::base_markers()` derives a display name for every starting base.
+
+A barracks with an authored `id` that already reads like a place keeps that identity in human-readable form. For example:
+
+```text
+east_lodge_barracks → East Lodge
+```
+
+IDs such as `p<N>_barracks`, together with unnamed entries, are treated as bookkeeping rather than authored place names. Those bases receive a name derived from their **world-space bearing**, such as `South-West`, `North-East`, or `Centre`.
+
+Bearings use world orientation, where north is `-z`, rather than the rotation of the preview image. This is deliberate. Authored place names and the battlefield itself use world north, so a location called the north toll should not become “South” simply because the minimap happens to be rotated by 225°.
+
+When two bases resolve to the same display name, a numeric suffix disambiguates them. `BaseMarkersTest` verifies that shipped skirmish maps do not expose duplicate base names.
 
 ## The data contract
 
-`StructureEntry::id` (parsed by `MapLoader::read_structures`) is the stable key
-for a base. Maps that omit it fall back to `structure_<index>`, which is stable
-for a given map file but moves if the `structures` array is edited — so a map
-whose bases should be pickable by name ought to author ids.
+`StructureEntry::id`, parsed by `MapLoader::read_structures`, is the stable key for a base.
 
-`Game::Map::collect_base_options()` lists every point barracks on a map;
-`default_base_assignments()` reports the seating the map itself authored.
+Maps that omit an ID fall back to `structure_<index>`. That fallback is stable for a particular version of a map file, but it changes when the `structures` array is reordered. A map whose bases are intended to be selected by stable name should therefore author explicit IDs.
 
-## What a reseat actually does
+Two map helpers expose the available seating information:
 
-The choice travels as `baseKey` on each entry of the `player_configs` list that
-the setup screen already passes to `start_skirmish`. `SkirmishLoader::start`
-collects them into `MapTransformer::set_base_assignments()`, alongside the team
-and nation overrides it already gathers. When that map is empty — an observed
-match, a campaign mission, a save being restored — nothing changes and the map
-plays exactly as it always did.
+- `Game::Map::collect_base_options()` lists every point barracks on the map; and
+- `default_base_assignments()` returns the seating authored by the map itself.
 
-When it is not empty, `resolve_base_seating()` in `map_transformer.cpp` works
-out three things before a single entity spawns:
+## How a base choice reaches the match
 
-1. **Ownership.** The chosen structure is spawned under its new owner.
-2. **One base each.** Every _other_ barracks that player was authored to hold
-   reverts to neutral, so a reseated player never fields two starts. The camp
-   they walked away from stays on the map as a capturable prize, exactly like
-   the neutral outposts the author placed.
-3. **The camp follows.** The player's authored units — and any other structure
-   they own — are translated by the vector from their authored base to the one
-   they chose, so a builder authored beside the barracks still stands beside it.
-   Spawns keep the transformer's existing "nudge off forbidden ground" pass, so
-   a translated unit that lands in a river is walked to the nearest free tile.
+The setup screen stores the selected base as `baseKey` on each entry in the existing `player_configs` list passed to `start_skirmish`.
 
-A neutral outpost is usually authored with a far smaller `max_population` than
-a start base. Taking one as your start therefore also takes the troop cap of
-the base you gave up, so the choice costs you position, not army size.
+`SkirmishLoader::start` collects those keys and forwards them to `MapTransformer::set_base_assignments()`, alongside the team and nation overrides it already handles.
 
-A `baseKey` naming a base the map does not have is a no-op for that player:
-they keep the barracks the author gave them rather than being left with none.
+When no base assignments are present—for example, in an observed match, campaign mission, or restored save—the transformation path remains inactive and the map behaves exactly as authored.
 
-## Where the tests are
+## What reseating changes
 
-- `tests/map/base_options_test.cpp` — the option list, the authored default
-  seating, marker naming and placement, and a sweep asserting every skirmish
-  map has at least as many bases as the player slots it advertises.
-- `tests/map/map_transformer_test.cpp` — the seating rules in isolation:
-  ownership, the one-base-each rule, the troop cap, the moved retinue, an
-  unknown key, and that assignments do not leak into the next match.
-- `tests/map/skirmish_base_choice_test.cpp` — the whole load path through
-  `SkirmishLoader`, including the opening camera framing the chosen base.
+When base assignments are present, `resolve_base_seating()` in `map_transformer.cpp` resolves them before any entity spawns. Reseating changes three things.
+
+### 1. Ownership follows the selected base
+
+The chosen barracks spawns under its new owner.
+
+### 2. Each player still owns only one starting base
+
+Any other barracks originally authored for that player revert to neutral ownership. A reseated player can therefore never begin with two bases.
+
+The abandoned camp remains on the map as a capturable neutral prize, just like any neutral outpost placed by the map author.
+
+### 3. The player's camp moves with the base
+
+The player's authored units, together with any other structures they own, are translated by the vector from the original base to the selected one. A builder authored beside the starting barracks therefore remains beside the barracks after reseating.
+
+Translated spawns still pass through the transformer's existing “nudge off forbidden ground” logic. If moving a camp places a unit in a river or other invalid location, the unit is moved to the nearest valid tile before play begins.
+
+## Population capacity follows the original start
+
+Neutral outposts are often authored with a much smaller `max_population` than a true starting base. Choosing one as the new start does **not** reduce the player's intended army capacity: the player carries the troop cap of the base they gave up.
+
+The choice therefore changes strategic position without accidentally changing the starting population budget.
+
+## Invalid selections fail safely
+
+A `baseKey` that does not match any base on the map is a no-op for that player. The player keeps the barracks authored for them rather than being left without a valid start.
+
+This fallback protects saved or externally supplied configurations from turning an unknown base identifier into an unplayable roster.
+
+## Test coverage
+
+The behavior is covered at three levels:
+
+- `tests/map/base_options_test.cpp` validates the option list, authored defaults, marker naming and placement, and verifies that every skirmish map contains at least as many bases as the player slots it advertises.
+- `tests/map/map_transformer_test.cpp` checks seating rules in isolation, including ownership, the one-base-per-player invariant, troop-cap preservation, translated retinues, unknown keys, and assignment isolation between matches.
+- `tests/map/skirmish_base_choice_test.cpp` exercises the complete path through `SkirmishLoader`, including the opening camera framing the selected base.
+
+The result is a flexible setup choice that changes where a player begins without weakening the map's ownership, population, spawn-placement, or fallback guarantees.

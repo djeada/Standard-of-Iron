@@ -1,90 +1,89 @@
-# CI policy
+# Continuous Integration Policy
 
-CI is split by feedback speed. Pull requests run only gates that should finish
-quickly enough to support normal review; expensive acceptance, performance and
-surface audits run weekly or on demand.
+The CI pipeline is organized around feedback speed. Pull requests run the checks that are fast enough to support normal review, while expensive acceptance, performance, and whole-surface audits run weekly, on demand, or as part of release validation.
 
-## Pull requests
+This split keeps everyday development responsive without weakening the project's broader validation strategy.
 
-The required pull-request path has three parts:
+## Pull-request validation
 
-- **Source policy**: `python3 scripts/check-pr-policy.py` runs compiler-free
-  architecture boundaries, the architecture-document contract, QML frame-lock
-  rules, and the three migration ratchets. It runs every gate, preserves the
-  underlying script output and publishes the first actionable failure in the
-  Actions summary.
-- **Formatting/static validation**: formatting, lint, quality markers,
-  typography, static resource validation and compiler-free portability checks.
-- **Fast build/test**: Debug-build `soi_test_binaries` and `content_validator`,
-  then run `SOI_TEST_PROFILE=pr scripts/run-tests.sh`. All nine test binaries
-  are built and run; the profile subtracts the individual tests named in
-  `tests/extended_tests.txt`.
+The required pull-request path has three layers.
 
-## What the fast profile leaves out, and why
+### Source policy
 
-Linking the test binaries was never the expensive part -- with a warm ccache the
-whole build is a couple of minutes. Running them was. A handful of tests
-simulate a battle, a siege or a whole AI match tick by tick, and another handful
-walk every shipped map, mission or creature asset on disk; each costs seconds,
-and in a Debug build that becomes minutes. The lane reached 90 minutes and was
-killed by its own timeout with `ai_tests` still on its first test, which had
-been running for over an hour.
+`python3 scripts/check-pr-policy.py` runs compiler-free checks for:
 
-`tests/extended_tests.txt` names those tests, one GoogleTest filter pattern per
-line with the reason it is there. Everything else -- every binary, and the
-thousands of tests that measure in milliseconds -- runs on every pull request.
+- architecture boundaries;
+- the architecture-document contract;
+- QML frame-lock rules; and
+- the three migration ratchets.
 
-Two checks keep the split honest, both in `scripts/check-test-speed.py`:
+The runner executes every gate, preserves the underlying script output, and publishes the first actionable failure in the GitHub Actions summary.
 
-- a test that ran in the fast profile and took longer than the per-test budget
-  fails the lane, so the next slow test is caught when it is written rather
-  than when the lane times out; and
-- a manifest pattern that matches no test fails the lane, so renaming a fixture
-  cannot quietly retire the gate the pattern named.
+### Formatting and static validation
 
-The PR path also does **not** run the battlefield verifier, the replay
-round-trip or the QML suite, execute simulation performance budgets, or build
-the terrain probe.
+The static layer covers formatting, linting, quality markers, typography, static resource validation, and compiler-free portability checks.
+
+### Fast build and test profile
+
+CI builds `soi_test_binaries` and `content_validator` in Debug mode, then runs:
+
+```sh
+SOI_TEST_PROFILE=pr scripts/run-tests.sh
+```
+
+All nine test binaries are built and executed. The pull-request profile excludes only the individual tests listed in `tests/extended_tests.txt`.
+
+## Why the fast profile excludes some tests
+
+Linking the test binaries is not the expensive part. With a warm compiler cache, the build itself completes in a few minutes. The cost comes from a small set of runtime-heavy tests.
+
+Some tests simulate a battle, siege, or complete AI match tick by tick. Others inspect every shipped map, mission, or creature asset on disk. Each test can take seconds, and the combined cost becomes substantial in a Debug build. Before the profile was split, the lane reached its 90-minute timeout while `ai_tests` was still running its first test.
+
+`tests/extended_tests.txt` names the expensive tests, one GoogleTest filter pattern per line, together with the reason for the exclusion. Everything else—including every binary and the thousands of millisecond-scale tests—runs on every pull request.
+
+Two checks in `scripts/check-test-speed.py` keep the split from silently degrading:
+
+- a test that runs in the fast profile and exceeds the per-test time budget fails the lane, catching newly slow tests before they can make CI time out; and
+- an extended-test manifest pattern that matches no test also fails the lane, preventing fixture renames from quietly disabling a gate.
+
+The pull-request path intentionally does **not** run the battlefield verifier, replay round-trip, QML suite, simulation performance budgets, or terrain-probe build.
 
 ## Weekly and manual validation
 
-`.github/workflows/weekly.yml` remains the broad whole-project lane: full test
-binaries are exercised under sanitizers and coverage, whole-tree lint/Apple
-portability runs, and all supported platforms perform packaging validation.
+`.github/workflows/weekly.yml` is the broad whole-project lane. It runs the complete test binaries under sanitizers and coverage, performs whole-tree lint and Apple portability checks, and validates packaging on every supported platform.
 
-`.github/workflows/extended-validation.yml` runs every Monday and through
-`workflow_dispatch`. It owns the expensive gates removed from pull requests:
+`.github/workflows/extended-validation.yml` runs every Monday and can also be started through `workflow_dispatch`. It owns the expensive gates removed from pull requests:
 
-- the Release `sim_benchmark` amplification budgets;
+- Release-mode `sim_benchmark` amplification budgets;
 - the engine-backed terrain-surface authored-placement audit; and
-- the full test profile, which is the fast profile plus everything in
-  `tests/extended_tests.txt` and the acceptance binaries that are not
-  GoogleTest suites. Dispatch this one by hand when a change touches shipped
-  content: those are the tests that read it.
+- the full test profile, which combines the fast profile, every entry in `tests/extended_tests.txt`, and acceptance binaries that are not GoogleTest suites.
 
-Release validation remains the final exhaustive ship gate.
+Run extended validation manually when a change touches shipped content. Those are the checks that read and validate the complete content surface.
 
-## Local source-policy preflight
+Release validation remains the final exhaustive shipping gate.
 
-Run the same source-policy command as CI:
+## Running the source-policy checks locally
 
-```bash
+Use the same command that CI runs:
+
+```sh
 python3 scripts/check-pr-policy.py
 ```
 
-For a pull request targeting another branch, pass it explicitly:
+When a pull request targets a branch other than `main`, pass the base explicitly:
 
-```bash
+```sh
 python3 scripts/check-pr-policy.py --base-ref origin/develop
 ```
 
-In Actions, the runner resolves `GITHUB_BASE_REF` and uses the pull-request merge
-parent as a fallback. Local runs fall back to `origin/main` and then `main`.
-Migration ratchet diagnostics show the target branch's checked-in budget and any
-budget values changed by the pull request.
+In GitHub Actions, the runner resolves `GITHUB_BASE_REF` and uses the pull-request merge parent as a fallback. Local runs fall back to `origin/main` and then `main`.
 
-The runner has a compiler-free self-test:
+Migration-ratchet diagnostics show the target branch's checked-in budget together with any budget values changed by the pull request.
 
-```bash
+The runner also provides a compiler-free self-test:
+
+```sh
 python3 scripts/check-pr-policy.py --self-test
 ```
+
+The result is a CI policy that optimizes for two different needs: fast feedback during review and exhaustive validation before changes are trusted broadly or shipped.
