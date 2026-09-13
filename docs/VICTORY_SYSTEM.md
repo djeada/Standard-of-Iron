@@ -1,92 +1,62 @@
-# How the Victory System Actually Works
+# Victory System Architecture
 
-Victory rules look simple on the surface: destroy the enemy, hold out for a timer, protect your commander. The tricky part is making those rules fast enough to check every frame, flexible enough for missions and skirmishes, and explicit enough that content authors can tell what will actually happen.
+Victory rules look simple to a player: eliminate an enemy, survive long enough, capture a position, or keep a commander alive. The implementation has to satisfy a harder set of requirements. Rules must be cheap enough to evaluate during simulation, expressive enough for both skirmishes and authored missions, deterministic across machines, and explicit enough that content authors can predict the result of their data.
 
-This document walks through the current victory architecture: how map and mission content become runtime rules, how the engine evaluates those rules cheaply, why the commander is now the default defeat anchor, and what needs to change when we add new objective families later.
+The current architecture solves that by separating **content translation** from **runtime evaluation**. Map and mission formats are translated once into typed rules, and `VictoryService` evaluates those rules against compact runtime state rather than interpreting content strings every update.
 
-## What we'll cover
+## From authored content to runtime rules
 
-1. The two translation paths: maps and missions
-2. The runtime rule model in `VictoryService`
-3. The default commander-centric defeat rules
-4. The single-pass world summary that keeps evaluation cheap
-5. The currently supported rule catalog
-6. How event-driven reevaluation works
-7. How to extend the system with new rule kinds safely
-
-## The core idea: translate content once, evaluate typed rules cheaply
-
-The runtime no longer interprets JSON-like strings on every update. Instead, content is translated into typed rule payloads once, then the service evaluates those payloads against a compact summary of the world.
+There are two authoring paths and one runtime model.
 
 ```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                             CONTENT LAYER                                   │
-│                                                                              │
-│  assets/maps/*.json                  assets/missions/*.json                  │
-│  ┌───────────────────────┐           ┌────────────────────────────────────┐  │
-│  │ VictoryConfig         │           │ MissionDefinition                  │  │
-│  │ - type                │           │ - victory_conditions[]             │  │
-│  │ - key_structures[]    │           │ - defeat_conditions[]              │  │
-│  │ - defeat_conditions[] │           │                                    │  │
-│  └──────────┬────────────┘           └──────────────────┬─────────────────┘  │
-│             │                                           │                    │
-└─────────────┼───────────────────────────────────────────┼────────────────────┘
-              │                                           │
-              ▼                                           ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                           TRANSLATION LAYER                                 │
-│                                                                              │
-│  victory_service.cpp                mission_victory_rules.cpp               │
-│  - build_rule_set_from_config()     - build_victory_rules()                 │
-│  - map/skirmish defaults            - mission defaults                      │
-│  - string normalization             - condition normalization               │
-└───────────────────────────────┬──────────────────────────────────────────────┘
-                                │
-                                ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                             RUNTIME LAYER                                   │
-│                                                                              │
-│  VictoryRuleSet                                                              │
-│  ├── victory_rules[]   # OR semantics                                        │
-│  └── defeat_rules[]    # OR semantics                                        │
-│                                                                              │
-│  VictoryService                                                              │
-│  ├── summarise_world() once when dirty                                       │
-│  ├── evaluate victory rules                                                  │
-│  ├── evaluate defeat rules                                                   │
-│  └── finalize_game(\"victory\" | \"defeat\")                                 │
-└──────────────────────────────────────────────────────────────────────────────┘
+assets/maps/*.json                      assets/missions/*.json
+        │                                        │
+        ▼                                        ▼
+VictoryConfig                           MissionDefinition
+        │                                        │
+        ▼                                        ▼
+build_rule_set_from_config()            build_victory_rules()
+        └───────────────────┬────────────────────┘
+                            ▼
+                    VictoryRuleSet
+                    ├─ victory_rules[]
+                    └─ defeat_rules[]
+                            │
+                            ▼
+                     VictoryService
+                    ├─ summarize world
+                    ├─ evaluate victory
+                    ├─ evaluate defeat
+                    └─ finalize outcome
 ```
 
-The important design choice is that translation and evaluation are separate concerns. Content-facing strings stay at the edge. The service itself works with typed rule payloads.
+The boundary is deliberate: content-facing names and normalization stay at the translation layer. Runtime code works with typed payloads that contain only the data each rule needs.
 
-## The two default defeat rules
+## Default defeat philosophy
 
-If content does **not** declare explicit defeat conditions, the engine now applies exactly these two defaults:
+When content does **not** provide explicit defeat conditions, both map-driven and mission-driven play receive the same two defaults:
 
-1. **No commander** — if your commander dies, you lose.
-2. **Only commander remaining** — if your commander is still alive but you have no non-commander troops and no tracked base structures left, you lose.
+1. **No commander** — losing the commander causes defeat.
+2. **Only commander remaining** — if the commander survives but the player has no non-commander troops and no tracked base structures, the match is lost.
 
-This is the baseline defeat model for both map-driven and mission-driven play.
+The default model is therefore commander-centric rather than structure-centric.
 
-### Why structure loss is no longer a default
+`no_key_structures` remains supported, but content must opt into it explicitly. Losing a barracks can be strategically serious without every mission treating that loss as an automatic defeat.
 
-`no_key_structures` is still supported, but it is now an explicit opt-in rule. The default defeat model is commander-centric, not structure-centric. That matters because many missions want barracks pressure without making every lost building an automatic failure state.
+### `only_commander_remaining` has a startup latch
 
-### The startup safety latch on `only_commander_remaining`
+The rule means **being reduced to only the commander**, not **starting with only the commander**.
 
-`only_commander_remaining` is meant to express **being reduced to only the commander**, not **starting with only the commander**.
+It becomes armed only after the local player has previously owned at least one of:
 
-To enforce that, the rule only becomes armed after the local player has previously owned at least one of the following:
+- a non-commander troop; or
+- a tracked base structure, currently barracks by default.
 
-- a non-commander troop
-- a tracked base structure for the rule (currently barracks by default)
+That prevents false defeat in commander-only openings, scripted reinforcement starts, and similar mission structures.
 
-That prevents false defeats on commander-only openings, scripted reinforcement starts, and similar setups.
+## Runtime rule model
 
-## The runtime rule model
-
-The runtime stores rules in a `VictoryRuleSet`:
+The active rules live in one `VictoryRuleSet`:
 
 ```cpp
 struct VictoryRuleSet {
@@ -95,31 +65,33 @@ struct VictoryRuleSet {
 };
 ```
 
-`VictoryRule` and `DefeatRule` are typed variants. Each payload only stores the data that rule actually needs.
+`VictoryRule` and `DefeatRule` are typed variants. Their payloads are intentionally narrow.
 
-### Supported victory payloads
+### Victory rules
 
-| Rule                           | Meaning                             | Payload                |
-| ------------------------------ | ----------------------------------- | ---------------------- |
-| `EliminationVictoryRule`       | Remove all tracked enemy structures | `structure_types[]`    |
-| `SurviveTimeVictoryRule`       | Stay alive until timer expires      | `duration`             |
-| `ControlStructuresVictoryRule` | Own enough tracked structures       | `StructureRequirement` |
-| `CaptureStructuresVictoryRule` | Capture enough foreign structures   | `StructureRequirement` |
+| Payload                        | Meaning                                      | Data carried             |
+| ------------------------------ | -------------------------------------------- | ------------------------ |
+| `EliminationVictoryRule`       | Remove all tracked enemy structures          | `structure_types[]`      |
+| `SurviveTimeVictoryRule`       | Remain alive until a duration expires        | `duration`               |
+| `ControlStructuresVictoryRule` | Own enough tracked structures                | `StructureRequirement`   |
+| `CaptureStructuresVictoryRule` | Capture enough formerly foreign structures   | `StructureRequirement`   |
 
-### Supported defeat payloads
+### Defeat rules
 
-| Rule                               | Meaning                                 | Payload             |
-| ---------------------------------- | --------------------------------------- | ------------------- |
-| `NoUnitsDefeatRule`                | Lose all local units                    | none                |
-| `NoKeyStructuresDefeatRule`        | Lose all tracked structures             | `structure_types[]` |
-| `NoCommanderDefeatRule`            | Commander is dead                       | none                |
-| `OnlyCommanderRemainingDefeatRule` | Commander is isolated and rule is armed | `structure_types[]` |
+| Payload                              | Meaning                                          | Data carried             |
+| ------------------------------------ | ------------------------------------------------ | ------------------------ |
+| `NoUnitsDefeatRule`                  | Lose all local units                             | none                     |
+| `NoKeyStructuresDefeatRule`          | Lose all tracked structures                      | `structure_types[]`      |
+| `NoCommanderDefeatRule`              | The commander dies                               | none                     |
+| `OnlyCommanderRemainingDefeatRule`   | Only the commander remains after the rule arms   | `structure_types[]`      |
 
-`OnlyCommanderRemainingDefeatRule` is parameterised over structure types even though current content uses barracks. That keeps the rule explicit instead of hiding a `"barracks"` literal deep in evaluation logic.
+`OnlyCommanderRemainingDefeatRule` is parameterized by structure type even though current content normally tracks barracks. Keeping that dependency in the payload avoids hiding a `"barracks"` literal in evaluator code.
 
-## One summary per reevaluation
+## One world summary per reevaluation
 
-The expensive part of victory logic used to be repeated entity scans. The service now builds one `WorldSummary` and reuses it for every active rule:
+The expensive part of victory logic is not comparing counters; it is discovering the relevant world state.
+
+`VictoryService` therefore builds one `WorldSummary` and reuses it for every active world-based rule:
 
 ```cpp
 struct WorldSummary {
@@ -132,113 +104,93 @@ struct WorldSummary {
 };
 ```
 
-That summary is built only when the world is dirty for world-based rules. The service tracks which structure types matter up front, so it does not need to count unrelated buildings.
+The service determines the structure types required by the active rules up front, so the summary does not count unrelated buildings.
 
-### Why this scales better
+This gives the evaluator several useful properties:
 
-- All world-based rules share the same scan.
-- Structure tracking is filtered to the structure types actually referenced by active rules.
-- Capture tracking is only enabled if a capture-based victory rule is present.
-- Timer victories do not need a world scan at all once configured.
+- every world-based rule shares the same entity scan;
+- structure counting is limited to active rule dependencies;
+- capture tracking is enabled only when a capture-based rule needs it; and
+- pure timer rules do not require a world scan at all.
 
-## Evaluation order and semantics
+## Evaluation semantics
 
-### Within each list
+Within each rule list, the semantics are **OR**:
 
-- Victory rules use **OR** semantics: the first satisfied victory rule wins.
-- Defeat rules use **OR** semantics: the first satisfied defeat rule loses the game.
+- the first satisfied victory rule wins the match;
+- the first satisfied defeat rule loses it.
 
-### Between victory and defeat
+For world-state reevaluations, non-timer victory rules are checked before defeat rules. If a world-based victory and defeat become true during the same reevaluation, victory currently wins because it is evaluated first.
 
-The service evaluates non-timer victory rules first, then defeat rules. Time-based victory is checked earlier in the update loop using elapsed time. In other words, if both a world-based victory and defeat become true in the same reevaluation, victory currently wins because it is checked first.
+Time-based victory is handled through the fixed-tick objective clock described below.
 
-## Who calls `update()`
+## Objective time advances on simulation ticks
 
-`VictoryService::update(world, dt)` is driven from inside the fixed simulation tick.
-`RuntimeFrameOrchestrator::advance_simulation()` calls it from the per-tick callback it
-hands to `SessionContext::advance()`, immediately after the world has been stepped, so
-`dt` is always the session's `tick_seconds` and never a presentation frame time.
+`VictoryService::update(world, dt)` runs inside the fixed simulation tick.
 
-It used to be called from `RuntimeFrameOrchestrator::update()` — the presentation path —
-with the frame's own delta. That made every real match rule that owns a clock (survive
-time, and the time-limit defeat) a function of how fast the machine happened to be
-drawing: `m_elapsed_time` accumulated presentation frames, so a mission held out for the
-same wall-clock span but a different number of ticks on a 15 fps machine and a 60 fps one,
-and a dropped simulation tick moved the deadline. Now the deadline lands on a fixed tick
-count. A paused match advances no ticks and therefore no objective clock, which is what
-was wanted anyway.
+`RuntimeFrameOrchestrator::advance_simulation()` invokes it from the per-tick callback passed to `SessionContext::advance()`, immediately after the world step. The `dt` received by the victory service is therefore the session's `tick_seconds`, not presentation-frame time.
 
-`RuntimeFrameOrchestratorTest.TheObjectiveClockRunsOnTicksNotOnFrames` pins this: the same
-survive-time rule fires on the same tick at 60 fps, at 15 fps, and on a stuttering
-alternation of the two.
+This makes timed objectives deterministic. A survive-time objective expires after the same number of simulation ticks whether the renderer is producing 15 FPS, 60 FPS, or an uneven sequence of frames.
 
-The consequence for callers is that the victory callback now runs on the simulation
-thread, not the render thread. Both are serialised by `GameEngine`'s frame mutex, so the
-callback sees the same world it always did.
+A paused match advances no simulation ticks, so objective time also stops.
 
-## Victory state is saved
+`RuntimeFrameOrchestratorTest.TheObjectiveClockRunsOnTicksNotOnFrames` verifies that the same survive-time rule resolves on the same tick under 60 FPS, 15 FPS, and a deliberately stuttering presentation schedule.
 
-`VictoryService::serialize_state()` / `restore_state()` put the elapsed time, the
-startup delay, the spectator poll timer, the two arming flags, the per-objective
-completion flags and the decided outcome into the match snapshot, through the
-`Game::Session::SessionSnapshot` contributor `GameEngine` registers for it. Before
-that the timer restarted from zero on load, so a survive-time mission reloaded
-near its deadline had to be survived twice.
+Because the victory update now runs on the simulation path, its completion callback also runs on the simulation thread. `GameEngine` serializes simulation and render access through the frame mutex, preserving the same world consistency expected by callers.
 
-## Victory state is saved
+## Victory state survives save and load
 
-`VictoryService::serialize_state()` / `restore_state()` put the elapsed time, the
-startup delay, the spectator poll timer, the two arming flags, the per-objective
-completion flags and the decided outcome into the match snapshot, through the
-`Game::Session::SessionSnapshot` contributor `GameEngine` registers for it. Before
-that the timer restarted from zero on load, so a survive-time mission reloaded near
-its deadline had to be survived twice.
+`VictoryService::serialize_state()` and `restore_state()` persist the state that would otherwise change the meaning of a resumed match:
 
-## Event-driven reevaluation
+- elapsed objective time;
+- startup delay;
+- spectator polling timer;
+- rule-arming flags;
+- per-objective completion flags; and
+- the decided outcome, if one already exists.
 
-World-based rules do not need a full scan every tick. The service marks itself dirty and reevaluates on the events that matter to current rules:
+`GameEngine` registers that state as a contributor to `Game::Session::SessionSnapshot`.
 
-- `UnitSpawnedEvent`
-- `UnitDiedEvent`
-- `BarrackCapturedEvent`
+This is especially important for timed objectives. Reloading a survive-time mission near its deadline must resume the existing clock rather than forcing the player to survive the entire duration again.
 
-That is enough for the current rule catalog because all current world-based rules depend on force counts, commander presence, and structure ownership.
+## Event-driven world reevaluation
 
-### Why future rule types may need more than a new payload
+World-based rules do not scan the world on every simulation tick. The service marks its summary dirty when events relevant to the current rule catalog occur:
 
-Adding a new variant alternative is not the whole job. A new rule may also need:
+- `UnitSpawnedEvent`;
+- `UnitDiedEvent`; and
+- `BarrackCapturedEvent`.
 
-1. New data in `WorldSummary`
-2. New dirty triggers or subscriptions
-3. Translation support for maps and missions
-4. Regression tests for both runtime behavior and content defaults
+Those events are sufficient for the current world-based rules because their inputs are troop presence, commander presence, and tracked structure ownership.
 
-For example:
+A new rule family may require more than another variant alternative. It can also require:
 
-- a **reach destination** rule will probably need position or region state and movement-related dirtying
-- a **gather resource** rule will need resource totals plus resource-change dirtying
-- a **fail if timer expires** rule may need a defeat-side time path instead of a world summary path
+- new fields in `WorldSummary`;
+- additional event subscriptions or dirty triggers;
+- map and/or mission translation support; and
+- regression coverage for both runtime semantics and authoring defaults.
 
-That is why the current design is described as **extension-friendly**, not magically plug-in.
+For example, a destination objective needs positional or region state, a resource objective needs resource-change notifications, and a defeat timer belongs on the time path rather than being forced through the entity summary.
 
-## Current translation rules
+The architecture is extension-friendly because those dependencies are explicit, not because new rule types are automatically free.
 
-### Map / skirmish path
+## Map and skirmish translation
 
-`VictoryConfig` in `game/map/map_definition.h` is the map-facing format. `build_rule_set_from_config()` in `game/systems/victory_service.cpp` translates it into runtime rules.
+Maps author victory through `VictoryConfig` in `game/map/map_definition.h`. `build_rule_set_from_config()` in `game/systems/victory_service.cpp` translates that data into a runtime `VictoryRuleSet`.
 
-Current supported map victory types:
+Supported map victory types include:
 
-- `elimination`
-- `survive_time`
-- `control_structures`
-- `capture_structures`
-- `undead_zones`
+- `elimination`;
+- `survive_time`;
+- `control_structures`;
+- `capture_structures`; and
+- `undead_zones`.
 
-`undead_zones` exists so a map with authored `undead_zones` wins on its awakening
-content instead of on barracks or a timer, which is what makes those maps
-playable in skirmish as well as in a campaign mission. It reads a sibling
-`undead_objectives` array:
+### Undead-zone objectives
+
+`undead_zones` lets a skirmish map use authored Iron Sepulcher content as its victory target rather than forcing the match into a barracks-elimination or timer model.
+
+A map can define:
 
 ```json
 "victory": {
@@ -251,82 +203,80 @@ playable in skirmish as well as in a campaign mission. It reads a sibling
 }
 ```
 
-Each entry becomes the same runtime rule the mission path produces, so the two
-authoring formats stay in sync. `undead_objectives` is also honoured alongside
-any other victory type, in which case the objectives are appended to that type's
-rules. A `undead_zones` map that declares no objectives falls back to
-`elimination` with a warning.
+Each entry becomes the same runtime rule produced by the mission path. `undead_objectives` may also accompany another map victory type, in which case the undead objectives are appended to that rule set.
 
-Current supported map defeat condition strings:
+An `undead_zones` map with no objectives falls back to `elimination` and emits a warning rather than creating an unwinnable match.
 
-- `no_units`
-- `no_key_structures`
-- `no_commander`
-- `only_commander_remaining`
+Supported map defeat strings are:
 
-If `defeat_conditions` is empty, the translator injects:
+- `no_units`;
+- `no_key_structures`;
+- `no_commander`; and
+- `only_commander_remaining`.
+
+When `defeat_conditions` is empty, translation injects:
 
 ```json
 ["no_commander", "only_commander_remaining"]
 ```
 
-### Mission path
+## Mission translation
 
-Mission definitions use structured `Condition` entries. `Game::Mission::build_victory_rules()` translates them into the same runtime rule set.
+Mission definitions use structured `Condition` entries. `Game::Mission::build_victory_rules()` translates them into the same runtime rule model as maps.
 
-Current supported mission victory condition types:
+Supported mission victory conditions include:
 
-- `destroy_all_enemies`
-- `survive_duration`
-- `control_structures`
-- `capture_structures`
+- `destroy_all_enemies`;
+- `survive_duration`;
+- `control_structures`; and
+- `capture_structures`.
 
-Current supported mission defeat condition types:
+Supported mission defeat conditions include:
 
-- `lose_all_units`
-- `lose_structure`
-- `lose_commander`
-- `only_commander_remaining`
+- `lose_all_units`;
+- `lose_structure`;
+- `lose_commander`; and
+- `only_commander_remaining`.
 
-If a mission omits defeat conditions entirely, the same commander-default pair is added automatically.
+A mission with no explicit defeat conditions receives the same commander-centric default pair as a skirmish map.
 
-## Normalisation and legacy compatibility
+## Normalization and compatibility
 
-The translators still normalize some legacy structure names. Most notably:
+The translation layer normalizes a small amount of legacy content vocabulary before creating typed rules. The most important current alias is:
 
-- `village` → `barracks`
+```text
+village → barracks
+```
 
-That keeps older content and partially migrated missions/maps working while the asset vocabulary remains in transition.
+Keeping compatibility at the edge lets older or partially migrated content continue to load without spreading legacy terminology into the runtime evaluator.
 
-## How to add a new rule kind
+## Adding a new rule kind
 
-When adding a new rule, treat it as a small vertical slice:
+Treat a new objective or defeat condition as a vertical slice through authoring, runtime state, invalidation, and tests.
 
-1. Add a new typed payload to the runtime rule variant.
-2. Decide whether it belongs in `victory_rules`, `defeat_rules`, or both.
-3. Extend `refresh_rule_metadata()` if the rule needs tracked world data.
-4. Extend `summarize_world()` or add adjacent runtime state if the rule needs new inputs.
-5. Add the reevaluation triggers the rule depends on.
-6. Add translation support for maps and/or missions.
-7. Add runtime tests and translation tests.
-8. Update this document and the content docs.
+1. Add the typed runtime payload.
+2. Decide whether the rule belongs to victory, defeat, or both.
+3. Extend `refresh_rule_metadata()` when new world data must be tracked.
+4. Extend `summarize_world()` or add adjacent subsystem state for new inputs.
+5. Add every event or timer trigger required to reevaluate the rule correctly.
+6. Add translation support to maps, missions, or both.
+7. Cover runtime semantics and translation defaults with tests.
+8. Update the relevant authoring documentation.
 
-If the new rule needs per-entity state, region progress, or subsystem-owned data, prefer adding that explicitly rather than smuggling more meaning into generic string fields.
+If a rule needs region progress, per-entity state, resource totals, or another subsystem's data, represent that dependency explicitly. Do not encode additional semantics into generic string fields merely to avoid adding a proper payload.
 
-## File map
+## Implementation map
 
-The current implementation is centered in these files:
+The core implementation and tests live in:
 
-- `game/systems/victory_service.h`
-- `game/systems/victory_service.cpp`
-- `game/map/mission_victory_rules.h`
-- `game/map/mission_victory_rules.cpp`
-- `game/map/map_definition.h`
-- `docs/MISSION_FRAMEWORK.md`
-- `tests/systems/victory_service_test.cpp`
-- `tests/map/mission_victory_rules_test.cpp`
-- `tests/map/mission_asset_rules_test.cpp`
+- `game/systems/victory_service.h`;
+- `game/systems/victory_service.cpp`;
+- `game/map/mission_victory_rules.h`;
+- `game/map/mission_victory_rules.cpp`;
+- `game/map/map_definition.h`;
+- [MISSION_FRAMEWORK.md](MISSION_FRAMEWORK.md);
+- `tests/systems/victory_service_test.cpp`;
+- `tests/map/mission_victory_rules_test.cpp`; and
+- `tests/map/mission_asset_rules_test.cpp`.
 
-## Practical takeaway
-
-The victory system is now built around one rule set, one world summary, and one default defeat philosophy: protect the commander, and do not let the commander become the only thing left. Everything else is explicit content.
+The practical model is one typed rule set, one shared world summary, deterministic objective time, and a commander-centric default defeat philosophy. Content can opt into other rules explicitly without requiring the runtime to reinterpret loosely typed mission data every frame.

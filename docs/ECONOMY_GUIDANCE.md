@@ -1,53 +1,52 @@
 # Explaining the Economy Loop
 
-The simulation has always had the whole loop — gather, haul, build, recruit — but a new
-player could not see it. The counters showed four of the five resources, nothing said
-where wood comes from or what stone is for, and a blocked build only said _not enough
-wood_ without saying how much was missing. This document covers the player-facing layer
-that explains the loop, and where its numbers come from.
+The economy guidance layer makes the simulation's gather-build-recruit loop visible to the player. Resource counters explain what each resource is for, the economy guide shows costs and prerequisites, and first-skirmish prompts answer the immediate question: **what should I do next?**
 
-Nothing here changes the simulation. Every figure the guidance shows is read back out of
-the systems that already own it: the construction catalogue, the troop profiles, the
-resource registry, and the builders themselves.
+None of these surfaces owns economic rules. Every number shown to the player is read from the systems that already define it—the construction catalogue, troop profiles, resource registry, and builder state. The guidance is therefore an explanation of the simulation, not a second copy of it.
 
-## The three surfaces
+## The three player-facing surfaces
 
-| Surface                    | Where it lives                | What it answers                                |
-| -------------------------- | ----------------------------- | ---------------------------------------------- |
-| Resource counters and tips | `ui/qml/HUDTop.qml`           | What is this resource, and how am I doing?     |
-| The economy guide          | `ui/qml/EconomyHelpPanel.qml` | What can I build or recruit, and at what cost? |
-| The first-skirmish prompts | `ui/qml/EconomyCoach.qml`     | What should I do next?                         |
+| Surface                    | Where it lives                | Question it answers                              |
+| -------------------------- | ----------------------------- | ------------------------------------------------ |
+| Resource counters and tips | `ui/qml/HUDTop.qml`           | What is this resource, and how am I doing?       |
+| Economy guide              | `ui/qml/EconomyHelpPanel.qml` | What can I build or recruit, and what does it cost? |
+| First-skirmish prompts     | `ui/qml/EconomyCoach.qml`     | What should I do next?                           |
 
-All three read one view model, `game.economy`
-(`app/viewmodels/economy_view_model.h`), and share one vocabulary singleton,
-`EconomyGuide` (`ui/qml/EconomyGuide.qml`), so a resource is named and described the same
-way wherever it appears.
+All three read the same `game.economy` view model from `app/viewmodels/economy_view_model.h`. They also share the `EconomyGuide` vocabulary singleton in `ui/qml/EconomyGuide.qml`, so a resource keeps the same name and explanation wherever it appears.
 
-### Resource counters
+## Resource counters
 
-The counter row is **built from the engine's resource list**, not from a literal list in
-QML. That is the whole point of the change: `k_all_resource_types` gained `Food` and the
-HUD kept showing four counters, because `HUDTop.qml` had `["gold", "wood", "stone",
-"iron"]` written into it. It now renders whatever `game.economy.resources` reports as
-relevant, so a resource can never again be tracked by the simulation and missing from the
-bar.
+The top resource bar is built from the engine's resource list rather than from a literal list in QML. This prevents a resource from existing in the simulation while being accidentally omitted from the HUD.
 
-A resource is **relevant** when the player holds any of it, it can be gathered, it is
-spent on something buildable, **a mission objective asks for it**, or it can be traded at
-a marketplace they own. In practice every resource on a normal map is relevant; the flag
-exists so a mode that genuinely does not use one does not have to show a permanent zero.
+A resource is considered **relevant** when at least one of these conditions is true:
 
-The objective clause is the one that is easy to miss. Before food had a source and a use
-(see [FOOD_AND_FARMS.md](FOOD_AND_FARMS.md)), a mission whose victory condition was
-_accumulate 400 food_ would otherwise have hidden the very counter the player was playing
-against while it still read zero. `GameEngine` collects
-the `accumulate_resources` amounts from the mission's victory conditions and optional
-objectives and passes them in as `objective_resources`.
+- the player already holds some of it;
+- it can be gathered;
+- a buildable item spends it;
+- a mission objective requires it; or
+- it can be traded at a marketplace the player owns.
 
-Each counter's tooltip answers five questions in a fixed order — source, use, storage,
-current gathering state, and deficit:
+On ordinary maps, that usually means every resource appears. The relevance rule exists so specialized modes that genuinely do not use a resource do not need to show a permanent zero.
 
-```
+### Objective resources must remain visible at zero
+
+The objective case is especially important. A mission can require the player to accumulate a resource before the player owns any of it. Without the objective rule, the relevant counter could be hidden precisely while the player is trying to satisfy it.
+
+`GameEngine` therefore collects `accumulate_resources` requirements from victory conditions and optional objectives and passes them to the economy layer as `objective_resources`.
+
+### What a tooltip explains
+
+Every resource tooltip answers the same five questions, in order:
+
+1. where the resource comes from;
+2. what it is spent on;
+3. how it is stored or credited;
+4. what builders are currently doing with it; and
+5. whether the player is short of it for a current action.
+
+For example:
+
+```text
 Wood: 120
 Send a builder to chop a tree with Collect, or leave Auto Gather running.
 Spent on: Home, Barracks, Archer
@@ -56,133 +55,131 @@ Builders gathering it: 2 · 40 being hauled to a barracks
 Short 30 for a Barracks.
 ```
 
-The counter turns amber when there is a shortfall, so the bar itself carries the warning
-without being read.
+A counter turns amber when a shortfall exists, allowing the resource bar itself to communicate the warning without requiring the tooltip to be opened.
 
-### The economy guide
+## The economy guide
 
-Opened from the ⚒ button beside the counters, or from **How it works** on the prompts.
-It lists every resource with its source and what it is spent on, then every structure a
-builder can raise and every unit a barracks can recruit, each with its full cost, its
-build time, and — when it is not available — the reason, which is one of:
+The economy guide opens from the ⚒ button beside the resource counters or from **How it works** in the coaching prompts.
 
-- **Needs a builder** / **Needs a barracks** — a prerequisite, not a cost.
-- **Not enough manpower at the barracks** — population held by that building.
-- **Population limit reached** — the mission's cap.
-- **Missing 5 more Stone, 12 more Wood** — the exact shortfall, per resource.
+It presents:
 
-Those four reasons are deliberately kept apart. Before this, "cannot build" collapsed a
-missing builder, an empty barracks and an empty treasury into the same silence.
+- every relevant resource, its source, and its uses;
+- every structure a builder can construct;
+- every unit the player's nation can recruit;
+- complete resource and reserve costs;
+- build or recruit time; and
+- a specific reason when an action is unavailable.
 
-### The first-skirmish prompts
+Availability failures are deliberately separated into different categories:
 
-A four-step strip — gather → build → recruit → keep an army — anchored under the wave
-tracker. Each step is judged from the world, never from a script:
+- **Needs a builder** / **Needs a barracks** — a prerequisite is missing.
+- **Not enough manpower at the barracks** — the recruiting building lacks sufficient reserve.
+- **Population limit reached** — the army has reached the mission cap.
+- **Missing 5 more Stone, 12 more Wood** — exact per-resource deficits.
 
-| Step      | Done when                                                               |
+Keeping these reasons distinct is important. “Cannot build” is not useful guidance if the actual problem might be a missing worker, an empty barracks reserve, a map cap, or an economic shortfall.
+
+## First-skirmish coaching
+
+`EconomyCoach.qml` presents a four-step progression beneath the wave tracker:
+
+> gather → build → recruit → keep an army
+
+Each step is inferred from world state rather than advanced by a scripted tutorial flag.
+
+| Step      | Considered complete when                                                |
 | --------- | ----------------------------------------------------------------------- |
 | `gather`  | anything has been credited through `add_harvested`                      |
-| `build`   | the player owns more buildings than they started with, or one is rising |
+| `build`   | the player owns more buildings than at start, or a building is rising   |
 | `recruit` | population has grown, or a barracks is producing                        |
 | `army`    | population has grown by `k_economy_coach_army_population` (150)         |
 
-Because the test is the world state, a player who already knows the game clears all four
-steps by playing normally and never sees a prompt they did not need. The strip is
-dismissed with its ✕, which is remembered in `ui/economy_coach` — a dismissal outlives
-the mission and the process.
+Because the checks read the actual game state, an experienced player completes the sequence naturally and is not forced through prompts they do not need.
 
-The prompts are shown in skirmish only: campaign missions carry their own briefing and
-teaching goal, and a spectated match has no economy to run.
+The strip can be dismissed with its ✕. That preference is stored under `ui/economy_coach`, so dismissal survives both the mission and the process.
 
-## Where the numbers come from
+Economy coaching is limited to skirmish mode. Campaign missions already provide their own briefing and teaching goals, while spectators have no economy to manage.
 
-`app/economy/economy_overview.cpp` is the only place that assembles them, and it reads:
+## Where the displayed numbers come from
 
-- `construction_cost_info` / `construction_build_time` — what a structure costs and how
-  long a builder works on it. Data-driven from `assets/data/construction/catalog.json`.
-- `TroopProfileService` — per-nation recruit cost, population cost and build time, so the
-  guide shows Carthaginian numbers to a Carthaginian player.
-- `NationRegistry` — which units the player's nation can actually recruit, so the guide
-  never advertises an elephant to Rome.
-- `PlayerResourceRegistry` — current stores, and `get_harvested_all` for the gather step.
-- `harvest_yields.h` — what one trip to a tree, boulder, ore seam, ripe farm or sheep is
-  worth.
-- The world itself — builders, what each is doing, what they are carrying, and which
-  buildings the player owns.
+`app/economy/economy_overview.cpp` is the single assembly point for the data shown by the economy UI. It reads from the following authoritative systems:
 
-`harvest_yields.h` exists because those three numbers used to be file-local constants in
-`production_system.cpp`, invisible to anything that wanted to explain them. The
-simulation and the guidance now read the same header, so a rebalance moves both.
+- `construction_cost_info` and `construction_build_time` for structure costs and builder time, sourced from `assets/data/construction/catalog.json`;
+- `TroopProfileService` for nation-specific recruit cost, army-cap weight, and build time;
+- `NationRegistry` for the units the selected nation can actually recruit;
+- `PlayerResourceRegistry` for current stores and `get_harvested_all` for coaching progress;
+- `harvest_yields.h` for one-trip yields from trees, boulders, ore seams, ripe farms, and sheep; and
+- the world itself for builders, carried resources, active jobs, and owned structures.
 
-## The threading rule
+`harvest_yields.h` exists specifically so simulation and explanation use the same constants. Harvest yields once lived as file-local values in `production_system.cpp`, which made them inaccessible to the UI without duplication. The shared header means a rebalance changes the simulation and the guidance together.
 
-`GameEngine::update` runs on the **render thread**, so it cannot write QML-facing state
-in place. `sync_economy_state` follows the same pattern as `sync_attack_targeting`: it
-builds the snapshot on the render thread, compares it against the last one, and pushes
-only a real change to the view model with a queued call. It also throttles to four
-refreshes a second — the scan walks every unit the player owns, and the HUD has nothing
-to gain from doing that at frame rate.
+## Threading and update frequency
 
-## One advertised price
+`GameEngine::update` runs on the **render thread**, so it cannot mutate QML-facing state directly.
 
-`TroopProductionStats` carries two numbers and they are not interchangeable:
+`sync_economy_state` follows the same model as `sync_attack_targeting`:
 
-- **`cost`** is the manpower price. `ProductionService` spends it from the building's
-  `manpower_available`, and `assets/data/nations/*.json` override it per nation — 50 for a
-  Carthaginian archer where the base catalogue says 20.
-- **`population_cost()`** is the army-cap weight, counted against `max_troops_per_player`.
-  Nation files never override `population`, so it stays at the base value.
+1. build a complete economy snapshot on the render thread;
+2. compare it with the previous snapshot;
+3. enqueue an update only when the snapshot has actually changed; and
+4. apply the change to the view model through a queued call.
 
-The bug this caused, twice: the app layer exported `population_cost()` as the card's price
-while `ProductionPanel.qml` gated the recruit button on it. The card asked for 20 while the
-barracks demanded 50 — the button stayed lit, the click was refused, and nothing said why. A
-Carthaginian player got two archers out of a 140 reserve and then dead clicks. It was fixed
-once on 27 Aug (`2e452a63`) on a branch that never merged, so it came back.
+Refreshes are throttled to four per second. Building the snapshot requires scanning the player's units and jobs, while the HUD gains nothing from repeating the work at frame rate.
 
-**The app layer exports `production.cost` — the price the barracks actually charges — and
-there is no second key to pick wrongly.** `unit_profile.cpp`, `production_readouts.cpp` and
-`economy_overview.cpp` all publish `cost`; the `population_cost` key QML used to gate on is
-deleted. `economy_overview.cpp` keeps the cap weight under its own name,
-`UnitItem::army_cap_weight`, feeding only `manpower_met`, the readout that is really about
-the cap.
+## One advertised recruit price
 
-Do **not** make the engine spend `population_cost()`. It looks like the same fix and is not:
-that value is the army-cap weight, a Carthaginian civilian is worth 70 there, and charging
-the cheaper number lets the AI flood its cap with troops instead of raising homes and farms.
+`TroopProductionStats` contains two quantities that serve different purposes and must not be confused.
 
-### Making it one number is a balance change, not a cleanup
+### `cost`: the barracks reserve price
 
-Unifying the two — weighing the cap by the nation price — was attempted and reverted. It is
-mechanically easy (delete `population`, resolve the weight per nation, rescale every map
-cap) and it destabilises the AI, because doctrines and town plans were authored against
-_flat_ cap weights (archer 20, swordsman 15, catapult 12) and real prices are not flat
-(50, 95, 260). Measured on `AiDuelMatchTest`, against a green 204/204 baseline: caps at 4x
-left the AI too rich to raise farms (`never broke ground on a field`); at 2.8x too poor to
-field an army (`nobody built an army`). No single multiplier satisfies both. It needs the
-town-plan priorities and per-map caps retuned by playtest, which is its own pass.
+`cost` is the amount spent from a recruiting building's `manpower_available`. Nation data in `assets/data/nations/*.json` can override it. A Carthaginian archer, for example, may cost 50 reserve even when the base catalogue contains another value.
 
-### Two words, one meaning each
+This is the number the production card must advertise because it is the number the production service actually charges.
 
-- **Reserve** — the pool a barracks, temple or home holds and spends per recruit. The panel
-  line ("Barracks reserve: 100 / 140"), the card price and every refusal use this word.
-- **Manpower** — what stands in the field, counted against the map's cap. The top bar and
-  the spectator HUD use this word, and nothing else does.
+### `population_cost()`: the army-cap weight
 
-"Population" is not a word this game uses any more. `max_population` in map JSON keeps its
-historical name only because renaming it would break every shipped map, every save and the
-map editor; it is read as `ProductionComponent::max_units`, the ceiling of a building's
-reserve.
+`population_cost()` is the amount counted against `max_troops_per_player`. Nation files do not override the underlying `population` value, so this quantity remains the base army-cap weight.
 
-`UnitProfileTest.TheAdvertisedPriceIsWhatProductionCharges` and
-`EconomyOverviewTest.TheHelpViewQuotesThePriceTheBarracksCharges` hold the line.
+It is not a recruit price and must not be used to decide whether a barracks can pay for a unit.
 
-## Related
+### The UI contract
 
-- [RESOURCE_STOCKPILE.md](RESOURCE_STOCKPILE.md) — the haul the counters are describing:
-  yards, carried loads, and why a gathered log is not credited where it is cut.
-- [SETTLEMENT_LIFE.md](SETTLEMENT_LIFE.md) — the standing gather order that keeps a
-  worker running its own round.
-- [FOOD_AND_FARMS.md](FOOD_AND_FARMS.md) — the farm, the two food jobs, the civilians that
-  eat, and the balance table.
-- [UI_DESIGN_SYSTEM.md](UI_DESIGN_SYSTEM.md) — the components the three surfaces are
-  built from.
+The app layer exports `production.cost` as the recruit price. `unit_profile.cpp`, `production_readouts.cpp`, and `economy_overview.cpp` all publish the same value.
+
+The old `population_cost` key that QML once used for recruit gating has been removed. When the cap weight is needed, `economy_overview.cpp` exposes it under the explicit name `UnitItem::army_cap_weight`.
+
+The rule is:
+
+> Advertise and gate on the price the recruiting building actually spends. Treat army-cap weight as a separate constraint.
+
+`UnitProfileTest.TheAdvertisedPriceIsWhatProductionCharges` and `EconomyOverviewTest.TheHelpViewQuotesThePriceTheBarracksCharges` enforce that relationship.
+
+## Why the two quantities remain separate
+
+It is tempting to unify recruit price and army-cap weight, but doing so changes game balance rather than merely simplifying code.
+
+AI doctrines and town plans were authored against relatively flat cap weights—such as archer 20, swordsman 15, and catapult 12—while actual recruit prices vary much more widely, for example 50, 95, and 260.
+
+Experiments with nation-priced cap weights destabilized the AI in opposite directions depending on the global multiplier. Larger caps left the AI too economically comfortable to invest in farms; smaller caps prevented it from fielding an army. No single scaling factor satisfied both behaviors in `AiDuelMatchTest`.
+
+Changing this model would therefore require its own balance pass over town-plan priorities, per-map caps, and playtest results. It should not be introduced as a naming cleanup.
+
+## Vocabulary: reserve and manpower
+
+The UI uses two words consistently:
+
+- **Reserve** — the pool stored by a barracks, temple, or home and spent when that building recruits. The production panel, unit card price, and refusal messages use this term.
+- **Manpower** — the force currently standing in the field and counted against the map's cap. The top bar and spectator HUD use this term.
+
+The player-facing UI no longer uses “population” for either concept.
+
+`max_population` remains in map JSON for compatibility with existing maps, saves, and the map editor. Runtime code reads it as `ProductionComponent::max_units`, which is the ceiling of a building's reserve rather than the army-wide manpower cap.
+
+## Related documentation
+
+- [RESOURCE_STOCKPILE.md](RESOURCE_STOCKPILE.md) explains carried loads, barracks yards, and why a resource is not credited where it is harvested.
+- [SETTLEMENT_LIFE.md](SETTLEMENT_LIFE.md) describes the standing gather order that keeps workers cycling through a resource round.
+- [FOOD_AND_FARMS.md](FOOD_AND_FARMS.md) covers farms, food jobs, civilians, and the food-to-manpower loop.
+- [UI_DESIGN_SYSTEM.md](UI_DESIGN_SYSTEM.md) documents the UI components used by the three economy surfaces.
+
+The economy guidance works when every message points back to the same rule the simulation uses. That single-source-of-truth approach keeps player education accurate as the economy evolves.
