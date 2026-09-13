@@ -1,61 +1,182 @@
 # Formation Architecture
 
-Standard of Iron has two formation layers because they solve two different problems. A **unit layout** places the soldiers inside one logical troop entity. An **army formation** places several troop entities relative to one another. They share data about doctrine and battlefield intent, but they do not share identity or ownership.
+Standard of Iron has two formation layers because they solve two different spatial problems.
+
+A **unit layout** places the soldiers inside one logical troop entity. An **army formation** places multiple troop entities relative to one another. The two layers can cooperate, but they do not share identity or ownership.
 
 | Layer | Arranges | Primary owner | Identity |
 | --- | --- | --- | --- |
-| Unit layout | Soldiers inside one troop entity | `Game::Formation::UnitLayoutSystem` | `UnitLayoutId` |
-| Army formation | Multiple troop entities | `ArmyFormationPlanner` and `ArmyFormationRegistry` | `FormationDoctrineId` + `ArmyFormationIntent` |
+| Unit layout | soldiers inside one troop entity | `Game::Formation::UnitLayoutSystem` | `UnitLayoutId` |
+| Army formation | multiple troop entities | `ArmyFormationPlanner` + `ArmyFormationRegistry` | `FormationDoctrineId` + `ArmyFormationIntent` |
 
-Keeping those layers separate lets a troop change its internal stance without leaving an army formation, and lets an army redeploy without redefining how every soldier stands.
+Keeping those layers separate lets a troop change its internal soldier arrangement without leaving its army group, and lets an army redeploy without redefining the geometry of every soldier inside every troop.
 
-## Independent formation state
+## Four independent concepts
 
-Four concepts coexist at runtime:
+Four concepts coexist at runtime and should not be collapsed into one “formation state.”
 
-- **Unit layout** controls the geometry of soldiers inside one troop entity.
-- **Army formation** controls the geometry of multiple troop entities.
-- **Combat stance** controls how a troop reacts to threats.
-- **Order** controls what the troop is doing now: moving, attacking, guarding, patrolling, and so on.
+- **Unit layout** — the local arrangement of soldiers inside one troop entity.
+- **Army formation** — the arrangement of troop entities inside a multi-unit group.
+- **Combat stance** — how a troop reacts to threats and what defensive/engagement rules apply.
+- **Order** — what the troop is currently doing: moving, attacking, guarding, patrolling, holding, and so on.
 
-A troop can therefore remain part of a Roman line while its soldiers form a defensive shield layout and the troop itself follows a movement or guard order.
+A troop can therefore be:
 
-## Unit layouts
+- a member of a Roman army line;
+- moving toward a new anchor;
+- internally in a defensive shield layout; and
+- under a hold/guard combat stance
 
-The internal layout system is defined by `game/formation/unit_layout.h`. `UnitLayoutStyle` contains the geometry needed to build a soldier pattern: lateral and depth spacing, rank stagger and arc, file grouping, jitter, weapon clearance, minimum separation, column width, and shape-specific values.
+at the same time.
 
-The supported layout shapes are:
+That independence is central to both data authoring and runtime behavior.
 
-- `Ranks`
-- `Wedge`
-- `LooseOrder`
-- `Column`
-- `Cluster`
-- `Circle`
-- `Shell`
-- `Arc`
+# Unit-layout layer
 
-`UnitLayoutSystem::offset()` resolves a `UnitLayoutQuery` into a local soldier offset and yaw. The query carries the layout id, row and column information, spacing, a deterministic seed, and the current formation transition ratio. `UnitLayoutSystem::compute()` exposes the same mechanism for a complete unit.
+The unit-layout system is defined primarily in `game/formation/unit_layout.h`.
 
-### Stable soldier identity
+Its job is to turn a stable logical soldier index and an authored style into a local offset and facing inside a troop entity.
 
-Internal layouts are deterministic. A soldier's placement is derived from stable query inputs rather than its current world position. This matters to rendering and combat because the same logical soldier must keep the same slot while a troop moves, turns, takes casualties, or changes presentation state.
+## Unit layout identity
 
-`FormationCombat::living_slot_indices()` is the shared boundary for deciding which presentation slots are still occupied. Renderer and combat-side consumers use the same surviving-slot information instead of deriving independent rosters.
+`UnitLayoutId` is a compact interned handle. The invalid value is `0xFFFF`.
 
-### Doctrine-specific layouts
+A troop profile refers to generic layout names. The loaded layout library resolves those names to an interned style and can prefer a doctrine-qualified variant when one exists.
 
-Troop formation profiles name generic layouts such as close-order infantry, marching layouts, or defensive layouts. `UnitLayoutLibrary::resolve(doctrine, generic_name)` first looks for a doctrine-qualified variant and then falls back to the generic layout.
+The runtime therefore does not need one giant enum containing every Roman, Carthaginian, Sepulcher, marching, defensive, and special layout.
 
-That gives the data layer room to express different silhouettes without changing code. Roman, Carthaginian, and Iron Sepulcher troops can all request the same broad role while resolving to different spacing, rank structure, arcs, shells, or file groupings.
+## Supported unit-layout shapes
 
-Formation data is loaded from `assets/data/formations/` on top of built-in defaults. See `assets/data/formations/README.md` for the authoring schema.
+`UnitLayoutShape` currently includes:
 
-## Army formations
+- `Ranks`;
+- `Wedge`;
+- `LooseOrder`;
+- `Column`;
+- `Cluster`;
+- `Circle`;
+- `Shell`; and
+- `Arc`.
 
-Army-scale state lives in `game/formation/army_formation_types.h` and is owned by `ArmyFormationRegistry`.
+The shape selects the broad geometry family. `UnitLayoutStyle` then tunes that family with authored parameters.
 
-The current formation intents are:
+## `UnitLayoutStyle`
+
+Current style data includes parameters for:
+
+- lateral spacing scale;
+- depth spacing scale;
+- rank stagger;
+- echelon drift;
+- rank arc;
+- front/rear tuning;
+- positional jitter;
+- facing jitter;
+- wedge behavior;
+- cluster/radius behavior;
+- file grouping;
+- group gaps;
+- file-depth stagger;
+- weapon clearance;
+- minimum separation scale; and
+- preferred column file count.
+
+The result is a data-driven silhouette rather than a hard-coded faction branch.
+
+## `UnitLayoutQuery`
+
+A layout query carries the facts needed to resolve one soldier placement, including:
+
+- layout id;
+- soldier index;
+- row and column;
+- row/column counts;
+- live/expected count;
+- optional forced file count;
+- base spacing;
+- deterministic seed;
+- `formed_ratio`;
+- optional blend source; and
+- blend ratio.
+
+`UnitLayoutSystem::offset()` resolves one query into local position/yaw. `UnitLayoutSystem::compute()` provides the same system at whole-unit scale.
+
+The query is intentionally independent of the soldier's current world position. A layout is geometry, not a second movement system.
+
+## Determinism and stable slots
+
+Internal layouts are deterministic for stable inputs.
+
+A soldier's slot is derived from logical identity and layout/query parameters, which gives several useful properties:
+
+- moving the troop does not reshuffle soldiers;
+- rotating the troop does not reshuffle soldiers;
+- renderer and combat geometry can agree on the same slot;
+- replay does not depend on presentation timing; and
+- stable soldiers can keep recognizable local positions through transitions.
+
+Random-looking variation is derived from deterministic seed/index input rather than from wall-clock randomness.
+
+## Living-slot ownership
+
+`FormationCombat::living_slot_indices()` is the shared boundary for deciding which internal presentation slots remain occupied.
+
+Combat and renderer-side consumers use the same living-slot information instead of independently estimating survivor positions from health.
+
+That matters because a formation can be visually sparse after casualties without renumbering every survivor into a new position on every frame.
+
+## Doctrine-specific layout resolution
+
+Troop formation profiles name generic layouts such as normal, marching, or defensive styles.
+
+`UnitLayoutLibrary::resolve(doctrine, generic_name)` resolves in two steps:
+
+1. try a doctrine-qualified name such as `<doctrine>.<generic>`;
+2. fall back to the bare generic layout.
+
+This allows doctrine-specific silhouettes while preserving a generic fallback.
+
+For example, two factions can both request a close-order infantry role while using different rank stagger, depth, arc, grouping, or shell geometry.
+
+## Data source
+
+Formation data is loaded from:
+
+```text
+assets/data/formations/
+```
+
+on top of built-in defaults.
+
+The shipped content can therefore refine formation geometry without requiring a new C++ enum or renderer branch for every doctrine variant.
+
+See `assets/data/formations/README.md` for the current file schema.
+
+## Unit-layout silhouette as faction language
+
+Unit layouts carry faction identity through geometry as well as material/colour.
+
+The current data/model can express distinctions such as:
+
+- broad, regular, staggered rank systems;
+- compact deep blocks;
+- grouped files with visible seams;
+- curved/arc fronts;
+- dense procession-like columns;
+- open shield walls; and
+- closed defensive shells.
+
+The important architectural point is that these differences are authored through the layout system. The renderer does not need a `switch (nation)` to decide where soldiers stand.
+
+# Army-formation layer
+
+Army-scale formation state lives in `game/formation/army_formation_types.h` and is owned by `ArmyFormationRegistry`.
+
+An army formation is a committed group of troop entities with one doctrine, one intent, one anchor/facing, one set of options, and one slot plan.
+
+## Army formation intents
+
+The current intent enum is:
 
 ```cpp
 enum class ArmyFormationIntent {
@@ -69,149 +190,500 @@ enum class ArmyFormationIntent {
 };
 ```
 
-Intent answers **what shape of deployment is wanted**. Doctrine answers **how a faction expresses that intent**. The two are deliberately separate.
+Intent describes the tactical deployment requested by the player or AI.
 
-### Formation state
+Doctrine describes how that intent is expressed by the faction/army.
 
-`ArmyFormation` stores the authoritative state for a committed group:
+Those concepts are separate so that two doctrines can both support `Line` while producing different role placement, frontage, depth, reserve structure, and internal troop layouts.
 
-- group id;
-- doctrine and intent;
-- anchor and facing;
-- frontage, depth, and spacing;
-- formation options;
-- phase and cohesion;
-- member entity ids;
-- placed slots;
-- destination and movement-plan state;
-- planning revision and replan flags.
+## Formation options
 
-Member entities carry a membership component that points back to the group. The registry remains the source of truth for group geometry and membership.
+`ArmyFormationOptions` refines a doctrine template without replacing it.
 
-### Formation options
+Current option families include:
 
-`ArmyFormationOptions` exposes the choices that can change a doctrine template without replacing it:
+### Flank preference
 
-- flank preference: balanced, strong left, strong right, or split;
-- movement policy: reform at destination or maintain formation;
-- ranged placement: front, rear, or skirmish;
-- mixed-doctrine policy: composite by role, separate contingents, commander doctrine, or majority doctrine;
-- frontage, depth, and spacing scales;
+- `Balanced`;
+- `StrongLeft`;
+- `StrongRight`;
+- `Split`.
+
+### Movement policy
+
+- `ReformAtDestination`;
+- `MaintainFormation`.
+
+### Ranged placement
+
+- `Front`;
+- `Rear`;
+- `Skirmish`.
+
+### Mixed-doctrine policy
+
+- `CompositeByRole`;
+- `SeparateContingents`;
+- `CommanderDoctrine`;
+- `MajorityDoctrine`.
+
+### Numeric/boolean tuning
+
+Options also include:
+
+- frontage scale;
+- depth scale;
+- spacing scale;
 - reserve rows;
-- member-order preservation;
-- doctrine locking.
+- preserve-member-order; and
+- doctrine lock.
 
-The planner uses those options together with troop role tags and the active doctrine template to build a formation layout.
+This makes the player's fine-tuning controls and AI planner operate on the same data model.
 
-## Planning and terrain placement
+## Army role tags
 
-`ArmyFormationPlanner` separates formation geometry from world placement.
+Doctrine templates match troop **role tags**, not hard-coded troop IDs.
 
-`build_layout()` produces formation-local slots from members, doctrine, intent, and options. `place()` rotates that layout into world space and fits its slots to terrain. `plan()` combines the two operations.
+A troop's formation data can declare roles such as line infantry, spear infantry, shielded troops, centre, reserve, and other current tags.
 
-This split is important for interactive placement: moving an otherwise unchanged preview does not require the role and template work to be rebuilt from scratch.
+The planner can then say “place troops with this role in this part of the formation” rather than “place troop type X at slot Y.”
 
-### Slot status
+That makes new troop types compatible with existing doctrine templates when their role data is authored correctly.
 
-Every placed slot has one of three statuses defined in `army_formation_types.h`:
+## `ArmyFormation`
 
-- `Valid` — the ideal position can be used;
-- `Adjusted` — terrain fitting moved the slot to a usable nearby position;
-- `Blocked` — no acceptable position was found.
+A committed formation stores authoritative group state such as:
 
-The preview and committed formation use this placement result rather than assuming that an authored geometric pattern is legal everywhere on the map.
+- formation group id;
+- doctrine;
+- intent;
+- anchor;
+- facing;
+- frontage;
+- depth;
+- spacing;
+- options;
+- phase;
+- cohesion;
+- member entity IDs;
+- slot assignments;
+- destination;
+- advance progress;
+- movement-plan state;
+- plan revision;
+- replan flag; and
+- pending movement state.
 
-## Cohesion and combat
+Member entities carry a formation-membership component containing the group/slot back-reference.
 
-`ArmyFormationRuntime` updates committed formations and exposes their combat effect.
+The registry remains the source of truth for group state. Group geometry is not reconstructed by scanning member positions and guessing which formation they were supposed to belong to.
 
-The current cohesion thresholds are defined in `army_formation_registry.cpp`:
+## Planning pipeline
 
-- a slot counts as in position inside `1.35 × spacing`;
-- cohesion at or above `0.8` is formed;
-- cohesion at or below `0.45` is disrupted.
+`ArmyFormationPlanner` separates local geometry from world placement.
 
-Formation phases are richer than a single formed/unformed flag. `army_formation_types.h` currently defines `Reforming`, `Formed`, `Disrupted`, `Opening`, `Traversing`, and `Arrived`.
+Conceptually:
 
-The combat damage path combines defensive unit-layout effects with `ArmyFormationRuntime::damage_taken_multiplier()`. This keeps internal defensive stance and army-scale cohesion independent while allowing both to affect the same incoming damage calculation.
+```text
+members + doctrine + intent + options
+            │
+            ▼
+      build_layout()
+            │
+            ▼
+   local formation slots
+            │
+            ├─ anchor
+            ├─ facing
+            └─ terrain/navigation context
+            ▼
+          place()
+            │
+            ▼
+   world-space FormationPlan
+```
+
+`plan()` is the combined convenience path.
+
+This split is important for interactive placement. Dragging a preview across the ground can reuse the same role/template layout while changing only world-space placement and terrain fitting.
+
+## Layout signatures and preview reuse
+
+The planner exposes a layout signature for inputs that affect local slot geometry.
+
+Anchor and facing affect placement, not the local role/template layout itself. A placement UI can therefore avoid repeating expensive role/layout work when only the mouse position or facing changes.
+
+The cache tests verify that the split path and full `plan()` path remain equivalent.
+
+## Terrain fitting
+
+A perfect geometric formation may not fit the world at its ideal coordinates.
+
+`SlotTerrainFitter` resolves each desired slot against walkable terrain and separation constraints.
+
+Every slot is classified as:
+
+- `Valid` — ideal position is usable;
+- `Adjusted` — a nearby valid position was found; or
+- `Blocked` — no acceptable placement was found.
+
+The result belongs to the plan and can be shown before the player commits the order.
+
+## Slot fitting behavior
+
+Terrain fitting searches outward from the ideal slot position and avoids assigning multiple troops to the same resolved location.
+
+The planner therefore preserves two separate facts:
+
+- **formation intent** — where the doctrine/template wanted the troop;
+- **placement result** — where terrain allowed it to stand.
+
+An adjusted slot is not necessarily an error. It means the shape can still be realized with a local nudge. A blocked slot means the planner could not place that member under the current rules.
+
+## Formation phases
+
+`FormationPhase` currently contains:
+
+- `Reforming`;
+- `Formed`;
+- `Disrupted`;
+- `Opening`;
+- `Traversing`;
+- `Arrived`.
+
+Phase describes the group runtime state, not merely the last command that was issued.
+
+This is useful because formation behavior spans several distinct transitions:
+
+- assembling into a shape;
+- holding a coherent shape;
+- being disrupted;
+- opening/adjusting for motion;
+- traversing constrained movement; and
+- arriving at the intended destination.
+
+## Cohesion
+
+`ArmyFormationRuntime` measures whether occupied, placeable slots are actually being held.
+
+The current constants in `army_formation_registry.cpp` include:
+
+- in-slot radius scale: `1.35 × spacing`;
+- formed threshold: cohesion `>= 0.8`;
+- disrupted threshold: cohesion `<= 0.45`.
+
+Cohesion is therefore a measured group property rather than an assumption that the formation is “formed” because a move command completed.
+
+## Cohesion and damage
+
+`ArmyFormationRuntime::damage_taken_multiplier()` is applied in the combat damage pipeline.
+
+This lets army-scale cohesion affect combat while remaining independent from unit-level defensive layouts.
+
+A troop can receive both:
+
+- a defensive-layout modifier from `DefensiveUnitLayoutService`; and
+- an army-group modifier from `ArmyFormationRuntime`.
+
+The two effects compose because they describe different spatial layers.
 
 ## Movement policies
 
-Two movement policies are part of the public formation contract.
+### Reform at destination
 
-**Reform at destination** lets troop entities route independently to the new deployment and form the requested shape at the destination.
+`ReformAtDestination` lets troop entities route toward the new destination and assemble the target shape there.
 
-**Maintain formation** keeps a moving group under formation runtime control while the formation center advances. Route-follow speed applies `ArmyFormationRuntime::move_speed_multiplier()` alongside other movement modifiers.
+This is robust through irregular terrain because the group does not try to preserve one rigid footprint through the entire route.
 
-Neither policy turns individual soldiers into pathfinding agents. Navigation remains attached to logical troop entities; soldier positions are presentation and combat geometry inside those entities.
+### Maintain formation
 
-## Constrained routes
+`MaintainFormation` keeps the group under formation runtime control as the center advances.
 
-Narrow crossings add an internal traversal-layout layer rather than replacing the authored unit layout.
+The runtime owns group movement-plan state, and route-follow speed applies `ArmyFormationRuntime::move_speed_multiplier()` together with the other movement modifiers that affect the troop.
 
-`UnitTraversalLayoutSystem` publishes `TraversalLayoutFacts` into movement state. Those facts include the current and target traversal mode, the relevant corridor/portal information, chosen and normal file counts, spacing, and lateral scaling. Movement and presentation can therefore agree on whether a block is using its normal frontage or temporarily closing ranks to pass through constrained ground.
+Neither movement policy turns internal soldiers into navigation agents. The logical troop entity remains the navigation body.
 
-The precedence remains:
+# Constrained-route traversal
 
-1. army formation and route choose the troop root's strategic destination;
-2. normal or defensive unit layout chooses the troop's base soldier arrangement;
-3. traversal layout may temporarily remap that arrangement for constrained movement;
-4. combat/contact presentation composes action and hit state on the resulting soldier anchors;
-5. the renderer consumes the published result rather than running another position simulation.
+Narrow passages introduce a temporary **traversal layout** inside a troop entity.
 
-`FormationCombat::soldier_spatial_anchors` is the shared soldier-level spatial query boundary for systems that need exact internal positions.
+This is separate from the authored normal/defensive unit layout and separate from the army group's strategic route.
 
-## Defence Mode
+`UnitTraversalLayoutSystem` publishes `TraversalLayoutFacts` into movement state.
 
-Defence Mode is an internal unit-layout state, not an army formation.
+Current facts include information such as:
 
-`DefensiveUnitLayoutService` reads the active unit and nation profile and exposes the movement, turning, charge, targeting, and damage rules associated with that defensive state. The service is used by movement, combat, route following, and damage application.
+- current traversal mode;
+- target traversal mode;
+- corridor/portal identity;
+- measured corridor width;
+- normal file count;
+- chosen file count;
+- presented spacing;
+- lateral scale; and
+- related transition state.
 
-`UnitLayoutStateComponent` carries the transition state, while nation data selects the eligible troop types and defensive layout. A unit can therefore form its defensive soldier geometry without receiving a new army group id or changing the other troop entities around it.
+## Traversal precedence
 
-The two shipped visual families are intentionally distinct: Roman defensive infantry uses the closed shell/testudo family, while Carthaginian defensive infantry uses an open shield-wall family. Those differences are expressed through formation data and baked presentation assets rather than by a separate army-formation type.
+The position contract is layered:
 
-## Player placement
+1. **Army formation and route** choose the logical troop root's strategic destination/lane/pace.
+2. **Normal or defensive unit layout** defines the base soldier arrangement.
+3. **Traversal layout** may temporarily remap soldier rows/files/local anchors to fit constrained ground.
+4. **Combat/contact presentation** composes action, facing, hit response, and contact adjustments on that anchor.
+5. **Renderer** reads the published final anchor; it does not run another positional integrator.
 
-The player-facing formation planner uses the same army planner and slot fitting as committed gameplay.
+This layering allows a shield formation to pass through a narrow opening without pretending that the doctrine/defensive state disappeared.
 
-The control surface exposes the current intent catalogue and formation options. A placement preview is a troop-footprint plan, not a cloud of individual soldier markers. Ground placement sets the anchor; orientation sets the facing; the planner reports resulting dimensions and blocked or adjusted slots before the order is committed.
+## Soldier-level spatial boundary
 
-A single troop may still be positioned and faced through the placement gesture, but `ArmyFormationService` does not need to create a one-member army group for that operation. Army formation state starts where there is actually a group to arrange.
+`FormationCombat::soldier_spatial_anchors` is the shared boundary for systems that need exact soldier-level coordinates.
 
-`FormationStatusBadge` is the persistent view of committed group state. It reports the selected group's intent, doctrine, phase, and cohesion after placement mode has ended.
+Consumers such as combat geometry, RPG/direct-control targeting, weapon traces, casualty effects, and selection/presentation can use the same resolved anchor precedence instead of calculating independent soldier positions.
 
-## AI formations
+Ordinary RTS entity selection still operates on troop/entity identity; the soldier-level query is used where exact internal geometry is required.
 
-AI and player armies share the same formation planner.
+# Defence Mode
 
-`Game::Systems::AI::plan_ai_formation` builds planner members from an AI snapshot and resolves a doctrine and intent through the normal formation machinery. AI formation choices are therefore subject to the same role, doctrine, terrain, and availability rules as player formations rather than using a second geometry implementation.
+Defence Mode is a unit-layout state, not an army formation.
 
-AI settlement and muster logic may choose a station and an intent on its own cadence, but the resulting troop placement still goes through the shared formation service.
+Each logical troop keeps:
 
-## Save/load
+- its world identity;
+- troop root position;
+- army-group membership;
+- current order; and
+- owner/nation identity.
 
-Army formations are persistent game state. The registry serializes committed groups with their doctrine, intent, anchor, options, members, slots, movement state, and cohesion-related data so a restored battle does not have to infer formations from troop positions.
+Defensive mode changes the internal soldier arrangement and exposes the related movement/combat modifiers through `DefensiveUnitLayoutService`.
 
-Internal unit-layout transition state is also serialized as component state. Save/load therefore restores both formation layers rather than reconstructing either from rendering output.
+## Defensive profiles
 
-## Validation
+Nation data selects:
 
-Formation content is validated against the same vocabulary the runtime loads. Validation covers unknown layout shapes, role tags, army roles, intents, invalid spacing, references to missing layouts, and incomplete doctrine definitions.
+- eligible troop types;
+- the defensive layout;
+- transition timing;
+- movement/turn behavior; and
+- directional combat modifiers.
 
-The main automated coverage includes:
+Roman and Carthaginian infantry can therefore use different defensive geometry without creating a new army-scale intent for every internal stance.
+
+## Defensive layout state
+
+`UnitLayoutStateComponent` carries the authoritative transition state.
+
+Formation data supplies `form_seconds` and `break_seconds` for the transition. Gameplay bonuses and baked defensive presentation are tied to the active formed state according to the current runtime rules.
+
+The component is serialized and included in render/presentation state so save/load and snapshot rendering agree about whether the unit is normal, forming, formed, or breaking.
+
+## Roman shell/testudo
+
+The Roman defensive family uses a closed `Shell`-style arrangement with directional shield presentation for front, rear, flanks, and overhead positions.
+
+The renderer applies the corresponding baked upper-body overlay poses while locomotion can continue through the lower-body authored movement path.
+
+The important architecture point is that “testudo” is an internal soldier-layout/presentation state of one logical troop, not a second army object.
+
+## Carthaginian shield wall
+
+The Carthaginian defensive family uses an open `Arc`-style shield wall rather than the closed Roman shell.
+
+Its authored geometry, poses, timings, and combat modifiers are data/runtime choices within the same defensive-layout system.
+
+# Player formation placement
+
+The player-facing planner uses the production `ArmyFormationPlanner`.
+
+A placement preview is therefore a real formation plan with:
+
+- current intent;
+- current doctrine;
+- selected members;
+- active options;
+- anchor;
+- facing;
+- local dimensions;
+- placed slots; and
+- blocked/adjusted status.
+
+The preview is not a decorative approximation drawn independently of the actual committed plan.
+
+## Placement gesture
+
+Ground placement establishes the formation anchor. Orientation determines facing. The UI can expose frontage/depth/spacing and other options that modify the planner inputs.
+
+The resulting troop footprints show where logical troop entities will be placed, not every internal soldier.
+
+## Single-troop positioning
+
+One troop can use the same positioning/facing gesture without registering a one-member army formation.
+
+This keeps the useful “place and face this block” control while preserving the semantic boundary that an army formation is a group-level object.
+
+## Formation panel data
+
+The formation panel reads current planner/controller state and can show:
+
+- available intents;
+- current doctrine;
+- current facing;
+- current dimensions/ranks/files;
+- slot placement counts;
+- blocked/adjusted state; and
+- advanced options.
+
+Unavailable intents can remain visible with an explanation instead of changing the meaning/order of intent selection according to the current roster.
+
+## Persistent group status
+
+`FormationStatusBadge` represents committed formation state after placement is over.
+
+It can report:
+
+- intent;
+- doctrine;
+- phase; and
+- cohesion.
+
+This gives the player feedback on whether the group actually formed or became disrupted, not merely which intent was selected earlier.
+
+# AI formation use
+
+AI and player groups share the same planner/runtime.
+
+`Game::Systems::AI::plan_ai_formation` builds formation members from the AI snapshot and resolves the doctrine/intent through the production planner.
+
+AI station/muster logic decides where a group should assemble, but it still relies on formation terrain fitting and slot availability to determine whether the candidate is usable.
+
+This prevents the AI from bypassing the same terrain and role constraints the player sees.
+
+See [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md) for station resolution and committed attack-wave behavior.
+
+# Persistence
+
+Army formations are authoritative game state and are serialized with the match.
+
+The registry persists information required to reconstruct the committed group, including its doctrine, intent, options, anchor, members, slots, phase/cohesion-related state, and movement-plan state as defined by the current serializer.
+
+Member back-references are restored consistently with the group registry.
+
+Unit-layout transition state is also component state and survives save/load.
+
+The save system does not infer formations from what the renderer happened to draw before the save.
+
+# Data validation
+
+`FormationDataLoader` applies authored formation data over the built-in defaults.
+
+Validation covers the vocabulary/runtime references used by the planner and unit-layout system, including areas such as:
+
+- unknown role tags;
+- unknown army roles;
+- unknown layout shapes;
+- unknown formation intents;
+- missing layout references;
+- incomplete doctrine defaults; and
+- non-positive/invalid spacing values.
+
+The `content_validator` links the same production formation/data code, which reduces the risk of the validator accepting a format the runtime interprets differently.
+
+# Testing
+
+Formation behavior is covered at several levels.
 
 | Area | Representative tests |
 | --- | --- |
-| Unit-layout geometry | `tests/formation/unit_layout_test.cpp` |
-| Army planning and terrain fitting | `tests/formation/army_formation_planner_test.cpp` |
-| Registry lifecycle and persistence | `tests/formation/army_formation_registry_test.cpp` |
+| Unit-layout geometry/determinism | `tests/formation/unit_layout_test.cpp` |
+| Army planner and doctrine roles | `tests/formation/army_formation_planner_test.cpp` |
+| Registry lifecycle/persistence | `tests/formation/army_formation_registry_test.cpp` |
 | Movement policies | `tests/formation/formation_movement_test.cpp` |
-| Formation data loading | `tests/formation/formation_data_loader_test.cpp` |
+| Data overlay/validation | `tests/formation/formation_data_loader_test.cpp` |
 | Terrain/navigation fitting | `tests/formation/formation_terrain_navigation_test.cpp` |
-| Cohesion and damage | `tests/formation/formation_cohesion_test.cpp` |
-| Defensive layouts | `tests/systems/defensive_unit_layout_test.cpp` |
-| Formation UI | `tests/ui/qml/tst_formation_panel.qml`, `tst_formation_status_badge.qml` |
-| Input integration | `tests/core/input_command_handler_test.cpp`, `tests/ui/input_bindings_test.cpp` |
+| Cohesion and combat multiplier | `tests/formation/formation_cohesion_test.cpp` |
+| Planner split/cache behavior | `tests/formation/formation_planner_cache_test.cpp` |
+| Defensive unit layouts | `tests/systems/defensive_unit_layout_test.cpp` |
+| Planner UI | `tests/ui/qml/tst_formation_panel.qml` |
+| Status badge | `tests/ui/qml/tst_formation_status_badge.qml` |
+| Input/placement behavior | `tests/core/input_command_handler_test.cpp` |
+| Key binding | `tests/ui/input_bindings_test.cpp` |
 
-Arena scenarios prefixed with `unit_layout_` and `army_formation_` exercise the same systems visually. Promotional formation scenarios also drive the planner through the arena tooling; see [PROMO_CAPTURE.md](PROMO_CAPTURE.md) for that capture pipeline.
+Arena scenarios prefixed with `unit_layout_` and `army_formation_` exercise the same runtime visually with real rendering and scenario commands.
+
+# Debugging by layer
+
+Formation bugs are easier to diagnose when the two formation layers are kept explicit.
+
+## Soldiers wrong inside one troop
+
+Inspect:
+
+- troop formation profile;
+- resolved `UnitLayoutId`;
+- doctrine-qualified layout;
+- layout query rows/files/count;
+- traversal/defensive state; and
+- soldier anchor precedence.
+
+## Whole troop entities placed wrong in an army
+
+Inspect:
+
+- formation membership;
+- doctrine/intent;
+- role tags;
+- `ArmyFormationOptions`;
+- local planner layout; and
+- terrain placement result.
+
+## Formation looks right in preview but not after movement
+
+Inspect:
+
+- committed registry state;
+- movement policy;
+- movement-plan/replan state;
+- blocked/adjusted slots;
+- cohesion/phase; and
+- route/traversal behavior.
+
+## Defensive formation changes army grouping unexpectedly
+
+That indicates a layer violation: Defence Mode should alter the internal unit layout and its modifiers, not create/replace the army-group identity.
+
+## Soldier positions disagree between combat and rendering
+
+Inspect `FormationCombat::soldier_spatial_anchors`, living-slot state, traversal state, and published presentation rather than adding another renderer-local offset rule.
+
+# Architectural invariants
+
+The current formation system depends on these invariants:
+
+- unit layouts and army formations remain separate identities;
+- internal soldier layouts are deterministic for stable inputs;
+- living-slot identity is shared by simulation/presentation consumers;
+- doctrine-specific layout resolution falls back to generic data;
+- army roles are tag-driven rather than hard-coded troop IDs;
+- committed group state belongs to `ArmyFormationRegistry`;
+- terrain fitting reports `Valid`, `Adjusted`, or `Blocked` instead of silently stacking units;
+- cohesion is measured from placed members;
+- defensive layout and army cohesion modifiers compose rather than replace each other;
+- constrained traversal remaps internal layout without taking over troop-root navigation; and
+- AI/player placement use the same planner.
+
+# Source map
+
+| Concern | Source |
+| --- | --- |
+| Unit layout types/system | `game/formation/unit_layout.*` |
+| Formation types/options | `game/formation/army_formation_types.h` |
+| Army planner | `game/formation/army_formation_planner.*` |
+| Registry/runtime/cohesion | `game/formation/army_formation_registry.*` |
+| Formation service | `game/formation/army_formation_service.*` |
+| Formation data loader | `game/formation/formation_data_loader.*` |
+| Defensive layout runtime | `game/systems/defensive_unit_layout_service.*` |
+| Traversal layout | `game/systems/unit_traversal_layout_system.*` |
+| Movement facts | `game/core/movement_facts.h` |
+| Authored formation data | `assets/data/formations/` |
+
+The architecture documented here describes the current unit-layout, army-group, traversal, defensive-state, AI, persistence, and UI contracts. Historical implementation stories are not needed to understand those contracts and are deliberately kept out of the reference article.
