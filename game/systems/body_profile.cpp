@@ -1,5 +1,7 @@
 #include "body_profile.h"
 
+#include <algorithm>
+
 #include "../core/component_commander.h"
 #include "../core/component_core.h"
 #include "../core/entity.h"
@@ -10,7 +12,9 @@ auto body_profile_for(const Engine::Core::Entity& entity) -> BodyProfile {
   BodyProfile profile;
   if (auto const* movement = entity.get_component<Engine::Core::MovementComponent>();
       movement != nullptr) {
-    profile.radius = movement->get_navigation_clearance();
+
+    profile.radius =
+        std::min(movement->get_navigation_clearance(), k_person_body_radius);
     profile.passability = movement->get_can_enter_forest()
                               ? Pathfinding::Passability::Light
                               : Pathfinding::Passability::Heavy;

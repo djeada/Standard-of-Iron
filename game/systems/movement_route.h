@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <utility>
@@ -55,6 +57,52 @@ public:
   [[nodiscard]] auto tangent_at(float s) const -> std::pair<float, float>;
 
   [[nodiscard]] auto next_vertex_s(float s) const -> float;
+
+  template <typename SegmentClear>
+  [[nodiscard]] auto steering_aim_s(float from_x,
+                                    float from_z,
+                                    float lookahead,
+                                    float min_aim_distance,
+                                    const SegmentClear& segment_clear) const -> float {
+
+    constexpr float k_fallback_lookahead = 0.45F;
+    float const reach =
+        std::isfinite(lookahead) && lookahead > 0.0F ? lookahead : k_fallback_lookahead;
+    if (!std::isfinite(min_aim_distance)) {
+      min_aim_distance = reach * 0.75F;
+    }
+    float const target = std::min(m_length, m_travelled + reach);
+    float aim_s = std::min(target, next_vertex_s(m_travelled));
+    constexpr int k_max_extensions = 16;
+    constexpr int k_clear_bisections = 6;
+    for (int extension = 0; extension < k_max_extensions && aim_s < target;
+         ++extension) {
+      auto const aim = point_at(aim_s);
+      if (std::hypot(aim.first - from_x, aim.second - from_z) >= min_aim_distance) {
+        break;
+      }
+      float const next = std::min(target, next_vertex_s(aim_s));
+      auto const beyond = point_at(next);
+      if (segment_clear(from_x, from_z, beyond.first, beyond.second)) {
+        aim_s = next;
+        continue;
+      }
+      float clear_s = aim_s;
+      float blocked_s = next;
+      for (int bisection = 0; bisection < k_clear_bisections; ++bisection) {
+        float const middle = (clear_s + blocked_s) * 0.5F;
+        auto const point = point_at(middle);
+        if (segment_clear(from_x, from_z, point.first, point.second)) {
+          clear_s = middle;
+        } else {
+          blocked_s = middle;
+        }
+      }
+      aim_s = clear_s;
+      break;
+    }
+    return aim_s;
+  }
 
   [[nodiscard]] auto final_point() const -> std::pair<float, float>;
 

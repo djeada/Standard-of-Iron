@@ -6,6 +6,8 @@
 
 namespace Game::Systems {
 
+inline constexpr float k_person_body_radius = 0.34F;
+
 struct GateBlocker {
   float min_x{0.0F};
   float max_x{0.0F};

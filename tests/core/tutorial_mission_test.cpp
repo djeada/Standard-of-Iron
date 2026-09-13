@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 #include <limits>
 #include <map>
+#include <memory>
 #include <vector>
 
 #include "app/session/skirmish_loader.h"
@@ -16,6 +17,7 @@
 #include "game/mission/mission_setup_coordinator.h"
 #include "game/mission/mission_waves.h"
 #include "game/mission/tutorial_director.h"
+#include "game/session/session_context.h"
 #include "game/systems/default_content.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/match_snapshot.h"
@@ -108,7 +110,10 @@ protected:
                : QVector3D(transform->position.x, 0.0F, transform->position.z);
   }
 
-  Engine::Core::World m_world;
+  std::unique_ptr<Game::Session::SessionContext> m_session{
+      std::make_unique<Game::Session::SessionContext>()};
+  Game::Session::ScopedSession m_scope{*m_session};
+  Engine::Core::World& m_world{m_session->world()};
   Render::GL::Renderer m_renderer{Render::ShaderQuality::None};
   Render::GL::Camera m_camera;
   CampaignManager m_campaign;

@@ -703,6 +703,7 @@ void HumanoidPoseController::hold_spear_idle() {
       .shoulder_y = HP::SHOULDER_Y,
       .running = is_running_locomotion(m_anim_ctx),
       .sample_time = m_anim_ctx.inputs.time,
+      .cycle_phase = m_anim_ctx.gait.cycle_phase,
   });
   apply_held_pose_sample(*this, m_pose, sample);
 }
@@ -715,6 +716,7 @@ void HumanoidPoseController::channel_spell_idle() {
       .shoulder_y = HP::SHOULDER_Y,
       .running = is_running_locomotion(m_anim_ctx),
       .sample_time = m_anim_ctx.inputs.time,
+      .cycle_phase = m_anim_ctx.gait.cycle_phase,
   });
   apply_held_pose_sample(*this, m_pose, sample);
 }
@@ -727,6 +729,7 @@ void HumanoidPoseController::carry_stave() {
       .shoulder_y = HP::SHOULDER_Y,
       .running = is_running_locomotion(m_anim_ctx),
       .sample_time = m_anim_ctx.inputs.time,
+      .cycle_phase = m_anim_ctx.gait.cycle_phase,
   });
   apply_held_pose_sample(*this, m_pose, sample);
 }
@@ -808,6 +811,7 @@ void HumanoidPoseController::carry_sword_and_shield() {
           Render::Creature::is_moving_animation(m_anim_ctx.inputs.movement_state) ||
           m_anim_ctx.gait.speed > 0.1F,
       .running = is_running_locomotion(m_anim_ctx),
+      .cycle_phase = m_anim_ctx.gait.cycle_phase,
   });
   apply_held_pose_sample(*this, m_pose, sample);
 }

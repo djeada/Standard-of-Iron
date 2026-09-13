@@ -139,6 +139,8 @@ enum class MovementState : std::uint8_t {
 
 class MovementComponent {
 public:
+  static constexpr float k_fell_short_slack = 0.75F;
+
   MovementComponent() = default;
 
   [[nodiscard]] auto get_has_target() const -> bool { return has_target; }
@@ -183,6 +185,15 @@ public:
   }
   [[nodiscard]] auto get_requested_goal_x() const -> float { return requested_goal_x; }
   [[nodiscard]] auto get_requested_goal_z() const -> float { return requested_goal_z; }
+
+  [[nodiscard]] auto get_order_fell_short() const -> bool {
+    if (!has_requested_goal) {
+      return false;
+    }
+    float const dx = requested_goal_x - goal_x;
+    float const dz = requested_goal_z - goal_y;
+    return ((dx * dx) + (dz * dz)) > (k_fell_short_slack * k_fell_short_slack);
+  }
 
   [[nodiscard]] auto has_waypoints() const -> bool { return path_index < path.size(); }
 
@@ -238,9 +249,9 @@ public:
     return structure_approach_target_id;
   }
 
-  [[nodiscard]] auto get_stuck_time() const -> float { return stuck_timer; }
-
   [[nodiscard]] auto get_precise_arrival() const -> bool { return precise_arrival; }
+
+  [[nodiscard]] auto get_issuer_retargets() const -> bool { return issuer_retargets; }
 
   [[nodiscard]] auto get_order_sequence() const -> std::uint64_t {
     return order_sequence;
@@ -268,6 +279,7 @@ public:
 
   void begin_order() {
     ++order_sequence;
+    issuer_retargets = false;
     route_id = 0U;
     route_lane_offset = 0.0F;
     route_lane_min_scale = 1.0F;
@@ -311,11 +323,8 @@ private:
 
   float navigation_clearance{0.5F};
 
-  bool stuck_ref_valid{false};
-  float stuck_ref_x{0.0F}, stuck_ref_z{0.0F};
-  float stuck_timer{0.0F};
-
   bool precise_arrival{false};
+  bool issuer_retargets{false};
   EntityID structure_approach_target_id{0};
   bool can_enter_forest{true};
 
@@ -346,7 +355,11 @@ public:
 
   void begin_tick() {
     desired = {};
-    motor = {};
+
+    motor = {.blocked = motor.blocked,
+             .has_contact = motor.has_contact,
+             .contact_nx = motor.contact_nx,
+             .contact_nz = motor.contact_nz};
   }
 };
 

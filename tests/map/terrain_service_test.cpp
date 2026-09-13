@@ -1,7 +1,9 @@
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <utility>
+#include <vector>
 
 #include "app/session/skirmish_loader.h"
 #include "game/core/world.h"
@@ -74,6 +76,45 @@ auto brute_point_near_road(const std::vector<Game::Map::RoadSegment>& roads,
     }
   }
   return false;
+}
+
+TEST_F(TerrainServiceTest, AMapNumbersItsPropsTheSameWhateverWasLoadedBefore) {
+
+  const auto map_with_props = [](int count) {
+    Game::Map::MapDefinition map_def;
+    map_def.grid.width = 24;
+    map_def.grid.height = 24;
+    map_def.grid.tile_size = 1.0F;
+    map_def.biome.procedural_boulders_enabled = false;
+    map_def.biome.procedural_iron_ore_enabled = false;
+    map_def.biome.procedural_trees_enabled = false;
+    for (int index = 0; index < count; ++index) {
+      Game::Map::WorldProp prop;
+      prop.type = Game::Map::WorldProp::Type::Boulder;
+      prop.x = 4.0F + (static_cast<float>(index) * 2.0F);
+      prop.z = 6.0F;
+      map_def.world_props.push_back(prop);
+    }
+    return map_def;
+  };
+  const auto authored_ids = [](const Game::Map::TerrainService& terrain) {
+    std::vector<std::uint64_t> ids;
+    for (const auto& prop : terrain.authored_world_props()) {
+      ids.push_back(prop.id);
+    }
+    return ids;
+  };
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_with_props(3));
+  const auto first_load = authored_ids(terrain);
+  ASSERT_EQ(first_load.size(), 3U);
+
+  terrain.initialize(map_with_props(10));
+  terrain.initialize(map_with_props(3));
+  const auto second_load = authored_ids(terrain);
+  EXPECT_EQ(second_load, first_load)
+      << "the same map numbered its props differently after another map was loaded";
 }
 
 TEST_F(TerrainServiceTest, BuildsDerivedFieldForFlatTerrainWithIrregularity) {

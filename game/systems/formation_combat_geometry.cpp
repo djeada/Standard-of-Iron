@@ -667,13 +667,15 @@ void soldier_spatial_anchors_into(const Engine::Core::Entity& entity,
                                                  : nullptr;
   };
 
+  float const frame_sign =
+      traversal != nullptr && traversal->about_faced ? -1.0F : 1.0F;
   for (auto const& base : base_layout.live_slots) {
     SoldierSpatialAnchor anchor{
         .slot_index = base.index,
         .row = base.row,
         .col = base.col,
-        .local_x = base.local_x,
-        .local_z = base.local_z,
+        .local_x = frame_sign * base.local_x,
+        .local_z = frame_sign * base.local_z,
         .local_yaw = base.local_yaw,
         .source = SoldierAnchorSource::BaseLayout,
     };
@@ -718,6 +720,59 @@ auto soldier_spatial_anchors(const Engine::Core::Entity& entity)
   return soldier_spatial_anchors(entity, resolve_layout(entity));
 }
 
+auto face_about_in_place(Engine::Core::Entity& entity) -> bool {
+  auto* traversal =
+      entity.get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
+  auto* transform = entity.get_component<Engine::Core::TransformComponent>();
+  if (traversal == nullptr || transform == nullptr) {
+    return false;
+  }
+
+  transform->rotation.y += transform->rotation.y > 0.0F ? -180.0F : 180.0F;
+  traversal->about_faced = !traversal->about_faced;
+  for (auto& slot : traversal->slot_states) {
+    slot.start_local_x = -slot.start_local_x;
+    slot.start_local_z = -slot.start_local_z;
+    slot.previous_local_x = -slot.previous_local_x;
+    slot.previous_local_z = -slot.previous_local_z;
+    slot.current_local_x = -slot.current_local_x;
+    slot.current_local_z = -slot.current_local_z;
+    slot.target_local_x = -slot.target_local_x;
+    slot.target_local_z = -slot.target_local_z;
+    slot.velocity_x = -slot.velocity_x;
+    slot.velocity_z = -slot.velocity_z;
+  }
+  ++traversal->slot_states_revision;
+
+  if (auto* presentation =
+          entity.get_component<Engine::Core::FormationPresentationComponent>()) {
+    for (auto& soldier : presentation->soldiers) {
+      soldier.local_x = -soldier.local_x;
+      soldier.local_z = -soldier.local_z;
+      soldier.previous_local_x = -soldier.previous_local_x;
+      soldier.previous_local_z = -soldier.previous_local_z;
+      soldier.relocation_velocity_x = -soldier.relocation_velocity_x;
+      soldier.relocation_velocity_z = -soldier.relocation_velocity_z;
+      soldier.contact_offset_x = -soldier.contact_offset_x;
+      soldier.contact_offset_z = -soldier.contact_offset_z;
+    }
+    ++presentation->revision;
+  }
+
+  if (auto* casualties =
+          entity.get_component<Engine::Core::SoldierCasualtyAnimationComponent>()) {
+
+    for (auto& entry : casualties->entries) {
+      entry.local_x = -entry.local_x;
+      entry.local_z = -entry.local_z;
+      entry.local_yaw += 180.0F;
+      entry.launch_velocity_x = -entry.launch_velocity_x;
+      entry.launch_velocity_z = -entry.launch_velocity_z;
+    }
+  }
+  return true;
+}
+
 auto formation_turn_radius(const Engine::Core::Entity& entity) -> float {
   std::uint64_t const signature = layout_signature(entity);
   auto cached = g_layout_cache.find(cache_key(entity));
@@ -740,90 +795,35 @@ auto formation_lateral_half_extent(const FormationLayout& layout) -> float {
   return extent;
 }
 
-auto narrow_file_depth(const FormationLayout& layout,
-                       std::uint32_t files,
-                       float rank_spacing) -> float {
-  int const count = std::max(1, static_cast<int>(layout.all_slots.size()));
-  int const cols = std::clamp(static_cast<int>(files), 1, count);
-  int const rows = (count + cols - 1) / cols;
-  return static_cast<float>(std::max(0, rows - 1)) * rank_spacing;
-}
-
-void narrow_file_slots_into(const FormationLayout& layout,
-                            std::uint32_t files,
-                            float file_spacing,
-                            float rank_spacing,
-                            std::vector<SoldierSlot>& result) {
-  result.assign(layout.all_slots.begin(), layout.all_slots.end());
-  if (result.empty()) {
-    return;
+auto minimum_formation_scale(const FormationLayout& layout) -> float {
+  float nearest = std::numeric_limits<float>::infinity();
+  for (std::size_t first = 0; first < layout.all_slots.size(); ++first) {
+    for (std::size_t second = first + 1; second < layout.all_slots.size(); ++second) {
+      auto const& a = layout.all_slots[first];
+      auto const& b = layout.all_slots[second];
+      float const distance = std::hypot(a.local_x - b.local_x, a.local_z - b.local_z);
+      if (distance > 0.001F) {
+        nearest = std::min(nearest, distance);
+      }
+    }
   }
-  int const count = static_cast<int>(result.size());
-  int const base_rows = std::max(1, layout.rows);
-  int const cols = std::clamp(static_cast<int>(files), 1, count);
-  int const rows = (count + cols - 1) / cols;
-
-  thread_local std::vector<std::uint16_t> filing_order;
-  filing_order.resize(result.size());
-  std::iota(filing_order.begin(), filing_order.end(), std::uint16_t{0});
-  std::stable_sort(filing_order.begin(),
-                   filing_order.end(),
-                   [&result, base_rows](std::uint16_t left, std::uint16_t right) {
-                     auto const& first = result[left];
-                     auto const& second = result[right];
-                     int const first_rank = base_rows - 1 - first.row;
-                     int const second_rank = base_rows - 1 - second.row;
-                     if (first_rank != second_rank) {
-                       return first_rank < second_rank;
-                     }
-                     float const first_flank = std::abs(first.local_x);
-                     float const second_flank = std::abs(second.local_x);
-                     if (std::abs(first_flank - second_flank) > 0.01F) {
-                       return first_flank < second_flank;
-                     }
-                     return first.local_x < second.local_x;
-                   });
-
-  for (int position = 0; position < count; ++position) {
-    auto& slot = result[filing_order[static_cast<std::size_t>(position)]];
-    int const row = position / cols;
-    int const file = position % cols;
-    int const rank_files = std::min(cols, count - (row * cols));
-    slot.row = static_cast<std::uint16_t>(row);
-    slot.col = static_cast<std::uint16_t>(file);
-    slot.local_x =
-        (static_cast<float>(file) - (0.5F * static_cast<float>(rank_files - 1))) *
-        file_spacing;
-    slot.local_z = ((0.5F * static_cast<float>(rows - 1)) - static_cast<float>(row)) *
-                   rank_spacing;
-    slot.local_yaw = 0.0F;
-  }
+  return std::isfinite(nearest)
+             ? std::min(1.0F,
+                        Game::Formation::TraversalPolicy::compact_spacing(
+                            layout.body_radius, nearest) /
+                            nearest)
+             : 1.0F;
 }
 
 auto formation_navigation_clearance(const Engine::Core::Entity& entity) -> float {
   auto const layout = resolve_layout(entity);
+  float const scale = minimum_formation_scale(layout);
   float lateral_extent = layout.body_radius;
-  float minimum_z = 0.0F;
-  float maximum_z = 0.0F;
   for (auto const& slot : layout.live_slots) {
     lateral_extent =
-        std::max(lateral_extent, std::abs(slot.local_x) + layout.body_radius);
-    minimum_z = std::min(minimum_z, slot.local_z - layout.body_radius);
-    maximum_z = std::max(maximum_z, slot.local_z + layout.body_radius);
+        std::max(lateral_extent, std::abs(slot.local_x) * scale + layout.body_radius);
   }
-  if (layout.live_slots.size() < 20U) {
-    return std::max(0.1F, lateral_extent);
-  }
-
-  float const compact_spacing = Game::Formation::TraversalPolicy::compact_spacing(
-      layout.body_radius, layout.spacing);
-  float const single_file_depth =
-      layout.body_radius * 2.0F +
-      static_cast<float>(layout.live_slots.size() - 1U) * compact_spacing;
-  float const normal_depth = std::max(layout.spacing, maximum_z - minimum_z);
-  float const depth_ratio = single_file_depth / normal_depth;
-  float const depth_premium = std::clamp((depth_ratio - 2.0F) * 0.12F, 0.0F, 0.75F);
-  return std::max(0.1F, lateral_extent * (1.0F + depth_premium));
+  return std::max(0.1F, lateral_extent);
 }
 
 auto has_formation_slots(const Engine::Core::Entity& entity) -> bool {

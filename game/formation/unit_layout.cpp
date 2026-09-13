@@ -6,6 +6,8 @@
 #include <numbers>
 #include <utility>
 
+#include "../util/planar_math.h"
+
 namespace Game::Formation {
 
 namespace {
@@ -1012,8 +1014,7 @@ auto UnitLayoutSystem::rows_for(int count, int max_per_row) -> int {
 namespace {
 
 [[nodiscard]] auto shortest_yaw_delta(float from, float to) -> float {
-  float delta = std::fmod(to - from + 540.0F, 360.0F) - 180.0F;
-  return delta;
+  return Game::Systems::signed_yaw_delta(from, to);
 }
 
 } // namespace

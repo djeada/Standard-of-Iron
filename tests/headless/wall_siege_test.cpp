@@ -322,8 +322,26 @@ TEST_F(WallSiegeTest, FrontRankVisuallyReachesTheFacadeFromWalkableGround) {
       << "the grid-controlled unit root stopped a formation-depth away from the wall";
   EXPECT_GE(minimum_visible_facade_gap, -0.05F)
       << "the rendered formation crossed through the attacked wall facade";
-  EXPECT_LE(closest_visible_gap, contact_clearance + 0.15F)
-      << "the front rank did not visually reach the wall it was attacking";
+  {
+    auto const* facts =
+        raider_entity->get_component<Engine::Core::MovementFactsComponent>();
+    auto const* movement =
+        raider_entity->get_component<Engine::Core::MovementComponent>();
+    auto const* attack = raider_entity->get_component<Engine::Core::AttackComponent>();
+    EXPECT_LE(closest_visible_gap, contact_clearance + 0.15F)
+        << "the front rank did not visually reach the wall it was attacking; root gap "
+        << root_surface.distance << " state "
+        << (facts != nullptr ? Engine::Core::movement_state_name(facts->progress.state)
+                             : "?")
+        << " rung "
+        << (facts != nullptr ? static_cast<int>(facts->progress.stall.rung) : -1)
+        << " arrived_short " << (facts != nullptr && facts->progress.arrived_short)
+        << " target " << (movement != nullptr && movement->get_has_target())
+        << " approach "
+        << (movement != nullptr ? movement->get_structure_approach_target() : 0)
+        << " lock " << (attack != nullptr && attack->in_melee_lock) << " contact "
+        << presentation->soldiers.size();
+  }
   EXPECT_LT(health_of(*session, wall), 4000);
 }
 

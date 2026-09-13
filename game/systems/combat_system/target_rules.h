@@ -32,6 +32,8 @@ enum class TargetRefusal : std::uint8_t {
 struct TargetQuery {
   EngagementIntent intent = EngagementIntent::AutoAcquired;
   bool allow_buildings = true;
+
+  bool in_reach = false;
 };
 
 [[nodiscard]] auto evaluate_target(const OwnerRegistry& owners,

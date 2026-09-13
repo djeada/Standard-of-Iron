@@ -527,8 +527,8 @@ auto find_nearest_enemy(Engine::Core::Entity* unit,
                         float max_range,
                         std::uint64_t* scan_iterations,
                         const TargetFilter& accept,
-                        Engine::Core::Entity** nearest_considered)
-    -> Engine::Core::Entity* {
+                        Engine::Core::Entity** nearest_considered,
+                        TargetQuery query) -> Engine::Core::Entity* {
   auto* unit_comp = unit->get_component<Engine::Core::UnitComponent>();
   auto* unit_transform = unit->get_component<Engine::Core::TransformComponent>();
   if ((unit_comp == nullptr) || (unit_transform == nullptr)) {
@@ -582,8 +582,7 @@ auto find_nearest_enemy(Engine::Core::Entity* unit,
 
     if (evaluate_target(target,
                         query_context.hostile(attacker_owner_id, target_unit->owner_id),
-                        {.intent = EngagementIntent::AutoAcquired,
-                         .allow_buildings = false}) != TargetRefusal::None) {
+                        query) != TargetRefusal::None) {
       continue;
     }
 

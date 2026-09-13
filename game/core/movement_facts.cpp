@@ -131,8 +131,6 @@ auto movement_recovery_rung_name(MovementRecoveryRung rung) noexcept -> const ch
     return "Replan";
   case MovementRecoveryRung::Sidestep:
     return "Sidestep";
-  case MovementRecoveryRung::RelaxFormation:
-    return "RelaxFormation";
   case MovementRecoveryRung::Abandoned:
     return "Abandoned";
   }

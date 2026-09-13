@@ -214,6 +214,9 @@ struct GroundMarkerCmd {
 
   Game::Accessibility::TeamPattern pattern{Game::Accessibility::TeamPattern::Solid};
   bool focused = false;
+
+  float occluded_alpha = 0.0F;
+
   TerrainSurfaceCmd::HeightResources height{};
   CommandPriority priority{CommandPriority::Critical};
 };

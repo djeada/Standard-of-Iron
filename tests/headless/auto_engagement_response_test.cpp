@@ -1,6 +1,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "game/core/component.h"
@@ -189,11 +190,23 @@ TEST_F(AutoEngagementResponseTest, SwordsmenGoToTheAidOfAnAllyBittenByWolves) {
   auto& world = m_session->world();
   Game::Systems::Combat::deal_damage(&world, world.get_entity(victim), 10, wolf);
 
-  run_for(1.0);
+  std::vector<bool> answered(escort.size(), false);
+  const double step = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 1.0; elapsed += step) {
+    run_for(step);
+    for (std::size_t index = 0; index < escort.size(); ++index) {
+      answered[index] = answered[index] || target_of(escort[index]) == wolf;
+    }
+  }
 
-  for (auto const swordsman : escort) {
-    EXPECT_EQ(target_of(swordsman), wolf)
-        << "swordsman " << swordsman << " watched a wolf maul the man beside him";
+  auto const* wolf_unit =
+      entity(wolf) != nullptr ? entity(wolf)->get_component<UnitComponent>() : nullptr;
+  bool const wolf_is_down = wolf_unit == nullptr || wolf_unit->health <= 0;
+  for (std::size_t index = 0; index < escort.size(); ++index) {
+    EXPECT_TRUE(answered[index] && (target_of(escort[index]) == wolf || wolf_is_down))
+        << "swordsman " << escort[index] << " watched a wolf maul the man beside him"
+        << "; wolf " << (wolf_is_down ? "down" : "alive") << ", his target "
+        << target_of(escort[index]);
   }
 }
 
@@ -395,7 +408,75 @@ TEST_F(AutoEngagementResponseTest, ANoncombatantNeverPicksItsOwnFight) {
 
   run_for(2.0);
 
-  EXPECT_EQ(target_of(builder), 0U) << "a builder went looking for a fight";
+  auto const* builder_attack = entity(builder)->get_component<AttackComponent>();
+  bool const locked_by_raider = builder_attack != nullptr &&
+                                builder_attack->in_melee_lock &&
+                                builder_attack->melee_lock_target_id == raider;
+  if (locked_by_raider) {
+    EXPECT_EQ(target_of(builder), raider) << "a locked builder fought someone else";
+  } else {
+    EXPECT_EQ(target_of(builder), 0U) << "a builder went looking for a fight";
+  }
+  auto const* record = EngagementTrace::instance().find(builder);
+  ASSERT_NE(record, nullptr);
+  EXPECT_EQ(record->outcome, Game::Systems::Combat::EngagementOutcome::NoCombatRole)
+      << "auto-engagement acquired a target for a builder";
 }
 
 } // namespace
+
+TEST_F(AutoEngagementResponseTest, AUnitThatWalksIntoAnEnemyBlockIsLockedOnContact) {
+  const EntityID walker = spawn(Game::Units::SpawnType::Knight, k_player, 0.0F, 0.0F);
+  const EntityID enemy = spawn(Game::Units::SpawnType::Knight, k_enemy, 6.0F, 0.0F);
+  ASSERT_NE(walker, 0U);
+  ASSERT_NE(enemy, 0U);
+
+  auto& world = m_session->world();
+  Game::Systems::CommandService::move_unit(world, walker, QVector3D(14.0F, 0.0F, 0.0F));
+
+  auto locked = [&](EntityID id) {
+    auto const* attack = entity(id)->get_component<AttackComponent>();
+    return attack != nullptr && attack->in_melee_lock;
+  };
+  auto position = [&](EntityID id) {
+    auto const* transform = entity(id)->get_component<TransformComponent>();
+    return QVector3D(transform->position.x, 0.0F, transform->position.z);
+  };
+  auto gap = [&]() {
+    return (position(walker) - position(enemy)).length();
+  };
+
+  const double step = m_session->clock().tick_seconds();
+  double first_touch = -1.0;
+  double first_lock = -1.0;
+  float closest = 1.0e9F;
+  for (double elapsed = 0.0; elapsed < 6.0 && first_lock < 0.0; elapsed += step) {
+    run_for(step);
+    closest = std::min(closest, gap());
+    if (first_touch < 0.0 && gap() <= 1.5F) {
+      first_touch = elapsed;
+    }
+    if (locked(walker) || locked(enemy)) {
+      first_lock = elapsed;
+    }
+  }
+  ASSERT_GE(first_touch, 0.0) << "the walker never reached the enemy; closest "
+                              << closest << " m, now at " << position(walker).x();
+  ASSERT_GE(first_lock, 0.0) << "the bodies touched at " << first_touch
+                             << " s and nobody was locked; the walker is at "
+                             << position(walker).x() << " with the enemy at "
+                             << position(enemy).x();
+  EXPECT_LE(first_lock - first_touch, 0.5)
+      << "the lock came " << (first_lock - first_touch) << " s after contact";
+  EXPECT_TRUE(locked(walker)) << "the enemy locked but the walker was left free";
+  EXPECT_TRUE(locked(enemy)) << "the walker locked but the enemy was left free";
+
+  const QVector3D held_at = position(walker);
+  Game::Systems::CommandService::move_unit(
+      world, walker, QVector3D(-12.0F, 0.0F, 0.0F));
+  run_for(3.0);
+  EXPECT_TRUE(locked(walker)) << "a move order let the walker out of the lock";
+  EXPECT_LE((position(walker) - held_at).length(), 1.5F)
+      << "the walker walked " << (position(walker) - held_at).length()
+      << " m away from a melee lock";
+}
