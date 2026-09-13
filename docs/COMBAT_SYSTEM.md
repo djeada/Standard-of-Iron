@@ -90,13 +90,13 @@ Combat::evaluate_target(
 
 The result is a `TargetRefusal` value.
 
-| Result | Meaning |
-| --- | --- |
-| `None` | the target is allowed |
-| `NoTarget` | null, dead, pending removal, or not a combat target |
-| `SelfOrAllied` | target belongs to the attacker or an allied team |
-| `Passive` | passive wildlife is protected from automatic acquisition |
-| `Structure` | the target is a building while the query disallows buildings |
+| Result         | Meaning                                                      |
+| -------------- | ------------------------------------------------------------ |
+| `None`         | the target is allowed                                        |
+| `NoTarget`     | null, dead, pending removal, or not a combat target          |
+| `SelfOrAllied` | target belongs to the attacker or an allied team             |
+| `Passive`      | passive wildlife is protected from automatic acquisition     |
+| `Structure`    | the target is a building while the query disallows buildings |
 
 `may_attack()` exposes the same rule as a boolean when the caller does not need the refusal reason.
 
@@ -227,12 +227,12 @@ RTS melee bodies that participate in the defensive exchange model use `combat_sy
 
 A swing can resolve as:
 
-| Outcome | Damage behavior | Presentation |
-| --- | --- | --- |
-| `Clean` | clean boosted contact | normal hit/flinch |
-| `Heavy` | stronger contact | heavier stagger |
-| `Blocked` | reduced damage | guard/block response |
-| `Evaded` | no contact damage | evade/whiff response |
+| Outcome   | Damage behavior       | Presentation         |
+| --------- | --------------------- | -------------------- |
+| `Clean`   | clean boosted contact | normal hit/flinch    |
+| `Heavy`   | stronger contact      | heavier stagger      |
+| `Blocked` | reduced damage        | guard/block response |
+| `Evaded`  | no contact damage     | evade/whiff response |
 
 The exchange sequence is deterministic rather than random. Attacker/target identity selects the phase of the exchange sequence, preserving replay stability while still producing varied-looking contact outcomes.
 
@@ -413,16 +413,16 @@ That prevents a visual symptom from being mistaken for an authoritative damage b
 
 ## Source map
 
-| Concern | Source |
-| --- | --- |
-| Combat orchestration | `game/systems/combat_system.cpp` |
-| Shared target rules | `game/systems/combat_system/target_rules.*` |
-| Normal attacks | `game/systems/combat_system/attack_processor.cpp` |
-| Damage application | `game/systems/combat_system/damage_application.cpp` |
-| Melee exchange | `game/systems/combat_system/melee_exchange.*` |
-| Threat/engagement/commitment | `game/systems/combat_system/` |
-| Counter constants | `game/systems/combat_system/combat_types.h` |
-| Troop combat data | `assets/data/troops/` and nation data |
-| Balance fixtures | `assets/balance/`, `tools/balance_sim/` |
+| Concern                      | Source                                              |
+| ---------------------------- | --------------------------------------------------- |
+| Combat orchestration         | `game/systems/combat_system.cpp`                    |
+| Shared target rules          | `game/systems/combat_system/target_rules.*`         |
+| Normal attacks               | `game/systems/combat_system/attack_processor.cpp`   |
+| Damage application           | `game/systems/combat_system/damage_application.cpp` |
+| Melee exchange               | `game/systems/combat_system/melee_exchange.*`       |
+| Threat/engagement/commitment | `game/systems/combat_system/`                       |
+| Counter constants            | `game/systems/combat_system/combat_types.h`         |
+| Troop combat data            | `assets/data/troops/` and nation data               |
+| Balance fixtures             | `assets/balance/`, `tools/balance_sim/`             |
 
 The processor order in `CombatSystem::update()` and the shared target rules are the authoritative current contract. Historical bug narratives are not required to explain how the combat system works now.

@@ -461,15 +461,15 @@ These invariants are more important than any individual strategy number because 
 
 ## Source map
 
-| Concern | Source |
-| --- | --- |
-| AI snapshot/context/reasoning | `game/systems/ai_system/` |
-| Strategy/posture/personality/difficulty | `game/systems/ai_system/ai_strategy.cpp` |
-| Strategic committed waves | `game/systems/ai_system/ai_attack_wave.cpp` |
-| Commander doctrines | `assets/data/ai/doctrines.json` |
-| Town plans | `assets/data/ai/town_plans.json` |
-| Mission AI setup/waves | `game/map/mission_definition.h`, mission assets |
-| Formation behavior | formation planner/runtime under `game/formation/` |
-| AI startup readiness | mission startup/game engine path |
+| Concern                                 | Source                                            |
+| --------------------------------------- | ------------------------------------------------- |
+| AI snapshot/context/reasoning           | `game/systems/ai_system/`                         |
+| Strategy/posture/personality/difficulty | `game/systems/ai_system/ai_strategy.cpp`          |
+| Strategic committed waves               | `game/systems/ai_system/ai_attack_wave.cpp`       |
+| Commander doctrines                     | `assets/data/ai/doctrines.json`                   |
+| Town plans                              | `assets/data/ai/town_plans.json`                  |
+| Mission AI setup/waves                  | `game/map/mission_definition.h`, mission assets   |
+| Formation behavior                      | formation planner/runtime under `game/formation/` |
+| AI startup readiness                    | mission startup/game engine path                  |
 
 The capabilities in this document describe current runtime paths. They are not a backlog or an estimate of what the AI might support later.

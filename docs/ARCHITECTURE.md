@@ -44,15 +44,15 @@ The exact domain split is reflected in the root CMake graph. The important archi
 
 A running match has several kinds of state, but only one of them is authoritative gameplay state.
 
-| State class | Owner | Examples |
-| --- | --- | --- |
-| Authoritative simulation | `SessionContext` / `World` and simulation services | entities, resources, ownership, combat state, mission state, RNG |
-| Commands | `CommandQueue` and command dispatch | player orders, AI orders, replay commands, scripted commands |
-| Derived simulation caches | subsystem-owned runtime services | spatial indexes, movement facts, collision indexes, engagement caches |
-| Presentation snapshots | simulation-published immutable/read-only data | render snapshot, minimap/read-model state |
-| Application/UI state | `app/`, view models, QML | selected panel, menus, settings, transient UI interaction |
-| Renderer caches | renderer/backend | GPU resources, prepared meshes, animation presentation data |
-| Persistent storage | save database + snapshot formats | serialized world/session state, campaign progress, save metadata |
+| State class               | Owner                                              | Examples                                                              |
+| ------------------------- | -------------------------------------------------- | --------------------------------------------------------------------- |
+| Authoritative simulation  | `SessionContext` / `World` and simulation services | entities, resources, ownership, combat state, mission state, RNG      |
+| Commands                  | `CommandQueue` and command dispatch                | player orders, AI orders, replay commands, scripted commands          |
+| Derived simulation caches | subsystem-owned runtime services                   | spatial indexes, movement facts, collision indexes, engagement caches |
+| Presentation snapshots    | simulation-published immutable/read-only data      | render snapshot, minimap/read-model state                             |
+| Application/UI state      | `app/`, view models, QML                           | selected panel, menus, settings, transient UI interaction             |
+| Renderer caches           | renderer/backend                                   | GPU resources, prepared meshes, animation presentation data           |
+| Persistent storage        | save database + snapshot formats                   | serialized world/session state, campaign progress, save metadata      |
 
 The distinction matters because it determines what can be rebuilt, what must be serialized, and what can safely lag behind by a presentation frame.
 
@@ -288,17 +288,17 @@ These are current implementation constraints. They are not a list of proposed fe
 
 ## Reading the code by concern
 
-| Concern | Primary locations |
-| --- | --- |
-| ECS and entity identity | `game/core/`, `engine_core` target |
-| Session ownership | `game/session/` |
-| Typed commands | `game/command/` |
-| AI | `game/systems/ai_system/` |
-| Missions/campaign | `game/map/`, mission/campaign assets |
-| Persistence | `game/save/`, `game/systems/save_*`, `app/persistence/` |
-| Rendering | `render/`, `scene/`, `animation/` |
-| UI/application | `app/`, `ui/` |
-| Validation/policy | `scripts/`, `tests/architecture/` |
+| Concern                 | Primary locations                                       |
+| ----------------------- | ------------------------------------------------------- |
+| ECS and entity identity | `game/core/`, `engine_core` target                      |
+| Session ownership       | `game/session/`                                         |
+| Typed commands          | `game/command/`                                         |
+| AI                      | `game/systems/ai_system/`                               |
+| Missions/campaign       | `game/map/`, mission/campaign assets                    |
+| Persistence             | `game/save/`, `game/systems/save_*`, `app/persistence/` |
+| Rendering               | `render/`, `scene/`, `animation/`                       |
+| UI/application          | `app/`, `ui/`                                           |
+| Validation/policy       | `scripts/`, `tests/architecture/`                       |
 
 ## Related architecture references
 

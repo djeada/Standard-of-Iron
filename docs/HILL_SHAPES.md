@@ -6,15 +6,15 @@ The footprint feeds the same distance-field terrain logic used for crown height,
 
 ## Available hill shapes
 
-| `shape`          | What it represents                                             | Sized by                                           |
-| ---------------- | -------------------------------------------------------------- | -------------------------------------------------- |
-| `blob` (default) | Organic mound                                                  | `radius`, or `width` / `depth`                     |
-| `corridor`       | Straight capsule ridge along its long axis                     | `width` / `depth`, `thickness`                     |
-| `arc`            | Elliptical band: boomerang, crescent, or corner wrap           | `width` / `depth`, `thickness`, `arc`, `arc_start` |
-| `elbow`          | Two straight arms meeting at a hard corner                     | `width` / `depth`, `thickness`, `arc`              |
-| `ring`           | Closed band around a hollow interior                           | `width` / `depth`, `thickness`                     |
-| `path`           | Band following authored spine points                           | `points`, `thickness`                              |
-| `mask`           | Exact cells listed in `cells`                                  | `cells`                                            |
+| `shape`          | What it represents                                   | Sized by                                           |
+| ---------------- | ---------------------------------------------------- | -------------------------------------------------- |
+| `blob` (default) | Organic mound                                        | `radius`, or `width` / `depth`                     |
+| `corridor`       | Straight capsule ridge along its long axis           | `width` / `depth`, `thickness`                     |
+| `arc`            | Elliptical band: boomerang, crescent, or corner wrap | `width` / `depth`, `thickness`, `arc`, `arc_start` |
+| `elbow`          | Two straight arms meeting at a hard corner           | `width` / `depth`, `thickness`, `arc`              |
+| `ring`           | Closed band around a hollow interior                 | `width` / `depth`, `thickness`                     |
+| `path`           | Band following authored spine points                 | `points`, `thickness`                              |
+| `mask`           | Exact cells listed in `cells`                        | `cells`                                            |
 
 Accepted aliases are:
 
@@ -59,8 +59,8 @@ For an `arc`, `arc_start` defines where the sweep begins, measured in degrees fr
 
 ```json
 [
-  { "x": 40, "z": 20 },
-  { "x": 52, "z": 26 }
+    { "x": 40, "z": 20 },
+    { "x": 52, "z": 26 }
 ]
 ```
 
@@ -80,21 +80,21 @@ The following hill creates a tapered 100° arc around a barracks and places both
 
 ```json
 {
-  "type": "hill",
-  "shape": "arc",
-  "x": 20,
-  "z": 100,
-  "width": 52,
-  "depth": 52,
-  "thickness": 8,
-  "arc": 100,
-  "arc_start": -95,
-  "taper": 0.35,
-  "height": 2.6,
-  "entrances": [
-    { "x": 22.4, "z": 86.2 },
-    { "x": 33.8, "z": 97.6 }
-  ]
+    "type": "hill",
+    "shape": "arc",
+    "x": 20,
+    "z": 100,
+    "width": 52,
+    "depth": 52,
+    "thickness": 8,
+    "arc": 100,
+    "arc_start": -95,
+    "taper": 0.35,
+    "height": 2.6,
+    "entrances": [
+        { "x": 22.4, "z": 86.2 },
+        { "x": 33.8, "z": 97.6 }
+    ]
 }
 ```
 
@@ -116,12 +116,12 @@ A `terrain` entry of type `flat` defines an absolute-height raised feature insid
 
 Flat features do not use hill entrance rules or an unwalkable rim, so troops can approach them from any side. They are suitable for terraces, city shelves, raised forums, and broad traversable mountains.
 
-| Field             | Meaning                                                                         |
-| ----------------- | ------------------------------------------------------------------------------- |
-| `width` / `depth` | Ellipse dimensions; `radius` is the fallback when neither is supplied          |
-| `height`          | Absolute height inside the plateau                                              |
+| Field             | Meaning                                                                            |
+| ----------------- | ---------------------------------------------------------------------------------- |
+| `width` / `depth` | Ellipse dimensions; `radius` is the fallback when neither is supplied              |
+| `height`          | Absolute height inside the plateau                                                 |
 | `taper`           | Fraction of the radius occupied by the sloped rim, from `0` to `1`; default `0.20` |
-| `raise`           | Keep the higher of existing ground and this feature instead of overwriting it   |
+| `raise`           | Keep the higher of existing ground and this feature instead of overwriting it      |
 
 ### `taper`
 
@@ -137,14 +137,14 @@ With `"raise": true`, a feature can only increase terrain height. A terrace and 
 
 ```json
 {
-  "type": "flat",
-  "x": 0,
-  "z": -306,
-  "width": 300,
-  "depth": 300,
-  "height": 58,
-  "taper": 0.49,
-  "raise": true
+    "type": "flat",
+    "x": 0,
+    "z": -306,
+    "width": 300,
+    "depth": 300,
+    "height": 58,
+    "taper": 0.49,
+    "raise": true
 }
 ```
 

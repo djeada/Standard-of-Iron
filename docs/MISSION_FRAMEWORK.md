@@ -56,14 +56,14 @@ A minimal mission shape is:
 
 ```json
 {
-  "id": "defend_outpost",
-  "title": "Defend the Outpost",
-  "summary": "Hold the position against repeated attacks.",
-  "map_path": ":/assets/maps/map_forest.json",
-  "player_setup": {},
-  "ai_setups": [],
-  "victory_conditions": [],
-  "defeat_conditions": []
+    "id": "defend_outpost",
+    "title": "Defend the Outpost",
+    "summary": "Hold the position against repeated attacks.",
+    "map_path": ":/assets/maps/map_forest.json",
+    "player_setup": {},
+    "ai_setups": [],
+    "victory_conditions": [],
+    "defeat_conditions": []
 }
 ```
 
@@ -78,14 +78,14 @@ A useful rule is:
 
 Examples:
 
-| Map concern | Mission concern |
-| --- | --- |
-| terrain height and shape | survive for a duration |
-| rivers, bridges, walls | capture a structure |
-| authored spawn positions | AI strategy/posture |
-| commander spawn entity | commander dialogue trigger |
-| camera/environment | wave timing |
-| named regions | objective referring to a region |
+| Map concern              | Mission concern                 |
+| ------------------------ | ------------------------------- |
+| terrain height and shape | survive for a duration          |
+| rivers, bridges, walls   | capture a structure             |
+| authored spawn positions | AI strategy/posture             |
+| commander spawn entity   | commander dialogue trigger      |
+| camera/environment       | wave timing                     |
+| named regions            | objective referring to a region |
 
 This boundary keeps mission logic from duplicating battlefield geometry.
 
@@ -148,21 +148,21 @@ Campaign/mission tests verify expected commander coverage and nation/mission con
 
 Each entry in `ai_setups[]` defines one computer-controlled force.
 
-| Field | Purpose |
-| --- | --- |
-| `id` | mission-local force identifier |
-| `nation` | nation/roster selection |
-| `faction` | mission/UI faction metadata |
-| `color` | owner colour |
-| `difficulty` | AI execution/wave-strength tuning |
-| `team_id` | alliance grouping between owners |
-| `strategy` | strategic preset |
-| `posture` | garrison or field behavior |
-| `personality` | aggression/defense/harassment modifiers |
-| `starting_units` | mission-level starting troops |
-| `starting_buildings` | mission-level starting structures |
-| `wave_escalation` | per-wave strength growth |
-| `waves` | scripted reinforcement waves |
+| Field                | Purpose                                 |
+| -------------------- | --------------------------------------- |
+| `id`                 | mission-local force identifier          |
+| `nation`             | nation/roster selection                 |
+| `faction`            | mission/UI faction metadata             |
+| `color`              | owner colour                            |
+| `difficulty`         | AI execution/wave-strength tuning       |
+| `team_id`            | alliance grouping between owners        |
+| `strategy`           | strategic preset                        |
+| `posture`            | garrison or field behavior              |
+| `personality`        | aggression/defense/harassment modifiers |
+| `starting_units`     | mission-level starting troops           |
+| `starting_buildings` | mission-level starting structures       |
+| `wave_escalation`    | per-wave strength growth                |
+| `waves`              | scripted reinforcement waves            |
 
 Personality values default to `0.5` when omitted.
 
@@ -271,14 +271,14 @@ This guarantees that an authored role in a wave does not disappear simply becaus
 
 `game/map/wave_archetype_catalog.cpp` defines these built-in archetypes:
 
-| ID | Composition role |
-| --- | --- |
-| `probe` | light swordsman/archer column |
-| `assault` | mixed spear/sword/archer attack |
-| `cavalry_flank` | mounted swordsmen and horse archers |
-| `skirmish_screen` | archers, horse archers, and spears |
-| `siege_column` | catapult with infantry escort |
-| `elite_guard` | heavy mixed force with elite swordsmen |
+| ID                | Composition role                       |
+| ----------------- | -------------------------------------- |
+| `probe`           | light swordsman/archer column          |
+| `assault`         | mixed spear/sword/archer attack        |
+| `cavalry_flank`   | mounted swordsmen and horse archers    |
+| `skirmish_screen` | archers, horse archers, and spears     |
+| `siege_column`    | catapult with infantry escort          |
+| `elite_guard`     | heavy mixed force with elite swordsmen |
 
 If `assets/data/waves/archetypes.json` exists, `WaveArchetypeCatalog` loads it as an overlay:
 
@@ -301,18 +301,18 @@ When stalled by a barrier on the route to its objective, the assault path can us
 
 The current mission condition types are:
 
-| Type | Required/important data |
-| --- | --- |
-| `destroy_all_enemies` | no extra field; tracks enemy barracks for elimination |
-| `survive_duration` | `duration` |
-| `control_structures` | structure type(s), optional `min_count` |
-| `capture_structures` | structure type(s), optional `min_count` |
-| `clear_undead_zone` | `zone_id` |
-| `purify_shrine` | `zone_id` |
-| `survive_undead_wave` | `zone_id`, optional `wave_count` |
-| `survive_waves` | optional `wave_count` |
-| `accumulate_resources` | positive `resources` map |
-| `eliminate_commanders` | no extra field |
+| Type                   | Required/important data                               |
+| ---------------------- | ----------------------------------------------------- |
+| `destroy_all_enemies`  | no extra field; tracks enemy barracks for elimination |
+| `survive_duration`     | `duration`                                            |
+| `control_structures`   | structure type(s), optional `min_count`               |
+| `capture_structures`   | structure type(s), optional `min_count`               |
+| `clear_undead_zone`    | `zone_id`                                             |
+| `purify_shrine`        | `zone_id`                                             |
+| `survive_undead_wave`  | `zone_id`, optional `wave_count`                      |
+| `survive_waves`        | optional `wave_count`                                 |
+| `accumulate_resources` | positive `resources` map                              |
+| `eliminate_commanders` | no extra field                                        |
 
 Mission JSON is therefore declarative: it names a supported rule and supplies its parameters; the victory system owns evaluation.
 
@@ -359,13 +359,13 @@ Authors should prefer current explicit structure names rather than relying on co
 
 Supported defeat condition types are:
 
-| Type | Meaning |
-| --- | --- |
-| `lose_all_units` | no local units remain |
-| `lose_commander` | commander is lost |
+| Type                       | Meaning                                                   |
+| -------------------------- | --------------------------------------------------------- |
+| `lose_all_units`           | no local units remain                                     |
+| `lose_commander`           | commander is lost                                         |
 | `only_commander_remaining` | commander is the only remaining force after the rule arms |
-| `time_limit` | defeat after `duration` |
-| `lose_structure` | all tracked structure types are lost |
+| `time_limit`               | defeat after `duration`                                   |
+| `lose_structure`           | all tracked structure types are lost                      |
 
 If a mission translates no explicit defeat rules, the runtime adds the commander-centered default pair:
 
@@ -611,17 +611,17 @@ Several mistakes are avoided by keeping responsibilities in the correct file/sys
 
 ## Source map
 
-| Concern | Source |
-| --- | --- |
-| Mission schema | `game/map/mission_definition.h` |
-| Mission loading | mission loader/runtime under `game/map/` |
-| Victory translation | `game/map/mission_victory_rules.cpp` |
-| Wave archetypes | `game/map/wave_archetype_catalog.cpp` |
-| Wave data overlay | `assets/data/waves/archetypes.json` |
-| Mission assets | `assets/missions/` |
-| Map assets | `assets/maps/` |
-| Campaign membership | `assets/campaigns/` |
-| Strategic/assault AI | `game/systems/ai_system/` |
-| Progress persistence | save storage/persistence layer |
+| Concern              | Source                                   |
+| -------------------- | ---------------------------------------- |
+| Mission schema       | `game/map/mission_definition.h`          |
+| Mission loading      | mission loader/runtime under `game/map/` |
+| Victory translation  | `game/map/mission_victory_rules.cpp`     |
+| Wave archetypes      | `game/map/wave_archetype_catalog.cpp`    |
+| Wave data overlay    | `assets/data/waves/archetypes.json`      |
+| Mission assets       | `assets/missions/`                       |
+| Map assets           | `assets/maps/`                           |
+| Campaign membership  | `assets/campaigns/`                      |
+| Strategic/assault AI | `game/systems/ai_system/`                |
+| Progress persistence | save storage/persistence layer           |
 
 The mission framework documented here is the schema and runtime behavior implemented by the repository. Dynamic mission generation, arbitrary user-defined runtime event types, or other speculative authoring features are not part of the format unless the corresponding code and validation exist.

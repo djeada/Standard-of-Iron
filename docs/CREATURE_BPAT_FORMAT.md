@@ -35,18 +35,18 @@ That strictness keeps the binary layout deterministic: if the structure changes,
 
 The current species/profile IDs are:
 
-| ID | Species/profile |
-| ---: | --- |
-| 0 | humanoid |
-| 1 | horse |
-| 2 | elephant |
-| 3 | humanoid sword-ready |
-| 4 | humanoid spear-ready |
-| 5 | humanoid skeleton |
-| 6 | humanoid caster |
-| 7 | humanoid stave-caster |
-| 8 | sheep |
-| 9 | wolf |
+|  ID | Species/profile       |
+| --: | --------------------- |
+|   0 | humanoid              |
+|   1 | horse                 |
+|   2 | elephant              |
+|   3 | humanoid sword-ready  |
+|   4 | humanoid spear-ready  |
+|   5 | humanoid skeleton     |
+|   6 | humanoid caster       |
+|   7 | humanoid stave-caster |
+|   8 | sheep                 |
+|   9 | wolf                  |
 
 `k_species_count` is 10 and `k_max_species_id` is the wolf ID.
 
@@ -121,13 +121,13 @@ All clips share one global frame stream. The clip entry identifies the contiguou
 
 The five normalized markers are:
 
-| Marker | Meaning |
-| --- | --- |
-| `anticipation_start` | wind-up begins |
-| `weapon_release` | weapon begins travelling toward the target |
-| `contact` | impact/contact point used by melee timing |
-| `recover_unlocked` | recovery/chaining may begin |
-| `exit_safe` | clip can be interrupted/blended out safely |
+| Marker               | Meaning                                    |
+| -------------------- | ------------------------------------------ |
+| `anticipation_start` | wind-up begins                             |
+| `weapon_release`     | weapon begins travelling toward the target |
+| `contact`            | impact/contact point used by melee timing  |
+| `recover_unlocked`   | recovery/chaining may begin                |
+| `exit_safe`          | clip can be interrupted/blended out safely |
 
 These markers make action timing authored data rather than a runtime guess based on clip names or fixed frame numbers.
 
@@ -518,13 +518,13 @@ The current BPAT pipeline depends on these invariants:
 
 ## Source map
 
-| Concern | Source |
-| --- | --- |
-| Binary structures/version/IDs | `animation/bpat/bpat_format.h` |
-| Reader/validation/decoded views | `animation/bpat/bpat_reader.cpp` |
-| Bake executable | `tools/bpat_baker/main.cpp` |
-| Generated-output list | `tools/bpat_baker/CMakeLists.txt` |
-| Creature manifests/recipes | animation/creature bake sources |
-| Runtime creature rendering | renderer/animation creature paths |
+| Concern                         | Source                            |
+| ------------------------------- | --------------------------------- |
+| Binary structures/version/IDs   | `animation/bpat/bpat_format.h`    |
+| Reader/validation/decoded views | `animation/bpat/bpat_reader.cpp`  |
+| Bake executable                 | `tools/bpat_baker/main.cpp`       |
+| Generated-output list           | `tools/bpat_baker/CMakeLists.txt` |
+| Creature manifests/recipes      | animation/creature bake sources   |
+| Runtime creature rendering      | renderer/animation creature paths |
 
 The current v3 structures, reader checks, and production baker are the BPAT contract. Older generated-file assumptions or partial output lists should not be carried forward when they disagree with those sources.

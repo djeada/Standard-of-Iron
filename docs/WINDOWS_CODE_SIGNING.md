@@ -16,10 +16,10 @@ The signing step runs after the game executable is built and before Qt deploymen
 
 The workflow reads two secrets:
 
-| Secret | Purpose |
-| --- | --- |
-| `WINDOWS_CERTIFICATE` | Base64-encoded `.pfx` / PKCS #12 signing certificate and private key |
-| `WINDOWS_CERTIFICATE_PASSWORD` | Password protecting that `.pfx` export |
+| Secret                         | Purpose                                                              |
+| ------------------------------ | -------------------------------------------------------------------- |
+| `WINDOWS_CERTIFICATE`          | Base64-encoded `.pfx` / PKCS #12 signing certificate and private key |
+| `WINDOWS_CERTIFICATE_PASSWORD` | Password protecting that `.pfx` export                               |
 
 Both values must be present for signing to run.
 

@@ -35,18 +35,18 @@ The game is written in C++20 with Qt 6 and a custom tiered OpenGL renderer. Its 
 
 ## At a glance
 
-| | Current scope |
-| --- | --- |
-| Campaign | **The Barcid Road**, eight missions from the Rhône crossing to Zama |
-| Tutorial | **Field Training**, covering orders, economy, building, armies, and defence |
-| Factions | Rome and Carthage are playable; the Iron Sepulcher is a campaign/world threat |
-| Command | Top-down RTS control and direct commander combat in the same match |
-| Forces | Infantry, archers, cavalry, healers, builders, commanders, siege engines, elephants, civilians, and wildlife |
-| Formations | Nation doctrine, troop roles, authored layouts, shield formations, cavalry wedges, and army-level grouping |
-| Languages | Translation catalogues for English, German, Spanish, Brazilian Portuguese, Arabic, Turkish, Polish, and Russian |
-| Platforms | Linux, macOS, and Windows |
-| Multiplayer | The shipped application is single-player; no network multiplayer mode is wired into the current game |
-| Replay | Command recording, replay, deterministic verification, and headless replay are implemented |
+|             | Current scope                                                                                                   |
+| ----------- | --------------------------------------------------------------------------------------------------------------- |
+| Campaign    | **The Barcid Road**, eight missions from the Rhône crossing to Zama                                             |
+| Tutorial    | **Field Training**, covering orders, economy, building, armies, and defence                                     |
+| Factions    | Rome and Carthage are playable; the Iron Sepulcher is a campaign/world threat                                   |
+| Command     | Top-down RTS control and direct commander combat in the same match                                              |
+| Forces      | Infantry, archers, cavalry, healers, builders, commanders, siege engines, elephants, civilians, and wildlife    |
+| Formations  | Nation doctrine, troop roles, authored layouts, shield formations, cavalry wedges, and army-level grouping      |
+| Languages   | Translation catalogues for English, German, Spanish, Brazilian Portuguese, Arabic, Turkish, Polish, and Russian |
+| Platforms   | Linux, macOS, and Windows                                                                                       |
+| Multiplayer | The shipped application is single-player; no network multiplayer mode is wired into the current game            |
+| Replay      | Command recording, replay, deterministic verification, and headless replay are implemented                      |
 
 ## Gameplay
 
@@ -159,17 +159,17 @@ make run
 
 Useful targets:
 
-| Command | Purpose |
-| --- | --- |
-| `make build-app` | Build the game and runtime assets |
-| `make run` | Build and launch the game |
-| `make editor` | Build and launch the map editor |
-| `make arena` | Build and launch the gameplay/render scenario harness |
-| `make test` | Build and run the complete test suite |
-| `make quality` | Run formatting, linting, and quality-marker checks |
-| `make validate-content` | Validate campaign/mission/content data |
-| `make validate` | Run the complete local quality, build, test, and data gate |
-| `make bake-bpat` | Bake the built-in creature animation/body assets |
+| Command                 | Purpose                                                    |
+| ----------------------- | ---------------------------------------------------------- |
+| `make build-app`        | Build the game and runtime assets                          |
+| `make run`              | Build and launch the game                                  |
+| `make editor`           | Build and launch the map editor                            |
+| `make arena`            | Build and launch the gameplay/render scenario harness      |
+| `make test`             | Build and run the complete test suite                      |
+| `make quality`          | Run formatting, linting, and quality-marker checks         |
+| `make validate-content` | Validate campaign/mission/content data                     |
+| `make validate`         | Run the complete local quality, build, test, and data gate |
+| `make bake-bpat`        | Bake the built-in creature animation/body assets           |
 
 The first map-pipeline run may download/generate campaign-map source data. Force regeneration with:
 
@@ -183,24 +183,24 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for platform setup, formatting, tests, an
 
 All gameplay bindings can be changed under **Settings → Controls**.
 
-| Context | Default input | Action |
-| --- | --- | --- |
-| Camera | Arrow keys or WASD | Pan; Shift increases step/speed |
-| Camera | Q / E | Rotate |
-| Camera | Ctrl+Up / Ctrl+Down | Tilt |
-| Camera | Wheel or PgUp / PgDown | Zoom |
-| Camera | Home | Reset/focus the authored camp framing |
-| Camera | Right-drag | Drag-pan |
-| Selection | Left-click / drag | Select a unit or rectangle |
-| Selection | Shift + left-click | Add to selection |
-| Orders | Right-click | Context move, attack, or interact |
-| Orders | C / M | Attack mode / move mode |
-| Orders | Z / H / G | Stop / hold / guard |
-| Orders | P, then two clicks | Patrol route |
-| Game | Space | Pause/resume |
-| Game | Enter | Enter/leave direct commander control |
-| Game | F5 / F9 | Quick-save / quick-load |
-| Game | Escape | Cancel current mode or open the menu |
+| Context   | Default input          | Action                                |
+| --------- | ---------------------- | ------------------------------------- |
+| Camera    | Arrow keys or WASD     | Pan; Shift increases step/speed       |
+| Camera    | Q / E                  | Rotate                                |
+| Camera    | Ctrl+Up / Ctrl+Down    | Tilt                                  |
+| Camera    | Wheel or PgUp / PgDown | Zoom                                  |
+| Camera    | Home                   | Reset/focus the authored camp framing |
+| Camera    | Right-drag             | Drag-pan                              |
+| Selection | Left-click / drag      | Select a unit or rectangle            |
+| Selection | Shift + left-click     | Add to selection                      |
+| Orders    | Right-click            | Context move, attack, or interact     |
+| Orders    | C / M                  | Attack mode / move mode               |
+| Orders    | Z / H / G              | Stop / hold / guard                   |
+| Orders    | P, then two clicks     | Patrol route                          |
+| Game      | Space                  | Pause/resume                          |
+| Game      | Enter                  | Enter/leave direct commander control  |
+| Game      | F5 / F9                | Quick-save / quick-load               |
+| Game      | Escape                 | Cancel current mode or open the menu  |
 
 ## Architecture
 
@@ -268,15 +268,15 @@ Subsystem-specific constraints belong in the documentation for the subsystem tha
 
 ## Documentation
 
-| Area | Reference |
-| --- | --- |
-| Architecture | [Architecture](docs/ARCHITECTURE.md), [rendering](docs/RENDERING_ARCHITECTURE.md) |
-| Gameplay | [Combat](docs/COMBAT_SYSTEM.md), [formations](docs/FORMATION_ARCHITECTURE.md), [AI](docs/AI_ARCHITECTURE.md), [economy](docs/ECONOMY_GUIDANCE.md) |
-| Campaign/data | [Mission roster](docs/CAMPAIGN_MISSIONS.md), [mission framework](docs/MISSION_FRAMEWORK.md), [hill shapes](docs/HILL_SHAPES.md) |
-| Persistence | [Save/load system](docs/SAVE_LOAD_SYSTEM.md) |
-| Presentation | [UI design system](docs/UI_DESIGN_SYSTEM.md), [typography](docs/TYPOGRAPHY.md), [accessibility](docs/ACCESSIBILITY.md), [audio](docs/AUDIO_MASTERING.md) |
-| Performance | [Instrumentation](docs/PERFORMANCE_INSTRUMENTATION.md), [mission startup](docs/MISSION_STARTUP.md), [massed battles](docs/MASSED_BATTLE_PERFORMANCE.md), [pathfinding](docs/PATHFINDING_ARCHITECTURE.md) |
-| Development | [Contributing](CONTRIBUTING.md), [tests](tests/README.md), [arena](tools/arena/README.md) |
+| Area          | Reference                                                                                                                                                                                                |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Architecture  | [Architecture](docs/ARCHITECTURE.md), [rendering](docs/RENDERING_ARCHITECTURE.md)                                                                                                                        |
+| Gameplay      | [Combat](docs/COMBAT_SYSTEM.md), [formations](docs/FORMATION_ARCHITECTURE.md), [AI](docs/AI_ARCHITECTURE.md), [economy](docs/ECONOMY_GUIDANCE.md)                                                        |
+| Campaign/data | [Mission roster](docs/CAMPAIGN_MISSIONS.md), [mission framework](docs/MISSION_FRAMEWORK.md), [hill shapes](docs/HILL_SHAPES.md)                                                                          |
+| Persistence   | [Save/load system](docs/SAVE_LOAD_SYSTEM.md)                                                                                                                                                             |
+| Presentation  | [UI design system](docs/UI_DESIGN_SYSTEM.md), [typography](docs/TYPOGRAPHY.md), [accessibility](docs/ACCESSIBILITY.md), [audio](docs/AUDIO_MASTERING.md)                                                 |
+| Performance   | [Instrumentation](docs/PERFORMANCE_INSTRUMENTATION.md), [mission startup](docs/MISSION_STARTUP.md), [massed battles](docs/MASSED_BATTLE_PERFORMANCE.md), [pathfinding](docs/PATHFINDING_ARCHITECTURE.md) |
+| Development   | [Contributing](CONTRIBUTING.md), [tests](tests/README.md), [arena](tools/arena/README.md)                                                                                                                |
 
 ## Contributing
 

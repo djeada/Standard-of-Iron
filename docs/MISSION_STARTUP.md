@@ -387,14 +387,14 @@ The current mission startup path depends on these invariants:
 
 ## Source map
 
-| Concern | Source |
-| --- | --- |
-| Startup orchestration | `app/core/game_engine.cpp` and runtime coordinator path |
-| Map context/cache | `game/map/map_context.*` |
-| Mission schema/setup | `game/map/`, mission runtime |
-| AI initial preparation | AI system + game-engine startup integration |
-| Terrain scatter readiness | renderer/scatter path exposed to `GameEngine` |
-| Startup profiling | `Engine::Core::StartupProfiler` integration |
-| Startup tests | mission startup tests including `MissionStartupTest.ParsesTheMissionMapOnce` |
+| Concern                   | Source                                                                       |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| Startup orchestration     | `app/core/game_engine.cpp` and runtime coordinator path                      |
+| Map context/cache         | `game/map/map_context.*`                                                     |
+| Mission schema/setup      | `game/map/`, mission runtime                                                 |
+| AI initial preparation    | AI system + game-engine startup integration                                  |
+| Terrain scatter readiness | renderer/scatter path exposed to `GameEngine`                                |
+| Startup profiling         | `Engine::Core::StartupProfiler` integration                                  |
+| Startup tests             | mission startup tests including `MissionStartupTest.ParsesTheMissionMapOnce` |
 
 The current startup contract is explicit: reuse the parsed map context, construct the world, apply mission ownership before final AI initialization, prepare the first AI decision batch during loading, and keep the overlay active while terrain scatter or initial AI decisions remain pending—subject to the 15-second maximum wait.

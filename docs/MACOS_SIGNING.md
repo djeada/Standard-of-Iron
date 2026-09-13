@@ -56,11 +56,11 @@ If they are present, the script decodes the `.p12`, imports it into a temporary 
 
 ### Signing credentials
 
-| Secret | Used for |
-| --- | --- |
-| `MACOS_CERTIFICATE` | Base64-encoded `.p12` containing the Developer ID certificate and private key |
-| `MACOS_CERTIFICATE_PASSWORD` | Password for the `.p12` export |
-| `MACOS_KEYCHAIN_PASSWORD` | Password for the temporary CI keychain; the script generates one with `uuidgen` when this value is empty |
+| Secret                       | Used for                                                                                                 |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `MACOS_CERTIFICATE`          | Base64-encoded `.p12` containing the Developer ID certificate and private key                            |
+| `MACOS_CERTIFICATE_PASSWORD` | Password for the `.p12` export                                                                           |
+| `MACOS_KEYCHAIN_PASSWORD`    | Password for the temporary CI keychain; the script generates one with `uuidgen` when this value is empty |
 
 Only the certificate and certificate password determine whether Developer ID signing runs.
 

@@ -83,12 +83,12 @@ The UI never collapses those conditions into a generic “cannot build” state.
 
 Completion comes from world state rather than scripted tutorial flags.
 
-| Step      | Complete when                                                               |
-| --------- | --------------------------------------------------------------------------- |
-| `gather`  | anything has been credited through `add_harvested`                          |
+| Step      | Complete when                                                              |
+| --------- | -------------------------------------------------------------------------- |
+| `gather`  | anything has been credited through `add_harvested`                         |
 | `build`   | the player owns more buildings than at start, or one is under construction |
-| `recruit` | fielded manpower has grown, or a barracks is producing                      |
-| `army`    | fielded manpower has grown by `k_economy_coach_army_population` (150)       |
+| `recruit` | fielded manpower has grown, or a barracks is producing                     |
+| `army`    | fielded manpower has grown by `k_economy_coach_army_population` (150)      |
 
 Experienced players therefore clear the sequence through ordinary play. Dismissing the strip with ✕ stores the preference under `ui/economy_coach`, and the dismissal persists across missions and application restarts.
 

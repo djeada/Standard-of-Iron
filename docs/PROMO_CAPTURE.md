@@ -470,13 +470,13 @@ These rules make the promo pipeline suitable for source-controlled production ra
 
 ## Source map
 
-| Concern | Source |
-| --- | --- |
+| Concern                           | Source                                        |
+| --------------------------------- | --------------------------------------------- |
 | Promo schema/camera/pass planning | `tools/arena/promo_spec.h` and implementation |
-| Arena capture | `tools/arena/` promo/capture code |
-| Matchup parser/generator | Arena matchup path |
-| Offline edit | `scripts/promo-edit.py` |
-| Formation reel orchestration | `scripts/capture-formation-promos.sh` |
-| Authored promo specs | `tools/arena/promos/` |
+| Arena capture                     | `tools/arena/` promo/capture code             |
+| Matchup parser/generator          | Arena matchup path                            |
+| Offline edit                      | `scripts/promo-edit.py`                       |
+| Formation reel orchestration      | `scripts/capture-formation-promos.sh`         |
+| Authored promo specs              | `tools/arena/promos/`                         |
 
 The current promo spec, Arena capture implementation, and offline editor are the source of truth for how a reel is produced. Notes about an earlier revision of a trailer are not part of the production contract.

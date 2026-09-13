@@ -343,12 +343,12 @@ Directional shadows are configured by `DirectionalShadowSettings` in the active 
 
 Current profile behavior is:
 
-| Profile | Directional shadows |
-| --- | --- |
-| Low | disabled |
-| Medium | 2 cascades, 1024 resolution |
-| High | 4 cascades, 4096 resolution, 200 m envelope |
-| Ultra | full High-style cascade envelope |
+| Profile | Directional shadows                         |
+| ------- | ------------------------------------------- |
+| Low     | disabled                                    |
+| Medium  | 2 cascades, 1024 resolution                 |
+| High    | 4 cascades, 4096 resolution, 200 m envelope |
+| Ultra   | full High-style cascade envelope            |
 
 Cascade fitting, bias, filtering, light-space culling, and sampling are implemented in `render/gl/` and shared shader includes.
 
@@ -573,17 +573,17 @@ The current renderer depends on these invariants:
 
 ## Source map
 
-| Concern | Source |
-| --- | --- |
-| Graphics profiles | `render/graphics_settings.h` |
-| Backend interface | `render/i_render_backend.h` |
-| Backend selection | `render/render_backend_factory.cpp` |
-| Scene traversal | `render/scene_walk.cpp` |
-| OpenGL backend/passes | `render/gl/` |
-| Software backend | `render/software_backend.*`, `render/software/` |
-| Scene/environment data | `scene/` |
-| Animation/BPAT | `animation/` |
-| Shaders | `assets/shaders/` |
+| Concern                | Source                                               |
+| ---------------------- | ---------------------------------------------------- |
+| Graphics profiles      | `render/graphics_settings.h`                         |
+| Backend interface      | `render/i_render_backend.h`                          |
+| Backend selection      | `render/render_backend_factory.cpp`                  |
+| Scene traversal        | `render/scene_walk.cpp`                              |
+| OpenGL backend/passes  | `render/gl/`                                         |
+| Software backend       | `render/software_backend.*`, `render/software/`      |
+| Scene/environment data | `scene/`                                             |
+| Animation/BPAT         | `animation/`                                         |
+| Shaders                | `assets/shaders/`                                    |
 | Frame pacing/profiling | `render/profiling/`, `scripts/check-frame-pacing.py` |
 
 The current implementation is the source of truth for renderer capability and quality behavior. Historical refactor notes, old preset descriptions, and proposed follow-up work are not part of the runtime contract.

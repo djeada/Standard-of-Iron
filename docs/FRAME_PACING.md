@@ -30,12 +30,12 @@ A run can therefore fail even if one headline number looks good. For example, lo
 
 `render/profiling/frame_pacing.h` is the source of truth.
 
-| Preset | CPU p95 | GPU p95 | Max upload/frame | Interval p95 | Interval p99 | Max interval |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Low | 10 ms | 10 ms | 2 MiB | 18 ms | 25 ms | 50 ms |
-| Medium | 12 ms | 12 ms | 4 MiB | 18 ms | 25 ms | 50 ms |
-| High | 12 ms | 12 ms | 8 MiB | 18 ms | 25 ms | 50 ms |
-| Ultra | 16.67 ms | 12 ms | 8 MiB | 18 ms | 25 ms | 50 ms |
+| Preset |  CPU p95 | GPU p95 | Max upload/frame | Interval p95 | Interval p99 | Max interval |
+| ------ | -------: | ------: | ---------------: | -----------: | -----------: | -----------: |
+| Low    |    10 ms |   10 ms |            2 MiB |        18 ms |        25 ms |        50 ms |
+| Medium |    12 ms |   12 ms |            4 MiB |        18 ms |        25 ms |        50 ms |
+| High   |    12 ms |   12 ms |            8 MiB |        18 ms |        25 ms |        50 ms |
+| Ultra  | 16.67 ms |   12 ms |            8 MiB |        18 ms |        25 ms |        50 ms |
 
 All presets also enforce:
 
@@ -474,15 +474,15 @@ The current gate depends on these invariants:
 
 ## Source map
 
-| Concern | Source |
-| --- | --- |
-| Budgets/sample/verdict | `render/profiling/frame_pacing.h` |
-| Runtime sampling | `ui/gl_view.*` |
-| Runner/validation | `scripts/check-frame-pacing.py` |
-| GL-site symbolization | `scripts/symbolize-gl-sites.py` |
-| Host qualification | `scripts/check-perf-host.py` |
-| CI workflow | `.github/workflows/frame-pacing.yml` |
-| Gate tests | `tests/render/profiling/frame_profile_test.cpp` |
-| Action fixture | `assets/benchmarks/battle_coverage.action.json` |
+| Concern                | Source                                          |
+| ---------------------- | ----------------------------------------------- |
+| Budgets/sample/verdict | `render/profiling/frame_pacing.h`               |
+| Runtime sampling       | `ui/gl_view.*`                                  |
+| Runner/validation      | `scripts/check-frame-pacing.py`                 |
+| GL-site symbolization  | `scripts/symbolize-gl-sites.py`                 |
+| Host qualification     | `scripts/check-perf-host.py`                    |
+| CI workflow            | `.github/workflows/frame-pacing.yml`            |
+| Gate tests             | `tests/render/profiling/frame_profile_test.cpp` |
+| Action fixture         | `assets/benchmarks/battle_coverage.action.json` |
 
 The gate documented here is the current executable performance contract. Historical investigation notes and proposed targets are not substitutes for the values enforced by the code and workflow.

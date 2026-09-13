@@ -8,15 +8,15 @@ The save system is designed around a clear ownership rule: persist state that ch
 
 The implementation is split by responsibility:
 
-| Area | Source | Responsibility |
-| --- | --- | --- |
-| World serialization | `game/save/serialization.*` | entity/component world document |
-| Session snapshot | `game/session/session_snapshot.*` | authoritative non-entity match state |
-| Snapshot contract | `game/save/snapshot_contract.*` | field classification and version contract |
-| Application coordination | `app/persistence/save_load_coordinator.*` | capture/restore orchestration around the live game |
-| Async save service | `game/systems/save_load_service.*` | queued jobs, slots, progress, cancellation, verification |
-| SQLite storage | `game/systems/save_storage.*` | schema, transactions, migration, recovery, campaign tables |
-| Payload format | `game/systems/save_format.*` | compression, checksums, packed world payload |
+| Area                     | Source                                    | Responsibility                                             |
+| ------------------------ | ----------------------------------------- | ---------------------------------------------------------- |
+| World serialization      | `game/save/serialization.*`               | entity/component world document                            |
+| Session snapshot         | `game/session/session_snapshot.*`         | authoritative non-entity match state                       |
+| Snapshot contract        | `game/save/snapshot_contract.*`           | field classification and version contract                  |
+| Application coordination | `app/persistence/save_load_coordinator.*` | capture/restore orchestration around the live game         |
+| Async save service       | `game/systems/save_load_service.*`        | queued jobs, slots, progress, cancellation, verification   |
+| SQLite storage           | `game/systems/save_storage.*`             | schema, transactions, migration, recovery, campaign tables |
+| Payload format           | `game/systems/save_format.*`              | compression, checksums, packed world payload               |
 
 These layers deliberately separate “what constitutes the match” from “how bytes are stored.”
 
@@ -443,16 +443,16 @@ The current save/load design depends on these invariants:
 
 ## Source map
 
-| Concern | Source |
-| --- | --- |
-| Entity/world serialization | `game/save/serialization.*` |
-| Authoritative non-entity snapshot | `game/session/session_snapshot.*` |
-| Snapshot classification | `game/save/snapshot_contract.*` |
-| Save job queue | `game/systems/save_load_service.*` |
-| SQLite storage/migration | `game/systems/save_storage.*` |
-| Compression/checksums | `game/systems/save_format.*` |
+| Concern                           | Source                                    |
+| --------------------------------- | ----------------------------------------- |
+| Entity/world serialization        | `game/save/serialization.*`               |
+| Authoritative non-entity snapshot | `game/session/session_snapshot.*`         |
+| Snapshot classification           | `game/save/snapshot_contract.*`           |
+| Save job queue                    | `game/systems/save_load_service.*`        |
+| SQLite storage/migration          | `game/systems/save_storage.*`             |
+| Compression/checksums             | `game/systems/save_format.*`              |
 | Application restore orchestration | `app/persistence/save_load_coordinator.*` |
-| Storage tests | `tests/db/save_storage_test.cpp` |
-| Restore/render tests | `tests/core/save_*` |
+| Storage tests                     | `tests/db/save_storage_test.cpp`          |
+| Restore/render tests              | `tests/core/save_*`                       |
 
 The storage, migration, compression, asynchronous write, integrity, and recovery paths described here are present in the current repository. They are not proposed enhancements.

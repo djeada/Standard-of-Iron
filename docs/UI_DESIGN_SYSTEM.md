@@ -64,19 +64,19 @@ A screen should not need to restate the product's base radius, animation timing,
 
 ## Core singletons
 
-| Singleton | Responsibility |
-| --- | --- |
-| `A11y` | QML-facing accessibility and scaling state |
-| `Theme` | product colours and accessibility-aware semantic colours |
-| `Metrics` | spacing, radii, borders, control dimensions, touch targets |
-| `Typography` | font families, pixel sizes, scale, weights, tracking |
-| `Motion` | durations, easing, dwell timing |
-| `Icons` | shared glyph and painted-art lookup |
-| `ActivityIcons` | action/activity-state icon vocabulary |
-| `Numerals` | numeric/readout presentation helpers |
-| `FactionTheme` | faction accent, heraldry, emblem, motto data |
-| `Notifications` | product-wide notification queue |
-| `UiSound` | UI interaction-sound helpers |
+| Singleton       | Responsibility                                             |
+| --------------- | ---------------------------------------------------------- |
+| `A11y`          | QML-facing accessibility and scaling state                 |
+| `Theme`         | product colours and accessibility-aware semantic colours   |
+| `Metrics`       | spacing, radii, borders, control dimensions, touch targets |
+| `Typography`    | font families, pixel sizes, scale, weights, tracking       |
+| `Motion`        | durations, easing, dwell timing                            |
+| `Icons`         | shared glyph and painted-art lookup                        |
+| `ActivityIcons` | action/activity-state icon vocabulary                      |
+| `Numerals`      | numeric/readout presentation helpers                       |
+| `FactionTheme`  | faction accent, heraldry, emblem, motto data               |
+| `Notifications` | product-wide notification queue                            |
+| `UiSound`       | UI interaction-sound helpers                               |
 
 These singletons provide one place for product-wide decisions. They are not gameplay authorities: a theme token can describe how a warning looks, but it does not decide whether a gameplay action is legal.
 
@@ -248,7 +248,7 @@ Typical state dimensions include:
 - destructive/warning emphasis; and
 - unavailable with an explanation.
 
-The product frequently needs to explain *why* a gameplay action is unavailable, so disabled styling alone is not enough for command surfaces.
+The product frequently needs to explain _why_ a gameplay action is unavailable, so disabled styling alone is not enough for command surfaces.
 
 ## Command tooltips
 
@@ -533,15 +533,15 @@ The current UI design system depends on these invariants:
 
 ## Source map
 
-| Concern | Source |
-| --- | --- |
-| Design module | `ui/qml/design/` |
-| Module manifest | `ui/qml/design/qmldir` |
-| QML resources | `design_resources.qrc` |
+| Concern                | Source                                |
+| ---------------------- | ------------------------------------- |
+| Design module          | `ui/qml/design/`                      |
+| Module manifest        | `ui/qml/design/qmldir`                |
+| QML resources          | `design_resources.qrc`                |
 | Persistent preferences | `ui/preferences.h` and implementation |
-| Design tests | `tests/ui/qml/` and related C++ tests |
-| Typography checks | `scripts/check-typography.py` |
-| Font architecture | [TYPOGRAPHY.md](TYPOGRAPHY.md) |
-| Input/accessibility | [ACCESSIBILITY.md](ACCESSIBILITY.md) |
+| Design tests           | `tests/ui/qml/` and related C++ tests |
+| Typography checks      | `scripts/check-typography.py`         |
+| Font architecture      | [TYPOGRAPHY.md](TYPOGRAPHY.md)        |
+| Input/accessibility    | [ACCESSIBILITY.md](ACCESSIBILITY.md)  |
 
 The design system is defined by the current `StandardOfIron.Design` module and the preference/application state that feeds it. Historical issue notes about how individual controls were introduced are not part of the present design contract.

@@ -4,10 +4,10 @@ Standard of Iron has two formation layers because they solve two different spati
 
 A **unit layout** places the soldiers inside one logical troop entity. An **army formation** places multiple troop entities relative to one another. The two layers can cooperate, but they do not share identity or ownership.
 
-| Layer | Arranges | Primary owner | Identity |
-| --- | --- | --- | --- |
-| Unit layout | soldiers inside one troop entity | `Game::Formation::UnitLayoutSystem` | `UnitLayoutId` |
-| Army formation | multiple troop entities | `ArmyFormationPlanner` + `ArmyFormationRegistry` | `FormationDoctrineId` + `ArmyFormationIntent` |
+| Layer          | Arranges                         | Primary owner                                    | Identity                                      |
+| -------------- | -------------------------------- | ------------------------------------------------ | --------------------------------------------- |
+| Unit layout    | soldiers inside one troop entity | `Game::Formation::UnitLayoutSystem`              | `UnitLayoutId`                                |
+| Army formation | multiple troop entities          | `ArmyFormationPlanner` + `ArmyFormationRegistry` | `FormationDoctrineId` + `ArmyFormationIntent` |
 
 Keeping those layers separate lets a troop change its internal soldier arrangement without leaving its army group, and lets an army redeploy without redefining the geometry of every soldier inside every troop.
 
@@ -592,21 +592,21 @@ The `content_validator` links the same production formation/data code, which red
 
 Formation behavior is covered at several levels.
 
-| Area | Representative tests |
-| --- | --- |
-| Unit-layout geometry/determinism | `tests/formation/unit_layout_test.cpp` |
-| Army planner and doctrine roles | `tests/formation/army_formation_planner_test.cpp` |
-| Registry lifecycle/persistence | `tests/formation/army_formation_registry_test.cpp` |
-| Movement policies | `tests/formation/formation_movement_test.cpp` |
-| Data overlay/validation | `tests/formation/formation_data_loader_test.cpp` |
-| Terrain/navigation fitting | `tests/formation/formation_terrain_navigation_test.cpp` |
-| Cohesion and combat multiplier | `tests/formation/formation_cohesion_test.cpp` |
-| Planner split/cache behavior | `tests/formation/formation_planner_cache_test.cpp` |
-| Defensive unit layouts | `tests/systems/defensive_unit_layout_test.cpp` |
-| Planner UI | `tests/ui/qml/tst_formation_panel.qml` |
-| Status badge | `tests/ui/qml/tst_formation_status_badge.qml` |
-| Input/placement behavior | `tests/core/input_command_handler_test.cpp` |
-| Key binding | `tests/ui/input_bindings_test.cpp` |
+| Area                             | Representative tests                                    |
+| -------------------------------- | ------------------------------------------------------- |
+| Unit-layout geometry/determinism | `tests/formation/unit_layout_test.cpp`                  |
+| Army planner and doctrine roles  | `tests/formation/army_formation_planner_test.cpp`       |
+| Registry lifecycle/persistence   | `tests/formation/army_formation_registry_test.cpp`      |
+| Movement policies                | `tests/formation/formation_movement_test.cpp`           |
+| Data overlay/validation          | `tests/formation/formation_data_loader_test.cpp`        |
+| Terrain/navigation fitting       | `tests/formation/formation_terrain_navigation_test.cpp` |
+| Cohesion and combat multiplier   | `tests/formation/formation_cohesion_test.cpp`           |
+| Planner split/cache behavior     | `tests/formation/formation_planner_cache_test.cpp`      |
+| Defensive unit layouts           | `tests/systems/defensive_unit_layout_test.cpp`          |
+| Planner UI                       | `tests/ui/qml/tst_formation_panel.qml`                  |
+| Status badge                     | `tests/ui/qml/tst_formation_status_badge.qml`           |
+| Input/placement behavior         | `tests/core/input_command_handler_test.cpp`             |
+| Key binding                      | `tests/ui/input_bindings_test.cpp`                      |
 
 Arena scenarios prefixed with `unit_layout_` and `army_formation_` exercise the same runtime visually with real rendering and scenario commands.
 
@@ -673,17 +673,17 @@ The current formation system depends on these invariants:
 
 # Source map
 
-| Concern | Source |
-| --- | --- |
-| Unit layout types/system | `game/formation/unit_layout.*` |
-| Formation types/options | `game/formation/army_formation_types.h` |
-| Army planner | `game/formation/army_formation_planner.*` |
-| Registry/runtime/cohesion | `game/formation/army_formation_registry.*` |
-| Formation service | `game/formation/army_formation_service.*` |
-| Formation data loader | `game/formation/formation_data_loader.*` |
-| Defensive layout runtime | `game/systems/defensive_unit_layout_service.*` |
-| Traversal layout | `game/systems/unit_traversal_layout_system.*` |
-| Movement facts | `game/core/movement_facts.h` |
-| Authored formation data | `assets/data/formations/` |
+| Concern                   | Source                                         |
+| ------------------------- | ---------------------------------------------- |
+| Unit layout types/system  | `game/formation/unit_layout.*`                 |
+| Formation types/options   | `game/formation/army_formation_types.h`        |
+| Army planner              | `game/formation/army_formation_planner.*`      |
+| Registry/runtime/cohesion | `game/formation/army_formation_registry.*`     |
+| Formation service         | `game/formation/army_formation_service.*`      |
+| Formation data loader     | `game/formation/formation_data_loader.*`       |
+| Defensive layout runtime  | `game/systems/defensive_unit_layout_service.*` |
+| Traversal layout          | `game/systems/unit_traversal_layout_system.*`  |
+| Movement facts            | `game/core/movement_facts.h`                   |
+| Authored formation data   | `assets/data/formations/`                      |
 
 The architecture documented here describes the current unit-layout, army-group, traversal, defensive-state, AI, persistence, and UI contracts. Historical implementation stories are not needed to understand those contracts and are deliberately kept out of the reference article.

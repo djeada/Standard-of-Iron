@@ -80,15 +80,15 @@ Current combat constants are defined in `game/systems/combat_system/combat_types
 
 Important relationships include:
 
-| Rule | Current multiplier |
-| --- | ---: |
-| Spearmen vs cavalry | 2.5× |
-| Infantry melee vs siege | 3.0× |
-| Archers vs elephants | 1.68× |
-| Archers from high ground | 1.8× damage |
-| Spearmen from high ground | 1.8× damage |
-| High-ground armour-side factor | 0.85× |
-| High-ground health-side factor | 1.15× |
+| Rule                           | Current multiplier |
+| ------------------------------ | -----------------: |
+| Spearmen vs cavalry            |               2.5× |
+| Infantry melee vs siege        |               3.0× |
+| Archers vs elephants           |              1.68× |
+| Archers from high ground       |        1.8× damage |
+| Spearmen from high ground      |        1.8× damage |
+| High-ground armour-side factor |              0.85× |
+| High-ground health-side factor |              1.15× |
 
 Hold mode also modifies range, damage, and health using constants in the same file. Spearmen have their own hold-range multiplier, and default/archer/spear hold damage tuning is represented separately.
 
@@ -364,16 +364,16 @@ The current balance workflow depends on these invariants:
 
 ## Source map
 
-| Concern | Source |
-| --- | --- |
-| Base troop data | `assets/data/troops/base.json` |
-| Nation overrides | `assets/data/nations/*.json` |
-| Combat/counter constants | `game/systems/combat_system/combat_types.h` |
-| Fixture data | `assets/balance/*.json` |
-| Simulator | `tools/balance_sim/` |
-| Test gate | `tests/tools/balance_sim_test.cpp` |
-| Economy explanation | [ECONOMY_GUIDANCE.md](ECONOMY_GUIDANCE.md) |
-| Combat pipeline | [COMBAT_SYSTEM.md](COMBAT_SYSTEM.md) |
+| Concern                  | Source                                                 |
+| ------------------------ | ------------------------------------------------------ |
+| Base troop data          | `assets/data/troops/base.json`                         |
+| Nation overrides         | `assets/data/nations/*.json`                           |
+| Combat/counter constants | `game/systems/combat_system/combat_types.h`            |
+| Fixture data             | `assets/balance/*.json`                                |
+| Simulator                | `tools/balance_sim/`                                   |
+| Test gate                | `tests/tools/balance_sim_test.cpp`                     |
+| Economy explanation      | [ECONOMY_GUIDANCE.md](ECONOMY_GUIDANCE.md)             |
+| Combat pipeline          | [COMBAT_SYSTEM.md](COMBAT_SYSTEM.md)                   |
 | Formation/stance effects | [FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md) |
 
 The active unit-balance contract is the combination of current production data, current combat rules, and deterministic fixtures. Historical one-number efficiency formulas are not a substitute for that executable system.

@@ -10,11 +10,11 @@ A cursed gold vein is authored as an ordinary world prop:
 
 ```json
 {
-  "type": "cursed_gold_vein",
-  "x": 262,
-  "z": 512,
-  "scale": 1.0,
-  "rotation": 1.2
+    "type": "cursed_gold_vein",
+    "x": 262,
+    "z": 512,
+    "scale": 1.0,
+    "rotation": 1.2
 }
 ```
 
