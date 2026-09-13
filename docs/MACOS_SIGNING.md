@@ -1,187 +1,126 @@
-# macOS Code Signing and Notarization Guide
+# macOS Code Signing and Notarization
 
-The macOS build workflow includes automatic code signing and notarization to ensure the application can be opened on macOS without Gatekeeper warnings. This process:
+The macOS release workflow can sign and notarize Standard of Iron so distributed builds pass Gatekeeper without requiring users to override the normal macOS security flow.
 
-1. **Signs** the `.app` bundle with a Developer ID Application certificate
-2. **Notarizes** the app with Apple's notary service
-3. **Staples** the notarization ticket to the DMG for offline verification
+The release path has three stages:
+
+1. **Code signing** — sign the `.app` bundle with a Developer ID Application certificate.
+2. **Notarization** — submit the signed application to Apple's notary service.
+3. **Stapling** — attach the notarization ticket to the distributed DMG so verification can succeed without another network lookup.
+
+Signing is optional for development builds. The workflow degrades gracefully when credentials are unavailable, which keeps local and community builds accessible.
 
 ## Prerequisites
 
-To enable signing and notarization, you need:
+To enable the complete signing and notarization path, you need:
 
-1. **Apple Developer Account** (paid membership, $99/year)
-2. **Developer ID Application Certificate** from Apple
-3. **App-specific password** for notarization
+- an Apple Developer account with Developer ID distribution access;
+- a **Developer ID Application** certificate and its private key; and
+- credentials that the notarization service can use, including an app-specific password.
 
-## Setup Instructions
+## 1. Create a Developer ID Application certificate
 
-### Step 1: Create Developer ID Application Certificate
+1. Sign in to the [Apple Developer account](https://developer.apple.com/account).
+2. Open **Certificates, Identifiers & Profiles**.
+3. Create a new certificate.
+4. Choose **Developer ID Application**, which is the certificate type used for applications distributed outside the Mac App Store.
+5. Follow Apple's instructions to create the Certificate Signing Request (CSR).
+6. Download the issued certificate and install it in Keychain Access.
 
-1. Log in to [Apple Developer Portal](https://developer.apple.com/account)
-2. Navigate to **Certificates, Identifiers & Profiles**
-3. Click **+** to create a new certificate
-4. Select **Developer ID Application** (for distribution outside Mac App Store)
-5. Follow the instructions to create a Certificate Signing Request (CSR)
-6. Download the certificate and install it in Keychain Access
+## 2. Export the certificate as PKCS #12
 
-### Step 2: Export Certificate as .p12
+The CI workflow needs both the certificate and its private key.
 
-1. Open **Keychain Access** on your Mac
-2. Find your **Developer ID Application** certificate
-3. Right-click and select **Export**
-4. Choose `.p12` format
-5. Set a strong password (you'll need this for GitHub Secrets)
-6. Save the file
+1. Open **Keychain Access**.
+2. Locate the **Developer ID Application** certificate.
+3. Export it in `.p12` format.
+4. Protect the exported file with a strong password.
+5. Keep both the `.p12` file and password private; CI will receive them through repository secrets.
 
-### Step 3: Create App-Specific Password
+## 3. Create an app-specific password
 
-1. Go to [appleid.apple.com](https://appleid.apple.com)
-2. Sign in with your Apple ID
-3. Navigate to **Security** → **App-Specific Passwords**
-4. Click **Generate an app-specific password**
-5. Label it (e.g., "Standard of Iron Notarization")
-6. Copy the generated password (format: `xxxx-xxxx-xxxx-xxxx`)
+1. Sign in at [appleid.apple.com](https://appleid.apple.com).
+2. Open the account security controls.
+3. Create an app-specific password for notarization.
+4. Give it a recognizable label such as `Standard of Iron Notarization`.
+5. Copy the generated password and store it securely.
 
-### Step 4: Find Your Team ID
+## 4. Find the Apple Developer Team ID
 
-1. Go to [Apple Developer Portal](https://developer.apple.com/account)
-2. Click on your account name in the top right
-3. Your **Team ID** is a 10-character alphanumeric code (e.g., `A1B2C3D4E5`)
+Open the Apple Developer account page and locate the team's 10-character alphanumeric **Team ID**. The notarization workflow uses this together with the Apple ID credentials.
 
-### Step 5: Configure GitHub Secrets
+## 5. Configure GitHub Actions secrets
 
-Add the following secrets to your GitHub repository:
+In the repository, open **Settings → Secrets and variables → Actions** and add the required repository secrets.
 
-1. Go to repository **Settings** → **Secrets and variables** → **Actions**
-2. Click **New repository secret** and add each of these:
+| Secret | Purpose | Value |
+| ------ | ------- | ----- |
+| `MACOS_CERTIFICATE` | Certificate and private key | Base64-encoded `.p12` file |
+| `MACOS_CERTIFICATE_PASSWORD` | Unlocks the `.p12` export | Password chosen during export |
+| `MACOS_KEYCHAIN_PASSWORD` | Protects the temporary CI keychain | Strong random value |
+| `APPLE_ID` | Notarization account | Apple ID email address |
+| `APPLE_ID_PASSWORD` | Notarization authentication | App-specific password |
+| `APPLE_TEAM_ID` | Identifies the developer team | 10-character Team ID |
 
-| Secret Name                  | Description                     | How to Get Value                                             |
-| ---------------------------- | ------------------------------- | ------------------------------------------------------------ |
-| `MACOS_CERTIFICATE`          | Base64-encoded .p12 certificate | Run: `base64 -i certificate.p12                              | pbcopy` (copies to clipboard) |
-| `MACOS_CERTIFICATE_PASSWORD` | Password for the .p12 file      | The password you set when exporting the certificate          |
-| `MACOS_KEYCHAIN_PASSWORD`    | Password for temporary keychain | Any strong random password (e.g., `openssl rand -base64 32`) |
-| `APPLE_ID`                   | Your Apple ID email             | Your Apple Developer account email                           |
-| `APPLE_ID_PASSWORD`          | App-specific password           | The password from Step 3 (with dashes)                       |
-| `APPLE_TEAM_ID`              | Your Apple Developer Team ID    | The 10-character code from Step 4                            |
+Encode the certificate without introducing line breaks. On macOS:
 
-### Example: Encoding Certificate
-
-```bash
-# On macOS, encode and copy to clipboard
+```sh
 base64 -i /path/to/certificate.p12 | pbcopy
+```
 
-# On Linux
+On GNU/Linux:
+
+```sh
 base64 -w 0 /path/to/certificate.p12
 ```
 
-## Behavior
+Paste the resulting text into `MACOS_CERTIFICATE`.
 
-### With Secrets Configured
+## Workflow behavior
 
-When all required secrets are present:
+### Complete configuration
 
-1. ✅ The `.app` is signed with your Developer ID
-2. ✅ The app is submitted to Apple for notarization
-3. ✅ The notarization ticket is stapled to the DMG
-4. ✅ Gatekeeper opens the app without warnings
+When all signing and notarization secrets are available, the workflow:
 
-### Without Secrets
+1. imports the certificate into a temporary keychain;
+2. signs the application with the Developer ID identity;
+3. submits the signed build to Apple's notarization service;
+4. staples the accepted ticket to the DMG; and
+5. fails the release job if a required signing or notarization step fails.
 
-If secrets are not configured:
+### No signing credentials
 
-1. ℹ️ The workflow prints an informational message
-2. ℹ️ Signing and notarization are skipped
-3. ✅ The build completes successfully
-4. ⚠️ Users will see "unidentified developer" warning
+When the signing credentials are absent, the script reports that signing is unavailable and skips the release-signing path. The build itself still succeeds.
 
-This graceful fallback allows:
+This fallback is intentional. It allows:
 
-- Testing builds without certificates
-- Community contributors to build without Apple Developer accounts
-- Quick iterations during development
+- contributors without Apple Developer credentials to build the project;
+- local development and testing without importing release certificates; and
+- CI jobs that only need to validate compilation or packaging structure.
 
-### Partial Configuration
+The resulting application is unsigned and should not be treated as a normal end-user release artifact.
 
-If only signing credentials are present (no notarization credentials):
+### Signing without notarization credentials
 
-1. ✅ The app is signed
-2. ⚠️ Notarization is skipped with a warning
-3. ⚠️ Users may still see Gatekeeper warnings
+If the certificate is configured but notarization credentials are incomplete, the application can still be signed while notarization is skipped with a warning. Such a package does not provide the same Gatekeeper experience as the fully notarized release path.
 
-## Troubleshooting
+## Security model
 
-### Notarization Failed
+Release credentials belong in GitHub Actions secrets rather than repository files, workflow output, or checked-in shell configuration.
 
-If notarization fails, the script will:
+The signing script limits credential lifetime on the runner by:
 
-1. Show the error message from Apple
-2. Attempt to retrieve detailed logs
-3. Exit with an error code
+- creating a temporary keychain;
+- importing the certificate only for the signing operation; and
+- deleting temporary keychain material during cleanup on success or failure.
 
-Common issues:
+Treat the `.p12` password, keychain password, Apple ID app-specific password, and certificate export as release credentials. Rotate or replace them when compromised, revoked, or expired.
 
-- **Invalid code signature**: Ensure frameworks are signed before the main app
-- **Hardened runtime violations**: Add appropriate entitlements if needed
-- **Invalid credentials**: Verify Apple ID, password, and Team ID
+## Local signing test
 
-### Certificate Not Found
+The same script used by CI can be exercised locally by supplying the required environment variables:
 
-Error: "Developer ID Application certificate not found in keychain"
-
-Solutions:
-
-- Verify the certificate is a **Developer ID Application** certificate
-- Ensure the certificate is not expired
-- Check that the .p12 file contains the certificate and private key
-
-### Keychain Access Denied
-
-Error: "User interaction is not allowed"
-
-Solutions:
-
-- Ensure `MACOS_KEYCHAIN_PASSWORD` secret is set
-- Check that the keychain is properly unlocked in the script
-
-## Security Considerations
-
-### Secret Protection
-
-GitHub Secrets are:
-
-- ✅ Encrypted at rest
-- ✅ Only exposed to GitHub Actions runners
-- ✅ Never logged or exposed in outputs
-- ✅ Redacted in build logs
-
-The signing script:
-
-- Creates a temporary keychain for signing
-- Immediately deletes certificates after use
-- Cleans up keychains on completion or failure
-
-### Certificate Expiration
-
-Developer ID Application certificates:
-
-- Valid for 5 years
-- Must be renewed before expiration
-- Apple will email reminders before expiration
-
-Remember to:
-
-- Update the certificate in GitHub Secrets before expiration
-- Test the new certificate before the old one expires
-
-## Testing
-
-### Local Testing
-
-You can test the signing script locally:
-
-```bash
-# Set environment variables
+```sh
 export MACOS_CERTIFICATE="$(base64 -i certificate.p12)"
 export MACOS_CERTIFICATE_PASSWORD="your-password"
 export MACOS_KEYCHAIN_PASSWORD="temp-password"
@@ -189,46 +128,86 @@ export APPLE_ID="your@email.com"
 export APPLE_ID_PASSWORD="xxxx-xxxx-xxxx-xxxx"
 export APPLE_TEAM_ID="A1B2C3D4E5"
 
-# Run the script
-./scripts/sign-and-notarize-macos.sh build/bin/standard_of_iron.app standard_of_iron-macos.dmg
+./scripts/sign-and-notarize-macos.sh \
+  build/bin/standard_of_iron.app \
+  standard_of_iron-macos.dmg
 ```
 
-### Verify Signed App
+Use disposable shell history or another secure method when working with real release credentials locally.
 
-```bash
-# Check code signature
+## Verifying a signed release
+
+Verify the application signature:
+
+```sh
 codesign --verify --deep --strict --verbose=2 standard_of_iron.app
+```
 
-# Check Gatekeeper assessment
+Ask Gatekeeper to assess the application:
+
+```sh
 spctl --assess --type execute --verbose standard_of_iron.app
+```
 
-# Verify stapled ticket
+Verify the stapled notarization ticket on the DMG:
+
+```sh
 stapler validate standard_of_iron-macos.dmg
 ```
 
-### Test Without Secrets
+All three checks should succeed for a fully signed and notarized release artifact.
 
-To test the fallback behavior:
+## Verifying the unsigned fallback
 
-```bash
-# Run without environment variables
-./scripts/sign-and-notarize-macos.sh build/bin/standard_of_iron.app standard_of_iron-macos.dmg
+Run the signing script without the required environment variables:
+
+```sh
+./scripts/sign-and-notarize-macos.sh \
+  build/bin/standard_of_iron.app \
+  standard_of_iron-macos.dmg
 ```
 
-Expected output: "macOS signing credentials not found, skipping signing and notarization"
+The expected behavior is an informational message that macOS signing credentials were not found, followed by a successful return to the ordinary build workflow.
+
+## Troubleshooting
+
+### Notarization fails
+
+The script reports the error from Apple's service and attempts to retrieve the detailed notarization log before exiting with failure.
+
+Common causes include:
+
+- an invalid or incomplete code signature;
+- nested frameworks or binaries that were not signed correctly;
+- hardened-runtime or entitlement problems; and
+- invalid Apple ID, app-specific password, or Team ID credentials.
+
+Start with the notarization log because it identifies the rejected component more precisely than the top-level workflow error.
+
+### Developer ID certificate is not found
+
+If the temporary keychain does not contain a usable signing identity:
+
+- confirm that the exported certificate is specifically **Developer ID Application**;
+- confirm that the certificate remains valid;
+- confirm that the `.p12` contains both the certificate and its private key; and
+- confirm that `MACOS_CERTIFICATE_PASSWORD` matches the export password.
+
+### Keychain reports `User interaction is not allowed`
+
+CI must be able to unlock and authorize the temporary keychain non-interactively. Confirm that `MACOS_KEYCHAIN_PASSWORD` is configured and that the signing script successfully creates, unlocks, and configures the temporary keychain before invoking `codesign`.
+
+## Credential maintenance
+
+Developer ID certificates and Apple authentication credentials have independent lifetimes. Replace expiring or revoked credentials in repository secrets before producing the next release and validate the replacement with the same signing, Gatekeeper, and stapling checks above.
+
+Do not wait for a release job to discover that a signing identity has expired.
 
 ## References
 
-- [Apple Code Signing Guide](https://developer.apple.com/support/code-signing/)
-- [Apple Notarization Guide](https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution)
-- [notarytool Documentation](https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow)
-- [GitHub Actions Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
+- [Apple code signing](https://developer.apple.com/support/code-signing/)
+- [Notarizing macOS software before distribution](https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution)
+- [Customizing the notarization workflow](https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow)
+- [GitHub Actions encrypted secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
 
-## Support
-
-If you encounter issues:
-
-1. Check the [Troubleshooting](#troubleshooting) section above
-2. Review the build logs in GitHub Actions
-3. Open an issue with the error message and relevant logs
-4. For sensitive credential issues, reach out privately to maintainers
+When troubleshooting a release, keep sensitive values out of issues and build logs. Share the failing command, non-secret diagnostic output, and notarization log details needed to reproduce the problem without exposing credentials.
