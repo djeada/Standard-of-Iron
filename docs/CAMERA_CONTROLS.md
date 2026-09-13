@@ -1,167 +1,126 @@
-# Camera controls
+# Camera Controls
 
-Nine ways to move the view, one legend that lists all of them, and a manual
-checklist for the layouts the automated tests cannot reach.
+The RTS camera supports nine ways to move or restore the view. The same control definitions feed the in-battle legend and field manual, while automated tests cover the underlying geometry and input rules. This page explains the complete control model and ends with the manual regression pass needed for layouts and interactions that unit tests cannot fully reproduce.
 
-## The nine controls
+## The nine camera controls
 
-| Control      | How                                               | Where it lives                                 |
-| ------------ | ------------------------------------------------- | ---------------------------------------------- |
-| Edge scroll  | Push the cursor into a screen edge                | `ui/qml/Main.qml`, `edge_scroll_overlay`       |
-| Keyboard pan | Arrow keys **or** `WASD`, Shift for a double step | `rts.camera_pan_*` in `ui/input_bindings.cpp`  |
-| Drag pan     | Hold the right button and drag                    | `ui/qml/GameView.qml`, `renderArea` mouse area |
-| Zoom         | Mouse wheel, or `PgUp` / `PgDown`                 | `rts.camera_zoom_*`                            |
-| Rotate       | `Q` / `E`, Shift to swing further                 | `rts.camera_rotate_*`                          |
-| Tilt         | `Ctrl+Up` / `Ctrl+Down`, Shift to tilt further    | `rts.camera_tilt_*`                            |
-| Minimap jump | Left-click or drag the minimap                    | `ui/qml/HUDTop.qml`, `minimapMouse`            |
-| Follow       | Button in the top bar                             | `ui/qml/HUDTop.qml`                            |
-| Reset        | `Home`, or the button in the top bar              | `rts.camera_reset`                             |
+| Control      | How                                                | Implementation                                  |
+| ------------ | -------------------------------------------------- | ----------------------------------------------- |
+| Edge scroll  | Push the cursor into a screen edge                 | `ui/qml/Main.qml`, `edge_scroll_overlay`        |
+| Keyboard pan | Arrow keys **or** `WASD`; Shift for a double step | `rts.camera_pan_*` in `ui/input_bindings.cpp`   |
+| Drag pan     | Hold the right mouse button and drag               | `ui/qml/GameView.qml`, `renderArea` mouse area  |
+| Zoom         | Mouse wheel, or `PgUp` / `PgDown`                  | `rts.camera_zoom_*`                             |
+| Rotate       | `Q` / `E`; Shift for a larger step                 | `rts.camera_rotate_*`                           |
+| Tilt         | `Ctrl+Up` / `Ctrl+Down`; Shift for a larger step   | `rts.camera_tilt_*`                             |
+| Minimap jump | Left-click or drag the minimap                     | `ui/qml/HUDTop.qml`, `minimapMouse`             |
+| Follow       | Button in the top bar                              | `ui/qml/HUDTop.qml`                             |
+| Reset        | `Home`, or the Reset button in the top bar         | `rts.camera_reset`                              |
 
-`ui/qml/CameraGuide.qml` is the single list every surface reads: the compact
-in-battle legend (`CameraLegend.qml`), the Camera tab of the field manual
-(`HelpPanel.qml`), and the live edge-scroll state shown in both. Adding a
-control means adding one entry there; nothing else needs a second copy.
+`ui/qml/CameraGuide.qml` is the single descriptive list used by every help surface: the compact in-battle legend in `CameraLegend.qml`, the Camera tab in `HelpPanel.qml`, and the live edge-scroll status shown by both.
 
-## What the words mean
+Adding or renaming a camera control should therefore start in `CameraGuide.qml` rather than by duplicating text in several interfaces.
 
-The three rotations are separate commands and were, until recently, separately
-misnamed. Keep them apart:
+## Pan, rotate, and tilt are different operations
 
-- **Pan** moves the point the camera looks at across the ground. It never
-  changes the angle.
-- **Rotate** swings the camera around that point on the horizontal circle —
-  yaw. `Camera::yaw` and `CameraService::yaw`.
-- **Tilt** raises the camera towards an overhead view or lowers it towards the
-  horizon — pitch. `CameraService::tilt`, which used to be called
-  `orbit_direction` and was bound as "orbit camera left/right" even though it
-  never touched yaw. `Camera::orbit(yaw, pitch)` keeps its name: it is the
-  two-axis primitive both of the above drive.
+The three basic camera motions should remain distinct in both code and player-facing language:
 
-`R` and `T` used to carry tilt, which put tilt on the same key as the commander
-rally flag and relied on a contextual-priority rule to sort out which one the
-player meant. Tilt now lives on `Ctrl+Up` / `Ctrl+Down` and `R` belongs to the
-rally flag alone.
+- **Pan** moves the camera's ground target without changing viewing angle.
+- **Rotate** changes yaw, swinging the camera around the target on the horizontal plane. Runtime owners are `Camera::yaw` and `CameraService::yaw`.
+- **Tilt** changes pitch, raising the view toward overhead or lowering it toward the horizon. Runtime owner is `CameraService::tilt`.
 
-### The pitch sign
+`Camera::orbit(yaw, pitch)` remains the lower-level two-axis primitive used by both rotation and tilt.
 
-`CameraService::tilt` takes a direction where **positive raises the camera**,
-and it passes the opposite sign down to the orbit. That is not a typo. The
-camera's own pitch is the elevation of the _view_ direction, so straight down is
-`-85` and level is `-5`: raising the camera makes that number smaller. Read the
-sign the other way round — as `orbit_direction` did — and `Ctrl+Up` dives at the
-horizon while `Ctrl+Down` climbs. The unit tests assert the camera's height
-above its target rather than its pitch, because the height cannot be read
-backwards.
+Tilt is bound to `Ctrl+Up` and `Ctrl+Down`. `R` is reserved for the commander rally action, avoiding a contextual collision between camera motion and rally placement.
 
-## Two keys per command
+### The pitch sign convention
 
-`InputBindings` stores a **primary** and an **alternate** chord per action
-(`InputBindings::Slot`), so panning answers to the arrows and to `WASD` without
-either being second-class. The alternate is stored under the action id with an
-`|alt` suffix, remapped from its own button in Settings › Controls, and resolved
-by `actions_for_key` alongside the primary.
+`CameraService::tilt` accepts a direction where **positive means raise the camera**, but it passes the opposite sign to the lower-level orbit function.
 
-`WASD` on the pan commands is why **Attack** moved to `C` and **Stop** to `Z`.
-A key can only mean one thing in a context, and a pan key that is dead whenever
-troops are selected — which is nearly always — is not a pan key.
+That inversion is intentional. The camera's pitch describes the elevation of the **view direction**: a near-overhead view is around `-85`, while a near-level view is around `-5`. Raising the camera therefore moves the numerical pitch downward.
 
-Saved keymaps survive both changes: a renamed action carries its stored chord
-across on load, and a player who rebound Attack or Stop keeps what they chose.
-The rename pairs by behaviour, not by name — `rts.camera_orbit_left` lowered the
-camera, so it becomes `rts.camera_tilt_down` — because a key that survives the
-upgrade doing the opposite of what it used to do is worse than one that is
-simply unbound.
+Tests assert the camera's height above its target rather than reading pitch directly, which protects the intended user-facing direction from sign confusion.
 
-## Where a reset lands
+## Two chords per command
 
-Every map authors the camera that frames its whole engagement — 18 on the
-48-tile Sepulcher Watch, 273 on the 650-tile field at Cannae. Reset used to
-ignore all of it and snap to a flat 12 units on every map alike, which on a
-battle map meant going from the whole battlefield to one soldier's shield in a
-single keystroke. The mission's opening shot went through the same code, so a
-campaign began at that same 12 units.
+`InputBindings` stores a **primary** and **alternate** chord for each action through `InputBindings::Slot`. This is how keyboard panning can support both the arrow keys and `WASD` as first-class bindings.
 
-`Game::reset_framing` in `game/camera_framing.h` derives the reset view from
-what the map authored: a third of its distance, floored at 24 units, and never
-further out than the map itself asked for. The authored tilt and swing carry
-over unchanged. `GameConfig::camera_reset_framing` applies it, falling back to
-the built-in default only when no map is loaded.
+Alternate bindings are persisted under the action ID with an `|alt` suffix, rebound from their own button in **Settings → Controls**, and resolved by `actions_for_key` alongside the primary chord.
 
-That one function is what the camp focus at load
-(`app/session/level_orchestrator.cpp`), the Reset command
-(`CameraService::snap_to_entity`) and the skirmish opening shot
-(`SkirmishRuntimeCoordinator::center_camera_on_local_forces`) all read, so the
-opening framing and the framing a reset returns to cannot drift apart.
+Using `WASD` for camera pan required moving conflicting RTS commands: **Attack** uses `C` and **Stop** uses `Z`. Within one context, a key must have one unambiguous meaning.
 
-## Speed settings
+Saved keymaps survive action renames. Migration maps stored chords according to **behavior**, not merely old labels. For example, the former `rts.camera_orbit_left` action actually lowered the camera, so its binding migrates to `rts.camera_tilt_down`. Preserving the physical key while reversing the action would be worse than dropping the binding.
 
-Keyboard pan, wheel zoom and `Q`/`E` rotation each carry a user speed scale —
-a quarter to three times the designed pace, set in Settings › Controls. The
-values persist through `App::Core::UserSettings` and are pushed into the
-atomics in `game/render_bridge/camera_speeds.h`, which
-`CameraService::move`, `CameraService::zoom` and `CameraService::yaw` read on
-every call. Drag pan, minimap jumps and tilt deliberately stay unscaled: they
-are already proportional to the gesture that drives them, so a multiplier would
-just resell the same motion twice.
+## Reset framing follows the map
 
-## Edge scroll geometry
+Every map authors a camera view appropriate to its scale. Small maps and large battlefields therefore need different reset distances.
 
-The maths lives in `ui/edge_scroll.cpp` rather than inline in QML so it can be
-tested (`tests/ui/edge_scroll_test.cpp`).
+`Game::reset_framing` in `game/camera_framing.h` derives reset framing from the map's authored camera:
 
-- The band is 26 logical px on **every** side at the default sensitivity,
-  multiplied by both the edge-scroll sensitivity and the interface scale, and
-  never narrower than 10 px.
-- Push grows toward the edge on the same square curve on both axes, and starts
-  at `k_entry_push` (35%) rather than at nothing: crossing into the band moves
-  the camera at once, and pinning the cursor to the edge runs it.
-- A corner is clamped to the magnitude of a single edge, so rounding one does
-  not lurch the view by a factor of sqrt(2).
-- An unknown cursor position (`-1`), a zero-sized surface or a cursor past the
-  surface all yield no movement, so a stale pointer cannot scroll the map.
+- use one third of the authored distance;
+- never go closer than 24 units; and
+- never go farther out than the map itself requested.
 
-Scaling the band by the interface scale is what keeps it reachable on a 4K panel
-at 200%; without it the band stays 26 physical px while every other target
-doubles.
+Authored tilt and yaw are preserved.
 
-The two axes are deliberately symmetric. They were not: the vertical band was
-10 px against 12 horizontally and ramped as a **cube** against a square, so the
-middle of the top band moved the camera at an eighth of the pace the middle of a
-side band did. Pushing the cursor up read as broken, because for all but the
-last pixel or two it was.
+`GameConfig::camera_reset_framing` applies this rule and falls back to the built-in default only when no map is loaded.
 
-### Where the cursor comes from
+The same framing function is consumed by:
 
-`EdgeScroll.cursorIn(item)` reads `QCursor::pos()` and maps it into the overlay,
-and the overlay's 16 ms timer polls that. It deliberately does **not** use the
-overlay's own hover events.
+- camp focus during load in `app/session/level_orchestrator.cpp`;
+- the Reset command through `CameraService::snap_to_entity`; and
+- the skirmish opening shot through `SkirmishRuntimeCoordinator::center_camera_on_local_forces`.
 
-The overlay is a full-screen `hoverEnabled` MouseArea sitting _below_ the HUD
-(`z: 0.5` against the HUD's `z: 1`), because Qt stops hover delivery at the
-first item that accepts it and an overlay above the HUD swallowed every HUD
-tooltip. But the same rule cuts the other way: while the overlay drove edge
-scroll from its own `positionChanged`, the top bar, the command panel, the
-minimap and the commander overlay each ate the cursor before it arrived. The
-top edge, the bottom edge and all four corners simply did not scroll. Polling
-the platform cursor gives both — HUD tooltips open, and every screen edge
-scrolls.
+Sharing one calculation prevents opening framing and reset framing from drifting apart.
 
-### The minimap
+## Camera speed settings
 
-The minimap is the one HUD control that is itself a camera move, so edge scroll
-has to keep off it. It is refused by state rather than by geometry:
-`HUD.blocks_edge_scroll()` returns true for the minimap's own rectangle, and
-`mainWindow.edge_scroll_disabled` covers a drag that wanders out of it
-(`hud.minimap_drag_active`).
+Keyboard pan, wheel zoom, and `Q` / `E` rotation each have a user-adjustable speed scale from one quarter to three times the designed pace.
 
-This replaced a one-pixel geometric clearance — the band's widest setting was
-`12 * 2.0 = 24` px against a minimap whose hit area ended 25 px from the right —
-which is what pinned the base band at 12 px in the first place. A margin nobody
-chose is not a margin; the band is now free to be as wide as it needs to be.
+Values persist through `App::Core::UserSettings` and are propagated to the atomics in `game/render_bridge/camera_speeds.h`. `CameraService::move`, `CameraService::zoom`, and `CameraService::yaw` read those values on every call.
 
-## What suppresses edge scroll
+Drag pan, minimap jumps, and tilt remain unscaled because their displacement is already determined by the gesture itself. Applying another multiplier would make the same physical motion encode two layers of speed.
 
-`mainWindow.edge_scroll_disabled` is **derived**, never assigned:
+## Edge-scroll geometry
+
+The edge-scroll calculation lives in `ui/edge_scroll.cpp` so it can be tested independently by `tests/ui/edge_scroll_test.cpp`.
+
+Its important rules are:
+
+- the default trigger band is 26 logical px on **every** side;
+- band width scales with both edge-scroll sensitivity and interface scale, with a 10 px minimum;
+- push increases toward the edge on the same square curve for both axes;
+- movement begins at `k_entry_push` (35%) as soon as the cursor enters the band;
+- diagonal corner push is clamped to the magnitude of one edge, avoiding a `sqrt(2)` speed increase; and
+- unknown cursor coordinates (`-1`), zero-sized surfaces, or coordinates outside the surface produce no movement.
+
+Scaling by interface size keeps the target usable on high-resolution displays. A 26-logical-pixel band should not collapse into a tiny physical sliver while every other UI target doubles at 200% scale.
+
+Horizontal and vertical edges deliberately use the same geometry and response curve so top and bottom scrolling feel as strong as left and right scrolling.
+
+## Where the edge-scroll cursor comes from
+
+`EdgeScroll.cursorIn(item)` reads `QCursor::pos()` and maps it into the edge-scroll overlay. A 16 ms timer in the overlay polls that position.
+
+The system intentionally does **not** depend on the overlay's own hover events.
+
+The full-screen edge overlay sits below the HUD (`z: 0.5` versus the HUD's `z: 1`) so HUD controls retain hover states and tooltips. In Qt, hover delivery stops at the first item that accepts the event. An overlay above the HUD would swallow HUD interaction; an overlay below it would fail to receive pointer movement whenever a HUD element was under the cursor.
+
+Polling the platform cursor solves both sides of the problem: HUD controls receive their own events, while edge scrolling can still see every physical screen edge.
+
+## The minimap suppresses edge scroll explicitly
+
+The minimap is itself a camera-control surface, so edge scrolling must not compete with it.
+
+Suppression is based on state rather than a hand-tuned geometric margin:
+
+- `HUD.blocks_edge_scroll()` returns true for the minimap rectangle; and
+- `mainWindow.edge_scroll_disabled` remains true during a minimap drag through `hud.minimap_drag_active`, even if the pointer leaves the minimap while dragging.
+
+This lets the edge band be sized for usability rather than constrained by a fragile one-pixel clearance around the minimap.
+
+## What suppresses edge scrolling
+
+`mainWindow.edge_scroll_disabled` is a **derived** property:
 
 ```qml
 readonly property bool edge_scroll_disabled: gameViewItem.camera_pan_active
@@ -169,122 +128,93 @@ readonly property bool edge_scroll_disabled: gameViewItem.camera_pan_active
     || hud.commander_rpg_mode || hud.minimap_drag_active
 ```
 
-`camera_pan_active` is in turn derived from the live pan state
-(`renderArea.key_pan_count > 0 || renderArea.mouse_pan_active`). This matters:
-the flag used to be set on right-press and cleared on right-release, so a drag
-interrupted by a lost grab — a modal opening, the window losing focus — left it
-latched and killed edge scrolling for the rest of the session. Keep it derived.
+`camera_pan_active` is also derived from live input state:
 
-The last three terms are what a hover-driven overlay used to get for free: an
-open panel, the commander's own full-screen cursor overlay and the minimap each
-took the cursor away from it. A cursor read straight from the platform sees none
-of that, so every reason to _not_ scroll now has to be stated. Anything new that
-covers the map and wants the pointer to itself belongs in this list.
+```text
+renderArea.key_pan_count > 0 || renderArea.mouse_pan_active
+```
 
-The overlay's timer is likewise bound to a live condition rather than started
-from `onEntered`, because an item that becomes visible under a stationary cursor
-does not reliably get an enter event: closing the menu with the pointer already
-at rest used to leave the timer stopped.
+Keeping these values derived prevents them from becoming latched when input is interrupted. For example, a modal opening or the application losing focus during a right-drag must not leave edge scrolling disabled for the rest of the session.
 
-## HUD zones
+Polling the platform cursor means the overlay no longer learns suppression indirectly by losing hover events. Every state that should block edge scrolling therefore needs to be represented explicitly in the derived condition.
 
-`edge_scroll_overlay.in_hud_zone()` decides where **world hover** stops, not
-where scrolling stops. Scrolling deliberately still works over the HUD so that
-every screen edge scrolls, including the bottom edge behind the command panel.
-The function reads `hud.top_panel_height` and `hud.bottom_panel_height` — note
-the snake_case; the camelCase spellings do not exist and silently evaluate to
-`undefined`, which is how world hover used to leak through the HUD.
+The overlay timer is likewise controlled by a live condition rather than started only by an enter event. If a panel closes while the cursor is already resting at an edge, scrolling should resume without requiring the pointer to leave and re-enter.
 
-`HUD.blocks_edge_scroll()` is the much smaller sibling that decides where
-**scrolling** stops, and it covers the minimap alone. Do not fold the two
-together: `blocks_world_pointer()` claims both full-width panels, and scrolling
-has to reach through them or the top and bottom edges are dead.
+## HUD zones and pointer ownership
 
-The overlay accepts `Qt.NoButton`, so it never takes a click from a HUD button,
-and it sits below the HUD so HUD hover states and tooltips work.
+Two similar-sounding rules serve different purposes and should not be merged.
+
+### `in_hud_zone()` blocks world hover
+
+`edge_scroll_overlay.in_hud_zone()` decides where **world hover** stops. It reads `hud.top_panel_height` and `hud.bottom_panel_height`, using the exact snake-case property names.
+
+Those full-width zones prevent world units and placement previews from responding to a pointer that is actually interacting with the HUD.
+
+### `blocks_edge_scroll()` blocks camera scrolling
+
+`HUD.blocks_edge_scroll()` is much narrower and covers only the minimap.
+
+Camera edge scrolling intentionally continues behind the top and bottom HUD panels so every physical screen edge remains useful. Folding the world-pointer and camera-scroll zones together would make the top and bottom edges dead.
+
+The overlay accepts `Qt.NoButton` and sits beneath the HUD, so it does not consume clicks intended for HUD controls.
 
 ## Manual regression checklist
 
-Automated coverage stops at the geometry and the legend contents. Run this pass
-by hand when touching anything above. Every row should behave identically.
+Automated tests cover geometry, binding behavior, and legend contents, but several interactions depend on real windowing, focus, scale, and pointer behavior. Run this checklist when changing camera controls or edge scrolling.
 
 ### Layouts to cover
 
 1. **Windowed, 1280×720, interface scale 100%**
 2. **Fullscreen, native resolution, interface scale 100%**
 3. **High resolution (2560×1440 or 3840×2160), interface scale 100%**
-4. **Interface scale 150% and 200%** (Settings › Accessibility › Interface size)
-5. **Right-to-left language** (Settings › Language › العربية)
+4. **Interface scale 150% and 200%** through **Settings → Accessibility → Interface size**
+5. **Right-to-left language** through **Settings → Language → العربية**
 
-### Checks per layout
+### Edge-scroll checks for every layout
 
-- [ ] Cursor to the **left** edge scrolls left; **right**, **top** and **bottom**
-      each scroll their own way. The bottom edge scrolls even though the command
-      panel is under the cursor.
-- [ ] Each **corner** scrolls on both axes at once.
-- [ ] Scrolling **stops** as soon as the cursor leaves the band.
-- [ ] The band feels reachable — no hunting for a sliver of pixels. On a
-      high-DPI panel confirm the band grew with the interface scale.
-- [ ] The top and bottom edges feel exactly as strong as the sides, at the very
-      edge and halfway into the band alike.
-- [ ] Rounding a corner does not speed the camera up.
-- [ ] Settings › Accessibility shows the band width in px and it **matches** what
-      you have to reach for.
-- [ ] Turning **edge scrolling off** stops it everywhere; the legend then reads
-      `off`, and keyboard pan, right-drag, wheel zoom and the minimap still work.
-- [ ] Raise and lower **edge scroll strength**: the band visibly widens and the
-      camera visibly speeds up, and the px readout tracks it.
+- [ ] Left, right, top, and bottom edges scroll in the expected direction. The bottom edge still works with the command panel under the cursor.
+- [ ] Every corner scrolls on both axes at once.
+- [ ] Scrolling stops immediately when the cursor leaves the trigger band.
+- [ ] The band remains easy to reach, including on high-DPI displays and at large interface scales.
+- [ ] Top and bottom edges feel as strong as the side edges, both at the physical edge and halfway through the band.
+- [ ] Entering a corner does not increase total camera speed.
+- [ ] **Settings → Accessibility** reports a band width in pixels that matches the actual target size.
+- [ ] Disabling **Edge scrolling** stops edge movement everywhere while keyboard pan, right-drag, wheel zoom, and minimap navigation continue to work.
+- [ ] The in-game legend reports edge scrolling as `off` when disabled.
+- [ ] Raising and lowering **Edge scroll strength** visibly changes both band width and pan speed, and the pixel readout follows it.
 
-### Interaction checks (any one layout)
+### Interaction checks
 
-- [ ] Right-drag pans; edge scroll does **not** fight it mid-drag.
-- [ ] With **edge scroll strength at maximum**, drag the camera around by the
-      minimap: the camera goes where the minimap says and does **not** also
-      creep sideways, including when the drag wanders off the minimap onto the
-      screen edge beside it.
-- [ ] In the commander's first-person mode the screen edges do **not** scroll
-      the RTS camera.
-- [ ] Right-drag, then press `Esc` / open the menu mid-drag, then return to the
-      battle: edge scroll still works. (This is the regression that used to
-      latch it off permanently.)
-- [ ] Hold an arrow key, alt-tab away, release it outside the window, alt-tab
-      back: edge scroll still works and the camera is not still panning.
-- [ ] Alt-tab away with the cursor parked on an edge: the camera does **not**
-      keep scrolling in the background.
-- [ ] Open Settings, then close it with the cursor already resting on an edge:
-      edge scroll resumes without moving the mouse out and back in.
-- [ ] Hover a HUD button: it highlights, and no world unit highlights behind it.
-- [ ] Click every top-bar button and every command-grid button: each one
-      registers; none is swallowed by the edge overlay.
-- [ ] Issue an attack order with the cursor near a screen edge: the order lands
-      where the cursor is, not where the camera drifted to.
-- [ ] Place a building and a formation with the cursor over the HUD: the preview
-      does not follow the cursor into the panel.
+- [ ] Right-drag pans without edge scrolling fighting the drag.
+- [ ] At maximum edge-scroll strength, dragging the minimap moves only according to the minimap, even if the drag leaves the minimap near a screen edge.
+- [ ] Commander first-person mode does not scroll the RTS camera from screen edges.
+- [ ] Start a right-drag, open the menu with `Esc` mid-drag, return to the battle, and confirm edge scrolling still works.
+- [ ] Hold an arrow key, alt-tab away, release the key outside the window, return, and confirm the camera is not still panning and edge scroll still works.
+- [ ] Alt-tab away with the cursor resting on an edge and confirm the camera does not continue scrolling in the background.
+- [ ] Open Settings, close it while the pointer is already on an edge, and confirm scrolling resumes without extra pointer movement.
+- [ ] Hover HUD controls and confirm they highlight without world units highlighting underneath.
+- [ ] Click all top-bar and command-grid buttons and confirm the edge overlay does not swallow input.
+- [ ] Issue an attack order near a screen edge and confirm the order lands at the intended cursor location rather than after unwanted camera drift.
+- [ ] Move building and formation placement previews over the HUD and confirm the previews stop following the pointer there.
 
-### First-run and legend
+### First-run legend and help
 
-- [ ] On a **fresh profile**, the camera legend appears on the first battle.
-- [ ] Dismissing it (× or the top-bar star) keeps it dismissed across restarts.
-- [ ] The star button in the top bar toggles it back on.
+- [ ] On a fresh profile, the camera legend appears on the first battle.
+- [ ] Dismissing the legend keeps it dismissed across restarts.
+- [ ] The star button in the top bar can show it again.
 - [ ] The legend's **Camera settings** button opens Settings.
-- [ ] The field manual's **Camera** tab lists the same nine controls with the
-      same key names, and both follow a rebound pan or rotate key.
-- [ ] The legend's pan row names **both** the arrows and `WASD`, and rebinding
-      either slot in Settings updates it.
+- [ ] The field manual's **Camera** tab lists the same nine controls with the same key names and follows rebound pan or rotate keys.
+- [ ] The pan row names both arrows and `WASD`, and rebinding either slot updates the legend.
 
 ### Bindings and framing
 
-- [ ] Settings › Controls shows two key buttons for every command; binding the
-      second one to a key another command already holds warns before taking it.
-- [ ] Clearing the alternate with Backspace leaves the primary alone, and
-      **Default** on the row restores both.
-- [ ] `WASD` pans; `A` and `S` no longer stop or attack, and `C` and `Z` do.
-- [ ] `Ctrl+Up` / `Ctrl+Down` tilt; plain `Up` / `Down` still pan while Ctrl is
-      not held.
-- [ ] `R` places a rally flag and does nothing to the camera.
+- [ ] **Settings → Controls** shows two key buttons per command, and assigning an alternate already used by another command warns before reassignment.
+- [ ] Clearing only the alternate with `Backspace` leaves the primary binding intact; **Default** restores both.
+- [ ] `WASD` pans; `A` and `S` no longer mean Stop or Attack, while `C` and `Z` do.
+- [ ] `Ctrl+Up` and `Ctrl+Down` tilt; plain `Up` and `Down` continue to pan when Ctrl is not held.
+- [ ] `R` places a rally flag without moving the camera.
 - [ ] `Home` and the top-bar Reset button land on the same view.
-- [ ] Start Cannae and press `Home`: the camera frames the camp and the ground
-      around it, not a single soldier. Start the tutorial and do the same: the
-      view is closer, but still wider than one formation.
-- [ ] Load a save from a build before this change: any camera key you had
-      rebound is still yours, and tilt is where "orbit" used to be.
+- [ ] On Cannae, Reset frames the camp and surrounding battlefield rather than a single soldier. On the tutorial, Reset is closer but still wider than one formation.
+- [ ] Load a save from a build predating the camera-action rename and confirm custom bindings survive with tilt mapped to the behavior formerly labeled orbit.
+
+The camera system is easiest to maintain when every movement has one name, every help surface reads one source of truth, and edge scrolling is controlled by explicit geometry and state rather than incidental event delivery.
