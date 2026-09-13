@@ -221,6 +221,7 @@ add_executable(
     headless/wall_siege_test.cpp
     headless/tight_gap_navigation_test.cpp
     headless/stuck_recovery_test.cpp
+    headless/movement_pace_test.cpp
     headless/hill_traversal_test.cpp
     headless/playable_ground_test.cpp
     headless/wildlife_fight_motion_test.cpp
@@ -493,6 +494,7 @@ add_executable(
     render/creature/render_request_test.cpp
     render/selection_ring_layout_test.cpp
     render/ground_marker_pattern_test.cpp
+    render/ground_marker_tessellation_test.cpp
     render/arrow_cloud_render_test.cpp
     render/projectile_relation_test.cpp
     render/orientation_arrow_mesh_test.cpp

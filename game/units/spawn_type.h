@@ -429,7 +429,7 @@ inline auto is_wall_network_spawn(SpawnType type) -> bool {
   case SpawnType::MountedKnight:
   case SpawnType::HorseArcher:
   case SpawnType::HorseSpearman:
-    return 5.0F;
+    return 8.0F;
   case SpawnType::Sheep:
     return 6.0F;
   case SpawnType::Wolf:

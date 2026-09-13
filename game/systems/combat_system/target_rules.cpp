@@ -47,7 +47,7 @@ auto evaluate_target(Engine::Core::Entity* target,
     return TargetRefusal::Structure;
   }
 
-  if (query.intent == EngagementIntent::AutoAcquired &&
+  if (query.intent == EngagementIntent::AutoAcquired && !query.in_reach &&
       is_passive_wildlife_target(target)) {
     return TargetRefusal::Passive;
   }

@@ -384,6 +384,9 @@ void TerrainService::initialize(const MapDefinition& map_def) {
   m_road_segments = map_def.roads;
   m_forests = map_def.forests;
   rebuild_road_spatial_index();
+
+  m_reserved_world_prop_ids.clear();
+  m_next_world_prop_id = 1;
   m_authored_world_props = map_def.world_props;
   normalize_world_props(m_authored_world_props);
   register_authored_building_obstacles(map_def);

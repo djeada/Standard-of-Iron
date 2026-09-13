@@ -8,6 +8,23 @@
 
 namespace Render::Entity {
 
+auto resolve_formation_root(const Engine::Core::Entity* entity,
+                            const Engine::Core::TransformComponent& transform)
+    -> FormationRoot {
+  auto const* sample =
+      entity != nullptr
+          ? entity->get_component<Engine::Core::CommanderPresentationSampleComponent>()
+          : nullptr;
+  if (sample != nullptr && sample->presented_valid) {
+    return {QVector3D(sample->presented_position.x,
+                      sample->presented_position.y,
+                      sample->presented_position.z),
+            sample->presented_yaw};
+  }
+  return {QVector3D(transform.position.x, transform.position.y, transform.position.z),
+          transform.rotation.y};
+}
+
 auto build_formation_instance(const FormationInstanceRequest& request)
     -> FormationInstance {
   FormationInstance instance{};
@@ -139,6 +156,7 @@ void apply_authoritative_formation_slots(
     std::span<FormationInstance> instances,
     const Engine::Core::FormationPresentationComponent* presentation,
     Engine::Core::Entity* entity,
+    bool about_faced,
     bool force_single_soldier) {
   if (presentation != nullptr && presentation->soldiers.size() == instances.size()) {
     for (std::size_t index = 0; index < instances.size(); ++index) {
@@ -158,13 +176,14 @@ void apply_authoritative_formation_slots(
   }
 
   auto const layout = Game::Systems::FormationCombat::resolve_layout(*entity);
+  float const frame_sign = about_faced ? -1.0F : 1.0F;
   for (auto const& slot : layout.occupied_slots) {
     if (slot.index >= instances.size()) {
       continue;
     }
     auto& instance = instances[slot.index];
-    instance.offset_x = slot.local_x;
-    instance.offset_z = slot.local_z;
+    instance.offset_x = frame_sign * slot.local_x;
+    instance.offset_z = frame_sign * slot.local_z;
     instance.yaw_offset = slot.local_yaw;
     instance.row_index = static_cast<std::uint8_t>(slot.row);
     instance.col_index = static_cast<std::uint8_t>(slot.col);

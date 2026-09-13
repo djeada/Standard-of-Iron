@@ -20,6 +20,8 @@ Button {
     implicitHeight: Design.Metrics.controlHeight
     implicitWidth: Math.max(112, contentItem.implicitWidth + Design.Metrics.space24 * 2)
     hoverEnabled: true
+
+    focusPolicy: Qt.TabFocus
     Accessible.name: accessibleName
     Accessible.description: interactive ? ToolTip.text : disabledReason
     ToolTip.text: interactive ? "" : disabledReason

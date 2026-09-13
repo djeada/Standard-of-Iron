@@ -100,6 +100,10 @@ public:
     return std::clamp(
         body_radius, k_min_traversal_clearance, k_max_traversal_clearance);
   }
+
+  [[nodiscard]] static auto routing_clearance(float requested_radius) -> float {
+    return std::min(requested_radius, k_person_body_radius);
+  }
   auto is_world_segment_walkable(const QVector3D& from,
                                  const QVector3D& to,
                                  Passability passability = Passability::Light,
@@ -175,6 +179,8 @@ private:
   [[nodiscard]] auto clearance_penalty(int x, int y) const -> int;
   void rebuild_clearance(int min_x, int max_x, int min_z, int max_z);
 
+  [[nodiscard]] static auto buildings() -> BuildingCollisionRegistry&;
+
   void rebuild_elevation(int min_x, int max_x, int min_z, int max_z);
   [[nodiscard]] auto climb_penalty(int from_index, int to_index) const -> int;
 
@@ -184,9 +190,9 @@ private:
   static constexpr int k_edge_step_penalty = 1;
 
   static constexpr int k_clearance_radius = 3;
-  static constexpr float k_max_body_clearance = 1.5F;
-  static constexpr int k_clearance_ring_penalty = 4;
-  static constexpr int k_clearance_avoid_weight = 6;
+  static constexpr float k_clearance_overlap_cost = 10.0F;
+  static constexpr float k_max_cost_clearance = 3.0F;
+  static constexpr float k_rigid_overlap_cost = 100.0F;
   static constexpr int k_turn_penalty = 1;
 
   static constexpr float k_climb_noise_floor_metres = 0.05F;

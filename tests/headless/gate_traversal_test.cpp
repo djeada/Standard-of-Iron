@@ -7,6 +7,7 @@
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
 #include "game/core/component_gameplay.h"
+#include "game/core/movement_facts.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
@@ -255,7 +256,28 @@ TEST_F(GateTraversalTest, GroupMembersIndividuallyUseTheGateCenterline) {
       used_centerline.begin(), used_centerline.end(), [](bool used) { return used; }))
       << "not every group member traversed the gate independently";
   for (const auto troop : troops) {
-    EXPECT_GT(position_z(*session, troop), gate_position.z() + 2.0F);
+    auto const* facts =
+        session->world().try_get<Engine::Core::MovementFactsComponent>(troop);
+    auto const* movement =
+        session->world().try_get<Engine::Core::MovementComponent>(troop);
+    const QVector3D where = entity_position(*session, troop);
+    EXPECT_GT(position_z(*session, troop), gate_position.z() + 2.0F)
+        << "unit " << troop << " at (" << where.x() << ", " << where.z() << ") state "
+        << (facts != nullptr ? Engine::Core::movement_state_name(facts->progress.state)
+                             : "?")
+        << " rung "
+        << (facts != nullptr ? static_cast<int>(facts->progress.stall.rung) : -1)
+        << " abandoned "
+        << (facts != nullptr && facts->progress.stall.objective_abandoned)
+        << " arrived_short " << (facts != nullptr && facts->progress.arrived_short)
+        << " steer "
+        << (facts != nullptr ? static_cast<int>(facts->steering.result) : -1)
+        << " overlap " << (facts != nullptr ? facts->steering.body_overlap : -1.0F)
+        << " no_closer "
+        << (facts != nullptr ? facts->progress.stall.no_closer_seconds : -1.0F)
+        << " target " << (movement != nullptr && movement->get_has_target())
+        << " goal (" << (movement != nullptr ? movement->get_goal_x() : 0.0F) << ", "
+        << (movement != nullptr ? movement->get_goal_y() : 0.0F) << ")";
   }
 }
 

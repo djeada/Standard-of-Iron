@@ -4,6 +4,7 @@
 
 #include "app/session/skirmish_loader.h"
 #include "core/world.h"
+#include "game/core/component.h"
 #include "game/map/map_context.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
@@ -12,12 +13,14 @@
 #include "game/mission/mission_definition_view.h"
 #include "game/mission/mission_setup_coordinator.h"
 #include "game/systems/ai_system.h"
+#include "game/systems/command_service.h"
 #include "game/systems/default_content.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/runtime_system_registry.h"
+#include "game/systems/walkability.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 
@@ -49,13 +52,14 @@ protected:
     Game::Map::MapContextStore::reset_statistics();
   }
 
-  [[nodiscard]] auto prepare_mission() -> bool {
+  [[nodiscard]] auto
+  prepare_mission(const char* mission_file = k_mission_file) -> bool {
     m_world.set_presentation_enabled(false);
     Game::Systems::register_runtime_systems(m_world);
 
     int selected_player_id = k_local_owner;
     if (!m_campaign.start_mission_file(
-            QString::fromLatin1(k_mission_file), selected_player_id, &m_error)) {
+            QString::fromLatin1(mission_file), selected_player_id, &m_error)) {
       return false;
     }
     if (!m_campaign.current_mission_definition().has_value()) {
@@ -147,6 +151,47 @@ TEST_F(MissionStartupTest, InitialAiSnapshotsAreBuiltBeforeTheFirstPlayableFrame
          "phase had already produced";
   EXPECT_GT(ai_system->completed_decision_count(), 0U)
       << "the decisions prepared during loading were never applied";
+}
+
+TEST_F(MissionStartupTest, StartingUnitsStandApartOnOpenGround) {
+
+  ASSERT_TRUE(prepare_mission("assets/missions/the_timber_levy.json"))
+      << m_error.toStdString();
+
+  struct Placed {
+    Engine::Core::EntityID id;
+    QVector3D root;
+    float radius;
+  };
+  std::vector<Placed> units;
+  for (auto* entity : m_world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (unit == nullptr || transform == nullptr || unit->owner_id != k_local_owner ||
+        entity->has_component<Engine::Core::BuildingComponent>() ||
+        !entity->has_component<Engine::Core::MovementComponent>()) {
+      continue;
+    }
+    units.push_back(
+        {entity->get_id(),
+         QVector3D(transform->position.x, 0.0F, transform->position.z),
+         Game::Systems::CommandService::get_unit_radius(m_world, entity->get_id())});
+  }
+  ASSERT_GE(units.size(), 9U);
+
+  const Game::Systems::BodyProfile point_body;
+  for (std::size_t first = 0; first < units.size(); ++first) {
+    EXPECT_TRUE(Game::Systems::Walkability::can_stand(units[first].root, point_body))
+        << "unit " << units[first].id << " starts on ground it cannot stand on at ("
+        << units[first].root.x() << ", " << units[first].root.z() << ")";
+    for (std::size_t second = first + 1; second < units.size(); ++second) {
+      const float gap = (units[first].root - units[second].root).length() -
+                        units[first].radius - units[second].radius;
+      EXPECT_GE(gap, -0.05F) << "units " << units[first].id << " and "
+                             << units[second].id << " start overlapping by " << -gap
+                             << " m";
+    }
+  }
 }
 
 } // namespace

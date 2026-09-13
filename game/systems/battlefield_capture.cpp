@@ -387,6 +387,8 @@ auto run(const RunnerConfig& config, const TickObserver& observer) -> CaptureRes
       std::ceil(config.duration_seconds / config.fixed_step_seconds));
   std::unordered_map<Engine::Core::EntityID, int> previous_health;
   std::unordered_map<Engine::Core::EntityID, float> previous_yaw;
+
+  std::unordered_map<Engine::Core::EntityID, bool> previous_about_faced;
   std::unordered_map<Engine::Core::EntityID, float> prior_state_change_time;
   std::unordered_map<Engine::Core::EntityID, Engine::Core::MotionPresentationState>
       prior_motion_state;
@@ -455,7 +457,18 @@ auto run(const RunnerConfig& config, const TickObserver& observer) -> CaptureRes
           !std::isfinite(actual_vz)) {
         ++out.quality.non_finite_samples;
       }
-      if (auto it = previous_yaw.find(id); it != previous_yaw.end()) {
+      auto const* traversal =
+          (*scenario->world)
+              .try_get<Engine::Core::UnitTraversalLayoutStateComponent>(id);
+      bool const about_faced = traversal != nullptr && traversal->about_faced;
+      bool reversed_its_ranks = false;
+      if (auto it = previous_about_faced.find(id); it != previous_about_faced.end()) {
+        reversed_its_ranks = it->second != about_faced;
+      }
+      previous_about_faced[id] = about_faced;
+
+      if (auto it = previous_yaw.find(id);
+          it != previous_yaw.end() && !reversed_its_ranks) {
         out.quality.max_yaw_step_degrees =
             std::max(out.quality.max_yaw_step_degrees,
                      wrap_degrees(transform->rotation.y - it->second));

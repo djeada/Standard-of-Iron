@@ -87,6 +87,7 @@
 #include "render/humanoid/runtime/skeleton_evaluator.h"
 #include "render/humanoid/runtime/unit_layout_spacing.h"
 #include "render/rigged_mesh.h"
+#include "render/selection_ring_layout.h"
 #include "render/submitter.h"
 #include "render/template_cache.h"
 #include "render/world_view.h"
@@ -1731,6 +1732,76 @@ TEST(HumanoidPrepare, BuilderConstructionFormationFacesInward) {
     float const inward_z = -world_z / world_r;
     EXPECT_NEAR(face_x, inward_x, 0.01F) << "idx=" << idx;
     EXPECT_NEAR(face_z, inward_z, 0.01F) << "idx=" << idx;
+  }
+}
+
+TEST(HumanoidPrepare,
+     RenderedSoldierRootsMatchRingsDuringTurnsCompressionAndIdleCorrections) {
+  Render::GL::HumanoidRendererBase const owner;
+  for (float const fps : {30.0F, 60.0F, 144.0F}) {
+    SCOPED_TRACE(fps);
+    Engine::Core::StandaloneEntity scratch(4344);
+    auto& entity = scratch.entity();
+    auto* unit =
+        entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 2.0F);
+    unit->spawn_type = Game::Units::SpawnType::Spearman;
+    unit->nation_id = Game::Systems::NationID::RomanRepublic;
+    unit->render_individuals_per_unit_override = 3;
+    auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+    transform->scale = {0.55F, 0.55F, 0.55F};
+    auto* shared = entity.add_component<Engine::Core::FormationPresentationComponent>();
+    shared->rows = 1;
+    shared->cols = 3;
+    shared->soldiers.resize(3);
+    for (std::uint16_t index = 0; index < 3; ++index) {
+      shared->soldiers[index].slot_index = index;
+      shared->soldiers[index].col = index;
+      shared->soldiers[index].alive = true;
+    }
+    Render::GL::DrawContext ctx{};
+    ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
+    ctx.entity = &entity;
+    ctx.allow_template_cache = false;
+    float previous_idle_yaw = 0.0F;
+    for (std::uint32_t frame = 0; frame < 90; ++frame) {
+      bool const idle = frame >= 30;
+      transform->rotation.y = idle ? 30.0F : static_cast<float>(frame);
+      transform->position = {
+          2.0F, 0.0F, idle ? 1.0F : static_cast<float>(frame) / 30.0F};
+      for (std::size_t index = 0; index < shared->soldiers.size(); ++index) {
+        shared->soldiers[index].local_x =
+            (static_cast<float>(index) - 1.0F) *
+            (idle ? 0.82F : 1.0F - 0.18F * static_cast<float>(frame) / 30.0F);
+        shared->soldiers[index].local_z =
+            idle ? (frame % 2 == 0 ? -0.01F : 0.01F) : 0.0F;
+      }
+      Render::GL::AnimationInputs anim{};
+      anim.time = static_cast<float>(frame) / fps;
+      anim.movement_state = idle ? Render::Creature::MovementAnimationState::Idle
+                                 : Render::Creature::MovementAnimationState::Walk;
+      Render::Humanoid::HumanoidPreparation prep;
+      Render::Humanoid::prepare_humanoid_instances(
+          owner, ctx, anim, test_runtime(frame), prep);
+      auto const bodies = prep.bodies.requests();
+      auto const root = Render::Entity::resolve_formation_root(&entity, *transform);
+      auto const rings =
+          Render::GL::build_selection_ring_layout({.soldiers = shared->soldiers,
+                                                   .position = root.position,
+                                                   .yaw_degrees = root.yaw});
+      ASSERT_EQ(bodies.size(), rings.size());
+      ASSERT_EQ(bodies.size(), 3U);
+      for (std::size_t index = 0; index < bodies.size(); ++index) {
+        auto const origin = bodies[index].world.map(QVector3D());
+        EXPECT_NEAR(origin.x(), rings[index].world_x, 1e-5F);
+        EXPECT_NEAR(origin.z(), rings[index].world_z, 1e-5F);
+      }
+      auto const forward = bodies.front().world.mapVector(QVector3D(0.0F, 0.0F, 1.0F));
+      float const yaw = std::atan2(forward.x(), forward.z());
+      if (frame > 60) {
+        EXPECT_NEAR(yaw, previous_idle_yaw, 1e-5F);
+      }
+      previous_idle_yaw = yaw;
+    }
   }
 }
 
@@ -4707,6 +4778,46 @@ TEST(AnimationCoreLocomotionManifest, RunHasACompactAirborneSilhouette) {
   EXPECT_LT(run_track, walk_track - 0.02F);
   EXPECT_GT(run_pose.hand_l_delta.y, walk_pose.hand_l_delta.y + 0.08F);
   EXPECT_GT(run_pose.shoulder_l_delta.z, walk_pose.shoulder_l_delta.z + 0.08F);
+}
+
+TEST(AnimationCoreLocomotionManifest, RunFoldsTheTrailingLegBeforeBringingItForward) {
+  auto run = run_pose_inputs();
+  run.cycle_phase = 0.52F;
+  auto const recovery = Animation::resolve_humanoid_locomotion_pose(run);
+  run.cycle_phase = 0.88F;
+  auto const landing = Animation::resolve_humanoid_locomotion_pose(run);
+
+  EXPECT_GT(recovery.foot_l.y, run.foot_y_offset + 0.35F);
+  EXPECT_LT(recovery.foot_l.z, 0.0F);
+  EXPECT_GT(landing.foot_l.z, recovery.foot_l.z);
+  EXPECT_LT(landing.foot_l.y, recovery.foot_l.y - 0.15F);
+}
+
+TEST(AnimationCoreHoldPoseManifest, RunningCarriesFollowTheStrideAndLoopCleanly) {
+  for (auto kind : {Animation::HumanoidHeldPoseKind::SwordShieldCarry,
+                    Animation::HumanoidHeldPoseKind::SpearIdle,
+                    Animation::HumanoidHeldPoseKind::CasterChannel,
+                    Animation::HumanoidHeldPoseKind::StaveCarry}) {
+    Animation::HumanoidHeldPoseInputs inputs{};
+    inputs.kind = kind;
+    inputs.running = true;
+    inputs.cycle_phase = 0.05F;
+    auto const first = Animation::resolve_humanoid_held_pose(inputs);
+    inputs.cycle_phase = 0.55F;
+    auto const opposite = Animation::resolve_humanoid_held_pose(inputs);
+    EXPECT_GT(std::abs(first.right_hand.z - opposite.right_hand.z), 0.08F);
+    inputs.cycle_phase = 1.05F;
+    auto const loop = Animation::resolve_humanoid_held_pose(inputs);
+    EXPECT_NEAR(first.right_hand.z, loop.right_hand.z, 1.0e-5F);
+    EXPECT_NEAR(first.right_hand.y, loop.right_hand.y, 1.0e-5F);
+
+    inputs.running = false;
+    inputs.cycle_phase = 0.05F;
+    auto const walk = Animation::resolve_humanoid_held_pose(inputs);
+    inputs.cycle_phase = 0.55F;
+    auto const walk_opposite = Animation::resolve_humanoid_held_pose(inputs);
+    EXPECT_FLOAT_EQ(walk.right_hand.z, walk_opposite.right_hand.z);
+  }
 }
 
 TEST(AnimationCoreLocomotionManifest, WalkHeelStrikesWhileRunLandsMidfoot) {

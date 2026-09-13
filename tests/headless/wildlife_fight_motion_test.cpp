@@ -12,6 +12,7 @@
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
+#include "game/systems/command_service.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
@@ -21,6 +22,7 @@
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/wildlife/wildlife_config.h"
+#include "game/wildlife/wildlife_species.h"
 #include "game/wildlife/wildlife_system.h"
 
 namespace {
@@ -431,4 +433,106 @@ TEST_F(WildlifeFightMotionTest, EveryBiteStartsFacingItsCommittedTargetAtContact
     }
   }
   EXPECT_GT(checked, 3U) << "the fixture must exercise repeated commitments";
+}
+
+TEST_F(WildlifeFightMotionTest, AUnitThatWalksIntoAWolfIsInAFightOnContact) {
+  field();
+  auto* system = m_session->world().get_system<Game::Wildlife::WildlifeSystem>();
+  ASSERT_NE(system, nullptr);
+  Game::Wildlife::WildlifeSettings settings = Game::Wildlife::default_settings();
+  settings.enabled = true;
+  settings.seed = 7U;
+  settings.sheep.enabled = false;
+  settings.sheep.group_count = 0;
+  settings.wolves.enabled = true;
+  settings.wolves.group_count = 1;
+  settings.wolves.group_size_min = 1;
+  settings.wolves.group_size_max = 1;
+  settings.wolves.aggression = 1.0F;
+  settings.wolves.roam_radius = 16.0F;
+  settings.wolves.alert_radius = 16.0F;
+  settings.wolves.spawn_areas = {{20.0F, 20.0F, 0.5F}};
+  settings.birds.enabled = false;
+  settings.birds.group_count = 0;
+  Game::Wildlife::sanitize(settings);
+  system->configure(settings, 7U);
+
+  spawn(Game::Units::SpawnType::Spearman, QVector3D(12.0F, 0.0F, 20.0F));
+  ASSERT_FALSE(m_handles.empty());
+  const EntityID troop = m_handles.back()->id();
+  step_once();
+  const auto wolves = animals();
+  ASSERT_EQ(wolves.size(), 1U);
+  const EntityID wolf = wolves.front()->get_id();
+
+  auto& world = m_session->world();
+  Game::Systems::CommandService::move_unit(world, troop, QVector3D(30.0F, 0.0F, 20.0F));
+
+  auto position = [&](EntityID id) {
+    auto const* transform = world.get_entity(id)->get_component<TransformComponent>();
+    return QVector3D(transform->position.x, 0.0F, transform->position.z);
+  };
+  auto troop_engaged = [&]() {
+    auto* entity = world.get_entity(troop);
+    auto const* target = entity->get_component<AttackTargetComponent>();
+    auto const* attack = entity->get_component<AttackComponent>();
+    return (target != nullptr && target->target_id == wolf) ||
+           (attack != nullptr && attack->in_melee_lock &&
+            attack->melee_lock_target_id == wolf);
+  };
+  auto wolf_committed = [&]() {
+    auto const* wildlife = world.get_entity(wolf)->get_component<WildlifeComponent>();
+    return wildlife != nullptr &&
+           wildlife->behavior == Game::Wildlife::Behavior::Stalk &&
+           wildlife->focus_id == troop;
+  };
+  auto wolf_alive = [&]() {
+    auto const* unit = world.get_entity(wolf)->get_component<UnitComponent>();
+    return unit != nullptr && unit->health > 0;
+  };
+
+  const float step = tick_seconds();
+  float first_touch = -1.0F;
+  float troop_answered = -1.0F;
+  float wolf_answered = -1.0F;
+  float closest = 1.0e9F;
+  for (float elapsed = 0.0F; elapsed < 10.0F; elapsed += step) {
+    step_once();
+    float const gap = (position(troop) - position(wolf)).length();
+    closest = std::min(closest, gap);
+    if (first_touch < 0.0F && gap <= 1.6F) {
+      first_touch = elapsed;
+    }
+    if (troop_answered < 0.0F && troop_engaged()) {
+      troop_answered = elapsed;
+    }
+    if (wolf_answered < 0.0F && wolf_committed()) {
+      wolf_answered = elapsed;
+    }
+    if (!wolf_alive()) {
+      break;
+    }
+  }
+
+  ASSERT_GE(first_touch, 0.0F)
+      << "the troop never reached the wolf; closest " << closest << " m, troop at "
+      << position(troop).x() << ", wolf at " << position(wolf).x();
+  EXPECT_GE(troop_answered, 0.0F) << "the troop walked into a wolf and never fought it";
+  EXPECT_GE(wolf_answered, 0.0F)
+      << "the wolf let a troop walk into it and never turned";
+  if (troop_answered >= 0.0F) {
+
+    EXPECT_LE(troop_answered - first_touch, 1.0F)
+        << "the troop answered " << (troop_answered - first_touch)
+        << " s after contact";
+  }
+  if (wolf_answered >= 0.0F) {
+    EXPECT_LE(wolf_answered - first_touch, 0.5F)
+        << "the wolf answered " << (wolf_answered - first_touch) << " s after contact";
+  }
+  if (wolf_alive()) {
+    EXPECT_LE((position(troop) - position(wolf)).length(), 3.0F)
+        << "the troop walked " << (position(troop) - position(wolf)).length()
+        << " m away from a wolf it had run into";
+  }
 }

@@ -9,6 +9,7 @@
 #include <limits>
 #include <numbers>
 #include <optional>
+#include <vector>
 
 #include "../core/ambient_session.h"
 #include "../core/component_economy.h"
@@ -117,41 +118,21 @@ auto production_count_increment(const Engine::Core::UnitComponent* unit_comp,
   return production_cost;
 }
 
-auto compute_builder_exit_position(float center_x,
-                                   float center_z,
-                                   const QVector3D& builder_pos,
-                                   float unit_radius,
-                                   const std::string& building_type) -> QVector3D {
-  auto const size = BuildingCollisionRegistry::get_building_size(building_type);
-  float const half_width = size.width * 0.5F;
-  float const half_depth = size.depth * 0.5F;
-  float const clearance = unit_radius + 0.25F;
-
-  float dir_x = builder_pos.x() - center_x;
-  float dir_z = builder_pos.z() - center_z;
-  float const len_sq = dir_x * dir_x + dir_z * dir_z;
-  if (len_sq < 0.0001F) {
-    dir_x = 1.0F;
-    dir_z = 0.0F;
-  } else {
-    float const len = std::sqrt(len_sq);
-    dir_x /= len;
-    dir_z /= len;
-  }
-
-  float const abs_x = std::fabs(dir_x);
-  float const abs_z = std::fabs(dir_z);
-  float const sx = (abs_x > 0.0001F) ? (half_width + clearance) / abs_x
-                                     : std::numeric_limits<float>::infinity();
-  float const sz = (abs_z > 0.0001F) ? (half_depth + clearance) / abs_z
-                                     : std::numeric_limits<float>::infinity();
-  float const scale = std::min(sx, sz);
-  float const fallback_scale = std::max(half_width, half_depth) + clearance;
-  float const final_scale =
-      std::isfinite(scale) && scale > 0.0F ? scale : fallback_scale;
-
-  return {
-      center_x + dir_x * final_scale, builder_pos.y(), center_z + dir_z * final_scale};
+auto distance_to_site_edge(const Engine::Core::BuilderProductionComponent& builder,
+                           float x,
+                           float z) -> float {
+  auto const size = BuildingCollisionRegistry::get_building_size(builder.product_type);
+  float const yaw =
+      builder.construction_site_rotation_y * std::numbers::pi_v<float> / 180.0F;
+  float const cosine = std::cos(yaw);
+  float const sine = std::sin(yaw);
+  float const dx = x - builder.construction_site_x;
+  float const dz = z - builder.construction_site_z;
+  float const local_x = std::fabs((dx * cosine) - (dz * sine));
+  float const local_z = std::fabs((dx * sine) + (dz * cosine));
+  float const outside_x = std::max(0.0F, local_x - (size.width * 0.5F));
+  float const outside_z = std::max(0.0F, local_z - (size.depth * 0.5F));
+  return std::hypot(outside_x, outside_z);
 }
 
 auto find_guaranteed_valid_exit(float exit_x,
@@ -172,6 +153,71 @@ auto find_guaranteed_valid_exit(float exit_x,
   }
 
   return NavGrid::grid_to_world(exit_grid);
+}
+
+auto builder_exit_position(const Engine::Core::BuilderProductionComponent& builder,
+                           const Engine::Core::MovementComponent& movement,
+                           float unit_radius) -> QVector3D {
+  float const center_x = builder.construction_site_x;
+  float const center_z = builder.construction_site_z;
+  auto const size = BuildingCollisionRegistry::get_building_size(builder.product_type);
+  float const half_width = size.width * 0.5F;
+  float const half_depth = size.depth * 0.5F;
+  float const clearance = unit_radius + 0.25F;
+
+  auto const exit_along = [&](float dir_x, float dir_z) {
+    float const abs_x = std::fabs(dir_x);
+    float const abs_z = std::fabs(dir_z);
+    float const sx = abs_x > 0.0001F ? (half_width + clearance) / abs_x
+                                     : std::numeric_limits<float>::infinity();
+    float const sz = abs_z > 0.0001F ? (half_depth + clearance) / abs_z
+                                     : std::numeric_limits<float>::infinity();
+    float const scale = std::min(sx, sz);
+    return QVector3D(center_x + dir_x * scale, 0.0F, center_z + dir_z * scale);
+  };
+
+  std::vector<QVector3D> candidates;
+  if (builder.has_site_approach) {
+    float dir_x = builder.site_approach_x - center_x;
+    float dir_z = builder.site_approach_z - center_z;
+    float const len = std::hypot(dir_x, dir_z);
+    if (len > 0.0001F) {
+      candidates.push_back(exit_along(dir_x / len, dir_z / len));
+    }
+  }
+  for (auto const [dir_x, dir_z] : {std::pair{1.0F, 0.0F},
+                                    std::pair{-1.0F, 0.0F},
+                                    std::pair{0.0F, 1.0F},
+                                    std::pair{0.0F, -1.0F}}) {
+    candidates.push_back(exit_along(dir_x, dir_z));
+  }
+
+  auto* pathfinder = NavGrid::get_pathfinder();
+  auto const passability = movement.get_can_enter_forest()
+                               ? Pathfinding::Passability::Light
+                               : Pathfinding::Passability::Heavy;
+  std::uint32_t const home_region =
+      pathfinder != nullptr && builder.has_site_approach
+          ? pathfinder->region_of(NavGrid::world_to_grid(builder.site_approach_x,
+                                                         builder.site_approach_z),
+                                  passability)
+          : Pathfinding::k_unreachable_region;
+  if (home_region != Pathfinding::k_unreachable_region) {
+    for (auto const& candidate : candidates) {
+      Point const cell = NavGrid::world_to_grid(candidate.x(), candidate.z());
+      if (pathfinder->region_of(cell, passability) == home_region) {
+        return candidate;
+      }
+    }
+  }
+  for (auto const& candidate : candidates) {
+    if (NavGrid::is_grid_walkable(
+            NavGrid::world_to_grid(candidate.x(), candidate.z()))) {
+      return candidate;
+    }
+  }
+  return find_guaranteed_valid_exit(
+      candidates.front().x(), candidates.front().z(), unit_radius);
 }
 
 constexpr float k_site_bypass_reach = 2.5F;
@@ -689,9 +735,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     }
   }
 
-  constexpr float CONSTRUCTION_ARRIVAL_DISTANCE_SQ = 0.0225F;
-
-  constexpr float k_wall_site_arrival_distance_sq = 1.0F * 1.0F;
+  constexpr float k_site_arrival_distance_sq = 1.0F * 1.0F;
 
   constexpr float k_site_approach_limit_seconds = 30.0F;
 
@@ -790,15 +834,18 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         float const dz = builder_prod->construction_site_z - transform->position.z;
         float const dist_sq = dx * dx + dz * dz;
 
-        const float arrival_sq = is_wall_network_product(builder_prod->product_type)
-                                     ? k_wall_site_arrival_distance_sq
-                                     : CONSTRUCTION_ARRIVAL_DISTANCE_SQ;
-        if (dist_sq < arrival_sq) {
+        const float arrival_sq = k_site_arrival_distance_sq;
+        float const edge = distance_to_site_edge(
+            *builder_prod, transform->position.x, transform->position.z);
+        if (dist_sq < arrival_sq || (edge * edge) < arrival_sq) {
 
           builder_prod->at_construction_site = true;
           builder_prod->in_progress = true;
           builder_prod->bypass_movement_active = false;
           builder_prod->clear_fault();
+          builder_prod->has_site_approach = true;
+          builder_prod->site_approach_x = transform->position.x;
+          builder_prod->site_approach_z = transform->position.z;
           Engine::Core::EventManager::instance().publish(
               Engine::Core::AudioCueEvent::for_owner(builder_owner_id,
                                                      "build.construction_started"));
@@ -818,10 +865,18 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
 
           constexpr float k_site_progress_epsilon = 0.75F;
           float const distance = std::sqrt(dist_sq);
+
+          auto const* facts =
+              world->try_get<Engine::Core::MovementFactsComponent>(e->get_id());
+          bool const on_route = movement != nullptr && movement->get_has_target() &&
+                                facts != nullptr &&
+                                facts->progress.remaining_arclength > 0.0F;
+          float const approach =
+              on_route ? facts->progress.remaining_arclength : distance;
           if (builder_prod->site_closest_approach <= 0.0F ||
-              distance <
+              approach <
                   builder_prod->site_closest_approach - k_site_progress_epsilon) {
-            builder_prod->site_closest_approach = distance;
+            builder_prod->site_closest_approach = approach;
             builder_prod->site_approach_seconds = 0.0F;
           }
           builder_prod->site_approach_seconds += delta_time;
@@ -1146,17 +1201,10 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
 
             if (builder_prod->has_construction_site && movement != nullptr &&
                 t != nullptr) {
-              float const unit_radius =
-                  CommandService::get_unit_radius(*world, e->get_id());
-              QVector3D const preferred_exit = compute_builder_exit_position(
-                  builder_prod->construction_site_x,
-                  builder_prod->construction_site_z,
-                  QVector3D(t->position.x, t->position.y, t->position.z),
-                  unit_radius,
-                  builder_prod->product_type);
-
-              QVector3D const safe_exit = find_guaranteed_valid_exit(
-                  preferred_exit.x(), preferred_exit.z(), unit_radius);
+              QVector3D const safe_exit = builder_exit_position(
+                  *builder_prod,
+                  *movement,
+                  CommandService::get_unit_radius(*world, e->get_id()));
 
               activate_bypass_movement(builder_prod, safe_exit.x(), safe_exit.z());
 

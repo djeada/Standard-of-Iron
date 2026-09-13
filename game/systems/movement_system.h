@@ -39,11 +39,6 @@ private:
                             const QVector3D& goal) -> bool;
   static void assign_direct_target(Engine::Core::MovementComponent& movement,
                                    const QVector3D& target);
-  static auto assign_path_to_movement(Pathfinding& pathfinder,
-                                      const std::vector<Point>& path_points,
-                                      const Engine::Core::TransformComponent& transform,
-                                      Engine::Core::MovementComponent& movement,
-                                      bool include_first_waypoint = false) -> bool;
   static auto
   assign_waypoints_to_movement(Pathfinding& pathfinder,
                                const std::vector<QVector3D>& waypoints,

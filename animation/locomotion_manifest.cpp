@@ -159,6 +159,7 @@ struct LocomotionPoseProfile {
   float head_stabilization{0.0F};
   float contact_lift{0.0F};
   float knee_drive{0.0F};
+  float heel_recovery{0.0F};
   float heel_strike_pitch{0.0F};
   float toe_off_pitch{0.0F};
   float swing_clearance_pitch{0.0F};
@@ -195,6 +196,7 @@ struct LocomotionPoseProfile {
   out.head_stabilization = mix(a.head_stabilization, b.head_stabilization);
   out.contact_lift = mix(a.contact_lift, b.contact_lift);
   out.knee_drive = mix(a.knee_drive, b.knee_drive);
+  out.heel_recovery = mix(a.heel_recovery, b.heel_recovery);
   out.heel_strike_pitch = mix(a.heel_strike_pitch, b.heel_strike_pitch);
   out.toe_off_pitch = mix(a.toe_off_pitch, b.toe_off_pitch);
   out.swing_clearance_pitch = mix(a.swing_clearance_pitch, b.swing_clearance_pitch);
@@ -262,6 +264,7 @@ struct LocomotionPoseProfile {
   profile.head_stabilization = 0.90F;
   profile.contact_lift = 0.010F;
   profile.knee_drive = 0.065F;
+  profile.heel_recovery = 0.24F;
 
   profile.heel_strike_pitch = -0.06F;
   profile.toe_off_pitch = -0.66F;
@@ -397,6 +400,8 @@ travel_shares_of(const HumanoidLocomotionPoseInputs& inputs) noexcept -> TravelS
     z_pos = -foot_stride_length * (1.0F - profile.stance_forward_fraction) +
             (foot_stride_length * 1.00F) * travel;
     foot_y +=
+
+        smooth_pulse(t, 0.0F, 0.30F, 0.80F) * profile.heel_recovery * step_scale +
         lift_curve * foot_step_height +
         std::sin(t * std::numbers::pi_v<float>) * profile.knee_drive * step_scale +
         landing_soften * profile.contact_lift * 0.25F;
@@ -1016,8 +1021,21 @@ auto resolve_humanoid_locomotion_pose(
     float const angle = std::asin(std::clamp(forward / arm_length, -0.85F, 0.85F));
     float const flex = profile.elbow_flex * (0.55F + 0.45F * std::max(0.0F, raw));
     float const extension = arm_length * (1.0F - flex);
-    hand_delta.z += extension * std::sin(angle);
-    hand_delta.y += arm_length - extension * std::cos(angle);
+    float const walk_z = extension * std::sin(angle);
+    float const walk_y = arm_length - extension * std::cos(angle);
+
+    float const upper_angle = raw * 0.85F * inputs.arm_swing_amplitude * stride_scale *
+                                  arm_swing_travel_scale -
+                              0.20F;
+    float const elbow_angle = 1.45F + 0.15F * raw;
+    float const upper_length = arm_length * 0.50F;
+    float const forearm_length = arm_length * 0.45F;
+    float const run_z = upper_length * std::sin(upper_angle) +
+                        forearm_length * std::sin(upper_angle + elbow_angle);
+    float const run_y = arm_length - upper_length * std::cos(upper_angle) -
+                        forearm_length * std::cos(upper_angle + elbow_angle);
+    hand_delta.z += lerp(walk_z, run_z, run_blend);
+    hand_delta.y += lerp(walk_y, run_y, run_blend);
     hand_delta.x -= lateral_sign * forward * profile.arm_counter_shift;
   };
   apply_arm_swing(sample.hand_l_delta, left_phase, -1.0F);

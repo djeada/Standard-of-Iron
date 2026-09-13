@@ -248,7 +248,7 @@ auto Pathfinding::is_world_position_walkable(const QVector3D& world_position,
     return true;
   }
 
-  float const radius = std::min(clearance_radius, k_max_body_clearance);
+  float const radius = clearance_radius;
   float const half_cell = m_grid_cell_size * 0.5F;
   float const center_u = world_position.x() - m_grid_offset_x;
   float const center_v = world_position.z() - m_grid_offset_z;
@@ -503,7 +503,7 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
   apply_forest_cells(min_x, max_x, min_z, max_z);
   apply_resource_prop_cells(min_x, max_x, min_z, max_z);
 
-  auto& registry = BuildingCollisionRegistry::instance();
+  auto& registry = buildings();
   registry.for_each_building_in_region(
       static_cast<float>(min_x) + m_grid_offset_x,
       static_cast<float>(max_x) + m_grid_offset_x,
@@ -553,7 +553,7 @@ void Pathfinding::force_navigation_passages_walkable(int min_x,
 
   constexpr float k_touch_epsilon = 1.0e-3F;
 
-  auto const& registry = BuildingCollisionRegistry::instance();
+  auto const& registry = buildings();
   for (const auto& passage : registry.navigation_passages()) {
     auto const range = cells_covering(
         passage.center_x, passage.center_z, passage.width * 0.5F, passage.depth * 0.5F);
@@ -634,7 +634,7 @@ void Pathfinding::force_map_passage_cells_walkable(int min_x,
   }
 
   constexpr float k_touch_epsilon = 1.0e-3F;
-  auto const& registry = BuildingCollisionRegistry::instance();
+  auto const& registry = buildings();
 
   for (int z = min_z; z <= max_z; ++z) {
     for (int x = min_x; x <= max_x; ++x) {
@@ -927,8 +927,11 @@ auto Pathfinding::find_path(const Point& start,
   std::shared_lock<std::shared_mutex> const navigation_lock(m_navigation_mutex);
   auto path = find_path_internal(
       start, end, passability, static_cast<float>(clearance_quarters) * 0.25F);
+
+  bool const reached_goal = !path.empty() && path.back() == end;
   std::lock_guard<std::mutex> const cache_lock(m_path_cache_mutex);
-  if (m_path_cache_revision != revision || navigation_revision() != revision) {
+  if (!reached_goal || m_path_cache_revision != revision ||
+      navigation_revision() != revision) {
     return path;
   }
   evict_cold_paths();
@@ -1046,13 +1049,27 @@ void Pathfinding::rebuild_region_map(RegionMap& map, Passability passability) co
     return;
   }
 
+  auto const& gates = GateService::blockers();
+  auto const connects = [&](int x, int y) {
+    if (is_walkable(x, y, passability)) {
+      return true;
+    }
+    if (gates.empty()) {
+      return false;
+    }
+    QVector3D const world = grid_to_world({x, y});
+    return std::any_of(gates.begin(), gates.end(), [&](GateBlocker const& gate) {
+      return gate.contains(world.x(), world.z());
+    });
+  };
+
   std::vector<int> frontier;
   std::uint32_t next_label = k_unreachable_region;
   for (int seed_y = 0; seed_y < m_height; ++seed_y) {
     for (int seed_x = 0; seed_x < m_width; ++seed_x) {
       int const seed_index = to_index(seed_x, seed_y);
       if (map.labels[static_cast<std::size_t>(seed_index)] != k_unreachable_region ||
-          !is_walkable(seed_x, seed_y, passability)) {
+          !connects(seed_x, seed_y)) {
         continue;
       }
 
@@ -1070,7 +1087,7 @@ void Pathfinding::rebuild_region_map(RegionMap& map, Passability passability) co
             collect_neighbors(current, neighbors, passability);
         for (std::size_t i = 0; i < neighbor_count; ++i) {
           Point const& neighbor = neighbors[i];
-          if (!is_walkable(neighbor.x, neighbor.y, passability)) {
+          if (!connects(neighbor.x, neighbor.y)) {
             continue;
           }
           auto const neighbor_index = static_cast<std::size_t>(to_index(neighbor));
@@ -1148,26 +1165,40 @@ auto Pathfinding::find_path_internal(const Point& start,
   SearchBuffers& buffers = search_buffers_for(this);
   ensure_working_buffers(buffers);
 
-  auto const is_walkableFunc = [this, passability](int x, int y) -> bool {
-    return is_world_position_walkable(grid_to_world({x, y}), passability, 0.0F);
+  float const one_man = routing_clearance(clearance_radius);
+  auto const is_walkableFunc = [this, passability, one_man](int x, int y) -> bool {
+    return is_world_position_walkable(grid_to_world({x, y}), passability, one_man);
   };
 
-  int const clearance_weight =
-      clearance_radius > 0.0F
-          ? std::max(1,
-                     static_cast<int>(
-                         std::lround(clearance_radius * k_clearance_avoid_weight)))
-          : 1;
+  float const cell_size = std::max(1.0e-3F, m_grid_cell_size);
+  float const costed_clearance = std::min(clearance_radius, k_max_cost_clearance);
+  auto const clearance_cost = [this, costed_clearance, cell_size](int x, int y) -> int {
+    int const reach = clearance_penalty(x, y);
+    if (reach == 0) {
+      return 0;
+    }
+    float const free_metres = (static_cast<float>(reach) - 0.5F) * cell_size;
+    float const overlap = costed_clearance - free_metres;
+    int cost = 0;
+    if (overlap > 0.0F) {
+      cost =
+          static_cast<int>(std::lround((overlap * k_rigid_overlap_cost) +
+                                       (overlap * overlap * k_clearance_overlap_cost)));
+    }
+    if (reach <= 1) {
+      cost = std::max(cost, k_edge_step_penalty);
+    }
+    return cost;
+  };
 
   if (!is_walkableFunc(start.x, start.y) || !is_walkableFunc(end.x, end.y)) {
     Point resolved_start = start;
     Point resolved_end = end;
+
     if ((!is_walkableFunc(start.x, start.y) &&
-         !resolve_walkable_endpoint(
-             start, resolved_start, passability, clearance_radius)) ||
+         !resolve_walkable_endpoint(start, resolved_start, passability, one_man)) ||
         (!is_walkableFunc(end.x, end.y) &&
-         !resolve_walkable_endpoint(
-             end, resolved_end, passability, clearance_radius))) {
+         !resolve_walkable_endpoint(end, resolved_end, passability, one_man))) {
       return {};
     }
 
@@ -1267,7 +1298,7 @@ auto Pathfinding::find_path_internal(const Point& start,
       const int tentative_gcost =
           current.g_cost +
           ((step_x != 0 && step_z != 0) ? k_diagonal_step_cost : k_straight_step_cost) +
-          (clearance_penalty(neighbor.x, neighbor.y) * clearance_weight) +
+          clearance_cost(neighbor.x, neighbor.y) +
           climb_penalty(current.index, neighbor_idx) + (turns ? k_turn_penalty : 0);
       if (tentative_gcost >= get_g_cost(buffers, neighbor_idx, generation)) {
         continue;
@@ -1387,6 +1418,10 @@ auto Pathfinding::clamp_to_grid(int& min_x,
   min_z = std::max(0, min_z);
   max_z = std::min(m_height - 1, max_z);
   return min_x <= max_x && min_z <= max_z;
+}
+
+auto Pathfinding::buildings() -> BuildingCollisionRegistry& {
+  return BuildingCollisionRegistry::instance();
 }
 
 auto Pathfinding::clearance_penalty(int x, int y) const -> int {
@@ -1518,16 +1553,26 @@ void Pathfinding::rebuild_clearance(int min_x, int max_x, int min_z, int max_z) 
     }
   }
 
+  auto const& passages = buildings().navigation_passages();
+
   for (int z = min_z; z <= max_z; ++z) {
     for (int x = min_x; x <= max_x; ++x) {
       int const reach = at(x, z);
       if (reach == 0 || reach > k_clearance_radius) {
         continue;
       }
-      int const graded = (k_clearance_ring_penalty * (k_clearance_radius + 1 - reach)) /
-                         k_clearance_radius;
+      if (!passages.empty()) {
+        QVector3D const world = grid_to_world({x, z});
+        if (std::any_of(passages.begin(), passages.end(), [&](auto const& passage) {
+              return passage.source_entity_id != 0U &&
+                     std::abs(world.x() - passage.center_x) <= passage.width * 0.5F &&
+                     std::abs(world.z() - passage.center_z) <= passage.depth * 0.5F;
+            })) {
+          continue;
+        }
+      }
       m_clearance_penalty[static_cast<std::size_t>(to_index(x, z))] =
-          static_cast<std::uint8_t>(std::max(graded, k_edge_step_penalty));
+          static_cast<std::uint8_t>(reach);
     }
   }
 }

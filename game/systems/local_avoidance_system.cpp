@@ -28,58 +28,14 @@ struct Body {
   float navigation_clearance{0.0F};
   Engine::Core::EntityID engaged_target{0};
   std::uint32_t formation_id{0};
-  std::uint8_t priority{0};
-  bool avoids{false};
-  bool is_moving{false};
+  bool under_way{false};
+  bool stopped_by_terrain{false};
   bool can_enter_forest{true};
-  bool considered{false};
+  bool has_travel{false};
+  float travel_x{0.0F};
+  float travel_z{0.0F};
+  float pace{0.0F};
 };
-
-auto compute_avoidance_priority(Engine::Core::SystemContext& context,
-                                Engine::Core::EntityID entity_id) -> std::uint8_t {
-  if (context.has<Engine::Core::BuildingComponent>(entity_id)) {
-    return 4;
-  }
-  const auto* atk = context.try_get<Engine::Core::AttackComponent>(entity_id);
-  if (atk != nullptr && atk->in_melee_lock) {
-    return 3;
-  }
-  const auto* intent =
-      context.try_get<Engine::Core::MovementIntentComponent>(entity_id);
-  if (intent != nullptr) {
-    return intent->priority;
-  }
-  const auto* movement = context.try_get<Engine::Core::MovementComponent>(entity_id);
-  if (movement != nullptr && movement->get_has_target()) {
-    return 1;
-  }
-  return 2;
-}
-
-auto point_is_in_navigation_passage(const BuildingCollisionRegistry& buildings,
-                                    float x,
-                                    float z) -> bool {
-  for (const auto& passage : buildings.navigation_passages()) {
-    if (std::abs(x - passage.center_x) <= passage.width * 0.5F + 0.5F &&
-        std::abs(z - passage.center_z) <= passage.depth * 0.5F + 0.5F) {
-      return true;
-    }
-  }
-  return false;
-}
-
-auto response_share(const Body& me, const Body& them) -> float {
-  if (!them.avoids || !them.is_moving) {
-    return 1.0F;
-  }
-  if (them.priority > me.priority) {
-    return 0.75F;
-  }
-  if (them.priority < me.priority) {
-    return 0.25F;
-  }
-  return 0.5F;
-}
 
 } // namespace
 
@@ -105,6 +61,7 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
 
   std::vector<Body> bodies(entries.size());
   float widest_core = 0.0F;
+  std::uint32_t units_processed = 0;
   for (std::size_t slot = 0; slot < entries.size(); ++slot) {
     const auto& entry = entries[slot];
     if (!entry.is(Engine::Core::WorldSpatialIndex::k_alive) ||
@@ -112,22 +69,29 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
         entry.is(Engine::Core::WorldSpatialIndex::k_pending_removal)) {
       continue;
     }
+    ++units_processed;
 
     Body& body = bodies[slot];
-    body.considered = true;
     body.core_radius = CommandService::get_unit_radii(world, entry.id).core;
-    body.priority = compute_avoidance_priority(context, entry.id);
     widest_core = std::max(widest_core, body.core_radius);
 
     if (const auto* movement =
             context.try_get<Engine::Core::MovementComponent>(entry.id)) {
-      body.is_moving = movement->get_has_target();
       body.navigation_clearance = movement->get_navigation_clearance();
       body.can_enter_forest = movement->get_can_enter_forest();
     }
     if (const auto* facts =
             context.try_get<Engine::Core::MovementFactsComponent>(entry.id)) {
-      body.avoids = facts->desired.valid;
+      body.under_way = facts->desired.valid;
+      body.stopped_by_terrain = facts->progress.blocked_steps > 0U;
+      body.pace = facts->last_accepted_speed;
+      float const speed = Game::Systems::planar_length(facts->desired.velocity_x,
+                                                       facts->desired.velocity_z);
+      if (facts->desired.valid && speed > 1.0e-4F) {
+        body.has_travel = true;
+        body.travel_x = facts->desired.velocity_x / speed;
+        body.travel_z = facts->desired.velocity_z / speed;
+      }
     }
     if (const auto* formation =
             context.try_get<Engine::Core::FormationModeComponent>(entry.id)) {
@@ -143,7 +107,6 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
                    context.try_get<Engine::Core::WildlifeComponent>(entry.id);
                wildlife != nullptr &&
                wildlife->behavior == Game::Wildlife::Behavior::Stalk) {
-
       body.engaged_target = wildlife->focus_id;
     }
   }
@@ -151,20 +114,16 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
   const Engine::Core::WorldSpatialIndex::Entry* const first = entries.data();
   std::uint32_t neighbors_examined = 0;
   std::uint32_t units_steered = 0;
-  std::uint32_t units_processed = 0;
 
   for (std::size_t slot = 0; slot < entries.size(); ++slot) {
     const auto& entry = entries[slot];
     const Body& me = bodies[slot];
 
-    if (me.considered) {
-      ++units_processed;
-    }
     auto* facts = context.try_get<Engine::Core::MovementFactsComponent>(entry.id);
     if (facts == nullptr) {
       continue;
     }
-    if (!me.avoids || !facts->desired.valid) {
+    if (!me.under_way || !facts->desired.valid) {
       facts->steering.valid = false;
       continue;
     }
@@ -173,7 +132,13 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
     const float desired_vz = facts->desired.velocity_z;
     const float desired_speed = Game::Systems::planar_length(desired_vx, desired_vz);
 
+    float const contact_push_x = facts->steering.contact_push_x;
+    float const contact_push_z = facts->steering.contact_push_z;
+    float const body_overlap = facts->steering.body_overlap;
     facts->steering = {};
+    facts->steering.contact_push_x = contact_push_x;
+    facts->steering.contact_push_z = contact_push_z;
+    facts->steering.body_overlap = body_overlap;
     facts->steering.valid = true;
     facts->steering.velocity_x = desired_vx;
     facts->steering.velocity_z = desired_vz;
@@ -191,7 +156,7 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
     const float query_radius =
         me.core_radius + widest_core + k_separation_radius + lookahead;
 
-    float speed_scale = 1.0F;
+    float speed_cap = desired_speed;
     float lean_x = 0.0F;
     float lean_z = 0.0F;
     std::uint32_t neighbor_count = 0;
@@ -207,11 +172,9 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
           other.is(Engine::Core::WorldSpatialIndex::k_pending_removal)) {
         return;
       }
-
       if (other.owner_id != entry.owner_id) {
         return;
       }
-
       if (other.id == me.engaged_target) {
         return;
       }
@@ -227,9 +190,7 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
       if (along <= 0.0F) {
         return;
       }
-
       const float lane = me.core_radius + them.core_radius + k_separation_radius;
-
       const float cross = (tx * pz) - (tz * px);
       if (std::abs(cross) >= lane) {
         return;
@@ -239,20 +200,45 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
         return;
       }
       ++neighbor_count;
-      if (me.formation_id != 0U && them.formation_id == me.formation_id) {
 
+      const float gap =
+          along - std::sqrt(std::max(0.0F, (lane * lane) - (cross * cross)));
+      const float heading_agreement =
+          them.has_travel ? (them.travel_x * tx) + (them.travel_z * tz) : 0.0F;
+
+      bool const mutual =
+          them.has_travel && ((-px * them.travel_x) + (-pz * them.travel_z)) > 0.0F;
+      bool const i_go_first = mutual && entry.id < other.id;
+      if (them.under_way && heading_agreement > 0.0F && !i_go_first) {
+
+        float closing_horizon = k_follow_close_seconds;
+        if (them.pace > 1.0e-3F) {
+          float const lateral_speed =
+              them.pace *
+              std::sqrt(std::max(0.0F, 1.0F - heading_agreement * heading_agreement));
+          if (lateral_speed > 1.0e-3F) {
+            float const leaves_in = (lane - std::abs(cross)) / lateral_speed;
+            closing_horizon = std::clamp(leaves_in, delta_time, k_follow_close_seconds);
+          }
+        }
+        const float closing_allowance =
+            std::max(0.0F, gap - k_follow_gap) / closing_horizon;
+        float cap = (them.pace * heading_agreement) + closing_allowance;
+        if (!them.stopped_by_terrain) {
+          cap = std::max(cap, desired_speed * k_min_speed_fraction);
+        }
+        speed_cap = std::min(speed_cap, cap);
+      }
+
+      if (me.formation_id != 0U && them.formation_id == me.formation_id) {
         rank_ahead = true;
       }
 
-      const float blockage =
+      const float closeness =
           std::clamp((reach - along) / std::max(1.0e-4F, reach - lane), 0.0F, 1.0F);
-      const float share = response_share(me, them);
-
-      speed_scale = std::min(speed_scale, 1.0F - (blockage * blockage * share));
-
       const float lateral_falloff =
           1.0F - std::clamp(std::abs(cross) / lane, 0.0F, 1.0F);
-      const float weight = blockage * share * lateral_falloff;
+      const float weight = closeness * lateral_falloff;
 
       const float head_on_band = lane * k_head_on_lane_fraction;
       float side = 1.0F;
@@ -271,8 +257,6 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
       continue;
     }
 
-    speed_scale = std::clamp(speed_scale, k_min_speed_fraction, 1.0F);
-
     if (const float leaned = Game::Systems::planar_length(lean_x, lean_z);
         leaned > k_lean_gain) {
       const float trim = k_lean_gain / leaned;
@@ -283,11 +267,10 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
     Point const own_cell = NavGrid::world_to_grid(entry.x, entry.z);
     bool has_room = !rank_ahead && !terrain.is_on_bridge(entry.x, entry.z) &&
                     !terrain.is_hill_entrance(own_cell.x, own_cell.y) &&
-                    !point_is_in_navigation_passage(buildings, entry.x, entry.z);
+                    !buildings.point_in_navigation_passage(entry.x, entry.z);
 
     float lean_magnitude = Game::Systems::planar_length(lean_x, lean_z);
     if (has_room && lean_magnitude > 1.0e-4F) {
-
       BodyProfile profile;
       profile.radius = me.navigation_clearance;
       profile.passability = me.can_enter_forest ? Pathfinding::Passability::Light
@@ -306,6 +289,7 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
       lean_magnitude = 0.0F;
     }
 
+    const float speed_scale = std::clamp(speed_cap / desired_speed, 0.0F, 1.0F);
     float steered_vx = (desired_vx * speed_scale) + (lean_x * desired_speed);
     float steered_vz = (desired_vz * speed_scale) + (lean_z * desired_speed);
 
@@ -347,7 +331,6 @@ auto LocalAvoidanceSystem::access() const -> Engine::Core::SystemAccess {
                                      AttackComponent,
                                      AttackTargetComponent,
                                      WildlifeComponent,
-                                     MovementIntentComponent,
                                      MovementComponent,
                                      FormationModeComponent,
                                      BuildingComponent,

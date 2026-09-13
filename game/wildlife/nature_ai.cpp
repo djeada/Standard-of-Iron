@@ -6,6 +6,7 @@
 
 #include "../core/component.h"
 #include "../core/entity.h"
+#include "../core/world.h"
 #include "wildlife_config.h"
 
 namespace Game::Wildlife {
@@ -454,6 +455,42 @@ public:
   }
 };
 
+class CorneredBehavior : public NatureBehavior {
+public:
+  [[nodiscard]] auto name() const noexcept -> std::string_view override {
+    return "wolf.cornered";
+  }
+  [[nodiscard]] auto priority() const noexcept -> NaturePriority override {
+    return NaturePriority::Survival;
+  }
+
+  auto try_run(const NatureContext& ctx, NatureActions& actions) -> bool override {
+
+    constexpr float k_wolf_body_radius = 0.4F;
+    PreyRef const toucher = actions.nearest_quarry(ctx, k_wolf_bite_range + 2.0F);
+    if (!toucher.valid() ||
+        distance_to(ctx, toucher) >= toucher.radius + k_wolf_body_radius) {
+      return false;
+    }
+
+    auto const* movement =
+        ctx.world->try_get<Engine::Core::MovementComponent>(toucher.id);
+    bool const walked_in = movement != nullptr &&
+                           (movement->get_has_target() ||
+                            std::hypot(movement->get_vx(), movement->get_vz()) > 0.1F);
+    if (!walked_in) {
+      return false;
+    }
+    auto& wildlife = *ctx.wildlife;
+    if (wildlife.behavior != Behavior::Stalk) {
+      actions.note(NatureEvent::Hunt);
+    }
+    actions.mark_hostile(ctx, toucher.id, true);
+    close_and_bite(ctx, actions, toucher);
+    return true;
+  }
+};
+
 class DefendBehavior : public NatureBehavior {
 public:
   [[nodiscard]] auto name() const noexcept -> std::string_view override {
@@ -506,11 +543,15 @@ public:
       return false;
     }
 
-    float const home_dx = ctx.x - ctx.wildlife->home_x;
-    float const home_dz = ctx.z - ctx.wildlife->home_z;
-    float const leash = ctx.config->roam_radius * k_wolf_defend_leash_multiplier;
-    if ((home_dx * home_dx) + (home_dz * home_dz) > leash * leash) {
-      return false;
+    bool const already_committed =
+        ctx.wildlife->behavior == Behavior::Stalk && ctx.wildlife->focus_id != 0;
+    if (!already_committed) {
+      float const home_dx = ctx.x - ctx.wildlife->home_x;
+      float const home_dz = ctx.z - ctx.wildlife->home_z;
+      float const leash = ctx.config->roam_radius * k_wolf_defend_leash_multiplier;
+      if ((home_dx * home_dx) + (home_dz * home_dz) > leash * leash) {
+        return false;
+      }
     }
 
     float const detect_radius = ctx.config->roam_radius * k_wolf_detect_multiplier;
@@ -642,6 +683,7 @@ auto make_sheep_brain() -> NatureBrain {
 
 auto make_wolf_brain() -> NatureBrain {
   NatureBrain brain;
+  brain.add(std::make_unique<CorneredBehavior>());
   brain.add(std::make_unique<DefendBehavior>());
   brain.add(std::make_unique<WolfRetreatBehavior>());
   brain.add(std::make_unique<StalkPreyBehavior>());

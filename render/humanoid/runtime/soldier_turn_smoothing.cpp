@@ -18,7 +18,6 @@ constexpr float k_pivot_yaw_rate_degrees = 10.0F;
 constexpr float k_pivot_center_speed = 0.35F;
 constexpr float k_sweep_excess_speed = 0.5F;
 constexpr float k_wheel_catch_up_scale = 1.5F;
-constexpr float k_pivot_snap_distance_scale = 2.0F;
 constexpr float k_relocate_travel_speed = 0.3F;
 
 [[nodiscard]] auto hash_u32(std::uint32_t value) -> std::uint32_t {
@@ -95,6 +94,27 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
       state.valid
           ? wrap_degrees(inputs.formation_yaw_degrees - state.formation_yaw_degrees)
           : 0.0F;
+
+  if (inputs.position_is_authoritative) {
+    state.body_yaw_degrees =
+        state.valid ? turn_toward(state.body_yaw_degrees,
+                                  inputs.formation_yaw_degrees,
+                                  inputs.turn_rate_degrees * std::max(0.0F, inputs.dt))
+                    : wrap_degrees(inputs.formation_yaw_degrees);
+    state.world_x = inputs.target_x;
+    state.world_z = inputs.target_z;
+    state.formation_yaw_degrees = inputs.formation_yaw_degrees;
+    state.valid = true;
+    state.relocating = false;
+    state.wheeling = false;
+    state.turn_pending = false;
+    result.x = inputs.target_x;
+    result.z = inputs.target_z;
+    result.yaw_degrees = state.body_yaw_degrees;
+    result.travel_yaw_degrees = state.body_yaw_degrees;
+    return result;
+  }
+
   bool pivoting = false;
   if (inputs.allow_pivot_wheel && state.valid && inputs.dt > 0.0F) {
     float const center_step =
@@ -112,24 +132,12 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
   }
   result.pivoting = pivoting;
 
-  bool const slot_owns_position =
-      inputs.position_is_authoritative && !pivoting && !state.relocating;
-  if (slot_owns_position) {
-    state.world_x = inputs.target_x;
-    state.world_z = inputs.target_z;
-  }
-
   float const to_target_x = inputs.target_x - state.world_x;
   float const to_target_z = inputs.target_z - state.world_z;
   float const distance =
       std::sqrt(to_target_x * to_target_x + to_target_z * to_target_z);
 
-  bool const wheeling_from_authoritative_slot =
-      pivoting || (inputs.position_is_authoritative && state.relocating);
-  float const snap_distance = wheeling_from_authoritative_slot
-                                  ? inputs.snap_distance * k_pivot_snap_distance_scale
-                                  : inputs.snap_distance;
-  bool const must_snap = !state.valid || distance > snap_distance;
+  bool const must_snap = !state.valid || distance > inputs.snap_distance;
   if (must_snap) {
     state.world_x = inputs.target_x;
     state.world_z = inputs.target_z;
