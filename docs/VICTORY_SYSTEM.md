@@ -69,21 +69,21 @@ struct VictoryRuleSet {
 
 ### Victory rules
 
-| Payload                        | Meaning                                      | Data carried             |
-| ------------------------------ | -------------------------------------------- | ------------------------ |
-| `EliminationVictoryRule`       | Remove all tracked enemy structures          | `structure_types[]`      |
-| `SurviveTimeVictoryRule`       | Remain alive until a duration expires        | `duration`               |
-| `ControlStructuresVictoryRule` | Own enough tracked structures                | `StructureRequirement`   |
-| `CaptureStructuresVictoryRule` | Capture enough formerly foreign structures   | `StructureRequirement`   |
+| Payload                        | Meaning                                    | Data carried           |
+| ------------------------------ | ------------------------------------------ | ---------------------- |
+| `EliminationVictoryRule`       | Remove all tracked enemy structures        | `structure_types[]`    |
+| `SurviveTimeVictoryRule`       | Remain alive until a duration expires      | `duration`             |
+| `ControlStructuresVictoryRule` | Own enough tracked structures              | `StructureRequirement` |
+| `CaptureStructuresVictoryRule` | Capture enough formerly foreign structures | `StructureRequirement` |
 
 ### Defeat rules
 
-| Payload                              | Meaning                                          | Data carried             |
-| ------------------------------------ | ------------------------------------------------ | ------------------------ |
-| `NoUnitsDefeatRule`                  | Lose all local units                             | none                     |
-| `NoKeyStructuresDefeatRule`          | Lose all tracked structures                      | `structure_types[]`      |
-| `NoCommanderDefeatRule`              | The commander dies                               | none                     |
-| `OnlyCommanderRemainingDefeatRule`   | Only the commander remains after the rule arms   | `structure_types[]`      |
+| Payload                            | Meaning                                        | Data carried        |
+| ---------------------------------- | ---------------------------------------------- | ------------------- |
+| `NoUnitsDefeatRule`                | Lose all local units                           | none                |
+| `NoKeyStructuresDefeatRule`        | Lose all tracked structures                    | `structure_types[]` |
+| `NoCommanderDefeatRule`            | The commander dies                             | none                |
+| `OnlyCommanderRemainingDefeatRule` | Only the commander remains after the rule arms | `structure_types[]` |
 
 `OnlyCommanderRemainingDefeatRule` is parameterized by structure type even though current content normally tracks barracks. Keeping that dependency in the payload avoids hiding a `"barracks"` literal in evaluator code.
 

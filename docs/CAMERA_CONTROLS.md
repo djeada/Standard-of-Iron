@@ -4,17 +4,17 @@ The RTS camera supports nine ways to move or restore the view. The same control 
 
 ## The nine camera controls
 
-| Control      | How                                                | Implementation                                  |
-| ------------ | -------------------------------------------------- | ----------------------------------------------- |
-| Edge scroll  | Push the cursor into a screen edge                 | `ui/qml/Main.qml`, `edge_scroll_overlay`        |
-| Keyboard pan | Arrow keys **or** `WASD`; Shift for a double step | `rts.camera_pan_*` in `ui/input_bindings.cpp`   |
-| Drag pan     | Hold the right mouse button and drag               | `ui/qml/GameView.qml`, `renderArea` mouse area  |
-| Zoom         | Mouse wheel, or `PgUp` / `PgDown`                  | `rts.camera_zoom_*`                             |
-| Rotate       | `Q` / `E`; Shift for a larger step                 | `rts.camera_rotate_*`                           |
-| Tilt         | `Ctrl+Up` / `Ctrl+Down`; Shift for a larger step   | `rts.camera_tilt_*`                             |
-| Minimap jump | Left-click or drag the minimap                     | `ui/qml/HUDTop.qml`, `minimapMouse`             |
-| Follow       | Button in the top bar                              | `ui/qml/HUDTop.qml`                             |
-| Reset        | `Home`, or the Reset button in the top bar         | `rts.camera_reset`                              |
+| Control      | How                                               | Implementation                                 |
+| ------------ | ------------------------------------------------- | ---------------------------------------------- |
+| Edge scroll  | Push the cursor into a screen edge                | `ui/qml/Main.qml`, `edge_scroll_overlay`       |
+| Keyboard pan | Arrow keys **or** `WASD`; Shift for a double step | `rts.camera_pan_*` in `ui/input_bindings.cpp`  |
+| Drag pan     | Hold the right mouse button and drag              | `ui/qml/GameView.qml`, `renderArea` mouse area |
+| Zoom         | Mouse wheel, or `PgUp` / `PgDown`                 | `rts.camera_zoom_*`                            |
+| Rotate       | `Q` / `E`; Shift for a larger step                | `rts.camera_rotate_*`                          |
+| Tilt         | `Ctrl+Up` / `Ctrl+Down`; Shift for a larger step  | `rts.camera_tilt_*`                            |
+| Minimap jump | Left-click or drag the minimap                    | `ui/qml/HUDTop.qml`, `minimapMouse`            |
+| Follow       | Button in the top bar                             | `ui/qml/HUDTop.qml`                            |
+| Reset        | `Home`, or the Reset button in the top bar        | `rts.camera_reset`                             |
 
 `ui/qml/CameraGuide.qml` is the single descriptive list used by every help surface: the compact in-battle legend in `CameraLegend.qml`, the Camera tab in `HelpPanel.qml`, and the live edge-scroll status shown by both.
 

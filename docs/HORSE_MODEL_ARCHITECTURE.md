@@ -1,14 +1,51 @@
 # Authored Horse and Elephant Pipeline
 
-Horses and elephants use authored, skinned low-poly geometry. The engine does not reconstruct either animal from primitive proportions at runtime. Instead, deterministic compiled creature packages carry the production mesh, skinning data, joint hierarchy, and animation clips all the way through the rendering pipeline.
+Horses and elephants use authored, skinned low-poly geometry compiled into deterministic creature packages. The production pipeline preserves mesh topology, skinning weights, joint hierarchy, authored animation channels, attachment landmarks, and reviewed production proportions from asset generation through BPAT baking and rendering.
 
-This page describes those production assets, the runtime path that consumes them, how mounted equipment is resolved, and the tests that protect the reviewed shapes and motion.
+The important architectural rule is that production geometry comes from the compiled creature package. Runtime rendering, shape verification, locomotion inspection, and attachment placement all consume that same asset rather than maintaining independent hand-entered body dimensions.
 
-## Production assets
+## Pipeline overview
 
-### Horse
+The current path is:
 
-The production horse package is `assets/creatures/horse/horse.cmesh`. It contains:
+```text
+authored creature source
+        │
+        ▼
+creature compiler
+        │
+        ▼
+.cmesh production package
+        │
+        ├─ vertices / indices
+        ├─ skin joints + weights
+        ├─ joint hierarchy
+        ├─ materials
+        └─ authored animation channels
+        │
+        ├────────► BPAT bake / runtime animation data
+        │
+        ▼
+compiled creature asset loader
+        │
+        ▼
+renderer preparation + equipment/attachment resolution
+        │
+        ▼
+production rendering / Arena / shape verification
+```
+
+The compiler output is deterministic, which means topology/count/extent tests can treat the generated package as a reproducible production contract.
+
+# Production horse
+
+The production horse package is:
+
+```text
+assets/creatures/horse/horse.cmesh
+```
+
+It contains:
 
 - 4,400 vertices;
 - 2,182 triangles;
@@ -17,108 +54,375 @@ The production horse package is `assets/creatures/horse/horse.cmesh`. It contain
 
 Walk and gallop use those authored actions directly.
 
-The production transform scales X and Y by `0.59` and Z by `0.5015`. This makes the current longitudinal extent 15% shorter while preserving the reviewed width and height relationship.
+## Horse production transform
 
-### Elephant
+The reviewed production transform scales:
 
-The production elephant package is `assets/creatures/elephant/elephant.cmesh`. It contains:
+- X: `0.59`;
+- Y: `0.59`; and
+- Z: `0.5015`.
+
+These values are part of the production shape contract used by runtime geometry and verification tooling.
+
+A scale change is therefore not merely a cosmetic transform tweak. It changes the body extents consumed by rendering, grounding, rider placement, screenshots, and shape-verification expectations.
+
+## Horse locomotion
+
+The horse uses authored skeletal locomotion rather than procedural leg placement as its production path.
+
+The runtime selects the appropriate authored clip through the creature manifest/BPAT path, samples the baked skeleton state, and deforms the skinned mesh through the same joint/weight data stored in the compiled package.
+
+The focused tests and Arena locomotion matrix exercise walking, galloping, stopping/starting, reverse movement, terrain grounding, and rider attachment behavior through the production renderer.
+
+# Production elephant
+
+The production elephant package is:
+
+```text
+assets/creatures/elephant/elephant.cmesh
+```
+
+It contains:
 
 - 1,464 vertices;
 - 760 triangles;
 - 32 skin joints; and
 - five authored actions.
 
-Its walk and fast-walk cycles use the same armature and skin weights. Elephants intentionally do not have a horse-style gallop.
+Its movement uses authored walk and fast-walk cycles. Elephants do not use the horse gallop model.
 
-The elephant transform is axis-specific:
+## Elephant production transform
+
+The elephant uses axis-specific production scaling:
 
 - X: `0.31625`;
 - Y: `0.275`; and
 - Z: `0.1925`.
 
-Relative to the earlier model, the resulting production shape is 50% of the previous height, 35% of the previous length, and 57.5% of the previous width.
+These values are likewise part of the reviewed production-shape contract.
 
-### Deterministic compiled assets
+The non-uniform transform is intentional and is verified against the generated package dimensions rather than reconstructed from separate “expected elephant size” constants in each renderer.
 
-Both `.cmesh` files are deterministic outputs of the repository's creature compiler. The repository does not keep an imported mesh, editable source scene, or comparison OBJ alongside them. The compiled package itself is the production artifact that runtime code and verification tools consume.
+# Compiled creature package
 
-## Runtime architecture
+`render/creature/compiled_creature_assets.cpp` loads the generated package used at runtime.
 
-`render/creature/compiled_creature_assets.cpp` validates and decompresses a generated package, then loads its buffers, accessors, materials, skin weights, joint hierarchy, and animation channels.
+The loader validates and decompresses the package, then resolves data such as:
 
-`MeshSkinning::Authored` preserves four joint indices and four weights per vertex through mesh compilation, BPAT baking, snapshots, and the GPU pipeline. The shared palette limit is 64 bones.
+- vertex/index buffers;
+- accessors;
+- materials;
+- per-vertex skin joint indices;
+- per-vertex skin weights;
+- joint hierarchy; and
+- authored animation channels.
 
-Species manifests choose the authored mesh and map gameplay clips to authored actions. Mounted attachment frames also follow the animated skeleton rather than static approximations: the horse saddle and rider frames follow the animated back bone, and the elephant howdah frame follows its corresponding animated back bone.
+This is the renderer-facing production source for the horse/elephant body geometry.
 
-Rest landmarks are measured from production geometry instead of being reconstructed from independently guessed dimensions.
+## Deterministic asset ownership
 
-## Mounted horse equipment has one resolution path
+The repository does not keep a second manually maintained runtime horse mesh or elephant mesh alongside `.cmesh` and then choose between them.
 
-Every mounted renderer base—`MountedKnightRendererBase`, `HorseSpearmanRendererBase`, and `HorseArcherRendererBase`—uses the same seven horse equipment slots:
+That matters because shape tests, attachment locations, renderer deformation, and promo/Arena review all need to inspect the same geometry the shipped game draws.
 
-- saddle;
-- bridle;
-- reins;
-- barding;
-- crupper; and
-- decoration slots represented by the corresponding `HorseTack`, `HorseArmor`, and `HorseDecoration` handles.
+If a production body changes, regenerate the compiled asset and update the tests/shape contract that intentionally depends on it.
 
-These renderers previously stored seven independent `EquipmentHandle` members and repeated the same resolution logic in each constructor. That shared behavior now lives in `render/entity/mounted_horse_equipment.h`.
+# Skinning contract
 
-`MountedHorseHandles` stores the seven handles, `resolve_mounted_horse_handles()` fills them from any configuration that provides the required fields, and `as_array()` returns the ordered array expected by `resolve_horse_equipment_archetype()`.
+`MeshSkinning::Authored` preserves four joint indices and four weights per vertex through the creature pipeline.
 
-The ordering is part of the archetype identity: `as_array()` is hashed by the resolver, so changing the order changes the archetype a mount resolves to. **New horse-equipment slots must therefore be appended rather than inserted.**
+The authored skinning data survives:
 
-The rider's own weapon, shield, helmet, armour, and shoulder handles remain renderer-specific. Mounted classes expose those fields differently—for example, `has_sword` versus `has_spear`, or `has_cavalry_shield` versus `has_shield`—and each class supplies its own five-handle array to the humanoid archetype resolver.
+1. mesh compilation;
+2. creature/BPAT baking where the animation path needs it;
+3. runtime snapshots/preparation; and
+4. GPU skinning.
 
-## Verifying production shape
+The common bone-palette limit is 64 bones.
 
-The shape-verification tooling inspects generated production geometry directly. It checks:
+The horse's 50 joints and the elephant's 32 joints fit inside that current runtime limit.
+
+## Weight normalization
+
+Focused model tests check normalized skin weights and finite deformation.
+
+That makes the skinning data itself part of the model contract. A mesh can have the correct static topology and still be invalid for runtime use if the skin weights are malformed.
+
+# Animation and BPAT integration
+
+Species manifests map gameplay/presentation actions to authored animation clips.
+
+The BPAT system carries pre-baked bone palettes, markers, sockets, contact data, bind pose, and hierarchy information used by the runtime animation path. The horse/elephant renderer then consumes the current clip/phase rather than rebuilding skeletal animation from source channels every frame.
+
+See [CREATURE_BPAT_FORMAT.md](CREATURE_BPAT_FORMAT.md) for the binary animation contract.
+
+## Root motion vs mesh pose
+
+Creature animation deforms the visible body and attachment frames, but gameplay movement still owns the logical entity/root motion.
+
+The authored gait must therefore visually match the movement speed/cadence well enough to avoid skating while remaining presentation data rather than a second navigation simulation.
+
+The locomotion matrix and focused tests exist to inspect that integration.
+
+# Attachment frames
+
+Mounted presentation depends on animated attachment frames rather than fixed world-space offsets.
+
+Current production attachment behavior includes:
+
+- horse saddle/rider frames following the animated back bone; and
+- elephant howdah frames following the corresponding animated back bone.
+
+This keeps the rider/howdah attached to the posed creature as the back rises, falls, pitches, and rolls through locomotion.
+
+## Rest landmarks
+
+Rest landmarks are measured from production geometry.
+
+They are not reconstructed from independently maintained body-height/length constants. This reduces drift between mesh revisions and attachment/grounding assumptions.
+
+# Mounted horse equipment resolution
+
+Mounted horse renderer families share a subset of horse-equipment configuration through `MountedHorseHandles` in:
+
+```text
+render/entity/mounted_horse_equipment.h
+```
+
+The mounted renderer bases include:
+
+- `MountedKnightRendererBase`;
+- `HorseSpearmanRendererBase`; and
+- `HorseArcherRendererBase`.
+
+`resolve_mounted_horse_handles()` fills the shared handles from the compatible renderer configuration.
+
+## Archetype handle ordering
+
+`MountedHorseHandles::as_array()` returns the ordered handle array consumed by:
+
+```text
+resolve_horse_equipment_archetype()
+```
+
+The resolver hashes that ordered array as part of archetype identity.
+
+The ordering is therefore a compatibility contract. New shared horse-equipment slots should be appended rather than inserted into the middle of the existing array, because insertion would reinterpret the positional meaning of existing handles and alter hashes for existing archetypes.
+
+## Shared vs rider-specific equipment
+
+The horse-side shared handles are intentionally separate from rider-specific equipment.
+
+The rider's:
+
+- weapon;
+- shield;
+- helmet;
+- armour; and
+- shoulder equipment
+
+remain renderer-family-specific.
+
+Mounted classes expose different concepts—for example `has_sword` vs `has_spear`, or `has_cavalry_shield` vs `has_shield`—and each renderer supplies its own humanoid equipment handle set to the rider archetype resolver.
+
+That separation avoids forcing every mounted troop into one oversized equipment schema with many meaningless fields.
+
+# Horse and rider composition
+
+A mounted troop is visually composed from at least two authored systems:
+
+1. the horse creature body/animation/equipment archetype; and
+2. the humanoid rider body/animation/equipment archetype.
+
+The saddle/rider frame links the two presentations.
+
+The horse equipment resolver should therefore own horse-side presentation identity, while humanoid equipment resolution owns rider-side identity.
+
+Gameplay troop identity remains outside both renderer archetype caches.
+
+# Elephant and howdah composition
+
+The elephant follows the same broad principle: the creature body is authored/skinned and the howdah or mounted presentation follows an animated attachment frame.
+
+The elephant does not share the horse's locomotion assumptions or production transforms. Its package, action catalogue, joint hierarchy, and reviewed extents are verified independently.
+
+# Production-shape verification
+
+Shape verification inspects generated production geometry directly.
+
+The verification path checks:
 
 - package integrity;
 - exact topology;
-- finite and grounded bounds;
+- finite bounds;
+- grounded bounds;
 - expected axis extents; and
 - non-empty full, torso, legs, and head regions.
 
-It also renders all four regions from left, rear, front-quarter, and top views for visual inspection.
+It also renders review views from:
 
-Run the checks with:
+- left;
+- rear;
+- front-quarter; and
+- top.
+
+## Verification commands
+
+Horse:
 
 ```sh
 build/bin/mesh_preview verify-horse-shape artifacts/horse-shape
+```
+
+Elephant:
+
+```sh
 build/bin/mesh_preview verify-elephant-shape artifacts/elephant-shape
 ```
 
-Axis extents must remain within `0.00005` game units of the reviewed production contract unless that contract is intentionally changed together with its tests.
+Axis extents must remain within `0.00005` game units of the reviewed production contract unless the production contract and corresponding tests are intentionally changed together.
 
-## Motion and integration gates
+## Why exact topology is checked
 
-Use `mesh_preview` to inspect the authored locomotion clips:
+Topology checks make the production asset deterministic at more than the visual-review level.
+
+A changed vertex/triangle count can indicate:
+
+- an unintended compiler/source change;
+- an accidentally different export;
+- missing/duplicated geometry; or
+- a deliberate model revision that needs its verification contract updated.
+
+The test cannot decide whether the change is artistically good; it can ensure the change is explicit.
+
+# Region verification
+
+The verifier checks that important regions such as torso, legs, and head are non-empty.
+
+This prevents a malformed package from passing only because its global bounding box remains plausible.
+
+A creature body with a missing head or collapsed leg region can have finite overall bounds and still be unusable.
+
+# Locomotion inspection
+
+Use `mesh_preview` to inspect authored actions directly.
+
+Horse:
 
 ```sh
 build/bin/mesh_preview horse artifacts/horse full walk
 build/bin/mesh_preview horse artifacts/horse full gallop
+```
+
+Elephant:
+
+```sh
 build/bin/mesh_preview elephant artifacts/elephant full walk
 build/bin/mesh_preview elephant artifacts/elephant full run
 ```
 
-Run the focused model tests:
+These commands are useful for reviewing deformation, gait silhouette, grounding, and attachment motion without running a full battle.
+
+# Focused model tests
+
+Run:
 
 ```sh
 build/bin/horse_model_tests
 build/bin/elephant_model_tests
 ```
 
-Finally, exercise the real runtime path through Arena:
+The focused tests cover areas including:
+
+- production counts/topology;
+- normalized skin weights;
+- locomotion samples;
+- finite deformation;
+- triangle-tear limits; and
+- rider/howdah socket invariants.
+
+A shape preview and the focused tests serve different purposes: one is visual review of the production body; the other locks structural/deformation properties.
+
+# Arena integration
+
+Use Arena to exercise the complete runtime path.
+
+Horse/mounted matrix:
 
 ```sh
 build/bin/arena_app --batch --scenario mounted_locomotion_matrix \
   --fps 60 --capture-interval 2 --artifact-dir artifacts/arena
+```
+
+Elephant matrix:
+
+```sh
 build/bin/arena_app --batch --scenario elephant_locomotion_matrix \
   --fps 60 --capture-interval 2 --artifact-dir artifacts/arena
 ```
 
-The focused tests validate production counts, topology, normalized weights, 64 samples per locomotion cycle, finite deformation, triangle-tear limits, and animated rider/howdah socket invariants. Arena then exercises the actual BPAT, preparation, renderer, terrain-grounding, start/stop, and reverse-motion paths.
+Arena adds integration that a static mesh preview cannot provide:
 
-Together, these gates protect both sides of the contract: the authored creature must retain its reviewed production shape, and the runtime must continue to animate and attach equipment to that shape correctly.
+- BPAT playback;
+- runtime preparation;
+- renderer integration;
+- terrain grounding;
+- movement start/stop transitions;
+- reverse motion; and
+- rider/howdah attachment in the production scene.
+
+# Diagnosing mounted-model problems
+
+The pipeline is easier to debug when the failing layer is identified explicitly.
+
+## Static shape is wrong
+
+Inspect the generated `.cmesh`, production transform, bounds, topology, and compiler/source model.
+
+## Static shape is correct but deformation tears
+
+Inspect joint indices, normalized weights, hierarchy, and authored animation channels/BPAT output.
+
+## Creature animates but rider/howdah drifts
+
+Inspect the animated attachment frame, anchor bone, rest landmark, and rider/howdah local transform.
+
+## Rider equipment is wrong but horse is correct
+
+Inspect the rider-specific humanoid equipment handles rather than changing `MountedHorseHandles`.
+
+## Horse equipment archetypes alias unexpectedly
+
+Inspect `MountedHorseHandles::as_array()` ordering and the hashed handle values.
+
+## Preview looks correct but Arena/runtime differs
+
+Inspect manifest clip mapping, BPAT runtime selection, renderer preparation, terrain grounding, and production render configuration.
+
+# Architectural invariants
+
+The current horse/elephant pipeline depends on these invariants:
+
+- compiled `.cmesh` packages are the production geometry source;
+- skinning preserves four joints/four weights per vertex;
+- joint count remains within the common 64-bone palette limit;
+- animation comes from authored/baked skeletal actions;
+- rider/howdah attachments follow animated bones;
+- production transforms/extents are verified directly from generated geometry;
+- shared horse-equipment handle ordering remains stable; and
+- preview/tests/Arena inspect the same production assets used by runtime.
+
+# Source map
+
+| Concern                        | Source                                         |
+| ------------------------------ | ---------------------------------------------- |
+| Compiled creature loading      | `render/creature/compiled_creature_assets.cpp` |
+| Horse production package       | `assets/creatures/horse/horse.cmesh`           |
+| Elephant production package    | `assets/creatures/elephant/elephant.cmesh`     |
+| Shared horse-equipment handles | `render/entity/mounted_horse_equipment.h`      |
+| BPAT format/runtime            | `animation/bpat/`                              |
+| Mesh/shape preview             | `mesh_preview` tool sources                    |
+| Focused tests                  | horse/elephant model test targets              |
+| Runtime integration            | Arena locomotion matrix scenarios              |
+
+The production packages, runtime loader, authored animation data, attachment frames, and verification tools define the current mounted-creature model contract. Historical refactor stories are not required to explain that pipeline.
