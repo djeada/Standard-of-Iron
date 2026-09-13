@@ -1,10 +1,12 @@
 # Combat System
 
-RTS combat is coordinated by `Game::Systems::CombatSystem`. It owns the shared combat query context and runs the normal attack, formation-contact, siege, elephant, auto-engagement, hit-feedback, and threat-alert processors in a fixed order.
+Combat in Standard of Iron is coordinated by `Game::Systems::CombatSystem`. It owns the shared combat query context and advances normal attacks, combat state, formation contacts, siege behavior, elephant behavior, automatic engagement, target commitment, hit feedback, and threat alerts in a fixed order.
 
-The combat code is split under `game/systems/combat_system/`; `game/systems/combat_system.cpp` is the orchestration entry point.
+The combat system is not a single damage function. It is a pipeline that decides who may fight, whether two subjects can physically engage, which combat mode applies, when an attack is ready, how damage is modified, what special processor owns the exchange, and what feedback or target state must survive into the next tick.
 
-## Update order
+The orchestration entry point is `game/systems/combat_system.cpp`. Most implementation lives below `game/systems/combat_system/`.
+
+## Combat update order
 
 `CombatSystem::update(world, delta_time)` currently runs:
 
@@ -22,19 +24,61 @@ tick_threat_alerts
 TargetCommitment::update(world, 0)
 ```
 
-That order defines the combat tick contract. Processors that need target lookup reuse the query context built at the start of the update.
+The order is part of the current combat contract.
+
+It means, for example, that normal attack processing runs before siege and elephant specials, automatic target acquisition happens after explicit attacks and specials, and target commitment is refreshed again at the end after the processors have had a chance to change targets.
+
+A change to this sequence can alter gameplay even if no individual processor changes, because later stages observe the state published by earlier ones.
+
+## End-to-end attack flow
+
+A typical explicit attack travels through several layers:
+
+```text
+player / AI / replay / mission command
+        │
+        ▼
+command validation
+        │
+        ├─ subject can attack?
+        ├─ target exists/alive?
+        ├─ ownership/hostility valid?
+        └─ ordered target rule valid?
+        ▼
+attack target/state assigned
+        │
+        ▼
+CombatSystem tick
+        │
+        ├─ query context
+        ├─ target commitment
+        ├─ combat-state transition
+        ├─ range / obstruction / cooldown
+        ├─ normal or special processor
+        ├─ damage pipeline
+        └─ feedback / alerts / target refresh
+```
+
+The command layer decides whether the order may enter the simulation. The combat layer decides whether and how the exchange can resolve on the current tick.
 
 ## Shared combat query context
 
-`CombatQueryContext` is built once per combat update and carries the shared entity/spatial lookup data used by attack/special/auto-engagement code.
+`CombatQueryContext` is rebuilt once at the start of the combat update.
 
-The context avoids independent full-world target scans inside each processor and keeps hostility/target filtering consistent across normal and special attacks.
+It carries shared entity/spatial lookup information used by normal attacks, special attacks, target acquisition, and related combat queries. Reusing one context has two purposes:
 
-Combat code that already receives `CombatQueryContext` should use it rather than rebuilding a second combat view from `World`.
+1. avoid rebuilding equivalent world/spatial views in every processor; and
+2. keep target and hostility decisions consistent across processors within one combat update.
+
+Code that already receives `CombatQueryContext` should use it rather than performing a second world-wide combat scan.
+
+This is especially important in massed battles, where repeated “find nearby enemy” work can become much more expensive than the actual per-contact combat calculation.
 
 ## Target rules
 
-`game/systems/combat_system/target_rules.h` defines the common target decision API.
+The common targeting API is defined in `game/systems/combat_system/target_rules.h`.
+
+A target check has the shape:
 
 ```cpp
 Combat::evaluate_target(
@@ -44,161 +88,341 @@ Combat::evaluate_target(
     {.intent = ..., .allow_buildings = ...});
 ```
 
-The result is a `TargetRefusal`:
+The result is a `TargetRefusal` value.
 
 | Result | Meaning |
 | --- | --- |
-| `None` | target is allowed |
+| `None` | the target is allowed |
 | `NoTarget` | null, dead, pending removal, or not a combat target |
 | `SelfOrAllied` | target belongs to the attacker or an allied team |
-| `Passive` | passive wildlife is protected from auto-acquisition |
-| `Structure` | target is a building but the query disallows buildings |
+| `Passive` | passive wildlife is protected from automatic acquisition |
+| `Structure` | the target is a building while the query disallows buildings |
 
-`may_attack()` exposes the same rule as a boolean for callers that do not need the refusal reason.
+`may_attack()` exposes the same rule as a boolean when the caller does not need the refusal reason.
 
-### Ordered vs auto-acquired intent
+The important design point is that target legality is shared. UI target classification, command validation, AI hostile-contact collection, and combat processors should not each invent their own owner/team/wildlife rule.
 
-`EngagementIntent` has two values:
+## Ordered vs automatic engagement
 
-- `Ordered` — a player/script deliberately chose a target;
-- `AutoAcquired` — combat logic selected a target opportunistically.
+`EngagementIntent` separates deliberate orders from opportunistic acquisition:
 
-Passive wildlife is the main distinction. Ordered targeting may deliberately attack wildlife. Auto-acquired targeting does not turn nearby passive animals into ordinary enemy contacts.
+- `Ordered` — a player, AI command, script, or other command producer intentionally selected the target;
+- `AutoAcquired` — combat logic selected the target because it was nearby and valid.
 
-The same intent model is used by command validation, attack-cursor classification, target highlights, right-click attack picking, and AI hostile-contact collection.
+Passive wildlife is the clearest behavioral difference. A deliberate ordered attack may target passive wildlife; automatic combat acquisition does not turn nearby passive animals into ordinary hostiles.
 
-### Ownership and hostility
+This distinction keeps “can the player explicitly attack it?” separate from “should an idle soldier spontaneously attack it?”
 
-Team/alliance hostility is resolved through `OwnerRegistry` and `Combat::owners_are_hostile()`. Neutral ownership by itself is not equivalent to combat hostility; target intent and wildlife state still participate in the target decision.
+## Ownership and hostility
 
-Combat processors should not replace this rule with direct owner-ID comparisons.
+Ownership is not tested with a simple `owner_id != attacker_owner_id` comparison.
+
+Team/alliance hostility is resolved through `OwnerRegistry` and `Combat::owners_are_hostile()`. Neutral ownership, allied teams, mission ownership, and wildlife state therefore pass through the shared combat rule instead of being inferred from raw IDs.
+
+This rule matters in mission content where several AI owners can belong to one team, and in scenes where neutral entities exist without being automatic combat targets.
 
 ## Attack capability
 
-Attack commands also validate the attacking subjects. Units that cannot use attack mode are filtered before the order is accepted. Healers, builders, structures, or other non-attacking subjects therefore do not silently pass command validation as ordinary attackers.
+Target validity is only half of an attack command. Subjects must also be able to attack.
 
-## Attack range
+Command validation filters entities that do not support attack mode. Healers, builders, structures, or other non-attacking subjects therefore do not silently become ordinary attackers just because they were part of a mixed selection.
 
-`AttackComponent::range` is the outer attack range. `AttackComponent::min_range` is an optional inner dead zone for ranged attacks.
+The command path can accept the attacking subset while rejecting or ignoring subjects that do not satisfy the attack capability contract according to the command implementation.
 
-`Combat::is_in_range()` resolves the actual combat reach after the relevant melee/ranged, structure, formation, and stance rules.
+## Range model
 
-UI and targeting code that needs the range a unit will actually use should call `Game::Systems::resolve_attack_range()` rather than reading the base range directly, because hold-mode bonuses can change effective reach.
+`AttackComponent::range` is the outer attack range. `AttackComponent::min_range` provides an optional inner dead zone for ranged attacks.
 
-## Structures between combatants
+The effective range used by gameplay is not always identical to the raw component value. `Combat::is_in_range()` and `Game::Systems::resolve_attack_range()` apply the relevant combat state and stance rules.
 
-Melee combat checks whether a blocking building footprint or closed gate separates the attacker and target.
+UI and targeting code that needs to explain the range the unit will actually use should query the resolved value instead of duplicating the base component number.
 
-`Combat::structure_separates_combatants()` and the related melee-wall helpers prevent melee damage and formation contact from passing through blocking structures.
+### Melee range
 
-An explicit ordered melee chase can request a bypass destination around a separating structure. The bypass helper searches for a walkable contact position near the target and leaves route feasibility to pathfinding.
+Melee reach also interacts with formation/contact geometry and obstruction. A raw center-to-center distance alone is not sufficient when two large formations are facing each other or a blocking structure lies between them.
 
-Ordinary opportunistic auto-engagement does not turn every enemy visible through/around a wall into a long pathing detour. Retaliation/local-threat logic has its own reachability path for responding to an aggressor that can be walked around to.
+### Ranged dead zones
 
-Ranged attacks use their ranged targeting/line-of-fire rules rather than the melee separation rule.
+A ranged unit with `min_range` can have a valid hostile target inside its outer range but still be too close to fire through the ordinary ranged path. That inner limit is part of the attack component rather than an ad-hoc UI rule.
 
-## Normal attacks
+## Obstructions between combatants
 
-`combat_system/attack_processor.cpp` handles the ordinary attack path, including:
+Melee combat checks whether a blocking building footprint or closed gate separates attacker and target.
 
-- target resolution;
-- cooldowns;
+`Combat::structure_separates_combatants()` and the related wall/gate helpers prevent melee damage and formation contact from passing through blocking structures.
+
+This physical-separation rule is important for three different systems:
+
+- direct melee damage;
+- formation-contact geometry; and
+- pursuit/path selection when a deliberate melee target is behind an obstacle.
+
+### Ordered melee bypass
+
+An explicit ordered melee chase can request a bypass/contact destination around a separating structure. The helper finds a candidate walkable contact position near the target; pathfinding remains responsible for proving an actual route to it.
+
+The combat system therefore does not make every visible enemy “melee reachable” merely because a point exists somewhere on the far side of a wall.
+
+### Automatic engagement near walls
+
+Automatic engagement is intentionally more conservative. An idle unit does not turn every hostile visible through or around a fortification into a long pathfinding detour.
+
+Retaliation and local-threat behavior have their own reachability path when reacting to an aggressor.
+
+### Ranged attacks
+
+Ranged attacks use ranged line/range rules rather than the melee structure-separation rule. A wall that blocks two swordsmen from contacting each other does not automatically imply that a projectile cannot pass over or around it.
+
+## Combat state processing
+
+`process_combat_state()` maintains the state that determines whether units are entering, holding, or leaving a combat interaction.
+
+This state is separate from simply “has an attack target.” A unit can know its target while still moving into range, be locked into melee contact, or be leaving combat after the target disappears.
+
+Keeping combat state explicit allows movement, animation, formation presentation, and targeting to agree on whether a unit is currently engaged.
+
+## Normal attack processor
+
+`combat_system/attack_processor.cpp` owns the ordinary attack path.
+
+Its responsibilities include:
+
+- resolving the current target;
+- rejecting targets that became invalid;
+- cooldown progression;
 - melee/ranged range checks;
-- melee lock state;
-- stance/terrain/counter multipliers;
-- ranged projectile/visual submission hooks;
-- combat animation state; and
+- melee lock behavior;
+- stance/terrain/counter modifiers;
+- projectile/visual submission hooks for ranged combat;
+- attack animation state; and
 - damage application.
 
-Special attacks configured through the relevant attack components are dispatched by the same combat update rather than through a separate world-combat authority.
+Specialized combat processors run in the same `CombatSystem` update but do not create a second world-level combat authority.
+
+## Damage application
+
+Authoritative health changes go through the combat damage path rather than being inferred from animation or visual contact.
+
+Damage can be modified by several independent systems, including:
+
+- unit/counter relationships;
+- high-ground or terrain state;
+- defensive unit-layout effects;
+- army-formation cohesion state; and
+- special attack context.
+
+The exact current counter constants live in `game/systems/combat_system/combat_types.h` and current troop data. [UNIT_BALANCE.md](UNIT_BALANCE.md) documents the active relationships and deterministic balance fixtures.
+
+### Formation and defensive-layout multipliers
+
+Defensive unit layouts and army formations are separate systems, and their combat modifiers compose in the damage path.
+
+For example, the defensive-layout service can apply its context-sensitive protection while `ArmyFormationRuntime::damage_taken_multiplier()` applies the group cohesion modifier. One does not replace the other.
+
+This matches the architecture described in [FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md): internal soldier layout and army-scale grouping are independent layers.
 
 ## Deterministic melee exchange
 
-RTS melee bodies that can defend use the deterministic exchange system in `combat_system/melee_exchange.*`.
+RTS melee bodies that participate in the defensive exchange model use `combat_system/melee_exchange.*`.
 
 A swing can resolve as:
 
 | Outcome | Damage behavior | Presentation |
 | --- | --- | --- |
-| `Clean` | boosted clean contact | normal hit/flinch |
+| `Clean` | clean boosted contact | normal hit/flinch |
 | `Heavy` | stronger contact | heavier stagger |
 | `Blocked` | reduced damage | guard/block response |
 | `Evaded` | no contact damage | evade/whiff response |
 
-The exchange sequence is deterministic rather than random. Attacker/target identity selects the phase of the sequence, keeping replay behavior stable.
+The exchange sequence is deterministic rather than random. Attacker/target identity selects the phase of the exchange sequence, preserving replay stability while still producing varied-looking contact outcomes.
 
-The melee-exchange constants are constructed so the multi-beat damage/cadence cycle preserves the intended long-run combat rate rather than adding an uncontrolled random DPS modifier.
+The sequence constants are constructed so the repeated exchange preserves the intended long-run combat rate instead of quietly adding an uncontrolled random DPS bonus or penalty.
 
-Targets that do not participate in the defensive exchange model use the ordinary clean-contact path.
+Targets that do not participate in this defensive model use the ordinary clean-contact path.
 
-## Hit feedback
+## Melee locks
 
-`process_hit_feedback()` updates short-lived combat reaction state. Damage outcomes can publish reaction kinds, knock-step presentation, block/evade feedback, and formation-slot hit presentation.
+Melee locks prevent ordinary navigation and combat contact from simultaneously trying to own the same close-quarters motion.
 
-Authoritative health/damage is separate from presentation. Formations can show a hit/reaction without moving the authoritative slot assignment for every visual knockback.
+Once units are engaged, the lock expresses that they are fighting rather than still freely pathing through one another.
 
-## Melee locks and footwork
-
-Melee locks keep engaged units from being simultaneously driven by ordinary movement logic.
-
-Single-body one-on-one combat can use duel footwork around that lock while formation members retain their formation constraints. The current footwork logic changes relative presentation/position within the melee contract without turning formation combat into free-form per-soldier circling.
+Single-body one-on-one combat can use duel footwork around the lock. Formation members remain constrained by their formation/contact presentation instead of turning every army engagement into independent per-soldier circling.
 
 ## Formation contact
 
-`update_formation_contacts()` publishes the combat-front/contact information used by formation combat and presentation.
+`update_formation_contacts()` publishes contact/front information used by formation combat and presentation.
 
-Formation contact only exists when the combatants can physically engage; blocking structures and other reach constraints therefore affect the contact geometry as well as direct damage.
+Formation contact is not just “bounding boxes overlap.” It must respect whether combatants can physically engage. Blocking structures, slot geometry, formation frontage, and the current combat state all influence what the simulation can treat as a valid contact front.
 
-See [FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md) for group/slot ownership and formation movement.
+The result helps keep several views of the fight aligned:
+
+- the authoritative combat interaction;
+- soldier-level formation presentation;
+- hit/weapon origin placement; and
+- visual front lines between formations.
+
+See [FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md) for soldier anchors, stable slots, traversal layouts, and army-group state.
+
+## Hit feedback
+
+`process_hit_feedback()` advances short-lived combat reaction state.
+
+Damage results can publish:
+
+- reaction type;
+- stagger/block/evade presentation;
+- knock-step or local reaction data; and
+- formation-slot hit presentation.
+
+The reaction layer does not become health authority. A visible stagger can move presentation locally without changing which formation slot the soldier owns or creating a second positional simulation.
 
 ## Siege specials
 
-`process_siege_specials()` handles siege-specific behavior after ordinary attacks/formation contacts and before elephant specials/auto-engagement.
+`process_siege_specials()` runs after ordinary attacks and formation contacts.
 
-Siege counter multipliers and current unit data are documented from the combat constants and troop assets in [UNIT_BALANCE.md](UNIT_BALANCE.md).
+Siege behavior uses the same ownership/target/damage infrastructure as the rest of combat but adds siege-specific attack behavior for units and structures that require it.
+
+Counter relationships involving siege units are defined in the same combat constants and current troop data used by the balance suite.
 
 ## Elephant specials
 
-`process_elephant_specials()` handles elephant-specific combat behavior, including the special contact/trample path defined by the elephant combat components.
+`process_elephant_specials()` handles elephant-specific contact and special behavior, including the dedicated elephant combat components and trample/contact path.
 
-Elephant counter rules use the same damage/target ownership model as other combat rather than bypassing alliance/target validation.
+Elephants still pass through ordinary target ownership/hostility rules. Their special processor changes how an eligible contact resolves; it does not grant permission to attack otherwise invalid subjects.
+
+## Mounted charge interaction
+
+Mounted charge state has its own processor path under combat. Defensive-layout state can block charge initiation where the current defensive service says the unit cannot charge.
+
+This is another example of combat composing subsystem state rather than encoding every stance rule directly inside the attack processor.
 
 ## Auto engagement
 
-`AutoEngagement::process()` lets eligible idle/available combat units acquire nearby hostile targets after explicit attack processing.
+`AutoEngagement::process()` lets eligible units acquire nearby hostile targets after explicit attack processing and special processors.
 
-Auto engagement uses `EngagementIntent::AutoAcquired`, so passive wildlife remains excluded and the same team/hostility rules used by ordered attacks are reused.
+It uses `EngagementIntent::AutoAcquired`, which means:
 
-Target commitment state helps prevent constant target churn across repeated scans.
+- allied/self targets remain invalid;
+- passive wildlife is ignored;
+- structure eligibility follows the query context; and
+- target commitment can preserve a sensible existing choice.
+
+Auto engagement is therefore an opportunistic targeting layer, not a separate attack implementation.
+
+## Target commitment
+
+Target commitment reduces target churn.
+
+Without commitment, repeated proximity queries can cause units to bounce between equally plausible enemies every update. `TargetCommitment::update()` maintains the current commitment state and is run both before attack processing and again at the end of the combat update.
+
+The final zero-delta update lets the commitment system observe target changes made by the processors in the same combat tick.
 
 ## Threat alerts
 
-`tick_threat_alerts()` updates the combat-threat notification state after attack/auto-engagement processing. Those alerts feed higher-level systems such as local AI response and presentation warnings without becoming a second damage system.
+`tick_threat_alerts()` updates combat-threat notification state after attack and auto-engagement processing.
 
-## Terrain and counter multipliers
+Threat alerts can feed higher-level systems such as AI local response and player presentation, but they are not another source of damage or targeting authority.
 
-Terrain/role counters are defined in `game/systems/combat_system/combat_types.h`. Current values include the cavalry/spear, siege/infantry, elephant/archer, high-ground, and hold-mode multipliers.
+Keeping alerts downstream of actual combat processing means they describe combat that the runtime recognized rather than speculative proximity alone.
 
-The combat code is the source of truth for how those multipliers are applied. [UNIT_BALANCE.md](UNIT_BALANCE.md) documents the current relationships and deterministic balance fixtures.
+## Hold and guard interactions
+
+Combat behavior composes with order/stance systems.
+
+Hold/guard state can change effective attack behavior, movement response, or range without inventing a parallel combat system. For example, effective range exposed to UI uses the same resolved range path that combat uses.
+
+Defensive unit layouts can additionally hold position or alter movement/turn/damage behavior through `DefensiveUnitLayoutService`, as described in the formation documentation.
+
+## Projectile and ranged presentation
+
+Ranged attacks submit projectile/visual state through the attack path while authoritative hit/damage remains simulation-owned.
+
+The visual projectile exists to represent the attack, not to become a second source of truth for whether a target lost health. This separation is important for replay and headless simulation, where combat must remain valid without relying on renderer timing.
+
+## Player feedback and inspection
+
+The UI can show target highlights, attack-state markers, refusal text, damage numbers, and current command target because application/read-model code consumes the same target and combat state produced by the simulation.
+
+Presentation is allowed to aggregate or animate that information, but target legality and health changes remain in simulation.
+
+This avoids cases where an attack cursor says “valid” using one rule while the command path rejects the same target using another.
 
 ## Command integration
 
-Player, AI, mission, and replay attack commands enter through the typed command pipeline. Command validation uses the shared combat target rules before the combat system executes the resulting attack state.
+Player, AI, mission, Arena, and replay attack commands enter through the typed command pipeline.
 
-This keeps replay/AI/player targeting under the same ownership and target-validity semantics.
+Command validation uses shared combat target/capability rules before attack state reaches the combat system. Replay playback then reuses the same combat execution path from the recorded command stream.
 
-## Tests
+The result is one set of target semantics for all issuers.
 
-Combat behavior is covered across system, command, movement/formation, balance, and replay tests. Important contracts include:
+## Balance integration
 
-- target refusal/hostility rules;
-- ordered vs auto-acquired wildlife behavior;
-- attack-command subject validation;
-- range/hold-mode agreement;
+Combat tuning is checked with production simulation rather than a standalone paper formula.
+
+`balance_sim` loads current troop/combat data and executes deterministic fixtures that encode important matchup relationships. The fixtures cover mirrors and current counter relationships such as spear/cavalry, infantry/siege, archer/elephant, spear/sword, faction line matchups, commander/line interactions, and other maintained cases.
+
+See [UNIT_BALANCE.md](UNIT_BALANCE.md) for the current fixture catalogue and combat constants.
+
+## Common invariants
+
+The current combat architecture depends on these invariants:
+
+- one shared target rule decides ownership/intent legality;
+- shared query context is built once per combat update;
+- explicit orders and auto-acquisition remain distinct intents;
+- melee cannot deal/contact through blocking structures;
+- authoritative damage is separate from hit presentation;
+- special processors still use the shared ownership/damage model;
+- target commitment prevents needless retarget churn;
+- combat commands enter through the typed command boundary; and
+- deterministic exchange/command timing does not depend on renderer frame timing.
+
+These invariants are more durable than a particular damage constant and are the first things to preserve when changing combat behavior.
+
+## Testing
+
+Combat is covered across simulation, command, formation, balance, replay, and scenario tests.
+
+Important contracts include:
+
+- `TargetRefusal` behavior and hostility rules;
+- ordered vs automatic wildlife targeting;
+- attack-subject capability validation;
+- effective attack range and hold-mode agreement;
 - wall/gate melee separation;
-- melee exchange determinism;
-- siege/elephant special behavior;
-- formation contact; and
-- auto-engagement/target commitment.
+- explicit bypass behavior;
+- deterministic melee exchange;
+- defensive-layout and formation damage composition;
+- formation contact;
+- siege and elephant special behavior;
+- auto engagement;
+- target commitment; and
+- replay/deterministic combat behavior.
 
-The authoritative processor order is `CombatSystem::update()`. Target semantics are defined by `target_rules.*`, and numerical counter tuning is defined by `combat_types.h` plus troop data.
+When debugging a combat failure, it is useful to identify the first broken layer:
+
+1. command/subject validation;
+2. target legality;
+3. path/range/obstruction;
+4. combat state/lock;
+5. normal vs special processor;
+6. damage modifiers/application; or
+7. presentation/feedback.
+
+That prevents a visual symptom from being mistaken for an authoritative damage bug.
+
+## Source map
+
+| Concern | Source |
+| --- | --- |
+| Combat orchestration | `game/systems/combat_system.cpp` |
+| Shared target rules | `game/systems/combat_system/target_rules.*` |
+| Normal attacks | `game/systems/combat_system/attack_processor.cpp` |
+| Damage application | `game/systems/combat_system/damage_application.cpp` |
+| Melee exchange | `game/systems/combat_system/melee_exchange.*` |
+| Threat/engagement/commitment | `game/systems/combat_system/` |
+| Counter constants | `game/systems/combat_system/combat_types.h` |
+| Troop combat data | `assets/data/troops/` and nation data |
+| Balance fixtures | `assets/balance/`, `tools/balance_sim/` |
+
+The processor order in `CombatSystem::update()` and the shared target rules are the authoritative current contract. Historical bug narratives are not required to explain how the combat system works now.
