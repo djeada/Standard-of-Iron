@@ -1,141 +1,152 @@
-# Food, Farms and the Settlement Economy
+# Food, Farms, and the Settlement Economy
 
-Food used to be a counter that nothing produced and nothing consumed. This document
-covers the loop that now runs through it — the **farm** that grows grain in cycles, the
-two ways a builder brings food home, the civilians that eat it — and the balance table
-the whole economy is tuned against. Read it with
-[RESOURCE_STOCKPILE.md](RESOURCE_STOCKPILE.md) (how a load gets credited) and
-[ECONOMY_GUIDANCE.md](ECONOMY_GUIDANCE.md) (how the counters explain it).
+Food connects settlement growth to military production. Farms grow grain, builders harvest grain or slaughter sheep, homes spend food to recruit civilians, and civilians become manpower when they reach a barracks. The result is an economic loop in which food drives population while wood, stone, and iron continue to fund buildings and equipment.
 
-## The loop in one line
+For the mechanics that credit a delivered load, see [RESOURCE_STOCKPILE.md](RESOURCE_STOCKPILE.md). For the UI that explains the resource counters to the player, see [ECONOMY_GUIDANCE.md](ECONOMY_GUIDANCE.md).
 
-> builders reap grain or slaughter sheep → **food** → a home recruits a **civilian** →
-> the civilian walks into a barracks and adds **manpower** → the barracks recruits
-> **troops**.
+## The settlement loop
 
-Wood, stone and iron pay for buildings and arm the troops; food is what turns homes into
-population. Neither side of the economy is optional any more.
+The complete food-to-army path is:
 
-## The farm
+> builders reap grain or slaughter sheep → **food** → a home recruits a **civilian** → the civilian enters a barracks and adds **manpower** → the barracks recruits **troops**
+
+Wood, stone, and iron pay for infrastructure and military equipment. Food is what turns homes into population. Both sides of the economy are therefore necessary for sustained growth.
+
+## Farms
 
 | Property                  | Value                                   |
 | ------------------------- | --------------------------------------- |
 | Spawn / building type key | `farm`                                  |
-| Cost                      | 40 wood, 10 stone; 8 s of builder work  |
+| Cost                      | 40 wood, 10 stone; 8 s of builder work |
 | Footprint                 | 4 × 4                                   |
 | Health / vision           | 600 / 10.0                              |
 | Growth cycle              | `k_farm_growth_cycle_seconds` = 60 s    |
 | Yield per harvest         | `k_harvest_grain_food_reward` = 60 food |
 | Nations                   | Roman and Carthaginian variants         |
 
-A farm carries a `FarmComponent` (`growth` in `0..1`, `cycle_seconds`, `harvests`).
-`FarmSystem` advances `growth` every tick for every owned, living farm; a farm at
-`growth >= 1` is **ripe** and holds there until it is reaped. Reaping resets it to zero
-and the next cycle starts on its own — nobody has to re-sow.
+A farm carries a `FarmComponent` containing `growth` in the range `0..1`, `cycle_seconds`, and `harvests`.
 
-`FarmComponent::growth_stage()` quantises growth into five stages, and the renderer keys
-one instanced archetype per stage and building state off it:
+`FarmSystem` advances `growth` every tick for each owned, living farm. Once growth reaches `1`, the field becomes **ripe** and remains ripe until a builder reaps it. Reaping resets growth to zero and the next cycle begins automatically; farms do not require a separate reseeding action.
 
-| Stage | Growth   | Field                                               |
+### Growth stages
+
+`FarmComponent::growth_stage()` divides the continuous growth value into five presentation stages:
+
+| Stage | Growth   | Field appearance                                    |
 | ----- | -------- | --------------------------------------------------- |
-| 0     | 0 – 25%  | tilled furrows with cut stubble                     |
-| 1     | 25 – 50% | rows of green sprouts                               |
-| 2     | 50 – 75% | knee-high green stalks with leaves                  |
-| 3     | 75 – 99% | tall yellow-green stalks, heads forming             |
-| 4     | ripe     | golden wheat, heavy drooping heads — send a builder |
+| 0     | 0–25%    | tilled furrows with cut stubble                     |
+| 1     | 25–50%   | rows of green sprouts                               |
+| 2     | 50–75%   | knee-high green stalks with leaves                  |
+| 3     | 75–99%   | tall yellow-green stalks with forming heads         |
+| 4     | ripe     | golden wheat with heavy heads; ready for a builder  |
 
-The stage is hashed into the render-snapshot signature (`render_entity_signature` in
-`game/core/world.cpp`), so a farm is only re-copied for the renderer when its stage
-changes; growth itself is not presentation state and is written to saves.
+The growth stage is included in the render-snapshot signature through `render_entity_signature` in `game/core/world.cpp`. A farm is therefore recopied for rendering only when its visible stage changes. The underlying continuous `growth` value is simulation state and is persisted in saves.
 
-Both nation renderers (`render/entity/nations/{roman,carthage}/farm_renderer.cpp`) share
-the field through `render/entity/farm_renderer_common.cpp` and dress it differently: the
-Roman plot has a limestone boundary, a tiled granary shed, an ox-cart, a haystack and
-amphorae; the Punic plot a mudbrick boundary, a flat-roofed lime-washed storehouse with a
-ladder, a stone threshing floor, a well and stacked grain sacks. Both keep a scarecrow.
-Damaged farms keep their crop (soot-tinted); a destroyed farm is a scorched field with a
-collapsed shed. `building_preview --only farm --growth 0.6` renders any stage offscreen.
+### Nation-specific presentation
 
-## Two ways to bring food home
+Both farm renderers share the crop field through `render/entity/farm_renderer_common.cpp` while dressing the plot differently.
 
-Both are builder jobs and both end the way every harvest ends: the yield is loaded onto
-the worker (`ResourceCarryComponent`) and hauled to a barracks yard, where it is credited.
-The yard now stacks grain sacks as the food store grows and a carrying builder shoulders a
-bound sheaf.
+The Roman farm in `render/entity/nations/roman/farm_renderer.cpp` uses a limestone boundary, tiled granary shed, ox cart, haystack, and amphorae. The Carthaginian farm uses a mudbrick boundary, lime-washed flat-roof storehouse with a ladder, a stone threshing floor, a well, and stacked grain sacks. Both variants retain a scarecrow.
+
+Damaged farms keep their crop but tint it with soot. Destroyed farms become scorched fields with collapsed sheds.
+
+Preview any growth state with:
+
+```sh
+building_preview --only farm --growth 0.6
+```
+
+## Two ways to collect food
+
+Food comes from two builder jobs. Both use the normal harvest-delivery loop: the yield is loaded into the worker's `ResourceCarryComponent`, carried back to a barracks yard, and credited there. The yard visually accumulates grain sacks as stored food increases, and a builder carrying grain shoulders a bound sheaf.
 
 | Job               | Product key       | Target            | Work | Yield |
 | ----------------- | ----------------- | ----------------- | ---- | ----- |
 | Reap a farm       | `harvest_grain`   | own **ripe** farm | 5 s  | 60    |
 | Slaughter a sheep | `slaughter_sheep` | any live sheep    | 4 s  | 35    |
 
-Unlike trees, boulders and ore seams these targets are **entities**, not world props, so
-they do not go through `TerrainService::reserve_world_prop`. The job is recorded in
-`BuilderProductionComponent::structure_task_entity_id` (the same slot repair and dismantle
-use) and a target counts as claimed while any builder holds it there with a food product
-(`Game::Systems::food_target_claimed`). `game/systems/food_targets.{h,cpp}` is the one
-place that decides what is harvestable, finds the nearest unclaimed target, and computes
-the work position (a farm's footprint edge; a standoff beside the sheep).
+Unlike trees, boulders, and ore seams, farms and sheep are **entities**, not world props. They therefore do not pass through `TerrainService::reserve_world_prop`.
 
-Ordering it: **Collect** now accepts a ripe farm or a sheep under the cursor as well as a
-resource node, and the interaction markers light ripe farms (`harvest`) and sheep
-(`slaughter`) whenever builders are selected. Right-click hints name the action.
+The current job target is stored in `BuilderProductionComponent::structure_task_entity_id`, the same slot used for repair and dismantling. A food target counts as claimed while any builder holds its entity ID together with a food product; `Game::Systems::food_target_claimed` implements that check.
 
-Sheep move. While a builder is on its way the job follows the animal, and once the builder
-is within reach the sheep is **held** (`WildlifeComponent::held_timer`) so it stands
-through the work instead of drifting off mid-butchering. When the work completes the
-sheep is killed through the same death sequence a wolf's bite would cause and the herd
-respawns on the map's wildlife timer, so mutton is renewable but slow — the farm is the
-reliable source.
+`game/systems/food_targets.{h,cpp}` centralizes food-target behavior. It decides what is harvestable, finds the nearest unclaimed target, and computes the work position: the edge of a farm footprint or a standoff point beside a sheep.
 
-### Standing orders and Auto Gather
+### Issuing food jobs
 
-Reaping or slaughtering starts a **standing round** exactly as felling a tree does. A
-worker with a `harvest_grain` round comes back to the nearest ripe farm near its anchor,
-and — unlike an exhausted tree stand — a round with no ripe farm is **not retired** while
-a friendly farm still stands within reach: the worker waits by the field for the next
-crop. **Auto Gather** treats ripe farms as ordinary nodes, and its priority cycle gained
-**Food first**, which also sends the worker after sheep.
+The **Collect** command accepts ripe farms and sheep under the cursor in addition to ordinary resource nodes. When builders are selected, interaction markers highlight ripe farms as `harvest` targets and sheep as `slaughter` targets. Right-click hints name the action before it is issued.
 
-## How the work reads
+### Sheep are moving targets
 
-Builders no longer swing a sword animation while they work. The humanoid bake gained five
-dedicated looping work clips — `construct_hammer` (an overhead mallet strike with a
-wind-up and a bounce), `construct_saw`, `construct_chisel`, `construct_kneel_chisel` and
-`construct_reap` (a bent-over sickle sweep) — and
-`apply_construction_clip` in `render/creature/pipeline/humanoid_animation_selection.cpp`
-routes every constructing soldier to the clip for its `HumanoidConstructionRole`.
+A sheep can move while a builder approaches. The job follows the animal until the builder is within working range. At that point the sheep is held through `WildlifeComponent::held_timer`, keeping it in place during the slaughter action.
 
-The role, and the tool in the builder's hand, now follow the **job**
-(`Animation::HumanoidWorkJob`, carried on `CreaturePresentationComponent::construction_job`
-and derived from the builder's product type in `game/core/world.cpp`): felling a tree
-swings the mallet, quarrying stone or ore kneels with the chisel, reaping a farm sweeps a
-sickle (a fifth tool archetype in both nations' variant tables), and butchering kneels
-with the blade. Raising a building keeps the seeded mix of hammer, saw and chisel crews
-that makes a work party look like a crew, with the sickle held back from the seed roll
-(`ArchetypeVariantTable::seed_variant_limit`).
+When the job completes, the sheep uses the same death sequence as a sheep killed by a wolf. The herd later respawns according to the map's wildlife timer. Mutton is therefore renewable but slow; farms remain the reliable source of food.
 
-`humanoid_preview --bpat build/bin/assets/creatures/humanoid.bpat --clip construct_reap
---frames 8 --view side --weapon none --out strip.png` reviews any of the five.
+## Standing orders and Auto Gather
+
+Reaping or slaughtering creates a **standing round**, just like felling a tree.
+
+A worker assigned a `harvest_grain` round returns to the nearest ripe farm around the round's anchor. Unlike a depleted tree stand, the round is not retired merely because no farm is currently ripe. If a friendly farm remains within reach, the worker waits near it for the next crop.
+
+**Auto Gather** treats ripe farms as normal resource targets. Its priority cycle includes **Food first**, which can also direct the worker toward sheep.
+
+## Making builder work readable
+
+Builders use dedicated work animations rather than swinging a combat animation while performing economic tasks.
+
+The humanoid bake contains five looping construction clips:
+
+- `construct_hammer` — overhead mallet strike with wind-up and bounce;
+- `construct_saw`;
+- `construct_chisel`;
+- `construct_kneel_chisel`; and
+- `construct_reap` — a bent-over sickle sweep.
+
+`apply_construction_clip` in `render/creature/pipeline/humanoid_animation_selection.cpp` routes a working humanoid to the clip associated with its `HumanoidConstructionRole`.
+
+The role and visible tool follow the **job** through `Animation::HumanoidWorkJob`, carried by `CreaturePresentationComponent::construction_job` and derived from the builder's product type in `game/core/world.cpp`.
+
+This gives each task a distinct read:
+
+- felling a tree uses the mallet action;
+- quarrying stone or ore uses a kneeling chisel;
+- reaping uses the sickle; and
+- slaughtering uses a kneeling blade action.
+
+Building construction retains the seeded mixture of hammer, saw, and chisel workers that makes a crew look varied. The sickle is excluded from that seed roll through `ArchetypeVariantTable::seed_variant_limit`.
+
+Inspect any work clip with `humanoid_preview`, for example:
+
+```sh
+humanoid_preview \
+  --bpat build/bin/assets/creatures/humanoid.bpat \
+  --clip construct_reap \
+  --frames 8 \
+  --view side \
+  --weapon none \
+  --out strip.png
+```
 
 ## Food is spent on civilians
 
-The one recruit that eats is the civilian: `civilian.production.resource_costs.food = 20`.
-A home holds 3 civilians for its lifetime and each carries 50 manpower to a barracks, so a
-home is 60 food for 150 manpower. Starting stores (100–200 food on the shipped maps)
-cover the first four to ten civilians; after that, farms.
+The civilian is the only recruit that consumes food:
 
-The AI does not recruit civilians, so food does not gate it and it builds no farms. It does, however, keep a **recruit reserve** of wood
-and iron now that troops cost more of both: `builder_behavior` sends an idle builder to
-harvest whenever wood drops under 80 or iron under 50, not only when a building is short.
+```text
+civilian.production.resource_costs.food = 20
+```
 
-## The balance table
+A home supports three civilians during its lifetime, and each civilian carries 50 manpower to a barracks. One home therefore converts 60 food into 150 manpower.
 
-Everything below is data (`assets/data/troops/base.json`,
-`assets/data/construction/catalog.json`) mirrored by the compiled fallbacks in
-`game/units/troop_catalog.cpp` and `game/systems/construction_cost_catalog.cpp`; the
-`CompiledDefaultsMatchTheShippedTroopData` test keeps them equal.
+Shipped maps begin with 100–200 food, enough for roughly four to ten civilians depending on the scenario. Beyond that initial reserve, sustained civilian production requires farms or sheep.
 
-**What a builder brings home** (one trip = walk out, work, walk back):
+The AI does not recruit civilians, so food does not gate AI expansion and the AI does not build farms. It does, however, maintain a **recruit reserve** for wood and iron now that troops consume more of both. `builder_behavior` sends an idle builder to gather whenever wood falls below 80 or iron below 50, rather than waiting until a building itself is blocked by a shortage.
+
+## Economy balance
+
+The following values come from `assets/data/troops/base.json` and `assets/data/construction/catalog.json`, with compiled fallbacks in `game/units/troop_catalog.cpp` and `game/systems/construction_cost_catalog.cpp`. `CompiledDefaultsMatchTheShippedTroopData` verifies that the compiled defaults match the shipped data.
+
+### What one builder trip returns
+
+One trip means walking to the target, working, and returning with the load.
 
 | Source    | Work | Yield          |
 | --------- | ---- | -------------- |
@@ -145,7 +156,7 @@ Everything below is data (`assets/data/troops/base.json`,
 | Ripe farm | 5 s  | 60 food / 60 s |
 | Sheep     | 4 s  | 35 food        |
 
-**What things cost:**
+### What units and buildings cost
 
 | Recruit / building | Population | Resources                  | Time  |
 | ------------------ | ---------- | -------------------------- | ----- |
@@ -166,26 +177,23 @@ Everything below is data (`assets/data/troops/base.json`,
 | Temple             | —          | 40 wood, 90 stone, 30 gold | 18 s  |
 | Defence tower      | —          | 60 wood, 80 stone          | 20 s  |
 
-The shape this is tuned for: a squad costs about a third of a wood trip and a third of an
-iron trip, so a player who keeps two builders on the tree line and one on the ore seam
-recruits without pause; a home's worth of civilians costs one farm cycle; and a farm pays
-for itself (40 wood) with its first harvest turned into a home's reserve. Nation
-variants inherit these resource costs and only tune the manpower price and build
-time.
+The economy is tuned around a simple rhythm. A squad consumes roughly one third of a wood trip and one third of an iron trip, so two builders on timber and one on ore can sustain troop recruitment. A full home's civilian output costs one farm cycle, and the first harvest effectively replaces the farm's 40-wood construction investment in the broader settlement economy.
 
-## Where the farm is wired
+Nation variants inherit these resource costs and vary only the manpower price and production time.
 
-- `game/units/spawn_type.h`, `building_type.h` — `Farm` (appended after `Wolf`).
-- `game/units/farm.{h,cpp}`, `factory.cpp` — the entity; `FarmComponent` in
-  `game/core/component.h`, serialised in `game/save/serialization.cpp`.
-- `game/systems/farm_system.{h,cpp}` — growth; registered in `runtime_system_registry`.
-- `game/systems/food_targets.{h,cpp}` — target rules shared by the dispatcher, the
-  production system, the gather loop, interaction targeting and the app.
-- `game/systems/production_system.cpp` — completing `harvest_grain` / `slaughter_sheep`,
-  following and holding the sheep.
-- `game/command/command_dispatcher.cpp` — `StartHarvest` with an entity target.
-- `app/economy/production_manager.cpp`, `harvest_targeting` — Collect on a farm or sheep.
-- `ui/qml/ProductionPanel.qml` — the Farm card and the selected-farm crop readout
-  (`ProductionViewModel::selected_farm_state`).
-- `tools/map_editor`, `tools/arena` (`SetFarmGrowth`, `HarvestResource grain|sheep`),
-  `tools/building_preview --growth`.
+## Implementation map
+
+The farm and food loop is distributed across the following components:
+
+- `game/units/spawn_type.h`, `building_type.h` — `Farm`, appended after `Wolf`;
+- `game/units/farm.{h,cpp}`, `factory.cpp` — farm entity creation;
+- `FarmComponent` in `game/core/component.h`, serialized by `game/save/serialization.cpp`;
+- `game/systems/farm_system.{h,cpp}` — crop growth, registered through `runtime_system_registry`;
+- `game/systems/food_targets.{h,cpp}` — shared targeting rules used by dispatch, production, standing gather, interactions, and the application layer;
+- `game/systems/production_system.cpp` — completion of `harvest_grain` and `slaughter_sheep`, including sheep following and holding;
+- `game/command/command_dispatcher.cpp` — `StartHarvest` with an entity target;
+- `app/economy/production_manager.cpp` and `harvest_targeting` — **Collect** on a farm or sheep;
+- `ui/qml/ProductionPanel.qml` — the Farm card and selected-farm crop state through `ProductionViewModel::selected_farm_state`; and
+- `tools/map_editor`, `tools/arena`, and `tools/building_preview` — authoring and inspection support, including `SetFarmGrowth`, `HarvestResource grain|sheep`, and `--growth`.
+
+The important design boundary is that food is not an isolated counter. It is a visible, harvestable, transportable resource that connects land use, civilian growth, manpower, and troop production into one settlement economy.
