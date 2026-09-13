@@ -1,20 +1,20 @@
 # The Iron Sepulcher
 
-The Iron Sepulcher is the undead faction. It has no economy, no recruitment, and
-no player-selectable slot. Its troops reach the battlefield one way only: an
-**undead zone** on the map wakes up and raises them.
+The Iron Sepulcher is Standard of Iron's undead faction. It has no economy, recruitment loop, or player-selectable slot. Undead troops reach the battlefield through **undead zones** authored on the map: dormant sites that awaken, raise a garrison, and turn part of the terrain into a temporary strategic problem.
 
-Everything below is driven by `undead_zones` in a map file and implemented by
-`Game::Systems::UndeadAwakeningSystem`.
+The system is data-driven through `undead_zones` in map files and implemented by `Game::Systems::UndeadAwakeningSystem`.
 
-## Zone schema
+## Undead zone schema
+
+A zone can define its trigger, guardians, haze, reward, and decorative anchor:
 
 ```json
 "undead_zones": [
   {
     "id": "shrine_sentinels",
     "anchor_type": "magic_shrine",
-    "x": 33, "z": 16,
+    "x": 33,
+    "z": 16,
     "radius": 7.0,
     "leash_radius": 12.0,
     "owner_id": 99,
@@ -30,115 +30,115 @@ Everything below is driven by `undead_zones` in a map file and implemented by
 ]
 ```
 
-| Field          | Meaning                                                                                    |
-| -------------- | ------------------------------------------------------------------------------------------ |
-| `awaken_on`    | `unit_enters_radius` (default) or `mission_start`.                                         |
-| `waves`        | Optional. Omit it to get the default garrison (see below).                                 |
-| `anchor_type`  | The decorative prop the guardians rise around. It does not decide whether a shrine exists. |
-| `fog_density`  | Optional. `0` disables the zone haze.                                                      |
-| `clear_reward` | Optional. Resources paid out once the garrison is broken.                                  |
+| Field          | Meaning                                                                                       |
+| -------------- | --------------------------------------------------------------------------------------------- |
+| `awaken_on`    | `unit_enters_radius` by default, or `mission_start`                                           |
+| `waves`        | Optional wave definition; omitting it uses the default garrison                               |
+| `anchor_type`  | Decorative prop around which guardians rise; it does not determine whether a shrine exists   |
+| `fog_density`  | Optional zone haze; `0` disables it                                                           |
+| `clear_reward` | Optional one-time resources granted when the garrison is broken                               |
 
-`owner_id` is a real owner: it is registered as an AI owner of nation
-`iron_sepulcher`, which resolves to the `sepulcher_defense` AI profile.
+`owner_id` is a real owner registered as an AI player of nation `iron_sepulcher`. That nation resolves to the `sepulcher_defense` AI profile.
 
-### Clearing a zone for profit
+## Clearing a zone is a strategic choice
 
-`clear_reward` is paid once, when the garrison breaks — whether the anchor was
-destroyed or captured. A capture pays the new owner of the anchor; a kill pays
-the local player. The amounts are added to the balance as spendable resources
-and are deliberately **not** counted as harvested, so a hoard can fund a push
-without shortcutting an `accumulate_resources` objective.
+`clear_reward` is paid once when the garrison breaks, whether the shrine is captured or destroyed.
 
-This is what turns a dead zone from an obstacle into a decision: the barrow is
-optional, it costs troops, and it pays for the assault it delays. Every mission
-in the Second Punic War campaign ships at least one.
+If the shrine is captured, the reward goes to its new owner. If it is destroyed, the reward goes to the local player. Resources are added as spendable balance rather than through the harvested-resource path, so clearing a barrow can finance the next push without accidentally satisfying an `accumulate_resources` objective.
 
-## The default garrison
+This is the intended role of an undead zone: it is optional, dangerous ground that can be worth contesting. Every mission in the Second Punic War campaign contains at least one.
 
-A zone that declares no `waves` raises **2 skeleton swordsmen, 1 skeleton
-archer, and 1 grave priest** in a single wave. A map that declares `waves`
-overrides that completely — the default is never merged in.
+## Default and authored garrisons
 
-The whole wave rises on one tick. Guardians are placed on a golden-angle
-sunflower spiral filling the zone radius, so they appear spread around the
-anchor rather than stacked on it, and impassable ground is skipped.
+A zone with no `waves` entry raises the default garrison in one wave:
 
-## Every zone gets a shrine, and the shrine is the barracks
+- 2 skeleton swordsmen;
+- 1 skeleton archer; and
+- 1 grave priest.
 
-`configure()` gives **every** zone exactly one magic shrine — the map does not
-have to author one and cannot opt out. The shrine is placed by
-`Game::Map::plan_undead_zone_shrine` (`game/map/undead_shrine_placement.h`):
+An authored `waves` list replaces the default completely; the two are never merged.
 
-1. a magic shrine prop already standing inside the zone radius is adopted, so an
-   authored shrine keeps its authored spot and a re-`configure()` (a reload, an
-   arena restart) finds the same shrine instead of planting another;
-2. otherwise the zone centre is used, if it is clear of water, bridges, roads,
-   buildings, other props, and the shrines already placed for other zones;
-3. otherwise the nearest clear point is found by searching outward in rings, so a
-   zone anchored on ruins puts its shrine beside them rather than inside them.
+A wave rises in a single simulation tick. Guardians are distributed on a golden-angle sunflower spiral across the zone radius so they emerge around the anchor rather than stacked at one point. Invalid or impassable positions are skipped.
 
-A shrine that has to be created is added to the terrain service as a real world
-prop, which is what draws it and what the save path carries.
+## Every zone receives one shrine
 
-At the shrine the system spawns a barracks entity:
+During `configure()`, every undead zone is paired with exactly one magic shrine. The map does not need to author that shrine and cannot opt out of it.
 
-- owned by the zone owner, nation `iron_sepulcher`;
-- **no `ProductionComponent`** — it cannot recruit anything, it exists so the
-  player can capture or raze it;
-- collision, navigation, selection, health bars, lighting and shadows come from
-  the shared building path, exactly like any other barracks. The building is
-  drawn by `troops/iron_sepulcher/barracks`, which submits no geometry, while the
-  shrine mesh is rendered by the terrain scatter pass from its world prop.
+`Game::Map::plan_undead_zone_shrine` in `game/map/undead_shrine_placement.h` chooses the location in three steps:
 
-If nothing in reach can hold a shrine — a zone dropped into a lake, say — the
-system logs the zone, raises no barracks, and reports the zone through
-`zones_without_shrine()`. `content_validator` runs the same placement over every
-shipped map and fails on such a zone.
+1. If a magic-shrine prop already exists inside the zone, adopt it. This preserves authored placement and allows a later `configure()`—for example after reload or Arena restart—to find the same shrine instead of creating another.
+2. Otherwise, use the zone centre if it is clear of water, bridges, roads, buildings, other props, and shrines already assigned to other zones.
+3. If the centre is blocked, search outward in rings for the nearest valid point. A zone centered on ruins can therefore place its shrine beside them rather than inside them.
 
-When that building is destroyed **or** changes owner, the zone's garrison breaks:
-every living guardian dies immediately, no further waves spawn, and the zone
-reports itself cleared and — for a shrine — purified. That is what routes the
-outcome back into the normal victory system: a mission or map using
-`clear_undead_zone` or `purify_shrine` wins on it without any special casing.
+A newly created shrine is inserted into the terrain service as a real world prop, which makes it part of both rendering and save/load state.
 
-Ruins and other anchor types stay decorative: they choose where the guardians
-rise, not whether the zone has a shrine.
+## The shrine is the capturable anchor
+
+At the shrine, the system creates a `Barracks` entity that acts as the gameplay anchor for capture, destruction, health, navigation, and ownership.
+
+The anchor:
+
+- belongs to the zone owner and nation `iron_sepulcher`;
+- intentionally has **no `ProductionComponent`**, so it can never recruit; and
+- uses the shared building path for collision, navigation, selection, health bars, lighting, and shadows.
+
+The building renderer `troops/iron_sepulcher/barracks` submits no visible barracks geometry. The shrine itself remains a terrain-scatter prop, so the physical shrine and the capturable entity occupy the same site without drawing two structures.
+
+If no valid shrine location can be found—for example, because a zone was authored entirely inside a lake—the system logs the failure, creates no barracks, and exposes the zone through `zones_without_shrine()`.
+
+`content_validator` runs the same placement logic against every shipped map and fails when a zone cannot receive a shrine.
+
+## Breaking the garrison
+
+The garrison breaks when the shrine building is destroyed or changes owner.
+
+At that point:
+
+- every living guardian dies immediately;
+- no further waves can spawn;
+- the zone reports itself cleared; and
+- for shrine-backed objectives, the site also reports itself purified.
+
+This feeds directly into the normal victory system. Objectives such as `clear_undead_zone` and `purify_shrine` need no special-case mission logic beyond the state published by the undead system.
+
+Other `anchor_type` values remain decorative. They influence where guardians appear, but they do not replace the mandatory shrine.
 
 ## Zone haze
 
-Each zone with a positive `fog_density` contributes a light, semi-transparent
-`FogZone` sized to the zone radius, rendered CPU-side by `AmbientFogRenderer`.
-Fog patches carry a ground height, so whoever owns the terrain (the skirmish
-loader, or the Arena) lifts each zone onto the surface before handing it to the
-renderer — otherwise the patches sink under raised ground.
+A zone with positive `fog_density` contributes a light, translucent `FogZone` sized to its radius and rendered on the CPU by `AmbientFogRenderer`.
+
+Fog patches include a ground height. The map owner—such as the skirmish loader or Arena—projects the patch onto the terrain before sending it to the renderer so the haze follows raised ground instead of sinking beneath it.
 
 ## Announcements
 
-The system publishes `Engine::Core::MissionAnnouncementEvent`, which `GameEngine`
-forwards to the existing mission-announcement toast. Each zone announces at most
-once per event:
+`UndeadAwakeningSystem` publishes `Engine::Core::MissionAnnouncementEvent`, which `GameEngine` forwards to the existing mission-announcement toast.
 
-- when it wakes;
-- when its garrison is put down, either by being fought to the last guardian or
-  by losing its shrine.
+Each zone announces each event at most once:
 
-## Save/load
+- when the zone awakens; and
+- when its garrison is broken, either by killing the guardians or by losing the shrine.
 
-`serialize_state()` / `restore_state()` carry the awakened flag, the broken-
-garrison flag, the anchor entity id, wave progress, and the live spawn ids. The
-shrine building itself is an ordinary entity, so its health and owner ride in the
-serialized world; loading re-runs `configure()`, which adopts the shrine already
-standing rather than planting a second one, and `restore_state()` re-links the
-zone to the barracks it already owned. A restored save never re-spawns an active
-wave and never stamps out a second shrine.
+## Save and load
 
-## Testing
+`serialize_state()` and `restore_state()` preserve the runtime state needed to resume an active zone:
 
-- `tests/systems/undead_awakening_system_test.cpp` — waves, defaults, spread,
-  the shrine barracks, one shrine per zone, blocked and impossible placements,
-  garrison break, announcements, save/load.
-- `tests/map/undead_shrine_placement_test.cpp` — the placement rules on their
-  own, plus a sweep that every shipped map can place every zone's shrine.
-- `tests/map/iron_sepulcher_skirmish_test.cpp` — end-to-end through the real
-  skirmish loader: load the map, wake the zone, win by purifying, capture, raze.
-- Arena: eleven `sepulcher_*` scenarios, see `tools/arena/README.md`.
+- awakened state;
+- broken-garrison state;
+- anchor entity ID;
+- wave progress; and
+- live guardian entity IDs.
+
+The shrine barracks itself is an ordinary entity, so its health and owner are serialized with the world.
+
+On load, `configure()` runs again and adopts the shrine already present in the restored terrain state. `restore_state()` then reconnects the zone to its existing barracks and live guardians. A restored save therefore neither duplicates the shrine nor replays an already active wave.
+
+## Test coverage
+
+The system is tested at several levels:
+
+- `tests/systems/undead_awakening_system_test.cpp` covers wave behavior, defaults, spawn spread, shrine anchors, one-shrine-per-zone rules, blocked and impossible placements, garrison break, announcements, and save/load.
+- `tests/map/undead_shrine_placement_test.cpp` tests the placement algorithm directly and sweeps all shipped maps to ensure every authored zone can receive a shrine.
+- `tests/map/iron_sepulcher_skirmish_test.cpp` exercises the complete skirmish-loader path, including awakening, purification victory, capture, and destruction.
+- Arena provides eleven `sepulcher_*` scenarios documented in `tools/arena/README.md`.
+
+The resulting design keeps the Iron Sepulcher deliberately outside the normal economy: undead presence comes from authored places in the world, and defeating that presence is expressed through capture, destruction, and ordinary mission objectives rather than a parallel game mode.
