@@ -102,12 +102,12 @@ Current event kinds are:
 
 ### Event relation describes impact, not ownership
 
-| Relation   | Meaning                                      | Presentation   |
-| ---------- | -------------------------------------------- | -------------- |
-| `self`     | our units or holdings are the target         | danger         |
-| `ally`     | an ally's units or holdings are the target   | warning        |
-| `friendly` | we or an ally are gaining                    | success        |
-| `enemy`    | two other parties are involved               | secondary text |
+| Relation   | Meaning                                    | Presentation   |
+| ---------- | ------------------------------------------ | -------------- |
+| `self`     | our units or holdings are the target       | danger         |
+| `ally`     | an ally's units or holdings are the target | warning        |
+| `friendly` | we or an ally are gaining                  | success        |
+| `enemy`    | two other parties are involved             | secondary text |
 
 An `enemy` event is hidden unless its position passes the same visibility test as unit markers. Battles between AI players remain invisible when they occur inside unscouted fog.
 

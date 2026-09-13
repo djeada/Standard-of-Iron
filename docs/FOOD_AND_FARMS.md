@@ -17,7 +17,7 @@ Wood, stone, and iron pay for infrastructure and military equipment. Food is wha
 | Property                  | Value                                   |
 | ------------------------- | --------------------------------------- |
 | Spawn / building type key | `farm`                                  |
-| Cost                      | 40 wood, 10 stone; 8 s of builder work |
+| Cost                      | 40 wood, 10 stone; 8 s of builder work  |
 | Footprint                 | 4 × 4                                   |
 | Health / vision           | 600 / 10.0                              |
 | Growth cycle              | `k_farm_growth_cycle_seconds` = 60 s    |
@@ -32,13 +32,13 @@ A farm carries a `FarmComponent` containing `growth` in the range `0..1`, `cycle
 
 `FarmComponent::growth_stage()` divides the continuous growth value into five presentation stages:
 
-| Stage | Growth   | Field appearance                                    |
-| ----- | -------- | --------------------------------------------------- |
-| 0     | 0–25%    | tilled furrows with cut stubble                     |
-| 1     | 25–50%   | rows of green sprouts                               |
-| 2     | 50–75%   | knee-high green stalks with leaves                  |
-| 3     | 75–99%   | tall yellow-green stalks with forming heads         |
-| 4     | ripe     | golden wheat with heavy heads; ready for a builder  |
+| Stage | Growth | Field appearance                                   |
+| ----- | ------ | -------------------------------------------------- |
+| 0     | 0–25%  | tilled furrows with cut stubble                    |
+| 1     | 25–50% | rows of green sprouts                              |
+| 2     | 50–75% | knee-high green stalks with leaves                 |
+| 3     | 75–99% | tall yellow-green stalks with forming heads        |
+| 4     | ripe   | golden wheat with heavy heads; ready for a builder |
 
 The growth stage is included in the render-snapshot signature through `render_entity_signature` in `game/core/world.cpp`. A farm is therefore recopied for rendering only when its visible stage changes. The underlying continuous `growth` value is simulation state and is persisted in saves.
 

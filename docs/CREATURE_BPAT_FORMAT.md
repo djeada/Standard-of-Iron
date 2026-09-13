@@ -1,342 +1,530 @@
-# Creature Bone-Palette Animation Texture (BPAT) Format
+# Creature Bone-Palette Animation Texture Format
 
-BPAT is the game's **motion book** for a creature species.
+BPAT is the baked runtime animation format used for skinned creatures in Standard of Iron. A BPAT file packages the data the runtime needs to animate a creature without rebuilding authored skeletal animation from source definitions every frame.
 
-A horse, elephant, humanoid, or sword-ready humanoid does not figure out every joint from scratch in the middle of battle. Instead, the hard animation work is prepared ahead of time and packed into a BPAT file. During play, the game only needs to answer two easy questions:
+The format stores pre-baked bone palettes for named animation clips together with clip timing, animation markers, variant metadata, attachment sockets, ground-contact data, bind-pose data, and the skeleton parent table.
 
-- **Which move is this creature doing?**
-- **How far through that move is it?**
+At runtime, the game chooses a clip and phase, reads/interpolates the baked pose data, and uses the same asset for rendering, attachment placement, grounding, combat timing, and layered animation where those systems require it.
 
-That is why large battles can stay lively without turning animation into a performance disaster.
+## Format ownership
 
-## The story
+The binary contract is defined by:
 
-Imagine the animators as drill masters before the campaign begins. They teach each creature its full set of moves: idle, walk, trot, attack, recoil, death, and so on.
+- `animation/bpat/bpat_format.h` — structures, constants, IDs, sizes, version;
+- `animation/bpat/bpat_reader.cpp` — validation and decoded runtime view; and
+- `tools/bpat_baker/` — production writer/bake path.
 
-Then the game's build tools write those lessons into a single travel book for that species: a BPAT file.
+Generated files are outputs of that contract. When the code and an older `.bpat` disagree, the current format/reader code is authoritative.
 
-When the battle starts, the game does **not** re-teach the horse how to bend a knee or swing a neck. It simply opens the book, jumps to the right move, picks the right moment, and says:
+## Current format version
 
-> "Show me frame 18 of the gallop."
+`animation/bpat/bpat_format.h` defines:
 
-The GPU then turns that stored pose into the moving creature you see on screen.
+```cpp
+k_magic   = {'B', 'P', 'A', 'T'}
+k_version = 3
+```
 
-So BPAT is a promise:
+The current reader accepts exactly `k_version`.
 
-- the expensive pose work happened earlier
-- the game only chooses **move + moment**
-- the graphics card does the fast final playback
+A file with a different version is rejected with an unsupported-version error rather than interpreted through a best-effort compatibility path.
 
-## Why players should care
+That strictness keeps the binary layout deterministic: if the structure changes, the version must change with it.
 
-- **Smoother battles**: more units can animate at once.
-- **More reliable looks**: creatures keep the same approved motion every time.
-- **Less stutter**: the engine avoids heavy live skeletal work in the shipping build.
-- **Cleaner design**: gameplay decides intent, while BPAT provides the body language.
+## Species/profile IDs
 
-In code, that "intent" is basically: _play this clip at this phase_.
+The current species/profile IDs are:
 
-## What lives inside a BPAT file
+|  ID | Species/profile       |
+| --: | --------------------- |
+|   0 | humanoid              |
+|   1 | horse                 |
+|   2 | elephant              |
+|   3 | humanoid sword-ready  |
+|   4 | humanoid spear-ready  |
+|   5 | humanoid skeleton     |
+|   6 | humanoid caster       |
+|   7 | humanoid stave-caster |
+|   8 | sheep                 |
+|   9 | wolf                  |
 
-Think of the file as a chest with a few labeled compartments.
+`k_species_count` is 10 and `k_max_species_id` is the wolf ID.
 
-| Part         | Plain-English meaning                                   |
-| ------------ | ------------------------------------------------------- |
-| Header       | Who this file is for and where the other parts begin    |
-| Clip list    | The named moves, such as walk or attack                 |
-| Socket list  | Attachment points for gear, riders, or props            |
-| String table | The actual text names used by the clip and socket lists |
-| Palette data | The real pose data for every frame of every move        |
-| Socket data  | Optional pre-baked attachment transforms                |
-| Contact data | One ground-contact height per frame (v3)                |
-| Bind palette | The rest pose the skinning matrices were built against  |
-| Bone parents | The skeleton hierarchy, one parent index per bone       |
+The profile IDs allow several humanoid bake variants to coexist while still using the same BPAT runtime format.
 
-### Header
+## High-level file layout
 
-The header gives the game the basics:
+A BPAT v3 file is laid out as a header plus referenced sections:
 
-- this is really a **BPAT** file
-- which **version** it uses
-- which **species** it belongs to
-- how many **bones**, **sockets**, and **clips** exist
-- how many total animation frames are stored
-- where the clip list, socket list, names, and pose data begin
+```text
+BpatHeader (64 bytes)
+BpatHeaderExtV3 (32 bytes)
+        │
+        ├─ clip table
+        ├─ socket table
+        ├─ string table
+        ├─ frame bone palettes
+        ├─ optional/permitted per-frame socket transforms
+        ├─ frame contact table
+        ├─ bind palette
+        └─ bone-parent table
+```
 
-### Clip list
+The writer aligns sections using `k_section_alignment`, currently 16 bytes.
 
-Each clip entry describes one named move:
+Offsets in the header are what define the binary section locations. Consumers should not infer section placement from the size of one generated sample file.
 
-- the clip name
-- how many frames it has
-- where its frames begin inside the big shared frame stream
-- how fast it plays
-- whether it loops
-- **authored timing markers** (see below) — key moments inside the move
+## Base header
 
-In simple terms, the clip list is the table of contents for the motion book.
+The 64-byte `BpatHeader` identifies core file facts, including:
 
-### Authored markers (v2)
+- magic/version;
+- species/profile ID;
+- bone count;
+- socket count;
+- clip count;
+- total frame count;
+- string-table size; and
+- offsets to clip, socket, string, and palette data.
 
-Starting with **version 2**, every clip entry also carries five **timing markers**,
-each a normalized phase in `[0, 1]` (or `-1` when unset):
+These fields are sufficient to locate the original BPAT sections and validate the broad dimensions of the asset.
 
-| Marker               | Meaning                                                        |
-| -------------------- | -------------------------------------------------------------- |
-| `anticipation_start` | the wind-up begins                                             |
-| `weapon_release`     | the weapon starts travelling toward the target                 |
-| `contact`            | the blade/impact connects — **this is when a melee hit lands** |
-| `recover_unlocked`   | the attacker may start recovering / chaining                   |
-| `exit_safe`          | the move can be safely interrupted/blended out                 |
+## Version-3 extension
 
-These replace the old, fragile habit of guessing key moments from the clip _name_. The
-baker authors the values; the runtime reads them directly. The `contact` marker is what
-lets a melee hit apply damage **mid-swing** (when the weapon visually connects) instead of
-on the trigger frame — see the deferred-melee-strike flow in
-[`ANIMATION_ARCHITECTURE.md`](ANIMATION_ARCHITECTURE.md). This stays DPS-neutral
-(the cooldown still resets at swing start) and deterministic (the pending strike is
-serialized).
+`BpatHeaderExtV3` is 32 bytes and extends v3 with offsets/counts for:
 
-### Clip flags and the variant table (v3)
+- per-frame contact data;
+- the bind palette; and
+- the bone-parent table.
 
-Version 3 stops the runtime from re-deriving facts about a clip that the baker already
-knows. Every clip entry now carries:
+These additions let the runtime recover more than GPU skinning matrices. It can derive local poses, bone-global transforms, hierarchy-aware interpolation, and grounding/contact information from the same baked asset.
 
-- a **flags** byte. Bit 0, `supplies_ground_contact`, is set for every clip except the
-  `riding_*` and `showcase_*` families. The runtime used to test the clip _name_ for
-  those prefixes on every soldier every frame; now it reads one bit.
-- a **variant family** and **variant ordinal**. Clip variants (the three sword swings,
-  the six ambient idles, the infantry death poses) are still contiguous in the blob and
-  still selected as `base_clip + variant`, but the baker records which family every clip
-  belongs to and its ordinal inside it, straight from `animation/clip_manifest.h`. The
-  runtime validates `base_clip + variant` against that table
-  (`BpatBlob::clip_is_variant_of`) and falls back to the base clip when the arithmetic
-  would land outside the family. Before v3 the same guard existed only for the idle
-  ambient variants and worked by comparing clip names.
+## Clip table
 
-### Contact data (v3)
+Each `BpatClipEntry` is 48 bytes.
 
-Every frame also gets a `BpatFrameContact` record with two floats:
+A clip entry stores:
 
-- `sole_y` — the lowest sole point of the posed feet relative to the bind pose. This is
-  what the submit path subtracts from the world matrix so a mid-stride soldier stands on
-  the ground instead of floating on its bind-pose feet.
-- `foot_y` — the lowest foot-bone origin in palette space, used by the shadow and
-  grounding pass in preparation.
+- clip name offset and length;
+- frame count;
+- global frame offset;
+- playback FPS;
+- loop flag;
+- clip flags;
+- variant family;
+- variant ordinal; and
+- five authored timing markers.
 
-Both used to be computed at runtime from the full bone palette (matrix inversions and
-sole-point transforms per soldier per frame, twice when frame-lerping). The baker now
-runs the exact same functions once per frame
-(`Render::Creature::Pipeline::palette_contact_y` / `palette_foot_contact_y`) and the
-runtime does two array reads and a lerp. `render_request_test` verifies the baked table
-against the runtime computation for every frame of every species blob it can load.
+All clips share one global frame stream. The clip entry identifies the contiguous frame range belonging to that action.
 
-### Socket list
+## Animation markers
 
-Some creatures need stable attachment points: a saddle, a rider anchor, a banner pole, a carried prop.
+The five normalized markers are:
 
-Each socket entry says:
+| Marker               | Meaning                                    |
+| -------------------- | ------------------------------------------ |
+| `anticipation_start` | wind-up begins                             |
+| `weapon_release`     | weapon begins travelling toward the target |
+| `contact`            | impact/contact point used by melee timing  |
+| `recover_unlocked`   | recovery/chaining may begin                |
+| `exit_safe`          | clip can be interrupted/blended out safely |
 
-- the socket name
-- which bone it follows
-- the small offset from that bone
+These markers make action timing authored data rather than a runtime guess based on clip names or fixed frame numbers.
 
-### String table
+A melee system, for example, can use the baked contact/recovery semantics even if two actions have different frame counts or FPS.
 
-This is just the name drawer. Instead of storing repeated text inside every entry, the file keeps the names together in one block and points to them from the clip and socket lists.
+## Marker phases
 
-### Palette data
+Markers are stored as normalized clip phases rather than absolute wall-clock times.
 
-This is the heart of the file.
+This lets runtime code map them consistently onto the current clip duration/playback rate.
 
-For every stored frame, BPAT contains one **skinning matrix per bone**: the posed bone
-transform already multiplied by the inverse of the bind pose, stored column-major
-exactly as the GPU consumes it. The data is laid out in one long run of frames, clip
-after clip. The renderer's skin atlas is a view straight into this block
-(`RiggedSkinAtlas::palettes` references `BpatBlob::palette_matrices()`), and the palette
-UBO is uploaded from it without any per-frame multiply or transposition at load.
+An unset marker uses the value produced by the marker source/bake path. Consumers should read marker state from the baked entry instead of assuming every action supplies every timing landmark.
 
-If you need a bone's world-space pose rather than its skinning matrix — the rider seat
-frame, the preview tool's stick figures, the animation diagnostics — multiply by the
-baked bind palette: `BpatBlob::bone_global_matrix(frame, bone)` does exactly
-`skin × bind`.
+## Clip flags
 
-If you like analogies, this is a flipbook where each page contains the finished
-deformation for that instant rather than the raw pose.
+Bit 0 of the flags byte is:
 
-### Bone parents (v3)
+```text
+k_clip_flag_supplies_ground_contact
+```
 
-`BpatHeaderExtV3::bone_parent_offset` points at `bone_count` bytes: the parent index of
-every bone (`0xFF` for a root), written from the species topology and validated so a
-parent always precedes its child. Together with the bind palette this lets the reader
-rebuild the **local pose** of every bone for every frame at load
-(`BpatBlob::frame_local_pose_view`: a rotation quaternion and a translation relative to
-the parent). Runtime pose layering — frame interpolation, full-body blends, upper-body
-overlays — is a slerp/lerp of those local poses followed by one forward-kinematics pass
-back to skinning matrices, instead of decomposing skinning matrices into quaternions on
-every blend. The reader derives the local poses rather than the baker storing them
-because they are a pure function of data already in the file; storing them would only
-add 1.3 MB per humanoid blob and a second copy that could drift.
+This marks clips whose baked contact data supplies the relevant grounding/contact information for the runtime path.
 
-### Bind palette (v3)
+Flags belong to the binary clip contract; they should be expanded through the format definition rather than through undocumented magic values in a consumer.
 
-`BpatHeaderExtV3::bind_palette_offset` points at `bone_count` column-major matrices:
-the rest pose the skinning matrices were built against. It exists so consumers can
-recover global bone poses without linking the species rig code (the baker writes it
-from the manifest's `bind_palette` provider), and so a blob is self-describing.
+## Variant metadata
 
-### Socket data
+Variant metadata records:
 
-This part is optional. If present, it stores ready-to-use attachment transforms so the game does not have to combine the bone pose with that extra socket offset every time. That saves extra work during rendering.
+- a variant family; and
+- an ordinal within that family.
 
-## How playback works without the scary math
+`BpatBlob::clip_is_variant_of()` validates that a requested clip really belongs to the expected family before runtime code treats `base + ordinal` as a valid variant.
 
-1. **Before the game ships**, `tools/bpat_baker` bakes creature motion into BPAT files.
-2. **During play**, gameplay chooses a clip and a phase inside it.
-3. **The engine looks up the right frame** in the BPAT data.
-4. **The GPU reads the stored pose** and bends the creature mesh into place.
+This avoids relying on accidental clip-table adjacency as the only proof that several actions are interchangeable variants.
 
-No live "solve the whole skeleton from scratch" step runs in the shipping build.
+## Frame palette data
 
-That is the idea behind the format.
+For every stored global frame, BPAT contains one skinning matrix per bone.
 
-## How to use the prebaker
+The layout is conceptually:
 
-If you want the game to regenerate the current creature BPAT assets, use the prebaker.
+```text
+frame 0: bone 0 ... bone N-1
+frame 1: bone 0 ... bone N-1
+...
+```
 
-### Recommended
+Clips select slices of that global frame stream using `frame_offset` and `frame_count`.
 
-```bash
+`BpatBlob::palette_matrices()` exposes the decoded palette block.
+
+## Skinning vs bone-global transforms
+
+A skinning matrix is not automatically the same thing as the bone's global pose matrix.
+
+`bone_global_matrix(frame, bone)` combines the stored skinning transform with the baked bind-pose information when a consumer needs the actual global bone pose.
+
+This is important for systems such as attachment sockets or analysis that need the transformed bone rather than the GPU-ready skinning matrix alone.
+
+## Bind palette
+
+Version 3 can store one bind-pose matrix per bone.
+
+The bind palette provides the reference needed to recover posed/global/local information from the baked skinning palette.
+
+The reader validates that the bind-palette section fits the file and matches the bone dimensions expected by the header.
+
+## Bone-parent table
+
+Version 3 also stores one parent byte per bone.
+
+The special value:
+
+```text
+0xFF
+```
+
+identifies a root bone.
+
+The reader rejects a parent index that does not precede its child in the baked ordering.
+
+This ordering constraint lets the runtime reconstruct hierarchy-dependent pose data in a deterministic forward pass.
+
+## Local-pose view
+
+Using the palette, bind pose, and hierarchy, the reader can derive local bone transforms.
+
+`frame_local_pose_view()` exposes decoded local rotations/translations used by interpolation and layered animation code.
+
+This is one reason the v3 asset contains more than the matrix block required for simple GPU skinning: the runtime can work with bone-local pose data without returning to the authoring source.
+
+## Per-frame contact data
+
+`BpatFrameContact` is an 8-byte record with:
+
+- `sole_y`; and
+- `foot_y`.
+
+`sole_y` represents the lowest posed sole point relative to the bind-pose reference used by grounding.
+
+`foot_y` records the lowest foot-bone origin used by the preparation/shadow path.
+
+When a contact table is present, the reader requires exactly one record per global frame.
+
+That one-to-one relationship keeps contact sampling aligned with animation sampling.
+
+## Why contact data is baked
+
+Grounding information can be expensive or inconsistent to infer from arbitrary posed geometry at runtime.
+
+Baking it gives the runtime a stable per-frame answer that can be shared by animation preparation and grounding/shadow logic.
+
+The value still belongs to presentation/animation behavior; authoritative unit-root position remains a gameplay/movement fact.
+
+## Sockets
+
+Each `BpatSocketEntry` is 32 bytes.
+
+A socket stores:
+
+- socket name;
+- anchor-bone index; and
+- local offset.
+
+When sockets are present, the file also contains their per-frame transformed data after the palette section according to the current writer layout.
+
+The reader checks that every socket anchor references a valid bone.
+
+## Socket use
+
+Sockets provide stable attachment points for items/effects that need to follow the animated skeleton.
+
+Typical consumers include weapon/equipment placement and other creature attachments.
+
+The socket contract keeps attachment placement tied to the baked skeleton rather than hard-coded world offsets in individual renderers.
+
+## String table
+
+Clip and socket names are stored through offsets into the file string table.
+
+The reader verifies that names:
+
+- fall inside the string-table bounds; and
+- are NUL-terminated within the table.
+
+This prevents malformed offsets from turning a corrupt asset into an unbounded string read.
+
+## Reader validation
+
+`BpatBlob::validate()` rejects a blob when the current binary contract is violated.
+
+Current checks include:
+
+- file shorter than the required header data;
+- magic mismatch;
+- version not equal to `k_version`;
+- species ID outside the supported range;
+- `bone_count` equal to zero or above 64;
+- zero clips;
+- section offsets/ranges outside the file;
+- contact-table count different from `frame_total`;
+- invalid bone-parent ordering;
+- non-contiguous clip frame offsets;
+- zero-frame clips;
+- clip frame counts that do not sum to `frame_total`;
+- clip/socket names outside the string table;
+- non-NUL-terminated names; and
+- socket anchors outside the valid bone range.
+
+A BPAT file is therefore treated as an untrusted binary blob until those structural checks pass.
+
+## Contiguous clip-frame contract
+
+Clip frame ranges are required to be contiguous in the global frame stream.
+
+That gives the runtime a simple model:
+
+```text
+clip 0 frames
+clip 1 frames
+clip 2 frames
+...
+```
+
+with no holes or overlapping clip ranges.
+
+The sum of all clip frame counts must equal `frame_total`.
+
+## Bone-count limit
+
+The reader currently accepts at most 64 bones.
+
+That limit is part of the format/runtime contract and should be treated as such when authoring a new creature skeleton.
+
+A source rig with more bones cannot simply be baked and expected to load unless the format/runtime limit is changed coherently.
+
+## Runtime clip selection
+
+Runtime systems select clips using the baked manifest/profile and action state.
+
+The BPAT reader supplies:
+
+- clip identity;
+- frame count/FPS;
+- loop state;
+- markers;
+- variants;
+- palette access;
+- local-pose access;
+- contacts; and
+- sockets.
+
+Higher-level animation code decides which clip to play and how to blend/layer it. The BPAT file supplies the immutable baked data.
+
+## Interpolation and layered animation
+
+The local-pose view enables runtime interpolation and layered animation without rebuilding the authored animation graph.
+
+For example, a defensive upper-body overlay can compose with locomotion when the runtime has the relevant local bone pose data and masks/overlay rules.
+
+The BPAT format itself does not decide gameplay state; it makes the posed animation data available to the animation/rendering systems that interpret current actions.
+
+## Baking assets
+
+The normal repository command is:
+
+```sh
 make bake-bpat
 ```
 
-That runs the built baker and writes the generated creature assets into `assets/creatures/`.
+The direct executable is:
 
-### Direct CLI
-
-```bash
-./build/bin/bpat_baker
+```sh
+./build/bin/bpat_baker [output-directory]
 ```
 
-The tool takes one optional argument: the output directory.
+The current CLI accepts one optional output directory.
 
-```bash
-./build/bin/bpat_baker assets/creatures
-./build/bin/bpat_baker /tmp/creature_bakes
+It does **not** accept a species selector.
+
+`tools/bpat_baker/main.cpp` always bakes the complete built-in profile/species set.
+
+## Built-in bake set
+
+The baker iterates six humanoid bake profiles and then bakes horse, elephant, sheep, and wolf.
+
+The resulting BPAT files are:
+
+- `humanoid.bpat`;
+- `humanoid_sword.bpat`;
+- `humanoid_spear.bpat`;
+- `humanoid_skeleton.bpat`;
+- `humanoid_caster.bpat`;
+- `humanoid_stave_caster.bpat`;
+- `horse.bpat`;
+- `elephant.bpat`;
+- `sheep.bpat`; and
+- `wolf.bpat`.
+
+These correspond to the current supported species/profile IDs.
+
+## Minimal snapshot meshes
+
+The same bake target also produces minimal `.bpsm` snapshot meshes for:
+
+- horse;
+- elephant;
+- sheep; and
+- wolf.
+
+Current generated names include:
+
+- `horse_minimal.bpsm`;
+- `elephant_minimal.bpsm`;
+- `sheep_minimal.bpsm`;
+- `wolf_minimal.bpsm`.
+
+These assets belong to the creature presentation/LOD pipeline rather than the BPAT matrix format itself, but they are generated by the same production bake target.
+
+## Rigged body meshes
+
+The bake target also produces full/minimal `.bprm` rigged bodies for the relevant creature profiles, including humanoid/skeleton-humanoid and the four non-humanoid creatures.
+
+This keeps animation and body outputs synchronized through one asset-generation step.
+
+## Source and staged outputs
+
+CMake runs the baker for both:
+
+```text
+assets/creatures
 ```
 
-### What it writes today
+and:
 
-At the moment, the prebaker writes all built-in species in one pass:
+```text
+build/bin/assets/creatures
+```
 
-| Output                   | Notes                              |
-| ------------------------ | ---------------------------------- |
-| `humanoid.bpat`          | default humanoid animation set     |
-| `humanoid_sword.bpat`    | sword-ready humanoid animation set |
-| `humanoid_spear.bpat`    | spear-ready humanoid animation set |
-| `humanoid_skeleton.bpat` | skeleton humanoid animation set    |
-| `horse.bpat`             | horse creature BPAT                |
-| `horse_minimal.bpsm`     | horse minimal snapshot mesh        |
-| `elephant.bpat`          | elephant creature BPAT             |
-| `elephant_minimal.bpsm`  | elephant minimal snapshot mesh     |
+so the repository/source asset tree and the staged runtime asset tree receive the generated outputs expected by the build/run workflow.
 
-So this is not a pick-one-species command yet. The current CLI bakes the whole built-in set.
+## `CreatureBakeRecipe`
 
-### How a new species plugs into the prebaker
+A baked creature profile is driven by a `CreatureBakeRecipe` and its runtime manifest.
 
-For whole-creature species such as horse and elephant, the current prebaker path is driven by `SpeciesManifest`.
+The recipe provides information such as:
 
-To hook a new species in, provide a manifest with:
+- runtime manifest/profile;
+- clip descriptions;
+- sockets;
+- marker provider where required; and
+- the frame-baking function.
 
-- `species_id`
-- `bpat_file_name`
-- `minimal_snapshot_file_name`
-- clip descriptors
-- `bind_palette`
-- `creature_spec`
-- `bake_clip_palette`
+The baker then writes the manifest's configured `bpat_file_name` and associated body/snapshot assets.
 
-Then expose that manifest and call `bake_species_manifest(...)` from the baker entrypoint.
+## Adding a built-in creature profile
 
-## The texture trick, explained simply
+Adding a new built-in profile requires more than assigning a new species ID.
 
-The engine uploads the baked pose data as a texture on the GPU.
+The current integration points include:
 
-Why a texture? Because GPUs are extremely good at reading texture data quickly and in parallel. Instead of treating the texture like a picture, the engine treats it like a shelf full of pose rows.
+1. define/update the runtime manifest/profile;
+2. provide a `CreatureBakeRecipe`;
+3. supply clip definitions and bake function;
+4. author required sockets/markers;
+5. add the profile/species to the sequence invoked by `tools/bpat_baker/main.cpp`;
+6. add generated outputs to `tools/bpat_baker/CMakeLists.txt`; and
+7. ensure the runtime species/profile ID and reader limits are updated coherently if the profile expands the supported ID set.
 
-So when the creature is drawn, the graphics card reads the right bone rows from the texture and bends the mesh into the correct pose.
+Because the CLI bakes the complete built-in set, the new profile becomes part of the normal bake invocation rather than a separately selected command-line mode.
 
-In player terms: the creature animation is packed like an image so the graphics card can replay it fast.
+## Changing the binary format
 
-## A friendly glossary
+A binary-format change should be treated as a versioned contract change.
 
-| Term         | Easy meaning                                       |
-| ------------ | -------------------------------------------------- |
-| Bone palette | The full creature pose for one frame               |
-| Clip         | One named move, like idle or attack                |
-| Frame        | One step inside that move                          |
-| Socket       | A named attach point for equipment or props        |
-| Phase        | How far through the move the creature currently is |
-| Species      | Which body plan this file belongs to               |
+At minimum, review:
 
-## The firm rules of the format
+- `BpatHeader` / extension structures;
+- `k_version`;
+- writer offsets/alignment;
+- reader range validation;
+- decoded runtime views;
+- generated asset rebuild; and
+- all consumers that assume current section dimensions.
 
-For readers who want the important hard facts without drowning in byte offset tables:
+The reader currently accepts only one exact version, so adding an incompatible section/field without a version change is not a safe migration strategy.
 
-- BPAT v3 is **little-endian**.
-- Floating-point values are **32-bit IEEE 754 floats**.
-- Bone skinning matrices and the bind palette are stored **column-major** (GPU
-  layout); the 3×4 socket transforms stay **row-major**.
-- Each section begins on a **16-byte boundary**.
-- Variable-sized data lives in trailing blocks referenced by **absolute file offsets**.
-- Reserved and padding bytes must be **zero**.
-- The file magic must be **`BPAT`**.
-- The header is **64 bytes** and is immediately followed by a **32-byte v3 extension
-  header** (contact table offset and count); each clip entry is **48 bytes** (5 marker
-  floats, flags, variant family and ordinal); each socket entry is **32 bytes**; each
-  contact record is **8 bytes**; the bind palette is `bone_count × 64` bytes; the bone
-  parent table is `bone_count` bytes.
-- Current supported species ids are **0 = humanoid, 1 = horse, 2 = elephant, 3 = humanoid_sword, 4 = humanoid_spear, 5 = humanoid_skeleton, 6 = humanoid_caster, 7 = humanoid_stave_caster, 8 = sheep, 9 = wolf**.
-- Blobs are build output (`make bake-bpat`), never checked in, so a version bump simply
-  re-bakes every species; the reader accepts exactly the current version and nothing else.
+## Diagnosing a load failure
 
-## How the frame data is packed
+A BPAT failure can usually be localized from the reader validation stage.
 
-The frame data is flat and simple:
+### Unsupported version
 
-- all frames from all clips are stored in one long sequence
-- frames from the same clip stay together
-- each frame stores all bones for that species
+The file was baked with a format version different from the runtime `k_version`.
 
-So a clip entry does not own a separate chunked mini-file. It simply points to its starting place inside the full shared stream.
+### Out-of-range section
 
-## Validation in plain language
+Header offsets/counts do not fit inside the file. Inspect writer layout or a truncated/corrupt asset.
 
-The current reader accepts a BPAT file when:
+### Clip-frame continuity failure
 
-1. it starts with the `BPAT` magic
-2. it uses version `3`
-3. its species id is known (`0..9` today)
-4. it has at least one clip
-5. its bone count is in range
-6. its clip frame offsets are contiguous and its frame counts add up correctly
-7. its offsets stay inside the file
-8. every referenced clip or socket name really exists inside the string table and ends with `NUL`
-9. every socket anchor bone points at a real bone
-10. if a contact table is present it holds exactly one record per frame and stays inside the file
-11. if a bind palette is present it holds exactly one matrix per bone and stays inside the file
-12. if a bone parent table is present every parent index precedes its child (or is `0xFF`)
+Clip offsets/counts no longer form one contiguous frame stream.
 
-The writer still emits zeroed padding and reserved fields, but the current reader does **not** actively reject non-zero reserved bytes.
+### Invalid parent ordering
 
-## If you need the exact binary contract
+The baked skeleton parent table violates the parent-before-child ordering required by the decoder.
 
-This page now tells the story first.
+### Invalid string/socket reference
 
-For the exact C++ layout used by the engine, see:
+Inspect string table offsets/NUL termination or socket anchor indices.
 
-- `animation/bpat/bpat_format.h`
+Regenerating the asset with the current baker is the first useful check when a stale generated file is suspected.
 
-For the broader rendering flow, see:
+## Runtime invariants
 
-- `docs/RENDERING_ARCHITECTURE.md`
+The current BPAT pipeline depends on these invariants:
+
+- file magic/version are exact;
+- species/profile IDs stay inside the declared range;
+- bone count is `1..64`;
+- clip frame ranges are contiguous and cover `frame_total` exactly;
+- string references remain inside the string table;
+- socket anchors reference valid bones;
+- contact records align one-to-one with global frames when present;
+- parent indices precede their children; and
+- the production baker/output list agree about the assets generated by `make bake-bpat`.
+
+## Source map
+
+| Concern                         | Source                            |
+| ------------------------------- | --------------------------------- |
+| Binary structures/version/IDs   | `animation/bpat/bpat_format.h`    |
+| Reader/validation/decoded views | `animation/bpat/bpat_reader.cpp`  |
+| Bake executable                 | `tools/bpat_baker/main.cpp`       |
+| Generated-output list           | `tools/bpat_baker/CMakeLists.txt` |
+| Creature manifests/recipes      | animation/creature bake sources   |
+| Runtime creature rendering      | renderer/animation creature paths |
+
+The current v3 structures, reader checks, and production baker are the BPAT contract. Older generated-file assumptions or partial output lists should not be carried forward when they disagree with those sources.

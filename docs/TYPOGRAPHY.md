@@ -14,11 +14,11 @@ The project therefore treats font selection as part of its visual contract rathe
 
 ## The three font families
 
-| Token                      | Face                                | Role                                                                      |
-| -------------------------- | ----------------------------------- | ------------------------------------------------------------------------- |
-| `Typography.family`        | Noto Sans                           | Body text, settings, debug UI, and text read at length                    |
-| `Typography.displayFamily` | Noto Serif                          | Serif headings and interface symbols such as `⚔ ⚑ ⚒ ♛ ⛏ ◈ ☾`           |
-| `Typography.titleFamily`   | **Standard Iron Display**           | Titles, outcome headlines, large numbers, and promotional reel captions   |
+| Token                      | Face                      | Role                                                                    |
+| -------------------------- | ------------------------- | ----------------------------------------------------------------------- |
+| `Typography.family`        | Noto Sans                 | Body text, settings, debug UI, and text read at length                  |
+| `Typography.displayFamily` | Noto Serif                | Serif headings and interface symbols such as `⚔ ⚑ ⚒ ♛ ⛏ ◈ ☾`            |
+| `Typography.titleFamily`   | **Standard Iron Display** | Titles, outcome headlines, large numbers, and promotional reel captions |
 
 `displayFamily` is deliberately separate from the brand face. It must carry command and faction symbols verified by `tests/ui/qml/tst_glyph_coverage.qml`, while the title face is optimized for capitals and figures rather than broad symbol coverage.
 
