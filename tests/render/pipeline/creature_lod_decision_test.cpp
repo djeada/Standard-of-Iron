@@ -162,3 +162,22 @@ TEST(CreatureLodDecision, AForcedLodStillIgnoresTheApparentSize) {
   EXPECT_EQ(decision.lod, CreatureLOD::Full);
   EXPECT_FALSE(decision.culled);
 }
+
+TEST(CreatureLodDecision, SnapshotMeshesNeverServeTheFullLod) {
+  using Render::Creature::Pipeline::snapshot_mesh_serves_request;
+  EXPECT_FALSE(snapshot_mesh_serves_request(CreatureLOD::Full, true, true, true));
+  EXPECT_FALSE(snapshot_mesh_serves_request(CreatureLOD::Full, true, false, true));
+}
+
+TEST(CreatureLodDecision, PrebakedMinimalSpeciesServeEveryStateFromTheSnapshotBlob) {
+  using Render::Creature::Pipeline::snapshot_mesh_serves_request;
+  EXPECT_TRUE(snapshot_mesh_serves_request(CreatureLOD::Minimal, false, true, false));
+  EXPECT_TRUE(snapshot_mesh_serves_request(CreatureLOD::Minimal, true, true, false));
+}
+
+TEST(CreatureLodDecision, RuntimeBakedSnapshotsStayOptInAndSnapshotOnly) {
+  using Render::Creature::Pipeline::snapshot_mesh_serves_request;
+  EXPECT_FALSE(snapshot_mesh_serves_request(CreatureLOD::Minimal, false, false, true));
+  EXPECT_FALSE(snapshot_mesh_serves_request(CreatureLOD::Minimal, true, false, false));
+  EXPECT_TRUE(snapshot_mesh_serves_request(CreatureLOD::Minimal, true, false, true));
+}

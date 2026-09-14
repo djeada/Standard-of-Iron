@@ -4,6 +4,7 @@
 
 #include "../core/ambient_session.h"
 #include "../core/component_gameplay.h"
+#include "../core/death_sequence.h"
 #include "../core/entity.h"
 #include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
@@ -36,7 +37,7 @@ void tear_down_structure(Engine::Core::World& world, Engine::Core::Entity& entit
 
 void disband_troop(Engine::Core::Entity& entity, Engine::Core::UnitComponent& unit) {
   unit.health = 0;
-  Engine::Core::get_or_add_component<Engine::Core::DeathAnimationComponent>(entity);
+  Engine::Core::begin_death_sequence(entity, 0U);
   Engine::Core::EventManager::instance().publish(
       Engine::Core::UnitDiedEvent(entity.get_id(), unit.owner_id, unit.spawn_type));
 }

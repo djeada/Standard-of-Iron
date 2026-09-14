@@ -13,6 +13,7 @@
 #include <numbers>
 
 #include "core/component_gameplay.h"
+#include "core/death_sequence.h"
 #include "core/entity.h"
 #include "core/event_manager.h"
 #include "core/local_audience.h"
@@ -460,7 +461,7 @@ void UndeadAwakeningSystem::break_garrison(Engine::Core::World& world,
       continue;
     }
     unit->health = 0;
-    Engine::Core::get_or_add_component<Engine::Core::DeathAnimationComponent>(*entity);
+    Engine::Core::begin_death_sequence(*entity, 0U);
     Engine::Core::EventManager::instance().publish(
         Engine::Core::UnitDiedEvent(spawn_id, unit->owner_id, unit->spawn_type));
   }

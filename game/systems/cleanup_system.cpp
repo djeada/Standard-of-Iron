@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "../core/component_gameplay.h"
+#include "../core/death_sequence.h"
 #include "../core/world.h"
 #include "core/entity.h"
 
@@ -18,6 +19,33 @@ template <typename T>
 void drop_components(World& world, const std::vector<EntityID>& entity_ids) {
   for (const EntityID entity_id : entity_ids) {
     world.remove<T>(entity_id);
+  }
+}
+
+struct SettledCorpse {
+  Engine::Core::DeathSequenceState* state{nullptr};
+  float* state_time{nullptr};
+  float age{0.0F};
+};
+
+template <typename Sequence>
+void note_settled_corpse(Sequence& sequence, std::vector<SettledCorpse>& settled) {
+  if (Engine::Core::death_sequence_is_settled(sequence)) {
+    settled.push_back({&sequence.state, &sequence.state_time, sequence.state_time});
+  }
+}
+
+void enforce_corpse_budget(std::vector<SettledCorpse>& settled) {
+  auto const budget = static_cast<std::size_t>(Engine::Core::Defaults::k_corpse_budget);
+  if (settled.size() <= budget) {
+    return;
+  }
+  std::sort(settled.begin(), settled.end(), [](auto const& lhs, auto const& rhs) {
+    return lhs.age > rhs.age;
+  });
+  for (std::size_t index = 0; index < settled.size() - budget; ++index) {
+    *settled[index].state = Engine::Core::DeathSequenceState::Sinking;
+    *settled[index].state_time = 0.0F;
   }
 }
 
@@ -74,6 +102,7 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
   drop_components<Engine::Core::RpgContactPresentationComponent>(*world, expired);
   expired.clear();
 
+  std::vector<SettledCorpse> settled;
   for (auto [entity_id, casualties] :
        world->view<Engine::Core::SoldierCasualtyAnimationComponent>()) {
     if (world->has<Engine::Core::PendingRemovalComponent>(entity_id)) {
@@ -81,19 +110,12 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     auto& entries = casualties.entries;
-    for (auto& entry : entries) {
-      entry.state_time += delta_time;
-      if (entry.state == Engine::Core::DeathSequenceState::Dying &&
-          entry.state_time >= entry.state_duration) {
-        entry.state = Engine::Core::DeathSequenceState::DeadHold;
-        entry.state_time = 0.0F;
-      }
-    }
-
-    std::erase_if(entries, [](const auto& entry) {
-      return entry.state == Engine::Core::DeathSequenceState::DeadHold &&
-             entry.state_time >= entry.dead_hold_duration;
+    std::erase_if(entries, [delta_time](auto& entry) {
+      return Engine::Core::advance_death_sequence(entry, delta_time);
     });
+    for (auto& entry : entries) {
+      note_settled_corpse(entry, settled);
+    }
     if (entries.empty()) {
       expired.push_back(entity_id);
     }
@@ -105,22 +127,17 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
-    death.state_time += delta_time;
-    if (death.state == Engine::Core::DeathSequenceState::Dying &&
-        death.state_time >= death.state_duration) {
-      death.state = Engine::Core::DeathSequenceState::DeadHold;
-      death.state_time = 0.0F;
-    }
-
-    if (death.state == Engine::Core::DeathSequenceState::DeadHold &&
-        death.state_time >= death.dead_hold_duration) {
+    if (Engine::Core::advance_death_sequence(death, delta_time)) {
       if (auto* renderable =
               world->try_get<Engine::Core::RenderableComponent>(entity_id)) {
         renderable->visible = false;
       }
       world->emplace<Engine::Core::PendingRemovalComponent>(entity_id);
+      continue;
     }
+    note_settled_corpse(death, settled);
   }
+  enforce_corpse_budget(settled);
 
   remove_dead_entities(world);
 }

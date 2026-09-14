@@ -380,6 +380,15 @@ TEST(WildlifeActionState, BiteAndDeathProgressComeFromSimulationComponents) {
   state = Render::GL::Wildlife::resolve_draw_state(ctx, 3.1F);
   EXPECT_FLOAT_EQ(state.death_progress, 1.0F);
   EXPECT_TRUE(state.dead);
+  EXPECT_FLOAT_EQ(state.sink_progress, 0.0F);
+
+  death->state = Engine::Core::DeathSequenceState::Sinking;
+  death->state_time = 0.4F;
+  death->sink_duration = 1.6F;
+  state = Render::GL::Wildlife::resolve_draw_state(ctx, 3.1F);
+  EXPECT_TRUE(state.dead);
+  EXPECT_FLOAT_EQ(state.death_progress, 1.0F);
+  EXPECT_NEAR(state.sink_progress, 0.25F, 0.001F);
 }
 
 TEST(WildlifeGaitLatch, AGaitDoesNotDitherOnItsThreshold) {

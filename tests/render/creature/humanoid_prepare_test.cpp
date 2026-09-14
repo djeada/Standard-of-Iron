@@ -40,6 +40,7 @@
 #include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/humanoid_clip_ids.h"
+#include "render/creature/pipeline/corpse_sink.h"
 #include "render/creature/pipeline/creature_pipeline.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/humanoid_animation_selection.h"
@@ -11139,4 +11140,170 @@ TEST(CombatRootSmoothing, AnAuthoredReactionPassesThroughUnchanged) {
     auto const applied = smooth_combat_root(state, target);
     EXPECT_NEAR(applied.offset_z, target.offset_z, 1.0e-5F) << "frame " << frame;
   }
+}
+
+TEST(AnimationCoreActionManifest, DeathSinkProgressOnlyReportsWhileTheBodyIsDead) {
+  auto const dying = Animation::resolve_humanoid_action_sample({
+      .death = {.active = true,
+                .dying = true,
+                .state_time = 0.5F,
+                .state_duration = 1.0F,
+                .sink_progress = 0.7F},
+  });
+  EXPECT_TRUE(dying.is_dying);
+  EXPECT_FLOAT_EQ(dying.death_sink_progress, 0.0F);
+
+  auto const sinking = Animation::resolve_humanoid_action_sample({
+      .death = {.active = true, .dying = false, .sink_progress = 0.7F},
+  });
+  EXPECT_TRUE(sinking.is_dead);
+  EXPECT_FLOAT_EQ(sinking.death_progress, 1.0F);
+  EXPECT_FLOAT_EQ(sinking.death_sink_progress, 0.7F);
+
+  auto const settled = Animation::resolve_humanoid_action_sample({
+      .death = {.active = true, .dying = false},
+  });
+  EXPECT_FLOAT_EQ(settled.death_sink_progress, 0.0F);
+}
+
+namespace {
+
+struct CasualtyScene {
+  Engine::Core::StandaloneEntity scratch{1};
+  Engine::Core::TransformComponent* transform{nullptr};
+  Engine::Core::SoldierCasualtyAnimationComponent* casualties{nullptr};
+
+  CasualtyScene() {
+    auto& entity = scratch.entity();
+    auto* unit = entity.add_component<Engine::Core::UnitComponent>(75, 100, 0.0F, 0.0F);
+    unit->spawn_type = Game::Units::SpawnType::Spearman;
+    unit->nation_id = Game::Systems::NationID::Carthage;
+    unit->render_individuals_per_unit_override = 4;
+    transform = entity.add_component<Engine::Core::TransformComponent>();
+    transform->scale = {1.0F, 1.0F, 1.0F};
+    casualties =
+        entity.add_component<Engine::Core::SoldierCasualtyAnimationComponent>();
+    casualties->entries.push_back({
+        .slot_index = 0U,
+        .profile = Engine::Core::DeathSequenceProfile::Infantry,
+        .state = Engine::Core::DeathSequenceState::DeadHold,
+        .state_time = 0.5F,
+        .state_duration = 1.0F,
+        .dead_hold_duration = 8.0F,
+        .sequence_variant = 0U,
+    });
+  }
+};
+
+auto is_corpse_request(const Render::Creature::CreatureRenderRequest& req) -> bool {
+  return req.state == Render::Creature::AnimationStateId::Die ||
+         req.state == Render::Creature::AnimationStateId::Dead;
+}
+
+auto request_origin(const Render::Humanoid::HumanoidPreparation& prep,
+                    bool corpse) -> QVector3D {
+  auto const found = std::find_if(
+      prep.bodies.requests().begin(),
+      prep.bodies.requests().end(),
+      [corpse](auto const& req) { return is_corpse_request(req) == corpse; });
+  EXPECT_NE(found, prep.bodies.requests().end());
+  return found == prep.bodies.requests().end() ? QVector3D{}
+                                               : found->world.map(QVector3D{});
+}
+
+} // namespace
+
+TEST(HumanoidPrepare, ASettledCasualtyStaysWhereItFellWhenTheSquadMarchesOn) {
+  ScopedFlatTerrain const terrain(0.0F);
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
+  ctx.allow_template_cache = false;
+
+  CasualtyScene scene;
+  ctx.entity = &scene.scratch.entity();
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, Render::GL::AnimationInputs{}, test_runtime(0U), prep);
+  QVector3D const corpse_before = request_origin(prep, true);
+  QVector3D const survivor_before = request_origin(prep, false);
+
+  scene.transform->position.x += 6.0F;
+  scene.transform->position.z -= 2.5F;
+  scene.transform->rotation.y += 90.0F;
+  prep.clear();
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, Render::GL::AnimationInputs{}, test_runtime(1U), prep);
+  QVector3D const corpse_after = request_origin(prep, true);
+  QVector3D const survivor_after = request_origin(prep, false);
+
+  EXPECT_GT(survivor_after.distanceToPoint(survivor_before), 5.0F);
+  EXPECT_LT(corpse_after.distanceToPoint(corpse_before), 0.01F);
+}
+
+TEST(HumanoidPrepare, ASinkingCasualtyDescendsBelowItsSettledRest) {
+  ScopedFlatTerrain const terrain(0.0F);
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
+  ctx.allow_template_cache = false;
+
+  CasualtyScene scene;
+  ctx.entity = &scene.scratch.entity();
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, Render::GL::AnimationInputs{}, test_runtime(0U), prep);
+  QVector3D const settled = request_origin(prep, true);
+
+  auto& entry = scene.casualties->entries.front();
+  entry.state = Engine::Core::DeathSequenceState::Sinking;
+  entry.state_time = 0.8F;
+  entry.sink_duration = 1.6F;
+  prep.clear();
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, Render::GL::AnimationInputs{}, test_runtime(1U), prep);
+  QVector3D const half_sunk = request_origin(prep, true);
+
+  float const expected_drop = -Render::Creature::Pipeline::corpse_sink_offset(
+      Render::Creature::Pipeline::CreatureKind::Humanoid, 0.5F);
+  EXPECT_GT(expected_drop, 0.2F);
+  EXPECT_NEAR(settled.y() - half_sunk.y(), expected_drop, 0.02F);
+  EXPECT_NEAR(settled.x(), half_sunk.x(), 0.01F);
+  EXPECT_NEAR(settled.z(), half_sunk.z(), 0.01F);
+}
+
+TEST(HumanoidPrepare, ALaunchedCasualtyStaysLandedWhenItStartsSinking) {
+  ScopedFlatTerrain const terrain(0.0F);
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
+  ctx.allow_template_cache = false;
+
+  CasualtyScene scene;
+  ctx.entity = &scene.scratch.entity();
+  auto& entry = scene.casualties->entries.front();
+  entry.state = Engine::Core::DeathSequenceState::DeadHold;
+  entry.state_time = 7.9F;
+  entry.launched = true;
+  entry.launch_velocity_x = 7.0F;
+  entry.launch_velocity_y = 8.0F;
+  entry.launch_velocity_z = 2.0F;
+  entry.launch_pitch_speed = 250.0F;
+  entry.launch_roll_speed = -110.0F;
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, Render::GL::AnimationInputs{}, test_runtime(0U), prep);
+  QVector3D const landed = request_origin(prep, true);
+
+  entry.state = Engine::Core::DeathSequenceState::Sinking;
+  entry.state_time = 0.0F;
+  prep.clear();
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, Render::GL::AnimationInputs{}, test_runtime(1U), prep);
+  QVector3D const sinking = request_origin(prep, true);
+
+  EXPECT_LT(landed.distanceToPoint(sinking), 0.02F);
 }

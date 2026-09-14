@@ -14,6 +14,7 @@
 
 #include "../../core/ambient_session.h"
 #include "../../core/component.h"
+#include "../../core/death_sequence.h"
 #include "../../core/event_manager.h"
 #include "../../core/world.h"
 #include "../../formation/army_formation_registry.h"
@@ -42,35 +43,6 @@ auto is_mounted_spawn(Game::Units::SpawnType spawn_type) -> bool {
   return spawn_type == SpawnType::MountedKnight ||
          spawn_type == SpawnType::HorseArcher || spawn_type == SpawnType::HorseSpearman;
 }
-
-auto resolve_death_profile(const Engine::Core::UnitComponent* unit)
-    -> Engine::Core::DeathSequenceProfile {
-  using Engine::Core::DeathSequenceProfile;
-  if (unit == nullptr) {
-    return DeathSequenceProfile::Infantry;
-  }
-  if (unit->death_sequence_override != 0xFFU &&
-      unit->death_sequence_override <=
-          static_cast<std::uint8_t>(DeathSequenceProfile::Elephant)) {
-    return static_cast<DeathSequenceProfile>(unit->death_sequence_override);
-  }
-  if (unit->spawn_type == Game::Units::SpawnType::Elephant) {
-    return DeathSequenceProfile::Elephant;
-  }
-  if (is_mounted_spawn(unit->spawn_type)) {
-    return DeathSequenceProfile::MountedRider;
-  }
-  if (Game::Units::is_wildlife_spawn(unit->spawn_type)) {
-    return DeathSequenceProfile::Horse;
-  }
-  return DeathSequenceProfile::Infantry;
-}
-
-struct DeathSequenceTiming {
-  float state_duration{1.0F};
-  float dead_hold_duration{0.8F};
-  std::uint8_t sequence_variant{0U};
-};
 
 auto infantry_death_variant(Engine::Core::Entity* target,
                             Engine::Core::Entity* attacker,
@@ -141,47 +113,6 @@ auto resolve_death_variant(Engine::Core::Entity* target,
   default:
     return 0U;
   }
-}
-
-auto resolve_death_timing(Engine::Core::DeathSequenceProfile profile,
-                          std::uint8_t variant) -> DeathSequenceTiming {
-  DeathSequenceTiming timing{};
-  timing.sequence_variant = variant;
-  switch (profile) {
-  case Engine::Core::DeathSequenceProfile::MountedRider:
-    timing.state_duration = Animation::humanoid_death_collapse_duration(
-        Animation::HumanoidDeathCollapse::MountedUnseat);
-    timing.dead_hold_duration = 0.95F;
-    break;
-  case Engine::Core::DeathSequenceProfile::Horse:
-    timing.state_duration = 1.20F;
-    timing.dead_hold_duration = 1.00F;
-    timing.sequence_variant = 0U;
-    break;
-  case Engine::Core::DeathSequenceProfile::Elephant:
-    timing.state_duration = 1.50F;
-    timing.dead_hold_duration = 1.25F;
-    break;
-  case Engine::Core::DeathSequenceProfile::Infantry:
-  default:
-
-    timing.state_duration = Animation::humanoid_death_collapse_duration(
-        Animation::humanoid_infantry_death_collapse(variant));
-    break;
-  }
-  return timing;
-}
-
-void apply_death_sequence(Engine::Core::DeathAnimationComponent& death,
-                          Engine::Core::DeathSequenceProfile profile,
-                          std::uint8_t variant) {
-  auto const timing = resolve_death_timing(profile, variant);
-  death.profile = profile;
-  death.state = Engine::Core::DeathSequenceState::Dying;
-  death.state_time = 0.0F;
-  death.state_duration = timing.state_duration;
-  death.dead_hold_duration = timing.dead_hold_duration;
-  death.sequence_variant = timing.sequence_variant;
 }
 
 auto preferred_formation_hit_slot(Engine::Core::Entity* target,
@@ -353,7 +284,7 @@ auto begin_soldier_casualties(Engine::Core::Entity* target,
   }
 
   auto* roster = ensure_formation_roster(*target, individuals_per_unit, prev_survivors);
-  auto const profile = resolve_death_profile(unit);
+  auto const profile = Engine::Core::resolve_death_profile(*target);
   auto* casualties = Engine::Core::get_or_add_component<
       Engine::Core::SoldierCasualtyAnimationComponent>(target);
   if (casualties == nullptr) {
@@ -407,13 +338,9 @@ auto begin_soldier_casualties(Engine::Core::Entity* target,
     }
     auto const variant = resolve_death_variant(
         target, attacker, profile, static_cast<std::uint16_t>(slot));
-    auto const timing = resolve_death_timing(profile, variant);
     entry.profile = profile;
-    entry.state = Engine::Core::DeathSequenceState::Dying;
-    entry.state_time = 0.0F;
-    entry.state_duration = timing.state_duration;
-    entry.dead_hold_duration = timing.dead_hold_duration;
-    entry.sequence_variant = timing.sequence_variant;
+    Engine::Core::apply_death_sequence_timing(
+        entry, Engine::Core::resolve_death_timing(profile, variant));
 
     auto existing =
         std::find_if(casualties->entries.begin(),
@@ -489,26 +416,6 @@ void fill_formation_front_vacancy(Engine::Core::World* world,
       replacement->get_id(),
       QVector3D(vacant->stable_slot_x, 0.0F, vacant->stable_slot_z),
       {.kind = MoveOrderKind::FormationMove, .preserve_formation_mode = true});
-}
-
-void begin_death_sequence(Engine::Core::Entity* target,
-                          Engine::Core::Entity* attacker) {
-  if (target == nullptr) {
-    return;
-  }
-
-  auto* unit = target->get_component<Engine::Core::UnitComponent>();
-  auto* death =
-      Engine::Core::get_or_add_component<Engine::Core::DeathAnimationComponent>(target);
-  if (death == nullptr) {
-    return;
-  }
-
-  auto const profile = target->has_component<Engine::Core::WildlifeComponent>()
-                           ? Engine::Core::DeathSequenceProfile::Horse
-                           : resolve_death_profile(unit);
-  auto const variant = resolve_death_variant(target, attacker, profile);
-  apply_death_sequence(*death, profile, variant);
 }
 
 void prune_oldest_blood_stain(Engine::Core::World* world) {
@@ -700,6 +607,16 @@ void queue_structure_impact(Engine::Core::Entity& target,
 }
 
 } // namespace
+
+void begin_death_sequence(Engine::Core::Entity* target,
+                          Engine::Core::Entity* attacker) {
+  if (target == nullptr) {
+    return;
+  }
+  auto const profile = Engine::Core::resolve_death_profile(*target);
+  Engine::Core::begin_death_sequence(*target,
+                                     resolve_death_variant(target, attacker, profile));
+}
 
 void spawn_blood_stain(Engine::Core::World* world,
                        const Engine::Core::Entity* target,
