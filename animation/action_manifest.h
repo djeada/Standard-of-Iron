@@ -17,6 +17,7 @@ struct HumanoidDeathActionInputs {
   float state_time{0.0F};
   float state_duration{0.0F};
   std::uint8_t variant{0U};
+  float sink_progress{0.0F};
 };
 
 struct HumanoidConstructionActionInputs {
@@ -120,6 +121,7 @@ struct HumanoidActionSample {
   bool is_dead{false};
   float death_progress{0.0F};
   std::uint8_t death_variant{0U};
+  float death_sink_progress{0.0F};
 
   bool attack_from_combat_state{false};
   bool attack_from_melee_lock{false};

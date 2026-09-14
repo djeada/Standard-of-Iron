@@ -6,6 +6,7 @@
 
 #include "../../entity_appearance.h"
 #include "game/core/component_economy.h"
+#include "game/core/death_sequence.h"
 #include "game/core/entity.h"
 
 namespace Render::GL::Wildlife {
@@ -128,9 +129,10 @@ auto resolve_draw_state(const DrawContext& ctx, float top_speed) -> DrawState {
 
   if (const auto* death =
           ctx.entity->get_component<Engine::Core::DeathAnimationComponent>()) {
-    if (death->state == Engine::Core::DeathSequenceState::DeadHold) {
+    if (death->state != Engine::Core::DeathSequenceState::Dying) {
       state.dead = true;
       state.death_progress = 1.0F;
+      state.sink_progress = Engine::Core::death_sink_progress(*death);
     } else {
       state.death_progress = std::clamp(
           death->state_time / std::max(death->state_duration, 0.001F), 0.0F, 1.0F);

@@ -289,6 +289,12 @@ The current creature detail model distinguishes full-detail and reduced/snapshot
 
 High and Ultra currently disable creature LOD in their profile definition.
 
+### Minimal LOD and the prebaked snapshot blob
+
+Species that ship a `*_minimal.bpsm` (horse, elephant, sheep, wolf) and carry no static attachments are marked `requires_prebaked_minimal_snapshot`: at the Minimal LOD they are only ever drawn from that blob, never skinned at runtime, so a distant herd costs one static mesh per body. The blob is baked from **every** clip in the species recipe, so any state can be served from it. The decision lives in `snapshot_mesh_serves_request()` (`render/creature/pipeline/lod_decision.h`): a prebaked Minimal request always takes the snapshot path; only the opt-in runtime-baked snapshot path (`creature_lod.snapshot_meshes`, off in every shipped profile) is restricted to states whose manifest `snapshot` flag is set.
+
+It used to require the `snapshot` flag in both cases, and the clip manifest clears that flag for `Die` because a humanoid's runtime-baked fall would cost a mesh per frame. The prebaked species inherited the exclusion by accident, and the pipeline's answer for a non-snapshot state at a prebaked Minimal LOD was to submit nothing: a sheep or horse dying more than 20 m from the camera (12 m on Low) vanished for the whole fall and reappeared as a settled corpse. Measured in `wildlife_pack_takedown` at `--graphics-quality low`, all 144 `Die` submissions for the two sheep were dropped while the 122 `Dead` submissions were drawn. Humanoids were never affected: they have no `.bpsm`, so their Minimal LOD falls through to the rigged path in both states.
+
 See [CREATURE_BPAT_FORMAT.md](CREATURE_BPAT_FORMAT.md) for the baked format and [HORSE_MODEL_ARCHITECTURE.md](HORSE_MODEL_ARCHITECTURE.md) for mounted creature asset structure.
 
 ## Animation ownership

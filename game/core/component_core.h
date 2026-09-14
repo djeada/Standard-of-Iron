@@ -56,6 +56,9 @@ inline constexpr float k_blood_stain_default_radius = 0.46F;
 inline constexpr float k_blood_stain_default_aspect_ratio = 1.0F;
 inline constexpr float k_blood_stain_default_lifetime = 8.0F;
 inline constexpr int k_blood_stain_max_active = 10;
+inline constexpr float k_corpse_hold_duration = 8.0F;
+inline constexpr float k_corpse_sink_duration = 1.6F;
+inline constexpr int k_corpse_budget = 96;
 } // namespace Defaults
 
 class TransformComponent {

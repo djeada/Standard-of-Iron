@@ -239,6 +239,7 @@ void apply_presentation_sample(
   anim.is_dead = presentation.is_dead;
   anim.death_progress = presentation.death_progress;
   anim.death_variant = presentation.death_variant;
+  anim.death_sink_progress = presentation.death_sink_progress;
 }
 
 void apply_authored_action_sample(
@@ -518,6 +519,7 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
   anim.is_dead = false;
   anim.death_progress = 0.0F;
   anim.death_variant = 0;
+  anim.death_sink_progress = 0.0F;
 
   if (ctx.entity == nullptr) {
     anim.visual_movement = visual_movement_for_animation_inputs(ctx, anim);

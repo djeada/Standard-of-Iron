@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <span>
 #include <vector>
 
@@ -10,6 +11,7 @@
 #include "animation/locomotion_manifest.h"
 #include "animation/micro_variation_manifest.h"
 #include "game/core/component.h"
+#include "game/core/death_sequence.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "game/formation/unit_layout_state_system.h"
@@ -18,6 +20,7 @@
 #include "game/units/spawn_type.h"
 #include "render/creature/animation_core_bridge.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/pipeline/corpse_sink.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/pipeline/creature_render_graph.h"
@@ -63,10 +66,8 @@ auto resolve_casualty_launch(
   constexpr float k_flight_seconds = 1.45F;
   constexpr float k_half_gravity = 4.9F;
 
-  float const casualty_age = entry.state == Engine::Core::DeathSequenceState::Dying
-                                 ? entry.state_time
-                                 : entry.state_duration + entry.state_time;
-  float const flight_time = std::min(casualty_age, k_flight_seconds);
+  float const flight_time =
+      std::min(Engine::Core::death_sequence_elapsed(entry), k_flight_seconds);
 
   return {entry.launch_velocity_x * flight_time,
           std::max(0.0F,
@@ -738,7 +739,9 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
                              float casualty_offset_z = 0.0F,
                              float casualty_pitch = 0.0F,
                              float casualty_roll = 0.0F,
-                             float casualty_yaw = 0.0F) {
+                             float casualty_yaw = 0.0F,
+                             const QMatrix4x4* casualty_base = nullptr,
+                             float casualty_root_yaw = 0.0F) {
   using namespace Render::GL;
 
   const HumanoidRendererBase& owner = *s.owner;
@@ -996,8 +999,9 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     m.scale(transform_comp->scale.x, transform_comp->scale.y, transform_comp->scale.z);
     inst_model = m;
   } else if (transform_comp != nullptr) {
-    applied_yaw = root_yaw + applied_yaw_offset;
-    QMatrix4x4 m = unit_base;
+    float const body_root_yaw = casualty_base != nullptr ? casualty_root_yaw : root_yaw;
+    applied_yaw = body_root_yaw + applied_yaw_offset;
+    QMatrix4x4 m = casualty_base != nullptr ? *casualty_base : unit_base;
     m.translate(
         offset_x + casualty_offset_x, casualty_offset_y, offset_z + casualty_offset_z);
     m.rotate(applied_yaw_offset, 0.0F, 1.0F, 0.0F);
@@ -1625,10 +1629,12 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
       inst_ctx.model = tilt * inst_ctx.model;
     }
   }
-  if (casualty_offset_y > 0.0F) {
+  float const corpse_sink = RCP::corpse_sink_offset(
+      RCP::CreatureKind::Humanoid, soldier_render_anim.death_sink_progress);
+  if (casualty_offset_y > 0.0F || corpse_sink < 0.0F) {
     RCP::set_model_world_y(inst_ctx.model,
                            RCP::model_world_origin(inst_ctx.model).y() +
-                               casualty_offset_y);
+                               casualty_offset_y + corpse_sink);
   }
 
   bool const combat_root_eligible = !soldier_is_casualty_body && !is_mounted_spawn &&
@@ -1864,7 +1870,8 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   shadow_inputs.mounted = is_mounted_spawn;
   shadow_inputs.facing_yaw_degrees = applied_yaw;
   shadow_inputs.intensity_scale =
-      (soldier_render_anim.is_dying || soldier_render_anim.is_dead) ? 0.45F : 1.0F;
+      ((soldier_render_anim.is_dying || soldier_render_anim.is_dead) ? 0.45F : 1.0F) *
+      RCP::corpse_shadow_scale(soldier_render_anim.death_sink_progress);
   shadow_inputs.surface_world_y = shadow_surface_world_y;
   shadow_inputs.surface_height_valid = shadow_surface_height_valid;
   const auto shadow_state = RCP::prepare_humanoid_shadow_state(shadow_inputs);
@@ -1950,7 +1957,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                             float casualty_offset_z = 0.0F,
                             float casualty_pitch = 0.0F,
                             float casualty_roll = 0.0F,
-                            float casualty_yaw = 0.0F) {
+                            float casualty_yaw = 0.0F,
+                            const QMatrix4x4* casualty_base = nullptr,
+                            float casualty_root_yaw = 0.0F) {
     append_prepared_soldier(snapshot,
                             formation_runtime,
                             unit_animation,
@@ -1964,7 +1973,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                             casualty_offset_z,
                             casualty_pitch,
                             casualty_roll,
-                            casualty_yaw);
+                            casualty_yaw,
+                            casualty_base,
+                            casualty_root_yaw);
   };
 
   for (int const idx : live_slot_indices) {
@@ -1972,7 +1983,17 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
   }
 
   if (!ctx.force_single_soldier && casualties_comp != nullptr) {
-    for (const auto& entry : casualties_comp->entries) {
+    auto const& entries = casualties_comp->entries;
+    auto* anchor_cache = formation_runtime.layout_cache_comp;
+    if (anchor_cache != nullptr) {
+      std::erase_if(anchor_cache->casualty_anchors, [&entries](auto const& anchor) {
+        return std::none_of(
+            entries.begin(), entries.end(), [&anchor](auto const& entry) {
+              return entry.slot_index == anchor.slot_index;
+            });
+      });
+    }
+    for (const auto& entry : entries) {
       if (entry.slot_index >= total_layout_count ||
           std::find(live_slot_indices.begin(),
                     live_slot_indices.end(),
@@ -1992,24 +2013,48 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       } else {
         casualty_anim.is_dead = true;
         casualty_anim.death_progress = 1.0F;
+        casualty_anim.death_sink_progress = Engine::Core::death_sink_progress(entry);
       }
       const CasualtyLaunch launch = resolve_casualty_launch(entry);
       auto const& casualty_layout =
           soldier_layouts[static_cast<std::size_t>(entry.slot_index)];
-      float const anchor_offset_x =
-          entry.has_local_anchor ? entry.local_x - casualty_layout.offset_x : 0.0F;
-      float const anchor_offset_z =
-          entry.has_local_anchor ? entry.local_z - casualty_layout.offset_z : 0.0F;
-      float const anchor_yaw =
-          entry.has_local_anchor ? entry.local_yaw - casualty_layout.yaw_offset : 0.0F;
+      float rest_x = entry.has_local_anchor ? entry.local_x : casualty_layout.offset_x;
+      float rest_z = entry.has_local_anchor ? entry.local_z : casualty_layout.offset_z;
+      float rest_yaw =
+          entry.has_local_anchor ? entry.local_yaw : casualty_layout.yaw_offset;
+      const QMatrix4x4* casualty_base = nullptr;
+      float casualty_root_yaw = 0.0F;
+      if (anchor_cache != nullptr) {
+        auto anchor = std::find_if(anchor_cache->casualty_anchors.begin(),
+                                   anchor_cache->casualty_anchors.end(),
+                                   [&entry](auto const& candidate) {
+                                     return candidate.slot_index == entry.slot_index;
+                                   });
+        if (anchor == anchor_cache->casualty_anchors.end()) {
+          anchor_cache->casualty_anchors.push_back({entry.slot_index,
+                                                    unit_animation.unit_base,
+                                                    unit_animation.root_yaw,
+                                                    rest_x,
+                                                    rest_z,
+                                                    rest_yaw});
+          anchor = std::prev(anchor_cache->casualty_anchors.end());
+        }
+        casualty_base = &anchor->frame;
+        casualty_root_yaw = anchor->root_yaw;
+        rest_x = anchor->rest_x;
+        rest_z = anchor->rest_z;
+        rest_yaw = anchor->rest_yaw;
+      }
       append_soldier(static_cast<int>(entry.slot_index),
                      casualty_anim,
-                     anchor_offset_x + launch.x,
+                     rest_x - casualty_layout.offset_x + launch.x,
                      launch.y,
-                     anchor_offset_z + launch.z,
+                     rest_z - casualty_layout.offset_z + launch.z,
                      launch.pitch,
                      launch.roll,
-                     anchor_yaw);
+                     rest_yaw - casualty_layout.yaw_offset,
+                     casualty_base,
+                     casualty_root_yaw);
     }
   }
 }

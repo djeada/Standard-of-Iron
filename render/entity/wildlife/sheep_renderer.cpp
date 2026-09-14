@@ -1,11 +1,13 @@
 #include "sheep_renderer.h"
 
+#include <QMatrix4x4>
 #include <QVector3D>
 
 #include <cstdint>
 #include <string>
 
 #include "render/creature/animation_state_components.h"
+#include "render/creature/pipeline/corpse_sink.h"
 #include "render/entity/registry.h"
 #include "render/wildlife/sheep_spec.h"
 #include "render/wildlife/wildlife_prepare.h"
@@ -178,6 +180,18 @@ void draw_sheep(const DrawContext& ctx, ISubmitter& out) {
   inputs.outgoing_phase = transition.phase;
   inputs.outgoing_weight = transition.weight;
 
+  if (state.sink_progress > 0.0F) {
+    DrawContext sunk = ctx;
+    QMatrix4x4 sink;
+    sink.translate(
+        0.0F,
+        Render::Creature::Pipeline::corpse_sink_offset(
+            Render::Creature::Pipeline::CreatureKind::Sheep, state.sink_progress),
+        0.0F);
+    sunk.model = sink * ctx.model;
+    Render::Wildlife::submit_wildlife(sunk, inputs, out);
+    return;
+  }
   Render::Wildlife::submit_wildlife(ctx, inputs, out);
 }
 
