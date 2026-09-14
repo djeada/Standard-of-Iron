@@ -124,6 +124,48 @@ TEST_F(InputCommandHandlerTest, RightPressConsumesCursorModeCancellation) {
   EXPECT_FALSE(input_handler->is_placing_formation());
 }
 
+TEST_F(InputCommandHandlerTest, RightPressCancelsRepairAndDismantleInsteadOfMoving) {
+  auto* builder = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  ASSERT_NE(builder, nullptr);
+  selection_system->select_unit(builder->get_id());
+
+  for (const auto mode : {CursorMode::Repair, CursorMode::Dismantle}) {
+    cursor_manager.set_mode(mode);
+    EXPECT_TRUE(input_handler->on_right_press(400.0, 300.0, 1, viewport));
+    EXPECT_EQ(cursor_manager.mode(), CursorMode::Normal);
+    EXPECT_FALSE(input_handler->is_placing_formation());
+  }
+}
+
+TEST_F(InputCommandHandlerTest, MinimapMoveClearsTheArmedOrderMode) {
+  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+  selection_system->select_unit(unit->get_id());
+  cursor_manager.set_mode(CursorMode::Attack);
+
+  input_handler->on_minimap_right_click(QVector3D(4.0F, 0.0F, 2.0F), 1);
+
+  EXPECT_EQ(cursor_manager.mode(), CursorMode::Normal);
+  EXPECT_TRUE(unit->get_component<Engine::Core::MovementComponent>()->get_has_target());
+}
+
+TEST_F(InputCommandHandlerTest, MoveOrderLiftsGuardWhileTroopsWalkBackToTheirPost) {
+  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+  selection_system->select_unit(unit->get_id());
+  auto* guard = unit->add_component<Engine::Core::GuardModeComponent>();
+  ASSERT_NE(guard, nullptr);
+  guard->active = true;
+  guard->has_guard_target = true;
+  guard->returning_to_guard_position = true;
+
+  input_handler->on_minimap_right_click(QVector3D(4.0F, 0.0F, 2.0F), 1);
+
+  const auto* after = unit->get_component<Engine::Core::GuardModeComponent>();
+  ASSERT_NE(after, nullptr);
+  EXPECT_FALSE(after->active);
+}
+
 TEST_F(InputCommandHandlerTest, HudGroupClickKeepsOnlySelectedUnitsOfThatType) {
   auto* first_archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
   auto* second_archer = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Archer);

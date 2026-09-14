@@ -95,14 +95,16 @@ The live-state parts of simulation/presentation coordination use the game-engine
 
 A `WorldFreeze` coordinates destructive world replacement or rebuild operations so simulation and presentation do not continue through a load/reset boundary.
 
-### QSG render-thread stages
+## QSG render-thread stages
 
-Each frame on the QSG render thread runs two stages, in order:
+`ui/gl_view.cpp` owns the frame callback through `GLView::GLRenderer::render()`, which Qt runs on the QSG render thread with the FBO OpenGL context current. The simulation does not run inside that callback:
 
-1. `GameEngine::update_presentation(dt)` advances presentation state: camera follow, order markers, renderer animation time, weather, visibility, the minimap and view-model synchronization. It never advances the simulation; `GameEngine::update(dt)` exists only as `simulate` + `update_presentation` for single-threaded callers, and `ui/gl_view.cpp` starts the simulation thread before it first calls `GameEngine::render`.
-2. `GameEngine::render(width, height)` records and plays back draw work from state that already exists. `Renderer::render_world(world)` consumes the latest published render snapshot, walks the scene and fills the `DrawQueue`; `Renderer::end_frame()` sorts the queue and `Backend::execute(...)` performs playback.
+1. `GameEngine::simulate(dt)` runs at a fixed cadence on its own `QThread` (`SoISimulation`), started by the first successful `GLRenderer::render()` through `GameEngine::start_simulation_thread()`. `GameEngine::update(dt)` remains as `simulate` plus `update_presentation` for single-threaded callers.
+2. `GameEngine::update_presentation(dt)` runs on the render thread at the top of every frame: camera follow, order markers, renderer animation time, visibility, minimap and view-model synchronization.
+3. `GameEngine::render(width, height)` configures the per-frame camera copy (`m_render_camera`), submits terrain, and calls `Renderer::render_world(world)` against the published snapshot without holding `GameEngine::m_frame_mutex`. It then takes the frame lock with a bounded wait for the live-state effects pass (`FrameUiCoordinator::render_effects`).
+4. `Renderer::end_frame()` sorts the `DrawQueue`, and `Backend::execute(...)` performs OpenGL playback.
 
-Render-side code must not rebuild combat query state or search for targets. Per-stage timings are logged through the render-thread frame phases described under performance instrumentation.
+`simulate`, `update_presentation`, and GUI-thread input serialise on the frame lock; scene walk and backend playback overlap the simulation tick. Frame phases are logged through `Render::Profiling::global_profile()`, and a GUI handler holding the frame lock must never wait on the render thread.
 
 ## Scene walk
 

@@ -134,6 +134,38 @@ TestCase {
                 }).length, 5, "context actions displaced the primary row");
     }
 
+    function test_a_mixed_selection_wraps_labelled_actions_inside_the_deck() {
+        panel.action_states = {
+            "build": state(1),
+            "collect": state(1),
+            "auto_gather": state(1),
+            "repair": state(1),
+            "dismantle": state(1),
+            "join": state(2),
+            "rally": state(1),
+            "aura": state(1)
+        };
+        wait(1);
+        var contextButtons = collect(panel, function (item) {
+                return String(item.objectName).indexOf("contextCommand_") === 0;
+            });
+        compare(contextButtons.length, 8, "builders and a commander expose eight specialist actions");
+        var primary = named("primaryCommand_attack");
+        var area = named("contextualCommandArea");
+        var rows = ({});
+        for (var i = 0; i < contextButtons.length; ++i) {
+            var button = contextButtons[i];
+            compare(button.compact, false, button.objectName + " lost its label");
+            compare(button.width, primary.width, button.objectName + " is narrower than the orders above it");
+            verify(button.height >= Metrics.minTouchTarget, button.objectName + " is too short: " + button.height);
+            var top = button.mapToItem(area, 0, 0).y;
+            verify(top >= 0 && top + button.height <= area.height + 1, button.objectName + " spills out of the deck: " + top + "+" + button.height + " > " + area.height);
+            rows[Math.round(top)] = true;
+        }
+        compare(Object.keys(rows).length, 2, "eight actions should wrap onto two rows");
+        compare(primary.compact, false, "the orders row lost its labels");
+    }
+
     Component {
         id: hudComponent
 

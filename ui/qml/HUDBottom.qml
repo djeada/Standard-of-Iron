@@ -645,10 +645,10 @@ RowLayout {
     ColumnLayout {
         id: commandDeck
 
-        readonly property int commandColumns: Math.max(bottomRoot.primaryCommands.length, bottomRoot.contextualCommands.length)
+        readonly property int commandColumns: Math.max(1, bottomRoot.primaryCommands.length)
         readonly property int commandCardWidth: Math.max(Design.A11y.scaled(24), Math.floor((bottomRoot.zoneWidth - Design.Metrics.space4 * (commandDeck.commandColumns - 1)) / commandDeck.commandColumns))
-        readonly property int primaryColumns: Math.max(1, bottomRoot.primaryCommands.length)
-        readonly property int primaryCardWidth: Math.max(Design.A11y.scaled(24), Math.floor((bottomRoot.zoneWidth - Design.Metrics.space4 * (commandDeck.primaryColumns - 1)) / commandDeck.primaryColumns))
+        readonly property int contextualRows: Math.max(1, Math.ceil(bottomRoot.contextualCommands.length / commandDeck.commandColumns))
+        readonly property int contextualCardHeight: Math.max(Design.A11y.scaled(24), Math.min(Design.Metrics.commandButtonSize, Math.floor((contextualCommandArea.height - Design.Metrics.space4 * (commandDeck.contextualRows - 1)) / commandDeck.contextualRows)))
 
         objectName: "commandDeck"
 
@@ -809,7 +809,7 @@ RowLayout {
                     readonly property var state: bottomRoot.action_state(primaryCommandButton.modelData.id)
 
                     objectName: "primaryCommand_" + primaryCommandButton.modelData.id
-                    width: commandDeck.primaryCardWidth
+                    width: commandDeck.commandCardWidth
                     height: Design.Metrics.commandButtonSize
                     iconOnly: false
 
@@ -844,14 +844,13 @@ RowLayout {
             Layout.fillHeight: true
             Layout.minimumHeight: Design.Metrics.commandButtonSize
 
-            Row {
+            Grid {
                 id: contextualCommandRow
 
                 objectName: "contextualCommandRow"
                 anchors.left: parent.left
-                anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                height: Design.Metrics.commandButtonSize
+                columns: commandDeck.commandColumns
                 spacing: Design.Metrics.space4
                 visible: bottomRoot.contextualCommands.length > 0
 
@@ -866,7 +865,7 @@ RowLayout {
 
                         objectName: "contextCommand_" + contextualCommandButton.modelData.id
                         width: commandDeck.commandCardWidth
-                        height: Design.Metrics.commandButtonSize
+                        height: commandDeck.contextualCardHeight
                         iconOnly: false
 
                         actionId: contextualCommandButton.modelData.id
