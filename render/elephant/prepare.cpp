@@ -13,6 +13,7 @@
 #include "game/core/component.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/movement_animation.h"
+#include "render/creature/pipeline/corpse_sink.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pipeline/prepared_submit.h"
@@ -175,6 +176,15 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
   Render::GL::DrawContext elephant_ctx = ctx;
   elephant_ctx.model = ctx.model;
   elephant_ctx.model.translate(howdah.ground_offset);
+  if (anim.death_sink_progress > 0.0F) {
+    QMatrix4x4 sink;
+    sink.translate(0.0F,
+                   Render::Creature::Pipeline::corpse_sink_offset(
+                       Render::Creature::Pipeline::CreatureKind::Elephant,
+                       anim.death_sink_progress),
+                   0.0F);
+    elephant_ctx.model = sink * elephant_ctx.model;
+  }
   const float elephant_surface_world_y =
       Render::Creature::Pipeline::ground_model_to_terrain(
           ctx.world_view.terrain_or_empty(), elephant_ctx.model);
@@ -194,7 +204,8 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
   input.seed = 0U;
   input.surface_world_y = elephant_surface_world_y;
   input.surface_height_valid = true;
-  input.shadow_intensity_scale = (anim.is_dying || anim.is_dead) ? 0.45F : 1.0F;
+  input.shadow_intensity_scale = ((anim.is_dying || anim.is_dead) ? 0.45F : 1.0F) *
+                                 RCP::corpse_shadow_scale(anim.death_sink_progress);
 
   auto const body = RCQ::build_quadruped_body(input);
 

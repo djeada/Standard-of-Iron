@@ -37,6 +37,8 @@ apply_unit_damage(Engine::Core::World* world,
                   std::optional<std::uint16_t> preferred_soldier_slot = std::nullopt,
                   float impact_speed = 0.0F);
 
+void begin_death_sequence(Engine::Core::Entity* target, Engine::Core::Entity* attacker);
+
 void apply_hit_feedback(Engine::Core::Entity* target,
                         Engine::Core::EntityID attacker_id,
                         Engine::Core::World* world);

@@ -24,6 +24,7 @@
 #include "preparation_common.h"
 #include "render/bone_palette_arena.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/pipeline/lod_decision.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/creature/skeleton.h"
 #include "render/creature/skeleton_blend_profile.h"
@@ -1060,10 +1061,11 @@ auto CreaturePipeline::submit_requests(
       ++stats.upper_body_overlay_requests;
     }
 
-    const bool use_snapshot_mesh =
-        req.lod != CreatureLOD::Full && primary.snapshot &&
-        (prebaked_lowpoly_required ||
-         Render::GraphicsSettings::instance().creature_lod().snapshot_meshes);
+    const bool use_snapshot_mesh = snapshot_mesh_serves_request(
+        req.lod,
+        primary.snapshot,
+        prebaked_lowpoly_required,
+        Render::GraphicsSettings::instance().creature_lod().snapshot_meshes);
     if (use_snapshot_mesh) {
       auto snapshot_playback = primary;
       if (req.full_body_blend.active() && full_body.valid() &&

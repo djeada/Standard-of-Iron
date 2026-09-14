@@ -119,6 +119,7 @@ struct AnimationInputs {
   bool is_dead{false};
   float death_progress{0.0F};
   std::uint8_t death_variant{0};
+  float death_sink_progress{0.0F};
   float idle_duration{0.0F};
   bool is_guarding{false};
   bool is_defensive_layout_locked{false};

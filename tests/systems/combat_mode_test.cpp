@@ -2848,7 +2848,7 @@ TEST_F(CombatModeTest, GuardBreakDropsGuardAndLetsTheBreakingHitThrough) {
   EXPECT_GT(target_cmd->punish_window_remaining, 0.0F);
 }
 
-TEST_F(CombatModeTest, CleanupSystemRunsDeathThenDeadHoldBeforeRemoval) {
+TEST_F(CombatModeTest, CleanupSystemRunsDeathThenDeadHoldThenSinkingBeforeRemoval) {
   auto* target = world->create_entity();
   auto target_id = target->get_id();
   target->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
@@ -2859,6 +2859,7 @@ TEST_F(CombatModeTest, CleanupSystemRunsDeathThenDeadHoldBeforeRemoval) {
   death->state = DeathSequenceState::Dying;
   death->state_duration = 0.1F;
   death->dead_hold_duration = 0.1F;
+  death->sink_duration = 0.1F;
   death->state_time = 0.0F;
 
   CleanupSystem cleanup;
@@ -2874,6 +2875,16 @@ TEST_F(CombatModeTest, CleanupSystemRunsDeathThenDeadHoldBeforeRemoval) {
   auto* death_mid = entity_mid->get_component<DeathAnimationComponent>();
   ASSERT_NE(death_mid, nullptr);
   EXPECT_EQ(death_mid->state, DeathSequenceState::DeadHold);
+
+  for (int i = 0; i < 6; ++i) {
+    cleanup.update(world.get(), 0.02F);
+  }
+  auto* entity_sinking = world->get_entity(target_id);
+  ASSERT_NE(entity_sinking, nullptr);
+  auto* death_sinking = entity_sinking->get_component<DeathAnimationComponent>();
+  ASSERT_NE(death_sinking, nullptr);
+  EXPECT_EQ(death_sinking->state, DeathSequenceState::Sinking);
+  EXPECT_TRUE(entity_sinking->get_component<RenderableComponent>()->visible);
 
   for (int i = 0; i < 6; ++i) {
     cleanup.update(world.get(), 0.02F);

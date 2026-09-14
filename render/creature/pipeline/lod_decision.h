@@ -53,4 +53,18 @@ select_distance_lod(float distance,
 [[nodiscard]] auto decide_creature_lod(const CreatureLodDecisionInputs& in) noexcept
     -> CreatureLodDecision;
 
+[[nodiscard]] constexpr auto
+snapshot_mesh_serves_request(CreatureLOD lod,
+                             bool state_is_snapshot,
+                             bool prebaked_minimal_required,
+                             bool snapshot_meshes_enabled) noexcept -> bool {
+  if (lod == CreatureLOD::Full) {
+    return false;
+  }
+  if (prebaked_minimal_required) {
+    return true;
+  }
+  return state_is_snapshot && snapshot_meshes_enabled;
+}
+
 } // namespace Render::Creature::Pipeline

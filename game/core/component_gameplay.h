@@ -304,7 +304,8 @@ enum class DeathSequenceProfile : std::uint8_t {
 
 enum class DeathSequenceState : std::uint8_t {
   Dying = 0,
-  DeadHold = 1
+  DeadHold = 1,
+  Sinking = 2
 };
 
 class DeathAnimationComponent {
@@ -315,7 +316,8 @@ public:
   DeathSequenceState state{DeathSequenceState::Dying};
   float state_time{0.0F};
   float state_duration{1.0F};
-  float dead_hold_duration{0.8F};
+  float dead_hold_duration{Defaults::k_corpse_hold_duration};
+  float sink_duration{Defaults::k_corpse_sink_duration};
   std::uint8_t sequence_variant{0};
 };
 
@@ -331,7 +333,8 @@ public:
     DeathSequenceState state{DeathSequenceState::Dying};
     float state_time{0.0F};
     float state_duration{1.0F};
-    float dead_hold_duration{0.8F};
+    float dead_hold_duration{Defaults::k_corpse_hold_duration};
+    float sink_duration{Defaults::k_corpse_sink_duration};
     std::uint8_t sequence_variant{0};
     bool launched{false};
     float launch_velocity_x{0.0F};

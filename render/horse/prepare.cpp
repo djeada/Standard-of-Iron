@@ -14,6 +14,7 @@
 #include "horse_motion.h"
 #include "horse_renderer_base.h"
 #include "render/creature/animation_state_components.h"
+#include "render/creature/pipeline/corpse_sink.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pipeline/prepared_submit.h"
@@ -207,6 +208,15 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase& owner,
   namespace RCP = Render::Creature::Pipeline;
   namespace RCQ = Render::Creature::Quadruped;
 
+  if (anim.death_sink_progress > 0.0F) {
+    QMatrix4x4 sink;
+    sink.translate(
+        0.0F,
+        RCP::corpse_sink_offset(RCP::CreatureKind::Horse, anim.death_sink_progress),
+        0.0F);
+    horse_ctx.model = sink * horse_ctx.model;
+  }
+
   QVector3D const horse_world_pos = RCP::model_world_origin(horse_ctx.model);
   const float horse_y_scale =
       horse_ctx.model.mapVector(QVector3D(0.0F, 1.0F, 0.0F)).length();
@@ -227,7 +237,8 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase& owner,
   input.surface_world_y = horse_world_pos.y() - k_ground_clearance_epsilon +
                           horse_contact_y * horse_y_scale;
   input.surface_height_valid = true;
-  input.shadow_intensity_scale = (anim.is_dying || anim.is_dead) ? 0.45F : 1.0F;
+  input.shadow_intensity_scale = ((anim.is_dying || anim.is_dead) ? 0.45F : 1.0F) *
+                                 RCP::corpse_shadow_scale(anim.death_sink_progress);
 
   auto const body = RCQ::build_quadruped_body(input);
 

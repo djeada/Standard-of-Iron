@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QMatrix4x4>
+
 #include <cstdint>
 #include <vector>
 
@@ -29,9 +31,19 @@ struct SoldierSelectionCache {
   Render::Creature::Pipeline::HumanoidAnimationSelection selection{};
 };
 
+struct CasualtyAnchor {
+  std::uint16_t slot_index{0U};
+  QMatrix4x4 frame{};
+  float root_yaw{0.0F};
+  float rest_x{0.0F};
+  float rest_z{0.0F};
+  float rest_yaw{0.0F};
+};
+
 struct HumanoidInstanceStateComponent {
 
   Render::Entity::FormationLayoutCache layout;
+  std::vector<CasualtyAnchor> casualty_anchors;
 
   std::vector<Render::Creature::HumanoidAnimationStateComponent> animation_states;
   std::vector<Render::Creature::SoldierCombatLaneState> combat_lanes;

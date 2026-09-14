@@ -29,6 +29,7 @@ auto resolve_humanoid_action_sample(const HumanoidActionSampleInputs& inputs) no
     } else {
       sample.is_dead = true;
       sample.death_progress = 1.0F;
+      sample.death_sink_progress = std::clamp(inputs.death.sink_progress, 0.0F, 1.0F);
     }
     return sample;
   }

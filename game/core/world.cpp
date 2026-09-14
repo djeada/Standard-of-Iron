@@ -29,6 +29,7 @@
 #include "component.h"
 #include "core/entity.h"
 #include "core/system.h"
+#include "death_sequence.h"
 #include "movement_trace.h"
 #include "nav_profile.h"
 
@@ -620,6 +621,7 @@ auto publish_creature_presentation_entity(Entity* entity, World* world)
         .state_time = death->state_time,
         .state_duration = death->state_duration,
         .variant = death->sequence_variant,
+        .sink_progress = death_sink_progress(*death),
     };
   }
   std::uint8_t construction_job = 0;
@@ -740,6 +742,7 @@ auto publish_creature_presentation_entity(Entity* entity, World* world)
   next.is_dead = action.is_dead;
   next.death_progress = action.death_progress;
   next.death_variant = action.death_variant;
+  next.death_sink_progress = action.death_sink_progress;
 
   auto const* formation = entity->get_component<FormationPresentationComponent>();
   next.allow_full_body_hit_reaction =

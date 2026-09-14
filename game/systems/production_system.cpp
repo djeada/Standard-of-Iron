@@ -14,6 +14,7 @@
 #include "../core/ambient_session.h"
 #include "../core/component_economy.h"
 #include "../core/component_presentation.h"
+#include "../core/death_sequence.h"
 #include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
@@ -566,16 +567,7 @@ void slaughter_sheep(Engine::Core::World* world,
           world->try_get<Engine::Core::MovementComponent>(sheep->get_id())) {
     movement->stop();
   }
-  auto* death =
-      Engine::Core::get_or_add_component<Engine::Core::DeathAnimationComponent>(*sheep);
-  if (death != nullptr) {
-    death->profile = Engine::Core::DeathSequenceProfile::Horse;
-    death->state = Engine::Core::DeathSequenceState::Dying;
-    death->state_time = 0.0F;
-    death->state_duration = 1.2F;
-    death->dead_hold_duration = 1.0F;
-    death->sequence_variant = 0U;
-  }
+  Engine::Core::begin_death_sequence(*sheep, 0U);
   const auto* worker_unit =
       worker != nullptr ? world->try_get<Engine::Core::UnitComponent>(worker->get_id())
                         : nullptr;

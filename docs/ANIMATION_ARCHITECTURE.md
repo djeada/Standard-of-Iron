@@ -327,6 +327,39 @@ Each collapse also owns its own length (`humanoid_death_collapse_duration`), and
 
 `tests/render/creature/death_collapse_test.cpp` guards both original defects: every segment holds its bind length across every sampled phase of every fall, and no joint is driven through the ground. Review a change with `humanoid_preview --clip die_infantry --view iso --report`.
 
+## Corpse lifecycle
+
+Every body on the field, whatever killed it, runs the same three-stage sequence. The stages, the timing and the shared helpers live in `game/core/death_sequence.h`; `CleanupSystem` advances both instances of it each tick:
+
+| stage      | what is shown                                      | length                                                           |
+| ---------- | -------------------------------------------------- | ---------------------------------------------------------------- |
+| `Dying`    | the authored fall (`die_*` clip, phase = progress) | the collapse's own duration, per profile                         |
+| `DeadHold` | the settled corpse (`dead_*` clip, last frame)     | `Defaults::k_corpse_hold_duration` (8 s; elephants 10 s)         |
+| `Sinking`  | the same corpse translated down into the ground    | `sink_duration` per profile (1.6 s; horse 1.8 s; elephant 2.4 s) |
+
+There are two carriers, and they are deliberately the same shape so one template drives both:
+
+- **`DeathAnimationComponent`** on the entity, for anything that dies as a whole: a single-body unit, a commander, a horse, an elephant, an animal, and the squad entity once its last soldier goes. When its sequence expires the entity is removed.
+- **`SoldierCasualtyAnimationComponent::Entry`** per slot on a living formation unit, for the men who fall while the squad fights on. An entry is erased when its own sequence expires.
+
+`Combat::begin_death_sequence()` is the **only** way a body enters the sequence. It picks the profile (infantry collapse chosen by blow direction, mounted unseat, horse, elephant, wildlife on the horse profile), zeroes health, stops movement and applies the authored timing. Nation collapse, the undead garrison break and sheep slaughter used to hand-roll the component with the default 1.0 s fall, which never matched the 1.00–1.25 s baked collapses; they go through the same entry point now.
+
+### Why bodies sink instead of popping
+
+Before this, a corpse was removed 0.8–1.25 s after it settled, by clearing `visible` and destroying the entity on the same tick. Under the RTS camera a battle read as men falling and then blinking out one by one. The hold is now long enough to leave a battlefield behind, and removal is a translation: `corpse_sink_offset()` (`render/creature/pipeline/corpse_sink.h`) eases the body down by a per-species depth that clears its lying height (0.75 m humanoid, 1.4 m horse, 2.6 m elephant, 0.8 m sheep and wolf) while its contact shadow fades with `corpse_shadow_scale()`. The offset is applied where each renderer already owns its world frame: the humanoid root and casualty offsets in `instance_prepare.cpp`, the horse and elephant grounded model, and the wildlife draw context. Humanoid, horse and elephant read `death_sink_progress` from the published `CreaturePresentationComponent`; the wildlife draw state reads the death component from the snapshot directly, as it already did for the fall.
+
+### Casualties are anchored to the world, not to the squad
+
+A casualty entry stores its rest position in **unit-local** coordinates, and the humanoid renderer used to rebuild every casualty body from the squad's current root each frame. That was invisible during a 2 s hold; with an 8 s hold the dead would have slid along behind a squad that marched off. The renderer now latches the squad frame (`CasualtyAnchor` in `HumanoidInstanceStateComponent`) the first frame it draws a given casualty slot and keeps drawing that slot from the latched frame until the entry is gone. The first frame is computed exactly as before, so there is no snap at the hand-off, and launched (charge-impact) casualties still fly relative to the latched frame. `HumanoidPrepare.ASettledCasualtyStaysWhereItFellWhenTheSquadMarchesOn` pins this.
+
+### Budget
+
+`CleanupSystem` counts every settled body (entity corpses and casualty entries together). Above `Defaults::k_corpse_budget` (96) the oldest settled bodies are pushed into `Sinking` early, so a long battle never accumulates an unbounded number of extra rigged draws. Bodies still falling are never cut short.
+
+### Where the "empty space, then a body" came from
+
+The report that started this was: a unit is defeated, the spot is empty for about a second, then a corpse appears briefly. On the simulation side there was no gap — the kill, the death component and the published `is_dying` all land in the same tick, and the arena trace showed a `Die` body submitted on the very frame health reached zero for infantry, cavalry targets and single-body units alike. The gap was in the creature pipeline's Minimal LOD for the prebaked quadruped species (see "Minimal LOD and the prebaked snapshot blob" in RENDERING_ARCHITECTURE.md): the fall was dropped and only the settled corpse was drawn. Diagnose this class of problem at the submit level, not from `trace.jsonl`: the trace's `soldiers` array records what the humanoid preparer intended, not what the pipeline emitted.
+
 ## Combat animation and marker-driven damage
 
 Melee combat uses a small per-swing state machine. Crucially, the **HP hit lands when the blade visually connects**, not on the trigger frame.

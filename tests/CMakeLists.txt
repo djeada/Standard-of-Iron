@@ -200,6 +200,7 @@ add_executable(
     systems/target_rules_test.cpp
     systems/target_focus_test.cpp
     systems/combat_mode_test.cpp
+    systems/death_sequence_test.cpp
     systems/hold_mode_test.cpp
     systems/rpg_bow_test.cpp
     systems/rpg_engagement_system_test.cpp

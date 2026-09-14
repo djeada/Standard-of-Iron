@@ -26,6 +26,7 @@ struct DrawState {
   float flinch_progress{-1.0F};
   float death_progress{-1.0F};
   bool dead{false};
+  float sink_progress{0.0F};
 };
 
 enum class GaitTier : std::uint8_t {
