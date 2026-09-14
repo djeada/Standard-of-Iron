@@ -34,6 +34,40 @@ InputCommandHandler::InputCommandHandler(
     , m_camera(camera) {
 }
 
+namespace {
+
+auto right_click_cancels_mode(CursorMode mode) -> bool {
+  switch (mode) {
+  case CursorMode::Attack:
+  case CursorMode::Guard:
+  case CursorMode::Patrol:
+  case CursorMode::Build:
+  case CursorMode::PlaceBuilding:
+  case CursorMode::Deliver:
+  case CursorMode::Heal:
+  case CursorMode::PlaceCommanderRally:
+  case CursorMode::PlaceBarracksRally:
+  case CursorMode::Collect:
+  case CursorMode::Repair:
+  case CursorMode::Dismantle:
+    return true;
+  case CursorMode::Normal:
+    break;
+  }
+  return false;
+}
+
+} // namespace
+
+void InputCommandHandler::reset_order_modes() {
+  if (m_cursor_manager != nullptr) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  }
+  if (m_command_controller != nullptr) {
+    m_command_controller->clear_patrol_first_waypoint();
+  }
+}
+
 void InputCommandHandler::on_map_clicked(qreal sx,
                                          qreal sy,
                                          int local_owner_id,
@@ -60,17 +94,8 @@ void InputCommandHandler::on_right_click(qreal sx,
     return;
   }
 
-  if (m_cursor_manager->mode() == CursorMode::Patrol ||
-      m_cursor_manager->mode() == CursorMode::Attack ||
-      m_cursor_manager->mode() == CursorMode::Guard ||
-      m_cursor_manager->mode() == CursorMode::PlaceBuilding ||
-      m_cursor_manager->mode() == CursorMode::Heal ||
-      m_cursor_manager->mode() == CursorMode::Build ||
-      m_cursor_manager->mode() == CursorMode::Collect ||
-      m_cursor_manager->mode() == CursorMode::Deliver ||
-      m_cursor_manager->mode() == CursorMode::PlaceCommanderRally ||
-      m_cursor_manager->mode() == CursorMode::PlaceBarracksRally) {
-    m_cursor_manager->set_mode(CursorMode::Normal);
+  if (right_click_cancels_mode(m_cursor_manager->mode())) {
+    reset_order_modes();
     return;
   }
 
@@ -106,6 +131,7 @@ void InputCommandHandler::on_right_click(qreal sx,
   (void)m_command_controller->on_move_or_attack_click(
       sx, sy, viewport.width, viewport.height, m_camera, local_owner_id);
   m_command_controller->disable_run_mode_for_selected();
+  reset_order_modes();
 }
 
 auto InputCommandHandler::resolve_context_interaction(
@@ -229,6 +255,7 @@ void InputCommandHandler::on_minimap_right_click(const QVector3D& world_target,
   }
 
   (void)m_command_controller->on_minimap_move(world_target, local_owner_id);
+  reset_order_modes();
 }
 
 void InputCommandHandler::on_right_double_click(qreal sx,
@@ -249,17 +276,8 @@ void InputCommandHandler::on_right_double_click(qreal sx,
     return;
   }
 
-  if (m_cursor_manager->mode() == CursorMode::Patrol ||
-      m_cursor_manager->mode() == CursorMode::Attack ||
-      m_cursor_manager->mode() == CursorMode::Guard ||
-      m_cursor_manager->mode() == CursorMode::PlaceBuilding ||
-      m_cursor_manager->mode() == CursorMode::Heal ||
-      m_cursor_manager->mode() == CursorMode::Build ||
-      m_cursor_manager->mode() == CursorMode::Collect ||
-      m_cursor_manager->mode() == CursorMode::Deliver ||
-      m_cursor_manager->mode() == CursorMode::PlaceCommanderRally ||
-      m_cursor_manager->mode() == CursorMode::PlaceBarracksRally) {
-    m_cursor_manager->set_mode(CursorMode::Normal);
+  if (right_click_cancels_mode(m_cursor_manager->mode())) {
+    reset_order_modes();
     return;
   }
 
@@ -272,6 +290,7 @@ void InputCommandHandler::on_right_double_click(qreal sx,
   (void)m_command_controller->on_move_or_attack_click(
       sx, sy, viewport.width, viewport.height, m_camera, local_owner_id);
   m_command_controller->enable_run_mode_for_selected();
+  reset_order_modes();
 }
 
 auto InputCommandHandler::on_right_press(qreal sx,
@@ -287,17 +306,8 @@ auto InputCommandHandler::on_right_press(qreal sx,
     return false;
   }
 
-  if (m_cursor_manager->mode() == CursorMode::Patrol ||
-      m_cursor_manager->mode() == CursorMode::Attack ||
-      m_cursor_manager->mode() == CursorMode::Guard ||
-      m_cursor_manager->mode() == CursorMode::PlaceBuilding ||
-      m_cursor_manager->mode() == CursorMode::Heal ||
-      m_cursor_manager->mode() == CursorMode::Build ||
-      m_cursor_manager->mode() == CursorMode::Collect ||
-      m_cursor_manager->mode() == CursorMode::Deliver ||
-      m_cursor_manager->mode() == CursorMode::PlaceCommanderRally ||
-      m_cursor_manager->mode() == CursorMode::PlaceBarracksRally) {
-    m_cursor_manager->set_mode(CursorMode::Normal);
+  if (right_click_cancels_mode(m_cursor_manager->mode())) {
+    reset_order_modes();
     return true;
   }
 
@@ -685,6 +695,7 @@ void InputCommandHandler::on_formation_confirm() {
     return;
   }
   m_command_controller->formation().confirm_formation_placement();
+  reset_order_modes();
 }
 
 void InputCommandHandler::on_formation_cancel() {

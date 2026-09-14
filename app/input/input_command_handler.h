@@ -158,6 +158,8 @@ public:
   void set_spectator_mode(bool is_spectator) { m_is_spectator_mode = is_spectator; }
 
 private:
+  void reset_order_modes();
+
   Engine::Core::World* m_world;
   Game::Systems::SelectionController* m_selection_controller;
   App::Controllers::CommandController* m_command_controller;
