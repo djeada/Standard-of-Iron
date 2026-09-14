@@ -391,11 +391,14 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
       }
 
       std::span<const Render::Entity::FormationInstance> body_slots;
-      if (entity != nullptr) {
+      if (entity != nullptr && entity->registry() != nullptr) {
+        auto const& registry = *entity->registry();
         auto const* creature =
-            entity->get_component<Engine::Core::CreaturePresentationComponent>();
+            registry.try_get<Engine::Core::CreaturePresentationComponent>(
+                entity->get_id());
         auto const* instance_state =
-            entity->get_component<Render::Humanoid::HumanoidInstanceStateComponent>();
+            registry.try_get<Render::Humanoid::HumanoidInstanceStateComponent>(
+                entity->get_id());
         body_slots = selection_ring_body_slots(
             creature != nullptr && creature->is_constructing,
             instance_state != nullptr ? &instance_state->layout : nullptr,
