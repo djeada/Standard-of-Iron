@@ -50,20 +50,6 @@ def tdc(volume: str, path: str) -> tuple[str, str]:
     return url, f"{TDC} - {volume.upper()}, '{leaf}', {TDC_AUTHOR}"
 
 
-HORN_VIKING = tdc(
-    "Horns",
-    "HORNS/TRADITIONAL/HORNTrad-Samsung Galaxy Smartphone, "
-    "CU_Viking War_Nicholas Judy_TDC.wav",
-)
-"""A blown war horn, and the only period-plausible one in the collection.
-
-It is also a phone recording, which is the catch: measured across its twelve
-blasts it carries 25-48 dB more energy at 1.2-3.8 kHz than below 300 Hz, so on
-its own it reads as rattle and breath rather than as a horn, which is why every
-horn cue here is built from HORN_HUNTING instead. Nothing shipped draws on this
-recording any more; it is kept named so the next person looking for a war horn
-in the CC0 libraries finds the measurement rather than repeating the mistake."""
-
 HORN_HUNTING = (
     f"{COMMONS}/d/df/Hunting_horn_tone.ogg",
     "Wikimedia Commons, 'File:Hunting horn tone.ogg', by Alon-De-Lon",
@@ -91,25 +77,6 @@ ELEPHANT = tdc(
     "ANIMALS/WILD/ANMLWild-CU_Elephant Trumpet_The Designer's Choice_GNRL1.wav",
 )
 
-GALLOP_01 = tdc(
-    "Footsteps",
-    "FOOTSTEPS/HORSE/FEETHors-Samsung Galaxy Smartphone_Horse Galloping, "
-    "Coconut Shells, Looped 01_Nicholas Judy_TDC.wav",
-)
-GALLOP_02 = tdc(
-    "Footsteps",
-    "FOOTSTEPS/HORSE/FEETHors-Samsung Galaxy Smartphone_Horse Galloping, "
-    "Coconut Shells, Looped 02_Nicholas Judy_TDC.wav",
-)
-GALLOP_03 = tdc(
-    "Footsteps",
-    "FOOTSTEPS/HORSE/FEETHors-Samsung Galaxy Smartphone_Horse Galloping, "
-    "Coconut Shells, Looped 03_Nicholas Judy_TDC.wav",
-)
-"""Coconut-shell gallops. This is how horses have been done since radio drama;
-the shells are the instrument, the same way the synthesised cues use struck
-wood. Three separate performances, so a charge can be built from three horses
-rather than one horse three times."""
 
 MARCH_ROCKY = tdc(
     "Footsteps",
@@ -173,10 +140,6 @@ CLANG_THIN_01 = tdc(
     "METAL/IMPACT/METLImpt-Blue Snowball Microphone_"
     "Metal, Clang, Thin 01_Nicholas Judy_TDC.wav",
 )
-CLANG_02 = tdc(
-    "Metal",
-    "METAL/IMPACT/METLImpt-Blue Snowball Microphone_Metal, Clang 02_Nicholas Judy_TDC.wav",
-)
 CLANG_DULL = tdc(
     "Metal",
     "METAL/IMPACT/METLImpt-Blue Snowball Microphone_"
@@ -210,13 +173,6 @@ DOG_BARK_CLOSE = tdc(
 transients: its sharpest bark onset rises by a factor of 446 against a factor of
 4.4 for anything in DOG_SNARL, which was recorded through a window."""
 
-DOG_SNARL = tdc(
-    "Animals",
-    "ANIMALS/DOG/ANMLDog-Samsung Galaxy Smartphone, CU_Aggessive Dog Barks, "
-    "Snarls, Inside Window_The Designer's Choice_GNRL1.wav",
-)
-"""A dog is Canis lupus familiaris -- the same species as the wolf -- which is
-the reasoning the existing wildlife cues already use."""
 
 WIND_TREES = tdc(
     "Wind",
@@ -230,13 +186,9 @@ TARGET_RMS_DB: dict[str, float] = {
     "bow_draw_creak": -18.0,
     "bow_full_draw_seat": -21.0,
     "bow_hold_strain": -18.0,
-    "bow_loose_heavy": -14.0,
-    "bow_loose_heavy_v2": -14.0,
     "bow_release_single": -16.0,
-    "bow_release_single_v2": -16.0,
     "charge_roar": -11.0,
     "dodge_roll": -16.0,
-    "dodge_roll_v2": -16.0,
     "guard_break": -15.0,
     "guard_raise": -18.0,
     "heal_bind_wound": -20.0,
@@ -249,33 +201,19 @@ TARGET_RMS_DB: dict[str, float] = {
     "shield_bash": -13.0,
     "shield_bash_v2": -13.0,
     "shield_block": -14.0,
-    "shield_block_v2": -14.0,
-    "siege_impact": -12.0,
     "siege_launch": -11.5,
     "vanguard_rush": -11.0,
     "enemy_spotted_horn": -12.7,
-    "enemy_reinforcements_warning": -12.0,
     "reinforcements_arrived": -11.1,
-    "population_limit_horn": -14.7,
-    "low_resources_click": -14.0,
     "battlefield_crowd_chaos": -14.2,
     "battlefield_distant_mass_01": -15.7,
-    "battlefield_distant_mass_02": -13.8,
     "aftermath_battlefield": -14.1,
     "army_march_dirt_mass": -14.8,
     "army_retreat_panic": -15.3,
     "soldiers_victory_cheer": -14.9,
     "carthage_prepare_battle": -13.7,
-    "archer_volley_many": -18.2,
-    "archers_shooting_close": -20.1,
-    "arrows_fast_flybys_lr": -21.2,
     "arrows_many_overhead": -20.0,
-    "arrows_overhead_ambience": -24.4,
     "arrows_overhead_dark": -14.6,
-    "arrows_whistle_snap_impact": -18.9,
-    "arrows_impact_shields_dirt": -19.7,
-    "roman_cavalry_charge": -13.0,
-    "numidian_cavalry_chase": -15.2,
     "horse_gallop_close_pass": -12.6,
     "roman_shield_wall_impact": -16.2,
     "gladius_shield_impacts_close": -14.2,
@@ -290,7 +228,7 @@ TARGET_RMS_DB: dict[str, float] = {
 """Measured RMS of the generated file each cue replaces, in dBFS.
 
 Effect cues are deliberately *not* loudness-normalised at runtime -- see
-docs/AUDIO_MASTERING.md, "Loudness is matched within a category, not across
+docs/AUDIO_SYSTEM.md, "Loudness is matched within a category, not across
 them". The level baked into the file is the design decision, so a drop-in
 replacement has to land where the old file sat or it changes the mix. RMS rather
 than LUFS because several of these are shorter than the 400 ms window R128
@@ -420,19 +358,6 @@ WOOD_BREAK = tdc(
 )
 """Three dry snaps. A shield giving way is wood failing, not metal."""
 
-BRANCH_SNAP = tdc(
-    "Wood",
-    "WOOD/BREAK/WOODBrk-Blue Snowball Microphone, "
-    "CU_Branch, Snaps, Crackles_Nicholas Judy_TDC.wav",
-)
-"""Heavier splintering, for the moment a siege shot lands in timber."""
-
-STONES_KICKED = tdc(
-    "Rocks",
-    "ROCKS/CRASH & DEBRIS/ROCKCrsh-Samsung Galaxy Smartphone, "
-    "CU_Small Stones, Kicked, X4_Nicholas Judy_TDC.wav",
-)
-"""Debris. What a stone shot leaves behind after the impact itself."""
 
 CLANG_BRIGHT = tdc(
     "Metal",
@@ -462,12 +387,6 @@ BOLT_DROP = tdc(
 )
 """One small hard metal event, for the cues that must not sound like a hit."""
 
-BUCKET_DROP = tdc(
-    "Metal",
-    "METAL/IMPACT/METLImpt-Blue Snowball Microphone, "
-    "CU_Bucket, Drop_Nicholas Judy_TDC.wav",
-)
-"""The largest metal body in the volume: the low end under a siege impact."""
 
 GLOVE_SLAP = tdc(
     "Cloth",
@@ -506,16 +425,6 @@ CUES: dict[str, Cue] = {
         notes="One flat blast. The shortest of the horn family, because it "
         "fires the instant a scout sees something.",
     ),
-    "enemy_reinforcements_warning": horn(
-        "sfx/alerts/enemy_reinforcements_warning",
-        2.6,
-        0.30,
-        lowpass=2600.0,
-        ranks=(0.62,),
-        release=0.5,
-        notes="Two horns, the second darker and behind the first: something "
-        "is coming that you cannot see yet.",
-    ),
     "reinforcements_arrived": horn(
         "sfx/alerts/reinforcements_arrived",
         2.4,
@@ -524,33 +433,6 @@ CUES: dict[str, Cue] = {
         release=0.45,
         notes="Two horns close together and undimmed -- the same figure as the "
         "warning above, but near and bright instead of far and dark.",
-    ),
-    "population_limit_horn": horn(
-        "sfx/alerts/population_limit_horn",
-        1.4,
-        0.30,
-        gain=0.85,
-        lowpass=3200.0,
-        notes="Clipped short. A refusal, not an announcement.",
-    ),
-    "low_resources_click": Cue(
-        path="sfx/alerts/low_resources_click",
-        seconds=0.5,
-        layers=[
-            Layer(
-                url=CLANG_DULL[0],
-                origin=CLANG_DULL[1],
-                licence=CC0,
-                start=0.08,
-                gain=0.7,
-                highpass=300.0,
-                lowpass=5200.0,
-            ),
-        ],
-        attack=0.002,
-        release=0.22,
-        notes="A dull struck-metal tick. The only alert that is not a horn, "
-        "because it fires while the player is reading a number.",
     ),
     "battlefield_crowd_chaos": Cue(
         path="sfx/combat/battlefield_crowd_chaos",
@@ -617,40 +499,6 @@ CUES: dict[str, Cue] = {
         release=1.2,
         notes="The same crowd taken a long way off: lowpassed to 1.1 kHz and "
         "laid under wind. Distance is mostly the absence of treble.",
-    ),
-    "battlefield_distant_mass_02": Cue(
-        path="sfx/combat/battlefield_distant_mass_02",
-        seconds=7.0,
-        layers=[
-            Layer(
-                url=CROWD[0],
-                origin=CROWD[1],
-                licence=CC0,
-                start=9.0,
-                gain=0.72,
-                highpass=150.0,
-                lowpass=950.0,
-                shelf_db=-6.0,
-                loop_source=True,
-                ranks=(1.7, 3.7),
-                rank_falloff=0.72,
-            ),
-            Layer(
-                url=MARCH_GRASS[0],
-                origin=MARCH_GRASS[1],
-                licence=CC0,
-                start=2.0,
-                gain=0.34,
-                lowpass=1200.0,
-                loop_source=True,
-                ranks=(0.9,),
-                rank_falloff=0.7,
-            ),
-        ],
-        attack=0.9,
-        release=1.2,
-        notes="A second window of the same crowd so the two files are not the "
-        "same sound twice; feet instead of wind underneath.",
     ),
     "aftermath_battlefield": Cue(
         path="sfx/combat/aftermath_battlefield",
@@ -809,85 +657,6 @@ CUES: dict[str, Cue] = {
         "Hz rather than the 130 Hz the Roman horns sit at, so the two armies "
         "do not answer in the same voice.",
     ),
-    "archer_volley_many": Cue(
-        path="sfx/combat/archer_volley_many",
-        seconds=2.6,
-        layers=[
-            Layer(
-                url=SWISH_BIG[0],
-                origin=SWISH_BIG[1],
-                licence=CC0,
-                start=0.15,
-                gain=1.0,
-                highpass=260.0,
-                ranks=(0.06, 0.13, 0.19, 0.27, 0.34),
-                rank_falloff=0.85,
-                rank_lowpass=0.92,
-            ),
-            Layer(
-                url=SWISH_STICK[0],
-                origin=SWISH_STICK[1],
-                licence=CC0,
-                start=0.1,
-                gain=0.6,
-                highpass=400.0,
-                ranks=(0.09, 0.21),
-                rank_falloff=0.85,
-            ),
-        ],
-        attack=0.005,
-        release=0.6,
-        notes="A volley is one arrow fired six times inside a third of a "
-        "second. Tight offsets so it reads as a release, not as six arrows.",
-    ),
-    "archers_shooting_close": Cue(
-        path="sfx/combat/archers_shooting_close",
-        seconds=2.0,
-        layers=[
-            Layer(
-                url=SWISH_STICK[0],
-                origin=SWISH_STICK[1],
-                licence=CC0,
-                start=0.1,
-                gain=1.0,
-                highpass=320.0,
-                ranks=(0.11, 0.26),
-                rank_falloff=0.8,
-            ),
-            Layer(
-                url=CLOTH_SWOOSH[0],
-                origin=CLOTH_SWOOSH[1],
-                licence=CC0,
-                start=0.2,
-                gain=0.55,
-                highpass=200.0,
-            ),
-        ],
-        attack=0.004,
-        release=0.4,
-        notes="Fewer bows and nearer: the cloth layer is the bowstring against "
-        "a sleeve, which is the part you only hear up close.",
-    ),
-    "arrows_fast_flybys_lr": Cue(
-        path="sfx/combat/arrows_fast_flybys_lr",
-        seconds=2.2,
-        layers=[
-            Layer(
-                url=FLYBY[0],
-                origin=FLYBY[1],
-                licence=CC0,
-                start=0.05,
-                gain=1.0,
-                highpass=380.0,
-                ranks=(0.33, 0.71, 1.04),
-                rank_falloff=0.82,
-                rank_lowpass=0.9,
-            ),
-        ],
-        attack=0.004,
-        release=0.35,
-        notes="Four passes at uneven spacing. Even spacing sounds mechanical.",
-    ),
     "arrows_many_overhead": Cue(
         path="sfx/combat/arrows_many_overhead",
         seconds=3.0,
@@ -919,45 +688,6 @@ CUES: dict[str, Cue] = {
         notes="Passing over rather than at you, so nothing here has an impact "
         "on the end of it.",
     ),
-    "arrows_overhead_ambience": Cue(
-        path="sfx/combat/arrows_overhead_ambience",
-        seconds=5.0,
-        layers=[
-            Layer(
-                url=SWISH_MED[0],
-                origin=SWISH_MED[1],
-                licence=CC0,
-                start=0.1,
-                gain=1.0,
-                highpass=280.0,
-                lowpass=5200.0,
-                loop_source=True,
-                ranks=(
-                    0.19,
-                    0.41,
-                    0.67,
-                    0.93,
-                    1.21,
-                    1.49,
-                    1.79,
-                    2.09,
-                    2.41,
-                    2.73,
-                    3.07,
-                    3.41,
-                    3.77,
-                    4.13,
-                    4.51,
-                ),
-                rank_falloff=0.97,
-                rank_lowpass=1.0,
-            ),
-        ],
-        attack=0.5,
-        release=1.2,
-        notes="The sustained version: quieter, longer, and thinned out so it "
-        "can sit under a fight for five seconds without drawing attention.",
-    ),
     "arrows_overhead_dark": Cue(
         path="sfx/combat/arrows_overhead_dark",
         seconds=4.0,
@@ -979,109 +709,6 @@ CUES: dict[str, Cue] = {
         release=1.0,
         notes="The heavy sibling of the bed above -- lowpassed to 2.2 kHz so "
         "the arrows read as massed and close rather than thin and high.",
-    ),
-    "arrows_whistle_snap_impact": Cue(
-        path="sfx/combat/arrows_whistle_snap_impact",
-        seconds=1.5,
-        layers=[
-            Layer(
-                url=SWISH_STICK[0],
-                origin=SWISH_STICK[1],
-                licence=CC0,
-                start=0.1,
-                gain=0.9,
-                highpass=450.0,
-            ),
-            Layer(
-                url=BOXING[0],
-                origin=BOXING[1],
-                licence=CC0,
-                start=0.35,
-                gain=0.85,
-                highpass=140.0,
-                ranks=(0.14,),
-                rank_falloff=0.8,
-            ),
-        ],
-        attack=0.003,
-        release=0.3,
-        notes="The one arrow cue that lands: a swish with an impact under its "
-        "tail rather than a swish that fades out.",
-    ),
-    "arrows_impact_shields_dirt": Cue(
-        path="sfx/combat/arrows_impact_shields_dirt",
-        seconds=2.0,
-        layers=[
-            Layer(
-                url=BOXING[0],
-                origin=BOXING[1],
-                licence=CC0,
-                start=0.2,
-                gain=1.0,
-                highpass=120.0,
-                lowpass=4200.0,
-                ranks=(0.13, 0.29, 0.47),
-                rank_falloff=0.84,
-            ),
-            Layer(
-                url=BODYFALL_GRASS[0],
-                origin=BODYFALL_GRASS[1],
-                licence=CC0,
-                start=0.3,
-                gain=0.5,
-                lowpass=1800.0,
-                ranks=(0.21,),
-                rank_falloff=0.8,
-            ),
-        ],
-        attack=0.003,
-        release=0.45,
-        notes="Arrows arriving: hits on hide over hits in dirt, which is what "
-        "a volley landing across a shield line and the ground around it is.",
-    ),
-    "roman_cavalry_charge": Cue(
-        path="sfx/combat/roman_cavalry_charge",
-        seconds=5.0,
-        layers=[
-            Layer(
-                url=HORSES_PASS[0],
-                origin=HORSES_PASS[1],
-                licence=CC0,
-                start=4.0,
-                gain=1.0,
-                lowpass=5200.0,
-                ranks=(0.23, 0.61),
-                rank_falloff=0.8,
-            ),
-        ],
-        attack=0.25,
-        release=0.9,
-        notes="The five seconds where the six horses close on the microphone, "
-        "so the cue builds and arrives the way a charge does rather than "
-        "looping at a constant distance. The ranks put more horses behind the "
-        "six that are there.",
-    ),
-    "numidian_cavalry_chase": Cue(
-        path="sfx/combat/numidian_cavalry_chase",
-        seconds=5.5,
-        layers=[
-            Layer(
-                url=HORSES_PASS[0],
-                origin=HORSES_PASS[1],
-                licence=CC0,
-                start=8.6,
-                gain=1.0,
-                highpass=90.0,
-                lowpass=6000.0,
-                ranks=(0.19, 0.44, 0.79),
-                rank_falloff=0.84,
-            ),
-        ],
-        attack=0.2,
-        release=1.0,
-        notes="The far side of the same pass: horses already gone by and "
-        "running on. Numidian horse was light and fast, so this keeps its top "
-        "end where the Roman charge is rolled off.",
     ),
     "horse_gallop_close_pass": Cue(
         path="sfx/combat/horse_gallop_close_pass",
@@ -1413,43 +1040,6 @@ CUES: dict[str, Cue] = {
         release=0.32,
         notes="A shorter, smaller charge_roar: one unit committing, not an army.",
     ),
-    "siege_impact": Cue(
-        path="sfx/combat/siege_impact",
-        seconds=1.8,
-        layers=[
-            Layer(
-                url=BUCKET_DROP[0],
-                origin=BUCKET_DROP[1],
-                licence=CC0,
-                start=0.0,
-                gain=1.0,
-                lowpass=900.0,
-            ),
-            Layer(
-                url=BRANCH_SNAP[0],
-                origin=BRANCH_SNAP[1],
-                licence=CC0,
-                start=1.0,
-                gain=3.0,
-                highpass=180.0,
-                lowpass=6000.0,
-            ),
-            Layer(
-                url=STONES_KICKED[0],
-                origin=STONES_KICKED[1],
-                licence=CC0,
-                start=0.0,
-                gain=2.4,
-                highpass=300.0,
-                lowpass=7000.0,
-            ),
-        ],
-        attack=0.002,
-        release=0.55,
-        notes="Three strata of one hit: the low metal body for the mass, timber "
-        "splintering for the target, and stone debris for the half second "
-        "after. No single recording holds a shot landing on a wall.",
-    ),
     "siege_launch": Cue(
         path="sfx/combat/siege_launch",
         seconds=1.4,
@@ -1569,33 +1159,6 @@ CUES: dict[str, Cue] = {
         release=0.28,
         notes="A blow caught square on the boards. Thinner than shield_bash: the "
         "shield holding, not the shield being driven.",
-    ),
-    "shield_block_v2": Cue(
-        path="sfx/combat/shield_block_v2",
-        seconds=0.7,
-        layers=[
-            Layer(
-                url=CLANG_THIN[0],
-                origin=CLANG_THIN[1],
-                licence=CC0,
-                start=0.2,
-                gain=1.0,
-                highpass=180.0,
-                lowpass=8000.0,
-            ),
-            Layer(
-                url=BOXING[0],
-                origin=BOXING[1],
-                licence=CC0,
-                start=7.8,
-                gain=1.6,
-                highpass=150.0,
-                lowpass=4200.0,
-            ),
-        ],
-        attack=0.002,
-        release=0.28,
-        notes="The same catch softer, so repeated blocks do not machine-gun.",
     ),
     "guard_raise": Cue(
         path="sfx/combat/guard_raise",
@@ -1736,79 +1299,6 @@ CUES: dict[str, Cue] = {
         notes="The string seating in the nock: one small hard click with the limb "
         "settling behind it.",
     ),
-    "bow_loose_heavy": Cue(
-        path="sfx/combat/bow_loose_heavy",
-        seconds=1.1,
-        layers=[
-            Layer(
-                url=SWISH_STICK[0],
-                origin=SWISH_STICK[1],
-                licence=CC0,
-                start=1.0,
-                gain=1.0,
-                highpass=180.0,
-                lowpass=5200.0,
-            ),
-            Layer(
-                url=WOOD_BREAK[0],
-                origin=WOOD_BREAK[1],
-                licence=CC0,
-                start=1.0,
-                gain=2.2,
-                highpass=220.0,
-                lowpass=4200.0,
-            ),
-            Layer(
-                url=FLYBY[0],
-                origin=FLYBY[1],
-                licence=CC0,
-                start=0.2,
-                gain=0.8,
-                highpass=400.0,
-                lowpass=8000.0,
-            ),
-        ],
-        attack=0.002,
-        release=0.4,
-        notes="A war bow: string snap, limb thump, and the shaft still audible in the "
-        "air afterwards. One man shooting, not a rank.",
-    ),
-    "bow_loose_heavy_v2": Cue(
-        path="sfx/combat/bow_loose_heavy_v2",
-        seconds=1.1,
-        layers=[
-            Layer(
-                url=SWISH_STICK[0],
-                origin=SWISH_STICK[1],
-                licence=CC0,
-                start=0.8,
-                gain=0.95,
-                highpass=180.0,
-                lowpass=5200.0,
-            ),
-            Layer(
-                url=WOOD_BREAK[0],
-                origin=WOOD_BREAK[1],
-                licence=CC0,
-                start=0.8,
-                gain=2.0,
-                highpass=220.0,
-                lowpass=4200.0,
-            ),
-            Layer(
-                url=FLYBY[0],
-                origin=FLYBY[1],
-                licence=CC0,
-                start=0.0,
-                gain=0.7,
-                highpass=400.0,
-                lowpass=8000.0,
-            ),
-        ],
-        attack=0.002,
-        release=0.4,
-        notes="A second loose, cut from earlier in the same three recordings.",
-    ),
     "bow_release_single": Cue(
         path="sfx/combat/bow_release_single",
         seconds=0.8,
@@ -1836,33 +1326,6 @@ CUES: dict[str, Cue] = {
         release=0.3,
         notes="Lighter than bow_loose_heavy: a hunting bow rather than a war bow.",
     ),
-    "bow_release_single_v2": Cue(
-        path="sfx/combat/bow_release_single_v2",
-        seconds=0.8,
-        layers=[
-            Layer(
-                url=SWISH_STICK[0],
-                origin=SWISH_STICK[1],
-                licence=CC0,
-                start=0.0,
-                gain=0.95,
-                highpass=300.0,
-                lowpass=7500.0,
-            ),
-            Layer(
-                url=BOLT_DROP[0],
-                origin=BOLT_DROP[1],
-                licence=CC0,
-                start=0.0,
-                gain=0.55,
-                highpass=400.0,
-                lowpass=8000.0,
-            ),
-        ],
-        attack=0.002,
-        release=0.3,
-        notes="The next swish in the same take.",
-    ),
     "dodge_roll": Cue(
         path="sfx/combat/dodge_roll",
         seconds=1.0,
@@ -1889,33 +1352,6 @@ CUES: dict[str, Cue] = {
         attack=0.004,
         release=0.35,
         notes="Cloth committing, then a body meeting the ground and carrying through.",
-    ),
-    "dodge_roll_v2": Cue(
-        path="sfx/combat/dodge_roll_v2",
-        seconds=1.0,
-        layers=[
-            Layer(
-                url=CLOTH_FIGHT[0],
-                origin=CLOTH_FIGHT[1],
-                licence=CC0,
-                start=0.4,
-                gain=0.95,
-                highpass=200.0,
-                lowpass=6000.0,
-            ),
-            Layer(
-                url=BODYFALL_GRASS[0],
-                origin=BODYFALL_GRASS[1],
-                licence=CC0,
-                start=0.2,
-                gain=5.0,
-                highpass=80.0,
-                lowpass=3200.0,
-            ),
-        ],
-        attack=0.004,
-        release=0.35,
-        notes="A second roll, from later in the garment take.",
     ),
     "jump_effort": Cue(
         path="sfx/combat/jump_effort",

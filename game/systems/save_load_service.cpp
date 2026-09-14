@@ -16,6 +16,7 @@
 
 #include "game/core/component_core.h"
 #include "game/core/world.h"
+#include "game/map/terrain_service.h"
 #include "game/save/serialization.h"
 #include "game/session/session_context.h"
 #include "save_storage.h"
@@ -408,6 +409,7 @@ auto SaveLoadService::load_game_from_slot(Engine::Core::World& world,
       *out_world_discarded = true;
     }
     world.clear();
+    Game::Session::session_for(world).terrain().clear();
     try {
       Engine::Core::Serialization::deserialize_world(&world, doc);
     } catch (const std::exception& exception) {

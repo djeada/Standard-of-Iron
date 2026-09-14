@@ -1,7 +1,7 @@
 # The looping ambience beds are rendered from the recipes in this directory
 # rather than being committed, for the same reason the creature clips are baked:
 # the recipe is the source of truth and the .ogg is output. See
-# docs/AUDIO_MASTERING.md.
+# docs/AUDIO_SYSTEM.md.
 #
 # Rendering needs Python and an ffmpeg that can write Vorbis, because
 # assets/audio/audio_manifest.json pins each bed to an .ogg path. When either is

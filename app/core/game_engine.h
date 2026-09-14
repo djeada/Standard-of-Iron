@@ -492,6 +492,7 @@ private:
   void prepare_mission_ai_state();
   [[nodiscard]] auto mission_startup_pending_components() const -> QStringList;
   void configure_mission_victory_conditions();
+  void wire_victory_service();
   void configure_rain_system();
   void reset_preload_interaction_state();
   void reset_mission_runtime_state();

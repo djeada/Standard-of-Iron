@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 
 namespace Game::Audio {
 
@@ -23,6 +24,7 @@ inline constexpr const char* k_ui_select_group = "ui.select_group";
 inline constexpr const char* k_ui_deselect = "ui.deselect";
 
 inline constexpr const char* k_order_move = "order.move";
+inline constexpr const char* k_order_move_mounted = "order.move_mounted";
 inline constexpr const char* k_order_attack = "order.attack";
 inline constexpr const char* k_order_patrol = "order.patrol";
 inline constexpr const char* k_order_stop = "order.stop";
@@ -79,7 +81,10 @@ inline constexpr const char* k_combat_arrow_volley = "combat.arrow_volley";
 inline constexpr const char* k_combat_siege_launch = "combat.siege_launch";
 inline constexpr const char* k_combat_siege_impact = "combat.siege_impact";
 inline constexpr const char* k_combat_charge = "combat.charge";
+inline constexpr const char* k_combat_charge_cavalry = "combat.charge_cavalry";
+inline constexpr const char* k_combat_charge_elephant = "combat.charge_elephant";
 inline constexpr const char* k_combat_heal = "combat.heal";
+inline constexpr const char* k_combat_heal_bind = "combat.heal_bind";
 inline constexpr const char* k_combat_guard_raise = "combat.guard_raise";
 inline constexpr const char* k_combat_block = "combat.block";
 inline constexpr const char* k_combat_perfect_guard = "combat.perfect_guard";
@@ -114,7 +119,7 @@ inline constexpr const char* k_state_load_complete = "state.load_complete";
 inline constexpr const char* k_state_commander_enter = "state.commander_enter";
 inline constexpr const char* k_state_commander_exit = "state.commander_exit";
 
-inline constexpr std::array<const char*, 96> k_all = {
+inline constexpr std::array<const char*, 100> k_all = {
     k_ui_hover,
     k_ui_click,
     k_ui_back,
@@ -131,6 +136,7 @@ inline constexpr std::array<const char*, 96> k_all = {
     k_ui_select_group,
     k_ui_deselect,
     k_order_move,
+    k_order_move_mounted,
     k_order_attack,
     k_order_patrol,
     k_order_stop,
@@ -181,7 +187,10 @@ inline constexpr std::array<const char*, 96> k_all = {
     k_combat_siege_launch,
     k_combat_siege_impact,
     k_combat_charge,
+    k_combat_charge_cavalry,
+    k_combat_charge_elephant,
     k_combat_heal,
+    k_combat_heal_bind,
     k_combat_guard_raise,
     k_combat_block,
     k_combat_perfect_guard,
@@ -211,6 +220,12 @@ inline constexpr std::array<const char*, 96> k_all = {
     k_state_load_complete,
     k_state_commander_enter,
     k_state_commander_exit,
+};
+
+struct SelectionMounts {
+  std::size_t foot{0};
+  std::size_t cavalry{0};
+  std::size_t elephants{0};
 };
 
 } // namespace Cue

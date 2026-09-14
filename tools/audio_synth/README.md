@@ -1,14 +1,13 @@
 # Synthesised cue sounds and ambience
 
-Sixty-four of the game's sound effects are not recordings. They are generated from
+Twenty-eight of the game's sound effects are not recordings. They are generated from
 the recipes in this directory by `make audio-assets`.
 
 ## Why generate them
 
 - **Provenance is trivial.** Nothing here is sampled, scraped or licensed, so
   there is no attribution to track and no commercial-use question to answer.
-- **They stay small.** All sixty-four come to roughly 640 KiB of Vorbis. Most are
-  under 5 KiB, which is mostly the Vorbis header.
+- **They stay small.** Most are under 5 KiB, which is mostly the Vorbis header.
 - **They stay editable.** "The click is too bright" is a one-line change to a
   recipe followed by a regeneration, not a trip back to a sound library.
 - **They stay short.** The cues these replaced were ten-second clips, which is
@@ -88,12 +87,10 @@ whole point of those two cues.
 ## What these are not
 
 They are convincing abstract and foley sounds, not a replacement for a
-recordist on the cues that carry real drama. The ones most worth re-recording
-later are the crowd and voice-adjacent pieces -- `combat.charge`,
-`combat.vanguard_rush`, `build.construction_started` -- where synthesis reads as
-"plausible" rather than "real". Everything in the `ui.*`, `state.*` and
-`order.*` families is meant to stay synthetic; abstract interface sounds are
-what this technique is best at.
+recordist on the cues that carry real drama. Those have moved to recordings and
+imports, and their recipes were deleted with them. What remains here is
+abstract interface, order and state feedback, which is what this technique is
+best at.
 
 ## The ambience beds
 
@@ -101,8 +98,8 @@ Eight of the twenty-one looping beds in `assets/audio/ambience` are generated
 here, by `make audio-ambience`. They replaced 16 kHz ten-second clips that the
 mixer had to resample at load — which manufactured a mirror of their own noise
 across 8-16 kHz — and whose energy sat in the 2-6 kHz band the ear finds most
-fatiguing. See [AUDIO_MASTERING.md](../../docs/AUDIO_MASTERING.md) for the
-measurements.
+fatiguing. See [AUDIO_SYSTEM.md](../../docs/AUDIO_SYSTEM.md) for the
+decode-time resampler and mastering.
 
 The beds are rendered at 48 kHz so nothing resamples them, run 18.8 s so the
 repeat is less obvious, and are folded tail-into-head so the file loops without
@@ -138,4 +135,4 @@ suite.
 Two of the beds are not places but skies. `weather_rain` and `weather_snow` are
 layered over whatever bed the biome chose, so they carry only the weather and
 never the ground under it -- see
-[AUDIO_MASTERING.md](../../docs/AUDIO_MASTERING.md).
+[AUDIO_SYSTEM.md](../../docs/AUDIO_SYSTEM.md).

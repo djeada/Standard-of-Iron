@@ -20,7 +20,7 @@ most LIMIT_HEADROOM_DB of what is left. Limiting is bounded on purpose -- these 
 level each track will actually play at in game, and flags any that land short.
 
 The shipped files are deliberately not mastered to the +0.1..+2.8 dBTP the previous set
-decoded at; `docs/AUDIO_MASTERING.md` names those peaks as a defect.
+decoded at; decoding above full scale is a defect (`docs/AUDIO_SYSTEM.md`).
 
 BATCHES records what each import renamed, so provenance survives the source folder being
 deleted. Add a new entry per batch rather than editing an old one.

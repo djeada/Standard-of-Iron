@@ -82,7 +82,7 @@ python scripts/format.py --all --lint --deep      # includes whole-tree clang-ti
 
 | Language                         | Formatter                               | Linter                                              |
 | -------------------------------- | --------------------------------------- | --------------------------------------------------- |
-| C/C++                            | clang-format                            | clang-tidy (changed files on PRs, full tree weekly) |
+| C/C++                            | clang-format                            | clang-tidy (changed files on PRs, `make lint-deep`) |
 | GLSL (`.frag`, `.vert`, `.glsl`) | clang-format                            | -                                                   |
 | QML                              | qmlformat                               | qmllint (advisory)                                  |
 | Python                           | black                                   | Ruff                                                |
@@ -92,12 +92,11 @@ python scripts/format.py --all --lint --deep      # includes whole-tree clang-ti
 | Markdown                         | prettier (optional)                     | markdownlint (advisory, optional)                   |
 | JSON                             | prettier (optional, excludes `assets/`) | built-in syntax check                               |
 
-Advisory linters report findings without failing the build. The weekly workflow
-reruns clang-tidy over the whole tree and publishes what it finds to the run
-summary. It does not fail on those findings yet: the tree carries about 120 of
-them, and a gate that is red before anyone has touched it teaches people to
-ignore it. Clear the backlog and the run can add `--fail-on-advisory`. Generated game data under
-`assets/` is never reformatted, only syntax-checked.
+Advisory linters report findings without failing the build. Pull requests run
+clang-tidy over the files they change; no CI lane runs it over the whole tree,
+because on one runner that pass ran past three hours. `make lint-deep` runs it
+locally and fails on advisory findings. Generated game data under `assets/` is
+never reformatted, only syntax-checked.
 
 ### Installing qmlformat and qmllint
 
@@ -166,9 +165,8 @@ bury the signal rather than add any.
 In CI, `glsl`, `windows` and `includes` run in the `portability` job of
 `quality.yml` on every pull request, because they need no compiler and finish
 in a minute. `apple` needs a configured tree and costs about 118 CPU minutes -
-half an hour of a four-core runner - so it runs in the whole-project lint job
-of `weekly.yml`, which already builds `soi_test_binaries` for clang-tidy and
-has the budget for it. Not in `build-linux.yml`: that job is on ubuntu-22.04
+half an hour of a four-core runner - so it runs in its own `portability` job
+of `weekly.yml`. Not in `build-linux.yml`: that job is on ubuntu-22.04
 for AppImage glibc reasons and `-Wnan-infinity-disabled` needs Clang 18. An
 unknown `-Werror=` name is only a warning to Clang, so on an older one the
 fast-math guard would appear to pass without ever being checked;

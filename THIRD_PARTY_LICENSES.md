@@ -102,23 +102,23 @@ deployment project is also MIT licensed:
 ## Audio Assets
 
 Every entry in `assets/audio/audio_manifest.json` carries a `provenance` block
-naming its origin and licence, so the question "may we ship this" is answerable
-per file without reading the prose below. The prose stays authoritative for the
-exact wording an attribution needs. `assets/audio/audio_provenance_baseline.json`
-lists the files whose rights are not written down yet;
-`scripts/audio_provenance.py --check`, which `make audio-check` runs, fails when
-a file arrives that is on neither list.
+naming its origin and licence, and `docs/AUDIO_LICENSES.md` is rendered from
+those blocks, so the question "may we ship this" is answerable per file without
+reading the prose below. The prose stays authoritative for the exact wording an
+attribution needs. `scripts/audio_provenance.py --check`, which
+`make audio-check` runs, fails when a track arrives without provenance, when a
+shipped `.ogg` is missing from the manifest, or when the per-file list is stale.
 
 ### Synthesised cue sounds
 
-The 66 sound effects listed with `"source": "synth"` in
+The 28 sound effects listed with `"source": "synth"` in
 `assets/audio/audio_manifest.json` are generated from the recipes in
 `tools/audio_synth/` by `make audio-assets`. They are original work produced by
 this repository's own code: nothing is sampled, and no third-party recording or
 library is involved. No attribution or licence obligation attaches to them.
 
-Covers the `ui.*`, `order.*`, `state.*` families in full, plus the build and
-alert cues. See `tools/audio_synth/README.md`.
+Covers the interface, order, state and build cues that the generated cues below
+did not replace. See `tools/audio_synth/README.md`.
 
 Nothing under `sfx/combat/` is synthesised any more. The twenty-one cues that
 were — the shield and guard set, the commander's bow, the movement cues, the
@@ -127,9 +127,9 @@ the combat audio, and are listed under the composed battle cues below.
 
 ### Wildlife effects (`assets/audio/sfx/wildlife/`)
 
-Four of the six files here are cut from the recordings below; the other two,
-`wolf_bite_snap.ogg` and `wolf_snarl_bark.ogg`, are CC0 and listed under the
-composed cues. Synthesised
+Four of the eight files here are cut from the recordings below.
+`wolf_bite_snap.ogg` and `wolf_snarl_bark.ogg` are CC0 and listed under the
+composed cues; `bird_chirp.ogg` and `sheep_bleat.ogg` are generated cues. Synthesised
 versions were tried first and abandoned: measured against this repository's own
 `combat/elephant_charge_carthage.ogg`, the generated growl scored **0.994
 cosine similarity on its band profile** — it was, spectrally, an elephant, and
@@ -177,7 +177,7 @@ nothing is mixed into it.
 
 ### Recorded combat and movement cues (`assets/audio/sfx/`)
 
-Thirty-one short one-shots, all cut from **The Designer's Choice UCS
+Twenty-three short one-shots, all cut from **The Designer's Choice UCS
 Collection** — original recordings by Nicholas A. Judy, released CC0 1.0 and
 explicitly cleared for commercial use. Each file is a single hit or footstep
 sliced out of a longer performance by `tools/audio_field/build_oneshots.py`;
@@ -186,12 +186,12 @@ the shaping applied.
 
 | Files                            | Source volume and recording                                                                                       |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `combat/sword_hit_01..04`        | [WEAPONS](https://archive.org/details/Designers-Choice-Collection-Weapons), `WEAPSwrd-…CU_Sword, Hits`            |
-| `combat/blade_clash_01..04`      | the same volume, `WEAPSwrd-…Sword, Hits, Scrapes, Shings`                                                         |
+| `combat/sword_hit_01`            | [WEAPONS](https://archive.org/details/Designers-Choice-Collection-Weapons), `WEAPSwrd-…CU_Sword, Hits`            |
+| `combat/blade_clash_01..03`      | the same volume, `WEAPSwrd-…Sword, Hits, Scrapes, Shings`                                                         |
 | `combat/spear_impact_01..02`     | [WOOD](https://archive.org/details/Designers-Choice-Collection-Wood), `WOODImpt-…CU_Board Drop 01` and `02`       |
-| `combat/arrow_impact_01..03`     | the same volume, `CU_Board Drop 03`, `04` and `05`                                                                |
+| `combat/arrow_impact_01`         | the same volume, `CU_Board Drop 03`, `04` and `05`                                                                |
 | `combat/armour_hit_01..03`       | [METAL](https://archive.org/details/Designers-Choice-Collection-Metal), `METLImpt-…Metal, Clang/Clank, Thin`      |
-| `combat/stone_impact_01..03`     | [ROCKS](https://archive.org/details/Designers-Choice-Collection-Rocks), `ROCKCrsh-…CU_Small Stones, Kicked`       |
+| `combat/stone_impact_01`         | [ROCKS](https://archive.org/details/Designers-Choice-Collection-Rocks), `ROCKCrsh-…CU_Small Stones, Kicked`       |
 | `movement/footstep_grass_01..04` | [FOOTSTEPS](https://archive.org/details/Designers-Choice-Collection-Footsteps), `FEETHmn-MCU_Footsteps, On Grass` |
 | `movement/footstep_stone_01..04` | the same volume, `FEETHmn-…CU_Footsteps, Rocky Surface`                                                           |
 | `movement/footstep_run_01..04`   | the same volume, `FEETHmn-…MCU_Running, Rocky Road`                                                               |
@@ -247,13 +247,14 @@ The twenty tracks that used to sit here have been **replaced**. The thirty track
 shipped were generated for this project in August and September 2026 with **ElevenLabs**,
 under a licence held by the project author that permits commercial use.
 
-| Directory   | Tracks | Covers                                                                  |
-| ----------- | -----: | ----------------------------------------------------------------------- |
-| `menu/`     |      3 | the main theme, its alternate and the Iron Kingdom anthem               |
-| `campaign/` |      2 | the campaign map                                                        |
-| `base/`     |     12 | nine peaceful beds and three tense ones, including two four-minute beds |
-| `combat/`   |      7 | three neutral, two Roman, two Carthaginian                              |
-| `stingers/` |      6 | victory, Carthaginian triumph, three defeats and a retreat signal       |
+| Directory   | Tracks | Covers                                                            |
+| ----------- | -----: | ----------------------------------------------------------------- |
+| `menu/`     |      3 | the main theme, its alternate and the Iron Kingdom anthem         |
+| `campaign/` |      2 | the campaign map                                                  |
+| `base/`     |     11 | peaceful and tense beds, including two four-minute beds           |
+| `events/`   |      1 | the Iron Sepulcher awakening                                      |
+| `combat/`   |      7 | three neutral, two Roman, two Carthaginian                        |
+| `stingers/` |      6 | victory, Carthaginian triumph, three defeats and a retreat signal |
 
 Selection is entirely tag-driven from `assets/audio/audio_manifest.json` — `screen_context`
 for the frontend, `ambient_state` in mission, `faction` to bias a nation's own music. No
@@ -282,7 +283,7 @@ re-bake at any other rate, or in stereo, needs those masters back.
 
 ### Generated cues (`assets/audio/sfx/`, `source: generated`)
 
-Forty one-shots were regenerated in August and September 2026 with **ElevenLabs**, under a licence
+Forty-four one-shots were generated in August and September 2026 with **ElevenLabs**, under a licence
 held by the project author that permits commercial use, replacing the synthesised cues that measured as oscillators rather
 than recordings (spectral flatness 0.024 against 0.336 for the recorded material, and almost
 no energy above 6 kHz). They carry `"source": "generated"` in
@@ -297,10 +298,13 @@ delivered length; `combat.heal` and `order.commander_rally` are both sustained p
 the approach and the decay are the sound, so both are imported whole.
 
 Twenty-two files were deleted rather than replaced: surplus variants whose cue now uses one
-good recording, and the cues that were folded into a shared sound. One refusal now answers
-`command.refuse`, `build.placement_rejected` and `combat.ability_refused`; one bell answers
-`build.unit_ready`, `build.construction_complete` and `alert.objective_complete`. Pausing and
-resuming the game are deliberately silent and their cues are gone entirely.
+good recording. `command.refuse_v2` also backs `combat.ability_refused`. Pausing and resuming
+the game are deliberately silent and their cues are gone entirely.
+
+Six renders predate the plan recording render names: `alerts/objective_complete`,
+`build/construction_complete`, `build/construction_started` and `build/placement_rejected`
+(#1366), and `combat/human_death_cry_v2` and `_v3` (#1363). `UNNAMED_IMPORTS` in the same
+script records them.
 
 ### Voices (`assets/audio/voices/`)
 
@@ -316,14 +320,14 @@ performer's rights other than the author's own attach to them.
 | `commanders/` |     3 | Marcellus, Scipio, Fabius Maximus               |
 
 They are covered by the same MIT licence as the rest of the repository and carry
-no attribution obligation or usage restriction. Unlike the music above, they
-place no limit on commercial distribution.
+no attribution obligation or usage restriction, and place no limit on commercial
+distribution.
 
 ### Composed battle cues (`assets/audio/sfx/`)
 
-Fifty-nine cues — the alerts, the mass-battle beds, the arrow and volley
-layers, the unit stingers, the shield, guard, bow, movement and siege sets, and
-`wolf_bite_snap` — were **generated by an earlier model and have been replaced
+Forty-two cues — two alert horns, the mass-battle beds, two arrow layers, the
+unit stingers, the shield, guard, bow, movement and siege sets, the wolf cues
+and `heal_bind_wound` — were **generated by an earlier model and have been replaced
 with CC0 material**. They were the second half
 of a licence restriction that no longer applies to anything shipped; the music
 that was the other half has since been replaced too.
@@ -334,24 +338,23 @@ recordings summed together, offset, filtered and enveloped.
 `tools/audio_field/battle.py` is the recipe — which recordings, which windows,
 what shaping — and `tools/audio_field/build_battle.py` renders it.
 
-| Cues                                                                                                                                                    | Built from                                                                                                                                                                                                                                              |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| the four `alerts/` horns, `roman_war_horns_orders`, the horn layer of `carthage_prepare_battle`                                                         | Wikimedia Commons, [`File:Hunting horn tone.ogg`](https://commons.wikimedia.org/wiki/File:Hunting_horn_tone.ogg) — one real brass note played at 0.70× into the cornu register, or 0.62× for Carthage so the two armies do not answer in the same voice |
-| `battlefield_crowd_chaos`, `_distant_mass_01`/`_02`, `aftermath_battlefield`, `army_retreat_panic`, `soldiers_victory_cheer`, `carthage_prepare_battle` | CROWDS, `CRWDApls-…Crowd Applause, Cheering, Yelling, Whooping`, high-passed off the applause and lowpassed for distance                                                                                                                                |
-| `army_march_dirt_mass`, `spearmen_formation_advance`                                                                                                    | FOOTSTEPS, `FEETHmn-…Running, Rocky Road` and `…On Grass`, summed against themselves at offsets sharing no common factor; MUSICAL, `MUSCPerc-…Drum, Snare, Military Marching Band`                                                                      |
-| the eight arrow and volley cues                                                                                                                         | SWOOSHES, `SWSH-…Swishes, Big, Low`, `…Medium Low`, `…Stick, Small, Swishes, X4`, `…Cloth, Swoosh`, `WHSH-…Fly By, Short`                                                                                                                               |
-| `roman_shield_wall_impact`, `gladius_shield_impacts_close`, `arrows_impact_shields_dirt`                                                                | FIGHT, `FGHTImpt-…Boxing Glove Hits`, `…Smacks, Rapid`, `FGHTBf-…Bodyfall, On Grass`; METAL, `METLImpt-…Metal, Clang, Thin 01` and `…Clang, Dull, Quiet`                                                                                                |
-| `roman_cavalry_charge`, `numidian_cavalry_chase`, `horse_gallop_close_pass`                                                                             | Wikimedia Commons, [`File:Six Horses Galloping By.ogg`](https://commons.wikimedia.org/wiki/File:Six_Horses_Galloping_By.ogg) — three windows of one real pass: the approach, the moment level, and the far side (see below)                             |
-| `elephant_charge_carthage`, `elephant_panic`                                                                                                            | ANIMALS, `ANMLWild-CU_Elephant Trumpet`                                                                                                                                                                                                                 |
-| `wolf_bite_snap`                                                                                                                                        | FIGHT, `FGHTImpt-…Smacks, Rapid` for the wet impact, under ANIMALS, `ANMLDog-…Aggresive Dog Barks and Snarls, Distant Wind Chimes` for the animal on top of it                                                                                          |
-| `wolf_snarl_bark`                                                                                                                                       | ANIMALS, `ANMLDog-…Aggresive Dog Barks and Snarls, Distant Wind Chimes`, one isolated bark — the same species reasoning the other wildlife cues use                                                                                                     |
-| `low_resources_click`                                                                                                                                   | METAL, `METLImpt-…Metal, Clang, Dull, Quiet`                                                                                                                                                                                                            |
-| `charge_roar`, `vanguard_rush`                                                                                                                          | CROWDS, the same applause recording high-passed off its claps, over FOOTSTEPS, `FEETHmn-…Running, Rocky Road` ranked at incommensurate offsets so a shout has a column behind it                                                                        |
-| `siege_impact`, `siege_launch`                                                                                                                          | METAL, `METLImpt-…Bucket, Drop` for the mass; WOOD, `WOODBrk-…Branch, Snaps, Crackles` and `…Stick, Small, Breaks`; ROCKS, `ROCKCrsh-…Small Stones, Kicked`; WOOD, `WOODFric-…Ship, Creaking` and SWOOSHES, `SWSH-…Rope, Twirling` for the arm          |
-| `shield_bash`, `shield_block`, `guard_break`, `guard_raise`, `perfect_guard`                                                                            | METAL, `METLImpt-…Metal, Clang 01` and `…Clang, Thin 01`; CLOTH, `CLOTHImpt-…Glove Slap` and `…Swish, Impact, Fight`; WOOD, `WOODBrk-…Stick, Small, Breaks` for the guard failing; FIGHT, `FGHTImpt-…Boxing Glove Hits`                                 |
-| the five `bow_` cues                                                                                                                                    | WOOD, `WOODFric-…Floorboard, Creak` and `…Ship, Creaking` for a limb under load; SWOOSHES, `SWSH-…Stick, Small, Swishes` and `WHSH-…Fly By, Short`; METAL, `METLImpt-…Bolt, Drop` for the nock                                                          |
-| `dodge_roll`, `jump_effort`, `land_thud`                                                                                                                | CLOTH, `CLOTHImpt-…Swish, Impact, Fight`; FIGHT, `FGHTBf-…Bodyfall, On Grass`; FOOTSTEPS, `FEETHmn-…Running, Rocky Road`                                                                                                                                |
-| `second_wind`, `heal_bind_wound`, `lock_on_tick`, `ability_refused`                                                                                     | CLOTH, `CLOTHRip-…Baseball Mitt, Velcro, Slow` for linen being bound; METAL, `METLImpt-…Small, Tin, Drop` and `…Metal, Clang, Dull, Quiet`                                                                                                              |
+| Cues                                                                                                                                              | Built from                                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `alerts/enemy_spotted_horn`, `alerts/reinforcements_arrived`, `roman_war_horns_orders`, the horn layer of `carthage_prepare_battle`               | Wikimedia Commons, [`File:Hunting horn tone.ogg`](https://commons.wikimedia.org/wiki/File:Hunting_horn_tone.ogg) — one real brass note played at 0.70× into the cornu register, or 0.62× for Carthage so the two armies do not answer in the same voice |
+| `battlefield_crowd_chaos`, `_distant_mass_01`, `aftermath_battlefield`, `army_retreat_panic`, `soldiers_victory_cheer`, `carthage_prepare_battle` | CROWDS, `CRWDApls-…Crowd Applause, Cheering, Yelling, Whooping`, high-passed off the applause and lowpassed for distance                                                                                                                                |
+| `army_march_dirt_mass`, `spearmen_formation_advance`                                                                                              | FOOTSTEPS, `FEETHmn-…Running, Rocky Road` and `…On Grass`, summed against themselves at offsets sharing no common factor; MUSICAL, `MUSCPerc-…Drum, Snare, Military Marching Band`                                                                      |
+| `arrows_many_overhead`, `arrows_overhead_dark`, `javelin_throw_whoosh`                                                                            | SWOOSHES, `SWSH-…Swishes, Big, Low`, `…Medium Low`, `…Stick, Small, Swishes, X4`, `…Cloth, Swoosh`, `WHSH-…Fly By, Short`                                                                                                                               |
+| `roman_shield_wall_impact`, `gladius_shield_impacts_close`                                                                                        | FIGHT, `FGHTImpt-…Boxing Glove Hits`, `…Smacks, Rapid`, `FGHTBf-…Bodyfall, On Grass`; METAL, `METLImpt-…Metal, Clang, Thin 01` and `…Clang, Dull, Quiet`                                                                                                |
+| `horse_gallop_close_pass`                                                                                                                         | Wikimedia Commons, [`File:Six Horses Galloping By.ogg`](https://commons.wikimedia.org/wiki/File:Six_Horses_Galloping_By.ogg) — one real pass, taken at the moment the horses draw level (see below)                                                     |
+| `elephant_charge_carthage`, `elephant_panic`                                                                                                      | ANIMALS, `ANMLWild-CU_Elephant Trumpet`                                                                                                                                                                                                                 |
+| `wolf_bite_snap`                                                                                                                                  | FIGHT, `FGHTImpt-…Smacks, Rapid` for the wet impact, under ANIMALS, `ANMLDog-…Aggresive Dog Barks and Snarls, Distant Wind Chimes` for the animal on top of it                                                                                          |
+| `wolf_snarl_bark`                                                                                                                                 | ANIMALS, `ANMLDog-…Aggresive Dog Barks and Snarls, Distant Wind Chimes`, one isolated bark — the same species reasoning the other wildlife cues use                                                                                                     |
+| `charge_roar`, `vanguard_rush`                                                                                                                    | CROWDS, the same applause recording high-passed off its claps, over FOOTSTEPS, `FEETHmn-…Running, Rocky Road` ranked at incommensurate offsets so a shout has a column behind it                                                                        |
+| `siege_launch`                                                                                                                                    | WOOD, `WOODFric-…Ship, Creaking` and `WOODBrk-…Stick, Small, Breaks`; SWOOSHES, `SWSH-…Rope, Twirling` for the arm                                                                                                                                      |
+| `shield_bash`, `shield_block`, `guard_break`, `guard_raise`, `perfect_guard`                                                                      | METAL, `METLImpt-…Metal, Clang 01` and `…Clang, Thin 01`; CLOTH, `CLOTHImpt-…Glove Slap` and `…Swish, Impact, Fight`; WOOD, `WOODBrk-…Stick, Small, Breaks` for the guard failing; FIGHT, `FGHTImpt-…Boxing Glove Hits`                                 |
+| the four `bow_` cues                                                                                                                              | WOOD, `WOODFric-…Floorboard, Creak` and `…Ship, Creaking` for a limb under load; SWOOSHES, `SWSH-…Stick, Small, Swishes`; METAL, `METLImpt-…Bolt, Drop` for the nock                                                                                    |
+| `dodge_roll`, `jump_effort`, `land_thud`                                                                                                          | CLOTH, `CLOTHImpt-…Swish, Impact, Fight`; FIGHT, `FGHTBf-…Bodyfall, On Grass`; FOOTSTEPS, `FEETHmn-…Running, Rocky Road`                                                                                                                                |
+| `second_wind`, `heal_bind_wound`, `lock_on_tick`, `ability_refused`                                                                               | CLOTH, `CLOTHRip-…Baseball Mitt, Velcro, Slow` for linen being bound; METAL, `METLImpt-…Small, Tin, Drop` and `…Metal, Clang, Dull, Quiet`                                                                                                              |
 
 Every source above except the horses is from **The Designer's Choice UCS
 Collection**, original recordings by Nicholas A. Judy, released **CC0 1.0** and
@@ -371,15 +374,14 @@ reason: it has the low end, but its buzz puts a bright band at 1.6–4 kHz that
 reads as metallic. Measured on the shipped files the brass note runs 23–29 dB
 _down_ in that band.
 
-The three cavalry cues come from **Wikimedia Commons,
+The cavalry cue comes from **Wikimedia Commons,
 [`File:Six Horses Galloping By.ogg`](https://commons.wikimedia.org/wiki/File:Six_Horses_Galloping_By.ogg)**,
 by the Freesound Community via Pixabay, released **CC0 1.0**. That collection has
 no real horse in it: its `FOOTSTEPS/HORSE` folder is coconut shells and a
-simulated wood floor, which is what these three cues were built from and why they
-sounded like a pantomime rather than cavalry. The recording is one pass — six
-horses closing, drawing level and running on — so the charge takes the approach,
-the close pass takes the moment they are level, and the chase takes the far side,
-with the real Doppler already in the material.
+simulated wood floor, which is what the cavalry cues were first built from and why
+they sounded like a pantomime rather than cavalry. The recording is one pass — six
+horses closing, drawing level and running on — and the close pass takes the moment
+they are level, with the real Doppler already in the material.
 
 CC0 requires no attribution; all of it is recorded here because the provenance of
 every shipped file should be answerable.
@@ -392,25 +394,24 @@ against the originals anyway:
   rebuilt cue is ceilinged at −1.9 dBFS.
 - **The alert cues were all exactly 10.0 seconds and the combat cues exactly
   5.0**, which was the generator's default length rather than a decision about
-  how long a horn should sound. They are now as long as they need to be, from
-  0.5 s for the resource click to 8 s for the aftermath bed.
+  how long a horn should sound. They are now as long as they need to be, up to
+  8 s for the aftermath bed.
 
 Effect cues are deliberately not loudness-normalised at runtime — the level in
-the file is the design decision (see `docs/AUDIO_MASTERING.md`). Each
+the file is the design decision (see `docs/AUDIO_SYSTEM.md`). Each
 replacement is therefore matched to the RMS of the file it replaces, so the mix
 is unchanged.
 
 Every track under `assets/audio/sfx/` now carries a `source` tag in the
-manifest — `synth` for the 106 generated cues, `field` for the 69 cut or
-composed from recordings — so "where did this sound come from" is answerable
+manifest — `synth` for the 28 synthesised cues, `generated` for the 44
+ElevenLabs renders, `field` for the 70 cut or composed from recordings — so "where did this sound come from" is answerable
 without reading this file.
 
 ### Where the audio actually ships
 
-`assets/audio/music`, `assets/audio/voices` and part of `assets/audio/sfx` are
-redistributed inside the binary via `assets.qrc`. The ambience beds are not
-embedded, but they are installed alongside the binary and redistributed just the
-same.
+`assets/audio/sfx` and `assets/audio/voices` are redistributed inside the binary
+via `assets.qrc`. Music and the ambience beds are not embedded, but they are
+installed alongside the binary and redistributed just the same.
 
 ## Bundled Libraries
 
@@ -430,8 +431,7 @@ answerable. If a downstream redistributor prefers the MIT option instead, the
 full licence text sits at the bottom of each vendored header.
 
 Neither library is modified. Both are permissive enough to impose no
-restriction on commercial use — the only such restriction in this project comes
-from the music above.
+restriction on commercial use, and no shipped asset restricts it either.
 
 ## Bundled Fonts
 

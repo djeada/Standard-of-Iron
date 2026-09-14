@@ -95,6 +95,15 @@ The live-state parts of simulation/presentation coordination use the game-engine
 
 A `WorldFreeze` coordinates destructive world replacement or rebuild operations so simulation and presentation do not continue through a load/reset boundary.
 
+### QSG render-thread stages
+
+Each frame on the QSG render thread runs two stages, in order:
+
+1. `GameEngine::update_presentation(dt)` advances presentation state: camera follow, order markers, renderer animation time, weather, visibility, the minimap and view-model synchronization. It never advances the simulation; `GameEngine::update(dt)` exists only as `simulate` + `update_presentation` for single-threaded callers, and `ui/gl_view.cpp` starts the simulation thread before it first calls `GameEngine::render`.
+2. `GameEngine::render(width, height)` records and plays back draw work from state that already exists. `Renderer::render_world(world)` consumes the latest published render snapshot, walks the scene and fills the `DrawQueue`; `Renderer::end_frame()` sorts the queue and `Backend::execute(...)` performs playback.
+
+Render-side code must not rebuild combat query state or search for targets. Per-stage timings are logged through the render-thread frame phases described under performance instrumentation.
+
 ## Scene walk
 
 `render/scene_walk.cpp` is the main bridge between snapshot data and renderer submission.

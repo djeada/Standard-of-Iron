@@ -231,7 +231,6 @@ void VictoryService::reset() {
   m_victory_state.clear();
   m_defeat_description.clear();
   m_world_ptr = nullptr;
-  m_victory_callback = nullptr;
 }
 
 void VictoryService::set_spectator_mode(bool enabled) {

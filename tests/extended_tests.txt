@@ -3,9 +3,10 @@
 # Every entry here is a GoogleTest filter pattern (`Suite.Test`, or `Suite.*`
 # for a whole fixture). `scripts/run-tests.sh` subtracts them when
 # SOI_TEST_PROFILE=pr, so a pull request still builds and runs every test
-# binary and every fast test in it. The full profile -- weekly sanitizer and
-# coverage lanes, extended validation and release verification -- runs the
-# complete set with no filter, so nothing listed here is unowned.
+# binary and every fast test in it. The full profile -- extended validation
+# and release verification -- runs the complete set with no filter, so nothing
+# listed here is unowned. The weekly sanitizer and coverage lanes use the pr
+# profile too; instrumented, the tests below do not fit their budget.
 #
 # The line is drawn by cost, not by importance. A test belongs here when it
 # spends seconds rather than milliseconds because it either

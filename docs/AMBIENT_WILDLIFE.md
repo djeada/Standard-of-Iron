@@ -59,12 +59,12 @@ A `NatureBehavior` receives a `NatureContext` containing the animal, its `Wildli
 
 `NatureBrain::tick` evaluates behaviors from highest to lowest priority and stops at the first behavior that takes control.
 
-| Priority | Sheep | Wolf |
-| --- | --- | --- |
-| `Survival` | `sheep.flee` | `wolf.defend`, `wolf.retreat` |
-| `Interest` | `sheep.regroup` | `wolf.stalk` |
-| `Routine` | `sheep.graze` | `wolf.menace` |
-| `Ambient` | `sheep.drift` | `wolf.prowl` |
+| Priority   | Sheep           | Wolf                          |
+| ---------- | --------------- | ----------------------------- |
+| `Survival` | `sheep.flee`    | `wolf.defend`, `wolf.retreat` |
+| `Interest` | `sheep.regroup` | `wolf.stalk`                  |
+| `Routine`  | `sheep.graze`   | `wolf.menace`                 |
+| `Ambient`  | `sheep.drift`   | `wolf.prowl`                  |
 
 Behaviors at the same priority preserve registration order.
 
@@ -149,11 +149,11 @@ Ground wildlife uses staggered thinking and distance tiers.
 
 Animals maintain independent think timers rather than evaluating in one synchronized sweep. Each ground animal is also classified against the authoritative interest field:
 
-| Tier | Behavior |
-| --- | --- |
-| `Near` | Full-rate thinking |
-| `Far` | Quarter-rate thinking |
-| `Dormant` | Brain tick skipped |
+| Tier      | Behavior              |
+| --------- | --------------------- |
+| `Near`    | Full-rate thinking    |
+| `Far`     | Quarter-rate thinking |
+| `Dormant` | Brain tick skipped    |
 
 The near and far radii are map-configurable.
 
@@ -259,13 +259,13 @@ The wolf block can contain `waves` for mission-timed pack releases.
 }
 ```
 
-| Field | Required | Meaning |
-| --- | --- | --- |
-| `timing` | Yes | Seconds from mission start |
-| `pack_size` | No | Wolves in the pack; default 4, clamped to 64 |
-| `x` / `z` | No | Den location in map coordinates |
-| `radius` | No | Anchor range around the den |
-| `label` | No | Announcement text; otherwise a generic line is used |
+| Field       | Required | Meaning                                             |
+| ----------- | -------- | --------------------------------------------------- |
+| `timing`    | Yes      | Seconds from mission start                          |
+| `pack_size` | No       | Wolves in the pack; default 4, clamped to 64        |
+| `x` / `z`   | No       | Den location in map coordinates                     |
+| `radius`    | No       | Anchor range around the den                         |
+| `label`     | No       | Announcement text; otherwise a generic line is used |
 
 Waves are sorted by `timing` and release exactly once. Fired-wave state and elapsed wildlife clock are serialized so loading a save does not release a completed wave again.
 
@@ -451,19 +451,19 @@ Wildlife scenarios run with:
 arena_app --batch --scenario <id>
 ```
 
-| Scenario | Coverage |
-| --- | --- |
-| `wildlife_grazing_herd` | Idle loop, herd cohesion, sheep silhouette, frame budget |
-| `wildlife_herd_flees_troops` | Patrol-triggered herd flee |
-| `wildlife_wolf_hunt` | Pack stalking, bite contact, herd panic |
-| `wildlife_wolf_pack` | Undisturbed prowl, wolf silhouette, coat, gait |
-| `wildlife_wolf_ambush` | Pack pressure against a lone patrol |
-| `wildlife_pack_takedown` | Close pack kill: bite, flinch, orbit, death |
-| `wildlife_bird_scatter` | Resident flock movement and scatter |
-| `wildlife_bird_flyover` | Flyover entry, crossing, and departure |
-| `wildlife_mixed_pasture` | Sheep, wolves, and birds together |
-| `wildlife_storm_pasture` | Wildlife shading under rain and wind |
-| `wildlife_dense_population` | Dense population against frame budget |
+| Scenario                     | Coverage                                                 |
+| ---------------------------- | -------------------------------------------------------- |
+| `wildlife_grazing_herd`      | Idle loop, herd cohesion, sheep silhouette, frame budget |
+| `wildlife_herd_flees_troops` | Patrol-triggered herd flee                               |
+| `wildlife_wolf_hunt`         | Pack stalking, bite contact, herd panic                  |
+| `wildlife_wolf_pack`         | Undisturbed prowl, wolf silhouette, coat, gait           |
+| `wildlife_wolf_ambush`       | Pack pressure against a lone patrol                      |
+| `wildlife_pack_takedown`     | Close pack kill: bite, flinch, orbit, death              |
+| `wildlife_bird_scatter`      | Resident flock movement and scatter                      |
+| `wildlife_bird_flyover`      | Flyover entry, crossing, and departure                   |
+| `wildlife_mixed_pasture`     | Sheep, wolves, and birds together                        |
+| `wildlife_storm_pasture`     | Wildlife shading under rain and wind                     |
+| `wildlife_dense_population`  | Dense population against frame budget                    |
 
 Validation uses wildlife-specific expectations including `WildlifeGrazingObserved`, `WildlifeFleeObserved`, `WildlifeHuntObserved`, `WildlifeBirdsScattered`, `WildlifeBirdFlyoverObserved`, `WildlifePopulationHeld`, and `WildlifeCasualtyObserved`.
 

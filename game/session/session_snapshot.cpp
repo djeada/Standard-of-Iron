@@ -149,14 +149,10 @@ void register_built_in_snapshot_contributors() {
        },
        .restore =
            [](const SnapshotScope& scope, const QJsonValue& value) {
-             auto* system = system_of<Game::Systems::UndeadAwakeningSystem>(scope);
-             if (system == nullptr) {
-               return;
+             if (auto* system =
+                     system_of<Game::Systems::UndeadAwakeningSystem>(scope)) {
+               system->restore_state(value.toArray());
              }
-             if (scope.map != nullptr) {
-               system->configure(*scope.map);
-             }
-             system->restore_state(value.toArray());
            }});
 
   SessionSnapshot::register_contributor(
@@ -168,14 +164,9 @@ void register_built_in_snapshot_contributors() {
        },
        .restore =
            [](const SnapshotScope& scope, const QJsonValue& value) {
-             auto* system = system_of<Game::Systems::CursedGoldVeinSystem>(scope);
-             if (system == nullptr) {
-               return;
+             if (auto* system = system_of<Game::Systems::CursedGoldVeinSystem>(scope)) {
+               system->restore_state(value.toArray());
              }
-             if (scope.map != nullptr) {
-               system->configure(*scope.map);
-             }
-             system->restore_state(value.toArray());
            }});
 
   SessionSnapshot::register_contributor(
@@ -187,14 +178,9 @@ void register_built_in_snapshot_contributors() {
        },
        .restore =
            [](const SnapshotScope& scope, const QJsonValue& value) {
-             auto* system = system_of<Game::Wildlife::WildlifeSystem>(scope);
-             if (system == nullptr) {
-               return;
+             if (auto* system = system_of<Game::Wildlife::WildlifeSystem>(scope)) {
+               system->restore_state(value.toObject());
              }
-             if (scope.map != nullptr) {
-               system->configure(*scope.map);
-             }
-             system->restore_state(value.toObject());
            }});
 }
 
