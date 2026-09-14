@@ -13,6 +13,7 @@
 #include "app/orders/army_formation_controller.h"
 #include "app/orders/order_feedback.h"
 #include "app/orders/order_issuer.h"
+#include "game/audio/cue_ids.h"
 #include "game/command/command.h"
 
 namespace Engine::Core {
@@ -88,6 +89,15 @@ public:
                           int local_owner_id) -> CommandResult;
   void enable_run_mode_for_selected();
   void disable_run_mode_for_selected();
+
+  [[nodiscard]] static auto
+  selection_mounts(Engine::Core::World& world,
+                   const std::vector<Engine::Core::EntityID>& units)
+      -> Game::Audio::Cue::SelectionMounts;
+  [[nodiscard]] static auto
+  charge_cue(const Game::Audio::Cue::SelectionMounts& mounts) -> const char*;
+  [[nodiscard]] static auto
+  move_order_cue(const Game::Audio::Cue::SelectionMounts& mounts) -> const char*;
   auto on_guard_click(qreal sx,
                       qreal sy,
                       int viewport_width,

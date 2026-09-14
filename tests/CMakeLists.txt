@@ -74,6 +74,7 @@ include(GoogleTest)
 # reaches for a window fails here.
 add_executable(
     simulation_tests
+    session/map_session_restore_test.cpp
     session/session_context_test.cpp
     command/command_pipeline_test.cpp
     command/command_codec_test.cpp

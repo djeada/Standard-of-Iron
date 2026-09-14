@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <array>
-#include <charconv>
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -64,9 +63,11 @@ TEST(RockPropMeshTest, TheVeinShaderAndMeshAgreeOnTheRockCrown) {
       << "cursed_gold_vein_instanced.frag no longer declares k_rock_crown";
 
   auto const text = match[1].str();
+  std::istringstream stream(text);
+  stream.imbue(std::locale::classic());
   float crown = 0.0F;
-  auto const parsed = std::from_chars(text.data(), text.data() + text.size(), crown);
-  ASSERT_EQ(parsed.ec, std::errc{}) << "could not read k_rock_crown from the shader";
+  stream >> crown;
+  ASSERT_FALSE(stream.fail()) << "could not read k_rock_crown from the shader";
 
   EXPECT_NEAR(
       crown, Render::GL::BackendPipelines::k_cursed_gold_vein_rock_crown, 1.0e-4F)

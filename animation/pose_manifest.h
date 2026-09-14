@@ -117,6 +117,10 @@ struct PoseResolution {
   case PoseIntent::Idle:
   case PoseIntent::Walk:
   case PoseIntent::Run:
+  case PoseIntent::WalkStrafeLeft:
+  case PoseIntent::WalkStrafeRight:
+  case PoseIntent::RunStrafeLeft:
+  case PoseIntent::RunStrafeRight:
   case PoseIntent::Hold:
   case PoseIntent::HitReaction:
   case PoseIntent::Healing:
@@ -140,6 +144,10 @@ is_locomotion_pose_intent(PoseIntent intent) noexcept -> bool {
   case PoseIntent::Run:
     return true;
   case PoseIntent::Idle:
+  case PoseIntent::WalkStrafeLeft:
+  case PoseIntent::WalkStrafeRight:
+  case PoseIntent::RunStrafeLeft:
+  case PoseIntent::RunStrafeRight:
   case PoseIntent::Hold:
   case PoseIntent::AttackMelee:
   case PoseIntent::AttackSpear:

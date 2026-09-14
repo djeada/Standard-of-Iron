@@ -768,20 +768,26 @@ void MiniaudioBackend::play_sound(const QString& id,
     wait_for_track(id);
   }
   const int slot = find_track_slot(id);
-  if (slot < 0 || m_track_table[slot].load(std::memory_order_acquire) == nullptr) {
-    if (is_track_decode_pending(id)) {
-      if (loop) {
+  if (slot < 0) {
+    qWarning() << "MiniaudioBackend: Sound not ready:" << id;
+    return;
+  }
+  if (m_track_table[slot].load(std::memory_order_acquire) == nullptr) {
 
-        QMutexLocker const locker(&m_decode_mutex);
+    QMutexLocker const locker(&m_decode_mutex);
+    if (m_pending_slots.contains(slot)) {
+      if (loop) {
         m_deferred_loops.insert(
             slot, DeferredLoop{sanitize_backend_volume(volume), pan, bus, priority});
       } else {
         qDebug() << "MiniaudioBackend: Sound still decoding, skipping play:" << id;
       }
-    } else {
-      qWarning() << "MiniaudioBackend: Sound not ready:" << id;
+      return;
     }
-    return;
+    if (m_track_table[slot].load(std::memory_order_acquire) == nullptr) {
+      qWarning() << "MiniaudioBackend: Sound not ready:" << id;
+      return;
+    }
   }
   Game::Audio::AudioCommand command;
   command.type = Game::Audio::AudioCommand::Type::PlaySound;

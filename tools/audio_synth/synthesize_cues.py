@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import json
 import shutil
 import subprocess
 import sys
@@ -32,6 +33,22 @@ from cues import RECIPES
 
 REPO = Path(__file__).resolve().parent.parent.parent
 AUDIO_DIR = REPO / "assets" / "audio"
+MANIFEST = AUDIO_DIR / "audio_manifest.json"
+
+
+def foreign_paths() -> dict[str, str]:
+    """Manifest paths another pipeline owns, mapped to their `source` tag.
+
+    A recipe outlives its file: when a cue is replaced by a recording or an
+    import, the recipe still names the path, and rendering over it would swap
+    the shipped sound back without anyone noticing.
+    """
+    tracks = json.loads(MANIFEST.read_text(encoding="utf-8"))["tracks"]
+    return {
+        track["path"]: track.get("tags", {}).get("source", "untagged")
+        for track in tracks
+        if track.get("tags", {}).get("source") != "synth"
+    }
 
 
 def encode(wav_path: Path, ogg_path: Path, quality: int) -> None:
@@ -88,6 +105,11 @@ def main() -> int:
     parser.add_argument("--wav-only", action="store_true", help="skip Vorbis encoding")
     parser.add_argument("--list", action="store_true", help="print cue ids and exit")
     parser.add_argument("--out", type=Path, default=AUDIO_DIR, help="output root")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="render over files the manifest credits to another source",
+    )
     args = parser.parse_args()
 
     if args.list:
@@ -113,11 +135,21 @@ def main() -> int:
             print("no cue matched", *args.patterns, file=sys.stderr)
             return 1
 
+    writes_shipped = args.out.resolve() == AUDIO_DIR.resolve()
+    foreign = foreign_paths() if writes_shipped and not args.force else {}
+
     total_bytes = 0
     total_seconds = 0.0
     total_files = 0
     for cue_id in selected:
         for take in range(RECIPES[cue_id].takes):
+            take_path = RECIPES[cue_id].take_path(take)
+            if take_path in foreign:
+                print(
+                    f"{cue_id}: skipped {take_path}, "
+                    f"the manifest credits it to source {foreign[take_path]}"
+                )
+                continue
             path, duration, size = render_take(cue_id, take, args.out, args.wav_only)
             total_bytes += size
             total_seconds += duration

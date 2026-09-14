@@ -480,7 +480,7 @@ TARGET_LUFS = -19.3
 PEAK_CEILING = 0.5
 """Same headroom the synthesised beds leave.
 
-Decode-time mastering (docs/AUDIO_MASTERING.md) expects room to work in. A bed
+Decode-time mastering (docs/AUDIO_SYSTEM.md) expects room to work in. A bed
 delivered near full scale makes its limiter pull several dB, which is audible
 as the bed ducking under itself, so loudness gives way to the ceiling when the
 two disagree.

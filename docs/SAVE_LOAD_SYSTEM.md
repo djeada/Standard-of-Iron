@@ -288,6 +288,20 @@ The loaded match therefore consists of both:
 
 Restoring one without the other would leave deterministic RNG, AI/victory state, visibility knowledge, or other registered session facts inconsistent with the world.
 
+### A load builds the match the way a launch does
+
+The load path used to rebuild the match through its own list of calls, and every gap in that list was a system that silently came back empty: victory conditions that never fired, an Iron Sepulcher whose garrison broke on load, and shrines re-placed beside their structures. The order is now fixed in one place, `Game::Session::restore_map_session()` (`game/session/map_session.*`):
+
+1. **Terrain keeps the save's props.** `GameStateRestorer` calls `TerrainService::initialize_keeping_world_props()`, which rebuilds the ground from the map but keeps the props `restore_from_serialized` brought in — runtime shrines, felled trees and the prop ids the vein and zone state refer to. Props from a _launched_ match are never kept, and `SaveLoadService` clears the session terrain before deserializing, so a save without terrain cannot inherit the previous map's.
+2. **Map systems are configured by `configure_map_systems()`** — the same function `LevelOrchestrator` calls on launch. It runs for every load, whether or not the save carries state for those systems.
+3. **Victory rules are configured by `GameEngine::configure_mission_victory_conditions()`** — the same function the launch calls: mission rules when a mission is loaded, the map's own `victory` block otherwise.
+4. **Only then is the session snapshot applied.** Snapshot contributors restore state and never configure; configuring after restoring is what used to wipe the victory clock and objectives.
+
+Two further rules keep this from regressing:
+
+- `VictoryService::reset()` clears match state only. The engine's victory and objectives callbacks are wired once, in `GameEngine::wire_victory_service()`; before this, every `configure()` on load dropped the callback, so a loaded match could be won without the game ever hearing about it.
+- Entity ids in session state are 64-bit. Ids carry a generation above bit 32 once a process has cleared a previous match, so an `int` round trip points the state at an entity that does not exist. `UndeadAwakeningSystem` did this with its anchor, and every load after the first match of a session broke the sepulcher's garrison.
+
 ## First simulation tick after load
 
 The renderer consumes published render snapshots rather than the mutable world.
@@ -327,7 +341,6 @@ If the saved mask dimensions do not match the restored map, the mask is ignored 
 The save snapshot preserves deterministic simulation state required for the match to continue consistently, including the simulation clock and deterministic RNG state.
 
 The command queue is not persisted, which means determinism after load begins from the committed state represented by the save rather than from commands that were waiting to execute at the instant capture occurred.
-
 This is also why replay and save contracts overlap conceptually but are not the same artifact: a replay stores an accepted command stream and digests, while a save stores a complete restorable state snapshot.
 
 ## Autosaves
@@ -423,7 +436,8 @@ The save contract is exercised at several levels:
 - `tests/save/snapshot_contract_test.cpp` — snapshot classification/versioning;
 - `tests/core/serialization_test.cpp` — entity/component world serialization;
 - `tests/core/save_load_render_snapshot_test.cpp` — render publication after load; and
-- `tests/core/save_runtime_restore_test.cpp` — runtime/session restoration behavior.
+- `tests/core/save_runtime_restore_test.cpp` — runtime/session restoration behavior; and
+- `tests/session/map_session_restore_test.cpp` — a launched match saved and loaded three times keeps its shrine, sepulcher structure, vein and structure count, can still be won, and an old save with no session state still gets its map systems.
 
 Background save jobs, progress stages, compression, integrity checks, database migration, and quarantine are current implemented behavior and should be documented as such.
 
@@ -437,6 +451,7 @@ The current save/load design depends on these invariants:
 - save workers operate on captured data, not the mutable live world;
 - packed payloads are integrity-checked;
 - a candidate world is staged before live replacement;
+- a load configures map systems and victory rules through the same functions as a launch, and applies saved state only after both;
 - database migration is backed up and transactional;
 - unreadable/corrupt/future storage is quarantined rather than silently destroyed; and
 - render/presentation state is republished after restoration rather than trusted from the previous world.

@@ -49,6 +49,8 @@ public:
 
   void initialize(const MapDefinition& map_def);
 
+  void initialize_keeping_world_props(const MapDefinition& map_def);
+
   void clear();
 
   void seal();
@@ -249,6 +251,7 @@ private:
   TerrainField m_terrain_field;
   BiomeSettings m_biome_settings;
   float m_supernatural_presence{0.0F};
+  bool m_world_props_from_save = false;
   CoordSystem m_coord_system{CoordSystem::Grid};
   std::vector<WorldProp> m_authored_world_props;
   std::vector<WorldProp> m_world_props;

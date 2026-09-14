@@ -19,11 +19,6 @@ namespace {
   return {a.forward + b.forward, a.right + b.right, a.up + b.up};
 }
 
-[[nodiscard]] auto subtract(MountedSeatOffset a,
-                            MountedSeatOffset b) noexcept -> MountedSeatOffset {
-  return {a.forward - b.forward, a.right - b.right, a.up - b.up};
-}
-
 [[nodiscard]] auto scale(PoseVec3 v, float s) noexcept -> PoseVec3 {
   return {v.x * s, v.y * s, v.z * s};
 }
@@ -47,10 +42,6 @@ namespace {
 
 [[nodiscard]] auto lerp(PoseVec3 a, PoseVec3 b, float t) noexcept -> PoseVec3 {
   return add(scale(a, 1.0F - t), scale(b, t));
-}
-
-[[nodiscard]] auto nlerp(PoseVec3 a, PoseVec3 b, float t) noexcept -> PoseVec3 {
-  return normalize(lerp(a, b, t));
 }
 
 [[nodiscard]] auto smoothstep(float t) noexcept -> float {

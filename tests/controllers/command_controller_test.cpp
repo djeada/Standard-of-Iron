@@ -3,6 +3,8 @@
 #include <vector>
 
 #include "app/orders/command_controller.h"
+#include "game/audio/cue_ids.h"
+#include "game/audio/cue_trace.h"
 #include "game/command/command_queue.h"
 #include "game/core/component_economy.h"
 #include "game/core/ownership_constants.h"
@@ -681,6 +683,65 @@ TEST_F(CommandControllerTest, StopWithEmptySelectionIsRejectedNotSilent) {
   EXPECT_EQ(result.order.kind, App::Core::OrderKind::Stop);
   EXPECT_EQ(result.order.reason, App::Core::no_selection_reason().text);
   ASSERT_EQ(seen.size(), 1U);
+}
+
+TEST_F(CommandControllerTest, SelectionMountsCountsElephantsCavalryAndFootApart) {
+  std::vector<Engine::Core::EntityID> units;
+  for (auto type : {Game::Units::SpawnType::Archer,
+                    Game::Units::SpawnType::Spearman,
+                    Game::Units::SpawnType::HorseArcher,
+                    Game::Units::SpawnType::Elephant}) {
+    auto* unit = create_unit(0.0F, 0.0F, 1, type);
+    ASSERT_NE(unit, nullptr);
+    units.push_back(unit->get_id());
+  }
+
+  const auto mounts =
+      App::Controllers::CommandController::selection_mounts(world, units);
+  EXPECT_EQ(mounts.foot, 2U);
+  EXPECT_EQ(mounts.cavalry, 1U);
+  EXPECT_EQ(mounts.elephants, 1U);
+}
+
+TEST_F(CommandControllerTest, ArchersBreakingIntoARunNeverTrumpetLikeElephants) {
+  auto* first = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* second = create_unit(1.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+  selection_system->select_unit(first->get_id());
+  selection_system->select_unit(second->get_id());
+
+  auto& trace = Game::Audio::CueTrace::instance();
+  trace.reset();
+  command_controller->enable_run_mode_for_selected();
+
+  EXPECT_GT(trace.record_for(Game::Audio::Cue::k_combat_charge).requests, 0U);
+  EXPECT_EQ(trace.record_for(Game::Audio::Cue::k_combat_charge_elephant).requests, 0U)
+      << "archers breaking into a run asked for the elephant charge";
+  EXPECT_EQ(trace.record_for(Game::Audio::Cue::k_combat_charge_cavalry).requests, 0U);
+  trace.reset();
+}
+
+TEST(CommandControllerCueTest, AChargeIsAnnouncedByTheBodiesThatAreCharging) {
+  using App::Controllers::CommandController;
+  EXPECT_STREQ(CommandController::charge_cue({.foot = 12}),
+               Game::Audio::Cue::k_combat_charge)
+      << "archers breaking into a run trumpeted like elephants";
+  EXPECT_STREQ(CommandController::charge_cue({.foot = 4, .cavalry = 2}),
+               Game::Audio::Cue::k_combat_charge_cavalry);
+  EXPECT_STREQ(CommandController::charge_cue({.foot = 4, .cavalry = 2, .elephants = 1}),
+               Game::Audio::Cue::k_combat_charge_elephant);
+}
+
+TEST(CommandControllerCueTest, OnlyAnAllCavalrySelectionMovesOffOnHooves) {
+  using App::Controllers::CommandController;
+  EXPECT_STREQ(CommandController::move_order_cue({.cavalry = 3}),
+               Game::Audio::Cue::k_order_move_mounted);
+  EXPECT_STREQ(CommandController::move_order_cue({.foot = 1, .cavalry = 3}),
+               Game::Audio::Cue::k_order_move);
+  EXPECT_STREQ(CommandController::move_order_cue({.elephants = 1}),
+               Game::Audio::Cue::k_order_move);
+  EXPECT_STREQ(CommandController::move_order_cue({}), Game::Audio::Cue::k_order_move);
 }
 
 } // namespace

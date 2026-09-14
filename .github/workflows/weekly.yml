@@ -1,7 +1,9 @@
 ---
-# The slow gates: whole-project linting, the sanitizer lanes, coverage, and a
-# packaging dry run on all three platforms. Pull requests deliberately skip
-# these, so this is the only thing that runs them between release tags.
+# The slow gates: the Clang + libc++ portability pass, the sanitizer lanes,
+# coverage, and a packaging dry run on all three platforms. Pull requests
+# deliberately skip these, so this is the only thing that runs them between
+# release tags. Whole-tree clang-tidy is not here: it ran past three hours on
+# one runner, so it stays a local `make lint-deep` pass.
 #
 # It was called Nightly and ran every night until the cron moved to Mondays;
 # the name, the identifiers and the prose kept saying nightly for months after
@@ -26,21 +28,26 @@ env:
 
 jobs:
   # ---------------------------------------------------------------------
-  # Whole-project clang-tidy. Pull requests only tidy the files they touch and
-  # defer the full tree here, and CONTRIBUTING.md has described this job for
-  # months -- but it was never actually in this workflow, so nothing ran it and
-  # the deferral went nowhere. `make lint-deep` is the same pass a developer
-  # runs locally. It reports rather than gates; see the run step for why.
+  # The macOS stand-in: every translation unit reparsed with Clang and libc++,
+  # which are the two things AppleClang is that GCC and libstdc++ are not.
+  # Syntax-only, so nothing links and Qt built against libstdc++ raises no ABI
+  # question -- but it needs the compile database and the generated moc headers.
   #
-  # clang-tidy needs a compile database, so the build is configured and the
-  # test targets are compiled to generate the moc/ui/version headers it parses.
+  # It is here rather than on pull requests because it costs ~118 CPU minutes,
+  # which is half an hour of a four-core runner, and the pull request lane is
+  # deliberately cheap. The compiler-free portability passes -- including the
+  # include-graph one that catches the class of break that failed this
+  # workflow on 2026-08-17 -- do run on every pull request, in quality.yml.
+  #
+  # It used to be the last step of a whole-project clang-tidy job, so that
+  # job's timeout cancelled it too and a portability break reported nothing. It is its own
+  # job now. --require-all so a missing clang fails the job rather than
+  # skipping the pass and reporting a green it did not earn.
   # ---------------------------------------------------------------------
-  lint:
-    name: Whole-project lint
+  portability:
+    name: Portability (Clang + libc++)
     runs-on: ubuntu-24.04
-    # clang-tidy over ~1800 translation units on a four-core runner. Nothing
-    # waits on this job, so the budget is generous rather than tight.
-    timeout-minutes: 180
+    timeout-minutes: 90
     env:
       CMAKE_CXX_COMPILER_LAUNCHER: ccache
     steps:
@@ -59,28 +66,17 @@ jobs:
           cache: true
           modules: qt5compat qtmultimedia
 
-      # Only clang-tidy is installed here. The quality gate already lints QML,
-      # Python, shell and the rest on every pull request; pulling the distro's
-      # Qt in for qmllint would put a second Qt beside the one this job builds
-      # against, which is a good way to break the build in a job nobody is
-      # watching. The version comes from tools/versions.env so a local
-      # `make lint-deep` and this job run the same binary.
-      - name: Install pinned lint toolchain
+      - name: Install Clang and libc++
         run: |
-          set -euo pipefail
-          # shellcheck disable=SC1091
-          source tools/versions.env
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             ninja-build libgl1-mesa-dev libegl1 ffmpeg \
-            "clang-tidy-${CLANG_TIDY_VERSION%%.*}" \
             clang libc++-dev libc++abi-dev
-          echo "CLANG_TIDY=clang-tidy-${CLANG_TIDY_VERSION%%.*}" >> "$GITHUB_ENV"
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
-          key: weekly-lint
+          key: weekly-portability
           max-size: 1G
 
       - name: Configure
@@ -91,66 +87,10 @@ jobs:
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
             -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
 
-      # clang-tidy reads compile_commands.json, which configure has already
-      # written, but it needs the generated headers (moc, ui, version) to
-      # exist before it can parse anything that includes them.
       - name: Build the compile database's targets
         run: cmake --build build --parallel --target soi_test_binaries
 
-      # --strict turns "clang-tidy is not installed" from a warning into an
-      # error, so this job cannot be green having linted nothing -- the same
-      # way its absence was green for months.
-      #
-      # It deliberately does not pass --fail-on-advisory yet. The tree carries
-      # about 120 pre-existing findings (implicit bool conversions, public
-      # member variables, const-correctness), and a gate that is red from its
-      # first run is one everybody learns to scroll past, which is how this job
-      # came to be missing in the first place. It reports them into the run
-      # summary; turn on the gate once the backlog is cleared.
-      - name: Whole-project clang-tidy
-        run: |
-          set -o pipefail
-          python scripts/format.py --all --lint --deep --languages cxx \
-            --strict --build-dir build 2>&1 | tee clang-tidy.log
-
-      - name: Publish findings
-        if: always()
-        run: |
-          {
-            echo "## clang-tidy"
-            echo
-            echo "\`$(grep -c 'warning:' clang-tidy.log || echo 0)\` findings over the whole tree."
-            echo
-            echo '```'
-            grep -E 'warning:' clang-tidy.log | sed 's|.*Standard-of-Iron/||' | sort | uniq -c | sort -rn | head -40
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always()
-        with:
-          name: clang-tidy-log
-          path: clang-tidy.log
-          retention-days: 30
-
-      # The macOS stand-in: every translation unit reparsed with Clang and
-      # libc++, which are the two things AppleClang is that GCC and libstdc++
-      # are not. Syntax-only, so nothing links and Qt built against libstdc++
-      # raises no ABI question -- but it needs the compile database and the
-      # generated moc headers, which the two steps above have already made.
-      #
-      # It is here rather than on pull requests because it costs ~118 CPU
-      # minutes, which is half an hour of a four-core runner, and the pull
-      # request lane is deliberately cheap. The compiler-free portability
-      # passes -- including the include-graph one that catches the class of
-      # break that failed this workflow on 2026-08-17 -- do run on every pull
-      # request, in quality.yml.
-      #
-      # `if: always()` so a red clang-tidy above does not hide a portability
-      # regression here; --require-all so a missing clang fails the job rather
-      # than skipping the pass and reporting a green it did not earn.
       - name: Portability (Clang + libc++)
-        if: always()
         run: |
           python scripts/check-portability.py --only apple \
             --build-dir build --require-all
@@ -218,8 +158,17 @@ jobs:
       # budget. The script runs each suite once instead, and treats a suite
       # missing from the build as an error rather than -- as --no-tests=ignore
       # did -- a reason to report success.
+      #
+      # The pr profile, not the full one. The full profile's headless battles
+      # and asset sweeps (tests/extended_tests.txt) take about three hours in a
+      # plain Debug build, and under a sanitizer they ran into the two-hour limit
+      # every Monday, so this lane was cancelled with nothing reported. The pr
+      # profile still runs every binary and every fast test -- about three
+      # minutes in Debug on the pull request lane -- and the extended set keeps
+      # its owner in extended-validation.yml.
       - name: Run tests under ${{ matrix.sanitizer }}Sanitizer
         env:
+          SOI_TEST_PROFILE: pr
           ASAN_OPTIONS: detect_leaks=1:abort_on_error=0:strict_string_checks=1
           # D-Bus, the GL driver and the QML engine each keep process-lifetime
           # allocations that LeakSanitizer counts. tools/lsan-suppressions.txt
@@ -272,8 +221,11 @@ jobs:
       - name: Build the test binaries
         run: cmake --build build --parallel --target soi_test_binaries
 
+      # The pr profile for the same reason as the sanitizer lanes: the extended
+      # battles ran this job into its two-hour limit before gcovr ever ran.
       - name: Run tests
         env:
+          SOI_TEST_PROFILE: pr
           QT_QPA_PLATFORM: offscreen
         run: bash scripts/run-tests.sh build --gtest_brief=1
 

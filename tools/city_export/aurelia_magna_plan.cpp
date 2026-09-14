@@ -82,7 +82,6 @@ constexpr float k_bridge_south_z = k_river_z + k_bridge_reach;
 constexpr float k_quay_z = 148.0F;
 constexpr float k_dock_row_z = 141.0F;
 constexpr float k_vicus_lane_z = 133.0F;
-constexpr float k_vicus_row_z = 127.2F;
 
 constexpr float k_circus_x = 133.0F;
 constexpr float k_circus_z = 32.0F;
@@ -1341,7 +1340,6 @@ void add_quarters(CityPlanner& planner) {
   const float avenue_inset = (6.1F * 0.5F) + k_setback;
   const float decumanus_inset = (5.4F * 0.5F) + k_setback;
   const float ring_inset = (4.0F * 0.5F) + k_setback;
-  const float outer_inset = (3.4F * 0.5F) + k_setback;
   const float lane_inset = (k_street_width * 0.5F) + k_setback;
 
   int seed = 4100;
