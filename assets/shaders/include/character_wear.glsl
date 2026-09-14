@@ -56,9 +56,9 @@ vec4 soi_wear_fetch(vec3 lattice, vec4 salts) {
 #if SOI_CHARACTER_WANTS(SOI_CHARACTER_WILDLIFE)
 
 float wildlife_white_coat_weight(vec3 base) {
-  float luma = dot(base, vec3(0.299, 0.587, 0.114));
   float chroma = max(max(base.r, base.g), base.b) - min(min(base.r, base.g), base.b);
-  return smoothstep(0.35, 0.65, luma) * (1.0 - smoothstep(0.025, 0.09, chroma));
+
+  return 1.0 - smoothstep(0.025, 0.09, chroma);
 }
 
 vec3 apply_wildlife_coat(vec3 base, vec3 pos_local) {

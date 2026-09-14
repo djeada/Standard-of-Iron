@@ -390,11 +390,27 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
         soldiers = formation_presentation->soldiers;
       }
 
+      std::span<const Render::Entity::FormationInstance> body_slots;
+      if (entity != nullptr && entity->registry() != nullptr) {
+        auto const& registry = *entity->registry();
+        auto const* creature =
+            registry.try_get<Engine::Core::CreaturePresentationComponent>(
+                entity->get_id());
+        auto const* instance_state =
+            registry.try_get<Render::Humanoid::HumanoidInstanceStateComponent>(
+                entity->get_id());
+        body_slots = selection_ring_body_slots(
+            creature != nullptr && creature->is_constructing,
+            instance_state != nullptr ? &instance_state->layout : nullptr,
+            soldiers.size());
+      }
+
       auto const root = Render::Entity::resolve_formation_root(entity, *transform);
       placements = build_selection_ring_layout({.soldiers = soldiers,
                                                 .ring_size = ring_size,
                                                 .position = root.position,
-                                                .yaw_degrees = root.yaw});
+                                                .yaw_degrees = root.yaw,
+                                                .body_slots = body_slots});
     } else {
 
       ring_size = config.get_selection_ring_size(unit_comp->spawn_type);

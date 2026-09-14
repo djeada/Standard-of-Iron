@@ -1854,6 +1854,74 @@ TEST(HumanoidPrepare, ActiveBuilderWorkOverridesSharedTravellingRowsWithCircle) 
   }
 }
 
+TEST(HumanoidPrepare, ConstructingBuilderRingsFollowTheWorkCircleBodies) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
+  ctx.allow_template_cache = false;
+
+  Engine::Core::StandaloneEntity entity_scratch(4245);
+  Engine::Core::Entity& entity = entity_scratch.entity();
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 2.0F);
+  unit->spawn_type = Game::Units::SpawnType::Builder;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  unit->render_individuals_per_unit_override = 4;
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  transform->position = {5.0F, 0.0F, -3.0F};
+  transform->rotation.y = 40.0F;
+  auto* shared = entity.add_component<Engine::Core::FormationPresentationComponent>();
+  shared->rows = 2;
+  shared->cols = 2;
+  for (std::uint16_t index = 0; index < 4U; ++index) {
+    shared->soldiers.push_back({.slot_index = index,
+                                .row = static_cast<std::uint16_t>(index / 2U),
+                                .col = static_cast<std::uint16_t>(index % 2U),
+                                .local_x = 20.0F + static_cast<float>(index),
+                                .local_z = 30.0F,
+                                .alive = true});
+  }
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  anim.is_constructing = true;
+  anim.construction_progress = 0.5F;
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
+
+  auto const* cache =
+      entity.get_component<Render::Humanoid::HumanoidInstanceStateComponent>();
+  ASSERT_NE(cache, nullptr);
+  auto const root = Render::Entity::resolve_formation_root(&entity, *transform);
+  auto const shared_rings =
+      Render::GL::build_selection_ring_layout({.soldiers = shared->soldiers,
+                                               .position = root.position,
+                                               .yaw_degrees = root.yaw});
+  auto const rings = Render::GL::build_selection_ring_layout(
+      {.soldiers = shared->soldiers,
+       .position = root.position,
+       .yaw_degrees = root.yaw,
+       .body_slots = Render::GL::selection_ring_body_slots(
+           true, &cache->layout, shared->soldiers.size())});
+  auto const bodies = prep.bodies.requests();
+  ASSERT_EQ(bodies.size(), 4U);
+  ASSERT_EQ(rings.size(), bodies.size());
+  ASSERT_EQ(shared_rings.size(), bodies.size());
+  for (std::size_t index = 0; index < bodies.size(); ++index) {
+    auto const origin = bodies[index].world.map(QVector3D());
+    EXPECT_NEAR(origin.x(), rings[index].world_x, 1e-4F) << "idx=" << index;
+    EXPECT_NEAR(origin.z(), rings[index].world_z, 1e-4F) << "idx=" << index;
+    EXPECT_GT(std::hypot(origin.x() - shared_rings[index].world_x,
+                         origin.z() - shared_rings[index].world_z),
+              10.0F)
+        << "idx=" << index;
+  }
+
+  EXPECT_TRUE(Render::GL::selection_ring_body_slots(
+                  false, &cache->layout, shared->soldiers.size())
+                  .empty());
+}
+
 TEST(HumanoidPrepare, FormationGuardDoesNotInheritTheStrikeCarriersAuthoredClip) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};

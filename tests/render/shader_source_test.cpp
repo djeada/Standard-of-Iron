@@ -1,3 +1,9 @@
+#include <QOffscreenSurface>
+#include <QOpenGLContext>
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLFunctions_3_3_Core>
+#include <QSurfaceFormat>
+
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -12,7 +18,10 @@
 #include <vector>
 
 #include "render/gl/directional_shadow_block.h"
+#include "render/gl/shader.h"
+#include "render/gl/ubo_bindings.h"
 #include "render/local_lighting.h"
+#include "scene/environment_lighting.h"
 
 namespace {
 
@@ -1141,4 +1150,106 @@ TEST(ShaderSource, SkyBoxCloudMarchIsBoundedAndQualityScaled) {
     const auto defined_at = source.find(std::string("#define ") + steps);
     EXPECT_NE(defined_at, std::string::npos) << steps;
   }
+}
+
+TEST(ShaderColor, ShadedWhiteWoolStaysNeutralAtEveryZoom) {
+  QSurfaceFormat format;
+  format.setVersion(3, 3);
+  format.setProfile(QSurfaceFormat::CoreProfile);
+  QOffscreenSurface surface;
+  surface.setFormat(format);
+  surface.create();
+  QOpenGLContext context;
+  context.setFormat(format);
+  if (!surface.isValid() || !context.create() || !context.makeCurrent(&surface)) {
+    GTEST_SKIP() << "No OpenGL 3.3 context available";
+  }
+  QOpenGLFunctions_3_3_Core gl;
+  ASSERT_TRUE(gl.initializeOpenGLFunctions());
+
+  std::vector<std::string> includes;
+  const auto fragment = inline_shader_includes(find_repo_root() / "assets" / "shaders",
+                                               R"(#version 330 core
+#define SOI_CHARACTER_VARIANT 3
+#include "character_shading.glsl"
+uniform vec3 u_base;
+uniform float u_coat_height;
+out vec4 frag_color;
+void main() {
+  vec3 base = apply_wildlife_coat(u_base, vec3(0.0, u_coat_height, 0.0));
+  vec3 color = soi_finish_character(base * vec3(0.70, 0.60, 0.40), base,
+      vec3(0.0, 0.0, 1.0), vec3(0.0), u_camera_position,
+      k_wildlife_material, 1, readable_zoom(vec3(0.0)));
+  frag_color = vec4(color, 1.0);
+}
+)",
+                                               includes);
+  Render::GL::Shader shader;
+  ASSERT_TRUE(shader.load_from_source(QStringLiteral(R"(#version 330 core
+void main() {
+  vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+}
+)"),
+                                      QString::fromStdString(fragment)));
+
+  GLuint buffer = 0;
+  gl.glGenBuffers(1, &buffer);
+  gl.glBindBuffer(GL_UNIFORM_BUFFER, buffer);
+  gl.glBindBufferBase(
+      GL_UNIFORM_BUFFER, Render::GL::k_environment_lighting_binding_point, buffer);
+  const auto upload_environment = [&](const Render::EnvironmentLightingState& env) {
+    const auto packed = env.packed_std140();
+    gl.glBufferData(GL_UNIFORM_BUFFER, sizeof(packed), packed.data(), GL_DYNAMIC_DRAW);
+  };
+  Render::EnvironmentLightingState environment;
+  upload_environment(environment);
+  GLuint vao = 0;
+  gl.glGenVertexArrays(1, &vao);
+  gl.glBindVertexArray(vao);
+  QOpenGLFramebufferObjectFormat target_format;
+  target_format.setInternalTextureFormat(GL_RGBA32F);
+  QOpenGLFramebufferObject target(1, 1, target_format);
+  ASSERT_TRUE(target.bind());
+  gl.glViewport(0, 0, 1, 1);
+  shader.use();
+  const auto sample = [&](const QVector3D& base, float height, float distance) {
+    shader.set_uniform("u_base", base);
+    shader.set_uniform("u_coat_height", height);
+    shader.set_uniform("u_camera_position", QVector3D(0.0F, 0.0F, distance));
+    gl.glDrawArrays(GL_TRIANGLES, 0, 3);
+    std::array<float, 4> pixel{};
+    gl.glReadPixels(0, 0, 1, 1, GL_RGBA, GL_FLOAT, pixel.data());
+    return QVector3D(pixel[0], pixel[1], pixel[2]);
+  };
+
+  for (const float value : {0.30F, 0.50F, 0.82F}) {
+    for (const float height : {0.20F, 1.0F}) {
+      const auto near_color = sample(QVector3D(value, value, value), height, 10.0F);
+      for (const float distance : {10.0F, 45.0F, 90.0F}) {
+        SCOPED_TRACE(::testing::Message() << "wool=" << value << " height=" << height
+                                          << " distance=" << distance);
+        const auto color = sample(QVector3D(value, value, value), height, distance);
+        EXPECT_NEAR(color.x(), color.y(), 0.00001F);
+        EXPECT_NEAR(color.y(), color.z(), 0.00001F);
+        EXPECT_NEAR((color - near_color).length(), 0.0F, 0.00001F);
+      }
+    }
+  }
+
+  const auto brown = sample(QVector3D(0.50F, 0.35F, 0.20F), 1.0F, 90.0F);
+  EXPECT_GT(brown.x(), brown.z() + 0.05F) << "colored coats should retain their hue";
+  environment.primary_color = QVector3D(0.30F, 0.45F, 0.90F);
+  upload_environment(environment);
+  const auto firelit = sample(QVector3D(0.82F, 0.82F, 0.82F), 1.0F, 90.0F);
+  const auto near_firelit = sample(QVector3D(0.82F, 0.82F, 0.82F), 1.0F, 10.0F);
+  EXPECT_NEAR((firelit - near_firelit).length(), 0.0F, 0.00001F);
+  EXPECT_GT(firelit.x(), firelit.z() + 0.05F)
+      << "warm illumination must still color white wool at night";
+  EXPECT_EQ(gl.glGetError(), static_cast<GLenum>(GL_NO_ERROR));
+
+  shader.release();
+  target.release();
+  gl.glDeleteVertexArrays(1, &vao);
+  gl.glDeleteBuffers(1, &buffer);
 }

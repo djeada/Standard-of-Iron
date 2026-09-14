@@ -23,6 +23,7 @@ struct SelectionRingLayoutInput {
   float ring_size{0.5F};
   QVector3D position{0.0F, 0.0F, 0.0F};
   float yaw_degrees{0.0F};
+  std::span<const Render::Entity::FormationInstance> body_slots{};
 };
 
 struct SelectionRingPlacement {
@@ -55,6 +56,17 @@ selection_ring_visual_size(const Game::Units::TroopConfig& config,
 
 } // namespace Detail
 
+[[nodiscard]] inline auto selection_ring_body_slots(
+    bool constructing,
+    const Render::Entity::FormationLayoutCache* body_layout,
+    std::size_t soldier_count) -> std::span<const Render::Entity::FormationInstance> {
+  if (!constructing || body_layout == nullptr || !body_layout->valid ||
+      body_layout->instances.size() != soldier_count) {
+    return {};
+  }
+  return body_layout->instances;
+}
+
 [[nodiscard]] inline auto build_selection_ring_layout(
     const SelectionRingLayoutInput& input) -> std::vector<SelectionRingPlacement> {
   std::vector<SelectionRingPlacement> placements;
@@ -66,12 +78,18 @@ selection_ring_visual_size(const Game::Units::TroopConfig& config,
   placements.reserve(input.soldiers.size());
   auto const frame =
       Render::Entity::formation_world_frame(input.position, input.yaw_degrees);
-  for (auto const& soldier : input.soldiers) {
+  bool const use_body_slots = input.body_slots.size() == input.soldiers.size();
+  for (std::size_t index = 0; index < input.soldiers.size(); ++index) {
+    auto const& soldier = input.soldiers[index];
     if (!soldier.alive) {
       continue;
     }
 
-    auto const anchor = frame.map(QVector3D(soldier.local_x, 0.0F, soldier.local_z));
+    float const local_x =
+        use_body_slots ? input.body_slots[index].offset_x : soldier.local_x;
+    float const local_z =
+        use_body_slots ? input.body_slots[index].offset_z : soldier.local_z;
+    auto const anchor = frame.map(QVector3D(local_x, 0.0F, local_z));
     placements.push_back({anchor.x(), anchor.z(), input.ring_size});
   }
 
