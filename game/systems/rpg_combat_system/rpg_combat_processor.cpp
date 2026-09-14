@@ -166,7 +166,6 @@ void refresh_commander_engagement(Engine::Core::World* world,
        world->entity_view<Engine::Core::UnitComponent,
                           Engine::Core::TransformComponent>()) {
     Engine::Core::Entity* candidate = &candidate_ref;
-    auto* unit = &unit_ref;
     auto* transform = &transform_ref;
     if (candidate->get_id() == commander_id) {
       continue;

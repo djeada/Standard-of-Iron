@@ -55,11 +55,23 @@ def main() -> int:
     by_id = {track["id"]: track for track in tracks}
     cues = {cue["id"]: cue for cue in catalog["cues"]}
 
+    foreign = {
+        track["path"]
+        for track in tracks
+        if track.get("tags", {}).get("source") != "synth"
+    }
+
     added = 0
     updated = 0
     for cue_id, recipe in RECIPES.items():
         if cue_id not in cues:
             print(f"warning: no catalog entry for {cue_id}", file=sys.stderr)
+            continue
+        if any(recipe.take_path(take) in foreign for take in range(recipe.takes)):
+            print(
+                f"warning: {cue_id} names a file another source owns; left alone",
+                file=sys.stderr,
+            )
             continue
         cue = cues[cue_id]
         bound: list[str] = []

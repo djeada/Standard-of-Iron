@@ -72,7 +72,6 @@ capture_step_for(const Engine::Core::CaptureComponent& capture) -> std::uint8_t 
 }
 
 constexpr float k_destination_cluster_grid = 2.0F;
-constexpr float k_origin_hash_steps = 96.0F;
 constexpr std::size_t k_max_pending_capture_alerts = 8;
 constexpr std::size_t k_max_destinations = 8;
 } // namespace
@@ -241,9 +240,6 @@ void MinimapManager::update_units(Engine::Core::World* world,
   destinations.clear();
   destination_cells.clear();
   std::uint64_t destination_hash = 0;
-  float selected_sum_x = 0.0F;
-  float selected_sum_z = 0.0F;
-  int selected_count = 0;
 
   std::uint64_t unit_hash = hash_combine(0, static_cast<std::uint64_t>(local_owner_id));
 
@@ -279,13 +275,6 @@ void MinimapManager::update_units(Engine::Core::World* world,
                                                  capture->capture_blocked});
           }
         }
-      }
-
-      if (marker.is_selected &&
-          marker.marker_class == Game::Map::Minimap::MarkerClass::Troop) {
-        selected_sum_x += marker.world_x;
-        selected_sum_z += marker.world_z;
-        ++selected_count;
       }
 
       if (marker.is_selected &&
@@ -335,24 +324,6 @@ void MinimapManager::update_units(Engine::Core::World* world,
     }
   }
   unit_hash = hash_combine(unit_hash, static_cast<std::uint64_t>(markers.size()));
-
-  if (!destinations.empty() && selected_count > 0) {
-    float origin_nx = 0.0F;
-    float origin_ny = 0.0F;
-    if (world_to_normalized(selected_sum_x / static_cast<float>(selected_count),
-                            selected_sum_z / static_cast<float>(selected_count),
-                            origin_nx,
-                            origin_ny)) {
-      for (auto& destination : destinations) {
-        destination.origin_nx = origin_nx;
-        destination.origin_ny = origin_ny;
-      }
-      destination_hash =
-          hash_combine(destination_hash, quantize(origin_nx, k_origin_hash_steps));
-      destination_hash =
-          hash_combine(destination_hash, quantize(origin_ny, k_origin_hash_steps));
-    }
-  }
 
   collect_capture_alerts(capture_watch);
 

@@ -65,7 +65,7 @@ the short is already published:
   which links the same chain the game applies at decode, so the short is scored
   with the audio a player hears. Delivery then only adds headroom for the AAC
   encoder rather than a second loudness normaliser. See
-  ``docs/AUDIO_MASTERING.md``.
+  ``docs/AUDIO_SYSTEM.md``.
 
 Exit status is non-zero when the footage is missing or ffmpeg fails, so this
 can be chained straight after a capture run. A cut that fails a delivery check

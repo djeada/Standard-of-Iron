@@ -100,8 +100,7 @@ void GameStateRestorer::restore_environment_from_metadata(
 
   const Game::Map::MapDefinition* def = map_context.definition();
   if (def != nullptr) {
-    terrain_service.clear();
-    terrain_service.initialize(*def);
+    terrain_service.initialize_keeping_world_props(*def);
 
     if (!def->name.isEmpty()) {
       level.map_name = def->name;

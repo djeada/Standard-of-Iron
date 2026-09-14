@@ -746,22 +746,28 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
     }
 
     bool assigned = false;
+    QVector3D const current(
+        move.transform->position.x, 0.0F, move.transform->position.z);
+
+    QVector3D const member_target = resolve_walkable_target_toward(
+        targets[i], current, passability_for(*move.movement));
     if (corridor.reachable()) {
-      QVector3D const current(
-          move.transform->position.x, 0.0F, move.transform->position.z);
-      QVector3D const target_offset = targets[i] - slot_center;
+      QVector3D const target_offset = member_target - slot_center;
       float const lateral_offset = QVector3D::dotProduct(target_offset, final_right);
       auto const lane =
           RouteCorridorPlanner::fit_lane(*pathfinder,
                                          corridor,
                                          current,
-                                         targets[i],
+                                         member_target,
                                          lateral_offset,
                                          passability_for(*move.movement),
                                          move.movement->get_navigation_clearance());
       if (lane.valid()) {
-        assigned = assign_waypoints_to_movement(
-            *pathfinder, lane.waypoints, targets[i], *move.transform, *move.movement);
+        assigned = assign_waypoints_to_movement(*pathfinder,
+                                                lane.waypoints,
+                                                member_target,
+                                                *move.transform,
+                                                *move.movement);
         if (assigned) {
           move.movement->route_id = corridor.id;
           move.movement->route_lane_offset = lateral_offset;
@@ -792,8 +798,6 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
       }
     }
     if (!assigned) {
-      QVector3D const current(
-          move.transform->position.x, 0.0F, move.transform->position.z);
       Point const start = NavGrid::world_to_grid(current.x(), current.z());
       Point const target = NavGrid::world_to_grid(targets[i].x(), targets[i].z());
       bool const direct_clear =

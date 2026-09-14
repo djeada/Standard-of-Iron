@@ -19,18 +19,16 @@
 #include "game/render_bridge/game_state_serializer.h"
 #include "game/save/serialization.h"
 #include "game/session/deterministic_rng.h"
+#include "game/session/map_session.h"
 #include "game/session/session_context.h"
 #include "game/session/session_snapshot.h"
 #include "game/session/simulation_clock.h"
 #include "game/systems/ai_system.h"
-#include "game/systems/cursed_gold_vein_system.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/save_load_service.h"
-#include "game/systems/undead_awakening_system.h"
 #include "game/systems/victory_service.h"
 #include "game/systems/world_restore.h"
 #include "game/units/factory.h"
-#include "game/wildlife/wildlife_system.h"
 #include "render/scene_renderer.h"
 #include "utils/resource_utils.h"
 
@@ -40,12 +38,13 @@ namespace {
 
 void restore_mission_context(const Game::Systems::Save::Record& record,
                              CampaignManager* campaign_manager) {
-  if (campaign_manager == nullptr || record.mode.isEmpty()) {
+  if (campaign_manager == nullptr) {
     return;
   }
 
   Game::Mission::MissionContext mission_context;
-  mission_context.mode = record.mode;
+  mission_context.mode =
+      record.mode.isEmpty() ? QStringLiteral("skirmish") : record.mode;
   mission_context.campaign_id = record.campaign_id;
   mission_context.mission_id = record.mission_id;
   mission_context.difficulty = record.difficulty;
@@ -210,30 +209,12 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
   context.selected_player_id = context.runtime_snapshot.local_owner_id;
   GameStateRestorer::rebuild_entity_cache(
       &context.world, context.entity_cache, context.runtime_snapshot.local_owner_id);
+  Game::Map::MapContext map_context;
   if (!context.level.map_path.isEmpty()) {
     QString map_error;
-    const Game::Map::MapContext map_context =
+    map_context =
         Game::Map::MapContextStore::acquire(context.level.map_path, &map_error);
-    if (map_context.valid()) {
-      const auto& map_def = *map_context.definition();
-      const auto report = Game::Session::SessionSnapshot::restore(
-          Game::Session::SnapshotScope{.world = &context.world, .map = &map_def},
-          metadata.value("session_snapshot").toObject());
-      for (const auto& key : report.missing_from_save) {
-        qWarning() << "SaveLoadCoordinator: the save carries no state for"
-                   << QString::fromStdString(key);
-      }
-      for (const auto& key : report.unclaimed_in_save) {
-        qWarning() << "SaveLoadCoordinator: nothing in this build claims the saved"
-                   << QString::fromStdString(key) << "state";
-      }
-      if (context.victory_service != nullptr) {
-        if (auto* undead_system =
-                context.world.get_system<Game::Systems::UndeadAwakeningSystem>()) {
-          context.victory_service->set_undead_zone_query(undead_system);
-        }
-      }
-    } else {
+    if (!map_context.valid()) {
 
       const QString map_warning =
           QObject::tr("Loaded, but '%1' could not be read, so wildlife, undead "
@@ -247,6 +228,22 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
                  << map_error;
     }
   }
+
+  const auto report = Game::Session::restore_map_session(
+      {.world = &context.world,
+       .map = map_context.definition(),
+       .victory_service = context.victory_service,
+       .configure_victory_rules = context.configure_victory,
+       .snapshot = metadata.value("session_snapshot").toObject()});
+  for (const auto& key : report.missing_from_save) {
+    qWarning() << "SaveLoadCoordinator: the save carries no state for"
+               << QString::fromStdString(key);
+  }
+  for (const auto& key : report.unclaimed_in_save) {
+    qWarning() << "SaveLoadCoordinator: nothing in this build claims the saved"
+               << QString::fromStdString(key) << "state";
+  }
+
   if (context.scene.session != nullptr) {
     context.scene.session->terrain().seal();
   } else {
@@ -272,17 +269,6 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
   if (auto* ai_system = context.world.get_system<Game::Systems::AISystem>()) {
     qInfo() << "Reinitializing AI system after loading saved game";
     ai_system->reinitialize();
-  }
-
-  if (context.victory_service != nullptr) {
-    if (context.campaign_manager != nullptr &&
-        context.campaign_manager->current_mission_context().has_mission()) {
-      context.campaign_manager->configure_mission_victory_conditions(
-          context.victory_service, context.runtime_snapshot.local_owner_id);
-    } else {
-      context.victory_service->configure(Game::Map::VictoryConfig(),
-                                         context.runtime_snapshot.local_owner_id);
-    }
   }
 
   return {.success = true,

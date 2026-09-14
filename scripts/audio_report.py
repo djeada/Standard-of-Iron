@@ -10,7 +10,7 @@ Three files have to agree for a sound to be heard in game:
 
 plus a call site in C++ or QML that actually fires the cue.  This script
 checks every link in that chain and writes the result to
-docs/AUDIO_WISHLIST.md, so "what audio do we still need" is a command
+artifacts/audio/AUDIO_WISHLIST.md, so "what audio do we still need" is a command
 rather than a memory exercise.
 
 The report is the wiring matrix for the whole catalogue.  Four states are
@@ -19,11 +19,11 @@ in a real game: declared (it is in the catalogue), called by code (a call site
 fires it), resource loaded (its pool resolves to files that exist), and heard
 in gameplay.  The last one cannot be read out of the source tree at all -- it
 comes from a mission summary written by a real run
-(SOI_AUDIO_TRACE_SUMMARY, see docs/AUDIO_RUNTIME_TRACE.md) and from the
+(SOI_AUDIO_TRACE_SUMMARY, see docs/AUDIO_SYSTEM.md) and from the
 scenario tests that drive production gameplay paths.
 
 Usage:
-    python3 scripts/audio_report.py             # rewrite docs/AUDIO_WISHLIST.md
+    python3 scripts/audio_report.py             # write artifacts/audio/AUDIO_WISHLIST.md
     python3 scripts/audio_report.py --stdout    # print instead of writing
     python3 scripts/audio_report.py --check     # exit 1 on a broken link
     python3 scripts/audio_report.py --runtime artifacts/audio/mission.json
@@ -43,7 +43,7 @@ AUDIO_DIR = REPO / "assets" / "audio"
 MANIFEST = AUDIO_DIR / "audio_manifest.json"
 CUES = AUDIO_DIR / "audio_cues.json"
 CUE_HEADER = REPO / "game" / "audio" / "cue_ids.h"
-REPORT = REPO / "docs" / "AUDIO_WISHLIST.md"
+REPORT = REPO / "artifacts" / "audio" / "AUDIO_WISHLIST.md"
 
 
 CALL_SITE_ROOTS = ("app", "game", "render", "scene", "ui", "tools", "main.cpp")
@@ -478,6 +478,7 @@ def main() -> int:
     if args.stdout:
         print(report, end="")
     else:
+        REPORT.parent.mkdir(parents=True, exist_ok=True)
         REPORT.write_text(report, encoding="utf-8")
         print(f"Wrote {REPORT.relative_to(REPO)}")
 

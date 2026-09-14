@@ -84,7 +84,7 @@ a window, or every run re-downloads them.
 Step 5 is where recordings differ most from generated beds. A gust or a cricket
 has a far higher crest factor than filtered noise, so gain alone would either
 miss the loudness target or eat the headroom that decode-time mastering needs
-(see [AUDIO_MASTERING.md](../../docs/AUDIO_MASTERING.md)). Limiting settles
+(see [AUDIO_SYSTEM.md](../../docs/AUDIO_SYSTEM.md)). Limiting settles
 that, and the loop iterates because limiting changes the loudness it was
 measuring.
 

@@ -364,6 +364,7 @@ void GameEngine::build_services_and_controllers() {
                service->restore_state(value.toObject());
              }
            }});
+  wire_victory_service();
 
   connect_save_service_signals();
   m_camera_service = std::make_unique<Game::Systems::CameraService>(

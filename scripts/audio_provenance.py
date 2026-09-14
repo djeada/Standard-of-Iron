@@ -24,13 +24,17 @@ licence is worse than admitting it is unknown.
 `--check` is a ratchet, not a wall.  The files whose rights are not yet written
 down are listed in assets/audio/audio_provenance_baseline.json; the check fails
 when a track outside that list has no provenance, which is to say when a *new*
-asset arrives without its rights recorded.
+asset arrives without its rights recorded.  It also fails when an .ogg ships
+without a manifest entry, and when docs/AUDIO_LICENSES.md no longer matches the
+manifest: that per-file list is rendered from the provenance blocks, so edit
+the manifest and rerun `--doc` rather than editing the table.
 
 Usage:
     python3 scripts/audio_provenance.py            # report
     python3 scripts/audio_provenance.py --backfill # write what is provable
     python3 scripts/audio_provenance.py --check    # fail on a new unknown
     python3 scripts/audio_provenance.py --accept   # rewrite the baseline
+    python3 scripts/audio_provenance.py --doc      # re-render the licence list
 """
 
 from __future__ import annotations
@@ -44,6 +48,11 @@ REPO = Path(__file__).resolve().parent.parent
 AUDIO_DIR = REPO / "assets" / "audio"
 MANIFEST = AUDIO_DIR / "audio_manifest.json"
 BASELINE = AUDIO_DIR / "audio_provenance_baseline.json"
+DOC = REPO / "docs" / "AUDIO_LICENSES.md"
+DOC_MARKER = (
+    "<!-- Rendered by scripts/audio_provenance.py --doc from the manifest's "
+    "provenance blocks. Edit those, not the tables below. -->"
+)
 
 PROVABLE = {
     "synth": {
@@ -99,6 +108,60 @@ def backfill(manifest: dict) -> int:
     return filled
 
 
+def cell(text: str) -> str:
+    return text.replace("|", "\\|").replace("\n", " ")
+
+
+def render_listing(manifest: dict) -> str:
+    tracks = sorted(manifest["tracks"], key=lambda track: track["path"])
+    by_licence: dict[str, int] = {}
+    for track in tracks:
+        licence = track.get("provenance", {}).get("licence", "not recorded")
+        by_licence[licence] = by_licence.get(licence, 0) + 1
+
+    lines = [DOC_MARKER, "", "<!-- prettier-ignore-start -->", ""]
+    lines += ["### Summary", "", "| Licence | Files |", "| --- | ---: |"]
+    for licence, count in sorted(
+        by_licence.items(), key=lambda item: (-item[1], item[0])
+    ):
+        lines.append(f"| {cell(licence)} | {count} |")
+
+    directory = None
+    for track in tracks:
+        parent = track["path"].rpartition("/")[0]
+        if parent != directory:
+            directory = parent
+            lines += ["", f"### `{directory}/`", "", "| File | Origin | Licence |"]
+            lines.append("| --- | --- | --- |")
+        provenance = track.get("provenance", {})
+        lines.append(
+            f"| `{track['path'].rpartition('/')[2]}` "
+            f"| {cell(provenance.get('origin', 'not recorded'))} "
+            f"| {cell(provenance.get('licence', 'not recorded'))} |"
+        )
+    lines += ["", "<!-- prettier-ignore-end -->", ""]
+    return "\n".join(lines)
+
+
+def rendered_doc(manifest: dict) -> str | None:
+    if not DOC.is_file():
+        return None
+    text = DOC.read_text(encoding="utf-8")
+    head, marker, _ = text.partition(DOC_MARKER)
+    if not marker:
+        return None
+    return head + render_listing(manifest)
+
+
+def orphan_files(manifest: dict) -> list[str]:
+    listed = {track["path"] for track in manifest["tracks"]}
+    return sorted(
+        path.relative_to(AUDIO_DIR).as_posix()
+        for path in AUDIO_DIR.rglob("*.ogg")
+        if path.relative_to(AUDIO_DIR).as_posix() not in listed
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -106,6 +169,9 @@ def main() -> int:
     )
     parser.add_argument("--check", action="store_true", help="fail on a new unknown")
     parser.add_argument("--accept", action="store_true", help="rewrite the baseline")
+    parser.add_argument(
+        "--doc", action="store_true", help="re-render docs/AUDIO_LICENSES.md"
+    )
     args = parser.parse_args()
 
     manifest = load_manifest()
@@ -115,6 +181,14 @@ def main() -> int:
         write_manifest(manifest)
         print(f"provenance written for {filled} tracks that the repository can prove")
         manifest = load_manifest()
+
+    if args.doc:
+        doc = rendered_doc(manifest)
+        if doc is None:
+            print(f"{DOC.relative_to(REPO)} has no render marker", file=sys.stderr)
+            return 1
+        DOC.write_text(doc, encoding="utf-8")
+        print(f"rendered {DOC.relative_to(REPO)}")
 
     missing = sorted(
         track["id"] for track in manifest["tracks"] if not has_provenance(track)
@@ -145,6 +219,23 @@ def main() -> int:
         f"{recorded} of {len(manifest['tracks'])} tracks record their origin and licence"
     )
 
+    failed = False
+    orphans = orphan_files(manifest)
+    if orphans:
+        print(f"\n{len(orphans)} files ship without a manifest entry:", file=sys.stderr)
+        for path in orphans:
+            print(f"  {path}", file=sys.stderr)
+        failed = True
+
+    doc = rendered_doc(manifest)
+    if doc is None or doc != DOC.read_text(encoding="utf-8"):
+        print(
+            f"\n{DOC.relative_to(REPO)} does not match the manifest; "
+            "rerun with --doc",
+            file=sys.stderr,
+        )
+        failed = True
+
     baseline = load_baseline()
     new_unknowns = [track_id for track_id in missing if track_id not in baseline]
     if new_unknowns:
@@ -159,15 +250,14 @@ def main() -> int:
             "THIRD_PARTY_LICENSES.md and rerun with --accept.",
             file=sys.stderr,
         )
-        if args.check:
-            return 1
+        failed = True
 
     if missing:
         print(
             f"{len(missing)} tracks still need a person to state their origin and "
             f"licence (see {BASELINE.relative_to(REPO)})"
         )
-    return 0
+    return 1 if failed and args.check else 0
 
 
 if __name__ == "__main__":

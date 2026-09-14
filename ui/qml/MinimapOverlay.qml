@@ -154,25 +154,10 @@ Item {
 
             readonly property real destX: overlayRoot.mapX(modelData.nx || 0)
             readonly property real destY: overlayRoot.mapY(modelData.ny || 0)
-            readonly property real originX: overlayRoot.mapX(modelData.origin_nx || 0)
-            readonly property real originY: overlayRoot.mapY(modelData.origin_ny || 0)
-            readonly property real leash: Math.hypot(destX - originX, destY - originY)
 
             anchors.fill: parent
             visible: overlayRoot.placeable
             z: 11
-
-            Rectangle {
-                visible: destinationPin.leash > Design.Metrics.space4
-                x: destinationPin.originX
-                y: destinationPin.originY - (height / 2)
-                width: destinationPin.leash
-                height: Math.max(1, Design.Metrics.borderThin)
-                color: Design.Theme.selection
-                opacity: 0.45
-                transformOrigin: Item.Left
-                rotation: Math.atan2(destinationPin.destY - destinationPin.originY, destinationPin.destX - destinationPin.originX) * 180 / Math.PI
-            }
 
             Rectangle {
                 x: destinationPin.destX - (width / 2)

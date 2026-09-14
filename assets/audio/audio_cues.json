@@ -216,6 +216,19 @@
       "wanted": "Short kit shuffle: leather, mail rustle, a single boot scuff."
     },
     {
+      "id": "order.move_mounted",
+      "description": "Move order issued to a selection made up entirely of cavalry.",
+      "category": "sfx",
+      "importance": "optional",
+      "volume": 0.8,
+      "priority": 5,
+      "cooldown_ms": 1500,
+      "resources": [
+        "sfx.movement.hooves_walk"
+      ],
+      "wanted": "Horses moving off at a walk on firm ground."
+    },
+    {
       "id": "order.attack",
       "description": "Attack order issued against a picked target.",
       "category": "sfx",
@@ -871,18 +884,44 @@
     },
     {
       "id": "combat.charge",
-      "description": "A selected body of troops is switched into run mode and breaks into a charge.",
+      "description": "A selected body of foot troops is switched into run mode and breaks into a charge.",
       "category": "sfx",
       "importance": "optional",
       "volume": 1.0,
       "priority": 6,
       "cooldown_ms": 4000,
       "resources": [
-        "sfx.combat.charge",
-        "sfx.combat.elephant_trumpet_charge",
+        "sfx.combat.charge"
+      ],
+      "wanted": "A charge roar layered with running feet, faction-neutral.",
+      "spatial": true
+    },
+    {
+      "id": "combat.charge_cavalry",
+      "description": "A selection with cavalry and no elephants is switched into run mode.",
+      "category": "sfx",
+      "importance": "optional",
+      "volume": 1.0,
+      "priority": 6,
+      "cooldown_ms": 4000,
+      "resources": [
         "sfx.movement.hooves_gallop"
       ],
-      "wanted": "A dedicated charge roar layered with running feet, faction-neutral.",
+      "wanted": "Horses breaking from a walk into a gallop.",
+      "spatial": true
+    },
+    {
+      "id": "combat.charge_elephant",
+      "description": "A selection with war elephants is switched into run mode.",
+      "category": "sfx",
+      "importance": "optional",
+      "volume": 1.0,
+      "priority": 6,
+      "cooldown_ms": 4000,
+      "resources": [
+        "sfx.combat.elephant_trumpet_charge"
+      ],
+      "wanted": "A war elephant trumpeting as it breaks into a charge.",
       "spatial": true
     },
     {
@@ -897,6 +936,20 @@
         "sfx.combat.heal"
       ],
       "wanted": "A bright, unmistakable restorative shimmer; the healer's work should read across a battle line.",
+      "spatial": true
+    },
+    {
+      "id": "combat.heal_bind",
+      "description": "A Roman medicus binds a soldier’s wound.",
+      "category": "sfx",
+      "importance": "optional",
+      "volume": 0.76,
+      "priority": 3,
+      "cooldown_ms": 500,
+      "resources": [
+        "sfx.combat.heal_bind_wound"
+      ],
+      "wanted": "Linen drawn off a roll and pulled tight; field medicine, not magic.",
       "spatial": true
     },
     {

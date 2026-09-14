@@ -383,6 +383,7 @@ add_library(
     command/command_validator.cpp
     command/replay.cpp
     map/match_loader.cpp
+    session/map_session.cpp
     session/session_context.cpp
     session/session_snapshot.cpp
     session/world_digest.cpp

@@ -131,7 +131,7 @@ auto parse_benchmark_action_fixture(const QJsonDocument& document, QString* erro
   if (!required.isArray()) {
     return fail(QStringLiteral("action fixture has no required_coverage array"));
   }
-  for (const QJsonValue& entry : required.toArray()) {
+  for (const QJsonValue entry : required.toArray()) {
     const QString name = entry.toString();
     if (name.isEmpty()) {
       return fail(QStringLiteral("required_coverage entries must be strings"));
@@ -150,7 +150,7 @@ auto parse_benchmark_action_fixture(const QJsonDocument& document, QString* erro
   if (!actions.isArray() || actions.toArray().isEmpty()) {
     return fail(QStringLiteral("action fixture has no actions"));
   }
-  for (const QJsonValue& entry : actions.toArray()) {
+  for (const QJsonValue entry : actions.toArray()) {
     if (!entry.isObject()) {
       return fail(QStringLiteral("action entries must be objects"));
     }
