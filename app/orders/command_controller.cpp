@@ -1204,10 +1204,7 @@ auto CommandController::selection_mounts(
     -> Game::Audio::Cue::SelectionMounts {
   Game::Audio::Cue::SelectionMounts mounts;
   for (const auto id : units) {
-    const auto* entity = world.get_entity(id);
-    const auto* unit = entity == nullptr
-                           ? nullptr
-                           : entity->get_component<Engine::Core::UnitComponent>();
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
     if (unit == nullptr) {
       continue;
     }
