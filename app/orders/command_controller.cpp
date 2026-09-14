@@ -1195,8 +1195,50 @@ void CommandController::enable_run_mode_for_selected() {
          Game::Command::SetRunMode{.units = {selected.begin(), selected.end()},
                                    .active = true});
 
-  Game::Audio::play_cue(Game::Audio::Cue::k_combat_charge);
+  Game::Audio::play_cue(charge_cue(selection_mounts(*m_world, selected)));
   emit run_mode_changed(true);
+}
+
+auto CommandController::selection_mounts(
+    Engine::Core::World& world, const std::vector<Engine::Core::EntityID>& units)
+    -> Game::Audio::Cue::SelectionMounts {
+  Game::Audio::Cue::SelectionMounts mounts;
+  for (const auto id : units) {
+    const auto* entity = world.get_entity(id);
+    const auto* unit = entity == nullptr
+                           ? nullptr
+                           : entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
+      continue;
+    }
+    if (unit->spawn_type == Game::Units::SpawnType::Elephant) {
+      ++mounts.elephants;
+    } else if (Game::Units::is_cavalry(unit->spawn_type)) {
+      ++mounts.cavalry;
+    } else {
+      ++mounts.foot;
+    }
+  }
+  return mounts;
+}
+
+auto CommandController::charge_cue(const Game::Audio::Cue::SelectionMounts& mounts)
+    -> const char* {
+  if (mounts.elephants > 0) {
+    return Game::Audio::Cue::k_combat_charge_elephant;
+  }
+  if (mounts.cavalry > 0) {
+    return Game::Audio::Cue::k_combat_charge_cavalry;
+  }
+  return Game::Audio::Cue::k_combat_charge;
+}
+
+auto CommandController::move_order_cue(const Game::Audio::Cue::SelectionMounts& mounts)
+    -> const char* {
+  const bool all_mounted =
+      mounts.cavalry > 0 && mounts.foot == 0 && mounts.elephants == 0;
+  return all_mounted ? Game::Audio::Cue::k_order_move_mounted
+                     : Game::Audio::Cue::k_order_move;
 }
 
 void CommandController::disable_run_mode_for_selected() {

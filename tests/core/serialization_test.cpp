@@ -2376,8 +2376,8 @@ TEST_F(SerializationTest, LoadingADifferentSaveReplacesTheWorldEntirely) {
 }
 
 TEST_F(SerializationTest, AlternatingBetweenTwoSavesKeepsEachMapsProps) {
-  const auto snapshot_of = [this](Game::Map::WorldProp::Type prop_type,
-                                  float scale) -> QJsonDocument {
+  const auto snapshot_of = [](Game::Map::WorldProp::Type prop_type,
+                              float scale) -> QJsonDocument {
     Game::Map::MapDefinition map_def;
     map_def.grid.width = 6;
     map_def.grid.height = 6;

@@ -1234,9 +1234,12 @@ void GameEngine::sync_attack_range_rings() {
 
 namespace {
 
-auto accepted_order_cue(App::Core::OrderKind kind) -> const char* {
+auto accepted_order_cue(App::Core::OrderKind kind,
+                        const Game::Audio::Cue::SelectionMounts& mounts) -> const
+    char* {
   switch (kind) {
   case App::Core::OrderKind::Move:
+    return App::Controllers::CommandController::move_order_cue(mounts);
   case App::Core::OrderKind::Deliver:
   case App::Core::OrderKind::Repair:
     return Game::Audio::Cue::k_order_move;
@@ -1365,7 +1368,14 @@ void GameEngine::handle_order_feedback(const App::Core::OrderOutcome& outcome) {
 
   QString message;
   if (outcome.accepted()) {
-    if (const char* cue = accepted_order_cue(outcome.kind)) {
+    Game::Audio::Cue::SelectionMounts mounts;
+    if (outcome.kind == App::Core::OrderKind::Move && m_world != nullptr) {
+      std::vector<Engine::Core::EntityID> selected;
+      get_selected_unit_ids(selected);
+      mounts =
+          App::Controllers::CommandController::selection_mounts(*m_world, selected);
+    }
+    if (const char* cue = accepted_order_cue(outcome.kind, mounts)) {
       Game::Audio::play_cue(cue);
     } else {
       Game::Audio::play_cue(Game::Audio::Cue::k_command_accept);
@@ -1930,15 +1940,29 @@ auto GameEngine::mission_startup_pending_components() const -> QStringList {
 }
 
 void GameEngine::configure_mission_victory_conditions() {
-  if (!m_campaign_manager || !m_victory_service) {
+  if (!m_victory_service) {
     return;
   }
 
-  m_campaign_manager->configure_mission_victory_conditions(m_victory_service.get(),
-                                                           m_runtime.local_owner_id);
+  const bool has_mission_rules =
+      m_campaign_manager &&
+      m_campaign_manager->current_mission_context().has_mission() &&
+      m_campaign_manager->current_mission_definition().has_value();
+  if (has_mission_rules) {
+    m_campaign_manager->configure_mission_victory_conditions(m_victory_service.get(),
+                                                             m_runtime.local_owner_id);
+  } else {
+    const Game::Map::MapContext map_context =
+        Game::Map::MapContextStore::acquire(m_level.map_path);
+    m_victory_service->configure(map_context.valid() ? map_context.definition()->victory
+                                                     : Game::Map::VictoryConfig(),
+                                 m_runtime.local_owner_id);
+  }
 
   m_victory_service->set_spectator_mode(m_level.is_spectator_mode);
+}
 
+void GameEngine::wire_victory_service() {
   m_victory_service->set_objectives_changed_callback(
       [this]() { publish_mission_stages(); });
 
@@ -2491,8 +2515,6 @@ void GameEngine::publish_minimap_overlays(float dt) {
       QVariantMap entry;
       entry["nx"] = destination.nx;
       entry["ny"] = destination.ny;
-      entry["origin_nx"] = destination.origin_nx;
-      entry["origin_ny"] = destination.origin_ny;
       destinations.append(entry);
     }
     m_minimap_view_model->set_destinations(destinations);
@@ -2843,12 +2865,24 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
     return;
   }
 
+  if (!m_runtime.initialized) {
+    ensure_initialized();
+  }
+  if (!m_runtime.initialized) {
+    set_error(tr("Load: not initialized"));
+    return;
+  }
+
   if (m_commander_view_model->active()) {
     m_commander_view_model->exit_mode();
   }
 
   reset_preload_interaction_state();
   reset_mission_runtime_state();
+  if (m_enemy_troops_defeated != 0) {
+    m_enemy_troops_defeated = 0;
+    emit enemy_troops_defeated_changed();
+  }
 
   m_finalize_progress_after_overlay = false;
   m_loading_overlay_active = true;
@@ -2876,6 +2910,7 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
            .entity_cache = m_entity_cache,
            .audio_coordinator = m_audio_coordinator.get(),
            .victory_service = m_victory_service.get(),
+           .configure_victory = [this]() { configure_mission_victory_conditions(); },
            .emit_troop_count_changed = [this]() { emit troop_count_changed(); },
            .restore_mission_waves =
                [this](const QJsonObject& wave_state) {
@@ -2928,6 +2963,17 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
   if (m_camera_controller) {
     m_camera_controller->sync_map_bounds();
   }
+
+  {
+    const Game::Mission::MissionDefinition* mission_def = nullptr;
+    if (m_campaign_manager &&
+        m_campaign_manager->current_mission_definition().has_value()) {
+      mission_def = &*m_campaign_manager->current_mission_definition();
+    }
+    m_audio_coordinator->apply_mission_ambience(
+        mission_def, m_level.map_path, m_runtime.local_owner_id);
+  }
+  emit victory_state_changed();
 
   m_runtime.loading = false;
   m_loading_overlay_wait_for_first_frame.store(true, std::memory_order_release);

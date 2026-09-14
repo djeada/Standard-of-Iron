@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import json
 import math
 import re
 import subprocess
@@ -35,6 +36,7 @@ from build_beds import cut_layer, download, write_wav
 
 REPO = Path(__file__).resolve().parent.parent.parent
 OUT_DIR = REPO / "assets" / "audio"
+MANIFEST = OUT_DIR / "audio_manifest.json"
 RATE = sources.RATE
 
 
@@ -262,6 +264,11 @@ def main() -> int:
         default=CACHE,
         help="where downloads are kept between runs",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="build over files the manifest credits to another source",
+    )
     args = parser.parse_args()
 
     globals()["CACHE"] = args.cache
@@ -284,9 +291,23 @@ def main() -> int:
         print("no cues matched", file=sys.stderr)
         return 1
 
+    tracks = json.loads(MANIFEST.read_text(encoding="utf-8"))["tracks"]
+    foreign = {
+        track["path"]: track.get("tags", {}).get("source", "untagged")
+        for track in tracks
+        if not args.force and track.get("tags", {}).get("source") != "field"
+    }
+    written = 0
     for name, cue in selected.items():
+        if f"{cue.path}.ogg" in foreign:
+            print(
+                f"{name}: skipped, the manifest credits {cue.path}.ogg "
+                f"to source {foreign[cue.path + '.ogg']}"
+            )
+            continue
         build(name, cue)
-    print(f"\n{len(selected)} cue(s) written under {OUT_DIR}")
+        written += 1
+    print(f"\n{written} cue(s) written under {OUT_DIR}")
     return 0
 
 

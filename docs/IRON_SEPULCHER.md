@@ -30,13 +30,13 @@ A zone can define its trigger, guardians, haze, reward, and decorative anchor:
 ]
 ```
 
-| Field          | Meaning                                                                                       |
-| -------------- | --------------------------------------------------------------------------------------------- |
-| `awaken_on`    | `unit_enters_radius` by default, or `mission_start`                                           |
-| `waves`        | Optional wave definition; omitting it uses the default garrison                               |
-| `anchor_type`  | Decorative prop around which guardians rise; it does not determine whether a shrine exists   |
-| `fog_density`  | Optional zone haze; `0` disables it                                                           |
-| `clear_reward` | Optional one-time resources granted when the garrison is broken                               |
+| Field          | Meaning                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------ |
+| `awaken_on`    | `unit_enters_radius` by default, or `mission_start`                                        |
+| `waves`        | Optional wave definition; omitting it uses the default garrison                            |
+| `anchor_type`  | Decorative prop around which guardians rise; it does not determine whether a shrine exists |
+| `fog_density`  | Optional zone haze; `0` disables it                                                        |
+| `clear_reward` | Optional one-time resources granted when the garrison is broken                            |
 
 `owner_id` is a real owner registered as an AI player of nation `iron_sepulcher`. That nation resolves to the `sepulcher_defense` AI profile.
 

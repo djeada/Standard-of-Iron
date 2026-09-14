@@ -732,7 +732,7 @@ music track through `build/bin/audio_master_preview`, which links the same
 `game/audio/audio_mastering.cpp` the game applies at decode, so the short is
 scored with the audio players actually hear rather than the raw generated
 master. Build that target first; without it the edit warns and falls back to the
-unmastered track. See `docs/AUDIO_MASTERING.md`.
+unmastered track. See `docs/AUDIO_SYSTEM.md`.
 
 Shot fields:
 

@@ -14,7 +14,7 @@ opt out with `"whole"` in its second slot, which imports the render exactly as d
 for a sustained wash rather than a hit, the padding *is* the sound.
 
 **Level.** Effect cues are deliberately *not* loudness-normalised at runtime -- the level in
-the file is the design decision (docs/AUDIO_MASTERING.md). So each import is matched to the
+the file is the design decision (docs/AUDIO_SYSTEM.md). So each import is matched to the
 RMS of the file it replaces, which keeps the existing mix intact, and ceilinged at
 -1.9 dBFS the way the CC0 battle cues were.
 
@@ -141,6 +141,16 @@ PLAN = {
         None,
         "ambience/camp_fire_night.ogg",
     ),
+}
+
+
+UNNAMED_IMPORTS = {
+    "sfx/alerts/objective_complete.ogg": "#1366, 2026-08-31, replaced the shared unit-ready bell",
+    "sfx/build/construction_complete.ogg": "#1366, 2026-08-31, replaced the shared unit-ready bell",
+    "sfx/build/construction_started.ogg": "#1366, 2026-08-31, replaced the placement confirmation",
+    "sfx/build/placement_rejected.ogg": "#1366, 2026-08-31, replaced the shared refusal",
+    "sfx/combat/human_death_cry_v2.ogg": "#1363, 2026-08-31, second take for combat.death",
+    "sfx/combat/human_death_cry_v3.ogg": "#1363, 2026-08-31, third take for combat.death",
 }
 
 AUDIO = pathlib.Path("assets/audio")

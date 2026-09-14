@@ -16,11 +16,11 @@ The `- 0.5` term is the half-cell offset that places a grid coordinate at the **
 
 Three code paths perform this conversion and must remain consistent:
 
-| Object family                                | Conversion path                                                                                               |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Structures, spawns, roads, rivers, wildlife  | `authored_position()` in `game/map/map_loader.cpp`; converted **during load**                                |
-| World props                                  | `TerrainService::world_prop_world_xz()`; converted **when used**, because props remain in grid space          |
-| Scatter through `SpawnValidator`             | `grid_to_world()` in `game/map/scatter/spawn_validator.cpp`                                                  |
+| Object family                               | Conversion path                                                                                      |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Structures, spawns, roads, rivers, wildlife | `authored_position()` in `game/map/map_loader.cpp`; converted **during load**                        |
+| World props                                 | `TerrainService::world_prop_world_xz()`; converted **when used**, because props remain in grid space |
+| Scatter through `SpawnValidator`            | `grid_to_world()` in `game/map/scatter/spawn_validator.cpp`                                          |
 
 ### World props are the exception
 
@@ -56,14 +56,14 @@ Grass, scatter, and soldiers may exist beneath the crown. Built objects may not.
 
 `scripts/fix-map-prop-overlaps.py` checks and repairs map-authored placement. A clean map has zero defects in all six categories:
 
-| Kind      | Meaning                                                   |
-| --------- | --------------------------------------------------------- |
-| `overlap` | two solid bodies intersect                                |
-| `canopy`  | a tree crown covers something built                       |
-| `road`    | a body occupies a road or bridge corridor                 |
-| `water`   | a body stands in a river or lake                          |
-| `slope`   | ground relief under a body makes a high corner float      |
-| `ramp`    | a body blocks a hill entrance                             |
+| Kind      | Meaning                                              |
+| --------- | ---------------------------------------------------- |
+| `overlap` | two solid bodies intersect                           |
+| `canopy`  | a tree crown covers something built                  |
+| `road`    | a body occupies a road or bridge corridor            |
+| `water`   | a body stands in a river or lake                     |
+| `slope`   | ground relief under a body makes a high corner float |
+| `ramp`    | a body blocks a hill entrance                        |
 
 Run it in reporting mode or allow it to repair movable objects in place:
 

@@ -122,6 +122,7 @@ protected:
     owners.set_local_player_id(k_local_owner);
 
     AudioResourceLoader::load_audio_cues();
+    AudioSystem::get_instance().stop_all_sounds();
     Game::Audio::CueRegistry::instance().reset_cooldowns();
     AudioSystem::get_instance().reset_playback_throttles();
     std::this_thread::sleep_for(std::chrono::milliseconds(60));
@@ -152,6 +153,46 @@ protected:
       std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
     return false;
+  }
+
+  auto mend_a_wounded_soldier(Game::Systems::NationID nation) -> bool {
+    auto* healer = m_world.create_entity();
+    healer->add_component<Engine::Core::TransformComponent>(0.0F, 0.0F, 0.0F);
+    auto* healer_unit =
+        healer->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+    healer_unit->owner_id = k_local_owner;
+    healer_unit->nation_id = nation;
+    auto* healing = healer->add_component<Engine::Core::HealerComponent>();
+    healing->healing_range = 8.0F;
+    healing->healing_amount = 20;
+    healing->healing_cooldown = 1.0F;
+    healing->time_since_last_heal = 1.0F;
+
+    auto* wounded = m_world.create_entity();
+    wounded->add_component<Engine::Core::TransformComponent>(2.0F, 0.0F, 0.0F);
+    auto* wounded_unit =
+        wounded->add_component<Engine::Core::UnitComponent>(40, 100, 1.0F, 12.0F);
+    wounded_unit->owner_id = k_local_owner;
+
+    Game::Systems::HealingSystem system;
+    system.update(&m_world, 0.1F);
+    return wounded_unit->health > 40;
+  }
+
+  static auto outcomes_of(const char* cue_id) -> std::string {
+    const auto record = CueTrace::instance().record_for(cue_id);
+    std::string text = std::to_string(record.requests) + " requested";
+    for (std::size_t index = 0; index < Game::Audio::k_cue_outcome_count; ++index) {
+      if (record.outcomes[index] > 0U) {
+        text += ", ";
+        text +=
+            Game::Audio::cue_outcome_name(static_cast<Game::Audio::CueOutcome>(index));
+        text += "=" + std::to_string(record.outcomes[index]);
+      }
+    }
+    return text + ", " +
+           std::to_string(AudioSystem::get_instance().get_active_channel_count()) +
+           " channels active";
   }
 
   static auto requests(const char* cue_id) -> std::uint64_t {
@@ -497,28 +538,16 @@ TEST_F(AudioGameplayScenarioTest, ASiegeShotIsHeardLeavingTheEngine) {
 }
 
 TEST_F(AudioGameplayScenarioTest, AHealerMendingASoldierIsHeard) {
-  auto* healer = m_world.create_entity();
-  healer->add_component<Engine::Core::TransformComponent>(0.0F, 0.0F, 0.0F);
-  auto* healer_unit =
-      healer->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
-  healer_unit->owner_id = k_local_owner;
-  auto* healing = healer->add_component<Engine::Core::HealerComponent>();
-  healing->healing_range = 8.0F;
-  healing->healing_amount = 20;
-  healing->healing_cooldown = 1.0F;
-  healing->time_since_last_heal = 1.0F;
-
-  auto* wounded = m_world.create_entity();
-  wounded->add_component<Engine::Core::TransformComponent>(2.0F, 0.0F, 0.0F);
-  auto* wounded_unit =
-      wounded->add_component<Engine::Core::UnitComponent>(40, 100, 1.0F, 12.0F);
-  wounded_unit->owner_id = k_local_owner;
-
-  Game::Systems::HealingSystem system;
-  system.update(&m_world, 0.1F);
-
-  ASSERT_GT(wounded_unit->health, 40) << "nothing was healed, so nothing to hear";
+  ASSERT_TRUE(mend_a_wounded_soldier(Game::Systems::NationID::Carthage))
+      << "nothing was healed, so nothing to hear";
   EXPECT_TRUE(heard(Game::Audio::Cue::k_combat_heal));
+}
+
+TEST_F(AudioGameplayScenarioTest, AMedicusBindsTheWoundRatherThanCastingOnIt) {
+  ASSERT_TRUE(mend_a_wounded_soldier(Game::Systems::NationID::RomanRepublic))
+      << "nothing was healed, so nothing to hear";
+  EXPECT_TRUE(heard(Game::Audio::Cue::k_combat_heal_bind));
+  EXPECT_EQ(requests(Game::Audio::Cue::k_combat_heal), 0U);
 }
 
 TEST_F(AudioGameplayScenarioTest, PlantingTheCommandersStandardSoundsTheRally) {
@@ -675,7 +704,8 @@ TEST_F(AudioGameplayScenarioTest, ADistantBattleIsCarriedAsOneMassNotAsSilence) 
   }
 
   EXPECT_TRUE(heard(Game::Audio::Cue::k_combat_distant_battle))
-      << "a battle raged out of earshot and the player heard nothing at all";
+      << "a battle raged out of earshot and the player heard nothing at all ("
+      << outcomes_of(Game::Audio::Cue::k_combat_distant_battle) << ")";
   EXPECT_EQ(
       CueTrace::instance().record_for(Game::Audio::Cue::k_combat_hit_sword).accepted,
       0U)

@@ -366,6 +366,7 @@ void register_authored_building_obstacles(const MapDefinition& map_def) {
 
 void TerrainService::initialize(const MapDefinition& map_def) {
   m_sealed = false;
+  m_world_props_from_save = false;
   m_prop_surface_cache.clear();
   m_prop_surface_cache_valid = false;
   m_height_map = std::make_unique<TerrainHeightMap>(
@@ -403,8 +404,34 @@ void TerrainService::initialize(const MapDefinition& map_def) {
   bump_navigation_topology_revision();
 }
 
+void TerrainService::initialize_keeping_world_props(const MapDefinition& map_def) {
+  if (!is_initialized() || !m_world_props_from_save) {
+    initialize(map_def);
+    return;
+  }
+
+  std::vector<WorldProp> saved_world_props = m_world_props;
+  std::vector<WorldProp> saved_authored_world_props = m_authored_world_props;
+
+  initialize(map_def);
+
+  m_world_props = std::move(saved_world_props);
+  m_authored_world_props = std::move(saved_authored_world_props);
+  normalize_world_props(m_authored_world_props);
+  normalize_world_props(m_world_props);
+  m_prop_surface_cache.clear();
+  m_prop_surface_cache_valid = false;
+  sync_world_prop_identity_state();
+  rebuild_terrain_field();
+  m_world_props_from_save = true;
+  bump_authored_world_props_revision();
+  bump_world_props_revision();
+  bump_navigation_topology_revision();
+}
+
 void TerrainService::clear() {
   m_sealed = false;
+  m_world_props_from_save = false;
   m_height_map.reset();
   m_prop_surface_cache.clear();
   m_prop_surface_cache_valid = false;
@@ -1067,6 +1094,7 @@ void TerrainService::restore_from_serialized(
         *m_height_map, m_biome_settings, m_coord_system, m_authored_world_props);
     normalize_world_props(m_world_props);
   }
+  m_world_props_from_save = true;
   sync_world_prop_identity_state();
   rebuild_terrain_field();
   bump_authored_world_props_revision();

@@ -100,6 +100,7 @@ struct LoadFromSlotContext {
   EntityCache& entity_cache;
   AudioCoordinator* audio_coordinator = nullptr;
   Game::Systems::VictoryService* victory_service = nullptr;
+  std::function<void()> configure_victory;
   std::function<void()> emit_troop_count_changed;
   std::function<void(const QJsonObject&)> restore_mission_waves;
   std::function<void(const QJsonObject&)> restore_mission_stages;

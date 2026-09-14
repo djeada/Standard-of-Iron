@@ -174,7 +174,7 @@ When hidden, the presentation layer continues draining the engine's event queue.
 | ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | `tests/ui/input_bindings_test.cpp`             | catalog coverage, chord round-tripping, conflict detection, context scoping, persistence |
 | `tests/ui/team_identity_test.cpp`              | palette distinctness, luminance separation, pattern assignment                           |
-| `tests/ui/preferences_test.cpp`                | defaults, clamping, corrupt-value fallback, propagation to accessibility runtime          |
+| `tests/ui/preferences_test.cpp`                | defaults, clamping, corrupt-value fallback, propagation to accessibility runtime         |
 | `tests/render/selection_ring_pattern_test.cpp` | one drawable, upward-facing, visibly distinct mesh per pattern                           |
 
 The accessibility architecture is designed around redundancy and shared sources of truth: controls remain customizable without ambiguous conflicts, important visual states use more than colour, motion can be reduced without weakening control, and UI scaling applies to the same tokens the production interface already uses.

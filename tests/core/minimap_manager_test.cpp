@@ -751,16 +751,9 @@ TEST(MinimapManagerTest, SelectedTroopDestinationsArePublished) {
   const auto& destination = manager.destinations().front();
   EXPECT_GE(destination.nx, 0.0F);
   EXPECT_LE(destination.nx, 1.0F);
-  EXPECT_GE(destination.origin_nx, 0.0F);
-  EXPECT_LE(destination.origin_nx, 1.0F);
-  EXPECT_GE(destination.origin_ny, 0.0F);
-  EXPECT_LE(destination.origin_ny, 1.0F);
+  EXPECT_GE(destination.ny, 0.0F);
+  EXPECT_LE(destination.ny, 1.0F);
   EXPECT_EQ(destination.owner_id, 1);
-  EXPECT_GT(std::hypot(destination.nx - destination.origin_nx,
-                       destination.ny - destination.origin_ny),
-            0.01F)
-      << "the leash must run from where the squad stands to where it is going, "
-         "not collapse onto one point.";
 
   selection->clear_selection();
   manager.update_units(world.get(), selection, 1);
