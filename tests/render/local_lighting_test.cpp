@@ -1,9 +1,19 @@
+#include <QFile>
+#include <QOffscreenSurface>
+#include <QOpenGLContext>
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLFunctions_3_3_Core>
+#include <QSurfaceFormat>
+
 #include <algorithm>
 #include <array>
+#include <filesystem>
 #include <gtest/gtest.h>
 #include <vector>
 
 #include "render/draw_queue.h"
+#include "render/gl/shader.h"
+#include "render/gl/ubo_bindings.h"
 #include "render/ground/firecamp_renderer.h"
 #include "render/local_lighting.h"
 
@@ -224,13 +234,6 @@ namespace {
 
 constexpr float k_authored_camp_radius = 3.4F;
 
-auto shader_falloff(float distance, float radius) -> float {
-  const float normalized = std::clamp(distance / radius, 0.0F, 1.0F);
-  float window = 1.0F - normalized * normalized;
-  window *= window;
-  return window / (1.0F + 4.0F * normalized * normalized);
-}
-
 } // namespace
 
 TEST(FireCampLightTest, ACampfireDoesNotLightHalfTheHillside) {
@@ -240,11 +243,6 @@ TEST(FireCampLightTest, ACampfireDoesNotLightHalfTheHillside) {
   EXPECT_LE(shape.reach, 7.0F) << "the firelight carries " << shape.reach
                                << " m, a pool " << (shape.reach * 2.0F) << " m across";
   EXPECT_GE(shape.reach, 3.0F) << "a campfire that lights nothing is not a campfire";
-
-  EXPECT_FLOAT_EQ(shader_falloff(20.0F, shape.reach), 0.0F)
-      << "the fire is still recolouring a building twenty metres away";
-
-  EXPECT_GT(shader_falloff(1.5F, shape.reach), 0.25F);
 }
 
 TEST(FireCampLightTest, TheFlameSitsOverTheLogsRatherThanOverTheCamp) {
@@ -262,4 +260,101 @@ TEST(FireCampLightTest, ASmallCampStillGetsAUsableLight) {
   const auto tiny = Render::GL::FireCampRenderer::fire_light_shape(0.2F);
   EXPECT_GE(tiny.reach, 3.0F);
   EXPECT_GT(tiny.height_above_ground, 0.0F);
+}
+
+TEST(FireCampLightTest, ShaderLightsNearbyGroundAndObjectsWithinItsRadius) {
+  QSurfaceFormat format;
+  format.setVersion(3, 3);
+  format.setProfile(QSurfaceFormat::CoreProfile);
+  QOffscreenSurface surface;
+  surface.setFormat(format);
+  surface.create();
+  QOpenGLContext context;
+  context.setFormat(format);
+  if (!surface.isValid() || !context.create() || !context.makeCurrent(&surface)) {
+    GTEST_SKIP() << "No OpenGL 3.3 context available";
+  }
+  QOpenGLFunctions_3_3_Core gl;
+  ASSERT_TRUE(gl.initializeOpenGLFunctions());
+
+  const auto shader_path = std::filesystem::path(__FILE__).parent_path() /
+                           "../../assets/shaders/include/local_lighting.glsl";
+  QFile source(QString::fromStdString(shader_path.string()));
+  ASSERT_TRUE(source.open(QIODevice::ReadOnly));
+  Render::GL::Shader shader;
+  ASSERT_TRUE(shader.load_from_source(QStringLiteral(R"(#version 330 core
+void main() {
+  vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+}
+)"),
+                                      QStringLiteral("#version 330 core\n") +
+                                          QString::fromUtf8(source.readAll()) +
+                                          QStringLiteral(R"(
+uniform vec3 u_sample_position;
+uniform vec3 u_sample_normal;
+out vec4 frag_color;
+void main() {
+  frag_color = vec4(local_lighting(u_sample_position, u_sample_normal), 1.0);
+}
+)")));
+
+  const auto shape =
+      Render::GL::FireCampRenderer::fire_light_shape(k_authored_camp_radius);
+  Render::LocalLight fire;
+  fire.position = QVector3D(0.0F, shape.height_above_ground, 0.0F);
+  fire.radius = shape.reach;
+  fire.color = QVector3D(1.0F, 0.52F, 0.19F);
+  const auto packed = Render::pack_local_lights_std140(
+      Render::select_local_lights({fire}, QVector3D()));
+  GLuint buffer = 0;
+  gl.glGenBuffers(1, &buffer);
+  gl.glBindBuffer(GL_UNIFORM_BUFFER, buffer);
+  gl.glBufferData(GL_UNIFORM_BUFFER, sizeof(packed), packed.data(), GL_STATIC_DRAW);
+  gl.glBindBufferBase(
+      GL_UNIFORM_BUFFER, Render::GL::k_local_lighting_binding_point, buffer);
+  GLuint vao = 0;
+  gl.glGenVertexArrays(1, &vao);
+  gl.glBindVertexArray(vao);
+  QOpenGLFramebufferObjectFormat target_format;
+  target_format.setInternalTextureFormat(GL_RGBA32F);
+  QOpenGLFramebufferObject target(1, 1, target_format);
+  ASSERT_TRUE(target.bind());
+  gl.glViewport(0, 0, 1, 1);
+  shader.use();
+  const auto sample = [&](const QVector3D& position, const QVector3D& normal) {
+    shader.set_uniform("u_sample_position", position);
+    shader.set_uniform("u_sample_normal", normal);
+    gl.glDrawArrays(GL_TRIANGLES, 0, 3);
+    std::array<float, 4> pixel{};
+    gl.glReadPixels(0, 0, 1, 1, GL_RGBA, GL_FLOAT, pixel.data());
+    return QVector3D(pixel[0], pixel[1], pixel[2]);
+  };
+
+  const QVector3D up(0.0F, 1.0F, 0.0F);
+  const auto ground = sample(QVector3D(3.0F, 0.0F, 0.0F), up);
+  EXPECT_GT(ground.x(), 0.16F) << "the ground halfway through the light pool is dim";
+  EXPECT_GT(ground.y(), 0.08F);
+  EXPECT_GT(ground.x(), ground.y());
+  EXPECT_GT(ground.y(), ground.z());
+  const QVector3D object_position(3.0F, shape.height_above_ground, 0.0F);
+  const auto facing = sample(object_position, QVector3D(-1.0F, 0.0F, 0.0F));
+  EXPECT_GT(facing.x(), 0.4F) << "nearby objects should visibly catch the firelight";
+  EXPECT_LT(facing.x(), 1.0F);
+  EXPECT_GT(sample(QVector3D(1.0F, 0.0F, 0.0F), up).x(), ground.x());
+  EXPECT_EQ(sample(QVector3D(shape.reach, 0.0F, 0.0F), up), QVector3D());
+  EXPECT_EQ(sample(QVector3D(20.0F, 0.0F, 0.0F), up), QVector3D());
+  EXPECT_EQ(sample(object_position, QVector3D(1.0F, 0.0F, 0.0F)), QVector3D());
+
+  shader.set_uniform("u_has_local_light_mask", 1);
+  shader.set_uniform("u_local_light_mask", 0);
+  EXPECT_EQ(sample(QVector3D(3.0F, 0.0F, 0.0F), up), QVector3D());
+  shader.set_uniform("u_local_light_mask", 1);
+  EXPECT_EQ(sample(QVector3D(3.0F, 0.0F, 0.0F), up), ground);
+  EXPECT_EQ(gl.glGetError(), static_cast<GLenum>(GL_NO_ERROR));
+
+  shader.release();
+  target.release();
+  gl.glDeleteVertexArrays(1, &vao);
+  gl.glDeleteBuffers(1, &buffer);
 }
