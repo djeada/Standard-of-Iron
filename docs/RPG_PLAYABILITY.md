@@ -57,15 +57,15 @@ Artifacts live under `artifacts/rpg-gates/`. The comparison baseline is `artifac
 
 `tools/arena/rpg_gate_manifest.json` is authoritative for the `rpg_*` scenarios included in the gate. `arena_rpg_gate_manifest_test` compares the manifest and scenario registry in both directions, so neither side can silently drift.
 
-| Field | Meaning |
-| --- | --- |
-| `id` | Registered scenario id |
-| `status` | `required_green` or `expected_red` |
-| `gate` | Playability gate that owns the scenario |
-| `notes` | What the scenario proves or why it is intentionally red |
-| `issue_codes` | Required failure codes for `expected_red` |
-| `repeats` | Number of identical runs used for the verdict |
-| `reproduction` | `deterministic` or `nondeterministic` |
+| Field          | Meaning                                                          |
+| -------------- | ---------------------------------------------------------------- |
+| `id`           | Registered scenario id                                           |
+| `status`       | `required_green` or `expected_red`                               |
+| `gate`         | Playability gate that owns the scenario                          |
+| `notes`        | What the scenario proves or why it is intentionally red          |
+| `issue_codes`  | Required failure codes for `expected_red`                        |
+| `repeats`      | Number of identical runs used for the verdict                    |
+| `reproduction` | `deterministic` or `nondeterministic`                            |
 | `intermittent` | Whether mixed repeat results are an explicitly declared property |
 
 `expected_red` is a ratchet, not an exemption. If every repeat passes, the gate reports `FIXED` and exits 4; the same change must promote the scenario to `required_green`. Thresholds are changed only for an explicit design reason, never simply to make a row green.
@@ -80,25 +80,25 @@ Behavior covers every non-performance issue code and is hardware-independent eno
 
 Performance covers `frame_budget_exceeded`, the `performance_*` codes, and frame-time percentiles. It is always reported and is enforced only with `--enforce-performance` on named reference hardware.
 
-| Repeat result | `required_green` | `expected_red` |
-| --- | --- | --- |
-| All pass | `PASS` | `FIXED` |
-| All fail | `FAIL` | `RED(known)` |
-| Mixed | `FLAKY-FAIL` | `RED(intermittent)` when declared, otherwise `FLAKY` |
+| Repeat result | `required_green` | `expected_red`                                       |
+| ------------- | ---------------- | ---------------------------------------------------- |
+| All pass      | `PASS`           | `FIXED`                                              |
+| All fail      | `FAIL`           | `RED(known)`                                         |
+| Mixed         | `FLAKY-FAIL`     | `RED(intermittent)` when declared, otherwise `FLAKY` |
 
 A `nondeterministic` reproduction records a real defect that the scenario cannot provoke on demand. It reports `RED(unreproduced)` on a passing run and `RED(known)` on a failing run, but it does not by itself change the gate result. It remains an explicit debt until a deterministic reproduction exists.
 
 ### Exit codes
 
-| Code | Meaning |
-| ---: | --- |
-| 0 | Every scenario matched its manifest expectation |
-| 1 | A `required_green` scenario failed behaviorally |
-| 2 | Build, unit-test filter, or argument failure |
-| 3 | Incomplete run, timeout, or missing report |
-| 4 | An `expected_red` scenario passed every repeat |
-| 5 | Enforced performance budget missed |
-| 6 | Identical repeats disagreed without an intermittent declaration |
+| Code | Meaning                                                         |
+| ---: | --------------------------------------------------------------- |
+|    0 | Every scenario matched its manifest expectation                 |
+|    1 | A `required_green` scenario failed behaviorally                 |
+|    2 | Build, unit-test filter, or argument failure                    |
+|    3 | Incomplete run, timeout, or missing report                      |
+|    4 | An `expected_red` scenario passed every repeat                  |
+|    5 | Enforced performance budget missed                              |
+|    6 | Identical repeats disagreed without an intermittent declaration |
 
 ## Presentation trace
 
@@ -106,23 +106,23 @@ Every rendered frame of an `rpg_*` Arena scenario carries a `commander` object i
 
 The trace is designed to attribute a failure to one pipeline stage rather than infer it from the final image.
 
-| Group | Contents |
-| --- | --- |
-| `input` | Edge sequences for press, release, consumption, refusal, and drop; sampled frame; move axes; held state and duration; raw look delta; view angles |
-| `motor` | Authoritative and presented pose, desired and accepted velocity, grounded state, blocked/slide state, separation correction, lunge, jump snap-back, and displacement sources |
+| Group    | Contents                                                                                                                                                                          |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `input`  | Edge sequences for press, release, consumption, refusal, and drop; sampled frame; move axes; held state and duration; raw look delta; view angles                                 |
+| `motor`  | Authoritative and presented pose, desired and accepted velocity, grounded state, blocked/slide state, separation correction, lunge, jump snap-back, and displacement sources      |
 | `camera` | Commander and visual anchor, pivot, unconstrained and resolved eye/target, boom state, obstruction, terrain lift, eye clearance, FOV, yaw/pitch, framing, and framing transitions |
-| `combat` | Action phase and time, queue state, guard and perfect-guard state, dodge timing, target ids and slots, hit-confirm sequence, health, and stamina |
-| `costs` | Scoped timing accumulators for motor, targeting, weapon trace, engagement, and camera |
+| `combat` | Action phase and time, queue state, guard and perfect-guard state, dodge timing, target ids and slots, hit-confirm sequence, health, and stamina                                  |
+| `costs`  | Scoped timing accumulators for motor, targeting, weapon trace, engagement, and camera                                                                                             |
 
 The motor trace also carries the shared movement facts that identify ownership in one line:
 
-| Field | Meaning |
-| --- | --- |
-| `movement_mode` | `direct_control` or `rts` |
-| `steering_source` | `DirectControl`, `Route`, or `None` from `MovementFacts::desired.source` |
-| `static_walkable` | Result from the shared `Walkability` layer |
-| `dynamic_push` | Correction applied by `BodyContactSystem`, with neighbor and overlap counts |
-| `accepted_displacement` | Actual displacement compared with requested speed and `dt` |
+| Field                   | Meaning                                                                     |
+| ----------------------- | --------------------------------------------------------------------------- |
+| `movement_mode`         | `direct_control` or `rts`                                                   |
+| `steering_source`       | `DirectControl`, `Route`, or `None` from `MovementFacts::desired.source`    |
+| `static_walkable`       | Result from the shared `Walkability` layer                                  |
+| `dynamic_push`          | Correction applied by `BodyContactSystem`, with neighbor and overlap counts |
+| `accepted_displacement` | Actual displacement compared with requested speed and `dt`                  |
 
 `dynamic_push` comes from shared movement facts rather than a controller-local estimate. A nonzero push in direct control with a steering source other than `DirectControl` is therefore an ownership violation. `separation_push` remains the magnitude used by `CommanderMotorCorrectionWithin`.
 
@@ -132,15 +132,15 @@ Animation data stays in the existing `soldiers` samples, including visual state,
 
 Arena expectations convert traces into explicit pass/fail rules. The standard commander checks include:
 
-| Expectation | What it enforces |
-| --- | --- |
-| `CommanderInputEdgesAllConsumed` | Every relevant press is consumed or explicitly dropped, and drops remain within budget |
-| `CommanderBoomIsContinuous` | Retraction may be immediate; extension must remain smooth and must not pump under one obstruction |
-| `CommanderMotorCorrectionWithin` | Separation correction and jump snap-back remain inside their per-frame budgets |
-| `NoUncommandedViewRotation` | The view changes only from look input, framing, or an active lock |
-| `CommanderSpeedIsContinuous` | Planar velocity changes remain inside acceleration/deceleration budgets |
-| `CommanderContactCountAtMost` | One running action produces no more contacts than authored |
-| `CommanderCameraKeepsCommanderInSight` | Opaque geometry cannot remain between the lens and commander beyond the allowed run |
+| Expectation                            | What it enforces                                                                                  |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `CommanderInputEdgesAllConsumed`       | Every relevant press is consumed or explicitly dropped, and drops remain within budget            |
+| `CommanderBoomIsContinuous`            | Retraction may be immediate; extension must remain smooth and must not pump under one obstruction |
+| `CommanderMotorCorrectionWithin`       | Separation correction and jump snap-back remain inside their per-frame budgets                    |
+| `NoUncommandedViewRotation`            | The view changes only from look input, framing, or an active lock                                 |
+| `CommanderSpeedIsContinuous`           | Planar velocity changes remain inside acceleration/deceleration budgets                           |
+| `CommanderContactCountAtMost`          | One running action produces no more contacts than authored                                        |
+| `CommanderCameraKeepsCommanderInSight` | Opaque geometry cannot remain between the lens and commander beyond the allowed run               |
 
 Each expectation has synthetic positive and negative coverage in `ArenaCommanderMetricsTest`. Retraction itself is not treated as a discontinuity because collision safety requires the camera to shorten immediately when necessary. Tiny boom reversals below 5 mm are numerical noise rather than pumping.
 
