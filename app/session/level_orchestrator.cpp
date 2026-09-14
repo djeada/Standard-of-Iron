@@ -16,16 +16,14 @@
 #include "game/game_config.h"
 #include "game/map/map_context.h"
 #include "game/map/terrain_service.h"
+#include "game/session/map_session.h"
 #include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
-#include "game/systems/cursed_gold_vein_system.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/troop_count_registry.h"
-#include "game/systems/undead_awakening_system.h"
 #include "game/systems/victory_service.h"
-#include "game/wildlife/wildlife_system.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 #include "utils/resource_utils.h"
@@ -171,10 +169,6 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
   Game::GameConfig::instance().set_max_troops_per_player(
       load_result.max_troops_per_player);
 
-  if (victory_service != nullptr) {
-    victory_service->configure(load_result.victory_config, result.updated_player_id);
-  }
-
   if (load_result.has_focus_position && (scene.active_camera != nullptr)) {
     const auto framing = Game::GameConfig::instance().camera_reset_framing();
     scene.active_camera->set_rts_view(
@@ -195,19 +189,7 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
   if (map_context.valid()) {
     const auto& map_def = *map_context.definition();
     level.starting_resources = map_def.starting_resources;
-    if (auto* undead_system =
-            world.get_system<Game::Systems::UndeadAwakeningSystem>()) {
-      undead_system->configure(map_def);
-      if (victory_service != nullptr) {
-        victory_service->set_undead_zone_query(undead_system);
-      }
-    }
-    if (auto* vein_system = world.get_system<Game::Systems::CursedGoldVeinSystem>()) {
-      vein_system->configure(map_def);
-    }
-    if (auto* wildlife_system = world.get_system<Game::Wildlife::WildlifeSystem>()) {
-      wildlife_system->configure(map_def);
-    }
+    Game::Session::configure_map_systems(world, map_def, victory_service);
     if (minimap_manager != nullptr) {
       minimap_manager->generate_for_map(map_def);
       if (visibility_coordinator != nullptr) {

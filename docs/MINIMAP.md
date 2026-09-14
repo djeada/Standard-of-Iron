@@ -129,9 +129,9 @@ Capture-completion and shrine events use a zero cooldown because they are rare a
 
 Selected troops with a movement goal publish their destinations through `MinimapViewModel.destinations`.
 
-Goals within two world units of one another collapse into one marker, and the list is capped at eight destinations. Each item also carries the selection centroid, allowing the overlay to draw a visual leash from the squad toward its goal.
+Goals within two world units of one another collapse into one marker, and the list is capped at eight destinations. The overlay draws one flag per destination and nothing else: an earlier version also drew a leash line from the selection centroid to every flag, which became a fan of lines as soon as a mixed selection had several goals, so the centroid is no longer published.
 
-The centroid is quantized before it contributes to the destination hash. A marching formation therefore republishes the QML property only a few times per second instead of at full simulation update frequency.
+The destination hash only changes when the set of clustered goal cells changes, so a marching formation does not republish the QML property every simulation update.
 
 ## Landmark feed
 

@@ -77,7 +77,7 @@ help:
 	@echo "  $(GREEN)test-only$(RESET)     - Run existing test binaries without building"
 	@echo "  $(GREEN)validate-content$(RESET) - Validate mission and campaign JSON files"
 	@echo "  $(GREEN)audio-preview$(RESET) - Render before/after WAVs of the decode-time mastering"
-	@echo "  $(GREEN)audio-report$(RESET)  - List missing/placeholder sounds into docs/AUDIO_WISHLIST.md"
+	@echo "  $(GREEN)audio-report$(RESET)  - List missing/placeholder sounds into artifacts/audio/AUDIO_WISHLIST.md"
 	@echo "  $(GREEN)audio-check$(RESET)   - Fail when cues, manifest and audio files disagree"
 	@echo "  $(GREEN)audio-scan$(RESET)    - Report leading silence and boundary clicks (never edits)"
 	@echo "  $(GREEN)audio-import$(RESET)  - Propose an import for files dropped in \"new sfx/\""
@@ -385,8 +385,6 @@ audio-battle:
 	@$(PYTHON) tools/audio_field/build_battle.py
 	@echo "$(GREEN)✓ Composed battle cues rebuilt$(RESET)"
 
-# Rewrite docs/AUDIO_WISHLIST.md from the cue catalog, the manifest and the
-# assets on disk. Run it any time you want the current list of missing sounds.
 .PHONY: audio-preview
 audio-preview:
 	@echo "$(BOLD)$(BLUE)Rendering audio mastering preview...$(RESET)"
@@ -394,11 +392,13 @@ audio-preview:
 	@$(BUILD_DIR)/bin/audio_master_preview --out artifacts/audio_preview $(AUDIO_PREVIEW_ARGS)
 
 ## Audit the cue catalogue, the manifest and the files on disk.
+# Writes artifacts/audio/AUDIO_WISHLIST.md; run it any time you want the current
+# list of missing sounds.
 .PHONY: audio-report
 audio-report:
 	@echo "$(BOLD)$(BLUE)Auditing game audio...$(RESET)"
 	@$(PYTHON) scripts/audio_report.py
-	@echo "$(GREEN)✓ Audio report written to docs/AUDIO_WISHLIST.md$(RESET)"
+	@echo "$(GREEN)✓ Audio report written to artifacts/audio/AUDIO_WISHLIST.md$(RESET)"
 
 # Same audit as a gate: fails when a cue, a manifest entry and a file disagree.
 .PHONY: audio-check
@@ -522,7 +522,7 @@ lint-fix:
 lint-changed:
 	@$(FORMAT_DRIVER) --changed $(FORMAT_BASE) --lint --jobs $(FORMAT_JOBS) --build-dir $(BUILD_DIR) $(FORMAT_ARGS)
 
-## Nightly lane: whole-project clang-tidy, advisory findings become failures.
+## Whole-project clang-tidy, advisory findings become failures. Local only: no CI lane runs it.
 lint-deep:
 	@$(FORMAT_DRIVER) --all --lint --deep --fail-on-advisory --jobs $(FORMAT_JOBS) --build-dir $(BUILD_DIR) $(FORMAT_ARGS)
 

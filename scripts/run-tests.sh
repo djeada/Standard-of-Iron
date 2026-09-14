@@ -4,10 +4,11 @@
 # There is one suite list, below, and both profiles build and run all of it.
 # The profiles differ only in which individual tests they execute:
 #
-#   full  everything. Weekly sanitizer and coverage lanes, extended validation
-#         and release verification use this, plus the acceptance binaries that
-#         are not GoogleTest suites (the gameplay verifier, the QML suite and
-#         the headless replay round trip).
+#   full  everything. Extended validation and release verification use this,
+#         plus the acceptance binaries that are not GoogleTest suites (the
+#         gameplay verifier, the QML suite and the headless replay round trip).
+#         The weekly sanitizer and coverage lanes use pr: under instrumentation
+#         the full profile does not fit their two-hour budget.
 #   pr    everything except the tests named in tests/extended_tests.txt: the
 #         headless battles and the sweeps over every shipped asset. Those spend
 #         seconds each and had grown to over ninety minutes, which is longer

@@ -202,6 +202,10 @@ void AudioSystem::stop_sound(const std::string& sound_id) {
   enqueue(AudioEvent(AudioEventType::STOP_SOUND, sound_id));
 }
 
+void AudioSystem::stop_all_sounds() {
+  enqueue(AudioEvent(AudioEventType::STOP_ALL_SOUNDS));
+}
+
 void AudioSystem::stop_music() {
   enqueue(AudioEvent(AudioEventType::STOP_MUSIC));
 }
@@ -593,6 +597,15 @@ void AudioSystem::process_event(const AudioEvent& event) {
                          [&](const ActiveSound& as) { return as.id == resource_id; }),
           active_sounds.end());
     }
+    break;
+  }
+  case AudioEventType::STOP_ALL_SOUNDS: {
+    std::lock_guard<std::mutex> const lock(resource_mutex);
+    for (auto& [resource_id, sound] : sounds) {
+      sound->stop();
+    }
+    std::lock_guard<std::mutex> const active_lock(active_sounds_mutex);
+    active_sounds.clear();
     break;
   }
   case AudioEventType::STOP_MUSIC: {

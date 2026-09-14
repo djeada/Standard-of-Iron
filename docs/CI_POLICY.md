@@ -50,7 +50,7 @@ The pull-request path intentionally does **not** run the battlefield verifier, r
 
 ## Weekly and manual validation
 
-`.github/workflows/weekly.yml` is the broad whole-project lane. It runs the complete test binaries under sanitizers and coverage, performs whole-tree lint and Apple portability checks, and validates packaging on every supported platform.
+`.github/workflows/weekly.yml` is the broad whole-project lane. It runs every test binary under sanitizers and coverage with the fast (`pr`) test profile — the extended tests do not fit a two-hour budget instrumented and stay with `extended-validation.yml` — performs the Clang + libc++ (Apple) portability check, and validates packaging on every supported platform. Whole-tree clang-tidy is not part of it; that pass ran past three hours on one runner and stays local (`make lint-deep`).
 
 `.github/workflows/extended-validation.yml` runs every Monday and can also be started through `workflow_dispatch`. It owns the expensive gates removed from pull requests:
 

@@ -180,7 +180,9 @@ auto plan_undead_zone_shrine(const TerrainService& terrain,
   center.setY(
       terrain.resolve_surface_world_y(center.x(), center.z(), k_shrine_surface_offset));
 
-  float const adopt_radius = std::max(k_undead_shrine_adopt_distance, zone.radius);
+  float const search_radius = std::max(k_undead_shrine_min_search_radius, zone.radius);
+
+  float const adopt_radius = std::max(k_undead_shrine_adopt_distance, search_radius);
   if (const WorldProp* existing =
           find_existing_shrine(terrain, center, adopt_radius, exclusions);
       existing != nullptr) {
@@ -198,7 +200,6 @@ auto plan_undead_zone_shrine(const TerrainService& terrain,
     return placement;
   }
 
-  float const search_radius = std::max(k_undead_shrine_min_search_radius, zone.radius);
   for (float radius = k_search_step; radius <= search_radius; radius += k_search_step) {
     int const samples =
         std::max(k_min_samples_per_ring,

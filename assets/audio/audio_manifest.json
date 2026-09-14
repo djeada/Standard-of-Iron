@@ -12,6 +12,10 @@
       "tags": {
         "faction": "roman",
         "unit": "archer"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -26,6 +30,10 @@
       "tags": {
         "faction": "roman",
         "unit": "swordsman"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -40,6 +48,10 @@
       "tags": {
         "faction": "roman",
         "unit": "spearman"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -53,6 +65,10 @@
       "tags": {
         "faction": "roman",
         "unit": "horse_archer"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -66,6 +82,10 @@
       "tags": {
         "faction": "roman",
         "unit": "horse_spearman"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -79,6 +99,10 @@
       "tags": {
         "faction": "roman",
         "unit": "horse_swordsman"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -92,6 +116,10 @@
       "tags": {
         "faction": "roman",
         "unit": "healer"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -105,6 +133,10 @@
       "tags": {
         "faction": "roman",
         "unit": "catapult"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -118,6 +150,10 @@
       "tags": {
         "faction": "roman",
         "unit": "ballista"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -131,6 +167,10 @@
       "tags": {
         "faction": "roman",
         "unit": "builder"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -142,6 +182,10 @@
         "faction": "roman",
         "role": "commander",
         "unit_def": "roman_legion_organizer"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -153,6 +197,10 @@
         "faction": "roman",
         "role": "commander",
         "unit_def": "roman_veteran_consul"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -164,6 +212,10 @@
         "faction": "roman",
         "role": "commander",
         "unit_def": "roman_field_commander"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -177,6 +229,10 @@
       "tags": {
         "faction": "carthage",
         "unit": "archer"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -190,6 +246,10 @@
       "tags": {
         "faction": "carthage",
         "unit": "swordsman"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -203,6 +263,10 @@
       "tags": {
         "faction": "carthage",
         "unit": "spearman"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -216,6 +280,10 @@
       "tags": {
         "faction": "carthage",
         "unit": "horse_archer"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -229,6 +297,10 @@
       "tags": {
         "faction": "carthage",
         "unit": "horse_spearman"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -242,6 +314,10 @@
       "tags": {
         "faction": "carthage",
         "unit": "horse_swordsman"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -255,6 +331,10 @@
       "tags": {
         "faction": "carthage",
         "unit": "healer"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -268,6 +348,10 @@
       "tags": {
         "faction": "carthage",
         "unit": "catapult"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -281,6 +365,10 @@
       "tags": {
         "faction": "carthage",
         "unit": "ballista"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -294,6 +382,10 @@
       "tags": {
         "faction": "carthage",
         "unit": "elephant"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -305,6 +397,10 @@
         "faction": "carthage",
         "role": "commander",
         "unit_def": "carthage_sword_commander"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -316,6 +412,10 @@
         "faction": "carthage",
         "role": "commander",
         "unit_def": "carthage_bow_commander"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -327,6 +427,10 @@
         "faction": "carthage",
         "role": "commander",
         "unit_def": "carthage_spear_commander"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -337,6 +441,10 @@
       "tags": {
         "faction": "roman",
         "unit": "praetorian_guard"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -347,6 +455,10 @@
       "tags": {
         "faction": "roman",
         "unit": "fire_legionary"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -357,6 +469,10 @@
       "tags": {
         "faction": "carthage",
         "unit": "infantry"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -367,6 +483,10 @@
       "tags": {
         "faction": "carthage",
         "unit": "numidians"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -377,6 +497,10 @@
       "tags": {
         "faction": "carthage",
         "unit": "baal_cultist"
+      },
+      "provenance": {
+        "origin": "Recorded by the project author",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -387,6 +511,10 @@
       "tags": {
         "screen_context": "menu",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Standard_of_Iron_Main_Theme_2026-08-28T210251`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -397,6 +525,10 @@
       "tags": {
         "screen_context": "menu",
         "variant": "alternate"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Standard_of_Iron_Main_Theme_ALT`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -407,6 +539,10 @@
       "tags": {
         "screen_context": "campaign",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Hannibals_Ascent_2026-08-28T204617`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -417,6 +553,10 @@
       "tags": {
         "screen_context": "campaign",
         "variant": "alternate"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `The_Crossing_of_the_Alps_2026-08-28T204617`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -427,6 +567,10 @@
       "tags": {
         "ambient_state": "peaceful",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Uneasy_Rest_at_the_Punic_Camp_2026-08-28T204959`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -437,6 +581,10 @@
       "tags": {
         "ambient_state": "peaceful",
         "variant": "harbour"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Hearth_and_Harbor_of_Old_2026-08-28T204417`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -448,6 +596,10 @@
         "ambient_state": "peaceful",
         "faction": "carthage",
         "variant": "night"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Campfire_Shadows_of_Carthage_2026-08-28T204014`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -459,6 +611,10 @@
         "ambient_state": "peaceful",
         "faction": "roman",
         "variant": "dusk"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Echoes_of_the_Legion_at_Dusk_2026-08-28T205219`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -469,6 +625,10 @@
       "tags": {
         "ambient_state": "peaceful",
         "variant": "pastoral"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Sunlight_Over_the_Olive_Groves_2026-08-28T204417`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -479,6 +639,10 @@
       "tags": {
         "ambient_state": "peaceful",
         "variant": "resting"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Uneasy_Rest_at_the_Punic_Camp_2026-08-28T204014`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -489,6 +653,10 @@
       "tags": {
         "event": "undead_awakening",
         "faction": "iron_sepulcher"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Guardians_of_the_Forest_Throne_2026-08-29T075035`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -499,6 +667,10 @@
       "tags": {
         "ambient_state": "peaceful",
         "variant": "highland_long"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Ancient_Peak_Fires_2026-08-28T210704`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -509,6 +681,10 @@
       "tags": {
         "ambient_state": "peaceful",
         "variant": "outpost_long"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Echoes_of_the_Ancient_Outpost_2026-08-28T210704`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -519,6 +695,10 @@
       "tags": {
         "ambient_state": "tense",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Ancient_Preparations_2026-08-28T205218`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -529,6 +709,10 @@
       "tags": {
         "ambient_state": "tense",
         "variant": "watch"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Sentinels_of_the_Peak_2026-08-28T210721`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -539,6 +723,10 @@
       "tags": {
         "ambient_state": "combat",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `The_Dust_of_Cannae_2026-08-28T210020`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -549,6 +737,10 @@
       "tags": {
         "ambient_state": "combat",
         "variant": "ambush"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Dust_of_Trasimene_2026-08-28T210020`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -560,6 +752,10 @@
         "ambient_state": "combat",
         "faction": "roman",
         "variant": "shieldwall"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `The_Shield_Wall_at_Dusk_2026-08-28T210210`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -571,6 +767,10 @@
         "ambient_state": "combat",
         "faction": "roman",
         "variant": "defensive"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `The_Last_Defensive_Wall_2026-08-28T210210`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -582,6 +782,10 @@
         "ambient_state": "combat",
         "faction": "carthage",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Carthaginian_Dust_2026-08-28T205446`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -593,6 +797,10 @@
         "ambient_state": "combat",
         "faction": "carthage",
         "variant": "cavalry"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Cavalry_of_Carthage_2026-08-28T205444`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -603,6 +811,10 @@
       "tags": {
         "ambient_state": "victory",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `The_Gates_of_Carthage_2026-08-28T210547`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -614,6 +826,10 @@
         "ambient_state": "victory",
         "faction": "carthage",
         "variant": "triumph"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Triumph_of_Carthage_2026-08-28T210547`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -624,6 +840,10 @@
       "tags": {
         "ambient_state": "defeat",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Tragic_Silence_on_the_Field_2026-08-28T210427`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -634,6 +854,10 @@
       "tags": {
         "ambient_state": "defeat",
         "variant": "alternate"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Echo_of_Defeat_2026-08-28T210512`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -644,6 +868,10 @@
       "tags": {
         "ambient_state": "defeat",
         "variant": "aftermath"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `The_Quiet_Field_2026-08-28T210427`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -654,6 +882,10 @@
       "tags": {
         "ambient_state": "defeat",
         "variant": "retreat"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Signal_Into_Wind_2026-08-28T210511`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -666,8 +898,8 @@
         "variant": "iron_kingdom"
       },
       "provenance": {
-        "origin": "ElevenLabs render, imported by tools/audio_import/import_music.py (batch 2026-09-iron)",
-        "licence": "Generated for this project under a licence held by the project author that permits commercial use"
+        "origin": "ElevenLabs render `Iron_Kingdom_2026-09-01T083636`, batch `2026-09-iron` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -680,8 +912,8 @@
         "variant": "old_gods"
       },
       "provenance": {
-        "origin": "ElevenLabs render, imported by tools/audio_import/import_music.py (batch 2026-09-iron)",
-        "licence": "Generated for this project under a licence held by the project author that permits commercial use"
+        "origin": "ElevenLabs render `March_of_the_Old_Gods_2026-09-01T083738`, batch `2026-09-iron` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -694,8 +926,8 @@
         "variant": "siege"
       },
       "provenance": {
-        "origin": "ElevenLabs render, imported by tools/audio_import/import_music.py (batch 2026-09-iron)",
-        "licence": "Generated for this project under a licence held by the project author that permits commercial use"
+        "origin": "ElevenLabs render `Siege_at_Dawn_2026-09-01T083842`, batch `2026-09-iron` of `tools/audio_import/import_music.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -709,6 +941,10 @@
       "tags": {
         "biome": "mountain",
         "variant": "pass"
+      },
+      "provenance": {
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Pic du Canigou, France, 'Sound of Wind on top of the Canigou Mountain'",
+        "licence": "Public Domain Mark 1.0"
       }
     },
     {
@@ -722,6 +958,10 @@
       "tags": {
         "biome": "plains",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Dörflis, Naturpark Haßberge, Germany, 'Wild Meadow Summer'; radio aporee ::: maps, Pic du Canigou, France, 'Sound of Wind on top of the Canigou Mountain'",
+        "licence": "Public Domain Mark 1.0"
       }
     },
     {
@@ -735,6 +975,10 @@
       "tags": {
         "biome": "forest",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Planina Razor, Tolmin, Slovenia, 'Birds in forest'; TDC WIND, 'CU_Thru Trees, Rustling, Faint Crickets'",
+        "licence": "Public Domain Mark 1.0 + CC0 1.0"
       }
     },
     {
@@ -748,6 +992,10 @@
       "tags": {
         "biome": "river",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Joneliškės, Lithuania, 'river Viesa'",
+        "licence": "Public Domain Mark 1.0"
       }
     },
     {
@@ -762,6 +1010,10 @@
         "biome": "camp",
         "faction": "roman",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -776,6 +1028,10 @@
         "biome": "camp",
         "faction": "roman",
         "variant": "alternate"
+      },
+      "provenance": {
+        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -789,6 +1045,10 @@
       "tags": {
         "biome": "mountain",
         "variant": "camp"
+      },
+      "provenance": {
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Pod Lipą, Borsuki, Poland, '(835a AB) midnight crickets'; Wikimedia Commons, File:Dry grass burning in open fireplace.ogg, by ezwa",
+        "licence": "Public Domain Mark 1.0 + Public domain"
       }
     },
     {
@@ -802,6 +1062,10 @@
       "tags": {
         "layer": "hearth",
         "variant": "camp_fire"
+      },
+      "provenance": {
+        "origin": "Cut by `tools/audio_field/build_beds.py` from Wikimedia Commons, File:Dry grass burning in open fireplace.ogg, by ezwa",
+        "licence": "Public domain"
       }
     },
     {
@@ -815,6 +1079,10 @@
       "tags": {
         "biome": "battlefield",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, 'dry hillside, parched wind'; TDC FOOTSTEPS, '…MCU_Running, Rocky Road'",
+        "licence": "Public Domain Mark 1.0 + CC0 1.0"
       }
     },
     {
@@ -828,6 +1096,10 @@
       "tags": {
         "biome": "battlefield",
         "variant": "alternate"
+      },
+      "provenance": {
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, 'dry hillside, parched wind'; TDC FOOTSTEPS, '…CU_Footsteps, Rocky Surface'",
+        "licence": "Public Domain Mark 1.0 + CC0 1.0"
       }
     },
     {
@@ -842,6 +1114,10 @@
         "biome": "camp",
         "faction": "carthage",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -856,6 +1132,10 @@
         "biome": "camp",
         "faction": "carthage",
         "variant": "alternate"
+      },
+      "provenance": {
+        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -870,6 +1150,10 @@
         "biome": "plains",
         "faction": "carthage",
         "variant": "march"
+      },
+      "provenance": {
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Cafe Tissardmine, Morocco, 'Desert Wind'; TDC FOOTSTEPS, '…MCU_Running, Rocky Road'",
+        "licence": "Public Domain Mark 1.0 + CC0 1.0"
       }
     },
     {
@@ -885,6 +1169,10 @@
         "faction": "roman",
         "context": "road",
         "variant": "road"
+      },
+      "provenance": {
+        "origin": "Cut by `tools/audio_field/build_beds.py` from TDC FOOTSTEPS, '…CU_Footsteps, Rocky Surface'; radio aporee ::: maps, 'dry hillside, parched wind'",
+        "licence": "CC0 1.0 + Public Domain Mark 1.0"
       }
     },
     {
@@ -899,6 +1187,10 @@
         "biome": "camp",
         "context": "siege",
         "variant": "siege"
+      },
+      "provenance": {
+        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -912,6 +1204,10 @@
       "tags": {
         "biome": "village",
         "variant": "aftermath"
+      },
+      "provenance": {
+        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -925,6 +1221,10 @@
       "tags": {
         "biome": "harbor",
         "variant": "primary"
+      },
+      "provenance": {
+        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -938,6 +1238,10 @@
       "tags": {
         "biome": "city",
         "variant": "market"
+      },
+      "provenance": {
+        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -951,6 +1255,10 @@
       "tags": {
         "layer": "weather",
         "weather": "rain"
+      },
+      "provenance": {
+        "origin": "Cut by `tools/audio_field/build_beds.py` from TDC RAIN, 'CU_Raining'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -964,6 +1272,10 @@
       "tags": {
         "layer": "weather",
         "weather": "storm"
+      },
+      "provenance": {
+        "origin": "Cut by `tools/audio_field/build_beds.py` from Own recording, Karlsruhe, 16 July 2026",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -977,6 +1289,10 @@
       "tags": {
         "layer": "weather",
         "weather": "snow"
+      },
+      "provenance": {
+        "origin": "Cut by `tools/audio_field/build_beds.py` from TDC WIND, 'CU_Blizzard, Old Recording'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -996,9 +1312,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC FIGHT, 'CU_Smacks, Rapid'; TDC METAL, 'Metal, Clang, Thin 01'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1017,9 +1332,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC SWOOSHES, 'CU_Swishes, Big, Low'; TDC SWOOSHES, 'MCU_Cloth, Swoosh'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1039,9 +1353,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CROWDS, 'CU_Crowd Applause, Cheering, Yelling, Whooping'; TDC FOOTSTEPS, 'MCU_Running, Rocky Road'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1059,9 +1372,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CROWDS, 'CU_Crowd Applause, Cheering, Yelling, Whooping'; TDC WIND, 'CU_Thru Trees, Rustling, Faint Crickets'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1082,9 +1394,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from Wikimedia Commons, 'Six Horses Galloping By', Freesound Community via Pixabay",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1104,9 +1415,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC ANIMALS, 'CU_Elephant Trumpet'; TDC FOOTSTEPS, 'MCU_Running, Rocky Road'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1124,9 +1434,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC ANIMALS, 'CU_Elephant Trumpet'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1146,9 +1455,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Internet Archive, `male_scream`",
+        "licence": "Public Domain Mark 1.0"
       }
     },
     {
@@ -1164,6 +1472,10 @@
         "attack_family": "death",
         "variant": "gentle",
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render imported in #1363; its name was not kept (`UNNAMED_IMPORTS`)",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1179,6 +1491,10 @@
         "attack_family": "death",
         "variant": "stronger",
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render imported in #1363; its name was not kept (`UNNAMED_IMPORTS`)",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1196,9 +1512,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CROWDS, 'CU_Crowd Applause, Cheering, Yelling, Whooping'; TDC WIND, 'CU_Thru Trees, Rustling, Faint Crickets'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1216,9 +1531,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC FIGHT, 'CU_Bodyfall, On Grass'; TDC METAL, 'Metal, Clang, Dull, Quiet'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1236,9 +1550,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC FOOTSTEPS, 'MCU_Footsteps, On Grass'; TDC MUSICAL, 'CU_Drum, Snare, Military Marching Band'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1255,9 +1568,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CROWDS, 'CU_Crowd Applause, Cheering, Yelling, Whooping'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1276,9 +1588,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from Wikimedia Commons, 'File:Hunting horn tone.ogg', by Alon-De-Lon",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1297,9 +1608,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CROWDS, 'CU_Crowd Applause, Cheering, Yelling, Whooping'; Wikimedia Commons, 'File:Hunting horn tone.ogg', by Alon-De-Lon",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1316,9 +1626,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CROWDS, 'CU_Crowd Applause, Cheering, Yelling, Whooping'; TDC FOOTSTEPS, 'MCU_Running, Rocky Road'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1336,9 +1645,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC FOOTSTEPS, 'MCU_Running, Rocky Road'; TDC FOOTSTEPS, 'MCU_Footsteps, On Grass'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1356,9 +1664,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC SWOOSHES, 'MCU_Swishes, Medium Low'; TDC SWOOSHES, 'CU_Fly By, Short'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1376,9 +1683,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC SWOOSHES, 'CU_Swishes, Big, Low'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1395,6 +1701,10 @@
       "tags": {
         "alert": "population_limit",
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `No_Peasants_Remain`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1413,9 +1723,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from Wikimedia Commons, 'File:Hunting horn tone.ogg', by Alon-De-Lon",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1432,6 +1741,10 @@
       "tags": {
         "alert": "low_resources",
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `The_Demand_of_the_Builders`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1445,6 +1758,10 @@
       "tags": {
         "ui": "hover",
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Fingertip_and_Parchment`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1458,6 +1775,10 @@
       "tags": {
         "ui": "click",
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Stiff_Leather_Tap`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1474,6 +1795,10 @@
       "tags": {
         "alert": "enemy_reinforcements",
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Horn_of_the_Enemy`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1492,9 +1817,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from Wikimedia Commons, 'File:Hunting horn tone.ogg', by Alon-De-Lon",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1506,6 +1830,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Wooden_Box_Closure`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1519,9 +1847,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `ui.tab_switch`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1535,9 +1862,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `ui.panel_open`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1551,9 +1877,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `ui.panel_close`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1565,6 +1890,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Toggle_Latch_UI_Click`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1576,6 +1905,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Shield_Thud_Error`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1589,9 +1922,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `ui.notification`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1603,6 +1935,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Shield_Boss_Knock`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1616,9 +1952,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `ui.select_group`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1630,6 +1965,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Leather_Lift_Brush`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1643,9 +1982,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.move`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1657,6 +1995,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Roman_War_Horn_Blast`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1668,6 +2010,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `The_Patrol_Horn`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1679,6 +2025,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Damped_War_Drum_Stroke`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1690,6 +2040,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Shields_Planted`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1701,6 +2055,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Guard_Spear_Taps`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1714,9 +2072,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.run`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1730,9 +2087,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.formation`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1744,6 +2100,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Standard_Pole_Placement`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1757,9 +2117,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.gate_mode`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1773,9 +2132,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.rally_set`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1789,8 +2147,8 @@
         "source": "generated"
       },
       "provenance": {
-        "origin": "ElevenLabs render, imported by tools/audio_import/import_cues.py",
-        "licence": "Generated for this project under a licence held by the project author that permits commercial use",
+        "origin": "ElevenLabs render `The_Commanders_Rally`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted",
         "notes": "imported at its delivered length; no trim"
       }
     },
@@ -1805,9 +2163,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `build.placement_begin`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1819,6 +2176,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Hammers_and_Nails`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1830,6 +2191,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render imported in #1366; its name was not kept (`UNNAMED_IMPORTS`)",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1841,6 +2206,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render imported in #1366; its name was not kept (`UNNAMED_IMPORTS`)",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1852,6 +2221,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render imported in #1366; its name was not kept (`UNNAMED_IMPORTS`)",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1865,9 +2238,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `build.unit_queued`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1879,6 +2251,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Resonance_in_the_Courtyard`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1892,9 +2268,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `build.building_destroyed`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1908,9 +2283,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `build.gate_open`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1924,9 +2298,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `build.gate_close`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -1938,6 +2311,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render imported in #1366; its name was not kept (`UNNAMED_IMPORTS`)",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1949,6 +2326,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Objective_Failed`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1960,6 +2341,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Unit_Lost_Signal`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -1973,9 +2358,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC SWOOSHES, 'CU_Stick, Small, Swishes, X4'; TDC METAL, 'CU_Bolt, Drop'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -1989,9 +2373,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CROWDS, 'CU_Crowd Applause, Cheering, Yelling, Whooping'; TDC FOOTSTEPS, 'MCU_Running, Rocky Road'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2005,9 +2388,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC WOOD, 'CU_Ship, Creaking, Sound Design'; TDC SWOOSHES, 'CU_Rope, Twirling Swishes'; TDC WOOD, 'CU_Stick, Small, Breaks, X3'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2021,9 +2403,24 @@
         "source": "generated"
       },
       "provenance": {
-        "origin": "ElevenLabs render, imported by tools/audio_import/import_cues.py",
-        "licence": "Generated for this project under a licence held by the project author that permits commercial use",
+        "origin": "ElevenLabs render `Magical_Healing_Sounds`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted",
         "notes": "imported at its delivered length; no trim"
+      }
+    },
+    {
+      "id": "sfx.combat.heal_bind_wound",
+      "path": "sfx/combat/heal_bind_wound.ogg",
+      "category": "sfx",
+      "priority": 3,
+      "cooldown_ms": 500,
+      "load_policy": "startup",
+      "tags": {
+        "source": "field"
+      },
+      "provenance": {
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CLOTH, 'CU_Baseball Mitt, Velcro, Slow'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2037,9 +2434,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CLOTH, 'CU_Swish, Impact, Fight'; TDC METAL, 'CU_Bolt, Drop'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2053,9 +2449,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC METAL, 'Metal, Clang, Thin 01'; TDC FIGHT, 'CU_Boxing Glove Hits'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2069,9 +2464,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC METAL, 'Metal, Clang, Thin 01'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2085,9 +2479,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC WOOD, 'CU_Stick, Small, Breaks, X3'; TDC METAL, 'Metal, Clang, Thin 01'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2101,9 +2494,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CLOTH, 'CU_Swish, Impact, Fight'; TDC FIGHT, 'CU_Bodyfall, On Grass'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2117,9 +2509,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CLOTH, 'CU_Swish, Impact, Fight'; TDC FOOTSTEPS, 'MCU_Running, Rocky Road'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2133,9 +2524,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC FIGHT, 'CU_Bodyfall, On Grass'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2149,9 +2539,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC METAL, 'Metal, Clang 01'; TDC CLOTH, 'CU_Glove Slap'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2165,9 +2554,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CROWDS, 'CU_Crowd Applause, Cheering, Yelling, Whooping'; TDC FOOTSTEPS, 'MCU_Running, Rocky Road'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2181,9 +2569,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CLOTH, 'CU_Swish, Impact, Fight'; TDC METAL, 'Metal, Clang, Thin 01'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2197,9 +2584,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC METAL, 'Metal, Clang, Dull, Quiet'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2213,9 +2599,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC METAL, 'CU_Small, Tin, Drop'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2229,9 +2614,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `state.speed_change`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -2245,9 +2629,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `state.save_complete`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -2261,9 +2644,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `state.load_complete`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -2277,9 +2659,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `state.commander_enter`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -2293,9 +2674,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `state.commander_exit`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -2309,9 +2689,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `ui.tab_switch`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -2323,6 +2702,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Leather_Shield_Impact`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -2336,9 +2719,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `ui.select_group`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -2352,9 +2734,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `ui.select_group`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -2368,9 +2749,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.move`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -2384,9 +2764,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.move`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -2400,9 +2779,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.run`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -2416,9 +2794,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.formation`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -2432,9 +2809,8 @@
         "source": "synth"
       },
       "provenance": {
-        "origin": "tools/audio_synth",
-        "licence": "Original work of this repository",
-        "notes": "rendered from a recipe by make audio-assets; nothing is sampled"
+        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `build.unit_queued`",
+        "licence": "Own work (MIT)"
       }
     },
     {
@@ -2448,9 +2824,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC FIGHT, 'CU_Bodyfall, On Grass'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2464,9 +2839,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC METAL, 'Metal, Clang 01'; TDC CLOTH, 'CU_Glove Slap'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2480,9 +2854,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC WOOD, 'CU_Floorboard, Creak'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2496,9 +2869,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC METAL, 'CU_Bolt, Drop'; TDC WOOD, 'CU_Floorboard, Creak'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2512,9 +2884,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC WOOD, 'CU_Ship, Creaking, Sound Design'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2531,9 +2902,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'CU_Sword, Hits'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2550,9 +2920,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'Sword, Hits, Scrapes, Shings'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2569,9 +2938,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'Sword, Hits, Scrapes, Shings'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2588,9 +2956,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'Sword, Hits, Scrapes, Shings'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2607,9 +2974,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC WOOD, 'CU_Board Drop 01'; TDC WOOD, 'CU_Board Drop 02'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2626,9 +2992,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC WOOD, 'CU_Board Drop 01'; TDC WOOD, 'CU_Board Drop 02'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2648,9 +3013,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC WOOD, 'CU_Board Drop 03'; TDC WOOD, 'CU_Board Drop 04'; TDC WOOD, 'CU_Board Drop 05'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2667,9 +3031,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC METAL, 'Metal, Clang, Thin 01'; TDC METAL, 'Metal, Clang, Thin 02'; TDC METAL, 'Metal, Clank, Thin'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2686,9 +3049,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC METAL, 'Metal, Clang, Thin 01'; TDC METAL, 'Metal, Clang, Thin 02'; TDC METAL, 'Metal, Clank, Thin'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2705,9 +3067,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC METAL, 'Metal, Clang, Thin 01'; TDC METAL, 'Metal, Clang, Thin 02'; TDC METAL, 'Metal, Clank, Thin'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2724,9 +3085,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC ROCKS, 'CU_Small Stones, Kicked, X4'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2743,9 +3103,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC FOOTSTEPS, 'MCU_Footsteps, On Grass'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2762,9 +3121,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC FOOTSTEPS, 'MCU_Footsteps, On Grass'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2781,9 +3139,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC FOOTSTEPS, 'MCU_Footsteps, On Grass'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2800,9 +3157,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC FOOTSTEPS, 'MCU_Footsteps, On Grass'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2819,9 +3175,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC FOOTSTEPS, 'CU_Footsteps, Rocky Surface'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2838,9 +3193,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC FOOTSTEPS, 'CU_Footsteps, Rocky Surface'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2857,9 +3211,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC FOOTSTEPS, 'CU_Footsteps, Rocky Surface'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2876,9 +3229,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC FOOTSTEPS, 'CU_Footsteps, Rocky Surface'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2895,9 +3247,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC FOOTSTEPS, 'MCU_Running, Rocky Road'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2914,9 +3265,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC FOOTSTEPS, 'MCU_Running, Rocky Road'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2933,9 +3283,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC FOOTSTEPS, 'MCU_Running, Rocky Road'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2952,9 +3301,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC FOOTSTEPS, 'MCU_Running, Rocky Road'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2971,9 +3319,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Wikimedia Commons, `File:Wolf howls.ogg`, 13.35–17.55 s",
+        "licence": "Public domain"
       }
     },
     {
@@ -2990,9 +3337,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Wikimedia Commons, `File:Wolf howls.ogg`, 20.05–23.65 s",
+        "licence": "Public domain"
       }
     },
     {
@@ -3009,9 +3355,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Faragó et al. 2010, PLOS ONE, supporting audio S3",
+        "licence": "CC BY 2.5 (attribution required)"
       }
     },
     {
@@ -3028,9 +3373,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC ANIMALS, 'CU_Aggresive Dog Barks and Snarls, Distant Wind Chimes'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -3047,9 +3391,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC FIGHT, 'CU_Smacks, Rapid'; TDC ANIMALS, 'CU_Aggresive Dog Barks and Snarls, Distant Wind Chimes'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -3066,9 +3409,8 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "Faragó et al. 2010, PLOS ONE, supporting audio S3 and S2",
+        "licence": "CC BY 2.5 (attribution required)"
       }
     },
     {
@@ -3080,6 +3422,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `The_Commanders_Folly`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -3091,6 +3437,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Bronze_Seal_Press`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -3102,6 +3452,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Spear_and_Shield_Impact`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -3113,6 +3467,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Command_Refuse`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -3124,6 +3482,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `No_No_No`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -3133,6 +3495,10 @@
       "load_policy": "mission",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Rise_of_the_Ossuary`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -3142,6 +3508,10 @@
       "load_policy": "mission",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Armored_Soldier_Stagger`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -3151,6 +3521,10 @@
       "load_policy": "startup",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Economy_Income_Tick`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -3161,6 +3535,10 @@
       "tags": {
         "attack_family": "elephant",
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Charge_of_the_War_Elephant`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -3172,6 +3550,10 @@
         "attack_family": "elephant",
         "variant": "panic",
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Distressed_War_Elephant`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -3181,6 +3563,24 @@
       "load_policy": "mission",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Galloping_Hooves`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
+      }
+    },
+    {
+      "id": "sfx.movement.hooves_walk",
+      "path": "sfx/movement/hooves_walk.ogg",
+      "category": "sfx",
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {
+        "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `HoresForest_Path_Walk`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -3190,6 +3590,10 @@
       "load_policy": "mission",
       "tags": {
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Timber_Structure_Inferno`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -3201,6 +3605,10 @@
         "species": "sheep",
         "state": "peaceful",
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Pastoral_Sheep_Bleat`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {
@@ -3212,6 +3620,10 @@
         "species": "bird",
         "state": "peaceful",
         "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Morning_Bird_Chirp`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     }
   ]

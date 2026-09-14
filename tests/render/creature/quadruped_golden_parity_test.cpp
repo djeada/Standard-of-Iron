@@ -5,7 +5,6 @@
 #include <QVector4D>
 
 #include <array>
-#include <charconv>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -611,10 +610,11 @@ auto read_lines(const std::string& text) -> std::vector<std::string> {
 }
 
 auto parse_number(const std::string& token, double& value) -> bool {
-  const char* first = token.data();
-  const char* last = first + token.size();
-  const auto result = std::from_chars(first, last, value);
-  return result.ec == std::errc() && result.ptr == last;
+  std::istringstream stream(token);
+  stream.imbue(std::locale::classic());
+  stream >> value;
+  return !token.empty() && !stream.fail() &&
+         stream.peek() == std::char_traits<char>::eof();
 }
 
 auto tolerance_for(const std::string& kind) -> float {

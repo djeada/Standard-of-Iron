@@ -30,6 +30,7 @@ enum class AudioEventType {
   PLAY_SOUND,
   PLAY_MUSIC,
   STOP_SOUND,
+  STOP_ALL_SOUNDS,
   SET_SOUND_LEVEL,
   STOP_MUSIC,
   SHUTDOWN,
@@ -105,6 +106,7 @@ public:
                   Game::Audio::MusicTransition transition =
                       Game::Audio::MusicTransition::Crossfade);
   void stop_sound(const std::string& sound_id);
+  void stop_all_sounds();
 
   void set_playing_sound_volume(const std::string& sound_id, float volume);
 

@@ -850,6 +850,8 @@ Whichever clock is further along picks the rung, and a rung only ever fires on t
 
 Two rules keep this from oscillating. Recovery may not edit the requested goal: a sidestep resolves `goal_x/goal_y` to a cell metres away, and repathing against _that_ is how a unit forgets where it was sent and reports `Arrived` somewhere it was never ordered to. And before an objective is written off, reachability is re-checked at the relaxed frontage -- a gate too narrow for a block is still a gate, and refusing it is how a formation ends up standing outside its own objective.
 
+An order that lands on ground the unit may not stand on -- a hill slope, a wall, water -- is resolved to standable ground on the unit's own side before any route is planned (`resolve_walkable_target_toward`), and it is resolved the same way for a single order and for every member of a group order, so a group lane never ends on the slope itself and the member's requested goal is the point it can actually reach.
+
 ### What The AI Does With It
 
 `MovementSnapshot` carries the stall facts to the AI worker. A unit that is going nowhere counts as idle rather than busy in the census -- counting it as busy is what let a wedged formation sit out the rest of a match -- and `Game::Systems::AI::update_stall_recovery` gives it a small fixed number of approaches from alternating sides before standing it down from its task and dropping it from the wave, so the next planning cycle gives it something else to do. Workers are out of scope there: a builder at a site holds a movement target without moving as a matter of course.

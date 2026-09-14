@@ -36,8 +36,6 @@ public:
   struct DestinationMarker {
     float nx = 0.0F;
     float ny = 0.0F;
-    float origin_nx = 0.0F;
-    float origin_ny = 0.0F;
     int owner_id = 0;
   };
 

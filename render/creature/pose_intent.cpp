@@ -114,6 +114,11 @@ auto resolve_pose_for_intent(PoseIntent intent) noexcept -> ResolvedPose {
   resolved.animation.action = semantic.semantic.action;
   resolved.animation.stance = semantic.semantic.stance;
   switch (intent) {
+  case PoseIntent::WalkStrafeLeft:
+  case PoseIntent::WalkStrafeRight:
+  case PoseIntent::RunStrafeLeft:
+  case PoseIntent::RunStrafeRight:
+    break;
   case PoseIntent::Walk:
     resolved.motion_state = M::Walk;
     resolved.humanoid_state = H::Walk;
