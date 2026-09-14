@@ -268,8 +268,9 @@ void OrderService::prepare_for_move(Engine::Core::Entity* entity,
 
   if (should_disable_guard_mode(kind)) {
     auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
+    const bool player_order = should_clear_auxiliary_orders(kind);
     if ((guard_mode != nullptr) && guard_mode->active &&
-        !guard_mode->returning_to_guard_position) {
+        (player_order || !guard_mode->returning_to_guard_position)) {
       set_guard_mode_active(entity, false);
     }
   }
