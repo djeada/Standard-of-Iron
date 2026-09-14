@@ -16,7 +16,7 @@ bool soi_local_light_active(int index) {
   return (u_local_light_mask & (1 << index)) != 0;
 }
 
-const float k_soi_local_wrap = 0.18;
+const float k_soi_local_wrap = 0.35;
 const float k_soi_local_specular_power = 22.0;
 const float k_soi_local_specular_gain = 0.28;
 
@@ -24,7 +24,8 @@ float soi_local_falloff(float distance_to_light, float radius) {
   float normalized = clamp(distance_to_light / radius, 0.0, 1.0);
   float window = 1.0 - normalized * normalized;
   window *= window;
-  return window / (1.0 + 4.0 * normalized * normalized);
+
+  return window / (1.0 + normalized * normalized);
 }
 
 vec3 local_lighting(vec3 world_position, vec3 normal) {

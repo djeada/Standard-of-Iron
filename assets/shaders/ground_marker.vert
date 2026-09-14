@@ -19,8 +19,6 @@ uniform vec2 u_height_uv_offset;
 uniform float u_height_to_world;
 uniform float u_ground_offset;
 
-uniform float u_angular_step;
-
 uniform vec2 u_height_world_per_texel;
 
 uniform float u_slope_clearance;
@@ -37,8 +35,6 @@ out float v_alpha;
 out float v_pattern;
 out float v_flags;
 out float v_phase;
-
-const float k_two_pi = 6.28318530718;
 
 float sample_terrain_height(vec2 world_xz, float fallback) {
   if (u_has_height_tex != 1) {
@@ -70,11 +66,12 @@ void main() {
 
   vec2 dir = vec2(a_position.x, a_position.z);
 
+  float height = max(center.y, sample_terrain_height(center.xz, center.y));
+
   float band_thickness = thickness;
   if (u_min_marker_pixels > 0.0 && u_half_viewport.y > 0.0) {
     vec2 anchor_xz = center.xz + dir * outer_radius;
-    vec3 anchor =
-        vec3(anchor_xz.x, sample_terrain_height(anchor_xz, center.y), anchor_xz.y);
+    vec3 anchor = vec3(anchor_xz.x, height, anchor_xz.y);
     float scale = pixels_per_world(anchor, dir);
     if (scale > 0.0001) {
       band_thickness = clamp(u_min_marker_pixels / scale,
@@ -86,25 +83,15 @@ void main() {
   float world_radius = max(outer_radius + (radial - 1.0) * band_thickness, 0.0);
   vec2 world_xz = center.xz + dir * world_radius;
 
-  float height = sample_terrain_height(world_xz, center.y);
   float lift = u_ground_offset;
 
   if (u_has_height_tex == 1) {
 
-    float half_step = u_angular_step * 0.5;
-    float theta = angle * k_two_pi;
-    vec2 behind = vec2(cos(theta - half_step), sin(theta - half_step));
-    vec2 ahead = vec2(cos(theta + half_step), sin(theta + half_step));
-    height =
-        max(height, sample_terrain_height(center.xz + behind * world_radius, center.y));
-    height =
-        max(height, sample_terrain_height(center.xz + ahead * world_radius, center.y));
-
     vec2 step_world = max(u_height_world_per_texel, vec2(0.0001));
-    float dh_x = sample_terrain_height(world_xz + vec2(step_world.x, 0.0), center.y) -
-                 sample_terrain_height(world_xz - vec2(step_world.x, 0.0), center.y);
-    float dh_z = sample_terrain_height(world_xz + vec2(0.0, step_world.y), center.y) -
-                 sample_terrain_height(world_xz - vec2(0.0, step_world.y), center.y);
+    float dh_x = sample_terrain_height(center.xz + vec2(step_world.x, 0.0), center.y) -
+                 sample_terrain_height(center.xz - vec2(step_world.x, 0.0), center.y);
+    float dh_z = sample_terrain_height(center.xz + vec2(0.0, step_world.y), center.y) -
+                 sample_terrain_height(center.xz - vec2(0.0, step_world.y), center.y);
     vec2 gradient = vec2(dh_x / (2.0 * step_world.x), dh_z / (2.0 * step_world.y));
 
     float secant = sqrt(1.0 + dot(gradient, gradient));

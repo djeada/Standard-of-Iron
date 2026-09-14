@@ -236,7 +236,13 @@ vec3 soi_finish_character(vec3 color,
     color = mix(vec3(luma), color, mix(1.0, cloth ? 1.08 : 0.82, zoom));
     color = clamp(color, 0.0, 1.0);
   } else {
-    color = apply_zoom_readability(color, zoom);
+    float color_zoom = zoom;
+#if SOI_CHARACTER_WANTS(SOI_CHARACTER_WILDLIFE)
+    if (material_id == k_wildlife_material) {
+      color_zoom *= 1.0 - wildlife_white_coat_weight(base);
+    }
+#endif
+    color = apply_zoom_readability(color, color_zoom);
   }
 #if SOI_CHARACTER_WANTS(SOI_CHARACTER_ELEPHANT)
   if (material_id == k_elephant_material) {
