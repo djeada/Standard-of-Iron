@@ -341,7 +341,6 @@ If the saved mask dimensions do not match the restored map, the mask is ignored 
 The save snapshot preserves deterministic simulation state required for the match to continue consistently, including the simulation clock and deterministic RNG state.
 
 The command queue is not persisted, which means determinism after load begins from the committed state represented by the save rather than from commands that were waiting to execute at the instant capture occurred.
-
 This is also why replay and save contracts overlap conceptually but are not the same artifact: a replay stores an accepted command stream and digests, while a save stores a complete restorable state snapshot.
 
 ## Autosaves
