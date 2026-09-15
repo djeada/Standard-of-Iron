@@ -47,6 +47,7 @@ auto action_names() -> QStringList {
           QStringLiteral("formation_begin"),
           QStringLiteral("formation_drag"),
           QStringLiteral("formation_end"),
+          QStringLiteral("formation_confirm"),
           QStringLiteral("formation_intent"),
           QStringLiteral("build_start"),
           QStringLiteral("build_hover"),

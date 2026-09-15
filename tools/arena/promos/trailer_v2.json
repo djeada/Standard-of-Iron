@@ -2,16 +2,17 @@
   "id": "trailer_v2",
   "title": "STANDARD OF IRON",
   "subtitle": "PLAY THE DEMO",
-  "end_card_seconds": 4.0,
+  "end_card_seconds": 4.5,
+  "end_card_background": "dim",
+  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
   "end_card_lines": [
-    "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
-    "WINDOWS  \u00b7  MACOS  \u00b7  LINUX  \u00b7  FREE AND OPEN SOURCE"
+    "FREE AND OPEN SOURCE  \u00b7  WINDOWS  \u00b7  MACOS  \u00b7  LINUX"
   ],
   "width": 1920,
   "height": 1080,
   "fps": 60,
   "supersample": 2,
-  "gameplay_ui": true,
+  "gameplay_ui": false,
   "motion_limits": {
     "yaw_degrees_per_second": 40,
     "pitch_degrees_per_second": 16,
@@ -22,7 +23,7 @@
   "transition": {
     "type": "cut"
   },
-  "music": "artifacts/promo/trailer_score_90.ogg",
+  "music": "artifacts/promo/trailer_v2_score.ogg",
   "music_start": 0.0,
   "music_volume": 0.2,
   "grade": {
@@ -69,6 +70,7 @@
       "scenario": "trailer_open",
       "start": 5.0,
       "duration": 1.6,
+      "caption": "FIGHT IN IT.",
       "focus": {
         "mode": "group",
         "group": "scipio",
@@ -96,17 +98,41 @@
       ]
     },
     {
-      "name": "commander_view",
+      "name": "scipio_rally",
       "scenario": "trailer_open",
       "start": 6.6,
-      "duration": 1.9,
-      "gameplay_camera": true,
-      "caption": "FIGHT IN IT."
+      "duration": 1.8,
+      "caption": "PUBLIUS CORNELIUS SCIPIO",
+      "focus": {
+        "mode": "group",
+        "group": "scipio",
+        "smoothing": 0.3,
+        "offset": [0.0, 1.0, 0.0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 9,
+          "pitch": 22,
+          "yaw": 250,
+          "fov": 42,
+          "height": 1.2
+        },
+        {
+          "time": 1.8,
+          "distance": 8.2,
+          "pitch": 21,
+          "yaw": 257,
+          "fov": 42,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ]
     },
     {
       "name": "the_line_answers",
       "scenario": "trailer_open",
-      "start": 8.5,
+      "start": 8.4,
       "duration": 1.5,
       "focus": {
         "mode": "group",
@@ -117,11 +143,11 @@
       "camera": [
         {
           "time": 0,
-          "distance": 6.23,
-          "pitch": 17.7,
+          "distance": 8.5,
+          "pitch": 20,
           "yaw": 5.2,
-          "fov": 68,
-          "height": 0.0
+          "fov": 60,
+          "height": 0.4
         },
         {
           "time": 1.5,
@@ -135,191 +161,185 @@
       ]
     },
     {
-      "name": "build_place",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/film/build_place.mp4",
-      "caption": "BUILD THE PLACE WORTH DEFENDING",
+      "name": "build_stronghold_place",
+      "clip": "artifacts/promo/film/build_stronghold_place.mp4",
+      "caption": "BUILD YOUR STRONGHOLD",
       "transition": {
         "type": "dip",
         "duration": 0.4
       }
     },
     {
-      "name": "rome_builds",
-      "scenario": "ai_war_of_towns",
-      "start": 20.0,
-      "duration": 100.0,
-      "time_lapse": 25,
-      "gameplay_ui": false,
-      "focus": {
-        "mode": "point",
-        "point": [-38.0, 0.0, -38.0],
-        "smoothing": 0.0
-      },
-      "camera": [
-        {
-          "time": 0,
-          "distance": 46,
-          "pitch": 52,
-          "yaw": 40,
-          "fov": 40,
-          "height": 0
-        },
-        {
-          "time": 100.0,
-          "distance": 44,
-          "pitch": 50,
-          "yaw": 52,
-          "fov": 40,
-          "height": 0,
-          "ease": "smooth"
-        }
-      ]
-    },
-    {
-      "name": "build_rise",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/film/build_rise.mp4"
-    },
-    {
-      "name": "meet_scipio",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/film/commander_select.mp4",
-      "caption": "PUBLIUS CORNELIUS SCIPIO",
+      "name": "build_stronghold_rise",
+      "clip": "artifacts/promo/film/build_stronghold_rise.mp4",
       "transition": {
-        "type": "dip",
-        "duration": 0.4
+        "type": "dissolve",
+        "duration": 0.3
       }
     },
     {
-      "name": "scipio_strikes",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/film/commander_strike.mp4"
-    },
-    {
-      "name": "hannibal_intro",
-      "scenario": "ai_war_of_towns",
-      "start": 14.0,
-      "duration": 2.4,
-      "gameplay_ui": false,
+      "name": "hannibal_advances",
+      "scenario": "trailer_clash",
+      "start": 3.6,
+      "duration": 3.4,
       "caption": "HANNIBAL BARCA",
-      "focus": {
-        "mode": "group",
-        "group": "hannibal_commander",
-        "smoothing": 0.4
+      "transition": {
+        "type": "dip",
+        "duration": 0.4
       },
-      "camera": [
-        {
-          "time": 0,
-          "distance": 22,
-          "pitch": 24,
-          "yaw": 208,
-          "fov": 40,
-          "height": 1.2
-        },
-        {
-          "time": 2.4,
-          "distance": 20,
-          "pitch": 22,
-          "yaw": 220,
-          "fov": 40,
-          "height": 1.2,
-          "ease": "smooth"
-        }
-      ]
-    },
-    {
-      "name": "hannibal_builds",
-      "scenario": "ai_war_of_towns",
-      "start": 20.0,
-      "duration": 60.0,
-      "time_lapse": 25,
-      "gameplay_ui": false,
       "focus": {
         "mode": "point",
-        "point": [38.0, 0.0, 38.0],
-        "smoothing": 0.0
+        "point": [-5.0, 0.0, 33.0]
       },
       "camera": [
         {
           "time": 0,
-          "distance": 46,
-          "pitch": 52,
-          "yaw": 220,
+          "distance": 30,
+          "pitch": 18,
+          "yaw": 205,
           "fov": 40,
-          "height": 0
+          "height": 1.5
         },
         {
-          "time": 60.0,
-          "distance": 44,
-          "pitch": 50,
-          "yaw": 232,
+          "time": 3.4,
+          "distance": 27,
+          "pitch": 17,
+          "yaw": 210,
           "fov": 40,
-          "height": 0,
+          "height": 1.5,
           "ease": "smooth"
         }
       ]
     },
     {
-      "name": "battle_high",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/film/river_formation.mp4",
-      "caption": "MAKE THE BATTLE READABLE",
+      "name": "form_the_line",
+      "clip": "artifacts/promo/film/form_the_line.mp4",
+      "caption": "FORM THE LINE",
       "transition": {
         "type": "dip",
+        "duration": 0.3
+      }
+    },
+    {
+      "name": "bridge_holds",
+      "scenario": "trailer_bridge_defense",
+      "start": 19.0,
+      "duration": 4.4,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, -7.0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 11,
+          "pitch": 22,
+          "yaw": 80,
+          "fov": 40,
+          "height": 1.5
+        },
+        {
+          "time": 4.4,
+          "distance": 9.5,
+          "pitch": 21,
+          "yaw": 88,
+          "fov": 40,
+          "height": 1.5,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "intervention_pov",
+      "scenario": "trailer_pov",
+      "start": 0.9,
+      "duration": 4.8,
+      "gameplay_camera": true,
+      "caption": "TURN THE BATTLE YOURSELF",
+      "transition": {
+        "type": "dissolve",
         "duration": 0.4
       }
     },
     {
-      "name": "bridge_storm",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/trailer/24_bridge_storm.mp4"
-    },
-    {
-      "name": "battle_cavalry",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/film/river_cavalry.mp4"
-    },
-    {
-      "name": "turn_it_yourself",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/film/river_commander.mp4",
-      "caption": "TURN THE BATTLE YOURSELF"
-    },
-    {
-      "name": "cold_march",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/trailer/32_cold_march.mp4",
-      "caption": "THE DEAD CHANGE THE WAR",
+      "name": "the_dead_rise",
+      "scenario": "trailer_barrow_night",
+      "start": 8.6,
+      "duration": 4.4,
+      "caption": "WAKE THE DEAD",
       "transition": {
         "type": "dip",
-        "duration": 0.5
-      }
+        "duration": 0.35
+      },
+      "focus": {
+        "mode": "point",
+        "point": [-17.5, 0.0, 32.5]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 18,
+          "pitch": 22,
+          "yaw": 118,
+          "fov": 42,
+          "height": 1.5
+        },
+        {
+          "time": 4.4,
+          "distance": 15,
+          "pitch": 21,
+          "yaw": 112,
+          "fov": 42,
+          "height": 1.5,
+          "ease": "smooth"
+        }
+      ]
     },
     {
-      "name": "grave_priests",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/trailer/33_grave_priests.mp4"
-    },
-    {
-      "name": "surrounded",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/trailer/34_surrounded.mp4"
-    },
-    {
-      "name": "editor_route",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/film/editor_route.mp4",
-      "caption": "MAKE YOUR OWN WAR",
+      "name": "editor_bridge",
+      "clip": "artifacts/promo/film/editor_bridge.mp4",
+      "caption": "CREATE MAPS AND MISSIONS",
       "transition": {
-        "type": "dip",
+        "type": "dissolve",
         "duration": 0.4
       }
     },
     {
-      "name": "editor_mission",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/film/editor_mission.mp4"
+      "name": "ford_played",
+      "clip": "artifacts/promo/film/ford_played.mp4"
     },
     {
-      "name": "new_route",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/trailer/18_high_pass.mp4",
-      "caption": "MAPS  \u00b7  MISSIONS  \u00b7  BALANCE  \u2014  ALL JSON"
-    },
-    {
-      "name": "lines_collide",
-      "clip": "/home/adam/tmp/Standard-of-Iron/artifacts/promo/trailer/28_lines_collide.mp4",
+      "name": "elephant_impact",
+      "scenario": "trailer_clash",
+      "start": 7.0,
+      "duration": 3.8,
       "transition": {
         "type": "dip",
         "duration": 0.4
-      }
+      },
+      "focus": {
+        "mode": "point",
+        "point": [-20.5, 0.8, 28.5]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 14,
+          "pitch": 22,
+          "yaw": 238,
+          "fov": 42,
+          "height": 1.5
+        },
+        {
+          "time": 3.8,
+          "distance": 12,
+          "pitch": 20,
+          "yaw": 246,
+          "fov": 42,
+          "height": 1.5,
+          "ease": "smooth"
+        }
+      ]
     }
   ],
   "sfx": [
@@ -334,183 +354,123 @@
       "gain": 0.85
     },
     {
-      "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 1.1,
-      "gain": 0.55
-    },
-    {
       "file": "assets/audio/sfx/orders/attack_horn_stab.ogg",
       "at": 3.15,
       "gain": 0.7
     },
     {
-      "file": "assets/audio/sfx/combat/vanguard_rush.ogg",
-      "at": 4.9,
-      "gain": 0.75
-    },
-    {
       "file": "assets/audio/sfx/combat/charge_roar.ogg",
-      "at": 5.35,
+      "at": 4.9,
       "gain": 0.85
     },
     {
       "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
-      "at": 6.55,
+      "at": 6.45,
       "gain": 0.9
     },
     {
-      "file": "assets/audio/ambience/roman_army_camp_01.ogg",
-      "at": 7.75,
-      "gain": 0.4
-    },
-    {
       "file": "assets/audio/sfx/build/placement_confirmed.ogg",
-      "at": 8.5,
+      "at": 8.8,
       "gain": 0.6
     },
     {
       "file": "assets/audio/sfx/build/construction_started.ogg",
-      "at": 9.9,
-      "gain": 0.55
-    },
-    {
-      "file": "assets/audio/sfx/build/construction_complete.ogg",
-      "at": 12.2,
-      "gain": 0.55
-    },
-    {
-      "file": "assets/audio/ambience/mediterranean_city_market.ogg",
-      "at": 14.3,
-      "gain": 0.42
-    },
-    {
-      "file": "assets/audio/sfx/build/construction_complete.ogg",
-      "at": 18.2,
+      "at": 9.5,
       "gain": 0.5
     },
     {
-      "file": "assets/audio/sfx/ui/command_accept.ogg",
-      "at": 20.3,
-      "gain": 0.55
-    },
-    {
-      "file": "assets/audio/voices/commanders/publius_cornelius_scipio.ogg",
-      "at": 20.5,
-      "gain": 0.95
-    },
-    {
-      "file": "assets/audio/sfx/combat/gladius_shield_impacts_close.ogg",
-      "at": 24.35,
-      "gain": 0.85
-    },
-    {
-      "file": "assets/audio/sfx/combat/sword_hit_01.ogg",
-      "at": 25.15,
-      "gain": 0.8
+      "file": "assets/audio/sfx/build/construction_complete.ogg",
+      "at": 10.5,
+      "gain": 0.6
     },
     {
       "file": "assets/audio/voices/carthage/hannibal.ogg",
-      "at": 27.6,
+      "at": 12.2,
       "gain": 0.95
     },
     {
-      "file": "assets/audio/sfx/combat/spearmen_formation_advance.ogg",
-      "at": 31.9,
-      "gain": 0.72
-    },
-    {
-      "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 33.4,
-      "gain": 0.6
-    },
-    {
-      "file": "assets/audio/sfx/combat/blade_clash_01.ogg",
-      "at": 36.0,
-      "gain": 0.8
-    },
-    {
-      "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
-      "at": 39.0,
-      "gain": 0.92
-    },
-    {
       "file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
-      "at": 43.75,
-      "gain": 0.85
+      "at": 13.0,
+      "gain": 0.7
     },
     {
-      "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
-      "at": 45.2,
+      "file": "assets/audio/sfx/ui/command_accept.ogg",
+      "at": 17.2,
       "gain": 0.55
     },
     {
-      "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
-      "at": 47.5,
-      "gain": 0.82
+      "file": "assets/audio/sfx/combat/spearmen_formation_advance.ogg",
+      "at": 17.4,
+      "gain": 0.7
+    },
+    {
+      "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
+      "at": 18.55,
+      "gain": 0.92
     },
     {
       "file": "assets/audio/sfx/combat/vanguard_rush.ogg",
-      "at": 49.3,
-      "gain": 0.85
-    },
-    {
-      "file": "assets/audio/sfx/combat/guard_break.ogg",
-      "at": 50.6,
+      "at": 21.17,
       "gain": 0.8
     },
     {
-      "file": "assets/audio/sfx/combat/soldiers_victory_cheer.ogg",
-      "at": 53.4,
-      "gain": 0.62
+      "file": "assets/audio/sfx/combat/sword_hit_01.ogg",
+      "at": 22.65,
+      "gain": 0.8
     },
     {
-      "file": "assets/audio/ambience/weather_snow.ogg",
-      "at": 58.3,
-      "gain": 0.45
+      "file": "assets/audio/sfx/combat/gladius_shield_impacts_close.ogg",
+      "at": 23.85,
+      "gain": 0.85
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
+      "at": 23.95,
+      "gain": 0.6
+    },
+    {
+      "file": "assets/audio/sfx/combat/soldiers_victory_cheer.ogg",
+      "at": 26.7,
+      "gain": 0.55
     },
     {
       "file": "assets/audio/ambience/mountain_camp_night.ogg",
-      "at": 58.8,
+      "at": 27.0,
       "gain": 0.5
     },
     {
       "file": "assets/audio/sfx/combat/guard_break.ogg",
-      "at": 61.9,
-      "gain": 0.7
+      "at": 28.18,
+      "gain": 0.75
     },
     {
       "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
-      "at": 64.8,
-      "gain": 0.6
-    },
-    {
-      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
-      "at": 66.0,
-      "gain": 0.8
-    },
-    {
-      "file": "assets/audio/sfx/build/placement_confirmed.ogg",
-      "at": 68.233,
-      "gain": 0.45
+      "at": 29.35,
+      "gain": 0.55
     },
     {
       "file": "assets/audio/sfx/ui/click_confirm.ogg",
-      "at": 73.733,
+      "at": 31.25,
       "gain": 0.4
     },
     {
+      "file": "assets/audio/sfx/build/placement_confirmed.ogg",
+      "at": 32.15,
+      "gain": 0.45
+    },
+    {
       "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 78.633,
-      "gain": 0.62
+      "at": 34.05,
+      "gain": 0.55
     },
     {
       "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
-      "at": 82.033,
+      "at": 36.75,
       "gain": 0.95
     },
     {
       "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
-      "at": 83.133,
+      "at": 37.05,
       "gain": 0.62
     }
   ]

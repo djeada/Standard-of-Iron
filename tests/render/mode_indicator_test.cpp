@@ -239,4 +239,22 @@ TEST(ModeIndicator, FadesOutBeyondTheReadableDistance) {
   EXPECT_LT(midpoint, 1.0F);
 }
 
+TEST(ModeIndicator, FadesOutNearTheCommanderLens) {
+  EXPECT_FLOAT_EQ(Render::Geom::indicator_lens_fade(0.0F), 0.0F);
+  EXPECT_FLOAT_EQ(
+      Render::Geom::indicator_lens_fade(Render::Geom::k_indicator_lens_hidden_sq),
+      0.0F);
+  EXPECT_FLOAT_EQ(
+      Render::Geom::indicator_lens_fade(Render::Geom::k_indicator_lens_clear_sq), 1.0F);
+  EXPECT_LT(Render::Geom::k_indicator_lens_clear_sq,
+            Render::Geom::k_indicator_fade_start_sq);
+
+  float const midpoint =
+      Render::Geom::indicator_lens_fade((Render::Geom::k_indicator_lens_hidden_sq +
+                                         Render::Geom::k_indicator_lens_clear_sq) *
+                                        0.5F);
+  EXPECT_GT(midpoint, 0.0F);
+  EXPECT_LT(midpoint, 1.0F);
+}
+
 } // namespace

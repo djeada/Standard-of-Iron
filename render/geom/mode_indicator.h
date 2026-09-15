@@ -61,6 +61,20 @@ indicator_distance_fade(float distance_sq) noexcept -> float {
   return 1.0F - (distance_sq - k_indicator_fade_start_sq) / span;
 }
 
+constexpr float k_indicator_lens_hidden_sq = 49.0F;
+constexpr float k_indicator_lens_clear_sq = 196.0F;
+
+[[nodiscard]] constexpr auto indicator_lens_fade(float distance_sq) noexcept -> float {
+  if (distance_sq <= k_indicator_lens_hidden_sq) {
+    return 0.0F;
+  }
+  if (distance_sq >= k_indicator_lens_clear_sq) {
+    return 1.0F;
+  }
+  return (distance_sq - k_indicator_lens_hidden_sq) /
+         (k_indicator_lens_clear_sq - k_indicator_lens_hidden_sq);
+}
+
 [[nodiscard]] auto indicator_has_glyph(IndicatorKind kind) noexcept -> bool;
 
 [[nodiscard]] auto indicator_base_color(IndicatorKind kind) noexcept -> QVector3D;

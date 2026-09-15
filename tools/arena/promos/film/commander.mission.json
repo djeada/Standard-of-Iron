@@ -61,6 +61,6 @@
   "theme": "Trailer fixture.",
   "victory_mode": "all",
   "commander_voices": {
-    "generic": true
+    "generic": false
   }
 }

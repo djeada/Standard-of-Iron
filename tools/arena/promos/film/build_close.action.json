@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "name": "trailer_build_close",
+  "loop_seconds": 0.0,
+  "required_coverage": ["build_panel"],
+  "actions": [
+    {
+      "at": 0.05,
+      "action": "camera_look_at",
+      "argument": "-9,20"
+    },
+    {
+      "at": 0.06,
+      "action": "camera_zoom",
+      "argument": "5"
+    },
+    {
+      "at": 0.8,
+      "action": "select_id",
+      "argument": "2"
+    },
+    {
+      "at": 1.4,
+      "action": "build_start_world",
+      "argument": "defense_tower,-5,21"
+    },
+    {
+      "at": 1.9,
+      "action": "build_hover_world",
+      "argument": "-7,20"
+    },
+    {
+      "at": 2.5,
+      "action": "build_place_world",
+      "argument": "-9,20"
+    },
+    {
+      "at": 3.1,
+      "action": "deselect_world",
+      "argument": "-2,27"
+    },
+    {
+      "at": 3.4,
+      "action": "game_speed",
+      "argument": "4"
+    },
+    {
+      "at": 9.9,
+      "action": "camera_zoom",
+      "argument": "-3"
+    },
+    {
+      "at": 10.2,
+      "action": "camera_zoom",
+      "argument": "-3"
+    },
+    {
+      "at": 14.0,
+      "action": "game_speed",
+      "argument": "1"
+    }
+  ]
+}
