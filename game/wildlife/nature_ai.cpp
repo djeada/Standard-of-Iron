@@ -32,6 +32,8 @@ constexpr float k_pack_ring_min = 0.9F;
 constexpr float k_pack_ring_reach_margin = 0.92F;
 constexpr float k_pack_slot_jitter = 0.35F;
 constexpr float k_flee_arc_jitter = 0.55F;
+constexpr float k_lunge_reach = 0.9F;
+constexpr float k_lunge_stop_fraction = 0.45F;
 
 constexpr float k_flee_min_gain = 2.5F;
 constexpr std::array<float, 5> k_flee_veers{{0.0F, 1.05F, -1.05F, 1.95F, -1.95F}};
@@ -195,10 +197,21 @@ void close_and_bite(const NatureContext& ctx,
     actions.face_toward(ctx, prey.x, prey.z);
     return;
   }
-  float const approach_angle = pack_slot_angle(ctx, slot) + wildlife.orbit;
-  float const spacing = pack_ring_radius(prey, slot.count);
-  float approach_x = prey.x + (std::cos(approach_angle) * spacing);
-  float approach_z = prey.z + (std::sin(approach_angle) * spacing);
+  float approach_x = 0.0F;
+  float approach_z = 0.0F;
+  float const reach = bite_reach(prey);
+  float const gap = distance_to(ctx, prey);
+  if (gap <= reach + k_lunge_reach && gap > 0.001F) {
+
+    float const lunge = reach * k_lunge_stop_fraction;
+    approach_x = prey.x + ((ctx.x - prey.x) / gap * lunge);
+    approach_z = prey.z + ((ctx.z - prey.z) / gap * lunge);
+  } else {
+    float const approach_angle = pack_slot_angle(ctx, slot) + wildlife.orbit;
+    float const spacing = pack_ring_radius(prey, slot.count);
+    approach_x = prey.x + (std::cos(approach_angle) * spacing);
+    approach_z = prey.z + (std::sin(approach_angle) * spacing);
+  }
   auto const* prey_registry = prey.entity->registry();
   if (auto const* movement =
           prey_registry == nullptr
@@ -276,7 +289,7 @@ private:
     if (wildlife.hostile_timer <= 0.0F || wildlife.aggressor_id == 0) {
       return {};
     }
-    PreyRef const foe = actions.locate(wildlife.aggressor_id);
+    PreyRef const foe = actions.locate(ctx, wildlife.aggressor_id);
     if (!foe.valid()) {
       wildlife.aggressor_id = 0;
       wildlife.hostile_timer = 0.0F;
@@ -509,7 +522,7 @@ public:
       return false;
     }
 
-    PreyRef const foe = actions.locate(wildlife.aggressor_id);
+    PreyRef const foe = actions.locate(ctx, wildlife.aggressor_id);
     if (!foe.valid()) {
       wildlife.aggressor_id = 0;
       wildlife.hostile_timer = 0.0F;

@@ -17,7 +17,12 @@ namespace Game::Systems::Combat {
 namespace {
 
 auto retaliation_should_chase(Engine::Core::Entity* entity) -> bool {
-  if (!pursues_targets(entity) || opens_fire_without_closing(entity)) {
+  auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+  bool const steps_into_a_brawl =
+      unit != nullptr && Game::Units::combat_role(unit->spawn_type) ==
+                             Game::Units::CombatRole::Noncombatant;
+  if ((!pursues_targets(entity) && !steps_into_a_brawl) ||
+      opens_fire_without_closing(entity)) {
     return false;
   }
   if (Game::Systems::DefensiveUnitLayoutService::holds_position(*entity)) {
