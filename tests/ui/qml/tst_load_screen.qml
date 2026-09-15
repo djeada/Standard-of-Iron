@@ -18,14 +18,11 @@ TestCase {
             });
         verify(host !== null, "the loading screen host was not created");
         wait(1);
-
         var content = findChild(host, "loading_content");
         var tip = findChild(host, "tip_plate");
         verify(content !== null, "the loading content was not found");
         verify(tip !== null, "the loading tip plate was not found");
-        verify(content.y + content.height <= tip.y,
-               "the loading content overlaps the tip plate");
-
+        verify(content.y + content.height <= tip.y, "the loading content overlaps the tip plate");
         host.destroy();
     }
 
