@@ -215,7 +215,7 @@
             "z": 520
         }
     ],
-    "max_troops_per_player": 750,
+    "max_troops_per_player": 1690,
     "name": "Crossing the Alps",
     "rain": {
         "active_duration": 150,

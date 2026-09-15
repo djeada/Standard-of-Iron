@@ -34,6 +34,8 @@ auto selected_barracks_state(Engine::Core::World* world,
   m["max_units"] = 0;
   m["villager_cost"] = 1;
   m["manpower_available"] = 0;
+  m["reserve_short"] = false;
+  m["cheapest_recruit_cost"] = 0;
 
   if (world == nullptr) {
     return m;
@@ -61,6 +63,8 @@ auto selected_barracks_state(Engine::Core::World* world,
   m["queue_size"] = st.queue_size;
   m["nation_id"] =
       QString::fromStdString(Game::Systems::nation_id_to_string(st.nation_id));
+  m["reserve_short"] = st.reserve_short;
+  m["cheapest_recruit_cost"] = st.cheapest_recruit_cost;
 
   QVariantList queue_list;
   for (const auto& unit_type : st.production_queue) {
@@ -257,6 +261,8 @@ auto selected_home_state(Engine::Core::World* world,
   m["queue_size"] = st.queue_size;
   m["nation_id"] =
       QString::fromStdString(Game::Systems::nation_id_to_string(st.nation_id));
+  m["reserve_short"] = st.reserve_short;
+  m["cheapest_recruit_cost"] = st.cheapest_recruit_cost;
 
   QVariantList queue_list;
   for (const auto& unit_type : st.production_queue) {
@@ -310,6 +316,8 @@ auto selected_temple_state(Engine::Core::World* world,
   m["queue_size"] = st.queue_size;
   m["nation_id"] =
       QString::fromStdString(Game::Systems::nation_id_to_string(st.nation_id));
+  m["reserve_short"] = st.reserve_short;
+  m["cheapest_recruit_cost"] = st.cheapest_recruit_cost;
 
   QVariantList queue_list;
   for (const auto& unit_type : st.production_queue) {

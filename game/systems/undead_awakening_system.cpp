@@ -12,6 +12,8 @@
 #include <cmath>
 #include <numbers>
 
+#include "core/component_combat.h"
+#include "core/component_core.h"
 #include "core/component_gameplay.h"
 #include "core/death_sequence.h"
 #include "core/entity.h"
@@ -22,10 +24,13 @@
 #include "core/world_spatial_index.h"
 #include "game/map/terrain_service.h"
 #include "game/map/undead_shrine_placement.h"
+#include "game/systems/combat_rules.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/order_service.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_feedback.h"
+#include "game/util/planar_math.h"
 #include "units/factory.h"
 #include "units/unit.h"
 
@@ -45,6 +50,27 @@ constexpr float k_golden_angle_radians = 2.3999632F;
 constexpr float k_min_spawn_ring_radius = 2.0F;
 constexpr float k_spawn_ring_fraction = 0.8F;
 constexpr int k_spawn_placement_attempts = 12;
+
+constexpr float k_leash_poll_seconds = 0.5F;
+constexpr float k_leash_slack = 1.5F;
+constexpr float k_min_guard_radius = 2.0F;
+constexpr float k_post_ring_fraction = 0.5F;
+constexpr float k_min_post_ring_radius = 1.5F;
+constexpr float k_post_ring_margin = 2.0F;
+constexpr float k_post_ring_drift_degrees_per_second = 4.0F;
+constexpr float k_post_arrival_distance = 1.25F;
+constexpr int k_post_placement_attempts = 6;
+
+auto post_ring_radius(const Game::Map::UndeadZone& definition) -> float {
+  float const inside_leash =
+      std::max(k_min_post_ring_radius, definition.leash_radius - k_post_ring_margin);
+  return std::clamp(
+      definition.radius * k_post_ring_fraction, k_min_post_ring_radius, inside_leash);
+}
+
+auto yaw_degrees_toward(float dx, float dz) -> float {
+  return std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
+}
 
 auto anchor_owner(Engine::Core::World& world,
                   Engine::Core::EntityID anchor_entity_id) -> int {
@@ -74,10 +100,15 @@ auto is_initial_wave_trigger(const QString& trigger) -> bool {
          trigger == QStringLiteral("mission_start");
 }
 
+auto is_timed_wave_trigger(const QString& trigger) -> bool {
+  return trigger == QStringLiteral("next_wave") ||
+         trigger == QStringLiteral("after_timeout") ||
+         trigger == QStringLiteral("timed");
+}
+
 auto is_followup_wave_trigger(const QString& trigger) -> bool {
   return trigger == QStringLiteral("after_clear") ||
-         trigger == QStringLiteral("on_clear") ||
-         trigger == QStringLiteral("next_wave");
+         trigger == QStringLiteral("on_clear") || is_timed_wave_trigger(trigger);
 }
 
 } // namespace
@@ -340,32 +371,172 @@ auto UndeadAwakeningSystem::can_spawn_wave(const RuntimeZone& zone) const -> boo
     return false;
   }
 
-  bool const wave_cleared = zone.active_spawn_ids.empty();
-
-  bool const wave_timed_out =
-      zone.definition.wave_timeout_seconds > 0.0F &&
-      zone.current_wave_elapsed >= zone.definition.wave_timeout_seconds;
-
-  if (!wave_cleared && !wave_timed_out) {
-    return false;
-  }
-  if (wave_cleared && zone.respawn_delay_remaining > 0.0F) {
-    return false;
-  }
-
   QString const trigger =
       zone.definition.waves[zone.next_wave_index].trigger.trimmed().toLower();
   if (zone.next_wave_index == 0) {
     return is_initial_wave_trigger(trigger);
   }
-  return is_followup_wave_trigger(trigger);
+  if (!is_followup_wave_trigger(trigger)) {
+    return false;
+  }
+
+  bool const wave_cleared = zone.active_spawn_ids.empty();
+  if (wave_cleared) {
+    return zone.respawn_delay_remaining <= 0.0F;
+  }
+
+  return is_timed_wave_trigger(trigger) &&
+         zone.definition.wave_timeout_seconds > 0.0F &&
+         zone.current_wave_elapsed >= zone.definition.wave_timeout_seconds;
+}
+
+auto UndeadAwakeningSystem::zone_origin(const RuntimeZone& zone) const -> QVector3D {
+  return (zone.anchor_world_prop_id != 0) ? zone.anchor_world : zone.center_world;
+}
+
+auto UndeadAwakeningSystem::guard_post_for_index(const RuntimeZone& zone,
+                                                 int post_index,
+                                                 int post_count) const -> QVector3D {
+  auto const& terrain_service = m_services.terrain;
+  QVector3D const origin = zone_origin(zone);
+  int const total = std::max(1, post_count);
+  float const ring = post_ring_radius(zone.definition);
+  float const base_angle =
+      zone.post_ring_phase_degrees * std::numbers::pi_v<float> / 180.0F +
+      2.0F * std::numbers::pi_v<float> * static_cast<float>(post_index) /
+          static_cast<float>(total);
+
+  for (int attempt = 0; attempt < k_post_placement_attempts; ++attempt) {
+    float const angle =
+        base_angle + static_cast<float>(attempt) * (k_golden_angle_radians * 0.5F);
+    float const sample_radius =
+        std::max(k_min_post_ring_radius, ring - static_cast<float>(attempt) * 0.5F);
+    float const world_x = origin.x() + std::cos(angle) * sample_radius;
+    float const world_z = origin.z() + std::sin(angle) * sample_radius;
+    if (terrain_service.is_initialized() &&
+        terrain_service.is_forbidden_world(world_x, world_z)) {
+      continue;
+    }
+    return terrain_service.resolve_surface_world_position(
+        world_x, world_z, k_spawn_y_offset, origin.y());
+  }
+
+  return origin;
+}
+
+void UndeadAwakeningSystem::station_guardian(Engine::Core::World& world,
+                                             const RuntimeZone& zone,
+                                             Engine::Core::EntityID guardian_id,
+                                             int post_index,
+                                             int post_count,
+                                             bool recall) const {
+  auto* guardian = world.get_entity(guardian_id);
+  auto* transform = world.try_get<Engine::Core::TransformComponent>(guardian_id);
+  if (guardian == nullptr || transform == nullptr) {
+    return;
+  }
+
+  QVector3D const post = guard_post_for_index(zone, post_index, post_count);
+  QVector3D const origin = zone_origin(zone);
+  float const ring_offset = std::hypot(post.x() - origin.x(), post.z() - origin.z());
+
+  auto* guard =
+      Engine::Core::get_or_add_component<Engine::Core::GuardModeComponent>(*guardian);
+  if (guard == nullptr) {
+    return;
+  }
+  guard->active = true;
+  guard->has_guard_target = true;
+  guard->guarded_entity_id = 0;
+  guard->guard_position_x = post.x();
+  guard->guard_position_z = post.z();
+  guard->guard_radius =
+      std::max(k_min_guard_radius, zone.definition.leash_radius - ring_offset);
+
+  auto const* movement = world.try_get<Engine::Core::MovementComponent>(guardian_id);
+  if (recall) {
+    OrderService::clear_attack_target(guardian);
+    CombatRules::clear_rts_melee_lock(guardian);
+    float const homeward_reach = post_ring_radius(zone.definition) + k_post_ring_margin;
+    bool const already_homeward =
+        movement != nullptr && movement->get_has_target() &&
+        std::hypot(movement->get_goal_x() - origin.x(),
+                   movement->get_goal_y() - origin.z()) <= homeward_reach;
+    if (!already_homeward) {
+      OrderService::reset_movement(guardian);
+      guard->returning_to_guard_position = false;
+    }
+    return;
+  }
+
+  auto const* attack_target =
+      world.try_get<Engine::Core::AttackTargetComponent>(guardian_id);
+  bool const busy = (attack_target != nullptr && attack_target->target_id != 0) ||
+                    (movement != nullptr && movement->get_has_target());
+  if (busy || transform->has_desired_yaw) {
+    return;
+  }
+
+  float const dx = transform->position.x - post.x();
+  float const dz = transform->position.z - post.z();
+  if (dx * dx + dz * dz > k_post_arrival_distance * k_post_arrival_distance) {
+    return;
+  }
+  float const out_x = post.x() - origin.x();
+  float const out_z = post.z() - origin.z();
+  if (out_x * out_x + out_z * out_z < 0.0001F) {
+    return;
+  }
+  float const outward = yaw_degrees_toward(out_x, out_z);
+  if (std::fabs(Game::Systems::signed_yaw_delta(transform->rotation.y, outward)) <
+      1.0F) {
+    return;
+  }
+  transform->desired_yaw = outward;
+  transform->has_desired_yaw = true;
+}
+
+void UndeadAwakeningSystem::enforce_leash(Engine::Core::World& world,
+                                          RuntimeZone& zone) const {
+  if (zone.active_spawn_ids.empty()) {
+    return;
+  }
+
+  QVector3D const origin = zone_origin(zone);
+  float const leash = zone.definition.leash_radius + k_leash_slack;
+  int const post_count = static_cast<int>(zone.active_spawn_ids.size());
+
+  for (int index = 0; index < post_count; ++index) {
+    Engine::Core::EntityID const guardian_id = zone.active_spawn_ids[index];
+    auto const* transform =
+        world.try_get<Engine::Core::TransformComponent>(guardian_id);
+    if (transform == nullptr) {
+      continue;
+    }
+    float const dx = transform->position.x - origin.x();
+    float const dz = transform->position.z - origin.z();
+    bool strayed = dx * dx + dz * dz > leash * leash;
+    if (!strayed) {
+      auto const* attack_target =
+          world.try_get<Engine::Core::AttackTargetComponent>(guardian_id);
+      auto const* prey = attack_target != nullptr && attack_target->target_id != 0
+                             ? world.try_get<Engine::Core::TransformComponent>(
+                                   attack_target->target_id)
+                             : nullptr;
+      if (prey != nullptr) {
+        float const px = prey->position.x - origin.x();
+        float const pz = prey->position.z - origin.z();
+        strayed = px * px + pz * pz > leash * leash;
+      }
+    }
+    station_guardian(world, zone, guardian_id, index, post_count, strayed);
+  }
 }
 
 auto UndeadAwakeningSystem::spawn_position_for_index(
     const RuntimeZone& zone, int spawn_index, int spawn_count) const -> QVector3D {
   auto const& terrain_service = m_services.terrain;
-  QVector3D const origin =
-      (zone.anchor_world_prop_id != 0) ? zone.anchor_world : zone.center_world;
+  QVector3D const origin = zone_origin(zone);
 
   float const outer_radius =
       std::max(k_min_spawn_ring_radius, zone.definition.radius * k_spawn_ring_fraction);
@@ -541,7 +712,11 @@ void UndeadAwakeningSystem::refresh_capture_lock(Engine::Core::World& world,
     return;
   }
 
-  capture->capture_blocked = !zone.garrison_broken && !zone.active_spawn_ids.empty();
+  const bool every_wave_put_down =
+      zone.awakened &&
+      zone.next_wave_index >= static_cast<int>(zone.definition.waves.size()) &&
+      zone.active_spawn_ids.empty();
+  capture->capture_blocked = !zone.garrison_broken && !every_wave_put_down;
 }
 
 void UndeadAwakeningSystem::awaken_zone(Engine::Core::World& world,
@@ -555,6 +730,10 @@ void UndeadAwakeningSystem::awaken_zone(Engine::Core::World& world,
   zone.current_wave_elapsed = 0.0F;
 
   try_spawn_next_wave(world, zone);
+
+  QVector3D const origin = zone_origin(zone);
+  Engine::Core::EventManager::instance().publish(Engine::Core::UndeadZoneAwakenedEvent(
+      zone.definition.id, origin.x(), origin.z(), zone.definition.owner_id, woken_by));
 }
 
 void UndeadAwakeningSystem::try_spawn_next_wave(Engine::Core::World& world,
@@ -585,6 +764,12 @@ void UndeadAwakeningSystem::try_spawn_next_wave(Engine::Core::World& world,
       }
       zone.active_spawn_ids.push_back(unit->id());
     }
+  }
+
+  int const post_count = static_cast<int>(zone.active_spawn_ids.size());
+  for (int index = 0; index < post_count; ++index) {
+    station_guardian(
+        world, zone, zone.active_spawn_ids[index], index, post_count, true);
   }
 
   zone.next_wave_index += 1;
@@ -660,10 +845,22 @@ void UndeadAwakeningSystem::update(Engine::Core::World* world, float delta_time)
       Engine::Core::EventManager::instance().publish(
           Engine::Core::MissionAnnouncementEvent(QCoreApplication::translate(
               "UndeadAwakeningSystem",
-              "The risen guardians are put down. The ground is quiet.")));
+              "The risen guardians are put down. Hold the shrine to purify it.")));
       Engine::Core::EventManager::instance().publish(
           Engine::Core::AudioCueEvent("alert.objective_complete"));
     }
+  }
+
+  m_leash_poll += delta_time;
+  if (m_leash_poll >= k_leash_poll_seconds) {
+    for (auto& zone : m_zones) {
+      zone.post_ring_phase_degrees =
+          std::fmod(zone.post_ring_phase_degrees +
+                        k_post_ring_drift_degrees_per_second * m_leash_poll,
+                    360.0F);
+      enforce_leash(*world, zone);
+    }
+    m_leash_poll = 0.0F;
   }
 
   update_zone_music(*world, delta_time);
@@ -766,7 +963,7 @@ auto UndeadAwakeningSystem::is_zone_cleared(const QString& zone_id) const -> boo
 
 auto UndeadAwakeningSystem::is_shrine_purified(const QString& zone_id) const -> bool {
   auto const* zone = find_zone(zone_id);
-  return zone != nullptr && zone->shrine_placed && is_zone_cleared(zone_id);
+  return zone != nullptr && zone->shrine_placed && zone->garrison_broken;
 }
 
 auto UndeadAwakeningSystem::anchor_entity(const QString& zone_id) const

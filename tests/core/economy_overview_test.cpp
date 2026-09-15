@@ -22,6 +22,7 @@
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/spawn_type.h"
+#include "game/units/squad.h"
 #include "game/units/troop_type.h"
 
 namespace {
@@ -228,6 +229,61 @@ TEST_F(EconomyOverviewTest, TheHelpViewQuotesThePriceTheBarracksCharges) {
         << unit.value(QStringLiteral("unit_type")).toString().toStdString()
         << ": the help view quotes a manpower price the barracks does not spend";
   }
+}
+
+TEST_F(EconomyOverviewTest, TheFieldIsCountedInMenNotInSquadsOrPrices) {
+  auto* archer = add_unit(Game::Units::SpawnType::Archer);
+  add_unit(Game::Units::SpawnType::RomanFieldCommander);
+  const auto& archer_profile =
+      Game::Systems::TroopProfileService::instance().get_profile_ref(
+          Game::Systems::NationID::RomanRepublic, Game::Units::TroopType::Archer);
+  const int full_squad = archer_profile.individuals_per_unit;
+  ASSERT_GT(full_squad, 1);
+
+  EXPECT_EQ(Game::Systems::troop_count_for(world, k_owner), full_squad + 1)
+      << "a commander is one man and a squad is its soldiers";
+
+  auto* unit = archer->get_component<Engine::Core::UnitComponent>();
+  unit->squad_strength =
+      Game::Units::squad_establishment(Game::Units::SpawnType::Archer) / 2;
+  Game::Systems::TroopCountRegistry::instance().clear();
+  EXPECT_NEAR(Game::Systems::troop_count_for(world, k_owner), full_squad / 2 + 1, 1)
+      << "a half squad fields half its men";
+}
+
+TEST_F(EconomyOverviewTest, TheTopBarCapIsWhatThePlayerCanActuallyRaise) {
+  add_unit(Game::Units::SpawnType::Archer);
+  auto* barracks = add_unit(Game::Units::SpawnType::Barracks);
+  auto* production = barracks->add_component<Engine::Core::ProductionComponent>();
+  production->manpower_available = 60;
+  auto* home = add_unit(Game::Units::SpawnType::Home);
+  home->add_component<Engine::Core::ProductionComponent>()->manpower_available = 40;
+
+  const int fielded = Game::Systems::troop_count_for(world, k_owner);
+  const auto summary =
+      App::Core::build_manpower_summary(&world, k_owner, k_manpower_cap);
+  EXPECT_EQ(summary.fielded, fielded);
+  EXPECT_EQ(summary.reserve, 60) << "a Home's families are not soldiers in reserve";
+  EXPECT_EQ(summary.cap, fielded + 60)
+      << "the map cap is far away; the reserve is the cap";
+  EXPECT_TRUE(summary.cap_is_reserve_bound());
+
+  const auto tight = App::Core::build_manpower_summary(&world, k_owner, fielded + 10);
+  EXPECT_EQ(tight.cap, fielded + 10) << "a map cap below the reserve is the real limit";
+  EXPECT_FALSE(tight.cap_is_reserve_bound());
+
+  const QVariantMap state = App::Core::manpower_summary_map(summary);
+  EXPECT_EQ(state.value(QStringLiteral("manpower")).toInt(), fielded);
+  EXPECT_EQ(state.value(QStringLiteral("manpower_cap")).toInt(), fielded + 60);
+  EXPECT_EQ(state.value(QStringLiteral("manpower_reserve")).toInt(), 60);
+  EXPECT_EQ(state.value(QStringLiteral("manpower_map_cap")).toInt(), k_manpower_cap);
+  EXPECT_EQ(state.value(QStringLiteral("manpower_cap_source")).toString(),
+            QStringLiteral("reserve"));
+  EXPECT_FALSE(state.value(QStringLiteral("manpower_tooltip")).toString().isEmpty());
+
+  const QVariantMap help = App::Core::build_production_help(request());
+  EXPECT_EQ(help.value(QStringLiteral("manpower_cap")).toInt(), fielded + 60)
+      << "the help panel and the top bar must quote the same cap";
 }
 
 TEST_F(EconomyOverviewTest, AnUnaffordableItemReportsWhatIsMissingAndByHowMuch) {

@@ -250,8 +250,12 @@
         <translation>Select a barracks before setting a rally point</translation>
     </message>
     <message>
-        <source>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</source>
-        <translation>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</translation>
+        <source>Reserve exhausted: %1 men held, the cheapest recruit needs %2. Civilians raised at a Home deliver more men.</source>
+        <translation>Reserve exhausted: %1 men held, the cheapest recruit needs %2. Civilians raised at a Home deliver more men.</translation>
+    </message>
+    <message>
+        <source>Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.</source>
+        <translation>Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.</translation>
     </message>
 </context>
 <context>
@@ -311,6 +315,21 @@
     <message>
         <source>Esc closes the report</source>
         <translation>Esc closes the report</translation>
+    </message>
+    <message>
+        <source>Retry mission</source>
+        <translation>Retry mission</translation>
+    </message>
+</context>
+<context>
+    <name>BattleSummary</name>
+    <message>
+        <source>Retry mission</source>
+        <translation>Retry mission</translation>
+    </message>
+    <message>
+        <source>Play again</source>
+        <translation>Play again</translation>
     </message>
 </context>
 <context>
@@ -767,13 +786,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
         <translation>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</translation>
-    </message>
-</context>
-<context>
-    <name>CommandController</name>
-    <message>
-        <source>Not enough wood, stone, or iron to recruit this unit.</source>
-        <translation>Not enough wood, stone, or iron to recruit this unit.</translation>
     </message>
 </context>
 <context>
@@ -2610,6 +2622,21 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
 </context>
 <context>
+    <name>EconomyOverview</name>
+    <message>
+        <source>Men in the field: %1. Every soldier, rider, crew member, builder and civilian counts as one man.</source>
+        <translation>Men in the field: %1. Every soldier, rider, crew member, builder and civilian counts as one man.</translation>
+    </message>
+    <message>
+        <source>Men you can still raise: %1 held in reserve by your barracks and temples. Walk civilians into a barracks or build a Home to raise more.</source>
+        <translation>Men you can still raise: %1 held in reserve by your barracks and temples. Walk civilians into a barracks or build a Home to raise more.</translation>
+    </message>
+    <message>
+        <source>This map allows %1 men per army; %2 more wait in reserve but cannot muster until the field thins.</source>
+        <translation>This map allows %1 men per army; %2 more wait in reserve but cannot muster until the field thins.</translation>
+    </message>
+</context>
+<context>
     <name>FactionTheme</name>
     <message>
         <source>Standard</source>
@@ -2684,6 +2711,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Farm</source>
         <translation>Farm</translation>
+    </message>
+    <message>
+        <source>Sepulcher Shrine</source>
+        <translation>Sepulcher Shrine</translation>
     </message>
 </context>
 <context>
@@ -3332,14 +3363,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>%1 is finished - %2 has fallen.</translation>
     </message>
     <message>
-        <source>Manpower limit reached.</source>
-        <translation>Manpower limit reached.</translation>
-    </message>
-    <message>
-        <source>Not enough reserve — build a home to raise more families.</source>
-        <translation>Not enough reserve — build a home to raise more families.</translation>
-    </message>
-    <message>
         <source>The previous frame is still running; the match could not be changed. Please try again.</source>
         <translation>The previous frame is still running; the match could not be changed. Please try again.</translation>
     </message>
@@ -3395,6 +3418,18 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>%1 FPS</source>
         <translation>%1 FPS</translation>
+    </message>
+    <message>
+        <source>Waves %1 of %2</source>
+        <translation>Waves %1 of %2</translation>
+    </message>
+    <message>
+        <source>Objectives</source>
+        <translation>Objectives</translation>
+    </message>
+    <message>
+        <source>Hide the objectives (O)</source>
+        <translation>Hide the objectives (O)</translation>
     </message>
 </context>
 <context>
@@ -4486,10 +4521,37 @@ Unseen: never scouted.</translation>
         <translation>Manpower</translation>
     </message>
     <message>
-        <source>Manpower in the field: %1 of %2.
-Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</source>
-        <translation>Manpower in the field: %1 of %2.
-Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</translation>
+        <source>Men in the field: %1 of %2.
+Every recruit costs the men in its squad; reserve held at a barracks raises the cap.</source>
+        <translation>Men in the field: %1 of %2.
+Every recruit costs the men in its squad; reserve held at a barracks raises the cap.</translation>
+    </message>
+    <message>
+        <source>Hide the objectives list</source>
+        <translation>Hide the objectives list</translation>
+    </message>
+    <message>
+        <source>Show every objective and defeat condition</source>
+        <translation>Show every objective and defeat condition</translation>
+    </message>
+    <message>
+        <source>Objectives</source>
+        <translation>Objectives</translation>
+    </message>
+</context>
+<context>
+    <name>HUDVictory</name>
+    <message>
+        <source>Retry mission</source>
+        <translation>Retry mission</translation>
+    </message>
+    <message>
+        <source>Fight it again</source>
+        <translation>Fight it again</translation>
+    </message>
+    <message>
+        <source>Return to Menu</source>
+        <translation>Return to Menu</translation>
     </message>
 </context>
 <context>
@@ -4541,10 +4603,6 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
     <message>
         <source>Winning and losing</source>
         <translation>Winning and losing</translation>
-    </message>
-    <message>
-        <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
-        <translation>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</translation>
     </message>
     <message>
         <source>The three materials</source>
@@ -4726,6 +4784,62 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
         <source>A barracks or temple starts with a reserve and spends it on every recruit; the card shows exactly what each one costs. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s reserve grows. A squad then stands in the field for what it cost, which is what the top bar counts against the map&apos;s manpower cap.</source>
         <translation>A barracks or temple starts with a reserve and spends it on every recruit; the card shows exactly what each one costs. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s reserve grows. A squad then stands in the field for what it cost, which is what the top bar counts against the map&apos;s manpower cap.</translation>
     </message>
+    <message>
+        <source>The Sepulcher</source>
+        <translation>The Sepulcher</translation>
+    </message>
+    <message>
+        <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In battle, press O or the objectives button in the top bar to keep the full list open beside the field. In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
+        <translation>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In battle, press O or the objectives button in the top bar to keep the full list open beside the field. In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</translation>
+    </message>
+    <message>
+        <source>Undead zones</source>
+        <translation>Undead zones</translation>
+    </message>
+    <message>
+        <source>Some fields are dotted with dormant ruins and shrines. Nothing stirs in them until your troops walk in. The moment you cross into a zone, it wakes: the ground gives up its dead and the first wave rises to meet you. Choose the moment - and the force - you enter with.</source>
+        <translation>Some fields are dotted with dormant ruins and shrines. Nothing stirs in them until your troops walk in. The moment you cross into a zone, it wakes: the ground gives up its dead and the first wave rises to meet you. Choose the moment - and the force - you enter with.</translation>
+    </message>
+    <message>
+        <source>Waves</source>
+        <translation>Waves</translation>
+    </message>
+    <message>
+        <source>Every zone holds a set number of waves, and the announcement names each one as it comes - wave 1 of 2, then 2 of 2. When a wave rises to meet you, it is coming for the troops inside the zone. Break one and the next rises. A zone is only clear when its last wave lies still.</source>
+        <translation>Every zone holds a set number of waves, and the announcement names each one as it comes - wave 1 of 2, then 2 of 2. When a wave rises to meet you, it is coming for the troops inside the zone. Break one and the next rises. A zone is only clear when its last wave lies still.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher Shrine</source>
+        <translation>The Sepulcher Shrine</translation>
+    </message>
+    <message>
+        <source>Each zone is anchored by a Sepulcher Shrine. While its guardians still stand, the shrine cannot be harmed and attack orders on it are refused - do not waste arrows on it. Kill every wave first; only then does the shrine lie open.</source>
+        <translation>Each zone is anchored by a Sepulcher Shrine. While its guardians still stand, the shrine cannot be harmed and attack orders on it are refused - do not waste arrows on it. Kill every wave first; only then does the shrine lie open.</translation>
+    </message>
+    <message>
+        <source>Purifying a shrine</source>
+        <translation>Purifying a shrine</translation>
+    </message>
+    <message>
+        <source>Once the guardians have fallen, walk troops onto the shrine to capture it, or simply knock it down. Either way the zone is purified for good and it will not wake again. A purified shrine pays out: the clear reward - wood, iron and food - lands in your stores the moment the zone falls.</source>
+        <translation>Once the guardians have fallen, walk troops onto the shrine to capture it, or simply knock it down. Either way the zone is purified for good and it will not wake again. A purified shrine pays out: the clear reward - wood, iron and food - lands in your stores the moment the zone falls.</translation>
+    </message>
+    <message>
+        <source>The guardians</source>
+        <translation>The guardians</translation>
+    </message>
+    <message>
+        <source>The dead defend their ground. They will chase you to the edge of the zone and then turn back to it, so you can pull out to regroup and re-enter when you are ready. You cannot lure them across the map - the fight happens at the shrine.</source>
+        <translation>The dead defend their ground. They will chase you to the edge of the zone and then turn back to it, so you can pull out to regroup and re-enter when you are ready. You cannot lure them across the map - the fight happens at the shrine.</translation>
+    </message>
+    <message>
+        <source>The grave priest</source>
+        <translation>The grave priest</translation>
+    </message>
+    <message>
+        <source>Among the waves walks a grave priest. He heals the dead around him and throws fire at your line, so a slow slog of spearmen alone will bleed. Bring a Medicus to mend the burns and ranged troops to cut the priest down from a distance before the guardians close in. Kill him first and the dead stop mending.</source>
+        <translation>Among the waves walks a grave priest. He heals the dead around him and throws fire at your line, so a slow slog of spearmen alone will bleed. Bring a Medicus to mend the burns and ranged troops to cut the priest down from a distance before the guardians close in. Kill him first and the dead stop mending.</translation>
+    </message>
 </context>
 <context>
     <name>HintCard</name>
@@ -4836,6 +4950,14 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
     <message>
         <source>One side is left holding the field.</source>
         <translation>One side is left holding the field.</translation>
+    </message>
+    <message>
+        <source>Look at the field</source>
+        <translation>Look at the field</translation>
+    </message>
+    <message>
+        <source>Show the verdict again</source>
+        <translation>Show the verdict again</translation>
     </message>
 </context>
 <context>
@@ -5442,6 +5564,26 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
     <message>
         <source>Workers are valuable strategic assets. Do not leave them exposed near the front.</source>
         <translation>Workers are valuable strategic assets. Do not leave them exposed near the front.</translation>
+    </message>
+    <message>
+        <source>A cursed shrine cannot be attacked while its guardians stand. Break the guard, then purify the shrine by capturing it.</source>
+        <translation>A cursed shrine cannot be attacked while its guardians stand. Break the guard, then purify the shrine by capturing it.</translation>
+    </message>
+    <message>
+        <source>A grave priest mends the dead around it and hurls fire at the living. Strike it down before the line closes.</source>
+        <translation>A grave priest mends the dead around it and hurls fire at the living. Strike it down before the line closes.</translation>
+    </message>
+    <message>
+        <source>Ranged troops and a Medicus make the vigil survivable. Wound the dead from a distance, and keep the wounded living.</source>
+        <translation>Ranged troops and a Medicus make the vigil survivable. Wound the dead from a distance, and keep the wounded living.</translation>
+    </message>
+    <message>
+        <source>Skeleton guardians defend their ruins and drift back to them when the fight moves on. Draw them out, or bring the fight to the stones.</source>
+        <translation>Skeleton guardians defend their ruins and drift back to them when the fight moves on. Draw them out, or bring the fight to the stones.</translation>
+    </message>
+    <message>
+        <source>The dead do not tire, do not flee, and do not file complaints. They are, in every other respect, a poor garrison.</source>
+        <translation>The dead do not tire, do not flee, and do not file complaints. They are, in every other respect, a poor garrison.</translation>
     </message>
 </context>
 <context>
@@ -6184,6 +6326,10 @@ to see preview</translation>
         <source>This battlefield has fewer than two slots to observe</source>
         <translation>This battlefield has fewer than two slots to observe</translation>
     </message>
+    <message>
+        <source>There is no battle to fight again</source>
+        <translation>There is no battle to fight again</translation>
+    </message>
 </context>
 <context>
     <name>MediterraneanMapPanel</name>
@@ -6651,10 +6797,6 @@ to see preview</translation>
         <translation>Break all three Roman assault phases. The quarter holds when the last consular column is dead in the streets.</translation>
     </message>
     <message>
-        <source>Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle.</source>
-        <translation>Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle.</translation>
-    </message>
-    <message>
         <source>Break three Roman columns before the survivors find the ford again.</source>
         <translation>Break three Roman columns before the survivors find the ford again.</translation>
     </message>
@@ -6705,10 +6847,6 @@ to see preview</translation>
     <message>
         <source>Defend Hannibal&apos;s fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.</source>
         <translation>Defend Hannibal&apos;s fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.</translation>
-    </message>
-    <message>
-        <source>Drive the dead from the shrine. Salt the earth where they stood.</source>
-        <translation>Drive the dead from the shrine. Salt the earth where they stood.</translation>
     </message>
     <message>
         <source>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</source>
@@ -7467,10 +7605,6 @@ to see preview</translation>
         <translation>Overcut the levy. A surplus is the only thing a quartermaster has ever thanked anyone for.</translation>
     </message>
     <message>
-        <source>Take the cursed shrine above the sepulcher ruins and hold what you take: clear the guardians out of the ruins, then drive the dead off the shrine itself.</source>
-        <translation>Take the cursed shrine above the sepulcher ruins and hold what you take: clear the guardians out of the ruins, then drive the dead off the shrine itself.</translation>
-    </message>
-    <message>
         <source>The Timber Levy</source>
         <translation>The Timber Levy</translation>
     </message>
@@ -7898,6 +8032,26 @@ to see preview</translation>
         <source>You cannot cover every gate. Watch the telegraph and move on interior lines.</source>
         <translation>You cannot cover every gate. Watch the telegraph and move on interior lines.</translation>
     </message>
+    <message>
+        <source>Break both risings of the dead at the sepulcher ruins by the south-western crossing. The guardians will not leave their ground; you must go to them.</source>
+        <translation>Break both risings of the dead at the sepulcher ruins by the south-western crossing. The guardians will not leave their ground; you must go to them.</translation>
+    </message>
+    <message>
+        <source>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</source>
+        <translation>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</translation>
+    </message>
+    <message>
+        <source>Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
+        <translation>Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too.</translation>
+    </message>
+    <message>
+        <source>Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it.</source>
+        <translation>Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it.</translation>
+    </message>
+    <message>
+        <source>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</source>
+        <translation>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -8284,6 +8438,34 @@ to see preview</translation>
     <message>
         <source>Only a squad of several individuals can be divided or joined.</source>
         <translation>Only a squad of several individuals can be divided or joined.</translation>
+    </message>
+    <message>
+        <source>Recruit</source>
+        <translation>Recruit</translation>
+    </message>
+    <message>
+        <source>Select a barracks, temple or home to recruit.</source>
+        <translation>Select a barracks, temple or home to recruit.</translation>
+    </message>
+    <message>
+        <source>Not enough reserve: %1 / %2 men. Walk civilians into the barracks or build a Home to raise more.</source>
+        <translation>Not enough reserve: %1 / %2 men. Walk civilians into the barracks or build a Home to raise more.</translation>
+    </message>
+    <message>
+        <source>Army at the map&apos;s limit: %1 / %2 men in the field.</source>
+        <translation>Army at the map&apos;s limit: %1 / %2 men in the field.</translation>
+    </message>
+    <message>
+        <source>The training queue is full.</source>
+        <translation>The training queue is full.</translation>
+    </message>
+    <message>
+        <source>%1 (%2 short)</source>
+        <translation>%1 (%2 short)</translation>
+    </message>
+    <message>
+        <source>Not enough %1.</source>
+        <translation>Not enough %1.</translation>
     </message>
 </context>
 <context>
@@ -10656,12 +10838,12 @@ Builders reap it for the food that recruits civilians</translation>
         <translation>%1 claws out of the ground.</translation>
     </message>
     <message>
-        <source>The risen guardians are put down. The ground is quiet.</source>
-        <translation>The risen guardians are put down. The ground is quiet.</translation>
-    </message>
-    <message>
         <source>The barrow gives up its hoard: %1.</source>
         <translation>The barrow gives up its hoard: %1.</translation>
+    </message>
+    <message>
+        <source>The risen guardians are put down. Hold the shrine to purify it.</source>
+        <translation>The risen guardians are put down. Hold the shrine to purify it.</translation>
     </message>
 </context>
 <context>

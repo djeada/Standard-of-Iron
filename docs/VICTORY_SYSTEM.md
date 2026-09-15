@@ -205,6 +205,12 @@ A map can define:
 
 Each entry becomes the same runtime rule produced by the mission path. `undead_objectives` may also accompany another map victory type, in which case the undead objectives are appended to that rule set.
 
+The three objectives read distinct states from `UndeadAwakeningSystem`:
+
+- `clear_undead_zone` is met once every wave of the zone is dead, or once its shrine is destroyed or captured;
+- `purify_shrine` is met only when the zone's shrine anchor changes hands or falls. Killing the last guardian lifts the shrine's ward and capture lock; the player then purifies it by holding the shrine with any troop until the capture completes, or by razing it; and
+- `survive_undead_wave` counts waves the zone has finished raising and losing.
+
 An `undead_zones` map with no objectives falls back to `elimination` and emits a warning rather than creating an unwinnable match.
 
 Supported map defeat strings are:

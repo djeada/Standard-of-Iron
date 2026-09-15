@@ -1,5 +1,6 @@
 #include "production_service.h"
 
+#include <algorithm>
 #include <vector>
 
 #include "../core/ambient_session.h"
@@ -12,6 +13,7 @@
 #include "../systems/player_resource_registry.h"
 #include "../systems/troop_profile_service.h"
 #include "../units/commander_catalog.h"
+#include "../units/troop_catalog.h"
 #include "../units/troop_config.h"
 #include "core/entity.h"
 #include "owner_queries.h"
@@ -142,7 +144,7 @@ auto production_ruling(Engine::Core::World& world,
   } else {
     const int current_troops = Game::Systems::troop_count_for(world, unit->owner_id);
     const int max_troops = Game::GameConfig::instance().get_max_troops_per_player();
-    if (current_troops + profile.production.population_cost() > max_troops) {
+    if (current_troops + std::max(1, profile.individuals_per_unit) > max_troops) {
       return ProductionResult::GlobalTroopLimitReached;
     }
   }
@@ -257,6 +259,30 @@ auto ProductionService::find_selected_temple(
   return e != nullptr ? e->get_id() : Engine::Core::NULL_ENTITY;
 }
 
+auto ProductionService::cheapest_recruit_cost(Game::Units::SpawnType building) -> int {
+  int cheapest = 0;
+  for (const auto& [type, troop_class] :
+       Game::Units::TroopCatalog::instance().get_all_classes()) {
+    if (troop_class.production.cost <= 0 || Game::Units::is_commander_troop(type) ||
+        recruiting_building_for(type) != building) {
+      continue;
+    }
+    cheapest = cheapest == 0 ? troop_class.production.cost
+                             : std::min(cheapest, troop_class.production.cost);
+  }
+  return cheapest;
+}
+
+auto ProductionService::reserve_is_short(
+    const Engine::Core::ProductionComponent& production,
+    Game::Units::SpawnType building) -> bool {
+  if (!Game::Units::is_recruitment_building(building)) {
+    return false;
+  }
+  const int cheapest = cheapest_recruit_cost(building);
+  return cheapest > 0 && production.manpower_available < cheapest;
+}
+
 auto ProductionService::get_selected_barracks_state(
     Engine::Core::World& world,
     const std::vector<Engine::Core::EntityID>& selected,
@@ -286,6 +312,9 @@ auto ProductionService::get_selected_barracks_state(
     out_state.manpower_available = p->manpower_available;
     out_state.queue_size = static_cast<int>(p->production_queue.size());
     out_state.production_queue = p->production_queue;
+    out_state.cheapest_recruit_cost =
+        cheapest_recruit_cost(Game::Units::SpawnType::Barracks);
+    out_state.reserve_short = reserve_is_short(*p, Game::Units::SpawnType::Barracks);
   }
   return true;
 }
@@ -352,6 +381,9 @@ auto ProductionService::get_selected_temple_state(
     out_state.manpower_available = p->manpower_available;
     out_state.queue_size = static_cast<int>(p->production_queue.size());
     out_state.production_queue = p->production_queue;
+    out_state.cheapest_recruit_cost =
+        cheapest_recruit_cost(Game::Units::SpawnType::Temple);
+    out_state.reserve_short = reserve_is_short(*p, Game::Units::SpawnType::Temple);
   }
   return true;
 }

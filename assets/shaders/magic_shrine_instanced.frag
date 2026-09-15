@@ -71,12 +71,16 @@ void main() {
   vec2 rune_scale = vec2(2.8, 4.1);
   vec2 rune_cell = floor(rune_uv * rune_scale);
   vec2 rune_frac = fract(rune_uv * rune_scale);
-  float rune_line_x = 1.0 - smoothstep(0.0, 0.09, abs(rune_frac.x - 0.5));
-  float rune_line_y = 1.0 - smoothstep(0.0, 0.09, abs(rune_frac.y - 0.5));
-  float rune_diag = 1.0 - smoothstep(0.0, 0.07, abs((rune_frac.x + rune_frac.y) - 1.0));
+  float rune_line_x = 1.0 - smoothstep(0.0, 0.26, abs(rune_frac.x - 0.5));
+  float rune_line_y = 1.0 - smoothstep(0.0, 0.26, abs(rune_frac.y - 0.5));
+  float rune_diag = 1.0 - smoothstep(0.0, 0.22, abs((rune_frac.x + rune_frac.y) - 1.0));
   float rune_selector = soi_hash13_1c8396(vec3(rune_cell, v_seed * 11.0));
   float rune = max(max(rune_line_x, rune_line_y) * step(0.46, rune_selector),
                    rune_diag * step(0.78, rune_selector));
+  rune *= rune;
+  float top_face = smoothstep(0.55, 0.85, N.y);
+  float rune_gather = 1.0 - smoothstep(0.30, 0.95, length(v_local_pos.xz));
+  rune *= mix(1.0, rune_gather, top_face);
 
   vec3 magic_a = vec3(0.66, 0.03, 1.18);
   vec3 magic_b = vec3(0.03, 0.48, 1.08);
@@ -130,12 +134,12 @@ void main() {
   color += rim_color;
 
   vec3 glow = magic_color * magic_strength * pulse *
-              (rune * 1.7 + seam * 0.65 + obelisk_mask * 0.22 + fresnel * 0.38);
+              (rune * 0.62 + seam * 0.45 + obelisk_mask * 0.22 + fresnel * 0.30);
   vec3 altar_glow =
       sanctum_color * magic_strength *
-      (altar_core * (1.55 + 0.45 * pulse) + altar_ring * (0.95 + 0.30 * pulse));
+      (altar_core * (0.78 + 0.22 * pulse) + altar_ring * (0.50 + 0.18 * pulse));
   vec3 aura = mix(magic_color, sanctum_color, 0.45) * magic_strength * altar_aura *
-              (0.26 + 0.18 * pulse);
+              (0.18 + 0.12 * pulse);
   color += glow;
   color += altar_glow;
   color += aura;

@@ -259,6 +259,19 @@ ApplicationWindow {
         mainMenu.forceActiveFocus();
     }
 
+    function restart_current_match() {
+        if (typeof game === 'undefined' || !game.setup || !game.setup.restart_current_match)
+            return false;
+        if (!game.setup.restart_current_match())
+            return false;
+        mainWindow.menu_visible = false;
+        mainWindow.game_started = true;
+        mainWindow.game_paused = false;
+        mainWindow.push_simulation_suspended();
+        gameViewItem.forceActiveFocus();
+        return true;
+    }
+
     function request_menu_toggle() {
         if (typeof game !== 'undefined' && game.placement) {
             if (game.placement.is_placing_construction && game.placement.on_construction_cancel) {
@@ -397,6 +410,7 @@ ApplicationWindow {
         }
         onHelp_requested: mainWindow.open_help(false)
         onCamera_settings_requested: mainWindow.show_view("settings")
+        onRetry_requested: mainWindow.restart_current_match()
     }
 
     MouseArea {
@@ -436,7 +450,7 @@ ApplicationWindow {
 
         anchors.top: parent.top
         anchors.right: parent.right
-        anchors.topMargin: hud.visible ? hud.right_stack_bottom + Design.Metrics.space8 : Design.Metrics.space24 * 3
+        anchors.topMargin: hud.visible ? hud.right_column_bottom + Design.Metrics.space8 : Design.Metrics.space24 * 3
         anchors.rightMargin: Design.Metrics.space16
         z: 12
         visible: mainWindow.game_started && !mainWindow.menu_visible
@@ -1126,7 +1140,7 @@ ApplicationWindow {
             if (!text || !mainWindow.game_started)
                 return;
             Design.Notifications.info(text, {
-                    "channel": "mission-announcement",
+                    "channel": "mission-announcement:" + text,
                     "icon": Design.Icons.objective
                 });
         }

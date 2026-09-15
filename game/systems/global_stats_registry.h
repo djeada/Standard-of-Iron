@@ -12,6 +12,7 @@ class World;
 namespace Game::Systems {
 
 struct PlayerStats {
+
   int troops_recruited = 0;
   int enemies_killed = 0;
   int losses = 0;

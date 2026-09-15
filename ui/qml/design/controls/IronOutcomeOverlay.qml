@@ -15,6 +15,14 @@ Item {
 
     property string outcomeReason: ""
     property string primaryAction: qsTr("Battle Report")
+    property string retryAction: ""
+    property string menuAction: ""
+    property string dismissAction: qsTr("Look at the field")
+
+    property bool collapsed: false
+    property int stripTopMargin: Design.Metrics.space24 * 3
+
+    readonly property Item strip: collapsedStrip
 
     property bool showingSummary: false
     property bool reportTransitioning: false
@@ -69,12 +77,15 @@ Item {
 
     signal reportRequested
     signal secondaryRequested
+    signal retryRequested
+    signal menuRequested
 
     function reset() {
         reportTransitionTimer.stop();
         root.reportTransitioning = false;
         root.showingSummary = false;
         root.manuallyHidden = false;
+        root.collapsed = false;
     }
 
     function forceHide() {
@@ -82,6 +93,17 @@ Item {
         root.reportTransitioning = false;
         root.showingSummary = false;
         root.manuallyHidden = true;
+        root.collapsed = false;
+    }
+
+    function collapse() {
+        if (!root.decided)
+            return;
+        root.collapsed = true;
+    }
+
+    function expand() {
+        root.collapsed = false;
     }
 
     function request_report() {
@@ -92,10 +114,12 @@ Item {
     }
 
     function onOutcomeChanged() {
-        if (root.victoryState === "")
+        if (root.victoryState === "") {
             root.reset();
-        else
+        } else {
             root.manuallyHidden = false;
+            root.collapsed = false;
+        }
     }
 
     anchors.fill: parent
@@ -132,7 +156,7 @@ Item {
 
         objectName: "outcomeBanner"
         anchors.fill: parent
-        active: !root.showingSummary
+        active: !root.showingSummary && !root.collapsed
         visible: active
         enabled: !root.reportTransitioning
 
@@ -143,8 +167,82 @@ Item {
             subtitle: root.subtitle
             primaryAction: root.primaryAction
             secondaryAction: root.secondaryAction
+            retryAction: root.retryAction
+            menuAction: root.menuAction
+            dismissAction: root.dismissAction
             onPrimaryActivated: root.request_report()
             onSecondaryActivated: root.secondaryRequested()
+            onRetryActivated: root.retryRequested()
+            onMenuActivated: root.menuRequested()
+            onDismissActivated: root.collapse()
+        }
+    }
+
+    Design.IronPanel {
+        id: collapsedStrip
+
+        objectName: "outcomeStrip"
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: root.stripTopMargin
+        visible: root.collapsed && !root.showingSummary
+        raised: true
+        translucent: true
+        contentPadding: Design.Metrics.space8
+        implicitWidth: Math.min(parent.width - Design.Metrics.space16 * 2, stripRow.implicitWidth + Design.Metrics.space8 * 2)
+        implicitHeight: stripRow.implicitHeight + Design.Metrics.space8 * 2
+        border.color: root.outcomeKind === "defeat" ? Design.Theme.danger : Design.Theme.success
+        accessibleName: root.headline
+
+        clip: true
+
+        Row {
+            id: stripRow
+
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Design.Metrics.space8
+
+            Text {
+                height: Design.Metrics.controlHeight
+                verticalAlignment: Text.AlignVCenter
+                text: root.headline
+                color: root.outcomeKind === "defeat" ? Design.Theme.danger : Design.Theme.success
+                font.family: Design.Typography.titleFamily
+                font.hintingPreference: Design.Typography.titleHinting
+                font.kerning: true
+                font.capitalization: Font.AllUppercase
+                font.pixelSize: Design.Typography.label
+                font.weight: Design.Typography.bold
+                font.letterSpacing: Design.Typography.trackingWide
+            }
+
+            Design.IronButton {
+                objectName: "outcomeStripReport"
+                text: root.primaryAction
+                tone: "primary"
+                onClicked: root.request_report()
+            }
+
+            Design.IronButton {
+                objectName: "outcomeStripRetry"
+                visible: root.retryAction !== ""
+                text: root.retryAction
+                onClicked: root.retryRequested()
+            }
+
+            Design.IronButton {
+                objectName: "outcomeStripMenu"
+                visible: root.menuAction !== ""
+                text: root.menuAction
+                onClicked: root.menuRequested()
+            }
+
+            Design.IronIconButton {
+                iconText: Design.Icons.disclosureOpen
+                tooltip: qsTr("Show the verdict again")
+                onClicked: root.expand()
+            }
         }
     }
 

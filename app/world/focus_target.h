@@ -10,8 +10,9 @@
 #include "game/units/spawn_type.h"
 
 namespace Engine::Core {
+class UnitComponent;
 class World;
-}
+} // namespace Engine::Core
 
 namespace App::Core {
 
@@ -62,6 +63,11 @@ count_selection_attacking(Engine::Core::World* world,
                                            int local_owner_id) -> int;
 
 [[nodiscard]] auto building_display_name(Game::Units::SpawnType type) -> QString;
+
+[[nodiscard]] auto
+building_display_name(const Engine::Core::UnitComponent& unit) -> QString;
+
+[[nodiscard]] auto is_sepulcher_shrine(const Engine::Core::UnitComponent& unit) -> bool;
 
 [[nodiscard]] auto focus_target_to_variant(const FocusTargetInfo& info) -> QVariantMap;
 

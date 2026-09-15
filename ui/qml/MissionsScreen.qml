@@ -748,6 +748,12 @@ Item {
                                 flickableDirection: Flickable.VerticalFlick
                                 boundsBehavior: Flickable.StopAtBounds
 
+                                function scroll_by_wheel(angle_delta) {
+                                    var limit = Math.max(0, briefing_scroll.contentHeight - briefing_scroll.height);
+                                    var step = (angle_delta / 120) * Design.Metrics.space24 * 2;
+                                    briefing_scroll.contentY = Math.max(0, Math.min(limit, briefing_scroll.contentY - step));
+                                }
+
                                 ScrollBar.vertical: Design.IronScrollBar {
                                     objectName: "missionBriefingScrollBar"
                                 }
@@ -866,12 +872,27 @@ Item {
                                 }
 
                                 Rectangle {
+                                    id: field_preview_frame
+
+                                    readonly property int capped_height: Math.max(Design.Metrics.space24 * 4, Math.min(width, Math.round(detail_panel.height * 0.4)))
+
+                                    objectName: "missionFieldPreviewFrame"
                                     Layout.fillWidth: true
-                                    Layout.preferredHeight: width
+                                    Layout.preferredHeight: field_preview_frame.capped_height
+                                    Layout.maximumHeight: field_preview_frame.capped_height
                                     radius: Design.Metrics.radiusMedium
                                     color: Design.Theme.backgroundDeep
                                     border.color: root.selected_tone
                                     border.width: Design.Metrics.borderThin
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        acceptedButtons: Qt.NoButton
+                                        onWheel: function (wheel) {
+                                            briefing_scroll.scroll_by_wheel(wheel.angleDelta.y !== 0 ? wheel.angleDelta.y : wheel.pixelDelta.y * 4);
+                                            wheel.accepted = true;
+                                        }
+                                    }
 
                                     MapPreview {
                                         id: field_preview

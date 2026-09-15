@@ -352,6 +352,7 @@ void MatchSetupViewModel::start_skirmish(const QString& map_path,
                                       .map_path = map_path,
                                       .player_configs = player_configs,
                                       .set_skirmish_context = true};
+  remember_launch(launch);
   emit launch_requested(launch);
 }
 
@@ -456,8 +457,36 @@ void MatchSetupViewModel::launch_current_mission(const QString& kind,
                                       .player_configs =
                                           build_campaign_player_configs(mission),
                                       .set_skirmish_context = false};
+  remember_launch(launch);
   emit launch_requested(launch);
   emit current_mission_changed();
+}
+
+void MatchSetupViewModel::remember_launch(const App::Core::MatchLaunch& launch) {
+  const bool could_restart = m_last_launch.has_value();
+  m_last_launch = LastLaunch{.kind = launch.kind,
+                             .reference = launch.reference,
+                             .map_path = launch.map_path,
+                             .player_configs = launch.player_configs};
+  if (!could_restart) {
+    emit can_restart_changed();
+  }
+}
+
+auto MatchSetupViewModel::restart_current_match() -> bool {
+  if (!m_last_launch.has_value()) {
+    emit failed(tr("There is no battle to fight again"));
+    return false;
+  }
+  const LastLaunch launch = *m_last_launch;
+  if (launch.kind == QStringLiteral("skirmish")) {
+    start_skirmish(launch.map_path, launch.player_configs);
+  } else if (launch.kind == QStringLiteral("campaign-mission")) {
+    start_campaign_mission(launch.reference);
+  } else {
+    start_mission_file(launch.reference);
+  }
+  return true;
 }
 
 } // namespace App::ViewModels

@@ -44,7 +44,7 @@ TEST_F(ArenaFeedbackTest, ACombatHitBecomesAFloatingNumberOverTheTarget) {
   Engine::Core::EventManager::instance().publish(Engine::Core::CombatHitEvent(
       0, target, 17, Game::Units::SpawnType::Knight, false, 3, 2));
 
-  feedback.advance(0.2F);
+  feedback.advance(0.6F);
   ASSERT_EQ(feedback.live_count(), 1)
       << "a hit in the arena must raise the same floating number the game shows";
 
@@ -81,7 +81,7 @@ TEST_F(ArenaFeedbackTest, AHarvestDeliveryBecomesAnEconomyNumber) {
       Engine::Core::WorldFeedbackEvent::make_resource(
           2, depot, Game::Systems::ResourceType::Wood, 40));
 
-  feedback.advance(0.6F);
+  feedback.advance(0.8F);
   EXPECT_EQ(feedback.live_count(), 1)
       << "economy feedback reaches the arena overlay too";
 }
@@ -93,7 +93,7 @@ TEST_F(ArenaFeedbackTest, TheNumbersScaleWithTheFrameTheyAreRecordedInto) {
   const auto target = spawn(0.0F, 0.0F);
   Engine::Core::EventManager::instance().publish(Engine::Core::CombatHitEvent(
       0, target, 12, Game::Units::SpawnType::Knight, false, 3, 2));
-  feedback.advance(0.2F);
+  feedback.advance(0.6F);
   ASSERT_EQ(feedback.live_count(), 1);
 
   const auto painted_pixels = [&feedback](float ui_scale) {

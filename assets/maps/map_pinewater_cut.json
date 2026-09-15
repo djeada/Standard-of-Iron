@@ -3,7 +3,7 @@
   "description": "A timber detail's cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.",
   "theme": "Axes in the pines, and something moving between them.",
   "coord_system": "grid",
-  "max_troops_per_player": 160,
+  "max_troops_per_player": 360,
   "grid": {
     "width": 64,
     "height": 64,

@@ -7,6 +7,7 @@
 #include <cstdint>
 
 #include "game/command/command_validator.h"
+#include "game/systems/resource_types.h"
 
 namespace App::Core {
 
@@ -25,6 +26,7 @@ enum class OrderKind : std::uint8_t {
   Rally,
   Formation,
   Squad,
+  Recruit,
 };
 
 enum class OrderStatus : std::uint8_t {
@@ -105,5 +107,10 @@ struct OrderOutcome {
 [[nodiscard]] auto no_repairs_needed_reason() -> OrderRefusal;
 [[nodiscard]] auto not_your_building_reason() -> OrderRefusal;
 [[nodiscard]] auto building_is_protected_reason() -> OrderRefusal;
+[[nodiscard]] auto reserve_short_reason(int available, int cost) -> OrderRefusal;
+[[nodiscard]] auto army_cap_reason(int fielded, int cap) -> OrderRefusal;
+[[nodiscard]] auto training_queue_full_reason() -> OrderRefusal;
+[[nodiscard]] auto
+missing_resources_reason(const Game::Systems::ResourceAmounts& missing) -> OrderRefusal;
 
 } // namespace App::Core

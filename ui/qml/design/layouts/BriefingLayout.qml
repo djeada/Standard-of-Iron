@@ -20,6 +20,8 @@ Item {
     readonly property string victoryHeading: root.headingForVictoryCount(victoryConditions.length)
     readonly property string stagesHeading: root.stagesAreVictoryConditions ? root.headingForVictoryCount(stages.length) : qsTr("Mission Steps — in order")
 
+    readonly property real contentHeight: briefingColumn.implicitHeight
+
     function headingForVictoryCount(count) {
         if (count <= 1)
             return qsTr("Victory Conditions");
@@ -37,6 +39,8 @@ Item {
         contentWidth: availableWidth
 
         Column {
+            id: briefingColumn
+
             width: scroller.availableWidth
             spacing: Design.Metrics.space16
 

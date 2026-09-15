@@ -22,6 +22,7 @@
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
 #include "game/core/component_gameplay.h"
+#include "game/core/component_structures.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "game/formation/army_formation_registry.h"
@@ -31,9 +32,12 @@
 #include "game/render_bridge/picking_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/combat_rules.h"
+#include "game/systems/combat_system/target_rules.h"
 #include "game/systems/command_service.h"
 #include "game/systems/food_targets.h"
+#include "game/systems/owner_queries.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/player_resource_registry.h"
 #include "game/systems/production_service.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/squad_service.h"
@@ -130,7 +134,8 @@ auto CommandController::on_attack_click(qreal sx,
   auto* target_unit = target_entity != nullptr
                           ? target_entity->get_component<Engine::Core::UnitComponent>()
                           : nullptr;
-  if (target_unit == nullptr) {
+  if (target_unit == nullptr ||
+      Game::Systems::Combat::is_warded_structure(target_entity)) {
     QVector3D hit;
     if (Game::Systems::PickingService::screen_to_ground(
             QPointF(sx, sy), *cam, viewport_width, viewport_height, hit)) {
@@ -722,23 +727,62 @@ void CommandController::recruit_near_selected(const QString& unit_type,
 
   const auto ruling = Game::Systems::ProductionService::can_start_production(
       *m_world, building, product);
-  if (ruling == Game::Systems::ProductionResult::GlobalTroopLimitReached) {
-    emit troop_limit_reached();
-    return;
-  }
-  if (ruling == Game::Systems::ProductionResult::InsufficientManpower) {
-    emit insufficient_manpower();
-    return;
-  }
-  if (ruling == Game::Systems::ProductionResult::InsufficientResources) {
-    emit insufficient_resources(
-        tr("Not enough wood, stone, or iron to recruit this unit."));
-    return;
-  }
   if (ruling != Game::Systems::ProductionResult::Success) {
+    (void)m_orders.reject_on(
+        App::Core::OrderKind::Recruit,
+        recruit_refusal(*m_world, ruling, building, product, local_owner_id),
+        building);
     return;
   }
   submit(m_world, Game::Command::Produce{.building = building, .product = product});
+}
+
+auto CommandController::recruit_refusal(Engine::Core::World& world,
+                                        Game::Systems::ProductionResult ruling,
+                                        Engine::Core::EntityID building,
+                                        Game::Units::TroopType product,
+                                        int local_owner_id) -> App::Core::OrderRefusal {
+  auto& session = Game::Session::session_for(world);
+  const auto* nation = session.nations().get_nation_for_player(local_owner_id);
+  const auto& profile = Game::Systems::TroopProfileService::instance().get_profile_ref(
+      nation != nullptr ? nation->id : session.nations().default_nation_id(), product);
+  switch (ruling) {
+  case Game::Systems::ProductionResult::InsufficientManpower: {
+    const auto* production = world.try_get<Engine::Core::ProductionComponent>(building);
+    return App::Core::reserve_short_reason(
+        production != nullptr ? production->manpower_available : 0,
+        profile.production.cost);
+  }
+  case Game::Systems::ProductionResult::GlobalTroopLimitReached:
+    return App::Core::army_cap_reason(
+        Game::Systems::troop_count_for(world, local_owner_id),
+        Game::GameConfig::instance().get_max_troops_per_player());
+  case Game::Systems::ProductionResult::InsufficientResources: {
+    const auto have = session.economy().get_all(local_owner_id);
+    Game::Systems::ResourceAmounts missing;
+    for (const auto type : Game::Systems::k_all_resource_types) {
+      missing.set(
+          type,
+          std::max(0, profile.production.resource_costs.get(type) - have.get(type)));
+    }
+    return App::Core::missing_resources_reason(missing);
+  }
+  case Game::Systems::ProductionResult::QueueFull:
+  case Game::Systems::ProductionResult::AlreadyInProgress:
+    return App::Core::training_queue_full_reason();
+  case Game::Systems::ProductionResult::PerBarracksLimitReached:
+    return App::Core::barracks_full_reason();
+  case Game::Systems::ProductionResult::NoBarracks:
+  case Game::Systems::ProductionResult::WrongBuilding:
+    return App::Core::no_eligible_units_reason(App::Core::OrderKind::Recruit);
+  case Game::Systems::ProductionResult::CommanderNotRecruitable:
+    return App::Core::rejection_refusal(Game::Command::Rejection::NotPermittedForSource,
+                                        App::Core::OrderKind::Recruit);
+  case Game::Systems::ProductionResult::Success:
+    break;
+  }
+  return App::Core::rejection_refusal(Game::Command::Rejection::MalformedPayload,
+                                      App::Core::OrderKind::Recruit);
 }
 
 void CommandController::reset_transient_state() {
@@ -1253,6 +1297,12 @@ void CommandController::disable_run_mode_for_selected() {
                                    .active = false});
 
   emit run_mode_changed(false);
+}
+
+auto CommandController::refuse_unreachable_move(const QVector3D& destination)
+    -> App::Core::OrderOutcome {
+  return m_orders.reject_at(
+      App::Core::OrderKind::Move, App::Core::unreachable_reason(), destination);
 }
 
 } // namespace App::Controllers

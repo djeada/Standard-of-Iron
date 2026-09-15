@@ -131,7 +131,9 @@ With more than one resource, `CueRegistry` avoids the last `pool / 2` picks, pre
 
 Loading only queues a decode; the decode worker does the work (see [Decode-time mastering](#decode-time-mastering)). A one-shot asked for before its decode lands is skipped, and a looping bed is held and starts the moment it lands. `AudioSystem::is_resource_ready` does not mean decoded: it only says the resource is loaded, off cooldown and under its instance limit.
 
-Resident decoded PCM is tracked against a budget (`SOI_AUDIO_PCM_BUDGET_MB` overrides it); overruns are counted and logged, not refused.
+Resident decoded PCM is tracked against a budget (`SOI_AUDIO_PCM_BUDGET_MB` overrides it; the default is 320 MB); overruns are counted and logged, not refused.
+
+Tracks are held as 32-bit float stereo at the device rate, so a minute of music costs about 22 MB at 48 kHz and twice that at 96 kHz. The two four-minute `peaceful` beds (`music.base.echoes_ancient_outpost`, `music.base.ancient_peak_fires`) are 88 MB each, and the `startup` and `mission` sets add roughly 20 MB more, which is why a mission that rotates onto its second long bed sits near 200 MB. The budget is a diagnostic: raise it (or shorten the long beds) rather than expecting the backend to evict anything.
 
 ## Tag-driven selection
 
@@ -290,7 +292,7 @@ After any rebuild, `git status assets/audio` shows what was actually touched.
 | `SOI_AUDIO_TRACE_SUMMARY=<path>` | JSON summary per mission, written at mission teardown and at shutdown; later exports in the same process get an index suffix |
 | `SOI_AUDIO_HUD=1`                | In-game overlay: volumes, active channels, the last cue request and its outcome; refreshed every 250 ms                      |
 | `SOI_AUDIO_OFFLINE=1`            | Opens no audio device; the mixer is driven by offline rendering (reels, preview)                                             |
-| `SOI_AUDIO_PCM_BUDGET_MB=<n>`    | Resident decoded-PCM budget                                                                                                  |
+| `SOI_AUDIO_PCM_BUDGET_MB=<n>`    | Resident decoded-PCM budget (default 320)                                                                                    |
 
 A trace line reads:
 

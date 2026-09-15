@@ -284,7 +284,7 @@
             "z": 400
         }
     ],
-    "max_troops_per_player": 900,
+    "max_troops_per_player": 2020,
     "name": "Campania Campaign",
     "rain": {
         "enabled": false

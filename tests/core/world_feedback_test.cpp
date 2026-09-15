@@ -50,7 +50,7 @@ TEST(WorldFeedbackStoreTest, HitsOnTheSameTargetWithinTheWindowCoalesce) {
   EXPECT_EQ(store.pending().front().hits, 2);
 
   EXPECT_TRUE(store.pop_ready().empty()) << "nothing is released before the window";
-  store.update(0.2F);
+  store.update(0.6F);
   const auto ready = store.pop_ready();
   ASSERT_EQ(ready.size(), 2U);
   EXPECT_TRUE(store.pending().empty());
@@ -179,7 +179,7 @@ TEST(WorldFeedbackStoreTest, EconomyTicksWaitLongerThanCombatTicks) {
   store.push(hit_on(1, 10));
   store.push(resource_on(2, 0, 5));
 
-  store.update(0.2F);
+  store.update(0.55F);
   auto ready = store.pop_ready();
   ASSERT_EQ(ready.size(), 1U);
   EXPECT_EQ(ready.front().kind, FeedbackKind::Damage);

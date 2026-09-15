@@ -70,19 +70,72 @@ TestCase {
         return host;
     }
 
-    function test_an_ambient_faction_is_not_listed_as_an_army() {
+    function test_the_sepulcher_is_listed_as_the_enemy_it_was() {
         var owners = [testCase.owner(1, "Scipio", 0, "Player", true, "roman_republic", "#c9a227"), testCase.owner(2, "Hasdrubal", 1, "AI", false, "carthage", "#9b59b6"), testCase.owner(99, "Iron Sepulcher tomb_1", 9, "AI", false, "iron_sepulcher", "#4b3f6b")];
         owners[2].is_contender = false;
         var byOwner = {
             "1": testCase.stats(148, 62, 96, 7, 1834),
             "2": testCase.stats(62, 148, 71, 2, 1834),
-            "99": testCase.stats(0, 0, 0, 4, 1834)
+            "99": testCase.stats(36, 90, 0, 0, 1834)
         };
         var engine = testCase.fakeEngine("victory", owners, byOwner, "");
         var host = testCase.makeSummary(engine);
-        compare(host.summary.armies.length, 2, "an ambient faction was listed as an army");
-        for (var i = 0; i < host.summary.armies.length; ++i)
-            verify(host.summary.armies[i].ownerId !== 99, "the tomb owner reached the roster");
+        compare(host.summary.armies.length, 3, "an enemy that fought is missing from the field");
+        var tomb = null;
+        for (var i = 0; i < host.summary.armies.length; ++i) {
+            if (host.summary.armies[i].ownerId === 99)
+                tomb = host.summary.armies[i];
+        }
+        verify(tomb !== null, "the tomb owner never reached the roster");
+        compare(tomb.name, FactionTheme.nameFor("iron_sepulcher"), "the sepulcher is named as a faction, not a zone id");
+        compare(tomb.kills, 36);
+        compare(tomb.losses, 90);
+        compare(tomb.isContender, false);
+        compare(tomb.isWinner, false);
+        engine.destroy();
+        host.destroy();
+    }
+
+    function test_an_ambient_faction_on_our_side_is_not_an_army() {
+        var owners = [testCase.owner(1, "Scipio", 0, "Player", true, "roman_republic", "#c9a227"), testCase.owner(2, "Hasdrubal", 1, "AI", false, "carthage", "#9b59b6"), testCase.owner(50, "Auxilia", 0, "AI", false, "roman_republic", "#c9a227")];
+        owners[2].is_contender = false;
+        var byOwner = {
+            "1": testCase.stats(148, 62, 96, 7, 1834),
+            "2": testCase.stats(62, 148, 71, 2, 1834),
+            "50": testCase.stats(0, 0, 0, 0, 1834)
+        };
+        var engine = testCase.fakeEngine("victory", owners, byOwner, "");
+        var host = testCase.makeSummary(engine);
+        compare(host.summary.armies.length, 2, "a non-contender on the local team was listed as an army");
+        engine.destroy();
+        host.destroy();
+    }
+
+    function test_asking_to_retry_calls_back() {
+        var engine = testCase.standardMatch("victory");
+        var host = testCase.makeSummary(engine);
+        var retries = 0;
+        host.summary.retry_requested.connect(function () {
+                retries += 1;
+            });
+        var report = findChild(host.summary, "battleReport");
+        verify(report.retryAvailable, "a played match can be retried");
+        report.retryRequested();
+        compare(retries, 1);
+        engine.destroy();
+        host.destroy();
+    }
+
+    function test_a_spectated_match_offers_no_retry() {
+        var owners = [testCase.owner(1, "CPU I", 1, "AI", false, "roman_republic", "#c9a227"), testCase.owner(2, "CPU II", 2, "AI", false, "carthage", "#9b59b6")];
+        var byOwner = {
+            "1": testCase.stats(120, 40, 60, 3, 900),
+            "2": testCase.stats(40, 120, 55, 0, 900)
+        };
+        var engine = testCase.fakeEngine("spectator", owners, byOwner, "");
+        var host = testCase.makeSummary(engine);
+        var report = findChild(host.summary, "battleReport");
+        verify(!report.retryAvailable, "there is nothing for a spectator to retry");
         engine.destroy();
         host.destroy();
     }

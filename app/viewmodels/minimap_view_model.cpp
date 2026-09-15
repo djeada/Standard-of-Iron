@@ -241,7 +241,8 @@ void MinimapViewModel::note_alert(MinimapAlert kind,
     relation = QStringLiteral("enemy");
   }
 
-  if (relation == QStringLiteral("enemy") && m_context.visibility != nullptr) {
+  if (relation == QStringLiteral("enemy") && kind != MinimapAlert::ShrineStirred &&
+      m_context.visibility != nullptr) {
     const auto snapshot = m_context.visibility->current_snapshot();
     if (snapshot != nullptr && snapshot->initialized &&
         !Game::Map::should_render_non_local_unit(*snapshot, world_x, world_z)) {

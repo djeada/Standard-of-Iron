@@ -566,29 +566,6 @@ void GameEngine::build_services_and_controllers() {
           &GameEngine::handle_order_feedback);
 
   connect(m_command_controller.get(),
-          &App::Controllers::CommandController::troop_limit_reached,
-          [this]() {
-            announce_player_warning(Game::Audio::Cue::k_alert_population_limit);
-            report_affordability_refusal(App::Core::OrderFailure::PopulationCap,
-                                         tr("Manpower limit reached."));
-          });
-  connect(m_command_controller.get(),
-          &App::Controllers::CommandController::insufficient_manpower,
-          [this]() {
-            announce_player_warning(Game::Audio::Cue::k_alert_low_resources);
-
-            report_affordability_refusal(
-                App::Core::OrderFailure::InsufficientResources,
-                tr("Not enough reserve — build a home to raise more families."));
-          });
-  connect(m_command_controller.get(),
-          &App::Controllers::CommandController::insufficient_resources,
-          [this](const QString& message) {
-            announce_player_warning(Game::Audio::Cue::k_alert_low_resources);
-            report_affordability_refusal(App::Core::OrderFailure::InsufficientResources,
-                                         message);
-          });
-  connect(m_command_controller.get(),
           &App::Controllers::CommandController::formation_placement_rejected,
           this,
           [this](const QString& reason) {
@@ -656,10 +633,16 @@ void GameEngine::build_services_and_controllers() {
                 e.owner_id != m_runtime.local_owner_id &&
                 e.killer_owner_id == m_runtime.local_owner_id) {
 
-              int const production_cost =
-                  Game::Units::TroopConfig::instance().get_production_cost(
-                      e.spawn_type);
-              m_enemy_troops_defeated += production_cost;
+              const auto* unit =
+                  m_world != nullptr
+                      ? m_world->try_get<Engine::Core::UnitComponent>(e.unit_id)
+                      : nullptr;
+              m_enemy_troops_defeated +=
+                  unit != nullptr ? std::max(1, Game::Systems::squad_men(*unit))
+                                  : std::max(1,
+                                             Game::Systems::troop_type_men(
+                                                 Game::Systems::NationID::RomanRepublic,
+                                                 e.spawn_type));
               emit enemy_troops_defeated_changed();
             }
           });
@@ -676,7 +659,13 @@ void GameEngine::build_services_and_controllers() {
                     e.owner_id)) {
               return;
             }
-            emit mission_announcement(e.text);
+            queue_mission_announcement(e.text);
+          });
+
+  m_undead_zone_awakened_subscription =
+      Engine::Core::ScopedEventSubscription<Engine::Core::UndeadZoneAwakenedEvent>(
+          [this](const Engine::Core::UndeadZoneAwakenedEvent& e) {
+            note_minimap_shrine_stirred(e);
           });
 
   m_combat_hit_subscription =

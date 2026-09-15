@@ -14,6 +14,7 @@
 #include "game/render_bridge/selection_controller.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/interaction_targeting.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/selection_system.h"
 #include "scene/camera.h"
 
@@ -332,7 +333,15 @@ auto InputCommandHandler::on_right_press(qreal sx,
   QVector3D hit;
   if (Game::Systems::PickingService::screen_to_ground(
           QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
+    const QVector3D clicked = hit;
     hit = App::Utils::snap_to_walkable_ground(hit);
+    constexpr float k_max_click_nudge = 3.0F;
+    if (!Game::Systems::NavGrid::is_world_position_walkable(clicked) &&
+        (!Game::Systems::NavGrid::is_world_position_walkable(hit) ||
+         (hit - clicked).length() > k_max_click_nudge)) {
+      (void)m_command_controller->refuse_unreachable_move(clicked);
+      return true;
+    }
     if (m_command_controller->formation().begin_move_placement_at_position(hit)) {
       m_command_controller->disable_run_mode_for_selected();
       return true;

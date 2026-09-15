@@ -165,7 +165,7 @@ protected:
     params.spawn_type = type;
     params.ai_controlled = true;
     params.is_initial_spawn = true;
-    params.max_population = 280;
+    params.max_population = 630;
     params.enables_production = true;
     params.nation_id = session.nations().get_nation_for_player(owner_id) != nullptr
                            ? session.nations().get_nation_for_player(owner_id)->id

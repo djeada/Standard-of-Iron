@@ -134,7 +134,7 @@ The civilian is the only recruit that consumes food:
 civilian.production.resource_costs.food = 20
 ```
 
-A home supports three civilians during its lifetime, and each civilian carries 50 manpower to a barracks. One home therefore converts 60 food into 150 manpower.
+A home supports three civilians during its lifetime, and each civilian walked into a barracks adds a household of 18 men to its reserve (`k_civilian_delivery_reserve_grant`). One home therefore converts 60 food into 54 men of reserve: three legionaries.
 
 Shipped maps begin with 100–200 food, enough for roughly four to ten civilians depending on the scenario. Beyond that initial reserve, sustained civilian production requires farms or sheep.
 
@@ -158,28 +158,31 @@ One trip means walking to the target, working, and returning with the load.
 
 ### What units and buildings cost
 
-| Recruit / building | Population | Resources                  | Time  |
-| ------------------ | ---------- | -------------------------- | ----- |
-| Civilian (home)    | 8 (home)   | 20 food                    | 5 s   |
-| Builder            | 60         | 10 wood                    | 6 s   |
-| Archer             | 50         | 12 wood                    | 5 s   |
-| Spearman           | 75         | 12 wood, 6 iron            | 6 s   |
-| Swordsman          | 90         | 12 wood, 10 iron           | 7 s   |
-| Healer             | 75         | 8 wood, 4 stone            | 7 s   |
-| Horse archer       | 120        | 22 wood, 10 iron           | 9 s   |
-| Horse spearman     | 135        | 22 wood, 12 iron           | 9.5 s |
-| Horse swordsman    | 145        | 20 wood, 14 iron           | 10 s  |
-| Elephant           | 350        | 30 wood, 20 iron           | 20 s  |
-| Home               | —          | 50 wood, 15 stone          | 10 s  |
-| Farm               | —          | 40 wood, 10 stone          | 8 s   |
-| Barracks           | —          | 100 wood, 60 stone         | 10 s  |
-| Marketplace        | —          | 60 wood, 40 stone, 50 gold | 10 s  |
-| Temple             | —          | 40 wood, 90 stone, 30 gold | 18 s  |
-| Defence tower      | —          | 60 wood, 80 stone          | 20 s  |
+| Recruit / building | Reserve (men)     | Resources                  | Time  |
+| ------------------ | ----------------- | -------------------------- | ----- |
+| Civilian (home)    | 1 (home families) | 20 food                    | 5 s   |
+| Builder            | 12                | 20 wood                    | 6 s   |
+| Archer             | 20 (Rome 24)      | 30 wood, 10 iron           | 5 s   |
+| Spearman           | 24 (Rome 26)      | 30 wood, 15 iron           | 6 s   |
+| Swordsman          | 15 (Rome 18)      | 10 wood, 30 iron           | 7 s   |
+| Healer             | 1                 | 10 wood, 10 stone, 15 food | 7 s   |
+| Horse archer       | 10                | 25 wood, 15 iron, 30 food  | 9 s   |
+| Horse spearman     | 9                 | 25 wood, 22 iron, 30 food  | 9.5 s |
+| Horse swordsman    | 9                 | 15 wood, 30 iron, 30 food  | 10 s  |
+| Elephant           | 1                 | 40 wood, 25 iron, 90 food  | 20 s  |
+| Catapult           | 1                 | 90 wood, 20 stone, 35 iron | 15 s  |
+| Home               | —                 | 50 wood, 15 stone          | 10 s  |
+| Farm               | —                 | 40 wood, 10 stone          | 8 s   |
+| Barracks           | —                 | 100 wood, 60 stone         | 10 s  |
+| Marketplace        | —                 | 60 wood, 40 stone, 50 gold | 10 s  |
+| Temple             | —                 | 40 wood, 90 stone, 30 gold | 18 s  |
+| Defence tower      | —                 | 60 wood, 80 stone          | 20 s  |
+
+The reserve price of a recruit is the number of men in the squad it fields (`formation.individuals_per_unit`), so a nation whose legionaries march eighteen strong pays eighteen men of reserve for one. Siege engines and commanders are one man each; their cost is in resources and time.
 
 The economy is tuned around a simple rhythm. A squad consumes roughly one third of a wood trip and one third of an iron trip, so two builders on timber and one on ore can sustain troop recruitment. A full home's civilian output costs one farm cycle, and the first harvest effectively replaces the farm's 40-wood construction investment in the broader settlement economy.
 
-Nation variants inherit these resource costs and vary only the manpower price and production time.
+Nation variants inherit these resource costs and vary only the squad size (and therefore the men charged) and the production time.
 
 ## Implementation map
 

@@ -35,8 +35,18 @@ const QVector3D k_order_guard_color(0.45F, 0.70F, 1.0F);
 const QVector3D k_order_patrol_color(0.35F, 1.0F, 0.55F);
 const QVector3D k_order_neutral_color(0.95F, 0.90F, 0.70F);
 const QVector3D k_order_rejected_color(0.72F, 0.72F, 0.74F);
+const QVector3D k_order_unreachable_color(0.96F, 0.28F, 0.20F);
 
 } // namespace
+
+auto order_marker_color(OrderKind kind,
+                        bool rejected,
+                        OrderFailure failure) -> QVector3D {
+  if (rejected && failure == OrderFailure::Unreachable) {
+    return k_order_unreachable_color;
+  }
+  return order_marker_color(kind, rejected);
+}
 
 auto order_marker_color(OrderKind kind, bool rejected) -> QVector3D {
   if (rejected) {

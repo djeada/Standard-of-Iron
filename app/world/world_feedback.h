@@ -60,8 +60,8 @@ class WorldFeedbackStore {
 public:
   struct Limits {
     std::size_t max_pending_per_kind = 32;
-    float damage_coalesce_window = 0.12F;
-    float economy_coalesce_window = 0.45F;
+    float damage_coalesce_window = 0.5F;
+    float economy_coalesce_window = 0.7F;
   };
 
   WorldFeedbackStore() = default;

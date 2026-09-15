@@ -834,6 +834,24 @@ TEST_F(ProductionManagerTest, SetRallyAtScreenAlsoMovesATempleRally) {
   EXPECT_NEAR(production->rally_z, 4.0F, 0.05F);
 }
 
+TEST_F(ProductionManagerTest, ASelectedBarracksSaysWhenItsReserveIsExhausted) {
+  auto* barracks =
+      add_selected_production_building(Game::Units::SpawnType::Barracks, 0.0F, 0.0F);
+  ASSERT_NE(barracks, nullptr);
+  auto* production = barracks->get_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(production, nullptr);
+  production->max_units = 60;
+  production->manpower_available = 60;
+
+  QVariantMap state = App::Economy::selected_barracks_state(&world, 1);
+  EXPECT_FALSE(state.value("reserve_short").toBool());
+  EXPECT_GT(state.value("cheapest_recruit_cost").toInt(), 0);
+
+  production->manpower_available = 0;
+  state = App::Economy::selected_barracks_state(&world, 1);
+  EXPECT_TRUE(state.value("reserve_short").toBool());
+}
+
 TEST_F(ProductionManagerTest, ASelectedTempleReportsItsRecruitmentState) {
   auto* temple =
       add_selected_production_building(Game::Units::SpawnType::Temple, -4.0F, 0.0F);

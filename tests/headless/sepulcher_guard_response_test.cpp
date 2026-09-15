@@ -1,6 +1,10 @@
 
 
+#include <QString>
+#include <QVector3D>
+
 #include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
 #include <memory>
 #include <vector>
@@ -25,6 +29,7 @@
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/runtime_system_registry.h"
 #include "game/systems/troop_count_registry.h"
+#include "game/systems/undead_awakening_system.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 
@@ -181,6 +186,119 @@ TEST_F(SepulcherGuardResponseTest, HittingOneGuardianBringsTheRestOfTheWatch) {
   EXPECT_TRUE(engaged(struck)) << "the guardian being shot never turned around";
   EXPECT_TRUE(engaged(neighbour))
       << "a guardian six metres away ignored its neighbour being shot to pieces";
+}
+
+class SepulcherLeashTest : public SepulcherGuardResponseTest {
+protected:
+  static constexpr float k_zone_grid = 30.0F;
+  static constexpr float k_leash = 10.0F;
+
+  auto wake_zone() -> std::vector<EntityID> {
+    Game::Map::MapDefinition map_definition;
+    map_definition.grid.width = k_map_size;
+    map_definition.grid.height = k_map_size;
+    map_definition.grid.tile_size = 1.0F;
+
+    Game::Map::UndeadZone zone;
+    zone.id = QStringLiteral("ruins_watch");
+    zone.x = k_zone_grid;
+    zone.z = k_zone_grid;
+    zone.radius = 6.0F;
+    zone.leash_radius = k_leash;
+    zone.owner_id = k_sepulcher;
+    zone.team_id = k_sepulcher;
+    zone.awaken_on = {QStringLiteral("unit_enters_radius")};
+    Game::Map::UndeadWave wave;
+    wave.trigger = QStringLiteral("initial");
+    wave.units.push_back({Game::Units::SpawnType::SkeletonSwordsman, 2});
+    zone.waves.push_back(wave);
+    map_definition.undead_zones.push_back(zone);
+
+    m_undead = m_session->world().get_system<Game::Systems::UndeadAwakeningSystem>();
+    if (m_undead == nullptr) {
+      return {};
+    }
+    m_undead->configure(map_definition);
+    m_anchor = m_undead->shrine_world_position(zone.id);
+
+    m_legionary = spawn(Game::Units::SpawnType::Knight,
+                        k_player,
+                        m_anchor.x() + 2.0F,
+                        m_anchor.z() + 2.0F);
+    run_for(0.5);
+
+    std::vector<EntityID> guardians;
+    for (auto* entity :
+         m_session->world().collect_entities_with<Engine::Core::UnitComponent>()) {
+      auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+      if (unit != nullptr && unit->owner_id == k_sepulcher && unit->health > 0 &&
+          Game::Units::is_troop_spawn(unit->spawn_type)) {
+        guardians.push_back(entity->get_id());
+      }
+    }
+    return guardians;
+  }
+
+  [[nodiscard]] auto distance_from_anchor(EntityID id) const -> float {
+    auto const* transform = m_session->world().try_get<TransformComponent>(id);
+    if (transform == nullptr) {
+      return 0.0F;
+    }
+    return std::hypot(transform->position.x - m_anchor.x(),
+                      transform->position.z - m_anchor.z());
+  }
+
+  Game::Systems::UndeadAwakeningSystem* m_undead = nullptr;
+  QVector3D m_anchor;
+  EntityID m_legionary = 0;
+};
+
+TEST_F(SepulcherLeashTest, GuardiansDoNotChasePreyBeyondTheLeash) {
+  const auto guardians = wake_zone();
+  ASSERT_EQ(guardians.size(), 2U);
+  ASSERT_NE(m_legionary, 0U);
+
+  auto& world = m_session->world();
+  auto* prey = world.try_get<TransformComponent>(m_legionary);
+  ASSERT_NE(prey, nullptr);
+  prey->position.x = m_anchor.x() + 30.0F;
+  prey->position.z = m_anchor.z();
+
+  for (auto const guardian : guardians) {
+    auto* chase = Engine::Core::get_or_add_component<AttackTargetComponent>(
+        *world.get_entity(guardian));
+    ASSERT_NE(chase, nullptr);
+    chase->target_id = m_legionary;
+    chase->should_chase = true;
+  }
+
+  run_for(6.0);
+
+  for (auto const guardian : guardians) {
+    auto const* target = world.try_get<AttackTargetComponent>(guardian);
+    EXPECT_TRUE(target == nullptr || target->target_id != m_legionary)
+        << "guardian " << guardian << " is still hunting prey far past the leash";
+    EXPECT_LE(distance_from_anchor(guardian), k_leash + 3.0F)
+        << "guardian " << guardian << " left its ruins";
+  }
+}
+
+TEST_F(SepulcherLeashTest, AStrayedGuardianWalksBackToItsPost) {
+  const auto guardians = wake_zone();
+  ASSERT_EQ(guardians.size(), 2U);
+
+  auto& world = m_session->world();
+  const EntityID strayed = guardians.front();
+  auto* transform = world.try_get<TransformComponent>(strayed);
+  ASSERT_NE(transform, nullptr);
+  transform->position.x = m_anchor.x() + 22.0F;
+  transform->position.z = m_anchor.z();
+  const float start = distance_from_anchor(strayed);
+
+  run_for(10.0);
+
+  EXPECT_LT(distance_from_anchor(strayed), start - 4.0F)
+      << "a guardian dropped outside the leash never came home";
 }
 
 } // namespace

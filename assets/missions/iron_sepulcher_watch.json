@@ -2,18 +2,54 @@
   "id": "iron_sepulcher_watch",
   "menu_order": 30,
   "title": "Iron Sepulcher Watch",
-  "summary": "Take the cursed shrine above the sepulcher ruins and hold what you take: clear the guardians out of the ruins, then drive the dead off the shrine itself.",
+  "summary": "Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it.",
   "map_path": ":/assets/maps/map_iron_sepulcher_watch.json",
   "player_setup": {
     "nation": "roman_republic",
     "faction": "roman",
     "color": "red",
-    "starting_units": [],
-    "starting_buildings": [],
+    "starting_units": [
+      {
+        "type": "swordsman",
+        "count": 2,
+        "position": {
+          "x": 10.0,
+          "z": 31.0
+        }
+      },
+      {
+        "type": "archer",
+        "count": 1,
+        "position": {
+          "x": 13.0,
+          "z": 29.5
+        }
+      },
+      {
+        "type": "builder",
+        "count": 1,
+        "position": {
+          "x": 6.0,
+          "z": 30.0
+        }
+      }
+    ],
+    "starting_buildings": [
+      {
+        "type": "home",
+        "position": {
+          "x": 5.5,
+          "z": 36.5
+        },
+        "max_population": 60
+      }
+    ],
     "starting_resources": {
       "gold": 250,
-      "food": 100,
-      "wood": 60
+      "food": 120,
+      "wood": 90,
+      "stone": 60,
+      "iron": 120
     }
   },
   "ai_setups": [],
@@ -27,7 +63,7 @@
     {
       "type": "purify_shrine",
       "zone_id": "shrine_sentinels",
-      "description": "Drive the dead from the shrine. Salt the earth where they stood."
+      "description": "Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood."
     }
   ],
   "optional_objectives": [
@@ -62,6 +98,32 @@
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 100
+    },
+    {
+      "id": "sepulcher_fabius_first_contact",
+      "speaker": "roman_legion_organizer",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "first_contact",
+        "delay": 0.5
+      },
+      "text": "There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.",
+      "voice_cue": "alert.commander_message",
+      "duration": 8.0,
+      "priority": 110
+    },
+    {
+      "id": "sepulcher_fabius_heavy_losses",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "heavy_losses",
+        "delay": 1.0
+      },
+      "text": "Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too.",
+      "voice_cue": "alert.commander_message",
+      "duration": 8.0,
+      "priority": 105
     },
     {
       "id": "sepulcher_fabius_victory",

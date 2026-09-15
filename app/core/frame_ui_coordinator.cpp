@@ -248,7 +248,8 @@ void render_order_markers(Render::GL::Renderer* renderer,
                             ? base_radius * (1.0F + 0.25F * ease)
                             : base_radius * (1.0F - k_order_marker_shrink * ease);
     ring.thickness = k_order_marker_thickness * (1.0F - 0.4F * ease);
-    ring.color = App::Core::order_marker_color(marker.kind, marker.rejected);
+    ring.color =
+        App::Core::order_marker_color(marker.kind, marker.rejected, marker.failure);
     ring.alpha = k_order_marker_alpha * (1.0F - ease);
     ring.pattern = order_marker_pattern(marker.kind, marker.rejected);
     ring.focused = !marker.rejected && marker.kind == App::Core::OrderKind::Attack;

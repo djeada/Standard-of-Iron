@@ -1,6 +1,7 @@
 #include "app/orders/order_feedback.h"
 
 #include <QCoreApplication>
+#include <QStringList>
 
 namespace App::Core {
 namespace {
@@ -93,6 +94,8 @@ auto order_kind_name(OrderKind kind) -> const char* {
     return "formation";
   case OrderKind::Squad:
     return "squad";
+  case OrderKind::Recruit:
+    return "recruit";
   }
   return "unknown";
 }
@@ -127,6 +130,8 @@ auto order_kind_display_name(OrderKind kind) -> QString {
     return QCoreApplication::translate("OrderFeedback", "Formation");
   case OrderKind::Squad:
     return QCoreApplication::translate("OrderFeedback", "Squad");
+  case OrderKind::Recruit:
+    return QCoreApplication::translate("OrderFeedback", "Recruit");
   }
   return {};
 }
@@ -243,6 +248,9 @@ auto no_eligible_units_text(OrderKind kind) -> QString {
     return QCoreApplication::translate(
         "OrderFeedback",
         "Only a squad of several individuals can be divided or joined.");
+  case OrderKind::Recruit:
+    return QCoreApplication::translate("OrderFeedback",
+                                       "Select a barracks, temple or home to recruit.");
   case OrderKind::Move:
   case OrderKind::Stop:
   case OrderKind::Rally:
@@ -307,6 +315,48 @@ auto building_is_protected_reason() -> OrderRefusal {
   return {OrderFailure::CommandUnavailable,
           QCoreApplication::translate("OrderFeedback",
                                       "That building cannot be taken down.")};
+}
+
+auto reserve_short_reason(int available, int cost) -> OrderRefusal {
+  return {OrderFailure::PopulationCap,
+          QCoreApplication::translate(
+              "OrderFeedback",
+              "Not enough reserve: %1 / %2 men. Walk civilians into the barracks or "
+              "build a Home to raise more.")
+              .arg(available)
+              .arg(cost)};
+}
+
+auto army_cap_reason(int fielded, int cap) -> OrderRefusal {
+  return {OrderFailure::PopulationCap,
+          QCoreApplication::translate(
+              "OrderFeedback", "Army at the map's limit: %1 / %2 men in the field.")
+              .arg(fielded)
+              .arg(cap)};
+}
+
+auto training_queue_full_reason() -> OrderRefusal {
+  return {OrderFailure::CommandUnavailable,
+          QCoreApplication::translate("OrderFeedback", "The training queue is full.")};
+}
+
+auto missing_resources_reason(const Game::Systems::ResourceAmounts& missing)
+    -> OrderRefusal {
+  QStringList parts;
+  for (const auto type : Game::Systems::k_all_resource_types) {
+    const int short_by = missing.get(type);
+    if (short_by > 0) {
+      parts.push_back(QCoreApplication::translate("OrderFeedback", "%1 (%2 short)")
+                          .arg(Game::Systems::resource_display_name(type))
+                          .arg(short_by));
+    }
+  }
+  if (parts.isEmpty()) {
+    return insufficient_resources_reason();
+  }
+  return {OrderFailure::InsufficientResources,
+          QCoreApplication::translate("OrderFeedback", "Not enough %1.")
+              .arg(parts.join(QStringLiteral(", ")))};
 }
 
 } // namespace App::Core

@@ -250,8 +250,12 @@
         <translation>Selecciona un cuartel antes de fijar un punto de reunión</translation>
     </message>
     <message>
-        <source>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</source>
-        <translation>Los efectivos que aún guarda este cuartel. Cada recluta gasta parte; los civiles criados en un Hogar traen más.</translation>
+        <source>Reserve exhausted: %1 men held, the cheapest recruit needs %2. Civilians raised at a Home deliver more men.</source>
+        <translation>Reserva agotada: %1 hombres disponibles, el recluta más barato necesita %2. Los civiles criados en una Casa traen más hombres.</translation>
+    </message>
+    <message>
+        <source>Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.</source>
+        <translation>Hombres que este cuartel aún conserva. Cada recluta gasta los hombres de su escuadra; los civiles criados en una Casa traen más.</translation>
     </message>
 </context>
 <context>
@@ -311,6 +315,21 @@
     <message>
         <source>Esc closes the report</source>
         <translation>Esc cierra el informe</translation>
+    </message>
+    <message>
+        <source>Retry mission</source>
+        <translation>Reintentar misión</translation>
+    </message>
+</context>
+<context>
+    <name>BattleSummary</name>
+    <message>
+        <source>Retry mission</source>
+        <translation>Reintentar misión</translation>
+    </message>
+    <message>
+        <source>Play again</source>
+        <translation>Jugar de nuevo</translation>
     </message>
 </context>
 <context>
@@ -767,13 +786,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
         <translation>Los supervivientes huyen hacia Placentia entre aguanieve y barro. Se capturan tiendas, grano y armas romanas; los cuerpos bajo el hielo se levantan solo cuando nadie mira.</translation>
-    </message>
-</context>
-<context>
-    <name>CommandController</name>
-    <message>
-        <source>Not enough wood, stone, or iron to recruit this unit.</source>
-        <translation>No hay suficiente madera, piedra o hierro para reclutar esta unidad.</translation>
     </message>
 </context>
 <context>
@@ -2610,6 +2622,21 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     </message>
 </context>
 <context>
+    <name>EconomyOverview</name>
+    <message>
+        <source>Men in the field: %1. Every soldier, rider, crew member, builder and civilian counts as one man.</source>
+        <translation>Hombres en el campo: %1. Cada soldado, jinete, sirviente, constructor y civil cuenta como un hombre.</translation>
+    </message>
+    <message>
+        <source>Men you can still raise: %1 held in reserve by your barracks and temples. Walk civilians into a barracks or build a Home to raise more.</source>
+        <translation>Hombres que aún puedes reclutar: %1 en reserva en tus cuarteles y templos. Lleva civiles a un cuartel o construye una Casa para reclutar más.</translation>
+    </message>
+    <message>
+        <source>This map allows %1 men per army; %2 more wait in reserve but cannot muster until the field thins.</source>
+        <translation>Este mapa permite %1 hombres por ejército; %2 más esperan en reserva pero no pueden formar hasta que el campo se despeje.</translation>
+    </message>
+</context>
+<context>
     <name>FactionTheme</name>
     <message>
         <source>Standard</source>
@@ -2684,6 +2711,10 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>Farm</source>
         <translation>Granja</translation>
+    </message>
+    <message>
+        <source>Sepulcher Shrine</source>
+        <translation>Santuario del Sepulcro</translation>
     </message>
 </context>
 <context>
@@ -3332,14 +3363,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>%1 está acabado – %2 ha caído.</translation>
     </message>
     <message>
-        <source>Manpower limit reached.</source>
-        <translation>Se alcanzó el límite de efectivos.</translation>
-    </message>
-    <message>
-        <source>Not enough reserve — build a home to raise more families.</source>
-        <translation>No hay suficiente reserva — construye una casa para criar más familias.</translation>
-    </message>
-    <message>
         <source>The previous frame is still running; the match could not be changed. Please try again.</source>
         <translation>El fotograma anterior aún se está ejecutando; no se pudo cambiar la partida. Inténtalo de nuevo.</translation>
     </message>
@@ -3395,6 +3418,18 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>%1 FPS</source>
         <translation>%1 FPS</translation>
+    </message>
+    <message>
+        <source>Waves %1 of %2</source>
+        <translation>Oleadas %1 de %2</translation>
+    </message>
+    <message>
+        <source>Objectives</source>
+        <translation>Objetivos</translation>
+    </message>
+    <message>
+        <source>Hide the objectives (O)</source>
+        <translation>Ocultar objetivos (O)</translation>
     </message>
 </context>
 <context>
@@ -4486,10 +4521,37 @@ Sin ver: nunca explorado.</translation>
         <translation>Efectivos</translation>
     </message>
     <message>
-        <source>Manpower in the field: %1 of %2.
-Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</source>
-        <translation>Efectivos en el campo: %1 de %2.
-Cada tropa cuesta efectivos; una escuadra de doce constructores cuesta diez. Esto no es un recuento de cabezas: el panel de selección cuenta soldados.</translation>
+        <source>Men in the field: %1 of %2.
+Every recruit costs the men in its squad; reserve held at a barracks raises the cap.</source>
+        <translation>Hombres en el campo: %1 de %2.
+Cada recluta cuesta los hombres de su escuadra; la reserva de un cuartel eleva el límite.</translation>
+    </message>
+    <message>
+        <source>Hide the objectives list</source>
+        <translation>Ocultar la lista de objetivos</translation>
+    </message>
+    <message>
+        <source>Show every objective and defeat condition</source>
+        <translation>Mostrar todos los objetivos y condiciones de derrota</translation>
+    </message>
+    <message>
+        <source>Objectives</source>
+        <translation>Objetivos</translation>
+    </message>
+</context>
+<context>
+    <name>HUDVictory</name>
+    <message>
+        <source>Retry mission</source>
+        <translation>Reintentar misión</translation>
+    </message>
+    <message>
+        <source>Fight it again</source>
+        <translation>Combatir de nuevo</translation>
+    </message>
+    <message>
+        <source>Return to Menu</source>
+        <translation>Volver al menú</translation>
     </message>
 </context>
 <context>
@@ -4541,10 +4603,6 @@ Cada tropa cuesta efectivos; una escuadra de doce constructores cuesta diez. Est
     <message>
         <source>Winning and losing</source>
         <translation>Ganar y perder</translation>
-    </message>
-    <message>
-        <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
-        <translation>Cada misión indica sus propias condiciones de victoria y derrota en la pantalla de Objetivos (Escape y luego Objetivos). En toda batalla tu comandante debe sobrevivir: una nación muere con el hombre que la dirige, y un comandante solo ya está perdido.</translation>
     </message>
     <message>
         <source>The three materials</source>
@@ -4726,6 +4784,62 @@ Cada tropa cuesta efectivos; una escuadra de doce constructores cuesta diez. Est
         <source>A barracks or temple starts with a reserve and spends it on every recruit; the card shows exactly what each one costs. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s reserve grows. A squad then stands in the field for what it cost, which is what the top bar counts against the map&apos;s manpower cap.</source>
         <translation>Un cuartel o un templo empieza con una reserva y la gasta en cada recluta; la ficha indica exactamente lo que cuesta cada uno. Las casas la reponen: cada Casa cría familias con el tiempo, allí puede reclutarse un civil a cambio de comida y enviarse a cualquiera de los dos edificios con Entregar, y la reserva de ese edificio crece. Una unidad queda en el campo por lo que costó, y eso es lo que la barra superior cuenta frente al límite de efectivos del mapa.</translation>
     </message>
+    <message>
+        <source>The Sepulcher</source>
+        <translation>El Sepulcro</translation>
+    </message>
+    <message>
+        <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In battle, press O or the objectives button in the top bar to keep the full list open beside the field. In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
+        <translation>Cada misión indica sus condiciones de victoria y derrota en la pantalla de Objetivos (Escape y luego Objetivos). En batalla, pulsa O o el botón de objetivos de la barra superior para mantener la lista completa abierta junto al campo. En toda batalla tu comandante debe sobrevivir: una nación muere con el hombre que la dirige, y un comandante solo ya está perdido.</translation>
+    </message>
+    <message>
+        <source>Undead zones</source>
+        <translation>Zonas de no muertos</translation>
+    </message>
+    <message>
+        <source>Some fields are dotted with dormant ruins and shrines. Nothing stirs in them until your troops walk in. The moment you cross into a zone, it wakes: the ground gives up its dead and the first wave rises to meet you. Choose the moment - and the force - you enter with.</source>
+        <translation>Algunos campos están salpicados de ruinas y santuarios dormidos. Nada se mueve en ellos hasta que tus tropas entran. En cuanto cruzas a una zona, despierta: la tierra entrega a sus muertos y la primera oleada se alza a tu encuentro. Elige el momento - y la fuerza - con la que entras.</translation>
+    </message>
+    <message>
+        <source>Waves</source>
+        <translation>Oleadas</translation>
+    </message>
+    <message>
+        <source>Every zone holds a set number of waves, and the announcement names each one as it comes - wave 1 of 2, then 2 of 2. When a wave rises to meet you, it is coming for the troops inside the zone. Break one and the next rises. A zone is only clear when its last wave lies still.</source>
+        <translation>Cada zona guarda un número fijo de oleadas, y el anuncio nombra cada una al llegar - oleada 1 de 2, luego 2 de 2. Cuando una oleada se alza a tu encuentro, va a por las tropas dentro de la zona. Rompe una y la siguiente se alza. Una zona solo está despejada cuando su última oleada yace inmóvil.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher Shrine</source>
+        <translation>El Santuario del Sepulcro</translation>
+    </message>
+    <message>
+        <source>Each zone is anchored by a Sepulcher Shrine. While its guardians still stand, the shrine cannot be harmed and attack orders on it are refused - do not waste arrows on it. Kill every wave first; only then does the shrine lie open.</source>
+        <translation>Cada zona está anclada a un Santuario del Sepulcro. Mientras sus guardianes sigan en pie, el santuario no puede ser dañado y las órdenes de ataque contra él se rechazan - no malgastes flechas en él. Mata primero cada oleada; solo entonces el santuario queda expuesto.</translation>
+    </message>
+    <message>
+        <source>Purifying a shrine</source>
+        <translation>Purificar un santuario</translation>
+    </message>
+    <message>
+        <source>Once the guardians have fallen, walk troops onto the shrine to capture it, or simply knock it down. Either way the zone is purified for good and it will not wake again. A purified shrine pays out: the clear reward - wood, iron and food - lands in your stores the moment the zone falls.</source>
+        <translation>Cuando los guardianes hayan caído, lleva tropas al santuario para capturarlo, o simplemente derríbalo. De cualquier modo la zona queda purificada para siempre y no volverá a despertar. Un santuario purificado paga: la recompensa de limpieza - madera, hierro y comida - llega a tus almacenes en cuanto cae la zona.</translation>
+    </message>
+    <message>
+        <source>The guardians</source>
+        <translation>Los guardianes</translation>
+    </message>
+    <message>
+        <source>The dead defend their ground. They will chase you to the edge of the zone and then turn back to it, so you can pull out to regroup and re-enter when you are ready. You cannot lure them across the map - the fight happens at the shrine.</source>
+        <translation>Los muertos defienden su terreno. Te perseguirán hasta el borde de la zona y luego volverán a ella, así que puedes retirarte para reagruparte y volver a entrar cuando estés listo. No puedes atraerlos por el mapa - la lucha ocurre en el santuario.</translation>
+    </message>
+    <message>
+        <source>The grave priest</source>
+        <translation>El sacerdote sepulcral</translation>
+    </message>
+    <message>
+        <source>Among the waves walks a grave priest. He heals the dead around him and throws fire at your line, so a slow slog of spearmen alone will bleed. Bring a Medicus to mend the burns and ranged troops to cut the priest down from a distance before the guardians close in. Kill him first and the dead stop mending.</source>
+        <translation>Entre las oleadas camina un sacerdote sepulcral. Cura a los muertos a su alrededor y arroja fuego a tu línea, así que un avance lento solo de lanceros se desangrará. Trae un Medicus para curar las quemaduras y tropas a distancia para abatir al sacerdote de lejos antes de que los guardianes se acerquen. Mátalo primero y los muertos dejan de curarse.</translation>
+    </message>
 </context>
 <context>
     <name>HintCard</name>
@@ -4836,6 +4950,14 @@ Cada tropa cuesta efectivos; una escuadra de doce constructores cuesta diez. Est
     <message>
         <source>One side is left holding the field.</source>
         <translation>Un bando queda dueño del campo.</translation>
+    </message>
+    <message>
+        <source>Look at the field</source>
+        <translation>Mirar el campo</translation>
+    </message>
+    <message>
+        <source>Show the verdict again</source>
+        <translation>Mostrar el veredicto de nuevo</translation>
     </message>
 </context>
 <context>
@@ -5442,6 +5564,26 @@ Cada tropa cuesta efectivos; una escuadra de doce constructores cuesta diez. Est
     <message>
         <source>Workers are valuable strategic assets. Do not leave them exposed near the front.</source>
         <translation>Los trabajadores son valiosos recursos estratégicos. No los dejes expuestos cerca del frente.</translation>
+    </message>
+    <message>
+        <source>A cursed shrine cannot be attacked while its guardians stand. Break the guard, then purify the shrine by capturing it.</source>
+        <translation>Un santuario maldito no puede ser atacado mientras sus guardianes sigan en pie. Rompe la guardia y luego purifica el santuario capturándolo.</translation>
+    </message>
+    <message>
+        <source>A grave priest mends the dead around it and hurls fire at the living. Strike it down before the line closes.</source>
+        <translation>Un sacerdote sepulcral repara a los muertos a su alrededor y arroja fuego a los vivos. Abátelo antes de que se cierren las líneas.</translation>
+    </message>
+    <message>
+        <source>Ranged troops and a Medicus make the vigil survivable. Wound the dead from a distance, and keep the wounded living.</source>
+        <translation>Las tropas a distancia y un Medicus hacen la vigilia soportable. Hiere a los muertos de lejos y mantén vivos a los heridos.</translation>
+    </message>
+    <message>
+        <source>Skeleton guardians defend their ruins and drift back to them when the fight moves on. Draw them out, or bring the fight to the stones.</source>
+        <translation>Los guardianes esqueléticos defienden sus ruinas y regresan a ellas cuando la lucha se aleja. Sácalos o lleva la lucha a las piedras.</translation>
+    </message>
+    <message>
+        <source>The dead do not tire, do not flee, and do not file complaints. They are, in every other respect, a poor garrison.</source>
+        <translation>Los muertos no se cansan, no huyen y no presentan quejas. En todo lo demás, son una guarnición pésima.</translation>
     </message>
 </context>
 <context>
@@ -6184,6 +6326,10 @@ para ver la vista previa</translation>
         <source>This battlefield has fewer than two slots to observe</source>
         <translation>Este campo de batalla tiene menos de dos puestos para observar</translation>
     </message>
+    <message>
+        <source>There is no battle to fight again</source>
+        <translation>No hay batalla que repetir</translation>
+    </message>
 </context>
 <context>
     <name>MediterraneanMapPanel</name>
@@ -6651,10 +6797,6 @@ para ver la vista previa</translation>
         <translation>Quiebra las tres fases de asalto romanas. El barrio resiste cuando la última columna consular yazca muerta en las calles.</translation>
     </message>
     <message>
-        <source>Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle.</source>
-        <translation>Quiebra ambos ataques del Sepulcro de Hierro. En Zama, los muertos ya no quedan al margen de la batalla.</translation>
-    </message>
-    <message>
         <source>Break three Roman columns before the survivors find the ford again.</source>
         <translation>Quiebra tres columnas romanas antes de que los supervivientes encuentren de nuevo el vado.</translation>
     </message>
@@ -6705,10 +6847,6 @@ para ver la vista previa</translation>
     <message>
         <source>Defend Hannibal&apos;s fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.</source>
         <translation>Defiende la villa de suministros campana fortificada de Aníbal y quiebra los tres asaltos romanos coordinados que llegan por vías consulares distintas.</translation>
-    </message>
-    <message>
-        <source>Drive the dead from the shrine. Salt the earth where they stood.</source>
-        <translation>Expulsa a los muertos del santuario. Siembra de sal la tierra donde estuvieron.</translation>
     </message>
     <message>
         <source>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</source>
@@ -7467,10 +7605,6 @@ para ver la vista previa</translation>
         <translation>Excede la leva. Un excedente es lo único que un intendente ha agradecido jamás a nadie.</translation>
     </message>
     <message>
-        <source>Take the cursed shrine above the sepulcher ruins and hold what you take: clear the guardians out of the ruins, then drive the dead off the shrine itself.</source>
-        <translation>Toma el santuario maldito sobre las ruinas del sepulcro y conserva lo que tomes: limpia de guardianes las ruinas y después expulsa a los muertos del propio santuario.</translation>
-    </message>
-    <message>
         <source>The Timber Levy</source>
         <translation>La Leva de Madera</translation>
     </message>
@@ -7898,6 +8032,26 @@ para ver la vista previa</translation>
         <source>You cannot cover every gate. Watch the telegraph and move on interior lines.</source>
         <translation>No puedes cubrir todas las puertas. Vigila el aviso previo y muévete por líneas interiores.</translation>
     </message>
+    <message>
+        <source>Break both risings of the dead at the sepulcher ruins by the south-western crossing. The guardians will not leave their ground; you must go to them.</source>
+        <translation>Rompe ambos alzamientos de los muertos en las ruinas del sepulcro junto al vado suroccidental. Los guardianes no abandonarán su terreno; debes ir a ellos.</translation>
+    </message>
+    <message>
+        <source>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</source>
+        <translation>Expulsa a los muertos del santuario y luego planta el estandarte sobre él. Sala la tierra donde estuvieron.</translation>
+    </message>
+    <message>
+        <source>Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
+        <translation>Retirad a los heridos a la casa y mandad a buscar a los hombres que aún nos quedan. Los muertos son pacientes. Nosotros también podemos permitirnos serlo.</translation>
+    </message>
+    <message>
+        <source>Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it.</source>
+        <translation>Toma el santuario maldito sobre las ruinas del sepulcro y conserva lo que tomes. Sesenta hombres, un cuartel y una casa son todo lo que Roma pudo prescindir: limpia las ruinas de guardianes, luego expulsa a los muertos del santuario y planta el estandarte sobre él.</translation>
+    </message>
+    <message>
+        <source>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</source>
+        <translation>Ahí están. No miréis las caras. Arqueros, disparad; escudos, cerrad filas; y nadie persigue nada de vuelta a esa niebla.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -8284,6 +8438,34 @@ para ver la vista previa</translation>
     <message>
         <source>Only a squad of several individuals can be divided or joined.</source>
         <translation>Solo una unidad de varios hombres se puede dividir o unir.</translation>
+    </message>
+    <message>
+        <source>Recruit</source>
+        <translation>Reclutar</translation>
+    </message>
+    <message>
+        <source>Select a barracks, temple or home to recruit.</source>
+        <translation>Selecciona un cuartel, templo o casa para reclutar.</translation>
+    </message>
+    <message>
+        <source>Not enough reserve: %1 / %2 men. Walk civilians into the barracks or build a Home to raise more.</source>
+        <translation>Reserva insuficiente: %1 / %2 hombres. Lleva civiles al cuartel o construye una Casa para reclutar más.</translation>
+    </message>
+    <message>
+        <source>Army at the map&apos;s limit: %1 / %2 men in the field.</source>
+        <translation>Ejército en el límite del mapa: %1 / %2 hombres en el campo.</translation>
+    </message>
+    <message>
+        <source>The training queue is full.</source>
+        <translation>La cola de entrenamiento está llena.</translation>
+    </message>
+    <message>
+        <source>%1 (%2 short)</source>
+        <translation>%1 (faltan %2)</translation>
+    </message>
+    <message>
+        <source>Not enough %1.</source>
+        <translation>No hay suficiente %1.</translation>
     </message>
 </context>
 <context>
@@ -10656,12 +10838,12 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <translation>%1 se abre paso desde la tierra a zarpazos.</translation>
     </message>
     <message>
-        <source>The risen guardians are put down. The ground is quiet.</source>
-        <translation>Los guardianes alzados han sido abatidos. La tierra está en silencio.</translation>
-    </message>
-    <message>
         <source>The barrow gives up its hoard: %1.</source>
         <translation>El túmulo entrega su tesoro: %1.</translation>
+    </message>
+    <message>
+        <source>The risen guardians are put down. Hold the shrine to purify it.</source>
+        <translation>Los guardianes alzados han sido abatidos. Mantén el santuario para purificarlo.</translation>
     </message>
 </context>
 <context>

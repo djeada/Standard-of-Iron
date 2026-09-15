@@ -230,10 +230,6 @@
         <translation>Резерв %1 / %2</translation>
     </message>
     <message>
-        <source>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</source>
-        <translation>Запас людей, который ещё держат эти казармы. Каждый новобранец его тратит; гражданские, выращенные в Доме, приносят новых.</translation>
-    </message>
-    <message>
         <source>Recruiting now</source>
         <translation>Идёт набор</translation>
     </message>
@@ -252,6 +248,14 @@
     <message>
         <source>Select a barracks before setting a rally point</source>
         <translation>Выберите казармы, прежде чем задавать точку сбора</translation>
+    </message>
+    <message>
+        <source>Reserve exhausted: %1 men held, the cheapest recruit needs %2. Civilians raised at a Home deliver more men.</source>
+        <translation>Резерв исчерпан: в запасе %1 чел., самый дешёвый рекрут требует %2. Жители, выросшие в Доме, приводят больше людей.</translation>
+    </message>
+    <message>
+        <source>Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.</source>
+        <translation>Люди, которых ещё держат эти казармы. Каждый рекрут расходует людей своего отряда; жители, выросшие в Доме, приводят больше.</translation>
     </message>
 </context>
 <context>
@@ -311,6 +315,21 @@
     <message>
         <source>Esc closes the report</source>
         <translation>Esc закрывает отчёт</translation>
+    </message>
+    <message>
+        <source>Retry mission</source>
+        <translation>Повторить миссию</translation>
+    </message>
+</context>
+<context>
+    <name>BattleSummary</name>
+    <message>
+        <source>Retry mission</source>
+        <translation>Повторить миссию</translation>
+    </message>
+    <message>
+        <source>Play again</source>
+        <translation>Сыграть снова</translation>
     </message>
 </context>
 <context>
@@ -767,13 +786,6 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
         <translation>Уцелевшие бегут к Плаценции сквозь снег с дождём и грязь. Римские шатры, зерно и оружие захвачены; тела подо льдом встают только тогда, когда никто не смотрит.</translation>
-    </message>
-</context>
-<context>
-    <name>CommandController</name>
-    <message>
-        <source>Not enough wood, stone, or iron to recruit this unit.</source>
-        <translation>Недостаточно древесины, камня или железа для найма этого отряда.</translation>
     </message>
 </context>
 <context>
@@ -2610,6 +2622,21 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>EconomyOverview</name>
+    <message>
+        <source>Men in the field: %1. Every soldier, rider, crew member, builder and civilian counts as one man.</source>
+        <translation>Людей в поле: %1. Каждый солдат, всадник, расчёт, строитель и житель считается за одного человека.</translation>
+    </message>
+    <message>
+        <source>Men you can still raise: %1 held in reserve by your barracks and temples. Walk civilians into a barracks or build a Home to raise more.</source>
+        <translation>Людей, которых вы ещё можете поднять: %1 в резерве казарм и храмов. Приведите жителей в казармы или постройте Дом, чтобы поднять больше.</translation>
+    </message>
+    <message>
+        <source>This map allows %1 men per army; %2 more wait in reserve but cannot muster until the field thins.</source>
+        <translation>Эта карта допускает %1 чел. на армию; ещё %2 ждут в резерве, но не встанут в строй, пока поле не поредеет.</translation>
+    </message>
+</context>
+<context>
     <name>FactionTheme</name>
     <message>
         <source>Standard</source>
@@ -2684,6 +2711,10 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Farm</source>
         <translation>Ферма</translation>
+    </message>
+    <message>
+        <source>Sepulcher Shrine</source>
+        <translation>Святилище Гробницы</translation>
     </message>
 </context>
 <context>
@@ -3332,14 +3363,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>Загрузка: не запущена</translation>
     </message>
     <message>
-        <source>Manpower limit reached.</source>
-        <translation>Достигнут предел людей.</translation>
-    </message>
-    <message>
-        <source>Not enough reserve — build a home to raise more families.</source>
-        <translation>Не хватает резерва — постройте дом, чтобы прибавилось семей.</translation>
-    </message>
-    <message>
         <source>The previous frame is still running; the match could not be changed. Please try again.</source>
         <translation>Предыдущий кадр ещё выполняется; не удалось сменить матч. Попробуйте снова.</translation>
     </message>
@@ -3395,6 +3418,18 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>%1 FPS</source>
         <translation>%1 кадр/с</translation>
+    </message>
+    <message>
+        <source>Waves %1 of %2</source>
+        <translation>Волны %1 из %2</translation>
+    </message>
+    <message>
+        <source>Objectives</source>
+        <translation>Задачи</translation>
+    </message>
+    <message>
+        <source>Hide the objectives (O)</source>
+        <translation>Скрыть задачи (O)</translation>
     </message>
 </context>
 <context>
@@ -4445,12 +4480,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>Люди</translation>
     </message>
     <message>
-        <source>Manpower in the field: %1 of %2.
-Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</source>
-        <translation>Людей в поле: %1 из %2.
-Каждый отряд стоит людей; отряд из двенадцати строителей стоит десяти. Это не поголовье — панель выделения считает воинов.</translation>
-    </message>
-    <message>
         <source>Human players</source>
         <translation>Живые игроки</translation>
     </message>
@@ -4491,6 +4520,39 @@ Unseen: never scouted.</source>
     <message>
         <source>Unseen</source>
         <translation>Неизвестно</translation>
+    </message>
+    <message>
+        <source>Men in the field: %1 of %2.
+Every recruit costs the men in its squad; reserve held at a barracks raises the cap.</source>
+        <translation>Людей в поле: %1 из %2.
+Каждый рекрут стоит людей своего отряда; резерв в казармах повышает предел.</translation>
+    </message>
+    <message>
+        <source>Hide the objectives list</source>
+        <translation>Скрыть список задач</translation>
+    </message>
+    <message>
+        <source>Show every objective and defeat condition</source>
+        <translation>Показать все задачи и условия поражения</translation>
+    </message>
+    <message>
+        <source>Objectives</source>
+        <translation>Задачи</translation>
+    </message>
+</context>
+<context>
+    <name>HUDVictory</name>
+    <message>
+        <source>Retry mission</source>
+        <translation>Повторить миссию</translation>
+    </message>
+    <message>
+        <source>Fight it again</source>
+        <translation>Сразиться снова</translation>
+    </message>
+    <message>
+        <source>Return to Menu</source>
+        <translation>Вернуться в меню</translation>
     </message>
 </context>
 <context>
@@ -4570,10 +4632,6 @@ Unseen: never scouted.</source>
     <message>
         <source>Winning and losing</source>
         <translation>Победа и поражение</translation>
-    </message>
-    <message>
-        <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
-        <translation>Каждое задание объявляет свои условия победы и поражения на экране задач (Escape, затем «Задачи»). В любом бою ваш полководец обязан выжить: народ умирает вместе с тем, кто его ведёт, а одинокий полководец уже проиграл.</translation>
     </message>
     <message>
         <source>The three materials</source>
@@ -4727,6 +4785,62 @@ Unseen: never scouted.</source>
         <source>Close</source>
         <translation>Закрыть</translation>
     </message>
+    <message>
+        <source>The Sepulcher</source>
+        <translation>Гробница</translation>
+    </message>
+    <message>
+        <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In battle, press O or the objectives button in the top bar to keep the full list open beside the field. In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
+        <translation>Каждая миссия задаёт свои условия победы и поражения на экране Задач (Escape, затем Задачи). В бою нажмите O или кнопку задач на верхней панели, чтобы держать полный список открытым рядом с полем. В каждом бою ваш командир должен выжить: народ умирает вместе с тем, кто его ведёт, а одинокий командир уже потерян.</translation>
+    </message>
+    <message>
+        <source>Undead zones</source>
+        <translation>Зоны нежити</translation>
+    </message>
+    <message>
+        <source>Some fields are dotted with dormant ruins and shrines. Nothing stirs in them until your troops walk in. The moment you cross into a zone, it wakes: the ground gives up its dead and the first wave rises to meet you. Choose the moment - and the force - you enter with.</source>
+        <translation>Некоторые поля усеяны спящими руинами и святилищами. В них ничто не шевелится, пока не войдут ваши войска. Стоит пересечь границу зоны, как она просыпается: земля отдаёт своих мертвецов, и первая волна поднимается вам навстречу. Выбирайте момент - и силы - с которыми входите.</translation>
+    </message>
+    <message>
+        <source>Waves</source>
+        <translation>Волны</translation>
+    </message>
+    <message>
+        <source>Every zone holds a set number of waves, and the announcement names each one as it comes - wave 1 of 2, then 2 of 2. When a wave rises to meet you, it is coming for the troops inside the zone. Break one and the next rises. A zone is only clear when its last wave lies still.</source>
+        <translation>В каждой зоне заложено определённое число волн, и объявление называет каждую по мере прихода - волна 1 из 2, затем 2 из 2. Когда волна поднимается вам навстречу, она идёт за войсками внутри зоны. Разбейте одну - поднимется следующая. Зона чиста лишь тогда, когда её последняя волна лежит недвижно.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher Shrine</source>
+        <translation>Святилище Гробницы</translation>
+    </message>
+    <message>
+        <source>Each zone is anchored by a Sepulcher Shrine. While its guardians still stand, the shrine cannot be harmed and attack orders on it are refused - do not waste arrows on it. Kill every wave first; only then does the shrine lie open.</source>
+        <translation>Каждая зона привязана к Святилищу Гробницы. Пока стоят его стражи, святилищу нельзя навредить, и приказы атаковать его отклоняются - не тратьте на него стрелы. Сначала перебейте каждую волну; лишь тогда святилище открыто.</translation>
+    </message>
+    <message>
+        <source>Purifying a shrine</source>
+        <translation>Очищение святилища</translation>
+    </message>
+    <message>
+        <source>Once the guardians have fallen, walk troops onto the shrine to capture it, or simply knock it down. Either way the zone is purified for good and it will not wake again. A purified shrine pays out: the clear reward - wood, iron and food - lands in your stores the moment the zone falls.</source>
+        <translation>Когда стражи падут, приведите войска на святилище, чтобы захватить его, или просто разрушьте. В любом случае зона очищена навсегда и больше не проснётся. Очищенное святилище платит: награда за очистку - дерево, железо и еда - попадает в ваши склады в момент падения зоны.</translation>
+    </message>
+    <message>
+        <source>The guardians</source>
+        <translation>Стражи</translation>
+    </message>
+    <message>
+        <source>The dead defend their ground. They will chase you to the edge of the zone and then turn back to it, so you can pull out to regroup and re-enter when you are ready. You cannot lure them across the map - the fight happens at the shrine.</source>
+        <translation>Мёртвые защищают свою землю. Они будут гнать вас до края зоны, а затем вернутся в неё, так что можно отойти, перегруппироваться и войти снова, когда будете готовы. Заманить их через карту не выйдет - бой идёт у святилища.</translation>
+    </message>
+    <message>
+        <source>The grave priest</source>
+        <translation>Могильный жрец</translation>
+    </message>
+    <message>
+        <source>Among the waves walks a grave priest. He heals the dead around him and throws fire at your line, so a slow slog of spearmen alone will bleed. Bring a Medicus to mend the burns and ranged troops to cut the priest down from a distance before the guardians close in. Kill him first and the dead stop mending.</source>
+        <translation>Среди волн ходит могильный жрец. Он исцеляет мёртвых вокруг себя и мечет огонь в ваш строй, так что медленный натиск одних копейщиков истечёт кровью. Возьмите медика лечить ожоги и стрелков, чтобы сразить жреца издали, прежде чем стражи подойдут. Убейте его первым - и мёртвые перестанут исцеляться.</translation>
+    </message>
 </context>
 <context>
     <name>HintCard</name>
@@ -4837,6 +4951,14 @@ Unseen: never scouted.</source>
     <message>
         <source>March the Campaign</source>
         <translation>Выступить в кампанию</translation>
+    </message>
+    <message>
+        <source>Look at the field</source>
+        <translation>Осмотреть поле</translation>
+    </message>
+    <message>
+        <source>Show the verdict again</source>
+        <translation>Показать вердикт снова</translation>
     </message>
 </context>
 <context>
@@ -5445,6 +5567,26 @@ Unseen: never scouted.</source>
     <message>
         <source>Workers are valuable strategic assets. Do not leave them exposed near the front.</source>
         <translation>Работники — ценный стратегический ресурс. Не оставляйте их открытыми у передовой.</translation>
+    </message>
+    <message>
+        <source>A cursed shrine cannot be attacked while its guardians stand. Break the guard, then purify the shrine by capturing it.</source>
+        <translation>Проклятое святилище нельзя атаковать, пока стоят его стражи. Сломите стражу, затем очистите святилище, захватив его.</translation>
+    </message>
+    <message>
+        <source>A grave priest mends the dead around it and hurls fire at the living. Strike it down before the line closes.</source>
+        <translation>Могильный жрец латает мёртвых вокруг себя и мечет огонь в живых. Сразите его, прежде чем строй сомкнётся.</translation>
+    </message>
+    <message>
+        <source>Ranged troops and a Medicus make the vigil survivable. Wound the dead from a distance, and keep the wounded living.</source>
+        <translation>Стрелки и медик делают бдение выживаемым. Раньте мёртвых издали, а раненых держите живыми.</translation>
+    </message>
+    <message>
+        <source>Skeleton guardians defend their ruins and drift back to them when the fight moves on. Draw them out, or bring the fight to the stones.</source>
+        <translation>Скелеты-стражи защищают свои руины и стягиваются к ним, когда бой уходит. Выманите их или несите бой к камням.</translation>
+    </message>
+    <message>
+        <source>The dead do not tire, do not flee, and do not file complaints. They are, in every other respect, a poor garrison.</source>
+        <translation>Мёртвые не устают, не бегут и не подают жалоб. Во всём остальном это скверный гарнизон.</translation>
     </message>
 </context>
 <context>
@@ -6187,6 +6329,10 @@ to see preview</source>
         <source>Failed to load mission preview: %1</source>
         <translation>Не удалось загрузить предпросмотр задания: %1</translation>
     </message>
+    <message>
+        <source>There is no battle to fight again</source>
+        <translation>Нет боя, который можно повторить</translation>
+    </message>
 </context>
 <context>
     <name>MediterraneanMapPanel</name>
@@ -6698,10 +6844,6 @@ to see preview</source>
         <translation>Сломите все три римские фазы приступа. Квартал держится, когда последняя консульская колонна лежит мёртвой на улицах.</translation>
     </message>
     <message>
-        <source>Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle.</source>
-        <translation>Сломите оба удара Железной Гробницы. При Заме мёртвые больше не остаются вне битвы.</translation>
-    </message>
-    <message>
         <source>Break the chiefs contesting the descent.</source>
         <translation>Сломите вождей, оспаривающих спуск.</translation>
     </message>
@@ -6800,10 +6942,6 @@ to see preview</source>
     <message>
         <source>Defend Hannibal&apos;s fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.</source>
         <translation>Обороняйте укреплённый кампанский город снабжения Ганнибала и сломите все три согласованных римских приступа, идущих по разным консульским дорогам.</translation>
-    </message>
-    <message>
-        <source>Drive the dead from the shrine. Salt the earth where they stood.</source>
-        <translation>Изгоните мёртвых из святилища. Засыпьте солью землю, где они стояли.</translation>
     </message>
     <message>
         <source>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</source>
@@ -7244,10 +7382,6 @@ to see preview</source>
     <message>
         <source>Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all.</source>
         <translation>Что ж, бери переправы. Бери всю холодную длину дороги на север и каждый камень, что на неё положен. Рим не теряет провинций — он одалживает их под процент, и мне говорят, что у сборщиков на этой дороге вовсе нет лиц.</translation>
-    </message>
-    <message>
-        <source>Take the cursed shrine above the sepulcher ruins and hold what you take: clear the guardians out of the ruins, then drive the dead off the shrine itself.</source>
-        <translation>Возьмите проклятое святилище над руинами гробницы и удержите взятое: очистите руины от стражей, а затем изгоните мёртвых с самого святилища.</translation>
     </message>
     <message>
         <source>Take the first pass quickly before the next ambush line assembles.</source>
@@ -7901,6 +8035,26 @@ to see preview</source>
         <source>You cannot cover every gate. Watch the telegraph and move on interior lines.</source>
         <translation>Все ворота не прикрыть. Следи за упреждающим знаком и перемещайся по внутренним линиям.</translation>
     </message>
+    <message>
+        <source>Break both risings of the dead at the sepulcher ruins by the south-western crossing. The guardians will not leave their ground; you must go to them.</source>
+        <translation>Разбейте оба восстания мёртвых у руин гробницы близ юго-западной переправы. Стражи не покинут свою землю; вам придётся идти к ним.</translation>
+    </message>
+    <message>
+        <source>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</source>
+        <translation>Изгоните мёртвых со святилища, затем водрузите на нём штандарт. Посыпьте солью землю, где они стояли.</translation>
+    </message>
+    <message>
+        <source>Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
+        <translation>Отведите раненых к дому и пошлите за людьми, что у нас остались. Мёртвые терпеливы. Мы тоже можем позволить себе терпение.</translation>
+    </message>
+    <message>
+        <source>Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it.</source>
+        <translation>Возьмите проклятое святилище над руинами гробницы и удержите взятое. Шестьдесят человек, казармы и один дом - всё, что смог выделить Рим: выбейте стражей из руин, затем изгоните мёртвых со святилища и водрузите на нём штандарт.</translation>
+    </message>
+    <message>
+        <source>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</source>
+        <translation>Вот они. Не смотрите в лица. Лучники, стреляй; щиты, сомкнуть; и никто не гонится ни за чем обратно в этот туман.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -8287,6 +8441,34 @@ to see preview</source>
     <message>
         <source>That building cannot be taken down.</source>
         <translation>Эту постройку разобрать нельзя.</translation>
+    </message>
+    <message>
+        <source>Recruit</source>
+        <translation>Набор</translation>
+    </message>
+    <message>
+        <source>Select a barracks, temple or home to recruit.</source>
+        <translation>Выберите казармы, храм или дом для набора.</translation>
+    </message>
+    <message>
+        <source>Not enough reserve: %1 / %2 men. Walk civilians into the barracks or build a Home to raise more.</source>
+        <translation>Недостаточно резерва: %1 / %2 чел. Приведите жителей в казармы или постройте Дом, чтобы поднять больше.</translation>
+    </message>
+    <message>
+        <source>Army at the map&apos;s limit: %1 / %2 men in the field.</source>
+        <translation>Армия у предела карты: %1 / %2 чел. в поле.</translation>
+    </message>
+    <message>
+        <source>The training queue is full.</source>
+        <translation>Очередь обучения заполнена.</translation>
+    </message>
+    <message>
+        <source>%1 (%2 short)</source>
+        <translation>%1 (не хватает %2)</translation>
+    </message>
+    <message>
+        <source>Not enough %1.</source>
+        <translation>Недостаточно: %1.</translation>
     </message>
 </context>
 <context>
@@ -10663,8 +10845,8 @@ Wide vision and a durable settlement anchor</source>
         <translation>%1 выцарапывается из земли.</translation>
     </message>
     <message>
-        <source>The risen guardians are put down. The ground is quiet.</source>
-        <translation>Восставшие стражи уложены. Земля тиха.</translation>
+        <source>The risen guardians are put down. Hold the shrine to purify it.</source>
+        <translation>Восставшие стражи повержены. Удержите святилище, чтобы очистить его.</translation>
     </message>
 </context>
 <context>

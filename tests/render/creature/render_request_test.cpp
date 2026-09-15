@@ -163,6 +163,10 @@ TEST(ArchetypeRegistryBaseline, GameplayStatesUseSnapshotCoverage) {
       reg.is_snapshot(ArchetypeRegistry::k_rider_base, AnimationStateId::RidingIdle));
   EXPECT_TRUE(
       reg.is_snapshot(ArchetypeRegistry::k_rider_base, AnimationStateId::RidingCharge));
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_sheep_base, AnimationStateId::Die))
+      << "sheep only render from the prebaked snapshot at LOD 1, so their death "
+         "clip must be snapshot-eligible or a dying sheep vanishes";
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_wolf_base, AnimationStateId::Die));
 }
 
 TEST(ArchetypeRegistryBaseline, UnknownArchetypeReturnsUnmappedClip) {

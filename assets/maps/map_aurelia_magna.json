@@ -88,7 +88,7 @@
             "z": 214
         }
     ],
-    "max_troops_per_player": 3600,
+    "max_troops_per_player": 8100,
     "name": "Aurelia Magna",
     "rain": {
         "enabled": false,

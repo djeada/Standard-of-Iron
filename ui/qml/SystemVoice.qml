@@ -13,6 +13,9 @@ Item {
     property int lastFailureCount: 0
     property real lastFailureAt: 0
 
+    readonly property bool matchOver: systemVoice.engine !== null && systemVoice.engine.victory_state !== undefined && systemVoice.engine.victory_state !== ""
+    readonly property bool armyGone: systemVoice.engine !== null && !!systemVoice.engine.selected_player_state && systemVoice.engine.selected_player_state.manpower !== undefined && systemVoice.engine.selected_player_state.manpower <= 0
+
     function quip_for(failure) {
         switch (failure) {
         case "no_selection":
@@ -37,6 +40,8 @@ Item {
 
     function note_refusal(failure) {
         if (!failure || failure === "none")
+            return;
+        if (systemVoice.matchOver || systemVoice.armyGone)
             return;
         var now = Date.now();
         if (failure !== systemVoice.lastFailure || (now - systemVoice.lastFailureAt) > systemVoice.forgetAfterMs) {
@@ -72,10 +77,21 @@ Item {
             });
     }
 
+    function announce_recruit_refusal(message, failure) {
+        if (!message || message.length === 0 || systemVoice.matchOver)
+            return;
+        Design.Notifications.urgent(message, {
+                "channel": "refusal-recruit",
+                "icon": failure === "manpower_cap" ? Design.Icons.population : Design.Icons.warning
+            });
+    }
+
     Connections {
         function onOrder_feedback(kind, accepted, message, failure) {
             if (accepted) {
                 systemVoice.forget();
+            } else if (kind === "recruit") {
+                systemVoice.announce_recruit_refusal(message, failure);
             } else if (failure === "unit_busy") {
                 systemVoice.announce_busy(message);
             } else {
