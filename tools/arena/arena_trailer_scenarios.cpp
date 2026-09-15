@@ -1221,6 +1221,15 @@ auto trailer_clash() -> ArenaScenarioDefinition {
   s.groups.push_back(punic_horse);
   s.groups.push_back(elephants);
 
+  auto hannibal = group(QStringLiteral("hannibal"),
+                        Troop::CarthageSwordCommander,
+                        2,
+                        1,
+                        {4.5F, 0.0F, 37.0F},
+                        1);
+  hannibal.health_override = hannibal.max_health_override = 9000;
+  s.groups.push_back(hannibal);
+
   auto aura = at(14.0F, Command::TriggerCommanderAura, QStringLiteral("roman_consul"));
   aura.value = 2;
 
@@ -1238,6 +1247,10 @@ auto trailer_clash() -> ArenaScenarioDefinition {
       at(3.5F,
          Command::Charge,
          QStringLiteral("punic_elephants"),
+         QStringLiteral("roman_line")),
+      at(3.8F,
+         Command::AttackMove,
+         QStringLiteral("hannibal"),
          QStringLiteral("roman_line")),
       at(4.0F,
          Command::Charge,
@@ -1607,7 +1620,7 @@ auto trailer_barrow_night() -> ArenaScenarioDefinition {
                       Troop::Swordsman,
                       2,
                       1,
-                      {-14.0F, 0.0F, 31.0F},
+                      {-4.0F, 0.0F, 30.0F},
                       6,
                       {2.6F, 0.0F, 0.0F});
   quarry.health_override = quarry.max_health_override = 900;

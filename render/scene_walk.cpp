@@ -487,7 +487,11 @@ void Renderer::enqueue_activity_indicator(Engine::Core::EntityID entity_id,
     return;
   }
 
-  float const distance_fade = Render::Geom::indicator_distance_fade(distance_sq);
+  float distance_fade = Render::Geom::indicator_distance_fade(distance_sq);
+  if (m_view.world_render_mode() == WorldRenderMode::Rpg) {
+
+    distance_fade *= Render::Geom::indicator_lens_fade(distance_sq);
+  }
   if (distance_fade <= 0.02F) {
     return;
   }

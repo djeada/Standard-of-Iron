@@ -25,6 +25,11 @@ CLIPS = [
     ("river_commander", "river_60.mp4", 13.6, 11.5),
     ("editor_route", "editor_route.mp4", 1.2, 5.5),
     ("editor_mission", "editor_mission.mp4", 1.5, 5.0),
+    ("editor_bridge", "editor_bridge.mp4", 2.0, 3.0),
+    ("build_stronghold_place", "build_close.mp4", 1.2, 2.2),
+    ("build_stronghold_rise", "build_close.mp4", 8.8, 3.0),
+    ("form_the_line", "formation_line.mp4", 1.2, 3.4),
+    ("ford_played", "formation_line.mp4", 8.0, 2.0),
 ]
 
 

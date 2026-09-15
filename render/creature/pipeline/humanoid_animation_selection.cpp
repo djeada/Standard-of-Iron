@@ -392,9 +392,10 @@ auto selection_from_layer_source(Animation::PlaybackLayerSource source,
   return nullptr;
 }
 
-auto locomotion_only_pose(const Render::GL::HumanoidAnimationContext& anim) noexcept
-    -> Render::Creature::ResolvedPose {
-  Render::GL::AnimationInputs base_inputs = anim.inputs;
+auto locomotion_only_context(const Render::GL::HumanoidAnimationContext& anim) noexcept
+    -> Render::GL::HumanoidAnimationContext {
+  auto base = anim;
+  auto& base_inputs = base.inputs;
   base_inputs.is_attacking = false;
   base_inputs.is_casting = false;
   base_inputs.combat_visual = {};
@@ -404,18 +405,19 @@ auto locomotion_only_pose(const Render::GL::HumanoidAnimationContext& anim) noex
 
     base_inputs.movement_state = Render::Creature::MovementAnimationState::Idle;
   }
-  return Render::Creature::resolve_pose(base_inputs);
+  return base;
 }
 
-auto action_only_pose(const Render::GL::HumanoidAnimationContext& anim) noexcept
-    -> Render::Creature::ResolvedPose {
-  Render::GL::AnimationInputs action_inputs = anim.inputs;
+auto action_only_context(const Render::GL::HumanoidAnimationContext& anim) noexcept
+    -> Render::GL::HumanoidAnimationContext {
+  auto action = anim;
+  auto& action_inputs = action.inputs;
   if (action_inputs.combat_visual.authoritative) {
     action_inputs.combat_visual.active = true;
     action_inputs.combat_visual.prioritize_action_over_locomotion = true;
   }
   action_inputs.is_attacking = true;
-  return Render::Creature::resolve_pose(action_inputs);
+  return action;
 }
 
 } // namespace
@@ -744,10 +746,16 @@ auto resolve_humanoid_animation_selection(
     return selection;
   }
 
-  auto const base_selection =
-      build_selection_for_pose(spec, anim, locomotion_only_pose(anim), seed, variant);
+  auto const base_anim = locomotion_only_context(anim);
+  auto const action_anim = action_only_context(anim);
+  auto const base_selection = build_selection_for_pose(
+      spec, base_anim, Render::Creature::resolve_pose(base_anim.inputs), seed, variant);
   auto const action_selection =
-      build_selection_for_pose(spec, anim, action_only_pose(anim), seed, variant);
+      build_selection_for_pose(spec,
+                               action_anim,
+                               Render::Creature::resolve_pose(action_anim.inputs),
+                               seed,
+                               variant);
   bool const moving =
       Render::Creature::is_moving_animation(anim.inputs.movement_state) &&
       base_selection.state != Render::Creature::AnimationStateId::Idle;

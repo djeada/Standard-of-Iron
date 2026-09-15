@@ -171,6 +171,8 @@ void apply_benchmark_action(GameEngine* engine,
     placement->on_formation_drag_update(sx, sy);
   } else if (placement != nullptr && name == QLatin1String("formation_end")) {
     placement->on_formation_drag_end();
+  } else if (placement != nullptr && name == QLatin1String("formation_confirm")) {
+    placement->on_formation_confirm();
   } else if (placement != nullptr && name == QLatin1String("formation_intent")) {
     placement->set_formation_intent(action.argument);
   } else if (placement != nullptr && name == QLatin1String("build_start")) {

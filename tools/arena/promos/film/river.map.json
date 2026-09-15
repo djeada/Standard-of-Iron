@@ -20,10 +20,12 @@
   },
   "time_of_day": "day",
   "environment": {
-    "start_time": 14.5,
+    "start_time": 13.0,
     "time_mode": "locked",
     "day_length_seconds": 2400.0,
-    "lighting_profile": "river_mist"
+    "lighting_profile": "mediterranean_summer",
+    "fog_density": 0.012,
+    "exposure": 1.25
   },
   "biome": {
     "ground_type": "soil_fertile",

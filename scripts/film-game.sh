@@ -95,7 +95,15 @@ command -v ffmpeg >/dev/null || {
   exit 2
 }
 
-OUT="$(python3 -c 'import os,sys;print(os.path.abspath(sys.argv[1]))' "${OUT}")"
+absolute() { python3 -c 'import os,sys;print(os.path.abspath(sys.argv[1]))' "$1"; }
+OUT="$(absolute "${OUT}")"
+# The game runs from build/bin, so every path handed to it must be absolute.
+[[ -n "${FIXTURE}" ]] && FIXTURE="$(absolute "${FIXTURE}")"
+for index in "${!MISSION[@]}"; do
+  if ((index % 2 == 1)) && [[ "${MISSION[index - 1]}" != "--observe" ]]; then
+    MISSION[index]="$(absolute "${MISSION[index]}")"
+  fi
+done
 readonly WORK="${OUT%.mp4}.frames"
 readonly CFG="${WORK}/.cfg"
 rm -rf "${WORK}"
