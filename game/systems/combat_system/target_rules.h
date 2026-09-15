@@ -26,7 +26,8 @@ enum class TargetRefusal : std::uint8_t {
   NoTarget,
   SelfOrAllied,
   Passive,
-  Structure
+  Structure,
+  Warded
 };
 
 struct TargetQuery {
@@ -68,6 +69,8 @@ owners_are_hostile(const OwnerRegistry& owners, int owner_a, int owner_b) -> boo
 [[nodiscard]] auto target_refusal_key(TargetRefusal refusal) -> std::string_view;
 
 [[nodiscard]] auto is_passive_wildlife_target(Engine::Core::Entity* target) -> bool;
+
+[[nodiscard]] auto is_warded_structure(Engine::Core::Entity* target) -> bool;
 
 [[nodiscard]] auto
 collect_hostile_contacts(const Engine::Core::World& world,

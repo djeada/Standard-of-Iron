@@ -337,7 +337,7 @@
             "z": 240
         }
     ],
-    "max_troops_per_player": 900,
+    "max_troops_per_player": 2020,
     "name": "Crossing the Rhone",
     "rain": {
         "active_duration": 70,

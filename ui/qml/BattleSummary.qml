@@ -22,6 +22,9 @@ Item {
 
     signal closed
     signal return_to_main_menu_requested
+    signal retry_requested
+
+    readonly property bool is_mission: summaryOverlay.engine !== null && !!summaryOverlay.engine.setup && summaryOverlay.engine.setup.is_mission_match === true
 
     function reset_data() {
         summaryOverlay.preparation_generation += 1;
@@ -100,6 +103,12 @@ Item {
         return stats.enemiesKilled * 100 + stats.troopsRecruited * 10 + stats.barracksOwned * 500;
     }
 
+    function army_name(owner) {
+        if (owner.is_contender === false && owner.nation)
+            return Design.FactionTheme.nameFor(owner.nation);
+        return owner.name;
+    }
+
     function build_army_list() {
         if (summaryOverlay.engine === null) {
             summaryOverlay.armies = [];
@@ -122,15 +131,16 @@ Item {
             var owner = owners[j];
             if (owner.type !== "Player" && owner.type !== "AI")
                 continue;
-            if (owner.is_contender === false)
+            if (owner.is_contender === false && owner.team_id === localTeamId)
                 continue;
             var stats = summaryOverlay.engine.get_player_stats(owner.id);
             longestPlayTime = Math.max(longestPlayTime, stats.playTimeSec);
             roster.push({
                     "ownerId": owner.id,
                     "teamId": owner.team_id,
-                    "name": owner.name,
+                    "name": summaryOverlay.army_name(owner),
                     "accent": owner.color,
+                    "isContender": owner.is_contender !== false,
                     "factionId": owner.nation ? owner.nation : "",
                     "factionName": owner.nation ? Design.FactionTheme.nameFor(owner.nation) : "",
                     "isLocal": owner.id === localOwnerId,
@@ -191,8 +201,15 @@ Item {
         missionName: summaryOverlay.missionName
         durationText: summaryOverlay.durationText
         armies: summaryOverlay.armies
+        retryAvailable: !summaryOverlay.is_spectator
+        retryAction: summaryOverlay.is_mission ? qsTr("Retry mission") : qsTr("Play again")
         onDismissed: summaryOverlay.hide()
         onMenuRequested: summaryOverlay.return_to_main_menu()
+        onRetryRequested: {
+            if (summaryOverlay.returning_to_menu)
+                return;
+            summaryOverlay.retry_requested();
+        }
     }
 
     Rectangle {

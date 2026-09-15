@@ -17,7 +17,6 @@ namespace Render::GL {
 namespace {
 
 const QVector3D k_hostile_lock_color(1.0F, 0.40F, 0.20F);
-const QVector3D k_hostile_lock_core(1.0F, 0.72F, 0.42F);
 const QVector3D k_friendly_focus_color(1.0F, 0.84F, 0.32F);
 const QVector3D k_neutral_focus_color(0.86F, 0.86F, 0.80F);
 const QVector3D k_incoming_color(0.96F, 0.16F, 0.12F);
@@ -119,18 +118,9 @@ void render_target_focus_rings(Renderer* renderer,
       ring.thickness = k_lock_thickness;
       ring.color = visual.hostile ? k_hostile_lock_color : k_neutral_focus_color;
       ring.alpha = k_lock_alpha;
-      ring.pattern = Game::Accessibility::TeamPattern::DoubleRing;
+      ring.pattern = Game::Accessibility::TeamPattern::Solid;
       ring.focused = true;
       renderer->ground_marker(ring);
-
-      GroundMarkerCmd core = ring;
-      core.outer_radius = visual.radius * 0.55F;
-      core.thickness = 0.06F;
-      core.color = k_hostile_lock_core;
-      core.alpha = 0.55F * (visual.hostile ? 1.0F : 0.6F);
-      core.pattern = Game::Accessibility::TeamPattern::Solid;
-      core.focused = false;
-      renderer->ground_marker(core);
 
       draw_glyph(renderer,
                  basis,

@@ -57,6 +57,7 @@ public:
   int manpower_available{0};
 
   int manpower_ceiling{0};
+  bool reserve_short{false};
   std::vector<Game::Units::TroopType> production_queue;
 
   [[nodiscard]] auto manpower_limit() const -> int {

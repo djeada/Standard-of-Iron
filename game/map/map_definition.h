@@ -128,7 +128,7 @@ struct Forest {
   float radius = 8.0F;
 };
 
-inline constexpr float k_undead_zone_default_fog_density = 0.28F;
+inline constexpr float k_undead_zone_default_fog_density = 0.16F;
 inline constexpr float k_undead_zone_default_wave_timeout = 45.0F;
 
 struct UndeadZone {

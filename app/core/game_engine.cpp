@@ -75,6 +75,7 @@
 #include "app/input/hover_tracker.h"
 #include "app/input/input_command_handler.h"
 #include "app/input/rts_camera_controller.h"
+#include "app/models/loading_tips.h"
 #include "app/models/selected_units_model.h"
 #include "app/orders/action_vfx.h"
 #include "app/orders/command_controller.h"
@@ -237,10 +238,9 @@ auto build_resource_map(Game::Session::SessionContext& session,
 auto build_player_state_map(Game::Session::SessionContext& session,
                             int owner_id,
                             int manpower_cap) -> QVariantMap {
-  QVariantMap state;
+  QVariantMap state = App::Core::manpower_summary_map(
+      App::Core::build_manpower_summary(&session.world(), owner_id, manpower_cap));
   state["owner_id"] = owner_id;
-  state["manpower"] = Game::Systems::troop_count_for(session.world(), owner_id);
-  state["manpower_cap"] = manpower_cap;
   state["resources"] = build_resource_map(session, owner_id);
   return state;
 }
@@ -903,6 +903,7 @@ void GameEngine::update_presentation(float dt) {
         &Render::Profiling::global_profile().view_model_sync_us);
     publish_frame_snapshots();
     publish_minimap_overlays(dt);
+    flush_mission_announcements(dt);
     sync_render_camera();
     capture_render_selection();
     sync_scatter_world_props();
@@ -1266,16 +1267,6 @@ auto accepted_order_cue(App::Core::OrderKind kind,
 
 } // namespace
 
-void GameEngine::report_affordability_refusal(App::Core::OrderFailure failure,
-                                              const QString& message) {
-  App::Core::OrderOutcome outcome;
-  outcome.kind = App::Core::OrderKind::Build;
-  outcome.status = App::Core::OrderStatus::Rejected;
-  outcome.failure = failure;
-  outcome.reason = message;
-  handle_order_feedback(outcome);
-}
-
 void GameEngine::report_late_command_rejection(const Game::Command::Command& command,
                                                Game::Command::Rejection reason) {
   if (command.source != Game::Command::Source::LocalPlayer) {
@@ -1385,7 +1376,13 @@ void GameEngine::handle_order_feedback(const App::Core::OrderOutcome& outcome) {
     }
     message = App::Core::accepted_order_message(outcome);
   } else {
-    Game::Audio::play_cue(Game::Audio::Cue::k_command_refuse);
+    if (outcome.kind == App::Core::OrderKind::Recruit) {
+      announce_player_warning(outcome.failure == App::Core::OrderFailure::PopulationCap
+                                  ? Game::Audio::Cue::k_alert_population_limit
+                                  : Game::Audio::Cue::k_alert_low_resources);
+    } else {
+      Game::Audio::play_cue(Game::Audio::Cue::k_command_refuse);
+    }
     message = outcome.reason;
   }
 
@@ -1677,6 +1674,23 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
   m_loading_overlay_last_frame_ms = 0;
   m_loading_overlay_active = true;
   m_runtime.loading = true;
+  {
+    QString mission_id;
+    bool mission_has_undead = false;
+    if (m_campaign_manager &&
+        m_campaign_manager->current_mission_definition().has_value()) {
+      const auto& mission = *m_campaign_manager->current_mission_definition();
+      mission_id = mission.id;
+      mission_has_undead = mission.include_ambient_undead;
+      for (const auto& condition : mission.victory_conditions) {
+        if (condition.type.contains(QStringLiteral("undead")) ||
+            condition.type == QStringLiteral("purify_shrine")) {
+          mission_has_undead = true;
+        }
+      }
+    }
+    LoadingTips::instance()->prefer_for_load(map_path, mission_id, mission_has_undead);
+  }
   emit is_loading_changed();
 
   if (m_loading_progress_tracker) {
@@ -2112,7 +2126,7 @@ void GameEngine::update_mission_waves(float dt) {
       m_mission_waves.advance(mission_wave_binding(), dt, tutorial_holds_clock);
 
   for (const auto& announcement : effects.announcements) {
-    emit mission_announcement(announcement);
+    queue_mission_announcement(announcement);
   }
   for (const auto& beat : effects.incoming_waves) {
     Engine::Core::EventManager::instance().publish(
@@ -2200,7 +2214,7 @@ void GameEngine::configure_commander_messages() {
     script.policy = mission.commander_voices;
   }
   script.speakers = Game::Mission::build_commander_speaker_roster(
-      *m_world, m_session->owners(), m_runtime.local_owner_id);
+      *m_world, m_session->owners(), m_session->nations(), m_runtime.local_owner_id);
   script.voices = &commander_voices();
 
   m_commander_message_director.configure(
@@ -2492,6 +2506,47 @@ void GameEngine::note_minimap_combat_hit(const Engine::Core::CombatHitEvent& eve
       event.attacker_owner_id);
 }
 
+void GameEngine::note_minimap_shrine_stirred(
+    const Engine::Core::UndeadZoneAwakenedEvent& event) {
+  if (!m_minimap_view_model || m_minimap_manager == nullptr ||
+      !m_minimap_manager->has_minimap()) {
+    return;
+  }
+  m_minimap_view_model->note_alert(App::ViewModels::MinimapAlert::ShrineStirred,
+                                   event.world_x,
+                                   event.world_z,
+                                   event.zone_owner_id,
+                                   event.woken_by_owner_id);
+}
+
+void GameEngine::queue_mission_announcement(const QString& text) {
+  if (text.isEmpty()) {
+    return;
+  }
+  if (m_mission_announcement_cooldown <= 0.0F &&
+      m_pending_mission_announcements.isEmpty()) {
+    m_mission_announcement_cooldown = k_mission_announcement_spacing_seconds;
+    emit mission_announcement(text);
+    return;
+  }
+  if (m_pending_mission_announcements.contains(text)) {
+    return;
+  }
+  m_pending_mission_announcements.append(text);
+}
+
+void GameEngine::flush_mission_announcements(float dt) {
+  m_mission_announcement_cooldown =
+      std::max(0.0F, m_mission_announcement_cooldown - std::max(dt, 0.0F));
+  if (m_mission_announcement_cooldown > 0.0F ||
+      m_pending_mission_announcements.isEmpty()) {
+    return;
+  }
+  const QString text = m_pending_mission_announcements.takeFirst();
+  m_mission_announcement_cooldown = k_mission_announcement_spacing_seconds;
+  emit mission_announcement(text);
+}
+
 void GameEngine::publish_minimap_overlays(float dt) {
   if (!m_minimap_manager || !m_minimap_view_model ||
       !m_minimap_manager->has_minimap()) {
@@ -2611,7 +2666,7 @@ void GameEngine::apply_skirmish_commander_setup(const QVariantList& player_confi
       {*m_world, m_campaign_manager.get(), m_level, m_runtime.local_owner_id},
       player_configs);
   for (const auto& announcement : effects.mission_announcements) {
-    emit mission_announcement(announcement);
+    queue_mission_announcement(announcement);
   }
 }
 
@@ -2887,6 +2942,7 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
   m_finalize_progress_after_overlay = false;
   m_loading_overlay_active = true;
   m_runtime.loading = true;
+  LoadingTips::instance()->set_preferred_tags({});
   emit is_loading_changed();
 
   Game::Systems::RuntimeSnapshot runtime_snapshot = to_runtime_snapshot();
@@ -3050,7 +3106,7 @@ auto GameEngine::describe_focus_entity(Engine::Core::EntityID id) const
   }
   QString name = described.name;
   if (described.is_building) {
-    const QString pretty = App::Core::building_display_name(unit->spawn_type);
+    const QString pretty = App::Core::building_display_name(*unit);
     if (!pretty.isEmpty()) {
       name = pretty;
     }

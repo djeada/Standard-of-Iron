@@ -99,7 +99,7 @@ The coach appears only in skirmish mode. Campaign missions use their own briefin
 `app/economy/economy_overview.cpp` assembles the economy view from authoritative runtime sources:
 
 - `construction_cost_info` and `construction_build_time` for structure cost and builder time, sourced from `assets/data/construction/catalog.json`;
-- `TroopProfileService` for nation-specific recruit cost, army-cap weight, and build time;
+- `TroopProfileService` for nation-specific recruit cost (the squad's men), squad size, and build time;
 - `NationRegistry` for the units the selected nation can recruit;
 - `PlayerResourceRegistry` for resource stores and `get_harvested_all` for coaching progress;
 - `harvest_yields.h` for one-trip yields from trees, boulders, ore seams, ripe farms, and sheep; and
@@ -120,46 +120,55 @@ The coach appears only in skirmish mode. Campaign missions use their own briefin
 
 Refreshes are throttled to four per second. Building the snapshot scans player units and jobs, while the HUD does not benefit from repeating that work at frame rate.
 
-## Recruit price and army-cap weight
+## One unit everywhere: men
 
-`TroopProductionStats` exposes two independent quantities.
+Every population number the player can read is a count of **men** (individuals). A squad is worth the soldiers it fields, a commander, a healer, a siege crew or a civilian is one man.
 
-### `cost`: recruiting-building reserve price
+### `cost`: what a recruiting building spends
 
-`cost` is spent from a recruiting building's `manpower_available`. Nation data in `assets/data/nations/*.json` can override it.
+`TroopProductionStats::cost` is spent from a recruiting building's `manpower_available`. The rule for every nation file and for `assets/data/troops/base.json` is:
 
-Production cards, affordability checks, and refusal messages use this value because it is the value `ProductionService` spends.
+> `production.cost == formation.individuals_per_unit`
 
-### `population_cost()`: army-cap weight
+A Roman legionary of eighteen costs eighteen men of reserve; a Carthaginian one of sixteen costs sixteen. `HomeManpowerSystemTest.EveryRecruitIsPricedAndCountedInItsMen` enforces the rule for the catalog and for every nation. The undead keep `cost: 0`: they are never recruited.
 
-`population_cost()` is counted against `max_troops_per_player`. Nation files do not override the base `population` value.
+`TroopCatalog` compiled defaults (`game/units/troop_catalog.cpp`) mirror `base.json`, and `TroopCatalogLoaderTest` keeps them in step.
 
-It is not a recruit price and is never used to decide whether a recruiting building can pay for a unit.
+### The field: `troop_count_for()`
 
-### UI contract
+`TroopCountRegistry::rebuild_from_world` sums `Game::Systems::squad_men()` for every living troop of an owner: the nation profile's `individuals_per_unit` scaled by the squad's current strength (`squad_strength / establishment`). This is the number the top bar, the AI, the economy coach and `ProductionService` all read.
 
-`unit_profile.cpp`, `production_readouts.cpp`, and `economy_overview.cpp` expose the recruiting price as `production.cost`.
+`population_cost()` still exists on `TroopProductionStats` and equals the men of the base squad; the army-cap check in `ProductionService` and `ProductionSystem` uses `profile.individuals_per_unit` directly so a nation variant is charged its own squad size.
 
-When the army-cap weight is needed, `economy_overview.cpp` exposes it explicitly as `UnitItem::army_cap_weight`. Recruit gating has no `population_cost` price key.
+### The cap the top bar shows
 
-The contract is:
+`App::Core::build_manpower_summary(world, owner, map_cap)` returns:
 
-> Advertise and gate on the value the recruiting building spends. Treat army-cap weight as a separate constraint.
+- `fielded` — men in the field (`troop_count_for`);
+- `reserve` — men held by the owner's barracks and temples (`manpower_available`), not Home families;
+- `map_cap` — the map's `max_troops_per_player`, in men;
+- `cap` — `min(map_cap, fielded + reserve)`, or `fielded + reserve` when the map has no cap.
 
-`UnitProfileTest.TheAdvertisedPriceIsWhatProductionCharges` and `EconomyOverviewTest.TheHelpViewQuotesThePriceTheBarracksCharges` enforce that relationship.
+`GameEngine::build_player_state_map` publishes it as `manpower`, `manpower_cap`, `manpower_reserve`, `manpower_map_cap`, `manpower_cap_source` (`"reserve"` or `"map"`) and `manpower_tooltip`. The readout therefore means "men in the field / men you can have right now": when the reserve is the binding constraint, the denominator grows as civilians are delivered and shrinks as it is spent, and the bar turns red the moment nothing more can be raised. `build_production_help` quotes the same cap.
 
-## Why recruit price and army-cap weight are separate
+### Battle report
 
-The two values serve different balance roles. Army doctrines and town plans use relatively flat cap weights such as archer 20, swordsman 15, and catapult 12, while actual recruiting prices can be much farther apart, such as 50, 95, and 260.
+`GlobalStatsRegistry` counts `troops_recruited`, `enemies_killed` and `losses` in men (`squad_men` of the squad at the moment it spawned or died) and `barracks_owned` includes the barracks a player started with. Every non-neutral enemy owner, including an Iron Sepulcher zone owner, gets a row in the report.
 
-Using recruit price as army-cap weight would couple economic tuning directly to force-cap tuning and would change the assumptions encoded in AI town plans and map caps. The runtime therefore keeps reserve price and cap weight as separate data.
+### Refusals
+
+A recruit that the reserve cannot pay for is an `OrderFailure::PopulationCap` refusal (`reserve_short_reason`), reported immediately with the numbers ("Not enough reserve: 7 / 18 men"). `InsufficientResources` is reserved for wood, stone, iron, food and gold.
+
+### AI budget
+
+`AIContext::population_cap` is the map cap in men and `population_used` sums `TroopConfig::get_population_cost` (base squad men). A 250-man cap fields roughly fourteen infantry squads including builders (12 men each); maps that were tuned when a swordsman weighed 8 points field about half the squads they used to. Raise `max_troops_per_player` in the map file if a map needs the old army size.
 
 ## Vocabulary
 
 The player-facing UI uses two terms:
 
-- **Reserve** — the pool held by a barracks, temple, or home and spent when that building recruits.
-- **Manpower** — the force in the field, counted against the map's army cap.
+- **Reserve** — the men a barracks, temple or home holds and spends when it recruits.
+- **Manpower** — the men in the field, shown against the men the player can still raise.
 
 The UI does not use “population” for either concept.
 

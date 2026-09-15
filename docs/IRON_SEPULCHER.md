@@ -20,7 +20,7 @@ A zone can define its trigger, guardians, haze, reward, and decorative anchor:
     "owner_id": 99,
     "team_id": 99,
     "awaken_on": ["unit_enters_radius"],
-    "fog_density": 0.28,
+    "fog_density": 0.16,
     "clear_reward": { "gold": 150, "stone": 80 },
     "waves": [
       { "trigger": "initial", "units": { "skeleton_swordsman": 2 } },
@@ -35,8 +35,19 @@ A zone can define its trigger, guardians, haze, reward, and decorative anchor:
 | `awaken_on`    | `unit_enters_radius` by default, or `mission_start`                                        |
 | `waves`        | Optional wave definition; omitting it uses the default garrison                            |
 | `anchor_type`  | Decorative prop around which guardians rise; it does not determine whether a shrine exists |
+| `radius`       | Awaken radius and the ring guardians hold their posts on                                   |
+| `leash_radius` | How far from the anchor a guardian may fight; defaults to `max(radius, 14)`                |
+| `wave_timeout` | Seconds before a `next_wave` wave rises even if the previous wave still stands             |
 | `fog_density`  | Optional zone haze; `0` disables it                                                        |
 | `clear_reward` | Optional one-time resources granted when the garrison is broken                            |
+
+Wave triggers:
+
+- `initial` (also `awaken`, `mission_start`) — the first wave, raised the moment the zone wakes;
+- `after_clear` (also `on_clear`) — rises 1.5 s after every guardian of the previous wave is dead, and never on a timer; and
+- `next_wave` (also `after_timeout`, `timed`) — rises when the previous wave dies **or** after `wave_timeout` seconds, whichever comes first. A `wave_timeout` of `0` disables the timer.
+
+The default `wave_timeout` is 45 s, but it only ever applies to `next_wave` waves. An `after_clear` wave with a `wave_timeout` authored on the zone still waits for the kill.
 
 `owner_id` is a real owner registered as an AI player of nation `iron_sepulcher`. That nation resolves to the `sepulcher_defense` AI profile.
 
@@ -60,6 +71,16 @@ An authored `waves` list replaces the default completely; the two are never merg
 
 A wave rises in a single simulation tick. Guardians are distributed on a golden-angle sunflower spiral across the zone radius so they emerge around the anchor rather than stacked at one point. Invalid or impassable positions are skipped.
 
+## Guardians defend; they never march
+
+The Iron Sepulcher has no army to send anywhere. Every guardian is stationed with a `GuardModeComponent` the moment it rises:
+
+- its **post** is a point on a ring around the anchor at half the zone radius, spread evenly between the living guardians of the zone;
+- its **guard radius** is `leash_radius` minus the ring offset, so no guardian ever pursues a target farther than `leash_radius` from the anchor; and
+- guard mode removes the unit from the AI snapshot, so `sepulcher_defense` never orders it to muster, gather, or attack.
+
+Inside the leash the guardians fight normally: they acquire targets on their own, answer threat alerts from their neighbours, and chase. The combat system drops any target that leaves the guard radius and `GuardSystem` walks the guardian back to its post. Every 0.5 s the awakening system also re-asserts the posts, recalls any guardian that has strayed past `leash_radius` (clearing its target and melee lock), and turns idle guardians at their posts to face outward. The post ring drifts at 4°/s, so an undisturbed garrison slowly walks the ring around its shrine instead of standing frozen on the spawn spiral. All of this is deterministic: posts come from the guardian's index in the zone and a per-zone phase, never from wall-clock randomness.
+
 ## Every zone receives one shrine
 
 During `configure()`, every undead zone is paired with exactly one magic shrine. The map does not need to author that shrine and cannot opt out of it.
@@ -82,7 +103,9 @@ The anchor:
 - intentionally has **no `ProductionComponent`**, so it can never recruit; and
 - uses the shared building path for collision, navigation, selection, health bars, lighting, and shadows.
 
-The building renderer `troops/iron_sepulcher/barracks` submits no visible barracks geometry. The shrine itself remains a terrain-scatter prop, so the physical shrine and the capturable entity occupy the same site without drawing two structures.
+The building renderer `troops/iron_sepulcher/barracks` submits no visible barracks geometry. The shrine itself remains a terrain-scatter prop, so the physical shrine and the capturable entity occupy the same site without drawing two structures. The HUD names the anchor "Sepulcher Shrine" rather than "Barracks".
+
+While any guardian of the zone lives, the anchor's `CaptureComponent::capture_blocked` is set and the anchor is **warded**: `Combat::evaluate_target` refuses it with `TargetRefusal::Warded` for ordered and auto-acquired attacks alike. Player attack clicks on a warded shrine fall through to an attack-move at that ground, so the troops engage the guardians instead of standing in front of an invisible building; AI target lists, auto-acquisition, and held attack targets drop it the same way. Once the last guardian of the last wave falls the ward and the capture lock both lift, and the anchor is an ordinary capturable, destructible barracks again.
 
 If no valid shrine location can be found—for example, because a zone was authored entirely inside a lake—the system logs the failure, creates no barracks, and exposes the zone through `zones_without_shrine()`.
 
@@ -96,8 +119,11 @@ At that point:
 
 - every living guardian dies immediately;
 - no further waves can spawn;
-- the zone reports itself cleared; and
-- for shrine-backed objectives, the site also reports itself purified.
+- the zone reports itself cleared;
+- the site reports itself purified; and
+- `clear_reward` is paid once.
+
+Killing every wave is the other way to clear a zone: `is_zone_cleared` is true once the last wave is dead. That does **not** purify the shrine. Purification needs the anchor itself to fall or change hands, so after the last guardian drops the player still has to take the shrine: any troop standing within the capture radius of the unguarded anchor captures it over the normal capture time, `refresh_anchor_structure` sees the new owner, and `break_garrison` runs with `captured = true` — paying the reward to the captor and purifying the site. The "guardians are put down" announcement tells the player to hold the shrine.
 
 This feeds directly into the normal victory system. Objectives such as `clear_undead_zone` and `purify_shrine` need no special-case mission logic beyond the state published by the undead system.
 
@@ -115,8 +141,13 @@ Fog patches include a ground height. The map owner—such as the skirmish loader
 
 Each zone announces each event at most once:
 
-- when the zone awakens; and
+- when the zone awakens;
+- when every later wave rises; and
 - when its garrison is broken, either by killing the guardians or by losing the shrine.
+
+`GameEngine` spaces mission announcements 4.5 s apart. The toast host merges any two announcements that land on its channel within its 4 s dwell into one toast with a "×2" suffix and only the newer text, so an unspaced pair (two zones waking together, or a wave rising on top of a commander line) used to lose a message. Queued announcements are shown in order; an identical text already waiting is not queued twice.
+
+Awakening also publishes `Engine::Core::UndeadZoneAwakenedEvent` with the anchor position. `GameEngine` turns it into a `MinimapAlert::ShrineStirred` ping so a player looking elsewhere gets a spatial cue as well as the toast and the sound.
 
 ## Save and load
 

@@ -4,11 +4,20 @@
 #include <cstdint>
 #include <unordered_map>
 
+#include "../units/spawn_type.h"
+#include "nation_id.h"
+
 namespace Engine::Core {
 class World;
-}
+class UnitComponent;
+} // namespace Engine::Core
 
 namespace Game::Systems {
+
+[[nodiscard]] auto squad_men(const Engine::Core::UnitComponent& unit) -> int;
+
+[[nodiscard]] auto troop_type_men(NationID nation_id,
+                                  Game::Units::SpawnType spawn_type) -> int;
 
 class TroopCountRegistry {
 public:

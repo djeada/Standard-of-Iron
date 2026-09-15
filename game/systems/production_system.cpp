@@ -36,6 +36,7 @@
 #include "pathfinding.h"
 #include "player_feedback.h"
 #include "player_resource_registry.h"
+#include "production_service.h"
 #include "troop_profile_service.h"
 #include "units/spawn_type.h"
 #include "units/unit.h"
@@ -635,6 +636,9 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
+    prod->reserve_short = unit_comp != nullptr && ProductionService::reserve_is_short(
+                                                      *prod, unit_comp->spawn_type);
+
     if (!prod->in_progress) {
       continue;
     }
@@ -662,7 +666,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
 
         int const current_troops = Game::Systems::troop_count_for(*world, u->owner_id);
         int const max_troops = Game::GameConfig::instance().get_max_troops_per_player();
-        if (current_troops + current_profile.production.population_cost() >
+        if (current_troops + std::max(1, current_profile.individuals_per_unit) >
             max_troops) {
           prod->in_progress = false;
           prod->time_remaining = 0.0F;

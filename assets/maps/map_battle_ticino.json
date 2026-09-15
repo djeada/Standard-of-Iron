@@ -241,7 +241,7 @@
             "z": 400
         }
     ],
-    "max_troops_per_player": 1100,
+    "max_troops_per_player": 2480,
     "name": "Battle of Ticino",
     "rain": {
         "active_duration": 80,

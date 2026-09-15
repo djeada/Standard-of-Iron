@@ -2,7 +2,7 @@
   "name": "Iron Sepulcher Watch",
   "description": "Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.",
   "coord_system": "grid",
-  "max_troops_per_player": 280,
+  "max_troops_per_player": 630,
   "grid": {
     "width": 48,
     "height": 48,
@@ -24,8 +24,8 @@
   "spawns": [
     {
       "type": "roman_legion_organizer",
-      "x": 13.0,
-      "z": 33.24,
+      "x": 14.0,
+      "z": 30.0,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
@@ -81,17 +81,23 @@
         {
           "trigger": "initial",
           "units": {
-            "skeleton_swordsman": 2,
-            "grave_priest": 1
+            "skeleton_archer": 3,
+            "skeleton_swordsman": 1
           }
         },
         {
           "trigger": "after_clear",
           "units": {
-            "skeleton_archer": 3
+            "skeleton_swordsman": 3,
+            "grave_priest": 1
           }
         }
-      ]
+      ],
+      "clear_reward": {
+        "wood": 60,
+        "iron": 90,
+        "food": 40
+      }
     },
     {
       "id": "shrine_sentinels",
@@ -110,10 +116,22 @@
           "trigger": "initial",
           "units": {
             "skeleton_swordsman": 2,
-            "skeleton_archer": 2
+            "skeleton_archer": 2,
+            "grave_priest": 1
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "skeleton_swordsman": 2,
+            "skeleton_archer": 1
           }
         }
-      ]
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
     }
   ],
   "victory": {
@@ -135,11 +153,11 @@
   },
   "time_of_day": "night",
   "starting_resources": {
-    "gold": 150,
-    "food": 100,
-    "wood": 100,
-    "stone": 200,
-    "iron": 200
+    "gold": 250,
+    "food": 120,
+    "wood": 90,
+    "stone": 60,
+    "iron": 120
   },
   "structures": [
     {

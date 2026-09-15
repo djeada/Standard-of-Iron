@@ -5,8 +5,10 @@
 #include <algorithm>
 #include <unordered_map>
 
+#include "game/core/component_core.h"
 #include "game/core/component_structures.h"
 #include "game/core/world.h"
+#include "game/systems/nation_id.h"
 
 namespace App::Core {
 
@@ -161,6 +163,18 @@ auto building_display_name(Game::Units::SpawnType type) -> QString {
     break;
   }
   return {};
+}
+
+auto is_sepulcher_shrine(const Engine::Core::UnitComponent& unit) -> bool {
+  return unit.spawn_type == Game::Units::SpawnType::Barracks &&
+         unit.nation_id == Game::Systems::NationID::IronSepulcher;
+}
+
+auto building_display_name(const Engine::Core::UnitComponent& unit) -> QString {
+  if (is_sepulcher_shrine(unit)) {
+    return QCoreApplication::translate("FocusTarget", "Sepulcher Shrine");
+  }
+  return building_display_name(unit.spawn_type);
 }
 
 auto focus_target_to_variant(const FocusTargetInfo& info) -> QVariantMap {

@@ -440,9 +440,6 @@ private:
   void report_late_command_rejection(const Game::Command::Command& command,
                                      Game::Command::Rejection reason);
 
-  void report_affordability_refusal(App::Core::OrderFailure failure,
-                                    const QString& message);
-
   void announce_player_warning(const char* cue_id);
 
 public:
@@ -512,6 +509,9 @@ private:
   void publish_victory_objectives();
   void publish_minimap_overlays(float dt);
   void note_minimap_combat_hit(const Engine::Core::CombatHitEvent& event);
+  void note_minimap_shrine_stirred(const Engine::Core::UndeadZoneAwakenedEvent& event);
+  void queue_mission_announcement(const QString& text);
+  void flush_mission_announcements(float dt);
   void update_mission_stages(float delta_time);
   void restore_mission_stages(const QJsonObject& stage_state);
   void restore_mission_waves(const QJsonObject& wave_state);
@@ -708,6 +708,11 @@ private:
       m_barrack_captured_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent>
       m_mission_announcement_subscription;
+  Engine::Core::ScopedEventSubscription<Engine::Core::UndeadZoneAwakenedEvent>
+      m_undead_zone_awakened_subscription;
+  static constexpr float k_mission_announcement_spacing_seconds = 4.5F;
+  QStringList m_pending_mission_announcements;
+  float m_mission_announcement_cooldown{0.0F};
 
   EntityCache m_entity_cache;
   RuntimeFrameOrchestrator m_frame_orchestrator;

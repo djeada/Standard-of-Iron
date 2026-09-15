@@ -15,9 +15,9 @@ namespace Render::GL {
 
 namespace {
 
-constexpr float k_hostile_alpha = 0.32F;
+constexpr float k_hostile_alpha = 0.14F;
 constexpr float k_hovered_alpha = 0.9F;
-constexpr float k_hostile_thickness = 0.09F;
+constexpr float k_hostile_thickness = 0.07F;
 constexpr float k_hovered_thickness = 0.16F;
 constexpr float k_hovered_ring_scale = 1.18F;
 constexpr float k_glyph_alpha = Render::Geom::k_indicator_alpha;
@@ -100,7 +100,7 @@ void render_attack_target_markers(Renderer* renderer,
     if (!marker.hovered) {
       ring.color = k_hostile_color;
       ring.alpha = k_hostile_alpha;
-      ring.pattern = Game::Accessibility::TeamPattern::Chevron;
+      ring.pattern = Game::Accessibility::TeamPattern::Solid;
       renderer->ground_marker(ring);
       continue;
     }

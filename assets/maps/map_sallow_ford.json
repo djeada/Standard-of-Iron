@@ -3,7 +3,7 @@
   "description": "A redoubt above a dry ford, for one. A spur of rock runs the length of the approach and the two shoulders close the flanks, so everything coming down from the north is committed to one of two lanes -- the cart gate in the west, the goat path in the east -- and they do not meet again until the ground in front of the camp. One line cannot hold both mouths, so holding here is a question of which lane you stand in and when you leave it.",
   "theme": "Two mouths, five columns, and the light going.",
   "coord_system": "grid",
-  "max_troops_per_player": 280,
+  "max_troops_per_player": 630,
   "grid": {
     "width": 72,
     "height": 72,

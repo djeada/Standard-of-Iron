@@ -260,6 +260,25 @@ public:
   int new_owner_id;
 };
 
+class UndeadZoneAwakenedEvent : public Event {
+public:
+  UndeadZoneAwakenedEvent(QString zone_id,
+                          float world_x,
+                          float world_z,
+                          int zone_owner_id,
+                          int woken_by_owner_id)
+      : zone_id(std::move(zone_id))
+      , world_x(world_x)
+      , world_z(world_z)
+      , zone_owner_id(zone_owner_id)
+      , woken_by_owner_id(woken_by_owner_id) {}
+  QString zone_id;
+  float world_x;
+  float world_z;
+  int zone_owner_id;
+  int woken_by_owner_id;
+};
+
 class AiAttackLaunchedEvent : public Event {
 public:
   AiAttackLaunchedEvent(int attacker_owner_id, int target_owner_id, EntityID target_id)

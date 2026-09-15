@@ -250,7 +250,7 @@ protected:
     params.spawn_type = type;
     params.ai_controlled = true;
     params.is_initial_spawn = true;
-    params.max_population = 160;
+    params.max_population = 360;
     params.enables_production = true;
     params.nation_id = Game::Systems::NationID::Carthage;
     auto unit = m_factory->create(type, session.world(), params);

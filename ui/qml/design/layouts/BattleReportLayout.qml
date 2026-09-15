@@ -14,6 +14,8 @@ FocusScope {
     property var armies: []
     property string primaryAction: qsTr("Return to Menu")
     property string secondaryAction: qsTr("Close Report")
+    property string retryAction: qsTr("Retry mission")
+    property bool retryAvailable: false
 
     readonly property color tone: root.outcome === "defeat" ? Design.Theme.danger : root.outcome === "campaign" ? Design.FactionTheme.accentFor(root.factionId) : Design.Theme.success
     readonly property string crest: root.outcome === "campaign" ? Design.FactionTheme.glyphFor(root.factionId) : root.outcome === "defeat" ? Design.Icons.defeated : Design.Icons.objective
@@ -70,6 +72,7 @@ FocusScope {
 
     signal dismissed
     signal menuRequested
+    signal retryRequested
 
     function figure(army, key) {
         var value = army && army[key] !== undefined ? army[key] : 0;
@@ -681,6 +684,13 @@ FocusScope {
                     objectName: "battleReportClose"
                     text: root.secondaryAction
                     onClicked: root.dismissed()
+                }
+
+                Design.IronButton {
+                    objectName: "battleReportRetry"
+                    visible: root.retryAvailable
+                    text: root.retryAction
+                    onClicked: root.retryRequested()
                 }
 
                 Design.IronButton {

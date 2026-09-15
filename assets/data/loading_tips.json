@@ -194,7 +194,45 @@
     },
     {
       "text": "The Iron Sepulcher is best approached with troops prepared for an unexpected engagement.",
-      "tone": "plain"
+      "tone": "plain",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "A grave priest mends the dead around it and hurls fire at the living. Strike it down before the line closes.",
+      "tone": "plain",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "Skeleton guardians defend their ruins and drift back to them when the fight moves on. Draw them out, or bring the fight to the stones.",
+      "tone": "plain",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "A cursed shrine cannot be attacked while its guardians stand. Break the guard, then purify the shrine by capturing it.",
+      "tone": "plain",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "Ranged troops and a Medicus make the vigil survivable. Wound the dead from a distance, and keep the wounded living.",
+      "tone": "plain",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "The dead do not tire, do not flee, and do not file complaints. They are, in every other respect, a poor garrison.",
+      "tone": "wry",
+      "tags": [
+        "undead"
+      ]
     },
     {
       "text": "Clearing a dangerous area is not the same as securing it. Check what remains nearby.",

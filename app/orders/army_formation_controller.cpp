@@ -33,6 +33,7 @@
 #include "game/session/session_context.h"
 #include "game/systems/combat_rules.h"
 #include "game/systems/command_service.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/production_service.h"
 #include "game/systems/selection_system.h"
@@ -376,6 +377,14 @@ void ArmyFormationController::confirm_formation_placement() {
     return;
   }
 
+  if (!anchor_is_reachable(m_formation_placement_position)) {
+    const QVector3D anchor = m_formation_placement_position;
+    end_formation_placement(FormationTeardown::Cancel);
+    (void)m_orders.reject_at(
+        App::Core::OrderKind::Move, App::Core::unreachable_reason(), anchor);
+    return;
+  }
+
   Game::Command::DeployFormation deploy;
   deploy.units = m_formation_units;
   deploy.anchor = m_formation_placement_position;
@@ -402,6 +411,13 @@ void ArmyFormationController::confirm_formation_placement() {
     if (!preview.valid) {
       emit formation_placement_rejected(
           QString::fromStdString(preview.rejection_reason));
+    } else if (!deploy.units.empty() &&
+               preview.blocked_count >= static_cast<int>(deploy.units.size())) {
+      const QVector3D anchor = deploy.anchor;
+      end_formation_placement(FormationTeardown::Cancel);
+      (void)m_orders.reject_at(
+          App::Core::OrderKind::Move, App::Core::unreachable_reason(), anchor);
+      return;
     }
   }
 
@@ -428,6 +444,17 @@ void ArmyFormationController::confirm_formation_placement() {
     emit formation_mode_changed(true);
   }
   m_is_right_drag_formation = false;
+}
+
+auto ArmyFormationController::anchor_is_reachable(const QVector3D& anchor) -> bool {
+  if (Game::Systems::NavGrid::is_world_position_walkable(anchor)) {
+    return true;
+  }
+  if (Game::Systems::NavGrid::get_pathfinder() == nullptr) {
+    return false;
+  }
+  const QVector3D snapped = Game::Systems::NavGrid::snap_to_walkable_ground(anchor);
+  return Game::Systems::NavGrid::is_world_position_walkable(snapped);
 }
 
 void ArmyFormationController::cancel_formation_placement() {

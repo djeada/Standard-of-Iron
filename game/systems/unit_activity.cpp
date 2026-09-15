@@ -5,10 +5,13 @@
 #include <utility>
 
 #include "builder_product_types.h"
+#include "game/core/component_core.h"
 #include "game/core/component_economy.h"
+#include "game/core/component_structures.h"
 #include "game/core/entity.h"
 #include "game/core/movement_facts.h"
 #include "game/core/world.h"
+#include "game/units/spawn_type.h"
 
 namespace Game::Systems {
 
@@ -212,6 +215,9 @@ auto classify_unit_activity(const Engine::Core::Entity& entity) -> UnitActivity 
       return {ActivityKind::Train,
               ActivityState::Active,
               static_cast<int>(production->production_queue.size())};
+    }
+    if (production->production_queue.empty() && production->reserve_short) {
+      return {ActivityKind::Blocked, ActivityState::Unavailable, 0};
     }
   }
 

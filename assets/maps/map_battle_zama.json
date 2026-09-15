@@ -223,7 +223,7 @@
             "z": 560
         }
     ],
-    "max_troops_per_player": 1050,
+    "max_troops_per_player": 2360,
     "name": "Battle of Zama",
     "rain": {
         "enabled": false

@@ -11,8 +11,9 @@ class World;
 }
 
 namespace Game::Systems {
+class NationRegistry;
 class OwnerRegistry;
-}
+} // namespace Game::Systems
 
 namespace Game::Mission {
 
@@ -25,6 +26,7 @@ struct CommanderSpeaker {
 [[nodiscard]] auto
 build_commander_speaker_roster(Engine::Core::World& world,
                                const Game::Systems::OwnerRegistry& owners,
+                               const Game::Systems::NationRegistry& nations,
                                int local_owner_id) -> std::vector<CommanderSpeaker>;
 
 } // namespace Game::Mission

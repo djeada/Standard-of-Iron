@@ -1,5 +1,6 @@
 #include "app/economy/economy_overview.h"
 
+#include <QCoreApplication>
 #include <QString>
 #include <QStringList>
 
@@ -46,7 +47,8 @@ constexpr std::array<std::string_view, 9> k_buildable_items = {
     "ballista",
 };
 
-constexpr int k_home_reserve_bonus = 50;
+constexpr int k_home_reserve_bonus =
+    3 * Game::Systems::k_civilian_delivery_reserve_grant;
 
 struct OwnerScan {
   int builder_count = 0;
@@ -231,7 +233,7 @@ auto civilian_item(Game::Systems::NationID nation_id) -> UnitItem {
       Game::Util::tr_asset(Game::Util::k_units_context, profile.display_name);
   entry.item.costs = profile.production.resource_costs;
   entry.manpower_cost = profile.production.cost;
-  entry.army_cap_weight = profile.production.population_cost();
+  entry.army_cap_weight = std::max(1, profile.individuals_per_unit);
   entry.build_time = profile.production.build_time;
   entry.individuals_per_unit = profile.individuals_per_unit;
   return entry;
@@ -260,7 +262,7 @@ auto unit_items(const Game::Systems::NationRegistry* nations,
         Game::Util::tr_asset(Game::Util::k_units_context, profile.display_name);
     entry.item.costs = profile.production.resource_costs;
     entry.manpower_cost = profile.production.cost;
-    entry.army_cap_weight = profile.production.population_cost();
+    entry.army_cap_weight = std::max(1, profile.individuals_per_unit);
     entry.build_time = profile.production.build_time;
     entry.individuals_per_unit = profile.individuals_per_unit;
     items.push_back(std::move(entry));
@@ -348,6 +350,67 @@ auto build_resource_overview(const EconomyOverviewRequest& request) -> QVariantL
   return entries;
 }
 
+auto build_manpower_summary(Engine::Core::World* world,
+                            int owner_id,
+                            int map_cap) -> ManpowerSummary {
+  ManpowerSummary summary;
+  summary.map_cap = std::max(0, map_cap);
+  if (world == nullptr) {
+    summary.cap = summary.map_cap;
+    return summary;
+  }
+  summary.fielded = Game::Systems::troop_count_for(*world, owner_id);
+  for (auto [entity_id, unit, production] :
+       world->view<const Engine::Core::UnitComponent,
+                   const Engine::Core::ProductionComponent>()) {
+    (void)entity_id;
+    if (unit.owner_id != owner_id || unit.health <= 0 ||
+        !Game::Units::is_recruitment_building(unit.spawn_type)) {
+      continue;
+    }
+    summary.reserve += std::max(0, production.manpower_available);
+  }
+  const int raisable = summary.fielded + summary.reserve;
+  summary.cap = summary.map_cap > 0 ? std::min(summary.map_cap, raisable) : raisable;
+  return summary;
+}
+
+auto manpower_summary_map(const ManpowerSummary& summary) -> QVariantMap {
+  QVariantMap map;
+  map["manpower"] = summary.fielded;
+  map["manpower_cap"] = summary.cap;
+  map["manpower_reserve"] = summary.reserve;
+  map["manpower_map_cap"] = summary.map_cap;
+  map["manpower_cap_source"] = summary.cap_is_reserve_bound()
+                                   ? QStringLiteral("reserve")
+                                   : QStringLiteral("map");
+  map["manpower_tooltip"] = manpower_tooltip(summary);
+  return map;
+}
+
+auto manpower_tooltip(const ManpowerSummary& summary) -> QString {
+  const QString fielded =
+      QCoreApplication::translate("EconomyOverview",
+                                  "Men in the field: %1. Every soldier, rider, crew "
+                                  "member, builder and civilian counts as one man.")
+          .arg(summary.fielded);
+  if (summary.cap_is_reserve_bound()) {
+    return fielded + QLatin1Char('\n') +
+           QCoreApplication::translate(
+               "EconomyOverview",
+               "Men you can still raise: %1 held in reserve by your barracks and "
+               "temples. Walk civilians into a barracks or build a Home to raise more.")
+               .arg(summary.reserve);
+  }
+  return fielded + QLatin1Char('\n') +
+         QCoreApplication::translate(
+             "EconomyOverview",
+             "This map allows %1 men per army; %2 more wait in reserve but cannot "
+             "muster until the field thins.")
+             .arg(summary.map_cap)
+             .arg(std::max(0, summary.fielded + summary.reserve - summary.map_cap));
+}
+
 auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap {
   if (request.resources == nullptr) {
     return {};
@@ -355,7 +418,9 @@ auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap
   auto& registry = *request.resources;
   const ResourceAmounts available = registry.get_all(request.owner_id);
   const OwnerScan scan = scan_owner(request.world, request.owner_id);
-  const int troop_count = troop_manpower_of(request);
+  const ManpowerSummary manpower =
+      build_manpower_summary(request.world, request.owner_id, request.manpower_cap);
+  const int troop_count = manpower.fielded;
 
   QVariantList buildings;
   for (const auto& item : building_items()) {
@@ -439,7 +504,10 @@ auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap
       civilian_item(request.nation_id).item.costs.get(ResourceType::Food);
   help["barracks_manpower"] = scan.barracks_manpower;
   help["manpower"] = troop_count;
-  help["manpower_cap"] = request.manpower_cap;
+  help["manpower_cap"] = manpower.cap;
+  help["manpower_map_cap"] = manpower.map_cap;
+  help["manpower_reserve"] = manpower.reserve;
+  help["manpower_tooltip"] = manpower_tooltip(manpower);
   help["home_reserve_bonus"] = k_home_reserve_bonus;
   help["civilian_delivery_grant"] = Game::Systems::k_civilian_delivery_reserve_grant;
   return help;

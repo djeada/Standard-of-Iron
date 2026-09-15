@@ -68,7 +68,7 @@ auto resolve_prop_draw(const BackendPipelines::VegetationPipeline& veg,
     return {veg.magic_shrine_shader(),
             &veg.m_magic_shrine_mesh,
             &veg.m_magic_shrine_uniforms,
-            1.18F};
+            0.95F};
   case S::CursedGoldVein:
     return {veg.cursed_gold_vein_shader(),
             &veg.m_cursed_gold_vein_mesh,

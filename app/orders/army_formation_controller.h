@@ -132,6 +132,7 @@ private:
   void follow_auto_formation_facing();
   void reset_formation_facing();
   void end_formation_placement(FormationTeardown teardown);
+  [[nodiscard]] static auto anchor_is_reachable(const QVector3D& anchor) -> bool;
   void apply_formation_option_change();
   void invalidate_formation_layout();
 

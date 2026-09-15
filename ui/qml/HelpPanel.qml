@@ -17,7 +17,7 @@ Item {
     readonly property var tutorial: (typeof game !== 'undefined' && game && game.tutorial) ? game.tutorial : null
     readonly property bool tutorial_active: tutorial !== null && tutorial.active
 
-    readonly property var tabs: [qsTr("Basics"), qsTr("Economy"), qsTr("Buildings"), qsTr("Army"), qsTr("Commander"), qsTr("Camera"), qsTr("Controls"), qsTr("Tutorial")]
+    readonly property var tabs: [qsTr("Basics"), qsTr("Economy"), qsTr("Buildings"), qsTr("Army"), qsTr("Commander"), qsTr("The Sepulcher"), qsTr("Camera"), qsTr("Controls"), qsTr("Tutorial")]
 
     readonly property var basics_sections: [{
             "heading": qsTr("Selecting"),
@@ -36,7 +36,7 @@ Item {
             "body": qsTr("Press Patrol, left-click the first waypoint, then left-click the second. The troops march between the two points for good and attack whatever crosses the line - useful for watching a flank while you look elsewhere. Right-click cancels while you are setting it; any other order, or Stop, clears the route.")
         }, {
             "heading": qsTr("Winning and losing"),
-            "body": qsTr("Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.")
+            "body": qsTr("Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In battle, press O or the objectives button in the top bar to keep the full list open beside the field. In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.")
         }]
 
     readonly property var economy_sections: [{
@@ -86,6 +86,26 @@ Item {
             "body": qsTr("Where the mission allows it, you can step into the commander's boots and lead from the field. The controls for that mode are listed under Controls.")
         }]
 
+    readonly property var sepulcher_sections: [{
+            "heading": qsTr("Undead zones"),
+            "body": qsTr("Some fields are dotted with dormant ruins and shrines. Nothing stirs in them until your troops walk in. The moment you cross into a zone, it wakes: the ground gives up its dead and the first wave rises to meet you. Choose the moment - and the force - you enter with.")
+        }, {
+            "heading": qsTr("Waves"),
+            "body": qsTr("Every zone holds a set number of waves, and the announcement names each one as it comes - wave 1 of 2, then 2 of 2. When a wave rises to meet you, it is coming for the troops inside the zone. Break one and the next rises. A zone is only clear when its last wave lies still.")
+        }, {
+            "heading": qsTr("The Sepulcher Shrine"),
+            "body": qsTr("Each zone is anchored by a Sepulcher Shrine. While its guardians still stand, the shrine cannot be harmed and attack orders on it are refused - do not waste arrows on it. Kill every wave first; only then does the shrine lie open.")
+        }, {
+            "heading": qsTr("Purifying a shrine"),
+            "body": qsTr("Once the guardians have fallen, walk troops onto the shrine to capture it, or simply knock it down. Either way the zone is purified for good and it will not wake again. A purified shrine pays out: the clear reward - wood, iron and food - lands in your stores the moment the zone falls.")
+        }, {
+            "heading": qsTr("The guardians"),
+            "body": qsTr("The dead defend their ground. They will chase you to the edge of the zone and then turn back to it, so you can pull out to regroup and re-enter when you are ready. You cannot lure them across the map - the fight happens at the shrine.")
+        }, {
+            "heading": qsTr("The grave priest"),
+            "body": qsTr("Among the waves walks a grave priest. He heals the dead around him and throws fire at your line, so a slow slog of spearmen alone will bleed. Bring a Medicus to mend the burns and ranged troops to cut the priest down from a distance before the guardians close in. Kill him first and the dead stop mending.")
+        }]
+
     readonly property var camera_sections: CameraGuide.entries.map(function (entry) {
             return {
                 "heading": entry.state.length > 0 ? entry.name + " — " + entry.state : entry.name,
@@ -111,6 +131,8 @@ Item {
         case 4:
             return commander_sections;
         case 5:
+            return sepulcher_sections;
+        case 6:
             return camera_sections;
         default:
             return [];
@@ -216,7 +238,7 @@ Item {
                     spacing: Design.Metrics.space16
 
                     Repeater {
-                        model: root.current_tab <= 5 ? root.sections_for(root.current_tab).concat(root.current_tab === 0 ? root.flow_sections : []) : []
+                        model: root.current_tab <= 6 ? root.sections_for(root.current_tab).concat(root.current_tab === 0 ? root.flow_sections : []) : []
 
                         delegate: Column {
                             required property var modelData
@@ -246,7 +268,7 @@ Item {
                     }
 
                     Repeater {
-                        model: root.current_tab === 6 ? root.binding_groups() : []
+                        model: root.current_tab === 7 ? root.binding_groups() : []
 
                         delegate: Column {
                             id: bindingGroup
@@ -295,7 +317,7 @@ Item {
                     Column {
                         width: scroller.availableWidth
                         spacing: Design.Metrics.space8
-                        visible: root.current_tab === 7
+                        visible: root.current_tab === 8
 
                         Text {
                             width: parent.width

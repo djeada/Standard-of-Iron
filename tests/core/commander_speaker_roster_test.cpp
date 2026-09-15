@@ -4,6 +4,7 @@
 #include "game/core/world.h"
 #include "game/mission/commander_speaker_roster.h"
 #include "game/systems/nation_id.h"
+#include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/units/spawn_type.h"
 
@@ -13,6 +14,8 @@ constexpr int k_local = 1;
 constexpr int k_enemy = 2;
 constexpr int k_ally = 3;
 constexpr int k_headless_enemy = 4;
+constexpr int k_undead = 99;
+constexpr int k_unassigned = 5;
 constexpr int k_neutral = 0;
 
 class CommanderSpeakerRosterTest : public ::testing::Test {
@@ -32,7 +35,15 @@ protected:
     owners.set_owner_team(k_ally, 1);
     owners.set_owner_team(k_enemy, 2);
     owners.set_owner_team(k_headless_enemy, 2);
+
+    m_nations.set_player_nation(k_local, Game::Systems::NationID::Carthage);
+    m_nations.set_player_nation(k_enemy, Game::Systems::NationID::RomanRepublic);
+    m_nations.set_player_nation(k_ally, Game::Systems::NationID::Carthage);
+    m_nations.set_player_nation(k_headless_enemy,
+                                Game::Systems::NationID::RomanRepublic);
   }
+
+  Game::Systems::NationRegistry m_nations;
 
   void TearDown() override { Game::Systems::OwnerRegistry::instance().clear(); }
 
@@ -90,7 +101,7 @@ TEST_F(CommanderSpeakerRosterTest, ReadsEveryNonLocalCommanderWithItsRelationshi
         false);
 
   const auto roster = Game::Mission::build_commander_speaker_roster(
-      world, Game::Systems::OwnerRegistry::instance(), k_local);
+      world, Game::Systems::OwnerRegistry::instance(), m_nations, k_local);
 
   ASSERT_EQ(roster.size(), 3U);
   EXPECT_EQ(roster[0].owner_id, k_enemy);
@@ -110,12 +121,53 @@ TEST_F(CommanderSpeakerRosterTest, ReadsEveryNonLocalCommanderWithItsRelationshi
 TEST_F(CommanderSpeakerRosterTest, AnAiWithNothingOnTheFieldIsStillGivenAVoice) {
   Engine::Core::World world;
   const auto roster = Game::Mission::build_commander_speaker_roster(
-      world, Game::Systems::OwnerRegistry::instance(), k_local);
+      world, Game::Systems::OwnerRegistry::instance(), m_nations, k_local);
   ASSERT_EQ(roster.size(), 3U);
   for (const auto& speaker : roster) {
     EXPECT_FALSE(speaker.troop_type.isEmpty()) << speaker.owner_id;
     EXPECT_NE(speaker.owner_id, k_local);
     EXPECT_NE(speaker.owner_id, k_neutral);
+  }
+  EXPECT_EQ(roster[1].troop_type, QStringLiteral("carthage_sword_commander"))
+      << "an empty-handed AI speaks with its registered nation's default commander";
+}
+
+TEST_F(CommanderSpeakerRosterTest, AnUndeadOwnerWithNoUnitsYetStaysSilent) {
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  owners.register_owner_with_id(k_undead, Game::Systems::OwnerType::AI, "Sepulcher");
+  owners.set_owner_team(k_undead, 3);
+  m_nations.set_player_nation(k_undead, Game::Systems::NationID::IronSepulcher);
+
+  Engine::Core::World world;
+  const auto roster = Game::Mission::build_commander_speaker_roster(
+      world, Game::Systems::OwnerRegistry::instance(), m_nations, k_local);
+  for (const auto& speaker : roster) {
+    EXPECT_NE(speaker.owner_id, k_undead)
+        << "a nation without a commander must not borrow Rome's voice";
+  }
+
+  spawn(world,
+        k_undead,
+        Game::Units::SpawnType::SkeletonSwordsman,
+        Game::Systems::NationID::IronSepulcher,
+        false);
+  const auto with_units = Game::Mission::build_commander_speaker_roster(
+      world, Game::Systems::OwnerRegistry::instance(), m_nations, k_local);
+  for (const auto& speaker : with_units) {
+    EXPECT_NE(speaker.owner_id, k_undead);
+  }
+}
+
+TEST_F(CommanderSpeakerRosterTest, AnAiWithNoNationAndNoUnitsIsNotGuessedAsRoman) {
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  owners.register_owner_with_id(k_unassigned, Game::Systems::OwnerType::AI, "Later");
+  owners.set_owner_team(k_unassigned, 4);
+
+  Engine::Core::World world;
+  const auto roster = Game::Mission::build_commander_speaker_roster(
+      world, Game::Systems::OwnerRegistry::instance(), m_nations, k_local);
+  for (const auto& speaker : roster) {
+    EXPECT_NE(speaker.owner_id, k_unassigned);
   }
 }
 

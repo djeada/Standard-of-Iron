@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <gtest/gtest.h>
+#include <string>
 #include <vector>
 
 #include "game/core/ambient_session.h"
@@ -125,21 +126,40 @@ TEST_F(HomeManpowerSystemTest, NoSingleRecruitSwallowsAWholeMapsPopulationCap) {
       << "the cap should field a real army of the heaviest unit, not a handful";
 }
 
-TEST_F(HomeManpowerSystemTest, PopulationIsCountedSeparatelyFromRecruitmentCost) {
+TEST_F(HomeManpowerSystemTest, EveryRecruitIsPricedAndCountedInItsMen) {
   ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
 
-  const auto* archer =
-      Game::Units::TroopCatalog::instance().get_class(Game::Units::TroopType::Archer);
-  ASSERT_NE(archer, nullptr);
-  EXPECT_GT(archer->production.population, 0)
-      << "population is authored, not inferred from the manpower price";
-  EXPECT_EQ(archer->production.population_cost(), archer->production.population);
+  const auto& catalog = Game::Units::TroopCatalog::instance().get_all_classes();
+  ASSERT_FALSE(catalog.empty());
+  for (const auto& [type, troop_class] : catalog) {
+    const std::string name = Game::Units::troop_typeToString(type);
+    if (Game::Units::is_wildlife_spawn(Game::Units::spawn_typeFromTroopType(type))) {
+      continue;
+    }
+    EXPECT_EQ(troop_class.production.population_cost(),
+              troop_class.individuals_per_unit)
+        << name << " weighs something other than its men against the army cap";
+    if (troop_class.production.cost > 0) {
+      EXPECT_EQ(troop_class.production.cost, troop_class.individuals_per_unit)
+          << name << " costs the barracks something other than its men";
+    }
+  }
 
-  Game::Units::TroopProductionStats unpriced;
-  unpriced.cost = 37;
-  unpriced.population = 0;
-  EXPECT_EQ(unpriced.population_cost(), 37)
-      << "a troop with no authored population still falls back to its cost";
+  auto& nations = Game::Systems::NationRegistry::instance();
+  for (const auto& nation : nations.get_all_nations()) {
+    for (const auto& troop : nation.available_troops) {
+      if (troop.cost <= 0) {
+        continue;
+      }
+      const auto& profile =
+          Game::Systems::TroopProfileService::instance().get_profile_ref(
+              nation.id, troop.unit_type);
+      EXPECT_EQ(troop.cost, profile.individuals_per_unit)
+          << Game::Units::troop_typeToString(troop.unit_type) << " of "
+          << Game::Systems::nation_id_to_string(nation.id)
+          << " is priced in something other than its men";
+    }
+  }
 }
 
 TEST_F(HomeManpowerSystemTest, BarracksProductionConsumesAvailableManpowerWhenQueued) {

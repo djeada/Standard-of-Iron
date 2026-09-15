@@ -1,5 +1,6 @@
 #include "global_stats_registry.h"
 
+#include <algorithm>
 #include <unordered_map>
 
 #include "../core/ambient_session.h"
@@ -8,15 +9,24 @@
 #include "../session/simulation_clock.h"
 #include "core/event_manager.h"
 #include "owner_registry.h"
+#include "troop_count_registry.h"
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
 namespace {
 
 auto counts_as_troop(Game::Units::SpawnType spawn_type) -> bool {
-  return spawn_type != Game::Units::SpawnType::Barracks &&
-         spawn_type != Game::Units::SpawnType::DefenseTower &&
-         spawn_type != Game::Units::SpawnType::Home;
+  return Game::Units::is_troop_spawn(spawn_type);
+}
+
+auto men_of(Engine::Core::EntityID unit_id, Game::Units::SpawnType spawn_type) -> int {
+  const auto* world = Game::Session::ambient_services().world;
+  if (world != nullptr) {
+    if (const auto* unit = world->try_get<Engine::Core::UnitComponent>(unit_id)) {
+      return std::max(1, squad_men(*unit));
+    }
+  }
+  return std::max(1, troop_type_men(NationID::RomanRepublic, spawn_type));
 }
 
 } // namespace
@@ -80,26 +90,26 @@ void GlobalStatsRegistry::mark_game_end(int owner_id) {
 }
 
 void GlobalStatsRegistry::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event) {
-
-  if (event.is_initial_spawn) {
-    return;
-  }
-
   auto& stats = m_player_stats[event.owner_id];
 
   if (event.spawn_type == Game::Units::SpawnType::Barracks) {
     stats.barracks_owned++;
-  } else if (counts_as_troop(event.spawn_type)) {
-    stats.troops_recruited++;
+    return;
   }
+  if (event.is_initial_spawn || !counts_as_troop(event.spawn_type)) {
+    return;
+  }
+  stats.troops_recruited += men_of(event.unit_id, event.spawn_type);
 }
 
 void GlobalStatsRegistry::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
 
-  if (counts_as_troop(event.spawn_type)) {
+  const int men =
+      counts_as_troop(event.spawn_type) ? men_of(event.unit_id, event.spawn_type) : 0;
+  if (men > 0) {
     auto it = m_player_stats.find(event.owner_id);
     if (it != m_player_stats.end()) {
-      it->second.losses++;
+      it->second.losses += men;
     }
   }
 
@@ -120,9 +130,7 @@ void GlobalStatsRegistry::on_unit_died(const Engine::Core::UnitDiedEvent& event)
     if (owner_registry.are_enemies(event.killer_owner_id, event.owner_id)) {
       auto& stats = m_player_stats[event.killer_owner_id];
 
-      if (counts_as_troop(event.spawn_type)) {
-        stats.enemies_killed++;
-      }
+      stats.enemies_killed += men;
     }
   }
 }

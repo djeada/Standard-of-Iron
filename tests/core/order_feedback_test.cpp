@@ -10,6 +10,7 @@
 #include "game/command/command_validator.h"
 #include "game/core/component_economy.h"
 #include "game/core/world.h"
+#include "game/systems/resource_types.h"
 
 namespace {
 
@@ -198,7 +199,7 @@ TEST_F(OrderFeedbackTest, EveryRejectionHasAReasonAndEveryKindHasAName) {
         << Game::Command::rejection_name(rejection);
   }
   for (int i = static_cast<int>(OrderKind::Move);
-       i <= static_cast<int>(OrderKind::Formation);
+       i <= static_cast<int>(OrderKind::Recruit);
        ++i) {
     const auto kind = static_cast<OrderKind>(i);
     EXPECT_STRNE(App::Core::order_kind_name(kind), "unknown");
@@ -341,6 +342,10 @@ TEST(OrderFailureTest, EveryRefusalHelperCarriesBothACodeAndText) {
       {App::Core::no_repairs_needed_reason(), OrderFailure::CommandUnavailable},
       {App::Core::no_eligible_units_reason(OrderKind::Attack),
        OrderFailure::CommandUnavailable},
+      {App::Core::reserve_short_reason(7, 18), OrderFailure::PopulationCap},
+      {App::Core::army_cap_reason(270, 280), OrderFailure::PopulationCap},
+      {App::Core::training_queue_full_reason(), OrderFailure::CommandUnavailable},
+      {App::Core::missing_resources_reason({}), OrderFailure::InsufficientResources},
   };
 
   for (const auto& [refusal, expected] : cases) {
@@ -349,6 +354,23 @@ TEST(OrderFailureTest, EveryRefusalHelperCarriesBothACodeAndText) {
     EXPECT_FALSE(refusal.text.isEmpty())
         << "failure " << App::Core::order_failure_name(expected) << " has no text";
   }
+}
+
+TEST(OrderFailureTest, AShortReserveIsAManpowerRefusalThatQuotesMen) {
+  const auto refusal = App::Core::reserve_short_reason(7, 18);
+  EXPECT_EQ(refusal.failure, App::Core::OrderFailure::PopulationCap)
+      << "a short reserve is a lack of people, not of coin";
+  EXPECT_TRUE(refusal.text.contains(QStringLiteral("7 / 18")))
+      << refusal.text.toStdString();
+
+  Game::Systems::ResourceAmounts missing;
+  missing.set(Game::Systems::ResourceType::Iron, 12);
+  const auto resources = App::Core::missing_resources_reason(missing);
+  EXPECT_EQ(resources.failure, App::Core::OrderFailure::InsufficientResources);
+  EXPECT_TRUE(resources.text.contains(QStringLiteral("12")))
+      << resources.text.toStdString();
+  EXPECT_FALSE(resources.text.contains(QStringLiteral("Wood")))
+      << "only the short resources are named";
 }
 
 TEST(OrderFailureTest, ARejectedOrderCarriesItsFailureCode) {

@@ -114,13 +114,15 @@ Rectangle {
             anchors.right: parent.right
             anchors.rightMargin: card.infoSize + Design.Metrics.space2
             anchors.top: parent.top
-            height: Math.max(implicitHeight, card.infoSize)
-            verticalAlignment: Text.AlignVCenter
+            height: Math.max(card.infoSize, Math.min(implicitHeight, Math.max(0, cardBody.height - costRow.height - Design.Metrics.space2)))
+            verticalAlignment: Text.AlignTop
             text: card.display_name
             color: card.is_enabled ? Design.Theme.textPrimary : Design.Theme.textDisabled
             font.family: Design.Typography.family
             font.pixelSize: Design.Typography.caption
             font.weight: Design.Typography.bold
+            wrapMode: Text.WordWrap
+            maximumLineCount: 2
             elide: Text.ElideRight
         }
 
@@ -185,7 +187,7 @@ Rectangle {
             id: detailsBadge
 
             anchors.right: parent.right
-            anchors.verticalCenter: unitName.verticalCenter
+            anchors.top: parent.top
             width: card.infoSize
             height: width
             radius: width / 2

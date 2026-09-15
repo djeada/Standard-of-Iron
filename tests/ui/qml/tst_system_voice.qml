@@ -27,6 +27,63 @@ TestCase {
         engine: null
     }
 
+    Component {
+        id: engineComponent
+
+        QtObject {
+            property string victory_state: ""
+            property var selected_player_state: ({
+                    "manpower": 28
+                })
+
+            signal order_feedback(string kind, bool accepted, string message, string failure)
+        }
+    }
+
+    function test_a_refused_recruit_is_explained_at_once() {
+        testCase.reset();
+        var engine = engineComponent.createObject(testCase);
+        voice.engine = engine;
+        engine.order_feedback("recruit", false, "Not enough reserve: 7 / 18 men.", "manpower_cap");
+        compare(testCase.spoken_lines(), 1, "the first refused recruit already deserves an answer");
+        compare(Notifications.current.channel, "refusal-recruit");
+        verify(Notifications.current.message.indexOf("7 / 18") >= 0, "the refusal quotes the reserve");
+        engine.order_feedback("recruit", false, "Not enough reserve: 7 / 18 men.", "manpower_cap");
+        compare(testCase.spoken_lines(), 1, "repeats fold into the same card");
+        voice.engine = null;
+        engine.destroy();
+    }
+
+    function test_a_finished_match_is_not_lectured() {
+        testCase.reset();
+        var engine = engineComponent.createObject(testCase, {
+                "victory_state": "defeat"
+            });
+        voice.engine = engine;
+        for (var i = 0; i < 3; ++i)
+            engine.order_feedback("move", false, "No units selected.", "no_selection");
+        compare(testCase.spoken_lines(), 0, "the report is on screen; nobody is listening");
+        engine.order_feedback("recruit", false, "Not enough reserve: 7 / 18 men.", "manpower_cap");
+        compare(testCase.spoken_lines(), 0);
+        voice.engine = null;
+        engine.destroy();
+    }
+
+    function test_an_army_that_is_gone_gets_no_quip() {
+        testCase.reset();
+        var engine = engineComponent.createObject(testCase, {
+                "selected_player_state": ({
+                        "manpower": 0
+                    })
+            });
+        voice.engine = engine;
+        for (var i = 0; i < 3; ++i)
+            engine.order_feedback("move", false, "No units selected.", "no_selection");
+        compare(testCase.spoken_lines(), 0, "there is nobody left to give the order to");
+        voice.engine = null;
+        engine.destroy();
+    }
+
     function test_a_single_slip_is_left_to_the_cursor_chip() {
         testCase.reset();
         voice.note_refusal("no_selection");

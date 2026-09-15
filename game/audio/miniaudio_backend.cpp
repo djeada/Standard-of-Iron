@@ -425,7 +425,7 @@ auto MiniaudioBackend::analysis_for(const QString& id,
 }
 
 auto MiniaudioBackend::default_pcm_budget_bytes() -> std::uint64_t {
-  constexpr std::uint64_t k_default_megabytes = 192;
+  constexpr std::uint64_t k_default_megabytes = 320;
   const QByteArray configured = qgetenv("SOI_AUDIO_PCM_BUDGET_MB");
   bool ok = false;
   const qulonglong parsed = configured.toULongLong(&ok);

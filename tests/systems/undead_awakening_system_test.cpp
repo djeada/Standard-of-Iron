@@ -4,6 +4,7 @@
 #include <tuple>
 #include <vector>
 
+#include "core/component_combat.h"
 #include "core/component_gameplay.h"
 #include "core/event_manager.h"
 #include "core/world.h"
@@ -68,13 +69,15 @@ auto make_shrine_map() -> Game::Map::MapDefinition {
   return map_definition;
 }
 
-auto make_two_wave_shrine_map(float wave_timeout) -> Game::Map::MapDefinition {
+auto make_two_wave_shrine_map(float wave_timeout,
+                              const QString& follow_up_trigger = QStringLiteral(
+                                  "after_clear")) -> Game::Map::MapDefinition {
   Game::Map::MapDefinition map_definition = make_shrine_map();
   auto& zone = map_definition.undead_zones.front();
   zone.wave_timeout_seconds = wave_timeout;
 
   Game::Map::UndeadWave follow_up;
-  follow_up.trigger = QStringLiteral("after_clear");
+  follow_up.trigger = follow_up_trigger;
   follow_up.units.push_back({Game::Units::SpawnType::SkeletonArcher, 1});
   zone.waves.push_back(follow_up);
   return map_definition;
@@ -742,11 +745,12 @@ TEST_F(UndeadAwakeningSystemTest, EveryWaveAnnouncesItsNumberOutOfTheTotal) {
       << announcements[1].toStdString();
 }
 
-TEST_F(UndeadAwakeningSystemTest, UnclearedWaveIsFollowedByTheNextOnceItTimesOut) {
+TEST_F(UndeadAwakeningSystemTest, UnclearedNextWaveIsReleasedOnceItTimesOut) {
   Engine::Core::World world;
   Game::Systems::UndeadAwakeningSystem system(undead_services());
 
-  const Game::Map::MapDefinition map_definition = make_two_wave_shrine_map(5.0F);
+  const Game::Map::MapDefinition map_definition =
+      make_two_wave_shrine_map(5.0F, QStringLiteral("next_wave"));
   Game::Map::TerrainService::instance().initialize(map_definition);
   system.configure(map_definition);
 
@@ -760,7 +764,42 @@ TEST_F(UndeadAwakeningSystemTest, UnclearedWaveIsFollowedByTheNextOnceItTimesOut
   }
 
   EXPECT_GT(count_owner_units(world, 99), first_wave_size)
-      << "a wave the player cannot finish in time must still escalate";
+      << "a timed wave the player cannot finish in time must still escalate";
+}
+
+TEST_F(UndeadAwakeningSystemTest, AnAfterClearWaveNeverRisesOnTheTimeout) {
+  Engine::Core::World world;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
+
+  const Game::Map::MapDefinition map_definition = make_two_wave_shrine_map(5.0F);
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  system.configure(map_definition);
+
+  add_intruder(world, {0.5F, 0.0F, 0.5F});
+  system.update(&world, 0.1F);
+  const int first_wave_size = count_owner_units(world, 99);
+  ASSERT_GT(first_wave_size, 0);
+
+  for (int tick = 0; tick < 40; ++tick) {
+    system.update(&world, 0.5F);
+  }
+  EXPECT_EQ(count_owner_units(world, 99), first_wave_size)
+      << "an after_clear wave must wait for the first wave to die";
+  EXPECT_EQ(system.completed_wave_count(k_shrine_zone_id), 0);
+
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit != nullptr && unit->owner_id == 99 &&
+        Game::Units::is_troop_spawn(unit->spawn_type)) {
+      unit->health = 0;
+    }
+  }
+  for (int tick = 0; tick < 8; ++tick) {
+    system.update(&world, 0.5F);
+  }
+  EXPECT_GT(count_owner_units(world, 99), 0)
+      << "the follow-up wave rises once the first wave is put down";
+  EXPECT_EQ(system.completed_wave_count(k_shrine_zone_id), 1);
 }
 
 TEST_F(UndeadAwakeningSystemTest, ZeroWaveTimeoutWaitsForTheWaveToBeCleared) {
@@ -795,7 +834,8 @@ TEST_F(UndeadAwakeningSystemTest, ShrineCaptureIsLockedWhileAnyGuardianStands) {
   ASSERT_NE(anchor, nullptr);
   auto* capture = anchor->get_component<Engine::Core::CaptureComponent>();
   ASSERT_NE(capture, nullptr);
-  EXPECT_FALSE(capture->capture_blocked) << "a dormant shrine is free to take";
+  EXPECT_TRUE(capture->capture_blocked)
+      << "a sleeping shrine is warded too; it must be woken and fought";
 
   add_intruder(world, {0.5F, 0.0F, 0.5F});
   system.update(&world, 0.1F);
@@ -809,8 +849,21 @@ TEST_F(UndeadAwakeningSystemTest, ShrineCaptureIsLockedWhileAnyGuardianStands) {
     }
   }
   system.update(&world, 0.1F);
+  EXPECT_TRUE(capture->capture_blocked)
+      << "the flag stays locked while a later wave is still to rise";
+
+  system.update(&world, 2.0F);
+  system.update(&world, 0.1F);
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit != nullptr && unit->owner_id == 99 &&
+        Game::Units::is_troop_spawn(unit->spawn_type)) {
+      unit->health = 0;
+    }
+  }
+  system.update(&world, 0.1F);
   EXPECT_FALSE(capture->capture_blocked)
-      << "the flag becomes takeable in the gap between waves";
+      << "the flag becomes takeable once the last wave is put down";
 }
 
 TEST_F(UndeadAwakeningSystemTest, AwakeningAndDefeatEachAnnounceExactlyOnce) {
@@ -845,6 +898,177 @@ TEST_F(UndeadAwakeningSystemTest, AwakeningAndDefeatEachAnnounceExactlyOnce) {
 
   ASSERT_EQ(announcements.size(), 2U);
   EXPECT_TRUE(announcements.back().contains(QStringLiteral("shrine")));
+}
+
+TEST_F(UndeadAwakeningSystemTest, KillingEveryWaveLeavesTheShrineToBeTaken) {
+  Engine::Core::World world;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
+
+  std::vector<QString> announcements;
+  Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent> const
+      subscription([&announcements](const Engine::Core::MissionAnnouncementEvent& e) {
+        announcements.push_back(e.text);
+      });
+
+  const Game::Map::MapDefinition map_definition = make_shrine_map();
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  system.configure(map_definition);
+
+  add_intruder(world, {0.5F, 0.0F, 0.5F});
+  system.update(&world, 0.1F);
+  ASSERT_GT(count_owner_units(world, 99), 0);
+
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit != nullptr && unit->owner_id == 99 &&
+        Game::Units::is_troop_spawn(unit->spawn_type)) {
+      unit->health = 0;
+    }
+  }
+  system.update(&world, 0.1F);
+  system.update(&world, 0.1F);
+
+  EXPECT_TRUE(system.is_zone_cleared(k_shrine_zone_id));
+  EXPECT_FALSE(system.is_shrine_purified(k_shrine_zone_id))
+      << "a shrine nobody has taken is not purified";
+
+  auto* anchor = world.get_entity(system.anchor_entity(k_shrine_zone_id));
+  ASSERT_NE(anchor, nullptr);
+  auto* capture = anchor->get_component<Engine::Core::CaptureComponent>();
+  ASSERT_NE(capture, nullptr);
+  EXPECT_FALSE(capture->capture_blocked) << "the unguarded shrine is free to take";
+  EXPECT_EQ(announcements.size(), 2U);
+
+  anchor->get_component<Engine::Core::UnitComponent>()->owner_id = 1;
+  system.update(&world, 0.1F);
+  system.update(&world, 0.1F);
+
+  EXPECT_TRUE(system.is_shrine_purified(k_shrine_zone_id));
+  EXPECT_TRUE(system.is_zone_cleared(k_shrine_zone_id));
+  EXPECT_EQ(announcements.size(), 2U)
+      << "taking an already silent shrine does not announce a second defeat";
+}
+
+TEST_F(UndeadAwakeningSystemTest, RisenGuardiansHoldPostsOnALeashAroundTheShrine) {
+  Engine::Core::World world;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
+
+  Game::Map::MapDefinition map_definition = make_shrine_map();
+  map_definition.undead_zones.front().leash_radius = 10.0F;
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  system.configure(map_definition);
+
+  add_intruder(world, {0.5F, 0.0F, 0.5F});
+  system.update(&world, 0.1F);
+  ASSERT_EQ(count_owner_units(world, 99), 2);
+
+  const QVector3D shrine = system.shrine_world_position(k_shrine_zone_id);
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || unit->owner_id != 99 ||
+        !Game::Units::is_troop_spawn(unit->spawn_type)) {
+      continue;
+    }
+    auto* guard = entity->get_component<Engine::Core::GuardModeComponent>();
+    ASSERT_NE(guard, nullptr) << "every guardian rises already stationed";
+    EXPECT_TRUE(guard->active);
+    EXPECT_TRUE(guard->has_guard_target);
+    EXPECT_EQ(guard->guarded_entity_id, 0U);
+    const float post_offset = std::hypot(guard->guard_position_x - shrine.x(),
+                                         guard->guard_position_z - shrine.z());
+    EXPECT_LE(post_offset, map_definition.undead_zones.front().radius);
+    EXPECT_LE(guard->guard_radius + post_offset, 10.0F + 0.01F)
+        << "no guardian may pursue past the leash radius from the shrine";
+    EXPECT_GE(guard->guard_radius, 2.0F);
+  }
+}
+
+TEST_F(UndeadAwakeningSystemTest, AGuardianPastTheLeashDropsItsPreyAndIsRecalled) {
+  Engine::Core::World world;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
+
+  Game::Map::MapDefinition map_definition = make_shrine_map();
+  map_definition.undead_zones.front().leash_radius = 8.0F;
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  system.configure(map_definition);
+
+  auto* intruder = add_intruder(world, {0.5F, 0.0F, 0.5F});
+  ASSERT_NE(intruder, nullptr);
+  system.update(&world, 0.1F);
+  ASSERT_EQ(count_owner_units(world, 99), 2);
+
+  Engine::Core::Entity* guardian = nullptr;
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit != nullptr && unit->owner_id == 99 &&
+        Game::Units::is_troop_spawn(unit->spawn_type)) {
+      guardian = entity;
+      break;
+    }
+  }
+  ASSERT_NE(guardian, nullptr);
+
+  auto* guard = guardian->get_component<Engine::Core::GuardModeComponent>();
+  ASSERT_NE(guard, nullptr);
+  guard->active = false;
+  guard->returning_to_guard_position = true;
+
+  auto* transform = guardian->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  transform->position.x = 12.5F;
+  transform->position.z = 0.5F;
+  auto* chase = Engine::Core::get_or_add_component<Engine::Core::AttackTargetComponent>(
+      *guardian);
+  ASSERT_NE(chase, nullptr);
+  chase->target_id = intruder->get_id();
+  chase->should_chase = true;
+
+  system.update(&world, 0.3F);
+  system.update(&world, 0.3F);
+
+  const auto* remaining =
+      guardian->get_component<Engine::Core::AttackTargetComponent>();
+  EXPECT_TRUE(remaining == nullptr || remaining->target_id == 0)
+      << "a guardian past the leash must let its prey go";
+  guard = guardian->get_component<Engine::Core::GuardModeComponent>();
+  ASSERT_NE(guard, nullptr);
+  EXPECT_TRUE(guard->active)
+      << "the leash re-asserts guard mode if something stripped it";
+  EXPECT_FALSE(guard->returning_to_guard_position)
+      << "the recall arms the guard system to walk it home";
+  const QVector3D shrine = system.shrine_world_position(k_shrine_zone_id);
+  EXPECT_LE(std::hypot(guard->guard_position_x - shrine.x(),
+                       guard->guard_position_z - shrine.z()),
+            8.0F);
+}
+
+TEST_F(UndeadAwakeningSystemTest, AwakeningPingsTheShrinePositionExactlyOnce) {
+  Engine::Core::World world;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
+
+  std::vector<Engine::Core::UndeadZoneAwakenedEvent> pings;
+  Engine::Core::ScopedEventSubscription<Engine::Core::UndeadZoneAwakenedEvent> const
+      subscription([&pings](const Engine::Core::UndeadZoneAwakenedEvent& e) {
+        pings.push_back(e);
+      });
+
+  const Game::Map::MapDefinition map_definition = make_shrine_map();
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  system.configure(map_definition);
+  system.update(&world, 0.1F);
+  EXPECT_TRUE(pings.empty());
+
+  add_intruder(world, {0.5F, 0.0F, 0.5F});
+  system.update(&world, 0.1F);
+  system.update(&world, 0.1F);
+
+  ASSERT_EQ(pings.size(), 1U);
+  EXPECT_EQ(pings.front().zone_id, QString::fromLatin1(k_shrine_zone_id));
+  EXPECT_EQ(pings.front().zone_owner_id, 99);
+  EXPECT_EQ(pings.front().woken_by_owner_id, 1);
+  const QVector3D shrine = system.shrine_world_position(k_shrine_zone_id);
+  EXPECT_NEAR(pings.front().world_x, shrine.x(), 4.0F);
+  EXPECT_NEAR(pings.front().world_z, shrine.z(), 4.0F);
 }
 
 } // namespace

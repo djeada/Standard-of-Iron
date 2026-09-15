@@ -111,14 +111,14 @@ Item {
 
                         width: parent.width
                         text: qsTr("Reserve %1 / %2").arg(root.prod.manpower_available || 0).arg(root.prod.max_units || 0)
-                        color: (root.prod.manpower_available || 0) > 0 ? Design.Theme.textPrimary : Design.Theme.danger
+                        color: root.prod.reserve_short ? Design.Theme.danger : Design.Theme.textPrimary
                         font.family: Design.Typography.family
                         font.pixelSize: Design.Typography.caption
                         elide: Text.ElideRight
 
                         ToolTip.visible: reserveMouse.containsMouse
                         ToolTip.delay: Design.Metrics.tooltipDelay
-                        ToolTip.text: qsTr("Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.")
+                        ToolTip.text: root.prod.reserve_short ? qsTr("Reserve exhausted: %1 men held, the cheapest recruit needs %2. Civilians raised at a Home deliver more men.").arg(root.prod.manpower_available || 0).arg(root.prod.cheapest_recruit_cost || 0) : qsTr("Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.")
 
                         MouseArea {
                             id: reserveMouse

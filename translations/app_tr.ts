@@ -250,8 +250,12 @@
         <translation>Toplanma noktası belirlemeden önce bir kışla seç</translation>
     </message>
     <message>
-        <source>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</source>
-        <translation>Bu kışlanın hâlâ elinde tuttuğu insan gücü. Her asker alımı bundan harcar; Evde yetiştirilen siviller daha fazlasını getirir.</translation>
+        <source>Reserve exhausted: %1 men held, the cheapest recruit needs %2. Civilians raised at a Home deliver more men.</source>
+        <translation>Yedek tükendi: %1 adam elde, en ucuz asker %2 gerektirir. Bir Evde yetişen siviller daha fazla adam getirir.</translation>
+    </message>
+    <message>
+        <source>Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.</source>
+        <translation>Bu kışlanın hâlâ elinde tuttuğu adamlar. Her asker mangasındaki adamları harcar; bir Evde yetişen siviller daha fazlasını getirir.</translation>
     </message>
 </context>
 <context>
@@ -311,6 +315,21 @@
     <message>
         <source>Esc closes the report</source>
         <translation>Esc raporu kapatır</translation>
+    </message>
+    <message>
+        <source>Retry mission</source>
+        <translation>Görevi yeniden dene</translation>
+    </message>
+</context>
+<context>
+    <name>BattleSummary</name>
+    <message>
+        <source>Retry mission</source>
+        <translation>Görevi yeniden dene</translation>
+    </message>
+    <message>
+        <source>Play again</source>
+        <translation>Yeniden oyna</translation>
     </message>
 </context>
 <context>
@@ -767,13 +786,6 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
         <translation>Sağ kalanlar sulusepken ve çamurun içinden Placentia&apos;ya kaçar. Roma çadırları, tahılı ve silahları ele geçirilir; buzun altındaki bedenler ise yalnızca kimse bakmazken kalkar.</translation>
-    </message>
-</context>
-<context>
-    <name>CommandController</name>
-    <message>
-        <source>Not enough wood, stone, or iron to recruit this unit.</source>
-        <translation>Bu birimi devşirmek için yeterli odun, taş ya da demir yok.</translation>
     </message>
 </context>
 <context>
@@ -2610,6 +2622,21 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
 </context>
 <context>
+    <name>EconomyOverview</name>
+    <message>
+        <source>Men in the field: %1. Every soldier, rider, crew member, builder and civilian counts as one man.</source>
+        <translation>Sahadaki adamlar: %1. Her asker, süvari, mürettebat, inşaatçı ve sivil bir adam sayılır.</translation>
+    </message>
+    <message>
+        <source>Men you can still raise: %1 held in reserve by your barracks and temples. Walk civilians into a barracks or build a Home to raise more.</source>
+        <translation>Hâlâ toplayabileceğin adamlar: %1 kışla ve tapınaklarında yedekte. Daha fazlası için sivilleri bir kışlaya götür veya bir Ev inşa et.</translation>
+    </message>
+    <message>
+        <source>This map allows %1 men per army; %2 more wait in reserve but cannot muster until the field thins.</source>
+        <translation>Bu harita ordu başına %1 adama izin verir; %2 adam daha yedekte bekler ama saha seyrelene dek toplanamaz.</translation>
+    </message>
+</context>
+<context>
     <name>FactionTheme</name>
     <message>
         <source>Standard</source>
@@ -2684,6 +2711,10 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>Farm</source>
         <translation>Tarla</translation>
+    </message>
+    <message>
+        <source>Sepulcher Shrine</source>
+        <translation>Mezar Tapınağı</translation>
     </message>
 </context>
 <context>
@@ -3332,14 +3363,6 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <translation>Yükleme: hazırlanmadı</translation>
     </message>
     <message>
-        <source>Manpower limit reached.</source>
-        <translation>İnsan gücü sınırına ulaşıldı.</translation>
-    </message>
-    <message>
-        <source>Not enough reserve — build a home to raise more families.</source>
-        <translation>Yeterli yedek yok — daha çok aile yetiştirmek için bir ev inşa et.</translation>
-    </message>
-    <message>
         <source>The previous frame is still running; the match could not be changed. Please try again.</source>
         <translation>Önceki kare hâlâ çalışıyor; maç değiştirilemedi. Lütfen tekrar deneyin.</translation>
     </message>
@@ -3395,6 +3418,18 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>%1 FPS</source>
         <translation>%1 FPS</translation>
+    </message>
+    <message>
+        <source>Waves %1 of %2</source>
+        <translation>Dalga %1 / %2</translation>
+    </message>
+    <message>
+        <source>Objectives</source>
+        <translation>Hedefler</translation>
+    </message>
+    <message>
+        <source>Hide the objectives (O)</source>
+        <translation>Hedefleri gizle (O)</translation>
     </message>
 </context>
 <context>
@@ -4443,12 +4478,6 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <translation>İnsan gücü</translation>
     </message>
     <message>
-        <source>Manpower in the field: %1 of %2.
-Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</source>
-        <translation>Sahadaki insan gücü: %2 üzerinden %1.
-Her birlik insan gücü harcar; on iki kişilik bir inşaatçı müfrezesi on harcar. Bu bir kişi sayımı değildir - seçim paneli askerleri sayar.</translation>
-    </message>
-    <message>
         <source>Human players</source>
         <translation>İnsan oyuncular</translation>
     </message>
@@ -4489,6 +4518,39 @@ Görülmemiş: hiç gözetlenmedi.</translation>
     <message>
         <source>Unseen</source>
         <translation>Görülmemiş</translation>
+    </message>
+    <message>
+        <source>Men in the field: %1 of %2.
+Every recruit costs the men in its squad; reserve held at a barracks raises the cap.</source>
+        <translation>Sahadaki adamlar: %1 / %2.
+Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yükseltir.</translation>
+    </message>
+    <message>
+        <source>Hide the objectives list</source>
+        <translation>Hedef listesini gizle</translation>
+    </message>
+    <message>
+        <source>Show every objective and defeat condition</source>
+        <translation>Tüm hedefleri ve yenilgi koşullarını göster</translation>
+    </message>
+    <message>
+        <source>Objectives</source>
+        <translation>Hedefler</translation>
+    </message>
+</context>
+<context>
+    <name>HUDVictory</name>
+    <message>
+        <source>Retry mission</source>
+        <translation>Görevi yeniden dene</translation>
+    </message>
+    <message>
+        <source>Fight it again</source>
+        <translation>Yeniden savaş</translation>
+    </message>
+    <message>
+        <source>Return to Menu</source>
+        <translation>Menüye dön</translation>
     </message>
 </context>
 <context>
@@ -4568,10 +4630,6 @@ Görülmemiş: hiç gözetlenmedi.</translation>
     <message>
         <source>Winning and losing</source>
         <translation>Kazanmak ve kaybetmek</translation>
-    </message>
-    <message>
-        <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
-        <translation>Her görev kendi zafer ve yenilgi koşullarını Hedefler ekranında belirtir (Escape, sonra Hedefler). Her savaşta komutanın hayatta kalmalıdır: bir ulus, kendisini yöneten adamla birlikte ölür ve yalnız kalmış bir komutan çoktan yitirilmiştir.</translation>
     </message>
     <message>
         <source>The three materials</source>
@@ -4725,6 +4783,62 @@ Görülmemiş: hiç gözetlenmedi.</translation>
         <source>Close</source>
         <translation>Kapat</translation>
     </message>
+    <message>
+        <source>The Sepulcher</source>
+        <translation>Mezar</translation>
+    </message>
+    <message>
+        <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In battle, press O or the objectives button in the top bar to keep the full list open beside the field. In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
+        <translation>Her görev kendi zafer ve yenilgi koşullarını Hedefler ekranında belirtir (Escape, sonra Hedefler). Savaşta tam listeyi sahanın yanında açık tutmak için O tuşuna veya üst çubuktaki hedefler düğmesine bas. Her savaşta komutanın hayatta kalmalı: bir ulus onu yöneten adamla ölür ve yalnız bir komutan zaten kaybedilmiştir.</translation>
+    </message>
+    <message>
+        <source>Undead zones</source>
+        <translation>Hortlak bölgeleri</translation>
+    </message>
+    <message>
+        <source>Some fields are dotted with dormant ruins and shrines. Nothing stirs in them until your troops walk in. The moment you cross into a zone, it wakes: the ground gives up its dead and the first wave rises to meet you. Choose the moment - and the force - you enter with.</source>
+        <translation>Bazı sahalar uykudaki harabeler ve tapınaklarla doludur. Birliklerin içeri girene dek hiçbir şey kıpırdamaz. Bir bölgeye adım attığın an uyanır: toprak ölülerini bırakır ve ilk dalga seni karşılamak için yükselir. Girdiğin anı - ve gücü - sen seç.</translation>
+    </message>
+    <message>
+        <source>Waves</source>
+        <translation>Dalgalar</translation>
+    </message>
+    <message>
+        <source>Every zone holds a set number of waves, and the announcement names each one as it comes - wave 1 of 2, then 2 of 2. When a wave rises to meet you, it is coming for the troops inside the zone. Break one and the next rises. A zone is only clear when its last wave lies still.</source>
+        <translation>Her bölge belirli sayıda dalga barındırır ve duyuru her birini geldiğinde adlandırır - 2 dalgadan 1., sonra 2. Bir dalga seni karşılamak için yükseldiğinde bölgedeki birliklerin peşindedir. Birini kır, sonraki yükselir. Bir bölge ancak son dalgası hareketsiz yattığında temizdir.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher Shrine</source>
+        <translation>Mezar Tapınağı</translation>
+    </message>
+    <message>
+        <source>Each zone is anchored by a Sepulcher Shrine. While its guardians still stand, the shrine cannot be harmed and attack orders on it are refused - do not waste arrows on it. Kill every wave first; only then does the shrine lie open.</source>
+        <translation>Her bölge bir Mezar Tapınağına bağlıdır. Muhafızları ayaktayken tapınağa zarar verilemez ve ona verilen saldırı emirleri reddedilir - oklarını boşa harcama. Önce her dalgayı öldür; ancak o zaman tapınak açığa çıkar.</translation>
+    </message>
+    <message>
+        <source>Purifying a shrine</source>
+        <translation>Bir tapınağı arındırmak</translation>
+    </message>
+    <message>
+        <source>Once the guardians have fallen, walk troops onto the shrine to capture it, or simply knock it down. Either way the zone is purified for good and it will not wake again. A purified shrine pays out: the clear reward - wood, iron and food - lands in your stores the moment the zone falls.</source>
+        <translation>Muhafızlar düştüğünde tapınağı ele geçirmek için birlikleri üzerine yürüt ya da onu yık. Her iki durumda da bölge kalıcı olarak arınır ve bir daha uyanmaz. Arınmış bir tapınak karşılığını verir: temizleme ödülü - odun, demir ve yiyecek - bölge düştüğü an depolarına girer.</translation>
+    </message>
+    <message>
+        <source>The guardians</source>
+        <translation>Muhafızlar</translation>
+    </message>
+    <message>
+        <source>The dead defend their ground. They will chase you to the edge of the zone and then turn back to it, so you can pull out to regroup and re-enter when you are ready. You cannot lure them across the map - the fight happens at the shrine.</source>
+        <translation>Ölüler topraklarını savunur. Seni bölgenin kenarına kadar kovalar, sonra geri dönerler; böylece toparlanmak için çekilip hazır olduğunda yeniden girebilirsin. Onları harita boyunca çekemezsin - savaş tapınakta olur.</translation>
+    </message>
+    <message>
+        <source>The grave priest</source>
+        <translation>Mezar rahibi</translation>
+    </message>
+    <message>
+        <source>Among the waves walks a grave priest. He heals the dead around him and throws fire at your line, so a slow slog of spearmen alone will bleed. Bring a Medicus to mend the burns and ranged troops to cut the priest down from a distance before the guardians close in. Kill him first and the dead stop mending.</source>
+        <translation>Dalgaların arasında bir mezar rahibi yürür. Çevresindeki ölüleri iyileştirir ve hattına ateş fırlatır; bu yüzden yalnız mızraklılarla yavaş bir ilerleyiş kan kaybettirir. Yanıkları sarmak için bir Medicus ve muhafızlar yaklaşmadan rahibi uzaktan indirmek için menzilli birlikler getir. Önce onu öldür, ölüler iyileşmeyi bıraksın.</translation>
+    </message>
 </context>
 <context>
     <name>HintCard</name>
@@ -4835,6 +4949,14 @@ Görülmemiş: hiç gözetlenmedi.</translation>
     <message>
         <source>March the Campaign</source>
         <translation>Sefere Çık</translation>
+    </message>
+    <message>
+        <source>Look at the field</source>
+        <translation>Sahaya bak</translation>
+    </message>
+    <message>
+        <source>Show the verdict again</source>
+        <translation>Hükmü yeniden göster</translation>
     </message>
 </context>
 <context>
@@ -5439,6 +5561,26 @@ Görülmemiş: hiç gözetlenmedi.</translation>
     <message>
         <source>Workers are valuable strategic assets. Do not leave them exposed near the front.</source>
         <translation>İşçiler değerli stratejik varlıklardır. Onları cephenin yakınında açıkta bırakma.</translation>
+    </message>
+    <message>
+        <source>A cursed shrine cannot be attacked while its guardians stand. Break the guard, then purify the shrine by capturing it.</source>
+        <translation>Lanetli bir tapınağa muhafızları ayaktayken saldırılamaz. Muhafızları kır, sonra tapınağı ele geçirerek arındır.</translation>
+    </message>
+    <message>
+        <source>A grave priest mends the dead around it and hurls fire at the living. Strike it down before the line closes.</source>
+        <translation>Bir mezar rahibi çevresindeki ölüleri onarır ve yaşayanlara ateş fırlatır. Hatlar kapanmadan onu indir.</translation>
+    </message>
+    <message>
+        <source>Ranged troops and a Medicus make the vigil survivable. Wound the dead from a distance, and keep the wounded living.</source>
+        <translation>Menzilli birlikler ve bir Medicus nöbeti atlatılabilir kılar. Ölüleri uzaktan yarala, yaralıları hayatta tut.</translation>
+    </message>
+    <message>
+        <source>Skeleton guardians defend their ruins and drift back to them when the fight moves on. Draw them out, or bring the fight to the stones.</source>
+        <translation>İskelet muhafızlar harabelerini savunur ve savaş uzaklaşınca oraya geri süzülür. Onları dışarı çek ya da savaşı taşlara götür.</translation>
+    </message>
+    <message>
+        <source>The dead do not tire, do not flee, and do not file complaints. They are, in every other respect, a poor garrison.</source>
+        <translation>Ölüler yorulmaz, kaçmaz ve şikâyet dilekçesi vermez. Diğer her açıdan ise berbat bir garnizondur.</translation>
     </message>
 </context>
 <context>
@@ -6181,6 +6323,10 @@ bir harita seç</translation>
         <source>Failed to load mission preview: %1</source>
         <translation>Görev önizlemesi yüklenemedi: %1</translation>
     </message>
+    <message>
+        <source>There is no battle to fight again</source>
+        <translation>Yeniden savaşılacak bir savaş yok</translation>
+    </message>
 </context>
 <context>
     <name>MediterraneanMapPanel</name>
@@ -6692,10 +6838,6 @@ bir harita seç</translation>
         <translation>Üç Roma taarruz evresini de kır. Mahalle, son konsül kolu sokaklarda öldüğünde tutulmuş olur.</translation>
     </message>
     <message>
-        <source>Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle.</source>
-        <translation>Demir Kabir&apos;in iki saldırısını da kır. Zama&apos;da ölüler artık savaşın dışında kalmıyor.</translation>
-    </message>
-    <message>
         <source>Break the chiefs contesting the descent.</source>
         <translation>İnişe itiraz eden reisleri kır.</translation>
     </message>
@@ -6794,10 +6936,6 @@ bir harita seç</translation>
     <message>
         <source>Defend Hannibal&apos;s fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.</source>
         <translation>Hannibal&apos;ın tahkimli Campania ikmal kasabasını savun ve ayrı konsül yollarından gelen üç eşgüdümlü Roma taarruzunu da kır.</translation>
-    </message>
-    <message>
-        <source>Drive the dead from the shrine. Salt the earth where they stood.</source>
-        <translation>Ölüleri mabetten sür. Durdukları toprağa tuz ek.</translation>
     </message>
     <message>
         <source>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</source>
@@ -7238,10 +7376,6 @@ bir harita seç</translation>
     <message>
         <source>Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all.</source>
         <translation>Öyleyse geçitleri al. Kuzeye giden yolun bütün soğuk uzunluğunu ve üzerine döşenmiş her taşı al. Roma eyalet yitirmez - onları faizle ödünç verir ve duyduğuma göre bu yoldaki tahsildarların hiç yüzü yokmuş.</translation>
-    </message>
-    <message>
-        <source>Take the cursed shrine above the sepulcher ruins and hold what you take: clear the guardians out of the ruins, then drive the dead off the shrine itself.</source>
-        <translation>Kabir harabelerinin üstündeki lanetli mabedi al ve aldığını tut: bekçileri harabelerden temizle, sonra ölüleri mabedin kendisinden sür.</translation>
     </message>
     <message>
         <source>Take the first pass quickly before the next ambush line assembles.</source>
@@ -7895,6 +8029,26 @@ bir harita seç</translation>
         <source>You cannot cover every gate. Watch the telegraph and move on interior lines.</source>
         <translation>Her kapıyı örtemezsin. Ön uyarıyı izle ve iç hatlardan kaydır.</translation>
     </message>
+    <message>
+        <source>Break both risings of the dead at the sepulcher ruins by the south-western crossing. The guardians will not leave their ground; you must go to them.</source>
+        <translation>Güneybatı geçidindeki mezar harabelerinde ölülerin iki ayaklanmasını da kır. Muhafızlar topraklarını terk etmez; onlara sen gitmelisin.</translation>
+    </message>
+    <message>
+        <source>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</source>
+        <translation>Ölüleri tapınaktan sür, sonra sancağı üzerine dik. Durdukları toprağa tuz ek.</translation>
+    </message>
+    <message>
+        <source>Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
+        <translation>Yaralıları eve çekin ve elimizde kalan adamları çağırın. Ölüler sabırlıdır. Biz de sabırlı olmayı göze alabiliriz.</translation>
+    </message>
+    <message>
+        <source>Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it.</source>
+        <translation>Mezar harabelerinin üstündeki lanetli tapınağı al ve aldığını elinde tut. Altmış adam, bir kışla ve bir ev, Roma&apos;nın ayırabildiğinin tamamı: muhafızları harabelerden temizle, sonra ölüleri tapınaktan sür ve sancağı üzerine dik.</translation>
+    </message>
+    <message>
+        <source>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</source>
+        <translation>İşte oradalar. Yüzlere bakmayın. Okçular atsın, kalkanlar kapansın ve kimse hiçbir şeyi o sisin içine geri kovalamasın.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -8281,6 +8435,34 @@ bir harita seç</translation>
     <message>
         <source>That building cannot be taken down.</source>
         <translation>O yapı indirilemez.</translation>
+    </message>
+    <message>
+        <source>Recruit</source>
+        <translation>Asker al</translation>
+    </message>
+    <message>
+        <source>Select a barracks, temple or home to recruit.</source>
+        <translation>Asker almak için bir kışla, tapınak veya ev seç.</translation>
+    </message>
+    <message>
+        <source>Not enough reserve: %1 / %2 men. Walk civilians into the barracks or build a Home to raise more.</source>
+        <translation>Yeterli yedek yok: %1 / %2 adam. Sivilleri kışlaya götür veya daha fazlası için bir Ev inşa et.</translation>
+    </message>
+    <message>
+        <source>Army at the map&apos;s limit: %1 / %2 men in the field.</source>
+        <translation>Ordu harita sınırında: sahada %1 / %2 adam.</translation>
+    </message>
+    <message>
+        <source>The training queue is full.</source>
+        <translation>Eğitim kuyruğu dolu.</translation>
+    </message>
+    <message>
+        <source>%1 (%2 short)</source>
+        <translation>%1 (%2 eksik)</translation>
+    </message>
+    <message>
+        <source>Not enough %1.</source>
+        <translation>Yeterli %1 yok.</translation>
     </message>
 </context>
 <context>
@@ -10657,8 +10839,8 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
         <translation>%1 topraktan tırmalayarak çıkıyor.</translation>
     </message>
     <message>
-        <source>The risen guardians are put down. The ground is quiet.</source>
-        <translation>Kalkmış bekçiler yatırıldı. Toprak sessiz.</translation>
+        <source>The risen guardians are put down. Hold the shrine to purify it.</source>
+        <translation>Dirilen muhafızlar yere serildi. Arındırmak için tapınağı tut.</translation>
     </message>
 </context>
 <context>

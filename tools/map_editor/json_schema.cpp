@@ -430,7 +430,8 @@ auto undead_zone_schema() -> JsonSchema {
       optional_field("wave_timeout",
                      "number",
                      "zone default",
-                     "Seconds before the next wave is released.",
+                     "Seconds before a next_wave wave rises on its own; after_clear "
+                     "waves always wait for the kill.",
                      30.0),
       optional_field("awaken_on",
                      "array",

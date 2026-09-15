@@ -514,11 +514,19 @@ sheep_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
   return t;
 }
 
+[[nodiscard]] constexpr auto make_wildlife_snapshot_table(
+    const std::array<std::uint16_t, state_count()>& clips) noexcept
+    -> std::array<bool, state_count()> {
+  auto t = make_snapshot_table_for_clips(clips);
+  t[state_index(StateId::Die)] = (clips[state_index(StateId::Die)] != k_unmapped_clip);
+  return t;
+}
+
 [[nodiscard]] constexpr auto sheep_clip_manifest() noexcept -> ClipManifest {
   auto const clips = sheep_clip_table();
   return {clips,
           make_variant_count_table_for_clips(clips),
-          make_snapshot_table_for_clips(clips)};
+          make_wildlife_snapshot_table(clips)};
 }
 
 [[nodiscard]] constexpr auto
@@ -540,7 +548,7 @@ wolf_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
   auto const clips = wolf_clip_table();
   return {clips,
           make_variant_count_table_for_clips(clips),
-          make_snapshot_table_for_clips(clips)};
+          make_wildlife_snapshot_table(clips)};
 }
 
 [[nodiscard]] auto humanoid_attack_clip(AttackClipFamily family,

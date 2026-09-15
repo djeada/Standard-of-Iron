@@ -368,6 +368,11 @@ Item {
             event.accepted = true;
             return;
         }
+        if (event.key === Qt.Key_O && event.modifiers === Qt.NoModifier && !event.isAutoRepeat && !is_commander_mode() && typeof hud !== 'undefined' && hud.visible && InputBindings.actions_for_key(event.key, event.modifiers, input_context()).length === 0) {
+            hud.toggle_objectives();
+            event.accepted = true;
+            return;
+        }
         var candidates = InputBindings.actions_for_key(event.key, event.modifiers, input_context());
         for (var i = 0; i < candidates.length; ++i) {
             if (dispatch_key_action(candidates[i], event)) {

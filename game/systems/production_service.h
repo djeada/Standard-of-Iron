@@ -11,6 +11,7 @@
 
 namespace Engine::Core {
 class World;
+class ProductionComponent;
 using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
@@ -43,6 +44,8 @@ struct ProductionState {
   int villager_cost = 1;
   int manpower_available = 0;
   int queue_size = 0;
+  bool reserve_short = false;
+  int cheapest_recruit_cost = 0;
   std::vector<Game::Units::TroopType> production_queue;
 };
 
@@ -74,6 +77,13 @@ public:
   static auto find_selected_temple(Engine::Core::World& world,
                                    const std::vector<Engine::Core::EntityID>& selected,
                                    int owner_id) -> Engine::Core::EntityID;
+
+  [[nodiscard]] static auto
+  cheapest_recruit_cost(Game::Units::SpawnType building) -> int;
+
+  [[nodiscard]] static auto
+  reserve_is_short(const Engine::Core::ProductionComponent& production,
+                   Game::Units::SpawnType building) -> bool;
 
   static auto
   get_selected_barracks_state(Engine::Core::World& world,
