@@ -445,7 +445,16 @@ auto may_engage(Engine::Core::Entity* unit,
   }
 
   if (!auto_acquires_targets(unit)) {
-    return false;
+    auto const* own_attack = unit->get_component<Engine::Core::AttackComponent>();
+    bool const answers_a_blow_bare_handed =
+        trigger == EngagementTrigger::Retaliation &&
+        Game::Units::combat_role(unit_comp->spawn_type) ==
+            Game::Units::CombatRole::Noncombatant &&
+        own_attack != nullptr && own_attack->can_melee &&
+        Game::Systems::CombatRules::participates_in_rts_melee_lock(unit);
+    if (!answers_a_blow_bare_handed) {
+      return false;
+    }
   }
 
   if (!may_attack(

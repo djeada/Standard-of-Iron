@@ -925,12 +925,9 @@ auto carthage_builder_variant_table()
     t.variant_trigger_pose = Render::Creature::PoseIntent::Construct;
     t.variant_stride = 5;
 
-    t.archetype_for_pose[static_cast<std::size_t>(
-        Render::Creature::PoseIntent::AttackMelee)] =
-        carthage_builder_hammer_unit_archetype();
     t.state_for_pose[static_cast<std::size_t>(
         Render::Creature::PoseIntent::AttackMelee)] =
-        Render::Creature::AnimationStateId::AttackSword;
+        Render::Creature::AnimationStateId::AttackMelee;
     t.variant_is_seed_based = true;
     t.seed_variant_limit = 4;
 

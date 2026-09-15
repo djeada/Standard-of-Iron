@@ -1,5 +1,6 @@
 #include "arena_wildlife_scenarios.h"
 
+#include <array>
 #include <utility>
 
 #include "arena_scenarios.h"
@@ -175,6 +176,67 @@ auto build_wildlife_definitions() -> std::vector<ArenaScenarioDefinition> {
       }
     }
     result.push_back(std::move(s));
+  }
+
+  {
+    struct BrawlFixture {
+      const char* id;
+      Troop troop;
+      int wolves;
+      bool walk_away;
+      float duration;
+    };
+    static constexpr std::array<BrawlFixture, 5> fixtures{{
+        {"wildlife_wolf_builder_gang_brawl", Troop::Builder, 1, false, 24.0F},
+        {"wildlife_wolves_builder_gang_brawl", Troop::Builder, 3, false, 26.0F},
+        {"wildlife_wolf_civilian_brawl", Troop::Civilian, 1, false, 20.0F},
+        {"wildlife_wolf_swordsman_squad_lock", Troop::Swordsman, 2, true, 20.0F},
+        {"wildlife_wolf_builder_gang_walk_away", Troop::Builder, 1, true, 20.0F},
+    }};
+    for (auto const& fixture : fixtures) {
+      auto s = definition(
+          QString::fromLatin1(fixture.id),
+          QStringLiteral("Wildlife Brawl: %1")
+              .arg(QString::fromLatin1(fixture.id).mid(9)),
+          QStringLiteral("A full-size unit meets a hunting wolf: the wolf must reach "
+                         "a soldier and bite, the unit must answer blow for blow, "
+                         "and a move order must not walk out of the fight."),
+          fixture.duration,
+          {14.0F, 34.0F, 60.0F});
+      s.suppress_terrain_scatter = true;
+      s.suppress_terrain_features = true;
+      s.suppress_spawn_anchor = true;
+      s.suppress_ui_overlays = true;
+      s.suppress_combat_dust = true;
+      s.wildlife = sheep_only(1, 1, 4.0F);
+      s.wildlife.seed = 1416U;
+      s.wildlife.sheep.enabled = false;
+      s.wildlife.sheep.group_count = 0;
+      s.wildlife.wolves.enabled = true;
+      s.wildlife.wolves.group_count = 1;
+      s.wildlife.wolves.group_size_min = fixture.wolves;
+      s.wildlife.wolves.group_size_max = fixture.wolves;
+      s.wildlife.wolves.aggression = 1.0F;
+      s.wildlife.wolves.roam_radius = 16.0F;
+      s.wildlife.wolves.alert_radius = 8.0F;
+      s.wildlife.wolves.respawn = false;
+      s.wildlife.wolves.spawn_areas = {{7.0F, 0.0F, 1.0F}};
+      auto target =
+          patrol_group(QStringLiteral("target"), fixture.troop, {0.0F, 0.0F, 0.0F}, 1);
+      target.individuals_per_unit = 0;
+      s.groups = {target};
+      if (fixture.walk_away) {
+        s.steps = {move_step(7.0F, QStringLiteral("target"), {-14.0F, 0.0F, 0.0F})};
+      }
+      s.expectations = {
+          expectation(Expect::WildlifeHuntObserved),
+          expectation(Expect::GroupHealthReduced, QStringLiteral("target")),
+          expectation(Expect::AttackAnimationObserved, QStringLiteral("target"))};
+      if (fixture.troop != Troop::Civilian) {
+        s.expectations.push_back(expectation(Expect::WildlifeCasualtyObserved));
+      }
+      result.push_back(std::move(s));
+    }
   }
 
   {

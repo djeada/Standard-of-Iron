@@ -17,6 +17,7 @@
 #include "../combat_actions/projectile_release.h"
 #include "../combat_actions/weapon_trace.h"
 #include "../combat_rules.h"
+#include "../formation_combat_geometry.h"
 #include "../pathfinding.h"
 #include "../rpg_combat_system/rpg_bow_draw.h"
 #include "../rpg_combat_system/rpg_bow_shot.h"
@@ -758,7 +759,11 @@ void deal_rts_melee_contact_damage(
                !structure_separates_combatants(&attacker, target);
   }
 
-  if (!in_range || facing < std::cos(80.0F * std::numbers::pi_v<float> / 180.0F)) {
+  bool const soldiers_face_the_animal =
+      target->has_component<Engine::Core::WildlifeComponent>() &&
+      FormationCombat::has_formation_slots(attacker);
+  if (!in_range || (!soldiers_face_the_animal &&
+                    facing < std::cos(80.0F * std::numbers::pi_v<float> / 180.0F))) {
     action.action_running = false;
     action.action_completed = true;
     return;

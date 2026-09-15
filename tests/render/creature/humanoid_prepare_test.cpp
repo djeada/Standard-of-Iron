@@ -6759,7 +6759,7 @@ auto render_builder_rigged_meshes(
   return sink.rigged_meshes;
 }
 
-TEST(HumanoidPrepare, BuiltInBuildersFightWithTheMalletInHand) {
+TEST(HumanoidPrepare, BuiltInBuildersBrawlBareHanded) {
   for (auto const& [renderer_id, nation] :
        {std::pair{"troops/roman/builder", Game::Systems::NationID::RomanRepublic},
         std::pair{"troops/carthage/builder", Game::Systems::NationID::Carthage}}) {
@@ -6767,9 +6767,14 @@ TEST(HumanoidPrepare, BuiltInBuildersFightWithTheMalletInHand) {
     auto const fighting = render_builder_rigged_meshes(renderer_id, nation, true);
     ASSERT_FALSE(idle.empty()) << renderer_id;
     ASSERT_FALSE(fighting.empty()) << renderer_id;
-    EXPECT_NE(idle.front(), fighting.front())
+    ASSERT_NE(idle.front(), nullptr) << renderer_id;
+    ASSERT_NE(fighting.front(), nullptr) << renderer_id;
+    EXPECT_EQ(idle.front()->vertex_count(), fighting.front()->vertex_count())
         << renderer_id
-        << ": a builder in melee swings the mallet archetype, not the bare idle body";
+        << ": a builder in a brawl fights with bare fists, not a tool archetype";
+    EXPECT_EQ(idle.front()->index_count(), fighting.front()->index_count())
+        << renderer_id
+        << ": a builder in a brawl fights with bare fists, not a tool archetype";
   }
 }
 

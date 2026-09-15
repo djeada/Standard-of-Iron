@@ -39,11 +39,15 @@ Under `EngagementIntent::AutoAcquired`, passive wildlife is protected from autom
 
 A wolf that commits to a person or is attacked carries `hostile_timer`. While hostile, the wolf is a valid automatic target as well as a valid explicit, retaliation, and AI target.
 
-Civilians do not take retaliation targets. A bitten civilian flees rather than entering a combat exchange.
+Civilians and builders never pick a fight, but they answer one. `may_engage` lets a noncombatant with a melee-capable `AttackComponent` take a `Retaliation` target (never an `Opportunity` one), so the unit enters the ordinary RTS melee lock against whatever struck it: a wolf, a raider, anything. This is general rather than wolf-specific. A noncombatant formation brawls as a crowd: `formation_contact_processor` gives every living soldier a strike role instead of the seeded guard/ready mix, and builders render that as the bare-handed jab/cross/hook set rather than a tool swing. Civilians keep the cudgel. The builder variant tables set only `state_for_pose[AttackMelee]`, never `archetype_for_pose`: the idle body is already tool-less, and replacing the archetype also discarded the per-unit variant the visual spec resolves (a Carthage builder lost his beard, about 4,500 vertices, the moment he started punching).
+
+Before this, a wolf could bite a twelve-man worker gang indefinitely while the whole gang stood idle, because the `Noncombatant` role failed `auto_acquires_targets` inside `may_engage` for every trigger.
 
 ### Wildlife retaliation
 
 `assign_retaliation_target_if_needed` records retaliation state directly in `WildlifeComponent` through `aggressor_id` and `hostile_timer`.
+
+Wildlife never holds an RTS melee lock either. `reciprocate_melee_lock` refuses a wildlife target, because the attack loop only clears an animal's lock when it reaches that animal while the person re-applies it every tick. The movement `MeleeLock` gate then zeroed the wolf's movement, so a wolf that drifted a few centimetres out of bite reach from a civilian it was fighting stood frozen for the rest of the fight.
 
 Wildlife does not receive an `AttackTargetComponent` for retaliation. Its movement and attack decisions remain owned by the nature AI, avoiding conflicting commands from the RTS attack processor.
 
@@ -100,6 +104,16 @@ Wolves focused on the same quarry claim deterministic positions on a ring.
 
 Pack members are ordered by entity id and assigned an angular share. `pack_ring_radius` considers both bite reach and the lateral arc required for the pack to stand around the target. The ring is capped by `reach * k_pack_ring_reach_margin` so assigned attack positions remain inside usable bite distance.
 
+A person-shaped quarry is usually a formation entity whose transform sits in the middle of its men. `resolve_prey` therefore resolves a formation target to the living soldier nearest the wolf (via `soldier_spatial_anchors_into`) with that soldier's body radius, and every lookup (stalk, defend, contact bite, bite impact) passes the wolf's position. Aiming at the unit centre put wolves inside a builder gang, where they bit from among the men without ever reaching a body on the edge.
+
+The last stretch of an approach is a straight lunge, not a ring slot. A scripted move settles within `clamp(unit_radius * 1.1, 0.25, 0.9)` of its goal (about 0.55 m for a wolf), while the ring slot sits only ~0.2 m inside bite reach, so wolves used to stop just outside reach and stand there until stall release shifted their orbit. Inside `reach + k_lunge_reach`, `close_and_bite` aims at a point `reach * k_lunge_stop_fraction` from the prey along the wolf's own line, which lands inside reach even with the arrival slop.
+
+`WildlifeSystem::issue_move` keeps the exact standable point instead of the nav cell centre. `NavGrid::snap_to_walkable_ground` always moves x/z to the nearest walkable cell's centre, so on a 1 m grid every lunge target within half a cell of the wolf collapsed onto a centre already inside the arrival radius. The move "arrived" instantly, and a wolf fighting a civilian who had been shoved back stood 1.2-1.3 m away, out of bite reach, for thirteen seconds. The arena trace showed the goal pinned at the same cell centre for the whole fight. Snapping is kept only when the requested point was not standable.
+
+A formation locked onto a wolf is not held to the whole-block 80° strike facing veto in `deal_rts_melee_contact_damage`: the animal is usually inside or against the block, so the block's root yaw says nothing about whether the soldiers facing it can hit. A single body locked onto a wolf turns toward it in the movement `MeleeLock` gate (`face_locked_opponent`), the same way it turns toward a locked building.
+
+A wolf has no formation slots, so no soldier of the unit fighting it ever receives a contact front, and every man used to keep the unit's original heading. Arena frames showed a worker gang boxing the air while the wolf bit the front builder from behind. Soldiers of a brawling crowd, or of any unit whose display opponent is an animal, now aim their `local_yaw` at the opponent in the non-contact branch of `publish_formation_presentation`; the existing unassigned-yaw hold keeps them 0.6 s and then turns them at `k_disengage_turn_degrees`.
+
 When a wolf is inside bite range, it faces the prey through `desired_yaw` while the bite is active. Between bites it retains its slot and advances a per-wolf `orbit` by `k_pack_orbit_step`, producing circling pressure rather than a static ring.
 
 Committing to a person marks the wolf hostile.
@@ -127,7 +141,7 @@ Wolf contact checks are independent of the nature-AI think interval.
 
 `begin_bite` is the single source of truth for bite timers, bite statistics, audio cues, and bite-facing behavior.
 
-A landed bite applies hit feedback. Civilian victims receive `LightFlinch`; armed troops do not, so a wolf pack cannot continuously suppress their melee response through repeated light stagger.
+A landed bite applies hit feedback. Civilian and builder victims receive `LightFlinch` only while they are not yet fighting back (no melee lock, no attack target); armed troops never do. The attack processor skips a staggered attacker outright, so a three-wolf pack biting a brawling worker gang kept it flinching almost half the time and it landed about four blows in 24 seconds.
 
 `wolf.menace` approaches civilians that are not selected as prey and holds a standoff distance without dealing damage. `wolf.prowl` roams around the pack anchor.
 

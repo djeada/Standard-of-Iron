@@ -13,6 +13,7 @@
 
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../../units/combat_role.h"
 #include "../../util/planar_math.h"
 #include "../formation_combat_geometry.h"
 #include "combat_utils.h"
@@ -393,6 +394,19 @@ auto combat_role_for(std::uint32_t formation_seed,
     return Engine::Core::FormationSoldierCombatRole::StepOut;
   }
   return Engine::Core::FormationSoldierCombatRole::Ready;
+}
+
+auto brawls_as_a_crowd(const Engine::Core::Entity& entity) -> bool {
+  auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
+  return unit != nullptr && Game::Units::combat_role(unit->spawn_type) ==
+                                Game::Units::CombatRole::Noncombatant;
+}
+
+auto crowd_brawl_role(std::uint16_t stable_slot)
+    -> Engine::Core::FormationSoldierCombatRole {
+  return (stable_slot % 2U) == 0U
+             ? Engine::Core::FormationSoldierCombatRole::LeadStrike
+             : Engine::Core::FormationSoldierCombatRole::SupportStrike;
 }
 
 auto action_for_role(Engine::Core::FormationSoldierCombatRole role)
@@ -782,7 +796,8 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
                 ? structure_facade_rank
                 : directive.engagement_surface_gap <= layout.spacing * 0.65F;
         directive.combat_role =
-            opponent_within_reach
+            brawls_as_a_crowd(*entity) ? crowd_brawl_role(original_slot.index)
+            : opponent_within_reach
                 ? combat_role_for(layout.seed, original_slot.index, true)
                 : Engine::Core::FormationSoldierCombatRole::Guard;
         directive.action = action_for_role(directive.combat_role);
@@ -861,8 +876,28 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         }
       } else if (directive.alive && melee_ordered) {
         directive.combat_role =
-            combat_role_for(layout.seed, original_slot.index, false);
+            brawls_as_a_crowd(*entity)
+                ? crowd_brawl_role(original_slot.index)
+                : combat_role_for(layout.seed, original_slot.index, false);
         directive.action = action_for_role(directive.combat_role);
+        bool const faces_an_animal =
+            display_opponent != nullptr &&
+            display_opponent->has_component<Engine::Core::WildlifeComponent>();
+        if ((brawls_as_a_crowd(*entity) || faces_an_animal) && !attacks_structure &&
+            actor_transform != nullptr && display_opponent != nullptr) {
+          if (auto const* opponent_transform =
+                  world.try_get<Engine::Core::TransformComponent>(
+                      display_opponent->get_id())) {
+            auto const toward = local_contact_vector(*actor_transform,
+                                                     directive.local_x,
+                                                     directive.local_z,
+                                                     opponent_transform->position.x,
+                                                     opponent_transform->position.z);
+            if (toward.distance > 0.0001F) {
+              directive.local_yaw = toward.yaw;
+            }
+          }
+        }
         if (attacks_structure && actor_transform != nullptr) {
           QVector3D const anchor_world =
               local_to_world(*actor_transform, directive.local_x, directive.local_z);
