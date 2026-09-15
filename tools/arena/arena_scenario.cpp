@@ -869,6 +869,13 @@ struct ArenaScenarioRunner::Impl {
     Engine::Core::EntityID bite_target_id{0};
     bool impact_pending{false};
     bool dying{false};
+    bool melee_lock{false};
+    bool has_move_target{false};
+    float goal_x{0.0F};
+    float goal_z{0.0F};
+    float state_timer{0.0F};
+    float stall_timer{0.0F};
+    bool staggered{false};
   };
 
   struct TraceFrame {
@@ -2174,7 +2181,21 @@ struct ArenaScenarioRunner::Impl {
             entity.get_component<Engine::Core::MovementComponent>()) {
       animal.vx = movement->get_vx();
       animal.vz = movement->get_vz();
+      animal.has_move_target = movement->get_has_target();
+      animal.goal_x = movement->get_goal_x();
+      animal.goal_z = movement->get_goal_y();
     }
+    auto* const registry = entity.registry();
+    if (auto const* attack =
+            registry == nullptr
+                ? nullptr
+                : registry->try_get<Engine::Core::AttackComponent>(entity.get_id())) {
+      animal.melee_lock = attack->in_melee_lock;
+    }
+    animal.state_timer = wildlife.state_timer;
+    animal.stall_timer = wildlife.stall_timer;
+    animal.staggered = registry != nullptr &&
+                       registry->has<Engine::Core::StaggerComponent>(entity.get_id());
     animal.biting = wildlife.bite_timer > 0.0F;
     animal.bite_phase =
         animal.biting
@@ -7165,7 +7186,13 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("bite_target_id"),
            static_cast<qint64>(animal.bite_target_id)},
           {QStringLiteral("impact_pending"), animal.impact_pending},
-          {QStringLiteral("dying"), animal.dying}});
+          {QStringLiteral("dying"), animal.dying},
+          {QStringLiteral("melee_lock"), animal.melee_lock},
+          {QStringLiteral("has_move_target"), animal.has_move_target},
+          {QStringLiteral("movement_goal"), QJsonArray{animal.goal_x, animal.goal_z}},
+          {QStringLiteral("state_timer"), animal.state_timer},
+          {QStringLiteral("stall_timer"), animal.stall_timer},
+          {QStringLiteral("staggered"), animal.staggered}});
     }
 
     QJsonArray soldiers;

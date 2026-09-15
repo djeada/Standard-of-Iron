@@ -153,17 +153,25 @@ void apply_desired_yaw(Engine::Core::TransformComponent* transform,
   }
 }
 
-auto face_locked_structure(Engine::Core::World* world,
-                           Engine::Core::TransformComponent& transform,
-                           const Engine::Core::AttackComponent& attack,
-                           const Engine::Core::UnitComponent* unit,
-                           float delta_time) -> bool {
+auto face_locked_opponent(Engine::Core::World* world,
+                          const Engine::Core::Entity& entity,
+                          Engine::Core::TransformComponent& transform,
+                          const Engine::Core::AttackComponent& attack,
+                          const Engine::Core::UnitComponent* unit,
+                          float delta_time) -> bool {
   if (world == nullptr || attack.melee_lock_target_id == 0) {
     return false;
   }
   auto* structure = world->get_entity(attack.melee_lock_target_id);
-  if (structure == nullptr ||
-      !structure->has_component<Engine::Core::BuildingComponent>()) {
+  if (structure == nullptr) {
+    return false;
+  }
+  bool const faces_a_structure =
+      world->has<Engine::Core::BuildingComponent>(structure->get_id());
+  bool const faces_an_animal =
+      world->has<Engine::Core::WildlifeComponent>(structure->get_id()) &&
+      !FormationCombat::has_formation_slots(entity);
+  if (!faces_a_structure && !faces_an_animal) {
     return false;
   }
   auto const* structure_transform =
@@ -982,7 +990,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     facts->progress.state = Engine::Core::MovementOrderState::Idle;
     if (atk != nullptr &&
         !apply_duel_footwork(entity, world, *transform, *atk, delta_time) &&
-        !face_locked_structure(world, *transform, *atk, unit, delta_time)) {
+        !face_locked_opponent(world, *entity, *transform, *atk, unit, delta_time)) {
       transform->desired_yaw = transform->rotation.y;
       transform->has_desired_yaw = false;
     }

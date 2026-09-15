@@ -108,7 +108,8 @@ public:
                                           float radius) -> PreyRef = 0;
   [[nodiscard]] virtual auto nearest_quarry(const NatureContext& ctx,
                                             float radius) -> PreyRef = 0;
-  [[nodiscard]] virtual auto locate(Engine::Core::EntityID entity_id) -> PreyRef = 0;
+  [[nodiscard]] virtual auto locate(const NatureContext& ctx,
+                                    Engine::Core::EntityID entity_id) -> PreyRef = 0;
   [[nodiscard]] virtual auto claim_pack_slot(const NatureContext& ctx,
                                              const PreyRef& prey) -> PackSlot = 0;
   [[nodiscard]] virtual auto

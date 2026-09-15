@@ -644,6 +644,7 @@ TEST_F(WildlifeSystemTest, WoundedWolvesTurnOnTheirAttacker) {
   auto* hunter = add_troop(world, in_front(wolf_entity, 1.0F));
   auto* hunter_unit = hunter->get_component<Engine::Core::UnitComponent>();
   ASSERT_NE(hunter_unit, nullptr);
+  hunter_unit->render_individuals_per_unit_override = 1;
 
   Game::Systems::Combat::apply_unit_damage(&world, wolf_entity, 5, hunter->get_id());
 
