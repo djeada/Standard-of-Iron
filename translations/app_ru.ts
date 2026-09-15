@@ -2267,6 +2267,22 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Slaughter sheep</source>
         <translation>Забить овцу</translation>
     </message>
+    <message>
+        <source>Point at a tree, boulder, ore, ripe farm or sheep</source>
+        <translation>Наведите на дерево, валун, руду, спелое поле или овцу</translation>
+    </message>
+    <message>
+        <source>Chop this tree</source>
+        <translation>Срубить это дерево</translation>
+    </message>
+    <message>
+        <source>Quarry this boulder</source>
+        <translation>Разбить этот валун</translation>
+    </message>
+    <message>
+        <source>Mine this ore</source>
+        <translation>Добыть эту руду</translation>
+    </message>
 </context>
 <context>
     <name>EconomyCoach</name>

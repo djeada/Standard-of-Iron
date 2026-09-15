@@ -1421,13 +1421,19 @@ void GameEngine::sync_interaction_targeting(float delta_time) {
   QVariantMap hint;
   hint[QStringLiteral("action")] = QStringLiteral("none");
 
-  bool const interaction_mode_armed = App::Economy::interaction_highlights_armed(
-      m_cursor_manager != nullptr ? m_cursor_manager->mode() : CursorMode::Normal,
-      m_production_manager != nullptr &&
-          m_production_manager->is_placing_construction(),
+  const CursorMode cursor_mode =
+      m_cursor_manager != nullptr ? m_cursor_manager->mode() : CursorMode::Normal;
+  const bool placing_construction = m_production_manager != nullptr &&
+                                    m_production_manager->is_placing_construction();
+  const QString pending_type =
       m_production_manager != nullptr
           ? m_production_manager->pending_builder_construction_type()
-          : QString());
+          : QString();
+  bool const interaction_mode_armed = App::Economy::interaction_highlights_armed(
+      cursor_mode, placing_construction, pending_type);
+  bool const gathering = cursor_mode == CursorMode::Collect ||
+                         (placing_construction &&
+                          App::Economy::is_harvest_construction_item(pending_type));
 
   if ((m_world != nullptr) && !m_level.is_spectator_mode && interaction_mode_armed) {
     std::vector<Engine::Core::EntityID> selection;
@@ -1468,9 +1474,20 @@ void GameEngine::sync_interaction_targeting(float delta_time) {
         request.anchor_x = anchor.x();
         request.anchor_z = anchor.z();
       }
-      request.max_distance = Game::Systems::k_interaction_highlight_max_distance;
-      request.max_markers = Game::Systems::k_interaction_highlight_max_markers;
+      request.max_distance = gathering
+                                 ? Game::Systems::k_gather_highlight_max_distance
+                                 : Game::Systems::k_interaction_highlight_max_distance;
+      request.max_markers = gathering
+                                ? Game::Systems::k_gather_highlight_max_markers
+                                : Game::Systems::k_interaction_highlight_max_markers;
       request.visibility = snapshot.get();
+      if (gathering && placing_construction) {
+        request.gather_only = true;
+        request.hover_from_placement = true;
+        request.placement_world_prop_id =
+            m_production_manager->pending_harvest_target_id();
+        request.placement_entity_id = m_production_manager->pending_food_target_id();
+      }
 
       QVector3D ground;
       if (screen_to_ground(QPointF(m_runtime.last_cursor_x, m_runtime.last_cursor_y),
@@ -1486,6 +1503,9 @@ void GameEngine::sync_interaction_targeting(float delta_time) {
           Game::Systems::interaction_action_key(highlights.hovered_action);
       hint[QStringLiteral("action")] = QString::fromLatin1(
           action_key.data(), static_cast<qsizetype>(action_key.size()));
+      hint[QStringLiteral("resource")] = QString::fromLatin1(
+          highlights.hovered_resource.data(),
+          static_cast<qsizetype>(highlights.hovered_resource.size()));
     }
   }
 

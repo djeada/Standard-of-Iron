@@ -18,6 +18,13 @@ Item {
     property var attackHint: null
     property var interactionHint: null
 
+    readonly property bool gathering: root.mode === "collect" && root.placingConstruction
+    readonly property bool gatherReady: root.gathering && root.constructionPreviewActive && root.constructionPreviewValid
+    property bool rejectFlash: false
+
+    onGatherReadyChanged: root.refresh_construction_glyphs()
+    onRejectFlashChanged: root.refresh_construction_glyphs()
+
     readonly property string intent: {
         if (!root.intentData)
             return "none";
@@ -55,6 +62,10 @@ Item {
     }
 
     function report_order_feedback(kind, accepted, message) {
+        if (!accepted) {
+            root.rejectFlash = true;
+            rejectShake.restart();
+        }
         if (!message || message.length === 0)
             return;
         chip.orderKind = kind;
@@ -80,12 +91,56 @@ Item {
         height: 32
         z: 999999
         visible: root.replacesPointer
-        x: root.pointerX - 16
+        x: root.pointerX - 16 + glyphs.shakeOffset
         y: root.pointerY - 16
 
         property real acknowledgeScale: 1
+        property real shakeOffset: 0
 
         scale: glyphs.acknowledgeScale
+
+        SequentialAnimation {
+            id: rejectShake
+
+            NumberAnimation {
+                target: glyphs
+                property: "shakeOffset"
+                to: -6
+                duration: 45
+            }
+            NumberAnimation {
+                target: glyphs
+                property: "shakeOffset"
+                to: 6
+                duration: 70
+            }
+            NumberAnimation {
+                target: glyphs
+                property: "shakeOffset"
+                to: -4
+                duration: 60
+            }
+            NumberAnimation {
+                target: glyphs
+                property: "shakeOffset"
+                to: 3
+                duration: 55
+            }
+            NumberAnimation {
+                target: glyphs
+                property: "shakeOffset"
+                to: 0
+                duration: 45
+            }
+            PauseAnimation {
+                duration: 260
+            }
+
+            onStopped: {
+                glyphs.shakeOffset = 0;
+                root.rejectFlash = false;
+            }
+        }
 
         SequentialAnimation {
             id: acknowledgeFlash
@@ -446,7 +501,70 @@ Item {
             visible: root.mode === "collect"
             anchors.fill: parent
 
+            Canvas {
+                id: gatherHand
+
+                objectName: "gatherHandCursor"
+                anchors.centerIn: parent
+                width: 38
+                height: 38
+                visible: root.gatherReady && !root.rejectFlash
+                onVisibleChanged: requestPaint()
+
+                SequentialAnimation on scale  {
+                    running: gatherHand.visible
+                    loops: Animation.Infinite
+
+                    NumberAnimation {
+                        from: 1
+                        to: 1.14
+                        duration: 420
+                        easing.type: Easing.OutQuad
+                    }
+                    NumberAnimation {
+                        from: 1.14
+                        to: 1
+                        duration: 420
+                        easing.type: Easing.InQuad
+                    }
+                }
+
+                onPaint: {
+                    var ctx = getContext("2d");
+                    ctx.reset();
+                    ctx.save();
+                    ctx.scale(width / 38, height / 38);
+                    ctx.fillStyle = Qt.rgba(0.46, 0.83, 0.42, 0.30);
+                    ctx.beginPath();
+                    ctx.arc(19, 19, 18, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = "#75D36B";
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.lineJoin = "round";
+                    ctx.fillStyle = "#F2DDB0";
+                    ctx.strokeStyle = "#3A2A12";
+                    ctx.lineWidth = 1.6;
+                    ctx.beginPath();
+                    ctx.roundedRect(11, 17, 18, 13, 4, 4);
+                    ctx.fill();
+                    ctx.stroke();
+                    for (var i = 0; i < 4; ++i) {
+                        ctx.beginPath();
+                        ctx.roundedRect(11 + i * 4.5, 10, 4.5, 10, 2.2, 2.2);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
+                    ctx.beginPath();
+                    ctx.roundedRect(7, 19, 10, 5.5, 2.7, 2.7);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+
             Image {
+                visible: !root.gatherReady || root.rejectFlash
                 anchors.centerIn: parent
                 width: 18
                 height: 18
@@ -460,12 +578,13 @@ Item {
             Canvas {
                 id: collectCursorOverlay
 
+                visible: !root.gatherReady || root.rejectFlash
                 anchors.fill: parent
                 onPaint: {
                     var ctx = getContext("2d");
                     ctx.clearRect(0, 0, width, height);
-                    var active = root.constructionPreviewActive;
-                    var ok = active && root.constructionPreviewValid;
+                    var active = root.constructionPreviewActive || root.rejectFlash;
+                    var ok = !root.rejectFlash && active && root.constructionPreviewValid;
                     var primary = !active ? "#D8C17A" : (ok ? "#75D36B" : "#D36060");
                     var secondary = !active ? "#51401A" : (ok ? "#163A16" : "#4A1717");
                     ctx.strokeStyle = primary;
@@ -525,6 +644,7 @@ Item {
     function refresh_construction_glyphs() {
         constructionCursor.requestPaint();
         collectCursorOverlay.requestPaint();
+        gatherHand.requestPaint();
     }
 
     Rectangle {
@@ -649,11 +769,33 @@ Item {
             return "";
         }
 
+        function gather_text() {
+            if (!root.gatherReady)
+                return qsTr("Point at a tree, boulder, ore, ripe farm or sheep");
+            switch (chip.interaction.action) {
+            case "harvest":
+                return qsTr("Harvest grain");
+            case "slaughter":
+                return qsTr("Slaughter sheep");
+            }
+            switch (chip.interaction.resource) {
+            case "wood":
+                return qsTr("Chop this tree");
+            case "stone":
+                return qsTr("Quarry this boulder");
+            case "iron":
+                return qsTr("Mine this ore");
+            }
+            return qsTr("Collect");
+        }
+
         readonly property string source: {
             if (chip.orderMessage.length > 0)
                 return "order";
             if (root.placingConstruction && root.constructionPreviewActive && !root.constructionPreviewValid && root.constructionPreviewReason.length > 0)
                 return "placement";
+            if (root.gathering)
+                return "gather";
             if (root.intent === "invalid" && root.intentReason.length > 0)
                 return "refusal";
             if (root.mode === "attack" && chip.attack.state !== "none")
@@ -674,6 +816,8 @@ Item {
                 return chip.attack.state === "valid" ? "⚔" : "⊘";
             case "interaction":
                 return chip.interaction_glyph();
+            case "gather":
+                return root.gatherReady ? Design.Icons.collect : "";
             }
             return "";
         }
@@ -690,6 +834,8 @@ Item {
                 return chip.attack_text();
             case "interaction":
                 return chip.interaction_text();
+            case "gather":
+                return chip.gather_text();
             }
             return "";
         }
@@ -698,7 +844,9 @@ Item {
 
         readonly property bool negative: chip.source === "placement" || chip.source === "refusal" || (chip.source === "order" && !chip.orderAccepted) || (chip.source === "attack" && chip.attack.state !== "valid")
 
+        objectName: "cursorChip"
         visible: chip.source !== "" && chip.label.length > 0
+        opacity: chip.source === "gather" && !root.gatherReady ? 0.78 : 1
         z: 999998
         radius: 5
         color: "#C8141414"

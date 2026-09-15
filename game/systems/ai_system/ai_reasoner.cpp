@@ -333,6 +333,19 @@ constexpr int k_food_reserve = 60;
 
 constexpr float k_worker_pop_share = 0.28F;
 
+auto doctrine_engine_target(const Game::Systems::AI::AIDoctrine& doctrine,
+                            int army_the_doctrine_wants) -> int {
+  const int planned =
+      doctrine.town_plan != nullptr ? doctrine.town_plan->engine_step_count() : 0;
+  const float share = std::clamp(doctrine.recruitment.siege_share, 0.0F, 1.0F);
+  if (share <= 0.0F && planned == 0) {
+    return 0;
+  }
+  const int by_share =
+      static_cast<int>((share * static_cast<float>(army_the_doctrine_wants)) + 0.999F);
+  return std::max(planned, by_share);
+}
+
 auto compute_macro_targets(const Game::Systems::AI::AISnapshot& snapshot,
                            const Game::Systems::AI::AIContext& ctx,
                            int catapult_count)
@@ -434,8 +447,12 @@ auto compute_macro_targets(const Game::Systems::AI::AISnapshot& snapshot,
                 !ctx.buildings_under_attack.empty())
                    ? 2
                    : targets.defense_tower_count);
-  targets.catapult_count =
-      std::max(targets.catapult_count, std::min(3, extra_catapults));
+  if (doctrine != nullptr) {
+    targets.catapult_count = doctrine_engine_target(*doctrine, army_the_doctrine_wants);
+  } else {
+    targets.catapult_count =
+        std::max(targets.catapult_count, std::min(3, extra_catapults));
+  }
 
   if (ctx.primary_barracks == 0 && ctx.home_count < 2) {
     targets.barracks_count = std::max(targets.barracks_count, 1);
@@ -993,7 +1010,12 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
 
   int catapult_count = 0;
   for (const auto& entity : snapshot.friendly_units) {
-    if (!entity.is_building && entity.spawn_type == Game::Units::SpawnType::Catapult) {
+    if (!entity.is_building && Game::Units::is_siege_engine_spawn(entity.spawn_type)) {
+      catapult_count++;
+    }
+    if (entity.builder_production.raising_a_building &&
+        Game::Units::is_siege_engine_spawn(
+            entity.builder_production.building_under_way)) {
       catapult_count++;
     }
   }

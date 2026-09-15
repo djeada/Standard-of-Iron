@@ -461,7 +461,7 @@ void PlacementViewModel::on_construction_pointer_released(qreal sx, qreal sy) {
     production->on_construction_pointer_released(
         viewport_point.x(), viewport_point.y(), *m_context.viewport);
   }
-  if (!is_placing_construction()) {
+  if (production == nullptr || !production->is_placing_construction()) {
     m_host.set_cursor_mode(CursorMode::Normal);
   }
 }
@@ -482,7 +482,7 @@ void PlacementViewModel::on_construction_confirm() {
   if (production != nullptr) {
     production->on_construction_confirm();
   }
-  if (!is_placing_construction()) {
+  if (production == nullptr || !production->is_placing_construction()) {
     m_host.set_cursor_mode(CursorMode::Normal);
   }
 }
@@ -493,7 +493,7 @@ void PlacementViewModel::on_construction_cancel() {
   if (production != nullptr) {
     production->on_construction_cancel();
   }
-  if (!is_placing_construction()) {
+  if (production == nullptr || !production->is_placing_construction()) {
     m_host.set_cursor_mode(CursorMode::Normal);
   }
 }

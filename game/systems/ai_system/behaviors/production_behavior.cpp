@@ -246,7 +246,7 @@ choose_recruit(const Game::Systems::Nation& nation,
                          DoctrineArm::Cavalry,
                          DoctrineArm::Siege}) {
     const float target = share_of(recruitment, arm);
-    if (target <= 0.0F) {
+    if (target <= 0.0F || arm == DoctrineArm::Siege) {
       continue;
     }
     const float have =

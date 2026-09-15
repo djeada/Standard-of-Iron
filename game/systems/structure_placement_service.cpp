@@ -20,7 +20,8 @@ auto StructurePlacementService::ground_ruling(const Engine::Core::World& world,
                                               float z,
                                               float rotation_y) -> PlacementRuling {
   const auto spawn_type = Game::Units::spawn_typeFromString(building_type);
-  if (!spawn_type.has_value() || !Game::Units::is_building_spawn(*spawn_type)) {
+  if (!spawn_type.has_value() || (!Game::Units::is_building_spawn(*spawn_type) &&
+                                  !Game::Units::is_siege_engine_spawn(*spawn_type))) {
     return PlacementRuling::UnknownStructure;
   }
   return ruling_for(assess_ground(world, building_type, x, z, 0, rotation_y));
