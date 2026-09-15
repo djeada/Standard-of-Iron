@@ -396,8 +396,9 @@ auto combat_role_for(std::uint32_t formation_seed,
   return Engine::Core::FormationSoldierCombatRole::Ready;
 }
 
-auto brawls_as_a_crowd(const Engine::Core::Entity& entity) -> bool {
-  auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
+auto brawls_as_a_crowd(const Engine::Core::World& world,
+                       Engine::Core::EntityID entity_id) -> bool {
+  auto const* unit = world.try_get<Engine::Core::UnitComponent>(entity_id);
   return unit != nullptr && Game::Units::combat_role(unit->spawn_type) ==
                                 Game::Units::CombatRole::Noncombatant;
 }
@@ -796,7 +797,8 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
                 ? structure_facade_rank
                 : directive.engagement_surface_gap <= layout.spacing * 0.65F;
         directive.combat_role =
-            brawls_as_a_crowd(*entity) ? crowd_brawl_role(original_slot.index)
+            brawls_as_a_crowd(world, entity->get_id())
+                ? crowd_brawl_role(original_slot.index)
             : opponent_within_reach
                 ? combat_role_for(layout.seed, original_slot.index, true)
                 : Engine::Core::FormationSoldierCombatRole::Guard;
@@ -876,15 +878,16 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         }
       } else if (directive.alive && melee_ordered) {
         directive.combat_role =
-            brawls_as_a_crowd(*entity)
+            brawls_as_a_crowd(world, entity->get_id())
                 ? crowd_brawl_role(original_slot.index)
                 : combat_role_for(layout.seed, original_slot.index, false);
         directive.action = action_for_role(directive.combat_role);
         bool const faces_an_animal =
             display_opponent != nullptr &&
-            display_opponent->has_component<Engine::Core::WildlifeComponent>();
-        if ((brawls_as_a_crowd(*entity) || faces_an_animal) && !attacks_structure &&
-            actor_transform != nullptr && display_opponent != nullptr) {
+            world.has<Engine::Core::WildlifeComponent>(display_opponent->get_id());
+        if ((brawls_as_a_crowd(world, entity->get_id()) || faces_an_animal) &&
+            !attacks_structure && actor_transform != nullptr &&
+            display_opponent != nullptr) {
           if (auto const* opponent_transform =
                   world.try_get<Engine::Core::TransformComponent>(
                       display_opponent->get_id())) {

@@ -445,7 +445,11 @@ auto may_engage(Engine::Core::Entity* unit,
   }
 
   if (!auto_acquires_targets(unit)) {
-    auto const* own_attack = unit->get_component<Engine::Core::AttackComponent>();
+    auto const* registry = unit->registry();
+    auto const* own_attack =
+        registry == nullptr
+            ? nullptr
+            : registry->try_get<Engine::Core::AttackComponent>(unit->get_id());
     bool const answers_a_blow_bare_handed =
         trigger == EngagementTrigger::Retaliation &&
         Game::Units::combat_role(unit_comp->spawn_type) ==

@@ -705,8 +705,9 @@ void deal_rts_melee_contact_damage(
     Engine::Core::Entity& attacker,
     Engine::Core::RpgCommanderActionComponent& action,
     const Game::Systems::CombatActions::CombatActionDefinition& definition) {
-  auto* attacker_unit = attacker.get_component<Engine::Core::UnitComponent>();
-  auto* attacker_transform = attacker.get_component<Engine::Core::TransformComponent>();
+  auto* attacker_unit = world.try_get<Engine::Core::UnitComponent>(attacker.get_id());
+  auto* attacker_transform =
+      world.try_get<Engine::Core::TransformComponent>(attacker.get_id());
   auto* target = world.get_entity(action.active_target_id);
   auto* target_unit = target != nullptr
                           ? target->get_component<Engine::Core::UnitComponent>()
@@ -760,7 +761,7 @@ void deal_rts_melee_contact_damage(
   }
 
   bool const soldiers_face_the_animal =
-      target->has_component<Engine::Core::WildlifeComponent>() &&
+      world.has<Engine::Core::WildlifeComponent>(target->get_id()) &&
       FormationCombat::has_formation_slots(attacker);
   if (!in_range || (!soldiers_face_the_animal &&
                     facing < std::cos(80.0F * std::numbers::pi_v<float> / 180.0F))) {

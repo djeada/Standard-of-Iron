@@ -167,9 +167,9 @@ auto face_locked_opponent(Engine::Core::World* world,
     return false;
   }
   bool const faces_a_structure =
-      structure->has_component<Engine::Core::BuildingComponent>();
+      world->has<Engine::Core::BuildingComponent>(structure->get_id());
   bool const faces_an_animal =
-      structure->has_component<Engine::Core::WildlifeComponent>() &&
+      world->has<Engine::Core::WildlifeComponent>(structure->get_id()) &&
       !FormationCombat::has_formation_slots(entity);
   if (!faces_a_structure && !faces_an_animal) {
     return false;

@@ -2185,12 +2185,17 @@ struct ArenaScenarioRunner::Impl {
       animal.goal_x = movement->get_goal_x();
       animal.goal_z = movement->get_goal_y();
     }
-    if (auto const* attack = entity.get_component<Engine::Core::AttackComponent>()) {
+    auto* const registry = entity.registry();
+    if (auto const* attack =
+            registry == nullptr
+                ? nullptr
+                : registry->try_get<Engine::Core::AttackComponent>(entity.get_id())) {
       animal.melee_lock = attack->in_melee_lock;
     }
     animal.state_timer = wildlife.state_timer;
     animal.stall_timer = wildlife.stall_timer;
-    animal.staggered = entity.has_component<Engine::Core::StaggerComponent>();
+    animal.staggered = registry != nullptr &&
+                       registry->has<Engine::Core::StaggerComponent>(entity.get_id());
     animal.biting = wildlife.bite_timer > 0.0F;
     animal.bite_phase =
         animal.biting

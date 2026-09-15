@@ -118,12 +118,13 @@ auto is_civilian_spawn(Game::Units::SpawnType type) -> bool {
          type == Game::Units::SpawnType::Builder;
 }
 
-auto is_fighting_back(const Engine::Core::Entity& entity) -> bool {
-  if (const auto* attack = entity.get_component<Engine::Core::AttackComponent>();
+auto is_fighting_back(const Engine::Core::World& world,
+                      Engine::Core::EntityID entity_id) -> bool {
+  if (const auto* attack = world.try_get<Engine::Core::AttackComponent>(entity_id);
       attack != nullptr && attack->in_melee_lock) {
     return true;
   }
-  const auto* target = entity.get_component<Engine::Core::AttackTargetComponent>();
+  const auto* target = world.try_get<Engine::Core::AttackTargetComponent>(entity_id);
   return target != nullptr && target->target_id != 0;
 }
 
@@ -1175,7 +1176,7 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
           const auto* prey_unit =
               prey.entity->get_component<Engine::Core::UnitComponent>();
           if (prey_unit != nullptr && is_civilian_spawn(prey_unit->spawn_type) &&
-              !is_fighting_back(*prey.entity)) {
+              !is_fighting_back(*world, prey.entity->get_id())) {
             Game::Systems::Combat::add_or_extend_stagger(
                 prey.entity,
                 k_wolf_bite_flinch_seconds,

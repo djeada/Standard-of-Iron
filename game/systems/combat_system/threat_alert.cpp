@@ -17,7 +17,11 @@ namespace Game::Systems::Combat {
 namespace {
 
 auto retaliation_should_chase(Engine::Core::Entity* entity) -> bool {
-  auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+  auto const* registry = entity->registry();
+  auto const* unit =
+      registry == nullptr
+          ? nullptr
+          : registry->try_get<Engine::Core::UnitComponent>(entity->get_id());
   bool const steps_into_a_brawl =
       unit != nullptr && Game::Units::combat_role(unit->spawn_type) ==
                              Game::Units::CombatRole::Noncombatant;

@@ -1095,7 +1095,7 @@ void reciprocate_melee_lock(Engine::Core::World* world,
   if (target_atk == nullptr) {
     return;
   }
-  if (target->has_component<Engine::Core::WildlifeComponent>()) {
+  if (world->has<Engine::Core::WildlifeComponent>(target->get_id())) {
     return;
   }
   if (target->has_component<Engine::Core::ElephantComponent>() &&
