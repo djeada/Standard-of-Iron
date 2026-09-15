@@ -176,7 +176,7 @@ protected:
     params.spawn_type = type;
     params.ai_controlled = true;
     params.is_initial_spawn = true;
-    params.max_population = 280;
+    params.max_population = 630;
     params.enables_production = true;
     const auto* nation = session.nations().get_nation_for_player(owner_id);
     params.nation_id =
@@ -256,7 +256,7 @@ TEST_F(CommanderVoiceSkirmishTest, HannibalAnnouncesHisOwnAttackOnThePlayer) {
 
   Game::Mission::CommanderMessageScript script;
   script.speakers = Game::Mission::build_commander_speaker_roster(
-      session.world(), session.owners(), k_player);
+      session.world(), session.owners(), session.nations(), k_player);
   ASSERT_EQ(script.speakers.size(), 1U);
   EXPECT_EQ(script.speakers.front().owner_id, k_enemy);
   EXPECT_EQ(script.speakers.front().troop_type,

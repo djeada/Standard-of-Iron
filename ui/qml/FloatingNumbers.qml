@@ -12,13 +12,45 @@ Item {
     property bool economyEnabled: true
 
     readonly property bool reducedMotion: Design.A11y.reducedMotion
-    readonly property int maxTicks: reducedMotion ? 12 : 24
-    readonly property int maxBursts: 48
+    readonly property int maxTicks: reducedMotion ? 12 : 18
+    readonly property int maxBursts: 24
+    readonly property int maxTicksPerAnchor: 2
+    readonly property int maxBurstsPerAnchor: 1
     readonly property int activeTicks: tickLayer.children.length
     readonly property int activeBursts: burstLayer.children.length
     readonly property var resourceKeys: ["gold", "food", "wood", "stone", "iron"]
+    property var activeByAnchor: ({})
 
     Accessible.ignored: true
+
+    function anchor_key(ev, burst) {
+        var anchor = Number(ev.anchor || 0);
+        if (anchor <= 0)
+            return "";
+        return (burst ? "b" : "t") + anchor;
+    }
+
+    function anchor_busy(key, limit) {
+        if (key.length === 0)
+            return false;
+        return Number(root.activeByAnchor[key] || 0) >= limit;
+    }
+
+    function acquire_anchor(key) {
+        if (key.length === 0)
+            return;
+        root.activeByAnchor[key] = Number(root.activeByAnchor[key] || 0) + 1;
+    }
+
+    function release_anchor(key) {
+        if (key.length === 0)
+            return;
+        var left = Number(root.activeByAnchor[key] || 0) - 1;
+        if (left <= 0)
+            delete root.activeByAnchor[key];
+        else
+            root.activeByAnchor[key] = left;
+    }
 
     function resource_key(index) {
         return index >= 0 && index < root.resourceKeys.length ? root.resourceKeys[index] : "";
@@ -96,6 +128,7 @@ Item {
             required property int resource
             required property int pairedResource
             required property int pairedAmount
+            required property string anchorKey
 
             readonly property var event: ({
                     "kind": kind,
@@ -140,7 +173,10 @@ Item {
                 }
 
                 ScriptAction {
-                    script: tick.destroy()
+                    script: {
+                        root.release_anchor(tick.anchorKey);
+                        tick.destroy();
+                    }
                 }
             }
 
@@ -229,6 +265,7 @@ Item {
             required property real severityRatio
             required property int lane
             required property bool killingBlow
+            required property string anchorKey
 
             readonly property var projection: {
                 if (root.projector === null)
@@ -291,7 +328,10 @@ Item {
                 }
 
                 ScriptAction {
-                    script: burst.destroy()
+                    script: {
+                        root.release_anchor(burst.anchorKey);
+                        burst.destroy();
+                    }
                 }
             }
 
@@ -441,9 +481,13 @@ Item {
                 var burst = ev.style === "burst";
                 if (!root.accepts(ev, burst))
                     continue;
+                var key = root.anchor_key(ev, burst);
                 if (burst) {
                     if (burstLayer.children.length >= root.maxBursts)
                         continue;
+                    if (!ev.killingBlow && root.anchor_busy(key, root.maxBurstsPerAnchor))
+                        continue;
+                    root.acquire_anchor(key);
                     damageBurst.createObject(burstLayer, {
                             "amount": Math.abs(Number(ev.amount || 0)),
                             "worldX": Number(ev.x || 0.0),
@@ -451,12 +495,16 @@ Item {
                             "worldZ": Number(ev.z || 0.0),
                             "severityRatio": Number(ev.severity || 0.0),
                             "lane": Number(ev.lane || 0),
-                            "killingBlow": !!ev.killingBlow
+                            "killingBlow": !!ev.killingBlow,
+                            "anchorKey": key
                         });
                     continue;
                 }
                 if (tickLayer.children.length >= root.maxTicks)
                     continue;
+                if (!ev.killingBlow && root.anchor_busy(key, root.maxTicksPerAnchor))
+                    continue;
+                root.acquire_anchor(key);
                 damageTick.createObject(tickLayer, {
                         "amount": Number(ev.amount || 0),
                         "hits": Number(ev.hits || 1),
@@ -471,7 +519,8 @@ Item {
                         "kind": String(ev.kind || "damage"),
                         "resource": Number(ev.resource === undefined ? -1 : ev.resource),
                         "pairedResource": Number(ev.pairedResource === undefined ? -1 : ev.pairedResource),
-                        "pairedAmount": Number(ev.pairedAmount || 0)
+                        "pairedAmount": Number(ev.pairedAmount || 0),
+                        "anchorKey": key
                     });
             }
         }

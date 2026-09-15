@@ -14,6 +14,7 @@ Design.IronPanel {
     property string hoverTooltip: ""
     property color accent: Design.Theme.accent
     property bool gate: true
+    property bool allowSuppress: true
 
     default property alias body: bodyColumn.data
 
@@ -91,6 +92,7 @@ Design.IronPanel {
 
         Text {
             Layout.fillWidth: true
+            visible: hintCard.allowSuppress
             color: neverAgainArea.containsMouse ? Design.Theme.textPrimary : Design.Theme.textDisabled
             font.family: Design.Typography.family
             font.pixelSize: Design.Typography.caption

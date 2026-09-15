@@ -270,7 +270,7 @@
             "z": 420
         }
     ],
-    "max_troops_per_player": 950,
+    "max_troops_per_player": 2140,
     "name": "Battle of Trebia",
     "rain": {
         "active_duration": 120,

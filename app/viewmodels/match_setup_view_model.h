@@ -6,6 +6,8 @@
 #include <QVariantList>
 #include <QVariantMap>
 
+#include <optional>
+
 namespace App::Core {
 struct ClientContext;
 class ClientHost;
@@ -38,6 +40,7 @@ class MatchSetupViewModel : public QObject {
   Q_PROPERTY(QVariantList missions READ missions NOTIFY missions_changed)
   Q_PROPERTY(bool campaign_completed READ campaign_completed NOTIFY campaigns_changed)
   Q_PROPERTY(bool is_mission_match READ is_mission_match NOTIFY current_mission_changed)
+  Q_PROPERTY(bool can_restart READ can_restart NOTIFY can_restart_changed)
   Q_PROPERTY(int starting_gold READ starting_gold WRITE set_starting_gold NOTIFY
                  starting_gold_changed)
 
@@ -81,6 +84,9 @@ public:
   Q_INVOKABLE void start_mission_file(const QString& file_path);
   void start_tutorial();
 
+  [[nodiscard]] auto can_restart() const -> bool { return m_last_launch.has_value(); }
+  Q_INVOKABLE bool restart_current_match();
+
   void set_maps(const QVariantList& maps);
   void append_map(const QVariantMap& map);
   void set_maps_loading(bool loading);
@@ -94,19 +100,29 @@ signals:
   void missions_changed();
   void current_mission_changed();
   void starting_gold_changed();
+  void can_restart_changed();
 
   void launch_requested(const App::Core::MatchLaunch& launch);
 
   void failed(const QString& message);
 
 private:
+  struct LastLaunch {
+    QString kind;
+    QString reference;
+    QString map_path;
+    QVariantList player_configs;
+  };
+
   void launch_current_mission(const QString& kind, const QString& reference);
+  void remember_launch(const App::Core::MatchLaunch& launch);
 
   const App::Core::ClientContext& m_context;
   App::Core::ClientHost& m_host;
   MapList m_maps;
   QVariantList m_missions;
   bool m_maps_loading = false;
+  std::optional<LastLaunch> m_last_launch;
 };
 
 } // namespace App::ViewModels

@@ -13,8 +13,8 @@ namespace {
 
 // clang-format off
 [[maybe_unused]] const char* const k_asset_strings[] = {
-    // 813 strings across 9 contexts.
-    // ---- Missions (333) ----
+    // 820 strings across 9 contexts.
+    // ---- Missions (335) ----
     QT_TRANSLATE_NOOP("Missions", "202 BC: Scipio arranged lanes through his infantry to blunt Hannibal's elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign's deliberate dark-fantasy break from history."),
     QT_TRANSLATE_NOOP("Missions", "215-212 BC: Hannibal campaigned across Campania while Capua served as his principal Italian ally and winter base. This dark-fantasy composite condenses several Roman attempts to contain and isolate the Carthaginian army."),
     QT_TRANSLATE_NOOP("Missions", "216 BC: beside the Aufidus, Hannibal's deliberately yielding center drew a much larger Roman infantry mass forward while African infantry attacked its flanks and Carthaginian cavalry closed the rear. Two Roman camps supported the army."),
@@ -50,7 +50,7 @@ namespace {
     QT_TRANSLATE_NOOP("Missions", "Break all five columns. The ford is held when the last of them is dead in front of it, and not one column sooner."),
     QT_TRANSLATE_NOOP("Missions", "Break all six assaults. They do not come at the same gate twice."),
     QT_TRANSLATE_NOOP("Missions", "Break all three Roman assault phases. The quarter holds when the last consular column is dead in the streets."),
-    QT_TRANSLATE_NOOP("Missions", "Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle."),
+    QT_TRANSLATE_NOOP("Missions", "Break both risings of the dead at the sepulcher ruins by the south-western crossing. The guardians will not leave their ground; you must go to them."),
     QT_TRANSLATE_NOOP("Missions", "Break the chiefs contesting the descent."),
     QT_TRANSLATE_NOOP("Missions", "Break the consular line at its centre."),
     QT_TRANSLATE_NOOP("Missions", "Break the siege"),
@@ -79,7 +79,7 @@ namespace {
     QT_TRANSLATE_NOOP("Missions", "Cut timber for the sledges, break stone for the road, and draw iron for the shoes and axles. The column crosses on what your builders can carry."),
     QT_TRANSLATE_NOOP("Missions", "December 218 BC: Hannibal provoked Tiberius Sempronius Longus into crossing the cold Trebia before breakfast. Carthaginian infantry, cavalry, elephants, and Mago's hidden detachment struck the exhausted Roman army from front, flanks, and rear."),
     QT_TRANSLATE_NOOP("Missions", "Defend Hannibal's fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads."),
-    QT_TRANSLATE_NOOP("Missions", "Drive the dead from the shrine. Salt the earth where they stood."),
+    QT_TRANSLATE_NOOP("Missions", "Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood."),
     QT_TRANSLATE_NOOP("Missions", "Eight hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. The column comes back through at dusk and it does not wait. Split the crew. Escort the far one."),
     QT_TRANSLATE_NOOP("Missions", "Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like."),
     QT_TRANSLATE_NOOP("Missions", "End the war with the men who lead it."),
@@ -174,6 +174,7 @@ namespace {
     QT_TRANSLATE_NOOP("Missions", "Provision the capital"),
     QT_TRANSLATE_NOOP("Missions", "Provision the capital. The grain is across the river and the stone is past the quarry gate; neither will walk in by itself."),
     QT_TRANSLATE_NOOP("Missions", "Provision the column for the descent: harvest timber, stone and iron from the pass while the mountain tribes contest every switchback."),
+    QT_TRANSLATE_NOOP("Missions", "Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too."),
     QT_TRANSLATE_NOOP("Missions", "Raze every Roman post. Leave Scipio nothing to rally behind."),
     QT_TRANSLATE_NOOP("Missions", "Reach the Rhone crossing"),
     QT_TRANSLATE_NOOP("Missions", "Rear guard deployment detected across the southern wadi. This is the final phase."),
@@ -226,7 +227,7 @@ namespace {
     QT_TRANSLATE_NOOP("Missions", "Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog."),
     QT_TRANSLATE_NOOP("Missions", "Take the consular town"),
     QT_TRANSLATE_NOOP("Missions", "Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all."),
-    QT_TRANSLATE_NOOP("Missions", "Take the cursed shrine above the sepulcher ruins and hold what you take: clear the guardians out of the ruins, then drive the dead off the shrine itself."),
+    QT_TRANSLATE_NOOP("Missions", "Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it."),
     QT_TRANSLATE_NOOP("Missions", "Take the first pass quickly before the next ambush line assembles."),
     QT_TRANSLATE_NOOP("Missions", "Take the northern camp"),
     QT_TRANSLATE_NOOP("Missions", "Take the rearguard camp"),
@@ -307,6 +308,7 @@ namespace {
     QT_TRANSLATE_NOOP("Missions", "Their camps fall neutral once their commander is dead."),
     QT_TRANSLATE_NOOP("Missions", "Their troops leave the field with them."),
     QT_TRANSLATE_NOOP("Missions", "Then it holds a little longer. Go home to your Senate and tell them what a Roman looks like from close to. I shall be here in the spring, and the spring after that, and I am younger than you."),
+    QT_TRANSLATE_NOOP("Missions", "There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog."),
     QT_TRANSLATE_NOOP("Missions", "There. No battle, no glory, no monument: a town with nothing left in it and a road with my army standing on it. They will call me the Delayer. Let them. Your dead will not care what I am called."),
     QT_TRANSLATE_NOOP("Missions", "There. Sit down in the mud with the others. They tell me the men who die on this road do not stay where they are put - that they rise about the third watch and go on marching north without their officers. Do continue. You are expected."),
     QT_TRANSLATE_NOOP("Missions", "There. That is what the river was for. Have your surgeons work quickly, and tell whatever is left of your baggage train that the road home goes back up the mountain."),
@@ -753,9 +755,11 @@ namespace {
     QT_TRANSLATE_NOOP("CommanderVoices", "Your men are falling faster than you are replacing them. That is not a battle. That is a harvest, and it is not yours."),
     QT_TRANSLATE_NOOP("CommanderVoices", "Your men are falling in rows. That is what happens when you fight a wall's war against a river."),
 
-    // ---- LoadingTips (51) ----
+    // ---- LoadingTips (56) ----
     QT_TRANSLATE_NOOP("LoadingTips", "A commander who personally investigates every problem soon becomes one of them."),
+    QT_TRANSLATE_NOOP("LoadingTips", "A cursed shrine cannot be attacked while its guardians stand. Break the guard, then purify the shrine by capturing it."),
     QT_TRANSLATE_NOOP("LoadingTips", "A formation that becomes scattered is easier to surround and destroy."),
+    QT_TRANSLATE_NOOP("LoadingTips", "A grave priest mends the dead around it and hurls fire at the living. Strike it down before the line closes."),
     QT_TRANSLATE_NOOP("LoadingTips", "A narrow front can prevent a numerically superior enemy from using all of its troops at once."),
     QT_TRANSLATE_NOOP("LoadingTips", "A retreat made early can preserve an army. A retreat made late can become a rout."),
     QT_TRANSLATE_NOOP("LoadingTips", "A strong economy cannot help you if the enemy cuts the road between it and your army."),
@@ -788,11 +792,14 @@ namespace {
     QT_TRANSLATE_NOOP("LoadingTips", "Keep reserve troops behind the main line to respond to breakthroughs."),
     QT_TRANSLATE_NOOP("LoadingTips", "Never underestimate the tactical value of looking busy while someone else carries the stone."),
     QT_TRANSLATE_NOOP("LoadingTips", "Protect your commander. Losing leadership at the wrong moment can decide a battle."),
+    QT_TRANSLATE_NOOP("LoadingTips", "Ranged troops and a Medicus make the vigil survivable. Wound the dead from a distance, and keep the wounded living."),
     QT_TRANSLATE_NOOP("LoadingTips", "Repairing damaged defenses before the next attack is usually cheaper than rebuilding them afterward."),
     QT_TRANSLATE_NOOP("LoadingTips", "Scout unfamiliar terrain before committing your main force."),
+    QT_TRANSLATE_NOOP("LoadingTips", "Skeleton guardians defend their ruins and drift back to them when the fight moves on. Draw them out, or bring the fight to the stones."),
     QT_TRANSLATE_NOOP("LoadingTips", "Stockpiles shorten resource delivery routes and improve economic efficiency."),
     QT_TRANSLATE_NOOP("LoadingTips", "Terrain can be as important as numbers. Use forests, hills, and narrow passages to your advantage."),
     QT_TRANSLATE_NOOP("LoadingTips", "The Iron Sepulcher is best approached with troops prepared for an unexpected engagement."),
+    QT_TRANSLATE_NOOP("LoadingTips", "The dead do not tire, do not flee, and do not file complaints. They are, in every other respect, a poor garrison."),
     QT_TRANSLATE_NOOP("LoadingTips", "The enemy cannot predict your strategy if you have forgotten it yourself."),
     QT_TRANSLATE_NOOP("LoadingTips", "The shortest path between two points is rarely the route selected by an army."),
     QT_TRANSLATE_NOOP("LoadingTips", "Use patrol orders to secure roads, settlements, and vulnerable resource routes."),

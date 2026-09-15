@@ -13,6 +13,9 @@ Item {
     default property alias detail: detailHost.data
     property string primaryAction: qsTr("Continue")
     property string secondaryAction: ""
+    property string retryAction: ""
+    property string menuAction: ""
+    property string dismissAction: ""
 
     readonly property bool triumphant: outcome !== "defeat"
     readonly property color tone: outcome === "defeat" ? Design.Theme.danger : outcome === "campaign" ? Design.FactionTheme.accentFor(root.factionId) : Design.Theme.success
@@ -34,6 +37,9 @@ Item {
 
     signal primaryActivated
     signal secondaryActivated
+    signal retryActivated
+    signal menuActivated
+    signal dismissActivated
 
     Accessible.role: Accessible.AlertMessage
     Accessible.name: root.headline
@@ -257,6 +263,33 @@ Item {
                     visible: root.secondaryAction !== ""
                     text: root.secondaryAction
                     onClicked: root.secondaryActivated()
+                }
+
+                Design.IronButton {
+                    objectName: "outcomeRetryButton"
+                    Layout.preferredWidth: Design.A11y.scaled(176)
+                    visible: root.retryAction !== ""
+                    text: root.retryAction
+                    onClicked: root.retryActivated()
+                }
+
+                Design.IronButton {
+                    objectName: "outcomeMenuButton"
+                    Layout.preferredWidth: Design.A11y.scaled(176)
+                    visible: root.menuAction !== ""
+                    text: root.menuAction
+                    onClicked: root.menuActivated()
+                }
+
+                Design.IronButton {
+                    objectName: "outcomeDismissButton"
+                    Layout.preferredWidth: Design.A11y.scaled(176)
+                    Layout.columnSpan: root.compact ? 1 : 2
+                    Layout.alignment: Qt.AlignHCenter
+                    visible: root.dismissAction !== ""
+                    text: root.dismissAction
+                    tone: "secondary"
+                    onClicked: root.dismissActivated()
                 }
             }
         }

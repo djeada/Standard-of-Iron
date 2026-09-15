@@ -73,8 +73,9 @@ HintCard {
     }
 
     hintId: "formation_readout"
-    title: status.intent_display_name !== undefined ? status.intent_display_name : qsTr("Formation")
+    title: qsTr("Formation")
     closeTooltip: qsTr("Hide this readout")
+    allowSuppress: false
     accent: phase_tone
     hoverTooltip: phase_hint
     gate: has_formation && any_selected

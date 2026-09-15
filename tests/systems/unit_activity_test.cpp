@@ -1,9 +1,11 @@
 #include <gtest/gtest.h>
 
 #include "core/component_economy.h"
+#include "core/component_structures.h"
 #include "core/world.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/unit_activity.h"
+#include "game/units/spawn_type.h"
 #include "tests/support/movement_test_access.h"
 
 namespace {
@@ -187,6 +189,35 @@ TEST(UnitActivityTest, StancesAndOrdersAreToldApart) {
   auto* barracks = make_unit(world);
   barracks->add_component<Engine::Core::ProductionComponent>()->in_progress = true;
   EXPECT_EQ(classify_unit_activity(*barracks).kind, ActivityKind::Train);
+}
+
+TEST(UnitActivityTest, ABarracksWavesOnlyWhenItsReserveCannotPayForAnyone) {
+  Engine::Core::World world;
+  auto* barracks = make_unit(world);
+  barracks->get_component<Engine::Core::UnitComponent>()->spawn_type =
+      Game::Units::SpawnType::Barracks;
+  auto* production = barracks->add_component<Engine::Core::ProductionComponent>();
+  production->max_units = 60;
+  production->manpower_available = 60;
+  EXPECT_EQ(classify_unit_activity(*barracks).kind, ActivityKind::Idle)
+      << "a barracks with men in reserve has nothing to complain about";
+
+  production->manpower_available = 0;
+  production->reserve_short = true;
+  const auto exhausted = classify_unit_activity(*barracks);
+  EXPECT_EQ(exhausted.kind, ActivityKind::Blocked);
+  EXPECT_EQ(exhausted.state, ActivityState::Unavailable);
+
+  production->in_progress = true;
+  EXPECT_EQ(classify_unit_activity(*barracks).kind, ActivityKind::Train)
+      << "training outranks the empty reserve";
+
+  auto* home = make_unit(world);
+  home->get_component<Engine::Core::UnitComponent>()->spawn_type =
+      Game::Units::SpawnType::Home;
+  home->add_component<Engine::Core::ProductionComponent>()->manpower_available = 0;
+  EXPECT_EQ(classify_unit_activity(*home).kind, ActivityKind::Idle)
+      << "a home is not a recruiting building";
 }
 
 TEST(UnitActivityTest, AWedgedUnitReportsBlockedRatherThanMoving) {

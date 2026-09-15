@@ -37,6 +37,25 @@ struct EconomyCoachBaseline {
 
 inline constexpr int k_economy_coach_army_manpower = 80;
 
+struct ManpowerSummary {
+  int fielded = 0;
+  int reserve = 0;
+  int map_cap = 0;
+  int cap = 0;
+
+  [[nodiscard]] auto cap_is_reserve_bound() const -> bool {
+    return map_cap <= 0 || fielded + reserve < map_cap;
+  }
+};
+
+[[nodiscard]] auto build_manpower_summary(Engine::Core::World* world,
+                                          int owner_id,
+                                          int map_cap) -> ManpowerSummary;
+
+[[nodiscard]] auto manpower_summary_map(const ManpowerSummary& summary) -> QVariantMap;
+
+[[nodiscard]] auto manpower_tooltip(const ManpowerSummary& summary) -> QString;
+
 [[nodiscard]] auto
 build_resource_overview(const EconomyOverviewRequest& request) -> QVariantList;
 

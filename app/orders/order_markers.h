@@ -56,5 +56,7 @@ private:
                                                QVector3D& out_position) -> bool;
 
 [[nodiscard]] auto order_marker_color(OrderKind kind, bool rejected) -> QVector3D;
+[[nodiscard]] auto
+order_marker_color(OrderKind kind, bool rejected, OrderFailure failure) -> QVector3D;
 
 } // namespace App::Core

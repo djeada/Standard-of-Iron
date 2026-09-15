@@ -52,7 +52,19 @@ auto evaluate_target(Engine::Core::Entity* target,
     return TargetRefusal::Passive;
   }
 
+  if (is_warded_structure(target)) {
+    return TargetRefusal::Warded;
+  }
+
   return TargetRefusal::None;
+}
+
+auto is_warded_structure(Engine::Core::Entity* target) -> bool {
+  if (target == nullptr || !target->has_component<Engine::Core::BuildingComponent>()) {
+    return false;
+  }
+  const auto* capture = target->get_component<Engine::Core::CaptureComponent>();
+  return capture != nullptr && capture->capture_blocked;
 }
 
 auto evaluate_target(const OwnerRegistry& owners,
@@ -122,6 +134,8 @@ auto target_refusal_key(TargetRefusal refusal) -> std::string_view {
     return "passive";
   case TargetRefusal::Structure:
     return "structure";
+  case TargetRefusal::Warded:
+    return "warded";
   }
   return "no_target";
 }

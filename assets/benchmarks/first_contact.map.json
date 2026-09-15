@@ -3,7 +3,7 @@
   "description": "Frame-pacing fixture map. Copied from the Sallow Ford with weather on and a sacrificial enemy tower.",
   "theme": "Two mouths, five columns, and the light going.",
   "coord_system": "grid",
-  "max_troops_per_player": 280,
+  "max_troops_per_player": 630,
   "grid": {
     "width": 72,
     "height": 72,

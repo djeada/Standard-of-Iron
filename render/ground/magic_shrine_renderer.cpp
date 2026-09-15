@@ -57,7 +57,7 @@ void MagicShrineRenderer::submit(Renderer& renderer, ResourceManager* resources)
     votive.position = shrine_pos + QVector3D(0.0F, scale * 0.9F, 0.0F);
     votive.color = QVector3D(0.52F, 0.62F, 0.86F);
     votive.radius = std::clamp(scale * 3.4F, 3.5F, 11.0F);
-    votive.intensity = 0.75F * pulse;
+    votive.intensity = 0.55F * pulse;
     renderer.local_light(votive);
   }
 }

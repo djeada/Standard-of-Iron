@@ -59,9 +59,10 @@ const float k_ground_fog_distance_reach = 34.0;
 const vec3 k_ground_fog_lift = vec3(1.10, 1.10, 1.08);
 const float k_mist_water_ceiling = 1.7;
 const float k_mist_miasma_ceiling = 2.8;
-const float k_mist_bank_reach = 5.0;
+const float k_mist_miasma_gain = 0.72;
+const float k_mist_bank_reach = 7.0;
 const vec3 k_mist_water_lift = vec3(1.18, 1.18, 1.16);
-const vec3 k_mist_miasma_tint = vec3(0.95, 0.72, 1.45);
+const vec3 k_mist_miasma_tint = vec3(1.02, 0.86, 1.24);
 const vec3 k_mist_miasma_floor = vec3(0.012, 0.008, 0.028);
 
 const vec2 k_ao_taps[8] = vec2[8](vec2(1.0, 0.0),
@@ -196,6 +197,8 @@ vec2 ground_mist(vec3 world) {
     float vertical = 1.0 - smoothstep(0.15 * ceiling, ceiling, rise);
     float amount = u_mist_info[i].y * lateral * vertical;
     if (is_miasma) {
+      float head_room = 1.0 - smoothstep(0.08 * ceiling, 0.55 * ceiling, rise);
+      amount *= k_mist_miasma_gain * mix(0.55, 1.0, head_room);
       miasma = max(miasma, amount);
     } else {
       water = max(water, amount);

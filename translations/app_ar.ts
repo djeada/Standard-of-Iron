@@ -250,8 +250,12 @@
         <translation>اختر ثكنة قبل تعيين نقطة التجمع</translation>
     </message>
     <message>
-        <source>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</source>
-        <translation>القوى البشرية التي ما زالت هذه الثكنة تحتفظ بها. كل تجنيد ينفق منها؛ والمدنيون الذين يُنشأون في المسكن يجلبون المزيد.</translation>
+        <source>Reserve exhausted: %1 men held, the cheapest recruit needs %2. Civilians raised at a Home deliver more men.</source>
+        <translation>نفد الاحتياطي: %1 رجلاً متاحين، وأرخص مجنّد يحتاج %2. المدنيون الذين يُربَّون في منزل يجلبون مزيداً من الرجال.</translation>
+    </message>
+    <message>
+        <source>Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.</source>
+        <translation>الرجال الذين لا تزال هذه الثكنة تحتفظ بهم. كل مجنّد يستهلك رجال فرقته؛ والمدنيون الذين يُربَّون في منزل يجلبون المزيد.</translation>
     </message>
 </context>
 <context>
@@ -311,6 +315,21 @@
     <message>
         <source>Esc closes the report</source>
         <translation>Esc يغلق التقرير</translation>
+    </message>
+    <message>
+        <source>Retry mission</source>
+        <translation>إعادة المهمة</translation>
+    </message>
+</context>
+<context>
+    <name>BattleSummary</name>
+    <message>
+        <source>Retry mission</source>
+        <translation>إعادة المهمة</translation>
+    </message>
+    <message>
+        <source>Play again</source>
+        <translation>العب مجدداً</translation>
     </message>
 </context>
 <context>
@@ -767,13 +786,6 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
         <translation>يفرّ الناجون نحو بلاسنتيا عبر الصقيع والوحل. تُغنم الخيام والحبوب والأسلحة الرومانية؛ أما الأجساد تحت الجليد فلا تنهض إلا حين لا يراها أحد.</translation>
-    </message>
-</context>
-<context>
-    <name>CommandController</name>
-    <message>
-        <source>Not enough wood, stone, or iron to recruit this unit.</source>
-        <translation>لا يكفي الخشب أو الحجر أو الحديد لتجنيد هذه الوحدة.</translation>
     </message>
 </context>
 <context>
@@ -2610,6 +2622,21 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>EconomyOverview</name>
+    <message>
+        <source>Men in the field: %1. Every soldier, rider, crew member, builder and civilian counts as one man.</source>
+        <translation>الرجال في الميدان: %1. كل جندي وفارس وطاقم وبنّاء ومدني يُحسب رجلاً واحداً.</translation>
+    </message>
+    <message>
+        <source>Men you can still raise: %1 held in reserve by your barracks and temples. Walk civilians into a barracks or build a Home to raise more.</source>
+        <translation>الرجال الذين لا يزال بوسعك حشدهم: %1 في احتياطي ثكناتك ومعابدك. أدخل المدنيين إلى ثكنة أو ابنِ منزلاً لحشد المزيد.</translation>
+    </message>
+    <message>
+        <source>This map allows %1 men per army; %2 more wait in reserve but cannot muster until the field thins.</source>
+        <translation>تسمح هذه الخريطة بـ%1 رجلاً لكل جيش؛ وينتظر %2 آخرون في الاحتياطي لكنهم لا يُحشدون حتى يخفّ الميدان.</translation>
+    </message>
+</context>
+<context>
     <name>FactionTheme</name>
     <message>
         <source>Standard</source>
@@ -2684,6 +2711,10 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Farm</source>
         <translation>مزرعة</translation>
+    </message>
+    <message>
+        <source>Sepulcher Shrine</source>
+        <translation>مزار المدفن</translation>
     </message>
 </context>
 <context>
@@ -3332,14 +3363,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>انتهى أمر %1 - لقد سقط %2.</translation>
     </message>
     <message>
-        <source>Manpower limit reached.</source>
-        <translation>تم بلوغ حد القوى البشرية.</translation>
-    </message>
-    <message>
-        <source>Not enough reserve — build a home to raise more families.</source>
-        <translation>الاحتياطي غير كافٍ — ابنِ منزلًا لتربية المزيد من الأسر.</translation>
-    </message>
-    <message>
         <source>The previous frame is still running; the match could not be changed. Please try again.</source>
         <translation>الإطار السابق لا يزال قيد التنفيذ؛ لم يتم تغيير المعركة. الرجاء المحاولة مرة أخرى.</translation>
     </message>
@@ -3395,6 +3418,18 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>%1 FPS</source>
         <translation>%1 FPS</translation>
+    </message>
+    <message>
+        <source>Waves %1 of %2</source>
+        <translation>الموجات %1 من %2</translation>
+    </message>
+    <message>
+        <source>Objectives</source>
+        <translation>الأهداف</translation>
+    </message>
+    <message>
+        <source>Hide the objectives (O)</source>
+        <translation>إخفاء الأهداف (O)</translation>
     </message>
 </context>
 <context>
@@ -4490,10 +4525,37 @@ Unseen: never scouted.</source>
         <translation>القوى البشرية</translation>
     </message>
     <message>
-        <source>Manpower in the field: %1 of %2.
-Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</source>
-        <translation>القوى البشرية في الميدان: %1 من %2.
-كل فرقة تكلّف قوى بشرية؛ فرقة من اثني عشر بنّاءً تكلّف عشرة. هذا ليس تعدادًا للأفراد — لوحة الاختيار هي التي تعدّ الجنود.</translation>
+        <source>Men in the field: %1 of %2.
+Every recruit costs the men in its squad; reserve held at a barracks raises the cap.</source>
+        <translation>الرجال في الميدان: %1 من %2.
+كل مجنّد يكلّف رجال فرقته؛ والاحتياطي المحفوظ في الثكنة يرفع الحد.</translation>
+    </message>
+    <message>
+        <source>Hide the objectives list</source>
+        <translation>إخفاء قائمة الأهداف</translation>
+    </message>
+    <message>
+        <source>Show every objective and defeat condition</source>
+        <translation>عرض كل الأهداف وشروط الهزيمة</translation>
+    </message>
+    <message>
+        <source>Objectives</source>
+        <translation>الأهداف</translation>
+    </message>
+</context>
+<context>
+    <name>HUDVictory</name>
+    <message>
+        <source>Retry mission</source>
+        <translation>إعادة المهمة</translation>
+    </message>
+    <message>
+        <source>Fight it again</source>
+        <translation>خُض المعركة مجدداً</translation>
+    </message>
+    <message>
+        <source>Return to Menu</source>
+        <translation>العودة إلى القائمة</translation>
     </message>
 </context>
 <context>
@@ -4545,10 +4607,6 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
     <message>
         <source>Winning and losing</source>
         <translation>الفوز والخسارة</translation>
-    </message>
-    <message>
-        <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
-        <translation>تبيّن كل مهمة شروط فوزها وخسارتها في شاشة الأهداف (Escape ثم الأهداف). في كل معركة يجب أن ينجو قائدك: تموت الأمة بموت من يقودها، والقائد الوحيد خاسر سلفًا.</translation>
     </message>
     <message>
         <source>The three materials</source>
@@ -4730,6 +4788,62 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
         <source>A barracks or temple starts with a reserve and spends it on every recruit; the card shows exactly what each one costs. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s reserve grows. A squad then stands in the field for what it cost, which is what the top bar counts against the map&apos;s manpower cap.</source>
         <translation>تبدأ الثكنة أو المعبد باحتياطي وتنفقه على كل مجنّد؛ وتبيّن البطاقة كلفة كل واحد بالضبط. والمنازل تعيد ملأه: فكل منزل يربّي عائلات مع الوقت، ويمكن تجنيد مدني هناك مقابل الطعام وإرساله إلى أي من المبنيين بأمر التسليم، فينمو احتياطي ذلك المبنى. وتقف الوحدة في الميدان بقيمة ما كلّفته، وهذا ما يحسبه الشريط العلوي مقابل حد القوى البشرية للخريطة.</translation>
     </message>
+    <message>
+        <source>The Sepulcher</source>
+        <translation>المدفن</translation>
+    </message>
+    <message>
+        <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In battle, press O or the objectives button in the top bar to keep the full list open beside the field. In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
+        <translation>تحدد كل مهمة شروط النصر والهزيمة الخاصة بها في شاشة الأهداف (Escape ثم الأهداف). أثناء المعركة اضغط O أو زر الأهداف في الشريط العلوي لإبقاء القائمة الكاملة مفتوحة بجوار الميدان. في كل معركة يجب أن يبقى قائدك حياً: تموت الأمة بموت من يقودها، والقائد الوحيد خاسر سلفاً.</translation>
+    </message>
+    <message>
+        <source>Undead zones</source>
+        <translation>مناطق الموتى الأحياء</translation>
+    </message>
+    <message>
+        <source>Some fields are dotted with dormant ruins and shrines. Nothing stirs in them until your troops walk in. The moment you cross into a zone, it wakes: the ground gives up its dead and the first wave rises to meet you. Choose the moment - and the force - you enter with.</source>
+        <translation>بعض الميادين مرصّعة بأطلال ومزارات خاملة. لا يتحرك فيها شيء حتى تدخلها قواتك. ما إن تعبر إلى منطقة حتى تستيقظ: تلفظ الأرض موتاها وتنهض الموجة الأولى للقائك. اختر اللحظة - والقوة - التي تدخل بها.</translation>
+    </message>
+    <message>
+        <source>Waves</source>
+        <translation>الموجات</translation>
+    </message>
+    <message>
+        <source>Every zone holds a set number of waves, and the announcement names each one as it comes - wave 1 of 2, then 2 of 2. When a wave rises to meet you, it is coming for the troops inside the zone. Break one and the next rises. A zone is only clear when its last wave lies still.</source>
+        <translation>تحمل كل منطقة عدداً محدداً من الموجات، ويُسمّي الإعلان كل موجة عند قدومها - الموجة 1 من 2 ثم 2 من 2. حين تنهض موجة للقائك فهي قادمة نحو القوات داخل المنطقة. اكسر واحدة فتنهض التالية. لا تُعدّ المنطقة نظيفة إلا حين تسكن موجتها الأخيرة.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher Shrine</source>
+        <translation>مزار المدفن</translation>
+    </message>
+    <message>
+        <source>Each zone is anchored by a Sepulcher Shrine. While its guardians still stand, the shrine cannot be harmed and attack orders on it are refused - do not waste arrows on it. Kill every wave first; only then does the shrine lie open.</source>
+        <translation>ترتكز كل منطقة على مزار المدفن. ما دام حرّاسه واقفين لا يمكن إيذاء المزار وتُرفض أوامر مهاجمته - فلا تهدر السهام عليه. اقتل كل موجة أولاً؛ عندها فقط ينكشف المزار.</translation>
+    </message>
+    <message>
+        <source>Purifying a shrine</source>
+        <translation>تطهير مزار</translation>
+    </message>
+    <message>
+        <source>Once the guardians have fallen, walk troops onto the shrine to capture it, or simply knock it down. Either way the zone is purified for good and it will not wake again. A purified shrine pays out: the clear reward - wood, iron and food - lands in your stores the moment the zone falls.</source>
+        <translation>حين يسقط الحرّاس، أدخل قواتك إلى المزار للاستيلاء عليه، أو اهدمه ببساطة. في الحالتين تُطهَّر المنطقة إلى الأبد ولن تستيقظ مجدداً. المزار المطهَّر يدفع الثمن: تصل مكافأة التطهير - خشب وحديد وطعام - إلى مخازنك لحظة سقوط المنطقة.</translation>
+    </message>
+    <message>
+        <source>The guardians</source>
+        <translation>الحرّاس</translation>
+    </message>
+    <message>
+        <source>The dead defend their ground. They will chase you to the edge of the zone and then turn back to it, so you can pull out to regroup and re-enter when you are ready. You cannot lure them across the map - the fight happens at the shrine.</source>
+        <translation>الموتى يدافعون عن أرضهم. سيطاردونك إلى حافة المنطقة ثم يعودون إليها، فبوسعك الانسحاب لإعادة التجمع والدخول مجدداً حين تكون مستعداً. لا يمكنك استدراجهم عبر الخريطة - القتال يحدث عند المزار.</translation>
+    </message>
+    <message>
+        <source>The grave priest</source>
+        <translation>كاهن القبور</translation>
+    </message>
+    <message>
+        <source>Among the waves walks a grave priest. He heals the dead around him and throws fire at your line, so a slow slog of spearmen alone will bleed. Bring a Medicus to mend the burns and ranged troops to cut the priest down from a distance before the guardians close in. Kill him first and the dead stop mending.</source>
+        <translation>بين الموجات يسير كاهن قبور. يشفي الموتى من حوله ويقذف النار على صفّك، فالزحف البطيء بالرماحة وحدهم سينزف. أحضر طبيباً ليداوي الحروق وقوات رماية لإسقاط الكاهن من بعيد قبل أن يقترب الحرّاس. اقتله أولاً فيكفّ الموتى عن الالتئام.</translation>
+    </message>
 </context>
 <context>
     <name>HintCard</name>
@@ -4840,6 +4954,14 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
     <message>
         <source>One side is left holding the field.</source>
         <translation>بقي طرف واحد ممسكًا بالميدان.</translation>
+    </message>
+    <message>
+        <source>Look at the field</source>
+        <translation>انظر إلى الميدان</translation>
+    </message>
+    <message>
+        <source>Show the verdict again</source>
+        <translation>عرض الحكم مجدداً</translation>
     </message>
 </context>
 <context>
@@ -5454,6 +5576,26 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
     <message>
         <source>Workers are valuable strategic assets. Do not leave them exposed near the front.</source>
         <translation>العمّال ثروة استراتيجية ثمينة. لا تتركهم مكشوفين قرب الجبهة.</translation>
+    </message>
+    <message>
+        <source>A cursed shrine cannot be attacked while its guardians stand. Break the guard, then purify the shrine by capturing it.</source>
+        <translation>لا يمكن مهاجمة مزار ملعون ما دام حرّاسه واقفين. اكسر الحرس ثم طهّر المزار بالاستيلاء عليه.</translation>
+    </message>
+    <message>
+        <source>A grave priest mends the dead around it and hurls fire at the living. Strike it down before the line closes.</source>
+        <translation>كاهن القبور يرمّم الموتى من حوله ويقذف النار على الأحياء. أسقطه قبل أن تلتحم الصفوف.</translation>
+    </message>
+    <message>
+        <source>Ranged troops and a Medicus make the vigil survivable. Wound the dead from a distance, and keep the wounded living.</source>
+        <translation>قوات الرماية وطبيب يجعلان السهر قابلاً للنجاة. أصِب الموتى من بعيد وأبقِ الجرحى أحياء.</translation>
+    </message>
+    <message>
+        <source>Skeleton guardians defend their ruins and drift back to them when the fight moves on. Draw them out, or bring the fight to the stones.</source>
+        <translation>الحرّاس الهياكل يدافعون عن أطلالهم وينجرفون عائدين إليها حين يبتعد القتال. استدرجهم للخارج أو انقل القتال إلى الحجارة.</translation>
+    </message>
+    <message>
+        <source>The dead do not tire, do not flee, and do not file complaints. They are, in every other respect, a poor garrison.</source>
+        <translation>الموتى لا يتعبون ولا يفرّون ولا يقدّمون شكاوى. وفي كل ما عدا ذلك، هم حامية رديئة.</translation>
     </message>
 </context>
 <context>
@@ -6196,6 +6338,10 @@ to see preview</source>
         <source>This battlefield has fewer than two slots to observe</source>
         <translation>هذا الميدان فيه أقل من موضعين للمشاهدة</translation>
     </message>
+    <message>
+        <source>There is no battle to fight again</source>
+        <translation>لا توجد معركة لخوضها مجدداً</translation>
+    </message>
 </context>
 <context>
     <name>MediterraneanMapPanel</name>
@@ -6663,10 +6809,6 @@ to see preview</source>
         <translation>اكسر مراحل الاقتحام الرومانية الثلاث. لا يصمد الحي إلا حين يسقط آخر رتل قنصلي صريعاً في الشوارع.</translation>
     </message>
     <message>
-        <source>Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle.</source>
-        <translation>اكسر هجومَي ضريح الحديد. في زاما، لم يعد الموتى خارج المعركة.</translation>
-    </message>
-    <message>
         <source>Break three Roman columns before the survivors find the ford again.</source>
         <translation>اكسر ثلاثة أرتال رومانية قبل أن يجد الناجون المخاضة من جديد.</translation>
     </message>
@@ -6717,10 +6859,6 @@ to see preview</source>
     <message>
         <source>Defend Hannibal&apos;s fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.</source>
         <translation>دافع عن بلدة الإمداد الكامبانية المحصّنة لحنبعل، واكسر الاقتحامات الرومانية الثلاثة المنسّقة القادمة من طرق قنصلية مختلفة.</translation>
-    </message>
-    <message>
-        <source>Drive the dead from the shrine. Salt the earth where they stood.</source>
-        <translation>اطرد الموتى من المزار. وامْلأ بالملح الأرض التي وقفوا عليها.</translation>
     </message>
     <message>
         <source>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</source>
@@ -7479,10 +7617,6 @@ to see preview</source>
         <translation>تجاوز الحصة المطلوبة. الفائض هو الشيء الوحيد الذي شكر عليه أمين المؤن أحدًا يومًا.</translation>
     </message>
     <message>
-        <source>Take the cursed shrine above the sepulcher ruins and hold what you take: clear the guardians out of the ruins, then drive the dead off the shrine itself.</source>
-        <translation>خذ المزار الملعون فوق أطلال الضريح واحفظ ما أخذت: طهّر الأطلال من حرّاسها، ثم اطرد الموتى عن المزار نفسه.</translation>
-    </message>
-    <message>
         <source>The Timber Levy</source>
         <translation>حصة الخشب</translation>
     </message>
@@ -7910,6 +8044,26 @@ to see preview</source>
         <source>You cannot cover every gate. Watch the telegraph and move on interior lines.</source>
         <translation>لا تستطيع تغطية كل بوابة. راقب الإنذار المسبق وتحرّك على الخطوط الداخلية.</translation>
     </message>
+    <message>
+        <source>Break both risings of the dead at the sepulcher ruins by the south-western crossing. The guardians will not leave their ground; you must go to them.</source>
+        <translation>اكسر نهضتي الموتى عند أطلال المدفن قرب المعبر الجنوبي الغربي. لن يغادر الحرّاس أرضهم؛ عليك أن تذهب إليهم.</translation>
+    </message>
+    <message>
+        <source>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</source>
+        <translation>اطرد الموتى من المزار ثم اغرس الراية عليه. املأ الأرض التي وقفوا عليها ملحاً.</translation>
+    </message>
+    <message>
+        <source>Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
+        <translation>اسحبوا الجرحى إلى المنزل وأرسلوا في طلب الرجال الذين ما زالوا لدينا. الموتى صبورون. وبوسعنا نحن أيضاً أن نصبر.</translation>
+    </message>
+    <message>
+        <source>Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it.</source>
+        <translation>استولِ على المزار الملعون فوق أطلال المدفن واحتفظ بما تأخذه. ستون رجلاً وثكنة ومنزل واحد هم كل ما استطاعت روما تخصيصه: طهّر الأطلال من الحرّاس، ثم اطرد الموتى من المزار واغرس الراية عليه.</translation>
+    </message>
+    <message>
+        <source>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</source>
+        <translation>ها هم. لا تنظروا إلى الوجوه. الرماة أطلِقوا، والدروع أغلِقوا الصفوف، ولا أحد يطارد شيئاً عائداً إلى ذلك الضباب.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -8296,6 +8450,34 @@ to see preview</source>
     <message>
         <source>Only a squad of several individuals can be divided or joined.</source>
         <translation>لا يمكن تقسيم أو دمج إلا وحدة مكوّنة من عدة أفراد.</translation>
+    </message>
+    <message>
+        <source>Recruit</source>
+        <translation>تجنيد</translation>
+    </message>
+    <message>
+        <source>Select a barracks, temple or home to recruit.</source>
+        <translation>اختر ثكنة أو معبداً أو منزلاً للتجنيد.</translation>
+    </message>
+    <message>
+        <source>Not enough reserve: %1 / %2 men. Walk civilians into the barracks or build a Home to raise more.</source>
+        <translation>الاحتياطي غير كافٍ: %1 / %2 رجلاً. أدخل المدنيين إلى الثكنة أو ابنِ منزلاً لحشد المزيد.</translation>
+    </message>
+    <message>
+        <source>Army at the map&apos;s limit: %1 / %2 men in the field.</source>
+        <translation>الجيش عند حد الخريطة: %1 / %2 رجلاً في الميدان.</translation>
+    </message>
+    <message>
+        <source>The training queue is full.</source>
+        <translation>طابور التدريب ممتلئ.</translation>
+    </message>
+    <message>
+        <source>%1 (%2 short)</source>
+        <translation>%1 (ينقص %2)</translation>
+    </message>
+    <message>
+        <source>Not enough %1.</source>
+        <translation>لا يكفي %1.</translation>
     </message>
 </context>
 <context>
@@ -10668,12 +10850,12 @@ Builders reap it for the food that recruits civilians</source>
         <translation>يشقّ %1 طريقه من باطن الأرض.</translation>
     </message>
     <message>
-        <source>The risen guardians are put down. The ground is quiet.</source>
-        <translation>أُجهز على الحرّاس الناهضين. وسكنت الأرض.</translation>
-    </message>
-    <message>
         <source>The barrow gives up its hoard: %1.</source>
         <translation>يجود التلّ الجنائزي بكنزه: %1.</translation>
+    </message>
+    <message>
+        <source>The risen guardians are put down. Hold the shrine to purify it.</source>
+        <translation>أُخمد الحرّاس الناهضون. تمسّك بالمزار لتطهيره.</translation>
     </message>
 </context>
 <context>

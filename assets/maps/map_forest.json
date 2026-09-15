@@ -8,7 +8,7 @@
     "height": 176,
     "tile_size": 1.0
   },
-  "max_troops_per_player": 400,
+  "max_troops_per_player": 900,
   "camera": {
     "center": [
       88.0,

@@ -15,6 +15,7 @@
 #include "app/orders/order_issuer.h"
 #include "game/audio/cue_ids.h"
 #include "game/command/command.h"
+#include "game/units/troop_type.h"
 
 namespace Engine::Core {
 class World;
@@ -25,6 +26,7 @@ using EntityID = std::uint64_t;
 namespace Game::Systems {
 class SelectionSystem;
 class PickingService;
+enum class ProductionResult;
 } // namespace Game::Systems
 
 namespace App::Controllers {
@@ -143,6 +145,8 @@ public:
   void clear_patrol_first_waypoint() { m_has_patrol_first_waypoint = false; }
   void reset_transient_state();
 
+  auto refuse_unreachable_move(const QVector3D& destination) -> App::Core::OrderOutcome;
+
   [[nodiscard]] auto formation() -> ArmyFormationController& { return m_formation; }
   [[nodiscard]] auto formation() const -> const ArmyFormationController& {
     return m_formation;
@@ -154,9 +158,6 @@ public:
 
 signals:
   void order_feedback(const App::Core::OrderOutcome& outcome);
-  void troop_limit_reached();
-  void insufficient_manpower();
-  void insufficient_resources(const QString& message);
   void hold_mode_changed(bool active);
   void gate_mode_changed(const QString& mode);
   void guard_mode_changed(bool active);
@@ -171,6 +172,12 @@ signals:
   void formation_preview_changed();
 
 private:
+  [[nodiscard]] static auto
+  recruit_refusal(Engine::Core::World& world,
+                  Game::Systems::ProductionResult ruling,
+                  Engine::Core::EntityID building,
+                  Game::Units::TroopType product,
+                  int local_owner_id) -> App::Core::OrderRefusal;
   auto issue_auto_gather(const std::vector<Engine::Core::EntityID>& builders,
                          bool active,
                          const QString& priority_product_type) -> CommandResult;

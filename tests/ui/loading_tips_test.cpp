@@ -47,6 +47,11 @@ TEST(LoadingTipsTest, EveryAuthoredTipDeclaresAKnownTone) {
     EXPECT_TRUE(tone == QStringLiteral("plain") || tone == QStringLiteral("wry"))
         << "unknown tone '" << tone.toStdString() << "' on tip "
         << tip.value(QStringLiteral("text")).toString().toStdString();
+    for (const auto tag : tip.value(QStringLiteral("tags")).toArray()) {
+      EXPECT_EQ(tag.toString(), QStringLiteral("undead"))
+          << "unknown tag on tip "
+          << tip.value(QStringLiteral("text")).toString().toStdString();
+    }
   }
 }
 
@@ -107,4 +112,67 @@ TEST(LoadingTipsTest, SurvivesAMalformedTipFile) {
       QByteArrayLiteral(R"({"tips":[{"text":"  "},{"text":"Hold the line."}]})"));
   EXPECT_EQ(tips.count(), 1) << "blank tips must be dropped, not shown.";
   EXPECT_EQ(tips.next(), QStringLiteral("Hold the line."));
+}
+
+TEST(LoadingTipsTest, ReadsTagsAndKeepsUntaggedTipsValid) {
+  LoadingTips tips;
+  tips.load_from_json(QByteArrayLiteral(
+      R"({"tips":[{"text":"Plain."},{"text":"Grave.","tags":["Undead"," "]}]})"));
+  ASSERT_EQ(tips.count(), 2);
+  EXPECT_TRUE(tips.tags_of(QStringLiteral("Plain.")).isEmpty());
+  EXPECT_EQ(tips.tags_of(QStringLiteral("Grave.")), QStringList{"undead"});
+}
+
+TEST(LoadingTipsTest, PreferredTagsAreDealtFirstAndTheDeckStaysWhole) {
+  LoadingTips tips;
+  tips.load_from_json(QByteArrayLiteral(R"({"tips":[
+      {"text":"A"},{"text":"B"},{"text":"C"},{"text":"D"},
+      {"text":"U1","tags":["undead"]},{"text":"U2","tags":["undead"]}]})"));
+  tips.reseed(3);
+  tips.set_preferred_tags({QStringLiteral("undead")});
+
+  const QString first = tips.next();
+  const QString second = tips.next();
+  EXPECT_TRUE(first.startsWith(QLatin1Char('U'))) << first.toStdString();
+  EXPECT_TRUE(second.startsWith(QLatin1Char('U'))) << second.toStdString();
+  EXPECT_NE(first, second);
+
+  QSet<QString> seen{first, second};
+  for (int i = 2; i < tips.count(); ++i) {
+    const QString drawn = tips.next();
+    EXPECT_FALSE(seen.contains(drawn)) << drawn.toStdString();
+    seen.insert(drawn);
+  }
+  EXPECT_EQ(seen.size(), tips.count());
+
+  tips.set_preferred_tags({});
+  EXPECT_TRUE(tips.preferred_tags().isEmpty());
+}
+
+TEST(LoadingTipsTest, UndeadMissionsPreferUndeadTips) {
+  EXPECT_EQ(LoadingTips::tags_for_load(
+                QStringLiteral("assets/maps/map_iron_sepulcher_watch.json"), {}, false),
+            QStringList{"undead"});
+  EXPECT_EQ(LoadingTips::tags_for_load(
+                QStringLiteral("assets/maps/map_battle_zama.json"), {}, false),
+            QStringList{"undead"});
+  EXPECT_EQ(LoadingTips::tags_for_load(QStringLiteral("assets/maps/map_forest.json"),
+                                       QStringLiteral("hold_the_sallow_ford"),
+                                       true),
+            QStringList{"undead"});
+  EXPECT_TRUE(LoadingTips::tags_for_load(QStringLiteral("assets/maps/map_forest.json"),
+                                         QStringLiteral("battle_of_cannae"),
+                                         false)
+                  .isEmpty());
+}
+
+TEST(LoadingTipsTest, ShipsSeveralUndeadTips) {
+  LoadingTips tips;
+  int undead = 0;
+  for (const QString& source : tips.source_texts()) {
+    if (tips.tags_of(source).contains(QStringLiteral("undead"))) {
+      ++undead;
+    }
+  }
+  EXPECT_GE(undead, 4) << "the Iron Sepulcher needs its own loading tips.";
 }

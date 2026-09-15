@@ -25,11 +25,13 @@ Item {
     readonly property bool minimapDragActive: minimap.visible && minimapMouse.pressed
 
     property bool camera_legend_visible: false
+    property bool objectives_visible: false
 
     signal pause_toggled
     signal speed_changed(real speed)
     signal help_requested
     signal camera_legend_toggled
+    signal objectives_toggled
 
     function game_ready() {
         return typeof game !== 'undefined' && game !== null;
@@ -48,6 +50,7 @@ Item {
     }
 
     readonly property bool missionStaged: game_ready() && game.mission && game.mission.staged
+    readonly property bool objectivesAvailable: game_ready() && !game.is_spectator_mode && (topRoot.missionStaged || (!!game.setup && game.setup.is_mission_match === true))
 
     readonly property string primaryObjectiveText: {
         if (!missionStaged)
@@ -115,6 +118,13 @@ Item {
 
     function manpower() {
         return game_ready() && game.selected_player_state ? (game.selected_player_state.manpower || 0) : 0;
+    }
+
+    function manpower_tooltip() {
+        var state = game_ready() ? game.selected_player_state : null;
+        if (state && state.manpower_tooltip)
+            return state.manpower_tooltip;
+        return qsTr("Men in the field: %1 of %2.\nEvery recruit costs the men in its squad; reserve held at a barracks raises the cap.").arg(topRoot.manpower()).arg(topRoot.manpower_cap());
     }
 
     function manpower_cap() {
@@ -304,9 +314,11 @@ Item {
                 Row {
                     id: objectiveRow
 
+                    readonly property real budget: Math.max(0, objectiveZone.width - (objectivesButton.visible ? objectivesButton.width + Design.Metrics.space8 : 0))
+
                     anchors.centerIn: parent
                     spacing: Design.Metrics.space8
-                    width: Math.min(objectiveGlyph.implicitWidth + spacing + objectiveText.implicitWidth + (objectiveDetail.visible ? spacing + objectiveDetail.implicitWidth : 0), objectiveZone.width)
+                    width: Math.min(objectiveGlyph.implicitWidth + spacing + objectiveText.implicitWidth + (objectiveDetail.visible ? spacing + objectiveDetail.implicitWidth : 0), objectiveRow.budget)
                     visible: topRoot.primaryObjectiveText !== "" && !(topRoot.game_ready() && game.is_spectator_mode)
 
                     Text {
@@ -324,7 +336,7 @@ Item {
 
                         anchors.verticalCenter: parent.verticalCenter
 
-                        width: Math.min(implicitWidth, Math.max(0, objectiveZone.width - objectiveGlyph.width - objectiveRow.spacing))
+                        width: Math.min(implicitWidth, Math.max(0, objectiveRow.budget - objectiveGlyph.width - objectiveRow.spacing))
                         visible: topRoot.objectiveDetailText !== "" && width > 0
                         text: topRoot.objectiveDetailText
                         color: Design.Theme.accent
@@ -337,7 +349,7 @@ Item {
                         id: objectiveText
 
                         anchors.verticalCenter: parent.verticalCenter
-                        width: Math.min(implicitWidth, Math.max(0, objectiveRow.parent.width - objectiveGlyph.width - objectiveRow.spacing - (objectiveDetail.visible ? objectiveDetail.width + objectiveRow.spacing : 0)))
+                        width: Math.min(implicitWidth, Math.max(0, objectiveRow.budget - objectiveGlyph.width - objectiveRow.spacing - (objectiveDetail.visible ? objectiveDetail.width + objectiveRow.spacing : 0)))
                         visible: width > 0
                         text: topRoot.primaryObjectiveText
                         color: Design.Theme.textSecondary
@@ -372,6 +384,30 @@ Item {
                     target: objectiveRow
                     active: topRoot.tutorialFocusRegion === "objective" && objectiveRow.visible
                     cornerRadius: Design.Metrics.radiusSmall
+                }
+
+                Design.IronIconButton {
+                    id: objectivesButton
+
+                    objectName: "objectivesToggleButton"
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: topRoot.objectivesAvailable
+                    iconText: Design.Icons.briefing
+                    tooltip: (topRoot.objectives_visible ? qsTr("Hide the objectives list") : qsTr("Show every objective and defeat condition")) + " (O)"
+                    accessibleName: qsTr("Objectives")
+                    checkable: true
+                    checked: topRoot.objectives_visible
+                    tone: checked ? "primary" : "secondary"
+                    onToggled: topRoot.objectives_toggled()
+
+                    Connections {
+                        function onObjectives_visibleChanged() {
+                            objectivesButton.checked = topRoot.objectives_visible;
+                        }
+
+                        target: topRoot
+                    }
                 }
 
                 Design.IronBadge {
@@ -430,7 +466,7 @@ Item {
                     amountText: topRoot.manpower() + " / " + topRoot.manpower_cap()
                     status: topRoot.manpower_status()
                     compact: topRoot.compact
-                    tooltipText: qsTr("Manpower in the field: %1 of %2.\nEvery troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.").arg(topRoot.manpower()).arg(topRoot.manpower_cap())
+                    tooltipText: topRoot.manpower_tooltip()
                 }
 
                 Design.IronDivider {

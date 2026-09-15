@@ -241,7 +241,7 @@
       "type": "survive_undead_wave",
       "zone_id": "sepulcher_vanguard",
       "wave_count": 2,
-      "description": "Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle."
+      "description": "Break both risings of the dead at the sepulcher ruins by the south-western crossing. The guardians will not leave their ground; you must go to them."
     },
     {
       "type": "eliminate_commanders",

@@ -189,9 +189,33 @@ TEST_F(IronSepulcherSkirmishTest, SoloSkirmishAwakensAndIsWonByPurifyingTheShrin
   EXPECT_FALSE(victory.is_game_over())
       << "the shrine is not purified while its guardians live";
 
-  for (auto* guardian : guardians) {
-    guardian->health = 0;
+  for (int wave = 0;
+       wave < 4 && !undead->is_zone_cleared(QStringLiteral("shrine_sentinels"));
+       ++wave) {
+    for (auto* guardian : living_guardians_of_owner(world, shrine->owner_id)) {
+      guardian->health = 0;
+    }
+    undead->update(&world, 0.1F);
+    undead->update(&world, 2.0F);
+    undead->update(&world, 0.1F);
   }
+  EXPECT_TRUE(undead->is_zone_cleared(QStringLiteral("shrine_sentinels")))
+      << "every authored wave must rise and fall before the shrine lies open";
+  EXPECT_FALSE(undead->is_shrine_purified(QStringLiteral("shrine_sentinels")))
+      << "a silent shrine still has to be taken";
+
+  victory.update(world, 0.1F);
+  EXPECT_FALSE(victory.is_game_over())
+      << "killing the guardians alone does not win a purify objective";
+
+  auto* anchor =
+      world.get_entity(undead->anchor_entity(QStringLiteral("shrine_sentinels")));
+  ASSERT_NE(anchor, nullptr);
+  auto* capture = anchor->get_component<Engine::Core::CaptureComponent>();
+  ASSERT_NE(capture, nullptr);
+  EXPECT_FALSE(capture->capture_blocked);
+  anchor->get_component<Engine::Core::UnitComponent>()->owner_id = k_local_player_id;
+
   undead->update(&world, 0.1F);
   EXPECT_TRUE(undead->is_shrine_purified(QStringLiteral("shrine_sentinels")));
 
@@ -543,11 +567,16 @@ TEST_F(IronSepulcherSkirmishTest, ShrineFlagOnlyFallsBetweenWaves) {
   EXPECT_FLOAT_EQ(capture->capture_progress, 0.0F);
   EXPECT_EQ(anchor_unit->owner_id, shrine->owner_id);
 
-  for (auto* guardian : living_guardians_of_owner(world, shrine->owner_id)) {
-    guardian->health = 0;
+  for (int wave = 0; wave < 4 && capture->capture_blocked; ++wave) {
+    for (auto* guardian : living_guardians_of_owner(world, shrine->owner_id)) {
+      guardian->health = 0;
+    }
+    undead->update(&world, 0.25F);
+    undead->update(&world, 2.0F);
+    undead->update(&world, 0.25F);
   }
-  undead->update(&world, 0.25F);
-  EXPECT_FALSE(capture->capture_blocked);
+  EXPECT_FALSE(capture->capture_blocked)
+      << "the flag comes free once the last authored wave is down";
 
   capture_system.update(&world, 0.25F);
   EXPECT_TRUE(capture->is_being_captured)

@@ -13,12 +13,13 @@ Item {
     property bool game_started: false
     readonly property bool compact: width < 820
     readonly property bool narrow: width < 620
+    readonly property bool short_screen: height < 760
     readonly property int side_margin: Math.max(24, Math.min(72, width * 0.058))
     readonly property int top_margin: Math.max(20, Math.min(54, height * 0.058))
     readonly property int command_width: root.compact ? width - side_margin * 2 : Math.min(600, Math.max(460, width * 0.40))
     readonly property var hs: StyleGuide.historical
     readonly property int command_row_spacing: commandList.height < menuModel.count * 70 ? 4 : 9
-    readonly property int command_row_height: Math.max(46, Math.min(root.narrow ? 62 : 70, Math.floor((commandList.height - command_row_spacing * (menuModel.count - 1)) / Math.max(1, menuModel.count))))
+    readonly property int command_row_height: Math.max(root.short_screen ? 40 : 46, Math.min(root.narrow ? 62 : 70, Math.floor((commandList.height - command_row_spacing * (menuModel.count - 1)) / Math.max(1, menuModel.count))))
     readonly property bool tutorial_pending: !Core.UiPreferences.tutorialCompleted
     readonly property color ink: "#0B0806"
     readonly property color bronze: hs.bronze
@@ -59,8 +60,6 @@ Item {
         if (entry.requiresGame && !root.game_started)
             return false;
         if (entry.requiresSave && !root.has_continue_save)
-            return false;
-        if (entry.idStr === "continue" && root.game_started)
             return false;
         return true;
     }
@@ -413,7 +412,7 @@ Item {
                 id: titleBlock
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: root.narrow ? 120 : 156
+                Layout.preferredHeight: (root.narrow || root.short_screen) ? 120 : 156
 
                 Column {
                     id: titleStack
@@ -484,7 +483,7 @@ Item {
 
                     Item {
                         width: parent.width
-                        height: root.narrow ? 44 : 62
+                        height: (root.narrow || root.short_screen) ? 44 : 62
 
                         Text {
                             anchors.left: parent.left
@@ -496,7 +495,7 @@ Item {
                             color: "#00060403"
                             font.family: Design.Typography.titleFamily
                             font.capitalization: Font.AllUppercase
-                            font.pixelSize: Design.Typography.display(root.narrow ? 36 : 54)
+                            font.pixelSize: Design.Typography.display((root.narrow || root.short_screen) ? 36 : 54)
                             font.weight: Design.Typography.bold
                             font.hintingPreference: Design.Typography.titleHinting
                             font.kerning: true
@@ -517,7 +516,7 @@ Item {
                             color: Theme.textMain
                             font.family: Design.Typography.titleFamily
                             font.capitalization: Font.AllUppercase
-                            font.pixelSize: Design.Typography.display(root.narrow ? 36 : 54)
+                            font.pixelSize: Design.Typography.display((root.narrow || root.short_screen) ? 36 : 54)
                             font.weight: Design.Typography.bold
                             font.hintingPreference: Design.Typography.titleHinting
                             font.kerning: true
@@ -622,10 +621,18 @@ Item {
                     }
                     select_first_available();
                 }
+                readonly property int gutter: menuScrollBar.overflowing ? menuScrollBar.thickness + 6 : 0
+
                 spacing: root.command_row_spacing
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 interactive: contentHeight > height
+
+                ScrollBar.vertical: Design.IronScrollBar {
+                    id: menuScrollBar
+
+                    objectName: "mainMenuScrollBar"
+                }
                 highlightFollowsCurrentItem: true
                 highlightMoveDuration: 0
                 onCurrentIndexChanged: commandList.positionViewAtIndex(commandList.currentIndex, ListView.Contain)
@@ -650,7 +657,7 @@ Item {
                     readonly property bool selected: ListView.isCurrentItem && item_enabled
                     readonly property bool hovered: menuMouse.containsMouse && item_enabled
 
-                    width: commandList.width
+                    width: commandList.width - commandList.gutter
                     height: root.command_row_height
                     opacity: item_enabled ? 1 : 0.38
 

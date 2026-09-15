@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
 #include "core/component_economy.h"
+#include "core/component_gameplay.h"
+#include "core/component_structures.h"
 #include "core/entity.h"
 #include "core/ownership_constants.h"
 #include "core/world.h"
@@ -160,6 +162,42 @@ TEST_F(TargetRulesTest, HostileContactsSeeHostileWildlifeButNotAHerd) {
   EXPECT_TRUE(holds(wolf));
   EXPECT_FALSE(holds(sheep));
   EXPECT_FALSE(holds(friendly));
+}
+
+TEST_F(TargetRulesTest, AWardedStructureIsRefusedByBothIntentsUntilTheWardLifts) {
+  auto* shrine = spawn(k_enemy_owner);
+  shrine->get_component<UnitComponent>()->spawn_type = Game::Units::SpawnType::Barracks;
+  shrine->add_component<BuildingComponent>();
+  auto* capture = shrine->add_component<CaptureComponent>();
+  capture->capture_blocked = true;
+
+  EXPECT_TRUE(Game::Systems::Combat::is_warded_structure(shrine));
+  EXPECT_EQ(evaluate_target(owners(), k_local_owner, shrine, k_ordered),
+            TargetRefusal::Warded);
+  EXPECT_EQ(evaluate_target(owners(), k_local_owner, shrine, k_auto),
+            TargetRefusal::Warded);
+  EXPECT_EQ(Game::Systems::Combat::target_refusal_key(TargetRefusal::Warded), "warded");
+
+  const auto contacts =
+      Game::Systems::Combat::collect_hostile_contacts(m_session.world(), k_local_owner);
+  EXPECT_EQ(std::find(contacts.begin(), contacts.end(), shrine), contacts.end())
+      << "a warded shrine never reaches the AI's contact list";
+
+  capture->capture_blocked = false;
+  EXPECT_FALSE(Game::Systems::Combat::is_warded_structure(shrine));
+  EXPECT_EQ(evaluate_target(owners(), k_local_owner, shrine, k_ordered),
+            TargetRefusal::None);
+  EXPECT_EQ(evaluate_target(owners(), k_local_owner, shrine, k_auto),
+            TargetRefusal::None);
+}
+
+TEST_F(TargetRulesTest, ACaptureLockOnATroopDoesNotWardIt) {
+  auto* enemy = spawn(k_enemy_owner);
+  enemy->add_component<CaptureComponent>()->capture_blocked = true;
+
+  EXPECT_FALSE(Game::Systems::Combat::is_warded_structure(enemy));
+  EXPECT_EQ(evaluate_target(owners(), k_local_owner, enemy, k_ordered),
+            TargetRefusal::None);
 }
 
 } // namespace

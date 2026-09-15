@@ -97,6 +97,7 @@ private:
     int completed_waves = 0;
     float respawn_delay_remaining = 0.0F;
     float current_wave_elapsed = 0.0F;
+    float post_ring_phase_degrees = 0.0F;
     std::vector<Engine::Core::EntityID> active_spawn_ids;
   };
 
@@ -118,6 +119,17 @@ private:
   [[nodiscard]] auto local_player_inside(Engine::Core::World& world,
                                          const RuntimeZone& zone) const -> bool;
   void try_spawn_next_wave(Engine::Core::World& world, RuntimeZone& zone);
+  void enforce_leash(Engine::Core::World& world, RuntimeZone& zone) const;
+  void station_guardian(Engine::Core::World& world,
+                        const RuntimeZone& zone,
+                        Engine::Core::EntityID guardian_id,
+                        int post_index,
+                        int post_count,
+                        bool recall) const;
+  [[nodiscard]] auto guard_post_for_index(const RuntimeZone& zone,
+                                          int post_index,
+                                          int post_count) const -> QVector3D;
+  [[nodiscard]] auto zone_origin(const RuntimeZone& zone) const -> QVector3D;
   void announce_wave(const RuntimeZone& zone) const;
   [[nodiscard]] auto
   should_awaken_zone(Engine::Core::World& world,
@@ -136,6 +148,7 @@ private:
 
   bool m_zone_music_playing = false;
   float m_zone_music_poll = 0.0F;
+  float m_leash_poll = 0.0F;
   bool m_allow_mission_start_trigger = false;
 };
 

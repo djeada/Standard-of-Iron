@@ -8,8 +8,11 @@
 #include "app/input/hover_tracker.h"
 #include "app/input/input_command_handler.h"
 #include "app/orders/command_controller.h"
+#include "app/orders/order_feedback.h"
 #include "game/command/command_queue.h"
+#include "game/core/component_economy.h"
 #include "game/core/component_gameplay.h"
+#include "game/core/component_structures.h"
 #include "game/core/world.h"
 #include "game/formation/army_formation_registry.h"
 #include "game/map/terrain_service.h"
@@ -280,6 +283,64 @@ TEST_F(InputCommandHandlerTest, RightPressStartsFormationPlacementForGroundMove)
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(movement, nullptr);
   EXPECT_TRUE(movement->get_has_target());
+}
+
+TEST_F(InputCommandHandlerTest, ARightClickOnUnwalkableGroundIsRefusedAsUnreachable) {
+  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+  selection_system->select_unit(unit->get_id());
+
+  auto& buildings = Game::Systems::BuildingCollisionRegistry::instance();
+  buildings.register_building(9001U, "temple", 6.0F, 6.0F, 2, 0.0F);
+  const QVector3D ruins(6.0F, 0.0F, 6.0F);
+  ASSERT_FALSE(Game::Systems::NavGrid::is_world_position_walkable(ruins))
+      << "the test needs a spot nobody can stand on";
+
+  auto& feedback = capture_feedback();
+  QPointF const ground_screen = world_to_screen(ruins);
+  EXPECT_TRUE(
+      input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
+  EXPECT_FALSE(input_handler->is_placing_formation())
+      << "a click nobody can reach never starts a placement";
+
+  ASSERT_FALSE(feedback.empty()) << "a click that moves nobody must say so";
+  const auto& outcome = feedback.back();
+  EXPECT_TRUE(outcome.rejected());
+  EXPECT_EQ(outcome.failure, App::Core::OrderFailure::Unreachable);
+  EXPECT_TRUE(outcome.has_destination);
+
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  EXPECT_FALSE(movement->get_has_target());
+}
+
+TEST_F(InputCommandHandlerTest,
+       ARecruitTheBarracksCannotPayForIsRefusedWithTheReserve) {
+  auto* barracks = world.create_entity();
+  ASSERT_NE(barracks, nullptr);
+  barracks->add_component<Engine::Core::TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* unit = barracks->add_component<Engine::Core::UnitComponent>();
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Barracks;
+  unit->health = 100;
+  auto* production = barracks->add_component<Engine::Core::ProductionComponent>();
+  production->max_units = 60;
+  production->manpower_available = 5;
+  selection_system->select_unit(barracks->get_id());
+
+  auto& feedback = capture_feedback();
+  command_controller->recruit_near_selected(QStringLiteral("archer"), 1);
+
+  ASSERT_EQ(feedback.size(), 1U) << "the first refused recruit must be reported";
+  const auto& outcome = feedback.front();
+  EXPECT_EQ(outcome.kind, App::Core::OrderKind::Recruit);
+  EXPECT_TRUE(outcome.rejected());
+  EXPECT_EQ(outcome.failure, App::Core::OrderFailure::PopulationCap)
+      << "a short reserve is a lack of people, not of coin";
+  EXPECT_TRUE(outcome.reason.contains(QStringLiteral("5 / ")))
+      << outcome.reason.toStdString();
+  EXPECT_EQ(outcome.target, barracks->get_id());
+  EXPECT_FALSE(production->in_progress);
 }
 
 TEST_F(InputCommandHandlerTest, OneTroopOpensThePlannerAndPreviewsItsFootprintAtOnce) {

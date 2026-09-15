@@ -20,9 +20,25 @@ Item {
 
     readonly property bool minimap_drag_active: hudTop.minimapDragActive
 
+    readonly property bool commander_message_showing: commanderMessage.showing
+
+    readonly property int right_column_bottom: commanderMessage.showing ? Math.round(commanderMessage.y + commanderMessage.height) : hud.right_stack_bottom
+
     property bool overlay_active: false
 
-    readonly property Item keyboard_owner: hudVictory.visible ? hudVictory : null
+    property bool objectives_visible: false
+
+    readonly property bool tutorial_active: typeof game !== 'undefined' && !!game.tutorial && game.tutorial.active
+
+    readonly property Item keyboard_owner: (hudVictory.visible && !hudVictory.collapsed) ? hudVictory : null
+
+    function toggle_objectives() {
+        hud.objectives_visible = !hud.objectives_visible;
+        if (hud.objectives_visible)
+            Design.UiSound.panelOpen();
+        else
+            Design.UiSound.panelClose();
+    }
 
     function right_stack_margin(card_height) {
         var preferred = hud.right_stack_bottom - topPanel.height;
@@ -51,6 +67,7 @@ Item {
     signal recruit_unit(string unit_type)
     signal return_to_main_menu_requested
     signal campaign_requested
+    signal retry_requested
     signal hud_became_visible
     signal help_requested
 
@@ -77,7 +94,7 @@ Item {
             return true;
         if (hud.blocks_edge_scroll(x, y))
             return true;
-        var floating = [cameraLegend, commanderMessage, waveTracker, economyCoach];
+        var floating = [cameraLegend, commanderMessage, waveTracker, economyCoach, objectivesCard, hudVictory.strip];
         for (var i = 0; i < floating.length; ++i) {
             if (hud.item_covers_pointer(floating[i], x, y))
                 return true;
@@ -198,6 +215,8 @@ Item {
             }
             onEconomy_help_requested: economyHelpPanel.visible = true
             onHelp_requested: hud.help_requested()
+            objectives_visible: hud.objectives_visible
+            onObjectives_toggled: hud.toggle_objectives()
             camera_legend_visible: hud.camera_legend_visible
             onCamera_legend_toggled: {
                 if (hud.camera_legend_visible)
@@ -315,10 +334,10 @@ Item {
 
         anchors.right: parent.right
         anchors.rightMargin: Design.Metrics.hudZoneMargin
-        anchors.top: topPanel.bottom
-        anchors.topMargin: hud.right_stack_margin(cameraLegend.height)
+        anchors.bottom: bottomPanel.top
+        anchors.bottomMargin: Design.Metrics.space12
 
-        gate: !hud.commander_rpg_mode && !commanderMessage.showing && !hud.overlay_active && !(typeof game !== 'undefined' && game.tutorial && game.tutorial.active)
+        gate: !hud.commander_rpg_mode && !hud.overlay_active && !hud.tutorial_active
         onOpen_settings_requested: {
             cameraLegend.dismiss();
             hud.camera_settings_requested();
@@ -381,6 +400,127 @@ Item {
         gate: has_formation && any_selected && !formationPanel.placing && !hud.commander_rpg_mode
     }
 
+    Design.IronPanel {
+        id: objectivesCard
+
+        property var mission_objectives: null
+
+        readonly property var mission: (typeof game !== 'undefined' && game && game.mission) ? game.mission : null
+        readonly property bool staged: objectivesCard.mission !== null && objectivesCard.mission.staged
+        readonly property int max_height: Math.max(Design.Metrics.space24 * 6, bottomPanel.y - objectivesCard.y - Design.Metrics.space16 - (formationStatusBadge.visible ? formationStatusBadge.height + Design.Metrics.space12 : 0))
+        readonly property int natural_height: objectivesHeader.implicitHeight + objectivesLayout.spacing + objectivesBody.contentHeight + objectivesCard.contentPadding * 2 + Design.Metrics.space4
+
+        function refresh() {
+            objectivesCard.mission_objectives = (typeof game !== 'undefined' && game && game.setup && game.setup.current_mission_objectives) ? game.setup.current_mission_objectives() : null;
+        }
+
+        function objective_list(key) {
+            return (objectivesCard.mission_objectives && objectivesCard.mission_objectives[key]) ? objectivesCard.mission_objectives[key] : [];
+        }
+
+        function optional_objectives_with_progress() {
+            var list = objectivesCard.objective_list("optional_objectives");
+            var waves = (typeof game !== 'undefined' && game && game.waves) ? game.waves : null;
+            var out = [];
+            for (var i = 0; i < list.length; ++i) {
+                var entry = list[i];
+                var row = {
+                    "description": entry.description,
+                    "state": "optional"
+                };
+                var wave_count = entry.wave_count !== undefined ? Number(entry.wave_count) : 0;
+                if (waves && wave_count > 0) {
+                    var cleared = Math.max(0, Math.min(wave_count, waves.cleared_phases || 0));
+                    row.detail = qsTr("Waves %1 of %2").arg(cleared).arg(wave_count);
+                    row.progress = cleared / wave_count;
+                    if (cleared >= wave_count)
+                        row.state = "complete";
+                }
+                out.push(row);
+            }
+            return out;
+        }
+
+        anchors.top: topPanel.bottom
+        anchors.left: parent.left
+        anchors.leftMargin: Design.Metrics.hudZoneMargin
+        anchors.topMargin: Design.Metrics.space8 + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0) + (missionDeadline.visible ? missionDeadline.height + Design.Metrics.space8 : 0) + (economyCoach.visible ? economyCoach.height + Design.Metrics.space8 : 0)
+        width: Math.max(Design.Metrics.space24 * 10, Math.min(Design.A11y.scaled(380), Math.round(hud.width * 0.36)))
+        height: Math.min(objectivesCard.max_height, objectivesCard.natural_height)
+        visible: hud.objectives_visible && !hud.commander_rpg_mode && !formationPanel.placing && !hud.tutorial_active && !(typeof game !== 'undefined' && game.is_spectator_mode)
+        raised: true
+        z: 50
+        accessibleName: qsTr("Objectives")
+
+        onVisibleChanged: {
+            if (visible)
+                objectivesCard.refresh();
+        }
+
+        Connections {
+            function onCurrent_mission_changed() {
+                objectivesCard.refresh();
+            }
+
+            ignoreUnknownSignals: true
+            target: (typeof game !== 'undefined' && game && game.setup) ? game.setup : null
+        }
+
+        ColumnLayout {
+            id: objectivesLayout
+
+            anchors.fill: parent
+            spacing: Design.Metrics.space8
+
+            RowLayout {
+                id: objectivesHeader
+
+                Layout.fillWidth: true
+                spacing: Design.Metrics.space8
+
+                Text {
+                    text: Design.Icons.briefing
+                    color: Design.Theme.accent
+                    font.family: Design.Typography.family
+                    font.pixelSize: Design.Typography.label
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: (objectivesCard.mission_objectives && objectivesCard.mission_objectives.title) ? objectivesCard.mission_objectives.title : qsTr("Objectives")
+                    color: Design.Theme.textPrimary
+                    elide: Text.ElideRight
+                    font.family: Design.Typography.displayFamily
+                    font.pixelSize: Design.Typography.subheading
+                    font.weight: Design.Typography.bold
+                }
+
+                Design.IronIconButton {
+                    iconText: Design.Icons.close
+                    tooltip: qsTr("Hide the objectives (O)")
+                    onClicked: hud.objectives_visible = false
+                }
+            }
+
+            Design.BriefingLayout {
+                id: objectivesBody
+
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                factionId: typeof game !== 'undefined' && game ? game.local_player_nation : ""
+                title: ""
+                summary: ""
+                victoryConditions: objectivesCard.objective_list("victory_conditions")
+                defeatConditions: objectivesCard.objective_list("defeat_conditions")
+                optionalObjectives: objectivesCard.optional_objectives_with_progress()
+                stages: objectivesCard.staged ? objectivesCard.mission.stages : objectivesCard.objective_list("stages")
+                stagesAreVictoryConditions: objectivesCard.staged && objectivesCard.mission.stages_mirror_victory_conditions
+                victoryMode: (objectivesCard.mission_objectives && objectivesCard.mission_objectives.victory_mode) ? objectivesCard.mission_objectives.victory_mode : "any"
+            }
+        }
+    }
+
     WorldProjector {
         id: worldProjector
 
@@ -439,11 +579,15 @@ Item {
         id: hudVictory
 
         anchors.fill: parent
+        strip_top_margin: topPanel.height + Design.Metrics.space8
         onReturn_to_main_menu_requested: {
             hud.return_to_main_menu_requested();
         }
         onCampaign_requested: {
             hud.campaign_requested();
+        }
+        onRetry_requested: {
+            hud.retry_requested();
         }
 
         Connections {
