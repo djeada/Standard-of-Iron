@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "game/core/component_economy.h"
+#include "game/core/component_presentation.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
@@ -14,6 +15,7 @@
 #include "game/session/simulation_clock.h"
 #include "game/systems/command_service.h"
 #include "game/systems/default_content.h"
+#include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
@@ -39,6 +41,35 @@ using Game::Systems::NavGrid;
 
 constexpr int k_player = 1;
 constexpr int k_map = 64;
+
+struct BodyPoint {
+  float x{0.0F};
+  float z{0.0F};
+  float radius{0.0F};
+};
+
+auto nearest_body_to(const Engine::Core::Entity& entity,
+                     float from_x,
+                     float from_z) -> BodyPoint {
+  auto const* transform = entity.get_component<TransformComponent>();
+  BodyPoint point{transform->position.x,
+                  transform->position.z,
+                  std::max(transform->scale.x, transform->scale.z) * 0.5F};
+  if (!Game::Systems::FormationCombat::has_formation_slots(entity)) {
+    return point;
+  }
+  auto const layout = Game::Systems::FormationCombat::resolve_layout(entity);
+  float nearest = 1.0e9F;
+  for (auto const& anchor :
+       Game::Systems::FormationCombat::soldier_spatial_anchors(entity, layout)) {
+    float const distance = std::hypot(anchor.world_x - from_x, anchor.world_z - from_z);
+    if (distance < nearest) {
+      nearest = distance;
+      point = {anchor.world_x, anchor.world_z, layout.body_radius};
+    }
+  }
+  return point;
+}
 
 struct Track {
   float x{0.0F};
@@ -417,18 +448,19 @@ TEST_F(WildlifeFightMotionTest, EveryBiteStartsFacingItsCommittedTargetAtContact
       }
       auto const* target = m_session->world().get_entity(wildlife->bite_target_id);
       ASSERT_NE(target, nullptr);
-      auto const* prey = target->get_component<TransformComponent>();
       auto const* hunter = animal->get_component<TransformComponent>();
-      float const dx = prey->position.x - hunter->position.x;
-      float const dz = prey->position.z - hunter->position.z;
+      BodyPoint const prey =
+          nearest_body_to(*target, hunter->position.x, hunter->position.z);
+      float const dx = prey.x - hunter->position.x;
+      float const dz = prey.z - hunter->position.z;
       float const yaw = std::atan2(dx, dz) * 180.0F / 3.14159265F;
 
       EXPECT_LE(std::abs(std::remainder(yaw - hunter->rotation.y, 360.0F)),
                 12.0F +
                     Game::Units::body_turn_speed_degrees(Game::Units::SpawnType::Wolf) *
                         tick_seconds());
-      float const radius = std::max(prey->scale.x, prey->scale.z) * 0.5F;
-      EXPECT_LE(std::hypot(dx, dz), Game::Wildlife::k_wolf_bite_range + radius + 0.15F);
+      EXPECT_LE(std::hypot(dx, dz),
+                Game::Wildlife::k_wolf_bite_range + prey.radius + 0.15F);
       ++checked;
     }
   }
@@ -498,7 +530,10 @@ TEST_F(WildlifeFightMotionTest, AUnitThatWalksIntoAWolfIsInAFightOnContact) {
   float closest = 1.0e9F;
   for (float elapsed = 0.0F; elapsed < 10.0F; elapsed += step) {
     step_once();
-    float const gap = (position(troop) - position(wolf)).length();
+    QVector3D const wolf_at = position(wolf);
+    BodyPoint const edge =
+        nearest_body_to(*world.get_entity(troop), wolf_at.x(), wolf_at.z());
+    float const gap = std::hypot(edge.x - wolf_at.x(), edge.z - wolf_at.z());
     closest = std::min(closest, gap);
     if (first_touch < 0.0F && gap <= 1.6F) {
       first_touch = elapsed;
@@ -535,4 +570,228 @@ TEST_F(WildlifeFightMotionTest, AUnitThatWalksIntoAWolfIsInAFightOnContact) {
         << "the troop walked " << (position(troop) - position(wolf)).length()
         << " m away from a wolf it had run into";
   }
+}
+
+namespace {
+
+void release_hunting_pack(Game::Session::SessionContext& session,
+                          int wolves,
+                          const QVector3D& den) {
+  auto* system = session.world().get_system<Game::Wildlife::WildlifeSystem>();
+  ASSERT_NE(system, nullptr);
+  Game::Wildlife::WildlifeSettings settings = Game::Wildlife::default_settings();
+  settings.enabled = true;
+  settings.seed = 1416U;
+  settings.sheep.enabled = false;
+  settings.sheep.group_count = 0;
+  settings.wolves.enabled = true;
+  settings.wolves.group_count = 1;
+  settings.wolves.group_size_min = wolves;
+  settings.wolves.group_size_max = wolves;
+  settings.wolves.aggression = 1.0F;
+  settings.wolves.roam_radius = 16.0F;
+  settings.wolves.alert_radius = 8.0F;
+  settings.wolves.respawn = false;
+  settings.wolves.spawn_areas = {{den.x(), den.z(), 1.0F}};
+  settings.birds.enabled = false;
+  settings.birds.group_count = 0;
+  Game::Wildlife::sanitize(settings);
+  system->configure(settings, 1416U);
+}
+
+} // namespace
+
+TEST_F(WildlifeFightMotionTest, ABittenBuilderGangFightsTheWolfOffBareHanded) {
+  field();
+  m_session->world().set_presentation_enabled(true);
+  release_hunting_pack(*m_session, 1, QVector3D(39.0F, 0.0F, 32.0F));
+  spawn(Game::Units::SpawnType::Builder, QVector3D(32.0F, 0.0F, 32.0F));
+  ASSERT_FALSE(m_handles.empty());
+  const EntityID gang = m_handles.back()->id();
+  step_once();
+  const auto wolves = animals();
+  ASSERT_EQ(wolves.size(), 1U);
+  const EntityID wolf = wolves.front()->get_id();
+
+  auto& world = m_session->world();
+  auto position = [&](EntityID id) {
+    auto const* transform = world.get_entity(id)->get_component<TransformComponent>();
+    return QVector3D(transform->position.x, 0.0F, transform->position.z);
+  };
+  auto locked_on_wolf = [&]() {
+    auto const* attack = world.get_entity(gang)->get_component<AttackComponent>();
+    return attack != nullptr && attack->in_melee_lock &&
+           attack->melee_lock_target_id == wolf;
+  };
+  auto wolf_health = [&]() {
+    auto const* unit = world.get_entity(wolf)->get_component<UnitComponent>();
+    return unit != nullptr ? unit->health : 0;
+  };
+  int const wolf_health_before = wolf_health();
+
+  const float step = tick_seconds();
+  bool answered = false;
+  bool whole_gang_struck = false;
+  float order_time = -1.0F;
+  QVector3D ordered_from;
+  bool held_after_order = false;
+  for (float elapsed = 0.0F; elapsed < 30.0F && wolf_health() > 0; elapsed += step) {
+    step_once();
+    auto* entity = world.get_entity(gang);
+    auto const* target = entity->get_component<AttackTargetComponent>();
+    answered = answered || locked_on_wolf() ||
+               (target != nullptr && target->target_id == wolf);
+
+    auto const* presentation =
+        entity->get_component<Engine::Core::FormationPresentationComponent>();
+    if (presentation != nullptr && presentation->melee_ordered) {
+      int alive = 0;
+      int striking = 0;
+      for (auto const& soldier : presentation->soldiers) {
+        if (!soldier.alive) {
+          continue;
+        }
+        ++alive;
+        using Role = Engine::Core::FormationSoldierCombatRole;
+        if (soldier.combat_role == Role::LeadStrike ||
+            soldier.combat_role == Role::SupportStrike) {
+          ++striking;
+        }
+      }
+      whole_gang_struck = whole_gang_struck || (alive > 1 && striking == alive);
+    }
+
+    if (order_time < 0.0F && locked_on_wolf()) {
+      order_time = elapsed;
+      ordered_from = position(gang);
+      Game::Systems::CommandService::move_unit(
+          world, gang, QVector3D(8.0F, 0.0F, 32.0F));
+    }
+    if (order_time >= 0.0F && !held_after_order && elapsed - order_time >= 1.5F &&
+        wolf_health() > 0) {
+      held_after_order = true;
+      EXPECT_TRUE(locked_on_wolf()) << "a move order walked the gang out of the fight";
+      EXPECT_LE((position(gang) - ordered_from).length(), 1.0F)
+          << "the locked gang walked " << (position(gang) - ordered_from).length()
+          << " m away from the wolf on a move order";
+    }
+  }
+
+  ASSERT_GT(bites(), 0U) << "the wolf never bit the gang, so nothing was proved";
+  EXPECT_TRUE(answered) << "the builders stood still while a wolf bit them";
+  EXPECT_TRUE(whole_gang_struck)
+      << "only part of the gang fought; every builder should throw punches";
+  EXPECT_LT(wolf_health(), wolf_health_before)
+      << "the builders never landed a blow on the wolf";
+}
+
+TEST_F(WildlifeFightMotionTest, AWolfFightingABareHandedCivilianKeepsBiting) {
+  field();
+  m_session->world().set_presentation_enabled(true);
+  release_hunting_pack(*m_session, 1, QVector3D(39.0F, 0.0F, 32.0F));
+  spawn(Game::Units::SpawnType::Civilian, QVector3D(32.0F, 0.0F, 32.0F));
+  ASSERT_FALSE(m_handles.empty());
+  const EntityID civilian = m_handles.back()->id();
+  if (auto* person =
+          m_session->world().get_entity(civilian)->get_component<UnitComponent>()) {
+    person->max_health = 400;
+    person->health = 400;
+  }
+  step_once();
+  const auto wolves = animals();
+  ASSERT_EQ(wolves.size(), 1U);
+  const EntityID wolf = wolves.front()->get_id();
+
+  auto& world = m_session->world();
+  auto alive = [&](EntityID id) {
+    auto* entity = world.get_entity(id);
+    auto const* unit =
+        entity != nullptr ? entity->get_component<UnitComponent>() : nullptr;
+    return unit != nullptr && unit->health > 0;
+  };
+
+  const float step = tick_seconds();
+  float lock_time = -1.0F;
+  unsigned bites_at_lock = 0U;
+  float next_sample = 0.0F;
+  std::string timeline;
+  for (float elapsed = 0.0F; elapsed < 20.0F && alive(civilian) && alive(wolf);
+       elapsed += step) {
+    step_once();
+    auto* person = world.get_entity(civilian);
+    auto const* person_attack = person->get_component<AttackComponent>();
+    if (lock_time < 0.0F && person_attack != nullptr && person_attack->in_melee_lock) {
+      lock_time = elapsed;
+      bites_at_lock = bites();
+    }
+    if (elapsed >= next_sample) {
+      next_sample += 1.0F;
+      auto* animal = world.get_entity(wolf);
+      auto const* wildlife = animal->get_component<WildlifeComponent>();
+      auto const* attack = animal->get_component<AttackComponent>();
+      auto const* movement = animal->get_component<MovementComponent>();
+      auto const* transform = animal->get_component<TransformComponent>();
+      auto const* person_transform = person->get_component<TransformComponent>();
+      float const gap =
+          std::hypot(transform->position.x - person_transform->position.x,
+                     transform->position.z - person_transform->position.z);
+      timeline +=
+          "\n t=" + std::to_string(elapsed) + " gap=" + std::to_string(gap) +
+          " wolf_lock=" + std::to_string(attack != nullptr && attack->in_melee_lock) +
+          " stagger=" +
+          std::to_string(animal->has_component<Engine::Core::StaggerComponent>()) +
+          " has_target=" + std::to_string(movement->get_has_target()) + " goal=(" +
+          std::to_string(movement->get_goal_x()) + "," +
+          std::to_string(movement->get_goal_y()) + ") v=(" +
+          std::to_string(movement->get_vx()) + "," +
+          std::to_string(movement->get_vz()) +
+          ") state_timer=" + std::to_string(wildlife->state_timer) +
+          " bite_timer=" + std::to_string(wildlife->bite_timer) +
+          " flinch=" + std::to_string(wildlife->flinch_timer) +
+          " stall=" + std::to_string(wildlife->stall_timer) +
+          " focus=" + std::to_string(wildlife->focus_id) +
+          " behavior=" + std::to_string(static_cast<int>(wildlife->behavior));
+    }
+  }
+
+  RecordProperty("timeline", timeline);
+  RecordProperty("lock_time", std::to_string(lock_time));
+  RecordProperty("civilian_alive", alive(civilian) ? "yes" : "no");
+  RecordProperty("wolf_alive", alive(wolf) ? "yes" : "no");
+  RecordProperty("bites_total", std::to_string(bites()));
+  ASSERT_GE(lock_time, 0.0F) << "the civilian never locked onto the wolf" << timeline;
+  unsigned const bites_after_lock = bites() - bites_at_lock;
+  EXPECT_GE(bites_after_lock, 3U)
+      << "the wolf stopped biting once the civilian fought back (" << bites_after_lock
+      << " bites after the lock at " << lock_time << " s)" << timeline;
+}
+
+TEST_F(WildlifeFightMotionTest,
+       ASquadLockedOnWolvesKeepsLandingBlowsUntilThePackIsDead) {
+  field();
+  release_hunting_pack(*m_session, 2, QVector3D(39.0F, 0.0F, 32.0F));
+  spawn(Game::Units::SpawnType::Knight, QVector3D(32.0F, 0.0F, 32.0F));
+  ASSERT_FALSE(m_handles.empty());
+  step_once();
+  ASSERT_EQ(animals().size(), 2U);
+
+  auto living_wolves = [&]() {
+    int count = 0;
+    for (auto* animal : animals()) {
+      auto const* unit = animal->get_component<UnitComponent>();
+      if (unit != nullptr && unit->health > 0) {
+        ++count;
+      }
+    }
+    return count;
+  };
+
+  const float step = tick_seconds();
+  for (float elapsed = 0.0F; elapsed < 30.0F && living_wolves() > 0; elapsed += step) {
+    step_once();
+  }
+
+  ASSERT_GT(bites(), 0U) << "the pack never engaged the squad, so nothing was proved";
+  EXPECT_EQ(living_wolves(), 0)
+      << "a squad locked onto a wolf stopped landing blows before the pack was dead";
 }

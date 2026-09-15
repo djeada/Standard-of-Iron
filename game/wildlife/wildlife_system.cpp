@@ -8,8 +8,10 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <numbers>
+#include <vector>
 
 #include "../audio/cue_ids.h"
 #include "../core/component.h"
@@ -21,6 +23,7 @@
 #include "../systems/combat_system/combat_utils.h"
 #include "../systems/combat_system/damage_application.h"
 #include "../systems/command_service.h"
+#include "../systems/formation_combat_geometry.h"
 #include "../systems/nav_grid.h"
 #include "../systems/order_service.h"
 #include "../systems/walkability.h"
@@ -115,8 +118,20 @@ auto is_civilian_spawn(Game::Units::SpawnType type) -> bool {
          type == Game::Units::SpawnType::Builder;
 }
 
+auto is_fighting_back(const Engine::Core::World& world,
+                      Engine::Core::EntityID entity_id) -> bool {
+  if (const auto* attack = world.try_get<Engine::Core::AttackComponent>(entity_id);
+      attack != nullptr && attack->in_melee_lock) {
+    return true;
+  }
+  const auto* target = world.try_get<Engine::Core::AttackTargetComponent>(entity_id);
+  return target != nullptr && target->target_id != 0;
+}
+
 auto resolve_prey(Engine::Core::World& world,
-                  Engine::Core::EntityID entity_id) -> PreyRef {
+                  Engine::Core::EntityID entity_id,
+                  float hunter_x,
+                  float hunter_z) -> PreyRef {
   auto* entity = world.get_entity(entity_id);
   if (entity == nullptr ||
       entity->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -135,6 +150,26 @@ auto resolve_prey(Engine::Core::World& world,
   prey.z = transform->position.z;
   prey.radius = std::max(0.0F, std::max(transform->scale.x, transform->scale.z) * 0.5F);
   prey.livestock = is_wildlife_entity(*entity);
+
+  if (!prey.livestock && Game::Systems::FormationCombat::has_formation_slots(*entity)) {
+    auto const layout = Game::Systems::FormationCombat::resolve_layout(*entity);
+    thread_local std::vector<Game::Systems::FormationCombat::SoldierSpatialAnchor>
+        anchors;
+    Game::Systems::FormationCombat::soldier_spatial_anchors_into(
+        *entity, layout, anchors);
+    float nearest_sq = std::numeric_limits<float>::max();
+    for (const auto& anchor : anchors) {
+      float const dx = anchor.world_x - hunter_x;
+      float const dz = anchor.world_z - hunter_z;
+      float const distance_sq = (dx * dx) + (dz * dz);
+      if (distance_sq < nearest_sq) {
+        nearest_sq = distance_sq;
+        prey.x = anchor.world_x;
+        prey.z = anchor.world_z;
+        prey.radius = layout.body_radius;
+      }
+    }
+  }
   return prey;
 }
 
@@ -611,7 +646,7 @@ void WildlifeSystem::try_contact_bite(Engine::Core::World& world,
       wildlife.bite_timer > 0.0F) {
     return;
   }
-  PreyRef const prey = resolve_prey(world, wildlife.focus_id);
+  PreyRef const prey = resolve_prey(world, wildlife.focus_id, animal.x, animal.z);
   if (!prey.valid()) {
     wildlife.focus_id = 0;
     return;
@@ -799,12 +834,15 @@ void WildlifeSystem::issue_move(Engine::Core::World& world,
   Game::Systems::BodyProfile profile;
   profile.radius = k_animal_navigation_radius;
   QVector3D const requested(world_x, 0.0F, world_z);
-  QVector3D const standable =
-      Game::Systems::Walkability::nearest_standable(requested, profile, 24.0F)
-          .value_or(requested);
+  auto const standable =
+      Game::Systems::Walkability::nearest_standable(requested, profile, 24.0F);
 
-  QVector3D const destination =
-      Game::Systems::NavGrid::snap_to_walkable_ground(standable);
+  QVector3D destination =
+      Game::Systems::NavGrid::snap_to_walkable_ground(standable.value_or(requested));
+  if (standable.has_value()) {
+    destination.setX(standable->x());
+    destination.setZ(standable->z());
+  }
 
   auto* entity = world.get_entity(entity_id);
   if (entity != nullptr) {
@@ -932,7 +970,7 @@ public:
     if (found == nullptr) {
       return {};
     }
-    return resolve_prey(m_world, found->id);
+    return resolve_prey(m_world, found->id, ctx.x, ctx.z);
   }
 
   auto nearest_quarry(const NatureContext& ctx, float radius) -> PreyRef override {
@@ -941,11 +979,12 @@ public:
     if (found == nullptr) {
       return {};
     }
-    return resolve_prey(m_world, found->id);
+    return resolve_prey(m_world, found->id, ctx.x, ctx.z);
   }
 
-  auto locate(Engine::Core::EntityID entity_id) -> PreyRef override {
-    return resolve_prey(m_world, entity_id);
+  auto locate(const NatureContext& ctx,
+              Engine::Core::EntityID entity_id) -> PreyRef override {
+    return resolve_prey(m_world, entity_id, ctx.x, ctx.z);
   }
 
   auto claim_pack_slot(const NatureContext& ctx,
@@ -1099,7 +1138,8 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
         (1.0F - Engine::Core::WildlifeComponent::k_bite_impact_phase);
     if (wildlife->bite_impact_pending && bite_timer_before > k_bite_impact_remaining &&
         wildlife->bite_timer <= k_bite_impact_remaining) {
-      PreyRef const prey = resolve_prey(*world, wildlife->bite_target_id);
+      PreyRef const prey =
+          resolve_prey(*world, wildlife->bite_target_id, animal.x, animal.z);
       auto const* wolf_transform =
           animal.entity->get_component<Engine::Core::TransformComponent>();
       auto const* attack =
@@ -1135,7 +1175,8 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
 
           const auto* prey_unit =
               prey.entity->get_component<Engine::Core::UnitComponent>();
-          if (prey_unit != nullptr && is_civilian_spawn(prey_unit->spawn_type)) {
+          if (prey_unit != nullptr && is_civilian_spawn(prey_unit->spawn_type) &&
+              !is_fighting_back(*world, prey.entity->get_id())) {
             Game::Systems::Combat::add_or_extend_stagger(
                 prey.entity,
                 k_wolf_bite_flinch_seconds,

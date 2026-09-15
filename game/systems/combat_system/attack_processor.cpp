@@ -744,7 +744,8 @@ void drop_target_left_by_a_finished_lock(
 
   auto const* attack_target =
       attacker->get_component<Engine::Core::AttackTargetComponent>();
-  if ((attack_target == nullptr) || attack_target->is_player_command) {
+  if ((attack_target == nullptr) || attack_target->is_player_command ||
+      attack_target->should_chase) {
     return;
   }
 
@@ -1092,6 +1093,9 @@ void reciprocate_melee_lock(Engine::Core::World* world,
                             bool keep_when_locked_on_attacker) {
   auto* target_atk = world->try_get<Engine::Core::AttackComponent>(target->get_id());
   if (target_atk == nullptr) {
+    return;
+  }
+  if (world->has<Engine::Core::WildlifeComponent>(target->get_id())) {
     return;
   }
   if (target->has_component<Engine::Core::ElephantComponent>() &&
@@ -1744,6 +1748,20 @@ void process_attacks(Engine::Core::World* world,
           if (!attack_target->should_chase) {
             drop_attack_target(world, attacker);
             continue;
+          }
+
+          if (!pursues_targets(attacker) && !attack_target->is_player_command) {
+            constexpr float k_brawl_leash = 3.0F;
+            float const leash =
+                combat_radius(attacker) + combat_radius(target) + k_brawl_leash;
+            float const leash_dx =
+                target_transform->position.x - attacker_transform->position.x;
+            float const leash_dz =
+                target_transform->position.z - attacker_transform->position.z;
+            if ((leash_dx * leash_dx) + (leash_dz * leash_dz) > leash * leash) {
+              drop_attack_target(world, attacker);
+              continue;
+            }
           }
 
           auto* hold_mode = attacker->get_component<Engine::Core::HoldModeComponent>();
