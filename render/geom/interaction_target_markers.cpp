@@ -15,11 +15,13 @@ namespace Render::GL {
 
 namespace {
 
-constexpr float k_idle_alpha = 0.45F;
-constexpr float k_hovered_alpha = 0.85F;
-constexpr float k_idle_thickness = 0.10F;
-constexpr float k_hovered_thickness = 0.14F;
-constexpr float k_hovered_ring_scale = 1.2F;
+constexpr float k_idle_alpha = 0.7F;
+constexpr float k_hovered_alpha = 1.0F;
+constexpr float k_idle_thickness = 0.14F;
+constexpr float k_hovered_thickness = 0.26F;
+constexpr float k_hovered_ring_scale = 1.45F;
+constexpr float k_idle_occluded_alpha = 0.45F;
+constexpr float k_hovered_occluded_alpha = 0.8F;
 constexpr float k_glyph_alpha = Render::Geom::k_indicator_alpha;
 
 struct BillboardBasis {
@@ -94,8 +96,10 @@ void render_interaction_target_markers(
     ring.focused = marker.hovered;
     ring.color = Render::Geom::indicator_base_color(marker.action);
     ring.alpha = marker.hovered ? k_hovered_alpha : k_idle_alpha;
+    ring.occluded_alpha =
+        marker.hovered ? k_hovered_occluded_alpha : k_idle_occluded_alpha;
     ring.pattern = marker.hovered ? Game::Accessibility::TeamPattern::DoubleRing
-                                  : Game::Accessibility::TeamPattern::Dotted;
+                                  : Game::Accessibility::TeamPattern::Solid;
     renderer->ground_marker(ring);
 
     if (!marker.hovered) {

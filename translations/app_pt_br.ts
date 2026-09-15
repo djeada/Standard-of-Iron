@@ -2267,6 +2267,22 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source>Slaughter sheep</source>
         <translation>Abater ovelha</translation>
     </message>
+    <message>
+        <source>Point at a tree, boulder, ore, ripe farm or sheep</source>
+        <translation>Aponte para uma árvore, rocha, minério, fazenda madura ou ovelha</translation>
+    </message>
+    <message>
+        <source>Chop this tree</source>
+        <translation>Cortar esta árvore</translation>
+    </message>
+    <message>
+        <source>Quarry this boulder</source>
+        <translation>Quebrar esta rocha</translation>
+    </message>
+    <message>
+        <source>Mine this ore</source>
+        <translation>Minerar este minério</translation>
+    </message>
 </context>
 <context>
     <name>EconomyCoach</name>

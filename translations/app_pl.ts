@@ -2267,6 +2267,22 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <source>Slaughter sheep</source>
         <translation>Ubij owcę</translation>
     </message>
+    <message>
+        <source>Point at a tree, boulder, ore, ripe farm or sheep</source>
+        <translation>Wskaż drzewo, głaz, rudę, dojrzałe pole lub owcę</translation>
+    </message>
+    <message>
+        <source>Chop this tree</source>
+        <translation>Zetnij to drzewo</translation>
+    </message>
+    <message>
+        <source>Quarry this boulder</source>
+        <translation>Rozbij ten głaz</translation>
+    </message>
+    <message>
+        <source>Mine this ore</source>
+        <translation>Wydobądź tę rudę</translation>
+    </message>
 </context>
 <context>
     <name>EconomyCoach</name>

@@ -54,21 +54,32 @@ struct InteractionTargetingRequest {
   float max_distance{0.0F};
   std::size_t max_markers{0};
   const Game::Map::VisibilityService::Snapshot* visibility{nullptr};
+
+  bool gather_only{false};
+  bool hover_from_placement{false};
+  std::uint64_t placement_world_prop_id{0};
+  Engine::Core::EntityID placement_entity_id{0};
 };
 
 struct InteractionTargetingHighlights {
   std::vector<InteractionTargetMarker> markers;
   Engine::Core::EntityID hovered_entity_id{0};
   InteractionAction hovered_action{InteractionAction::None};
+  std::string_view hovered_resource{};
 };
 
 inline constexpr float k_interaction_highlight_max_distance = 42.0F;
 inline constexpr std::size_t k_interaction_highlight_max_markers = 48;
+inline constexpr float k_gather_highlight_max_distance = 80.0F;
+inline constexpr std::size_t k_gather_highlight_max_markers = 160;
 
 [[nodiscard]] auto collect_interaction_target_highlights(
     const InteractionTargetingRequest& request) -> InteractionTargetingHighlights;
 
 [[nodiscard]] auto interaction_action_key(InteractionAction action) -> std::string_view;
+
+[[nodiscard]] auto
+interaction_resource_key(const InteractionTargetMarker& marker) -> std::string_view;
 
 [[nodiscard]] auto
 harvest_product_for_prop(Game::Map::WorldProp::Type type) -> std::string_view;

@@ -581,7 +581,8 @@ void apply_start_harvest(World& world, int owner_id, const StartHarvest& order) 
       release_task_target(terrain, *builder);
       continue;
     }
-    release_task_target(terrain, *builder);
+    Game::Systems::OrderService::clear_builder_task(world, entity);
+    Game::Systems::OrderService::clear_builder_gather_order(entity);
 
     const QVector3D work_position =
         Game::Systems::CommandService::world_prop_work_position(
