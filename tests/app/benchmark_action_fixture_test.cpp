@@ -41,6 +41,20 @@ TEST(BenchmarkActionFixtureTest, AValidFixtureParsesAndSortsItsActions) {
   EXPECT_DOUBLE_EQ(fixture->actions[1].x, 0.6);
 }
 
+TEST(BenchmarkActionFixtureTest, AFormationDragIsDeployedByItsConfirm) {
+  QString error;
+  const auto fixture = parse(R"({"version": 1, "name": "deploy",
+      "required_coverage": ["formation_move"],
+      "actions": [{"at": 1.6, "action": "formation_begin_world", "argument": "-18,-20"},
+                  {"at": 2.4, "action": "formation_drag_world", "argument": "-7,-25"},
+                  {"at": 3.3, "action": "formation_end"},
+                  {"at": 3.7, "action": "formation_confirm"}]})",
+                             &error);
+  ASSERT_TRUE(fixture.has_value()) << error.toStdString();
+  ASSERT_EQ(fixture->actions.size(), 4U);
+  EXPECT_EQ(fixture->actions[3].action, QStringLiteral("formation_confirm"));
+}
+
 TEST(BenchmarkActionFixtureTest, AnUnsupportedVersionIsRejected) {
   QString error;
   EXPECT_FALSE(parse(R"({"version": 2, "name": "x",

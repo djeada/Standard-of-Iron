@@ -186,6 +186,13 @@ def main() -> int:
     parser.add_argument("--size", default="1920x1080")
     parser.add_argument("--fps", type=int, default=30)
     parser.add_argument("--settle", type=float, default=6.0)
+    parser.add_argument(
+        "--without-bridge",
+        action="append",
+        default=[],
+        metavar="ID",
+        help="open the map with this bridge removed, so the film can draw it back",
+    )
     args = parser.parse_args()
 
     width, height = (int(v) for v in args.size.split("x"))
@@ -199,6 +206,14 @@ def main() -> int:
     for sibling in source.parent.glob("*.json"):
         shutil.copy(sibling, work / sibling.name)
     map_copy = work / source.name
+    if args.without_bridge:
+        data = json.loads(map_copy.read_text())
+        data["bridges"] = [
+            bridge
+            for bridge in data.get("bridges", [])
+            if bridge.get("id") not in args.without_bridge
+        ]
+        map_copy.write_text(json.dumps(data, indent=2))
     cfg = work / "cfg" / "djeada"
     cfg.mkdir(parents=True)
     (cfg / "StandardOfIron.ini").write_text("[audio]\nmaster_volume=0\n")

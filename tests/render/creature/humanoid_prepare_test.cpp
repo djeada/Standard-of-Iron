@@ -4,6 +4,7 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdio>
 #include <gtest/gtest.h>
@@ -1972,8 +1973,10 @@ TEST(HumanoidPrepare, FormationGuardDoesNotInheritTheStrikeCarriersAuthoredClip)
   auto const requests = prep.bodies.requests();
   ASSERT_EQ(requests.size(), 2U);
   EXPECT_NE(requests[0].clip_id, anim.authored_action_clip);
-  EXPECT_EQ(requests[1].clip_id, anim.authored_action_clip);
-  EXPECT_NEAR(requests[1].phase, anim.authored_action_phase, 1.0e-4F);
+  EXPECT_NE(requests[1].clip_id, anim.authored_action_clip);
+  EXPECT_EQ(requests[1].upper_body_overlay.clip_id, anim.authored_action_clip);
+  EXPECT_NEAR(
+      requests[1].upper_body_overlay.phase, anim.authored_action_phase, 1.0e-4F);
 }
 
 TEST(HumanoidPrepare, BuilderConstructionPlaybackUsesWorkClip) {
@@ -6292,6 +6295,211 @@ TEST(HumanoidPrepare, FormationMeleeKeepsLowerBodyOnRootedBaseLayer) {
   EXPECT_EQ(selection.upper_body_overlay.mode, PlaybackLayerMode::UpperBodyOverlay);
   EXPECT_EQ(selection.upper_body_overlay.state, AnimationStateId::AttackSpear);
   EXPECT_FALSE(selection.full_body_blend.active());
+}
+
+class MotionProbeSubmitter : public CountingSubmitter {
+public:
+  std::vector<QMatrix4x4> bones;
+
+  void rigged(const Render::GL::RiggedCreatureCmd& cmd) override {
+    auto const bind = Render::Humanoid::humanoid_bind_palette();
+    bones.clear();
+    for (std::size_t b = 0; b < std::min<std::size_t>(cmd.bone_count, bind.size());
+         ++b) {
+      QMatrix4x4 skin = cmd.bone_palette[b];
+      if (cmd.palette_frames_resident && cmd.bone_palette_next != nullptr) {
+        float const weight = std::clamp(cmd.palette_lerp, 0.0F, 1.0F);
+        for (int i = 0; i < 16; ++i) {
+          skin.data()[i] +=
+              (cmd.bone_palette_next[b].constData()[i] - skin.constData()[i]) * weight;
+        }
+      }
+      bones.push_back(cmd.world * skin * bind[b]);
+    }
+  }
+};
+
+struct MotionMeasurements {
+  float max_speed{0.0F};
+  float max_angular_speed{0.0F};
+  int rapid_reversals{0};
+  float excursion{0.0F};
+};
+
+auto measure_motion(const std::vector<QMatrix4x4>& track,
+                    float dt) -> MotionMeasurements {
+  MotionMeasurements result;
+  std::vector<int> reversals;
+  for (std::size_t i = 1; i < track.size(); ++i) {
+    auto const position = track[i].column(3).toVector3D();
+    auto const step = position - track[i - 1].column(3).toVector3D();
+    result.excursion = std::max(
+        result.excursion, (position - track.front().column(3).toVector3D()).length());
+    result.max_speed = std::max(result.max_speed, step.length() / dt);
+    for (int axis = 0; axis < 3; ++axis) {
+      float const dot =
+          QVector3D::dotProduct(track[i].column(axis).toVector3D().normalized(),
+                                track[i - 1].column(axis).toVector3D().normalized());
+      float const degrees =
+          std::acos(std::clamp(dot, -1.0F, 1.0F)) * 180.0F / std::numbers::pi_v<float>;
+      result.max_angular_speed = std::max(result.max_angular_speed, degrees / dt);
+    }
+    if (i < 2) {
+      continue;
+    }
+    auto const previous_step =
+        track[i - 1].column(3).toVector3D() - track[i - 2].column(3).toVector3D();
+
+    bool reverses =
+        step.length() > 0.001F && previous_step.length() > 0.001F &&
+        QVector3D::dotProduct(step.normalized(), previous_step.normalized()) < -0.5F;
+    for (int axis = 0; axis < 3; ++axis) {
+      auto const direction = track[i].column(axis).toVector3D().normalized();
+      auto const previous = track[i - 1].column(axis).toVector3D().normalized();
+      auto const before = track[i - 2].column(axis).toVector3D().normalized();
+      auto const turn = direction - previous;
+      auto const previous_turn = previous - before;
+      reverses = reverses ||
+                 (turn.length() > 0.005F && previous_turn.length() > 0.005F &&
+                  QVector3D::dotProduct(turn.normalized(), previous_turn.normalized()) <
+                      -0.5F);
+    }
+    if (reverses) {
+      reversals.push_back(static_cast<int>(i));
+    }
+    std::erase_if(reversals, [&](int frame) {
+      return static_cast<float>(static_cast<int>(i) - frame) * dt > 0.2F;
+    });
+    result.rapid_reversals =
+        std::max(result.rapid_reversals, static_cast<int>(reversals.size()));
+  }
+  return result;
+}
+
+TEST(HumanoidMotionQuality, DetectorDistinguishesSmoothMotionFromShakeAndSnap) {
+  std::vector<QMatrix4x4> smooth, shaking, spinning, rocking;
+  for (int frame = 0; frame <= 60; ++frame) {
+    float const t = static_cast<float>(frame) / 60.0F;
+    QMatrix4x4 pose;
+    pose.translate(0.1F * std::sin(t * 2.0F * std::numbers::pi_v<float>), 0, 0);
+    smooth.push_back(pose);
+    pose.setToIdentity();
+    pose.translate(frame % 2 == 0 ? 0.02F : -0.02F, 0, 0);
+    shaking.push_back(pose);
+    pose.setToIdentity();
+    pose.rotate(static_cast<float>(frame) * 30.0F, 0, 1, 0);
+    spinning.push_back(pose);
+    pose.setToIdentity();
+    pose.rotate(frame % 2 == 0 ? 1.0F : -1.0F, 0, 1, 0);
+    rocking.push_back(pose);
+  }
+  EXPECT_LT(measure_motion(smooth, 1.0F / 60.0F).rapid_reversals, 3);
+  EXPECT_GE(measure_motion(shaking, 1.0F / 60.0F).rapid_reversals, 3);
+  EXPECT_GE(measure_motion(rocking, 1.0F / 60.0F).rapid_reversals, 3);
+  EXPECT_GT(measure_motion(spinning, 1.0F / 60.0F).max_angular_speed, 360.0F);
+  smooth[30].translate(0.3F, 0, 0);
+  EXPECT_GT(measure_motion(smooth, 1.0F / 60.0F).max_speed, 4.0F);
+}
+
+TEST(HumanoidMotionQuality, MeleeHitsRecoveryAndRetargetingStayVisuallyContinuous) {
+  using Bone = Render::Humanoid::HumanoidBone;
+  constexpr std::array observed{Bone::FootL,
+                                Bone::FootR,
+                                Bone::Pelvis,
+                                Bone::Chest,
+                                Bone::Head,
+                                Bone::HandL,
+                                Bone::HandR};
+  ScopedFlatTerrain const terrain(0.0F);
+  for (int fps : {30, 60, 120}) {
+    for (auto family : {Engine::Core::CombatAttackFamily::Sword,
+                        Engine::Core::CombatAttackFamily::Spear}) {
+      for (unsigned seed : {17U, 91U}) {
+        SCOPED_TRACE(::testing::Message()
+                     << "fps=" << fps << " family=" << static_cast<int>(family)
+                     << " seed=" << seed);
+        Engine::Core::StandaloneEntity scratch(seed);
+        auto& entity = scratch.entity();
+        auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1, 12);
+        unit->spawn_type = family == Engine::Core::CombatAttackFamily::Sword
+                               ? Game::Units::SpawnType::Knight
+                               : Game::Units::SpawnType::Spearman;
+        unit->render_individuals_per_unit_override = 2;
+        auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+        transform->scale = {1.0F, 1.0F, 1.0F};
+        Render::GL::DrawContext ctx{};
+        ctx.entity = &entity;
+        ctx.allow_template_cache = false;
+        ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
+        Render::GL::HumanoidRendererBase const owner;
+        Render::Creature::Pipeline::CreaturePipeline const pipeline;
+        std::array<std::vector<QMatrix4x4>, observed.size()> tracks;
+        float const dt = 1.0F / static_cast<float>(fps);
+        for (int frame = 0; frame <= 5 * fps; ++frame) {
+          float const t = static_cast<float>(frame) * dt;
+          Render::GL::AnimationInputs anim{};
+          anim.time = t;
+          anim.is_in_melee_lock = true;
+          anim.is_melee = true;
+          anim.attack_family = family;
+          anim.is_attacking = t >= 0.5F && t < 3.0F;
+          if (seed == 91U) {
+            anim.has_authored_action_clip = true;
+            anim.has_authored_action_phase = anim.is_attacking;
+            anim.authored_action_clip =
+                family == Engine::Core::CombatAttackFamily::Sword
+                    ? Animation::k_humanoid_attack_sword_a_clip
+                    : Animation::k_humanoid_attack_spear_a_clip;
+            anim.authored_action_phase = std::fmod(std::max(0.0F, t - 0.5F), 1.0F);
+          }
+
+          float const hit_start = t < 2.0F ? 1.2F : 2.2F;
+          float const hit_duration = t < 2.0F ? 0.3F : 0.6F;
+          anim.is_hit_reacting = t >= hit_start && t < hit_start + hit_duration;
+          anim.hit_reaction_kind = t < 2.0F ? Engine::Core::HitReactionKind::Flinch
+                                            : Engine::Core::HitReactionKind::Stagger;
+          anim.hit_reaction_progress =
+              std::clamp((t - hit_start) / hit_duration, 0.0F, 1.0F);
+          anim.hit_reaction_intensity =
+              anim.is_hit_reacting ? 1.0F - anim.hit_reaction_progress : 0.0F;
+          anim.hit_recoil_z = -0.1F * anim.hit_reaction_intensity;
+          transform->rotation.y = t < 3.5F ? 0.0F : 90.0F;
+          Render::Humanoid::HumanoidPreparation prep;
+          Render::Humanoid::prepare_humanoid_instances(
+              owner, ctx, anim, test_runtime(static_cast<std::uint32_t>(frame)), prep);
+          ASSERT_FALSE(prep.bodies.requests().empty());
+          MotionProbeSubmitter sink;
+          pipeline.submit_requests(prep.bodies.requests().first(1), sink);
+          ASSERT_EQ(sink.bones.size(), Render::Humanoid::k_bone_count)
+              << "motion checks require the actual rendered skeleton";
+          for (std::size_t b = 0; b < observed.size(); ++b) {
+            auto const& bone = sink.bones[static_cast<std::size_t>(observed[b])];
+            for (int element = 0; element < 16; ++element) {
+              ASSERT_TRUE(std::isfinite(bone.constData()[element]))
+                  << "frame=" << frame << " bone=" << static_cast<int>(observed[b]);
+            }
+            tracks[b].push_back(bone);
+          }
+        }
+        for (std::size_t b = 0; b < observed.size(); ++b) {
+          SCOPED_TRACE(Render::Humanoid::bone_name(observed[b]));
+          auto const motion = measure_motion(tracks[b], dt);
+          bool const hand = observed[b] == Bone::HandL || observed[b] == Bone::HandR;
+
+          EXPECT_LT(motion.max_speed, hand ? 15.0F : 4.0F);
+          EXPECT_LT(motion.max_angular_speed, hand ? 1440.0F : 360.0F);
+          EXPECT_LT(motion.rapid_reversals, 3);
+
+          std::vector<QMatrix4x4> const combat_track(tracks[b].begin(),
+                                                     tracks[b].begin() + 3 * fps);
+          if (hand) {
+            EXPECT_GT(measure_motion(combat_track, dt).excursion, 0.05F)
+                << "a frozen attack must not pass";
+          }
+        }
+      }
+    }
+  }
 }
 
 TEST(HumanoidPrepare, CombatAttackEmphasisScalesUpperBodyOverlayWeight) {

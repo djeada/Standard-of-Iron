@@ -26,6 +26,14 @@ camera work they belong to::
       ]
     }
 
+The end card (``title``, ``subtitle``, ``end_card_destination``,
+``end_card_lines``) is laid over the last ``end_card_seconds`` of footage by
+default. ``"end_card_background": "dim"`` instead lets the last shot finish and
+appends the card after it, over that shot's final frame held and darkened, so
+the payoff lands before any text and the text never sits on moving troops.
+``end_card_destination`` is the one line the viewer must be able to read on a
+phone; ``end_card_lines`` are smaller, subordinate notes under it.
+
 ``sfx`` cues are timed one-shots laid over the score. ``at`` is a time on the
 finished, blended timeline -- the same one caption timing uses -- so a cue is
 placed against the cut the viewer sees rather than against raw clip lengths.
@@ -92,6 +100,8 @@ FREEZE_TEXT_Y_FRACTION = 0.44
 TITLE_Y_FRACTION = 0.42
 CAPTION_FADE = 0.25
 END_CARD_SECONDS = 2.2
+END_CARD_DIM = 0.84
+END_CARD_DIM_FADE = 0.7
 OPENING_FADE = 0.0
 FIRST_FRAME_MIN_PEAK = 8
 FIRST_FRAME_VISIBLE_LUMA = 32
@@ -1145,10 +1155,33 @@ def main() -> int:
     spans, total = plan_timeline(lengths, joins)
     width = int(manifest.get("width", 1080))
     height = int(manifest.get("height", 1920))
+    frame_rate = float(manifest.get("fps", 60))
+
+    card_seconds = float(spec.get("end_card_seconds", END_CARD_SECONDS))
+    has_card = bool(spec.get("title") or spec.get("subtitle"))
+    dim_card = has_card and spec.get("end_card_background") == "dim"
+    footage_end = total
+    if dim_card:
+        total += card_seconds
 
     effects = [shot_filter(authored.get(name, {}), width, height) for name in names]
     chain, joined = build_join_graph(lengths, joins, spans, effects)
-    chain.append(f"[{joined}]{build_grade(spec.get('grade', {}))}[graded]")
+    grade = build_grade(spec.get("grade", {}))
+    if dim_card:
+
+        chain.append(
+            f"[{joined}]tpad=stop_mode=clone:stop_duration={card_seconds:.3f},"
+            f"{grade}[held]"
+        )
+        chain.append(
+            f"color=c=black:s={width}x{height}:r={frame_rate:g}:d={total:.3f},"
+            f"format=yuva420p,"
+            f"fade=t=in:st={footage_end:.3f}:d={END_CARD_DIM_FADE:.3f}:alpha=1,"
+            f"colorchannelmixer=aa={END_CARD_DIM:.3f}[shade]"
+        )
+        chain.append("[held][shade]overlay=shortest=1:format=auto[graded]")
+    else:
+        chain.append(f"[{joined}]{grade}[graded]")
 
     timeline = [
         (names[index], spans[index][0], spans[index][1]) for index in range(len(names))
@@ -1209,9 +1242,8 @@ def main() -> int:
                 )
                 stage = f"advised{line_index}"
 
-        card_seconds = float(spec.get("end_card_seconds", END_CARD_SECONDS))
         card_start = max(0.0, total - card_seconds)
-        has_card = bool(spec.get("title") or spec.get("subtitle"))
+        card_text_start = card_start + (END_CARD_DIM_FADE * 0.6 if dim_card else 0.0)
         step = 0
         for index, (name, start, end) in enumerate(timeline):
 
@@ -1332,7 +1364,7 @@ def main() -> int:
                     font=font,
                     size=card_title_size,
                     y_expr=f"h*{TITLE_Y_FRACTION}",
-                    start=card_start,
+                    start=card_text_start,
                     end=total,
                 )
                 + "[titled]"
@@ -1352,7 +1384,7 @@ def main() -> int:
                     font=font,
                     size=card_subtitle_size,
                     y_expr=f"h*{TITLE_Y_FRACTION}+{card_gap}",
-                    start=card_start + 0.35,
+                    start=card_text_start + 0.35,
                     end=total,
                     color="#e6c98a",
                 )
@@ -1360,11 +1392,36 @@ def main() -> int:
             )
             stage = "sub"
 
+        credit_top = card_gap + int(subtitle_size * 2.4)
+        credit_delay = 0.8
+        credit_color = "#cfc6b4"
+        destination = spec.get("end_card_destination")
+        if destination:
+
+            destination_size = max(34 * text_scale, int(type_base * 0.052))
+            chain.append(
+                f"[{stage}]"
+                + drawtext(
+                    text=tracked(destination),
+                    font=font,
+                    size=fit_font_size(
+                        tracked(destination), font, destination_size, safe_width
+                    ),
+                    y_expr=f"h*{TITLE_Y_FRACTION}+{credit_top}",
+                    start=card_text_start + 0.6,
+                    end=total,
+                )
+                + "[destination]"
+            )
+            stage = "destination"
+            credit_top += int(destination_size * 2.1)
+            credit_delay = 1.0
+            credit_color = "#a39a8a"
+
         credit_lines = list(spec.get("end_card_lines", []))
         if credit_lines:
 
             credit_size = max(24 * text_scale, int(type_base * 0.032))
-            credit_top = card_gap + int(subtitle_size * 2.4)
             for line_index, line in enumerate(credit_lines):
                 offset = credit_top + int(credit_size * 1.7 * line_index)
                 chain.append(
@@ -1376,9 +1433,9 @@ def main() -> int:
                             tracked(line), font, credit_size, safe_width
                         ),
                         y_expr=f"h*{TITLE_Y_FRACTION}+{offset}",
-                        start=card_start + 0.8 + (0.25 * line_index),
+                        start=card_text_start + credit_delay + (0.25 * line_index),
                         end=total,
-                        color="#cfc6b4",
+                        color=credit_color,
                     )
                     + f"[credit{line_index}]"
                 )
