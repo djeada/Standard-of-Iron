@@ -136,8 +136,12 @@ Rectangle {
     }
 
     Column {
-        anchors.centerIn: parent
-        anchors.verticalCenterOffset: parent.height * 0.28
+        id: loading_content
+        objectName: "loading_content"
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: tip_plate.top
+        anchors.bottomMargin: Math.max(24, parent.height * 0.04)
         spacing: 18
         width: Math.min(parent.width * 0.6, 620)
 
@@ -292,6 +296,7 @@ Rectangle {
 
     Item {
         id: tip_plate
+        objectName: "tip_plate"
 
         function draw_tip() {
             if (typeof LoadingTips === "undefined")
