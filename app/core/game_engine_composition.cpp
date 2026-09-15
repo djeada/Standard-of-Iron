@@ -489,6 +489,10 @@ void GameEngine::build_services_and_controllers() {
                 gathering ? App::Core::OrderKind::Gather : App::Core::OrderKind::Build,
                 App::Core::OrderRefusal{App::Core::OrderFailure::CommandUnavailable,
                                         reason});
+            if (const auto clicked = m_production_manager->release_position()) {
+              outcome.has_destination = true;
+              outcome.destination = *clicked;
+            }
             handle_order_feedback(outcome);
           });
   connect(m_production_manager.get(),

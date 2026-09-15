@@ -2267,6 +2267,22 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Slaughter sheep</source>
         <translation>ذبح خروف</translation>
     </message>
+    <message>
+        <source>Point at a tree, boulder, ore, ripe farm or sheep</source>
+        <translation>أشر إلى شجرة أو صخرة أو خام أو مزرعة ناضجة أو خروف</translation>
+    </message>
+    <message>
+        <source>Chop this tree</source>
+        <translation>اقطع هذه الشجرة</translation>
+    </message>
+    <message>
+        <source>Quarry this boulder</source>
+        <translation>اكسر هذه الصخرة</translation>
+    </message>
+    <message>
+        <source>Mine this ore</source>
+        <translation>استخرج هذا الخام</translation>
+    </message>
 </context>
 <context>
     <name>EconomyCoach</name>

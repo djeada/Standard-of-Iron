@@ -124,6 +124,8 @@ struct SideReport {
   int missile = 0;
   int horse = 0;
   int engines = 0;
+  int catapults = 0;
+  int ballistas = 0;
   bool commander_alive = false;
 };
 
@@ -132,6 +134,9 @@ struct SideHistory {
   int most_homes = 0;
   int most_farms = 0;
   int most_fighters = 0;
+  int most_engines = 0;
+  int most_catapults = 0;
+  int most_ballistas = 0;
   int biggest_wave = 0;
   int harvested = 0;
   float commander_lost_at = -1.0F;
@@ -366,8 +371,12 @@ protected:
             ++report.horse;
             break;
           case Game::Units::SpawnType::Catapult:
+            ++report.engines;
+            ++report.catapults;
+            break;
           case Game::Units::SpawnType::Ballista:
             ++report.engines;
+            ++report.ballistas;
             break;
           default:
             ++report.foot;
@@ -471,6 +480,9 @@ protected:
     history.most_homes = std::max(history.most_homes, report.homes);
     history.most_farms = std::max(history.most_farms, report.farms);
     history.most_fighters = std::max(history.most_fighters, report.fighters);
+    history.most_engines = std::max(history.most_engines, report.engines);
+    history.most_catapults = std::max(history.most_catapults, report.catapults);
+    history.most_ballistas = std::max(history.most_ballistas, report.ballistas);
     history.harvested = harvested_total(session, owner);
 
     if (plan != nullptr && plan->wave.committed) {
@@ -815,6 +827,34 @@ protected:
     }
   }
 
+  enum class SiegeTrain {
+    None,
+    Catapults,
+    Ballistas
+  };
+
+  static void expect_the_siege_train_of_its_doctrine(const SideHistory& side,
+                                                     const char* name,
+                                                     SiegeTrain train) {
+    if (train == SiegeTrain::None) {
+      EXPECT_EQ(side.most_engines, 0)
+          << name << " has no siege in its doctrine yet fielded " << side.most_engines
+          << " engines; every commander would end up with the same army";
+      return;
+    }
+    EXPECT_GE(side.most_engines, 1)
+        << name << " has siege in its doctrine but never raised an engine";
+    constexpr int k_siege_train_ceiling = 3;
+    EXPECT_LE(side.most_engines, k_siege_train_ceiling)
+        << name << " fielded " << side.most_engines
+        << " engines; a siege train is a few engines, not the army";
+    if (train == SiegeTrain::Catapults) {
+      EXPECT_EQ(side.most_ballistas, 0) << name << " is a catapult commander";
+    } else {
+      EXPECT_EQ(side.most_catapults, 0) << name << " is a ballista commander";
+    }
+  }
+
   static void expect_a_commander_played_the_match(const SideHistory& side,
                                                   const char* name) {
     EXPECT_GE(side.most_buildings, 5)
@@ -862,6 +902,10 @@ TEST_F(AiDuelMatchTest, ScipioAndFabiusBothPlayTheirDoctrine) {
   EXPECT_GE(outcome.north.biggest_wave, 4)
       << "Scipio's aggressive doctrine never gathered a wave bigger than "
       << outcome.north.biggest_wave;
+  expect_the_siege_train_of_its_doctrine(
+      outcome.north, "Scipio", SiegeTrain::Catapults);
+  expect_the_siege_train_of_its_doctrine(
+      outcome.south, "Fabius", SiegeTrain::Ballistas);
 }
 
 TEST_F(AiDuelMatchTest, MarcellusAndHannoBothPlayTheirDoctrine) {
@@ -879,6 +923,8 @@ TEST_F(AiDuelMatchTest, MarcellusAndHannoBothPlayTheirDoctrine) {
 
   EXPECT_GE(outcome.north.biggest_wave, 3)
       << "Marcellus' rushing doctrine never gathered a wave";
+  expect_the_siege_train_of_its_doctrine(outcome.north, "Marcellus", SiegeTrain::None);
+  expect_the_siege_train_of_its_doctrine(outcome.south, "Hanno", SiegeTrain::Ballistas);
 }
 
 TEST_F(AiDuelMatchTest, HannibalAndHasdrubalBothPlayTheirDoctrine) {
@@ -893,6 +939,9 @@ TEST_F(AiDuelMatchTest, HannibalAndHasdrubalBothPlayTheirDoctrine) {
   expect_a_commander_played_the_match(outcome.north, "Hannibal");
   expect_a_commander_played_the_match(outcome.south, "Hasdrubal");
   expect_one_of_them_fought_a_war(outcome.north, outcome.south);
+  expect_the_siege_train_of_its_doctrine(
+      outcome.north, "Hannibal", SiegeTrain::Catapults);
+  expect_the_siege_train_of_its_doctrine(outcome.south, "Hasdrubal", SiegeTrain::None);
 }
 
 TEST_F(AiDuelMatchTest, HannibalMirrorGetsItsArmyAcrossTheRiver) {

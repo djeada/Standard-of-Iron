@@ -446,6 +446,51 @@ TEST_F(ProductionSystemTest, BuilderCompletesMarketplaceConstruction) {
   EXPECT_FALSE(production->has_construction_site);
 }
 
+TEST_F(ProductionSystemTest, BuilderFinishesTheSiegeEngineItWasAskedToBuild) {
+  for (const auto& [product, expected] :
+       {std::pair{"catapult", Game::Units::SpawnType::Catapult},
+        std::pair{"ballista", Game::Units::SpawnType::Ballista}}) {
+    SCOPED_TRACE(product);
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
+    auto const build_world = Game::Systems::NavGrid::grid_to_world({4, 4});
+
+    Engine::Core::World world;
+    auto* builder = world.create_entity();
+    ASSERT_NE(builder, nullptr);
+    builder->add_component<Engine::Core::TransformComponent>(
+        build_world.x(), 0.0F, build_world.z());
+    builder->add_component<Engine::Core::MovementComponent>();
+    auto* unit = builder->add_component<Engine::Core::UnitComponent>();
+    auto* production =
+        builder->add_component<Engine::Core::BuilderProductionComponent>();
+    unit->owner_id = 1;
+    unit->spawn_type = Game::Units::SpawnType::Builder;
+    unit->nation_id = Game::Systems::NationID::RomanRepublic;
+    production->in_progress = true;
+    production->time_remaining = 0.0F;
+    production->product_type = product;
+    production->has_construction_site = true;
+    production->construction_site_x = build_world.x();
+    production->construction_site_z = build_world.z();
+    production->at_construction_site = true;
+
+    Game::Systems::ProductionSystem system;
+    system.update(&world, 0.1F);
+
+    Engine::Core::Entity* engine = nullptr;
+    for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+      auto* spawned = entity->get_component<Engine::Core::UnitComponent>();
+      if (entity != builder && spawned != nullptr && spawned->spawn_type == expected) {
+        engine = entity;
+      }
+    }
+    ASSERT_NE(engine, nullptr) << "the finished site must roll out a " << product;
+    EXPECT_EQ(engine->get_component<Engine::Core::UnitComponent>()->owner_id, 1);
+    EXPECT_TRUE(production->construction_complete);
+    EXPECT_FALSE(production->has_construction_site);
+  }
+}
+
 TEST_F(ProductionSystemTest, RepairMendsAStructureOneTickAtATime) {
   Engine::Core::World world;
 

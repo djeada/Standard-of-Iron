@@ -6,6 +6,7 @@
 #include <QVector3D>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -74,6 +75,15 @@ public:
   [[nodiscard]] int construction_preview_total_cost() const {
     return m_construction_preview_total_cost;
   }
+  [[nodiscard]] std::uint64_t pending_harvest_target_id() const {
+    return m_construction_preview_valid ? m_pending_harvest_target_id : 0;
+  }
+  [[nodiscard]] Engine::Core::EntityID pending_food_target_id() const {
+    return m_construction_preview_valid ? m_pending_food_target_id : 0;
+  }
+  [[nodiscard]] std::optional<QVector3D> release_position() const {
+    return m_release_position;
+  }
   void on_construction_mouse_move(qreal sx, qreal sy, const ViewportState& viewport);
   void
   on_construction_pointer_pressed(qreal sx, qreal sy, const ViewportState& viewport);
@@ -99,7 +109,7 @@ signals:
   void order_feedback(const App::Core::OrderOutcome& outcome);
 
 private:
-  std::vector<Engine::Core::EntityID> collect_available_builders();
+  std::vector<Engine::Core::EntityID> collect_available_builders(bool include_busy);
   QVector3D calculate_builder_center_position(
       const std::vector<Engine::Core::EntityID>& builder_ids);
   void set_construction_preview_active(bool active);
@@ -162,6 +172,7 @@ private:
   int m_construction_preview_total_cost = 0;
   std::uint64_t m_pending_harvest_target_id = 0;
   Engine::Core::EntityID m_pending_food_target_id = 0;
+  std::optional<QVector3D> m_release_position;
 
   bool m_wall_drag_active = false;
   bool m_wall_drag_anchor_set = false;

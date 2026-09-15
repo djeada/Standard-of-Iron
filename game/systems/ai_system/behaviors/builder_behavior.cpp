@@ -316,6 +316,16 @@ auto preferred_siege_engine(const AIContext& context) -> const char* {
       return BUILDING_TYPE_CATAPULT;
     }
   }
+  if (doctrine->town_plan != nullptr) {
+    for (const auto& step : doctrine->town_plan->steps) {
+      if (step.building == BUILDING_TYPE_BALLISTA) {
+        return BUILDING_TYPE_BALLISTA;
+      }
+      if (step.building == BUILDING_TYPE_CATAPULT) {
+        return BUILDING_TYPE_CATAPULT;
+      }
+    }
+  }
   return BUILDING_TYPE_CATAPULT;
 }
 
@@ -414,15 +424,6 @@ auto authored_plan_step(const AIContext& context,
 
   PlanStepChoice fallback;
 
-  int engines_fielded = 0;
-  for (const auto& entity : snapshot.friendly_units) {
-    if (entity.spawn_type == Game::Units::SpawnType::Catapult ||
-        entity.spawn_type == Game::Units::SpawnType::Ballista) {
-      ++engines_fielded;
-    }
-  }
-  int engine_steps_seen = 0;
-
   int slot = -1;
   for (const auto& step : doctrine->town_plan->steps) {
     ++slot;
@@ -437,12 +438,9 @@ auto authored_plan_step(const AIContext& context,
     }
 
     if (resolved == BUILDING_TYPE_CATAPULT || resolved == BUILDING_TYPE_BALLISTA) {
-
-      ++engine_steps_seen;
-      if (engines_fielded >= engine_steps_seen) {
-        continue;
-      }
-    } else if (plan_step_is_already_met(standing, targets, resolved)) {
+      continue;
+    }
+    if (plan_step_is_already_met(standing, targets, resolved)) {
 
       continue;
     }
@@ -565,6 +563,9 @@ auto plan_still_sites_this_itself(const AIContext& context,
                                   const char* building) -> bool {
   const auto* doctrine = context.strategy_config.doctrine;
   if (doctrine == nullptr || doctrine->town_plan == nullptr || building == nullptr) {
+    return false;
+  }
+  if (building == BUILDING_TYPE_CATAPULT || building == BUILDING_TYPE_BALLISTA) {
     return false;
   }
   if (plan_step_is_already_met(standing, targets, building)) {
@@ -806,6 +807,10 @@ auto planned_settlement_offset(const AIContext& context,
     const int slot = construction_index % 11;
     return QVector3D{
         -10.0F + static_cast<float>(slot) * 2.0F, 0.0F, carthaginian ? -13.0F : -14.0F};
+  }
+  if (building_type == BUILDING_TYPE_CATAPULT ||
+      building_type == BUILDING_TYPE_BALLISTA) {
+    return expanding_ring_offset(context, construction_index, 8, 12.0F, 5.0F);
   }
   const float angle = static_cast<float>(construction_index) * 0.8F;
   return {18.0F * std::cos(angle), 0.0F, 18.0F * std::sin(angle)};
@@ -1413,8 +1418,10 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
 
   int siege_count = 0;
   for (const auto& entity : snapshot.friendly_units) {
-    if (entity.spawn_type == Game::Units::SpawnType::Catapult ||
-        entity.spawn_type == Game::Units::SpawnType::Ballista) {
+    if (Game::Units::is_siege_engine_spawn(entity.spawn_type) ||
+        (entity.builder_production.raising_a_building &&
+         Game::Units::is_siege_engine_spawn(
+             entity.builder_production.building_under_way))) {
       siege_count++;
     }
   }
@@ -1588,6 +1595,13 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     wish(BUILDING_TYPE_HOME);
   }
 
+  const bool town_can_spare_an_engine = standing.barracks > 0 &&
+                                        standing.homes >= k_roofs_before_the_frame &&
+                                        standing.farms > 0;
+  if (town_can_spare_an_engine && siege_count < target_catapults) {
+    wish(siege_engine);
+  }
+
   if (has_plan_step) {
     ConstructionIntent step;
     step.type = planned.building;
@@ -1649,9 +1663,12 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
       if (missing_resource == ResourceType::Count) {
         missing_resource = verdict.missing;
       }
-      if (intent.plan_slot >= 0 && saving_for == ResourceType::Count &&
-          (intent.type == BUILDING_TYPE_WALL_GATE ||
-           intent.type == BUILDING_TYPE_DEFENSE_TOWER)) {
+      const bool worth_saving_for =
+          (intent.plan_slot >= 0 && (intent.type == BUILDING_TYPE_WALL_GATE ||
+                                     intent.type == BUILDING_TYPE_DEFENSE_TOWER)) ||
+          intent.type == BUILDING_TYPE_CATAPULT ||
+          intent.type == BUILDING_TYPE_BALLISTA;
+      if (worth_saving_for && saving_for == ResourceType::Count) {
         saving_for = verdict.missing;
       }
       continue;
@@ -1715,6 +1732,12 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
       }
       if (!site_resolved) {
         m_construction_counter += k_site_search_attempts;
+        if (building_to_construct == BUILDING_TYPE_CATAPULT ||
+            building_to_construct == BUILDING_TYPE_BALLISTA) {
+          constexpr float k_engine_site_retry_seconds = 60.0F;
+          m_deferred_type = building_to_construct;
+          m_deferred_until = snapshot.game_time + k_engine_site_retry_seconds;
+        }
         building_to_construct = nullptr;
       }
     }

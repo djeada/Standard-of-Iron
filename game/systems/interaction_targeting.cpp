@@ -17,7 +17,8 @@ namespace Game::Systems {
 namespace {
 
 constexpr int k_reach_search_radius = 3;
-constexpr float k_node_marker_radius = 0.8F;
+constexpr float k_tree_marker_radius = 0.9F;
+constexpr float k_rock_marker_radius = 1.3F;
 constexpr float k_building_marker_radius = 1.6F;
 constexpr float k_hover_reach_scale = 1.5F;
 
@@ -73,7 +74,9 @@ void collect_resource_nodes(const InteractionTargetingRequest& request,
     marker.world_x = position.x();
     marker.world_y = position.y();
     marker.world_z = position.z();
-    marker.radius = k_node_marker_radius;
+    marker.radius = Game::Map::is_tree_world_prop_type(prop.type)
+                        ? k_tree_marker_radius
+                        : k_rock_marker_radius;
     out.push_back({marker, distance_sq});
   }
 }
@@ -157,7 +160,8 @@ void collect_buildings(const InteractionTargetingRequest& request,
     const auto* transform = &transform_ref;
 
     const auto action = building_action(request, entity, *unit);
-    if (action == InteractionAction::None) {
+    if (action == InteractionAction::None ||
+        (request.gather_only && action != InteractionAction::Harvest)) {
       continue;
     }
 
@@ -205,14 +209,24 @@ auto collect_interaction_target_highlights(const InteractionTargetingRequest& re
   collect_buildings(request, max_distance_sq, candidates);
 
   for (auto& candidate : candidates) {
-    candidate.marker.hovered = candidate.marker.entity_id != 0 &&
-                               candidate.marker.entity_id == request.hovered_entity_id;
-    if (candidate.marker.hovered) {
-      highlights.hovered_action = candidate.marker.action;
+    auto& marker = candidate.marker;
+    if (request.hover_from_placement) {
+      marker.hovered = (request.placement_world_prop_id != 0 &&
+                        marker.world_prop_id == request.placement_world_prop_id) ||
+                       (request.placement_entity_id != 0 &&
+                        marker.entity_id == request.placement_entity_id);
+    } else {
+      marker.hovered =
+          marker.entity_id != 0 && marker.entity_id == request.hovered_entity_id;
+    }
+    if (marker.hovered) {
+      highlights.hovered_action = marker.action;
+      highlights.hovered_resource = interaction_resource_key(marker);
     }
   }
 
-  if (highlights.hovered_action == InteractionAction::None &&
+  if (!request.hover_from_placement &&
+      highlights.hovered_action == InteractionAction::None &&
       request.has_hovered_ground) {
     Scored* closest = nullptr;
     float closest_distance_sq = std::numeric_limits<float>::max();
@@ -230,6 +244,7 @@ auto collect_interaction_target_highlights(const InteractionTargetingRequest& re
     if (closest != nullptr) {
       closest->marker.hovered = true;
       highlights.hovered_action = closest->marker.action;
+      highlights.hovered_resource = interaction_resource_key(closest->marker);
     }
   }
 
@@ -262,6 +277,28 @@ auto harvest_product_for_prop(Game::Map::WorldProp::Type type) -> std::string_vi
     return k_builder_product_collect_stone;
   }
   return k_builder_product_collect_iron_ore;
+}
+
+auto interaction_resource_key(const InteractionTargetMarker& marker)
+    -> std::string_view {
+  switch (marker.action) {
+  case InteractionAction::Gather:
+    if (Game::Map::is_tree_world_prop_type(marker.prop_type)) {
+      return "wood";
+    }
+    if (Game::Map::is_boulder_world_prop_type(marker.prop_type)) {
+      return "stone";
+    }
+    return "iron";
+  case InteractionAction::Harvest:
+  case InteractionAction::Slaughter:
+    return "food";
+  case InteractionAction::Deliver:
+  case InteractionAction::Repair:
+  case InteractionAction::None:
+    break;
+  }
+  return {};
 }
 
 auto interaction_action_key(InteractionAction action) -> std::string_view {

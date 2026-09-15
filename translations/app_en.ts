@@ -2267,6 +2267,22 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Slaughter sheep</source>
         <translation>Slaughter sheep</translation>
     </message>
+    <message>
+        <source>Point at a tree, boulder, ore, ripe farm or sheep</source>
+        <translation>Point at a tree, boulder, ore, ripe farm or sheep</translation>
+    </message>
+    <message>
+        <source>Chop this tree</source>
+        <translation>Chop this tree</translation>
+    </message>
+    <message>
+        <source>Quarry this boulder</source>
+        <translation>Quarry this boulder</translation>
+    </message>
+    <message>
+        <source>Mine this ore</source>
+        <translation>Mine this ore</translation>
+    </message>
 </context>
 <context>
     <name>EconomyCoach</name>
