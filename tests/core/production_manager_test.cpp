@@ -2,6 +2,8 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <memory>
+#include <optional>
+#include <vector>
 
 #include "app/input/input_command_handler.h"
 #include "game/command/command_queue.h"
@@ -780,6 +782,123 @@ TEST_F(ProductionManagerTest, RestartingCollectReleasesPreviousResourceReservati
   EXPECT_TRUE(builder_prod->task_target_reserved);
   EXPECT_EQ(builder_prod->task_target_id, target->id);
   EXPECT_FALSE(manager.is_placing_construction());
+}
+
+TEST_F(ProductionManagerTest, CollectCanRetaskABuilderThatIsAlreadyWorking) {
+  auto* builder = add_selected_builder();
+  auto* builder_prod =
+      builder->get_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_NE(builder_prod, nullptr);
+  builder_prod->has_construction_site = true;
+  builder_prod->product_type = "cut_tree";
+
+  ProductionManager manager(&world, &picking_service, &camera);
+  manager.start_builder_construction(QStringLiteral("collect"));
+
+  EXPECT_TRUE(manager.is_placing_construction())
+      << "a builder chopping one tree must still take a Collect order for another; "
+         "otherwise the button silently does nothing after the first trip";
+}
+
+TEST_F(ProductionManagerTest, ACatapultPlacedFromTheBuilderPanelSendsTheBuilder) {
+  auto* builder = add_selected_builder();
+  ProductionManager manager(&world, &picking_service, &camera);
+
+  manager.start_builder_construction(QStringLiteral("catapult"));
+  ASSERT_TRUE(manager.is_placing_construction());
+
+  const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
+  EXPECT_TRUE(manager.construction_preview_active());
+  EXPECT_TRUE(manager.construction_preview_valid())
+      << manager.construction_preview_reason().toStdString();
+  manager.on_construction_confirm();
+
+  const auto* builder_prod =
+      builder->get_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_NE(builder_prod, nullptr);
+  EXPECT_FALSE(manager.is_placing_construction());
+  EXPECT_TRUE(builder_prod->has_construction_site);
+  EXPECT_EQ(builder_prod->product_type, "catapult");
+}
+
+TEST_F(ProductionManagerTest, ABallistaPlacedFromTheBuilderPanelSendsTheBuilder) {
+  auto* builder = add_selected_builder();
+  ProductionManager manager(&world, &picking_service, &camera);
+
+  manager.start_builder_construction(QStringLiteral("ballista"));
+  ASSERT_TRUE(manager.is_placing_construction());
+
+  const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
+  EXPECT_TRUE(manager.construction_preview_valid())
+      << manager.construction_preview_reason().toStdString();
+  manager.on_construction_confirm();
+
+  const auto* builder_prod =
+      builder->get_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_NE(builder_prod, nullptr);
+  EXPECT_FALSE(manager.is_placing_construction());
+  EXPECT_TRUE(builder_prod->has_construction_site);
+  EXPECT_EQ(builder_prod->product_type, "ballista");
+}
+
+TEST_F(ProductionManagerTest, BuildingStillWaitsForAFreeBuilder) {
+  auto* builder = add_selected_builder();
+  auto* builder_prod =
+      builder->get_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_NE(builder_prod, nullptr);
+  builder_prod->has_construction_site = true;
+
+  ProductionManager manager(&world, &picking_service, &camera);
+  std::vector<App::Core::OrderOutcome> refusals;
+  QObject::connect(&manager,
+                   &ProductionManager::order_feedback,
+                   [&refusals](const App::Core::OrderOutcome& outcome) {
+                     refusals.push_back(outcome);
+                   });
+  manager.start_builder_construction(QStringLiteral("defense_tower"));
+
+  EXPECT_FALSE(manager.is_placing_construction());
+  ASSERT_EQ(refusals.size(), 1U) << "a press that cannot start must say why";
+  EXPECT_TRUE(refusals.front().rejected());
+}
+
+TEST_F(ProductionManagerTest, AMissedCollectClickSaysWhereItLandedAndStaysArmed) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 64;
+  map_def.grid.height = 64;
+  map_def.grid.tile_size = 1.0F;
+  map_def.biome.procedural_trees_enabled = false;
+  map_def.biome.procedural_boulders_enabled = false;
+  map_def.biome.procedural_iron_ore_enabled = false;
+  Game::Map::TerrainService::instance().initialize(map_def);
+  Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
+
+  add_selected_builder();
+  ProductionManager manager(&world, &picking_service, &camera);
+  manager.start_builder_construction(QStringLiteral("collect"));
+  ASSERT_TRUE(manager.is_placing_construction());
+
+  QString reason;
+  std::optional<QVector3D> landed;
+  QObject::connect(&manager,
+                   &ProductionManager::construction_placement_rejected,
+                   [&](const QString& rejected_reason) {
+                     reason = rejected_reason;
+                     landed = manager.release_position();
+                   });
+
+  const QPointF screen = world_to_screen(QVector3D(2.0F, 0.0F, -3.0F));
+  manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
+  manager.on_construction_pointer_released(screen.x(), screen.y(), viewport);
+
+  EXPECT_FALSE(reason.isEmpty());
+  ASSERT_TRUE(landed.has_value()) << "the refusal needs a spot to mark on the ground";
+  EXPECT_NEAR(landed->x(), 2.0F, 0.5F);
+  EXPECT_NEAR(landed->z(), -3.0F, 0.5F);
+  EXPECT_TRUE(manager.is_placing_construction()) << "a miss must keep Collect armed";
+  EXPECT_FALSE(manager.release_position().has_value());
 }
 
 TEST_F(ProductionManagerTest, SetRallyAtScreenTargetsOnlySelectedBarracks) {

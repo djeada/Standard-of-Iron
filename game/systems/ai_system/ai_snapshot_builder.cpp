@@ -342,7 +342,8 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       if (builder_prod->has_construction_site) {
         if (const auto raising =
                 Game::Units::spawn_typeFromString(builder_prod->product_type);
-            raising.has_value() && Game::Units::is_building_spawn(*raising)) {
+            raising.has_value() && (Game::Units::is_building_spawn(*raising) ||
+                                    Game::Units::is_siege_engine_spawn(*raising))) {
           data.builder_production.raising_a_building = true;
           data.builder_production.building_under_way = *raising;
         }

@@ -354,6 +354,10 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
   return type == SpawnType::Sheep || type == SpawnType::Wolf;
 }
 
+[[nodiscard]] inline auto is_siege_engine_spawn(SpawnType type) noexcept -> bool {
+  return type == SpawnType::Catapult || type == SpawnType::Ballista;
+}
+
 inline auto is_building_spawn(SpawnType type) -> bool {
   return type == SpawnType::Barracks || type == SpawnType::DefenseTower ||
          type == SpawnType::Home || type == SpawnType::WallSegment ||

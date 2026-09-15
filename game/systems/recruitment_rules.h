@@ -14,6 +14,9 @@ recruiting_building_for(Game::Units::TroopType unit_type) -> Game::Units::SpawnT
     return Game::Units::SpawnType::Home;
   case Game::Units::TroopType::Healer:
     return Game::Units::SpawnType::Temple;
+  case Game::Units::TroopType::Catapult:
+  case Game::Units::TroopType::Ballista:
+    return Game::Units::SpawnType::Builder;
   default:
     return Game::Units::SpawnType::Barracks;
   }

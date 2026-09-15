@@ -356,4 +356,75 @@ TEST_F(InteractionTargetingTest, TheListIsCappedSoTheFieldDoesNotFillWithRings) 
   EXPECT_LE(highlights.markers.size(), 8U);
 }
 
+TEST_F(InteractionTargetingTest, CollectModeLightsTheNodeTheClickWouldTake) {
+  lay_out({{.type = WorldProp::Type::Boulder, .x = 3.0F, .z = 0.0F},
+           {.type = WorldProp::Type::PineTree, .x = -3.0F, .z = 0.0F}});
+  Engine::Core::World world;
+
+  std::uint64_t tree_id = 0;
+  for (const auto& prop : Game::Map::TerrainService::instance().world_props()) {
+    if (prop.type == WorldProp::Type::PineTree) {
+      tree_id = prop.id;
+    }
+  }
+  ASSERT_NE(tree_id, 0U);
+
+  auto request = request_for(world, true, false);
+  request.gather_only = true;
+  request.hover_from_placement = true;
+  request.placement_world_prop_id = tree_id;
+  request.has_hovered_ground = true;
+  request.hovered_ground_x = 3.0F;
+  request.hovered_ground_z = 0.0F;
+
+  const auto highlights = Game::Systems::collect_interaction_target_highlights(request);
+
+  EXPECT_EQ(highlights.hovered_action, InteractionAction::Gather);
+  EXPECT_EQ(highlights.hovered_resource, "wood");
+  ASSERT_EQ(highlights.markers.size(), 2U);
+  for (const auto& marker : highlights.markers) {
+    EXPECT_EQ(marker.hovered, marker.world_prop_id == tree_id)
+        << "the strong ring must sit on the node the click commits to, even when "
+           "the ground under the cursor is closer to another one";
+  }
+}
+
+TEST_F(InteractionTargetingTest, CollectModeDoesNotPromiseANodeTheClickWouldMiss) {
+  lay_out({{.type = WorldProp::Type::Boulder, .x = 3.0F, .z = 0.0F}});
+  Engine::Core::World world;
+
+  auto request = request_for(world, true, false);
+  request.gather_only = true;
+  request.hover_from_placement = true;
+  request.has_hovered_ground = true;
+  request.hovered_ground_x = 3.0F;
+  request.hovered_ground_z = 0.0F;
+
+  const auto highlights = Game::Systems::collect_interaction_target_highlights(request);
+
+  EXPECT_EQ(highlights.hovered_action, InteractionAction::None);
+  ASSERT_EQ(highlights.markers.size(), 1U);
+  EXPECT_FALSE(highlights.markers.front().hovered);
+}
+
+TEST_F(InteractionTargetingTest, CollectModeOffersOnlyWhatABuilderCanGather) {
+  lay_out({{.type = WorldProp::Type::PineTree, .x = 3.0F, .z = 0.0F}});
+  Engine::Core::World world;
+  auto* barracks =
+      add_building(world, Game::Units::SpawnType::Barracks, k_owner, -4.0F, 0.0F);
+  barracks->get_component<Engine::Core::UnitComponent>()->health = 200;
+
+  auto request = request_for(world, true, false);
+  ASSERT_EQ(count_of(Game::Systems::collect_interaction_target_highlights(request),
+                     InteractionAction::Repair),
+            1);
+
+  request.gather_only = true;
+  const auto highlights = Game::Systems::collect_interaction_target_highlights(request);
+
+  EXPECT_EQ(count_of(highlights, InteractionAction::Repair), 0)
+      << "a repair ring in Collect mode reads as something to collect";
+  EXPECT_EQ(count_of(highlights, InteractionAction::Gather), 1);
+}
+
 } // namespace

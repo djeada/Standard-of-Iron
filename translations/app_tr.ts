@@ -2267,6 +2267,22 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>Slaughter sheep</source>
         <translation>Koyun kes</translation>
     </message>
+    <message>
+        <source>Point at a tree, boulder, ore, ripe farm or sheep</source>
+        <translation>Bir ağaca, kayaya, cevhere, olgun tarlaya ya da koyuna işaret et</translation>
+    </message>
+    <message>
+        <source>Chop this tree</source>
+        <translation>Bu ağacı kes</translation>
+    </message>
+    <message>
+        <source>Quarry this boulder</source>
+        <translation>Bu kayayı kır</translation>
+    </message>
+    <message>
+        <source>Mine this ore</source>
+        <translation>Bu cevheri çıkar</translation>
+    </message>
 </context>
 <context>
     <name>EconomyCoach</name>

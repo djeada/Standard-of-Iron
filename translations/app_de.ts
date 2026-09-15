@@ -2267,6 +2267,22 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>Slaughter sheep</source>
         <translation>Schaf schlachten</translation>
     </message>
+    <message>
+        <source>Point at a tree, boulder, ore, ripe farm or sheep</source>
+        <translation>Zeige auf einen Baum, Felsbrocken, Erz, reifen Acker oder ein Schaf</translation>
+    </message>
+    <message>
+        <source>Chop this tree</source>
+        <translation>Diesen Baum fällen</translation>
+    </message>
+    <message>
+        <source>Quarry this boulder</source>
+        <translation>Diesen Felsbrocken abbauen</translation>
+    </message>
+    <message>
+        <source>Mine this ore</source>
+        <translation>Dieses Erz schürfen</translation>
+    </message>
 </context>
 <context>
     <name>EconomyCoach</name>

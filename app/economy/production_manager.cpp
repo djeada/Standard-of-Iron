@@ -550,9 +550,22 @@ void ProductionManager::on_construction_pointer_released(
         m_pending_food_target_id = resolved_hit->food_target_id;
         m_construction_placement_position = resolved_hit->world_position;
         update_non_wall_construction_preview(m_construction_placement_position);
+        m_release_position = resolved_hit->world_position;
+      } else if (QVector3D ground;
+                 Game::Systems::PickingService::screen_to_ground(screen_point,
+                                                                 *m_camera,
+                                                                 viewport.width,
+                                                                 viewport.height,
+                                                                 ground)) {
+        if (is_harvest_construction_item(m_pending_construction_type)) {
+          clear_non_wall_construction_preview();
+          set_construction_preview_valid(false);
+        }
+        m_release_position = ground;
       }
     }
     on_construction_confirm();
+    m_release_position.reset();
     return;
   }
 
@@ -833,8 +846,12 @@ void ProductionManager::start_builder_construction(const QString& item_type) {
     on_construction_cancel();
   }
 
-  m_pending_construction_builders = collect_available_builders();
+  const bool harvesting = is_harvest_construction_item(item_type);
+  m_pending_construction_builders = collect_available_builders(harvesting);
   if (m_pending_construction_builders.empty()) {
+    emit order_feedback(App::Core::rejected_order(
+        harvesting ? App::Core::OrderKind::Gather : App::Core::OrderKind::Build,
+        App::Core::unit_busy_reason()));
     return;
   }
 
@@ -1432,7 +1449,7 @@ auto ProductionManager::set_rally_at_screen(qreal sx,
   return updated_any;
 }
 
-auto ProductionManager::collect_available_builders()
+auto ProductionManager::collect_available_builders(bool include_busy)
     -> std::vector<Engine::Core::EntityID> {
   std::vector<Engine::Core::EntityID> builders;
 
@@ -1451,8 +1468,9 @@ auto ProductionManager::collect_available_builders()
     auto* builder_prod = e->get_component<Engine::Core::BuilderProductionComponent>();
     auto* unit = e->get_component<Engine::Core::UnitComponent>();
     if (builder_prod != nullptr && unit != nullptr &&
-        unit->spawn_type == Game::Units::SpawnType::Builder &&
-        !builder_prod->in_progress && !builder_prod->has_construction_site) {
+        unit->spawn_type == Game::Units::SpawnType::Builder && unit->health > 0 &&
+        (include_busy ||
+         (!builder_prod->in_progress && !builder_prod->has_construction_site))) {
       builders.push_back(id);
     }
   }
