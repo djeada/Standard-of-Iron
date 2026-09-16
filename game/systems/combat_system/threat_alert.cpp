@@ -222,8 +222,9 @@ auto ally_fight_to_join(Engine::Core::World* world,
   if ((world == nullptr) || (unit == nullptr) || !answers_alerts(unit)) {
     return nullptr;
   }
-  auto const* own_unit = unit->get_component<Engine::Core::UnitComponent>();
-  auto const* own_transform = unit->get_component<Engine::Core::TransformComponent>();
+  auto const* own_unit = world->try_get<Engine::Core::UnitComponent>(unit->get_id());
+  auto const* own_transform =
+      world->try_get<Engine::Core::TransformComponent>(unit->get_id());
   if ((own_unit == nullptr) || (own_transform == nullptr)) {
     return nullptr;
   }
@@ -253,7 +254,7 @@ auto ally_fight_to_join(Engine::Core::World* world,
       continue;
     }
     auto const* prey_transform =
-        prey->get_component<Engine::Core::TransformComponent>();
+        world->try_get<Engine::Core::TransformComponent>(prey->get_id());
     if (prey_transform == nullptr) {
       continue;
     }
@@ -279,7 +280,7 @@ void answer_attacker(Engine::Core::World* world,
   if ((world == nullptr) || (victim == nullptr) || (attacker == nullptr)) {
     return;
   }
-  auto const* unit = victim->get_component<Engine::Core::UnitComponent>();
+  auto const* unit = world->try_get<Engine::Core::UnitComponent>(victim->get_id());
   bool const keeps_its_fight = policy == AnswerPolicy::KeepCurrentFight &&
                                has_active_engagement(world, victim, unit);
   if (!keeps_its_fight &&

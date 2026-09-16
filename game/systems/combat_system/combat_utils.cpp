@@ -223,7 +223,8 @@ auto guard_reach_of(const Engine::Core::Entity* entity) -> std::optional<GuardRe
   if (!post.has_value()) {
     return std::nullopt;
   }
-  auto const* guard = entity->get_component<Engine::Core::GuardModeComponent>();
+  auto const* guard =
+      entity->registry()->try_get<Engine::Core::GuardModeComponent>(entity->get_id());
   if (guard->has_reach_center) {
     return GuardReach{
         guard->reach_center_x, guard->reach_center_z, guard->guard_radius};
@@ -498,9 +499,11 @@ auto melee_walled_off_from(Engine::Core::Entity* attacker,
   if (!walk.has_value()) {
     return true;
   }
+  auto* registry = attacker->registry();
   auto const& from =
-      attacker->get_component<Engine::Core::TransformComponent>()->position;
-  auto const& to = target->get_component<Engine::Core::TransformComponent>()->position;
+      registry->try_get<Engine::Core::TransformComponent>(attacker->get_id())->position;
+  auto const& to =
+      registry->try_get<Engine::Core::TransformComponent>(target->get_id())->position;
   float const straight = std::hypot(to.x - from.x, to.z - from.z);
   return *walk > straight + allowed_detour;
 }
