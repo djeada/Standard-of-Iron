@@ -76,10 +76,17 @@ A wave rises in a single simulation tick. Guardians are distributed on a golden-
 The Iron Sepulcher has no army to send anywhere. Every guardian is stationed with a `GuardModeComponent` the moment it rises:
 
 - its **post** is a point on a ring around the anchor at half the zone radius, spread evenly between the living guardians of the zone;
-- its **guard radius** is `leash_radius` minus the ring offset, so no guardian ever pursues a target farther than `leash_radius` from the anchor; and
+- its **reach** is a circle of `leash_radius` centred on the anchor, not on the post (`GuardModeComponent::has_reach_center`), so every guardian covers the same ground whichever side of the shrine it stands on; and
 - guard mode removes the unit from the AI snapshot, so `sepulcher_defense` never orders it to muster, gather, or attack.
 
-Inside the leash the guardians fight normally: they acquire targets on their own, answer threat alerts from their neighbours, and chase. The combat system drops any target that leaves the guard radius and `GuardSystem` walks the guardian back to its post. Every 0.5 s the awakening system also re-asserts the posts, recalls any guardian that has strayed past `leash_radius` (clearing its target and melee lock), and turns idle guardians at their posts to face outward. The post ring drifts at 4°/s, so an undisturbed garrison slowly walks the ring around its shrine instead of standing frozen on the spawn spiral. All of this is deterministic: posts come from the guardian's index in the zone and a per-zone phase, never from wall-clock randomness.
+Inside the leash the guardians fight normally: they acquire targets on their own, answer threat alerts from their neighbours, and chase. Two reach rules apply, both answered by `Combat::within_guard_reach`:
+
+- a guardian _picks_ a fight only with an enemy inside the leash (`GuardReachRule::Strict`); and
+- a guardian _answers_ an attacker — its own attacker, or a neighbour's through a threat alert — out to the leash plus that attacker's weapon range, capped at 12 m (`GuardReachRule::AnswersFire`). An archer that can hit the garrison from where it stands is close enough to be charged; one that cannot is left alone.
+
+The combat system drops any target that leaves the answering reach and walks the guardian back to its post through `Combat::send_guard_home`. The shrine anchor is not a wall: a guardian behind the shrine walks round it to reach a fight on the far side, because `Combat::melee_walled_off_from` only treats a structure as separating two combatants when the walked detour around it is long. Every 0.5 s the awakening system also re-asserts the posts, recalls any guardian whose prey has left the answering reach or who has strayed past `leash_radius` plus that prey's weapon range (clearing its target and melee lock), and turns idle guardians at their posts to face outward.
+
+Before September 2026 guardians on the far side of a stormed shrine stood idle for the whole fight (40 s in `DefenderEngagementTest.GuardiansBehindTheShrineJoinAFightOnItsFarSide`): the anchor's footprint made every enemy "walled off", reach was measured from each post, and a guardian whose walk home ended short kept `returning_to_guard_position` set and refused every fight, retaliation included. The flag now counts only while the guardian is actually moving (`Combat::is_returning_to_guard_post`). The post ring drifts at 4°/s, so an undisturbed garrison slowly walks the ring around its shrine instead of standing frozen on the spawn spiral. All of this is deterministic: posts come from the guardian's index in the zone and a per-zone phase, never from wall-clock randomness.
 
 ## Every zone receives one shrine
 

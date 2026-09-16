@@ -190,6 +190,8 @@ struct EntitySnapshot {
   bool engagement_resolved = false;
   bool engaged = false;
 
+  bool fighting_troops = false;
+
   float pos_x = 0.0F;
   float pos_y = 0.0F;
   float pos_z = 0.0F;

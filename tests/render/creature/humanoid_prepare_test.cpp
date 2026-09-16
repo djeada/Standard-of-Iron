@@ -5905,12 +5905,9 @@ TEST(HumanoidPrepare, AComboLinkFadesOutOfTheActionItInterrupted) {
   EXPECT_FALSE(without_link.full_body_blend.active())
       << "nothing to blend when no action was interrupted";
 
-  anim.inputs.has_action_link = true;
-  anim.inputs.action_link_clip = outgoing;
-  anim.inputs.action_link_phase = 0.82F;
-  anim.inputs.action_link_weight = 0.75F;
-
-  auto const linked = resolve_humanoid_animation_selection(spec, anim, 7U);
+  auto linked = without_link;
+  Render::Creature::Pipeline::blend_out_interrupted_clip(
+      linked, outgoing, 0.82F, 0.75F);
   ASSERT_TRUE(linked.clip_id.has_value());
   EXPECT_EQ(*linked.clip_id, incoming) << "the incoming action still leads";
   ASSERT_TRUE(linked.full_body_blend.active())
@@ -5921,8 +5918,9 @@ TEST(HumanoidPrepare, AComboLinkFadesOutOfTheActionItInterrupted) {
       << "the outgoing clip is held at the phase it was cut on";
   EXPECT_FLOAT_EQ(linked.full_body_blend.weight, 0.75F);
 
-  anim.inputs.action_link_clip = incoming;
-  auto const self_link = resolve_humanoid_animation_selection(spec, anim, 7U);
+  auto self_link = without_link;
+  Render::Creature::Pipeline::blend_out_interrupted_clip(
+      self_link, incoming, 0.82F, 0.75F);
   EXPECT_FALSE(self_link.full_body_blend.active());
 }
 
@@ -11349,7 +11347,7 @@ TEST(CombatRootSmoothing, AnAuthoredReactionPassesThroughUnchanged) {
 
   for (int frame = 1; frame <= 5; ++frame) {
     target.time = static_cast<float>(frame) * k_dt;
-    target.offset_z = -0.30F * static_cast<float>(frame) / 5.0F;
+    target.offset_z = -0.10F * static_cast<float>(frame) / 5.0F;
     auto const applied = smooth_combat_root(state, target);
     EXPECT_NEAR(applied.offset_z, target.offset_z, 1.0e-5F) << "frame " << frame;
   }

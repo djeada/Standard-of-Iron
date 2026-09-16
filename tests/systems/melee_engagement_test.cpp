@@ -546,15 +546,22 @@ TEST_F(MeleeEngagementTest, BesiegerShotOverTheWallKeepsBreachingInsteadOfChasin
   besieger_unit->health = besieger_unit->max_health = 100000;
   (void)besieger->add_component<Engine::Core::AIControlledComponent>();
 
-  auto* wall = spawn(world,
-                     Game::Units::SpawnType::WallSegment,
-                     1,
-                     QVector3D(4.0F, 0.0F, 0.0F),
-                     Game::Systems::NationID::RomanRepublic);
+  Engine::Core::Entity* wall = nullptr;
+  for (float wall_z = -7.0F; wall_z <= 7.0F; wall_z += 2.0F) {
+    auto* segment = spawn(world,
+                          Game::Units::SpawnType::WallSegment,
+                          1,
+                          QVector3D(4.0F, 0.0F, wall_z),
+                          Game::Systems::NationID::RomanRepublic);
+    ASSERT_NE(segment, nullptr);
+    auto* segment_unit = segment->get_component<UnitComponent>();
+    ASSERT_NE(segment_unit, nullptr);
+    segment_unit->health = segment_unit->max_health = 100000;
+    if (std::abs(wall_z - 1.0F) < 0.01F) {
+      wall = segment;
+    }
+  }
   ASSERT_NE(wall, nullptr);
-  auto* wall_unit = wall->get_component<UnitComponent>();
-  ASSERT_NE(wall_unit, nullptr);
-  wall_unit->health = wall_unit->max_health = 100000;
 
   auto* archer = spawn(world,
                        Game::Units::SpawnType::Archer,

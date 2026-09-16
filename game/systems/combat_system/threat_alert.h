@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "../../core/component_combat.h"
 #include "../../core/entity.h"
 
@@ -22,6 +24,19 @@ auto note_threat(Engine::Core::World* world,
                  Engine::Core::Entity* origin,
                  Engine::Core::Entity* aggressor,
                  Engine::Core::ThreatAlertComponent::Kind kind) -> int;
+
+auto ally_fight_to_join(Engine::Core::World* world,
+                        Engine::Core::Entity* unit) -> Engine::Core::Entity*;
+
+enum class AnswerPolicy : std::uint8_t {
+  KeepCurrentFight,
+  TurnOnAttacker,
+};
+
+void answer_attacker(Engine::Core::World* world,
+                     Engine::Core::Entity* victim,
+                     Engine::Core::Entity* attacker,
+                     AnswerPolicy policy);
 
 void tick_threat_alerts(Engine::Core::World* world, float delta_time);
 

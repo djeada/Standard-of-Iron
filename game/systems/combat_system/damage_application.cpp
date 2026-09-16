@@ -507,20 +507,7 @@ void assign_retaliation_target_if_needed(Engine::Core::World* world,
     return;
   }
 
-  auto* unit = target->get_component<Engine::Core::UnitComponent>();
-  if (!has_active_engagement(world, target, unit) &&
-      may_engage(target, attacker, EngagementTrigger::Retaliation)) {
-    engage_threat_target(target, attacker->get_id());
-    note_engagement(target,
-                    {.candidate_id = attacker->get_id(),
-                     .target_id = attacker->get_id(),
-                     .acquisition_range = 0.0F,
-                     .outcome = EngagementOutcome::Retaliated,
-                     .source = CommandSource::Auto});
-  }
-
-  note_threat(
-      world, target, attacker, Engine::Core::ThreatAlertComponent::Kind::UnderAttack);
+  answer_attacker(world, target, attacker, AnswerPolicy::KeepCurrentFight);
 }
 
 void queue_structure_impact(Engine::Core::Entity& target,

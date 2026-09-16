@@ -30,8 +30,8 @@ auto should_exit_hold_mode(MoveOrderKind kind) -> bool {
 
 auto should_disable_guard_mode(MoveOrderKind kind) -> bool {
   return kind == MoveOrderKind::PlayerMove || kind == MoveOrderKind::FormationMove ||
-         kind == MoveOrderKind::AttackMove || kind == MoveOrderKind::AttackChase ||
-         kind == MoveOrderKind::ScriptedMove || kind == MoveOrderKind::PlannerMove;
+         kind == MoveOrderKind::AttackMove || kind == MoveOrderKind::ScriptedMove ||
+         kind == MoveOrderKind::PlannerMove;
 }
 
 auto should_touch_formation_mode(MoveOrderKind kind) -> bool {
@@ -268,9 +268,7 @@ void OrderService::prepare_for_move(Engine::Core::Entity* entity,
 
   if (should_disable_guard_mode(kind)) {
     auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
-    const bool player_order = should_clear_auxiliary_orders(kind);
-    if ((guard_mode != nullptr) && guard_mode->active &&
-        (player_order || !guard_mode->returning_to_guard_position)) {
+    if ((guard_mode != nullptr) && guard_mode->active) {
       set_guard_mode_active(entity, false);
     }
   }

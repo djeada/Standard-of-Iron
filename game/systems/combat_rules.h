@@ -2,7 +2,6 @@
 
 #include "../core/component_commander.h"
 #include "../core/entity.h"
-#include "../units/combat_role.h"
 
 namespace Game::Systems::CombatRules {
 
@@ -27,20 +26,6 @@ uses_rpg_combat_rules(const Engine::Core::Entity* entity) -> bool {
 
   auto const* rpg = entity->get_component<Engine::Core::RpgHealthComponent>();
   return (rpg != nullptr) && rpg->active;
-}
-
-[[nodiscard]] inline auto
-seeks_out_enemies(const Engine::Core::Entity* entity) -> bool {
-  if (entity == nullptr) {
-    return false;
-  }
-
-  auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
-  if (unit == nullptr) {
-    return false;
-  }
-
-  return Game::Units::pursues_targets(unit->spawn_type);
 }
 
 [[nodiscard]] inline auto

@@ -51,6 +51,11 @@ struct HumanoidAnimationSelection {
     const Render::GL::HumanoidVariant* variant = nullptr) noexcept
     -> HumanoidAnimationSelection;
 
+void blend_out_interrupted_clip(HumanoidAnimationSelection& selection,
+                                std::uint16_t outgoing_clip,
+                                float outgoing_phase,
+                                float weight) noexcept;
+
 [[nodiscard]] auto
 resolve_unit_visual_spec(UnitVisualSpec spec,
                          const Render::GL::HumanoidVariant& variant) -> UnitVisualSpec;
