@@ -977,9 +977,12 @@ TEST_F(UndeadAwakeningSystemTest, RisenGuardiansHoldPostsOnALeashAroundTheShrine
     const float post_offset = std::hypot(guard->guard_position_x - shrine.x(),
                                          guard->guard_position_z - shrine.z());
     EXPECT_LE(post_offset, map_definition.undead_zones.front().radius);
-    EXPECT_LE(guard->guard_radius + post_offset, 10.0F + 0.01F)
-        << "no guardian may pursue past the leash radius from the shrine";
-    EXPECT_GE(guard->guard_radius, 2.0F);
+    EXPECT_TRUE(guard->has_reach_center) << "a guardian's reach is the leash around "
+                                            "the shrine, not a circle round its post";
+    EXPECT_FLOAT_EQ(guard->reach_center_x, shrine.x());
+    EXPECT_FLOAT_EQ(guard->reach_center_z, shrine.z());
+    EXPECT_FLOAT_EQ(guard->guard_radius, 10.0F)
+        << "no guardian may pick a fight past the leash radius from the shrine";
   }
 }
 

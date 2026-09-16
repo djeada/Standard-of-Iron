@@ -264,6 +264,7 @@ add_executable(
     headless/mission_wave_assault_test.cpp
     headless/sepulcher_guard_response_test.cpp
     headless/auto_engagement_response_test.cpp
+    headless/defender_engagement_test.cpp
     headless/ai_skirmish_opening_test.cpp
     headless/ai_duel_match_test.cpp
     headless/commander_voice_skirmish_test.cpp
@@ -618,6 +619,7 @@ add_executable(
     map/minimap_utils_test.cpp
     map/terrain_service_test.cpp
     map/iron_sepulcher_skirmish_test.cpp
+    map/iron_sepulcher_watch_defence_test.cpp
     map/skirmish_base_choice_test.cpp
     systems/civilian_delivery_system_test.cpp
     systems/building_obstruction_lifecycle_test.cpp

@@ -390,6 +390,10 @@ public:
   float guard_radius;
   bool returning_to_guard_position{false};
   bool has_guard_target{false};
+
+  bool has_reach_center{false};
+  float reach_center_x{0.0F};
+  float reach_center_z{0.0F};
 };
 
 class HealerComponent {

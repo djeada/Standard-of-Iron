@@ -443,6 +443,12 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     guard_mode_obj["returning_to_guard_position"] =
         guard_mode->returning_to_guard_position;
     guard_mode_obj["has_guard_target"] = guard_mode->has_guard_target;
+    if (guard_mode->has_reach_center) {
+      guard_mode_obj["reach_center_x"] =
+          static_cast<double>(guard_mode->reach_center_x);
+      guard_mode_obj["reach_center_z"] =
+          static_cast<double>(guard_mode->reach_center_z);
+    }
     entity_obj["guard_mode"] = guard_mode_obj;
   }
 
@@ -1305,6 +1311,11 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     guard_mode->returning_to_guard_position =
         guard_mode_obj["returning_to_guard_position"].toBool(false);
     guard_mode->has_guard_target = guard_mode_obj["has_guard_target"].toBool(false);
+    guard_mode->has_reach_center = guard_mode_obj.contains("reach_center_x");
+    guard_mode->reach_center_x =
+        static_cast<float>(guard_mode_obj["reach_center_x"].toDouble(0.0));
+    guard_mode->reach_center_z =
+        static_cast<float>(guard_mode_obj["reach_center_z"].toDouble(0.0));
   }
 
   if (json.contains("healer")) {

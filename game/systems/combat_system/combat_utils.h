@@ -83,6 +83,38 @@ auto is_unit_in_hold_mode(Engine::Core::Entity* entity) -> bool;
 
 auto is_unit_in_guard_mode(Engine::Core::Entity* entity) -> bool;
 
+struct GuardReach {
+  float center_x{0.0F};
+  float center_z{0.0F};
+  float radius{0.0F};
+};
+
+auto guard_post_of(const Engine::Core::Entity* entity) -> std::optional<QVector3D>;
+
+auto guard_reach_of(const Engine::Core::Entity* entity) -> std::optional<GuardReach>;
+
+auto within_guard_reach(const Engine::Core::Entity* entity,
+                        float x,
+                        float z,
+                        float margin = 0.0F) -> bool;
+
+auto guard_answer_fire_margin(const Engine::Core::Entity* aggressor) -> float;
+
+enum class GuardReachRule : std::uint8_t {
+  Strict,
+  AnswersFire,
+};
+
+auto within_guard_reach(const Engine::Core::Entity* entity,
+                        const Engine::Core::Entity* target,
+                        GuardReachRule rule = GuardReachRule::Strict) -> bool;
+
+auto is_returning_to_guard_post(const Engine::Core::Entity* entity) -> bool;
+
+void send_guard_home(Engine::Core::World& world,
+                     Engine::Core::Entity* entity,
+                     float arrival_threshold = -1.0F);
+
 auto is_building(Engine::Core::Entity* entity) -> bool;
 
 auto combat_radius(Engine::Core::Entity* entity) -> float;
@@ -103,11 +135,16 @@ auto melee_bypass_destination(const QVector3D& attacker_position,
                               float standoff_distance,
                               float clearance_radius) -> std::optional<QVector3D>;
 
-auto melee_walled_off_from(Engine::Core::Entity* attacker,
-                           Engine::Core::Entity* target) -> bool;
+inline constexpr float k_opportunity_walk_around_detour = 8.0F;
+inline constexpr float k_answering_walk_around_detour = 16.0F;
 
-auto melee_can_walk_around(Engine::Core::Entity* attacker,
-                           Engine::Core::Entity* target) -> bool;
+auto melee_walk_around_length(Engine::Core::Entity* attacker,
+                              Engine::Core::Entity* target) -> std::optional<float>;
+
+auto melee_walled_off_from(Engine::Core::Entity* attacker,
+                           Engine::Core::Entity* target,
+                           float allowed_detour = k_opportunity_walk_around_detour)
+    -> bool;
 
 auto suppresses_opportunistic_combat(Engine::Core::Entity* unit) -> bool;
 

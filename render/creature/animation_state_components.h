@@ -38,6 +38,12 @@ struct HumanoidAnimationStateComponent {
   float action_link_until{-1.0F};
   std::uint16_t last_action_clip{Animation::k_unmapped_clip};
   float last_action_phase{0.0F};
+  std::uint16_t last_primary_clip{Animation::k_unmapped_clip};
+
+  float last_reaction_time{-1.0F};
+  PlaybackLayerRequest last_overlay{};
+  float overlay_sample_time{0.0F};
+  float overlay_weight_velocity{0.0F};
 };
 
 struct HorseAnimationStateComponent {

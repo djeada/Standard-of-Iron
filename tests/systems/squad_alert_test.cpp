@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstddef>
 #include <gtest/gtest.h>
 #include <vector>
 
@@ -6,6 +7,7 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "systems/building_collision_registry.h"
+#include "systems/combat_system/combat_types.h"
 #include "systems/combat_system/combat_utils.h"
 #include "systems/combat_system/damage_processor.h"
 #include "systems/combat_system/threat_alert.h"
@@ -171,10 +173,11 @@ TEST_F(SquadAlertTest, ASightingCommitsFarFewerMenThanAnAttackDoes) {
 
   Combat::note_threat(
       world.get(), scout, enemy, ThreatAlertComponent::Kind::UnderAttack);
-  EXPECT_EQ(count_responders(), 3) << "the squad did not answer a man under attack";
+  EXPECT_EQ(count_responders(), static_cast<std::ptrdiff_t>(squad.size()))
+      << "a man under attack left squadmates standing beside the fight";
 }
 
-TEST_F(SquadAlertTest, OneEnemyDrawsAMeasuredResponseNotTheWholeGarrison) {
+TEST_F(SquadAlertTest, AManUnderSustainedFireBringsEveryIdleNeighbour) {
   auto* enemy = make_soldier(2.0F, 0.0F, 2);
   std::vector<Entity*> garrison;
   garrison.reserve(8);
@@ -192,8 +195,29 @@ TEST_F(SquadAlertTest, OneEnemyDrawsAMeasuredResponseNotTheWholeGarrison) {
         auto* target = member->get_component<AttackTargetComponent>();
         return target != nullptr && target->target_id == enemy->get_id();
       });
-  EXPECT_EQ(responders, 3) << "sustained fire from one man mobilised " << responders
-                           << " defenders";
+  EXPECT_EQ(responders, static_cast<std::ptrdiff_t>(garrison.size()))
+      << "only " << responders << " of " << garrison.size()
+      << " men answered a neighbour being cut down";
+}
+
+TEST_F(SquadAlertTest, AnAttackAlertStopsAtTheSquadAlertCap) {
+  auto* victim = make_soldier(0.0F, 0.0F, 1);
+  auto* enemy = make_soldier(2.0F, 0.0F, 2);
+  std::vector<Entity*> garrison;
+  garrison.reserve(20);
+  for (int i = 0; i < 20; ++i) {
+    garrison.push_back(make_soldier(4.0F + (static_cast<float>(i) * 0.3F), 0.0F, 1));
+  }
+
+  Combat::note_threat(
+      world.get(), victim, enemy, ThreatAlertComponent::Kind::UnderAttack);
+
+  auto const responders =
+      std::count_if(garrison.begin(), garrison.end(), [enemy](Entity* member) {
+        auto* target = member->get_component<AttackTargetComponent>();
+        return target != nullptr && target->target_id == enemy->get_id();
+      });
+  EXPECT_EQ(responders, Combat::Constants::k_max_squad_alert_allies);
 }
 
 TEST_F(SquadAlertTest, ACommanderIsNeverDraggedInByAnAlert) {

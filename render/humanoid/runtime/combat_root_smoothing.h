@@ -22,8 +22,8 @@ struct CombatRootSmoothingTarget {
   float roll_degrees{0.0F};
 };
 
-inline constexpr float k_combat_root_translation_speed = 3.6F;
-inline constexpr float k_combat_root_rotation_speed_degrees = 240.0F;
+inline constexpr float k_combat_root_translation_speed = 1.5F;
+inline constexpr float k_combat_root_rotation_speed_degrees = 60.0F;
 inline constexpr float k_combat_root_max_dt = 0.1F;
 
 [[nodiscard]] inline auto smooth_combat_root(CombatRootSmoothingState& state,

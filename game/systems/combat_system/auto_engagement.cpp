@@ -8,6 +8,7 @@
 #include "combat_types.h"
 #include "combat_utils.h"
 #include "engagement_trace.h"
+#include "target_assignment.h"
 #include "threat_alert.h"
 
 namespace Game::Systems::Combat {
@@ -101,8 +102,7 @@ void AutoEngagement::process(Engine::Core::World* world,
       continue;
     }
 
-    auto* guard_mode = unit->get_component<Engine::Core::GuardModeComponent>();
-    bool const in_guard_mode = (guard_mode != nullptr) && guard_mode->active;
+    bool const in_guard_mode = is_unit_in_guard_mode(unit);
 
     bool const siege_retarget = besieging_structure(unit, query_context);
 
@@ -123,9 +123,6 @@ void AutoEngagement::process(Engine::Core::World* world,
     }
 
     float detection_range = acquisition_range(unit);
-    if (in_guard_mode) {
-      detection_range = std::min(detection_range, guard_mode->guard_radius);
-    }
     if (unit->has_component<Engine::Core::CommanderComponent>()) {
       detection_range = std::min(detection_range, k_commander_self_defence_radius);
     }
@@ -140,6 +137,20 @@ void AutoEngagement::process(Engine::Core::World* world,
     Engine::Core::EntityID const candidate_id =
         nearest_candidate != nullptr ? nearest_candidate->get_id() : 0U;
 
+    if (nearest_enemy == nullptr && current_target_of(unit) == 0 &&
+        unit->has_component<Engine::Core::AIControlledComponent>()) {
+      if (auto* ally_prey = ally_fight_to_join(world, unit)) {
+        engage_threat_target(unit, ally_prey->get_id());
+        m_scan_cooldowns[unit->get_id()] = Constants::k_engagement_cooldown;
+        trace(unit,
+              EngagementOutcome::AssistedAlly,
+              ally_prey->get_id(),
+              ally_prey->get_id(),
+              detection_range);
+        continue;
+      }
+    }
+
     if (nearest_enemy == nullptr) {
       m_scan_cooldowns[unit->get_id()] = quiet_rescan_delay(unit->get_id());
       trace(unit,
@@ -151,18 +162,10 @@ void AutoEngagement::process(Engine::Core::World* world,
       continue;
     }
 
-    auto* attack_target =
-        Engine::Core::get_or_add_component<Engine::Core::AttackTargetComponent>(unit);
-    if (attack_target == nullptr) {
+    if (assign_attack_target(
+            unit, nearest_enemy->get_id(), TargetSource::Opportunity) == nullptr) {
       continue;
     }
-
-    attack_target->target_id = nearest_enemy->get_id();
-
-    attack_target->should_chase = pursues_targets(unit) &&
-                                  !opens_fire_without_closing(unit) &&
-                                  !is_unit_in_hold_mode(unit);
-    attack_target->is_player_command = false;
 
     m_scan_cooldowns[unit->get_id()] = Constants::k_engagement_cooldown;
     trace(unit,

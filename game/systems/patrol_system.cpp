@@ -10,6 +10,7 @@
 #include "../core/world.h"
 #include "../core/world_spatial_index.h"
 #include "combat_system/combat_utils.h"
+#include "combat_system/target_assignment.h"
 #include "combat_system/target_rules.h"
 #include "command_service.h"
 
@@ -111,8 +112,10 @@ void PatrolSystem::run(Engine::Core::SystemContext& context) {
             context.emplace<Engine::Core::AttackTargetComponent>(entity.get_id());
       }
       if (attack_target != nullptr) {
-        attack_target->target_id = nearest_enemy;
-        attack_target->should_chase = false;
+        Combat::set_attack_target(*attack_target,
+                                  context.world().get_entity(entity.get_id()),
+                                  nearest_enemy,
+                                  Combat::TargetSource::Patrol);
       }
 
       continue;

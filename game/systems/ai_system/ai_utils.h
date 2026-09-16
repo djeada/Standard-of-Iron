@@ -69,6 +69,9 @@ inline auto is_entity_engaged(const EntitySnapshot& entity,
   if (entity.engagement_resolved) {
     return entity.engaged;
   }
+  if (entity.fighting_troops) {
+    return true;
+  }
 
   constexpr float ENGAGED_RADIUS = k_engaged_radius;
   const float engaged_sq = ENGAGED_RADIUS * ENGAGED_RADIUS;

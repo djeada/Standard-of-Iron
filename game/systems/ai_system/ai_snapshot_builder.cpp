@@ -279,6 +279,21 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       data.pos_z = transform->position.z;
     }
 
+    if (const auto* attack = world.try_get<Engine::Core::AttackComponent>(data.id);
+        attack != nullptr && attack->in_melee_lock) {
+      data.fighting_troops = true;
+    }
+    if (const auto* attack_target =
+            world.try_get<Engine::Core::AttackTargetComponent>(data.id);
+        attack_target != nullptr && attack_target->target_id != 0) {
+      const auto* prey =
+          world.try_get<Engine::Core::UnitComponent>(attack_target->target_id);
+      data.fighting_troops =
+          data.fighting_troops ||
+          (prey != nullptr && prey->health > 0 &&
+           !world.has<Engine::Core::BuildingComponent>(attack_target->target_id));
+    }
+
     if (auto* movement =
             world.try_get<Engine::Core::MovementComponent>(entity->get_id())) {
       data.movement.has_component = true;
@@ -442,14 +457,15 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
 
   for (auto& friendly : snapshot.friendly_units) {
     friendly.engagement_resolved = true;
-    friendly.engaged = engagement_grid.any_near(
-        friendly.pos_x, friendly.pos_z, [&](std::size_t index) {
-          const auto& enemy = snapshot.visible_enemies[index];
-          const float dx = enemy.pos_x - friendly.pos_x;
-          const float dy = enemy.pos_y - friendly.pos_y;
-          const float dz = enemy.pos_z - friendly.pos_z;
-          return (dx * dx + dy * dy + dz * dz) <= engaged_radius_sq;
-        });
+    friendly.engaged = friendly.fighting_troops ||
+                       engagement_grid.any_near(
+                           friendly.pos_x, friendly.pos_z, [&](std::size_t index) {
+                             const auto& enemy = snapshot.visible_enemies[index];
+                             const float dx = enemy.pos_x - friendly.pos_x;
+                             const float dy = enemy.pos_y - friendly.pos_y;
+                             const float dz = enemy.pos_z - friendly.pos_z;
+                             return (dx * dx + dy * dy + dz * dz) <= engaged_radius_sq;
+                           });
   }
 
   return snapshot;

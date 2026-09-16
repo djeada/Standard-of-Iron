@@ -65,6 +65,8 @@ namespace {
   return ((v >> 7U) & 1U) == 0U ? 1.0F : -1.0F;
 }
 
+constexpr float k_reaction_root_share = 0.25F;
+
 [[nodiscard]] auto settle(float q, float peak) noexcept -> float {
   if (q <= peak) {
     return smooth01(q / std::max(peak, 1.0e-4F));
@@ -169,7 +171,8 @@ auto resolve_combat_root_motion(const CombatRootMotionInputs& inputs) noexcept
     float const q = clamp01(inputs.reaction_progress);
     float const intensity = std::clamp(inputs.reaction_intensity, 0.5F, 1.5F);
     float const translation_scale =
-        intensity * (inputs.body_displaced_by_simulation ? 0.40F : 1.0F);
+        k_reaction_root_share * intensity *
+        (inputs.body_displaced_by_simulation ? 0.40F : 1.0F);
     float const sign = seed_sign(inputs.seed);
 
     float back = 0.0F;
@@ -244,7 +247,7 @@ auto resolve_combat_root_motion(const CombatRootMotionInputs& inputs) noexcept
     float const side_z = -dir_x;
     sample.world_offset_x += (dir_x * back + side_x * lateral) * translation_scale;
     sample.world_offset_z += (dir_z * back + side_z * lateral) * translation_scale;
-    float const rotation_scale = std::min(intensity, 1.0F);
+    float const rotation_scale = k_reaction_root_share * std::min(intensity, 1.0F);
     sample.pitch_degrees += pitch * rotation_scale;
     sample.roll_degrees += roll * rotation_scale;
     sample.squash += squash * intensity;

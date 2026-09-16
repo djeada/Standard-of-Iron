@@ -38,6 +38,7 @@
 #include "damage_processor.h"
 #include "melee_exchange.h"
 #include "structure_combat.h"
+#include "target_assignment.h"
 #include "target_rules.h"
 #include "threat_alert.h"
 
@@ -721,15 +722,12 @@ void sync_melee_lock_target(Engine::Core::Entity* attacker,
     if (switch_blocked) {
       attack_comp->in_melee_lock = false;
       attack_comp->melee_lock_target_id = 0;
-      attack_target->target_id = commitment->committed_target_id;
-      attack_target->should_chase = true;
+      assign_attack_target(
+          attacker, commitment->committed_target_id, TargetSource::Commitment);
       return;
     }
-    attack_target->target_id = attack_comp->melee_lock_target_id;
-
-    attack_target->should_chase =
-        attack_target->is_player_command ||
-        Game::Systems::CombatRules::seeks_out_enemies(attacker);
+    assign_attack_target(
+        attacker, attack_comp->melee_lock_target_id, TargetSource::MeleeLock);
   }
 }
 
@@ -737,7 +735,7 @@ void drop_target_left_by_a_finished_lock(
     Engine::Core::World* world,
     Engine::Core::Entity* attacker,
     const Engine::Core::AttackComponent* attack_comp) {
-  if (Game::Systems::CombatRules::seeks_out_enemies(attacker) ||
+  if (pursues_targets(attacker) ||
       ((attack_comp != nullptr) && attack_comp->in_melee_lock)) {
     return;
   }
@@ -1162,11 +1160,7 @@ auto enter_melee_lock(Engine::Core::Entity* attacker,
     return true;
   }
 
-  if (may_engage(target, attacker, EngagementTrigger::Retaliation)) {
-    engage_threat_target(target, attacker->get_id());
-  }
-  note_threat(
-      world, target, attacker, Engine::Core::ThreatAlertComponent::Kind::UnderAttack);
+  answer_attacker(world, target, attacker, AnswerPolicy::TurnOnAttacker);
 
   auto* att_t = world->try_get<Engine::Core::TransformComponent>(attacker->get_id());
   auto* tgt_t = world->try_get<Engine::Core::TransformComponent>(target->get_id());
@@ -1745,62 +1739,9 @@ void process_attacks(Engine::Core::World* world,
             face_target(attacker_transform, target_transform);
           }
         } else {
-          if (!attack_target->should_chase) {
+          if (!keeps_pursuing(attacker, target)) {
             drop_attack_target(world, attacker);
             continue;
-          }
-
-          if (!pursues_targets(attacker) && !attack_target->is_player_command) {
-            constexpr float k_brawl_leash = 3.0F;
-            float const leash =
-                combat_radius(attacker) + combat_radius(target) + k_brawl_leash;
-            float const leash_dx =
-                target_transform->position.x - attacker_transform->position.x;
-            float const leash_dz =
-                target_transform->position.z - attacker_transform->position.z;
-            if ((leash_dx * leash_dx) + (leash_dz * leash_dz) > leash * leash) {
-              drop_attack_target(world, attacker);
-              continue;
-            }
-          }
-
-          auto* hold_mode = attacker->get_component<Engine::Core::HoldModeComponent>();
-          if ((hold_mode != nullptr) && hold_mode->active) {
-            drop_attack_target(world, attacker);
-            continue;
-          }
-
-          if (Game::Systems::DefensiveUnitLayoutService::holds_position(*attacker)) {
-            drop_attack_target(world, attacker);
-            continue;
-          }
-
-          auto* guard_mode =
-              attacker->get_component<Engine::Core::GuardModeComponent>();
-          if ((guard_mode != nullptr) && guard_mode->active) {
-            float guard_x = guard_mode->guard_position_x;
-            float guard_z = guard_mode->guard_position_z;
-            if (guard_mode->guarded_entity_id != 0) {
-              auto* guarded_entity = world->get_entity(guard_mode->guarded_entity_id);
-              if (guarded_entity != nullptr) {
-                auto* guarded_transform =
-                    guarded_entity->get_component<Engine::Core::TransformComponent>();
-                if (guarded_transform != nullptr) {
-                  guard_x = guarded_transform->position.x;
-                  guard_z = guarded_transform->position.z;
-                }
-              }
-            }
-
-            float const dx = target_transform->position.x - guard_x;
-            float const dz = target_transform->position.z - guard_z;
-            float const dist_sq = dx * dx + dz * dz;
-            float const guard_radius_sq =
-                guard_mode->guard_radius * guard_mode->guard_radius;
-            if (dist_sq > guard_radius_sq) {
-              drop_attack_target(world, attacker);
-              continue;
-            }
           }
 
           QVector3D const attacker_pos(
@@ -2009,18 +1950,11 @@ void process_attacks(Engine::Core::World* world,
           movement != nullptr) {
         OrderService::clear_player_order_intent(attacker);
       }
-      if (!attacker->has_component<Engine::Core::AttackTargetComponent>()) {
-        auto* new_target =
-            attacker->add_component<Engine::Core::AttackTargetComponent>();
-        new_target->target_id = best_target->get_id();
-        new_target->should_chase = false;
-      } else {
-        auto* existing_target =
-            attacker->get_component<Engine::Core::AttackTargetComponent>();
-        if (existing_target->target_id != best_target->get_id()) {
-          existing_target->target_id = best_target->get_id();
-          existing_target->should_chase = false;
-        }
+      auto const* existing_target =
+          attacker->get_component<Engine::Core::AttackTargetComponent>();
+      if ((existing_target == nullptr) ||
+          existing_target->target_id != best_target->get_id()) {
+        assign_attack_target(attacker, best_target->get_id(), TargetSource::InReach);
       }
 
       bool const ranged_unit = is_ranged_mode(attacker_atk);
@@ -2138,11 +2072,6 @@ void process_attacks(Engine::Core::World* world,
         *t_accum = -deterministic_attack_delay(
             attacker->get_id(), best_target->get_id(), cooldown);
       }
-
-      auto* guard_mode = attacker->get_component<Engine::Core::GuardModeComponent>();
-      if ((guard_mode != nullptr) && guard_mode->active) {
-        guard_mode->returning_to_guard_position = false;
-      }
     } else {
       clear_orphaned_rts_attack_presentation(attacker);
       if (Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker) &&
@@ -2151,38 +2080,10 @@ void process_attacks(Engine::Core::World* world,
         drop_attack_target(world, attacker);
       }
 
-      auto* guard_mode = attacker->get_component<Engine::Core::GuardModeComponent>();
-      if ((guard_mode != nullptr) && guard_mode->active &&
-          !guard_mode->returning_to_guard_position) {
-        float guard_x = guard_mode->guard_position_x;
-        float guard_z = guard_mode->guard_position_z;
-
-        if (guard_mode->guarded_entity_id != 0) {
-          auto* guarded_entity = world->get_entity(guard_mode->guarded_entity_id);
-          if (guarded_entity != nullptr) {
-            auto* guarded_transform =
-                guarded_entity->get_component<Engine::Core::TransformComponent>();
-            if (guarded_transform != nullptr) {
-              guard_x = guarded_transform->position.x;
-              guard_z = guarded_transform->position.z;
-            }
-          }
-        }
-
-        float const dx = guard_x - attacker_transform->position.x;
-        float const dz = guard_z - attacker_transform->position.z;
-        float const dist_sq = dx * dx + dz * dz;
-
-        float const k_return_threshold_sq =
-            Engine::Core::Defaults::k_guard_return_threshold *
-            Engine::Core::Defaults::k_guard_return_threshold;
-        if (dist_sq > k_return_threshold_sq) {
-          guard_mode->returning_to_guard_position = true;
-          CommandService::MoveOptions options;
-          options.kind = MoveOrderKind::GuardReturn;
-          CommandService::move_unit(
-              *world, attacker->get_id(), QVector3D(guard_x, 0.0F, guard_z), options);
-        }
+      auto const* held = attacker->get_component<Engine::Core::AttackTargetComponent>();
+      if (is_unit_in_guard_mode(attacker) &&
+          (held == nullptr || held->target_id == 0)) {
+        send_guard_home(*world, attacker);
       }
     }
   }

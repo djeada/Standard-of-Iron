@@ -10,7 +10,9 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <sstream>
+#include <unordered_map>
 #include <vector>
 
 #include "animation/bpat/bpat_format.h"
@@ -336,16 +338,20 @@ struct PooledPaletteAllocator {
   }
 };
 
-constexpr std::uint32_t k_blend_weight_buckets = 32U;
+constexpr std::uint32_t k_frame_lerp_buckets = 32U;
+constexpr std::uint32_t k_layer_weight_buckets = 256U;
 
-auto blend_weight_bucket(float weight) noexcept -> std::uint32_t {
+auto blend_weight_bucket(float weight,
+                         std::uint32_t buckets = k_frame_lerp_buckets) noexcept
+    -> std::uint32_t {
   return static_cast<std::uint32_t>(
-      std::lround(std::clamp(weight, 0.0F, 1.0F) *
-                  static_cast<float>(k_blend_weight_buckets - 1U)));
+      std::lround(std::clamp(weight, 0.0F, 1.0F) * static_cast<float>(buckets - 1U)));
 }
 
-auto blend_bucket_weight(std::uint32_t bucket) noexcept -> float {
-  return static_cast<float>(bucket) / static_cast<float>(k_blend_weight_buckets - 1U);
+auto blend_bucket_weight(std::uint32_t bucket,
+                         std::uint32_t buckets = k_frame_lerp_buckets) noexcept
+    -> float {
+  return static_cast<float>(bucket) / static_cast<float>(buckets - 1U);
 }
 
 using OwnedPalette = std::shared_ptr<BonePaletteArray>;
@@ -361,18 +367,51 @@ auto blends_bone(const Render::Creature::SkeletonBlendProfile* profile,
   return profile != nullptr && profile->upper_body.contains(bone);
 }
 
+auto shortest_path_flips(const LocalPose& base,
+                         std::span<const Render::Creature::Bpat::LocalBonePose> layer,
+                         std::uint32_t bone_count) noexcept -> std::uint64_t {
+  std::uint64_t flipped = 0ULL;
+  for (std::uint32_t bone = 0; bone < bone_count && bone < layer.size(); ++bone) {
+    if (QQuaternion::dotProduct(base[bone].rotation, layer[bone].rotation) < 0.0F) {
+      flipped |= 1ULL << bone;
+    }
+  }
+  return flipped;
+}
+
+auto slerp_in_hemisphere(const QQuaternion& from,
+                         const QQuaternion& to,
+                         float weight,
+                         bool flip) noexcept -> QQuaternion {
+  QQuaternion const target = flip ? -to : to;
+  float const angle =
+      std::acos(std::clamp(QQuaternion::dotProduct(from, target), -1.0F, 1.0F));
+  float const sine = std::sin(angle);
+  if (sine < 1.0e-3F) {
+    QQuaternion const mixed = from * (1.0F - weight) + target * weight;
+    return mixed.length() > 1.0e-4F ? mixed.normalized()
+                                    : (weight < 0.5F ? from : target);
+  }
+  return (from * (std::sin((1.0F - weight) * angle) / sine) +
+          target * (std::sin(weight * angle) / sine))
+      .normalized();
+}
+
 void lerp_local_pose(LocalPose& io,
                      std::span<const Render::Creature::Bpat::LocalBonePose> layer,
                      std::uint32_t bone_count,
                      float weight,
                      const Render::Creature::SkeletonBlendProfile* blend_profile,
-                     bool upper_body_only) noexcept {
+                     bool upper_body_only,
+                     std::uint64_t flipped_bones) noexcept {
   for (std::uint32_t bone = 0; bone < bone_count && bone < layer.size(); ++bone) {
     if (!blends_bone(blend_profile, bone, upper_body_only)) {
       continue;
     }
-    io[bone].rotation =
-        QQuaternion::slerp(io[bone].rotation, layer[bone].rotation, weight);
+    io[bone].rotation = slerp_in_hemisphere(io[bone].rotation,
+                                            layer[bone].rotation,
+                                            weight,
+                                            ((flipped_bones >> bone) & 1ULL) != 0ULL);
     io[bone].translation =
         io[bone].translation * (1.0F - weight) + layer[bone].translation * weight;
   }
@@ -395,7 +434,13 @@ auto sample_local_pose(const Render::Creature::Bpat::BpatBlob& blob,
   if (next.size() < bone_count) {
     return true;
   }
-  lerp_local_pose(out, next, bone_count, blend_bucket_weight(bucket), nullptr, false);
+  lerp_local_pose(out,
+                  next,
+                  bone_count,
+                  blend_bucket_weight(bucket),
+                  nullptr,
+                  false,
+                  shortest_path_flips(out, next, bone_count));
   return true;
 }
 
@@ -427,9 +472,11 @@ struct PaletteBlendKey {
   const Render::GL::RiggedMeshEntry* entry{nullptr};
   std::array<std::uint32_t, 6> frames{};
   std::array<std::uint32_t, 5> buckets{};
+  std::array<std::uint64_t, 2> flipped_bones{};
 
   auto operator==(const PaletteBlendKey& other) const noexcept -> bool {
-    return entry == other.entry && frames == other.frames && buckets == other.buckets;
+    return entry == other.entry && frames == other.frames && buckets == other.buckets &&
+           flipped_bones == other.flipped_bones;
   }
 };
 
@@ -479,6 +526,9 @@ private:
     for (auto const v : key.buckets) {
       hash ^= v * 0x85EBCA77U + 0xC2B2AE3DU + (hash << 6U) + (hash >> 2U);
     }
+    for (auto const v : key.flipped_bones) {
+      hash ^= std::hash<std::uint64_t>{}(v) + 0x9E3779B9U + (hash << 6U) + (hash >> 2U);
+    }
     return hash;
   }
 
@@ -489,6 +539,72 @@ private:
 auto blend_cache() -> PaletteBlendCache& {
   thread_local PaletteBlendCache cache;
   return cache;
+}
+
+class BlendHemisphereTable {
+public:
+  auto flipped_bones(std::uint64_t layer_key,
+                     std::uint16_t clip_id,
+                     const LocalPose& base,
+                     const LocalPose& layer,
+                     std::uint32_t bone_count) -> std::uint64_t {
+    std::uint32_t const now = Render::GL::humanoid_current_frame();
+    std::lock_guard<std::mutex> const lock(m_mutex);
+    if (m_layers.size() > k_max_layers) {
+      std::erase_if(m_layers, [now](const auto& item) {
+        return now - item.second.frame > k_stale_frames;
+      });
+    }
+    auto& state = m_layers[layer_key];
+    bool const continues = state.valid && state.clip_id == clip_id &&
+                           now - state.frame <= k_continuity_frames;
+    std::uint64_t flipped = 0ULL;
+    if (continues) {
+      for (std::uint32_t bone = 0; bone < bone_count; ++bone) {
+        bool const base_crossed =
+            QQuaternion::dotProduct(base[bone].rotation, state.base[bone]) < 0.0F;
+        bool const layer_crossed =
+            QQuaternion::dotProduct(layer[bone].rotation, state.layer[bone]) < 0.0F;
+        bool const was_flipped = ((state.flipped >> bone) & 1ULL) != 0ULL;
+        if (was_flipped != (base_crossed != layer_crossed)) {
+          flipped |= 1ULL << bone;
+        }
+      }
+    } else {
+      flipped = shortest_path_flips(base, layer, bone_count);
+    }
+    for (std::uint32_t bone = 0; bone < bone_count; ++bone) {
+      state.base[bone] = base[bone].rotation;
+      state.layer[bone] = layer[bone].rotation;
+    }
+    state.valid = true;
+    state.clip_id = clip_id;
+    state.frame = now;
+    state.flipped = flipped;
+    return flipped;
+  }
+
+private:
+  static constexpr std::size_t k_max_layers = 16384U;
+  static constexpr std::uint32_t k_stale_frames = 240U;
+  static constexpr std::uint32_t k_continuity_frames = 2U;
+
+  struct LayerState {
+    bool valid{false};
+    std::uint16_t clip_id{0U};
+    std::uint32_t frame{0U};
+    std::uint64_t flipped{0ULL};
+    std::array<QQuaternion, Render::GL::RiggedCreatureCmd::k_max_owned_bones> base{};
+    std::array<QQuaternion, Render::GL::RiggedCreatureCmd::k_max_owned_bones> layer{};
+  };
+
+  std::mutex m_mutex;
+  std::unordered_map<std::uint64_t, LayerState> m_layers;
+};
+
+auto blend_hemispheres() -> BlendHemisphereTable& {
+  static BlendHemisphereTable table;
+  return table;
 }
 
 auto contact_y_for_playback(const ResolvedRequestPlayback& playback) noexcept -> float {
@@ -685,40 +801,66 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
       key.frames[2] = full_body_blend->global_frame;
       key.frames[3] = full_body_blend->next_global_frame;
       key.buckets[1] = blend_weight_bucket(full_body_blend->frame_lerp);
-      key.buckets[2] = blend_weight_bucket(full_body_blend_weight);
+      key.buckets[2] =
+          blend_weight_bucket(full_body_blend_weight, k_layer_weight_buckets);
     }
     if (overlay_active) {
       key.frames[4] = upper_body_overlay->global_frame;
       key.frames[5] = upper_body_overlay->next_global_frame;
       key.buckets[3] = blend_weight_bucket(upper_body_overlay->frame_lerp);
-      key.buckets[4] = blend_weight_bucket(upper_body_overlay_weight);
+      key.buckets[4] =
+          blend_weight_bucket(upper_body_overlay_weight, k_layer_weight_buckets);
     }
     const std::uint32_t bone_count = std::min<std::uint32_t>(
         skin_atlas->bone_count, Render::GL::RiggedCreatureCmd::k_max_owned_bones);
     const auto* blend_profile = asset->blend_profile;
-    OwnedPalette owned = blend_cache().get_or_compute(key, [&]() -> OwnedPalette {
-      LocalPose pose{};
-      if (!sample_local_pose(blob, primary_playback, bone_count, pose)) {
-        return {};
-      }
+    LocalPose pose{};
+    auto blend_layer = [&](const ResolvedRequestPlayback& playback,
+                           std::size_t slot,
+                           float weight,
+                           bool upper_body_only) {
       LocalPose layer{};
-      if (full_body_active &&
-          sample_local_pose(blob, *full_body_blend, bone_count, layer)) {
-        lerp_local_pose(pose,
-                        layer,
-                        bone_count,
-                        blend_bucket_weight(key.buckets[2]),
-                        blend_profile,
-                        false);
+      if (!sample_local_pose(blob, playback, bone_count, layer)) {
+        return;
       }
-      if (overlay_active &&
-          sample_local_pose(blob, *upper_body_overlay, bone_count, layer)) {
-        lerp_local_pose(pose,
-                        layer,
-                        bone_count,
-                        blend_bucket_weight(key.buckets[4]),
-                        blend_profile,
-                        true);
+      std::uint64_t const layer_key =
+          (static_cast<std::uint64_t>(entity_id) << 17U) |
+          (static_cast<std::uint64_t>(instance_index) << 1U) | slot;
+      key.flipped_bones[slot] =
+          entity_id != 0U ? blend_hemispheres().flipped_bones(
+                                layer_key, playback.clip_id, pose, layer, bone_count)
+                          : shortest_path_flips(pose, layer, bone_count);
+      lerp_local_pose(pose,
+                      layer,
+                      bone_count,
+                      weight,
+                      blend_profile,
+                      upper_body_only,
+                      key.flipped_bones[slot]);
+    };
+    auto compose_pose = [&]() -> bool {
+      if (!sample_local_pose(blob, primary_playback, bone_count, pose)) {
+        return false;
+      }
+      if (full_body_active) {
+        blend_layer(*full_body_blend,
+                    0U,
+                    blend_bucket_weight(key.buckets[2], k_layer_weight_buckets),
+                    false);
+      }
+      if (overlay_active) {
+        blend_layer(*upper_body_overlay,
+                    1U,
+                    blend_bucket_weight(key.buckets[4], k_layer_weight_buckets),
+                    true);
+      }
+      return true;
+    };
+    bool const layered = full_body_active || overlay_active;
+    bool const layered_pose_ready = layered && compose_pose();
+    OwnedPalette owned = blend_cache().get_or_compute(key, [&]() -> OwnedPalette {
+      if (layered ? !layered_pose_ready : !compose_pose()) {
+        return {};
       }
       return skin_palette_from_local_pose(blob, pose, bone_count);
     });
