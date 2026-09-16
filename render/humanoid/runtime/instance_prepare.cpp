@@ -86,11 +86,12 @@ constexpr std::uint32_t k_selection_refresh_period = 8U;
 auto humanoid_selection_is_steady(
     const Render::GL::HumanoidAnimationContext& anim_ctx) noexcept -> bool {
   auto const& in = anim_ctx.inputs;
-  if (in.is_attacking || in.is_casting || in.is_mounted || in.has_showcase_clip ||
-      in.has_authored_action_clip || in.is_in_hold_mode || in.is_exiting_hold ||
-      in.is_guarding || in.is_exiting_guard || in.is_hit_reacting || in.is_healing ||
-      in.is_routing || in.is_constructing || in.is_carrying_load || in.is_dying ||
-      in.is_dead || in.is_defensive_layout_locked ||
+  if (in.is_attacking || in.is_in_melee_lock || in.is_casting || in.is_mounted ||
+      in.has_showcase_clip || in.has_authored_action_clip || in.is_in_hold_mode ||
+      in.is_exiting_hold || in.is_guarding || in.is_exiting_guard ||
+      in.is_hit_reacting || in.is_healing || in.is_routing || in.is_constructing ||
+      in.is_carrying_load || in.is_dying || in.is_dead ||
+      in.is_defensive_layout_locked ||
       in.shield_formation_pose != Render::GL::ShieldFormationPose::None ||
       in.combat_visual.authoritative ||
       anim_ctx.ambient_idle_type != Render::GL::AmbientIdleType::None) {
@@ -676,7 +677,7 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
     bool const combat_active =
         anim.is_attacking || formation_fight_active || anim.is_in_melee_lock;
     if (combat_active) {
-      turn_smoothing_cap *= 2.0F;
+      turn_smoothing_cap *= anim.is_in_melee_lock ? 1.0F : 2.0F;
       turn_smoothing_travel_yaw = false;
       turn_smoothing_stagger = false;
     }
@@ -977,7 +978,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
         smoothing_inputs);
     soldier_turn_smoothed = true;
     if (turn_smoothing.relocating && !soldier_render_anim.is_attacking &&
-        !soldier_render_anim.is_constructing &&
+        !soldier_render_anim.is_in_melee_lock && !soldier_render_anim.is_constructing &&
         !Render::Creature::is_moving_animation(soldier_render_anim.movement_state)) {
       soldier_render_anim.movement_state = Animation::MovementState::Walk;
     }
@@ -1337,51 +1338,6 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
         std::clamp(soldier_directive->target_held_seconds / 0.18F, 0.0F, 1.0F);
   }
 
-  constexpr float k_action_link_seconds = 0.14F;
-  if (locomotion_persistent_state != nullptr) {
-    auto& link_state = *locomotion_persistent_state;
-
-    std::uint16_t current_clip = Animation::k_unmapped_clip;
-    if (soldier_render_anim.is_attacking) {
-      if (soldier_render_anim.has_sword_attack_animation &&
-          soldier_render_anim.attack_family ==
-              Engine::Core::CombatAttackFamily::Sword) {
-        auto const state = Animation::state_for_sword_attack_animation(
-            soldier_render_anim.sword_attack_animation);
-        if (state != Render::Creature::AnimationStateId::AttackSword) {
-          current_clip =
-              Animation::humanoid_clip_manifest().clips[Animation::state_index(state)];
-        }
-      }
-      if (current_clip == Animation::k_unmapped_clip &&
-          soldier_render_anim.has_authored_action_clip) {
-        current_clip = soldier_render_anim.authored_action_clip;
-      }
-    }
-
-    if (allow_animation_persistence) {
-      if (current_clip != link_state.last_action_clip &&
-          link_state.last_action_clip != Animation::k_unmapped_clip &&
-          current_clip != Animation::k_unmapped_clip) {
-        link_state.action_link_clip = link_state.last_action_clip;
-        link_state.action_link_phase = link_state.last_action_phase;
-        link_state.action_link_until = anim.time + k_action_link_seconds;
-      }
-      link_state.last_action_clip = current_clip;
-      link_state.last_action_phase = soldier_render_anim.authored_action_phase;
-    }
-
-    float const remaining = link_state.action_link_until - anim.time;
-    if (remaining > 0.0F && remaining <= k_action_link_seconds &&
-        link_state.action_link_clip != Animation::k_unmapped_clip &&
-        current_clip != Animation::k_unmapped_clip) {
-      soldier_render_anim.has_action_link = true;
-      soldier_render_anim.action_link_clip = link_state.action_link_clip;
-      soldier_render_anim.action_link_phase = link_state.action_link_phase;
-      soldier_render_anim.action_link_weight = remaining / k_action_link_seconds;
-    }
-  }
-
   soldier_render_anim.melee_intent = Animation::melee_intent_rotated(
       soldier_render_anim.melee_intent, individuality.swing_plane_offset);
   bool const render_has_locomotion =
@@ -1639,6 +1595,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
 
   bool const combat_root_eligible = !soldier_is_casualty_body && !is_mounted_spawn &&
                                     !soldier_render_anim.has_authored_action_phase &&
+                                    !soldier_render_anim.has_authored_action_clip &&
                                     !soldier_render_anim.is_in_hold_mode &&
                                     !soldier_render_anim.is_constructing;
   Animation::CombatRootMotionSample root_motion{};
@@ -1673,6 +1630,23 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
         .simulation_owns_lunge = soldier_render_anim.simulation_owns_root_motion,
         .seed = inst_seed,
     });
+  }
+  if (locomotion_persistent_state != nullptr) {
+    constexpr float k_lunge_resume_seconds = 0.4F;
+    auto& root_state = *locomotion_persistent_state;
+    bool const reacting = soldier_render_anim.is_hit_reacting || swing_recoil_active;
+    if (allow_animation_persistence && reacting) {
+      root_state.last_reaction_time = anim.time;
+    }
+    if (!reacting && root_state.last_reaction_time >= 0.0F) {
+      float const resume = std::clamp((anim.time - root_state.last_reaction_time) /
+                                          k_lunge_resume_seconds,
+                                      0.0F,
+                                      1.0F);
+      root_motion.forward_offset *= resume;
+      root_motion.pitch_degrees *= resume;
+      root_motion.roll_degrees *= resume;
+    }
   }
   {
     CombatRootSmoothingTarget root_target{};
@@ -1823,6 +1797,110 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
             static_cast<std::uint8_t>(anim_ctx.inputs.movement_state);
         selection_slot->selection = *graph_output.humanoid_selection;
       }
+    }
+  }
+
+  if (locomotion_persistent_state != nullptr &&
+      graph_output.humanoid_selection->clip_id.has_value()) {
+    constexpr float k_action_link_seconds = 0.2F;
+    auto& link_state = *locomotion_persistent_state;
+    auto& selection = *graph_output.humanoid_selection;
+    std::uint16_t const current_clip = *selection.clip_id;
+    if (allow_animation_persistence &&
+        link_state.last_action_clip != Animation::k_unmapped_clip &&
+        current_clip != link_state.last_primary_clip &&
+        current_clip != link_state.last_action_clip) {
+      link_state.action_link_clip = link_state.last_action_clip;
+      link_state.action_link_phase = link_state.last_action_phase;
+      link_state.action_link_until = anim.time + k_action_link_seconds;
+    }
+    float const remaining = link_state.action_link_until - anim.time;
+    float const linear = std::clamp(remaining / k_action_link_seconds, 0.0F, 1.0F);
+    float const weight = linear * linear * (3.0F - 2.0F * linear);
+    auto const& blend = selection.full_body_blend;
+    bool const already_blending_out =
+        blend.active() && blend.clip_id == link_state.action_link_clip;
+    if (remaining > 0.0F && remaining <= k_action_link_seconds + 1.0e-3F &&
+        !already_blending_out && (!blend.active() || weight > blend.weight)) {
+      RCP::blend_out_interrupted_clip(
+          selection, link_state.action_link_clip, link_state.action_link_phase, weight);
+      if (selection.full_body_blend.active()) {
+        anim_ctx.inputs.action_link_weight = weight;
+      }
+    }
+    if (allow_animation_persistence) {
+      bool const blend_dominates =
+          blend.active() && blend.weight > 0.5F && blend.clip_id.has_value();
+      link_state.last_primary_clip = current_clip;
+      link_state.last_action_clip = blend_dominates ? *blend.clip_id : current_clip;
+      link_state.last_action_phase = blend_dominates ? blend.phase : selection.phase;
+    }
+  }
+
+  if (locomotion_persistent_state != nullptr) {
+    constexpr float k_overlay_phase_jump = 0.2F;
+    constexpr float k_overlay_weight_rate = 2.1F;
+    constexpr float k_overlay_weight_spring = 20.0F;
+    auto& link_state = *locomotion_persistent_state;
+    auto& overlay = graph_output.humanoid_selection->upper_body_overlay;
+    bool const has_target = overlay.active() && overlay.clip_id.has_value();
+    std::uint16_t const target_clip =
+        has_target ? *overlay.clip_id : Animation::k_unmapped_clip;
+    float const target_weight = has_target ? overlay.weight : 0.0F;
+    auto& shown = link_state.last_overlay;
+    float const dt = std::clamp(anim.time - link_state.overlay_sample_time, 0.0F, 0.1F);
+    float const max_step = k_overlay_weight_rate * dt;
+
+    Render::Creature::PlaybackLayerRequest next = shown;
+    if (shown.clip_id == Animation::k_unmapped_clip || shown.weight <= 1.0e-3F) {
+      next = {};
+      if (has_target) {
+        next = {.archetype = overlay.archetype,
+                .state = overlay.state,
+                .phase = overlay.phase,
+                .weight = std::min(target_weight, max_step),
+                .clip_variant = overlay.clip_variant,
+                .clip_id = target_clip,
+                .mode = overlay.mode};
+      }
+    } else if (shown.clip_id == target_clip &&
+               std::abs(overlay.phase - shown.phase) <= k_overlay_phase_jump) {
+      next.archetype = overlay.archetype;
+      next.state = overlay.state;
+      next.phase = overlay.phase;
+      next.clip_variant = overlay.clip_variant;
+      next.mode = overlay.mode;
+      float velocity = link_state.overlay_weight_velocity;
+      velocity += (k_overlay_weight_spring * k_overlay_weight_spring *
+                       (target_weight - shown.weight) -
+                   2.0F * k_overlay_weight_spring * velocity) *
+                  dt;
+      velocity = std::clamp(velocity, -k_overlay_weight_rate, k_overlay_weight_rate);
+      next.weight = std::clamp(shown.weight + velocity * dt, 0.0F, 1.0F);
+      if (allow_animation_persistence) {
+        link_state.overlay_weight_velocity = velocity;
+      }
+    } else {
+      next.weight = std::max(0.0F, shown.weight - max_step);
+    }
+    if (next.weight <= 1.0e-3F) {
+      next.clip_id = Animation::k_unmapped_clip;
+    }
+
+    if (next.clip_id != Animation::k_unmapped_clip) {
+      overlay.archetype = next.archetype;
+      overlay.state = next.state;
+      overlay.phase = next.phase;
+      overlay.clip_variant = next.clip_variant;
+      overlay.clip_id = next.clip_id;
+      overlay.mode = next.mode;
+      overlay.weight = next.weight;
+    } else {
+      overlay = {};
+    }
+    if (allow_animation_persistence) {
+      shown = next;
+      link_state.overlay_sample_time = anim.time;
     }
   }
 

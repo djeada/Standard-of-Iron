@@ -249,6 +249,8 @@ Local engagement handles contacts that can be answered without turning the entir
 
 This separation matters because a small contact near a base should not automatically dissolve the AI's higher-level plan, while a committed attack should not be rebuilt from scratch every time one frontline unit enters combat.
 
+A unit counts as **engaged** (`EntitySnapshot::engaged`, read through `is_entity_engaged`) when an enemy troop is within `k_engaged_radius` _or_ when it is already fighting troops: it holds a live, non-building attack target or is in a melee lock (`EntitySnapshot::fighting_troops`). Gather, attack-wave and harass selection skip engaged units, so a planner move never pulls an archer off the raider it is shooting from 10 m or a swordsman off the man it is chasing. Every AI `MoveUnits` command is applied as `MoveOrderKind::PlannerMove`, which clears the unit's attack target, so a behaviour that forgot this check would silently end the fight.
+
 ## Committed attack waves
 
 `game/systems/ai_system/ai_attack_wave.cpp` manages strategic attack-wave membership.

@@ -167,7 +167,7 @@ The combat system therefore does not make every visible enemy “melee reachable
 
 Automatic engagement is intentionally more conservative. An idle unit does not turn every hostile visible through or around a fortification into a long pathfinding detour.
 
-Retaliation and local-threat behavior have their own reachability path when reacting to an aggressor.
+`Combat::melee_walled_off_from(attacker, target, allowed_detour)` is the one answer to "is this enemy behind a wall?". A structure on the straight line only separates two melee combatants when the walked route around it (`Combat::melee_walk_around_length`, a real `Pathfinding::find_path` query) is longer than the straight line by more than the allowed detour: `k_opportunity_walk_around_detour` (8 m) when a unit picks its own fight, `k_answering_walk_around_detour` (16 m) when it answers an attacker or a neighbour's alert. A house, a shrine anchor or a lone tower is walked round; a curtain wall is not. With no pathfinder (bare test worlds) the helper falls back to `melee_bypass_destination`.
 
 ### Ranged attacks
 
@@ -309,6 +309,23 @@ It uses `EngagementIntent::AutoAcquired`, which means:
 
 Auto engagement is therefore an opportunistic targeting layer, not a separate attack implementation.
 
+## Chase policy
+
+Whether a unit walks after its target is decided in one file, `combat_system/target_assignment.{h,cpp}`. Every automatic writer of `AttackTargetComponent` names its reason with a `TargetSource`, and `set_attack_target()` / `assign_attack_target()` fill in `should_chase` and `is_player_command` from `chases_target()`:
+
+| Source        | Writer                                                              | Chases                                                                                     |
+| ------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `Opportunity` | `AutoEngagement`                                                    | fighters that close to fire, when not holding                                              |
+| `Answering`   | `engage_threat_target` (retaliation, squad alerts, joining an ally) | fighters, including ranged ones, and noncombatants stepping into a brawl, when not holding |
+| `InReach`     | the attack processor's in-strike-range pick                         | never                                                                                      |
+| `Patrol`      | `PatrolSystem`                                                      | never                                                                                      |
+| `MeleeLock`   | `sync_melee_lock_target`                                            | player orders and fighters                                                                 |
+| `Commitment`  | `TargetCommitmentSystem` / a blocked lock switch                    | always                                                                                     |
+
+"Holding" is hold mode or a formed defensive unit layout. The three automatic scans (`Opportunity`, `Answering`, `Patrol`) clear `is_player_command`; the others keep it.
+
+The reader is `keeps_pursuing()`, which the attack processor asks whenever a target is out of reach: it drops the target unless `should_chase` is set, a non-pursuing unit is still inside its brawl leash, the unit is free to move, and the target is inside its guard reach. Explicit player and AI attack orders store the order's own chase flag in `CommandService::attack_target`; that module sits below combat and does not decide anything.
+
 ## Target commitment
 
 Target commitment reduces target churn.
@@ -321,6 +338,14 @@ The final zero-delta update lets the commitment system observe target changes ma
 
 `tick_threat_alerts()` updates combat-threat notification state after attack and auto-engagement processing.
 
+Every "a unit was hit" path goes through `Combat::answer_attacker()`: the damage path (`AnswerPolicy::KeepCurrentFight`, a unit already fighting another _troop_ keeps that fight) and first melee contact (`AnswerPolicy::TurnOnAttacker`). It retaliates when `may_engage(..., Retaliation)` allows and then raises an `UnderAttack` alert. A unit breaching a wall keeps breaching when archers shoot it over the wall (`MeleeEngagementTest.BesiegerShotOverTheWallKeepsBreachingInsteadOfChasing`).
+
+An `UnderAttack` alert recruits every free ally within `threat_alert_radius()` of the victim, up to `k_max_squad_alert_allies` (12). There is deliberately no per-aggressor quota: with the old limit of three responders per attacker, one raider hitting a group of six left three men standing beside the fight. An `EnemySighted` alert still recruits one ally, and the unit that raised it no longer counts against that one slot (before, the spotter's own target used the slot up, so sighting alerts recruited nobody).
+
+Alerts are pushed once per second from the unit that was hit, so an ally that was busy at that moment would miss the fight. `AutoEngagement` therefore also _pulls_: an idle AI-controlled unit with nothing in its own acquisition range joins the nearest troop fight of an ally within its vision range (`Combat::ally_fight_to_join`, recorded as `EngagementOutcome::AssistedAlly`). The joined target must pass `may_engage(..., SquadAlert)`, so guard reach, walls and hold rules still apply, and only a fight against an armed enemy is joined: an ally battering a building or chasing an unarmed scout fights alone (`MissionWaveAssaultTest.GarrisonAnswersAScoutWithAFewUnitsAndHoldsTheRest`). Player units do not do this; they fight what they see and what hits them.
+
+A ranged unit answering an attack or an alert chases into range (`TargetSource::Answering`, see [Chase policy](#chase-policy)). Opportunistic acquisition still uses weapon range only, so archers do not wander after targets they merely see.
+
 Threat alerts can feed higher-level systems such as AI local response and player presentation, but they are not another source of damage or targeting authority.
 
 Keeping alerts downstream of actual combat processing means they describe combat that the runtime recognized rather than speculative proximity alone.
@@ -328,6 +353,15 @@ Keeping alerts downstream of actual combat processing means they describe combat
 ## Hold and guard interactions
 
 Combat behavior composes with order/stance systems.
+
+Guard mode has one set of helpers in `combat_utils.h`, used by `AutoEngagement`, `may_engage`, the attack processor, `GuardSystem` and the undead leash alike:
+
+- `guard_post_of()` — the post, following a guarded entity when there is one;
+- `guard_reach_of()` / `within_guard_reach()` — the reach circle, centred on the post or on `reach_center_*` when set, with the `Strict` and `AnswersFire` rules;
+- `is_returning_to_guard_post()` — the return flag, but only while the unit is actually moving, so a walk home that ended short cannot leave a guard refusing every fight; and
+- `send_guard_home()` — the single place that issues a `GuardReturn` move.
+
+An automatic `AttackChase` move no longer switches guard mode off; only explicit player, formation, attack-move, scripted and AI planner moves do.
 
 Hold/guard state can change effective attack behavior, movement response, or range without inventing a parallel combat system. For example, effective range exposed to UI uses the same resolved range path that combat uses.
 

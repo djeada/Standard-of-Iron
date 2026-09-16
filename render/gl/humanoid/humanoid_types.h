@@ -57,9 +57,6 @@ struct AnimationInputs {
       Render::Creature::MovementAnimationState::Idle};
   VisualMovementState visual_movement{};
 
-  bool has_action_link{false};
-  std::uint16_t action_link_clip{Animation::k_unmapped_clip};
-  float action_link_phase{0.0F};
   float action_link_weight{0.0F};
   bool is_mounted{false};
   bool is_attacking;

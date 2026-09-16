@@ -12,6 +12,7 @@
 #include "../../units/spawn_type.h"
 #include "../building_collision_registry.h"
 #include "../combat_rules.h"
+#include "../command_service.h"
 #include "../formation_combat_geometry.h"
 #include "../nav_grid.h"
 #include "../owner_registry.h"
@@ -30,6 +31,10 @@ constexpr int k_bypass_arc_samples = 12;
 constexpr float k_min_bypass_standoff = 0.75F;
 
 constexpr float k_bypass_clearance_margin = 0.75F;
+
+constexpr float k_walk_around_arrival_slack = 1.5F;
+
+constexpr float k_max_answer_fire_margin = 12.0F;
 } // namespace
 
 CombatQueryContext::CombatQueryContext() {
@@ -195,6 +200,120 @@ auto is_unit_in_guard_mode(Engine::Core::Entity* entity) -> bool {
   return (guard_mode != nullptr) && guard_mode->active;
 }
 
+auto guard_post_of(const Engine::Core::Entity* entity) -> std::optional<QVector3D> {
+  auto const* guard = entity == nullptr
+                          ? nullptr
+                          : entity->get_component<Engine::Core::GuardModeComponent>();
+  if ((guard == nullptr) || !guard->active || !guard->has_guard_target) {
+    return std::nullopt;
+  }
+  QVector3D post(guard->guard_position_x, 0.0F, guard->guard_position_z);
+  auto const* registry = entity->registry();
+  if (guard->guarded_entity_id != 0 && registry != nullptr) {
+    if (auto const* guarded = registry->try_get<Engine::Core::TransformComponent>(
+            guard->guarded_entity_id)) {
+      post = QVector3D(guarded->position.x, 0.0F, guarded->position.z);
+    }
+  }
+  return post;
+}
+
+auto guard_reach_of(const Engine::Core::Entity* entity) -> std::optional<GuardReach> {
+  auto const post = guard_post_of(entity);
+  if (!post.has_value()) {
+    return std::nullopt;
+  }
+  auto const* guard =
+      entity->registry()->try_get<Engine::Core::GuardModeComponent>(entity->get_id());
+  if (guard->has_reach_center) {
+    return GuardReach{
+        guard->reach_center_x, guard->reach_center_z, guard->guard_radius};
+  }
+  return GuardReach{post->x(), post->z(), guard->guard_radius};
+}
+
+auto within_guard_reach(const Engine::Core::Entity* entity,
+                        float x,
+                        float z,
+                        float margin) -> bool {
+  auto const reach = guard_reach_of(entity);
+  if (!reach.has_value()) {
+    return true;
+  }
+  float const dx = x - reach->center_x;
+  float const dz = z - reach->center_z;
+  float const radius = reach->radius + std::max(0.0F, margin);
+  return (dx * dx) + (dz * dz) <= radius * radius;
+}
+
+auto guard_answer_fire_margin(const Engine::Core::Entity* aggressor) -> float {
+  auto const* attack = aggressor == nullptr
+                           ? nullptr
+                           : aggressor->get_component<Engine::Core::AttackComponent>();
+  if (attack == nullptr) {
+    return 0.0F;
+  }
+  return std::min(std::max(attack->range, attack->melee_range),
+                  k_max_answer_fire_margin);
+}
+
+auto within_guard_reach(const Engine::Core::Entity* entity,
+                        const Engine::Core::Entity* target,
+                        GuardReachRule rule) -> bool {
+  auto const* transform =
+      target == nullptr ? nullptr
+                        : target->get_component<Engine::Core::TransformComponent>();
+  if (transform == nullptr) {
+    return true;
+  }
+  float const margin =
+      rule == GuardReachRule::AnswersFire ? guard_answer_fire_margin(target) : 0.0F;
+  return within_guard_reach(
+      entity, transform->position.x, transform->position.z, margin);
+}
+
+auto is_returning_to_guard_post(const Engine::Core::Entity* entity) -> bool {
+  auto const* guard = entity == nullptr
+                          ? nullptr
+                          : entity->get_component<Engine::Core::GuardModeComponent>();
+  if ((guard == nullptr) || !guard->active || !guard->returning_to_guard_position) {
+    return false;
+  }
+  auto const* movement = entity->get_component<Engine::Core::MovementComponent>();
+  return (movement != nullptr) && movement->get_has_target();
+}
+
+void send_guard_home(Engine::Core::World& world,
+                     Engine::Core::Entity* entity,
+                     float arrival_threshold) {
+  auto const post = guard_post_of(entity);
+  auto const* transform =
+      entity == nullptr ? nullptr
+                        : entity->get_component<Engine::Core::TransformComponent>();
+  if (!post.has_value() || (transform == nullptr)) {
+    return;
+  }
+  auto* guard = entity->get_component<Engine::Core::GuardModeComponent>();
+  if (is_returning_to_guard_post(entity)) {
+    return;
+  }
+  guard->returning_to_guard_position = false;
+
+  float const dx = post->x() - transform->position.x;
+  float const dz = post->z() - transform->position.z;
+  float const threshold = arrival_threshold >= 0.0F
+                              ? arrival_threshold
+                              : Engine::Core::Defaults::k_guard_return_threshold;
+  if ((dx * dx) + (dz * dz) <= threshold * threshold) {
+    return;
+  }
+
+  guard->returning_to_guard_position = true;
+  CommandService::MoveOptions options;
+  options.kind = MoveOrderKind::GuardReturn;
+  CommandService::move_unit(world, entity->get_id(), *post, options);
+}
+
 auto is_building(Engine::Core::Entity* entity) -> bool {
   if (entity == nullptr) {
     return false;
@@ -302,8 +421,68 @@ auto melee_bypass_destination(const QVector3D& attacker_position,
   return std::nullopt;
 }
 
+auto melee_walk_around_length(Engine::Core::Entity* attacker,
+                              Engine::Core::Entity* target) -> std::optional<float> {
+  if ((attacker == nullptr) || (target == nullptr)) {
+    return std::nullopt;
+  }
+  auto const* attacker_transform =
+      attacker->get_component<Engine::Core::TransformComponent>();
+  auto const* target_transform =
+      target->get_component<Engine::Core::TransformComponent>();
+  if ((attacker_transform == nullptr) || (target_transform == nullptr)) {
+    return std::nullopt;
+  }
+  QVector3D const start(
+      attacker_transform->position.x, 0.0F, attacker_transform->position.z);
+  QVector3D const goal(
+      target_transform->position.x, 0.0F, target_transform->position.z);
+  auto const geometry = FormationCombat::contact_geometry(*attacker, *target);
+
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  if (pathfinder == nullptr) {
+    auto const bypass = melee_bypass_destination(
+        start,
+        goal,
+        geometry.contact_center_distance,
+        std::max(k_min_bypass_clearance,
+                 FormationCombat::formation_navigation_clearance(*attacker)));
+    if (!bypass.has_value()) {
+      return std::nullopt;
+    }
+    return (*bypass - start).length() + (goal - *bypass).length();
+  }
+
+  pathfinder->update_navigation_grid();
+  auto const route = pathfinder->find_path(
+      Game::Systems::NavGrid::world_to_grid(attacker_transform->position.x,
+                                            attacker_transform->position.z),
+      Game::Systems::NavGrid::world_to_grid(target_transform->position.x,
+                                            target_transform->position.z),
+      Game::Systems::Pathfinding::Passability::Light,
+      FormationCombat::formation_navigation_clearance(*attacker));
+  if (route.empty()) {
+    return std::nullopt;
+  }
+
+  QVector3D previous = start;
+  float length = 0.0F;
+  for (auto const& cell : route) {
+    QVector3D const point = Game::Systems::NavGrid::grid_to_world(cell);
+    QVector3D const flat(point.x(), 0.0F, point.z());
+    length += (flat - previous).length();
+    previous = flat;
+  }
+  float const shortfall = (goal - previous).length();
+  if (shortfall > geometry.contact_center_distance + k_walk_around_arrival_slack) {
+    return std::nullopt;
+  }
+  return length + shortfall;
+}
+
 auto melee_walled_off_from(Engine::Core::Entity* attacker,
-                           Engine::Core::Entity* target) -> bool {
+                           Engine::Core::Entity* target,
+                           float allowed_detour) -> bool {
   if (attacker == nullptr) {
     return false;
   }
@@ -312,33 +491,21 @@ auto melee_walled_off_from(Engine::Core::Entity* attacker,
       attack != nullptr &&
       (!attack->can_ranged ||
        attack->preferred_mode == Engine::Core::AttackComponent::CombatMode::Melee);
-  return melee_only && structure_separates_combatants(attacker, target);
-}
-
-auto melee_can_walk_around(Engine::Core::Entity* attacker,
-                           Engine::Core::Entity* target) -> bool {
-  if ((attacker == nullptr) || (target == nullptr)) {
-    return false;
-  }
-  auto const* attacker_transform =
-      attacker->get_component<Engine::Core::TransformComponent>();
-  auto const* target_transform =
-      target->get_component<Engine::Core::TransformComponent>();
-  if ((attacker_transform == nullptr) || (target_transform == nullptr)) {
+  if (!melee_only || !structure_separates_combatants(attacker, target)) {
     return false;
   }
 
-  auto const geometry = FormationCombat::contact_geometry(*attacker, *target);
-  QVector3D const from(
-      attacker_transform->position.x, 0.0F, attacker_transform->position.z);
-  QVector3D const to(target_transform->position.x, 0.0F, target_transform->position.z);
-  return melee_bypass_destination(
-             from,
-             to,
-             geometry.contact_center_distance,
-             std::max(k_min_bypass_clearance,
-                      FormationCombat::formation_navigation_clearance(*attacker)))
-      .has_value();
+  auto const walk = melee_walk_around_length(attacker, target);
+  if (!walk.has_value()) {
+    return true;
+  }
+  auto* registry = attacker->registry();
+  auto const& from =
+      registry->try_get<Engine::Core::TransformComponent>(attacker->get_id())->position;
+  auto const& to =
+      registry->try_get<Engine::Core::TransformComponent>(target->get_id())->position;
+  float const straight = std::hypot(to.x - from.x, to.z - from.z);
+  return *walk > straight + allowed_detour;
 }
 
 auto is_in_range(Engine::Core::Entity* attacker,
@@ -467,12 +634,14 @@ auto may_engage(Engine::Core::Entity* unit,
           {.intent = EngagementIntent::AutoAcquired, .allow_buildings = true})) {
     return false;
   }
-  if (melee_walled_off_from(unit, enemy)) {
-
-    bool const answering_a_blow = trigger != EngagementTrigger::Opportunity;
-    if (!answering_a_blow || !melee_can_walk_around(unit, enemy)) {
-      return false;
-    }
+  bool const answering_a_blow = trigger != EngagementTrigger::Opportunity;
+  bool const answering_fire = trigger == EngagementTrigger::Retaliation ||
+                              trigger == EngagementTrigger::SquadAlert;
+  if (melee_walled_off_from(unit,
+                            enemy,
+                            answering_a_blow ? k_answering_walk_around_detour
+                                             : k_opportunity_walk_around_detour)) {
+    return false;
   }
 
   auto const* attack_comp = unit->get_component<Engine::Core::AttackComponent>();
@@ -480,9 +649,10 @@ auto may_engage(Engine::Core::Entity* unit,
     return false;
   }
 
-  auto* guard_mode = unit->get_component<Engine::Core::GuardModeComponent>();
-  if (guard_mode != nullptr && guard_mode->active &&
-      guard_mode->returning_to_guard_position) {
+  if (!within_guard_reach(unit,
+                          enemy,
+                          answering_fire ? GuardReachRule::AnswersFire
+                                         : GuardReachRule::Strict)) {
     return false;
   }
 
@@ -500,18 +670,13 @@ auto may_engage(Engine::Core::Entity* unit,
     return false;
   }
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
-  return movement == nullptr || !movement->get_has_target();
+  return movement == nullptr || !movement->get_has_target() ||
+         is_returning_to_guard_post(unit);
 }
 
 auto is_unit_idle(Engine::Core::Entity* unit) -> bool {
   auto* hold_mode = unit->get_component<Engine::Core::HoldModeComponent>();
   if ((hold_mode != nullptr) && hold_mode->active) {
-    return false;
-  }
-
-  auto* guard_mode = unit->get_component<Engine::Core::GuardModeComponent>();
-  if ((guard_mode != nullptr) && guard_mode->active &&
-      guard_mode->returning_to_guard_position) {
     return false;
   }
 

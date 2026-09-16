@@ -6,39 +6,19 @@
 #include "../../core/component_gameplay.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
-#include "../defensive_unit_layout_service.h"
 #include "combat_types.h"
 #include "combat_utils.h"
 #include "engagement_trace.h"
+#include "target_assignment.h"
 #include "target_rules.h"
 
 namespace Game::Systems::Combat {
 
 namespace {
 
-auto retaliation_should_chase(Engine::Core::Entity* entity) -> bool {
-  auto const* registry = entity->registry();
-  auto const* unit =
-      registry == nullptr
-          ? nullptr
-          : registry->try_get<Engine::Core::UnitComponent>(entity->get_id());
-  bool const steps_into_a_brawl =
-      unit != nullptr && Game::Units::combat_role(unit->spawn_type) ==
-                             Game::Units::CombatRole::Noncombatant;
-  if ((!pursues_targets(entity) && !steps_into_a_brawl) ||
-      opens_fire_without_closing(entity)) {
-    return false;
-  }
-  if (Game::Systems::DefensiveUnitLayoutService::holds_position(*entity)) {
-    return false;
-  }
-  auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
-  return (hold_mode == nullptr) || !hold_mode->active;
-}
-
 auto responder_budget(Engine::Core::ThreatAlertComponent::Kind kind) -> int {
   return kind == Engine::Core::ThreatAlertComponent::Kind::UnderAttack
-             ? Constants::k_attack_responders_per_aggressor
+             ? Constants::k_max_squad_alert_allies
              : Constants::k_sight_responders_per_aggressor;
 }
 
@@ -95,7 +75,7 @@ auto alert_nearby_allies(Engine::Core::World* world,
 
   std::vector<Engine::Core::Entity*> candidates;
   candidates.reserve(nearby.size());
-  int committed = is_committed_to(origin, aggressor_id) ? 1 : 0;
+  int committed = !informing_only && is_committed_to(origin, aggressor_id) ? 1 : 0;
 
   for (const Engine::Core::EntityID ally_id : nearby) {
     auto* ally = world->get_entity(ally_id);
@@ -198,14 +178,9 @@ auto has_active_engagement(Engine::Core::World* world,
 
 void engage_threat_target(Engine::Core::Entity* entity,
                           Engine::Core::EntityID aggressor_id) {
-  auto* attack_target =
-      Engine::Core::get_or_add_component<Engine::Core::AttackTargetComponent>(entity);
-  if (attack_target == nullptr) {
+  if (assign_attack_target(entity, aggressor_id, TargetSource::Answering) == nullptr) {
     return;
   }
-  attack_target->target_id = aggressor_id;
-  attack_target->should_chase = retaliation_should_chase(entity);
-  attack_target->is_player_command = false;
 
   if (auto* intent =
           entity->get_component<Engine::Core::PlayerOrderIntentComponent>()) {
@@ -240,6 +215,86 @@ auto note_threat(Engine::Core::World* world,
   alert->kind = kind;
   alert->cooldown = Constants::k_threat_alert_interval;
   return alert_nearby_allies(world, origin, aggressor, kind);
+}
+
+auto ally_fight_to_join(Engine::Core::World* world,
+                        Engine::Core::Entity* unit) -> Engine::Core::Entity* {
+  if ((world == nullptr) || (unit == nullptr) || !answers_alerts(unit)) {
+    return nullptr;
+  }
+  auto const* own_unit = world->try_get<Engine::Core::UnitComponent>(unit->get_id());
+  auto const* own_transform =
+      world->try_get<Engine::Core::TransformComponent>(unit->get_id());
+  if ((own_unit == nullptr) || (own_transform == nullptr)) {
+    return nullptr;
+  }
+
+  static thread_local std::vector<Engine::Core::EntityID> nearby;
+  collect_unit_ids_near(*world,
+                        own_transform->position.x,
+                        own_transform->position.z,
+                        own_unit->vision_range,
+                        nearby);
+
+  Engine::Core::Entity* best = nullptr;
+  float best_distance_sq = 0.0F;
+  for (const Engine::Core::EntityID ally_id : nearby) {
+    auto const* ally_unit = world->try_get<Engine::Core::UnitComponent>(ally_id);
+    if ((ally_id == unit->get_id()) || (ally_unit == nullptr) ||
+        ally_unit->health <= 0 || ally_unit->owner_id != own_unit->owner_id) {
+      continue;
+    }
+    auto const* ally_target =
+        world->try_get<Engine::Core::AttackTargetComponent>(ally_id);
+    if ((ally_target == nullptr) || ally_target->target_id == 0) {
+      continue;
+    }
+    auto* prey = world->get_entity(ally_target->target_id);
+    if ((prey == nullptr) || is_building(prey) || !auto_acquires_targets(prey)) {
+      continue;
+    }
+    auto const* prey_transform =
+        world->try_get<Engine::Core::TransformComponent>(prey->get_id());
+    if (prey_transform == nullptr) {
+      continue;
+    }
+    float const dx = prey_transform->position.x - own_transform->position.x;
+    float const dz = prey_transform->position.z - own_transform->position.z;
+    float const distance_sq = (dx * dx) + (dz * dz);
+    if (best != nullptr && distance_sq >= best_distance_sq) {
+      continue;
+    }
+    if (!may_engage(unit, prey, EngagementTrigger::SquadAlert)) {
+      continue;
+    }
+    best = prey;
+    best_distance_sq = distance_sq;
+  }
+  return best;
+}
+
+void answer_attacker(Engine::Core::World* world,
+                     Engine::Core::Entity* victim,
+                     Engine::Core::Entity* attacker,
+                     AnswerPolicy policy) {
+  if ((world == nullptr) || (victim == nullptr) || (attacker == nullptr)) {
+    return;
+  }
+  auto const* unit = world->try_get<Engine::Core::UnitComponent>(victim->get_id());
+  bool const keeps_its_fight = policy == AnswerPolicy::KeepCurrentFight &&
+                               has_active_engagement(world, victim, unit);
+  if (!keeps_its_fight &&
+      may_engage(victim, attacker, EngagementTrigger::Retaliation)) {
+    engage_threat_target(victim, attacker->get_id());
+    note_engagement(victim,
+                    {.candidate_id = attacker->get_id(),
+                     .target_id = attacker->get_id(),
+                     .acquisition_range = 0.0F,
+                     .outcome = EngagementOutcome::Retaliated,
+                     .source = CommandSource::Auto});
+  }
+  note_threat(
+      world, victim, attacker, Engine::Core::ThreatAlertComponent::Kind::UnderAttack);
 }
 
 void tick_threat_alerts(Engine::Core::World* world, float delta_time) {

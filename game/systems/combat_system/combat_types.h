@@ -45,7 +45,6 @@ inline constexpr float k_arrow_speed = 14.0F;
 inline constexpr int k_max_visual_arrows_per_volley = 20;
 
 inline constexpr int k_max_squad_alert_allies = 12;
-inline constexpr int k_attack_responders_per_aggressor = 3;
 inline constexpr int k_sight_responders_per_aggressor = 1;
 inline constexpr float k_threat_alert_interval = 1.0F;
 inline constexpr float k_chase_spread_arc = 1.4F;

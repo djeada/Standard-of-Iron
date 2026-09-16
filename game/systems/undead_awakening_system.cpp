@@ -25,6 +25,7 @@
 #include "game/map/terrain_service.h"
 #include "game/map/undead_shrine_placement.h"
 #include "game/systems/combat_rules.h"
+#include "game/systems/combat_system/combat_utils.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/order_service.h"
@@ -438,7 +439,6 @@ void UndeadAwakeningSystem::station_guardian(Engine::Core::World& world,
 
   QVector3D const post = guard_post_for_index(zone, post_index, post_count);
   QVector3D const origin = zone_origin(zone);
-  float const ring_offset = std::hypot(post.x() - origin.x(), post.z() - origin.z());
 
   auto* guard =
       Engine::Core::get_or_add_component<Engine::Core::GuardModeComponent>(*guardian);
@@ -450,8 +450,10 @@ void UndeadAwakeningSystem::station_guardian(Engine::Core::World& world,
   guard->guarded_entity_id = 0;
   guard->guard_position_x = post.x();
   guard->guard_position_z = post.z();
-  guard->guard_radius =
-      std::max(k_min_guard_radius, zone.definition.leash_radius - ring_offset);
+  guard->has_reach_center = true;
+  guard->reach_center_x = origin.x();
+  guard->reach_center_z = origin.z();
+  guard->guard_radius = std::max(k_min_guard_radius, zone.definition.leash_radius);
 
   auto const* movement = world.try_get<Engine::Core::MovementComponent>(guardian_id);
   if (recall) {
@@ -513,22 +515,22 @@ void UndeadAwakeningSystem::enforce_leash(Engine::Core::World& world,
     if (transform == nullptr) {
       continue;
     }
+    auto const* attack_target =
+        world.try_get<Engine::Core::AttackTargetComponent>(guardian_id);
+    auto* prey = attack_target != nullptr && attack_target->target_id != 0
+                     ? world.get_entity(attack_target->target_id)
+                     : nullptr;
+    float allowed = leash;
+    bool strayed = false;
+    if (prey != nullptr) {
+      auto* guardian = world.get_entity(guardian_id);
+      strayed = !Combat::within_guard_reach(
+          guardian, prey, Combat::GuardReachRule::AnswersFire);
+      allowed += Combat::guard_answer_fire_margin(prey);
+    }
     float const dx = transform->position.x - origin.x();
     float const dz = transform->position.z - origin.z();
-    bool strayed = dx * dx + dz * dz > leash * leash;
-    if (!strayed) {
-      auto const* attack_target =
-          world.try_get<Engine::Core::AttackTargetComponent>(guardian_id);
-      auto const* prey = attack_target != nullptr && attack_target->target_id != 0
-                             ? world.try_get<Engine::Core::TransformComponent>(
-                                   attack_target->target_id)
-                             : nullptr;
-      if (prey != nullptr) {
-        float const px = prey->position.x - origin.x();
-        float const pz = prey->position.z - origin.z();
-        strayed = px * px + pz * pz > leash * leash;
-      }
-    }
+    strayed = strayed || dx * dx + dz * dz > allowed * allowed;
     station_guardian(world, zone, guardian_id, index, post_count, strayed);
   }
 }

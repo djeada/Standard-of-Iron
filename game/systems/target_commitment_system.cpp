@@ -6,6 +6,7 @@
 #include "../core/entity.h"
 #include "../core/system_context.h"
 #include "../core/world.h"
+#include "combat_system/target_assignment.h"
 
 namespace Game::Systems {
 
@@ -91,8 +92,10 @@ void TargetCommitmentSystem::run(Engine::Core::SystemContext& context) {
 
       if (in_committed || commitment->cooldown_remaining > 0.0F) {
 
-        attack_target->target_id = commitment->committed_target_id;
-        attack_target->should_chase = true;
+        Combat::set_attack_target(*attack_target,
+                                  context.world().get_entity(entity_id),
+                                  commitment->committed_target_id,
+                                  Combat::TargetSource::Commitment);
         if (atk.in_melee_lock &&
             atk.melee_lock_target_id != commitment->committed_target_id) {
 

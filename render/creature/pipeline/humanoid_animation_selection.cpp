@@ -449,27 +449,6 @@ auto finalize_visible_humanoid_spec(UnitVisualSpec spec,
 
 namespace {
 
-void apply_action_link_blend(
-    HumanoidAnimationSelection& selection,
-    const Render::GL::HumanoidAnimationContext& anim) noexcept {
-  if (!anim.inputs.has_action_link ||
-      anim.inputs.action_link_clip == Animation::k_unmapped_clip ||
-      anim.inputs.action_link_weight <= 0.001F || !selection.clip_id.has_value() ||
-      selection.clip_id == anim.inputs.action_link_clip) {
-    return;
-  }
-  HumanoidAnimationSelection outgoing = selection;
-  outgoing.clip_id = anim.inputs.action_link_clip;
-  outgoing.phase = std::clamp(anim.inputs.action_link_phase, 0.0F, 1.0F);
-  outgoing.clip_variant = 0U;
-  outgoing.full_body_blend = {};
-  outgoing.upper_body_overlay = {};
-  selection.full_body_blend = playback_layer_from_selection(
-      outgoing,
-      std::clamp(anim.inputs.action_link_weight, 0.0F, 1.0F),
-      Render::Creature::PlaybackLayerMode::FullBodyBlend);
-}
-
 auto apply_ambient_idle_crossfade(HumanoidAnimationSelection& selection,
                                   const Render::GL::HumanoidAnimationContext& anim,
                                   const UnitVisualSpec& spec,
@@ -669,6 +648,26 @@ auto apply_construction_crossfade(HumanoidAnimationSelection& selection,
 
 } // namespace
 
+void blend_out_interrupted_clip(HumanoidAnimationSelection& selection,
+                                std::uint16_t outgoing_clip,
+                                float outgoing_phase,
+                                float weight) noexcept {
+  if (outgoing_clip == Animation::k_unmapped_clip || weight <= 0.001F ||
+      !selection.clip_id.has_value() || selection.clip_id == outgoing_clip) {
+    return;
+  }
+  HumanoidAnimationSelection outgoing = selection;
+  outgoing.clip_id = outgoing_clip;
+  outgoing.phase = std::clamp(outgoing_phase, 0.0F, 1.0F);
+  outgoing.clip_variant = 0U;
+  outgoing.full_body_blend = {};
+  outgoing.upper_body_overlay = {};
+  selection.full_body_blend =
+      playback_layer_from_selection(outgoing,
+                                    std::clamp(weight, 0.0F, 1.0F),
+                                    Render::Creature::PlaybackLayerMode::FullBodyBlend);
+}
+
 auto resolve_humanoid_animation_selection(
     const UnitVisualSpec& spec,
     const Render::GL::HumanoidAnimationContext& anim,
@@ -742,7 +741,6 @@ auto resolve_humanoid_animation_selection(
       anim.inputs.combat_visual.authoritative ? &anim.inputs.combat_visual : nullptr;
   if (combat == nullptr || anim.inputs.is_hit_reacting || anim.inputs.is_dying ||
       anim.inputs.is_dead || anim.inputs.is_constructing || anim.inputs.is_healing) {
-    apply_action_link_blend(selection, anim);
     return selection;
   }
 
@@ -799,7 +797,6 @@ auto resolve_humanoid_animation_selection(
         Render::Creature::PlaybackLayerMode::UpperBodyOverlay);
   }
 
-  apply_action_link_blend(selection, anim);
   return selection;
 }
 
