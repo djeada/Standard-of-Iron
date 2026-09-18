@@ -14,6 +14,9 @@ RowLayout {
     property var action_states: ({})
     property var selection_groups: []
     property int selection_count: 0
+    // Keep model identity stable while the HUD polls: replacing an identical array
+    // destroys Repeater delegates between mouse press and release.
+    property var contextualCommandCache: []
 
     readonly property int zoneMinimumWidth: Design.A11y.scaled(170)
     readonly property int zoneWidth: Math.max(bottomRoot.zoneMinimumWidth, Math.floor((bottomRoot.width - bottomRoot.spacing * 2) / 3))
@@ -549,6 +552,21 @@ RowLayout {
             if (state.eligibleCount > 0 || state.active || state.mixed || state.placing || state.passive || isCurrentMode || bottomRoot.tutorial_spotlights(entry.id))
                 out.push(entry);
         }
+        // Reuse the same array when only dynamic status/progress changes. A
+        // Repeater reset on every 100 ms poll discards in-progress mouse clicks.
+        var previous = bottomRoot.contextualCommandCache;
+        if (previous.length === out.length) {
+            var same = true;
+            for (var index = 0; index < out.length; ++index) {
+                if (previous[index].id !== out[index].id) {
+                    same = false;
+                    break;
+                }
+            }
+            if (same)
+                return previous;
+        }
+        bottomRoot.contextualCommandCache = out;
         return out;
     }
 
