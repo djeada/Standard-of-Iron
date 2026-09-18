@@ -42,7 +42,7 @@ TEST_F(ArenaFeedbackTest, ACombatHitBecomesAFloatingNumberOverTheTarget) {
   const auto target = spawn(4.0F, -6.0F);
 
   Engine::Core::EventManager::instance().publish(Engine::Core::CombatHitEvent(
-      0, target, 17, Game::Units::SpawnType::Knight, false, 3, 2));
+      0, target, 17, Game::Units::SpawnType::Swordsman, false, 3, 2));
 
   feedback.advance(0.6F);
   ASSERT_EQ(feedback.live_count(), 1)
@@ -92,7 +92,7 @@ TEST_F(ArenaFeedbackTest, TheNumbersScaleWithTheFrameTheyAreRecordedInto) {
 
   const auto target = spawn(0.0F, 0.0F);
   Engine::Core::EventManager::instance().publish(Engine::Core::CombatHitEvent(
-      0, target, 12, Game::Units::SpawnType::Knight, false, 3, 2));
+      0, target, 12, Game::Units::SpawnType::Swordsman, false, 3, 2));
   feedback.advance(0.6F);
   ASSERT_EQ(feedback.live_count(), 1);
 

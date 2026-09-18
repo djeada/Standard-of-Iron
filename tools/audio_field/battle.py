@@ -215,8 +215,6 @@ TARGET_RMS_DB: dict[str, float] = {
     "arrows_many_overhead": -20.0,
     "arrows_overhead_dark": -14.6,
     "horse_gallop_close_pass": -12.6,
-    "roman_shield_wall_impact": -16.2,
-    "gladius_shield_impacts_close": -14.2,
     "spearmen_formation_advance": -19.2,
     "javelin_throw_whoosh": -15.5,
     "roman_war_horns_orders": -18.8,
@@ -729,66 +727,6 @@ CUES: dict[str, Cue] = {
         "the horses draw level, so this window is the arrival and the leaving "
         "with the real Doppler on it. Nothing here is ranked -- there are six "
         "horses in the recording already.",
-    ),
-    "roman_shield_wall_impact": Cue(
-        path="sfx/combat/roman_shield_wall_impact",
-        seconds=2.2,
-        layers=[
-            Layer(
-                url=BODYFALL_GRASS[0],
-                origin=BODYFALL_GRASS[1],
-                licence=CC0,
-                start=0.15,
-                gain=1.0,
-                lowpass=2600.0,
-                ranks=(0.05, 0.12),
-                rank_falloff=0.85,
-            ),
-            Layer(
-                url=CLANG_DULL[0],
-                origin=CLANG_DULL[1],
-                licence=CC0,
-                start=0.08,
-                gain=0.55,
-                highpass=180.0,
-                lowpass=3600.0,
-                ranks=(0.07, 0.16),
-                rank_falloff=0.8,
-            ),
-        ],
-        attack=0.003,
-        release=0.6,
-        notes="A shield wall taking a charge is mass first and metal second, "
-        "so the bodyfall is the loud layer and the clang only colours it.",
-    ),
-    "gladius_shield_impacts_close": Cue(
-        path="sfx/combat/gladius_shield_impacts_close",
-        seconds=2.4,
-        layers=[
-            Layer(
-                url=SMACKS_RAPID[0],
-                origin=SMACKS_RAPID[1],
-                licence=CC0,
-                start=0.1,
-                gain=0.95,
-                highpass=150.0,
-                lowpass=5000.0,
-            ),
-            Layer(
-                url=CLANG_THIN_01[0],
-                origin=CLANG_THIN_01[1],
-                licence=CC0,
-                start=0.05,
-                gain=0.7,
-                highpass=280.0,
-                ranks=(0.11, 0.27, 0.44),
-                rank_falloff=0.82,
-            ),
-        ],
-        attack=0.003,
-        release=0.5,
-        notes="Short sword on shield, worked fast. Thin clangs rather than the "
-        "big ones: a gladius is a stabbing blade, not a bell.",
     ),
     "spearmen_formation_advance": Cue(
         path="sfx/combat/spearmen_formation_advance",

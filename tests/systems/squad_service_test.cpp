@@ -104,12 +104,12 @@ TEST_F(SquadServiceTest, ACommanderIsNeverDivided) {
 }
 
 TEST_F(SquadServiceTest, JoiningTwoDecimatedSquadsRebuildsOne) {
-  const auto left = spawn(SpawnType::Knight, 10.0F, 10.0F);
-  const auto right = spawn(SpawnType::Knight, 12.0F, 10.0F);
+  const auto left = spawn(SpawnType::Swordsman, 10.0F, 10.0F);
+  const auto right = spawn(SpawnType::Swordsman, 12.0F, 10.0F);
   ASSERT_NE(left, 0U);
   ASSERT_NE(right, 0U);
 
-  const int establishment = Game::Units::squad_establishment(SpawnType::Knight);
+  const int establishment = Game::Units::squad_establishment(SpawnType::Swordsman);
   SquadService::apply_strength(m_session->world(), left, establishment / 3);
   SquadService::apply_strength(m_session->world(), right, establishment / 3);
 
@@ -123,7 +123,7 @@ TEST_F(SquadServiceTest, JoiningTwoDecimatedSquadsRebuildsOne) {
 }
 
 TEST_F(SquadServiceTest, SquadsOfDifferentKindsDoNotJoin) {
-  const auto sword = spawn(SpawnType::Knight, 10.0F, 10.0F);
+  const auto sword = spawn(SpawnType::Swordsman, 10.0F, 10.0F);
   const auto spear = spawn(SpawnType::Spearman, 12.0F, 10.0F);
   SquadService::apply_strength(m_session->world(), sword, 4);
   SquadService::apply_strength(m_session->world(), spear, 4);
@@ -132,9 +132,9 @@ TEST_F(SquadServiceTest, SquadsOfDifferentKindsDoNotJoin) {
 }
 
 TEST_F(SquadServiceTest, SquadsTooFarApartDoNotJoin) {
-  const auto near_unit = spawn(SpawnType::Knight, 10.0F, 10.0F);
+  const auto near_unit = spawn(SpawnType::Swordsman, 10.0F, 10.0F);
   const auto far_unit =
-      spawn(SpawnType::Knight, 10.0F + SquadService::k_merge_radius + 5.0F, 10.0F);
+      spawn(SpawnType::Swordsman, 10.0F + SquadService::k_merge_radius + 5.0F, 10.0F);
   SquadService::apply_strength(m_session->world(), near_unit, 4);
   SquadService::apply_strength(m_session->world(), far_unit, 4);
 
@@ -142,7 +142,7 @@ TEST_F(SquadServiceTest, SquadsTooFarApartDoNotJoin) {
 }
 
 TEST_F(SquadServiceTest, DividingCostsNoExtraPopulation) {
-  const auto id = spawn(SpawnType::Knight, 10.0F, 10.0F);
+  const auto id = spawn(SpawnType::Swordsman, 10.0F, 10.0F);
   ASSERT_NE(id, 0U);
   auto& counts = m_session->troop_counts();
   counts.rebuild_from_world(m_session->world());

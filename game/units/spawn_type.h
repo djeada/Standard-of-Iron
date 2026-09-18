@@ -2,12 +2,10 @@
 
 #include <QString>
 
-#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <optional>
 #include <string>
-#include <string_view>
 
 #include "troop_type.h"
 
@@ -15,12 +13,12 @@ namespace Game::Units {
 
 enum class SpawnType : std::uint8_t {
   Archer,
-  Knight,
+  Swordsman,
   Spearman,
   SkeletonSwordsman,
   SkeletonArcher,
   GravePriest,
-  MountedKnight,
+  MountedSwordsman,
   HorseArcher,
   HorseSpearman,
   Healer,
@@ -47,82 +45,11 @@ enum class SpawnType : std::uint8_t {
   Farm
 };
 
-inline constexpr std::size_t k_spawn_type_count =
-    static_cast<std::size_t>(SpawnType::Farm) + 1U;
-
-constexpr auto spawn_type_name(SpawnType type) -> std::string_view {
-  switch (type) {
-  case SpawnType::Archer:
-    return "archer";
-  case SpawnType::Knight:
-    return "swordsman";
-  case SpawnType::Spearman:
-    return "spearman";
-  case SpawnType::SkeletonSwordsman:
-    return "skeleton_swordsman";
-  case SpawnType::SkeletonArcher:
-    return "skeleton_archer";
-  case SpawnType::GravePriest:
-    return "grave_priest";
-  case SpawnType::MountedKnight:
-    return "horse_swordsman";
-  case SpawnType::HorseArcher:
-    return "horse_archer";
-  case SpawnType::HorseSpearman:
-    return "horse_spearman";
-  case SpawnType::Healer:
-    return "healer";
-  case SpawnType::Catapult:
-    return "catapult";
-  case SpawnType::Ballista:
-    return "ballista";
-  case SpawnType::Elephant:
-    return "elephant";
-  case SpawnType::RomanLegionOrganizer:
-    return "roman_legion_organizer";
-  case SpawnType::RomanVeteranConsul:
-    return "roman_veteran_consul";
-  case SpawnType::RomanFieldCommander:
-    return "roman_field_commander";
-  case SpawnType::CarthageSpearCommander:
-    return "carthage_spear_commander";
-  case SpawnType::CarthageBowCommander:
-    return "carthage_bow_commander";
-  case SpawnType::CarthageSwordCommander:
-    return "carthage_sword_commander";
-  case SpawnType::Civilian:
-    return "civilian";
-  case SpawnType::Builder:
-    return "builder";
-  case SpawnType::Barracks:
-    return "barracks";
-  case SpawnType::DefenseTower:
-    return "defense_tower";
-  case SpawnType::Home:
-    return "home";
-  case SpawnType::WallSegment:
-    return "wall_segment";
-  case SpawnType::Marketplace:
-    return "marketplace";
-  case SpawnType::WallGate:
-    return "wall_gate";
-  case SpawnType::Temple:
-    return "temple";
-  case SpawnType::Sheep:
-    return "sheep";
-  case SpawnType::Wolf:
-    return "wolf";
-  case SpawnType::Farm:
-    return "farm";
-  }
-  return "archer";
-}
-
 inline auto spawn_typeToQString(SpawnType type) -> QString {
   switch (type) {
   case SpawnType::Archer:
     return QStringLiteral("archer");
-  case SpawnType::Knight:
+  case SpawnType::Swordsman:
     return QStringLiteral("swordsman");
   case SpawnType::Spearman:
     return QStringLiteral("spearman");
@@ -132,7 +59,7 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("skeleton_archer");
   case SpawnType::GravePriest:
     return QStringLiteral("grave_priest");
-  case SpawnType::MountedKnight:
+  case SpawnType::MountedSwordsman:
     return QStringLiteral("horse_swordsman");
   case SpawnType::HorseArcher:
     return QStringLiteral("horse_archer");
@@ -187,7 +114,7 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
 }
 
 inline auto spawn_typeToString(SpawnType type) -> std::string {
-  return std::string(spawn_type_name(type));
+  return spawn_typeToQString(type).toStdString();
 }
 
 inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {
@@ -197,7 +124,7 @@ inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {
     return true;
   }
   if (lowered == QStringLiteral("swordsman")) {
-    out = SpawnType::Knight;
+    out = SpawnType::Swordsman;
     return true;
   }
   if (lowered == QStringLiteral("spearman")) {
@@ -217,7 +144,7 @@ inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {
     return true;
   }
   if (lowered == QStringLiteral("horse_swordsman")) {
-    out = SpawnType::MountedKnight;
+    out = SpawnType::MountedSwordsman;
     return true;
   }
   if (lowered == QStringLiteral("horse_archer")) {
@@ -328,7 +255,7 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
     return SpawnType::Archer;
   }
   if (str == "swordsman") {
-    return SpawnType::Knight;
+    return SpawnType::Swordsman;
   }
   if (str == "spearman") {
     return SpawnType::Spearman;
@@ -343,7 +270,7 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
     return SpawnType::GravePriest;
   }
   if (str == "horse_swordsman") {
-    return SpawnType::MountedKnight;
+    return SpawnType::MountedSwordsman;
   }
   if (str == "horse_archer") {
     return SpawnType::HorseArcher;
@@ -451,14 +378,14 @@ inline auto is_wall_network_spawn(SpawnType type) -> bool {
 }
 
 [[nodiscard]] inline auto is_cavalry(SpawnType type) noexcept -> bool {
-  return type == SpawnType::MountedKnight || type == SpawnType::HorseArcher ||
+  return type == SpawnType::MountedSwordsman || type == SpawnType::HorseArcher ||
          type == SpawnType::HorseSpearman;
 }
 
 [[nodiscard]] inline auto can_enter_forest(SpawnType type) noexcept -> bool {
   switch (type) {
   case SpawnType::Archer:
-  case SpawnType::Knight:
+  case SpawnType::Swordsman:
   case SpawnType::Healer:
   case SpawnType::Builder:
   case SpawnType::Civilian:
@@ -486,7 +413,7 @@ inline auto is_wall_network_spawn(SpawnType type) -> bool {
   case SpawnType::Catapult:
   case SpawnType::Ballista:
     return 100.0F;
-  case SpawnType::MountedKnight:
+  case SpawnType::MountedSwordsman:
   case SpawnType::HorseArcher:
   case SpawnType::HorseSpearman:
     return 300.0F;
@@ -503,7 +430,7 @@ inline auto is_wall_network_spawn(SpawnType type) -> bool {
   switch (type) {
   case SpawnType::Elephant:
     return 1.2F;
-  case SpawnType::MountedKnight:
+  case SpawnType::MountedSwordsman:
   case SpawnType::HorseArcher:
   case SpawnType::HorseSpearman:
     return 8.0F;
@@ -536,12 +463,12 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
 [[nodiscard]] inline auto can_use_run_mode(SpawnType type) noexcept -> bool {
   switch (type) {
   case SpawnType::Archer:
-  case SpawnType::Knight:
+  case SpawnType::Swordsman:
   case SpawnType::Spearman:
   case SpawnType::Healer:
   case SpawnType::Civilian:
   case SpawnType::Builder:
-  case SpawnType::MountedKnight:
+  case SpawnType::MountedSwordsman:
   case SpawnType::HorseArcher:
   case SpawnType::HorseSpearman:
   case SpawnType::RomanLegionOrganizer:
@@ -576,7 +503,7 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
   switch (type) {
   case SpawnType::Archer:
     return TroopType::Archer;
-  case SpawnType::Knight:
+  case SpawnType::Swordsman:
     return TroopType::Swordsman;
   case SpawnType::Spearman:
     return TroopType::Spearman;
@@ -586,8 +513,8 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
     return TroopType::SkeletonArcher;
   case SpawnType::GravePriest:
     return TroopType::GravePriest;
-  case SpawnType::MountedKnight:
-    return TroopType::MountedKnight;
+  case SpawnType::MountedSwordsman:
+    return TroopType::MountedSwordsman;
   case SpawnType::HorseArcher:
     return TroopType::HorseArcher;
   case SpawnType::HorseSpearman:
@@ -645,7 +572,7 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
   case TroopType::Archer:
     return SpawnType::Archer;
   case TroopType::Swordsman:
-    return SpawnType::Knight;
+    return SpawnType::Swordsman;
   case TroopType::Spearman:
     return SpawnType::Spearman;
   case TroopType::SkeletonSwordsman:
@@ -654,8 +581,8 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
     return SpawnType::SkeletonArcher;
   case TroopType::GravePriest:
     return SpawnType::GravePriest;
-  case TroopType::MountedKnight:
-    return SpawnType::MountedKnight;
+  case TroopType::MountedSwordsman:
+    return SpawnType::MountedSwordsman;
   case TroopType::HorseArcher:
     return SpawnType::HorseArcher;
   case TroopType::HorseSpearman:

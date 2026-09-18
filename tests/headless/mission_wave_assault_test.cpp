@@ -159,7 +159,7 @@ protected:
     for (int i = 0; i < count; ++i) {
       const EntityID id =
           spawn(session,
-                Game::Units::SpawnType::Knight,
+                Game::Units::SpawnType::Swordsman,
                 k_wave_ai,
                 entry + QVector3D(static_cast<float>(i) * 2.0F, 0.0F, 0.0F),
                 true);

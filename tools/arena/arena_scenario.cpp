@@ -24,6 +24,7 @@
 #include "game/core/world.h"
 #include "game/formation/army_formation_service.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/attack_range.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
@@ -34,12 +35,14 @@
 #include "game/systems/combat_system/structure_combat.h"
 #include "game/systems/combat_system/structure_fire.h"
 #include "game/systems/command_service.h"
+#include "game/systems/construction_cost_catalog.h"
 #include "game/systems/defensive_unit_layout_service.h"
 #include "game/systems/food_targets.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/order_service.h"
 #include "game/systems/pathfinding.h"
+#include "game/systems/player_resource_registry.h"
 #include "game/systems/projectile_kind.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
@@ -168,6 +171,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("RpgWeaponSwitch");
   case ScenarioCommandKind::RepairStructure:
     return QStringLiteral("RepairStructure");
+  case ScenarioCommandKind::StartConstruction:
+    return QStringLiteral("StartConstruction");
   case ScenarioCommandKind::DeliverToStructure:
     return QStringLiteral("DeliverToStructure");
   case ScenarioCommandKind::HarvestResource:
@@ -1706,6 +1711,32 @@ struct ArenaScenarioRunner::Impl {
               .owner_id = owner_of(world, workers.front()),
               .payload = Game::Command::RepairStructure{
                   .units = workers, .structure = structures.front()}});
+      arm_response(step.group, command_name(step.command));
+      break;
+    }
+    case ScenarioCommandKind::StartConstruction: {
+      auto const workers = ids(step.group);
+      if (workers.empty() || step.construction_type.isEmpty()) {
+        break;
+      }
+      const int owner = owner_of(world, workers.front());
+      const std::string type = step.construction_type.toStdString();
+
+      auto& economy = Game::Session::session_for(world).economy();
+      const auto costs = Game::Systems::construction_cost_info(type).resource_costs;
+      for (const auto resource : Game::Systems::k_all_resource_types) {
+        economy.add(owner, resource, costs.get(resource));
+      }
+      Game::Command::dispatch(
+          world,
+          Game::Command::Command{
+              .source = Game::Command::Source::Script,
+              .owner_id = owner,
+              .payload = Game::Command::StartConstruction{
+                  .units = workers,
+                  .construction_type = type,
+                  .site = step.destination,
+                  .rotation_y = step.construction_rotation_degrees}});
       arm_response(step.group, command_name(step.command));
       break;
     }

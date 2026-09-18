@@ -6,11 +6,11 @@ TEST(ArenaUnitSpawnOptionsTest, ParsesSingleHorsePreset) {
   auto const option = Arena::UnitSpawnOptions::parse_special_unit_option(
       Arena::UnitSpawnOptions::build_special_unit_id(
           Arena::UnitSpawnOptions::Kind::SingleHorse,
-          Game::Units::TroopType::MountedKnight));
+          Game::Units::TroopType::MountedSwordsman));
 
   ASSERT_TRUE(option.has_value());
   EXPECT_EQ(option->kind, Arena::UnitSpawnOptions::Kind::SingleHorse);
-  EXPECT_EQ(option->troop_type, Game::Units::TroopType::MountedKnight);
+  EXPECT_EQ(option->troop_type, Game::Units::TroopType::MountedSwordsman);
   EXPECT_EQ(option->individuals_per_unit, 1);
   EXPECT_FALSE(option->render_rider);
 }

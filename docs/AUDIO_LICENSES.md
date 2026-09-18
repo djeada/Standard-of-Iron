@@ -53,7 +53,8 @@ The ElevenLabs renders were generated under a licence held by the project author
 | --- | ---: |
 | ElevenLabs licence held by the project author; commercial use permitted | 74 |
 | Own work (MIT) | 68 |
-| CC0 1.0 | 67 |
+| CC0 1.0 | 62 |
+| Proprietary -- supplied by the project owner | 4 |
 | Public Domain Mark 1.0 | 4 |
 | Public Domain Mark 1.0 + CC0 1.0 | 4 |
 | Public domain | 3 |
@@ -184,9 +185,8 @@ The ElevenLabs renders were generated under a licence held by the project author
 | --- | --- | --- |
 | `ability_refused.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC METAL, 'Metal, Clang, Dull, Quiet' | CC0 1.0 |
 | `aftermath_battlefield.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CROWDS, 'CU_Crowd Applause, Cheering, Yelling, Whooping'; TDC WIND, 'CU_Thru Trees, Rustling, Faint Crickets' | CC0 1.0 |
-| `armour_hit_01.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC METAL, 'Metal, Clang, Thin 01'; TDC METAL, 'Metal, Clang, Thin 02'; TDC METAL, 'Metal, Clank, Thin' | CC0 1.0 |
-| `armour_hit_02.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC METAL, 'Metal, Clang, Thin 01'; TDC METAL, 'Metal, Clang, Thin 02'; TDC METAL, 'Metal, Clank, Thin' | CC0 1.0 |
-| `armour_hit_03.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC METAL, 'Metal, Clang, Thin 01'; TDC METAL, 'Metal, Clang, Thin 02'; TDC METAL, 'Metal, Clank, Thin' | CC0 1.0 |
+| `armour_hit_01.ogg` | Recorded import supplied by the project owner, generated with ElevenLabs sound effects on 2026-09-17 and converted to Vorbis; it replaces the composed CC0 cue that was here. | Proprietary -- supplied by the project owner |
+| `armour_hit_02.ogg` | Recorded import supplied by the project owner, generated with ElevenLabs sound effects on 2026-09-17 and converted to Vorbis; it replaces the composed CC0 cue that was here. | Proprietary -- supplied by the project owner |
 | `army_march_dirt_mass.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC FOOTSTEPS, 'MCU_Running, Rocky Road'; TDC FOOTSTEPS, 'MCU_Footsteps, On Grass' | CC0 1.0 |
 | `army_retreat_panic.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CROWDS, 'CU_Crowd Applause, Cheering, Yelling, Whooping'; TDC FOOTSTEPS, 'MCU_Running, Rocky Road' | CC0 1.0 |
 | `arrow_impact_01.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC WOOD, 'CU_Board Drop 03'; TDC WOOD, 'CU_Board Drop 04'; TDC WOOD, 'CU_Board Drop 05' | CC0 1.0 |
@@ -208,7 +208,7 @@ The ElevenLabs renders were generated under a licence held by the project author
 | `elephant_panic.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC ANIMALS, 'CU_Elephant Trumpet' | CC0 1.0 |
 | `elephant_trumpet_charge.ogg` | ElevenLabs render `Charge_of_the_War_Elephant`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
 | `elephant_trumpet_panic.ogg` | ElevenLabs render `Distressed_War_Elephant`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
-| `gladius_shield_impacts_close.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC FIGHT, 'CU_Smacks, Rapid'; TDC METAL, 'Metal, Clang, Thin 01' | CC0 1.0 |
+| `gladius_shield_impacts_close.ogg` | Recorded import supplied by the project owner, generated with ElevenLabs sound effects on 2026-09-17 and converted to Vorbis; it replaces the composed CC0 cue that was here. | Proprietary -- supplied by the project owner |
 | `guard_break.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC WOOD, 'CU_Stick, Small, Breaks, X3'; TDC METAL, 'Metal, Clang, Thin 01' | CC0 1.0 |
 | `guard_raise.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CLOTH, 'CU_Swish, Impact, Fight'; TDC METAL, 'CU_Bolt, Drop' | CC0 1.0 |
 | `heal_bind_wound.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CLOTH, 'CU_Baseball Mitt, Velcro, Slow' | CC0 1.0 |
@@ -223,7 +223,7 @@ The ElevenLabs renders were generated under a licence held by the project author
 | `land_thud_v2.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC FIGHT, 'CU_Bodyfall, On Grass' | CC0 1.0 |
 | `lock_on_tick.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC METAL, 'CU_Small, Tin, Drop' | CC0 1.0 |
 | `perfect_guard.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC METAL, 'Metal, Clang, Thin 01' | CC0 1.0 |
-| `roman_shield_wall_impact.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC FIGHT, 'CU_Bodyfall, On Grass'; TDC METAL, 'Metal, Clang, Dull, Quiet' | CC0 1.0 |
+| `roman_shield_wall_impact.ogg` | Recorded import supplied by the project owner, generated with ElevenLabs sound effects on 2026-09-17 and converted to Vorbis; it replaces the composed CC0 cue that was here. | Proprietary -- supplied by the project owner |
 | `roman_war_horns_orders.ogg` | Composed by `tools/audio_field/build_battle.py` from Wikimedia Commons, 'File:Hunting horn tone.ogg', by Alon-De-Lon | CC0 1.0 |
 | `second_wind.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CLOTH, 'CU_Swish, Impact, Fight'; TDC METAL, 'Metal, Clang, Thin 01' | CC0 1.0 |
 | `shield_bash.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC METAL, 'Metal, Clang 01'; TDC CLOTH, 'CU_Glove Slap' | CC0 1.0 |

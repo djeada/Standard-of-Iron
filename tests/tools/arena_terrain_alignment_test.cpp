@@ -77,7 +77,7 @@ TEST_F(ArenaTerrainAlignmentTest, TroopsAreStillPushedOutOfOccupiedGround) {
   soldier->add_component<TransformComponent>(0.0F, 7.5F, 0.0F);
   auto* unit = soldier->add_component<UnitComponent>(100, 100, 1.0F, 8.0F);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
 
   EXPECT_FALSE(Arena::entity_keeps_planar_position(*soldier));
   Arena::align_entity_to_ground(*soldier, Game::Map::TerrainService::instance());

@@ -3,10 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <cstddef>
 #include <numbers>
-#include <string>
-#include <string_view>
 #include <utility>
 
 #include "../util/planar_math.h"
@@ -932,7 +929,7 @@ auto UnitLayoutLibrary::register_style(UnitLayoutStyle style) -> UnitLayoutId {
 }
 
 auto UnitLayoutLibrary::find(std::string_view name) const -> UnitLayoutId {
-  auto it = m_by_name.find(name);
+  auto it = m_by_name.find(std::string(name));
   return it == m_by_name.end() ? k_invalid_layout : it->second;
 }
 
@@ -942,25 +939,13 @@ auto UnitLayoutLibrary::resolve(std::string_view doctrine,
     return find("close_order_infantry");
   }
   if (!doctrine.empty()) {
-    std::array<char, 128> buffer{};
-    std::size_t const length = doctrine.size() + 1U + generic_name.size();
-    if (length <= buffer.size()) {
-      auto* cursor = std::copy(doctrine.begin(), doctrine.end(), buffer.data());
-      *cursor++ = '.';
-      std::copy(generic_name.begin(), generic_name.end(), cursor);
-      if (auto const id = find(std::string_view(buffer.data(), length));
-          id != k_invalid_layout) {
-        return id;
-      }
-    } else {
-      std::string qualified;
-      qualified.reserve(length);
-      qualified.append(doctrine);
-      qualified.push_back('.');
-      qualified.append(generic_name);
-      if (auto const id = find(qualified); id != k_invalid_layout) {
-        return id;
-      }
+    std::string qualified;
+    qualified.reserve(doctrine.size() + generic_name.size() + 1U);
+    qualified.append(doctrine);
+    qualified.push_back('.');
+    qualified.append(generic_name);
+    if (auto const id = find(qualified); id != k_invalid_layout) {
+      return id;
     }
   }
   if (auto const id = find(generic_name); id != k_invalid_layout) {

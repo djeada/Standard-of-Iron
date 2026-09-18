@@ -243,6 +243,32 @@ TEST(ArenaPromoSpecTest, AReelCanTurnTheGameplayUiOnWholeOrPerShot) {
       << "a shot may still opt out of the gameplay UI";
 }
 
+TEST(ArenaPromoSpecTest, AGameplayLensShotMayAskToBeStabilised) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+
+  const QString path = write_spec(dir, R"({
+    "id": "probe",
+    "shots": [
+      { "name": "steady", "scenario": "arena", "duration": 2.0,
+        "gameplay_camera": true, "stabilize_seconds": 0.25 },
+      { "name": "raw", "scenario": "arena", "duration": 2.0,
+        "gameplay_camera": true },
+      { "name": "nonsense", "scenario": "arena", "duration": 2.0,
+        "gameplay_camera": true, "stabilize_seconds": -1.0 }
+    ]
+  })");
+
+  QString error;
+  const auto spec = Arena::Promo::load(path, &error);
+  ASSERT_TRUE(spec.has_value()) << error.toStdString();
+  ASSERT_EQ(spec->shots.size(), 3U);
+  EXPECT_FLOAT_EQ(spec->shots[0].stabilize_seconds, 0.25F);
+  EXPECT_FLOAT_EQ(spec->shots[1].stabilize_seconds, 0.0F)
+      << "an unstabilised lens is what the player sees; smoothing is opt-in";
+  EXPECT_FLOAT_EQ(spec->shots[2].stabilize_seconds, 0.0F);
+}
+
 TEST(ArenaPromoSpecTest, TimeLapseIsSlowMotionWrittenTheFriendlyWayRound) {
   QTemporaryDir dir;
   ASSERT_TRUE(dir.isValid());

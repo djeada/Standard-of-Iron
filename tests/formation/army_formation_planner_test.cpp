@@ -122,10 +122,10 @@ protected:
 TEST_F(ArmyFormationPlannerTest, PlacesEveryEligibleMemberExactlyOnce) {
   Engine::Core::World world;
   std::vector<Engine::Core::EntityID> units;
-  Game::Units::SpawnType const spawns[] = {Game::Units::SpawnType::Knight,
+  Game::Units::SpawnType const spawns[] = {Game::Units::SpawnType::Swordsman,
                                            Game::Units::SpawnType::Spearman,
                                            Game::Units::SpawnType::Archer,
-                                           Game::Units::SpawnType::MountedKnight,
+                                           Game::Units::SpawnType::MountedSwordsman,
                                            Game::Units::SpawnType::HorseArcher,
                                            Game::Units::SpawnType::Catapult,
                                            Game::Units::SpawnType::Elephant,
@@ -154,7 +154,7 @@ TEST_F(ArmyFormationPlannerTest, RangedTroopsSitBehindTheMeleeFront) {
   auto const spear =
       add_unit(world, Game::Units::SpawnType::Spearman, NationID::RomanRepublic, -2.0F);
   auto const sword =
-      add_unit(world, Game::Units::SpawnType::Knight, NationID::RomanRepublic, 0.0F);
+      add_unit(world, Game::Units::SpawnType::Swordsman, NationID::RomanRepublic, 0.0F);
   auto const archer =
       add_unit(world, Game::Units::SpawnType::Archer, NationID::RomanRepublic, 2.0F);
 
@@ -168,8 +168,8 @@ TEST_F(ArmyFormationPlannerTest, RangedTroopsSitBehindTheMeleeFront) {
 
 TEST_F(ArmyFormationPlannerTest, SiegeEnginesAreNotPlacedInTheFrontRank) {
   Engine::Core::World world;
-  auto const sword =
-      add_unit(world, Game::Units::SpawnType::Knight, NationID::RomanRepublic, -2.0F);
+  auto const sword = add_unit(
+      world, Game::Units::SpawnType::Swordsman, NationID::RomanRepublic, -2.0F);
   auto const catapult =
       add_unit(world, Game::Units::SpawnType::Catapult, NationID::RomanRepublic, 0.0F);
   auto const ballista =
@@ -189,14 +189,14 @@ TEST_F(ArmyFormationPlannerTest, CavalryIsSplitOntoBothFlanks) {
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 4; ++i) {
     units.push_back(add_unit(world,
-                             Game::Units::SpawnType::Knight,
+                             Game::Units::SpawnType::Swordsman,
                              NationID::RomanRepublic,
                              static_cast<float>(i) - 2.0F));
   }
   auto const left_horse = add_unit(
-      world, Game::Units::SpawnType::MountedKnight, NationID::RomanRepublic, -10.0F);
+      world, Game::Units::SpawnType::MountedSwordsman, NationID::RomanRepublic, -10.0F);
   auto const right_horse = add_unit(
-      world, Game::Units::SpawnType::MountedKnight, NationID::RomanRepublic, 10.0F);
+      world, Game::Units::SpawnType::MountedSwordsman, NationID::RomanRepublic, 10.0F);
   units.push_back(left_horse);
   units.push_back(right_horse);
 
@@ -213,8 +213,10 @@ TEST_F(ArmyFormationPlannerTest, RomeAndCarthageProduceDistinctLinesForTheSameAr
   auto build = [](Engine::Core::World& world, NationID nation) {
     std::vector<Engine::Core::EntityID> units;
     for (int i = 0; i < 6; ++i) {
-      units.push_back(add_unit(
-          world, Game::Units::SpawnType::Knight, nation, static_cast<float>(i) - 3.0F));
+      units.push_back(add_unit(world,
+                               Game::Units::SpawnType::Swordsman,
+                               nation,
+                               static_cast<float>(i) - 3.0F));
     }
     for (int i = 0; i < 3; ++i) {
       units.push_back(add_unit(world,
@@ -265,7 +267,7 @@ TEST_F(ArmyFormationPlannerTest, LineIntentIsWiderThanColumnIntent) {
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 10; ++i) {
     units.push_back(add_unit(world,
-                             Game::Units::SpawnType::Knight,
+                             Game::Units::SpawnType::Swordsman,
                              NationID::RomanRepublic,
                              static_cast<float>(i) - 5.0F));
   }
@@ -283,7 +285,7 @@ TEST_F(ArmyFormationPlannerTest, ExplicitFrontageOverridesTheTemplateWidth) {
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 8; ++i) {
     units.push_back(add_unit(world,
-                             Game::Units::SpawnType::Knight,
+                             Game::Units::SpawnType::Swordsman,
                              NationID::RomanRepublic,
                              static_cast<float>(i) - 4.0F));
   }
@@ -307,14 +309,14 @@ TEST_F(ArmyFormationPlannerTest, FlankPreferenceMovesTheCavalryWeight) {
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 4; ++i) {
     units.push_back(add_unit(world,
-                             Game::Units::SpawnType::Knight,
+                             Game::Units::SpawnType::Swordsman,
                              NationID::RomanRepublic,
                              static_cast<float>(i) - 2.0F));
   }
   std::vector<Engine::Core::EntityID> horses;
   for (int i = 0; i < 6; ++i) {
     horses.push_back(add_unit(world,
-                              Game::Units::SpawnType::MountedKnight,
+                              Game::Units::SpawnType::MountedSwordsman,
                               NationID::RomanRepublic,
                               static_cast<float>(i) * 2.0F - 6.0F,
                               -4.0F));
@@ -350,7 +352,7 @@ TEST_F(ArmyFormationPlannerTest, SiegeEscortIsRejectedWithoutSiegeEngines) {
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 4; ++i) {
     units.push_back(add_unit(world,
-                             Game::Units::SpawnType::Knight,
+                             Game::Units::SpawnType::Swordsman,
                              NationID::RomanRepublic,
                              static_cast<float>(i) - 2.0F));
   }
@@ -365,7 +367,7 @@ TEST_F(ArmyFormationPlannerTest, EncirclementIsRejectedWithoutCavalry) {
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 5; ++i) {
     units.push_back(add_unit(world,
-                             Game::Units::SpawnType::Knight,
+                             Game::Units::SpawnType::Swordsman,
                              NationID::RomanRepublic,
                              static_cast<float>(i) - 2.0F));
   }
@@ -380,12 +382,12 @@ TEST_F(ArmyFormationPlannerTest, MajorityDoctrineWinsForMixedSelections) {
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 5; ++i) {
     units.push_back(add_unit(world,
-                             Game::Units::SpawnType::Knight,
+                             Game::Units::SpawnType::Swordsman,
                              NationID::Carthage,
                              static_cast<float>(i)));
   }
-  units.push_back(
-      add_unit(world, Game::Units::SpawnType::Knight, NationID::RomanRepublic, -4.0F));
+  units.push_back(add_unit(
+      world, Game::Units::SpawnType::Swordsman, NationID::RomanRepublic, -4.0F));
 
   auto const plan = plan_for(world, units, ArmyFormationIntent::FactionDefault);
   ASSERT_TRUE(plan.valid) << plan.rejection_reason;
@@ -397,7 +399,7 @@ TEST_F(ArmyFormationPlannerTest, CompositeByRoleIgnoresFactionBlocks) {
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 3; ++i) {
     units.push_back(add_unit(world,
-                             Game::Units::SpawnType::Knight,
+                             Game::Units::SpawnType::Swordsman,
                              NationID::Carthage,
                              static_cast<float>(i)));
     units.push_back(add_unit(world,
@@ -426,7 +428,7 @@ TEST_F(ArmyFormationPlannerTest, CommanderDoctrinePolicyFollowsTheCommander) {
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 4; ++i) {
     units.push_back(add_unit(world,
-                             Game::Units::SpawnType::Knight,
+                             Game::Units::SpawnType::Swordsman,
                              NationID::Carthage,
                              static_cast<float>(i)));
   }
@@ -503,7 +505,7 @@ TEST_F(ArmyFormationPlannerTest, SlotsAroundAnObstacleAreMarkedAdjustedNotBlocke
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 5; ++i) {
     units.push_back(add_unit(world,
-                             Game::Units::SpawnType::Knight,
+                             Game::Units::SpawnType::Swordsman,
                              NationID::RomanRepublic,
                              static_cast<float>(i) - 2.0F));
   }
@@ -530,7 +532,7 @@ TEST_F(ArmyFormationPlannerTest, FacingRotatesTheWholeDeployment) {
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 6; ++i) {
     units.push_back(add_unit(world,
-                             Game::Units::SpawnType::Knight,
+                             Game::Units::SpawnType::Swordsman,
                              NationID::RomanRepublic,
                              static_cast<float>(i) - 3.0F));
   }
@@ -564,7 +566,7 @@ TEST_F(ArmyFormationPlannerTest, ServiceReportsWhyAnIntentIsUnavailable) {
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 4; ++i) {
     units.push_back(add_unit(world,
-                             Game::Units::SpawnType::Knight,
+                             Game::Units::SpawnType::Swordsman,
                              NationID::RomanRepublic,
                              static_cast<float>(i) - 2.0F));
   }

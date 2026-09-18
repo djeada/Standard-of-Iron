@@ -93,6 +93,7 @@ enum class ScenarioCommandKind : std::uint8_t {
   RpgCycleLockOn,
 
   RepairStructure,
+  StartConstruction,
   DeliverToStructure,
   HarvestResource,
   AbandonWork,
@@ -225,6 +226,9 @@ struct ArenaScenarioStep {
   int value{0};
 
   QString resource_kind;
+
+  QString construction_type;
+  float construction_rotation_degrees{0.0F};
   float camera_distance{14.0F};
   float camera_angle{45.0F};
   float camera_yaw{30.0F};
@@ -413,6 +417,8 @@ struct ArenaScenarioDefinition {
   int terrain_grid_extent{0};
 
   float terrain_height_scale_override{0.0F};
+
+  bool terrain_snowbound{false};
 
   QString ground_type;
 

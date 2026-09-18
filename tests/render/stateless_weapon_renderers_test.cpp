@@ -358,7 +358,7 @@ TEST(StatelessWeaponRenderers, SwordTrailUsesArchetypePath) {
   auto anim = make_anim();
   anim.inputs.is_attacking = true;
   anim.inputs.is_melee = true;
-  anim.inputs.time = Render::GL::KNIGHT_ATTACK_CYCLE_TIME * 0.40F;
+  anim.inputs.time = Render::GL::SWORDSMAN_ATTACK_CYCLE_TIME * 0.40F;
   const auto palette = make_palette();
   const auto ctx = make_ctx();
 

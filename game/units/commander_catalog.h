@@ -82,7 +82,7 @@ struct CommanderDefinition {
   float death_morale_shock = 25.0F;
   float aura_ability_duration = 15.0F;
   float aura_ability_cooldown = 60.0F;
-  Game::Units::SpawnType aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
+  Game::Units::SpawnType aura_affinity_spawn_type = Game::Units::SpawnType::Swordsman;
   CommanderSignature signature{};
   CommanderDoctrine doctrine{};
 };

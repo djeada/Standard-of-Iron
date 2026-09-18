@@ -4,13 +4,13 @@
 
 namespace Game::Units {
 
-class MountedKnight : public Unit {
+class MountedSwordsman : public Unit {
 public:
   static auto Create(Engine::Core::World& world,
-                     const SpawnParams& params) -> std::unique_ptr<MountedKnight>;
+                     const SpawnParams& params) -> std::unique_ptr<MountedSwordsman>;
 
 private:
-  MountedKnight(Engine::Core::World& world);
+  MountedSwordsman(Engine::Core::World& world);
   void init(const SpawnParams& params);
 };
 

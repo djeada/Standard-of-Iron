@@ -20,6 +20,8 @@ struct ArmyFormationResult {
   std::vector<int> stable_slot_ids;
   std::vector<int> stable_ranks;
   std::vector<int> stable_files;
+
+  std::vector<int> unit_files;
   std::vector<SlotStatus> slot_status;
 
   FormationGroupID group_id{k_invalid_group};

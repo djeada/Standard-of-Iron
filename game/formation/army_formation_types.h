@@ -46,7 +46,9 @@ enum class MovementPolicy : std::uint8_t {
 enum class RangedPlacement : std::uint8_t {
   Front,
   Rear,
-  Skirmish
+  Skirmish,
+
+  Automatic
 };
 
 enum class MixedDoctrinePolicy : std::uint8_t {
@@ -151,7 +153,7 @@ struct ArmyFormationShape {
 struct ArmyFormationOptions {
   FlankPreference flank_preference{FlankPreference::Balanced};
   MovementPolicy movement_policy{MovementPolicy::ReformAtDestination};
-  RangedPlacement ranged_placement{RangedPlacement::Rear};
+  RangedPlacement ranged_placement{RangedPlacement::Automatic};
   MixedDoctrinePolicy mixed_policy{MixedDoctrinePolicy::MajorityDoctrine};
 
   float frontage_scale{1.0F};
@@ -173,6 +175,8 @@ struct ArmyFormation {
   float frontage{0.0F};
   float depth{0.0F};
   float spacing{1.0F};
+
+  float slot_spacing{1.0F};
 
   ArmyFormationOptions options;
   FormationPhase phase{FormationPhase::Reforming};

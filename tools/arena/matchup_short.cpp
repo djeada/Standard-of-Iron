@@ -111,7 +111,7 @@ auto nation_equivalent(Nation nation, Troop troop) -> Troop {
   switch (troop) {
   case Troop::Swordsman:
   case Troop::Spearman:
-  case Troop::MountedKnight:
+  case Troop::MountedSwordsman:
   case Troop::HorseSpearman:
     return Troop::SkeletonSwordsman;
   case Troop::Archer:

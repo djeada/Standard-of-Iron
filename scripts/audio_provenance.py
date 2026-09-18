@@ -17,7 +17,8 @@ Provenance lives on the manifest track itself:
 
 Two of those are backfilled automatically because the repository already
 proves them: anything tagged `"source": "synth"` is generated here by our own
-code, and anything tagged `"source": "field"` is cut by tools/audio_field from
+code, anything tagged `"source": "recorded"` was supplied to the project and is
+never rebuilt, and anything tagged `"source": "field"` is cut by tools/audio_field from
 the catalogued recordings.  Everything else needs a person, because guessing a
 licence is worse than admitting it is unknown.
 

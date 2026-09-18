@@ -11,6 +11,7 @@
 #include "formation_doctrine.h"
 
 namespace Engine::Core {
+class Entity;
 class World;
 } // namespace Engine::Core
 
@@ -22,6 +23,15 @@ struct ArmyFormationMember {
   RoleTagSet roles{0U};
   QVector3D current_position;
   float footprint{1.0F};
+
+  float half_width{0.5F};
+  float half_depth{0.5F};
+
+  int individuals{1};
+  int files{1};
+  float soldier_file_step{1.0F};
+  float soldier_rank_step{1.0F};
+  float soldier_body_radius{0.5F};
   FormationDoctrineId doctrine;
 };
 
@@ -55,7 +65,14 @@ struct ArmyFormationPlan {
   float depth{0.0F};
   float spacing{1.0F};
 
+  float slot_spacing{1.0F};
+
   std::vector<FormationSlot> slot_list;
+  std::vector<float> slot_clearance;
+  std::vector<float> slot_half_width;
+  std::vector<float> slot_half_depth;
+
+  std::vector<int> slot_files;
 
   int blocked_count{0};
   int adjusted_count{0};
@@ -75,10 +92,16 @@ struct ArmyFormationLayout {
   ArmyFormationIntent intent{ArmyFormationIntent::FactionDefault};
 
   float spacing{1.0F};
+  float slot_spacing{1.0F};
   float frontage{0.0F};
   float depth{0.0F};
 
   std::vector<FormationSlot> slot_list;
+
+  std::vector<float> slot_clearance;
+  std::vector<float> slot_half_width;
+  std::vector<float> slot_half_depth;
+  std::vector<int> slot_files;
 
   std::uint64_t signature{0U};
 };
@@ -137,7 +160,16 @@ public:
                    const ArmyFormationOptions& options,
                    float spacing,
                    float requested_frontage,
-                   float facing) -> std::vector<FormationSlot>;
+                   float facing,
+                   float* slot_spacing_out = nullptr,
+                   int row_cap_override = 0,
+                   int* row_cap_used = nullptr) -> std::vector<FormationSlot>;
+
+  static void measure_footprint(const Engine::Core::Entity& entity,
+                                float fallback_radius,
+                                ArmyFormationMember& member);
+
+  static void shape_member_for_intent(ArmyFormationMember& member, float aspect);
 };
 
 } // namespace Game::Formation

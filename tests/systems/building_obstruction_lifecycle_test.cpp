@@ -114,7 +114,7 @@ protected:
     soldier->add_component<MovementComponent>();
     auto* unit = soldier->add_component<UnitComponent>(100, 100, 4.0F, 10.0F);
     unit->owner_id = owner_id;
-    unit->spawn_type = Game::Units::SpawnType::Knight;
+    unit->spawn_type = Game::Units::SpawnType::Swordsman;
     return soldier;
   }
 

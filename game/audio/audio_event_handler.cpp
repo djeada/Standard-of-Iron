@@ -154,7 +154,7 @@ auto is_siege_engine(Game::Units::SpawnType type) -> bool {
 
 auto hit_cue_for_attacker(Game::Units::SpawnType type) -> const char* {
   switch (type) {
-  case Game::Units::SpawnType::Knight:
+  case Game::Units::SpawnType::Swordsman:
   case Game::Units::SpawnType::SkeletonSwordsman:
   case Game::Units::SpawnType::GravePriest:
     return Cue::k_combat_hit_sword;
@@ -165,7 +165,7 @@ auto hit_cue_for_attacker(Game::Units::SpawnType type) -> const char* {
   case Game::Units::SpawnType::SkeletonArcher:
   case Game::Units::SpawnType::HorseArcher:
     return Cue::k_combat_hit_arrow;
-  case Game::Units::SpawnType::MountedKnight:
+  case Game::Units::SpawnType::MountedSwordsman:
     return Cue::k_combat_hit_cavalry;
   case Game::Units::SpawnType::Elephant:
     return Cue::k_combat_hit_elephant;

@@ -22,12 +22,12 @@ enum class CombatRole : std::uint8_t {
 [[nodiscard]] constexpr auto combat_role(SpawnType type) noexcept -> CombatRole {
   switch (type) {
   case SpawnType::Archer:
-  case SpawnType::Knight:
+  case SpawnType::Swordsman:
   case SpawnType::Spearman:
   case SpawnType::SkeletonSwordsman:
   case SpawnType::SkeletonArcher:
   case SpawnType::GravePriest:
-  case SpawnType::MountedKnight:
+  case SpawnType::MountedSwordsman:
   case SpawnType::HorseArcher:
   case SpawnType::HorseSpearman:
   case SpawnType::Catapult:

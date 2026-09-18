@@ -770,7 +770,7 @@ TEST_F(WildlifeFightMotionTest,
        ASquadLockedOnWolvesKeepsLandingBlowsUntilThePackIsDead) {
   field();
   release_hunting_pack(*m_session, 2, QVector3D(39.0F, 0.0F, 32.0F));
-  spawn(Game::Units::SpawnType::Knight, QVector3D(32.0F, 0.0F, 32.0F));
+  spawn(Game::Units::SpawnType::Swordsman, QVector3D(32.0F, 0.0F, 32.0F));
   ASSERT_FALSE(m_handles.empty());
   step_once();
   ASSERT_EQ(animals().size(), 2U);

@@ -4,7 +4,7 @@
 
 namespace Render::GL::Roman {
 
-using KnightStyleConfig = ::Render::GL::SwordsmanStyleConfig;
+using SwordsmanStyleConfig = ::Render::GL::SwordsmanStyleConfig;
 
 void register_roman_swordsman_style();
 

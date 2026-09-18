@@ -76,8 +76,8 @@ enum class WeaponSchool : std::uint8_t {
 auto weapon_school_of(Game::Units::SpawnType spawn_type) -> WeaponSchool {
   using Game::Units::SpawnType;
   switch (spawn_type) {
-  case SpawnType::Knight:
-  case SpawnType::MountedKnight:
+  case SpawnType::Swordsman:
+  case SpawnType::MountedSwordsman:
   case SpawnType::SkeletonSwordsman:
     return WeaponSchool::Sword;
   case SpawnType::Spearman:

@@ -517,7 +517,7 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
     attack_phase =
         use_authored_phase
             ? clamp01(anim.attack_phase)
-            : std::fmod(anim.inputs.time * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
+            : std::fmod(anim.inputs.time * SWORDSMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
   }
 
   QVector3D ready_pos(0.10F, 0.85F, 0.52F);

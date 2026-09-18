@@ -1,0 +1,66 @@
+{
+  "id": "trailer_forest_town",
+  "title": "Trailer: a city at work",
+  "summary": "Filming fixture.",
+  "teaching_goal": "None.",
+  "narrative_intent": "Trailer fixture.",
+  "historical_context": "Trailer fixture.",
+  "terrain_type": "forest",
+  "map_path": "forest_town.map.json",
+  "player_setup": {
+    "nation": "carthage",
+    "faction": "carthaginian",
+    "color": "brown",
+    "starting_units": [],
+    "starting_buildings": [],
+    "starting_resources": {
+      "gold": 3000,
+      "food": 2000,
+      "wood": 2500,
+      "stone": 1800,
+      "iron": 900
+    }
+  },
+  "ai_setups": [
+    {
+      "id": "roman_outpost",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "red",
+      "team_id": 2,
+      "difficulty": "easy",
+      "strategy": "defensive",
+      "posture": "garrison",
+      "personality": {
+        "aggression": 0.0,
+        "defense": 0.9,
+        "harassment": 0.0
+      },
+      "starting_units": [],
+      "starting_buildings": [],
+      "waves": []
+    }
+  ],
+  "victory_conditions": [
+    {
+      "type": "eliminate_commanders",
+      "description": "Trailer fixture."
+    }
+  ],
+  "defeat_conditions": [
+    {
+      "type": "lose_commander",
+      "description": "Trailer fixture."
+    }
+  ],
+  "optional_objectives": [],
+  "stages": [],
+  "events": [],
+  "commander_messages": [],
+  "include_ambient_undead": false,
+  "theme": "Trailer fixture.",
+  "victory_mode": "all",
+  "commander_voices": {
+    "generic": false
+  }
+}

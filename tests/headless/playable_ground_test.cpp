@@ -156,9 +156,9 @@ TEST_F(PlayableGroundTest, DuellistsNeverFightOnTopOfARuin) {
   field({ruins_at(24, 24)});
 
   const EntityID ours =
-      spawn(Game::Units::SpawnType::Knight, world_of(22, 29), k_player);
+      spawn(Game::Units::SpawnType::Swordsman, world_of(22, 29), k_player);
   const EntityID theirs =
-      spawn(Game::Units::SpawnType::Knight, world_of(26, 29), k_enemy);
+      spawn(Game::Units::SpawnType::Swordsman, world_of(26, 29), k_enemy);
   ASSERT_NE(ours, 0U);
   ASSERT_NE(theirs, 0U);
 
@@ -379,9 +379,9 @@ TEST_F(PlayableGroundTest, ADuellistStrandedInsideGeometryStillWalksOut) {
   field({ruins_at(24, 24)});
 
   const EntityID ours =
-      spawn(Game::Units::SpawnType::Knight, world_of(21, 24), k_player);
+      spawn(Game::Units::SpawnType::Swordsman, world_of(21, 24), k_player);
   const EntityID theirs =
-      spawn(Game::Units::SpawnType::Knight, world_of(27, 24), k_enemy);
+      spawn(Game::Units::SpawnType::Swordsman, world_of(27, 24), k_enemy);
   ASSERT_NE(ours, 0U);
   ASSERT_NE(theirs, 0U);
 
@@ -404,9 +404,9 @@ TEST_F(PlayableGroundTest, AFightBesideARuinIsNotBrokenUpByIt) {
   field({ruins_at(24, 24)});
 
   const EntityID ours =
-      spawn(Game::Units::SpawnType::Knight, world_of(20, 27), k_player);
+      spawn(Game::Units::SpawnType::Swordsman, world_of(20, 27), k_player);
   const EntityID theirs =
-      spawn(Game::Units::SpawnType::Knight, world_of(21, 27), k_enemy);
+      spawn(Game::Units::SpawnType::Swordsman, world_of(21, 27), k_enemy);
   ASSERT_NE(ours, 0U);
   ASSERT_NE(theirs, 0U);
 
@@ -510,7 +510,7 @@ TEST_F(PlayableGroundTest, AMarchingSquadTurnsOnSomethingAttackingOneOfThem) {
     squad.push_back(id);
   }
   const EntityID raider =
-      spawn(Game::Units::SpawnType::Knight, world_of(19, 22), k_enemy);
+      spawn(Game::Units::SpawnType::Swordsman, world_of(19, 22), k_enemy);
   ASSERT_NE(raider, 0U);
 
   std::vector<QVector3D> targets(squad.size(), world_of(40, 24));
@@ -548,7 +548,7 @@ TEST_F(PlayableGroundTest, AHeldUnitFightsBackWithoutLeavingItsPost) {
   const EntityID holder =
       spawn(Game::Units::SpawnType::Spearman, world_of(26, 24), k_player);
   const EntityID raider =
-      spawn(Game::Units::SpawnType::Knight, world_of(23, 24), k_enemy);
+      spawn(Game::Units::SpawnType::Swordsman, world_of(23, 24), k_enemy);
   ASSERT_NE(victim, 0U);
   ASSERT_NE(holder, 0U);
   ASSERT_NE(raider, 0U);

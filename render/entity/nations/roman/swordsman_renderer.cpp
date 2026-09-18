@@ -52,7 +52,7 @@ const std::array<SwordsmanRendererRegistration, 7> k_swordsman_renderers{{
 
 } // namespace
 
-void register_knight_renderer(Render::GL::EntityRendererRegistry& registry) {
+void register_swordsman_renderer(Render::GL::EntityRendererRegistry& registry) {
   register_swordsman_renderer_profile(
       registry, k_swordsman_profile, k_swordsman_renderers);
 }

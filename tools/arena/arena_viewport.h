@@ -3,10 +3,14 @@
 #include <QElapsedTimer>
 #include <QOpenGLWidget>
 #include <QPoint>
+#include <QPointF>
 #include <QRect>
+#include <QSize>
 #include <QString>
 #include <QStringList>
 #include <QTimer>
+#include <QVariantMap>
+#include <QVector3D>
 
 #include <cstddef>
 #include <cstdint>
@@ -221,6 +225,10 @@ public:
 
   [[nodiscard]] auto casting_snapshot() const -> Arena::ArenaCastingSnapshot;
   [[nodiscard]] auto world() const -> Engine::Core::World* { return m_world.get(); }
+
+  [[nodiscard]] auto rpg_commander_id() const -> Engine::Core::EntityID {
+    return m_rpg_commander_id;
+  }
   [[nodiscard]] auto session() -> Game::Session::SessionContext& { return m_session; }
   void set_frame_hook(std::function<void(float)> hook);
 
@@ -233,6 +241,8 @@ public:
                           float roll_degrees);
   void clear_cinematic_view();
 
+  void set_capture_stabilization(float seconds);
+
   [[nodiscard]] auto scenario_elapsed_seconds() const -> float;
   [[nodiscard]] auto
   scenario_group_center(const QString& group) const -> std::optional<QVector3D>;
@@ -243,24 +253,11 @@ public:
   [[nodiscard]] auto
   scenario_army_center(int owner, float home_radius) const -> std::optional<QVector3D>;
 
-  struct RpgBowHudState {
-    bool valid{false};
-    bool bow_stance{false};
-    bool drawing{false};
-    bool full_draw{false};
-    bool strained{false};
-    bool target_in_reticle{false};
-    float draw_progress{0.0F};
-    float spread_degrees{0.0F};
-    float fov_degrees{68.0F};
-    float health_ratio{1.0F};
-    float stamina_ratio{1.0F};
+  [[nodiscard]] auto rpg_commander_status() const -> QVariantMap;
 
-    float recovery_ratio{0.0F};
-    float hit_confirm{0.0F};
-    int takedowns{0};
-  };
-  [[nodiscard]] auto rpg_bow_hud_state() const -> RpgBowHudState;
+  [[nodiscard]] auto project_to_capture(const QVector3D& world,
+                                        const QSize& frame_size,
+                                        QPointF& out) const -> bool;
 
 public:
   [[nodiscard]] auto
@@ -402,6 +399,7 @@ private:
   void sample_frame_continuity();
   [[nodiscard]] auto ensure_capture_target() -> bool;
   void apply_cinematic_view();
+  void apply_capture_stabilization(float dt);
   void present_capture_preview();
   [[nodiscard]] auto ensure_flame_card_program() -> bool;
   void render_flame_card(int width, int height);
@@ -410,6 +408,7 @@ private:
   QElapsedTimer m_frame_clock;
   TerrainSettings m_terrain_settings;
   Game::Map::GroundType m_ground_type = Game::Map::GroundType::SoilRocky;
+  bool m_terrain_snowbound = false;
   Game::Map::GroundType m_ground_type_baseline = Game::Map::GroundType::SoilRocky;
   int m_terrain_seed_baseline = 1337;
   Game::Map::TimeOfDay m_time_of_day = Game::Map::TimeOfDay::Day;
@@ -449,7 +448,6 @@ private:
   std::unique_ptr<CommanderControlController> m_rpg_commander_controller;
   std::unique_ptr<Render::GL::RpgTelegraphRenderer> m_rpg_telegraphs;
   Engine::Core::EntityID m_rpg_commander_id{0};
-  int m_rpg_initial_enemy_units{0};
   bool m_rpg_interactive{false};
   float m_rpg_trace_accumulator{0.0F};
   bool m_rpg_mouse_captured{false};
@@ -519,6 +517,11 @@ private:
   int m_capture_height = 0;
   bool m_capture_active = false;
   bool m_cinematic_view_valid = false;
+  float m_capture_stabilize_seconds = 0.0F;
+  bool m_stabilized_lens_valid = false;
+  QVector3D m_stabilized_eye;
+  QVector3D m_stabilized_target;
+  float m_stabilized_fov = 0.0F;
   QVector3D m_cinematic_target;
   float m_cinematic_distance = 16.0F;
   float m_cinematic_pitch = 18.0F;

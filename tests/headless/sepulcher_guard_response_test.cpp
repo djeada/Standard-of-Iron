@@ -156,7 +156,7 @@ TEST_F(SepulcherGuardResponseTest, AWokenWatchDoesNotWaitToBeKilledOneByOne) {
   }
 
   const EntityID legionary =
-      spawn(Game::Units::SpawnType::Knight, k_player, 45.0F, 40.0F);
+      spawn(Game::Units::SpawnType::Swordsman, k_player, 45.0F, 40.0F);
   ASSERT_NE(legionary, 0U);
 
   run_for(3.0);
@@ -221,7 +221,7 @@ protected:
     m_undead->configure(map_definition);
     m_anchor = m_undead->shrine_world_position(zone.id);
 
-    m_legionary = spawn(Game::Units::SpawnType::Knight,
+    m_legionary = spawn(Game::Units::SpawnType::Swordsman,
                         k_player,
                         m_anchor.x() + 2.0F,
                         m_anchor.z() + 2.0F);

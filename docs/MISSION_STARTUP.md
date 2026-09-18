@@ -40,8 +40,6 @@ loading overlay waits on readiness gate
         │
         ├─ terrain scatter GPU ready?
         ├─ initial AI decisions ready?
-        ├─ deferred unit templates drained?
-        ├─ mission audio decoded?
         ├─ minimum display time met?
         └─ maximum wait not exceeded?
         ▼
@@ -120,14 +118,6 @@ It covers the work required to turn the authored map into a runtime world, inclu
 - renderer-facing terrain/scatter preparation.
 
 The startup profiler should therefore be used to distinguish map parsing from total world initialization. A slow `world.load` does not automatically imply that JSON parsing is the bottleneck.
-
-### Navigation prewarm
-
-`world.nav_prewarm` builds the navigation grid, the forest and world-prop indexes and the
-region labels for every passability before the templates are warmed. Without it the
-first path query of the match paid for all of that (about 30 ms on Ticino) inside a
-simulation tick. `NavGrid::prewarm()` calls `Pathfinding::prewarm_navigation()`; later
-edits still go through the normal dirty-region rebuild.
 
 ## Mission setup phase
 
@@ -215,9 +205,7 @@ That is important during startup as well as ordinary gameplay: precomputing the 
 
 `GameEngine::mission_startup_pending_components()` is the source of truth for the runtime components that can keep the loading overlay active.
 
-The current implementation reports four pending conditions. The last two exist because
-anything still lazy at reveal is paid for in the first seconds of play, on the render
-thread, where it shows up as frame spikes rather than as loading time.
+The current implementation reports two pending conditions.
 
 ### Terrain scatter
 
@@ -236,24 +224,6 @@ Reported when:
 - `initial_decisions_ready()` is false.
 
 This prevents the match from being revealed while the computer opponent's initial strategic state is still unprepared under normal startup conditions.
-
-### Unit templates
-
-Reported when `Renderer::has_pending_template_prewarm()` is true: the extended template
-set that `prewarm_unit_templates` queues after the core set has not been worked through
-yet. While the overlay is up, `process_async_template_prewarm` drops its per-frame item
-cap and spends up to 12 ms a frame on the queue, because nothing the player can see
-depends on those frames. After reveal it falls back to the preset's small budget. Until
-the queue drains, runtime creature bakes are still allowed, so a cache miss after reveal
-would bake synchronously inside a draw; draining first is what makes
-`runtime_bake_forbidden()` true for the whole match.
-
-### Mission audio
-
-Reported when `AudioSystem::has_pending_mission_decodes()` is true: the decode worker
-still has queued or in-flight tracks. Music and ambience beds queue behind effects, and a
-bed that is still decoding when the battle starts plays late and competes with the first
-frames for CPU.
 
 ## Loading-overlay maximum wait
 
@@ -292,7 +262,7 @@ The startup profiler distinguishes overlay release and first playable frame so t
 
 Terrain scatter is part of rendering/presentation, but its readiness participates in mission startup because a battlefield can be technically simulated while still visually incomplete.
 
-The startup gate does not wait for every possible renderer cache in the application. It waits on the explicit current readiness contract exposed by terrain scatter, AI initial decisions, the deferred unit templates and the mission audio decodes.
+The startup gate does not wait for every possible renderer cache in the application. It waits on the explicit current readiness contract exposed by terrain scatter and AI initial decisions.
 
 See [RENDERING_ARCHITECTURE.md](RENDERING_ARCHITECTURE.md) for the rendering ownership model.
 
@@ -411,7 +381,7 @@ The current mission startup path depends on these invariants:
 - mission ownership/setup is established before final AI preparation;
 - AI workers reason from snapshots rather than the mutable world;
 - AI results keep deterministic due simulation updates;
-- terrain scatter, initial AI decisions, deferred unit templates and mission audio decodes are the explicit current readiness blockers;
+- terrain scatter and initial AI decisions are the explicit current readiness blockers;
 - the loading overlay has a bounded maximum wait; and
 - startup profiling records enough phase/counter data to distinguish parsing, world construction, mission setup, and AI preparation.
 
@@ -427,4 +397,4 @@ The current mission startup path depends on these invariants:
 | Startup profiling         | `Engine::Core::StartupProfiler` integration                                  |
 | Startup tests             | mission startup tests including `MissionStartupTest.ParsesTheMissionMapOnce` |
 
-The current startup contract is explicit: reuse the parsed map context, construct the world, apply mission ownership before final AI initialization, prepare the first AI decision batch during loading, and keep the overlay active while terrain scatter, initial AI decisions, deferred unit templates or mission audio remain pending—subject to the 15-second maximum wait.
+The current startup contract is explicit: reuse the parsed map context, construct the world, apply mission ownership before final AI initialization, prepare the first AI decision batch during loading, and keep the overlay active while terrain scatter or initial AI decisions remain pending—subject to the 15-second maximum wait.

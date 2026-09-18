@@ -54,6 +54,12 @@ struct DoctrineIntentTemplate {
   float spacing_scale{1.0F};
   int reserve_rows{0};
 
+  float unit_files_aspect{0.0F};
+
+  float max_depth{0.0F};
+
+  float max_frontage{0.0F};
+
   FlankPreference default_flank{FlankPreference::Balanced};
   RangedPlacement default_ranged{RangedPlacement::Rear};
   MovementPolicy default_movement{MovementPolicy::ReformAtDestination};

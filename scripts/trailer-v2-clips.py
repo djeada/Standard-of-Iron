@@ -2,8 +2,13 @@
 """Cut the game and editor recordings into the clips trailer_v2.json names.
 
 Raw recordings live in artifacts/promo/film/raw; each entry below is
-(output name, source, start seconds, duration seconds). Cuts re-encode so the
-in-point is frame-accurate, at the same 1920x1080 / 60 fps the arena clips use.
+(output name, source, start seconds, duration seconds[, speed[, crop]]). Cuts
+re-encode so the in-point is frame-accurate, at the same 1920x1080 / 60 fps the
+arena clips use. A speed above 1 compresses that many source seconds into fewer
+on the timeline, for a beat that needs its whole arc but not its whole running
+time. A crop ("w:h:x:y" against the 1920x1080 frame) is a push-in: the window is
+scaled back up to full frame, which is how a shot filmed wide enough to keep the
+whole army on screen ends up filling it.
 """
 from __future__ import annotations
 
@@ -28,15 +33,21 @@ CLIPS = [
     ("editor_bridge", "editor_bridge.mp4", 2.0, 3.0),
     ("build_stronghold_place", "build_close.mp4", 1.2, 2.2),
     ("build_stronghold_rise", "build_close.mp4", 8.8, 3.0),
-    ("form_the_line", "formation_line.mp4", 1.2, 3.4),
-    ("ford_played", "formation_line.mp4", 8.0, 2.0),
+    ("form_the_line", "formation_field.mp4", 4.8, 20.5, 3.7),
+    ("battle_line", "formation_field.mp4", 28.5, 21.0, 4.2, "1560:878:320:150"),
+    ("town_wide", "forest_town.mp4", 0.3, 3.7),
+    ("town_crews", "forest_town.mp4", 4.6, 5.0),
+    ("town_build", "forest_town.mp4", 10.8, 6.8),
+    ("town_busy", "forest_town.mp4", 20.6, 4.0),
 ]
 
 
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     only = set(sys.argv[1:])
-    for name, source, start, seconds in CLIPS:
+    for name, source, start, seconds, *rest in CLIPS:
+        speed = rest[0] if rest else 1.0
+        crop = rest[1] if len(rest) > 1 else None
         if only and name not in only:
             continue
         src = RAW / source
@@ -55,9 +66,13 @@ def main() -> int:
                 "-i",
                 str(src),
                 "-t",
-                f"{seconds:.3f}",
+                f"{seconds / speed:.3f}",
                 "-vf",
-                "scale=1920:1080,fps=60",
+                (
+                    f"setpts=PTS/{speed:.4f},"
+                    + (f"crop={crop}," if crop else "")
+                    + "scale=1920:1080,setsar=1,fps=60"
+                ),
                 "-c:v",
                 "libx264",
                 "-preset",
@@ -71,7 +86,12 @@ def main() -> int:
             ],
             check=True,
         )
-        print(f"wrote {dst.name} ({seconds:.1f} s from {source} @ {start:.1f})")
+        print(
+            f"wrote {dst.name} ({seconds / speed:.1f} s from {seconds:.1f} s of "
+            f"{source} @ {start:.1f}, speed {speed:g}"
+            + (f", crop {crop}" if crop else "")
+            + ")"
+        )
     return 0
 
 

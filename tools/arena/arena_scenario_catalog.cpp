@@ -490,7 +490,7 @@ auto performance_battle_definition(QString id,
             {-8.0F, 0.0F, -25.0F},
             1),
       group(QStringLiteral("blue_cavalry"),
-            Troop::MountedKnight,
+            Troop::MountedSwordsman,
             1,
             cavalry,
             {-23.0F, 0.0F, -20.0F},
@@ -514,7 +514,7 @@ auto performance_battle_definition(QString id,
             {-8.0F, 0.0F, 25.0F},
             1),
       group(QStringLiteral("red_cavalry"),
-            Troop::MountedKnight,
+            Troop::MountedSwordsman,
             2,
             cavalry,
             {-23.0F, 0.0F, 20.0F},
@@ -672,14 +672,14 @@ auto massed_battle_definition(QString id,
                             41.0F,
                             8.0F));
     s.groups.push_back(column(prefix + QStringLiteral("_cavalry_left"),
-                              Troop::MountedKnight,
+                              Troop::MountedSwordsman,
                               owner,
                               (cavalry + 1) / 2,
                               sign,
                               -34.0F,
                               18.0F));
     s.groups.push_back(column(prefix + QStringLiteral("_cavalry_right"),
-                              Troop::MountedKnight,
+                              Troop::MountedSwordsman,
                               owner,
                               cavalry / 2,
                               sign,
@@ -859,7 +859,7 @@ auto seven_ai_scale_definition() -> ArenaScenarioDefinition {
     add_troops(QStringLiteral("spears"), Troop::Spearman, 8, 0.0F, k_individuals);
     add_troops(QStringLiteral("archers"), Troop::Archer, 8, -6.0F, k_individuals);
     add_troops(
-        QStringLiteral("cavalry"), Troop::MountedKnight, 4, -12.0F, k_individuals);
+        QStringLiteral("cavalry"), Troop::MountedSwordsman, 4, -12.0F, k_individuals);
 
     const QVector3D resources = radial * 94.0F - tangent * 8.0F;
     s.resource_patches.push_back(
@@ -4113,7 +4113,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         12.0F,
         {22.0F, 48.0F, 20.0F});
     s.groups = {group(QStringLiteral("blue_cavalry"),
-                      Troop::MountedKnight,
+                      Troop::MountedSwordsman,
                       1,
                       2,
                       {0.0F, 0.0F, -10.0F},
@@ -4159,7 +4159,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         12.0F,
         {22.0F, 48.0F, 20.0F});
     s.groups = {group(QStringLiteral("cavalry"),
-                      Troop::MountedKnight,
+                      Troop::MountedSwordsman,
                       1,
                       1,
                       {0.0F, 0.0F, -10.0F},
@@ -4659,33 +4659,33 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                    QStringLiteral("Mounted sword chamber, full swing, and recovery."),
                    10.0F,
                    {13.0F, 43.0F, 28.0F});
-    s.groups = {group(QStringLiteral("blue_knights"),
-                      Troop::MountedKnight,
+    s.groups = {group(QStringLiteral("blue_swordsmans"),
+                      Troop::MountedSwordsman,
                       1,
                       1,
                       {-3.0F, 0.0F, 0.0F},
                       4),
-                group(QStringLiteral("red_knights"),
-                      Troop::MountedKnight,
+                group(QStringLiteral("red_swordsmans"),
+                      Troop::MountedSwordsman,
                       2,
                       1,
                       {3.0F, 0.0F, 0.0F},
                       4)};
     s.steps = {at(0.0F,
                   Command::Attack,
-                  QStringLiteral("blue_knights"),
-                  QStringLiteral("red_knights")),
+                  QStringLiteral("blue_swordsmans"),
+                  QStringLiteral("red_swordsmans")),
                at(0.0F,
                   Command::Attack,
-                  QStringLiteral("red_knights"),
-                  QStringLiteral("blue_knights"))};
+                  QStringLiteral("red_swordsmans"),
+                  QStringLiteral("blue_swordsmans"))};
     add_visual_stability(
-        s, {QStringLiteral("blue_knights"), QStringLiteral("red_knights")});
+        s, {QStringLiteral("blue_swordsmans"), QStringLiteral("red_swordsmans")});
     s.expectations.push_back(
-        expectation(Expect::NoLimbOverextension, QStringLiteral("blue_knights")));
+        expectation(Expect::NoLimbOverextension, QStringLiteral("blue_swordsmans")));
     s.expectations.push_back(expectation(Expect::AttackHasVisibleContact,
-                                         QStringLiteral("blue_knights"),
-                                         QStringLiteral("red_knights")));
+                                         QStringLiteral("blue_swordsmans"),
+                                         QStringLiteral("red_swordsmans")));
     result.push_back(std::move(s));
   }
 
@@ -4807,7 +4807,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   {
     auto s = definition(QString::fromLatin1(k_mounted_locomotion_matrix_id),
                         QStringLiteral("Mounted Locomotion Matrix"),
-                        QStringLiteral("Horse archers, knights, and horse spearmen "
+                        QStringLiteral("Horse archers, swordsmans, and horse spearmen "
                                        "start, ride, stop, and reverse."),
                         13.0F,
                         {30.0F, 50.0F, 30.0F});
@@ -4817,8 +4817,8 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                       1,
                       {-7.0F, 0.0F, -10.0F},
                       6),
-                group(QStringLiteral("knights"),
-                      Troop::MountedKnight,
+                group(QStringLiteral("swordsmans"),
+                      Troop::MountedSwordsman,
                       1,
                       1,
                       {0.0F, 0.0F, -10.0F},
@@ -4830,13 +4830,13 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                       {7.0F, 0.0F, -10.0F},
                       6)};
     s.steps = {at(0.5F, Command::FormationMove, QStringLiteral("horse_archers")),
-               at(0.5F, Command::FormationMove, QStringLiteral("knights")),
+               at(0.5F, Command::FormationMove, QStringLiteral("swordsmans")),
                at(0.5F, Command::FormationMove, QStringLiteral("horse_spears")),
                at(6.0F, Command::Stop, QStringLiteral("horse_archers")),
-               at(6.0F, Command::Stop, QStringLiteral("knights")),
+               at(6.0F, Command::Stop, QStringLiteral("swordsmans")),
                at(6.0F, Command::Stop, QStringLiteral("horse_spears")),
                at(8.0F, Command::FormationMove, QStringLiteral("horse_archers")),
-               at(8.0F, Command::FormationMove, QStringLiteral("knights")),
+               at(8.0F, Command::FormationMove, QStringLiteral("swordsmans")),
                at(8.0F, Command::FormationMove, QStringLiteral("horse_spears"))};
     for (int lane = 0; lane < 3; ++lane) {
       s.steps[static_cast<std::size_t>(lane)].destination = {
@@ -4846,10 +4846,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     }
     add_visual_stability(s,
                          {QStringLiteral("horse_archers"),
-                          QStringLiteral("knights"),
+                          QStringLiteral("swordsmans"),
                           QStringLiteral("horse_spears")});
     for (auto const& name : {QStringLiteral("horse_archers"),
-                             QStringLiteral("knights"),
+                             QStringLiteral("swordsmans"),
                              QStringLiteral("horse_spears")}) {
       s.expectations.push_back(
           expectation(Expect::AllGroupsRespondWithin, name, {}, 0.45F));
@@ -4964,28 +4964,32 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
-    auto s =
-        definition(QString::fromLatin1(k_mounted_damage_matrix_id),
-                   QStringLiteral("Mounted Damage Matrix"),
-                   QStringLiteral("Horse archers, knights, and horse spearmen absorb a "
-                                  "hit and dismount through stable death sequences."),
-                   10.0F,
-                   {23.0F, 48.0F, 30.0F});
+    auto s = definition(
+        QString::fromLatin1(k_mounted_damage_matrix_id),
+        QStringLiteral("Mounted Damage Matrix"),
+        QStringLiteral("Horse archers, swordsmans, and horse spearmen absorb a "
+                       "hit and dismount through stable death sequences."),
+        10.0F,
+        {23.0F, 48.0F, 30.0F});
     auto archers = group(QStringLiteral("horse_archers"),
                          Troop::HorseArcher,
                          1,
                          1,
                          {-6.0F, 0.0F, 0.0F},
                          1);
-    auto knights = group(
-        QStringLiteral("knights"), Troop::MountedKnight, 1, 1, {0.0F, 0.0F, 0.0F}, 1);
+    auto swordsmans = group(QStringLiteral("swordsmans"),
+                            Troop::MountedSwordsman,
+                            1,
+                            1,
+                            {0.0F, 0.0F, 0.0F},
+                            1);
     auto spears = group(QStringLiteral("horse_spears"),
                         Troop::HorseSpearman,
                         1,
                         1,
                         {6.0F, 0.0F, 0.0F},
                         1);
-    for (auto* troop : {&archers, &knights, &spears}) {
+    for (auto* troop : {&archers, &swordsmans, &spears}) {
       troop->nation_id = Nation::Carthage;
       troop->owner_id = 2;
       troop->facing_degrees = 180.0F;
@@ -4993,25 +4997,25 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       troop->max_health_override = 40;
     }
     archers.origin.setZ(2.4F);
-    knights.origin.setZ(2.4F);
+    swordsmans.origin.setZ(2.4F);
     spears.origin.setZ(2.4F);
     s.groups = {archers,
-                knights,
+                swordsmans,
                 spears,
                 group(QStringLiteral("attack_archers"),
-                      Troop::MountedKnight,
+                      Troop::MountedSwordsman,
                       1,
                       1,
                       {-6.0F, 0.0F, -2.4F},
                       1),
-                group(QStringLiteral("attack_knights"),
-                      Troop::MountedKnight,
+                group(QStringLiteral("attack_swordsmans"),
+                      Troop::MountedSwordsman,
                       1,
                       1,
                       {0.0F, 0.0F, -2.4F},
                       1),
                 group(QStringLiteral("attack_spears"),
-                      Troop::MountedKnight,
+                      Troop::MountedSwordsman,
                       1,
                       1,
                       {6.0F, 0.0F, -2.4F},
@@ -5022,18 +5026,18 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                   QStringLiteral("horse_archers")),
                at(0.5F,
                   Command::AttackMove,
-                  QStringLiteral("attack_knights"),
-                  QStringLiteral("knights")),
+                  QStringLiteral("attack_swordsmans"),
+                  QStringLiteral("swordsmans")),
                at(0.5F,
                   Command::AttackMove,
                   QStringLiteral("attack_spears"),
                   QStringLiteral("horse_spears"))};
     add_visual_stability(s,
                          {QStringLiteral("horse_archers"),
-                          QStringLiteral("knights"),
+                          QStringLiteral("swordsmans"),
                           QStringLiteral("horse_spears")});
     for (auto const& name : {QStringLiteral("horse_archers"),
-                             QStringLiteral("knights"),
+                             QStringLiteral("swordsmans"),
                              QStringLiteral("horse_spears")}) {
       s.expectations.push_back(expectation(Expect::DeathAnimationObserved, name));
       s.expectations.push_back(expectation(Expect::HitReactionObserved, name));
@@ -5048,30 +5052,31 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     Troop troop;
     bool mounted;
   };
-  for (auto const& spec : {ActionTransitionSpec{k_archer_action_transition_id,
-                                                "Archer Action Transition",
-                                                Troop::Archer,
-                                                false},
-                           ActionTransitionSpec{k_swordsman_action_transition_id,
-                                                "Swordsman Action Transition",
-                                                Troop::Swordsman,
-                                                false},
-                           ActionTransitionSpec{k_spearman_action_transition_id,
-                                                "Spearman Action Transition",
-                                                Troop::Spearman,
-                                                false},
-                           ActionTransitionSpec{k_horse_archer_action_transition_id,
-                                                "Horse Archer Action Transition",
-                                                Troop::HorseArcher,
-                                                true},
-                           ActionTransitionSpec{k_mounted_knight_action_transition_id,
-                                                "Mounted Knight Action Transition",
-                                                Troop::MountedKnight,
-                                                true},
-                           ActionTransitionSpec{k_horse_spearman_action_transition_id,
-                                                "Horse Spearman Action Transition",
-                                                Troop::HorseSpearman,
-                                                true}}) {
+  for (auto const& spec :
+       {ActionTransitionSpec{k_archer_action_transition_id,
+                             "Archer Action Transition",
+                             Troop::Archer,
+                             false},
+        ActionTransitionSpec{k_swordsman_action_transition_id,
+                             "Swordsman Action Transition",
+                             Troop::Swordsman,
+                             false},
+        ActionTransitionSpec{k_spearman_action_transition_id,
+                             "Spearman Action Transition",
+                             Troop::Spearman,
+                             false},
+        ActionTransitionSpec{k_horse_archer_action_transition_id,
+                             "Horse Archer Action Transition",
+                             Troop::HorseArcher,
+                             true},
+        ActionTransitionSpec{k_mounted_swordsman_action_transition_id,
+                             "Mounted Swordsman Action Transition",
+                             Troop::MountedSwordsman,
+                             true},
+        ActionTransitionSpec{k_horse_spearman_action_transition_id,
+                             "Horse Spearman Action Transition",
+                             Troop::HorseSpearman,
+                             true}}) {
     auto s = definition(
         QString::fromLatin1(spec.id),
         QString::fromLatin1(spec.label),
@@ -5446,7 +5451,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                       6,
                       {2.4F, 0.0F, 0.0F}),
                 group(QStringLiteral("cavalry"),
-                      Troop::MountedKnight,
+                      Troop::MountedSwordsman,
                       1,
                       3,
                       {-2.4F, 0.0F, 12.0F},
@@ -5862,8 +5867,8 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                        "no rider tries to squat on the ground."),
                         70.0F,
                         {17.0F, 26.0F, 20.0F});
-    s.groups = {group(QStringLiteral("knights"),
-                      Troop::MountedKnight,
+    s.groups = {group(QStringLiteral("swordsmans"),
+                      Troop::MountedSwordsman,
                       1,
                       1,
                       {-5.0F, 0.0F, 0.0F},
@@ -5874,10 +5879,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                       1,
                       {5.0F, 0.0F, 0.0F},
                       4)};
-    s.steps = {at(0.25F, Command::Stand, QStringLiteral("knights")),
+    s.steps = {at(0.25F, Command::Stand, QStringLiteral("swordsmans")),
                at(0.25F, Command::Stand, QStringLiteral("horse_archers"))};
-    add_visual_stability(s,
-                         {QStringLiteral("knights"), QStringLiteral("horse_archers")});
+    add_visual_stability(
+        s, {QStringLiteral("swordsmans"), QStringLiteral("horse_archers")});
     result.push_back(std::move(s));
   }
 
@@ -7140,7 +7145,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
               {-11.0F, 0.0F, -8.0F},
               1),
         group(QStringLiteral("blue_cavalry"),
-              Troop::MountedKnight,
+              Troop::MountedSwordsman,
               1,
               2,
               {-12.0F, 0.0F, -16.0F},
@@ -7282,7 +7287,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
               {-25.0F, 0.0F, -22.0F},
               16),
         group(QStringLiteral("blue_cavalry"),
-              Troop::MountedKnight,
+              Troop::MountedSwordsman,
               1,
               6,
               {9.0F, 0.0F, -20.0F},
@@ -7318,7 +7323,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
               {-25.0F, 0.0F, 22.0F},
               16),
         group(QStringLiteral("red_cavalry"),
-              Troop::MountedKnight,
+              Troop::MountedSwordsman,
               2,
               9,
               {7.0F, 0.0F, 20.0F},
@@ -8895,7 +8900,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                      6,
                      {4.5F, 0.0F, 0.0F}),
         nation_group(QStringLiteral("raider_horse"),
-                     Troop::MountedKnight,
+                     Troop::MountedSwordsman,
                      Nation::Carthage,
                      2,
                      1,
@@ -9858,7 +9863,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         14.0F,
         {18.0F, 44.0F, 20.0F});
     s.groups = {nation_group(QStringLiteral("punic_cavalry"),
-                             Troop::MountedKnight,
+                             Troop::MountedSwordsman,
                              Nation::Carthage,
                              1,
                              2,
@@ -10769,7 +10774,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
               {-9.1F, 0.0F, 12.0F},
               12),
         group(QStringLiteral("punic_cavalry"),
-              Troop::MountedKnight,
+              Troop::MountedSwordsman,
               2,
               6,
               {16.0F, 0.0F, 6.0F},
@@ -10924,7 +10929,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.precipitation.wind_direction_deg = 205.0F;
     s.groups = {
         group(QStringLiteral("roman_cavalry"),
-              Troop::MountedKnight,
+              Troop::MountedSwordsman,
               1,
               8,
               {-9.1F, 0.0F, -18.0F},
@@ -11057,7 +11062,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
               8,
               {3.4F, 0.0F, 0.0F}),
         group(QStringLiteral("roman_horse"),
-              Troop::MountedKnight,
+              Troop::MountedSwordsman,
               1,
               4,
               {19.0F, 0.0F, -18.0F},
@@ -11078,7 +11083,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
               8,
               {3.4F, 0.0F, 0.0F}),
         group(QStringLiteral("punic_horse"),
-              Troop::MountedKnight,
+              Troop::MountedSwordsman,
               2,
               4,
               {-24.0F, 0.0F, 18.0F},
@@ -11199,7 +11204,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     roman_spears.health_override = 1500;
 
     auto roman_horse = group(QStringLiteral("roman_horse"),
-                             Troop::MountedKnight,
+                             Troop::MountedSwordsman,
                              1,
                              14,
                              {30.0F, 0.0F, -16.0F},
@@ -11222,7 +11227,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                               16,
                               {3.4F, 0.0F, 0.0F});
     auto punic_horse = group(QStringLiteral("punic_horse"),
-                             Troop::MountedKnight,
+                             Troop::MountedSwordsman,
                              2,
                              7,
                              {-26.0F, 0.0F, 12.0F},
@@ -11421,7 +11426,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     villagers.health_override = villagers.max_health_override = 120;
 
     auto riders = group(QStringLiteral("riders"),
-                        Troop::MountedKnight,
+                        Troop::MountedSwordsman,
                         1,
                         5,
                         {-22.0F, 0.0F, -3.0F},

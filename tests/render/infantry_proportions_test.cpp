@@ -208,11 +208,11 @@ TEST(InfantryProportionsTest, RomanAndCarthageSpearmenStayComparable) {
 TEST(InfantryProportionsTest, RomanAndCarthageSwordsmenStayComparable) {
   auto const roman =
       render_single_soldier_bounds("troops/roman/swordsman",
-                                   Game::Units::SpawnType::Knight,
+                                   Game::Units::SpawnType::Swordsman,
                                    Game::Systems::NationID::RomanRepublic,
                                    9001U);
   auto const carthage = render_single_soldier_bounds("troops/carthage/swordsman",
-                                                     Game::Units::SpawnType::Knight,
+                                                     Game::Units::SpawnType::Swordsman,
                                                      Game::Systems::NationID::Carthage,
                                                      9001U);
 

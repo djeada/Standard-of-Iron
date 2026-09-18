@@ -121,7 +121,7 @@ Item {
         case "encirclement":
             return "##...##" + "#.....#" + ".#####." + ".#####.";
         case "siege_escort":
-            return "..@@@.." + ".#####." + "#######" + ".......";
+            return "#######" + ".#####." + "..@@@.." + ".......";
         }
         return "";
     }
@@ -502,13 +502,13 @@ Item {
                     FormationOptionRow {
                         hint: qsTr("Where archers and slingers stand. Skirmish sends them out ahead and pulls them back on contact.")
                         label: qsTr("Missile troops")
-                        model: [qsTr("In front"), qsTr("Behind"), qsTr("Skirmish ahead")]
-                        selectedIndex: formationPanel.options.ranged_index !== undefined ? formationPanel.options.ranged_index : 1
+                        model: [qsTr("Doctrine decides"), qsTr("In front"), qsTr("Behind"), qsTr("Skirmish ahead")]
+                        selectedIndex: formationPanel.options.ranged_index !== undefined ? formationPanel.options.ranged_index : 0
                         width: parent.width
 
                         onActivated: function (index) {
                             if (formationPanel.game_ready())
-                                game.placement.set_formation_ranged_placement(["front", "rear", "skirmish"][index]);
+                                game.placement.set_formation_ranged_placement(["automatic", "front", "rear", "skirmish"][index]);
                         }
                     }
 

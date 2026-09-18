@@ -155,7 +155,7 @@ TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   Engine::Core::StandaloneEntity entity_scratch(1);
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   unit->owner_id = 1;
   unit->max_health = 100;
   unit->health = 100;
@@ -238,7 +238,7 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   Engine::Core::StandaloneEntity entity_scratch(1);
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   unit->owner_id = 1;
   unit->max_health = 100;
   unit->health = 100;
@@ -289,7 +289,7 @@ TEST(HorsePrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) 
   Engine::Core::StandaloneEntity entity_scratch(1);
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   unit->owner_id = 1;
   unit->max_health = 100;
   unit->health = 100;

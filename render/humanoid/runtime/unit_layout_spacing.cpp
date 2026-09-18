@@ -20,7 +20,7 @@ auto resolve_formation_spacing(const Game::Units::TroopConfig& config,
                                float configured_spacing,
                                float mount_scale) -> float {
   switch (spawn_type) {
-  case Game::Units::SpawnType::MountedKnight:
+  case Game::Units::SpawnType::MountedSwordsman:
   case Game::Units::SpawnType::HorseArcher:
   case Game::Units::SpawnType::HorseSpearman:
     return cavalry_formation_spacing(mount_scale);

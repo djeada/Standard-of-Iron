@@ -74,7 +74,7 @@ TEST_F(StructureCombatTest, AttackClassesHaveExplicitStructureEffectiveness) {
                 add_attacker(world, Game::Units::SpawnType::SkeletonArcher), 100),
             0);
   EXPECT_EQ(Game::Systems::Combat::resolve_structure_damage(
-                add_attacker(world, Game::Units::SpawnType::Knight), 100),
+                add_attacker(world, Game::Units::SpawnType::Swordsman), 100),
             12);
   EXPECT_EQ(Game::Systems::Combat::resolve_structure_damage(
                 add_attacker(world, Game::Units::SpawnType::Spearman), 100),
@@ -92,7 +92,7 @@ TEST_F(StructureCombatTest, AttackClassesHaveExplicitStructureEffectiveness) {
 
 TEST_F(StructureCombatTest, AppliedDamageAndEventsUseEffectiveStructureDamage) {
   Engine::Core::World world;
-  auto* attacker = add_attacker(world, Game::Units::SpawnType::Knight);
+  auto* attacker = add_attacker(world, Game::Units::SpawnType::Swordsman);
   auto* structure = add_structure(world, Game::Units::SpawnType::Barracks, 5.0F, 0.0F);
 
   std::vector<int> hit_damage;
@@ -187,7 +187,7 @@ TEST_F(StructureCombatTest, FullFormationApproachUsesItsNavigationRoot) {
 
 TEST_F(StructureCombatTest, MeleeApproachUsesTheClosestWalkableFacadePosition) {
   Engine::Core::World world;
-  auto* attacker = add_attacker(world, Game::Units::SpawnType::Knight, 0.0F, 0.0F);
+  auto* attacker = add_attacker(world, Game::Units::SpawnType::Swordsman, 0.0F, 0.0F);
   auto* structure = add_structure(world, Game::Units::SpawnType::Barracks, 0.0F, 6.0F);
 
   auto const approach =

@@ -72,7 +72,7 @@ TEST(CommanderCatalogTest, DefinesThreeCommandersForEachPlayableNation) {
         bool bow = false;
         for (const auto* definition : nation) {
           sword = sword || definition->aura_affinity_spawn_type ==
-                               Game::Units::SpawnType::Knight;
+                               Game::Units::SpawnType::Swordsman;
           spear = spear || definition->aura_affinity_spawn_type ==
                                Game::Units::SpawnType::Spearman;
           bow = bow ||
@@ -237,8 +237,9 @@ TEST(UndeadSpawnTypeTest, RoundTripsAndModesMatchDesign) {
       Game::Units::can_use_hold_mode(Game::Units::SpawnType::SkeletonSwordsman));
   EXPECT_FALSE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::SkeletonArcher));
   EXPECT_FALSE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::GravePriest));
-  EXPECT_FALSE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::Knight));
-  EXPECT_FALSE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::MountedKnight));
+  EXPECT_FALSE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::Swordsman));
+  EXPECT_FALSE(
+      Game::Units::can_use_hold_mode(Game::Units::SpawnType::MountedSwordsman));
   EXPECT_TRUE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::Archer));
   EXPECT_TRUE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::Spearman));
   EXPECT_TRUE(Game::Units::can_use_patrol_mode(Game::Units::SpawnType::GravePriest));
@@ -394,7 +395,7 @@ TEST(CommanderSystemTest, AuraAppliesAttackAndProductionBonusesByType) {
   ASSERT_NE(ally_attack, nullptr);
   ally_unit->owner_id = 1;
   ally_unit->health = 100;
-  ally_unit->spawn_type = Game::Units::SpawnType::Knight;
+  ally_unit->spawn_type = Game::Units::SpawnType::Swordsman;
   ally_unit->nation_id = Game::Systems::NationID::RomanRepublic;
   ally_transform->position = {2.0F, 0.0F, 0.0F};
 
@@ -513,7 +514,7 @@ TEST(CommanderSystemTest, AttackBoostFallsOffOutsideAura) {
   ASSERT_NE(ally_attack, nullptr);
   ally_unit->owner_id = 1;
   ally_unit->health = 100;
-  ally_unit->spawn_type = Game::Units::SpawnType::Knight;
+  ally_unit->spawn_type = Game::Units::SpawnType::Swordsman;
   ally_unit->nation_id = Game::Systems::NationID::RomanRepublic;
   ally_transform->position = {2.0F, 0.0F, 0.0F};
 
@@ -1032,7 +1033,7 @@ TEST(CommanderAuraAbilityTest, ExplicitActivationAppliesConfiguredDamageBoost) {
   ASSERT_NE(ally_attack, nullptr);
   ally_unit->owner_id = 1;
   ally_unit->health = 100;
-  ally_unit->spawn_type = Game::Units::SpawnType::Knight;
+  ally_unit->spawn_type = Game::Units::SpawnType::Swordsman;
   ally_transform->position = {2.0F, 0.0F, 0.0F};
 
   Game::Systems::CommanderSystem system;
@@ -1101,7 +1102,7 @@ TEST(CommanderAuraAbilityTest, ConfiguredBonusFavoursTheCommandersOwnWeaponSchoo
   ASSERT_NE(off_attack, nullptr);
   off_unit->owner_id = 1;
   off_unit->health = 100;
-  off_unit->spawn_type = Game::Units::SpawnType::Knight;
+  off_unit->spawn_type = Game::Units::SpawnType::Swordsman;
   off_transform->position = {2.0F, 0.0F, 1.0F};
 
   Game::Systems::CommanderSystem system;
@@ -1142,7 +1143,7 @@ TEST(CommanderAuraAbilityTest, AllTroopsInRadiusReceiveVisibleBuffMarker) {
   commander_data->aura_radius = 10.0F;
   commander_data->aura_ability_active = true;
   commander_data->aura_ability_remaining = 10.0F;
-  commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
+  commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Swordsman;
 
   auto* ally = world.create_entity();
   auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
@@ -1183,7 +1184,7 @@ TEST(CommanderAuraAbilityTest, TroopsOutsideRadiusGetNoBoost) {
   commander_data->aura_radius = 5.0F;
   commander_data->aura_ability_duration = 15.0F;
   commander_data->aura_ability_cooldown = 60.0F;
-  commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
+  commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Swordsman;
 
   auto* ally = world.create_entity();
   auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
@@ -1195,7 +1196,7 @@ TEST(CommanderAuraAbilityTest, TroopsOutsideRadiusGetNoBoost) {
   ally_unit->owner_id = 1;
   ally_unit->health = 100;
   ally_unit->max_health = 100;
-  ally_unit->spawn_type = Game::Units::SpawnType::Knight;
+  ally_unit->spawn_type = Game::Units::SpawnType::Swordsman;
   ally_transform->position = {50.0F, 0.0F, 0.0F};
 
   Game::Systems::CommanderSystem system;
@@ -1244,7 +1245,7 @@ auto build_collapse_scenario(Engine::Core::World& world,
                              int owner_id) -> CollapseFixture {
   CollapseFixture fixture;
   fixture.commander =
-      add_owned_unit(world, owner_id, Game::Units::SpawnType::Knight, 0.0F);
+      add_owned_unit(world, owner_id, Game::Units::SpawnType::Swordsman, 0.0F);
   fixture.commander->add_component<Engine::Core::CommanderComponent>();
   fixture.barracks =
       add_owned_unit(world, owner_id, Game::Units::SpawnType::Barracks, 10.0F);
@@ -1288,7 +1289,7 @@ TEST(CommanderSystemTest, NationOnlyCollapsesWhenItsLastCommanderFalls) {
   auto fixture = build_collapse_scenario(world, 2);
 
   auto* second_commander =
-      add_owned_unit(world, 2, Game::Units::SpawnType::Knight, 5.0F);
+      add_owned_unit(world, 2, Game::Units::SpawnType::Swordsman, 5.0F);
   second_commander->add_component<Engine::Core::CommanderComponent>();
 
   Game::Systems::CommanderSystem system;

@@ -173,10 +173,8 @@ tree_scatter_density(const Game::Map::TerrainScatterRules& rules,
                      const Game::Map::TerrainScatterProfile& scatter_profile,
                      Game::Map::TreeSpecies species) -> float {
   const auto& rule = rules.tree(species);
-  if (scatter_profile.plant_density > 0.0F) {
-    return scatter_profile.plant_density * rule.density_scale;
-  }
-  return rule.base_density;
+
+  return std::max(0.0F, scatter_profile.plant_density) * rule.density_scale;
 }
 
 template <typename Emit>

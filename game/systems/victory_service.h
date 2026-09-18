@@ -5,7 +5,6 @@
 #include <QSet>
 #include <QString>
 
-#include <array>
 #include <functional>
 #include <memory>
 #include <type_traits>
@@ -17,7 +16,6 @@
 #include "game/systems/mission_wave_query.h"
 #include "game/systems/resource_types.h"
 #include "game/systems/undead_zone_query.h"
-#include "game/units/spawn_type.h"
 
 namespace Engine::Core {
 class World;
@@ -250,7 +248,6 @@ private:
   void finalize_game(const QString& state);
 
   [[nodiscard]] auto can_evaluate() const -> bool;
-  void refresh_tracked_spawn_types();
   [[nodiscard]] auto summarize_world(Engine::Core::World& world) const -> WorldSummary;
   [[nodiscard]] auto check_victory_rule(const VictoryRule& rule,
                                         const WorldSummary& summary) const -> bool;
@@ -260,8 +257,6 @@ private:
   VictoryRuleSet m_rule_set;
   QSet<QString> m_tracked_enemy_structure_types;
   QSet<QString> m_tracked_local_structure_types;
-  std::array<bool, Game::Units::k_spawn_type_count> m_tracked_enemy_spawn_types{};
-  std::array<bool, Game::Units::k_spawn_type_count> m_tracked_local_spawn_types{};
   float m_elapsed_time = 0.0F;
   float m_startup_delay = 0.0F;
   bool m_has_time_based_victory = false;

@@ -8,7 +8,7 @@
 
 namespace Render::GL {
 
-struct MountedKnightPoseTuning {
+struct MountedSwordsmanPoseTuning {
   float stirrup_inset_factor = 0.82F;
   float stirrup_drop_scale = 0.74F;
   float stirrup_forward_bias = 0.12F;
@@ -34,9 +34,9 @@ struct MountedKnightPoseTuning {
   float sword_outset_factor = 0.72F;
 };
 
-inline void tune_mounted_knight_frame(const HorseDimensions& dims,
-                                      MountedAttachmentFrame& mount,
-                                      const MountedKnightPoseTuning& cfg = {}) {
+inline void tune_mounted_swordsman_frame(const HorseDimensions& dims,
+                                         MountedAttachmentFrame& mount,
+                                         const MountedSwordsmanPoseTuning& cfg = {}) {
   auto reposition_stirrup = [&](Side side) {
     float const sign = (side == Side::Left) ? -1.0F : 1.0F;
     QVector3D attach =

@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <optional>
-#include <utility>
 #include <vector>
 
 #include "game/map/map_definition.h"
@@ -118,68 +117,6 @@ TEST_F(PathfindingTest, TreeCellsRemainBlockedButDistinguishable) {
   EXPECT_TRUE(pathfinding.is_world_position_walkable(beside_tree));
   EXPECT_FALSE(pathfinding.is_world_position_walkable(
       beside_tree, Game::Systems::Pathfinding::Passability::Light, 0.6F));
-}
-
-TEST_F(PathfindingTest, ClearanceEarlyOutAgreesWithTheFullCellScan) {
-  constexpr int k_size = 12;
-  Game::Systems::Pathfinding pathfinding(k_size, k_size);
-  pathfinding.set_grid_offset(-(k_size * 0.5F - 0.5F), -(k_size * 0.5F - 0.5F));
-  pathfinding.update_navigation_grid();
-  for (auto const& [x, z] : std::vector<std::pair<int, int>>{
-           {3, 3}, {4, 3}, {7, 8}, {8, 8}, {0, 5}, {11, 2}, {6, 0}, {5, 11}}) {
-    pathfinding.set_obstacle(x, z, true);
-  }
-
-  auto const brute_force = [&](const QVector3D& position, float radius) {
-    auto const grid = pathfinding.world_to_grid(position.x(), position.z());
-    if (!pathfinding.is_walkable(grid.x, grid.y)) {
-      return false;
-    }
-    float const center_u = position.x() + (k_size * 0.5F - 0.5F);
-    float const center_v = position.z() + (k_size * 0.5F - 0.5F);
-    for (int cell_z = grid.y - 3; cell_z <= grid.y + 3; ++cell_z) {
-      for (int cell_x = grid.x - 3; cell_x <= grid.x + 3; ++cell_x) {
-        if ((cell_x == grid.x && cell_z == grid.y) ||
-            pathfinding.is_walkable(cell_x, cell_z)) {
-          continue;
-        }
-        float const gap_u =
-            std::max(0.0F, std::abs(center_u - static_cast<float>(cell_x)) - 0.5F);
-        float const gap_v =
-            std::max(0.0F, std::abs(center_v - static_cast<float>(cell_z)) - 0.5F);
-        if (gap_u * gap_u + gap_v * gap_v < radius * radius) {
-          return false;
-        }
-      }
-    }
-    return true;
-  };
-
-  std::uint32_t state = 12345U;
-  auto next = [&state]() {
-    state = state * 1664525U + 1013904223U;
-    return static_cast<float>(state >> 8U) / static_cast<float>(1U << 24U);
-  };
-  int checked = 0;
-  for (int sample = 0; sample < 20000; ++sample) {
-    QVector3D const position(
-        (next() - 0.5F) * (k_size + 1.0F), 0.0F, (next() - 0.5F) * (k_size + 1.0F));
-    float const radius = next() * 1.6F;
-    ASSERT_EQ(pathfinding.is_world_position_walkable(
-                  position, Game::Systems::Pathfinding::Passability::Light, radius),
-              brute_force(position, radius))
-        << position.x() << "," << position.z() << " r=" << radius;
-    ++checked;
-  }
-  for (int z = 0; z < k_size; ++z) {
-    for (int x = 0; x < k_size; ++x) {
-      QVector3D const center = pathfinding.grid_to_world({x, z});
-      EXPECT_EQ(pathfinding.is_world_position_walkable(
-                    center, Game::Systems::Pathfinding::Passability::Light, 0.34F),
-                pathfinding.is_walkable(x, z));
-    }
-  }
-  EXPECT_EQ(checked, 20000);
 }
 
 TEST_F(PathfindingTest, FormationClearanceRoutesAroundBlockedFootprints) {

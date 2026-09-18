@@ -362,6 +362,11 @@ void apply_deploy_formation(World& world, const DeployFormation& order) {
           i < result.facing_angles.size() ? result.facing_angles[i] : 0.0F;
       transform->has_desired_yaw = true;
     }
+
+    if (auto* unit = world.try_get<Engine::Core::UnitComponent>(order.units[i]);
+        unit != nullptr && i < result.unit_files.size()) {
+      unit->formation_files_override = result.unit_files[i];
+    }
     auto* formation_mode =
         entity->get_component<Engine::Core::FormationModeComponent>();
     if (formation_mode != nullptr && i < result.stable_slot_ids.size()) {

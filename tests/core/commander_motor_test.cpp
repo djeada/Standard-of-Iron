@@ -52,7 +52,7 @@ protected:
     unit->max_health = 100;
     unit->owner_id = 1;
     unit->speed = 3.0F;
-    unit->spawn_type = Game::Units::SpawnType::Knight;
+    unit->spawn_type = Game::Units::SpawnType::Swordsman;
     commander->fpv_controlled = true;
     return entity;
   }
@@ -496,7 +496,7 @@ TEST_F(CommanderMotorTest, CrowdSeparationIsBoundedAndRepeatable) {
         unit->max_health = 100;
         unit->owner_id = 1;
         unit->speed = 3.0F;
-        unit->spawn_type = Game::Units::SpawnType::Knight;
+        unit->spawn_type = Game::Units::SpawnType::Swordsman;
       }
     }
 

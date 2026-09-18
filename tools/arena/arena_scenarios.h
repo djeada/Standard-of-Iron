@@ -39,8 +39,8 @@ inline constexpr char k_swordsman_action_transition_id[] =
 inline constexpr char k_spearman_action_transition_id[] = "spearman_action_transition";
 inline constexpr char k_horse_archer_action_transition_id[] =
     "horse_archer_action_transition";
-inline constexpr char k_mounted_knight_action_transition_id[] =
-    "mounted_knight_action_transition";
+inline constexpr char k_mounted_swordsman_action_transition_id[] =
+    "mounted_swordsman_action_transition";
 inline constexpr char k_horse_spearman_action_transition_id[] =
     "horse_spearman_action_transition";
 inline constexpr char k_melee_lock_id[] = "melee_lock";
@@ -277,6 +277,9 @@ inline constexpr char k_trailer_night_snow_id[] = "trailer_night_snow";
 inline constexpr char k_trailer_last_breath_id[] = "trailer_last_breath";
 inline constexpr char k_trailer_wolf_rain_id[] = "trailer_wolf_rain";
 inline constexpr char k_trailer_open_id[] = "trailer_open";
+inline constexpr char k_trailer_city_battle_id[] = "trailer_city_battle";
+inline constexpr char k_trailer_trade_city_id[] = "trailer_trade_city";
+inline constexpr char k_trailer_sepulcher_winter_id[] = "trailer_sepulcher_winter";
 
 inline constexpr char k_weather_rain_light_id[] = "weather_rain_light";
 inline constexpr char k_weather_rain_medium_id[] = "weather_rain_medium";

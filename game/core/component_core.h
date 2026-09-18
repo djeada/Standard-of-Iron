@@ -115,6 +115,8 @@ public:
 
   int render_individuals_per_unit_override{0};
 
+  int formation_files_override{0};
+
   int squad_strength{0};
   bool render_rider{true};
   std::uint8_t death_sequence_override{0xFF};

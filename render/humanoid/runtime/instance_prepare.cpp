@@ -263,7 +263,7 @@ auto snapshot_humanoid_unit(const HumanoidRendererBase& owner,
   if (unit_comp != nullptr) {
     using Game::Units::SpawnType;
     auto const st = unit_comp->spawn_type;
-    is_mounted_spawn = is_mounted_spawn || st == SpawnType::MountedKnight ||
+    is_mounted_spawn = is_mounted_spawn || st == SpawnType::MountedSwordsman ||
                        st == SpawnType::HorseArcher || st == SpawnType::HorseSpearman;
   }
 

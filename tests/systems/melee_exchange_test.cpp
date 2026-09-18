@@ -191,12 +191,12 @@ TEST_F(MeleeExchangeDuelTest, ASwordDuelKeepsItsDamageRateAndShowsEveryReaction)
   Game::Systems::register_runtime_systems(world);
 
   auto* blue = spawn(world,
-                     Game::Units::SpawnType::Knight,
+                     Game::Units::SpawnType::Swordsman,
                      1,
                      QVector3D(-1.4F, 0.0F, 0.0F),
                      Game::Systems::NationID::RomanRepublic);
   auto* red = spawn(world,
-                    Game::Units::SpawnType::Knight,
+                    Game::Units::SpawnType::Swordsman,
                     2,
                     QVector3D(1.4F, 0.0F, 0.0F),
                     Game::Systems::NationID::Carthage);

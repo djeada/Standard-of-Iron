@@ -127,7 +127,7 @@ auto collect_species(World& world, Species species) -> std::vector<Entity*> {
 
 auto add_troop(World& world,
                const QVector3D& position,
-               Game::Units::SpawnType type = Game::Units::SpawnType::Knight)
+               Game::Units::SpawnType type = Game::Units::SpawnType::Swordsman)
     -> Entity* {
   auto* entity = world.create_entity();
   auto* transform = entity->add_component<Engine::Core::TransformComponent>();

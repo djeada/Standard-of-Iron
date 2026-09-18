@@ -200,6 +200,7 @@ auto ArmyFormationService::build(Engine::Core::World& world,
   result.stable_slot_ids.assign(member_count, k_invalid_slot);
   result.stable_ranks.assign(member_count, -1);
   result.stable_files.assign(member_count, -1);
+  result.unit_files.assign(member_count, 0);
   result.slot_status.assign(member_count, SlotStatus::Blocked);
 
   if (member_count == 0) {
@@ -236,7 +237,7 @@ auto ArmyFormationService::build(Engine::Core::World& world,
     index_of.emplace(request.members[i], i);
   }
 
-  auto const [ranks, files] = rank_and_file(plan.slot_list, plan.spacing);
+  auto const [ranks, files] = rank_and_file(plan.slot_list, plan.slot_spacing);
 
   for (std::size_t slot_index = 0; slot_index < plan.slot_list.size(); ++slot_index) {
     const auto& slot = plan.slot_list[slot_index];
@@ -250,6 +251,9 @@ auto ArmyFormationService::build(Engine::Core::World& world,
     result.stable_slot_ids[target] = slot.id;
     result.stable_ranks[target] = ranks[slot_index];
     result.stable_files[target] = files[slot_index];
+    if (slot_index < plan.slot_files.size()) {
+      result.unit_files[target] = plan.slot_files[slot_index];
+    }
     result.slot_status[target] = slot.status;
   }
 

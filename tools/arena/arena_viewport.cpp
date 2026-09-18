@@ -35,6 +35,7 @@
 
 #include "animation/showcase_pose_manifest.h"
 #include "app/commander/commander_control_controller.h"
+#include "app/commander/commander_status_builder.h"
 #include "app/orders/movement_utils.h"
 #include "app/session/renderer_bootstrap.h"
 #include "app/session/world_bootstrap.h"
@@ -297,7 +298,7 @@ auto prettify_identifier(const QString& value) -> QString {
 
 auto is_mounted_spawn_type(Game::Units::SpawnType spawn_type) -> bool {
   using Game::Units::SpawnType;
-  return spawn_type == SpawnType::MountedKnight ||
+  return spawn_type == SpawnType::MountedSwordsman ||
          spawn_type == SpawnType::HorseArcher || spawn_type == SpawnType::HorseSpearman;
 }
 
@@ -579,6 +580,7 @@ void ArenaViewport::paintGL() {
   update_active_scenario(simulation_dt);
   update_fog_of_war(simulation_dt);
   apply_cinematic_view();
+  apply_capture_stabilization(simulation_dt);
   Arena::ArenaRenderedFrameTimings timings;
   timings.simulation_ms = elapsed_phase_ms();
 
@@ -634,6 +636,8 @@ void ArenaViewport::paintGL() {
   m_renderer->update_animation_time(simulation_dt);
 
   m_renderer->set_order_marker_all_owners(m_capture_gameplay_ui_all_owners);
+
+  m_renderer->set_rpg_lens_detached(m_cinematic_view_valid);
   m_renderer->set_cinematic_mode(
       !m_capture_gameplay_ui &&
       (m_clean_capture || m_promo_mode ||
@@ -1735,6 +1739,16 @@ void ArenaViewport::regenerate_terrain() {
 
   Game::Map::BiomeSettings biome;
   Game::Map::apply_ground_type_defaults(biome, m_ground_type);
+  if (m_terrain_snowbound) {
+
+    biome.grass_primary = QVector3D(0.64F, 0.70F, 0.80F);
+    biome.grass_secondary = QVector3D(0.72F, 0.77F, 0.86F);
+    biome.grass_dry = QVector3D(0.56F, 0.61F, 0.71F);
+    biome.soil_color = QVector3D(0.40F, 0.43F, 0.50F);
+    biome.snow_color = QVector3D(0.74F, 0.80F, 0.90F);
+    biome.snow_coverage = 1.0F;
+    biome.plant_density *= 0.15F;
+  }
   biome.seed = static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed));
   biome.height_noise_frequency = m_terrain_settings.frequency;
   biome.height_noise_amplitude =
@@ -3058,6 +3072,42 @@ void ArenaViewport::clear_cinematic_view() {
   m_cinematic_view_valid = false;
 }
 
+void ArenaViewport::set_capture_stabilization(float seconds) {
+  m_capture_stabilize_seconds = std::max(0.0F, seconds);
+  m_stabilized_lens_valid = false;
+}
+
+void ArenaViewport::apply_capture_stabilization(float dt) {
+  if (m_capture_stabilize_seconds <= 0.0F || m_cinematic_view_valid ||
+      m_camera == nullptr || dt <= 0.0F) {
+    m_stabilized_lens_valid = false;
+    return;
+  }
+  const QVector3D eye = m_camera->get_position();
+  const QVector3D target = m_camera->get_target();
+  const float fov = m_camera->get_fov();
+  if (!m_stabilized_lens_valid) {
+    m_stabilized_eye = eye;
+    m_stabilized_target = target;
+    m_stabilized_fov = fov;
+    m_stabilized_lens_valid = true;
+    return;
+  }
+
+  constexpr float k_target_share = 0.6F;
+  const float eye_alpha = 1.0F - std::exp(-dt / m_capture_stabilize_seconds);
+  const float target_alpha =
+      1.0F - std::exp(-dt / (m_capture_stabilize_seconds * k_target_share));
+  m_stabilized_eye += (eye - m_stabilized_eye) * eye_alpha;
+  m_stabilized_target += (target - m_stabilized_target) * target_alpha;
+  m_stabilized_fov += (fov - m_stabilized_fov) * eye_alpha;
+  m_camera->look_at(m_stabilized_eye, m_stabilized_target, QVector3D(0.0F, 1.0F, 0.0F));
+  m_camera->set_perspective(m_stabilized_fov,
+                            m_camera->get_aspect(),
+                            m_camera->get_near(),
+                            m_camera->get_far());
+}
+
 namespace {
 
 constexpr float k_cinematic_ground_clearance = 2.2F;
@@ -3994,9 +4044,11 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     m_terrain_settings.seed = definition->terrain_seed_override;
   }
   m_suppress_boundary_mountains = definition->suppress_boundary_mountains;
-  if (!m_arena_rivers.empty() || !m_arena_lakes.empty() || !m_arena_bridges.empty() ||
-      !m_arena_roads.empty() || !m_arena_elevation_patches.empty() ||
-      m_terrain_grid_extent != k_terrain_width ||
+  const bool snow_changed = m_terrain_snowbound != definition->terrain_snowbound;
+  m_terrain_snowbound = definition->terrain_snowbound;
+  if (snow_changed || m_terrain_snowbound || !m_arena_rivers.empty() ||
+      !m_arena_lakes.empty() || !m_arena_bridges.empty() || !m_arena_roads.empty() ||
+      !m_arena_elevation_patches.empty() || m_terrain_grid_extent != k_terrain_width ||
       m_arena_floor_half_extent != k_default_floor_extent ||
       m_terrain_settings.height_scale != k_default_terrain_height_scale ||
       m_ground_type != m_ground_type_baseline ||
@@ -4382,6 +4434,9 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     qWarning().noquote() << QStringLiteral(
                                 "Arena scenario '%1' failed validation or startup")
                                 .arg(scenario_id);
+    for (const auto& issue : m_scenario_runner->report().issues) {
+      qWarning().noquote() << QStringLiteral("  %1: %2").arg(issue.code, issue.message);
+    }
     m_scenario_runner.reset();
     return;
   }
@@ -4621,82 +4676,26 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
   if (m_rpg_telegraphs != nullptr) {
     m_rpg_telegraphs->clear();
   }
-
-  m_rpg_initial_enemy_units = 0;
-  for (auto* candidate :
-       m_world->collect_entities_with<Engine::Core::UnitComponent>()) {
-    auto const* candidate_unit =
-        candidate != nullptr ? candidate->get_component<Engine::Core::UnitComponent>()
-                             : nullptr;
-    if (candidate_unit != nullptr && candidate_unit->owner_id != unit->owner_id &&
-        candidate_unit->health > 0) {
-      ++m_rpg_initial_enemy_units;
-    }
-  }
 }
 
-auto ArenaViewport::rpg_bow_hud_state() const -> ArenaViewport::RpgBowHudState {
-  RpgBowHudState state;
-  if (m_world == nullptr || m_rpg_commander_id == 0) {
-    return state;
+auto ArenaViewport::rpg_commander_status() const -> QVariantMap {
+  if (m_world == nullptr || m_rpg_commander_id == 0 ||
+      m_rpg_commander_controller == nullptr) {
+    return {};
   }
-  auto* commander = m_world->get_entity(m_rpg_commander_id);
-  if (commander == nullptr) {
-    return state;
-  }
-  auto const* unit = commander->get_component<Engine::Core::UnitComponent>();
-  if (unit == nullptr) {
-    return state;
-  }
-  state.valid = true;
+  App::Core::CommanderStatusInput input;
+  input.world = m_world.get();
+  input.controlled_commander_id = m_rpg_commander_id;
+  input.dodge_active = m_rpg_commander_controller->is_dodge_rolling();
+  input.locked_target_id = m_rpg_commander_controller->locked_target_id();
+  return App::Core::build_controlled_commander_status(input);
+}
 
-  if (auto const* aim =
-          commander->get_component<Engine::Core::RpgCommanderAimComponent>()) {
-    state.bow_stance = aim->stance == Engine::Core::FpvWeaponStance::Bow;
-    state.drawing = aim->is_drawing();
-    state.full_draw = aim->draw_stage == Engine::Core::BowDrawStage::FullDraw;
-    state.strained = aim->full_draw_hold >=
-                     Engine::Core::RpgCommanderAimComponent::k_steady_hold_seconds;
-    state.draw_progress = std::clamp(aim->draw_progress, 0.0F, 1.0F);
-    state.spread_degrees = aim->spread_degrees;
-    state.fov_degrees = aim->camera_fov_degrees;
-  }
-  if (auto const* action =
-          commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {
-    if (action->action_running && action->action_duration > 0.0F && !state.drawing) {
-      state.recovery_ratio = std::clamp(
-          1.0F - (action->action_elapsed_time / action->action_duration), 0.0F, 1.0F);
-    }
-  }
-  if (auto const* targets =
-          commander->get_component<Engine::Core::RpgCommanderTargetComponent>()) {
-    state.target_in_reticle =
-        targets->aim_candidate_in_range && targets->aim_candidate_id != 0;
-    state.hit_confirm = std::clamp(targets->recent_hit_timer / 0.28F, 0.0F, 1.0F);
-  }
-  if (auto const* unit = commander->get_component<Engine::Core::UnitComponent>();
-      unit != nullptr && unit->max_health > 0) {
-    state.health_ratio =
-        static_cast<float>(unit->health) / static_cast<float>(unit->max_health);
-  }
-  if (auto const* stamina =
-          commander->get_component<Engine::Core::StaminaComponent>()) {
-    state.stamina_ratio = stamina->get_stamina_ratio();
-  }
-
-  int alive_enemies = 0;
-  for (auto* candidate :
-       m_world->collect_entities_with<Engine::Core::UnitComponent>()) {
-    auto const* candidate_unit =
-        candidate != nullptr ? candidate->get_component<Engine::Core::UnitComponent>()
-                             : nullptr;
-    if (candidate_unit != nullptr && candidate_unit->owner_id != unit->owner_id &&
-        candidate_unit->health > 0) {
-      ++alive_enemies;
-    }
-  }
-  state.takedowns = std::max(0, m_rpg_initial_enemy_units - alive_enemies);
-  return state;
+auto ArenaViewport::project_to_capture(const QVector3D& world,
+                                       const QSize& frame_size,
+                                       QPointF& out) const -> bool {
+  return m_camera != nullptr && frame_size.width() > 0 && frame_size.height() > 0 &&
+         m_camera->world_to_screen(world, frame_size.width(), frame_size.height(), out);
 }
 
 auto ArenaViewport::take_due_presentation_hitch() -> float {

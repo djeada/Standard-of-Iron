@@ -850,6 +850,10 @@ auto main(int argc, char* argv[]) -> int {
     parser.addOption(film_start_opt);
     parser.addOption(film_size_opt);
     parser.addOption(film_visible_opt);
+    QCommandLineOption const film_cursor_opt(
+        "film-cursor",
+        "Draw a mouse pointer that travels to each scripted click in the footage.");
+    parser.addOption(film_cursor_opt);
     parser.process(app);
 
     component_gallery_requested = parser.isSet(component_gallery_opt);
@@ -925,6 +929,7 @@ auto main(int argc, char* argv[]) -> int {
         config.height = std::clamp(size[1].toInt(), 240, 4320);
       }
       config.background = !parser.isSet(film_visible_opt);
+      config.draw_cursor = parser.isSet(film_cursor_opt);
       if (config.directory.isEmpty()) {
         qCritical() << "--film needs a directory";
         return 2;

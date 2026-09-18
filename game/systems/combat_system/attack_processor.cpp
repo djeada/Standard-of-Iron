@@ -856,7 +856,7 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
   if (attacker_unit->spawn_type == Game::Units::SpawnType::Spearman) {
     if (target_unit->spawn_type == Game::Units::SpawnType::HorseArcher ||
         target_unit->spawn_type == Game::Units::SpawnType::HorseSpearman ||
-        target_unit->spawn_type == Game::Units::SpawnType::MountedKnight) {
+        target_unit->spawn_type == Game::Units::SpawnType::MountedSwordsman) {
       multiplier *= Constants::k_spearman_vs_cavalry_multiplier;
     }
   }

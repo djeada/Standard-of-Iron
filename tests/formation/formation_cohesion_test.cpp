@@ -54,7 +54,7 @@ protected:
       auto* unit = entity->add_component<Engine::Core::UnitComponent>();
       transform->position = {
           static_cast<float>(i % 8) + 40.0F, 0.0F, static_cast<float>(i / 8) + 40.0F};
-      unit->spawn_type = Game::Units::SpawnType::Knight;
+      unit->spawn_type = Game::Units::SpawnType::Swordsman;
       unit->nation_id = NationID::RomanRepublic;
       unit->health = 100;
       ids.push_back(entity->get_id());

@@ -163,10 +163,6 @@ public:
     const QString terrain_frag =
         resolve(shader_base + QStringLiteral("terrain_chunk.frag"));
     load(QStringLiteral("terrain_chunk"), terrain_vert, terrain_frag);
-    load(QStringLiteral("terrain_chunk_baked"),
-         terrain_vert,
-         terrain_frag,
-         QStringLiteral("#define SOI_TERRAIN_BAKED 1"));
 
     const QString river_vert = resolve(shader_base + QStringLiteral("river.vert"));
     const QString river_frag = resolve(shader_base + QStringLiteral("river.frag"));

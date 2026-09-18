@@ -97,10 +97,6 @@ public:
   void begin_frame();
   void end_frame();
   void set_viewport(int width, int height);
-  void set_loading_overlay_active(bool active) { m_loading_overlay_active = active; }
-  [[nodiscard]] auto has_pending_template_prewarm() const -> bool {
-    return m_async_prewarm.current() != nullptr;
-  }
 
   void set_world_view(const Render::WorldView& view) { m_world_view = view; }
   [[nodiscard]] auto world_view() const noexcept -> const Render::WorldView& {
@@ -164,6 +160,10 @@ public:
   }
   [[nodiscard]] auto rpg_camera_focus() const -> Engine::Core::EntityID {
     return m_view.rpg_camera_focus();
+  }
+  void set_rpg_lens_detached(bool detached) { m_view.set_rpg_lens_detached(detached); }
+  [[nodiscard]] auto rpg_lens_gap_applies() const noexcept -> bool {
+    return m_view.rpg_lens_gap_applies();
   }
   [[nodiscard]] auto non_local_unit_visibility_filter_enabled() const -> bool;
   [[nodiscard]] auto static_world_visibility_filter_enabled() const -> bool;
@@ -588,7 +588,6 @@ private:
   Engine::Core::World* m_cached_world{nullptr};
 
   AsyncTemplatePrewarm m_async_prewarm;
-  bool m_loading_overlay_active = false;
 };
 
 struct FrameScope {
