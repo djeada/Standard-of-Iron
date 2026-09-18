@@ -32,6 +32,19 @@ TestCase {
         };
     }
 
+    function verify_objectives_on_screen(screen, expected) {
+        var objectives = findChild(screen, "selectedMissionObjectives");
+        var list = findChild(screen, "selectedMissionObjectivesList");
+        verify(objectives !== null, "the selected mission needs a pinned objectives section");
+        verify(list !== null, "the victory conditions need to be rendered, not just retained in data");
+        verify(objectives.visible && list.visible);
+        verify(objectives.height > 0 && list.implicitHeight > 0);
+        var top = objectives.mapToItem(screen, 0, 0).y;
+        verify(top >= 0 && top + objectives.height <= screen.height,
+               "the mission objectives must be visible without scrolling the briefing");
+        compare(objectives.lines[0], expected);
+    }
+
     function test_selected_objectives_are_visible_before_deployment() {
         var screen = missionsComponent.createObject(testCase, {
                 "width": 1200,
@@ -41,16 +54,10 @@ TestCase {
             });
         verify(screen !== null);
         waitForRendering(screen);
-        var objectives = findChild(screen, "selectedMissionObjectives");
-        verify(objectives !== null, "the mission selection screen needs a pinned objectives panel");
-        verify(objectives.visible);
-        verify(objectives.height > 0);
-        compare(objectives.lines.length, 1);
-        compare(objectives.lines[0], "Hold the crossing");
+        verify_objectives_on_screen(screen, "Hold the crossing");
         screen.selected_index = 1;
-        tryCompare(screen, "selected_index", 1);
-        compare(objectives.lines[0], "Capture the fortress", "objectives must follow the highlighted mission before starting it");
-        verify(objectives.visible);
+        compare(screen.selected_index, 1);
+        verify_objectives_on_screen(screen, "Capture the fortress");
         screen.destroy();
     }
 
@@ -63,11 +70,7 @@ TestCase {
             });
         verify(screen !== null);
         waitForRendering(screen);
-        var objectives = findChild(screen, "selectedMissionObjectives");
-        verify(objectives !== null);
-        verify(objectives.visible);
-        verify(objectives.height >= 68, "small viewports must still reserve room for the mission goal");
-        compare(objectives.lines[0], "Protect the commander");
+        verify_objectives_on_screen(screen, "Protect the commander");
         screen.destroy();
     }
 }
