@@ -2,10 +2,12 @@
 
 #include <QString>
 
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <optional>
 #include <string>
+#include <string_view>
 
 #include "troop_type.h"
 
@@ -44,6 +46,77 @@ enum class SpawnType : std::uint8_t {
   Wolf,
   Farm
 };
+
+inline constexpr std::size_t k_spawn_type_count =
+    static_cast<std::size_t>(SpawnType::Farm) + 1U;
+
+constexpr auto spawn_type_name(SpawnType type) -> std::string_view {
+  switch (type) {
+  case SpawnType::Archer:
+    return "archer";
+  case SpawnType::Knight:
+    return "swordsman";
+  case SpawnType::Spearman:
+    return "spearman";
+  case SpawnType::SkeletonSwordsman:
+    return "skeleton_swordsman";
+  case SpawnType::SkeletonArcher:
+    return "skeleton_archer";
+  case SpawnType::GravePriest:
+    return "grave_priest";
+  case SpawnType::MountedKnight:
+    return "horse_swordsman";
+  case SpawnType::HorseArcher:
+    return "horse_archer";
+  case SpawnType::HorseSpearman:
+    return "horse_spearman";
+  case SpawnType::Healer:
+    return "healer";
+  case SpawnType::Catapult:
+    return "catapult";
+  case SpawnType::Ballista:
+    return "ballista";
+  case SpawnType::Elephant:
+    return "elephant";
+  case SpawnType::RomanLegionOrganizer:
+    return "roman_legion_organizer";
+  case SpawnType::RomanVeteranConsul:
+    return "roman_veteran_consul";
+  case SpawnType::RomanFieldCommander:
+    return "roman_field_commander";
+  case SpawnType::CarthageSpearCommander:
+    return "carthage_spear_commander";
+  case SpawnType::CarthageBowCommander:
+    return "carthage_bow_commander";
+  case SpawnType::CarthageSwordCommander:
+    return "carthage_sword_commander";
+  case SpawnType::Civilian:
+    return "civilian";
+  case SpawnType::Builder:
+    return "builder";
+  case SpawnType::Barracks:
+    return "barracks";
+  case SpawnType::DefenseTower:
+    return "defense_tower";
+  case SpawnType::Home:
+    return "home";
+  case SpawnType::WallSegment:
+    return "wall_segment";
+  case SpawnType::Marketplace:
+    return "marketplace";
+  case SpawnType::WallGate:
+    return "wall_gate";
+  case SpawnType::Temple:
+    return "temple";
+  case SpawnType::Sheep:
+    return "sheep";
+  case SpawnType::Wolf:
+    return "wolf";
+  case SpawnType::Farm:
+    return "farm";
+  }
+  return "archer";
+}
 
 inline auto spawn_typeToQString(SpawnType type) -> QString {
   switch (type) {
@@ -114,7 +187,7 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
 }
 
 inline auto spawn_typeToString(SpawnType type) -> std::string {
-  return spawn_typeToQString(type).toStdString();
+  return std::string(spawn_type_name(type));
 }
 
 inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {

@@ -329,6 +329,29 @@ Terrain/world-prop positions are resolved from authored map/grid space through t
 
 See [MAP_OBJECT_PLACEMENT.md](MAP_OBJECT_PLACEMENT.md) for the placement contract.
 
+### Ground plane draws after the terrain
+
+The ground plane (`GroundRenderer`, the map-plus-48-tile skirt at y = -0.08) and the terrain
+chunks are both `TerrainSurfaceCmd`s. The plane uses sort key `0x00C0`, after the chunks and
+the boundary mountains (`0x0080`). Both are opaque and nothing between them depends on the
+plane, so the order is invisible in the image. What it changes is cost: drawn first, every
+pixel under the terrain ran `ground_plane.frag` (18 fbm calls) and was then overdrawn;
+drawn last, early depth rejects those pixels. GPU timers on Zama Ultra put the terrain
+surface pass at 1.78 ms before and 1.23 ms after.
+
+### Baked terrain shader variant
+
+`terrain_chunk.frag` is compiled twice. `terrain_chunk` keeps the procedural fallbacks for
+when the per-map noise atlas or microdetail texture is missing (`SOI_TERRAIN_NOISE_BAKE=0`
+or a failed bake). `terrain_chunk_baked` is compiled with `SOI_TERRAIN_BAKED`, which turns
+`HAS_NOISE_ATLAS` and `HAS_MICRODETAIL` into compile-time `true`, so the compiler drops the
+fallback code instead of carrying it behind a uniform branch. The executor picks the baked
+program per draw when the command's height resources carry all three textures, and
+`TerrainPipeline::terrain_uniforms_for()` hands back the matching uniform table; the baked
+table resolves every handle as optional because the stripped program no longer has the
+fallback-only uniforms. Measured on Zama Ultra: 1.23 ms to 0.97 ms for the terrain pass on
+top of the ground-plane change.
+
 ## Terrain scatter readiness
 
 Terrain scatter has an explicit GPU-readiness state.

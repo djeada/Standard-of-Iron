@@ -518,10 +518,7 @@ RowLayout {
     readonly property var primaryCommandIds: ["attack", "guard", "patrol", "hold", "stop"]
     readonly property var contextualCommandIds: ["build", "collect", "auto_gather", "repair", "dismantle", "divide", "join", "deliver", "rally", "aura", "gate", "heal"]
     readonly property var primaryCommands: bottomRoot.commands_for_ids(bottomRoot.primaryCommandIds)
-    // The HUD polls every 100 ms. Handing the Repeater a new model on each poll
-    // recreates its buttons, and a press that straddles a poll never becomes a
-    // click. The model is replaced only when the set of eligible commands
-    // changes; the buttons bind to live action state themselves.
+
     property var contextualCommands: []
 
     function command_by_id(actionId) {
