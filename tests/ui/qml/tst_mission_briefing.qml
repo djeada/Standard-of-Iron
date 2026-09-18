@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtTest 1.15
 import StandardOfIron 1.0
+import "../../../ui/qml"
 
 TestCase {
     id: testCase
