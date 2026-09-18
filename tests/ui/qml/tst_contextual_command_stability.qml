@@ -35,52 +35,77 @@ TestCase {
             "eligibleCount": eligible,
             "activeCount": active,
             "active": active > 0,
+            "mixed": false,
+            "placing": false,
+            "passive": false,
             "detail": ({})
         };
     }
 
-    function test_refresh_preserves_buttons_when_membership_is_unchanged() {
-        var deck = commandDeck.createObject(testCase);
-        verify(deck !== null);
-        deck.action_states = ({"build": state(1, 0), "collect": state(1, 0)});
-        compare(deck.contextualCommands.length, 2);
-        var first = deck.contextualCommands;
-        deck.action_states = ({"build": state(1, 0), "collect": state(1, 1)});
-        verify(deck.contextualCommands === first,
-               "A new model destroys buttons between mouse press and release");
-        deck.destroy();
+    function builder_states(collecting) {
+        return {
+            "build": state(1, 0),
+            "collect": state(1, collecting),
+            "repair": state(1, 0),
+            "deliver": state(1, 0)
+        };
     }
 
-    function test_a_contextual_click_survives_a_state_refresh() {
-        var deck = commandDeck.createObject(testCase);
+    // One HUD poll. Every 100 ms HUD.qml bumps selection_tick and
+    // update_action_states() replaces action_states with a fresh map from the
+    // game; there is no game here, so hand over the fresh map directly.
+    function poll(deck, collecting) {
+        deck.action_states = builder_states(collecting);
+    }
+
+    function create_deck() {
+        var deck = createTemporaryObject(commandDeck, testCase);
         verify(deck !== null);
-        deck.action_states = ({"deliver": state(1, 0)});
+        deck.action_states = builder_states(0);
         waitForRendering(deck);
-        var button = findChild(deck, "contextCommand_deliver");
+        return deck;
+    }
+
+    function test_polling_keeps_the_same_model_and_buttons() {
+        var deck = create_deck();
+        var model = deck.contextualCommands;
+        var button = findChild(deck, "contextCommand_collect");
         verify(button !== null, "the contextual command was not created");
-        verify(button.interactive);
-        var spy = signalSpy.createObject(testCase, {
-                "target": deck,
-                "signalName": "command_mode_changed"
+        for (var i = 0; i < 3; ++i)
+            poll(deck, i % 2);
+        verify(deck.contextualCommands === model, "an unchanged command set must not rebuild the Repeater model");
+        verify(findChild(deck, "contextCommand_collect") === button, "polling must not recreate the buttons");
+        poll(deck, 1);
+        compare(button.activeCount, 1, "buttons still follow live action state");
+    }
+
+    function test_a_click_held_across_polls_still_lands() {
+        var deck = create_deck();
+        var button = findChild(deck, "contextCommand_build");
+        verify(button !== null && button.interactive);
+        var clicks = signalSpy.createObject(testCase, {
+                "target": button,
+                "signalName": "clicked"
             });
-        verify(spy !== null);
         mousePress(button, button.width / 2, button.height / 2);
-        wait(150); // Longer than the HUD's 100 ms refresh period.
-        deck.action_states = ({"deliver": state(1, 0)});
-        mouseRelease(button, button.width / 2, button.height / 2);
-        compare(spy.count, 1, "refresh must not swallow a contextual command click");
-        spy.destroy();
-        deck.destroy();
+        for (var i = 0; i < 3; ++i) {
+            wait(110);
+            poll(deck, 0);
+        }
+        mouseRelease(findChild(deck, "contextCommand_build"), button.width / 2, button.height / 2);
+        compare(clicks.count, 1, "a poll between press and release swallowed the click");
+        clicks.destroy();
     }
 
     function test_membership_changes_still_refresh_the_deck() {
-        var deck = commandDeck.createObject(testCase);
-        verify(deck !== null);
-        deck.action_states = ({"build": state(1, 0)});
+        var deck = create_deck();
         var initial = deck.contextualCommands;
-        deck.action_states = ({"build": state(1, 0), "repair": state(1, 0)});
+        compare(initial.length, 4);
+        var states = builder_states(0);
+        delete states.repair;
+        deck.action_states = states;
         verify(deck.contextualCommands !== initial);
-        compare(deck.contextualCommands.length, 2);
-        deck.destroy();
+        compare(deck.contextualCommands.length, 3);
+        compare(findChild(deck, "contextCommand_repair"), null);
     }
 }
