@@ -267,8 +267,8 @@ TEST_F(DefenderEngagementTest, GuardiansBehindTheShrineJoinAFightOnItsFarSide) {
   QVector3D const anchor = wake_shrine_garrison();
 
   const std::vector<EntityID> army{
-      spawn(SpawnType::Knight, k_player, anchor.x() - 9.0F, anchor.z()),
-      spawn(SpawnType::Knight, k_player, anchor.x() - 9.0F, anchor.z() + 3.0F),
+      spawn(SpawnType::Swordsman, k_player, anchor.x() - 9.0F, anchor.z()),
+      spawn(SpawnType::Swordsman, k_player, anchor.x() - 9.0F, anchor.z() + 3.0F),
       spawn(SpawnType::Spearman, k_player, anchor.x() - 9.0F, anchor.z() - 3.0F),
       spawn(SpawnType::Archer, k_player, anchor.x() - 14.0F, anchor.z() + 1.5F),
       spawn(SpawnType::Archer, k_player, anchor.x() - 14.0F, anchor.z() - 1.5F),
@@ -310,17 +310,17 @@ TEST_F(DefenderEngagementTest, AnAiCampRaidedByAColumnFightsWithEveryMan) {
   spawn(SpawnType::Barracks, k_carthage, 64.0F, 72.0F);
   spawn(SpawnType::Spearman, k_carthage, 60.0F, 64.0F);
   spawn(SpawnType::Spearman, k_carthage, 64.0F, 62.0F);
-  spawn(SpawnType::Knight, k_carthage, 68.0F, 64.0F);
+  spawn(SpawnType::Swordsman, k_carthage, 68.0F, 64.0F);
   spawn(SpawnType::Archer, k_carthage, 62.0F, 67.0F);
   spawn(SpawnType::Archer, k_carthage, 66.0F, 67.0F);
-  spawn(SpawnType::Knight, k_carthage, 72.0F, 66.0F);
+  spawn(SpawnType::Swordsman, k_carthage, 72.0F, 66.0F);
   run_for(1.0);
 
   const std::vector<EntityID> army{
-      spawn(SpawnType::Knight, k_player, 40.0F, 64.0F),
-      spawn(SpawnType::Knight, k_player, 40.0F, 60.0F),
+      spawn(SpawnType::Swordsman, k_player, 40.0F, 64.0F),
+      spawn(SpawnType::Swordsman, k_player, 40.0F, 60.0F),
       spawn(SpawnType::Spearman, k_player, 40.0F, 68.0F),
-      spawn(SpawnType::MountedKnight, k_player, 38.0F, 56.0F),
+      spawn(SpawnType::MountedSwordsman, k_player, 38.0F, 56.0F),
   };
   attack_move(army, QVector3D(64.0F, 0.0F, 64.0F));
 
@@ -335,9 +335,9 @@ TEST_F(DefenderEngagementTest, AnAiCampShotAtFromRangeSendsMenAtTheArchers) {
   spawn(SpawnType::Barracks, k_carthage, 64.0F, 72.0F);
   spawn(SpawnType::Spearman, k_carthage, 60.0F, 64.0F);
   spawn(SpawnType::Spearman, k_carthage, 64.0F, 62.0F);
-  spawn(SpawnType::Knight, k_carthage, 68.0F, 64.0F);
+  spawn(SpawnType::Swordsman, k_carthage, 68.0F, 64.0F);
   spawn(SpawnType::Archer, k_carthage, 62.0F, 67.0F);
-  spawn(SpawnType::Knight, k_carthage, 72.0F, 66.0F);
+  spawn(SpawnType::Swordsman, k_carthage, 72.0F, 66.0F);
   run_for(1.0);
 
   const std::vector<EntityID> archers{
@@ -359,9 +359,9 @@ TEST_F(DefenderEngagementTest, AnAiCampShotAtFromRangeSendsMenAtTheArchers) {
 }
 
 TEST_F(DefenderEngagementTest, AnIdleAiSoldierJoinsTheFightOfAnAllyItCanSee) {
-  const EntityID fighter = spawn(SpawnType::Knight, k_carthage, 50.0F, 64.0F);
-  const EntityID bystander = spawn(SpawnType::Knight, k_carthage, 38.0F, 64.0F);
-  const EntityID raider = spawn(SpawnType::Knight, k_player, 57.0F, 64.0F);
+  const EntityID fighter = spawn(SpawnType::Swordsman, k_carthage, 50.0F, 64.0F);
+  const EntityID bystander = spawn(SpawnType::Swordsman, k_carthage, 38.0F, 64.0F);
+  const EntityID raider = spawn(SpawnType::Swordsman, k_player, 57.0F, 64.0F);
   ASSERT_NE(fighter, 0U);
   ASSERT_NE(bystander, 0U);
   ASSERT_NE(raider, 0U);

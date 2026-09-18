@@ -162,7 +162,7 @@ private:
 
 float get_unit_base_cull_radius(Game::Units::SpawnType spawn_type) {
   switch (spawn_type) {
-  case Game::Units::SpawnType::MountedKnight:
+  case Game::Units::SpawnType::MountedSwordsman:
   case Game::Units::SpawnType::HorseArcher:
   case Game::Units::SpawnType::HorseSpearman:
   case Game::Units::SpawnType::Catapult:
@@ -178,7 +178,7 @@ float get_unit_base_cull_radius(Game::Units::SpawnType spawn_type) {
     return 3.5F;
   case Game::Units::SpawnType::Spearman:
   case Game::Units::SpawnType::Archer:
-  case Game::Units::SpawnType::Knight:
+  case Game::Units::SpawnType::Swordsman:
     return 2.5F;
   default:
     return 3.0F;
@@ -190,8 +190,8 @@ auto is_formation_render_spawn(Game::Units::SpawnType spawn_type) noexcept -> bo
   switch (spawn_type) {
   case SpawnType::Spearman:
   case SpawnType::Archer:
-  case SpawnType::Knight:
-  case SpawnType::MountedKnight:
+  case SpawnType::Swordsman:
+  case SpawnType::MountedSwordsman:
   case SpawnType::HorseArcher:
   case SpawnType::HorseSpearman:
     return true;
@@ -211,7 +211,7 @@ float get_unit_cull_radius(const Engine::Core::UnitComponent& unit) {
   const int rows = (definition.total_count + columns - 1) / columns;
   const float half_width = 0.5F * static_cast<float>(columns - 1) * definition.spacing;
   const float half_depth = 0.5F * static_cast<float>(rows - 1) * definition.spacing;
-  const bool mounted = unit.spawn_type == Game::Units::SpawnType::MountedKnight ||
+  const bool mounted = unit.spawn_type == Game::Units::SpawnType::MountedSwordsman ||
                        unit.spawn_type == Game::Units::SpawnType::HorseArcher ||
                        unit.spawn_type == Game::Units::SpawnType::HorseSpearman;
   const float body_padding = mounted ? 2.75F : 1.75F;
@@ -240,7 +240,7 @@ auto stable_combat_creature_lod(const Engine::Core::UnitComponent* unit,
     switch (unit->spawn_type) {
     case SpawnType::HorseArcher:
     case SpawnType::HorseSpearman:
-    case SpawnType::MountedKnight:
+    case SpawnType::MountedSwordsman:
       full_distance = settings.horse_full_detail_distance();
       break;
     case SpawnType::Elephant:
@@ -538,8 +538,7 @@ auto Renderer::compute_rpg_lens_gap(Engine::Core::World& world) const
   constexpr float k_rpg_lens_gap_focus_radius = 0.45F;
 
   LensGapExclusion rpg_lens_gap;
-  if (m_view.world_render_mode() != WorldRenderMode::Rpg ||
-      m_view.rpg_camera_focus() == 0 || m_camera == nullptr) {
+  if (!m_view.rpg_lens_gap_applies() || m_camera == nullptr) {
     return rpg_lens_gap;
   }
 

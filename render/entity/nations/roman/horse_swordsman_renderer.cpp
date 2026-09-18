@@ -3,15 +3,15 @@
 #include <memory>
 
 #include "render/creature/pipeline/creature_asset.h"
-#include "render/entity/mounted_knight_renderer_base.h"
+#include "render/entity/mounted_swordsman_renderer_base.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/submitter.h"
 
 namespace Render::GL::Roman {
 namespace {
 
-auto make_mounted_knight_config() -> MountedKnightRendererConfig {
-  MountedKnightRendererConfig config;
+auto make_mounted_swordsman_config() -> MountedSwordsmanRendererConfig {
+  MountedSwordsmanRendererConfig config;
   const auto loadout =
       Render::GL::Nation::resolve_equipment_loadout("troops/roman/horse_swordsman");
   config.sword_equipment_id = loadout.ids.sword;
@@ -47,11 +47,11 @@ auto make_mounted_knight_config() -> MountedKnightRendererConfig {
 
 } // namespace
 
-void register_mounted_knight_renderer(EntityRendererRegistry& registry) {
-  register_humanoid_renderer(
-      registry,
-      "troops/roman/horse_swordsman",
-      std::make_shared<MountedKnightRendererBase const>(make_mounted_knight_config()));
+void register_mounted_swordsman_renderer(EntityRendererRegistry& registry) {
+  register_humanoid_renderer(registry,
+                             "troops/roman/horse_swordsman",
+                             std::make_shared<MountedSwordsmanRendererBase const>(
+                                 make_mounted_swordsman_config()));
 }
 
 } // namespace Render::GL::Roman

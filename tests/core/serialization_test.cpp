@@ -727,7 +727,7 @@ TEST_F(SerializationTest, CommanderComponentRoundTrip) {
   commander->aura_ability_remaining = 4.5F;
   commander->aura_ability_cooldown = 42.0F;
   commander->aura_ability_cooldown_remaining = 7.0F;
-  commander->aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
+  commander->aura_affinity_spawn_type = Game::Units::SpawnType::Swordsman;
   commander->flag_rally_cost = 2.5F;
   commander->flag_rally_pending_x = 14.0F;
   commander->flag_rally_pending_z = -6.0F;
@@ -1635,7 +1635,7 @@ TEST_F(SerializationTest, MultipleUnitsPositionsAndHealthPreserved) {
   std::vector<UnitData> original_units = {
       {10.0F, 0.0F, 20.0F, 80, 100, 1, Game::Units::SpawnType::Archer},
       {15.5F, 1.0F, 25.5F, 45, 100, 1, Game::Units::SpawnType::Spearman},
-      {30.0F, 0.0F, 40.0F, 100, 100, 2, Game::Units::SpawnType::Knight},
+      {30.0F, 0.0F, 40.0F, 100, 100, 2, Game::Units::SpawnType::Swordsman},
       {35.5F, 2.0F, 45.5F, 60, 150, 2, Game::Units::SpawnType::HorseArcher},
       {50.0F, 0.5F, 60.0F, 25, 80, 1, Game::Units::SpawnType::Catapult},
   };

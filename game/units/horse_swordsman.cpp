@@ -11,25 +11,25 @@
 
 namespace Game::Units {
 
-MountedKnight::MountedKnight(Engine::Core::World& world)
-    : Unit(world, TroopType::MountedKnight) {
+MountedSwordsman::MountedSwordsman(Engine::Core::World& world)
+    : Unit(world, TroopType::MountedSwordsman) {
 }
 
-auto MountedKnight::Create(Engine::Core::World& world, const SpawnParams& params)
-    -> std::unique_ptr<MountedKnight> {
-  auto unit = std::unique_ptr<MountedKnight>(new MountedKnight(world));
+auto MountedSwordsman::Create(Engine::Core::World& world, const SpawnParams& params)
+    -> std::unique_ptr<MountedSwordsman> {
+  auto unit = std::unique_ptr<MountedSwordsman>(new MountedSwordsman(world));
   unit->init(params);
   return unit;
 }
 
-void MountedKnight::init(const SpawnParams& params) {
+void MountedSwordsman::init(const SpawnParams& params) {
 
   auto* e = m_world->create_entity();
   m_id = e->get_id();
 
   const auto nation_id = resolve_nation_id(params);
   auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-      nation_id, TroopType::MountedKnight);
+      nation_id, TroopType::MountedSwordsman);
 
   m_t = e->add_component<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(), params.position.z()};

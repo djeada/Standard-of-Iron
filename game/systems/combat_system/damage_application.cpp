@@ -40,7 +40,7 @@ namespace {
 
 auto is_mounted_spawn(Game::Units::SpawnType spawn_type) -> bool {
   using Game::Units::SpawnType;
-  return spawn_type == SpawnType::MountedKnight ||
+  return spawn_type == SpawnType::MountedSwordsman ||
          spawn_type == SpawnType::HorseArcher || spawn_type == SpawnType::HorseSpearman;
 }
 
@@ -829,7 +829,7 @@ apply_unit_damage(Engine::Core::World* world,
   }
 
   Game::Units::SpawnType const attacker_type =
-      attacker_type_opt.value_or(Game::Units::SpawnType::Knight);
+      attacker_type_opt.value_or(Game::Units::SpawnType::Swordsman);
   Engine::Core::EventManager::instance().publish(
       Engine::Core::CombatHitEvent(attacker_id,
                                    target->get_id(),

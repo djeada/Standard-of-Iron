@@ -7,13 +7,13 @@
 
 namespace Render::GL::Roman {
 
-using KnightStyleConfig = ::Render::GL::SwordsmanStyleConfig;
+using SwordsmanStyleConfig = ::Render::GL::SwordsmanStyleConfig;
 
 inline void register_swordsman_style(const std::string& nation_id,
-                                     const KnightStyleConfig& style) {
+                                     const SwordsmanStyleConfig& style) {
   ::Render::GL::register_swordsman_style(nation_id, style);
 }
 
-void register_knight_renderer(EntityRendererRegistry& registry);
+void register_swordsman_renderer(EntityRendererRegistry& registry);
 
 } // namespace Render::GL::Roman

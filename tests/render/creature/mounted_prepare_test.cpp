@@ -26,8 +26,8 @@
 #include "render/entity/horse_archer_renderer_base.h"
 #include "render/entity/horse_spearman_renderer_base.h"
 #include "render/entity/mounted_humanoid_renderer_base.h"
-#include "render/entity/mounted_knight_renderer_base.h"
 #include "render/entity/mounted_prepare.h"
+#include "render/entity/mounted_swordsman_renderer_base.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/horse/armor/champion_renderer.h"
@@ -86,10 +86,11 @@ public:
   void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
-class InspectableMountedKnightRenderer : public Render::GL::MountedKnightRendererBase {
+class InspectableMountedSwordsmanRenderer
+    : public Render::GL::MountedSwordsmanRendererBase {
 public:
   using Render::GL::MountedHumanoidRendererBase::resolve_mount_render_state;
-  using Render::GL::MountedKnightRendererBase::MountedKnightRendererBase;
+  using Render::GL::MountedSwordsmanRendererBase::MountedSwordsmanRendererBase;
 };
 
 auto test_equipment_role_only_attachment(std::uint8_t)
@@ -198,11 +199,11 @@ TEST(MountedPrepare, ProducesHorseMountAndHumanoidRiderRows) {
 }
 
 TEST(MountedPrepare, ShadowPairProducesNoDrawCalls) {
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::MountedSwordsmanRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.template_prewarm = true;
@@ -222,11 +223,11 @@ TEST(MountedPrepare, ShadowPairProducesNoDrawCalls) {
 }
 
 TEST(MountedPrepare, MainPairProducesTwoEntitySubmissions) {
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::MountedSwordsmanRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
@@ -249,7 +250,7 @@ TEST(MountedPrepare, HorseMountArchetypeUsesHandleBackedEquipmentLoadout) {
       Render::GL::Nation::resolve_equipment_loadout("troops/roman/horse_swordsman");
   ASSERT_TRUE(loadout.found);
 
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
   cfg.horse_saddle_handle = loadout.horse_saddle_handle;
@@ -260,7 +261,7 @@ TEST(MountedPrepare, HorseMountArchetypeUsesHandleBackedEquipmentLoadout) {
   cfg.horse_crupper_handle = loadout.horse_crupper_handle;
   cfg.horse_decoration_handle = loadout.horse_decoration_handle;
 
-  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::MountedSwordsmanRendererBase const renderer(cfg);
   const auto mount_archetype_id = renderer.mounted_visual_spec().mount.archetype_id;
   ASSERT_NE(mount_archetype_id, Render::Creature::k_invalid_archetype);
 
@@ -363,15 +364,15 @@ TEST(MountedPrepare, TemplatePrewarmRenderWarmsMountedSnapshotCache) {
                                      root + "/horse_minimal.bpsm"))
       << snapshots.last_error();
   Render::GL::reset_humanoid_runtime_context();
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::MountedSwordsmanRendererBase const renderer(cfg);
   Engine::Core::StandaloneEntity entity_scratch(1);
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   unit->owner_id = 1;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
   unit->max_health = 100;
@@ -400,11 +401,11 @@ TEST(MountedPrepare, TemplatePrewarmRenderWarmsMountedSnapshotCache) {
 TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
   using namespace Render::Creature::Pipeline;
 
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::MountedSwordsmanRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
@@ -465,11 +466,11 @@ TEST(MountedPrepare, MountedRiderUsesMountedChargeStateForMeleeAttack) {
 }
 
 TEST(MountedPrepare, MountedSwordAttackUsesMountedSwordStateWhileMoving) {
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::MountedSwordsmanRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
@@ -497,11 +498,11 @@ TEST(MountedPrepare, MountedSwordAttackUsesMountedSwordStateWhileMoving) {
 }
 
 TEST(MountedPrepare, MountedSwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::MountedSwordsmanRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
@@ -511,7 +512,7 @@ TEST(MountedPrepare, MountedSwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   auto* persistent =
       entity.add_component<Render::Creature::HumanoidAnimationStateComponent>();
   ASSERT_NE(persistent, nullptr);
@@ -612,11 +613,11 @@ TEST(MountedPrepare, HorseSpearmanShieldBuildsIntoRiderArchetype) {
 TEST(MountedPrepare, SubmitPreparationDrawsRiderFromPreparedPose) {
   using namespace Render::Creature::Pipeline;
 
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::MountedSwordsmanRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
@@ -633,11 +634,11 @@ TEST(MountedPrepare, SubmitPreparationDrawsRiderFromPreparedPose) {
 }
 
 TEST(MountedPrepare, MountedRiderRequestUsesAbsoluteSeatWorld) {
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::MountedSwordsmanRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
@@ -672,11 +673,11 @@ TEST(MountedPrepare, MountedRiderRequestUsesAbsoluteSeatWorld) {
 TEST(MountedPrepare, MountedUnitGroupsRiderAndHorseBySharedWorldKey) {
   using Render::Creature::Pipeline::CreatureKind;
 
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::MountedSwordsmanRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.allow_template_cache = false;
@@ -685,7 +686,7 @@ TEST(MountedPrepare, MountedUnitGroupsRiderAndHorseBySharedWorldKey) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs const anim{};
@@ -735,12 +736,12 @@ TEST(MountedPrepare, MountedRiderRootAttachesToHorseSeatFrame) {
   ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_humanoid_sword,
                                 root + "/humanoid_sword.bpat"));
 
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
   cfg.rider_creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
 
-  InspectableMountedKnightRenderer const renderer(cfg);
+  InspectableMountedSwordsmanRenderer const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.allow_template_cache = false;
@@ -750,7 +751,7 @@ TEST(MountedPrepare, MountedRiderRootAttachesToHorseSeatFrame) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs const anim{};
@@ -827,12 +828,12 @@ TEST(MountedPrepare, AttackingMountedRiderRootAttachesToHorseSeatFrame) {
   ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_humanoid_sword,
                                 root + "/humanoid_sword.bpat"));
 
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
   cfg.rider_creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
 
-  InspectableMountedKnightRenderer const renderer(cfg);
+  InspectableMountedSwordsmanRenderer const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.allow_template_cache = false;
@@ -842,7 +843,7 @@ TEST(MountedPrepare, AttackingMountedRiderRootAttachesToHorseSeatFrame) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs anim{};
@@ -927,11 +928,11 @@ TEST(MountedPrepare, MovingMountedRiderRootAttachesToHorseSeatFrame) {
   ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_humanoid,
                                 root + "/humanoid.bpat"));
 
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  InspectableMountedKnightRenderer const renderer(cfg);
+  InspectableMountedSwordsmanRenderer const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.allow_template_cache = false;
@@ -941,7 +942,7 @@ TEST(MountedPrepare, MovingMountedRiderRootAttachesToHorseSeatFrame) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs anim{};
@@ -1012,10 +1013,10 @@ TEST(MountedPrepare, MovingMountedRiderRootAttachesToHorseSeatFrame) {
   }
 }
 
-TEST(MountedPrepare, ShieldedMountedKnightMovementUsesRiggedSubmissionsOnly) {
+TEST(MountedPrepare, ShieldedMountedSwordsmanMovementUsesRiggedSubmissionsOnly) {
   Render::GL::register_built_in_equipment();
 
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.sword_equipment_id = "sword_roman";
   cfg.shield_equipment_id = "roman_scutum";
   cfg.helmet_equipment_id = "roman_heavy";
@@ -1023,7 +1024,7 @@ TEST(MountedPrepare, ShieldedMountedKnightMovementUsesRiggedSubmissionsOnly) {
   cfg.shoulder_equipment_id = "roman_shoulder_cover_cavalry";
   cfg.has_shoulder = true;
 
-  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::MountedSwordsmanRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
@@ -1045,13 +1046,13 @@ TEST(MountedPrepare, ShieldedMountedKnightMovementUsesRiggedSubmissionsOnly) {
   EXPECT_EQ(sink.meshes, 0);
 }
 
-TEST(MountedPrepare, MountedKnightKeepsConfiguredRiderArchetype) {
-  Render::GL::MountedKnightRendererConfig cfg;
+TEST(MountedPrepare, MountedSwordsmanKeepsConfiguredRiderArchetype) {
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
   cfg.rider_archetype_id = 77U;
 
-  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::MountedSwordsmanRendererBase const renderer(cfg);
   auto const& mounted = renderer.mounted_visual_spec();
 
   EXPECT_EQ(mounted.rider.archetype_id, 77U);
@@ -1070,11 +1071,11 @@ TEST(MountedPrepare, HorseSpearmanKeepsConfiguredRiderArchetype) {
 }
 
 TEST(MountedPrepare, StaleLayoutCacheVersionForcesMountedFormationRefresh) {
-  Render::GL::MountedKnightRendererConfig cfg;
+  Render::GL::MountedSwordsmanRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::MountedSwordsmanRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.allow_template_cache = false;
@@ -1083,7 +1084,7 @@ TEST(MountedPrepare, StaleLayoutCacheVersionForcesMountedFormationRefresh) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs const anim{};

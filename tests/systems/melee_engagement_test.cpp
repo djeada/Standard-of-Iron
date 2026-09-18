@@ -215,14 +215,14 @@ TEST_P(MeleeDuelDistanceTest, DuellistsCloseToWeaponContactBeforeSwinging) {
 INSTANTIATE_TEST_SUITE_P(
     Matchups,
     MeleeDuelDistanceTest,
-    ::testing::Values(DuelCase{Game::Units::SpawnType::Knight,
+    ::testing::Values(DuelCase{Game::Units::SpawnType::Swordsman,
                                Game::Units::SpawnType::GravePriest,
                                "swordsman vs caster"},
-                      DuelCase{Game::Units::SpawnType::Knight,
-                               Game::Units::SpawnType::Knight,
+                      DuelCase{Game::Units::SpawnType::Swordsman,
+                               Game::Units::SpawnType::Swordsman,
                                "swordsman duel"},
                       DuelCase{Game::Units::SpawnType::Spearman,
-                               Game::Units::SpawnType::Knight,
+                               Game::Units::SpawnType::Swordsman,
                                "spearman vs swordsman"},
                       DuelCase{Game::Units::SpawnType::RomanVeteranConsul,
                                Game::Units::SpawnType::CarthageSwordCommander,
@@ -239,7 +239,7 @@ TEST_P(BareHandedMeleeTest, NonCombatantsFightOnceLockedInMelee) {
   Game::Systems::register_runtime_systems(world);
 
   auto* swordsman = spawn(world,
-                          Game::Units::SpawnType::Knight,
+                          Game::Units::SpawnType::Swordsman,
                           1,
                           QVector3D(-2.0F, 0.0F, 0.0F),
                           Game::Systems::NationID::RomanRepublic);
@@ -380,7 +380,7 @@ TEST_F(MeleeEngagementTest, AHealerStopsFightingWhenTheMeleeLetsGo) {
                        QVector3D(0.0F, 0.0F, 0.0F),
                        Game::Systems::NationID::RomanRepublic);
   auto* swordsman = spawn(world,
-                          Game::Units::SpawnType::Knight,
+                          Game::Units::SpawnType::Swordsman,
                           2,
                           QVector3D(-2.0F, 0.0F, 0.0F),
                           Game::Systems::NationID::Carthage);
@@ -451,7 +451,7 @@ TEST_F(MeleeEngagementTest, SiegingUnitDropsTheWallForAnEnemySoldierInReach) {
   ASSERT_TRUE(locked_onto_structure) << "besieger never engaged the structure";
 
   auto* soldier = spawn(world,
-                        Game::Units::SpawnType::Knight,
+                        Game::Units::SpawnType::Swordsman,
                         1,
                         QVector3D(-1.2F, 0.0F, 0.0F),
                         Game::Systems::NationID::RomanRepublic);
@@ -494,7 +494,7 @@ TEST_F(MeleeEngagementTest, GuardMeleeClosesOnIntrudersButHoldsItsLeash) {
   guard_mode->guard_radius = 8.0F;
 
   auto* far_intruder = spawn(world,
-                             Game::Units::SpawnType::Knight,
+                             Game::Units::SpawnType::Swordsman,
                              1,
                              QVector3D(11.0F, 0.0F, 0.0F),
                              Game::Systems::NationID::RomanRepublic);
@@ -511,7 +511,7 @@ TEST_F(MeleeEngagementTest, GuardMeleeClosesOnIntrudersButHoldsItsLeash) {
       << "guard left its post for an enemy outside the guard radius";
 
   auto* near_intruder = spawn(world,
-                              Game::Units::SpawnType::Knight,
+                              Game::Units::SpawnType::Swordsman,
                               1,
                               QVector3D(5.0F, 0.0F, 0.0F),
                               Game::Systems::NationID::RomanRepublic);
@@ -605,12 +605,12 @@ TEST_F(MeleeEngagementTest, MeleeAttackerWalksAroundTheWallBeforeFighting) {
   }
 
   auto* attacker = spawn(world,
-                         Game::Units::SpawnType::Knight,
+                         Game::Units::SpawnType::Swordsman,
                          2,
                          QVector3D(0.0F, 0.0F, 0.0F),
                          Game::Systems::NationID::Carthage);
   auto* defender = spawn(world,
-                         Game::Units::SpawnType::Knight,
+                         Game::Units::SpawnType::Swordsman,
                          1,
                          QVector3D(8.0F, 0.0F, 0.0F),
                          Game::Systems::NationID::RomanRepublic);
@@ -665,12 +665,12 @@ TEST_F(MeleeEngagementTest, SquadOrderedThroughAWallMarchesAroundItBeforeFightin
   }
 
   auto* attacker = spawn_formation(world,
-                                   Game::Units::SpawnType::Knight,
+                                   Game::Units::SpawnType::Swordsman,
                                    2,
                                    QVector3D(0.0F, 0.0F, 0.0F),
                                    Game::Systems::NationID::Carthage);
   auto* defender = spawn_formation(world,
-                                   Game::Units::SpawnType::Knight,
+                                   Game::Units::SpawnType::Swordsman,
                                    1,
                                    QVector3D(11.0F, 0.0F, 0.0F),
                                    Game::Systems::NationID::RomanRepublic);
@@ -780,12 +780,12 @@ TEST_F(MeleeEngagementTest, GridOnlyObstaclePreventsMeleeThroughIt) {
   QVector3D const defender_position =
       Game::Systems::NavGrid::grid_to_world({obstacle.x + 1, obstacle.y});
   auto* attacker = spawn(world,
-                         Game::Units::SpawnType::Knight,
+                         Game::Units::SpawnType::Swordsman,
                          1,
                          attacker_position,
                          Game::Systems::NationID::Carthage);
   auto* defender = spawn(world,
-                         Game::Units::SpawnType::Knight,
+                         Game::Units::SpawnType::Swordsman,
                          2,
                          defender_position,
                          Game::Systems::NationID::RomanRepublic);
@@ -829,7 +829,7 @@ TEST_P(MeleeAgainstStructureTest, SwordsmenLandBlowsOnEveryStructureTheyAreSentA
                           Game::Systems::NationID::Carthage);
   ASSERT_NE(structure, nullptr) << GetParam().name << " could not be spawned";
   auto* attacker = spawn(world,
-                         Game::Units::SpawnType::Knight,
+                         Game::Units::SpawnType::Swordsman,
                          1,
                          QVector3D(-6.0F, 0.0F, 0.0F),
                          Game::Systems::NationID::RomanRepublic);

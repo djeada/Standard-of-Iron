@@ -698,10 +698,10 @@ TEST(ShaderSource, TerrainGroundUsesCoherentBiomeMaterialPatches) {
   ASSERT_FALSE(frag.empty());
   const auto flat = collapse_whitespace(frag);
 
-  EXPECT_NE(flat.find("float meadow_field = (HAS_NOISE_ATLAS) ? baked_noise.a "
+  EXPECT_NE(flat.find("float meadow_field = (u_has_noise_atlas == 1) ? baked_noise.a "
                       ": clamp("),
             std::string::npos);
-  EXPECT_NE(flat.find("float thatch_field = (HAS_NOISE_ATLAS) ? "
+  EXPECT_NE(flat.find("float thatch_field = (u_has_noise_atlas == 1) ? "
                       "baked_noise_detail.r : clamp("),
             std::string::npos);
   EXPECT_NE(flat.find("float lush_patch = smoothstep("), std::string::npos);
@@ -746,25 +746,19 @@ TEST(ShaderSource, TerrainReadsTheBakedNoiseAtlasWithAProceduralFallback) {
     EXPECT_NE(frag.find(uniform), std::string::npos);
   }
 
-  EXPECT_NE(flat.find("#ifdef SOI_TERRAIN_BAKED #define HAS_NOISE_ATLAS true "
-                      "#define HAS_MICRODETAIL true #else #define HAS_NOISE_ATLAS "
-                      "(u_has_noise_atlas == 1) #define HAS_MICRODETAIL "
-                      "(u_has_microdetail == 1) #endif"),
-            std::string::npos);
-
   EXPECT_NE(flat.find("#include \"terrain_noise.glsl\""), std::string::npos);
   EXPECT_NE(flat_bake.find("#include \"terrain_noise.glsl\""), std::string::npos);
 
   EXPECT_NE(flat.find("baked_noise = texture(u_noise_atlas, atlas_uv);"),
             std::string::npos);
 
-  for (const auto* field : {"float regional_field = (HAS_NOISE_ATLAS) ? "
+  for (const auto* field : {"float regional_field = (u_has_noise_atlas == 1) ? "
                             "baked_noise.r : clamp(",
-                            "float soil_field = (HAS_NOISE_ATLAS) ? "
+                            "float soil_field = (u_has_noise_atlas == 1) ? "
                             "baked_noise.g : clamp(",
-                            "float moisture_field = (HAS_NOISE_ATLAS) ? "
+                            "float moisture_field = (u_has_noise_atlas == 1) ? "
                             "baked_noise.b : clamp(",
-                            "float meadow_field = (HAS_NOISE_ATLAS) ? "
+                            "float meadow_field = (u_has_noise_atlas == 1) ? "
                             "baked_noise.a : clamp("}) {
     EXPECT_NE(flat.find(field), std::string::npos);
   }

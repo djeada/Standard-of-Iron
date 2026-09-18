@@ -12,7 +12,7 @@
 #include "animation/clip_manifest.h"
 #include "game/core/component.h"
 #include "render/creature/humanoid_clip_ids.h"
-#include "render/entity/mounted_knight_pose.h"
+#include "render/entity/mounted_swordsman_pose.h"
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/horse/horse_motion.h"
 #include "render/humanoid/schema/skeleton_schema.h"
@@ -1117,7 +1117,7 @@ TEST(BpatRegistry, SwordHumanoidRidingChargeKeepsShieldHandMountedRelative) {
 
   auto horse_profile = Render::GL::make_horse_profile(0U, {}, {});
   auto mount = Render::GL::compute_mount_frame(horse_profile);
-  Render::GL::tune_mounted_knight_frame(horse_profile.dims, mount);
+  Render::GL::tune_mounted_swordsman_frame(horse_profile.dims, mount);
   QVector3D const expected = mount.seat_position + mount.seat_forward * 0.05F +
                              mount.seat_right * -0.16F + mount.seat_up * 0.22F;
 

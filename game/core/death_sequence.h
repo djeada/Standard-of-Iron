@@ -104,7 +104,7 @@ resolve_death_profile(const UnitComponent* unit,
   if (unit->spawn_type == SpawnType::Elephant) {
     return DeathSequenceProfile::Elephant;
   }
-  if (unit->spawn_type == SpawnType::MountedKnight ||
+  if (unit->spawn_type == SpawnType::MountedSwordsman ||
       unit->spawn_type == SpawnType::HorseArcher ||
       unit->spawn_type == SpawnType::HorseSpearman) {
     return DeathSequenceProfile::MountedRider;

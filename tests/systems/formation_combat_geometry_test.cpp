@@ -586,7 +586,7 @@ TEST_F(FormationCombatGeometry,
 
 TEST(CreaturePresentation, PublishesOneCombatContractForEveryCreaturePipeline) {
   for (auto const spawn_type : {Game::Units::SpawnType::Spearman,
-                                Game::Units::SpawnType::MountedKnight,
+                                Game::Units::SpawnType::MountedSwordsman,
                                 Game::Units::SpawnType::Elephant}) {
     Engine::Core::World world;
     auto* entity = world.create_entity();
@@ -640,7 +640,7 @@ TEST_F(FormationCombatGeometry, UnequalFormationsGiveEveryAttackerAnOpponentLane
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* target = add_spearmen(world, 2, 3.0F, 180.0F);
   target->get_component<Engine::Core::UnitComponent>()->spawn_type =
-      Game::Units::SpawnType::Knight;
+      Game::Units::SpawnType::Swordsman;
   target->get_component<Engine::Core::TransformComponent>()->scale = {0.6F, 0.6F, 0.6F};
   target->get_component<Engine::Core::UnitComponent>()->health = 40;
   auto const geometry =
@@ -774,7 +774,7 @@ TEST_F(FormationCombatGeometry, ChargeLockAtVisibleOverlapTransitionsToMeleeCont
   auto* cavalry = add_spearmen(world, 1, 0.0F, 0.0F);
   auto* infantry = add_spearmen(world, 2, 3.0F, 180.0F);
   cavalry->get_component<Engine::Core::UnitComponent>()->spawn_type =
-      Game::Units::SpawnType::MountedKnight;
+      Game::Units::SpawnType::MountedSwordsman;
 
   auto initial = Game::Systems::FormationCombat::contact_geometry(*cavalry, *infantry);
   auto* infantry_transform =

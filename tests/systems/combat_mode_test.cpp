@@ -378,7 +378,7 @@ TEST_F(CombatModeTest, HoldModeSpearmanStillLocksEnemyInMelee) {
   auto* enemy_transform = enemy->add_component<TransformComponent>(1.5F, 0.0F, 0.0F);
   auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   enemy_unit->owner_id = 2;
-  enemy_unit->spawn_type = Game::Units::SpawnType::Knight;
+  enemy_unit->spawn_type = Game::Units::SpawnType::Swordsman;
   auto* enemy_attack = enemy->add_component<AttackComponent>();
   enemy_attack->can_melee = true;
   enemy_attack->can_ranged = false;
@@ -1156,7 +1156,7 @@ TEST_F(CombatModeTest, ACommanderIsNotWalkedOffByADistantEnemy) {
   enemy->add_component<TransformComponent>(15.0F, 0.0F, 0.0F);
   auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   enemy_unit->owner_id = 2;
-  enemy_unit->spawn_type = Game::Units::SpawnType::Knight;
+  enemy_unit->spawn_type = Game::Units::SpawnType::Swordsman;
 
   auto const query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());
@@ -1193,7 +1193,7 @@ TEST_F(CombatModeTest, SupportAndWorkersNeverStartAFight) {
     enemy->add_component<TransformComponent>(2.0F, 0.0F, 0.0F);
     auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
     enemy_unit->owner_id = 2;
-    enemy_unit->spawn_type = Game::Units::SpawnType::Knight;
+    enemy_unit->spawn_type = Game::Units::SpawnType::Swordsman;
 
     auto const query_context =
         Game::Systems::Combat::build_combat_query_context(&scratch);
@@ -1233,13 +1233,13 @@ TEST_F(CombatModeTest, AutoEngagementSkipsAWalledOffEnemyForAReachableOne) {
   auto* behind_unit =
       behind_the_wall->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   behind_unit->owner_id = 2;
-  behind_unit->spawn_type = Game::Units::SpawnType::Knight;
+  behind_unit->spawn_type = Game::Units::SpawnType::Swordsman;
 
   auto* in_the_open = world->create_entity();
   in_the_open->add_component<TransformComponent>(-9.0F, 0.0F, 0.0F);
   auto* open_unit = in_the_open->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   open_unit->owner_id = 2;
-  open_unit->spawn_type = Game::Units::SpawnType::Knight;
+  open_unit->spawn_type = Game::Units::SpawnType::Swordsman;
 
   auto const query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());
@@ -1562,7 +1562,7 @@ TEST_F(CombatModeTest, InfantryMeleeQuicklyDestroysExposedSiegeEngines) {
     attacker_transform->rotation.y = 90.0F;
     auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
     attacker_unit->owner_id = 1;
-    attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
+    attacker_unit->spawn_type = Game::Units::SpawnType::Swordsman;
     auto* attack = attacker->add_component<AttackComponent>();
     attack->can_melee = true;
     attack->can_ranged = false;
@@ -1893,7 +1893,7 @@ TEST_F(CombatModeTest, RtsAttackProcessorDoesNotDriveCommanderFpvAttacks) {
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   attacker_unit->owner_id = 1;
-  attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Swordsman;
   auto* attacker_attack = attacker->add_component<AttackComponent>();
   attacker_attack->can_melee = true;
   attacker_attack->can_ranged = false;
@@ -1935,7 +1935,7 @@ TEST_F(CombatModeTest, RtsCommanderUsesTheSameAdvancedActionCatalog) {
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   attacker_unit->owner_id = 1;
-  attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Swordsman;
   attacker_unit->render_individuals_per_unit_override = 1;
   auto* attack = attacker->add_component<AttackComponent>();
   attack->can_melee = true;
@@ -1990,7 +1990,7 @@ TEST_F(CombatModeTest, CommanderFinisherFlagControlsFollowupPhaseDurations) {
   auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(attacker_unit, nullptr);
   attacker_unit->owner_id = 1;
-  attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Swordsman;
   auto* commander = attacker->add_component<CommanderComponent>();
   ASSERT_NE(commander, nullptr);
   commander->fpv_controlled = true;
@@ -2013,7 +2013,7 @@ TEST_F(CombatModeTest, CommanderFinisherFlagControlsFollowupPhaseDurations) {
   auto* finisher_unit = finisher->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(finisher_unit, nullptr);
   finisher_unit->owner_id = 1;
-  finisher_unit->spawn_type = Game::Units::SpawnType::Knight;
+  finisher_unit->spawn_type = Game::Units::SpawnType::Swordsman;
   auto* finisher_commander = finisher->add_component<CommanderComponent>();
   ASSERT_NE(finisher_commander, nullptr);
   finisher_commander->fpv_controlled = true;
@@ -2525,7 +2525,7 @@ TEST_F(CombatModeTest, LethalDamageStartsDeathSequenceBeforeCleanup) {
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   attacker_unit->owner_id = 1;
-  attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Swordsman;
   auto* attacker_attack = attacker->add_component<AttackComponent>();
   attacker_attack->current_mode = AttackComponent::CombatMode::Melee;
 
@@ -2582,7 +2582,7 @@ TEST_F(CombatModeTest, TheFallMatchesWhereTheKillingBlowCameFrom) {
     attacker->add_component<TransformComponent>(attacker_x, 0.0F, attacker_z);
     auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
     attacker_unit->owner_id = 1;
-    attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
+    attacker_unit->spawn_type = Game::Units::SpawnType::Swordsman;
 
     auto* target = world->create_entity();
     target->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
@@ -2607,7 +2607,7 @@ TEST_F(CombatModeTest, NonLethalDamageQueuesPerSoldierCasualtyAnimations) {
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   attacker_unit->owner_id = 1;
-  attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Swordsman;
 
   auto* target = world->create_entity();
   target->add_component<TransformComponent>(1.0F, 0.0F, 0.0F);
@@ -2648,7 +2648,7 @@ TEST_F(CombatModeTest, MountedAndElephantVictimsSelectDeathProfiles) {
   auto* mounted_target_unit =
       mounted_target->add_component<UnitComponent>(40, 100, 1.0F, 12.0F);
   mounted_target_unit->owner_id = 2;
-  mounted_target_unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  mounted_target_unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
 
   Game::Systems::Combat::deal_damage(
       world.get(), mounted_target, 80, mounted->get_id());
@@ -3556,7 +3556,7 @@ auto make_enemy_cavalry(World& world, float x, float z) -> Entity* {
   auto* enemy = make_enemy_soldier(world, x, z);
   auto* unit = enemy != nullptr ? enemy->get_component<UnitComponent>() : nullptr;
   if (unit != nullptr) {
-    unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+    unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
     unit->speed = 7.0F;
   }
   return enemy;
@@ -3567,7 +3567,7 @@ auto make_mounted_attacker(World& world, float x, float z) -> Entity* {
   attacker->add_component<TransformComponent>(x, 0.0F, z);
   auto* unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   unit->speed = 7.0F;
   auto* attack = attacker->add_component<AttackComponent>();
   attack->can_melee = true;

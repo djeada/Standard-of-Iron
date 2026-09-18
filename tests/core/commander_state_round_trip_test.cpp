@@ -29,7 +29,7 @@ protected:
     unit->health = 80;
     unit->max_health = 100;
     unit->owner_id = 1;
-    unit->spawn_type = Game::Units::SpawnType::Knight;
+    unit->spawn_type = Game::Units::SpawnType::Swordsman;
     auto* commander = entity->add_component<CommanderComponent>();
     commander->fpv_controlled = true;
     auto* rpg = entity->add_component<RpgHealthComponent>();

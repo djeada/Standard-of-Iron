@@ -102,11 +102,11 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
   Roman::register_spearman_renderer(registry);
   Carthage::register_spearman_renderer(registry);
 
-  Roman::register_knight_renderer(registry);
-  Carthage::register_knight_renderer(registry);
+  Roman::register_swordsman_renderer(registry);
+  Carthage::register_swordsman_renderer(registry);
 
-  Roman::register_mounted_knight_renderer(registry);
-  Carthage::register_mounted_knight_renderer(registry);
+  Roman::register_mounted_swordsman_renderer(registry);
+  Carthage::register_mounted_swordsman_renderer(registry);
 
   Roman::register_horse_archer_renderer(registry);
   Carthage::register_horse_archer_renderer(registry);

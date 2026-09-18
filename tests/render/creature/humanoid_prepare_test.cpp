@@ -1017,7 +1017,7 @@ TEST(HumanoidPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   Engine::Core::StandaloneEntity entity_scratch(1);
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->owner_id = 1;
   unit->max_health = 100;
   unit->health = 100;
@@ -1257,7 +1257,7 @@ TEST(HumanoidPrepare, BuiltInArchersUseBowReadyIdleClip) {
 TEST(HumanoidPrepare,
      MotionSnapshotDrivenInfantryMovementChangesVisibleLowerBodyPoseOverTime) {
   EXPECT_TRUE(moving_palette_changes_over_time("troops/roman/swordsman",
-                                               Game::Units::SpawnType::Knight,
+                                               Game::Units::SpawnType::Swordsman,
                                                Game::Systems::NationID::RomanRepublic,
                                                true));
   EXPECT_TRUE(moving_palette_changes_over_time("troops/roman/archer",
@@ -1289,7 +1289,7 @@ TEST(HumanoidPrepare, PersistentEntitySwordsmanWalkRequestAdvancesPhaseOverTime)
     auto* warm_unit =
         warm_entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     ASSERT_NE(warm_unit, nullptr);
-    warm_unit->spawn_type = Game::Units::SpawnType::Knight;
+    warm_unit->spawn_type = Game::Units::SpawnType::Swordsman;
     warm_unit->nation_id = Game::Systems::NationID::RomanRepublic;
     warm_ctx.entity = &warm_entity;
     CountingSubmitter warm_sink;
@@ -1316,7 +1316,7 @@ TEST(HumanoidPrepare, PersistentEntitySwordsmanWalkRequestAdvancesPhaseOverTime)
   ASSERT_NE(movement, nullptr);
   ASSERT_NE(transform, nullptr);
   ASSERT_NE(motion, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
   MovementTestAccess::set_has_target(*movement, true);
   MovementTestAccess::set_target_x(*movement, 6.0F);
@@ -1379,7 +1379,7 @@ TEST(HumanoidPrepare, StoppingAUnitBlendsTheStrideOutInsteadOfCutting) {
     auto* warm_unit =
         warm_entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     ASSERT_NE(warm_unit, nullptr);
-    warm_unit->spawn_type = Game::Units::SpawnType::Knight;
+    warm_unit->spawn_type = Game::Units::SpawnType::Swordsman;
     warm_unit->nation_id = Game::Systems::NationID::RomanRepublic;
     warm_ctx.entity = &warm_entity;
     CountingSubmitter warm_sink;
@@ -1406,7 +1406,7 @@ TEST(HumanoidPrepare, StoppingAUnitBlendsTheStrideOutInsteadOfCutting) {
   ASSERT_NE(movement, nullptr);
   ASSERT_NE(transform, nullptr);
   ASSERT_NE(motion, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
   transform->position = {0.0F, 0.0F, 0.0F};
   motion->initialized = true;
@@ -1510,7 +1510,7 @@ TEST(HumanoidPrepare, MultiSoldierCombatFallbackOffsetsAttackPhasePerSoldier) {
     auto* warm_unit =
         warm_entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     ASSERT_NE(warm_unit, nullptr);
-    warm_unit->spawn_type = Game::Units::SpawnType::Knight;
+    warm_unit->spawn_type = Game::Units::SpawnType::Swordsman;
     warm_unit->nation_id = Game::Systems::NationID::RomanRepublic;
     warm_ctx.entity = &warm_entity;
     CountingSubmitter warm_sink;
@@ -1531,7 +1531,7 @@ TEST(HumanoidPrepare, MultiSoldierCombatFallbackOffsetsAttackPhasePerSoldier) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
   unit->render_individuals_per_unit_override = 15;
 
@@ -6420,7 +6420,7 @@ TEST(HumanoidMotionQuality, MeleeHitsRecoveryAndRetargetingStayVisuallyContinuou
         auto& entity = scratch.entity();
         auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1, 12);
         unit->spawn_type = family == Engine::Core::CombatAttackFamily::Sword
-                               ? Game::Units::SpawnType::Knight
+                               ? Game::Units::SpawnType::Swordsman
                                : Game::Units::SpawnType::Spearman;
         unit->render_individuals_per_unit_override = 2;
         auto* transform = entity.add_component<Engine::Core::TransformComponent>();
@@ -7391,7 +7391,7 @@ TEST(HumanoidPrepare, AttackRequestsUsePerSoldierVisualPhaseOffsets) {
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->render_individuals_per_unit_override = 15;
   ctx.entity = &entity;
 
@@ -7468,7 +7468,7 @@ TEST(HumanoidPrepare, MovingCombatRecoveryUsesAttackClipInsteadOfWalkClip) {
   ASSERT_NE(combat_state, nullptr);
   ASSERT_NE(add_walk_motion(entity, unit->speed), nullptr);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   MovementTestAccess::set_has_target(*movement, true);
   MovementTestAccess::set_target_x(*movement, 4.0F);
   MovementTestAccess::set_target_y(*movement, 0.0F);
@@ -7511,7 +7511,7 @@ TEST(HumanoidPrepare, CombatAdvancePreservesWalkClipWhileClosingDistance) {
   ASSERT_NE(combat_state, nullptr);
   ASSERT_NE(add_walk_motion(entity, unit->speed), nullptr);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   MovementTestAccess::set_has_target(*movement, true);
   MovementTestAccess::set_target_x(*movement, 4.0F);
   MovementTestAccess::set_target_y(*movement, 0.0F);
@@ -7695,7 +7695,7 @@ TEST(HumanoidPrepare, CommandedMovementWithoutVelocityStillBuildsStride) {
   ASSERT_NE(transform, nullptr);
   ASSERT_NE(motion, nullptr);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   MovementTestAccess::set_has_target(*movement, true);
   MovementTestAccess::set_target_x(*movement, 6.0F);
   MovementTestAccess::set_target_y(*movement, 0.0F);
@@ -7749,7 +7749,7 @@ TEST(HumanoidPrepare, ActiveTargetMovementStillTriggersWalkAnimation) {
   ASSERT_NE(transform, nullptr);
   ASSERT_NE(motion, nullptr);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   MovementTestAccess::set_goal_x(*movement, 8.0F);
   MovementTestAccess::set_goal_y(*movement, 0.0F);
   MovementTestAccess::set_has_target(*movement, true);
@@ -7793,7 +7793,7 @@ TEST(HumanoidPrepare, WaypointMovementStillTriggersWalkAnimation) {
   ASSERT_NE(transform, nullptr);
   ASSERT_NE(motion, nullptr);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   MovementTestAccess::set_path(*movement, {{5.0F, 0.0F}});
   MovementTestAccess::set_path_index(*movement, 0);
   MovementTestAccess::set_goal_x(*movement, 5.0F);
@@ -7836,7 +7836,7 @@ TEST(HumanoidPrepare, VelocityOnlyMovementStillTriggersWalkAnimation) {
   ASSERT_NE(transform, nullptr);
   ASSERT_NE(motion, nullptr);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   MovementTestAccess::set_vx(*movement, 1.4F);
   MovementTestAccess::set_vz(*movement, 0.2F);
   transform->position = {0.0F, 0.0F, 0.0F};
@@ -7880,7 +7880,7 @@ TEST(HumanoidPrepare, ChaseIntentOutOfRangeTriggersWalkAnimation) {
   ASSERT_NE(transform, nullptr);
   ASSERT_NE(add_walk_motion(attacker, unit->speed), nullptr);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
   attack->range = 1.5F;
   attack_target->should_chase = true;
@@ -7932,7 +7932,7 @@ TEST(HumanoidPrepare, ChaseIntentInRangePreservesAttackInsteadOfWalk) {
   ASSERT_NE(attack_target, nullptr);
   ASSERT_NE(transform, nullptr);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
   attack->range = 1.5F;
   attack->time_since_last = 0.05F;
@@ -8088,7 +8088,7 @@ TEST(HumanoidPrepare, SampledMovementSnapshotDrivesPreparationAfterIntentClears)
   ASSERT_NE(transform, nullptr);
   ASSERT_NE(motion, nullptr);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   MovementTestAccess::set_has_target(*movement, true);
   MovementTestAccess::set_target_x(*movement, 7.0F);
   MovementTestAccess::set_target_y(*movement, 0.0F);
@@ -8135,7 +8135,7 @@ TEST(HumanoidPrepare, IdleAnimationOverrideSuppressesLiveMovementIntent) {
   ASSERT_NE(movement, nullptr);
   ASSERT_NE(transform, nullptr);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   MovementTestAccess::set_has_target(*movement, true);
   MovementTestAccess::set_target_x(*movement, 9.0F);
   MovementTestAccess::set_target_y(*movement, 0.0F);
@@ -8173,7 +8173,7 @@ TEST(HumanoidPrepare, MovingAnimationOverrideBuildsStrideWithoutLiveIntent) {
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(transform, nullptr);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   transform->position = {0.0F, 0.0F, 0.0F};
   transform->rotation = {0.0F, 0.0F, 0.0F};
   ctx.entity = &entity;
@@ -8234,7 +8234,7 @@ TEST(HumanoidPrepare, CommanderFpvAttacksKeepAuthoredClipPhaseMapping) {
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs anim{};
@@ -8287,7 +8287,7 @@ TEST(HumanoidPrepare, StationaryCommanderGuardUsesHoldClipButMovingGuardKeepsWal
     auto* unit =
         entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     ASSERT_NE(unit, nullptr);
-    unit->spawn_type = Game::Units::SpawnType::Knight;
+    unit->spawn_type = Game::Units::SpawnType::Swordsman;
     unit->nation_id = Game::Systems::NationID::RomanRepublic;
     ctx.entity = &entity;
 
@@ -8637,7 +8637,7 @@ TEST(HumanoidPrepare, ShieldBearingGuardFallsBackToNationFrontFormationPose) {
         auto* unit =
             entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
         ASSERT_NE(unit, nullptr);
-        unit->spawn_type = Game::Units::SpawnType::Knight;
+        unit->spawn_type = Game::Units::SpawnType::Swordsman;
         unit->nation_id = nation_id;
         guard_ctx.entity = &entity;
 
@@ -8686,7 +8686,7 @@ TEST(HumanoidPrepare, FormationSamplingBlendsRomanInfantryShieldGuardInAndOut) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
   auto* persistent =
       entity.add_component<Render::Creature::HumanoidAnimationStateComponent>();
@@ -8829,7 +8829,7 @@ TEST(HumanoidPrepare, FormationGuardDoesNotBuildHiddenKneelWhileAttacking) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->nation_id = Game::Systems::NationID::Carthage;
   ASSERT_NE(entity.add_component<Render::Creature::HumanoidAnimationStateComponent>(),
             nullptr);
@@ -8981,7 +8981,7 @@ TEST(HumanoidPrepare, FormationUsesRomanTopInteriorAndDistinctCarthageFrontShiel
     if (unit == nullptr) {
       return std::unordered_set<Render::Creature::ArchetypeId>{};
     }
-    unit->spawn_type = Game::Units::SpawnType::Knight;
+    unit->spawn_type = Game::Units::SpawnType::Swordsman;
     unit->nation_id = nation_id;
     unit->render_individuals_per_unit_override = 15;
     auto* formation_mode = entity.add_component<Engine::Core::FormationModeComponent>();
@@ -9171,7 +9171,7 @@ TEST(HumanoidPrepare, RomanFormationFrontShieldMatchesDefaultRomanGuardFallback)
     if (unit == nullptr) {
       return nullptr;
     }
-    unit->spawn_type = Game::Units::SpawnType::Knight;
+    unit->spawn_type = Game::Units::SpawnType::Swordsman;
     unit->nation_id = Game::Systems::NationID::RomanRepublic;
     if (formation_active) {
       auto* formation_mode =
@@ -9260,7 +9260,7 @@ TEST(HumanoidPrepare, CarthageFormationFrontShieldTiltsOverBody) {
     if (unit == nullptr) {
       return nullptr;
     }
-    unit->spawn_type = Game::Units::SpawnType::Knight;
+    unit->spawn_type = Game::Units::SpawnType::Swordsman;
     unit->nation_id = Game::Systems::NationID::Carthage;
     if (formation_active) {
       auto* formation_mode =
@@ -9367,7 +9367,7 @@ TEST(HumanoidPrepare, RomanSwordsmanUsesRomanScutumRoleLayout) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
   ctx.entity = &entity;
 
@@ -9410,7 +9410,7 @@ TEST(HumanoidPrepare, BuiltInRomanSwordsmanRemainsVisibleAfterGuardTransition) {
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(persistent, nullptr);
   ASSERT_NE(formation_mode, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
   formation_mode->active = true;
   ctx.entity = &entity;
@@ -9510,7 +9510,7 @@ TEST(HumanoidPrepare, CarthageSwordsmanUsesCarthageShieldRoleLayout) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->nation_id = Game::Systems::NationID::Carthage;
   ctx.entity = &entity;
 
@@ -9742,7 +9742,7 @@ TEST(HumanoidPrepare, RomanMountedSwordsmanUsesRomanScutumRoleLayout) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
   ctx.entity = &entity;
 
@@ -9775,7 +9775,7 @@ TEST(HumanoidPrepare, CarthageMountedSwordsmanUsesCarthageShieldRoleLayout) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   unit->nation_id = Game::Systems::NationID::Carthage;
   ctx.entity = &entity;
 
@@ -9877,7 +9877,7 @@ TEST(HumanoidPrepare, CommanderJumpLiftSurvivesSurfaceGrounding) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
 
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
@@ -10703,7 +10703,7 @@ TEST(HumanoidPrepare, TemplatePrewarmRenderLeavesHumanoidAnimationStateUntouched
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->owner_id = 1;
   unit->max_health = 100;
   unit->health = 100;
@@ -10836,7 +10836,7 @@ TEST(HumanoidPrepare, FormationAmbientIdlesStaggerAndRotatePerSoldier) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 2.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->render_individuals_per_unit_override = 12;
   entity.add_component<Engine::Core::TransformComponent>();
   ctx.entity = &entity;
@@ -10898,7 +10898,7 @@ TEST(HumanoidPrepare, PopulationLodKeepsRepresentativesAcrossFormationFootprint)
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->render_individuals_per_unit_override = 16;
   entity.add_component<Engine::Core::TransformComponent>();
   ctx.entity = &entity;
@@ -10924,7 +10924,7 @@ TEST(HumanoidPrepare, SwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   auto* persistent =
       entity.add_component<Render::Creature::HumanoidAnimationStateComponent>();
   ASSERT_NE(persistent, nullptr);
@@ -11178,7 +11178,7 @@ TEST(HumanoidPrepare, HitReactionDoesNotMoveOrSquashFormationRoot) {
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(transform, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   transform->position = {2.0F, 0.0F, 3.0F};
   ctx.entity = &entity;
 
@@ -11231,7 +11231,7 @@ TEST(HumanoidPrepare, FogHiddenMemberIsRejectedBeforeBodyPreparation) {
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(transform, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   transform->position = {0.0F, 0.0F, 0.0F};
   ctx.entity = &entity;
 
@@ -11272,7 +11272,7 @@ TEST(HumanoidPrepare, SoldierUsesCentralFrustumGuardBandAtScreenEdge) {
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(transform, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   transform->position = {3.8F, 0.0F, 0.0F};
   ctx.entity = &entity;
 

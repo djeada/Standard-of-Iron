@@ -77,7 +77,7 @@ protected:
     unit->max_health = 100;
     unit->owner_id = 1;
     unit->speed = 3.0F;
-    unit->spawn_type = Game::Units::SpawnType::Knight;
+    unit->spawn_type = Game::Units::SpawnType::Swordsman;
     return entity;
   }
 
@@ -95,7 +95,7 @@ protected:
     unit->max_health = 100;
     unit->owner_id = 2;
     unit->speed = 3.0F;
-    unit->spawn_type = Game::Units::SpawnType::Knight;
+    unit->spawn_type = Game::Units::SpawnType::Swordsman;
     return entity;
   }
 

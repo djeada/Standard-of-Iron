@@ -110,7 +110,7 @@ public:
   float aura_ability_remaining{0.0F};
   float aura_ability_cooldown{60.0F};
   float aura_ability_cooldown_remaining{0.0F};
-  Game::Units::SpawnType aura_affinity_spawn_type{Game::Units::SpawnType::Knight};
+  Game::Units::SpawnType aura_affinity_spawn_type{Game::Units::SpawnType::Swordsman};
 
   std::uint8_t signature_move{0U};
   std::string signature_name;

@@ -7,7 +7,7 @@
 namespace Render::GL::Carthage {
 
 void register_carthage_swordsman_style() {
-  KnightStyleConfig carthage;
+  SwordsmanStyleConfig carthage;
   carthage.cloth_color = QVector3D(0.15F, 0.36F, 0.55F);
   carthage.leather_color = QVector3D(0.32F, 0.22F, 0.12F);
   carthage.leather_dark_color = QVector3D(0.32F, 0.22F, 0.15F);
@@ -19,7 +19,7 @@ void register_carthage_swordsman_style() {
   carthage.has_scabbard = false;
   carthage.shield_cross_decal = false;
 
-  KnightStyleConfig sepulcher = carthage;
+  SwordsmanStyleConfig sepulcher = carthage;
   sepulcher.skin_color = Sepulcher::k_bone;
   sepulcher.cloth_color = Sepulcher::k_grave_cloth;
   sepulcher.leather_color = Sepulcher::k_grave_leather;

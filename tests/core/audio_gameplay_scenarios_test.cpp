@@ -270,18 +270,18 @@ float AudioGameplayScenarioTest::s_saved_master = 1.0F;
 float AudioGameplayScenarioTest::s_saved_sound = 1.0F;
 
 TEST_F(AudioGameplayScenarioTest, ASwordLandingOnAPlayerSoldierIsHeard) {
-  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Knight, 0.0F);
+  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 0.0F);
   auto* target = add_soldier(k_local_owner, Game::Units::SpawnType::Spearman, 2.0F);
 
   Game::Systems::Combat::apply_unit_damage(&m_world, target, 10, attacker->get_id());
 
   EXPECT_TRUE(heard(Game::Audio::Cue::k_combat_hit_sword))
-      << "a knight struck a player soldier and the blow was silent";
+      << "a swordsman struck a player soldier and the blow was silent";
 }
 
 TEST_F(AudioGameplayScenarioTest, TheAttackersWeaponPicksTheImpactSound) {
   auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Spearman, 0.0F);
-  auto* target = add_soldier(k_local_owner, Game::Units::SpawnType::Knight, 2.0F);
+  auto* target = add_soldier(k_local_owner, Game::Units::SpawnType::Swordsman, 2.0F);
 
   Game::Systems::Combat::apply_unit_damage(&m_world, target, 10, attacker->get_id());
 
@@ -291,7 +291,7 @@ TEST_F(AudioGameplayScenarioTest, TheAttackersWeaponPicksTheImpactSound) {
 }
 
 TEST_F(AudioGameplayScenarioTest, ADyingSoldierIsHeardAndReportedLost) {
-  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Knight, 0.0F);
+  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 0.0F);
   auto* target = add_soldier(k_local_owner, Game::Units::SpawnType::Spearman, 2.0F);
 
   Game::Systems::Combat::apply_unit_damage(&m_world, target, 10000, attacker->get_id());
@@ -302,7 +302,7 @@ TEST_F(AudioGameplayScenarioTest, ADyingSoldierIsHeardAndReportedLost) {
 }
 
 TEST_F(AudioGameplayScenarioTest, KillingAnEnemyDoesNotRaiseTheLostUnitAlert) {
-  auto* attacker = add_soldier(k_local_owner, Game::Units::SpawnType::Knight, 0.0F);
+  auto* attacker = add_soldier(k_local_owner, Game::Units::SpawnType::Swordsman, 0.0F);
   auto* target = add_soldier(k_enemy_owner, Game::Units::SpawnType::Spearman, 2.0F);
 
   Game::Systems::Combat::apply_unit_damage(&m_world, target, 10000, attacker->get_id());
@@ -313,7 +313,7 @@ TEST_F(AudioGameplayScenarioTest, KillingAnEnemyDoesNotRaiseTheLostUnitAlert) {
 }
 
 TEST_F(AudioGameplayScenarioTest, TwoRivalArmiesFightingIsNotThePlayersBusiness) {
-  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Knight, 0.0F);
+  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 0.0F);
   auto* target = add_soldier(3, Game::Units::SpawnType::Spearman, 2.0F);
 
   Game::Systems::Combat::apply_unit_damage(&m_world, target, 10, attacker->get_id());
@@ -329,7 +329,7 @@ TEST_F(AudioGameplayScenarioTest, TwoRivalArmiesFightingIsNotThePlayersBusiness)
 }
 
 TEST_F(AudioGameplayScenarioTest, AnAttackOnThePlayersBuildingRaisesTheAlarm) {
-  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Knight, 0.0F);
+  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 0.0F);
   auto* barracks = add_barracks(k_local_owner, 3.0F);
 
   Game::Systems::Combat::apply_unit_damage(&m_world, barracks, 25, attacker->get_id());
@@ -433,7 +433,8 @@ TEST_F(AudioGameplayScenarioTest, AWolfPackStartingAHuntIsHeard) {
 }
 
 TEST_F(AudioGameplayScenarioTest, MountedAndElephantAttacksHaveTheirOwnImpacts) {
-  auto* rider = add_soldier(k_enemy_owner, Game::Units::SpawnType::MountedKnight, 0.0F);
+  auto* rider =
+      add_soldier(k_enemy_owner, Game::Units::SpawnType::MountedSwordsman, 0.0F);
   auto* target = add_soldier(k_local_owner, Game::Units::SpawnType::Spearman, 2.0F);
   Game::Systems::Combat::apply_unit_damage(&m_world, target, 5, rider->get_id());
   EXPECT_TRUE(heard(Game::Audio::Cue::k_combat_hit_cavalry));
@@ -445,7 +446,7 @@ TEST_F(AudioGameplayScenarioTest, MountedAndElephantAttacksHaveTheirOwnImpacts) 
 }
 
 TEST_F(AudioGameplayScenarioTest, ABuildingComingDownIsHeardAsAStructureNotASoldier) {
-  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Knight, 0.0F);
+  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 0.0F);
   auto* barracks = add_barracks(k_local_owner, 3.0F);
 
   Game::Systems::Combat::apply_unit_damage(
@@ -587,7 +588,7 @@ TEST_F(AudioGameplayScenarioTest, QueueingATroopAcknowledgesTheOrder) {
 }
 
 TEST_F(AudioGameplayScenarioTest, ABlowOnAWallSoundsLikeStoneNotLikeAMan) {
-  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Knight, 0.0F);
+  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 0.0F);
   auto* barracks = add_barracks(k_local_owner, 3.0F);
 
   Game::Systems::Combat::apply_unit_damage(&m_world, barracks, 20, attacker->get_id());
@@ -639,7 +640,8 @@ TEST_F(AudioGameplayScenarioTest, AFightAcrossTheMapIsNotHeardAtTheCamera) {
                                             .right_z = 0.0F,
                                             .valid = true});
 
-  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Knight, 400.0F);
+  auto* attacker =
+      add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 400.0F);
   auto* target = add_soldier(k_local_owner, Game::Units::SpawnType::Spearman, 402.0F);
 
   Game::Systems::Combat::apply_unit_damage(&m_world, target, 10, attacker->get_id());
@@ -669,7 +671,7 @@ TEST_F(AudioGameplayScenarioTest, AFightAtTheCameraIsHeardInFull) {
                                             .right_z = 0.0F,
                                             .valid = true});
 
-  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Knight, 0.0F);
+  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 0.0F);
   auto* target = add_soldier(k_local_owner, Game::Units::SpawnType::Spearman, 2.0F);
 
   Game::Systems::Combat::apply_unit_damage(&m_world, target, 10, attacker->get_id());
@@ -686,7 +688,8 @@ TEST_F(AudioGameplayScenarioTest, ADistantBattleIsCarriedAsOneMassNotAsSilence) 
                                             .right_z = 0.0F,
                                             .valid = true});
 
-  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Knight, 400.0F);
+  auto* attacker =
+      add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 400.0F);
   auto* target = add_soldier(k_local_owner, Game::Units::SpawnType::Spearman, 402.0F);
 
   constexpr const char* k_distant_mass = "sfx.combat.battlefield_distant_mass_01";
@@ -720,7 +723,8 @@ TEST_F(AudioGameplayScenarioTest, ATradedBlowOrTwoFarAwayIsNotABattle) {
                                             .right_z = 0.0F,
                                             .valid = true});
 
-  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Knight, 400.0F);
+  auto* attacker =
+      add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 400.0F);
   auto* target = add_soldier(k_local_owner, Game::Units::SpawnType::Spearman, 402.0F);
 
   Game::Systems::Combat::apply_unit_damage(&m_world, target, 1, attacker->get_id());
@@ -739,7 +743,7 @@ TEST_F(AudioGameplayScenarioTest, FightingUnderTheCameraNeverBecomesADistantBed)
                                             .right_z = 0.0F,
                                             .valid = true});
 
-  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Knight, 0.0F);
+  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 0.0F);
   auto* target = add_soldier(k_local_owner, Game::Units::SpawnType::Spearman, 2.0F);
 
   for (int blow = 0; blow < 10; ++blow) {
@@ -754,7 +758,7 @@ TEST_F(AudioGameplayScenarioTest, FightingUnderTheCameraNeverBecomesADistantBed)
 }
 
 TEST_F(AudioGameplayScenarioTest, EveryScenarioCueReachedTheMixerFromRealGameplay) {
-  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Knight, 0.0F);
+  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 0.0F);
   auto* target = add_soldier(k_local_owner, Game::Units::SpawnType::Spearman, 2.0F);
 
   Game::Systems::Combat::apply_unit_damage(&m_world, target, 10, attacker->get_id());

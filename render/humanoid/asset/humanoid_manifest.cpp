@@ -21,7 +21,7 @@
 #include "animation/showcase_pose_manifest.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/movement_state.h"
-#include "render/entity/mounted_knight_pose.h"
+#include "render/entity/mounted_swordsman_pose.h"
 #include "render/equipment/weapons/spear_renderer.h"
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/gl/humanoid/humanoid_types.h"
@@ -2272,7 +2272,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
 
     auto horse_profile = Render::GL::make_horse_profile(0U, {}, {});
     auto mount = Render::GL::compute_mount_frame(horse_profile);
-    Render::GL::tune_mounted_knight_frame(horse_profile.dims, mount);
+    Render::GL::tune_mounted_swordsman_frame(horse_profile.dims, mount);
 
     Render::GL::MountedPoseController ctrl(pose, anim_ctx_r);
     if (profile == BakeProfile::SwordReady &&

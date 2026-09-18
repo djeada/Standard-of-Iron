@@ -389,12 +389,22 @@ void render_effects(const RenderEffectsContext& context,
 
     const auto& preview = context.command_controller->formation().formation_preview();
     placement.slot_markers.reserve(preview.slot_list.size());
-    for (const auto& slot : preview.slot_list) {
+    for (std::size_t index = 0; index < preview.slot_list.size(); ++index) {
+      const auto& slot = preview.slot_list[index];
       Render::GL::FormationSlotMarker marker;
       marker.position = slot.world_position;
       marker.position.setY(session.terrain().get_terrain_height(
           slot.world_position.x(), slot.world_position.z()));
-      marker.radius = std::max(0.6F, preview.spacing * 0.45F);
+
+      float const half_width = index < preview.slot_half_width.size()
+                                   ? preview.slot_half_width[index]
+                                   : preview.slot_spacing * 0.45F;
+      float const half_depth = index < preview.slot_half_depth.size()
+                                   ? preview.slot_half_depth[index]
+                                   : preview.slot_spacing * 0.45F;
+      marker.radius = std::max(0.6F, half_width);
+      marker.half_width = std::max(0.6F, half_width);
+      marker.half_depth = std::max(0.5F, half_depth);
       marker.facing_degrees = slot.facing;
       marker.blocked = slot.status == Game::Formation::SlotStatus::Blocked;
       marker.adjusted = slot.status == Game::Formation::SlotStatus::Adjusted;

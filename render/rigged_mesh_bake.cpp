@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <cstddef>
 #include <limits>
 #include <mutex>
 #include <set>
@@ -31,14 +30,6 @@
 namespace Render::Creature {
 
 namespace {
-
-template <typename Vector>
-void reserve_for_append(Vector& values, std::size_t appended) {
-  std::size_t const needed = values.size() + appended;
-  if (needed > values.capacity()) {
-    values.reserve(std::max(needed, values.capacity() * 2U));
-  }
-}
 
 using Render::GL::Mesh;
 using Render::GL::RiggedVertex;
@@ -350,7 +341,7 @@ void append_primitive_vertices(const PrimitiveInstance& prim,
   auto const tail =
       two_bone ? static_cast<std::uint8_t>(prim.params.tail_bone) : anchor;
 
-  reserve_for_append(out.vertices, src_verts.size());
+  out.vertices.reserve(out.vertices.size() + src_verts.size());
   for (Vertex const& v : src_verts) {
     QVector3D const local_pos{v.position[0], v.position[1], v.position[2]};
     QVector3D const local_norm{v.normal[0], v.normal[1], v.normal[2]};
@@ -388,7 +379,7 @@ void append_primitive_vertices(const PrimitiveInstance& prim,
     out.vertices.push_back(rv);
   }
 
-  reserve_for_append(out.indices, src_idx.size());
+  out.indices.reserve(out.indices.size() + src_idx.size());
   for (unsigned int const idx : src_idx) {
     out.indices.push_back(base_vertex + static_cast<std::uint32_t>(idx));
   }
@@ -491,7 +482,7 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
     auto const bone = static_cast<std::uint8_t>(spec.socket_bone_index & 0xFFU);
     auto const normal_matrix = attach_model.normalMatrix();
 
-    reserve_for_append(out.vertices, src_verts.size());
+    out.vertices.reserve(out.vertices.size() + src_verts.size());
     for (Render::GL::Vertex const& v : src_verts) {
       QVector3D const local_pos{v.position[0], v.position[1], v.position[2]};
       QVector3D const local_norm{v.normal[0], v.normal[1], v.normal[2]};
@@ -508,7 +499,7 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
       out.vertices.push_back(rv);
     }
 
-    reserve_for_append(out.indices, src_idx.size());
+    out.indices.reserve(out.indices.size() + src_idx.size());
     for (unsigned int const idx : src_idx) {
       out.indices.push_back(base_vertex + static_cast<std::uint32_t>(idx));
     }

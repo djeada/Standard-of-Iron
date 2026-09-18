@@ -31,7 +31,7 @@ auto add_unit(Engine::Core::World& world, float x, float z) -> Engine::Core::Ent
   auto* transform = entity->add_component<Engine::Core::TransformComponent>();
   auto* unit = entity->add_component<Engine::Core::UnitComponent>();
   transform->position = {x, 0.0F, z};
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->nation_id = NationID::RomanRepublic;
   unit->health = 100;
   unit->max_health = 100;

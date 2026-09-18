@@ -82,7 +82,7 @@ auto make_enemy(World& world, float x, float z) -> Entity* {
   unit->health = 100;
   unit->max_health = 100;
   unit->owner_id = 2;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   return entity;
 }
 

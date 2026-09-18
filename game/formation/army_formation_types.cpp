@@ -53,10 +53,11 @@ constexpr NameTable<MovementPolicy, 2> k_movement{
     {{{MovementPolicy::ReformAtDestination, "reform_at_destination"},
       {MovementPolicy::MaintainFormation, "maintain_formation"}}}};
 
-constexpr NameTable<RangedPlacement, 3> k_ranged{
+constexpr NameTable<RangedPlacement, 4> k_ranged{
     {{{RangedPlacement::Rear, "rear"},
       {RangedPlacement::Front, "front"},
-      {RangedPlacement::Skirmish, "skirmish"}}}};
+      {RangedPlacement::Skirmish, "skirmish"},
+      {RangedPlacement::Automatic, "automatic"}}}};
 
 constexpr NameTable<MixedDoctrinePolicy, 4> k_mixed{
     {{{MixedDoctrinePolicy::MajorityDoctrine, "majority_doctrine"},

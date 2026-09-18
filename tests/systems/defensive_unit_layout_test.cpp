@@ -40,7 +40,7 @@ protected:
   }
 
   auto spawn(NationID nation,
-             Game::Units::SpawnType type = Game::Units::SpawnType::Knight,
+             Game::Units::SpawnType type = Game::Units::SpawnType::Swordsman,
              float x = 0.0F,
              float z = 0.0F) -> Entity* {
     auto* entity = world->create_entity();
@@ -138,8 +138,9 @@ TEST_F(DefensiveUnitLayoutTest, ASelectedSingleUnitCanFormTestudoByItself) {
 }
 
 TEST_F(DefensiveUnitLayoutTest, SelectedUnitsDoNotReceiveInterUnitSlotsOrMoveOrders) {
-  auto* left = spawn(NationID::RomanRepublic, Game::Units::SpawnType::Knight, -9.0F);
-  auto* right = spawn(NationID::RomanRepublic, Game::Units::SpawnType::Knight, 11.0F);
+  auto* left = spawn(NationID::RomanRepublic, Game::Units::SpawnType::Swordsman, -9.0F);
+  auto* right =
+      spawn(NationID::RomanRepublic, Game::Units::SpawnType::Swordsman, 11.0F);
   initialize_layouts();
 
   issue_guard({left, right});
@@ -162,8 +163,9 @@ TEST_F(DefensiveUnitLayoutTest, SelectedUnitsDoNotReceiveInterUnitSlotsOrMoveOrd
 }
 
 TEST_F(DefensiveUnitLayoutTest, EachFactionUsesItsOwnFormationTime) {
-  auto* roman = spawn(NationID::RomanRepublic, Game::Units::SpawnType::Knight, -3.0F);
-  auto* carthage = spawn(NationID::Carthage, Game::Units::SpawnType::Knight, 3.0F);
+  auto* roman =
+      spawn(NationID::RomanRepublic, Game::Units::SpawnType::Swordsman, -3.0F);
+  auto* carthage = spawn(NationID::Carthage, Game::Units::SpawnType::Swordsman, 3.0F);
   initialize_layouts();
   issue_guard({roman, carthage});
 
@@ -236,8 +238,9 @@ TEST_F(DefensiveUnitLayoutTest, TestudoProtectsFrontAndPunishesRearExposure) {
 }
 
 TEST_F(DefensiveUnitLayoutTest, CarthaginianWallIsFasterButLessMissileProof) {
-  auto* roman = spawn(NationID::RomanRepublic, Game::Units::SpawnType::Knight, -2.0F);
-  auto* carthage = spawn(NationID::Carthage, Game::Units::SpawnType::Knight, 2.0F);
+  auto* roman =
+      spawn(NationID::RomanRepublic, Game::Units::SpawnType::Swordsman, -2.0F);
+  auto* carthage = spawn(NationID::Carthage, Game::Units::SpawnType::Swordsman, 2.0F);
   initialize_layouts();
   issue_guard({roman, carthage});
   advance(3.2F);
@@ -255,7 +258,7 @@ TEST_F(DefensiveUnitLayoutTest, CarthaginianWallIsFasterButLessMissileProof) {
 }
 
 TEST_F(DefensiveUnitLayoutTest, GuardOffOpensTheSameUnitWithoutMovingIt) {
-  auto* roman = spawn(NationID::RomanRepublic, Game::Units::SpawnType::Knight, 7.0F);
+  auto* roman = spawn(NationID::RomanRepublic, Game::Units::SpawnType::Swordsman, 7.0F);
   initialize_layouts();
   issue_guard({roman});
   advance(3.2F);

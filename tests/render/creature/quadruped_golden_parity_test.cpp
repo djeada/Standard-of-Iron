@@ -425,7 +425,7 @@ auto capture_mounted(const Render::GL::EntityRendererRegistry& registry,
   Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
   unit->render_individuals_per_unit_override = 1;
 

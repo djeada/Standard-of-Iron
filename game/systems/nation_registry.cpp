@@ -202,7 +202,7 @@ void NationRegistry::register_default_nations() {
     append_troop(Game::Units::TroopType::Archer);
     append_troop(Game::Units::TroopType::Swordsman);
     append_troop(Game::Units::TroopType::Spearman);
-    append_troop(Game::Units::TroopType::MountedKnight);
+    append_troop(Game::Units::TroopType::MountedSwordsman);
 
     register_nation(std::move(roman));
     m_default_nation = NationID::RomanRepublic;

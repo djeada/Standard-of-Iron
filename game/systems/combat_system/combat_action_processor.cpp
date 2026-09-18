@@ -64,6 +64,17 @@ auto is_advanced_rts_commander_melee(
               Game::Systems::CombatActions::WeaponFamily::Spear);
 }
 
+auto commander_swings_under_player_control(
+    const Engine::Core::CommanderComponent* commander,
+    const Game::Systems::CombatActions::CombatActionDefinition& definition) -> bool {
+  return commander != nullptr && commander->fpv_controlled &&
+         definition.commander_only &&
+         (definition.weapon_family ==
+              Game::Systems::CombatActions::WeaponFamily::Sword ||
+          definition.weapon_family ==
+              Game::Systems::CombatActions::WeaponFamily::Spear);
+}
+
 auto target_uses_rpg_combat(Engine::Core::World& world,
                             Engine::Core::EntityID target_id) -> bool {
   auto* target = world.get_entity(target_id);
@@ -882,6 +893,26 @@ void deal_weapon_trace_damage(
                                    result,
                                    contact.contact_point,
                                    contact.contact_speed);
+
+    auto const* commander =
+        world.try_get<Engine::Core::CommanderComponent>(attacker.get_id());
+    if (result.applied &&
+        commander_swings_under_player_control(commander, definition)) {
+      auto const* attacker_transform =
+          world.try_get<Engine::Core::TransformComponent>(attacker.get_id());
+      auto const* target_transform =
+          world.try_get<Engine::Core::TransformComponent>(struck->get_id());
+      if (attacker_transform != nullptr && target_transform != nullptr) {
+        bool const signature_strike = commander->signature_strike_active;
+        record_signature_contact(
+            attacker,
+            *attacker_transform,
+            *target_transform,
+            commander_strike_form(definition, commander),
+            commander_strike_intensity(definition, signature_strike),
+            std::max(definition.hit_shape.reach, 1.2F));
+      }
+    }
   }
 
   if (presentation_state != nullptr) {
@@ -1175,16 +1206,19 @@ void handle_action_events(
     auto const action_id = static_cast<Game::Systems::CombatActions::CombatActionId>(
         action.combat_action_id);
     bool const advanced_rts_melee = is_advanced_rts_commander_melee(entity, definition);
+    auto const* commander =
+        world.try_get<Engine::Core::CommanderComponent>(entity.get_id());
     if (event.type ==
             Game::Systems::CombatActions::CombatActionEventType::WeaponTraceStart &&
         (advanced_rts_melee ||
+         commander_swings_under_player_control(commander, definition) ||
          action_id == Game::Systems::CombatActions::CombatActionId::RtsCommanderCut ||
          action_id ==
              Game::Systems::CombatActions::CombatActionId::RtsCommanderThrust)) {
-      auto const* commander = entity.get_component<Engine::Core::CommanderComponent>();
-      auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
+      auto const* transform =
+          world.try_get<Engine::Core::TransformComponent>(entity.get_id());
       auto const* attack = entity.get_component<Engine::Core::AttackComponent>();
-      if (commander != nullptr && !commander->fpv_controlled && transform != nullptr) {
+      if (commander != nullptr && transform != nullptr) {
         float const reach = std::max(attack != nullptr ? attack->melee_range : 0.0F,
                                      definition.hit_shape.reach) +
                             (commander->signature_strike_active

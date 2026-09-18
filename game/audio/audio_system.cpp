@@ -376,12 +376,6 @@ auto AudioSystem::is_resource_ready(const std::string& resource_id) const -> boo
          get_active_instance_count_locked(resolved_id) < config.max_instances;
 }
 
-auto AudioSystem::has_pending_mission_decodes() const -> bool {
-  const MiniaudioBackend* backend =
-      (m_music_player != nullptr) ? m_music_player->get_backend() : nullptr;
-  return backend != nullptr && backend->has_pending_decodes();
-}
-
 auto AudioSystem::resource_cooldown_ms(const std::string& resource_id) const -> int {
   std::lock_guard<std::mutex> const lock(resource_mutex);
   return get_resource_config_locked(resolve_resource_id_locked(resource_id))

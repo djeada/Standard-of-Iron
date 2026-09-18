@@ -101,7 +101,6 @@ public:
     return m_analyses_computed.load(std::memory_order_relaxed);
   }
   auto is_track_decode_pending(const QString& id) const -> bool;
-  [[nodiscard]] auto has_pending_decodes() const -> bool;
 
   void on_audio(float* output, unsigned frames);
   void set_offline_render(bool enabled) { m_offline_render = enabled; }
@@ -157,7 +156,6 @@ private:
                     const float* pcm,
                     std::size_t frames) -> Game::Audio::Mastering::Analysis;
   [[nodiscard]] auto take_next_job(DecodeJob& job) -> bool;
-  void cancel_queued_decode(const QString& id);
   void finish_job(const DecodeJob& job, bool decoded);
   void release_slot(int slot);
   void decode_worker();

@@ -713,8 +713,7 @@
       "cooldown_ms": 140,
       "resources": [
         "sfx.combat.armour_hit_01",
-        "sfx.combat.armour_hit_02",
-        "sfx.combat.armour_hit_03"
+        "sfx.combat.armour_hit_02"
       ],
       "spatial": true
     },

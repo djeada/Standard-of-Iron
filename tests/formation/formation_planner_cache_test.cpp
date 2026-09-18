@@ -54,7 +54,7 @@ auto build_army(Engine::Core::World& world,
     auto* unit = entity->add_component<Engine::Core::UnitComponent>();
     transform->position = {
         static_cast<float>(i % 16) + 40.0F, 0.0F, static_cast<float>(i / 16) + 40.0F};
-    unit->spawn_type = Game::Units::SpawnType::Knight;
+    unit->spawn_type = Game::Units::SpawnType::Swordsman;
     unit->nation_id = NationID::RomanRepublic;
     ids.push_back(entity->get_id());
   }
@@ -114,8 +114,36 @@ TEST_F(FormationPlannerCacheTest, SignatureIsStableForUnchangedInputs) {
 
   auto moved = request;
   moved.anchor = QVector3D(60.0F, 0.0F, 30.0F);
-  moved.facing = 175.0F;
-  EXPECT_EQ(first, ArmyFormationPlanner::layout_signature(members, moved));
+  EXPECT_EQ(first, ArmyFormationPlanner::layout_signature(members, moved))
+      << "the layout is built in formation-local space, so sliding the anchor "
+         "must not rebuild it";
+}
+
+TEST_F(FormationPlannerCacheTest, TurningTheFormationRebuildsTheLayout) {
+  Engine::Core::World world;
+  auto const ids = build_army(world, 12);
+  auto const request = make_request(ids);
+  auto const members = ArmyFormationPlanner::collect_members(world, ids);
+  auto const first = ArmyFormationPlanner::layout_signature(members, request);
+
+  auto turned = request;
+  turned.facing = request.facing + 90.0F;
+
+  EXPECT_NE(first, ArmyFormationPlanner::layout_signature(members, turned));
+}
+
+TEST_F(FormationPlannerCacheTest, MembersMovingAcrossTheFieldRebuildTheLayout) {
+  Engine::Core::World world;
+  auto const ids = build_army(world, 12);
+  auto const request = make_request(ids);
+  auto members = ArmyFormationPlanner::collect_members(world, ids);
+  auto const first = ArmyFormationPlanner::layout_signature(members, request);
+
+  for (auto& member : members) {
+    member.current_position.setZ(member.current_position.z() + 25.0F);
+  }
+  EXPECT_NE(first, ArmyFormationPlanner::layout_signature(members, request))
+      << "member positions feed the file ordering on both axes, not just x";
 }
 
 TEST_F(FormationPlannerCacheTest, SignatureMovesForEveryLayoutInput) {

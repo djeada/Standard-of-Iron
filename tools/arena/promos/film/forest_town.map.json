@@ -1,0 +1,4087 @@
+{
+  "name": "Forest Town (trailer film)",
+  "description": "Trailer film fixture: a Carthaginian town at work in a forest clearing.",
+  "theme": "forest",
+  "coord_system": "grid",
+  "grid": {
+    "width": 220,
+    "height": 220,
+    "tile_size": 1.0
+  },
+  "max_troops_per_player": 900,
+  "camera": {
+    "center": [110.0, 0, 110.0],
+    "distance": 150.0,
+    "tilt_deg": 50.0,
+    "yaw": 225.0,
+    "fov_y": 45.0,
+    "near": 1.0,
+    "far": 600.0
+  },
+  "time_of_day": "afternoon",
+  "environment": {
+    "start_time": 15.6,
+    "time_mode": "locked",
+    "day_length_seconds": 2400.0,
+    "lighting_profile": "mediterranean_summer"
+  },
+  "biome": {
+    "ground_type": "forest_mud",
+    "seed": 51844,
+    "patch_density": 5.2,
+    "patch_jitter": 0.9,
+    "plant_density": 1.05,
+    "grass_primary": [0.16, 0.33, 0.17],
+    "grass_secondary": [0.23, 0.42, 0.21],
+    "grass_dry": [0.42, 0.36, 0.22],
+    "soil_color": [0.14, 0.11, 0.08],
+    "height_noise": [0.18, 0.06],
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.14,
+    "irregularity_amplitude": 0.06
+  },
+  "rain": {
+    "enabled": false
+  },
+  "terrain": [
+    {
+      "id": "town_clearing",
+      "type": "flat",
+      "x": 110.0,
+      "z": 110.0,
+      "width": 190.0,
+      "depth": 190.0,
+      "description": "The town floor."
+    }
+  ],
+  "forests": [
+    {
+      "id": "ring_00",
+      "x": 206.0,
+      "z": 110.0,
+      "radius": 16.0
+    },
+    {
+      "id": "ring_01",
+      "x": 203.3,
+      "z": 148.7,
+      "radius": 18.0
+    },
+    {
+      "id": "ring_02",
+      "x": 185.0,
+      "z": 185.0,
+      "radius": 20.0
+    },
+    {
+      "id": "ring_03",
+      "x": 146.7,
+      "z": 198.7,
+      "radius": 22.0
+    },
+    {
+      "id": "ring_04",
+      "x": 110.0,
+      "z": 211.0,
+      "radius": 16.0
+    },
+    {
+      "id": "ring_05",
+      "x": 69.4,
+      "z": 207.9,
+      "radius": 18.0
+    },
+    {
+      "id": "ring_06",
+      "x": 42.1,
+      "z": 177.9,
+      "radius": 20.0
+    },
+    {
+      "id": "ring_07",
+      "x": 16.7,
+      "z": 148.7,
+      "radius": 22.0
+    },
+    {
+      "id": "ring_08",
+      "x": 4.0,
+      "z": 110.0,
+      "radius": 16.0
+    },
+    {
+      "id": "ring_09",
+      "x": 21.3,
+      "z": 73.3,
+      "radius": 18.0
+    },
+    {
+      "id": "ring_10",
+      "x": 38.6,
+      "z": 38.6,
+      "radius": 20.0
+    },
+    {
+      "id": "ring_11",
+      "x": 69.4,
+      "z": 12.1,
+      "radius": 22.0
+    },
+    {
+      "id": "ring_12",
+      "x": 110.0,
+      "z": 14.0,
+      "radius": 16.0
+    },
+    {
+      "id": "ring_13",
+      "x": 148.7,
+      "z": 16.7,
+      "radius": 18.0
+    },
+    {
+      "id": "ring_14",
+      "x": 185.0,
+      "z": 35.0,
+      "radius": 20.0
+    },
+    {
+      "id": "ring_15",
+      "x": 198.7,
+      "z": 73.3,
+      "radius": 22.0
+    },
+    {
+      "id": "grove_0",
+      "x": 26.0,
+      "z": 60.0,
+      "radius": 12.0
+    },
+    {
+      "id": "grove_1",
+      "x": 194.0,
+      "z": 160.0,
+      "radius": 12.0
+    },
+    {
+      "id": "grove_2",
+      "x": 50.0,
+      "z": 198.0,
+      "radius": 12.0
+    },
+    {
+      "id": "grove_3",
+      "x": 170.0,
+      "z": 20.0,
+      "radius": 12.0
+    }
+  ],
+  "rivers": [],
+  "lakes": [],
+  "bridges": [],
+  "roads": [
+    {
+      "id": "street_00",
+      "start": [46.0, 110.0],
+      "end": [174.0, 110.0],
+      "width": 6.0,
+      "style": "stone"
+    },
+    {
+      "id": "street_01",
+      "start": [110.0, 50.0],
+      "end": [110.0, 170.0],
+      "width": 6.0,
+      "style": "stone"
+    },
+    {
+      "id": "street_02",
+      "start": [54.0, 80.0],
+      "end": [166.0, 80.0],
+      "width": 3.6,
+      "style": "default"
+    },
+    {
+      "id": "street_03",
+      "start": [80.0, 58.0],
+      "end": [80.0, 162.0],
+      "width": 3.6,
+      "style": "default"
+    },
+    {
+      "id": "street_04",
+      "start": [54.0, 140.0],
+      "end": [166.0, 140.0],
+      "width": 3.6,
+      "style": "default"
+    },
+    {
+      "id": "street_05",
+      "start": [140.0, 58.0],
+      "end": [140.0, 162.0],
+      "width": 3.6,
+      "style": "default"
+    }
+  ],
+  "landmarks": [],
+  "structures": [
+    {
+      "id": "marketplace_000",
+      "type": "marketplace",
+      "x": 99.0,
+      "z": 101.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "marketplace_001",
+      "type": "marketplace",
+      "x": 121.0,
+      "z": 101.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "marketplace_002",
+      "type": "marketplace",
+      "x": 99.0,
+      "z": 119.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "marketplace_003",
+      "type": "marketplace",
+      "x": 121.0,
+      "z": 119.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_004",
+      "type": "home",
+      "x": 54.0,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_005",
+      "type": "home",
+      "x": 54.0,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_006",
+      "type": "home",
+      "x": 54.0,
+      "z": 65.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_007",
+      "type": "home",
+      "x": 54.0,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_008",
+      "type": "home",
+      "x": 54.0,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_009",
+      "type": "home",
+      "x": 59.5,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_010",
+      "type": "home",
+      "x": 59.5,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_011",
+      "type": "home",
+      "x": 59.5,
+      "z": 65.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_012",
+      "type": "home",
+      "x": 59.5,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_013",
+      "type": "home",
+      "x": 59.5,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_014",
+      "type": "home",
+      "x": 65.0,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_015",
+      "type": "home",
+      "x": 65.0,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_016",
+      "type": "home",
+      "x": 65.0,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_017",
+      "type": "home",
+      "x": 65.0,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_018",
+      "type": "home",
+      "x": 70.5,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_019",
+      "type": "home",
+      "x": 70.5,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_020",
+      "type": "home",
+      "x": 70.5,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_021",
+      "type": "home",
+      "x": 70.5,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_022",
+      "type": "home",
+      "x": 76.0,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_023",
+      "type": "home",
+      "x": 76.0,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_024",
+      "type": "home",
+      "x": 76.0,
+      "z": 65.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_025",
+      "type": "home",
+      "x": 76.0,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_026",
+      "type": "home",
+      "x": 76.0,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_027",
+      "type": "home",
+      "x": 54.0,
+      "z": 84.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_028",
+      "type": "home",
+      "x": 54.0,
+      "z": 89.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_029",
+      "type": "home",
+      "x": 54.0,
+      "z": 95.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_030",
+      "type": "home",
+      "x": 54.0,
+      "z": 100.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_031",
+      "type": "home",
+      "x": 54.0,
+      "z": 106.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_032",
+      "type": "home",
+      "x": 59.5,
+      "z": 84.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_033",
+      "type": "home",
+      "x": 59.5,
+      "z": 89.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_034",
+      "type": "home",
+      "x": 59.5,
+      "z": 95.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_035",
+      "type": "home",
+      "x": 59.5,
+      "z": 100.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_036",
+      "type": "home",
+      "x": 59.5,
+      "z": 106.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_037",
+      "type": "home",
+      "x": 65.0,
+      "z": 84.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_038",
+      "type": "home",
+      "x": 65.0,
+      "z": 89.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_039",
+      "type": "home",
+      "x": 65.0,
+      "z": 100.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_040",
+      "type": "home",
+      "x": 65.0,
+      "z": 106.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_041",
+      "type": "home",
+      "x": 70.5,
+      "z": 84.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_042",
+      "type": "home",
+      "x": 70.5,
+      "z": 89.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_043",
+      "type": "home",
+      "x": 70.5,
+      "z": 100.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_044",
+      "type": "home",
+      "x": 70.5,
+      "z": 106.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_045",
+      "type": "home",
+      "x": 76.0,
+      "z": 84.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_046",
+      "type": "home",
+      "x": 76.0,
+      "z": 89.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_047",
+      "type": "home",
+      "x": 76.0,
+      "z": 95.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_048",
+      "type": "home",
+      "x": 76.0,
+      "z": 100.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_049",
+      "type": "home",
+      "x": 76.0,
+      "z": 106.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_050",
+      "type": "home",
+      "x": 54.0,
+      "z": 114.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_051",
+      "type": "home",
+      "x": 54.0,
+      "z": 119.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_052",
+      "type": "home",
+      "x": 54.0,
+      "z": 125.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_053",
+      "type": "home",
+      "x": 54.0,
+      "z": 130.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_054",
+      "type": "home",
+      "x": 54.0,
+      "z": 136.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_055",
+      "type": "home",
+      "x": 59.5,
+      "z": 114.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_056",
+      "type": "home",
+      "x": 59.5,
+      "z": 119.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_057",
+      "type": "home",
+      "x": 59.5,
+      "z": 125.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_058",
+      "type": "home",
+      "x": 59.5,
+      "z": 130.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_059",
+      "type": "home",
+      "x": 59.5,
+      "z": 136.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_060",
+      "type": "home",
+      "x": 65.0,
+      "z": 114.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_061",
+      "type": "home",
+      "x": 65.0,
+      "z": 119.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_062",
+      "type": "home",
+      "x": 65.0,
+      "z": 130.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_063",
+      "type": "home",
+      "x": 65.0,
+      "z": 136.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_064",
+      "type": "home",
+      "x": 70.5,
+      "z": 114.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_065",
+      "type": "home",
+      "x": 70.5,
+      "z": 119.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_066",
+      "type": "home",
+      "x": 70.5,
+      "z": 130.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_067",
+      "type": "home",
+      "x": 70.5,
+      "z": 136.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_068",
+      "type": "home",
+      "x": 76.0,
+      "z": 114.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_069",
+      "type": "home",
+      "x": 76.0,
+      "z": 119.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_070",
+      "type": "home",
+      "x": 76.0,
+      "z": 125.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_071",
+      "type": "home",
+      "x": 76.0,
+      "z": 130.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_072",
+      "type": "home",
+      "x": 76.0,
+      "z": 136.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_073",
+      "type": "home",
+      "x": 54.0,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_074",
+      "type": "home",
+      "x": 54.0,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_075",
+      "type": "home",
+      "x": 54.0,
+      "z": 155.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_076",
+      "type": "home",
+      "x": 54.0,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_077",
+      "type": "home",
+      "x": 54.0,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_078",
+      "type": "home",
+      "x": 59.5,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_079",
+      "type": "home",
+      "x": 59.5,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_080",
+      "type": "home",
+      "x": 59.5,
+      "z": 155.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_081",
+      "type": "home",
+      "x": 59.5,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_082",
+      "type": "home",
+      "x": 59.5,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_083",
+      "type": "home",
+      "x": 65.0,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_084",
+      "type": "home",
+      "x": 65.0,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_085",
+      "type": "home",
+      "x": 65.0,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_086",
+      "type": "home",
+      "x": 65.0,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_087",
+      "type": "home",
+      "x": 70.5,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_088",
+      "type": "home",
+      "x": 70.5,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_089",
+      "type": "home",
+      "x": 70.5,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_090",
+      "type": "home",
+      "x": 70.5,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_091",
+      "type": "home",
+      "x": 76.0,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_092",
+      "type": "home",
+      "x": 76.0,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_093",
+      "type": "home",
+      "x": 76.0,
+      "z": 155.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_094",
+      "type": "home",
+      "x": 76.0,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_095",
+      "type": "home",
+      "x": 76.0,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_096",
+      "type": "home",
+      "x": 84.0,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_097",
+      "type": "home",
+      "x": 84.0,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_098",
+      "type": "home",
+      "x": 84.0,
+      "z": 65.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_099",
+      "type": "home",
+      "x": 84.0,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_100",
+      "type": "home",
+      "x": 84.0,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_101",
+      "type": "home",
+      "x": 89.5,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_102",
+      "type": "home",
+      "x": 89.5,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_103",
+      "type": "home",
+      "x": 89.5,
+      "z": 65.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_104",
+      "type": "home",
+      "x": 89.5,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_105",
+      "type": "home",
+      "x": 89.5,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_106",
+      "type": "home",
+      "x": 95.0,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_107",
+      "type": "home",
+      "x": 95.0,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_108",
+      "type": "home",
+      "x": 95.0,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_109",
+      "type": "home",
+      "x": 95.0,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_110",
+      "type": "home",
+      "x": 100.5,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_111",
+      "type": "home",
+      "x": 100.5,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_112",
+      "type": "home",
+      "x": 100.5,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_113",
+      "type": "home",
+      "x": 100.5,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_114",
+      "type": "home",
+      "x": 106.0,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_115",
+      "type": "home",
+      "x": 106.0,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_116",
+      "type": "home",
+      "x": 106.0,
+      "z": 65.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_117",
+      "type": "home",
+      "x": 106.0,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_118",
+      "type": "home",
+      "x": 106.0,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_119",
+      "type": "home",
+      "x": 84.0,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_120",
+      "type": "home",
+      "x": 84.0,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_121",
+      "type": "home",
+      "x": 84.0,
+      "z": 155.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_122",
+      "type": "home",
+      "x": 84.0,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_123",
+      "type": "home",
+      "x": 84.0,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_124",
+      "type": "home",
+      "x": 89.5,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_125",
+      "type": "home",
+      "x": 89.5,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_126",
+      "type": "home",
+      "x": 89.5,
+      "z": 155.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_127",
+      "type": "home",
+      "x": 89.5,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_128",
+      "type": "home",
+      "x": 89.5,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_129",
+      "type": "home",
+      "x": 95.0,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_130",
+      "type": "home",
+      "x": 95.0,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_131",
+      "type": "home",
+      "x": 95.0,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_132",
+      "type": "home",
+      "x": 95.0,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_133",
+      "type": "home",
+      "x": 100.5,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_134",
+      "type": "home",
+      "x": 100.5,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_135",
+      "type": "home",
+      "x": 100.5,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_136",
+      "type": "home",
+      "x": 100.5,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_137",
+      "type": "home",
+      "x": 106.0,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_138",
+      "type": "home",
+      "x": 106.0,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_139",
+      "type": "home",
+      "x": 106.0,
+      "z": 155.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_140",
+      "type": "home",
+      "x": 106.0,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_141",
+      "type": "home",
+      "x": 106.0,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_142",
+      "type": "home",
+      "x": 114.0,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_143",
+      "type": "home",
+      "x": 114.0,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_144",
+      "type": "home",
+      "x": 114.0,
+      "z": 65.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_145",
+      "type": "home",
+      "x": 114.0,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_146",
+      "type": "home",
+      "x": 114.0,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_147",
+      "type": "home",
+      "x": 119.5,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_148",
+      "type": "home",
+      "x": 119.5,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_149",
+      "type": "home",
+      "x": 119.5,
+      "z": 65.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_150",
+      "type": "home",
+      "x": 119.5,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_151",
+      "type": "home",
+      "x": 119.5,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_152",
+      "type": "home",
+      "x": 125.0,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_153",
+      "type": "home",
+      "x": 125.0,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_154",
+      "type": "home",
+      "x": 125.0,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_155",
+      "type": "home",
+      "x": 125.0,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_156",
+      "type": "home",
+      "x": 130.5,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_157",
+      "type": "home",
+      "x": 130.5,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_158",
+      "type": "home",
+      "x": 130.5,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_159",
+      "type": "home",
+      "x": 130.5,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_160",
+      "type": "home",
+      "x": 136.0,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_161",
+      "type": "home",
+      "x": 136.0,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_162",
+      "type": "home",
+      "x": 136.0,
+      "z": 65.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_163",
+      "type": "home",
+      "x": 136.0,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_164",
+      "type": "home",
+      "x": 136.0,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_165",
+      "type": "home",
+      "x": 114.0,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_166",
+      "type": "home",
+      "x": 114.0,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_167",
+      "type": "home",
+      "x": 114.0,
+      "z": 155.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_168",
+      "type": "home",
+      "x": 114.0,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_169",
+      "type": "home",
+      "x": 114.0,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_170",
+      "type": "home",
+      "x": 119.5,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_171",
+      "type": "home",
+      "x": 119.5,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_172",
+      "type": "home",
+      "x": 119.5,
+      "z": 155.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_173",
+      "type": "home",
+      "x": 119.5,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_174",
+      "type": "home",
+      "x": 119.5,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_175",
+      "type": "home",
+      "x": 125.0,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_176",
+      "type": "home",
+      "x": 125.0,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_177",
+      "type": "home",
+      "x": 125.0,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_178",
+      "type": "home",
+      "x": 125.0,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_179",
+      "type": "home",
+      "x": 130.5,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_180",
+      "type": "home",
+      "x": 130.5,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_181",
+      "type": "home",
+      "x": 130.5,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_182",
+      "type": "home",
+      "x": 130.5,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_183",
+      "type": "home",
+      "x": 136.0,
+      "z": 144.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_184",
+      "type": "home",
+      "x": 136.0,
+      "z": 149.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_185",
+      "type": "home",
+      "x": 136.0,
+      "z": 155.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_186",
+      "type": "home",
+      "x": 136.0,
+      "z": 160.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_187",
+      "type": "home",
+      "x": 136.0,
+      "z": 166.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_188",
+      "type": "home",
+      "x": 144.0,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_189",
+      "type": "home",
+      "x": 144.0,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_190",
+      "type": "home",
+      "x": 144.0,
+      "z": 65.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_191",
+      "type": "home",
+      "x": 144.0,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_192",
+      "type": "home",
+      "x": 144.0,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_193",
+      "type": "home",
+      "x": 149.5,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_194",
+      "type": "home",
+      "x": 149.5,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_195",
+      "type": "home",
+      "x": 149.5,
+      "z": 65.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_196",
+      "type": "home",
+      "x": 149.5,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_197",
+      "type": "home",
+      "x": 149.5,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_198",
+      "type": "home",
+      "x": 155.0,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_199",
+      "type": "home",
+      "x": 155.0,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_200",
+      "type": "home",
+      "x": 155.0,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_201",
+      "type": "home",
+      "x": 155.0,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_202",
+      "type": "home",
+      "x": 160.5,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_203",
+      "type": "home",
+      "x": 160.5,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_204",
+      "type": "home",
+      "x": 160.5,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_205",
+      "type": "home",
+      "x": 160.5,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_206",
+      "type": "home",
+      "x": 166.0,
+      "z": 54.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_207",
+      "type": "home",
+      "x": 166.0,
+      "z": 59.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_208",
+      "type": "home",
+      "x": 166.0,
+      "z": 65.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_209",
+      "type": "home",
+      "x": 166.0,
+      "z": 70.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_210",
+      "type": "home",
+      "x": 166.0,
+      "z": 76.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_211",
+      "type": "home",
+      "x": 144.0,
+      "z": 84.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_212",
+      "type": "home",
+      "x": 144.0,
+      "z": 89.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_213",
+      "type": "home",
+      "x": 144.0,
+      "z": 95.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_214",
+      "type": "home",
+      "x": 144.0,
+      "z": 100.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_215",
+      "type": "home",
+      "x": 144.0,
+      "z": 106.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_216",
+      "type": "home",
+      "x": 149.5,
+      "z": 84.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_217",
+      "type": "home",
+      "x": 149.5,
+      "z": 89.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_218",
+      "type": "home",
+      "x": 149.5,
+      "z": 95.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_219",
+      "type": "home",
+      "x": 149.5,
+      "z": 100.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_220",
+      "type": "home",
+      "x": 149.5,
+      "z": 106.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_221",
+      "type": "home",
+      "x": 155.0,
+      "z": 84.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_222",
+      "type": "home",
+      "x": 155.0,
+      "z": 89.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_223",
+      "type": "home",
+      "x": 155.0,
+      "z": 100.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_224",
+      "type": "home",
+      "x": 155.0,
+      "z": 106.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_225",
+      "type": "home",
+      "x": 160.5,
+      "z": 84.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_226",
+      "type": "home",
+      "x": 160.5,
+      "z": 89.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_227",
+      "type": "home",
+      "x": 160.5,
+      "z": 100.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_228",
+      "type": "home",
+      "x": 160.5,
+      "z": 106.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_229",
+      "type": "home",
+      "x": 166.0,
+      "z": 84.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_230",
+      "type": "home",
+      "x": 166.0,
+      "z": 89.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_231",
+      "type": "home",
+      "x": 166.0,
+      "z": 95.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_232",
+      "type": "home",
+      "x": 166.0,
+      "z": 100.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_233",
+      "type": "home",
+      "x": 166.0,
+      "z": 106.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_234",
+      "type": "home",
+      "x": 144.0,
+      "z": 114.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_235",
+      "type": "home",
+      "x": 144.0,
+      "z": 119.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_236",
+      "type": "home",
+      "x": 144.0,
+      "z": 125.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_237",
+      "type": "home",
+      "x": 144.0,
+      "z": 130.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_238",
+      "type": "home",
+      "x": 144.0,
+      "z": 136.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_239",
+      "type": "home",
+      "x": 149.5,
+      "z": 114.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_240",
+      "type": "home",
+      "x": 149.5,
+      "z": 119.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_241",
+      "type": "home",
+      "x": 149.5,
+      "z": 125.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_242",
+      "type": "home",
+      "x": 149.5,
+      "z": 130.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_243",
+      "type": "home",
+      "x": 149.5,
+      "z": 136.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_244",
+      "type": "home",
+      "x": 155.0,
+      "z": 114.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_245",
+      "type": "home",
+      "x": 155.0,
+      "z": 119.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_246",
+      "type": "home",
+      "x": 155.0,
+      "z": 130.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_247",
+      "type": "home",
+      "x": 155.0,
+      "z": 136.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_248",
+      "type": "home",
+      "x": 160.5,
+      "z": 114.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_249",
+      "type": "home",
+      "x": 160.5,
+      "z": 119.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_250",
+      "type": "home",
+      "x": 160.5,
+      "z": 130.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_251",
+      "type": "home",
+      "x": 160.5,
+      "z": 136.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_252",
+      "type": "home",
+      "x": 166.0,
+      "z": 114.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_253",
+      "type": "home",
+      "x": 166.0,
+      "z": 119.5,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_254",
+      "type": "home",
+      "x": 166.0,
+      "z": 125.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_255",
+      "type": "home",
+      "x": 166.0,
+      "z": 130.5,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_256",
+      "type": "home",
+      "x": 166.0,
+      "z": 136.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "temple_257",
+      "type": "temple",
+      "x": 132.0,
+      "z": 88.0,
+      "rotation": 225,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "defense_tower_258",
+      "type": "defense_tower",
+      "x": 48.0,
+      "z": 52.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "defense_tower_259",
+      "type": "defense_tower",
+      "x": 172.0,
+      "z": 52.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "defense_tower_260",
+      "type": "defense_tower",
+      "x": 48.0,
+      "z": 168.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "defense_tower_261",
+      "type": "defense_tower",
+      "x": 172.0,
+      "z": 168.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "barracks_262",
+      "type": "barracks",
+      "x": 50.0,
+      "z": 112.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1,
+      "max_population": 200
+    },
+    {
+      "id": "barracks_263",
+      "type": "barracks",
+      "x": 112.0,
+      "z": 52.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1,
+      "max_population": 200
+    },
+    {
+      "id": "barracks_264",
+      "type": "barracks",
+      "x": 170.0,
+      "z": 108.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1,
+      "max_population": 200
+    },
+    {
+      "id": "farm_265",
+      "type": "farm",
+      "x": 74.0,
+      "z": 180.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "farm_266",
+      "type": "farm",
+      "x": 98.0,
+      "z": 180.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "farm_267",
+      "type": "farm",
+      "x": 122.0,
+      "z": 180.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "farm_268",
+      "type": "farm",
+      "x": 146.0,
+      "z": 180.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "barracks_269",
+      "type": "barracks",
+      "x": 16,
+      "z": 16,
+      "rotation": 45,
+      "player_id": 2,
+      "team_id": 2,
+      "max_population": 60
+    }
+  ],
+  "spawns": [
+    {
+      "id": "builder_000",
+      "type": "builder",
+      "x": 34.32,
+      "z": 108.3,
+      "player_id": 1
+    },
+    {
+      "id": "builder_001",
+      "type": "builder",
+      "x": 35.21,
+      "z": 107.97,
+      "player_id": 1
+    },
+    {
+      "id": "builder_002",
+      "type": "builder",
+      "x": 28.33,
+      "z": 116.13,
+      "player_id": 1
+    },
+    {
+      "id": "builder_003",
+      "type": "builder",
+      "x": 28.54,
+      "z": 114.5,
+      "player_id": 1
+    },
+    {
+      "id": "builder_004",
+      "type": "builder",
+      "x": 36.36,
+      "z": 110.38,
+      "player_id": 1
+    },
+    {
+      "id": "builder_005",
+      "type": "builder",
+      "x": 27.78,
+      "z": 109.89,
+      "player_id": 1
+    },
+    {
+      "id": "builder_006",
+      "type": "builder",
+      "x": 110.61,
+      "z": 30.44,
+      "player_id": 1
+    },
+    {
+      "id": "builder_007",
+      "type": "builder",
+      "x": 110.02,
+      "z": 30.04,
+      "player_id": 1
+    },
+    {
+      "id": "builder_008",
+      "type": "builder",
+      "x": 113.25,
+      "z": 35.66,
+      "player_id": 1
+    },
+    {
+      "id": "builder_009",
+      "type": "builder",
+      "x": 114.92,
+      "z": 33.77,
+      "player_id": 1
+    },
+    {
+      "id": "builder_010",
+      "type": "builder",
+      "x": 113.22,
+      "z": 31.67,
+      "player_id": 1
+    },
+    {
+      "id": "builder_011",
+      "type": "builder",
+      "x": 107.01,
+      "z": 36.73,
+      "player_id": 1
+    },
+    {
+      "id": "builder_012",
+      "type": "builder",
+      "x": 184.98,
+      "z": 105.21,
+      "player_id": 1
+    },
+    {
+      "id": "builder_013",
+      "type": "builder",
+      "x": 185.05,
+      "z": 112.76,
+      "player_id": 1
+    },
+    {
+      "id": "builder_014",
+      "type": "builder",
+      "x": 192.69,
+      "z": 110.01,
+      "player_id": 1
+    },
+    {
+      "id": "builder_015",
+      "type": "builder",
+      "x": 188.75,
+      "z": 106.67,
+      "player_id": 1
+    },
+    {
+      "id": "builder_016",
+      "type": "builder",
+      "x": 190.13,
+      "z": 103.65,
+      "player_id": 1
+    },
+    {
+      "id": "builder_017",
+      "type": "builder",
+      "x": 184.26,
+      "z": 109.44,
+      "player_id": 1
+    },
+    {
+      "id": "builder_018",
+      "type": "builder",
+      "x": 74.0,
+      "z": 170.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_019",
+      "type": "builder",
+      "x": 98.0,
+      "z": 170.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_020",
+      "type": "builder",
+      "x": 122.0,
+      "z": 170.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_021",
+      "type": "builder",
+      "x": 146.0,
+      "z": 170.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_022",
+      "type": "builder",
+      "x": 143.0,
+      "z": 142.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_023",
+      "type": "builder",
+      "x": 146.0,
+      "z": 142.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_024",
+      "type": "builder",
+      "x": 149.0,
+      "z": 142.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_025",
+      "type": "builder",
+      "x": 152.0,
+      "z": 142.0,
+      "player_id": 1
+    },
+    {
+      "id": "civilian_026",
+      "type": "civilian",
+      "x": 124.0,
+      "z": 110.0,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_027",
+      "type": "civilian",
+      "x": 123.16,
+      "z": 114.1,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_028",
+      "type": "civilian",
+      "x": 120.72,
+      "z": 117.71,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_029",
+      "type": "civilian",
+      "x": 117.0,
+      "z": 120.39,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_030",
+      "type": "civilian",
+      "x": 112.43,
+      "z": 121.82,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_031",
+      "type": "civilian",
+      "x": 107.57,
+      "z": 121.82,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_032",
+      "type": "civilian",
+      "x": 103.0,
+      "z": 120.39,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_033",
+      "type": "civilian",
+      "x": 99.28,
+      "z": 117.71,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_034",
+      "type": "civilian",
+      "x": 96.84,
+      "z": 114.1,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_035",
+      "type": "civilian",
+      "x": 96.0,
+      "z": 110.0,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_036",
+      "type": "civilian",
+      "x": 96.84,
+      "z": 105.9,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_037",
+      "type": "civilian",
+      "x": 99.28,
+      "z": 102.29,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_038",
+      "type": "civilian",
+      "x": 103.0,
+      "z": 99.61,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_039",
+      "type": "civilian",
+      "x": 107.57,
+      "z": 98.18,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_040",
+      "type": "civilian",
+      "x": 112.43,
+      "z": 98.18,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_041",
+      "type": "civilian",
+      "x": 117.0,
+      "z": 99.61,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_042",
+      "type": "civilian",
+      "x": 120.72,
+      "z": 102.29,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_043",
+      "type": "civilian",
+      "x": 123.16,
+      "z": 105.9,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 14.0
+    },
+    {
+      "id": "civilian_044",
+      "type": "civilian",
+      "x": 108.96,
+      "z": 140.72,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_045",
+      "type": "civilian",
+      "x": 100.5,
+      "z": 81.84,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_046",
+      "type": "civilian",
+      "x": 66.96,
+      "z": 139.51,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_047",
+      "type": "civilian",
+      "x": 121.97,
+      "z": 140.62,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_048",
+      "type": "civilian",
+      "x": 64.08,
+      "z": 81.86,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_049",
+      "type": "civilian",
+      "x": 147.3,
+      "z": 138.4,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_050",
+      "type": "civilian",
+      "x": 124.91,
+      "z": 140.73,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_051",
+      "type": "civilian",
+      "x": 150.78,
+      "z": 80.84,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_052",
+      "type": "civilian",
+      "x": 135.22,
+      "z": 138.09,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_053",
+      "type": "civilian",
+      "x": 112.75,
+      "z": 80.79,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_054",
+      "type": "civilian",
+      "x": 85.92,
+      "z": 140.67,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_055",
+      "type": "civilian",
+      "x": 130.63,
+      "z": 139.49,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_056",
+      "type": "civilian",
+      "x": 133.21,
+      "z": 81.93,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_057",
+      "type": "civilian",
+      "x": 101.74,
+      "z": 78.41,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_058",
+      "type": "civilian",
+      "x": 76.02,
+      "z": 141.02,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "civilian_059",
+      "type": "civilian",
+      "x": 159.3,
+      "z": 139.69,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 18.0
+    },
+    {
+      "id": "carthage_sword_commander_060",
+      "type": "carthage_sword_commander",
+      "x": 112.0,
+      "z": 126.0,
+      "player_id": 1
+    },
+    {
+      "id": "roman_veteran_consul_061",
+      "type": "roman_veteran_consul",
+      "x": 22,
+      "z": 22,
+      "player_id": 2
+    }
+  ],
+  "world_props": [
+    {
+      "id": "supply_cart_000",
+      "type": "supply_cart",
+      "x": 93.0,
+      "z": 113.5,
+      "rotation": 90,
+      "scale": 1.0
+    },
+    {
+      "id": "supply_cart_001",
+      "type": "supply_cart",
+      "x": 127.0,
+      "z": 113.5,
+      "rotation": 270,
+      "scale": 1.0
+    },
+    {
+      "id": "olive_tree_002",
+      "type": "olive_tree",
+      "x": 63.5,
+      "z": 65.0,
+      "rotation": 245.7,
+      "scale": 1.05
+    },
+    {
+      "id": "olive_tree_003",
+      "type": "olive_tree",
+      "x": 63.5,
+      "z": 95.0,
+      "rotation": 313.3,
+      "scale": 1.05
+    },
+    {
+      "id": "olive_tree_004",
+      "type": "olive_tree",
+      "x": 63.5,
+      "z": 125.0,
+      "rotation": 133.0,
+      "scale": 1.05
+    },
+    {
+      "id": "olive_tree_005",
+      "type": "olive_tree",
+      "x": 63.5,
+      "z": 155.0,
+      "rotation": 311.9,
+      "scale": 1.05
+    },
+    {
+      "id": "cypress_tree_006",
+      "type": "cypress_tree",
+      "x": 93.5,
+      "z": 65.0,
+      "rotation": 238.3,
+      "scale": 1.05
+    },
+    {
+      "id": "olive_tree_007",
+      "type": "olive_tree",
+      "x": 93.5,
+      "z": 155.0,
+      "rotation": 89.5,
+      "scale": 1.05
+    },
+    {
+      "id": "cypress_tree_008",
+      "type": "cypress_tree",
+      "x": 123.5,
+      "z": 65.0,
+      "rotation": 96.8,
+      "scale": 1.05
+    },
+    {
+      "id": "cypress_tree_009",
+      "type": "cypress_tree",
+      "x": 123.5,
+      "z": 155.0,
+      "rotation": 287.3,
+      "scale": 1.05
+    },
+    {
+      "id": "cypress_tree_010",
+      "type": "cypress_tree",
+      "x": 153.5,
+      "z": 65.0,
+      "rotation": 191.0,
+      "scale": 1.05
+    },
+    {
+      "id": "cypress_tree_011",
+      "type": "cypress_tree",
+      "x": 153.5,
+      "z": 95.0,
+      "rotation": 331.0,
+      "scale": 1.05
+    },
+    {
+      "id": "cypress_tree_012",
+      "type": "cypress_tree",
+      "x": 153.5,
+      "z": 125.0,
+      "rotation": 16.6,
+      "scale": 1.05
+    },
+    {
+      "id": "supply_cart_013",
+      "type": "supply_cart",
+      "x": 144.0,
+      "z": 165.0,
+      "rotation": 45.0,
+      "scale": 1.0
+    },
+    {
+      "id": "olive_tree_014",
+      "type": "olive_tree",
+      "x": 21.74,
+      "z": 88.0,
+      "rotation": 296.9,
+      "scale": 1.15
+    },
+    {
+      "id": "pine_tree_015",
+      "type": "pine_tree",
+      "x": 22.68,
+      "z": 91.2,
+      "rotation": 108.1,
+      "scale": 1.15
+    },
+    {
+      "id": "olive_tree_016",
+      "type": "olive_tree",
+      "x": 20.18,
+      "z": 94.4,
+      "rotation": 256.7,
+      "scale": 1.15
+    },
+    {
+      "id": "pine_tree_017",
+      "type": "pine_tree",
+      "x": 18.14,
+      "z": 97.6,
+      "rotation": 309.5,
+      "scale": 1.15
+    },
+    {
+      "id": "olive_tree_018",
+      "type": "olive_tree",
+      "x": 22.68,
+      "z": 100.8,
+      "rotation": 131.5,
+      "scale": 1.15
+    },
+    {
+      "id": "pine_tree_019",
+      "type": "pine_tree",
+      "x": 22.09,
+      "z": 104.0,
+      "rotation": 356.1,
+      "scale": 1.15
+    },
+    {
+      "id": "olive_tree_020",
+      "type": "olive_tree",
+      "x": 19.86,
+      "z": 107.2,
+      "rotation": 146.6,
+      "scale": 1.15
+    },
+    {
+      "id": "pine_tree_021",
+      "type": "pine_tree",
+      "x": 20.65,
+      "z": 110.4,
+      "rotation": 17.9,
+      "scale": 1.15
+    },
+    {
+      "id": "olive_tree_022",
+      "type": "olive_tree",
+      "x": 20.2,
+      "z": 113.6,
+      "rotation": 109.2,
+      "scale": 1.15
+    },
+    {
+      "id": "pine_tree_023",
+      "type": "pine_tree",
+      "x": 17.73,
+      "z": 116.8,
+      "rotation": 42.0,
+      "scale": 1.15
+    },
+    {
+      "id": "olive_tree_024",
+      "type": "olive_tree",
+      "x": 21.5,
+      "z": 120.0,
+      "rotation": 223.9,
+      "scale": 1.15
+    },
+    {
+      "id": "pine_tree_025",
+      "type": "pine_tree",
+      "x": 18.68,
+      "z": 123.2,
+      "rotation": 177.8,
+      "scale": 1.15
+    },
+    {
+      "id": "olive_tree_026",
+      "type": "olive_tree",
+      "x": 17.77,
+      "z": 126.4,
+      "rotation": 200.7,
+      "scale": 1.15
+    },
+    {
+      "id": "pine_tree_027",
+      "type": "pine_tree",
+      "x": 17.45,
+      "z": 129.6,
+      "rotation": 276.4,
+      "scale": 1.15
+    },
+    {
+      "id": "olive_tree_028",
+      "type": "olive_tree",
+      "x": 21.02,
+      "z": 132.8,
+      "rotation": 237.9,
+      "scale": 1.15
+    },
+    {
+      "id": "pine_tree_029",
+      "type": "pine_tree",
+      "x": 19.88,
+      "z": 136.0,
+      "rotation": 59.7,
+      "scale": 1.15
+    },
+    {
+      "id": "boulder_030",
+      "type": "boulder",
+      "x": 94.0,
+      "z": 23.68,
+      "rotation": 318.0,
+      "scale": 1.2
+    },
+    {
+      "id": "boulder_031",
+      "type": "boulder",
+      "x": 97.0,
+      "z": 20.03,
+      "rotation": 127.3,
+      "scale": 1.2
+    },
+    {
+      "id": "boulder_032",
+      "type": "boulder",
+      "x": 100.0,
+      "z": 23.74,
+      "rotation": 132.9,
+      "scale": 1.2
+    },
+    {
+      "id": "boulder_033",
+      "type": "boulder",
+      "x": 103.0,
+      "z": 22.95,
+      "rotation": 341.1,
+      "scale": 1.2
+    },
+    {
+      "id": "boulder_034",
+      "type": "boulder",
+      "x": 106.0,
+      "z": 21.75,
+      "rotation": 158.2,
+      "scale": 1.2
+    },
+    {
+      "id": "boulder_035",
+      "type": "boulder",
+      "x": 109.0,
+      "z": 20.6,
+      "rotation": 263.6,
+      "scale": 1.2
+    },
+    {
+      "id": "boulder_036",
+      "type": "boulder",
+      "x": 112.0,
+      "z": 23.82,
+      "rotation": 340.8,
+      "scale": 1.2
+    },
+    {
+      "id": "boulder_037",
+      "type": "boulder",
+      "x": 115.0,
+      "z": 21.65,
+      "rotation": 100.2,
+      "scale": 1.2
+    },
+    {
+      "id": "boulder_038",
+      "type": "boulder",
+      "x": 118.0,
+      "z": 20.39,
+      "rotation": 64.6,
+      "scale": 1.2
+    },
+    {
+      "id": "boulder_039",
+      "type": "boulder",
+      "x": 121.0,
+      "z": 20.1,
+      "rotation": 197.0,
+      "scale": 1.2
+    },
+    {
+      "id": "boulder_040",
+      "type": "boulder",
+      "x": 124.0,
+      "z": 20.8,
+      "rotation": 355.5,
+      "scale": 1.2
+    },
+    {
+      "id": "boulder_041",
+      "type": "boulder",
+      "x": 127.0,
+      "z": 22.97,
+      "rotation": 71.7,
+      "scale": 1.2
+    },
+    {
+      "id": "iron_ore_042",
+      "type": "iron_ore",
+      "x": 200.49,
+      "z": 94.0,
+      "rotation": 238.5,
+      "scale": 1.05
+    },
+    {
+      "id": "iron_ore_043",
+      "type": "iron_ore",
+      "x": 201.29,
+      "z": 97.2,
+      "rotation": 265.5,
+      "scale": 1.05
+    },
+    {
+      "id": "iron_ore_044",
+      "type": "iron_ore",
+      "x": 198.43,
+      "z": 100.4,
+      "rotation": 316.2,
+      "scale": 1.05
+    },
+    {
+      "id": "iron_ore_045",
+      "type": "iron_ore",
+      "x": 199.58,
+      "z": 103.6,
+      "rotation": 351.5,
+      "scale": 1.05
+    },
+    {
+      "id": "iron_ore_046",
+      "type": "iron_ore",
+      "x": 199.12,
+      "z": 106.8,
+      "rotation": 20.5,
+      "scale": 1.05
+    },
+    {
+      "id": "iron_ore_047",
+      "type": "iron_ore",
+      "x": 200.97,
+      "z": 110.0,
+      "rotation": 235.6,
+      "scale": 1.05
+    },
+    {
+      "id": "iron_ore_048",
+      "type": "iron_ore",
+      "x": 200.69,
+      "z": 113.2,
+      "rotation": 173.9,
+      "scale": 1.05
+    },
+    {
+      "id": "iron_ore_049",
+      "type": "iron_ore",
+      "x": 200.07,
+      "z": 116.4,
+      "rotation": 30.0,
+      "scale": 1.05
+    },
+    {
+      "id": "iron_ore_050",
+      "type": "iron_ore",
+      "x": 199.12,
+      "z": 119.6,
+      "rotation": 173.8,
+      "scale": 1.05
+    },
+    {
+      "id": "iron_ore_051",
+      "type": "iron_ore",
+      "x": 198.01,
+      "z": 122.8,
+      "rotation": 184.1,
+      "scale": 1.05
+    },
+    {
+      "id": "cypress_tree_052",
+      "type": "cypress_tree",
+      "x": 56.0,
+      "z": 104.8,
+      "rotation": 0.0,
+      "scale": 0.95
+    },
+    {
+      "id": "olive_tree_053",
+      "type": "olive_tree",
+      "x": 115.2,
+      "z": 56.0,
+      "rotation": 31.4,
+      "scale": 0.95
+    },
+    {
+      "id": "cypress_tree_054",
+      "type": "cypress_tree",
+      "x": 68.0,
+      "z": 104.8,
+      "rotation": 0.0,
+      "scale": 0.95
+    },
+    {
+      "id": "olive_tree_055",
+      "type": "olive_tree",
+      "x": 115.2,
+      "z": 68.0,
+      "rotation": 60.8,
+      "scale": 0.95
+    },
+    {
+      "id": "cypress_tree_056",
+      "type": "cypress_tree",
+      "x": 80.0,
+      "z": 104.8,
+      "rotation": 0.0,
+      "scale": 0.95
+    },
+    {
+      "id": "olive_tree_057",
+      "type": "olive_tree",
+      "x": 115.2,
+      "z": 80.0,
+      "rotation": 324.1,
+      "scale": 0.95
+    },
+    {
+      "id": "cypress_tree_058",
+      "type": "cypress_tree",
+      "x": 92.0,
+      "z": 104.8,
+      "rotation": 0.0,
+      "scale": 0.95
+    },
+    {
+      "id": "olive_tree_059",
+      "type": "olive_tree",
+      "x": 115.2,
+      "z": 92.0,
+      "rotation": 271.3,
+      "scale": 0.95
+    },
+    {
+      "id": "cypress_tree_060",
+      "type": "cypress_tree",
+      "x": 128.0,
+      "z": 104.8,
+      "rotation": 0.0,
+      "scale": 0.95
+    },
+    {
+      "id": "olive_tree_061",
+      "type": "olive_tree",
+      "x": 115.2,
+      "z": 128.0,
+      "rotation": 194.0,
+      "scale": 0.95
+    },
+    {
+      "id": "cypress_tree_062",
+      "type": "cypress_tree",
+      "x": 140.0,
+      "z": 104.8,
+      "rotation": 0.0,
+      "scale": 0.95
+    },
+    {
+      "id": "olive_tree_063",
+      "type": "olive_tree",
+      "x": 115.2,
+      "z": 140.0,
+      "rotation": 54.2,
+      "scale": 0.95
+    },
+    {
+      "id": "cypress_tree_064",
+      "type": "cypress_tree",
+      "x": 152.0,
+      "z": 104.8,
+      "rotation": 0.0,
+      "scale": 0.95
+    },
+    {
+      "id": "olive_tree_065",
+      "type": "olive_tree",
+      "x": 115.2,
+      "z": 152.0,
+      "rotation": 356.9,
+      "scale": 0.95
+    },
+    {
+      "id": "cypress_tree_066",
+      "type": "cypress_tree",
+      "x": 164.0,
+      "z": 104.8,
+      "rotation": 0.0,
+      "scale": 0.95
+    },
+    {
+      "id": "olive_tree_067",
+      "type": "olive_tree",
+      "x": 115.2,
+      "z": 164.0,
+      "rotation": 172.3,
+      "scale": 0.95
+    }
+  ],
+  "firecamps": [
+    {
+      "id": "fire_00",
+      "x": 105.0,
+      "z": 106.0,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "id": "fire_01",
+      "x": 115.0,
+      "z": 114.0,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "id": "fire_02",
+      "x": 105.0,
+      "z": 114.0,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "id": "fire_03",
+      "x": 115.0,
+      "z": 106.0,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "id": "fire_04",
+      "x": 66.8,
+      "z": 65.5,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_05",
+      "x": 66.8,
+      "z": 95.5,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_06",
+      "x": 66.8,
+      "z": 125.5,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_07",
+      "x": 66.8,
+      "z": 155.5,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_08",
+      "x": 96.8,
+      "z": 65.5,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_09",
+      "x": 96.8,
+      "z": 155.5,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_10",
+      "x": 126.8,
+      "z": 65.5,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_11",
+      "x": 126.8,
+      "z": 155.5,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_12",
+      "x": 156.8,
+      "z": 65.5,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_13",
+      "x": 156.8,
+      "z": 95.5,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_14",
+      "x": 156.8,
+      "z": 125.5,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_15",
+      "x": 143.0,
+      "z": 143.0,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_16",
+      "x": 167.0,
+      "z": 167.0,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_17",
+      "x": 126.0,
+      "z": 94.0,
+      "intensity": 1.1,
+      "radius": 3.4
+    },
+    {
+      "id": "fire_18",
+      "x": 138.0,
+      "z": 94.0,
+      "intensity": 1.1,
+      "radius": 3.4
+    },
+    {
+      "id": "fire_19",
+      "x": 126.0,
+      "z": 82.0,
+      "intensity": 1.1,
+      "radius": 3.4
+    },
+    {
+      "id": "fire_20",
+      "x": 56.0,
+      "z": 119.0,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "id": "fire_21",
+      "x": 118.0,
+      "z": 59.0,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "id": "fire_22",
+      "x": 176.0,
+      "z": 115.0,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "id": "fire_23",
+      "x": 60.0,
+      "z": 114.5,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "id": "fire_24",
+      "x": 105.5,
+      "z": 60.0,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "id": "fire_25",
+      "x": 60.0,
+      "z": 143.8,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_26",
+      "x": 60.0,
+      "z": 76.2,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_27",
+      "x": 72.0,
+      "z": 114.5,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "id": "fire_28",
+      "x": 105.5,
+      "z": 72.0,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "id": "fire_29",
+      "x": 72.0,
+      "z": 143.8,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_30",
+      "x": 72.0,
+      "z": 76.2,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_31",
+      "x": 84.0,
+      "z": 114.5,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "id": "fire_32",
+      "x": 105.5,
+      "z": 84.0,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "id": "fire_33",
+      "x": 84.0,
+      "z": 143.8,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_34",
+      "x": 84.0,
+      "z": 76.2,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_35",
+      "x": 136.0,
+      "z": 114.5,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "id": "fire_36",
+      "x": 105.5,
+      "z": 136.0,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "id": "fire_37",
+      "x": 136.0,
+      "z": 143.8,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_38",
+      "x": 136.0,
+      "z": 76.2,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_39",
+      "x": 148.0,
+      "z": 114.5,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "id": "fire_40",
+      "x": 105.5,
+      "z": 148.0,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "id": "fire_41",
+      "x": 148.0,
+      "z": 143.8,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_42",
+      "x": 148.0,
+      "z": 76.2,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_43",
+      "x": 160.0,
+      "z": 114.5,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "id": "fire_44",
+      "x": 105.5,
+      "z": 160.0,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "id": "fire_45",
+      "x": 160.0,
+      "z": 143.8,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_46",
+      "x": 160.0,
+      "z": 76.2,
+      "intensity": 0.85,
+      "radius": 2.4
+    }
+  ],
+  "undead_zones": [],
+  "wildlife": {
+    "enabled": true,
+    "seed": 51844,
+    "near_simulation_radius": 60.0,
+    "far_simulation_radius": 120.0,
+    "sheep": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 5,
+      "group_size_max": 7,
+      "roam_radius": 10.0,
+      "respawn": false,
+      "spawn_areas": [
+        {
+          "x": 90.0,
+          "z": 194.0,
+          "radius": 8.0
+        },
+        {
+          "x": 140.0,
+          "z": 194.0,
+          "radius": 8.0
+        }
+      ]
+    }
+  },
+  "starting_resources": {
+    "gold": 3000,
+    "food": 2000,
+    "wood": 2500,
+    "stone": 1800,
+    "iron": 900
+  },
+  "victory": {
+    "type": "elimination",
+    "key_structures": ["barracks"],
+    "defeat_conditions": [
+      "no_key_structures",
+      "no_commander",
+      "only_commander_remaining"
+    ]
+  }
+}

@@ -1,20 +1,14 @@
 #pragma once
 
 #include <cstdint>
-#include <functional>
 #include <map>
 #include <set>
 #include <string>
-#include <string_view>
 #include <unordered_map>
 #include <vector>
 
 namespace Engine::Core {
 using EntityID = std::uint64_t;
-}
-
-namespace Game::Units {
-enum class SpawnType : std::uint8_t;
 }
 
 namespace Game::Systems {
@@ -116,8 +110,7 @@ public:
   static void set_grid_dirty_hook(GridDirtyHook hook);
   static void set_obstruction_released_hook(ObstructionReleasedHook hook);
 
-  static auto get_building_size(std::string_view building_type) -> BuildingSize;
-  static auto get_building_size(Game::Units::SpawnType building_type) -> BuildingSize;
+  static auto get_building_size(const std::string& building_type) -> BuildingSize;
 
   struct BuildingBody {
     float width;
@@ -277,8 +270,8 @@ private:
       m_spatial_buckets;
   float m_max_half_extent{0.0F};
 
-  static const std::map<std::string, BuildingSize, std::less<>> s_building_sizes;
-  static const std::map<std::string, BuildingBody, std::less<>> s_building_bodies;
+  static const std::map<std::string, BuildingSize> s_building_sizes;
+  static const std::map<std::string, BuildingBody> s_building_bodies;
 
   static float s_grid_padding;
 };

@@ -61,7 +61,7 @@ auto add_troop(Engine::Core::World& world,
   transform->position = {position.x(), position.y(), position.z()};
   unit->owner_id = owner_id;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->health = 100;
   unit->max_health = 100;
   return entity;

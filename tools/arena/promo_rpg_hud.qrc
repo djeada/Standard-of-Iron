@@ -1,0 +1,17 @@
+<!--
+  The game's RPG HUD, loaded by the arena's promo capture so recordings show the
+  same overlay the player sees. Aliases point at the shipped files; nothing here
+  is a copy.
+-->
+<RCC>
+    <qresource prefix="/arena_rpg_hud">
+        <file alias="RpgFpvOverlay.qml">../../ui/qml/RpgFpvOverlay.qml</file>
+        <file alias="RpgMeter.qml">../../ui/qml/RpgMeter.qml</file>
+        <file alias="WorldProjector.qml">../../ui/qml/WorldProjector.qml</file>
+        <file alias="FloatingNumbers.qml">../../ui/qml/FloatingNumbers.qml</file>
+    </qresource>
+    <!-- The Design typography loads the brand title face from the game's path. -->
+    <qresource prefix="/assets/fonts">
+        <file alias="StandardIronDisplay-Bold.ttf">../../assets/fonts/StandardIronDisplay-Bold.ttf</file>
+    </qresource>
+</RCC>

@@ -5,12 +5,14 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <limits>
 #include <numbers>
 #include <unordered_map>
 
 #include "../core/component_core.h"
 #include "../core/entity.h"
 #include "../core/world.h"
+#include "../systems/formation_combat_geometry.h"
 #include "../systems/nation_registry.h"
 #include "../systems/nav_grid.h"
 #include "../units/spawn_type.h"
@@ -118,17 +120,40 @@ auto balanced_rows(int total, int max_per_row, int min_per_row) -> std::vector<i
   return rows;
 }
 
-auto member_spacing(const ArmyFormationMember& member, float base_spacing) -> float {
-  return std::max(base_spacing, member.footprint * 2.0F + 0.5F) * 1.0F;
+constexpr float k_unit_gap = 0.9F;
+constexpr float k_min_unit_gap = 0.45F;
+
+constexpr float k_flank_gap_lanes = 2.5F;
+
+auto lane_for(float base_spacing) -> float {
+  return std::max(k_min_unit_gap, base_spacing * k_unit_gap);
 }
 
-auto max_member_spacing(const std::vector<const ArmyFormationMember*>& members,
-                        float base_spacing) -> float {
-  float spacing = base_spacing;
+auto member_lateral_step(const ArmyFormationMember& member,
+                         float base_spacing) -> float {
+  return member.half_width * 2.0F + lane_for(base_spacing);
+}
+
+auto member_depth_step(const ArmyFormationMember& member, float base_spacing) -> float {
+  return member.half_depth * 2.0F + lane_for(base_spacing);
+}
+
+auto max_lateral_step(const std::vector<const ArmyFormationMember*>& members,
+                      float base_spacing) -> float {
+  float step = base_spacing;
   for (const auto* member : members) {
-    spacing = std::max(spacing, member_spacing(*member, base_spacing));
+    step = std::max(step, member_lateral_step(*member, base_spacing));
   }
-  return spacing;
+  return step;
+}
+
+auto max_depth_step(const std::vector<const ArmyFormationMember*>& members,
+                    float base_spacing) -> float {
+  float step = base_spacing;
+  for (const auto* member : members) {
+    step = std::max(step, member_depth_step(*member, base_spacing));
+  }
+  return step;
 }
 
 struct AssignedLine {
@@ -189,6 +214,8 @@ auto assign_lines(const DoctrineIntentTemplate& tmpl,
 void emit_centre_block(const DoctrineLineRule& rule,
                        const std::vector<const ArmyFormationMember*>& members,
                        float base_spacing,
+                       int row_cap,
+                       int rows_allowed,
                        float& cursor_z,
                        int& next_slot_id,
                        std::vector<FormationSlot>& out,
@@ -198,11 +225,20 @@ void emit_centre_block(const DoctrineLineRule& rule,
     return;
   }
 
-  float const spacing = max_member_spacing(members, base_spacing);
-  float const lateral_step = spacing * rule.lateral_spacing_scale;
-  float const depth_step = spacing * rule.depth_spacing_scale;
-  int const max_per_row =
-      std::max(1, std::min(rule.max_per_row, static_cast<int>(members.size())));
+  float const lateral_step = max_lateral_step(members, base_spacing) *
+                             std::max(1.0F, rule.lateral_spacing_scale);
+  float const depth_step =
+      max_depth_step(members, base_spacing) * std::max(1.0F, rule.depth_spacing_scale);
+  int const abreast_for_depth =
+      rows_allowed > 0
+          ? (static_cast<int>(members.size()) + rows_allowed - 1) / rows_allowed
+          : 1;
+
+  int const max_per_row = std::clamp(
+      std::min(std::max(std::min(rule.max_per_row, row_cap), abreast_for_depth),
+               row_cap),
+      1,
+      static_cast<int>(members.size()));
   int const min_per_row = std::max(1, std::min(rule.min_per_row, max_per_row));
   auto const rows =
       balanced_rows(static_cast<int>(members.size()), max_per_row, min_per_row);
@@ -258,6 +294,9 @@ void emit_centre_block(const DoctrineLineRule& rule,
 void emit_split_flanks(const DoctrineLineRule& rule,
                        const std::vector<const ArmyFormationMember*>& members,
                        float base_spacing,
+                       int row_cap,
+                       int rows_allowed,
+                       const QVector3D& lateral_axis,
                        float front_anchor_z,
                        float body_half_width,
                        FlankPreference preference,
@@ -269,14 +308,19 @@ void emit_split_flanks(const DoctrineLineRule& rule,
   }
 
   std::vector<const ArmyFormationMember*> sorted = members;
-  std::stable_sort(sorted.begin(),
-                   sorted.end(),
-                   [](const ArmyFormationMember* a, const ArmyFormationMember* b) {
-                     if (a->current_position.x() != b->current_position.x()) {
-                       return a->current_position.x() < b->current_position.x();
-                     }
-                     return a->entity_id < b->entity_id;
-                   });
+  std::stable_sort(
+      sorted.begin(),
+      sorted.end(),
+      [&lateral_axis](const ArmyFormationMember* a, const ArmyFormationMember* b) {
+        float const a_lateral =
+            QVector3D::dotProduct(a->current_position, lateral_axis);
+        float const b_lateral =
+            QVector3D::dotProduct(b->current_position, lateral_axis);
+        if (a_lateral != b_lateral) {
+          return a_lateral < b_lateral;
+        }
+        return a->entity_id < b->entity_id;
+      });
 
   float right_weight = rule.right_side_weight;
   switch (preference) {
@@ -315,16 +359,33 @@ void emit_split_flanks(const DoctrineLineRule& rule,
     if (side.empty()) {
       return;
     }
-    float const spacing = max_member_spacing(side, base_spacing);
-    float const lateral_step = spacing * rule.lateral_spacing_scale;
-    float const depth_step = spacing * rule.depth_spacing_scale;
-    int const max_per_row =
-        std::max(1, std::min(rule.max_per_row, static_cast<int>(side.size())));
+    float const lateral_step = max_lateral_step(side, base_spacing) *
+                               std::max(1.0F, rule.lateral_spacing_scale);
+    float const depth_step =
+        max_depth_step(side, base_spacing) * std::max(1.0F, rule.depth_spacing_scale);
+    float const spacing = lateral_step;
+    int const abreast_for_depth =
+        rows_allowed > 0
+            ? (static_cast<int>(side.size()) + rows_allowed - 1) / rows_allowed
+            : 1;
+    int const max_per_row = std::clamp(
+        std::min(std::max(std::min(rule.max_per_row, row_cap), abreast_for_depth),
+                 row_cap),
+        1,
+        static_cast<int>(side.size()));
     int const min_per_row = std::max(1, std::min(rule.min_per_row, max_per_row));
     auto const rows =
         balanced_rows(static_cast<int>(side.size()), max_per_row, min_per_row);
+
+    int const widest_flank_row =
+        rows.empty() ? 1 : *std::max_element(rows.begin(), rows.end());
+    float const flank_half_width =
+        (static_cast<float>(std::max(1, widest_flank_row) - 1) * lateral_step * 0.5F) +
+        (lateral_step * 0.5F);
+    float const flank_lane =
+        lane_for(base_spacing) * k_flank_gap_lanes * rule.flank_gap_scale;
     float const flank_centre =
-        side_sign * (body_half_width + spacing * rule.flank_gap_scale);
+        side_sign * (body_half_width + flank_lane + flank_half_width);
 
     std::size_t index = 0;
     for (std::size_t row = 0; row < rows.size() && index < side.size(); ++row) {
@@ -368,6 +429,73 @@ void emit_split_flanks(const DoctrineLineRule& rule,
 
   emit_side(left, -1.0F, ArmyRole::LeftFlank);
   emit_side(right, 1.0F, ArmyRole::RightFlank);
+}
+
+void resolve_overlaps(std::vector<FormationSlot>& slot_list,
+                      const std::vector<float>& half_width,
+                      const std::vector<float>& half_depth,
+                      float gap) {
+  constexpr int k_passes = 12;
+  auto const count = slot_list.size();
+  if (count < 2U || half_width.size() != count || half_depth.size() != count) {
+    return;
+  }
+
+  for (int pass = 0; pass < k_passes; ++pass) {
+    bool moved = false;
+    for (std::size_t i = 0; i < count; ++i) {
+      for (std::size_t j = i + 1; j < count; ++j) {
+        float const dx = slot_list[j].local_offset.x() - slot_list[i].local_offset.x();
+        float const dz = slot_list[j].local_offset.z() - slot_list[i].local_offset.z();
+        float const need_x = half_width[i] + half_width[j] + gap;
+        float const need_z = half_depth[i] + half_depth[j] + gap;
+        float const over_x = need_x - std::abs(dx);
+        float const over_z = need_z - std::abs(dz);
+        if (over_x <= 0.0F || over_z <= 0.0F) {
+          continue;
+        }
+        moved = true;
+
+        if (over_x <= over_z) {
+          float const push = (dx >= 0.0F ? over_x : -over_x) * 0.5F;
+          slot_list[i].local_offset.setX(slot_list[i].local_offset.x() - push);
+          slot_list[j].local_offset.setX(slot_list[j].local_offset.x() + push);
+        } else {
+          float const push = (dz >= 0.0F ? over_z : -over_z) * 0.5F;
+          slot_list[i].local_offset.setZ(slot_list[i].local_offset.z() - push);
+          slot_list[j].local_offset.setZ(slot_list[j].local_offset.z() + push);
+        }
+      }
+    }
+    if (!moved) {
+      return;
+    }
+  }
+}
+
+auto widest_rank(const std::vector<FormationSlot>& slot_list, float spacing) -> int {
+  if (slot_list.empty()) {
+    return 0;
+  }
+  std::vector<float> depths;
+  depths.reserve(slot_list.size());
+  for (const auto& slot : slot_list) {
+    depths.push_back(slot.local_offset.z());
+  }
+  std::sort(depths.begin(), depths.end(), std::greater<>());
+  float const band = std::max(spacing, 0.2F) * 0.5F;
+  int widest = 0;
+  int in_band = 0;
+  float start = depths.front();
+  for (float const depth : depths) {
+    if (std::abs(depth - start) > band) {
+      widest = std::max(widest, in_band);
+      start = depth;
+      in_band = 0;
+    }
+    ++in_band;
+  }
+  return std::max(widest, in_band);
 }
 
 void recentre(std::vector<FormationSlot>& slot_list) {
@@ -420,6 +548,10 @@ void apply_reserve_rows(std::vector<FormationSlot>& slot_list,
     ++count;
   }
 
+  if (count >= ordered.size()) {
+    return;
+  }
+
   for (std::size_t i = 0; i < count; ++i) {
     auto* slot = ordered[i];
     slot->local_offset.setZ(slot->local_offset.z() - spacing * 1.15F);
@@ -430,10 +562,58 @@ void apply_reserve_rows(std::vector<FormationSlot>& slot_list,
   }
 }
 
+void apply_ranged_placement(std::vector<FormationSlot>& slot_list,
+                            RangedPlacement placement,
+                            float spacing) {
+  Bounds body;
+  Bounds ranged;
+  for (const auto& slot : slot_list) {
+    if (slot.role == ArmyRole::Ranged) {
+      ranged.expand(slot.local_offset);
+    } else if (slot.role == ArmyRole::Centre || slot.role == ArmyRole::Screen ||
+               slot.role == ArmyRole::Vanguard) {
+      body.expand(slot.local_offset);
+    }
+  }
+  if (!ranged.valid || !body.valid) {
+    return;
+  }
+
+  float shift = 0.0F;
+  float lateral_spread = 1.0F;
+  switch (placement) {
+  case RangedPlacement::Front:
+
+    shift = (body.max_z + spacing * 0.9F) - ranged.min_z;
+    break;
+  case RangedPlacement::Skirmish:
+
+    shift = (body.max_z + spacing * 2.2F) - ranged.min_z;
+    lateral_spread = 1.45F;
+    break;
+  case RangedPlacement::Rear:
+  case RangedPlacement::Automatic:
+
+    shift = (body.min_z - spacing * 0.9F) - ranged.max_z;
+    break;
+  }
+
+  for (auto& slot : slot_list) {
+    if (slot.role != ArmyRole::Ranged) {
+      continue;
+    }
+    slot.local_offset.setZ(slot.local_offset.z() + shift);
+    slot.local_offset.setX(slot.local_offset.x() * lateral_spread);
+  }
+}
+
 void scale_to_frontage(std::vector<FormationSlot>& slot_list,
                        float requested_frontage,
                        float frontage_scale,
-                       float depth_scale) {
+                       float depth_scale,
+                       float lateral_floor,
+                       float max_frontage,
+                       float max_depth) {
   if (slot_list.empty()) {
     return;
   }
@@ -443,10 +623,20 @@ void scale_to_frontage(std::vector<FormationSlot>& slot_list,
   }
   float lateral_scale = frontage_scale;
   if (requested_frontage > 0.01F && bounds.width() > 0.01F) {
-    lateral_scale = requested_frontage / bounds.width();
+
+    lateral_scale = std::max(1.0F, requested_frontage / bounds.width());
   }
-  lateral_scale = std::clamp(lateral_scale, 0.25F, 6.0F);
-  float const depth_multiplier = std::clamp(depth_scale, 0.25F, 6.0F);
+
+  if (max_frontage > 0.1F && bounds.width() > 0.01F) {
+    lateral_scale = std::min(lateral_scale, max_frontage / bounds.width());
+  }
+  lateral_scale = std::clamp(std::max(lateral_scale, lateral_floor), 0.25F, 6.0F);
+
+  float depth_multiplier = depth_scale;
+  if (max_depth > 0.1F && bounds.depth() > 0.01F) {
+    depth_multiplier = std::min(depth_multiplier, max_depth / bounds.depth());
+  }
+  depth_multiplier = std::clamp(depth_multiplier, 1.0F, 6.0F);
   for (auto& slot : slot_list) {
     slot.local_offset.setX(slot.local_offset.x() * lateral_scale);
     slot.local_offset.setZ(slot.local_offset.z() * depth_multiplier);
@@ -464,23 +654,24 @@ auto rotate_offset(const QVector3D& local, float yaw_degrees) -> QVector3D {
 
 class ClaimGrid {
 public:
-  explicit ClaimGrid(float min_separation)
-      : m_cell(std::max(min_separation, 0.05F))
-      , m_min_separation_sq(min_separation * min_separation) {}
+  explicit ClaimGrid(float cell)
+      : m_cell(std::max(cell, 0.05F)) {}
 
-  [[nodiscard]] auto is_free(const QVector3D& point) const -> bool {
+  [[nodiscard]] auto is_free(const QVector3D& point, float clearance) const -> bool {
     auto const cell_x = to_cell(point.x());
     auto const cell_z = to_cell(point.z());
-    for (int dx = -1; dx <= 1; ++dx) {
-      for (int dz = -1; dz <= 1; ++dz) {
+    int const reach = static_cast<int>(std::ceil(clearance / m_cell)) + 1;
+    for (int dx = -reach; dx <= reach; ++dx) {
+      for (int dz = -reach; dz <= reach; ++dz) {
         auto const it = m_cells.find(key(cell_x + dx, cell_z + dz));
         if (it == m_cells.end()) {
           continue;
         }
         for (const auto& claimed : it->second) {
-          float const off_x = claimed.x() - point.x();
-          float const off_z = claimed.z() - point.z();
-          if ((off_x * off_x + off_z * off_z) < m_min_separation_sq) {
+          float const off_x = claimed.point.x() - point.x();
+          float const off_z = claimed.point.z() - point.z();
+          float const apart = clearance + claimed.clearance;
+          if ((off_x * off_x + off_z * off_z) < apart * apart) {
             return false;
           }
         }
@@ -489,8 +680,8 @@ public:
     return true;
   }
 
-  void claim(const QVector3D& point) {
-    m_cells[key(to_cell(point.x()), to_cell(point.z()))].push_back(point);
+  void claim(const QVector3D& point, float clearance) {
+    m_cells[key(to_cell(point.x()), to_cell(point.z()))].push_back({point, clearance});
   }
 
   void reserve(std::size_t count) { m_cells.reserve(count * 2U); }
@@ -506,37 +697,41 @@ private:
            static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell_z));
   }
 
-  std::unordered_map<std::uint64_t, std::vector<QVector3D>> m_cells;
+  struct Claim {
+    QVector3D point;
+    float clearance{0.0F};
+  };
+
+  std::unordered_map<std::uint64_t, std::vector<Claim>> m_cells;
   float m_cell{1.0F};
-  float m_min_separation_sq{1.0F};
 };
 
 class SlotTerrainFitter {
 public:
   SlotTerrainFitter(float spacing, bool enabled, std::size_t expected_slots)
-      : m_grid(spacing * 0.6F)
-      , m_separation(spacing * 0.6F)
+      : m_grid(std::max(spacing, 0.5F))
+      , m_separation(spacing)
       , m_enabled(enabled) {
     m_grid.reserve(expected_slots);
   }
 
-  auto fit(const QVector3D& ideal, SlotStatus& status) -> QVector3D {
+  auto fit(const QVector3D& ideal, float clearance, SlotStatus& status) -> QVector3D {
     if (!m_enabled) {
-      m_grid.claim(ideal);
+      m_grid.claim(ideal, clearance);
       status = SlotStatus::Valid;
       return ideal;
     }
 
-    if (m_grid.is_free(ideal) &&
+    if (m_grid.is_free(ideal, clearance) &&
         Game::Systems::NavGrid::is_world_position_walkable(ideal)) {
-      m_grid.claim(ideal);
+      m_grid.claim(ideal, clearance);
       status = SlotStatus::Valid;
       return ideal;
     }
 
     constexpr int k_rings = 6;
     constexpr int k_samples = 12;
-    float const step = m_separation * 1.05F;
+    float const step = std::max(m_separation, clearance * 2.0F) * 1.05F;
     for (int ring = 1; ring <= k_rings; ++ring) {
       float const radius = step * static_cast<float>(ring);
       for (int sample = 0; sample < k_samples; ++sample) {
@@ -546,13 +741,13 @@ public:
         QVector3D const candidate(ideal.x() + std::cos(angle) * radius,
                                   ideal.y(),
                                   ideal.z() + std::sin(angle) * radius);
-        if (!m_grid.is_free(candidate)) {
+        if (!m_grid.is_free(candidate, clearance)) {
           continue;
         }
         if (!Game::Systems::NavGrid::is_world_position_walkable(candidate)) {
           continue;
         }
-        m_grid.claim(candidate);
+        m_grid.claim(candidate, clearance);
         status = SlotStatus::Adjusted;
         return candidate;
       }
@@ -563,8 +758,8 @@ public:
             Game::Systems::NavGrid::find_nearest_walkable_grid(origin, k_wide_cells)) {
       QVector3D const grounded = Game::Systems::NavGrid::grid_to_world(*nearest);
       QVector3D const candidate(grounded.x(), ideal.y(), grounded.z());
-      if (m_grid.is_free(candidate)) {
-        m_grid.claim(candidate);
+      if (m_grid.is_free(candidate, clearance)) {
+        m_grid.claim(candidate, clearance);
         status = SlotStatus::Adjusted;
         return candidate;
       }
@@ -630,7 +825,7 @@ auto ArmyFormationPlan::depth_bands() const -> std::vector<int> {
   }
   std::sort(depths.begin(), depths.end(), std::greater<>());
 
-  float const band_gap = std::max(spacing, 0.2F) * 0.5F;
+  float const band_gap = std::max(slot_spacing, 0.2F) * 0.5F;
   float band_start = depths.front();
   int in_band = 0;
   for (float const depth : depths) {
@@ -683,6 +878,7 @@ auto ArmyFormationPlanner::collect_members(Engine::Core::World& world,
         QVector3D(transform->position.x, transform->position.y, transform->position.z);
     member.footprint =
         Game::Units::TroopConfig::instance().get_selection_ring_size(*troop);
+    measure_footprint(*entity, member.footprint, member);
     member.doctrine = doctrine_for_entity(world, id);
     members.push_back(member);
   }
@@ -752,7 +948,10 @@ auto ArmyFormationPlanner::plan_local_slots(
     const ArmyFormationOptions& options,
     float spacing,
     float requested_frontage,
-    float facing) -> std::vector<FormationSlot> {
+    float facing,
+    float* slot_spacing_out,
+    int row_cap_override,
+    int* row_cap_used) -> std::vector<FormationSlot> {
   std::vector<FormationSlot> slot_list;
   if (members.empty()) {
     return slot_list;
@@ -760,6 +959,72 @@ auto ArmyFormationPlanner::plan_local_slots(
   slot_list.reserve(members.size());
 
   auto lines = assign_lines(tmpl, members, options.preserve_member_order, facing);
+
+  float slot_spacing = 0.0F;
+  for (const auto& line : lines) {
+    if (line.rule == nullptr || line.members.empty()) {
+      continue;
+    }
+    float const line_step = max_lateral_step(line.members, spacing) *
+                            std::max(1.0F, line.rule->lateral_spacing_scale);
+    slot_spacing = slot_spacing > 0.0F ? std::min(slot_spacing, line_step) : line_step;
+  }
+  if (slot_spacing <= 0.0F) {
+    slot_spacing = spacing;
+  }
+
+  constexpr float k_lateral_floor = 1.0F;
+
+  float depth_unit = spacing;
+  for (const auto& line : lines) {
+    if (line.rule == nullptr || line.members.empty()) {
+      continue;
+    }
+    depth_unit = std::max(depth_unit, max_depth_step(line.members, spacing));
+  }
+
+  int rows_allowed = 0;
+  if (tmpl.max_depth > 0.1F) {
+
+    int stacked = 0;
+    for (const auto& line : lines) {
+      if (line.rule != nullptr && !line.members.empty() &&
+          line.rule->placement != LinePlacement::SplitFlanks) {
+        ++stacked;
+      }
+    }
+    int const total_rows =
+        std::max(1, static_cast<int>(tmpl.max_depth / std::max(0.5F, depth_unit)));
+    rows_allowed = std::max(1, total_rows / std::max(1, stacked));
+  }
+
+  float widest_step = slot_spacing;
+  for (const auto& line : lines) {
+    if (line.rule == nullptr || line.members.empty()) {
+      continue;
+    }
+    widest_step = std::max(widest_step,
+                           max_lateral_step(line.members, spacing) *
+                               std::max(1.0F, line.rule->lateral_spacing_scale));
+  }
+
+  int row_cap = std::numeric_limits<int>::max();
+  if (requested_frontage > 0.01F) {
+    float const step = std::max(0.2F, slot_spacing);
+    row_cap = std::max(1, static_cast<int>(std::floor(requested_frontage / step)) + 1);
+  } else if (tmpl.max_frontage > 0.1F) {
+    row_cap = std::max(
+        1,
+        static_cast<int>(std::floor(tmpl.max_frontage / std::max(0.2F, widest_step))));
+  }
+  if (row_cap_override > 0) {
+    row_cap = row_cap_override;
+  }
+  if (row_cap_used != nullptr) {
+    *row_cap_used = row_cap;
+  }
+  float const yaw = facing * k_deg_to_rad;
+  QVector3D const lateral_axis(std::cos(yaw), 0.0F, -std::sin(yaw));
 
   Bounds all_bounds;
   Bounds body_bounds;
@@ -773,6 +1038,8 @@ auto ArmyFormationPlanner::plan_local_slots(
     emit_centre_block(*line.rule,
                       line.members,
                       spacing,
+                      row_cap,
+                      rows_allowed,
                       cursor_z,
                       next_slot_id,
                       slot_list,
@@ -799,6 +1066,8 @@ auto ArmyFormationPlanner::plan_local_slots(
       emit_centre_block(collapsed,
                         line.members,
                         spacing,
+                        row_cap,
+                        rows_allowed,
                         cursor_z,
                         next_slot_id,
                         slot_list,
@@ -810,6 +1079,9 @@ auto ArmyFormationPlanner::plan_local_slots(
     emit_split_flanks(*line.rule,
                       line.members,
                       spacing,
+                      row_cap,
+                      rows_allowed,
+                      lateral_axis,
                       body_bounds.max_z,
                       body_half_width,
                       preference,
@@ -820,14 +1092,46 @@ auto ArmyFormationPlanner::plan_local_slots(
 
   int const reserve_rows =
       options.reserve_rows >= 0 ? options.reserve_rows : tmpl.reserve_rows;
-  apply_reserve_rows(slot_list, reserve_rows, spacing);
+  apply_reserve_rows(slot_list, reserve_rows, depth_unit);
+
+  RangedPlacement ranged = options.ranged_placement;
+  if (ranged == RangedPlacement::Automatic) {
+    ranged = tmpl.default_ranged;
+  }
+  apply_ranged_placement(slot_list, ranged, depth_unit);
 
   scale_to_frontage(slot_list,
                     requested_frontage,
                     tmpl.frontage_scale * options.frontage_scale,
-                    tmpl.depth_scale * options.depth_scale);
+                    tmpl.depth_scale * options.depth_scale,
+                    k_lateral_floor,
+                    requested_frontage > 0.01F ? 0.0F : tmpl.max_frontage,
+                    tmpl.max_depth);
+
+  {
+    std::unordered_map<EntityID, const ArmyFormationMember*> by_id;
+    by_id.reserve(members.size());
+    for (const auto& member : members) {
+      by_id.emplace(member.entity_id, &member);
+    }
+    std::vector<float> half_width(slot_list.size(), 0.5F);
+    std::vector<float> half_depth(slot_list.size(), 0.5F);
+    for (std::size_t i = 0; i < slot_list.size(); ++i) {
+      auto const found = by_id.find(slot_list[i].occupant);
+      if (found == by_id.end()) {
+        continue;
+      }
+      half_width[i] = found->second->half_width;
+      half_depth[i] = found->second->half_depth;
+    }
+    resolve_overlaps(slot_list, half_width, half_depth, lane_for(spacing) * 0.5F);
+  }
+
   recentre(slot_list);
 
+  if (slot_spacing_out != nullptr) {
+    *slot_spacing_out = slot_spacing;
+  }
   return slot_list;
 }
 
@@ -843,9 +1147,100 @@ auto ArmyFormationPlanner::make_member(EntityID entity_id,
   member.current_position = position;
   member.footprint =
       Game::Units::TroopConfig::instance().get_selection_ring_size(troop_type);
+
+  member.half_width = member.footprint;
+  member.half_depth = member.footprint;
   member.doctrine = doctrine.empty() ? k_neutral_doctrine : doctrine;
   return member;
 }
+
+void ArmyFormationPlanner::measure_footprint(const Engine::Core::Entity& entity,
+                                             float fallback_radius,
+                                             ArmyFormationMember& member) {
+  member.half_width = fallback_radius;
+  member.half_depth = fallback_radius;
+  member.individuals = 1;
+  member.files = 1;
+  member.soldier_body_radius = fallback_radius;
+
+  auto const layout = Game::Systems::FormationCombat::resolve_layout(entity);
+  if (layout.all_slots.empty()) {
+    return;
+  }
+  float extent_x = 0.0F;
+  float extent_z = 0.0F;
+  for (const auto& slot : layout.all_slots) {
+    extent_x = std::max(extent_x, std::abs(slot.local_x));
+    extent_z = std::max(extent_z, std::abs(slot.local_z));
+  }
+  member.individuals = std::max(1, static_cast<int>(layout.all_slots.size()));
+  member.files = std::max(1, layout.cols);
+  member.soldier_body_radius = std::max(0.05F, layout.body_radius);
+
+  member.soldier_file_step =
+      layout.cols > 1 ? (extent_x * 2.0F) / static_cast<float>(layout.cols - 1)
+                      : std::max(0.1F, layout.spacing);
+  int const rows = std::max(1, layout.rows);
+  member.soldier_rank_step = rows > 1 ? (extent_z * 2.0F) / static_cast<float>(rows - 1)
+                                      : std::max(0.1F, layout.spacing);
+  member.half_width = std::max(member.half_width, extent_x + layout.body_radius);
+  member.half_depth = std::max(member.half_depth, extent_z + layout.body_radius);
+}
+
+void ArmyFormationPlanner::shape_member_for_intent(ArmyFormationMember& member,
+                                                   float aspect) {
+  if (aspect <= 0.0F || member.individuals <= 1) {
+    return;
+  }
+  int const files = std::clamp(static_cast<int>(std::lround(std::sqrt(
+                                   static_cast<float>(member.individuals) * aspect))),
+                               1,
+                               member.individuals);
+  member.files = files;
+  int const rows = (member.individuals + files - 1) / files;
+  member.half_width = static_cast<float>(files - 1) * member.soldier_file_step * 0.5F +
+                      member.soldier_body_radius;
+  member.half_depth = static_cast<float>(rows - 1) * member.soldier_rank_step * 0.5F +
+                      member.soldier_body_radius;
+}
+
+namespace {
+
+auto plan_fitting_the_ground(const std::vector<ArmyFormationMember>& members,
+                             const ArmyFormationRequest& request,
+                             const ArmyFormation* previous) -> ArmyFormationPlan {
+  constexpr int k_attempts = 4;
+  constexpr float k_narrowing = 0.62F;
+  constexpr float k_tolerated_blocked_share = 0.12F;
+
+  ArmyFormationPlan best;
+  ArmyFormationRequest attempt = request;
+  for (int index = 0; index < k_attempts; ++index) {
+    auto plan = ArmyFormationPlanner::place(
+        ArmyFormationPlanner::build_layout(members, attempt, previous), attempt);
+    if (!plan.valid) {
+      if (best.slot_list.empty()) {
+        best = std::move(plan);
+      }
+      break;
+    }
+    auto const total = static_cast<float>(plan.slot_list.size());
+    float const blocked_share =
+        total > 0.0F ? static_cast<float>(plan.blocked_count) / total : 1.0F;
+    if (best.slot_list.empty() || plan.blocked_count < best.blocked_count) {
+      best = plan;
+    }
+    if (blocked_share <= k_tolerated_blocked_share) {
+      return best;
+    }
+
+    float const current = attempt.frontage > 0.01F ? attempt.frontage : plan.frontage;
+    attempt.frontage = std::max(1.0F, current * k_narrowing);
+  }
+  return best;
+}
+
+} // namespace
 
 auto ArmyFormationPlanner::plan(Engine::Core::World& world,
                                 const ArmyFormationRequest& request)
@@ -855,7 +1250,7 @@ auto ArmyFormationPlanner::plan(Engine::Core::World& world,
           ? ArmyFormationRegistry::for_world(world).find(request.group_id)
           : nullptr;
   const auto members = collect_members(world, request.members);
-  return place(build_layout(members, request, previous), request);
+  return plan_fitting_the_ground(members, request, previous);
 }
 
 auto ArmyFormationPlanner::layout_signature(
@@ -871,9 +1266,14 @@ auto ArmyFormationPlanner::layout_signature(
     hasher.mix_float(member.footprint);
 
     hasher.mix_float(member.current_position.x());
+    hasher.mix_float(member.current_position.z());
   }
 
+  hasher.mix_float(request.facing);
   hasher.mix(static_cast<std::uint64_t>(request.intent));
+  for (const auto& member : members) {
+    hasher.mix(static_cast<std::uint64_t>(member.individuals));
+  }
   hasher.mix(request.doctrine);
   hasher.mix_float(request.spacing);
   hasher.mix_float(request.frontage);
@@ -947,8 +1347,62 @@ auto ArmyFormationPlanner::build_layout(const std::vector<ArmyFormationMember>& 
                    std::clamp(request.options.spacing_scale, 0.4F, 2.5F));
   layout.spacing = spacing;
 
-  layout.slot_list = plan_local_slots(
-      members, *tmpl, request.options, spacing, request.frontage, request.facing);
+  std::vector<ArmyFormationMember> shaped = members;
+  for (auto& member : shaped) {
+    shape_member_for_intent(member, tmpl->unit_files_aspect);
+  }
+
+  layout.slot_spacing = spacing;
+
+  {
+    constexpr int k_bound_attempts = 6;
+    int row_cap_override = 0;
+    std::vector<FormationSlot> best;
+    float best_excess = std::numeric_limits<float>::max();
+    float best_spacing = spacing;
+    for (int attempt = 0; attempt < k_bound_attempts; ++attempt) {
+      float attempt_spacing = spacing;
+      int cap_used = 0;
+      auto candidate = plan_local_slots(shaped,
+                                        *tmpl,
+                                        request.options,
+                                        spacing,
+                                        request.frontage,
+                                        request.facing,
+                                        &attempt_spacing,
+                                        row_cap_override,
+                                        &cap_used);
+      Bounds measured;
+      for (const auto& slot : candidate) {
+        measured.expand(slot.local_offset);
+      }
+      float const over_width = tmpl->max_frontage > 0.1F && request.frontage <= 0.01F
+                                   ? measured.width() - tmpl->max_frontage
+                                   : 0.0F;
+      float const over_depth =
+          tmpl->max_depth > 0.1F ? measured.depth() - tmpl->max_depth : 0.0F;
+      float const excess = std::max(0.0F, over_width) + std::max(0.0F, over_depth);
+      if (excess < best_excess) {
+        best_excess = excess;
+        best = candidate;
+        best_spacing = attempt_spacing;
+      }
+      if (excess <= 0.0F) {
+        break;
+      }
+
+      int const current = std::max(1, cap_used);
+      int const next = over_width > over_depth
+                           ? std::max(1, current - std::max(1, current / 5))
+                           : current + std::max(1, current / 5);
+      if (next == current) {
+        break;
+      }
+      row_cap_override = next;
+    }
+    layout.slot_list = std::move(best);
+    layout.slot_spacing = best_spacing;
+  }
   if (layout.slot_list.empty()) {
     layout.rejection_reason = "The formation template produced no slot_list.";
     return layout;
@@ -996,6 +1450,30 @@ auto ArmyFormationPlanner::build_layout(const std::vector<ArmyFormationMember>& 
     }
   }
 
+  {
+    std::unordered_map<EntityID, const ArmyFormationMember*> by_id;
+    by_id.reserve(shaped.size());
+    for (const auto& member : shaped) {
+      by_id.emplace(member.entity_id, &member);
+    }
+    layout.slot_clearance.assign(layout.slot_list.size(), layout.slot_spacing * 0.5F);
+    layout.slot_half_width.assign(layout.slot_list.size(), layout.slot_spacing * 0.5F);
+    layout.slot_half_depth.assign(layout.slot_list.size(), layout.slot_spacing * 0.5F);
+    layout.slot_files.assign(layout.slot_list.size(), 0);
+    for (std::size_t i = 0; i < layout.slot_list.size(); ++i) {
+      auto const found = by_id.find(layout.slot_list[i].occupant);
+      if (found == by_id.end()) {
+        continue;
+      }
+      layout.slot_files[i] = tmpl->unit_files_aspect > 0.0F ? found->second->files : 0;
+
+      layout.slot_clearance[i] =
+          std::min(found->second->half_width, found->second->half_depth);
+      layout.slot_half_width[i] = found->second->half_width;
+      layout.slot_half_depth[i] = found->second->half_depth;
+    }
+  }
+
   Bounds bounds;
   for (const auto& slot : layout.slot_list) {
     bounds.expand(slot.local_offset);
@@ -1015,6 +1493,7 @@ auto ArmyFormationPlanner::place(const ArmyFormationLayout& layout,
   plan.intent = layout.intent;
   plan.doctrine = layout.doctrine;
   plan.spacing = layout.spacing;
+  plan.slot_spacing = layout.slot_spacing;
   plan.frontage = layout.frontage;
   plan.depth = layout.depth;
 
@@ -1024,33 +1503,47 @@ auto ArmyFormationPlanner::place(const ArmyFormationLayout& layout,
   }
 
   plan.slot_list = layout.slot_list;
+  plan.slot_clearance = layout.slot_clearance;
+  plan.slot_half_width = layout.slot_half_width;
+  plan.slot_half_depth = layout.slot_half_depth;
+  plan.slot_files = layout.slot_files;
+  plan.slot_clearance.resize(plan.slot_list.size(), layout.slot_spacing * 0.5F);
+  plan.slot_half_width.resize(plan.slot_list.size(), layout.slot_spacing * 0.5F);
+  plan.slot_half_depth.resize(plan.slot_list.size(), layout.slot_spacing * 0.5F);
+  plan.slot_files.resize(plan.slot_list.size(), 0);
 
   SlotTerrainFitter fitter(
-      layout.spacing, request.resolve_terrain, plan.slot_list.size());
+      layout.slot_spacing, request.resolve_terrain, plan.slot_list.size());
   QVector3D const anchor =
       request.resolve_terrain
           ? Game::Systems::NavGrid::snap_to_walkable_ground(request.anchor, 15)
           : request.anchor;
   plan.anchor = anchor;
 
-  std::vector<FormationSlot*> ordered;
+  std::vector<std::size_t> ordered;
   ordered.reserve(plan.slot_list.size());
-  for (auto& slot : plan.slot_list) {
-    ordered.push_back(&slot);
+  for (std::size_t i = 0; i < plan.slot_list.size(); ++i) {
+    ordered.push_back(i);
   }
-  std::stable_sort(ordered.begin(), ordered.end(), [](const auto* a, const auto* b) {
-    if (a->local_offset.z() != b->local_offset.z()) {
-      return a->local_offset.z() > b->local_offset.z();
-    }
-    return std::abs(a->local_offset.x()) < std::abs(b->local_offset.x());
-  });
 
-  for (auto* slot : ordered) {
+  auto const& placed = plan.slot_list;
+  std::stable_sort(
+      ordered.begin(), ordered.end(), [&placed](std::size_t ia, std::size_t ib) {
+        const auto* a = &placed[ia];
+        const auto* b = &placed[ib];
+        if (a->local_offset.z() != b->local_offset.z()) {
+          return a->local_offset.z() > b->local_offset.z();
+        }
+        return std::abs(a->local_offset.x()) < std::abs(b->local_offset.x());
+      });
+
+  for (auto const index : ordered) {
+    auto* slot = &plan.slot_list[index];
     QVector3D const rotated = rotate_offset(slot->local_offset, request.facing);
     QVector3D const ideal(
         anchor.x() + rotated.x(), anchor.y(), anchor.z() + rotated.z());
     SlotStatus status = SlotStatus::Valid;
-    slot->world_position = fitter.fit(ideal, status);
+    slot->world_position = fitter.fit(ideal, plan.slot_clearance[index], status);
     slot->status = status;
     slot->facing = request.facing;
     if (status == SlotStatus::Blocked) {
@@ -1094,6 +1587,7 @@ auto ArmyFormationPlanner::scatter_layout(
     float spacing) -> ArmyFormationLayout {
   ArmyFormationLayout layout;
   layout.spacing = spacing;
+  layout.slot_spacing = spacing;
   layout.doctrine = k_neutral_doctrine;
   auto const offsets = scatter_offsets(static_cast<int>(members.size()), spacing);
   layout.slot_list.reserve(members.size());
@@ -1118,7 +1612,7 @@ auto ArmyFormationPlanner::scatter_layout(
 auto ArmyFormationPlanner::plan(const std::vector<ArmyFormationMember>& members,
                                 const ArmyFormationRequest& request)
     -> ArmyFormationPlan {
-  return place(build_layout(members, request), request);
+  return plan_fitting_the_ground(members, request, nullptr);
 }
 
 } // namespace Game::Formation

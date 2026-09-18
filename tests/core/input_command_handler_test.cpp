@@ -227,7 +227,7 @@ TEST_F(InputCommandHandlerTest, RightPressConsumesBarracksRallyCursorModeCancell
 
 TEST_F(InputCommandHandlerTest, RightPressConsumesEnemyAttackCommand) {
   auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(enemy, nullptr);
   selection_system->select_unit(unit->get_id());
@@ -246,7 +246,7 @@ TEST_F(InputCommandHandlerTest, RightPressConsumesEnemyAttackCommand) {
 TEST_F(InputCommandHandlerTest, RightPressAppliesAttackOnlyToEligibleUnits) {
   auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
   auto* builder = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(archer, nullptr);
   ASSERT_NE(builder, nullptr);
   ASSERT_NE(enemy, nullptr);
@@ -463,7 +463,7 @@ TEST_F(InputCommandHandlerTest, PositioningOneTroopDoesNotRegisterAnArmyFormatio
       << "moving one member out must not shrink its group to itself";
   EXPECT_EQ(registry.group_ids().size(), 1U);
 
-  auto* lone = create_unit(5.0F, 5.0F, 1, Game::Units::SpawnType::Knight);
+  auto* lone = create_unit(5.0F, 5.0F, 1, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(lone, nullptr);
   selection_system->clear_selection();
   selection_system->select_unit(lone->get_id());
@@ -509,6 +509,33 @@ TEST_F(InputCommandHandlerTest, TheFormationKeyPositionsOneTroopToo) {
   ASSERT_NE(transform, nullptr);
   EXPECT_TRUE(transform->has_desired_yaw);
   EXPECT_NEAR(transform->desired_yaw, 0.0F, 0.5F);
+}
+
+TEST_F(InputCommandHandlerTest,
+       TheFormationKeyOpensPlacementOnAnArmyThatIsAlreadyFormed) {
+  auto* first = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Swordsman);
+  auto* second = create_unit(-1.0F, 0.0F, 1, Game::Units::SpawnType::Swordsman);
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+  selection_system->select_unit(first->get_id());
+  selection_system->select_unit(second->get_id());
+
+  input_handler->on_formation_command();
+  ASSERT_TRUE(input_handler->is_placing_formation());
+  command_controller->formation().begin_formation_drag(QVector3D(0.0F, 0.0F, 4.0F));
+  command_controller->formation().update_formation_drag(QVector3D(6.0F, 0.0F, 4.0F));
+  command_controller->formation().end_formation_drag();
+  input_handler->on_formation_confirm();
+  ASSERT_FALSE(input_handler->is_placing_formation());
+  ASSERT_TRUE(command_controller->formation().any_selected_in_formation_mode())
+      << "a deployed army stays in formation mode";
+
+  input_handler->on_formation_command();
+  EXPECT_TRUE(input_handler->is_placing_formation())
+      << "the formation key must open a placement every time, not every other time";
+
+  input_handler->on_formation_command();
+  EXPECT_FALSE(input_handler->is_placing_formation());
 }
 
 TEST_F(InputCommandHandlerTest, FormationConfirmClearsPatrolBeforeApplyingMove) {
@@ -567,7 +594,7 @@ TEST_F(InputCommandHandlerTest, RightDoubleClickDoesNotBypassFormationPlacement)
 }
 
 TEST_F(InputCommandHandlerTest, RightDoubleClickEnablesRunModeAndDispatchesMove) {
-  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Knight);
+  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(unit, nullptr);
   selection_system->select_unit(unit->get_id());
 
@@ -785,8 +812,8 @@ TEST_F(InputCommandHandlerTest, UntouchedPlacementFacesAwayFromTheUnitsThatMarch
 
 TEST_F(InputCommandHandlerTest, RightPressAttackPublishesFeedbackForTheClickedEnemy) {
   auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
-  auto* bystander = create_unit(3.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
+  auto* bystander = create_unit(3.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(enemy, nullptr);
   ASSERT_NE(bystander, nullptr);
@@ -806,7 +833,7 @@ TEST_F(InputCommandHandlerTest, RightPressAttackPublishesFeedbackForTheClickedEn
 
 TEST_F(InputCommandHandlerTest, RightPressOnEnemyWithBuildersOnlyIsRefusedAndConsumed) {
   auto* builder = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(builder, nullptr);
   ASSERT_NE(enemy, nullptr);
   selection_system->select_unit(builder->get_id());
@@ -858,7 +885,7 @@ TEST_F(InputCommandHandlerTest, RightClickWithEmptySelectionPublishesNothing) {
 
 TEST_F(InputCommandHandlerTest, AttackModeClickPublishesFeedbackAndResetsTheCursor) {
   auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(enemy, nullptr);
   selection_system->select_unit(unit->get_id());
@@ -910,7 +937,7 @@ TEST_F(InputCommandHandlerTest, MinimapRightClickPublishesMoveFeedback) {
 
 TEST_F(InputCommandHandlerTest, ClickingAnEnemyInspectsItInsteadOfSelectingIt) {
   auto* mine = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(mine, nullptr);
   ASSERT_NE(enemy, nullptr);
   selection_system->select_unit(mine->get_id());
@@ -937,7 +964,7 @@ TEST_F(InputCommandHandlerTest, ClickingAnEnemyBuildingInspectsIt) {
 
 TEST_F(InputCommandHandlerTest, SelectingOwnUnitsClearsTheInspectedEnemy) {
   auto* mine = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(mine, nullptr);
   ASSERT_NE(enemy, nullptr);
   selection_system->set_inspected_entity(enemy->get_id());
@@ -951,7 +978,7 @@ TEST_F(InputCommandHandlerTest, SelectingOwnUnitsClearsTheInspectedEnemy) {
 }
 
 TEST_F(InputCommandHandlerTest, ClickingEmptyGroundClearsTheInspectedEnemy) {
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(enemy, nullptr);
   selection_system->set_inspected_entity(enemy->get_id());
 
@@ -964,7 +991,7 @@ TEST_F(InputCommandHandlerTest, ClickingEmptyGroundClearsTheInspectedEnemy) {
 
 TEST_F(InputCommandHandlerTest, ShiftClickingAnEnemyDoesNotInspectOrDeselect) {
   auto* mine = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(mine, nullptr);
   ASSERT_NE(enemy, nullptr);
   selection_system->select_unit(mine->get_id());
@@ -977,7 +1004,7 @@ TEST_F(InputCommandHandlerTest, ShiftClickingAnEnemyDoesNotInspectOrDeselect) {
 }
 
 TEST_F(InputCommandHandlerTest, TheInspectFilterCanVetoHiddenEnemies) {
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(enemy, nullptr);
   selection_controller->set_inspect_filter(
       [](Engine::Core::EntityID) { return false; });
@@ -990,7 +1017,7 @@ TEST_F(InputCommandHandlerTest, TheInspectFilterCanVetoHiddenEnemies) {
 }
 
 TEST_F(InputCommandHandlerTest, DeadEnemiesCannotBeInspected) {
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(enemy, nullptr);
   enemy->get_component<Engine::Core::UnitComponent>()->health = 0;
 

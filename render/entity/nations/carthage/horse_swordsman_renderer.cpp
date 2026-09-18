@@ -4,7 +4,7 @@
 #include <optional>
 
 #include "render/creature/pipeline/creature_asset.h"
-#include "render/entity/mounted_knight_renderer_base.h"
+#include "render/entity/mounted_swordsman_renderer_base.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/humanoid/runtime/style_palette.h"
 #include "render/submitter.h"
@@ -18,8 +18,8 @@ constexpr float k_style_mix_weight = 0.4F;
 
 constexpr float k_leather_team_mix_weight = 0.15F;
 
-auto carthage_style() -> KnightStyleConfig {
-  KnightStyleConfig style;
+auto carthage_style() -> SwordsmanStyleConfig {
+  SwordsmanStyleConfig style;
   style.cloth_color = QVector3D(0.15F, 0.36F, 0.55F);
   style.leather_color = QVector3D(0.32F, 0.22F, 0.12F);
   style.leather_dark_color = QVector3D(0.32F, 0.22F, 0.15F);
@@ -27,15 +27,15 @@ auto carthage_style() -> KnightStyleConfig {
   return style;
 }
 
-class CarthageMountedKnightRenderer : public MountedKnightRendererBase {
+class CarthageMountedSwordsmanRenderer : public MountedSwordsmanRendererBase {
 public:
-  using MountedKnightRendererBase::MountedKnightRendererBase;
+  using MountedSwordsmanRendererBase::MountedSwordsmanRendererBase;
 
   void get_variant(const DrawContext& ctx,
                    uint32_t seed,
                    HumanoidVariant& v) const override {
-    MountedKnightRendererBase::get_variant(ctx, seed, v);
-    const KnightStyleConfig style = carthage_style();
+    MountedSwordsmanRendererBase::get_variant(ctx, seed, v);
+    const SwordsmanStyleConfig style = carthage_style();
     QVector3D const team_tint = resolve_team_tint(ctx);
 
     auto apply_color = [&](const std::optional<QVector3D>& override_color,
@@ -53,8 +53,8 @@ public:
   }
 };
 
-auto make_mounted_knight_config() -> MountedKnightRendererConfig {
-  MountedKnightRendererConfig config;
+auto make_mounted_swordsman_config() -> MountedSwordsmanRendererConfig {
+  MountedSwordsmanRendererConfig config;
   const auto loadout =
       Render::GL::Nation::resolve_equipment_loadout("troops/carthage/horse_swordsman");
   config.sword_equipment_id = loadout.ids.sword;
@@ -91,11 +91,11 @@ auto make_mounted_knight_config() -> MountedKnightRendererConfig {
 
 } // namespace
 
-void register_mounted_knight_renderer(EntityRendererRegistry& registry) {
+void register_mounted_swordsman_renderer(EntityRendererRegistry& registry) {
   register_humanoid_renderer(registry,
                              "troops/carthage/horse_swordsman",
-                             std::make_shared<CarthageMountedKnightRenderer const>(
-                                 make_mounted_knight_config()));
+                             std::make_shared<CarthageMountedSwordsmanRenderer const>(
+                                 make_mounted_swordsman_config()));
 }
 
 } // namespace Render::GL::Carthage

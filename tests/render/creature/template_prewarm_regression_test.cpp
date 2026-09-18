@@ -1007,7 +1007,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanSwordsmanGuardTemplates) {
   Engine::Core::Entity* swordsman = world.create_entity();
   ASSERT_NE(swordsman, nullptr);
   add_test_unit(*swordsman,
-                SpawnType::Knight,
+                SpawnType::Swordsman,
                 NationID::RomanRepublic,
                 1,
                 "troops/roman/swordsman");
@@ -1025,7 +1025,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanSwordsmanGuardTemplates) {
   Engine::Core::StandaloneEntity runtime_entity_scratch(9005);
   Engine::Core::Entity& runtime_entity = runtime_entity_scratch.entity();
   add_test_unit(runtime_entity,
-                SpawnType::Knight,
+                SpawnType::Swordsman,
                 NationID::RomanRepublic,
                 1,
                 "troops/roman/swordsman");

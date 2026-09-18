@@ -67,6 +67,12 @@ public:
     return m_rpg_camera_focus_id;
   }
 
+  void set_rpg_lens_detached(bool detached) noexcept { m_rpg_lens_detached = detached; }
+  [[nodiscard]] auto rpg_lens_gap_applies() const noexcept -> bool {
+    return m_world_render_mode == WorldRenderMode::Rpg && m_rpg_camera_focus_id != 0 &&
+           !m_rpg_lens_detached;
+  }
+
 private:
   Engine::Core::EntityID m_hovered_entity_id = 0;
   Engine::Core::EntityID m_rpg_camera_focus_id = 0;
@@ -76,6 +82,7 @@ private:
   bool m_order_marker_all_owners = false;
   bool m_force_full_creature_lod = false;
   bool m_cinematic_mode = false;
+  bool m_rpg_lens_detached = false;
 };
 
 } // namespace Render::GL

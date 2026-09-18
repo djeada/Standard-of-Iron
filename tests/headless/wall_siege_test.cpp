@@ -225,7 +225,7 @@ TEST_F(WallSiegeTest, WallKeepsItsOrientationWhileBeingHacked) {
 
   const float rotation_before = rotation_of(*session, wall);
   const EntityID raider = spawn_troop(*session,
-                                      Game::Units::SpawnType::Knight,
+                                      Game::Units::SpawnType::Swordsman,
                                       k_raider,
                                       0.0F,
                                       besieged_face_z() - 3.0F);
@@ -247,7 +247,7 @@ TEST_F(WallSiegeTest, WallKeepsItsOrientationWhenStruckFromAnAngle) {
 
   const float rotation_before = rotation_of(*session, wall);
   const EntityID raider = spawn_troop(*session,
-                                      Game::Units::SpawnType::Knight,
+                                      Game::Units::SpawnType::Swordsman,
                                       k_raider,
                                       -3.0F,
                                       besieged_face_z() - 2.0F);
@@ -375,7 +375,7 @@ TEST_F(WallSiegeTest, GateKeepsItsAxisAfterBeingHackedAndLosingANeighbour) {
   Game::Systems::WallNetworkService::refresh_world(session->world());
 
   const EntityID raider = spawn_troop(
-      *session, Game::Units::SpawnType::Knight, k_raider, breach.x(), breach.z());
+      *session, Game::Units::SpawnType::Swordsman, k_raider, breach.x(), breach.z());
   ASSERT_NE(raider, 0U);
   order_attack(*session, raider, gate);
   run_for(*session, 8.0);
@@ -446,7 +446,7 @@ TEST_F(WallSiegeTest, AnAssaultOnAnUnbreachedWallNeverGetsBehindIt) {
                                         lane,
                                         besieged_face_z() - 4.0F);
     const EntityID defender = spawn_troop(*session,
-                                          Game::Units::SpawnType::Knight,
+                                          Game::Units::SpawnType::Swordsman,
                                           k_defender,
                                           lane,
                                           defended_face_z() + 1.5F);
@@ -546,12 +546,12 @@ TEST_F(WallSiegeTest, RaiderCannotReachATargetBehindAnIntactWall) {
   ASSERT_NE(build_wall(*session), 0U);
 
   const EntityID raider = spawn_troop(*session,
-                                      Game::Units::SpawnType::Knight,
+                                      Game::Units::SpawnType::Swordsman,
                                       k_raider,
                                       0.0F,
                                       besieged_face_z() - 3.0F);
   const EntityID defender = spawn_troop(*session,
-                                        Game::Units::SpawnType::Knight,
+                                        Game::Units::SpawnType::Swordsman,
                                         k_defender,
                                         0.0F,
                                         defended_face_z() + 0.4F);

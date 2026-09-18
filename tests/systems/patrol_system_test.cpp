@@ -24,7 +24,8 @@ protected:
   }
 
   static void arm(Entity* entity) {
-    entity->get_component<UnitComponent>()->spawn_type = Game::Units::SpawnType::Knight;
+    entity->get_component<UnitComponent>()->spawn_type =
+        Game::Units::SpawnType::Swordsman;
     auto* attack = entity->add_component<AttackComponent>();
     attack->can_melee = true;
     attack->range = 1.5F;
@@ -150,7 +151,7 @@ TEST_F(PatrolSystemTest, AWorkerOnPatrolRouteDoesNotPickFights) {
   auto* enemy_unit_comp =
       enemy_troop->add_component<UnitComponent>(100, 100, 1.0F, 10.0F);
   enemy_unit_comp->owner_id = 2;
-  enemy_unit_comp->spawn_type = Game::Units::SpawnType::Knight;
+  enemy_unit_comp->spawn_type = Game::Units::SpawnType::Swordsman;
 
   patrol_system->update(world.get(), 0.1F);
 

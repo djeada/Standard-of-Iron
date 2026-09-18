@@ -18,7 +18,7 @@ protected:
   void SetUp() override { Render::GL::register_built_in_equipment(); }
 };
 
-TEST_F(EquipmentLoadoutCatalogTest, RomanMountedKnightLoadoutFromData) {
+TEST_F(EquipmentLoadoutCatalogTest, RomanMountedSwordsmanLoadoutFromData) {
   const auto loadout =
       Render::GL::Nation::resolve_equipment_loadout("troops/roman/horse_swordsman");
 

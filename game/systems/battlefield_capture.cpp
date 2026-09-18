@@ -239,39 +239,39 @@ auto build_world(ScenarioId id, Engine::Core::World* into = nullptr)
 
   switch (id) {
   case ScenarioId::InfantryApproach20v20:
-    spawn_line(*scenario, 1, Game::Units::SpawnType::Knight, 20, -14, 0, 1, false);
-    spawn_line(*scenario, 2, Game::Units::SpawnType::Knight, 20, 14, 0, 2, false);
+    spawn_line(*scenario, 1, Game::Units::SpawnType::Swordsman, 20, -14, 0, 1, false);
+    spawn_line(*scenario, 2, Game::Units::SpawnType::Swordsman, 20, 14, 0, 2, false);
     break;
   case ScenarioId::ArchersVsInfantry:
     spawn_line(*scenario, 1, Game::Units::SpawnType::Archer, 20, -16, 0, 1, false);
-    spawn_line(*scenario, 2, Game::Units::SpawnType::Knight, 20, 16, 0, 2, false);
+    spawn_line(*scenario, 2, Game::Units::SpawnType::Swordsman, 20, 16, 0, 2, false);
     break;
   case ScenarioId::MixedFormation:
-    spawn_line(*scenario, 1, Game::Units::SpawnType::Knight, 12, -15, -5, 1, false);
+    spawn_line(*scenario, 1, Game::Units::SpawnType::Swordsman, 12, -15, -5, 1, false);
     spawn_line(*scenario, 1, Game::Units::SpawnType::Archer, 8, -17, 6, 3, false);
-    spawn_line(*scenario, 2, Game::Units::SpawnType::Knight, 20, 15, 0, 2, false);
+    spawn_line(*scenario, 2, Game::Units::SpawnType::Swordsman, 20, 15, 0, 2, false);
     break;
   case ScenarioId::CasualtyReflow:
 
-    spawn_line(*scenario, 1, Game::Units::SpawnType::Knight, 20, -8, 0, 1, false);
-    spawn_line(*scenario, 2, Game::Units::SpawnType::Knight, 20, 8, 0, 2, false);
+    spawn_line(*scenario, 1, Game::Units::SpawnType::Swordsman, 20, -8, 0, 1, false);
+    spawn_line(*scenario, 2, Game::Units::SpawnType::Swordsman, 20, 8, 0, 2, false);
     break;
   case ScenarioId::CavalryCharge:
     spawn_line(
-        *scenario, 1, Game::Units::SpawnType::MountedKnight, 15, -24, 0, 1, false);
-    spawn_line(*scenario, 2, Game::Units::SpawnType::Knight, 20, 8, 0, 2, false);
+        *scenario, 1, Game::Units::SpawnType::MountedSwordsman, 15, -24, 0, 1, false);
+    spawn_line(*scenario, 2, Game::Units::SpawnType::Swordsman, 20, 8, 0, 2, false);
     break;
   case ScenarioId::NarrowPassage:
-    spawn_line(*scenario, 1, Game::Units::SpawnType::Knight, 8, -18, 0, 1, false);
-    spawn_line(*scenario, 2, Game::Units::SpawnType::Knight, 8, 18, 0, 2, false);
+    spawn_line(*scenario, 1, Game::Units::SpawnType::Swordsman, 8, -18, 0, 1, false);
+    spawn_line(*scenario, 2, Game::Units::SpawnType::Swordsman, 8, 18, 0, 2, false);
     break;
   case ScenarioId::CommanderInLine:
-    spawn_line(*scenario, 1, Game::Units::SpawnType::Knight, 20, -14, 0, 1, false);
-    spawn_line(*scenario, 2, Game::Units::SpawnType::Knight, 20, 14, 0, 2, false);
+    spawn_line(*scenario, 1, Game::Units::SpawnType::Swordsman, 20, -14, 0, 1, false);
+    spawn_line(*scenario, 2, Game::Units::SpawnType::Swordsman, 20, 14, 0, 2, false);
     break;
   case ScenarioId::BotSkirmish:
-    spawn_line(*scenario, 1, Game::Units::SpawnType::Knight, 12, -12, 0, 1, false);
-    spawn_line(*scenario, 2, Game::Units::SpawnType::Knight, 12, 12, 0, 2, true);
+    spawn_line(*scenario, 1, Game::Units::SpawnType::Swordsman, 12, -12, 0, 1, false);
+    spawn_line(*scenario, 2, Game::Units::SpawnType::Swordsman, 12, 12, 0, 2, true);
     break;
   }
 

@@ -20,7 +20,7 @@ auto add_unit(Engine::Core::World& world,
   auto* unit =
       entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   unit->owner_id = owner_id;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   return entity;
 }
 

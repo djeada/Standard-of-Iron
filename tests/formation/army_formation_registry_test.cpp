@@ -78,8 +78,8 @@ TEST_F(ArmyFormationRegistryTest, CommitCreatesOneGroupOwningEveryMember) {
   Engine::Core::World world;
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 5; ++i) {
-    units.push_back(
-        add_unit(world, Game::Units::SpawnType::Knight, static_cast<float>(i) - 2.0F));
+    units.push_back(add_unit(
+        world, Game::Units::SpawnType::Swordsman, static_cast<float>(i) - 2.0F));
   }
 
   auto const result = commit(world, units);
@@ -103,7 +103,7 @@ TEST_F(ArmyFormationRegistryTest, MembershipComponentsMirrorTheGroupRecord) {
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 4; ++i) {
     units.push_back(
-        add_unit(world, Game::Units::SpawnType::Knight, static_cast<float>(i)));
+        add_unit(world, Game::Units::SpawnType::Swordsman, static_cast<float>(i)));
   }
 
   auto const result = commit(world, units);
@@ -125,7 +125,7 @@ TEST_F(ArmyFormationRegistryTest, RemovingAMemberFreesItsSlotAndSchedulesAReplan
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 5; ++i) {
     units.push_back(
-        add_unit(world, Game::Units::SpawnType::Knight, static_cast<float>(i)));
+        add_unit(world, Game::Units::SpawnType::Swordsman, static_cast<float>(i)));
   }
   auto const result = commit(world, units);
   ASSERT_TRUE(result.valid);
@@ -144,8 +144,8 @@ TEST_F(ArmyFormationRegistryTest, RemovingAMemberFreesItsSlotAndSchedulesAReplan
 TEST_F(ArmyFormationRegistryTest, EmptyingAGroupRemovesIt) {
 
   Engine::Core::World world;
-  auto const first = add_unit(world, Game::Units::SpawnType::Knight, 0.0F);
-  auto const second = add_unit(world, Game::Units::SpawnType::Knight, 1.0F);
+  auto const first = add_unit(world, Game::Units::SpawnType::Swordsman, 0.0F);
+  auto const second = add_unit(world, Game::Units::SpawnType::Swordsman, 1.0F);
   auto const result = commit(world, {first, second});
   ASSERT_TRUE(result.valid);
 
@@ -161,7 +161,7 @@ TEST_F(ArmyFormationRegistryTest, EmptyingAGroupRemovesIt) {
 TEST_F(ArmyFormationRegistryTest, ASingleUnitOrderCommitsNoGroup) {
 
   Engine::Core::World world;
-  auto const only = add_unit(world, Game::Units::SpawnType::Knight, 0.0F);
+  auto const only = add_unit(world, Game::Units::SpawnType::Swordsman, 0.0F);
   auto const result = commit(world, {only});
   EXPECT_TRUE(result.valid);
 
@@ -176,7 +176,7 @@ TEST_F(ArmyFormationRegistryTest, RuntimePrunesDestroyedMembers) {
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 4; ++i) {
     units.push_back(
-        add_unit(world, Game::Units::SpawnType::Knight, static_cast<float>(i)));
+        add_unit(world, Game::Units::SpawnType::Swordsman, static_cast<float>(i)));
   }
   auto const result = commit(world, units);
   ASSERT_TRUE(result.valid);
@@ -199,7 +199,7 @@ TEST_F(ArmyFormationRegistryTest, DetachClearsBothRegistryAndComponent) {
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 3; ++i) {
     units.push_back(
-        add_unit(world, Game::Units::SpawnType::Knight, static_cast<float>(i)));
+        add_unit(world, Game::Units::SpawnType::Swordsman, static_cast<float>(i)));
   }
   auto const result = commit(world, units);
   ASSERT_TRUE(result.valid);
@@ -218,8 +218,8 @@ TEST_F(ArmyFormationRegistryTest, GroupStateSurvivesASaveLoadRoundTrip) {
   Engine::Core::World world;
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 6; ++i) {
-    units.push_back(
-        add_unit(world, Game::Units::SpawnType::Knight, static_cast<float>(i) - 3.0F));
+    units.push_back(add_unit(
+        world, Game::Units::SpawnType::Swordsman, static_cast<float>(i) - 3.0F));
   }
   auto const result = commit(world, units, ArmyFormationIntent::Defensive);
   ASSERT_TRUE(result.valid);
@@ -255,8 +255,8 @@ TEST_F(ArmyFormationRegistryTest, ReplanningKeepsUnitsInTheirExistingSlots) {
   Engine::Core::World world;
   std::vector<Engine::Core::EntityID> units;
   for (int i = 0; i < 8; ++i) {
-    units.push_back(
-        add_unit(world, Game::Units::SpawnType::Knight, static_cast<float>(i) - 4.0F));
+    units.push_back(add_unit(
+        world, Game::Units::SpawnType::Swordsman, static_cast<float>(i) - 4.0F));
   }
 
   auto const first = commit(world, units);
@@ -284,7 +284,7 @@ TEST_F(ArmyFormationRegistryTest, CommittingASecondSelectionMovesUnitsBetweenGro
   std::vector<Engine::Core::EntityID> first_units;
   for (int i = 0; i < 4; ++i) {
     first_units.push_back(
-        add_unit(world, Game::Units::SpawnType::Knight, static_cast<float>(i)));
+        add_unit(world, Game::Units::SpawnType::Swordsman, static_cast<float>(i)));
   }
   auto const first = commit(world, first_units);
   ASSERT_TRUE(first.valid);

@@ -37,7 +37,7 @@ protected:
     entity->add_component<TransformComponent>(x, 0.0F, z);
     auto* unit = entity->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
     unit->owner_id = owner_id;
-    unit->spawn_type = Game::Units::SpawnType::Knight;
+    unit->spawn_type = Game::Units::SpawnType::Swordsman;
     entity->add_component<AttackComponent>(2.0F, 12, 1.0F);
     entity->add_component<MovementComponent>();
     return entity;

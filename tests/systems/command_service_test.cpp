@@ -270,7 +270,7 @@ TEST_F(CommandServiceTest, ArrivalStopsNavigationWalkAnimationImmediately) {
 TEST_F(CommandServiceTest, StationaryNavigationIntentDoesNotFakeLocomotion) {
   Engine::Core::World world;
   auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
-  auto* target = create_unit(world, 0.75F, 0.0F, Game::Units::SpawnType::Knight);
+  auto* target = create_unit(world, 0.75F, 0.0F, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(target, nullptr);
 
@@ -304,7 +304,7 @@ TEST_F(CommandServiceTest, StationaryNavigationIntentDoesNotFakeLocomotion) {
 TEST_F(CommandServiceTest, NewlyRetargetedChasePublishesWalkWithoutIdleFrame) {
   Engine::Core::World world;
   auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
-  auto* target = create_unit(world, 5.0F, 0.0F, Game::Units::SpawnType::Knight);
+  auto* target = create_unit(world, 5.0F, 0.0F, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(target, nullptr);
 
@@ -617,7 +617,7 @@ TEST_F(CommandServiceTest, NewMoveOrderAssignsFreshTarget) {
 
 TEST_F(CommandServiceTest, ReverseMoveTravelsWhileItComesAbout) {
   Engine::Core::World world;
-  auto* entity = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Knight);
+  auto* entity = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(entity, nullptr);
   auto* movement = entity->get_component<Engine::Core::MovementComponent>();
   auto* transform = entity->get_component<Engine::Core::TransformComponent>();
@@ -1309,7 +1309,7 @@ TEST_F(CommandServiceTest, PlannedMoveUsesLargeUnitFootprintForSharedDestination
 TEST_F(CommandServiceTest, AttackTargetDefersApproachGeometryToCombatSystem) {
   Engine::Core::World world;
 
-  auto* target = create_unit(world, 10.0F, 0.0F, Game::Units::SpawnType::Knight);
+  auto* target = create_unit(world, 10.0F, 0.0F, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(target, nullptr);
   auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
   ASSERT_NE(target_unit, nullptr);
@@ -1352,8 +1352,8 @@ TEST_F(CommandServiceTest, AttackTargetDefersApproachGeometryToCombatSystem) {
 TEST_F(CommandServiceTest, AttackTargetCannotReplaceALivingMeleeLock) {
   Engine::Core::World world;
 
-  auto* old_target = create_unit(world, 1.0F, 0.0F, Game::Units::SpawnType::Knight);
-  auto* new_target = create_unit(world, 12.0F, 0.0F, Game::Units::SpawnType::Knight);
+  auto* old_target = create_unit(world, 1.0F, 0.0F, Game::Units::SpawnType::Swordsman);
+  auto* new_target = create_unit(world, 12.0F, 0.0F, Game::Units::SpawnType::Swordsman);
   auto* attacker = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
   ASSERT_NE(old_target, nullptr);
   ASSERT_NE(new_target, nullptr);

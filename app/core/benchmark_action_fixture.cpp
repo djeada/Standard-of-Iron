@@ -31,6 +31,8 @@ auto action_names() -> QStringList {
           QStringLiteral("run"),
           QStringLiteral("guard"),
           QStringLiteral("build_panel"),
+          QStringLiteral("auto_gather"),
+          QStringLiteral("cursor_to"),
           QStringLiteral("production_panel"),
           QStringLiteral("recruit"),
           QStringLiteral("set_rally"),
@@ -69,6 +71,8 @@ auto action_names() -> QStringList {
 
           QStringLiteral("select_id"),
           QStringLiteral("select_at_world"),
+          QStringLiteral("cursor_to_world"),
+          QStringLiteral("select_area_world"),
           QStringLiteral("move_to_world"),
           QStringLiteral("attack_at_world"),
           QStringLiteral("guard_at_world"),

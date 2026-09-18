@@ -135,7 +135,7 @@ constexpr std::array<TroopDefaults, 23> k_troop_defaults{{
      .renderer_id = "troops/roman/spearman",
      .individuals_per_unit = 24,
      .max_units_per_row = 6},
-    {.unit_type = TroopType::MountedKnight,
+    {.unit_type = TroopType::MountedSwordsman,
      .display_name = QT_TRANSLATE_NOOP("Units", "Mounted Knight"),
      .cost = 9,
      .population = 9,

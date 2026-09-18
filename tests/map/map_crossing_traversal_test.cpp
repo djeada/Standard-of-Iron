@@ -82,7 +82,7 @@ protected:
       const float offset_x = static_cast<float>(index % per_row) - 1.5F;
       const float offset_z = static_cast<float>(index / per_row) - 1.0F;
       transform->position = {centre.x() + offset_x, 0.0F, centre.z() + offset_z};
-      unit->spawn_type = Game::Units::SpawnType::Knight;
+      unit->spawn_type = Game::Units::SpawnType::Swordsman;
       unit->owner_id = 1;
       unit->nation_id = Game::Systems::NationID::Carthage;
       unit->health = 1000;

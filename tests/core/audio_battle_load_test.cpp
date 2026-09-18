@@ -144,11 +144,11 @@ TEST_F(AudioBattleLoadTest, AnImpactStormStillLetsTheAlarmThrough) {
   std::vector<Entity*> attackers;
   for (int index = 0; index < k_per_side; ++index) {
     const float offset = static_cast<float>(index) * 1.6F;
-    auto* defender = spawn(Game::Units::SpawnType::Knight,
+    auto* defender = spawn(Game::Units::SpawnType::Swordsman,
                            k_player,
                            QVector3D(-1.2F, 0.0F, offset),
                            Game::Systems::NationID::RomanRepublic);
-    auto* attacker = spawn(Game::Units::SpawnType::Knight,
+    auto* attacker = spawn(Game::Units::SpawnType::Swordsman,
                            k_enemy,
                            QVector3D(1.2F, 0.0F, offset),
                            Game::Systems::NationID::Carthage);
@@ -236,11 +236,11 @@ TEST_F(AudioBattleLoadTest, ABattleOutOfEarshotBecomesOneDistantMass) {
   std::vector<Entity*> attackers;
   for (int index = 0; index < k_per_side; ++index) {
     const float offset = static_cast<float>(index) * 1.6F;
-    auto* defender = spawn(Game::Units::SpawnType::Knight,
+    auto* defender = spawn(Game::Units::SpawnType::Swordsman,
                            k_player,
                            QVector3D(k_far - 1.2F, 0.0F, offset),
                            Game::Systems::NationID::RomanRepublic);
-    auto* attacker = spawn(Game::Units::SpawnType::Knight,
+    auto* attacker = spawn(Game::Units::SpawnType::Swordsman,
                            k_enemy,
                            QVector3D(k_far + 1.2F, 0.0F, offset),
                            Game::Systems::NationID::Carthage);

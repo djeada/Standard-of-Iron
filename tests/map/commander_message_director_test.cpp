@@ -150,7 +150,7 @@ TEST_F(CommanderMessageDirectorTest, CommanderDeathLineFiltersOnNationAndKiller)
   configure(std::move(mission));
 
   Engine::Core::EventManager::instance().publish(Engine::Core::UnitDiedEvent(
-      20, k_hill_fort_owner, Game::Units::SpawnType::Knight, 1, k_local_owner));
+      20, k_hill_fort_owner, Game::Units::SpawnType::Swordsman, 1, k_local_owner));
   m_director.update(0.0F);
   EXPECT_FALSE(m_director.has_active());
 

@@ -131,7 +131,7 @@ auto add_intruder(Engine::Core::World& world,
   transform->position = {position.x(), position.y(), position.z()};
   unit->owner_id = 1;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->health = 100;
   unit->max_health = 100;
   return entity;
@@ -205,7 +205,7 @@ TEST_F(UndeadAwakeningSystemTest, SpawnsOnlyAfterEnemyUnitEntersZone) {
   transform->position = {0.5F, 0.0F, 0.5F};
   unit->owner_id = 1;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->health = 100;
   unit->max_health = 100;
 
@@ -253,7 +253,7 @@ TEST_F(UndeadAwakeningSystemTest, AwakeningCueBelongsToThePlayerWhoWokeTheZone) 
   transform->position = {0.5F, 0.0F, 0.5F};
   unit->owner_id = 2;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->health = 100;
   unit->max_health = 100;
 
@@ -282,7 +282,7 @@ TEST_F(UndeadAwakeningSystemTest, RestoredStateDoesNotRespawnActiveWave) {
   transform->position = {0.5F, 0.0F, 0.5F};
   unit->owner_id = 1;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->health = 100;
   unit->max_health = 100;
 

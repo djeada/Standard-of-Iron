@@ -2,9 +2,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <string_view>
 #include <utility>
 #include <vector>
 
+#include "arena_city_scenarios.h"
 #include "arena_scenarios.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/wildlife/wildlife_config.h"
@@ -893,7 +895,7 @@ auto trailer_dawn() -> ArenaScenarioDefinition {
                          1,
                          {3.2F, 0.0F, 0.0F});
   auto watch = group(QStringLiteral("valley_watch"),
-                     Troop::MountedKnight,
+                     Troop::MountedSwordsman,
                      1,
                      2,
                      {6.0F, 0.0F, 6.0F},
@@ -1052,7 +1054,7 @@ auto trailer_muster() -> ArenaScenarioDefinition {
                        8,
                        {3.2F, 0.0F, 0.0F});
   auto cavalry = group(QStringLiteral("legion_cavalry"),
-                       Troop::MountedKnight,
+                       Troop::MountedSwordsman,
                        1,
                        2,
                        {24.0F, 0.0F, 22.0F},
@@ -1163,7 +1165,7 @@ auto trailer_clash() -> ArenaScenarioDefinition {
                              8,
                              {3.3F, 0.0F, 0.0F});
   auto roman_horse = group(QStringLiteral("roman_horse"),
-                           Troop::MountedKnight,
+                           Troop::MountedSwordsman,
                            1,
                            4,
                            {18.0F, 0.0F, 24.0F},
@@ -1191,7 +1193,7 @@ auto trailer_clash() -> ArenaScenarioDefinition {
                              8,
                              {3.3F, 0.0F, 0.0F});
   auto punic_horse = group(QStringLiteral("punic_horse"),
-                           Troop::MountedKnight,
+                           Troop::MountedSwordsman,
                            2,
                            4,
                            {-26.0F, 0.0F, 33.0F},
@@ -1416,6 +1418,677 @@ auto trailer_pov() -> ArenaScenarioDefinition {
   return s;
 }
 
+auto trailer_city_battle() -> ArenaScenarioDefinition {
+  auto s = definition(
+      QString::fromLatin1(k_trailer_city_battle_id),
+      QStringLiteral("Trailer: The Battle For Aurelia Magna"),
+      QStringLiteral("The opening beat, under the east wall of the capital. The "
+                     "legion stands before the gate with its archers, ballista "
+                     "battery and catapults behind it while Hannibal's host comes "
+                     "on with elephants, horse archers and its own stone-throwers. "
+                     "The legion is ordered in, the camera drops to Scipio, and "
+                     "he cuts his way through the Carthaginian centre."),
+      40.0F,
+      {120.0F, 38.0F, 90.0F});
+
+  constexpr float k_gate_z = -32.0F;
+  dress_aurelia_magna(s, QRectF(176.0, -150.0, 184.0, 220.0));
+  s.wildlife = {};
+  s.camera_focus = QVector3D(228.0F, 0.0F, k_gate_z);
+  s.force_full_creature_lod = false;
+  s.environment.time_mode = Game::Map::TimeMode::Locked;
+  s.environment.start_time = 17.4F;
+  s.environment.fog_density_override = 0.0025F;
+  s.environment.exposure_override = 1.2F;
+  s.rpg_mode = true;
+  s.rpg_commander_group = QStringLiteral("scipio");
+
+  constexpr float k_rome_facing = 90.0F;
+  constexpr float k_carthage_facing = 270.0F;
+
+  const auto file = [&](const char* name,
+                        Troop troop,
+                        int owner,
+                        int count,
+                        float x,
+                        float z,
+                        int individuals,
+                        float step) {
+    auto result = group(QString::fromLatin1(name),
+                        troop,
+                        owner,
+                        count,
+                        {x, 0.0F, z},
+                        individuals,
+                        {0.0F, 0.0F, step});
+    result.facing_degrees = owner == 1 ? k_rome_facing : k_carthage_facing;
+    return result;
+  };
+  const auto line_health = [](ArenaScenarioGroup& line, int health) {
+    line.health_override = line.max_health_override = health;
+  };
+
+  auto scipio =
+      file("scipio", Troop::RomanVeteranConsul, 1, 1, 224.0F, k_gate_z, 1, 0.0F);
+  line_health(scipio, 9000);
+  s.groups.push_back(scipio);
+
+  const std::pair<const char*, float> sectors[] = {
+      {"n", k_gate_z - 34.0F}, {"c", k_gate_z}, {"s", k_gate_z + 34.0F}};
+  for (const auto& [sector, z] : sectors) {
+    auto swords = file(qPrintable(QStringLiteral("roman_swords_%1").arg(sector)),
+                       Troop::Swordsman,
+                       1,
+                       10,
+                       219.0F,
+                       z,
+                       12,
+                       3.3F);
+    auto spears = file(qPrintable(QStringLiteral("roman_spears_%1").arg(sector)),
+                       Troop::Spearman,
+                       1,
+                       10,
+                       214.0F,
+                       z,
+                       12,
+                       3.3F);
+    auto archers = file(qPrintable(QStringLiteral("roman_archers_%1").arg(sector)),
+                        Troop::Archer,
+                        1,
+                        10,
+                        208.0F,
+                        z,
+                        10,
+                        3.3F);
+    line_health(swords, 2600);
+    line_health(spears, 2600);
+    archers.attack_range_override = 42.0F;
+    s.groups.push_back(swords);
+    s.groups.push_back(spears);
+    s.groups.push_back(archers);
+
+    auto p_swords = file(qPrintable(QStringLiteral("punic_swords_%1").arg(sector)),
+                         Troop::Swordsman,
+                         2,
+                         10,
+                         246.0F,
+                         z,
+                         12,
+                         3.3F);
+    auto p_spears = file(qPrintable(QStringLiteral("punic_spears_%1").arg(sector)),
+                         Troop::Spearman,
+                         2,
+                         10,
+                         251.0F,
+                         z,
+                         12,
+                         3.3F);
+    auto p_archers = file(qPrintable(QStringLiteral("punic_archers_%1").arg(sector)),
+                          Troop::Archer,
+                          2,
+                          10,
+                          263.0F,
+                          z,
+                          10,
+                          3.3F);
+
+    const int punic_health = std::string_view(sector) == "c" ? 600 : 2600;
+    line_health(p_swords, punic_health);
+    line_health(p_spears, punic_health);
+    p_archers.attack_range_override = 42.0F;
+    s.groups.push_back(p_swords);
+    s.groups.push_back(p_spears);
+    s.groups.push_back(p_archers);
+  }
+
+  auto ballistas =
+      file("roman_ballistas", Troop::Ballista, 1, 8, 202.0F, k_gate_z, 1, 8.0F);
+  ballistas.attack_range_override = 50.0F;
+  auto catapults =
+      file("roman_catapults", Troop::Catapult, 1, 4, 194.0F, k_gate_z, 1, 16.0F);
+  catapults.attack_range_override = 66.0F;
+  auto horse_n =
+      file("roman_horse_n", Troop::MountedSwordsman, 1, 5, 214.0F, -100.0F, 6, 3.4F);
+  auto horse_s =
+      file("roman_horse_s", Troop::MountedSwordsman, 1, 5, 214.0F, 36.0F, 6, 3.4F);
+  s.groups.push_back(ballistas);
+  s.groups.push_back(catapults);
+  s.groups.push_back(horse_n);
+  s.groups.push_back(horse_s);
+
+  auto elephants_n =
+      file("punic_elephants_n", Troop::Elephant, 2, 3, 252.0F, -100.0F, 1, 12.0F);
+  auto elephants_s =
+      file("punic_elephants_s", Troop::Elephant, 2, 3, 252.0F, 36.0F, 1, 12.0F);
+  auto horse_archers_n =
+      file("punic_horse_archers_n", Troop::HorseArcher, 2, 5, 262.0F, -126.0F, 6, 3.4F);
+  auto horse_archers_s =
+      file("punic_horse_archers_s", Troop::HorseArcher, 2, 5, 262.0F, 62.0F, 6, 3.4F);
+  auto punic_catapults =
+      file("punic_catapults", Troop::Catapult, 2, 5, 276.0F, k_gate_z, 1, 15.0F);
+  punic_catapults.attack_range_override = 66.0F;
+  auto hannibal =
+      file("hannibal", Troop::CarthageSwordCommander, 2, 1, 270.0F, k_gate_z, 1, 0.0F);
+  line_health(hannibal, 9000);
+  s.groups.push_back(elephants_n);
+  s.groups.push_back(elephants_s);
+  s.groups.push_back(horse_archers_n);
+  s.groups.push_back(horse_archers_s);
+  s.groups.push_back(punic_catapults);
+  s.groups.push_back(hannibal);
+
+  const auto rpg_move = [](float time, QVector3D axes) {
+    constexpr float k_battle_view_yaw = 92.0F;
+    auto step = at(time, Command::RpgMove, QStringLiteral("scipio"));
+    step.destination = axes;
+    step.rpg_view_yaw_degrees = k_battle_view_yaw;
+    return step;
+  };
+  const auto hold_attack = [](float time, bool held) {
+    auto step = at(time, Command::RpgAttackHold, QStringLiteral("scipio"));
+    step.enabled = held;
+    return step;
+  };
+  s.steps = {
+      at(0.2F, Command::Hold, QStringLiteral("scipio")),
+      at(0.5F,
+         Command::Attack,
+         QStringLiteral("roman_catapults"),
+         QStringLiteral("punic_spears_c")),
+      at(0.6F,
+         Command::Attack,
+         QStringLiteral("roman_ballistas"),
+         QStringLiteral("punic_swords_c")),
+      at(0.7F,
+         Command::Attack,
+         QStringLiteral("punic_catapults"),
+         QStringLiteral("roman_spears_c")),
+      at(3.0F,
+         Command::AttackMove,
+         QStringLiteral("punic_elephants_n"),
+         QStringLiteral("roman_horse_n")),
+      at(3.0F,
+         Command::AttackMove,
+         QStringLiteral("punic_elephants_s"),
+         QStringLiteral("roman_horse_s")),
+      at(3.5F,
+         Command::Attack,
+         QStringLiteral("punic_horse_archers_n"),
+         QStringLiteral("roman_archers_n")),
+      at(3.5F,
+         Command::Attack,
+         QStringLiteral("punic_horse_archers_s"),
+         QStringLiteral("roman_archers_s")),
+      form_step(4.0F,
+                {QStringLiteral("roman_swords_n"),
+                 QStringLiteral("roman_swords_c"),
+                 QStringLiteral("roman_swords_s"),
+                 QStringLiteral("roman_spears_n"),
+                 QStringLiteral("roman_spears_c"),
+                 QStringLiteral("roman_spears_s")},
+                Intent::Assault,
+                {219.0F, 0.0F, k_gate_z},
+                k_rome_facing,
+                100.0F),
+      rpg_move(6.4F, {0.0F, 0.0F, 0.0F}),
+
+      hold_attack(9.4F, true),
+      at(7.4F,
+         Command::Charge,
+         QStringLiteral("roman_horse_n"),
+         QStringLiteral("punic_horse_archers_n")),
+      at(7.4F,
+         Command::Charge,
+         QStringLiteral("roman_horse_s"),
+         QStringLiteral("punic_horse_archers_s")),
+      hold_attack(30.0F, false),
+  };
+
+  for (const auto& [sector, z] : sectors) {
+    const QString tag = QString::fromLatin1(sector);
+    s.steps.push_back(at(0.8F,
+                         Command::Attack,
+                         QStringLiteral("roman_archers_") + tag,
+                         QStringLiteral("punic_swords_") + tag));
+    s.steps.push_back(at(1.0F,
+                         Command::Attack,
+                         QStringLiteral("punic_archers_") + tag,
+                         QStringLiteral("roman_swords_") + tag));
+    s.steps.push_back(at(1.2F,
+                         Command::AttackMove,
+                         QStringLiteral("punic_swords_") + tag,
+                         QStringLiteral("roman_swords_") + tag));
+    s.steps.push_back(at(1.4F,
+                         Command::AttackMove,
+                         QStringLiteral("punic_spears_") + tag,
+                         QStringLiteral("roman_spears_") + tag));
+    s.steps.push_back(at(7.2F,
+                         Command::AttackMove,
+                         QStringLiteral("roman_swords_") + tag,
+                         QStringLiteral("punic_swords_") + tag));
+    s.steps.push_back(at(7.2F,
+                         Command::AttackMove,
+                         QStringLiteral("roman_spears_") + tag,
+                         QStringLiteral("punic_spears_") + tag));
+  }
+
+  s.expectations = {
+      expectation(Expect::GroupExists, QStringLiteral("scipio")),
+      expectation(Expect::GroupExists, QStringLiteral("capital_gate_east")),
+      expectation(Expect::ProjectileFlightObserved,
+                  QStringLiteral("roman_catapults"),
+                  QStringLiteral("punic_spears_c")),
+      expectation(Expect::GroupHealthReduced, QStringLiteral("punic_swords_c")),
+      no_visibility_churn(QStringLiteral("roman_swords_c"), 0.0F, 14.0F),
+      no_visibility_churn(QStringLiteral("punic_swords_c"), 0.0F, 14.0F),
+      no_visibility_churn(QStringLiteral("roman_spears_n"), 0.0F, 14.0F),
+      expectation(Expect::MovementAnimationObserved,
+                  QStringLiteral("capital_east_quarter_folk")),
+  };
+  return s;
+}
+
+auto trailer_trade_city() -> ArenaScenarioDefinition {
+  auto s = definition(
+      QString::fromLatin1(k_trailer_trade_city_id),
+      QStringLiteral("Trailer: A City At Work"),
+      QStringLiteral("A Carthaginian trading city in full swing: four districts "
+                     "around a bazaar of three markets, farms being reaped, "
+                     "woodcutters, quarrymen and miners hauling timber, stone and "
+                     "iron through the streets to the barracks yards, and a new "
+                     "quarter rising from its foundations."),
+      90.0F,
+      {150.0F, 38.0F, 200.0F});
+  s.arena_floor_half_extent = 92.0F;
+  s.terrain_grid_extent = 200;
+  s.ground_type = QStringLiteral("soil_fertile");
+  s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+  s.force_full_creature_lod = false;
+  s.environment.start_time = 15.8F;
+  s.environment.lighting_profile = QStringLiteral("mediterranean_summer");
+  s.environment.fog_density_override = 0.004F;
+  s.environment.exposure_override = 1.05F;
+
+  constexpr int k_city = 1;
+  constexpr auto k_punic = Nation::Carthage;
+
+  s.roads.push_back(street({-84.0F, 0.0F, 0.0F}, {84.0F, 0.0F, 0.0F}, 5.0F));
+  s.roads.push_back(street({0.0F, 0.0F, -66.0F}, {0.0F, 0.0F, 66.0F}, 5.0F));
+
+  struct District {
+    const char* prefix;
+    QVector3D center;
+    bool acropolis;
+  };
+  for (auto const& district :
+       {District{"punic_harbor_ward", {-40.0F, 0.0F, -26.0F}, true},
+        District{"punic_merchant_ward", {40.0F, 0.0F, -26.0F}, true},
+        District{"punic_potters_ward", {-40.0F, 0.0F, 34.0F}, true}}) {
+    add_settlement(s,
+                   {.prefix = QString::fromLatin1(district.prefix),
+                    .nation = k_punic,
+                    .owner = k_city,
+                    .center = district.center,
+                    .scale = SettlementScale::Town,
+                    .add_residents = true,
+                    .walled = false,
+                    .acropolis = district.acropolis});
+  }
+
+  struct Stall {
+    const char* name;
+    QVector3D at;
+    float facing;
+  };
+  for (auto const& stall :
+       {Stall{"bazaar_market_west", {-11.0F, 0.0F, -8.0F}, 0.0F},
+        Stall{"bazaar_market_east", {11.0F, 0.0F, -8.0F}, 0.0F},
+        Stall{"bazaar_market_south", {14.0F, 0.0F, 12.0F}, 180.0F}}) {
+    s.groups.push_back(building(QString::fromLatin1(stall.name),
+                                Game::Units::SpawnType::Marketplace,
+                                k_punic,
+                                k_city,
+                                1,
+                                stall.at,
+                                {},
+                                stall.facing));
+    s.groups.push_back(
+        residents(QString::fromLatin1(stall.name) + QStringLiteral("_crowd"),
+                  k_punic,
+                  k_city,
+                  6,
+                  stall.at + QVector3D(0.0F, 0.0F, 5.0F),
+                  {2.4F, 0.0F, 0.0F},
+                  12.0F));
+  }
+  s.resource_patches.push_back(
+      patch("supply_cart", 4, {-6.0F, 0.0F, 4.0F}, {4.0F, 0.0F, 0.0F}, 1.0F));
+  s.resource_patches.push_back(patch("statue", 1, {0.0F, 0.0F, -3.0F}, {}, 1.2F));
+
+  s.resource_patches.push_back(
+      patch("pine_tree", 8, {-80.0F, 0.0F, -28.0F}, {0.0F, 0.0F, 4.2F}, 1.2F));
+  s.resource_patches.push_back(
+      patch("olive_tree", 7, {-74.0F, 0.0F, -26.0F}, {0.0F, 0.0F, 4.6F}, 1.15F));
+  s.resource_patches.push_back(
+      patch("boulder", 8, {-14.0F, 0.0F, -64.0F}, {3.6F, 0.0F, 0.8F}, 1.15F));
+  s.resource_patches.push_back(
+      patch("iron_ore", 6, {80.0F, 0.0F, -14.0F}, {0.0F, 0.0F, 3.4F}, 1.05F));
+
+  struct Gang {
+    const char* name;
+    QVector3D at;
+    const char* kind;
+    float start;
+  };
+  const Gang gangs[] = {
+      Gang{"city_fellers_north", {-70.0F, 0.0F, -18.0F}, "tree", 1.0F},
+      Gang{"city_fellers_south", {-70.0F, 0.0F, -4.0F}, "tree", 1.6F},
+      Gang{"city_quarrymen", {-6.0F, 0.0F, -56.0F}, "boulder", 1.2F},
+      Gang{"city_stonecutters", {6.0F, 0.0F, -56.0F}, "boulder", 2.0F},
+      Gang{"city_miners", {72.0F, 0.0F, -6.0F}, "iron_ore", 1.4F},
+      Gang{"city_smelters", {72.0F, 0.0F, 4.0F}, "iron_ore", 2.2F},
+  };
+  for (auto const& gang : gangs) {
+    auto crew = group(QString::fromLatin1(gang.name),
+                      Troop::Builder,
+                      k_city,
+                      2,
+                      gang.at,
+                      6,
+                      {3.0F, 0.0F, 0.0F});
+    crew.nation_id = k_punic;
+    s.groups.push_back(crew);
+    for (float when = gang.start; when < 90.0F; when += 14.0F) {
+      s.steps.push_back(harvest_at(
+          when, QString::fromLatin1(gang.name), QString::fromLatin1(gang.kind)));
+    }
+  }
+
+  s.groups.push_back(building(QStringLiteral("city_farms"),
+                              Game::Units::SpawnType::Farm,
+                              k_punic,
+                              k_city,
+                              3,
+                              {-44.0F, 0.0F, 66.0F},
+                              {16.0F, 0.0F, 0.0F},
+                              0.0F));
+  s.steps.push_back(at(0.5F, Command::SetFarmGrowth, QStringLiteral("city_farms")));
+  s.steps.back().value = 100;
+  auto reapers = group(QStringLiteral("city_reapers"),
+                       Troop::Builder,
+                       k_city,
+                       2,
+                       {-44.0F, 0.0F, 56.0F},
+                       6,
+                       {16.0F, 0.0F, 0.0F});
+  reapers.nation_id = k_punic;
+  s.groups.push_back(reapers);
+  for (float when = 1.5F; when < 90.0F; when += 12.0F) {
+    s.steps.push_back(
+        harvest_at(when, QStringLiteral("city_reapers"), QStringLiteral("grain")));
+  }
+
+  struct Site {
+    const char* crew;
+    QVector3D crew_at;
+    const char* type;
+    QVector3D site;
+    float rotation;
+    float order_at;
+  };
+  const Site sites[] = {
+      Site{"quarter_home_crew",
+           {26.0F, 0.0F, 14.0F},
+           "home",
+           {28.0F, 0.0F, 22.0F},
+           180.0F,
+           14.0F},
+      Site{"quarter_market_crew",
+           {40.0F, 0.0F, 14.0F},
+           "marketplace",
+           {42.0F, 0.0F, 24.0F},
+           180.0F,
+           15.0F},
+      Site{"quarter_temple_crew",
+           {54.0F, 0.0F, 16.0F},
+           "temple",
+           {58.0F, 0.0F, 30.0F},
+           270.0F,
+           12.0F},
+      Site{"quarter_barracks_crew",
+           {30.0F, 0.0F, 40.0F},
+           "barracks",
+           {32.0F, 0.0F, 34.0F},
+           0.0F,
+           13.0F},
+      Site{"quarter_tower_crew",
+           {46.0F, 0.0F, 44.0F},
+           "defense_tower",
+           {48.0F, 0.0F, 40.0F},
+           0.0F,
+           12.5F},
+  };
+  for (auto const& site : sites) {
+    auto crew = group(
+        QString::fromLatin1(site.crew), Troop::Builder, k_city, 1, site.crew_at, 8);
+    crew.nation_id = k_punic;
+    s.groups.push_back(crew);
+    auto order =
+        at(site.order_at, Command::StartConstruction, QString::fromLatin1(site.crew));
+    order.construction_type = QString::fromLatin1(site.type);
+    order.destination = site.site;
+    order.construction_rotation_degrees = site.rotation;
+    s.steps.push_back(order);
+  }
+
+  s.expectations = {
+      expectation(Expect::GroupExists, QStringLiteral("bazaar_market_west")),
+      expectation(Expect::MovementAnimationObserved,
+                  QStringLiteral("bazaar_market_west_crowd")),
+  };
+  return s;
+}
+
+auto trailer_sepulcher_winter() -> ArenaScenarioDefinition {
+  auto s = definition(
+      QString::fromLatin1(k_trailer_sepulcher_winter_id),
+      QStringLiteral("Trailer: The Iron Sepulcher Wakes"),
+      QStringLiteral("Deep winter on the high ground. A legion marches onto the "
+                     "snowbound barrow of the Iron Sepulcher; the first wave "
+                     "tears out of the frozen ground with grave priests hurling "
+                     "fire, and the consul cuts his way to the mages."),
+      30.0F,
+      {40.0F, 32.0F, 20.0F});
+  s.ground_type = QStringLiteral("alpine_mix");
+  s.terrain_snowbound = true;
+  s.terrain_seed_override = 9931;
+  s.arena_floor_half_extent = 44.0F;
+  s.environment.start_time = 15.2F;
+  s.environment.lighting_profile = QStringLiteral("alpine_clear");
+  s.environment.fog_density_override = 0.022F;
+  s.environment.exposure_override = 1.1F;
+  s.weather.snow = 0.75F;
+  s.precipitation.enabled = true;
+  s.precipitation.type = Game::Map::WeatherType::Snow;
+  s.precipitation.intensity = 0.75F;
+  s.precipitation.wind_strength = 0.35F;
+  s.precipitation.wind_direction_deg = 30.0F;
+  s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+  s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 99, .team_id = 99}};
+  s.rpg_mode = true;
+  s.rpg_commander_group = QStringLiteral("sepulcher_consul");
+
+  constexpr float k_barrow_z = -12.0F;
+
+  struct Barrow {
+    const char* id;
+    float x;
+    int swords;
+    int archers;
+    int priests;
+  };
+
+  for (auto const& barrow : {Barrow{"sepulcher_west", -26.0F, 4, 3, 3},
+                             Barrow{"sepulcher_heart", -1.0F, 3, 4, 2},
+                             Barrow{"sepulcher_east", 21.0F, 3, 3, 3}}) {
+    Game::Map::UndeadZone zone;
+    zone.id = QString::fromLatin1(barrow.id);
+    zone.anchor_type = Game::Map::WorldProp::Type::MagicShrine;
+    zone.x = barrow.x;
+    zone.z = k_barrow_z;
+    zone.radius = 12.0F;
+    zone.leash_radius = 26.0F;
+    zone.owner_id = 99;
+    zone.team_id = 99;
+    zone.awaken_on = {QStringLiteral("unit_enters_radius")};
+    zone.waves = {
+        undead_wave(QStringLiteral("initial"),
+                    {{Game::Units::SpawnType::SkeletonSwordsman, barrow.swords},
+                     {Game::Units::SpawnType::SkeletonArcher, barrow.archers},
+                     {Game::Units::SpawnType::GravePriest, barrow.priests}}),
+        undead_wave(QStringLiteral("after_clear"),
+                    {{Game::Units::SpawnType::SkeletonSwordsman, 2}})};
+    s.undead_zones.push_back(zone);
+  }
+
+  s.resource_patches = {
+
+      patch("abandoned_home", 3, {-36.0F, 0.0F, -26.0F}, {6.2F, 0.0F, -2.8F}, 1.05F),
+      patch("abandoned_home", 2, {-14.0F, 0.0F, -31.0F}, {6.8F, 0.0F, 2.6F}, 0.95F),
+      patch("abandoned_home", 2, {31.0F, 0.0F, -24.0F}, {5.4F, 0.0F, -4.2F}, 1.0F),
+      patch("abandoned_home", 1, {-24.0F, 0.0F, -19.0F}, {}, 0.9F),
+      patch("ruins", 4, {7.0F, 0.0F, k_barrow_z - 10.0F}, {4.6F, 0.0F, -2.4F}, 1.2F),
+      patch("ruins", 3, {-19.0F, 0.0F, k_barrow_z - 8.0F}, {3.6F, 0.0F, 2.1F}, 1.05F),
+      patch("ruins", 2, {-30.0F, 0.0F, -33.0F}, {4.2F, 0.0F, 3.0F}, 0.9F),
+      patch("statue", 2, {-9.0F, 0.0F, k_barrow_z - 7.0F}, {7.4F, 0.0F, -3.8F}, 1.2F),
+      patch("statue", 1, {28.0F, 0.0F, k_barrow_z - 12.0F}, {}, 1.1F),
+      patch("tent", 3, {19.0F, 0.0F, 13.0F}, {3.4F, 0.0F, 2.2F}, 1.0F),
+      patch("supply_cart", 2, {23.0F, 0.0F, 8.0F}, {4.8F, 0.0F, 3.4F}, 1.0F),
+      patch("weapon_rack", 2, {-14.0F, 0.0F, 19.0F}, {3.2F, 0.0F, 1.8F}, 1.0F),
+      patch(
+          "dead_tree", 4, {-23.0F, 0.0F, k_barrow_z - 2.0F}, {2.3F, 0.0F, 4.6F}, 1.15F),
+      patch("dead_tree", 3, {11.0F, 0.0F, 2.0F}, {3.1F, 0.0F, 3.6F}, 1.05F),
+      patch("dead_tree", 5, {31.0F, 0.0F, k_barrow_z + 4.0F}, {1.9F, 0.0F, 4.1F}, 1.1F),
+      patch("dead_tree", 3, {-35.0F, 0.0F, -4.0F}, {2.6F, 0.0F, -3.8F}, 1.0F),
+      patch("pine_tree", 7, {-33.0F, 0.0F, 27.0F}, {2.6F, 0.0F, -3.9F}, 1.2F),
+      patch("pine_tree", 5, {32.0F, 0.0F, 22.0F}, {2.9F, 0.0F, -4.8F}, 1.15F),
+      patch("pine_tree", 4, {-7.0F, 0.0F, 29.0F}, {4.1F, 0.0F, 2.4F}, 1.1F),
+      patch("pine_tree", 3, {36.0F, 0.0F, -6.0F}, {2.2F, 0.0F, -5.2F}, 1.05F),
+      patch("fire_camp", 1, {-6.0F, 0.0F, 20.0F}, {}, 0.95F),
+      patch("fire_camp", 1, {7.0F, 0.0F, 21.0F}, {}, 0.95F),
+      patch("boulder", 5, {14.0F, 0.0F, k_barrow_z - 6.0F}, {3.0F, 0.0F, 1.5F}, 1.1F),
+      patch("boulder", 3, {-17.0F, 0.0F, 7.0F}, {2.7F, 0.0F, 2.3F}, 0.95F),
+      patch("boulder", 4, {34.0F, 0.0F, 5.0F}, {2.4F, 0.0F, 3.1F}, 1.05F),
+      patch("boulder", 3, {-30.0F, 0.0F, -20.0F}, {3.3F, 0.0F, -2.0F}, 1.15F),
+  };
+
+  auto legion_swords = group(QStringLiteral("winter_legion_swords"),
+                             Troop::Swordsman,
+                             1,
+                             12,
+                             {0.0F, 0.0F, 6.0F},
+                             10,
+                             {3.4F, 0.0F, 0.0F});
+  auto legion_spears = group(QStringLiteral("winter_legion_spears"),
+                             Troop::Spearman,
+                             1,
+                             10,
+                             {0.0F, 0.0F, 10.0F},
+                             10,
+                             {3.4F, 0.0F, 0.0F});
+  auto legion_bows = group(QStringLiteral("winter_legion_bows"),
+                           Troop::Archer,
+                           1,
+                           8,
+                           {0.0F, 0.0F, 14.0F},
+                           8,
+                           {3.4F, 0.0F, 0.0F});
+  for (auto* line : {&legion_swords, &legion_spears}) {
+    line->health_override = line->max_health_override = 2400;
+    line->facing_degrees = 180.0F;
+  }
+  legion_bows.facing_degrees = 180.0F;
+  auto consul = group(QStringLiteral("sepulcher_consul"),
+                      Troop::RomanVeteranConsul,
+                      1,
+                      1,
+                      {-30.0F, 0.0F, 9.0F},
+                      1);
+  consul.facing_degrees = 180.0F;
+  consul.health_override = consul.max_health_override = 9000;
+
+  auto mages = group(QStringLiteral("sepulcher_mages"),
+                     Troop::GravePriest,
+                     99,
+                     1,
+                     {-30.0F, 0.0F, -2.0F},
+                     1);
+  mages.nation_id = Nation::IronSepulcher;
+  mages.spawn_at_start = false;
+  mages.health_override = mages.max_health_override = 90;
+
+  auto barrow_temple = building(QStringLiteral("sepulcher_temple"),
+                                Game::Units::SpawnType::Temple,
+                                Nation::IronSepulcher,
+                                99,
+                                1,
+                                {17.0F, 0.0F, k_barrow_z - 21.0F},
+                                {},
+                                200.0F);
+
+  s.groups = {legion_swords, legion_spears, legion_bows, consul, mages, barrow_temple};
+
+  const auto march = [](float time, const char* source, QVector3D destination) {
+    auto step = at(time, Command::Move, QString::fromLatin1(source));
+    step.destination = destination;
+    return step;
+  };
+  const auto rpg_move = [](float time, QVector3D axes) {
+    constexpr float k_barrow_view_yaw = 180.0F;
+    auto step = at(time, Command::RpgMove, QStringLiteral("sepulcher_consul"));
+    step.destination = axes;
+    step.rpg_view_yaw_degrees = k_barrow_view_yaw;
+    return step;
+  };
+  const auto hold_attack = [](float time, bool held) {
+    auto step = at(time, Command::RpgAttackHold, QStringLiteral("sepulcher_consul"));
+    step.enabled = held;
+    return step;
+  };
+
+  s.steps = {
+      rpg_move(0.2F, {0.0F, 0.0F, 0.0F}),
+      march(0.4F, "winter_legion_swords", {0.0F, 0.0F, -5.0F}),
+      march(0.6F, "winter_legion_spears", {0.0F, 0.0F, -1.0F}),
+      march(0.8F, "winter_legion_bows", {0.0F, 0.0F, 4.0F}),
+
+      march(4.2F, "winter_legion_swords", {0.0F, 0.0F, -12.0F}),
+      march(4.6F, "winter_legion_spears", {0.0F, 0.0F, -8.0F}),
+
+      at(7.4F,
+         Command::SpawnAmbush,
+         QStringLiteral("sepulcher_mages"),
+         QStringLiteral("sepulcher_consul")),
+
+      rpg_move(6.0F, {0.0F, 0.0F, 1.0F}),
+      rpg_move(9.8F, {0.0F, 0.0F, 0.0F}),
+      hold_attack(9.9F, true),
+      hold_attack(24.0F, false),
+  };
+
+  s.expectations = {
+      expectation(Expect::GroupExists, QStringLiteral("winter_legion_swords")),
+      [] {
+        ArenaExpectation result;
+        result.kind = Expect::UndeadZoneAwakened;
+        result.zone_id = QStringLiteral("sepulcher_heart");
+        result.threshold = 8.0F;
+        return result;
+      }(),
+  };
+  return s;
+}
+
 auto trailer_open() -> ArenaScenarioDefinition {
   auto s = definition(
       QString::fromLatin1(k_trailer_open_id),
@@ -1466,7 +2139,7 @@ auto trailer_open() -> ArenaScenarioDefinition {
                             12,
                             {3.3F, 0.0F, 0.0F});
   auto roman_horse = group(QStringLiteral("roman_horse"),
-                           Troop::MountedKnight,
+                           Troop::MountedSwordsman,
                            1,
                            3,
                            {-29.0F, 0.0F, 30.0F},
@@ -1488,7 +2161,7 @@ auto trailer_open() -> ArenaScenarioDefinition {
                             12,
                             {3.3F, 0.0F, 0.0F});
   auto punic_horse = group(QStringLiteral("punic_horse"),
-                           Troop::MountedKnight,
+                           Troop::MountedSwordsman,
                            2,
                            3,
                            {-34.0F, 0.0F, 22.0F},
@@ -2110,8 +2783,12 @@ auto trailer_gate_march() -> ArenaScenarioDefinition {
       QStringLiteral("gate_spears"), Troop::Spearman, 1, 2, {0.0F, 0.0F, 27.0F}, 6);
   auto archers = group(
       QStringLiteral("gate_archers"), Troop::Archer, 1, 2, {0.0F, 0.0F, 32.0F}, 6);
-  auto horse = group(
-      QStringLiteral("gate_horse"), Troop::MountedKnight, 1, 2, {0.0F, 0.0F, 37.0F}, 4);
+  auto horse = group(QStringLiteral("gate_horse"),
+                     Troop::MountedSwordsman,
+                     1,
+                     2,
+                     {0.0F, 0.0F, 37.0F},
+                     4);
   auto siege = group(
       QStringLiteral("gate_siege"), Troop::Catapult, 1, 2, {0.0F, 0.0F, 42.0F}, 1);
   for (auto* column : {&swords, &spears, &archers, &horse, &siege}) {
@@ -2212,7 +2889,7 @@ auto trailer_highland() -> ArenaScenarioDefinition {
   s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
 
   auto vanguard = group(QStringLiteral("pass_vanguard"),
-                        Troop::MountedKnight,
+                        Troop::MountedSwordsman,
                         1,
                         2,
                         {-34.0F, 0.0F, 12.0F},
@@ -2991,7 +3668,7 @@ auto trailer_wolf_rain() -> ArenaScenarioDefinition {
                          1,
                          {3.2F, 0.0F, 0.0F});
   auto watch = group(QStringLiteral("fold_watch"),
-                     Troop::MountedKnight,
+                     Troop::MountedSwordsman,
                      1,
                      3,
                      {-26.0F, 0.0F, -14.0F},
@@ -3067,6 +3744,9 @@ auto build_trailer_definitions() -> std::vector<ArenaScenarioDefinition> {
   result.push_back(trailer_last_breath());
   result.push_back(trailer_wolf_rain());
   result.push_back(trailer_open());
+  result.push_back(trailer_city_battle());
+  result.push_back(trailer_trade_city());
+  result.push_back(trailer_sepulcher_winter());
   return result;
 }
 

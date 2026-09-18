@@ -446,8 +446,8 @@ enum class CombatAttackFamily : std::uint8_t {
   }
 
   switch (spawn_type) {
-  case SpawnType::Knight:
-  case SpawnType::MountedKnight:
+  case SpawnType::Swordsman:
+  case SpawnType::MountedSwordsman:
   case SpawnType::Archer:
   case SpawnType::HorseArcher:
   case SpawnType::SkeletonSwordsman:

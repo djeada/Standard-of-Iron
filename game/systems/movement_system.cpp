@@ -58,6 +58,9 @@ constexpr float full_translation_heading_error_degrees = 20.0F;
 constexpr float k_formation_about_face_degrees = 100.0F;
 constexpr float k_about_face_cooldown_seconds = 0.5F;
 
+constexpr float k_formation_align_distance = 11.0F;
+constexpr float k_formation_align_max_deviation_degrees = 55.0F;
+
 constexpr float k_formation_turn_speed_floor_degrees = 20.0F;
 constexpr float k_formation_heading_deadband_degrees = 6.0F;
 constexpr float k_heading_hold_speed = 0.25F;
@@ -94,6 +97,22 @@ struct HeadingReference {
   float yaw{0.0F};
 };
 
+auto aligned_with_slot(float travel_yaw,
+                       const Engine::Core::TransformComponent& transform,
+                       float remaining_distance) -> float {
+  if (!transform.has_desired_yaw || remaining_distance >= k_formation_align_distance) {
+    return travel_yaw;
+  }
+  float const closeness =
+      std::clamp(1.0F - (remaining_distance / k_formation_align_distance), 0.0F, 1.0F);
+  float const to_slot =
+      Game::Systems::signed_yaw_delta(travel_yaw, transform.desired_yaw);
+  float const blended = std::clamp(to_slot * closeness,
+                                   -k_formation_align_max_deviation_degrees,
+                                   k_formation_align_max_deviation_degrees);
+  return travel_yaw + blended;
+}
+
 auto heading_reference(const Engine::Core::Entity& entity,
                        const Engine::Core::TransformComponent& transform,
                        const Engine::Core::MovementComponent& movement,
@@ -102,6 +121,10 @@ auto heading_reference(const Engine::Core::Entity& entity,
   bool const formation =
       unit != nullptr && FormationCombat::has_formation_slots(entity);
   if (formation && movement.get_has_target()) {
+    float const to_target_x = movement.get_target_x() - transform.position.x;
+    float const to_target_z = movement.get_target_y() - transform.position.z;
+    float const remaining =
+        std::sqrt((to_target_x * to_target_x) + (to_target_z * to_target_z));
     if (facts != nullptr && facts->desired.valid) {
       float dx = facts->desired.heading_x;
       float dz = facts->desired.heading_z;
@@ -110,15 +133,18 @@ auto heading_reference(const Engine::Core::Entity& entity,
         dz = facts->desired.velocity_z;
       }
       if (dx * dx + dz * dz > 1.0e-5F) {
-        return {true, Game::Systems::yaw_degrees_from_direction(dx, dz)};
+        return {true,
+                aligned_with_slot(Game::Systems::yaw_degrees_from_direction(dx, dz),
+                                  transform,
+                                  remaining)};
       }
     }
-    float const intent_x = movement.get_target_x() - transform.position.x;
-    float const intent_z = movement.get_target_y() - transform.position.z;
-    if (intent_x * intent_x + intent_z * intent_z >
-        k_formation_intent_min_distance * k_formation_intent_min_distance) {
+    if (remaining > k_formation_intent_min_distance) {
       return {true,
-              std::atan2(intent_x, intent_z) * 180.0F / std::numbers::pi_v<float>};
+              aligned_with_slot(std::atan2(to_target_x, to_target_z) * 180.0F /
+                                    std::numbers::pi_v<float>,
+                                transform,
+                                remaining)};
     }
   }
   float const vx = movement.get_vx();

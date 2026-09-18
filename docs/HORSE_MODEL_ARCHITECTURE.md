@@ -191,7 +191,7 @@ render/entity/mounted_horse_equipment.h
 
 The mounted renderer bases include:
 
-- `MountedKnightRendererBase`;
+- `MountedSwordsmanRendererBase`;
 - `HorseSpearmanRendererBase`; and
 - `HorseArcherRendererBase`.
 

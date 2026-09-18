@@ -150,7 +150,7 @@ TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
         Arena::Scenarios::k_swordsman_action_transition_id,
         Arena::Scenarios::k_spearman_action_transition_id,
         Arena::Scenarios::k_horse_archer_action_transition_id,
-        Arena::Scenarios::k_mounted_knight_action_transition_id,
+        Arena::Scenarios::k_mounted_swordsman_action_transition_id,
         Arena::Scenarios::k_horse_spearman_action_transition_id}) {
     EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(transition_id)),
               ids.end());

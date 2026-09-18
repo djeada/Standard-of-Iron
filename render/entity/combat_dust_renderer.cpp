@@ -621,6 +621,22 @@ void render_combat_dust(Renderer* renderer,
                             radius,
                             contact.intensity * intensity_scale,
                             contact.age);
+
+      if (contact.outcome == Engine::Core::RpgContactOutcome::Dodge) {
+        continue;
+      }
+      float const contact_fade =
+          1.0F -
+          std::clamp(contact.age / std::max(0.01F, contact.lifetime), 0.0F, 1.0F);
+      if (contact_fade <= 0.0F) {
+        continue;
+      }
+      QVector3D const grit_tint = color * 0.30F + QVector3D(0.60F, 0.55F, 0.45F);
+      renderer->combat_dust(QVector3D(contact.x, contact.y - 0.10F, contact.z),
+                            grit_tint,
+                            0.46F + 0.18F * contact.intensity,
+                            0.42F * contact.intensity * contact_fade,
+                            animation_time + contact.x * 0.19F + contact.z * 0.13F);
     }
   }
 

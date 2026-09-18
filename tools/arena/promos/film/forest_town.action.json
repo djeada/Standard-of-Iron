@@ -1,0 +1,193 @@
+{
+  "version": 1,
+  "name": "trailer_forest_town",
+  "loop_seconds": 0.0,
+  "required_coverage": ["build_panel"],
+  "actions": [
+    {
+      "at": 0.05,
+      "action": "camera_look_at",
+      "argument": "0,4"
+    },
+    {
+      "at": 0.06,
+      "action": "camera_zoom",
+      "argument": "-5"
+    },
+    {
+      "at": 1.2,
+      "action": "cursor_to_world",
+      "argument": "-11,-9"
+    },
+    {
+      "at": 2.4,
+      "action": "hover_at_world",
+      "argument": "11,9"
+    },
+    {
+      "at": 3.3,
+      "action": "cursor_to_world",
+      "argument": "-24,20"
+    },
+    {
+      "at": 4.0,
+      "action": "camera_look_at",
+      "argument": "-72,2"
+    },
+    {
+      "at": 4.01,
+      "action": "camera_zoom",
+      "argument": "2.5"
+    },
+    {
+      "at": 5.3,
+      "action": "select_area_world",
+      "argument": "-91,2,-65,2"
+    },
+    {
+      "at": 5.6,
+      "action": "auto_gather",
+      "argument": ""
+    },
+    {
+      "at": 6.0,
+      "action": "camera_look_at",
+      "argument": "2,-70"
+    },
+    {
+      "at": 7.1,
+      "action": "select_area_world",
+      "argument": "-11,-76,15,-76"
+    },
+    {
+      "at": 7.4,
+      "action": "auto_gather",
+      "argument": ""
+    },
+    {
+      "at": 7.8,
+      "action": "camera_look_at",
+      "argument": "74,-2"
+    },
+    {
+      "at": 8.9,
+      "action": "select_area_world",
+      "argument": "65,-2,91,-2"
+    },
+    {
+      "at": 9.2,
+      "action": "auto_gather",
+      "argument": ""
+    },
+    {
+      "at": 9.6,
+      "action": "camera_look_at",
+      "argument": "42,40"
+    },
+    {
+      "at": 9.61,
+      "action": "camera_zoom",
+      "argument": "0.8"
+    },
+    {
+      "at": 11.0,
+      "action": "select_at_world",
+      "argument": "33,32"
+    },
+    {
+      "at": 11.3,
+      "action": "build_start_world",
+      "argument": "home,39,41"
+    },
+    {
+      "at": 11.8,
+      "action": "build_place_world",
+      "argument": "39,41"
+    },
+    {
+      "at": 12.3,
+      "action": "select_at_world",
+      "argument": "36,32"
+    },
+    {
+      "at": 12.6,
+      "action": "build_start_world",
+      "argument": "home,51,41"
+    },
+    {
+      "at": 13.1,
+      "action": "build_place_world",
+      "argument": "51,41"
+    },
+    {
+      "at": 13.6,
+      "action": "select_at_world",
+      "argument": "39,32"
+    },
+    {
+      "at": 13.9,
+      "action": "build_start_world",
+      "argument": "marketplace,46,51"
+    },
+    {
+      "at": 14.5,
+      "action": "build_place_world",
+      "argument": "46,51"
+    },
+    {
+      "at": 15.0,
+      "action": "select_at_world",
+      "argument": "42,32"
+    },
+    {
+      "at": 15.3,
+      "action": "build_start_world",
+      "argument": "defense_tower,35,52"
+    },
+    {
+      "at": 15.8,
+      "action": "build_place_world",
+      "argument": "35,52"
+    },
+    {
+      "at": 16.3,
+      "action": "game_speed",
+      "argument": "3"
+    },
+    {
+      "at": 16.6,
+      "action": "cursor_to_world",
+      "argument": "60,60"
+    },
+    {
+      "at": 17.6,
+      "action": "cursor_to_world",
+      "argument": "46,48"
+    },
+    {
+      "at": 20.0,
+      "action": "camera_look_at",
+      "argument": "16,14"
+    },
+    {
+      "at": 20.01,
+      "action": "camera_zoom",
+      "argument": "-3.3"
+    },
+    {
+      "at": 21.6,
+      "action": "cursor_to_world",
+      "argument": "-10,4"
+    },
+    {
+      "at": 24.8,
+      "action": "cursor_to_world",
+      "argument": "30,30"
+    },
+    {
+      "at": 29.3,
+      "action": "game_speed",
+      "argument": "1"
+    }
+  ]
+}

@@ -67,7 +67,7 @@ auto squad(Engine::Core::World& world,
   units.reserve(static_cast<std::size_t>(count));
   for (int i = 0; i < count; ++i) {
     units.push_back(add_unit(world,
-                             Game::Units::SpawnType::Knight,
+                             Game::Units::SpawnType::Swordsman,
                              nation,
                              centre_x + static_cast<float>(i) - (count * 0.5F),
                              centre_z));
