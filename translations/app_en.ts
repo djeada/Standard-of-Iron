@@ -5601,6 +5601,142 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>The dead do not tire, do not flee, and do not file complaints. They are, in every other respect, a poor garrison.</source>
         <translation>The dead do not tire, do not flee, and do not file complaints. They are, in every other respect, a poor garrison.</translation>
     </message>
+    <message>
+        <source>A battle plan with seven arrows usually requires at least eight messengers.</source>
+        <translation>A battle plan with seven arrows usually requires at least eight messengers.</translation>
+    </message>
+    <message>
+        <source>A brilliant encirclement is harder to admire from the inside.</source>
+        <translation>A brilliant encirclement is harder to admire from the inside.</translation>
+    </message>
+    <message>
+        <source>A general can order a forced march. Boots remain stubbornly outside the chain of command.</source>
+        <translation>A general can order a forced march. Boots remain stubbornly outside the chain of command.</translation>
+    </message>
+    <message>
+        <source>A grave priest appears to mend broken bone. The darker story is that it persuades the grave to return what it claimed.</source>
+        <translation>A grave priest appears to mend broken bone. The darker story is that it persuades the grave to return what it claimed.</translation>
+    </message>
+    <message>
+        <source>A grave priest never runs short of fire. It only asks whose name is missing from the graveyard roll.</source>
+        <translation>A grave priest never runs short of fire. It only asks whose name is missing from the graveyard roll.</translation>
+    </message>
+    <message>
+        <source>An undead shrine is warded while its guardians live. Defeat every wave before attempting to destroy or capture it.</source>
+        <translation>An undead shrine is warded while its guardians live. Defeat every wave before attempting to destroy or capture it.</translation>
+    </message>
+    <message>
+        <source>At Cannae in 216 BC, Hannibal&apos;s yielding center drew Roman infantry forward while his flanks and cavalry closed around them.</source>
+        <translation>At Cannae in 216 BC, Hannibal&apos;s yielding center drew Roman infantry forward while his flanks and cavalry closed around them.</translation>
+    </message>
+    <message>
+        <source>At Ilipa in 206 BC, Scipio changed his usual deployment and attacked the Carthaginian wings with his stronger Roman infantry.</source>
+        <translation>At Ilipa in 206 BC, Scipio changed his usual deployment and attacked the Carthaginian wings with his stronger Roman infantry.</translation>
+    </message>
+    <message>
+        <source>At Lake Trasimene in 217 BC, Hannibal ambushed a Roman marching column between the lake and the hills. Terrain was part of the trap.</source>
+        <translation>At Lake Trasimene in 217 BC, Hannibal ambushed a Roman marching column between the lake and the hills. Terrain was part of the trap.</translation>
+    </message>
+    <message>
+        <source>At Zama in 202 BC, Scipio left lanes through his infantry to blunt Hannibal&apos;s elephants. Positioning beat panic.</source>
+        <translation>At Zama in 202 BC, Scipio left lanes through his infantry to blunt Hannibal&apos;s elephants. Positioning beat panic.</translation>
+    </message>
+    <message>
+        <source>At the Trebia, Hannibal lured Roman troops into a winter battle; a concealed Carthaginian force struck during the fighting.</source>
+        <translation>At the Trebia, Hannibal lured Roman troops into a winter battle; a concealed Carthaginian force struck during the fighting.</translation>
+    </message>
+    <message>
+        <source>Fabius Maximus earned the name &apos;the Delayer&apos; by avoiding Hannibal&apos;s preferred pitched battles and harassing his movements and supplies.</source>
+        <translation>Fabius Maximus earned the name &apos;the Delayer&apos; by avoiding Hannibal&apos;s preferred pitched battles and harassing his movements and supplies.</translation>
+    </message>
+    <message>
+        <source>Fabius called it patience. His critics probably called it a very long walk.</source>
+        <translation>Fabius called it patience. His critics probably called it a very long walk.</translation>
+    </message>
+    <message>
+        <source>Hamilcar Barca, Hannibal&apos;s father, built Carthaginian power in Iberia after the First Punic War. His sons inherited a formidable campaign.</source>
+        <translation>Hamilcar Barca, Hannibal&apos;s father, built Carthaginian power in Iberia after the First Punic War. His sons inherited a formidable campaign.</translation>
+    </message>
+    <message>
+        <source>Hannibal Barca was the Carthaginian commander who brought the Second Punic War into Italy by marching across the Alps in 218 BC.</source>
+        <translation>Hannibal Barca was the Carthaginian commander who brought the Second Punic War into Italy by marching across the Alps in 218 BC.</translation>
+    </message>
+    <message>
+        <source>Hannibal married a woman from the Iberian city of Castulo. The poet Silius Italicus calls her Imilce; the historian Livy does not give her name.</source>
+        <translation>Hannibal married a woman from the Iberian city of Castulo. The poet Silius Italicus calls her Imilce; the historian Livy does not give her name.</translation>
+    </message>
+    <message>
+        <source>Hannibal won battles in Italy, but Rome&apos;s alliances, manpower, and stubborn refusal to surrender kept the war alive.</source>
+        <translation>Hannibal won battles in Italy, but Rome&apos;s alliances, manpower, and stubborn refusal to surrender kept the war alive.</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s elephants crossed mountains. Your supply wagon still insists that a shallow stream is impassable.</source>
+        <translation>Hannibal&apos;s elephants crossed mountains. Your supply wagon still insists that a shallow stream is impassable.</translation>
+    </message>
+    <message>
+        <source>Hasdrubal Barca was Hannibal&apos;s brother, not his brother-in-law Hasdrubal the Fair. His attempted reinforcement ended at the Metaurus in 207 BC.</source>
+        <translation>Hasdrubal Barca was Hannibal&apos;s brother, not his brother-in-law Hasdrubal the Fair. His attempted reinforcement ended at the Metaurus in 207 BC.</translation>
+    </message>
+    <message>
+        <source>In 218 BC Hannibal crossed the Alps with infantry, cavalry, baggage, and elephants. His exact route remains disputed.</source>
+        <translation>In 218 BC Hannibal crossed the Alps with infantry, cavalry, baggage, and elephants. His exact route remains disputed.</translation>
+    </message>
+    <message>
+        <source>Maharbal commanded cavalry under Hannibal. The famous tale that he urged an immediate march on Rome after Cannae comes from later Roman tradition.</source>
+        <translation>Maharbal commanded cavalry under Hannibal. The famous tale that he urged an immediate march on Rome after Cannae comes from later Roman tradition.</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s Numidian horsemen fought alongside Rome at Zama. Their return to the battlefield helped decide the fight.</source>
+        <translation>Masinissa&apos;s Numidian horsemen fought alongside Rome at Zama. Their return to the battlefield helped decide the fight.</translation>
+    </message>
+    <message>
+        <source>No one remembers who buried the first Sepulcher priest. The priest has had plenty of time to hold a grudge.</source>
+        <translation>No one remembers who buried the first Sepulcher priest. The priest has had plenty of time to hold a grudge.</translation>
+    </message>
+    <message>
+        <source>Scipio took New Carthage in 209 BC, seizing an important harbor, stores, and hostages instead of chasing every enemy army.</source>
+        <translation>Scipio took New Carthage in 209 BC, seizing an important harbor, stores, and hostages instead of chasing every enemy army.</translation>
+    </message>
+    <message>
+        <source>Sepulcher legend says grave priests draw their fire from the last breaths trapped beneath the iron seals of forgotten shrines.</source>
+        <translation>Sepulcher legend says grave priests draw their fire from the last breaths trapped beneath the iron seals of forgotten shrines.</translation>
+    </message>
+    <message>
+        <source>Soldiers whisper that the shrine&apos;s haze repeats orders in the voices of men who never came home.</source>
+        <translation>Soldiers whisper that the shrine&apos;s haze repeats orders in the voices of men who never came home.</translation>
+    </message>
+    <message>
+        <source>Some say a grave priest burns the names scraped from burial stones. Each lost name feeds one more ember.</source>
+        <translation>Some say a grave priest burns the names scraped from burial stones. Each lost name feeds one more ember.</translation>
+    </message>
+    <message>
+        <source>The Iron Sepulcher keeps no quartermaster. Its garrison stopped asking for rations centuries ago.</source>
+        <translation>The Iron Sepulcher keeps no quartermaster. Its garrison stopped asking for rations centuries ago.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher&apos;s guardians do not pursue forever. They return to the shrine as though the last watch never ended.</source>
+        <translation>The Sepulcher&apos;s guardians do not pursue forever. They return to the shrine as though the last watch never ended.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher&apos;s iron nails are said to pin unfinished oaths beneath the earth. Its guardians are still keeping theirs.</source>
+        <translation>The Sepulcher&apos;s iron nails are said to pin unfinished oaths beneath the earth. Its guardians are still keeping theirs.</translation>
+    </message>
+    <message>
+        <source>The best time to discover that your bridge is too narrow was before the elephants arrived.</source>
+        <translation>The best time to discover that your bridge is too narrow was before the elephants arrived.</translation>
+    </message>
+    <message>
+        <source>The cavalry has found the enemy&apos;s rear. Unfortunately, it has also found your missing supplies.</source>
+        <translation>The cavalry has found the enemy&apos;s rear. Unfortunately, it has also found your missing supplies.</translation>
+    </message>
+    <message>
+        <source>The dead have held this post for centuries. You can understand why they dislike a change of ownership.</source>
+        <translation>The dead have held this post for centuries. You can understand why they dislike a change of ownership.</translation>
+    </message>
+    <message>
+        <source>Slaying the last guardian clears a zone, but the shrine is not purified until you capture or destroy it.</source>
+        <translation>Slaying the last guardian clears a zone, but the shrine is not purified until you capture or destroy it.</translation>
+    </message>
 </context>
 <context>
     <name>Main</name>
