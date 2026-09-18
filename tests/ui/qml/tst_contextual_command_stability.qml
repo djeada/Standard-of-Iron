@@ -22,6 +22,13 @@ TestCase {
         }
     }
 
+    Component {
+        id: signalSpy
+
+        SignalSpy {
+        }
+    }
+
     function state(eligible, active) {
         return {
             "enabled": true,
@@ -41,6 +48,28 @@ TestCase {
         deck.action_states = ({"build": state(1, 0), "collect": state(1, 1)});
         verify(deck.contextualCommands === first,
                "A new model destroys buttons between mouse press and release");
+        deck.destroy();
+    }
+
+    function test_a_contextual_click_survives_a_state_refresh() {
+        var deck = commandDeck.createObject(testCase);
+        verify(deck !== null);
+        deck.action_states = ({"deliver": state(1, 0)});
+        waitForRendering(deck);
+        var button = findChild(deck, "contextCommand_deliver");
+        verify(button !== null, "the contextual command was not created");
+        verify(button.interactive);
+        var spy = signalSpy.createObject(testCase, {
+                "target": deck,
+                "signalName": "command_mode_changed"
+            });
+        verify(spy !== null);
+        mousePress(button, button.width / 2, button.height / 2);
+        wait(150); // Longer than the HUD's 100 ms refresh period.
+        deck.action_states = ({"deliver": state(1, 0)});
+        mouseRelease(button, button.width / 2, button.height / 2);
+        compare(spy.count, 1, "refresh must not swallow a contextual command click");
+        spy.destroy();
         deck.destroy();
     }
 
