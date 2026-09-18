@@ -1,7 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import QtQuick.Window 2.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
 
@@ -22,23 +21,6 @@ Item {
 
     function objective_list(key) {
         return (mission_objectives && mission_objectives[key]) ? mission_objectives[key] : [];
-    }
-
-    function should_open_after_loading(mission_active, loading, match_started, overlay_active, tutorial_active) {
-        return mission_active && !loading && match_started && !overlay_active && !tutorial_active;
-    }
-
-    function show_briefing_for_ready_mission() {
-        var window = root.Window.window;
-        if (!window || !game_ready() || !game.setup)
-            return;
-        var tutorial_active = !!(game.tutorial && game.tutorial.active);
-        if (!root.should_open_after_loading(game.setup.is_mission_match, game.is_loading, window.game_started, window.overlay_active, tutorial_active))
-            return;
-        if (!mission_objectives || !mission_objectives.title)
-            return;
-        window.game_paused = true;
-        root.visible = true;
     }
 
     readonly property var stage_list: (game_ready() && game.mission && game.mission.staged) ? game.mission.stages : objective_list("stages")
@@ -63,7 +45,6 @@ Item {
     Connections {
         function onCurrent_mission_changed() {
             root.refresh_objectives();
-            root.show_briefing_for_ready_mission();
         }
 
         ignoreUnknownSignals: true
