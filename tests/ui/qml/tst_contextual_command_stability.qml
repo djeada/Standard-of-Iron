@@ -51,9 +51,6 @@ TestCase {
         };
     }
 
-    // One HUD poll. Every 100 ms HUD.qml bumps selection_tick and
-    // update_action_states() replaces action_states with a fresh map from the
-    // game; there is no game here, so hand over the fresh map directly.
     function poll(deck, collecting) {
         deck.action_states = builder_states(collecting);
     }

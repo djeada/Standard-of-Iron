@@ -305,10 +305,7 @@ void MiniaudioBackend::finish_job(const DecodeJob& job, bool decoded) {
       m_deferred_loops.remove(job.track);
     }
     --m_decode_in_flight;
-    if (m_decode_jobs.empty() && m_decode_bulk_jobs.empty() &&
-        m_decode_in_flight == 0) {
-      m_decode_idle.wakeAll();
-    }
+    m_decode_idle.wakeAll();
   }
 
   if (deferred.has_value()) {
@@ -401,6 +398,11 @@ auto MiniaudioBackend::is_track_decode_pending(const QString& id) const -> bool 
   }
   QMutexLocker const locker(&m_decode_mutex);
   return m_pending_slots.contains(slot);
+}
+
+auto MiniaudioBackend::has_pending_decodes() const -> bool {
+  QMutexLocker const locker(&m_decode_mutex);
+  return !m_pending_slots.isEmpty();
 }
 
 auto MiniaudioBackend::analysis_for(const QString& id,
@@ -618,7 +620,32 @@ auto MiniaudioBackend::request_track(const QString& id,
   return true;
 }
 
+void MiniaudioBackend::cancel_queued_decode(const QString& id) {
+  const int slot = find_track_slot(id);
+  if (slot < 0) {
+    return;
+  }
+  QMutexLocker const locker(&m_decode_mutex);
+  const auto for_slot = [slot](const DecodeJob& job) {
+    return job.track == slot;
+  };
+  const auto erase_from = [&for_slot](auto& jobs) {
+    const auto before = jobs.size();
+    jobs.erase(std::remove_if(jobs.begin(), jobs.end(), for_slot), jobs.end());
+    return before != jobs.size();
+  };
+  const bool erased_urgent = erase_from(m_decode_jobs);
+  const bool erased_bulk = erase_from(m_decode_bulk_jobs);
+  if (!erased_urgent && !erased_bulk) {
+    return;
+  }
+  m_pending_slots.remove(slot);
+  m_deferred_loops.remove(slot);
+  m_decode_idle.wakeAll();
+}
+
 void MiniaudioBackend::unload(const QString& id) {
+  cancel_queued_decode(id);
   wait_for_track(id);
 
   int slot = -1;

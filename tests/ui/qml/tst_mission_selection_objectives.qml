@@ -11,8 +11,6 @@ TestCase {
     height: 800
     visible: true
 
-    // MissionsScreen fills its parent, so each case hosts it in an item of
-    // the window size under test.
     Component {
         id: hostComponent
 

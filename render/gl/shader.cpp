@@ -505,7 +505,7 @@ namespace {
 
 auto uniform_handle_impl(QOpenGLFunctions_3_3_Core& fn,
                          GLuint program,
-                         std::unordered_map<std::string, Shader::UniformHandle>& cache,
+                         Shader::UniformCache& cache,
                          std::vector<std::string>& names,
                          std::vector<GLint>& locations,
                          const char* name,
@@ -514,7 +514,7 @@ auto uniform_handle_impl(QOpenGLFunctions_3_3_Core& fn,
     return Shader::InvalidUniform;
   }
 
-  auto it = cache.find(name);
+  auto it = cache.find(std::string_view(name));
   if (it != cache.end()) {
     return it->second;
   }
