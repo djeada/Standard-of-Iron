@@ -48,8 +48,9 @@ TestCase {
         compare(objectives.lines.length, 1);
         compare(objectives.lines[0], "Hold the crossing");
         screen.selected_index = 1;
-        tryCompare(objectives, "height", objectives.height);
+        tryCompare(screen, "selected_index", 1);
         compare(objectives.lines[0], "Capture the fortress", "objectives must follow the highlighted mission before starting it");
+        verify(objectives.visible);
         screen.destroy();
     }
 
