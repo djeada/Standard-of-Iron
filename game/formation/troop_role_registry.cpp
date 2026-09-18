@@ -78,7 +78,7 @@ auto default_troop_formation_profile(TroopType troop) -> TroopFormationProfile {
     profile.marching_layout = "procession";
     break;
 
-  case TroopType::MountedKnight:
+  case TroopType::MountedSwordsman:
     profile.roles = mask({RoleTag::Cavalry, RoleTag::Mounted, RoleTag::Shielded});
     profile.army_roles = {ArmyRole::LeftFlank, ArmyRole::RightFlank};
     profile.unit_layout = "cavalry_wedge";

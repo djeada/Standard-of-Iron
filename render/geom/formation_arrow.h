@@ -15,6 +15,9 @@ namespace Render::GL {
 struct FormationSlotMarker {
   QVector3D position;
   float radius = 1.0F;
+
+  float half_width = 1.0F;
+  float half_depth = 1.0F;
   float facing_degrees = 0.0F;
   bool blocked = false;
   bool adjusted = false;

@@ -8,6 +8,9 @@
 #include <QImage>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QPainter>
+#include <QPainterPath>
+#include <QPen>
 #include <QQuickWindow>
 #include <QRect>
 #include <QScreen>
@@ -31,6 +34,11 @@ constexpr int k_writer_threads = 3;
 constexpr std::size_t k_max_pending_saves = 6;
 constexpr int k_png_quality = 85;
 constexpr int k_parked_visible_pixels = 8;
+
+constexpr double k_cursor_lead_seconds = 0.9;
+constexpr double k_ripple_seconds = 0.38;
+
+constexpr double k_drag_seconds = 0.45;
 
 } // namespace
 
@@ -157,9 +165,104 @@ auto FilmRecorder::grab_frame() -> bool {
       return false;
     }
   }
-  enqueue_save(path, frame);
+  if (m_config.draw_cursor && m_cursor_valid) {
+    QImage painted = frame.convertToFormat(QImage::Format_ARGB32);
+    paint_cursor(painted);
+    enqueue_save(path, std::move(painted));
+  } else {
+    enqueue_save(path, frame);
+  }
   ++m_frames_written;
   return true;
+}
+
+void FilmRecorder::advance_cursor(double dt) {
+  for (auto& ripple : m_ripples) {
+    ripple.age += dt;
+  }
+  std::erase_if(m_ripples, [](const ClickRipple& ripple) {
+    return ripple.age >= k_ripple_seconds;
+  });
+  if (m_fixture == nullptr) {
+    return;
+  }
+
+  for (const auto& action : m_fixture->actions) {
+    if (action.at_seconds <= m_clock) {
+      continue;
+    }
+    if (action.at_seconds - m_clock > k_cursor_lead_seconds) {
+      break;
+    }
+    auto target = resolve_action_pointer(m_engine, m_window, action);
+    if (!target.has_value()) {
+      continue;
+    }
+    double arrive_at = action.at_seconds;
+    m_drag_active = false;
+    if (const auto origin = resolve_drag_origin(m_engine, m_window, action)) {
+
+      const double drag_start = action.at_seconds - k_drag_seconds;
+      if (m_clock < drag_start) {
+        target = origin;
+        arrive_at = drag_start;
+      } else {
+        m_drag_active = true;
+        m_drag_origin = *origin;
+      }
+    }
+    if (!m_cursor_valid) {
+      m_cursor = *target;
+      m_cursor_valid = true;
+      return;
+    }
+    const double remaining = std::max(0.0, arrive_at - m_clock);
+    const double share = std::clamp(dt / std::max(dt, remaining), 0.0, 1.0);
+
+    const double eased = 1.0 - std::pow(1.0 - share, 1.8);
+    m_cursor += (*target - m_cursor) * eased;
+    return;
+  }
+}
+
+void FilmRecorder::paint_cursor(QImage& frame) const {
+  const qreal scale = std::max(1.0, frame.height() / 1080.0) * 1.7;
+  QPainter painter(&frame);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+
+  for (const auto& ripple : m_ripples) {
+    const qreal t = ripple.age / k_ripple_seconds;
+    const qreal radius = (6.0 + 22.0 * t) * scale;
+    QColor gold(236, 204, 120);
+    gold.setAlphaF(std::clamp(0.9 * (1.0 - t), 0.0, 1.0));
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QPen(gold, 2.4 * scale));
+    painter.drawEllipse(ripple.at, radius, radius);
+  }
+
+  if (m_drag_active) {
+
+    const QRectF box = QRectF(m_drag_origin, m_cursor).normalized();
+    painter.setPen(QPen(QColor(255, 255, 255, 235), 1.6 * scale));
+    painter.setBrush(QColor(255, 255, 255, 22));
+    painter.drawRect(box);
+  }
+
+  QPainterPath arrow;
+  arrow.moveTo(0.0, 0.0);
+  arrow.lineTo(0.0, 17.0);
+  arrow.lineTo(4.2, 13.2);
+  arrow.lineTo(7.2, 20.0);
+  arrow.lineTo(9.8, 18.8);
+  arrow.lineTo(6.9, 12.2);
+  arrow.lineTo(12.4, 12.2);
+  arrow.closeSubpath();
+  painter.translate(m_cursor);
+  painter.scale(scale, scale);
+  painter.setPen(
+      QPen(QColor(12, 10, 8), 1.4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+  painter.setBrush(QColor(250, 246, 236));
+  painter.drawPath(arrow);
 }
 
 auto FilmRecorder::eventFilter(QObject* watched, QEvent* event) -> bool {
@@ -201,8 +304,21 @@ void FilmRecorder::pump() {
 
   if (m_fixture != nullptr) {
     for (const auto& action : actions_between(*m_fixture, m_previous_clock, m_clock)) {
+      if (m_config.draw_cursor) {
+        if (const auto at = resolve_action_pointer(m_engine, m_window, action)) {
+          m_cursor = *at;
+          m_cursor_valid = true;
+          if (action_is_click(action)) {
+            m_ripples.push_back({.at = *at, .age = 0.0});
+          }
+          m_drag_active = false;
+        }
+      }
       apply_benchmark_action(m_engine, m_window, action);
     }
+  }
+  if (m_config.draw_cursor) {
+    advance_cursor(dt);
   }
   const auto step_start = std::chrono::steady_clock::now();
   m_engine->film_step(static_cast<float>(dt));

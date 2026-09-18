@@ -134,13 +134,19 @@ auto ArmyFormationController::on_formation_command() -> CommandResult {
     return result;
   }
 
+  if (m_is_placing_formation) {
+    cancel_formation_placement();
+    result.input_consumed = true;
+    result.reset_cursor_to_normal = false;
+    return result;
+  }
+
   const auto& selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
     return result;
   }
 
   int eligible_count = 0;
-  int formation_active_count = 0;
 
   for (auto id : selected) {
     auto* entity = m_world->get_entity(id);
@@ -158,25 +164,17 @@ auto ArmyFormationController::on_formation_command() -> CommandResult {
     }
 
     eligible_count++;
-
-    auto* formation_mode =
-        entity->get_component<Engine::Core::FormationModeComponent>();
-    if ((formation_mode != nullptr) && formation_mode->active) {
-      formation_active_count++;
-    }
   }
 
   if (eligible_count < 1) {
     return result;
   }
 
-  const bool should_enable_formation = (formation_active_count < eligible_count);
-
   submit(m_world,
          Game::Command::SetFormationMode{.units = {selected.begin(), selected.end()},
-                                         .active = should_enable_formation});
+                                         .active = true});
 
-  if (should_enable_formation) {
+  {
     QVector3D center(0.0F, 0.0F, 0.0F);
     int valid_count = 0;
 
@@ -724,7 +722,11 @@ auto ArmyFormationController::formation_options() const -> QVariantMap {
   map["spacing_index"] =
       preset_index_for_scale(m_formation_options.spacing_scale, 0.75F, 1.0F, 1.35F);
   map["flank_index"] = static_cast<int>(m_formation_options.flank_preference);
-  map["ranged_index"] = static_cast<int>(m_formation_options.ranged_placement);
+  map["ranged_index"] =
+      m_formation_options.ranged_placement ==
+              Game::Formation::RangedPlacement::Automatic
+          ? 0
+          : static_cast<int>(m_formation_options.ranged_placement) + 1;
   map["reserve_index"] = std::clamp(m_formation_options.reserve_rows, -1, 2) + 1;
   map["movement_index"] = static_cast<int>(m_formation_options.movement_policy);
   map["mixed_index"] = static_cast<int>(m_formation_options.mixed_policy);

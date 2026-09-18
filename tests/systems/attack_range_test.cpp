@@ -91,7 +91,7 @@ TEST_F(AttackRangeTest, ProfileReportsTheWeaponRangeAndClass) {
                           .x = 10.0F,
                           .ranged_range = 18.0F});
   auto* swordsman = spawn(*world,
-                          {.spawn_type = Game::Units::SpawnType::Knight,
+                          {.spawn_type = Game::Units::SpawnType::Swordsman,
                            .x = 20.0F,
                            .ranged_range = 1.6F,
                            .melee_range = 1.6F,
@@ -125,9 +125,10 @@ TEST_F(AttackRangeTest, HoldModeGrowsTheArcherRangeLikeCombatDoes) {
 
 TEST_F(AttackRangeTest, OnlyRangedLocalUnitsGetRings) {
   auto* archer = spawn(*world, {});
-  auto* swordsman = spawn(
-      *world,
-      {.spawn_type = Game::Units::SpawnType::Knight, .x = 4.0F, .can_ranged = false});
+  auto* swordsman = spawn(*world,
+                          {.spawn_type = Game::Units::SpawnType::Swordsman,
+                           .x = 4.0F,
+                           .can_ranged = false});
   auto* enemy_archer = spawn(*world, {.owner_id = k_enemy_owner, .x = 8.0F});
   auto* corpse = spawn(*world, {.x = 12.0F});
   corpse->get_component<UnitComponent>()->health = 0;
@@ -237,7 +238,7 @@ TEST_F(AttackRangeTest, AnArcherLockedInMeleeReadsAsBlockedInsideItsRing) {
 
 TEST_F(AttackRangeTest, MeleeOnlySelectionsProduceNoRangeVerdict) {
   auto* swordsman = spawn(*world,
-                          {.spawn_type = Game::Units::SpawnType::Knight,
+                          {.spawn_type = Game::Units::SpawnType::Swordsman,
                            .ranged_range = 1.6F,
                            .melee_range = 1.6F,
                            .can_ranged = false});

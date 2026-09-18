@@ -1,4 +1,4 @@
-#include "mounted_knight_renderer_base.h"
+#include "mounted_swordsman_renderer_base.h"
 
 #include <QVector3D>
 
@@ -8,7 +8,7 @@
 #include "animation/rig/humanoid_proportions.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
-#include "mounted_knight_pose.h"
+#include "mounted_swordsman_pose.h"
 #include "render/creature/archetype_registry.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/horse_equipment_archetype.h"
@@ -26,7 +26,8 @@ constexpr auto k_profile = Render::GL::Humanoid::k_mounted_rider_proportion_prof
 
 }
 
-MountedKnightRendererBase::MountedKnightRendererBase(MountedKnightRendererConfig config)
+MountedSwordsmanRendererBase::MountedSwordsmanRendererBase(
+    MountedSwordsmanRendererConfig config)
     : m_config(std::move(config))
     , m_sword_handle(m_config.sword_handle) {
   auto& equipment_registry = EquipmentRegistry::instance();
@@ -80,13 +81,13 @@ MountedKnightRendererBase::MountedKnightRendererBase(MountedKnightRendererConfig
   build_visual_spec();
 }
 
-auto MountedKnightRendererBase::get_mount_scale() const -> float {
+auto MountedSwordsmanRendererBase::get_mount_scale() const -> float {
   return m_config.mount_scale;
 }
 
-void MountedKnightRendererBase::adjust_variation(const DrawContext&,
-                                                 uint32_t,
-                                                 VariationParams& variation) const {
+void MountedSwordsmanRendererBase::adjust_variation(const DrawContext&,
+                                                    uint32_t,
+                                                    VariationParams& variation) const {
   variation.height_scale = 0.88F;
   variation.bulk_scale = 0.76F;
   variation.stance_width = 0.60F;
@@ -96,13 +97,13 @@ void MountedKnightRendererBase::adjust_variation(const DrawContext&,
   variation.shoulder_tilt = 0.0F;
 }
 
-void MountedKnightRendererBase::get_variant(const DrawContext& ctx,
-                                            uint32_t seed,
-                                            HumanoidVariant& v) const {
+void MountedSwordsmanRendererBase::get_variant(const DrawContext& ctx,
+                                               uint32_t seed,
+                                               HumanoidVariant& v) const {
   HumanoidRendererBase::get_variant(ctx, seed, v);
 }
 
-void MountedKnightRendererBase::build_visual_spec() {
+void MountedSwordsmanRendererBase::build_visual_spec() {
   using namespace Render::Creature::Pipeline;
 
   const Render::Creature::ArchetypeId base_rider_id =

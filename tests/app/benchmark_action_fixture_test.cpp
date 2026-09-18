@@ -55,6 +55,21 @@ TEST(BenchmarkActionFixtureTest, AFormationDragIsDeployedByItsConfirm) {
   EXPECT_EQ(fixture->actions[3].action, QStringLiteral("formation_confirm"));
 }
 
+TEST(BenchmarkActionFixtureTest, AFilmMayPutWorkersToWorkAndSteerTheCursor) {
+  QString error;
+  const auto fixture = parse(R"({"version": 1, "name": "town",
+      "required_coverage": ["build_panel"],
+      "actions": [{"at": 0.4, "action": "select_by_type", "argument": "builder"},
+                  {"at": 0.6, "action": "auto_gather", "argument": "cut_tree"},
+                  {"at": 1.1, "action": "cursor_to_world", "argument": "12,-4"},
+                  {"at": 1.5, "action": "build_panel"}]})",
+                             &error);
+  ASSERT_TRUE(fixture.has_value()) << error.toStdString();
+  ASSERT_EQ(fixture->actions.size(), 4U);
+  EXPECT_EQ(fixture->actions[1].action, QStringLiteral("auto_gather"));
+  EXPECT_EQ(fixture->actions[2].action, QStringLiteral("cursor_to_world"));
+}
+
 TEST(BenchmarkActionFixtureTest, AnUnsupportedVersionIsRejected) {
   QString error;
   EXPECT_FALSE(parse(R"({"version": 2, "name": "x",

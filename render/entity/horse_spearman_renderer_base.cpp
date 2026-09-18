@@ -8,7 +8,7 @@
 #include "animation/rig/humanoid_proportions.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
-#include "mounted_knight_pose.h"
+#include "mounted_swordsman_pose.h"
 #include "render/creature/archetype_registry.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/horse_equipment_archetype.h"

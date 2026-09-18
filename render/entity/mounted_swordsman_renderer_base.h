@@ -12,7 +12,7 @@
 
 namespace Render::GL {
 
-struct MountedKnightRendererConfig {
+struct MountedSwordsmanRendererConfig {
   std::string sword_equipment_id;
   std::string shield_equipment_id;
   std::string helmet_equipment_id;
@@ -40,8 +40,8 @@ struct MountedKnightRendererConfig {
   Render::Creature::ArchetypeId mount_archetype_id{
       Render::Creature::k_invalid_archetype};
 
-  std::string rider_debug_name{"troops/mounted_knight/rider"};
-  std::string mount_debug_name{"troops/mounted_knight/horse"};
+  std::string rider_debug_name{"troops/mounted_swordsman/rider"};
+  std::string mount_debug_name{"troops/mounted_swordsman/horse"};
 
   EquipmentHandle sword_handle{k_invalid_equipment_handle};
   EquipmentHandle shield_handle{k_invalid_equipment_handle};
@@ -57,14 +57,14 @@ struct MountedKnightRendererConfig {
   EquipmentHandle horse_decoration_handle{k_invalid_equipment_handle};
 };
 
-class MountedKnightRendererBase : public MountedHumanoidRendererBase {
+class MountedSwordsmanRendererBase : public MountedHumanoidRendererBase {
 public:
-  explicit MountedKnightRendererBase(MountedKnightRendererConfig config);
-  MountedKnightRendererBase(const MountedKnightRendererBase&) = delete;
-  MountedKnightRendererBase& operator=(const MountedKnightRendererBase&) = delete;
-  MountedKnightRendererBase(MountedKnightRendererBase&&) = delete;
-  MountedKnightRendererBase& operator=(MountedKnightRendererBase&&) = delete;
-  ~MountedKnightRendererBase() override = default;
+  explicit MountedSwordsmanRendererBase(MountedSwordsmanRendererConfig config);
+  MountedSwordsmanRendererBase(const MountedSwordsmanRendererBase&) = delete;
+  MountedSwordsmanRendererBase& operator=(const MountedSwordsmanRendererBase&) = delete;
+  MountedSwordsmanRendererBase(MountedSwordsmanRendererBase&&) = delete;
+  MountedSwordsmanRendererBase& operator=(MountedSwordsmanRendererBase&&) = delete;
+  ~MountedSwordsmanRendererBase() override = default;
 
   auto get_mount_scale() const -> float override;
   void adjust_variation(const DrawContext&,
@@ -74,10 +74,10 @@ public:
   get_variant(const DrawContext& ctx, uint32_t seed, HumanoidVariant& v) const override;
 
 protected:
-  const MountedKnightRendererConfig& config() const { return m_config; }
+  const MountedSwordsmanRendererConfig& config() const { return m_config; }
 
 private:
-  MountedKnightRendererConfig m_config;
+  MountedSwordsmanRendererConfig m_config;
   EquipmentHandle m_sword_handle{k_invalid_equipment_handle};
   EquipmentHandle m_shield_handle{k_invalid_equipment_handle};
   EquipmentHandle m_helmet_handle{k_invalid_equipment_handle};

@@ -1,0 +1,562 @@
+{
+  "name": "Trailer: the forming field",
+  "description": "Filming fixture: a loose army that forms a line.",
+  "theme": "Two armies share one river and disagree about who owns its fords.",
+  "coord_system": "grid",
+  "grid": {
+    "width": 176,
+    "height": 176,
+    "tile_size": 1.0
+  },
+  "max_troops_per_player": 400,
+  "camera": {
+    "center": [88.0, 0, 88.0],
+    "distance": 194.0,
+    "tilt_deg": 48.0,
+    "yaw": 225.0,
+    "fov_y": 45.0,
+    "near": 1.0,
+    "far": 492.8
+  },
+  "time_of_day": "day",
+  "environment": {
+    "start_time": 13.0,
+    "time_mode": "locked",
+    "day_length_seconds": 2400.0,
+    "lighting_profile": "mediterranean_summer",
+    "fog_density": 0.005,
+    "exposure": 1.32
+  },
+  "biome": {
+    "ground_type": "soil_fertile",
+    "seed": 40217,
+    "patch_density": 1.25,
+    "patch_jitter": 0.92,
+    "plant_density": 0.0,
+    "grass_primary": [0.24, 0.38, 0.2],
+    "grass_secondary": [0.33, 0.45, 0.24],
+    "grass_dry": [0.42, 0.39, 0.27],
+    "soil_color": [0.13, 0.11, 0.09],
+    "height_noise": [0.2, 0.06],
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.15,
+    "irregularity_amplitude": 0.07,
+    "moisture_level": 0.55,
+    "grass_saturation": 0.74,
+    "soil_roughness": 0.68,
+    "procedural_trees_enabled": false,
+    "procedural_boulders_enabled": false,
+    "procedural_iron_ore_enabled": false
+  },
+  "rain": {
+    "enabled": false,
+    "type": "rain",
+    "intensity": 0.0
+  },
+  "terrain": [
+    {
+      "id": "parade_ground",
+      "type": "flat",
+      "x": 88.0,
+      "z": 96.0,
+      "width": 148.0,
+      "depth": 110.0,
+      "description": "The field the army forms up on."
+    }
+  ],
+  "forests": [],
+  "rivers": [],
+  "lakes": [],
+  "bridges": [],
+  "roads": [],
+  "landmarks": [],
+  "structures": [],
+  "spawns": [
+    {
+      "id": "p1_commander",
+      "type": "roman_veteran_consul",
+      "x": 85.0,
+      "z": 91.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_0",
+      "type": "spearman",
+      "x": 72.3,
+      "z": 94.9,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_1",
+      "type": "swordsman",
+      "x": 90.3,
+      "z": 106.5,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_2",
+      "type": "swordsman",
+      "x": 75.1,
+      "z": 98.8,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_3",
+      "type": "spearman",
+      "x": 76.1,
+      "z": 96.1,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_archer_4",
+      "type": "archer",
+      "x": 88.4,
+      "z": 100.1,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_horse_swordsman_5",
+      "type": "horse_swordsman",
+      "x": 78.8,
+      "z": 91.2,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_6",
+      "type": "swordsman",
+      "x": 88.7,
+      "z": 116.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_archer_7",
+      "type": "archer",
+      "x": 107.4,
+      "z": 91.9,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_8",
+      "type": "spearman",
+      "x": 109.9,
+      "z": 95.8,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_9",
+      "type": "swordsman",
+      "x": 84.8,
+      "z": 101.6,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_10",
+      "type": "swordsman",
+      "x": 105.9,
+      "z": 97.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_archer_11",
+      "type": "archer",
+      "x": 87.0,
+      "z": 100.8,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_12",
+      "type": "swordsman",
+      "x": 81.0,
+      "z": 103.2,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_13",
+      "type": "swordsman",
+      "x": 71.5,
+      "z": 95.4,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_horse_swordsman_14",
+      "type": "horse_swordsman",
+      "x": 79.0,
+      "z": 102.6,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_15",
+      "type": "swordsman",
+      "x": 89.8,
+      "z": 99.6,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_16",
+      "type": "swordsman",
+      "x": 87.8,
+      "z": 102.1,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_horse_swordsman_17",
+      "type": "horse_swordsman",
+      "x": 75.5,
+      "z": 102.6,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_18",
+      "type": "swordsman",
+      "x": 93.9,
+      "z": 108.5,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_archer_19",
+      "type": "archer",
+      "x": 101.5,
+      "z": 100.9,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_20",
+      "type": "swordsman",
+      "x": 85.9,
+      "z": 104.8,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_archer_21",
+      "type": "archer",
+      "x": 90.6,
+      "z": 100.6,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_22",
+      "type": "swordsman",
+      "x": 103.8,
+      "z": 97.6,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_23",
+      "type": "spearman",
+      "x": 92.3,
+      "z": 103.8,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_archer_24",
+      "type": "archer",
+      "x": 90.2,
+      "z": 100.4,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_25",
+      "type": "swordsman",
+      "x": 71.4,
+      "z": 94.9,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_26",
+      "type": "spearman",
+      "x": 106.3,
+      "z": 96.4,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_27",
+      "type": "spearman",
+      "x": 105.1,
+      "z": 96.7,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_horse_swordsman_28",
+      "type": "horse_swordsman",
+      "x": 103.1,
+      "z": 96.7,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_29",
+      "type": "spearman",
+      "x": 74.9,
+      "z": 95.9,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_30",
+      "type": "spearman",
+      "x": 71.5,
+      "z": 94.9,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_archer_31",
+      "type": "archer",
+      "x": 85.0,
+      "z": 101.1,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_32",
+      "type": "swordsman",
+      "x": 89.4,
+      "z": 105.8,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_33",
+      "type": "spearman",
+      "x": 75.1,
+      "z": 96.2,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_34",
+      "type": "spearman",
+      "x": 90.8,
+      "z": 104.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_archer_35",
+      "type": "archer",
+      "x": 103.8,
+      "z": 96.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_36",
+      "type": "swordsman",
+      "x": 110.3,
+      "z": 86.4,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_37",
+      "type": "swordsman",
+      "x": 96.1,
+      "z": 100.2,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_38",
+      "type": "spearman",
+      "x": 71.0,
+      "z": 98.7,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p2_commander",
+      "type": "carthage_sword_commander",
+      "x": 152.0,
+      "z": 15.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_swordsman_0",
+      "type": "swordsman",
+      "x": 148.0,
+      "z": 17.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_swordsman_1",
+      "type": "swordsman",
+      "x": 152.0,
+      "z": 19.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_swordsman_2",
+      "type": "swordsman",
+      "x": 156.0,
+      "z": 21.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_spearman_3",
+      "type": "spearman",
+      "x": 144.0,
+      "z": 15.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_spearman_4",
+      "type": "spearman",
+      "x": 160.0,
+      "z": 23.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_archer_5",
+      "type": "archer",
+      "x": 150.0,
+      "z": 11.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_archer_6",
+      "type": "archer",
+      "x": 156.0,
+      "z": 13.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_elephant_7",
+      "type": "elephant",
+      "x": 162.0,
+      "z": 17.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_horse_swordsman_8",
+      "type": "horse_swordsman",
+      "x": 166.0,
+      "z": 25.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    },
+    {
+      "id": "p2_builder",
+      "type": "builder",
+      "x": 168.0,
+      "z": 26.229999999999997,
+      "player_id": 2
+    },
+    {
+      "id": "p2_healer",
+      "type": "healer",
+      "x": 168.0,
+      "z": 18.009999999999998,
+      "player_id": 2
+    }
+  ],
+  "world_props": [],
+  "firecamps": [],
+  "undead_zones": [],
+  "wildlife": {
+    "enabled": false
+  },
+  "starting_resources": {
+    "gold": 250,
+    "food": 200,
+    "wood": 250,
+    "stone": 120,
+    "iron": 80
+  },
+  "victory": {
+    "type": "elimination",
+    "key_structures": ["barracks"],
+    "defeat_conditions": [
+      "no_key_structures",
+      "no_commander",
+      "only_commander_remaining"
+    ]
+  }
+}

@@ -155,6 +155,9 @@ auto column_template(ArmyFormationIntent intent,
   DoctrineIntentTemplate tmpl;
   tmpl.intent = intent;
   tmpl.frontage_scale = 0.35F;
+  tmpl.unit_files_aspect = 0.6F;
+  tmpl.max_depth = 70.0F;
+  tmpl.max_frontage = 32.0F;
   tmpl.depth_scale = 2.4F;
   tmpl.spacing_scale = spacing_scale;
   tmpl.default_movement = MovementPolicy::MaintainFormation;
@@ -274,6 +277,8 @@ auto make_neutral_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate defensive = line;
   defensive.intent = ArmyFormationIntent::Defensive;
   defensive.frontage_scale = 0.85F;
+  defensive.unit_files_aspect = 2.2F;
+  defensive.max_frontage = 85.0F;
   defensive.depth_scale = 1.25F;
   defensive.spacing_scale = 0.9F;
   defensive.reserve_rows = 1;
@@ -282,6 +287,8 @@ auto make_neutral_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate assault = line;
   assault.intent = ArmyFormationIntent::Assault;
   assault.frontage_scale = 0.9F;
+  assault.unit_files_aspect = 2.2F;
+  assault.max_frontage = 85.0F;
   assault.depth_scale = 1.15F;
   assault.default_ranged = RangedPlacement::Skirmish;
   doctrine.intents[static_cast<int>(ArmyFormationIntent::Assault)] = assault;
@@ -301,6 +308,8 @@ auto make_rome_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate battle_line;
   battle_line.intent = ArmyFormationIntent::FactionDefault;
   battle_line.frontage_scale = 1.0F;
+  battle_line.unit_files_aspect = 2.6F;
+  battle_line.max_frontage = 95.0F;
   battle_line.depth_scale = 1.0F;
   battle_line.spacing_scale = 1.0F;
   battle_line.reserve_rows = 1;
@@ -339,6 +348,8 @@ auto make_rome_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate line = battle_line;
   line.intent = ArmyFormationIntent::Line;
   line.frontage_scale = 1.25F;
+  line.unit_files_aspect = 3.0F;
+  line.max_frontage = 125.0F;
   line.depth_scale = 0.85F;
   for (auto& rule : line.lines) {
     if (rule.placement == LinePlacement::CentreBlock) {
@@ -350,6 +361,8 @@ auto make_rome_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate defensive = battle_line;
   defensive.intent = ArmyFormationIntent::Defensive;
   defensive.frontage_scale = 0.85F;
+  defensive.unit_files_aspect = 2.2F;
+  defensive.max_frontage = 85.0F;
   defensive.depth_scale = 1.30F;
   defensive.spacing_scale = 0.88F;
   defensive.reserve_rows = 2;
@@ -368,6 +381,8 @@ auto make_rome_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate assault = battle_line;
   assault.intent = ArmyFormationIntent::Assault;
   assault.frontage_scale = 0.95F;
+  assault.unit_files_aspect = 2.2F;
+  assault.max_frontage = 85.0F;
   assault.depth_scale = 1.10F;
   assault.spacing_scale = 0.95F;
   assault.reserve_rows = 1;
@@ -389,6 +404,8 @@ auto make_rome_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate siege_escort = battle_line;
   siege_escort.intent = ArmyFormationIntent::SiegeEscort;
   siege_escort.frontage_scale = 0.9F;
+  siege_escort.unit_files_aspect = 2.2F;
+  siege_escort.max_frontage = 90.0F;
   siege_escort.depth_scale = 1.35F;
   siege_escort.required_roles = k_any_siege;
   siege_escort.requirement_hint = QT_TRANSLATE_NOOP(
@@ -407,6 +424,8 @@ auto make_rome_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate encirclement = battle_line;
   encirclement.intent = ArmyFormationIntent::Encirclement;
   encirclement.frontage_scale = 1.6F;
+  encirclement.unit_files_aspect = 3.0F;
+  encirclement.max_frontage = 130.0F;
   encirclement.depth_scale = 0.7F;
   encirclement.default_flank = FlankPreference::Split;
   encirclement.required_roles = k_any_cavalry;
@@ -432,6 +451,8 @@ auto make_carthage_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate battle_line;
   battle_line.intent = ArmyFormationIntent::FactionDefault;
   battle_line.frontage_scale = 1.20F;
+  battle_line.unit_files_aspect = 2.6F;
+  battle_line.max_frontage = 95.0F;
   battle_line.depth_scale = 0.90F;
   battle_line.spacing_scale = 1.05F;
   battle_line.reserve_rows = 1;
@@ -470,12 +491,16 @@ auto make_carthage_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate line = battle_line;
   line.intent = ArmyFormationIntent::Line;
   line.frontage_scale = 1.45F;
+  line.unit_files_aspect = 3.0F;
+  line.max_frontage = 125.0F;
   line.depth_scale = 0.75F;
   doctrine.intents[static_cast<int>(ArmyFormationIntent::Line)] = line;
 
   DoctrineIntentTemplate defensive = battle_line;
   defensive.intent = ArmyFormationIntent::Defensive;
   defensive.frontage_scale = 1.05F;
+  defensive.unit_files_aspect = 2.2F;
+  defensive.max_frontage = 85.0F;
   defensive.depth_scale = 1.20F;
   defensive.spacing_scale = 0.95F;
   defensive.reserve_rows = 2;
@@ -495,6 +520,8 @@ auto make_carthage_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate assault = battle_line;
   assault.intent = ArmyFormationIntent::Assault;
   assault.frontage_scale = 1.15F;
+  assault.unit_files_aspect = 2.2F;
+  assault.max_frontage = 85.0F;
   assault.depth_scale = 1.05F;
   assault.default_flank = FlankPreference::StrongRight;
   for (auto& rule : assault.lines) {
@@ -515,6 +542,8 @@ auto make_carthage_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate encirclement = battle_line;
   encirclement.intent = ArmyFormationIntent::Encirclement;
   encirclement.frontage_scale = 1.85F;
+  encirclement.unit_files_aspect = 3.0F;
+  encirclement.max_frontage = 130.0F;
   encirclement.depth_scale = 0.65F;
   encirclement.default_flank = FlankPreference::Split;
   encirclement.required_roles = k_any_cavalry;
@@ -532,6 +561,8 @@ auto make_carthage_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate siege_escort = battle_line;
   siege_escort.intent = ArmyFormationIntent::SiegeEscort;
   siege_escort.frontage_scale = 1.05F;
+  siege_escort.unit_files_aspect = 2.2F;
+  siege_escort.max_frontage = 90.0F;
   siege_escort.depth_scale = 1.30F;
   siege_escort.required_roles = k_any_siege;
   siege_escort.requirement_hint = QT_TRANSLATE_NOOP(
@@ -558,6 +589,8 @@ auto make_iron_sepulcher_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate burial_guard;
   burial_guard.intent = ArmyFormationIntent::FactionDefault;
   burial_guard.frontage_scale = 0.80F;
+  burial_guard.unit_files_aspect = 2.2F;
+  burial_guard.max_frontage = 85.0F;
   burial_guard.depth_scale = 1.30F;
   burial_guard.spacing_scale = 0.78F;
   burial_guard.reserve_rows = 1;
@@ -598,12 +631,16 @@ auto make_iron_sepulcher_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate line = burial_guard;
   line.intent = ArmyFormationIntent::Line;
   line.frontage_scale = 1.00F;
+  line.unit_files_aspect = 3.0F;
+  line.max_frontage = 125.0F;
   line.depth_scale = 1.10F;
   doctrine.intents[static_cast<int>(ArmyFormationIntent::Line)] = line;
 
   DoctrineIntentTemplate shrine_defence = burial_guard;
   shrine_defence.intent = ArmyFormationIntent::Defensive;
   shrine_defence.frontage_scale = 0.70F;
+  shrine_defence.unit_files_aspect = 2.0F;
+  shrine_defence.max_frontage = 80.0F;
   shrine_defence.depth_scale = 1.45F;
   shrine_defence.spacing_scale = 0.70F;
   shrine_defence.reserve_rows = 2;
@@ -612,6 +649,8 @@ auto make_iron_sepulcher_doctrine() -> FormationDoctrine {
   DoctrineIntentTemplate dense_advance = burial_guard;
   dense_advance.intent = ArmyFormationIntent::Assault;
   dense_advance.frontage_scale = 0.75F;
+  dense_advance.unit_files_aspect = 2.0F;
+  dense_advance.max_frontage = 80.0F;
   dense_advance.depth_scale = 1.55F;
   dense_advance.spacing_scale = 0.72F;
   for (auto& rule : dense_advance.lines) {

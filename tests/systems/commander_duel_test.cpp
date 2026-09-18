@@ -3,12 +3,15 @@
 #include <set>
 #include <string>
 
+#include "core/component_combat.h"
 #include "core/component_commander.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/arrow_projectile.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
+#include "game/systems/combat_actions/combat_action_events.h"
+#include "game/systems/combat_system/combat_action_processor.h"
 #include "game/systems/default_content.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nation_registry.h"
@@ -136,7 +139,7 @@ TEST_F(CommanderDuelTest, DuellistsCloseToWithinTheirWeaponsReach) {
                                 1.45F,
                                 "sword commanders"},
                            Pair{Game::Units::SpawnType::RomanVeteranConsul,
-                                Game::Units::SpawnType::Knight,
+                                Game::Units::SpawnType::Swordsman,
                                 1.40F,
                                 "commander against a swordsman"}}) {
     Engine::Core::World world;
@@ -183,7 +186,7 @@ TEST_F(CommanderDuelTest, SiegeEnginesStopShootingOnceLockedInMelee) {
                          QVector3D(0.0F, 0.0F, 0.0F),
                          Game::Systems::NationID::RomanRepublic);
   auto* brawler = spawn(world,
-                        Game::Units::SpawnType::Knight,
+                        Game::Units::SpawnType::Swordsman,
                         2,
                         QVector3D(1.2F, 0.0F, 0.0F),
                         Game::Systems::NationID::Carthage);
@@ -235,7 +238,7 @@ TEST_F(CommanderDuelTest, SiegeEnginesStillShootWhenNothingIsOnTopOfThem) {
                          QVector3D(0.0F, 0.0F, 0.0F),
                          Game::Systems::NationID::RomanRepublic);
   auto* quarry = spawn(world,
-                       Game::Units::SpawnType::Knight,
+                       Game::Units::SpawnType::Swordsman,
                        2,
                        QVector3D(12.0F, 0.0F, 0.0F),
                        Game::Systems::NationID::Carthage);
@@ -269,7 +272,7 @@ TEST_F(CommanderDuelTest, ShootersSwitchToTheirSidearmWhenLocked) {
                           QVector3D(0.0F, 0.0F, 0.0F),
                           Game::Systems::NationID::RomanRepublic);
     auto* brawler = spawn(world,
-                          Game::Units::SpawnType::Knight,
+                          Game::Units::SpawnType::Swordsman,
                           2,
                           QVector3D(1.2F, 0.0F, 0.0F),
                           Game::Systems::NationID::Carthage);
@@ -306,7 +309,7 @@ TEST_P(CommanderDuelTest, CommanderThrowsItsSignatureInADuel) {
                           QVector3D(-4.0F, 0.0F, 0.0F),
                           Game::Systems::NationID::RomanRepublic);
   auto* rival = spawn(world,
-                      Game::Units::SpawnType::Knight,
+                      Game::Units::SpawnType::Swordsman,
                       2,
                       QVector3D(0.0F, 0.0F, 0.0F),
                       Game::Systems::NationID::Carthage);
@@ -391,7 +394,7 @@ TEST_F(CommanderDuelTest, SignatureLeavesAContactBurstForTheRenderer) {
                           QVector3D(-4.0F, 0.0F, 0.0F),
                           Game::Systems::NationID::Carthage);
   auto* rival = spawn(world,
-                      Game::Units::SpawnType::Knight,
+                      Game::Units::SpawnType::Swordsman,
                       2,
                       QVector3D(0.0F, 0.0F, 0.0F),
                       Game::Systems::NationID::RomanRepublic);
@@ -434,7 +437,7 @@ TEST_F(CommanderDuelTest, ContactBurstsExpireInsteadOfPilingUp) {
                           QVector3D(-4.0F, 0.0F, 0.0F),
                           Game::Systems::NationID::Carthage);
   auto* rival = spawn(world,
-                      Game::Units::SpawnType::Knight,
+                      Game::Units::SpawnType::Swordsman,
                       2,
                       QVector3D(0.0F, 0.0F, 0.0F),
                       Game::Systems::NationID::RomanRepublic);
@@ -467,12 +470,12 @@ TEST_F(CommanderDuelTest, SweepSignatureCatchesASecondFighter) {
                           QVector3D(-3.0F, 0.0F, 0.0F),
                           Game::Systems::NationID::Carthage);
   auto* rival = spawn(world,
-                      Game::Units::SpawnType::Knight,
+                      Game::Units::SpawnType::Swordsman,
                       2,
                       QVector3D(0.0F, 0.0F, 0.0F),
                       Game::Systems::NationID::RomanRepublic);
   auto* bystander = spawn(world,
-                          Game::Units::SpawnType::Knight,
+                          Game::Units::SpawnType::Swordsman,
                           2,
                           QVector3D(-0.2F, 0.0F, 1.2F),
                           Game::Systems::NationID::RomanRepublic);
@@ -514,7 +517,7 @@ TEST_F(CommanderDuelTest, EveryCommanderLinkLeavesASwingCueNotOnlyTheSignature) 
                           QVector3D(-4.0F, 0.0F, 0.0F),
                           Game::Systems::NationID::Carthage);
   auto* rival = spawn(world,
-                      Game::Units::SpawnType::Knight,
+                      Game::Units::SpawnType::Swordsman,
                       2,
                       QVector3D(0.0F, 0.0F, 0.0F),
                       Game::Systems::NationID::RomanRepublic);
@@ -552,6 +555,74 @@ TEST_F(CommanderDuelTest, EveryCommanderLinkLeavesASwingCueNotOnlyTheSignature) 
       << "the chain's links all read as the same arc; the finisher and sweep "
          "should have their own form";
   EXPECT_GE(impact_cues, 2) << "ordinary links landed but left no impact burst";
+}
+
+TEST_F(CommanderDuelTest, APlayedCommanderLeavesTheSameStrikeCuesAsAnOrderedOne) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  auto* commander = spawn(world,
+                          Game::Units::SpawnType::RomanVeteranConsul,
+                          1,
+                          QVector3D(0.0F, 0.0F, 0.0F),
+                          Game::Systems::NationID::RomanRepublic);
+  auto* rival = spawn(world,
+                      Game::Units::SpawnType::Swordsman,
+                      2,
+                      QVector3D(0.0F, 0.0F, 1.0F),
+                      Game::Systems::NationID::Carthage);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(rival, nullptr);
+
+  auto* commander_data = commander->get_component<CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+  commander_data->fpv_controlled = true;
+  auto* rpg_health =
+      Engine::Core::get_or_add_component<Engine::Core::RpgHealthComponent>(commander);
+  ASSERT_NE(rpg_health, nullptr);
+  rpg_health->active = true;
+
+  auto* transform = commander->get_component<TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  transform->rotation.y = 0.0F;
+
+  auto* combat_state =
+      Engine::Core::get_or_add_component<Engine::Core::CombatStateComponent>(commander);
+  auto* action =
+      Engine::Core::get_or_add_component<RpgCommanderActionComponent>(commander);
+  ASSERT_NE(action, nullptr);
+  action->combat_action_id =
+      static_cast<std::uint8_t>(CombatActionId::RpgSwordSlashLeft);
+  Game::Systems::CombatActions::reset_combat_action_event_runtime(*action);
+
+  int swing_cues = 0;
+  int impact_cues = 0;
+  for (int tick = 0; tick < 40; ++tick) {
+    Game::Systems::Combat::process_authored_combat_action(
+        &world, *commander, combat_state, 0.02F);
+    auto const* presentation =
+        commander
+            ->get_component<Engine::Core::CommanderSignaturePresentationComponent>();
+    if (presentation == nullptr) {
+      continue;
+    }
+    for (auto const& entry : presentation->entries) {
+      if (entry.age > 0.0F) {
+        continue;
+      }
+      if (entry.cue == Engine::Core::CommanderStrikeCue::Swing) {
+        ++swing_cues;
+        EXPECT_NEAR(std::hypot(entry.dir_x, entry.dir_z), 1.0F, 0.01F);
+      } else {
+        ++impact_cues;
+      }
+    }
+  }
+
+  EXPECT_GE(swing_cues, 1)
+      << "a played commander's swing left no arc to draw, so his blows land on a "
+         "battlefield with nothing on it";
+  EXPECT_GE(impact_cues, 1) << "a played commander's hit left no impact burst";
 }
 
 TEST_F(CommanderDuelTest, CommanderPressesIntoAFormationInsteadOfBeingShovedOut) {
@@ -624,7 +695,7 @@ TEST_F(CommanderDuelTest, CommanderChainLinksAreNotCutOffMidSwing) {
                           QVector3D(-4.0F, 0.0F, 0.0F),
                           Game::Systems::NationID::Carthage);
   auto* rival = spawn(world,
-                      Game::Units::SpawnType::Knight,
+                      Game::Units::SpawnType::Swordsman,
                       2,
                       QVector3D(0.0F, 0.0F, 0.0F),
                       Game::Systems::NationID::RomanRepublic);
@@ -680,7 +751,7 @@ TEST_F(CommanderDuelTest, CommanderArrowsCarryTheCommanderStyle) {
                           QVector3D(-7.0F, 0.0F, 0.0F),
                           Game::Systems::NationID::RomanRepublic);
   auto* rival = spawn(world,
-                      Game::Units::SpawnType::Knight,
+                      Game::Units::SpawnType::Swordsman,
                       2,
                       QVector3D(0.0F, 0.0F, 0.0F),
                       Game::Systems::NationID::RomanRepublic);

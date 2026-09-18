@@ -166,10 +166,13 @@ auto parse_line_rule(const QJsonObject& obj,
 auto parse_intent_template(ArmyFormationIntent intent,
                            const QJsonObject& obj,
                            FormationContentReport& report,
-                           const QString& source) -> DoctrineIntentTemplate {
-  DoctrineIntentTemplate tmpl;
+                           const QString& source,
+                           DoctrineIntentTemplate tmpl) -> DoctrineIntentTemplate {
   tmpl.intent = intent;
   tmpl.frontage_scale = read_float(obj, "frontage_scale", tmpl.frontage_scale);
+  tmpl.unit_files_aspect = read_float(obj, "unit_files_aspect", tmpl.unit_files_aspect);
+  tmpl.max_depth = read_float(obj, "max_depth", tmpl.max_depth);
+  tmpl.max_frontage = read_float(obj, "max_frontage", tmpl.max_frontage);
   tmpl.depth_scale = read_float(obj, "depth_scale", tmpl.depth_scale);
   tmpl.spacing_scale = read_float(obj, "spacing_scale", tmpl.spacing_scale);
   tmpl.reserve_rows = read_int(obj, "reserve_rows", tmpl.reserve_rows);
@@ -192,6 +195,9 @@ auto parse_intent_template(ArmyFormationIntent intent,
       obj.value(QStringLiteral("requirement_hint")).toString().toStdString();
 
   auto const lines = obj.value(QStringLiteral("lines")).toArray();
+  if (!lines.isEmpty()) {
+    tmpl.lines.clear();
+  }
   tmpl.lines.reserve(static_cast<std::size_t>(lines.size()));
   for (const auto entry : lines) {
     tmpl.lines.push_back(parse_line_rule(entry.toObject(), report, source));
@@ -265,8 +271,17 @@ auto FormationDataLoader::load_doctrine(const QJsonObject& root,
           {source, QStringLiteral("Unknown intent '%1'").arg(it.key()), true});
       continue;
     }
-    doctrine.intents[static_cast<int>(*parsed_intent)] =
-        parse_intent_template(*parsed_intent, it.value().toObject(), report, source);
+
+    auto const* built_in = DoctrineRegistry::instance().find(doctrine.id);
+    DoctrineIntentTemplate base;
+    if (built_in != nullptr) {
+      if (auto found = built_in->intents.find(static_cast<int>(*parsed_intent));
+          found != built_in->intents.end()) {
+        base = found->second;
+      }
+    }
+    doctrine.intents[static_cast<int>(*parsed_intent)] = parse_intent_template(
+        *parsed_intent, it.value().toObject(), report, source, std::move(base));
   }
 
   DoctrineRegistry::instance().register_doctrine(std::move(doctrine));

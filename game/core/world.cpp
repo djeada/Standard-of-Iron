@@ -799,7 +799,7 @@ auto publish_creature_presentation_entity(Entity* entity, World* world)
       unit_layout->is_formed();
   next.guard_requested =
       (next.fpv_controlled && commander_guard != nullptr && commander_guard->active) ||
-      (unit != nullptr && unit->spawn_type == Game::Units::SpawnType::Knight &&
+      (unit != nullptr && unit->spawn_type == Game::Units::SpawnType::Swordsman &&
        next.formation_guard_active) ||
       (brace != nullptr && (brace->requested || brace->active));
   next.activity = Game::Systems::classify_unit_activity(*entity);

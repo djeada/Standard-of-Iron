@@ -80,7 +80,7 @@ auto shared_guard_shield_pose(
   return Animation::resolve_humanoid_guard_shield_pose({
       .has_left_hand_shield = visual_spec.capabilities.contains(
           Render::Humanoid::HumanoidCapability::LeftHandShield),
-      .infantry_formation_unit = unit->spawn_type == Game::Units::SpawnType::Knight,
+      .infantry_formation_unit = unit->spawn_type == Game::Units::SpawnType::Swordsman,
       .formation_active = formation_active,
       .guard_mode_active = guard_mode_active,
       .defensive_layout_locked = defensive_layout_locked,
@@ -151,7 +151,7 @@ auto HumanoidRendererBase::resolve_formation(
     }
   } else if (owner.uses_mounted_pipeline()) {
     params.spacing = resolve_formation_spacing(*ctx.world_view.troop_config(),
-                                               Game::Units::SpawnType::MountedKnight,
+                                               Game::Units::SpawnType::MountedSwordsman,
                                                0.0F,
                                                owner.get_mount_scale());
   }

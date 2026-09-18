@@ -180,8 +180,8 @@ TEST_F(AutoEngagementResponseTest, SwordsmenGoToTheAidOfAnAllyBittenByWolves) {
   ASSERT_NE(wolf, 0U);
 
   const std::vector<EntityID> escort{
-      spawn(Game::Units::SpawnType::Knight, k_player, 4.0F, 0.0F),
-      spawn(Game::Units::SpawnType::Knight, k_player, 4.0F, 3.0F),
+      spawn(Game::Units::SpawnType::Swordsman, k_player, 4.0F, 0.0F),
+      spawn(Game::Units::SpawnType::Swordsman, k_player, 4.0F, 3.0F),
   };
   for (auto const swordsman : escort) {
     ASSERT_NE(swordsman, 0U);
@@ -212,7 +212,7 @@ TEST_F(AutoEngagementResponseTest, SwordsmenGoToTheAidOfAnAllyBittenByWolves) {
 
 TEST_F(AutoEngagementResponseTest, InfantryUnderArrowFireDoesNotStandAndTakeIt) {
   const EntityID legionary =
-      spawn(Game::Units::SpawnType::Knight, k_player, 0.0F, 0.0F);
+      spawn(Game::Units::SpawnType::Swordsman, k_player, 0.0F, 0.0F);
   const EntityID archer = spawn(Game::Units::SpawnType::Archer, k_enemy, 9.0F, 0.0F);
   ASSERT_NE(legionary, 0U);
   ASSERT_NE(archer, 0U);
@@ -261,7 +261,7 @@ TEST_F(AutoEngagementResponseTest, ArchersOpenFireOnlyOnceAThreatIsInWeaponRange
   float const weapon_range = attack->range;
 
   const EntityID distant =
-      spawn(Game::Units::SpawnType::Knight, k_enemy, weapon_range + 12.0F, 0.0F);
+      spawn(Game::Units::SpawnType::Swordsman, k_enemy, weapon_range + 12.0F, 0.0F);
   ASSERT_NE(distant, 0U);
 
   auto* distant_entity = entity(distant);
@@ -284,9 +284,10 @@ TEST_F(AutoEngagementResponseTest, ArchersOpenFireOnlyOnceAThreatIsInWeaponRange
 
 TEST_F(AutoEngagementResponseTest, APlayerMoveOrderOverridesAnAutomaticTarget) {
   const EntityID legionary =
-      spawn(Game::Units::SpawnType::Knight, k_player, 0.0F, 0.0F);
+      spawn(Game::Units::SpawnType::Swordsman, k_player, 0.0F, 0.0F);
 
-  const EntityID raider = spawn(Game::Units::SpawnType::Knight, k_enemy, 12.0F, 0.0F);
+  const EntityID raider =
+      spawn(Game::Units::SpawnType::Swordsman, k_enemy, 12.0F, 0.0F);
   ASSERT_NE(legionary, 0U);
   ASSERT_NE(raider, 0U);
 
@@ -318,11 +319,11 @@ TEST_F(AutoEngagementResponseTest, APlayerMoveOrderOverridesAnAutomaticTarget) {
 
 TEST_F(AutoEngagementResponseTest, AnAutomaticTargetIsReplacedByAPlayerAttackOrder) {
   const EntityID legionary =
-      spawn(Game::Units::SpawnType::Knight, k_player, 0.0F, 0.0F);
+      spawn(Game::Units::SpawnType::Swordsman, k_player, 0.0F, 0.0F);
   const EntityID near_raider =
-      spawn(Game::Units::SpawnType::Knight, k_enemy, 10.0F, 0.0F);
+      spawn(Game::Units::SpawnType::Swordsman, k_enemy, 10.0F, 0.0F);
   const EntityID chosen_raider =
-      spawn(Game::Units::SpawnType::Knight, k_enemy, 0.0F, 13.0F);
+      spawn(Game::Units::SpawnType::Swordsman, k_enemy, 0.0F, 13.0F);
   ASSERT_NE(legionary, 0U);
   ASSERT_NE(near_raider, 0U);
   ASSERT_NE(chosen_raider, 0U);
@@ -346,8 +347,8 @@ TEST_F(AutoEngagementResponseTest, AnAutomaticTargetIsReplacedByAPlayerAttackOrd
 
 TEST_F(AutoEngagementResponseTest, TheTraceNamesTheCandidateTheTargetAndTheReason) {
   const EntityID legionary =
-      spawn(Game::Units::SpawnType::Knight, k_player, 0.0F, 0.0F);
-  const EntityID raider = spawn(Game::Units::SpawnType::Knight, k_enemy, 5.0F, 0.0F);
+      spawn(Game::Units::SpawnType::Swordsman, k_player, 0.0F, 0.0F);
+  const EntityID raider = spawn(Game::Units::SpawnType::Swordsman, k_enemy, 5.0F, 0.0F);
   ASSERT_NE(legionary, 0U);
   ASSERT_NE(raider, 0U);
 
@@ -374,7 +375,8 @@ TEST_F(AutoEngagementResponseTest, AnAiUnitThatPicksItsOwnFightReadsAsAutomatic)
 
   const EntityID defender =
       spawn(Game::Units::SpawnType::Spearman, k_enemy, 0.0F, 0.0F);
-  const EntityID raider = spawn(Game::Units::SpawnType::Knight, k_player, 6.0F, 0.0F);
+  const EntityID raider =
+      spawn(Game::Units::SpawnType::Swordsman, k_player, 6.0F, 0.0F);
   ASSERT_NE(defender, 0U);
   ASSERT_NE(raider, 0U);
 
@@ -402,7 +404,7 @@ TEST_F(AutoEngagementResponseTest, AnAiUnitThatPicksItsOwnFightReadsAsAutomatic)
 
 TEST_F(AutoEngagementResponseTest, ANoncombatantNeverPicksItsOwnFight) {
   const EntityID builder = spawn(Game::Units::SpawnType::Builder, k_player, 0.0F, 0.0F);
-  const EntityID raider = spawn(Game::Units::SpawnType::Knight, k_enemy, 4.0F, 0.0F);
+  const EntityID raider = spawn(Game::Units::SpawnType::Swordsman, k_enemy, 4.0F, 0.0F);
   ASSERT_NE(builder, 0U);
   ASSERT_NE(raider, 0U);
 
@@ -426,8 +428,9 @@ TEST_F(AutoEngagementResponseTest, ANoncombatantNeverPicksItsOwnFight) {
 } // namespace
 
 TEST_F(AutoEngagementResponseTest, AUnitThatWalksIntoAnEnemyBlockIsLockedOnContact) {
-  const EntityID walker = spawn(Game::Units::SpawnType::Knight, k_player, 0.0F, 0.0F);
-  const EntityID enemy = spawn(Game::Units::SpawnType::Knight, k_enemy, 6.0F, 0.0F);
+  const EntityID walker =
+      spawn(Game::Units::SpawnType::Swordsman, k_player, 0.0F, 0.0F);
+  const EntityID enemy = spawn(Game::Units::SpawnType::Swordsman, k_enemy, 6.0F, 0.0F);
   ASSERT_NE(walker, 0U);
   ASSERT_NE(enemy, 0U);
 

@@ -61,7 +61,7 @@ protected:
     unit->max_health = 100;
     unit->owner_id = 1;
     unit->speed = 3.0F;
-    unit->spawn_type = Game::Units::SpawnType::Knight;
+    unit->spawn_type = Game::Units::SpawnType::Swordsman;
     return entity;
   }
 
@@ -91,7 +91,7 @@ protected:
     unit->max_health = 100;
     unit->owner_id = 2;
     unit->speed = 3.0F;
-    unit->spawn_type = Game::Units::SpawnType::Knight;
+    unit->spawn_type = Game::Units::SpawnType::Swordsman;
     return entity;
   }
 };
@@ -786,7 +786,7 @@ TEST_F(CommanderControlControllerTest,
   auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(commander_data, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   commander_data->fpv_controlled = true;
 
   auto* attack = commander->add_component<Engine::Core::AttackComponent>();
@@ -1038,7 +1038,7 @@ TEST_F(CommanderControlControllerTest, MountedVanguardInputRequestsAuthoredCharg
   ASSERT_NE(commander, nullptr);
   auto* unit = commander->get_component<Engine::Core::UnitComponent>();
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->spawn_type = Game::Units::SpawnType::MountedSwordsman;
   auto* transform = commander->get_component<Engine::Core::TransformComponent>();
   ASSERT_NE(transform, nullptr);
 

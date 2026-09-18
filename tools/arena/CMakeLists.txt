@@ -39,6 +39,28 @@ target_link_libraries(
     PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui engine_core render_gl game_sim
 )
 
+# The game's RPG HUD (ui/qml/RpgFpvOverlay.qml) rendered offscreen over promo
+# frames. Its own library so arena_tests can paint it onto an image and look at
+# the pixels a recording would carry.
+add_library(
+    arena_rpg_hud
+    STATIC
+    promo_rpg_hud.cpp
+    promo_rpg_hud.qrc
+    ${CMAKE_SOURCE_DIR}/design_resources.qrc
+)
+target_include_directories(arena_rpg_hud PUBLIC "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(
+    arena_rpg_hud
+    PUBLIC
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Qml
+        Qt${QT_VERSION_MAJOR}::Quick
+        ui_shell
+        app_core
+)
+
 # The floating combat and economy numbers. They live in their own library for
 # the same reason the panels do: arena_tests asserts on the ticks the arena
 # actually paints, not on a second compiled copy of them.
@@ -127,6 +149,7 @@ target_link_libraries(
         arena_panels
         arena_feedback
         arena_casting_overlay
+        arena_rpg_hud
 )
 
 set_target_properties(

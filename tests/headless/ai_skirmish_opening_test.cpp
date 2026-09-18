@@ -392,7 +392,7 @@ TEST_F(AiSkirmishOpeningTest, AGarrisonNationCampedNextDoorIsNotAStandingThreat)
                  Game::Systems::NationID::IronSepulcher,
                  [this, &session](int owner, QVector3D position) {
                    return spawn(
-                       session, Game::Units::SpawnType::Knight, owner, position);
+                       session, Game::Units::SpawnType::Swordsman, owner, position);
                  });
 
   run_for(session, 60.0);
@@ -417,7 +417,7 @@ TEST_F(AiSkirmishOpeningTest, AMarchingNationCampedNextDoorStillReadsAsAThreat) 
                  Game::Systems::NationID::Carthage,
                  [this, &session](int owner, QVector3D position) {
                    return spawn(
-                       session, Game::Units::SpawnType::Knight, owner, position);
+                       session, Game::Units::SpawnType::Swordsman, owner, position);
                  });
 
   run_for(session, 60.0);
@@ -425,7 +425,7 @@ TEST_F(AiSkirmishOpeningTest, AMarchingNationCampedNextDoorStillReadsAsAThreat) 
   const auto* plan = ai->plan_for(k_left);
   ASSERT_NE(plan, nullptr);
   EXPECT_GT(plan->nearby_threat_count, 0)
-      << "three enemy knights twelve metres from the barracks went unnoticed";
+      << "three enemy swordsmans twelve metres from the barracks went unnoticed";
 }
 
 TEST_F(AiSkirmishOpeningTest, AHarvestOrderSendsTheWorkerOntoTheProp) {

@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <gtest/gtest.h>
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
@@ -671,12 +672,12 @@ TEST_F(MovementPaceTest, AnArmyReorderedThroughATownHoldsPace) {
   int const rows[] = {20, 27, 34, 41};
   for (int row : rows) {
     add(Game::Units::SpawnType::Spearman, 6, row, "spear");
-    add(Game::Units::SpawnType::Knight, 12, row, "sword");
+    add(Game::Units::SpawnType::Swordsman, 12, row, "sword");
   }
   add(Game::Units::SpawnType::Archer, 18, 24, "archer");
   add(Game::Units::SpawnType::Archer, 18, 37, "archer");
-  add(Game::Units::SpawnType::MountedKnight, 2, 24, "knight");
-  add(Game::Units::SpawnType::MountedKnight, 2, 37, "knight");
+  add(Game::Units::SpawnType::MountedSwordsman, 2, 24, "swordsman");
+  add(Game::Units::SpawnType::MountedSwordsman, 2, 37, "swordsman");
   run_for(1.0);
   track(army, labels);
 
@@ -715,18 +716,34 @@ TEST_F(MovementPaceTest, AnArmyReorderedThroughATownHoldsPace) {
   for (auto const& record : m_records) {
     expect_clean(record, 12, 90, 0.20F, 48);
   }
+
+  float front_x = -std::numeric_limits<float>::max();
+  float centre_x = 0.0F;
   for (std::size_t index = 0; index < army.size(); ++index) {
     auto const* entity = m_session->world().get_entity(army[index]);
     auto const* movement = entity->get_component<Engine::Core::MovementComponent>();
     auto const* facts = entity->get_component<Engine::Core::MovementFactsComponent>();
-    EXPECT_GT(position_of(army[index]).x(), world_of(50, 30).x())
-        << labels[index] << " position=(" << position_of(army[index]).x() << ","
-        << position_of(army[index]).z() << ") goal=(" << movement->get_goal_x() << ","
-        << movement->get_goal_y()
-        << ") remaining=" << facts->progress.remaining_arclength
-        << " state=" << Engine::Core::movement_state_name(facts->progress.state)
-        << " budget=" << arrival_budget;
+    auto const position = position_of(army[index]);
+    auto const detail = [&] {
+      return labels[index] + " position=(" + std::to_string(position.x()) + "," +
+             std::to_string(position.z()) + ") goal=(" +
+             std::to_string(movement->get_goal_x()) + "," +
+             std::to_string(movement->get_goal_y()) +
+             ") remaining=" + std::to_string(facts->progress.remaining_arclength) +
+             " state=" + Engine::Core::movement_state_name(facts->progress.state) +
+             " budget=" + std::to_string(arrival_budget);
+    };
+    EXPECT_LT(std::hypot(position.x() - movement->get_goal_x(),
+                         position.z() - movement->get_goal_y()),
+              2.0F)
+        << detail();
+    EXPECT_GT(position.x(), world_of(38, 30).x()) << detail();
+    front_x = std::max(front_x, position.x());
+    centre_x += position.x();
   }
+  centre_x /= static_cast<float>(army.size());
+  EXPECT_GT(front_x, world_of(50, 30).x()) << "the front rank reached the target";
+  EXPECT_GT(centre_x, world_of(44, 30).x()) << "the block, not just a wing, arrived";
 }
 
 TEST_F(MovementPaceTest, ABlockKeepsPacePastAFriendHoldingGroundInAStreet) {
@@ -736,7 +753,7 @@ TEST_F(MovementPaceTest, ABlockKeepsPacePastAFriendHoldingGroundInAStreet) {
       spawn(Game::Units::SpawnType::Spearman, world_of(8, 32), 90.0F);
   ASSERT_NE(block, 0U);
   EntityID const sentry =
-      spawn(Game::Units::SpawnType::Knight, world_of(32, 32), 90.0F);
+      spawn(Game::Units::SpawnType::Swordsman, world_of(32, 32), 90.0F);
   ASSERT_NE(sentry, 0U);
   m_session->world()
       .get_entity(sentry)
@@ -764,7 +781,7 @@ TEST_F(MovementPaceTest, ABlockKeepsPaceThroughAOneCellGapAFriendIsStandingIn) {
       spawn(Game::Units::SpawnType::Spearman, world_of(12, 32), 90.0F);
   ASSERT_NE(block, 0U);
   EntityID const sentry =
-      spawn(Game::Units::SpawnType::Knight, world_of(30, 32), 90.0F);
+      spawn(Game::Units::SpawnType::Swordsman, world_of(30, 32), 90.0F);
   ASSERT_NE(sentry, 0U);
   m_session->world()
       .get_entity(sentry)
@@ -787,7 +804,7 @@ TEST_F(MovementPaceTest, ABlockKeepsPaceThroughAnIdleCrowd) {
   ASSERT_NE(block, 0U);
   for (int x = 30; x <= 34; x += 2) {
     for (int z = 28; z <= 36; z += 2) {
-      ASSERT_NE(spawn(Game::Units::SpawnType::Knight, world_of(x, z), 0.0F), 0U);
+      ASSERT_NE(spawn(Game::Units::SpawnType::Swordsman, world_of(x, z), 0.0F), 0U);
     }
   }
   run_for(1.0);
@@ -828,7 +845,7 @@ TEST_F(MovementPaceTest, AColumnIsNotHeldUpByAFriendStoppedAtTheFront) {
   open_field();
   street(20, 44, 32, 3, 4);
   EntityID const sentry =
-      spawn(Game::Units::SpawnType::Knight, world_of(36, 32), 90.0F);
+      spawn(Game::Units::SpawnType::Swordsman, world_of(36, 32), 90.0F);
   ASSERT_NE(sentry, 0U);
   m_session->world()
       .get_entity(sentry)

@@ -9,7 +9,7 @@
 #include "animation/bpat/bpat_registry.h"
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
-#include "mounted_knight_pose.h"
+#include "mounted_swordsman_pose.h"
 #include "render/creature/anatomy_bake.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"

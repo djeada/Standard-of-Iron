@@ -8,16 +8,17 @@ namespace Render::GL {
 
 static constexpr std::size_t MAX_EXTRAS_CACHE_SIZE = 10000;
 
-static constexpr float MOUNTED_KNIGHT_ATTACK_CYCLE_TIME = 0.70F;
-static constexpr float MOUNTED_KNIGHT_INV_ATTACK_CYCLE_TIME =
-    1.0F / MOUNTED_KNIGHT_ATTACK_CYCLE_TIME;
+static constexpr float MOUNTED_SWORDSMAN_ATTACK_CYCLE_TIME = 0.70F;
+static constexpr float MOUNTED_SWORDSMAN_INV_ATTACK_CYCLE_TIME =
+    1.0F / MOUNTED_SWORDSMAN_ATTACK_CYCLE_TIME;
 
 static constexpr float SPEARMAN_ATTACK_CYCLE_TIME = 0.80F;
 static constexpr float SPEARMAN_INV_ATTACK_CYCLE_TIME =
     1.0F / SPEARMAN_ATTACK_CYCLE_TIME;
 
-static constexpr float KNIGHT_ATTACK_CYCLE_TIME = 0.60F;
-static constexpr float KNIGHT_INV_ATTACK_CYCLE_TIME = 1.0F / KNIGHT_ATTACK_CYCLE_TIME;
+static constexpr float SWORDSMAN_ATTACK_CYCLE_TIME = 0.60F;
+static constexpr float SWORDSMAN_INV_ATTACK_CYCLE_TIME =
+    1.0F / SWORDSMAN_ATTACK_CYCLE_TIME;
 
 static constexpr float ARCHER_ATTACK_CYCLE_TIME = 1.20F;
 static constexpr float ARCHER_INV_ATTACK_CYCLE_TIME = 1.0F / ARCHER_ATTACK_CYCLE_TIME;

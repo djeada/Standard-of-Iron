@@ -33,7 +33,7 @@ constexpr float k_catapult_stone_impact_speed = 8.0F;
 
 [[nodiscard]] auto
 is_rts_charge_attacker(const Engine::Core::UnitComponent& unit) -> bool {
-  return (unit.spawn_type == Game::Units::SpawnType::MountedKnight ||
+  return (unit.spawn_type == Game::Units::SpawnType::MountedSwordsman ||
           unit.spawn_type == Game::Units::SpawnType::HorseSpearman);
 }
 

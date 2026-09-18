@@ -4,7 +4,7 @@
 
 namespace Render::GL::Carthage {
 
-using KnightStyleConfig = ::Render::GL::SwordsmanStyleConfig;
+using SwordsmanStyleConfig = ::Render::GL::SwordsmanStyleConfig;
 
 void register_carthage_swordsman_style();
 

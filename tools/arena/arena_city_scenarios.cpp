@@ -14,6 +14,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/map_loader.h"
 #include "game/units/spawn_type.h"
+#include "game/units/troop_type.h"
 #include "utils/resource_utils.h"
 
 namespace Arena::Scenarios {
@@ -200,7 +201,12 @@ void finish_bucket(const Bucket& bucket, ArenaScenarioDefinition& out) {
   out.groups.push_back(std::move(group));
 }
 
-void read_city(const Game::Map::MapDefinition& map, ArenaScenarioDefinition& out) {
+void read_city(const Game::Map::MapDefinition& map,
+               ArenaScenarioDefinition& out,
+               const QRectF& clear = {}) {
+  const auto cleared = [&](float x, float z) {
+    return !clear.isEmpty() && clear.contains(QPointF(x, z));
+  };
   out.roads = map.roads;
   out.rivers = map.rivers;
   out.lakes = map.lakes;
@@ -226,6 +232,10 @@ void read_city(const Game::Map::MapDefinition& map, ArenaScenarioDefinition& out
     const QString name = entry.group.isEmpty() ? entry.id : entry.group;
     if (const auto* line =
             std::get_if<Game::Map::LineStructureGeometry>(&entry.geometry)) {
+      if (cleared(line->start.x(), line->start.z()) &&
+          cleared(line->end.x(), line->end.z())) {
+        continue;
+      }
 
       const QVector3D span = line->end - line->start;
       const int count = static_cast<int>(std::lround(
@@ -246,7 +256,7 @@ void read_city(const Game::Map::MapDefinition& map, ArenaScenarioDefinition& out
       continue;
     }
     const auto* point = std::get_if<Game::Map::PointStructureGeometry>(&entry.geometry);
-    if (point == nullptr) {
+    if (point == nullptr || cleared(point->position.x(), point->position.z())) {
       continue;
     }
     Bucket& bucket = bucket_for(name);
@@ -256,7 +266,7 @@ void read_city(const Game::Map::MapDefinition& map, ArenaScenarioDefinition& out
   }
 
   for (const auto& spawn : map.spawns) {
-    if (spawn.player_id != 1) {
+    if (spawn.player_id != 1 || cleared(spawn.x, spawn.z)) {
 
       continue;
     }
@@ -290,6 +300,9 @@ void read_city(const Game::Map::MapDefinition& map, ArenaScenarioDefinition& out
   }
 
   for (const auto& prop : map.world_props) {
+    if (cleared(prop.x, prop.z)) {
+      continue;
+    }
     ArenaScenarioResourcePatch patch;
     patch.prop_type =
         QLatin1String(Game::Map::world_prop_type_to_string(prop.type)).toString();
@@ -506,6 +519,31 @@ auto build_city_definitions() -> std::vector<ArenaScenarioDefinition> {
   std::vector<ArenaScenarioDefinition> result;
   result.push_back(imperial_capital());
   return result;
+}
+
+void dress_aurelia_magna(ArenaScenarioDefinition& scenario, const QRectF& clear) {
+  scenario.arena_floor_half_extent = k_content_half;
+  scenario.terrain_grid_extent = k_grid_extent;
+  scenario.ground_type = QStringLiteral("soil_fertile");
+  scenario.terrain_seed_override = 20260819;
+  scenario.terrain_height_scale_override = 42.0F;
+  scenario.suppress_boundary_mountains = true;
+
+  Game::Map::MapDefinition map;
+  QString error;
+  if (!Game::Map::MapLoader::load_from_json_file(
+          Utils::Resources::resolve_resource_path(QString::fromLatin1(k_city_map)),
+          map,
+          &error)) {
+    qWarning() << "Arena: cannot read the city map" << k_city_map << ":" << error;
+    return;
+  }
+  read_city(map, scenario, clear);
+
+  std::erase_if(scenario.groups, [](const ArenaScenarioGroup& group) {
+    return !group.spawn_type.has_value() &&
+           Game::Units::is_commander_troop(group.troop_type);
+  });
 }
 
 } // namespace Arena::Scenarios

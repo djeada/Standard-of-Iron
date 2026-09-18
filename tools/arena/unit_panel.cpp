@@ -511,7 +511,7 @@ void UnitPanel::populate_unit_options(const QString& nation_id,
     m_unit_box->addItem(label, troop_id);
 
     if (!cavalry_option.has_value() &&
-        (troop.unit_type == Game::Units::TroopType::MountedKnight ||
+        (troop.unit_type == Game::Units::TroopType::MountedSwordsman ||
          troop.unit_type == Game::Units::TroopType::HorseArcher ||
          troop.unit_type == Game::Units::TroopType::HorseSpearman)) {
       cavalry_option = troop.unit_type;

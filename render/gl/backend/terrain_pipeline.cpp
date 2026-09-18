@@ -30,7 +30,6 @@ auto TerrainPipeline::initialize() -> bool {
   m_grass_shader = m_shader_cache->get("grass_instanced");
   m_ground_shader = m_shader_cache->get("ground_plane");
   m_terrain_shader = m_shader_cache->get("terrain_chunk");
-  m_terrain_baked_shader = m_shader_cache->get("terrain_chunk_baked");
 
   if (m_grass_shader == nullptr) {
     qWarning() << "TerrainPipeline: Failed to load grass_instanced shader";
@@ -54,7 +53,6 @@ void TerrainPipeline::shutdown() {
   m_grass_shader = nullptr;
   m_ground_shader = nullptr;
   m_terrain_shader = nullptr;
-  m_terrain_baked_shader = nullptr;
 }
 
 void TerrainPipeline::cache_uniforms() {
@@ -144,87 +142,118 @@ void TerrainPipeline::cache_ground_uniforms() {
 }
 
 void TerrainPipeline::cache_terrain_uniforms() {
-  cache_terrain_uniforms(m_terrain_shader, m_terrain_uniforms, false);
-  cache_terrain_uniforms(m_terrain_baked_shader, m_terrain_baked_uniforms, true);
-}
-
-void TerrainPipeline::cache_terrain_uniforms(GL::Shader* shader,
-                                             TerrainUniforms& uniforms,
-                                             bool all_optional) {
-  if (shader == nullptr) {
+  if (m_terrain_shader == nullptr) {
     return;
   }
-  auto required = [shader, all_optional](const char* name) {
-    return all_optional ? shader->optional_uniform_handle(name)
-                        : shader->uniform_handle(name);
-  };
 
-  uniforms.mvp = required("u_mvp");
-  uniforms.model = required("u_model");
-  uniforms.ground_type = shader->optional_uniform_handle("u_ground_type");
-  uniforms.terrain_type = shader->optional_uniform_handle("u_terrain_type");
-  uniforms.grass_primary = required("u_grass_primary");
-  uniforms.grass_secondary = required("u_grass_secondary");
-  uniforms.grass_dry = required("u_grass_dry");
-  uniforms.soil_color = required("u_soil_color");
-  uniforms.rock_low = required("u_rock_low");
-  uniforms.rock_high = required("u_rock_high");
-  uniforms.tint = required("u_tint");
-  uniforms.noise_offset = required("u_noise_offset");
-  uniforms.tile_size = required("u_tile_size");
-  uniforms.macro_noise_scale = required("u_macro_noise_scale");
-  uniforms.detail_noise_scale = shader->optional_uniform_handle("u_detail_noise_scale");
-  uniforms.slope_rock_threshold = required("u_slope_rock_threshold");
-  uniforms.slope_rock_sharpness =
-      shader->optional_uniform_handle("u_slope_rock_sharpness");
-  uniforms.soil_blend_height = shader->optional_uniform_handle("u_soil_blend_height");
-  uniforms.soil_blend_sharpness =
-      shader->optional_uniform_handle("u_soil_blend_sharpness");
-  uniforms.height_noise_strength = required("u_height_noise_strength");
-  uniforms.height_noise_frequency = required("u_height_noise_frequency");
-  uniforms.ambient_boost = required("u_ambient_boost");
-  uniforms.rock_detail_strength =
-      shader->optional_uniform_handle("u_rock_detail_strength");
-  uniforms.light_dir = shader->optional_uniform_handle("u_light_dir");
+  m_terrain_uniforms.mvp = m_terrain_shader->uniform_handle("u_mvp");
+  m_terrain_uniforms.model = m_terrain_shader->uniform_handle("u_model");
+  m_terrain_uniforms.ground_type =
+      m_terrain_shader->optional_uniform_handle("u_ground_type");
+  m_terrain_uniforms.terrain_type =
+      m_terrain_shader->optional_uniform_handle("u_terrain_type");
+  m_terrain_uniforms.grass_primary =
+      m_terrain_shader->uniform_handle("u_grass_primary");
+  m_terrain_uniforms.grass_secondary =
+      m_terrain_shader->uniform_handle("u_grass_secondary");
+  m_terrain_uniforms.grass_dry = m_terrain_shader->uniform_handle("u_grass_dry");
+  m_terrain_uniforms.soil_color = m_terrain_shader->uniform_handle("u_soil_color");
+  m_terrain_uniforms.rock_low = m_terrain_shader->uniform_handle("u_rock_low");
+  m_terrain_uniforms.rock_high = m_terrain_shader->uniform_handle("u_rock_high");
+  m_terrain_uniforms.tint = m_terrain_shader->uniform_handle("u_tint");
+  m_terrain_uniforms.noise_offset = m_terrain_shader->uniform_handle("u_noise_offset");
+  m_terrain_uniforms.tile_size = m_terrain_shader->uniform_handle("u_tile_size");
+  m_terrain_uniforms.macro_noise_scale =
+      m_terrain_shader->uniform_handle("u_macro_noise_scale");
+  m_terrain_uniforms.detail_noise_scale =
+      m_terrain_shader->optional_uniform_handle("u_detail_noise_scale");
+  m_terrain_uniforms.slope_rock_threshold =
+      m_terrain_shader->uniform_handle("u_slope_rock_threshold");
+  m_terrain_uniforms.slope_rock_sharpness =
+      m_terrain_shader->optional_uniform_handle("u_slope_rock_sharpness");
+  m_terrain_uniforms.soil_blend_height =
+      m_terrain_shader->optional_uniform_handle("u_soil_blend_height");
+  m_terrain_uniforms.soil_blend_sharpness =
+      m_terrain_shader->optional_uniform_handle("u_soil_blend_sharpness");
+  m_terrain_uniforms.height_noise_strength =
+      m_terrain_shader->uniform_handle("u_height_noise_strength");
+  m_terrain_uniforms.height_noise_frequency =
+      m_terrain_shader->uniform_handle("u_height_noise_frequency");
+  m_terrain_uniforms.ambient_boost =
+      m_terrain_shader->uniform_handle("u_ambient_boost");
+  m_terrain_uniforms.rock_detail_strength =
+      m_terrain_shader->optional_uniform_handle("u_rock_detail_strength");
+  m_terrain_uniforms.light_dir =
+      m_terrain_shader->optional_uniform_handle("u_light_dir");
 
-  uniforms.snow_coverage = required("u_snow_coverage");
-  uniforms.moisture_level = required("u_moisture_level");
-  uniforms.crack_intensity = required("u_crack_intensity");
-  uniforms.rock_exposure = required("u_rock_exposure");
-  uniforms.grass_saturation = required("u_grass_saturation");
-  uniforms.soil_roughness = shader->optional_uniform_handle("u_soil_roughness");
-  uniforms.curvature_response = required("u_curvature_response");
-  uniforms.ridge_response = required("u_ridge_response");
-  uniforms.gully_response = required("u_gully_response");
-  uniforms.snow_color = required("u_snow_color");
-  uniforms.soil_foot_height = shader->optional_uniform_handle("u_soil_foot_height");
-  uniforms.screen_toe_mul = shader->optional_uniform_handle("u_screen_toe_mul");
-  uniforms.screen_toe_clamp = shader->optional_uniform_handle("u_screen_toe_clamp");
-  uniforms.has_height_texture = shader->optional_uniform_handle("u_has_height_tex");
-  uniforms.height_texture = shader->optional_uniform_handle("u_height_tex");
-  uniforms.has_field_texture = shader->optional_uniform_handle("u_has_field_tex");
-  uniforms.has_noise_atlas = shader->optional_uniform_handle("u_has_noise_atlas");
-  uniforms.noise_atlas = shader->optional_uniform_handle("u_noise_atlas");
-  uniforms.noise_atlas_detail = shader->optional_uniform_handle("u_noise_atlas_detail");
-  uniforms.local_light_mask = shader->optional_uniform_handle("u_local_light_mask");
-  uniforms.has_local_light_mask =
-      shader->optional_uniform_handle("u_has_local_light_mask");
-  uniforms.has_microdetail = shader->optional_uniform_handle("u_has_microdetail");
-  uniforms.microdetail = shader->optional_uniform_handle("u_microdetail");
-  uniforms.noise_atlas_world_size =
-      shader->optional_uniform_handle("u_noise_atlas_world_size");
-  uniforms.field_texture = shader->optional_uniform_handle("u_field_tex");
-  uniforms.height_texel_size = shader->optional_uniform_handle("u_height_texel_size");
-  uniforms.height_uv_scale = shader->optional_uniform_handle("u_height_uv_scale");
-  uniforms.height_uv_offset = shader->optional_uniform_handle("u_height_uv_offset");
-  uniforms.height_to_world = shader->optional_uniform_handle("u_height_tex_to_world");
-  uniforms.camera_position = required("u_camera_pos");
-  uniforms.has_visibility = shader->optional_uniform_handle("u_has_visibility");
-  uniforms.visibility_texture = shader->optional_uniform_handle("u_visibility_tex");
-  uniforms.visibility_size = shader->optional_uniform_handle("u_visibility_size");
-  uniforms.visibility_tile_size =
-      shader->optional_uniform_handle("u_visibility_tile_size");
-  uniforms.explored_alpha = shader->optional_uniform_handle("u_explored_alpha");
+  m_terrain_uniforms.snow_coverage =
+      m_terrain_shader->uniform_handle("u_snow_coverage");
+  m_terrain_uniforms.moisture_level =
+      m_terrain_shader->uniform_handle("u_moisture_level");
+  m_terrain_uniforms.crack_intensity =
+      m_terrain_shader->uniform_handle("u_crack_intensity");
+  m_terrain_uniforms.rock_exposure =
+      m_terrain_shader->uniform_handle("u_rock_exposure");
+  m_terrain_uniforms.grass_saturation =
+      m_terrain_shader->uniform_handle("u_grass_saturation");
+  m_terrain_uniforms.soil_roughness =
+      m_terrain_shader->optional_uniform_handle("u_soil_roughness");
+  m_terrain_uniforms.curvature_response =
+      m_terrain_shader->uniform_handle("u_curvature_response");
+  m_terrain_uniforms.ridge_response =
+      m_terrain_shader->uniform_handle("u_ridge_response");
+  m_terrain_uniforms.gully_response =
+      m_terrain_shader->uniform_handle("u_gully_response");
+  m_terrain_uniforms.snow_color = m_terrain_shader->uniform_handle("u_snow_color");
+  m_terrain_uniforms.soil_foot_height =
+      m_terrain_shader->optional_uniform_handle("u_soil_foot_height");
+  m_terrain_uniforms.screen_toe_mul =
+      m_terrain_shader->optional_uniform_handle("u_screen_toe_mul");
+  m_terrain_uniforms.screen_toe_clamp =
+      m_terrain_shader->optional_uniform_handle("u_screen_toe_clamp");
+  m_terrain_uniforms.has_height_texture =
+      m_terrain_shader->optional_uniform_handle("u_has_height_tex");
+  m_terrain_uniforms.height_texture =
+      m_terrain_shader->optional_uniform_handle("u_height_tex");
+  m_terrain_uniforms.has_field_texture =
+      m_terrain_shader->optional_uniform_handle("u_has_field_tex");
+  m_terrain_uniforms.has_noise_atlas =
+      m_terrain_shader->optional_uniform_handle("u_has_noise_atlas");
+  m_terrain_uniforms.noise_atlas =
+      m_terrain_shader->optional_uniform_handle("u_noise_atlas");
+  m_terrain_uniforms.noise_atlas_detail =
+      m_terrain_shader->optional_uniform_handle("u_noise_atlas_detail");
+  m_terrain_uniforms.local_light_mask =
+      m_terrain_shader->optional_uniform_handle("u_local_light_mask");
+  m_terrain_uniforms.has_local_light_mask =
+      m_terrain_shader->optional_uniform_handle("u_has_local_light_mask");
+  m_terrain_uniforms.has_microdetail =
+      m_terrain_shader->optional_uniform_handle("u_has_microdetail");
+  m_terrain_uniforms.microdetail =
+      m_terrain_shader->optional_uniform_handle("u_microdetail");
+  m_terrain_uniforms.noise_atlas_world_size =
+      m_terrain_shader->optional_uniform_handle("u_noise_atlas_world_size");
+  m_terrain_uniforms.field_texture =
+      m_terrain_shader->optional_uniform_handle("u_field_tex");
+  m_terrain_uniforms.height_texel_size =
+      m_terrain_shader->optional_uniform_handle("u_height_texel_size");
+  m_terrain_uniforms.height_uv_scale =
+      m_terrain_shader->optional_uniform_handle("u_height_uv_scale");
+  m_terrain_uniforms.height_uv_offset =
+      m_terrain_shader->optional_uniform_handle("u_height_uv_offset");
+  m_terrain_uniforms.height_to_world =
+      m_terrain_shader->optional_uniform_handle("u_height_tex_to_world");
+  m_terrain_uniforms.camera_position = m_terrain_shader->uniform_handle("u_camera_pos");
+  m_terrain_uniforms.has_visibility =
+      m_terrain_shader->optional_uniform_handle("u_has_visibility");
+  m_terrain_uniforms.visibility_texture =
+      m_terrain_shader->optional_uniform_handle("u_visibility_tex");
+  m_terrain_uniforms.visibility_size =
+      m_terrain_shader->optional_uniform_handle("u_visibility_size");
+  m_terrain_uniforms.visibility_tile_size =
+      m_terrain_shader->optional_uniform_handle("u_visibility_tile_size");
+  m_terrain_uniforms.explored_alpha =
+      m_terrain_shader->optional_uniform_handle("u_explored_alpha");
 }
 
 void TerrainPipeline::initialize_grass_geometry() {

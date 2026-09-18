@@ -2,6 +2,7 @@
 
 #include <QImage>
 #include <QObject>
+#include <QPointF>
 #include <QPointer>
 #include <QString>
 
@@ -31,6 +32,8 @@ struct FilmConfig {
   int height{1080};
 
   bool background{true};
+
+  bool draw_cursor{false};
 };
 
 class FilmRecorder : public QObject {
@@ -54,6 +57,8 @@ private:
   void finish(int exit_code);
   void enqueue_save(QString path, QImage frame);
   void drain_saves();
+  void advance_cursor(double dt);
+  void paint_cursor(QImage& frame) const;
 
   QPointer<GameEngine> m_engine;
   QPointer<QQuickWindow> m_window;
@@ -66,6 +71,16 @@ private:
   int m_warmup_frames{0};
   bool m_started{false};
   bool m_seen_loading{false};
+
+  QPointF m_cursor;
+  bool m_cursor_valid{false};
+  struct ClickRipple {
+    QPointF at;
+    double age{0.0};
+  };
+  std::vector<ClickRipple> m_ripples;
+  bool m_drag_active{false};
+  QPointF m_drag_origin;
 
   struct PendingSave {
     QString path;

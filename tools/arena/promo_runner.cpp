@@ -24,14 +24,18 @@
 #include <utility>
 #include <vector>
 
+#include "app/world/world_feedback_events.h"
 #include "arena_audio_recorder.h"
 #include "arena_casting.h"
 #include "arena_scenario.h"
 #include "arena_typography.h"
 #include "arena_viewport.h"
+#include "game/audio/audio_system.h"
+#include "game/core/event_manager.h"
 #include "game/session/session_context.h"
 #include "game/visuals/team_colors.h"
 #include "promo_casting_overlay.h"
+#include "promo_rpg_hud.h"
 #include "render/humanoid/runtime/runtime_stats.h"
 #include "video_encoder.h"
 
@@ -47,167 +51,6 @@ constexpr int k_pass_warmup_frames = 3;
 constexpr double k_card_dissolve_seconds = 0.55;
 constexpr int k_first_frame_min_peak = 8;
 constexpr int k_max_black_frames_skipped = 45;
-
-void paint_meter(QPainter& painter,
-                 const QRectF& rect,
-                 float ratio,
-                 const QColor& fill,
-                 const QString& label) {
-  painter.setPen(Qt::NoPen);
-  painter.setBrush(QColor(6, 6, 8, 190));
-  painter.drawRect(rect);
-  QRectF filled = rect.adjusted(2.0, 2.0, -2.0, -2.0);
-  filled.setWidth(filled.width() * std::clamp(ratio, 0.0F, 1.0F));
-  painter.setBrush(fill);
-  painter.drawRect(filled);
-  painter.setBrush(Qt::NoBrush);
-  painter.setPen(QPen(QColor(0, 0, 0, 170), 1.0));
-  painter.drawRect(rect);
-  if (!label.isEmpty()) {
-    painter.setPen(QColor(238, 232, 218, 225));
-    painter.drawText(
-        rect.adjusted(8.0, 0.0, -8.0, 0.0), Qt::AlignVCenter | Qt::AlignLeft, label);
-  }
-}
-
-void paint_rpg_bow_hud(QImage& frame, const ArenaViewport::RpgBowHudState& state) {
-  if (frame.isNull() || !state.valid) {
-    return;
-  }
-
-  const double width = frame.width();
-  const double height = frame.height();
-  const double ui = std::clamp(height / 1080.0, 0.6, 2.4);
-
-  QPainter painter(&frame);
-  painter.setRenderHint(QPainter::Antialiasing, true);
-  painter.setRenderHint(QPainter::TextAntialiasing, true);
-
-  painter.setFont(Arena::Typography::small_label(ui));
-
-  const QPointF centre(width * 0.5, height * 0.5);
-
-  if (state.bow_stance) {
-
-    const double half_fov =
-        std::clamp(static_cast<double>(state.fov_degrees), 20.0, 110.0) *
-        std::numbers::pi / 360.0;
-    const double focal = (height * 0.5) / std::tan(half_fov);
-    const double spread = std::min(
-        height * 0.14,
-        focal * std::tan(std::min(14.0, static_cast<double>(state.spread_degrees)) *
-                         std::numbers::pi / 180.0));
-
-    QColor reticle(243, 239, 230, 245);
-    if (state.strained) {
-      reticle = QColor(255, 122, 90, 245);
-    } else if (state.full_draw) {
-      reticle = QColor(255, 224, 122, 250);
-    } else if (state.target_in_reticle) {
-      reticle = QColor(120, 236, 255, 245);
-    }
-
-    const double gap = (7.0 * ui) + spread;
-    const double tick = 26.0 * ui;
-    const double thickness = std::max(2.0, 3.0 * ui);
-
-    painter.setBrush(Qt::NoBrush);
-    painter.setPen(
-        QPen(QColor(0, 0, 0, 130), thickness + (2.0 * ui), Qt::SolidLine, Qt::FlatCap));
-    for (int axis = 0; axis < 4; ++axis) {
-      const double dx = (axis == 2) ? -1.0 : ((axis == 3) ? 1.0 : 0.0);
-      const double dy = (axis == 0) ? -1.0 : ((axis == 1) ? 1.0 : 0.0);
-      painter.drawLine(
-          QPointF(centre.x() + (dx * gap), centre.y() + (dy * gap)),
-          QPointF(centre.x() + (dx * (gap + tick)), centre.y() + (dy * (gap + tick))));
-    }
-    painter.setPen(QPen(reticle, thickness, Qt::SolidLine, Qt::FlatCap));
-    for (int axis = 0; axis < 4; ++axis) {
-      const double dx = (axis == 2) ? -1.0 : ((axis == 3) ? 1.0 : 0.0);
-      const double dy = (axis == 0) ? -1.0 : ((axis == 1) ? 1.0 : 0.0);
-      painter.drawLine(
-          QPointF(centre.x() + (dx * gap), centre.y() + (dy * gap)),
-          QPointF(centre.x() + (dx * (gap + tick)), centre.y() + (dy * (gap + tick))));
-    }
-
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(reticle);
-    const double dot = std::max(2.0, 3.2 * ui);
-    painter.drawEllipse(centre, dot, dot);
-
-    if (state.drawing) {
-
-      const double radius = 46.0 * ui;
-      const QRectF ring(
-          centre.x() - radius, centre.y() - radius, radius * 2.0, radius * 2.0);
-      painter.setBrush(Qt::NoBrush);
-      painter.setPen(QPen(QColor(0, 0, 0, 120), std::max(3.0, 4.0 * ui)));
-      painter.drawArc(ring, 0, 360 * 16);
-      painter.setPen(
-          QPen(reticle, std::max(3.0, 4.0 * ui), Qt::SolidLine, Qt::RoundCap));
-      painter.drawArc(
-          ring,
-          90 * 16,
-          -static_cast<int>(std::round(state.draw_progress * 360.0 * 16.0)));
-    }
-
-    if (state.hit_confirm > 0.0F) {
-      const double radius = (16.0 + (26.0 * (1.0 - state.hit_confirm))) * ui;
-      painter.setBrush(Qt::NoBrush);
-      painter.setPen(QPen(
-          QColor(238, 74, 52, static_cast<int>(std::round(220.0 * state.hit_confirm))),
-          std::max(2.0, 3.0 * ui)));
-      painter.drawEllipse(centre, radius, radius);
-    }
-  }
-
-  const double bar_width = 300.0 * ui;
-  const double bar_height = 18.0 * ui;
-  const double margin = 42.0 * ui;
-  double bar_y = height - margin - (bar_height * 2.0) - (7.0 * ui);
-  paint_meter(painter,
-              QRectF(margin, bar_y, bar_width, bar_height),
-              state.health_ratio,
-              QColor(178, 46, 40, 235),
-              QStringLiteral("HP"));
-  bar_y += bar_height + (7.0 * ui);
-  paint_meter(painter,
-              QRectF(margin, bar_y, bar_width, bar_height),
-              state.stamina_ratio,
-              QColor(74, 138, 82, 235),
-              QStringLiteral("STAMINA"));
-
-  if (state.bow_stance) {
-    const double nock_width = 190.0 * ui;
-    const double nock_height = 12.0 * ui;
-    const QRectF nock(width - margin - nock_width,
-                      height - margin - nock_height,
-                      nock_width,
-                      nock_height);
-    const bool ready = state.recovery_ratio <= 0.001F;
-    paint_meter(painter,
-                nock,
-                ready ? 1.0F : (1.0F - state.recovery_ratio),
-                ready ? QColor(214, 186, 116, 235) : QColor(122, 92, 58, 220),
-                QString());
-    painter.setPen(ready ? QColor(240, 224, 178, 235) : QColor(168, 150, 122, 215));
-    painter.drawText(
-        QRectF(nock.left(), nock.top() - (24.0 * ui), nock.width(), 20.0 * ui),
-        Qt::AlignRight | Qt::AlignVCenter,
-        ready ? QStringLiteral("ARROW READY") : QStringLiteral("NOCKING"));
-  }
-
-  painter.setFont(Arena::Typography::number(ui));
-  painter.setPen(QColor(0, 0, 0, 170));
-  const QString takedowns =
-      QStringLiteral("TAKEDOWNS  %1").arg(state.takedowns, 2, 10, QLatin1Char('0'));
-  const QRectF counter(width - margin - (340.0 * ui), margin, 340.0 * ui, 30.0 * ui);
-  painter.drawText(counter.adjusted(2.0, 2.0, 2.0, 2.0),
-                   Qt::AlignRight | Qt::AlignVCenter,
-                   takedowns);
-  painter.setPen(QColor(238, 226, 196, 240));
-  painter.drawText(counter, Qt::AlignRight | Qt::AlignVCenter, takedowns);
-}
 
 auto format_clock(float seconds) -> QString {
   const int total = std::max(0, static_cast<int>(std::lround(seconds)));
@@ -645,6 +488,35 @@ public:
 
     m_viewport.set_promo_mode(true);
 
+    if (std::any_of(m_spec.shots.begin(), m_spec.shots.end(), [](const Shot& shot) {
+          return shot.rpg_hud;
+        })) {
+      RpgHud::select_software_scene_graph();
+      m_rpg_hud = std::make_unique<RpgHud>();
+      if (!m_rpg_hud->ready()) {
+        if (error != nullptr) {
+          *error = QStringLiteral("the RPG HUD overlay could not be loaded: %1")
+                       .arg(m_rpg_hud->error());
+        }
+        return false;
+      }
+
+      m_rpg_hud_hits =
+          Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>(
+              [this](const Engine::Core::CombatHitEvent& event) {
+                if (!m_shot_active || !current_shot().rpg_hud ||
+                    m_viewport.world() == nullptr ||
+                    m_viewport.rpg_commander_id() == 0 ||
+                    event.attacker_id != m_viewport.rpg_commander_id()) {
+                  return;
+                }
+                if (auto tick = App::Core::combat_feedback_tick(
+                        *m_viewport.world(), event, App::Core::FeedbackStyle::Burst)) {
+                  m_rpg_hud->push_feedback(*tick);
+                }
+              });
+    }
+
     if (!m_viewport.has_graphics_quality_override()) {
       m_viewport.set_graphics_quality_override(Render::GraphicsQuality::Ultra);
     }
@@ -977,6 +849,8 @@ private:
                                     "Promo pass over '%1' runs without audio")
                                     .arg(pass.scenario);
         m_audio.reset();
+      } else if (!m_spec.record_music) {
+        AudioSystem::get_instance().set_music_volume(0.0F);
       } else {
         m_audio->play_music_bed(m_spec.music_track, m_spec.music_volume);
       }
@@ -1061,6 +935,8 @@ private:
     }
     m_viewport.set_batch_fixed_step(idle_step());
     m_viewport.set_flame_card(shot.flame_card, shot.flame_speed, shot.flame_intensity);
+    m_viewport.set_capture_stabilization(shot.gameplay_camera ? shot.stabilize_seconds
+                                                              : 0.0F);
     m_viewport.set_capture_gameplay_ui(shot.gameplay_ui && !shot.flame_card,
                                        shot.gameplay_ui_all_owners);
 
@@ -1308,12 +1184,21 @@ private:
       output = frame.scaled(
           m_spec.width, m_spec.height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
     }
-    if (current_shot().rpg_hud) {
+    if (current_shot().rpg_hud && m_rpg_hud != nullptr) {
       if (output.format() != QImage::Format_ARGB32 &&
           output.format() != QImage::Format_RGB32) {
         output = output.convertToFormat(QImage::Format_ARGB32);
       }
-      paint_rpg_bow_hud(output, m_viewport.rpg_bow_hud_state());
+      const QSize frame_size = output.size();
+      m_rpg_hud->set_projection(
+          [this, frame_size](const QVector3D& world, QPointF& out) {
+            return m_viewport.project_to_capture(world, frame_size, out);
+          });
+      m_rpg_hud->paint(output,
+                       m_viewport.rpg_commander_status(),
+                       static_cast<double>(m_rpg_hud_frames++) /
+                           static_cast<double>(m_spec.fps),
+                       m_step_seconds);
     }
 
     if (m_frames_written == 0) {
@@ -1334,7 +1219,8 @@ private:
       }
     }
 
-    if (current_shot().gameplay_ui && !current_shot().flame_card) {
+    if (current_shot().gameplay_ui && !current_shot().flame_card &&
+        !current_shot().rpg_hud) {
       if (output.format() != QImage::Format_ARGB32 &&
           output.format() != QImage::Format_RGB32) {
         output = output.convertToFormat(QImage::Format_ARGB32);
@@ -1663,6 +1549,9 @@ private:
 
   std::vector<PendingAudio> m_pending_audio;
   std::unique_ptr<AudioRecorder> m_audio;
+  std::unique_ptr<RpgHud> m_rpg_hud;
+  Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent> m_rpg_hud_hits;
+  int m_rpg_hud_frames = 0;
   int m_logged_bucket{-1};
   bool m_failed{false};
 };

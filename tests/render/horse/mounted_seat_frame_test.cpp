@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "animation/rig/mounted_seat.h"
-#include "render/entity/mounted_knight_pose.h"
+#include "render/entity/mounted_swordsman_pose.h"
 #include "render/equipment/weapons/spear_renderer.h"
 #include "render/horse/dimensions.h"
 #include "render/horse/horse_motion.h"
@@ -15,7 +15,7 @@ constexpr float k_tolerance = 1.0e-4F;
 TEST(MountedSeatFrame, FrozenGameplayValuesMatchTheRig) {
   auto profile = Render::GL::make_horse_profile(0U, {}, {});
   auto mount = Render::GL::compute_mount_frame(profile);
-  Render::GL::tune_mounted_knight_frame(profile.dims, mount);
+  Render::GL::tune_mounted_swordsman_frame(profile.dims, mount);
 
   using namespace Animation::Rig::MountedSeat;
 

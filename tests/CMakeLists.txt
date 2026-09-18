@@ -175,6 +175,8 @@ soi_register_test_binary(simulation_tests)
 add_executable(
     combat_balance_tests
     formation/unit_layout_test.cpp
+    formation/formation_drag_shape_test.cpp
+    formation/formation_squad_extent_probe_test.cpp
     formation/army_formation_planner_test.cpp
     formation/formation_planner_cache_test.cpp
     formation/formation_cohesion_test.cpp
@@ -668,6 +670,7 @@ add_executable(
     tools/arena_terrain_alignment_test.cpp
     tools/arena_promo_spec_test.cpp
     tools/arena_casting_overlay_test.cpp
+    tools/arena_rpg_hud_test.cpp
     tools/arena_matchup_short_test.cpp
     tools/arena_video_encoder_test.cpp
     tools/settlement_layout_test.cpp
@@ -690,6 +693,7 @@ target_link_libraries(
         arena_panels
         arena_feedback
         arena_casting_overlay
+        arena_rpg_hud
 )
 soi_register_test_binary(arena_tests)
 if(TARGET bake_creature_assets)

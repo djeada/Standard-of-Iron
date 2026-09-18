@@ -191,7 +191,7 @@ TEST_F(StaminaSystemTest, InfantryCanRun) {
   unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* unit_comp = unit->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   unit_comp->owner_id = 1;
-  unit_comp->spawn_type = Game::Units::SpawnType::Knight;
+  unit_comp->spawn_type = Game::Units::SpawnType::Swordsman;
 
   auto* movement = unit->add_component<MovementComponent>();
   MovementTestAccess::set_vx(*movement, 1.0F);
@@ -212,7 +212,7 @@ TEST_F(StaminaSystemTest, CavalryCanRun) {
   unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* unit_comp = unit->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   unit_comp->owner_id = 1;
-  unit_comp->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit_comp->spawn_type = Game::Units::SpawnType::MountedSwordsman;
 
   auto* movement = unit->add_component<MovementComponent>();
   MovementTestAccess::set_vx(*movement, 1.0F);

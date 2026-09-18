@@ -115,40 +115,26 @@ auto resample_to(std::vector<float>& pcm,
   const bool mono_content = channels_are_identical(pcm, channels);
   const unsigned worked_channels = mono_content ? 1U : channels;
 
-  std::vector<float> bank(static_cast<std::size_t>(up) * taps_per_phase, 0.0F);
-  for (std::size_t phase = 0; phase < up; ++phase) {
-    for (std::size_t tap = 0; tap < taps_per_phase; ++tap) {
-      bank[phase * taps_per_phase + (taps_per_phase - 1 - tap)] =
-          filter[phase + tap * up];
-    }
-  }
-
-  const std::size_t pad = taps_per_phase;
-  const std::size_t max_base = ((frames_out - 1) * down + centre) / up;
-  const std::size_t planar_size = pad + std::max(frames_in, max_base + 1) + pad;
-  std::vector<float> planar(planar_size, 0.0F);
-
   std::vector<float> out(frames_out * channels, 0.0F);
-  for (unsigned channel = 0; channel < worked_channels; ++channel) {
-    std::fill(planar.begin(), planar.end(), 0.0F);
-    for (std::size_t frame = 0; frame < frames_in; ++frame) {
-      planar[pad + frame] = pcm[frame * channels + channel];
-    }
-    for (std::size_t frame = 0; frame < frames_out; ++frame) {
-      const std::size_t numerator = frame * down + centre;
-      const std::size_t phase = numerator % up;
-      const std::size_t base = (numerator - phase) / up;
-      const float* weights = bank.data() + phase * taps_per_phase;
-      const float* source = planar.data() + pad + base + 1 - taps_per_phase;
+  for (std::size_t frame = 0; frame < frames_out; ++frame) {
+    const std::size_t numerator = frame * down + centre;
+    const std::size_t phase = numerator % up;
+    const std::size_t base = (numerator - phase) / up;
+    const std::size_t first_tap =
+        base >= frames_in ? (base - frames_in) + 1U : std::size_t{0};
+    const std::size_t last_tap = std::min(taps_per_phase - 1, base);
+    for (unsigned channel = 0; channel < worked_channels; ++channel) {
       float total = 0.0F;
-      for (std::size_t index = 0; index < taps_per_phase; ++index) {
-        total += weights[index] * source[index];
+      const float* source = pcm.data() + (base - first_tap) * channels + channel;
+      const float* tap_weight = filter.data() + phase + first_tap * up;
+      for (std::size_t tap = first_tap; tap <= last_tap; ++tap) {
+        total += *tap_weight * *source;
+        tap_weight += up;
+        source -= channels;
       }
       out[frame * channels + channel] = total * static_cast<float>(up);
     }
-  }
-  if (mono_content) {
-    for (std::size_t frame = 0; frame < frames_out; ++frame) {
+    if (mono_content) {
       for (unsigned channel = 1; channel < channels; ++channel) {
         out[frame * channels + channel] = out[frame * channels];
       }

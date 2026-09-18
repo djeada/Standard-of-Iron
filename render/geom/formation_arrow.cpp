@@ -105,7 +105,9 @@ void render_formation_slot_preview(Renderer* renderer,
   QVector3D const valid_color =
       placement.accent_color.value_or(QVector3D(0.72F, 1.00F, 1.00F));
   QVector3D const adjusted_color(1.00F, 0.78F, 0.24F);
-  QVector3D const blocked_color(0.95F, 0.22F, 0.20F);
+
+  QVector3D const blocked_color(0.10F, 0.07F, 0.07F);
+  constexpr float k_blocked_radius_scale = 0.55F;
 
   Mesh* const arrow_mesh = get_orientation_arrow();
 
@@ -113,13 +115,16 @@ void render_formation_slot_preview(Renderer* renderer,
     QVector3D const color = marker.blocked    ? blocked_color
                             : marker.adjusted ? adjusted_color
                                               : valid_color;
-    float const alpha = (marker.blocked ? 0.55F : 0.34F) * fa;
+    float const alpha = (marker.blocked ? 0.78F : 0.34F) * fa;
+    float const shape = marker.blocked ? k_blocked_radius_scale : 1.0F;
+    float const half_width = std::max(0.3F, marker.half_width) * shape;
+    float const half_depth = std::max(0.3F, marker.half_depth) * shape;
 
     QMatrix4x4 xform;
     xform.translate(
         marker.position.x(), marker.position.y() + 0.03F, marker.position.z());
     xform.rotate(marker.facing_degrees + 180.0F, 0.0F, 1.0F, 0.0F);
-    xform.scale(marker.radius, 1.0F, marker.radius);
+    xform.scale(half_width, 1.0F, half_depth);
     renderer->mesh(disc, xform, color, nullptr, alpha);
 
     if (arrow_mesh == nullptr || marker.blocked) {
@@ -129,7 +134,8 @@ void render_formation_slot_preview(Renderer* renderer,
     facing_xform.translate(
         marker.position.x(), marker.position.y() + 0.06F, marker.position.z());
     facing_xform.rotate(marker.facing_degrees + 180.0F, 0.0F, 1.0F, 0.0F);
-    facing_xform.scale(marker.radius * 0.45F, 0.18F, marker.radius * 0.45F);
+    float const arrow = std::min(half_width, half_depth) * 0.55F;
+    facing_xform.scale(arrow, 0.18F, arrow);
     renderer->mesh(arrow_mesh, facing_xform, color, nullptr, 0.5F * fa);
   }
 }

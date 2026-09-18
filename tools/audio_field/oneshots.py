@@ -164,20 +164,6 @@ TAKES: dict[str, Take] = {
         notes="Shorter and brighter than the spear: an arrow bites where a "
         "spear shoves.",
     ),
-    "armour_hit": Take(
-        sources=[
-            metal_clang("Clang, Thin 01"),
-            metal_clang("Clang, Thin 02"),
-            metal_clang("Clank, Thin"),
-        ],
-        licence=CC0,
-        prefix="sfx/combat/armour_hit",
-        count=3,
-        length_ms=300.0,
-        highpass=140.0,
-        notes="Backs combat.hit.generic, the fallback for units whose type has "
-        "no dedicated family.",
-    ),
     "stone_impact": Take(
         sources=[
             tdc(

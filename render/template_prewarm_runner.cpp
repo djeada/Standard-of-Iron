@@ -10,7 +10,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
-#include <limits>
 #include <memory>
 #include <mutex>
 #include <numbers>
@@ -343,12 +342,8 @@ void Renderer::process_async_template_prewarm() {
   std::size_t max_items = prewarm_budget.items_per_tick;
   std::chrono::microseconds time_budget(prewarm_budget.tick_budget_us);
 
-  constexpr std::chrono::microseconds k_loading_overlay_budget(12000);
   const int visible_units = m_battle_optimizer.visible_unit_count();
-  if (m_loading_overlay_active) {
-    max_items = std::numeric_limits<std::size_t>::max();
-    time_budget = std::max(time_budget, k_loading_overlay_budget);
-  } else if (visible_units >= 300) {
+  if (visible_units >= 300) {
     if ((m_battle_optimizer.frame_counter() & 1U) != 0U) {
       return;
     }
@@ -461,7 +456,7 @@ void Renderer::prewarm_unit_templates(
     case TroopType::SkeletonSwordsman:
     case TroopType::SkeletonArcher:
     case TroopType::GravePriest:
-    case TroopType::MountedKnight:
+    case TroopType::MountedSwordsman:
     case TroopType::HorseArcher:
     case TroopType::HorseSpearman:
     case TroopType::Healer:
@@ -538,7 +533,7 @@ void Renderer::prewarm_unit_templates(
     p.nation_id = nation_id;
     p.max_health = std::max(1, max_health);
     p.is_elephant = (spawn_type == Game::Units::SpawnType::Elephant);
-    p.is_mounted = (spawn_type == Game::Units::SpawnType::MountedKnight ||
+    p.is_mounted = (spawn_type == Game::Units::SpawnType::MountedSwordsman ||
                     spawn_type == Game::Units::SpawnType::HorseArcher ||
                     spawn_type == Game::Units::SpawnType::HorseSpearman);
     p.fn = *fn;
@@ -673,7 +668,7 @@ void Renderer::prewarm_unit_templates(
                         TroopType::SkeletonSwordsman,
                         TroopType::SkeletonArcher,
                         TroopType::GravePriest,
-                        TroopType::MountedKnight,
+                        TroopType::MountedSwordsman,
                         TroopType::HorseArcher,
                         TroopType::HorseSpearman,
                         TroopType::Healer,

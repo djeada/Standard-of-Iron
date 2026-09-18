@@ -268,3 +268,18 @@ TEST(RendererVisibilityPolicyTest, LensGapIsClearedByFrameReset) {
   policy.reset(nullptr, nullptr);
   EXPECT_FALSE(policy.occludes_lens_gap(QVector3D(0.0F, 0.0F, -1.5F)));
 }
+
+TEST(RendererVisibilityPolicyTest, LensGapBelongsToTheChaseLensNotACinematicCamera) {
+  Render::GL::Renderer renderer;
+  EXPECT_FALSE(renderer.rpg_lens_gap_applies());
+
+  renderer.set_world_render_mode(Render::GL::Renderer::WorldRenderMode::Rpg);
+  renderer.set_rpg_camera_focus(42U);
+  EXPECT_TRUE(renderer.rpg_lens_gap_applies());
+
+  renderer.set_rpg_lens_detached(true);
+  EXPECT_FALSE(renderer.rpg_lens_gap_applies());
+
+  renderer.set_rpg_lens_detached(false);
+  EXPECT_TRUE(renderer.rpg_lens_gap_applies());
+}

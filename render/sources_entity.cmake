@@ -25,7 +25,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/horse_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/mounted_humanoid_renderer_base.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/mounted_prepare.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/entity/mounted_knight_renderer_base.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/mounted_swordsman_renderer_base.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/horse_archer_renderer_base.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/horse_spearman_renderer_base.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/horse_swordsman_renderer.cpp

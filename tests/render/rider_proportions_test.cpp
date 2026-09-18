@@ -4,7 +4,7 @@
 
 #include "render/entity/horse_archer_renderer_base.h"
 #include "render/entity/horse_spearman_renderer_base.h"
-#include "render/entity/mounted_knight_renderer_base.h"
+#include "render/entity/mounted_swordsman_renderer_base.h"
 #include "render/humanoid/schema/humanoid_proportion_profiles.h"
 
 using namespace Render::GL;
@@ -20,11 +20,11 @@ constexpr Render::GL::Humanoid::ProportionOffset k_spearman_profile_tolerance{
 
 class RiderProportionsTest : public ::testing::Test {
 protected:
-  static auto make_mounted_knight_renderer() -> MountedKnightRendererBase {
-    MountedKnightRendererConfig config;
-    config.rider_debug_name = "tests/mounted_knight/rider";
-    config.mount_debug_name = "tests/mounted_knight/horse";
-    return MountedKnightRendererBase(std::move(config));
+  static auto make_mounted_swordsman_renderer() -> MountedSwordsmanRendererBase {
+    MountedSwordsmanRendererConfig config;
+    config.rider_debug_name = "tests/mounted_swordsman/rider";
+    config.mount_debug_name = "tests/mounted_swordsman/horse";
+    return MountedSwordsmanRendererBase(std::move(config));
   }
 
   static auto make_horse_archer_renderer() -> HorseArcherRendererBase {
@@ -87,8 +87,8 @@ protected:
   }
 };
 
-TEST_F(RiderProportionsTest, MountedKnightBaseHasRealisticProportions) {
-  auto renderer = make_mounted_knight_renderer();
+TEST_F(RiderProportionsTest, MountedSwordsmanBaseHasRealisticProportions) {
+  auto renderer = make_mounted_swordsman_renderer();
   expect_profile_equals(renderer, k_mounted_base_profile);
   expect_balanced_profile(renderer.get_proportion_scaling());
 }
@@ -106,24 +106,24 @@ TEST_F(RiderProportionsTest, MountedSpearmanBaseHasRealisticProportions) {
 }
 
 TEST_F(RiderProportionsTest, MountedRiderBasesStayConsistentAcrossRoles) {
-  auto mounted_knight = make_mounted_knight_renderer();
+  auto mounted_swordsman = make_mounted_swordsman_renderer();
   auto horse_archer = make_horse_archer_renderer();
   auto horse_spearman = make_horse_spearman_renderer();
 
-  QVector3D const knight_props = mounted_knight.get_proportion_scaling();
+  QVector3D const swordsman_props = mounted_swordsman.get_proportion_scaling();
   QVector3D const archer_props = horse_archer.get_proportion_scaling();
   QVector3D const spearman_props = horse_spearman.get_proportion_scaling();
 
-  EXPECT_FLOAT_EQ(knight_props.x(), archer_props.x());
-  EXPECT_FLOAT_EQ(knight_props.y(), archer_props.y());
-  EXPECT_FLOAT_EQ(knight_props.z(), archer_props.z());
+  EXPECT_FLOAT_EQ(swordsman_props.x(), archer_props.x());
+  EXPECT_FLOAT_EQ(swordsman_props.y(), archer_props.y());
+  EXPECT_FLOAT_EQ(swordsman_props.z(), archer_props.z());
 
-  EXPECT_NEAR(knight_props.x(), spearman_props.x(), k_spearman_profile_tolerance.x);
-  EXPECT_NEAR(knight_props.y(), spearman_props.y(), k_spearman_profile_tolerance.y);
-  EXPECT_NEAR(knight_props.z(), spearman_props.z(), k_spearman_profile_tolerance.z);
+  EXPECT_NEAR(swordsman_props.x(), spearman_props.x(), k_spearman_profile_tolerance.x);
+  EXPECT_NEAR(swordsman_props.y(), spearman_props.y(), k_spearman_profile_tolerance.y);
+  EXPECT_NEAR(swordsman_props.z(), spearman_props.z(), k_spearman_profile_tolerance.z);
 }
 
 TEST_F(RiderProportionsTest, MountedRiderBasesAvoidExtremeRatios) {
-  auto renderer = make_mounted_knight_renderer();
+  auto renderer = make_mounted_swordsman_renderer();
   expect_balanced_profile(renderer.get_proportion_scaling());
 }

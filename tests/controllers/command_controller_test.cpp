@@ -119,7 +119,7 @@ protected:
 TEST_F(CommandControllerTest, AttackClickAppliesOnlyToEligibleUnits) {
   auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
   auto* builder = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(archer, nullptr);
   ASSERT_NE(builder, nullptr);
   ASSERT_NE(enemy, nullptr);
@@ -270,7 +270,7 @@ TEST_F(CommandControllerTest, AutoGatherIgnoresASelectionWithoutBuilders) {
 
 TEST_F(CommandControllerTest, LeftClickAttackModeReportsTheClickedTarget) {
   auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(archer, nullptr);
   ASSERT_NE(enemy, nullptr);
   selection_system->select_unit(archer->get_id());
@@ -324,7 +324,7 @@ TEST_F(CommandControllerTest, AttackClickOnEmptyGroundIssuesAnAttackMove) {
 
 TEST_F(CommandControllerTest, AttackClickOnAFriendlyUnitIsRejectedWithAReason) {
   auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
-  auto* friendly = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Knight);
+  auto* friendly = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(archer, nullptr);
   ASSERT_NE(friendly, nullptr);
   selection_system->select_unit(archer->get_id());
@@ -350,7 +350,7 @@ TEST_F(CommandControllerTest, AttackClickOnAFriendlyUnitIsRejectedWithAReason) {
 
 TEST_F(CommandControllerTest, AttackClickWithNonCombatSelectionExplainsWhy) {
   auto* builder = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(builder, nullptr);
   ASSERT_NE(enemy, nullptr);
   selection_system->select_unit(builder->get_id());
@@ -369,7 +369,7 @@ TEST_F(CommandControllerTest, AttackClickWithNonCombatSelectionExplainsWhy) {
 }
 
 TEST_F(CommandControllerTest, AttackClickWithEmptySelectionIsRejectedNotSilent) {
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(enemy, nullptr);
   auto& seen = capture_feedback();
 
@@ -386,7 +386,7 @@ TEST_F(CommandControllerTest, AttackClickWithEmptySelectionIsRejectedNotSilent) 
 
 TEST_F(CommandControllerTest, RightClickOnEnemyAttacksTheClickedTarget) {
   auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(archer, nullptr);
   ASSERT_NE(enemy, nullptr);
   selection_system->select_unit(archer->get_id());
@@ -461,7 +461,7 @@ TEST_F(CommandControllerTest, AttackClickOnAGrazingSheepStillHunts) {
 
 TEST_F(CommandControllerTest, RightClickOnOneOfYourOwnUnitsIsAMoveOrder) {
   auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
-  auto* comrade = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Knight);
+  auto* comrade = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(archer, nullptr);
   ASSERT_NE(comrade, nullptr);
   selection_system->select_unit(archer->get_id());
@@ -481,8 +481,8 @@ TEST_F(CommandControllerTest, RightClickOnOneOfYourOwnUnitsIsAMoveOrder) {
 
 TEST_F(CommandControllerTest, ChainingMoveAndAttackLeavesExactlyOneLiveOrder) {
   auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
-  auto* first = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
-  auto* second = create_unit(3.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* first = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
+  auto* second = create_unit(3.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(archer, nullptr);
   ASSERT_NE(first, nullptr);
   ASSERT_NE(second, nullptr);
@@ -556,7 +556,7 @@ TEST_F(CommandControllerTest, RightClickOnGroundReportsTheDestination) {
 
 TEST_F(CommandControllerTest, RightClickOnEnemyWithNonCombatSelectionDoesNotMove) {
   auto* builder = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
-  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
   ASSERT_NE(builder, nullptr);
   ASSERT_NE(enemy, nullptr);
   selection_system->select_unit(builder->get_id());

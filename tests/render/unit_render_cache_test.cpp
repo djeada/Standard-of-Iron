@@ -69,7 +69,7 @@ TEST_F(UnitRenderCacheTest, UsesTroopProfileRendererForBlankInfantryRendererId) 
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
 
-  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
 
   const auto& cached = cache.get_or_create(world_view, 3, &entity, 1);

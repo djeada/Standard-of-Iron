@@ -3,7 +3,7 @@
 namespace Render::GL::Roman {
 
 void register_roman_swordsman_style() {
-  KnightStyleConfig style;
+  SwordsmanStyleConfig style;
   style.cloth_color = QVector3D(0.72F, 0.16F, 0.18F);
   style.leather_color = QVector3D(0.34F, 0.21F, 0.11F);
   style.leather_dark_color = QVector3D(0.34F, 0.22F, 0.14F);

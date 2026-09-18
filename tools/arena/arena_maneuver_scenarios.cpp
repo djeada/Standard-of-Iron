@@ -298,7 +298,7 @@ auto add_roman_army(ArenaScenarioDefinition& scenario, QVector3D west) -> QStrin
   scenario.groups.push_back(group(
       archers, Troop::Archer, 1, 3, west + QVector3D(-8.0F, 0.0F, 0.0F), 10, across));
   scenario.groups.push_back(group(horse,
-                                  Troop::MountedKnight,
+                                  Troop::MountedSwordsman,
                                   1,
                                   2,
                                   west + QVector3D(-14.0F, 0.0F, 0.0F),

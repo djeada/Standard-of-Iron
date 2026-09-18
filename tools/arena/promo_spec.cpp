@@ -271,6 +271,8 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
   spec.fps = root.value(QStringLiteral("fps")).toInt(spec.fps);
   spec.supersample = root.value(QStringLiteral("supersample")).toInt(spec.supersample);
   spec.audio = root.value(QStringLiteral("audio")).toBool(spec.audio);
+  spec.record_music =
+      root.value(QStringLiteral("record_music")).toBool(spec.record_music);
   spec.music_track =
       root.value(QStringLiteral("music_track")).toString(spec.music_track).trimmed();
   spec.report_sound_decided = root.value(QStringLiteral("report_sound_decided"))
@@ -432,6 +434,10 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
         shot_object.value(QStringLiteral("shake")).toDouble(shot.shake));
     shot.gameplay_camera = shot_object.value(QStringLiteral("gameplay_camera"))
                                .toBool(shot.gameplay_camera);
+    shot.stabilize_seconds = std::max(
+        0.0F,
+        static_cast<float>(shot_object.value(QStringLiteral("stabilize_seconds"))
+                               .toDouble(shot.stabilize_seconds)));
     shot.flame_card =
         shot_object.value(QStringLiteral("flame_card")).toBool(shot.flame_card);
     shot.flame_speed = static_cast<float>(

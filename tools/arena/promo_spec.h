@@ -85,6 +85,8 @@ struct Shot {
 
   bool gameplay_camera{false};
 
+  float stabilize_seconds{0.0F};
+
   bool flame_card{false};
   float flame_speed{1.0F};
   float flame_intensity{1.0F};
@@ -120,6 +122,8 @@ struct Spec {
   int supersample{1};
 
   bool audio{true};
+
+  bool record_music{true};
 
   QString music_track;
   float music_volume{0.18F};

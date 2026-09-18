@@ -74,7 +74,7 @@ TEST(LocalAudienceTest, ASpectatorIsFilteredOutOfNothing) {
 TEST(CombatEventAttributionTest, CombatHitsNameBothSidesOfTheExchange) {
   Game::Systems::BuildingCollisionRegistry::instance().clear();
   Engine::Core::World world;
-  auto* attacker = add_unit(world, 2, Game::Units::SpawnType::Knight, 0.0F);
+  auto* attacker = add_unit(world, 2, Game::Units::SpawnType::Swordsman, 0.0F);
   auto* target = add_unit(world, 3, Game::Units::SpawnType::Spearman, 2.0F);
 
   std::vector<Engine::Core::CombatHitEvent> hits;
@@ -97,7 +97,7 @@ TEST(CombatEventAttributionTest, CombatHitsNameBothSidesOfTheExchange) {
 TEST(CombatEventAttributionTest, DeathsNameTheOwnerAndTheKiller) {
   Game::Systems::BuildingCollisionRegistry::instance().clear();
   Engine::Core::World world;
-  auto* attacker = add_unit(world, 2, Game::Units::SpawnType::Knight, 0.0F);
+  auto* attacker = add_unit(world, 2, Game::Units::SpawnType::Swordsman, 0.0F);
   auto* target = add_unit(world, 3, Game::Units::SpawnType::Spearman, 2.0F);
 
   std::vector<Engine::Core::UnitDiedEvent> deaths;

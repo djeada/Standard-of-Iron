@@ -8,6 +8,7 @@
 #include <numbers>
 
 #include "../core/ambient_session.h"
+#include "../core/component_combat.h"
 #include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../core/world.h"
@@ -287,6 +288,7 @@ void ArmyFormationRegistry::apply_plan(FormationGroupID id,
   formation->frontage = plan.frontage;
   formation->depth = plan.depth;
   formation->spacing = plan.spacing;
+  formation->slot_spacing = plan.slot_spacing;
   formation->slot_list = plan.slot_list;
   formation->needs_replan = false;
   ++formation->plan_revision;
@@ -332,6 +334,7 @@ auto ArmyFormationRegistry::to_json() const -> QJsonObject {
     obj["frontage"] = static_cast<double>(formation->frontage);
     obj["depth"] = static_cast<double>(formation->depth);
     obj["spacing"] = static_cast<double>(formation->spacing);
+    obj["slot_spacing"] = static_cast<double>(formation->slot_spacing);
     obj["phase"] = static_cast<int>(formation->phase);
     obj["cohesion"] = static_cast<double>(formation->cohesion);
     obj["cohesion_pace"] = static_cast<double>(formation->cohesion_pace);
@@ -375,6 +378,9 @@ void ArmyFormationRegistry::from_json(const QJsonObject& root) {
     formation.frontage = static_cast<float>(obj["frontage"].toDouble(0.0));
     formation.depth = static_cast<float>(obj["depth"].toDouble(0.0));
     formation.spacing = static_cast<float>(obj["spacing"].toDouble(1.0));
+
+    formation.slot_spacing = static_cast<float>(
+        obj["slot_spacing"].toDouble(static_cast<double>(formation.spacing)));
     formation.phase = static_cast<FormationPhase>(obj["phase"].toInt(0));
     formation.cohesion = static_cast<float>(obj["cohesion"].toDouble(1.0));
     formation.cohesion_pace = static_cast<float>(obj["cohesion_pace"].toDouble(0.0));
@@ -407,6 +413,42 @@ void ArmyFormationRegistry::from_json(const QJsonObject& root) {
     }
   }
 }
+
+namespace {
+
+void hold_group_facing(Engine::Core::World& world, ArmyFormation& formation) {
+  if (!formation.is_formed()) {
+    return;
+  }
+  constexpr float k_tolerance_degrees = 4.0F;
+  for (const auto& slot : formation.slot_list) {
+    if (slot.occupant == 0U || slot.status == SlotStatus::Blocked) {
+      continue;
+    }
+    const auto* movement =
+        world.try_get<Engine::Core::MovementComponent>(slot.occupant);
+    if (movement != nullptr && movement->get_has_target()) {
+      continue;
+    }
+    const auto* attack = world.try_get<Engine::Core::AttackComponent>(slot.occupant);
+    if (attack != nullptr && attack->in_melee_lock) {
+      continue;
+    }
+    auto* transform = world.try_get<Engine::Core::TransformComponent>(slot.occupant);
+    if (transform == nullptr || transform->has_desired_yaw) {
+      continue;
+    }
+    float const drift =
+        std::abs(std::remainder(transform->rotation.y - slot.facing, 360.0F));
+    if (drift <= k_tolerance_degrees) {
+      continue;
+    }
+    transform->desired_yaw = slot.facing;
+    transform->has_desired_yaw = true;
+  }
+}
+
+} // namespace
 
 void ArmyFormationRuntime::refresh_shape_state(Engine::Core::World& world,
                                                ArmyFormation& formation) {
@@ -490,6 +532,7 @@ void ArmyFormationRuntime::refresh_shape_state(Engine::Core::World& world,
       all_in_slot && formation.phase == FormationPhase::Arrived
           ? FormationPhase::Arrived
           : (all_in_slot ? FormationPhase::Formed : FormationPhase::Reforming);
+  hold_group_facing(world, formation);
 }
 
 auto ArmyFormationRuntime::damage_taken_multiplier(const Engine::Core::Entity& entity)

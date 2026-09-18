@@ -960,7 +960,7 @@
         "variant": "primary"
       },
       "provenance": {
-        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Dörflis, Naturpark Haßberge, Germany, 'Wild Meadow Summer'; radio aporee ::: maps, Pic du Canigou, France, 'Sound of Wind on top of the Canigou Mountain'",
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, D\u00f6rflis, Naturpark Ha\u00dfberge, Germany, 'Wild Meadow Summer'; radio aporee ::: maps, Pic du Canigou, France, 'Sound of Wind on top of the Canigou Mountain'",
         "licence": "Public Domain Mark 1.0"
       }
     },
@@ -994,7 +994,7 @@
         "variant": "primary"
       },
       "provenance": {
-        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Joneliškės, Lithuania, 'river Viesa'",
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Joneli\u0161k\u0117s, Lithuania, 'river Viesa'",
         "licence": "Public Domain Mark 1.0"
       }
     },
@@ -1047,7 +1047,7 @@
         "variant": "camp"
       },
       "provenance": {
-        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Pod Lipą, Borsuki, Poland, '(835a AB) midnight crickets'; Wikimedia Commons, File:Dry grass burning in open fireplace.ogg, by ezwa",
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Pod Lip\u0105, Borsuki, Poland, '(835a AB) midnight crickets'; Wikimedia Commons, File:Dry grass burning in open fireplace.ogg, by ezwa",
         "licence": "Public Domain Mark 1.0 + Public domain"
       }
     },
@@ -1081,7 +1081,7 @@
         "variant": "primary"
       },
       "provenance": {
-        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, 'dry hillside, parched wind'; TDC FOOTSTEPS, '…MCU_Running, Rocky Road'",
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, 'dry hillside, parched wind'; TDC FOOTSTEPS, '\u2026MCU_Running, Rocky Road'",
         "licence": "Public Domain Mark 1.0 + CC0 1.0"
       }
     },
@@ -1098,7 +1098,7 @@
         "variant": "alternate"
       },
       "provenance": {
-        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, 'dry hillside, parched wind'; TDC FOOTSTEPS, '…CU_Footsteps, Rocky Surface'",
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, 'dry hillside, parched wind'; TDC FOOTSTEPS, '\u2026CU_Footsteps, Rocky Surface'",
         "licence": "Public Domain Mark 1.0 + CC0 1.0"
       }
     },
@@ -1152,7 +1152,7 @@
         "variant": "march"
       },
       "provenance": {
-        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Cafe Tissardmine, Morocco, 'Desert Wind'; TDC FOOTSTEPS, '…MCU_Running, Rocky Road'",
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Cafe Tissardmine, Morocco, 'Desert Wind'; TDC FOOTSTEPS, '\u2026MCU_Running, Rocky Road'",
         "licence": "Public Domain Mark 1.0 + CC0 1.0"
       }
     },
@@ -1171,7 +1171,7 @@
         "variant": "road"
       },
       "provenance": {
-        "origin": "Cut by `tools/audio_field/build_beds.py` from TDC FOOTSTEPS, '…CU_Footsteps, Rocky Surface'; radio aporee ::: maps, 'dry hillside, parched wind'",
+        "origin": "Cut by `tools/audio_field/build_beds.py` from TDC FOOTSTEPS, '\u2026CU_Footsteps, Rocky Surface'; radio aporee ::: maps, 'dry hillside, parched wind'",
         "licence": "CC0 1.0 + Public Domain Mark 1.0"
       }
     },
@@ -1309,11 +1309,11 @@
       "load_policy": "mission",
       "tags": {
         "role": "charge",
-        "source": "field"
+        "source": "recorded"
       },
       "provenance": {
-        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC FIGHT, 'CU_Smacks, Rapid'; TDC METAL, 'Metal, Clang, Thin 01'",
-        "licence": "CC0 1.0"
+        "origin": "Recorded import supplied by the project owner, generated with ElevenLabs sound effects on 2026-09-17 and converted to Vorbis; it replaces the composed CC0 cue that was here.",
+        "licence": "Proprietary -- supplied by the project owner"
       }
     },
     {
@@ -1528,11 +1528,11 @@
       "tags": {
         "role": "charge",
         "variant": "shield",
-        "source": "field"
+        "source": "recorded"
       },
       "provenance": {
-        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC FIGHT, 'CU_Bodyfall, On Grass'; TDC METAL, 'Metal, Clang, Dull, Quiet'",
-        "licence": "CC0 1.0"
+        "origin": "Recorded import supplied by the project owner, generated with ElevenLabs sound effects on 2026-09-17 and converted to Vorbis; it replaces the composed CC0 cue that was here.",
+        "licence": "Proprietary -- supplied by the project owner"
       }
     },
     {
@@ -3028,11 +3028,11 @@
       "load_policy": "startup",
       "tags": {
         "attack_family": "generic",
-        "source": "field"
+        "source": "recorded"
       },
       "provenance": {
-        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC METAL, 'Metal, Clang, Thin 01'; TDC METAL, 'Metal, Clang, Thin 02'; TDC METAL, 'Metal, Clank, Thin'",
-        "licence": "CC0 1.0"
+        "origin": "Recorded import supplied by the project owner, generated with ElevenLabs sound effects on 2026-09-17 and converted to Vorbis; it replaces the composed CC0 cue that was here.",
+        "licence": "Proprietary -- supplied by the project owner"
       }
     },
     {
@@ -3046,29 +3046,11 @@
       "load_policy": "startup",
       "tags": {
         "attack_family": "generic",
-        "source": "field"
+        "source": "recorded"
       },
       "provenance": {
-        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC METAL, 'Metal, Clang, Thin 01'; TDC METAL, 'Metal, Clang, Thin 02'; TDC METAL, 'Metal, Clank, Thin'",
-        "licence": "CC0 1.0"
-      }
-    },
-    {
-      "id": "sfx.combat.armour_hit_03",
-      "path": "sfx/combat/armour_hit_03.ogg",
-      "category": "sfx",
-      "volume": 0.85,
-      "priority": 4,
-      "cooldown_ms": 90,
-      "max_instances": 4,
-      "load_policy": "startup",
-      "tags": {
-        "attack_family": "generic",
-        "source": "field"
-      },
-      "provenance": {
-        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC METAL, 'Metal, Clang, Thin 01'; TDC METAL, 'Metal, Clang, Thin 02'; TDC METAL, 'Metal, Clank, Thin'",
-        "licence": "CC0 1.0"
+        "origin": "Recorded import supplied by the project owner, generated with ElevenLabs sound effects on 2026-09-17 and converted to Vorbis; it replaces the composed CC0 cue that was here.",
+        "licence": "Proprietary -- supplied by the project owner"
       }
     },
     {
@@ -3319,7 +3301,7 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "Wikimedia Commons, `File:Wolf howls.ogg`, 13.35–17.55 s",
+        "origin": "Wikimedia Commons, `File:Wolf howls.ogg`, 13.35\u201317.55 s",
         "licence": "Public domain"
       }
     },
@@ -3337,7 +3319,7 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "Wikimedia Commons, `File:Wolf howls.ogg`, 20.05–23.65 s",
+        "origin": "Wikimedia Commons, `File:Wolf howls.ogg`, 20.05\u201323.65 s",
         "licence": "Public domain"
       }
     },
@@ -3355,7 +3337,7 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "Faragó et al. 2010, PLOS ONE, supporting audio S3",
+        "origin": "Farag\u00f3 et al. 2010, PLOS ONE, supporting audio S3",
         "licence": "CC BY 2.5 (attribution required)"
       }
     },
@@ -3409,7 +3391,7 @@
         "source": "field"
       },
       "provenance": {
-        "origin": "Faragó et al. 2010, PLOS ONE, supporting audio S3 and S2",
+        "origin": "Farag\u00f3 et al. 2010, PLOS ONE, supporting audio S3 and S2",
         "licence": "CC BY 2.5 (attribution required)"
       }
     },

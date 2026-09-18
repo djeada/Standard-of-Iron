@@ -154,233 +154,270 @@ void Backend::set_terrain_chunk_uniforms(Shader& shader,
                                          const QMatrix4x4& mvp,
                                          const QVector3D& camera_position) {
   const auto& pipeline = *m_terrain_pipeline;
-  const auto& uniforms = pipeline.terrain_uniforms_for(shader);
   const auto& visibility = single.visibility;
-  if (uniforms.has_visibility != Shader::InvalidUniform) {
+  if (pipeline.m_terrain_uniforms.has_visibility != Shader::InvalidUniform) {
     int const has_vis = visibility.enabled && (visibility.texture != nullptr) ? 1 : 0;
-    shader.set_uniform(uniforms.has_visibility, has_vis);
+    shader.set_uniform(pipeline.m_terrain_uniforms.has_visibility, has_vis);
   }
   if (visibility.enabled && visibility.texture != nullptr) {
-    if (uniforms.visibility_size != Shader::InvalidUniform) {
-      shader.set_uniform(uniforms.visibility_size, visibility.size);
+    if (pipeline.m_terrain_uniforms.visibility_size != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.visibility_size, visibility.size);
     }
-    if (uniforms.visibility_tile_size != Shader::InvalidUniform) {
-      shader.set_uniform(uniforms.visibility_tile_size, visibility.tile_size);
+    if (pipeline.m_terrain_uniforms.visibility_tile_size != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.visibility_tile_size,
+                         visibility.tile_size);
     }
-    if (uniforms.explored_alpha != Shader::InvalidUniform) {
-      shader.set_uniform(uniforms.explored_alpha, visibility.explored_alpha);
+    if (pipeline.m_terrain_uniforms.explored_alpha != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.explored_alpha,
+                         visibility.explored_alpha);
     }
     visibility.texture->bind(TextureUnit::terrain_visibility);
     m_last_bound_texture = visibility.texture;
-    if (uniforms.visibility_texture != Shader::InvalidUniform) {
-      shader.set_uniform(uniforms.visibility_texture, TextureUnit::terrain_visibility);
+    if (pipeline.m_terrain_uniforms.visibility_texture != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.visibility_texture,
+                         TextureUnit::terrain_visibility);
     }
   }
-  if (uniforms.mvp != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.mvp, mvp);
+  if (pipeline.m_terrain_uniforms.mvp != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.mvp, mvp);
   }
-  if (uniforms.model != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.model, single.model);
+  if (pipeline.m_terrain_uniforms.model != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.model, single.model);
   }
-  if (uniforms.ground_type != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.ground_type, single.params.ground_type);
+  if (pipeline.m_terrain_uniforms.ground_type != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.ground_type,
+                       single.params.ground_type);
   }
-  if (uniforms.terrain_type != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.terrain_type, single.params.terrain_type);
+  if (pipeline.m_terrain_uniforms.terrain_type != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.terrain_type,
+                       single.params.terrain_type);
   }
-  if (uniforms.grass_primary != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.grass_primary, single.params.grass_primary);
+  if (pipeline.m_terrain_uniforms.grass_primary != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.grass_primary,
+                       single.params.grass_primary);
   }
-  if (uniforms.grass_secondary != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.grass_secondary, single.params.grass_secondary);
+  if (pipeline.m_terrain_uniforms.grass_secondary != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.grass_secondary,
+                       single.params.grass_secondary);
   }
-  if (uniforms.grass_dry != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.grass_dry, single.params.grass_dry);
+  if (pipeline.m_terrain_uniforms.grass_dry != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.grass_dry, single.params.grass_dry);
   }
-  if (uniforms.soil_color != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.soil_color, single.params.soil_color);
+  if (pipeline.m_terrain_uniforms.soil_color != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.soil_color,
+                       single.params.soil_color);
   }
-  if (uniforms.rock_low != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.rock_low, single.params.rock_low);
+  if (pipeline.m_terrain_uniforms.rock_low != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.rock_low, single.params.rock_low);
   }
-  if (uniforms.rock_high != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.rock_high, single.params.rock_high);
+  if (pipeline.m_terrain_uniforms.rock_high != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.rock_high, single.params.rock_high);
   }
-  if (uniforms.tint != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.tint, single.params.tint);
+  if (pipeline.m_terrain_uniforms.tint != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.tint, single.params.tint);
   }
-  if (uniforms.noise_offset != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.noise_offset, single.params.noise_offset);
+  if (pipeline.m_terrain_uniforms.noise_offset != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.noise_offset,
+                       single.params.noise_offset);
   }
-  if (uniforms.tile_size != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.tile_size, single.params.tile_size);
+  if (pipeline.m_terrain_uniforms.tile_size != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.tile_size, single.params.tile_size);
   }
-  if (uniforms.macro_noise_scale != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.macro_noise_scale, single.params.macro_noise_scale);
+  if (pipeline.m_terrain_uniforms.macro_noise_scale != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.macro_noise_scale,
+                       single.params.macro_noise_scale);
   }
-  if (uniforms.detail_noise_scale != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.detail_noise_scale, single.params.detail_noise_scale);
+  if (pipeline.m_terrain_uniforms.detail_noise_scale != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.detail_noise_scale,
+                       single.params.detail_noise_scale);
   }
-  if (uniforms.slope_rock_threshold != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.slope_rock_threshold,
+  if (pipeline.m_terrain_uniforms.slope_rock_threshold != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.slope_rock_threshold,
                        single.params.slope_rock_threshold);
   }
-  if (uniforms.slope_rock_sharpness != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.slope_rock_sharpness,
+  if (pipeline.m_terrain_uniforms.slope_rock_sharpness != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.slope_rock_sharpness,
                        single.params.slope_rock_sharpness);
   }
-  if (uniforms.soil_blend_height != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.soil_blend_height, single.params.soil_blend_height);
+  if (pipeline.m_terrain_uniforms.soil_blend_height != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.soil_blend_height,
+                       single.params.soil_blend_height);
   }
-  if (uniforms.soil_blend_sharpness != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.soil_blend_sharpness,
+  if (pipeline.m_terrain_uniforms.soil_blend_sharpness != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.soil_blend_sharpness,
                        single.params.soil_blend_sharpness);
   }
-  if (uniforms.height_noise_strength != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.height_noise_strength,
+  if (pipeline.m_terrain_uniforms.height_noise_strength != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.height_noise_strength,
                        single.params.height_noise_strength);
   }
-  if (uniforms.height_noise_frequency != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.height_noise_frequency,
+  if (pipeline.m_terrain_uniforms.height_noise_frequency != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.height_noise_frequency,
                        single.params.height_noise_frequency);
   }
-  if (uniforms.ambient_boost != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.ambient_boost, single.params.ambient_boost);
+  if (pipeline.m_terrain_uniforms.ambient_boost != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.ambient_boost,
+                       single.params.ambient_boost);
   }
-  if (uniforms.rock_detail_strength != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.rock_detail_strength,
+  if (pipeline.m_terrain_uniforms.rock_detail_strength != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.rock_detail_strength,
                        single.params.rock_detail_strength);
   }
-  if (uniforms.light_dir != Shader::InvalidUniform) {
+  if (pipeline.m_terrain_uniforms.light_dir != Shader::InvalidUniform) {
     QVector3D light_dir = single.params.light_direction;
     if (!light_dir.isNull()) {
       light_dir.normalize();
     }
-    shader.set_uniform(uniforms.light_dir, light_dir);
+    shader.set_uniform(pipeline.m_terrain_uniforms.light_dir, light_dir);
   }
-  if (uniforms.snow_coverage != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.snow_coverage, single.params.snow_coverage);
+  if (pipeline.m_terrain_uniforms.snow_coverage != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.snow_coverage,
+                       single.params.snow_coverage);
   }
-  if (uniforms.moisture_level != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.moisture_level, single.params.moisture_level);
+  if (pipeline.m_terrain_uniforms.moisture_level != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.moisture_level,
+                       single.params.moisture_level);
   }
-  if (uniforms.crack_intensity != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.crack_intensity, single.params.crack_intensity);
+  if (pipeline.m_terrain_uniforms.crack_intensity != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.crack_intensity,
+                       single.params.crack_intensity);
   }
-  if (uniforms.rock_exposure != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.rock_exposure, single.params.rock_exposure);
+  if (pipeline.m_terrain_uniforms.rock_exposure != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.rock_exposure,
+                       single.params.rock_exposure);
   }
-  if (uniforms.grass_saturation != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.grass_saturation, single.params.grass_saturation);
+  if (pipeline.m_terrain_uniforms.grass_saturation != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.grass_saturation,
+                       single.params.grass_saturation);
   }
-  if (uniforms.soil_roughness != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.soil_roughness, single.params.soil_roughness);
+  if (pipeline.m_terrain_uniforms.soil_roughness != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.soil_roughness,
+                       single.params.soil_roughness);
   }
-  if (uniforms.curvature_response != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.curvature_response, single.params.curvature_response);
+  if (pipeline.m_terrain_uniforms.curvature_response != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.curvature_response,
+                       single.params.curvature_response);
   }
-  if (uniforms.ridge_response != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.ridge_response, single.params.ridge_response);
+  if (pipeline.m_terrain_uniforms.ridge_response != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.ridge_response,
+                       single.params.ridge_response);
   }
-  if (uniforms.gully_response != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.gully_response, single.params.gully_response);
+  if (pipeline.m_terrain_uniforms.gully_response != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.gully_response,
+                       single.params.gully_response);
   }
-  if (uniforms.snow_color != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.snow_color, single.params.snow_color);
+  if (pipeline.m_terrain_uniforms.snow_color != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.snow_color,
+                       single.params.snow_color);
   }
-  if (uniforms.soil_foot_height != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.soil_foot_height, single.params.soil_foot_height);
+  if (pipeline.m_terrain_uniforms.soil_foot_height != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.soil_foot_height,
+                       single.params.soil_foot_height);
   }
-  if (uniforms.screen_toe_mul != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.screen_toe_mul, single.params.screen_toe_mul);
+  if (pipeline.m_terrain_uniforms.screen_toe_mul != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.screen_toe_mul,
+                       single.params.screen_toe_mul);
   }
-  if (uniforms.screen_toe_clamp != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.screen_toe_clamp, single.params.screen_toe_clamp);
+  if (pipeline.m_terrain_uniforms.screen_toe_clamp != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.screen_toe_clamp,
+                       single.params.screen_toe_clamp);
   }
   const auto& height = single.height;
-  if (uniforms.has_height_texture != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.has_height_texture,
+  if (pipeline.m_terrain_uniforms.has_height_texture != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.has_height_texture,
                        height.enabled && height.texture != nullptr ? 1 : 0);
   }
   if (height.enabled && height.texture != nullptr) {
     height.texture->bind(TextureUnit::terrain_height);
     m_last_bound_texture = height.texture;
-    if (uniforms.height_texture != Shader::InvalidUniform) {
-      shader.set_uniform(uniforms.height_texture, TextureUnit::terrain_height);
+    if (pipeline.m_terrain_uniforms.height_texture != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.height_texture,
+                         TextureUnit::terrain_height);
     }
-    if (uniforms.height_texel_size != Shader::InvalidUniform) {
-      shader.set_uniform(uniforms.height_texel_size, height.texel_size);
+    if (pipeline.m_terrain_uniforms.height_texel_size != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.height_texel_size,
+                         height.texel_size);
     }
-    if (uniforms.height_uv_scale != Shader::InvalidUniform) {
-      shader.set_uniform(uniforms.height_uv_scale, height.uv_scale);
+    if (pipeline.m_terrain_uniforms.height_uv_scale != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.height_uv_scale, height.uv_scale);
     }
-    if (uniforms.height_uv_offset != Shader::InvalidUniform) {
-      shader.set_uniform(uniforms.height_uv_offset, height.uv_offset);
+    if (pipeline.m_terrain_uniforms.height_uv_offset != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.height_uv_offset,
+                         height.uv_offset);
     }
-    if (uniforms.height_to_world != Shader::InvalidUniform) {
-      shader.set_uniform(uniforms.height_to_world, height.to_world);
+    if (pipeline.m_terrain_uniforms.height_to_world != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.height_to_world, height.to_world);
     }
   }
   const bool field_ready = height.enabled && height.field_texture != nullptr;
-  if (uniforms.has_field_texture != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.has_field_texture, field_ready ? 1 : 0);
+  if (pipeline.m_terrain_uniforms.has_field_texture != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.has_field_texture,
+                       field_ready ? 1 : 0);
   }
   if (field_ready) {
     height.field_texture->bind(TextureUnit::terrain_fields);
-    if (uniforms.field_texture != Shader::InvalidUniform) {
-      shader.set_uniform(uniforms.field_texture, TextureUnit::terrain_fields);
+    if (pipeline.m_terrain_uniforms.field_texture != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.field_texture,
+                         TextureUnit::terrain_fields);
     }
   }
 
   const bool atlas_ready = height.noise_atlas != 0U && height.noise_atlas_detail != 0U;
-  if (uniforms.has_noise_atlas != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.has_noise_atlas, atlas_ready ? 1 : 0);
+  if (pipeline.m_terrain_uniforms.has_noise_atlas != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.has_noise_atlas,
+                       atlas_ready ? 1 : 0);
   }
   if (atlas_ready) {
     glActiveTexture(GL_TEXTURE0 + TextureUnit::terrain_noise_atlas);
     glBindTexture(GL_TEXTURE_2D, height.noise_atlas);
     glActiveTexture(GL_TEXTURE0);
-    if (uniforms.noise_atlas != Shader::InvalidUniform) {
-      shader.set_uniform(uniforms.noise_atlas, TextureUnit::terrain_noise_atlas);
+    if (pipeline.m_terrain_uniforms.noise_atlas != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.noise_atlas,
+                         TextureUnit::terrain_noise_atlas);
     }
     glActiveTexture(GL_TEXTURE0 + TextureUnit::terrain_noise_atlas_detail);
     glBindTexture(GL_TEXTURE_2D, height.noise_atlas_detail);
     glActiveTexture(GL_TEXTURE0);
-    if (uniforms.noise_atlas_detail != Shader::InvalidUniform) {
-      shader.set_uniform(uniforms.noise_atlas_detail,
+    if (pipeline.m_terrain_uniforms.noise_atlas_detail != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.noise_atlas_detail,
                          TextureUnit::terrain_noise_atlas_detail);
     }
-    if (uniforms.noise_atlas_world_size != Shader::InvalidUniform) {
-      shader.set_uniform(uniforms.noise_atlas_world_size,
+    if (pipeline.m_terrain_uniforms.noise_atlas_world_size != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.noise_atlas_world_size,
                          height.noise_atlas_world_size);
     }
   }
   const bool microdetail_ready = height.microdetail != 0U;
-  if (uniforms.has_microdetail != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.has_microdetail, microdetail_ready ? 1 : 0);
+  if (pipeline.m_terrain_uniforms.has_microdetail != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.has_microdetail,
+                       microdetail_ready ? 1 : 0);
   }
   if (microdetail_ready) {
     glActiveTexture(GL_TEXTURE0 + TextureUnit::terrain_microdetail);
     glBindTexture(GL_TEXTURE_2D, height.microdetail);
     glActiveTexture(GL_TEXTURE0);
-    if (uniforms.microdetail != Shader::InvalidUniform) {
-      shader.set_uniform(uniforms.microdetail, TextureUnit::terrain_microdetail);
+    if (pipeline.m_terrain_uniforms.microdetail != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.microdetail,
+                         TextureUnit::terrain_microdetail);
     }
   }
 
-  if (uniforms.has_local_light_mask != Shader::InvalidUniform) {
+  if (pipeline.m_terrain_uniforms.has_local_light_mask != Shader::InvalidUniform) {
     const bool mask_ready = !m_active_local_lights.empty();
-    shader.set_uniform(uniforms.has_local_light_mask, mask_ready ? 1 : 0);
-    if (mask_ready && uniforms.local_light_mask != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.has_local_light_mask,
+                       mask_ready ? 1 : 0);
+    if (mask_ready &&
+        pipeline.m_terrain_uniforms.local_light_mask != Shader::InvalidUniform) {
       const QVector3D center = single.aabb.center();
       const QVector3D extents = single.aabb.extents();
       const auto mask = Render::local_light_mask_for_bounds(
           m_active_local_lights, center, extents.length());
-      shader.set_uniform(uniforms.local_light_mask, static_cast<int>(mask));
+      shader.set_uniform(pipeline.m_terrain_uniforms.local_light_mask,
+                         static_cast<int>(mask));
     }
   }
 
-  set_camera_uniform(shader, uniforms, camera_position);
+  set_camera_uniform(shader, pipeline.m_terrain_uniforms, camera_position);
 }
 
 void Backend::execute_terrain_commands(const PreparedBatch& prepared,
@@ -406,35 +443,23 @@ void Backend::execute_terrain_commands(const PreparedBatch& prepared,
   case TerrainSurfaceCmdIndex: {
     const auto& terrain = std::get<TerrainSurfaceCmdIndex>(cmd);
 
-    auto shader_for = [this](const TerrainSurfaceCmd& single) -> Shader* {
-      if (single.params.is_ground_plane) {
-        return m_terrain_pipeline->m_ground_shader;
-      }
-      const auto& height = single.height;
-      if (m_terrain_pipeline->m_terrain_baked_shader != nullptr &&
-          height.noise_atlas != 0U && height.noise_atlas_detail != 0U &&
-          height.microdetail != 0U) {
-        return m_terrain_pipeline->m_terrain_baked_shader;
-      }
-      return m_terrain_pipeline->m_terrain_shader;
-    };
+    Shader* active_shader = terrain.params.is_ground_plane
+                                ? m_terrain_pipeline->m_ground_shader
+                                : m_terrain_pipeline->m_terrain_shader;
 
-    if ((terrain.mesh == nullptr) || (shader_for(terrain) == nullptr)) {
+    if ((terrain.mesh == nullptr) || (active_shader == nullptr)) {
       break;
+    }
+
+    if (m_last_bound_shader != active_shader) {
+      active_shader->use();
+      m_last_bound_shader = active_shader;
+      m_last_bound_texture = nullptr;
     }
 
     QVector3D const camera_position = cam.get_position();
 
     auto draw_surface = [&](const TerrainSurfaceCmd& single) {
-      Shader* active_shader = shader_for(single);
-      if (active_shader == nullptr) {
-        return;
-      }
-      if (m_last_bound_shader != active_shader) {
-        active_shader->use();
-        m_last_bound_shader = active_shader;
-        m_last_bound_texture = nullptr;
-      }
       const QMatrix4x4 mvp = view_proj * single.model;
       if (single.params.is_ground_plane) {
         set_ground_plane_uniforms(*active_shader, single, mvp, camera_position);

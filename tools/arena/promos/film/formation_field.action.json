@@ -1,0 +1,314 @@
+{
+  "version": 1,
+  "name": "trailer_formation_field",
+  "loop_seconds": 0.0,
+  "required_coverage": ["formation_move"],
+  "actions": [
+    {
+      "at": 0.04,
+      "action": "resume"
+    },
+    {
+      "at": 0.05,
+      "action": "camera_look_at",
+      "argument": "0,-4"
+    },
+    {
+      "at": 0.06,
+      "action": "camera_zoom",
+      "argument": "-0.28"
+    },
+    {
+      "at": 0.7,
+      "action": "select_by_type",
+      "argument": "swordsman"
+    },
+    {
+      "at": 1.05,
+      "action": "move_to_world",
+      "argument": "6,16"
+    },
+    {
+      "at": 1.54,
+      "action": "resume"
+    },
+    {
+      "at": 1.7,
+      "action": "select_by_type",
+      "argument": "spearman"
+    },
+    {
+      "at": 2.05,
+      "action": "move_to_world",
+      "argument": "-12,22"
+    },
+    {
+      "at": 2.6,
+      "action": "select_by_type",
+      "argument": "archer"
+    },
+    {
+      "at": 2.95,
+      "action": "move_to_world",
+      "argument": "12,24"
+    },
+    {
+      "at": 3.04,
+      "action": "resume"
+    },
+    {
+      "at": 3.4,
+      "action": "select_by_type",
+      "argument": "horse_swordsman"
+    },
+    {
+      "at": 3.75,
+      "action": "move_to_world",
+      "argument": "-16,12"
+    },
+    {
+      "at": 4.54,
+      "action": "resume"
+    },
+    {
+      "at": 4.6,
+      "action": "deselect_world",
+      "argument": "-26,-14"
+    },
+    {
+      "at": 6.04,
+      "action": "resume"
+    },
+    {
+      "at": 6.2,
+      "action": "select_by_type",
+      "argument": "swordsman"
+    },
+    {
+      "at": 7.0,
+      "action": "formation_begin_world",
+      "argument": "20,-14"
+    },
+    {
+      "at": 7.54,
+      "action": "resume"
+    },
+    {
+      "at": 8.2,
+      "action": "formation_intent",
+      "argument": "line"
+    },
+    {
+      "at": 9.04,
+      "action": "resume"
+    },
+    {
+      "at": 9.4,
+      "action": "formation_drag_world",
+      "argument": "11,-5"
+    },
+    {
+      "at": 10.0,
+      "action": "formation_drag_world",
+      "argument": "2,4"
+    },
+    {
+      "at": 10.54,
+      "action": "resume"
+    },
+    {
+      "at": 10.6,
+      "action": "formation_drag_world",
+      "argument": "-7,13"
+    },
+    {
+      "at": 11.2,
+      "action": "formation_drag_world",
+      "argument": "-16,22"
+    },
+    {
+      "at": 11.9,
+      "action": "formation_end"
+    },
+    {
+      "at": 12.04,
+      "action": "resume"
+    },
+    {
+      "at": 12.4,
+      "action": "formation_confirm"
+    },
+    {
+      "at": 13.54,
+      "action": "resume"
+    },
+    {
+      "at": 13.6,
+      "action": "deselect_world",
+      "argument": "-26,-16"
+    },
+    {
+      "at": 15.04,
+      "action": "resume"
+    },
+    {
+      "at": 16.54,
+      "action": "resume"
+    },
+    {
+      "at": 18.04,
+      "action": "resume"
+    },
+    {
+      "at": 19.54,
+      "action": "resume"
+    },
+    {
+      "at": 21.04,
+      "action": "resume"
+    },
+    {
+      "at": 22.54,
+      "action": "resume"
+    },
+    {
+      "at": 24.04,
+      "action": "resume"
+    },
+    {
+      "at": 25.54,
+      "action": "resume"
+    },
+    {
+      "at": 27.04,
+      "action": "resume"
+    },
+    {
+      "at": 27.2,
+      "action": "select_all"
+    },
+    {
+      "at": 28.0,
+      "action": "formation_begin_world",
+      "argument": "27,-38"
+    },
+    {
+      "at": 28.54,
+      "action": "resume"
+    },
+    {
+      "at": 29.0,
+      "action": "formation_intent",
+      "argument": "line"
+    },
+    {
+      "at": 30.0,
+      "action": "formation_drag_world",
+      "argument": "13,-24"
+    },
+    {
+      "at": 30.04,
+      "action": "resume"
+    },
+    {
+      "at": 30.6,
+      "action": "formation_drag_world",
+      "argument": "-1,-10"
+    },
+    {
+      "at": 31.2,
+      "action": "formation_drag_world",
+      "argument": "-15,4"
+    },
+    {
+      "at": 31.54,
+      "action": "resume"
+    },
+    {
+      "at": 31.8,
+      "action": "formation_drag_world",
+      "argument": "-29,18"
+    },
+    {
+      "at": 32.6,
+      "action": "formation_end"
+    },
+    {
+      "at": 33.04,
+      "action": "resume"
+    },
+    {
+      "at": 33.1,
+      "action": "formation_confirm"
+    },
+    {
+      "at": 34.2,
+      "action": "deselect_world",
+      "argument": "46,28"
+    },
+    {
+      "at": 34.54,
+      "action": "resume"
+    },
+    {
+      "at": 36.04,
+      "action": "resume"
+    },
+    {
+      "at": 37.54,
+      "action": "resume"
+    },
+    {
+      "at": 39.04,
+      "action": "resume"
+    },
+    {
+      "at": 40.54,
+      "action": "resume"
+    },
+    {
+      "at": 42.04,
+      "action": "resume"
+    },
+    {
+      "at": 43.54,
+      "action": "resume"
+    },
+    {
+      "at": 45.04,
+      "action": "resume"
+    },
+    {
+      "at": 46.54,
+      "action": "resume"
+    },
+    {
+      "at": 48.04,
+      "action": "resume"
+    },
+    {
+      "at": 49.54,
+      "action": "resume"
+    },
+    {
+      "at": 51.04,
+      "action": "resume"
+    },
+    {
+      "at": 52.54,
+      "action": "resume"
+    },
+    {
+      "at": 54.04,
+      "action": "resume"
+    },
+    {
+      "at": 55.54,
+      "action": "resume"
+    },
+    {
+      "at": 57.04,
+      "action": "resume"
+    }
+  ]
+}

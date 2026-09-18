@@ -125,8 +125,8 @@ TEST_P(IronSepulcherWatchDefenceTest, NoGuardianStandsIdleWhileItsZoneIsStormed)
   };
 
   const std::vector<EntityID> column{
-      spawn(Game::Units::SpawnType::Knight, 12.0F, 0.0F),
-      spawn(Game::Units::SpawnType::Knight, 12.0F, 3.0F),
+      spawn(Game::Units::SpawnType::Swordsman, 12.0F, 0.0F),
+      spawn(Game::Units::SpawnType::Swordsman, 12.0F, 3.0F),
       spawn(Game::Units::SpawnType::Spearman, 12.0F, -3.0F),
   };
   const std::vector<EntityID> archers{

@@ -75,7 +75,7 @@ protected:
 TEST_F(HoldModeTest, StanceStaysLimitedToArchersAndSpearmen) {
   auto* archer = spawn(Game::Units::SpawnType::Archer);
   auto* spearman = spawn(Game::Units::SpawnType::Spearman, 2.0F);
-  auto* swordsman = spawn(Game::Units::SpawnType::Knight, 4.0F);
+  auto* swordsman = spawn(Game::Units::SpawnType::Swordsman, 4.0F);
   auto* civilian = spawn(Game::Units::SpawnType::Civilian, 6.0F);
 
   for (auto* entity : {archer, spearman, swordsman, civilian}) {
@@ -140,7 +140,7 @@ TEST_F(HoldModeTest, GuardOrderStandsUpInsteadOfSnapping) {
 
 TEST_F(HoldModeTest, DeathReleasesTheStance) {
   auto* archer = spawn(Game::Units::SpawnType::Archer, 0.0F, 0.0F, 1, 40);
-  auto* attacker = spawn(Game::Units::SpawnType::Knight, 2.0F, 0.0F, 2);
+  auto* attacker = spawn(Game::Units::SpawnType::Swordsman, 2.0F, 0.0F, 2);
   set_hold(archer, true);
   advance(2.0F);
 

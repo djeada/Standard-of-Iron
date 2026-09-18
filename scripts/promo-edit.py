@@ -151,8 +151,13 @@ def build_sfx_layer(
     cues: list[dict],
     first_input: int,
     bed_label: str,
+    clip_tracks: list[tuple[int, float, float, float]] | None = None,
 ) -> tuple[str, list[str]]:
     """Lay timed one-shots over the score and mix them into a single bus.
+
+    ``clip_tracks`` adds a shot's own recorded game audio: ``(input index,
+    timeline start, seconds on screen, gain)``. It is trimmed to the shot and
+    faded at both ends so a join never clicks.
 
     A cue is ``{"file": ..., "at": <seconds on the finished timeline>}`` plus an
     optional linear ``gain``. Times are measured on the *blended* timeline, the
@@ -191,6 +196,19 @@ def build_sfx_layer(
         )
         labels.append(f"[{label}]")
 
+    for index, (input_index, start, seconds, gain) in enumerate(clip_tracks or []):
+        at_ms = int(round(max(0.0, start) * 1000.0))
+        fade_out = min(0.3, seconds * 0.25)
+        label = f"clipaudio{index}"
+        filter_complex += (
+            f";[{input_index}:a]aformat=channel_layouts=stereo,aresample=48000,"
+            f"atrim=0:{seconds:.3f},asetpts=PTS-STARTPTS,"
+            f"afade=t=in:st=0:d=0.12,"
+            f"afade=t=out:st={max(0.0, seconds - fade_out):.3f}:d={fade_out:.3f},"
+            f"volume={gain:.3f},adelay={at_ms}|{at_ms}[{label}]"
+        )
+        labels.append(f"[{label}]")
+
     filter_complex += (
         f";{''.join(labels)}amix=inputs={len(labels)}:duration=longest:"
         f"dropout_transition=0:normalize=0[sfxmix]"
@@ -200,6 +218,27 @@ def build_sfx_layer(
         f"alimiter=limit={PLATFORM_CEILING:.3f}:level=disabled[aout]"
     )
     return filter_complex, inputs
+
+
+def clip_has_audio(path: Path) -> bool:
+    probe = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "a",
+            "-show_entries",
+            "stream=index",
+            "-of",
+            "csv=p=0",
+            str(path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return bool(probe.stdout.strip())
 
 
 def master_music(track: Path, workdir: Path) -> Path | None:
@@ -1501,12 +1540,33 @@ def main() -> int:
             f"alimiter=limit={PLATFORM_CEILING:.3f}:level=disabled[{bed_label}]"
         )
 
-    if sfx_cues and mode != "none":
+    clip_tracks: list[tuple[int, float, float, float]] = []
+    for index, shot in enumerate(shots):
+        gain = authored.get(shot.get("name", ""), {}).get("clip_audio")
+        if gain is None:
+            continue
+        clip = args.clips / shot["clip"]
+        if not clip_has_audio(clip):
+            print(
+                f"promo-edit: warning: '{shot.get('name')}' asks for its game audio "
+                f"but {clip.name} has no audio stream"
+            )
+            continue
+        start, end = spans[index]
+        clip_tracks.append((index, start, end - start, float(gain)))
+    if clip_tracks and mode != "none":
+        bed_label = "abed"
+        filter_complex = filter_complex.replace("[aout]", "[abed]")
+
+    if (sfx_cues or clip_tracks) and mode != "none":
         filter_complex, sfx_inputs = build_sfx_layer(
-            filter_complex, sfx_cues, len(shots) + 1, bed_label
+            filter_complex, sfx_cues, len(shots) + 1, bed_label, clip_tracks
         )
         command += sfx_inputs
-        print(f"promo-edit: mixing {len(sfx_cues)} sound effect cue(s) over the score")
+        print(
+            f"promo-edit: mixing {len(sfx_cues)} sound effect cue(s) and "
+            f"{len(clip_tracks)} shot(s) of game audio over the score"
+        )
 
     command += ["-filter_complex", filter_complex, "-map", "[vout]"]
     if mode != "none":

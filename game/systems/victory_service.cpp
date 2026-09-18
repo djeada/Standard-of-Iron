@@ -206,8 +206,6 @@ void VictoryService::reset() {
   m_rule_set = {};
   m_tracked_enemy_structure_types.clear();
   m_tracked_local_structure_types.clear();
-  m_tracked_enemy_spawn_types.fill(false);
-  m_tracked_local_spawn_types.fill(false);
   m_only_commander_structure_types.clear();
   m_elapsed_time = 0.0F;
   m_startup_delay = 0.0F;
@@ -468,16 +466,6 @@ void VictoryService::refresh_rule_metadata() {
             }},
         condition.rule);
   }
-  refresh_tracked_spawn_types();
-}
-
-void VictoryService::refresh_tracked_spawn_types() {
-  for (std::size_t index = 0; index < Game::Units::k_spawn_type_count; ++index) {
-    QString const name =
-        Game::Units::spawn_typeToQString(static_cast<Game::Units::SpawnType>(index));
-    m_tracked_enemy_spawn_types[index] = m_tracked_enemy_structure_types.contains(name);
-    m_tracked_local_spawn_types[index] = m_tracked_local_structure_types.contains(name);
-  }
 }
 
 void VictoryService::update_rule_arming(const WorldSummary& summary) {
@@ -660,20 +648,11 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
       continue;
     }
 
-    auto const spawn_index = static_cast<std::size_t>(unit->spawn_type);
-    if (spawn_index >= Game::Units::k_spawn_type_count) {
-      continue;
-    }
-    bool const tracked_local = is_local_unit && track_local_structures &&
-                               m_tracked_local_spawn_types[spawn_index];
-    bool const tracked_enemy =
-        track_enemy_structures && m_tracked_enemy_spawn_types[spawn_index];
-    if (!tracked_local && !tracked_enemy) {
-      continue;
-    }
-    QString const unit_type = Game::Units::spawn_typeToQString(unit->spawn_type);
+    QString const unit_type =
+        QString::fromStdString(Game::Units::spawn_typeToString(unit->spawn_type));
 
-    if (tracked_local) {
+    if (is_local_unit && track_local_structures &&
+        m_tracked_local_structure_types.contains(unit_type)) {
       summary.local_owned_structure_counts[unit_type] += 1;
       if (m_requires_captured_structure_tracking) {
         const auto* building =
@@ -685,7 +664,7 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
       continue;
     }
 
-    if (tracked_enemy &&
+    if (track_enemy_structures && m_tracked_enemy_structure_types.contains(unit_type) &&
         m_owner_registry.are_enemies(m_local_owner_id, unit->owner_id)) {
       if (!m_rule_set.include_ambient_undead &&
           unit->nation_id == Game::Systems::NationID::IronSepulcher) {

@@ -364,7 +364,7 @@ protected:
           case Game::Units::SpawnType::Archer:
             ++report.missile;
             break;
-          case Game::Units::SpawnType::MountedKnight:
+          case Game::Units::SpawnType::MountedSwordsman:
           case Game::Units::SpawnType::HorseArcher:
           case Game::Units::SpawnType::HorseSpearman:
           case Game::Units::SpawnType::Elephant:

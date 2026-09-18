@@ -142,25 +142,6 @@ void evict_incrementally(Map& cache, std::size_t limit) {
   }
 }
 
-auto compute_formation_extents(const FormationLayout& layout) -> FormationExtents {
-  FormationExtents extents;
-  extents.body_radius = layout.body_radius;
-  for (auto const& slot : layout.live_slots) {
-    extents.live_envelope =
-        std::max(extents.live_envelope,
-                 std::hypot(slot.local_x, slot.local_z) + layout.body_radius);
-  }
-  extents.minimum_scale = minimum_formation_scale(layout);
-  float lateral_extent = layout.body_radius;
-  for (auto const& slot : layout.live_slots) {
-    lateral_extent =
-        std::max(lateral_extent,
-                 std::abs(slot.local_x) * extents.minimum_scale + layout.body_radius);
-  }
-  extents.navigation_clearance = std::max(0.1F, lateral_extent);
-  return extents;
-}
-
 struct LayoutCacheEntry {
   std::uint64_t epoch{0};
   std::uint64_t local_signature{0};
@@ -168,7 +149,6 @@ struct LayoutCacheEntry {
   float world_z{0.0F};
   float yaw{0.0F};
   float turn_radius{0.0F};
-  FormationExtents extents;
   FormationLayout layout;
 };
 
@@ -186,30 +166,9 @@ void hash_float(std::uint64_t& seed, float value) noexcept {
   hash_combine(seed, std::bit_cast<std::uint32_t>(value));
 }
 
-auto definition_total_count(const Engine::Core::UnitComponent& unit) -> int {
-  int total_count = 0;
-  if (auto troop_type = Game::Units::spawn_typeToTroopType(unit.spawn_type);
-      unit.uses_nation_formation_profile && troop_type) {
-    total_count = TroopProfileService::instance()
-                      .get_profile_ref(unit.nation_id, *troop_type)
-                      .individuals_per_unit;
-  } else {
-    total_count =
-        Game::Units::TroopConfig::instance().get_individuals_per_unit(unit.spawn_type);
-  }
-  if (unit.render_individuals_per_unit_override > 0) {
-    total_count = unit.render_individuals_per_unit_override;
-  } else if (unit.squad_strength > 0) {
-    total_count = std::min(total_count, unit.squad_strength);
-  }
-  return std::max(1, total_count);
-}
-
 auto layout_signature(const Engine::Core::Entity& entity) -> std::uint64_t {
   std::uint64_t signature = 0xcbf29ce484222325ULL;
   hash_combine(signature, entity.get_id());
-  bool const is_building = entity.has_component<Engine::Core::BuildingComponent>();
-  bool const is_elephant = entity.has_component<Engine::Core::ElephantComponent>();
   auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
   if (unit != nullptr) {
     hash_combine(signature, static_cast<std::uint64_t>(unit->spawn_type));
@@ -218,23 +177,22 @@ auto layout_signature(const Engine::Core::Entity& entity) -> std::uint64_t {
     hash_combine(
         signature,
         static_cast<std::uint64_t>(unit->render_individuals_per_unit_override));
+    hash_combine(signature, static_cast<std::uint64_t>(unit->formation_files_override));
     hash_combine(signature, static_cast<std::uint64_t>(unit->squad_strength));
     hash_combine(signature, unit->uses_nation_formation_profile ? 1U : 0U);
 
-    bool const rigid_body = is_building || is_elephant;
-    int const health_state =
-        rigid_body ? (unit->health > 0 ? 1 : 0)
-                   : Engine::Core::resolve_surviving_individual_count(
-                         unit->health, unit->max_health, definition_total_count(*unit));
-    hash_combine(signature, static_cast<std::uint64_t>(health_state));
+    hash_combine(signature, static_cast<std::uint64_t>(unit->health));
+    hash_combine(signature, static_cast<std::uint64_t>(unit->max_health));
   }
   auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
   if (transform != nullptr) {
     hash_float(signature, transform->scale.x);
     hash_float(signature, transform->scale.z);
   }
-  hash_combine(signature, is_building ? 1U : 0U);
-  hash_combine(signature, is_elephant ? 1U : 0U);
+  hash_combine(signature,
+               entity.has_component<Engine::Core::BuildingComponent>() ? 1U : 0U);
+  hash_combine(signature,
+               entity.has_component<Engine::Core::ElephantComponent>() ? 1U : 0U);
   hash_combine(signature, holds_formation_line(entity) ? 1U : 0U);
   if (auto const* roster =
           entity.get_component<Engine::Core::FormationRosterPresentationComponent>()) {
@@ -259,15 +217,11 @@ auto layout_signature(const Engine::Core::Entity& entity) -> std::uint64_t {
 
 void transform_cached_slots(FormationLayout& layout,
                             const Engine::Core::TransformComponent& transform) {
-  float const yaw = transform.rotation.y * std::numbers::pi_v<float> / 180.0F;
-  float const sin_yaw = std::sin(yaw);
-  float const cos_yaw = std::cos(yaw);
-  float const origin_x = transform.position.x;
-  float const origin_z = transform.position.z;
-  auto update = [&](std::vector<SoldierSlot>& soldier_slots) {
+  auto update = [&transform](std::vector<SoldierSlot>& soldier_slots) {
     for (SoldierSlot& slot : soldier_slots) {
-      slot.world_x = origin_x + cos_yaw * slot.local_x + sin_yaw * slot.local_z;
-      slot.world_z = origin_z - sin_yaw * slot.local_x + cos_yaw * slot.local_z;
+      auto const position = world_slot(transform, slot.local_x, slot.local_z);
+      slot.world_x = position.first;
+      slot.world_z = position.second;
     }
   };
   update(layout.all_slots);
@@ -296,7 +250,6 @@ void store_layout_cache(const Engine::Core::Entity* entity,
     cache.turn_radius =
         std::max(cache.turn_radius, std::hypot(slot.local_x, slot.local_z));
   }
-  cache.extents = compute_formation_extents(layout);
 }
 
 } // namespace
@@ -356,6 +309,9 @@ auto resolve_definition(const Engine::Core::UnitComponent& unit)
     definition.total_count = std::min(definition.total_count, unit.squad_strength);
   }
   definition.total_count = std::max(1, definition.total_count);
+  if (unit.formation_files_override > 0) {
+    definition.max_per_row = unit.formation_files_override;
+  }
   definition.max_per_row =
       std::clamp(definition.max_per_row, 1, definition.total_count);
   definition.spacing = std::max(0.1F, definition.spacing);
@@ -378,6 +334,9 @@ auto resolve_definition(const Engine::Core::UnitComponent& unit,
     definition.total_count = std::min(definition.total_count, unit.squad_strength);
   }
   definition.total_count = std::max(1, definition.total_count);
+  if (unit.formation_files_override > 0) {
+    definition.max_per_row = unit.formation_files_override;
+  }
   definition.max_per_row =
       std::clamp(definition.max_per_row, 1, definition.total_count);
   definition.spacing = std::max(0.1F, definition.spacing);
@@ -863,15 +822,15 @@ auto minimum_formation_scale(const FormationLayout& layout) -> float {
              : 1.0F;
 }
 
-auto formation_extents(const Engine::Core::Entity& entity) -> FormationExtents {
-  if (auto const* entry = resolve_layout_entry(entity)) {
-    return entry->extents;
-  }
-  return compute_formation_extents(FormationLayout{});
-}
-
 auto formation_navigation_clearance(const Engine::Core::Entity& entity) -> float {
-  return formation_extents(entity).navigation_clearance;
+  auto const layout = resolve_layout(entity);
+  float const scale = minimum_formation_scale(layout);
+  float lateral_extent = layout.body_radius;
+  for (auto const& slot : layout.live_slots) {
+    lateral_extent =
+        std::max(lateral_extent, std::abs(slot.local_x) * scale + layout.body_radius);
+  }
+  return std::max(0.1F, lateral_extent);
 }
 
 auto has_formation_slots(const Engine::Core::Entity& entity) -> bool {

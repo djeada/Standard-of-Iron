@@ -451,8 +451,10 @@ TEST(AudioProvenanceTest, EveryEffectDeclaresWhereItCameFrom) {
   const QJsonArray tracks = document.object().value(QStringLiteral("tracks")).toArray();
   ASSERT_FALSE(tracks.isEmpty());
 
-  const QSet<QString> known = {
-      QStringLiteral("synth"), QStringLiteral("field"), QStringLiteral("generated")};
+  const QSet<QString> known = {QStringLiteral("synth"),
+                               QStringLiteral("field"),
+                               QStringLiteral("generated"),
+                               QStringLiteral("recorded")};
   QStringList untagged;
   QStringList unknown;
   int effects = 0;

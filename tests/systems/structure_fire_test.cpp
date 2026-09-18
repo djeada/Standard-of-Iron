@@ -58,7 +58,7 @@ protected:
 };
 
 TEST_F(StructureFireTest, MeleeDamageNeverIgnitesAStructure) {
-  auto* attacker = add_attacker(world, Game::Units::SpawnType::Knight);
+  auto* attacker = add_attacker(world, Game::Units::SpawnType::Swordsman);
   auto* structure = add_structure(world);
 
   for (int blow = 0; blow < 40; ++blow) {
