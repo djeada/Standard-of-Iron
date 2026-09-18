@@ -331,7 +331,7 @@
       "tone": "wry"
     },
     {
-      "text": "The Iron Sepulcher does not need a quartermaster. Its quartermaster is still looking for someone to tell him.",
+      "text": "The Iron Sepulcher keeps no quartermaster. Its garrison stopped asking for rations centuries ago.",
       "tone": "wry",
       "tags": [
         "undead"
@@ -345,7 +345,7 @@
       ]
     },
     {
-      "text": "Some say a skeleton mage burns the names scraped from burial stones. Each lost name feeds one more ember.",
+      "text": "Some say a grave priest burns the names scraped from burial stones. Each lost name feeds one more ember.",
       "tone": "plain",
       "tags": [
         "undead"
@@ -387,7 +387,7 @@
       ]
     },
     {
-      "text": "Slaying the last guardian clears a zone, but the shrine is not purified until you capture or destroy its anchor.",
+      "text": "Slaying the last guardian clears a zone, but the shrine is not purified until you capture or destroy it.",
       "tone": "plain",
       "tags": [
         "undead"
@@ -401,7 +401,7 @@
       ]
     },
     {
-      "text": "A skeleton mage never asks for more mana. It asks whose name is missing from the graveyard roll.",
+      "text": "A grave priest never runs short of fire. It only asks whose name is missing from the graveyard roll.",
       "tone": "wry",
       "tags": [
         "undead"
