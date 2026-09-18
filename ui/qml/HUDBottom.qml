@@ -518,7 +518,11 @@ RowLayout {
     readonly property var primaryCommandIds: ["attack", "guard", "patrol", "hold", "stop"]
     readonly property var contextualCommandIds: ["build", "collect", "auto_gather", "repair", "dismantle", "divide", "join", "deliver", "rally", "aura", "gate", "heal"]
     readonly property var primaryCommands: bottomRoot.commands_for_ids(bottomRoot.primaryCommandIds)
-    readonly property var contextualCommands: (bottomRoot.selection_tick, bottomRoot.action_states, bottomRoot.contextual_commands())
+    // The HUD polls every 100 ms. Handing the Repeater a new model on each poll
+    // recreates its buttons, and a press that straddles a poll never becomes a
+    // click. The model is replaced only when the set of eligible commands
+    // changes; the buttons bind to live action state themselves.
+    property var contextualCommands: []
 
     function command_by_id(actionId) {
         for (var i = 0; i < bottomRoot.commands.length; ++i) {
@@ -538,7 +542,24 @@ RowLayout {
         return out;
     }
 
-    function contextual_commands() {
+    function refresh_contextual_commands(force) {
+        var ids = bottomRoot.contextual_command_ids();
+        var current = bottomRoot.contextualCommands;
+        if (!force && ids.length === current.length) {
+            var unchanged = true;
+            for (var i = 0; i < ids.length; ++i) {
+                if (current[i].id !== ids[i]) {
+                    unchanged = false;
+                    break;
+                }
+            }
+            if (unchanged)
+                return;
+        }
+        bottomRoot.contextualCommands = bottomRoot.commands_for_ids(ids);
+    }
+
+    function contextual_command_ids() {
         var out = [];
         for (var i = 0; i < bottomRoot.contextualCommandIds.length; ++i) {
             var entry = bottomRoot.command_by_id(bottomRoot.contextualCommandIds[i]);
@@ -547,7 +568,7 @@ RowLayout {
             var state = bottomRoot.action_state(entry.id);
             var isCurrentMode = entry.mode && bottomRoot.current_command_mode === entry.mode;
             if (state.eligibleCount > 0 || state.active || state.mixed || state.placing || state.passive || isCurrentMode || bottomRoot.tutorial_spotlights(entry.id))
-                out.push(entry);
+                out.push(entry.id);
         }
         return out;
     }
@@ -572,11 +593,17 @@ RowLayout {
     Component.onCompleted: {
         update_action_states();
         refresh_selection();
+        refresh_contextual_commands(true);
     }
     onSelection_tickChanged: {
         update_action_states();
         refresh_selection();
+        refresh_contextual_commands(false);
     }
+    onAction_statesChanged: refresh_contextual_commands(false)
+    onCurrent_command_modeChanged: refresh_contextual_commands(false)
+    onTutorialFocusActionsChanged: refresh_contextual_commands(false)
+    onCommandsChanged: refresh_contextual_commands(true)
 
     anchors.fill: parent
     anchors.leftMargin: Design.Metrics.hudZoneMargin
