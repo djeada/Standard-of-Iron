@@ -144,10 +144,18 @@ public:
   GL::Shader* m_grass_shader = nullptr;
   GL::Shader* m_ground_shader = nullptr;
   GL::Shader* m_terrain_shader = nullptr;
+  GL::Shader* m_terrain_baked_shader = nullptr;
 
   GrassUniforms m_grass_uniforms;
   GroundUniforms m_ground_uniforms;
   TerrainUniforms m_terrain_uniforms;
+  TerrainUniforms m_terrain_baked_uniforms;
+
+  [[nodiscard]] auto
+  terrain_uniforms_for(const GL::Shader& shader) const -> const TerrainUniforms& {
+    return &shader == m_terrain_baked_shader ? m_terrain_baked_uniforms
+                                             : m_terrain_uniforms;
+  }
 
   GLuint m_grass_vao = 0;
   GLuint m_grass_vertex_buffer = 0;
@@ -159,6 +167,9 @@ private:
   void cache_grass_uniforms();
   void cache_ground_uniforms();
   void cache_terrain_uniforms();
+  static void cache_terrain_uniforms(GL::Shader* shader,
+                                     TerrainUniforms& uniforms,
+                                     bool all_optional);
 
   void initialize_grass_geometry();
   void shutdown_grass_geometry();

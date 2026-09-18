@@ -4,6 +4,7 @@
 #include <cmath>
 #include <numbers>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "../../core/component_core.h"
@@ -45,9 +46,11 @@ structure_footprint(const Engine::Core::Entity& structure) -> StructureFootprint
     return result;
   }
 
-  auto size = Game::Systems::BuildingCollisionRegistry::get_building_size(
-      unit != nullptr ? Game::Units::spawn_typeToString(unit->spawn_type)
-                      : std::string{});
+  auto size = unit != nullptr
+                  ? Game::Systems::BuildingCollisionRegistry::get_building_size(
+                        unit->spawn_type)
+                  : Game::Systems::BuildingCollisionRegistry::get_building_size(
+                        std::string_view{});
   result.half_width = std::max(0.1F, size.width * 0.5F);
   result.half_depth = std::max(0.1F, size.depth * 0.5F);
   return result;

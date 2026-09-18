@@ -5,12 +5,14 @@
 #include <cstddef>
 #include <map>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 #include "../core/ambient_session.h"
 #include "../core/component_gameplay.h"
 #include "../core/world.h"
+#include "../units/spawn_type.h"
 
 namespace Game::Systems {
 
@@ -18,7 +20,7 @@ auto BuildingCollisionRegistry::instance() -> BuildingCollisionRegistry& {
   return *Game::Session::ambient_services().building_collision;
 }
 
-const std::map<std::string, BuildingCollisionRegistry::BuildingSize>
+const std::map<std::string, BuildingCollisionRegistry::BuildingSize, std::less<>>
     BuildingCollisionRegistry::s_building_sizes = {
         {"barracks", {4.F, 4.F}},
         {"home", {4.3F, 4.4F}},
@@ -32,7 +34,7 @@ const std::map<std::string, BuildingCollisionRegistry::BuildingSize>
 
 };
 
-const std::map<std::string, BuildingCollisionRegistry::BuildingBody>
+const std::map<std::string, BuildingCollisionRegistry::BuildingBody, std::less<>>
     BuildingCollisionRegistry::s_building_bodies = {
         {"barracks", {8.65F, 4.20F, 2.325F, 0.0F}},
         {"home", {2.36F, 2.42F, 0.0F, 0.03F}},
@@ -105,7 +107,12 @@ BuildingCollisionRegistry::BuildingCollisionRegistry() {
   });
 }
 
-auto BuildingCollisionRegistry::get_building_size(const std::string& building_type)
+auto BuildingCollisionRegistry::get_building_size(Game::Units::SpawnType building_type)
+    -> BuildingCollisionRegistry::BuildingSize {
+  return get_building_size(Game::Units::spawn_type_name(building_type));
+}
+
+auto BuildingCollisionRegistry::get_building_size(std::string_view building_type)
     -> BuildingCollisionRegistry::BuildingSize {
   auto it = s_building_sizes.find(building_type);
   if (it != s_building_sizes.end()) {
