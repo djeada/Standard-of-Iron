@@ -34,6 +34,7 @@
 #include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/map/json_keys.h"
+#include "game/map/map_context.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
@@ -257,43 +258,22 @@ auto SkirmishLoader::start(const QString& map_path,
   pump_events();
 
   QSet<int> map_player_ids;
-  const QString resolved_map_path = Utils::Resources::resolve_resource_path(map_path);
-  QFile map_file(resolved_map_path);
-  if (map_file.open(QIODevice::ReadOnly)) {
-    const QByteArray data = map_file.readAll();
-    map_file.close();
-    QJsonParseError err;
-    const QJsonDocument doc = QJsonDocument::fromJson(data, &err);
-    if (err.error == QJsonParseError::NoError && doc.isObject()) {
-      QJsonObject const obj = doc.object();
-      auto collect_player_ids = [&map_player_ids, &obj](const char* key) {
-        if (!obj.contains(key) || !obj[key].isArray()) {
-          return;
-        }
-
-        const QJsonArray entries = obj[key].toArray();
-        for (const auto entry_val : entries) {
-          if (!entry_val.isObject()) {
-            continue;
-          }
-          QJsonObject const entry = entry_val.toObject();
-          if (!entry.contains(PLAYER_ID)) {
-            continue;
-          }
-
-          const int player_id = entry[PLAYER_ID].toInt();
-          if (player_id > 0) {
-            map_player_ids.insert(player_id);
-          }
-        }
-      };
-
-      collect_player_ids(SPAWNS);
-      collect_player_ids(STRUCTURES);
+  QString map_error;
+  const Game::Map::MapContext map_context =
+      Game::Map::MapContextStore::acquire(map_path, &map_error);
+  if (const auto* map_def = map_context.definition(); map_def != nullptr) {
+    for (const auto& spawn : map_def->spawns) {
+      if (spawn.player_id > 0) {
+        map_player_ids.insert(spawn.player_id);
+      }
+    }
+    for (const auto& structure : map_def->structures) {
+      if (structure.player_id > 0) {
+        map_player_ids.insert(structure.player_id);
+      }
     }
   } else {
-    qWarning() << "Could not open map file for reading player IDs:"
-               << resolved_map_path;
+    qWarning() << "Could not load map for reading player IDs:" << map_path << map_error;
   }
 
   auto& session = Game::Session::session_for(m_world);

@@ -21,6 +21,7 @@
 #include "game/systems/ai_system.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/match_snapshot.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/victory_service.h"
@@ -236,6 +237,11 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
         stats_registry.mark_game_start(owner.owner_id);
       }
     }
+  }
+
+  {
+    const Engine::Core::ScopedStartupPhase nav_phase("world.nav_prewarm");
+    Game::Systems::NavGrid::prewarm();
   }
 
   if (scene.renderer != nullptr) {
