@@ -436,8 +436,8 @@ auto CombatDustPipeline::create_weapon_arc_geometry() -> bool {
   std::vector<DustVertex> vertices;
   std::vector<unsigned int> indices;
 
-  constexpr int segment_count = 64;
-  constexpr int band_count = 3;
+  constexpr int segment_count = 96;
+  constexpr int band_count = 6;
   constexpr float pi = std::numbers::pi_v<float>;
   constexpr float inner_radius = 0.50F;
   vertices.reserve(static_cast<std::size_t>((segment_count + 1) * (band_count + 1)));

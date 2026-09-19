@@ -96,7 +96,7 @@ void BridgeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
                                          m_bridges,
                                          m_meshes,
                                          LinearFeatureKind::Bridge,
-                                         QVector3D(0.58F, 0.55F, 0.50F),
+                                         QVector3D(0.64F, 0.60F, 0.53F),
                                          segment_cull_options(longest_segment),
                                          visibility_resources,
                                          fog_mask);
