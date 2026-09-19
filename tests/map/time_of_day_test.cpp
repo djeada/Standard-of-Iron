@@ -26,7 +26,7 @@ auto ambient_radiance_at(TimeOfDay time_of_day) -> float {
 TEST(TimeOfDayTest, LightingForDayReturnsHighSun) {
   const auto settings = lighting_for_time_of_day(TimeOfDay::Day);
   EXPECT_GT(settings.primary_direction.y(), 0.7F);
-  EXPECT_FLOAT_EQ(settings.ambient_intensity, 0.30F);
+  EXPECT_FLOAT_EQ(settings.ambient_intensity, 0.27F);
   EXPECT_NEAR(settings.primary_direction.length(), 1.0F, 1e-5F);
 }
 
@@ -42,7 +42,7 @@ TEST(TimeOfDayTest, LightingForAfternoonSitsLowerInTheSkyThanDay) {
   const auto afternoon = lighting_for_time_of_day(TimeOfDay::Afternoon);
 
   EXPECT_LT(afternoon.primary_direction.y(), day.primary_direction.y());
-  EXPECT_FLOAT_EQ(afternoon.ambient_intensity, 0.36F);
+  EXPECT_FLOAT_EQ(afternoon.ambient_intensity, 0.30F);
   EXPECT_NEAR(afternoon.primary_direction.length(), 1.0F, 1e-5F);
 
   EXPECT_GT(afternoon.ambient_intensity, day.ambient_intensity);

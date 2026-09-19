@@ -10,6 +10,7 @@
 
 #include "../core/component_gameplay.h"
 #include "../core/world.h"
+#include "../formation/army_formation_registry.h"
 #include "../map/terrain_service.h"
 #include "body_profile.h"
 #include "combat_rules.h"
@@ -234,6 +235,30 @@ struct PreparedMove {
   float previous_vz{0.0F};
   bool preserve_velocity{false};
 };
+
+// Every troop of a shaped order reaches its slot at the same moment: each walks
+// its own route at the pace that makes it arrive with the slowest-arriving one.
+auto synchronized_paces(const std::vector<float>& route_length,
+                        const std::vector<float>& speed) -> std::vector<float> {
+  constexpr float k_min_pace_share = 0.3F;
+  std::vector<float> paces(route_length.size(), 0.0F);
+  float arrival_seconds = 0.0F;
+  for (std::size_t i = 0; i < route_length.size(); ++i) {
+    if (speed[i] > 0.0F) {
+      arrival_seconds = std::max(arrival_seconds, route_length[i] / speed[i]);
+    }
+  }
+  if (arrival_seconds <= 1.0e-3F) {
+    return paces;
+  }
+  for (std::size_t i = 0; i < route_length.size(); ++i) {
+    if (speed[i] > 0.0F) {
+      paces[i] = std::clamp(
+          route_length[i] / arrival_seconds, speed[i] * k_min_pace_share, speed[i]);
+    }
+  }
+  return paces;
+}
 
 [[nodiscard]] auto issuer_retargets(MoveOrderKind kind) -> bool {
   return kind == MoveOrderKind::AttackChase || kind == MoveOrderKind::ScriptedMove ||
@@ -607,7 +632,8 @@ void MovementSystem::issue_move(Engine::Core::World& world,
   if (prepared.movement == nullptr || prepared.transform == nullptr) {
     return;
   }
-  prepared.movement->precise_arrival = options.kind == MoveOrderKind::AttackChase;
+  prepared.movement->precise_arrival = options.kind == MoveOrderKind::AttackChase ||
+                                       options.kind == MoveOrderKind::FormationMove;
   prepared.movement->issuer_retargets = issuer_retargets(options.kind);
   assign_navigation_target(
       NavGrid::get_pathfinder(), *prepared.transform, *prepared.movement, target);
@@ -644,7 +670,8 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
     prepared.push_back(prepare_move(world, unit_id, options));
     if (prepared.back().movement != nullptr) {
       prepared.back().movement->precise_arrival =
-          options.kind == MoveOrderKind::AttackChase;
+          options.kind == MoveOrderKind::AttackChase ||
+          options.kind == MoveOrderKind::FormationMove;
       prepared.back().movement->issuer_retargets = issuer_retargets(options.kind);
     }
   }
@@ -751,7 +778,50 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
 
     QVector3D const member_target = resolve_walkable_target_toward(
         targets[i], current, passability_for(*move.movement));
-    if (corridor.reachable()) {
+    if (options.kind == MoveOrderKind::FormationMove &&
+        pathfinder->is_world_segment_walkable(
+            current,
+            member_target,
+            passability_for(*move.movement),
+            move.movement->get_navigation_clearance())) {
+      assign_direct_target(*move.movement, member_target);
+      assigned = true;
+    }
+    // A shaped order sends each troop along its own route when that route is
+    // close to direct (scattered trees, a boulder): funnelling everyone into one
+    // shared corridor made them bunch at its mouth and loop back to their slots.
+    // Shared lanes remain for real detours such as a bridge or a gate.
+    if (!assigned && (options.synchronize_arrival || options.prefer_own_routes)) {
+      constexpr float k_own_route_detour = 1.35F;
+      constexpr float k_own_route_slack_metres = 2.0F;
+      auto const own =
+          RouteCorridorPlanner::plan(*pathfinder,
+                                     current,
+                                     member_target,
+                                     passability_for(*move.movement),
+                                     move.movement->get_navigation_clearance());
+      if (own.reachable()) {
+        float length = 0.0F;
+        QVector3D previous = current;
+        for (const auto& point : own.centerline) {
+          length += QVector3D(point.x() - previous.x(), 0.0F, point.z() - previous.z())
+                        .length();
+          previous = point;
+        }
+        float const straight = QVector3D(member_target.x() - current.x(),
+                                         0.0F,
+                                         member_target.z() - current.z())
+                                   .length();
+        if (length <= straight * k_own_route_detour + k_own_route_slack_metres) {
+          assigned = assign_waypoints_to_movement(*pathfinder,
+                                                  own.centerline,
+                                                  own.centerline.back(),
+                                                  *move.transform,
+                                                  *move.movement);
+        }
+      }
+    }
+    if (!assigned && corridor.reachable()) {
       QVector3D const target_offset = member_target - slot_center;
       float const lateral_offset = QVector3D::dotProduct(target_offset, final_right);
       auto const lane =
@@ -829,6 +899,39 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
       move.movement->vz = move.previous_vz;
     }
   }
+
+  if (options.synchronize_arrival) {
+    std::vector<float> route_length(prepared.size(), 0.0F);
+    std::vector<float> speed(prepared.size(), 0.0F);
+    for (std::size_t i = 0; i < prepared.size(); ++i) {
+      auto const& move = prepared[i];
+      if (move.entity == nullptr || move.transform == nullptr ||
+          move.movement == nullptr) {
+        continue;
+      }
+      const auto* unit =
+          world.try_get<Engine::Core::UnitComponent>(move.entity->get_id());
+      speed[i] = unit != nullptr ? unit->speed : 0.0F;
+      float x = move.transform->position.x;
+      float z = move.transform->position.z;
+      float length = 0.0F;
+      for (std::size_t w = move.movement->path_index; w < move.movement->path.size();
+           ++w) {
+        length += std::hypot(move.movement->path[w].first - x,
+                             move.movement->path[w].second - z);
+        x = move.movement->path[w].first;
+        z = move.movement->path[w].second;
+      }
+      length += std::hypot(targets[i].x() - x, targets[i].z() - z);
+      route_length[i] = length;
+    }
+    auto const paces = synchronized_paces(route_length, speed);
+    for (std::size_t i = 0; i < prepared.size(); ++i) {
+      if (prepared[i].movement != nullptr && paces[i] > 0.0F) {
+        prepared[i].movement->declared_group_pace = paces[i];
+      }
+    }
+  }
 }
 
 void MovementSystem::issue_move_units(Engine::Core::World& world,
@@ -836,9 +939,107 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
   issue_move_units(world, intents, MoveOptions{});
 }
 
+void MovementSystem::follow_formation_slot(Engine::Core::World& world,
+                                           const MoveIntent& intent,
+                                           const MoveOptions& options) {
+  const auto* attack = world.try_get<Engine::Core::AttackComponent>(intent.unit_id);
+  if (attack != nullptr && attack->in_melee_lock) {
+    return;
+  }
+  auto* movement = world.try_get<Engine::Core::MovementComponent>(intent.unit_id);
+  auto* transform = world.try_get<Engine::Core::TransformComponent>(intent.unit_id);
+  if (transform == nullptr) {
+    return;
+  }
+  bool const continuing = movement != nullptr && movement->following_formation_slot;
+  if (!continuing) {
+    const auto prepared = prepare_move(world, intent.unit_id, options);
+    if (prepared.movement == nullptr) {
+      return;
+    }
+    movement = prepared.movement;
+    if (auto* system = world.get_system<MovementSystem>()) {
+      system->cancel_pending_path_request(intent.unit_id);
+    }
+  }
+  if (intent.facing_angle.has_value()) {
+    transform->desired_yaw = *intent.facing_angle;
+    transform->has_desired_yaw = true;
+  }
+  movement->following_formation_slot = true;
+  movement->issuer_retargets = true;
+  movement->precise_arrival = true;
+  const auto* membership =
+      world.try_get<Engine::Core::ArmyFormationMembershipComponent>(intent.unit_id);
+  const auto* group =
+      membership != nullptr
+          ? Game::Formation::ArmyFormationRegistry::for_world(world).find(
+                membership->group_id)
+          : nullptr;
+  if (group != nullptr) {
+    if (group->morph.active) {
+      const auto* unit = world.try_get<Engine::Core::UnitComponent>(intent.unit_id);
+      movement->declared_group_pace = Game::Formation::ArmyFormationRuntime::morph_pace(
+          *group,
+          intent.unit_id,
+          QVector3D(transform->position.x, 0.0F, transform->position.z),
+          unit != nullptr ? unit->speed : 1.0F);
+    } else {
+      movement->declared_group_pace = group->cohesion_pace;
+    }
+    movement->route_id = RouteCorridorPlanner::identity(
+        group->move_plan.corridor,
+        NavGrid::get_pathfinder() != nullptr
+            ? NavGrid::get_pathfinder()->navigation_revision()
+            : 0U);
+    if (const auto* slot = group->find_slot_for(intent.unit_id)) {
+      movement->route_lane_offset = slot->local_offset.x();
+    }
+  }
+
+  float const change_x = intent.target.x() - movement->goal_x;
+  float const change_z = intent.target.z() - movement->goal_y;
+  if (continuing && change_x * change_x + change_z * change_z < 1.0e-6F &&
+      (movement->has_target ||
+       std::hypot(transform->position.x - intent.target.x(),
+                  transform->position.z - intent.target.z()) <= 0.1F)) {
+    return;
+  }
+
+  const QVector3D current(transform->position.x, 0.0F, transform->position.z);
+  auto* pathfinder = NavGrid::get_pathfinder();
+  // The group already owns the corridor and the slot's rank/depth. Fitting
+  // another group lane here sends rear ranks towards the centre and back again.
+  bool const direct =
+      pathfinder == nullptr ||
+      pathfinder->is_world_segment_walkable(current,
+                                            intent.target,
+                                            passability_for(*movement),
+                                            movement->get_navigation_clearance());
+  if (direct) {
+    // Rebase the short route as the slot wheels; extending an old chord cuts
+    // across the formation and misreports a moving endpoint as stalled travel.
+    stamp_route_revision(*movement);
+    movement->path = {{intent.target.x(), intent.target.z()}};
+    movement->path_index = 0;
+    movement->target_x = movement->goal_x = intent.target.x();
+    movement->target_y = movement->goal_y = intent.target.z();
+    movement->has_target = true;
+    movement->has_requested_goal = false;
+  } else {
+    assign_navigation_target(pathfinder, *transform, *movement, intent.target);
+  }
+}
+
 void MovementSystem::issue_move_units(Engine::Core::World& world,
                                       const std::vector<MoveIntent>& intents,
                                       const MoveOptions& options) {
+  if (options.follow_formation_slots) {
+    for (const auto& intent : intents) {
+      follow_formation_slot(world, intent, options);
+    }
+    return;
+  }
   std::vector<Engine::Core::EntityID> units;
   std::vector<QVector3D> targets;
   units.reserve(intents.size());
@@ -849,10 +1050,8 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
     if (!intent.facing_angle.has_value()) {
       continue;
     }
-    auto const* formation_mode =
-        world.try_get<Engine::Core::FormationModeComponent>(intent.unit_id);
     auto* transform = world.try_get<Engine::Core::TransformComponent>(intent.unit_id);
-    if (formation_mode != nullptr && formation_mode->active && transform != nullptr) {
+    if (transform != nullptr) {
       transform->desired_yaw = *intent.facing_angle;
       transform->has_desired_yaw = true;
     }

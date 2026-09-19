@@ -49,9 +49,10 @@ constexpr NameTable<FlankPreference, 4> k_flanks{
       {FlankPreference::StrongRight, "right"},
       {FlankPreference::Split, "split"}}}};
 
-constexpr NameTable<MovementPolicy, 2> k_movement{
+constexpr NameTable<MovementPolicy, 3> k_movement{
     {{{MovementPolicy::ReformAtDestination, "reform_at_destination"},
-      {MovementPolicy::MaintainFormation, "maintain_formation"}}}};
+      {MovementPolicy::MaintainFormation, "maintain_formation"},
+      {MovementPolicy::DoctrineDefault, "doctrine_default"}}}};
 
 constexpr NameTable<RangedPlacement, 4> k_ranged{
     {{{RangedPlacement::Rear, "rear"},

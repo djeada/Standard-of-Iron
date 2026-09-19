@@ -20,6 +20,9 @@ public:
   [[nodiscard]] auto is_initialized() const -> bool override;
 
   struct WaterUniforms {
+    GL::Shader::UniformHandle soil_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle moisture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle snow_coverage{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle view{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle projection{GL::Shader::InvalidUniform};

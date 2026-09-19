@@ -32,6 +32,9 @@ struct ArmyFormationResult {
   float frontage{0.0F};
   float depth{0.0F};
 
+  MovementPolicy movement_policy{MovementPolicy::ReformAtDestination};
+  bool compressed{false};
+
   bool valid{false};
   bool used_army_formation{false};
   int blocked_count{0};

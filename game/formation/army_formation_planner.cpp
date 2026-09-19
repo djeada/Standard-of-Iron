@@ -3,10 +3,12 @@
 #include <QCoreApplication>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstring>
 #include <limits>
 #include <numbers>
+#include <optional>
 #include <unordered_map>
 
 #include "../core/component_core.h"
@@ -15,6 +17,7 @@
 #include "../systems/formation_combat_geometry.h"
 #include "../systems/nation_registry.h"
 #include "../systems/nav_grid.h"
+#include "../systems/pathfinding.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_config.h"
 #include "army_formation_registry.h"
@@ -473,6 +476,72 @@ void resolve_overlaps(std::vector<FormationSlot>& slot_list,
   }
 }
 
+constexpr float k_overlap_epsilon = 1.0e-3F;
+
+auto local_overlap(float dx,
+                   float dz,
+                   float half_width_a,
+                   float half_depth_a,
+                   float half_width_b,
+                   float half_depth_b,
+                   float gap) -> bool {
+  return std::abs(dx) + k_overlap_epsilon < half_width_a + half_width_b + gap &&
+         std::abs(dz) + k_overlap_epsilon < half_depth_a + half_depth_b + gap;
+}
+
+void separate_footprints(std::vector<FormationSlot>& slot_list,
+                         const std::vector<float>& half_width,
+                         const std::vector<float>& half_depth,
+                         float gap) {
+  auto const count = slot_list.size();
+  if (count < 2U || half_width.size() != count || half_depth.size() != count) {
+    return;
+  }
+  resolve_overlaps(slot_list, half_width, half_depth, gap);
+
+  std::vector<std::size_t> order(count);
+  for (std::size_t i = 0; i < count; ++i) {
+    order[i] = i;
+  }
+  std::stable_sort(order.begin(), order.end(), [&](std::size_t a, std::size_t b) {
+    if (slot_list[a].local_offset.z() != slot_list[b].local_offset.z()) {
+      return slot_list[a].local_offset.z() > slot_list[b].local_offset.z();
+    }
+    return slot_list[a].local_offset.x() < slot_list[b].local_offset.x();
+  });
+
+  std::vector<std::size_t> settled;
+  settled.reserve(count);
+  for (auto const index : order) {
+    auto& slot = slot_list[index];
+    for (std::size_t guard = 0; guard <= settled.size(); ++guard) {
+      bool pushed = false;
+      for (auto const other_index : settled) {
+        const auto& other = slot_list[other_index];
+        float const dx = slot.local_offset.x() - other.local_offset.x();
+        float const dz = slot.local_offset.z() - other.local_offset.z();
+        if (!local_overlap(dx,
+                           dz,
+                           half_width[index],
+                           half_depth[index],
+                           half_width[other_index],
+                           half_depth[other_index],
+                           gap)) {
+          continue;
+        }
+        slot.local_offset.setZ(other.local_offset.z() -
+                               (half_depth[index] + half_depth[other_index] + gap));
+        pushed = true;
+        break;
+      }
+      if (!pushed) {
+        break;
+      }
+    }
+    settled.push_back(index);
+  }
+}
+
 auto widest_rank(const std::vector<FormationSlot>& slot_list, float spacing) -> int {
   if (slot_list.empty()) {
     return 0;
@@ -496,6 +565,28 @@ auto widest_rank(const std::vector<FormationSlot>& slot_list, float spacing) -> 
     ++in_band;
   }
   return std::max(widest, in_band);
+}
+
+// The anchor is where the troops' centre of mass stands, not the middle of
+// their bounding box: for an uneven shape (a row of two with one behind) the
+// two differ and the army would land off the point the player chose.
+void recentre_on_centroid(std::vector<FormationSlot>& slot_list) {
+  if (slot_list.empty()) {
+    return;
+  }
+  float cx = 0.0F;
+  float cz = 0.0F;
+  for (const auto& slot : slot_list) {
+    cx += slot.local_offset.x();
+    cz += slot.local_offset.z();
+  }
+  cx /= static_cast<float>(slot_list.size());
+  cz /= static_cast<float>(slot_list.size());
+  for (auto& slot : slot_list) {
+    slot.local_offset.setX(slot.local_offset.x() - cx);
+    slot.local_offset.setY(0.0F);
+    slot.local_offset.setZ(slot.local_offset.z() - cz);
+  }
 }
 
 void recentre(std::vector<FormationSlot>& slot_list) {
@@ -652,15 +743,30 @@ auto rotate_offset(const QVector3D& local, float yaw_degrees) -> QVector3D {
           -local.x() * sin_yaw + local.z() * cos_yaw};
 }
 
-class ClaimGrid {
-public:
-  explicit ClaimGrid(float cell)
-      : m_cell(std::max(cell, 0.05F)) {}
+struct FrameAxes {
+  QVector3D lateral{1.0F, 0.0F, 0.0F};
+  QVector3D depth{0.0F, 0.0F, 1.0F};
+};
 
-  [[nodiscard]] auto is_free(const QVector3D& point, float clearance) const -> bool {
+auto frame_axes(float facing_degrees) -> FrameAxes {
+  return {rotate_offset(QVector3D(1.0F, 0.0F, 0.0F), facing_degrees),
+          rotate_offset(QVector3D(0.0F, 0.0F, 1.0F), facing_degrees)};
+}
+
+class FootprintClaims {
+public:
+  FootprintClaims(float cell, const FrameAxes& axes, float gap)
+      : m_cell(std::max(cell, 0.5F))
+      , m_axes(axes)
+      , m_gap(gap) {}
+
+  [[nodiscard]] auto
+  is_free(const QVector3D& point, float half_width, float half_depth) const -> bool {
+    float const reach_metres =
+        std::max(half_width, half_depth) + m_largest_extent + m_gap;
+    int const reach = static_cast<int>(std::ceil(reach_metres * 1.415F / m_cell)) + 1;
     auto const cell_x = to_cell(point.x());
     auto const cell_z = to_cell(point.z());
-    int const reach = static_cast<int>(std::ceil(clearance / m_cell)) + 1;
     for (int dx = -reach; dx <= reach; ++dx) {
       for (int dz = -reach; dz <= reach; ++dz) {
         auto const it = m_cells.find(key(cell_x + dx, cell_z + dz));
@@ -668,10 +774,14 @@ public:
           continue;
         }
         for (const auto& claimed : it->second) {
-          float const off_x = claimed.point.x() - point.x();
-          float const off_z = claimed.point.z() - point.z();
-          float const apart = clearance + claimed.clearance;
-          if ((off_x * off_x + off_z * off_z) < apart * apart) {
+          QVector3D const offset = point - claimed.point;
+          if (local_overlap(QVector3D::dotProduct(offset, m_axes.lateral),
+                            QVector3D::dotProduct(offset, m_axes.depth),
+                            half_width,
+                            half_depth,
+                            claimed.half_width,
+                            claimed.half_depth,
+                            m_gap)) {
             return false;
           }
         }
@@ -680,8 +790,10 @@ public:
     return true;
   }
 
-  void claim(const QVector3D& point, float clearance) {
-    m_cells[key(to_cell(point.x()), to_cell(point.z()))].push_back({point, clearance});
+  void claim(const QVector3D& point, float half_width, float half_depth) {
+    m_cells[key(to_cell(point.x()), to_cell(point.z()))].push_back(
+        {point, half_width, half_depth});
+    m_largest_extent = std::max(m_largest_extent, std::max(half_width, half_depth));
   }
 
   void reserve(std::size_t count) { m_cells.reserve(count * 2U); }
@@ -699,55 +811,75 @@ private:
 
   struct Claim {
     QVector3D point;
-    float clearance{0.0F};
+    float half_width{0.0F};
+    float half_depth{0.0F};
   };
 
   std::unordered_map<std::uint64_t, std::vector<Claim>> m_cells;
   float m_cell{1.0F};
+  FrameAxes m_axes;
+  float m_gap{0.0F};
+  float m_largest_extent{0.0F};
 };
 
 class SlotTerrainFitter {
 public:
-  SlotTerrainFitter(float spacing, bool enabled, std::size_t expected_slots)
-      : m_grid(std::max(spacing, 0.5F))
+  SlotTerrainFitter(float spacing,
+                    float gap,
+                    float facing,
+                    const QVector3D& anchor,
+                    bool enabled,
+                    std::size_t expected_slots)
+      : m_claims(std::max(spacing, 0.5F), frame_axes(facing), gap)
+      , m_axes(frame_axes(facing))
       , m_separation(spacing)
-      , m_enabled(enabled) {
-    m_grid.reserve(expected_slots);
+      , m_gap(gap)
+      , m_anchor(anchor)
+      , m_enabled(enabled)
+      , m_pathfinder(enabled ? Game::Systems::NavGrid::get_pathfinder() : nullptr) {
+    m_claims.reserve(expected_slots);
   }
 
-  auto fit(const QVector3D& ideal, float clearance, SlotStatus& status) -> QVector3D {
+  auto fit(const QVector3D& ideal,
+           float half_width,
+           float half_depth,
+           bool heavy,
+           SlotStatus& status) -> QVector3D {
     if (!m_enabled) {
-      m_grid.claim(ideal, clearance);
+      m_claims.claim(ideal, half_width, half_depth);
       status = SlotStatus::Valid;
       return ideal;
     }
 
-    if (m_grid.is_free(ideal, clearance) &&
-        Game::Systems::NavGrid::is_world_position_walkable(ideal)) {
-      m_grid.claim(ideal, clearance);
+    if (acceptable(ideal, half_width, half_depth, heavy)) {
+      m_claims.claim(ideal, half_width, half_depth);
       status = SlotStatus::Valid;
       return ideal;
     }
 
-    constexpr int k_rings = 6;
+    constexpr int k_max_rings = 8;
     constexpr int k_samples = 12;
-    float const step = std::max(m_separation, clearance * 2.0F) * 1.05F;
-    for (int ring = 1; ring <= k_rings; ++ring) {
-      float const radius = step * static_cast<float>(ring);
+    float const reach = max_displacement(half_width, half_depth);
+    float const step =
+        std::max(0.75F, (std::min(half_width, half_depth) * 2.0F + m_gap) * 0.5F);
+    int const rings =
+        std::clamp(static_cast<int>(std::ceil(reach / step)), 1, k_max_rings);
+    for (int ring = 1; ring <= rings; ++ring) {
+      float const radius = reach * static_cast<float>(ring) / static_cast<float>(rings);
       for (int sample = 0; sample < k_samples; ++sample) {
-        float const angle =
-            (static_cast<float>(sample) / static_cast<float>(k_samples)) * 2.0F * k_pi +
-            static_cast<float>(ring) * 0.37F;
-        QVector3D const candidate(ideal.x() + std::cos(angle) * radius,
+        int const side = (sample % 2 == 0) ? 1 : -1;
+        float const turn = static_cast<float>((sample + 1) / 2) * (2.0F * k_pi) /
+                           static_cast<float>(k_samples);
+        float const angle = k_pi + static_cast<float>(side) * turn;
+        QVector3D const direction =
+            m_axes.depth * std::cos(angle) + m_axes.lateral * std::sin(angle);
+        QVector3D const candidate(ideal.x() + direction.x() * radius,
                                   ideal.y(),
-                                  ideal.z() + std::sin(angle) * radius);
-        if (!m_grid.is_free(candidate, clearance)) {
+                                  ideal.z() + direction.z() * radius);
+        if (!acceptable(candidate, half_width, half_depth, heavy)) {
           continue;
         }
-        if (!Game::Systems::NavGrid::is_world_position_walkable(candidate)) {
-          continue;
-        }
-        m_grid.claim(candidate, clearance);
+        m_claims.claim(candidate, half_width, half_depth);
         status = SlotStatus::Adjusted;
         return candidate;
       }
@@ -758,8 +890,10 @@ public:
             Game::Systems::NavGrid::find_nearest_walkable_grid(origin, k_wide_cells)) {
       QVector3D const grounded = Game::Systems::NavGrid::grid_to_world(*nearest);
       QVector3D const candidate(grounded.x(), ideal.y(), grounded.z());
-      if (m_grid.is_free(candidate, clearance)) {
-        m_grid.claim(candidate, clearance);
+      QVector3D const shift(candidate.x() - ideal.x(), 0.0F, candidate.z() - ideal.z());
+      if (shift.length() <= reach &&
+          acceptable(candidate, half_width, half_depth, heavy)) {
+        m_claims.claim(candidate, half_width, half_depth);
         status = SlotStatus::Adjusted;
         return candidate;
       }
@@ -772,9 +906,94 @@ public:
 private:
   static constexpr int k_wide_cells = 12;
 
-  ClaimGrid m_grid;
+  static constexpr float k_footprint_inset = 0.5F;
+  static constexpr int k_max_samples_per_axis = 6;
+
+  [[nodiscard]] auto max_displacement(float half_width,
+                                      float half_depth) const -> float {
+    return std::max(m_separation, std::max(half_width, half_depth) * 2.0F + m_gap);
+  }
+
+  [[nodiscard]] auto acceptable(const QVector3D& centre,
+                                float half_width,
+                                float half_depth,
+                                bool heavy) -> bool {
+    return m_claims.is_free(centre, half_width, half_depth) &&
+           footprint_walkable(centre, half_width, half_depth, heavy) &&
+           connected_to_anchor(centre, heavy);
+  }
+
+  [[nodiscard]] auto walkable(const QVector3D& point, bool heavy) const -> bool {
+    if (m_pathfinder == nullptr) {
+      return Game::Systems::NavGrid::is_world_position_walkable(point);
+    }
+    return m_pathfinder->is_world_position_walkable(
+        point,
+        heavy ? Game::Systems::Pathfinding::Passability::Heavy
+              : Game::Systems::Pathfinding::Passability::Light);
+  }
+
+  [[nodiscard]] auto footprint_walkable(const QVector3D& centre,
+                                        float half_width,
+                                        float half_depth,
+                                        bool heavy) const -> bool {
+    if (!walkable(centre, heavy)) {
+      return false;
+    }
+    float const sample_step = std::max(
+        0.75F, m_pathfinder != nullptr ? m_pathfinder->grid_cell_size() : 1.0F);
+    float const reach_x = half_width * k_footprint_inset;
+    float const reach_z = half_depth * k_footprint_inset;
+    int const across =
+        std::clamp(static_cast<int>(std::ceil(reach_x * 2.0F / sample_step)) + 1,
+                   2,
+                   k_max_samples_per_axis);
+    int const along =
+        std::clamp(static_cast<int>(std::ceil(reach_z * 2.0F / sample_step)) + 1,
+                   2,
+                   k_max_samples_per_axis);
+    for (int i = 0; i < across; ++i) {
+      float const u = -reach_x + (2.0F * reach_x) * static_cast<float>(i) /
+                                     static_cast<float>(across - 1);
+      for (int j = 0; j < along; ++j) {
+        float const v = -reach_z + (2.0F * reach_z) * static_cast<float>(j) /
+                                       static_cast<float>(along - 1);
+        QVector3D const point = centre + m_axes.lateral * u + m_axes.depth * v;
+        if (!walkable(point, heavy)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  [[nodiscard]] auto connected_to_anchor(const QVector3D& centre, bool heavy) -> bool {
+    if (m_pathfinder == nullptr) {
+      return true;
+    }
+    auto const passability = heavy ? Game::Systems::Pathfinding::Passability::Heavy
+                                   : Game::Systems::Pathfinding::Passability::Light;
+    auto& anchor_region = heavy ? m_heavy_anchor_region : m_light_anchor_region;
+    if (!anchor_region.has_value()) {
+      anchor_region = m_pathfinder->region_of(
+          m_pathfinder->world_to_grid(m_anchor.x(), m_anchor.z()), passability);
+    }
+    if (*anchor_region == Game::Systems::Pathfinding::k_unreachable_region) {
+      return true;
+    }
+    return m_pathfinder->region_of(m_pathfinder->world_to_grid(centre.x(), centre.z()),
+                                   passability) == *anchor_region;
+  }
+
+  FootprintClaims m_claims;
+  FrameAxes m_axes;
   float m_separation{1.0F};
+  float m_gap{0.0F};
+  QVector3D m_anchor;
   bool m_enabled{true};
+  Game::Systems::Pathfinding* m_pathfinder{nullptr};
+  std::optional<std::uint32_t> m_light_anchor_region;
+  std::optional<std::uint32_t> m_heavy_anchor_region;
 };
 
 auto doctrine_for_entity(Engine::Core::World& world,
@@ -879,6 +1098,10 @@ auto ArmyFormationPlanner::collect_members(Engine::Core::World& world,
     member.footprint =
         Game::Units::TroopConfig::instance().get_selection_ring_size(*troop);
     measure_footprint(*entity, member.footprint, member);
+    if (const auto* movement =
+            entity->get_component<Engine::Core::MovementComponent>()) {
+      member.heavy = !movement->get_can_enter_forest();
+    }
     member.doctrine = doctrine_for_entity(world, id);
     members.push_back(member);
   }
@@ -1124,7 +1347,7 @@ auto ArmyFormationPlanner::plan_local_slots(
       half_width[i] = found->second->half_width;
       half_depth[i] = found->second->half_depth;
     }
-    resolve_overlaps(slot_list, half_width, half_depth, lane_for(spacing) * 0.5F);
+    separate_footprints(slot_list, half_width, half_depth, lane_for(spacing) * 0.5F);
   }
 
   recentre(slot_list);
@@ -1162,29 +1385,40 @@ void ArmyFormationPlanner::measure_footprint(const Engine::Core::Entity& entity,
   member.individuals = 1;
   member.files = 1;
   member.soldier_body_radius = fallback_radius;
+  member.extents_by_files.clear();
 
   auto const layout = Game::Systems::FormationCombat::resolve_layout(entity);
   if (layout.all_slots.empty()) {
     return;
   }
-  float extent_x = 0.0F;
-  float extent_z = 0.0F;
-  for (const auto& slot : layout.all_slots) {
-    extent_x = std::max(extent_x, std::abs(slot.local_x));
-    extent_z = std::max(extent_z, std::abs(slot.local_z));
-  }
   member.individuals = std::max(1, static_cast<int>(layout.all_slots.size()));
-  member.files = std::max(1, layout.cols);
   member.soldier_body_radius = std::max(0.05F, layout.body_radius);
 
+  // The troop's own default shape (no files override) is what a formation
+  // without a reshaping template leaves it in; the table holds the exact
+  // extents of every file count a template may ask for.
+  auto const natural =
+      Game::Systems::FormationCombat::layout_reach_for_files(entity, 0);
+  member.files = std::max(1, natural.files);
+  member.half_width = natural.half_x + natural.body_radius;
+  member.half_depth = natural.half_z + natural.body_radius;
   member.soldier_file_step =
-      layout.cols > 1 ? (extent_x * 2.0F) / static_cast<float>(layout.cols - 1)
-                      : std::max(0.1F, layout.spacing);
-  int const rows = std::max(1, layout.rows);
-  member.soldier_rank_step = rows > 1 ? (extent_z * 2.0F) / static_cast<float>(rows - 1)
-                                      : std::max(0.1F, layout.spacing);
-  member.half_width = std::max(member.half_width, extent_x + layout.body_radius);
-  member.half_depth = std::max(member.half_depth, extent_z + layout.body_radius);
+      member.files > 1 ? (natural.half_x * 2.0F) / static_cast<float>(member.files - 1)
+                       : std::max(0.1F, layout.spacing);
+  int const rows = std::max(1, (member.individuals + member.files - 1) / member.files);
+  member.soldier_rank_step =
+      rows > 1 ? (natural.half_z * 2.0F) / static_cast<float>(rows - 1)
+               : std::max(0.1F, layout.spacing);
+
+  constexpr int k_max_tabulated_files = 48;
+  int const tabulated = std::min(member.individuals, k_max_tabulated_files);
+  member.extents_by_files.reserve(static_cast<std::size_t>(tabulated));
+  for (int files = 1; files <= tabulated; ++files) {
+    auto const reach =
+        Game::Systems::FormationCombat::layout_reach_for_files(entity, files);
+    member.extents_by_files.emplace_back(reach.half_x + reach.body_radius,
+                                         reach.half_z + reach.body_radius);
+  }
 }
 
 void ArmyFormationPlanner::shape_member_for_intent(ArmyFormationMember& member,
@@ -1197,6 +1431,13 @@ void ArmyFormationPlanner::shape_member_for_intent(ArmyFormationMember& member,
                                1,
                                member.individuals);
   member.files = files;
+  if (static_cast<std::size_t>(files) <= member.extents_by_files.size()) {
+    member.half_width =
+        member.extents_by_files[static_cast<std::size_t>(files) - 1U].first;
+    member.half_depth =
+        member.extents_by_files[static_cast<std::size_t>(files) - 1U].second;
+    return;
+  }
   int const rows = (member.individuals + files - 1) / files;
   member.half_width = static_cast<float>(files - 1) * member.soldier_file_step * 0.5F +
                       member.soldier_body_radius;
@@ -1206,41 +1447,210 @@ void ArmyFormationPlanner::shape_member_for_intent(ArmyFormationMember& member,
 
 namespace {
 
-auto plan_fitting_the_ground(const std::vector<ArmyFormationMember>& members,
-                             const ArmyFormationRequest& request,
-                             const ArmyFormation* previous) -> ArmyFormationPlan {
+constexpr float k_tolerated_displaced_share = 0.12F;
+
+auto hungarian_assignment(const std::vector<std::vector<float>>& cost)
+    -> std::vector<int> {
+  auto const n = static_cast<int>(cost.size());
+  constexpr float k_inf = std::numeric_limits<float>::max() / 4.0F;
+  std::vector<float> u(static_cast<std::size_t>(n) + 1U, 0.0F);
+  std::vector<float> v(static_cast<std::size_t>(n) + 1U, 0.0F);
+  std::vector<int> p(static_cast<std::size_t>(n) + 1U, 0);
+  std::vector<int> way(static_cast<std::size_t>(n) + 1U, 0);
+  for (int i = 1; i <= n; ++i) {
+    p[0] = i;
+    int j0 = 0;
+    std::vector<float> minv(static_cast<std::size_t>(n) + 1U, k_inf);
+    std::vector<bool> used(static_cast<std::size_t>(n) + 1U, false);
+    do {
+      used[static_cast<std::size_t>(j0)] = true;
+      int const i0 = p[static_cast<std::size_t>(j0)];
+      float delta = k_inf;
+      int j1 = 0;
+      for (int j = 1; j <= n; ++j) {
+        if (used[static_cast<std::size_t>(j)]) {
+          continue;
+        }
+        float const cur =
+            cost[static_cast<std::size_t>(i0 - 1)][static_cast<std::size_t>(j - 1)] -
+            u[static_cast<std::size_t>(i0)] - v[static_cast<std::size_t>(j)];
+        if (cur < minv[static_cast<std::size_t>(j)]) {
+          minv[static_cast<std::size_t>(j)] = cur;
+          way[static_cast<std::size_t>(j)] = j0;
+        }
+        if (minv[static_cast<std::size_t>(j)] < delta) {
+          delta = minv[static_cast<std::size_t>(j)];
+          j1 = j;
+        }
+      }
+      for (int j = 0; j <= n; ++j) {
+        if (used[static_cast<std::size_t>(j)]) {
+          u[static_cast<std::size_t>(p[static_cast<std::size_t>(j)])] += delta;
+          v[static_cast<std::size_t>(j)] -= delta;
+        } else {
+          minv[static_cast<std::size_t>(j)] -= delta;
+        }
+      }
+      j0 = j1;
+    } while (p[static_cast<std::size_t>(j0)] != 0);
+    do {
+      int const j1 = way[static_cast<std::size_t>(j0)];
+      p[static_cast<std::size_t>(j0)] = p[static_cast<std::size_t>(j1)];
+      j0 = j1;
+    } while (j0 != 0);
+  }
+  std::vector<int> row_to_column(static_cast<std::size_t>(n), -1);
+  for (int j = 1; j <= n; ++j) {
+    if (p[static_cast<std::size_t>(j)] > 0) {
+      row_to_column[static_cast<std::size_t>(p[static_cast<std::size_t>(j)] - 1)] =
+          j - 1;
+    }
+  }
+  return row_to_column;
+}
+
+void assign_nearest_troops(ArmyFormationPlan& plan,
+                           const ArmyFormationLayout& layout,
+                           const QVector3D& anchor,
+                           float facing) {
+  auto const count = plan.slot_list.size();
+  std::vector<bool> done(count, false);
+  std::vector<EntityID> occupants(count, 0U);
+  std::vector<int> files(count, 0);
+  for (std::size_t first = 0; first < count; ++first) {
+    if (done[first]) {
+      continue;
+    }
+    std::vector<std::size_t> bucket;
+    for (std::size_t i = first; i < count; ++i) {
+      if (!done[i] && layout.slot_kind[i] == layout.slot_kind[first]) {
+        bucket.push_back(i);
+        done[i] = true;
+      }
+    }
+    std::vector<std::vector<float>> cost(bucket.size(),
+                                         std::vector<float>(bucket.size(), 0.0F));
+    for (std::size_t r = 0; r < bucket.size(); ++r) {
+      QVector3D const start = layout.slot_start[bucket[r]];
+      for (std::size_t c = 0; c < bucket.size(); ++c) {
+        QVector3D const rotated =
+            rotate_offset(plan.slot_list[bucket[c]].local_offset, facing);
+        QVector3D const target(
+            anchor.x() + rotated.x(), 0.0F, anchor.z() + rotated.z());
+        cost[r][c] =
+            QVector3D(target.x() - start.x(), 0.0F, target.z() - start.z()).length();
+      }
+    }
+    auto const chosen = hungarian_assignment(cost);
+    for (std::size_t r = 0; r < bucket.size(); ++r) {
+      auto const column = chosen[r] >= 0 ? static_cast<std::size_t>(chosen[r]) : r;
+      occupants[bucket[column]] = plan.slot_list[bucket[r]].occupant;
+      files[bucket[column]] = plan.slot_files[bucket[r]];
+    }
+  }
+  for (std::size_t i = 0; i < count; ++i) {
+    plan.slot_list[i].occupant = occupants[i];
+    plan.slot_files[i] = files[i];
+  }
+}
+
+auto displacement_score(const ArmyFormationPlan& plan,
+                        const QVector3D& requested_anchor) -> float {
+  float const pitch = std::max(1.0F, plan.slot_spacing);
+  QVector3D const moved(plan.anchor.x() - requested_anchor.x(),
+                        0.0F,
+                        plan.anchor.z() - requested_anchor.z());
+  return static_cast<float>(plan.blocked_count * 4 + plan.adjusted_count) +
+         plan.displacement / pitch + (plan.narrowed ? 1.0F : 0.0F) +
+         moved.length() / pitch * 0.5F;
+}
+
+} // namespace
+
+auto ArmyFormationPlan::keeps_shape() const -> bool {
+  if (!valid) {
+    return false;
+  }
+  auto const tolerated = static_cast<int>(
+      std::floor(static_cast<float>(slot_list.size()) * k_tolerated_displaced_share));
+  return blocked_count <= tolerated &&
+         blocked_count + adjusted_count <= std::max(1, tolerated);
+}
+
+auto ArmyFormationPlanner::fit_to_ground(
+    const ArmyFormationLayout& first_layout,
+    const std::vector<ArmyFormationMember>& members,
+    const ArmyFormationRequest& request,
+    const ArmyFormation* previous_group) -> ArmyFormationPlan {
   constexpr int k_attempts = 4;
   constexpr float k_narrowing = 0.62F;
-  constexpr float k_tolerated_blocked_share = 0.12F;
 
-  ArmyFormationPlan best;
-  ArmyFormationRequest attempt = request;
-  for (int index = 0; index < k_attempts; ++index) {
-    auto plan = ArmyFormationPlanner::place(
-        ArmyFormationPlanner::build_layout(members, attempt, previous), attempt);
-    if (!plan.valid) {
-      if (best.slot_list.empty()) {
+  ArmyFormationPlan best = place(first_layout, request);
+  if (!best.valid || best.keeps_shape() || !request.resolve_terrain) {
+    return best;
+  }
+  QVector3D const requested_anchor = best.anchor;
+
+  if (request.allow_anchor_shift) {
+    float const yaw = request.facing * k_deg_to_rad;
+    QVector3D const forward(std::sin(yaw), 0.0F, std::cos(yaw));
+    QVector3D const lateral(std::cos(yaw), 0.0F, -std::sin(yaw));
+    float const depth = std::max(best.depth, best.slot_spacing);
+    float const frontage = std::max(best.frontage, best.slot_spacing);
+    std::array<QVector3D, 6> const shifts{forward * (-0.25F * depth),
+                                          forward * (-0.5F * depth),
+                                          lateral * (-0.25F * frontage),
+                                          lateral * (0.25F * frontage),
+                                          forward * (0.25F * depth),
+                                          forward * (0.5F * depth)};
+    for (const auto& shift : shifts) {
+      ArmyFormationRequest shifted = request;
+      shifted.anchor = request.anchor + shift;
+      auto plan = place(first_layout, shifted);
+      if (!plan.valid) {
+        continue;
+      }
+      if (displacement_score(plan, requested_anchor) <
+          displacement_score(best, requested_anchor)) {
         best = std::move(plan);
       }
+      if (best.keeps_shape()) {
+        return best;
+      }
+    }
+  }
+
+  ArmyFormationRequest attempt = request;
+  float current = request.frontage > 0.01F ? request.frontage : best.frontage;
+  for (int index = 1; index < k_attempts; ++index) {
+    attempt.frontage = std::max(1.0F, current * k_narrowing);
+    if (attempt.frontage >= current - 0.01F) {
       break;
     }
-    auto const total = static_cast<float>(plan.slot_list.size());
-    float const blocked_share =
-        total > 0.0F ? static_cast<float>(plan.blocked_count) / total : 1.0F;
-    if (best.slot_list.empty() || plan.blocked_count < best.blocked_count) {
-      best = plan;
+    current = attempt.frontage;
+    auto plan = place(build_layout(members, attempt, previous_group), attempt);
+    if (!plan.valid) {
+      break;
     }
-    if (blocked_share <= k_tolerated_blocked_share) {
-      return best;
+    plan.narrowed = true;
+    if (displacement_score(plan, requested_anchor) <
+        displacement_score(best, requested_anchor)) {
+      best = std::move(plan);
     }
-
-    float const current = attempt.frontage > 0.01F ? attempt.frontage : plan.frontage;
-    attempt.frontage = std::max(1.0F, current * k_narrowing);
+    if (best.keeps_shape()) {
+      break;
+    }
   }
   return best;
 }
 
-} // namespace
+auto ArmyFormationPlanner::plan(const std::vector<ArmyFormationMember>& members,
+                                const ArmyFormationRequest& request,
+                                const ArmyFormation* previous_group)
+    -> ArmyFormationPlan {
+  return fit_to_ground(
+      build_layout(members, request, previous_group), members, request, previous_group);
+}
 
 auto ArmyFormationPlanner::plan(Engine::Core::World& world,
                                 const ArmyFormationRequest& request)
@@ -1250,7 +1660,146 @@ auto ArmyFormationPlanner::plan(Engine::Core::World& world,
           ? ArmyFormationRegistry::for_world(world).find(request.group_id)
           : nullptr;
   const auto members = collect_members(world, request.members);
-  return plan_fitting_the_ground(members, request, previous);
+  return plan(members, request, previous);
+}
+
+auto ArmyFormationPlanner::resolve_movement_policy(
+    MovementPolicy requested, const DoctrineIntentTemplate& tmpl) -> MovementPolicy {
+  if (requested != MovementPolicy::DoctrineDefault) {
+    return requested;
+  }
+  return tmpl.default_movement == MovementPolicy::DoctrineDefault
+             ? MovementPolicy::ReformAtDestination
+             : tmpl.default_movement;
+}
+
+auto ArmyFormationPlanner::layout_from_reference(const ArmyFormation& formation)
+    -> ArmyFormationLayout {
+  ArmyFormationLayout layout;
+  layout.doctrine = formation.doctrine;
+  layout.intent = formation.intent;
+  layout.spacing = formation.spacing;
+  layout.slot_spacing = formation.slot_spacing;
+  layout.footprint_gap = lane_for(formation.spacing) * 0.5F;
+  layout.movement_policy = formation.options.movement_policy;
+  layout.slot_list = formation.reference_slots;
+  Bounds bounds;
+  for (const auto& slot : layout.slot_list) {
+    bounds.expand(slot.local_offset);
+    layout.slot_clearance.push_back(std::min(slot.half_width, slot.half_depth));
+    layout.slot_half_width.push_back(slot.half_width);
+    layout.slot_half_depth.push_back(slot.half_depth);
+    layout.slot_files.push_back(0);
+  }
+  layout.frontage = bounds.width();
+  layout.depth = bounds.depth();
+  layout.valid = !layout.slot_list.empty();
+  if (!layout.valid) {
+    layout.rejection_reason = "The formation has no reference shape.";
+  }
+  return layout;
+}
+
+void ArmyFormationPlanner::fold_onto_reference(
+    ArmyFormationPlan& plan, const std::vector<FormationSlot>& reference) {
+  std::unordered_map<EntityID, const FormationSlot*> reference_of;
+  for (const auto& slot : reference) {
+    if (slot.occupant != 0U) {
+      reference_of.emplace(slot.occupant, &slot);
+    }
+  }
+  for (const auto& slot : plan.slot_list) {
+    if (reference_of.count(slot.occupant) == 0U) {
+      return;
+    }
+  }
+
+  auto funnel_before = [](const QVector3D& a, const QVector3D& b) {
+    if (std::abs(a.z() - b.z()) > 0.01F) {
+      return a.z() > b.z();
+    }
+    if (std::abs(std::abs(a.x()) - std::abs(b.x())) > 0.01F) {
+      return std::abs(a.x()) < std::abs(b.x());
+    }
+    return a.x() < b.x();
+  };
+
+  auto size_key = [](const FormationSlot& slot) {
+    return (static_cast<std::uint64_t>(slot.role) << 1U) |
+           static_cast<std::uint64_t>(slot.heavy);
+  };
+
+  auto const count = plan.slot_list.size();
+  std::vector<bool> done(count, false);
+  std::vector<EntityID> occupants(count, 0U);
+  for (std::size_t first = 0; first < count; ++first) {
+    if (done[first]) {
+      continue;
+    }
+    auto const key = size_key(plan.slot_list[first]);
+    std::vector<std::size_t> positions;
+    std::vector<EntityID> troops;
+    for (std::size_t i = first; i < count; ++i) {
+      if (!done[i] && size_key(plan.slot_list[i]) == key) {
+        done[i] = true;
+        positions.push_back(i);
+        troops.push_back(plan.slot_list[i].occupant);
+      }
+    }
+    std::stable_sort(
+        positions.begin(), positions.end(), [&](std::size_t a, std::size_t b) {
+          return funnel_before(plan.slot_list[a].local_offset,
+                               plan.slot_list[b].local_offset);
+        });
+    std::stable_sort(troops.begin(), troops.end(), [&](EntityID a, EntityID b) {
+      return funnel_before(reference_of[a]->local_offset,
+                           reference_of[b]->local_offset);
+    });
+    for (std::size_t k = 0; k < positions.size(); ++k) {
+      occupants[positions[k]] = troops[k];
+    }
+  }
+  for (std::size_t i = 0; i < count; ++i) {
+    plan.slot_list[i].occupant = occupants[i];
+    plan.slot_list[i].id = reference_of[occupants[i]]->id;
+  }
+}
+
+auto ArmyFormationPlanner::min_cost_assignment(
+    const std::vector<std::vector<float>>& cost) -> std::vector<int> {
+  return hungarian_assignment(cost);
+}
+
+auto ArmyFormationPlanner::footprints_overlap(const FormationSlot& a,
+                                              const FormationSlot& b,
+                                              float gap) -> bool {
+  auto const axes = frame_axes(a.facing);
+  QVector3D const offset = b.world_position - a.world_position;
+  return local_overlap(QVector3D::dotProduct(offset, axes.lateral),
+                       QVector3D::dotProduct(offset, axes.depth),
+                       a.half_width,
+                       a.half_depth,
+                       b.half_width,
+                       b.half_depth,
+                       gap);
+}
+
+auto ArmyFormationPlanner::first_overlap(const std::vector<FormationSlot>& slot_list,
+                                         float gap) -> std::pair<int, int> {
+  for (std::size_t i = 0; i < slot_list.size(); ++i) {
+    if (slot_list[i].status == SlotStatus::Blocked) {
+      continue;
+    }
+    for (std::size_t j = i + 1; j < slot_list.size(); ++j) {
+      if (slot_list[j].status == SlotStatus::Blocked) {
+        continue;
+      }
+      if (footprints_overlap(slot_list[i], slot_list[j], gap)) {
+        return {static_cast<int>(i), static_cast<int>(j)};
+      }
+    }
+  }
+  return {-1, -1};
 }
 
 auto ArmyFormationPlanner::layout_signature(
@@ -1279,6 +1828,7 @@ auto ArmyFormationPlanner::layout_signature(
   hasher.mix_float(request.frontage);
   hasher.mix(request.group_id);
   hasher.mix(static_cast<std::uint64_t>(request.preserve_previous_slots));
+  hasher.mix(static_cast<std::uint64_t>(request.assign_nearest));
 
   const auto& options = request.options;
   hasher.mix(static_cast<std::uint64_t>(options.flank_preference));
@@ -1304,6 +1854,396 @@ auto ArmyFormationPlanner::layout_signature(
 
   return hasher.value();
 }
+
+namespace {
+
+constexpr float k_lateral_gap_metres = 1.6F;
+constexpr float k_rank_gap_metres = 2.0F;
+
+auto is_wing(ArmyRole role) -> bool {
+  return role == ArmyRole::LeftFlank || role == ArmyRole::RightFlank;
+}
+
+auto split_rows(int total, const std::vector<float>& weights) -> std::vector<int> {
+  std::vector<int> rows;
+  float weight_sum = 0.0F;
+  for (float const w : weights) {
+    weight_sum += w;
+  }
+  int assigned = 0;
+  for (std::size_t r = 0; r < weights.size(); ++r) {
+    int size = r + 1U == weights.size()
+                   ? total - assigned
+                   : static_cast<int>(std::lround(static_cast<float>(total) *
+                                                  weights[r] / weight_sum));
+    size = std::clamp(size, 0, total - assigned);
+    if (size > 0) {
+      rows.push_back(size);
+    }
+    assigned += size;
+  }
+  return rows;
+}
+
+auto even_rows(int total, int row_count) -> std::vector<int> {
+  row_count = std::clamp(row_count, 1, std::max(1, total));
+  std::vector<int> rows;
+  int const base = total / row_count;
+  int const extra = total % row_count;
+  for (int r = 0; r < row_count; ++r) {
+    int const size = base + (r < extra ? 1 : 0);
+    if (size > 0) {
+      rows.push_back(size);
+    }
+  }
+  return rows;
+}
+
+// Row sizes that draw the intent's pictogram in the formation panel.
+auto silhouette_rows(ArmyFormationIntent intent,
+                     int total,
+                     const ArmyFormationOptions& options,
+                     bool has_rear_tier = false) -> std::vector<int> {
+  float const depth_bias = std::clamp(options.depth_scale, 0.4F, 3.0F) /
+                           std::clamp(options.frontage_scale, 0.4F, 3.0F);
+  auto scaled = [&](int rows) {
+    return std::max(
+        1, static_cast<int>(std::lround(static_cast<float>(rows) * depth_bias)));
+  };
+  switch (intent) {
+  case ArmyFormationIntent::Line:
+  case ArmyFormationIntent::Encirclement:
+    return even_rows(total, total <= 3 ? 1 : scaled(2));
+  case ArmyFormationIntent::Column: {
+    int const files = std::clamp(static_cast<int>(std::lround((total <= 2   ? 1.0F
+                                                               : total <= 6 ? 2.0F
+                                                                            : 3.0F) /
+                                                              depth_bias)),
+                                 1,
+                                 total);
+    return even_rows(total, (total + files - 1) / files);
+  }
+  case ArmyFormationIntent::Assault:
+    if (total <= 3) {
+      return even_rows(total, total);
+    }
+    return split_rows(total, {5.0F, 3.0F, 1.0F});
+  case ArmyFormationIntent::SiegeEscort:
+    return total <= 4 ? even_rows(total, 2) : split_rows(total, {7.0F, 5.0F});
+  case ArmyFormationIntent::FactionDefault:
+  case ArmyFormationIntent::Defensive:
+    if (total <= 4 || has_rear_tier) {
+      return even_rows(total, scaled(total <= 2 ? 1 : 2));
+    }
+    return split_rows(total, {5.0F, 5.0F, 3.0F});
+  }
+  return even_rows(total, 2);
+}
+
+auto is_core_role(ArmyRole role) -> bool {
+  return role == ArmyRole::Centre || role == ArmyRole::Screen ||
+         role == ArmyRole::Vanguard;
+}
+
+// Lays the doctrine's troops out as the pictogram shows: evenly gapped rows,
+// centred on the anchor. The doctrine template decides who stands where; this
+// pass only cleans the geometry (no stagger, jitter or empty ranks, uniform
+// gaps). Roles keep the template's front-to-back order as tiers: the fighting
+// core takes the pictogram's rows, ranged, siege and reserve troops get rows of
+// their own, and cavalry wings stand at the ends of the front rank.
+void regularize_silhouette(
+    std::vector<FormationSlot>& slot_list,
+    const std::unordered_map<EntityID, const ArmyFormationMember*>& by_id,
+    const ArmyFormationRequest& request,
+    const DoctrineIntentTemplate& tmpl,
+    float spacing) {
+  if (slot_list.size() < 2U) {
+    return;
+  }
+  float const gap_scale = std::clamp(request.options.spacing_scale, 0.5F, 2.5F);
+  float const lateral_gap = std::max(k_lateral_gap_metres, spacing) * gap_scale;
+  float const rank_gap = std::max(k_rank_gap_metres, spacing) * gap_scale;
+  auto half_width = [&](std::size_t index) {
+    auto const it = by_id.find(slot_list[index].occupant);
+    return it == by_id.end() ? 0.5F : it->second->half_width;
+  };
+  auto half_depth = [&](std::size_t index) {
+    auto const it = by_id.find(slot_list[index].occupant);
+    return it == by_id.end() ? 0.5F : it->second->half_depth;
+  };
+
+  auto const intent = request.intent;
+  bool const wings_apart = intent != ArmyFormationIntent::Column;
+  std::vector<std::size_t> left_wing;
+  std::vector<std::size_t> right_wing;
+  struct Tier {
+    ArmyRole role{ArmyRole::Centre};
+    bool core{false};
+    float mean_z{0.0F};
+    std::vector<std::size_t> members;
+  };
+  std::vector<Tier> tiers;
+  for (std::size_t i = 0; i < slot_list.size(); ++i) {
+    auto const role = slot_list[i].role;
+    if (wings_apart && role == ArmyRole::LeftFlank) {
+      left_wing.push_back(i);
+      continue;
+    }
+    if (wings_apart && role == ArmyRole::RightFlank) {
+      right_wing.push_back(i);
+      continue;
+    }
+    bool const core = is_core_role(role) || is_wing(role);
+    auto tier = std::find_if(tiers.begin(), tiers.end(), [&](const Tier& t) {
+      return core ? t.core : (!t.core && t.role == role);
+    });
+    if (tier == tiers.end()) {
+      tiers.push_back({role, core, 0.0F, {}});
+      tier = std::prev(tiers.end());
+    }
+    tier->members.push_back(i);
+  }
+  for (auto& tier : tiers) {
+    float sum = 0.0F;
+    for (auto const index : tier.members) {
+      sum += slot_list[index].local_offset.z();
+    }
+    tier.mean_z =
+        sum / static_cast<float>(std::max<std::size_t>(1U, tier.members.size()));
+    std::stable_sort(
+        tier.members.begin(), tier.members.end(), [&](std::size_t a, std::size_t b) {
+          float const za = slot_list[a].local_offset.z();
+          float const zb = slot_list[b].local_offset.z();
+          if (std::abs(za - zb) > 0.25F) {
+            return za > zb;
+          }
+          return slot_list[a].local_offset.x() < slot_list[b].local_offset.x();
+        });
+  }
+  std::stable_sort(tiers.begin(), tiers.end(), [](const Tier& a, const Tier& b) {
+    return a.mean_z > b.mean_z;
+  });
+  if (tiers.empty()) {
+    return;
+  }
+
+  auto row_width = [&](const std::vector<std::size_t>& row) {
+    float width = 0.0F;
+    for (auto const index : row) {
+      width += 2.0F * half_width(index);
+    }
+    return width + lateral_gap * static_cast<float>(row.empty() ? 0U : row.size() - 1U);
+  };
+  float average_width = 0.0F;
+  std::size_t counted = 0;
+  for (const auto& tier : tiers) {
+    for (auto const index : tier.members) {
+      average_width += 2.0F * half_width(index) + lateral_gap;
+      ++counted;
+    }
+  }
+  average_width /= static_cast<float>(std::max<std::size_t>(1U, counted));
+
+  // How many troops the widest row may hold: the dragged frontage, else the
+  // pictogram's rows for the fighting core, bounded by the template's width.
+  int core_count = 0;
+  for (const auto& tier : tiers) {
+    if (tier.core) {
+      core_count += static_cast<int>(tier.members.size());
+    }
+  }
+  std::vector<int> core_rows;
+  if (request.frontage > 0.01F) {
+    int const per_row =
+        std::max(1, static_cast<int>(std::floor(request.frontage / average_width)) + 1);
+    core_rows = even_rows(core_count, (core_count + per_row - 1) / per_row);
+  } else {
+    bool const has_rear_tier =
+        std::any_of(tiers.begin(), tiers.end(), [](const Tier& t) { return !t.core; });
+    core_rows = silhouette_rows(intent, core_count, request.options, has_rear_tier);
+  }
+  int row_capacity = 1;
+  for (int const size : core_rows) {
+    row_capacity = std::max(row_capacity, size);
+  }
+  if (core_count == 0) {
+    row_capacity = std::max(
+        1,
+        silhouette_rows(intent, static_cast<int>(slot_list.size()), request.options)
+            .front());
+  }
+  if (tmpl.max_frontage > 0.1F && request.frontage <= 0.01F) {
+    auto wing_width = [&](const std::vector<std::size_t>& wing) {
+      float width = 0.0F;
+      for (std::size_t k = 0; k < wing.size(); k += 2U) {
+        float column = half_width(wing[k]);
+        if (k + 1U < wing.size()) {
+          column = std::max(column, half_width(wing[k + 1U]));
+        }
+        width += 2.0F * column + lateral_gap;
+      }
+      return width;
+    };
+    float const core_room =
+        std::max(average_width,
+                 tmpl.max_frontage - wing_width(left_wing) - wing_width(right_wing));
+    int const fits = std::max(
+        1, static_cast<int>(std::floor((core_room + lateral_gap) / average_width)));
+    if (row_capacity > fits) {
+      row_capacity = fits;
+      core_rows = even_rows(core_count, (core_count + fits - 1) / fits);
+    }
+  }
+
+  RangedPlacement ranged_placement = request.options.ranged_placement;
+  if (ranged_placement == RangedPlacement::Automatic) {
+    ranged_placement = tmpl.default_ranged;
+  }
+  auto build_rows = [&](int capacity, const std::vector<int>& core_sizes) {
+    std::vector<std::vector<std::size_t>> rows;
+    bool core_placed = false;
+    for (const auto& tier : tiers) {
+      auto const count = static_cast<int>(tier.members.size());
+      std::vector<int> const sizes =
+          tier.core ? core_sizes : even_rows(count, (count + capacity - 1) / capacity);
+      if (!tier.core && intent == ArmyFormationIntent::Defensive &&
+          tier.role == ArmyRole::Reserve && !rows.empty()) {
+        rows.emplace_back();
+      }
+      std::size_t cursor = 0;
+      for (int const size : sizes) {
+        std::vector<std::size_t> row(
+            tier.members.begin() + static_cast<std::ptrdiff_t>(cursor),
+            tier.members.begin() + static_cast<std::ptrdiff_t>(cursor) + size);
+        cursor += static_cast<std::size_t>(size);
+        std::stable_sort(row.begin(), row.end(), [&](std::size_t a, std::size_t b) {
+          return slot_list[a].local_offset.x() < slot_list[b].local_offset.x();
+        });
+        rows.push_back(std::move(row));
+      }
+      if (!tier.core && !core_placed && tier.role == ArmyRole::Ranged &&
+          ranged_placement == RangedPlacement::Skirmish) {
+        rows.emplace_back();
+      }
+      core_placed = core_placed || tier.core;
+    }
+    return rows;
+  };
+  auto rows_depth = [&](const std::vector<std::vector<std::size_t>>& rows) {
+    float depth = 0.0F;
+    float previous = 0.0F;
+    bool first_row = true;
+    for (const auto& row : rows) {
+      if (row.empty()) {
+        depth += rank_gap + 2.0F * previous;
+        continue;
+      }
+      float row_half_depth = 0.0F;
+      for (auto const index : row) {
+        row_half_depth = std::max(row_half_depth, half_depth(index));
+      }
+      if (!first_row) {
+        depth += previous + rank_gap + row_half_depth;
+      }
+      first_row = false;
+      previous = row_half_depth;
+    }
+    return depth;
+  };
+  auto placed_rows = build_rows(row_capacity, core_rows);
+  int const total = static_cast<int>(slot_list.size());
+  while (tmpl.max_depth > 0.1F && rows_depth(placed_rows) > tmpl.max_depth &&
+         row_capacity < total) {
+    ++row_capacity;
+    core_rows = even_rows(core_count, (core_count + row_capacity - 1) / row_capacity);
+    placed_rows = build_rows(row_capacity, core_rows);
+  }
+
+  float z = 0.0F;
+  float previous_half_depth = 0.0F;
+  float front_z = 0.0F;
+  float front_half_depth = 0.0F;
+  float front_half_width = 0.0F;
+  bool first = true;
+  int rank = 0;
+  for (auto const& row : placed_rows) {
+    if (row.empty()) {
+      z -= rank_gap + 2.0F * previous_half_depth;
+      continue;
+    }
+    float row_half_depth = 0.0F;
+    for (auto const index : row) {
+      row_half_depth = std::max(row_half_depth, half_depth(index));
+    }
+    float gap = lateral_gap;
+    if (request.frontage > 0.01F && row.size() > 1U) {
+      float const outer = half_width(row.front()) + half_width(row.back());
+      float const bodies =
+          row_width(row) - lateral_gap * static_cast<float>(row.size() - 1U) - outer;
+      gap = std::max(lateral_gap,
+                     (request.frontage - bodies) / static_cast<float>(row.size() - 1U));
+    }
+    float width = 0.0F;
+    for (auto const index : row) {
+      width += 2.0F * half_width(index);
+    }
+    width += gap * static_cast<float>(row.size() - 1U);
+    if (!first) {
+      z -= previous_half_depth + rank_gap + row_half_depth;
+    }
+    float x = -width * 0.5F;
+    int file = 0;
+    for (auto const index : row) {
+      float const hw = half_width(index);
+      slot_list[index].local_offset = QVector3D(x + hw, 0.0F, z);
+      slot_list[index].rank = rank;
+      slot_list[index].file = file++;
+      x += 2.0F * hw + gap;
+    }
+    if (first) {
+      front_z = z;
+      front_half_depth = row_half_depth;
+      front_half_width = width * 0.5F;
+      first = false;
+    }
+    previous_half_depth = row_half_depth;
+    ++rank;
+  }
+
+  auto place_wing = [&](std::vector<std::size_t>& wing, float side) {
+    std::stable_sort(wing.begin(), wing.end(), [&](std::size_t a, std::size_t b) {
+      return side * slot_list[a].local_offset.x() <
+             side * slot_list[b].local_offset.x();
+    });
+    float const reach = intent == ArmyFormationIntent::Encirclement
+                            ? front_half_depth * 2.0F + rank_gap
+                            : 0.0F;
+    float x = front_half_width + lateral_gap;
+    int column = 0;
+    float column_width = 0.0F;
+    float wing_z = front_z + reach;
+    for (std::size_t k = 0; k < wing.size(); ++k) {
+      auto& slot = slot_list[wing[k]];
+      float const hw = half_width(wing[k]);
+      float const hd = half_depth(wing[k]);
+      column_width = std::max(column_width, hw);
+      slot.local_offset = QVector3D(side * (x + hw), 0.0F, wing_z);
+      slot.rank = column;
+      wing_z -= 2.0F * hd + rank_gap;
+      if ((k + 1U) % 2U == 0U) {
+        x += 2.0F * column_width + lateral_gap;
+        column_width = 0.0F;
+        wing_z = front_z + reach;
+        ++column;
+      }
+    }
+  };
+  place_wing(left_wing, -1.0F);
+  place_wing(right_wing, 1.0F);
+  recentre_on_centroid(slot_list);
+}
+
+} // namespace
 
 auto ArmyFormationPlanner::build_layout(const std::vector<ArmyFormationMember>& members,
                                         const ArmyFormationRequest& request,
@@ -1346,6 +2286,9 @@ auto ArmyFormationPlanner::build_layout(const std::vector<ArmyFormationMember>& 
                request.spacing * tmpl->spacing_scale *
                    std::clamp(request.options.spacing_scale, 0.4F, 2.5F));
   layout.spacing = spacing;
+  layout.footprint_gap = lane_for(spacing) * 0.5F;
+  layout.movement_policy =
+      resolve_movement_policy(request.options.movement_policy, *tmpl);
 
   std::vector<ArmyFormationMember> shaped = members;
   for (auto& member : shaped) {
@@ -1408,70 +2351,127 @@ auto ArmyFormationPlanner::build_layout(const std::vector<ArmyFormationMember>& 
     return layout;
   }
 
-  if (request.preserve_previous_slots && request.group_id != k_invalid_group) {
-    const auto* previous = previous_group;
-    if (previous != nullptr) {
-      std::vector<FormationSlot> reordered = layout.slot_list;
-      std::vector<bool> claimed(reordered.size(), false);
-      std::unordered_map<EntityID, std::size_t> desired;
-      for (const auto& old_slot : previous->slot_list) {
-        if (old_slot.occupant == 0U) {
-          continue;
-        }
-        auto const index = static_cast<std::size_t>(old_slot.id);
-        if (index < reordered.size()) {
-          desired.emplace(old_slot.occupant, index);
+  std::unordered_map<EntityID, const ArmyFormationMember*> by_id;
+  by_id.reserve(shaped.size());
+  for (const auto& member : shaped) {
+    by_id.emplace(member.entity_id, &member);
+  }
+
+  regularize_silhouette(layout.slot_list, by_id, request, *tmpl, spacing);
+
+  if (request.preserve_previous_slots && request.group_id != k_invalid_group &&
+      previous_group != nullptr) {
+
+    auto footprint_key = [&by_id](EntityID id) -> std::uint64_t {
+      auto const found = by_id.find(id);
+      if (found == by_id.end()) {
+        return 0U;
+      }
+      Hasher hasher;
+      hasher.mix(static_cast<std::uint64_t>(found->second->troop_type));
+      hasher.mix(static_cast<std::uint64_t>(found->second->individuals));
+      hasher.mix(static_cast<std::uint64_t>(found->second->heavy));
+      return hasher.value();
+    };
+
+    std::unordered_map<EntityID, std::size_t> desired;
+    for (const auto& old_slot : previous_group->slot_list) {
+      if (old_slot.occupant == 0U || old_slot.id < 0) {
+        continue;
+      }
+      auto const index = static_cast<std::size_t>(old_slot.id);
+      if (index < layout.slot_list.size()) {
+        desired.emplace(old_slot.occupant, index);
+      }
+    }
+
+    auto const slot_count = layout.slot_list.size();
+    std::vector<std::uint64_t> slot_keys(slot_count, 0U);
+    for (std::size_t i = 0; i < slot_count; ++i) {
+      slot_keys[i] = footprint_key(layout.slot_list[i].occupant);
+    }
+    std::vector<EntityID> occupants(slot_count, 0U);
+    std::vector<bool> bucket_done(slot_count, false);
+    for (std::size_t first = 0; first < slot_count; ++first) {
+      if (bucket_done[first]) {
+        continue;
+      }
+      std::vector<std::size_t> bucket;
+      for (std::size_t i = first; i < slot_count; ++i) {
+        if (!bucket_done[i] && slot_keys[i] == slot_keys[first]) {
+          bucket.push_back(i);
+          bucket_done[i] = true;
         }
       }
-      std::vector<EntityID> unassigned;
-      std::vector<EntityID> occupants(reordered.size(), 0U);
-      for (const auto& slot : layout.slot_list) {
-        auto it = desired.find(slot.occupant);
-        if (it != desired.end() && !claimed[it->second]) {
-          claimed[it->second] = true;
-          occupants[it->second] = slot.occupant;
+      std::vector<EntityID> pending;
+      for (auto const i : bucket) {
+        auto const entity = layout.slot_list[i].occupant;
+        auto const wanted = desired.find(entity);
+        bool const in_bucket = wanted != desired.end() && wanted->second < slot_count &&
+                               slot_keys[wanted->second] == slot_keys[first];
+        if (in_bucket && occupants[wanted->second] == 0U) {
+          occupants[wanted->second] = entity;
         } else {
-          unassigned.push_back(slot.occupant);
+          pending.push_back(entity);
         }
       }
       std::size_t next = 0;
-      for (std::size_t i = 0; i < occupants.size(); ++i) {
-        if (occupants[i] != 0U) {
-          continue;
-        }
-        if (next < unassigned.size()) {
-          occupants[i] = unassigned[next++];
+      for (auto const i : bucket) {
+        if (occupants[i] == 0U && next < pending.size()) {
+          occupants[i] = pending[next++];
         }
       }
-      for (std::size_t i = 0; i < reordered.size(); ++i) {
-        reordered[i].occupant = occupants[i];
-      }
-      layout.slot_list = reordered;
+    }
+    for (std::size_t i = 0; i < slot_count; ++i) {
+      layout.slot_list[i].occupant = occupants[i];
     }
   }
 
-  {
-    std::unordered_map<EntityID, const ArmyFormationMember*> by_id;
-    by_id.reserve(shaped.size());
-    for (const auto& member : shaped) {
-      by_id.emplace(member.entity_id, &member);
+  layout.slot_clearance.assign(layout.slot_list.size(), layout.slot_spacing * 0.5F);
+  layout.slot_half_width.assign(layout.slot_list.size(), layout.slot_spacing * 0.5F);
+  layout.slot_half_depth.assign(layout.slot_list.size(), layout.slot_spacing * 0.5F);
+  layout.slot_files.assign(layout.slot_list.size(), 0);
+  for (std::size_t i = 0; i < layout.slot_list.size(); ++i) {
+    auto& slot = layout.slot_list[i];
+    auto const found = by_id.find(slot.occupant);
+    if (found == by_id.end()) {
+      slot.half_width = layout.slot_half_width[i];
+      slot.half_depth = layout.slot_half_depth[i];
+      continue;
     }
-    layout.slot_clearance.assign(layout.slot_list.size(), layout.slot_spacing * 0.5F);
-    layout.slot_half_width.assign(layout.slot_list.size(), layout.slot_spacing * 0.5F);
-    layout.slot_half_depth.assign(layout.slot_list.size(), layout.slot_spacing * 0.5F);
-    layout.slot_files.assign(layout.slot_list.size(), 0);
-    for (std::size_t i = 0; i < layout.slot_list.size(); ++i) {
-      auto const found = by_id.find(layout.slot_list[i].occupant);
-      if (found == by_id.end()) {
-        continue;
-      }
-      layout.slot_files[i] = tmpl->unit_files_aspect > 0.0F ? found->second->files : 0;
+    layout.slot_files[i] = tmpl->unit_files_aspect > 0.0F ? found->second->files : 0;
+    layout.slot_clearance[i] =
+        std::min(found->second->half_width, found->second->half_depth);
+    layout.slot_half_width[i] = found->second->half_width;
+    layout.slot_half_depth[i] = found->second->half_depth;
+    slot.half_width = found->second->half_width;
+    slot.half_depth = found->second->half_depth;
+    slot.heavy = found->second->heavy;
+  }
 
-      layout.slot_clearance[i] =
-          std::min(found->second->half_width, found->second->half_depth);
-      layout.slot_half_width[i] = found->second->half_width;
-      layout.slot_half_depth[i] = found->second->half_depth;
+  separate_footprints(layout.slot_list,
+                      layout.slot_half_width,
+                      layout.slot_half_depth,
+                      layout.footprint_gap);
+  recentre_on_centroid(layout.slot_list);
+
+  layout.assign_by_distance =
+      request.assign_nearest &&
+      !(request.preserve_previous_slots && request.group_id != k_invalid_group &&
+        previous_group != nullptr);
+  layout.slot_start.assign(layout.slot_list.size(), QVector3D());
+  layout.slot_kind.assign(layout.slot_list.size(), 0U);
+  for (std::size_t i = 0; i < layout.slot_list.size(); ++i) {
+    auto const found = by_id.find(layout.slot_list[i].occupant);
+    if (found == by_id.end()) {
+      continue;
     }
+    layout.slot_start[i] = found->second->current_position;
+    Hasher hasher;
+    hasher.mix(static_cast<std::uint64_t>(found->second->troop_type));
+    hasher.mix(static_cast<std::uint64_t>(found->second->individuals));
+    hasher.mix(static_cast<std::uint64_t>(found->second->heavy));
+    layout.slot_kind[i] = hasher.value();
   }
 
   Bounds bounds;
@@ -1496,6 +2496,8 @@ auto ArmyFormationPlanner::place(const ArmyFormationLayout& layout,
   plan.slot_spacing = layout.slot_spacing;
   plan.frontage = layout.frontage;
   plan.depth = layout.depth;
+  plan.footprint_gap = layout.footprint_gap;
+  plan.movement_policy = layout.movement_policy;
 
   if (!layout.valid) {
     plan.rejection_reason = layout.rejection_reason;
@@ -1512,13 +2514,23 @@ auto ArmyFormationPlanner::place(const ArmyFormationLayout& layout,
   plan.slot_half_depth.resize(plan.slot_list.size(), layout.slot_spacing * 0.5F);
   plan.slot_files.resize(plan.slot_list.size(), 0);
 
-  SlotTerrainFitter fitter(
-      layout.slot_spacing, request.resolve_terrain, plan.slot_list.size());
   QVector3D const anchor =
-      request.resolve_terrain
+      request.resolve_terrain &&
+              !Game::Systems::NavGrid::is_world_position_walkable(request.anchor)
           ? Game::Systems::NavGrid::snap_to_walkable_ground(request.anchor, 15)
           : request.anchor;
   plan.anchor = anchor;
+  SlotTerrainFitter fitter(layout.slot_spacing,
+                           layout.footprint_gap,
+                           request.facing,
+                           anchor,
+                           request.resolve_terrain,
+                           plan.slot_list.size());
+
+  if (layout.assign_by_distance && layout.slot_start.size() == plan.slot_list.size() &&
+      layout.slot_kind.size() == plan.slot_list.size()) {
+    assign_nearest_troops(plan, layout, anchor, request.facing);
+  }
 
   std::vector<std::size_t> ordered;
   ordered.reserve(plan.slot_list.size());
@@ -1543,9 +2555,16 @@ auto ArmyFormationPlanner::place(const ArmyFormationLayout& layout,
     QVector3D const ideal(
         anchor.x() + rotated.x(), anchor.y(), anchor.z() + rotated.z());
     SlotStatus status = SlotStatus::Valid;
-    slot->world_position = fitter.fit(ideal, plan.slot_clearance[index], status);
+    slot->world_position = fitter.fit(ideal,
+                                      plan.slot_half_width[index],
+                                      plan.slot_half_depth[index],
+                                      slot->heavy,
+                                      status);
     slot->status = status;
     slot->facing = request.facing;
+    if (status == SlotStatus::Adjusted) {
+      plan.displacement += (slot->world_position - ideal).length();
+    }
     if (status == SlotStatus::Blocked) {
       ++plan.blocked_count;
     } else if (status == SlotStatus::Adjusted) {
@@ -1612,7 +2631,7 @@ auto ArmyFormationPlanner::scatter_layout(
 auto ArmyFormationPlanner::plan(const std::vector<ArmyFormationMember>& members,
                                 const ArmyFormationRequest& request)
     -> ArmyFormationPlan {
-  return plan_fitting_the_ground(members, request, nullptr);
+  return plan(members, request, nullptr);
 }
 
 } // namespace Game::Formation

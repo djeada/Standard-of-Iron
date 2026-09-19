@@ -35,7 +35,7 @@ void TerrainFeatureManager::configure(
   const auto& bridges = height_map.get_bridges();
   const float tile_size = height_map.get_tile_size();
 
-  m_water->configure(river_segments, lakes, height_map);
+  m_water->configure(river_segments, lakes, height_map, biome_settings);
   m_road->configure(road_segments, height_map);
   m_shoreline->configure(river_segments, lakes, height_map, biome_settings);
   m_bridge->configure(bridges, tile_size, height_map);

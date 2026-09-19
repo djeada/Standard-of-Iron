@@ -31,6 +31,11 @@ struct SoldierSelectionCache {
   Render::Creature::Pipeline::HumanoidAnimationSelection selection{};
 };
 
+struct SoldierOffsetState {
+  float x{0.0F};
+  float z{0.0F};
+};
+
 struct CasualtyAnchor {
   std::uint16_t slot_index{0U};
   QMatrix4x4 frame{};
@@ -53,6 +58,10 @@ struct HumanoidInstanceStateComponent {
   std::vector<SoldierTurnSmoothingState> turn_states;
   float turn_time{0.0F};
   bool turn_time_valid{false};
+  std::vector<SoldierOffsetState> displayed_offsets;
+  float offset_time{0.0F};
+  bool offset_time_valid{false};
+  bool offset_about_faced{false};
 };
 
 } // namespace Render::Humanoid

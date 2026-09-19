@@ -120,6 +120,26 @@ auto heading_reference(const Engine::Core::Entity& entity,
                        const Engine::Core::UnitComponent* unit) -> HeadingReference {
   bool const formation =
       unit != nullptr && FormationCombat::has_formation_slots(entity);
+  if (movement.get_following_formation_slot()) {
+    const auto* membership =
+        entity.get_component<Engine::Core::ArmyFormationMembershipComponent>();
+    const auto* group = membership != nullptr
+                            ? Game::Formation::ArmyFormationRegistry::instance().find(
+                                  membership->group_id)
+                            : nullptr;
+    if (group != nullptr && group->maintains_formation() &&
+        (group->has_destination || movement.get_has_target())) {
+      const auto* slot = group->find_slot_for(entity.get_id());
+      if (slot != nullptr &&
+          std::hypot(transform.position.x - slot->world_position.x(),
+                     transform.position.z - slot->world_position.z()) <= 3.0F &&
+          movement.remaining_waypoints() <= 1U) {
+        // Small slot corrections and a coordinated wheel share the army's
+        // heading. Their lateral/backward velocity is not a new facing order.
+        return {true, slot->facing};
+      }
+    }
+  }
   if (formation && movement.get_has_target()) {
     float const to_target_x = movement.get_target_x() - transform.position.x;
     float const to_target_z = movement.get_target_y() - transform.position.z;
@@ -323,7 +343,8 @@ auto finalize_orientation(Engine::Core::World& world,
     bool const jostled = formation && facts != nullptr &&
                          (facts->steering.contact_push_x != 0.0F ||
                           facts->steering.contact_push_z != 0.0F);
-    float const deadband = (standing_still || jostled)
+    float const deadband = movement->get_following_formation_slot() ? 0.5F
+                           : (standing_still || jostled)
                                ? full_translation_heading_error_degrees
                            : formation ? k_formation_heading_deadband_degrees
                                        : 0.0F;
@@ -1115,7 +1136,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     movement->vx *= std::max(0.0F, 1.0F - limits.damping * delta_time);
     movement->vz *= std::max(0.0F, 1.0F - limits.damping * delta_time);
   } else {
-    if (movement->get_issuer_retargets()) {
+    if (movement->get_issuer_retargets() && !movement->get_following_formation_slot()) {
 
       movement->vx += (target_vx - movement->vx) * limits.acceleration * delta_time;
       movement->vz += (target_vz - movement->vz) * limits.acceleration * delta_time;

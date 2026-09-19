@@ -40,7 +40,8 @@ enum class FlankPreference : std::uint8_t {
 
 enum class MovementPolicy : std::uint8_t {
   ReformAtDestination,
-  MaintainFormation
+  MaintainFormation,
+  DoctrineDefault
 };
 
 enum class RangedPlacement : std::uint8_t {
@@ -113,6 +114,10 @@ struct FormationSlot {
   SlotStatus status{SlotStatus::Valid};
   EntityID occupant{0};
 
+  float half_width{0.5F};
+  float half_depth{0.5F};
+  bool heavy{false};
+
   [[nodiscard]] auto is_occupied() const noexcept -> bool { return occupant != 0U; }
   [[nodiscard]] auto is_placeable() const noexcept -> bool {
     return status != SlotStatus::Blocked;
@@ -143,6 +148,33 @@ struct FormationMovePlan {
   }
 };
 
+struct FormationMorph {
+  bool active{false};
+  bool rigid{false};
+  float elapsed{0.0F};
+  float duration{0.0F};
+  QVector3D anchor_from;
+  QVector3D anchor_to;
+  float facing_from{0.0F};
+  float facing_to{0.0F};
+  std::vector<EntityID> occupants;
+  std::vector<QVector3D> local_from;
+  std::vector<QVector3D> local_to;
+  std::vector<QVector3D> world_to;
+  std::vector<float> path_speed;
+
+  void clear() noexcept {
+    active = false;
+    elapsed = 0.0F;
+    duration = 0.0F;
+    occupants.clear();
+    local_from.clear();
+    local_to.clear();
+    world_to.clear();
+    path_speed.clear();
+  }
+};
+
 struct ArmyFormationShape {
   float frontage{0.0F};
   float depth{0.0F};
@@ -152,7 +184,7 @@ struct ArmyFormationShape {
 
 struct ArmyFormationOptions {
   FlankPreference flank_preference{FlankPreference::Balanced};
-  MovementPolicy movement_policy{MovementPolicy::ReformAtDestination};
+  MovementPolicy movement_policy{MovementPolicy::DoctrineDefault};
   RangedPlacement ranged_placement{RangedPlacement::Automatic};
   MixedDoctrinePolicy mixed_policy{MixedDoctrinePolicy::MajorityDoctrine};
 
@@ -178,6 +210,10 @@ struct ArmyFormation {
 
   float slot_spacing{1.0F};
 
+  float requested_frontage{0.0F};
+  std::vector<FormationSlot> reference_slots;
+  bool compressed{false};
+
   ArmyFormationOptions options;
   FormationPhase phase{FormationPhase::Reforming};
 
@@ -188,7 +224,9 @@ struct ArmyFormation {
   std::vector<FormationSlot> slot_list;
 
   QVector3D destination;
+  float destination_facing{0.0F};
   bool has_destination{false};
+  FormationMorph morph;
   float advance_progress{0.0F};
 
   FormationMovePlan move_plan;

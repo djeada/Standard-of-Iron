@@ -186,6 +186,14 @@ auto AISystem::initial_decisions_ready() const -> bool {
   return m_initial_decisions_ready.load(std::memory_order_acquire);
 }
 
+void AISystem::wait_for_decisions() {
+  for (auto& ai : m_ai_instances) {
+    if (ai.worker) {
+      ai.worker->wait_idle();
+    }
+  }
+}
+
 void AISystem::shutdown_workers() {
   for (auto& ai : m_ai_instances) {
     if (ai.worker) {

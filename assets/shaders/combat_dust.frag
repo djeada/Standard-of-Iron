@@ -85,8 +85,9 @@ void main() {
     color = mix(shade, lit, smoothstep(0.10, 0.90, height_t) * (0.50 + 0.50 * puff));
     color *= 0.86 + 0.28 * fine;
 
-    float dust_alpha = v_alpha * soft_edge * ground_kiss * carve;
-    frag_color = vec4(color, clamp(dust_alpha, 0.0, 0.70));
+    float top_fade = 1.0 - smoothstep(0.45, 0.98, height_t);
+    float dust_alpha = v_alpha * soft_edge * ground_kiss * carve * top_fade;
+    frag_color = vec4(color, clamp(dust_alpha, 0.0, 0.52));
   } else if (u_effect_type == 1 || u_effect_type == 4) {
     bool unit_flame = (u_effect_type == 4);
     float flame_height = clamp(v_texcoord.y, 0.0, 1.0);

@@ -472,7 +472,7 @@ auto decode_formation_options(const QJsonObject& object,
   options.flank_preference =
       r.enumeration("flank_preference", Game::Formation::FlankPreference::Split);
   options.movement_policy = r.enumeration(
-      "movement_policy", Game::Formation::MovementPolicy::MaintainFormation);
+      "movement_policy", Game::Formation::MovementPolicy::DoctrineDefault);
   options.ranged_placement =
       r.enumeration("ranged_placement", Game::Formation::RangedPlacement::Skirmish);
   options.mixed_policy = r.enumeration(

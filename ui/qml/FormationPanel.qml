@@ -528,13 +528,13 @@ Item {
                     FormationOptionRow {
                         hint: qsTr("Reform is faster and copes with chokepoints. Maintain keeps the shape on the march but moves slower.")
                         label: qsTr("On the march")
-                        model: [qsTr("Reform on arrival"), qsTr("Hold the shape")]
+                        model: [qsTr("Doctrine decides") + " (" + (formationPanel.options.effective_movement_index === 1 ? qsTr("Hold the shape") : qsTr("Reform on arrival")) + ")", qsTr("Reform on arrival"), qsTr("Hold the shape")]
                         selectedIndex: formationPanel.options.movement_index !== undefined ? formationPanel.options.movement_index : 0
                         width: parent.width
 
                         onActivated: function (index) {
                             if (formationPanel.game_ready())
-                                game.placement.set_formation_movement_policy(["reform_at_destination", "maintain_formation"][index]);
+                                game.placement.set_formation_movement_policy(["doctrine_default", "reform_at_destination", "maintain_formation"][index]);
                         }
                     }
 

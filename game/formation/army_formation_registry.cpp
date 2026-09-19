@@ -25,14 +25,42 @@ namespace {
 constexpr float k_replan_interval_seconds = 0.5F;
 constexpr float k_advance_interval_seconds = 0.25F;
 constexpr float k_maintain_speed_multiplier = 0.55F;
-constexpr float k_stage_arrival_tolerance = 2.5F;
 
 constexpr float k_corridor_waypoint_tolerance = 1.25F;
 constexpr float k_corridor_max_anchor_lead = 6.0F;
 constexpr float k_corridor_min_leg_length = 1.5F;
 
+constexpr float k_max_wheel_degrees_per_second = 60.0F;
+constexpr float k_wheel_in_place_degrees = 0.5F;
+constexpr float k_final_sidestep_metres = 3.0F;
+
+struct GroupTraversal {
+  Game::Systems::Pathfinding::Passability passability{
+      Game::Systems::Pathfinding::Passability::Light};
+  float clearance{0.0F};
+};
+
+auto group_traversal(Engine::Core::World& world,
+                     const ArmyFormation& formation) -> GroupTraversal {
+  GroupTraversal traversal;
+  float widest = 0.0F;
+  for (auto const member : formation.members) {
+    const auto* movement = world.try_get<Engine::Core::MovementComponent>(member);
+    if (movement == nullptr) {
+      continue;
+    }
+    if (!movement->get_can_enter_forest()) {
+      traversal.passability = Game::Systems::Pathfinding::Passability::Heavy;
+    }
+    widest = std::max(widest, movement->get_navigation_clearance());
+  }
+  traversal.clearance = Game::Systems::Pathfinding::routing_clearance(widest);
+  return traversal;
+}
+
 auto build_corridor(const QVector3D& start,
-                    const QVector3D& destination) -> std::vector<QVector3D> {
+                    const QVector3D& destination,
+                    const GroupTraversal& traversal) -> std::vector<QVector3D> {
   std::vector<QVector3D> corridor;
   auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   if (pathfinder == nullptr) {
@@ -40,12 +68,15 @@ auto build_corridor(const QVector3D& start,
     return corridor;
   }
 
+  // A clear leg has one heading. Grid-cell centres otherwise introduce tiny
+  // alternating turns even on an unobstructed field.
+  if (pathfinder->is_world_segment_walkable(
+          start, destination, traversal.passability, traversal.clearance)) {
+    return {destination};
+  }
+
   auto const planned = Game::Systems::RouteCorridorPlanner::plan(
-      *pathfinder,
-      start,
-      destination,
-      Game::Systems::Pathfinding::Passability::Light,
-      0.0F);
+      *pathfinder, start, destination, traversal.passability, traversal.clearance);
   if (!planned.reachable()) {
     return corridor;
   }
@@ -108,6 +139,9 @@ auto slot_to_json(const FormationSlot& slot) -> QJsonObject {
   obj["file"] = slot.file;
   obj["status"] = static_cast<int>(slot.status);
   obj["occupant"] = static_cast<qint64>(slot.occupant);
+  obj["half_width"] = static_cast<double>(slot.half_width);
+  obj["half_depth"] = static_cast<double>(slot.half_depth);
+  obj["heavy"] = slot.heavy;
   return obj;
 }
 
@@ -122,6 +156,9 @@ auto slot_from_json(const QJsonObject& obj) -> FormationSlot {
   slot.file = obj["file"].toInt(0);
   slot.status = static_cast<SlotStatus>(obj["status"].toInt(0));
   slot.occupant = static_cast<EntityID>(obj["occupant"].toVariant().toULongLong());
+  slot.half_width = static_cast<float>(obj["half_width"].toDouble(0.5));
+  slot.half_depth = static_cast<float>(obj["half_depth"].toDouble(0.5));
+  slot.heavy = obj["heavy"].toBool(false);
   return slot;
 }
 
@@ -291,6 +328,10 @@ void ArmyFormationRegistry::apply_plan(FormationGroupID id,
   formation->spacing = plan.spacing;
   formation->slot_spacing = plan.slot_spacing;
   formation->slot_list = plan.slot_list;
+  formation->compressed = plan.narrowed;
+  if (!plan.narrowed) {
+    formation->reference_slots = plan.slot_list;
+  }
   formation->needs_replan = false;
   ++formation->plan_revision;
   reindex_membership(*formation);
@@ -343,6 +384,9 @@ auto ArmyFormationRegistry::to_json() const -> QJsonObject {
     obj["needs_replan"] = formation->needs_replan;
     obj["moves_pending"] = formation->moves_pending;
     obj["options"] = options_to_json(formation->options);
+    obj["requested_frontage"] = static_cast<double>(formation->requested_frontage);
+    obj["destination_facing"] = static_cast<double>(formation->destination_facing);
+    obj["compressed"] = formation->compressed;
 
     QJsonArray members;
     for (auto const member : formation->members) {
@@ -355,6 +399,12 @@ auto ArmyFormationRegistry::to_json() const -> QJsonObject {
       slot_list.append(slot_to_json(slot));
     }
     obj["slot_list"] = slot_list;
+
+    QJsonArray reference_slots;
+    for (const auto& slot : formation->reference_slots) {
+      reference_slots.append(slot_to_json(slot));
+    }
+    obj["reference_slots"] = reference_slots;
 
     groups.append(obj);
   }
@@ -390,6 +440,11 @@ void ArmyFormationRegistry::from_json(const QJsonObject& root) {
     formation.needs_replan = obj["needs_replan"].toBool(false);
     formation.moves_pending = obj["moves_pending"].toBool(false);
     formation.options = options_from_json(obj["options"].toObject());
+    formation.requested_frontage =
+        static_cast<float>(obj["requested_frontage"].toDouble(0.0));
+    formation.destination_facing = static_cast<float>(
+        obj["destination_facing"].toDouble(static_cast<double>(formation.facing)));
+    formation.compressed = obj["compressed"].toBool(false);
 
     for (const auto member : obj["members"].toArray()) {
       formation.members.push_back(
@@ -397,6 +452,9 @@ void ArmyFormationRegistry::from_json(const QJsonObject& root) {
     }
     for (const auto slot : obj["slot_list"].toArray()) {
       formation.slot_list.push_back(slot_from_json(slot.toObject()));
+    }
+    for (const auto slot : obj["reference_slots"].toArray()) {
+      formation.reference_slots.push_back(slot_from_json(slot.toObject()));
     }
 
     if (formation.id == k_invalid_group) {
@@ -416,6 +474,229 @@ void ArmyFormationRegistry::from_json(const QJsonObject& root) {
 }
 
 namespace {
+
+constexpr float k_morph_pace_share = 0.85F;
+constexpr float k_morph_about_face_degrees = 135.0F;
+constexpr int k_morph_samples = 12;
+
+auto rotate_yaw(const QVector3D& local, float yaw_degrees) -> QVector3D {
+  float const yaw = yaw_degrees * std::numbers::pi_v<float> / 180.0F;
+  float const s = std::sin(yaw);
+  float const c = std::cos(yaw);
+  return {local.x() * c + local.z() * s, 0.0F, -local.x() * s + local.z() * c};
+}
+
+auto morph_point(const FormationMorph& morph, std::size_t index, float t) -> QVector3D {
+  QVector3D const anchor =
+      morph.anchor_from + (morph.anchor_to - morph.anchor_from) * t;
+  float const facing =
+      morph.facing_from +
+      Game::Systems::signed_yaw_delta(morph.facing_from, morph.facing_to) * t;
+  QVector3D const local =
+      morph.local_from[index] + (morph.local_to[index] - morph.local_from[index]) * t;
+  QVector3D const offset = rotate_yaw(local, facing);
+  return {anchor.x() + offset.x(), anchor.y(), anchor.z() + offset.z()};
+}
+
+// A formed group keeps every troop at the same place within its shape: among
+// troops of one kind, the new slots are matched to where each troop stands in
+// the old shape (both measured in their own formation frame), so a wheel or a
+// march never reshuffles the ranks.
+void keep_places_in_shape(Engine::Core::World& world,
+                          ArmyFormation& formation,
+                          float facing_from,
+                          float facing_to) {
+  std::vector<std::size_t> held;
+  QVector3D troop_centre;
+  QVector3D slot_centre;
+  for (std::size_t i = 0; i < formation.slot_list.size(); ++i) {
+    const auto& slot = formation.slot_list[i];
+    const auto* transform =
+        world.try_get<Engine::Core::TransformComponent>(slot.occupant);
+    if (slot.occupant == 0U || slot.status == SlotStatus::Blocked ||
+        transform == nullptr) {
+      continue;
+    }
+    held.push_back(i);
+    troop_centre += QVector3D(transform->position.x, 0.0F, transform->position.z);
+    slot_centre += QVector3D(slot.world_position.x(), 0.0F, slot.world_position.z());
+  }
+  if (held.size() < 2U) {
+    return;
+  }
+  troop_centre /= static_cast<float>(held.size());
+  slot_centre /= static_cast<float>(held.size());
+
+  auto kind_of = [&](EntityID id) -> std::uint64_t {
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
+    const auto* movement = world.try_get<Engine::Core::MovementComponent>(id);
+    std::uint64_t kind =
+        unit != nullptr ? static_cast<std::uint64_t>(unit->spawn_type) : 0U;
+    kind = (kind << 1U) |
+           ((movement != nullptr && !movement->get_can_enter_forest()) ? 1U : 0U);
+    return kind;
+  };
+
+  std::vector<bool> done(held.size(), false);
+  std::vector<EntityID> occupants(formation.slot_list.size(), 0U);
+  for (std::size_t first = 0; first < held.size(); ++first) {
+    if (done[first]) {
+      continue;
+    }
+    auto const kind = kind_of(formation.slot_list[held[first]].occupant);
+    std::vector<std::size_t> bucket;
+    for (std::size_t k = first; k < held.size(); ++k) {
+      if (!done[k] && kind_of(formation.slot_list[held[k]].occupant) == kind) {
+        done[k] = true;
+        bucket.push_back(held[k]);
+      }
+    }
+    std::vector<std::vector<float>> cost(bucket.size(),
+                                         std::vector<float>(bucket.size()));
+    for (std::size_t r = 0; r < bucket.size(); ++r) {
+      const auto* transform = world.try_get<Engine::Core::TransformComponent>(
+          formation.slot_list[bucket[r]].occupant);
+      QVector3D const place = rotate_yaw(
+          QVector3D(transform->position.x, 0.0F, transform->position.z) - troop_centre,
+          -facing_from);
+      for (std::size_t c = 0; c < bucket.size(); ++c) {
+        auto const& target = formation.slot_list[bucket[c]].world_position;
+        QVector3D const shape_place = rotate_yaw(
+            QVector3D(target.x(), 0.0F, target.z()) - slot_centre, -facing_to);
+        cost[r][c] = (place - shape_place).length();
+      }
+    }
+    auto const chosen = ArmyFormationPlanner::min_cost_assignment(cost);
+    for (std::size_t r = 0; r < bucket.size(); ++r) {
+      auto const column = chosen[r] >= 0 ? static_cast<std::size_t>(chosen[r]) : r;
+      occupants[bucket[column]] = formation.slot_list[bucket[r]].occupant;
+    }
+  }
+  for (auto const index : held) {
+    formation.slot_list[index].occupant = occupants[index];
+  }
+  ArmyFormationRuntime::sync_membership_components(world, formation);
+}
+
+// "Hold the shape" on open ground: the formation's frame (anchor and facing)
+// moves from where the troops stand to the ordered place, and every troop's
+// slot is that frame plus its local offset. A formed group therefore marches
+// and wheels as one rigid body; a loose crowd morphs into the shape on the way.
+auto start_morph(Engine::Core::World& world,
+                 ArmyFormation& formation,
+                 std::optional<float> marching_facing) -> bool {
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  FormationMorph morph;
+  morph.anchor_to = formation.destination;
+  morph.facing_to = formation.destination_facing;
+  morph.facing_from = marching_facing.value_or(morph.facing_to);
+  if (std::abs(Game::Systems::signed_yaw_delta(morph.facing_from, morph.facing_to)) >
+      k_morph_about_face_degrees) {
+    morph.facing_from = morph.facing_to;
+  }
+
+  if (marching_facing.has_value()) {
+    keep_places_in_shape(world, formation, morph.facing_from, morph.facing_to);
+  }
+
+  std::vector<QVector3D> starts;
+  std::vector<float> speeds;
+  for (const auto& slot : formation.slot_list) {
+    if (slot.occupant == 0U || slot.status == SlotStatus::Blocked) {
+      continue;
+    }
+    const auto* transform =
+        world.try_get<Engine::Core::TransformComponent>(slot.occupant);
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(slot.occupant);
+    if (transform == nullptr || unit == nullptr || unit->speed <= 0.0F) {
+      return false;
+    }
+    morph.occupants.push_back(slot.occupant);
+    morph.world_to.push_back(slot.world_position);
+    QVector3D const offset(slot.world_position.x() - morph.anchor_to.x(),
+                           0.0F,
+                           slot.world_position.z() - morph.anchor_to.z());
+    morph.local_to.push_back(rotate_yaw(offset, -morph.facing_to));
+    starts.emplace_back(transform->position.x, 0.0F, transform->position.z);
+    speeds.push_back(unit->speed);
+  }
+  if (morph.occupants.empty()) {
+    return false;
+  }
+
+  QVector3D anchor_from;
+  for (std::size_t i = 0; i < starts.size(); ++i) {
+    anchor_from += starts[i] - rotate_yaw(morph.local_to[i], morph.facing_from);
+  }
+  anchor_from /= static_cast<float>(starts.size());
+  anchor_from.setY(morph.anchor_to.y());
+  morph.anchor_from = anchor_from;
+  for (auto const& start : starts) {
+    morph.local_from.push_back(rotate_yaw(start - anchor_from, -morph.facing_from));
+  }
+
+  float duration = 0.5F;
+  for (std::size_t i = 0; i < morph.occupants.size(); ++i) {
+    const auto* movement =
+        world.try_get<Engine::Core::MovementComponent>(morph.occupants[i]);
+    auto const passability = movement != nullptr && !movement->get_can_enter_forest()
+                                 ? Game::Systems::Pathfinding::Passability::Heavy
+                                 : Game::Systems::Pathfinding::Passability::Light;
+    float const clearance =
+        movement != nullptr ? movement->get_navigation_clearance() : 0.0F;
+    float length = 0.0F;
+    QVector3D previous = morph_point(morph, i, 0.0F);
+    for (int k = 1; k <= k_morph_samples; ++k) {
+      QVector3D const next = morph_point(
+          morph, i, static_cast<float>(k) / static_cast<float>(k_morph_samples));
+      if (pathfinder != nullptr && !pathfinder->is_world_segment_walkable(
+                                       previous, next, passability, clearance)) {
+        return false;
+      }
+      length +=
+          QVector3D(next.x() - previous.x(), 0.0F, next.z() - previous.z()).length();
+      previous = next;
+    }
+    duration = std::max(duration, length / (speeds[i] * k_morph_pace_share));
+    morph.path_speed.push_back(length);
+  }
+  for (auto& speed : morph.path_speed) {
+    speed /= duration;
+  }
+  constexpr float k_rigid_tolerance = 0.75F;
+  morph.rigid = true;
+  for (std::size_t i = 0; i < morph.local_from.size(); ++i) {
+    if ((morph.local_from[i] - morph.local_to[i]).length() > k_rigid_tolerance) {
+      morph.rigid = false;
+      break;
+    }
+  }
+  morph.duration = duration;
+  morph.active = true;
+  formation.morph = std::move(morph);
+  formation.anchor = formation.morph.anchor_from;
+  formation.facing = formation.morph.facing_from;
+  for (auto& slot : formation.slot_list) {
+    auto const found = std::find(formation.morph.occupants.begin(),
+                                 formation.morph.occupants.end(),
+                                 slot.occupant);
+    if (found == formation.morph.occupants.end()) {
+      continue;
+    }
+    auto const index = static_cast<std::size_t>(
+        std::distance(formation.morph.occupants.begin(), found));
+    slot.world_position = morph_point(formation.morph, index, 0.0F);
+    slot.facing = formation.facing;
+  }
+  return true;
+}
+
+auto facing_settled(const ArmyFormation& formation) -> bool {
+  constexpr float k_settled_degrees = 0.5F;
+  return !formation.maintains_formation() ||
+         std::abs(Game::Systems::signed_yaw_delta(
+             formation.facing, formation.destination_facing)) <= k_settled_degrees;
+}
 
 void hold_group_facing(Engine::Core::World& world, ArmyFormation& formation) {
   if (!formation.is_formed()) {
@@ -459,6 +740,7 @@ void ArmyFormationRuntime::refresh_shape_state(Engine::Core::World& world,
   int expected = 0;
   int observed = 0;
   int in_slot = 0;
+  bool all_facing_aligned = true;
   bool controlled_break = false;
   float slowest_speed = std::numeric_limits<float>::max();
   for (const auto& slot : formation.slot_list) {
@@ -488,6 +770,9 @@ void ArmyFormationRuntime::refresh_shape_state(Engine::Core::World& world,
     if ((off_x * off_x) + (off_z * off_z) <= radius_sq) {
       ++in_slot;
     }
+    all_facing_aligned = all_facing_aligned &&
+                         std::abs(Game::Systems::signed_yaw_delta(transform->rotation.y,
+                                                                  slot.facing)) <= 4.0F;
   }
 
   formation.cohesion_pace =
@@ -508,19 +793,31 @@ void ArmyFormationRuntime::refresh_shape_state(Engine::Core::World& world,
     return;
   }
 
+  if (formation.morph.active) {
+    formation.phase = formation.cohesion >= k_formed_cohesion && formation.morph.rigid
+                          ? FormationPhase::Traversing
+                          : FormationPhase::Reforming;
+    return;
+  }
+
   if (formation.move_plan.has_corridor()) {
+    if (formation.compressed) {
+      formation.phase = FormationPhase::Opening;
+      return;
+    }
     float const opening_distance =
         std::max(formation.spacing, 0.1F) * k_opening_progress_spacing_scale;
     bool const still_opening = controlled_break ||
                                formation.advance_progress < opening_distance ||
-                               formation.cohesion < k_formed_cohesion;
+                               !all_in_slot || !all_facing_aligned;
     formation.phase =
         still_opening ? FormationPhase::Opening : FormationPhase::Traversing;
     return;
   }
 
   if (formation.has_destination) {
-    if (all_in_slot) {
+    if (all_in_slot && all_facing_aligned && facing_settled(formation) &&
+        !formation.morph.active) {
       formation.has_destination = false;
       formation.phase = FormationPhase::Arrived;
     } else {
@@ -571,7 +868,8 @@ auto ArmyFormationRuntime::move_speed_multiplier(const Engine::Core::Entity& ent
     return 1.0F;
   }
   const auto* formation = ArmyFormationRegistry::instance().find(membership->group_id);
-  if (formation == nullptr || !formation->maintains_formation()) {
+  if (formation == nullptr || !formation->maintains_formation() ||
+      formation->morph.active || !formation->move_plan.active) {
     return 1.0F;
   }
   const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
@@ -603,7 +901,9 @@ auto ArmyFormationRuntime::move_speed_multiplier(const Engine::Core::Entity& ent
 void ArmyFormationRuntime::begin_move(Engine::Core::World& world,
                                       FormationGroupID id,
                                       const QVector3D& destination,
-                                      float facing) {
+                                      float facing,
+                                      std::optional<float> marching_facing,
+                                      bool allow_morph) {
   auto& registry = ArmyFormationRegistry::instance();
   auto* formation = registry.find(id);
   if (formation == nullptr) {
@@ -611,12 +911,25 @@ void ArmyFormationRuntime::begin_move(Engine::Core::World& world,
   }
 
   formation->destination = destination;
+  formation->destination_facing = facing;
   formation->has_destination = true;
   formation->facing = facing;
   formation->advance_progress = 0.0F;
   formation->move_plan.clear();
+  formation->morph.clear();
 
-  if (!formation->maintains_formation()) {
+  if (formation->maintains_formation() && allow_morph &&
+      start_morph(world, *formation, marching_facing)) {
+    formation->needs_replan = false;
+    formation->moves_pending = true;
+    refresh_shape_state(world, *formation);
+    return;
+  }
+
+  // Where the ground will not carry the shape as one body (a river, a wood, a
+  // settlement), every troop routes to its slot on its own and the group
+  // assembles on arrival; the old anchor march stalled on real maps.
+  if (!formation->maintains_formation() || allow_morph) {
     formation->anchor = destination;
     formation->needs_replan = false;
     refresh_shape_state(world, *formation);
@@ -636,13 +949,24 @@ void ArmyFormationRuntime::begin_move(Engine::Core::World& world,
     }
     centroid +=
         QVector3D(transform->position.x, transform->position.y, transform->position.z);
+    if (marching_facing.has_value()) {
+      if (const auto* slot = formation->find_slot_for(member)) {
+        float const radians = *marching_facing * std::numbers::pi_v<float> / 180.0F;
+        const auto& offset = slot->local_offset;
+        centroid -=
+            QVector3D(offset.x() * std::cos(radians) + offset.z() * std::sin(radians),
+                      0.0F,
+                      -offset.x() * std::sin(radians) + offset.z() * std::cos(radians));
+      }
+    }
     ++count;
   }
   if (count > 0) {
     formation->anchor = centroid / static_cast<float>(count);
   }
 
-  formation->move_plan.corridor = build_corridor(formation->anchor, destination);
+  formation->move_plan.corridor = build_corridor(
+      formation->anchor, destination, group_traversal(world, *formation));
   formation->move_plan.corridor_index = 0;
   formation->move_plan.formation_center = formation->anchor;
   formation->move_plan.active = !formation->move_plan.corridor.empty();
@@ -652,11 +976,56 @@ void ArmyFormationRuntime::begin_move(Engine::Core::World& world,
     if (heading.lengthSquared() > 1.0e-4F) {
       formation->move_plan.facing_direction = heading.normalized();
     }
+
+    if (marching_facing.has_value()) {
+      formation->facing = *marching_facing;
+    } else if (heading.lengthSquared() > 1.0e-4F) {
+      formation->facing =
+          Game::Systems::yaw_degrees_from_direction(heading.x(), heading.z());
+    }
   }
 
   formation->needs_replan = true;
   static_cast<void>(replan(world, id));
   refresh_shape_state(world, *formation);
+}
+
+void ArmyFormationRuntime::advance_morphs(Engine::Core::World& world,
+                                          float delta_time) {
+  auto& registry = ArmyFormationRegistry::for_world(world);
+  for (auto const id : registry.group_ids()) {
+    auto* formation = registry.find(id);
+    if (formation == nullptr || !formation->morph.active) {
+      continue;
+    }
+    auto& morph = formation->morph;
+    morph.elapsed += delta_time;
+    float const t = morph.duration > 0.0F
+                        ? std::clamp(morph.elapsed / morph.duration, 0.0F, 1.0F)
+                        : 1.0F;
+    formation->anchor = morph.anchor_from + (morph.anchor_to - morph.anchor_from) * t;
+    formation->facing =
+        morph.facing_from +
+        Game::Systems::signed_yaw_delta(morph.facing_from, morph.facing_to) * t;
+    for (auto& slot : formation->slot_list) {
+      auto const found =
+          std::find(morph.occupants.begin(), morph.occupants.end(), slot.occupant);
+      if (found == morph.occupants.end()) {
+        continue;
+      }
+      auto const index =
+          static_cast<std::size_t>(std::distance(morph.occupants.begin(), found));
+      slot.world_position =
+          t >= 1.0F ? morph.world_to[index] : morph_point(morph, index, t);
+      slot.facing = formation->facing;
+    }
+    formation->moves_pending = true;
+    if (t >= 1.0F) {
+      formation->anchor = morph.anchor_to;
+      formation->facing = morph.facing_to;
+      morph.active = false;
+    }
+  }
 }
 
 void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
@@ -666,7 +1035,8 @@ void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
   for (auto const id : registry.group_ids()) {
     auto* formation = registry.find(id);
     if (formation == nullptr || !formation->has_destination ||
-        !formation->maintains_formation() || formation->members.empty()) {
+        !formation->maintains_formation() || formation->morph.active ||
+        !formation->move_plan.active || formation->members.empty()) {
       continue;
     }
 
@@ -683,6 +1053,11 @@ void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
       }
       centroid += QVector3D(
           transform->position.x, transform->position.y, transform->position.z);
+      if (const auto* slot = formation->find_slot_for(member)) {
+        // Estimate the anchor from slot errors. In an asymmetric formation the
+        // members' raw centroid need not coincide with the formation anchor.
+        centroid -= slot->world_position - formation->anchor;
+      }
       ++count;
     }
     if (count == 0) {
@@ -690,9 +1065,44 @@ void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
     }
     centroid /= static_cast<float>(count);
 
+    float const declared_pace = formation->cohesion_pace > 0.0F
+                                    ? formation->cohesion_pace
+                                    : k_maintain_speed_multiplier;
+
+    float half_span = std::max(formation->spacing, 0.5F);
+    float max_slot_error = 0.0F;
+    for (const auto& slot : formation->slot_list) {
+      if (slot.occupant == 0U || slot.status == SlotStatus::Blocked) {
+        continue;
+      }
+      half_span = std::max(half_span,
+                           slot.local_offset.length() +
+                               std::hypot(slot.half_width, slot.half_depth));
+      if (const auto* transform =
+              world.try_get<Engine::Core::TransformComponent>(slot.occupant)) {
+        max_slot_error =
+            std::max(max_slot_error,
+                     std::hypot(transform->position.x - slot.world_position.x(),
+                                transform->position.z - slot.world_position.z()));
+      }
+    }
+    // Wait for every rank, including during assembly and a wheel. A centroid
+    // can look caught up while the front and rear are far from their slots.
+    if (!formation->compressed && max_slot_error > 1.0F) {
+      formation->moves_pending = true;
+      continue;
+    }
+    float const wheel_step = std::clamp(declared_pace / std::max(half_span, 0.5F) *
+                                            180.0F / std::numbers::pi_v<float>,
+                                        0.0F,
+                                        k_max_wheel_degrees_per_second) *
+                             delta_time;
+
     auto& plan = formation->move_plan;
     if (!plan.active) {
-      plan.corridor = build_corridor(formation->anchor, formation->destination);
+      plan.corridor = build_corridor(formation->anchor,
+                                     formation->destination,
+                                     group_traversal(world, *formation));
       plan.corridor_index = 0;
       plan.active = !plan.corridor.empty();
     }
@@ -710,7 +1120,10 @@ void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
       QVector3D const to_waypoint(waypoint.x() - formation->anchor.x(),
                                   0.0F,
                                   waypoint.z() - formation->anchor.z());
-      if (to_waypoint.length() > k_corridor_waypoint_tolerance) {
+      float const tolerance = plan.corridor_index + 1U == plan.corridor.size()
+                                  ? 0.05F
+                                  : k_corridor_waypoint_tolerance;
+      if (to_waypoint.length() > tolerance) {
         break;
       }
       ++plan.corridor_index;
@@ -721,8 +1134,13 @@ void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
                                      0.0F,
                                      formation->destination.z() -
                                          formation->anchor.z());
-      if (to_destination.length() <= k_stage_arrival_tolerance * 0.5F) {
+      if (to_destination.length() <= 0.05F) {
         plan.clear();
+        if (!facing_settled(*formation)) {
+          formation->facing = Game::Systems::turn_yaw_toward(
+              formation->facing, formation->destination_facing, wheel_step);
+          formation->needs_replan = true;
+        }
         continue;
       }
       plan.corridor.push_back(formation->destination);
@@ -737,17 +1155,86 @@ void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
     heading /= leg;
     plan.facing_direction = heading;
 
-    float const declared_pace = formation->cohesion_pace > 0.0F
-                                    ? formation->cohesion_pace
-                                    : k_maintain_speed_multiplier;
+    bool const final_step = plan.corridor_index + 1U >= plan.corridor.size() &&
+                            leg <= k_final_sidestep_metres;
+    float const target_facing =
+        final_step
+            ? formation->destination_facing
+            : Game::Systems::yaw_degrees_from_direction(heading.x(), heading.z());
+    formation->facing =
+        Game::Systems::turn_yaw_toward(formation->facing, target_facing, wheel_step);
+    formation->needs_replan = true;
+    if (std::abs(Game::Systems::signed_yaw_delta(formation->facing, target_facing)) >
+        k_wheel_in_place_degrees) {
+      continue;
+    }
+
     float const step = std::min(leg, std::max(0.05F, declared_pace * delta_time));
     formation->anchor += heading * step;
-    formation->facing = static_cast<float>(
-        std::atan2(static_cast<double>(heading.x()), static_cast<double>(heading.z())) *
-        180.0 / std::numbers::pi);
     formation->advance_progress += step;
-    formation->needs_replan = true;
   }
+}
+
+// A troop following a moving slot is sent to where the slot will be a moment
+// ahead, at the pace the slot moves: it walks alongside its slot instead of
+// reaching it, stopping, and setting off again every few ticks.
+auto ArmyFormationRuntime::morph_target(const ArmyFormation& formation,
+                                        EntityID entity) -> std::optional<QVector3D> {
+  constexpr float k_lead_seconds = 1.0F;
+  const auto& morph = formation.morph;
+  if (!morph.active || morph.duration <= 0.0F) {
+    return std::nullopt;
+  }
+  auto const found = std::find(morph.occupants.begin(), morph.occupants.end(), entity);
+  if (found == morph.occupants.end()) {
+    return std::nullopt;
+  }
+  auto const index =
+      static_cast<std::size_t>(std::distance(morph.occupants.begin(), found));
+  float const t =
+      std::clamp((morph.elapsed + k_lead_seconds) / morph.duration, 0.0F, 1.0F);
+  return t >= 1.0F ? morph.world_to[index] : morph_point(morph, index, t);
+}
+
+auto ArmyFormationRuntime::morph_pace(const ArmyFormation& formation,
+                                      EntityID entity,
+                                      const QVector3D& position,
+                                      float full_speed) -> float {
+  constexpr float k_catch_up_per_metre = 0.5F;
+  const auto& morph = formation.morph;
+  auto const found = std::find(morph.occupants.begin(), morph.occupants.end(), entity);
+  if (!morph.active || found == morph.occupants.end()) {
+    return 0.0F;
+  }
+  auto const index =
+      static_cast<std::size_t>(std::distance(morph.occupants.begin(), found));
+  const auto* slot = formation.find_slot_for(entity);
+  float const behind = slot == nullptr
+                           ? 0.0F
+                           : QVector3D(slot->world_position.x() - position.x(),
+                                       0.0F,
+                                       slot->world_position.z() - position.z())
+                                 .length();
+  float const pace = morph.path_speed[index] * (1.0F + k_catch_up_per_metre * behind);
+  return std::clamp(pace, 0.1F, std::max(0.1F, full_speed));
+}
+
+auto ArmyFormationRuntime::reference_matches_members(const ArmyFormation& formation)
+    -> bool {
+  if (formation.reference_slots.empty()) {
+    return false;
+  }
+  std::vector<EntityID> occupants;
+  occupants.reserve(formation.reference_slots.size());
+  for (const auto& slot : formation.reference_slots) {
+    if (slot.occupant != 0U) {
+      occupants.push_back(slot.occupant);
+    }
+  }
+  std::vector<EntityID> members = formation.members;
+  std::sort(occupants.begin(), occupants.end());
+  std::sort(members.begin(), members.end());
+  return occupants == members;
 }
 
 void ArmyFormationRuntime::sync_membership_components(Engine::Core::World& world,
@@ -796,7 +1283,7 @@ auto ArmyFormationRuntime::replan(Engine::Core::World& world,
   request.members = formation->members;
   request.anchor = formation->anchor;
   request.facing = formation->facing;
-  request.frontage = formation->frontage;
+  request.frontage = formation->requested_frontage;
   request.intent = formation->intent;
   request.doctrine = formation->doctrine;
   request.options = formation->options;
@@ -808,9 +1295,22 @@ auto ArmyFormationRuntime::replan(Engine::Core::World& world,
   bool const advancing_along_corridor = formation->maintains_formation() &&
                                         formation->has_destination &&
                                         formation->move_plan.active;
+  request.allow_anchor_shift = !advancing_along_corridor;
   QVector3D const advancing_anchor = formation->anchor;
 
-  auto const plan = ArmyFormationPlanner::plan(world, request);
+  ArmyFormationPlan plan;
+  bool reused_reference = false;
+  if (reference_matches_members(*formation)) {
+    plan = ArmyFormationPlanner::place(
+        ArmyFormationPlanner::layout_from_reference(*formation), request);
+    reused_reference = plan.keeps_shape();
+  }
+  if (!reused_reference) {
+    plan = ArmyFormationPlanner::plan(world, request);
+    if (plan.valid && plan.narrowed && reference_matches_members(*formation)) {
+      ArmyFormationPlanner::fold_onto_reference(plan, formation->reference_slots);
+    }
+  }
   if (!plan.valid) {
 
     formation->needs_replan = false;
@@ -844,6 +1344,8 @@ void ArmyFormationRuntime::update(Engine::Core::World* world, float delta_time) 
   }
 
   auto& registry = ArmyFormationRegistry::instance();
+
+  advance_morphs(*world, delta_time);
 
   for (auto const id : registry.group_ids()) {
     auto* formation = registry.find(id);

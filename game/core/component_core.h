@@ -258,6 +258,10 @@ public:
 
   [[nodiscard]] auto get_issuer_retargets() const -> bool { return issuer_retargets; }
 
+  [[nodiscard]] auto get_following_formation_slot() const -> bool {
+    return following_formation_slot;
+  }
+
   [[nodiscard]] auto get_order_sequence() const -> std::uint64_t {
     return order_sequence;
   }
@@ -284,6 +288,7 @@ public:
 
   void begin_order() {
     ++order_sequence;
+    following_formation_slot = false;
     issuer_retargets = false;
     route_id = 0U;
     route_lane_offset = 0.0F;
@@ -342,6 +347,7 @@ private:
   std::size_t route_opening_waypoint_index{0U};
   std::size_t route_reform_waypoint_index{0U};
   float declared_group_pace{0.0F};
+  bool following_formation_slot{false};
 };
 
 class MovementFactsComponent {

@@ -612,23 +612,22 @@ void add_army_formation_scenarios(std::vector<ArenaScenarioDefinition>& out) {
     auto s = formation_definition(QString::fromLatin1(id),
                                   QString::fromLatin1(label),
                                   QString::fromLatin1(description),
-                                  10.0F,
+                                  30.0F,
                                   overhead_camera(camera_distance));
     s.groups = mixed_force(nation, 1, -18.0F);
-    s.steps = {
-        step_at(
-            1.0F, Command::FormationMove, QStringLiteral("swords"), {0.0F, 0.0F, 6.0F}),
-        step_at(
-            1.0F, Command::FormationMove, QStringLiteral("spears"), {0.0F, 0.0F, 6.0F}),
-        step_at(1.0F,
-                Command::FormationMove,
-                QStringLiteral("archers"),
-                {0.0F, 0.0F, 6.0F}),
-        step_at(1.0F,
-                Command::FormationMove,
-                QStringLiteral("cavalry"),
-                {0.0F, 0.0F, 6.0F}),
-    };
+    ArenaScenarioStep deploy;
+    deploy.name = QStringLiteral("faction_default");
+    deploy.trigger = {Trigger::AtTime, 1.0F, {}, {}, 0.0F};
+    deploy.command = Command::FormArmy;
+    deploy.group = QStringLiteral("swords");
+    deploy.formation.groups = {QStringLiteral("swords"),
+                               QStringLiteral("spears"),
+                               QStringLiteral("archers"),
+                               QStringLiteral("cavalry")};
+    deploy.formation.intent = Game::Formation::ArmyFormationIntent::FactionDefault;
+    deploy.formation.anchor = {0.0F, 0.0F, 6.0F};
+    deploy.formation.facing_degrees = 0.0F;
+    s.steps = {deploy};
     s.expectations = {
         expect(Expect::AllGroupsRespondWithin, {}, {}, 2.0F),
         expect(Expect::FormationOrderPreserved, QStringLiteral("swords")),
@@ -868,7 +867,7 @@ void add_army_formation_scenarios(std::vector<ArenaScenarioDefinition>& out) {
         QStringLiteral("A wide deployment is ordered through a walled gate. The "
                        "formation must convert to a column, pass, and reform "
                        "without units stacking on a single fallback point."),
-        16.0F,
+        40.0F,
         three_quarter_camera(58.0F));
     s.suppress_terrain_scatter = false;
     s.groups = {

@@ -923,9 +923,11 @@ TEST(ArenaScenariosTest, ArmyFormationScenariosIssueFormationMoves) {
                             scenario->steps.end(),
                             [](auto const& step) {
                               return step.command ==
-                                     Arena::ScenarioCommandKind::FormationMove;
+                                         Arena::ScenarioCommandKind::FormationMove ||
+                                     step.command ==
+                                         Arena::ScenarioCommandKind::FormArmy;
                             }))
-        << option.id.toStdString() << " never issues a FormationMove";
+        << option.id.toStdString() << " never issues a formation order";
   }
 }
 

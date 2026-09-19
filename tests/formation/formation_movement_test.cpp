@@ -3,12 +3,14 @@
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 #include <vector>
 
 #include "core/component_core.h"
 #include "core/world.h"
 #include "formation/army_formation_registry.h"
 #include "formation/army_formation_service.h"
+#include "systems/command_service.h"
 #include "systems/formation_move_dispatch_system.h"
 #include "systems/nation_registry.h"
 #include "systems/nav_grid.h"
@@ -119,7 +121,7 @@ TEST_F(FormationMovementTest, MaintainFormationStartsFromTheCurrentCentroid) {
   EXPECT_LT(formation->anchor.z(), target.z() * 0.5F);
 }
 
-TEST_F(FormationMovementTest, MaintainFormationAdvancesTheAnchorInStages) {
+TEST_F(FormationMovementTest, MaintainFormationStartsEverySlotUnderItsTroop) {
   Engine::Core::World world;
   auto const units = make_squad(world);
   QVector3D const target(0.0F, 0.0F, 60.0F);
@@ -128,11 +130,21 @@ TEST_F(FormationMovementTest, MaintainFormationAdvancesTheAnchorInStages) {
   ASSERT_TRUE(result.valid);
 
   auto& registry = ArmyFormationRegistry::instance();
-  float const first_anchor = registry.find(result.group_id)->anchor.z();
+  const auto* formation = registry.find(result.group_id);
+  ASSERT_NE(formation, nullptr);
+  ASSERT_TRUE(formation->morph.active);
+  for (const auto& slot : formation->slot_list) {
+    const auto* transform =
+        world.try_get<Engine::Core::TransformComponent>(slot.occupant);
+    ASSERT_NE(transform, nullptr);
+    EXPECT_NEAR(slot.world_position.x(), transform->position.x, 0.05F)
+        << "no troop is dragged towards a slot that left without it";
+    EXPECT_NEAR(slot.world_position.z(), transform->position.z, 0.05F);
+  }
+  float const first_anchor = formation->anchor.z();
 
   ArmyFormationRuntime runtime;
   runtime.update(&world, 0.3F);
-
   float const second_anchor = registry.find(result.group_id)->anchor.z();
   EXPECT_GT(second_anchor, first_anchor);
   EXPECT_LT(second_anchor, target.z());
@@ -172,60 +184,45 @@ TEST_F(FormationMovementTest, MaintainFormationDoesNotOvershootTheDestination) {
   EXPECT_FALSE(formation->has_destination);
 }
 
-TEST_F(FormationMovementTest, MaintainFormationSlowsItsMembersDown) {
+TEST_F(FormationMovementTest, MaintainFormationPacesTheShapeToItsSlowestTroop) {
   Engine::Core::World world;
   auto const units = make_squad(world);
-
-  auto const result = commit(
-      world, units, QVector3D(0.0F, 0.0F, 40.0F), MovementPolicy::MaintainFormation);
-  ASSERT_TRUE(result.valid);
-
-  auto* entity = world.get_entity(units.front());
-  ASSERT_NE(entity, nullptr);
-  EXPECT_LT(ArmyFormationRuntime::move_speed_multiplier(*entity), 1.0F);
-}
-
-TEST_F(FormationMovementTest, MixedSpeedsShareOneDeclaredContinuousPace) {
-  Engine::Core::World world;
-  auto const units = make_squad(world);
-  auto* fast = world.get_entity(units.front());
-  ASSERT_NE(fast, nullptr);
-  auto* fast_unit = fast->get_component<Engine::Core::UnitComponent>();
+  auto* fast_unit = world.try_get<Engine::Core::UnitComponent>(units.front());
   ASSERT_NE(fast_unit, nullptr);
   fast_unit->speed = 4.0F;
 
   auto const result = commit(
       world, units, QVector3D(0.0F, 0.0F, 40.0F), MovementPolicy::MaintainFormation);
   ASSERT_TRUE(result.valid);
-  auto* formation = ArmyFormationRegistry::instance().find(result.group_id);
+  auto& registry = ArmyFormationRegistry::instance();
+  const auto* formation = registry.find(result.group_id);
   ASSERT_NE(formation, nullptr);
+  ASSERT_TRUE(formation->morph.active);
+  EXPECT_GE(formation->morph.duration, 40.0F / 2.0F)
+      << "the shape may not outrun its slowest troop";
 
+  std::vector<QVector3D> before;
   for (const auto& slot : formation->slot_list) {
-    auto* member = world.get_entity(slot.occupant);
-    ASSERT_NE(member, nullptr);
-    auto* transform = member->get_component<Engine::Core::TransformComponent>();
-    ASSERT_NE(transform, nullptr);
-    transform->position = {
-        slot.world_position.x(), slot.world_position.y(), slot.world_position.z()};
+    before.push_back(slot.world_position);
   }
-  ArmyFormationRuntime::refresh_shape_state(world, *formation);
-
-  auto* slow = world.get_entity(units.back());
-  ASSERT_NE(slow, nullptr);
-  const auto* slow_unit = slow->get_component<Engine::Core::UnitComponent>();
-  ASSERT_NE(slow_unit, nullptr);
-  float const fast_multiplier = ArmyFormationRuntime::move_speed_multiplier(*fast);
-  float const slow_multiplier = ArmyFormationRuntime::move_speed_multiplier(*slow);
-  EXPECT_NEAR(formation->cohesion_pace, 1.1F, 0.001F);
-  EXPECT_NEAR(fast_unit->speed * fast_multiplier, formation->cohesion_pace, 0.001F);
-  EXPECT_NEAR(slow_unit->speed * slow_multiplier, formation->cohesion_pace, 0.001F);
-
-  auto* fast_transform = fast->get_component<Engine::Core::TransformComponent>();
-  ASSERT_NE(fast_transform, nullptr);
-  fast_transform->position.x += formation->spacing * 6.0F;
-  float const recovery_multiplier = ArmyFormationRuntime::move_speed_multiplier(*fast);
-  EXPECT_GT(recovery_multiplier, fast_multiplier);
-  EXPECT_LE(recovery_multiplier, 1.0F);
+  ArmyFormationRuntime runtime;
+  runtime.update(&world, 1.0F);
+  formation = registry.find(result.group_id);
+  ASSERT_NE(formation, nullptr);
+  float slowest_step = std::numeric_limits<float>::max();
+  float fastest_step = 0.0F;
+  for (std::size_t i = 0; i < formation->slot_list.size(); ++i) {
+    float const step = (formation->slot_list[i].world_position - before[i]).length();
+    slowest_step = std::min(slowest_step, step);
+    fastest_step = std::max(fastest_step, step);
+  }
+  EXPECT_GT(slowest_step, 0.0F);
+  EXPECT_LE(fastest_step, 2.0F * 1.0F + 1.0e-3F)
+      << "no slot moves faster than the slowest troop can walk";
+  auto* fast = world.get_entity(units.front());
+  ASSERT_NE(fast, nullptr);
+  EXPECT_FLOAT_EQ(ArmyFormationRuntime::move_speed_multiplier(*fast), 1.0F)
+      << "a troop that fell behind its moving slot may run to catch up";
 }
 
 TEST_F(FormationMovementTest, ReformAtDestinationRunsAtFullSpeed) {
@@ -312,11 +309,18 @@ TEST_F(FormationMovementTest, NarrowGroundCompressesRatherThanStackingUnits) {
   }
 }
 
-TEST_F(FormationMovementTest,
-       MaintainFormationFollowsACorridorRatherThanAStraightLine) {
+TEST_F(FormationMovementTest, MaintainFormationDoesNotMarchTheShapeThroughAWall) {
   Engine::Core::World world;
   auto const units = make_squad(world);
   QVector3D const target(0.0F, 0.0F, 24.0F);
+
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  auto const wall = Game::Systems::NavGrid::world_to_grid(0.0F, 12.0F);
+  for (int dx = -20; dx <= 12; ++dx) {
+    pathfinder->set_obstacle(wall.x + dx, wall.y, true);
+    pathfinder->set_obstacle(wall.x + dx, wall.y + 1, true);
+  }
 
   auto const result = commit(world, units, target, MovementPolicy::MaintainFormation);
   ASSERT_TRUE(result.valid);
@@ -324,10 +328,14 @@ TEST_F(FormationMovementTest,
   auto& registry = ArmyFormationRegistry::instance();
   const auto* formation = registry.find(result.group_id);
   ASSERT_NE(formation, nullptr);
-  EXPECT_TRUE(formation->move_plan.active)
-      << "a maintained move never built a corridor";
-  EXPECT_FALSE(formation->move_plan.corridor.empty());
-  EXPECT_NEAR(formation->move_plan.corridor.back().z(), target.z(), 2.0F);
+  EXPECT_FALSE(formation->morph.active)
+      << "a rigid march would carry troops straight through the wall";
+  EXPECT_TRUE(formation->has_destination);
+  EXPECT_NEAR(formation->anchor.z(), target.z(), 2.0F)
+      << "each troop routes to its slot at the destination on its own";
+  for (const auto& slot : formation->slot_list) {
+    EXPECT_GT(slot.world_position.z(), 13.0F) << "slots stand beyond the wall";
+  }
 }
 
 TEST_F(FormationMovementTest, FormationDispatchUsesOneSharedMemberLaneCorridor) {
@@ -344,19 +352,36 @@ TEST_F(FormationMovementTest, FormationDispatchUsesOneSharedMemberLaneCorridor) 
     transform->position = {static_cast<float>(index) - 2.5F, 0.0F, -10.0F};
   }
 
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  // A long wall whose only gap lies far to the side: every troop faces a real
+  // detour, which is what the shared corridor with lanes exists for.
+  auto const wall = Game::Systems::NavGrid::world_to_grid(0.0F, 0.0F);
+  for (int dx = -40; dx <= 40; ++dx) {
+    if (dx >= 30 && dx <= 34) {
+      continue;
+    }
+    pathfinder->set_obstacle(wall.x + dx, wall.y, true);
+  }
+
   auto const result = commit(
       world, units, QVector3D(0.0F, 0.0F, 10.0F), MovementPolicy::MaintainFormation);
   ASSERT_TRUE(result.valid);
-
-  ArmyFormationRuntime runtime;
-  runtime.update(&world, 1.0F);
-
   auto* formation = ArmyFormationRegistry::instance().find(result.group_id);
   ASSERT_NE(formation, nullptr);
-  ASSERT_TRUE(formation->moves_pending);
+  ASSERT_FALSE(formation->morph.active) << "the wall must refuse a rigid march";
 
-  Game::Systems::FormationMoveDispatchSystem dispatch;
-  dispatch.update(&world, 0.0F);
+  // What apply_deploy_formation sends when the group routes around the wall.
+  std::vector<Game::Systems::CommandService::MoveIntent> intents;
+  for (std::size_t i = 0; i < units.size(); ++i) {
+    intents.push_back({.unit_id = units[i], .target = result.positions[i]});
+  }
+  Game::Systems::CommandService::move_units(
+      world,
+      intents,
+      {.kind = Game::Systems::MoveOrderKind::FormationMove,
+       .preserve_formation_mode = true,
+       .synchronize_arrival = true});
   Game::Systems::RouteFollowSystem route_follower;
   route_follower.update(&world, 0.1F);
 
@@ -369,7 +394,6 @@ TEST_F(FormationMovementTest, FormationDispatchUsesOneSharedMemberLaneCorridor) 
     ASSERT_NE(movement, nullptr);
     const auto* facts = entity->get_component<Engine::Core::MovementFactsComponent>();
     ASSERT_NE(facts, nullptr);
-    EXPECT_FLOAT_EQ(facts->route.cohesion_pace, formation->cohesion_pace);
     ASSERT_NE(movement->get_route_id(), 0U);
     if (shared_route == 0U) {
       shared_route = movement->get_route_id();

@@ -35,11 +35,13 @@ WaterRenderer::~WaterRenderer() = default;
 void WaterRenderer::configure(
     const std::vector<Game::Map::RiverSegment>& river_segments,
     const std::vector<Game::Map::Lake>& lakes,
-    const Game::Map::TerrainHeightMap& height_map) {
+    const Game::Map::TerrainHeightMap& height_map,
+    const Game::Map::BiomeSettings& biome_settings) {
   m_river_segments = river_segments;
   m_lakes = lakes;
   m_tile_size = height_map.get_tile_size();
   m_height_map = &height_map;
+  m_biome_settings = biome_settings;
   build_meshes();
 }
 
@@ -104,6 +106,8 @@ void WaterRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
   QMatrix4x4 model;
   model.setToIdentity();
+  const auto surface_profile = Game::Map::make_surface_profile(m_biome_settings);
+  const auto climate = Game::Map::make_climate_profile(m_biome_settings);
 
   for (const auto& surface : m_meshes) {
     auto* mesh = surface.mesh.get();
@@ -125,6 +129,9 @@ void WaterRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     cmd.water_kind = surface.kind;
     cmd.model = model;
     cmd.color = QVector3D(1.0F, 1.0F, 1.0F);
+    cmd.biome_soil_color = surface_profile.soil_color;
+    cmd.biome_moisture = climate.moisture_level;
+    cmd.biome_snow_coverage = climate.snow_coverage;
     cmd.alpha = 1.0F;
     cmd.visibility = vis_res;
     renderer.terrain_feature(cmd);

@@ -216,6 +216,13 @@ vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4
           (1.0 - metal_like) * smoothstep(0.08, 0.32, saturation) *
               smoothstep(0.18, 0.72, base.r));
   float cloth_like = clamp(1.0 - metal_like * 0.8, 0.0, 1.0);
+  // Humanoids already carry authored palette roles. A pale tunic or a dark
+  // bronze helmet must not acquire wear from the colour-based fallback.
+  if (material_id == 0 && color_role > 0) {
+    metal_like = float(color_role == 6);
+    leather_like = float(color_role == 3 || color_role == 4);
+    cloth_like = float(color_role == 1 || color_role == 7);
+  }
   if (color_role == 2) {
     wear_amount *= 0.45;
     grime_amount *= 0.18;

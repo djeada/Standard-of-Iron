@@ -2,6 +2,7 @@
 
 #include <QJsonObject>
 
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -76,15 +77,29 @@ public:
   static void begin_move(Engine::Core::World& world,
                          FormationGroupID id,
                          const QVector3D& destination,
-                         float facing);
+                         float facing,
+                         std::optional<float> marching_facing = std::nullopt,
+                         bool allow_morph = false);
 
   static void refresh_shape_state(Engine::Core::World& world, ArmyFormation& formation);
+
+  [[nodiscard]] static auto
+  reference_matches_members(const ArmyFormation& formation) -> bool;
+
+  [[nodiscard]] static auto morph_target(const ArmyFormation& formation,
+                                         EntityID entity) -> std::optional<QVector3D>;
+
+  [[nodiscard]] static auto morph_pace(const ArmyFormation& formation,
+                                       EntityID entity,
+                                       const QVector3D& position,
+                                       float full_speed) -> float;
 
   [[nodiscard]] static auto
   damage_taken_multiplier(const Engine::Core::Entity& entity) -> float;
 
 private:
   void advance_maintained_groups(Engine::Core::World& world, float delta_time);
+  static void advance_morphs(Engine::Core::World& world, float delta_time);
 
   float m_replan_accumulator{0.0F};
   float m_advance_accumulator{0.0F};

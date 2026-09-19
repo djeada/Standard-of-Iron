@@ -407,10 +407,18 @@ void ArmyFormationController::confirm_formation_placement() {
     auto const preview =
         Game::Formation::ArmyFormationService::preview(*m_world, request);
     if (!preview.valid) {
-      emit formation_placement_rejected(
-          QString::fromStdString(preview.rejection_reason));
-    } else if (!deploy.units.empty() &&
-               preview.blocked_count >= static_cast<int>(deploy.units.size())) {
+      const QString reason = QString::fromStdString(preview.rejection_reason);
+      emit formation_placement_rejected(reason);
+      const QVector3D anchor = deploy.anchor;
+      end_formation_placement(FormationTeardown::Cancel);
+      (void)m_orders.reject_at(
+          App::Core::OrderKind::Formation,
+          {.failure = App::Core::OrderFailure::CommandUnavailable, .text = reason},
+          anchor);
+      return;
+    }
+    if (!deploy.units.empty() &&
+        preview.blocked_count >= static_cast<int>(deploy.units.size())) {
       const QVector3D anchor = deploy.anchor;
       end_formation_placement(FormationTeardown::Cancel);
       (void)m_orders.reject_at(
@@ -706,8 +714,15 @@ auto ArmyFormationController::formation_options() const -> QVariantMap {
       m_formation_options.flank_preference));
   map["ranged"] = QString::fromLatin1(Game::Formation::ranged_placement_to_string(
       m_formation_options.ranged_placement));
+  const bool movement_from_doctrine = m_formation_options.movement_policy ==
+                                      Game::Formation::MovementPolicy::DoctrineDefault;
+  const auto effective_movement = movement_from_doctrine
+                                      ? m_formation_preview.movement_policy
+                                      : m_formation_options.movement_policy;
   map["movement"] = QString::fromLatin1(
-      Game::Formation::movement_policy_to_string(m_formation_options.movement_policy));
+      Game::Formation::movement_policy_to_string(effective_movement));
+  map["movement_from_doctrine"] = movement_from_doctrine;
+  map["effective_movement_index"] = static_cast<int>(effective_movement);
   map["mixed"] = QString::fromLatin1(
       Game::Formation::mixed_policy_to_string(m_formation_options.mixed_policy));
   map["frontage"] = m_formation_frontage;
@@ -728,7 +743,8 @@ auto ArmyFormationController::formation_options() const -> QVariantMap {
           ? 0
           : static_cast<int>(m_formation_options.ranged_placement) + 1;
   map["reserve_index"] = std::clamp(m_formation_options.reserve_rows, -1, 2) + 1;
-  map["movement_index"] = static_cast<int>(m_formation_options.movement_policy);
+  map["movement_index"] =
+      movement_from_doctrine ? 0 : static_cast<int>(effective_movement) + 1;
   map["mixed_index"] = static_cast<int>(m_formation_options.mixed_policy);
 
   map["preserve_index"] = m_formation_options.preserve_member_order ? 1 : 0;
@@ -818,6 +834,9 @@ auto ArmyFormationController::selected_formation_status() const -> QVariantMap {
   map["selected_in_group"] = in_group;
   map["mixed_groups"] = group_count > 0;
   map["blocked_slots"] = formation->blocked_slot_count();
+  map["movement"] = QString::fromLatin1(
+      Game::Formation::movement_policy_to_string(formation->options.movement_policy));
+  map["compressed"] = formation->compressed;
   return map;
 }
 
@@ -868,6 +887,7 @@ void ArmyFormationController::refresh_formation_preview() {
   request.group_id =
       Game::Formation::ArmyFormationRegistry::for_world(*m_world).group_of(
           m_formation_units.front());
+  request.assign_nearest = true;
 
   constexpr float k_anchor_epsilon = 0.05F;
   constexpr float k_facing_epsilon = 0.25F;
@@ -896,8 +916,8 @@ void ArmyFormationController::refresh_formation_preview() {
     m_formation_layout_valid = true;
   }
 
-  m_formation_preview =
-      Game::Formation::ArmyFormationPlanner::place(m_formation_layout, request);
+  m_formation_preview = Game::Formation::ArmyFormationPlanner::fit_to_ground(
+      m_formation_layout, m_formation_members, request, previous_group);
   m_formation_previewed_anchor = request.anchor;
   m_formation_previewed_facing = request.facing;
   m_formation_preview_dirty = false;

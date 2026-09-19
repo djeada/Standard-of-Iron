@@ -32,6 +32,8 @@ struct ArmyFormationMember {
   float soldier_file_step{1.0F};
   float soldier_rank_step{1.0F};
   float soldier_body_radius{0.5F};
+  bool heavy{false};
+  std::vector<std::pair<float, float>> extents_by_files;
   FormationDoctrineId doctrine;
 };
 
@@ -48,7 +50,9 @@ struct ArmyFormationRequest {
 
   float spacing{1.0F};
   bool resolve_terrain{true};
-  bool preserve_previous_slots{true};
+  bool allow_anchor_shift{true};
+  bool assign_nearest{false};
+  bool preserve_previous_slots{false};
   FormationGroupID group_id{k_invalid_group};
 };
 
@@ -66,6 +70,8 @@ struct ArmyFormationPlan {
   float spacing{1.0F};
 
   float slot_spacing{1.0F};
+  float footprint_gap{0.0F};
+  MovementPolicy movement_policy{MovementPolicy::ReformAtDestination};
 
   std::vector<FormationSlot> slot_list;
   std::vector<float> slot_clearance;
@@ -76,7 +82,10 @@ struct ArmyFormationPlan {
 
   int blocked_count{0};
   int adjusted_count{0};
+  float displacement{0.0F};
+  bool narrowed{false};
 
+  [[nodiscard]] auto keeps_shape() const -> bool;
   [[nodiscard]] auto slot_for(EntityID entity) const -> const FormationSlot*;
   [[nodiscard]] auto placed_count() const -> int;
   [[nodiscard]] auto depth_bands() const -> std::vector<int>;
@@ -95,6 +104,8 @@ struct ArmyFormationLayout {
   float slot_spacing{1.0F};
   float frontage{0.0F};
   float depth{0.0F};
+  float footprint_gap{0.0F};
+  MovementPolicy movement_policy{MovementPolicy::ReformAtDestination};
 
   std::vector<FormationSlot> slot_list;
 
@@ -102,6 +113,10 @@ struct ArmyFormationLayout {
   std::vector<float> slot_half_width;
   std::vector<float> slot_half_depth;
   std::vector<int> slot_files;
+
+  std::vector<QVector3D> slot_start;
+  std::vector<std::uint64_t> slot_kind;
+  bool assign_by_distance{false};
 
   std::uint64_t signature{0U};
 };
@@ -115,6 +130,36 @@ public:
   [[nodiscard]] static auto
   plan(const std::vector<ArmyFormationMember>& members,
        const ArmyFormationRequest& request) -> ArmyFormationPlan;
+
+  [[nodiscard]] static auto
+  plan(const std::vector<ArmyFormationMember>& members,
+       const ArmyFormationRequest& request,
+       const ArmyFormation* previous_group) -> ArmyFormationPlan;
+
+  [[nodiscard]] static auto
+  fit_to_ground(const ArmyFormationLayout& first_layout,
+                const std::vector<ArmyFormationMember>& members,
+                const ArmyFormationRequest& request,
+                const ArmyFormation* previous_group) -> ArmyFormationPlan;
+
+  [[nodiscard]] static auto
+  layout_from_reference(const ArmyFormation& formation) -> ArmyFormationLayout;
+
+  [[nodiscard]] static auto
+  min_cost_assignment(const std::vector<std::vector<float>>& cost) -> std::vector<int>;
+
+  static void fold_onto_reference(ArmyFormationPlan& plan,
+                                  const std::vector<FormationSlot>& reference);
+
+  [[nodiscard]] static auto
+  resolve_movement_policy(MovementPolicy requested,
+                          const DoctrineIntentTemplate& tmpl) -> MovementPolicy;
+
+  [[nodiscard]] static auto
+  footprints_overlap(const FormationSlot& a, const FormationSlot& b, float gap) -> bool;
+
+  [[nodiscard]] static auto first_overlap(const std::vector<FormationSlot>& slot_list,
+                                          float gap) -> std::pair<int, int>;
 
   [[nodiscard]] static auto
   build_layout(const std::vector<ArmyFormationMember>& members,

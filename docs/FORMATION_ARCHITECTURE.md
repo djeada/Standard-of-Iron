@@ -212,7 +212,14 @@ Current option families include:
 ### Movement policy
 
 - `ReformAtDestination`;
-- `MaintainFormation`.
+- `MaintainFormation`;
+- `DoctrineDefault` — the option's default: the chosen template's `default_movement` decides.
+
+A player (or the AI) who picks a policy overrides the template; otherwise choosing
+Column alone gives the doctrine's march policy (`maintain_formation` for every
+shipped column). The planner resolves the effective policy into
+`ArmyFormationPlan::movement_policy`, the commit stores the resolved value on the
+group, and the formation panel shows it next to "Doctrine decides".
 
 ### Ranged placement
 
@@ -303,7 +310,10 @@ members + doctrine + intent + options
    world-space FormationPlan
 ```
 
-`plan()` is the combined convenience path.
+`plan()` is the combined convenience path: `build_layout()` followed by
+`fit_to_ground()` (see [Terrain fitting](#terrain-fitting)). The placement preview
+runs the same `fit_to_ground()` on its cached layout, so the preview is the plan
+the commit will produce.
 
 This split is important for interactive placement. Dragging a preview across the ground can reuse the same role/template layout while changing only world-space placement and terrain fitting.
 
@@ -313,13 +323,116 @@ The planner exposes a layout signature for inputs that affect local slot geometr
 
 Anchor and facing affect placement, not the local role/template layout itself. A placement UI can therefore avoid repeating expensive role/layout work when only the mouse position or facing changes.
 
-The cache tests verify that the split path and full `plan()` path remain equivalent.
+The cache tests verify that the split path (`build_layout()` + `fit_to_ground()`)
+and full `plan()` path remain equivalent.
+
+## Footprints and separation
+
+A slot is sized for the whole troop standing in it: `FormationSlot::half_width`
+and `half_depth` are the troop's measured (and intent-shaped) extents, and every
+slot of a plan shares the plan's facing. Two troops therefore overlap exactly when
+their centre offset, projected on the formation's lateral and depth axes, is inside
+the summed half extents plus the plan's `footprint_gap` (half a lane,
+`0.45 × spacing`, at least `0.225 m`).
+
+`build_layout()` guarantees disjoint rectangles in two steps. A pairwise
+relaxation pushes overlapping neighbours apart, and because relaxation can stop
+short in a dense block, a front-to-back sweep then moves any slot that still
+touches an earlier one directly behind it. Slots only ever move rearward in the
+sweep, so rank order is kept and the pass always terminates. The same pass runs
+again after previous slot ids are restored (see
+[Slot identity](#slot-identity)), so no reshuffle can reopen an overlap.
+`ArmyFormationPlanner::first_overlap()` checks a placed plan on world positions.
+
+## Slot identity
+
+Slot ids are the group's stable ordering. When a group is replanned with
+`preserve_previous_slots`, a troop takes back its previous id only by swapping
+with a troop of the same kind (troop type, head count, passability): a slot was
+laid out for its original occupant's line and size, and any other swap would move
+a troop into a line it does not belong to. Measured extents are deliberately not
+part of that key — they drift while a unit reshapes on the march — and the
+separation pass absorbs the difference.
+
+A group that holds a formation keeps its committed shape as
+`ArmyFormation::reference_slots`. While the membership is unchanged, every replan
+re-places that reference (rotated and translated to the moving anchor) instead of
+re-deriving a layout from the troops' current positions, so ranks and files never
+swap on the march or in a turn. Losing a member invalidates the reference; the
+next plan is built fresh for the survivors and becomes the new reference.
+
+## Silhouettes
+
+What a formation looks like is fixed by the pictograms of the formation panel
+(`FormationPanel.qml`): Line is two full rows, Column three files deep, the
+faction default 5/5/3, Defensive two rows and a reserve behind a gap, Assault a
+wedge behind its skirmishers, Encirclement a horseshoe, Siege Escort two rows
+and the engines behind. The doctrine template decides who stands where; a final
+pass (`regularize_silhouette`) then lays the troops out on clean rows with uniform
+gaps (1.6 m between troops, 2 m between ranks, scaled by the spacing option).
+
+- Roles form tiers in the template's front-to-back order. The fighting core
+  (centre, screen, vanguard) takes the pictogram's rows; ranged, siege, command
+  and reserve troops get rows of their own, so they are never level with the
+  line in front of them. When a rear tier exists, it is the pictogram's short
+  last row, and the core takes only the full rows. Skirmishers stand a clear rank
+  ahead.
+- Cavalry wings stand at the ends of the front rank (one rank forward for an
+  encirclement).
+- A dragged frontage is the span between the outermost troop centres; rows then
+  hold as many troops as fit, with gaps stretched to that width. Without one,
+  rows follow the pictogram, the frontage and depth options, and the template's
+  `max_frontage` (counting the wings) and `max_depth` (a column too deep gains a
+  file).
+- Troop sizes are measured, not estimated: `layout_reach_for_files()` returns the
+  real soldier extents for every file count a template may ask for, so a
+  reshaped troop (a column's deep blocks, riders who keep their own shape) is
+  planned at the size it will actually have.
+
+## Slot assignment for new orders
+
+A fresh order assigns troops to slots at world placement time
+(`ArmyFormationPlanner::place`), among troops of one kind (type, head count,
+passability), by the minimum total travel distance (Hungarian assignment). Straight
+paths of a minimum-total-distance assignment never cross, so the army does not
+braid through itself on the way. Runtime replans keep their stable ids instead
+(`preserve_previous_slots`).
 
 ## Terrain fitting
 
 A perfect geometric formation may not fit the world at its ideal coordinates.
 
 `SlotTerrainFitter` resolves each desired slot against walkable terrain and separation constraints.
+
+A candidate position is accepted only when:
+
+- its whole troop rectangle is free of every rectangle already claimed;
+- the core of the rectangle (the inner half in each axis) is passable for the
+  troop's class — heavy troops (`can_enter_forest == false`) test with
+  `Passability::Heavy`. The outer soldiers of a unit bend around a tree or a wall
+  corner on their own (the unit layout does that), the core must stand on
+  passable ground; and
+- it lies in the same connected navigation region as the formation anchor, so a
+  slot is never offered across a river the troop cannot reach.
+
+A slot that fails at its ideal position is searched for within about one troop's
+reach (`max(slot spacing, 2 × larger half extent + gap)`), rearward first and then
+fanning out to the flanks, so a displaced troop stays behind its own file. Beyond
+that reach the slot is `Blocked` rather than flung across the map.
+
+`fit_to_ground()` then treats the shape as a whole. A plan *keeps its shape* when
+at most 12% of its troops are displaced (always at least one, so a small group is
+not compressed over a single boulder) and no more than 12% are blocked. If the
+first placement does not keep its shape:
+
+1. the whole shape slides — back off a map edge or a river bank by up to half its
+   depth, or sideways by a quarter of its frontage (never for a group marching
+   along a corridor, whose anchor is its progress along the route); then
+2. the frontage narrows (×0.62 per attempt, up to three times), deepening the
+   files. The plan records `narrowed`.
+
+The attempt with the least displacement wins (blocked troops weigh four times an
+adjusted one, plus the distance troops were moved and how far the anchor slid).
 
 Every slot is classified as:
 
@@ -331,7 +444,7 @@ The result belongs to the plan and can be shown before the player commits the or
 
 ## Slot fitting behavior
 
-Terrain fitting searches outward from the ideal slot position and avoids assigning multiple troops to the same resolved location.
+Terrain fitting searches outward from the ideal slot position and never lets two troop footprints overlap.
 
 The planner therefore preserves two separate facts:
 
@@ -339,6 +452,23 @@ The planner therefore preserves two separate facts:
 - **placement result** — where terrain allowed it to stand.
 
 An adjusted slot is not necessarily an error. It means the shape can still be realized with a local nudge. A blocked slot means the planner could not place that member under the current rules.
+
+## Rejected plans
+
+A plan that cannot be fielded (the doctrine lacks the intent, the selection lacks
+the required roles, or nothing fits) is reported, never substituted:
+
+- `ArmyFormationService::preview()` / `commit()` return `valid = false` with the
+  reason, every slot `Blocked` and every position on the anchor;
+- the placement controller refuses to deploy an invalid preview and shows the
+  reason;
+- `DeployFormation` rejects an invalid plan without issuing movement orders;
+- a plain group move whose preview is invalid falls back to the same
+  shape-preserving move; and
+- the AI's `placements_for()` falls back to the doctrine's own default line, and
+  if even that fails returns every placement `Blocked`.
+
+No path produces the old unrelated scatter grid.
 
 ## Formation phases
 
@@ -369,7 +499,8 @@ This is useful because formation behavior spans several distinct transitions:
 The current constants in `army_formation_registry.cpp` include:
 
 - in-slot radius scale: `1.35 × spacing`;
-- formed threshold: cohesion `>= 0.8`;
+- formed travel requires all placeable members in their slots and facing within
+  4° of their assigned direction;
 - disrupted threshold: cohesion `<= 0.45`.
 
 Cohesion is therefore a measured group property rather than an assumption that the formation is “formed” because a move command completed.
@@ -389,17 +520,77 @@ The two effects compose because they describe different spatial layers.
 
 ## Movement policies
 
-### Reform at destination
+Both policies end the same way: every troop stands on the slot the placement
+preview showed, facing the ordered way. They differ in how the group gets there.
 
-`ReformAtDestination` lets troop entities route toward the new destination and assemble the target shape there.
+### Reform at destination (fastest)
 
-This is robust through irregular terrain because the group does not try to preserve one rigid footprint through the entire route.
+Each troop goes straight to its final slot. The order is *synchronised*: every
+troop walks its own route at the pace that makes it arrive together with the
+slowest-arriving troop (`MoveOptions::synchronize_arrival`; paces come from the
+routes' real lengths once they are assigned, and never drop below 30% of a
+troop's speed). On open ground this reads as the army flowing into the shape.
 
-### Maintain formation
+### Maintain formation ("Hold the shape")
 
-`MaintainFormation` keeps the group under formation runtime control as the center advances.
+On open ground the group moves as one body: a **frame morph**
+(`ArmyFormation::morph`). The formation's frame — anchor and facing — is
+interpolated from where the troops stand to the ordered place and facing, and
+every troop's slot is that frame plus its local offset; if the old and new shapes
+differ, the local offsets are interpolated too. Slots start exactly under their
+troops, so nobody is dragged, and the duration is set so that no slot moves
+faster than 85% of its troop's speed (`move_speed_multiplier()` is 1 during a
+morph, so a troop that falls behind may catch up). A formed group that receives
+a new order keeps every troop at the same place within its shape
+(`keep_places_in_shape`), so a march or a wheel never reshuffles the ranks and the
+motion is rigid (`FormationMorph::rigid`, phase `Traversing`; a morph that changes
+the shape reads as `Reforming`). A turn of more than 135° does not swing the whole
+shape round: the troops about-face in place instead.
 
-The runtime owns group movement-plan state, and route-follow speed applies `ArmyFormationRuntime::move_speed_multiplier()` together with the other movement modifiers that affect the troop.
+Before a morph starts, every troop's path is sampled; if any would cross ground it
+cannot stand on (a river, a wall, a settlement), the ground will not carry the
+shape as one body, and the group falls back to the synchronised per-troop move of
+*Reform at destination*, assembling on arrival. The old anchor march (a moving
+anchor dragging replanned slots behind it, compressing at bridges) stalled on real
+maps and is no longer started.
+
+**Slot following.** A clear route uses its exact endpoint rather than intermediate
+grid-cell centres. A walkable moving anchor keeps its continuous position instead
+of snapping the entire shape to the grid. Runtime dispatch updates each member's
+short route to its slot, preserving the movement order and velocity; it does not
+fit a second shared lane through the group centroid. Members within 3 m of their
+slots share the group's facing even when their correction is lateral or backward.
+Longer assembly moves and obstructed paths still use normal navigation. The
+movement component's `following_formation_slot` flag is transient, reset by a new
+order and re-established by runtime dispatch.
+
+### Routes of shaped orders
+
+A shaped order (a deployment or a group move) first tries each troop's own route
+to its slot, and keeps it when it is close to direct (at most 1.35× the straight
+line plus 2 m): scattered trees or a boulder should not make the whole army
+converge on one corridor, bunch at its mouth and loop back to the slots. Real
+detours (a bridge, a gate) still use the group's shared corridor with one lane per
+troop. The corridor is planned for the toughest member: one troop that cannot
+enter forest makes the route use `Passability::Heavy`, and the widest navigation
+body sets the clearance. Formation orders arrive precisely (`precise_arrival`), so
+the finished shape lands within centimetres of the preview.
+
+Known limit: troops that must change places (the doctrine puts the spears in front
+of swordsmen who start ahead of them) still pass through each other's blocks in
+transit; local avoidance steers by core radius and does not treat a troop as its
+whole block. `FormationUxLab` (`SOI_UX_LAB=1`) measures this together with time to
+form, stalls, heading travel and final error, on open ground and on legs across
+obstacles found automatically on the shipped maps.
+
+A deployment also sets each troop's file count (`formation_files_override`), which
+changes its internal rank/file layout at once. The humanoid renderer eases that
+change: when a soldier's local offset jumps by more than 0.25 m in one frame, the
+drawn soldier walks to the new offset at 2.5 m/s (`ease_soldier_offsets` in
+`render/humanoid/runtime/instance_prepare.cpp`). Smaller per-frame changes are
+tracked exactly, so bodies stay on their selection rings while formed. Changes
+beyond 12 m, a new soldier count, or an about-face still snap. Without this, every
+soldier of a reshaped troop jumped 1–4 m in the frame after the order.
 
 Neither movement policy turns internal soldiers into navigation agents. The logical troop entity remains the navigation body.
 

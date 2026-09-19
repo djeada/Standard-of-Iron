@@ -162,6 +162,10 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
     context.scene.renderer->clear_entity_render_caches();
   }
 
+  if (auto* ai_system = context.world.get_system<Game::Systems::AISystem>()) {
+    ai_system->wait_for_decisions();
+  }
+
   bool world_discarded = false;
   if (!context.save_load_service.load_game_from_slot(
           context.world, context.slot, &world_discarded)) {

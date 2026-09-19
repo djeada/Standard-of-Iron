@@ -412,6 +412,52 @@ auto snapshot_humanoid_unit(const HumanoidRendererBase& owner,
   return snapshot;
 }
 
+void ease_soldier_offsets(HumanoidInstanceStateComponent& cache,
+                          std::vector<Render::Entity::FormationInstance>& instances,
+                          float time,
+                          bool about_faced,
+                          bool enabled) {
+  constexpr float k_reshape_speed = 2.5F;
+  constexpr float k_reshape_max_dt = 0.1F;
+  constexpr float k_reshape_snap_distance = 12.0F;
+  constexpr float k_reshape_jump_distance = 0.25F;
+  float const dt = cache.offset_time_valid
+                       ? std::clamp(time - cache.offset_time, 0.0F, k_reshape_max_dt)
+                       : 0.0F;
+  bool const reset = !enabled || !cache.offset_time_valid ||
+                     cache.displayed_offsets.size() != instances.size() ||
+                     cache.offset_about_faced != about_faced;
+  cache.offset_time = time;
+  cache.offset_time_valid = enabled;
+  cache.offset_about_faced = about_faced;
+  if (reset) {
+    cache.displayed_offsets.resize(instances.size());
+    for (std::size_t index = 0; index < instances.size(); ++index) {
+      cache.displayed_offsets[index] = {instances[index].offset_x,
+                                        instances[index].offset_z};
+    }
+    return;
+  }
+  float const max_step = k_reshape_speed * dt;
+  for (std::size_t index = 0; index < instances.size(); ++index) {
+    auto& shown = cache.displayed_offsets[index];
+    auto& instance = instances[index];
+    float const dx = instance.offset_x - shown.x;
+    float const dz = instance.offset_z - shown.z;
+    float const distance = std::sqrt(dx * dx + dz * dz);
+    if (distance <= std::max(max_step, k_reshape_jump_distance) ||
+        distance >= k_reshape_snap_distance) {
+      shown = {instance.offset_x, instance.offset_z};
+      continue;
+    }
+    float const scale = max_step / distance;
+    shown.x += dx * scale;
+    shown.z += dz * scale;
+    instance.offset_x = shown.x;
+    instance.offset_z = shown.z;
+  }
+}
+
 auto prepare_formation_runtime(const HumanoidUnitSnapshot& s,
                                const AnimationInputs& anim,
                                std::uint32_t frame_index) -> HumanoidFormationRuntime {
@@ -482,8 +528,8 @@ auto prepare_formation_runtime(const HumanoidUnitSnapshot& s,
 
   auto& soldier_layouts = *soldier_layout_storage;
 
+  bool about_faced = false;
   if (!anim.is_constructing) {
-    bool about_faced = false;
     if (ctx.world != nullptr && ctx.entity != nullptr) {
       auto const* traversal =
           ctx.world->try_get<Engine::Core::UnitTraversalLayoutStateComponent>(
@@ -497,6 +543,15 @@ auto prepare_formation_runtime(const HumanoidUnitSnapshot& s,
         ctx.entity,
         about_faced,
         ctx.force_single_soldier);
+  }
+
+  if (layout_cache_comp != nullptr) {
+    ease_soldier_offsets(*layout_cache_comp,
+                         soldier_layouts,
+                         anim.time,
+                         about_faced,
+                         allow_animation_persistence && !anim.is_constructing &&
+                             !ctx.force_single_soldier && total_layout_count > 1);
   }
 
   bool const use_per_soldier_locomotion_state = total_layout_count > 1;
