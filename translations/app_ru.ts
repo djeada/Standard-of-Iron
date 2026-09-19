@@ -5604,6 +5604,142 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>The dead do not tire, do not flee, and do not file complaints. They are, in every other respect, a poor garrison.</source>
         <translation>Мёртвые не устают, не бегут и не подают жалоб. Во всём остальном это скверный гарнизон.</translation>
     </message>
+    <message>
+        <source>A battle plan with seven arrows usually requires at least eight messengers.</source>
+        <translation>Плану битвы с семью стрелками обычно нужно не меньше восьми гонцов.</translation>
+    </message>
+    <message>
+        <source>A brilliant encirclement is harder to admire from the inside.</source>
+        <translation>Блестящим окружением куда труднее восхищаться изнутри.</translation>
+    </message>
+    <message>
+        <source>A general can order a forced march. Boots remain stubbornly outside the chain of command.</source>
+        <translation>Полководец может приказать форсированный марш. Сапоги упрямо остаются вне цепочки командования.</translation>
+    </message>
+    <message>
+        <source>A grave priest appears to mend broken bone. The darker story is that it persuades the grave to return what it claimed.</source>
+        <translation>Кажется, что могильный жрец сращивает сломанные кости. По более мрачной легенде, он уговаривает могилу вернуть то, что она забрала.</translation>
+    </message>
+    <message>
+        <source>A grave priest never runs short of fire. It only asks whose name is missing from the graveyard roll.</source>
+        <translation>У могильного жреца никогда не кончается огонь. Он лишь спрашивает, чьего имени не хватает в кладбищенском списке.</translation>
+    </message>
+    <message>
+        <source>An undead shrine is warded while its guardians live. Defeat every wave before attempting to destroy or capture it.</source>
+        <translation>Святилище нежити защищено, пока живы его стражи. Разбейте каждую волну, прежде чем пытаться уничтожить или захватить его.</translation>
+    </message>
+    <message>
+        <source>At Cannae in 216 BC, Hannibal&apos;s yielding center drew Roman infantry forward while his flanks and cavalry closed around them.</source>
+        <translation>При Каннах в 216 г. до н. э. отступающий центр Ганнибала втянул римскую пехоту вперёд, а его фланги и конница сомкнулись вокруг неё.</translation>
+    </message>
+    <message>
+        <source>At Ilipa in 206 BC, Scipio changed his usual deployment and attacked the Carthaginian wings with his stronger Roman infantry.</source>
+        <translation>При Илипе в 206 г. до н. э. Сципион изменил привычное построение и ударил по карфагенским флангам своей более сильной римской пехотой.</translation>
+    </message>
+    <message>
+        <source>At Lake Trasimene in 217 BC, Hannibal ambushed a Roman marching column between the lake and the hills. Terrain was part of the trap.</source>
+        <translation>У Тразименского озера в 217 г. до н. э. Ганнибал устроил засаду римской походной колонне между озером и холмами. Местность была частью ловушки.</translation>
+    </message>
+    <message>
+        <source>At Zama in 202 BC, Scipio left lanes through his infantry to blunt Hannibal&apos;s elephants. Positioning beat panic.</source>
+        <translation>При Заме в 202 г. до н. э. Сципион оставил проходы в строю пехоты, чтобы погасить натиск слонов Ганнибала. Построение победило панику.</translation>
+    </message>
+    <message>
+        <source>At the Trebia, Hannibal lured Roman troops into a winter battle; a concealed Carthaginian force struck during the fighting.</source>
+        <translation>На Треббии Ганнибал заманил римлян в зимнее сражение; скрытый карфагенский отряд ударил в разгар боя.</translation>
+    </message>
+    <message>
+        <source>Fabius Maximus earned the name &apos;the Delayer&apos; by avoiding Hannibal&apos;s preferred pitched battles and harassing his movements and supplies.</source>
+        <translation>Фабий Максим получил прозвище «Медлитель», избегая генеральных сражений, которых добивался Ганнибал, и тревожа его переходы и снабжение.</translation>
+    </message>
+    <message>
+        <source>Fabius called it patience. His critics probably called it a very long walk.</source>
+        <translation>Фабий называл это терпением. Его критики, вероятно, называли это очень долгой прогулкой.</translation>
+    </message>
+    <message>
+        <source>Hamilcar Barca, Hannibal&apos;s father, built Carthaginian power in Iberia after the First Punic War. His sons inherited a formidable campaign.</source>
+        <translation>Гамилькар Барка, отец Ганнибала, укрепил власть Карфагена в Иберии после Первой Пунической войны. Его сыновья унаследовали грозную кампанию.</translation>
+    </message>
+    <message>
+        <source>Hannibal Barca was the Carthaginian commander who brought the Second Punic War into Italy by marching across the Alps in 218 BC.</source>
+        <translation>Ганнибал Барка — карфагенский полководец, перенёсший Вторую Пуническую войну в Италию переходом через Альпы в 218 г. до н. э.</translation>
+    </message>
+    <message>
+        <source>Hannibal married a woman from the Iberian city of Castulo. The poet Silius Italicus calls her Imilce; the historian Livy does not give her name.</source>
+        <translation>Ганнибал женился на женщине из иберийского города Кастулон. Поэт Силий Италик называет её Имилькой; историк Тит Ливий имени не приводит.</translation>
+    </message>
+    <message>
+        <source>Hannibal won battles in Italy, but Rome&apos;s alliances, manpower, and stubborn refusal to surrender kept the war alive.</source>
+        <translation>Ганнибал выигрывал сражения в Италии, но союзы Рима, его людские резервы и упорный отказ сдаваться не давали войне угаснуть.</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s elephants crossed mountains. Your supply wagon still insists that a shallow stream is impassable.</source>
+        <translation>Слоны Ганнибала перешли горы. Ваш обоз по-прежнему уверен, что мелкий ручей непроходим.</translation>
+    </message>
+    <message>
+        <source>Hasdrubal Barca was Hannibal&apos;s brother, not his brother-in-law Hasdrubal the Fair. His attempted reinforcement ended at the Metaurus in 207 BC.</source>
+        <translation>Гасдрубал Барка был братом Ганнибала, а не его зятем Гасдрубалом Красивым. Его попытка привести подкрепление закончилась на Метавре в 207 г. до н. э.</translation>
+    </message>
+    <message>
+        <source>In 218 BC Hannibal crossed the Alps with infantry, cavalry, baggage, and elephants. His exact route remains disputed.</source>
+        <translation>В 218 г. до н. э. Ганнибал перешёл Альпы с пехотой, конницей, обозом и слонами. Его точный маршрут до сих пор оспаривается.</translation>
+    </message>
+    <message>
+        <source>Maharbal commanded cavalry under Hannibal. The famous tale that he urged an immediate march on Rome after Cannae comes from later Roman tradition.</source>
+        <translation>Магарбал командовал конницей Ганнибала. Знаменитый рассказ о том, что после Канн он призывал немедленно идти на Рим, восходит к поздней римской традиции.</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s Numidian horsemen fought alongside Rome at Zama. Their return to the battlefield helped decide the fight.</source>
+        <translation>Нумидийские всадники Масиниссы сражались при Заме на стороне Рима. Их возвращение на поле боя помогло решить исход битвы.</translation>
+    </message>
+    <message>
+        <source>No one remembers who buried the first Sepulcher priest. The priest has had plenty of time to hold a grudge.</source>
+        <translation>Никто не помнит, кто похоронил первого жреца Гробницы. У жреца было предостаточно времени, чтобы затаить обиду.</translation>
+    </message>
+    <message>
+        <source>Scipio took New Carthage in 209 BC, seizing an important harbor, stores, and hostages instead of chasing every enemy army.</source>
+        <translation>Сципион взял Новый Карфаген в 209 г. до н. э., захватив важную гавань, припасы и заложников вместо того, чтобы гоняться за каждой вражеской армией.</translation>
+    </message>
+    <message>
+        <source>Sepulcher legend says grave priests draw their fire from the last breaths trapped beneath the iron seals of forgotten shrines.</source>
+        <translation>Легенда Гробницы гласит, что могильные жрецы черпают огонь из последних вздохов, запертых под железными печатями забытых святилищ.</translation>
+    </message>
+    <message>
+        <source>Soldiers whisper that the shrine&apos;s haze repeats orders in the voices of men who never came home.</source>
+        <translation>Солдаты шепчутся, что дымка святилища повторяет приказы голосами тех, кто так и не вернулся домой.</translation>
+    </message>
+    <message>
+        <source>Some say a grave priest burns the names scraped from burial stones. Each lost name feeds one more ember.</source>
+        <translation>Говорят, могильный жрец сжигает имена, соскобленные с надгробий. Каждое утраченное имя питает ещё один уголёк.</translation>
+    </message>
+    <message>
+        <source>The Iron Sepulcher keeps no quartermaster. Its garrison stopped asking for rations centuries ago.</source>
+        <translation>В Железной Гробнице нет интенданта. Её гарнизон перестал просить паёк много веков назад.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher&apos;s guardians do not pursue forever. They return to the shrine as though the last watch never ended.</source>
+        <translation>Стражи Гробницы не преследуют вечно. Они возвращаются к святилищу, будто последняя стража так и не закончилась.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher&apos;s iron nails are said to pin unfinished oaths beneath the earth. Its guardians are still keeping theirs.</source>
+        <translation>Говорят, железные гвозди Гробницы прибивают под землёй неисполненные клятвы. Её стражи всё ещё держат свои.</translation>
+    </message>
+    <message>
+        <source>The best time to discover that your bridge is too narrow was before the elephants arrived.</source>
+        <translation>Лучшее время понять, что ваш мост слишком узок, было до прихода слонов.</translation>
+    </message>
+    <message>
+        <source>The cavalry has found the enemy&apos;s rear. Unfortunately, it has also found your missing supplies.</source>
+        <translation>Конница нашла вражеский тыл. К сожалению, заодно она нашла и ваши пропавшие припасы.</translation>
+    </message>
+    <message>
+        <source>The dead have held this post for centuries. You can understand why they dislike a change of ownership.</source>
+        <translation>Мёртвые держат этот пост веками. Понятно, почему им не нравится смена владельца.</translation>
+    </message>
+    <message>
+        <source>Slaying the last guardian clears a zone, but the shrine is not purified until you capture or destroy it.</source>
+        <translation>Гибель последнего стража очищает зону, но святилище не будет очищено, пока вы не захватите или не уничтожите его.</translation>
+    </message>
 </context>
 <context>
     <name>Main</name>

@@ -130,6 +130,7 @@ public:
   void register_alias(const std::string& alias_id, const std::string& resource_id);
   auto has_resource(const std::string& resource_id) const -> bool;
   [[nodiscard]] auto is_resource_ready(const std::string& resource_id) const -> bool;
+  [[nodiscard]] auto has_pending_mission_decodes() const -> bool;
   [[nodiscard]] auto resource_cooldown_ms(const std::string& resource_id) const -> int;
   void reset_playback_throttles();
   void unload_sound(const std::string& sound_id);

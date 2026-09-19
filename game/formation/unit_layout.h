@@ -2,7 +2,9 @@
 
 #include <QString>
 
+#include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -137,8 +139,15 @@ public:
 private:
   UnitLayoutLibrary();
 
+  struct NameHash {
+    using is_transparent = void;
+    auto operator()(std::string_view name) const noexcept -> std::size_t {
+      return std::hash<std::string_view>{}(name);
+    }
+  };
+
   std::vector<UnitLayoutStyle> m_styles;
-  std::unordered_map<std::string, UnitLayoutId> m_by_name;
+  std::unordered_map<std::string, UnitLayoutId, NameHash, std::equal_to<>> m_by_name;
   UnitLayoutStyle m_fallback;
 };
 

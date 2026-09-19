@@ -992,6 +992,7 @@ void GameEngine::render(int pixel_width, int pixel_height) {
   }
 
   m_renderer->set_world_view(Render::WorldView::of(*m_session));
+  m_renderer->set_loading_overlay_active(m_loading_overlay_active);
 
   if (m_loading_overlay_active) {
 
@@ -1963,6 +1964,12 @@ auto GameEngine::mission_startup_pending_components() const -> QStringList {
   QStringList pending;
   if (m_scatter != nullptr && !m_scatter->is_gpu_ready()) {
     pending << QStringLiteral("terrain scatter");
+  }
+  if (m_renderer && m_renderer->has_pending_template_prewarm()) {
+    pending << QStringLiteral("unit templates");
+  }
+  if (AudioSystem::get_instance().has_pending_mission_decodes()) {
+    pending << QStringLiteral("mission audio");
   }
   if (m_world != nullptr) {
     if (const auto* ai_system = m_world->get_system<Game::Systems::AISystem>();

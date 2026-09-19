@@ -8,8 +8,11 @@
 #include <QVector3D>
 #include <QVector4D>
 
+#include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <variant>
@@ -21,6 +24,14 @@ class Shader : protected QOpenGLFunctions_3_3_Core {
 public:
   using UniformHandle = GLint;
   static constexpr UniformHandle InvalidUniform = -1;
+  struct UniformNameHash {
+    using is_transparent = void;
+    auto operator()(std::string_view name) const noexcept -> std::size_t {
+      return std::hash<std::string_view>{}(name);
+    }
+  };
+  using UniformCache =
+      std::unordered_map<std::string, UniformHandle, UniformNameHash, std::equal_to<>>;
 
   Shader();
   ~Shader() override;
@@ -108,7 +119,7 @@ private:
   QString m_compute_source;
   QString m_variant_defines;
 
-  std::unordered_map<std::string, UniformHandle> m_uniform_cache;
+  UniformCache m_uniform_cache;
   std::vector<std::string> m_uniform_names;
   std::vector<GLint> m_uniform_locations;
   std::vector<std::pair<std::string, std::uint32_t>> m_block_bindings;

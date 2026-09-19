@@ -42,6 +42,13 @@ struct FormationLayout {
   std::vector<SoldierSlot> occupied_slots;
 };
 
+struct FormationExtents {
+  float body_radius{0.5F};
+  float live_envelope{0.0F};
+  float minimum_scale{1.0F};
+  float navigation_clearance{0.1F};
+};
+
 enum class SoldierAnchorSource : std::uint8_t {
   BaseLayout = 0,
   TraversalLayout,
@@ -127,6 +134,9 @@ auto face_about_in_place(Engine::Core::Entity& entity) -> bool;
 
 [[nodiscard]] auto
 formation_navigation_clearance(const Engine::Core::Entity& entity) -> float;
+
+[[nodiscard]] auto
+formation_extents(const Engine::Core::Entity& entity) -> FormationExtents;
 
 [[nodiscard]] auto
 formation_lateral_half_extent(const FormationLayout& layout) -> float;

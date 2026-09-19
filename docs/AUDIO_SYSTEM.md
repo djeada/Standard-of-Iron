@@ -135,6 +135,18 @@ Resident decoded PCM is tracked against a budget (`SOI_AUDIO_PCM_BUDGET_MB` over
 
 Tracks are held as 32-bit float stereo at the device rate, so a minute of music costs about 22 MB at 48 kHz and twice that at 96 kHz. The two four-minute `peaceful` beds (`music.base.echoes_ancient_outpost`, `music.base.ancient_peak_fires`) are 88 MB each, and the `startup` and `mission` sets add roughly 20 MB more, which is why a mission that rotates onto its second long bed sits near 200 MB. The budget is a diagnostic: raise it (or shorten the long beds) rather than expecting the backend to evict anything.
 
+### Waiting on a decode
+
+There is one decode worker, and a scripted launch reaches the mission preload while the
+startup set (about a hundred tracks) is still queued on it. `MiniaudioBackend::unload`
+runs with `AudioSystem::resource_mutex` held, and every `load_sound` in the mission
+preload needs that mutex, so any wait inside unload stalls the loading thread. Two rules
+keep that wait short. `finish_job` wakes `m_decode_idle` after every job, so
+`wait_for_track` returns when its own track lands instead of when the whole queue drains.
+And `unload` first calls `cancel_queued_decode`, which drops a job that has not started
+yet, so only a decode already in flight is ever waited for. Before this the mission
+preload measured anywhere from under 1 ms to 5.6 s on the same map.
+
 ## Tag-driven selection
 
 `AudioCoordinator` and `AudioEventHandler` pick music, beds and voices by querying manifest tags. No track ID for music or ambience appears in code except the final fallback bed.

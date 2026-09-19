@@ -241,6 +241,178 @@
     {
       "text": "The shortest path between two points is rarely the route selected by an army.",
       "tone": "wry"
+    },
+    {
+      "text": "Hannibal Barca was the Carthaginian commander who brought the Second Punic War into Italy by marching across the Alps in 218 BC.",
+      "tone": "plain"
+    },
+    {
+      "text": "Hannibal married a woman from the Iberian city of Castulo. The poet Silius Italicus calls her Imilce; the historian Livy does not give her name.",
+      "tone": "plain"
+    },
+    {
+      "text": "Hamilcar Barca, Hannibal's father, built Carthaginian power in Iberia after the First Punic War. His sons inherited a formidable campaign.",
+      "tone": "plain"
+    },
+    {
+      "text": "In 218 BC Hannibal crossed the Alps with infantry, cavalry, baggage, and elephants. His exact route remains disputed.",
+      "tone": "plain"
+    },
+    {
+      "text": "At the Trebia, Hannibal lured Roman troops into a winter battle; a concealed Carthaginian force struck during the fighting.",
+      "tone": "plain"
+    },
+    {
+      "text": "At Lake Trasimene in 217 BC, Hannibal ambushed a Roman marching column between the lake and the hills. Terrain was part of the trap.",
+      "tone": "plain"
+    },
+    {
+      "text": "At Cannae in 216 BC, Hannibal's yielding center drew Roman infantry forward while his flanks and cavalry closed around them.",
+      "tone": "plain"
+    },
+    {
+      "text": "Maharbal commanded cavalry under Hannibal. The famous tale that he urged an immediate march on Rome after Cannae comes from later Roman tradition.",
+      "tone": "plain"
+    },
+    {
+      "text": "Hasdrubal Barca was Hannibal's brother, not his brother-in-law Hasdrubal the Fair. His attempted reinforcement ended at the Metaurus in 207 BC.",
+      "tone": "plain"
+    },
+    {
+      "text": "Fabius Maximus earned the name 'the Delayer' by avoiding Hannibal's preferred pitched battles and harassing his movements and supplies.",
+      "tone": "plain"
+    },
+    {
+      "text": "Scipio took New Carthage in 209 BC, seizing an important harbor, stores, and hostages instead of chasing every enemy army.",
+      "tone": "plain"
+    },
+    {
+      "text": "At Ilipa in 206 BC, Scipio changed his usual deployment and attacked the Carthaginian wings with his stronger Roman infantry.",
+      "tone": "plain"
+    },
+    {
+      "text": "At Zama in 202 BC, Scipio left lanes through his infantry to blunt Hannibal's elephants. Positioning beat panic.",
+      "tone": "plain"
+    },
+    {
+      "text": "Masinissa's Numidian horsemen fought alongside Rome at Zama. Their return to the battlefield helped decide the fight.",
+      "tone": "plain"
+    },
+    {
+      "text": "Hannibal won battles in Italy, but Rome's alliances, manpower, and stubborn refusal to surrender kept the war alive.",
+      "tone": "plain"
+    },
+    {
+      "text": "Hannibal's elephants crossed mountains. Your supply wagon still insists that a shallow stream is impassable.",
+      "tone": "wry"
+    },
+    {
+      "text": "A brilliant encirclement is harder to admire from the inside.",
+      "tone": "wry"
+    },
+    {
+      "text": "Fabius called it patience. His critics probably called it a very long walk.",
+      "tone": "wry"
+    },
+    {
+      "text": "The cavalry has found the enemy's rear. Unfortunately, it has also found your missing supplies.",
+      "tone": "wry"
+    },
+    {
+      "text": "A battle plan with seven arrows usually requires at least eight messengers.",
+      "tone": "wry"
+    },
+    {
+      "text": "The best time to discover that your bridge is too narrow was before the elephants arrived.",
+      "tone": "wry"
+    },
+    {
+      "text": "A general can order a forced march. Boots remain stubbornly outside the chain of command.",
+      "tone": "wry"
+    },
+    {
+      "text": "The Iron Sepulcher keeps no quartermaster. Its garrison stopped asking for rations centuries ago.",
+      "tone": "wry",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "Sepulcher legend says grave priests draw their fire from the last breaths trapped beneath the iron seals of forgotten shrines.",
+      "tone": "plain",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "Some say a grave priest burns the names scraped from burial stones. Each lost name feeds one more ember.",
+      "tone": "plain",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "The Sepulcher's iron nails are said to pin unfinished oaths beneath the earth. Its guardians are still keeping theirs.",
+      "tone": "plain",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "Soldiers whisper that the shrine's haze repeats orders in the voices of men who never came home.",
+      "tone": "plain",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "A grave priest appears to mend broken bone. The darker story is that it persuades the grave to return what it claimed.",
+      "tone": "plain",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "The Sepulcher's guardians do not pursue forever. They return to the shrine as though the last watch never ended.",
+      "tone": "plain",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "An undead shrine is warded while its guardians live. Defeat every wave before attempting to destroy or capture it.",
+      "tone": "plain",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "Slaying the last guardian clears a zone, but the shrine is not purified until you capture or destroy it.",
+      "tone": "plain",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "No one remembers who buried the first Sepulcher priest. The priest has had plenty of time to hold a grudge.",
+      "tone": "wry",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "A grave priest never runs short of fire. It only asks whose name is missing from the graveyard roll.",
+      "tone": "wry",
+      "tags": [
+        "undead"
+      ]
+    },
+    {
+      "text": "The dead have held this post for centuries. You can understand why they dislike a change of ownership.",
+      "tone": "wry",
+      "tags": [
+        "undead"
+      ]
     }
   ]
 }

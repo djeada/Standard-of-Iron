@@ -252,6 +252,15 @@ auto Pathfinding::is_world_position_walkable(const QVector3D& world_position,
   float const half_cell = m_grid_cell_size * 0.5F;
   float const center_u = world_position.x() - m_grid_offset_x;
   float const center_v = world_position.z() - m_grid_offset_z;
+
+  constexpr float k_gap_margin = 1.0e-4F;
+  float const offset_from_cell =
+      std::max(std::abs(center_u - static_cast<float>(grid.x)),
+               std::abs(center_v - static_cast<float>(grid.y)));
+  if (radius < 1.0F - offset_from_cell - half_cell - k_gap_margin) {
+    return true;
+  }
+
   CellRange const box = body_cell_range(center_u, center_v, radius, half_cell);
 
   for (int cell_z = box.min_z; cell_z <= box.max_z; ++cell_z) {
@@ -895,6 +904,17 @@ void Pathfinding::update_navigation_grid() {
   m_navigation_grid_dirty.store(false, std::memory_order_release);
 }
 
+void Pathfinding::prewarm_navigation() {
+  update_navigation_grid();
+  Point const origin{0, 0};
+  for (std::size_t index = 0; index < k_passability_count; ++index) {
+    std::uint32_t first_label = 0;
+    std::uint32_t second_label = 0;
+    region_labels(
+        origin, origin, static_cast<Passability>(index), first_label, second_label);
+  }
+}
+
 auto Pathfinding::find_path(const Point& start,
                             const Point& end,
                             Passability passability,
@@ -1166,7 +1186,13 @@ auto Pathfinding::find_path_internal(const Point& start,
   ensure_working_buffers(buffers);
 
   float const one_man = routing_clearance(clearance_radius);
-  auto const is_walkableFunc = [this, passability, one_man](int x, int y) -> bool {
+  bool const centre_clear_of_neighbours =
+      one_man < 1.0F - (m_grid_cell_size * 0.5F) - 1.0e-4F;
+  auto const is_walkableFunc =
+      [this, passability, one_man, centre_clear_of_neighbours](int x, int y) -> bool {
+    if (centre_clear_of_neighbours) {
+      return is_walkable(x, y, passability);
+    }
     return is_world_position_walkable(grid_to_world({x, y}), passability, one_man);
   };
 

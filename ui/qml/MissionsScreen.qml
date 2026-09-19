@@ -12,6 +12,7 @@ Item {
     property int selected_index: -1
 
     readonly property var selected: (selected_index >= 0 && selected_index < missions.length) ? missions[selected_index] : null
+    readonly property var selected_objective_lines: objective_lines(selected)
     readonly property bool compact: width < Design.A11y.scaled(1080)
     readonly property bool shallow: height < Design.A11y.scaled(720)
     readonly property int frame_margin: Math.max(Design.Metrics.space12, Math.min(Design.Metrics.space32, Math.round(Math.min(width, height) * 0.032)))
@@ -34,7 +35,13 @@ Item {
         if (game.setup.load_missions)
             game.setup.load_missions();
         missions = game.setup.missions || [];
-        if (missions.length > 0 && (selected_index < 0 || selected_index >= missions.length))
+        clamp_selection();
+    }
+
+    function clamp_selection() {
+        if (missions.length === 0)
+            selected_index = -1;
+        else if (selected_index < 0 || selected_index >= missions.length)
             selected_index = 0;
     }
 
@@ -145,6 +152,7 @@ Item {
             if (root.selected_index >= 0)
                 mission_list.positionViewAtIndex(root.selected_index, ListView.Contain);
             briefing_scroll.contentY = 0;
+            objectives_scroll.contentY = 0;
         })
 
     Keys.onPressed: function (event) {
@@ -168,6 +176,7 @@ Item {
     Connections {
         function onMissions_changed() {
             root.missions = game.setup.missions || [];
+            root.clamp_selection();
         }
 
         target: (typeof game !== "undefined") ? game.setup : null
@@ -730,6 +739,49 @@ Item {
                             color: Design.Theme.borderSubtle
                         }
 
+                        Item {
+                            id: selected_objectives
+
+                            readonly property var lines: root.selected_objective_lines
+                            readonly property int height_cap: Math.min(root.shallow ? Design.A11y.scaled(168) : Design.A11y.scaled(240), Math.round(detail_panel.height * 0.36))
+
+                            objectName: "selectedMissionObjectives"
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: Math.min(objectives_list.implicitHeight, selected_objectives.height_cap)
+                            Layout.minimumHeight: Layout.preferredHeight
+                            visible: selected_objectives.lines.length > 0
+                            Accessible.role: Accessible.Pane
+                            Accessible.name: root.orders_heading(root.selected)
+                            Accessible.description: selected_objectives.lines.join(". ")
+
+                            Flickable {
+                                id: objectives_scroll
+
+                                anchors.fill: parent
+                                clip: true
+                                contentWidth: width
+                                contentHeight: objectives_list.implicitHeight
+                                flickableDirection: Flickable.VerticalFlick
+                                boundsBehavior: Flickable.StopAtBounds
+                                interactive: contentHeight > height
+
+                                ScrollBar.vertical: Design.IronScrollBar {
+                                    objectName: "selectedMissionObjectivesScrollBar"
+                                }
+
+                                MissionOrderList {
+                                    id: objectives_list
+
+                                    objectName: "selectedMissionObjectivesList"
+                                    width: Math.max(0, objectives_scroll.width - briefing_scroll.gutter)
+                                    heading: root.orders_heading(root.selected)
+                                    heading_color: root.selected_tone
+                                    marker: Design.Icons.objective
+                                    lines: selected_objectives.lines
+                                }
+                            }
+                        }
+
                         RowLayout {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
@@ -737,6 +789,8 @@ Item {
 
                             Flickable {
                                 id: briefing_scroll
+
+                                objectName: "missionBriefing"
 
                                 readonly property int gutter: Design.Metrics.scrollBarThickness + Design.Metrics.space4
 
@@ -814,14 +868,6 @@ Item {
 
                                     MissionOrderList {
                                         Layout.fillWidth: true
-                                        heading: root.orders_heading(root.selected)
-                                        heading_color: Design.Theme.accent
-                                        marker: Design.Icons.objective
-                                        lines: root.objective_lines(root.selected)
-                                    }
-
-                                    MissionOrderList {
-                                        Layout.fillWidth: true
                                         heading: qsTr("Worth doing as well")
                                         heading_color: Design.Theme.warning
                                         marker: Design.Icons.objective
@@ -855,8 +901,12 @@ Item {
                             }
 
                             ColumnLayout {
+                                readonly property int column_width: Math.min(Design.A11y.scaled(320), Math.round(detail_panel.width * 0.34))
+
                                 Layout.alignment: Qt.AlignTop
-                                Layout.preferredWidth: Math.min(Design.A11y.scaled(320), Math.round(detail_panel.width * 0.34))
+                                Layout.fillWidth: false
+                                Layout.preferredWidth: column_width
+                                Layout.maximumWidth: column_width
                                 spacing: Design.Metrics.space8
                                 visible: !root.compact
 
@@ -878,6 +928,8 @@ Item {
 
                                     objectName: "missionFieldPreviewFrame"
                                     Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    Layout.minimumHeight: Design.Metrics.space24 * 3
                                     Layout.preferredHeight: field_preview_frame.capped_height
                                     Layout.maximumHeight: field_preview_frame.capped_height
                                     radius: Design.Metrics.radiusMedium
@@ -1000,6 +1052,7 @@ Item {
                             }
 
                             Design.IronButton {
+                                objectName: "missionDeployButton"
                                 text: (root.selected && root.selected.completed) ? qsTr("Take it again") : qsTr("Take the field")
                                 tone: "primary"
                                 accessibleName: text

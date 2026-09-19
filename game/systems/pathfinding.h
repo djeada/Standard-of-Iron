@@ -112,6 +112,8 @@ public:
 
   void update_navigation_grid();
 
+  void prewarm_navigation();
+
   void mark_navigation_grid_dirty();
 
   void mark_region_dirty(int min_x, int max_x, int min_z, int max_z);

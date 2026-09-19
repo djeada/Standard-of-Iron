@@ -52,6 +52,12 @@ void NavGrid::initialize(int world_width, int world_height) {
       });
 }
 
+void NavGrid::prewarm() {
+  if (auto* pathfinder = active_pathfinder()) {
+    pathfinder->prewarm_navigation();
+  }
+}
+
 auto NavGrid::get_pathfinder() -> Pathfinding* {
   return active_pathfinder();
 }
