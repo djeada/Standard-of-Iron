@@ -15,6 +15,7 @@
 #include "../systems/nav_grid.h"
 #include "../systems/pathfinding.h"
 #include "../systems/route_corridor_planner.h"
+#include "../util/planar_math.h"
 #include "army_formation_planner.h"
 
 namespace Game::Formation {
@@ -439,7 +440,7 @@ void hold_group_facing(Engine::Core::World& world, ArmyFormation& formation) {
       continue;
     }
     float const drift =
-        std::abs(std::remainder(transform->rotation.y - slot.facing, 360.0F));
+        std::abs(Game::Systems::signed_yaw_delta(slot.facing, transform->rotation.y));
     if (drift <= k_tolerance_degrees) {
       continue;
     }

@@ -14,6 +14,8 @@ class NavGrid {
 public:
   static void initialize(int world_width, int world_height);
 
+  static void prewarm();
+
   [[nodiscard]] static auto get_pathfinder() -> Pathfinding*;
 
   [[nodiscard]] static auto world_to_grid(float world_x, float world_z) -> Point;

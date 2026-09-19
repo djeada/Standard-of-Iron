@@ -457,13 +457,9 @@ auto CommandService::get_unit_radii(Engine::Core::World& world,
     return radii;
   }
 
-  auto const layout = FormationCombat::resolve_layout(*entity);
-  radii.core = std::max(layout.body_radius, k_unit_radius_threshold);
-  radii.envelope = radii.core;
-  for (auto const& slot : layout.live_slots) {
-    radii.envelope = std::max(
-        radii.envelope, std::hypot(slot.local_x, slot.local_z) + layout.body_radius);
-  }
+  auto const extents = FormationCombat::formation_extents(*entity);
+  radii.core = std::max(extents.body_radius, k_unit_radius_threshold);
+  radii.envelope = std::max(radii.core, extents.live_envelope);
   return radii;
 }
 
