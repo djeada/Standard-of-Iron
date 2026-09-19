@@ -830,6 +830,108 @@ TEST_F(VictoryServiceTest, AccumulateResourcesReadsLifetimeHarvestNotCurrentBala
   resources.clear();
 }
 
+TEST_F(VictoryServiceTest, HarvestProgressRepublishesTheObjectivesBeforeTheyComplete) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  resources.clear();
+
+  Game::Systems::ResourceAmounts required;
+  required.set(Game::Systems::ResourceType::Wood, 800);
+  Game::Systems::VictoryRuleSet rules;
+  rules.victory_rules.emplace_back(
+      Game::Systems::AccumulateResourcesVictoryRule{required});
+
+  int published = 0;
+  m_service->set_objectives_changed_callback([&published]() { ++published; });
+  m_service->configure(rules, 1);
+  advance_past_startup_delay(world);
+  m_service->update(world, 0.1F);
+  const int after_start = published;
+
+  m_service->update(world, 0.1F);
+  EXPECT_EQ(published, after_start) << "nothing changed, nothing to republish";
+
+  resources.add_harvested(1, Game::Systems::ResourceType::Wood, 120);
+  m_service->update(world, 0.1F);
+  EXPECT_EQ(published, after_start + 1) << "a delivery must reach the HUD";
+  ASSERT_EQ(m_service->objectives().size(), 1U);
+  EXPECT_TRUE(
+      m_service->objectives().front().detail.contains(QStringLiteral("120/800")))
+      << m_service->objectives().front().detail.toStdString();
+
+  resources.add(1, Game::Systems::ResourceType::Wood, 300);
+  m_service->update(world, 0.1F);
+  EXPECT_EQ(published, after_start + 1)
+      << "stock that was not harvested is not progress";
+
+  resources.clear();
+}
+
+TEST_F(VictoryServiceTest, OptionalObjectivesReportProgressButNeverEndTheMatch) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  resources.clear();
+
+  Game::Systems::ResourceAmounts levy;
+  levy.set(Game::Systems::ResourceType::Wood, 800);
+  Game::Systems::ResourceAmounts overcut;
+  overcut.set(Game::Systems::ResourceType::Wood, 100);
+  overcut.set(Game::Systems::ResourceType::Stone, 100);
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.victory_rules.emplace_back(Game::Systems::AccumulateResourcesVictoryRule{levy});
+  Game::Systems::VictoryObjective optional(
+      Game::Systems::AccumulateResourcesVictoryRule{overcut},
+      QStringLiteral("accumulate_resources"),
+      QStringLiteral("Overcut the levy."));
+  optional.source_index = 3;
+  rules.optional_rules.push_back(optional);
+
+  int published = 0;
+  m_service->set_objectives_changed_callback([&published]() { ++published; });
+  m_service->configure(rules, 1);
+  advance_past_startup_delay(world);
+  m_service->update(world, 0.1F);
+  const int after_start = published;
+
+  resources.add_harvested(1, Game::Systems::ResourceType::Stone, 50);
+  m_service->update(world, 0.1F);
+  EXPECT_EQ(published, after_start + 1) << "optional progress must reach the HUD";
+  auto optionals = m_service->optional_objectives();
+  ASSERT_EQ(optionals.size(), 1U);
+  EXPECT_EQ(optionals.front().source_index, 3);
+  EXPECT_EQ(optionals.front().compact_detail, QStringLiteral("0/100 · 50/100"));
+  EXPECT_DOUBLE_EQ(optionals.front().fraction, 0.25);
+  EXPECT_FALSE(optionals.front().complete);
+
+  resources.add_harvested(1, Game::Systems::ResourceType::Wood, 100);
+  resources.add_harvested(1, Game::Systems::ResourceType::Stone, 50);
+  m_service->update(world, 0.1F);
+  optionals = m_service->optional_objectives();
+  EXPECT_TRUE(optionals.front().complete);
+  EXPECT_DOUBLE_EQ(optionals.front().fraction, 1.0);
+  EXPECT_FALSE(m_service->is_game_over()) << "an optional objective never wins";
+
+  const auto saved = m_service->serialize_state();
+  m_service->configure(rules, 1);
+  m_service->restore_state(saved);
+  EXPECT_TRUE(m_service->optional_objectives().front().complete);
+
+  resources.clear();
+}
+
 TEST_F(VictoryServiceTest, SurviveWavesVictoryWaitsForEveryRequiredPhase) {
   Engine::Core::World world;
   ASSERT_NE(create_unit(world,

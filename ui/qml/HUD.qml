@@ -421,6 +421,10 @@ Item {
         function optional_objectives_with_progress() {
             var list = objectivesCard.objective_list("optional_objectives");
             var waves = (typeof game !== 'undefined' && game && game.waves) ? game.waves : null;
+            var live = {};
+            var tracked = objectivesCard.mission ? objectivesCard.mission.optional : [];
+            for (var t = 0; t < tracked.length; ++t)
+                live[tracked[t].index] = tracked[t];
             var out = [];
             for (var i = 0; i < list.length; ++i) {
                 var entry = list[i];
@@ -428,6 +432,17 @@ Item {
                     "description": entry.description,
                     "state": "optional"
                 };
+                var status = live[i];
+                if (status) {
+                    if (status.detail)
+                        row.detail = status.detail;
+                    else if (status.required > 1)
+                        row.detail = qsTr("%1 of %2").arg(status.progress).arg(status.required);
+                    if (status.detail || status.required > 1)
+                        row.progress = status.fraction;
+                    if (status.complete)
+                        row.state = "complete";
+                }
                 var wave_count = entry.wave_count !== undefined ? Number(entry.wave_count) : 0;
                 if (waves && wave_count > 0) {
                     var cleared = Math.max(0, Math.min(wave_count, waves.cleared_phases || 0));

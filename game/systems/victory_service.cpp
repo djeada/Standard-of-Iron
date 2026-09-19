@@ -229,6 +229,8 @@ void VictoryService::reset() {
   m_last_world_summary = {};
   m_has_world_summary = false;
   m_objective_complete.clear();
+  m_optional_complete.clear();
+  m_published_progress.clear();
   m_local_owner_id = 1;
   m_victory_state.clear();
   m_defeat_description.clear();
@@ -285,6 +287,11 @@ auto VictoryService::serialize_state() const -> QJsonObject {
     complete.append(done);
   }
   state["objective_complete"] = complete;
+  QJsonArray optional_complete;
+  for (const bool done : m_optional_complete) {
+    optional_complete.append(done);
+  }
+  state["optional_complete"] = optional_complete;
   return state;
 }
 
@@ -304,8 +311,13 @@ void VictoryService::restore_state(const QJsonObject& state) {
   m_victory_state = state.value("victory_state").toString();
   m_defeat_description = state.value("defeat_description").toString();
   m_objective_complete.clear();
+  m_published_progress.clear();
   for (const auto value : state.value("objective_complete").toArray()) {
     m_objective_complete.push_back(value.toBool(false));
+  }
+  m_optional_complete.clear();
+  for (const auto value : state.value("optional_complete").toArray()) {
+    m_optional_complete.push_back(value.toBool(false));
   }
   mark_world_dirty();
 }
@@ -398,7 +410,16 @@ void VictoryService::refresh_rule_metadata() {
   m_has_eliminate_commanders_rule = false;
   m_only_commander_structure_types.clear();
 
+  std::vector<const VictoryObjective*> tracked;
+  tracked.reserve(m_rule_set.victory_rules.size() + m_rule_set.optional_rules.size());
   for (const auto& objective : m_rule_set.victory_rules) {
+    tracked.push_back(&objective);
+  }
+  for (const auto& objective : m_rule_set.optional_rules) {
+    tracked.push_back(&objective);
+  }
+  for (const auto* tracked_objective : tracked) {
+    const auto& objective = *tracked_objective;
     std::visit(
         Overloaded{
             [this](const EliminationVictoryRule& elimination_rule) {
@@ -531,6 +552,24 @@ void VictoryService::evaluate_rules(const WorldSummary& summary) {
       }
       all_satisfied = all_satisfied && satisfied;
       any_satisfied = any_satisfied || satisfied;
+    }
+
+    if (m_optional_complete.size() != m_rule_set.optional_rules.size()) {
+      m_optional_complete.resize(m_rule_set.optional_rules.size(), false);
+      objectives_changed = true;
+    }
+    for (std::size_t index = 0; index < m_rule_set.optional_rules.size(); ++index) {
+      if (!m_optional_complete[index] &&
+          check_victory_rule(m_rule_set.optional_rules[index].rule, summary)) {
+        m_optional_complete[index] = true;
+        objectives_changed = true;
+      }
+    }
+
+    fill_progress_fingerprint(m_progress_scratch);
+    if (m_progress_scratch != m_published_progress) {
+      m_published_progress.swap(m_progress_scratch);
+      objectives_changed = true;
     }
 
     if (objectives_changed && m_objectives_changed_callback) {
@@ -698,57 +737,122 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
   return summary;
 }
 
+auto VictoryService::counted_progress(const VictoryRule& rule) const
+    -> std::optional<CountedProgress> {
+  return std::visit(
+      Overloaded{
+          [](const auto&) -> std::optional<CountedProgress> { return std::nullopt; },
+          [this](const SurviveUndeadWaveVictoryRule& wave_rule)
+              -> std::optional<CountedProgress> {
+            return CountedProgress{
+                .progress =
+                    m_undead_zone_query != nullptr
+                        ? m_undead_zone_query->completed_wave_count(wave_rule.zone_id)
+                        : 0,
+                .required = std::max(1, wave_rule.required_wave_count)};
+          },
+          [this](const SurviveWavesVictoryRule& wave_rule)
+              -> std::optional<CountedProgress> {
+            return CountedProgress{
+                .progress = m_mission_wave_query != nullptr
+                                ? m_mission_wave_query->cleared_wave_count()
+                                : 0,
+                .required = std::max(1, wave_rule.required_wave_count)};
+          },
+          [this](const ControlStructuresVictoryRule& control_rule)
+              -> std::optional<CountedProgress> {
+            return CountedProgress{
+                .progress = count_matching_structures(
+                    m_last_world_summary.local_owned_structure_counts,
+                    control_rule.target.structure_types),
+                .required = std::max(1, control_rule.target.required_count)};
+          },
+          [this](const CaptureStructuresVictoryRule& capture_rule)
+              -> std::optional<CountedProgress> {
+            return CountedProgress{
+                .progress = count_matching_structures(
+                    m_last_world_summary.local_captured_structure_counts,
+                    capture_rule.target.structure_types),
+                .required = std::max(1, capture_rule.target.required_count)};
+          }},
+      rule);
+}
+
+// Every number the objectives panel shows, in a fixed order, so a change in
+// any of them -- not only an objective completing -- republishes the panel.
+void VictoryService::fill_progress_fingerprint(std::vector<int>& out) const {
+  out.clear();
+  append_progress_fingerprint(m_rule_set.victory_rules, out);
+  append_progress_fingerprint(m_rule_set.optional_rules, out);
+}
+
+void VictoryService::append_progress_fingerprint(
+    const std::vector<VictoryObjective>& rules, std::vector<int>& out) const {
+  for (const auto& objective : rules) {
+    if (const auto* resources =
+            std::get_if<AccumulateResourcesVictoryRule>(&objective.rule)) {
+      const auto harvested = m_economy.get_harvested_all(m_local_owner_id);
+      for (const auto type : k_all_resource_types) {
+        const int required = resources->required.get(type);
+        if (required > 0) {
+          out.push_back(std::min(harvested.get(type), required));
+        }
+      }
+    } else if (const auto counted = counted_progress(objective.rule)) {
+      out.push_back(std::clamp(counted->progress, 0, counted->required));
+    }
+  }
+}
+
 auto VictoryService::objectives() const -> std::vector<ObjectiveStatus> {
+  return statuses_for(m_rule_set.victory_rules, m_objective_complete);
+}
+
+auto VictoryService::optional_objectives() const -> std::vector<ObjectiveStatus> {
+  return statuses_for(m_rule_set.optional_rules, m_optional_complete);
+}
+
+auto VictoryService::statuses_for(const std::vector<VictoryObjective>& rules,
+                                  const std::vector<bool>& complete_flags) const
+    -> std::vector<ObjectiveStatus> {
   std::vector<ObjectiveStatus> out;
-  out.reserve(m_rule_set.victory_rules.size());
-  for (std::size_t index = 0; index < m_rule_set.victory_rules.size(); ++index) {
-    const auto& objective = m_rule_set.victory_rules[index];
-    const bool complete =
-        index < m_objective_complete.size() && m_objective_complete[index];
+  out.reserve(rules.size());
+  for (std::size_t index = 0; index < rules.size(); ++index) {
+    const auto& objective = rules[index];
+    const bool complete = index < complete_flags.size() && complete_flags[index];
 
     ObjectiveStatus status{.id = objective.id,
                            .description = objective.description,
+                           .source_index = objective.source_index,
                            .progress = complete ? 1 : 0,
                            .required = 1,
                            .complete = complete};
 
-    std::visit(
-        Overloaded{[](const auto&) {},
-                   [this, &status](const SurviveUndeadWaveVictoryRule& rule) {
-                     status.required = std::max(1, rule.required_wave_count);
-                     status.progress =
-                         m_undead_zone_query != nullptr
-                             ? m_undead_zone_query->completed_wave_count(rule.zone_id)
-                             : 0;
-                   },
-                   [this, &status](const SurviveWavesVictoryRule& rule) {
-                     status.required = std::max(1, rule.required_wave_count);
-                     status.progress = m_mission_wave_query != nullptr
-                                           ? m_mission_wave_query->cleared_wave_count()
-                                           : 0;
-                   },
-                   [this, &status](const ControlStructuresVictoryRule& rule) {
-                     status.required = std::max(1, rule.target.required_count);
-                     status.progress = count_matching_structures(
-                         m_last_world_summary.local_owned_structure_counts,
-                         rule.target.structure_types);
-                   },
-                   [this, &status](const CaptureStructuresVictoryRule& rule) {
-                     status.required = std::max(1, rule.target.required_count);
-                     status.progress = count_matching_structures(
-                         m_last_world_summary.local_captured_structure_counts,
-                         rule.target.structure_types);
-                   },
-                   [this, &status](const AccumulateResourcesVictoryRule& rule) {
-                     const auto tally = resource_tally(
-                         m_economy.get_harvested_all(m_local_owner_id), rule.required);
-                     status.detail = tally.text;
-                     status.required = std::max(1, tally.kinds);
-                     status.progress = tally.met;
-                   }},
-        objective.rule);
+    if (const auto* resources =
+            std::get_if<AccumulateResourcesVictoryRule>(&objective.rule)) {
+      const auto tally = resource_tally(m_economy.get_harvested_all(m_local_owner_id),
+                                        resources->required);
+      status.detail = tally.text;
+      status.compact_detail = tally.numbers;
+      status.fraction = tally.fraction;
+      status.required = std::max(1, tally.kinds);
+      status.progress = tally.met;
+    } else if (const auto counted = counted_progress(objective.rule)) {
+      status.progress = counted->progress;
+      status.required = counted->required;
+    }
 
     status.progress = std::clamp(status.progress, 0, status.required);
+    if (status.complete) {
+      status.progress = status.required;
+    }
+    if (!std::holds_alternative<AccumulateResourcesVictoryRule>(objective.rule)) {
+      status.fraction = static_cast<double>(status.progress) /
+                        static_cast<double>(std::max(1, status.required));
+    }
+    if (status.complete) {
+      status.fraction = 1.0;
+    }
     out.push_back(std::move(status));
   }
   return out;

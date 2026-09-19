@@ -250,6 +250,8 @@ auto MissionStageTracker::update(Game::Session::SessionContext& session,
     int progress = status.progress;
     int required = status.required;
     QString detail = status.detail;
+    QString compact_detail = status.compact_detail;
+    double fraction = status.fraction;
     const QString& type = status.type;
 
     if (type == QStringLiteral("capture_structures")) {
@@ -284,6 +286,8 @@ auto MissionStageTracker::update(Game::Session::SessionContext& session,
       const auto resource_progress = Game::Systems::resource_tally(
           harvested, wanted.value_or(Game::Systems::ResourceAmounts{}));
       detail = resource_progress.text;
+      compact_detail = resource_progress.numbers;
+      fraction = resource_progress.fraction;
       required = std::max(1, resource_progress.kinds);
       progress = resource_progress.met;
     } else if (type == QStringLiteral("survive_waves")) {
@@ -304,6 +308,8 @@ auto MissionStageTracker::update(Game::Session::SessionContext& session,
       status.required = required;
       status.complete = complete;
       status.detail = detail;
+      status.compact_detail = compact_detail;
+      status.fraction = fraction;
       changed = true;
     }
 

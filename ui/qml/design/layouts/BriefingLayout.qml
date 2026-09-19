@@ -128,7 +128,7 @@ Item {
                                 parts.push(qsTr("%1 of %2").arg(stageProgress).arg(stageRequired));
                             return parts.join(" · ");
                         }
-                        progress: stageRequired > 1 ? stageProgress / stageRequired : -1
+                        progress: modelData.fraction !== undefined && (stageRequired > 1 || modelData.detail) ? modelData.fraction : (stageRequired > 1 ? stageProgress / stageRequired : -1)
                     }
                 }
             }
