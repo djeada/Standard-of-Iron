@@ -61,7 +61,6 @@ constexpr float k_about_face_cooldown_seconds = 0.5F;
 constexpr float k_formation_align_distance = 11.0F;
 constexpr float k_formation_align_max_deviation_degrees = 55.0F;
 
-constexpr float k_formation_turn_speed_floor_degrees = 20.0F;
 constexpr float k_formation_heading_deadband_degrees = 6.0F;
 constexpr float k_heading_hold_speed = 0.25F;
 
@@ -86,10 +85,7 @@ auto formation_turn_speed_degrees(const Engine::Core::Entity& entity,
                unit.speed * k_formation_outer_file_speed_scale);
   float const derived =
       max_outer_speed / turn_radius * 180.0F / std::numbers::pi_v<float>;
-  return std::clamp(
-      derived,
-      std::min(k_formation_turn_speed_floor_degrees, single_body_turn_speed),
-      std::min(75.0F, single_body_turn_speed));
+  return std::min(derived, std::min(75.0F, single_body_turn_speed));
 }
 
 struct HeadingReference {
