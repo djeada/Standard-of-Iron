@@ -112,16 +112,20 @@ vec3 shade_readable_character(vec3 base,
   float fresnel = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 4.0);
   if (material_id == 2 || (material_id == 0 && color_role == k_humanoid_role_metal)) {
 
-    float metal_glint = pow(n_dot_h, 42.0);
+    // Broaden distant glints to avoid flicker while keeping the authored metal
+    // tint (including bronze) visible under both sunlight and sky reflection.
+    float metal_glint = pow(n_dot_h, mix(48.0, 24.0, zoom));
     float metal_sheen = pow(n_dot_h, 9.0);
+    vec3 metal_tint = mix(base, sqrt(max(base, vec3(0.0))), 0.35);
     color += sun_color * environment_primary_intensity() *
-             (metal_glint * 0.42 + metal_sheen * 0.12) * base;
-    color += sky_color * (0.08 + fresnel * 0.22) * base;
+             (metal_glint * mix(0.48, 0.32, zoom) + metal_sheen * 0.10) * metal_tint;
+    color += sky_color * (0.06 + fresnel * 0.18) * metal_tint;
     color += local_lighting_specular(world_position, surface_normal, view_dir, 1.0);
   } else if (material_id == 0 && (color_role == k_humanoid_role_leather ||
                                   color_role == k_humanoid_role_leather_dark)) {
 
-    color += sun_color * environment_primary_intensity() * pow(n_dot_h, 12.0) * 0.10;
+    color += sun_color * environment_primary_intensity() *
+             pow(n_dot_h, mix(12.0, 20.0, wetness)) * mix(0.045, 0.09, wetness);
   } else if (material_id == 0 && color_role == k_humanoid_role_skin) {
 
     color += base * vec3(0.16, 0.05, 0.02) * shadow_side * readable_ambient;
@@ -136,7 +140,7 @@ vec3 shade_readable_character(vec3 base,
 
     float cloth_sheen = pow(n_dot_h, 6.0);
     color +=
-        base * mix(sky_color, sun_color, 0.45) * cloth_sheen * mix(0.025, 0.045, zoom);
+        base * mix(sky_color, sun_color, 0.30) * cloth_sheen * mix(0.018, 0.028, zoom);
   } else if (wetness > 0.0) {
 
     bool coat = false;

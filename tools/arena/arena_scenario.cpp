@@ -961,6 +961,7 @@ struct ArenaScenarioRunner::Impl {
   ArenaScenarioDefinition scenario;
   QVector3D world_origin;
   QHash<QString, std::vector<Engine::Core::EntityID>> groups;
+  QHash<QString, QVector3D> formed_destinations;
   QHash<Engine::Core::EntityID, QString> entity_groups;
   std::vector<StepRuntime> steps;
   QHash<Engine::Core::EntityID, CommandResponse> responses;
@@ -1133,6 +1134,34 @@ struct ArenaScenarioRunner::Impl {
       , steps(definition.steps.size())
       , duration_limit(definition.duration_seconds) {
     report.scenario_id = definition.id;
+  }
+
+  // Where the scenario last ordered a group to go. An arrival expectation
+  // without an explicit position checks against this, not the world origin.
+  [[nodiscard]] auto ordered_destination(const QString& group) const -> QVector3D {
+    QVector3D destination;
+    bool formed = false;
+    for (const auto& step : scenario.steps) {
+      bool const moves_group =
+          step.group == group && (step.command == ScenarioCommandKind::Move ||
+                                  step.command == ScenarioCommandKind::FormationMove ||
+                                  step.command == ScenarioCommandKind::Run ||
+                                  step.command == ScenarioCommandKind::AttackMove);
+      if (moves_group) {
+        destination = step.destination;
+        formed = false;
+      } else if (step.command == ScenarioCommandKind::FormArmy &&
+                 (step.formation.groups.contains(group) ||
+                  (step.formation.groups.isEmpty() && step.group == group))) {
+        destination = step.formation.anchor;
+        formed = true;
+      }
+    }
+    auto const planned = formed_destinations.constFind(group);
+    if (formed && planned != formed_destinations.cend()) {
+      return planned.value();
+    }
+    return destination;
   }
 
   [[nodiscard]] auto
@@ -1533,34 +1562,22 @@ struct ArenaScenarioRunner::Impl {
       return;
     }
 
-    for (std::size_t i = 0; i < members.size(); ++i) {
-      auto* entity = world.get_entity(members[i]);
-      if (entity == nullptr) {
-        continue;
-      }
-      if (auto* transform = entity->get_component<Engine::Core::TransformComponent>()) {
-        if (i < result.facing_angles.size()) {
-          transform->desired_yaw = result.facing_angles[i];
-          transform->has_desired_yaw = true;
+    Game::Systems::CommandService::march_into_formation(world, members, result);
+
+    for (auto const& name : sources) {
+      QVector3D sum;
+      int count = 0;
+      for (std::size_t i = 0; i < members.size(); ++i) {
+        if (ids(name).end() !=
+            std::find(ids(name).begin(), ids(name).end(), members[i])) {
+          sum += result.positions[i] - world_origin;
+          ++count;
         }
       }
-      auto* formation_mode =
-          entity->get_component<Engine::Core::FormationModeComponent>();
-      if (formation_mode != nullptr && i < result.stable_slot_ids.size()) {
-        formation_mode->formation_id = result.group_id;
-        formation_mode->stable_slot_id = result.stable_slot_ids[i];
-        formation_mode->stable_rank = result.stable_ranks[i];
-        formation_mode->stable_file = result.stable_files[i];
-        formation_mode->stable_slot_x = result.positions[i].x();
-        formation_mode->stable_slot_z = result.positions[i].z();
+      if (count > 0) {
+        formed_destinations.insert(name, sum / static_cast<float>(count));
       }
     }
-
-    Game::Systems::CommandService::MoveOptions options;
-    options.kind = Game::Systems::MoveOrderKind::FormationMove;
-    options.preserve_formation_mode = result.used_army_formation;
-    Game::Systems::CommandService::move_units(
-        world, members, result.positions, options);
 
     for (auto const& name : sources) {
       arm_response(name, command_name(step.command));
@@ -5799,13 +5816,22 @@ struct ArenaScenarioRunner::Impl {
         }
         float const tolerance =
             expectation.distance > 0.0F ? expectation.distance : 2.5F;
-        QVector3D const destination = world_origin + expectation.position;
+        QVector3D const destination =
+            world_origin + (expectation.position.isNull()
+                                ? ordered_destination(expectation.group)
+                                : expectation.position);
         if (living == 0 ||
             horizontal_distance(centroid / static_cast<float>(std::max(living, 1)),
                                 destination) > tolerance) {
+          QVector3D const reached = centroid / static_cast<float>(std::max(living, 1));
           add_issue(QStringLiteral("group_missed_destination"),
-                    QStringLiteral("%1 did not reach its scenario destination")
-                        .arg(expectation.group));
+                    QStringLiteral("%1 did not reach its scenario destination: "
+                                   "centroid (%2, %3), destination (%4, %5)")
+                        .arg(expectation.group)
+                        .arg(reached.x(), 0, 'f', 1)
+                        .arg(reached.z(), 0, 'f', 1)
+                        .arg(destination.x(), 0, 'f', 1)
+                        .arg(destination.z(), 0, 'f', 1));
         }
         break;
       }

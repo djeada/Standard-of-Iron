@@ -66,7 +66,7 @@ void main() {
     float lobe = 0.88 + 0.17 * body_noise + 0.08 * curl_noise;
     pos.xz = dir * dome * lobe;
 
-    pos.y = height_t * 0.78 * (0.86 + 0.24 * body_noise);
+    pos.y = height_t * 0.52 * (0.86 + 0.24 * body_noise);
     pos.y += 0.03 * sin(u_time * 0.9 + angle * 2.0);
 
     float mound = smoothstep(0.0, 0.30, height_t) *

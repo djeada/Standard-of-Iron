@@ -23,14 +23,18 @@ void FormationMoveDispatchSystem::update(Engine::Core::World* world, float) {
       if (slot.occupant == 0U || slot.status == Game::Formation::SlotStatus::Blocked) {
         continue;
       }
+      auto const target = Game::Formation::ArmyFormationRuntime::morph_target(
+          *formation, slot.occupant);
       intents.push_back({.unit_id = slot.occupant,
-                         .target = slot.world_position,
+                         .target = target.value_or(slot.world_position),
                          .facing_angle = slot.facing});
     }
     CommandService::move_units(
         *world,
         intents,
-        {.kind = MoveOrderKind::FormationMove, .preserve_formation_mode = true});
+        {.kind = MoveOrderKind::FormationMove,
+         .preserve_formation_mode = true,
+         .follow_formation_slots = formation->maintains_formation()});
   }
 }
 

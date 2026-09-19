@@ -5,12 +5,14 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <optional>
 #include <unordered_map>
 
 #include "../core/component_core.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../systems/nav_grid.h"
+#include "../systems/pathfinding.h"
 #include "army_formation_registry.h"
 #include "formation_doctrine.h"
 
@@ -158,10 +160,13 @@ auto ArmyFormationService::placements_for(
   }
 
   auto plan = ArmyFormationPlanner::plan(members, request);
+  if (!plan.valid && request.intent != ArmyFormationIntent::FactionDefault) {
+    ArmyFormationRequest fallback = request;
+    fallback.intent = ArmyFormationIntent::FactionDefault;
+    plan = ArmyFormationPlanner::plan(members, fallback);
+  }
   if (!plan.valid) {
-    plan = ArmyFormationPlanner::place(
-        ArmyFormationPlanner::scatter_layout(members, std::max(0.5F, request.spacing)),
-        request);
+    return placements;
   }
 
   std::unordered_map<EntityID, std::size_t> index_of;
@@ -210,6 +215,7 @@ auto ArmyFormationService::build(Engine::Core::World& world,
   }
 
   ArmyFormationRequest effective = request;
+  effective.assign_nearest = true;
   if (effective.group_id == k_invalid_group) {
     effective.group_id =
         ArmyFormationRegistry::for_world(world).group_of(request.members.front());
@@ -222,12 +228,12 @@ auto ArmyFormationService::build(Engine::Core::World& world,
   result.frontage = plan.frontage;
   result.depth = plan.depth;
   result.blocked_count = plan.blocked_count;
+  result.movement_policy = plan.movement_policy;
+  result.compressed = plan.narrowed;
 
   if (!plan.valid) {
+
     result.rejection_reason = plan.rejection_reason;
-    result.positions = spread(static_cast<int>(member_count),
-                              request.anchor,
-                              std::max(0.5F, request.spacing));
     return result;
   }
 
@@ -267,6 +273,10 @@ auto ArmyFormationService::build(Engine::Core::World& world,
   auto& registry = ArmyFormationRegistry::for_world(world);
   FormationGroupID group_id = effective.group_id;
   auto* existing = registry.find(group_id);
+  std::optional<float> marching_facing;
+  if (existing != nullptr && existing->has_member(request.members.front())) {
+    marching_facing = existing->facing;
+  }
   if (existing == nullptr) {
     group_id = registry.create_group(plan.doctrine, plan.intent, request.members);
   } else {
@@ -278,6 +288,9 @@ auto ArmyFormationService::build(Engine::Core::World& world,
   auto* formation = registry.find(group_id);
   if (formation != nullptr) {
     formation->options = request.options;
+    formation->options.movement_policy = plan.movement_policy;
+    formation->requested_frontage = request.frontage;
+    formation->reference_slots.clear();
   }
   registry.apply_plan(group_id, plan);
 
@@ -285,7 +298,8 @@ auto ArmyFormationService::build(Engine::Core::World& world,
   if (committed != nullptr) {
     ArmyFormationRuntime::sync_membership_components(world, *committed);
   }
-  ArmyFormationRuntime::begin_move(world, group_id, plan.anchor, plan.facing);
+  ArmyFormationRuntime::begin_move(
+      world, group_id, plan.anchor, plan.facing, marching_facing, true);
   result.group_id = group_id;
   return result;
 }

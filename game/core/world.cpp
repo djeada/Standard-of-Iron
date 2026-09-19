@@ -1192,6 +1192,15 @@ World::World(bool presentation_enabled, bool render_snapshot)
 
 World::~World() = default;
 
+void World::shutdown_systems() {
+  while (!m_systems.empty()) {
+    m_systems.pop_back();
+    if (!m_system_phases.empty()) {
+      m_system_phases.pop_back();
+    }
+  }
+}
+
 auto World::resolve(EntityID entity_id) const -> Entity* {
   if (!m_registry.is_alive(entity_id)) {
     return nullptr;

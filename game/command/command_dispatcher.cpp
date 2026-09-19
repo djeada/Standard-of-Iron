@@ -10,6 +10,7 @@
 #include "../core/component_economy.h"
 #include "../core/world.h"
 #include "../formation/army_formation_planner.h"
+#include "../formation/army_formation_registry.h"
 #include "../formation/army_formation_service.h"
 #include "../map/terrain_service.h"
 #include "../session/session_context.h"
@@ -66,6 +67,8 @@ void apply_move(World& world, const Move& move) {
   Game::Systems::CommandService::MoveOptions options;
   options.kind = move.kind;
   options.preserve_formation_mode = move.preserve_formation_mode;
+  options.prefer_own_routes = move.kind == Game::Systems::MoveOrderKind::PlayerMove ||
+                              move.kind == Game::Systems::MoveOrderKind::FormationMove;
   Game::Systems::CommandService::move_units(world, intents, options);
 }
 
@@ -351,44 +354,16 @@ void apply_deploy_formation(World& world, const DeployFormation& order) {
   request.spacing = order.spacing;
 
   auto const result = Game::Formation::ArmyFormationService::commit(world, request);
-
-  for (std::size_t i = 0; i < order.units.size(); ++i) {
-    auto* entity = world.get_entity(order.units[i]);
-    if (entity == nullptr) {
-      continue;
-    }
-    if (auto* transform = entity->get_component<Engine::Core::TransformComponent>()) {
-      transform->desired_yaw =
-          i < result.facing_angles.size() ? result.facing_angles[i] : 0.0F;
-      transform->has_desired_yaw = true;
-    }
-
-    if (auto* unit = world.try_get<Engine::Core::UnitComponent>(order.units[i]);
-        unit != nullptr && i < result.unit_files.size()) {
-      unit->formation_files_override = result.unit_files[i];
-    }
-    auto* formation_mode =
-        entity->get_component<Engine::Core::FormationModeComponent>();
-    if (formation_mode != nullptr && i < result.stable_slot_ids.size()) {
-      formation_mode->formation_id = result.group_id;
-      formation_mode->stable_slot_id = result.stable_slot_ids[i];
-      formation_mode->stable_rank = result.stable_ranks[i];
-      formation_mode->stable_file = result.stable_files[i];
-      formation_mode->stable_slot_x = result.positions[i].x();
-      formation_mode->stable_slot_z = result.positions[i].z();
-    }
-    Game::Systems::OrderService::clear_patrol(entity);
-  }
-
-  if (result.positions.size() != order.units.size()) {
+  if (!result.valid) {
     return;
   }
-  Move march;
-  march.units = order.units;
-  march.targets = result.positions;
-  march.kind = Game::Systems::MoveOrderKind::FormationMove;
-  march.preserve_formation_mode = result.used_army_formation;
-  apply_move(world, march);
+
+  for (auto const id : order.units) {
+    if (auto* entity = world.get_entity(id)) {
+      Game::Systems::OrderService::clear_patrol(entity);
+    }
+  }
+  Game::Systems::CommandService::march_into_formation(world, order.units, result);
 }
 
 void apply_release_formation(World& world, const ReleaseFormation& order) {

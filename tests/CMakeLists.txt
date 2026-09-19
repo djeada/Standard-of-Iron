@@ -178,6 +178,7 @@ add_executable(
     formation/formation_drag_shape_test.cpp
     formation/formation_squad_extent_probe_test.cpp
     formation/army_formation_planner_test.cpp
+    formation/army_formation_integrity_test.cpp
     formation/formation_planner_cache_test.cpp
     formation/formation_cohesion_test.cpp
     formation/formation_phase_vocabulary_test.cpp
@@ -227,6 +228,8 @@ add_executable(
     headless/tight_gap_navigation_test.cpp
     headless/stuck_recovery_test.cpp
     headless/movement_pace_test.cpp
+    headless/army_formation_march_test.cpp
+    headless/formation_ux_lab_test.cpp
     headless/hill_traversal_test.cpp
     headless/playable_ground_test.cpp
     headless/wildlife_fight_motion_test.cpp

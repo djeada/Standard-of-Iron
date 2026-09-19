@@ -132,7 +132,11 @@ void render_interaction_targeting(
          .hovered = marker.hovered,
          .action = glyph_for_interaction(marker)});
   }
-  Render::GL::render_interaction_target_markers(renderer, resources, visuals);
+  Render::GL::render_interaction_target_markers(
+      renderer,
+      resources,
+      visuals,
+      Game::Accessibility::MotionSettings::reduced_motion());
 }
 
 constexpr float k_order_marker_base_radius = 0.9F;

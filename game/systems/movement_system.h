@@ -37,6 +37,9 @@ private:
   static auto retarget_unit(Engine::Core::World& world,
                             Engine::Core::EntityID entity_id,
                             const QVector3D& goal) -> bool;
+  static void follow_formation_slot(Engine::Core::World& world,
+                                    const MoveIntent& intent,
+                                    const MoveOptions& options);
   static void assign_direct_target(Engine::Core::MovementComponent& movement,
                                    const QVector3D& target);
   static auto

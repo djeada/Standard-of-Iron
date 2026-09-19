@@ -60,6 +60,11 @@ void WaterPipeline::cache_water_uniforms() {
     return;
   }
 
+  m_water_uniforms.soil_color = m_water_shader->optional_uniform_handle("u_soil_color");
+  m_water_uniforms.moisture =
+      m_water_shader->optional_uniform_handle("u_moisture_level");
+  m_water_uniforms.snow_coverage =
+      m_water_shader->optional_uniform_handle("u_snow_coverage");
   m_water_uniforms.model = m_water_shader->uniform_handle("model");
   m_water_uniforms.view = m_water_shader->uniform_handle("view");
   m_water_uniforms.projection = m_water_shader->uniform_handle("projection");

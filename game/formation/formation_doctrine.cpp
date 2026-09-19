@@ -158,7 +158,7 @@ auto column_template(ArmyFormationIntent intent,
   tmpl.unit_files_aspect = 0.6F;
   tmpl.max_depth = 70.0F;
   tmpl.max_frontage = 32.0F;
-  tmpl.depth_scale = 2.4F;
+  tmpl.depth_scale = 1.0F;
   tmpl.spacing_scale = spacing_scale;
   tmpl.default_movement = MovementPolicy::MaintainFormation;
 

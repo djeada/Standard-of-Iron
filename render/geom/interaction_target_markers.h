@@ -20,6 +20,7 @@ struct InteractionTargetMarkerVisual {
 void render_interaction_target_markers(
     Renderer* renderer,
     ResourceManager* resources,
-    std::span<const InteractionTargetMarkerVisual> markers);
+    std::span<const InteractionTargetMarkerVisual> markers,
+    bool reduced_motion = false);
 
 } // namespace Render::GL

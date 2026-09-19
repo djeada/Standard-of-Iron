@@ -184,10 +184,13 @@ auto CommandService::resolve_group_slots(
     }
     if (one_existing_group) {
       request.group_id = group_id;
-      request.preserve_previous_slots = true;
+      request.preserve_previous_slots = false;
     }
 
     auto const result = Game::Formation::ArmyFormationService::preview(world, request);
+    if (!result.valid) {
+      return resolve_group_slots(world, units, center, true);
+    }
     if (result.positions.size() != units.size() ||
         result.facing_angles.size() != units.size() ||
         result.stable_slot_ids.size() != units.size() ||
@@ -368,6 +371,69 @@ auto CommandService::plan_ground_move(Engine::Core::World& world,
   return plan;
 }
 
+// After a formation is committed: every troop learns its slot and facing, and
+// either the runtime morphs the group into the shape (the troops follow their
+// moving slots) or each troop routes to its final slot with synchronised
+// arrival. The player's deploy order and the Arena share this path.
+void CommandService::march_into_formation(
+    Engine::Core::World& world,
+    const std::vector<Engine::Core::EntityID>& units,
+    const Game::Formation::ArmyFormationResult& result) {
+  for (std::size_t i = 0; i < units.size(); ++i) {
+    auto* entity = world.get_entity(units[i]);
+    if (entity == nullptr) {
+      continue;
+    }
+    if (auto* transform = entity->get_component<Engine::Core::TransformComponent>()) {
+      transform->desired_yaw =
+          i < result.facing_angles.size() ? result.facing_angles[i] : 0.0F;
+      transform->has_desired_yaw = true;
+    }
+    if (auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+        unit != nullptr && i < result.unit_files.size()) {
+      unit->formation_files_override = result.unit_files[i];
+    }
+    auto* formation_mode =
+        entity->get_component<Engine::Core::FormationModeComponent>();
+    if (formation_mode != nullptr && i < result.stable_slot_ids.size()) {
+      formation_mode->formation_id = result.group_id;
+      formation_mode->stable_slot_id = result.stable_slot_ids[i];
+      formation_mode->stable_rank = result.stable_ranks[i];
+      formation_mode->stable_file = result.stable_files[i];
+      formation_mode->stable_slot_x = result.positions[i].x();
+      formation_mode->stable_slot_z = result.positions[i].z();
+    }
+  }
+  if (result.positions.size() != units.size()) {
+    return;
+  }
+  const auto* group =
+      Game::Formation::ArmyFormationRegistry::for_world(world).find(result.group_id);
+  if (group != nullptr && group->morph.active) {
+    for (auto const id : units) {
+      if (auto* movement = world.try_get<Engine::Core::MovementComponent>(id)) {
+        movement->begin_order();
+      }
+    }
+    return;
+  }
+  std::vector<MoveIntent> intents;
+  intents.reserve(units.size());
+  for (std::size_t i = 0; i < units.size(); ++i) {
+    intents.push_back(
+        {.unit_id = units[i],
+         .target = result.positions[i],
+         .facing_angle = i < result.facing_angles.size()
+                             ? std::optional<float>(result.facing_angles[i])
+                             : std::nullopt});
+  }
+  move_units(world,
+             intents,
+             {.kind = MoveOrderKind::FormationMove,
+              .preserve_formation_mode = result.used_army_formation,
+              .synchronize_arrival = true});
+}
+
 void CommandService::issue_ground_move(Engine::Core::World& world,
                                        const std::vector<Engine::Core::EntityID>& units,
                                        const GroundMovePlan& plan) {
@@ -387,6 +453,7 @@ void CommandService::issue_ground_move(Engine::Core::World& world,
   MoveOptions opts;
   opts.kind = MoveOrderKind::FormationMove;
   opts.preserve_formation_mode = plan.preserve_formation_mode;
+  opts.prefer_own_routes = true;
   move_units(world, intents, opts);
 }
 

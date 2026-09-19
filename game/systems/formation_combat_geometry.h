@@ -109,6 +109,16 @@ resolve_definition(const Engine::Core::UnitComponent& unit,
 [[nodiscard]] auto
 resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout;
 
+struct LayoutReach {
+  float half_x{0.0F};
+  float half_z{0.0F};
+  float body_radius{0.5F};
+  int files{1};
+};
+
+[[nodiscard]] auto layout_reach_for_files(const Engine::Core::Entity& entity,
+                                          int files) -> LayoutReach;
+
 [[nodiscard]] auto soldier_spatial_anchors(const Engine::Core::Entity& entity)
     -> std::vector<SoldierSpatialAnchor>;
 

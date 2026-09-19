@@ -491,8 +491,13 @@ protected:
     EXPECT_GE(record.full_pace_tick, 0) << record.label << " never reached pace";
     EXPECT_LE(record.full_pace_tick - record.order_tick, full_pace_ticks)
         << record.label << " took too long to reach pace";
-    EXPECT_LE(record.below_full_share(), below_full_share)
-        << record.label << " spent too long below pace";
+    // A hop shorter than the acceleration ramp is all ramp; the share of time
+    // below pace only means something on a march.
+    constexpr int k_min_march_ticks = 30;
+    if (record.under_way_ticks >= k_min_march_ticks) {
+      EXPECT_LE(record.below_full_share(), below_full_share)
+          << record.label << " spent too long below pace";
+    }
     EXPECT_LE(record.longest_crawl_run, crawl_ticks)
         << record.label << " crawled for too long";
   }

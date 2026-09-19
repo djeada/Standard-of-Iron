@@ -143,6 +143,17 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
         PolygonOffsetScope const poly(-1.0F, -1.0F);
         for (std::size_t j = i; j < batch_end; ++j) {
           const auto& single = std::get<TerrainFeatureCmdIndex>(queue.get_sorted(j));
+          const auto& uniforms = m_water_pipeline->m_water_uniforms;
+          if (uniforms.soil_color != Shader::InvalidUniform) {
+            water_shader->set_uniform(uniforms.soil_color, single.biome_soil_color);
+          }
+          if (uniforms.moisture != Shader::InvalidUniform) {
+            water_shader->set_uniform(uniforms.moisture, single.biome_moisture);
+          }
+          if (uniforms.snow_coverage != Shader::InvalidUniform) {
+            water_shader->set_uniform(uniforms.snow_coverage,
+                                      single.biome_snow_coverage);
+          }
           if (m_water_pipeline->m_water_uniforms.surface_kind !=
               Shader::InvalidUniform) {
             water_shader->set_uniform(m_water_pipeline->m_water_uniforms.surface_kind,

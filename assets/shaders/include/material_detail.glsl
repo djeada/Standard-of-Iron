@@ -76,19 +76,24 @@ vec3 soi_wood_variation(
 }
 
 vec3 soi_metal_variation(vec3 base_color, vec2 uv, vec3 normal, vec3 view_dir) {
-  float metal_noise = soi_detail_fine(uv * 9.0) * 0.018;
+  float metal_noise = (soi_detail_fine(uv * 9.0) - 0.5) * 0.018;
   float view_angle = abs(dot(normal, view_dir));
   float fresnel = pow(1.0 - view_angle, 2.0) * 0.10;
-  return base_color + vec3(metal_noise + fresnel);
+  vec3 metal_tint = mix(base_color, sqrt(max(base_color, vec3(0.0))), 0.35);
+  return base_color + metal_tint * (metal_noise + fresnel);
 }
 
 vec3 soi_cloth_variation(
     vec3 base_color, vec2 uv, vec3 normal, vec3 view_dir, vec3 world_pos) {
-  float weave_pattern = sin(world_pos.x * 55.0) * sin(world_pos.z * 55.0) * 0.025;
+  float weave_visibility =
+      1.0 -
+      smoothstep(0.25, 0.75, max(fwidth(world_pos.x), fwidth(world_pos.z)) * 55.0);
+  float weave_pattern =
+      sin(world_pos.x * 55.0) * sin(world_pos.z * 55.0) * 0.018 * weave_visibility;
   float cloth_noise = soi_detail_mid(uv * 2.5) * 0.10 - 0.05;
   float view_angle = abs(dot(normal, view_dir));
-  float sheen = pow(1.0 - view_angle, 3.0) * 0.15;
-  return base_color * (1.0 + cloth_noise + weave_pattern) + vec3(sheen);
+  float sheen = pow(1.0 - view_angle, 3.0) * 0.045;
+  return base_color * (1.0 + cloth_noise + weave_pattern + sheen);
 }
 
 vec3 soi_leather_variation(vec3 base_color, vec2 uv) {

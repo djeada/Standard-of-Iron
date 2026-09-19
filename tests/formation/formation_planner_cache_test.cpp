@@ -81,8 +81,8 @@ TEST_F(FormationPlannerCacheTest, BuildLayoutThenPlaceMatchesASinglePlanCall) {
   auto const members = ArmyFormationPlanner::collect_members(world, ids);
 
   auto const direct = ArmyFormationPlanner::plan(members, request);
-  auto const split = ArmyFormationPlanner::place(
-      ArmyFormationPlanner::build_layout(members, request), request);
+  auto const split = ArmyFormationPlanner::fit_to_ground(
+      ArmyFormationPlanner::build_layout(members, request), members, request, nullptr);
 
   ASSERT_TRUE(direct.valid);
   ASSERT_TRUE(split.valid);

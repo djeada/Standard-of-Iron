@@ -11,6 +11,9 @@ uniform float time;
 uniform float u_segment_visibility;
 uniform int u_water_surface_kind;
 uniform vec3 u_camera_pos;
+uniform vec3 u_soil_color;
+uniform float u_moisture_level;
+uniform float u_snow_coverage;
 
 const float PI = 3.14159265359;
 
@@ -128,9 +131,17 @@ void main() {
   float ndv = max(dot(normal, view_dir), 0.0);
   float ndl = max(dot(normal, light_dir), 0.0);
 
-  const vec3 shallow_water = vec3(0.095, 0.255, 0.240);
-  const vec3 deep_water = vec3(0.062, 0.205, 0.220);
-  const vec3 suspended_silt = vec3(0.165, 0.250, 0.185);
+  // Use the same soil/climate inputs as the banks. Meltwater stays clearer;
+  // wetter lowlands and rain carry more of the surrounding soil colour.
+  float snow = saturate(u_snow_coverage);
+  float sediment =
+      saturate(0.18 + u_moisture_level * 0.32 + environment_wetness() * 0.25) *
+      (1.0 - snow * 0.75);
+  vec3 suspended_silt =
+      mix(vec3(0.165, 0.250, 0.185), max(u_soil_color, vec3(0.025)) * 0.58, 0.65);
+  vec3 shallow_water = mix(vec3(0.095, 0.255, 0.240), vec3(0.115, 0.285, 0.310), snow);
+  shallow_water = mix(shallow_water, suspended_silt, sediment * 0.45);
+  vec3 deep_water = mix(vec3(0.062, 0.205, 0.220), vec3(0.055, 0.180, 0.235), snow);
 
   float shore_distance =
       u_water_surface_kind == 1 ? tex_coord.y : min(tex_coord.x, 1.0 - tex_coord.x);
@@ -155,13 +166,13 @@ void main() {
 
   float roughness = mix(0.34, 0.46, saturate(length(gradient) * 1.5));
   float specular = ggx_specular(normal, view_dir, light_dir, roughness, 0.020);
-  color += sun_light * environment_exposure() * min(specular, 0.42) * 0.15;
+  color += sun_light * environment_exposure() * min(specular, 0.42) * 0.19;
 
   float river_energy = 1.0 - lake;
   float shore_band = 1.0 - smoothstep(0.006, 0.060, shore_distance);
   float broken_edge = smoothstep(
       0.40, 0.78, fbm(world_pos.xz * 0.72 + vec2(time * 0.12, -time * 0.08)));
-  float shore_foam = shore_band * broken_edge * 0.055;
+  float shore_foam = shore_band * broken_edge * mix(0.065, 0.11, river_energy);
   float crest = smoothstep(0.64, 1.18, abs(laplacian) * 0.006 + length(gradient));
   crest *=
       smoothstep(0.55, 0.86, fbm(world_pos.xz * 1.15 - vec2(time * 0.18, time * 0.08)));

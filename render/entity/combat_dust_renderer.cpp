@@ -9,6 +9,7 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/render_visibility_rules.h"
+#include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_rules.h"
@@ -313,6 +314,29 @@ struct GroundDustCluster {
   int cell_z{0};
 };
 
+struct GroundDustAppearance {
+  QVector3D color{k_dust_color_r, k_dust_color_g, k_dust_color_b};
+  float intensity_scale{1.0F};
+};
+
+auto ground_dust_appearance(const Renderer& renderer) -> GroundDustAppearance {
+  GroundDustAppearance result;
+  float wetness = renderer.environment_lighting().wetness;
+  const auto* terrain = renderer.world_view().terrain();
+  if (terrain != nullptr) {
+    const auto& biome = terrain->biome_settings();
+    const auto surface = Game::Map::make_surface_profile(biome);
+    const auto climate = Game::Map::make_climate_profile(biome);
+    result.color = surface.soil_color * 0.72F + surface.grass_dry * 0.28F;
+    // Airborne fine soil is a little lighter than the ground it came from.
+    result.color = result.color * 0.85F + QVector3D(0.12F, 0.11F, 0.09F);
+    wetness = std::max(wetness, climate.moisture_level * 0.65F);
+    result.intensity_scale *= 1.0F - std::clamp(climate.snow_coverage, 0.0F, 1.0F);
+  }
+  result.intensity_scale *= 1.0F - 0.88F * std::clamp(wetness, 0.0F, 1.0F);
+  return result;
+}
+
 auto dust_cell_of(float world_value) -> int {
   return static_cast<int>(
       std::floor(world_value / Render::CombatDustDefaults::k_cluster_cell));
@@ -343,6 +367,8 @@ void emit_ground_dust(Renderer* renderer,
                       std::vector<GroundDustCluster>& clusters,
                       float animation_time) {
   namespace Defaults = Render::CombatDustDefaults;
+  const auto appearance = ground_dust_appearance(*renderer);
+  const auto* terrain = renderer->world_view().terrain();
 
   std::sort(clusters.begin(),
             clusters.end(),
@@ -367,14 +393,15 @@ void emit_ground_dust(Renderer* renderer,
         std::min(Defaults::k_cluster_intensity_max,
                  Defaults::k_intensity + Defaults::k_cluster_intensity_growth * crowd);
 
-    QVector3D const position(cluster.sum_x / cluster.weight,
-                             k_dust_y_offset,
-                             cluster.sum_z / cluster.weight);
-    QVector3D const color(k_dust_color_r, k_dust_color_g, k_dust_color_b);
+    const float world_x = cluster.sum_x / cluster.weight;
+    const float world_z = cluster.sum_z / cluster.weight;
+    const float ground_y =
+        terrain != nullptr ? terrain->resolve_surface_world_y(world_x, world_z) : 0.0F;
+    QVector3D const position(world_x, ground_y + k_dust_y_offset, world_z);
     renderer->combat_dust(position,
-                          color,
+                          appearance.color,
                           radius,
-                          intensity,
+                          intensity * appearance.intensity_scale,
                           animation_time +
                               dust_cell_phase(cluster.cell_x, cluster.cell_z));
   }
@@ -388,6 +415,7 @@ void render_combat_dust(Renderer* renderer,
   }
 
   float const animation_time = renderer->get_animation_time();
+  const auto dust_appearance = ground_dust_appearance(*renderer);
   auto& visibility = Render::GL::CameraVisibility::instance();
   auto const& world_view = renderer->world_view();
   auto fog_snapshot =
@@ -631,11 +659,13 @@ void render_combat_dust(Renderer* renderer,
       if (contact_fade <= 0.0F) {
         continue;
       }
-      QVector3D const grit_tint = color * 0.30F + QVector3D(0.60F, 0.55F, 0.45F);
+      QVector3D const grit_tint = dust_appearance.color;
       renderer->combat_dust(QVector3D(contact.x, contact.y - 0.10F, contact.z),
                             grit_tint,
-                            0.46F + 0.18F * contact.intensity,
-                            0.42F * contact.intensity * contact_fade,
+                            (0.36F + 0.18F * contact.intensity) *
+                                (1.0F + 0.35F * (1.0F - contact_fade)),
+                            0.42F * contact.intensity * contact_fade * contact_fade *
+                                dust_appearance.intensity_scale,
                             animation_time + contact.x * 0.19F + contact.z * 0.13F);
     }
   }

@@ -30,9 +30,9 @@ uniform float u_ambient_boost, u_rock_detail_strength;
 const float k_soi_terrain_detail_damping = 0.58;
 const float k_soi_terrain_relief_damping = 0.68;
 const float k_soi_terrain_hue_scale = 0.042;
-const float k_soi_terrain_hue_amount = 0.24;
+const float k_soi_terrain_hue_amount = 0.32;
 const float k_soi_terrain_earth_scale = 0.016;
-const float k_soi_terrain_earth_amount = 0.36;
+const float k_soi_terrain_earth_amount = 0.44;
 const vec3 k_soi_terrain_shade_moss = vec3(0.74, 0.86, 0.92);
 const float k_soi_terrain_shade_amount = 0.48;
 const float k_soi_terrain_saturation = 0.90;
@@ -1020,9 +1020,13 @@ void main() {
 #else
   float earth_field = 0.0;
 #endif
-  float worn_ground = smoothstep(0.16, 0.52, earth_field) * (1.0 - rock_mask) *
-                      (1.0 - u_snow_coverage) * (1.0 - slope * 1.5);
-  vec3 worn_color = mix(u_grass_dry, u_soil_color, 0.42) * 0.92;
+  // Broad clearings remain legible at command-camera distances. Keep wet
+  // hollows greener and avoid extrapolating the blend on steep slopes.
+  float clearing_dryness = 1.0 - clamp(u_moisture_level, 0.0, 1.0);
+  float worn_ground = smoothstep(0.22, 0.56, earth_field) * (1.0 - rock_mask) *
+                      (1.0 - u_snow_coverage) * clamp(1.0 - slope * 1.5, 0.0, 1.0);
+  worn_ground *= mix(0.60, 1.0, clearing_dryness) * (1.0 - terrain_cavity * 0.25);
+  vec3 worn_color = mix(u_grass_dry, u_soil_color, 0.48) * 0.94;
   terrain_color =
       mix(terrain_color, worn_color, worn_ground * k_soi_terrain_earth_amount);
   vec3 sunward_landform_tint = vec3(1.055, 1.018, 0.950);

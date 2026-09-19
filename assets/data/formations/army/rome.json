@@ -257,7 +257,7 @@
     },
     "column": {
       "frontage_scale": 0.35,
-      "depth_scale": 2.4,
+      "depth_scale": 1.0,
       "spacing_scale": 0.92,
       "reserve_rows": 0,
       "default_movement": "maintain_formation",

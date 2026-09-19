@@ -150,7 +150,7 @@ void main() {
                      (deposit_field - 0.5) * 0.055;
   float shore_t = saturate(tex_coord.x + edge_shift);
 
-  float moisture = saturate(u_moisture_level);
+  float moisture = max(saturate(u_moisture_level), environment_wetness());
   float rock_exposure = saturate(u_rock_exposure);
   float snow_coverage = saturate(u_snow_coverage);
 
@@ -171,6 +171,7 @@ void main() {
   stone_weight /= sediment_weight_sum;
 
   float wetness = 1.0 - smoothstep(0.045, mix(0.28, 0.40, mud_weight), shore_t);
+  wetness = max(wetness, environment_wetness() * 0.55);
   float contact = 1.0 - smoothstep(0.004, 0.070, shore_t);
   float damp_band =
       smoothstep(0.02, 0.12, shore_t) * (1.0 - smoothstep(0.34, 0.62, shore_t));

@@ -431,7 +431,7 @@ TEST_F(FormationTerrainTest, TheScatterFallbackNeverSeatsTwoMenOnOneCell) {
       Game::Formation::ArmyFormationPlanner::scatter_layout(members, request.spacing),
       request);
 
-  ASSERT_GT(plan.adjusted_count, 0)
+  ASSERT_GT(plan.adjusted_count + plan.blocked_count, 0)
       << "the fixture must force at least one slot off its ideal ground";
 
   std::vector<QVector3D> seated;

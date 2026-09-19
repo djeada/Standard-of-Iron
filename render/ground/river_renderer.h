@@ -21,7 +21,8 @@ public:
 
   void configure(const std::vector<Game::Map::RiverSegment>& river_segments,
                  const std::vector<Game::Map::Lake>& lakes,
-                 const Game::Map::TerrainHeightMap& height_map);
+                 const Game::Map::TerrainHeightMap& height_map,
+                 const Game::Map::BiomeSettings& biome_settings);
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
@@ -34,6 +35,7 @@ private:
   std::vector<Game::Map::Lake> m_lakes;
   float m_tile_size = 1.0F;
   const Game::Map::TerrainHeightMap* m_height_map = nullptr;
+  Game::Map::BiomeSettings m_biome_settings;
   struct SurfaceMesh {
     std::unique_ptr<Mesh> mesh;
     WaterSurfaceKind kind = WaterSurfaceKind::River;

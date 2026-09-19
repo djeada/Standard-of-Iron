@@ -654,6 +654,48 @@ void build_layout_into_cache(const Engine::Core::Entity& entity,
 
 } // namespace
 
+auto layout_reach_for_files(const Engine::Core::Entity& entity,
+                            int files) -> LayoutReach {
+  LayoutReach reach;
+  auto const* unit_ptr = entity.get_component<Engine::Core::UnitComponent>();
+  auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
+  if (unit_ptr == nullptr) {
+    return reach;
+  }
+  float const scale =
+      transform != nullptr ? std::max(transform->scale.x, transform->scale.z) : 1.0F;
+  reach.body_radius = std::max(0.05F, scale * 0.5F);
+  if (entity.has_component<Engine::Core::BuildingComponent>() ||
+      entity.has_component<Engine::Core::ElephantComponent>()) {
+    return reach;
+  }
+  Engine::Core::UnitComponent unit = *unit_ptr;
+  unit.formation_files_override = std::max(0, files);
+  auto const definition = resolve_definition(unit);
+  int const count = definition.total_count;
+  int const cols = std::max(1, definition.max_per_row);
+  int const rows = std::max(1, (count + cols - 1) / cols);
+  auto const seed = formation_seed(entity);
+  for (int idx = 0; idx < count; ++idx) {
+    auto const slot = Game::Formation::rank_slot_for(idx, count, cols);
+    Game::Formation::UnitLayoutQuery query;
+    query.layout = definition.layout;
+    query.index = idx;
+    query.row = slot.row;
+    query.col = slot.col;
+    query.rows = rows;
+    query.cols = cols;
+    query.count = count;
+    query.spacing = definition.spacing;
+    query.seed = seed;
+    auto const offset = Game::Formation::UnitLayoutSystem::instance().offset(query);
+    reach.half_x = std::max(reach.half_x, std::abs(offset.offset_x));
+    reach.half_z = std::max(reach.half_z, std::abs(offset.offset_z));
+  }
+  reach.files = cols;
+  return reach;
+}
+
 auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
   auto const* entry = resolve_layout_entry(entity);
   return entry != nullptr ? entry->layout : FormationLayout{};

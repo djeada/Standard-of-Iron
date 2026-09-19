@@ -186,7 +186,8 @@ auto parse_intent_template(ArmyFormationIntent intent,
     tmpl.default_ranged = *parsed;
   }
   if (auto parsed = try_parse_movement_policy(
-          obj.value(QStringLiteral("default_movement")).toString())) {
+          obj.value(QStringLiteral("default_movement")).toString());
+      parsed && *parsed != MovementPolicy::DoctrineDefault) {
     tmpl.default_movement = *parsed;
   }
 

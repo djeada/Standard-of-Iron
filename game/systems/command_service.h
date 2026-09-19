@@ -21,6 +21,10 @@ using EntityID = std::uint64_t;
 class MovementComponent;
 } // namespace Engine::Core
 
+namespace Game::Formation {
+struct ArmyFormationResult;
+} // namespace Game::Formation
+
 namespace Game::Systems {
 
 class Pathfinding;
@@ -56,6 +60,10 @@ public:
   struct MoveOptions {
     MoveOrderKind kind = MoveOrderKind::PlayerMove;
     bool preserve_formation_mode = false;
+    // Runtime slot updates continue an existing formation order.
+    bool follow_formation_slots = false;
+    bool synchronize_arrival = false;
+    bool prefer_own_routes = false;
   };
 
   struct MoveIntent {
@@ -69,6 +77,10 @@ public:
   static constexpr float WAYPOINT_SKIP_THRESHOLD_SQ = 0.16F;
   static constexpr float k_unit_radius_threshold =
       FormationCombat::k_body_core_radius_floor;
+
+  static void march_into_formation(Engine::Core::World& world,
+                                   const std::vector<Engine::Core::EntityID>& units,
+                                   const Game::Formation::ArmyFormationResult& result);
 
   static auto plan_ground_move(Engine::Core::World& world,
                                const std::vector<Engine::Core::EntityID>& units,
