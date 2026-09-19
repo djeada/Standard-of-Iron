@@ -3,6 +3,8 @@
 #include <QVariantMap>
 #include <QVector3D>
 
+#include <algorithm>
+
 #include "app/core/client_context.h"
 #include "app/viewmodels/camera_view_model.h"
 #include "scene/camera.h"
@@ -83,7 +85,16 @@ void MissionViewModel::set_seconds_until_deadline(qreal seconds) {
   emit deadline_changed();
 }
 
+void MissionViewModel::set_optional(const QVariantList& optional) {
+  if (optional == m_optional) {
+    return;
+  }
+  m_optional = optional;
+  emit optional_changed();
+}
+
 void MissionViewModel::clear() {
+  set_optional({});
   if (m_stages.isEmpty() && m_markers.isEmpty() && m_active_index < 0) {
     return;
   }
@@ -114,6 +125,18 @@ auto MissionViewModel::active_hint() const -> QString {
 
 auto MissionViewModel::active_detail() const -> QString {
   return active_stage().value("detail").toString();
+}
+
+auto MissionViewModel::active_compact_detail() const -> QString {
+  return active_stage().value("compact_detail").toString();
+}
+
+auto MissionViewModel::active_fraction() const -> qreal {
+  const QVariantMap stage = active_stage();
+  if (stage.contains("fraction")) {
+    return std::clamp(stage.value("fraction").toDouble(), 0.0, 1.0);
+  }
+  return static_cast<qreal>(active_progress()) / static_cast<qreal>(active_required());
 }
 
 auto MissionViewModel::active_progress() const -> int {

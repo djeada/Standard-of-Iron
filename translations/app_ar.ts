@@ -3447,6 +3447,10 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Hide the objectives (O)</source>
         <translation>إخفاء الأهداف (O)</translation>
     </message>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 من %2</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottom</name>
@@ -4557,6 +4561,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Objectives</source>
         <translation>الأهداف</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1%</translation>
     </message>
 </context>
 <context>

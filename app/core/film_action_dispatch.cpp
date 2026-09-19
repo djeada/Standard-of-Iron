@@ -2,6 +2,8 @@
 
 #include <QDebug>
 #include <QLatin1String>
+#include <QMetaObject>
+#include <QQuickItem>
 #include <QQuickWindow>
 #include <QStringList>
 #include <QVariantMap>
@@ -247,6 +249,25 @@ void apply_benchmark_action(GameEngine* engine,
     if (auto* activity = qobject_cast<App::ViewModels::ActivityViewModel*>(
             engine->activity_view_model())) {
       activity->set_auto_gather(true, action.argument.trimmed());
+    }
+  } else if (name == QLatin1String("divide_squads") ||
+             name == QLatin1String("merge_squads")) {
+    if (auto* activity = qobject_cast<App::ViewModels::ActivityViewModel*>(
+            engine->activity_view_model())) {
+      if (name == QLatin1String("divide_squads")) {
+        activity->divide_selected_squads();
+      } else {
+        activity->merge_selected_squads();
+      }
+    }
+  } else if (name == QLatin1String("objectives_panel")) {
+    auto* hud = window->findChild<QObject*>(QStringLiteral("gameHud"));
+    if (hud == nullptr) {
+      hud = window->contentItem()->findChild<QObject*>(QStringLiteral("gameHud"));
+    }
+    if (hud == nullptr ||
+        !QMetaObject::invokeMethod(hud, "toggle_objectives", Qt::DirectConnection)) {
+      qWarning() << "SOI_FILM: objectives_panel found no HUD to toggle";
     }
   } else if (name == QLatin1String("cursor_to")) {
 

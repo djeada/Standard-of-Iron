@@ -29,6 +29,9 @@ auto resource_tally(const ResourceAmounts& carried,
                     const ResourceAmounts& needed) -> ResourceTally {
   ResourceTally tally;
   QStringList parts;
+  QStringList numbers;
+  long long carried_total = 0;
+  long long needed_total = 0;
   for (const auto type : k_all_resource_types) {
     const int required = needed.get(type);
     if (required <= 0) {
@@ -39,12 +42,20 @@ auto resource_tally(const ResourceAmounts& carried,
     if (have >= required) {
       ++tally.met;
     }
+    const int shown = std::clamp(have, 0, required);
     parts.append(QCoreApplication::translate("Resources", "%1 %2/%3")
                      .arg(resource_display_name(type))
-                     .arg(std::min(have, required))
+                     .arg(shown)
                      .arg(required));
+    numbers.append(QStringLiteral("%1/%2").arg(shown).arg(required));
+    carried_total += shown;
+    needed_total += required;
   }
   tally.text = parts.join(QStringLiteral(" · "));
+  tally.numbers = numbers.join(QStringLiteral(" · "));
+  tally.fraction = needed_total > 0 ? static_cast<double>(carried_total) /
+                                          static_cast<double>(needed_total)
+                                    : 0.0;
   return tally;
 }
 

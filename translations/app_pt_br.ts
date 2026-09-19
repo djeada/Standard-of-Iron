@@ -3447,6 +3447,10 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source>Hide the objectives (O)</source>
         <translation>Ocultar objetivos (O)</translation>
     </message>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 de %2</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottom</name>
@@ -4553,6 +4557,10 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     <message>
         <source>Objectives</source>
         <translation>Objetivos</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1%</translation>
     </message>
 </context>
 <context>

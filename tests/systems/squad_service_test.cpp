@@ -1,13 +1,16 @@
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <gtest/gtest.h>
 #include <memory>
 #include <vector>
 
+#include "game/core/component.h"
 #include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/map/map_transformer.h"
 #include "game/session/session_context.h"
+#include "game/systems/combat_system/formation_contact_processor.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/squad_service.h"
 #include "game/systems/troop_count_registry.h"
@@ -67,6 +70,60 @@ protected:
   auto survivors_of(EntityID id) -> int {
     const auto* unit = unit_of(id);
     return unit != nullptr ? Game::Units::squad_survivors(*unit) : 0;
+  }
+
+  void present(float seconds) {
+    constexpr float k_step = 1.0F / 20.0F;
+    for (float elapsed = 0.0F; elapsed < seconds; elapsed += k_step) {
+      Game::Systems::Combat::update_formation_contacts(&m_session->world(), k_step);
+    }
+  }
+
+  struct Spot {
+    float x = 0.0F;
+    float z = 0.0F;
+  };
+
+  // Where the presented living men of a squad stand on the field.
+  auto men_of(EntityID id) -> std::vector<Spot> {
+    std::vector<Spot> spots;
+    auto& world = m_session->world();
+    const auto* transform = world.try_get<Engine::Core::TransformComponent>(id);
+    const auto* presentation =
+        world.try_get<Engine::Core::FormationPresentationComponent>(id);
+    if (transform == nullptr || presentation == nullptr) {
+      return spots;
+    }
+    const float yaw = transform->rotation.y * 3.14159265F / 180.0F;
+    for (const auto& soldier : presentation->soldiers) {
+      if (soldier.alive) {
+        spots.push_back({transform->position.x + (std::cos(yaw) * soldier.local_x) +
+                             (std::sin(yaw) * soldier.local_z),
+                         transform->position.z - (std::sin(yaw) * soldier.local_x) +
+                             (std::cos(yaw) * soldier.local_z)});
+      }
+    }
+    return spots;
+  }
+
+  auto reforming_men(EntityID id) -> int {
+    const auto* presentation =
+        m_session->world().try_get<Engine::Core::FormationPresentationComponent>(id);
+    if (presentation == nullptr) {
+      return 0;
+    }
+    return static_cast<int>(std::count_if(
+        presentation->soldiers.begin(),
+        presentation->soldiers.end(),
+        [](const auto& soldier) { return soldier.alive && soldier.reforming; }));
+  }
+
+  static auto nearest(const std::vector<Spot>& spots, Spot spot) -> float {
+    float best = 1.0e9F;
+    for (const auto& other : spots) {
+      best = std::min(best, std::hypot(other.x - spot.x, other.z - spot.z));
+    }
+    return best;
   }
 
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory;
@@ -471,6 +528,59 @@ TEST_F(SquadServiceTest, AHalfSquadCountsHalfTheStrengthAndHalfThePopulation) {
   ASSERT_NE(halved, nullptr);
   EXPECT_NEAR(Game::Units::squad_fraction(*halved), 0.5F, 0.05F);
   EXPECT_LT(Game::Units::squad_population_cost(*halved), full_population);
+}
+
+TEST_F(SquadServiceTest, JoinedMenWalkOverInsteadOfAppearingInTheRanks) {
+  const auto left = spawn(SpawnType::Swordsman, 10.0F, 10.0F);
+  const auto right = spawn(SpawnType::Swordsman, 20.0F, 10.0F);
+  SquadService::apply_strength(m_session->world(), left, 3);
+  SquadService::apply_strength(m_session->world(), right, 3);
+  present(0.2F);
+  std::vector<Spot> before = men_of(left);
+  const auto right_men = men_of(right);
+  before.insert(before.end(), right_men.begin(), right_men.end());
+  ASSERT_EQ(before.size(), 6U);
+
+  ASSERT_FALSE(SquadService::merge_all(m_session->world(), {left, right}).empty());
+  const EntityID kept = unit_of(left) != nullptr ? left : right;
+  ASSERT_EQ(survivors_of(kept), 6);
+  ASSERT_TRUE(m_session->world().has<Engine::Core::SquadReformComponent>(kept));
+
+  present(0.05F);
+  const auto first_frame = men_of(kept);
+  ASSERT_EQ(first_frame.size(), 6U);
+  for (const auto& man : first_frame) {
+    EXPECT_LT(nearest(before, man), 0.5F)
+        << "every man starts from where he stood, not in his new slot";
+  }
+  EXPECT_GE(reforming_men(kept), 3) << "the far squad's men are on the way";
+
+  present(6.0F);
+  EXPECT_EQ(reforming_men(kept), 0);
+  EXPECT_FALSE(m_session->world().has<Engine::Core::SquadReformComponent>(kept));
+}
+
+TEST_F(SquadServiceTest, ADetachmentMarchesOutOfItsParentsRanks) {
+  const auto id = spawn(SpawnType::Swordsman, 10.0F, 10.0F);
+  present(0.2F);
+  const auto before = men_of(id);
+  ASSERT_FALSE(before.empty());
+
+  const auto division = SquadService::divide(m_session->world(), id);
+  ASSERT_NE(division.detachment, 0U);
+
+  present(0.05F);
+  const auto detached = men_of(division.detachment);
+  ASSERT_FALSE(detached.empty());
+  for (const auto& man : detached) {
+    EXPECT_LT(nearest(before, man), 0.5F)
+        << "the detachment's men leave from the parent's ranks";
+  }
+  EXPECT_GT(reforming_men(division.detachment), 0);
+
+  present(6.0F);
+  EXPECT_EQ(reforming_men(division.parent), 0);
+  EXPECT_EQ(reforming_men(division.detachment), 0);
 }
 
 } // namespace

@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
+#include <numbers>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -15,6 +17,7 @@
 #include "../units/factory.h"
 #include "../units/squad.h"
 #include "../units/unit.h"
+#include "formation_combat_geometry.h"
 #include "nav_grid.h"
 
 namespace Game::Systems {
@@ -67,6 +70,124 @@ auto detachment_position(const Engine::Core::TransformComponent& parent) -> QVec
     return {placed.x(), parent.position.y, placed.z()};
   }
   return {parent.position.x + k_step, parent.position.y, parent.position.z + k_step};
+}
+
+struct FieldPosition {
+  float x = 0.0F;
+  float z = 0.0F;
+};
+
+// Where the living men of a squad stand on the field, as last presented.
+auto soldier_positions(const Engine::Core::World& world,
+                       Engine::Core::EntityID id) -> std::vector<FieldPosition> {
+  std::vector<FieldPosition> positions;
+  const auto* transform = world.try_get<Engine::Core::TransformComponent>(id);
+  const auto* presentation =
+      world.try_get<Engine::Core::FormationPresentationComponent>(id);
+  if (transform == nullptr || presentation == nullptr) {
+    return positions;
+  }
+  const float yaw = transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
+  const float sin_yaw = std::sin(yaw);
+  const float cos_yaw = std::cos(yaw);
+  for (const auto& soldier : presentation->soldiers) {
+    if (!soldier.alive) {
+      continue;
+    }
+    positions.push_back(FieldPosition{
+        .x = transform->position.x + (cos_yaw * soldier.local_x) +
+             (sin_yaw * soldier.local_z),
+        .z = transform->position.z - (sin_yaw * soldier.local_x) +
+             (cos_yaw * soldier.local_z),
+    });
+  }
+  return positions;
+}
+
+// Sends the men who stood at `from` to the new slots of `squads`, closest pairs
+// first, so a split or a join is a short walk rather than men appearing in
+// their new ranks.
+void walk_into_new_slots(Engine::Core::World& world,
+                         const std::vector<Engine::Core::EntityID>& squads,
+                         const std::vector<FieldPosition>& from) {
+  constexpr float k_reform_seconds = 8.0F;
+  constexpr float k_already_there_sq = 0.05F * 0.05F;
+
+  struct Target {
+    std::size_t squad = 0;
+    std::uint16_t slot = 0;
+    float x = 0.0F;
+    float z = 0.0F;
+  };
+  std::vector<Target> targets;
+  for (std::size_t squad = 0; squad < squads.size(); ++squad) {
+    const auto* entity = world.get_entity(squads[squad]);
+    if (entity == nullptr) {
+      continue;
+    }
+    for (const auto& slot : FormationCombat::resolve_layout(*entity).live_slots) {
+      targets.push_back(Target{
+          .squad = squad, .slot = slot.index, .x = slot.world_x, .z = slot.world_z});
+    }
+  }
+
+  struct Pairing {
+    float distance_sq = 0.0F;
+    std::size_t target = 0;
+    std::size_t source = 0;
+  };
+  std::vector<Pairing> pairings;
+  pairings.reserve(targets.size() * from.size());
+  for (std::size_t target = 0; target < targets.size(); ++target) {
+    for (std::size_t source = 0; source < from.size(); ++source) {
+      const float dx = targets[target].x - from[source].x;
+      const float dz = targets[target].z - from[source].z;
+      pairings.push_back(Pairing{
+          .distance_sq = (dx * dx) + (dz * dz), .target = target, .source = source});
+    }
+  }
+  std::sort(pairings.begin(), pairings.end(), [](const Pairing& a, const Pairing& b) {
+    if (a.distance_sq != b.distance_sq) {
+      return a.distance_sq < b.distance_sq;
+    }
+    return a.target != b.target ? a.target < b.target : a.source < b.source;
+  });
+
+  std::vector<std::vector<Engine::Core::SquadReformSoldier>> walkers(squads.size());
+  std::vector<bool> target_taken(targets.size(), false);
+  std::vector<bool> source_taken(from.size(), false);
+  for (const auto& pairing : pairings) {
+    if (target_taken[pairing.target] || source_taken[pairing.source]) {
+      continue;
+    }
+    target_taken[pairing.target] = true;
+    source_taken[pairing.source] = true;
+    if (pairing.distance_sq <= k_already_there_sq) {
+      continue;
+    }
+    const auto& target = targets[pairing.target];
+    walkers[target.squad].push_back(Engine::Core::SquadReformSoldier{
+        .slot_index = target.slot,
+        .world_x = from[pairing.source].x,
+        .world_z = from[pairing.source].z,
+    });
+  }
+
+  for (std::size_t squad = 0; squad < squads.size(); ++squad) {
+    if (walkers[squad].empty()) {
+      world.remove<Engine::Core::SquadReformComponent>(squads[squad]);
+      continue;
+    }
+    auto* reform = world.try_get<Engine::Core::SquadReformComponent>(squads[squad]);
+    if (reform == nullptr) {
+      reform = world.emplace<Engine::Core::SquadReformComponent>(squads[squad]);
+    }
+    if (reform == nullptr) {
+      continue;
+    }
+    reform->remaining_seconds = k_reform_seconds;
+    reform->soldiers = std::move(walkers[squad]);
+  }
 }
 
 struct JoinCandidate {
@@ -304,6 +425,7 @@ auto SquadService::divide(Engine::Core::World& world,
                                     unit->health,
                                     establishment,
                                     establishment_max_health);
+  const auto ranks = soldier_positions(world, unit_id);
 
   Game::Units::SpawnParams params;
   params.position = detachment_position(*transform);
@@ -328,6 +450,7 @@ auto SquadService::divide(Engine::Core::World& world,
 
   apply_roster(*parent_unit, rosters[0], establishment, establishment_max_health);
   apply_roster(*child_unit, rosters[1], establishment, establishment_max_health);
+  walk_into_new_slots(world, {unit_id, spawned->id()}, ranks);
   result.parent = unit_id;
   result.detachment = spawned->id();
   return result;
@@ -417,6 +540,11 @@ auto SquadService::merge_all(Engine::Core::World& world,
     }
     const int establishment = Game::Units::squad_establishment(lead->spawn_type);
     const int establishment_max_health = full_max_health(*lead);
+    std::vector<FieldPosition> ranks;
+    for (const auto member : plan.members) {
+      const auto positions = soldier_positions(world, member);
+      ranks.insert(ranks.end(), positions.begin(), positions.end());
+    }
     for (std::size_t i = 0; i < plan.members.size(); ++i) {
       if (i < plan.rosters.size()) {
         if (auto* unit = unit_of(world, plan.members[i]); unit != nullptr) {
@@ -431,6 +559,13 @@ auto SquadService::merge_all(Engine::Core::World& world,
     if (plan.rosters.size() == plan.members.size()) {
       merges.push_back(SquadMerge{.kept = plan.members.front(), .absorbed = 0});
     }
+    walk_into_new_slots(
+        world,
+        std::vector<Engine::Core::EntityID>(
+            plan.members.begin(),
+            plan.members.begin() + static_cast<std::ptrdiff_t>(std::min(
+                                       plan.rosters.size(), plan.members.size()))),
+        ranks);
   }
   return merges;
 }

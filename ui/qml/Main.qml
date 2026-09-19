@@ -368,6 +368,7 @@ ApplicationWindow {
     HUD {
         id: hud
 
+        objectName: "gameHud"
         anchors.fill: parent
         z: 1
         visible: !mainWindow.menu_visible && game_started

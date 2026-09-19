@@ -8,6 +8,7 @@
 #include <array>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -130,13 +131,19 @@ struct VictoryObjective {
   VictoryRule rule;
   QString id;
   QString description;
+  // Position of the authored condition in its mission list, or -1.
+  int source_index = -1;
 };
 
 struct ObjectiveStatus {
   QString id;
   QString description;
+  int source_index = -1;
 
   QString detail;
+  QString compact_detail;
+  // Share of the objective done, 0..1.
+  double fraction = 0.0;
   int progress = 0;
   int required = 1;
   bool complete = false;
@@ -163,6 +170,8 @@ struct DefeatCondition {
 
 struct VictoryRuleSet {
   std::vector<VictoryObjective> victory_rules;
+  // Tracked and reported, never decide the match; once met they stay met.
+  std::vector<VictoryObjective> optional_rules;
   std::vector<DefeatCondition> defeat_rules;
   bool include_ambient_undead = false;
   bool require_all_victory_rules = false;
@@ -221,6 +230,7 @@ public:
   }
 
   [[nodiscard]] auto objectives() const -> std::vector<ObjectiveStatus>;
+  [[nodiscard]] auto optional_objectives() const -> std::vector<ObjectiveStatus>;
 
   [[nodiscard]] auto serialize_state() const -> QJsonObject;
   void restore_state(const QJsonObject& state);
@@ -246,6 +256,19 @@ private:
   void evaluate_polled_rules();
   void evaluate_world_state(Engine::Core::World& world);
   void evaluate_rules(const WorldSummary& summary);
+
+  struct CountedProgress {
+    int progress = 0;
+    int required = 1;
+  };
+  [[nodiscard]] auto
+  counted_progress(const VictoryRule& rule) const -> std::optional<CountedProgress>;
+  void fill_progress_fingerprint(std::vector<int>& out) const;
+  void append_progress_fingerprint(const std::vector<VictoryObjective>& rules,
+                                   std::vector<int>& out) const;
+  [[nodiscard]] auto
+  statuses_for(const std::vector<VictoryObjective>& rules,
+               const std::vector<bool>& complete) const -> std::vector<ObjectiveStatus>;
   void evaluate_spectator_state();
   void finalize_game(const QString& state);
 
@@ -288,6 +311,9 @@ private:
   VictoryCallback m_victory_callback;
   ObjectivesChangedCallback m_objectives_changed_callback;
   std::vector<bool> m_objective_complete;
+  std::vector<bool> m_optional_complete;
+  std::vector<int> m_published_progress;
+  std::vector<int> m_progress_scratch;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
       m_unit_spawned_subscription;

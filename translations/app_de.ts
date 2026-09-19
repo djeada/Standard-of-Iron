@@ -3447,6 +3447,10 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>Hide the objectives (O)</source>
         <translation>Ziele ausblenden (O)</translation>
     </message>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 von %2</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottom</name>
@@ -4553,6 +4557,10 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     <message>
         <source>Objectives</source>
         <translation>Ziele</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1 %</translation>
     </message>
 </context>
 <context>

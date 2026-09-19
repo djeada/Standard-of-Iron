@@ -267,3 +267,33 @@ TEST(MissionVictoryRulesTest, VictoryModeDefaultsToAnyForUnsetAndUnknownValues) 
   mission.victory_mode = QStringLiteral("both");
   EXPECT_FALSE(Game::Mission::build_victory_rules(mission).require_all_victory_rules);
 }
+
+TEST(MissionVictoryRulesTest, TracksMeasurableOptionalObjectivesByTheirMissionIndex) {
+  Game::Mission::MissionDefinition mission;
+
+  Game::Mission::Condition win;
+  win.type = QStringLiteral("destroy_all_enemies");
+  mission.victory_conditions = {win};
+
+  Game::Mission::Condition waves;
+  waves.type = QStringLiteral("wave_count");
+  waves.wave_count = 3;
+
+  Game::Mission::Condition overcut;
+  overcut.type = QStringLiteral("accumulate_resources");
+  overcut.description = QStringLiteral("Overcut the levy.");
+  Game::Mission::Resources wood;
+  wood.set(Game::Systems::ResourceType::Wood, 1280);
+  overcut.resources = wood;
+
+  mission.optional_objectives = {waves, overcut};
+
+  const auto rules = Game::Mission::build_victory_rules(mission);
+  ASSERT_EQ(rules.optional_rules.size(), 1U) << "wave_count is not a victory rule";
+  EXPECT_EQ(rules.optional_rules.front().source_index, 1);
+  EXPECT_EQ(rules.optional_rules.front().description,
+            QStringLiteral("Overcut the levy."));
+  EXPECT_TRUE(std::holds_alternative<Game::Systems::AccumulateResourcesVictoryRule>(
+      rules.optional_rules.front().rule));
+  EXPECT_EQ(rules.victory_rules.front().source_index, 0);
+}
