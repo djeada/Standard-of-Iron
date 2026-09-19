@@ -2,6 +2,7 @@
 #include <QString>
 #include <QVector3D>
 
+#include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <optional>
@@ -34,6 +35,7 @@ auto load_map(const QString& file_name) -> Game::Map::MapDefinition {
 struct Crossing {
   const Game::Map::RiverSegment* river = nullptr;
   QVector3D point;
+  float river_t = 0.0F;
 };
 
 auto crossing_for(const Game::Map::Bridge& bridge,
@@ -53,7 +55,8 @@ auto crossing_for(const Game::Map::Bridge& bridge,
     const float cross = Game::Map::xz_cross(bridge_vec, river_vec);
     const QVector3D diff = river.start - bridge.start;
     const float t = Game::Map::xz_cross(diff, river_vec) / cross;
-    return Crossing{&river, bridge.start + bridge_vec * t};
+    const float s = Game::Map::xz_cross(diff, bridge_vec) / cross;
+    return Crossing{&river, bridge.start + bridge_vec * t, s};
   }
   return std::nullopt;
 }
@@ -88,7 +91,7 @@ TEST(MapBridgeCoverageTest, RuntimeDecksAreLongerThanTheyAreWide) {
   }
 }
 
-TEST(MapBridgeCoverageTest, EveryShippedBridgeReachesBankToBank) {
+TEST(MapBridgeCoverageTest, EveryShippedBridgeReachesBankToBankAndStopsThere) {
   const QStringList maps = shipped_maps();
   ASSERT_FALSE(maps.isEmpty());
 
@@ -101,16 +104,37 @@ TEST(MapBridgeCoverageTest, EveryShippedBridgeReachesBankToBank) {
         continue;
       }
 
-      const float required =
-          Game::Map::river_bank_standing_half_width(crossing->river->width);
+      const QVector3D axis = (bridge.end - bridge.start).normalized();
+      const auto water = Game::Map::drawn_water_reach_across(
+          *crossing->river,
+          crossing->river_t,
+          crossing->point,
+          axis,
+          std::max(bridge.width, Game::Map::k_min_bridge_width) * 0.5F);
 
-      const QVector3D start_reach = crossing->point - bridge.start;
-      const QVector3D end_reach = bridge.end - crossing->point;
-      const float start_len = std::hypot(start_reach.x(), start_reach.z());
-      const float end_len = std::hypot(end_reach.x(), end_reach.z());
+      const float start_len =
+          QVector3D::dotProduct(crossing->point - bridge.start, axis);
+      const float end_len = QVector3D::dotProduct(bridge.end - crossing->point, axis);
 
-      EXPECT_GT(start_len, required) << file_name.toStdString() << " bridge " << index;
-      EXPECT_GT(end_len, required) << file_name.toStdString() << " bridge " << index;
+      // The deck clears the drawn water and the bank clearance on both sides...
+      const float required = Game::Map::k_water_bank_clearance;
+      EXPECT_GT(start_len - water.behind, required)
+          << file_name.toStdString() << " bridge " << index;
+      EXPECT_GT(end_len - water.ahead, required)
+          << file_name.toStdString() << " bridge " << index;
+
+      // ...and stops a short landing onto the bank, unless the stream is so
+      // narrow the deck has to grow to be as long as it is wide.
+      const float drawn_width = std::max(bridge.width, Game::Map::k_min_bridge_width);
+      const float landing =
+          Game::Map::k_water_bank_clearance + Game::Map::k_bridge_max_bank_landing;
+      const float shortfall = std::max(
+          0.0F, drawn_width + 0.01F - (water.behind + water.ahead + 2.0F * landing));
+      const float allowed = landing + (shortfall * 0.5F) + 0.001F;
+      EXPECT_LE(start_len - water.behind, allowed)
+          << file_name.toStdString() << " bridge " << index;
+      EXPECT_LE(end_len - water.ahead, allowed)
+          << file_name.toStdString() << " bridge " << index;
     }
   }
 }

@@ -304,9 +304,7 @@ TEST(LinearFeatureGeometryTest, BuildsBridgeMeshFromSharedHelper) {
 
   const float drawn_width = std::max(bridge.width, Game::Map::k_min_bridge_width);
   const float abutment = Game::Map::bridge_abutment_reach(drawn_width);
-  const float landing = std::max(abutment,
-                                 std::clamp(drawn_width * 0.26F, 0.55F, 1.05F) * 1.35F /
-                                     Game::Map::k_bridge_landing_grade);
+  const float landing = Game::Map::bridge_visual_landing_run(drawn_width);
 
   EXPECT_NEAR(min_x, bridge.start.x() - landing, 0.0001F);
   EXPECT_NEAR(max_x, bridge.end.x() + landing, 0.0001F);

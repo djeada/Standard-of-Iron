@@ -1127,6 +1127,11 @@ TEST_F(TightGapNavigationTest, AnArmyCrossesARiverOnTheBridgeDeck) {
   const Point deck = cell_of(QVector3D(0.0F, 0.0F, 0.0F));
   ASSERT_TRUE(pf.is_walkable(deck.x, deck.y)) << "the bridge deck must be walkable";
 
+  // Hold the column to the centerline over the water itself; the landings are
+  // where it funnels onto the deck.
+  const float over_water =
+      Game::Map::river_drawn_cross_section(map.rivers.front(), 0.5F).half_width;
+
   std::vector<EntityID> army;
   for (int i = 0; i < 12; ++i) {
     const QVector3D start(
@@ -1157,7 +1162,7 @@ TEST_F(TightGapNavigationTest, AnArmyCrossesARiverOnTheBridgeDeck) {
       if (on_water && !on_deck) {
         drowned++;
       }
-      if (on_deck && std::abs(position.x()) < 5.0F) {
+      if (on_deck && std::abs(position.x()) < over_water) {
         crossed_centerline[index] = true;
         max_centerline_offset[index] =
             std::max(max_centerline_offset[index], std::abs(position.z()));
