@@ -175,7 +175,7 @@ void GroundRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       cmd.mesh = plane;
       cmd.model = m_model;
       cmd.params = params;
-      cmd.sort_key = 0x0040U;
+      cmd.sort_key = 0x00C0U;
       cmd.depth_write = true;
       cmd.depth_bias = +0.0008F;
       renderer.terrain_surface(cmd);

@@ -97,6 +97,10 @@ public:
   void begin_frame();
   void end_frame();
   void set_viewport(int width, int height);
+  void set_loading_overlay_active(bool active) { m_loading_overlay_active = active; }
+  [[nodiscard]] auto has_pending_template_prewarm() const -> bool {
+    return m_async_prewarm.current() != nullptr;
+  }
 
   void set_world_view(const Render::WorldView& view) { m_world_view = view; }
   [[nodiscard]] auto world_view() const noexcept -> const Render::WorldView& {
@@ -588,6 +592,7 @@ private:
   Engine::Core::World* m_cached_world{nullptr};
 
   AsyncTemplatePrewarm m_async_prewarm;
+  bool m_loading_overlay_active = false;
 };
 
 struct FrameScope {

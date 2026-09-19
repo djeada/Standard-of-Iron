@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <numbers>
@@ -342,8 +343,12 @@ void Renderer::process_async_template_prewarm() {
   std::size_t max_items = prewarm_budget.items_per_tick;
   std::chrono::microseconds time_budget(prewarm_budget.tick_budget_us);
 
+  constexpr std::chrono::microseconds k_loading_overlay_budget(12000);
   const int visible_units = m_battle_optimizer.visible_unit_count();
-  if (visible_units >= 300) {
+  if (m_loading_overlay_active) {
+    max_items = std::numeric_limits<std::size_t>::max();
+    time_budget = std::max(time_budget, k_loading_overlay_budget);
+  } else if (visible_units >= 300) {
     if ((m_battle_optimizer.frame_counter() & 1U) != 0U) {
       return;
     }

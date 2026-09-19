@@ -5613,6 +5613,142 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>The dead do not tire, do not flee, and do not file complaints. They are, in every other respect, a poor garrison.</source>
         <translation>الموتى لا يتعبون ولا يفرّون ولا يقدّمون شكاوى. وفي كل ما عدا ذلك، هم حامية رديئة.</translation>
     </message>
+    <message>
+        <source>A battle plan with seven arrows usually requires at least eight messengers.</source>
+        <translation>خطة المعركة ذات الأسهم السبعة تحتاج عادةً إلى ثمانية رُسل على الأقل.</translation>
+    </message>
+    <message>
+        <source>A brilliant encirclement is harder to admire from the inside.</source>
+        <translation>يصعب الإعجاب بتطويق بارع حين تكون في داخله.</translation>
+    </message>
+    <message>
+        <source>A general can order a forced march. Boots remain stubbornly outside the chain of command.</source>
+        <translation>يستطيع القائد أن يأمر بمسيرة إجبارية، لكن الأحذية تبقى بعناد خارج سلسلة القيادة.</translation>
+    </message>
+    <message>
+        <source>A grave priest appears to mend broken bone. The darker story is that it persuades the grave to return what it claimed.</source>
+        <translation>يبدو أن كاهن القبور يجبر العظام المكسورة، لكن الرواية الأشد قتامة تقول إنه يقنع القبر بأن يعيد ما استولى عليه.</translation>
+    </message>
+    <message>
+        <source>A grave priest never runs short of fire. It only asks whose name is missing from the graveyard roll.</source>
+        <translation>لا ينفد اللهب من كاهن القبور أبدًا، وكل ما يسأل عنه هو الاسم الغائب عن سجل المقبرة.</translation>
+    </message>
+    <message>
+        <source>An undead shrine is warded while its guardians live. Defeat every wave before attempting to destroy or capture it.</source>
+        <translation>يبقى مزار الموتى الأحياء محصّنًا ما دام حرّاسه أحياء. اهزم كل موجة قبل أن تحاول تدميره أو الاستيلاء عليه.</translation>
+    </message>
+    <message>
+        <source>At Cannae in 216 BC, Hannibal&apos;s yielding center drew Roman infantry forward while his flanks and cavalry closed around them.</source>
+        <translation>في كاناي عام 216 ق.م، استدرج قلب جيش حنبعل المتراجع المشاةَ الرومان إلى الأمام بينما أطبقت أجنحته وفرسانه عليهم.</translation>
+    </message>
+    <message>
+        <source>At Ilipa in 206 BC, Scipio changed his usual deployment and attacked the Carthaginian wings with his stronger Roman infantry.</source>
+        <translation>في إليبا عام 206 ق.م، غيّر سكيبيو انتشاره المعتاد وهاجم جناحي القرطاجيين بمشاته الرومان الأقوى.</translation>
+    </message>
+    <message>
+        <source>At Lake Trasimene in 217 BC, Hannibal ambushed a Roman marching column between the lake and the hills. Terrain was part of the trap.</source>
+        <translation>عند بحيرة تراسيمينه عام 217 ق.م، نصب حنبعل كمينًا لرتل روماني زاحف بين البحيرة والتلال. كانت الأرض جزءًا من الفخ.</translation>
+    </message>
+    <message>
+        <source>At Zama in 202 BC, Scipio left lanes through his infantry to blunt Hannibal&apos;s elephants. Positioning beat panic.</source>
+        <translation>في زاما عام 202 ق.م، ترك سكيبيو ممرات بين صفوف مشاته ليُفقد أفيال حنبعل زخمها. تغلّب حسن التمركز على الذعر.</translation>
+    </message>
+    <message>
+        <source>At the Trebia, Hannibal lured Roman troops into a winter battle; a concealed Carthaginian force struck during the fighting.</source>
+        <translation>عند نهر تريبيا استدرج حنبعل القوات الرومانية إلى معركة شتوية، ثم انقضّت قوة قرطاجية مختبئة في أثناء القتال.</translation>
+    </message>
+    <message>
+        <source>Fabius Maximus earned the name &apos;the Delayer&apos; by avoiding Hannibal&apos;s preferred pitched battles and harassing his movements and supplies.</source>
+        <translation>نال فابيوس ماكسيموس لقب «المماطل» لأنه تجنّب المعارك النظامية التي فضّلها حنبعل وأخذ يضايق تحركاته وإمداداته.</translation>
+    </message>
+    <message>
+        <source>Fabius called it patience. His critics probably called it a very long walk.</source>
+        <translation>سمّاه فابيوس صبرًا، أما منتقدوه فربما سمّوه نزهة طويلة جدًا.</translation>
+    </message>
+    <message>
+        <source>Hamilcar Barca, Hannibal&apos;s father, built Carthaginian power in Iberia after the First Punic War. His sons inherited a formidable campaign.</source>
+        <translation>بنى هملقار برقة، والد حنبعل، قوة قرطاج في إيبيريا بعد الحرب البونيقية الأولى، وورث أبناؤه حملة هائلة.</translation>
+    </message>
+    <message>
+        <source>Hannibal Barca was the Carthaginian commander who brought the Second Punic War into Italy by marching across the Alps in 218 BC.</source>
+        <translation>كان حنبعل برقة القائد القرطاجي الذي نقل الحرب البونيقية الثانية إلى إيطاليا بعبوره جبال الألب عام 218 ق.م.</translation>
+    </message>
+    <message>
+        <source>Hannibal married a woman from the Iberian city of Castulo. The poet Silius Italicus calls her Imilce; the historian Livy does not give her name.</source>
+        <translation>تزوّج حنبعل امرأة من مدينة كاستولو الإيبيرية. يسمّيها الشاعر سيليوس إيتاليكوس إيميلكي، أما المؤرخ ليفيوس فلا يذكر اسمها.</translation>
+    </message>
+    <message>
+        <source>Hannibal won battles in Italy, but Rome&apos;s alliances, manpower, and stubborn refusal to surrender kept the war alive.</source>
+        <translation>انتصر حنبعل في معارك بإيطاليا، لكن تحالفات روما وقوتها البشرية ورفضها العنيد للاستسلام أبقت الحرب مشتعلة.</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s elephants crossed mountains. Your supply wagon still insists that a shallow stream is impassable.</source>
+        <translation>عبرت أفيال حنبعل الجبال، وما زالت عربة إمداداتك تصرّ على أن جدولًا ضحلًا لا يمكن عبوره.</translation>
+    </message>
+    <message>
+        <source>Hasdrubal Barca was Hannibal&apos;s brother, not his brother-in-law Hasdrubal the Fair. His attempted reinforcement ended at the Metaurus in 207 BC.</source>
+        <translation>كان صدربعل برقة شقيق حنبعل، لا صهره صدربعل الوسيم. وانتهت محاولته لإمداده بالتعزيزات عند نهر ميتاوروس عام 207 ق.م.</translation>
+    </message>
+    <message>
+        <source>In 218 BC Hannibal crossed the Alps with infantry, cavalry, baggage, and elephants. His exact route remains disputed.</source>
+        <translation>في عام 218 ق.م عبر حنبعل جبال الألب بالمشاة والفرسان والأمتعة والأفيال، ولا يزال طريقه الدقيق موضع خلاف.</translation>
+    </message>
+    <message>
+        <source>Maharbal commanded cavalry under Hannibal. The famous tale that he urged an immediate march on Rome after Cannae comes from later Roman tradition.</source>
+        <translation>قاد مهربعل الفرسان تحت إمرة حنبعل. أما الحكاية الشهيرة عن حثّه على الزحف فورًا إلى روما بعد كاناي فمصدرها تقاليد رومانية لاحقة.</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s Numidian horsemen fought alongside Rome at Zama. Their return to the battlefield helped decide the fight.</source>
+        <translation>قاتل فرسان ماسينيسا النوميديون إلى جانب روما في زاما، وأسهمت عودتهم إلى ساحة المعركة في حسم القتال.</translation>
+    </message>
+    <message>
+        <source>No one remembers who buried the first Sepulcher priest. The priest has had plenty of time to hold a grudge.</source>
+        <translation>لا أحد يذكر من دفن أول كاهن للمدفن، لكن الكاهن حظي بوقت طويل ليحمل الضغينة.</translation>
+    </message>
+    <message>
+        <source>Scipio took New Carthage in 209 BC, seizing an important harbor, stores, and hostages instead of chasing every enemy army.</source>
+        <translation>استولى سكيبيو على قرطاجة الجديدة عام 209 ق.م، فغنم ميناءً مهمًا ومؤنًا ورهائن بدلًا من مطاردة كل جيش معادٍ.</translation>
+    </message>
+    <message>
+        <source>Sepulcher legend says grave priests draw their fire from the last breaths trapped beneath the iron seals of forgotten shrines.</source>
+        <translation>تقول أسطورة المدفن إن كهنة القبور يستمدّون نارهم من الأنفاس الأخيرة المحبوسة تحت الأختام الحديدية لمزارات منسية.</translation>
+    </message>
+    <message>
+        <source>Soldiers whisper that the shrine&apos;s haze repeats orders in the voices of men who never came home.</source>
+        <translation>يهمس الجنود بأن ضباب المزار يردّد الأوامر بأصوات رجال لم يعودوا إلى ديارهم قط.</translation>
+    </message>
+    <message>
+        <source>Some say a grave priest burns the names scraped from burial stones. Each lost name feeds one more ember.</source>
+        <translation>يقول بعضهم إن كاهن القبور يحرق الأسماء المكشوطة عن شواهد القبور، وكل اسم ضائع يغذّي جمرة أخرى.</translation>
+    </message>
+    <message>
+        <source>The Iron Sepulcher keeps no quartermaster. Its garrison stopped asking for rations centuries ago.</source>
+        <translation>لا يحتفظ ضريح الحديد بأمين للمؤن، فحاميته كفّت عن طلب الأرزاق منذ قرون.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher&apos;s guardians do not pursue forever. They return to the shrine as though the last watch never ended.</source>
+        <translation>لا يطارد حرّاس المدفن إلى الأبد، بل يعودون إلى المزار كأن النوبة الأخيرة لم تنتهِ قط.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher&apos;s iron nails are said to pin unfinished oaths beneath the earth. Its guardians are still keeping theirs.</source>
+        <translation>يُقال إن مسامير المدفن الحديدية تثبّت تحت الأرض عهودًا لم تُوفَ، وحرّاسه ما زالوا يوفون بعهودهم.</translation>
+    </message>
+    <message>
+        <source>The best time to discover that your bridge is too narrow was before the elephants arrived.</source>
+        <translation>كان أنسب وقت لتكتشف أن جسرك أضيق من اللازم قبل وصول الأفيال.</translation>
+    </message>
+    <message>
+        <source>The cavalry has found the enemy&apos;s rear. Unfortunately, it has also found your missing supplies.</source>
+        <translation>عثر الفرسان على مؤخرة العدو، ولسوء الحظ عثروا أيضًا على مؤنك المفقودة.</translation>
+    </message>
+    <message>
+        <source>The dead have held this post for centuries. You can understand why they dislike a change of ownership.</source>
+        <translation>يحرس الموتى هذا الموقع منذ قرون، ولك أن تفهم لماذا يكرهون تغيّر مالكه.</translation>
+    </message>
+    <message>
+        <source>Slaying the last guardian clears a zone, but the shrine is not purified until you capture or destroy it.</source>
+        <translation>قتل آخر حارس يُخلي المنطقة، لكن المزار لا يتطهّر حتى تستولي عليه أو تدمّره.</translation>
+    </message>
 </context>
 <context>
     <name>Main</name>

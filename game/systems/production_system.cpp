@@ -57,8 +57,7 @@ void start_completion_effect(Engine::Core::World& world,
   effect->radius = std::max(
       1.0F, Game::Units::TroopConfig::instance().get_selection_ring_size(spawn_type));
   if (entity->has_component<Engine::Core::BuildingComponent>()) {
-    const auto size = BuildingCollisionRegistry::get_building_size(
-        Game::Units::spawn_typeToString(spawn_type));
+    const auto size = BuildingCollisionRegistry::get_building_size(spawn_type);
     effect->radius =
         std::max(effect->radius, 0.6F * std::hypot(size.width, size.depth));
   }
