@@ -213,34 +213,22 @@ void main() {
     float t = clamp(u_time, 0.0, 1.0);
     float span = clamp(abs(u_span), 0.02, 1.0);
     bool ring = abs(u_span) >= 0.999;
-    float centered = (a_texcoord.x - 0.5) * 2.0;
-    float inside = step(abs(centered), span);
-    float along = clamp(centered / span * 0.5 + 0.5, 0.0, 1.0);
-    if (u_span < 0.0) {
-      along = 1.0 - along;
-    }
+    float along = u_span < 0.0 ? 1.0 - a_texcoord.x : a_texcoord.x;
     float across = a_texcoord.y;
 
-    float head = ring ? 1.0 : smoothstep(0.0, 0.42, t);
-    float tail = ring ? 0.0 : smoothstep(0.30, 1.0, t) * 0.85;
-    float head_mask = 1.0 - smoothstep(head - 0.07, head + 0.01, along);
-    float head_soft = 1.0 - smoothstep(head - 0.16, head, along);
-    float tail_soft = smoothstep(tail, tail + 0.22, along);
-    float wipe = ring ? 1.0 : head_mask * (0.35 + 0.65 * head_soft) * tail_soft;
+    // Use the entire mesh for the requested sweep, avoiding collapsed end triangles.
+    float angle = (a_texcoord.x - 0.5) * 6.28318530718 * span;
+    float taper = pow(max(sin(along * 3.14159265359), 0.0), 0.65);
+    float width = ring ? 0.28 : 0.045 + 0.40 * taper;
+    float radius = 1.0 - (1.0 - across) * width;
+    float grow = ring ? mix(0.28, 1.12, 1.0 - pow(1.0 - t, 2.0)) : 1.0;
+    pos = vec3(sin(angle) * radius, 0.0, cos(angle) * radius) * grow;
+    pos.y = ring ? 0.0 : sin(along * 3.14159265359) * (1.0 - across) * 0.055;
 
-    float grow = ring ? mix(0.40, 1.0, smoothstep(0.0, 0.6, t)) : 1.0;
-    pos *= grow;
-    pos.y += ring ? 0.0 : (across - 0.5) * 0.04;
+    float life = ring ? 1.0 - smoothstep(0.12, 0.88, t)
+                      : 1.0 - smoothstep(0.48, 1.0, t);
+    v_alpha = clamp(life * u_intensity, 0.0, 1.0);
 
-    float life =
-        ring ? 1.0 - smoothstep(0.25, 0.80, t) : 1.0 - smoothstep(0.55, 1.0, t);
-    float edge =
-        ring ? (1.0 - smoothstep(0.55, 1.0, across)) * smoothstep(0.0, 0.25, across)
-             : smoothstep(0.0, 0.35, across);
-    v_alpha = clamp(inside * wipe * life * edge * u_intensity, 0.0, 1.0);
-    if (inside < 0.5) {
-      pos = vec3(0.0);
-    }
   } else {
     vec3 normal_dir = normalize(a_normal);
 

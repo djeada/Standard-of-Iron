@@ -327,6 +327,68 @@ TEST(LinearFeatureGeometryTest, BuildsBridgeMeshFromSharedHelper) {
       << " m above the ground it lands on, which renders as a step";
 }
 
+TEST(LinearFeatureGeometryTest, BridgeDetailsPreserveClearanceAndFaceOutward) {
+  Game::Map::TerrainHeightMap ground(128, 128, 1.0F);
+  ground.build_from_features({});
+  const std::vector<Game::Map::Bridge> bridges{
+      {{-2.0F, 0.5F, 0.0F}, {2.0F, 0.5F, 0.0F}, 8.0F, 0.6F},
+      {{-12.0F, 0.3F, -8.0F}, {12.0F, 1.1F, 8.0F}, 8.0F, 1.2F},
+      {{0.0F, 1.0F, 24.0F}, {0.0F, 0.2F, -24.0F}, 12.0F, 1.6F},
+  };
+  for (const auto& bridge : bridges) {
+    SCOPED_TRACE(bridge.width);
+    auto mesh = Render::Ground::build_bridge_mesh(bridge, 1.0F, ground);
+    ASSERT_NE(mesh, nullptr);
+    const auto& vertices = mesh->get_vertices();
+    const auto& indices = mesh->get_indices();
+    QVector3D direction = bridge.end - bridge.start;
+    direction.setY(0.0F);
+    const float length = direction.length();
+    direction.normalize();
+    const QVector3D sideways(-direction.z(), 0.0F, direction.x());
+    const float landing = Game::Map::bridge_visual_landing_run(bridge.width);
+    const float clear_half_width = Game::Map::bridge_walkable_half_width(bridge.width);
+    int dressed_vertices = 0;
+    for (const auto& vertex : vertices) {
+      const QVector3D position(
+          vertex.position[0], vertex.position[1], vertex.position[2]);
+      const QVector3D normal(vertex.normal[0], vertex.normal[1], vertex.normal[2]);
+      for (const float value : vertex.position) {
+        ASSERT_TRUE(std::isfinite(value));
+      }
+      EXPECT_NEAR(normal.length(), 1.0F, 0.001F);
+      const float distance = QVector3D::dotProduct(position - bridge.start, direction);
+      EXPECT_GE(distance, -landing - 0.001F);
+      EXPECT_LE(distance, length + landing + 0.001F);
+      if (vertex.tex_coord[0] < 0.0F) {
+        ++dressed_vertices;
+        EXPECT_GT(std::abs(QVector3D::dotProduct(position - bridge.start, sideways)),
+                  clear_half_width)
+            << "coping and buttresses must stay outside the traversable deck";
+      }
+    }
+    EXPECT_GT(dressed_vertices, 0);
+    ASSERT_EQ(indices.size() % 3, 0U);
+    for (std::size_t index = 0; index < indices.size(); index += 3) {
+      ASSERT_LT(indices[index], vertices.size());
+      ASSERT_LT(indices[index + 1], vertices.size());
+      ASSERT_LT(indices[index + 2], vertices.size());
+      const auto& a = vertices[indices[index]];
+      const auto& b = vertices[indices[index + 1]];
+      const auto& c = vertices[indices[index + 2]];
+      const QVector3D pa(a.position[0], a.position[1], a.position[2]);
+      const QVector3D pb(b.position[0], b.position[1], b.position[2]);
+      const QVector3D pc(c.position[0], c.position[1], c.position[2]);
+      const QVector3D face = QVector3D::crossProduct(pb - pa, pc - pa);
+      if (face.lengthSquared() > 0.00000001F) {
+        const QVector3D normal(a.normal[0], a.normal[1], a.normal[2]);
+        EXPECT_GT(QVector3D::dotProduct(face.normalized(), normal), 0.0F)
+            << "triangle " << index / 3 << " is culled from its visible side";
+      }
+    }
+  }
+}
+
 TEST(LinearFeatureGeometryTest, BuildsSharedCapsForRiverJunctionsAndEndpoints) {
   const std::vector<Render::Ground::LinearFeatureRibbonSegment> segments{
       {{-4.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}, 2.0F},

@@ -3,6 +3,7 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <numbers>
 #include <utility>
@@ -481,6 +482,7 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
                        const Game::Map::TerrainHeightMap& height_map)
     -> std::unique_ptr<Render::GL::Mesh> {
   QVector3D dir = bridge.end - bridge.start;
+  dir.setY(0.0F);
   float const length = dir.length();
   if (length < 0.01F) {
     return nullptr;
@@ -529,7 +531,20 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
         vertices.push_back(vtx);
       };
 
+  auto vertex_position = [&](unsigned int index) {
+    const auto& p = vertices[index].position;
+    return QVector3D(p[0], p[1], p[2]);
+  };
+
   auto push_quad = [&](unsigned int a, unsigned int b, unsigned int c, unsigned int d) {
+    // Keep the underside and both banks outward-facing with backface culling.
+    const auto& n = vertices[a].normal;
+    if (QVector3D::dotProduct(
+            QVector3D::crossProduct(vertex_position(b) - vertex_position(a),
+                                    vertex_position(c) - vertex_position(a)),
+            QVector3D(n[0], n[1], n[2])) < 0.0F) {
+      std::swap(b, d);
+    }
     indices.push_back(a);
     indices.push_back(b);
     indices.push_back(c);
@@ -635,48 +650,53 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
     const QVector3D right_outer_top =
         rail_point(ring_parapet_offset + parapet_half_width, rail_top_y);
 
-    float const tex_u0 = 0.0F;
-    float const tex_u1 = 1.0F;
-    float const tex_v = mesh_t * visual_length * 0.4F;
+    const float profile_step = 0.02F;
+    const float t0 = std::max(0.0F, authored_t - profile_step / length);
+    const float t1 = std::min(1.0F, authored_t + profile_step / length);
+    const float grade = (Game::Map::bridge_deck_world_y(bridge, t1) -
+                         Game::Map::bridge_deck_world_y(bridge, t0)) /
+                        std::max((t1 - t0) * length, 0.001F);
+    const QVector3D deck_normal =
+        (QVector3D(0.0F, 1.0F, 0.0F) - dir * grade).normalized();
 
-    add_vertex(top_left, QVector3D(0.0F, 1.0F, 0.0F), tex_u0, tex_v);
-    add_vertex(top_right, QVector3D(0.0F, 1.0F, 0.0F), tex_u1, tex_v);
-    add_vertex(bottom_left, QVector3D(0.0F, -1.0F, 0.0F), tex_u0, tex_v);
-    add_vertex(bottom_right, QVector3D(0.0F, -1.0F, 0.0F), tex_u1, tex_v);
-    add_vertex(side_left_top, left_normal, tex_u0, tex_v);
-    add_vertex(side_left_bottom, left_normal, tex_u0, tex_v);
-    add_vertex(side_right_top, right_normal, tex_u1, tex_v);
-    add_vertex(side_right_bottom, right_normal, tex_u1, tex_v);
-    add_vertex(left_outer_bottom, -perpendicular, tex_u0, tex_v);
-    add_vertex(left_outer_top, -perpendicular, tex_u0, tex_v);
-    add_vertex(left_inner_bottom, perpendicular, tex_u0, tex_v);
-    add_vertex(left_inner_top, perpendicular, tex_u0, tex_v);
-    add_vertex(left_outer_top, QVector3D(0.0F, 1.0F, 0.0F), tex_u0, tex_v);
-    add_vertex(left_inner_top, QVector3D(0.0F, 1.0F, 0.0F), tex_u0, tex_v);
-    add_vertex(right_inner_bottom, -perpendicular, tex_u1, tex_v);
-    add_vertex(right_inner_top, -perpendicular, tex_u1, tex_v);
-    add_vertex(right_outer_bottom, perpendicular, tex_u1, tex_v);
-    add_vertex(right_outer_top, perpendicular, tex_u1, tex_v);
-    add_vertex(right_inner_top, QVector3D(0.0F, 1.0F, 0.0F), tex_u1, tex_v);
-    add_vertex(right_outer_top, QVector3D(0.0F, 1.0F, 0.0F), tex_u1, tex_v);
+    // UVs are metres in the bridge's own frame, including oblique crossings.
+    add_vertex(top_left, deck_normal, 0.0F, span_distance);
+    add_vertex(top_right, deck_normal, ring_half_width * 2.0F, span_distance);
+    add_vertex(bottom_left, -deck_normal, 0.0F, span_distance);
+    add_vertex(bottom_right, -deck_normal, bottom_half_width * 2.0F, span_distance);
+    add_vertex(side_left_top, left_normal, span_distance, deck_y);
+    add_vertex(side_left_bottom, left_normal, span_distance, underside_y);
+    add_vertex(side_right_top, right_normal, span_distance, deck_y);
+    add_vertex(side_right_bottom, right_normal, span_distance, underside_y);
+    add_vertex(left_outer_bottom, -perpendicular, span_distance, deck_y);
+    add_vertex(left_outer_top, -perpendicular, span_distance, rail_top_y);
+    add_vertex(left_inner_bottom, perpendicular, span_distance, deck_y);
+    add_vertex(left_inner_top, perpendicular, span_distance, rail_top_y);
+    add_vertex(left_outer_top, deck_normal, 0.0F, span_distance);
+    add_vertex(left_inner_top, deck_normal, parapet_half_width * 2.0F, span_distance);
+    add_vertex(right_inner_bottom, -perpendicular, span_distance, deck_y);
+    add_vertex(right_inner_top, -perpendicular, span_distance, rail_top_y);
+    add_vertex(right_outer_bottom, perpendicular, span_distance, deck_y);
+    add_vertex(right_outer_top, perpendicular, span_distance, rail_top_y);
+    add_vertex(right_inner_top, deck_normal, 0.0F, span_distance);
+    add_vertex(right_outer_top, deck_normal, parapet_half_width * 2.0F, span_distance);
+  }
 
-    if (i < length_segments) {
-      auto const base_idx =
-          static_cast<unsigned int>(i * k_vertices_per_bridge_segment);
-      unsigned int const next_idx = base_idx + k_vertices_per_bridge_segment;
+  for (int i = 0; i < length_segments; ++i) {
+    auto const base_idx = static_cast<unsigned int>(i * k_vertices_per_bridge_segment);
+    unsigned int const next_idx = base_idx + k_vertices_per_bridge_segment;
 
-      push_quad(base_idx + 0, base_idx + 1, next_idx + 1, next_idx + 0);
-      push_quad(next_idx + 3, next_idx + 2, base_idx + 2, base_idx + 3);
-      push_quad(base_idx + 4, base_idx + 5, next_idx + 5, next_idx + 4);
-      push_quad(base_idx + 6, base_idx + 7, next_idx + 7, next_idx + 6);
+    push_quad(base_idx + 0, base_idx + 1, next_idx + 1, next_idx + 0);
+    push_quad(next_idx + 3, next_idx + 2, base_idx + 2, base_idx + 3);
+    push_quad(base_idx + 4, base_idx + 5, next_idx + 5, next_idx + 4);
+    push_quad(base_idx + 6, base_idx + 7, next_idx + 7, next_idx + 6);
 
-      push_quad(base_idx + 8, base_idx + 9, next_idx + 9, next_idx + 8);
-      push_quad(base_idx + 11, base_idx + 10, next_idx + 10, next_idx + 11);
-      push_quad(base_idx + 12, base_idx + 13, next_idx + 13, next_idx + 12);
-      push_quad(base_idx + 14, base_idx + 15, next_idx + 15, next_idx + 14);
-      push_quad(base_idx + 17, base_idx + 16, next_idx + 16, next_idx + 17);
-      push_quad(base_idx + 18, base_idx + 19, next_idx + 19, next_idx + 18);
-    }
+    push_quad(base_idx + 8, base_idx + 9, next_idx + 9, next_idx + 8);
+    push_quad(base_idx + 11, base_idx + 10, next_idx + 10, next_idx + 11);
+    push_quad(base_idx + 12, base_idx + 13, next_idx + 13, next_idx + 12);
+    push_quad(base_idx + 14, base_idx + 15, next_idx + 15, next_idx + 14);
+    push_quad(base_idx + 17, base_idx + 16, next_idx + 16, next_idx + 17);
+    push_quad(base_idx + 18, base_idx + 19, next_idx + 19, next_idx + 18);
   }
 
   if (!vertices.empty()) {
@@ -698,6 +718,11 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
         vtx.normal[0] = n.x();
         vtx.normal[1] = n.y();
         vtx.normal[2] = n.z();
+        const QVector3D position(vtx.position[0], vtx.position[1], vtx.position[2]);
+        vtx.tex_coord[0] =
+            QVector3D::dotProduct(position - visual_start, perpendicular) +
+            bridge_width;
+        vtx.tex_coord[1] = position.y();
         vertices.push_back(vtx);
       };
       copy_vertex(top_l, normal);
@@ -719,6 +744,171 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
             start_idx + 15,
             -forward_normal);
     add_cap(end_idx + 14, end_idx + 15, end_idx + 17, end_idx + 16, forward_normal);
+  }
+
+  // Sample the finished strip so ornament follows the exact landing/deck profile.
+  auto strip_point = [&](float distance, unsigned int column) {
+    const float row = std::clamp(distance / visual_length, 0.0F, 1.0F) *
+                      static_cast<float>(length_segments);
+    const auto lo = static_cast<unsigned int>(std::floor(row));
+    const auto hi = std::min(lo + 1U, static_cast<unsigned int>(length_segments));
+    return vertex_position(lo * k_vertices_per_bridge_segment + column) *
+               (1.0F - (row - static_cast<float>(lo))) +
+           vertex_position(hi * k_vertices_per_bridge_segment + column) *
+               (row - static_cast<float>(lo));
+  };
+  auto lateral_offset = [&](const QVector3D& point) {
+    return QVector3D::dotProduct(point - visual_start, perpendicular);
+  };
+
+  // Four rings make real chamfers catch the sun at the normal battle-camera zoom.
+  // Negative U identifies individually modelled dressed stone in bridge.vert;
+  // positive U is reserved for the continuous paving / coursed masonry above.
+  auto add_dressed_block = [&](float start,
+                               float end,
+                               float offset_start,
+                               float offset_end,
+                               float block_half_width,
+                               float bottom_start,
+                               float bottom_end,
+                               float top_start,
+                               float top_end,
+                               float bevel) {
+    const float chamfer = std::min({bevel,
+                                    (end - start) * 0.20F,
+                                    block_half_width * 0.35F,
+                                    (top_start - bottom_start) * 0.24F,
+                                    (top_end - bottom_end) * 0.24F});
+    std::array<std::array<QVector3D, 4>, 4> rings;
+    for (int ring = 0; ring < 4; ++ring) {
+      const float inset = (ring == 0 || ring == 3) ? chamfer : 0.0F;
+      for (int corner = 0; corner < 4; ++corner) {
+        const bool far_end = corner == 1 || corner == 2;
+        const float distance = far_end ? end - inset : start + inset;
+        const float t = (distance - start) / (end - start);
+        const float side = corner < 2 ? -1.0F : 1.0F;
+        QVector3D point = visual_start + dir * distance +
+                          perpendicular * (mixf(offset_start, offset_end, t) +
+                                           side * (block_half_width - inset));
+        const float bottom = mixf(bottom_start, bottom_end, t);
+        const float top = mixf(top_start, top_end, t);
+        point.setY(ring == 0   ? bottom
+                   : ring == 1 ? bottom + chamfer
+                   : ring == 2 ? top - chamfer
+                               : top);
+        rings[ring][corner] = point;
+      }
+    }
+    auto face = [&](const QVector3D& a,
+                    const QVector3D& b,
+                    const QVector3D& c,
+                    const QVector3D& d) {
+      const QVector3D normal = QVector3D::crossProduct(b - a, c - a).normalized();
+      const auto first = static_cast<unsigned int>(vertices.size());
+      const float width = (b - a).length();
+      const float height = (d - a).length();
+      add_vertex(a, normal, -1.0F, 0.0F);
+      add_vertex(b, normal, -1.0F - width, 0.0F);
+      add_vertex(c, normal, -1.0F - width, height);
+      add_vertex(d, normal, -1.0F, height);
+      push_quad(first, first + 1, first + 2, first + 3);
+    };
+    for (int ring = 0; ring < 3; ++ring) {
+      for (int corner = 0; corner < 4; ++corner) {
+        const int next = (corner + 1) % 4;
+        face(rings[ring][corner],
+             rings[ring + 1][corner],
+             rings[ring + 1][next],
+             rings[ring][next]);
+      }
+    }
+    face(rings[0][0], rings[0][1], rings[0][2], rings[0][3]);
+    face(rings[3][3], rings[3][2], rings[3][1], rings[3][0]);
+  };
+
+  const float detail_start = landing_run * 0.65F;
+  const float detail_length = visual_length - detail_start * 2.0F;
+  // An odd count keeps the larger keystone centred on the crown.
+  const int stone_count =
+      std::clamp(static_cast<int>(std::ceil(detail_length / 0.95F)) | 1, 3, 191);
+  const float stone_length = detail_length / static_cast<float>(stone_count);
+  for (int stone = 0; stone < stone_count; ++stone) {
+    const float start =
+        detail_start + stone_length * static_cast<float>(stone) + 0.014F;
+    const float end = start + stone_length - 0.028F;
+    for (int side = 0; side < 2; ++side) {
+      const unsigned int outer = side == 0 ? 12U : 18U;
+      const QVector3D rail_start =
+          (strip_point(start, outer) + strip_point(start, outer + 1)) * 0.5F;
+      const QVector3D rail_end =
+          (strip_point(end, outer) + strip_point(end, outer + 1)) * 0.5F;
+      const float variation = 0.012F * std::sin(static_cast<float>(stone) * 2.37F);
+      add_dressed_block(start,
+                        end,
+                        lateral_offset(rail_start),
+                        lateral_offset(rail_end),
+                        parapet_half_width + 0.095F,
+                        rail_start.y() - 0.035F,
+                        rail_end.y() - 0.035F,
+                        rail_start.y() + 0.17F + variation,
+                        rail_end.y() + 0.17F + variation,
+                        0.045F);
+
+      // A projecting ring of wedge-like stones makes the arch legible in silhouette.
+      const unsigned int edge = side == 0 ? 0U : 1U;
+      const QVector3D deck_start = strip_point(start, edge);
+      const QVector3D deck_end = strip_point(end, edge);
+      const float soffit_start = strip_point(start, edge + 2).y();
+      const float soffit_end = strip_point(end, edge + 2).y();
+      const float ring_height = stone == stone_count / 2 ? 0.44F : 0.34F;
+      add_dressed_block(start,
+                        end,
+                        lateral_offset(deck_start),
+                        lateral_offset(deck_end),
+                        side_bevel + 0.035F,
+                        soffit_start - 0.055F,
+                        soffit_end - 0.055F,
+                        std::min(soffit_start + ring_height, deck_start.y() - 0.03F),
+                        std::min(soffit_end + ring_height, deck_end.y() - 0.03F),
+                        0.028F);
+    }
+  }
+
+  // Bank-side buttresses terminate the parapets and anchor the span in the terrain.
+  const float post_inset = std::min(length * 0.15F, 1.25F);
+  const float post_half_length = std::min(length * 0.08F, 0.46F);
+  for (const float distance :
+       {landing_run + post_inset, landing_run + length - post_inset}) {
+    for (int side = 0; side < 2; ++side) {
+      const unsigned int outer = side == 0 ? 12U : 18U;
+      const QVector3D rail =
+          (strip_point(distance, outer) + strip_point(distance, outer + 1)) * 0.5F;
+      const float offset = lateral_offset(rail);
+      const float footing =
+          std::min(sample_height_clamped(height_map, rail.x(), rail.z()) - 0.12F,
+                   strip_point(distance, side == 0 ? 2U : 3U).y() - 0.18F);
+      const float top = rail.y() + 0.12F;
+      add_dressed_block(distance - post_half_length,
+                        distance + post_half_length,
+                        offset,
+                        offset,
+                        parapet_half_width + 0.10F,
+                        footing,
+                        footing,
+                        top,
+                        top,
+                        0.055F);
+      add_dressed_block(distance - post_half_length - 0.06F,
+                        distance + post_half_length + 0.06F,
+                        offset,
+                        offset,
+                        parapet_half_width + 0.18F,
+                        top,
+                        top,
+                        top + 0.18F,
+                        top + 0.18F,
+                        0.045F);
+    }
   }
 
   if (vertices.empty() || indices.empty()) {

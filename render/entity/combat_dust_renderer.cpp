@@ -50,8 +50,43 @@ void draw_commander_swing(
   constexpr float k_cut_tilt = 0.62F;
   constexpr float k_slam_tilt = 1.02F;
   float const reach = std::max(1.2F, entry.reach);
-  float const arc_alpha = entry.intensity * 0.85F;
-  QVector3D const hot = accent * 0.22F + QVector3D(0.70F, 0.72F, 0.74F);
+  float const arc_alpha = entry.intensity * 0.90F;
+  QVector3D const hot = accent * 0.65F + QVector3D(0.35F, 0.37F, 0.40F);
+  QVector3D const across(-forward.z(), 0.0F, forward.x());
+
+  auto cutting_wake =
+      [&](const QVector3D& origin, float radius, float span, float tilt) {
+        // The echo follows the same cutting plane, with a thinner, cooler inner arc.
+        if (progress > 0.075F) {
+          renderer->weapon_arc(origin - forward * 0.055F +
+                                   QVector3D(0.0F, -0.045F, 0.0F),
+                               accent * 0.65F + QVector3D(0.16F, 0.25F, 0.42F),
+                               radius * 0.91F,
+                               arc_alpha * 0.38F,
+                               std::clamp((progress - 0.075F) / 0.925F, 0.0F, 1.0F),
+                               forward,
+                               span * 0.92F,
+                               tilt);
+        }
+        if (progress > 0.08F && progress < 0.72F) {
+          const float travel = std::clamp(progress / 0.36F, 0.0F, 1.0F);
+          const float eased = travel * travel * (3.0F - 2.0F * travel);
+          const float sign = span < 0.0F ? -1.0F : 1.0F;
+          const float angle =
+              (eased - 0.5F) * 2.0F * std::numbers::pi_v<float> * std::abs(span) * sign;
+          const QVector3D cut_side =
+              -across * std::cos(tilt) + QVector3D(0.0F, std::sin(tilt), 0.0F);
+          const QVector3D ray = forward * std::cos(angle) + cut_side * std::sin(angle);
+          const QVector3D tangent =
+              (cut_side * std::cos(angle) - forward * std::sin(angle)) * sign;
+          renderer->metal_spark(origin + ray * radius * 0.96F,
+                                hot,
+                                0.16F,
+                                arc_alpha * (1.0F - progress) * 0.85F,
+                                0.045F + progress * 0.13F,
+                                tangent);
+        }
+      };
 
   switch (entry.form) {
   case Engine::Core::CommanderSignatureForm::Cut: {
@@ -64,6 +99,7 @@ void draw_commander_swing(
                          forward,
                          entry.span,
                          tilt);
+    cutting_wake(contact, reach * 1.05F, entry.span, tilt);
     break;
   }
   case Engine::Core::CommanderSignatureForm::Sweep: {
@@ -75,6 +111,8 @@ void draw_commander_swing(
                          forward,
                          entry.span,
                          0.0F);
+    cutting_wake(
+        contact - QVector3D(0.0F, 0.22F, 0.0F), reach * 0.92F, entry.span, 0.0F);
     break;
   }
   case Engine::Core::CommanderSignatureForm::Slam: {
@@ -86,6 +124,10 @@ void draw_commander_swing(
                          forward,
                          std::abs(entry.span) * 0.8F,
                          k_slam_tilt);
+    cutting_wake(contact - forward * (reach * 0.12F),
+                 reach * 0.95F,
+                 std::abs(entry.span) * 0.8F,
+                 k_slam_tilt);
     constexpr float k_shock_start = 0.34F;
     if (progress >= k_shock_start) {
       float const shock =
@@ -108,16 +150,35 @@ void draw_commander_swing(
     break;
   }
   case Engine::Core::CommanderSignatureForm::Thrust: {
-    float const drive = std::clamp(progress * 1.6F, 0.0F, 1.0F);
-    QVector3D const tip = contact + forward * (reach * (0.15F + 0.55F * drive));
-    renderer->metal_spark(
-        tip, hot, 0.12F, 1.4F * arc_alpha, std::max(0.0F, entry.age), forward);
-    renderer->metal_spark(contact + forward * (reach * 0.25F * drive),
-                          accent,
-                          0.09F,
-                          0.9F * arc_alpha,
-                          std::max(0.0F, entry.age - 0.04F),
-                          forward);
+    float const drive =
+        1.0F - std::pow(1.0F - std::clamp(progress * 1.7F, 0.0F, 1.0F), 3.0F);
+    QVector3D const tip = contact + forward * (reach * (0.12F + 0.68F * drive));
+    float const flash = (1.0F - progress) * arc_alpha;
+    // Staggered, axial glints leave a pointed wake along the spear's drive.
+    for (int streak = 0; streak < 4; ++streak) {
+      const float lag = static_cast<float>(streak);
+      const float delay = lag * 0.018F;
+      if (entry.age < delay) {
+        continue;
+      }
+      renderer->metal_spark(tip - forward * (reach * lag * 0.11F),
+                            streak == 0 ? QVector3D(0.82F, 0.94F, 1.0F) : hot,
+                            0.23F - lag * 0.033F,
+                            flash * (1.65F - lag * 0.28F),
+                            std::max(0.0F, entry.age - delay),
+                            forward);
+    }
+    // Turn the pressure ring across the spear, perpendicular to its travel.
+    if (progress > 0.12F) {
+      renderer->weapon_arc(tip - forward * 0.12F,
+                           accent,
+                           0.25F + reach * 0.12F,
+                           flash * 0.55F,
+                           (progress - 0.12F) / 0.88F,
+                           across,
+                           1.0F,
+                           std::numbers::pi_v<float> * 0.5F);
+    }
     break;
   }
   case Engine::Core::CommanderSignatureForm::Shot:
@@ -129,7 +190,7 @@ void draw_commander_swing(
   swing_light.color = accent * 0.25F + QVector3D(0.48F, 0.50F, 0.52F);
   swing_light.radius = 1.4F + reach * 0.35F;
   swing_light.intensity =
-      0.22F * arc_alpha * (1.0F - progress) * std::clamp(progress * 4.0F, 0.0F, 1.0F);
+      0.38F * arc_alpha * (1.0F - progress) * std::clamp(progress * 9.0F, 0.0F, 1.0F);
   renderer->local_light(swing_light);
 }
 
@@ -774,6 +835,18 @@ void render_combat_dust(Renderer* renderer,
       };
       QVector3D const spark_tint = accent * 0.35F + QVector3D(0.65F, 0.62F, 0.55F);
 
+      if (entry.form != Engine::Core::CommanderSignatureForm::Shot) {
+        const bool thrust = entry.form == Engine::Core::CommanderSignatureForm::Thrust;
+        renderer->weapon_arc(contact + forward * 0.035F,
+                             thrust ? QVector3D(0.52F, 0.78F, 1.0F) : accent,
+                             thrust ? 0.48F : 0.62F,
+                             entry.intensity * 0.65F,
+                             progress,
+                             across,
+                             1.0F,
+                             std::numbers::pi_v<float> * 0.5F);
+      }
+
       switch (entry.form) {
       case Engine::Core::CommanderSignatureForm::Thrust: {
 
@@ -885,7 +958,7 @@ void render_combat_dust(Renderer* renderer,
                                ? QVector3D(0.72F, 0.84F, 1.0F)
                                : accent * 0.55F + QVector3D(0.45F, 0.35F, 0.20F);
       strike_light.radius = 1.8F + 0.5F * entry.intensity;
-      strike_light.intensity = 0.35F * fade;
+      strike_light.intensity = 0.55F * fade;
       renderer->local_light(strike_light);
     }
   }

@@ -308,32 +308,45 @@ void main() {
   } else if (u_effect_type == 6) {
     float t = clamp(u_time, 0.0, 1.0);
     float across = clamp(v_texcoord.y, 0.0, 1.0);
+    float along = u_span < 0.0 ? 1.0 - v_texcoord.x : v_texcoord.x;
     bool ring = abs(u_span) >= 0.999;
-
     vec3 accent = max(u_dust_color, vec3(0.03));
-    vec3 white_hot = vec3(2.6, 2.4, 2.0);
-    vec3 hot_accent = accent * 2.2;
-    vec3 cool_accent = accent * 0.7;
 
-    float blade_band =
-        ring ? smoothstep(0.58, 0.74, across) * (1.0 - smoothstep(0.80, 0.94, across))
-             : smoothstep(0.58, 0.86, across) * (1.0 - smoothstep(0.92, 1.0, across));
-    float body = ring ? 0.0 : 1.0 - smoothstep(0.0, 0.75, across);
+    // A fast cutting edge with a lingering, dissolving wake behind it.
+    float head = smoothstep(0.0, 0.36, t);
+    float tail = smoothstep(0.22, 1.0, t) * 0.96;
+    float aa = max(fwidth(along), 0.002);
+    float wipe = smoothstep(tail - aa, tail + 0.12 + aa, along) *
+                 (1.0 - smoothstep(head - 0.018 - aa, head + aa, along));
+    float ends = smoothstep(0.0, 0.045, along) *
+                 (1.0 - smoothstep(0.965, 1.0, along));
+    float edge_aa = max(fwidth(across), 0.004);
+    float cutting_edge = exp(-pow((across - 0.87) / (0.035 + edge_aa), 2.0));
+    float halo = exp(-pow((across - 0.78) / 0.22, 2.0));
+    float inner_fade = smoothstep(0.02, 0.38, across);
+    float outer_fade = 1.0 - smoothstep(0.94, 1.0, across);
+    float wake_noise = soi_noise_3d41e6(vec2(along * 19.0 - t * 6.0, across * 5.0));
+    float dissolve = smoothstep(t * 0.44, 0.48 + t * 0.30, wake_noise);
+    float filaments = pow(0.5 + 0.5 * sin(across * 74.0 + along * 13.0 - t * 8.0), 10.0);
+    float wake = inner_fade * outer_fade * dissolve * (0.10 + filaments * 0.24);
+    float head_glint = exp(-pow((along - head + 0.045) / 0.07, 2.0));
 
-    float heat = 1.0 - smoothstep(0.0, 0.7, t);
-    color = mix(hot_accent, white_hot, blade_band * heat * (ring ? 0.0 : 0.25));
-    color = mix(color, cool_accent, (1.0 - heat) * 0.5);
-
-    float grain = 0.90 + 0.10 * combined_noise;
-    color *= v_intensity * 1.6 * grain;
-    color = clamp(color, 0.0, 5.0);
-
-    float arc_alpha = v_alpha * (0.14 * body + 1.0 * blade_band) * grain;
+    vec3 edge_color = mix(accent * 2.6, vec3(3.8, 3.9, 4.1), 0.72);
+    vec3 wake_color = mix(accent, vec3(0.38, 0.62, 1.0), 0.23);
+    vec3 radiance = edge_color * cutting_edge * (0.70 + head_glint * 0.75) +
+                    accent * halo * 0.48 + wake_color * wake;
+    float coverage = wipe * ends;
+    float opacity = cutting_edge * 0.85 + halo * 0.20 + wake * 0.22;
     if (ring) {
-      arc_alpha = v_alpha * 0.85 * blade_band * grain;
+      float fracture = 0.72 + 0.28 * sin(v_texcoord.x * 75.3982237 + t * 9.0);
+      radiance = accent * (cutting_edge * 2.5 + halo * 0.40) * fracture;
+      coverage = smoothstep(0.0, 0.05, t);
+      opacity = cutting_edge * 0.65 + halo * 0.12;
     }
-    arc_alpha = clamp(arc_alpha, 0.0, 1.0);
-    frag_color = vec4(color * arc_alpha, arc_alpha * 0.30);
+    float energy = coverage * v_alpha;
+    frag_color = vec4(min(radiance, vec3(5.0)) * energy,
+                       clamp(opacity * energy * 0.24, 0.0, 0.40));
+
   } else {
 
     color = u_dust_color;
