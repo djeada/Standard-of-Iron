@@ -1003,9 +1003,34 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   bool soldier_turn_smoothed = false;
   bool const soldier_is_casualty_body =
       soldier_render_anim.is_dying || soldier_render_anim.is_dead;
-  if (turn_smoothing_active && !soldier_is_casualty_body &&
-      !soldier_render_anim.simulation_owns_root_motion &&
-      static_cast<std::size_t>(idx) < layout_cache_comp->turn_states.size()) {
+  auto const* shared_footing =
+      has_shared_formation_layout
+          ? &formation_presentation->soldiers[static_cast<std::size_t>(idx)]
+          : nullptr;
+  const bool has_shared_footsteps =
+      shared_footing != nullptr && shared_footing->world_motion_valid &&
+      !soldier_is_casualty_body && !soldier_render_anim.simulation_owns_root_motion;
+  if (has_shared_footsteps) {
+    // Simulation already integrates each soldier's feet and facing. Applying
+    // the parent yaw (or a second smoothing pass) would rotate the ranks again.
+    turn_smoothing.x = shared_footing->world_x;
+    turn_smoothing.z = shared_footing->world_z;
+    turn_smoothing.yaw_degrees = shared_footing->world_yaw;
+    turn_smoothing.travel_speed =
+        std::hypot(shared_footing->world_velocity_x, shared_footing->world_velocity_z);
+    turn_smoothing.travel_yaw_degrees =
+        turn_smoothing.travel_speed > 0.01F
+            ? std::atan2(shared_footing->world_velocity_x,
+                         shared_footing->world_velocity_z) *
+                  180.0F / std::numbers::pi_v<float>
+            : shared_footing->world_yaw;
+    turn_smoothing.relocating = shared_footing->reforming;
+    turn_slot_world =
+        QVector3D(shared_footing->world_x, root_position.y(), shared_footing->world_z);
+    soldier_turn_smoothed = true;
+  } else if (turn_smoothing_active && !soldier_is_casualty_body &&
+             !soldier_render_anim.simulation_owns_root_motion &&
+             static_cast<std::size_t>(idx) < layout_cache_comp->turn_states.size()) {
     turn_slot_world = unit_base.map(QVector3D(offset_x, 0.0F, offset_z));
 
     auto const turn_variation = soldier_turn_variation(
@@ -1038,11 +1063,24 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
       soldier_render_anim.movement_state = Animation::MovementState::Walk;
     }
   }
-  if (has_shared_formation_layout &&
-      formation_presentation->soldiers[static_cast<std::size_t>(idx)].reforming &&
-      !soldier_is_casualty_body && !soldier_render_anim.is_attacking &&
-      !soldier_render_anim.is_in_melee_lock && !soldier_render_anim.is_constructing &&
-      !Render::Creature::is_moving_animation(soldier_render_anim.movement_state)) {
+  if (has_shared_footsteps && !soldier_render_anim.is_attacking &&
+      !soldier_render_anim.is_in_melee_lock && !soldier_render_anim.is_constructing) {
+    const float speed = turn_smoothing.travel_speed;
+    const bool stepping = speed > 0.06F || shared_footing->angular_speed > 8.0F;
+    const float running_speed =
+        std::max(2.4F, (unit_comp != nullptr ? unit_comp->speed : 2.0F) * 1.15F);
+    soldier_render_anim.movement_state = !stepping ? Animation::MovementState::Idle
+                                         : speed > running_speed
+                                             ? Animation::MovementState::Run
+                                             : Animation::MovementState::Walk;
+  } else if (has_shared_formation_layout &&
+             formation_presentation->soldiers[static_cast<std::size_t>(idx)]
+                 .reforming &&
+             !soldier_is_casualty_body && !soldier_render_anim.is_attacking &&
+             !soldier_render_anim.is_in_melee_lock &&
+             !soldier_render_anim.is_constructing &&
+             !Render::Creature::is_moving_animation(
+                 soldier_render_anim.movement_state)) {
     soldier_render_anim.movement_state = Animation::MovementState::Walk;
   }
 
@@ -1417,7 +1455,17 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   locomotion_inputs.individuality = individuality;
   locomotion_inputs.persistent_state = locomotion_persistent_state;
   locomotion_inputs.allow_persistent_update = allow_animation_persistence;
-  if (soldier_turn_smoothed && turn_smoothing.relocating) {
+  if (has_shared_footsteps) {
+    // Inner files may stand or shuffle while the outer files walk. Do not use
+    // the unit centre's speed as a minimum stride speed for every soldier.
+    const float pivot_stride =
+        0.38F * std::clamp(shared_footing->angular_speed / 140.0F, 0.0F, 1.0F);
+    locomotion_inputs.move_speed = std::max(turn_smoothing.travel_speed, pivot_stride);
+    const float travel_rad = qDegreesToRadians(turn_smoothing.travel_yaw_degrees);
+    locomotion_inputs.locomotion_direction =
+        QVector3D(std::sin(travel_rad), 0.0F, std::cos(travel_rad));
+    locomotion_inputs.has_movement_target = false;
+  } else if (soldier_turn_smoothed && turn_smoothing.relocating) {
 
     locomotion_inputs.move_speed =
         std::max(locomotion_inputs.move_speed, turn_smoothing.travel_speed);

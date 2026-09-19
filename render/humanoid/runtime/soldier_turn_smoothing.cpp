@@ -17,7 +17,6 @@ constexpr float k_turn_stable_reset_seconds = 0.08F;
 constexpr float k_pivot_yaw_rate_degrees = 10.0F;
 constexpr float k_pivot_center_speed = 0.35F;
 constexpr float k_sweep_excess_speed = 0.5F;
-constexpr float k_wheel_catch_up_scale = 1.5F;
 constexpr float k_relocate_travel_speed = 0.3F;
 
 [[nodiscard]] auto hash_u32(std::uint32_t value) -> std::uint32_t {
@@ -54,11 +53,6 @@ constexpr float k_relocate_travel_speed = 0.3F;
   return t * t * (3.0F - 2.0F * t);
 }
 
-[[nodiscard]] auto
-blend_degrees(float from_degrees, float to_degrees, float amount) -> float {
-  return wrap_degrees(from_degrees + wrap_degrees(to_degrees - from_degrees) * amount);
-}
-
 } // namespace
 
 auto soldier_turn_variation(std::uint32_t seed,
@@ -77,7 +71,7 @@ auto soldier_turn_variation(std::uint32_t seed,
   SoldierTurnVariation result;
   result.catch_up_speed_scale = 0.90F + speed_jitter * 0.18F;
   result.turn_rate_scale = 0.78F + turn_jitter * 0.40F;
-  result.response_delay_seconds = 0.015F + response_jitter * 0.055F + rear_rank * 0.08F;
+  result.response_delay_seconds = 0.035F + response_jitter * 0.14F + rear_rank * 0.20F;
   if (mounted) {
     result.response_delay_seconds *= 1.2F;
   }
@@ -137,7 +131,12 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
   float const distance =
       std::sqrt(to_target_x * to_target_x + to_target_z * to_target_z);
 
-  bool const must_snap = !state.valid || distance > inputs.snap_distance;
+  // A large slot displacement during a turn is not a teleport: outer ranks
+  // must walk that distance. Only a discontinuous move of the root resets feet.
+  float const center_distance =
+      std::hypot(inputs.formation_center_x - state.formation_center_x,
+                 inputs.formation_center_z - state.formation_center_z);
+  bool const must_snap = !state.valid || center_distance > inputs.snap_distance;
   if (must_snap) {
     state.world_x = inputs.target_x;
     state.world_z = inputs.target_z;
@@ -199,8 +198,7 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
     state.facing_yaw_degrees = state.formation_yaw_degrees;
   }
 
-  float const max_speed =
-      state.wheeling ? inputs.max_speed * k_wheel_catch_up_scale : inputs.max_speed;
+  float const max_speed = std::max(0.0F, inputs.max_speed);
   float const max_step = max_speed * inputs.dt;
   float step = std::min(distance, max_step);
   float travel_yaw = state.body_yaw_degrees;
@@ -283,9 +281,7 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
       state.turn_pending && state.turn_delay_remaining > 0.0F;
   bool const face_travel = inputs.allow_travel_yaw && !awaiting_turn_response &&
                            result.relocating && result.travel_speed > 0.3F;
-  float const travel_facing =
-      blend_degrees(travel_yaw, state.facing_yaw_degrees, wheel_amount);
-  float const yaw_target = face_travel ? travel_facing : state.facing_yaw_degrees;
+  float const yaw_target = face_travel ? travel_yaw : state.facing_yaw_degrees;
   state.body_yaw_degrees = turn_toward(
       state.body_yaw_degrees, yaw_target, inputs.turn_rate_degrees * inputs.dt);
   if (state.turn_pending && state.turn_delay_remaining <= 0.0F &&

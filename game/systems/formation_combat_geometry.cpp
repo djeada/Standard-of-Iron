@@ -795,6 +795,14 @@ void soldier_spatial_anchors_into(const Engine::Core::Entity& entity,
         anchor.local_x = soldier.local_x;
         anchor.local_z = soldier.local_z;
         anchor.local_yaw = soldier.local_yaw;
+        if (soldier.world_motion_valid) {
+          const float dx = soldier.world_x - root_x;
+          const float dz = soldier.world_z - root_z;
+          anchor.local_x = cos_yaw * dx - sin_yaw * dz;
+          anchor.local_z = sin_yaw * dx + cos_yaw * dz;
+          anchor.local_yaw =
+              soldier.world_yaw - (transform != nullptr ? transform->rotation.y : 0.0F);
+        }
         anchor.source = SoldierAnchorSource::PresentationFacts;
       }
     }
