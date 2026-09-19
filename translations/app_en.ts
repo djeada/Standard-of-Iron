@@ -4062,24 +4062,8 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Join</translation>
     </message>
     <message>
-        <source>Fold two understrength squads of the same kind back into one.</source>
-        <translation>Fold two understrength squads of the same kind back into one.</translation>
-    </message>
-    <message>
-        <source>Two squads of the same kind, both below full strength and standing close together.</source>
-        <translation>Two squads of the same kind, both below full strength and standing close together.</translation>
-    </message>
-    <message>
         <source>Result</source>
         <translation>Result</translation>
-    </message>
-    <message>
-        <source>One squad with their men and health added together, up to a full establishment.</source>
-        <translation>One squad with their men and health added together, up to a full establishment.</translation>
-    </message>
-    <message>
-        <source>Select two understrength squads of the same kind</source>
-        <translation>Select two understrength squads of the same kind</translation>
     </message>
     <message>
         <source>Pick a structure, move the outline onto flat clear ground, scroll or press [ and ] to rotate, left-click to confirm. Right-click cancels.</source>
@@ -4104,6 +4088,22 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Select troops to reveal their specialist actions</source>
         <translation>Select troops to reveal their specialist actions</translation>
+    </message>
+    <message>
+        <source>Fold squads of the same kind that have lost men back into full-strength ones.</source>
+        <translation>Fold squads of the same kind that have lost men back into full-strength ones.</translation>
+    </message>
+    <message>
+        <source>Squads of the same kind standing close together, at least one of them short of men.</source>
+        <translation>Squads of the same kind standing close together, at least one of them short of men.</translation>
+    </message>
+    <message>
+        <source>Their men fill whole squads first and any left over stay together as one smaller squad. No man is lost.</source>
+        <translation>Their men fill whole squads first and any left over stay together as one smaller squad. No man is lost.</translation>
+    </message>
+    <message>
+        <source>Select squads of the same kind that have lost men</source>
+        <translation>Select squads of the same kind that have lost men</translation>
     </message>
 </context>
 <context>
@@ -9124,38 +9124,6 @@ Build time: %3s</translation>
         <translation>MARKETPLACE</translation>
     </message>
     <message>
-        <source>Trade resources for gold at fixed exchange rates</source>
-        <translation>Trade resources for gold at fixed exchange rates</translation>
-    </message>
-    <message>
-        <source>Select your marketplace to trade</source>
-        <translation>Select your marketplace to trade</translation>
-    </message>
-    <message>
-        <source>Gold: %1    Trade size: %2</source>
-        <translation>Gold: %1    Trade size: %2</translation>
-    </message>
-    <message>
-        <source>Trading is available only for your own marketplace.</source>
-        <translation>Trading is available only for your own marketplace.</translation>
-    </message>
-    <message>
-        <source>You have %1</source>
-        <translation>You have %1</translation>
-    </message>
-    <message>
-        <source>Buy %1 (%2g)</source>
-        <translation>Buy %1 (%2g)</translation>
-    </message>
-    <message>
-        <source>Spend %1 gold to buy %2 %3</source>
-        <translation>Spend %1 gold to buy %2 %3</translation>
-    </message>
-    <message>
-        <source>Sell %1 (+%2g)</source>
-        <translation>Sell %1 (+%2g)</translation>
-    </message>
-    <message>
         <source>Sell %1 %2 for %3 gold</source>
         <translation>Sell %1 %2 for %3 gold</translation>
     </message>
@@ -9302,6 +9270,34 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>QUEUE</source>
         <translation>QUEUE</translation>
+    </message>
+    <message>
+        <source>· lots of %1</source>
+        <translation>· lots of %1</translation>
+    </message>
+    <message>
+        <source>Only your own marketplace can trade. Select it to buy or sell.</source>
+        <translation>Only your own marketplace can trade. Select it to buy or sell.</translation>
+    </message>
+    <message>
+        <source>Buy %1 · %2g</source>
+        <translation>Buy %1 · %2g</translation>
+    </message>
+    <message>
+        <source>Sell %1 · +%2g</source>
+        <translation>Sell %1 · +%2g</translation>
+    </message>
+    <message>
+        <source>Spend %1 gold for %2 %3</source>
+        <translation>Spend %1 gold for %2 %3</translation>
+    </message>
+    <message>
+        <source>Not enough gold: %1 needed</source>
+        <translation>Not enough gold: %1 needed</translation>
+    </message>
+    <message>
+        <source>Not enough %1: %2 needed</source>
+        <translation>Not enough %1: %2 needed</translation>
     </message>
 </context>
 <context>

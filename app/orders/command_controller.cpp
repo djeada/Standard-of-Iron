@@ -444,13 +444,8 @@ auto mergeable_selection(Engine::Core::World* world,
                          const std::vector<Engine::Core::EntityID>& selected)
     -> std::vector<Engine::Core::EntityID> {
   std::vector<Engine::Core::EntityID> mergeable;
-  for (const auto id : selected) {
-    for (const auto other : selected) {
-      if (Game::Systems::SquadService::can_merge(*world, id, other)) {
-        mergeable.push_back(id);
-        break;
-      }
-    }
+  for (const auto& plan : Game::Systems::SquadService::plan_joins(*world, selected)) {
+    mergeable.insert(mergeable.end(), plan.members.begin(), plan.members.end());
   }
   return mergeable;
 }

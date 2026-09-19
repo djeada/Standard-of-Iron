@@ -4066,24 +4066,8 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>دمج</translation>
     </message>
     <message>
-        <source>Fold two understrength squads of the same kind back into one.</source>
-        <translation>يدمج وحدتين ناقصتَي العدد من النوع نفسه في وحدة واحدة.</translation>
-    </message>
-    <message>
-        <source>Two squads of the same kind, both below full strength and standing close together.</source>
-        <translation>وحدتان من النوع نفسه، كلتاهما دون كامل القوة ومتقاربتان.</translation>
-    </message>
-    <message>
         <source>Result</source>
         <translation>النتيجة</translation>
-    </message>
-    <message>
-        <source>One squad with their men and health added together, up to a full establishment.</source>
-        <translation>وحدة واحدة تُجمع فيها رجالهما وصحتهما حتى القوام الكامل.</translation>
-    </message>
-    <message>
-        <source>Select two understrength squads of the same kind</source>
-        <translation>اختر وحدتين ناقصتَي العدد من النوع نفسه</translation>
     </message>
     <message>
         <source>Pick a structure, move the outline onto flat clear ground, scroll or press [ and ] to rotate, left-click to confirm. Right-click cancels.</source>
@@ -4108,6 +4092,22 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Select troops to reveal their specialist actions</source>
         <translation>حدّد قوات لعرض إجراءاتها الخاصة</translation>
+    </message>
+    <message>
+        <source>Fold squads of the same kind that have lost men back into full-strength ones.</source>
+        <translation>ادمج فرق النوع نفسه التي فقدت رجالًا في فرق كاملة من جديد.</translation>
+    </message>
+    <message>
+        <source>Squads of the same kind standing close together, at least one of them short of men.</source>
+        <translation>فرق من النوع نفسه متقاربة، واحدة منها على الأقل فقدت رجالًا.</translation>
+    </message>
+    <message>
+        <source>Their men fill whole squads first and any left over stay together as one smaller squad. No man is lost.</source>
+        <translation>يملأ رجالها الفرق الكاملة أولًا، ومن يتبقى يبقى معًا في فرقة أصغر واحدة. لا يضيع أي رجل.</translation>
+    </message>
+    <message>
+        <source>Select squads of the same kind that have lost men</source>
+        <translation>حدّد فرقًا من النوع نفسه فقدت رجالًا</translation>
     </message>
 </context>
 <context>
@@ -9136,38 +9136,6 @@ Build time: %3s</source>
         <translation>السوق</translation>
     </message>
     <message>
-        <source>Trade resources for gold at fixed exchange rates</source>
-        <translation>قايض الموارد بالذهب بأسعار صرف ثابتة</translation>
-    </message>
-    <message>
-        <source>Select your marketplace to trade</source>
-        <translation>اختر سوقك للتجارة</translation>
-    </message>
-    <message>
-        <source>Gold: %1    Trade size: %2</source>
-        <translation>الذهب: %1    حجم الصفقة: %2</translation>
-    </message>
-    <message>
-        <source>Trading is available only for your own marketplace.</source>
-        <translation>التجارة متاحة في سوقك أنت فقط.</translation>
-    </message>
-    <message>
-        <source>You have %1</source>
-        <translation>لديك %1</translation>
-    </message>
-    <message>
-        <source>Buy %1 (%2g)</source>
-        <translation>اشترِ %1 (%2 ذ)</translation>
-    </message>
-    <message>
-        <source>Spend %1 gold to buy %2 %3</source>
-        <translation>أنفق %1 من الذهب لشراء %2 %3</translation>
-    </message>
-    <message>
-        <source>Sell %1 (+%2g)</source>
-        <translation>بِع %1 (+%2 ذ)</translation>
-    </message>
-    <message>
         <source>Sell %1 %2 for %3 gold</source>
         <translation>بِع %1 %2 مقابل %3 من الذهب</translation>
     </message>
@@ -9314,6 +9282,34 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>QUEUE</source>
         <translation>الطابور</translation>
+    </message>
+    <message>
+        <source>· lots of %1</source>
+        <translation>· دفعات من %1</translation>
+    </message>
+    <message>
+        <source>Only your own marketplace can trade. Select it to buy or sell.</source>
+        <translation>لا يتاجر إلا سوقك أنت. حدّده للشراء أو البيع.</translation>
+    </message>
+    <message>
+        <source>Buy %1 · %2g</source>
+        <translation>شراء %1 · %2 ذ</translation>
+    </message>
+    <message>
+        <source>Sell %1 · +%2g</source>
+        <translation>بيع %1 · +%2 ذ</translation>
+    </message>
+    <message>
+        <source>Spend %1 gold for %2 %3</source>
+        <translation>أنفق %1 ذهبًا مقابل %2 من %3</translation>
+    </message>
+    <message>
+        <source>Not enough gold: %1 needed</source>
+        <translation>ذهب غير كافٍ: يلزم %1</translation>
+    </message>
+    <message>
+        <source>Not enough %1: %2 needed</source>
+        <translation>%1 غير كافٍ: يلزم %2</translation>
     </message>
 </context>
 <context>

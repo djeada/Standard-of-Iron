@@ -6,9 +6,12 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <iterator>
 #include <limits>
 #include <numbers>
 #include <optional>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "../core/ambient_session.h"
@@ -22,6 +25,7 @@
 #include "../map/map_transformer.h"
 #include "../map/terrain_service.h"
 #include "../units/factory.h"
+#include "../units/squad.h"
 #include "../units/troop_config.h"
 #include "build_site.h"
 #include "builder_product_types.h"
@@ -605,6 +609,154 @@ auto complete_food_harvest(Engine::Core::World* world,
   return true;
 }
 
+// A building order names every crew that will raise it. Those crews share one
+// site: its progress, the hands that speed it up and the single building it
+// ends in. Walls keep their own site entities and gathering is per crew.
+auto raises_shared_site(const Engine::Core::BuilderProductionComponent& builder)
+    -> bool {
+  return builder.has_construction_site && builder.construction_site_entity_id == 0 &&
+         !builder.product_type.empty() &&
+         !is_wall_builder_product(builder.product_type) &&
+         !is_gather_builder_product(builder.product_type) &&
+         builder.product_type != k_builder_product_repair &&
+         builder.product_type != k_builder_product_dismantle;
+}
+
+struct SharedSiteKey {
+  int owner_id = 0;
+  std::string product_type;
+  float x = 0.0F;
+  float z = 0.0F;
+  float rotation_y = 0.0F;
+
+  [[nodiscard]] auto operator==(const SharedSiteKey& other) const -> bool = default;
+};
+
+struct SharedSite {
+  SharedSiteKey key;
+  std::vector<Engine::Core::EntityID> crews;
+};
+
+auto crew_hands(const Engine::Core::World& world, Engine::Core::EntityID id) -> float {
+  const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
+  return unit != nullptr ? std::max(0.05F, Game::Units::squad_fraction(*unit)) : 1.0F;
+}
+
+auto site_progress(const Engine::Core::BuilderProductionComponent& builder) -> float {
+  if (!builder.in_progress || builder.build_time <= 0.0F) {
+    return 0.0F;
+  }
+  return std::clamp(1.0F - (builder.time_remaining / builder.build_time), 0.0F, 1.0F);
+}
+
+auto collect_shared_sites(Engine::Core::World& world) -> std::vector<SharedSite> {
+  std::vector<SharedSite> sites;
+  for (auto [entity_ref, builder] :
+       world.entity_view<Engine::Core::BuilderProductionComponent>()) {
+    if (!raises_shared_site(builder)) {
+      continue;
+    }
+    const Engine::Core::EntityID id = entity_ref.get_id();
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
+    SharedSiteKey key{.owner_id = unit != nullptr ? unit->owner_id : 0,
+                      .product_type = builder.product_type,
+                      .x = builder.construction_site_x,
+                      .z = builder.construction_site_z,
+                      .rotation_y = builder.construction_site_rotation_y};
+    auto site = std::find_if(sites.begin(), sites.end(), [&key](const SharedSite& s) {
+      return s.key == key;
+    });
+    if (site == sites.end()) {
+      sites.push_back(SharedSite{.key = std::move(key), .crews = {}});
+      site = std::prev(sites.end());
+    }
+    site->crews.push_back(id);
+  }
+  for (auto& site : sites) {
+    std::sort(site.crews.begin(), site.crews.end());
+  }
+  return sites;
+}
+
+void release_helper_crew(Engine::Core::World& world, Engine::Core::EntityID crew) {
+  auto* builder = world.try_get<Engine::Core::BuilderProductionComponent>(crew);
+  auto* movement = world.try_get<Engine::Core::MovementComponent>(crew);
+  if (builder == nullptr) {
+    return;
+  }
+  if (movement != nullptr && builder->at_construction_site) {
+    const QVector3D exit = builder_exit_position(
+        *builder, *movement, CommandService::get_unit_radius(world, crew));
+    activate_bypass_movement(builder, exit.x(), exit.z());
+    movement->set_rest_position(exit.x(), exit.z());
+  } else if (movement != nullptr) {
+    abandon_site_route(*builder, movement);
+  }
+  builder->in_progress = false;
+  builder->time_remaining = 0.0F;
+  builder->construction_complete = true;
+  builder->has_construction_site = false;
+  builder->at_construction_site = false;
+  reset_site_approach(*builder);
+  clear_builder_task_target(world, builder, false);
+}
+
+using FinishedSites =
+    std::vector<std::pair<Engine::Core::EntityID, std::vector<Engine::Core::EntityID>>>;
+
+// Advances every shared site by the hands working on it and hands the
+// finished site to exactly one crew. Returns, per finishing crew, everyone
+// who stood on that site so the building may rise around them.
+auto advance_shared_sites(Engine::Core::World& world,
+                          float delta_time) -> FinishedSites {
+  FinishedSites finishing;
+  for (auto& site : collect_shared_sites(world)) {
+    const float work = construction_build_time(site.key.product_type);
+    if (work <= 0.0F) {
+      continue;
+    }
+
+    float progress = 0.0F;
+    float hands = 0.0F;
+    Engine::Core::EntityID lead = 0;
+    for (const auto crew : site.crews) {
+      const auto& builder =
+          *world.try_get<Engine::Core::BuilderProductionComponent>(crew);
+      progress = std::max(progress, site_progress(builder));
+      if (builder.at_construction_site && builder.in_progress) {
+        hands += crew_hands(world, crew);
+        if (lead == 0) {
+          lead = crew;
+        }
+      }
+    }
+    if (lead == 0) {
+      continue;
+    }
+
+    progress = std::min(1.0F, progress + (std::max(0.0F, delta_time) * hands / work));
+    const float seconds_at_this_pace = work / hands;
+    for (const auto crew : site.crews) {
+      auto& builder = *world.try_get<Engine::Core::BuilderProductionComponent>(crew);
+      builder.build_time = seconds_at_this_pace;
+      builder.time_remaining = (1.0F - progress) * seconds_at_this_pace;
+    }
+    if (progress < 1.0F) {
+      continue;
+    }
+
+    for (const auto crew : site.crews) {
+      if (crew != lead) {
+        release_helper_crew(world, crew);
+      }
+    }
+    world.try_get<Engine::Core::BuilderProductionComponent>(lead)->time_remaining =
+        0.0F;
+    finishing.emplace_back(lead, site.crews);
+  }
+  return finishing;
+}
+
 } // namespace
 
 void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
@@ -736,6 +888,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
 
   constexpr float k_orphaned_task_limit_seconds = 8.0F;
   constexpr float MAX_CONSTRUCTION_DISTANCE_SQ = 9.0F;
+
+  const auto finishing_sites = advance_shared_sites(*world, delta_time);
 
   for (auto [entity_ref, builder_prod_ref] :
        world->entity_view<Engine::Core::BuilderProductionComponent>()) {
@@ -951,7 +1105,9 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       }
     }
 
-    builder_prod->time_remaining -= delta_time;
+    if (!raises_shared_site(*builder_prod)) {
+      builder_prod->time_remaining -= delta_time;
+    }
     if (is_wall_network_product(builder_prod->product_type) &&
         builder_prod->construction_site_entity_id != 0) {
       if (auto* site_entity =
@@ -1135,7 +1291,12 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
                 free_standing_wall) {
 
               constexpr float k_finished_site_nudge = 5.0F;
-              const std::array<Engine::Core::EntityID, 1> finishing_crew{e->get_id()};
+              std::vector<Engine::Core::EntityID> finishing_crew{e->get_id()};
+              for (const auto& [lead_id, crew] : finishing_sites) {
+                if (lead_id == e->get_id()) {
+                  finishing_crew = crew;
+                }
+              }
               const auto clear_site =
                   find_clear_site(*world,
                                   builder_prod->product_type,
