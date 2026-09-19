@@ -147,6 +147,8 @@ struct FormationSoldierPresentation {
   float combat_speed_scale{1.0F};
   bool damage_carrier{false};
   float unassigned_seconds{0.0F};
+  // Walking from where he stood to a new slot after his squad split or joined.
+  bool reforming{false};
 
   auto operator==(const FormationSoldierPresentation&) const -> bool = default;
 };
@@ -159,6 +161,22 @@ public:
   std::uint16_t live_count{0};
   std::uint32_t revision{0};
   std::vector<std::uint8_t> alive;
+};
+
+// Where the men of a squad that was just split or joined stand on the field,
+// so each walks to his new slot instead of appearing in it.
+struct SquadReformSoldier {
+  std::uint16_t slot_index{0};
+  float world_x{0.0F};
+  float world_z{0.0F};
+};
+
+class SquadReformComponent {
+public:
+  SquadReformComponent() = default;
+
+  float remaining_seconds{0.0F};
+  std::vector<SquadReformSoldier> soldiers;
 };
 
 class FormationHitPresentationComponent {
