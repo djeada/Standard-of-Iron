@@ -1366,8 +1366,6 @@ void TerrainHeightMap::add_river_segments(
 
     const QVector3D horizontal_direction(
         delta_x / horizontal_length, 0.0F, delta_z / horizontal_length);
-    const QVector3D perpendicular(
-        -horizontal_direction.z(), 0.0F, horizontal_direction.x());
 
     int const steps = static_cast<int>(std::ceil(horizontal_length / m_tile_size)) + 1;
 
@@ -1399,18 +1397,33 @@ void TerrainHeightMap::add_river_segments(
 
       for (int z = min_z; z <= max_z; ++z) {
         for (int x = min_x; x <= max_x; ++x) {
-          float const dx = static_cast<float>(x) - grid_center_x;
-          float const dz = static_cast<float>(z) - grid_center_z;
-
-          float const dist_along_perp =
-              std::abs(dx * perpendicular.x() + dz * perpendicular.z());
+          // Distance to the segment itself, not its infinite line: measured
+          // against the line, every segment carved a dry trench running on past
+          // its endpoint wherever the river bends.
+          float const from_start_x =
+              static_cast<float>(x) -
+              ((river.start.x() / m_tile_size) + grid_half_width);
+          float const from_start_z =
+              static_cast<float>(z) -
+              ((river.start.z() / m_tile_size) + grid_half_height);
+          float const length_cells = horizontal_length / m_tile_size;
+          float const along = std::clamp((from_start_x * horizontal_direction.x()) +
+                                             (from_start_z * horizontal_direction.z()),
+                                         0.0F,
+                                         length_cells);
+          float const dx = from_start_x - (horizontal_direction.x() * along);
+          float const dz = from_start_z - (horizontal_direction.z() * along);
+          float const dist_along_perp = std::hypot(dx, dz);
 
           if (dist_along_perp > channel_extent) {
             continue;
           }
 
           int const idx = indexAt(x, z);
-          const float bed_height = center_pos.y() - river_bed_depth;
+          float const along_t = length_cells > 0.0F ? along / length_cells : 0.0F;
+          const float bed_height = river.start.y() +
+                                   ((river.end.y() - river.start.y()) * along_t) -
+                                   river_bed_depth;
           if (dist_along_perp <= half_width) {
             m_terrain_types[idx] = TerrainType::River;
             m_hill_entrances[idx] = false;
@@ -1582,17 +1595,29 @@ void TerrainHeightMap::precompute_water_blocked() {
     const float span_x = end_x - start_x;
     const float span_z = end_z - start_z;
     const float span_length_sq = (span_x * span_x) + (span_z * span_z);
-    const float blocked_half_cells_sq = blocked_half_cells * blocked_half_cells;
+    const float span_length = std::sqrt(span_length_sq);
+    const float perp_x = -span_z / span_length;
+    const float perp_z = span_x / span_length;
 
     for (int z = min_z; z <= max_z; ++z) {
       for (int x = min_x; x <= max_x; ++x) {
         const float dx = static_cast<float>(x) - start_x;
         const float dz = static_cast<float>(z) - start_z;
-        const float t =
-            std::clamp(((dx * span_x) + (dz * span_z)) / span_length_sq, 0.0F, 1.0F);
-        const float offset_x = dx - (span_x * t);
-        const float offset_z = dz - (span_z * t);
-        if ((offset_x * offset_x) + (offset_z * offset_z) > blocked_half_cells_sq) {
+        const float raw_t = ((dx * span_x) + (dz * span_z)) / span_length_sq;
+        const float t = std::clamp(raw_t, 0.0F, 1.0F);
+
+        // Block against the water as drawn at this row, not the widest the
+        // river could ever be drawn, so the bank beside the water stays land.
+        const RibbonCrossSection section = river_drawn_cross_section(river, t);
+        const float center_x = (section.center.x() / tile) + grid_half_width;
+        const float center_z = (section.center.z() / tile) + grid_half_height;
+        const float lateral = ((static_cast<float>(x) - center_x) * perp_x) +
+                              ((static_cast<float>(z) - center_z) * perp_z);
+        const float beyond_end = (raw_t - t) * span_length;
+        const float reach = (std::max(section.half_width, river.width * 0.5F) +
+                             k_water_bank_clearance) /
+                            tile;
+        if ((lateral * lateral) + (beyond_end * beyond_end) > reach * reach) {
           continue;
         }
         m_water_blocked[static_cast<size_t>(indexAt(x, z))] = true;

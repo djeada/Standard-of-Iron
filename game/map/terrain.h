@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "hill_shape.h"
+#include "river_ribbon.h"
 
 namespace Game::Map {
 
@@ -813,11 +814,6 @@ inline constexpr float k_max_oblique_bridge_span = 3.0F;
   return std::clamp(bridge_width * 0.14F, 0.7F, 1.3F);
 }
 
-[[nodiscard]] inline constexpr auto bridge_bank_overhang(float bridge_width,
-                                                         float river_width) -> float {
-  return std::clamp(river_width * 0.30F, 0.6F, bridge_abutment_reach(bridge_width));
-}
-
 inline constexpr float k_river_drawn_edge_scale = 1.30F;
 
 inline constexpr float k_river_drawn_meander_reach = 0.16F;
@@ -839,13 +835,66 @@ bridge_walkable_half_width(float bridge_width) -> float {
   return std::max((bridge_width * 0.5F) - k_water_bank_clearance, bridge_width * 0.25F);
 }
 
-inline constexpr float k_bridge_min_bank_landing = 2.0F;
+inline constexpr float k_bridge_min_bank_landing = 1.0F;
+
+inline constexpr float k_bridge_max_bank_landing = 1.5F;
 
 [[nodiscard]] inline constexpr auto bridge_bank_landing(float bridge_width,
                                                         float river_width) -> float {
-  return std::clamp(std::max(bridge_width * 0.12F, river_width * 0.05F),
+  return std::clamp(std::max(bridge_width * 0.06F, river_width * 0.03F),
                     k_bridge_min_bank_landing,
-                    3.0F);
+                    k_bridge_max_bank_landing);
+}
+
+// How far the drawn deck runs past bridge.start/bridge.end as it ramps down
+// onto the bank.
+[[nodiscard]] inline constexpr auto
+bridge_visual_landing_run(float bridge_width) -> float {
+  return bridge_abutment_reach(bridge_width);
+}
+
+[[nodiscard]] inline auto river_drawn_cross_section(const RiverSegment& river,
+                                                    float t) -> RibbonCrossSection {
+  return sample_ribbon_cross_section(
+      river.start, river.end, river.width, t, k_river_ribbon_shape);
+}
+
+struct RiverWaterReach {
+  float behind = 0.0F;
+  float ahead = 0.0F;
+};
+
+// How far the drawn water (or the carved channel, whichever is wider) reaches
+// from `crossing` along -span_dir and +span_dir, over the stretch of river a
+// deck `deck_half_width` wide covers.
+[[nodiscard]] inline auto
+drawn_water_reach_across(const RiverSegment& river,
+                         float crossing_t,
+                         const QVector3D& crossing,
+                         const QVector3D& span_dir,
+                         float deck_half_width) -> RiverWaterReach {
+  QVector3D const river_vec = river.end - river.start;
+  float const river_len = std::hypot(river_vec.x(), river_vec.z());
+  float const channel_half = river.width * 0.5F;
+  RiverWaterReach reach{channel_half, channel_half};
+  if (river_len < 1.0e-4F) {
+    return reach;
+  }
+
+  constexpr float k_sample_spacing = 0.5F;
+  int const samples = std::max(
+      2, static_cast<int>(std::ceil(deck_half_width * 2.0F / k_sample_spacing)));
+  float const t_half = deck_half_width / river_len;
+  for (int index = 0; index <= samples; ++index) {
+    float const lateral =
+        (static_cast<float>(index) / static_cast<float>(samples)) * 2.0F - 1.0F;
+    float const t = std::clamp(crossing_t + t_half * lateral, 0.0F, 1.0F);
+    RibbonCrossSection const section = river_drawn_cross_section(river, t);
+    float const offset = QVector3D::dotProduct(section.center - crossing, span_dir);
+    reach.behind = std::max(reach.behind, section.half_width - offset);
+    reach.ahead = std::max(reach.ahead, section.half_width + offset);
+  }
+  return reach;
 }
 
 [[nodiscard]] inline auto closest_point_on_segment(const QVector3D& point,
@@ -888,33 +937,36 @@ inline void fit_bridge_span_to_riverbanks(Bridge& bridge,
   }
   QVector3D const dir(bridge_vec.x() / bridge_len, 0.0F, bridge_vec.z() / bridge_len);
 
-  auto span_direction_across = [&dir](const QVector3D& river_vec, float river_len) {
-    if (river_len < 1.0e-4F) {
-      return dir;
+  auto apply = [&](const RiverSegment& river,
+                   float river_t,
+                   const QVector3D& crossing) {
+    QVector3D const river_vec = river.end - river.start;
+    float const river_len = std::hypot(river_vec.x(), river_vec.z());
+    QVector3D span_dir = dir;
+    if (river_len >= 1.0e-4F) {
+      span_dir = QVector3D(-river_vec.z() / river_len, 0.0F, river_vec.x() / river_len);
+      if (QVector3D::dotProduct(span_dir, dir) < 0.0F) {
+        span_dir = -span_dir;
+      }
     }
-    QVector3D across(-river_vec.z() / river_len, 0.0F, river_vec.x() / river_len);
-    if (QVector3D::dotProduct(across, dir) < 0.0F) {
-      across = -across;
+
+    float const deck_half_width = std::max(bridge.width, k_min_bridge_width) * 0.5F;
+    RiverWaterReach const water =
+        drawn_water_reach_across(river, river_t, crossing, span_dir, deck_half_width);
+    float const past_water =
+        k_water_bank_clearance + bridge_bank_landing(bridge.width, river.width);
+    float behind = water.behind + past_water;
+    float ahead = water.ahead + past_water;
+
+    // Over a narrow stream a deck still reads as a bridge, not a slab.
+    float const shortfall = (deck_half_width * 2.0F) + 0.01F - (behind + ahead);
+    if (shortfall > 0.0F) {
+      behind += shortfall * 0.5F;
+      ahead += shortfall * 0.5F;
     }
-    return across;
-  };
 
-  auto apply = [&](const QVector3D& crossing,
-                   const QVector3D& span_dir,
-                   float river_width) {
-    float const authored_start_reach =
-        QVector3D::dotProduct(crossing - bridge.start, span_dir);
-    float const authored_end_reach =
-        QVector3D::dotProduct(bridge.end - crossing, span_dir);
-
-    float const shortest = river_bank_standing_half_width(river_width) +
-                           bridge_bank_landing(bridge.width, river_width);
-    float const longest = shortest + bridge_bank_overhang(bridge.width, river_width);
-
-    bridge.start =
-        crossing - span_dir * std::clamp(authored_start_reach, shortest, longest);
-    bridge.end =
-        crossing + span_dir * std::clamp(authored_end_reach, shortest, longest);
+    bridge.start = crossing - span_dir * behind;
+    bridge.end = crossing + span_dir * ahead;
   };
 
   for (const RiverSegment& river : rivers) {
@@ -923,14 +975,12 @@ inline void fit_bridge_span_to_riverbanks(Bridge& bridge,
     }
 
     QVector3D const river_vec = river.end - river.start;
-    float const river_len = std::hypot(river_vec.x(), river_vec.z());
     float const cross = xz_cross(bridge_vec, river_vec);
     QVector3D const diff = river.start - bridge.start;
     float const t = xz_cross(diff, river_vec) / cross;
+    float const s = xz_cross(diff, bridge_vec) / cross;
 
-    apply(bridge.start + dir * (t * bridge_len),
-          span_direction_across(river_vec, river_len),
-          river.width);
+    apply(river, s, bridge.start + dir * (t * bridge_len));
     return;
   }
 
@@ -959,8 +1009,15 @@ inline void fit_bridge_span_to_riverbanks(Bridge& bridge,
   }
 
   QVector3D const river_vec = nearest->end - nearest->start;
-  float const river_len = std::hypot(river_vec.x(), river_vec.z());
-  apply(nearest_point, span_direction_across(river_vec, river_len), nearest->width);
+  float const river_len_sq =
+      (river_vec.x() * river_vec.x()) + (river_vec.z() * river_vec.z());
+  float const river_t =
+      river_len_sq < 1.0e-8F
+          ? 0.0F
+          : (((nearest_point.x() - nearest->start.x()) * river_vec.x()) +
+             ((nearest_point.z() - nearest->start.z()) * river_vec.z())) /
+                river_len_sq;
+  apply(*nearest, river_t, nearest_point);
 }
 
 inline void extend_bridge_to_span_riverbanks(Bridge& bridge,
@@ -991,14 +1048,28 @@ inline constexpr float k_river_bank_max_blend_cells = 26.0F;
 
 inline constexpr float k_bridge_deck_visual_lift = 0.12F;
 
-inline constexpr float k_bridge_landing_grade = 0.50F;
-
 inline constexpr float k_bridge_landing_thickness = 0.06F;
 
-[[nodiscard]] inline auto bridge_effective_height(const Bridge& bridge) -> float {
+inline constexpr float k_bridge_max_entry_grade = 0.11F;
 
-  return std::max(
-      {bridge.height, k_min_bridge_deck_rise, bridge.width * k_bridge_rise_per_width});
+// The tallest arch a span can carry while its first metre stays an approach
+// rather than a step. On the sin^2 profile the grade one metre onto the deck is
+// about rise * (pi / span) * sin(2 pi / span).
+[[nodiscard]] inline auto bridge_max_rise_for_span(float span) -> float {
+  float const safe_span = std::max(span, 0.5F);
+  float const angular = std::numbers::pi_v<float> / safe_span;
+  float const entry_slope =
+      safe_span > 4.0F ? angular * std::sin(2.0F * angular) : angular;
+  return k_bridge_max_entry_grade / entry_slope;
+}
+
+[[nodiscard]] inline auto bridge_effective_height(const Bridge& bridge) -> float {
+  float const span =
+      std::hypot(bridge.end.x() - bridge.start.x(), bridge.end.z() - bridge.start.z());
+  return std::min(std::max({bridge.height,
+                            k_min_bridge_deck_rise,
+                            bridge.width * k_bridge_rise_per_width}),
+                  bridge_max_rise_for_span(span));
 }
 
 [[nodiscard]] inline auto bridge_deck_world_y(const Bridge& bridge, float t) -> float {
