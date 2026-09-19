@@ -163,6 +163,39 @@ A recruit that the reserve cannot pay for is an `OrderFailure::PopulationCap` re
 
 `AIContext::population_cap` is the map cap in men and `population_used` sums `TroopConfig::get_population_cost` (base squad men). A 250-man cap fields roughly fourteen infantry squads including builders (12 men each); maps that were tuned when a swordsman weighed 8 points field about half the squads they used to. Raise `max_troops_per_player` in the map file if a map needs the old army size.
 
+### Splitting and joining squads
+
+`SquadService` treats a squad as a pool of **men standing** (`squad_survivors`: the nominal
+roster read through the health pool, exactly as the renderer counts figures) and its health.
+Both orders go through one primitive, so there is no per-case branching to fall out of step:
+
+- `share_health(sizes, health, …)` deals a health pool over squads of given sizes. Every squad
+  lands between the least health that still shows all its men and a full pool, and the total is
+  the input clamped to the sum of those bands. A split or join therefore never loses a man and
+  never heals a squad whole; the only top-up is under one man's worth per squad.
+- `pack(men, health, …)` fills whole squads first and puts the remainder in one last squad.
+
+**Split** halves the men standing (needs four). **Join** accepts any selection: squads are grouped
+by owner, kind and nation, chained by `k_merge_radius` (a line of squads each within reach of the
+next is one group), and each group is packed. Three battered squads become as few as their men fill;
+two squads of ten with a twelve-man establishment become twelve and eight. A group whose men would
+pack the same way (all full, or a full squad beside a battered one) is left alone. The fullest
+squads are the ones kept, the rest are absorbed.
+
+Because a squad's `squad_strength` becomes the men it actually has, joining battered squads frees
+the population their dead were still holding. The AI's squad discipline still judges strength by
+the roster, not by survivors; it only ever asks for two-squad joins and goes through the same code.
+
+### Several crews on one building
+
+Every crew named by one `StartConstruction` order shares one site, keyed by owner, building type,
+position and rotation. `ProductionSystem` advances the site once per tick by the hands of the
+crews actually working it (each crew's `squad_fraction`), so three full crews build three times as
+fast and a late crew joins the progress already made. When the site is done exactly one crew raises
+the building, with every crew on the site counted as its own so they cannot block it, and the rest
+are released and walk out of the footprint. Before this, each crew ran its own timer and raised or
+refunded its own copy of the building. Walls keep their own site entities and are not pooled.
+
 ## Vocabulary
 
 The player-facing UI uses two terms:

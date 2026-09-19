@@ -3975,24 +3975,8 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <translation>Połącz</translation>
     </message>
     <message>
-        <source>Fold two understrength squads of the same kind back into one.</source>
-        <translation>Złóż z powrotem w jedno dwa niepełne oddziały tego samego rodzaju.</translation>
-    </message>
-    <message>
-        <source>Two squads of the same kind, both below full strength and standing close together.</source>
-        <translation>Dwóch oddziałów tego samego rodzaju, obu poniżej pełnego stanu i stojących blisko siebie.</translation>
-    </message>
-    <message>
         <source>Result</source>
         <translation>Wynik</translation>
-    </message>
-    <message>
-        <source>One squad with their men and health added together, up to a full establishment.</source>
-        <translation>Jeden oddział z sumą ludzi i zdrowia, do pełnego etatu.</translation>
-    </message>
-    <message>
-        <source>Select two understrength squads of the same kind</source>
-        <translation>Zaznacz dwa niepełne oddziały tego samego rodzaju</translation>
     </message>
     <message>
         <source>Deliver</source>
@@ -4105,6 +4089,22 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     <message>
         <source>Select troops to reveal their specialist actions</source>
         <translation>Zaznacz oddziały, by pokazać ich działania specjalne</translation>
+    </message>
+    <message>
+        <source>Fold squads of the same kind that have lost men back into full-strength ones.</source>
+        <translation>Połącz oddziały tego samego rodzaju, które straciły ludzi, w pełne oddziały.</translation>
+    </message>
+    <message>
+        <source>Squads of the same kind standing close together, at least one of them short of men.</source>
+        <translation>Oddziały tego samego rodzaju stojące blisko siebie, z których co najmniej jeden stracił ludzi.</translation>
+    </message>
+    <message>
+        <source>Their men fill whole squads first and any left over stay together as one smaller squad. No man is lost.</source>
+        <translation>Ich ludzie najpierw wypełniają całe oddziały, a pozostali tworzą razem jeden mniejszy oddział. Nikt nie ginie.</translation>
+    </message>
+    <message>
+        <source>Select squads of the same kind that have lost men</source>
+        <translation>Zaznacz oddziały tego samego rodzaju, które straciły ludzi</translation>
     </message>
 </context>
 <context>
@@ -9207,38 +9207,6 @@ Szerokie pole widzenia i trwała kotwica osady</translation>
         <translation>TARGOWISKO</translation>
     </message>
     <message>
-        <source>Trade resources for gold at fixed exchange rates</source>
-        <translation>Wymieniaj surowce na złoto po stałym kursie</translation>
-    </message>
-    <message>
-        <source>Select your marketplace to trade</source>
-        <translation>Zaznacz swoje targowisko, by handlować</translation>
-    </message>
-    <message>
-        <source>Gold: %1    Trade size: %2</source>
-        <translation>Złoto: %1    Wielkość transakcji: %2</translation>
-    </message>
-    <message>
-        <source>Trading is available only for your own marketplace.</source>
-        <translation>Handel jest dostępny tylko na twoim własnym targowisku.</translation>
-    </message>
-    <message>
-        <source>You have %1</source>
-        <translation>Masz %1</translation>
-    </message>
-    <message>
-        <source>Buy %1 (%2g)</source>
-        <translation>Kup %1 (%2 zł)</translation>
-    </message>
-    <message>
-        <source>Spend %1 gold to buy %2 %3</source>
-        <translation>Wydaj %1 złota, by kupić %2 %3</translation>
-    </message>
-    <message>
-        <source>Sell %1 (+%2g)</source>
-        <translation>Sprzedaj %1 (+%2 zł)</translation>
-    </message>
-    <message>
         <source>Sell %1 %2 for %3 gold</source>
         <translation>Sprzedaj %1 %2 za %3 złota</translation>
     </message>
@@ -9305,6 +9273,34 @@ Szerokie pole widzenia i trwała kotwica osady</translation>
     <message>
         <source>Select a barracks to recruit units</source>
         <translation>Zaznacz koszary, by rekrutować jednostki</translation>
+    </message>
+    <message>
+        <source>· lots of %1</source>
+        <translation>· partie po %1</translation>
+    </message>
+    <message>
+        <source>Only your own marketplace can trade. Select it to buy or sell.</source>
+        <translation>Handlować może tylko twój własny targ. Zaznacz go, aby kupować lub sprzedawać.</translation>
+    </message>
+    <message>
+        <source>Buy %1 · %2g</source>
+        <translation>Kup %1 · %2 zł.</translation>
+    </message>
+    <message>
+        <source>Sell %1 · +%2g</source>
+        <translation>Sprzedaj %1 · +%2 zł.</translation>
+    </message>
+    <message>
+        <source>Spend %1 gold for %2 %3</source>
+        <translation>Wydaj %1 złota na %2 × %3</translation>
+    </message>
+    <message>
+        <source>Not enough gold: %1 needed</source>
+        <translation>Za mało złota: potrzeba %1</translation>
+    </message>
+    <message>
+        <source>Not enough %1: %2 needed</source>
+        <translation>Za mało: %1, potrzeba %2</translation>
     </message>
 </context>
 <context>
