@@ -505,6 +505,7 @@ private:
   void release_pending_mission_start_cue();
   void publish_commander_message();
   void publish_mission_stages();
+  void publish_optional_objectives();
   void publish_mission_deadline();
   void publish_victory_objectives();
   void publish_minimap_overlays(float dt);

@@ -1,6 +1,7 @@
 #include "mission_victory_rules.h"
 
 #include <QDebug>
+#include <QStringList>
 
 #include <algorithm>
 
@@ -40,6 +41,22 @@ auto normalize_structure_types(const Condition& condition,
   }
 
   return normalized;
+}
+
+// Victory types an optional objective can be tracked by. Other optional
+// objectives (wave_count, time_pressure) are shown but not measured here.
+auto is_trackable_objective_type(const QString& type) -> bool {
+  static const QStringList k_types{QStringLiteral("destroy_all_enemies"),
+                                   QStringLiteral("survive_duration"),
+                                   QStringLiteral("control_structures"),
+                                   QStringLiteral("capture_structures"),
+                                   QStringLiteral("clear_undead_zone"),
+                                   QStringLiteral("purify_shrine"),
+                                   QStringLiteral("survive_undead_wave"),
+                                   QStringLiteral("survive_waves"),
+                                   QStringLiteral("accumulate_resources"),
+                                   QStringLiteral("eliminate_commanders")};
+  return k_types.contains(type);
 }
 
 void append_victory_condition(const Condition& condition,
@@ -140,13 +157,30 @@ auto build_victory_rules(const MissionDefinition& mission)
                << "- defaulting to any";
   }
 
-  for (const auto& condition : mission.victory_conditions) {
+  for (std::size_t source = 0; source < mission.victory_conditions.size(); ++source) {
+    const auto& condition = mission.victory_conditions[source];
     const std::size_t before = rules.victory_rules.size();
     append_victory_condition(condition, rules);
     for (std::size_t index = before; index < rules.victory_rules.size(); ++index) {
       rules.victory_rules[index].id =
           condition.zone_id.value_or(condition.type.trimmed().toLower());
       rules.victory_rules[index].description = condition.description;
+      rules.victory_rules[index].source_index = static_cast<int>(source);
+    }
+  }
+
+  for (std::size_t source = 0; source < mission.optional_objectives.size(); ++source) {
+    const auto& condition = mission.optional_objectives[source];
+    if (!is_trackable_objective_type(condition.type.trimmed().toLower())) {
+      continue;
+    }
+    Game::Systems::VictoryRuleSet optional;
+    append_victory_condition(condition, optional);
+    for (auto& objective : optional.victory_rules) {
+      objective.id = condition.zone_id.value_or(condition.type.trimmed().toLower());
+      objective.description = condition.description;
+      objective.source_index = static_cast<int>(source);
+      rules.optional_rules.push_back(std::move(objective));
     }
   }
 

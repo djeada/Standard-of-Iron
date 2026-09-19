@@ -2404,10 +2404,31 @@ void GameEngine::publish_mission_deadline() {
       remaining < 0.0F ? -1.0 : std::floor(static_cast<double>(remaining)));
 }
 
+void GameEngine::publish_optional_objectives() {
+  if (!m_mission_view_model) {
+    return;
+  }
+  QVariantList optional;
+  if (m_victory_service) {
+    for (const auto& objective : m_victory_service->optional_objectives()) {
+      QVariantMap entry;
+      entry["index"] = objective.source_index;
+      entry["detail"] = objective.detail;
+      entry["progress"] = objective.progress;
+      entry["required"] = objective.required;
+      entry["fraction"] = objective.fraction;
+      entry["complete"] = objective.complete;
+      optional.append(entry);
+    }
+  }
+  m_mission_view_model->set_optional(optional);
+}
+
 void GameEngine::publish_mission_stages() {
   if (!m_mission_view_model) {
     return;
   }
+  publish_optional_objectives();
   if (!m_mission_stage_tracker.has_stages()) {
     publish_victory_objectives();
     return;
@@ -2429,6 +2450,10 @@ void GameEngine::publish_mission_stages() {
         Game::Util::tr_asset(Game::Util::k_missions_context, status.description);
     entry["hint"] = Game::Util::tr_asset(Game::Util::k_missions_context, status.hint);
     entry["detail"] = status.detail;
+    entry["compact_detail"] = status.compact_detail;
+    entry["fraction"] = status.fraction >= 0.0 ? status.fraction
+                                               : static_cast<double>(status.progress) /
+                                                     std::max(1, status.required);
     entry["progress"] = status.progress;
     entry["required"] = status.required;
     entry["complete"] = status.complete;
@@ -2483,6 +2508,8 @@ void GameEngine::publish_victory_objectives() {
     entry["description"] = entry["title"];
     entry["hint"] = QString();
     entry["detail"] = objective.detail;
+    entry["compact_detail"] = objective.compact_detail;
+    entry["fraction"] = objective.fraction;
     entry["progress"] = objective.progress;
     entry["required"] = objective.required;
     entry["complete"] = objective.complete;

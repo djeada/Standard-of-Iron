@@ -983,6 +983,13 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
       soldier_render_anim.movement_state = Animation::MovementState::Walk;
     }
   }
+  if (has_shared_formation_layout &&
+      formation_presentation->soldiers[static_cast<std::size_t>(idx)].reforming &&
+      !soldier_is_casualty_body && !soldier_render_anim.is_attacking &&
+      !soldier_render_anim.is_in_melee_lock && !soldier_render_anim.is_constructing &&
+      !Render::Creature::is_moving_animation(soldier_render_anim.movement_state)) {
+    soldier_render_anim.movement_state = Animation::MovementState::Walk;
+  }
 
   bool const soldier_has_locomotion =
       Render::Creature::is_moving_animation(soldier_render_anim.movement_state);

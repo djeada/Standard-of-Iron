@@ -22,6 +22,10 @@ class MissionViewModel : public QObject {
   Q_PROPERTY(QString active_title READ active_title NOTIFY stages_changed)
   Q_PROPERTY(QString active_hint READ active_hint NOTIFY stages_changed)
   Q_PROPERTY(QString active_detail READ active_detail NOTIFY stages_changed)
+  Q_PROPERTY(
+      QString active_compact_detail READ active_compact_detail NOTIFY stages_changed)
+  Q_PROPERTY(qreal active_fraction READ active_fraction NOTIFY stages_changed)
+  Q_PROPERTY(QVariantList optional READ optional NOTIFY optional_changed)
   Q_PROPERTY(int active_progress READ active_progress NOTIFY stages_changed)
   Q_PROPERTY(int active_required READ active_required NOTIFY stages_changed)
   Q_PROPERTY(bool active_has_target READ active_has_target NOTIFY stages_changed)
@@ -40,6 +44,9 @@ public:
 
   void set_stages(const QVariantList& stages, bool mirrors_victory_conditions = false);
   void set_seconds_until_deadline(qreal seconds);
+  // Live progress of the tracked optional objectives, keyed by "index" into
+  // the mission's optional_objectives list.
+  void set_optional(const QVariantList& optional);
   void clear();
 
   [[nodiscard]] auto staged() const -> bool { return !m_stages.isEmpty(); }
@@ -48,6 +55,9 @@ public:
   [[nodiscard]] auto active_title() const -> QString;
   [[nodiscard]] auto active_hint() const -> QString;
   [[nodiscard]] auto active_detail() const -> QString;
+  [[nodiscard]] auto active_compact_detail() const -> QString;
+  [[nodiscard]] auto active_fraction() const -> qreal;
+  [[nodiscard]] auto optional() const -> QVariantList { return m_optional; }
   [[nodiscard]] auto active_progress() const -> int;
   [[nodiscard]] auto active_required() const -> int;
   [[nodiscard]] auto active_has_target() const -> bool;
@@ -66,6 +76,7 @@ public:
 signals:
   void stages_changed();
   void deadline_changed();
+  void optional_changed();
 
 private:
   [[nodiscard]] auto active_stage() const -> QVariantMap;
@@ -76,6 +87,7 @@ private:
 
   QVariantList m_stages;
   QVariantList m_markers;
+  QVariantList m_optional;
   int m_active_index = -1;
   bool m_stages_mirror_victory_conditions = false;
   qreal m_seconds_until_deadline = -1.0;

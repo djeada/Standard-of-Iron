@@ -3447,6 +3447,10 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <source>Hide the objectives (O)</source>
         <translation>Ukryj cele (O)</translation>
     </message>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 z %2</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottom</name>
@@ -4554,6 +4558,10 @@ Każdy rekrut kosztuje ludzi swojego oddziału; rezerwa w koszarach podnosi limi
     <message>
         <source>Objectives</source>
         <translation>Cele</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1%</translation>
     </message>
 </context>
 <context>

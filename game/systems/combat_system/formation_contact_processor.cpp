@@ -33,6 +33,10 @@ constexpr float k_contact_turn_degrees = 180.0F;
 
 constexpr float k_contact_yaw_hold_seconds = 0.6F;
 constexpr float k_disengage_turn_degrees = 120.0F;
+
+constexpr float k_reform_walk_speed = 2.4F;
+constexpr float k_reform_catch_up_scale = 1.35F;
+constexpr float k_reform_turn_degrees = 420.0F;
 struct PairEvaluation {
   std::uint64_t signature{0};
   FormationCombat::ContactGeometry geometry;
@@ -546,6 +550,62 @@ auto local_contact_vector(const Engine::Core::TransformComponent& actor,
   return result;
 }
 
+auto world_to_local(const Engine::Core::TransformComponent& actor,
+                    float world_x,
+                    float world_z) -> std::pair<float, float> {
+  float const yaw = actor.rotation.y * std::numbers::pi_v<float> / 180.0F;
+  float const sin_yaw = std::sin(yaw);
+  float const cos_yaw = std::cos(yaw);
+  float const dx = world_x - actor.position.x;
+  float const dz = world_z - actor.position.z;
+  return {cos_yaw * dx - sin_yaw * dz, sin_yaw * dx + cos_yaw * dz};
+}
+
+// Moves a soldier of a just split or joined squad from where he stands towards
+// his slot at walking pace, faster when the squad itself is marching away.
+// Returns true while he is still on the way.
+auto walk_to_new_slot(Engine::Core::SquadReformComponent& reform,
+                      const Engine::Core::TransformComponent& actor,
+                      float squad_speed,
+                      float delta_time,
+                      const Engine::Core::FormationSoldierPresentation* previous,
+                      Engine::Core::FormationSoldierPresentation& directive) -> bool {
+  auto walker = std::find_if(
+      reform.soldiers.begin(), reform.soldiers.end(), [&directive](auto const& entry) {
+        return entry.slot_index == directive.slot_index;
+      });
+  if (walker == reform.soldiers.end()) {
+    return false;
+  }
+  QVector3D const slot = local_to_world(actor, directive.local_x, directive.local_z);
+  float const dx = slot.x() - walker->world_x;
+  float const dz = slot.z() - walker->world_z;
+  float const distance = std::hypot(dx, dz);
+  float const speed =
+      std::max(k_reform_walk_speed, squad_speed * k_reform_catch_up_scale);
+  float const step = speed * std::max(0.0F, delta_time);
+  if (distance <= step) {
+    reform.soldiers.erase(walker);
+    return false;
+  }
+  walker->world_x += dx / distance * step;
+  walker->world_z += dz / distance * step;
+
+  auto const [local_x, local_z] =
+      world_to_local(actor, walker->world_x, walker->world_z);
+  auto const heading =
+      world_to_local(actor, actor.position.x + dx, actor.position.z + dz);
+  float const travel_yaw =
+      std::atan2(heading.first, heading.second) * 180.0F / std::numbers::pi_v<float>;
+  directive.local_x = local_x;
+  directive.local_z = local_z;
+  directive.local_yaw = Game::Systems::turn_yaw_toward(
+      previous != nullptr ? previous->local_yaw : travel_yaw,
+      travel_yaw,
+      k_reform_turn_degrees * std::max(0.0F, delta_time));
+  return true;
+}
+
 void tick_formation_hit(Engine::Core::Entity& entity, float delta_time) {
   auto* hit = entity.get_component<Engine::Core::FormationHitPresentationComponent>();
   if (hit == nullptr) {
@@ -697,6 +757,19 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
              carrier.has_value() ? std::optional<std::uint16_t>{carrier->attacker_slot}
                                  : std::nullopt});
       }
+    }
+
+    auto* reform = world.try_get<Engine::Core::SquadReformComponent>(entity->get_id());
+    if (reform != nullptr) {
+      reform->remaining_seconds -= std::max(0.0F, delta_time);
+      if (reform->remaining_seconds <= 0.0F || actor_transform == nullptr) {
+        reform->soldiers.clear();
+      }
+    }
+    float squad_speed = 0.0F;
+    if (auto const* movement =
+            world.try_get<Engine::Core::MovementComponent>(entity->get_id())) {
+      squad_speed = std::hypot(movement->get_vx(), movement->get_vz());
     }
 
     auto& directives = presentation->soldiers;
@@ -995,6 +1068,10 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         directive.local_x = anchor_local_x + offset_x;
         directive.local_z = anchor_local_z + offset_z;
       }
+      if (reform != nullptr && directive.alive && actor_transform != nullptr) {
+        directive.reforming = walk_to_new_slot(
+            *reform, *actor_transform, squad_speed, delta_time, previous, directive);
+      }
 
       if (traversal_slot == nullptr && previous != nullptr && directive.alive) {
         float const step_time = std::max(0.0F, delta_time);
@@ -1032,6 +1109,15 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
       soldiers_changed =
           soldiers_changed || previous == nullptr || *previous != directive;
       directives[original_slot.index] = directive;
+    }
+
+    if (reform != nullptr) {
+      std::erase_if(reform->soldiers, [&layout](auto const& entry) {
+        return find_live_slot(layout, entry.slot_index) == nullptr;
+      });
+      if (reform->soldiers.empty()) {
+        world.remove<Engine::Core::SquadReformComponent>(entity->get_id());
+      }
     }
 
     bool const changed = presentation->formation_seed != layout.seed ||

@@ -3447,6 +3447,10 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>Hide the objectives (O)</source>
         <translation>Hedefleri gizle (O)</translation>
     </message>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 / %2</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottom</name>
@@ -4552,6 +4556,10 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     <message>
         <source>Objectives</source>
         <translation>Hedefler</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%%1</translation>
     </message>
 </context>
 <context>

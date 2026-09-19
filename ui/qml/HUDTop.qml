@@ -66,6 +66,8 @@ Item {
     }
 
     readonly property string objectiveDetailText: (topRoot.missionStaged && game.mission.active_detail) ? game.mission.active_detail : ""
+    readonly property string objectiveCompactText: (topRoot.missionStaged && game.mission.active_compact_detail) ? game.mission.active_compact_detail : ""
+    readonly property string objectivePercentText: topRoot.objectiveDetailText !== "" ? qsTr("%1%").arg(Math.floor(game.mission.active_fraction * 100)) : ""
 
     function objective_tooltip(canFocusTarget) {
         var lines = [];
@@ -315,11 +317,15 @@ Item {
                     id: objectiveRow
 
                     readonly property real budget: Math.max(0, objectiveZone.width - (objectivesButton.visible ? objectivesButton.width + Design.Metrics.space8 : 0))
+                    // A counted goal needs room for at least "★ 53%"; below that the
+                    // objectives button carries the progress instead.
+                    readonly property bool fits: topRoot.objectiveDetailText === "" || objectiveGlyph.implicitWidth + spacing + objectivePercentMetrics.advanceWidth <= budget
 
-                    anchors.centerIn: parent
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: Math.max(0, (budget - width) / 2)
                     spacing: Design.Metrics.space8
                     width: Math.min(objectiveGlyph.implicitWidth + spacing + objectiveText.implicitWidth + (objectiveDetail.visible ? spacing + objectiveDetail.implicitWidth : 0), objectiveRow.budget)
-                    visible: topRoot.primaryObjectiveText !== "" && !(topRoot.game_ready() && game.is_spectator_mode)
+                    visible: topRoot.primaryObjectiveText !== "" && fits && !(topRoot.game_ready() && game.is_spectator_mode)
 
                     Text {
                         id: objectiveGlyph
@@ -331,14 +337,45 @@ Item {
                         font.pixelSize: Design.Typography.body
                     }
 
+                    TextMetrics {
+                        id: objectiveDetailFullMetrics
+
+                        font: objectiveDetail.font
+                        text: topRoot.objectiveDetailText
+                    }
+
+                    TextMetrics {
+                        id: objectivePercentMetrics
+
+                        font: objectiveDetail.font
+                        text: topRoot.objectivePercentText
+                    }
+
+                    TextMetrics {
+                        id: objectiveDetailCompactMetrics
+
+                        font: objectiveDetail.font
+                        text: topRoot.objectiveCompactText
+                    }
+
                     Text {
                         id: objectiveDetail
 
+                        // Resource names first go, then the counts collapse to a share, so a
+                        // narrow bar still shows the goal moving instead of "Timbe".
+                        readonly property real room: Math.max(0, objectiveRow.budget - objectiveGlyph.width - objectiveRow.spacing)
+
                         anchors.verticalCenter: parent.verticalCenter
 
-                        width: Math.min(implicitWidth, Math.max(0, objectiveRow.budget - objectiveGlyph.width - objectiveRow.spacing))
+                        width: Math.min(implicitWidth, room)
                         visible: topRoot.objectiveDetailText !== "" && width > 0
-                        text: topRoot.objectiveDetailText
+                        text: {
+                            if (objectiveDetailFullMetrics.advanceWidth <= room || topRoot.objectiveCompactText === "")
+                                return objectiveDetailFullMetrics.advanceWidth <= room || topRoot.objectivePercentText === "" ? topRoot.objectiveDetailText : topRoot.objectivePercentText;
+                            if (objectiveDetailCompactMetrics.advanceWidth <= room)
+                                return topRoot.objectiveCompactText;
+                            return topRoot.objectivePercentText;
+                        }
                         color: Design.Theme.accent
                         font.family: Design.Typography.family
                         font.pixelSize: Design.Typography.label
@@ -381,8 +418,8 @@ Item {
                 }
 
                 Design.IronSpotlight {
-                    target: objectiveRow
-                    active: topRoot.tutorialFocusRegion === "objective" && objectiveRow.visible
+                    target: objectiveRow.visible ? objectiveRow : objectivesButton
+                    active: topRoot.tutorialFocusRegion === "objective" && (objectiveRow.visible || objectiveButtonProgress.visible)
                     cornerRadius: Design.Metrics.radiusSmall
                 }
 
@@ -394,7 +431,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: topRoot.objectivesAvailable
                     iconText: Design.Icons.briefing
-                    tooltip: (topRoot.objectives_visible ? qsTr("Hide the objectives list") : qsTr("Show every objective and defeat condition")) + " (O)"
+                    tooltip: (objectiveButtonProgress.visible ? topRoot.primaryObjectiveText + "\n" + topRoot.objectiveDetailText + "\n\n" : "") + (topRoot.objectives_visible ? qsTr("Hide the objectives list") : qsTr("Show every objective and defeat condition")) + " (O)"
                     accessibleName: qsTr("Objectives")
                     checkable: true
                     checked: topRoot.objectives_visible
@@ -407,6 +444,21 @@ Item {
                         }
 
                         target: topRoot
+                    }
+
+                    Rectangle {
+                        id: objectiveButtonProgress
+
+                        objectName: "objectiveButtonProgress"
+                        anchors.left: parent.left
+                        anchors.bottom: parent.bottom
+                        anchors.leftMargin: Design.Metrics.space4
+                        anchors.bottomMargin: Design.Metrics.space4
+                        width: (parent.width - Design.Metrics.space4 * 2) * (topRoot.missionStaged ? game.mission.active_fraction : 0)
+                        height: 3
+                        radius: 1
+                        color: Design.Theme.accent
+                        visible: !objectiveRow.fits && topRoot.missionStaged && topRoot.objectiveDetailText !== ""
                     }
                 }
 
