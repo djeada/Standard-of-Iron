@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "game/map/river_ribbon.h"
 #include "game/map/scatter/ground_utils.h"
 #include "render/gl/render_constants.h"
 
@@ -132,29 +133,24 @@ auto mixf(float a, float b, float t) -> float {
 namespace Render::Ground {
 
 auto make_river_ribbon_settings() -> LinearFeatureRibbonSettings {
+  constexpr auto& shape = Game::Map::k_river_ribbon_shape;
+  static_assert(shape.width_scale * (1.0F + shape.width_variation_scale) <=
+                    Game::Map::k_river_drawn_edge_scale,
+                "river ribbon draws wider than the worst-case drawn river edge");
+  static_assert(shape.meander_amplitude <= Game::Map::k_river_drawn_meander_reach,
+                "river ribbon meanders further than the worst-case drawn river edge");
+
   LinearFeatureRibbonSettings settings;
   settings.sample_step = 0.24F;
   settings.min_length_steps = 8;
   settings.cross_section_segments = 4;
-
-  settings.edge_noise_frequencies = {0.015F, 0.055F, 0.14F};
-  settings.edge_noise_weights = {0.45F, 0.36F, 0.19F};
-
-  constexpr float k_width_scale = 1.08F;
-  constexpr float k_width_variation_scale = 0.15F;
-  constexpr float k_meander_amplitude = 0.145F;
-
-  static_assert(k_width_scale * (1.0F + k_width_variation_scale) <=
-                    Game::Map::k_river_drawn_edge_scale,
-                "river ribbon draws wider than bridge decks reserve to span");
-  static_assert(k_meander_amplitude <= Game::Map::k_river_drawn_meander_reach,
-                "river ribbon meanders further than bridge landings reserve for");
-
-  settings.width_scale = k_width_scale;
-  settings.width_variation_scale = k_width_variation_scale;
-  settings.meander_frequency = 3.6F;
-
-  settings.meander_amplitude = k_meander_amplitude;
+  settings.edge_noise_frequencies = shape.edge_noise_frequencies;
+  settings.edge_noise_weights = shape.edge_noise_weights;
+  settings.width_scale = shape.width_scale;
+  settings.width_variation_scale = shape.width_variation_scale;
+  settings.meander_frequency = shape.meander_frequency;
+  settings.meander_length_scale = shape.meander_length_scale;
+  settings.meander_amplitude = shape.meander_amplitude;
   settings.y_offset = 0.12F;
   return settings;
 }
@@ -163,47 +159,18 @@ auto sample_linear_feature_cross_section(const LinearFeatureRibbonSegment& segme
                                          float t,
                                          const LinearFeatureRibbonSettings& settings)
     -> LinearFeatureCrossSection {
-  QVector3D direction = segment.end - segment.start;
-  const float length = direction.length();
-  if (length < 0.01F) {
-    return {segment.start, std::max(segment.width * 0.5F, 0.01F)};
-  }
-  direction.normalize();
-  QVector3D const perpendicular(-direction.z(), 0.0F, direction.x());
-  QVector3D center = segment.start + direction * (length * std::clamp(t, 0.0F, 1.0F));
-
-  float combined_noise = 0.0F;
-  float weight_sum = 0.0F;
-  for (std::size_t index = 0; index < settings.edge_noise_frequencies.size(); ++index) {
-    const float frequency = settings.edge_noise_frequencies[index];
-    const float weight = settings.edge_noise_weights[index];
-    if (frequency <= 0.0F || weight <= 0.0F) {
-      continue;
-    }
-    combined_noise +=
-        value_noise(center.x() * frequency, center.z() * frequency) * weight;
-    weight_sum += weight;
-  }
-  if (weight_sum > 0.0F) {
-    combined_noise = combined_noise / weight_sum * 2.0F - 1.0F;
-  }
-
-  if (settings.meander_amplitude > 0.0F && settings.meander_frequency > 0.0F) {
-    const float meander =
-        (value_noise(t * settings.meander_frequency,
-                     length * settings.meander_length_scale) *
-             2.0F -
-         1.0F) *
-        segment.width * settings.meander_amplitude *
-        std::sin(std::numbers::pi_v<float> * std::clamp(t, 0.0F, 1.0F));
-    center += perpendicular * meander;
-  }
-
-  const float half_width = segment.width * 0.5F * settings.width_scale;
-  return {center,
-          std::max(half_width +
-                       combined_noise * half_width * settings.width_variation_scale,
-                   0.01F)};
+  const Game::Map::RibbonShape shape{
+      .edge_noise_frequencies = settings.edge_noise_frequencies,
+      .edge_noise_weights = settings.edge_noise_weights,
+      .width_scale = settings.width_scale,
+      .width_variation_scale = settings.width_variation_scale,
+      .meander_frequency = settings.meander_frequency,
+      .meander_length_scale = settings.meander_length_scale,
+      .meander_amplitude = settings.meander_amplitude,
+  };
+  const auto section = Game::Map::sample_ribbon_cross_section(
+      segment.start, segment.end, segment.width, t, shape);
+  return {section.center, section.half_width};
 }
 
 auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment& segment,
@@ -524,12 +491,7 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
   float const bridge_width = std::max(bridge.width, Game::Map::k_min_bridge_width);
   float const half_width = bridge_width * 0.5F;
 
-  float const abutment_reach = Game::Map::bridge_abutment_reach(bridge_width);
-
-  float const deck_thickness_estimate = std::clamp(bridge_width * 0.26F, 0.55F, 1.05F);
-  float const landing_run =
-      std::max(abutment_reach,
-               deck_thickness_estimate * 1.35F / Game::Map::k_bridge_landing_grade);
+  float const landing_run = Game::Map::bridge_visual_landing_run(bridge_width);
   const float visual_length = length + landing_run * 2.0F;
   QVector3D const visual_start = bridge.start - dir * landing_run;
   float const segment_step = std::max(tile_size * 0.28F, 0.16F);

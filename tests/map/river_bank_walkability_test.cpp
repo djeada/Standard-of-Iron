@@ -1,5 +1,6 @@
 #include <QVector3D>
 
+#include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
 
@@ -24,19 +25,30 @@ auto world_of(int grid) -> float {
   return (static_cast<float>(grid) - (k_cells * 0.5F - 0.5F)) * k_tile;
 }
 
+auto grid_of(float world) -> int {
+  return static_cast<int>(std::round(world / k_tile + (k_cells * 0.5F - 0.5F)));
+}
+
+auto river_for(float river_width) -> Game::Map::RiverSegment {
+  return {{-140.0F, 0.0F, 0.0F}, {140.0F, 0.0F, 0.0F}, river_width};
+}
+
 } // namespace
 
 TEST(RiverBankWalkabilityTest, NoWalkableGroundLiesUnderTheDrawnRiver) {
   for (const float river_width : {4.2F, 7.0F, 19.6F, 26.0F}) {
     const auto terrain = build(river_width, 26.0F);
-    const float drawn_half = Game::Map::river_drawn_half_width(river_width);
+    const auto river = river_for(river_width);
 
     int walkable_under_water = 0;
-    for (int z = 0; z < k_cells; ++z) {
-      if (std::abs(world_of(z)) > drawn_half) {
-        continue;
-      }
-      for (int x = 0; x < k_cells; ++x) {
+    for (int x = 0; x < k_cells; ++x) {
+      const float t =
+          (world_of(x) - river.start.x()) / (river.end.x() - river.start.x());
+      const auto section = Game::Map::river_drawn_cross_section(river, t);
+      for (int z = 0; z < k_cells; ++z) {
+        if (std::abs(world_of(z) - section.center.z()) > section.half_width) {
+          continue;
+        }
         if (terrain.isBridgeCell(x, z)) {
           continue;
         }
@@ -47,22 +59,54 @@ TEST(RiverBankWalkabilityTest, NoWalkableGroundLiesUnderTheDrawnRiver) {
   }
 }
 
+TEST(RiverBankWalkabilityTest, BankBesideTheDrawnWaterIsWalkable) {
+  for (const float river_width : {7.0F, 19.6F, 26.0F}) {
+    const auto terrain = build(river_width, 8.0F);
+    const auto river = river_for(river_width);
+
+    int blocked_dry_bank = 0;
+    for (int x = grid_of(-90.0F); x <= grid_of(90.0F); ++x) {
+      const float t =
+          (world_of(x) - river.start.x()) / (river.end.x() - river.start.x());
+      const auto section = Game::Map::river_drawn_cross_section(river, t);
+      const float reach = std::max(section.half_width, river_width * 0.5F) +
+                          Game::Map::k_water_bank_clearance + k_tile * 1.5F;
+      for (const float side : {-1.0F, 1.0F}) {
+        const int z = grid_of(section.center.z() + side * reach);
+        if (!terrain.isBridgeCell(x, z) && !terrain.is_walkable(x, z)) {
+          ++blocked_dry_bank;
+        }
+      }
+    }
+    EXPECT_EQ(blocked_dry_bank, 0) << "river width " << river_width;
+  }
+}
+
 TEST(RiverBankWalkabilityTest, BridgeDecksLandOnDryWalkableGround) {
   for (const float river_width : {4.2F, 7.0F, 19.6F, 26.0F}) {
     const auto terrain = build(river_width, 26.0F);
     const auto& bridge = terrain.get_bridges().front();
-    const float blocked_half = Game::Map::river_bank_standing_half_width(river_width);
+    const auto section =
+        Game::Map::river_drawn_cross_section(river_for(river_width), 0.5F);
 
-    EXPECT_GT(std::abs(bridge.start.z()), blocked_half)
+    EXPECT_LT(bridge.start.z(), section.center.z() - section.half_width)
         << "river width " << river_width;
-    EXPECT_GT(std::abs(bridge.end.z()), blocked_half) << "river width " << river_width;
+    EXPECT_GT(bridge.end.z(), section.center.z() + section.half_width)
+        << "river width " << river_width;
 
+    const int grid_x = grid_of(0.0F);
     for (const float deck_end : {bridge.start.z(), bridge.end.z()}) {
-      const int grid_z =
-          static_cast<int>(std::round(deck_end + (k_cells * 0.5F - 0.5F)));
-      const int grid_x = static_cast<int>(std::round(k_cells * 0.5F - 0.5F));
-      EXPECT_TRUE(terrain.is_walkable(grid_x, grid_z))
+      EXPECT_TRUE(terrain.is_walkable(grid_x, grid_of(deck_end)))
           << "river width " << river_width << " deck end " << deck_end;
+    }
+    // Past the deck the ground itself must carry the column on.
+    for (const float step_off :
+         {bridge.start.z() - 2.0F * k_tile, bridge.end.z() + 2.0F * k_tile}) {
+      const int grid_z = grid_of(step_off);
+      EXPECT_FALSE(terrain.isBridgeCell(grid_x, grid_z))
+          << "river width " << river_width << " step-off " << step_off;
+      EXPECT_TRUE(terrain.is_walkable(grid_x, grid_z))
+          << "river width " << river_width << " step-off " << step_off;
     }
   }
 }
