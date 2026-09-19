@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "core/component_economy.h"
@@ -11,6 +13,7 @@
 #include "game/map/terrain_service.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/construction_cost_catalog.h"
 #include "game/systems/harvest_yields.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/movement_pipeline.h"
@@ -379,6 +382,146 @@ TEST_F(ProductionSystemTest, HarvestingBuilderStaysCenteredOnResourceAnchor) {
            "collect_iron_ore",
            &Game::Systems::Pathfinding::is_iron_ore,
            "iron_ore");
+}
+
+struct CrewMember {
+  Engine::Core::Entity* entity = nullptr;
+  Engine::Core::BuilderProductionComponent* builder = nullptr;
+};
+
+auto add_site_crew(Engine::Core::World& world,
+                   const std::string& product,
+                   QVector3D site,
+                   bool at_site) -> CrewMember {
+  auto* entity = world.create_entity();
+  entity->add_component<Engine::Core::TransformComponent>(
+      site.x() + (at_site ? 0.0F : 40.0F), 0.0F, site.z());
+  entity->add_component<Engine::Core::MovementComponent>();
+  auto* unit = entity->add_component<Engine::Core::UnitComponent>();
+  unit->owner_id = 1;
+  unit->health = 100;
+  unit->max_health = 100;
+  unit->spawn_type = Game::Units::SpawnType::Builder;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  auto* builder = entity->add_component<Engine::Core::BuilderProductionComponent>();
+  // What the StartConstruction order leaves behind for every crew it names.
+  builder->product_type = product;
+  builder->build_time = Game::Systems::construction_build_time(product);
+  builder->time_remaining = builder->build_time;
+  builder->has_construction_site = true;
+  builder->construction_site_x = site.x();
+  builder->construction_site_z = site.z();
+  builder->at_construction_site = at_site;
+  builder->in_progress = at_site;
+  return {entity, builder};
+}
+
+auto count_spawned(Engine::Core::World& world, Game::Units::SpawnType type) -> int {
+  int count = 0;
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    if (entity->get_component<Engine::Core::UnitComponent>()->spawn_type == type) {
+      ++count;
+    }
+  }
+  return count;
+}
+
+auto run_until_built(Engine::Core::World& world,
+                     Game::Systems::ProductionSystem& system,
+                     const std::vector<CrewMember>& crews,
+                     float limit_seconds) -> float {
+  constexpr float k_dt = 0.1F;
+  float elapsed = 0.0F;
+  while (elapsed < limit_seconds) {
+    system.update(&world, k_dt);
+    elapsed += k_dt;
+    const bool anyone_working =
+        std::any_of(crews.begin(), crews.end(), [](const CrewMember& crew) {
+          return crew.builder->in_progress || crew.builder->has_construction_site;
+        });
+    if (!anyone_working) {
+      break;
+    }
+  }
+  return elapsed;
+}
+
+TEST_F(ProductionSystemTest, SeveralCrewsOnOneSiteRaiseOneBuildingTogether) {
+  Game::Systems::NavGrid::initialize(64, 64);
+  const std::string product = "home";
+  const float full_time = Game::Systems::construction_build_time(product);
+  const auto site = Game::Systems::NavGrid::grid_to_world({32, 32});
+
+  Engine::Core::World world;
+  std::vector<CrewMember> crews;
+  for (int i = 0; i < 3; ++i) {
+    crews.push_back(add_site_crew(world, product, site, true));
+  }
+
+  Game::Systems::ProductionSystem system;
+  const float took = run_until_built(world, system, crews, full_time * 3.0F);
+
+  EXPECT_EQ(count_spawned(world, Game::Units::SpawnType::Home), 1)
+      << "one order is one building, however many crews raise it";
+  EXPECT_LT(took, full_time * 0.5F) << "three crews must work faster than one";
+  EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
+                1, Game::Systems::ResourceType::Wood),
+            0)
+      << "helpers finishing must not refund the cost";
+  for (const auto& crew : crews) {
+    EXPECT_FALSE(crew.builder->in_progress);
+    EXPECT_FALSE(crew.builder->has_construction_site) << "every crew is released";
+  }
+}
+
+TEST_F(ProductionSystemTest, ACrewStillWalkingJoinsWorkAlreadyUnderWay) {
+  Game::Systems::NavGrid::initialize(64, 64);
+  const std::string product = "home";
+  const float full_time = Game::Systems::construction_build_time(product);
+  const auto site = Game::Systems::NavGrid::grid_to_world({32, 32});
+
+  Engine::Core::World world;
+  auto first = add_site_crew(world, product, site, true);
+  auto late = add_site_crew(world, product, site, false);
+
+  Game::Systems::ProductionSystem system;
+  for (int i = 0; i < 10; ++i) {
+    system.update(&world, 0.1F);
+  }
+  const float progress_before =
+      1.0F - (first.builder->time_remaining / first.builder->build_time);
+  EXPECT_GT(progress_before, 0.0F);
+
+  auto* late_transform = late.entity->get_component<Engine::Core::TransformComponent>();
+  late_transform->position.x = site.x();
+  late_transform->position.z = site.z();
+  system.update(&world, 0.1F);
+  ASSERT_TRUE(late.builder->at_construction_site);
+  system.update(&world, 0.1F);
+  const float late_progress =
+      1.0F - (late.builder->time_remaining / late.builder->build_time);
+  EXPECT_GE(late_progress, progress_before)
+      << "the late crew shares the site's progress";
+
+  run_until_built(world, system, {first, late}, full_time * 3.0F);
+  EXPECT_EQ(count_spawned(world, Game::Units::SpawnType::Home), 1);
+}
+
+TEST_F(ProductionSystemTest, CrewsOnDifferentSitesBuildSeparately) {
+  Game::Systems::NavGrid::initialize(64, 64);
+  const std::string product = "home";
+  const float full_time = Game::Systems::construction_build_time(product);
+
+  Engine::Core::World world;
+  std::vector<CrewMember> crews{
+      add_site_crew(
+          world, product, Game::Systems::NavGrid::grid_to_world({16, 16}), true),
+      add_site_crew(
+          world, product, Game::Systems::NavGrid::grid_to_world({48, 48}), true)};
+
+  Game::Systems::ProductionSystem system;
+  run_until_built(world, system, crews, full_time * 3.0F);
+  EXPECT_EQ(count_spawned(world, Game::Units::SpawnType::Home), 2);
 }
 
 TEST_F(ProductionSystemTest, BuilderCompletesMarketplaceConstruction) {

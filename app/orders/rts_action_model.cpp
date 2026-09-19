@@ -232,7 +232,7 @@ auto unit_is_eligible_for_action(const Engine::Core::Entity& entity,
   case ActionId::Join:
     return (unit != nullptr) && !Game::Units::is_building_spawn(unit->spawn_type) &&
            Game::Units::squad_establishment(unit->spawn_type) > 1 &&
-           !Game::Units::squad_is_at_full_strength(*unit);
+           Game::Units::squad_is_short_of_men(*unit);
   case ActionId::Run:
     return (unit != nullptr) && Game::Units::can_use_run_mode(unit->spawn_type);
   case ActionId::Rally:

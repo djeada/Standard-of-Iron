@@ -437,15 +437,15 @@ RowLayout {
             "id": "join",
             "label": qsTr("Join"),
             "needsTroops": true,
-            "hint": qsTr("Fold two understrength squads of the same kind back into one."),
+            "hint": qsTr("Fold squads of the same kind that have lost men back into full-strength ones."),
             "details": [{
                     "term": qsTr("Needs"),
-                    "text": qsTr("Two squads of the same kind, both below full strength and standing close together.")
+                    "text": qsTr("Squads of the same kind standing close together, at least one of them short of men.")
                 }, {
                     "term": qsTr("Result"),
-                    "text": qsTr("One squad with their men and health added together, up to a full establishment.")
+                    "text": qsTr("Their men fill whole squads first and any left over stay together as one smaller squad. No man is lost.")
                 }],
-            "unavailable": qsTr("Select two understrength squads of the same kind"),
+            "unavailable": qsTr("Select squads of the same kind that have lost men"),
             "invoke": function () {
                 if (bottomRoot.game_ready() && game.activity)
                     game.activity.merge_selected_squads();

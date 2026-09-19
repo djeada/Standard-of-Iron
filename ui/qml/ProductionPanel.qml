@@ -2607,10 +2607,18 @@ Rectangle {
             }
 
             Rectangle {
-                property bool has_marketplace_selected: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("marketplace")))
+                id: marketplaceSection
 
+                property bool has_marketplace_selected: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("marketplace")))
+                readonly property var market_state: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_marketplace_state) ? productionPanel.production.selected_marketplace_state() : productionPanel.default_marketplace_state())
+                readonly property bool trading: market_state.has_marketplace === true
+                readonly property int lot: Math.max(0, market_state.trade_quantity || 0)
+                readonly property int gold: productionPanel.resource_amount(productionPanel.current_resources(), "gold")
+                readonly property int row_height: Math.max(Design.A11y.scaled(26), Design.Typography.label + 12)
+
+                objectName: "marketplaceSection"
                 width: parent.width
-                height: marketplaceContent.height + 16
+                height: marketplaceContent.implicitHeight + Design.Metrics.space8 * 2
                 color: "#120D09"
                 radius: 6
                 border.color: hs.bronzeDeep
@@ -2620,153 +2628,185 @@ Rectangle {
                 Column {
                     id: marketplaceContent
 
-                    property var market_state: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_marketplace_state) ? productionPanel.production.selected_marketplace_state() : productionPanel.default_marketplace_state())
-
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.left: parent.left
+                    anchors.right: parent.right
                     anchors.top: parent.top
-                    anchors.margins: 8
-                    spacing: 8
-                    width: parent.width - 16
+                    anchors.margins: Design.Metrics.space8
+                    spacing: Design.Metrics.space4
 
-                    Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 6
+                    RowLayout {
+                        width: parent.width
+                        spacing: Design.Metrics.space4
 
                         Image {
                             id: marketplaceHeaderIcon
 
-                            width: 18
-                            height: 18
-                            source: productionPanel.unit_icon_source("marketplace", marketplaceContent.market_state.nation_id)
+                            Layout.preferredWidth: 16
+                            Layout.preferredHeight: 16
+                            source: productionPanel.unit_icon_source("marketplace", marketplaceSection.market_state.nation_id)
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             visible: status === Image.Ready
                         }
 
                         Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: marketplaceHeaderIcon.visible ? qsTr("MARKETPLACE") : Design.Icons.unitGlyph("marketplace") + " " + qsTr("MARKETPLACE")
+                            text: qsTr("MARKETPLACE")
                             color: hs.bronze
                             font.pixelSize: Design.Typography.caption
                             font.bold: true
                         }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        Image {
+                            Layout.preferredWidth: 14
+                            Layout.preferredHeight: 14
+                            source: productionPanel.cost_icon_source("gold")
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            visible: marketplaceSection.trading
+                        }
+
+                        Text {
+                            objectName: "marketplaceGold"
+                            visible: marketplaceSection.trading
+                            text: marketplaceSection.gold
+                            color: "#F4E7C8"
+                            font.pixelSize: Design.Typography.caption
+                            font.bold: true
+                        }
+
+                        Text {
+                            visible: marketplaceSection.trading
+                            text: qsTr("· lots of %1").arg(marketplaceSection.lot)
+                            color: "#8D7146"
+                            font.pixelSize: Design.Typography.caption
+                        }
                     }
 
                     Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: marketplaceContent.market_state.has_marketplace ? qsTr("Trade resources for gold at fixed exchange rates") : qsTr("Select your marketplace to trade")
-                        color: "#8D7146"
-                        font.pixelSize: Design.Typography.caption
-                    }
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        visible: marketplaceContent.market_state.has_marketplace === true
-                        text: qsTr("Gold: %1    Trade size: %2").arg(productionPanel.resource_amount(productionPanel.current_resources(), "gold")).arg(Math.max(0, marketplaceContent.market_state.trade_quantity || 0))
-                        color: "#F4E7C8"
-                        font.pixelSize: Design.Typography.caption
-                        font.bold: true
-                    }
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        visible: !marketplaceContent.market_state.has_marketplace
-                        text: qsTr("Trading is available only for your own marketplace.")
+                        visible: !marketplaceSection.trading
+                        width: parent.width
+                        text: qsTr("Only your own marketplace can trade. Select it to buy or sell.")
                         color: "#8D7146"
                         font.pixelSize: Design.Typography.caption
                         wrapMode: Text.WordWrap
                         horizontalAlignment: Text.AlignHCenter
-                        width: parent.width - 24
                     }
 
-                    Column {
-                        width: parent.width
-                        spacing: 6
-                        visible: marketplaceContent.market_state.has_marketplace === true
+                    Repeater {
+                        model: marketplaceSection.trading ? productionPanel.marketplace_trade_specs : []
 
-                        Repeater {
-                            model: productionPanel.marketplace_trade_specs
+                        delegate: Rectangle {
+                            id: tradeRow
 
-                            delegate: Rectangle {
-                                property string resource_key: modelData.key
-                                property int trade_quantity: Math.max(0, marketplaceContent.market_state.trade_quantity || 0)
-                                property int buy_price: productionPanel.trade_price(marketplaceContent.market_state.buy_prices, resource_key)
-                                property int sell_price: productionPanel.trade_price(marketplaceContent.market_state.sell_prices, resource_key)
+                            readonly property string resource_key: modelData.key
+                            readonly property string resource_label: modelData.label
+                            readonly property int stock: productionPanel.resource_amount(productionPanel.current_resources(), resource_key)
+                            readonly property int buy_price: productionPanel.trade_price(marketplaceSection.market_state.buy_prices, resource_key)
+                            readonly property int sell_price: productionPanel.trade_price(marketplaceSection.market_state.sell_prices, resource_key)
+                            readonly property bool can_buy: productionPanel.can_buy_trade_resource(marketplaceSection.market_state, resource_key)
+                            readonly property bool can_sell: productionPanel.can_sell_trade_resource(marketplaceSection.market_state, resource_key)
 
-                                width: marketplaceContent.width
-                                height: 54
-                                radius: 6
-                                color: "#1A120C"
-                                border.color: hs.bronzeDeep
-                                border.width: 1
+                            objectName: "marketplaceRow_" + resource_key
+                            width: marketplaceContent.width
+                            height: marketplaceSection.row_height
+                            radius: 4
+                            color: "#1A120C"
+                            border.color: hs.bronzeDeep
+                            border.width: 1
 
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.margins: 8
-                                    spacing: 8
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: Design.Metrics.space4
+                                anchors.rightMargin: 2
+                                anchors.topMargin: 2
+                                anchors.bottomMargin: 2
+                                spacing: Design.Metrics.space4
 
-                                    Image {
-                                        Layout.preferredWidth: 18
-                                        Layout.preferredHeight: 18
-                                        fillMode: Image.PreserveAspectFit
-                                        smooth: true
-                                        source: productionPanel.cost_icon_source(resource_key)
-                                    }
+                                Image {
+                                    Layout.preferredWidth: 16
+                                    Layout.preferredHeight: 16
+                                    fillMode: Image.PreserveAspectFit
+                                    smooth: true
+                                    source: productionPanel.cost_icon_source(tradeRow.resource_key)
+                                }
 
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        spacing: 1
+                                Text {
+                                    Layout.fillWidth: true
+                                    Layout.minimumWidth: 0
+                                    text: qsTr("%1 %2").arg(tradeRow.resource_label).arg(tradeRow.stock)
+                                    color: "#F4E7C8"
+                                    font.pixelSize: Design.Typography.caption
+                                    font.bold: true
+                                    elide: Text.ElideRight
+                                }
+
+                                Repeater {
+                                    model: [{
+                                            "buying": true
+                                        }, {
+                                            "buying": false
+                                        }]
+
+                                    delegate: Rectangle {
+                                        id: tradeButton
+
+                                        readonly property bool buying: modelData.buying
+                                        readonly property bool allowed: buying ? tradeRow.can_buy : tradeRow.can_sell
+                                        readonly property int price: buying ? tradeRow.buy_price : tradeRow.sell_price
+
+                                        objectName: (buying ? "marketplaceBuy_" : "marketplaceSell_") + tradeRow.resource_key
+                                        Layout.fillHeight: true
+                                        Layout.preferredWidth: Math.max(tradeLabel.implicitWidth + Design.Metrics.space12, Math.round(tradeRow.width * 0.3))
+                                        radius: 3
+                                        color: !allowed ? "#140E0A" : tradeMouse.pressed ? "#4A3520" : tradeMouse.containsMouse ? "#3A2A1A" : "#2A1D12"
+                                        border.width: 1
+                                        border.color: !allowed ? "#3B2F24" : tradeMouse.containsMouse ? Theme.accent : hs.bronze
+                                        Accessible.role: Accessible.Button
+                                        Accessible.name: tradeLabel.text
 
                                         Text {
-                                            text: modelData.label
-                                            color: "#F4E7C8"
+                                            id: tradeLabel
+
+                                            anchors.centerIn: parent
+                                            text: tradeButton.buying ? qsTr("Buy %1 · %2g").arg(marketplaceSection.lot).arg(tradeButton.price) : qsTr("Sell %1 · +%2g").arg(marketplaceSection.lot).arg(tradeButton.price)
+                                            color: tradeButton.allowed ? "#F4E7C8" : "#5E4B36"
                                             font.pixelSize: Design.Typography.caption
                                             font.bold: true
                                         }
 
-                                        Text {
-                                            text: qsTr("You have %1").arg(productionPanel.resource_amount(productionPanel.current_resources(), resource_key))
-                                            color: "#8D7146"
-                                            font.pixelSize: Design.Typography.caption
-                                        }
-                                    }
+                                        MouseArea {
+                                            id: tradeMouse
 
-                                    Button {
-
-                                        readonly property bool allowed: productionPanel.can_buy_trade_resource(marketplaceContent.market_state, resource_key)
-
-                                        Layout.preferredWidth: 110
-                                        text: qsTr("Buy %1 (%2g)").arg(trade_quantity).arg(buy_price)
-                                        opacity: allowed ? 1 : 0.5
-                                        onClicked: {
-                                            if (!allowed) {
-                                                Design.UiSound.warning();
-                                                return;
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: tradeButton.allowed ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                            onClicked: {
+                                                if (!productionPanel.production)
+                                                    return;
+                                                if (!tradeButton.allowed) {
+                                                    Design.UiSound.warning();
+                                                    return;
+                                                }
+                                                Design.UiSound.activate();
+                                                if (tradeButton.buying)
+                                                    productionPanel.production.marketplace_buy(tradeRow.resource_key);
+                                                else
+                                                    productionPanel.production.marketplace_sell(tradeRow.resource_key);
                                             }
-                                            Design.UiSound.activate();
-                                            productionPanel.production.marketplace_buy(resource_key);
                                         }
-                                        ToolTip.visible: hovered
-                                        ToolTip.text: qsTr("Spend %1 gold to buy %2 %3").arg(buy_price).arg(trade_quantity).arg(modelData.label.toLowerCase())
-                                    }
 
-                                    Button {
-
-                                        readonly property bool allowed: productionPanel.can_sell_trade_resource(marketplaceContent.market_state, resource_key)
-
-                                        Layout.preferredWidth: 110
-                                        text: qsTr("Sell %1 (+%2g)").arg(trade_quantity).arg(sell_price)
-                                        opacity: allowed ? 1 : 0.5
-                                        onClicked: {
-                                            if (!allowed) {
-                                                Design.UiSound.warning();
-                                                return;
-                                            }
-                                            Design.UiSound.activate();
-                                            productionPanel.production.marketplace_sell(resource_key);
+                                        ToolTip.visible: tradeMouse.containsMouse
+                                        ToolTip.delay: Design.Metrics.tooltipDelay
+                                        ToolTip.text: {
+                                            var goods = tradeRow.resource_label.toLowerCase();
+                                            if (tradeButton.buying)
+                                                return tradeButton.allowed ? qsTr("Spend %1 gold for %2 %3").arg(tradeButton.price).arg(marketplaceSection.lot).arg(goods) : qsTr("Not enough gold: %1 needed").arg(tradeButton.price);
+                                            return tradeButton.allowed ? qsTr("Sell %1 %2 for %3 gold").arg(marketplaceSection.lot).arg(goods).arg(tradeButton.price) : qsTr("Not enough %1: %2 needed").arg(goods).arg(marketplaceSection.lot);
                                         }
-                                        ToolTip.visible: hovered
-                                        ToolTip.text: qsTr("Sell %1 %2 for %3 gold").arg(trade_quantity).arg(modelData.label.toLowerCase()).arg(sell_price)
                                     }
                                 }
                             }

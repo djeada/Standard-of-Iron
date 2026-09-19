@@ -44,6 +44,18 @@ squad_is_at_full_strength(const Engine::Core::UnitComponent& unit) -> bool {
 }
 
 [[nodiscard]] inline auto
+squad_survivors(const Engine::Core::UnitComponent& unit) -> int {
+  return Engine::Core::resolve_surviving_individual_count(
+      unit.health, unit.max_health, squad_strength(unit));
+}
+
+[[nodiscard]] inline auto
+squad_is_short_of_men(const Engine::Core::UnitComponent& unit) -> bool {
+  return unit.health > 0 &&
+         squad_survivors(unit) < squad_establishment(unit.spawn_type);
+}
+
+[[nodiscard]] inline auto
 squad_population_cost(const Engine::Core::UnitComponent& unit) -> int {
   const int full = TroopConfig::instance().get_population_cost(unit.spawn_type);
   if (squad_is_at_full_strength(unit)) {
@@ -56,7 +68,7 @@ squad_population_cost(const Engine::Core::UnitComponent& unit) -> int {
 squad_can_divide(const Engine::Core::UnitComponent& unit) -> bool {
   return unit.health > 0 && !is_building_spawn(unit.spawn_type) &&
          squad_establishment(unit.spawn_type) >= k_minimum_squad_strength * 2 &&
-         squad_strength(unit) >= k_minimum_squad_strength * 2;
+         squad_survivors(unit) >= k_minimum_squad_strength * 2;
 }
 
 } // namespace Game::Units

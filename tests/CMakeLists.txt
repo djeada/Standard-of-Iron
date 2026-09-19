@@ -223,6 +223,7 @@ add_executable(
     headless/headless_simulation_test.cpp
     headless/gate_traversal_test.cpp
     headless/wall_siege_test.cpp
+    headless/builder_crews_test.cpp
     headless/tight_gap_navigation_test.cpp
     headless/stuck_recovery_test.cpp
     headless/movement_pace_test.cpp
@@ -577,6 +578,7 @@ add_executable(
     core/commander_lock_on_test.cpp
     core/commander_presentation_trace_test.cpp
     core/commander_view_model_input_test.cpp
+    core/production_view_model_trade_test.cpp
     core/commander_presentation_pose_test.cpp
     core/commander_motor_test.cpp
     core/commander_direct_control_latency_test.cpp

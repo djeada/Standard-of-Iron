@@ -3975,24 +3975,8 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <translation>Birleştir</translation>
     </message>
     <message>
-        <source>Fold two understrength squads of the same kind back into one.</source>
-        <translation>Aynı türden eksik iki müfrezeyi tekrar tek bir müfrezede topla.</translation>
-    </message>
-    <message>
-        <source>Two squads of the same kind, both below full strength and standing close together.</source>
-        <translation>Aynı türden, ikisi de tam mevcudun altında ve birbirine yakın duran iki müfreze.</translation>
-    </message>
-    <message>
         <source>Result</source>
         <translation>Sonuç</translation>
-    </message>
-    <message>
-        <source>One squad with their men and health added together, up to a full establishment.</source>
-        <translation>Adamları ve canları toplanmış, tam mevcuda kadar tek bir müfreze.</translation>
-    </message>
-    <message>
-        <source>Select two understrength squads of the same kind</source>
-        <translation>Aynı türden eksik iki müfreze seç</translation>
     </message>
     <message>
         <source>Deliver</source>
@@ -4103,6 +4087,22 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>Select troops to reveal their specialist actions</source>
         <translation>Uzmanlık eylemlerini görmek için birlik seç</translation>
+    </message>
+    <message>
+        <source>Fold squads of the same kind that have lost men back into full-strength ones.</source>
+        <translation>Adam kaybetmiş aynı türden birlikleri yeniden tam birlikler hâlinde birleştir.</translation>
+    </message>
+    <message>
+        <source>Squads of the same kind standing close together, at least one of them short of men.</source>
+        <translation>Birbirine yakın duran, en az biri adam kaybetmiş aynı türden birlikler.</translation>
+    </message>
+    <message>
+        <source>Their men fill whole squads first and any left over stay together as one smaller squad. No man is lost.</source>
+        <translation>Adamları önce tam birlikleri doldurur, artanlar birlikte daha küçük tek bir birlik olur. Hiç kimse kaybolmaz.</translation>
+    </message>
+    <message>
+        <source>Select squads of the same kind that have lost men</source>
+        <translation>Adam kaybetmiş aynı türden birlikleri seç</translation>
     </message>
 </context>
 <context>
@@ -9201,38 +9201,6 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
         <translation>PAZAR</translation>
     </message>
     <message>
-        <source>Trade resources for gold at fixed exchange rates</source>
-        <translation>Sabit kurlarla altın karşılığı kaynak ticareti yap</translation>
-    </message>
-    <message>
-        <source>Select your marketplace to trade</source>
-        <translation>Ticaret yapmak için pazarını seç</translation>
-    </message>
-    <message>
-        <source>Gold: %1    Trade size: %2</source>
-        <translation>Altın: %1    Ticaret büyüklüğü: %2</translation>
-    </message>
-    <message>
-        <source>Trading is available only for your own marketplace.</source>
-        <translation>Ticaret yalnızca kendi pazarında yapılabilir.</translation>
-    </message>
-    <message>
-        <source>You have %1</source>
-        <translation>Elinde %1 var</translation>
-    </message>
-    <message>
-        <source>Buy %1 (%2g)</source>
-        <translation>%1 al (%2a)</translation>
-    </message>
-    <message>
-        <source>Spend %1 gold to buy %2 %3</source>
-        <translation>%2 %3 almak için %1 altın harca</translation>
-    </message>
-    <message>
-        <source>Sell %1 (+%2g)</source>
-        <translation>%1 sat (+%2a)</translation>
-    </message>
-    <message>
         <source>Sell %1 %2 for %3 gold</source>
         <translation>%1 %2 karşılığında %3 altın al</translation>
     </message>
@@ -9299,6 +9267,34 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <message>
         <source>Select a barracks to recruit units</source>
         <translation>Birim devşirmek için bir kışla seç</translation>
+    </message>
+    <message>
+        <source>· lots of %1</source>
+        <translation>· %1&apos;lik partiler</translation>
+    </message>
+    <message>
+        <source>Only your own marketplace can trade. Select it to buy or sell.</source>
+        <translation>Yalnızca kendi pazarın ticaret yapabilir. Almak ya da satmak için onu seç.</translation>
+    </message>
+    <message>
+        <source>Buy %1 · %2g</source>
+        <translation>%1 al · %2 a</translation>
+    </message>
+    <message>
+        <source>Sell %1 · +%2g</source>
+        <translation>%1 sat · +%2 a</translation>
+    </message>
+    <message>
+        <source>Spend %1 gold for %2 %3</source>
+        <translation>%2 %3 için %1 altın harca</translation>
+    </message>
+    <message>
+        <source>Not enough gold: %1 needed</source>
+        <translation>Yetersiz altın: %1 gerekli</translation>
+    </message>
+    <message>
+        <source>Not enough %1: %2 needed</source>
+        <translation>Yetersiz %1: %2 gerekli</translation>
     </message>
 </context>
 <context>

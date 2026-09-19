@@ -4062,24 +4062,8 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Unir</translation>
     </message>
     <message>
-        <source>Fold two understrength squads of the same kind back into one.</source>
-        <translation>Junta duas unidades desfalcadas do mesmo tipo em uma só.</translation>
-    </message>
-    <message>
-        <source>Two squads of the same kind, both below full strength and standing close together.</source>
-        <translation>Duas unidades do mesmo tipo, ambas abaixo da força total e próximas.</translation>
-    </message>
-    <message>
         <source>Result</source>
         <translation>Resultado</translation>
-    </message>
-    <message>
-        <source>One squad with their men and health added together, up to a full establishment.</source>
-        <translation>Uma unidade com homens e vida somados, até o efetivo completo.</translation>
-    </message>
-    <message>
-        <source>Select two understrength squads of the same kind</source>
-        <translation>Selecione duas unidades desfalcadas do mesmo tipo</translation>
     </message>
     <message>
         <source>Pick a structure, move the outline onto flat clear ground, scroll or press [ and ] to rotate, left-click to confirm. Right-click cancels.</source>
@@ -4104,6 +4088,22 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>Select troops to reveal their specialist actions</source>
         <translation>Selecione tropas para ver suas ações especiais</translation>
+    </message>
+    <message>
+        <source>Fold squads of the same kind that have lost men back into full-strength ones.</source>
+        <translation>Reúna esquadrões do mesmo tipo que perderam homens em esquadrões completos.</translation>
+    </message>
+    <message>
+        <source>Squads of the same kind standing close together, at least one of them short of men.</source>
+        <translation>Esquadrões do mesmo tipo próximos uns dos outros, pelo menos um deles com baixas.</translation>
+    </message>
+    <message>
+        <source>Their men fill whole squads first and any left over stay together as one smaller squad. No man is lost.</source>
+        <translation>Os homens preenchem primeiro esquadrões inteiros e os que sobram formam juntos um esquadrão menor. Nenhum homem é perdido.</translation>
+    </message>
+    <message>
+        <source>Select squads of the same kind that have lost men</source>
+        <translation>Selecione esquadrões do mesmo tipo que perderam homens</translation>
     </message>
 </context>
 <context>
@@ -9124,38 +9124,6 @@ Tempo de construção: %3s</translation>
         <translation>MERCADO</translation>
     </message>
     <message>
-        <source>Trade resources for gold at fixed exchange rates</source>
-        <translation>Troque recursos por ouro a taxas de câmbio fixas</translation>
-    </message>
-    <message>
-        <source>Select your marketplace to trade</source>
-        <translation>Selecione seu mercado para negociar</translation>
-    </message>
-    <message>
-        <source>Gold: %1    Trade size: %2</source>
-        <translation>Ouro: %1    Volume de troca: %2</translation>
-    </message>
-    <message>
-        <source>Trading is available only for your own marketplace.</source>
-        <translation>A negociação só está disponível no seu próprio mercado.</translation>
-    </message>
-    <message>
-        <source>You have %1</source>
-        <translation>Você tem %1</translation>
-    </message>
-    <message>
-        <source>Buy %1 (%2g)</source>
-        <translation>Comprar %1 (%2 o)</translation>
-    </message>
-    <message>
-        <source>Spend %1 gold to buy %2 %3</source>
-        <translation>Gaste %1 de ouro para comprar %2 de %3</translation>
-    </message>
-    <message>
-        <source>Sell %1 (+%2g)</source>
-        <translation>Vender %1 (+%2 o)</translation>
-    </message>
-    <message>
         <source>Sell %1 %2 for %3 gold</source>
         <translation>Vender %1 de %2 por %3 de ouro</translation>
     </message>
@@ -9302,6 +9270,34 @@ Os construtores os ceifam pela comida que recruta civis</translation>
     <message>
         <source>QUEUE</source>
         <translation>FILA</translation>
+    </message>
+    <message>
+        <source>· lots of %1</source>
+        <translation>· lotes de %1</translation>
+    </message>
+    <message>
+        <source>Only your own marketplace can trade. Select it to buy or sell.</source>
+        <translation>Só o seu próprio mercado pode negociar. Selecione-o para comprar ou vender.</translation>
+    </message>
+    <message>
+        <source>Buy %1 · %2g</source>
+        <translation>Comprar %1 · %2 o</translation>
+    </message>
+    <message>
+        <source>Sell %1 · +%2g</source>
+        <translation>Vender %1 · +%2 o</translation>
+    </message>
+    <message>
+        <source>Spend %1 gold for %2 %3</source>
+        <translation>Gastar %1 de ouro por %2 de %3</translation>
+    </message>
+    <message>
+        <source>Not enough gold: %1 needed</source>
+        <translation>Ouro insuficiente: %1 necessário</translation>
+    </message>
+    <message>
+        <source>Not enough %1: %2 needed</source>
+        <translation>%1 insuficiente: %2 necessário</translation>
     </message>
 </context>
 <context>

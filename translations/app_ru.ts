@@ -3975,24 +3975,8 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>Слить</translation>
     </message>
     <message>
-        <source>Fold two understrength squads of the same kind back into one.</source>
-        <translation>Сложите обратно в один два неполных отряда одного рода.</translation>
-    </message>
-    <message>
-        <source>Two squads of the same kind, both below full strength and standing close together.</source>
-        <translation>Двух отрядов одного рода, оба неполные и стоят рядом.</translation>
-    </message>
-    <message>
         <source>Result</source>
         <translation>Итог</translation>
-    </message>
-    <message>
-        <source>One squad with their men and health added together, up to a full establishment.</source>
-        <translation>Один отряд, где люди и здоровье сложены, вплоть до полного состава.</translation>
-    </message>
-    <message>
-        <source>Select two understrength squads of the same kind</source>
-        <translation>Выделите два неполных отряда одного рода</translation>
     </message>
     <message>
         <source>Deliver</source>
@@ -4105,6 +4089,22 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Select troops to reveal their specialist actions</source>
         <translation>Выделите отряды, чтобы увидеть их особые действия</translation>
+    </message>
+    <message>
+        <source>Fold squads of the same kind that have lost men back into full-strength ones.</source>
+        <translation>Сведите отряды одного типа, потерявшие людей, обратно в полные отряды.</translation>
+    </message>
+    <message>
+        <source>Squads of the same kind standing close together, at least one of them short of men.</source>
+        <translation>Отряды одного типа, стоящие рядом, хотя бы в одном из которых есть потери.</translation>
+    </message>
+    <message>
+        <source>Their men fill whole squads first and any left over stay together as one smaller squad. No man is lost.</source>
+        <translation>Люди сначала заполняют целые отряды, а оставшиеся образуют один меньший отряд. Никто не теряется.</translation>
+    </message>
+    <message>
+        <source>Select squads of the same kind that have lost men</source>
+        <translation>Выберите отряды одного типа, потерявшие людей</translation>
     </message>
 </context>
 <context>
@@ -9207,38 +9207,6 @@ Wide vision and a durable settlement anchor</source>
         <translation>РЫНОК</translation>
     </message>
     <message>
-        <source>Trade resources for gold at fixed exchange rates</source>
-        <translation>Меняйте ресурсы на золото по твёрдому курсу</translation>
-    </message>
-    <message>
-        <source>Select your marketplace to trade</source>
-        <translation>Выделите свой рынок, чтобы торговать</translation>
-    </message>
-    <message>
-        <source>Gold: %1    Trade size: %2</source>
-        <translation>Золото: %1    Размер сделки: %2</translation>
-    </message>
-    <message>
-        <source>Trading is available only for your own marketplace.</source>
-        <translation>Торговать можно только на своём рынке.</translation>
-    </message>
-    <message>
-        <source>You have %1</source>
-        <translation>У вас %1</translation>
-    </message>
-    <message>
-        <source>Buy %1 (%2g)</source>
-        <translation>Купить %1 (%2 зол.)</translation>
-    </message>
-    <message>
-        <source>Spend %1 gold to buy %2 %3</source>
-        <translation>Потратьте %1 золота, чтобы купить %2 %3</translation>
-    </message>
-    <message>
-        <source>Sell %1 (+%2g)</source>
-        <translation>Продать %1 (+%2 зол.)</translation>
-    </message>
-    <message>
         <source>Sell %1 %2 for %3 gold</source>
         <translation>Продайте %1 %2 за %3 золота</translation>
     </message>
@@ -9305,6 +9273,34 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>Select a barracks to recruit units</source>
         <translation>Выделите казармы, чтобы нанимать отряды</translation>
+    </message>
+    <message>
+        <source>· lots of %1</source>
+        <translation>· партиями по %1</translation>
+    </message>
+    <message>
+        <source>Only your own marketplace can trade. Select it to buy or sell.</source>
+        <translation>Торговать может только ваш собственный рынок. Выберите его, чтобы покупать или продавать.</translation>
+    </message>
+    <message>
+        <source>Buy %1 · %2g</source>
+        <translation>Купить %1 · %2 з.</translation>
+    </message>
+    <message>
+        <source>Sell %1 · +%2g</source>
+        <translation>Продать %1 · +%2 з.</translation>
+    </message>
+    <message>
+        <source>Spend %1 gold for %2 %3</source>
+        <translation>Потратить %1 золота на %2 ед. (%3)</translation>
+    </message>
+    <message>
+        <source>Not enough gold: %1 needed</source>
+        <translation>Недостаточно золота: нужно %1</translation>
+    </message>
+    <message>
+        <source>Not enough %1: %2 needed</source>
+        <translation>Недостаточно ресурса «%1»: нужно %2</translation>
     </message>
 </context>
 <context>

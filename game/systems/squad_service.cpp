@@ -4,9 +4,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
+#include "../core/component_core.h"
 #include "../core/world.h"
 #include "../map/map_transformer.h"
 #include "../units/factory.h"
@@ -39,28 +42,23 @@ auto full_max_health(const Engine::Core::UnitComponent& unit) -> int {
       1, static_cast<int>(std::lround(static_cast<float>(unit.max_health) / fraction)));
 }
 
-void scale_health_pool(Engine::Core::UnitComponent& unit,
-                       int establishment_max_health,
-                       int strength,
-                       float health_ratio) {
-  const int establishment = Game::Units::squad_establishment(unit.spawn_type);
-  const int clamped = std::clamp(strength, 1, establishment);
-  unit.squad_strength = clamped >= establishment ? 0 : clamped;
-  const float fraction =
-      static_cast<float>(clamped) / static_cast<float>(establishment);
-  unit.max_health =
-      std::max(1,
-               static_cast<int>(std::lround(
-                   static_cast<float>(establishment_max_health) * fraction)));
-  unit.health = std::clamp(
-      static_cast<int>(std::lround(static_cast<float>(unit.max_health) * health_ratio)),
-      1,
-      unit.max_health);
+auto max_health_for(int men, int establishment, int establishment_max_health) -> int {
+  return std::max(1,
+                  static_cast<int>(std::lround(
+                      static_cast<double>(establishment_max_health) *
+                      static_cast<double>(men) / static_cast<double>(establishment))));
 }
 
-auto detachment_position(Engine::Core::World& world,
-                         const Engine::Core::TransformComponent& parent) -> QVector3D {
-  (void)world;
+void apply_roster(Engine::Core::UnitComponent& unit,
+                  const SquadRoster& roster,
+                  int establishment,
+                  int establishment_max_health) {
+  unit.squad_strength = roster.men >= establishment ? 0 : roster.men;
+  unit.max_health = max_health_for(roster.men, establishment, establishment_max_health);
+  unit.health = std::clamp(roster.health, 1, unit.max_health);
+}
+
+auto detachment_position(const Engine::Core::TransformComponent& parent) -> QVector3D {
   constexpr float k_step = 2.5F;
   const Point origin =
       NavGrid::world_to_grid(parent.position.x + k_step, parent.position.z + k_step);
@@ -71,7 +69,188 @@ auto detachment_position(Engine::Core::World& world,
   return {parent.position.x + k_step, parent.position.y, parent.position.z + k_step};
 }
 
+struct JoinCandidate {
+  Engine::Core::EntityID id = 0;
+  int owner = 0;
+  Game::Units::SpawnType type{};
+  Game::Systems::NationID nation{};
+  float x = 0.0F;
+  float z = 0.0F;
+  int men = 0;
+  int health = 0;
+  int establishment_max_health = 0;
+};
+
+auto same_group(const JoinCandidate& a, const JoinCandidate& b) -> bool {
+  return a.owner == b.owner && a.type == b.type && a.nation == b.nation;
+}
+
+auto join_candidates(const Engine::Core::World& world,
+                     const std::vector<Engine::Core::EntityID>& units)
+    -> std::vector<JoinCandidate> {
+  std::vector<JoinCandidate> candidates;
+  candidates.reserve(units.size());
+  for (const auto id : units) {
+    const auto* unit = unit_of(world, id);
+    const auto* transform = world.try_get<Engine::Core::TransformComponent>(id);
+    if (unit == nullptr || transform == nullptr || unit->health <= 0 ||
+        Game::Units::is_building_spawn(unit->spawn_type) ||
+        Game::Units::squad_establishment(unit->spawn_type) <= 1) {
+      continue;
+    }
+    candidates.push_back(JoinCandidate{
+        .id = id,
+        .owner = unit->owner_id,
+        .type = unit->spawn_type,
+        .nation = unit->nation_id,
+        .x = transform->position.x,
+        .z = transform->position.z,
+        .men = Game::Units::squad_survivors(*unit),
+        .health = unit->health,
+        .establishment_max_health = full_max_health(*unit),
+    });
+  }
+  std::sort(candidates.begin(),
+            candidates.end(),
+            [](const JoinCandidate& a, const JoinCandidate& b) { return a.id < b.id; });
+  candidates.erase(std::unique(candidates.begin(),
+                               candidates.end(),
+                               [](const JoinCandidate& a, const JoinCandidate& b) {
+                                 return a.id == b.id;
+                               }),
+                   candidates.end());
+  return candidates;
+}
+
+// Single-link clusters: a squad joins a cluster when it stands within
+// k_merge_radius of any member, so a line of squads folds as one group.
+auto join_clusters(const std::vector<JoinCandidate>& candidates)
+    -> std::vector<std::vector<std::size_t>> {
+  std::vector<std::size_t> parent(candidates.size());
+  for (std::size_t i = 0; i < parent.size(); ++i) {
+    parent[i] = i;
+  }
+  const auto root = [&parent](std::size_t i) {
+    while (parent[i] != i) {
+      parent[i] = parent[parent[i]];
+      i = parent[i];
+    }
+    return i;
+  };
+  constexpr float k_radius_sq =
+      SquadService::k_merge_radius * SquadService::k_merge_radius;
+  for (std::size_t i = 0; i < candidates.size(); ++i) {
+    for (std::size_t j = i + 1; j < candidates.size(); ++j) {
+      if (!same_group(candidates[i], candidates[j])) {
+        continue;
+      }
+      const float dx = candidates[i].x - candidates[j].x;
+      const float dz = candidates[i].z - candidates[j].z;
+      if ((dx * dx) + (dz * dz) <= k_radius_sq) {
+        parent[root(j)] = root(i);
+      }
+    }
+  }
+  std::unordered_map<std::size_t, std::vector<std::size_t>> by_root;
+  for (std::size_t i = 0; i < candidates.size(); ++i) {
+    by_root[root(i)].push_back(i);
+  }
+  std::vector<std::vector<std::size_t>> clusters;
+  for (auto& [key, members] : by_root) {
+    if (members.size() >= 2U) {
+      clusters.push_back(std::move(members));
+    }
+  }
+  std::sort(clusters.begin(), clusters.end());
+  return clusters;
+}
+
 } // namespace
+
+auto SquadService::share_health(const std::vector<int>& men,
+                                int health,
+                                int establishment,
+                                int establishment_max_health)
+    -> std::vector<SquadRoster> {
+  std::vector<SquadRoster> rosters;
+  std::vector<int> floors;
+  std::vector<int> ceilings;
+  rosters.reserve(men.size());
+  long long total_men = 0;
+  long long floor_sum = 0;
+  long long ceiling_sum = 0;
+  for (const int count : men) {
+    const int squad_men = std::max(0, count);
+    const int ceiling =
+        squad_men > 0
+            ? max_health_for(squad_men, establishment, establishment_max_health)
+            : 0;
+    // The least health at which the squad still shows all of its men.
+    const int floor =
+        squad_men > 0
+            ? static_cast<int>((static_cast<long long>(squad_men - 1) * ceiling) /
+                               squad_men) +
+                  1
+            : 0;
+    rosters.push_back(SquadRoster{.men = squad_men, .health = 0});
+    floors.push_back(floor);
+    ceilings.push_back(ceiling);
+    total_men += squad_men;
+    floor_sum += floor;
+    ceiling_sum += ceiling;
+  }
+  if (total_men == 0) {
+    return rosters;
+  }
+
+  const long long target =
+      std::clamp(static_cast<long long>(std::max(0, health)), floor_sum, ceiling_sum);
+
+  // Deal the pool in proportion to men, then keep each share inside its band.
+  long long running_men = 0;
+  long long handed_out = 0;
+  long long dealt = 0;
+  for (std::size_t i = 0; i < rosters.size(); ++i) {
+    running_men += rosters[i].men;
+    const long long due = ((target * running_men) + (total_men / 2)) / total_men;
+    rosters[i].health =
+        std::clamp(static_cast<int>(due - handed_out), floors[i], ceilings[i]);
+    handed_out = due;
+    dealt += rosters[i].health;
+  }
+
+  // Clamping can leave the total off by a little; settle it one point at a
+  // time against the squads with room, so the total is exactly the target.
+  while (dealt != target) {
+    const int step = dealt < target ? 1 : -1;
+    bool moved = false;
+    for (std::size_t i = 0; i < rosters.size() && dealt != target; ++i) {
+      const int next = rosters[i].health + step;
+      if (next < floors[i] || next > ceilings[i]) {
+        continue;
+      }
+      rosters[i].health = next;
+      dealt += step;
+      moved = true;
+    }
+    if (!moved) {
+      break;
+    }
+  }
+  return rosters;
+}
+
+auto SquadService::pack(int men,
+                        int health,
+                        int establishment,
+                        int establishment_max_health) -> std::vector<SquadRoster> {
+  const int full = std::max(1, establishment);
+  std::vector<int> sizes;
+  for (int left = std::max(0, men); left > 0; left -= full) {
+    sizes.push_back(std::min(full, left));
+  }
+  return share_health(sizes, health, full, establishment_max_health);
+}
 
 auto SquadService::can_divide(const Engine::Core::World& world,
                               Engine::Core::EntityID unit_id) -> bool {
@@ -86,11 +265,20 @@ void SquadService::apply_strength(Engine::Core::World& world,
   if (unit == nullptr || unit->max_health <= 0) {
     return;
   }
-  const float ratio = std::clamp(static_cast<float>(unit->health) /
-                                     static_cast<float>(unit->max_health),
-                                 0.01F,
-                                 1.0F);
-  scale_health_pool(*unit, full_max_health(*unit), strength, ratio);
+  const int establishment = Game::Units::squad_establishment(unit->spawn_type);
+  const int establishment_max_health = full_max_health(*unit);
+  const int men = std::clamp(strength, 1, establishment);
+  const double ratio = std::clamp(static_cast<double>(unit->health) /
+                                      static_cast<double>(unit->max_health),
+                                  0.01,
+                                  1.0);
+  const int ceiling = max_health_for(men, establishment, establishment_max_health);
+  apply_roster(*unit,
+               SquadRoster{.men = men,
+                           .health = static_cast<int>(
+                               std::lround(static_cast<double>(ceiling) * ratio))},
+               establishment,
+               establishment_max_health);
 }
 
 auto SquadService::divide(Engine::Core::World& world,
@@ -108,17 +296,17 @@ auto SquadService::divide(Engine::Core::World& world,
     return result;
   }
 
-  const int strength = Game::Units::squad_strength(*unit);
-  const int kept = strength / 2;
-  const int detached = strength - kept;
+  const int establishment = Game::Units::squad_establishment(unit->spawn_type);
   const int establishment_max_health = full_max_health(*unit);
-  const float ratio = std::clamp(static_cast<float>(unit->health) /
-                                     static_cast<float>(std::max(1, unit->max_health)),
-                                 0.01F,
-                                 1.0F);
+  const int survivors = Game::Units::squad_survivors(*unit);
+  const int detached = survivors / 2;
+  const auto rosters = share_health({survivors - detached, detached},
+                                    unit->health,
+                                    establishment,
+                                    establishment_max_health);
 
   Game::Units::SpawnParams params;
-  params.position = detachment_position(world, *transform);
+  params.position = detachment_position(*transform);
   params.rotation_y = transform->rotation.y;
   params.player_id = unit->owner_id;
   params.spawn_type = unit->spawn_type;
@@ -132,86 +320,76 @@ auto SquadService::divide(Engine::Core::World& world,
     return result;
   }
 
-  result.parent = unit_id;
-  result.detachment = spawned->id();
-
   auto* parent_unit = unit_of(world, unit_id);
-  auto* child_unit = unit_of(world, result.detachment);
+  auto* child_unit = unit_of(world, spawned->id());
   if (parent_unit == nullptr || child_unit == nullptr) {
     return result;
   }
 
-  scale_health_pool(*parent_unit, establishment_max_health, kept, ratio);
-  scale_health_pool(*child_unit, establishment_max_health, detached, ratio);
-
+  apply_roster(*parent_unit, rosters[0], establishment, establishment_max_health);
+  apply_roster(*child_unit, rosters[1], establishment, establishment_max_health);
+  result.parent = unit_id;
+  result.detachment = spawned->id();
   return result;
+}
+
+auto SquadService::plan_joins(const Engine::Core::World& world,
+                              const std::vector<Engine::Core::EntityID>& units)
+    -> std::vector<SquadJoinPlan> {
+  const auto candidates = join_candidates(world, units);
+  std::vector<SquadJoinPlan> plans;
+  for (auto cluster : join_clusters(candidates)) {
+    std::sort(
+        cluster.begin(), cluster.end(), [&candidates](std::size_t a, std::size_t b) {
+          if (candidates[a].men != candidates[b].men) {
+            return candidates[a].men > candidates[b].men;
+          }
+          return candidates[a].id < candidates[b].id;
+        });
+
+    int men = 0;
+    int health = 0;
+    int establishment_max_health = 0;
+    for (const auto index : cluster) {
+      men += candidates[index].men;
+      health += candidates[index].health;
+      establishment_max_health = std::max(establishment_max_health,
+                                          candidates[index].establishment_max_health);
+    }
+    const auto& lead = candidates[cluster.front()];
+    auto rosters = pack(men,
+                        health,
+                        Game::Units::squad_establishment(lead.type),
+                        establishment_max_health);
+
+    bool unchanged = rosters.size() == cluster.size();
+    for (std::size_t i = 0; unchanged && i < rosters.size(); ++i) {
+      unchanged = rosters[i].men == candidates[cluster[i]].men;
+    }
+    if (unchanged) {
+      continue;
+    }
+
+    SquadJoinPlan plan;
+    plan.rosters = std::move(rosters);
+    for (const auto index : cluster) {
+      plan.members.push_back(candidates[index].id);
+    }
+    plans.push_back(std::move(plan));
+  }
+  return plans;
 }
 
 auto SquadService::can_merge(const Engine::Core::World& world,
                              Engine::Core::EntityID kept,
                              Engine::Core::EntityID absorbed) -> bool {
-  if (kept == absorbed || kept == 0 || absorbed == 0) {
-    return false;
-  }
-  const auto* left = unit_of(world, kept);
-  const auto* right = unit_of(world, absorbed);
-  if (left == nullptr || right == nullptr) {
-    return false;
-  }
-  if (left->owner_id != right->owner_id || left->spawn_type != right->spawn_type) {
-    return false;
-  }
-  if (left->health <= 0 || right->health <= 0) {
-    return false;
-  }
-  if (Game::Units::is_building_spawn(left->spawn_type)) {
-    return false;
-  }
-  if (Game::Units::squad_is_at_full_strength(*left)) {
-    return false;
-  }
-
-  const auto* left_transform = world.try_get<Engine::Core::TransformComponent>(kept);
-  const auto* right_transform =
-      world.try_get<Engine::Core::TransformComponent>(absorbed);
-  if (left_transform == nullptr || right_transform == nullptr) {
-    return false;
-  }
-  const float dx = left_transform->position.x - right_transform->position.x;
-  const float dz = left_transform->position.z - right_transform->position.z;
-  return (dx * dx) + (dz * dz) <= k_merge_radius * k_merge_radius;
+  return kept != absorbed && !plan_joins(world, {kept, absorbed}).empty();
 }
 
 auto SquadService::merge(Engine::Core::World& world,
                          Engine::Core::EntityID kept,
                          Engine::Core::EntityID absorbed) -> bool {
-  if (!can_merge(world, kept, absorbed)) {
-    return false;
-  }
-  auto* left = unit_of(world, kept);
-  auto* right = unit_of(world, absorbed);
-
-  const int establishment = Game::Units::squad_establishment(left->spawn_type);
-  const int establishment_max_health = full_max_health(*left);
-  const int combined_strength = std::min(establishment,
-                                         Game::Units::squad_strength(*left) +
-                                             Game::Units::squad_strength(*right));
-  const int combined_health = left->health + right->health;
-
-  const int combined_max_health = std::max(
-      1,
-      static_cast<int>(std::lround(static_cast<float>(establishment_max_health) *
-                                   static_cast<float>(combined_strength) /
-                                   static_cast<float>(establishment))));
-  const float ratio = std::clamp(static_cast<float>(combined_health) /
-                                     static_cast<float>(combined_max_health),
-                                 0.01F,
-                                 1.0F);
-
-  scale_health_pool(*left, establishment_max_health, combined_strength, ratio);
-  world.destroy_entity(absorbed);
-
-  return true;
+  return kept != absorbed && !merge_all(world, {kept, absorbed}).empty();
 }
 
 auto SquadService::divide_all(Engine::Core::World& world,
@@ -232,24 +410,26 @@ auto SquadService::merge_all(Engine::Core::World& world,
                              const std::vector<Engine::Core::EntityID>& units)
     -> std::vector<SquadMerge> {
   std::vector<SquadMerge> merges;
-
-  std::vector<Engine::Core::EntityID> remaining = units;
-  std::sort(remaining.begin(), remaining.end());
-  remaining.erase(std::unique(remaining.begin(), remaining.end()), remaining.end());
-
-  bool merged_this_round = true;
-  while (merged_this_round) {
-    merged_this_round = false;
-    for (std::size_t i = 0; i < remaining.size() && !merged_this_round; ++i) {
-      for (std::size_t j = i + 1; j < remaining.size(); ++j) {
-        if (!merge(world, remaining[i], remaining[j])) {
-          continue;
+  for (const auto& plan : plan_joins(world, units)) {
+    auto* lead = unit_of(world, plan.members.front());
+    if (lead == nullptr) {
+      continue;
+    }
+    const int establishment = Game::Units::squad_establishment(lead->spawn_type);
+    const int establishment_max_health = full_max_health(*lead);
+    for (std::size_t i = 0; i < plan.members.size(); ++i) {
+      if (i < plan.rosters.size()) {
+        if (auto* unit = unit_of(world, plan.members[i]); unit != nullptr) {
+          apply_roster(*unit, plan.rosters[i], establishment, establishment_max_health);
         }
-        merges.push_back(SquadMerge{remaining[i], remaining[j]});
-        remaining.erase(remaining.begin() + static_cast<std::ptrdiff_t>(j));
-        merged_this_round = true;
-        break;
+        continue;
       }
+      merges.push_back(
+          SquadMerge{.kept = plan.members.front(), .absorbed = plan.members[i]});
+      world.destroy_entity(plan.members[i]);
+    }
+    if (plan.rosters.size() == plan.members.size()) {
+      merges.push_back(SquadMerge{.kept = plan.members.front(), .absorbed = 0});
     }
   }
   return merges;
