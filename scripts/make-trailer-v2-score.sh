@@ -3,8 +3,8 @@
 #
 # The shipped tracks are 60 s long, so the piece is assembled from windows of
 # five of them, crossfaded so each join is centred on a scene boundary of the
-# cut: the town at 34.5 s, the Iron Sepulcher at 49.5 s, the editor at 63.8 s
-# and the fire end card at 66.3 s. The fanfare lands on the card.
+# cut: the town at 34.5 s, the Iron Sepulcher at 57.9 s, the editor at 72.2 s
+# and the fire end card at 74.7 s. The fanfare lands on the card.
 #
 # Boundaries come from scripts/place-trailer-v2-cues.py's timeline; re-derive
 # the window lengths if a shot changes length.
@@ -18,8 +18,10 @@ out="${1:-${root}/artifacts/promo/trailer_v2_score.ogg}"
 mkdir -p "$(dirname "${out}")"
 
 # Window lengths (crossfade 1.5 s): each section starts 1.5 s before the one
-# before it ends, so the joins sit at 15.7, 34.5, 49.5, 63.8 and 66.3 s -- the
+# before it ends, so the joins sit at 15.7, 34.5, 57.9, 72.2 and 74.7 s -- the
 # city, the town, the army forming up, the barrow, the editor and the end card.
+# The third window grew by 8.4 s when the formation beats stopped cutting over
+# their own deployments and ramped through them instead.
 # `atrim` takes start:end, so a window's length is the difference, and the join
 # after it lands at (running total - 0.75).
 ffmpeg -hide_banner -loglevel error -y \
@@ -32,7 +34,7 @@ ffmpeg -hide_banner -loglevel error -y \
   -filter_complex "\
 [0:a]atrim=0:16.45,asetpts=PTS-STARTPTS,volume=0.95[s1];\
 [1:a]atrim=4:24.3,asetpts=PTS-STARTPTS,volume=0.95[s2];\
-[2:a]atrim=6:22.5,asetpts=PTS-STARTPTS,volume=0.95[s3];\
+[2:a]atrim=6:30.9,asetpts=PTS-STARTPTS,volume=0.95[s3];\
 [3:a]atrim=2:17.8,asetpts=PTS-STARTPTS,volume=1.0[s4];\
 [4:a]atrim=0:4.0,asetpts=PTS-STARTPTS,volume=0.9[s5];\
 [5:a]atrim=0:7,asetpts=PTS-STARTPTS,volume=1.0,apad=pad_dur=2[s6];\
@@ -41,7 +43,7 @@ ffmpeg -hide_banner -loglevel error -y \
 [j2][s4]acrossfade=d=1.5:c1=tri:c2=tri[j3];\
 [j3][s5]acrossfade=d=1.5:c1=tri:c2=tri[j4];\
 [j4][s6]acrossfade=d=1.5:c1=tri:c2=tri[j5];\
-[j5]atrim=0:71.8,asetpts=PTS-STARTPTS,afade=t=out:st=69.3:d=2.5[mix]" \
+[j5]atrim=0:80.2,asetpts=PTS-STARTPTS,afade=t=out:st=77.7:d=2.5[mix]" \
   -map "[mix]" -ar 44100 -c:a libvorbis -q:a 6 "${out}"
 
 printf 'wrote %s (%s s)\n' "${out}" \
