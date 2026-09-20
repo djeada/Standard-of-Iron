@@ -17,6 +17,7 @@
 #include "battle_render_optimizer.h"
 #include "bone_palette_arena.h"
 #include "draw_queue.h"
+#include "entity/farm_activity.h"
 #include "entity/registry.h"
 #include "frame_budget.h"
 #include "game/systems/unit_activity.h"
@@ -538,6 +539,7 @@ private:
   std::unique_ptr<EntityRendererRegistry> m_entity_registry;
 
   Render::Humanoid::HumanoidRuntimeContext m_humanoid_runtime;
+  FarmActivity m_farm_activity;
 
   Render::Creature::Quadruped::QuadrupedRuntimeContext m_quadruped_runtime;
   std::optional<Render::Creature::Quadruped::ScopedQuadrupedRuntimeContext>

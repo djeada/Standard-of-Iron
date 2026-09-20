@@ -414,6 +414,7 @@ add_executable(
     render/barracks_flag_renderer_test.cpp
     render/carried_load_renderer_test.cpp
     render/building_archetype_desc_test.cpp
+    render/farm_activity_test.cpp
     render/building_facade_coplanarity_test.cpp
     render/building_body_footprint_test.cpp
     render/building_render_common_test.cpp

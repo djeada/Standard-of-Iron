@@ -344,7 +344,8 @@ auto build_farm_desc_impl(BuildingState state, int stage) -> BuildingArchetypeDe
                                .rows = 19,
                                .stalks_per_row = 33,
                                .seed = 19,
-                               .rows_along_x = false},
+                               .rows_along_x = false,
+                               .worker_clearings = true},
                  field_palette,
                  stage);
 

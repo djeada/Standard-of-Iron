@@ -26,6 +26,7 @@
 #include "math/math_utils.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/entity/farm_activity.h"
 #include "render/entity/nations/builder_tool_palette.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/registry.h"
@@ -1075,7 +1076,29 @@ public:
     v.palette = make_humanoid_palette(team_tint, seed);
     apply_roman_civilian_palette(team_tint, seed, v);
   }
+
+  // Decorative field workers share the civilian palette exactly; they are the
+  // same people, so they must not drift into their own look.
+  static void fill_farm_worker_variant(const DrawContext& ctx,
+                                       std::uint32_t seed,
+                                       HumanoidVariant& v) {
+    QVector3D const team_tint = resolve_team_tint(ctx);
+    v.palette = make_humanoid_palette(team_tint, seed);
+    apply_roman_civilian_palette(team_tint, seed, v);
+    seed_missing_humanoid_wear(v, seed);
+  }
 };
+
+void register_farm_worker_visual_for_nation() {
+  // Field workers are this nation's civilians holding this nation's tools --
+  // the same rig, proportions and palette, never a bespoke figure.
+  FarmWorkerVisual visual{};
+  visual.spec = CivilianRenderer::make_visual_spec();
+  visual.tending = roman_civilian_idle_archetype();
+  visual.reaping = roman_builder_sickle_unit_archetype();
+  visual.fill_variant = &CivilianRenderer::fill_farm_worker_variant;
+  register_farm_worker_visual(false, std::move(visual));
+}
 
 void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_builder_styles_registered();
@@ -1100,6 +1123,7 @@ void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
 
 void register_civilian_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_builder_styles_registered();
+  register_farm_worker_visual_for_nation();
   register_humanoid_renderer(
       registry, "troops/roman/civilian", std::make_shared<CivilianRenderer const>());
 

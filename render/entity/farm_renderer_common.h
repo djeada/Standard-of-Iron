@@ -57,6 +57,7 @@ struct FarmFieldSpec {
   int stalks_per_row{15};
   int seed{7};
   bool rows_along_x{true};
+  bool worker_clearings{false};
 };
 
 void add_farm_field(BuildingArchetypeDesc& desc,

@@ -5,6 +5,7 @@
 #include <cstddef>
 
 #include "building_decay.h"
+#include "farm_activity.h"
 #include "game/core/component_economy.h"
 #include "render/submitter.h"
 
@@ -282,6 +283,11 @@ void add_crop(BuildingArchetypeDesc& desc,
           spec.rows_along_x
               ? spec.center + QVector3D(run, spec.ground_y + 0.040F, across)
               : spec.center + QVector3D(across, spec.ground_y + 0.040F, run);
+      // Permanent work clearings, not simulated harvest progress. These share
+      // anchors with the actors and keep the seated gag readable through wheat.
+      if (spec.worker_clearings && farm_activity_clearing(clump_base)) {
+        continue;
+      }
 
       int tillers = 1;
       if (look.tillers > 1 && hash01(seed + 131) < 0.55F) {
@@ -498,6 +504,7 @@ void register_farm_renderer_variant(EntityRendererRegistry& registry,
         }
         const BuildingState state = resolve_building_state(ctx);
         submit_building_instance(out, ctx, config.archetype(state, stage));
+        submit_farm_activity(ctx, out, config.nation_slug == "carthage");
         draw_building_selection_overlay(out, ctx, config.selection);
       });
 }
