@@ -211,11 +211,6 @@ struct BiomeSettings {
   float soil_roughness = 0.5F;
   QVector3D snow_color{0.92F, 0.94F, 0.98F};
 
-  // Per-species multiplier on top of the ground type's tree density, indexed by
-  // TreeSpecies. The ground type decides which trees a country grows and in what
-  // proportion; this lets one map lean on part of that mix -- palm country on dry
-  // grass, say -- without inventing a ground type for it. 1 leaves the ground
-  // type's own mix alone, 0 drops a species out of it.
   std::array<float, k_tree_species_count> tree_density_scale{1.0F, 1.0F, 1.0F, 1.0F};
 };
 

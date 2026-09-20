@@ -765,9 +765,7 @@ void UndeadAwakeningSystem::try_spawn_next_wave(Engine::Core::World& world,
       if (!unit) {
         continue;
       }
-      // Every guardian a wave raises gets the same burst a recruit gets, in
-      // grave-light instead of gold, so the moment the ground gives up its dead
-      // reads at a glance across the whole wave.
+
       attach_spawn_flare(
           world, unit->id(), unit_spawn.type, Engine::Core::SpawnFlareStyle::Awakening);
       zone.active_spawn_ids.push_back(unit->id());

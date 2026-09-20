@@ -782,8 +782,7 @@ TEST(ArenaScenariosTest, WaveFlareReviewRaisesTwoWavesOffATimerForAClosingCamera
   ASSERT_EQ(zone.waves.size(), 2U);
   EXPECT_EQ(zone.waves[0].trigger, QStringLiteral("initial"));
   EXPECT_EQ(zone.waves[1].trigger, QStringLiteral("next_wave"));
-  // The point of the scenario is watching the flare fire twice, so the second
-  // wave must not be gated on the first one dying.
+
   EXPECT_GT(zone.wave_timeout_seconds, 0.0F);
   EXPECT_LT(zone.wave_timeout_seconds, scenario->duration_seconds);
   EXPECT_LT(scenario->camera.distance, 25.0F)
@@ -808,9 +807,6 @@ TEST(ArenaScenariosTest, SepulcherTrailerSceneIsANightFieldThatIsNotPlacedInRows
   EXPECT_GE(fire_camps, 8)
       << "firelight is the key light at night, so the field needs plenty of it";
 
-  // Scenery that stands in a row, all one size, all facing one way is the
-  // loudest tell that a scene was placed by hand. Anything natural in this
-  // scene has to carry variation.
   for (auto const& patch : scenario->resource_patches) {
     const bool natural = patch.prop_type == QStringLiteral("ruins") ||
                          patch.prop_type == QStringLiteral("dead_tree") ||
@@ -831,8 +827,7 @@ TEST(ArenaScenariosTest, SepulcherTrailerSceneIsANightFieldThatIsNotPlacedInRows
 }
 
 TEST(ArenaScenariosTest, ResourcePatchesAreUnvariedUnlessAScenarioAsksForIt) {
-  // The variation knobs are opt-in: a patch that does not set them must place
-  // exactly where it always did, so adding them changed no existing scene.
+
   const Arena::ArenaScenarioResourcePatch plain;
   EXPECT_FLOAT_EQ(plain.jitter, 0.0F);
   EXPECT_FLOAT_EQ(plain.yaw_spread, 0.0F);

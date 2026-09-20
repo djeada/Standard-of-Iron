@@ -17,8 +17,7 @@ namespace {
 
 constexpr float k_dt = 1.0F / 60.0F;
 constexpr float k_speed = 2.5F;
-// Any single-tick footing move larger than this is a snap, not a step: even
-// the outer file of a fast wheel covers well under half a metre per tick.
+
 constexpr float k_snap_step = 0.4F;
 
 auto add_spearmen(Engine::Core::World& world) -> Engine::Core::Entity* {
@@ -49,9 +48,6 @@ struct MarchStats {
   int lagging_soldiers{0};
 };
 
-// Drives the unit transform like the movement system would: straight, a wheel,
-// straight again. Measures how far each soldier's published world footing is
-// from his slot, and the largest single-tick jump of any footing.
 auto march(Engine::Core::World& world,
            Engine::Core::Entity* entity,
            float seconds,

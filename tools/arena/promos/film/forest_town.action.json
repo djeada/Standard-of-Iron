@@ -2,9 +2,7 @@
   "version": 1,
   "name": "trailer_forest_town",
   "loop_seconds": 0.0,
-  "required_coverage": [
-    "build_panel"
-  ],
+  "required_coverage": ["build_panel"],
   "actions": [
     {
       "at": 0.05,

@@ -29,8 +29,6 @@ CUES: list[tuple[str, float, str, float]] = [
     ("city_reveal", 0.05, SFX + "combat/battlefield_distant_mass_01.ogg", 0.62),
     ("city_reveal", 0.35, SFX + "combat/roman_war_horns_orders.ogg", 0.85),
     ("command_view", 0.60, SFX + "ui/command_accept.ogg", 0.50),
-    # The city is under bombardment while the camera reads the command view, so
-    # stone keeps landing through it rather than the shot going quiet.
     ("command_view", 0.35, SFX + "combat/stone_impact_01.ogg", 0.70),
     ("command_view", 1.15, SFX + "combat/stone_impact_01.ogg", 0.55),
     ("command_view", 1.85, SFX + "combat/spear_impact_02.ogg", 0.45),
@@ -38,13 +36,6 @@ CUES: list[tuple[str, float, str, float]] = [
     ("ballista_volley", 0.30, SFX + "combat/arrows_many_overhead.ogg", 0.55),
     ("engines_loose", 0.20, SFX + "combat/siege_launch.ogg", 0.80),
     ("into_the_saddle", 0.15, SFX + "orders/attack_horn_stab.ogg", 0.70),
-    # The commander's own fight. This ran on three cues and went quiet between
-    # them; a melee the camera is standing inside has to be continuously loud,
-    # so a crowd bed carries the whole shot and blades, armour, arrows and
-    # deaths land across it from first frame to last.
-    # One death cry in the whole city beat, at the end of the commander's shot.
-    # A scream every second reads as a sound effect reel rather than a battle,
-    # and it pulls the ear off everything else in the mix.
     ("scipio_pov", 0.00, SFX + "combat/battlefield_crowd_chaos.ogg", 0.70),
     ("scipio_pov", 0.05, SFX + "combat/charge_roar.ogg", 0.85),
     ("scipio_pov", 0.45, SFX + "combat/blade_clash_01.ogg", 0.80),
@@ -64,9 +55,6 @@ CUES: list[tuple[str, float, str, float]] = [
     ("town_build", 0.80, SFX + "build/placement_confirmed.ogg", 0.55),
     ("town_build", 2.20, SFX + "build/construction_started.ogg", 0.50),
     ("town_busy", 1.40, SFX + "build/construction_complete.ogg", 0.55),
-    # The formation beat, two orders and two payoffs: the order shots are cued
-    # off what is happening in the panel (select, pick, drag, confirm) and the
-    # payoffs off the ranks (march, halt, plant).
     ("form_the_line", 0.15, SFX + "ui/command_accept.ogg", 0.50),
     ("form_the_line", 1.00, SFX + "orders/formation_pole_shift.ogg", 0.60),
     ("form_the_line", 3.05, SFX + "combat/army_march_dirt_mass.ogg", 0.55),
@@ -80,17 +68,10 @@ CUES: list[tuple[str, float, str, float]] = [
     ("bridge_column", 0.10, SFX + "combat/army_march_dirt_mass.ogg", 0.50),
     ("bridge_column", 2.00, SFX + "combat/army_march_dirt_mass.ogg", 0.45),
     ("bridge_column", 4.00, SFX + "orders/hold_shields_plant.ogg", 0.60),
-    # The sepulcher beat had no cues at all and leaned on the shots' recorded
-    # game audio, which does not carry: three shots of a battle played silent.
-    # The wake gets the ground opening, and the two fights get the same
-    # continuous treatment as the commander's -- a bed under blades, armour,
-    # deaths, and the grave priests' fire landing on top.
     ("sepulcher_wake", 0.10, SFX + "undead/skeletons_rise.ogg", 0.85),
     ("sepulcher_wake", 1.30, SFX + "combat/battlefield_distant_mass_01.ogg", 0.50),
     ("sepulcher_wake", 2.60, SFX + "undead/skeletons_rise.ogg", 0.60),
     ("sepulcher_wake", 3.60, SFX + "orders/attack_horn_stab.ogg", 0.60),
-    # No cries at all through the sepulcher: what is dying there is already
-    # dead, and the beat carries on blades, armour and the priests' fire.
     ("sepulcher_battle", 0.00, SFX + "combat/battlefield_crowd_chaos.ogg", 0.68),
     ("sepulcher_battle", 0.15, SFX + "combat/charge_roar.ogg", 0.75),
     ("sepulcher_battle", 0.55, SFX + "combat/blade_clash_02.ogg", 0.80),

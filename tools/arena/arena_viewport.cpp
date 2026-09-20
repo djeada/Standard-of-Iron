@@ -209,9 +209,6 @@ auto grid_position_from_world(const Game::Map::TerrainField& field,
           std::clamp(grid_z, 0.0F, static_cast<float>(field.height - 1))};
 }
 
-// Deterministic variation for scenery. A scene has to look unplanned without
-// being unrepeatable: the same scenario must dress itself identically on every
-// run, so the "randomness" is a hash of what is being placed, not a PRNG.
 auto mix_seed(std::uint32_t seed, std::uint32_t value) -> std::uint32_t {
   seed ^= value + 0x9E3779B9U + (seed << 6U) + (seed >> 2U);
   return seed;
@@ -2584,9 +2581,7 @@ void ArenaViewport::place_scenario_resource_patches(
     const auto type = world_prop_type_from_string(patch.prop_type);
     const bool varies =
         patch.jitter > 0.0F || patch.yaw_spread > 0.0F || patch.scale_spread > 0.0F;
-    // One seed per patch, so two patches of the same prop type at different
-    // places in the scene do not draw the same "random" numbers and end up
-    // repeating each other's arrangement.
+
     const std::uint32_t patch_seed =
         variation_seed(patch.prop_type, patch.origin, patch.count);
 

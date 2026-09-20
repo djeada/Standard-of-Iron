@@ -743,10 +743,6 @@ auto advance_shared_sites(Engine::Core::World& world,
   return finishing;
 }
 
-// The placement ghost the player dropped stays standing over the build site for
-// as long as a crew is actually raising it. The ghosts are pure presentation:
-// they are derived from the live builder sites every tick, so a site that is
-// finished, cancelled, abandoned or whose crew died takes its ghost with it.
 constexpr float k_site_ghost_match_radius_sq = 0.25F;
 
 struct SiteGhost {

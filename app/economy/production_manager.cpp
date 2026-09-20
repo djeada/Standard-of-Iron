@@ -805,8 +805,7 @@ void ProductionManager::on_construction_confirm() {
   m_wall_preview_rotation_explicit = false;
   m_pending_harvest_target_id = 0;
   m_pending_food_target_id = 0;
-  // The ghost stays where it was dropped. ProductionSystem adopts it for the
-  // build site and clears it when the site finishes or is abandoned.
+
   hand_preview_to_construction_site(placed_type);
   set_construction_preview_active(false);
   set_construction_preview_valid(false);

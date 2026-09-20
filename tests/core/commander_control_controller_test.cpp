@@ -1496,9 +1496,6 @@ TEST_F(CommanderControlControllerTest,
   ASSERT_NE(intents, nullptr);
   ASSERT_EQ(intents->accepted_intents, 1U);
 
-  // Break the chain the way a real fight does: the swing ends without a
-  // continuation having been accepted (a stagger, a dodge, a swing refused for
-  // want of a target), and the body goes idle with the button still down.
   const auto drop_to_idle = [&]() {
     action->action_running = false;
     action->action_completed = true;
@@ -1515,7 +1512,6 @@ TEST_F(CommanderControlControllerTest,
   EXPECT_EQ(intents->accepted_intents, 2U)
       << "holding the attack stopped swinging once the combo chain broke";
 
-  // Releasing ends it: an idle body with the button up stays idle.
   controller.primary_action_up();
   drop_to_idle();
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.2F));

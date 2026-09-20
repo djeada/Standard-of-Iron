@@ -31,9 +31,6 @@ constexpr int k_glint_count = 12;
 constexpr QVector3D k_gold{1.0F, 0.78F, 0.30F};
 constexpr QVector3D k_pale_gold{1.0F, 0.94F, 0.72F};
 
-// Grave-light: the cold green a sepulcher wave rises in. Deliberately the
-// opposite end of the wheel from the recruit gold, so a risen guardian is never
-// mistaken for something the player just paid for.
 constexpr QVector3D k_grave_light{0.30F, 0.86F, 0.52F};
 constexpr QVector3D k_pale_grave{0.76F, 1.0F, 0.84F};
 

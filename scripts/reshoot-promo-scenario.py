@@ -62,17 +62,14 @@ def main() -> int:
         help="arena binary to record with",
     )
     args = parser.parse_args()
-    # The arena runs from its own directory, so every path handed to it has to
-    # be absolute: a relative --scratch used to end with the arena reporting
-    # "could not open promo spec" and the script reporting "got 0 clips".
+
     args.spec = args.spec.resolve()
     args.clips = args.clips.resolve()
     args.scratch = args.scratch.resolve()
     args.arena = args.arena.resolve()
 
     spec = json.loads(args.spec.read_text())
-    # A spec may mix arena shots with clips filmed elsewhere, and those carry
-    # no scenario at all.
+
     subset = [shot for shot in spec["shots"] if shot.get("scenario") == args.scenario]
     if not subset:
         print(f"reshoot: no shot uses scenario {args.scenario}", file=sys.stderr)
@@ -99,9 +96,6 @@ def main() -> int:
         [str(args.arena), "--promo-spec", str(partial_path), "--promo-out", str(out)],
         cwd=str(args.arena.parent),
         stdout=subprocess.PIPE,
-        # The arena logs through Qt, which writes to stderr: capturing the two
-        # separately and reporting only stdout left a failed reshoot with
-        # nothing on screen but "got 0 clips".
         stderr=subprocess.STDOUT,
         text=True,
     )

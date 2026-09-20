@@ -40,8 +40,7 @@ HERE = Path(__file__).resolve().parent
 SOURCE = HERE / "river.map.json"
 TARGET = HERE / "palm_crossing.map.json"
 
-# The river and its two crossings. The hero span is the southern one: the army
-# musters on its west bank and the camera looks down the deck.
+
 RIVER_X = 88.0
 RIVER_WIDTH = 24.0
 GREAT_SPAN_Z = 96.0
@@ -50,15 +49,10 @@ SPAN_WEST = 73.0
 SPAN_EAST = 103.0
 DECK_WIDTH = 14.0
 
-# Where the army stands before it is given the column. Far enough back from the
-# west abutment that the whole march onto the deck is in shot.
+
 MUSTER = (58.0, 96.0)
 
-# Nine squads, sized from the planner rather than from taste: this roster on an
-# 11 m drag plans out 11.3 m across and 37.4 m deep. That is a frontage the
-# 14 m deck holds with a rank's margin either side, and a body long enough to
-# fill the 30 m span and still trail onto the west bank -- a column *on* the
-# bridge, not a block parked next to one.
+
 ROSTER = ["swordsman"] * 5 + ["spearman"] * 3 + ["archer"] * 1
 
 
@@ -131,7 +125,6 @@ def main() -> int:
     )
     world["theme"] = "A river nobody fords and two bridges everybody wants."
 
-    # One channel, straight through both spans, bending only at the map edges.
     world["rivers"] = [
         {
             "id": "the_great_river",
@@ -164,8 +157,6 @@ def main() -> int:
     ]
     world["lakes"] = []
 
-    # Flat approaches either side of the hero deck and nothing else: the arc
-    # ridges tried first rendered as pale blobs on the horizon at this exposure.
     world["terrain"] = [
         {
             "id": "west_approach",
@@ -189,9 +180,6 @@ def main() -> int:
 
     world["forests"] = palm_groves()
 
-    # The road the column is marching, in two legs that stop at the abutments:
-    # drawn as one road straight across, it paints a dark band over the water
-    # behind the deck.
     world["roads"] = [
         {
             "id": "the_west_approach_road",
@@ -258,7 +246,6 @@ def main() -> int:
     world["undead_zones"] = []
     world["wildlife"] = {"enabled": False}
 
-    # Dressing well clear of the marching box (x 60..118, z 84..108).
     world["world_props"] = [
         {
             "id": "west_camp_tent_a",
@@ -326,13 +313,6 @@ def main() -> int:
         },
     ] + hero_palms(rng)
 
-    # Dry Mediterranean: grass_dry is what puts palms at the top of the scatter
-    # rules, and the colours pull the ground sandy rather than green.
-    # Dry Mediterranean, taken from the shipped Rhone crossing rather than
-    # invented: grass_dry is the only ground type whose scatter rules put palms
-    # at the top, and the Rhone's colours are the proof that this ground type
-    # reads as parched country under the summer profile instead of as mud. Only
-    # the density and the dryness move -- a shade sandier, a shade thinner.
     world["biome"] = {
         "ground_type": "grass_dry",
         "seed": 70921,
@@ -355,8 +335,6 @@ def main() -> int:
         "sway_speed": 1.1,
         "procedural_boulders_enabled": False,
         "procedural_iron_ore_enabled": False,
-        # Palm country: keep a little scrub for variety, drop the pines the dry
-        # ground type would not grow anyway, and let the palms carry the map.
         "tree_mix": {"pine": 0.0, "olive": 0.3, "cypress": 0.45, "palm": 2.6},
     }
 
@@ -370,9 +348,6 @@ def main() -> int:
     }
     world["rain"] = {"enabled": False, "type": "rain", "intensity": 0.0}
 
-    # The camera opens looking down the hero deck from the west bank, low and
-    # close: 30 m is inside the RTS minimum-to-maximum band for this map, and a
-    # 34 degree tilt is as shallow as the near-distance pitch coupling allows.
     world["camera"] = {
         "center": [86.0, 0.0, GREAT_SPAN_Z],
         "distance": 62.0,
@@ -383,8 +358,6 @@ def main() -> int:
         "far": 492.8,
     }
 
-    # The army: a loose knot on the west bank, no ranks, so the column lands as
-    # a change of shape rather than a change of place.
     commander = {
         "id": "p1_commander",
         "type": "roman_veteran_consul",
@@ -412,8 +385,6 @@ def main() -> int:
             }
         )
 
-    # A token Carthaginian presence on the far bank so the mission has an enemy
-    # commander to hold its victory condition, parked out of frame.
     enemy = [
         {
             "id": "p2_commander",
