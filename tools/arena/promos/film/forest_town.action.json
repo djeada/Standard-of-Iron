@@ -2,7 +2,9 @@
   "version": 1,
   "name": "trailer_forest_town",
   "loop_seconds": 0.0,
-  "required_coverage": ["build_panel"],
+  "required_coverage": [
+    "build_panel"
+  ],
   "actions": [
     {
       "at": 0.05,
@@ -97,12 +99,12 @@
     {
       "at": 11.3,
       "action": "build_start_world",
-      "argument": "home,39,41"
+      "argument": "home,46,41"
     },
     {
       "at": 11.8,
       "action": "build_place_world",
-      "argument": "39,41"
+      "argument": "46,41"
     },
     {
       "at": 12.3,
@@ -112,12 +114,12 @@
     {
       "at": 12.6,
       "action": "build_start_world",
-      "argument": "home,51,41"
+      "argument": "home,56,41"
     },
     {
       "at": 13.1,
       "action": "build_place_world",
-      "argument": "51,41"
+      "argument": "56,41"
     },
     {
       "at": 13.6,
@@ -142,12 +144,12 @@
     {
       "at": 15.3,
       "action": "build_start_world",
-      "argument": "defense_tower,35,52"
+      "argument": "defense_tower,56,51"
     },
     {
       "at": 15.8,
       "action": "build_place_world",
-      "argument": "35,52"
+      "argument": "56,51"
     },
     {
       "at": 16.3,
