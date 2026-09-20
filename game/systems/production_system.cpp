@@ -41,6 +41,7 @@
 #include "player_feedback.h"
 #include "player_resource_registry.h"
 #include "production_service.h"
+#include "spawn_flare.h"
 #include "troop_profile_service.h"
 #include "units/spawn_type.h"
 #include "units/unit.h"
@@ -53,18 +54,8 @@ namespace {
 void start_completion_effect(Engine::Core::World& world,
                              const Game::Units::Unit& unit,
                              Game::Units::SpawnType spawn_type) {
-  auto* entity = world.get_entity(unit.id());
-  if (entity == nullptr) {
-    return;
-  }
-  auto* effect = entity->add_component<Engine::Core::ProductionCompletionComponent>();
-  effect->radius = std::max(
-      1.0F, Game::Units::TroopConfig::instance().get_selection_ring_size(spawn_type));
-  if (entity->has_component<Engine::Core::BuildingComponent>()) {
-    const auto size = BuildingCollisionRegistry::get_building_size(spawn_type);
-    effect->radius =
-        std::max(effect->radius, 0.6F * std::hypot(size.width, size.depth));
-  }
+  attach_spawn_flare(
+      world, unit.id(), spawn_type, Engine::Core::SpawnFlareStyle::Recruit);
 }
 
 void face_work_target(Engine::Core::TransformComponent& transform,

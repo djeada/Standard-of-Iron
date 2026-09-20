@@ -31,6 +31,7 @@
 #include "game/systems/order_service.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_feedback.h"
+#include "game/systems/spawn_flare.h"
 #include "game/util/planar_math.h"
 #include "units/factory.h"
 #include "units/unit.h"
@@ -764,6 +765,11 @@ void UndeadAwakeningSystem::try_spawn_next_wave(Engine::Core::World& world,
       if (!unit) {
         continue;
       }
+      // Every guardian a wave raises gets the same burst a recruit gets, in
+      // grave-light instead of gold, so the moment the ground gives up its dead
+      // reads at a glance across the whole wave.
+      attach_spawn_flare(
+          world, unit->id(), unit_spawn.type, Engine::Core::SpawnFlareStyle::Awakening);
       zone.active_spawn_ids.push_back(unit->id());
     }
   }

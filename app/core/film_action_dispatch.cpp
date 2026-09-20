@@ -283,6 +283,16 @@ void apply_benchmark_action(GameEngine* engine,
     if (numbers.size() >= 2) {
       camera->look_at_world(numbers[0], numbers[1]);
     }
+    // Same caveat as camera_zoom: the move is eased, so this line reports where
+    // the camera was told to go, not where it has arrived. Read the next verb's
+    // line for the settled pose.
+    const QVector3D target = camera->world_target();
+    qInfo().noquote()
+        << QStringLiteral("SOI_FILM: camera_look_at %1 -> target %2, %3 distance %4 m")
+               .arg(action.argument)
+               .arg(target.x(), 0, 'f', 1)
+               .arg(target.z(), 0, 'f', 1)
+               .arg(camera->distance(), 0, 'f', 1);
   } else if (camera != nullptr && name == QLatin1String("camera_move")) {
     if (numbers.size() >= 2) {
       camera->move(numbers[0], numbers[1]);
@@ -292,9 +302,13 @@ void apply_benchmark_action(GameEngine* engine,
       camera->zoom(numbers[0]);
     }
 
-    qInfo().noquote() << QStringLiteral("SOI_FILM: camera_zoom %1 -> distance %2 m")
+    const QVector3D zoom_target = camera->world_target();
+    qInfo().noquote() << QStringLiteral(
+                             "SOI_FILM: camera_zoom %1 -> distance %2 m, target %3, %4")
                              .arg(numbers.isEmpty() ? 0.0F : numbers[0], 0, 'f', 2)
-                             .arg(camera->distance(), 0, 'f', 1);
+                             .arg(camera->distance(), 0, 'f', 1)
+                             .arg(zoom_target.x(), 0, 'f', 1)
+                             .arg(zoom_target.z(), 0, 'f', 1);
   } else if (camera != nullptr && name == QLatin1String("camera_orbit")) {
     if (numbers.size() >= 2) {
       camera->orbit(numbers[0], numbers[1]);

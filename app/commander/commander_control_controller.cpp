@@ -49,6 +49,10 @@ namespace {
 constexpr float k_degrees_to_radians = 0.017453292519943295F;
 
 constexpr float k_ability_rescan_cooldown = 0.18F;
+// How long a held attack waits after the body falls idle before it swings
+// again. Long enough that a refused swing does not machine-gun, short
+// enough that holding the button reads as continuous fighting.
+constexpr float k_held_restart_interval = 0.12F;
 
 auto wrap_angle_degrees(float degrees) -> float {
   degrees = std::fmod(degrees, 360.0F);
@@ -2286,6 +2290,11 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   if (m_primary_scan_cooldown > 0.0F) {
     m_primary_scan_cooldown = std::max(0.0F, m_primary_scan_cooldown - dt);
   }
+  if (m_tick_input.primary_held) {
+    m_held_restart_delay = std::max(0.0F, m_held_restart_delay - dt);
+  } else {
+    m_held_restart_delay = 0.0F;
+  }
 
   auto* intents =
       Engine::Core::get_or_add_component<Engine::Core::CombatIntentQueueComponent>(
@@ -2326,7 +2335,20 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
                 *held_definition,
                 Game::Systems::CombatActions::CombatActionEventType::RecoveryStart,
                 0.75F);
-    if (held_melee_combo) {
+    // The chain above only continues an action that is still running. Any
+    // break in it -- a swing refused for want of a target, a stagger, a
+    // dodge, a guard raised and dropped -- left the commander standing with
+    // the button down and never swinging again until the player released and
+    // pressed. Holding the attack means "keep swinging", so re-arm a light
+    // swing a beat after the body falls idle.
+    bool const guarding = guard != nullptr && guard->active;
+    bool const drawing_bow =
+        aim != nullptr && aim->stance == Engine::Core::FpvWeaponStance::Bow;
+    bool const held_melee_restart =
+        m_tick_input.primary_held && !m_tick_input.primary_pressed &&
+        intents->empty() && held_definition == nullptr && !guarding && !drawing_bow &&
+        m_dodge_state == DodgeState::None && m_held_restart_delay <= 0.0F;
+    if (held_melee_combo || held_melee_restart) {
       auto const* body =
           commander->get_component<Engine::Core::CommanderBodyControlComponent>();
       Engine::Core::CombatActionIntent continuation;
@@ -2339,6 +2361,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       continuation.pressed_at = intents->clock;
       continuation.held_duration = 0.0F;
       intents->push(continuation);
+      m_held_restart_delay = k_held_restart_interval;
     }
 
     if (m_tick_input.primary_pressed || m_tick_input.heavy_pressed ||

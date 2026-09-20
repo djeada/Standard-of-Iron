@@ -96,7 +96,8 @@ void append_generated_trees(std::vector<WorldProp>& out,
   input.height = height;
   input.tile_size = tile_size;
   input.noise_seed = biome_settings.seed;
-  input.density = tree_scatter_density(scatter_rules, scatter_profile, species);
+  input.density = tree_scatter_density(scatter_rules, scatter_profile, species) *
+                  biome_settings.tree_density_scale[static_cast<std::size_t>(species)];
   input.scale_min = rule.scale_min;
   input.scale_max = rule.scale_max;
 

@@ -3,7 +3,8 @@
 #
 #   scripts/film-game.sh <out.mp4> --mission-file <mission.json> \
 #       [--action-fixture <fixture.json>] [--fps 60] [--seconds 8] [--start 0] \
-#       [--size 1920x1080] [--display :0|xvfb] [--keep-frames] [-- <extra game args>]
+#       [--size 1920x1080] [--display :0|xvfb] [--ui-scale 1.0] [--keep-frames] \
+#       [-- <extra game args>]
 #
 # By default the game films on the current display's GPU in a frameless window
 # pinned to the bottom of the window stack that never takes focus, so it stays
@@ -11,7 +12,12 @@
 # software-GL run (about 20 s a frame at 1080p on llvmpipe, so only for short
 # clips). Frame rate is irrelevant either way because --film steps the
 # simulation exactly one frame per grab. A throwaway XDG_CONFIG_HOME keeps the
-# run muted and off the user's profile.
+# run muted, off the user's profile, and -- because the camera otherwise drifts
+# for the whole take when the pointer happens to rest against a screen edge --
+# with edge scrolling off. --ui-scale writes the accessibility UI
+# scale into it, which is how a HUD panel is filmed big enough to read once the
+# clip is three seconds of a trailer rather than a screen someone is sitting in
+# front of.
 set -euo pipefail
 export LC_ALL=C
 
@@ -26,6 +32,7 @@ START=0
 SIZE=1920x1080
 DISPLAY_MODE="${DISPLAY:-:0}"
 KEEP_FRAMES=0
+UI_SCALE=1.0
 FIXTURE=""
 MISSION=()
 EXTRA=()
@@ -57,6 +64,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --display)
       DISPLAY_MODE="$2"
+      shift 2
+      ;;
+    --ui-scale)
+      UI_SCALE="$2"
       shift 2
       ;;
     --keep-frames)
@@ -108,7 +119,8 @@ readonly WORK="${OUT%.mp4}.frames"
 readonly CFG="${WORK}/.cfg"
 rm -rf "${WORK}"
 mkdir -p "${WORK}" "${CFG}/djeada"
-printf '[audio]\nmaster_volume=0\n[ui]\ncamera_legend_seen=true\neconomy_coach=false\nformation_hints=false\n' >"${CFG}/djeada/StandardOfIron.ini"
+printf '[audio]\nmaster_volume=0\n[ui]\ncamera_legend_seen=true\neconomy_coach=false\nformation_hints=false\nedge_scroll_enabled=false\nscale=%s\n' \
+  "${UI_SCALE}" >"${CFG}/djeada/StandardOfIron.ini"
 
 ARGS=("${MISSION[@]}" --skip-briefing --film "${WORK}" --film-fps "${FPS}"
   --film-seconds "${SECONDS_}" --film-start "${START}" --film-size "${SIZE}")

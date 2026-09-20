@@ -31,11 +31,28 @@ class RouteFollowSystem;
 
 namespace Engine::Core {
 
+// A spawn flare is one effect with two readings. A recruit walks out of a
+// building in the owner's gold; a sepulcher guardian claws out of the ground in
+// grave-light. The shape of the burst is the same, so the style only picks the
+// palette and how long the burst lingers.
+enum class SpawnFlareStyle : std::uint8_t {
+  Recruit,
+  Awakening,
+};
+
 class ProductionCompletionComponent {
 public:
   static constexpr float k_duration = 2.2F;
+  static constexpr float k_awakening_duration = 2.9F;
+
+  [[nodiscard]] static constexpr auto duration_for(SpawnFlareStyle style) -> float {
+    return style == SpawnFlareStyle::Awakening ? k_awakening_duration : k_duration;
+  }
+
   float remaining{k_duration};
   float radius{1.0F};
+  float duration{k_duration};
+  SpawnFlareStyle style{SpawnFlareStyle::Recruit};
 };
 
 class MovementIntentComponent {

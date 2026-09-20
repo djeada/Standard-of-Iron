@@ -1470,6 +1470,59 @@ TEST_F(CommanderControlControllerTest,
   EXPECT_EQ(intents->accepted_intents, 2U);
 }
 
+TEST_F(CommanderControlControllerTest,
+       HoldingPrimaryStartsSwingingAgainAfterTheChainBreaks) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(create_enemy(world, 0.0F, 1.6F), nullptr);
+
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+  commander_data->fpv_controlled = true;
+  auto* attack = commander->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  Render::GL::Camera camera;
+  controller.primary_action_down();
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+
+  auto* action = commander->get_component<Engine::Core::RpgCommanderActionComponent>();
+  auto* intents = commander->get_component<Engine::Core::CombatIntentQueueComponent>();
+  ASSERT_NE(action, nullptr);
+  ASSERT_NE(intents, nullptr);
+  ASSERT_EQ(intents->accepted_intents, 1U);
+
+  // Break the chain the way a real fight does: the swing ends without a
+  // continuation having been accepted (a stagger, a dodge, a swing refused for
+  // want of a target), and the body goes idle with the button still down.
+  const auto drop_to_idle = [&]() {
+    action->action_running = false;
+    action->action_completed = true;
+    if (auto* combat_state =
+            commander->get_component<Engine::Core::CombatStateComponent>()) {
+      combat_state->animation_state = Engine::Core::CombatAnimationState::Idle;
+      combat_state->state_duration = 0.0F;
+      combat_state->state_time = 0.0F;
+    }
+  };
+  drop_to_idle();
+
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.2F));
+  EXPECT_EQ(intents->accepted_intents, 2U)
+      << "holding the attack stopped swinging once the combo chain broke";
+
+  // Releasing ends it: an idle body with the button up stays idle.
+  controller.primary_action_up();
+  drop_to_idle();
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.2F));
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.2F));
+  EXPECT_EQ(intents->accepted_intents, 2U);
+}
+
 TEST_F(CommanderControlControllerTest, MiddleMouseHeavyIsLongerAndHitsHarderThanLight) {
   using Game::Systems::CombatActions::CombatActionId;
   auto const* light = Game::Systems::CombatActions::find_combat_action_definition(

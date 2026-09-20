@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "name": "trailer_formation_field",
+  "name": "trailer_palm_column",
   "loop_seconds": 0.0,
   "required_coverage": ["formation_move"],
   "actions": [
@@ -11,14 +11,19 @@
     {
       "at": 0.05,
       "action": "camera_look_at",
-      "argument": "3,-8"
+      "argument": "-3.5,8.5"
+    },
+    {
+      "at": 0.06,
+      "action": "camera_zoom",
+      "argument": "-7.8"
     },
     {
       "at": 0.5,
       "action": "resume"
     },
     {
-      "at": 0.8,
+      "at": 0.6,
       "action": "select_all"
     },
     {
@@ -32,7 +37,7 @@
     {
       "at": 2.0,
       "action": "formation_begin_world",
-      "argument": "33,-44"
+      "argument": "13.5,14"
     },
     {
       "at": 2.0,
@@ -43,9 +48,9 @@
       "action": "resume"
     },
     {
-      "at": 2.9,
+      "at": 2.8,
       "action": "formation_intent",
-      "argument": "line"
+      "argument": "column"
     },
     {
       "at": 3.0,
@@ -56,22 +61,27 @@
       "action": "resume"
     },
     {
-      "at": 3.8,
+      "at": 3.6,
       "action": "formation_drag_world",
-      "argument": "18,-29"
+      "argument": "13.5,11"
     },
     {
       "at": 4.0,
       "action": "resume"
     },
     {
+      "at": 4.2,
+      "action": "formation_drag_world",
+      "argument": "13.5,7.5"
+    },
+    {
       "at": 4.5,
       "action": "resume"
     },
     {
-      "at": 4.6,
+      "at": 4.8,
       "action": "formation_drag_world",
-      "argument": "3,-14"
+      "argument": "13.5,4.5"
     },
     {
       "at": 5.0,
@@ -80,7 +90,7 @@
     {
       "at": 5.4,
       "action": "formation_drag_world",
-      "argument": "-12,1"
+      "argument": "13.5,3"
     },
     {
       "at": 5.5,
@@ -92,16 +102,15 @@
     },
     {
       "at": 6.2,
-      "action": "formation_drag_world",
-      "argument": "-27,16"
+      "action": "formation_end"
     },
     {
       "at": 6.5,
       "action": "resume"
     },
     {
-      "at": 7.0,
-      "action": "formation_end"
+      "at": 6.9,
+      "action": "formation_confirm"
     },
     {
       "at": 7.0,
@@ -110,10 +119,6 @@
     {
       "at": 7.5,
       "action": "resume"
-    },
-    {
-      "at": 7.8,
-      "action": "formation_confirm"
     },
     {
       "at": 8.0,
@@ -125,12 +130,12 @@
     },
     {
       "at": 9.0,
-      "action": "resume"
+      "action": "deselect_world",
+      "argument": "-47.5,-47.5"
     },
     {
-      "at": 9.2,
-      "action": "deselect_world",
-      "argument": "-60,52"
+      "at": 9.0,
+      "action": "resume"
     },
     {
       "at": 9.5,
@@ -330,17 +335,7 @@
     },
     {
       "at": 34.0,
-      "action": "camera_look_at",
-      "argument": "3,-14"
-    },
-    {
-      "at": 34.0,
       "action": "resume"
-    },
-    {
-      "at": 34.4,
-      "action": "camera_zoom",
-      "argument": "1.93"
     },
     {
       "at": 34.5,
@@ -349,11 +344,6 @@
     {
       "at": 35.0,
       "action": "resume"
-    },
-    {
-      "at": 35.4,
-      "action": "camera_orbit",
-      "argument": "0,12"
     },
     {
       "at": 35.5,
@@ -389,126 +379,6 @@
     },
     {
       "at": 39.5,
-      "action": "resume"
-    },
-    {
-      "at": 40.0,
-      "action": "resume"
-    },
-    {
-      "at": 40.5,
-      "action": "resume"
-    },
-    {
-      "at": 41.0,
-      "action": "resume"
-    },
-    {
-      "at": 41.5,
-      "action": "resume"
-    },
-    {
-      "at": 42.0,
-      "action": "resume"
-    },
-    {
-      "at": 42.5,
-      "action": "resume"
-    },
-    {
-      "at": 43.0,
-      "action": "resume"
-    },
-    {
-      "at": 43.5,
-      "action": "resume"
-    },
-    {
-      "at": 44.0,
-      "action": "resume"
-    },
-    {
-      "at": 44.5,
-      "action": "resume"
-    },
-    {
-      "at": 45.0,
-      "action": "resume"
-    },
-    {
-      "at": 45.5,
-      "action": "resume"
-    },
-    {
-      "at": 46.0,
-      "action": "resume"
-    },
-    {
-      "at": 46.5,
-      "action": "resume"
-    },
-    {
-      "at": 47.0,
-      "action": "resume"
-    },
-    {
-      "at": 47.5,
-      "action": "resume"
-    },
-    {
-      "at": 48.0,
-      "action": "resume"
-    },
-    {
-      "at": 48.5,
-      "action": "resume"
-    },
-    {
-      "at": 49.0,
-      "action": "resume"
-    },
-    {
-      "at": 49.5,
-      "action": "resume"
-    },
-    {
-      "at": 50.0,
-      "action": "resume"
-    },
-    {
-      "at": 50.5,
-      "action": "resume"
-    },
-    {
-      "at": 51.0,
-      "action": "resume"
-    },
-    {
-      "at": 51.5,
-      "action": "resume"
-    },
-    {
-      "at": 52.0,
-      "action": "resume"
-    },
-    {
-      "at": 52.5,
-      "action": "resume"
-    },
-    {
-      "at": 53.0,
-      "action": "resume"
-    },
-    {
-      "at": 53.5,
-      "action": "resume"
-    },
-    {
-      "at": 54.0,
-      "action": "resume"
-    },
-    {
-      "at": 54.5,
       "action": "resume"
     }
   ]

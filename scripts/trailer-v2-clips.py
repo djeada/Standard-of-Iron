@@ -33,8 +33,16 @@ CLIPS = [
     ("editor_bridge", "editor_bridge.mp4", 2.0, 3.0),
     ("build_stronghold_place", "build_close.mp4", 1.2, 2.2),
     ("build_stronghold_rise", "build_close.mp4", 8.8, 3.0),
-    ("form_the_line", "formation_field.mp4", 4.8, 20.5, 3.7),
-    ("battle_line", "formation_field.mp4", 28.5, 21.0, 4.2, "1560:878:320:150"),
+    # The formation beat is four shots across two maps: pick a line on the
+    # parade ground and watch it land, then pick a column for a bridge and watch
+    # that land. The first of each pair runs slowly enough to read the formation
+    # panel -- that panel is the point of the beat -- and the second is held long
+    # enough for the ranks to finish dressing. The push-in at the end of each
+    # payoff is filmed in engine (the fixture moves the camera), not cropped in.
+    ("form_the_line", "formation_field.mp4", 1.8, 7.2, 2.0),
+    ("battle_line", "formation_field.mp4", 34.6, 12.2, 2.9),
+    ("bridge_order", "palm_column.mp4", 1.8, 6.2, 1.82),
+    ("bridge_column", "palm_column.mp4", 22.0, 13.5, 2.93),
     ("town_wide", "forest_town.mp4", 0.3, 3.7),
     ("town_crews", "forest_town.mp4", 4.6, 5.0),
     ("town_build", "forest_town.mp4", 10.8, 6.8),

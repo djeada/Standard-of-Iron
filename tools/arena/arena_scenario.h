@@ -151,6 +151,15 @@ struct ArenaScenarioResourcePatch {
   float scale{1.0F};
 
   bool exact{false};
+
+  // Nothing in a landscape lines up, faces the same way and is the same size.
+  // These three knobs break a patch out of its row; they are deterministic
+  // (seeded from the prop type, the patch origin and the instance index), so a
+  // scenario still renders identically run to run. All default to zero, so a
+  // patch that does not ask for variation places exactly where it always did.
+  float jitter{0.0F};       // metres each instance may wander off the row
+  float yaw_spread{0.0F};   // degrees of yaw to spread across the instances
+  float scale_spread{0.0F}; // fraction of scale to vary by, e.g. 0.25 = +-25%
 };
 
 struct ArenaScenarioAIProfile {

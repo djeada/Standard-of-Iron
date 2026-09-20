@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <numbers>
 #include <optional>
@@ -206,6 +207,37 @@ auto grid_position_from_world(const Game::Map::TerrainField& field,
   float const grid_z = world_position.z() / field.tile_size + half_height;
   return {std::clamp(grid_x, 0.0F, static_cast<float>(field.width - 1)),
           std::clamp(grid_z, 0.0F, static_cast<float>(field.height - 1))};
+}
+
+// Deterministic variation for scenery. A scene has to look unplanned without
+// being unrepeatable: the same scenario must dress itself identically on every
+// run, so the "randomness" is a hash of what is being placed, not a PRNG.
+auto mix_seed(std::uint32_t seed, std::uint32_t value) -> std::uint32_t {
+  seed ^= value + 0x9E3779B9U + (seed << 6U) + (seed >> 2U);
+  return seed;
+}
+
+auto unit_float(std::uint32_t seed, std::uint32_t stream) -> float {
+  std::uint32_t hashed = mix_seed(seed, stream);
+  hashed ^= hashed >> 16U;
+  hashed *= 0x7FEB352DU;
+  hashed ^= hashed >> 15U;
+  hashed *= 0x846CA68BU;
+  hashed ^= hashed >> 16U;
+  return static_cast<float>(hashed & 0xFFFFFFU) / static_cast<float>(0x1000000U);
+}
+
+auto signed_unit(std::uint32_t seed, std::uint32_t stream) -> float {
+  return (unit_float(seed, stream) * 2.0F) - 1.0F;
+}
+
+auto variation_seed(const QString& prop_type,
+                    const QVector3D& origin,
+                    int count) -> std::uint32_t {
+  std::uint32_t seed = static_cast<std::uint32_t>(qHash(prop_type));
+  seed = mix_seed(seed, static_cast<std::uint32_t>(std::lround(origin.x() * 16.0F)));
+  seed = mix_seed(seed, static_cast<std::uint32_t>(std::lround(origin.z() * 16.0F)));
+  return mix_seed(seed, static_cast<std::uint32_t>(count));
 }
 
 auto world_prop_type_from_string(const QString& prop_type)
@@ -2550,10 +2582,38 @@ void ArenaViewport::place_scenario_resource_patches(
 
   for (const auto& patch : definition.resource_patches) {
     const auto type = world_prop_type_from_string(patch.prop_type);
-    float const radius = Game::Map::world_prop_ground_radius(type, patch.scale);
+    const bool varies =
+        patch.jitter > 0.0F || patch.yaw_spread > 0.0F || patch.scale_spread > 0.0F;
+    // One seed per patch, so two patches of the same prop type at different
+    // places in the scene do not draw the same "random" numbers and end up
+    // repeating each other's arrangement.
+    const std::uint32_t patch_seed =
+        variation_seed(patch.prop_type, patch.origin, patch.count);
 
     for (int index = 0; index < patch.count; ++index) {
-      const QVector3D wanted = scenario_origin + patch.origin + patch.spacing * index;
+      QVector3D wanted = scenario_origin + patch.origin + patch.spacing * index;
+
+      float instance_scale = patch.scale;
+      float instance_yaw = 0.0F;
+      if (varies) {
+        const std::uint32_t seed =
+            mix_seed(patch_seed, static_cast<std::uint32_t>(index));
+        if (patch.jitter > 0.0F) {
+          const float angle = signed_unit(seed, 1U) * 3.14159265F;
+          const float reach = patch.jitter * std::sqrt(unit_float(seed, 2U));
+          wanted.setX(wanted.x() + (std::cos(angle) * reach));
+          wanted.setZ(wanted.z() + (std::sin(angle) * reach));
+        }
+        if (patch.yaw_spread > 0.0F) {
+          instance_yaw =
+              signed_unit(seed, 3U) * patch.yaw_spread * 0.5F * (3.14159265F / 180.0F);
+        }
+        if (patch.scale_spread > 0.0F) {
+          instance_scale =
+              patch.scale * (1.0F + (signed_unit(seed, 4U) * patch.scale_spread));
+        }
+      }
+      float const radius = Game::Map::world_prop_ground_radius(type, instance_scale);
 
       std::optional<QVector3D> spot;
       if (patch.exact) {
@@ -2589,10 +2649,11 @@ void ArenaViewport::place_scenario_resource_patches(
       prop.type = type;
       prop.x = grid_position.x();
       prop.z = grid_position.y();
-      prop.scale = patch.scale;
+      prop.scale = instance_scale;
+      prop.rotation = instance_yaw;
       if (type == Game::Map::WorldProp::Type::FireCamp) {
-        prop.radius *= patch.scale;
-        prop.intensity *= patch.scale;
+        prop.radius *= instance_scale;
+        prop.intensity *= instance_scale;
       }
       prop.persistent = true;
       m_world_props.push_back(prop);

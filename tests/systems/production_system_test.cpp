@@ -933,6 +933,12 @@ TEST_F(ProductionSystemTest, RecruitmentGlowsOnTheRecruitOnly) {
       world.collect_entities_with<Engine::Core::ProductionCompletionComponent>();
   ASSERT_EQ(glowing.size(), 1U);
   EXPECT_NE(glowing.front()->get_id(), barracks->get_id());
+  const auto* flare =
+      glowing.front()->get_component<Engine::Core::ProductionCompletionComponent>();
+  ASSERT_NE(flare, nullptr);
+  EXPECT_EQ(flare->style, Engine::Core::SpawnFlareStyle::Recruit);
+  EXPECT_FLOAT_EQ(flare->duration,
+                  Engine::Core::ProductionCompletionComponent::k_duration);
   const auto* recruit = glowing.front()->get_component<Engine::Core::UnitComponent>();
   ASSERT_NE(recruit, nullptr);
   EXPECT_EQ(recruit->owner_id, 1);

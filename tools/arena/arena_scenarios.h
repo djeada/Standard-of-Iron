@@ -211,6 +211,8 @@ inline constexpr char k_sepulcher_vs_carthage_cavalry_id[] =
 inline constexpr char k_sepulcher_shrine_awakening_id[] = "sepulcher_shrine_awakening";
 inline constexpr char k_sepulcher_ruins_awakening_waves_id[] =
     "sepulcher_ruins_awakening_waves";
+inline constexpr char k_sepulcher_wave_flare_review_id[] =
+    "sepulcher_wave_flare_review";
 inline constexpr char k_sepulcher_shrine_siege_id[] = "sepulcher_shrine_siege";
 inline constexpr char k_sepulcher_fireball_review_id[] = "sepulcher_fireball_review";
 inline constexpr char k_sepulcher_zone_shrine_spawn_id[] =

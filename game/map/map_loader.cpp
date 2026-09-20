@@ -14,6 +14,7 @@
 #include <qjsonobject.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <optional>
@@ -245,6 +246,26 @@ void read_biome(const QJsonObject& obj, BiomeSettings& out) {
   }
   if (obj.contains(PLANT_DENSITY)) {
     out.plant_density = float(obj.value(PLANT_DENSITY).toDouble(out.plant_density));
+  }
+  if (obj.contains(TREE_MIX)) {
+    // {"palm": 2.0, "olive": 0} leans the ground type's own tree mix without
+    // replacing it: species the object does not name keep their ground-type
+    // share. Negative values are meaningless, so they read as "none".
+    static constexpr std::array<std::pair<const char*, TreeSpecies>,
+                                k_tree_species_count>
+        k_species{{{"pine", TreeSpecies::Pine},
+                   {"olive", TreeSpecies::Olive},
+                   {"cypress", TreeSpecies::Cypress},
+                   {"palm", TreeSpecies::Palm}}};
+    const QJsonObject mix = obj.value(TREE_MIX).toObject();
+    for (const auto& [name, species] : k_species) {
+      const QString key = QString::fromLatin1(name);
+      if (!mix.contains(key)) {
+        continue;
+      }
+      auto& scale = out.tree_density_scale[static_cast<std::size_t>(species)];
+      scale = std::max(0.0F, float(mix.value(key).toDouble(scale)));
+    }
   }
   if (obj.contains(SPAWN_EDGE_PADDING)) {
     out.spawn_edge_padding =
