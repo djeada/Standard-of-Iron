@@ -253,8 +253,11 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
      "creature. No mission ever creates one."},
     {"ConstructionPreviewComponent",
      PresentationOnly,
-     "Placement ghost. Entities carrying it are skipped entirely when a world "
-     "is written, so a save never contains a half-placed building."},
+     "Placement ghost, both the one under the cursor and the one left standing "
+     "over a build site while a crew works it. The site ghosts are rebuilt from "
+     "the live builder sites every tick, and entities carrying this are skipped "
+     "entirely when a world is written, so a save never contains a half-placed "
+     "building."},
 
     {"PendingRemovalComponent",
      DerivedRebuilt,

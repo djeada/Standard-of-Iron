@@ -1576,10 +1576,18 @@ auto trailer_city_battle() -> ArenaScenarioDefinition {
       file("roman_horse_n", Troop::MountedSwordsman, 1, 5, 214.0F, -100.0F, 6, 3.4F);
   auto horse_s =
       file("roman_horse_s", Troop::MountedSwordsman, 1, 5, 214.0F, 36.0F, 6, 3.4F);
+  // The city's own elephants, held in the gap between the artillery and the
+  // east wall: behind everything that is fighting, in front of the stone. The
+  // wall runs at x=170 and the catapults are the rearmost of the line at 194,
+  // so 182 reads as inside the defence rather than part of it, and they sit
+  // across the gate so the opening wide shot has them in frame.
+  auto roman_elephants = file(
+      "roman_elephants", Troop::Elephant, 1, 3, 182.0F, k_gate_z - 12.0F, 1, 12.0F);
   s.groups.push_back(ballistas);
   s.groups.push_back(catapults);
   s.groups.push_back(horse_n);
   s.groups.push_back(horse_s);
+  s.groups.push_back(roman_elephants);
 
   auto elephants_n =
       file("punic_elephants_n", Troop::Elephant, 2, 3, 252.0F, -100.0F, 1, 12.0F);

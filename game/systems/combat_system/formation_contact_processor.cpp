@@ -4,6 +4,7 @@
 #include <bit>
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
 #include <limits>
 #include <numbers>
 #include <optional>
@@ -605,6 +606,11 @@ auto walk_to_new_slot(Engine::Core::SquadReformComponent& reform,
   return true;
 }
 
+// Below this a soldier is standing in his slot, and the remainder is taken in
+// one step so the published presentation matches the layout exactly. It is well
+// under a single tick of walking, so it can never read as a snap.
+constexpr float k_slot_settle_distance = 0.12F;
+
 void walk_formation_slot(
     const Engine::Core::TransformComponent& actor,
     const Engine::Core::FormationPresentationComponent& formation,
@@ -618,6 +624,12 @@ void walk_formation_slot(
     bool mounted,
     bool engaged,
     bool external_reform,
+    // The traversal layout, when one is running, has already decided where this
+    // slot stands this tick -- that is simulation data, not something the
+    // presentation gets a second opinion on. The walk still runs, because it is
+    // what produces facing, crowd yielding and velocity for the animation, but
+    // the position it lands on is the authored one.
+    bool position_is_authored,
     Pathfinding::Passability passability,
     float delta_time,
     Engine::Core::FormationSoldierPresentation& soldier) {
@@ -666,33 +678,56 @@ void walk_formation_slot(
   soldier.turn_response_remaining =
       std::max(0.0F, soldier.turn_response_remaining - dt);
 
+  // The slot is a moving destination: it carries the root's translation plus
+  // the wheel's tangential sweep. Feed that forward so a marching man holds
+  // station instead of chasing a point that walks away from him at his own
+  // pace. Only the catch-up on top of it is proportional and speed-capped.
+  const float target_x = destination.x() - actor.position.x;
+  const float target_z = destination.z() - actor.position.z;
+  const float heading_rate =
+      dt > 0.0F ? heading_change * std::numbers::pi_v<float> / 180.0F / dt : 0.0F;
+  const float slot_velocity_x =
+      dt > 0.0F
+          ? (actor.position.x - formation.motion_root_x) / dt + heading_rate * target_z
+          : 0.0F;
+  const float slot_velocity_z =
+      dt > 0.0F
+          ? (actor.position.z - formation.motion_root_z) / dt - heading_rate * target_x
+          : 0.0F;
+
   const float dx = destination.x() - soldier.world_x;
   const float dz = destination.z() - soldier.world_z;
   const float distance = std::hypot(dx, dz);
-  float travel_x = distance > 0.0001F ? dx / distance : 0.0F;
-  float travel_z = distance > 0.0001F ? dz / distance : 0.0F;
+  float catch_x = distance > 0.0001F ? dx / distance : 0.0F;
+  float catch_z = distance > 0.0001F ? dz / distance : 0.0F;
 
+  // On a wheel, follow a loose curved lane rather than cutting straight through
+  // the inside ranks. A plain lag on a straight march is not a wheel, so the
+  // bend only applies while the root is actually turning.
   const float radial_x = soldier.world_x - actor.position.x;
   const float radial_z = soldier.world_z - actor.position.z;
-  const float target_x = destination.x() - actor.position.x;
-  const float target_z = destination.z() - actor.position.z;
   const float radius = std::hypot(radial_x, radial_z);
   const float target_radius = std::hypot(target_x, target_z);
-  if (!engaged && radius > 0.5F && target_radius > 0.5F) {
+  if (!engaged && std::abs(heading_change) > 0.05F && radius > 0.5F &&
+      target_radius > 0.5F) {
     const float angle = std::atan2(radial_z * target_x - radial_x * target_z,
                                    radial_x * target_x + radial_z * target_z);
     const float bend = std::clamp((std::abs(angle) - 0.20F) / 0.70F, 0.0F, 1.0F);
     const float sign = angle < 0.0F ? -1.0F : 1.0F;
     const float radial_correction =
         std::clamp((target_radius - radius) / radius, -0.4F, 0.4F);
-    travel_x +=
-        (sign * radial_z / radius + radial_x / radius * radial_correction - travel_x) *
+    catch_x +=
+        (sign * radial_z / radius + radial_x / radius * radial_correction - catch_x) *
         bend;
-    travel_z +=
-        (-sign * radial_x / radius + radial_z / radius * radial_correction - travel_z) *
+    catch_z +=
+        (-sign * radial_x / radius + radial_z / radius * radial_correction - catch_z) *
         bend;
   }
 
+  // Nearby men yield a little space instead of walking through one another.
+  // Read last tick's snapshot for every slot, avoiding an update-order bias.
+  // The yield only throttles the catch-up: a rank marching behind another at
+  // formation spacing is not closing on it and must never be slowed by it.
   const float personal_space = std::max(0.28F, spacing * 0.72F);
   float crowd_speed = 1.0F;
   for (const auto& neighbor : neighbors) {
@@ -703,36 +738,58 @@ void walk_formation_slot(
     const float away_x = soldier.world_x - neighbor.world_x;
     const float away_z = soldier.world_z - neighbor.world_z;
     const float separation = std::hypot(away_x, away_z);
-    if (separation > 0.001F && separation < personal_space * 1.6F) {
-      const bool approaching = travel_x * away_x + travel_z * away_z < 0.0F;
+    if (separation > 0.001F && separation < personal_space) {
+      const bool approaching = catch_x * away_x + catch_z * away_z < 0.0F;
       if (approaching) {
         crowd_speed = std::min(
             crowd_speed,
-            std::clamp((separation - personal_space * 0.85F) / (personal_space * 0.75F),
+            std::clamp((separation - personal_space * 0.5F) / (personal_space * 0.5F),
                        0.0F,
                        1.0F));
       }
       const float pressure = std::max(0.0F, 1.0F - separation / personal_space) * 2.5F;
-      travel_x += away_x / separation * pressure;
-      travel_z += away_z / separation * pressure;
-
+      catch_x += away_x / separation * pressure;
+      catch_z += away_z / separation * pressure;
+      // A consistent passing side prevents two opposing files from freezing
+      // nose-to-nose or swapping places through each other's bodies.
       if (approaching) {
-        travel_x -= away_z / separation * pressure * 0.45F;
-        travel_z += away_x / separation * pressure * 0.45F;
+        catch_x -= away_z / separation * pressure * 0.45F;
+        catch_z += away_x / separation * pressure * 0.45F;
       }
     }
   }
-  const float direction_length = std::hypot(travel_x, travel_z);
-  if (direction_length > 0.0001F) {
-    travel_x /= direction_length;
-    travel_z /= direction_length;
+  const float catch_length = std::hypot(catch_x, catch_z);
+  if (catch_length > 0.0001F) {
+    catch_x /= catch_length;
+    catch_z /= catch_length;
+  }
+  // Catch-up is always a clear margin over the squad's own pace, so a man who
+  // fell back on a wheel closes the gap in seconds rather than trailing it.
+  const float catch_up_cap =
+      std::max(1.0F, march_speed * 0.6F) * (0.94F + variation * 0.12F);
+  const float catch_up_speed = std::min(catch_up_cap, distance * 4.0F) * crowd_speed;
+  float desired_x = slot_velocity_x + catch_x * catch_up_speed;
+  float desired_z = slot_velocity_z + catch_z * catch_up_speed;
+  // Feed-forward plus catch-up is still a man on foot. On a tight about-face
+  // the slot's tangential sweep alone can ask the outer file for several times
+  // walking pace, so the total is capped at his own top speed, which already
+  // carries a hurry margin over the squad's march. He may hurry; he never
+  // sprints past what his legs do, and a wheel too tight for that is the
+  // layout's problem, not his.
+  const float speed_ceiling = max_speed;
+  float desired_magnitude = std::hypot(desired_x, desired_z);
+  if (desired_magnitude > speed_ceiling && desired_magnitude > 0.0001F) {
+    const float scale = speed_ceiling / desired_magnitude;
+    desired_x *= scale;
+    desired_z *= scale;
+    desired_magnitude = speed_ceiling;
   }
   const float travel_yaw =
-      direction_length > 0.0001F
-          ? std::atan2(travel_x, travel_z) * 180.0F / std::numbers::pi_v<float>
+      desired_magnitude > 0.25F
+          ? std::atan2(desired_x, desired_z) * 180.0F / std::numbers::pi_v<float>
           : desired_facing;
   const float facing_target =
-      !engaged && distance > 0.09F ? travel_yaw : desired_facing;
+      !engaged && desired_magnitude > 0.25F ? travel_yaw : desired_facing;
   const bool responding = soldier.turn_response_remaining <= 0.0F;
   if (responding) {
     soldier.world_yaw =
@@ -744,13 +801,20 @@ void walk_formation_slot(
                                    std::numbers::pi_v<float> / 180.0F);
   const float mobility =
       engaged ? 1.0F : std::clamp((alignment - 0.15F) / 0.85F, 0.0F, 1.0F);
-  const float arrival_speed = std::min(max_speed, distance * 5.0F);
-  const float desired_speed =
-      responding ? arrival_speed * mobility * crowd_speed : 0.0F;
-  const float velocity_dx = travel_x * desired_speed - soldier.world_velocity_x;
-  const float velocity_dz = travel_z * desired_speed - soldier.world_velocity_z;
+  if (responding) {
+    desired_x *= mobility;
+    desired_z *= mobility;
+  } else {
+    // Waiting for his turn cue he keeps his course, he does not halt and let
+    // the column walk away from him.
+    desired_x = soldier.world_velocity_x;
+    desired_z = soldier.world_velocity_z;
+  }
+  const float velocity_dx = desired_x - soldier.world_velocity_x;
+  const float velocity_dz = desired_z - soldier.world_velocity_z;
   const float velocity_change = std::hypot(velocity_dx, velocity_dz);
-  const float acceleration_step = max_speed / (mounted ? 0.45F : 0.28F) * dt;
+  const float acceleration_step =
+      std::max(max_speed, desired_magnitude) / (mounted ? 0.45F : 0.28F) * dt;
   const float velocity_blend = velocity_change > 0.0001F
                                    ? std::min(1.0F, acceleration_step / velocity_change)
                                    : 1.0F;
@@ -758,11 +822,6 @@ void walk_formation_slot(
   soldier.world_velocity_z += velocity_dz * velocity_blend;
   float step_x = soldier.world_velocity_x * dt;
   float step_z = soldier.world_velocity_z * dt;
-  if (step_x * dx + step_z * dz > distance * distance) {
-    step_x = dx;
-    step_z = dz;
-  }
-
   if (auto const* pathfinder = NavGrid::get_pathfinder();
       pathfinder != nullptr && std::hypot(step_x, step_z) > 0.0001F) {
     const QVector3D origin(soldier.world_x, actor.position.y, soldier.world_z);
@@ -781,6 +840,21 @@ void walk_formation_slot(
       }
       soldier.relocation_blocked = true;
     }
+  }
+  // Settle exactly onto the slot once he is all but standing in it. The
+  // feed-forward otherwise leaves a few centimetres of standing lag and the
+  // published presentation stops matching the layout it published. The old
+  // code clamped on any overshoot at any distance, which is what made a man
+  // snap across open ground; bounded to a fraction of one step it is a
+  // correction nobody can see. It sits after the clearance check so a walkable
+  // step is not re-opened for a man the ground just refused.
+  if (position_is_authored) {
+    step_x = dx;
+    step_z = dz;
+  } else if (!soldier.relocation_blocked && distance > 0.0001F &&
+             distance < k_slot_settle_distance) {
+    step_x = dx;
+    step_z = dz;
   }
   soldier.world_x += step_x;
   soldier.world_z += step_z;
@@ -1343,6 +1417,7 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
                             mounted,
                             melee_ordered,
                             reform != nullptr,
+                            traversal_slot != nullptr,
                             passability,
                             delta_time,
                             directive);

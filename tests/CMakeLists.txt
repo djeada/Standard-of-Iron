@@ -192,6 +192,7 @@ add_executable(
     systems/movement_stage_ownership_test.cpp
     systems/movement_route_test.cpp
     systems/formation_combat_geometry_test.cpp
+    systems/formation_march_keepup_test.cpp
     systems/defensive_unit_layout_test.cpp
     systems/structure_combat_test.cpp
     systems/event_audience_test.cpp

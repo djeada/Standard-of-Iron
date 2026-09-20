@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write the formation film's map: one big Roman army standing in a loose mob.
+"""Write the formation film's map: one big army standing in a loose mob.
 
 The trailer's formation beat has to read as a rabble becoming a line, so the
 army starts scattered -- no ranks, no shared facing, types interleaved -- and it
@@ -40,8 +40,18 @@ KNOTS = (
 
 
 ROSTER = (
-    ["swordsman"] * 16 + ["spearman"] * 11 + ["archer"] * 8 + ["horse_swordsman"] * 4
+    ["swordsman"] * 16
+    + ["spearman"] * 11
+    + ["archer"] * 8
+    + ["horse_swordsman"] * 4
+    + ["elephant"] * 3
 )
+
+# Only Carthage's roster carries the elephant, so its spawns have to name that
+# nation even though they stand in this player's army -- with "roman_republic"
+# on them the type does not resolve and they simply never appear. Everything
+# else about them is ordinary: same player, same team, same formation order.
+NATION_FOR = {"elephant": "carthage"}
 
 
 def main() -> int:
@@ -91,7 +101,7 @@ def main() -> int:
                 "z": round(min(126.0, max(74.0, z)), 1),
                 "player_id": 1,
                 "team_id": 1,
-                "nation": "roman_republic",
+                "nation": NATION_FOR.get(unit_type, "roman_republic"),
             }
         )
 

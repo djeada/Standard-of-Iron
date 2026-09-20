@@ -234,6 +234,12 @@ public:
   int grid_x{0};
   int grid_z{0};
   bool valid{false};
+
+  // A site ghost is the placement ghost left standing over a build site while a
+  // crew works it. It is rebuilt from the live sites every tick, never saved.
+  bool site_ghost{false};
+  std::string product_type{};
+  float progress{0.0F};
 };
 
 class PendingRemovalComponent {
