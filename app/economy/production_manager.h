@@ -131,6 +131,9 @@ private:
                                         int valid_segment_count,
                                         int total_cost);
   void clear_preview_entities();
+  // Leaves the placement ghost standing as the build site's ghost instead of
+  // destroying it; ProductionSystem owns it from then on.
+  void hand_preview_to_construction_site(const QString& item_type);
   void update_non_wall_construction_preview(const QVector3D& world_position);
   void clear_non_wall_construction_preview();
   void rebuild_non_wall_preview_entity(const QVector3D& world_position);

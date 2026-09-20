@@ -558,7 +558,15 @@ TEST_F(ProductionManagerTest, BuilderConstructionPreviewRotationCarriesIntoQueue
   EXPECT_FALSE(manager.is_placing_construction());
   EXPECT_TRUE(builder_prod->has_construction_site);
   EXPECT_FLOAT_EQ(builder_prod->construction_site_rotation_y, 15.0F);
-  EXPECT_TRUE(preview_entities().empty());
+
+  previews = preview_entities();
+  ASSERT_EQ(previews.size(), 1U)
+      << "the ghost must stay standing over the site being built";
+  const auto* handed_over =
+      previews.front()->get_component<Engine::Core::ConstructionPreviewComponent>();
+  ASSERT_NE(handed_over, nullptr);
+  EXPECT_TRUE(handed_over->site_ghost);
+  EXPECT_EQ(handed_over->product_type, "defense_tower");
 }
 
 TEST_F(ProductionManagerTest, DirectBuildingPlacementRejectsConfirmWithoutResources) {

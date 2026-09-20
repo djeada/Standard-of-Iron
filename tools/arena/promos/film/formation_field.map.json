@@ -10,7 +10,11 @@
   },
   "max_troops_per_player": 400,
   "camera": {
-    "center": [88.0, 0, 88.0],
+    "center": [
+      88.0,
+      0,
+      88.0
+    ],
     "distance": 194.0,
     "tilt_deg": 48.0,
     "yaw": 225.0,
@@ -33,11 +37,30 @@
     "patch_density": 1.25,
     "patch_jitter": 0.92,
     "plant_density": 0.0,
-    "grass_primary": [0.24, 0.38, 0.2],
-    "grass_secondary": [0.33, 0.45, 0.24],
-    "grass_dry": [0.42, 0.39, 0.27],
-    "soil_color": [0.13, 0.11, 0.09],
-    "height_noise": [0.2, 0.06],
+    "grass_primary": [
+      0.24,
+      0.38,
+      0.2
+    ],
+    "grass_secondary": [
+      0.33,
+      0.45,
+      0.24
+    ],
+    "grass_dry": [
+      0.42,
+      0.39,
+      0.27
+    ],
+    "soil_color": [
+      0.13,
+      0.11,
+      0.09
+    ],
+    "height_noise": [
+      0.2,
+      0.06
+    ],
     "ground_irregularity_enabled": true,
     "irregularity_scale": 0.15,
     "irregularity_amplitude": 0.07,
@@ -82,19 +105,19 @@
       "nation": "roman_republic"
     },
     {
-      "id": "p1_spearman_0",
-      "type": "spearman",
-      "x": 72.3,
-      "z": 94.9,
+      "id": "p1_swordsman_0",
+      "type": "swordsman",
+      "x": 87.2,
+      "z": 107.8,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_swordsman_1",
-      "type": "swordsman",
-      "x": 90.3,
-      "z": 106.5,
+      "id": "p1_horse_swordsman_1",
+      "type": "horse_swordsman",
+      "x": 87.4,
+      "z": 99.6,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
@@ -102,8 +125,8 @@
     {
       "id": "p1_swordsman_2",
       "type": "swordsman",
-      "x": 75.1,
-      "z": 98.8,
+      "x": 73.3,
+      "z": 94.1,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
@@ -111,26 +134,26 @@
     {
       "id": "p1_spearman_3",
       "type": "spearman",
-      "x": 76.1,
-      "z": 96.1,
+      "x": 105.0,
+      "z": 96.9,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_archer_4",
-      "type": "archer",
-      "x": 88.4,
-      "z": 100.1,
+      "id": "p1_spearman_4",
+      "type": "spearman",
+      "x": 77.1,
+      "z": 90.0,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_horse_swordsman_5",
-      "type": "horse_swordsman",
-      "x": 78.8,
-      "z": 91.2,
+      "id": "p1_swordsman_5",
+      "type": "swordsman",
+      "x": 110.7,
+      "z": 94.3,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
@@ -138,8 +161,8 @@
     {
       "id": "p1_swordsman_6",
       "type": "swordsman",
-      "x": 88.7,
-      "z": 116.0,
+      "x": 71.3,
+      "z": 93.2,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
@@ -147,8 +170,8 @@
     {
       "id": "p1_archer_7",
       "type": "archer",
-      "x": 107.4,
-      "z": 91.9,
+      "x": 63.3,
+      "z": 97.7,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
@@ -156,8 +179,8 @@
     {
       "id": "p1_spearman_8",
       "type": "spearman",
-      "x": 109.9,
-      "z": 95.8,
+      "x": 81.2,
+      "z": 94.8,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
@@ -165,26 +188,26 @@
     {
       "id": "p1_swordsman_9",
       "type": "swordsman",
-      "x": 84.8,
-      "z": 101.6,
+      "x": 73.1,
+      "z": 97.9,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_swordsman_10",
-      "type": "swordsman",
-      "x": 105.9,
-      "z": 97.0,
-      "player_id": 1,
-      "team_id": 1,
-      "nation": "roman_republic"
-    },
-    {
-      "id": "p1_archer_11",
+      "id": "p1_archer_10",
       "type": "archer",
-      "x": 87.0,
-      "z": 100.8,
+      "x": 68.5,
+      "z": 97.6,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_11",
+      "type": "swordsman",
+      "x": 85.0,
+      "z": 99.7,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
@@ -192,53 +215,53 @@
     {
       "id": "p1_swordsman_12",
       "type": "swordsman",
-      "x": 81.0,
-      "z": 103.2,
+      "x": 93.2,
+      "z": 99.7,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_swordsman_13",
-      "type": "swordsman",
-      "x": 71.5,
-      "z": 95.4,
+      "id": "p1_spearman_13",
+      "type": "spearman",
+      "x": 90.9,
+      "z": 104.7,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_horse_swordsman_14",
+      "id": "p1_spearman_14",
+      "type": "spearman",
+      "x": 78.0,
+      "z": 99.2,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_15",
+      "type": "spearman",
+      "x": 78.1,
+      "z": 91.7,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_horse_swordsman_16",
       "type": "horse_swordsman",
-      "x": 79.0,
-      "z": 102.6,
+      "x": 90.5,
+      "z": 102.7,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_swordsman_15",
+      "id": "p1_swordsman_17",
       "type": "swordsman",
-      "x": 89.8,
-      "z": 99.6,
-      "player_id": 1,
-      "team_id": 1,
-      "nation": "roman_republic"
-    },
-    {
-      "id": "p1_swordsman_16",
-      "type": "swordsman",
-      "x": 87.8,
-      "z": 102.1,
-      "player_id": 1,
-      "team_id": 1,
-      "nation": "roman_republic"
-    },
-    {
-      "id": "p1_horse_swordsman_17",
-      "type": "horse_swordsman",
-      "x": 75.5,
-      "z": 102.6,
+      "x": 89.1,
+      "z": 100.0,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
@@ -246,8 +269,8 @@
     {
       "id": "p1_swordsman_18",
       "type": "swordsman",
-      "x": 93.9,
-      "z": 108.5,
+      "x": 72.7,
+      "z": 94.6,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
@@ -255,116 +278,116 @@
     {
       "id": "p1_archer_19",
       "type": "archer",
-      "x": 101.5,
-      "z": 100.9,
+      "x": 90.8,
+      "z": 107.0,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_swordsman_20",
-      "type": "swordsman",
-      "x": 85.9,
-      "z": 104.8,
-      "player_id": 1,
-      "team_id": 1,
-      "nation": "roman_republic"
-    },
-    {
-      "id": "p1_archer_21",
+      "id": "p1_archer_20",
       "type": "archer",
-      "x": 90.6,
-      "z": 100.6,
+      "x": 69.6,
+      "z": 88.5,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_swordsman_22",
-      "type": "swordsman",
-      "x": 103.8,
-      "z": 97.6,
+      "id": "p1_elephant_21",
+      "type": "elephant",
+      "x": 90.6,
+      "z": 103.3,
       "player_id": 1,
       "team_id": 1,
-      "nation": "roman_republic"
+      "nation": "carthage"
+    },
+    {
+      "id": "p1_elephant_22",
+      "type": "elephant",
+      "x": 91.3,
+      "z": 101.7,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "carthage"
     },
     {
       "id": "p1_spearman_23",
       "type": "spearman",
-      "x": 92.3,
-      "z": 103.8,
+      "x": 91.0,
+      "z": 103.1,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_archer_24",
-      "type": "archer",
-      "x": 90.2,
-      "z": 100.4,
-      "player_id": 1,
-      "team_id": 1,
-      "nation": "roman_republic"
-    },
-    {
-      "id": "p1_swordsman_25",
+      "id": "p1_swordsman_24",
       "type": "swordsman",
-      "x": 71.4,
-      "z": 94.9,
+      "x": 72.0,
+      "z": 94.8,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_spearman_26",
-      "type": "spearman",
-      "x": 106.3,
-      "z": 96.4,
-      "player_id": 1,
-      "team_id": 1,
-      "nation": "roman_republic"
-    },
-    {
-      "id": "p1_spearman_27",
-      "type": "spearman",
-      "x": 105.1,
-      "z": 96.7,
-      "player_id": 1,
-      "team_id": 1,
-      "nation": "roman_republic"
-    },
-    {
-      "id": "p1_horse_swordsman_28",
-      "type": "horse_swordsman",
-      "x": 103.1,
-      "z": 96.7,
-      "player_id": 1,
-      "team_id": 1,
-      "nation": "roman_republic"
-    },
-    {
-      "id": "p1_spearman_29",
-      "type": "spearman",
-      "x": 74.9,
-      "z": 95.9,
-      "player_id": 1,
-      "team_id": 1,
-      "nation": "roman_republic"
-    },
-    {
-      "id": "p1_spearman_30",
-      "type": "spearman",
-      "x": 71.5,
-      "z": 94.9,
-      "player_id": 1,
-      "team_id": 1,
-      "nation": "roman_republic"
-    },
-    {
-      "id": "p1_archer_31",
+      "id": "p1_archer_25",
       "type": "archer",
-      "x": 85.0,
-      "z": 101.1,
+      "x": 97.8,
+      "z": 104.9,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_26",
+      "type": "swordsman",
+      "x": 87.8,
+      "z": 97.3,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_archer_27",
+      "type": "archer",
+      "x": 106.8,
+      "z": 102.9,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_28",
+      "type": "swordsman",
+      "x": 91.4,
+      "z": 103.4,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_archer_29",
+      "type": "archer",
+      "x": 71.3,
+      "z": 96.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_horse_swordsman_30",
+      "type": "horse_swordsman",
+      "x": 86.7,
+      "z": 108.4,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_31",
+      "type": "spearman",
+      "x": 89.1,
+      "z": 104.1,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
@@ -372,62 +395,89 @@
     {
       "id": "p1_swordsman_32",
       "type": "swordsman",
-      "x": 89.4,
-      "z": 105.8,
+      "x": 71.4,
+      "z": 95.2,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_spearman_33",
+      "id": "p1_horse_swordsman_33",
+      "type": "horse_swordsman",
+      "x": 106.6,
+      "z": 97.8,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_34",
+      "type": "swordsman",
+      "x": 75.9,
+      "z": 94.2,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_35",
       "type": "spearman",
-      "x": 75.1,
-      "z": 96.2,
+      "x": 97.1,
+      "z": 100.4,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_spearman_34",
+      "id": "p1_spearman_36",
       "type": "spearman",
-      "x": 90.8,
-      "z": 104.0,
+      "x": 116.6,
+      "z": 102.2,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_archer_35",
+      "id": "p1_archer_37",
       "type": "archer",
-      "x": 103.8,
-      "z": 96.0,
+      "x": 77.2,
+      "z": 92.3,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_swordsman_36",
+      "id": "p1_swordsman_38",
       "type": "swordsman",
-      "x": 110.3,
-      "z": 86.4,
+      "x": 71.1,
+      "z": 94.4,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_swordsman_37",
+      "id": "p1_elephant_39",
+      "type": "elephant",
+      "x": 86.7,
+      "z": 100.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "id": "p1_swordsman_40",
       "type": "swordsman",
-      "x": 96.1,
-      "z": 100.2,
+      "x": 101.0,
+      "z": 112.7,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     },
     {
-      "id": "p1_spearman_38",
+      "id": "p1_spearman_41",
       "type": "spearman",
-      "x": 71.0,
-      "z": 98.7,
+      "x": 73.5,
+      "z": 93.1,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
@@ -552,7 +602,9 @@
   },
   "victory": {
     "type": "elimination",
-    "key_structures": ["barracks"],
+    "key_structures": [
+      "barracks"
+    ],
     "defeat_conditions": [
       "no_key_structures",
       "no_commander",

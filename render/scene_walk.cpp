@@ -1468,6 +1468,11 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     if (preview == nullptr) {
       continue;
     }
+    if (preview->site_ghost) {
+      render_preview_like_entity(
+          entity, 0.82F, QVector3D(0.78F, 0.60F, 0.20F), 0.22F, preview->progress);
+      continue;
+    }
     render_preview_like_entity(entity,
                                0.62F,
                                preview->valid ? QVector3D(0.24F, 0.75F, 0.30F)

@@ -791,6 +791,8 @@ void ProductionManager::on_construction_confirm() {
         App::Core::submit_player_order(*m_world, owner_id, std::move(request)));
   }
 
+  const QString placed_type = m_pending_construction_type;
+
   m_is_placing_construction = false;
   m_is_direct_building_placement = false;
   m_active_placement_owner_id = 0;
@@ -803,7 +805,9 @@ void ProductionManager::on_construction_confirm() {
   m_wall_preview_rotation_explicit = false;
   m_pending_harvest_target_id = 0;
   m_pending_food_target_id = 0;
-  clear_preview_entities();
+  // The ghost stays where it was dropped. ProductionSystem adopts it for the
+  // build site and clears it when the site finishes or is abandoned.
+  hand_preview_to_construction_site(placed_type);
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
   emit placing_construction_changed();
@@ -1086,6 +1090,27 @@ void ProductionManager::clear_preview_entities() {
     if (m_world->get_entity(entity_id) != nullptr) {
       m_world->destroy_entity(entity_id);
     }
+  }
+  m_preview_entity_ids.clear();
+}
+
+void ProductionManager::hand_preview_to_construction_site(const QString& item_type) {
+  if (m_world == nullptr) {
+    clear_preview_entities();
+    return;
+  }
+
+  for (auto entity_id : m_preview_entity_ids) {
+    auto* preview =
+        m_world->try_get<Engine::Core::ConstructionPreviewComponent>(entity_id);
+    if (preview == nullptr) {
+      m_world->destroy_entity(entity_id);
+      continue;
+    }
+    preview->site_ghost = true;
+    preview->valid = true;
+    preview->progress = 0.0F;
+    preview->product_type = item_type.toStdString();
   }
   m_preview_entity_ids.clear();
 }

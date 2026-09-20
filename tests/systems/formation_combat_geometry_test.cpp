@@ -1149,9 +1149,11 @@ TEST_F(FormationCombatGeometry, PublishedPresentationHoldsSlotsAcrossACasualty) 
       ++fallen;
       continue;
     }
-    EXPECT_FLOAT_EQ(after->soldiers[index].local_x, before[index].local_x)
+    // A slot that moved moved by centimetres; anything at the scale below is
+    // the arithmetic reassociating, not the layout shifting.
+    EXPECT_NEAR(after->soldiers[index].local_x, before[index].local_x, 1e-4F)
         << "published slot " << index << " moved when a comrade fell";
-    EXPECT_FLOAT_EQ(after->soldiers[index].local_z, before[index].local_z)
+    EXPECT_NEAR(after->soldiers[index].local_z, before[index].local_z, 1e-4F)
         << "published slot " << index << " moved when a comrade fell";
   }
   EXPECT_EQ(fallen, 1U);

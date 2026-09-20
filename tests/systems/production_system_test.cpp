@@ -18,6 +18,7 @@
 #include "game/systems/marketplace_system.h"
 #include "game/systems/movement_pipeline.h"
 #include "game/systems/nav_grid.h"
+#include "game/systems/order_service.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/production_system.h"
@@ -522,6 +523,97 @@ TEST_F(ProductionSystemTest, CrewsOnDifferentSitesBuildSeparately) {
   Game::Systems::ProductionSystem system;
   run_until_built(world, system, crews, full_time * 3.0F);
   EXPECT_EQ(count_spawned(world, Game::Units::SpawnType::Home), 2);
+}
+
+auto site_ghosts(Engine::Core::World& world) -> std::vector<Engine::Core::Entity*> {
+  std::vector<Engine::Core::Entity*> ghosts;
+  for (auto* entity :
+       world.collect_entities_with<Engine::Core::ConstructionPreviewComponent>()) {
+    if (entity->get_component<Engine::Core::ConstructionPreviewComponent>()
+            ->site_ghost) {
+      ghosts.push_back(entity);
+    }
+  }
+  return ghosts;
+}
+
+TEST_F(ProductionSystemTest, TheGhostStandsOverTheSiteUntilTheBuildingReplacesIt) {
+  Game::Systems::NavGrid::initialize(64, 64);
+  const std::string product = "home";
+  const float full_time = Game::Systems::construction_build_time(product);
+  const auto site = Game::Systems::NavGrid::grid_to_world({32, 32});
+
+  Engine::Core::World world;
+  std::vector<CrewMember> crews{add_site_crew(world, product, site, true)};
+  Game::Systems::ProductionSystem system;
+
+  system.update(&world, 0.1F);
+  auto ghosts = site_ghosts(world);
+  ASSERT_EQ(ghosts.size(), 1U) << "the ghost stays standing over the site";
+  auto* ghost = ghosts.front();
+  const auto* transform = ghost->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  EXPECT_NEAR(transform->position.x, site.x(), 0.01F);
+  EXPECT_NEAR(transform->position.z, site.z(), 0.01F);
+  EXPECT_FALSE(ghost->has_component<Engine::Core::UnitComponent>())
+      << "a ghost is presentation only: no unit, no target, no population";
+
+  const auto ghost_id = ghost->get_id();
+  for (int tick = 0; tick < 5; ++tick) {
+    system.update(&world, 0.1F);
+  }
+  ghosts = site_ghosts(world);
+  ASSERT_EQ(ghosts.size(), 1U) << "the same ghost is kept, not respawned each tick";
+  EXPECT_EQ(ghosts.front()->get_id(), ghost_id);
+  EXPECT_GT(ghosts.front()
+                ->get_component<Engine::Core::ConstructionPreviewComponent>()
+                ->progress,
+            0.0F);
+
+  run_until_built(world, system, crews, full_time * 3.0F);
+  EXPECT_EQ(count_spawned(world, Game::Units::SpawnType::Home), 1);
+  EXPECT_TRUE(site_ghosts(world).empty()) << "the finished building replaces the ghost";
+}
+
+TEST_F(ProductionSystemTest, AnAbandonedSiteTakesItsGhostWithIt) {
+  Game::Systems::NavGrid::initialize(64, 64);
+  const std::string product = "home";
+  const auto site = Game::Systems::NavGrid::grid_to_world({32, 32});
+
+  Engine::Core::World world;
+  auto crew = add_site_crew(world, product, site, true);
+  Game::Systems::ProductionSystem system;
+
+  system.update(&world, 0.1F);
+  ASSERT_EQ(site_ghosts(world).size(), 1U);
+
+  Game::Systems::OrderService::clear_builder_task(world, crew.entity);
+  system.update(&world, 0.1F);
+  EXPECT_TRUE(site_ghosts(world).empty())
+      << "a crew pulled off the site leaves no ghost behind";
+}
+
+TEST_F(ProductionSystemTest, AGhostGoesWhenTheWholeCrewDies) {
+  Game::Systems::NavGrid::initialize(64, 64);
+  const std::string product = "home";
+  const auto site = Game::Systems::NavGrid::grid_to_world({32, 32});
+
+  Engine::Core::World world;
+  auto first = add_site_crew(world, product, site, true);
+  auto second = add_site_crew(world, product, site, true);
+  Game::Systems::ProductionSystem system;
+
+  system.update(&world, 0.1F);
+  ASSERT_EQ(site_ghosts(world).size(), 1U) << "one site, one ghost, two crews";
+
+  world.destroy_entity(first.entity->get_id());
+  system.update(&world, 0.1F);
+  EXPECT_EQ(site_ghosts(world).size(), 1U)
+      << "the survivor keeps the site, so the ghost keeps standing";
+
+  world.destroy_entity(second.entity->get_id());
+  system.update(&world, 0.1F);
+  EXPECT_TRUE(site_ghosts(world).empty()) << "no crew left, no site, no ghost";
 }
 
 TEST_F(ProductionSystemTest, BuilderCompletesMarketplaceConstruction) {

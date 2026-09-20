@@ -24,6 +24,7 @@
 #include "../game_config.h"
 #include "../map/map_transformer.h"
 #include "../map/terrain_service.h"
+#include "../units/building_spawn_setup.h"
 #include "../units/factory.h"
 #include "../units/squad.h"
 #include "../units/troop_config.h"
@@ -742,6 +743,150 @@ auto advance_shared_sites(Engine::Core::World& world,
   return finishing;
 }
 
+// The placement ghost the player dropped stays standing over the build site for
+// as long as a crew is actually raising it. The ghosts are pure presentation:
+// they are derived from the live builder sites every tick, so a site that is
+// finished, cancelled, abandoned or whose crew died takes its ghost with it.
+constexpr float k_site_ghost_match_radius_sq = 0.25F;
+
+struct SiteGhost {
+  int owner_id{0};
+  Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
+  std::string product_type;
+  float x{0.0F};
+  float z{0.0F};
+  float rotation_y{0.0F};
+  float progress{0.0F};
+  bool matched{false};
+};
+
+auto same_site(const SiteGhost& site,
+               int owner_id,
+               const std::string& product_type,
+               float x,
+               float z) -> bool {
+  if (site.owner_id != owner_id || site.product_type != product_type) {
+    return false;
+  }
+  const float dx = site.x - x;
+  const float dz = site.z - z;
+  return (dx * dx + dz * dz) <= k_site_ghost_match_radius_sq;
+}
+
+auto collect_site_ghosts(Engine::Core::World& world) -> std::vector<SiteGhost> {
+  std::vector<SiteGhost> sites;
+  for (auto [entity_ref, builder] :
+       world.entity_view<Engine::Core::BuilderProductionComponent>()) {
+    if (!raises_shared_site(builder)) {
+      continue;
+    }
+    if (construction_build_time(builder.product_type) <= 0.0F) {
+      continue;
+    }
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(entity_ref.get_id());
+    const int owner_id = unit != nullptr ? unit->owner_id : 0;
+    const float progress = site_progress(builder);
+    auto existing =
+        std::find_if(sites.begin(), sites.end(), [&](const SiteGhost& candidate) {
+          return same_site(candidate,
+                           owner_id,
+                           builder.product_type,
+                           builder.construction_site_x,
+                           builder.construction_site_z);
+        });
+    if (existing != sites.end()) {
+      existing->progress = std::max(existing->progress, progress);
+      continue;
+    }
+    sites.push_back(SiteGhost{.owner_id = owner_id,
+                              .nation_id = unit != nullptr
+                                               ? unit->nation_id
+                                               : Game::Systems::NationID::RomanRepublic,
+                              .product_type = builder.product_type,
+                              .x = builder.construction_site_x,
+                              .z = builder.construction_site_z,
+                              .rotation_y = builder.construction_site_rotation_y,
+                              .progress = progress});
+  }
+  return sites;
+}
+
+void raise_site_ghost(Engine::Core::World& world, const SiteGhost& site) {
+  auto* entity = world.create_entity();
+  if (entity == nullptr) {
+    return;
+  }
+  const auto entity_id = entity->get_id();
+  auto* transform = world.emplace<Engine::Core::TransformComponent>(entity_id);
+  auto* preview = world.emplace<Engine::Core::ConstructionPreviewComponent>(entity_id);
+  if (transform == nullptr || preview == nullptr) {
+    world.destroy_entity(entity_id);
+    return;
+  }
+
+  float surface_y = 0.0F;
+  const auto* services = Game::Session::services_for_or_null(world);
+  if (services != nullptr && services->terrain != nullptr &&
+      services->terrain->is_initialized()) {
+    surface_y = services->terrain->resolve_surface_world_y(site.x, site.z);
+  }
+  transform->position = {site.x, surface_y, site.z};
+  transform->rotation = {0.0F, site.rotation_y, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+
+  auto* renderable =
+      Game::Units::add_building_renderable(*entity, site.nation_id, site.product_type);
+  if (renderable == nullptr) {
+    world.destroy_entity(entity_id);
+    return;
+  }
+  renderable->visible = false;
+
+  preview->owner_id = site.owner_id;
+  preview->nation_id = site.nation_id;
+  preview->product_type = site.product_type;
+  preview->valid = true;
+  preview->site_ghost = true;
+  preview->progress = site.progress;
+}
+
+void sync_site_ghosts(Engine::Core::World& world) {
+  auto sites = collect_site_ghosts(world);
+
+  std::vector<Engine::Core::EntityID> stale;
+  for (auto [entity_id, preview, transform] :
+       world.view<Engine::Core::ConstructionPreviewComponent,
+                  Engine::Core::TransformComponent>()) {
+    if (!preview.site_ghost) {
+      continue;
+    }
+    auto site =
+        std::find_if(sites.begin(), sites.end(), [&](const SiteGhost& candidate) {
+          return !candidate.matched && same_site(candidate,
+                                                 preview.owner_id,
+                                                 preview.product_type,
+                                                 transform.position.x,
+                                                 transform.position.z);
+        });
+    if (site == sites.end()) {
+      stale.push_back(entity_id);
+      continue;
+    }
+    site->matched = true;
+    preview.valid = true;
+    preview.progress = site->progress;
+  }
+
+  for (const auto id : stale) {
+    world.destroy_entity(id);
+  }
+  for (const auto& site : sites) {
+    if (!site.matched) {
+      raise_site_ghost(world, site);
+    }
+  }
+}
+
 } // namespace
 
 void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
@@ -1367,6 +1512,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       clear_builder_task_target(*world, builder_prod, false);
     }
   }
+
+  sync_site_ghosts(*world);
 }
 
 } // namespace Game::Systems
