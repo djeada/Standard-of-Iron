@@ -430,11 +430,6 @@
       "gain": 0.75
     },
     {
-      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
-      "at": 12.1,
-      "gain": 0.7
-    },
-    {
       "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
       "at": 12.45,
       "gain": 0.8
@@ -453,11 +448,6 @@
       "file": "assets/audio/sfx/combat/arrow_impact_01.ogg",
       "at": 13.55,
       "gain": 0.6
-    },
-    {
-      "file": "assets/audio/sfx/combat/human_death_cry_v2.ogg",
-      "at": 13.85,
-      "gain": 0.7
     },
     {
       "file": "assets/audio/sfx/combat/blade_clash_03.ogg",
@@ -506,222 +496,197 @@
     },
     {
       "file": "assets/audio/sfx/build/construction_complete.ogg",
-      "at": 32.3,
+      "at": 33.5,
       "gain": 0.55
     },
     {
       "file": "assets/audio/sfx/ui/command_accept.ogg",
-      "at": 34.65,
+      "at": 35.85,
       "gain": 0.5
     },
     {
       "file": "assets/audio/sfx/orders/formation_pole_shift.ogg",
-      "at": 35.5,
+      "at": 36.7,
       "gain": 0.6
     },
     {
       "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 37.55,
+      "at": 38.75,
       "gain": 0.55
     },
     {
       "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 43.233,
+      "at": 44.433,
       "gain": 0.5
     },
     {
       "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 45.433,
+      "at": 46.633,
       "gain": 0.45
     },
     {
       "file": "assets/audio/sfx/orders/hold_shields_plant.ogg",
-      "at": 46.433,
+      "at": 47.633,
       "gain": 0.7
     },
     {
       "file": "assets/audio/sfx/orders/formation_standard_planted.ogg",
-      "at": 46.983,
+      "at": 48.183,
       "gain": 0.65
     },
     {
       "file": "assets/audio/sfx/ui/command_accept.ogg",
-      "at": 46.983,
+      "at": 48.183,
       "gain": 0.5
     },
     {
       "file": "assets/audio/sfx/ui/click_confirm.ogg",
-      "at": 47.433,
+      "at": 48.633,
       "gain": 0.45
     },
     {
       "file": "assets/audio/sfx/orders/formation_pole_shift.ogg",
-      "at": 49.683,
+      "at": 50.883,
       "gain": 0.6
     },
     {
       "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 53.8,
+      "at": 55.0,
       "gain": 0.5
     },
     {
       "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 55.7,
+      "at": 56.9,
       "gain": 0.45
     },
     {
       "file": "assets/audio/sfx/orders/hold_shields_plant.ogg",
-      "at": 57.7,
+      "at": 58.9,
       "gain": 0.6
     },
     {
       "file": "assets/audio/sfx/undead/skeletons_rise.ogg",
-      "at": 58.0,
+      "at": 59.2,
       "gain": 0.85
     },
     {
       "file": "assets/audio/sfx/combat/battlefield_distant_mass_01.ogg",
-      "at": 59.2,
+      "at": 60.4,
       "gain": 0.5
     },
     {
       "file": "assets/audio/sfx/undead/skeletons_rise.ogg",
-      "at": 60.5,
+      "at": 61.7,
       "gain": 0.6
     },
     {
       "file": "assets/audio/sfx/orders/attack_horn_stab.ogg",
-      "at": 61.5,
+      "at": 62.7,
       "gain": 0.6
     },
     {
       "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
-      "at": 62.9,
+      "at": 64.1,
       "gain": 0.68
     },
     {
       "file": "assets/audio/sfx/combat/charge_roar.ogg",
-      "at": 63.05,
+      "at": 64.25,
       "gain": 0.75
     },
     {
       "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
-      "at": 63.45,
+      "at": 64.65,
       "gain": 0.8
     },
     {
       "file": "assets/audio/sfx/combat/fireball_impact.ogg",
-      "at": 63.9,
+      "at": 65.1,
       "gain": 0.85
     },
     {
-      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
-      "at": 64.35,
-      "gain": 0.7
-    },
-    {
       "file": "assets/audio/sfx/combat/armour_hit_01.ogg",
-      "at": 64.75,
+      "at": 65.95,
       "gain": 0.72
     },
     {
       "file": "assets/audio/sfx/combat/blade_clash_03.ogg",
-      "at": 65.15,
+      "at": 66.35,
       "gain": 0.78
     },
     {
       "file": "assets/audio/sfx/combat/fireball_impact.ogg",
-      "at": 65.6,
+      "at": 66.8,
       "gain": 0.75
     },
     {
-      "file": "assets/audio/sfx/combat/human_death_cry_v2.ogg",
-      "at": 65.95,
-      "gain": 0.68
-    },
-    {
       "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
-      "at": 66.4,
+      "at": 67.6,
       "gain": 0.72
     },
     {
       "file": "assets/audio/sfx/combat/fireball_impact.ogg",
-      "at": 66.6,
+      "at": 67.8,
       "gain": 0.9
     },
     {
       "file": "assets/audio/sfx/combat/blade_clash_01.ogg",
-      "at": 67.05,
+      "at": 68.25,
       "gain": 0.82
     },
     {
-      "file": "assets/audio/sfx/combat/human_death_cry_v3.ogg",
-      "at": 67.45,
-      "gain": 0.72
-    },
-    {
       "file": "assets/audio/sfx/combat/armour_hit_02.ogg",
-      "at": 67.85,
+      "at": 69.05,
       "gain": 0.75
     },
     {
       "file": "assets/audio/sfx/combat/fireball_impact.ogg",
-      "at": 68.25,
+      "at": 69.45,
       "gain": 0.8
     },
     {
       "file": "assets/audio/sfx/combat/sword_hit_01.ogg",
-      "at": 68.7,
+      "at": 69.9,
       "gain": 0.78
     },
     {
-      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
-      "at": 69.1,
-      "gain": 0.7
-    },
-    {
       "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
-      "at": 69.5,
+      "at": 70.7,
       "gain": 0.8
     },
     {
       "file": "assets/audio/sfx/combat/fireball_impact.ogg",
-      "at": 69.95,
+      "at": 71.15,
       "gain": 0.85
     },
     {
       "file": "assets/audio/sfx/combat/armour_hit_01.ogg",
-      "at": 70.4,
-      "gain": 0.72
-    },
-    {
-      "file": "assets/audio/sfx/combat/human_death_cry_v2.ogg",
-      "at": 70.8,
+      "at": 71.6,
       "gain": 0.72
     },
     {
       "file": "assets/audio/sfx/combat/blade_clash_03.ogg",
-      "at": 71.2,
+      "at": 72.4,
       "gain": 0.78
     },
     {
       "file": "assets/audio/sfx/combat/fireball_impact.ogg",
-      "at": 71.65,
+      "at": 72.85,
       "gain": 0.8
     },
     {
       "file": "assets/audio/sfx/combat/soldiers_victory_cheer.ogg",
-      "at": 72.1,
+      "at": 73.3,
       "gain": 0.6
     },
     {
       "file": "assets/audio/sfx/ui/click_confirm.ogg",
-      "at": 72.5,
+      "at": 73.7,
       "gain": 0.4
     },
     {
       "file": "assets/audio/sfx/build/placement_confirmed.ogg",
-      "at": 73.4,
+      "at": 74.6,
       "gain": 0.45
     }
   ]

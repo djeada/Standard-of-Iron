@@ -1469,8 +1469,17 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
       continue;
     }
     if (preview->site_ghost) {
-      render_preview_like_entity(
-          entity, 0.82F, QVector3D(0.78F, 0.60F, 0.20F), 0.22F, preview->progress);
+      // A site ghost is a plan, not a building. It starts barely there and
+      // firms up as the crew works, so the moment of placing it never reads as
+      // the building already being finished, and the thing that finally stands
+      // on the spot is the real structure rather than this.
+      const float ghost_alpha =
+          0.22F + 0.42F * std::clamp(preview->progress, 0.0F, 1.0F);
+      render_preview_like_entity(entity,
+                                 ghost_alpha,
+                                 QVector3D(0.78F, 0.60F, 0.20F),
+                                 0.26F,
+                                 preview->progress);
       continue;
     }
     render_preview_like_entity(entity,

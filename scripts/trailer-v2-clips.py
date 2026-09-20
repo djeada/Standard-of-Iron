@@ -69,8 +69,14 @@ CLIPS = [
     ("bridge_column", "palm_column.mp4", 22.0, 13.5, 2.93),
     ("town_wide", "forest_town.mp4", 0.3, 3.7),
     ("town_crews", "forest_town.mp4", 4.6, 5.0),
-    ("town_build", "forest_town.mp4", 10.8, 6.8),
-    ("town_busy", "forest_town.mp4", 20.6, 4.0),
+    # The beat is the crews raising the buildings, and the old window cut away
+    # a second after the last site was placed -- four ghosts dropped and nobody
+    # ever seen working on them. It now starts after the fixture's first
+    # placement (which the town's ground refuses, and the refusal notice sits
+    # on screen for two and a half seconds) and runs long enough to cover the
+    # remaining sitings and the whole stretch of crews at work.
+    ("town_build", "forest_town.mp4", 14.3, 8.0),
+    ("town_busy", "forest_town.mp4", 22.4, 4.0),
 ]
 
 
