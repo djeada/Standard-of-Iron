@@ -411,7 +411,7 @@ public:
   void terrain_feature(const TerrainFeatureCmd& cmd);
   void terrain_scatter(const TerrainScatterCmd& cmd);
 
-  void local_light(const Render::LocalLight& light);
+  void local_light(const Render::LocalLight& light) override;
 
   struct TemplatePrewarmProgress {
     enum class Phase {

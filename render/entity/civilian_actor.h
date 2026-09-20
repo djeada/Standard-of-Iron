@@ -44,6 +44,12 @@ struct CivilianActor {
   std::uint16_t instance{0};
   std::uint32_t seed{0};
   bool distant{false};
+  // Where this actor was a moment ago. Set these and the outgoing clip is
+  // blended out over `blend_weight`, so a change of task eases instead of
+  // snapping mid-stride.
+  std::uint16_t blend_clip{0xFFFFU};
+  float blend_phase{0.0F};
+  float blend_weight{0.0F};
 };
 
 void begin_civilian_actors();

@@ -4234,6 +4234,40 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     result.push_back(std::move(s));
   }
 
+  for (const auto nation : {Nation::RomanRepublic, Nation::Carthage}) {
+    const bool roman = nation == Nation::RomanRepublic;
+    auto s = definition(
+        roman ? QStringLiteral("siege_roman_showcase") : QStringLiteral("siege_carthage_showcase"),
+        QStringLiteral("Siege Engines: March, Wind and Release"),
+        QStringLiteral("Close inspection of rolling wheels, braced carriages, faction standards, "
+                       "winding mechanisms and recoil during repeated live shots."),
+        24.0F, {11.0F, 35.0F, 145.0F});
+    s.camera_focus = QVector3D(0.0F, 0.6F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_terrain_scatter = true;
+    s.groups = {
+        group(QStringLiteral("ballista"), Troop::Ballista, 1, 1, {-1.8F, 0, -3.0F}, 1),
+        group(QStringLiteral("catapult"), Troop::Catapult, 1, 1, {1.8F, 0, -3.0F}, 1),
+        group(QStringLiteral("target"), Troop::Spearman, 2, 1, {0, 0, 11.0F}, 6)};
+    s.groups[0].nation_id = nation;
+    s.groups[1].nation_id = nation;
+    s.groups[2].health_override = 9000;
+    s.groups[2].max_health_override = 9000;
+    s.steps.push_back(at(0.0F, Command::Hold, QStringLiteral("target")));
+    for (int engine = 0; engine < 2; ++engine) {
+      const auto name = engine == 0 ? QStringLiteral("ballista") : QStringLiteral("catapult");
+      auto march = at(0.0F, Command::Move, name);
+      march.destination = {engine == 0 ? -1.8F : 1.8F, 0.0F, 0.0F};
+      s.steps.push_back(march);
+      s.steps.push_back(at(5.0F, Command::Attack, name, QStringLiteral("target")));
+      s.expectations.push_back(expectation(Expect::GroupExists, name));
+      s.expectations.push_back(expectation(Expect::ProjectileImpactSynchronized,
+                                           name, QStringLiteral("target")));
+    }
+    result.push_back(std::move(s));
+  }
+
   {
     auto s = definition(
         QString::fromLatin1(k_catapult_impact_id),

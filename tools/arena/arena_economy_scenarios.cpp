@@ -265,8 +265,13 @@ auto build_economy_definitions() -> std::vector<ArenaScenarioDefinition> {
         field.owner_id = nation + 1;
         field.ai_controlled = false;
         if (variant == 1) {
+          // Spacing is applied about the group's centre
+          // (origin + spacing * (index - (count - 1) / 2)), so the origin has
+          // to be offset by half the span or the two nations' inner columns
+          // both land on x = 0 and sit inside each other.
           field.count = 2;
-          field.spacing = {nation == 0 ? -16.0F : 16.0F, 0, 0};
+          field.origin = {nation == 0 ? -19.0F : 19.0F, 0, field.origin.z()};
+          field.spacing = {nation == 0 ? -18.0F : 18.0F, 0, 0};
         }
         s.groups.push_back(std::move(field));
         ArenaExpectation lifecycle;
@@ -318,9 +323,9 @@ auto build_economy_definitions() -> std::vector<ArenaScenarioDefinition> {
                    "for the visibility boundary. One house is destroyed mid-run "
                    "and must stop smoking.");
     s.duration_seconds = variant == 1 ? 45 : soup ? 40 : 90;
-    s.camera = {variant == 1 ? 74.0F : soup ? 14.0F : 40.0F, 45.0F, 30.0F};
+    s.camera = {variant == 1 ? 68.0F : soup ? 14.0F : 40.0F, 45.0F, 30.0F};
     s.camera_focus = soup ? QVector3D(-9, 0, 4) : QVector3D(0, 0, 0);
-    s.arena_floor_half_extent = variant == 1 ? 60 : 30;
+    s.arena_floor_half_extent = variant == 1 ? 52 : 30;
     s.terrain_grid_extent = 160;
     s.select_spawned_units = false;
     s.suppress_spawn_anchor = true;
@@ -335,19 +340,23 @@ auto build_economy_definitions() -> std::vector<ArenaScenarioDefinition> {
     for (int row = 0; row < rows; ++row) {
       for (int nation = 0; nation < 2; ++nation) {
         const auto name = QStringLiteral("house_%1_%2").arg(row).arg(nation);
-        auto house = seat_building(name,
-                                   Game::Units::SpawnType::Home,
-                                   {nation == 0 ? -9.0F : 9.0F,
-                                    0,
-                                    static_cast<float>(row) * 13 - (rows - 1) * 6.5F},
-                                   0);
+        auto house =
+            seat_building(name,
+                          Game::Units::SpawnType::Home,
+                          {nation == 0 ? -9.0F : 9.0F,
+                           0,
+                           // Each row spans 2 x spacing about its own
+                           // centre, so the row pitch has to clear
+                           // that span or neighbouring rows interleave.
+                           (static_cast<float>(row) * 20.0F) - ((rows - 1) * 10.0F)},
+                          0);
         house.nation_id = nation == 0 ? Nation::RomanRepublic : Nation::Carthage;
         house.owner_id = nation + 1;
         house.ai_controlled = false;
         if (!soup) {
           // Several neighbours per row, so lockstep would be obvious.
           house.count = variant == 1 ? 3 : 3;
-          house.spacing = {0, 0, 11.0F};
+          house.spacing = {0, 0, 8.0F};
         }
         s.groups.push_back(std::move(house));
         ArenaExpectation lifecycle;

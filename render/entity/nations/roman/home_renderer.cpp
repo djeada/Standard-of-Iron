@@ -276,10 +276,26 @@ void register_home_renderer(Render::GL::EntityRendererRegistry& registry) {
   register_home_smoke_anchor(
       false,
       HomeSmokeAnchor{.vent = QVector3D(0.0F, 1.66F, -0.42F),
-                      .smoke_tint = QVector3D(0.34F, 0.32F, 0.30F),
-                      .plume_radius = 1.15F,
+                      .smoke_tint = QVector3D(0.56F, 0.54F, 0.51F),
+                      .plume_radius = 0.68F,
                       .doorstep = QVector3D(0.0F, 0.16F, 1.24F),
-                      .outward = QVector3D(0.0F, 0.0F, 1.0F)});
+                      .outward = QVector3D(0.0F, 0.0F, 1.0F),
+                      // A curtain hung in the door opening.
+                      .cloth_top = QVector3D(0.0F, 0.74F, 0.99F),
+                      .cloth_span = 0.30F,
+                      .cloth_indigo = false,
+                      .cloth_at_door = true,
+                      .lamp = QVector3D(0.0F, 0.165F, 1.22F),
+                      // The side-wall windows the model already cuts, with a
+                      // leaf hinged at each jamb.
+                      .window = QVector3D(0.95F, 0.58F, 0.30F),
+                      .shutter_width = 0.16F,
+                      .shutter_height = 0.40F,
+                      // A line strung between two of the portico columns.
+                      .line_a = QVector3D(-0.72F, 0.99F, 0.95F),
+                      .line_b = QVector3D(-0.38F, 0.99F, 0.95F),
+                      .line_pole = false,
+                      .max_laundry = 2});
   register_home_renderer_variant(
       registry,
       HomeRendererConfig{.nation_slug = "roman",

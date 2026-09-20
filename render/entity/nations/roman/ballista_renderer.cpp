@@ -25,8 +25,9 @@ void draw_ballista_body(const DrawContext& p,
                         ISubmitter& out,
                         Mesh* unit,
                         Texture* white,
-                        const QVector3D& team_color) {
-  draw_ballista_geometry(p, out, unit, white, team_color, palette());
+                        const QVector3D& team_color,
+                        const SiegeMotion& motion) {
+  draw_ballista_geometry(p, out, unit, white, team_color, palette(), motion);
 }
 
 } // namespace

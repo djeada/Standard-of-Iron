@@ -74,6 +74,7 @@ public:
 
 private:
   auto create_dust_geometry() -> bool;
+  auto create_hearth_smoke_geometry() -> bool;
   auto create_fireball_geometry() -> bool;
   auto create_metal_spark_geometry() -> bool;
   auto create_weapon_arc_geometry() -> bool;
@@ -85,6 +86,7 @@ private:
   GL::Shader* m_blood_shader = nullptr;
 
   StaticMeshBuffers m_dust_mesh;
+  StaticMeshBuffers m_hearth_smoke_mesh;
   StaticMeshBuffers m_fireball_mesh;
   StaticMeshBuffers m_metal_spark_mesh;
   StaticMeshBuffers m_weapon_arc_mesh;

@@ -80,6 +80,8 @@ public:
                            float radius,
                            float intensity,
                            float time) = 0;
+  // A warm point light: a lamp or hearth seen through a doorway at night.
+  virtual void local_light(const Render::LocalLight& light) { (void)light; }
   // A slow domestic plume: rises, widens, drifts and fades. No embers, no
   // light -- a hearth venting through a roof, not a fire.
   virtual void hearth_smoke(const QVector3D& position,
@@ -183,6 +185,9 @@ public:
                    float intensity,
                    float time) override {
     m_inner.healer_aura(position, color, radius, intensity, time);
+  }
+  void local_light(const Render::LocalLight& light) override {
+    m_inner.local_light(light);
   }
   void hearth_smoke(const QVector3D& position,
                     const QVector3D& color,
@@ -430,6 +435,12 @@ public:
     cmd.time = time;
     m_queue->submit(std::move(cmd));
   }
+  void local_light(const Render::LocalLight& light) override {
+    if (m_queue == nullptr || light.intensity <= 0.0F || light.radius <= 0.0F) {
+      return;
+    }
+    m_queue->submit_local_light(light);
+  }
   void hearth_smoke(const QVector3D& position,
                     const QVector3D& color,
                     float radius,
@@ -617,6 +628,12 @@ public:
                    float time) override {
     if (m_fallback != nullptr) {
       m_fallback->healer_aura(position, color, radius, intensity, time);
+    }
+  }
+
+  void local_light(const Render::LocalLight& light) override {
+    if (m_fallback != nullptr) {
+      m_fallback->local_light(light);
     }
   }
 

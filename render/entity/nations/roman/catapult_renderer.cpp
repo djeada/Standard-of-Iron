@@ -60,11 +60,16 @@ inline auto k_buffer_end(float side) -> QVector3D {
 inline auto arm_swing_rad(const CatapultAnimContext& anim_ctx) -> float {
   switch (anim_ctx.state) {
   case CatapultAnimState::Loading:
-    return k_arm_rest_rad +
-           ((k_arm_cocked_rad - k_arm_rest_rad) * anim_ctx.loading_progress);
+    return k_arm_rest_rad + ((k_arm_cocked_rad - k_arm_rest_rad) *
+                             siege_winding(anim_ctx.loading_progress));
   case CatapultAnimState::Firing:
-    return k_arm_cocked_rad - ((k_arm_cocked_rad - k_arm_rest_rad) *
-                               std::min(1.0F, anim_ctx.firing_progress * 1.35F));
+    return k_arm_cocked_rad -
+           ((k_arm_cocked_rad - k_arm_rest_rad) *
+            siege_release(anim_ctx.firing_progress)) +
+           0.075F * std::sin(anim_ctx.firing_progress * 22.0F) *
+               siege_release(anim_ctx.firing_progress) *
+               std::exp(-anim_ctx.firing_progress * 5.0F) *
+               (1.0F - anim_ctx.firing_progress);
   case CatapultAnimState::Idle:
   case CatapultAnimState::Resetting:
     break;
@@ -95,7 +100,7 @@ get_anim_context(const Engine::Core::Entity* entity) -> CatapultAnimContext {
   case Engine::Core::CatapultLoadingComponent::LoadingState::Loading:
     ctx.state = CatapultAnimState::Loading;
     ctx.loading_progress = loading->get_loading_progress();
-    ctx.show_stone = true;
+    ctx.show_stone = ctx.loading_progress > 0.72F;
     break;
   case Engine::Core::CatapultLoadingComponent::LoadingState::ReadyToFire:
     ctx.state = CatapultAnimState::Firing;
@@ -106,7 +111,7 @@ get_anim_context(const Engine::Core::Entity* entity) -> CatapultAnimContext {
   case Engine::Core::CatapultLoadingComponent::LoadingState::Firing:
     ctx.state = CatapultAnimState::Firing;
     ctx.firing_progress = loading->get_firing_progress();
-    ctx.show_stone = ctx.firing_progress < 0.3F;
+    ctx.show_stone = false;
     break;
   }
 
@@ -191,56 +196,35 @@ void draw_base_frame(const DrawContext& p,
 void draw_wheels(const DrawContext& p,
                  ISubmitter& out,
                  Texture* white,
-                 const RomanCatapultPalette& c) {
-
-  float const wheel_radius = 0.18F;
-
-  auto draw_wheel = [&](const QVector3D& hub, float side) {
-    QVector3D const wood_inner = hub - QVector3D(side * 0.030F, 0, 0);
-    QVector3D const wood_outer = hub + QVector3D(side * 0.058F, 0, 0);
-    QVector3D const tyre_inner = hub + QVector3D(side * 0.002F, 0, 0);
-    QVector3D const tyre_outer = hub + QVector3D(side * 0.030F, 0, 0);
-
-    draw_cyl(
-        out, p.model, wood_inner, wood_outer, wheel_radius * 0.90F, c.wood_dark, white);
-    draw_cyl(out, p.model, tyre_inner, tyre_outer, wheel_radius, c.metal_iron, white);
+                 const RomanCatapultPalette& c,
+                 const SiegeMotion& motion) {
+  for (float z : {-0.25F, 0.25F}) {
+    draw_siege_wheel(out,
+                     white,
+                     p.model,
+                     {-0.57F, 0.21F, z},
+                     0.21F,
+                     motion.left_roll,
+                     c.wood_light,
+                     c.metal_iron,
+                     c.metal_bronze);
+    draw_siege_wheel(out,
+                     white,
+                     p.model,
+                     {0.57F, 0.21F, z},
+                     0.21F,
+                     motion.right_roll,
+                     c.wood_light,
+                     c.metal_iron,
+                     c.metal_bronze);
     draw_cyl(out,
              p.model,
-             wood_inner - QVector3D(side * 0.022F, 0, 0),
-             wood_outer + QVector3D(side * 0.022F, 0, 0),
-             0.045F,
-             c.metal_bronze,
+             {-0.60F, 0.21F, z},
+             {0.60F, 0.21F, z},
+             0.027F,
+             c.metal_iron,
              white);
-
-    for (int spoke = 0; spoke < 6; ++spoke) {
-      float const angle = static_cast<float>(spoke) * std::numbers::pi_v<float> / 3.0F;
-      QVector3D const face(hub.x() + side * 0.070F, hub.y(), hub.z());
-      QVector3D const rim(face.x(),
-                          face.y() + std::sin(angle) * wheel_radius * 0.78F,
-                          face.z() + std::cos(angle) * wheel_radius * 0.78F);
-      draw_cyl(out, p.model, face, rim, 0.017F, c.wood_light, white);
-    }
-  };
-
-  draw_wheel(QVector3D(-0.42F, wheel_radius, -0.25F), -1.0F);
-  draw_wheel(QVector3D(-0.42F, wheel_radius, 0.25F), -1.0F);
-  draw_wheel(QVector3D(0.42F, wheel_radius, -0.25F), 1.0F);
-  draw_wheel(QVector3D(0.42F, wheel_radius, 0.25F), 1.0F);
-
-  draw_cyl(out,
-           p.model,
-           QVector3D(-0.40F, wheel_radius, -0.25F),
-           QVector3D(0.40F, wheel_radius, -0.25F),
-           0.025F,
-           c.metal_iron,
-           white);
-  draw_cyl(out,
-           p.model,
-           QVector3D(-0.40F, wheel_radius, 0.25F),
-           QVector3D(0.40F, wheel_radius, 0.25F),
-           0.025F,
-           c.metal_iron,
-           white);
+  }
 }
 
 void draw_torsion_mechanism(const DrawContext& p,
@@ -486,55 +470,94 @@ void draw_decorations(const DrawContext& p,
 void draw_windlass(const DrawContext& p,
                    ISubmitter& out,
                    Texture* white,
-                   const RomanCatapultPalette& c) {
-
+                   const RomanCatapultPalette& c,
+                   const CatapultAnimContext& anim_ctx) {
+  const float winding = anim_ctx.state == CatapultAnimState::Loading
+                            ? siege_winding(anim_ctx.loading_progress)
+                        : anim_ctx.state == CatapultAnimState::Firing
+                            ? 1.0F - siege_release(anim_ctx.firing_progress)
+                            : 0.0F;
+  const float crank = winding * 6.0F * std::numbers::pi_v<float>;
   draw_cyl(out,
            p.model,
-           QVector3D(-0.20F, 0.22F, 0.30F),
-           QVector3D(0.20F, 0.22F, 0.30F),
-           0.05F,
+           {-0.25F, 0.25F, 0.34F},
+           {0.25F, 0.25F, 0.34F},
+           0.045F,
            c.wood_frame,
            white);
-
-  draw_cyl(out,
-           p.model,
-           QVector3D(-0.25F, 0.22F, 0.30F),
-           QVector3D(-0.25F, 0.32F, 0.30F),
-           0.02F,
-           c.wood_dark,
-           white);
-  draw_cyl(out,
-           p.model,
-           QVector3D(0.25F, 0.22F, 0.30F),
-           QVector3D(0.25F, 0.32F, 0.30F),
-           0.02F,
-           c.wood_dark,
-           white);
-
-  draw_cyl(out,
-           p.model,
-           QVector3D(-0.15F, 0.22F, 0.30F),
-           QVector3D(0.15F, 0.22F, 0.30F),
-           0.06F,
-           c.rope,
-           white);
+  for (int wrap = 0; wrap < 7; ++wrap) {
+    const float x = -0.12F + static_cast<float>(wrap) * 0.04F;
+    draw_cyl(out,
+             p.model,
+             {x - 0.012F, 0.25F, 0.34F},
+             {x + 0.012F, 0.25F, 0.34F},
+             0.055F,
+             c.rope,
+             white);
+  }
+  for (float side : {-1.0F, 1.0F}) {
+    const QVector3D hub(side * 0.27F, 0.25F, 0.34F);
+    const QVector3D grip =
+        hub +
+        QVector3D(0, std::cos(crank) * side * 0.11F, std::sin(crank) * side * 0.11F);
+    draw_cyl(out, p.model, hub, grip, 0.018F, c.metal_bronze, white);
+    draw_cyl(out,
+             p.model,
+             grip,
+             grip + QVector3D(side * 0.06F, 0, 0),
+             0.023F,
+             c.wood_dark,
+             white);
+  }
+  if (anim_ctx.state == CatapultAnimState::Loading ||
+      (anim_ctx.state == CatapultAnimState::Firing &&
+       anim_ctx.firing_progress == 0.0F)) {
+    const float angle = arm_swing_rad(anim_ctx);
+    const QVector3D anchor(0,
+                           k_pivot_y + std::sin(angle) * k_arm_length * 0.7F,
+                           k_pivot_z - std::cos(angle) * k_arm_length * 0.7F);
+    draw_cyl(out, p.model, {0, 0.29F, 0.34F}, anchor, 0.012F, c.rope, white);
+  }
 }
 
 void draw_catapult_body(const DrawContext& p,
                         ISubmitter& out,
                         Mesh* unit_cube,
                         Texture* white_tex,
-                        const QVector3D& team_color) {
+                        const QVector3D& team_color,
+                        const SiegeMotion& motion) {
   auto palette = make_palette(team_color);
   auto anim_ctx = get_anim_context(p.entity);
 
-  draw_base_frame(p, out, unit_cube, white_tex, palette);
-  draw_wheels(p, out, white_tex, palette);
-  draw_torsion_mechanism(p, out, unit_cube, white_tex, palette);
-  draw_stanchions(p, out, white_tex, palette);
-  draw_throwing_arm(p, out, unit_cube, white_tex, palette, anim_ctx);
-  draw_windlass(p, out, white_tex, palette);
-  draw_decorations(p, out, unit_cube, white_tex, palette);
+  DrawContext body = p;
+  auto carriage_motion = motion;
+  carriage_motion.recoil *= 1.6F;
+  body.model = siege_body_model(p, carriage_motion);
+  draw_base_frame(body, out, unit_cube, white_tex, palette);
+  draw_wheels(p, out, white_tex, palette, motion);
+  draw_torsion_mechanism(body, out, unit_cube, white_tex, palette);
+  draw_stanchions(body, out, white_tex, palette);
+  draw_throwing_arm(body, out, unit_cube, white_tex, palette, anim_ctx);
+  draw_windlass(body, out, white_tex, palette, anim_ctx);
+  draw_decorations(body, out, unit_cube, white_tex, palette);
+  draw_siege_regalia(
+      body, out, unit_cube, white_tex, palette.team, palette.metal_bronze, false);
+  for (float side : {-1.0F, 1.0F}) {
+    draw_cyl(out,
+             body.model,
+             {side * 0.42F, 0.28F, 0.32F},
+             {side * 0.245F, 0.79F, -0.20F},
+             0.035F,
+             palette.wood_dark,
+             white_tex);
+    draw_cyl(out,
+             body.model,
+             {side * 0.245F, 0.74F, -0.20F},
+             {side * 0.245F, 0.82F, -0.20F},
+             0.052F,
+             palette.metal_bronze,
+             white_tex);
+  }
 }
 
 } // namespace

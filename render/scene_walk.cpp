@@ -1156,6 +1156,17 @@ void Renderer::render_world(Engine::Core::World* world) {
   std::lock_guard<std::recursive_mutex> const guard(world->get_entity_mutex());
 
   m_farm_activity.begin_frame(world, m_accumulated_time, simulation_world);
+  // Lamps follow the scene's own key light rather than a clock, so they behave
+  // under any lighting profile, a locked hour or a storm. Intensity alone is
+  // not the signal: mediterranean_summer still reports 0.44 at 21:00 and only
+  // the colour goes dim, so this measures the light the scene actually casts.
+  {
+    const auto& lighting = environment_lighting();
+    const auto& key = lighting.primary_color;
+    const float key_luma = ((key.x() * 0.30F) + (key.y() * 0.59F) + (key.z() * 0.11F)) *
+                           lighting.primary_intensity;
+    m_home_activity.set_night(std::clamp((0.46F - key_luma) / 0.28F, 0.0F, 1.0F));
+  }
   m_home_activity.begin_frame(world, m_accumulated_time, simulation_world);
 
   m_cached_world = simulation_world;

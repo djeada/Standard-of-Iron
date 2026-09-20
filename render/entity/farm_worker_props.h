@@ -16,4 +16,9 @@ struct FarmWorkerProps {
 // Registers the ids and their humanoid contributions on first call.
 [[nodiscard]] auto farm_worker_props() -> const FarmWorkerProps&;
 
+// Registers every field prop with the archetype registry so warm_all() builds
+// the geometry at renderer init rather than on the first frame that draws a
+// field. Call once, from the farm renderer registration.
+void register_farm_worker_prop_archetypes();
+
 } // namespace Render::GL

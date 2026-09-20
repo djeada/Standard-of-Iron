@@ -3,6 +3,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <vector>
@@ -10,6 +11,7 @@
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
+#include "render/equipment/render_archetype_registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/asset/bind_skeleton.h"
 #include "render/humanoid/asset/humanoid_spec.h"
@@ -78,6 +80,32 @@ auto bowl_role_colors(const void* variant_void,
 
 } // namespace
 
+void register_home_prop_archetypes() {
+  auto& registry = RenderArchetypeRegistry::instance();
+  registry.register_archetype("home_soup_puddle", [] { (void)soup_puddle_archetype(); });
+  registry.register_archetype("home_lamp_glow", [] { (void)lamp_glow_archetype(); });
+  registry.register_archetype("home_washing_line", [] { (void)washing_line_archetype(); });
+  registry.register_archetype("home_washing_pole", [] { (void)washing_pole_archetype(); });
+  registry.register_archetype("home_cloth", [] {
+    for (bool indigo : {false, true}) {
+      (void)cloth_strip_archetype(indigo);
+      (void)cloth_strip_tail_archetype(indigo);
+    }
+  });
+  registry.register_archetype("home_shutter", [] {
+    for (bool carthage : {false, true}) {
+      (void)shutter_leaf_archetype(carthage);
+    }
+  });
+  registry.register_archetype("home_laundry", [] {
+    for (int colour = 0; colour < 4; ++colour) {
+      (void)laundry_piece_archetype(colour);
+    }
+  });
+  // The bowl is humanoid equipment, so warming it also warms its contribution.
+  registry.register_archetype("home_soup_bowl", [] { (void)home_props(); });
+}
+
 auto home_props() -> const HomeProps& {
   static const HomeProps props = []() {
     HomeProps result{};
@@ -123,6 +151,118 @@ auto soup_puddle_archetype() -> const RenderArchetype& {
                            lobe.radius,
                            lobe.color);
     }
+    return std::move(builder).build();
+  }();
+  return archetype;
+}
+
+namespace {
+auto build_cloth_link(const QVector3D& cloth, bool tail) -> RenderArchetype {
+  RenderArchetypeBuilder builder{tail ? "home_cloth_tail" : "home_cloth_strip"};
+  // Authored hanging from the origin so a rotation about x/z at the top edge
+  // swings the free end, the way a hung cloth actually moves.
+  const float length = k_cloth_link_length;
+  builder.add_box(QVector3D(0.0F, -length * 0.5F, 0.0F),
+                  QVector3D(0.055F, length * 0.5F + 0.004F, 0.008F),
+                  tail ? cloth * 0.94F : cloth);
+  if (tail) {
+    // A heavier hem, which is what gives the swing its weight.
+    builder.add_box(QVector3D(0.0F, -length - 0.008F, 0.0F),
+                    QVector3D(0.052F, 0.012F, 0.010F),
+                    cloth * 0.76F);
+  }
+  return std::move(builder).build();
+}
+constexpr QVector3D k_punic_cloth{0.21F, 0.24F, 0.46F};
+constexpr QVector3D k_roman_cloth{0.53F, 0.17F, 0.14F};
+} // namespace
+
+auto cloth_strip_archetype(bool indigo) -> const RenderArchetype& {
+  static const RenderArchetype punic = build_cloth_link(k_punic_cloth, false);
+  static const RenderArchetype roman = build_cloth_link(k_roman_cloth, false);
+  return indigo ? punic : roman;
+}
+
+auto cloth_strip_tail_archetype(bool indigo) -> const RenderArchetype& {
+  static const RenderArchetype punic = build_cloth_link(k_punic_cloth, true);
+  static const RenderArchetype roman = build_cloth_link(k_roman_cloth, true);
+  return indigo ? punic : roman;
+}
+
+auto shutter_leaf_archetype(bool carthage) -> const RenderArchetype& {
+  // A unit leaf: one wide, one tall, hinged along the origin's vertical axis.
+  // Two thin battens across it so it reads as boards rather than a plank.
+  static const auto build = [](const QVector3D& wood, const QVector3D& batten) {
+    RenderArchetypeBuilder builder{"home_shutter_leaf"};
+    builder.add_box(QVector3D(0.0F, 0.0F, 0.5F), QVector3D(0.012F, 0.5F, 0.5F), wood);
+    for (const float y : {-0.28F, 0.28F}) {
+      builder.add_box(
+          QVector3D(0.014F, y, 0.5F), QVector3D(0.006F, 0.05F, 0.44F), batten);
+    }
+    return std::move(builder).build();
+  };
+  static const RenderArchetype roman =
+      build(QVector3D(0.36F, 0.24F, 0.14F), QVector3D(0.30F, 0.19F, 0.11F));
+  static const RenderArchetype punic =
+      build(QVector3D(0.30F, 0.22F, 0.15F), QVector3D(0.24F, 0.17F, 0.12F));
+  return carthage ? punic : roman;
+}
+
+auto laundry_piece_archetype(int colour) -> const RenderArchetype& {
+  // Undyed linen, ochre, indigo and madder: what a Mediterranean household
+  // actually hung out. A unit piece, hung from the origin, scaled per piece.
+  static const auto build = [](const QVector3D& cloth) {
+    RenderArchetypeBuilder builder{"home_laundry_piece"};
+    builder.add_box(QVector3D(0.0F, -0.5F, 0.0F), QVector3D(0.5F, 0.5F, 0.006F), cloth);
+    // Folded over the line.
+    builder.add_box(
+        QVector3D(0.0F, -0.02F, 0.0F), QVector3D(0.5F, 0.024F, 0.014F), cloth * 0.9F);
+    return std::move(builder).build();
+  };
+  static const std::array<RenderArchetype, k_laundry_colours> pieces{{
+      build(QVector3D(0.80F, 0.74F, 0.60F)),
+      build(QVector3D(0.66F, 0.46F, 0.22F)),
+      build(QVector3D(0.22F, 0.25F, 0.46F)),
+      build(QVector3D(0.55F, 0.19F, 0.15F)),
+  }};
+  return pieces[static_cast<std::size_t>(std::clamp(colour, 0, k_laundry_colours - 1))];
+}
+
+auto washing_line_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype = []() {
+    RenderArchetypeBuilder builder{"home_washing_line"};
+    builder.add_cylinder(QVector3D(0.0F, 0.0F, 0.0F),
+                         QVector3D(1.0F, 0.0F, 0.0F),
+                         0.007F,
+                         QVector3D(0.62F, 0.56F, 0.44F));
+    return std::move(builder).build();
+  }();
+  return archetype;
+}
+
+auto washing_pole_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype = []() {
+    RenderArchetypeBuilder builder{"home_washing_pole"};
+    builder.add_cylinder(QVector3D(0.0F, 0.0F, 0.0F),
+                         QVector3D(0.0F, 1.0F, 0.0F),
+                         0.022F,
+                         QVector3D(0.44F, 0.33F, 0.20F));
+    return std::move(builder).build();
+  }();
+  return archetype;
+}
+
+auto lamp_glow_archetype() -> const RenderArchetype& {
+  // Discs on the ground rather than a billboard: the effect shader is unlit
+  // and a glowing quad in mid-air reads as a bug at this camera angle.
+  static const RenderArchetype archetype = []() {
+    RenderArchetypeBuilder builder{"home_lamp_glow"};
+    const QVector3D warm(0.92F, 0.66F, 0.32F);
+    builder.add_cylinder(
+        QVector3D(0, 0.004F, 0), QVector3D(0, 0.010F, 0), 0.62F, warm * 0.55F);
+    builder.add_cylinder(
+        QVector3D(0, 0.006F, 0), QVector3D(0, 0.012F, 0), 0.36F, warm * 0.85F);
+    builder.add_cylinder(QVector3D(0, 0.008F, 0), QVector3D(0, 0.014F, 0), 0.17F, warm);
     return std::move(builder).build();
   }();
   return archetype;

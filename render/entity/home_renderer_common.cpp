@@ -3,11 +3,19 @@
 #include "../entity_appearance.h"
 #include "game/core/component_core.h"
 #include "home_activity.h"
+#include "home_props.h"
 
 namespace Render::GL {
 
 void register_home_renderer_variant(EntityRendererRegistry& registry,
                                     const HomeRendererConfig& config) {
+  // Build the house props during warm_all() at renderer init, not on the
+  // first frame that happens to draw a house.
+  static const bool props_registered = [] {
+    register_home_prop_archetypes();
+    return true;
+  }();
+  (void)props_registered;
   register_building_renderer(
       registry,
       config.nation_slug,

@@ -6,6 +6,7 @@
 
 #include "building_decay.h"
 #include "farm_activity.h"
+#include "farm_worker_props.h"
 #include "game/core/component_economy.h"
 #include "render/submitter.h"
 
@@ -285,7 +286,8 @@ void add_crop(BuildingArchetypeDesc& desc,
               : spec.center + QVector3D(across, spec.ground_y + 0.040F, run);
       // Permanent work clearings, not simulated harvest progress. These share
       // anchors with the actors and keep the seated gag readable through wheat.
-      if (spec.worker_clearings && farm_activity_clearing(clump_base)) {
+      if (spec.worker_clearings &&
+          farm_activity_clearing(clump_base, spec.rows_along_x)) {
         continue;
       }
 
@@ -489,6 +491,13 @@ auto farm_archetype_from_table(
 
 void register_farm_renderer_variant(EntityRendererRegistry& registry,
                                     const FarmRendererConfig& config) {
+  // Build the field props during warm_all() at renderer init, not on the
+  // first frame that happens to draw a farm.
+  static const bool props_registered = [] {
+    register_farm_worker_prop_archetypes();
+    return true;
+  }();
+  (void)props_registered;
   register_building_renderer(
       registry,
       config.nation_slug,

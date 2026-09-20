@@ -11,6 +11,7 @@
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/humanoid_attachment_archetype.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
+#include "render/equipment/render_archetype_registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/asset/bind_skeleton.h"
 #include "render/humanoid/asset/humanoid_spec.h"
@@ -184,6 +185,16 @@ auto register_prop(EquipmentCategory category,
 }
 
 } // namespace
+
+void register_farm_worker_prop_archetypes() {
+  auto& registry = RenderArchetypeRegistry::instance();
+  registry.register_archetype("farm_sun_hat", [] { (void)sun_hat_archetype(); });
+  registry.register_archetype("farm_sun_hat_tilted",
+                              [] { (void)tilted_sun_hat_archetype(); });
+  registry.register_archetype("farm_wheat_sheaf", [] { (void)wheat_sheaf_archetype(); });
+  // Warming the props also registers their humanoid equipment contributions.
+  registry.register_archetype("farm_worker_props", [] { (void)farm_worker_props(); });
+}
 
 auto farm_worker_props() -> const FarmWorkerProps& {
   static const FarmWorkerProps props = []() {

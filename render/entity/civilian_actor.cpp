@@ -7,6 +7,7 @@
 #include "registry.h"
 #include "render/creature/pipeline/creature_pipeline.h"
 #include "render/creature/pipeline/creature_render_graph.h"
+#include "render/creature/pipeline/humanoid_animation_selection.h"
 #include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::GL {
@@ -78,6 +79,10 @@ void add_civilian_actor(const DrawContext& ctx,
   selection.state = AnimationStateId::Idle;
   selection.phase = actor.phase;
   selection.clip_id = actor.clip;
+  if (actor.blend_weight > 0.0F && actor.blend_clip != 0xFFFFU) {
+    Pipeline::blend_out_interrupted_clip(
+        selection, actor.blend_clip, actor.blend_phase, actor.blend_weight);
+  }
   output.humanoid_selection = selection;
   const Render::GL::HumanoidPose pose{};
   const Render::GL::HumanoidAnimationContext anim{};
