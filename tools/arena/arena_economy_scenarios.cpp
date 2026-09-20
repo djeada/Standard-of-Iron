@@ -298,6 +298,91 @@ auto build_economy_definitions() -> std::vector<ArenaScenarioDefinition> {
     result.push_back(std::move(s));
   }
 
+  for (int variant = 0; variant < 4; ++variant) {
+    const bool soup = variant == 3;
+    const bool night = variant == 2;
+    ArenaScenarioDefinition s;
+    s.id = variant == 0   ? QStringLiteral("home_ambient_street")
+           : variant == 1 ? QStringLiteral("home_ambient_dense")
+           : night        ? QStringLiteral("home_ambient_night")
+                          : QStringLiteral("home_ambient_soup");
+    s.label = s.id;
+    s.description =
+        soup ? QStringLiteral(
+                   "Close review of the rare soup-spill sequence: a resident "
+                   "carries a bowl out of the door, trips, spills, gets up and "
+                   "goes back in. Set SOI_HOME_GAG_SECONDS=12 to force it.")
+             : QStringLiteral(
+                   "Roman and Punic houses venting hearth smoke: staggered per "
+                   "house, from a roof the model actually has. Use --fog-of-war "
+                   "for the visibility boundary. One house is destroyed mid-run "
+                   "and must stop smoking.");
+    s.duration_seconds = variant == 1 ? 45 : soup ? 40 : 90;
+    s.camera = {variant == 1 ? 74.0F : soup ? 14.0F : 40.0F, 45.0F, 30.0F};
+    s.camera_focus = soup ? QVector3D(-9, 0, 4) : QVector3D(0, 0, 0);
+    s.arena_floor_half_extent = variant == 1 ? 60 : 30;
+    s.terrain_grid_extent = 160;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_terrain_scatter = true;
+    s.ground_type = QStringLiteral("grass_dry");
+    if (night) {
+      // Smoke has to stay legible against a dark sky, not just a bright one.
+      s.environment.start_time = 21.0F;
+      s.environment.lighting_profile = QStringLiteral("mediterranean_summer");
+    }
+    const int rows = variant == 1 ? 3 : 1;
+    for (int row = 0; row < rows; ++row) {
+      for (int nation = 0; nation < 2; ++nation) {
+        const auto name = QStringLiteral("house_%1_%2").arg(row).arg(nation);
+        auto house = seat_building(name,
+                                   Game::Units::SpawnType::Home,
+                                   {nation == 0 ? -9.0F : 9.0F,
+                                    0,
+                                    static_cast<float>(row) * 13 - (rows - 1) * 6.5F},
+                                   0);
+        house.nation_id = nation == 0 ? Nation::RomanRepublic : Nation::Carthage;
+        house.owner_id = nation + 1;
+        house.ai_controlled = false;
+        if (!soup) {
+          // Several neighbours per row, so lockstep would be obvious.
+          house.count = variant == 1 ? 3 : 3;
+          house.spacing = {0, 0, 11.0F};
+        }
+        s.groups.push_back(std::move(house));
+        ArenaExpectation lifecycle;
+        lifecycle.kind = Expect::GroupHealthUnchanged;
+        lifecycle.group = name;
+        s.expectations.push_back(std::move(lifecycle));
+
+        // One extra house per nation is levelled mid-run and must stop
+        // smoking at once, while its neighbours carry on.
+        if (row == 0 && !soup) {
+          const auto doomed_name = QStringLiteral("doomed_%1").arg(nation);
+          auto doomed = seat_building(doomed_name,
+                                      Game::Units::SpawnType::Home,
+                                      {nation == 0 ? -9.0F : 9.0F, 0, -19.0F},
+                                      0);
+          doomed.nation_id = nation == 0 ? Nation::RomanRepublic : Nation::Carthage;
+          doomed.owner_id = nation + 1;
+          doomed.ai_controlled = false;
+          s.groups.push_back(std::move(doomed));
+          ArenaExpectation gone;
+          gone.kind = Expect::GroupDestroyed;
+          gone.group = doomed_name;
+          s.expectations.push_back(std::move(gone));
+          ArenaScenarioStep destroy;
+          destroy.group = doomed_name;
+          destroy.command = ScenarioCommandKind::SetHealth;
+          destroy.trigger.time_seconds = variant == 1 ? 28.0F : 40.0F;
+          destroy.value = 0;
+          s.steps.push_back(std::move(destroy));
+        }
+      }
+    }
+    result.push_back(std::move(s));
+  }
+
   {
     ArenaScenarioDefinition s;
     s.id = QString::fromLatin1(k_ai_kingdom_rise_id);

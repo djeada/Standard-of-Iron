@@ -117,18 +117,21 @@ protected:
 TEST_F(FarmActivityTest, BothFactionsUseTheirOwnCivilianRig) {
   for (bool carthage : {false, true}) {
     const auto& visual = farm_worker_visual(carthage);
+    const auto& rig = nation_civilian_rig(carthage);
     ASSERT_TRUE(visual.valid());
-    EXPECT_NE(visual.tending, visual.reaping);
-    EXPECT_EQ(visual.spec.kind, Render::Creature::Pipeline::CreatureKind::Humanoid);
+    ASSERT_TRUE(rig.valid());
+    EXPECT_NE(rig.idle, rig.working);
+    EXPECT_EQ(rig.spec.kind, Render::Creature::Pipeline::CreatureKind::Humanoid);
   }
-  EXPECT_NE(farm_worker_visual(false).tending, farm_worker_visual(true).tending);
+  EXPECT_NE(nation_civilian_rig(false).idle, nation_civilian_rig(true).idle);
   // Every worker wears the straw hat, and the sleeper wears it over its face;
   // a silently dropped attachment would leave these counts equal.
   const auto& registry = Render::Creature::ArchetypeRegistry::instance();
   for (bool carthage : {false, true}) {
     const auto& visual = farm_worker_visual(carthage);
-    const auto* bare_tend = registry.get(visual.tending);
-    const auto* bare_reap = registry.get(visual.reaping);
+    const auto& rig = nation_civilian_rig(carthage);
+    const auto* bare_tend = registry.get(rig.idle);
+    const auto* bare_reap = registry.get(rig.working);
     const auto* hatted_tend = registry.get(visual.hatted_tending);
     const auto* hatted_reap = registry.get(visual.hatted_reaping);
     const auto* gathering = registry.get(visual.hatted_gathering);

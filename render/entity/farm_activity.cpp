@@ -27,13 +27,7 @@ namespace {
 constexpr float k_tend_cycle_seconds = 2.6F;
 constexpr float k_reap_cycle_seconds = 2.2F;
 
-auto mix(std::uint32_t x) -> std::uint32_t {
-  x ^= x >> 16U;
-  x *= 0x7feb352dU;
-  x ^= x >> 15U;
-  x *= 0x846ca68bU;
-  return x ^ (x >> 16U);
-}
+constexpr auto mix = ambient_hash;
 
 // 0 at its own anchor, 1 beside the sleeper. Out and back around the stare.
 auto walk_fraction(float gag_time) -> float {
@@ -72,37 +66,35 @@ auto yaw_towards(const QVector3D& from,
   return std::atan2(direction.x(), direction.z()) * 180.0F / 3.14159265F;
 }
 
-auto visuals() -> std::array<FarmWorkerVisual, 2>& {
-  static std::array<FarmWorkerVisual, 2> registered{};
-  return registered;
-}
-} // namespace
-
-void register_farm_worker_visual(bool carthage, FarmWorkerVisual visual) {
-  // Derive the hatted/laden variants once, at renderer registration, so no
-  // archetype is built inside the frame loop.
+auto derive_visual(bool carthage) -> FarmWorkerVisual {
+  // Hang the shared field props on this nation's civilian rig. Done once, off
+  // the frame loop, so no archetype is built while drawing.
+  const auto& rig = nation_civilian_rig(carthage);
+  FarmWorkerVisual visual{};
+  if (!rig.valid()) {
+    return visual;
+  }
   const auto& props = farm_worker_props();
-  const std::string_view nation = carthage ? "carthage" : "roman";
+  const std::string nation = carthage ? "carthage" : "roman";
   const std::array<EquipmentHandle, 1> hat{props.sun_hat};
   const std::array<EquipmentHandle, 2> hat_and_sheaf{props.sun_hat, props.wheat_sheaf};
   const std::array<EquipmentHandle, 1> tilted{props.tilted_sun_hat};
   visual.hatted_tending = resolve_humanoid_equipment_archetype(
-      std::string("farm/worker/").append(nation).append("/tend"), visual.tending, hat);
+      "farm/worker/" + nation + "/tend", rig.idle, hat);
   visual.hatted_reaping = resolve_humanoid_equipment_archetype(
-      std::string("farm/worker/").append(nation).append("/reap"), visual.reaping, hat);
+      "farm/worker/" + nation + "/reap", rig.working, hat);
   visual.hatted_gathering = resolve_humanoid_equipment_archetype(
-      std::string("farm/worker/").append(nation).append("/gather"),
-      visual.tending,
-      hat_and_sheaf);
+      "farm/worker/" + nation + "/gather", rig.idle, hat_and_sheaf);
   visual.napping = resolve_humanoid_equipment_archetype(
-      std::string("farm/worker/").append(nation).append("/nap"),
-      visual.reaping,
-      tilted);
-  visuals()[carthage ? 1U : 0U] = std::move(visual);
+      "farm/worker/" + nation + "/nap", rig.working, tilted);
+  return visual;
 }
+} // namespace
 
 auto farm_worker_visual(bool carthage) -> const FarmWorkerVisual& {
-  return visuals()[carthage ? 1U : 0U];
+  static const std::array<FarmWorkerVisual, 2> derived{derive_visual(false),
+                                                       derive_visual(true)};
+  return derived[carthage ? 1U : 0U];
 }
 
 auto farm_activity_anchor(int index) -> QVector3D {
@@ -320,11 +312,8 @@ void submit_farm_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
                                              ctx.animation_time)
                              : -1.0F;
 
-  static thread_local Pipeline::CreatureRenderBatch batch;
-  static thread_local Pipeline::CreaturePipeline pipeline;
-  batch.clear();
-  const Render::GL::HumanoidPose pose{};
-  const Render::GL::HumanoidAnimationContext anim{};
+  begin_civilian_actors();
+  const auto& rig = nation_civilian_rig(carthage);
   const bool ripe = field->growth >= 1.0F;
   const bool gag_running = gag_time >= 0 && gag_time < Nap::k_sequence_end;
   for (int i = 0; i < count; ++i) {
@@ -393,32 +382,21 @@ void submit_farm_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
       }
     }
 
-    Pipeline::CreatureGraphOutput output{};
-    // Minimal resolves a per-state snapshot mesh rather than the requested
-    // clip, so it is only used where a worker is a speck and the pose cannot
-    // be read anyway.
-    output.lod = pixels >= 0 && pixels < 12 ? CreatureLOD::Minimal : CreatureLOD::Full;
-    output.pass_intent = Pipeline::RenderPassIntent::Main;
-    output.seed = mix(seed + (i * 977U));
-    output.world_matrix = models[i];
-    output.world_already_grounded = true;
-    output.entity_id = static_cast<Pipeline::EntityId>(field->id);
-    output.instance_index = static_cast<std::uint16_t>(i + 1);
-    output.spec = visual.spec;
-    Pipeline::HumanoidAnimationSelection selection{};
-    selection.requested_archetype = archetype;
-    selection.resolved_archetype = archetype;
-    selection.state = AnimationStateId::Idle;
-    selection.phase = held ? std::clamp(phase, 0.0F, 1.0F) : phase - std::floor(phase);
-    selection.clip_id = clip;
-    output.humanoid_selection = selection;
-    Render::GL::HumanoidVariant variant{};
-    visual.fill_variant(ctx, output.seed, variant);
-    batch.add_humanoid(output, pose, variant, anim);
+    add_civilian_actor(
+        ctx,
+        rig,
+        CivilianActor{
+            .archetype = archetype,
+            .clip = clip,
+            .phase = held ? std::clamp(phase, 0.0F, 1.0F) : phase - std::floor(phase),
+            .world = models[i],
+            .owner_id = static_cast<std::uint32_t>(field->id),
+            .instance = static_cast<std::uint16_t>(i + 1),
+            .seed = mix(seed + (i * 977U)),
+            .distant = pixels >= 0 && pixels < 12,
+        });
     --activity->remaining;
   }
-  if (!batch.empty()) {
-    (void)pipeline.submit_requests(batch.requests(), out);
-  }
+  submit_civilian_actors(out);
 }
 } // namespace Render::GL

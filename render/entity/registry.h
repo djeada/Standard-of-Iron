@@ -49,6 +49,7 @@ inline constexpr RendererHandle k_invalid_renderer_handle =
     std::numeric_limits<RendererHandle>::max();
 
 struct FarmActivity;
+struct HomeActivity;
 
 struct DrawContext {
   ResourceManager* resources = nullptr;
@@ -101,6 +102,7 @@ struct DrawContext {
 
   Render::Humanoid::HumanoidRuntimeContext* humanoid_runtime = nullptr;
   FarmActivity* farm_activity = nullptr;
+  HomeActivity* home_activity = nullptr;
 };
 
 [[nodiscard]] inline auto

@@ -22,7 +22,8 @@ enum class EffectType {
   Fireball = 3,
   BurningFlame = 4,
   MetalSpark = 5,
-  WeaponArc = 6
+  WeaponArc = 6,
+  HearthSmoke = 7
 };
 
 class CombatDustPipeline final : public IPipeline {

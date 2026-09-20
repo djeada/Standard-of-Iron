@@ -198,6 +198,32 @@ void main() {
                         u_intensity * 1.2,
                     0.0,
                     1.0);
+  } else if (u_effect_type == 7) {
+    // Hearth smoke: a slow column that rises, widens, leans downwind and
+    // dissolves. No flicker, no licks -- this is a cooking fire, not a blaze.
+    float height = clamp(a_texcoord.y, 0.0, 1.0);
+    float angle = a_texcoord.x * 6.28318;
+    vec2 ring = vec2(cos(angle), sin(angle));
+
+    float drift = soi_fbm_23e5ab(ring * 1.4 + vec2(u_time * 0.08, height * 1.9 - u_time * 0.14));
+    float curl = soi_fbm_23e5ab(ring * 3.1 + vec2(5.0 - u_time * 0.06, height * 3.4));
+
+    // Widens with height, pinched at the outlet so it reads as escaping.
+    float spread = mix(0.16, 1.44, pow(height, 0.92)) * (0.84 + 0.32 * drift);
+    pos.xz = ring * spread;
+
+    pos.y = height * 3.1 * (0.90 + 0.18 * drift);
+
+    // A steady lean, so neighbouring houses share a wind rather than swirling
+    // independently, plus a slow wander that breaks up the column.
+    vec2 wind = vec2(0.62, 0.30);
+    float lean = height * height * 1.05;
+    pos.xz += wind * lean;
+    pos.xz += vec2(curl - 0.5, drift - 0.5) * height * 0.52;
+
+    float outlet = smoothstep(0.0, 0.12, height);
+    float dissolve = 1.0 - smoothstep(0.42, 1.0, height);
+    v_alpha = clamp(outlet * dissolve * (0.45 + 0.55 * u_intensity), 0.0, 1.0);
   } else if (u_effect_type == 5) {
     float t = u_time;
     float along = clamp(a_texcoord.x, 0.0, 1.0);

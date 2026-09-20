@@ -805,9 +805,10 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
         DrawContext{ctx.resources, entry.entity, ctx.world, world_view(), model_matrix};
 
     draw_ctx.humanoid_runtime = &m_humanoid_runtime;
-    // Farms carry a UnitComponent, so the render snapshot files them with the
-    // units and they are drawn from here, not from submit_non_unit_entry().
+    // Buildings carry a UnitComponent, so the render snapshot files them with
+    // the units and they are drawn from here, not from submit_non_unit_entry().
     draw_ctx.farm_activity = &m_farm_activity;
+    draw_ctx.home_activity = &m_home_activity;
     draw_ctx.selected = entry.selected;
     draw_ctx.hovered = entry.hovered;
     bool should_update_animation = ctx.full_creature_detail;
@@ -1155,6 +1156,7 @@ void Renderer::render_world(Engine::Core::World* world) {
   std::lock_guard<std::recursive_mutex> const guard(world->get_entity_mutex());
 
   m_farm_activity.begin_frame(world, m_accumulated_time, simulation_world);
+  m_home_activity.begin_frame(world, m_accumulated_time, simulation_world);
 
   m_cached_world = simulation_world;
 

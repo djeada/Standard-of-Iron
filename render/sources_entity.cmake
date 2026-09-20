@@ -90,8 +90,11 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/marketplace_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/temple_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_renderer_common.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/civilian_actor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_activity.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_worker_props.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/home_props.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/home_activity.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/defense_tower_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_stockpile.cpp

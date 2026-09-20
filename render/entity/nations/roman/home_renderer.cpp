@@ -14,6 +14,7 @@
 #include "render/entity/building_ornaments.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/building_state.h"
+#include "render/entity/home_activity.h"
 #include "render/entity/home_renderer_common.h"
 #include "render/entity/registry.h"
 #include "render/submitter.h"
@@ -270,6 +271,15 @@ auto build_home_desc(BuildingState state) -> BuildingArchetypeDesc {
 }
 
 void register_home_renderer(Render::GL::EntityRendererRegistry& registry) {
+  // A domus has no chimney. Smoke from the hearth works its way out through
+  // the roof tiles, so the plume starts just above the ridge toward the rear.
+  register_home_smoke_anchor(
+      false,
+      HomeSmokeAnchor{.vent = QVector3D(0.0F, 1.66F, -0.42F),
+                      .smoke_tint = QVector3D(0.34F, 0.32F, 0.30F),
+                      .plume_radius = 1.15F,
+                      .doorstep = QVector3D(0.0F, 0.16F, 1.24F),
+                      .outward = QVector3D(0.0F, 0.0F, 1.0F)});
   register_home_renderer_variant(
       registry,
       HomeRendererConfig{.nation_slug = "roman",

@@ -277,6 +277,28 @@ void main() {
               0.86);
     color = clamp(color, 0.0, 4.0) * fireball_alpha;
     frag_color = vec4(color, fireball_alpha);
+  } else if (u_effect_type == 7) {
+    float height = clamp(v_texcoord.y, 0.0, 1.0);
+    float axis_radius = length(v_local_pos.xz);
+
+    vec2 plan = v_local_pos.xz * 1.7;
+    float body = soi_fbm_23e5ab(plan + vec2(u_time * 0.11, height * 2.0 - u_time * 0.17));
+    float fine = soi_fbm_23e5ab(plan * 2.6 + vec2(3.0 - u_time * 0.08, height * 5.2));
+    float puff = clamp(((body * 0.66 + fine * 0.34) - 0.24) * 2.2, 0.0, 1.0);
+
+    // Warm and dense at the outlet, cooling to a thin grey as it disperses.
+    // Kept deliberately dim: this shader is unlit, so a bright plume would
+    // glow at night instead of catching the last of the daylight.
+    vec3 near_hearth = u_dust_color * 0.58 + vec3(0.022, 0.017, 0.013);
+    vec3 cooled = u_dust_color * 0.92 + vec3(0.014, 0.015, 0.017);
+    color = mix(near_hearth, cooled, smoothstep(0.05, 0.75, height));
+    color *= 0.88 + 0.26 * fine;
+
+    float soft_edge = inv_smoothstep(0.34, 1.05, axis_radius / max(1.0, 0.55 + height));
+    float top_fade = 1.0 - smoothstep(0.38, 1.0, height);
+    float outlet = smoothstep(0.0, 0.09, height);
+    float smoke_alpha = v_alpha * soft_edge * top_fade * outlet * (0.40 + 0.60 * puff);
+    frag_color = vec4(color, clamp(smoke_alpha, 0.0, 0.62));
   } else if (u_effect_type == 5) {
     float along = clamp(v_texcoord.x, 0.0, 1.0);
     float across = abs(v_texcoord.y * 2.0 - 1.0);

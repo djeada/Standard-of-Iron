@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "render/creature/pipeline/unit_visual_spec.h"
+#include "civilian_actor.h"
 #include "render/creature/spec.h"
 
 namespace Engine::Core {
@@ -16,32 +16,20 @@ struct DrawContext;
 struct HumanoidVariant;
 class ISubmitter;
 
-// The look of a field worker, registered by each nation's troop renderers so the
-// decorative actors are the same rig, proportions and palette as that nation's
-// real civilians -- never a separate hand-built figure.
+// The nation's civilian rig wearing the field props. Derived once from
+// nation_civilian_rig(), never authored here.
 struct FarmWorkerVisual {
-  Render::Creature::Pipeline::UnitVisualSpec spec{};
-  // Filled in by the nation: its civilian rig, and its builder holding a sickle.
-  Render::Creature::ArchetypeId tending{Render::Creature::k_invalid_archetype};
-  Render::Creature::ArchetypeId reaping{Render::Creature::k_invalid_archetype};
-  void (*fill_variant)(const DrawContext& ctx,
-                       std::uint32_t seed,
-                       HumanoidVariant& out){nullptr};
-
-  // Derived at registration by hanging the shared field props on those two.
   Render::Creature::ArchetypeId hatted_tending{Render::Creature::k_invalid_archetype};
   Render::Creature::ArchetypeId hatted_reaping{Render::Creature::k_invalid_archetype};
   Render::Creature::ArchetypeId hatted_gathering{Render::Creature::k_invalid_archetype};
   Render::Creature::ArchetypeId napping{Render::Creature::k_invalid_archetype};
 
   [[nodiscard]] auto valid() const noexcept -> bool {
-    return fill_variant != nullptr &&
-           hatted_tending != Render::Creature::k_invalid_archetype &&
+    return hatted_tending != Render::Creature::k_invalid_archetype &&
            hatted_reaping != Render::Creature::k_invalid_archetype;
   }
 };
 
-void register_farm_worker_visual(bool carthage, FarmWorkerVisual visual);
 [[nodiscard]] auto farm_worker_visual(bool carthage) -> const FarmWorkerVisual&;
 
 // Owned by a renderer, never stored in the simulation or save/replay state.
