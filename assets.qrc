@@ -249,6 +249,8 @@
         <file>assets/audio/sfx/combat/guard_raise.ogg</file>
         <file>assets/audio/sfx/combat/heal_bind_wound.ogg</file>
         <file>assets/audio/sfx/combat/heal_magic_shimmer.ogg</file>
+        <file>assets/audio/sfx/combat/fireball_impact.ogg</file>
+        <file>assets/audio/sfx/combat/magic_arc_discharge.ogg</file>
         <file>assets/audio/sfx/combat/horse_gallop_close_pass.ogg</file>
         <file>assets/audio/sfx/combat/human_death_cry.ogg</file>
         <file>assets/audio/sfx/combat/human_death_cry_v2.ogg</file>

@@ -112,6 +112,7 @@
         "game/systems/projectile",
         "game/systems/resource_stockpile",
         "game/systems/run_stamina",
+        "game/systems/spawn_flare",
         "game/systems/spent_projectile",
         "game/systems/troop_count_registry",
         "game/systems/troop_profile_service",
