@@ -426,8 +426,6 @@ TEST_F(UndeadAwakeningSystemTest, AFollowUpWaveFlaresAgainOnItsOwnGuardians) {
   add_intruder(world, {0.5F, 0.0F, 0.5F});
   system.update(&world, 0.1F);
 
-  // Put the first wave down and let its flares expire the way the production
-  // system would, so anything still glowing afterwards belongs to wave two.
   for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit != nullptr && unit->owner_id == 99 &&

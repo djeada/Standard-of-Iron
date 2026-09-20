@@ -47,10 +47,7 @@ ROSTER = (
     + ["elephant"] * 3
 )
 
-# Only Carthage's roster carries the elephant, so its spawns have to name that
-# nation even though they stand in this player's army -- with "roman_republic"
-# on them the type does not resolve and they simply never appear. Everything
-# else about them is ordinary: same player, same team, same formation order.
+
 NATION_FOR = {"elephant": "carthage"}
 
 

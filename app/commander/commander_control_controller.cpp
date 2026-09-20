@@ -49,9 +49,7 @@ namespace {
 constexpr float k_degrees_to_radians = 0.017453292519943295F;
 
 constexpr float k_ability_rescan_cooldown = 0.18F;
-// How long a held attack waits after the body falls idle before it swings
-// again. Long enough that a refused swing does not machine-gun, short
-// enough that holding the button reads as continuous fighting.
+
 constexpr float k_held_restart_interval = 0.12F;
 
 auto wrap_angle_degrees(float degrees) -> float {
@@ -2335,12 +2333,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
                 *held_definition,
                 Game::Systems::CombatActions::CombatActionEventType::RecoveryStart,
                 0.75F);
-    // The chain above only continues an action that is still running. Any
-    // break in it -- a swing refused for want of a target, a stagger, a
-    // dodge, a guard raised and dropped -- left the commander standing with
-    // the button down and never swinging again until the player released and
-    // pressed. Holding the attack means "keep swinging", so re-arm a light
-    // swing a beat after the body falls idle.
+
     bool const guarding = guard != nullptr && guard->active;
     bool const drawing_bow =
         aim != nullptr && aim->stance == Engine::Core::FpvWeaponStance::Bow;

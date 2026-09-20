@@ -31,10 +31,6 @@ class RouteFollowSystem;
 
 namespace Engine::Core {
 
-// A spawn flare is one effect with two readings. A recruit walks out of a
-// building in the owner's gold; a sepulcher guardian claws out of the ground in
-// grave-light. The shape of the burst is the same, so the style only picks the
-// palette and how long the burst lingers.
 enum class SpawnFlareStyle : std::uint8_t {
   Recruit,
   Awakening,

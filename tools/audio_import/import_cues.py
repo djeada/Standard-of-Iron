@@ -48,18 +48,11 @@ PLAN = {
         "whole",
         "sfx/combat/heal_bind_wound.ogg",
     ),
-    # A sustained discharge, not a hit: it rises over half a second, holds for
-    # nearly two, and stops. Locating a transient in that would cut the rise
-    # off, so it imports whole and takes its level from the other magic cue.
-    # Held for a kind of magic the game does not have yet; nothing plays it.
     "Magical_Voltage_Arc": (
         "sfx/combat/magic_arc_discharge.ogg",
         "whole",
         "sfx/combat/heal_magic_shimmer.ogg",
     ),
-    # The grave priests' fire. A real hit -- it peaks inside the first third of
-    # a second and then burns down over two more -- so it locates its transient
-    # the normal way and sits at impact level.
     "Flame_Hit": (
         "sfx/combat/fireball_impact.ogg",
         None,

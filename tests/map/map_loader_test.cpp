@@ -218,9 +218,7 @@ TEST(MapLoaderTest, TreeMixLeansTheGroundTypesSpeciesWithoutReplacingIt) {
   EXPECT_FLOAT_EQ(scale(Game::Map::TreeSpecies::Pine), 0.0F);
   EXPECT_FLOAT_EQ(scale(Game::Map::TreeSpecies::Olive), 0.3F);
   EXPECT_FLOAT_EQ(scale(Game::Map::TreeSpecies::Palm), 2.6F);
-  // A negative share is meaningless, so it reads as none rather than failing
-  // the load or flipping sign; a key naming no species the scatter grows
-  // ("juniper") is ignored outright.
+
   EXPECT_FLOAT_EQ(scale(Game::Map::TreeSpecies::Cypress), 0.0F);
 }
 

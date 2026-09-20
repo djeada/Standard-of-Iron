@@ -10056,8 +10056,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                   {Game::Units::SpawnType::SkeletonArcher, 1}}),
                      undead_wave(QStringLiteral("next_wave"),
                                  {{Game::Units::SpawnType::SkeletonSwordsman, 2}})});
-    // The second wave is on a timer rather than on a clear, so the flare fires
-    // twice in a short review run with nothing having to die in between.
+
     zone.wave_timeout_seconds = 5.0F;
     s.undead_zones = {std::move(zone)};
 
@@ -10073,7 +10072,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     add_visual_stability(s, {QStringLiteral("scout")});
     s.expectations.push_back(zone_expectation(
         Expect::UndeadZoneDormantBefore, QStringLiteral("flare_zone"), 0.0F, 1.0F));
-    // Five is both waves: the review is worthless if only the opening burst fires.
+
     s.expectations.push_back(zone_expectation(
         Expect::UndeadZoneAwakened, QStringLiteral("flare_zone"), 5.0F));
     result.push_back(std::move(s));

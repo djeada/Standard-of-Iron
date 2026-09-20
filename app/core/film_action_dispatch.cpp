@@ -283,9 +283,7 @@ void apply_benchmark_action(GameEngine* engine,
     if (numbers.size() >= 2) {
       camera->look_at_world(numbers[0], numbers[1]);
     }
-    // Same caveat as camera_zoom: the move is eased, so this line reports where
-    // the camera was told to go, not where it has arrived. Read the next verb's
-    // line for the settled pose.
+
     const QVector3D target = camera->world_target();
     qInfo().noquote()
         << QStringLiteral("SOI_FILM: camera_look_at %1 -> target %2, %3 distance %4 m")

@@ -248,9 +248,7 @@ void read_biome(const QJsonObject& obj, BiomeSettings& out) {
     out.plant_density = float(obj.value(PLANT_DENSITY).toDouble(out.plant_density));
   }
   if (obj.contains(TREE_MIX)) {
-    // {"palm": 2.0, "olive": 0} leans the ground type's own tree mix without
-    // replacing it: species the object does not name keep their ground-type
-    // share. Negative values are meaningless, so they read as "none".
+
     static constexpr std::array<std::pair<const char*, TreeSpecies>,
                                 k_tree_species_count>
         k_species{{{"pine", TreeSpecies::Pine},

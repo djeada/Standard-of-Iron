@@ -91,10 +91,6 @@ auto patch(const char* prop_type,
   return {QString::fromLatin1(prop_type), count, origin, spacing, scale};
 }
 
-// A patch that is allowed to look unplanned: instances wander off the row, each
-// takes its own yaw, and no two are quite the same size. Scenery that stands in
-// a straight line at one size facing one way is the single loudest tell that a
-// scene was placed by hand, so anything natural should go through here.
 auto scatter(const char* prop_type,
              int count,
              QVector3D origin,
@@ -1490,11 +1486,7 @@ auto trailer_city_battle() -> ArenaScenarioDefinition {
   auto scipio =
       file("scipio", Troop::RomanVeteranConsul, 1, 1, 224.0F, k_gate_z, 1, 0.0F);
   line_health(scipio, 9000);
-  // A held attack spends stamina per swing, so on the default pool Scipio runs
-  // dry about four seconds into his shot and simply stops -- the swings are
-  // refused, nothing says so, and the first-person camera shows a man standing
-  // in a melee holding a sword. The reel needs him fighting for all 5.6 s, so
-  // he gets the same deep pool the other scripted duellists use.
+
   scipio.stamina_override = scipio.max_stamina_override = 600.0F;
   s.groups.push_back(scipio);
 
@@ -1576,11 +1568,7 @@ auto trailer_city_battle() -> ArenaScenarioDefinition {
       file("roman_horse_n", Troop::MountedSwordsman, 1, 5, 214.0F, -100.0F, 6, 3.4F);
   auto horse_s =
       file("roman_horse_s", Troop::MountedSwordsman, 1, 5, 214.0F, 36.0F, 6, 3.4F);
-  // The city's own elephants, held in the gap between the artillery and the
-  // east wall: behind everything that is fighting, in front of the stone. The
-  // wall runs at x=170 and the catapults are the rearmost of the line at 194,
-  // so 182 reads as inside the defence rather than part of it, and they sit
-  // across the gate so the opening wide shot has them in frame.
+
   auto roman_elephants = file(
       "roman_elephants", Troop::Elephant, 1, 3, 182.0F, k_gate_z - 12.0F, 1, 12.0F);
   s.groups.push_back(ballistas);
@@ -1600,13 +1588,7 @@ auto trailer_city_battle() -> ArenaScenarioDefinition {
   auto punic_catapults =
       file("punic_catapults", Troop::Catapult, 2, 5, 276.0F, k_gate_z, 1, 15.0F);
   punic_catapults.attack_range_override = 66.0F;
-  // Scipio's first-person shot runs 10.2 s to 15.8 s and has to be a fight for
-  // all of it. It cannot lean on the centre file: that one is deliberately
-  // brittle so the line breaks for the wide shots, and once it goes the lane in
-  // front of him empties and he is left holding a sword up on an empty road.
-  // (Marching him forward only walks him further out of the melee.) This file
-  // exists to walk onto him and stay in reach: close enough to make contact
-  // before the shot opens, and tough enough to still be there when it ends.
+
   auto punic_guard =
       file("punic_guard_c", Troop::Swordsman, 2, 6, 232.0F, k_gate_z, 12, 3.0F);
   line_health(punic_guard, 5200);
@@ -1954,14 +1936,11 @@ auto trailer_sepulcher_winter() -> ArenaScenarioDefinition {
   s.terrain_snowbound = true;
   s.terrain_seed_override = 9931;
   s.arena_floor_half_extent = 44.0F;
-  // Night. The barrow reads as a grave-field only in the dark, and the fire
-  // camps below become the key light instead of the sun.
+
   s.environment.start_time = 22.2F;
   s.environment.lighting_profile = QStringLiteral("iron_sepulcher");
   s.environment.fog_density_override = 0.010F;
-  // Snow is the brightest surface in the game; the night keyframe's own
-  // exposure is already enough for it. Lifting it the way a dark grove scene
-  // does (2.3) turns the whole field white and puts a daylit sky back over it.
+
   s.environment.exposure_override = 1.02F;
   s.weather.snow = 0.75F;
   s.precipitation.enabled = true;
@@ -2007,13 +1986,8 @@ auto trailer_sepulcher_winter() -> ArenaScenarioDefinition {
     s.undead_zones.push_back(zone);
   }
 
-  // Every cluster wanders, turns and resizes per instance, and the spacing
-  // vectors are deliberately not axis-aligned. Just as important: the field is
-  // thinned out and the sizes pulled apart. A grave-field is a few big broken
-  // masses with open snow between them, not an even sprinkle of identical
-  // rubble, and an even sprinkle is what reads as fake at trailer distance.
   s.resource_patches = {
-      // The dead village, far back on the ridge and well spread.
+
       scatter("abandoned_home",
               2,
               {-36.0F, 0.0F, -28.0F},
@@ -2033,8 +2007,6 @@ auto trailer_sepulcher_winter() -> ArenaScenarioDefinition {
               0.18F,
               70.0F),
 
-      // Broken stone at the barrow mouths. Wide scale spread so each cluster
-      // has one standing mass and the rest is low rubble around it.
       scatter("ruins",
               2,
               {6.0F, 0.0F, k_barrow_z - 11.0F},
@@ -2074,8 +2046,6 @@ auto trailer_sepulcher_winter() -> ArenaScenarioDefinition {
               0.12F,
               120.0F),
 
-      // The legion's camp. Tents and carts keep a narrow yaw spread: this was
-      // pitched by soldiers, not scattered by the wind.
       scatter("tent",
               4,
               {18.0F, 0.0F, 12.0F},
@@ -2109,11 +2079,6 @@ auto trailer_sepulcher_winter() -> ArenaScenarioDefinition {
               0.1F,
               50.0F),
 
-      // Firelight is the scene's key light now, so there is a lot of it and it
-      // is spread through the depth of frame: the camp at the legion's back,
-      // braziers flanking the approach, and fires still burning out among the
-      // barrows so the risen come up against something bright. Yaw is left
-      // alone -- a fire has no front.
       scatter("fire_camp",
               3,
               {-16.0F, 0.0F, 13.0F},
@@ -2151,9 +2116,6 @@ auto trailer_sepulcher_winter() -> ArenaScenarioDefinition {
       scatter("fire_camp", 1, {-33.0F, 0.0F, -21.0F}, {}, 0.95F, 2.2F, 0.2F, 0.0F),
       scatter("fire_camp", 1, {35.0F, 0.0F, -18.0F}, {}, 0.95F, 2.2F, 0.2F, 0.0F),
 
-      // Dead wood on the barrow, live pine on the treeline. Both take a full
-      // 360 degrees of yaw and a wide scale spread -- a bare trunk repeated at
-      // one angle and one height is the tell the eye catches first.
       scatter("dead_tree",
               3,
               {-24.0F, 0.0F, k_barrow_z - 1.0F},

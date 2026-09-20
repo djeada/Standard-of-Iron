@@ -40,21 +40,6 @@ CLIPS = [
     ("editor_bridge", "editor_bridge.mp4", 2.0, 3.0),
     ("build_stronghold_place", "build_close.mp4", 1.2, 2.2),
     ("build_stronghold_rise", "build_close.mp4", 8.8, 3.0),
-    # The formation beat is four shots across two maps: pick a line on the
-    # parade ground and watch it land, then pick a column for a bridge and watch
-    # that land. The order shot of each pair runs slowly enough to read the
-    # formation panel -- that panel is the point of the beat -- and the payoff is
-    # held long enough for the ranks to finish dressing. The push-in at the end
-    # of each payoff is filmed in engine (the fixture moves the camera), not
-    # cropped in.
-    #
-    # The order shots ramp rather than cut. They used to end at the moment the
-    # order was given and the payoff picked the source up twenty-five seconds
-    # later, so the trailer jumped over the entire deployment -- the one part
-    # that shows the mechanic working. Each now runs continuously into its
-    # payoff: read speed while the panel is being used, a time-lapse through the
-    # march, and back to read speed as the ranks dress. The payoff then starts on
-    # the next source frame, so there is no jump anywhere in the beat.
     (
         "form_the_line",
         "formation_field.mp4",
@@ -69,12 +54,6 @@ CLIPS = [
     ("bridge_column", "palm_column.mp4", 22.0, 13.5, 2.93),
     ("town_wide", "forest_town.mp4", 0.3, 3.7),
     ("town_crews", "forest_town.mp4", 4.6, 5.0),
-    # The beat is the crews raising the buildings, and the old window cut away
-    # a second after the last site was placed -- four ghosts dropped and nobody
-    # ever seen working on them. It now starts after the fixture's first
-    # placement (which the town's ground refuses, and the refusal notice sits
-    # on screen for two and a half seconds) and runs long enough to cover the
-    # remaining sitings and the whole stretch of crews at work.
     ("town_build", "forest_town.mp4", 14.3, 8.0),
     ("town_busy", "forest_town.mp4", 22.4, 4.0),
 ]
