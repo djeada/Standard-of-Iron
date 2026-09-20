@@ -31,10 +31,29 @@ constexpr int k_glint_count = 12;
 constexpr QVector3D k_gold{1.0F, 0.78F, 0.30F};
 constexpr QVector3D k_pale_gold{1.0F, 0.94F, 0.72F};
 
+// Grave-light: the cold green a sepulcher wave rises in. Deliberately the
+// opposite end of the wheel from the recruit gold, so a risen guardian is never
+// mistaken for something the player just paid for.
+constexpr QVector3D k_grave_light{0.30F, 0.86F, 0.52F};
+constexpr QVector3D k_pale_grave{0.76F, 1.0F, 0.84F};
+
+struct FlarePalette {
+  QVector3D core;
+  QVector3D pale;
+};
+
+auto palette_for(Engine::Core::SpawnFlareStyle style) -> FlarePalette {
+  if (style == Engine::Core::SpawnFlareStyle::Awakening) {
+    return {k_grave_light, k_pale_grave};
+  }
+  return {k_gold, k_pale_gold};
+}
+
 void submit_ground_disc(Renderer* renderer,
                         const QVector3D& ground,
                         float radius,
-                        float alpha) {
+                        float alpha,
+                        const FlarePalette& palette) {
   if (alpha <= 0.01F) {
     return;
   }
@@ -42,7 +61,7 @@ void submit_ground_disc(Renderer* renderer,
   disc.center = QVector3D(ground.x(), ground.y() + 0.05F, ground.z());
   disc.outer_radius = radius * 0.95F;
   disc.thickness = disc.outer_radius;
-  disc.color = k_pale_gold;
+  disc.color = palette.pale;
   disc.alpha = alpha;
   renderer->ground_marker(disc);
 }
@@ -51,7 +70,8 @@ void submit_ground_ring(Renderer* renderer,
                         const QVector3D& ground,
                         float radius,
                         float ring_age,
-                        float alpha_scale) {
+                        float alpha_scale,
+                        const FlarePalette& palette) {
   if (ring_age < 0.0F || ring_age >= k_ring_seconds || alpha_scale <= 0.01F) {
     return;
   }
@@ -61,7 +81,7 @@ void submit_ground_ring(Renderer* renderer,
   ring.center = QVector3D(ground.x(), ground.y() + 0.07F, ground.z());
   ring.outer_radius = radius * (0.55F + 1.10F * travel);
   ring.thickness = std::max(0.08F, radius * 0.16F * (1.0F - 0.5F * travel));
-  ring.color = k_gold;
+  ring.color = palette.core;
   ring.alpha = alpha_scale * fade;
   renderer->ground_marker(ring);
 }
@@ -70,10 +90,11 @@ void submit_glow_light(Renderer* renderer,
                        const QVector3D& position,
                        float radius,
                        float intensity,
-                       float flare) {
+                       float flare,
+                       const FlarePalette& palette) {
   Render::LocalLight glow;
   glow.position = position + QVector3D(0.0F, radius * 0.75F, 0.0F);
-  glow.color = k_gold;
+  glow.color = palette.core;
   glow.radius = std::clamp(radius * 2.6F, 4.0F, 9.0F);
   glow.intensity = std::min(1.05F, 0.5F * intensity + 0.7F * flare);
   renderer->local_light(glow);
@@ -114,10 +135,10 @@ void render_production_completions(Renderer* renderer,
       continue;
     }
 
-    const float age =
-        Engine::Core::ProductionCompletionComponent::k_duration - effect.remaining;
-    const float progress = std::clamp(
-        age / Engine::Core::ProductionCompletionComponent::k_duration, 0.0F, 1.0F);
+    const float duration = std::max(effect.duration, 0.01F);
+    const float age = duration - effect.remaining;
+    const float progress = std::clamp(age / duration, 0.0F, 1.0F);
+    const FlarePalette palette = palette_for(effect.style);
     const float fade_in = std::clamp(age / k_fade_in_seconds, 0.0F, 1.0F);
     const float fade_out = 1.0F - progress * progress * (3.0F - 2.0F * progress);
     const float intensity = fade_in * fade_out;
@@ -137,18 +158,25 @@ void render_production_completions(Renderer* renderer,
                static_cast<double>(ground.z()));
     }
 
-    submit_ground_disc(
-        renderer, ground, effect.radius, 0.16F * intensity * intensity + 0.22F * flare);
-    submit_glow_light(renderer, ground, effect.radius, intensity, flare);
+    submit_ground_disc(renderer,
+                       ground,
+                       effect.radius,
+                       0.16F * intensity * intensity + 0.22F * flare,
+                       palette);
+    submit_glow_light(renderer, ground, effect.radius, intensity, flare, palette);
 
-    renderer->healer_aura(position, k_gold, radius, intensity, time);
+    renderer->healer_aura(position, palette.core, radius, intensity, time);
     renderer->healer_aura(
-        position, k_pale_gold, radius * 0.78F, intensity * 0.9F, time);
+        position, palette.pale, radius * 0.78F, intensity * 0.9F, time);
     renderer->healer_aura(
-        position, k_pale_gold, radius * 0.52F, intensity * 0.8F, time);
+        position, palette.pale, radius * 0.52F, intensity * 0.8F, time);
     if (reduced_motion) {
-      submit_ground_ring(
-          renderer, ground, effect.radius, k_ring_seconds * 0.35F, 0.55F * intensity);
+      submit_ground_ring(renderer,
+                         ground,
+                         effect.radius,
+                         k_ring_seconds * 0.35F,
+                         0.55F * intensity,
+                         palette);
       continue;
     }
 
@@ -157,7 +185,8 @@ void render_production_completions(Renderer* renderer,
                          ground,
                          effect.radius,
                          age - static_cast<float>(ring) * k_ring_delay_seconds,
-                         0.60F - 0.18F * static_cast<float>(ring));
+                         0.60F - 0.18F * static_cast<float>(ring),
+                         palette);
     }
 
     for (int i = 0; i < k_glint_count; ++i) {
@@ -174,7 +203,7 @@ void render_production_completions(Renderer* renderer,
       const float shimmer = 0.75F + 0.25F * std::sin(age * 7.0F + phase * 23.0F);
       renderer->metal_spark(
           glint,
-          i % 3 == 0 ? k_pale_gold : k_gold,
+          i % 3 == 0 ? palette.pale : palette.core,
           0.09F + 0.035F * effect.radius,
           (intensity + flare) * shimmer * 1.3F,
           spark_age,

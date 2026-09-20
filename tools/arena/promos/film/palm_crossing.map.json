@@ -1,0 +1,676 @@
+{
+  "name": "Trailer: the palm crossing",
+  "description": "Filming fixture: one wide river through dry palm country, two bridges, and a Roman column marching over the southern span.",
+  "theme": "A river nobody fords and two bridges everybody wants.",
+  "coord_system": "grid",
+  "grid": {
+    "width": 176,
+    "height": 176,
+    "tile_size": 1.0
+  },
+  "max_troops_per_player": 400,
+  "camera": {
+    "center": [86.0, 0.0, 96.0],
+    "distance": 62.0,
+    "tilt_deg": 34.0,
+    "yaw": 315.0,
+    "fov_y": 45.0,
+    "near": 1.0,
+    "far": 492.8
+  },
+  "time_of_day": "day",
+  "environment": {
+    "start_time": 13.5,
+    "time_mode": "locked",
+    "day_length_seconds": 1800.0,
+    "lighting_profile": "mediterranean_summer",
+    "fog_density": 0.008,
+    "exposure": 1.22
+  },
+  "biome": {
+    "ground_type": "grass_dry",
+    "seed": 70921,
+    "patch_density": 2.6,
+    "patch_jitter": 0.82,
+    "plant_density": 1.15,
+    "grass_primary": [0.34, 0.44, 0.21],
+    "grass_secondary": [0.46, 0.53, 0.25],
+    "grass_dry": [0.58, 0.52, 0.28],
+    "soil_color": [0.34, 0.27, 0.18],
+    "rock_low": [0.44, 0.42, 0.39],
+    "rock_high": [0.66, 0.65, 0.61],
+    "height_noise": [0.18, 0.06],
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.13,
+    "irregularity_amplitude": 0.08,
+    "moisture_level": 0.14,
+    "grass_saturation": 0.62,
+    "sway_strength": 0.2,
+    "sway_speed": 1.1,
+    "procedural_boulders_enabled": false,
+    "procedural_iron_ore_enabled": false,
+    "tree_mix": {
+      "pine": 0.0,
+      "olive": 0.3,
+      "cypress": 0.45,
+      "palm": 2.6
+    }
+  },
+  "rain": {
+    "enabled": false,
+    "type": "rain",
+    "intensity": 0.0
+  },
+  "terrain": [
+    {
+      "id": "west_approach",
+      "type": "flat",
+      "x": 62.0,
+      "z": 96.0,
+      "width": 26.0,
+      "depth": 20.0,
+      "description": "The muster ground on the west bank."
+    },
+    {
+      "id": "east_approach",
+      "type": "flat",
+      "x": 114.0,
+      "z": 96.0,
+      "width": 24.0,
+      "depth": 20.0,
+      "description": "The landing on the east bank."
+    }
+  ],
+  "forests": [
+    {
+      "id": "west_upper_palms",
+      "x": 58.0,
+      "z": 30.0,
+      "radius": 15.0
+    },
+    {
+      "id": "west_mid_palms",
+      "x": 52.0,
+      "z": 66.0,
+      "radius": 13.0
+    },
+    {
+      "id": "west_lower_palms",
+      "x": 46.0,
+      "z": 134.0,
+      "radius": 16.0
+    },
+    {
+      "id": "west_shore_palms",
+      "x": 66.0,
+      "z": 150.0,
+      "radius": 12.0
+    },
+    {
+      "id": "east_upper_palms",
+      "x": 118.0,
+      "z": 26.0,
+      "radius": 14.0
+    },
+    {
+      "id": "east_mid_palms",
+      "x": 124.0,
+      "z": 74.0,
+      "radius": 15.0
+    },
+    {
+      "id": "east_shore_palms",
+      "x": 110.0,
+      "z": 126.0,
+      "radius": 13.0
+    },
+    {
+      "id": "east_lower_palms",
+      "x": 132.0,
+      "z": 150.0,
+      "radius": 16.0
+    },
+    {
+      "id": "north_headland_palms",
+      "x": 88.0,
+      "z": 14.0,
+      "radius": 12.0
+    },
+    {
+      "id": "south_headland_palms",
+      "x": 92.0,
+      "z": 166.0,
+      "radius": 13.0
+    },
+    {
+      "id": "west_abutment_palms_n",
+      "x": 70.0,
+      "z": 84.0,
+      "radius": 10.0
+    },
+    {
+      "id": "west_abutment_palms_s",
+      "x": 70.0,
+      "z": 108.0,
+      "radius": 10.0
+    },
+    {
+      "id": "east_abutment_palms_n",
+      "x": 106.0,
+      "z": 84.0,
+      "radius": 10.0
+    },
+    {
+      "id": "east_abutment_palms_s",
+      "x": 106.0,
+      "z": 108.0,
+      "radius": 10.0
+    },
+    {
+      "id": "west_muster_palms_n",
+      "x": 52.0,
+      "z": 82.0,
+      "radius": 9.0
+    },
+    {
+      "id": "west_muster_palms_s",
+      "x": 52.0,
+      "z": 110.0,
+      "radius": 9.0
+    },
+    {
+      "id": "east_landing_palms_n",
+      "x": 124.0,
+      "z": 88.0,
+      "radius": 9.0
+    },
+    {
+      "id": "east_landing_palms_s",
+      "x": 124.0,
+      "z": 106.0,
+      "radius": 9.0
+    }
+  ],
+  "rivers": [
+    {
+      "id": "the_great_river",
+      "start": [88.0, 0.0],
+      "end": [88.0, 175.0],
+      "width": 24.0,
+      "waypoints": [
+        [78.0, 0.0],
+        [88.0, 30.0],
+        [88.0, 140.0],
+        [98.0, 175.0]
+      ]
+    }
+  ],
+  "lakes": [],
+  "bridges": [
+    {
+      "id": "great_span",
+      "start": [73.0, 96.0],
+      "end": [103.0, 96.0],
+      "width": 14.0,
+      "height": 0.9
+    },
+    {
+      "id": "upper_span",
+      "start": [75.0, 52.0],
+      "end": [101.0, 52.0],
+      "width": 8.0,
+      "height": 0.8
+    }
+  ],
+  "roads": [
+    {
+      "id": "the_west_approach_road",
+      "start": [28.0, 99.0],
+      "end": [72.0, 96.0],
+      "width": 11.0,
+      "style": "default",
+      "waypoints": [
+        [28.0, 99.0],
+        [46.0, 98.0],
+        [58.0, 97.0],
+        [72.0, 96.0]
+      ]
+    },
+    {
+      "id": "the_east_landing_road",
+      "start": [104.0, 96.0],
+      "end": [150.0, 93.0],
+      "width": 11.0,
+      "style": "default",
+      "waypoints": [
+        [104.0, 96.0],
+        [122.0, 95.0],
+        [150.0, 93.0]
+      ]
+    },
+    {
+      "id": "the_upper_road_west",
+      "start": [40.0, 40.0],
+      "end": [74.0, 52.0],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [40.0, 40.0],
+        [62.0, 48.0],
+        [74.0, 52.0]
+      ]
+    },
+    {
+      "id": "the_upper_road_east",
+      "start": [102.0, 52.0],
+      "end": [146.0, 60.0],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [102.0, 52.0],
+        [124.0, 56.0],
+        [146.0, 60.0]
+      ]
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "river_sanctuary",
+      "kind": "sanctuary",
+      "x": 120.0,
+      "z": 148.0,
+      "facing": "north"
+    }
+  ],
+  "structures": [],
+  "spawns": [
+    {
+      "id": "p1_commander",
+      "type": "roman_veteran_consul",
+      "x": 54.0,
+      "z": 102.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_0",
+      "type": "swordsman",
+      "x": 53.9,
+      "z": 91.6,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_1",
+      "type": "swordsman",
+      "x": 57.3,
+      "z": 93.7,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_2",
+      "type": "spearman",
+      "x": 68.2,
+      "z": 100.8,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_3",
+      "type": "swordsman",
+      "x": 56.5,
+      "z": 101.3,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_4",
+      "type": "swordsman",
+      "x": 61.5,
+      "z": 97.6,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_swordsman_5",
+      "type": "swordsman",
+      "x": 64.7,
+      "z": 93.9,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_archer_6",
+      "type": "archer",
+      "x": 55.8,
+      "z": 94.4,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_7",
+      "type": "spearman",
+      "x": 51.8,
+      "z": 98.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p1_spearman_8",
+      "type": "spearman",
+      "x": 58.1,
+      "z": 96.1,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    },
+    {
+      "id": "p2_commander",
+      "type": "carthage_sword_commander",
+      "x": 150.0,
+      "z": 30.0,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage"
+    }
+  ],
+  "world_props": [
+    {
+      "id": "west_camp_tent_a",
+      "type": "tent",
+      "x": 44.0,
+      "z": 78.0,
+      "rotation": 18.0
+    },
+    {
+      "id": "west_camp_tent_b",
+      "type": "tent",
+      "x": 39.0,
+      "z": 84.0,
+      "rotation": 340.0
+    },
+    {
+      "id": "west_camp_cart",
+      "type": "supply_cart",
+      "x": 42.0,
+      "z": 70.0,
+      "rotation": 96.0
+    },
+    {
+      "id": "west_rack",
+      "type": "weapon_rack",
+      "x": 47.0,
+      "z": 72.0,
+      "rotation": 210.0
+    },
+    {
+      "id": "east_ruins_a",
+      "type": "ruins",
+      "x": 128.0,
+      "z": 112.0,
+      "rotation": 42.0
+    },
+    {
+      "id": "east_ruins_b",
+      "type": "ruins",
+      "x": 134.0,
+      "z": 104.0,
+      "rotation": 128.0
+    },
+    {
+      "id": "east_statue",
+      "type": "statue",
+      "x": 122.0,
+      "z": 120.0,
+      "rotation": 270.0
+    },
+    {
+      "id": "north_ruins",
+      "type": "ruins",
+      "x": 70.0,
+      "z": 40.0,
+      "rotation": 300.0
+    },
+    {
+      "id": "north_home",
+      "type": "abandoned_home",
+      "x": 108.0,
+      "z": 38.0,
+      "rotation": 190.0
+    },
+    {
+      "id": "south_home",
+      "type": "abandoned_home",
+      "x": 62.0,
+      "z": 140.0,
+      "rotation": 64.0
+    },
+    {
+      "id": "palm_west_n_0",
+      "type": "palm_tree",
+      "x": 71.4,
+      "z": 86.8,
+      "rotation": 46.0
+    },
+    {
+      "id": "palm_west_n_1",
+      "type": "palm_tree",
+      "x": 76.4,
+      "z": 85.6,
+      "rotation": 86.9
+    },
+    {
+      "id": "palm_west_n_2",
+      "type": "palm_tree",
+      "x": 69.0,
+      "z": 84.1,
+      "rotation": 260.2
+    },
+    {
+      "id": "palm_west_n_3",
+      "type": "palm_tree",
+      "x": 70.2,
+      "z": 85.9,
+      "rotation": 346.2
+    },
+    {
+      "id": "palm_west_n_4",
+      "type": "palm_tree",
+      "x": 75.9,
+      "z": 84.5,
+      "rotation": 67.5
+    },
+    {
+      "id": "palm_west_n_5",
+      "type": "palm_tree",
+      "x": 68.9,
+      "z": 84.7,
+      "rotation": 177.6
+    },
+    {
+      "id": "palm_west_n_6",
+      "type": "palm_tree",
+      "x": 69.6,
+      "z": 87.6,
+      "rotation": 116.3
+    },
+    {
+      "id": "palm_west_s_0",
+      "type": "palm_tree",
+      "x": 72.5,
+      "z": 109.2,
+      "rotation": 180.0
+    },
+    {
+      "id": "palm_west_s_1",
+      "type": "palm_tree",
+      "x": 69.5,
+      "z": 109.5,
+      "rotation": 223.2
+    },
+    {
+      "id": "palm_west_s_2",
+      "type": "palm_tree",
+      "x": 62.5,
+      "z": 107.6,
+      "rotation": 203.0
+    },
+    {
+      "id": "palm_west_s_3",
+      "type": "palm_tree",
+      "x": 70.5,
+      "z": 110.0,
+      "rotation": 242.7
+    },
+    {
+      "id": "palm_west_s_4",
+      "type": "palm_tree",
+      "x": 66.3,
+      "z": 105.9,
+      "rotation": 106.0
+    },
+    {
+      "id": "palm_west_s_5",
+      "type": "palm_tree",
+      "x": 72.9,
+      "z": 104.9,
+      "rotation": 79.0
+    },
+    {
+      "id": "palm_west_s_6",
+      "type": "palm_tree",
+      "x": 77.6,
+      "z": 106.7,
+      "rotation": 252.9
+    },
+    {
+      "id": "palm_east_n_0",
+      "type": "palm_tree",
+      "x": 114.1,
+      "z": 84.3,
+      "rotation": 2.9
+    },
+    {
+      "id": "palm_east_n_1",
+      "type": "palm_tree",
+      "x": 102.9,
+      "z": 85.8,
+      "rotation": 30.6
+    },
+    {
+      "id": "palm_east_n_2",
+      "type": "palm_tree",
+      "x": 110.3,
+      "z": 86.2,
+      "rotation": 105.4
+    },
+    {
+      "id": "palm_east_n_3",
+      "type": "palm_tree",
+      "x": 109.5,
+      "z": 84.8,
+      "rotation": 255.4
+    },
+    {
+      "id": "palm_east_n_4",
+      "type": "palm_tree",
+      "x": 99.1,
+      "z": 86.9,
+      "rotation": 8.9
+    },
+    {
+      "id": "palm_east_n_5",
+      "type": "palm_tree",
+      "x": 112.1,
+      "z": 85.9,
+      "rotation": 178.9
+    },
+    {
+      "id": "palm_east_n_6",
+      "type": "palm_tree",
+      "x": 105.9,
+      "z": 86.5,
+      "rotation": 175.0
+    },
+    {
+      "id": "palm_east_s_0",
+      "type": "palm_tree",
+      "x": 113.2,
+      "z": 112.4,
+      "rotation": 54.6
+    },
+    {
+      "id": "palm_east_s_1",
+      "type": "palm_tree",
+      "x": 109.2,
+      "z": 112.7,
+      "rotation": 30.5
+    },
+    {
+      "id": "palm_east_s_2",
+      "type": "palm_tree",
+      "x": 105.8,
+      "z": 107.1,
+      "rotation": 339.6
+    },
+    {
+      "id": "palm_east_s_3",
+      "type": "palm_tree",
+      "x": 107.4,
+      "z": 104.8,
+      "rotation": 351.2
+    },
+    {
+      "id": "palm_east_s_4",
+      "type": "palm_tree",
+      "x": 101.8,
+      "z": 106.8,
+      "rotation": 164.5
+    },
+    {
+      "id": "palm_east_s_5",
+      "type": "palm_tree",
+      "x": 102.7,
+      "z": 107.7,
+      "rotation": 335.0
+    },
+    {
+      "id": "palm_east_s_6",
+      "type": "palm_tree",
+      "x": 114.5,
+      "z": 111.8,
+      "rotation": 303.6
+    }
+  ],
+  "firecamps": [],
+  "undead_zones": [],
+  "wildlife": {
+    "enabled": false
+  },
+  "starting_resources": {
+    "gold": 250,
+    "food": 200,
+    "wood": 250,
+    "stone": 120,
+    "iron": 80
+  },
+  "victory": {
+    "type": "elimination",
+    "key_structures": ["barracks"],
+    "defeat_conditions": [
+      "no_key_structures",
+      "no_commander",
+      "only_commander_remaining"
+    ]
+  }
+}

@@ -241,6 +241,19 @@
       "clip": "artifacts/promo/film/battle_line.mp4"
     },
     {
+      "name": "bridge_order",
+      "clip": "artifacts/promo/film/bridge_order.mp4",
+      "caption": "SHAPE THEM TO THE GROUND",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.4
+      }
+    },
+    {
+      "name": "bridge_column",
+      "clip": "artifacts/promo/film/bridge_column.mp4"
+    },
+    {
       "name": "sepulcher_wake",
       "scenario": "trailer_sepulcher_winter",
       "start": 1.5,
@@ -413,47 +426,77 @@
     },
     {
       "file": "assets/audio/sfx/ui/command_accept.ogg",
-      "at": 34.7,
+      "at": 34.65,
       "gain": 0.5
     },
     {
       "file": "assets/audio/sfx/orders/formation_pole_shift.ogg",
-      "at": 35.8,
+      "at": 35.5,
       "gain": 0.6
     },
     {
       "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 36.4,
+      "at": 37.55,
       "gain": 0.55
     },
     {
       "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 38.2,
-      "gain": 0.45
-    },
-    {
-      "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 40.317,
+      "at": 38.3,
       "gain": 0.5
     },
     {
+      "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
+      "at": 40.5,
+      "gain": 0.45
+    },
+    {
       "file": "assets/audio/sfx/orders/hold_shields_plant.ogg",
-      "at": 43.017,
+      "at": 41.5,
       "gain": 0.7
     },
     {
       "file": "assets/audio/sfx/orders/formation_standard_planted.ogg",
-      "at": 44.117,
+      "at": 42.05,
       "gain": 0.65
     },
     {
+      "file": "assets/audio/sfx/ui/command_accept.ogg",
+      "at": 42.05,
+      "gain": 0.5
+    },
+    {
       "file": "assets/audio/sfx/ui/click_confirm.ogg",
-      "at": 59.167,
+      "at": 42.5,
+      "gain": 0.45
+    },
+    {
+      "file": "assets/audio/sfx/orders/formation_pole_shift.ogg",
+      "at": 44.75,
+      "gain": 0.6
+    },
+    {
+      "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
+      "at": 45.4,
+      "gain": 0.5
+    },
+    {
+      "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
+      "at": 47.3,
+      "gain": 0.45
+    },
+    {
+      "file": "assets/audio/sfx/orders/hold_shields_plant.ogg",
+      "at": 49.3,
+      "gain": 0.6
+    },
+    {
+      "file": "assets/audio/sfx/ui/click_confirm.ogg",
+      "at": 64.1,
       "gain": 0.4
     },
     {
       "file": "assets/audio/sfx/build/placement_confirmed.ogg",
-      "at": 60.067,
+      "at": 65.0,
       "gain": 0.45
     }
   ]

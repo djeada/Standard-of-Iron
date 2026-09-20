@@ -154,6 +154,15 @@ terrainTypeFromString(const std::string& str) -> std::optional<TerrainType> {
   return std::nullopt;
 }
 
+enum class TreeSpecies : std::uint8_t {
+  Pine = 0,
+  Olive,
+  Cypress,
+  Palm
+};
+
+inline constexpr std::size_t k_tree_species_count = 4;
+
 struct BiomeSettings {
   GroundType ground_type = GroundType::ForestMud;
   QVector3D grass_primary{0.27F, 0.52F, 0.25F};
@@ -201,6 +210,13 @@ struct BiomeSettings {
   float grass_saturation = 1.0F;
   float soil_roughness = 0.5F;
   QVector3D snow_color{0.92F, 0.94F, 0.98F};
+
+  // Per-species multiplier on top of the ground type's tree density, indexed by
+  // TreeSpecies. The ground type decides which trees a country grows and in what
+  // proportion; this lets one map lean on part of that mix -- palm country on dry
+  // grass, say -- without inventing a ground type for it. 1 leaves the ground
+  // type's own mix alone, 0 drops a species out of it.
+  std::array<float, k_tree_species_count> tree_density_scale{1.0F, 1.0F, 1.0F, 1.0F};
 };
 
 struct TerrainSurfaceProfile {
@@ -270,15 +286,6 @@ struct BiomeProfiles {
   ClimateProfile climate;
   WindProfile wind;
 };
-
-enum class TreeSpecies : std::uint8_t {
-  Pine = 0,
-  Olive,
-  Cypress,
-  Palm
-};
-
-inline constexpr std::size_t k_tree_species_count = 4;
 
 struct TreeScatterRule {
   bool allowed = false;

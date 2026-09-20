@@ -10031,6 +10031,56 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_sepulcher_wave_flare_review_id),
+        QStringLiteral("Sepulcher Wave Flare Review"),
+        QStringLiteral("Close review of the grave-light flare every guardian rises "
+                       "in. A lone scout wakes the ruins, the opening wave bursts "
+                       "out of the ground, and a timed second wave repeats the "
+                       "burst without waiting for the first to be cleared."),
+        16.0F,
+        {17.0F, 38.0F, 18.0F});
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.select_spawned_units = false;
+    s.camera_focus = QVector3D(0.0F, 0.0F, 4.0F);
+    s.resource_patches = {patch("ruins", 1, QVector3D(0.0F, 0.0F, 5.0F), {}, 1.1F)};
+
+    auto zone =
+        undead_zone(QStringLiteral("flare_zone"),
+                    Game::Map::WorldProp::Type::Ruins,
+                    QVector3D(0.0F, 0.0F, 5.0F),
+                    6.0F,
+                    99,
+                    {undead_wave(QStringLiteral("initial"),
+                                 {{Game::Units::SpawnType::SkeletonSwordsman, 2},
+                                  {Game::Units::SpawnType::SkeletonArcher, 1}}),
+                     undead_wave(QStringLiteral("next_wave"),
+                                 {{Game::Units::SpawnType::SkeletonSwordsman, 2}})});
+    // The second wave is on a timer rather than on a clear, so the flare fires
+    // twice in a short review run with nothing having to die in between.
+    zone.wave_timeout_seconds = 5.0F;
+    s.undead_zones = {std::move(zone)};
+
+    s.groups = {nation_group(QStringLiteral("scout"),
+                             Troop::Swordsman,
+                             Nation::RomanRepublic,
+                             1,
+                             1,
+                             {0.0F, 0.0F, -6.0F},
+                             1)};
+    s.steps = {at(0.5F, Command::FormationMove, QStringLiteral("scout"))};
+    s.steps.back().destination = QVector3D(0.0F, 0.0F, 2.0F);
+    add_visual_stability(s, {QStringLiteral("scout")});
+    s.expectations.push_back(zone_expectation(
+        Expect::UndeadZoneDormantBefore, QStringLiteral("flare_zone"), 0.0F, 1.0F));
+    // Five is both waves: the review is worthless if only the opening burst fires.
+    s.expectations.push_back(zone_expectation(
+        Expect::UndeadZoneAwakened, QStringLiteral("flare_zone"), 5.0F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_sepulcher_shrine_siege_id),
         QStringLiteral("Sepulcher Shrine Siege"),
         QStringLiteral("A Roman assault wakes the shrine and fights for its flag. "

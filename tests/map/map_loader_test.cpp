@@ -187,6 +187,65 @@ TEST(MapLoaderTest, ParsesProceduralScatterOptOuts) {
   EXPECT_TRUE(map_definition.biome.procedural_trees_enabled);
 }
 
+TEST(MapLoaderTest, TreeMixLeansTheGroundTypesSpeciesWithoutReplacingIt) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Palm Country Test"},
+      {"grid", QJsonObject{{"width", 64}, {"height", 64}, {"tile_size", 1.0}}},
+      {"biome",
+       QJsonObject{{"ground_type", "grass_dry"},
+                   {"tree_mix",
+                    QJsonObject{{"pine", 0.0},
+                                {"olive", 0.3},
+                                {"palm", 2.6},
+                                {"juniper", 9.0},
+                                {"cypress", -1.0}}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      temp_file.fileName(), map_definition, &error))
+      << error.toStdString();
+
+  const auto& mix = map_definition.biome.tree_density_scale;
+  const auto scale = [&mix](Game::Map::TreeSpecies species) {
+    return mix[static_cast<std::size_t>(species)];
+  };
+  EXPECT_FLOAT_EQ(scale(Game::Map::TreeSpecies::Pine), 0.0F);
+  EXPECT_FLOAT_EQ(scale(Game::Map::TreeSpecies::Olive), 0.3F);
+  EXPECT_FLOAT_EQ(scale(Game::Map::TreeSpecies::Palm), 2.6F);
+  // A negative share is meaningless, so it reads as none rather than failing
+  // the load or flipping sign; a key naming no species the scatter grows
+  // ("juniper") is ignored outright.
+  EXPECT_FLOAT_EQ(scale(Game::Map::TreeSpecies::Cypress), 0.0F);
+}
+
+TEST(MapLoaderTest, AMapWithNoTreeMixKeepsItsGroundTypesSpeciesMix) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Default Mix Test"},
+      {"grid", QJsonObject{{"width", 32}, {"height", 32}, {"tile_size", 1.0}}},
+      {"biome", QJsonObject{{"ground_type", "grass_dry"}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      temp_file.fileName(), map_definition, &error))
+      << error.toStdString();
+
+  for (const float scale : map_definition.biome.tree_density_scale) {
+    EXPECT_FLOAT_EQ(scale, 1.0F);
+  }
+}
+
 TEST(MapLoaderTest, ParsesUndeadVictoryObjectives) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());

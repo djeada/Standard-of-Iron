@@ -91,6 +91,25 @@ auto patch(const char* prop_type,
   return {QString::fromLatin1(prop_type), count, origin, spacing, scale};
 }
 
+// A patch that is allowed to look unplanned: instances wander off the row, each
+// takes its own yaw, and no two are quite the same size. Scenery that stands in
+// a straight line at one size facing one way is the single loudest tell that a
+// scene was placed by hand, so anything natural should go through here.
+auto scatter(const char* prop_type,
+             int count,
+             QVector3D origin,
+             QVector3D spacing,
+             float scale,
+             float jitter,
+             float scale_spread = 0.22F,
+             float yaw_spread = 360.0F) -> ArenaScenarioResourcePatch {
+  auto result = patch(prop_type, count, origin, spacing, scale);
+  result.jitter = jitter;
+  result.yaw_spread = yaw_spread;
+  result.scale_spread = scale_spread;
+  return result;
+}
+
 auto at(float time,
         Command command,
         QString source = {},
@@ -1471,6 +1490,12 @@ auto trailer_city_battle() -> ArenaScenarioDefinition {
   auto scipio =
       file("scipio", Troop::RomanVeteranConsul, 1, 1, 224.0F, k_gate_z, 1, 0.0F);
   line_health(scipio, 9000);
+  // A held attack spends stamina per swing, so on the default pool Scipio runs
+  // dry about four seconds into his shot and simply stops -- the swings are
+  // refused, nothing says so, and the first-person camera shows a man standing
+  // in a melee holding a sword. The reel needs him fighting for all 5.6 s, so
+  // he gets the same deep pool the other scripted duellists use.
+  scipio.stamina_override = scipio.max_stamina_override = 600.0F;
   s.groups.push_back(scipio);
 
   const std::pair<const char*, float> sectors[] = {
@@ -1567,6 +1592,18 @@ auto trailer_city_battle() -> ArenaScenarioDefinition {
   auto punic_catapults =
       file("punic_catapults", Troop::Catapult, 2, 5, 276.0F, k_gate_z, 1, 15.0F);
   punic_catapults.attack_range_override = 66.0F;
+  // Scipio's first-person shot runs 10.2 s to 15.8 s and has to be a fight for
+  // all of it. It cannot lean on the centre file: that one is deliberately
+  // brittle so the line breaks for the wide shots, and once it goes the lane in
+  // front of him empties and he is left holding a sword up on an empty road.
+  // (Marching him forward only walks him further out of the melee.) This file
+  // exists to walk onto him and stay in reach: close enough to make contact
+  // before the shot opens, and tough enough to still be there when it ends.
+  auto punic_guard =
+      file("punic_guard_c", Troop::Swordsman, 2, 6, 232.0F, k_gate_z, 12, 3.0F);
+  line_health(punic_guard, 5200);
+  s.groups.push_back(punic_guard);
+
   auto hannibal =
       file("hannibal", Troop::CarthageSwordCommander, 2, 1, 270.0F, k_gate_z, 1, 0.0F);
   line_health(hannibal, 9000);
@@ -1631,6 +1668,11 @@ auto trailer_city_battle() -> ArenaScenarioDefinition {
                 k_rome_facing,
                 100.0F),
       rpg_move(6.4F, {0.0F, 0.0F, 0.0F}),
+
+      at(7.0F,
+         Command::AttackMove,
+         QStringLiteral("punic_guard_c"),
+         QStringLiteral("scipio")),
 
       hold_attack(9.4F, true),
       at(7.4F,
@@ -1893,20 +1935,26 @@ auto trailer_sepulcher_winter() -> ArenaScenarioDefinition {
   auto s = definition(
       QString::fromLatin1(k_trailer_sepulcher_winter_id),
       QStringLiteral("Trailer: The Iron Sepulcher Wakes"),
-      QStringLiteral("Deep winter on the high ground. A legion marches onto the "
-                     "snowbound barrow of the Iron Sepulcher; the first wave "
-                     "tears out of the frozen ground with grave priests hurling "
-                     "fire, and the consul cuts his way to the mages."),
+      QStringLiteral("A winter night on the high ground. A legion marches by "
+                     "firelight onto the snowbound barrow of the Iron Sepulcher; "
+                     "the first wave tears out of the frozen ground with grave "
+                     "priests hurling fire, and the consul cuts his way to the "
+                     "mages."),
       30.0F,
       {40.0F, 32.0F, 20.0F});
   s.ground_type = QStringLiteral("alpine_mix");
   s.terrain_snowbound = true;
   s.terrain_seed_override = 9931;
   s.arena_floor_half_extent = 44.0F;
-  s.environment.start_time = 15.2F;
-  s.environment.lighting_profile = QStringLiteral("alpine_clear");
-  s.environment.fog_density_override = 0.022F;
-  s.environment.exposure_override = 1.1F;
+  // Night. The barrow reads as a grave-field only in the dark, and the fire
+  // camps below become the key light instead of the sun.
+  s.environment.start_time = 22.2F;
+  s.environment.lighting_profile = QStringLiteral("iron_sepulcher");
+  s.environment.fog_density_override = 0.010F;
+  // Snow is the brightest surface in the game; the night keyframe's own
+  // exposure is already enough for it. Lifting it the way a dark grove scene
+  // does (2.3) turns the whole field white and puts a daylit sky back over it.
+  s.environment.exposure_override = 1.02F;
   s.weather.snow = 0.75F;
   s.precipitation.enabled = true;
   s.precipitation.type = Game::Map::WeatherType::Snow;
@@ -1951,35 +1999,202 @@ auto trailer_sepulcher_winter() -> ArenaScenarioDefinition {
     s.undead_zones.push_back(zone);
   }
 
+  // Every cluster wanders, turns and resizes per instance, and the spacing
+  // vectors are deliberately not axis-aligned. Just as important: the field is
+  // thinned out and the sizes pulled apart. A grave-field is a few big broken
+  // masses with open snow between them, not an even sprinkle of identical
+  // rubble, and an even sprinkle is what reads as fake at trailer distance.
   s.resource_patches = {
+      // The dead village, far back on the ridge and well spread.
+      scatter("abandoned_home",
+              2,
+              {-36.0F, 0.0F, -28.0F},
+              {8.4F, 0.0F, -4.6F},
+              1.05F,
+              3.0F,
+              0.18F,
+              70.0F),
+      scatter(
+          "abandoned_home", 1, {-13.0F, 0.0F, -33.0F}, {}, 1.15F, 2.6F, 0.16F, 70.0F),
+      scatter("abandoned_home",
+              2,
+              {30.0F, 0.0F, -27.0F},
+              {5.8F, 0.0F, -6.4F},
+              0.95F,
+              3.0F,
+              0.18F,
+              70.0F),
 
-      patch("abandoned_home", 3, {-36.0F, 0.0F, -26.0F}, {6.2F, 0.0F, -2.8F}, 1.05F),
-      patch("abandoned_home", 2, {-14.0F, 0.0F, -31.0F}, {6.8F, 0.0F, 2.6F}, 0.95F),
-      patch("abandoned_home", 2, {31.0F, 0.0F, -24.0F}, {5.4F, 0.0F, -4.2F}, 1.0F),
-      patch("abandoned_home", 1, {-24.0F, 0.0F, -19.0F}, {}, 0.9F),
-      patch("ruins", 4, {7.0F, 0.0F, k_barrow_z - 10.0F}, {4.6F, 0.0F, -2.4F}, 1.2F),
-      patch("ruins", 3, {-19.0F, 0.0F, k_barrow_z - 8.0F}, {3.6F, 0.0F, 2.1F}, 1.05F),
-      patch("ruins", 2, {-30.0F, 0.0F, -33.0F}, {4.2F, 0.0F, 3.0F}, 0.9F),
-      patch("statue", 2, {-9.0F, 0.0F, k_barrow_z - 7.0F}, {7.4F, 0.0F, -3.8F}, 1.2F),
-      patch("statue", 1, {28.0F, 0.0F, k_barrow_z - 12.0F}, {}, 1.1F),
-      patch("tent", 3, {19.0F, 0.0F, 13.0F}, {3.4F, 0.0F, 2.2F}, 1.0F),
-      patch("supply_cart", 2, {23.0F, 0.0F, 8.0F}, {4.8F, 0.0F, 3.4F}, 1.0F),
-      patch("weapon_rack", 2, {-14.0F, 0.0F, 19.0F}, {3.2F, 0.0F, 1.8F}, 1.0F),
-      patch(
-          "dead_tree", 4, {-23.0F, 0.0F, k_barrow_z - 2.0F}, {2.3F, 0.0F, 4.6F}, 1.15F),
-      patch("dead_tree", 3, {11.0F, 0.0F, 2.0F}, {3.1F, 0.0F, 3.6F}, 1.05F),
-      patch("dead_tree", 5, {31.0F, 0.0F, k_barrow_z + 4.0F}, {1.9F, 0.0F, 4.1F}, 1.1F),
-      patch("dead_tree", 3, {-35.0F, 0.0F, -4.0F}, {2.6F, 0.0F, -3.8F}, 1.0F),
-      patch("pine_tree", 7, {-33.0F, 0.0F, 27.0F}, {2.6F, 0.0F, -3.9F}, 1.2F),
-      patch("pine_tree", 5, {32.0F, 0.0F, 22.0F}, {2.9F, 0.0F, -4.8F}, 1.15F),
-      patch("pine_tree", 4, {-7.0F, 0.0F, 29.0F}, {4.1F, 0.0F, 2.4F}, 1.1F),
-      patch("pine_tree", 3, {36.0F, 0.0F, -6.0F}, {2.2F, 0.0F, -5.2F}, 1.05F),
-      patch("fire_camp", 1, {-6.0F, 0.0F, 20.0F}, {}, 0.95F),
-      patch("fire_camp", 1, {7.0F, 0.0F, 21.0F}, {}, 0.95F),
-      patch("boulder", 5, {14.0F, 0.0F, k_barrow_z - 6.0F}, {3.0F, 0.0F, 1.5F}, 1.1F),
-      patch("boulder", 3, {-17.0F, 0.0F, 7.0F}, {2.7F, 0.0F, 2.3F}, 0.95F),
-      patch("boulder", 4, {34.0F, 0.0F, 5.0F}, {2.4F, 0.0F, 3.1F}, 1.05F),
-      patch("boulder", 3, {-30.0F, 0.0F, -20.0F}, {3.3F, 0.0F, -2.0F}, 1.15F),
+      // Broken stone at the barrow mouths. Wide scale spread so each cluster
+      // has one standing mass and the rest is low rubble around it.
+      scatter("ruins",
+              2,
+              {6.0F, 0.0F, k_barrow_z - 11.0F},
+              {6.8F, 0.0F, -4.9F},
+              1.45F,
+              3.4F,
+              0.46F),
+      scatter("ruins",
+              2,
+              {-20.0F, 0.0F, k_barrow_z - 9.0F},
+              {5.7F, 0.0F, 4.8F},
+              1.3F,
+              3.4F,
+              0.46F),
+      scatter("ruins",
+              2,
+              {26.0F, 0.0F, k_barrow_z + 5.0F},
+              {5.1F, 0.0F, 5.6F},
+              0.8F,
+              3.0F,
+              0.42F),
+      scatter("ruins", 1, {-32.0F, 0.0F, -34.0F}, {}, 1.5F, 2.4F, 0.2F),
+      scatter("statue",
+              1,
+              {-10.0F, 0.0F, k_barrow_z - 6.0F},
+              {},
+              1.35F,
+              1.8F,
+              0.14F,
+              120.0F),
+      scatter("statue",
+              1,
+              {27.0F, 0.0F, k_barrow_z - 13.0F},
+              {},
+              1.1F,
+              1.6F,
+              0.12F,
+              120.0F),
+
+      // The legion's camp. Tents and carts keep a narrow yaw spread: this was
+      // pitched by soldiers, not scattered by the wind.
+      scatter("tent",
+              4,
+              {18.0F, 0.0F, 12.0F},
+              {4.3F, 0.0F, 3.4F},
+              1.0F,
+              1.6F,
+              0.12F,
+              40.0F),
+      scatter("tent",
+              3,
+              {-20.0F, 0.0F, 14.0F},
+              {4.7F, 0.0F, -2.9F},
+              0.95F,
+              1.6F,
+              0.12F,
+              40.0F),
+      scatter("supply_cart",
+              2,
+              {24.0F, 0.0F, 7.0F},
+              {5.2F, 0.0F, 4.7F},
+              1.0F,
+              1.5F,
+              0.1F,
+              50.0F),
+      scatter("weapon_rack",
+              2,
+              {-15.0F, 0.0F, 17.0F},
+              {3.4F, 0.0F, 2.8F},
+              1.0F,
+              1.4F,
+              0.1F,
+              50.0F),
+
+      // Firelight is the scene's key light now, so there is a lot of it and it
+      // is spread through the depth of frame: the camp at the legion's back,
+      // braziers flanking the approach, and fires still burning out among the
+      // barrows so the risen come up against something bright. Yaw is left
+      // alone -- a fire has no front.
+      scatter("fire_camp",
+              3,
+              {-16.0F, 0.0F, 13.0F},
+              {7.4F, 0.0F, 3.2F},
+              1.25F,
+              2.2F,
+              0.2F,
+              0.0F),
+      scatter("fire_camp",
+              2,
+              {12.0F, 0.0F, 15.0F},
+              {8.1F, 0.0F, -3.6F},
+              1.15F,
+              2.2F,
+              0.2F,
+              0.0F),
+      scatter("fire_camp", 1, {-26.0F, 0.0F, -3.0F}, {}, 1.3F, 2.0F, 0.18F, 0.0F),
+      scatter("fire_camp", 1, {27.0F, 0.0F, -1.0F}, {}, 1.3F, 2.0F, 0.18F, 0.0F),
+      scatter("fire_camp",
+              2,
+              {-13.0F, 0.0F, k_barrow_z - 7.0F},
+              {9.2F, 0.0F, -4.1F},
+              1.1F,
+              2.4F,
+              0.22F,
+              0.0F),
+      scatter("fire_camp",
+              2,
+              {17.0F, 0.0F, k_barrow_z - 9.0F},
+              {8.6F, 0.0F, 3.8F},
+              1.05F,
+              2.4F,
+              0.22F,
+              0.0F),
+      scatter("fire_camp", 1, {-33.0F, 0.0F, -21.0F}, {}, 0.95F, 2.2F, 0.2F, 0.0F),
+      scatter("fire_camp", 1, {35.0F, 0.0F, -18.0F}, {}, 0.95F, 2.2F, 0.2F, 0.0F),
+
+      // Dead wood on the barrow, live pine on the treeline. Both take a full
+      // 360 degrees of yaw and a wide scale spread -- a bare trunk repeated at
+      // one angle and one height is the tell the eye catches first.
+      scatter("dead_tree",
+              3,
+              {-24.0F, 0.0F, k_barrow_z - 1.0F},
+              {3.6F, 0.0F, 5.4F},
+              1.25F,
+              3.2F,
+              0.4F),
+      scatter(
+          "dead_tree", 2, {10.0F, 0.0F, 1.0F}, {5.8F, 0.0F, 4.3F}, 1.1F, 3.0F, 0.4F),
+      scatter("dead_tree",
+              3,
+              {32.0F, 0.0F, k_barrow_z + 6.0F},
+              {1.9F, 0.0F, 5.7F},
+              1.15F,
+              3.2F,
+              0.4F),
+      scatter("dead_tree",
+              2,
+              {-34.0F, 0.0F, -6.0F},
+              {4.4F, 0.0F, -4.9F},
+              1.05F,
+              3.0F,
+              0.4F),
+      scatter("pine_tree",
+              6,
+              {-34.0F, 0.0F, 26.0F},
+              {3.1F, 0.0F, -4.4F},
+              1.25F,
+              3.6F,
+              0.34F),
+      scatter(
+          "pine_tree", 4, {33.0F, 0.0F, 22.0F}, {3.4F, 0.0F, -5.6F}, 1.2F, 3.6F, 0.34F),
+      scatter(
+          "pine_tree", 3, {-8.0F, 0.0F, 30.0F}, {5.2F, 0.0F, 2.7F}, 1.15F, 3.4F, 0.34F),
+      scatter(
+          "pine_tree", 3, {37.0F, 0.0F, -8.0F}, {2.4F, 0.0F, -6.1F}, 1.1F, 3.4F, 0.34F),
+
+      scatter("boulder",
+              3,
+              {15.0F, 0.0F, k_barrow_z - 5.0F},
+              {4.6F, 0.0F, 3.1F},
+              1.25F,
+              3.0F,
+              0.45F),
+      scatter(
+          "boulder", 2, {-18.0F, 0.0F, 6.0F}, {3.9F, 0.0F, 4.2F}, 1.0F, 2.6F, 0.45F),
+      scatter("boulder", 3, {34.0F, 0.0F, 4.0F}, {2.7F, 0.0F, 5.1F}, 1.1F, 2.8F, 0.45F),
+      scatter(
+          "boulder", 2, {-31.0F, 0.0F, -19.0F}, {4.8F, 0.0F, -3.4F}, 1.2F, 2.8F, 0.45F),
   };
 
   auto legion_swords = group(QStringLiteral("winter_legion_swords"),

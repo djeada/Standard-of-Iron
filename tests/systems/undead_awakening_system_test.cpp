@@ -6,6 +6,7 @@
 
 #include "core/component_combat.h"
 #include "core/component_gameplay.h"
+#include "core/component_presentation.h"
 #include "core/event_manager.h"
 #include "core/world.h"
 #include "game/map/map_definition.h"
@@ -377,6 +378,84 @@ TEST_F(UndeadAwakeningSystemTest, WaveRisesTogetherAtDistinctSpreadPositions) {
           << "guardians " << i << " and " << j << " spawned on top of each other";
     }
   }
+}
+
+TEST_F(UndeadAwakeningSystemTest, EveryGuardianOfAWaveRisesWithItsOwnFlare) {
+  Engine::Core::World world;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
+
+  Game::Map::MapDefinition map_definition = make_test_map();
+  map_definition.undead_zones.front().waves.front().units = {
+      {Game::Units::SpawnType::SkeletonSwordsman, 4}};
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  system.configure(map_definition);
+
+  auto* intruder = add_intruder(world, {0.5F, 0.0F, 0.5F});
+  system.update(&world, 0.1F);
+
+  int flaring = 0;
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || unit->owner_id != 99 ||
+        !Game::Units::is_troop_spawn(unit->spawn_type)) {
+      continue;
+    }
+    const auto* flare =
+        entity->get_component<Engine::Core::ProductionCompletionComponent>();
+    ASSERT_NE(flare, nullptr) << "a risen guardian rose with no flare on it";
+    EXPECT_EQ(flare->style, Engine::Core::SpawnFlareStyle::Awakening);
+    EXPECT_FLOAT_EQ(flare->remaining,
+                    Engine::Core::ProductionCompletionComponent::k_awakening_duration);
+    EXPECT_GT(flare->radius, 0.0F);
+    ++flaring;
+  }
+
+  EXPECT_EQ(flaring, 4);
+  EXPECT_FALSE(intruder->has_component<Engine::Core::ProductionCompletionComponent>())
+      << "the flare marks who rose, not who walked in";
+}
+
+TEST_F(UndeadAwakeningSystemTest, AFollowUpWaveFlaresAgainOnItsOwnGuardians) {
+  Engine::Core::World world;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
+
+  const Game::Map::MapDefinition map_definition = make_two_wave_shrine_map(0.0F);
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  system.configure(map_definition);
+
+  add_intruder(world, {0.5F, 0.0F, 0.5F});
+  system.update(&world, 0.1F);
+
+  // Put the first wave down and let its flares expire the way the production
+  // system would, so anything still glowing afterwards belongs to wave two.
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit != nullptr && unit->owner_id == 99 &&
+        Game::Units::is_troop_spawn(unit->spawn_type)) {
+      unit->health = 0;
+    }
+    entity->remove_component<Engine::Core::ProductionCompletionComponent>();
+  }
+
+  for (int tick = 0; tick < 40; ++tick) {
+    system.update(&world, 0.1F);
+  }
+
+  int flaring = 0;
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    const auto* flare =
+        entity->get_component<Engine::Core::ProductionCompletionComponent>();
+    if (unit == nullptr || flare == nullptr) {
+      continue;
+    }
+    EXPECT_EQ(unit->owner_id, 99);
+    EXPECT_EQ(unit->spawn_type, Game::Units::SpawnType::SkeletonArcher);
+    EXPECT_EQ(flare->style, Engine::Core::SpawnFlareStyle::Awakening);
+    ++flaring;
+  }
+
+  EXPECT_EQ(flaring, 1) << "the second wave must flare as it rises, like the first";
 }
 
 TEST_F(UndeadAwakeningSystemTest, ShrineZoneGarrisonsACapturableSepulcherBarracks) {

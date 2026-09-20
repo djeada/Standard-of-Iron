@@ -103,6 +103,7 @@ add_library(
     units/troop_catalog_loader.cpp
     visuals/building_asset_key.cpp
     systems/building_collision_registry.cpp
+    systems/spawn_flare.cpp
     systems/building_line_of_sight.cpp
     systems/camera_obstruction.cpp
     systems/player_feedback.cpp
