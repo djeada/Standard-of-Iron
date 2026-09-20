@@ -41,7 +41,7 @@
       "scenario": "trailer_city_battle",
       "start": 5.5,
       "duration": 3.0,
-      "caption": "AURELIA MAGNA",
+      "caption": "MASSIVE BATTLE",
       "focus": {
         "mode": "point",
         "point": [196.0, 0.0, -40.0]
@@ -199,7 +199,7 @@
       "stabilize_seconds": 0.25,
       "rpg_hud": true,
       "gameplay_ui": true,
-      "caption": "PUBLIUS CORNELIUS SCIPIO"
+      "caption": "BE THE COMMANDER"
     },
     {
       "name": "town_wide",
@@ -365,9 +365,29 @@
       "gain": 0.85
     },
     {
+      "file": "assets/audio/sfx/combat/stone_impact_01.ogg",
+      "at": 2.95,
+      "gain": 0.7
+    },
+    {
       "file": "assets/audio/sfx/ui/command_accept.ogg",
       "at": 3.2,
       "gain": 0.5
+    },
+    {
+      "file": "assets/audio/sfx/combat/stone_impact_01.ogg",
+      "at": 3.75,
+      "gain": 0.55
+    },
+    {
+      "file": "assets/audio/sfx/combat/spear_impact_02.ogg",
+      "at": 4.45,
+      "gain": 0.45
+    },
+    {
+      "file": "assets/audio/sfx/combat/stone_impact_01.ogg",
+      "at": 4.95,
+      "gain": 0.65
     },
     {
       "file": "assets/audio/sfx/combat/arrows_many_overhead.ogg",
@@ -385,9 +405,19 @@
       "gain": 0.7
     },
     {
+      "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
+      "at": 10.5,
+      "gain": 0.7
+    },
+    {
       "file": "assets/audio/sfx/combat/charge_roar.ogg",
       "at": 10.55,
       "gain": 0.85
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_01.ogg",
+      "at": 10.95,
+      "gain": 0.8
     },
     {
       "file": "assets/audio/sfx/combat/gladius_shield_impacts_close.ogg",
@@ -395,9 +425,64 @@
       "gain": 0.85
     },
     {
+      "file": "assets/audio/sfx/combat/armour_hit_01.ogg",
+      "at": 11.75,
+      "gain": 0.75
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
+      "at": 12.1,
+      "gain": 0.7
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
+      "at": 12.45,
+      "gain": 0.8
+    },
+    {
       "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
       "at": 12.9,
       "gain": 0.8
+    },
+    {
+      "file": "assets/audio/sfx/combat/sword_hit_01.ogg",
+      "at": 13.25,
+      "gain": 0.75
+    },
+    {
+      "file": "assets/audio/sfx/combat/arrow_impact_01.ogg",
+      "at": 13.55,
+      "gain": 0.6
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry_v2.ogg",
+      "at": 13.85,
+      "gain": 0.7
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_03.ogg",
+      "at": 14.2,
+      "gain": 0.8
+    },
+    {
+      "file": "assets/audio/sfx/combat/armour_hit_02.ogg",
+      "at": 14.55,
+      "gain": 0.72
+    },
+    {
+      "file": "assets/audio/sfx/combat/arrows_overhead_dark.ogg",
+      "at": 14.9,
+      "gain": 0.55
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry_v3.ogg",
+      "at": 15.25,
+      "gain": 0.7
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_01.ogg",
+      "at": 15.6,
+      "gain": 0.75
     },
     {
       "file": "assets/audio/ambience/mediterranean_city_market.ogg",
@@ -441,62 +526,202 @@
     },
     {
       "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 38.3,
+      "at": 43.233,
       "gain": 0.5
     },
     {
       "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 40.5,
+      "at": 45.433,
       "gain": 0.45
     },
     {
       "file": "assets/audio/sfx/orders/hold_shields_plant.ogg",
-      "at": 41.5,
+      "at": 46.433,
       "gain": 0.7
     },
     {
       "file": "assets/audio/sfx/orders/formation_standard_planted.ogg",
-      "at": 42.05,
+      "at": 46.983,
       "gain": 0.65
     },
     {
       "file": "assets/audio/sfx/ui/command_accept.ogg",
-      "at": 42.05,
+      "at": 46.983,
       "gain": 0.5
     },
     {
       "file": "assets/audio/sfx/ui/click_confirm.ogg",
-      "at": 42.5,
+      "at": 47.433,
       "gain": 0.45
     },
     {
       "file": "assets/audio/sfx/orders/formation_pole_shift.ogg",
-      "at": 44.75,
+      "at": 49.683,
       "gain": 0.6
     },
     {
       "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 45.4,
+      "at": 53.8,
       "gain": 0.5
     },
     {
       "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-      "at": 47.3,
+      "at": 55.7,
       "gain": 0.45
     },
     {
       "file": "assets/audio/sfx/orders/hold_shields_plant.ogg",
-      "at": 49.3,
+      "at": 57.7,
+      "gain": 0.6
+    },
+    {
+      "file": "assets/audio/sfx/undead/skeletons_rise.ogg",
+      "at": 58.0,
+      "gain": 0.85
+    },
+    {
+      "file": "assets/audio/sfx/combat/battlefield_distant_mass_01.ogg",
+      "at": 59.2,
+      "gain": 0.5
+    },
+    {
+      "file": "assets/audio/sfx/undead/skeletons_rise.ogg",
+      "at": 60.5,
+      "gain": 0.6
+    },
+    {
+      "file": "assets/audio/sfx/orders/attack_horn_stab.ogg",
+      "at": 61.5,
+      "gain": 0.6
+    },
+    {
+      "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
+      "at": 62.9,
+      "gain": 0.68
+    },
+    {
+      "file": "assets/audio/sfx/combat/charge_roar.ogg",
+      "at": 63.05,
+      "gain": 0.75
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
+      "at": 63.45,
+      "gain": 0.8
+    },
+    {
+      "file": "assets/audio/sfx/combat/fireball_impact.ogg",
+      "at": 63.9,
+      "gain": 0.85
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
+      "at": 64.35,
+      "gain": 0.7
+    },
+    {
+      "file": "assets/audio/sfx/combat/armour_hit_01.ogg",
+      "at": 64.75,
+      "gain": 0.72
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_03.ogg",
+      "at": 65.15,
+      "gain": 0.78
+    },
+    {
+      "file": "assets/audio/sfx/combat/fireball_impact.ogg",
+      "at": 65.6,
+      "gain": 0.75
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry_v2.ogg",
+      "at": 65.95,
+      "gain": 0.68
+    },
+    {
+      "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
+      "at": 66.4,
+      "gain": 0.72
+    },
+    {
+      "file": "assets/audio/sfx/combat/fireball_impact.ogg",
+      "at": 66.6,
+      "gain": 0.9
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_01.ogg",
+      "at": 67.05,
+      "gain": 0.82
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry_v3.ogg",
+      "at": 67.45,
+      "gain": 0.72
+    },
+    {
+      "file": "assets/audio/sfx/combat/armour_hit_02.ogg",
+      "at": 67.85,
+      "gain": 0.75
+    },
+    {
+      "file": "assets/audio/sfx/combat/fireball_impact.ogg",
+      "at": 68.25,
+      "gain": 0.8
+    },
+    {
+      "file": "assets/audio/sfx/combat/sword_hit_01.ogg",
+      "at": 68.7,
+      "gain": 0.78
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
+      "at": 69.1,
+      "gain": 0.7
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
+      "at": 69.5,
+      "gain": 0.8
+    },
+    {
+      "file": "assets/audio/sfx/combat/fireball_impact.ogg",
+      "at": 69.95,
+      "gain": 0.85
+    },
+    {
+      "file": "assets/audio/sfx/combat/armour_hit_01.ogg",
+      "at": 70.4,
+      "gain": 0.72
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry_v2.ogg",
+      "at": 70.8,
+      "gain": 0.72
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_03.ogg",
+      "at": 71.2,
+      "gain": 0.78
+    },
+    {
+      "file": "assets/audio/sfx/combat/fireball_impact.ogg",
+      "at": 71.65,
+      "gain": 0.8
+    },
+    {
+      "file": "assets/audio/sfx/combat/soldiers_victory_cheer.ogg",
+      "at": 72.1,
       "gain": 0.6
     },
     {
       "file": "assets/audio/sfx/ui/click_confirm.ogg",
-      "at": 64.1,
+      "at": 72.5,
       "gain": 0.4
     },
     {
       "file": "assets/audio/sfx/build/placement_confirmed.ogg",
-      "at": 65.0,
+      "at": 73.4,
       "gain": 0.45
     }
   ]

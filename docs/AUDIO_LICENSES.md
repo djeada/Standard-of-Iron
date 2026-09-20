@@ -51,7 +51,7 @@ The ElevenLabs renders were generated under a licence held by the project author
 
 | Licence | Files |
 | --- | ---: |
-| ElevenLabs licence held by the project author; commercial use permitted | 74 |
+| ElevenLabs licence held by the project author; commercial use permitted | 76 |
 | Own work (MIT) | 68 |
 | CC0 1.0 | 62 |
 | Proprietary -- supplied by the project owner | 4 |
@@ -208,6 +208,7 @@ The ElevenLabs renders were generated under a licence held by the project author
 | `elephant_panic.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC ANIMALS, 'CU_Elephant Trumpet' | CC0 1.0 |
 | `elephant_trumpet_charge.ogg` | ElevenLabs render `Charge_of_the_War_Elephant`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
 | `elephant_trumpet_panic.ogg` | ElevenLabs render `Distressed_War_Elephant`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
+| `fireball_impact.ogg` | ElevenLabs render `Flame_Hit`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
 | `gladius_shield_impacts_close.ogg` | Recorded import supplied by the project owner, generated with ElevenLabs sound effects on 2026-09-17 and converted to Vorbis; it replaces the composed CC0 cue that was here. | Proprietary -- supplied by the project owner |
 | `guard_break.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC WOOD, 'CU_Stick, Small, Breaks, X3'; TDC METAL, 'Metal, Clang, Thin 01' | CC0 1.0 |
 | `guard_raise.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CLOTH, 'CU_Swish, Impact, Fight'; TDC METAL, 'CU_Bolt, Drop' | CC0 1.0 |
@@ -222,6 +223,7 @@ The ElevenLabs renders were generated under a licence held by the project author
 | `land_thud.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC FIGHT, 'CU_Bodyfall, On Grass' | CC0 1.0 |
 | `land_thud_v2.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC FIGHT, 'CU_Bodyfall, On Grass' | CC0 1.0 |
 | `lock_on_tick.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC METAL, 'CU_Small, Tin, Drop' | CC0 1.0 |
+| `magic_arc_discharge.ogg` | ElevenLabs render `Magical_Voltage_Arc`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
 | `perfect_guard.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC METAL, 'Metal, Clang, Thin 01' | CC0 1.0 |
 | `roman_shield_wall_impact.ogg` | Recorded import supplied by the project owner, generated with ElevenLabs sound effects on 2026-09-17 and converted to Vorbis; it replaces the composed CC0 cue that was here. | Proprietary -- supplied by the project owner |
 | `roman_war_horns_orders.ogg` | Composed by `tools/audio_field/build_battle.py` from Wikimedia Commons, 'File:Hunting horn tone.ogg', by Alon-De-Lon | CC0 1.0 |

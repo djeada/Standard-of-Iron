@@ -2409,6 +2409,38 @@
       }
     },
     {
+      "id": "sfx.combat.magic_arc",
+      "path": "sfx/combat/magic_arc_discharge.ogg",
+      "category": "sfx",
+      "priority": 3,
+      "cooldown_ms": 400,
+      "load_policy": "startup",
+      "tags": {
+        "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Magical_Voltage_Arc`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted",
+        "notes": "imported at its delivered length; no trim"
+      }
+    },
+    {
+      "id": "sfx.combat.fireball_impact",
+      "path": "sfx/combat/fireball_impact.ogg",
+      "category": "sfx",
+      "priority": 3,
+      "cooldown_ms": 250,
+      "load_policy": "startup",
+      "tags": {
+        "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Flame_Hit`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted",
+        "notes": "trimmed from its transient at 0.14 s; level matched to stone_impact_01.ogg"
+      }
+    },
+    {
       "id": "sfx.combat.heal_bind_wound",
       "path": "sfx/combat/heal_bind_wound.ogg",
       "category": "sfx",
