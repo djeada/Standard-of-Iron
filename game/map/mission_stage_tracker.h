@@ -25,7 +25,7 @@ struct StageStatus {
   QString detail;
   QString compact_detail;
   QString type;
-  // Share of the stage done, 0..1, when finer than progress / required.
+
   double fraction = -1.0;
   int progress = 0;
   int required = 1;

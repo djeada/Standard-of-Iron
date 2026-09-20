@@ -77,7 +77,6 @@ struct FieldPosition {
   float z = 0.0F;
 };
 
-// Where the living men of a squad stand on the field, as last presented.
 auto soldier_positions(const Engine::Core::World& world,
                        Engine::Core::EntityID id) -> std::vector<FieldPosition> {
   std::vector<FieldPosition> positions;
@@ -104,9 +103,6 @@ auto soldier_positions(const Engine::Core::World& world,
   return positions;
 }
 
-// Sends the men who stood at `from` to the new slots of `squads`, closest pairs
-// first, so a split or a join is a short walk rather than men appearing in
-// their new ranks.
 void walk_into_new_slots(Engine::Core::World& world,
                          const std::vector<Engine::Core::EntityID>& squads,
                          const std::vector<FieldPosition>& from) {
@@ -243,8 +239,6 @@ auto join_candidates(const Engine::Core::World& world,
   return candidates;
 }
 
-// Single-link clusters: a squad joins a cluster when it stands within
-// k_merge_radius of any member, so a line of squads folds as one group.
 auto join_clusters(const std::vector<JoinCandidate>& candidates)
     -> std::vector<std::vector<std::size_t>> {
   std::vector<std::size_t> parent(candidates.size());
@@ -306,7 +300,7 @@ auto SquadService::share_health(const std::vector<int>& men,
         squad_men > 0
             ? max_health_for(squad_men, establishment, establishment_max_health)
             : 0;
-    // The least health at which the squad still shows all of its men.
+
     const int floor =
         squad_men > 0
             ? static_cast<int>((static_cast<long long>(squad_men - 1) * ceiling) /
@@ -327,7 +321,6 @@ auto SquadService::share_health(const std::vector<int>& men,
   const long long target =
       std::clamp(static_cast<long long>(std::max(0, health)), floor_sum, ceiling_sum);
 
-  // Deal the pool in proportion to men, then keep each share inside its band.
   long long running_men = 0;
   long long handed_out = 0;
   long long dealt = 0;
@@ -340,8 +333,6 @@ auto SquadService::share_health(const std::vector<int>& men,
     dealt += rosters[i].health;
   }
 
-  // Clamping can leave the total off by a little; settle it one point at a
-  // time against the squads with room, so the total is exactly the target.
   while (dealt != target) {
     const int step = dealt < target ? 1 : -1;
     bool moved = false;

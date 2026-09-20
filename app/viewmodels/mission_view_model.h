@@ -44,8 +44,7 @@ public:
 
   void set_stages(const QVariantList& stages, bool mirrors_victory_conditions = false);
   void set_seconds_until_deadline(qreal seconds);
-  // Live progress of the tracked optional objectives, keyed by "index" into
-  // the mission's optional_objectives list.
+
   void set_optional(const QVariantList& optional);
   void clear();
 

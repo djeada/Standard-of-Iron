@@ -405,12 +405,12 @@ void ProjectileSystem::confirm_commander_hit(Engine::Core::World* world,
   if (world == nullptr || attacker_id == 0) {
     return;
   }
-  auto* attacker = world->get_entity(attacker_id);
-  if (attacker == nullptr) {
+  auto const* commander = world->try_get<Engine::Core::CommanderComponent>(attacker_id);
+  if (commander == nullptr || !commander->fpv_controlled) {
     return;
   }
-  auto const* commander = attacker->get_component<Engine::Core::CommanderComponent>();
-  if (commander == nullptr || !commander->fpv_controlled) {
+  auto* attacker = world->get_entity(attacker_id);
+  if (attacker == nullptr) {
     return;
   }
   auto* targets =

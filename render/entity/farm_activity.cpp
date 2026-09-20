@@ -34,11 +34,11 @@ constexpr float k_reap_cycle_seconds = 2.2F;
 constexpr float k_kneel_cycle_seconds = 3.0F;
 constexpr float k_idle_cycle_seconds = 3.6F;
 constexpr float k_soil_y = 0.035F;
-// A clip change cross-fades over this long, when the actor path supports it.
+
 constexpr float k_blend_seconds = 0.35F;
-// A worker turning at a row end swings round over this much of the walk back.
+
 constexpr float k_turn_metres = 0.45F;
-// Lane workers stand this far from the row centre line, at most.
+
 constexpr float k_lane_jitter = 0.03F;
 constexpr float k_lane_clear_half_width = 0.075F;
 constexpr float k_headland_x = 0.80F;
@@ -46,9 +46,6 @@ constexpr float k_bundle_x = 0.78F;
 
 constexpr auto mix = ambient_hash;
 
-// Independent sub-streams of one entity hash. Every duration, stride, offset
-// and choice below is drawn from these, never from wall-clock alone, which is
-// what keeps a hundred fields out of step with each other.
 auto salt(std::uint32_t seed, std::uint32_t tag) -> std::uint32_t {
   return mix(seed ^ (tag * 0x9E3779B9U));
 }
@@ -77,7 +74,6 @@ auto yaw_of(const QVector3D& direction) -> float {
   return std::atan2(direction.x(), direction.z()) * 180.0F / k_pi;
 }
 
-// Shortest-arc interpolation between two headings in degrees.
 auto lerp_yaw(float from, float to, float t) -> float {
   float delta = std::fmod(to - from + 540.0F, 360.0F) - 180.0F;
   return from + delta * std::clamp(t, 0.0F, 1.0F);
@@ -89,7 +85,6 @@ auto flat(QVector3D v) -> QVector3D {
   return length > 1e-6F ? v / length : QVector3D(0.0F, 0.0F, 1.0F);
 }
 
-// 0 at its own anchor, 1 beside the sleeper. Out and back around the stare.
 auto walk_fraction(float gag_time) -> float {
   if (gag_time < Nap::k_approach_start) {
     return 0.0F;
@@ -127,8 +122,7 @@ auto yaw_towards(const QVector3D& from,
 }
 
 auto derive_visual(bool carthage) -> FarmWorkerVisual {
-  // Hang the shared field props on this nation's civilian rig. Done once, off
-  // the frame loop, so no archetype is built while drawing.
+
   const auto& rig = nation_civilian_rig(carthage);
   FarmWorkerVisual visual{};
   if (!rig.valid()) {
@@ -153,8 +147,6 @@ auto derive_visual(bool carthage) -> FarmWorkerVisual {
   return visual;
 }
 
-// Cut sheaves stood on end and leaned together. Built once per sheaf count;
-// the instance palette carries the field's own straw tone.
 enum StookSlot : std::uint8_t {
   k_stook_straw = 0U,
   k_stook_shade = 1U,
@@ -163,8 +155,7 @@ constexpr int k_stook_min_sheaves = 5;
 constexpr int k_stook_max_sheaves = 8;
 
 auto build_stook(int sheaves) -> RenderArchetype {
-  // The field model is scaled about 7x in the ground plane and 5x in height,
-  // so these are authored small: one sheaf stands a little over a metre.
+
   std::vector<GeneratedEquipmentPrimitive> primitives;
   primitives.reserve(static_cast<std::size_t>(sheaves) * 3U);
   const std::uint32_t seed = mix(0x5700CU + static_cast<std::uint32_t>(sheaves));
@@ -178,7 +169,7 @@ auto build_stook(int sheaves) -> RenderArchetype {
     const QVector3D foot(std::cos(angle) * lean, 0.0F, std::sin(angle) * lean);
     const QVector3D head(std::cos(angle) * 0.010F, height, std::sin(angle) * 0.010F);
     const QVector3D band = foot + (head - foot) * 0.58F;
-    // Two cones meeting at the tie, so the bundle flares at both ends.
+
     primitives.push_back(generated_cone(foot, band, 0.0135F, k_stook_straw));
     primitives.push_back(generated_cone(head, band, 0.0125F, k_stook_straw));
     primitives.push_back(generated_cylinder(band - (head - foot) * 0.03F,
@@ -186,7 +177,7 @@ auto build_stook(int sheaves) -> RenderArchetype {
                                             0.0075F,
                                             k_stook_shade));
   }
-  // Loose straw at the foot.
+
   primitives.push_back(generated_cylinder(QVector3D(0.0F, 0.000F, 0.0F),
                                           QVector3D(0.0F, 0.006F, 0.0F),
                                           0.085F,
@@ -208,8 +199,6 @@ auto stook_archetype(int sheaves) -> const RenderArchetype& {
   const int clamped = std::clamp(sheaves, k_stook_min_sheaves, k_stook_max_sheaves);
   return table[static_cast<std::size_t>(clamped - k_stook_min_sheaves)];
 }
-
-// --- schedules -------------------------------------------------------------
 
 struct Bout {
   float work{0.0F};
@@ -239,7 +228,7 @@ auto worker_plan(std::uint64_t field_id, int worker, bool ripe) -> WorkerPlan {
                      : ripe   ? k_reap_cycle_seconds
                               : k_tend_cycle_seconds;
   plan.stroke_cycle = base * (0.86F + 0.28F * unit(salt(w, 1U)));
-  // A field pace, not a march.
+
   plan.walk_speed = 0.85F + 0.35F * unit(salt(w, 2U));
   for (std::uint32_t j = 0; j < 3U; ++j) {
     auto& bout = plan.bouts[j];
@@ -277,7 +266,7 @@ auto sample_worker(const WorkerPlan& plan, float time) -> FarmWorkerBeat {
       beat.kind = FarmWorkerBeat::Kind::Work;
       beat.elapsed = local;
       beat.duration = bout.work;
-      // The last thing it did was walk; that is where the fade comes from.
+
       beat.previous_phase = fract(before.step_metres / Nap::k_walk_metres_per_cycle);
       return beat;
     }
@@ -286,7 +275,7 @@ auto sample_worker(const WorkerPlan& plan, float time) -> FarmWorkerBeat {
       beat.kind = FarmWorkerBeat::Kind::Pause;
       beat.elapsed = local;
       beat.duration = bout.pause;
-      beat.previous_phase = 0.0F; // Work ends on a stroke boundary.
+      beat.previous_phase = 0.0F;
       return beat;
     }
     local -= bout.pause;
@@ -302,7 +291,7 @@ auto sample_worker(const WorkerPlan& plan, float time) -> FarmWorkerBeat {
     local -= bout.step;
     beat.advance += bout.step_metres;
   }
-  // Float slop at the loop end: treat as the start of the next loop.
+
   beat.kind = FarmWorkerBeat::Kind::Work;
   beat.elapsed = 0.0F;
   beat.duration = plan.bouts[0].work;
@@ -333,17 +322,12 @@ auto gatherer_plan(std::uint64_t field_id) -> GathererPlan {
   return plan;
 }
 
-// --- placement -------------------------------------------------------------
-
 struct LanePlace {
   QVector3D position;
   float yaw{0.0F};
   float heading{1.0F};
 };
 
-// Out and back along the lane: `advance` metres from a start point somewhere
-// on that loop. The heading swings round over the first stretch after a turn
-// rather than flipping on the spot.
 auto place_on_lane(const QVector3D& a,
                    const QVector3D& b,
                    float start_fraction,
@@ -405,8 +389,7 @@ auto lane_worker_pose(const WorkerContext& wc,
   const bool headland = worker == k_farm_headland_lane;
   ActorPose pose{};
   pose.position = place.position;
-  // Lane workers face down the row and turn into the standing crop to work
-  // it; the headland worker kneels facing the crop edge.
+
   const float work_yaw = headland ? yaw_of(crop_direction) + place.heading * 16.0F
                                   : place.yaw + beat.face_tilt;
   if (headland) {
@@ -427,7 +410,7 @@ auto lane_worker_pose(const WorkerContext& wc,
     blend_in(pose, Animation::k_humanoid_walk_clip, beat.previous_phase, beat.elapsed);
     break;
   case FarmWorkerBeat::Kind::Pause:
-    // Straighten up and look down the row: a breath, not a clip swap.
+
     pose.clip = Animation::k_humanoid_idle_clip;
     pose.phase = fract(beat.elapsed / k_idle_cycle_seconds);
     pose.yaw = lerp_yaw(
@@ -436,7 +419,7 @@ auto lane_worker_pose(const WorkerContext& wc,
     break;
   case FarmWorkerBeat::Kind::Step:
     pose.clip = Animation::k_humanoid_walk_clip;
-    // Phase follows distance covered, not wall-clock, so feet do not skate.
+
     pose.phase = fract(beat.walked / Nap::k_walk_metres_per_cycle);
     pose.yaw = place.yaw;
     blend_in(pose, Animation::k_humanoid_idle_clip, beat.previous_phase, beat.elapsed);
@@ -511,9 +494,6 @@ auto gatherer_pose(const WorkerContext& wc,
   return pose;
 }
 
-// The shared actor path gains cross-fade fields when its owner adds them;
-// until then the poses are chosen so each change lands on a stroke or stride
-// boundary and the fade is simply not applied.
 template <typename Actor>
 concept HasClipBlend = requires(Actor actor) {
   actor.blend_clip;
@@ -535,9 +515,6 @@ void apply_clip_blend(Actor& actor, const ActorPose& pose) {
   }
 }
 
-// Review hook. The sequence is meant to be rare, which makes it impossible to
-// capture: SOI_FARM_GAG_SECONDS shortens the window to that many seconds and
-// makes every field eligible, so an Arena run can show it.
 auto gag_review_interval() -> float {
   static const float seconds = []() {
     const char* value = std::getenv("SOI_FARM_GAG_SECONDS");
@@ -557,9 +534,7 @@ auto farm_worker_visual(bool carthage) -> const FarmWorkerVisual& {
 }
 
 auto farm_activity_lane(bool rows_along_x, int index) -> FarmLane {
-  // The crop rectangle is x in [-0.88, 0.72], z in [-0.84, 0.40]; the
-  // scarecrow, well and gate posts sit in the +x/-z corner and on the +x
-  // wall, so the lanes stop short of them.
+
   if (index == k_farm_headland_lane) {
     return {QVector3D(k_headland_x, k_soil_y, -0.14F),
             QVector3D(k_headland_x, k_soil_y, 0.30F),
@@ -619,7 +594,7 @@ auto farm_activity_roster(std::uint64_t field_id) -> FarmRoster {
   if (draw < 0.55F) {
     roster = {{0, 1, 2}, 3};
   } else if (draw < 0.90F) {
-    // A pair is a reaper with a gatherer as often as two reapers.
+
     roster =
         (salt(seed, 42U) & 1U) ? FarmRoster{{0, 1, 0}, 2} : FarmRoster{{0, 2, 0}, 2};
   } else {
@@ -640,8 +615,7 @@ auto farm_worker_stays_put(
   const auto plan = worker_plan(field_id, worker, ripe);
   const auto now = sample_worker(plan, time);
   const auto later = sample_worker(plan, time + seconds);
-  // Advance only grows while stepping, so equal advance at both ends means no
-  // step in between.
+
   return now.kind != FarmWorkerBeat::Kind::Step &&
          later.kind != FarmWorkerBeat::Kind::Step && now.advance == later.advance;
 }
@@ -704,10 +678,7 @@ void FarmActivity::begin_frame(Engine::Core::World* snapshot,
   if (snapshot == nullptr || workers_per_field == 0) {
     return;
   }
-  // Two scans per frame, not a component lookup per field per frame. A real
-  // economic worker assigned to a field owns that field's visuals, so the
-  // decorative actors stand down for it. The task target is on the snapshot;
-  // render must not ask a gameplay system what the task means.
+
   claimed.clear();
   for (auto [id, builder] :
        snapshot->view<Engine::Core::BuilderProductionComponent>()) {
@@ -764,23 +735,16 @@ auto FarmActivity::gag(std::uint64_t id,
       gag_started = time;
     }
   } else if (gag_field == 0 && workers_per_field >= 2) {
-    // The window has to open often enough to actually be seen: a missed
-    // window is dropped, not queued, and the camera is rarely on a farm or
-    // a house. This is the issue's ceiling (~5 min per eligible building),
-    // not a rate every building hits -- only a quarter are picked per cycle
-    // and one renderer-wide slot still gates the whole scene.
+
     const float interval = std::max(330.0F, cooldown_seconds * 0.6F);
-    // Jitter has to stay inside interval - 300 so two consecutive windows for
-    // the same building can never be closer than the five minutes the issue
-    // sets as the ceiling, while still not landing on a fixed beat.
+
     const float jitter = std::max(0.0F, interval - 305.0F);
     const auto cycle =
         static_cast<std::uint32_t>(std::max(0.0F, std::floor(time / interval)));
     const auto seed = mix(static_cast<std::uint32_t>(id) ^
                           static_cast<std::uint32_t>(id >> 32U) ^ mix(cycle));
-    const float start =
-        (static_cast<float>(cycle) * interval) +
-        ((static_cast<float>(seed % 1000U) / 1000.0F) * jitter);
+    const float start = (static_cast<float>(cycle) * interval) +
+                        ((static_cast<float>(seed % 1000U) / 1000.0F) * jitter);
     if (may_start && (seed & 3U) == 0 && previous_time < start && time >= start &&
         time - start < 0.5F) {
       gag_field = id;
@@ -805,8 +769,7 @@ void submit_farm_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
   if (!visual.valid()) {
     return;
   }
-  // Eligibility -- growth, health, ownership, removal, dismantling and real
-  // harvest tasks -- was resolved for every field in begin_frame().
+
   const auto* field = activity->field(ctx.entity->get_id());
   if (field == nullptr) {
     return;
@@ -821,10 +784,6 @@ void submit_farm_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
   const bool ripe = field->growth >= 1.0F;
   const float time = ctx.animation_time;
 
-  // Harvest progress at the field edge: while the crop stands ripe the cut
-  // sheaves are stooked by the gate, fuller for a field that has been through
-  // more harvests. It is part of the field, so it follows the field's own fog
-  // and distance treatment rather than the workers' current-visibility gate.
   if (ripe) {
     auto model = ctx.model;
     model.translate(farm_activity_stook_anchor());
@@ -852,9 +811,6 @@ void submit_farm_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
   const auto& rig = nation_civilian_rig(carthage);
   const WorkerContext wc{&visual, &rig, ripe};
 
-  // Field-space geometry mapped through the field's placement. Actors are
-  // people, not field decoration: the field's own scale never reaches their
-  // world matrix, only their place on it does.
   const auto to_world = [&](const QVector3D& local) {
     return ctx.model.map(local);
   };
@@ -863,7 +819,7 @@ void submit_farm_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
   };
   const auto ground = [&](QVector3D point) {
     if (ctx.world_view.has_terrain()) {
-      // Never sink below the field's own soil surface on graded foundations.
+
       point.setY(std::max(point.y(),
                           ctx.world_view.terrain()->resolve_surface_world_y(
                               point.x(), point.z(), k_soil_y * scale, point.y())));
@@ -890,7 +846,7 @@ void submit_farm_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
                            farm_gatherer_beat(field->id, trip, at));
     } else {
       auto lane = farm_activity_lane(rows_along_x, worker);
-      // A little off the row centre line, inside the cleared strip.
+
       const float jitter =
           (unit(salt(seed, 71U + static_cast<std::uint32_t>(worker))) - 0.5F) * 2.0F *
           k_lane_jitter;
@@ -931,8 +887,6 @@ void submit_farm_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
         can_see(poses[static_cast<std::size_t>(i)].position);
   }
 
-  // The nap needs the two lane workers, both on screen, and a sleeper who is
-  // not about to walk off mid-sequence.
   const bool gag_cast = count >= 2 && roster.worker[1] == 1 && visible[0] && visible[1];
   const float gag_time =
       gag_cast ? activity->gag(field->id,
@@ -953,8 +907,7 @@ void submit_farm_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
     const auto work_cycle = ripe ? k_reap_cycle_seconds : k_tend_cycle_seconds;
 
     if (gag_running && i == 0) {
-      // The sleeper: sit down, hat over the eyes, jolt up, then work far too
-      // hard for a short while. It stays where the sequence found it.
+
       const auto found = sample(0, activity->gag_started);
       pose.yaw = found.yaw;
       pose.blend_weight = 0.0F;
@@ -968,7 +921,7 @@ void submit_farm_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
         pose.phase = 0.0F;
         pose.held = true;
       } else if (gag_time < Nap::k_get_up_end) {
-        // Standing up is the sit-down beat run backwards.
+
         pose.clip = Animation::k_humanoid_showcase_rest_sit_down_clip;
         pose.phase = 1.0F - ((gag_time - Nap::k_asleep_end) /
                              (Nap::k_get_up_end - Nap::k_asleep_end));
@@ -981,8 +934,7 @@ void submit_farm_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
     }
 
     if (gag_running && i == 1) {
-      // The coworker walks over to look, holds the stare, then walks back to
-      // wherever its own loop has it by then.
+
       const float travel = walk_fraction(gag_time);
       if (travel > 0.0F) {
         const auto sleeper = poses[0].position;

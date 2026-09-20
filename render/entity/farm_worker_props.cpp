@@ -26,15 +26,13 @@ enum StrawSlot : std::uint8_t {
 };
 constexpr std::uint8_t k_straw_role_count = 2U;
 
-// Head gear is authored against the rendered skull silhouette (~0.168), not the
-// rig's nominal head radius, or it disappears inside the head.
 constexpr float k_head_silhouette = 0.168F;
 
 auto sun_hat_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = []() {
     const float brim = k_head_silhouette * 1.62F;
     const std::array<GeneratedEquipmentPrimitive, 3> primitives{{
-        // A disc, not a flattened sphere: flat ellipsoids shade black here.
+
         generated_cylinder(QVector3D(0.0F, 0.055F, 0.0F),
                            QVector3D(0.0F, 0.073F, 0.0F),
                            brim,
@@ -53,8 +51,6 @@ auto sun_hat_archetype() -> const RenderArchetype& {
   return archetype;
 }
 
-// The same hat, tipped forward onto the face. Its axis runs forward and down,
-// so the brim covers the eyes instead of sitting level on the crown.
 auto tilted_sun_hat_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = []() {
     const float brim = k_head_silhouette * 1.62F;
@@ -76,7 +72,6 @@ auto tilted_sun_hat_archetype() -> const RenderArchetype& {
   return archetype;
 }
 
-// A tied bundle of cut stalks, carried against the hip.
 auto wheat_sheaf_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = []() {
     const std::array<GeneratedEquipmentPrimitive, 5> primitives{{
@@ -160,7 +155,7 @@ auto straw_role_colors(const void* variant_void,
   if (variant_void == nullptr || max_count < base_count + k_straw_role_count) {
     return base_count;
   }
-  // Sun-bleached straw, varied per worker so a row of hats is not one colour.
+
   const auto& variant = *static_cast<const HumanoidVariant*>(variant_void);
   const float bleach = 0.88F + (variant.pattern_seed * 0.22F);
   out[base_count] = QVector3D(0.79F, 0.66F, 0.36F) * bleach;
@@ -191,8 +186,9 @@ void register_farm_worker_prop_archetypes() {
   registry.register_archetype("farm_sun_hat", [] { (void)sun_hat_archetype(); });
   registry.register_archetype("farm_sun_hat_tilted",
                               [] { (void)tilted_sun_hat_archetype(); });
-  registry.register_archetype("farm_wheat_sheaf", [] { (void)wheat_sheaf_archetype(); });
-  // Warming the props also registers their humanoid equipment contributions.
+  registry.register_archetype("farm_wheat_sheaf",
+                              [] { (void)wheat_sheaf_archetype(); });
+
   registry.register_archetype("farm_worker_props", [] { (void)farm_worker_props(); });
 }
 

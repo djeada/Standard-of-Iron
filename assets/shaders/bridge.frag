@@ -29,7 +29,6 @@ float fbm(vec2 p) {
   return value;
 }
 
-// Surface gradients keep relief attached to the stone as the camera rotates.
 vec3 relief_normal(vec3 normal, float height) {
   vec3 dpdx = dFdx(v_world_pos);
   vec3 dpdy = dFdy(v_world_pos);
@@ -74,8 +73,6 @@ void main() {
   float dressed = float(v_dressed_stone);
   float paving = upward * (1.0 - dressed);
 
-  // Small road setts and larger staggered ashlar courses share a metre scale.
-  // UVs follow the bridge rather than world axes, including diagonal spans.
   vec2 block_size = mix(vec2(0.92, 0.38), vec2(0.43, 0.31), paving);
   vec2 uv = v_tex_coord / block_size;
   float row = floor(uv.y);
@@ -93,7 +90,7 @@ void main() {
   float aa = max(fwidth(edge), 0.001);
   float stone_mask = smoothstep(0.009 - aa, 0.020 + aa, edge);
   float bevel = smoothstep(0.013, 0.043, edge);
-  // Blend subpixel joints to their coverage instead of sparkling at distant zooms.
+
   float distance_fade = smoothstep(0.12, 0.65, max(fwidth(uv.x), fwidth(uv.y)));
   stone_mask = mix(stone_mask, 0.88, distance_fade);
   stone_mask = mix(stone_mask, 1.0, dressed);
@@ -105,8 +102,7 @@ void main() {
   vec3 cool_stone = vec3(0.88, 0.94, 1.015);
   vec3 tint = mix(warm_stone, cool_stone, hue * 0.58);
   tint = mix(tint, vec3(1.055, 1.035, 0.99), dressed);
-  float block_variation = mix((cell_rnd - 0.5) * 0.24,
-                               (weather - 0.5) * 0.15, dressed);
+  float block_variation = mix((cell_rnd - 0.5) * 0.24, (weather - 0.5) * 0.15, dressed);
   float grain_fade = 1.0 - smoothstep(0.035, 0.18, length(fwidth(mineral_pos)));
   float grain = (soi_noise_3d41e6(mineral_pos * 48.0) - 0.5) * grain_fade;
   vec3 stone_color = u_color * tint *
@@ -115,40 +111,39 @@ void main() {
   vec3 mortar_color = u_color * vec3(0.65, 0.65, 0.62);
   vec3 base_color = mix(mortar_color, stone_color, stone_mask);
 
-  // Pale worn arrises, restrained mineral veins and pitting in the limestone.
   float arris = (1.0 - bevel) * stone_mask * (1.0 - distance_fade);
   base_color += u_color * arris * 0.11;
-  float vein = 1.0 - smoothstep(0.018, 0.065,
-                               abs(mineral - 0.49 + (weather - 0.5) * 0.16));
+  float vein =
+      1.0 - smoothstep(0.018, 0.065, abs(mineral - 0.49 + (weather - 0.5) * 0.16));
   base_color *= 1.0 - vein * stone_mask * 0.055;
   float pits = smoothstep(0.72, 0.88, soi_noise_3d41e6(mineral_pos * 32.0));
   base_color *= 1.0 - pits * grain_fade * 0.12;
 
-  // Rain streaks and a little moss collect in sheltered joints, not every stone.
   float streaks = fbm(vec2(v_tex_coord.x * 3.2, v_tex_coord.y * 0.18));
   float sheltered = (1.0 - upward) * smoothstep(0.42, 0.72, weather);
   float runoff = sheltered * smoothstep(0.40, 0.72, streaks);
   base_color *= 1.0 - runoff * 0.19;
-  float moss = smoothstep(0.52, 0.73, weather) *
-               smoothstep(0.38, 0.65, mineral) *
+  float moss = smoothstep(0.52, 0.73, weather) * smoothstep(0.38, 0.65, mineral) *
                (mortar_mask * 0.65 + (1.0 - bevel) * 0.18) * (1.0 - dressed);
   base_color = mix(base_color, u_color * vec3(0.43, 0.51, 0.29), moss * 0.65);
 
   float height = (bevel * 0.024 + (mineral - 0.5) * 0.013 + grain * 0.003) *
-                  mix(1.0 - distance_fade, 1.0, dressed);
+                 mix(1.0 - distance_fade, 1.0, dressed);
   vec3 N = relief_normal(Ng, height);
   float ao = mix(0.72, 1.0, bevel) * (1.0 - runoff * 0.07);
 
   float wetness = environment_wetness();
   float rain_exposure = smoothstep(0.08, 0.82, Ng.y);
-  float joint_pool = wetness * rain_exposure * mortar_mask *
-                     smoothstep(0.36, 0.66, weather);
+  float joint_pool =
+      wetness * rain_exposure * mortar_mask * smoothstep(0.36, 0.66, weather);
   float damp = wetness * (0.24 + rain_exposure * 0.56 + runoff * 0.20);
   base_color *= 1.0 - damp * 0.25 - joint_pool * 0.12;
 
   vec3 wet_normal = normalize(mix(N, Ng, damp * 0.18 + joint_pool * 0.60));
-  float roughness = clamp(0.84 - paving * 0.09 - dressed * 0.06 +
-                          pits * 0.08 - damp * 0.27 - joint_pool * 0.27, 0.18, 0.96);
+  float roughness = clamp(0.84 - paving * 0.09 - dressed * 0.06 + pits * 0.08 -
+                              damp * 0.27 - joint_pool * 0.27,
+                          0.18,
+                          0.96);
   float F0 = mix(0.035, 0.05, damp);
   vec3 L = environment_primary_direction();
   vec3 V = normalize(u_camera_pos - v_world_pos);
@@ -158,7 +153,8 @@ void main() {
   vec3 lit_color = base_color * soi_surface_lighting_scaled(wet_normal, 0.76) * ao;
   lit_color += environment_primary_color() * environment_primary_intensity() * spec *
                max(dot(wet_normal, L), 0.0) * (0.24 + damp * 0.50 + joint_pool * 0.42);
-  lit_color += environment_sky_color() * sky_fresnel * (damp * 0.065 + joint_pool * 0.10);
+  lit_color +=
+      environment_sky_color() * sky_fresnel * (damp * 0.065 + joint_pool * 0.10);
   lit_color += soi_rim_light(wet_normal, V) * 0.65;
   lit_color = apply_directional_shadow(lit_color, v_world_pos, v_normal);
   lit_color += base_color * ao * local_lighting(v_world_pos, wet_normal);

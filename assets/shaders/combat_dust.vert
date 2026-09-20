@@ -202,13 +202,13 @@ void main() {
                     0.0,
                     1.0);
   } else if (u_effect_type == 7) {
-    // A continuous stream of overlapping wisps, never a solid mesh shell.
+
     vec2 hearth_cell = floor(u_center.xz * 3.0);
     float hearth = soi_hash12_dbdbc1(hearth_cell + vec2(0.37, 0.91));
     float slot = a_normal.x;
     float clock = u_time * mix(0.085, 0.115, hearth) + slot;
     float age = fract(clock);
-    // Change each wisp only while it is invisible at the lifetime boundary.
+
     float seed = soi_hash12_dbdbc1(vec2(slot * 73.0, floor(clock)) + hearth_cell);
     float phase = seed * 6.2831853;
     float rise = age * mix(2.5, 3.2, hearth);
@@ -216,14 +216,11 @@ void main() {
     vec2 wind = vec2(0.85, 0.38);
     vec2 curl = vec2(sin(age * 7.0 + phase), cos(age * 5.0 + phase));
     vec3 center = vec3(0.0, rise, 0.0);
-    center.xz = wind * travel * mix(1.0, 1.7, hearth) +
-                curl * (0.025 + 0.22 * travel);
+    center.xz = wind * travel * mix(1.0, 1.7, hearth) + curl * (0.025 + 0.22 * travel);
 
-    // Small at the hearth, stretching and diffusing as it cools downwind.
     float width = mix(0.11, 0.62, pow(age, 0.85)) * mix(0.8, 1.2, seed);
     vec3 to_eye = normalize(u_camera_pos - u_center + vec3(0.0, 0.0001, 0.0));
-    vec3 reference = abs(to_eye.y) > 0.98 ? vec3(0.0, 0.0, 1.0)
-                                         : vec3(0.0, 1.0, 0.0);
+    vec3 reference = abs(to_eye.y) > 0.98 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0);
     vec3 right = normalize(cross(reference, to_eye));
     vec3 up = cross(to_eye, right);
     float turn = sin(phase + age * 2.0) * 0.65;
@@ -252,7 +249,6 @@ void main() {
     float along = u_span < 0.0 ? 1.0 - a_texcoord.x : a_texcoord.x;
     float across = a_texcoord.y;
 
-    // Use the entire mesh for the requested sweep, avoiding collapsed end triangles.
     float angle = (a_texcoord.x - 0.5) * 6.28318530718 * span;
     float taper = pow(max(sin(along * 3.14159265359), 0.0), 0.65);
     float width = ring ? 0.28 : 0.045 + 0.40 * taper;

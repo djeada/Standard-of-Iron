@@ -10,8 +10,6 @@ namespace Render::GL {
 class Mesh;
 class Texture;
 
-// Render-owned travel history: wheels follow distance, including pivot turns,
-// and retain their orientation when the engine stops.
 struct SiegeTravelState {
   QVector3D position;
   float yaw{0.0F};

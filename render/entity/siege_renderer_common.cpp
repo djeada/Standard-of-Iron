@@ -9,6 +9,7 @@
 #include "../entity_appearance.h"
 #include "game/core/component_core.h"
 #include "game/core/component_gameplay.h"
+#include "game/core/world.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
@@ -22,7 +23,7 @@ auto siege_winding(float progress) -> float {
 }
 
 auto siege_release(float progress) -> float {
-  // Most of the stroke happens immediately; the rest is the buffer settling.
+
   const float t = std::clamp(progress / 0.24F, 0.0F, 1.0F);
   const float remaining = 1.0F - t;
   return 1.0F - remaining * remaining * remaining;
@@ -59,9 +60,10 @@ auto siege_motion(const DrawContext& ctx,
   state.yaw = yaw;
   state.time = ctx.animation_time;
   SiegeMotion result{state.left_roll, state.right_roll, state.movement, 0.0F};
-  if (ctx.entity != nullptr) {
-    const auto* loading =
-        ctx.entity->get_component<Engine::Core::CatapultLoadingComponent>();
+  if (ctx.entity != nullptr && ctx.world != nullptr) {
+
+    const auto* loading = ctx.world->try_get<Engine::Core::CatapultLoadingComponent>(
+        ctx.entity->get_id());
     if (loading != nullptr &&
         loading->state ==
             Engine::Core::CatapultLoadingComponent::LoadingState::Firing) {
@@ -116,7 +118,7 @@ void draw_siege_wheel(ISubmitter& out,
                  white,
                  1.0F);
       };
-  // Open spokes and a built-up felloe, rather than a solid metal disc.
+
   constexpr int segments = 16;
   for (int i = 0; i < segments; ++i) {
     const float a = static_cast<float>(i) * 2.0F * std::numbers::pi_v<float> / segments;
@@ -152,7 +154,7 @@ void draw_siege_regalia(const DrawContext& ctx,
         out.mesh(cube, m, color, white, 1.0F);
       };
   for (float side : {-1.0F, 1.0F}) {
-    // Painted side panels, bronze straps and proud rivet heads.
+
     box({side * (width + 0.048F), deck, 0.0F}, {0.009F, 0.040F, 0.27F}, team * 0.65F);
     for (float z : {-0.28F, 0.0F, 0.28F}) {
       box({side * width, deck, z}, {0.055F, 0.057F, 0.020F}, bronze);
@@ -162,7 +164,7 @@ void draw_siege_regalia(const DrawContext& ctx,
       out.mesh(get_unit_sphere(5, 8), rivet, bronze * 1.12F, white, 1.0F);
     }
   }
-  // A short vexillum at the rear, clear of the bow and throwing arm.
+
   const float top = ballista ? 0.86F : 1.08F;
   const QVector3D foot(-width, deck, 0.32F);
   const QVector3D crown(-width, top, 0.32F);

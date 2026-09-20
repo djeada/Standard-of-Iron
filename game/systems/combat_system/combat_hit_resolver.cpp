@@ -248,10 +248,7 @@ motion_velocity(const Engine::Core::Entity& entity) -> std::pair<float, float> {
     return nullptr;
   }
 
-  auto* attacker = world->get_entity(attacker_id);
-  return attacker != nullptr
-             ? attacker->get_component<Engine::Core::SpecialAttackComponent>()
-             : nullptr;
+  return world->try_get<Engine::Core::SpecialAttackComponent>(attacker_id);
 }
 
 [[nodiscard]] auto
@@ -261,12 +258,7 @@ projectile_attacker_owner_id(Engine::Core::World* world,
     return 0;
   }
 
-  auto* attacker = world->get_entity(attacker_id);
-  if (attacker == nullptr) {
-    return 0;
-  }
-
-  auto const* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
+  const auto* attacker_unit = world->try_get<Engine::Core::UnitComponent>(attacker_id);
   return attacker_unit != nullptr ? attacker_unit->owner_id : 0;
 }
 

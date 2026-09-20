@@ -116,15 +116,12 @@ TEST(MapBridgeCoverageTest, EveryShippedBridgeReachesBankToBankAndStopsThere) {
           QVector3D::dotProduct(crossing->point - bridge.start, axis);
       const float end_len = QVector3D::dotProduct(bridge.end - crossing->point, axis);
 
-      // The deck clears the drawn water and the bank clearance on both sides...
       const float required = Game::Map::k_water_bank_clearance;
       EXPECT_GT(start_len - water.behind, required)
           << file_name.toStdString() << " bridge " << index;
       EXPECT_GT(end_len - water.ahead, required)
           << file_name.toStdString() << " bridge " << index;
 
-      // ...and stops a short landing onto the bank, unless the stream is so
-      // narrow the deck has to grow to be as long as it is wide.
       const float drawn_width = std::max(bridge.width, Game::Map::k_min_bridge_width);
       const float landing =
           Game::Map::k_water_bank_clearance + Game::Map::k_bridge_max_bank_landing;

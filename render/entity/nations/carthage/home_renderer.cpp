@@ -308,8 +308,7 @@ auto build_home_desc(BuildingState state) -> BuildingArchetypeDesc {
 }
 
 void register_home_renderer(Render::GL::EntityRendererRegistry& registry) {
-  // The Punic house bakes on the roof: the plume leaves the bread oven's own
-  // vent, offset to the oven rather than centred on the building.
+
   register_home_smoke_anchor(
       true,
       HomeSmokeAnchor{.vent = QVector3D(0.48F, 1.70F, -0.46F),
@@ -317,19 +316,17 @@ void register_home_renderer(Render::GL::EntityRendererRegistry& registry) {
                       .plume_radius = 0.60F,
                       .doorstep = QVector3D(0.0F, 0.16F, 1.22F),
                       .outward = QVector3D(0.0F, 0.0F, 1.0F),
-                      // A valance hung off the front edge of the roof awning
-                      // the model already carries.
+
                       .cloth_top = QVector3D(-0.35F, 1.72F, 0.34F),
                       .cloth_span = 0.74F,
                       .cloth_indigo = true,
                       .cloth_at_door = false,
                       .lamp = QVector3D(0.0F, 0.165F, 1.20F),
-                      // The narrow side-wall windows, a leaf at each jamb.
+
                       .window = QVector3D(1.045F, 0.58F, 0.32F),
                       .shutter_width = 0.07F,
                       .shutter_height = 0.44F,
-                      // Washing across the flat roof, from the awning post to
-                      // a pole by the far parapet.
+
                       .line_a = QVector3D(0.0F, 1.64F, 0.30F),
                       .line_b = QVector3D(0.82F, 1.64F, 0.62F),
                       .line_pole = true,

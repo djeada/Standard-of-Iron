@@ -43,8 +43,6 @@ auto normalize_structure_types(const Condition& condition,
   return normalized;
 }
 
-// Victory types an optional objective can be tracked by. Other optional
-// objectives (wave_count, time_pressure) are shown but not measured here.
 auto is_trackable_objective_type(const QString& type) -> bool {
   static const QStringList k_types{QStringLiteral("destroy_all_enemies"),
                                    QStringLiteral("survive_duration"),

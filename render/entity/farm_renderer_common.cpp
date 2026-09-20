@@ -284,8 +284,7 @@ void add_crop(BuildingArchetypeDesc& desc,
           spec.rows_along_x
               ? spec.center + QVector3D(run, spec.ground_y + 0.040F, across)
               : spec.center + QVector3D(across, spec.ground_y + 0.040F, run);
-      // Permanent work clearings, not simulated harvest progress. These share
-      // anchors with the actors and keep the seated gag readable through wheat.
+
       if (spec.worker_clearings &&
           farm_activity_clearing(clump_base, spec.rows_along_x)) {
         continue;
@@ -491,8 +490,7 @@ auto farm_archetype_from_table(
 
 void register_farm_renderer_variant(EntityRendererRegistry& registry,
                                     const FarmRendererConfig& config) {
-  // Build the field props during warm_all() at renderer init, not on the
-  // first frame that happens to draw a farm.
+
   static const bool props_registered = [] {
     register_farm_worker_prop_archetypes();
     return true;

@@ -63,8 +63,7 @@ void add_civilian_actor(const DrawContext& ctx,
     return;
   }
   Pipeline::CreatureGraphOutput output{};
-  // Minimal resolves a per-state snapshot mesh rather than the requested clip,
-  // so it is only used where an actor is a speck and the pose cannot be read.
+
   output.lod = actor.distant ? CreatureLOD::Minimal : CreatureLOD::Full;
   output.pass_intent = Pipeline::RenderPassIntent::Main;
   output.seed = actor.seed;

@@ -60,7 +60,7 @@ public:
   struct MoveOptions {
     MoveOrderKind kind = MoveOrderKind::PlayerMove;
     bool preserve_formation_mode = false;
-    // Runtime slot updates continue an existing formation order.
+
     bool follow_formation_slots = false;
     bool synchronize_arrival = false;
     bool prefer_own_routes = false;

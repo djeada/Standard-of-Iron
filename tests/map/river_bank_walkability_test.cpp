@@ -99,7 +99,7 @@ TEST(RiverBankWalkabilityTest, BridgeDecksLandOnDryWalkableGround) {
       EXPECT_TRUE(terrain.is_walkable(grid_x, grid_of(deck_end)))
           << "river width " << river_width << " deck end " << deck_end;
     }
-    // Past the deck the ground itself must carry the column on.
+
     for (const float step_off :
          {bridge.start.z() - 2.0F * k_tile, bridge.end.z() + 2.0F * k_tile}) {
       const int grid_z = grid_of(step_off);

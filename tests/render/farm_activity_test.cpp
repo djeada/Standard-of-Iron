@@ -19,8 +19,6 @@ using namespace Render::GL;
 
 class FarmRecorder final : public ISubmitter {
 public:
-  // Field workers are rigged humanoids, so they arrive as rigged() commands.
-  // A mesh() here would mean someone reintroduced a hand-built figure.
   std::vector<QMatrix4x4> models;
   std::vector<std::uint32_t> bone_counts;
   std::vector<const void*> meshes;
@@ -29,7 +27,7 @@ public:
     models.push_back(cmd.world);
     bone_counts.push_back(cmd.bone_count);
     meshes.push_back(static_cast<const void*>(cmd.mesh));
-    // The animation lives in the bone palette now, so that is what has to move.
+
     float signature = cmd.palette_lerp;
     const auto bones = std::min<std::uint32_t>(cmd.bone_count, 8U);
     for (std::uint32_t bone = 0; cmd.bone_palette != nullptr && bone < bones; ++bone) {
@@ -48,7 +46,7 @@ public:
     poses.clear();
     prop_draws = 0;
   }
-  // The stook by the gate is instanced geometry; workers never arrive here.
+
   int prop_draws{0};
   void mesh(Mesh*, const QMatrix4x4&, const QVector3D&, Texture*, float, int) override {
     ++prop_draws;
@@ -78,8 +76,7 @@ public:
 class FarmActivityTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    // Registering the built-ins is what publishes each nation's field-worker
-    // visual, so this also proves the wiring from the troop renderers.
+
     static const bool registered = [] {
       static EntityRendererRegistry shared_registry;
       Render::GL::register_built_in_entity_renderers(shared_registry);
@@ -88,8 +85,7 @@ protected:
     (void)registered;
     old_quality = Render::GraphicsSettings::instance().quality();
     Render::GraphicsSettings::instance().set_quality(Render::GraphicsQuality::High);
-    // The nap needs both lane workers, so the fixture field is one whose
-    // hash fields all three. Extra ids are harmless plain entities.
+
     entity = world.create_entity();
     while (farm_activity_roster(entity->get_id()).count < 3) {
       entity = world.create_entity();
@@ -135,8 +131,7 @@ TEST_F(FarmActivityTest, BothFactionsUseTheirOwnCivilianRig) {
     EXPECT_EQ(rig.spec.kind, Render::Creature::Pipeline::CreatureKind::Humanoid);
   }
   EXPECT_NE(nation_civilian_rig(false).idle, nation_civilian_rig(true).idle);
-  // Every worker wears the straw hat, and the sleeper wears it over its face;
-  // a silently dropped attachment would leave these counts equal.
+
   const auto& registry = Render::Creature::ArchetypeRegistry::instance();
   for (bool carthage : {false, true}) {
     const auto& visual = farm_worker_visual(carthage);
@@ -150,7 +145,7 @@ TEST_F(FarmActivityTest, BothFactionsUseTheirOwnCivilianRig) {
     ASSERT_NE(napping, nullptr);
     EXPECT_EQ(hatted_tend->bake_attachment_count, bare_tend->bake_attachment_count + 1);
     EXPECT_EQ(hatted_reap->bake_attachment_count, bare_reap->bake_attachment_count + 1);
-    // Hat plus sheaf.
+
     EXPECT_EQ(gathering->bake_attachment_count, bare_tend->bake_attachment_count + 2);
     EXPECT_EQ(napping->bake_attachment_count, bare_reap->bake_attachment_count + 1);
     EXPECT_NE(visual.napping, visual.hatted_reaping);
@@ -158,7 +153,7 @@ TEST_F(FarmActivityTest, BothFactionsUseTheirOwnCivilianRig) {
   draw();
   ASSERT_FALSE(recorder.bone_counts.empty());
   for (auto bones : recorder.bone_counts) {
-    EXPECT_GT(bones, 0U); // A rig, not a pile of boxes.
+    EXPECT_GT(bones, 0U);
   }
 }
 
@@ -170,14 +165,14 @@ TEST_F(FarmActivityTest, BothFactionsAnimateAndFollowGrowthWithoutChangingIt) {
     const auto first_meshes = recorder.meshes;
     ASSERT_FALSE(first.empty());
     EXPECT_EQ(activity.remaining, 64 - farm_activity_roster(entity->get_id()).count);
-    EXPECT_GE(recorder.models.size(), 3U); // Three people; a body may be several draws.
+    EXPECT_GE(recorder.models.size(), 3U);
     draw(1.5F, carthage);
     EXPECT_NE(first, recorder.poses);
     auto* farm = entity->get_component<Engine::Core::FarmComponent>();
     EXPECT_FLOAT_EQ(farm->growth, 0.5F);
     farm->growth = 1.0F;
     draw(1.5F, carthage);
-    EXPECT_NE(first_meshes, recorder.meshes); // The sickle rig replaces the hoe.
+    EXPECT_NE(first_meshes, recorder.meshes);
     EXPECT_FLOAT_EQ(farm->growth, 1.0F);
     EXPECT_EQ(farm->harvests, 0);
     farm->growth = 0.5F;
@@ -241,7 +236,7 @@ TEST_F(FarmActivityTest, NoActorsOnEmptyDeadDismantledOrClaimedFields) {
   unit->health = 0;
   draw();
   EXPECT_TRUE(recorder.models.empty());
-  unit->health = 100; // The building renderer already shows ruined crops.
+  unit->health = 100;
   draw();
   EXPECT_TRUE(recorder.models.empty());
   unit->health = 600;
@@ -270,10 +265,10 @@ TEST_F(FarmActivityTest, FogRequiresCurrentlyVisibleCells) {
     std::fill(fog.cells.begin(), fog.cells.end(), state);
     draw();
     EXPECT_EQ(recorder.models.empty(), state != 2);
-    EXPECT_EQ(recorder.prop_draws, 0); // Not ripe: nothing stooked yet.
+    EXPECT_EQ(recorder.prop_draws, 0);
   }
   std::fill(fog.cells.begin(), fog.cells.end(), 0);
-  ctx.submission_fog_mode = SubmissionFogMode::Ignore; // Arena fog disabled.
+  ctx.submission_fog_mode = SubmissionFogMode::Ignore;
   draw();
   EXPECT_FALSE(recorder.models.empty());
 }
@@ -331,10 +326,6 @@ TEST_F(FarmActivityTest, DenseSubmissionCpuSample) {
   EXPECT_EQ(activity.remaining, 0);
 }
 
-// Every place a worker can be over ten minutes of drifting along the rows,
-// both nations, ripe and tending: inside the boundary wall, off the yard,
-// and never below the soil. The headland lane is outside the crop rectangle
-// by design, so the bound is the wall, not the crop.
 TEST_F(FarmActivityTest, AllActorsStayInsideTheBoundaryWall) {
   auto* farm = entity->get_component<Engine::Core::FarmComponent>();
   for (bool carthage : {false, true}) {
@@ -356,10 +347,6 @@ TEST_F(FarmActivityTest, AllActorsStayInsideTheBoundaryWall) {
   farm->growth = 0.5F;
 }
 
-// The headline requirement: a hundred farms must never keep time together.
-// Every field's loop has its own period, offset, stride and stroke rate, so
-// at any instant the fields are spread across work, breather and stepping,
-// and no two neighbours are ever at the same point of the same beat.
 TEST_F(FarmActivityTest, AHundredFieldsDoNotMoveInLockstep) {
   constexpr int k_fields = 100;
   int identical_neighbours = 0;
@@ -379,19 +366,16 @@ TEST_F(FarmActivityTest, AHundredFieldsDoNotMoveInLockstep) {
     }
     dominant_share_max =
         std::max(dominant_share_max, *std::max_element(tally.begin(), tally.end()));
-    // Working is the common state, but at no moment is the whole street
-    // working, pausing or walking together.
+
     EXPECT_GT(tally[0], 0);
     EXPECT_LT(tally[0], k_fields);
   }
   EXPECT_EQ(identical_neighbours, 0);
   EXPECT_LT(dominant_share_max, k_fields * 9 / 10);
 
-  // Periods and offsets differ field to field, not just phases.
   std::vector<float> periods;
   for (int id = 1; id <= k_fields; ++id) {
-    // One full work bout for worker 0 is strokes * stroke cycle; the cycle
-    // alone already separates fields.
+
     periods.push_back(
         farm_worker_beat(static_cast<std::uint64_t>(id), 0, false, 0).stroke_cycle);
   }
@@ -399,8 +383,6 @@ TEST_F(FarmActivityTest, AHundredFieldsDoNotMoveInLockstep) {
   EXPECT_GT(std::unique(periods.begin(), periods.end()) - periods.begin(),
             k_fields / 2);
 
-  // The same holds for the submitted result: sixty-four fields drawn at the
-  // same instant do not share one bone palette.
   activity.begin_frame(&world, 40.0F);
   ctx.animation_time = 40.0F;
   std::vector<float> first_worker_poses;
@@ -411,7 +393,7 @@ TEST_F(FarmActivityTest, AHundredFieldsDoNotMoveInLockstep) {
     other->add_component<Engine::Core::FarmComponent>()->growth = 0.5F;
   }
   activity.begin_frame(&world, 40.0F);
-  activity.remaining = 1000; // Not a budget test.
+  activity.remaining = 1000;
   for (const auto& field : activity.fields) {
     ctx.entity = world.get_entity(field.id);
     recorder.clear();
@@ -429,8 +411,6 @@ TEST_F(FarmActivityTest, AHundredFieldsDoNotMoveInLockstep) {
   EXPECT_GT(distinct, 16);
 }
 
-// Fields do not all carry the same three people, and a pair is sometimes a
-// reaper with a gatherer rather than two reapers.
 TEST_F(FarmActivityTest, RosterVariesAcrossFields) {
   std::array<int, 4> by_count{};
   int pair_with_gatherer = 0;
@@ -439,7 +419,7 @@ TEST_F(FarmActivityTest, RosterVariesAcrossFields) {
     ASSERT_GE(roster.count, 1);
     ASSERT_LE(roster.count, 3);
     ++by_count[static_cast<std::size_t>(roster.count)];
-    EXPECT_EQ(roster.worker[0], 0); // The one-worker LOD always keeps a lane worker.
+    EXPECT_EQ(roster.worker[0], 0);
     if (roster.count == 2 && roster.worker[1] == k_farm_headland_lane) {
       ++pair_with_gatherer;
     }
@@ -451,10 +431,6 @@ TEST_F(FarmActivityTest, RosterVariesAcrossFields) {
   EXPECT_LT(pair_with_gatherer, by_count[2]);
 }
 
-// A lane worker works a few strokes, straightens up, walks a few steps down
-// the row and starts again; over minutes it reaches the far end and comes
-// back. Work bouts end on a stroke boundary so the change of clip lands on
-// a pose the two clips share.
 TEST_F(FarmActivityTest, WorkersDriftAlongTheRowsAndTurnBack) {
   const std::uint64_t id = entity->get_id();
   float advance = 0.0F;
@@ -477,10 +453,8 @@ TEST_F(FarmActivityTest, WorkersDriftAlongTheRowsAndTurnBack) {
   }
   EXPECT_TRUE(saw_pause);
   EXPECT_TRUE(saw_step);
-  EXPECT_GT(advance, 20.0F); // Metres walked in ten minutes: well past one lane length.
+  EXPECT_GT(advance, 20.0F);
 
-  // In world terms the first worker visits both halves of its row and faces
-  // both ways along it.
   float min_x = 1e9F;
   float max_x = -1e9F;
   for (int frame = 0; frame < 300; ++frame) {
@@ -490,11 +464,10 @@ TEST_F(FarmActivityTest, WorkersDriftAlongTheRowsAndTurnBack) {
     min_x = std::min(min_x, p.x());
     max_x = std::max(max_x, p.x());
   }
-  // Roman lane 0 spans x in [-0.70, 0.40] of a 7.14-unit field.
+
   EXPECT_LT(min_x, -0.20F * 7.14F);
   EXPECT_GT(max_x, 0.0F);
 
-  // Staying put means exactly that: no step inside the window.
   int checked = 0;
   for (int tick = 0; tick < 3000 && checked < 50; ++tick) {
     const float time = static_cast<float>(tick) * 0.2F;
@@ -507,8 +480,6 @@ TEST_F(FarmActivityTest, WorkersDriftAlongTheRowsAndTurnBack) {
   EXPECT_GT(checked, 0);
 }
 
-// The ripe field's third hand bundles at the row end, carries the sheaf to
-// the stook and walks back empty-handed, on its own clock.
 TEST_F(FarmActivityTest, GathererCarriesSheavesToTheStook) {
   const std::uint64_t id = entity->get_id();
   std::array<bool, 5> seen{};
@@ -519,7 +490,7 @@ TEST_F(FarmActivityTest, GathererCarriesSheavesToTheStook) {
     if (beat.kind == FarmGathererBeat::Kind::Carry ||
         beat.kind == FarmGathererBeat::Kind::Return) {
       EXPECT_LE(beat.walked, 3.5F + 1e-3F);
-      // The walk lasts as long as the distance takes at a walking pace.
+
       EXPECT_GT(beat.duration, 2.0F);
       EXPECT_LT(beat.duration, 4.5F);
     } else {
@@ -531,7 +502,7 @@ TEST_F(FarmActivityTest, GathererCarriesSheavesToTheStook) {
   for (bool kind_seen : seen) {
     EXPECT_TRUE(kind_seen);
   }
-  // Neighbouring fields' gatherers are not in step either.
+
   int same = 0;
   for (int other = 1; other < 100; ++other) {
     const auto a = farm_gatherer_beat(static_cast<std::uint64_t>(other), 3.5F, 50.0F);
@@ -541,8 +512,6 @@ TEST_F(FarmActivityTest, GathererCarriesSheavesToTheStook) {
   }
   EXPECT_EQ(same, 0);
 
-  // On a ripe field the third worker rides the headland: it stays outside
-  // the crop rectangle and the sheaf rig shows up while it carries.
   auto* farm = entity->get_component<Engine::Core::FarmComponent>();
   farm->growth = 1.0F;
   std::vector<const void*> rigs_seen;
@@ -557,13 +526,11 @@ TEST_F(FarmActivityTest, GathererCarriesSheavesToTheStook) {
     rigs_seen.insert(rigs_seen.end(), recorder.meshes.begin(), recorder.meshes.end());
   }
   std::sort(rigs_seen.begin(), rigs_seen.end());
-  // Reapers, the bundler and the laden carrier are three different rigs.
+
   EXPECT_GE(std::unique(rigs_seen.begin(), rigs_seen.end()) - rigs_seen.begin(), 3);
   farm->growth = 0.5F;
 }
 
-// The stook by the gate is the harvest reading: nothing before the crop is
-// ripe, a stook once it is, fuller for a field that has been harvested more.
 TEST_F(FarmActivityTest, StookAppearsWhenRipeAndFillsWithHarvests) {
   auto* farm = entity->get_component<Engine::Core::FarmComponent>();
   draw();
@@ -575,7 +542,7 @@ TEST_F(FarmActivityTest, StookAppearsWhenRipeAndFillsWithHarvests) {
   farm->harvests = 3;
   draw();
   EXPECT_GT(recorder.prop_draws, fresh);
-  // Still drawn when the actor budget is spent: it is part of the field.
+
   activity.begin_frame(&world, 1.0F);
   activity.remaining = 0;
   recorder.clear();
@@ -587,20 +554,19 @@ TEST_F(FarmActivityTest, StookAppearsWhenRipeAndFillsWithHarvests) {
   farm->growth = 0.5F;
 }
 
-// Sheaves at the gate must stay out of the walked lanes and the crop.
 TEST_F(FarmActivityTest, LanesAndStookKeepClearOfEachOtherAndTheCorner) {
   for (bool rows_along_x : {true, false}) {
     for (int lane = 0; lane < k_farm_lane_count; ++lane) {
       const auto geometry = farm_activity_lane(rows_along_x, lane);
       for (const auto& end : {geometry.from, geometry.to}) {
-        // Inside the wall, off the yard, off the scarecrow/well corner.
+
         EXPECT_GT(end.x(), -0.88F);
         EXPECT_LT(end.x(), 0.90F);
         EXPECT_GT(end.z(), -0.70F);
         EXPECT_LT(end.z(), 0.40F);
         EXPECT_GT((end - farm_activity_stook_anchor()).length(), 0.2F);
       }
-      // Only the crop lanes are cleared; the headland needs no clearing.
+
       const auto mid = (geometry.from + geometry.to) * 0.5F;
       EXPECT_EQ(farm_activity_clearing(mid, rows_along_x),
                 lane != k_farm_headland_lane);
@@ -630,7 +596,7 @@ TEST_F(FarmActivityTest, LazySequenceIsRareCappedAndCancelledOnVisibilityLoss) {
   }
   EXPECT_GT(starts, 0);
   EXPECT_LT(starts, 10);
-  // A sleeper about to walk off never starts the sequence.
+
   int blocked_starts = 0;
   for (int tick = 0; tick < 20000; ++tick) {
     const float time = static_cast<float>(tick) * 0.25F;
@@ -645,7 +611,7 @@ TEST_F(FarmActivityTest, LazySequenceIsRareCappedAndCancelledOnVisibilityLoss) {
   activity.gag_started = 5000;
   activity.gag_seen = true;
   activity.begin_frame(&world, 5001);
-  // No submission while hidden. Next frame releases the shared slot.
+
   activity.begin_frame(&world, 5002);
   EXPECT_EQ(activity.gag_field, 0U);
   activity.gag_field = entity->get_id();
@@ -654,9 +620,6 @@ TEST_F(FarmActivityTest, LazySequenceIsRareCappedAndCancelledOnVisibilityLoss) {
   EXPECT_EQ(activity.gag_field, 0U);
 }
 
-// The wiring this pins is easy to get wrong: a farm carries a UnitComponent, so
-// the render snapshot files it with the units and it is drawn from the unit
-// path. Wiring FarmActivity into the building path alone renders nothing.
 TEST_F(FarmActivityTest, FarmsArePublishedOnTheUnitRenderPath) {
   entity->add_component<Engine::Core::TransformComponent>();
   entity->add_component<Engine::Core::BuildingComponent>();
@@ -686,7 +649,7 @@ TEST_F(FarmActivityTest, SleeperReturnsToHarvestingWithoutChangingFarmState) {
   draw(4);
   EXPECT_NE(napping, recorder.poses);
   draw(7);
-  // Back on the tools: the seated pose is gone and the reap cycle is running.
+
   EXPECT_NE(napping, recorder.poses);
   EXPECT_EQ(recorder.meshes.size(), napping.size());
   EXPECT_FLOAT_EQ(farm->growth, 1);

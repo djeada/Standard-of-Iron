@@ -147,8 +147,7 @@ struct FormationSoldierPresentation {
   float combat_speed_scale{1.0F};
   bool damage_carrier{false};
   float unassigned_seconds{0.0F};
-  // Persistent world-space footing: changing the squad frame must not carry a
-  // soldier around its centre. Shared by rendering and combat spatial anchors.
+
   float world_x{0.0F};
   float world_z{0.0F};
   float world_yaw{0.0F};
@@ -158,7 +157,7 @@ struct FormationSoldierPresentation {
   float turn_response_remaining{0.0F};
   bool world_motion_valid{false};
   bool turning{false};
-  // Walking into position after a turn, a layout change, or a split/join.
+
   bool reforming{false};
 
   auto operator==(const FormationSoldierPresentation&) const -> bool = default;
@@ -174,8 +173,6 @@ public:
   std::vector<std::uint8_t> alive;
 };
 
-// Where the men of a squad that was just split or joined stand on the field,
-// so each walks to his new slot instead of appearing in it.
 struct SquadReformSoldier {
   std::uint16_t slot_index{0};
   float world_x{0.0F};

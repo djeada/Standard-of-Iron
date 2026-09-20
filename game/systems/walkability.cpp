@@ -16,7 +16,7 @@ namespace {
 using CellValue = Pathfinding::CellValue;
 
 auto registry() -> const BuildingCollisionRegistry& {
-  return BuildingCollisionRegistry::instance();
+  return Pathfinding::building_collisions();
 }
 
 constexpr float k_bearing_samples = 24.0F;

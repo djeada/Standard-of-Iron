@@ -237,8 +237,7 @@ auto build_economy_definitions() -> std::vector<ArenaScenarioDefinition> {
                   "empty reset and destruction. Use --fog-of-war for visibility "
                   "review. No economic workers or decorative gameplay entities "
                   "are spawned.");
-    // The dense scene carries 12 full crop fields; it is kept short so the
-    // software-GL arena stays inside the harness watchdog.
+
     s.duration_seconds = variant == 1 ? 40 : lazy_farmer ? 40 : 90;
     s.camera = {variant == 1 ? 78.0F : lazy_farmer ? 13.0F : 34.0F, 45.0F, 30.0F};
     s.camera_focus = lazy_farmer ? QVector3D(5, 0, -4) : QVector3D(0, 0, 0);
@@ -265,10 +264,7 @@ auto build_economy_definitions() -> std::vector<ArenaScenarioDefinition> {
         field.owner_id = nation + 1;
         field.ai_controlled = false;
         if (variant == 1) {
-          // Spacing is applied about the group's centre
-          // (origin + spacing * (index - (count - 1) / 2)), so the origin has
-          // to be offset by half the span or the two nations' inner columns
-          // both land on x = 0 and sit inside each other.
+
           field.count = 2;
           field.origin = {nation == 0 ? -19.0F : 19.0F, 0, field.origin.z()};
           field.spacing = {nation == 0 ? -18.0F : 18.0F, 0, 0};
@@ -279,8 +275,7 @@ auto build_economy_definitions() -> std::vector<ArenaScenarioDefinition> {
                                                   : Expect::GroupHealthUnchanged;
         lifecycle.group = name;
         s.expectations.push_back(std::move(lifecycle));
-        // The gag review scene stays ripe throughout: a growth change cancels
-        // the sequence by design, which would cut every capture short.
+
         const int stages = lazy_farmer ? 1 : 3;
         for (int stage = 0; stage < stages; ++stage) {
           ArenaScenarioStep step;
@@ -332,7 +327,7 @@ auto build_economy_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.suppress_terrain_scatter = true;
     s.ground_type = QStringLiteral("grass_dry");
     if (night) {
-      // Smoke has to stay legible against a dark sky, not just a bright one.
+
       s.environment.start_time = 21.0F;
       s.environment.lighting_profile = QStringLiteral("mediterranean_summer");
     }
@@ -345,16 +340,14 @@ auto build_economy_definitions() -> std::vector<ArenaScenarioDefinition> {
                           Game::Units::SpawnType::Home,
                           {nation == 0 ? -9.0F : 9.0F,
                            0,
-                           // Each row spans 2 x spacing about its own
-                           // centre, so the row pitch has to clear
-                           // that span or neighbouring rows interleave.
+
                            (static_cast<float>(row) * 20.0F) - ((rows - 1) * 10.0F)},
                           0);
         house.nation_id = nation == 0 ? Nation::RomanRepublic : Nation::Carthage;
         house.owner_id = nation + 1;
         house.ai_controlled = false;
         if (!soup) {
-          // Several neighbours per row, so lockstep would be obvious.
+
           house.count = variant == 1 ? 3 : 3;
           house.spacing = {0, 0, 8.0F};
         }
@@ -364,8 +357,6 @@ auto build_economy_definitions() -> std::vector<ArenaScenarioDefinition> {
         lifecycle.group = name;
         s.expectations.push_back(std::move(lifecycle));
 
-        // One extra house per nation is levelled mid-run and must stop
-        // smoking at once, while its neighbours carry on.
         if (row == 0 && !soup) {
           const auto doomed_name = QStringLiteral("doomed_%1").arg(nation);
           auto doomed = seat_building(doomed_name,

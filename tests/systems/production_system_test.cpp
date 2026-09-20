@@ -404,7 +404,7 @@ auto add_site_crew(Engine::Core::World& world,
   unit->spawn_type = Game::Units::SpawnType::Builder;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
   auto* builder = entity->add_component<Engine::Core::BuilderProductionComponent>();
-  // What the StartConstruction order leaves behind for every crew it names.
+
   builder->product_type = product;
   builder->build_time = Game::Systems::construction_build_time(product);
   builder->time_remaining = builder->build_time;

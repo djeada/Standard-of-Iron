@@ -91,8 +91,6 @@ public:
 
   void add_system(std::unique_ptr<System> system);
 
-  // Destroys every system, newest first, joining any worker threads they own.
-  // Call before the services those workers read (navigation, terrain) go away.
   void shutdown_systems();
 
   void add_system(std::unique_ptr<System> system, SystemPhase phase);

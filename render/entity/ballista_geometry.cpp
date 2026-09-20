@@ -173,7 +173,7 @@ void draw_wheels(const DrawContext& p,
                  Texture* white,
                  const BallistaPalette& c,
                  const SiegeMotion& motion) {
-  // The ballista model is authored facing -Z, hence the reversed roll.
+
   draw_siege_wheel(out,
                    white,
                    p.model,
@@ -570,7 +570,7 @@ void draw_ballista_geometry(const DrawContext& p,
   draw_trigger_mechanism(ctx, out, unit, white, c, anim_ctx);
   draw_ornaments(ctx, out, unit, white, c);
   draw_siege_regalia(ctx, out, unit, white, c.team, c.accent, true);
-  // Braced cheeks carry the torsion frame down into the chassis.
+
   for (float side : {-1.0F, 1.0F}) {
     draw_cyl(out,
              ctx.model,

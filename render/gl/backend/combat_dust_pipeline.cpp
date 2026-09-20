@@ -315,8 +315,6 @@ auto CombatDustPipeline::create_hearth_smoke_geometry() -> bool {
   release_mesh_buffers(*this, m_hearth_smoke_mesh);
   clear_gl_errors();
 
-  // Independent soft wisps, animated entirely on the GPU. The normal's x
-  // stores a lifetime offset; smoke does not use surface lighting.
   constexpr int wisp_count = 20;
   std::vector<DustVertex> vertices;
   std::vector<unsigned int> indices;

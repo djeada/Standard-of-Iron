@@ -462,8 +462,6 @@ struct ExpectedBridgeEnds {
   Game::Map::RiverWaterReach water;
 };
 
-// The ends a deck crossing a river running along +z at x = 0 should get: the
-// drawn water at the crossing plus the bank clearance and landing, no more.
 auto expected_bridge_ends(float bridge_width,
                           float river_width,
                           float river_half_length) -> ExpectedBridgeEnds {
@@ -479,7 +477,7 @@ auto expected_bridge_ends(float bridge_width,
                            Game::Map::bridge_bank_landing(bridge_width, river_width);
   float behind = water.behind + past_water;
   float ahead = water.ahead + past_water;
-  // A deck over a narrow stream still grows to be as long as it is wide.
+
   const float shortfall =
       std::max(bridge_width, Game::Map::k_min_bridge_width) + 0.01F - (behind + ahead);
   if (shortfall > 0.0F) {

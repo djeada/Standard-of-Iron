@@ -805,8 +805,7 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
         DrawContext{ctx.resources, entry.entity, ctx.world, world_view(), model_matrix};
 
     draw_ctx.humanoid_runtime = &m_humanoid_runtime;
-    // Buildings carry a UnitComponent, so the render snapshot files them with
-    // the units and they are drawn from here, not from submit_non_unit_entry().
+
     draw_ctx.farm_activity = &m_farm_activity;
     draw_ctx.home_activity = &m_home_activity;
     draw_ctx.selected = entry.selected;
@@ -1156,10 +1155,7 @@ void Renderer::render_world(Engine::Core::World* world) {
   std::lock_guard<std::recursive_mutex> const guard(world->get_entity_mutex());
 
   m_farm_activity.begin_frame(world, m_accumulated_time, simulation_world);
-  // Lamps follow the scene's own key light rather than a clock, so they behave
-  // under any lighting profile, a locked hour or a storm. Intensity alone is
-  // not the signal: mediterranean_summer still reports 0.44 at 21:00 and only
-  // the colour goes dim, so this measures the light the scene actually casts.
+
   {
     const auto& lighting = environment_lighting();
     const auto& key = lighting.primary_color;

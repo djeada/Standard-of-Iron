@@ -46,7 +46,7 @@ public:
   void local_light(const Render::LocalLight& light) override {
     lights.push_back(light);
   }
-  // Props lying on the ground: the spilled broth, never a hung cloth.
+
   [[nodiscard]] auto ground() const -> std::vector<QMatrix4x4> {
     std::vector<QMatrix4x4> low;
     for (const auto& model : props) {
@@ -122,7 +122,7 @@ protected:
     activity.begin_frame(&world, time);
     submit_home_activity(ctx, recorder, carthage);
   }
-  // Finds a time at which this house's hearth is alight.
+
   auto lit_time(std::uint64_t id) -> float {
     for (int step = 0; step < 4000; ++step) {
       const float time = static_cast<float>(step) * 0.5F;
@@ -146,11 +146,11 @@ TEST_F(HomeActivityTest, BothNationsVentFromTheirOwnAnchorAndCarryTheirOwnBowl) 
   const auto& punic = home_smoke_anchor(true);
   ASSERT_TRUE(roman.valid());
   ASSERT_TRUE(punic.valid());
-  // No shared chimney silhouette: each nation vents from its own opening.
+
   EXPECT_NE(roman.vent, punic.vent);
   EXPECT_GT(roman.vent.y(), 1.0F);
   EXPECT_GT(punic.vent.y(), 1.0F);
-  // The Punic oven sits off to one side of the roof; the domus ridge does not.
+
   EXPECT_NEAR(roman.vent.x(), 0.0F, 0.05F);
   EXPECT_GT(std::abs(punic.vent.x()), 0.2F);
 
@@ -191,7 +191,7 @@ TEST_F(HomeActivityTest, DestroyedRuinedAndNeutralHousesStopSmoking) {
   draw(time);
   EXPECT_TRUE(recorder.plumes.empty());
 
-  unit->health = 40; // Ruined: the building renderer already shows the wreck.
+  unit->health = 40;
   draw(time);
   EXPECT_TRUE(recorder.plumes.empty());
 
@@ -207,7 +207,7 @@ TEST_F(HomeActivityTest, DestroyedRuinedAndNeutralHousesStopSmoking) {
 }
 
 TEST_F(HomeActivityTest, NeighbouringHousesDoNotSmokeInLockstep) {
-  // A street should always show a subset alight, never all and never none.
+
   constexpr int k_houses = 64;
   int ever_lit = 0;
   int simultaneous_max = 0;
@@ -233,7 +233,6 @@ TEST_F(HomeActivityTest, NeighbouringHousesDoNotSmokeInLockstep) {
   EXPECT_LT(simultaneous_max, k_houses);
   EXPECT_LT(simultaneous_min, k_houses / 2);
 
-  // Adjacent ids must not share a phase.
   const float probe = 53.0F;
   int identical = 0;
   for (int house = 1; house < k_houses; ++house) {
@@ -251,7 +250,7 @@ TEST_F(HomeActivityTest, HearthRampsInAndOutRatherThanSnapping) {
   const std::uint64_t id = entity->get_id();
   const float lit = lit_time(id);
   ASSERT_GE(lit, 0.0F);
-  // Walk back to the edge of the window and check the intensity climbs.
+
   float previous = activity.hearth_intensity(id, lit);
   bool saw_partial = false;
   for (float back = 0.5F; back < 9.0F; back += 0.5F) {
@@ -275,7 +274,7 @@ TEST_F(HomeActivityTest, FogAndQualityGateEverything) {
   fog.cells.resize(32 * 32);
   visibility.reset(nullptr, &fog);
   activity.set_night(1.0F);
-  // A moment when this household's lamp is lit, if it ever is.
+
   float lamp_time = -1.0F;
   for (float probe = 0.0F; probe < 900.0F && lamp_time < 0.0F; probe += 1.0F) {
     if (activity.lamp_state(entity->get_id(), probe).strength > 0.0F) {
@@ -285,8 +284,7 @@ TEST_F(HomeActivityTest, FogAndQualityGateEverything) {
   for (std::uint8_t state : {0, 1, 2}) {
     std::fill(fog.cells.begin(), fog.cells.end(), state);
     draw(time);
-    // Explored-but-unseen must not betray an occupied house: no smoke, and no
-    // lamplight, cloth or shutters either.
+
     EXPECT_EQ(recorder.plumes.empty(), state != 2);
     if (state != 2) {
       EXPECT_TRUE(recorder.lights.empty());
@@ -308,7 +306,7 @@ TEST_F(HomeActivityTest, FogAndQualityGateEverything) {
   Render::GraphicsSettings::instance().set_quality(Render::GraphicsQuality::Medium);
   draw(time);
   EXPECT_EQ(activity.max_plumes, 8);
-  // Reduced effects also means no rigged gag actor.
+
   EXPECT_FALSE(activity.actors_allowed);
 }
 
@@ -335,14 +333,13 @@ TEST_F(HomeActivityTest, SpillIsRareSharesOneSlotAndCancelsCleanly) {
       EXPECT_GE(time - last_start, 300.0F);
       last_start = time;
       ++starts;
-      // One slot for the whole renderer: a neighbour cannot also start.
+
       EXPECT_LT(activity.gag(entity->get_id() + 1, time), 0.0F);
     }
   }
   EXPECT_GT(starts, 0);
   EXPECT_LT(starts, 12);
 
-  // Losing visibility for a frame releases the slot rather than stranding it.
   activity.gag_home = entity->get_id();
   activity.gag_started = 5000.0F;
   activity.gag_seen = true;
@@ -359,25 +356,21 @@ TEST_F(HomeActivityTest, SpillCarriesABowlOutThenLeavesTheMessBehind) {
   activity.gag_seen = true;
   activity.world = &world;
 
-  // Carrying it out: an actor, no spill on the ground yet.
   draw(1.0F);
   const auto carried = recorder.actors.size();
   EXPECT_GT(carried, 0U);
   EXPECT_TRUE(recorder.ground().empty());
 
-  // Sprawled: the broth is on the ground.
   draw(3.0F);
   EXPECT_GT(recorder.actors.size(), 0U);
   EXPECT_FALSE(recorder.ground().empty());
 
-  // Back on their feet, mess still there, house untouched.
   draw(5.5F);
   EXPECT_GT(recorder.actors.size(), 0U);
   EXPECT_FALSE(recorder.ground().empty());
   EXPECT_EQ(world.entity_count(), 1U);
   EXPECT_EQ(entity->get_component<Engine::Core::UnitComponent>()->health, 400);
 
-  // After the sequence there is no actor and no mess.
   draw(Spill::k_sequence_end + 1.0F);
   EXPECT_TRUE(recorder.actors.empty());
   EXPECT_TRUE(recorder.ground().empty());
@@ -417,14 +410,13 @@ TEST_F(HomeActivityTest, PlumesDifferInCharacterAcrossAStreet) {
       ++tended;
     }
   }
-  // A street of different fires, not one plume stamped N times.
+
   EXPECT_GT(sizes.size(), 5U);
   EXPECT_GT(warmths.size(), 5U);
   EXPECT_GT(clocks.size(), 8U);
   EXPECT_GT(tended, k_houses / 6);
   EXPECT_LT(tended, k_houses * 5 / 6);
 
-  // Two houses lit at the same moment submit visibly different plumes.
   const std::uint64_t id = entity->get_id();
   const float time = lit_time(id);
   ASSERT_GE(time, 0.0F);
@@ -445,7 +437,7 @@ TEST_F(HomeActivityTest, PlumesDifferInCharacterAcrossAStreet) {
   const auto theirs = recorder.plume_details.front();
   EXPECT_NE(mine.radius, theirs.radius);
   EXPECT_NE(mine.color, theirs.color);
-  // The noise clock is the house's own, never raw animation time.
+
   EXPECT_NE(mine.time, time);
   EXPECT_NE(theirs.time, other_time);
   EXPECT_NE(mine.time - time, theirs.time - other_time);
@@ -479,7 +471,6 @@ TEST_F(HomeActivityTest, MealTimesLightMoreHearthsWithoutSwitchingTheStreet) {
   EXPECT_LT(deep_night, midday);
   EXPECT_LT(dusk, static_cast<float>(k_houses) * 0.8F);
 
-  // Dusk arriving must light houses one at a time, never as a group.
   const float probe = 131.0F;
   int worst_step = 0;
   activity.set_night(0.0F);
@@ -512,13 +503,12 @@ TEST_F(HomeActivityTest, LampsComeOnHouseByHouseOnTheirOwnClocks) {
   EXPECT_EQ(lit(50.0F), 0);
   activity.set_night(1.0F);
   const int at_night = lit(50.0F);
-  // Some houses are dark, most are lit.
+
   EXPECT_GT(at_night, k_houses / 2);
   EXPECT_LT(at_night, k_houses);
   activity.set_night(0.3F);
   EXPECT_LT(lit(50.0F), at_night);
 
-  // Dusk lights windows one by one.
   int worst_step = 0;
   activity.set_night(0.0F);
   int previous = 0;
@@ -530,8 +520,6 @@ TEST_F(HomeActivityTest, LampsComeOnHouseByHouseOnTheirOwnClocks) {
   }
   EXPECT_LE(worst_step, 4);
 
-  // Each lamp keeps its own schedule and its own flicker: two neighbours are
-  // never in lockstep, and a lit house sometimes goes dark for a while.
   activity.set_night(1.0F);
   std::vector<std::uint64_t> lit_now;
   for (int house = 1; house <= k_houses && lit_now.size() < 2; ++house) {
@@ -571,7 +559,7 @@ TEST_F(HomeActivityTest, LampsComeOnHouseByHouseOnTheirOwnClocks) {
     const auto lamp = activity.lamp_state(static_cast<std::uint64_t>(house), 50.0F);
     if (lamp.strength > 0.0F) {
       colours.insert(static_cast<int>(lamp.color.y() * 100.0F));
-      // Candle-warm, never neon.
+
       EXPECT_GT(lamp.color.x(), lamp.color.y());
       EXPECT_GT(lamp.color.y(), lamp.color.z());
     }
@@ -610,10 +598,9 @@ TEST_F(HomeActivityTest, DoorstepVisitsVaryInLengthActivityAndCompany) {
   EXPECT_GE(activities.size(), 4U);
   EXPECT_GE(durations.size(), 3U);
   EXPECT_GT(pairs, 0);
-  // Never a street stepping out together.
+
   EXPECT_LT(most_out, k_houses / 2);
 
-  // Deterministic: the same house at the same moment is the same visit.
   const auto once = activity.doorstep_plan(9U, 400.0F);
   const auto again = activity.doorstep_plan(9U, 400.0F);
   EXPECT_EQ(once.t, again.t);
@@ -621,7 +608,7 @@ TEST_F(HomeActivityTest, DoorstepVisitsVaryInLengthActivityAndCompany) {
 }
 
 TEST_F(HomeActivityTest, DoorCurtainPartsOnlyAsSomeonePassesThrough) {
-  // Find a visit and check the curtain moves at its ends, not its middle.
+
   bool found = false;
   for (int house = 1; house <= 64 && !found; ++house) {
     for (float time = 0.0F; time < 600.0F && !found; time += 0.5F) {
@@ -661,7 +648,7 @@ TEST_F(HomeActivityTest, ShuttersStandAtTheirOwnAnglesAndCloseForTheNight) {
   EXPECT_GT(angles.size(), 6U);
   EXPECT_GT(closed, 0);
   EXPECT_GT(open, k_houses);
-  // The same house never has four identical windows.
+
   int identical_houses = 0;
   for (int house = 1; house <= k_houses; ++house) {
     const auto id = static_cast<std::uint64_t>(house);
@@ -672,7 +659,6 @@ TEST_F(HomeActivityTest, ShuttersStandAtTheirOwnAnglesAndCloseForTheNight) {
   }
   EXPECT_LT(identical_houses, k_houses / 8);
 
-  // Dusk closes them one window at a time; full night closes them all.
   auto open_count = [&]() {
     int count = 0;
     for (int house = 1; house <= k_houses; ++house) {
@@ -710,7 +696,7 @@ TEST_F(HomeActivityTest, ResidentsStandOnTheStreetSideAndPairsFaceEachOther) {
       continue;
     }
     draw(time);
-    // One actor may submit more than one rigged command; count bodies.
+
     std::vector<QMatrix4x4> bodies;
     for (const auto& actor : recorder.actors) {
       if (bodies.empty() || bodies.back().column(3) != actor.column(3)) {
@@ -720,7 +706,7 @@ TEST_F(HomeActivityTest, ResidentsStandOnTheStreetSideAndPairsFaceEachOther) {
     ASSERT_EQ(bodies.size(), static_cast<std::size_t>(visit.residents));
     for (const auto& actor : bodies) {
       const auto at = actor.column(3).toVector3D();
-      // Outside the door, never inside the house.
+
       EXPECT_GT(at.z(), anchor.doorstep.z() * 1.36F + 0.3F);
       EXPECT_LT(std::abs(at.x()), 5.0F);
     }
@@ -731,7 +717,7 @@ TEST_F(HomeActivityTest, ResidentsStandOnTheStreetSideAndPairsFaceEachOther) {
       const float apart = (a - b).length();
       EXPECT_GT(apart, 0.8F);
       EXPECT_LT(apart, 1.6F);
-      // Each faces the other: their forward axes point at one another.
+
       const auto forward_a = bodies[0].mapVector(QVector3D(0, 0, 1));
       const auto forward_b = bodies[1].mapVector(QVector3D(0, 0, 1));
       EXPECT_GT(QVector3D::dotProduct(forward_a, (b - a).normalized()), 0.9F);
@@ -745,8 +731,7 @@ TEST_F(HomeActivityTest, ResidentsStandOnTheStreetSideAndPairsFaceEachOther) {
 }
 
 TEST_F(HomeActivityTest, DetailPropsSitOnTheHouseAndVaryBetweenHouses) {
-  // Everything hung on the house stays within its footprint and above its
-  // plinth: nothing floats off into the street or sinks into the ground.
+
   draw(12.0F);
   EXPECT_FALSE(recorder.props.empty());
   for (const auto& prop : recorder.props) {
@@ -756,7 +741,7 @@ TEST_F(HomeActivityTest, DetailPropsSitOnTheHouseAndVaryBetweenHouses) {
     EXPECT_GT(at.y(), 0.15F);
     EXPECT_LT(at.y(), 1.36F * 2.1F);
   }
-  // The cloth is never still and never the same on two houses.
+
   const auto first = recorder.props;
   draw(12.5F);
   ASSERT_EQ(recorder.props.size(), first.size());

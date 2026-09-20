@@ -80,10 +80,9 @@ public:
                            float radius,
                            float intensity,
                            float time) = 0;
-  // A warm point light: a lamp or hearth seen through a doorway at night.
+
   virtual void local_light(const Render::LocalLight& light) { (void)light; }
-  // A slow domestic plume: rises, widens, drifts and fades. No embers, no
-  // light -- a hearth venting through a roof, not a fire.
+
   virtual void hearth_smoke(const QVector3D& position,
                             const QVector3D& color,
                             float radius,

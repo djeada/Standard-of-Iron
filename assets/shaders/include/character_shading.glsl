@@ -112,8 +112,6 @@ vec3 shade_readable_character(vec3 base,
   float fresnel = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 4.0);
   if (material_id == 2 || (material_id == 0 && color_role == k_humanoid_role_metal)) {
 
-    // Broaden distant glints to avoid flicker while keeping the authored metal
-    // tint (including bronze) visible under both sunlight and sky reflection.
     float metal_glint = pow(n_dot_h, mix(48.0, 24.0, zoom));
     float metal_sheen = pow(n_dot_h, 9.0);
     vec3 metal_tint = mix(base, sqrt(max(base, vec3(0.0))), 0.35);

@@ -9,8 +9,7 @@ namespace Render::GL {
 
 void register_home_renderer_variant(EntityRendererRegistry& registry,
                                     const HomeRendererConfig& config) {
-  // Build the house props during warm_all() at renderer init, not on the
-  // first frame that happens to draw a house.
+
   static const bool props_registered = [] {
     register_home_prop_archetypes();
     return true;

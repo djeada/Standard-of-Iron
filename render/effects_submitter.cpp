@@ -274,8 +274,7 @@ void Renderer::hearth_smoke(const QVector3D& position,
                             float radius,
                             float intensity,
                             float time) {
-  // Domestic smoke must never betray an unseen house, so it is gated on
-  // current visibility rather than merely explored ground.
+
   if (!m_submission_visibility.accepts_sphere(
           position, radius, SubmissionFogMode::VisibleOnly, FogExtent::Anchor)) {
     return;

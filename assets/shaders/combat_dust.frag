@@ -282,17 +282,17 @@ void main() {
     float age = v_smoke_data.x;
     float seed = v_smoke_data.y;
     vec2 uv = v_texcoord * 2.0 - 1.0;
-    // Advect coherent noise with the wisp. No screen-space grain or flicker.
+
     vec2 flow = vec2(seed * 19.0, seed * 31.0 - age * 1.8);
     float body = soi_fbm_23e5ab(uv * 2.1 + flow);
     float detail = soi_fbm_23e5ab(uv * 4.3 + flow + vec2(age * 0.6, 7.0));
     vec2 warped = uv + vec2(body - 0.5, detail - 0.5) * 0.32;
     float envelope = 1.0 - smoothstep(0.12, 1.0, length(warped));
-    // Zero coverage at every quad boundary, even after the noise distortion.
+
     float edge = 1.0 - smoothstep(0.72, 1.0, max(abs(uv.x), abs(uv.y)));
     float wisps = smoothstep(0.18, 0.72, body * 0.7 + detail * 0.3);
     float alpha = v_alpha * envelope * edge * (0.35 + 0.65 * wisps);
-    // Neutral wood smoke, subdued by the caller's daylight/night tint.
+
     color = u_dust_color * mix(0.88, 1.08, age);
     frag_color = vec4(color, alpha);
   } else if (u_effect_type == 5) {
@@ -330,7 +330,6 @@ void main() {
     bool ring = abs(u_span) >= 0.999;
     vec3 accent = max(u_dust_color, vec3(0.03));
 
-    // A fast cutting edge with a lingering, dissolving wake behind it.
     float head = smoothstep(0.0, 0.36, t);
     float tail = smoothstep(0.22, 1.0, t) * 0.96;
     float aa = max(fwidth(along), 0.002);

@@ -1077,8 +1077,6 @@ public:
     apply_roman_civilian_palette(team_tint, seed, v);
   }
 
-  // Ambient actors share the civilian palette exactly; they are the same
-  // people, so they must not drift into their own look.
   static void
   fill_ambient_variant(const DrawContext& ctx, std::uint32_t seed, HumanoidVariant& v) {
     QVector3D const team_tint = resolve_team_tint(ctx);
@@ -1089,8 +1087,7 @@ public:
 };
 
 void register_civilian_rig_for_nation() {
-  // Ambient actors are this nation's civilians, holding this nation's tools --
-  // the same rig, proportions and palette, never a bespoke figure.
+
   NationCivilianRig rig{};
   rig.spec = CivilianRenderer::make_visual_spec();
   rig.idle = roman_civilian_idle_archetype();

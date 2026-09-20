@@ -609,9 +609,6 @@ auto complete_food_harvest(Engine::Core::World* world,
   return true;
 }
 
-// A building order names every crew that will raise it. Those crews share one
-// site: its progress, the hands that speed it up and the single building it
-// ends in. Walls keep their own site entities and gathering is per crew.
 auto raises_shared_site(const Engine::Core::BuilderProductionComponent& builder)
     -> bool {
   return builder.has_construction_site && builder.construction_site_entity_id == 0 &&
@@ -704,9 +701,6 @@ void release_helper_crew(Engine::Core::World& world, Engine::Core::EntityID crew
 using FinishedSites =
     std::vector<std::pair<Engine::Core::EntityID, std::vector<Engine::Core::EntityID>>>;
 
-// Advances every shared site by the hands working on it and hands the
-// finished site to exactly one crew. Returns, per finishing crew, everyone
-// who stood on that site so the building may rise around them.
 auto advance_shared_sites(Engine::Core::World& world,
                           float delta_time) -> FinishedSites {
   FinishedSites finishing;

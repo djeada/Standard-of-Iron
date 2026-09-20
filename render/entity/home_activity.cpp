@@ -3,10 +3,10 @@
 #include <QQuaternion>
 
 #include <algorithm>
-#include <cstdio>
-#include <cstdlib>
 #include <array>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 
 #include "animation/clip_manifest.h"
@@ -28,8 +28,6 @@ constexpr auto mix = ambient_hash;
 constexpr float k_pi = 3.14159265F;
 constexpr float k_tau = 6.2831853F;
 
-// A hearth is lit for a stretch and then out, so a street is never uniformly
-// smoking and never uniformly bare.
 constexpr float k_hearth_period = 190.0F;
 constexpr float k_hearth_duty = 0.46F;
 constexpr float k_hearth_ramp = 9.0F;
@@ -43,8 +41,6 @@ auto low32(std::uint64_t id) -> std::uint32_t {
   return static_cast<std::uint32_t>(id) ^ static_cast<std::uint32_t>(id >> 32U);
 }
 
-// A fresh unit float per (seed, salt) pair, so every knob of every schedule
-// draws on different bits and no two knobs of one house move together.
 auto roll(std::uint32_t seed, std::uint32_t salt) -> float {
   return static_cast<float>(mix(seed ^ (salt * 0x9e3779b9U)) & 0xffffU) / 65536.0F;
 }
@@ -97,7 +93,7 @@ auto hearth_character(std::uint64_t id) -> HearthCharacter {
   character.warmth = roll(seed, 3U);
   character.speed = 0.82F + (0.36F * roll(seed, 4U));
   character.time_offset = 600.0F * roll(seed, 5U);
-  // Some fires are being tended: they breathe. Others burn steadily.
+
   const float tended = roll(seed, 6U);
   character.puff_depth = tended < 0.55F ? 0.0F : 0.12F + (0.22F * roll(seed, 7U));
   character.puff_rate = 0.05F + (0.09F * roll(seed, 8U));
@@ -127,8 +123,7 @@ void HomeActivity::begin_frame(Engine::Core::World* snapshot,
                : quality == GraphicsQuality::Medium ? 8
                : quality == GraphicsQuality::High   ? 20
                                                     : 32;
-  // Residents are full rigged actors, so they follow the creature budget
-  // rather than the cheap plume budget.
+
   actors_allowed =
       quality != GraphicsQuality::Low && quality != GraphicsQuality::Medium;
   remaining_plumes = max_plumes;
@@ -137,7 +132,7 @@ void HomeActivity::begin_frame(Engine::Core::World* snapshot,
   if (snapshot == nullptr || max_plumes == 0) {
     return;
   }
-  // One scan per frame over the locked snapshot, never the live simulation.
+
   for (auto [id, unit] : snapshot->view<Engine::Core::UnitComponent>()) {
     if (unit.spawn_type != Game::Units::SpawnType::Home || unit.health <= 0 ||
         get_building_state(static_cast<float>(unit.health) /
@@ -160,28 +155,21 @@ auto HomeActivity::inhabited(std::uint64_t id) const -> bool {
 }
 
 auto HomeActivity::meal_bias() const noexcept -> float {
-  // Twilight is where the night factor is in transition: the evening meal is
-  // cooked as the light goes, the morning one as it returns. Midday is quiet
-  // and by full dark most fires are banked. The bias moves slowly with the
-  // light, and each house crosses its own window edge at its own phase, so a
-  // rising bias lights houses one by one rather than all at once.
+
   const float n = night_factor;
   const float twilight = 4.0F * n * (1.0F - n);
-  // The day floor is what a town looks like at a glance for most of a match,
-  // so it has to read as inhabited on its own; twilight is the peak above it.
+
   return 1.00F + (0.55F * twilight) - (0.30F * n);
 }
 
 auto HomeActivity::hearth_intensity(std::uint64_t id, float time) const -> float {
-  // Review hook: a lit subset is the point, which makes both anchors hard to
-  // inspect in one capture. This lights every eligible house.
+
   static const bool always = ambient_review_interval("SOI_HOME_SMOKE_ALWAYS") > 0.0F;
   if (always) {
     return 0.85F;
   }
   const auto seed = mix(low32(id));
-  // A per-house offset and a per-house period stretch: neighbours never share
-  // a cycle, so a street has no visible rhythm.
+
   const float offset = static_cast<float>(seed % 1000U) / 1000.0F * k_hearth_period;
   const float period =
       k_hearth_period * (0.78F + (static_cast<float>((seed >> 11U) % 500U) / 1000.0F));
@@ -192,31 +180,28 @@ auto HomeActivity::hearth_intensity(std::uint64_t id, float time) const -> float
   if (phase >= lit_seconds) {
     return 0.0F;
   }
-  // Smooth start and stop: a hearth is banked up and dies down.
+
   const float ramp = std::min(k_hearth_ramp, lit_seconds * 0.4F);
   const float rise = std::clamp(phase / ramp, 0.0F, 1.0F);
   const float fall = std::clamp((lit_seconds - phase) / ramp, 0.0F, 1.0F);
-  const float strength =
-      0.55F + (static_cast<float>((seed >> 5U) % 450U) / 1000.0F); // 0.55 - 1.0
+  const float strength = 0.55F + (static_cast<float>((seed >> 5U) % 450U) / 1000.0F);
   return rise * fall * strength;
 }
 
 auto HomeActivity::lamp_state(std::uint64_t id, float time) const -> LampState {
   LampState state;
   const auto seed = mix(low32(id) ^ 0x9e3779b9U);
-  // Some households are simply dark: asleep, away, or saving the oil.
+
   if (roll(seed, 1U) < 0.22F) {
     return state;
   }
-  // Each house lights up at its own point in the dusk and eases in over its
-  // own stretch of it, so a street comes alight window by window.
+
   const float threshold = 0.10F + (0.42F * roll(seed, 2U));
   const float ease = smoothstep(threshold, threshold + 0.24F, night_factor);
   if (ease <= 0.0F) {
     return state;
   }
-  // Now and then the lamp goes out for a while: someone has gone to bed, or
-  // carried it to the back of the house.
+
   const float period = 240.0F + (220.0F * roll(seed, 3U));
   const float offset = period * roll(seed, 4U);
   const float lit_seconds = period * (0.70F + (0.22F * roll(seed, 5U)));
@@ -227,8 +212,7 @@ auto HomeActivity::lamp_state(std::uint64_t id, float time) const -> LampState {
   constexpr float k_ramp = 6.0F;
   const float schedule = std::clamp(phase / k_ramp, 0.0F, 1.0F) *
                          std::clamp((lit_seconds - phase) / k_ramp, 0.0F, 1.0F);
-  // An oil flame's flicker: a quick wobble under a slow one, both at rates
-  // and phases of the house's own.
+
   const float rate = 1.6F + (2.2F * roll(seed, 6U));
   const float depth = 0.05F + (0.12F * roll(seed, 7U));
   const float flicker_phase = k_tau * roll(seed, 8U);
@@ -237,7 +221,7 @@ auto HomeActivity::lamp_state(std::uint64_t id, float time) const -> LampState {
       0.7F + (0.3F * std::sin((time * rate * 0.37F * k_tau) + (flicker_phase * 1.7F)));
   const float flicker = (1.0F - depth) + (depth * quick * slow);
   state.strength = ease * schedule * flicker;
-  // Candle-warm, a little more amber in some houses than others.
+
   const float amber = roll(seed, 9U);
   state.color = QVector3D(1.0F, 0.74F - (0.16F * amber), 0.40F - (0.18F * amber));
   return state;
@@ -246,9 +230,7 @@ auto HomeActivity::lamp_state(std::uint64_t id, float time) const -> LampState {
 auto HomeActivity::doorstep_plan(std::uint64_t id, float time) const -> DoorstepVisit {
   DoorstepVisit visit;
   const auto seed = mix(low32(id) ^ 0x51ed270bU);
-  // Each house keeps its own rhythm, and within it each turn outside is
-  // decided afresh: whether anyone comes out at all, for how long, to do
-  // what, and whether a second resident joins them.
+
   const float period = Doorstep::k_period * (0.72F + (0.70F * roll(seed, 1U)));
   const float offset = period * roll(seed, 2U);
   const float shifted = std::max(0.0F, time + offset);
@@ -297,7 +279,7 @@ auto HomeActivity::curtain_parting(std::uint64_t id, float time) const -> float 
   if (!visit.active()) {
     return 0.0F;
   }
-  // A short push aside as each resident goes out, and again as they come in.
+
   auto bump = [](float since) {
     const float u = (since - 0.15F) / 0.5F;
     return std::max(0.0F, 1.0F - (u * u));
@@ -319,8 +301,7 @@ auto HomeActivity::curtain_parting(std::uint64_t id, float time) const -> float 
 auto HomeActivity::shutter_angle(std::uint64_t id, int window) const -> float {
   const auto seed =
       mix(low32(id) ^ 0x7f4a7c15U ^ (static_cast<std::uint32_t>(window) * 0x85ebca6bU));
-  // Closed, ajar or thrown open: settled per window, so the same street is
-  // never four identical facades.
+
   const float style = roll(seed, 1U);
   float angle = 0.0F;
   if (style < 0.22F) {
@@ -330,7 +311,7 @@ auto HomeActivity::shutter_angle(std::uint64_t id, int window) const -> float {
   } else {
     angle = 135.0F + (38.0F * roll(seed, 2U));
   }
-  // Shutters are closed for the night, each at its own moment in the dusk.
+
   const float threshold = 0.18F + (0.50F * roll(seed, 3U));
   const float closing = smoothstep(threshold, threshold + 0.28F, night_factor);
   return angle * (1.0F - closing);
@@ -347,22 +328,15 @@ auto HomeActivity::gag(std::uint64_t id, float time) -> float {
       gag_started = time;
     }
   } else if (gag_home == 0 && actors_allowed) {
-    // The window has to open often enough to actually be seen: a missed
-    // window is dropped, not queued, and the camera is rarely on a farm or
-    // a house. This is the issue's ceiling (~5 min per eligible building),
-    // not a rate every building hits -- only a quarter are picked per cycle
-    // and one renderer-wide slot still gates the whole scene.
+
     const float interval = std::max(330.0F, cooldown_seconds * 0.6F);
-    // Jitter has to stay inside interval - 300 so two consecutive windows for
-    // the same building can never be closer than the five minutes the issue
-    // sets as the ceiling, while still not landing on a fixed beat.
+
     const float jitter = std::max(0.0F, interval - 305.0F);
     const auto cycle =
         static_cast<std::uint32_t>(std::max(0.0F, std::floor(time / interval)));
     const auto seed = mix(low32(id) ^ mix(cycle));
-    const float start =
-        (static_cast<float>(cycle) * interval) +
-        ((static_cast<float>(seed % 1000U) / 1000.0F) * jitter);
+    const float start = (static_cast<float>(cycle) * interval) +
+                        ((static_cast<float>(seed % 1000U) / 1000.0F) * jitter);
     if ((seed & 3U) == 0 && previous_time < start && time >= start &&
         time - start < 0.5F) {
       gag_home = id;
@@ -377,7 +351,7 @@ auto HomeActivity::gag(std::uint64_t id, float time) -> float {
 }
 
 namespace {
-// Distance walked from the doorstep at each beat: out, sprawled, then back.
+
 auto spill_walk_metres(float t) -> float {
   if (t < Spill::k_emerge_end) {
     return Spill::k_walk_out_metres * (t / Spill::k_emerge_end);
@@ -394,7 +368,6 @@ auto yaw_of(const QVector3D& direction) -> float {
   return std::atan2(direction.x(), direction.z()) * 180.0F / k_pi;
 }
 
-// The house's own frame on the ground: away from the door, and across it.
 struct DoorFrame {
   QVector3D doorstep;
   QVector3D outward;
@@ -417,8 +390,6 @@ auto door_frame(const DrawContext& ctx,
                    .scale = ctx.model.column(1).toVector3D().length()};
 }
 
-// Puts a point on the ground. The doorstep anchor sits on the house plinth;
-// a step or two out, the resident is on the street.
 auto ground(const DrawContext& ctx,
             const DoorFrame& frame,
             QVector3D point,
@@ -443,7 +414,6 @@ struct ResidentPose {
   bool drawn{false};
 };
 
-// Where resident r of a visit is and what they are doing, t seconds in.
 auto resident_pose(const DrawContext& ctx,
                    const DoorFrame& frame,
                    const DoorstepVisit& visit,
@@ -457,7 +427,7 @@ auto resident_pose(const DrawContext& ctx,
     return pose;
   }
   const float step = visit.step_seconds();
-  // A pair leaves the door on either side of it and settles a stride apart.
+
   const float lateral =
       visit.residents > 1 ? visit.lateral + (r == 0 ? -0.55F : 0.55F) : visit.lateral;
   const float time = ctx.animation_time;
@@ -467,7 +437,7 @@ auto resident_pose(const DrawContext& ctx,
   auto along = [&](float out, float across) {
     return frame.doorstep + (frame.outward * out) + (frame.lateral * across);
   };
-  // The walk path bends from the door towards where they settle.
+
   auto path = [&](float s) {
     return along(visit.out_metres * s, lateral * (0.25F + (0.75F * s)));
   };
@@ -480,7 +450,7 @@ auto resident_pose(const DrawContext& ctx,
     pose.position = path(s);
     pose.yaw = yaw_of(heading);
     pose.clip = Animation::k_humanoid_walk_clip;
-    // Phase follows distance covered, so the feet do not skate.
+
     pose.phase = (visit.out_metres * s) / Spill::k_walk_metres_per_cycle;
     pose.position = ground(ctx, frame, pose.position, visit.out_metres * s);
     return pose;
@@ -498,7 +468,7 @@ auto resident_pose(const DrawContext& ctx,
   const float busy = t - step;
   const float busy_end = duration - (2.0F * step);
   pose.position = ground(ctx, frame, settle, visit.out_metres);
-  // Facing: mostly away from the house, turned a little one way or the other.
+
   const float turn = (roll(seed, 13U) - 0.5F) * 60.0F;
   pose.yaw = yaw_of(frame.outward) + turn;
   pose.phase = (time * idle_rate) + idle_phase;
@@ -511,7 +481,7 @@ auto resident_pose(const DrawContext& ctx,
     pose.phase = (time / 2.6F) + idle_phase;
     break;
   case DoorstepActivity::Scrub:
-    // Kneeling at the threshold, facing the house.
+
     pose.clip = Animation::k_humanoid_construct_kneel_chisel_clip;
     pose.phase = (time / 3.0F) + idle_phase;
     pose.yaw = yaw_of(-frame.outward) + (turn * 0.4F);
@@ -523,7 +493,7 @@ auto resident_pose(const DrawContext& ctx,
       pose.phase = busy / Doorstep::k_sit_down_seconds;
       pose.held = true;
     } else if (busy >= busy_end - Doorstep::k_sit_down_seconds) {
-      // Getting up is sitting down played backwards.
+
       pose.clip = Animation::k_humanoid_showcase_rest_sit_down_clip;
       pose.phase = (busy_end - busy) / Doorstep::k_sit_down_seconds;
       pose.held = true;
@@ -534,7 +504,7 @@ auto resident_pose(const DrawContext& ctx,
     break;
   }
   case DoorstepActivity::Errand: {
-    // Along the front of the house, a pause at the far end, and back.
+
     const float leg = visit.errand_metres / Doorstep::k_walk_speed;
     const float pause = std::max(0.0F, busy_end - (2.0F * leg));
     const float side = roll(seed, 14U) < 0.5F ? -1.0F : 1.0F;
@@ -565,7 +535,7 @@ auto resident_pose(const DrawContext& ctx,
     break;
   }
   case DoorstepActivity::Talk: {
-    // Facing each other.
+
     const QVector3D other =
         along(visit.out_metres, visit.lateral + (r == 0 ? 0.55F : -0.55F));
     pose.yaw = yaw_of((other - settle).normalized());
@@ -579,8 +549,6 @@ auto resident_pose(const DrawContext& ctx,
   return pose;
 }
 
-// Residents out on the doorstep. Ordinary ambient, so they share the actor
-// budget rather than the gag's slot.
 void submit_doorstep_residents(const DrawContext& ctx,
                                ISubmitter& out,
                                bool carthage,
@@ -633,9 +601,6 @@ void submit_doorstep_residents(const DrawContext& ctx,
   }
 }
 
-// Hanging cloth: a run of two-link strips, each swung about its own top edge
-// on its own phase, with the gust travelling along the run rather than
-// lifting every strip at once. A door curtain also parts for a resident.
 void submit_cloth(const DrawContext& ctx,
                   ISubmitter& out,
                   const HomeSmokeAnchor& anchor,
@@ -652,17 +617,17 @@ void submit_cloth(const DrawContext& ctx,
   for (int i = 0; i < k_cloth_strips; ++i) {
     const float fi = static_cast<float>(i);
     const float across = ((fi / (k_cloth_strips - 1)) - 0.5F) * anchor.cloth_span;
-    // The gust arrives at each strip a little after the one before it.
+
     const float gust =
         0.5F + (0.5F * std::sin((time * gust_rate * k_tau) + breeze - (fi * 0.55F)));
     const float lift = strength * (2.2F + (6.0F * gust * gust));
     const float wave = std::sin((time * flutter_rate * k_tau) + breeze + (fi * 0.9F));
-    // The hem lags the hung edge and overshoots it.
+
     const float lag =
         std::sin((time * flutter_rate * k_tau) + breeze + (fi * 0.9F) - 1.1F);
     const float upper = wave * lift;
     const float lower = (lag * lift * 1.35F) + (upper * 0.35F);
-    // Pushed aside from the middle out when someone passes through.
+
     const float side = (fi - ((k_cloth_strips - 1) * 0.5F)) < 0.0F ? -1.0F : 1.0F;
     const float part =
         parting * side *
@@ -687,9 +652,6 @@ void submit_cloth(const DrawContext& ctx,
   }
 }
 
-// Shutters on the side windows: two leaves per window, each hinged at the
-// window's outer edge, standing at an angle of the house's own and closing
-// for the night.
 void submit_shutters(const DrawContext& ctx,
                      ISubmitter& out,
                      bool carthage,
@@ -704,8 +666,7 @@ void submit_shutters(const DrawContext& ctx,
       const QVector3D centre(
           side * anchor.window.x(), anchor.window.y(), along * anchor.window.z());
       for (const float edge : {-1.0F, 1.0F}) {
-        // Hinge at the outer edge; the leaf spans back across the window when
-        // closed and swings out and round against the wall when open.
+
         auto model = ctx.model;
         model.translate(centre + QVector3D(0.0F, 0.0F, edge * anchor.shutter_width));
         model.rotate(edge > 0.0F ? 180.0F : 0.0F, 0.0F, 1.0F, 0.0F);
@@ -721,7 +682,6 @@ void submit_shutters(const DrawContext& ctx,
   }
 }
 
-// Washing on a line, on the houses that have some out. Taken in at dusk.
 void submit_laundry(const DrawContext& ctx,
                     ISubmitter& out,
                     bool carthage,
@@ -766,7 +726,7 @@ void submit_laundry(const DrawContext& ctx,
   const float gust_rate = 0.27F + (0.18F * roll(seed, 4U));
   for (int i = 0; i < pieces; ++i) {
     const auto piece = mix(seed + (static_cast<std::uint32_t>(i) * 977U));
-    // Brought in for the night, one piece at a time.
+
     const float threshold = 0.25F + (0.45F * roll(piece, 1U));
     const float alpha =
         1.0F - smoothstep(threshold, threshold + 0.20F, activity->night());
@@ -855,24 +815,22 @@ void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
     const auto vent = to_world(anchor.vent);
     const auto character = hearth_character(id);
     if (visible(vent, anchor.plume_radius * character.size * scale)) {
-      // A tended fire breathes; a steady one does not.
+
       const float puff =
           1.0F - character.puff_depth +
           (character.puff_depth *
            (0.5F + (0.5F * std::sin((ctx.animation_time * character.puff_rate * k_tau) +
                                     character.puff_phase))));
-      // Thins out towards the draw limit rather than popping.
+
       const float far_fade = 1.0F - smoothstep(k_far * 0.72F, k_far, distance);
-      // Damp wood smokes cool and grey; dry wood a little warm and brown.
+
       const QVector3D cool = anchor.smoke_tint * QVector3D(0.94F, 0.97F, 1.03F);
       const QVector3D warm = anchor.smoke_tint * QVector3D(1.10F, 1.00F, 0.86F);
-      // The effect shader is unlit, so at night a plume must be turned down
-      // by hand or it reads as a searchlight: just enough moonlight to see.
+
       const float dusk = 1.0F - (0.62F * activity->night());
       const QVector3D tint = (cool + ((warm - cool) * character.warmth)) * dusk;
       const float night_thin = 1.0F - (0.35F * activity->night());
-      // The plume is authored in house-local units, so it scales with the
-      // model rather than towering over a small house.
+
       out.hearth_smoke(
           vent,
           tint,
@@ -884,8 +842,6 @@ void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
     }
   }
 
-  // The dressing moves, so it is fogged like the smoke: a remembered house
-  // on explored ground must not show cloth stirring or shutters closing.
   const bool detailed =
       (pixels < 0 || pixels >= 14) && visible(to_world(anchor.doorstep), 1.4F);
   if (anchor.cloth_span > 0.0F && detailed) {
@@ -900,8 +856,6 @@ void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
     submit_laundry(ctx, out, carthage, anchor, id);
   }
 
-  // An oil lamp inside the door once it is dark: a warm pool on the threshold
-  // and a small light, easing in with the dusk rather than snapping on.
   if (activity->night() > 0.02F) {
     const auto lamp = activity->lamp_state(id, ctx.animation_time);
     const auto lamp_at = to_world(anchor.lamp);
@@ -938,13 +892,11 @@ void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
   }
   const float t = activity->gag(id, ctx.animation_time);
   if (t < 0.0F || t >= Spill::k_sequence_end) {
-    // No gag here, but the household may still have somebody outside the door.
+
     submit_doorstep_residents(ctx, out, carthage, anchor, id, doorstep);
     return;
   }
 
-  // The path runs straight out from the door, on the house's own facing, so it
-  // never crosses the building and never needs the navigation grid.
   const auto frame = door_frame(ctx, anchor, doorstep);
   const auto& outward = frame.outward;
   const float walked = spill_walk_metres(t);
@@ -961,27 +913,27 @@ void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
   float phase = walked / Spill::k_walk_metres_per_cycle;
   bool held = false;
   if (t < Spill::k_emerge_end) {
-    // Out through the door, bowl in hand.
+
   } else if (t < Spill::k_trip_end) {
-    // The trip: a stagger, bowl still held, just before it goes.
+
     clip = Animation::k_humanoid_react_stagger_clip;
     phase = (t - Spill::k_emerge_end) / (Spill::k_trip_end - Spill::k_emerge_end);
     held = true;
   } else if (t < Spill::k_sprawl_end) {
-    // Flat out. The bowl is gone from the hand and the broth is on the ground.
+
     archetype = rig.idle;
     clip = Animation::k_humanoid_dead_infantry_face_clip;
     phase = 0.0F;
     held = true;
   } else if (t < Spill::k_rise_end) {
-    // Getting up is the fall played backwards.
+
     archetype = rig.idle;
     clip = Animation::k_humanoid_die_infantry_face_clip;
     phase =
         1.0F - ((t - Spill::k_sprawl_end) / (Spill::k_rise_end - Spill::k_sprawl_end));
     held = true;
   } else if (t < Spill::k_stare_end) {
-    // Standing over the mess, empty-handed.
+
     archetype = rig.idle;
     clip = Animation::k_humanoid_idle_clip;
     phase = (t - Spill::k_rise_end) * 0.4F;
@@ -990,7 +942,7 @@ void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
     clip = Animation::k_humanoid_idle_clip;
     phase = (t - Spill::k_rise_end) * 0.4F;
   } else {
-    // Back inside, empty bowl left behind.
+
     archetype = rig.idle;
   }
 
@@ -1011,9 +963,7 @@ void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
   submit_civilian_actors(out);
 
   if (t >= Spill::k_trip_end) {
-    // The spill itself, fading as the broth soaks away.
-    // Just beyond where they landed, so they stand beside the mess rather
-    // than in it.
+
     auto puddle = doorstep + (outward * (Spill::k_walk_out_metres + 0.55F));
     puddle.setY(position.y() + 0.01F);
     QMatrix4x4 spill;
