@@ -567,9 +567,6 @@ auto widest_rank(const std::vector<FormationSlot>& slot_list, float spacing) -> 
   return std::max(widest, in_band);
 }
 
-// The anchor is where the troops' centre of mass stands, not the middle of
-// their bounding box: for an uneven shape (a row of two with one behind) the
-// two differ and the army would land off the point the player chose.
 void recentre_on_centroid(std::vector<FormationSlot>& slot_list) {
   if (slot_list.empty()) {
     return;
@@ -1394,9 +1391,6 @@ void ArmyFormationPlanner::measure_footprint(const Engine::Core::Entity& entity,
   member.individuals = std::max(1, static_cast<int>(layout.all_slots.size()));
   member.soldier_body_radius = std::max(0.05F, layout.body_radius);
 
-  // The troop's own default shape (no files override) is what a formation
-  // without a reshaping template leaves it in; the table holds the exact
-  // extents of every file count a template may ask for.
   auto const natural =
       Game::Systems::FormationCombat::layout_reach_for_files(entity, 0);
   member.files = std::max(1, natural.files);
@@ -1899,7 +1893,6 @@ auto even_rows(int total, int row_count) -> std::vector<int> {
   return rows;
 }
 
-// Row sizes that draw the intent's pictogram in the formation panel.
 auto silhouette_rows(ArmyFormationIntent intent,
                      int total,
                      const ArmyFormationOptions& options,
@@ -1945,12 +1938,6 @@ auto is_core_role(ArmyRole role) -> bool {
          role == ArmyRole::Vanguard;
 }
 
-// Lays the doctrine's troops out as the pictogram shows: evenly gapped rows,
-// centred on the anchor. The doctrine template decides who stands where; this
-// pass only cleans the geometry (no stagger, jitter or empty ranks, uniform
-// gaps). Roles keep the template's front-to-back order as tiers: the fighting
-// core takes the pictogram's rows, ranged, siege and reserve troops get rows of
-// their own, and cavalry wings stand at the ends of the front rank.
 void regularize_silhouette(
     std::vector<FormationSlot>& slot_list,
     const std::unordered_map<EntityID, const ArmyFormationMember*>& by_id,
@@ -2044,8 +2031,6 @@ void regularize_silhouette(
   }
   average_width /= static_cast<float>(std::max<std::size_t>(1U, counted));
 
-  // How many troops the widest row may hold: the dragged frontage, else the
-  // pictogram's rows for the fighting core, bounded by the template's width.
   int core_count = 0;
   for (const auto& tier : tiers) {
     if (tier.core) {

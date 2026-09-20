@@ -480,7 +480,7 @@ TEST_F(ArmyFormationMarchTest, AStraightMarchDoesNotBacktrackOrTurnBetweenSlotUp
   run_for(25.0, units, march);
   EXPECT_LE(march.worst_penetration, k_touching);
   EXPECT_LT(march.worst_slot_error, 1.5F);
-  // Allow at most a few motor substeps of settling per troop over the march.
+
   EXPECT_LT(march.backwards_distance, 0.05F * static_cast<float>(units.size()));
   EXPECT_EQ(march.slot_changes, 0);
   for (auto const id : units) {

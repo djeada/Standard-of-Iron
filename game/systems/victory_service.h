@@ -131,7 +131,7 @@ struct VictoryObjective {
   VictoryRule rule;
   QString id;
   QString description;
-  // Position of the authored condition in its mission list, or -1.
+
   int source_index = -1;
 };
 
@@ -142,7 +142,7 @@ struct ObjectiveStatus {
 
   QString detail;
   QString compact_detail;
-  // Share of the objective done, 0..1.
+
   double fraction = 0.0;
   int progress = 0;
   int required = 1;
@@ -170,7 +170,7 @@ struct DefeatCondition {
 
 struct VictoryRuleSet {
   std::vector<VictoryObjective> victory_rules;
-  // Tracked and reported, never decide the match; once met they stay met.
+
   std::vector<VictoryObjective> optional_rules;
   std::vector<DefeatCondition> defeat_rules;
   bool include_ambient_undead = false;

@@ -563,9 +563,6 @@ auto world_to_local(const Engine::Core::TransformComponent& actor,
   return {cos_yaw * dx - sin_yaw * dz, sin_yaw * dx + cos_yaw * dz};
 }
 
-// Moves a soldier of a just split or joined squad from where he stands towards
-// his slot at walking pace, faster when the squad itself is marching away.
-// Returns true while he is still on the way.
 auto walk_to_new_slot(Engine::Core::SquadReformComponent& reform,
                       const Engine::Core::TransformComponent& actor,
                       float squad_speed,
@@ -608,9 +605,6 @@ auto walk_to_new_slot(Engine::Core::SquadReformComponent& reform,
   return true;
 }
 
-// Formation slots are destinations, not rigid attachments to the unit transform.
-// Integrate each man's footsteps in world space, then publish them in the current
-// formation frame so both the renderer and contact geometry see the same position.
 void walk_formation_slot(
     const Engine::Core::TransformComponent& actor,
     const Engine::Core::FormationPresentationComponent& formation,
@@ -678,8 +672,6 @@ void walk_formation_slot(
   float travel_x = distance > 0.0001F ? dx / distance : 0.0F;
   float travel_z = distance > 0.0001F ? dz / distance : 0.0F;
 
-  // Follow a loose curved lane on larger wheels rather than cutting straight
-  // through the inside ranks. Each lane still has its own speed and facing.
   const float radial_x = soldier.world_x - actor.position.x;
   const float radial_z = soldier.world_z - actor.position.z;
   const float target_x = destination.x() - actor.position.x;
@@ -701,8 +693,6 @@ void walk_formation_slot(
         bend;
   }
 
-  // Nearby men yield a little space instead of walking through one another.
-  // Read last tick's snapshot for every slot, avoiding an update-order bias.
   const float personal_space = std::max(0.28F, spacing * 0.72F);
   float crowd_speed = 1.0F;
   for (const auto& neighbor : neighbors) {
@@ -725,8 +715,7 @@ void walk_formation_slot(
       const float pressure = std::max(0.0F, 1.0F - separation / personal_space) * 2.5F;
       travel_x += away_x / separation * pressure;
       travel_z += away_z / separation * pressure;
-      // A consistent passing side prevents two opposing files from freezing
-      // nose-to-nose or swapping places through each other's bodies.
+
       if (approaching) {
         travel_x -= away_z / separation * pressure * 0.45F;
         travel_z += away_x / separation * pressure * 0.45F;
@@ -991,7 +980,7 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
     }
 
     auto& directives = presentation->soldiers;
-    // A stable snapshot also supplies neighbor positions for footstep steering.
+
     const auto previous_soldiers = directives;
     auto const* movement =
         world.try_get<Engine::Core::MovementComponent>(entity->get_id());
@@ -1337,8 +1326,7 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
       }
       if (directive.alive && actor_transform != nullptr &&
           layout.all_slots.size() > 1U) {
-        // Outside melee the slot's authored facing is the destination heading;
-        // the previous soldier's local yaw belongs to the old, moving frame.
+
         if (!melee_ordered) {
           directive.local_yaw =
               live_slot != nullptr ? live_slot->local_yaw : original_slot.local_yaw;

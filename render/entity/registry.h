@@ -48,6 +48,9 @@ using RendererHandle = std::uint32_t;
 inline constexpr RendererHandle k_invalid_renderer_handle =
     std::numeric_limits<RendererHandle>::max();
 
+struct FarmActivity;
+struct HomeActivity;
+
 struct DrawContext {
   ResourceManager* resources = nullptr;
   Engine::Core::Entity* entity = nullptr;
@@ -98,6 +101,8 @@ struct DrawContext {
   bool order_markers_visible = false;
 
   Render::Humanoid::HumanoidRuntimeContext* humanoid_runtime = nullptr;
+  FarmActivity* farm_activity = nullptr;
+  HomeActivity* home_activity = nullptr;
 };
 
 [[nodiscard]] inline auto

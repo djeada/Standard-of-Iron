@@ -24,7 +24,6 @@ constexpr float k_hovered_thickness = 0.26F;
 constexpr float k_hovered_ring_scale = 1.45F;
 constexpr float k_glyph_alpha = Render::Geom::k_indicator_alpha;
 
-// Same golden palette as the recruit glow in production_completion_renderer.
 constexpr QVector3D k_glow_gold{1.0F, 0.78F, 0.30F};
 constexpr QVector3D k_glow_pale_gold{1.0F, 0.94F, 0.72F};
 constexpr float k_glow_intensity = 0.62F;

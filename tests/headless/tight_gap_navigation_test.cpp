@@ -1127,8 +1127,6 @@ TEST_F(TightGapNavigationTest, AnArmyCrossesARiverOnTheBridgeDeck) {
   const Point deck = cell_of(QVector3D(0.0F, 0.0F, 0.0F));
   ASSERT_TRUE(pf.is_walkable(deck.x, deck.y)) << "the bridge deck must be walkable";
 
-  // Hold the column to the centerline over the water itself; the landings are
-  // where it funnels onto the deck.
   const float over_water =
       Game::Map::river_drawn_cross_section(map.rivers.front(), 0.5F).half_width;
 

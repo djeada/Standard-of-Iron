@@ -130,8 +130,7 @@ auto heading_reference(const Engine::Core::Entity& entity,
           std::hypot(transform.position.x - slot->world_position.x(),
                      transform.position.z - slot->world_position.z()) <= 3.0F &&
           movement.remaining_waypoints() <= 1U) {
-        // Small slot corrections and a coordinated wheel share the army's
-        // heading. Their lateral/backward velocity is not a new facing order.
+
         return {true, slot->facing};
       }
     }

@@ -1446,6 +1446,10 @@ auto Pathfinding::clamp_to_grid(int& min_x,
   return min_x <= max_x && min_z <= max_z;
 }
 
+auto Pathfinding::building_collisions() -> BuildingCollisionRegistry& {
+  return buildings();
+}
+
 auto Pathfinding::buildings() -> BuildingCollisionRegistry& {
   return BuildingCollisionRegistry::instance();
 }

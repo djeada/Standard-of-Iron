@@ -56,7 +56,6 @@ void draw_commander_swing(
 
   auto cutting_wake =
       [&](const QVector3D& origin, float radius, float span, float tilt) {
-        // The echo follows the same cutting plane, with a thinner, cooler inner arc.
         if (progress > 0.075F) {
           renderer->weapon_arc(origin - forward * 0.055F +
                                    QVector3D(0.0F, -0.045F, 0.0F),
@@ -154,7 +153,7 @@ void draw_commander_swing(
         1.0F - std::pow(1.0F - std::clamp(progress * 1.7F, 0.0F, 1.0F), 3.0F);
     QVector3D const tip = contact + forward * (reach * (0.12F + 0.68F * drive));
     float const flash = (1.0F - progress) * arc_alpha;
-    // Staggered, axial glints leave a pointed wake along the spear's drive.
+
     for (int streak = 0; streak < 4; ++streak) {
       const float lag = static_cast<float>(streak);
       const float delay = lag * 0.018F;
@@ -168,7 +167,7 @@ void draw_commander_swing(
                             std::max(0.0F, entry.age - delay),
                             forward);
     }
-    // Turn the pressure ring across the spear, perpendicular to its travel.
+
     if (progress > 0.12F) {
       renderer->weapon_arc(tip - forward * 0.12F,
                            accent,
@@ -389,7 +388,7 @@ auto ground_dust_appearance(const Renderer& renderer) -> GroundDustAppearance {
     const auto surface = Game::Map::make_surface_profile(biome);
     const auto climate = Game::Map::make_climate_profile(biome);
     result.color = surface.soil_color * 0.72F + surface.grass_dry * 0.28F;
-    // Airborne fine soil is a little lighter than the ground it came from.
+
     result.color = result.color * 0.85F + QVector3D(0.12F, 0.11F, 0.09F);
     wetness = std::max(wetness, climate.moisture_level * 0.65F);
     result.intensity_scale *= 1.0F - std::clamp(climate.snow_coverage, 0.0F, 1.0F);

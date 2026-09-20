@@ -241,7 +241,8 @@ struct EffectBatchCmd {
     BloodPool,
     StoneImpact,
     MetalSpark,
-    WeaponArc
+    WeaponArc,
+    HearthSmoke
   };
 
   Kind kind = Kind::HealerAura;

@@ -134,6 +134,11 @@ auto CombatDustPipeline::initialize() -> bool {
     return false;
   }
 
+  if (!create_hearth_smoke_geometry()) {
+    qWarning() << "CombatDustPipeline: Failed to create hearth smoke geometry";
+    return false;
+  }
+
   if (!create_fireball_geometry()) {
     qWarning() << "CombatDustPipeline: Failed to create fireball geometry";
     return false;
@@ -173,6 +178,7 @@ void CombatDustPipeline::release_geometry() {
     clear_gl_errors();
   }
   for (StaticMeshBuffers* mesh : {&m_dust_mesh,
+                                  &m_hearth_smoke_mesh,
                                   &m_fireball_mesh,
                                   &m_metal_spark_mesh,
                                   &m_weapon_arc_mesh,
@@ -210,6 +216,7 @@ void CombatDustPipeline::cache_uniforms() {
 
 auto CombatDustPipeline::is_initialized() const -> bool {
   return m_dust_shader != nullptr && m_dust_mesh.vao != 0 &&
+         m_hearth_smoke_mesh.vao != 0 && m_hearth_smoke_mesh.index_count > 0 &&
          m_dust_mesh.index_count > 0 && m_fireball_mesh.vao != 0 &&
          m_fireball_mesh.index_count > 0 && m_metal_spark_mesh.vao != 0 &&
          m_metal_spark_mesh.index_count > 0 && m_weapon_arc_mesh.vao != 0 &&
@@ -301,6 +308,37 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
   }
 
   return upload_dust_mesh(*this, m_dust_mesh, "dust", vertices, indices);
+}
+
+auto CombatDustPipeline::create_hearth_smoke_geometry() -> bool {
+  initializeOpenGLFunctions();
+  release_mesh_buffers(*this, m_hearth_smoke_mesh);
+  clear_gl_errors();
+
+  constexpr int wisp_count = 20;
+  std::vector<DustVertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve(wisp_count * 4);
+  indices.reserve(wisp_count * 6);
+  for (int wisp = 0; wisp < wisp_count; ++wisp) {
+    const auto first = static_cast<unsigned int>(vertices.size());
+    for (int corner = 0; corner < 4; ++corner) {
+      const float u = static_cast<float>(corner % 2);
+      const float v = static_cast<float>(corner / 2);
+      DustVertex vertex{};
+      vertex.position[0] = u * 2.0F - 1.0F;
+      vertex.position[1] = v * 2.0F - 1.0F;
+      vertex.normal[0] = static_cast<float>(wisp) / wisp_count;
+      vertex.normal[2] = 1.0F;
+      vertex.tex_coord[0] = u;
+      vertex.tex_coord[1] = v;
+      vertices.push_back(vertex);
+    }
+    indices.insert(indices.end(),
+                   {first, first + 1U, first + 2U, first + 2U, first + 1U, first + 3U});
+  }
+  return upload_dust_mesh(
+      *this, m_hearth_smoke_mesh, "hearth smoke", vertices, indices);
 }
 
 auto CombatDustPipeline::create_fireball_geometry() -> bool {
@@ -583,7 +621,11 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
             ? m_fireball_mesh
             : (use_metal_spark_geometry
                    ? m_metal_spark_mesh
-                   : (use_weapon_arc_geometry ? m_weapon_arc_mesh : m_dust_mesh));
+                   : (use_weapon_arc_geometry
+                          ? m_weapon_arc_mesh
+                          : (inst.effect_type == EffectType::HearthSmoke
+                                 ? m_hearth_smoke_mesh
+                                 : m_dust_mesh)));
     GLuint const target_vao = target_mesh.vao;
     GLsizei const target_index_count = target_mesh.index_count;
     if (target_vao == 0 || target_index_count <= 0) {

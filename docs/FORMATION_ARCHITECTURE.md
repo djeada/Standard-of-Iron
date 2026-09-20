@@ -420,7 +420,7 @@ reach (`max(slot spacing, 2 × larger half extent + gap)`), rearward first and t
 fanning out to the flanks, so a displaced troop stays behind its own file. Beyond
 that reach the slot is `Blocked` rather than flung across the map.
 
-`fit_to_ground()` then treats the shape as a whole. A plan *keeps its shape* when
+`fit_to_ground()` then treats the shape as a whole. A plan _keeps its shape_ when
 at most 12% of its troops are displaced (always at least one, so a small group is
 not compressed over a single boulder) and no more than 12% are blocked. If the
 first placement does not keep its shape:
@@ -525,7 +525,7 @@ preview showed, facing the ordered way. They differ in how the group gets there.
 
 ### Reform at destination (fastest)
 
-Each troop goes straight to its final slot. The order is *synchronised*: every
+Each troop goes straight to its final slot. The order is _synchronised_: every
 troop walks its own route at the pace that makes it arrive together with the
 slowest-arriving troop (`MoveOptions::synchronize_arrival`; paces come from the
 routes' real lengths once they are assigned, and never drop below 30% of a
@@ -550,7 +550,7 @@ shape round: the troops about-face in place instead.
 Before a morph starts, every troop's path is sampled; if any would cross ground it
 cannot stand on (a river, a wall, a settlement), the ground will not carry the
 shape as one body, and the group falls back to the synchronised per-troop move of
-*Reform at destination*, assembling on arrival. The old anchor march (a moving
+_Reform at destination_, assembling on arrival. The old anchor march (a moving
 anchor dragging replanned slots behind it, compressing at bridges) stalled on real
 maps and is no longer started.
 

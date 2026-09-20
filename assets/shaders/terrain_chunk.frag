@@ -1020,8 +1020,7 @@ void main() {
 #else
   float earth_field = 0.0;
 #endif
-  // Broad clearings remain legible at command-camera distances. Keep wet
-  // hollows greener and avoid extrapolating the blend on steep slopes.
+
   float clearing_dryness = 1.0 - clamp(u_moisture_level, 0.0, 1.0);
   float worn_ground = smoothstep(0.22, 0.56, earth_field) * (1.0 - rock_mask) *
                       (1.0 - u_snow_coverage) * clamp(1.0 - slope * 1.5, 0.0, 1.0);

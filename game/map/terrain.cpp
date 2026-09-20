@@ -1397,9 +1397,7 @@ void TerrainHeightMap::add_river_segments(
 
       for (int z = min_z; z <= max_z; ++z) {
         for (int x = min_x; x <= max_x; ++x) {
-          // Distance to the segment itself, not its infinite line: measured
-          // against the line, every segment carved a dry trench running on past
-          // its endpoint wherever the river bends.
+
           float const from_start_x =
               static_cast<float>(x) -
               ((river.start.x() / m_tile_size) + grid_half_width);
@@ -1606,8 +1604,6 @@ void TerrainHeightMap::precompute_water_blocked() {
         const float raw_t = ((dx * span_x) + (dz * span_z)) / span_length_sq;
         const float t = std::clamp(raw_t, 0.0F, 1.0F);
 
-        // Block against the water as drawn at this row, not the widest the
-        // river could ever be drawn, so the bank beside the water stays land.
         const RibbonCrossSection section = river_drawn_cross_section(river, t);
         const float center_x = (section.center.x() / tile) + grid_half_width;
         const float center_z = (section.center.z() / tile) + grid_half_height;

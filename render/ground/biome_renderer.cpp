@@ -371,7 +371,7 @@ void BiomeRenderer::generate_grass_instances() {
       std::clamp(GraphicsSettings::instance().profile().grass_density, 0.0F, 1.0F);
   m_generated_grass_density = density_scale;
   scatter_profile.patch_density *= density_scale;
-  // Keep the same cluster budget, with more open ground between the clumps.
+
   scatter_profile.background_blade_density *= density_scale * 0.78F;
   if (scatter_profile.patch_density < 0.01F) {
     grass_instance_count = 0;

@@ -805,6 +805,9 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
         DrawContext{ctx.resources, entry.entity, ctx.world, world_view(), model_matrix};
 
     draw_ctx.humanoid_runtime = &m_humanoid_runtime;
+
+    draw_ctx.farm_activity = &m_farm_activity;
+    draw_ctx.home_activity = &m_home_activity;
     draw_ctx.selected = entry.selected;
     draw_ctx.hovered = entry.hovered;
     bool should_update_animation = ctx.full_creature_detail;
@@ -1150,6 +1153,17 @@ void Renderer::render_world(Engine::Core::World* world) {
   }
 
   std::lock_guard<std::recursive_mutex> const guard(world->get_entity_mutex());
+
+  m_farm_activity.begin_frame(world, m_accumulated_time, simulation_world);
+
+  {
+    const auto& lighting = environment_lighting();
+    const auto& key = lighting.primary_color;
+    const float key_luma = ((key.x() * 0.30F) + (key.y() * 0.59F) + (key.z() * 0.11F)) *
+                           lighting.primary_intensity;
+    m_home_activity.set_night(std::clamp((0.46F - key_luma) / 0.28F, 0.0F, 1.0F));
+  }
+  m_home_activity.begin_frame(world, m_accumulated_time, simulation_world);
 
   m_cached_world = simulation_world;
 

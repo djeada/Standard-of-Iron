@@ -24,6 +24,8 @@ struct BuildingFootprint;
 
 class Pathfinding {
 public:
+  [[nodiscard]] static auto building_collisions() -> BuildingCollisionRegistry&;
+
   enum class CellValue : std::uint8_t {
     Walkable = 0,
     Blocked = 1,

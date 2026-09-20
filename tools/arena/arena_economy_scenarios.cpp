@@ -217,6 +217,172 @@ auto estate_wildlife() -> Game::Wildlife::WildlifeSettings {
 auto build_economy_definitions() -> std::vector<ArenaScenarioDefinition> {
   std::vector<ArenaScenarioDefinition> result;
 
+  for (int variant = 0; variant < 4; ++variant) {
+    const bool lazy_farmer = variant == 3;
+    ArenaScenarioDefinition s;
+    s.id = variant == 0   ? QStringLiteral("farm_activity_single")
+           : variant == 1 ? QStringLiteral("farm_activity_dense")
+           : variant == 2 ? QStringLiteral("farm_activity_terrain")
+                          : QStringLiteral("farm_activity_lazy_farmer");
+    s.label = s.id;
+    s.description =
+        lazy_farmer
+            ? QStringLiteral(
+                  "Close review of the rare lazy-farmer sequence: sit, hat over "
+                  "the eyes, a coworker walks over to stare, then hurried work. "
+                  "Set SOI_FARM_GAG_SECONDS=10 to force it; it is otherwise "
+                  "roughly once per ten minutes per field.")
+            : QStringLiteral(
+                  "Cosmetic Roman/Punic field workers: tending, sickle harvest, "
+                  "empty reset and destruction. Use --fog-of-war for visibility "
+                  "review. No economic workers or decorative gameplay entities "
+                  "are spawned.");
+
+    s.duration_seconds = variant == 1 ? 40 : lazy_farmer ? 40 : 90;
+    s.camera = {variant == 1 ? 78.0F : lazy_farmer ? 13.0F : 34.0F, 45.0F, 30.0F};
+    s.camera_focus = lazy_farmer ? QVector3D(5, 0, -4) : QVector3D(0, 0, 0);
+    s.arena_floor_half_extent = variant == 1 ? 65 : 30;
+    s.terrain_grid_extent = 160;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_terrain_scatter = true;
+    s.ground_type = QStringLiteral("soil_fertile");
+    if (variant == 2) {
+      s.terrain_features.push_back(knoll(0, 0, 24, 2, Game::Map::HillShape::Blob));
+    }
+    const int rows = variant == 1 ? 3 : 1;
+    for (int row = 0; row < rows; ++row) {
+      for (int nation = 0; nation < 2; ++nation) {
+        const auto name = QStringLiteral("field_%1_%2").arg(row).arg(nation);
+        auto field = seat_building(name,
+                                   Game::Units::SpawnType::Farm,
+                                   {nation == 0 ? -8.0F : 8.0F,
+                                    0,
+                                    static_cast<float>(row) * 15 - (rows - 1) * 7.5F},
+                                   0);
+        field.nation_id = nation == 0 ? Nation::RomanRepublic : Nation::Carthage;
+        field.owner_id = nation + 1;
+        field.ai_controlled = false;
+        if (variant == 1) {
+
+          field.count = 2;
+          field.origin = {nation == 0 ? -19.0F : 19.0F, 0, field.origin.z()};
+          field.spacing = {nation == 0 ? -18.0F : 18.0F, 0, 0};
+        }
+        s.groups.push_back(std::move(field));
+        ArenaExpectation lifecycle;
+        lifecycle.kind = row == 0 && !lazy_farmer ? Expect::GroupDestroyed
+                                                  : Expect::GroupHealthUnchanged;
+        lifecycle.group = name;
+        s.expectations.push_back(std::move(lifecycle));
+
+        const int stages = lazy_farmer ? 1 : 3;
+        for (int stage = 0; stage < stages; ++stage) {
+          ArenaScenarioStep step;
+          step.group = name;
+          step.command = ScenarioCommandKind::SetFarmGrowth;
+          step.trigger.time_seconds = stage == 0 ? 0.5F : stage == 1 ? 8.0F : 16.0F;
+          step.value = lazy_farmer ? 100 : stage == 0 ? 40 : stage == 1 ? 100 : 0;
+          s.steps.push_back(std::move(step));
+        }
+        if (row == 0 && !lazy_farmer) {
+          ArenaScenarioStep destroy;
+          destroy.group = name;
+          destroy.command = ScenarioCommandKind::SetHealth;
+          destroy.trigger.time_seconds = 24;
+          destroy.value = 0;
+          s.steps.push_back(std::move(destroy));
+        }
+      }
+    }
+    result.push_back(std::move(s));
+  }
+
+  for (int variant = 0; variant < 4; ++variant) {
+    const bool soup = variant == 3;
+    const bool night = variant == 2;
+    ArenaScenarioDefinition s;
+    s.id = variant == 0   ? QStringLiteral("home_ambient_street")
+           : variant == 1 ? QStringLiteral("home_ambient_dense")
+           : night        ? QStringLiteral("home_ambient_night")
+                          : QStringLiteral("home_ambient_soup");
+    s.label = s.id;
+    s.description =
+        soup ? QStringLiteral(
+                   "Close review of the rare soup-spill sequence: a resident "
+                   "carries a bowl out of the door, trips, spills, gets up and "
+                   "goes back in. Set SOI_HOME_GAG_SECONDS=12 to force it.")
+             : QStringLiteral(
+                   "Roman and Punic houses venting hearth smoke: staggered per "
+                   "house, from a roof the model actually has. Use --fog-of-war "
+                   "for the visibility boundary. One house is destroyed mid-run "
+                   "and must stop smoking.");
+    s.duration_seconds = variant == 1 ? 45 : soup ? 40 : 90;
+    s.camera = {variant == 1 ? 68.0F : soup ? 14.0F : 40.0F, 45.0F, 30.0F};
+    s.camera_focus = soup ? QVector3D(-9, 0, 4) : QVector3D(0, 0, 0);
+    s.arena_floor_half_extent = variant == 1 ? 52 : 30;
+    s.terrain_grid_extent = 160;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_terrain_scatter = true;
+    s.ground_type = QStringLiteral("grass_dry");
+    if (night) {
+
+      s.environment.start_time = 21.0F;
+      s.environment.lighting_profile = QStringLiteral("mediterranean_summer");
+    }
+    const int rows = variant == 1 ? 3 : 1;
+    for (int row = 0; row < rows; ++row) {
+      for (int nation = 0; nation < 2; ++nation) {
+        const auto name = QStringLiteral("house_%1_%2").arg(row).arg(nation);
+        auto house =
+            seat_building(name,
+                          Game::Units::SpawnType::Home,
+                          {nation == 0 ? -9.0F : 9.0F,
+                           0,
+
+                           (static_cast<float>(row) * 20.0F) - ((rows - 1) * 10.0F)},
+                          0);
+        house.nation_id = nation == 0 ? Nation::RomanRepublic : Nation::Carthage;
+        house.owner_id = nation + 1;
+        house.ai_controlled = false;
+        if (!soup) {
+
+          house.count = variant == 1 ? 3 : 3;
+          house.spacing = {0, 0, 8.0F};
+        }
+        s.groups.push_back(std::move(house));
+        ArenaExpectation lifecycle;
+        lifecycle.kind = Expect::GroupHealthUnchanged;
+        lifecycle.group = name;
+        s.expectations.push_back(std::move(lifecycle));
+
+        if (row == 0 && !soup) {
+          const auto doomed_name = QStringLiteral("doomed_%1").arg(nation);
+          auto doomed = seat_building(doomed_name,
+                                      Game::Units::SpawnType::Home,
+                                      {nation == 0 ? -9.0F : 9.0F, 0, -19.0F},
+                                      0);
+          doomed.nation_id = nation == 0 ? Nation::RomanRepublic : Nation::Carthage;
+          doomed.owner_id = nation + 1;
+          doomed.ai_controlled = false;
+          s.groups.push_back(std::move(doomed));
+          ArenaExpectation gone;
+          gone.kind = Expect::GroupDestroyed;
+          gone.group = doomed_name;
+          s.expectations.push_back(std::move(gone));
+          ArenaScenarioStep destroy;
+          destroy.group = doomed_name;
+          destroy.command = ScenarioCommandKind::SetHealth;
+          destroy.trigger.time_seconds = variant == 1 ? 28.0F : 40.0F;
+          destroy.value = 0;
+          s.steps.push_back(std::move(destroy));
+        }
+      }
+    }
+    result.push_back(std::move(s));
+  }
+
   {
     ArenaScenarioDefinition s;
     s.id = QString::fromLatin1(k_ai_kingdom_rise_id);

@@ -17,6 +17,8 @@
 #include "battle_render_optimizer.h"
 #include "bone_palette_arena.h"
 #include "draw_queue.h"
+#include "entity/farm_activity.h"
+#include "entity/home_activity.h"
 #include "entity/registry.h"
 #include "frame_budget.h"
 #include "game/systems/unit_activity.h"
@@ -348,6 +350,11 @@ public:
                    float radius,
                    float intensity,
                    float time) override;
+  void hearth_smoke(const QVector3D& position,
+                    const QVector3D& color,
+                    float radius,
+                    float intensity,
+                    float time) override;
   void combat_dust(const QVector3D& position,
                    const QVector3D& color,
                    float radius,
@@ -404,7 +411,7 @@ public:
   void terrain_feature(const TerrainFeatureCmd& cmd);
   void terrain_scatter(const TerrainScatterCmd& cmd);
 
-  void local_light(const Render::LocalLight& light);
+  void local_light(const Render::LocalLight& light) override;
 
   struct TemplatePrewarmProgress {
     enum class Phase {
@@ -538,6 +545,8 @@ private:
   std::unique_ptr<EntityRendererRegistry> m_entity_registry;
 
   Render::Humanoid::HumanoidRuntimeContext m_humanoid_runtime;
+  FarmActivity m_farm_activity;
+  HomeActivity m_home_activity;
 
   Render::Creature::Quadruped::QuadrupedRuntimeContext m_quadruped_runtime;
   std::optional<Render::Creature::Quadruped::ScopedQuadrupedRuntimeContext>

@@ -236,8 +236,6 @@ struct PreparedMove {
   bool preserve_velocity{false};
 };
 
-// Every troop of a shaped order reaches its slot at the same moment: each walks
-// its own route at the pace that makes it arrive with the slowest-arriving one.
 auto synchronized_paces(const std::vector<float>& route_length,
                         const std::vector<float>& speed) -> std::vector<float> {
   constexpr float k_min_pace_share = 0.3F;
@@ -787,10 +785,7 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
       assign_direct_target(*move.movement, member_target);
       assigned = true;
     }
-    // A shaped order sends each troop along its own route when that route is
-    // close to direct (scattered trees, a boulder): funnelling everyone into one
-    // shared corridor made them bunch at its mouth and loop back to their slots.
-    // Shared lanes remain for real detours such as a bridge or a gate.
+
     if (!assigned && (options.synchronize_arrival || options.prefer_own_routes)) {
       constexpr float k_own_route_detour = 1.35F;
       constexpr float k_own_route_slack_metres = 2.0F;
@@ -1008,8 +1003,7 @@ void MovementSystem::follow_formation_slot(Engine::Core::World& world,
 
   const QVector3D current(transform->position.x, 0.0F, transform->position.z);
   auto* pathfinder = NavGrid::get_pathfinder();
-  // The group already owns the corridor and the slot's rank/depth. Fitting
-  // another group lane here sends rear ranks towards the centre and back again.
+
   bool const direct =
       pathfinder == nullptr ||
       pathfinder->is_world_segment_walkable(current,
@@ -1017,8 +1011,7 @@ void MovementSystem::follow_formation_slot(Engine::Core::World& world,
                                             passability_for(*movement),
                                             movement->get_navigation_clearance());
   if (direct) {
-    // Rebase the short route as the slot wheels; extending an old chord cuts
-    // across the formation and misreports a moving endpoint as stalled travel.
+
     stamp_route_revision(*movement);
     movement->path = {{intent.target.x(), intent.target.z()}};
     movement->path_index = 0;

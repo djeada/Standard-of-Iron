@@ -173,7 +173,7 @@ yards = {
     "quarry": ((CX + 2, CZ - 58), 0),
     "mine": ((CX + 60, CZ - 2), 270),
 }
-for name, ((x, z), rotation) in yards.items():
+for _name, ((x, z), rotation) in yards.items():
     structure("barracks", x, z, rotation, footprint=6.0, max_population=200)
     fire(x + 6, z + 7, 1.0, 3.0)
 
@@ -217,7 +217,7 @@ for i in range(4):
 for name, ((x, z), _rotation) in yards.items():
     out_x = -18 if name == "lumber" else (18 if name == "mine" else 0)
     out_z = -18 if name == "quarry" else 0
-    for i in range(6):
+    for _i in range(6):
         spawn("builder", x + out_x + rng.uniform(-5, 5), z + out_z + rng.uniform(-5, 5))
 for i in range(4):
     spawn("builder", CX - 36 + i * 24, CZ + 60)
@@ -234,7 +234,7 @@ for i in range(18):
         behavior="guard",
         guard_radius=14.0,
     )
-for i in range(16):
+for _i in range(16):
     spawn(
         "civilian",
         CX + rng.uniform(-50, 50),

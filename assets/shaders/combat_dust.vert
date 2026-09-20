@@ -13,6 +13,7 @@ uniform float u_radius;
 uniform float u_intensity;
 uniform int u_effect_type;
 uniform float u_span;
+uniform vec3 u_camera_pos;
 
 out vec3 v_world_pos;
 out vec3 v_normal;
@@ -21,6 +22,7 @@ out vec3 v_local_pos;
 out float v_intensity;
 out float v_alpha;
 out float v_lick;
+out vec2 v_smoke_data;
 
 float inv_smoothstep(float edge0, float edge1, float x) {
   float lower_edge = min(edge0, edge1);
@@ -42,6 +44,7 @@ float soi_fbm3_fireball(vec3 p) {
 void main() {
   vec3 pos = a_position;
   v_lick = 0.0;
+  v_smoke_data = vec2(0.0);
 
   vec3 world_pos = (u_model * vec4(pos, 1.0)).xyz;
   vec3 to_center = world_pos - u_center;
@@ -198,6 +201,36 @@ void main() {
                         u_intensity * 1.2,
                     0.0,
                     1.0);
+  } else if (u_effect_type == 7) {
+
+    vec2 hearth_cell = floor(u_center.xz * 3.0);
+    float hearth = soi_hash12_dbdbc1(hearth_cell + vec2(0.37, 0.91));
+    float slot = a_normal.x;
+    float clock = u_time * mix(0.085, 0.115, hearth) + slot;
+    float age = fract(clock);
+
+    float seed = soi_hash12_dbdbc1(vec2(slot * 73.0, floor(clock)) + hearth_cell);
+    float phase = seed * 6.2831853;
+    float rise = age * mix(2.5, 3.2, hearth);
+    float travel = age * age;
+    vec2 wind = vec2(0.85, 0.38);
+    vec2 curl = vec2(sin(age * 7.0 + phase), cos(age * 5.0 + phase));
+    vec3 center = vec3(0.0, rise, 0.0);
+    center.xz = wind * travel * mix(1.0, 1.7, hearth) + curl * (0.025 + 0.22 * travel);
+
+    float width = mix(0.11, 0.62, pow(age, 0.85)) * mix(0.8, 1.2, seed);
+    vec3 to_eye = normalize(u_camera_pos - u_center + vec3(0.0, 0.0001, 0.0));
+    vec3 reference = abs(to_eye.y) > 0.98 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0);
+    vec3 right = normalize(cross(reference, to_eye));
+    vec3 up = cross(to_eye, right);
+    float turn = sin(phase + age * 2.0) * 0.65;
+    vec2 corner = mat2(cos(turn), sin(turn), -sin(turn), cos(turn)) * a_position.xy;
+    pos = center + right * corner.x * width + up * corner.y * width * 1.35;
+
+    float birth = smoothstep(0.0, 0.10, age);
+    float disperse = 1.0 - smoothstep(0.25, 1.0, age);
+    v_alpha = birth * disperse * u_intensity * mix(0.27, 0.36, seed);
+    v_smoke_data = vec2(age, seed);
   } else if (u_effect_type == 5) {
     float t = u_time;
     float along = clamp(a_texcoord.x, 0.0, 1.0);
@@ -216,7 +249,6 @@ void main() {
     float along = u_span < 0.0 ? 1.0 - a_texcoord.x : a_texcoord.x;
     float across = a_texcoord.y;
 
-    // Use the entire mesh for the requested sweep, avoiding collapsed end triangles.
     float angle = (a_texcoord.x - 0.5) * 6.28318530718 * span;
     float taper = pow(max(sin(along * 3.14159265359), 0.0), 0.65);
     float width = ring ? 0.28 : 0.045 + 0.40 * taper;
@@ -225,8 +257,8 @@ void main() {
     pos = vec3(sin(angle) * radius, 0.0, cos(angle) * radius) * grow;
     pos.y = ring ? 0.0 : sin(along * 3.14159265359) * (1.0 - across) * 0.055;
 
-    float life = ring ? 1.0 - smoothstep(0.12, 0.88, t)
-                      : 1.0 - smoothstep(0.48, 1.0, t);
+    float life =
+        ring ? 1.0 - smoothstep(0.12, 0.88, t) : 1.0 - smoothstep(0.48, 1.0, t);
     v_alpha = clamp(life * u_intensity, 0.0, 1.0);
 
   } else {

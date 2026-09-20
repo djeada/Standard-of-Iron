@@ -84,7 +84,6 @@ protected:
     float z = 0.0F;
   };
 
-  // Where the presented living men of a squad stand on the field.
   auto men_of(EntityID id) -> std::vector<Spot> {
     std::vector<Spot> spots;
     auto& world = m_session->world();
@@ -463,7 +462,7 @@ TEST(SquadRosterTest, PackingKeepsEveryManAndShowsEachSquadItsExactCount) {
 }
 
 TEST(SquadRosterTest, AJoinOfWoundedSquadsKeepsEveryManStanding) {
-  // Three squads of four, each with one man badly hurt: 3.1 men of health.
+
   const auto rosters = SquadService::share_health({12}, 3 * 31, 12, 120);
   ASSERT_EQ(rosters.size(), 1U);
   EXPECT_EQ(Engine::Core::resolve_surviving_individual_count(

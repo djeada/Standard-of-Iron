@@ -131,10 +131,9 @@ struct OwnerResourceState {
 
 struct ResourceTally {
   QString text;
-  // The same counts without resource names ("240/800 · 175/210"), for places
-  // with no room for the full line.
+
   QString numbers;
-  // Everything carried towards the target over everything asked, 0..1.
+
   double fraction = 0.0;
   int kinds = 0;
   int met = 0;

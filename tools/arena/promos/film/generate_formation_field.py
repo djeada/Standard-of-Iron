@@ -67,6 +67,7 @@ def main() -> int:
 
     def place() -> tuple[float, float]:
         roll = rng.random()
+
         for dx, dz, sigma, share in KNOTS:
             roll -= share
             if roll <= 0.0:

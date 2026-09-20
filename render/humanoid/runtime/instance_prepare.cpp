@@ -1011,8 +1011,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
       shared_footing != nullptr && shared_footing->world_motion_valid &&
       !soldier_is_casualty_body && !soldier_render_anim.simulation_owns_root_motion;
   if (has_shared_footsteps) {
-    // Simulation already integrates each soldier's feet and facing. Applying
-    // the parent yaw (or a second smoothing pass) would rotate the ranks again.
+
     turn_smoothing.x = shared_footing->world_x;
     turn_smoothing.z = shared_footing->world_z;
     turn_smoothing.yaw_degrees = shared_footing->world_yaw;
@@ -1456,8 +1455,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   locomotion_inputs.persistent_state = locomotion_persistent_state;
   locomotion_inputs.allow_persistent_update = allow_animation_persistence;
   if (has_shared_footsteps) {
-    // Inner files may stand or shuffle while the outer files walk. Do not use
-    // the unit centre's speed as a minimum stride speed for every soldier.
+
     const float pivot_stride =
         0.38F * std::clamp(shared_footing->angular_speed / 140.0F, 0.0F, 1.0F);
     locomotion_inputs.move_speed = std::max(turn_smoothing.travel_speed, pivot_stride);

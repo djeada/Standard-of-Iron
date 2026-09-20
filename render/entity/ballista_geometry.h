@@ -3,6 +3,7 @@
 #include <QVector3D>
 
 namespace Render::GL {
+struct SiegeMotion;
 
 struct DrawContext;
 class ISubmitter;
@@ -26,6 +27,7 @@ void draw_ballista_geometry(const DrawContext& p,
                             Mesh* unit,
                             Texture* white,
                             const QVector3D& team_color,
-                            const BallistaPalette& palette);
+                            const BallistaPalette& palette,
+                            const SiegeMotion& motion);
 
 } // namespace Render::GL

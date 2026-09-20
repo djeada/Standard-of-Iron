@@ -183,8 +183,8 @@ void UnitLayoutStateSystem::update(Engine::Core::World* world, float delta_time)
     return;
   }
 
-  world->for_each_entity([delta_time](Engine::Core::Entity& entity) {
-    const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
+  world->for_each_entity([world, delta_time](Engine::Core::Entity& entity) {
+    const auto* unit = world->try_get<Engine::Core::UnitComponent>(entity.get_id());
     if (unit == nullptr || !Game::Units::is_troop_spawn(unit->spawn_type)) {
       return;
     }
