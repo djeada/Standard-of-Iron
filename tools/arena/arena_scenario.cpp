@@ -1136,8 +1136,6 @@ struct ArenaScenarioRunner::Impl {
     report.scenario_id = definition.id;
   }
 
-  // Where the scenario last ordered a group to go. An arrival expectation
-  // without an explicit position checks against this, not the world origin.
   [[nodiscard]] auto ordered_destination(const QString& group) const -> QVector3D {
     QVector3D destination;
     bool formed = false;

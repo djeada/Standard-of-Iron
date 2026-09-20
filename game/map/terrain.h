@@ -846,8 +846,6 @@ inline constexpr float k_bridge_max_bank_landing = 1.5F;
                     k_bridge_max_bank_landing);
 }
 
-// How far the drawn deck runs past bridge.start/bridge.end as it ramps down
-// onto the bank.
 [[nodiscard]] inline constexpr auto
 bridge_visual_landing_run(float bridge_width) -> float {
   return bridge_abutment_reach(bridge_width);
@@ -864,9 +862,6 @@ struct RiverWaterReach {
   float ahead = 0.0F;
 };
 
-// How far the drawn water (or the carved channel, whichever is wider) reaches
-// from `crossing` along -span_dir and +span_dir, over the stretch of river a
-// deck `deck_half_width` wide covers.
 [[nodiscard]] inline auto
 drawn_water_reach_across(const RiverSegment& river,
                          float crossing_t,
@@ -958,7 +953,6 @@ inline void fit_bridge_span_to_riverbanks(Bridge& bridge,
     float behind = water.behind + past_water;
     float ahead = water.ahead + past_water;
 
-    // Over a narrow stream a deck still reads as a bridge, not a slab.
     float const shortfall = (deck_half_width * 2.0F) + 0.01F - (behind + ahead);
     if (shortfall > 0.0F) {
       behind += shortfall * 0.5F;
@@ -1052,9 +1046,6 @@ inline constexpr float k_bridge_landing_thickness = 0.06F;
 
 inline constexpr float k_bridge_max_entry_grade = 0.11F;
 
-// The tallest arch a span can carry while its first metre stays an approach
-// rather than a step. On the sin^2 profile the grade one metre onto the deck is
-// about rise * (pi / span) * sin(2 pi / span).
 [[nodiscard]] inline auto bridge_max_rise_for_span(float span) -> float {
   float const safe_span = std::max(span, 0.5F);
   float const angular = std::numbers::pi_v<float> / safe_span;

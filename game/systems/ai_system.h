@@ -41,9 +41,6 @@ public:
   void reinitialize();
   void shutdown_workers();
 
-  // Blocks until no decision job is running. Anything that replaces what the
-  // jobs read (the navigation grid, the terrain, the world on a load) must call
-  // this first; the jobs run on worker threads.
   void wait_for_decisions();
 
   void prepare_initial_decisions(Engine::Core::World& world);

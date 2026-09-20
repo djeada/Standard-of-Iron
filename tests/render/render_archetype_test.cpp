@@ -24,6 +24,7 @@
 #include "render/entity/nations/roman/home_renderer.h"
 #include "render/entity/nations/roman/wall_renderer.h"
 #include "render/entity/registry.h"
+#include "render/entity/siege_renderer_common.h"
 #include "render/entity_appearance.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/horse/armor/scale_barding_renderer.h"
@@ -454,6 +455,79 @@ TEST(RenderArchetypeSiege, NationVariantRenderersAreRegistered) {
     auto renderer = registry.get(renderer_key);
     ASSERT_TRUE(static_cast<bool>(renderer)) << renderer_key;
   }
+}
+
+TEST(SiegeMotion, WheelsFollowDistanceAndRemainStillWhenParked) {
+  Render::GL::DrawContext ctx;
+  Render::GL::SiegeTravelState state;
+  (void)Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
+  ctx.animation_time = 0.25F;
+  ctx.model.translate(0, 0, 0.2F);
+  const auto moving = Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
+  EXPECT_NEAR(moving.left_roll, 1.0F, 0.0001F);
+  EXPECT_NEAR(moving.right_roll, 1.0F, 0.0001F);
+  for (int frame = 0; frame < 20; ++frame) {
+    ctx.animation_time += 0.1F;
+    const auto parked = Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
+    EXPECT_EQ(parked.left_roll, moving.left_roll);
+    EXPECT_EQ(parked.right_roll, moving.right_roll);
+  }
+  EXPECT_LT(state.movement, 0.001F);
+}
+
+TEST(SiegeMotion, PivotTurnsRollOppositeWheelsAndScaleChangesTheCircumference) {
+  Render::GL::DrawContext ctx;
+  Render::GL::SiegeTravelState state;
+  ctx.model.scale(2.0F);
+  (void)Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
+  ctx.animation_time = 0.25F;
+  ctx.model.translate(0, 0, 0.2F);
+  const auto moving = Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
+  EXPECT_NEAR(moving.left_roll, 1.0F, 0.0001F);
+  ctx.animation_time = 0.5F;
+  ctx.model.rotate(10.0F, 0, 1, 0);
+  const auto turning = Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
+  EXPECT_GT(turning.left_roll, moving.left_roll);
+  EXPECT_LT(turning.right_roll, moving.right_roll);
+  EXPECT_NEAR(turning.left_roll + turning.right_roll, 2.0F, 0.0001F);
+}
+
+TEST(SiegeMotion, ReplayRewindAndTeleportDoNotSpinTheWheels) {
+  Render::GL::DrawContext ctx;
+  Render::GL::SiegeTravelState state;
+  ctx.animation_time = 5.0F;
+  (void)Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
+  ctx.animation_time = 5.2F;
+  ctx.model.translate(100, 0, 100);
+  const auto teleport = Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
+  EXPECT_EQ(teleport.left_roll, 0.0F);
+  EXPECT_EQ(teleport.right_roll, 0.0F);
+  ctx.animation_time = 0.0F;
+  ctx.model.setToIdentity();
+  const auto rewind = Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
+  EXPECT_EQ(rewind.left_roll, 0.0F);
+  EXPECT_EQ(rewind.movement, 0.0F);
+}
+
+TEST(SiegeMotion, ReleaseIsFastAndRecoilSettlesBeforeTheNextCycle) {
+  EXPECT_FLOAT_EQ(Render::GL::siege_release(0.0F), 0.0F);
+  EXPECT_GT(Render::GL::siege_release(0.12F), 0.8F);
+  EXPECT_FLOAT_EQ(Render::GL::siege_release(1.0F), 1.0F);
+  EXPECT_FLOAT_EQ(Render::GL::siege_winding(0.0F), 0.0F);
+  EXPECT_FLOAT_EQ(Render::GL::siege_winding(1.0F), 1.0F);
+  EXPECT_LT(Render::GL::siege_winding(0.1F), 0.1F);
+  Engine::Core::StandaloneEntity scratch(45);
+  auto& entity = scratch.entity();
+  auto* loading = entity.add_component<Engine::Core::CatapultLoadingComponent>();
+  loading->state = Engine::Core::CatapultLoadingComponent::LoadingState::Firing;
+  loading->firing_duration = 0.5F;
+  Render::GL::DrawContext ctx;
+  ctx.entity = &entity;
+  Render::GL::SiegeTravelState state;
+  loading->firing_time = 0.05F;
+  EXPECT_GT(Render::GL::siege_motion(ctx, state, 0.2F, 0.4F).recoil, 0.2F);
+  loading->firing_time = 0.5F;
+  EXPECT_NEAR(Render::GL::siege_motion(ctx, state, 0.2F, 0.4F).recoil, 0.0F, 0.0001F);
 }
 
 TEST(RenderArchetypeBuildings, RendererHandleResolvesRomanHome) {

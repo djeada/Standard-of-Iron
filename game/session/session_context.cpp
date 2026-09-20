@@ -85,10 +85,7 @@ SessionContext::SessionContext(const Config& config)
 }
 
 SessionContext::~SessionContext() {
-  // Systems run background jobs (AI planning, path requests) that read the
-  // navigation grid and the terrain. The world is declared before those
-  // services and would otherwise outlive them by a few microseconds with a job
-  // still in flight: stop the systems first.
+
   m_state->world.shutdown_systems();
   unbind_world_services(m_state->world);
   unbind_ambient_services(&m_state->services);

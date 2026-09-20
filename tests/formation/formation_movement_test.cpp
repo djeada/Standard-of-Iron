@@ -354,8 +354,7 @@ TEST_F(FormationMovementTest, FormationDispatchUsesOneSharedMemberLaneCorridor) 
 
   auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  // A long wall whose only gap lies far to the side: every troop faces a real
-  // detour, which is what the shared corridor with lanes exists for.
+
   auto const wall = Game::Systems::NavGrid::world_to_grid(0.0F, 0.0F);
   for (int dx = -40; dx <= 40; ++dx) {
     if (dx >= 30 && dx <= 34) {
@@ -371,7 +370,6 @@ TEST_F(FormationMovementTest, FormationDispatchUsesOneSharedMemberLaneCorridor) 
   ASSERT_NE(formation, nullptr);
   ASSERT_FALSE(formation->morph.active) << "the wall must refuse a rigid march";
 
-  // What apply_deploy_formation sends when the group routes around the wall.
   std::vector<Game::Systems::CommandService::MoveIntent> intents;
   for (std::size_t i = 0; i < units.size(); ++i) {
     intents.push_back({.unit_id = units[i], .target = result.positions[i]});

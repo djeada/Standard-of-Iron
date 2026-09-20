@@ -131,8 +131,6 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
   float const distance =
       std::sqrt(to_target_x * to_target_x + to_target_z * to_target_z);
 
-  // A large slot displacement during a turn is not a teleport: outer ranks
-  // must walk that distance. Only a discontinuous move of the root resets feet.
   float const center_distance =
       std::hypot(inputs.formation_center_x - state.formation_center_x,
                  inputs.formation_center_z - state.formation_center_z);

@@ -68,8 +68,6 @@ auto build_corridor(const QVector3D& start,
     return corridor;
   }
 
-  // A clear leg has one heading. Grid-cell centres otherwise introduce tiny
-  // alternating turns even on an unobstructed field.
   if (pathfinder->is_world_segment_walkable(
           start, destination, traversal.passability, traversal.clearance)) {
     return {destination};
@@ -498,10 +496,6 @@ auto morph_point(const FormationMorph& morph, std::size_t index, float t) -> QVe
   return {anchor.x() + offset.x(), anchor.y(), anchor.z() + offset.z()};
 }
 
-// A formed group keeps every troop at the same place within its shape: among
-// troops of one kind, the new slots are matched to where each troop stands in
-// the old shape (both measured in their own formation frame), so a wheel or a
-// march never reshuffles the ranks.
 void keep_places_in_shape(Engine::Core::World& world,
                           ArmyFormation& formation,
                           float facing_from,
@@ -578,10 +572,6 @@ void keep_places_in_shape(Engine::Core::World& world,
   ArmyFormationRuntime::sync_membership_components(world, formation);
 }
 
-// "Hold the shape" on open ground: the formation's frame (anchor and facing)
-// moves from where the troops stand to the ordered place, and every troop's
-// slot is that frame plus its local offset. A formed group therefore marches
-// and wheels as one rigid body; a loose crowd morphs into the shape on the way.
 auto start_morph(Engine::Core::World& world,
                  ArmyFormation& formation,
                  std::optional<float> marching_facing) -> bool {
@@ -926,9 +916,6 @@ void ArmyFormationRuntime::begin_move(Engine::Core::World& world,
     return;
   }
 
-  // Where the ground will not carry the shape as one body (a river, a wood, a
-  // settlement), every troop routes to its slot on its own and the group
-  // assembles on arrival; the old anchor march stalled on real maps.
   if (!formation->maintains_formation() || allow_morph) {
     formation->anchor = destination;
     formation->needs_replan = false;
@@ -1054,8 +1041,7 @@ void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
       centroid += QVector3D(
           transform->position.x, transform->position.y, transform->position.z);
       if (const auto* slot = formation->find_slot_for(member)) {
-        // Estimate the anchor from slot errors. In an asymmetric formation the
-        // members' raw centroid need not coincide with the formation anchor.
+
         centroid -= slot->world_position - formation->anchor;
       }
       ++count;
@@ -1086,8 +1072,7 @@ void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
                                 transform->position.z - slot.world_position.z()));
       }
     }
-    // Wait for every rank, including during assembly and a wheel. A centroid
-    // can look caught up while the front and rear are far from their slots.
+
     if (!formation->compressed && max_slot_error > 1.0F) {
       formation->moves_pending = true;
       continue;
@@ -1175,9 +1160,6 @@ void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
   }
 }
 
-// A troop following a moving slot is sent to where the slot will be a moment
-// ahead, at the pace the slot moves: it walks alongside its slot instead of
-// reaching it, stopping, and setting off again every few ticks.
 auto ArmyFormationRuntime::morph_target(const ArmyFormation& formation,
                                         EntityID entity) -> std::optional<QVector3D> {
   constexpr float k_lead_seconds = 1.0F;

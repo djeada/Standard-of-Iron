@@ -537,7 +537,6 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
   };
 
   auto push_quad = [&](unsigned int a, unsigned int b, unsigned int c, unsigned int d) {
-    // Keep the underside and both banks outward-facing with backface culling.
     const auto& n = vertices[a].normal;
     if (QVector3D::dotProduct(
             QVector3D::crossProduct(vertex_position(b) - vertex_position(a),
@@ -659,7 +658,6 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
     const QVector3D deck_normal =
         (QVector3D(0.0F, 1.0F, 0.0F) - dir * grade).normalized();
 
-    // UVs are metres in the bridge's own frame, including oblique crossings.
     add_vertex(top_left, deck_normal, 0.0F, span_distance);
     add_vertex(top_right, deck_normal, ring_half_width * 2.0F, span_distance);
     add_vertex(bottom_left, -deck_normal, 0.0F, span_distance);
@@ -746,7 +744,6 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
     add_cap(end_idx + 14, end_idx + 15, end_idx + 17, end_idx + 16, forward_normal);
   }
 
-  // Sample the finished strip so ornament follows the exact landing/deck profile.
   auto strip_point = [&](float distance, unsigned int column) {
     const float row = std::clamp(distance / visual_length, 0.0F, 1.0F) *
                       static_cast<float>(length_segments);
@@ -761,9 +758,6 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
     return QVector3D::dotProduct(point - visual_start, perpendicular);
   };
 
-  // Four rings make real chamfers catch the sun at the normal battle-camera zoom.
-  // Negative U identifies individually modelled dressed stone in bridge.vert;
-  // positive U is reserved for the continuous paving / coursed masonry above.
   auto add_dressed_block = [&](float start,
                                float end,
                                float offset_start,
@@ -828,7 +822,7 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
 
   const float detail_start = landing_run * 0.65F;
   const float detail_length = visual_length - detail_start * 2.0F;
-  // An odd count keeps the larger keystone centred on the crown.
+
   const int stone_count =
       std::clamp(static_cast<int>(std::ceil(detail_length / 0.95F)) | 1, 3, 191);
   const float stone_length = detail_length / static_cast<float>(stone_count);
@@ -854,7 +848,6 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
                         rail_end.y() + 0.17F + variation,
                         0.045F);
 
-      // A projecting ring of wedge-like stones makes the arch legible in silhouette.
       const unsigned int edge = side == 0 ? 0U : 1U;
       const QVector3D deck_start = strip_point(start, edge);
       const QVector3D deck_end = strip_point(end, edge);
@@ -874,7 +867,6 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
     }
   }
 
-  // Bank-side buttresses terminate the parapets and anchor the span in the terrain.
   const float post_inset = std::min(length * 0.15F, 1.25F);
   const float post_half_length = std::min(length * 0.08F, 0.46F);
   for (const float distance :

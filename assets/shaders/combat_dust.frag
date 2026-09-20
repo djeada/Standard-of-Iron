@@ -8,6 +8,7 @@ in vec3 v_local_pos;
 in float v_intensity;
 in float v_alpha;
 in float v_lick;
+in vec2 v_smoke_data;
 
 out vec4 frag_color;
 
@@ -277,6 +278,23 @@ void main() {
               0.86);
     color = clamp(color, 0.0, 4.0) * fireball_alpha;
     frag_color = vec4(color, fireball_alpha);
+  } else if (u_effect_type == 7) {
+    float age = v_smoke_data.x;
+    float seed = v_smoke_data.y;
+    vec2 uv = v_texcoord * 2.0 - 1.0;
+
+    vec2 flow = vec2(seed * 19.0, seed * 31.0 - age * 1.8);
+    float body = soi_fbm_23e5ab(uv * 2.1 + flow);
+    float detail = soi_fbm_23e5ab(uv * 4.3 + flow + vec2(age * 0.6, 7.0));
+    vec2 warped = uv + vec2(body - 0.5, detail - 0.5) * 0.32;
+    float envelope = 1.0 - smoothstep(0.12, 1.0, length(warped));
+
+    float edge = 1.0 - smoothstep(0.72, 1.0, max(abs(uv.x), abs(uv.y)));
+    float wisps = smoothstep(0.18, 0.72, body * 0.7 + detail * 0.3);
+    float alpha = v_alpha * envelope * edge * (0.35 + 0.65 * wisps);
+
+    color = u_dust_color * mix(0.88, 1.08, age);
+    frag_color = vec4(color, alpha);
   } else if (u_effect_type == 5) {
     float along = clamp(v_texcoord.x, 0.0, 1.0);
     float across = abs(v_texcoord.y * 2.0 - 1.0);
@@ -312,14 +330,12 @@ void main() {
     bool ring = abs(u_span) >= 0.999;
     vec3 accent = max(u_dust_color, vec3(0.03));
 
-    // A fast cutting edge with a lingering, dissolving wake behind it.
     float head = smoothstep(0.0, 0.36, t);
     float tail = smoothstep(0.22, 1.0, t) * 0.96;
     float aa = max(fwidth(along), 0.002);
     float wipe = smoothstep(tail - aa, tail + 0.12 + aa, along) *
                  (1.0 - smoothstep(head - 0.018 - aa, head + aa, along));
-    float ends = smoothstep(0.0, 0.045, along) *
-                 (1.0 - smoothstep(0.965, 1.0, along));
+    float ends = smoothstep(0.0, 0.045, along) * (1.0 - smoothstep(0.965, 1.0, along));
     float edge_aa = max(fwidth(across), 0.004);
     float cutting_edge = exp(-pow((across - 0.87) / (0.035 + edge_aa), 2.0));
     float halo = exp(-pow((across - 0.78) / 0.22, 2.0));
@@ -327,7 +343,8 @@ void main() {
     float outer_fade = 1.0 - smoothstep(0.94, 1.0, across);
     float wake_noise = soi_noise_3d41e6(vec2(along * 19.0 - t * 6.0, across * 5.0));
     float dissolve = smoothstep(t * 0.44, 0.48 + t * 0.30, wake_noise);
-    float filaments = pow(0.5 + 0.5 * sin(across * 74.0 + along * 13.0 - t * 8.0), 10.0);
+    float filaments =
+        pow(0.5 + 0.5 * sin(across * 74.0 + along * 13.0 - t * 8.0), 10.0);
     float wake = inner_fade * outer_fade * dissolve * (0.10 + filaments * 0.24);
     float head_glint = exp(-pow((along - head + 0.045) / 0.07, 2.0));
 
@@ -345,7 +362,7 @@ void main() {
     }
     float energy = coverage * v_alpha;
     frag_color = vec4(min(radiance, vec3(5.0)) * energy,
-                       clamp(opacity * energy * 0.24, 0.0, 0.40));
+                      clamp(opacity * energy * 0.24, 0.0, 0.40));
 
   } else {
 

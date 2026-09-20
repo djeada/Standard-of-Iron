@@ -22,9 +22,6 @@ struct RibbonShape {
   float meander_amplitude = 0.0F;
 };
 
-// The shape the river water is drawn with. Bridges and the water-blocked
-// navigation band read the same shape, so a deck ends where the drawn water
-// ends rather than where the widest possible river would.
 inline constexpr RibbonShape k_river_ribbon_shape{
     .edge_noise_frequencies = {0.015F, 0.055F, 0.14F},
     .edge_noise_weights = {0.45F, 0.36F, 0.19F},

@@ -80,6 +80,20 @@ public:
                            float radius,
                            float intensity,
                            float time) = 0;
+
+  virtual void local_light(const Render::LocalLight& light) { (void)light; }
+
+  virtual void hearth_smoke(const QVector3D& position,
+                            const QVector3D& color,
+                            float radius,
+                            float intensity,
+                            float time) {
+    (void)position;
+    (void)color;
+    (void)radius;
+    (void)intensity;
+    (void)time;
+  }
   virtual void combat_dust(const QVector3D& position,
                            const QVector3D& color,
                            float radius,
@@ -170,6 +184,16 @@ public:
                    float intensity,
                    float time) override {
     m_inner.healer_aura(position, color, radius, intensity, time);
+  }
+  void local_light(const Render::LocalLight& light) override {
+    m_inner.local_light(light);
+  }
+  void hearth_smoke(const QVector3D& position,
+                    const QVector3D& color,
+                    float radius,
+                    float intensity,
+                    float time) override {
+    m_inner.hearth_smoke(position, color, radius, intensity, time);
   }
   void combat_dust(const QVector3D& position,
                    const QVector3D& color,
@@ -410,6 +434,30 @@ public:
     cmd.time = time;
     m_queue->submit(std::move(cmd));
   }
+  void local_light(const Render::LocalLight& light) override {
+    if (m_queue == nullptr || light.intensity <= 0.0F || light.radius <= 0.0F) {
+      return;
+    }
+    m_queue->submit_local_light(light);
+  }
+  void hearth_smoke(const QVector3D& position,
+                    const QVector3D& color,
+                    float radius,
+                    float intensity,
+                    float time) override {
+    if (m_queue == nullptr) {
+      return;
+    }
+    EffectBatchCmd cmd;
+    cmd.kind = EffectBatchCmd::Kind::HearthSmoke;
+    cmd.position = position;
+    cmd.color = color;
+    cmd.radius = radius;
+    cmd.intensity = intensity;
+    cmd.time = time;
+    cmd.priority = CommandPriority::Low;
+    m_queue->submit(std::move(cmd));
+  }
   void combat_dust(const QVector3D& position,
                    const QVector3D& color,
                    float radius,
@@ -579,6 +627,22 @@ public:
                    float time) override {
     if (m_fallback != nullptr) {
       m_fallback->healer_aura(position, color, radius, intensity, time);
+    }
+  }
+
+  void local_light(const Render::LocalLight& light) override {
+    if (m_fallback != nullptr) {
+      m_fallback->local_light(light);
+    }
+  }
+
+  void hearth_smoke(const QVector3D& position,
+                    const QVector3D& color,
+                    float radius,
+                    float intensity,
+                    float time) override {
+    if (m_fallback != nullptr) {
+      m_fallback->hearth_smoke(position, color, radius, intensity, time);
     }
   }
 

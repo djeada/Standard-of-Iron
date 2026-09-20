@@ -317,8 +317,7 @@ Item {
                     id: objectiveRow
 
                     readonly property real budget: Math.max(0, objectiveZone.width - (objectivesButton.visible ? objectivesButton.width + Design.Metrics.space8 : 0))
-                    // A counted goal needs room for at least "★ 53%"; below that the
-                    // objectives button carries the progress instead.
+
                     readonly property bool fits: topRoot.objectiveDetailText === "" || objectiveGlyph.implicitWidth + spacing + objectivePercentMetrics.advanceWidth <= budget
 
                     anchors.verticalCenter: parent.verticalCenter
@@ -361,8 +360,6 @@ Item {
                     Text {
                         id: objectiveDetail
 
-                        // Resource names first go, then the counts collapse to a share, so a
-                        // narrow bar still shows the goal moving instead of "Timbe".
                         readonly property real room: Math.max(0, objectiveRow.budget - objectiveGlyph.width - objectiveRow.spacing)
 
                         anchors.verticalCenter: parent.verticalCenter

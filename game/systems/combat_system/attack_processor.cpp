@@ -568,14 +568,15 @@ void release_structure_lock_for_troop_target(Engine::Core::Entity* attacker,
   }
 
   auto const* attack_target =
-      attacker->get_component<Engine::Core::AttackTargetComponent>();
+      world->try_get<Engine::Core::AttackTargetComponent>(attacker->get_id());
   if ((attack_target == nullptr) ||
       attack_target->target_id == attack_comp->melee_lock_target_id) {
     return;
   }
 
   auto* ordered_target = world->get_entity(attack_target->target_id);
-  auto const* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
+  auto const* attacker_unit =
+      world->try_get<Engine::Core::UnitComponent>(attacker->get_id());
   if (!may_attack(attacker_unit,
                   ordered_target,
                   {.intent = EngagementIntent::Ordered, .allow_buildings = false})) {
@@ -686,7 +687,7 @@ auto locked_target_for_attack(Engine::Core::Entity* attacker,
   }
 
   auto* target = world->get_entity(attack_comp->melee_lock_target_id);
-  auto* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
+  auto* attacker_unit = world->try_get<Engine::Core::UnitComponent>(attacker->get_id());
   if ((target == nullptr) || (attacker_unit == nullptr) ||
       !Game::Systems::CombatRules::participates_in_rts_melee_lock(target) ||
       !may_attack(attacker_unit,

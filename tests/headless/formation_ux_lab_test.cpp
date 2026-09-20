@@ -161,7 +161,6 @@ protected:
     return unit ? unit->id() : 0;
   }
 
-  // A realistic mixed selection standing as a loose crowd around `centre`.
   auto
   army(const QVector3D& centre, int count, float yaw = 0.0F) -> std::vector<EntityID> {
     std::vector<SpawnType> const kinds{SpawnType::Swordsman,
@@ -207,7 +206,6 @@ protected:
     return unit == nullptr ? 1.0F : std::max(0.1F, unit->speed);
   }
 
-  // The player's formation placement: exactly what ArmyFormationController sends.
   auto deploy(const std::vector<EntityID>& units,
               const QVector3D& anchor,
               float facing,
@@ -241,7 +239,6 @@ protected:
     return true;
   }
 
-  // The player's plain right-click move of a selection.
   auto move(const std::vector<EntityID>& units, const QVector3D& target) -> bool {
     auto const plan = Game::Systems::CommandService::plan_ground_move(
         m_session->world(), units, target);
@@ -269,8 +266,6 @@ protected:
     return {members.front().half_width, members.front().half_depth};
   }
 
-  // Soldiers of two different troops standing inside each other, as the
-  // player sees them: the deepest body interpenetration this tick.
   auto soldier_overlap(const std::vector<EntityID>& units) -> float {
     struct Body {
       std::vector<QVector3D> points;
@@ -606,9 +601,6 @@ auto area_is_open(Game::Systems::Pathfinding& pathfinder,
   return true;
 }
 
-// Legs where the ground matters: open ground for the army at both ends, a
-// path between them, and no straight line (a river, a hill, a wood or a
-// settlement is in the way).
 auto find_legs(int grid_width, int grid_height, int wanted) -> std::vector<Leg> {
   std::vector<Leg> legs;
   auto* pathfinder = NavGrid::get_pathfinder();
@@ -772,7 +764,7 @@ TEST_F(FormationUxLab, Silhouettes) {
       if (!plan.valid) {
         continue;
       }
-      // One character per troop centre on a 3 m grid, front rank on top.
+
       float min_x = 1e9F, max_x = -1e9F, min_z = 1e9F, max_z = -1e9F;
       for (const auto& slot : plan.slot_list) {
         min_x = std::min(min_x, slot.local_offset.x());

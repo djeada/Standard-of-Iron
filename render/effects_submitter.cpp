@@ -66,6 +66,25 @@ void EffectsSubmitter::combat_dust(DrawQueue* queue,
   }
 }
 
+void EffectsSubmitter::hearth_smoke(DrawQueue* queue,
+                                    const QVector3D& position,
+                                    const QVector3D& color,
+                                    float radius,
+                                    float intensity,
+                                    float time) const {
+  EffectBatchCmd cmd;
+  cmd.kind = EffectBatchCmd::Kind::HearthSmoke;
+  cmd.position = position;
+  cmd.color = color;
+  cmd.radius = radius;
+  cmd.intensity = intensity;
+  cmd.time = time;
+  cmd.priority = CommandPriority::Low;
+  if (queue != nullptr) {
+    queue->submit(std::move(cmd));
+  }
+}
+
 void EffectsSubmitter::building_flame(DrawQueue* queue,
                                       const QVector3D& position,
                                       const QVector3D& color,
@@ -247,6 +266,20 @@ void Renderer::combat_dust(const QVector3D& position,
     return;
   }
   m_effects_submitter->combat_dust(
+      m_active_queue, position, color, radius, intensity, time);
+}
+
+void Renderer::hearth_smoke(const QVector3D& position,
+                            const QVector3D& color,
+                            float radius,
+                            float intensity,
+                            float time) {
+
+  if (!m_submission_visibility.accepts_sphere(
+          position, radius, SubmissionFogMode::VisibleOnly, FogExtent::Anchor)) {
+    return;
+  }
+  m_effects_submitter->hearth_smoke(
       m_active_queue, position, color, radius, intensity, time);
 }
 

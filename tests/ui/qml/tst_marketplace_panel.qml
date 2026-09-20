@@ -81,7 +81,6 @@ TestCase {
         }
     }
 
-    // The bottom HUD gives the production zone about 410 x 170 px.
     function create_panel() {
         var panel = createTemporaryObject(panelComponent, testCase, {
                 "width": 410,

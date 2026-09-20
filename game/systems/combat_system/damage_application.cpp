@@ -231,11 +231,8 @@ void publish_formation_hit(
   hit->hit_direction_x = 0.0F;
   hit->hit_direction_z = 0.0F;
   if (world != nullptr && attacker_id != 0) {
-    auto const* attacker = world->get_entity(attacker_id);
     auto const* attacker_transform =
-        attacker != nullptr
-            ? attacker->get_component<Engine::Core::TransformComponent>()
-            : nullptr;
+        world->try_get<Engine::Core::TransformComponent>(attacker_id);
     auto const* target_transform =
         target.get_component<Engine::Core::TransformComponent>();
     if (attacker_transform != nullptr && target_transform != nullptr) {
@@ -767,13 +764,13 @@ apply_unit_damage(Engine::Core::World* world,
   std::optional<Game::Units::SpawnType> attacker_type_opt;
   Engine::Core::Entity* attacker = nullptr;
   if (attacker_id != 0 && world != nullptr) {
+
     attacker = world->get_entity(attacker_id);
-    if (attacker != nullptr) {
-      auto* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
-      if (attacker_unit != nullptr) {
-        attacker_owner_id = attacker_unit->owner_id;
-        attacker_type_opt = attacker_unit->spawn_type;
-      }
+    if (const auto* attacker_unit =
+            world->try_get<Engine::Core::UnitComponent>(attacker_id);
+        attacker_unit != nullptr) {
+      attacker_owner_id = attacker_unit->owner_id;
+      attacker_type_opt = attacker_unit->spawn_type;
     }
   }
 

@@ -26,6 +26,7 @@
 #include "math/math_utils.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/entity/civilian_actor.h"
 #include "render/entity/nations/builder_tool_palette.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/registry.h"
@@ -1075,7 +1076,25 @@ public:
     v.palette = make_humanoid_palette(team_tint, seed);
     apply_roman_civilian_palette(team_tint, seed, v);
   }
+
+  static void
+  fill_ambient_variant(const DrawContext& ctx, std::uint32_t seed, HumanoidVariant& v) {
+    QVector3D const team_tint = resolve_team_tint(ctx);
+    v.palette = make_humanoid_palette(team_tint, seed);
+    apply_roman_civilian_palette(team_tint, seed, v);
+    seed_missing_humanoid_wear(v, seed);
+  }
 };
+
+void register_civilian_rig_for_nation() {
+
+  NationCivilianRig rig{};
+  rig.spec = CivilianRenderer::make_visual_spec();
+  rig.idle = roman_civilian_idle_archetype();
+  rig.working = roman_builder_sickle_unit_archetype();
+  rig.fill_variant = &CivilianRenderer::fill_ambient_variant;
+  register_nation_civilian_rig(false, rig);
+}
 
 void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_builder_styles_registered();
@@ -1100,6 +1119,7 @@ void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
 
 void register_civilian_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_builder_styles_registered();
+  register_civilian_rig_for_nation();
   register_humanoid_renderer(
       registry, "troops/roman/civilian", std::make_shared<CivilianRenderer const>());
 

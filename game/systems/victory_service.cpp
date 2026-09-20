@@ -778,8 +778,6 @@ auto VictoryService::counted_progress(const VictoryRule& rule) const
       rule);
 }
 
-// Every number the objectives panel shows, in a fixed order, so a change in
-// any of them -- not only an objective completing -- republishes the panel.
 void VictoryService::fill_progress_fingerprint(std::vector<int>& out) const {
   out.clear();
   append_progress_fingerprint(m_rule_set.victory_rules, out);

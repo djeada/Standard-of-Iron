@@ -131,8 +131,6 @@ void main() {
   float ndv = max(dot(normal, view_dir), 0.0);
   float ndl = max(dot(normal, light_dir), 0.0);
 
-  // Use the same soil/climate inputs as the banks. Meltwater stays clearer;
-  // wetter lowlands and rain carry more of the surrounding soil colour.
   float snow = saturate(u_snow_coverage);
   float sediment =
       saturate(0.18 + u_moisture_level * 0.32 + environment_wetness() * 0.25) *

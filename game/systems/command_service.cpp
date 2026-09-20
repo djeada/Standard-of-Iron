@@ -371,10 +371,6 @@ auto CommandService::plan_ground_move(Engine::Core::World& world,
   return plan;
 }
 
-// After a formation is committed: every troop learns its slot and facing, and
-// either the runtime morphs the group into the shape (the troops follow their
-// moving slots) or each troop routes to its final slot with synchronised
-// arrival. The player's deploy order and the Arena share this path.
 void CommandService::march_into_formation(
     Engine::Core::World& world,
     const std::vector<Engine::Core::EntityID>& units,

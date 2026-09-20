@@ -22,6 +22,12 @@ public:
                    float radius,
                    float intensity,
                    float time) const;
+  void hearth_smoke(DrawQueue* queue,
+                    const QVector3D& position,
+                    const QVector3D& color,
+                    float radius,
+                    float intensity,
+                    float time) const;
   void combat_dust(DrawQueue* queue,
                    const QVector3D& position,
                    const QVector3D& color,

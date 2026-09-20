@@ -38,6 +38,8 @@ auto billboard_effect_type(EffectBatchCmd::Kind kind) -> BackendPipelines::Effec
     return BackendPipelines::EffectType::MetalSpark;
   case EffectBatchCmd::Kind::WeaponArc:
     return BackendPipelines::EffectType::WeaponArc;
+  case EffectBatchCmd::Kind::HearthSmoke:
+    return BackendPipelines::EffectType::HearthSmoke;
   default:
     return BackendPipelines::EffectType::Dust;
   }
@@ -367,6 +369,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
     case EffectBatchCmd::Kind::Fireball:
     case EffectBatchCmd::Kind::StoneImpact:
     case EffectBatchCmd::Kind::MetalSpark:
+    case EffectBatchCmd::Kind::HearthSmoke:
     case EffectBatchCmd::Kind::WeaponArc: {
       if (m_combat_dust_pipeline == nullptr ||
           !m_combat_dust_pipeline->is_initialized()) {

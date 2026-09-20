@@ -26,24 +26,20 @@ using Render::Geom::clamp01;
 using Render::Geom::clamp_vec_01;
 using Render::Geom::cylinder_between;
 
-using Render::Geom::clamp01;
-using Render::Geom::clamp_vec_01;
-using Render::Geom::cylinder_between;
-
 constexpr float k_stock_tilt_deg = 22.0F;
 constexpr float k_nock_rest_z = -0.07F;
 constexpr float k_slide_travel = 0.38F;
 
-inline auto k_arm_tip(float side) -> QVector3D {
-  return {side * 0.605F, 0.348F, -0.395F};
+inline auto k_arm_tip(float side, float tension) -> QVector3D {
+  return {side * (0.66F - 0.065F * tension), 0.348F, -0.395F + 0.17F * tension};
 }
 
 inline auto slide_travel(const BallistaAnimContext& anim_ctx) -> float {
   switch (anim_ctx.state) {
   case BallistaAnimState::Loading:
-    return anim_ctx.loading_progress * k_slide_travel;
+    return siege_winding(anim_ctx.loading_progress) * k_slide_travel;
   case BallistaAnimState::Firing:
-    return k_slide_travel * (1.0F - anim_ctx.firing_progress);
+    return k_slide_travel * (1.0F - siege_release(anim_ctx.firing_progress));
   case BallistaAnimState::Idle:
   case BallistaAnimState::Resetting:
     break;
@@ -71,7 +67,7 @@ get_anim_context(const Engine::Core::Entity* entity) -> BallistaAnimContext {
   case Engine::Core::CatapultLoadingComponent::LoadingState::Loading:
     ctx.state = BallistaAnimState::Loading;
     ctx.loading_progress = loading->get_loading_progress();
-    ctx.show_bolt = true;
+    ctx.show_bolt = ctx.loading_progress > 0.62F;
     break;
   case Engine::Core::CatapultLoadingComponent::LoadingState::ReadyToFire:
     ctx.state = BallistaAnimState::Firing;
@@ -82,7 +78,7 @@ get_anim_context(const Engine::Core::Entity* entity) -> BallistaAnimContext {
   case Engine::Core::CatapultLoadingComponent::LoadingState::Firing:
     ctx.state = BallistaAnimState::Firing;
     ctx.firing_progress = loading->get_firing_progress();
-    ctx.show_bolt = ctx.firing_progress < 0.2F;
+    ctx.show_bolt = false;
     break;
   }
 
@@ -175,51 +171,32 @@ void draw_base_frame(const DrawContext& p,
 void draw_wheels(const DrawContext& p,
                  ISubmitter& out,
                  Texture* white,
-                 const BallistaPalette& c) {
+                 const BallistaPalette& c,
+                 const SiegeMotion& motion) {
 
-  float const wheel_radius = 0.155F;
-  float const wheel_half_thickness = 0.022F;
-
-  auto draw_wheel = [&](float side) {
-    QVector3D const hub(side * 0.355F, wheel_radius, 0.02F);
-    QVector3D const inner = hub - QVector3D(side * wheel_half_thickness, 0, 0);
-    QVector3D const outer = hub + QVector3D(side * wheel_half_thickness, 0, 0);
-
-    draw_cyl(out, p.model, inner, outer, wheel_radius * 0.93F, c.wood_dark, white);
-    draw_cyl(out,
-             p.model,
-             inner - QVector3D(side * 0.004F, 0, 0),
-             outer + QVector3D(side * 0.004F, 0, 0),
-             wheel_radius,
-             c.metal_iron,
-             white);
-    draw_cyl(out,
-             p.model,
-             inner - QVector3D(side * 0.026F, 0, 0),
-             outer + QVector3D(side * 0.026F, 0, 0),
-             0.038F,
-             c.accent,
-             white);
-
-    for (int spoke = 0; spoke < 6; ++spoke) {
-      float const angle = static_cast<float>(spoke) * std::numbers::pi_v<float> / 3.0F;
-      QVector3D const rim(hub.x() + side * (wheel_half_thickness + 0.012F),
-                          hub.y() + std::sin(angle) * wheel_radius * 0.80F,
-                          hub.z() + std::cos(angle) * wheel_radius * 0.80F);
-      QVector3D const centre(
-          hub.x() + side * (wheel_half_thickness + 0.012F), hub.y(), hub.z());
-      draw_cyl(out, p.model, centre, rim, 0.013F, c.wood_light, white);
-    }
-  };
-
-  draw_wheel(-1.0F);
-  draw_wheel(1.0F);
-
+  draw_siege_wheel(out,
+                   white,
+                   p.model,
+                   {-0.355F, 0.155F, 0.02F},
+                   0.155F,
+                   -motion.right_roll,
+                   c.wood_light,
+                   c.metal_iron,
+                   c.accent);
+  draw_siege_wheel(out,
+                   white,
+                   p.model,
+                   {0.355F, 0.155F, 0.02F},
+                   0.155F,
+                   -motion.left_roll,
+                   c.wood_light,
+                   c.metal_iron,
+                   c.accent);
   draw_cyl(out,
            p.model,
-           QVector3D(-0.34F, 0.155F, 0.02F),
-           QVector3D(0.34F, 0.155F, 0.02F),
-           0.020F,
+           {-0.34F, 0.155F, 0.02F},
+           {0.34F, 0.155F, 0.02F},
+           0.025F,
            c.metal_iron,
            white);
 }
@@ -312,15 +289,18 @@ void draw_torsion_bundles(const DrawContext& p,
 void draw_arms(const DrawContext& p,
                ISubmitter& out,
                Texture* white,
-               const BallistaPalette& c) {
+               const BallistaPalette& c,
+               const BallistaAnimContext& anim_ctx) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(k_stock_tilt_deg, 1.0F, 0.0F, 0.0F);
+  const float tension = slide_travel(anim_ctx) / k_slide_travel;
 
   auto draw_arm = [&](float side) {
     QVector3D const root(side * 0.245F, 0.355F, -0.255F);
-    QVector3D const mid(side * 0.435F, 0.352F, -0.325F);
-    QVector3D const tip = k_arm_tip(side);
+    QVector3D const mid(
+        side * (0.46F - 0.03F * tension), 0.352F, -0.325F + 0.08F * tension);
+    QVector3D const tip = k_arm_tip(side, tension);
 
     draw_cyl(out, tilted, root, mid, 0.032F, c.wood_frame, white);
     draw_cyl(out, tilted, mid, tip, 0.023F, c.wood_light, white);
@@ -351,8 +331,20 @@ void draw_bowstring(const DrawContext& p,
 
   QVector3D const nock(0.0F, 0.315F, k_nock_rest_z + slide_travel(anim_ctx));
 
-  draw_cyl(out, tilted, k_arm_tip(-1.0F), nock, 0.012F, c.rope, white);
-  draw_cyl(out, tilted, k_arm_tip(1.0F), nock, 0.012F, c.rope, white);
+  draw_cyl(out,
+           tilted,
+           k_arm_tip(-1.0F, slide_travel(anim_ctx) / k_slide_travel),
+           nock,
+           0.012F,
+           c.rope,
+           white);
+  draw_cyl(out,
+           tilted,
+           k_arm_tip(1.0F, slide_travel(anim_ctx) / k_slide_travel),
+           nock,
+           0.012F,
+           c.rope,
+           white);
 
   QMatrix4x4 grip = tilted;
   grip.translate(nock);
@@ -488,20 +480,22 @@ void draw_trigger_mechanism(const DrawContext& p,
            c.wood_dark,
            white);
 
-  draw_cyl(out,
-           tilted,
-           QVector3D(-0.10F, 0.27F, 0.36F),
-           QVector3D(-0.10F, 0.36F, 0.36F),
-           0.014F,
-           c.wood_frame,
-           white);
-  draw_cyl(out,
-           tilted,
-           QVector3D(0.10F, 0.27F, 0.36F),
-           QVector3D(0.10F, 0.18F, 0.36F),
-           0.014F,
-           c.wood_frame,
-           white);
+  const float crank =
+      slide_travel(anim_ctx) / k_slide_travel * 4.0F * std::numbers::pi_v<float>;
+  for (float side : {-1.0F, 1.0F}) {
+    const QVector3D hub(side * 0.10F, 0.27F, 0.36F);
+    const QVector3D handle =
+        hub +
+        QVector3D(0.0F, std::cos(crank) * side * 0.10F, std::sin(crank) * side * 0.10F);
+    draw_cyl(out, tilted, hub, handle, 0.016F, c.accent, white);
+    draw_cyl(out,
+             tilted,
+             handle,
+             handle + QVector3D(side * 0.055F, 0, 0),
+             0.021F,
+             c.wood_dark,
+             white);
+  }
 
   draw_cyl(out,
            tilted,
@@ -555,23 +549,37 @@ void draw_ballista_geometry(const DrawContext& p,
                             Mesh* unit,
                             Texture* white,
                             const QVector3D& team_color,
-                            const BallistaPalette& palette) {
+                            const BallistaPalette& palette,
+                            const SiegeMotion& motion) {
   BallistaPalette c = palette;
   c.team = clamp_vec_01(team_color);
   auto anim_ctx = get_anim_context(p.entity);
 
   DrawContext ctx = p;
-  ctx.model = p.model;
+  ctx.model = siege_body_model(p, motion);
   ctx.model.rotate(180.0F, 0.0F, 1.0F, 0.0F);
 
   draw_base_frame(ctx, out, unit, white, c);
-  draw_wheels(ctx, out, white, c);
+  DrawContext wheels = p;
+  wheels.model.rotate(180.0F, 0.0F, 1.0F, 0.0F);
+  draw_wheels(wheels, out, white, c, motion);
   draw_torsion_bundles(ctx, out, unit, white, c);
-  draw_arms(ctx, out, white, c);
+  draw_arms(ctx, out, white, c, anim_ctx);
   draw_bowstring(ctx, out, white, c, anim_ctx);
   draw_slide(ctx, out, unit, white, c, anim_ctx);
   draw_trigger_mechanism(ctx, out, unit, white, c, anim_ctx);
   draw_ornaments(ctx, out, unit, white, c);
+  draw_siege_regalia(ctx, out, unit, white, c.team, c.accent, true);
+
+  for (float side : {-1.0F, 1.0F}) {
+    draw_cyl(out,
+             ctx.model,
+             {side * 0.29F, 0.19F, 0.25F},
+             {side * 0.29F, 0.48F, -0.28F},
+             0.026F,
+             c.wood_dark,
+             white);
+  }
 }
 
 } // namespace Render::GL
