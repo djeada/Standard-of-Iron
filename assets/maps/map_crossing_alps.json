@@ -1676,7 +1676,7 @@
             "player_id": 2,
             "settlement": "alps_first_pass_camp",
             "type": "defense_tower",
-            "x": 121.87,
+            "x": 122,
             "z": 161.43
         },
         {
@@ -4174,7 +4174,7 @@
             "rotation": 67.6,
             "scale": 1.08,
             "type": "statue",
-            "x": 569.8000000000001,
+            "x": 570.6,
             "z": 553.08
         },
         {
@@ -4671,7 +4671,7 @@
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 203.98,
+            "x": 206.3,
             "z": 365.75
         },
         {

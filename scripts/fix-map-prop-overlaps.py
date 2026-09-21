@@ -63,6 +63,7 @@ import argparse
 import itertools
 import json
 import math
+import re
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -493,13 +494,26 @@ class Placeable:
     def exempt_from(self, other: "Placeable") -> bool:
         """Pairs that are meant to touch.
 
-        Wall panels abut by definition, and a gatehouse or corner tower is built
-        *into* the run rather than beside it -- 214 of those towers, more than
+        A body derived from another -- a building and its own goods yard -- shares
+        ground with its parent by construction, and the key says so: the yard is
+        keyed `structures[3].stockpile`. A goods yard is measured against the props,
+        firecamps and spawns that would visibly stand in it, and not against other
+        buildings: a neighbouring house or a rampart shoulder touching the yard is a
+        layout decision a settlement planner already took, while a campfire inside
+        the yard is the immersion break this audit exists to catch. Wall panels abut by definition too, and a
+        gatehouse or corner tower is built *into* the run rather than beside it -- 214 of those towers, more than
         half of every overlapping pair on the campaign maps, are the ring doing
         its job.  Two towers overlapping each other is still a defect, so the
         exemption is only ever between a wall and something locked onto it.
         """
         if self.kind == "spawn" and other.kind == "spawn":
+            return True
+        if self.key.startswith(f"{other.key}.") or other.key.startswith(f"{self.key}."):
+            return True
+        yard, neighbour = (
+            (self, other) if self.body_type.endswith("_stockpile") else (other, self)
+        )
+        if yard.body_type.endswith("_stockpile") and neighbour.kind == "structure":
             return True
         if self.body_type in WALL_TYPES and other.body_type in WALL_TYPES:
             return True
@@ -535,6 +549,46 @@ def make_prop(key: str, kind: str, prop: dict, prop_type: str, default_priority:
         payload=prop,
         body_type=prop_type,
         canopy_half=canopy,
+    )
+
+
+STOCKPILE_YARDS = {"barracks": (5.20, 0.0, 1.45, 2.10)}
+"""Building types that draw a goods yard beside themselves.
+
+`(offset_x, offset_z, half_x, half_z)` in the building's own space, mirrored from
+`k_stockpile_center_x`/`k_stockpile_half_width` in game/systems/resource_stockpile.h,
+which render/entity/barracks_stockpile.cpp lays the crib and the wood, stone and
+iron bays out from. The yard reaches 6.65 m along the building's x while the
+barracks body itself stops at 4.325, so the last 2.3 m of it is ground the audit
+could not see: on map_pinewater_cut a firecamp sits inside the timber camp's yard
+and nothing reported it.
+"""
+
+
+def stockpile_yard(building: Placeable) -> Placeable | None:
+    """The goods yard beside a building, as a body to measure like any other."""
+    yard = STOCKPILE_YARDS.get(building.body_type)
+    if yard is None:
+        return None
+    offset_x, offset_z, half_x, half_z = yard
+    facing = float(
+        building.payload.get("facing", building.payload.get("rotation", 0.0)) or 0.0
+    )
+    cos_f, sin_f = math.cos(facing), math.sin(facing)
+    width, depth = axis_aligned_body((half_x * 2.0, half_z * 2.0), facing)
+    return Placeable(
+        key=f"{building.key}.stockpile",
+        kind="structure",
+        name=f"{building.name} stockpile yard",
+        x=building.x + (offset_x * cos_f) - (offset_z * sin_f),
+        z=building.z + (offset_x * sin_f) + (offset_z * cos_f),
+        half_x=width * 0.5,
+        half_z=depth * 0.5,
+        priority=PRIORITY_IMMOVABLE,
+        payload={},
+        body_type=f"{building.body_type}_stockpile",
+        avoids_roads=False,
+        avoids_slope_rims=False,
     )
 
 
@@ -581,6 +635,10 @@ def collect(map_data: dict, path_name: str) -> list[Placeable]:
                 avoids_slope_rims=False,
             )
         )
+
+    items.extend(
+        yard for yard in (stockpile_yard(item) for item in list(items)) if yard
+    )
 
     lock_ring_structures(items)
     return items
@@ -1282,27 +1340,30 @@ def repair(
         for item, other, _ in find_overlaps(items, clearance):
             if item.overlap_with(other, clearance) <= 1e-3:
                 continue
-            mover, anchor = (
+            ordered = (
                 (item, other) if item.priority <= other.priority else (other, item)
             )
-            if mover.priority >= PRIORITY_ANCHOR:
-                continue
-            overlap, unit_x, unit_z = mover.separation_from(anchor, clearance)
-            if try_move(
-                mover,
-                items,
-                terrain,
-                clearance,
-                travel_budget_for(mover, budgets),
-                overlap,
-                unit_x,
-                unit_z,
-                road_margin,
-                rim_margin,
-                anchor,
-            ):
-                progressed = True
-                resolved += 1
+
+            for mover, anchor in (ordered, (ordered[1], ordered[0])):
+                if mover.priority >= PRIORITY_ANCHOR:
+                    continue
+                overlap, unit_x, unit_z = mover.separation_from(anchor, clearance)
+                if try_move(
+                    mover,
+                    items,
+                    terrain,
+                    clearance,
+                    travel_budget_for(mover, budgets),
+                    overlap,
+                    unit_x,
+                    unit_z,
+                    road_margin,
+                    rim_margin,
+                    anchor,
+                ):
+                    progressed = True
+                    resolved += 1
+                    break
 
         for violation in find_canopy_intrusions(items, canopy_fraction):
             mover = violation.item
@@ -1544,20 +1605,46 @@ def walk_out_of_anchors(
     return [inside[0], inside[1]]
 
 
-def detect_format(source: str, map_data: dict) -> tuple[int, bool, bool] | None:
-    """The indent/sort/newline that reproduces this file byte for byte.
+EMPTY_CONTAINER = re.compile(r'^(\s*)("[^"]*": )?(\[\]|\{\})(,?)$')
 
-    Maps in this repo are authored in two styles, and rewriting one in the
-    other buries a two-line fix under a whole-file diff.
+
+def expand_empty_containers(text: str) -> str:
+    """`[]` written open-and-close on two lines, the way tools/city_export does."""
+    out: list[str] = []
+    for line in text.split("\n"):
+        match = EMPTY_CONTAINER.match(line)
+        if match is None:
+            out.append(line)
+            continue
+        pad, key, pair, comma = match.groups()
+        out.append(f"{pad}{key or ''}{pair[0]}")
+        out.append(f"{pad}{pair[1]}{comma}")
+    return "\n".join(out)
+
+
+def render(map_data: dict, style: tuple[int, bool, bool, bool]) -> str:
+    indent, sort_keys, trailing_newline, expand_empty = style
+    text = json.dumps(map_data, indent=indent, sort_keys=sort_keys)
+    if expand_empty:
+        text = expand_empty_containers(text)
+    return text + ("\n" if trailing_newline else "")
+
+
+def detect_format(source: str, map_data: dict) -> tuple[int, bool, bool, bool] | None:
+    """The style that reproduces this file byte for byte.
+
+    Maps in this repo are authored in two styles and generated in a third, and
+    rewriting one in another buries a two-line fix under a whole-file diff. The
+    third is tools/city_export, which writes an empty array over two lines; a
+    generated map is still content this script has to be able to repair, and
+    before this it was refused and its 1453 defects went unfixed every week.
     """
-    for indent, sort_keys, trailing_newline in itertools.product(
-        (2, 4), (False, True), (True, False)
+    for indent, sort_keys, trailing_newline, expand_empty in itertools.product(
+        (2, 4), (False, True), (True, False), (False, True)
     ):
-        candidate = json.dumps(map_data, indent=indent, sort_keys=sort_keys) + (
-            "\n" if trailing_newline else ""
-        )
-        if candidate == source:
-            return indent, sort_keys, trailing_newline
+        style = (indent, sort_keys, trailing_newline, expand_empty)
+        if render(map_data, style) == source:
+            return style
     return None
 
 
@@ -1831,11 +1918,7 @@ def main() -> int:
         remaining = len(audit_map(args, path.name, map_data, surface)[2])
         total_remaining += remaining
         total_moved += moved
-        indent, sort_keys, trailing_newline = style
-        path.write_text(
-            json.dumps(map_data, indent=indent, sort_keys=sort_keys)
-            + ("\n" if trailing_newline else "")
-        )
+        path.write_text(render(map_data, style))
         print(
             f"{path.name}: {len(before)} defect(s) -> {remaining} left, "
             f"{moved} object(s) nudged, {trimmed} road(s) trimmed"

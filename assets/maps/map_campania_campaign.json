@@ -2660,7 +2660,7 @@
             "player_id": 3,
             "settlement": "campania_coast_camp",
             "type": "defense_tower",
-            "x": 96.1,
+            "x": 96.24,
             "z": 467.78
         },
         {
@@ -6691,8 +6691,8 @@
             "authored_camp": true,
             "scale": 1,
             "type": "weapon_rack",
-            "x": 112.05,
-            "z": 49.9
+            "x": 113.5,
+            "z": 51.98
         },
         {
             "authored_camp": true,
@@ -6705,8 +6705,8 @@
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 111.53,
-            "z": 53.77
+            "x": 111.16,
+            "z": 49.55
         },
         {
             "authored_camp": true,
@@ -6751,7 +6751,7 @@
             "scale": 1,
             "type": "supply_cart",
             "x": 477.6,
-            "z": 133
+            "z": 133.97
         },
         {
             "authored_camp": true,

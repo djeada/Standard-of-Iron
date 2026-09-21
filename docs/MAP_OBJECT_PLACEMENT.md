@@ -2,6 +2,17 @@
 
 An object authored in map JSON has to become two things that agree with each other: a physical body on the ground and a model on the screen. This document explains the coordinate contract that keeps them aligned, how object footprints are validated, and how the placement audit detects geometry that intersects roads, water, steep terrain, or other authored objects.
 
+## The goods yard beside a building
+
+A barracks draws a goods yard beside itself: `k_stockpile_center_x` in `game/systems/resource_stockpile.h` puts it 5.20 m along the building's own x with half extents 1.45 x 2.10, and `render/entity/barracks_stockpile.cpp` lays the crib and the wood, stone and iron bays out from there. The yard reaches 6.65 m while the barracks body itself stops at 4.325, so its last 2.3 m is ground that carries no object in the map file and was invisible to the audit. On `map_pinewater_cut` a firecamp stood inside the timber camp's yard and nothing reported it; once the yard was modelled, 33 defects of that class appeared across eleven maps, on maps that had audited clean for months.
+
+`scripts/fix-map-prop-overlaps.py` derives the yard as a body keyed `structures[N].stockpile`, and two rules keep it honest:
+
+- A body is exempt from anything derived from it, so a barracks does not overlap its own yard.
+- A yard is measured against props, firecamps and spawns — the things that would visibly stand in it — and not against other buildings. A neighbouring house or a rampart shoulder touching the yard is a layout decision a settlement planner already took; a campfire inside the yard is the immersion break this audit exists to catch. Without that scope the audit reported a wall run and a settlement home as defects that nothing was allowed to move.
+
+When the lower-priority body of an overlapping pair has nowhere legal to go, the repair now asks the other one to yield before giving up. Player 5's camp on `map_amber_delta` is why: a tent was pinned between a firecamp and a yard on ground where no legal spot existed within twelve metres, and the firecamp could step aside in one push. The tent itself was cleared by moving the barracks 1.5 m west, which is the authored fix — the yard, not the tent, was in the wrong place.
+
 ## The coordinate contract
 
 Map JSON is authored in **grid coordinates**. `x` and `z` range from `0` to `grid.width` / `grid.height`, with `grid.tile_size` metres represented by each cell.

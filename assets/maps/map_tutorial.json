@@ -160,7 +160,7 @@
       "id": "p1_builder_02",
       "type": "builder",
       "x": 31,
-      "z": 69,
+      "z": 67.23,
       "player_id": 1,
       "team_id": 1,
       "nation": "carthage"
@@ -187,7 +187,7 @@
       "id": "p1_archer_01",
       "type": "archer",
       "x": 32,
-      "z": 72,
+      "z": 72.77,
       "player_id": 1,
       "team_id": 1,
       "nation": "carthage"
@@ -339,7 +339,7 @@
     {
       "type": "supply_cart",
       "x": 76.26,
-      "z": 30.23,
+      "z": 30.4,
       "scale": 1.0,
       "rotation": 0.7
     },
