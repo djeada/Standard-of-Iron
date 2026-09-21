@@ -995,8 +995,10 @@ TEST(ShaderSource, LandscapeScatterIsShadedUnderFogNotDeleted) {
   ASSERT_NE(shading_begin, std::string::npos);
   const auto revealed_begin = flat_mask.find("vec3 apply_visibility_revealed(");
   ASSERT_NE(revealed_begin, std::string::npos);
-  EXPECT_EQ(flat_mask.find("discard", shading_begin, revealed_begin - shading_begin),
-            std::string::npos)
+  ASSERT_LT(shading_begin, revealed_begin);
+  const auto world_shading =
+      flat_mask.substr(shading_begin, revealed_begin - shading_begin);
+  EXPECT_EQ(world_shading.find("discard"), std::string::npos)
       << "world shading darkens what the player has not explored; a discard there "
          "deletes the landscape and leaves the explored area floating on nothing";
 
