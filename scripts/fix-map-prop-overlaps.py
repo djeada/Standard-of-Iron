@@ -660,6 +660,13 @@ def make_structure(key: str, structure: dict, path_name: str) -> Placeable:
     A ring is laid across whatever ground it has to hold and a gateway is a hole
     in it for a road to run through, so walls are checked against other bodies
     but never against roads or hill rims.
+
+    A building's ``rotation`` is in **degrees**, unlike a prop's: the engine reads
+    it as `rotation_y` and works in degrees throughout -- `fmod(rotation_y, 90)`
+    in component_gameplay.h, `rotation_y / 90` in wall_plan_service.cpp,
+    `* pi / 180` in production_system.cpp. Every non-zero structure rotation in
+    `assets/maps` is 90 or a multiple of it, and reading 90 as radians turned a
+    quarter turn into 116 degrees and mis-sized the body it measured.
     """
     body_type = str(structure.get("type", ""))
     priority = STRUCTURE_PRIORITY.get(body_type, STRUCTURE_PRIORITY_DEFAULT)
@@ -700,7 +707,9 @@ def make_structure(key: str, structure: dict, path_name: str) -> Placeable:
 
     width, depth = axis_aligned_body(
         BUILDING_BODIES.get(body_type, BUILDING_BODY_DEFAULT),
-        float(structure.get("facing", structure.get("rotation", 0.0)) or 0.0),
+        math.radians(
+            float(structure.get("facing", structure.get("rotation", 0.0)) or 0.0)
+        ),
     )
     return Placeable(
         key=key,
