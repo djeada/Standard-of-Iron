@@ -666,10 +666,10 @@ of an obstacle and hands out a shortcut through a wall that has no gap in it.
 ### One clearance for every hard walkability test
 
 A formation carries two radii. `formation_navigation_clearance()` is the lateral
-half-extent of the whole body (3 m or more for a wide line) and is what A* *costs*
+half-extent of the whole body (3 m or more for a wide line) and is what A* _costs_
 against: cells within that distance of an obstacle get an overlap penalty so a wide
 body prefers the middle of a street. `Pathfinding::routing_clearance()` (the same
-value capped at `k_person_body_radius`, 0.34 m) is what A* *blocks* against: a cell is
+value capped at `k_person_body_radius`, 0.34 m) is what A* _blocks_ against: a cell is
 open when one man fits, and the lane fitter folds the formation into whatever width
 the corridor actually has.
 
