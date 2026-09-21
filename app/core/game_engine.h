@@ -473,6 +473,7 @@ private:
     QString kind;
     QString reference;
     QVariantList player_configs;
+    QString difficulty;
   };
   void arm_replay_for_started_match();
   void finish_replay_verification_if_done();
@@ -485,7 +486,11 @@ private:
                                const QVariantList& player_configs,
                                bool set_skirmish_context);
   void apply_skirmish_commander_setup(const QVariantList& player_configs);
-  void apply_mission_setup();
+  [[nodiscard]] auto resolve_match_difficulty(const QVariantList& player_configs) const
+      -> Game::Mission::MatchDifficulty;
+
+  Game::Mission::MatchDifficulty m_match_difficulty;
+  void apply_mission_setup(const Game::Mission::MatchDifficulty& difficulty);
   void prepare_mission_ai_state();
   [[nodiscard]] auto mission_startup_pending_components() const -> QStringList;
   void configure_mission_victory_conditions();

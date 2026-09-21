@@ -33,6 +33,8 @@ namespace App::Core {
 
 struct SkirmishLoadResult {
   bool ok = false;
+
+  QVariantList resolved_player_configs;
   QString map_name;
   QString error_message;
   Engine::Core::EntityID player_unit_id = 0;

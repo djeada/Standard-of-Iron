@@ -273,7 +273,7 @@ public:
   [[nodiscard]] auto registry() noexcept -> Registry& { return m_registry; }
   [[nodiscard]] auto registry() const noexcept -> const Registry& { return m_registry; }
 
-  using EntityDestroyedHook = void (*)(EntityID);
+  using EntityDestroyedHook = void (*)(World&, EntityID);
   static void set_entity_destroyed_hook(EntityDestroyedHook hook);
 
   ObserverHandle add_component_observer(ComponentObserverCallback callback);

@@ -26,8 +26,8 @@ Rectangle {
     property string command_banner_text: is_player_carthaginian ? qsTr("Carthaginian High Command") : qsTr("Roman High Command")
     readonly property int base_casualty_forecast: 420
     readonly property int casualty_per_difficulty_step: 95
-    readonly property int tactical_rating_min: 1
-    readonly property int tactical_rating_max: 5
+    readonly property int tactical_rating_min: ScenarioChallenge.minRating
+    readonly property int tactical_rating_max: ScenarioChallenge.maxRating
     property string tactical_rating: calculate_tactical_rating()
     property string casualty_forecast: calculate_casualty_forecast()
     property string success_estimate: calculate_success_estimate()
@@ -36,6 +36,9 @@ Rectangle {
     property var opposing_forces: mission_definition && mission_definition.ai_setups ? mission_definition.ai_setups : []
 
     readonly property var speed_options: GameSpeeds.options
+
+    property string difficulty_id: (typeof game !== "undefined" && game.setup) ? game.setup.preferred_difficulty : DifficultyCatalog.defaultId
+    property var difficulty_presets: (typeof game !== "undefined" && game.setup) ? game.setup.difficulty_presets : []
 
     signal start_mission_clicked
 
@@ -140,9 +143,7 @@ Rectangle {
     }
 
     function calculate_tactical_rating() {
-        if (!mission_data || !mission_data.difficulty_modifier)
-            return Design.Numerals.roman(3) + "/" + Design.Numerals.roman(tactical_rating_max);
-        return Design.Numerals.roman(Math.min(tactical_rating_max, Math.max(tactical_rating_min, Math.round(mission_data.difficulty_modifier)))) + "/" + Design.Numerals.roman(tactical_rating_max);
+        return ScenarioChallenge.roman_rating(mission_data ? mission_data.difficulty_modifier : 0);
     }
 
     function calculate_casualty_forecast() {
@@ -231,6 +232,36 @@ Rectangle {
 
                     RowLayout {
                         spacing: Theme.spacingSmall
+
+                        Rectangle {
+                            Layout.preferredHeight: 24
+                            Layout.preferredWidth: difficulty_badge.implicitWidth + Theme.spacingMedium
+                            radius: Theme.radiusSmall
+                            color: Theme.cardBaseB
+                            border.color: DifficultyCatalog.accent_for(root.difficulty_id)
+                            border.width: 1
+
+                            DifficultyBadge {
+                                id: difficulty_badge
+
+                                anchors.centerIn: parent
+                                difficulty_id: root.difficulty_id
+                                presets: root.difficulty_presets
+                                icon_size: Design.Metrics.iconSmall
+                            }
+
+                            ToolTip.visible: difficulty_hover.containsMouse
+                            ToolTip.delay: Design.Metrics.tooltipDelay
+                            ToolTip.text: DifficultyCatalog.summary_for(root.difficulty_presets, root.difficulty_id)
+
+                            MouseArea {
+                                id: difficulty_hover
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                acceptedButtons: Qt.NoButton
+                            }
+                        }
 
                         Rectangle {
                             Layout.preferredHeight: 24

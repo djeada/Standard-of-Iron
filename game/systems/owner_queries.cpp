@@ -13,4 +13,11 @@ auto troop_count_for(const Engine::Core::World& world, int owner_id) -> int {
   return counts.get_troop_count(owner_id);
 }
 
+auto authoritative_troop_count_for(const Engine::Core::World& world,
+                                   int owner_id) -> int {
+  auto& counts = *Game::Session::services_for(world).troop_counts;
+  counts.rebuild_from_world(world);
+  return counts.get_troop_count(owner_id);
+}
+
 } // namespace Game::Systems

@@ -37,6 +37,8 @@ public:
 
   void refresh(const World& world);
 
+  void invalidate() noexcept { m_built_for_tick = 0; }
+
   void rebuild(const World& world);
 
   void clear();

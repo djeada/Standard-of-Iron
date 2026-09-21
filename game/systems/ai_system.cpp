@@ -116,8 +116,8 @@ void AISystem::reinitialize() {
 auto AISystem::submit_decision_job(AIInstance& ai,
                                    Engine::Core::World& world,
                                    float delta_time) -> bool {
-  AI::AISnapshot snapshot =
-      Game::Systems::AI::AISnapshotBuilder::build(world, ai.context.player_id);
+  AI::AISnapshot snapshot = Game::Systems::AI::AISnapshotBuilder::build(
+      world, ai.context.player_id, &ai.known_objectives);
   snapshot.game_time = m_total_game_time;
   ++m_snapshot_build_count;
 
@@ -261,7 +261,12 @@ auto AISystem::ai_player_state(int player_id) const -> AIPlayerState {
             .aggression_modifier = config.aggression_modifier,
             .defense_modifier = config.defense_modifier,
             .proactive_attack_size = config.proactive_attack_size,
-            .reactive_attack_size = config.reactive_attack_size};
+            .reactive_attack_size = config.reactive_attack_size,
+            .difficulty_level = config.difficulty.level,
+            .update_interval_multiplier = config.difficulty.update_interval_multiplier,
+            .production_rate_multiplier = config.difficulty.production_rate_multiplier,
+            .scouting_distance_multiplier =
+                config.difficulty.scouting_distance_multiplier};
   }
   return {};
 }
@@ -277,6 +282,20 @@ auto AISystem::serialize_state() const -> QJsonObject {
     entry["player_id"] = ai.context.player_id;
     entry["update_timer"] = static_cast<double>(ai.update_timer);
     entry["state"] = static_cast<int>(ai.context.state);
+
+    const auto& config = ai.context.strategy_config;
+    QJsonObject profile;
+    profile["strategy"] = AI::AIStrategyFactory::strategy_to_string(config.strategy);
+    profile["posture"] = AI::AIStrategyFactory::posture_to_string(config.posture);
+    profile["aggression"] = static_cast<double>(config.personality.aggression);
+    profile["defense"] = static_cast<double>(config.personality.defense);
+    profile["harassment"] = static_cast<double>(config.personality.harassment);
+    profile["difficulty"] = config.difficulty.level;
+    if (config.doctrine != nullptr) {
+      profile["doctrine"] = QString::fromStdString(config.doctrine->id);
+    }
+    entry["profile"] = profile;
+
     players.append(entry);
   }
   state["players"] = players;
@@ -301,6 +320,27 @@ void AISystem::restore_state(const QJsonObject& state) {
       ai.update_timer = static_cast<float>(entry.value("update_timer").toDouble(0.0));
       ai.context.state = static_cast<AI::AIState>(
           entry.value("state").toInt(static_cast<int>(AI::AIState::Idle)));
+
+      if (entry.contains("profile")) {
+        const auto saved = entry.value("profile").toObject();
+        AI::AIPlayerProfile profile;
+        profile.strategy =
+            AI::AIStrategyFactory::parse_strategy(saved.value("strategy").toString());
+        profile.posture = AI::AIStrategyFactory::parse_posture(
+            saved.value("posture").toString(), AI::AIPosture::Field);
+        profile.personality.aggression =
+            static_cast<float>(saved.value("aggression").toDouble(0.5));
+        profile.personality.defense =
+            static_cast<float>(saved.value("defense").toDouble(0.5));
+        profile.personality.harassment =
+            static_cast<float>(saved.value("harassment").toDouble(0.5));
+        profile.difficulty = saved.value("difficulty").toString();
+        const QString doctrine_id = saved.value("doctrine").toString();
+        if (!doctrine_id.isEmpty()) {
+          profile.doctrine = AI::authored_doctrine(doctrine_id.toStdString());
+        }
+        ai.context.strategy_config = AI::AIStrategyFactory::create_config(profile);
+      }
       break;
     }
   }

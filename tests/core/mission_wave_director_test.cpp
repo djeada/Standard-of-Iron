@@ -342,6 +342,39 @@ TEST(MissionWaveDirectorTest, SavedStateSurvivesARoundTrip) {
   EXPECT_TRUE(restored.advance().waves_to_spawn.empty());
 }
 
+TEST(MissionWaveDirectorTest, AnUnspawnedWaveKeepsTheCompositionItWasSavedWith) {
+  Engine::Core::World world;
+  std::vector<PendingMissionWave> waves{make_wave("roman", 1, 10.0F),
+                                        make_wave("roman", 2, 20.0F)};
+  set_phase_count(waves, 2);
+
+  waves[1].composition[0].count = 8;
+  waves[1].baseline_composition = waves[1].composition;
+  waves[1].baseline_composition[0].count = 4;
+
+  MissionWaveDirector director;
+  director.bind(&waves, &world);
+  director.set_elapsed(10.0F);
+  (void)director.advance();
+  (void)spawn_into(director, world, 0, 4);
+  const QJsonObject saved = director.serialize();
+
+  std::vector<PendingMissionWave> restored_waves{make_wave("roman", 1, 10.0F),
+                                                 make_wave("roman", 2, 20.0F)};
+  set_phase_count(restored_waves, 2);
+  restored_waves[1].baseline_composition = restored_waves[1].composition;
+
+  MissionWaveDirector restored;
+  restored.bind(&restored_waves, &world);
+  restored.restore(saved);
+
+  EXPECT_EQ(restored_waves[1].composition[0].count, 8)
+      << "loading a Brutal save rebuilt the coming wave at its authored size";
+  EXPECT_EQ(restored_waves[1].baseline_composition[0].count, 4)
+      << "the wave no longer knows which of its troops the preset added";
+  EXPECT_FALSE(restored_waves[1].spawned);
+}
+
 TEST(MissionWaveDirectorTest, RestoringAMismatchedLayoutLeavesTheAuthoredSchedule) {
   Engine::Core::World world;
   std::vector<PendingMissionWave> waves{make_wave("roman", 1, 10.0F)};

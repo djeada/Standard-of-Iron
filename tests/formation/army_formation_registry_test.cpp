@@ -251,6 +251,82 @@ TEST_F(ArmyFormationRegistryTest, GroupStateSurvivesASaveLoadRoundTrip) {
   }
 }
 
+TEST_F(ArmyFormationRegistryTest, AMarchingGroupKeepsItsOrderAcrossASaveLoad) {
+  Engine::Core::World world;
+  std::vector<Engine::Core::EntityID> units;
+  for (int i = 0; i < 6; ++i) {
+    units.push_back(add_unit(
+        world, Game::Units::SpawnType::Swordsman, static_cast<float>(i) - 3.0F));
+  }
+  auto const result = commit(world, units, ArmyFormationIntent::Defensive);
+  ASSERT_TRUE(result.valid);
+
+  auto& registry = ArmyFormationRegistry::instance();
+  auto* marching = registry.find(result.group_id);
+  ASSERT_NE(marching, nullptr);
+  marching->has_destination = true;
+  marching->destination = QVector3D(40.0F, 0.0F, 25.0F);
+  marching->destination_facing = 1.25F;
+  marching->advance_progress = 0.4F;
+  marching->moves_pending = true;
+  marching->move_plan.active = true;
+  marching->move_plan.corridor = {QVector3D(10.0F, 0.0F, 5.0F),
+                                  QVector3D(25.0F, 0.0F, 15.0F),
+                                  QVector3D(40.0F, 0.0F, 25.0F)};
+  marching->move_plan.corridor_index = 1U;
+  marching->move_plan.formation_center = QVector3D(9.0F, 0.0F, 4.0F);
+
+  auto const json = registry.to_json();
+  registry.clear();
+  registry.from_json(json);
+
+  const auto* after = registry.find(result.group_id);
+  ASSERT_NE(after, nullptr);
+  EXPECT_TRUE(after->has_destination) << "the group forgot where it was going";
+  EXPECT_FLOAT_EQ(after->destination.x(), 40.0F);
+  EXPECT_FLOAT_EQ(after->destination.z(), 25.0F);
+  EXPECT_FLOAT_EQ(after->destination_facing, 1.25F);
+  EXPECT_FLOAT_EQ(after->advance_progress, 0.4F);
+  EXPECT_TRUE(after->move_plan.active);
+  ASSERT_EQ(after->move_plan.corridor.size(), 3U);
+  EXPECT_FLOAT_EQ(after->move_plan.corridor[2].x(), 40.0F);
+  EXPECT_EQ(after->move_plan.corridor_index, 1U);
+  EXPECT_TRUE(after->needs_replan)
+      << "the derived movement has to be rebuilt from the restored order";
+  EXPECT_FALSE(after->morph.active) << "an in-flight morph is rebuilt, not restored";
+}
+
+TEST_F(ArmyFormationRegistryTest, AGroupWithNoOrderDoesNotComeBackWaitingOnOne) {
+  Engine::Core::World world;
+  std::vector<Engine::Core::EntityID> units;
+  for (int i = 0; i < 4; ++i) {
+    units.push_back(add_unit(
+        world, Game::Units::SpawnType::Swordsman, static_cast<float>(i) - 2.0F));
+  }
+  auto const result = commit(world, units);
+  ASSERT_TRUE(result.valid);
+
+  auto& registry = ArmyFormationRegistry::instance();
+  auto* idle = registry.find(result.group_id);
+  ASSERT_NE(idle, nullptr);
+  idle->has_destination = false;
+  idle->moves_pending = true;
+  idle->advance_progress = 0.8F;
+  idle->move_plan.active = true;
+  idle->move_plan.corridor = {QVector3D(3.0F, 0.0F, 3.0F)};
+
+  auto const json = registry.to_json();
+  registry.clear();
+  registry.from_json(json);
+
+  const auto* after = registry.find(result.group_id);
+  ASSERT_NE(after, nullptr);
+  EXPECT_FALSE(after->moves_pending)
+      << "the group waits for an arrival that nothing will ever report";
+  EXPECT_FALSE(after->move_plan.active);
+  EXPECT_FLOAT_EQ(after->advance_progress, 0.0F);
+}
+
 TEST_F(ArmyFormationRegistryTest, ReplanningKeepsUnitsInTheirExistingSlots) {
   Engine::Core::World world;
   std::vector<Engine::Core::EntityID> units;

@@ -174,6 +174,18 @@ Item {
         radius: Design.Metrics.radiusMedium
         width: viewport.width + Design.Metrics.space16 * 2
 
+        MouseArea {
+            id: pointer_guard
+
+            objectName: "formationPanelPointerGuard"
+            acceptedButtons: Qt.AllButtons
+            anchors.fill: parent
+            hoverEnabled: true
+            onWheel: function (wheel) {
+                wheel.accepted = true;
+            }
+        }
+
         Flickable {
             id: viewport
 

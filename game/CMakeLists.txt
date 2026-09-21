@@ -503,6 +503,7 @@ add_library(
     map/map_catalog.cpp
     map/mission_catalog.cpp
     mission/commander_voice_bank.cpp
+    mission/difficulty_profile.cpp
     mission/mission_commander_setup.cpp
     mission/mission_definition_view.cpp
     mission/tutorial_director.cpp
@@ -595,10 +596,12 @@ add_library(
     mission/commander_message_director.cpp
     mission/commander_speaker_roster.cpp
     mission/commander_voice_observer.cpp
+    mission/difficulty_forces.cpp
     mission/mission_setup_coordinator.cpp
     mission/mission_wave_director.cpp
     mission/mission_wave_runtime.cpp
     mission/mission_waves.cpp
+    mission/spawn_placement.cpp
 )
 target_include_directories(soi_mission_runtime PUBLIC .)
 target_link_libraries(soi_mission_runtime PUBLIC soi_missions soi_persistence soi_ai)

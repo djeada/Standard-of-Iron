@@ -11,6 +11,7 @@
 #include "app/core/entity_cache.h"
 #include "app/input/cursor_mode.h"
 #include "game/map/mission_context.h"
+#include "game/mission/difficulty_profile.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/save_format.h"
 
@@ -69,6 +70,8 @@ struct SaveToSlotContext {
   QString map_name;
   std::optional<Game::Mission::MissionContext> mission_context;
 
+  const Game::Mission::MatchDifficulty* difficulty = nullptr;
+
   QString mission_title;
   Game::Systems::Save::SlotKind kind = Game::Systems::Save::SlotKind::Manual;
   double play_time_seconds = 0.0;
@@ -109,6 +112,9 @@ struct LoadFromSlotContext {
 
 struct LoadFromSlotEffects {
   bool success = false;
+
+  Game::Mission::MatchDifficulty match_difficulty;
+
   bool emit_selected_units_changed = false;
   bool emit_owner_info_changed = false;
   QString error;

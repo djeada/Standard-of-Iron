@@ -265,6 +265,56 @@ void ArmyFormationRegistry::remove_group(FormationGroupID id) {
   m_groups.erase(it);
 }
 
+auto ArmyFormationRegistry::replace_members(
+    FormationGroupID id, std::vector<EntityID> members) -> std::vector<EntityID> {
+  auto* formation = find(id);
+  if (formation == nullptr) {
+    return {};
+  }
+
+  std::vector<EntityID> dropped;
+  for (auto const previous : formation->members) {
+    if (std::find(members.begin(), members.end(), previous) == members.end()) {
+      dropped.push_back(previous);
+    }
+  }
+
+  for (auto const member : dropped) {
+    auto membership = m_membership.find(member);
+    if (membership != m_membership.end() && membership->second == id) {
+      m_membership.erase(membership);
+    }
+    for (auto& slot : formation->slot_list) {
+      if (slot.occupant == member) {
+        slot.occupant = 0U;
+      }
+    }
+  }
+
+  for (auto const member : members) {
+    auto existing = m_membership.find(member);
+    if (existing != m_membership.end() && existing->second != id) {
+      auto group = m_groups.find(existing->second);
+      if (group != m_groups.end()) {
+        auto& list = group->second.members;
+        list.erase(std::remove(list.begin(), list.end(), member), list.end());
+        group->second.needs_replan = true;
+      }
+    }
+    m_membership[member] = id;
+  }
+
+  formation->members = std::move(members);
+  formation->needs_replan = true;
+  return dropped;
+}
+
+auto ArmyFormationRegistry::members_of(FormationGroupID id) const
+    -> std::vector<EntityID> {
+  const auto* formation = find(id);
+  return formation == nullptr ? std::vector<EntityID>{} : formation->members;
+}
+
 auto ArmyFormationRegistry::add_member(FormationGroupID id, EntityID entity) -> bool {
   auto* formation = find(id);
   if (formation == nullptr) {
@@ -386,6 +436,24 @@ auto ArmyFormationRegistry::to_json() const -> QJsonObject {
     obj["destination_facing"] = static_cast<double>(formation->destination_facing);
     obj["compressed"] = formation->compressed;
 
+    obj["has_destination"] = formation->has_destination;
+    obj["destination"] = vector_to_json(formation->destination);
+    obj["advance_progress"] = static_cast<double>(formation->advance_progress);
+
+    QJsonObject move_plan;
+    move_plan["active"] = formation->move_plan.active;
+    move_plan["corridor_index"] =
+        static_cast<qint64>(formation->move_plan.corridor_index);
+    move_plan["center"] = vector_to_json(formation->move_plan.formation_center);
+    move_plan["facing_direction"] =
+        vector_to_json(formation->move_plan.facing_direction);
+    QJsonArray corridor;
+    for (const auto& waypoint : formation->move_plan.corridor) {
+      corridor.append(vector_to_json(waypoint));
+    }
+    move_plan["corridor"] = corridor;
+    obj["move_plan"] = move_plan;
+
     QJsonArray members;
     for (auto const member : formation->members) {
       members.append(static_cast<qint64>(member));
@@ -444,6 +512,25 @@ void ArmyFormationRegistry::from_json(const QJsonObject& root) {
         obj["destination_facing"].toDouble(static_cast<double>(formation.facing)));
     formation.compressed = obj["compressed"].toBool(false);
 
+    formation.has_destination = obj["has_destination"].toBool(false);
+    formation.destination = vector_from_json(obj["destination"].toArray());
+    formation.advance_progress =
+        static_cast<float>(obj["advance_progress"].toDouble(0.0));
+
+    const auto move_plan = obj["move_plan"].toObject();
+    formation.move_plan.active = move_plan["active"].toBool(false);
+    formation.move_plan.corridor_index =
+        static_cast<std::size_t>(move_plan["corridor_index"].toVariant().toULongLong());
+    formation.move_plan.formation_center =
+        vector_from_json(move_plan["center"].toArray());
+    if (move_plan.contains("facing_direction")) {
+      formation.move_plan.facing_direction =
+          vector_from_json(move_plan["facing_direction"].toArray());
+    }
+    for (const auto waypoint : move_plan["corridor"].toArray()) {
+      formation.move_plan.corridor.push_back(vector_from_json(waypoint.toArray()));
+    }
+
     for (const auto member : obj["members"].toArray()) {
       formation.members.push_back(
           static_cast<EntityID>(member.toVariant().toULongLong()));
@@ -458,6 +545,16 @@ void ArmyFormationRegistry::from_json(const QJsonObject& root) {
     if (formation.id == k_invalid_group) {
       continue;
     }
+
+    formation.morph.clear();
+    if (!formation.has_destination) {
+      formation.moves_pending = false;
+      formation.move_plan.clear();
+      formation.advance_progress = 0.0F;
+    } else {
+      formation.needs_replan = true;
+    }
+
     auto const id = formation.id;
     m_groups.emplace(id, std::move(formation));
     reindex_membership(m_groups.at(id));
@@ -831,7 +928,8 @@ auto ArmyFormationRuntime::damage_taken_multiplier(const Engine::Core::Entity& e
     return 1.0F;
   }
   const auto* formation = ArmyFormationRegistry::instance().find(membership->group_id);
-  if (formation == nullptr) {
+
+  if (formation == nullptr || !formation->has_member(entity.get_id())) {
     return 1.0F;
   }
 
@@ -858,8 +956,9 @@ auto ArmyFormationRuntime::move_speed_multiplier(const Engine::Core::Entity& ent
     return 1.0F;
   }
   const auto* formation = ArmyFormationRegistry::instance().find(membership->group_id);
-  if (formation == nullptr || !formation->maintains_formation() ||
-      formation->morph.active || !formation->move_plan.active) {
+  if (formation == nullptr || !formation->has_member(entity.get_id()) ||
+      !formation->maintains_formation() || formation->morph.active ||
+      !formation->move_plan.active) {
     return 1.0F;
   }
   const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
@@ -1239,18 +1338,28 @@ void ArmyFormationRuntime::sync_membership_components(Engine::Core::World& world
   }
 }
 
-void ArmyFormationRuntime::detach(Engine::Core::World& world, EntityID entity) {
-  ArmyFormationRegistry::instance().remove_member(entity);
-  auto* target = world.get_entity(entity);
-  if (target == nullptr) {
-    return;
-  }
+void ArmyFormationRuntime::clear_membership_component(Engine::Core::World& world,
+                                                      EntityID entity) {
   auto* membership =
-      target->get_component<Engine::Core::ArmyFormationMembershipComponent>();
+      world.try_get<Engine::Core::ArmyFormationMembershipComponent>(entity);
   if (membership != nullptr) {
     membership->group_id = 0U;
     membership->slot_id = k_invalid_slot;
   }
+}
+
+void ArmyFormationRuntime::disband(Engine::Core::World& world, FormationGroupID id) {
+  auto& registry = ArmyFormationRegistry::for_world(world);
+
+  for (auto const member : registry.members_of(id)) {
+    clear_membership_component(world, member);
+  }
+  registry.remove_group(id);
+}
+
+void ArmyFormationRuntime::detach(Engine::Core::World& world, EntityID entity) {
+  ArmyFormationRegistry::instance().remove_member(entity);
+  clear_membership_component(world, entity);
 }
 
 auto ArmyFormationRuntime::replan(Engine::Core::World& world,

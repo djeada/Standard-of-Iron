@@ -121,6 +121,8 @@
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/mission/campaign_manager.h"
+#include "game/mission/difficulty_forces.h"
+#include "game/mission/difficulty_profile.h"
 #include "game/mission/mission_commander_setup.h"
 #include "game/mission/mission_definition_view.h"
 #include "game/mission/mission_setup_coordinator.h"
@@ -1599,10 +1601,15 @@ auto GameEngine::start_replay(const QString& path) -> bool {
   }
   const Game::Command::ReplayHeader header = file->header;
   m_pending_replay = std::move(file);
+
+  const QString replay_difficulty = Game::Mission::normalize_difficulty_id(
+      header.launch.value(QLatin1String("difficulty")).toString());
   if (header.kind == QLatin1String("campaign-mission")) {
-    m_match_setup_view_model->start_campaign_mission(header.reference);
+    m_match_setup_view_model->start_campaign_mission(
+        header.reference, replay_difficulty, false);
   } else if (header.kind == QLatin1String("mission-file")) {
-    m_match_setup_view_model->start_mission_file(header.reference);
+    m_match_setup_view_model->start_mission_file(
+        header.reference, replay_difficulty, false);
   } else if (header.kind == QLatin1String("skirmish")) {
     m_match_setup_view_model->start_skirmish(
         header.reference,
@@ -1637,6 +1644,7 @@ void GameEngine::arm_replay_for_started_match() {
   header.reference = m_replay_launch.reference;
   header.launch["player_configs"] =
       QJsonArray::fromVariantList(m_replay_launch.player_configs);
+  header.launch["difficulty"] = m_replay_launch.difficulty;
   header.tick_seconds = m_session->clock().tick_seconds();
   header.rng_seed = m_session->rng_seed();
   auto recorder = std::make_unique<Game::Command::ReplayRecorder>();
@@ -1786,6 +1794,22 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
     m_runtime.local_owner_id = load_effects.updated_player_id;
     publish_client_context();
     m_audio_coordinator->configure_audio_manifest_mappings(m_runtime.local_owner_id);
+
+    m_match_difficulty =
+        resolve_match_difficulty(load_effects.resolved_player_configs.isEmpty()
+                                     ? player_configs
+                                     : load_effects.resolved_player_configs);
+    const Game::Mission::MatchDifficulty& difficulty = m_match_difficulty;
+    {
+      const Engine::Core::ScopedStartupPhase phase("mission.difficulty_forces");
+      const auto forces = Game::Mission::apply_starting_force_difficulty(
+          *m_world, difficulty, m_runtime.local_owner_id);
+      if (forces.units_added != 0 || forces.units_withdrawn != 0) {
+        qInfo() << "Difficulty:" << difficulty.baseline_id() << "reinforced"
+                << forces.owners_scaled << "opponent(s) by" << forces.units_added
+                << "unit(s) and withdrew" << forces.units_withdrawn;
+      }
+    }
     const Game::Mission::MissionDefinition* mission_def = nullptr;
     if (m_campaign_manager &&
         m_campaign_manager->current_mission_definition().has_value()) {
@@ -1809,10 +1833,13 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
     }
     {
       const Engine::Core::ScopedStartupPhase phase("mission.setup");
-      apply_mission_setup();
+      apply_mission_setup(difficulty);
     }
-    m_skirmish_runtime->initialize_player_resources(
-        {*m_session, m_level, m_runtime.local_owner_id, authored_mission_def});
+    m_skirmish_runtime->initialize_player_resources({*m_session,
+                                                     m_level,
+                                                     m_runtime.local_owner_id,
+                                                     authored_mission_def,
+                                                     &difficulty});
     configure_mission_victory_conditions();
 
     publish_mission_stages();
@@ -1889,7 +1916,30 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
   });
 }
 
-void GameEngine::apply_mission_setup() {
+auto GameEngine::resolve_match_difficulty(const QVariantList& player_configs) const
+    -> Game::Mission::MatchDifficulty {
+  Game::Mission::MatchDifficulty difficulty;
+  if (m_campaign_manager != nullptr &&
+      m_campaign_manager->current_mission_context().has_mission()) {
+    difficulty.set_baseline(m_campaign_manager->current_mission_context().difficulty);
+    return difficulty;
+  }
+
+  for (const QVariant& config_value : player_configs) {
+    const QVariantMap config = config_value.toMap();
+    if (config.value(QStringLiteral("isHuman"), false).toBool()) {
+      continue;
+    }
+    const QString id = config.value(QStringLiteral("difficulty")).toString();
+    if (id.isEmpty()) {
+      continue;
+    }
+    difficulty.set_owner(config.value(QStringLiteral("player_id"), -1).toInt(), id);
+  }
+  return difficulty;
+}
+
+void GameEngine::apply_mission_setup(const Game::Mission::MatchDifficulty& difficulty) {
   if (!m_world || !m_campaign_manager || !m_mission_setup || !m_skirmish_runtime) {
     return;
   }
@@ -1900,7 +1950,8 @@ void GameEngine::apply_mission_setup() {
                                                        m_level,
                                                        m_selected_player_id,
                                                        m_runtime.local_owner_id,
-                                                       waves});
+                                                       waves,
+                                                       &difficulty});
   std::vector<Game::Mission::PendingMissionEvent> events;
   if (m_campaign_manager->current_mission_definition().has_value()) {
     events = Game::Mission::build_pending_mission_events(
@@ -2869,6 +2920,7 @@ auto GameEngine::capture_save_to_slot(const QString& slot_name,
        .title = slot_name,
        .map_name = m_level.map_name,
        .mission_context = std::move(mission_context),
+       .difficulty = &m_match_difficulty,
        .mission_title = mission_title,
        .kind = kind,
        .play_time_seconds = m_mission_waves.elapsed(),
@@ -3034,6 +3086,9 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
                [this](const QJsonObject& message_state) {
                  restore_commander_message_state(message_state);
                }});
+  if (effects.success) {
+    m_match_difficulty = effects.match_difficulty;
+  }
   if (effects.success && !effects.warning.isEmpty()) {
 
     emit m_save_slots_view_model->save_completed(slot_name, false, effects.warning);
@@ -3621,7 +3676,8 @@ auto GameEngine::orders_view_model() const -> QObject* {
 void GameEngine::launch_match(const App::Core::MatchLaunch& launch) {
   clear_error();
   set_game_speed(App::Core::GameSpeed::k_default);
-  m_replay_launch = {launch.kind, launch.reference, launch.player_configs};
+  m_replay_launch = {
+      launch.kind, launch.reference, launch.player_configs, launch.difficulty};
   start_skirmish_internal(
       launch.map_path, launch.player_configs, launch.set_skirmish_context);
 }

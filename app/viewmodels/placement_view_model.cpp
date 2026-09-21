@@ -113,6 +113,14 @@ void PlacementViewModel::publish_frame() {
   const auto previous = m_readout.read();
   const bool formation_changed =
       !previous || previous->placing_formation != readout.placing_formation;
+
+  const bool formation_readout_changed =
+      !previous || previous->formation_intent != readout.formation_intent ||
+      previous->formation_intents != readout.formation_intents ||
+      previous->dragging_formation != readout.dragging_formation ||
+      previous->formation_doctrine_options != readout.formation_doctrine_options ||
+      previous->formation_options != readout.formation_options ||
+      previous->selected_formation_status != readout.selected_formation_status;
   const bool construction_changed =
       !previous || previous->placing_construction != readout.placing_construction;
   const bool preview_active_changed =
@@ -125,6 +133,10 @@ void PlacementViewModel::publish_frame() {
 
   if (formation_changed) {
     emit placing_formation_changed();
+  }
+
+  if (formation_readout_changed) {
+    emit formation_options_changed();
   }
   if (construction_changed) {
     emit placing_construction_changed();

@@ -95,6 +95,11 @@ public:
     float defense_modifier = 0.0F;
     int proactive_attack_size = 0;
     int reactive_attack_size = 0;
+
+    QString difficulty_level;
+    float update_interval_multiplier = 1.0F;
+    float production_rate_multiplier = 1.0F;
+    float scouting_distance_multiplier = 1.0F;
   };
 
   [[nodiscard]] auto ai_player_state(int player_id) const -> AIPlayerState;
@@ -116,6 +121,8 @@ private:
     std::uint64_t job_due_update = 0;
 
     std::unordered_map<Engine::Core::EntityID, float> unmerged_building_attacks;
+
+    AI::KnownObjectives known_objectives;
   };
 
   static constexpr std::uint64_t k_decision_latency_updates = 6;

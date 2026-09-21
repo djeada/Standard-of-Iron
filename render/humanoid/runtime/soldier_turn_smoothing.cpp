@@ -53,6 +53,11 @@ constexpr float k_relocate_travel_speed = 0.3F;
   return t * t * (3.0F - 2.0F * t);
 }
 
+[[nodiscard]] auto
+blend_degrees(float from_degrees, float to_degrees, float amount) -> float {
+  return wrap_degrees(from_degrees + wrap_degrees(to_degrees - from_degrees) * amount);
+}
+
 } // namespace
 
 auto soldier_turn_variation(std::uint32_t seed,
@@ -134,7 +139,11 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
   float const center_distance =
       std::hypot(inputs.formation_center_x - state.formation_center_x,
                  inputs.formation_center_z - state.formation_center_z);
-  bool const must_snap = !state.valid || center_distance > inputs.snap_distance;
+
+  float const slot_step =
+      std::hypot(inputs.target_x - state.slot_x, inputs.target_z - state.slot_z);
+  bool const must_snap = !state.valid || center_distance > inputs.snap_distance ||
+                         slot_step > inputs.snap_distance;
   if (must_snap) {
     state.world_x = inputs.target_x;
     state.world_z = inputs.target_z;
@@ -279,7 +288,10 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
       state.turn_pending && state.turn_delay_remaining > 0.0F;
   bool const face_travel = inputs.allow_travel_yaw && !awaiting_turn_response &&
                            result.relocating && result.travel_speed > 0.3F;
-  float const yaw_target = face_travel ? travel_yaw : state.facing_yaw_degrees;
+
+  float const travel_facing =
+      blend_degrees(travel_yaw, state.facing_yaw_degrees, wheel_amount);
+  float const yaw_target = face_travel ? travel_facing : state.facing_yaw_degrees;
   state.body_yaw_degrees = turn_toward(
       state.body_yaw_degrees, yaw_target, inputs.turn_rate_degrees * inputs.dt);
   if (state.turn_pending && state.turn_delay_remaining <= 0.0F &&

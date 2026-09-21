@@ -26,7 +26,9 @@ Item {
         return count;
     }
 
-    signal mission_chosen(string file_path)
+    property string selected_difficulty: (typeof game !== "undefined" && game.setup) ? game.setup.preferred_difficulty : DifficultyCatalog.defaultId
+
+    signal mission_chosen(string file_path, string difficulty)
     signal cancelled
 
     function refresh_missions() {
@@ -137,7 +139,7 @@ Item {
     function start_selected() {
         if (!root.selected || !root.selected.file_path)
             return;
-        root.mission_chosen(String(root.selected.file_path));
+        root.mission_chosen(String(root.selected.file_path), root.selected_difficulty);
     }
 
     anchors.fill: parent
@@ -818,6 +820,16 @@ Item {
                                     width: Math.max(0, briefing_scroll.width - briefing_scroll.gutter)
                                     spacing: Design.Metrics.space12
 
+                                    DifficultySelector {
+                                        objectName: "missionDifficultySelector"
+                                        Layout.fillWidth: true
+                                        compact: true
+                                        selected_id: root.selected_difficulty
+                                        onChosen: function (difficulty_id) {
+                                            root.selected_difficulty = difficulty_id;
+                                        }
+                                    }
+
                                     Rectangle {
                                         Layout.fillWidth: true
                                         implicitHeight: summary_column.implicitHeight + Design.Metrics.space16
@@ -1037,6 +1049,13 @@ Item {
                                     font.family: Design.Typography.family
                                     font.pixelSize: Design.Typography.caption
                                 }
+                            }
+
+                            DifficultyBadge {
+                                objectName: "missionDifficultyBadge"
+                                difficulty_id: root.selected_difficulty
+                                presets: (typeof game !== "undefined" && game.setup) ? game.setup.difficulty_presets : []
+                                icon_size: Design.Metrics.iconSmall
                             }
 
                             Item {

@@ -43,6 +43,7 @@ inline constexpr char kUiEconomyCoachKey[] = "ui/economy_coach";
 inline constexpr char kUiFormationHintsKey[] = "ui/formation_hints";
 inline constexpr char kUiCameraLegendSeenKey[] = "ui/camera_legend_seen";
 inline constexpr char kUiTutorialCompletedKey[] = "ui/tutorial_completed";
+inline constexpr char kMatchDifficultyKey[] = "match/difficulty";
 inline constexpr char kDisplayWindowModeKey[] = "display/window_mode";
 inline constexpr char kDisplayVsyncKey[] = "display/vsync";
 inline constexpr char kUiShowFpsKey[] = "ui/show_fps";
@@ -169,6 +170,29 @@ inline void save_language(const QString& language) {
 
   auto settings = open();
   settings.setValue(QString::fromLatin1(kLanguageKey), normalized);
+  settings.sync();
+}
+
+inline auto load_match_difficulty() -> std::optional<QString> {
+  auto settings = open();
+  const QString difficulty =
+      settings.value(QString::fromLatin1(kMatchDifficultyKey)).toString().trimmed();
+  if (difficulty.isEmpty()) {
+    return std::nullopt;
+  }
+
+  return difficulty;
+}
+
+inline void save_match_difficulty(const QString& difficulty) {
+  const QString normalized = difficulty.trimmed();
+  if (normalized.isEmpty()) {
+    qWarning() << "Refusing to save empty difficulty id";
+    return;
+  }
+
+  auto settings = open();
+  settings.setValue(QString::fromLatin1(kMatchDifficultyKey), normalized);
   settings.sync();
 }
 

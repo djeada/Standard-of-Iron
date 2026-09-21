@@ -42,6 +42,7 @@ auto MissionLoader::parse_unit_setup(const QJsonObject& obj) -> UnitSetup {
   unit.position = parse_position(obj["position"].toObject());
   unit.behavior = parse_unit_behavior(obj["behavior"].toString());
   unit.guard_radius = static_cast<float>(obj["guard_radius"].toDouble(10.0));
+  unit.difficulty_scaling = obj["difficulty_scaling"].toBool(true);
 
   const QJsonArray patrol_waypoints = obj["patrol_waypoints"].toArray();
   for (const auto waypoint_val : patrol_waypoints) {
@@ -80,6 +81,9 @@ auto MissionLoader::parse_player_setup(const QJsonObject& obj) -> PlayerSetup {
   setup.nation = obj["nation"].toString();
   setup.faction = obj["faction"].toString();
   setup.color = obj["color"].toString();
+  if (obj.contains("team_id")) {
+    setup.team_id = obj["team_id"].toInt();
+  }
   warn_on_authored_commander(obj, QStringLiteral("player_setup"));
 
   const QJsonArray units = obj["starting_units"].toArray();
@@ -164,6 +168,7 @@ auto MissionLoader::parse_ai_setup(const QJsonObject& obj) -> AISetup {
   setup.faction = obj["faction"].toString();
   setup.color = obj["color"].toString();
   setup.difficulty = obj["difficulty"].toString();
+  setup.difficulty_scaling = obj["difficulty_scaling"].toBool(true);
   warn_on_authored_commander(obj, setup.id);
 
   if (obj.contains("team_id")) {

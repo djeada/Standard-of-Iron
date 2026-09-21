@@ -43,6 +43,11 @@ class MatchSetupViewModel : public QObject {
   Q_PROPERTY(bool can_restart READ can_restart NOTIFY can_restart_changed)
   Q_PROPERTY(int starting_gold READ starting_gold WRITE set_starting_gold NOTIFY
                  starting_gold_changed)
+  Q_PROPERTY(QVariantList difficulty_presets READ difficulty_presets CONSTANT)
+  Q_PROPERTY(QString preferred_difficulty READ preferred_difficulty WRITE
+                 set_preferred_difficulty NOTIFY preferred_difficulty_changed)
+  Q_PROPERTY(
+      QString active_difficulty READ active_difficulty NOTIFY current_mission_changed)
 
 public:
   MatchSetupViewModel(const App::Core::ClientContext& context,
@@ -63,6 +68,15 @@ public:
   [[nodiscard]] auto starting_gold() const -> int;
   void set_starting_gold(int gold);
 
+  [[nodiscard]] auto difficulty_presets() const -> QVariantList;
+  [[nodiscard]] auto preferred_difficulty() const -> QString;
+  void set_preferred_difficulty(const QString& difficulty);
+  [[nodiscard]] auto active_difficulty() const -> QString;
+  Q_INVOKABLE [[nodiscard]] QString
+  normalize_difficulty(const QString& difficulty) const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap
+  difficulty_preset(const QString& difficulty) const;
+
   Q_INVOKABLE void load_campaigns();
   Q_INVOKABLE void load_missions();
   [[nodiscard]] auto missions() const -> QVariantList;
@@ -80,8 +94,13 @@ public:
   Q_INVOKABLE bool start_observed_skirmish(const QString& map_path);
   [[nodiscard]] auto
   build_observer_player_configs(const QString& map_path) const -> QVariantList;
-  Q_INVOKABLE void start_campaign_mission(const QString& mission_path);
-  Q_INVOKABLE void start_mission_file(const QString& file_path);
+
+  Q_INVOKABLE void start_campaign_mission(const QString& mission_path,
+                                          const QString& difficulty = QString(),
+                                          bool remember_preference = true);
+  Q_INVOKABLE void start_mission_file(const QString& file_path,
+                                      const QString& difficulty = QString(),
+                                      bool remember_preference = true);
   void start_tutorial();
 
   [[nodiscard]] auto can_restart() const -> bool { return m_last_launch.has_value(); }
@@ -101,6 +120,7 @@ signals:
   void current_mission_changed();
   void starting_gold_changed();
   void can_restart_changed();
+  void preferred_difficulty_changed();
 
   void launch_requested(const App::Core::MatchLaunch& launch);
 
@@ -112,6 +132,7 @@ private:
     QString reference;
     QString map_path;
     QVariantList player_configs;
+    QString difficulty;
   };
 
   void launch_current_mission(const QString& kind, const QString& reference);

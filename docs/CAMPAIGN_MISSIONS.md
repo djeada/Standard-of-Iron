@@ -67,9 +67,18 @@ Wildlife is authored per map rather than inherited from a derived default. Each 
 
 The campaign's `difficulty_modifier` rises monotonically from the Rhône to Zama. The star rating shown in the campaign list is derived from that value:
 
-`ceil((modifier - 1.0) / 0.15)`, clamped to 1–5.
+`ceil((modifier - 1.0) / 0.15)`, clamped to 1–5, with a small epsilon so a
+modifier that lands exactly on a step does not round up past it.
 
 Tune the modifier; the stars follow automatically.
+
+That formula lives in one place, `ui/qml/ScenarioChallenge.qml`. The mission
+list and the mission detail panel both ask it, so the star row and the Roman
+tactical rating always describe the same mission the same way. This is the
+scenario's _inherent_ challenge and has nothing to do with the Easy/Normal/Hard/
+Brutal preset the player picks before deploying — see
+[DIFFICULTY.md](DIFFICULTY.md). Never feed `difficulty_modifier` into a force,
+resource or wave multiplier.
 
 ## Guidance for mission tuning
 

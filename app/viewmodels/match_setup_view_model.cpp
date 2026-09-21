@@ -11,10 +11,12 @@
 #include <optional>
 
 #include "app/core/client_context.h"
+#include "app/core/user_settings.h"
 #include "game/game_config.h"
 #include "game/map/map_catalog.h"
 #include "game/map/mission_catalog.h"
 #include "game/mission/campaign_manager.h"
+#include "game/mission/difficulty_profile.h"
 #include "game/mission/mission_commander_setup.h"
 #include "game/mission/mission_definition_view.h"
 #include "game/render_bridge/minimap/map_preview_generator.h"
@@ -345,13 +347,68 @@ void MatchSetupViewModel::set_starting_gold(int gold) {
   emit starting_gold_changed();
 }
 
+auto MatchSetupViewModel::difficulty_presets() const -> QVariantList {
+  QVariantList presets;
+  for (const auto preset : Game::Mission::difficulty_presets()) {
+    const auto profile = Game::Mission::difficulty_profile_for(preset);
+    QVariantMap entry;
+    entry.insert(QStringLiteral("id"), profile.id());
+    entry.insert(QStringLiteral("resource_multiplier"), profile.resource_multiplier);
+    entry.insert(QStringLiteral("unit_multiplier"), profile.starting_unit_multiplier);
+    entry.insert(QStringLiteral("wave_multiplier"), profile.wave_multiplier);
+    entry.insert(QStringLiteral("is_baseline"), profile.is_baseline());
+    presets.append(entry);
+  }
+  return presets;
+}
+
+auto MatchSetupViewModel::difficulty_preset(const QString& difficulty) const
+    -> QVariantMap {
+  const QString wanted = Game::Mission::normalize_difficulty_id(difficulty);
+  for (const QVariant& entry : difficulty_presets()) {
+    const QVariantMap preset = entry.toMap();
+    if (preset.value(QStringLiteral("id")).toString() == wanted) {
+      return preset;
+    }
+  }
+  return {};
+}
+
+auto MatchSetupViewModel::normalize_difficulty(const QString& difficulty) const
+    -> QString {
+  return Game::Mission::normalize_difficulty_id(difficulty);
+}
+
+auto MatchSetupViewModel::preferred_difficulty() const -> QString {
+  const auto saved = App::Core::UserSettings::load_match_difficulty();
+  return Game::Mission::normalize_difficulty_id(saved.value_or(QString()));
+}
+
+void MatchSetupViewModel::set_preferred_difficulty(const QString& difficulty) {
+  const QString normalized = Game::Mission::normalize_difficulty_id(difficulty);
+  if (normalized == preferred_difficulty()) {
+    return;
+  }
+  App::Core::UserSettings::save_match_difficulty(normalized);
+  emit preferred_difficulty_changed();
+}
+
+auto MatchSetupViewModel::active_difficulty() const -> QString {
+  if (m_context.campaign == nullptr) {
+    return Game::Mission::default_difficulty_id();
+  }
+  return Game::Mission::normalize_difficulty_id(
+      m_context.campaign->current_mission_context().difficulty);
+}
+
 void MatchSetupViewModel::start_skirmish(const QString& map_path,
                                          const QVariantList& player_configs) {
   const App::Core::MatchLaunch launch{.kind = QStringLiteral("skirmish"),
                                       .reference = map_path,
                                       .map_path = map_path,
                                       .player_configs = player_configs,
-                                      .set_skirmish_context = true};
+                                      .set_skirmish_context = true,
+                                      .difficulty = QString()};
   remember_launch(launch);
   emit launch_requested(launch);
 }
@@ -411,41 +468,58 @@ auto MatchSetupViewModel::start_observed_skirmish(const QString& map_path) -> bo
   return true;
 }
 
-void MatchSetupViewModel::start_campaign_mission(const QString& mission_path) {
+void MatchSetupViewModel::start_campaign_mission(const QString& mission_path,
+                                                 const QString& difficulty,
+                                                 bool remember_preference) {
   auto* campaign = m_context.campaign;
   if (campaign == nullptr) {
     emit failed(tr("Campaign manager not initialized"));
     return;
   }
 
+  const QString chosen =
+      difficulty.isEmpty() ? preferred_difficulty() : normalize_difficulty(difficulty);
   int selected_player_id = 1;
-  campaign->start_campaign_mission(mission_path, selected_player_id);
+  campaign->start_campaign_mission(mission_path, selected_player_id, chosen);
   if (!campaign->current_mission_definition().has_value()) {
     emit failed(tr("Failed to load mission"));
     return;
   }
+  if (remember_preference) {
+    set_preferred_difficulty(chosen);
+  }
   launch_current_mission(QStringLiteral("campaign-mission"), mission_path);
 }
 
-void MatchSetupViewModel::start_mission_file(const QString& file_path) {
+void MatchSetupViewModel::start_mission_file(const QString& file_path,
+                                             const QString& difficulty,
+                                             bool remember_preference) {
   auto* campaign = m_context.campaign;
   if (campaign == nullptr) {
     emit failed(tr("Campaign manager not initialized"));
     return;
   }
 
+  const QString chosen =
+      difficulty.isEmpty() ? preferred_difficulty() : normalize_difficulty(difficulty);
   int selected_player_id = m_context.local_owner_id;
   QString error;
-  if (!campaign->start_mission_file(file_path, selected_player_id, &error)) {
+  if (!campaign->start_mission_file(file_path, selected_player_id, &error, chosen)) {
     emit failed(tr("Failed to load mission preview: %1").arg(error));
     return;
+  }
+  if (remember_preference) {
+    set_preferred_difficulty(chosen);
   }
   launch_current_mission(QStringLiteral("mission-file"), file_path);
 }
 
 void MatchSetupViewModel::start_tutorial() {
+
   start_mission_file(Utils::Resources::resolve_resource_path(
-      QStringLiteral(":/assets/missions/tutorial.json")));
+                         QStringLiteral(":/assets/missions/tutorial.json")),
+                     Game::Mission::default_difficulty_id(),
+                     false);
 }
 
 void MatchSetupViewModel::launch_current_mission(const QString& kind,
@@ -456,7 +530,8 @@ void MatchSetupViewModel::launch_current_mission(const QString& kind,
                                       .map_path = mission.map_path,
                                       .player_configs =
                                           build_campaign_player_configs(mission),
-                                      .set_skirmish_context = false};
+                                      .set_skirmish_context = false,
+                                      .difficulty = active_difficulty()};
   remember_launch(launch);
   emit launch_requested(launch);
   emit current_mission_changed();
@@ -467,7 +542,8 @@ void MatchSetupViewModel::remember_launch(const App::Core::MatchLaunch& launch) 
   m_last_launch = LastLaunch{.kind = launch.kind,
                              .reference = launch.reference,
                              .map_path = launch.map_path,
-                             .player_configs = launch.player_configs};
+                             .player_configs = launch.player_configs,
+                             .difficulty = launch.difficulty};
   if (!could_restart) {
     emit can_restart_changed();
   }
@@ -482,9 +558,9 @@ auto MatchSetupViewModel::restart_current_match() -> bool {
   if (launch.kind == QStringLiteral("skirmish")) {
     start_skirmish(launch.map_path, launch.player_configs);
   } else if (launch.kind == QStringLiteral("campaign-mission")) {
-    start_campaign_mission(launch.reference);
+    start_campaign_mission(launch.reference, launch.difficulty);
   } else {
-    start_mission_file(launch.reference);
+    start_mission_file(launch.reference, launch.difficulty);
   }
   return true;
 }

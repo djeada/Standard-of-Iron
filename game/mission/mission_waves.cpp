@@ -24,8 +24,10 @@
 #include "game/map/mission_context.h"
 #include "game/map/wave_archetype_catalog.h"
 #include "game/mission/campaign_manager.h"
+#include "game/mission/difficulty_profile.h"
 #include "game/mission/mission_commander_setup.h"
 #include "game/mission/mission_setup_coordinator.h"
+#include "game/mission/spawn_placement.h"
 #include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_strategy.h"
@@ -295,6 +297,8 @@ auto MissionWaves::spawn(const MissionWaveContext& ctx,
   constexpr float k_elite_health_multiplier = 1.6F;
 
   int spawned_units = 0;
+  int extras_requested = 0;
+  int extras_unplaced = 0;
 
   for (int comp_index = 0; comp_index < composition_count; ++comp_index) {
     const auto& comp = wave.composition[static_cast<std::size_t>(comp_index)];
@@ -305,6 +309,13 @@ auto MissionWaves::spawn(const MissionWaveContext& ctx,
     }
 
     const int count = std::max(1, comp.count);
+    const int baseline_count =
+        comp_index < static_cast<int>(wave.baseline_composition.size())
+            ? std::max(
+                  1,
+                  wave.baseline_composition[static_cast<std::size_t>(comp_index)].count)
+            : count;
+    extras_requested += count - baseline_count;
     const int grid = static_cast<int>(std::ceil(std::sqrt(static_cast<float>(count))));
     const float angle = (k_two_pi * static_cast<float>(comp_index)) /
                         static_cast<float>(composition_count);
@@ -336,6 +347,17 @@ auto MissionWaves::spawn(const MissionWaveContext& ctx,
         continue;
       }
 
+      if (i >= baseline_count) {
+
+        if (!Game::Mission::place_clear_of_units(
+                 ctx.world, unit->id(), pos, Game::Mission::BuildingFootprints::Refuse)
+                 .has_value()) {
+          ctx.world.destroy_entity(unit->id());
+          ++extras_unplaced;
+          continue;
+        }
+      }
+
       effects.spawned_entity_ids.push_back(unit->id());
 
       auto* entity = ctx.world.get_entity(unit->id());
@@ -358,6 +380,14 @@ auto MissionWaves::spawn(const MissionWaveContext& ctx,
       }
       spawned_units++;
     }
+  }
+
+  if (extras_requested > 0) {
+    qInfo() << "Mission wave for AI" << wave.ai_id << "(" << wave.owner_id
+            << "): the preset asked for" << extras_requested
+            << "troops on top of the authored wave, placed"
+            << (extras_requested - extras_unplaced)
+            << (extras_unplaced > 0 ? "- short of clear ground at the entry" : "");
   }
 
   if (spawned_units > 0) {
@@ -402,13 +432,23 @@ auto build_pending_mission_waves(const MissionWaveBuildContext& ctx)
     return parsed.value_or(nation_registry.default_nation_id());
   };
 
-  const float mission_strength_multiplier =
-      Game::Mission::difficulty_strength_multiplier(ctx.mission_difficulty);
+  const float player_selected_multiplier =
+      Game::Mission::resolve_difficulty(ctx.mission_difficulty).wave_multiplier;
+
+  const auto player_team = ctx.mission.player_setup.team_id;
 
   int ai_owner_id = 2;
   for (const auto& ai_setup : ctx.mission.ai_setups) {
+    const bool allied_with_player = player_team.has_value() &&
+                                    ai_setup.team_id.has_value() &&
+                                    *ai_setup.team_id == *player_team;
+
+    const float reinforcement_multiplier =
+        (ai_setup.difficulty_scaling && !allied_with_player)
+            ? player_selected_multiplier
+            : 1.0F;
     const float ai_strength_multiplier =
-        mission_strength_multiplier *
+        reinforcement_multiplier *
         Game::Mission::difficulty_strength_multiplier(ai_setup.difficulty);
     const auto ai_nation_id = resolve_nation(ai_setup.nation);
 
@@ -440,6 +480,10 @@ auto build_pending_mission_waves(const MissionWaveBuildContext& ctx)
                                        static_cast<float>(wave_ordinal));
       const float strength =
           std::max(0.1F, wave.strength) * ai_strength_multiplier * escalation;
+      const float baseline_strength =
+          std::max(0.1F, wave.strength) *
+          Game::Mission::difficulty_strength_multiplier(ai_setup.difficulty) *
+          escalation;
 
       std::vector<Game::Mission::WaveComposition> composition = wave.composition;
       if (!wave.archetype.isEmpty()) {
@@ -455,6 +499,8 @@ auto build_pending_mission_waves(const MissionWaveBuildContext& ctx)
       }
       pending_wave.composition =
           Game::Mission::scale_wave_composition(composition, strength);
+      pending_wave.baseline_composition =
+          Game::Mission::scale_wave_composition(composition, baseline_strength);
 
       waves.push_back(std::move(pending_wave));
       wave_ordinal++;

@@ -81,6 +81,8 @@ SessionContext::SessionContext(const Config& config)
   services.rng = &m_state->rng;
   services.commands = &m_state->commands;
 
+  m_state->building_collision.bind_navigation(&m_state->navigation);
+
   bind_world_services(m_state->world, &m_state->services);
 }
 

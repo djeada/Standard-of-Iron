@@ -78,6 +78,55 @@ TEST(SceneWalkEntityHandleTest, WorldWalkIteratesFullWidthEntityHandles) {
   }
 }
 
+TEST(SceneWalkEntityHandleTest, RenderEntriesCarryFullWidthEntityHandles) {
+  const auto root = find_repo_root();
+  ASSERT_FALSE(root.empty());
+  const auto source = read_text(root / "render" / "scene_walk.cpp");
+  ASSERT_FALSE(source.empty());
+
+  EXPECT_EQ(source.find("uint32_t entity_id{0};"), std::string::npos)
+      << "a render entry stores a truncated entity handle";
+
+  for (const char* entry : {"struct UnitRenderEntry", "struct RenderEntry"}) {
+    const auto at = source.find(entry);
+    ASSERT_NE(at, std::string::npos) << entry << " is missing from scene_walk.cpp";
+    const auto end = source.find("\n};", at);
+    ASSERT_NE(end, std::string::npos) << entry;
+    const auto field = source.find("Engine::Core::EntityID entity_id{0};", at);
+    EXPECT_NE(field, std::string::npos) << entry << " has no full-width handle field";
+    EXPECT_LT(field, end) << entry << " has no full-width handle field of its own";
+  }
+
+  const auto optimizer = read_text(root / "render" / "battle_render_optimizer.h");
+  ASSERT_FALSE(optimizer.empty());
+  EXPECT_EQ(optimizer.find("should_update_animation(std::uint32_t entity_id"),
+            std::string::npos)
+      << "the animation budget keys off a truncated entity handle";
+}
+
+TEST(SceneWalkEntityHandleTest, MissingBodyWarningsAreOwnedByTheRendererNotTheProcess) {
+  const auto root = find_repo_root();
+  ASSERT_FALSE(root.empty());
+  const auto source = read_text(root / "render" / "scene_walk.cpp");
+  ASSERT_FALSE(source.empty());
+
+  EXPECT_EQ(source.find("static std::unordered_set<std::string> warned_units"),
+            std::string::npos)
+      << "render warnings are suppressed by a process-lifetime static";
+  EXPECT_NE(source.find("note_missing_body_warning"), std::string::npos)
+      << "expected the renderer to own its warning suppression";
+
+  const auto header = read_text(root / "render" / "scene_renderer.h");
+  ASSERT_FALSE(header.empty());
+  EXPECT_NE(header.find("clear_missing_body_warnings"), std::string::npos);
+  const auto clear_at = header.find("void clear_entity_render_caches()");
+  ASSERT_NE(clear_at, std::string::npos);
+  const auto clear_end = header.find('}', clear_at);
+  ASSERT_NE(clear_end, std::string::npos);
+  EXPECT_LT(header.find("clear_missing_body_warnings();", clear_at), clear_end)
+      << "a map change must drop the warnings the last match accumulated";
+}
+
 TEST(SceneWalkEntityHandleTest, CreatureSeedsDeriveFromTheUnitNotItsAddress) {
   const auto root = find_repo_root();
   ASSERT_FALSE(root.empty());

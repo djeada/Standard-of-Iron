@@ -28,6 +28,7 @@ Item {
 
     readonly property bool has_selection: selected_map_data !== null
     property alias roster: players_model
+    property var difficulty_presets: (typeof game !== "undefined" && game.setup) ? game.setup.difficulty_presets : []
 
     signal map_chosen(string map_path, var player_configs)
 
@@ -474,6 +475,7 @@ Item {
                 "commanderRally": commander_field(defaultCommander, "rally_ability"),
                 "isHuman": true,
                 "isEnabled": true,
+                "difficulty": root.default_difficulty(),
                 "baseKey": "",
                 "baseName": ""
             });
@@ -532,6 +534,7 @@ Item {
                 "commanderRally": commander_field(defaultCommander, "rally_ability"),
                 "isHuman": false,
                 "isEnabled": true,
+                "difficulty": root.default_difficulty(),
                 "baseKey": "",
                 "baseName": ""
             });
@@ -576,6 +579,32 @@ Item {
         players_model.setProperty(index, "colorName", Theme.playerColors[newIdx].name);
         roster_revision++;
         refresh_map_preview();
+    }
+
+    function default_difficulty() {
+        return (typeof game !== "undefined" && game.setup) ? game.setup.preferred_difficulty : DifficultyCatalog.defaultId;
+    }
+
+    function cycle_player_difficulty(index) {
+        if (index < 0 || index >= players_model.count)
+            return;
+        let seat = players_model.get(index);
+        if (seat.isHuman)
+            return;
+        let entries = DifficultyCatalog.entries;
+        let current = String(seat.difficulty || DifficultyCatalog.defaultId);
+        let at = 0;
+        for (let i = 0; i < entries.length; i++) {
+            if (entries[i].id === current) {
+                at = i;
+                break;
+            }
+        }
+        let next = entries[(at + 1) % entries.length].id;
+        players_model.setProperty(index, "difficulty", next);
+        roster_revision++;
+        if (typeof game !== "undefined" && game.setup)
+            game.setup.preferred_difficulty = next;
     }
 
     function cycle_player_team(index) {
@@ -720,6 +749,7 @@ Item {
                     "nationId": p.nationId,
                     "commanderTroop": p.commanderTroop,
                     "isHuman": p.isHuman,
+                    "difficulty": p.isHuman ? "" : String(p.difficulty || DifficultyCatalog.defaultId),
                     "baseKey": p.baseKey || ""
                 });
         }
@@ -1576,6 +1606,21 @@ Item {
                                             interactive: true
                                             tooltip_text: model.commanderRole !== "" ? qsTr("%1 — click to change commander").arg(model.commanderRole) : qsTr("Commander — click to change")
                                             onActivated: cycle_player_commander(index)
+                                        }
+
+                                        SkirmishChip {
+                                            Layout.fillWidth: true
+                                            Layout.preferredWidth: 150
+                                            Layout.minimumWidth: 84
+                                            visible: !model.isHuman
+                                            caption: DifficultyCatalog.label
+                                            value: DifficultyCatalog.name_for(model.difficulty)
+                                            value_color: DifficultyCatalog.accent_for(model.difficulty)
+                                            vector_icon: DifficultyCatalog.icon_for(model.difficulty)
+                                            vector_accent: DifficultyCatalog.accent_for(model.difficulty)
+                                            interactive: true
+                                            tooltip_text: DifficultyCatalog.quip_for(model.difficulty) + "\n" + DifficultyCatalog.summary_for(root.difficulty_presets, model.difficulty) + "\n" + qsTr("Click to change this opponent's difficulty")
+                                            onActivated: cycle_player_difficulty(index)
                                         }
 
                                         SkirmishChip {

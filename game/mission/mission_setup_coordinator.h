@@ -10,6 +10,7 @@
 
 #include "game/map/mission_definition.h"
 #include "game/map/mission_stage_tracker.h"
+#include "game/mission/difficulty_profile.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/nation_id.h"
 
@@ -41,6 +42,8 @@ struct PendingMissionWave {
   std::vector<QVector3D> entry_world_positions;
   QVector3D defense_reference_world_position{0.0F, 0.0F, 0.0F};
   std::vector<Game::Mission::WaveComposition> composition;
+
+  std::vector<Game::Mission::WaveComposition> baseline_composition;
   Game::Systems::ResourceAmounts clear_reward;
   bool final_wave = false;
   bool spawned = false;
@@ -91,6 +94,8 @@ struct MissionSetupApplyContext {
   int& selected_player_id;
   int local_owner_id;
   std::vector<PendingMissionWave>& pending_waves;
+
+  const Game::Mission::MatchDifficulty* difficulty = nullptr;
 };
 
 struct MissionSetupEffects {

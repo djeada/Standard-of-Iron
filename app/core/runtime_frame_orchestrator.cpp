@@ -146,13 +146,14 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
         scene.world->ensure_render_snapshot();
         const std::shared_ptr<Engine::Core::World> minimap_snapshot =
             scene.world->acquire_render_snapshot();
-        scene.minimap_manager->update_units(
-            minimap_snapshot != nullptr ? minimap_snapshot.get() : scene.world,
-            selection_system,
-            state.local_owner_id);
-        if (unit_update_due) {
-          state.minimap_unit_update_accumulator = std::fmod(
-              state.minimap_unit_update_accumulator, k_minimap_unit_update_interval);
+
+        if (minimap_snapshot != nullptr) {
+          scene.minimap_manager->update_units(
+              minimap_snapshot.get(), selection_system, state.local_owner_id);
+          if (unit_update_due) {
+            state.minimap_unit_update_accumulator = std::fmod(
+                state.minimap_unit_update_accumulator, k_minimap_unit_update_interval);
+          }
         }
       }
       scene.minimap_manager->update_camera_viewport(

@@ -652,11 +652,11 @@ ApplicationWindow {
             }
             mainWindow.sync_audio_context();
         }
-        onMission_selected: function (campaign_id, mission_id) {
-            console.log("Main: Campaign mission selected:", campaign_id + "/" + mission_id);
+        onMission_selected: function (campaign_id, mission_id, difficulty) {
+            console.log("Main: Campaign mission selected:", campaign_id + "/" + mission_id, "at", difficulty);
             if (typeof game !== 'undefined' && game.setup.start_campaign_mission) {
                 mainWindow.confirm_leaving_battle(function () {
-                        game.setup.start_campaign_mission(campaign_id + "/" + mission_id);
+                        game.setup.start_campaign_mission(campaign_id + "/" + mission_id, difficulty);
                         campaign_screen.visible = false;
                         mainWindow.menu_visible = false;
                         mainWindow.game_started = true;
@@ -687,11 +687,11 @@ ApplicationWindow {
             }
             mainWindow.sync_audio_context();
         }
-        onMission_chosen: function (file_path) {
+        onMission_chosen: function (file_path, difficulty) {
             if (typeof game === 'undefined' || !game.setup.start_mission_file)
                 return;
             mainWindow.confirm_leaving_battle(function () {
-                    game.setup.start_mission_file(file_path);
+                    game.setup.start_mission_file(file_path, difficulty);
                     missions_screen.visible = false;
                     mainWindow.menu_visible = false;
                     mainWindow.game_started = true;
