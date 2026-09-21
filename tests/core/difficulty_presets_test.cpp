@@ -48,8 +48,96 @@ namespace {
 
 using Engine::Core::UnitComponent;
 
-constexpr char k_mission_path[] = "assets/missions/battle_of_ticino.json";
 constexpr int k_local_owner = 1;
+
+constexpr char k_fixture_mission[] = R"({
+  "id": "difficulty_fixture",
+  "title": "Difficulty Fixture",
+  "map_path": ":/assets/maps/map_tutorial.json",
+  "player_setup": {
+    "nation": "carthage",
+    "team_id": 1,
+    "starting_units": [
+      {"type": "spearman", "count": 4, "position": {"x": 30, "z": 58}}
+    ],
+    "starting_resources": {"gold": 300, "food": 200}
+  },
+  "ai_setups": [
+    {
+      "id": "roman_line",
+      "nation": "roman_republic",
+      "team_id": 2,
+      "difficulty": "medium",
+      "starting_units": [],
+      "waves": [
+        {
+          "timing": 60,
+          "entry_point": {"x": 90, "z": 10},
+          "composition": [
+            {"type": "spearman", "count": 5},
+            {"type": "archer", "count": 3}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "roman_reserve",
+      "nation": "roman_republic",
+      "team_id": 2,
+      "difficulty": "medium",
+      "starting_units": [],
+      "waves": [
+        {
+          "timing": 120,
+          "entry_point": {"x": 88, "z": 16},
+          "composition": [
+            {"type": "swordsman", "count": 4},
+            {"type": "archer", "count": 2}
+          ]
+        }
+      ]
+    }
+  ],
+  "victory_conditions": [{"type": "eliminate_commanders"}]
+})";
+
+auto write_mission_file(const QString& path, const QString& body) -> bool {
+  QFile file(path);
+  if (!file.open(QIODevice::WriteOnly)) {
+    return false;
+  }
+  const QByteArray encoded = body.toUtf8();
+  return file.write(encoded) == encoded.size();
+}
+
+class FixtureMission {
+public:
+  static auto path() -> QString {
+    static const FixtureMission fixture;
+    return fixture.m_path;
+  }
+
+  FixtureMission(const FixtureMission&) = delete;
+  FixtureMission(FixtureMission&&) = delete;
+  auto operator=(const FixtureMission&) -> FixtureMission& = delete;
+  auto operator=(FixtureMission&&) -> FixtureMission& = delete;
+  ~FixtureMission() = default;
+
+private:
+  FixtureMission() {
+    if (!m_directory.isValid()) {
+      return;
+    }
+    const QString path =
+        m_directory.filePath(QStringLiteral("difficulty_fixture.json"));
+    if (write_mission_file(path, QString::fromLatin1(k_fixture_mission))) {
+      m_path = path;
+    }
+  }
+
+  QTemporaryDir m_directory;
+  QString m_path;
+};
 
 struct MatchReadout {
 
@@ -82,7 +170,7 @@ struct MatchReadout {
 class MissionRun {
 public:
   explicit MissionRun(const QString& difficulty_id,
-                      QString mission_path = QString::fromLatin1(k_mission_path))
+                      QString mission_path = FixtureMission::path())
       : m_difficulty(difficulty_id)
       , m_mission_path(std::move(mission_path)) {}
 
@@ -428,7 +516,7 @@ TEST_F(DifficultyPresetsTest, AnAuthoredVeryHardOpponentIsUntouchedAtNormal) {
     file.write(QStringLiteral(R"({
       "id": "authored_dial",
       "title": "Authored Dial",
-      "map_path": ":/assets/maps/map_battle_ticino.json",
+      "map_path": ":/assets/maps/map_tutorial.json",
       "player_setup": {"nation": "carthage", "starting_resources": {"gold": 300}},
       "ai_setups": [
         {
@@ -502,7 +590,7 @@ TEST_F(DifficultyPresetsTest, AnAlliedAiIsLeftExactlyAsTheMissionAuthoredIt) {
     file.write(R"({
       "id": "allied_field",
       "title": "Allied Field",
-      "map_path": ":/assets/maps/map_battle_ticino.json",
+      "map_path": ":/assets/maps/map_tutorial.json",
       "player_setup": {
         "nation": "carthage",
         "team_id": 1,
@@ -565,21 +653,16 @@ TEST_F(DifficultyPresetsTest, AnAlliedAiIsLeftExactlyAsTheMissionAuthoredIt) {
 }
 
 TEST_F(DifficultyPresetsTest, ReturningToNormalReturnsTheOriginalMatch) {
-  reset_globals();
-  const auto snapshot = [](const char* id) {
-    reset_globals();
-    MissionRun run{QString::fromLatin1(id)};
-    QString error;
-    EXPECT_TRUE(run.run(&error)) << id << ": " << error.toStdString();
-    MatchReadout readout = run.readout();
-    reset_globals();
-    return readout;
-  };
+  const MatchReadout first = measure("normal");
+  (void)measure("hard");
+  (void)measure("very_hard");
 
-  const MatchReadout first = snapshot("normal");
-  (void)snapshot("hard");
-  (void)snapshot("very_hard");
-  const MatchReadout last = snapshot("normal");
+  reset_globals();
+  MissionRun again{QStringLiteral("normal")};
+  QString error;
+  ASSERT_TRUE(again.run(&error)) << error.toStdString();
+  const MatchReadout last = again.readout();
+  reset_globals();
 
   EXPECT_EQ(last.enemy_troops_by_owner, first.enemy_troops_by_owner);
   EXPECT_EQ(last.enemy_gold_by_owner, first.enemy_gold_by_owner);
@@ -648,7 +731,7 @@ TEST_F(DifficultyPresetsTest, TwoSourcesOfStartingTroopsAreEachScaledOnce) {
     file.write(R"({
       "id": "two_sources",
       "title": "Two Sources",
-      "map_path": ":/assets/maps/map_battle_ticino.json",
+      "map_path": ":/assets/maps/map_tutorial.json",
       "player_setup": {"nation": "carthage", "starting_resources": {"gold": 300}},
       "ai_setups": [
         {
