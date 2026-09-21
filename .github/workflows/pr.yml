@@ -34,10 +34,15 @@ jobs:
   test:
     name: Fast build and test (ubuntu-24.04)
     runs-on: ubuntu-24.04
-    # Roughly ten minutes of work: a warm-ccache build, then a test run that
-    # measures in single-digit minutes. The ceiling is here to kill a hung run,
-    # not to leave room for a slow one.
-    timeout-minutes: 45
+    # Roughly ten minutes of work on a warm ccache: the build measures 11
+    # minutes and the tests single digits. The ceiling is here to kill a hung
+    # run, but it has to clear a COLD one, because the first run on a new branch
+    # always is: the cache this job saves is scoped to the branch that saved it,
+    # and a branch may only read its own caches and main's, which this job never
+    # runs on. A cold build measured 33 minutes on 21 Sep 2026 and left the last
+    # gate, the promo first-frame test, cancelled 50 seconds in with every other
+    # step green.
+    timeout-minutes: 60
     env:
       CMAKE_CXX_COMPILER_LAUNCHER: ccache
       CMAKE_C_COMPILER_LAUNCHER: ccache
