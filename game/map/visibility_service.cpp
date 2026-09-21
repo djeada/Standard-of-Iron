@@ -126,10 +126,10 @@ auto VisibilityService::update(Engine::Core::World& world, int player_id) -> boo
   }
 
   if (should_start_new_job()) {
-    auto sources = gather_vision_sources(world, player_id);
+    auto gathered = gather_vision_sources(world, player_id);
 
-    if (!sources.empty()) {
-      auto payload = compose_job_payload(sources);
+    if (gathered.changed) {
+      auto payload = compose_job_payload(gathered.sources);
       enqueue_job(std::move(payload));
     }
   }
@@ -142,8 +142,8 @@ void VisibilityService::compute_immediate(Engine::Core::World& world, int player
     return;
   }
 
-  const auto sources = gather_vision_sources(world, player_id);
-  auto payload = compose_job_payload(sources);
+  const auto gathered = gather_vision_sources(world, player_id);
+  auto payload = compose_job_payload(gathered.sources);
   auto result = execute_job(std::move(payload));
 
   if (result.changed) {
@@ -157,7 +157,7 @@ void VisibilityService::compute_immediate(Engine::Core::World& world, int player
 }
 
 auto VisibilityService::gather_vision_sources(Engine::Core::World& world, int player_id)
-    -> std::vector<VisibilityService::VisionSource> {
+    -> VisibilityService::GatheredVision {
   std::vector<VisionSource> sources;
   const auto entities = world.collect_entities_with<Engine::Core::TransformComponent>();
   const float range_padding = m_tile_size * k_half_cell_offset;
@@ -197,18 +197,18 @@ auto VisibilityService::gather_vision_sources(Engine::Core::World& world, int pl
     }
 
     const std::uint64_t entity_id = entity->get_id();
-    current_positions[entity_id] = {center_x, center_z};
+    const int cell_radius =
+        std::max(1, static_cast<int>(std::ceil(vision_range / m_tile_size)));
+    current_positions[entity_id] = {center_x, center_z, cell_radius};
 
     if (!any_moved) {
       auto it = m_last_positions.find(entity_id);
       if (it == m_last_positions.end() || it->second.grid_x != center_x ||
-          it->second.grid_z != center_z) {
+          it->second.grid_z != center_z || it->second.cell_radius != cell_radius) {
         any_moved = true;
       }
     }
 
-    const int cell_radius =
-        std::max(1, static_cast<int>(std::ceil(vision_range / m_tile_size)));
     const float expanded_range_sq =
         (vision_range + range_padding) * (vision_range + range_padding);
     const float expanded_radius_cells_sq = expanded_range_sq * inverse_tile_size_sq;
@@ -229,11 +229,12 @@ auto VisibilityService::gather_vision_sources(Engine::Core::World& world, int pl
     }
 
     const std::uint64_t rally_id = rally_flag_visibility_id(entity_id);
-    current_positions[rally_id] = {rally_center_x, rally_center_z};
+    current_positions[rally_id] = {rally_center_x, rally_center_z, cell_radius};
     if (!any_moved) {
       auto it = m_last_positions.find(rally_id);
       if (it == m_last_positions.end() || it->second.grid_x != rally_center_x ||
-          it->second.grid_z != rally_center_z) {
+          it->second.grid_z != rally_center_z ||
+          it->second.cell_radius != cell_radius) {
         any_moved = true;
       }
     }
@@ -254,11 +255,7 @@ auto VisibilityService::gather_vision_sources(Engine::Core::World& world, int pl
   m_last_positions = std::move(current_positions);
   m_force_full_update = false;
 
-  if (!any_moved && !sources.empty()) {
-    return {};
-  }
-
-  return sources;
+  return {.changed = any_moved, .sources = std::move(sources)};
 }
 
 auto VisibilityService::compose_job_payload(

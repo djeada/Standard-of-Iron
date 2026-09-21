@@ -2285,6 +2285,53 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
 </context>
 <context>
+    <name>DifficultyCatalog</name>
+    <message>
+        <source>Difficulty</source>
+        <translation>Zorluk</translation>
+    </message>
+    <message>
+        <source>Difficulty changes enemy resources, starting troops and reinforcements only. Enemy tactics never change.</source>
+        <translation>Zorluk yalnızca düşmanın kaynaklarını, başlangıç birliklerini ve takviyelerini değiştirir. Düşman taktikleri hiç değişmez.</translation>
+    </message>
+    <message>
+        <source>Easy</source>
+        <translation>Kolay</translation>
+    </message>
+    <message>
+        <source>The legions forgot their alarm clock.</source>
+        <translation>Lejyonlar çalar saatlerini kurmayı unutmuş.</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normal</translation>
+    </message>
+    <message>
+        <source>A perfectly respectable amount of chaos.</source>
+        <translation>Gayet saygıdeğer miktarda kaos.</translation>
+    </message>
+    <message>
+        <source>Hard</source>
+        <translation>Zor</translation>
+    </message>
+    <message>
+        <source>The treasury has discovered your location.</source>
+        <translation>Hazine yerini öğrendi.</translation>
+    </message>
+    <message>
+        <source>Brutal</source>
+        <translation>Acımasız</translation>
+    </message>
+    <message>
+        <source>HONK. The empire has doubled its budget.</source>
+        <translation>HONK. İmparatorluk bütçesini ikiye katladı.</translation>
+    </message>
+    <message>
+        <source>Enemy resources %1 · starting troops %2 · reinforcements %3</source>
+        <translation>Düşman kaynakları %1 · başlangıç birlikleri %2 · takviyeler %3</translation>
+    </message>
+</context>
+<context>
     <name>EconomyCoach</name>
     <message>
         <source>Hide these prompts</source>
@@ -6321,6 +6368,10 @@ bir harita seç</translation>
     <message>
         <source>Start the battle (Enter)</source>
         <translation>Savaşı başlat (Enter)</translation>
+    </message>
+    <message>
+        <source>Click to change this opponent&apos;s difficulty</source>
+        <translation>Bu rakibin zorluğunu değiştirmek için tıklayın</translation>
     </message>
 </context>
 <context>

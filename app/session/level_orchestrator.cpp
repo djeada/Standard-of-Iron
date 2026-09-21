@@ -152,6 +152,7 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
     QCoreApplication::processEvents();
   }
 
+  result.resolved_player_configs = load_result.resolved_player_configs;
   level.map_name = load_result.map_name;
   level.player_unit_id = load_result.player_unit_id;
   level.cam_fov = load_result.cam_fov;

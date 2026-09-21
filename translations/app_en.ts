@@ -2285,6 +2285,53 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
 </context>
 <context>
+    <name>DifficultyCatalog</name>
+    <message>
+        <source>Difficulty</source>
+        <translation>Difficulty</translation>
+    </message>
+    <message>
+        <source>Difficulty changes enemy resources, starting troops and reinforcements only. Enemy tactics never change.</source>
+        <translation>Difficulty changes enemy resources, starting troops and reinforcements only. Enemy tactics never change.</translation>
+    </message>
+    <message>
+        <source>Easy</source>
+        <translation>Easy</translation>
+    </message>
+    <message>
+        <source>The legions forgot their alarm clock.</source>
+        <translation>The legions forgot their alarm clock.</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normal</translation>
+    </message>
+    <message>
+        <source>A perfectly respectable amount of chaos.</source>
+        <translation>A perfectly respectable amount of chaos.</translation>
+    </message>
+    <message>
+        <source>Hard</source>
+        <translation>Hard</translation>
+    </message>
+    <message>
+        <source>The treasury has discovered your location.</source>
+        <translation>The treasury has discovered your location.</translation>
+    </message>
+    <message>
+        <source>Brutal</source>
+        <translation>Brutal</translation>
+    </message>
+    <message>
+        <source>HONK. The empire has doubled its budget.</source>
+        <translation>HONK. The empire has doubled its budget.</translation>
+    </message>
+    <message>
+        <source>Enemy resources %1 · starting troops %2 · reinforcements %3</source>
+        <translation>Enemy resources %1 · starting troops %2 · reinforcements %3</translation>
+    </message>
+</context>
+<context>
     <name>EconomyCoach</name>
     <message>
         <source>How it works</source>
@@ -6324,6 +6371,10 @@ to see preview</translation>
     <message>
         <source>Starting base — click for the next free one, or pick it on the map</source>
         <translation>Starting base — click for the next free one, or pick it on the map</translation>
+    </message>
+    <message>
+        <source>Click to change this opponent&apos;s difficulty</source>
+        <translation>Click to change this opponent&apos;s difficulty</translation>
     </message>
 </context>
 <context>

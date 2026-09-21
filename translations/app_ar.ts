@@ -2285,6 +2285,53 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>DifficultyCatalog</name>
+    <message>
+        <source>Difficulty</source>
+        <translation>الصعوبة</translation>
+    </message>
+    <message>
+        <source>Difficulty changes enemy resources, starting troops and reinforcements only. Enemy tactics never change.</source>
+        <translation>تغيّر الصعوبة موارد العدو وقواته الأولية وتعزيزاته فقط. أما تكتيكات العدو فلا تتغير أبدًا.</translation>
+    </message>
+    <message>
+        <source>Easy</source>
+        <translation>سهل</translation>
+    </message>
+    <message>
+        <source>The legions forgot their alarm clock.</source>
+        <translation>نسيت الفيالق ضبط المنبّه.</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>عادي</translation>
+    </message>
+    <message>
+        <source>A perfectly respectable amount of chaos.</source>
+        <translation>قدر محترم تمامًا من الفوضى.</translation>
+    </message>
+    <message>
+        <source>Hard</source>
+        <translation>صعب</translation>
+    </message>
+    <message>
+        <source>The treasury has discovered your location.</source>
+        <translation>اكتشفت الخزانة موقعك.</translation>
+    </message>
+    <message>
+        <source>Brutal</source>
+        <translation>وحشي</translation>
+    </message>
+    <message>
+        <source>HONK. The empire has doubled its budget.</source>
+        <translation>بَطّ! ضاعفت الإمبراطورية ميزانيتها.</translation>
+    </message>
+    <message>
+        <source>Enemy resources %1 · starting troops %2 · reinforcements %3</source>
+        <translation>موارد العدو %1 · القوات الأولية %2 · التعزيزات %3</translation>
+    </message>
+</context>
+<context>
     <name>EconomyCoach</name>
     <message>
         <source>How it works</source>
@@ -6336,6 +6383,10 @@ to see preview</source>
     <message>
         <source>Starting base — click for the next free one, or pick it on the map</source>
         <translation>قاعدة البداية — انقر للتالية الخالية، أو اخترها على الخريطة</translation>
+    </message>
+    <message>
+        <source>Click to change this opponent&apos;s difficulty</source>
+        <translation>انقر لتغيير صعوبة هذا الخصم</translation>
     </message>
 </context>
 <context>

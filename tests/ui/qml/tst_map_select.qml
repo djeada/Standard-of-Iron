@@ -290,6 +290,38 @@ TestCase {
         screen.destroy();
     }
 
+    function test_each_opponent_seat_carries_its_own_difficulty() {
+        var screen = make_screen(two_slot_map);
+        compare(screen.roster.get(1).difficulty, DifficultyCatalog.defaultId, "an opponent starts on the remembered preset");
+        screen.cycle_player_difficulty(1);
+        compare(screen.roster.get(1).difficulty, "hard", "cycling walks past normal to hard");
+        screen.cycle_player_difficulty(1);
+        compare(screen.roster.get(1).difficulty, "very_hard");
+        screen.cycle_player_difficulty(1);
+        compare(screen.roster.get(1).difficulty, "easy", "cycling wraps round to easy");
+        screen.destroy();
+    }
+
+    function test_the_human_seat_has_no_difficulty_of_its_own() {
+        var screen = make_screen(two_slot_map);
+        screen.cycle_player_difficulty(0);
+        var configs = screen.get_player_configs();
+        compare(configs.length, 2);
+        compare(configs[0].difficulty, "", "the player is never given a difficulty");
+        screen.destroy();
+    }
+
+    function test_the_chosen_difficulty_reaches_the_launch_configs() {
+        var screen = make_screen(two_slot_map);
+        screen.cycle_player_difficulty(1);
+        var configs = screen.get_player_configs();
+        compare(configs[1].difficulty, "hard", "the opponent's preset travels with its slot");
+        screen.cycle_player_color(1);
+        screen.cycle_player_team(1);
+        compare(screen.get_player_configs()[1].difficulty, "hard", "changing another setting keeps the preset");
+        screen.destroy();
+    }
+
     function test_clearing_the_selection_empties_the_roster() {
         var screen = make_screen(two_slot_map);
         screen.select_map(-1);

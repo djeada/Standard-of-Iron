@@ -11,6 +11,7 @@
 #include "animation/rig/horse_attachment_frames.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
+#include "game/core/world.h"
 #include "render/entity/nations/carthage/ballista_renderer.h"
 #include "render/entity/nations/carthage/barracks_renderer.h"
 #include "render/entity/nations/carthage/catapult_renderer.h"
@@ -516,13 +517,17 @@ TEST(SiegeMotion, ReleaseIsFastAndRecoilSettlesBeforeTheNextCycle) {
   EXPECT_FLOAT_EQ(Render::GL::siege_winding(0.0F), 0.0F);
   EXPECT_FLOAT_EQ(Render::GL::siege_winding(1.0F), 1.0F);
   EXPECT_LT(Render::GL::siege_winding(0.1F), 0.1F);
-  Engine::Core::StandaloneEntity scratch(45);
-  auto& entity = scratch.entity();
-  auto* loading = entity.add_component<Engine::Core::CatapultLoadingComponent>();
+  Engine::Core::World world;
+  auto* entity = world.create_entity();
+  ASSERT_NE(entity, nullptr);
+  auto* loading = entity->add_component<Engine::Core::CatapultLoadingComponent>();
   loading->state = Engine::Core::CatapultLoadingComponent::LoadingState::Firing;
   loading->firing_duration = 0.5F;
+
   Render::GL::DrawContext ctx;
-  ctx.entity = &entity;
+  ctx.entity = entity;
+
+  ctx.world = &world;
   Render::GL::SiegeTravelState state;
   loading->firing_time = 0.05F;
   EXPECT_GT(Render::GL::siege_motion(ctx, state, 0.2F, 0.4F).recoil, 0.2F);

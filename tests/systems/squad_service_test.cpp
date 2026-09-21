@@ -9,8 +9,10 @@
 #include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/map/map_transformer.h"
+#include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/combat_system/formation_contact_processor.h"
+#include "game/systems/default_content.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/squad_service.h"
 #include "game/systems/troop_count_registry.h"
@@ -30,6 +32,8 @@ constexpr int k_owner = 2;
 class SquadServiceTest : public ::testing::Test {
 protected:
   void SetUp() override {
+
+    Game::Map::TerrainService::instance().clear();
     Game::Systems::NavGrid::initialize(64, 64);
     m_factory = std::make_shared<Game::Units::UnitFactoryRegistry>();
     Game::Units::register_built_in_units(*m_factory);
@@ -38,12 +42,15 @@ protected:
     m_session->world().set_presentation_enabled(false);
     m_scope = std::make_unique<Game::Session::ScopedSession>(*m_session);
     Game::Map::MapTransformer::setFactoryRegistry(m_factory);
+
+    Game::Systems::initialize_default_content(m_session->nations());
   }
 
   void TearDown() override {
     Game::Map::MapTransformer::setFactoryRegistry(nullptr);
     m_scope.reset();
     m_session.reset();
+    Game::Map::TerrainService::instance().clear();
   }
 
   auto spawn(SpawnType type, float x, float z) -> EntityID {
@@ -554,7 +561,7 @@ TEST_F(SquadServiceTest, JoinedMenWalkOverInsteadOfAppearingInTheRanks) {
   }
   EXPECT_GE(reforming_men(kept), 3) << "the far squad's men are on the way";
 
-  present(6.0F);
+  present(8.0F);
   EXPECT_EQ(reforming_men(kept), 0);
   EXPECT_FALSE(m_session->world().has<Engine::Core::SquadReformComponent>(kept));
 }

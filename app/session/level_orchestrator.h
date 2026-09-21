@@ -38,6 +38,8 @@ struct LevelLoadResult {
   bool success = false;
   QString error_message;
   int updated_player_id = 1;
+
+  QVariantList resolved_player_configs;
 };
 
 class LevelOrchestrator {

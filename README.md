@@ -75,7 +75,7 @@ See [docs/ECONOMY_GUIDANCE.md](docs/ECONOMY_GUIDANCE.md), [docs/FOOD_AND_FARMS.m
 
 The campaign contains eight missions: Crossing the Rhône, Crossing the Alps, Battle of Ticino, Battle of Trebia, Battle of Lake Trasimene, Battle of Cannae, The Campanian Vigil, and Battle of Zama.
 
-Missions use data-driven objectives, waves, commander rules, map regions, rewards, and defeat conditions. Their design intent is documented in [docs/CAMPAIGN_MISSIONS.md](docs/CAMPAIGN_MISSIONS.md), while the authoring schema is documented in [docs/MISSION_FRAMEWORK.md](docs/MISSION_FRAMEWORK.md).
+Missions use data-driven objectives, waves, commander rules, map regions, rewards, and defeat conditions. Their design intent is documented in [docs/CAMPAIGN_MISSIONS.md](docs/CAMPAIGN_MISSIONS.md), while the authoring schema is documented in [docs/MISSION_FRAMEWORK.md](docs/MISSION_FRAMEWORK.md). Easy, Normal, Hard and Brutal give the enemy more or fewer resources, troops and reinforcements without changing its tactics; see [docs/DIFFICULTY.md](docs/DIFFICULTY.md).
 
 ![The Barcid Road campaign war table](docs/screenshots/campaign-war-table.webp)
 
@@ -272,7 +272,7 @@ Subsystem-specific constraints belong in the documentation for the subsystem tha
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Architecture  | [Architecture](docs/ARCHITECTURE.md), [rendering](docs/RENDERING_ARCHITECTURE.md)                                                                                                                                                           |
 | Gameplay      | [Combat](docs/COMBAT_SYSTEM.md), [formations](docs/FORMATION_ARCHITECTURE.md), [AI](docs/AI_ARCHITECTURE.md), [economy](docs/ECONOMY_GUIDANCE.md)                                                                                           |
-| Campaign/data | [Mission roster](docs/CAMPAIGN_MISSIONS.md), [mission framework](docs/MISSION_FRAMEWORK.md), [hill shapes](docs/HILL_SHAPES.md)                                                                                                             |
+| Campaign/data | [Mission roster](docs/CAMPAIGN_MISSIONS.md), [mission framework](docs/MISSION_FRAMEWORK.md), [difficulty presets](docs/DIFFICULTY.md), [hill shapes](docs/HILL_SHAPES.md)                                                                   |
 | Persistence   | [Save/load system](docs/SAVE_LOAD_SYSTEM.md)                                                                                                                                                                                                |
 | Presentation  | [UI design system](docs/UI_DESIGN_SYSTEM.md), [typography](docs/TYPOGRAPHY.md), [accessibility](docs/ACCESSIBILITY.md), [audio](docs/AUDIO_SYSTEM.md), [audio mastering](docs/AUDIO_MASTERING.md), [audio licences](docs/AUDIO_LICENSES.md) |
 | Performance   | [Instrumentation](docs/PERFORMANCE_INSTRUMENTATION.md), [mission startup](docs/MISSION_STARTUP.md), [massed battles](docs/MASSED_BATTLE_PERFORMANCE.md), [pathfinding](docs/PATHFINDING_ARCHITECTURE.md)                                    |

@@ -273,6 +273,65 @@ auto build_catalog() -> std::vector<Art> {
        fill(QStringLiteral("M7.2 6.6 L16.8 6.6 L16.8 12.2 L7.2 12.2 Z"), Tone::Gold),
        line(QStringLiteral("M4.4 15.4 L19.6 15.4"), Tone::Ink, 1.0F)});
 
+  add("difficulty_easy",
+      {fill(QStringLiteral("M6.6 18.4 Q3 17 3.4 20.6 Q5.2 21 6.8 20.2 Z"), Tone::Edge),
+       fill(QStringLiteral("M6.4 21.6 Q5.4 15.6 12 14.8 Q18.6 15.6 17.6 21.6 Z"),
+            Tone::Edge),
+       fill(QStringLiteral("M16.4 17 L20 18.2 L16.4 19.2 Z"), Tone::Gold),
+       line(QStringLiteral("M9.2 16.8 Q10.6 18.2 12 16.8"), Tone::Ink, 1.2F),
+       fill(QStringLiteral("M5.6 12.2 Q5.6 3.6 12 3.6 Q18.4 3.6 18.4 12.2 Z"),
+            Tone::Metal),
+       fill(QStringLiteral("M4.8 12.2 L19.2 12.2 L19.2 14 L4.8 14 Z"), Tone::Iron),
+       fill(QStringLiteral("M10.8 3.8 Q9.8 0.8 13.4 1.6 Q14.6 2.8 13.4 3.8 Z"),
+            Tone::Ember)});
+
+  add("difficulty_normal",
+      {fill(QStringLiteral("M6 13 Q4.8 7 10.2 5.8 Q17 4.8 18.6 11 Q20 18 14 20.8 "
+                           "Q7.8 22.4 6 13 Z"),
+            Tone::Timber),
+       fill(QStringLiteral("M8.8 6 Q9 3.2 11.8 3.4 Q14.2 3.6 14 6.2 Z"), Tone::Metal),
+       fill(QStringLiteral("M11.2 3.4 L12 1.4 L12.8 3.4 Z"), Tone::Ember),
+       line(QStringLiteral("M8.2 9.6 L11 10.6"), Tone::Ink, 1.3F),
+       line(QStringLiteral("M16 9.6 L13.2 10.6"), Tone::Ink, 1.3F),
+       fill(QStringLiteral("M8.8 11.4 L10.6 11.4 L10.6 13 L8.8 13 Z"), Tone::Ink),
+       fill(QStringLiteral("M13.6 11.4 L15.4 11.4 L15.4 13 L13.6 13 Z"), Tone::Ink),
+       line(QStringLiteral("M9.6 16.4 L14.6 16.4"), Tone::Ink, 1.5F)});
+
+  add("difficulty_hard",
+      {fill(QStringLiteral("M6 15.2 Q5.6 10.2 11 9.8 L17.4 10.2 Q20 13 18.4 16.8 "
+                           "Q13.8 21 8.8 19.4 Q6.2 18.4 6 15.2 Z"),
+            Tone::Stone),
+       fill(QStringLiteral("M14.4 13.8 Q20.2 13.4 20.2 16.8 Q19.8 19.8 14.4 19 Z"),
+            Tone::Timber),
+       fill(QStringLiteral("M17.4 15.2 L18.8 15.2 L18.8 16.4 L17.4 16.4 Z"), Tone::Ink),
+       fill(QStringLiteral("M17.4 17 L18.8 17 L18.8 18.2 L17.4 18.2 Z"), Tone::Ink),
+       fill(QStringLiteral("M13.2 19.8 L14.2 14.8 L15.2 19.8 Z"), Tone::Edge),
+       fill(QStringLiteral("M10.4 20 L11.3 16.4 L12.2 20 Z"), Tone::Edge),
+       fill(QStringLiteral("M9.4 12.2 L12.4 13.4 L12.2 14.6 L9.2 13.4 Z"), Tone::Ink),
+       fill(QStringLiteral("M4.8 8.4 Q5.4 2.8 12 2.8 Q18.6 2.8 19.2 8.4 Z"),
+            Tone::Metal),
+       fill(QStringLiteral("M4.4 8.4 L19.6 8.4 L19.6 9.8 L4.4 9.8 Z"), Tone::Iron),
+       fill(QStringLiteral("M9 2.8 Q10.4 0.6 12 1.2 Q13.6 0.6 15 2.8 Z"),
+            Tone::Ember)});
+
+  add("difficulty_very_hard",
+      {fill(QStringLiteral("M5 13.6 Q3.4 9.6 6.6 7.4 Q5.8 10.6 8 11.2 Q7.2 8.2 9.6 "
+                           "6.2 Q9 10.8 11 12.8 Z"),
+            Tone::Ember),
+       fill(QStringLiteral("M6.2 21 Q4.4 14.8 10.2 13.6 Q16 13.2 16.6 17.6 Q16.8 21 "
+                           "13.6 21.6 Z"),
+            Tone::Edge),
+       fill(QStringLiteral("M10.6 14.2 Q9.4 8.2 12.6 6.8 Q15.2 6.2 15.6 8.6 L13.6 "
+                           "9.2 Q12.8 8.4 12.4 9.6 Q12.2 12 13 14 Z"),
+            Tone::Edge),
+       fill(QStringLiteral("M15.4 7.6 L20.2 6.8 L15.6 9 Z"), Tone::Gold),
+       fill(QStringLiteral("M15.2 9.4 L19.4 10.6 L15 10.4 Z"), Tone::Gold),
+       fill(QStringLiteral("M12.9 7.4 L14 7.4 L14 8.5 L12.9 8.5 Z"), Tone::Ink),
+       line(QStringLiteral("M10.6 6 Q13.4 3.4 17 4.6"), Tone::Ember, 1.0F),
+       fill(QStringLiteral("M10 4.6 L12 3.6 L11.6 5.8 Z"), Tone::Ember),
+       fill(QStringLiteral("M13 2.4 L14.6 2 L14 4 Z"), Tone::Ember),
+       fill(QStringLiteral("M16.6 3 L18.4 3.8 L16.6 4.8 Z"), Tone::Ember)});
+
   return catalog;
 }
 

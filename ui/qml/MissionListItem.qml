@@ -200,7 +200,7 @@ Rectangle {
 
             RowLayout {
                 spacing: Theme.spacingTiny
-                visible: !!(mission_data && mission_data.difficulty_modifier)
+                visible: !!mission_data && ScenarioChallenge.has_rating(mission_data.difficulty_modifier)
 
                 Label {
                     text: qsTr("Difficulty:")
@@ -210,17 +210,12 @@ Rectangle {
 
                 Repeater {
 
-                    model: 5
+                    model: ScenarioChallenge.maxRating
 
                     delegate: Text {
                         required property int index
 
-                        readonly property int filled: {
-                            if (!mission_data || !mission_data.difficulty_modifier)
-                                return 1;
-                            var steps = Math.ceil((mission_data.difficulty_modifier - 1.0) / 0.15);
-                            return Math.max(1, Math.min(5, steps));
-                        }
+                        readonly property int filled: ScenarioChallenge.rating(mission_data ? mission_data.difficulty_modifier : 0)
 
                         text: index < filled ? "★" : "☆"
                         color: index < filled ? Theme.warningText : Theme.textDim

@@ -31,6 +31,8 @@ struct UnitSetup {
   UnitBehavior behavior = UnitBehavior::Strategic;
   float guard_radius = 10.0F;
   std::vector<Position> patrol_waypoints;
+
+  bool difficulty_scaling = true;
 };
 
 struct BuildingSetup {
@@ -45,6 +47,8 @@ struct PlayerSetup {
   QString nation;
   QString faction;
   QString color;
+
+  std::optional<int> team_id;
   std::vector<UnitSetup> starting_units;
   std::vector<BuildingSetup> starting_buildings;
   Game::Systems::ResourceOverlay starting_resources;
@@ -99,6 +103,8 @@ struct AISetup {
   QString faction;
   QString color;
   QString difficulty;
+
+  bool difficulty_scaling = true;
   std::optional<int> team_id;
   std::optional<QString> strategy;
   std::optional<QString> posture;

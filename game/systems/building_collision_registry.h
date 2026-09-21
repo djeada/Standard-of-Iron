@@ -19,6 +19,8 @@ enum class SpawnType : std::uint8_t;
 
 namespace Game::Systems {
 
+class NavigationService;
+
 inline constexpr float k_default_building_grid_padding = 1.0F;
 inline constexpr float k_wall_segment_grid_padding = 0.0F;
 
@@ -99,11 +101,12 @@ public:
     float depth;
   };
 
-  using RegionDirtyHook = void (*)(float center_x,
+  using RegionDirtyHook = void (*)(BuildingCollisionRegistry& source,
+                                   float center_x,
                                    float center_z,
                                    float width,
                                    float depth);
-  using GridDirtyHook = void (*)();
+  using GridDirtyHook = void (*)(BuildingCollisionRegistry& source);
 
   struct ObstructionRelease {
     float center_x{0.0F};
@@ -111,10 +114,14 @@ public:
     bool located{false};
   };
 
-  using ObstructionReleasedHook = void (*)(const ObstructionRelease& release);
+  using ObstructionReleasedHook = void (*)(BuildingCollisionRegistry& source,
+                                           const ObstructionRelease& release);
   static void set_region_dirty_hook(RegionDirtyHook hook);
   static void set_grid_dirty_hook(GridDirtyHook hook);
   static void set_obstruction_released_hook(ObstructionReleasedHook hook);
+
+  void bind_navigation(NavigationService* navigation) { m_navigation = navigation; }
+  [[nodiscard]] auto navigation() const -> NavigationService* { return m_navigation; }
 
   static auto get_building_size(std::string_view building_type) -> BuildingSize;
   static auto get_building_size(Game::Units::SpawnType building_type) -> BuildingSize;
@@ -281,6 +288,8 @@ private:
   static const std::map<std::string, BuildingBody, std::less<>> s_building_bodies;
 
   static float s_grid_padding;
+
+  NavigationService* m_navigation = nullptr;
 };
 
 } // namespace Game::Systems

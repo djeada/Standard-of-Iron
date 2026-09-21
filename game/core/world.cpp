@@ -1090,6 +1090,14 @@ auto render_entity_signature(const Entity& entity) -> std::uint64_t {
   if (auto const* farm = entity.get_component<FarmComponent>()) {
     render_hash_combine(signature, static_cast<std::uint64_t>(farm->growth_stage()));
   }
+  if (auto const* stockpile = entity.get_component<StockpileComponent>()) {
+
+    render_hash_float(signature, stockpile->wood_fill);
+    render_hash_float(signature, stockpile->stone_fill);
+    render_hash_float(signature, stockpile->iron_fill);
+    render_hash_float(signature, stockpile->food_fill);
+    render_hash_float(signature, stockpile->deposit_flash);
+  }
   if (auto const* gate = entity.get_component<GateComponent>()) {
 
     render_hash_float(signature, gate->open_amount);
@@ -1290,7 +1298,7 @@ void World::destroy_entity(EntityID entity_id) {
 
   if (m_registry.is_alive(entity_id)) {
     if (!m_is_render_snapshot && g_entity_destroyed_hook != nullptr) {
-      g_entity_destroyed_hook(entity_id);
+      g_entity_destroyed_hook(*this, entity_id);
     }
     m_registry.destroy_entity(entity_id);
   }
@@ -1303,6 +1311,27 @@ void World::destroy_entity(EntityID entity_id) {
 
 void World::clear() {
   const EntityLock lock(*this);
+
+  if (!m_is_render_snapshot) {
+    const auto observers = m_entity_destroyed_observers;
+    std::vector<EntityID> live;
+    live.reserve(m_registry.entity_count());
+    const std::size_t slot_total = m_registry.slot_count();
+    for (std::size_t index = 1; index < slot_total; ++index) {
+      const EntityID id = m_registry.entity_at_index(static_cast<std::uint32_t>(index));
+      if (id != NULL_ENTITY) {
+        live.push_back(id);
+      }
+    }
+    for (const EntityID id : live) {
+      if (g_entity_destroyed_hook != nullptr) {
+        g_entity_destroyed_hook(*this, id);
+      }
+      for (const auto& observer : observers) {
+        observer.callback(id);
+      }
+    }
+  }
 
   m_registry.clear();
   m_deferred.clear();

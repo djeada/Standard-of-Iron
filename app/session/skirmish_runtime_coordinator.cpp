@@ -6,6 +6,7 @@
 #include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
+#include "game/mission/difficulty_forces.h"
 #include "game/session/session_context.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
@@ -37,7 +38,8 @@ auto SkirmishRuntimeCoordinator::perform_load(
           .error = load_result.error_message,
           .updated_player_id = load_result.updated_player_id,
           .selected_player_changed =
-              load_result.updated_player_id != ctx.selected_player_id};
+              load_result.updated_player_id != ctx.selected_player_id,
+          .resolved_player_configs = load_result.resolved_player_configs};
 }
 
 void SkirmishRuntimeCoordinator::center_camera_on_local_forces(
@@ -115,16 +117,23 @@ void SkirmishRuntimeCoordinator::initialize_player_resources(
               Game::GameConfig::instance().get_starting_gold());
   }
 
-  const auto endow = [&](int owner_id) {
+  const auto endow = [&](int owner_id, float multiplier) {
     for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
-      resources.set(owner_id, type, stock.get(type));
+      const int authored = stock.get(type);
+      resources.set(
+          owner_id, type, Game::Mission::scaled_resource_amount(authored, multiplier));
     }
   };
   for (const auto& owner_id : owner_registry.get_player_owner_ids()) {
-    endow(owner_id);
+    endow(owner_id, 1.0F);
   }
   for (const auto& owner_id : owner_registry.get_ai_owner_ids()) {
-    endow(owner_id);
+    const bool eligible =
+        ctx.difficulty != nullptr &&
+        Game::Mission::difficulty_applies_to(
+            *ctx.difficulty, owner_registry, owner_id, ctx.local_owner_id);
+    endow(owner_id,
+          eligible ? ctx.difficulty->profile_for(owner_id).resource_multiplier : 1.0F);
   }
 }
 

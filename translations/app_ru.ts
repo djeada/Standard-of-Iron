@@ -2285,6 +2285,53 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>DifficultyCatalog</name>
+    <message>
+        <source>Difficulty</source>
+        <translation>Сложность</translation>
+    </message>
+    <message>
+        <source>Difficulty changes enemy resources, starting troops and reinforcements only. Enemy tactics never change.</source>
+        <translation>Сложность меняет только ресурсы, начальные войска и подкрепления противника. Тактика противника не меняется.</translation>
+    </message>
+    <message>
+        <source>Easy</source>
+        <translation>Лёгкая</translation>
+    </message>
+    <message>
+        <source>The legions forgot their alarm clock.</source>
+        <translation>Легионы забыли завести будильник.</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Обычная</translation>
+    </message>
+    <message>
+        <source>A perfectly respectable amount of chaos.</source>
+        <translation>Вполне приличное количество хаоса.</translation>
+    </message>
+    <message>
+        <source>Hard</source>
+        <translation>Высокая</translation>
+    </message>
+    <message>
+        <source>The treasury has discovered your location.</source>
+        <translation>Казна узнала, где вы находитесь.</translation>
+    </message>
+    <message>
+        <source>Brutal</source>
+        <translation>Зверская</translation>
+    </message>
+    <message>
+        <source>HONK. The empire has doubled its budget.</source>
+        <translation>ГА-ГА. Империя удвоила свой бюджет.</translation>
+    </message>
+    <message>
+        <source>Enemy resources %1 · starting troops %2 · reinforcements %3</source>
+        <translation>Ресурсы врага %1 · начальные войска %2 · подкрепления %3</translation>
+    </message>
+</context>
+<context>
     <name>EconomyCoach</name>
     <message>
         <source>Hide these prompts</source>
@@ -6327,6 +6374,10 @@ to see preview</source>
     <message>
         <source>Start the battle (Enter)</source>
         <translation>Начать бой (Enter)</translation>
+    </message>
+    <message>
+        <source>Click to change this opponent&apos;s difficulty</source>
+        <translation>Нажмите, чтобы изменить сложность этого противника</translation>
     </message>
 </context>
 <context>

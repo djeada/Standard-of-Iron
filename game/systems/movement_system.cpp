@@ -388,6 +388,8 @@ void MovementSystem::update(Engine::Core::World* world, float delta_time) {
                                 Engine::Core::MovementComponent&) {
         move_unit(world->get_entity(id), world, delta_time);
       });
+
+  world->spatial_index().invalidate();
 }
 
 void MovementSystem::process_pending_path_requests(Engine::Core::World& world) {
@@ -395,6 +397,14 @@ void MovementSystem::process_pending_path_requests(Engine::Core::World& world) {
   while (processed < k_path_requests_per_tick && !m_pending_path_requests.empty()) {
     PendingPathRequest request = std::move(m_pending_path_requests.front());
     m_pending_path_requests.pop_front();
+
+    const auto generation = m_pending_path_generations.find(request.entity_id);
+    if (generation == m_pending_path_generations.end() ||
+        generation->second != request.generation) {
+      continue;
+    }
+    m_pending_path_generations.erase(generation);
+
     auto* entity = world.get_entity(request.entity_id);
     if (entity == nullptr) {
       ++processed;
@@ -434,21 +444,33 @@ auto MovementSystem::enqueue_pending_path_request(Engine::Core::EntityID entity_
                                                   std::uint64_t navigation_revision,
                                                   std::uint64_t order_sequence)
     -> bool {
-  cancel_pending_path_request(entity_id);
+
+  const std::uint64_t generation = ++m_pending_path_generations[entity_id];
+
   if (m_pending_path_requests.size() >= k_max_pending_path_requests) {
-    Engine::Core::count_nav(Engine::Core::NavCounter::RequestsDropped);
-    return false;
+
+    const auto evicted = m_pending_path_requests.front();
+    m_pending_path_requests.pop_front();
+    const auto current = m_pending_path_generations.find(evicted.entity_id);
+    if (current != m_pending_path_generations.end() &&
+        current->second == evicted.generation) {
+      m_pending_path_generations.erase(current);
+      Engine::Core::count_nav(Engine::Core::NavCounter::RequestsDropped);
+    }
   }
+
   Engine::Core::count_nav(Engine::Core::NavCounter::RequestsQueued);
-  m_pending_path_requests.push_back(
-      {entity_id, target, navigation_revision, order_sequence, precise_arrival});
+  m_pending_path_requests.push_back({entity_id,
+                                     target,
+                                     navigation_revision,
+                                     order_sequence,
+                                     generation,
+                                     precise_arrival});
   return true;
 }
 
 void MovementSystem::cancel_pending_path_request(Engine::Core::EntityID entity_id) {
-  std::erase_if(m_pending_path_requests, [entity_id](auto const& request) {
-    return request.entity_id == entity_id;
-  });
+  m_pending_path_generations.erase(entity_id);
 }
 
 void MovementSystem::repath_after_obstruction_release(

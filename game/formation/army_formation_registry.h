@@ -34,6 +34,11 @@ public:
 
   void remove_group(FormationGroupID id);
 
+  auto replace_members(FormationGroupID id,
+                       std::vector<EntityID> members) -> std::vector<EntityID>;
+
+  [[nodiscard]] auto members_of(FormationGroupID id) const -> std::vector<EntityID>;
+
   auto add_member(FormationGroupID id, EntityID entity) -> bool;
   auto remove_member(EntityID entity) -> bool;
 
@@ -67,6 +72,10 @@ public:
                                          const ArmyFormation& formation);
 
   static void detach(Engine::Core::World& world, EntityID entity);
+
+  static void clear_membership_component(Engine::Core::World& world, EntityID entity);
+
+  static void disband(Engine::Core::World& world, FormationGroupID id);
 
   [[nodiscard]] static auto replan(Engine::Core::World& world,
                                    FormationGroupID id) -> bool;

@@ -26,8 +26,10 @@
 #include "game/map/mission_context.h"
 #include "game/map/wave_archetype_catalog.h"
 #include "game/mission/campaign_manager.h"
+#include "game/mission/difficulty_forces.h"
 #include "game/mission/mission_commander_setup.h"
 #include "game/mission/mission_waves.h"
+#include "game/mission/spawn_placement.h"
 #include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_commander_doctrine.h"
@@ -245,8 +247,11 @@ auto MissionSetupCoordinator::apply_mission_setup(
 
   auto spawn_units_for_owner = [&](int owner_id,
                                    const Game::Systems::NationID nation_id,
-                                   const std::vector<Game::Mission::UnitSetup>& units) {
+                                   const std::vector<Game::Mission::UnitSetup>& units,
+                                   float force_multiplier) {
     const bool ai_controlled = owner_registry.is_ai(owner_id);
+    int requested_bonus = 0;
+    int unplaced_bonus = 0;
     for (const auto& unit_setup : units) {
       const auto spawn_type =
           Game::Units::spawn_typeFromString(unit_setup.type.toStdString());
@@ -255,82 +260,13 @@ auto MissionSetupCoordinator::apply_mission_setup(
         continue;
       }
 
-      const int count = std::max(1, unit_setup.count);
+      const int authored_count = std::max(1, unit_setup.count);
+      const int count =
+          unit_setup.difficulty_scaling
+              ? Game::Mission::scaled_force_count(authored_count, force_multiplier)
+              : authored_count;
+      requested_bonus += count - authored_count;
       const QVector3D base_pos = position_to_world(unit_setup.position);
-
-      auto place_clear_of_units = [&ctx, &base_pos](Engine::Core::Entity& placed) {
-        constexpr float k_gap = 0.3F;
-        constexpr int k_max_rings = 48;
-        constexpr int k_footprint_probes = 8;
-        constexpr float k_two_pi = 6.2831853F;
-        const float radius =
-            Game::Systems::CommandService::get_unit_radius(ctx.world, placed.get_id());
-        Game::Systems::BodyProfile ground;
-        if (const auto* movement =
-                ctx.world.try_get<Engine::Core::MovementComponent>(placed.get_id())) {
-          ground.passability = movement->get_can_enter_forest()
-                                   ? Game::Systems::Pathfinding::Passability::Light
-                                   : Game::Systems::Pathfinding::Passability::Heavy;
-        }
-        struct Occupied {
-          QVector3D centre;
-          float radius;
-        };
-        std::vector<Occupied> occupied;
-        ctx.world.each<Engine::Core::MovementComponent>(
-            [&](Engine::Core::EntityID other, Engine::Core::MovementComponent&) {
-              const auto* other_transform =
-                  ctx.world.try_get<Engine::Core::TransformComponent>(other);
-              if (other == placed.get_id() || other_transform == nullptr ||
-                  ctx.world.has<Engine::Core::BuildingComponent>(other)) {
-                return;
-              }
-              occupied.push_back(
-                  {QVector3D(
-                       other_transform->position.x, 0.0F, other_transform->position.z),
-                   Game::Systems::CommandService::get_unit_radius(ctx.world, other)});
-            });
-        const auto fits = [&](const QVector3D& centre) {
-          if (!Game::Systems::Walkability::can_stand(centre, ground)) {
-            return false;
-          }
-          for (int probe = 0; probe < k_footprint_probes; ++probe) {
-            const float angle = static_cast<float>(probe) * k_two_pi /
-                                static_cast<float>(k_footprint_probes);
-            const QVector3D edge(centre.x() + std::sin(angle) * radius * 0.6F,
-                                 0.0F,
-                                 centre.z() + std::cos(angle) * radius * 0.6F);
-            if (!Game::Systems::Walkability::can_stand(edge, ground)) {
-              return false;
-            }
-          }
-          return std::none_of(
-              occupied.begin(), occupied.end(), [&](const Occupied& other) {
-                return (other.centre - centre).length() < other.radius + radius + k_gap;
-              });
-        };
-        const QVector3D origin(base_pos.x(), 0.0F, base_pos.z());
-        const float step = std::max(0.5F, radius * 0.5F);
-        for (int ring = 0; ring <= k_max_rings; ++ring) {
-          const float distance = step * static_cast<float>(ring);
-          const int samples =
-              ring == 0
-                  ? 1
-                  : std::max(6,
-                             static_cast<int>(std::ceil(k_two_pi * distance / step)));
-          for (int sample = 0; sample < samples; ++sample) {
-            const float angle =
-                static_cast<float>(sample) * k_two_pi / static_cast<float>(samples);
-            const QVector3D candidate(origin.x() + std::sin(angle) * distance,
-                                      0.0F,
-                                      origin.z() + std::cos(angle) * distance);
-            if (fits(candidate)) {
-              return std::optional<QVector3D>(candidate);
-            }
-          }
-        }
-        return std::optional<QVector3D>();
-      };
 
       for (int i = 0; i < count; ++i) {
         QVector3D pos = base_pos;
@@ -353,14 +289,25 @@ auto MissionSetupCoordinator::apply_mission_setup(
         if (entity == nullptr) {
           continue;
         }
-        if (auto* transform =
-                ctx.world.try_get<Engine::Core::TransformComponent>(entity->get_id())) {
-          if (const auto placed = place_clear_of_units(*entity)) {
-            transform->position.x = placed->x();
-            transform->position.z = placed->z();
-            pos.setX(placed->x());
-            pos.setZ(placed->z());
-          }
+        const bool is_bonus_troop = i >= authored_count;
+        const auto placed = Game::Mission::place_clear_of_units(
+            ctx.world,
+            entity->get_id(),
+            base_pos,
+            is_bonus_troop ? Game::Mission::BuildingFootprints::Refuse
+                           : Game::Mission::BuildingFootprints::Trust);
+        if (placed.has_value()) {
+          pos.setX(placed->x());
+          pos.setZ(placed->z());
+        } else if (is_bonus_troop) {
+
+          ctx.world.destroy_entity(entity->get_id());
+          ++unplaced_bonus;
+          continue;
+        } else {
+          qWarning() << "Mission setup: no clear ground near the authored position of"
+                     << unit_setup.type << "for owner" << owner_id
+                     << "- it stands where the mission file put it";
         }
 
         if (unit_setup.behavior == Game::Mission::UnitBehavior::Guard) {
@@ -423,6 +370,14 @@ auto MissionSetupCoordinator::apply_mission_setup(
           }
         }
       }
+    }
+
+    if (requested_bonus != 0) {
+      qInfo() << "Mission setup: owner" << owner_id << "team"
+              << owner_registry.get_owner_team(owner_id) << "asked for"
+              << requested_bonus << "authored troops on top of the baseline, placed"
+              << (requested_bonus - unplaced_bonus)
+              << (unplaced_bonus > 0 ? "- short of clear ground" : "");
     }
   };
 
@@ -515,7 +470,9 @@ auto MissionSetupCoordinator::apply_mission_setup(
             .arg(local_owner_id)
             .toStdString());
   }
-  owner_registry.set_owner_team(local_owner_id, 0);
+
+  owner_registry.set_owner_team(local_owner_id,
+                                mission.player_setup.team_id.value_or(0));
 
   const auto player_nation_id = resolve_nation_id(mission.player_setup.nation);
   nation_registry.set_player_nation(local_owner_id, player_nation_id);
@@ -524,7 +481,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
   verify_owner_commander(local_owner_id, QStringLiteral("the player"));
   verify_message_speakers(local_owner_id);
   spawn_units_for_owner(
-      local_owner_id, player_nation_id, mission.player_setup.starting_units);
+      local_owner_id, player_nation_id, mission.player_setup.starting_units, 1.0F);
   spawn_buildings_for_owner(
       local_owner_id, player_nation_id, mission.player_setup.starting_buildings);
 
@@ -558,7 +515,16 @@ auto MissionSetupCoordinator::apply_mission_setup(
     apply_owner_color(ai_owner_id, ai_setup.color);
 
     verify_owner_commander(ai_owner_id, ai_setup.id);
-    spawn_units_for_owner(ai_owner_id, ai_nation_id, ai_setup.starting_units);
+    const bool scales_with_preset =
+        ctx.difficulty != nullptr && ai_setup.difficulty_scaling &&
+        Game::Mission::difficulty_applies_to(
+            *ctx.difficulty, owner_registry, ai_owner_id, local_owner_id);
+    const float ai_force_multiplier =
+        scales_with_preset
+            ? ctx.difficulty->profile_for(ai_owner_id).starting_unit_multiplier
+            : 1.0F;
+    spawn_units_for_owner(
+        ai_owner_id, ai_nation_id, ai_setup.starting_units, ai_force_multiplier);
     spawn_buildings_for_owner(ai_owner_id, ai_nation_id, ai_setup.starting_buildings);
 
     ai_owner_id++;

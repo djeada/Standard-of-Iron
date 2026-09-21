@@ -1088,6 +1088,18 @@ auto main(int argc, char* argv[]) -> int {
                            0,
                            "EconomyGuide");
 
+  qmlRegisterSingletonType(QUrl("qrc:/StandardOfIron/ui/qml/DifficultyCatalog.qml"),
+                           "StandardOfIron",
+                           1,
+                           0,
+                           "DifficultyCatalog");
+
+  qmlRegisterSingletonType(QUrl("qrc:/StandardOfIron/ui/qml/ScenarioChallenge.qml"),
+                           "StandardOfIron",
+                           1,
+                           0,
+                           "ScenarioChallenge");
+
   const QUrl root_qml =
       component_gallery_requested
           ? QUrl(QStringLiteral("qrc:/StandardOfIron/Design/GalleryWindow.qml"))

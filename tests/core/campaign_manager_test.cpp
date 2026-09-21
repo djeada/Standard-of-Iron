@@ -1,7 +1,9 @@
 #include <QCoreApplication>
 #include <QDir>
+#include <QFile>
 #include <QStandardPaths>
 #include <QString>
+#include <QTemporaryDir>
 #include <QVariantList>
 #include <QVariantMap>
 
@@ -256,4 +258,92 @@ TEST_F(CampaignManagerTest, LoadingASkirmishSaveLeavesNoMissionBehind) {
   EXPECT_FALSE(manager->current_mission_definition().has_value())
       << "a skirmish save left the previous mission's rules in place";
   EXPECT_TRUE(manager->current_mission_id().isEmpty());
+}
+
+TEST_F(CampaignManagerTest, ABundledMissionIsRememberedByItsResourcePath) {
+  int selected_player_id = 1;
+  manager->start_campaign_mission(
+      QStringLiteral("%1/%2").arg(QLatin1String(k_campaign_id),
+                                  QLatin1String(k_first_mission)),
+      selected_player_id,
+      QStringLiteral("hard"));
+
+  const Game::Mission::MissionContext context = manager->current_mission_context();
+  ASSERT_TRUE(manager->current_mission_definition().has_value());
+  EXPECT_EQ(context.difficulty, QStringLiteral("hard"));
+
+  EXPECT_TRUE(context.mission_file.startsWith(QStringLiteral(":/")) ||
+              QFile::exists(context.mission_file))
+      << context.mission_file.toStdString();
+
+  manager->set_skirmish_context(QStringLiteral("assets/maps/map_crossing_rhone.json"));
+  ASSERT_FALSE(manager->current_mission_definition().has_value());
+  manager->restore_mission_context(context);
+  ASSERT_TRUE(manager->current_mission_definition().has_value());
+  EXPECT_EQ(manager->current_mission_definition()->id, QLatin1String(k_first_mission));
+}
+
+TEST_F(CampaignManagerTest, AMissionStartedFromAnArbitraryPathIsReloadedFromIt) {
+  QTemporaryDir directory;
+  ASSERT_TRUE(directory.isValid());
+  const QString path = directory.filePath(QStringLiteral("skirmish_of_nowhere.json"));
+  {
+    QFile file(path);
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    file.write(R"({
+      "id": "skirmish_of_nowhere",
+      "title": "Skirmish of Nowhere",
+      "map_path": ":/assets/maps/map_crossing_rhone.json",
+      "player_setup": {"nation": "carthage"}
+    })");
+  }
+
+  int selected_player_id = 1;
+  QString error;
+  ASSERT_TRUE(manager->start_mission_file(path, selected_player_id, &error))
+      << error.toStdString();
+  const Game::Mission::MissionContext context = manager->current_mission_context();
+  EXPECT_EQ(context.mission_file, path);
+
+  manager->set_skirmish_context(QStringLiteral("assets/maps/map_crossing_rhone.json"));
+  ASSERT_FALSE(manager->current_mission_definition().has_value());
+
+  manager->restore_mission_context(context);
+  ASSERT_TRUE(manager->current_mission_definition().has_value())
+      << "a save of a custom mission could not find its own definition again";
+  EXPECT_EQ(manager->current_mission_definition()->title,
+            QStringLiteral("Skirmish of Nowhere"));
+}
+
+TEST_F(CampaignManagerTest, ACustomMissionIsNeverSwappedForABundledOneWithTheSameId) {
+  QTemporaryDir directory;
+  ASSERT_TRUE(directory.isValid());
+  const QString path = directory.filePath(QStringLiteral("mine.json"));
+  {
+    QFile file(path);
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    file.write(QStringLiteral(R"({
+      "id": "%1",
+      "title": "Not The Campaign Mission",
+      "map_path": ":/assets/maps/map_crossing_rhone.json",
+      "player_setup": {"nation": "carthage"}
+    })")
+                   .arg(QLatin1String(k_first_mission))
+                   .toUtf8());
+  }
+
+  int selected_player_id = 1;
+  QString error;
+  ASSERT_TRUE(manager->start_mission_file(path, selected_player_id, &error))
+      << error.toStdString();
+  const Game::Mission::MissionContext context = manager->current_mission_context();
+  ASSERT_EQ(context.mission_file, path);
+  ASSERT_EQ(manager->current_mission_definition()->title,
+            QStringLiteral("Not The Campaign Mission"));
+
+  ASSERT_TRUE(QFile::remove(path));
+  manager->restore_mission_context(context);
+
+  EXPECT_FALSE(manager->current_mission_definition().has_value())
+      << "the bundled mission with the same id was loaded in its place";
 }
