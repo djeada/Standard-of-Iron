@@ -9,4 +9,7 @@ namespace Game::Systems {
 [[nodiscard]] auto troop_count_for(const Engine::Core::World& world,
                                    int owner_id) -> int;
 
+[[nodiscard]] auto authoritative_troop_count_for(const Engine::Core::World& world,
+                                                 int owner_id) -> int;
+
 } // namespace Game::Systems

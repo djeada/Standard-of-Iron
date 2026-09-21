@@ -89,6 +89,42 @@ TEST(WaveArchetypeCatalog, DifficultyMultipliersRankFromEasyToVeryHard) {
   EXPECT_FLOAT_EQ(difficulty_strength_multiplier(QStringLiteral("nonsense")), 1.0F);
 }
 
+TEST(WaveArchetypeCatalog, TheAuthoredCurveIsNotThePlayerPresetCurve) {
+  EXPECT_FLOAT_EQ(difficulty_strength_multiplier(QStringLiteral("easy")), 0.75F);
+  EXPECT_FLOAT_EQ(difficulty_strength_multiplier(QStringLiteral("hard")), 1.2F);
+  EXPECT_FLOAT_EQ(difficulty_strength_multiplier(QStringLiteral("very_hard")), 1.4F);
+
+  EXPECT_NE(difficulty_strength_multiplier(QStringLiteral("hard")), 1.5F);
+  EXPECT_NE(difficulty_strength_multiplier(QStringLiteral("very_hard")), 2.0F);
+}
+
+TEST(WaveArchetypeCatalog, SmallWavesRoundRoleByRoleAndSaySo) {
+  std::vector<WaveComposition> source;
+  for (const int count : {1, 3, 5}) {
+    WaveComposition role;
+    role.type = QStringLiteral("spearman");
+    role.count = count;
+    source.push_back(role);
+  }
+
+  const auto hard = scale_wave_composition(source, 1.5F);
+  ASSERT_EQ(hard.size(), 3U);
+
+  EXPECT_EQ(hard[0].count, 2);
+  EXPECT_EQ(hard[1].count, 5);
+  EXPECT_EQ(hard[2].count, 8);
+  EXPECT_EQ(total_units(hard), 15);
+  EXPECT_NE(total_units(hard), static_cast<int>(total_units(source) * 1.5F));
+
+  const auto brutal = scale_wave_composition(source, 2.0F);
+  EXPECT_EQ(total_units(brutal), total_units(source) * 2);
+
+  const auto easy = scale_wave_composition(source, 0.1F);
+  for (const auto& role : easy) {
+    EXPECT_GE(role.count, 1);
+  }
+}
+
 TEST(WaveArchetypeCatalog, ElitesAndTitlesSurviveScaling) {
   std::vector<WaveComposition> source;
   WaveComposition guard;

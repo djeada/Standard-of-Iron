@@ -1,4 +1,6 @@
 singleton StyleGuide 1.0 StyleGuide.qml
+singleton DifficultyCatalog 1.0 DifficultyCatalog.qml
+singleton ScenarioChallenge 1.0 ScenarioChallenge.qml
 singleton EconomyGuide 1.0 EconomyGuide.qml
 singleton CameraGuide 1.0 CameraGuide.qml
 StyledButton 1.0 StyledButton.qml
@@ -9,6 +11,8 @@ LoadGamePanel 1.0 LoadGamePanel.qml
 SaveSlotRow 1.0 SaveSlotRow.qml
 SaveProgressOverlay 1.0 SaveProgressOverlay.qml
 MapPreview 1.0 MapPreview.qml
+DifficultySelector 1.0 DifficultySelector.qml
+DifficultyBadge 1.0 DifficultyBadge.qml
 SkirmishChip 1.0 SkirmishChip.qml
 FormationPanel 1.0 FormationPanel.qml
 FormationShape 1.0 FormationShape.qml

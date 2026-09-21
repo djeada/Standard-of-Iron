@@ -10,6 +10,8 @@ Rectangle {
     property string caption: ""
     property string value: ""
     property string emblem_source: ""
+    property string vector_icon: ""
+    property color vector_accent: Theme.accent
     property color value_color: Theme.textMain
     property color outline: Theme.thumbBr
     property bool interactive: false
@@ -49,11 +51,27 @@ Rectangle {
         }
     }
 
+    Design.IronVectorIcon {
+        id: glyph
+
+        width: chip.vector_icon !== "" ? Design.Metrics.iconMedium : 0
+        height: width
+        visible: chip.vector_icon !== ""
+        iconId: chip.vector_icon
+        accent: chip.vector_accent
+
+        anchors {
+            left: parent.left
+            leftMargin: Theme.spacingSmall
+            verticalCenter: parent.verticalCenter
+        }
+    }
+
     Item {
         id: text_area
 
         anchors {
-            left: emblem.visible ? emblem.right : parent.left
+            left: emblem.visible ? emblem.right : (glyph.visible ? glyph.right : parent.left)
             right: parent.right
             top: parent.top
             bottom: parent.bottom

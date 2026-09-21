@@ -110,8 +110,9 @@ A starting-unit entry describes:
 - count;
 - position;
 - behavior;
-- guard radius; and
-- optional patrol waypoints.
+- guard radius;
+- optional patrol waypoints; and
+- optional `difficulty_scaling` (default `true`), which holds this spawn group at its authored count on every difficulty preset.
 
 Supported behavior values map to the current runtime behaviors:
 
@@ -148,23 +149,26 @@ Campaign/mission tests verify expected commander coverage and nation/mission con
 
 Each entry in `ai_setups[]` defines one computer-controlled force.
 
-| Field                | Purpose                                 |
-| -------------------- | --------------------------------------- |
-| `id`                 | mission-local force identifier          |
-| `nation`             | nation/roster selection                 |
-| `faction`            | mission/UI faction metadata             |
-| `color`              | owner colour                            |
-| `difficulty`         | AI execution/wave-strength tuning       |
-| `team_id`            | alliance grouping between owners        |
-| `strategy`           | strategic preset                        |
-| `posture`            | garrison or field behavior              |
-| `personality`        | aggression/defense/harassment modifiers |
-| `starting_units`     | mission-level starting troops           |
-| `starting_buildings` | mission-level starting structures       |
-| `wave_escalation`    | per-wave strength growth                |
-| `waves`              | scripted reinforcement waves            |
+| Field                | Purpose                                                               |
+| -------------------- | --------------------------------------------------------------------- |
+| `id`                 | mission-local force identifier                                        |
+| `nation`             | nation/roster selection                                               |
+| `faction`            | mission/UI faction metadata                                           |
+| `color`              | owner colour                                                          |
+| `difficulty`         | AI execution/wave-strength tuning                                     |
+| `difficulty_scaling` | opt this force out of the player-selected difficulty (default `true`) |
+| `team_id`            | alliance grouping between owners                                      |
+| `strategy`           | strategic preset                                                      |
+| `posture`            | garrison or field behavior                                            |
+| `personality`        | aggression/defense/harassment modifiers                               |
+| `starting_units`     | mission-level starting troops                                         |
+| `starting_buildings` | mission-level starting structures                                     |
+| `wave_escalation`    | per-wave strength growth                                              |
+| `waves`              | scripted reinforcement waves                                          |
 
 Personality values default to `0.5` when omitted.
+
+`difficulty` is the _authored_ tuning for this opponent and is independent of the difficulty the player selects before a match. The player's preset is documented in [docs/DIFFICULTY.md](DIFFICULTY.md); the two are applied once each and never compounded into one another.
 
 ## AI strategy
 

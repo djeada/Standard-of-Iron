@@ -26,12 +26,17 @@ public:
 
   void load_campaigns();
   void set_available_campaigns(const QVariantList& campaigns);
-  void start_campaign_mission(const QString& mission_path, int& selected_player_id);
+  void start_campaign_mission(const QString& mission_path,
+                              int& selected_player_id,
+                              const QString& difficulty = QString());
   bool start_mission_file(const QString& file_path,
                           int& selected_player_id,
-                          QString* out_error = nullptr);
+                          QString* out_error = nullptr,
+                          const QString& difficulty = QString());
   void mark_current_mission_completed();
   void set_skirmish_context(const QString& map_path);
+
+  void set_current_difficulty(const QString& difficulty);
 
   [[nodiscard]] QVariantList available_campaigns() const {
     return m_available_campaigns;

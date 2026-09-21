@@ -277,12 +277,17 @@ auto ArmyFormationService::build(Engine::Core::World& world,
   if (existing != nullptr && existing->has_member(request.members.front())) {
     marching_facing = existing->facing;
   }
+  std::vector<Engine::Core::EntityID> dropped;
   if (existing == nullptr) {
     group_id = registry.create_group(plan.doctrine, plan.intent, request.members);
   } else {
-    existing->members = request.members;
-    existing->doctrine = plan.doctrine;
-    existing->intent = plan.intent;
+
+    dropped = registry.replace_members(group_id, request.members);
+    existing = registry.find(group_id);
+    if (existing != nullptr) {
+      existing->doctrine = plan.doctrine;
+      existing->intent = plan.intent;
+    }
   }
 
   auto* formation = registry.find(group_id);
@@ -293,6 +298,10 @@ auto ArmyFormationService::build(Engine::Core::World& world,
     formation->reference_slots.clear();
   }
   registry.apply_plan(group_id, plan);
+
+  for (const auto member : dropped) {
+    ArmyFormationRuntime::clear_membership_component(world, member);
+  }
 
   const auto* committed = registry.find(group_id);
   if (committed != nullptr) {

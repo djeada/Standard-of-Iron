@@ -976,7 +976,7 @@ TEST_F(AISystemTest, SepulcherStateMachineStaysLocalAndReturnsToGathering) {
   EXPECT_EQ(context.state, Game::Systems::AI::AIState::Gathering);
 }
 
-TEST_F(AISystemTest, SnapshotBuilderKeepsHiddenStrategicObjectives) {
+TEST_F(AISystemTest, SnapshotBuilderOnlyOffersScoutedStrategicObjectives) {
   Engine::Core::World world;
   auto& owners = Game::Systems::OwnerRegistry::instance();
   owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "AI");
@@ -984,13 +984,27 @@ TEST_F(AISystemTest, SnapshotBuilderKeepsHiddenStrategicObjectives) {
 
   auto* hidden_enemy_base = add_world_unit(
       world, 7, 60.0F, 0.0F, 12.0F, false, true, Game::Units::SpawnType::Barracks);
-  (void)add_world_unit(world, 3, 0.0F, 0.0F, 12.0F, true, false);
+  auto* scout = add_world_unit(world, 3, 0.0F, 0.0F, 12.0F, true, false);
 
-  const auto snapshot = Game::Systems::AI::AISnapshotBuilder::build(world, 3);
+  Game::Systems::AI::KnownObjectives known;
+  const auto unscouted = Game::Systems::AI::AISnapshotBuilder::build(world, 3, &known);
+  EXPECT_TRUE(unscouted.visible_enemies.empty());
+  EXPECT_TRUE(unscouted.strategic_objectives.empty())
+      << "a base nothing has seen was handed to the planner";
 
-  EXPECT_TRUE(snapshot.visible_enemies.empty());
-  ASSERT_EQ(snapshot.strategic_objectives.size(), 1U);
-  EXPECT_EQ(snapshot.strategic_objectives.front().id, hidden_enemy_base->get_id());
+  auto* transform = world.try_get<Engine::Core::TransformComponent>(scout->get_id());
+  ASSERT_NE(transform, nullptr);
+  transform->position.x = 58.0F;
+
+  const auto scouted = Game::Systems::AI::AISnapshotBuilder::build(world, 3, &known);
+  ASSERT_EQ(scouted.strategic_objectives.size(), 1U);
+  EXPECT_EQ(scouted.strategic_objectives.front().id, hidden_enemy_base->get_id());
+
+  transform->position.x = 0.0F;
+  const auto remembered = Game::Systems::AI::AISnapshotBuilder::build(world, 3, &known);
+  ASSERT_EQ(remembered.strategic_objectives.size(), 1U);
+  EXPECT_EQ(remembered.strategic_objectives.front().id, hidden_enemy_base->get_id());
+  EXPECT_TRUE(remembered.visible_enemies.empty());
 }
 
 TEST_F(AISystemTest, DefensiveAILeavesDefendingWhenOnlyDistantEnemyRemainsVisible) {

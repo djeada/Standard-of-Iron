@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <deque>
+#include <unordered_map>
 #include <vector>
 
 #include "../core/component_combat.h"
@@ -96,6 +97,8 @@ private:
     QVector3D target;
     std::uint64_t navigation_revision{0};
     std::uint64_t order_sequence{0};
+
+    std::uint64_t generation{0};
     bool precise_arrival{false};
   };
 
@@ -106,6 +109,7 @@ private:
                                     std::uint64_t order_sequence) -> bool;
   void cancel_pending_path_request(Engine::Core::EntityID entity_id);
   std::deque<PendingPathRequest> m_pending_path_requests;
+  std::unordered_map<Engine::Core::EntityID, std::uint64_t> m_pending_path_generations;
 
   static constexpr std::size_t k_path_requests_per_tick = 8U;
   static constexpr std::size_t k_max_pending_path_requests = 2048U;

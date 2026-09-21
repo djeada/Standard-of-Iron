@@ -346,6 +346,20 @@ void Renderer::set_viewport(int width, int height) {
   }
 }
 
+void Renderer::clear_missing_body_warnings() {
+  const std::lock_guard<std::mutex> lock(m_missing_body_warning_mutex);
+  m_missing_body_warnings.clear();
+}
+
+auto Renderer::note_missing_body_warning(const std::string& key) -> bool {
+  const std::lock_guard<std::mutex> lock(m_missing_body_warning_mutex);
+  if (m_missing_body_warnings.size() >= k_max_missing_body_warnings) {
+
+    return false;
+  }
+  return m_missing_body_warnings.emplace(key).second;
+}
+
 auto Renderer::resolve_animation_time(Engine::Core::EntityID entity_id,
                                       bool update,
                                       float current_time,

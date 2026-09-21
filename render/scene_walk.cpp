@@ -267,7 +267,7 @@ struct UnitRenderEntry {
   Engine::Core::MotionPresentationComponent* motion{nullptr};
   std::string renderer_key;
   Render::GL::RendererHandle renderer_handle{Render::GL::k_invalid_renderer_handle};
-  uint32_t entity_id{0};
+  Engine::Core::EntityID entity_id{0};
   bool selected{false};
   bool hovered{false};
   bool combat_active{false};
@@ -295,7 +295,7 @@ struct RenderEntry {
   Engine::Core::UnitComponent* unit{nullptr};
   std::string renderer_key;
   Render::GL::RendererHandle renderer_handle{Render::GL::k_invalid_renderer_handle};
-  uint32_t entity_id{0};
+  Engine::Core::EntityID entity_id{0};
   bool selected{false};
   bool hovered{false};
   float distance_sq{0.0F};
@@ -956,16 +956,9 @@ void Renderer::submit_unit_entry(
           probe.rigged_body_count() == 0U && soldier_visibility_is_known &&
           unit_should_emit_rigged_body(entry.unit->spawn_type) && !tier_is_minimal &&
           !all_published_soldiers_culled && !prepared_only_casts_shadows) {
-        static std::mutex warning_mutex;
-        static std::unordered_set<std::string> warned_units;
         const std::string warning_key =
             std::to_string(entry.entity_id) + ":" + entry.renderer_key;
-        bool should_warn = false;
-        {
-          std::lock_guard<std::mutex> const lock(warning_mutex);
-          should_warn = warned_units.emplace(warning_key).second;
-        }
-        if (should_warn) {
+        if (note_missing_body_warning(warning_key)) {
           qWarning().noquote()
               << QStringLiteral(
                      "Renderer: unit renderer emitted no rigged body; "

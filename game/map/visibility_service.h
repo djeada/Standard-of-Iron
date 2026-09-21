@@ -109,8 +109,13 @@ private:
     bool changed;
   };
 
+  struct GatheredVision {
+    bool changed = false;
+    std::vector<VisionSource> sources;
+  };
+
   auto gather_vision_sources(Engine::Core::World& world,
-                             int player_id) -> std::vector<VisionSource>;
+                             int player_id) -> GatheredVision;
   auto
   compose_job_payload(const std::vector<VisionSource>& sources) const -> JobPayload;
   void enqueue_job(JobPayload&& payload);
@@ -148,6 +153,8 @@ private:
   struct CachedPosition {
     int grid_x;
     int grid_z;
+
+    int cell_radius;
   };
   std::unordered_map<std::uint64_t, CachedPosition> m_last_positions;
   bool m_force_full_update{true};

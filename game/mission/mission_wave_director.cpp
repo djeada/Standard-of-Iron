@@ -415,6 +415,21 @@ auto MissionWaveDirector::serialize() const -> QJsonObject {
         ids.append(static_cast<double>(entity_id));
       }
       entry["spawned_entity_ids"] = ids;
+
+      QJsonArray composition;
+      for (std::size_t index = 0; index < wave.composition.size(); ++index) {
+        const auto& comp = wave.composition[index];
+        QJsonObject slot;
+        slot["type"] = comp.type;
+        slot["count"] = comp.count;
+        slot["elite"] = comp.elite;
+        if (index < wave.baseline_composition.size()) {
+          slot["baseline_count"] = wave.baseline_composition[index].count;
+        }
+        composition.append(slot);
+      }
+      entry["composition"] = composition;
+
       waves.append(entry);
     }
   }
@@ -449,6 +464,36 @@ void MissionWaveDirector::restore(const QJsonObject& state) {
     for (const auto id_value : entry.value("spawned_entity_ids").toArray()) {
       wave.spawned_entity_ids.push_back(
           static_cast<Engine::Core::EntityID>(id_value.toDouble(0.0)));
+    }
+
+    if (entry.contains("composition")) {
+
+      const QJsonArray composition = entry.value("composition").toArray();
+      const auto shared_slots = std::min(static_cast<std::size_t>(composition.size()),
+                                         wave.composition.size());
+      bool layout_matches =
+          static_cast<std::size_t>(composition.size()) == wave.composition.size();
+      for (std::size_t slot = 0; slot < shared_slots; ++slot) {
+        const QJsonObject saved = composition[static_cast<qsizetype>(slot)].toObject();
+        auto& comp = wave.composition[slot];
+        if (saved.value("type").toString() != comp.type) {
+          layout_matches = false;
+          continue;
+        }
+        comp.count = saved.value("count").toInt(comp.count);
+        comp.elite = saved.value("elite").toBool(comp.elite);
+        if (slot < wave.baseline_composition.size()) {
+          wave.baseline_composition[slot].count =
+              saved.value("baseline_count")
+                  .toInt(wave.baseline_composition[slot].count);
+        }
+      }
+      if (!layout_matches) {
+        qWarning() << "Mission wave restore: the saved composition of wave"
+                   << wave.phase_index << "of" << wave.ai_id
+                   << "no longer matches the mission definition; the parts that "
+                      "still line up keep their saved counts";
+      }
     }
   }
 

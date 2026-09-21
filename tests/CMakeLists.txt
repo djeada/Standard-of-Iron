@@ -83,6 +83,7 @@ add_executable(
     core/component_storage_test.cpp
     core/world_spatial_index_test.cpp
     core/system_schedule_test.cpp
+    core/world_teardown_ownership_test.cpp
     core/percentile_test.cpp
     core/nav_profile_test.cpp
     core/movement_trace_test.cpp
@@ -92,6 +93,7 @@ add_executable(
     map/map_loader_test.cpp
     map/explored_mask_codec_test.cpp
     map/visibility_restore_test.cpp
+    map/visibility_invalidation_test.cpp
     map/map_bridge_coverage_test.cpp
     map/map_supernatural_presence_test.cpp
     map/river_bank_walkability_test.cpp
@@ -179,6 +181,7 @@ add_executable(
     formation/formation_squad_extent_probe_test.cpp
     formation/army_formation_planner_test.cpp
     formation/army_formation_integrity_test.cpp
+    formation/army_formation_membership_test.cpp
     formation/formation_planner_cache_test.cpp
     formation/formation_cohesion_test.cpp
     formation/formation_phase_vocabulary_test.cpp
@@ -262,6 +265,7 @@ soi_register_test_binary(combat_balance_tests)
 add_executable(
     ai_tests
     systems/ai_system_test.cpp
+    systems/ai_scouted_intel_test.cpp
     systems/ai_stall_recovery_test.cpp
     systems/ai_worker_pool_test.cpp
     systems/ai_commander_doctrine_test.cpp
@@ -317,6 +321,7 @@ add_executable(
     map/commander_voice_bank_test.cpp
     map/mission_victory_rules_test.cpp
     map/wave_archetype_catalog_test.cpp
+    map/difficulty_profile_test.cpp
     map/map_catalog_test.cpp
     map/mission_catalog_test.cpp
     map/mission_map_reachability_test.cpp
@@ -595,6 +600,8 @@ add_executable(
     core/input_command_handler_test.cpp
     core/tutorial_mission_test.cpp
     core/campaign_wave_assault_test.cpp
+    core/difficulty_presets_test.cpp
+    core/match_setup_difficulty_test.cpp
     core/mission_startup_test.cpp
     core/production_manager_test.cpp
     core/economy_overview_test.cpp
@@ -612,6 +619,7 @@ add_executable(
     core/camera_bounds_test.cpp
     core/mission_objective_markers_test.cpp
     controllers/command_controller_test.cpp
+    controllers/formation_panel_wiring_test.cpp
     ui/preferences_test.cpp
     ui/hints_test.cpp
     ui/input_bindings_test.cpp

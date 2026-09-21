@@ -10,6 +10,7 @@
 #include "app/core/app_scene_context.h"
 #include "app/core/entity_cache.h"
 #include "game/map/mission_definition.h"
+#include "game/mission/difficulty_profile.h"
 #include "game/systems/match_snapshot.h"
 
 class LoadingProgressTracker;
@@ -56,6 +57,8 @@ struct PerformSkirmishLoadEffects {
   QString error;
   int updated_player_id = 1;
   bool selected_player_changed = false;
+
+  QVariantList resolved_player_configs;
 };
 
 struct CenterCameraOnLocalForcesContext {
@@ -69,6 +72,8 @@ struct InitializePlayerResourcesContext {
   const Game::Systems::LevelSnapshot& level;
   int local_owner_id = 1;
   const Game::Mission::MissionDefinition* mission_definition = nullptr;
+
+  const Game::Mission::MatchDifficulty* difficulty = nullptr;
 };
 
 struct FinalizeSkirmishLoadContext {

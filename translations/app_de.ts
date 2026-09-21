@@ -2285,6 +2285,53 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
 </context>
 <context>
+    <name>DifficultyCatalog</name>
+    <message>
+        <source>Difficulty</source>
+        <translation>Schwierigkeit</translation>
+    </message>
+    <message>
+        <source>Difficulty changes enemy resources, starting troops and reinforcements only. Enemy tactics never change.</source>
+        <translation>Die Schwierigkeit ändert nur die Rohstoffe, Starttruppen und Verstärkungen des Gegners. Die Taktik des Gegners bleibt gleich.</translation>
+    </message>
+    <message>
+        <source>Easy</source>
+        <translation>Leicht</translation>
+    </message>
+    <message>
+        <source>The legions forgot their alarm clock.</source>
+        <translation>Die Legionen haben den Wecker vergessen.</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normal</translation>
+    </message>
+    <message>
+        <source>A perfectly respectable amount of chaos.</source>
+        <translation>Ein durchaus achtbares Maß an Chaos.</translation>
+    </message>
+    <message>
+        <source>Hard</source>
+        <translation>Schwer</translation>
+    </message>
+    <message>
+        <source>The treasury has discovered your location.</source>
+        <translation>Die Staatskasse hat deinen Aufenthaltsort entdeckt.</translation>
+    </message>
+    <message>
+        <source>Brutal</source>
+        <translation>Brutal</translation>
+    </message>
+    <message>
+        <source>HONK. The empire has doubled its budget.</source>
+        <translation>HONK. Das Reich hat sein Budget verdoppelt.</translation>
+    </message>
+    <message>
+        <source>Enemy resources %1 · starting troops %2 · reinforcements %3</source>
+        <translation>Feindliche Rohstoffe %1 · Starttruppen %2 · Verstärkungen %3</translation>
+    </message>
+</context>
+<context>
     <name>EconomyCoach</name>
     <message>
         <source>How it works</source>
@@ -6324,6 +6371,10 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Starting base — click for the next free one, or pick it on the map</source>
         <translation>Startbasis — klicken für die nächste freie oder auf der Karte wählen</translation>
+    </message>
+    <message>
+        <source>Click to change this opponent&apos;s difficulty</source>
+        <translation>Klicken, um die Schwierigkeit dieses Gegners zu ändern</translation>
     </message>
 </context>
 <context>

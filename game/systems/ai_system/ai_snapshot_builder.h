@@ -15,7 +15,8 @@ namespace Game::Systems::AI {
 namespace AISnapshotBuilder {
 
 [[nodiscard]] auto build(const Engine::Core::World& world,
-                         int ai_owner_id) -> AISnapshot;
+                         int ai_owner_id,
+                         KnownObjectives* known = nullptr) -> AISnapshot;
 
 void attach_nation(AISnapshot& snapshot,
                    int ai_owner_id,

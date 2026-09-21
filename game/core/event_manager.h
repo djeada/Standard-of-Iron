@@ -150,7 +150,8 @@ public:
       : m_handle(0) {}
 
   ScopedEventSubscription(EventHandler<T> handler)
-      : m_handle(EventManager::instance().subscribe<T>(handler)) {}
+      : m_bus(&EventManager::instance())
+      , m_handle(m_bus->subscribe<T>(handler)) {}
 
   ~ScopedEventSubscription() { unsubscribe(); }
 
@@ -158,27 +159,33 @@ public:
   auto operator=(const ScopedEventSubscription&) -> ScopedEventSubscription& = delete;
 
   ScopedEventSubscription(ScopedEventSubscription&& other) noexcept
-      : m_handle(other.m_handle) {
+      : m_bus(other.m_bus)
+      , m_handle(other.m_handle) {
+    other.m_bus = nullptr;
     other.m_handle = 0;
   }
 
   auto operator=(ScopedEventSubscription&& other) noexcept -> ScopedEventSubscription& {
     if (this != &other) {
       unsubscribe();
+      m_bus = other.m_bus;
       m_handle = other.m_handle;
+      other.m_bus = nullptr;
       other.m_handle = 0;
     }
     return *this;
   }
 
   void unsubscribe() {
-    if (m_handle != 0) {
-      EventManager::instance().unsubscribe<T>(m_handle);
-      m_handle = 0;
+    if (m_handle != 0 && m_bus != nullptr) {
+      m_bus->unsubscribe<T>(m_handle);
     }
+    m_bus = nullptr;
+    m_handle = 0;
   }
 
 private:
+  EventManager* m_bus = nullptr;
   SubscriptionHandle m_handle;
 };
 

@@ -92,6 +92,8 @@ struct MatchLaunch {
   QString map_path;
   QVariantList player_configs;
   bool set_skirmish_context = false;
+
+  QString difficulty;
 };
 
 class ClientHost {

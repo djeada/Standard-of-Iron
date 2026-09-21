@@ -370,6 +370,8 @@ auto SkirmishLoader::start(const QString& map_path,
     return result;
   }
 
+  result.resolved_player_configs = saved_player_configs;
+
   Game::Map::MapTransformer::set_local_owner_id(player_owner_id);
   const Game::Map::MapTransformOptions transform_options{
       .player_team_overrides = team_overrides,

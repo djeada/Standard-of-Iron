@@ -508,13 +508,15 @@
       ],
       "files": [
         "game/mission/campaign_manager",
+        "game/mission/difficulty_forces",
         "game/mission/commander_message_director",
         "game/mission/mission_setup_coordinator",
         "game/mission/mission_waves",
         "game/mission/mission_wave_director",
         "game/mission/mission_wave_runtime",
         "game/mission/commander_speaker_roster",
-        "game/mission/commander_voice_observer"
+        "game/mission/commander_voice_observer",
+        "game/mission/spawn_placement"
       ],
       "may_use": [
         "domain_types",

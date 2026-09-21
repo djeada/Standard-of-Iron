@@ -3,12 +3,14 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QFile>
+#include <QFileInfo>
 #include <QStringList>
 #include <QVariantMap>
 
 #include "game/map/map_definition.h"
 #include "game/map/mission_loader.h"
 #include "game/map/mission_victory_rules.h"
+#include "game/mission/difficulty_profile.h"
 #include "game/systems/save_load_service.h"
 #include "game/systems/save_storage.h"
 #include "game/systems/victory_service.h"
@@ -37,6 +39,31 @@ auto find_mission_file(const QString& mission_id) -> QString {
   return QString(":/assets/missions/%1.json").arg(mission_id);
 }
 
+auto canonical_mission_reference(const QString& file_path,
+                                 const QString& mission_id) -> QString {
+  if (mission_id.isEmpty()) {
+    return file_path;
+  }
+  const QString bundled = QString(":/assets/missions/%1.json").arg(mission_id);
+  if (!QFile::exists(bundled)) {
+    return file_path;
+  }
+  if (file_path.startsWith(QLatin1String(":/"))) {
+    return bundled;
+  }
+  const QString resolved = find_mission_file(mission_id);
+  if (resolved == file_path) {
+    return bundled;
+  }
+  const QFileInfo given(file_path);
+  const QFileInfo found(resolved);
+  if (given.exists() && found.exists() &&
+      given.canonicalFilePath() == found.canonicalFilePath()) {
+    return bundled;
+  }
+  return file_path;
+}
+
 } // namespace
 
 auto CampaignManager::save_service() const -> Game::Systems::SaveLoadService* {
@@ -58,17 +85,25 @@ void CampaignManager::restore_mission_context(
     return;
   }
 
-  const QString mission_file = find_mission_file(context.mission_id);
+  const bool has_original = !context.mission_file.isEmpty();
+  const QString mission_file =
+      has_original ? context.mission_file : find_mission_file(context.mission_id);
   Game::Mission::MissionDefinition mission;
   QString error;
-  if (Game::Mission::MissionLoader::load_from_json_file(
+  if (!Game::Mission::MissionLoader::load_from_json_file(
           mission_file, mission, &error)) {
-    m_current_mission_definition = mission;
-  } else {
     m_current_mission_definition.reset();
     qWarning() << "CampaignManager: could not reload mission" << context.mission_id
-               << "after loading a save:" << error
+               << "from" << mission_file << "after loading a save:" << error
                << "- victory conditions and campaign progression will not apply";
+  } else if (has_original && !context.mission_id.isEmpty() &&
+             mission.id != context.mission_id) {
+    m_current_mission_definition.reset();
+    qWarning() << "CampaignManager:" << mission_file << "now holds mission"
+               << mission.id << "but the save was made in" << context.mission_id
+               << "- victory conditions and campaign progression will not apply";
+  } else {
+    m_current_mission_definition = mission;
   }
 
   emit current_campaign_changed();
@@ -84,7 +119,9 @@ void CampaignManager::set_available_campaigns(const QVariantList& campaigns) {
   emit available_campaigns_changed();
 }
 
-void CampaignManager::start_campaign_mission(const QString& mission_path, int&) {
+void CampaignManager::start_campaign_mission(const QString& mission_path,
+                                             int&,
+                                             const QString& difficulty) {
   const QStringList parts = mission_path.split('/');
   if (parts.size() != 2) {
     qWarning() << "Invalid mission path format. Expected: campaign_id/mission_id";
@@ -113,7 +150,10 @@ void CampaignManager::start_campaign_mission(const QString& mission_path, int&) 
   m_current_mission_context.mode = "campaign";
   m_current_mission_context.campaign_id = campaign_id;
   m_current_mission_context.mission_id = mission_id;
-  m_current_mission_context.difficulty = "normal";
+  m_current_mission_context.mission_file =
+      canonical_mission_reference(mission_file_path, mission_id);
+  m_current_mission_context.difficulty =
+      Game::Mission::normalize_difficulty_id(difficulty);
 
   emit current_campaign_changed();
   emit current_mission_changed();
@@ -121,7 +161,8 @@ void CampaignManager::start_campaign_mission(const QString& mission_path, int&) 
 
 bool CampaignManager::start_mission_file(const QString& file_path,
                                          int& selected_player_id,
-                                         QString* out_error) {
+                                         QString* out_error,
+                                         const QString& difficulty) {
   Game::Mission::MissionDefinition mission;
   QString error;
   if (!Game::Mission::MissionLoader::load_from_json_file(file_path, mission, &error)) {
@@ -140,7 +181,10 @@ bool CampaignManager::start_mission_file(const QString& file_path,
   m_current_mission_context.mode = QStringLiteral("mission");
   m_current_mission_context.campaign_id.clear();
   m_current_mission_context.mission_id = mission.id;
-  m_current_mission_context.difficulty = QStringLiteral("normal");
+  m_current_mission_context.mission_file =
+      canonical_mission_reference(file_path, mission.id);
+  m_current_mission_context.difficulty =
+      Game::Mission::normalize_difficulty_id(difficulty);
   emit current_campaign_changed();
   emit current_mission_changed();
   return true;
@@ -192,6 +236,15 @@ void CampaignManager::mark_current_mission_completed() {
   emit available_campaigns_changed();
 }
 
+void CampaignManager::set_current_difficulty(const QString& difficulty) {
+  const QString normalized = Game::Mission::normalize_difficulty_id(difficulty);
+  if (m_current_mission_context.difficulty == normalized) {
+    return;
+  }
+  m_current_mission_context.difficulty = normalized;
+  emit current_mission_changed();
+}
+
 void CampaignManager::set_skirmish_context(const QString& map_path) {
   m_campaign_completed = false;
   m_current_campaign_id.clear();
@@ -201,7 +254,8 @@ void CampaignManager::set_skirmish_context(const QString& map_path) {
   m_current_mission_context.mode = "skirmish";
   m_current_mission_context.campaign_id = "";
   m_current_mission_context.mission_id = map_path;
-  m_current_mission_context.difficulty = "normal";
+  m_current_mission_context.mission_file.clear();
+  m_current_mission_context.difficulty = Game::Mission::default_difficulty_id();
 
   emit current_campaign_changed();
   emit current_mission_changed();

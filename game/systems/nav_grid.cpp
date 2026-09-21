@@ -20,6 +20,13 @@ auto active_pathfinder() -> Pathfinding* {
   return navigation != nullptr ? navigation->pathfinder() : nullptr;
 }
 
+auto pathfinder_for(BuildingCollisionRegistry& source) -> Pathfinding* {
+  if (auto* navigation = source.navigation()) {
+    return navigation->pathfinder();
+  }
+  return active_pathfinder();
+}
+
 } // namespace
 
 void NavGrid::initialize(int world_width, int world_height) {
@@ -27,20 +34,24 @@ void NavGrid::initialize(int world_width, int world_height) {
   GateService::clear_blockers();
   NavigationService::active().initialize(world_width, world_height);
 
-  BuildingCollisionRegistry::set_region_dirty_hook(
-      [](float center_x, float center_z, float width, float depth) {
-        if (auto* pathfinder = active_pathfinder()) {
-          pathfinder->mark_building_region_dirty(center_x, center_z, width, depth);
-        }
-      });
-  BuildingCollisionRegistry::set_grid_dirty_hook([]() {
-    if (auto* pathfinder = active_pathfinder()) {
+  BuildingCollisionRegistry::set_region_dirty_hook([](BuildingCollisionRegistry& source,
+                                                      float center_x,
+                                                      float center_z,
+                                                      float width,
+                                                      float depth) {
+    if (auto* pathfinder = pathfinder_for(source)) {
+      pathfinder->mark_building_region_dirty(center_x, center_z, width, depth);
+    }
+  });
+  BuildingCollisionRegistry::set_grid_dirty_hook([](BuildingCollisionRegistry& source) {
+    if (auto* pathfinder = pathfinder_for(source)) {
       pathfinder->mark_navigation_grid_dirty();
     }
   });
   BuildingCollisionRegistry::set_obstruction_released_hook(
-      [](const BuildingCollisionRegistry::ObstructionRelease& release) {
-        auto* pathfinder = active_pathfinder();
+      [](BuildingCollisionRegistry& source,
+         const BuildingCollisionRegistry::ObstructionRelease& release) {
+        auto* pathfinder = pathfinder_for(source);
         if (pathfinder == nullptr) {
           return;
         }

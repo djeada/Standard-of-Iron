@@ -359,8 +359,12 @@ auto build_mission_objectives_map(const Game::Mission::MissionDefinition& missio
 auto build_campaign_player_configs(const Game::Mission::MissionDefinition& mission)
     -> QVariantList {
   QVariantList player_configs;
-  player_configs.append(build_campaign_player_config(
-      mission.player_setup.nation, k_local_owner_id, 0, 0, true));
+  player_configs.append(
+      build_campaign_player_config(mission.player_setup.nation,
+                                   k_local_owner_id,
+                                   0,
+                                   mission.player_setup.team_id.value_or(0),
+                                   true));
 
   int player_id = k_first_ai_owner_id;
   int default_team_id = 1;

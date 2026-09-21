@@ -142,7 +142,9 @@ auto production_ruling(Engine::Core::World& world,
       return ProductionResult::PerBarracksLimitReached;
     }
   } else {
-    const int current_troops = Game::Systems::troop_count_for(world, unit->owner_id);
+
+    const int current_troops =
+        Game::Systems::authoritative_troop_count_for(world, unit->owner_id);
     const int max_troops = Game::GameConfig::instance().get_max_troops_per_player();
     if (current_troops + std::max(1, profile.individuals_per_unit) > max_troops) {
       return ProductionResult::GlobalTroopLimitReached;

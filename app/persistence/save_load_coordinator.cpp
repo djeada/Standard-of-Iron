@@ -36,10 +36,27 @@ namespace App::Core {
 
 namespace {
 
-void restore_mission_context(const Game::Systems::Save::Record& record,
-                             CampaignManager* campaign_manager) {
+constexpr const char* k_match_launch_key = "match_launch";
+
+auto restore_mission_context(const Game::Systems::Save::Record& record,
+                             CampaignManager* campaign_manager)
+    -> Game::Mission::MatchDifficulty {
+  const QJsonObject launch =
+      record.metadata.value(QLatin1String(k_match_launch_key)).toObject();
+
+  Game::Mission::MatchDifficulty difficulty{record.difficulty};
+  const QJsonObject by_owner =
+      launch.value(QLatin1String("difficulty_by_owner")).toObject();
+  for (auto it = by_owner.constBegin(); it != by_owner.constEnd(); ++it) {
+    bool owner_ok = false;
+    const int owner_id = it.key().toInt(&owner_ok);
+    if (owner_ok) {
+      difficulty.set_owner(owner_id, it.value().toString());
+    }
+  }
+
   if (campaign_manager == nullptr) {
-    return;
+    return difficulty;
   }
 
   Game::Mission::MissionContext mission_context;
@@ -48,7 +65,9 @@ void restore_mission_context(const Game::Systems::Save::Record& record,
   mission_context.campaign_id = record.campaign_id;
   mission_context.mission_id = record.mission_id;
   mission_context.difficulty = record.difficulty;
+  mission_context.mission_file = launch.value(QLatin1String("mission_file")).toString();
   campaign_manager->restore_mission_context(mission_context);
+  return difficulty;
 }
 
 } // namespace
@@ -118,11 +137,26 @@ auto SaveLoadCoordinator::begin_save_to_slot(const SaveToSlotContext& context) c
 
   request.map_name = context.map_name;
   request.map_path = context.level.map_path;
+  QJsonObject launch;
   if (context.mission_context.has_value()) {
     request.mode = context.mission_context->mode;
     request.campaign_id = context.mission_context->campaign_id;
     request.mission_id = context.mission_context->mission_id;
     request.difficulty = context.mission_context->difficulty;
+    launch["mission_file"] = context.mission_context->mission_file;
+  }
+  if (context.difficulty != nullptr) {
+    launch["difficulty"] = context.difficulty->baseline_id();
+    QJsonObject by_owner;
+    for (const int owner_id : context.difficulty->owner_ids()) {
+      by_owner[QString::number(owner_id)] = context.difficulty->id_for(owner_id);
+    }
+    if (!by_owner.isEmpty()) {
+      launch["difficulty_by_owner"] = by_owner;
+    }
+  }
+  if (!launch.isEmpty()) {
+    metadata[QLatin1String(k_match_launch_key)] = launch;
   }
   if (request.mode.isEmpty()) {
     request.mode = QStringLiteral("skirmish");
@@ -176,7 +210,8 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
   const Game::Systems::Save::Record& record =
       context.save_load_service.get_last_record();
   const QJsonObject metadata = record.metadata;
-  restore_mission_context(record, context.campaign_manager);
+  LoadFromSlotEffects effects;
+  effects.match_difficulty = restore_mission_context(record, context.campaign_manager);
 
   Game::Systems::GameStateSerializer::restore_player_nations_from_metadata(
       Game::Session::session_for(context.world).nations(), metadata);
@@ -233,6 +268,11 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
     }
   }
 
+  if (auto* ai_system = context.world.get_system<Game::Systems::AISystem>()) {
+    qInfo() << "Reinitializing AI system before restoring its saved state";
+    ai_system->reinitialize();
+  }
+
   const auto report = Game::Session::restore_map_session(
       {.world = &context.world,
        .map = map_context.definition(),
@@ -270,15 +310,11 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
       context.runtime_snapshot.local_owner_id);
   context.emit_troop_count_changed();
 
-  if (auto* ai_system = context.world.get_system<Game::Systems::AISystem>()) {
-    qInfo() << "Reinitializing AI system after loading saved game";
-    ai_system->reinitialize();
-  }
-
-  return {.success = true,
-          .emit_selected_units_changed = true,
-          .emit_owner_info_changed = true,
-          .warning = partial_restore_warning};
+  effects.success = true;
+  effects.emit_selected_units_changed = true;
+  effects.emit_owner_info_changed = true;
+  effects.warning = partial_restore_warning;
+  return effects;
 }
 
 } // namespace App::Core

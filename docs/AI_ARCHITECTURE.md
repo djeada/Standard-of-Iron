@@ -71,6 +71,21 @@ The startup path uses the same worker system. Mission loading can wait for the i
 
 The snapshot is not a second world. It is a purpose-built observation of the authoritative match. If a behavior needs new live information, the correct change is normally to add that information to the snapshot builder rather than let the worker read ECS state directly.
 
+### What an opponent knows
+
+An opponent plans against what it has seen. `visible_enemies` is what is in sight right now; `strategic_objectives` is every hostile building and commander this opponent has _ever_ had something near, remembered at its last-seen position and dropped the moment it stops existing. That memory lives on the AI instance, not in the snapshot, because it has to survive between decision rounds. An enemy base nobody has scouted is not an objective, and an AI will not march on one.
+
+This perception is deliberately **not** the player's fog of war, and the differences are intentional:
+
+|             | AI perception                    | Player fog (`VisibilityService`)      |
+| ----------- | -------------------------------- | ------------------------------------- |
+| Sources     | the owner's own units            | the owner's and its allies' units     |
+| Range       | raw `vision_range`               | floored at the 12m default, then x1.5 |
+| Buildings   | 18m floor so a base is not blind | no floor                              |
+| Rally flags | not a source                     | a source                              |
+
+The fog is a presentation rule about how much of the map a player is shown; AI perception is a gameplay rule about what an opponent may plan against. Neither may decide what a unit is _allowed_ to attack — that is the engagement rules' job. `tests/systems/ai_scouted_intel_test.cpp` pins the AI side.
+
 ## Persistent strategic context
 
 `AIContext` survives across decision rounds and stores the AI's ongoing plan and memory.

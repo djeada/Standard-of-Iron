@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -169,7 +170,8 @@ void AISnapshotBuilder::attach_nation(AISnapshot& snapshot,
 }
 
 auto AISnapshotBuilder::build(const Engine::Core::World& world,
-                              int ai_owner_id) -> AISnapshot {
+                              int ai_owner_id,
+                              KnownObjectives* known) -> AISnapshot {
   auto& session = Game::Session::session_for(world);
   AISnapshot snapshot;
   snapshot.player_id = ai_owner_id;
@@ -392,6 +394,11 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     }
   }
 
+  std::unordered_set<Engine::Core::EntityID> hostile_now;
+  if (known != nullptr) {
+    hostile_now.reserve(enemies.size());
+  }
+
   for (auto* entity : enemies) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {
@@ -405,23 +412,39 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
 
     const bool is_building = entity->has_component<Engine::Core::BuildingComponent>();
     const bool is_commander = entity->has_component<Engine::Core::CommanderComponent>();
+    const bool visible = is_visible_to_sources(*transform, vision_sources, vision_grid);
 
     if (is_building || is_commander) {
-      ContactSnapshot objective;
-      objective.id = entity->get_id();
-      objective.owner_id = unit->owner_id;
-      objective.is_building = is_building;
-      objective.pos_x = transform->position.x;
-      objective.pos_y = 0.0F;
-      objective.pos_z = transform->position.z;
-      objective.health = unit->health;
-      objective.max_health = unit->max_health;
-      objective.spawn_type = unit->spawn_type;
-      objective.holds_ground = garrison_owners.holds_ground(unit->owner_id);
-      snapshot.strategic_objectives.push_back(std::move(objective));
+      if (known != nullptr) {
+        hostile_now.insert(entity->get_id());
+      }
+
+      if (visible) {
+        ContactSnapshot objective;
+        objective.id = entity->get_id();
+        objective.owner_id = unit->owner_id;
+        objective.is_building = is_building;
+        objective.pos_x = transform->position.x;
+        objective.pos_y = 0.0F;
+        objective.pos_z = transform->position.z;
+        objective.health = unit->health;
+        objective.max_health = unit->max_health;
+        objective.spawn_type = unit->spawn_type;
+        objective.holds_ground = garrison_owners.holds_ground(unit->owner_id);
+        if (known != nullptr) {
+          (*known)[objective.id] = objective;
+        }
+        snapshot.strategic_objectives.push_back(std::move(objective));
+      } else if (known != nullptr) {
+
+        const auto remembered = known->find(entity->get_id());
+        if (remembered != known->end()) {
+          snapshot.strategic_objectives.push_back(remembered->second);
+        }
+      }
     }
 
-    if (!is_visible_to_sources(*transform, vision_sources, vision_grid)) {
+    if (!visible) {
       continue;
     }
 
@@ -439,6 +462,12 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     contact.holds_ground = garrison_owners.holds_ground(unit->owner_id);
 
     snapshot.visible_enemies.push_back(std::move(contact));
+  }
+
+  if (known != nullptr) {
+    std::erase_if(*known, [&hostile_now](const auto& entry) {
+      return !hostile_now.contains(entry.first);
+    });
   }
 
   const float engaged_radius_sq =

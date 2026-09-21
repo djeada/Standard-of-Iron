@@ -2285,6 +2285,53 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     </message>
 </context>
 <context>
+    <name>DifficultyCatalog</name>
+    <message>
+        <source>Difficulty</source>
+        <translation>Poziom trudności</translation>
+    </message>
+    <message>
+        <source>Difficulty changes enemy resources, starting troops and reinforcements only. Enemy tactics never change.</source>
+        <translation>Poziom trudności zmienia tylko surowce, początkowe oddziały i posiłki wroga. Taktyka wroga nigdy się nie zmienia.</translation>
+    </message>
+    <message>
+        <source>Easy</source>
+        <translation>Łatwy</translation>
+    </message>
+    <message>
+        <source>The legions forgot their alarm clock.</source>
+        <translation>Legiony zapomniały nastawić budzik.</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normalny</translation>
+    </message>
+    <message>
+        <source>A perfectly respectable amount of chaos.</source>
+        <translation>Całkiem przyzwoita porcja chaosu.</translation>
+    </message>
+    <message>
+        <source>Hard</source>
+        <translation>Trudny</translation>
+    </message>
+    <message>
+        <source>The treasury has discovered your location.</source>
+        <translation>Skarbiec odkrył twoje położenie.</translation>
+    </message>
+    <message>
+        <source>Brutal</source>
+        <translation>Brutalny</translation>
+    </message>
+    <message>
+        <source>HONK. The empire has doubled its budget.</source>
+        <translation>HONK. Imperium podwoiło swój budżet.</translation>
+    </message>
+    <message>
+        <source>Enemy resources %1 · starting troops %2 · reinforcements %3</source>
+        <translation>Surowce wroga %1 · oddziały początkowe %2 · posiłki %3</translation>
+    </message>
+</context>
+<context>
     <name>EconomyCoach</name>
     <message>
         <source>Hide these prompts</source>
@@ -6327,6 +6374,10 @@ by zobaczyć podgląd</translation>
     <message>
         <source>Start the battle (Enter)</source>
         <translation>Rozpocznij bitwę (Enter)</translation>
+    </message>
+    <message>
+        <source>Click to change this opponent&apos;s difficulty</source>
+        <translation>Kliknij, aby zmienić poziom trudności tego przeciwnika</translation>
     </message>
 </context>
 <context>

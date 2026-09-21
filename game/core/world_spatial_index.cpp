@@ -47,6 +47,7 @@ void WorldSpatialIndex::refresh(const World& world) {
   if (tick != 0 && m_ever_built && m_built_for_tick == tick) {
     return;
   }
+
   rebuild(world);
 }
 

@@ -941,7 +941,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       auto* u = world->try_get<Engine::Core::UnitComponent>(e->get_id());
       if ((t != nullptr) && (u != nullptr)) {
 
-        int const current_troops = Game::Systems::troop_count_for(*world, u->owner_id);
+        int const current_troops =
+            Game::Systems::authoritative_troop_count_for(*world, u->owner_id);
         int const max_troops = Game::GameConfig::instance().get_max_troops_per_player();
         if (current_troops + std::max(1, current_profile.individuals_per_unit) >
             max_troops) {

@@ -4,6 +4,7 @@
 #include <mutex>
 
 #include "game/core/component_core.h"
+#include "game/core/entity_id.h"
 
 namespace Render {
 
@@ -45,7 +46,7 @@ public:
     }
 
     [[nodiscard]] auto
-    should_update_animation(std::uint32_t entity_id,
+    should_update_animation(Engine::Core::EntityID entity_id,
                             float distance_sq,
                             bool is_selected,
                             bool is_combat_active,
@@ -63,7 +64,7 @@ public:
 
   private:
     [[nodiscard]] auto
-    evaluate_animation_update(std::uint32_t entity_id,
+    evaluate_animation_update(Engine::Core::EntityID entity_id,
                               float distance_sq,
                               bool is_selected,
                               bool is_combat_active,
@@ -85,8 +86,11 @@ public:
       if (distance_sq < priority_distance * priority_distance) {
         return true;
       }
-      return ((entity_id + frame) %
-              static_cast<std::uint32_t>(config.animation_skip_frames + 1)) == 0;
+
+      const auto phase =
+          static_cast<std::uint64_t>(entity_id) + static_cast<std::uint64_t>(frame);
+      return (phase % static_cast<std::uint64_t>(config.animation_skip_frames + 1)) ==
+             0;
     }
   };
 

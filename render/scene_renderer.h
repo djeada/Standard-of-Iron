@@ -280,6 +280,7 @@ public:
     m_rigged_mesh_cache.clear();
     m_snapshot_mesh_cache.clear();
     m_animation_time_cache.clear();
+    clear_missing_body_warnings();
     if (m_gl_backend != nullptr) {
       m_gl_backend->reset_local_lights();
     }
@@ -519,6 +520,12 @@ private:
     float time = 0.0F;
     uint32_t last_frame = 0;
   };
+
+  static constexpr std::size_t k_max_missing_body_warnings = 512;
+  void clear_missing_body_warnings();
+  [[nodiscard]] auto note_missing_body_warning(const std::string& key) -> bool;
+  mutable std::mutex m_missing_body_warning_mutex;
+  std::unordered_set<std::string> m_missing_body_warnings;
 
   auto resolve_animation_time(Engine::Core::EntityID entity_id,
                               bool update,

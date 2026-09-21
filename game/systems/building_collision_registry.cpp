@@ -57,32 +57,39 @@ BuildingCollisionRegistry::GridDirtyHook g_grid_dirty_hook = nullptr;
 BuildingCollisionRegistry::ObstructionReleasedHook g_obstruction_released_hook =
     nullptr;
 
-void announce_region_dirty(float center_x, float center_z, float width, float depth) {
+void announce_region_dirty(BuildingCollisionRegistry& source,
+                           float center_x,
+                           float center_z,
+                           float width,
+                           float depth) {
   if (g_region_dirty_hook != nullptr) {
-    g_region_dirty_hook(center_x, center_z, width, depth);
+    g_region_dirty_hook(source, center_x, center_z, width, depth);
   }
 }
 
-void announce_grid_dirty() {
+void announce_grid_dirty(BuildingCollisionRegistry& source) {
   if (g_grid_dirty_hook != nullptr) {
-    g_grid_dirty_hook();
+    g_grid_dirty_hook(source);
   }
 }
 
 void announce_obstruction_released(
+    BuildingCollisionRegistry& source,
     const BuildingCollisionRegistry::ObstructionRelease& release) {
   if (g_obstruction_released_hook != nullptr) {
-    g_obstruction_released_hook(release);
+    g_obstruction_released_hook(source, release);
   }
 }
 
-void announce_obstruction_released_at(float center_x, float center_z) {
+void announce_obstruction_released_at(BuildingCollisionRegistry& source,
+                                      float center_x,
+                                      float center_z) {
   announce_obstruction_released(
-      {.center_x = center_x, .center_z = center_z, .located = true});
+      source, {.center_x = center_x, .center_z = center_z, .located = true});
 }
 
-void announce_obstruction_released_everywhere() {
-  announce_obstruction_released({});
+void announce_obstruction_released_everywhere(BuildingCollisionRegistry& source) {
+  announce_obstruction_released(source, {});
 }
 
 } // namespace
@@ -102,9 +109,15 @@ void BuildingCollisionRegistry::set_obstruction_released_hook(
 
 BuildingCollisionRegistry::BuildingCollisionRegistry() {
 
-  Engine::Core::World::set_entity_destroyed_hook([](Engine::Core::EntityID id) {
-    BuildingCollisionRegistry::instance().unregister_building(id);
-  });
+  Engine::Core::World::set_entity_destroyed_hook(
+      [](Engine::Core::World& world, Engine::Core::EntityID id) {
+        const auto* services = Game::Session::services_for_or_null(world);
+        auto* registry = services != nullptr ? services->building_collision
+                                             : &BuildingCollisionRegistry::instance();
+        if (registry != nullptr) {
+          registry->unregister_building(id);
+        }
+      });
 }
 
 auto BuildingCollisionRegistry::get_building_size(Game::Units::SpawnType building_type)
@@ -248,7 +261,7 @@ void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_
   m_entity_to_index[entity_id] = m_buildings.size() - 1;
   add_to_spatial_index(m_buildings.back());
 
-  announce_region_dirty(center_x, center_z, size.width, size.depth);
+  announce_region_dirty(*this, center_x, center_z, size.width, size.depth);
 }
 
 void BuildingCollisionRegistry::apply_building_body(Engine::Core::EntityID entity_id,
@@ -293,8 +306,8 @@ void BuildingCollisionRegistry::unregister_building(Engine::Core::EntityID entit
 
   release_authored_obstacles_within(center_x, center_z, width, depth);
 
-  announce_region_dirty(center_x, center_z, width, depth);
-  announce_obstruction_released_at(center_x, center_z);
+  announce_region_dirty(*this, center_x, center_z, width, depth);
+  announce_obstruction_released_at(*this, center_x, center_z);
 }
 
 void BuildingCollisionRegistry::release_authored_obstacles_within(float center_x,
@@ -335,8 +348,8 @@ void BuildingCollisionRegistry::update_building_position(
   m_buildings[index].body_center_z = center_z + body_offset_z;
   add_to_spatial_index(m_buildings[index]);
 
-  announce_region_dirty(old_x, old_z, width, depth);
-  announce_region_dirty(center_x, center_z, width, depth);
+  announce_region_dirty(*this, old_x, old_z, width, depth);
+  announce_region_dirty(*this, center_x, center_z, width, depth);
 }
 
 void BuildingCollisionRegistry::resize_building(Engine::Core::EntityID entity_id,
@@ -362,8 +375,8 @@ void BuildingCollisionRegistry::resize_building(Engine::Core::EntityID entity_id
   m_buildings[index].depth = size.depth;
   add_to_spatial_index(m_buildings[index]);
 
-  announce_region_dirty(center_x, center_z, old_width, old_depth);
-  announce_region_dirty(center_x, center_z, size.width, size.depth);
+  announce_region_dirty(*this, center_x, center_z, old_width, old_depth);
+  announce_region_dirty(*this, center_x, center_z, size.width, size.depth);
 }
 
 void BuildingCollisionRegistry::update_building_owner(Engine::Core::EntityID entity_id,
@@ -391,7 +404,7 @@ void BuildingCollisionRegistry::set_building_navigation_blocking(
   footprint.blocks_navigation = blocks_navigation;
 
   announce_region_dirty(
-      footprint.center_x, footprint.center_z, footprint.width, footprint.depth);
+      *this, footprint.center_x, footprint.center_z, footprint.width, footprint.depth);
 }
 
 auto BuildingCollisionRegistry::find_building(Engine::Core::EntityID entity_id) const
@@ -690,10 +703,10 @@ void BuildingCollisionRegistry::set_navigation_passages(
     return;
   }
 
-  auto mark_dirty = [](const std::vector<NavigationPassage>& list) {
+  auto mark_dirty = [this](const std::vector<NavigationPassage>& list) {
     for (const auto& passage : list) {
       announce_region_dirty(
-          passage.center_x, passage.center_z, passage.width, passage.depth);
+          *this, passage.center_x, passage.center_z, passage.width, passage.depth);
     }
   };
 
@@ -710,14 +723,14 @@ void BuildingCollisionRegistry::clear() {
   m_spatial_buckets.clear();
   m_max_half_extent = 0.0F;
 
-  announce_grid_dirty();
-  announce_obstruction_released_everywhere();
+  announce_grid_dirty(*this);
+  announce_obstruction_released_everywhere(*this);
 }
 
 void BuildingCollisionRegistry::set_grid_padding(float padding) {
   s_grid_padding = padding;
 
-  announce_grid_dirty();
+  announce_grid_dirty(instance());
 }
 
 auto BuildingCollisionRegistry::get_grid_padding() -> float {

@@ -225,6 +225,8 @@ struct ContactSnapshot {
   Game::Units::SpawnType spawn_type = Game::Units::SpawnType::Archer;
 };
 
+using KnownObjectives = std::unordered_map<Engine::Core::EntityID, ContactSnapshot>;
+
 struct AISnapshot {
   int player_id = 0;
   std::vector<EntitySnapshot> friendly_units;

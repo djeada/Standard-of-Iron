@@ -14,7 +14,9 @@ Item {
     property var campaign_map_state: null
     readonly property string theater_heading: qsTr("Campaign War Table • Mediterranean Theater")
 
-    signal mission_selected(string campaign_id, string mission_id)
+    property string selected_difficulty: (typeof game !== "undefined" && game.setup) ? game.setup.preferred_difficulty : DifficultyCatalog.defaultId
+
+    signal mission_selected(string campaign_id, string mission_id, string difficulty)
     signal cancelled
 
     function refresh_campaigns() {
@@ -413,17 +415,32 @@ Item {
                 }
             }
 
+            DifficultySelector {
+                id: campaign_difficulty
+
+                Layout.fillWidth: true
+                compact: true
+                visible: selected_mission_index >= 0
+                selected_id: root.selected_difficulty
+                onChosen: function (difficulty_id) {
+                    root.selected_difficulty = difficulty_id;
+                }
+            }
+
             MissionDetailPanel {
                 id: mission_detail_panel
+
+                objectName: "missionDetailPanel"
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: visible ? Math.max(260, Math.min(container.height * 0.38, 340)) : 0
                 visible: selected_mission_index >= 0
                 mission_data: selected_mission_index >= 0 && current_campaign && current_campaign.missions ? current_campaign.missions[selected_mission_index] : null
                 campaign_id: current_campaign ? current_campaign.id : ""
+                difficulty_id: root.selected_difficulty
                 onStart_mission_clicked: {
                     if (current_campaign && mission_data && mission_data.mission_id)
-                        root.mission_selected(current_campaign.id, mission_data.mission_id);
+                        root.mission_selected(current_campaign.id, mission_data.mission_id, root.selected_difficulty);
                 }
 
                 Behavior on Layout.preferredHeight  {
