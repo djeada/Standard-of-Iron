@@ -2,6 +2,14 @@
 
 An object authored in map JSON has to become two things that agree with each other: a physical body on the ground and a model on the screen. This document explains the coordinate contract that keeps them aligned, how object footprints are validated, and how the placement audit detects geometry that intersects roads, water, steep terrain, or other authored objects.
 
+## Dressing a repair is allowed to delete
+
+`--drop-unplaceable` deletes world props and firecamps that no push could place. It never touches a structure or a spawn: a building is a decision, a spawn is a seat in the match, and a wall is geometry a settlement depends on.
+
+It exists for generated content. `map_aurelia_magna.json` carried 1,454 defects and every push the ladder could make left 1,327 of them standing, because a planned city has no slack to push dressing into; 1,556 of the bodies named in those defects were world props — plants on broken ground, tents inside one another, trees over the forum. Deleting a body can only remove defects, never create one, so the pass runs after the pushes and takes the lower-priority side of each pair that is still in conflict. On that map it drops 831 of 2,074 props and brings 1,454 defects down to 145.
+
+The 145 that survive are the generator's to fix, not the repair's: 129 fill buildings on ground that breaks under them, 14 spawns standing in water, 6 structures in a road and 5 structure-on-spawn overlaps, none of which has settled ground within 8 m to move to. `tools/city_export` checks placements with `stands_on_ground`, which accepts any walkable cell within six tiles of an object's centre — that is why a spawn can sit in a river and a house can straddle a break. A city planner that consulted the heightfield across each footprint, the water it writes and the roads it lays would not need this pass at all.
+
 ## The goods yard beside a building
 
 A barracks draws a goods yard beside itself: `k_stockpile_center_x` in `game/systems/resource_stockpile.h` puts it 5.20 m along the building's own x with half extents 1.45 x 2.10, and `render/entity/barracks_stockpile.cpp` lays the crib and the wood, stone and iron bays out from there. The yard reaches 6.65 m while the barracks body itself stops at 4.325, so its last 2.3 m is ground that carries no object in the map file and was invisible to the audit. On `map_pinewater_cut` a firecamp stood inside the timber camp's yard and nothing reported it; once the yard was modelled, 33 defects of that class appeared across eleven maps, on maps that had audited clean for months.

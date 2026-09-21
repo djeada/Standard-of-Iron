@@ -1323,6 +1323,71 @@ def try_move(
     return False
 
 
+DROPPABLE_KINDS = ("world_prop", "firecamp")
+"""Kinds a repair may delete rather than place.
+
+Dressing, and only dressing. A structure is a decision, a spawn is a seat in the
+match, and a wall is geometry a settlement depends on; a plant that cannot stand
+anywhere legal is a plant the generator should not have scattered there.
+"""
+
+DROP_KEY = re.compile(r"^([A-Za-z_]+)\[(\d+)\]$")
+
+
+def droppable(item: Placeable) -> bool:
+    """Whether this body is dressing the repair is allowed to delete."""
+    return item.kind in DROPPABLE_KINDS and DROP_KEY.match(item.key) is not None
+
+
+def drop_unplaceable(
+    map_data: dict, items: list[Placeable], violations: list[Violation]
+) -> int:
+    """Delete the dressing that no push could place, worst defect first.
+
+    A generated map scatters more than its ground can hold: on
+    map_aurelia_magna 1,327 defects survived every push the ladder could make,
+    and 1,556 of the bodies named in them were world props -- plants on broken
+    ground, tents inside each other, trees over the forum. Deleting a body can
+    only remove defects, never create one, so this runs after the pushes and
+    takes the lower-priority side of each pair that is still in conflict.
+    """
+    doomed: set[str] = set()
+    for violation in violations:
+        if violation.item.key in doomed or (
+            violation.other is not None and violation.other.key in doomed
+        ):
+            continue
+        sides = [violation.item]
+        if violation.other is not None:
+            sides.append(violation.other)
+        candidates = sorted(
+            (side for side in sides if droppable(side)), key=lambda side: side.priority
+        )
+        if candidates:
+            doomed.add(candidates[0].key)
+
+    if not doomed:
+        return 0
+
+    by_array: dict[str, set[int]] = {}
+    for key in doomed:
+        match = DROP_KEY.match(key)
+        if match is None:
+            continue
+        by_array.setdefault(match.group(1), set()).add(int(match.group(2)))
+
+    dropped = 0
+    for array_name, indices in by_array.items():
+        entries = map_data.get(array_name) or []
+        map_data[array_name] = [
+            entry for index, entry in enumerate(entries) if index not in indices
+        ]
+        dropped += len(entries) - len(map_data[array_name])
+
+    items[:] = [item for item in items if item.key not in doomed]
+    return dropped
+
+
 def repair(
     items: list[Placeable],
     terrain: Terrain,
@@ -1802,6 +1867,15 @@ def main() -> int:
         "under the system temporary directory).",
     )
     parser.add_argument(
+        "--drop-unplaceable",
+        action="store_true",
+        help="Delete dressing -- world props and firecamps, never a structure "
+        "or a spawn -- that no push could place. A generated map scatters more "
+        "than its ground can hold, and a plant standing in a river is worse "
+        "than no plant; the pushes run first and only what survives them is "
+        "deleted.",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="Report defects and exit non-zero without writing anything.",
@@ -1843,6 +1917,7 @@ def main() -> int:
     total_before = 0
     total_remaining = 0
     total_moved = 0
+    total_dropped = 0
     failed = False
     for path in paths:
         try:
@@ -1915,23 +1990,31 @@ def main() -> int:
         )
         moved = apply(items)
 
+        dropped = 0
+        if args.drop_unplaceable:
+            survivors = audit_map(args, path.name, map_data, surface)[2]
+            dropped = drop_unplaceable(map_data, items, survivors)
+
         remaining = len(audit_map(args, path.name, map_data, surface)[2])
         total_remaining += remaining
         total_moved += moved
+        total_dropped += dropped
         path.write_text(render(map_data, style))
-        print(
+        report = (
             f"{path.name}: {len(before)} defect(s) -> {remaining} left, "
             f"{moved} object(s) nudged, {trimmed} road(s) trimmed"
         )
+        print(f"{report}, {dropped} dressing dropped" if dropped else report)
 
     if args.check:
         print(f"total: {total_before} defect(s)")
         return 1 if (total_before or failed) else 0
 
-    print(
+    summary = (
         f"total: {total_before} defect(s) -> {total_remaining} left, "
         f"{total_moved} object(s) nudged"
     )
+    print(f"{summary}, {total_dropped} dressing dropped" if total_dropped else summary)
     return 1 if failed else 0
 
 
