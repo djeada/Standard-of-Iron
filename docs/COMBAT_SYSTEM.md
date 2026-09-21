@@ -141,6 +141,12 @@ UI and targeting code that needs to explain the range the unit will actually use
 
 Melee reach also interacts with formation/contact geometry and obstruction. A raw center-to-center distance alone is not sufficient when two large formations are facing each other or a blocking structure lies between them.
 
+"Have I reached melee contact with this target?" has exactly one implementation, `Combat::melee_contact_reached(attacker, target, geometry)` in `combat_utils.cpp`, fed by one `FormationCombat::contact_geometry()` result. It is the elephant penetration distance when an elephant meets a formation, `FormationCombat::contact_is_active()` when either side has formation slots, and `single_combat_strike_distance()` for two single bodies. The attack processor asks it in three places — to confirm an in-range ordered target, to decide whether a chasing unit may stop, and to filter the in-reach auto-acquire pick — and those three used to carry their own copies of the same three-way branch, which could and did drift apart. Do not add a fourth copy; extend the predicate.
+
+### Combat mode
+
+`update_combat_mode()` picks melee or ranged for a unit whose `preferred_mode` is `Auto`. It only needs to look at enemies when the unit can fight both ways: a unit with `can_ranged == false` is melee on every branch of the decision and a unit with `can_melee == false` is ranged on every branch, so both return before the neighbourhood scan. For the hybrid case the scan sorts the neighbours by centre distance and stops as soon as the next candidate's centre distance minus two contact extents cannot beat the closest surface distance found so far; `contact_geometry()` is only resolved for the candidates that survive. Before this, every unit with a target resolved contact geometry against every enemy within reach plus two formation widths on every tick, which on `sim_benchmark --units 1000` was 85% of the whole simulation tick.
+
 ### Ranged dead zones
 
 A ranged unit with `min_range` can have a valid hostile target inside its outer range but still be too close to fire through the ordinary ranged path. That inner limit is part of the attack component rather than an ad-hoc UI rule.
@@ -325,6 +331,10 @@ Whether a unit walks after its target is decided in one file, `combat_system/tar
 "Holding" is hold mode or a formed defensive unit layout. The three automatic scans (`Opportunity`, `Answering`, `Patrol`) clear `is_player_command`; the others keep it.
 
 The reader is `keeps_pursuing()`, which the attack processor asks whenever a target is out of reach: it drops the target unless `should_chase` is set, a non-pursuing unit is still inside its brawl leash, the unit is free to move, and the target is inside its guard reach. Explicit player and AI attack orders store the order's own chase flag in `CommandService::attack_target`; that module sits below combat and does not decide anything.
+
+### When a chase order is re-issued
+
+A chase destination that comes from `chase_destination()` is a point on a ring around the target — at the standoff distance, on the attacker's side, rotated by the attacker's spread angle. Because the ring point is derived from the attacker's own position it rotates as the attacker walks, so comparing "where I planned to go" with "where I would go now" re-issues the order because the attacker moved, which is every few ticks for the whole approach. `should_queue_chase_command()` therefore asks whether the *world* changed: for a ring goal it re-issues only when the target has moved off the ring the planned goal sits on (the planned goal's distance to the target differs from the desired standoff by more than `k_new_command_threshold`), and never because the attacker took a step. Goals that do not follow the attacker — an engagement-slot anchor, a structure approach point, a bypass around a wall — keep the plain point comparison, because for them a changed point *is* a changed world. A unit with no active movement always gets its order. Each re-issue is a full `issue_move`: it bumps the order sequence, resets the stall ladder, and re-resolves the route, so it is not free even when the route turns out to be a straight line.
 
 ## Target commitment
 

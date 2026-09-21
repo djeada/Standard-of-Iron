@@ -19,6 +19,10 @@ class AttackComponent;
 class UnitComponent;
 } // namespace Engine::Core
 
+namespace Game::Systems::FormationCombat {
+struct ContactGeometry;
+} // namespace Game::Systems::FormationCombat
+
 namespace Game::Systems::Combat {
 
 struct CandidateRecord {
@@ -122,6 +126,15 @@ auto combat_radius(Engine::Core::Entity* entity) -> float;
 auto is_in_range(Engine::Core::Entity* attacker,
                  Engine::Core::Entity* target,
                  float range) -> bool;
+
+auto elephant_formation_penetration_distance(
+    const Engine::Core::Entity& attacker,
+    const Engine::Core::Entity& target,
+    const FormationCombat::ContactGeometry& geometry) -> std::optional<float>;
+
+auto melee_contact_reached(const Engine::Core::Entity& attacker,
+                           const Engine::Core::Entity& target,
+                           const FormationCombat::ContactGeometry& geometry) -> bool;
 
 auto structure_separates_positions(const QVector3D& from, const QVector3D& to) -> bool;
 

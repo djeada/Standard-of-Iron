@@ -454,13 +454,20 @@ auto melee_walk_around_length(Engine::Core::Entity* attacker,
   }
 
   pathfinder->update_navigation_grid();
+  Point const start_cell = Game::Systems::NavGrid::world_to_grid(
+      attacker_transform->position.x, attacker_transform->position.z);
+  Point const goal_cell = Game::Systems::NavGrid::world_to_grid(
+      target_transform->position.x, target_transform->position.z);
+  if (!pathfinder->can_reach(
+          start_cell, goal_cell, Game::Systems::Pathfinding::Passability::Light)) {
+    return std::nullopt;
+  }
   auto const route = pathfinder->find_path(
-      Game::Systems::NavGrid::world_to_grid(attacker_transform->position.x,
-                                            attacker_transform->position.z),
-      Game::Systems::NavGrid::world_to_grid(target_transform->position.x,
-                                            target_transform->position.z),
+      start_cell,
+      goal_cell,
       Game::Systems::Pathfinding::Passability::Light,
-      FormationCombat::formation_navigation_clearance(*attacker));
+      Game::Systems::Pathfinding::routing_clearance(
+          FormationCombat::formation_navigation_clearance(*attacker)));
   if (route.empty()) {
     return std::nullopt;
   }
@@ -582,6 +589,34 @@ auto is_in_range(Engine::Core::Entity* attacker,
   }
 
   return true;
+}
+
+auto elephant_formation_penetration_distance(
+    const Engine::Core::Entity& attacker,
+    const Engine::Core::Entity& target,
+    const FormationCombat::ContactGeometry& geometry) -> std::optional<float> {
+  auto const* elephant = attacker.get_component<Engine::Core::ElephantComponent>();
+  if (elephant == nullptr || !FormationCombat::has_formation_slots(target) ||
+      geometry.formation_overlap_required) {
+    return std::nullopt;
+  }
+  return geometry.engagement_center_distance;
+}
+
+constexpr float k_melee_contact_slack = 0.15F;
+
+auto melee_contact_reached(const Engine::Core::Entity& attacker,
+                           const Engine::Core::Entity& target,
+                           const FormationCombat::ContactGeometry& geometry) -> bool {
+  if (auto const penetration =
+          elephant_formation_penetration_distance(attacker, target, geometry)) {
+    return geometry.center_distance <= *penetration + k_melee_contact_slack;
+  }
+  if (geometry.uses_formation_slots) {
+    return FormationCombat::contact_is_active(attacker, target, geometry);
+  }
+  return geometry.center_distance <=
+         FormationCombat::single_combat_strike_distance(attacker, target, geometry);
 }
 
 auto suppresses_opportunistic_combat(Engine::Core::Entity* unit) -> bool {

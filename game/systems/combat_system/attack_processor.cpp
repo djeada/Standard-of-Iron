@@ -171,14 +171,12 @@ void begin_attack_animation(Engine::Core::Entity* attacker,
   }
 }
 
-auto should_queue_chase_command(Engine::Core::Entity* attacker,
-                                Engine::Core::Entity* target,
-                                Engine::Core::TransformComponent* attacker_transform,
-                                Engine::Core::MovementComponent* movement,
+auto should_queue_chase_command(Engine::Core::MovementComponent* movement,
+                                const QVector3D& target_pos,
                                 const QVector3D& desired_pos,
+                                bool goal_follows_attacker,
                                 float delta_time) -> bool {
-  if ((attacker == nullptr) || (target == nullptr) || (attacker_transform == nullptr) ||
-      (movement == nullptr)) {
+  if (movement == nullptr) {
     return false;
   }
 
@@ -186,14 +184,25 @@ auto should_queue_chase_command(Engine::Core::Entity* attacker,
     return true;
   }
 
-  QVector3D const planned_target(movement->get_goal_x(), 0.0F, movement->get_goal_y());
+  QVector3D const planned_target =
+      movement->get_has_requested_goal()
+          ? QVector3D(movement->get_requested_goal_x(),
+                      0.0F,
+                      movement->get_requested_goal_z())
+          : QVector3D(movement->get_goal_x(), 0.0F, movement->get_goal_y());
 
   float const frame_scale =
       std::clamp(delta_time * Constants::k_reference_frames_per_second,
                  1.0F,
                  Constants::k_max_chase_threshold_scale);
   float const threshold = Constants::k_new_command_threshold * frame_scale;
-  return (planned_target - desired_pos).lengthSquared() > threshold * threshold;
+  if (!goal_follows_attacker) {
+    return (planned_target - desired_pos).lengthSquared() > threshold * threshold;
+  }
+
+  float const planned_standoff = (planned_target - target_pos).length();
+  float const desired_standoff = (desired_pos - target_pos).length();
+  return std::abs(planned_standoff - desired_standoff) > threshold;
 }
 
 void stop_unit_movement(Engine::Core::Entity* unit,
@@ -220,19 +229,6 @@ void drop_attack_target(Engine::Core::World* world, Engine::Core::Entity* attack
   }
   stop_unit_movement(
       attacker, world->try_get<Engine::Core::TransformComponent>(attacker->get_id()));
-}
-
-auto elephant_formation_penetration_distance(
-    const Engine::Core::Entity& attacker,
-    const Engine::Core::Entity& target,
-    const FormationCombat::ContactGeometry& geometry) -> std::optional<float> {
-  auto const* elephant = attacker.get_component<Engine::Core::ElephantComponent>();
-  if (elephant == nullptr || !FormationCombat::has_formation_slots(target) ||
-      geometry.formation_overlap_required) {
-    return std::nullopt;
-  }
-
-  return geometry.engagement_center_distance;
 }
 
 void clear_orphaned_rts_attack_presentation(Engine::Core::Entity* attacker) {
@@ -1710,25 +1706,13 @@ void process_attacks(Engine::Core::World* world,
         bool target_reached = is_in_range(attacker, target, range);
         if (target_reached && !is_ranged_mode(attacker_atk)) {
           auto const geometry = FormationCombat::contact_geometry(*attacker, *target);
-          float const dx =
-              target_transform->position.x - attacker_transform->position.x;
-          float const dz =
-              target_transform->position.z - attacker_transform->position.z;
-          float const centre_distance = std::hypot(dx, dz);
-          if (auto const penetration = elephant_formation_penetration_distance(
-                  *attacker, *target, geometry)) {
-            target_reached = centre_distance <= *penetration + 0.15F;
-          } else if (!geometry.uses_formation_slots) {
-
-            auto const* attacker_movement =
-                attacker->get_component<Engine::Core::MovementComponent>();
-            bool const still_closing =
-                attacker_movement != nullptr && attacker_movement->get_has_target();
-            target_reached =
-                !still_closing ||
-                centre_distance <= FormationCombat::single_combat_strike_distance(
-                                       *attacker, *target, geometry);
-          }
+          auto const* attacker_movement =
+              attacker->get_component<Engine::Core::MovementComponent>();
+          bool const settled_single_body =
+              !geometry.uses_formation_slots &&
+              (attacker_movement == nullptr || !attacker_movement->get_has_target());
+          target_reached = settled_single_body ||
+                           melee_contact_reached(*attacker, *target, geometry);
         }
 
         if (target_reached) {
@@ -1751,6 +1735,7 @@ void process_attacks(Engine::Core::World* world,
               target_transform->position.x, 0.0F, target_transform->position.z);
           QVector3D desired_pos = target_pos;
           bool hold_position = false;
+          bool goal_follows_attacker = false;
 
           float const spread_angle = chase_spread_angle(attacker->get_id());
           QVector3D const direction = target_pos - attacker_pos;
@@ -1784,6 +1769,7 @@ void process_attacks(Engine::Core::World* world,
               if (distance > desired_distance + 0.15F) {
                 desired_pos = chase_destination(
                     attacker_pos, target_pos, desired_distance, spread_angle);
+                goal_follows_attacker = true;
               } else {
                 hold_position = true;
               }
@@ -1798,6 +1784,7 @@ void process_attacks(Engine::Core::World* world,
                                                                     : spread_angle;
                 desired_pos = chase_destination(
                     attacker_pos, target_pos, optimal_range, ranged_approach_angle);
+                goal_follows_attacker = true;
               } else {
                 hold_position = true;
               }
@@ -1817,17 +1804,7 @@ void process_attacks(Engine::Core::World* world,
                                               ? geometry.contact_tolerance * 2.0F
                                               : 0.0F)))
                       : single_body_chase_distance(*attacker, *target, geometry);
-              bool const engagement_reached =
-                  elephant_penetration.has_value()
-                      ? distance <= desired_distance + 0.15F
-                      : (geometry.uses_formation_slots
-                             ? FormationCombat::contact_is_active(
-                                   *attacker, *target, geometry)
-
-                             : distance <=
-                                   FormationCombat::single_combat_strike_distance(
-                                       *attacker, *target, geometry));
-              if (!engagement_reached) {
+              if (!melee_contact_reached(*attacker, *target, geometry)) {
 
                 auto const* slot =
                     attacker->get_component<Engine::Core::EngagementSlotComponent>();
@@ -1844,6 +1821,7 @@ void process_attacks(Engine::Core::World* world,
                       target_pos,
                       desired_distance,
                       geometry.uses_formation_slots ? 0.0F : spread_angle);
+                  goal_follows_attacker = true;
                 }
               } else {
                 hold_position = true;
@@ -1863,6 +1841,7 @@ void process_attacks(Engine::Core::World* world,
             if (bypass.has_value()) {
               desired_pos = *bypass;
               hold_position = false;
+              goal_follows_attacker = false;
             }
           }
 
@@ -1880,11 +1859,10 @@ void process_attacks(Engine::Core::World* world,
               movement->stop();
               movement->set_rest_position(attacker_transform->position.x,
                                           attacker_transform->position.z);
-            } else if (should_queue_chase_command(attacker,
-                                                  target,
-                                                  attacker_transform,
-                                                  movement,
+            } else if (should_queue_chase_command(movement,
+                                                  target_pos,
                                                   desired_pos,
+                                                  goal_follows_attacker,
                                                   delta_time)) {
               chase_move_intents.push_back({attacker->get_id(), desired_pos});
             }
@@ -1924,17 +1902,9 @@ void process_attacks(Engine::Core::World* world,
 
           auto const geometry =
               FormationCombat::contact_geometry(*attacker, *best_target);
-          auto const* candidate_transform =
-              best_target->get_component<Engine::Core::TransformComponent>();
-          if (!geometry.uses_formation_slots && candidate_transform != nullptr) {
-            float const dx =
-                candidate_transform->position.x - attacker_transform->position.x;
-            float const dz =
-                candidate_transform->position.z - attacker_transform->position.z;
-            if (std::hypot(dx, dz) > FormationCombat::single_combat_strike_distance(
-                                         *attacker, *best_target, geometry)) {
-              best_target = nullptr;
-            }
+          if (!geometry.uses_formation_slots &&
+              !melee_contact_reached(*attacker, *best_target, geometry)) {
+            best_target = nullptr;
           }
         }
         if (best_target != nullptr) {
