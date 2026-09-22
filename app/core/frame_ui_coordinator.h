@@ -12,6 +12,7 @@
 #include "game/systems/attack_range.h"
 #include "game/systems/attack_targeting.h"
 #include "game/systems/interaction_targeting.h"
+#include "game/systems/render_effects_frame.h"
 #include "game/systems/target_focus.h"
 
 class CursorManager;
@@ -29,11 +30,14 @@ namespace App::Controllers {
 class CommandController;
 }
 
+namespace Game::Session {
+class SessionContext;
+}
+
 namespace App::Core::FrameUiCoordinator {
 
 struct RenderEffectsContext {
   Render::GL::Renderer* renderer = nullptr;
-  Engine::Core::World* world = nullptr;
   App::Controllers::CommandController* command_controller = nullptr;
   int local_owner_id = 0;
   std::optional<QVector3D> commander_rally_preview_pos;
@@ -45,6 +49,11 @@ struct RenderEffectsContext {
   const Game::Systems::InteractionTargetingHighlights* interaction_targeting = nullptr;
 
   std::optional<QVector3D> objective_marker;
+
+  const Game::Systems::RenderEffectsFrame* effects = nullptr;
+
+  Engine::Core::World* snapshot = nullptr;
+  Game::Session::SessionContext* session = nullptr;
 };
 
 void render_effects(const RenderEffectsContext& context,

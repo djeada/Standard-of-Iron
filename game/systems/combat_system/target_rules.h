@@ -68,6 +68,8 @@ owners_are_hostile(const OwnerRegistry& owners, int owner_a, int owner_b) -> boo
 
 [[nodiscard]] auto target_refusal_key(TargetRefusal refusal) -> std::string_view;
 
+[[nodiscard]] auto is_building(const Engine::Core::Entity* entity) -> bool;
+
 [[nodiscard]] auto is_passive_wildlife_target(Engine::Core::Entity* target) -> bool;
 
 [[nodiscard]] auto is_warded_structure(Engine::Core::Entity* target) -> bool;

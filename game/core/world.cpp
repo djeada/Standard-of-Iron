@@ -1565,11 +1565,11 @@ void World::ensure_render_snapshot() {
     return;
   }
   request_render_snapshots();
-  if (m_render_publish_revision != 0) {
+  if (m_render_publish_revision.load(std::memory_order_acquire) != 0) {
     return;
   }
   const EntityLock lock(*this);
-  if (m_render_publish_revision == 0) {
+  if (m_render_publish_revision.load(std::memory_order_acquire) == 0) {
     publish_render_snapshot();
   }
 }
@@ -1618,7 +1618,8 @@ void World::publish_render_snapshot() {
   if (snapshot->m_render_entity_signatures.size() < slot_count) {
     snapshot->m_render_entity_signatures.resize(slot_count, 0U);
   }
-  ++m_render_publish_revision;
+  snapshot->m_render_effects_frame = m_render_effects_frame;
+  m_render_publish_revision.fetch_add(1, std::memory_order_release);
   snapshot->m_render_unit_ids.reserve(entities_with<UnitComponent>().size());
   snapshot->m_render_building_ids.reserve(entities_with<BuildingComponent>().size());
   snapshot->m_render_other_ids.reserve(entities_with<RenderableComponent>().size());

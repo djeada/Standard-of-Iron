@@ -13,9 +13,10 @@
 #include "game/core/presentation_coverage.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/selection_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/nav_grid.h"
-#include "game/systems/selection_system.h"
 #include "scene/camera.h"
 
 namespace App::ViewModels {
@@ -145,7 +146,7 @@ void OrdersViewModel::refresh_context_intent(qreal sx, qreal sy) {
   request.placing_formation = m_placement.is_placing_formation();
 
   std::vector<Engine::Core::EntityID> selection;
-  if (auto* selection_system = world->get_system<Game::Systems::SelectionSystem>()) {
+  if (auto* selection_system = &Game::Session::session_for(*world).selection()) {
     selection = selection_system->get_selected_units();
   }
   request.selection = &selection;

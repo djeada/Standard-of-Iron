@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "../core/entity.h"
-#include "../systems/selection_system.h"
+#include "../session/selection_service.h"
 
 namespace Engine::Core {
 class World;
@@ -22,7 +22,7 @@ class SelectionController : public QObject {
   Q_OBJECT
 public:
   SelectionController(Engine::Core::World* world,
-                      SelectionSystem* selection_system,
+                      Game::Session::SelectionService* selection_system,
                       PickingService* picking_service,
                       QObject* parent = nullptr);
 
@@ -63,7 +63,7 @@ signals:
 
 private:
   Engine::Core::World* m_world;
-  SelectionSystem* m_selection_system;
+  Game::Session::SelectionService* m_selection_system;
   PickingService* m_picking_service;
   InspectFilter m_inspect_filter;
 

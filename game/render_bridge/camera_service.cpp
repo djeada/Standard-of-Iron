@@ -13,7 +13,8 @@
 #include "../map/terrain.h"
 #include "../map/terrain_service.h"
 #include "../map/visibility_service.h"
-#include "../systems/selection_system.h"
+#include "../session/selection_service.h"
+#include "../session/session_context.h"
 #include "../units/spawn_type.h"
 #include "camera_controller.h"
 #include "camera_follow_system.h"
@@ -103,7 +104,7 @@ void CameraService::follow_selection(Render::GL::Camera& camera,
   m_controller->set_follow_enabled(camera, enable);
 
   if (enable) {
-    if (auto* selection_system = world.get_system<SelectionSystem>()) {
+    if (auto* selection_system = &Game::Session::session_for(world).selection()) {
       m_follow_system->snap_to_selection(world, *selection_system, camera);
     }
   } else {
@@ -166,7 +167,7 @@ void CameraService::update_follow(Render::GL::Camera& camera,
                                   bool follow_enabled) {
   sync_map_bounds(camera);
   if (follow_enabled) {
-    if (auto* selection_system = world.get_system<SelectionSystem>()) {
+    if (auto* selection_system = &Game::Session::session_for(world).selection()) {
       m_follow_system->update(world, *selection_system, camera);
     }
   }

@@ -18,9 +18,9 @@
 #include "game/render_bridge/minimap/minimap_generator.h"
 #include "game/render_bridge/minimap/minimap_utils.h"
 #include "game/render_bridge/minimap/unit_layer.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/owner_registry.h"
-#include "game/systems/selection_system.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 #include "scene/camera.h"
@@ -215,7 +215,7 @@ bool MinimapManager::consume_destinations_dirty() {
 }
 
 void MinimapManager::update_units(Engine::Core::World* world,
-                                  Game::Systems::SelectionSystem* selection_system,
+                                  Game::Session::SelectionService* selection_system,
                                   int local_owner_id) {
   if (m_minimap_fog_image.isNull() || !m_unit_layer || (world == nullptr)) {
     return;

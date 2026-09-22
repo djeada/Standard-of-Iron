@@ -4,6 +4,7 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <vector>
 
 #include "render/gl/mesh.h"
 
@@ -79,11 +80,11 @@ class ResourceManager;
 } // namespace Render
 
 namespace Game::Systems {
-class ArrowSystem;
+struct ArrowInstance;
 }
 
 namespace Render::GL {
 void render_arrows(Renderer* renderer,
                    ResourceManager* resources,
-                   const Game::Systems::ArrowSystem& arrow_system);
+                   const std::vector<Game::Systems::ArrowInstance>& arrows);
 }

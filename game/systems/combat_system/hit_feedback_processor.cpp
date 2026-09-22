@@ -7,6 +7,7 @@
 #include "../../core/world.h"
 #include "../combat_rules.h"
 #include "../formation_combat_geometry.h"
+#include "target_rules.h"
 
 namespace Game::Systems::Combat {
 
@@ -35,8 +36,7 @@ namespace {
 knockback_moves_body(const Engine::Core::Entity& unit,
                      const Engine::Core::HitFeedbackComponent& feedback) -> bool {
   const auto* registry = unit.registry();
-  if (unit.has_component<Engine::Core::BuildingComponent>() ||
-      unit.has_component<Engine::Core::ElephantComponent>() ||
+  if (is_building(&unit) || unit.has_component<Engine::Core::ElephantComponent>() ||
       (registry != nullptr &&
        registry->has<Engine::Core::WildlifeComponent>(unit.get_id()))) {
 

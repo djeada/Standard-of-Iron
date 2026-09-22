@@ -63,6 +63,10 @@ TEST(RenderThreadBoundaryTest, GlRendererDoesNotRunTheSimulationOnTheRenderThrea
   EXPECT_FALSE(contains(source, "m_engine->update("))
       << "GameEngine::update belongs to the simulation thread; the QSG render "
          "thread only renders";
+  EXPECT_FALSE(contains(source, "m_engine->update_presentation("))
+      << "update_presentation writes to the live world -- visibility and ambient "
+         "state -- so it runs on the simulation thread beside simulate(). The "
+         "render thread reads what it published, through the presentation frame";
   const auto start_pos = source.find("m_engine->start_simulation_thread();");
   const auto render_pos = source.find("m_engine->render(");
   ASSERT_NE(start_pos, std::string::npos);

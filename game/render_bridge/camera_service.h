@@ -25,7 +25,6 @@ namespace Game::Systems {
 
 class CameraController;
 class CameraFollowSystem;
-class SelectionSystem;
 
 class CameraService {
 public:

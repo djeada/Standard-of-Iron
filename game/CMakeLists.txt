@@ -399,7 +399,7 @@ add_library(
     systems/gate_system.cpp
     systems/home_system.cpp
     systems/rain_manager.cpp
-    systems/selection_system.cpp
+    session/selection_service.cpp
     systems/settlement_life_system.cpp
     systems/showcase_routine_system.cpp
     systems/cursed_gold_vein_system.cpp

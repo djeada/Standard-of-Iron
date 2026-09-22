@@ -3,12 +3,13 @@
 #include "app/world/selection_query_service.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
-#include "game/systems/selection_system.h"
+#include "game/session/selection_service.h"
+#include "game/session/session_context.h"
 
 namespace {
 
 auto add_selected_unit(Engine::Core::World& world,
-                       Game::Systems::SelectionSystem& selection,
+                       Game::Session::SelectionService& selection,
                        Game::Units::SpawnType spawn_type) -> Engine::Core::Entity* {
   auto* entity = world.create_entity();
   auto* unit = entity->add_component<Engine::Core::UnitComponent>();
@@ -19,8 +20,7 @@ auto add_selected_unit(Engine::Core::World& world,
 
 TEST(SelectionQueryService, ReportsMixedHoldStateForPartialSelection) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   auto* active = add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
@@ -34,8 +34,7 @@ TEST(SelectionQueryService, ReportsMixedHoldStateForPartialSelection) {
 
 TEST(SelectionQueryService, IgnoresIneligibleUnitsInHoldState) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   auto* active = add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
@@ -49,8 +48,7 @@ TEST(SelectionQueryService, IgnoresIneligibleUnitsInHoldState) {
 
 TEST(SelectionQueryService, ReportsMixedFormationStateForPartialSelection) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   auto* active = add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
@@ -64,8 +62,7 @@ TEST(SelectionQueryService, ReportsMixedFormationStateForPartialSelection) {
 
 TEST(SelectionQueryService, BuilderSelectionEnablesCollectMode) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
@@ -78,8 +75,7 @@ TEST(SelectionQueryService, BuilderSelectionEnablesCollectMode) {
 
 TEST(SelectionQueryService, MixedSelectionUsesUnionAvailability) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
@@ -94,8 +90,7 @@ TEST(SelectionQueryService, MixedSelectionUsesUnionAvailability) {
 
 TEST(SelectionQueryService, CommandModeIgnoresIneligibleUnitsForGuardState) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   auto* archer = add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);

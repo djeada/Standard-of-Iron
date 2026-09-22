@@ -45,6 +45,8 @@ class ReplayRecorder;
 
 namespace Game::Session {
 
+class SelectionService;
+
 class DeterministicRng;
 class SimulationClock;
 
@@ -87,6 +89,10 @@ public:
   [[nodiscard]] auto stats() -> Game::Systems::GlobalStatsRegistry&;
 
   [[nodiscard]] auto troop_counts() -> Game::Systems::TroopCountRegistry&;
+
+  // Client state, not match state -- see SelectionService.
+  [[nodiscard]] auto selection() -> SelectionService&;
+  [[nodiscard]] auto selection() const -> const SelectionService&;
 
   [[nodiscard]] auto building_collision() -> Game::Systems::BuildingCollisionRegistry&;
 

@@ -125,6 +125,9 @@
 #include "game/render_bridge/minimap/unit_layer.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/render_bridge/selection_controller.h"
+#include "game/session/selection_service.h"
+#include "game/session/selection_utils.h"
+#include "game/session/session_context.h"
 #include "game/session/session_snapshot.h"
 #include "game/session/simulation_clock.h"
 #include "game/systems/ai_system.h"
@@ -155,7 +158,6 @@
 #include "game/systems/rain_manager.h"
 #include "game/systems/rpg_combat_system/rpg_combat_processor.h"
 #include "game/systems/save_load_service.h"
-#include "game/systems/selection_system.h"
 #include "game/systems/terrain_alignment_system.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/troop_profile_service.h"
@@ -167,7 +169,6 @@
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 #include "game/util/asset_text.h"
-#include "game/util/selection_utils.h"
 #include "game/visuals/team_colors.h"
 #include "render/camera_visibility.h"
 #include "render/geom/stone.h"
@@ -195,6 +196,7 @@ void GameEngine::build_client_and_view_models() {
   m_session = std::make_unique<Game::Session::SessionContext>();
   m_session_scope = std::make_unique<Game::Session::ScopedSession>(*m_session);
   m_world = &m_session->world();
+  m_world->request_render_snapshots(true);
   m_session->commands().set_rejection_observer(
       [this](const Game::Command::Command& command, Game::Command::Rejection reason) {
         report_late_command_rejection(command, reason);
@@ -385,7 +387,7 @@ void GameEngine::build_services_and_controllers() {
             emit loading_stage_changed(std::move(detail));
           });
 
-  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*m_world).selection();
   m_selection_controller = std::make_unique<Game::Systems::SelectionController>(
       m_world, selection_system, m_picking_service.get());
   m_selection_controller->set_inspect_filter([this](Engine::Core::EntityID id) {

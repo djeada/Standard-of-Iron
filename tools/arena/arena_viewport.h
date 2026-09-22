@@ -45,7 +45,6 @@ class SessionContext;
 namespace Game::Systems {
 class CameraService;
 class PickingService;
-class SelectionSystem;
 class UndeadAwakeningSystem;
 } // namespace Game::Systems
 
@@ -378,7 +377,7 @@ private:
                           Game::Units::SpawnType spawn_type) const -> QString;
   void render_attack_range_rings(Render::GL::ResourceManager* resources);
   void render_target_focus_rings(Render::GL::ResourceManager* resources);
-  auto selection_system() const -> Game::Systems::SelectionSystem*;
+  auto selection_system() const -> Game::Session::SelectionService*;
   auto selected_unit_ids_or_fallback() -> std::vector<Engine::Core::EntityID>;
   void sync_spawn_selection_defaults();
   void clear_forced_animation_state(const std::vector<Engine::Core::EntityID>& ids);

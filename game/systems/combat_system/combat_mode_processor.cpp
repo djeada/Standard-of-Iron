@@ -8,7 +8,6 @@
 #include "../../core/ambient_session.h"
 #include "../../core/component_structures.h"
 #include "../../core/world.h"
-#include "../combat_rules.h"
 #include "../formation_combat_geometry.h"
 #include "../owner_registry.h"
 #include "combat_utils.h"
@@ -22,9 +21,7 @@ void update_combat_mode(Engine::Core::Entity* attacker,
     return;
   }
 
-  bool const in_melee_combat =
-      attack_comp->in_melee_lock &&
-      Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker);
+  bool const in_melee_combat = in_rts_melee_lock(attacker);
   if (in_melee_combat) {
 
     attack_comp->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
@@ -102,7 +99,7 @@ void update_combat_mode(Engine::Core::Entity* attacker,
       continue;
     }
 
-    if (target->has_component<Engine::Core::BuildingComponent>()) {
+    if (is_building(target)) {
       continue;
     }
 

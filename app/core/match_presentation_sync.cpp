@@ -11,8 +11,8 @@
 #include "app/world/unit_queries.h"
 #include "game/core/world.h"
 #include "game/map/visibility_service.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
-#include "game/systems/selection_system.h"
 #include "scene/camera.h"
 
 namespace App::Core::PresentationSync {
@@ -24,7 +24,7 @@ auto collect_attack_range_rings(const SelectionAttackContext& ctx)
     return rings;
   }
 
-  auto* selection_system = ctx.world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*ctx.world).selection();
   if (selection_system == nullptr) {
     return rings;
   }
@@ -58,8 +58,7 @@ auto collect_attack_targeting(const SelectionAttackContext& ctx)
   }
 
   std::vector<Engine::Core::EntityID> attackers;
-  if (auto* selection_system =
-          ctx.world->get_system<Game::Systems::SelectionSystem>()) {
+  if (auto* selection_system = &Game::Session::session_for(*ctx.world).selection()) {
     attackers = App::Core::filter_selected_units_for_action(
         ctx.world, selection_system->get_selected_units(), QStringLiteral("attack"));
   }

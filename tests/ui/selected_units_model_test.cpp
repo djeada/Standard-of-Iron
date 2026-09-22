@@ -9,20 +9,20 @@
 #include "game/core/component_structures.h"
 #include "game/core/world.h"
 #include "game/render_bridge/selection_controller.h"
-#include "game/systems/selection_system.h"
+#include "game/session/selection_service.h"
 
 namespace {
 
 struct SelectionFixture {
   Engine::Core::World world;
-  Game::Systems::SelectionSystem* selection_system = nullptr;
+  Game::Session::SelectionService test_selection;
+  Game::Session::SelectionService* selection_system = nullptr;
   std::unique_ptr<Game::Systems::SelectionController> controller;
   App::Core::ClientContext context;
   std::unique_ptr<SelectedUnitsModel> model;
 
   SelectionFixture() {
-    world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-    selection_system = world.get_system<Game::Systems::SelectionSystem>();
+    selection_system = &test_selection;
     controller = std::make_unique<Game::Systems::SelectionController>(
         &world, selection_system, nullptr);
     context.world = &world;

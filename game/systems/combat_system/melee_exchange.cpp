@@ -7,6 +7,7 @@
 #include "../../core/component_gameplay.h"
 #include "../combat_rules.h"
 #include "combat_random.h"
+#include "target_rules.h"
 
 namespace Game::Systems::Combat {
 
@@ -145,7 +146,7 @@ auto melee_target_can_defend(const Engine::Core::Entity* attacker,
   if (attacker == nullptr || target == nullptr) {
     return false;
   }
-  if (target->has_component<Engine::Core::BuildingComponent>()) {
+  if (is_building(target)) {
     return false;
   }
   if (Game::Systems::CombatRules::uses_rpg_combat_rules(target)) {

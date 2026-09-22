@@ -40,19 +40,20 @@ TEST(ProjectileRelationTest, EverythingElseIsNeutral) {
       << "spectators have no side";
 }
 
-TEST(ProjectileRelationTest, TheViewContextResolvesOwnersThroughTheCallback) {
+TEST(ProjectileRelationTest, TheViewContextClassifiesOwnersResolvedAtPublishTime) {
   ProjectileViewContext view;
   view.local_owner_id = 1;
-  view.owner_of = [](std::uint64_t id) -> int {
-    return id == 10 ? 1 : 2;
-  };
-  EXPECT_EQ(view.relation_for(10, 20), ProjectileRelation::Outgoing);
-  EXPECT_EQ(view.relation_for(20, 10), ProjectileRelation::Incoming);
-  EXPECT_EQ(view.relation_for(20, 30), ProjectileRelation::Neutral);
-  EXPECT_EQ(view.relation_for(0, 0), ProjectileRelation::Neutral);
 
-  ProjectileViewContext blind;
-  blind.local_owner_id = 1;
-  EXPECT_EQ(blind.relation_for(10, 20), ProjectileRelation::Neutral)
-      << "without an owner resolver the renderer must not guess";
+  EXPECT_EQ(view.relation_for_owners(1, 2), ProjectileRelation::Outgoing);
+  EXPECT_EQ(view.relation_for_owners(2, 1), ProjectileRelation::Incoming);
+  EXPECT_EQ(view.relation_for_owners(2, 3), ProjectileRelation::Neutral);
+  EXPECT_EQ(view.relation_for_owners(0, 0), ProjectileRelation::Neutral)
+      << "an unowned pair belongs to nobody";
+}
+
+TEST(ProjectileRelationTest, ASpectatorHasNoSide) {
+  ProjectileViewContext spectator;
+  spectator.local_owner_id = 0;
+  EXPECT_EQ(spectator.relation_for_owners(1, 2), ProjectileRelation::Neutral)
+      << "with no local owner the renderer must not guess";
 }

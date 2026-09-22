@@ -18,9 +18,10 @@
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/render_bridge/selection_controller.h"
+#include "game/session/selection_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/nav_grid.h"
-#include "game/systems/selection_system.h"
 #include "scene/camera.h"
 
 namespace {
@@ -30,10 +31,10 @@ protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
+    Game::Session::SessionContext::active().selection().clear_selection();
     Game::Systems::NavGrid::initialize(32, 32);
 
-    world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-    selection_system = world.get_system<Game::Systems::SelectionSystem>();
+    selection_system = &Game::Session::SessionContext::active().selection();
     ASSERT_NE(selection_system, nullptr);
 
     selection_controller = std::make_unique<Game::Systems::SelectionController>(
@@ -104,7 +105,7 @@ protected:
   std::vector<App::Core::OrderOutcome> feedback;
   Game::Command::ScopedImmediateDispatch immediate_orders;
   Engine::Core::World world;
-  Game::Systems::SelectionSystem* selection_system = nullptr;
+  Game::Session::SelectionService* selection_system = nullptr;
   Game::Systems::PickingService picking_service;
   std::unique_ptr<Game::Systems::SelectionController> selection_controller;
   std::unique_ptr<App::Controllers::CommandController> command_controller;

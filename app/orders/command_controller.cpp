@@ -30,6 +30,7 @@
 #include "game/formation/formation_doctrine.h"
 #include "game/game_config.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/combat_rules.h"
 #include "game/systems/combat_system/target_rules.h"
@@ -39,7 +40,6 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/production_service.h"
-#include "game/systems/selection_system.h"
 #include "game/systems/squad_service.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/spawn_type.h"
@@ -60,7 +60,7 @@ void submit(Engine::Core::World* world, Game::Command::Payload payload) {
 } // namespace
 
 CommandController::CommandController(Engine::Core::World* world,
-                                     Game::Systems::SelectionSystem* selection_system,
+                                     Game::Session::SelectionService* selection_system,
                                      Game::Systems::PickingService* picking_service,
                                      QObject* parent)
     : QObject(parent)

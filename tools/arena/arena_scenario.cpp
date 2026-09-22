@@ -24,6 +24,7 @@
 #include "game/core/world.h"
 #include "game/formation/army_formation_service.h"
 #include "game/map/terrain_service.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/attack_range.h"
 #include "game/systems/builder_product_types.h"
@@ -46,7 +47,6 @@
 #include "game/systems/projectile_kind.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
-#include "game/systems/selection_system.h"
 #include "game/systems/undead_awakening_system.h"
 #include "game/units/unit.h"
 #include "game/wildlife/bird_flock.h"
@@ -2681,7 +2681,7 @@ struct ArenaScenarioRunner::Impl {
   }
 
   void observe_range_rings() {
-    auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+    auto* selection = &Game::Session::session_for(world).selection();
     if (selection == nullptr) {
       return;
     }

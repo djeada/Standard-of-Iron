@@ -56,6 +56,7 @@
 #include "game/map/visibility_service.h"
 #include "game/render_bridge/camera_service.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_commander_doctrine.h"
@@ -73,7 +74,6 @@
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/run_stamina.h"
-#include "game/systems/selection_system.h"
 #include "game/systems/target_focus.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/undead_awakening_system.h"
@@ -698,26 +698,19 @@ void ArenaViewport::paintGL() {
   timings.world_submit_ms = elapsed_phase_ms();
   if (auto* res = m_renderer->resources(); res != nullptr) {
     if (auto* arrow_system = m_world->get_system<Game::Systems::ArrowSystem>()) {
-      Render::GL::render_arrows(m_renderer.get(), res, *arrow_system);
+      Render::GL::render_arrows(m_renderer.get(), res, arrow_system->arrows());
     }
-    if (auto* projectile_system =
-            m_world->get_system<Game::Systems::ProjectileSystem>()) {
+    {
       Render::GL::ProjectileViewContext view;
       view.local_owner_id = k_local_owner_id;
-      Engine::Core::World* world = m_world.get();
-      view.owner_of = [world](std::uint64_t id) -> int {
-        auto* entity = world->get_entity(id);
-        const auto* unit = entity != nullptr
-                               ? entity->get_component<Engine::Core::UnitComponent>()
-                               : nullptr;
-        return unit != nullptr ? unit->owner_id : 0;
-      };
-      Render::GL::render_projectiles(m_renderer.get(), res, *projectile_system, &view);
+      view.reduced_effects = Game::Accessibility::MotionSettings::reduced_motion();
+      Render::GL::render_projectiles(
+          m_renderer.get(), res, m_world->render_effects_frame(), &view);
     }
-    if (auto* healing_beam_system =
-            m_world->get_system<Game::Systems::HealingBeamSystem>()) {
-      Render::GL::render_healing_beams(m_renderer.get(), res, *healing_beam_system);
-      Render::GL::render_healing_waves(m_renderer.get(), res, *healing_beam_system);
+    {
+      const auto& beams = m_world->render_effects_frame().healing_beams;
+      Render::GL::render_healing_beams(m_renderer.get(), res, beams);
+      Render::GL::render_healing_waves(m_renderer.get(), res, beams);
     }
     Render::GL::render_production_completions(
         m_renderer.get(),
@@ -1247,8 +1240,8 @@ void ArenaViewport::render_target_focus_rings(Render::GL::ResourceManager* resou
   Render::GL::render_target_focus_rings(m_renderer.get(), resources, visuals);
 }
 
-auto ArenaViewport::selection_system() const -> Game::Systems::SelectionSystem* {
-  return m_world != nullptr ? m_world->get_system<Game::Systems::SelectionSystem>()
+auto ArenaViewport::selection_system() const -> Game::Session::SelectionService* {
+  return m_world != nullptr ? &Game::Session::session_for(*m_world).selection()
                             : nullptr;
 }
 

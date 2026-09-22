@@ -1,7 +1,9 @@
 #pragma once
 
+#include <vector>
+
 namespace Game::Systems {
-class HealingBeamSystem;
+struct HealingBeamView;
 }
 
 namespace Render::GL {
@@ -10,6 +12,6 @@ class ResourceManager;
 
 void render_healing_beams(Renderer* renderer,
                           ResourceManager* resources,
-                          const Game::Systems::HealingBeamSystem& beam_system);
+                          const std::vector<Game::Systems::HealingBeamView>& beams);
 
 } // namespace Render::GL

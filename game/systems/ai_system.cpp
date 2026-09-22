@@ -10,6 +10,7 @@
 #include <memory>
 #include <utility>
 
+#include "../core/ambient_session.h"
 #include "../core/world.h"
 #include "../session/session_context.h"
 #include "ai_system/ai_command_applier.h"
@@ -126,6 +127,8 @@ auto AISystem::submit_decision_job(AIInstance& ai,
   job.context = ai.context;
   job.context.nation = nullptr;
   job.delta_time = delta_time;
+  const auto* bound = Game::Session::services_for_or_null(world);
+  job.session = bound != nullptr ? bound->session : nullptr;
   merge_building_attacks(ai, job.context);
 
   if (!ai.worker->try_submit(std::move(job))) {

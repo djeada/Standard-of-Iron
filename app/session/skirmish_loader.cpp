@@ -38,6 +38,7 @@
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/building_collision_registry.h"
@@ -46,7 +47,6 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
-#include "game/systems/selection_system.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/wall_network_service.h"
 #include "game/units/spawn_type.h"
@@ -203,7 +203,7 @@ SkirmishLoader::SkirmishLoader(Engine::Core::World& world,
 }
 
 void SkirmishLoader::reset_game_state() {
-  if (auto* selection_system = m_world.get_system<Game::Systems::SelectionSystem>()) {
+  if (auto* selection_system = &Game::Session::session_for(m_world).selection()) {
     selection_system->clear_selection();
   }
 

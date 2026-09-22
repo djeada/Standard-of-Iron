@@ -19,8 +19,8 @@ class World;
 using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
-namespace Game::Systems {
-class SelectionSystem;
+namespace Game::Session {
+class SelectionService;
 }
 
 namespace App::Controllers {
@@ -36,7 +36,7 @@ public:
   };
 
   ArmyFormationController(Engine::Core::World* world,
-                          Game::Systems::SelectionSystem* selection_system,
+                          Game::Session::SelectionService* selection_system,
                           App::Orders::OrderIssuer::FeedbackSink feedback,
                           QObject* parent = nullptr);
 
@@ -137,7 +137,7 @@ private:
   void invalidate_formation_layout();
 
   Engine::Core::World* m_world = nullptr;
-  Game::Systems::SelectionSystem* m_selection_system = nullptr;
+  Game::Session::SelectionService* m_selection_system = nullptr;
   App::Orders::OrderIssuer m_orders;
 
   bool m_is_placing_formation = false;

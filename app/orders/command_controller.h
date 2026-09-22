@@ -24,7 +24,6 @@ using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Game::Systems {
-class SelectionSystem;
 class PickingService;
 enum class ProductionResult;
 } // namespace Game::Systems
@@ -42,7 +41,7 @@ class CommandController : public QObject {
   Q_OBJECT
 public:
   CommandController(Engine::Core::World* world,
-                    Game::Systems::SelectionSystem* selection_system,
+                    Game::Session::SelectionService* selection_system,
                     Game::Systems::PickingService* picking_service,
                     QObject* parent = nullptr);
 
@@ -183,7 +182,7 @@ private:
                          const QString& priority_product_type) -> CommandResult;
 
   Engine::Core::World* m_world;
-  Game::Systems::SelectionSystem* m_selection_system;
+  Game::Session::SelectionService* m_selection_system;
   Game::Systems::PickingService* m_picking_service;
 
   bool m_has_patrol_first_waypoint = false;

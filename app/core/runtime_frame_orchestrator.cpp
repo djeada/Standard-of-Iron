@@ -12,10 +12,10 @@
 #include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/map/environment_lighting.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
 #include "game/systems/rain_manager.h"
-#include "game/systems/selection_system.h"
 #include "game/systems/victory_service.h"
 #include "game/wildlife/wildlife_system.h"
 #include "render/ground/rain_renderer.h"
@@ -137,8 +137,7 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
     if (scene.minimap_manager != nullptr) {
       Render::Profiling::AccumulatorScope const minimap_scope(
           &Render::Profiling::global_profile().minimap_update_us);
-      auto* selection_system =
-          scene.world->get_system<Game::Systems::SelectionSystem>();
+      auto* selection_system = &Game::Session::session_for(*scene.world).selection();
       state.minimap_unit_update_accumulator += std::max(dt, 0.0F);
       const bool unit_update_due =
           state.minimap_unit_update_accumulator >= k_minimap_unit_update_interval;
@@ -211,7 +210,7 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
     return;
   }
 
-  auto* selection_system = scene.world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*scene.world).selection();
   if (selection_system == nullptr || selection_system->get_selected_units().empty()) {
     return;
   }

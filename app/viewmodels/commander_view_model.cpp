@@ -22,10 +22,10 @@
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/nav_grid.h"
-#include "game/systems/selection_system.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 
@@ -386,7 +386,7 @@ void CommanderViewModel::trigger_aura() {
   Engine::Core::Entity* commander_entity = nullptr;
   if (active()) {
     commander_entity = controlled_commander_entity();
-  } else if (auto* selection = world->get_system<Game::Systems::SelectionSystem>()) {
+  } else if (auto* selection = &Game::Session::session_for(*world).selection()) {
     for (const auto entity_id : selection->get_selected_units()) {
       auto* candidate = world->get_entity(entity_id);
       if (candidate == nullptr) {

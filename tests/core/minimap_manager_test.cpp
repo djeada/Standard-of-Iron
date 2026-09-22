@@ -12,8 +12,8 @@
 #include "core/component_gameplay.h"
 #include "core/entity.h"
 #include "core/world.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
-#include "game/systems/selection_system.h"
 #include "game/units/spawn_type.h"
 #include "map/map_definition.h"
 #include "map/render_visibility_rules.h"
@@ -733,12 +733,12 @@ TEST(MinimapManagerTest, SelectedTroopDestinationsArePublished) {
   const MapDefinition map = make_test_map(kMapSize, kMapSize, 0.0F);
 
   auto world = std::make_unique<Engine::Core::World>();
-  world->add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  Game::Session::SelectionService test_selection;
   auto* unit = add_unit(*world, 0.0F, 0.0F, 1);
   auto* movement = unit->add_component<Engine::Core::MovementComponent>();
   movement->engage_manual_move(8.0F, -6.0F);
 
-  auto* selection = world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &test_selection;
   selection->select_unit(unit->get_id());
 
   MinimapManager manager;

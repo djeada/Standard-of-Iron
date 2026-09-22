@@ -8,7 +8,7 @@
 
 namespace Game::Systems {
 
-void HealingBeamSystem::update(Engine::Core::World*, float delta_time) {
+void HealingBeamSystem::update(Engine::Core::World* world, float delta_time) {
 
   for (auto& beam : m_beams) {
     if (beam && beam->is_active()) {
@@ -22,6 +22,23 @@ void HealingBeamSystem::update(Engine::Core::World*, float delta_time) {
                                  return !beam || !beam->is_active();
                                }),
                 m_beams.end());
+
+  if (world != nullptr) {
+    auto& published = world->render_effects_frame().healing_beams;
+    published.clear();
+    published.reserve(m_beams.size());
+    for (const auto& beam : m_beams) {
+      if (!beam || !beam->is_active()) {
+        continue;
+      }
+      published.push_back({.start = beam->get_start(),
+                           .end = beam->get_end(),
+                           .color = beam->get_color(),
+                           .progress = beam->get_progress(),
+                           .beam_width = beam->get_beam_width(),
+                           .intensity = beam->get_intensity()});
+    }
+  }
 }
 
 void HealingBeamSystem::spawn_beam(const QVector3D& healer_pos,

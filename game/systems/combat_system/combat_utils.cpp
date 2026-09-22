@@ -35,6 +35,8 @@ constexpr float k_bypass_clearance_margin = 0.75F;
 constexpr float k_walk_around_arrival_slack = 1.5F;
 
 constexpr float k_max_answer_fire_margin = 12.0F;
+
+constexpr float k_contact_separation_exemption = 1.6F;
 } // namespace
 
 CombatQueryContext::CombatQueryContext() {
@@ -170,13 +172,8 @@ void rebuild_combat_query_context(Engine::Core::World* world,
       continue;
     }
 
-    const bool building = is_building(&entity);
     query_context.units.push_back(&entity);
-    query_context.record_candidate(&entity, unit.owner_id, building);
-
-    if (building) {
-      continue;
-    }
+    query_context.record_candidate(&entity, unit.owner_id, is_building(&entity));
   }
 
   query_context.world = world;
@@ -314,11 +311,26 @@ void send_guard_home(Engine::Core::World& world,
   CommandService::move_unit(world, entity->get_id(), *post, options);
 }
 
-auto is_building(Engine::Core::Entity* entity) -> bool {
-  if (entity == nullptr) {
-    return false;
-  }
-  return entity->has_component<Engine::Core::BuildingComponent>();
+auto is_infantry_spawn(Game::Units::SpawnType type) noexcept -> bool {
+  return !Game::Units::is_cavalry(type) && type != Game::Units::SpawnType::Elephant &&
+         !Game::Units::is_siege_engine_spawn(type);
+}
+
+auto is_melee_mode(const Engine::Core::AttackComponent* attack) -> bool {
+  return attack != nullptr && attack->attacks_in_melee();
+}
+
+auto is_ranged_mode(const Engine::Core::AttackComponent* attack) -> bool {
+  return attack != nullptr && attack->can_ranged &&
+         attack->current_mode == Engine::Core::AttackComponent::CombatMode::Ranged;
+}
+
+auto in_rts_melee_lock(const Engine::Core::Entity* entity) -> bool {
+  auto const* attack = entity == nullptr
+                           ? nullptr
+                           : entity->get_component<Engine::Core::AttackComponent>();
+  return attack != nullptr && attack->in_melee_lock &&
+         Game::Systems::CombatRules::participates_in_rts_melee_lock(entity);
 }
 
 auto combat_radius(Engine::Core::Entity* entity) -> float {
@@ -349,8 +361,6 @@ auto structure_separates_positions(const QVector3D& from, const QVector3D& to) -
   return Game::Systems::BuildingCollisionRegistry::instance()
       .segment_crosses_blocking_building(from.x(), from.z(), to.x(), to.z());
 }
-
-constexpr float k_contact_separation_exemption = 1.6F;
 
 auto structure_separates_combatants(Engine::Core::Entity* attacker,
                                     Engine::Core::Entity* target) -> bool {
@@ -532,9 +542,7 @@ auto is_in_range(Engine::Core::Entity* attacker,
   float const distance_squared = dx * dx + dz * dz;
 
   auto* attacker_atk = attacker->get_component<Engine::Core::AttackComponent>();
-  bool const melee =
-      (attacker_atk != nullptr) &&
-      attacker_atk->current_mode == Engine::Core::AttackComponent::CombatMode::Melee;
+  bool const melee = is_melee_mode(attacker_atk);
 
   if (!melee && (attacker_atk != nullptr) && attacker_atk->min_range > 0.0F &&
       distance_squared < attacker_atk->min_range * attacker_atk->min_range) {
@@ -725,9 +733,7 @@ auto is_unit_idle(Engine::Core::Entity* unit) -> bool {
     return false;
   }
 
-  auto* attack_comp = unit->get_component<Engine::Core::AttackComponent>();
-  if ((attack_comp != nullptr) && attack_comp->in_melee_lock &&
-      Game::Systems::CombatRules::participates_in_rts_melee_lock(unit)) {
+  if (in_rts_melee_lock(unit)) {
     return false;
   }
 

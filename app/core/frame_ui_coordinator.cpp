@@ -12,12 +12,12 @@
 #include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/arrow_system.h"
 #include "game/systems/healing_beam_system.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/projectile_system.h"
-#include "game/systems/selection_system.h"
 #include "game/units/spawn_type.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "render/entity/commander_aura_renderer.h"
@@ -47,7 +47,7 @@ auto has_selected_local_barracks(Engine::Core::World* world,
     return false;
   }
 
-  auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*world).selection();
   if (selection_system == nullptr) {
     return false;
   }
@@ -267,7 +267,7 @@ namespace App::Core::FrameUiCoordinator {
 
 void render_effects(const RenderEffectsContext& context,
                     const std::function<void()>& render_runtime_mode_effects) {
-  if (context.renderer == nullptr || context.world == nullptr) {
+  if (context.renderer == nullptr || context.snapshot == nullptr) {
     return;
   }
 
@@ -276,45 +276,35 @@ void render_effects(const RenderEffectsContext& context,
     return;
   }
 
-  if (auto* arrow_system = context.world->get_system<Game::Systems::ArrowSystem>()) {
-    Render::GL::render_arrows(context.renderer, res, *arrow_system);
+  if (context.effects != nullptr) {
+    Render::GL::render_arrows(context.renderer, res, context.effects->arrows);
   }
 
-  if (auto* projectile_system =
-          context.world->get_system<Game::Systems::ProjectileSystem>()) {
+  if (context.effects != nullptr) {
     Render::GL::ProjectileViewContext view;
     view.local_owner_id = context.local_owner_id;
     view.reduced_effects = Game::Accessibility::MotionSettings::reduced_motion();
-    Engine::Core::World* world = context.world;
-    view.owner_of = [world](std::uint64_t id) -> int {
-      auto* entity = world->get_entity(id);
-      const auto* unit = entity != nullptr
-                             ? entity->get_component<Engine::Core::UnitComponent>()
-                             : nullptr;
-      return unit != nullptr ? unit->owner_id : 0;
-    };
-    Render::GL::render_projectiles(context.renderer, res, *projectile_system, &view);
+    Render::GL::render_projectiles(context.renderer, res, *context.effects, &view);
   }
 
-  if (auto* healing_beam_system =
-          context.world->get_system<Game::Systems::HealingBeamSystem>()) {
+  if (context.effects != nullptr) {
     if (auto* resources = context.renderer->resources()) {
       Render::GL::render_healing_beams(
-          context.renderer, resources, *healing_beam_system);
+          context.renderer, resources, context.effects->healing_beams);
       Render::GL::render_healing_waves(
-          context.renderer, resources, *healing_beam_system);
+          context.renderer, resources, context.effects->healing_beams);
     }
   }
 
   Render::GL::render_production_completions(
       context.renderer,
-      context.world,
+      context.snapshot,
       context.local_owner_id,
       Game::Accessibility::MotionSettings::reduced_motion());
-  Render::GL::render_healer_auras(context.renderer, res, context.world);
-  Render::GL::render_commander_auras(context.renderer, res, context.world);
-  Render::GL::render_combat_dust(context.renderer, res, context.world);
-  Render::GL::render_blood_stains(context.renderer, res, context.world);
+  Render::GL::render_healer_auras(context.renderer, res, context.snapshot);
+  Render::GL::render_commander_auras(context.renderer, res, context.snapshot);
+  Render::GL::render_combat_dust(context.renderer, res, context.snapshot);
+  Render::GL::render_blood_stains(context.renderer, res, context.snapshot);
 
   if (render_runtime_mode_effects) {
     render_runtime_mode_effects();
@@ -351,17 +341,20 @@ void render_effects(const RenderEffectsContext& context,
     preview_waypoint = context.command_controller->get_patrol_first_waypoint();
   }
   Render::GL::render_patrol_flags(
-      context.renderer, res, *context.world, preview_waypoint);
+      context.renderer, res, *context.snapshot, preview_waypoint);
 
   Render::GL::render_commander_rally_flags(context.renderer,
                                            res,
-                                           context.world,
+                                           context.snapshot,
                                            context.local_owner_id,
                                            context.commander_rally_preview_pos);
 
   if (context.command_controller != nullptr &&
       context.command_controller->formation().is_placing_formation()) {
-    auto& session = Game::Session::session_for(*context.world);
+    if (context.session == nullptr) {
+      return;
+    }
+    auto& session = *context.session;
     Render::GL::FormationPlacementInfo placement;
     placement.position =
         context.command_controller->formation().get_formation_placement_position();

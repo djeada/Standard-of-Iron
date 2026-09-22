@@ -7,6 +7,7 @@
 #include "../../core/event_manager.h"
 #include "../../core/world.h"
 #include "damage_application.h"
+#include "target_rules.h"
 
 namespace Game::Systems::Combat {
 
@@ -17,7 +18,7 @@ constexpr float k_fire_fade_seconds = 1.2F;
 
 [[nodiscard]] auto live_structure_unit(const Engine::Core::Entity& entity)
     -> const Engine::Core::UnitComponent* {
-  if (!entity.has_component<Engine::Core::BuildingComponent>()) {
+  if (!is_building(&entity)) {
     return nullptr;
   }
   auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
@@ -39,10 +40,6 @@ ignition_threshold_for(const Engine::Core::UnitComponent& unit) -> float {
 }
 
 } // namespace
-
-auto is_structure(const Engine::Core::Entity& entity) -> bool {
-  return entity.has_component<Engine::Core::BuildingComponent>();
-}
 
 auto can_ignite_structure(const Engine::Core::Entity& entity) -> bool {
   return !entity.has_component<Engine::Core::PendingRemovalComponent>() &&
