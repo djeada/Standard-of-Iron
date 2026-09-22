@@ -101,11 +101,11 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
 
   const float stringcourse_y = 0.20F + wall_height * height_multiplier - 0.12F;
   for (const float side : {-1.0F, 1.0F}) {
-    desc.add_box(QVector3D(0.0F, stringcourse_y, side * 1.024F),
+    desc.add_box(QVector3D(0.0F, stringcourse_y, side * 1.03F),
                  QVector3D(0.90F, 0.025F, 0.025F),
                  c.stone_base,
                  k_building_state_mask_intact);
-    desc.add_box(QVector3D(side * 1.024F, stringcourse_y, 0.0F),
+    desc.add_box(QVector3D(side * 1.03F, stringcourse_y, 0.0F),
                  QVector3D(0.025F, 0.025F, 0.90F),
                  c.stone_base,
                  k_building_state_mask_intact);

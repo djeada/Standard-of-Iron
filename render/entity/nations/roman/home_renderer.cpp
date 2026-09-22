@@ -114,7 +114,7 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
 
   for (const float x : {-0.68F, -0.34F, 0.0F, 0.34F, 0.68F}) {
     for (const float side : {-1.0F, 1.0F}) {
-      desc.add_box(QVector3D(x, cornice_y - 0.12F, side * 0.975F),
+      desc.add_box(QVector3D(x, cornice_y - 0.12F, side * 0.98F),
                    QVector3D(0.045F, 0.055F, 0.035F),
                    c.limestone_shade,
                    k_building_state_mask_intact);

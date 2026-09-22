@@ -312,8 +312,8 @@ void add_roof_parapet(BuildingArchetypeDesc& desc,
   float const half_z = k_shrine_half_z + 0.086F;
 
   for (const float side : {-1.0F, 1.0F}) {
-    desc.add_box(QVector3D(k_shrine_x, roof_y + 0.018F, side * half_z),
-                 QVector3D(half_x, 0.018F, 0.046F),
+    desc.add_box(QVector3D(k_shrine_x - 0.023F, roof_y + 0.018F, side * half_z),
+                 QVector3D(half_x - 0.023F, 0.018F, 0.046F),
                  c.sandstone_dark,
                  k_building_state_mask_intact);
   }
