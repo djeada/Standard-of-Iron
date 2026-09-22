@@ -91,4 +91,22 @@ auto build_commander_speaker_roster(Engine::Core::World& world,
   return roster;
 }
 
+auto local_commander_speaker(Engine::Core::World& world,
+                             int local_owner_id) -> std::optional<CommanderSpeaker> {
+  for (auto [entity_id, unit] : world.view<const Engine::Core::UnitComponent>()) {
+    if (unit.owner_id != local_owner_id || unit.health <= 0 ||
+        !world.has<Engine::Core::CommanderComponent>(entity_id)) {
+      continue;
+    }
+    const auto troop_type = Game::Units::spawn_typeToTroopType(unit.spawn_type);
+    if (!troop_type.has_value() || !Game::Units::is_commander_troop(*troop_type)) {
+      continue;
+    }
+    return CommanderSpeaker{.owner_id = local_owner_id,
+                            .troop_type = Game::Units::troop_typeToQString(*troop_type),
+                            .relationship = CommanderRelationship::Ally};
+  }
+  return std::nullopt;
+}
+
 } // namespace Game::Mission

@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "game/audio/cue_ids.h"
+#include "game/core/component_commander.h"
 #include "game/core/component_structures.h"
 #include "game/core/world.h"
 #include "game/mission/mission_setup_coordinator.h"
@@ -340,6 +341,48 @@ TEST(MissionWaveDirectorTest, SavedStateSurvivesARoundTrip) {
 
   restored.set_elapsed(43.0F);
   EXPECT_TRUE(restored.advance().waves_to_spawn.empty());
+}
+
+TEST(MissionWaveDirectorTest, AHeadlessNationSendsNoMoreColumns) {
+  Engine::Core::World world;
+  std::vector<PendingMissionWave> waves{make_wave("roman", 1, 60.0F),
+                                        make_wave("roman", 2, 120.0F)};
+  set_phase_count(waves, 2);
+  const auto commander = spawn_unit(world);
+  world.get_entity(commander)->add_component<Engine::Core::CommanderComponent>();
+
+  MissionWaveDirector director;
+  director.bind(&waves, &world);
+  director.set_elapsed(1.0F);
+  EXPECT_TRUE(director.advance().waves_to_spawn.empty());
+
+  kill(world, commander);
+  director.set_elapsed(60.0F);
+  const auto effects = director.advance();
+  EXPECT_TRUE(effects.waves_to_spawn.empty());
+  EXPECT_TRUE(effects.all_cleared);
+  EXPECT_EQ(director.cleared_wave_count(), 2);
+
+  const QJsonObject saved = director.serialize();
+  std::vector<PendingMissionWave> restored_waves{make_wave("roman", 1, 60.0F),
+                                                 make_wave("roman", 2, 120.0F)};
+  set_phase_count(restored_waves, 2);
+  MissionWaveDirector restored;
+  restored.bind(&restored_waves, &world);
+  restored.restore(saved);
+  restored.set_elapsed(130.0F);
+  EXPECT_TRUE(restored.advance().waves_to_spawn.empty());
+}
+
+TEST(MissionWaveDirectorTest, AnOwnerThatNeverFieldedACommanderKeepsItsSchedule) {
+  Engine::Core::World world;
+  std::vector<PendingMissionWave> waves{make_wave("roman", 1, 60.0F)};
+  set_phase_count(waves, 1);
+
+  MissionWaveDirector director;
+  director.bind(&waves, &world);
+  director.set_elapsed(60.0F);
+  EXPECT_EQ(director.advance().waves_to_spawn.size(), 1U);
 }
 
 TEST(MissionWaveDirectorTest, AnUnspawnedWaveKeepsTheCompositionItWasSavedWith) {

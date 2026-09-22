@@ -56,6 +56,7 @@ struct CommanderMessageCue {
 struct CommanderMessageScript {
   std::vector<CommanderMessage> mission_lines;
   std::vector<CommanderSpeaker> speakers;
+  std::optional<CommanderSpeaker> local_speaker;
   const CommanderVoiceLibrary* voices = nullptr;
   CommanderVoicesPolicy policy;
 };

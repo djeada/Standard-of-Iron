@@ -12,48 +12,7 @@
     "faction": "carthaginian",
     "color": "brown",
     "starting_units": [],
-    "starting_buildings": [
-      {
-        "type": "marketplace",
-        "position": {
-          "x": 322,
-          "z": 238
-        },
-        "max_population": 75
-      },
-      {
-        "type": "home",
-        "position": {
-          "x": 301,
-          "z": 250
-        },
-        "max_population": 75
-      },
-      {
-        "type": "home",
-        "position": {
-          "x": 343,
-          "z": 250
-        },
-        "max_population": 75
-      },
-      {
-        "type": "home",
-        "position": {
-          "x": 301,
-          "z": 271
-        },
-        "max_population": 75
-      },
-      {
-        "type": "home",
-        "position": {
-          "x": 343,
-          "z": 271
-        },
-        "max_population": 75
-      }
-    ],
+    "starting_buildings": [],
     "starting_resources": {
       "gold": 1800,
       "food": 1500,
@@ -77,32 +36,7 @@
         "harassment": 0.45
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "marketplace",
-          "position": {
-            "x": 120,
-            "z": 78
-          },
-          "max_population": 55
-        },
-        {
-          "type": "home",
-          "position": {
-            "x": 96,
-            "z": 80
-          },
-          "max_population": 55
-        },
-        {
-          "type": "home",
-          "position": {
-            "x": 140,
-            "z": 72
-          },
-          "max_population": 55
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
           "timing": 180.0,
@@ -126,7 +60,7 @@
           },
           "phase": 1,
           "warning_seconds": 20.0,
-          "label": "The northern consular legion"
+          "label": "Fabius's Volturnus legion"
         },
         {
           "timing": 0.0,
@@ -156,7 +90,7 @@
           "warning_seconds": 20.0,
           "trigger": "after_previous_cleared",
           "grace_seconds": 45.0,
-          "label": "The northern consular legion",
+          "label": "Fabius's Volturnus legion",
           "clear_reward": {
             "gold": 200,
             "food": 150,
@@ -197,7 +131,7 @@
           "warning_seconds": 20.0,
           "trigger": "after_previous_cleared",
           "grace_seconds": 45.0,
-          "label": "The northern consular legion",
+          "label": "Fabius's Volturnus legion",
           "clear_reward": {
             "gold": 350,
             "food": 200,
@@ -231,32 +165,7 @@
         "harassment": 0.78
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "marketplace",
-          "position": {
-            "x": 392,
-            "z": 546
-          },
-          "max_population": 55
-        },
-        {
-          "type": "home",
-          "position": {
-            "x": 372,
-            "z": 548
-          },
-          "max_population": 55
-        },
-        {
-          "type": "home",
-          "position": {
-            "x": 412,
-            "z": 548
-          },
-          "max_population": 55
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
           "timing": 180.0,
@@ -359,31 +268,7 @@
         "harassment": 0.86
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "home",
-          "position": {
-            "x": 582,
-            "z": 284
-          },
-          "max_population": 55
-        },
-        {
-          "type": "home",
-          "position": {
-            "x": 582,
-            "z": 318
-          },
-          "max_population": 55
-        },
-        {
-          "type": "defense_tower",
-          "position": {
-            "x": 552,
-            "z": 300
-          }
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
           "timing": 180.0,
@@ -524,7 +409,7 @@
       "type": "eliminate_commanders",
       "title": "Kill the Roman commanders",
       "description": "Break the siege camp once the assaults are spent.",
-      "hint": "The siege works stand to the east of the quarter.",
+      "hint": "Three men lead the siege: Fabius in the Volturnus camp to the north-west, the allied commander at the southern camp, Marcellus in the siege works to the east.",
       "target": {
         "x": 566,
         "z": 300
@@ -541,31 +426,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Three Roman columns have entered the consular roads. The first coordinated assault arrives at 17:00."
-        }
-      ]
-    },
-    {
-      "trigger": {
-        "type": "timer",
-        "time": 170.0
-      },
-      "actions": [
-        {
-          "type": "show_message",
-          "text": "ASSAULT I: infantry from north and south; cavalry raiders and engineers on the eastern consular road."
-        }
-      ]
-    },
-    {
-      "trigger": {
-        "type": "timer",
-        "time": 570.0
-      },
-      "actions": [
-        {
-          "type": "show_message",
-          "text": "ASSAULT II: the Roman horns answer one another. Rotate the reserve before all three roads close."
+          "text": "Three Roman columns are on the roads: Fabius down the Volturnus, the allied wing from the south, Marcellus's siege column out of Nola to the east. The first assault reaches the walls within the minute."
         }
       ]
     },
@@ -578,30 +439,6 @@
         {
           "type": "show_message",
           "text": "Grave-lights move among the western orchards. The Iron Sepulcher is watching, but the legions remain the greater danger."
-        }
-      ]
-    },
-    {
-      "trigger": {
-        "type": "timer",
-        "time": 990.0
-      },
-      "actions": [
-        {
-          "type": "show_message",
-          "text": "ASSAULT III: siege engines and veteran cohorts. Hold every gate until the twentieth minute."
-        }
-      ]
-    },
-    {
-      "trigger": {
-        "type": "timer",
-        "time": 1140.0
-      },
-      "actions": [
-        {
-          "type": "show_message",
-          "text": "One minute. Spend the reserve; save the camp."
         }
       ]
     }
@@ -656,7 +493,7 @@
         "delay": 0.5,
         "final_wave": false
       },
-      "text": "The northern legion is coming down through the orchards. Slowly. I ordered slowly. Every tree they pass is one you will not harvest.",
+      "text": "The Volturnus legion is coming down through the orchards. Slowly. I ordered slowly. Every tree they pass is one you will not harvest.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 60
@@ -744,7 +581,7 @@
         "owner_id": "player",
         "delay": 2.0
       },
-      "text": "Hannibal falls in Campania, among the orchards, in a war he did not choose. There is a kind of mercy in that, and I did not intend it.",
+      "text": "Hannibal falls in Campania, among the orchards, in a war he began at Saguntum. There is a kind of mercy in that, and I did not intend it.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80
@@ -757,7 +594,49 @@
         "type": "near_defeat",
         "owner_id": 2
       },
-      "text": "The northern legion is spent. I have others. I have always had others. That is what the delaying was for.",
+      "text": "The Volturnus legion is spent. I have others. I have always had others. That is what the delaying was for.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "campania_hannibal_open",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 16.0
+      },
+      "text": "He will not fight me, so he will starve me. Good. Every column he sends to the walls is a battle he swore he would not give.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 90
+    },
+    {
+      "id": "campania_hannibal_last_column",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "final_wave": true,
+        "delay": 10.5
+      },
+      "text": "Last column. Spend the reserve at the gate it chooses, not the one you fear.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "campania_hannibal_siege_camp_taken",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 4,
+        "by_owner_id": "player",
+        "delay": 11.0
+      },
+      "text": "His ladders, his grain, his camp. Marcellus may walk back to Nola and explain.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80

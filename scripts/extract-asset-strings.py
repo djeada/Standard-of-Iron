@@ -45,6 +45,7 @@ ASSET_CONTEXTS: list[dict] = [
             "stages[]/hint",
             "events[]/actions[]/text",
             "commander_messages[]/text",
+            "ai_setups[]/waves[]/label",
         ],
     },
     {

@@ -724,24 +724,8 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>215–212 a.C.: Cápua e os aliados campânios sustentam Aníbal enquanto Roma evita outra Canas e ataca estradas, fazendas e lealdades. Fortifique o quarteirão púnico de suprimentos e rompa os três assaltos coordenados — o quarteirão só estará seguro quando a última coluna consular jazer morta nas ruas.</translation>
     </message>
     <message>
-        <source>216 BC: the consuls mass Rome&apos;s greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the principal camp, the reserve camp, and the allied camp across the river road.</source>
-        <translation>216 a.C.: os cônsules reúnem o maior exército de campo de Roma junto ao Áufido. Ceda o centro púnico de propósito, vença as duas alas de cavalaria, feche o duplo envolvimento e então tome o acampamento principal, o de reserva e o dos aliados, do outro lado da estrada ribeirinha.</translation>
-    </message>
-    <message>
-        <source>217 BC: Flaminius pursues along the northern shore of Lake Trasimene. Mist closes the road between lake and wooded height — and it will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</source>
-        <translation>217 a.C.: Flamínio persegue pela margem norte do Lago Trasimeno. A névoa fecha a estrada entre o lago e a encosta arborizada — e não durará muito. Golpeie toda a extensão da coluna e tome os dois postos de campo em vinte minutos, antes que o ar clareie e uma coorte leve a notícia para fora da bacia.</translation>
-    </message>
-    <message>
-        <source>218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line and break all three crossings. You need not take his camp — you need only be standing when the river has finished with him.</source>
-        <translation>Inverno de 218 a.C.: Semprônio Longo morde a isca e conduz seu exército faminto pelas águas geladas do Trébia. Mantenha a linha sul e rompa as três travessias. Não é preciso tomar o acampamento dele — basta estar de pé quando o rio tiver terminado com ele.</translation>
-    </message>
-    <message>
         <source>218 BC: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, baggage animals, and elephants. The pass cannot be taken by the sword alone — it must be paid for in timber, stone and iron. Set your builders to the slopes while the mountain peoples contest every switchback; do not follow the grave-lights into the snow.</source>
         <translation>218 a.C.: Aníbal deixa o Ródano rumo aos Alpes com soldados, cavalaria, animais de carga e elefantes. A passagem não se toma só com a espada — ela precisa ser paga em madeira, pedra e ferro. Ponha seus construtores nas encostas enquanto os povos da montanha disputam cada curva; e não siga as luzes sepulcrais para dentro da neve.</translation>
-    </message>
-    <message>
-        <source>218 BC: near the Ticinus, Scipio&apos;s reconnaissance force tests Hannibal&apos;s cavalry. Win the mounted engagement, cut the bridge road, and overrun both Roman camps before their scouts carry a clean account back to the consul.</source>
-        <translation>218 a.C.: perto do Ticino, a força de reconhecimento de Cipião põe à prova a cavalaria de Aníbal. Vença o combate montado, corte a estrada da ponte e domine os dois acampamentos romanos antes que os batedores levem um relato claro ao cônsul.</translation>
     </message>
     <message>
         <source>218 BC: the Rhône must be secured faster than Publius Cornelius Scipio can bring his army from Massalia. In this altered campaign, Roman advance posts hold the eastern approaches. Cross by ford, pontoon, or wooded detour and seize their river camps.</source>
@@ -756,20 +740,12 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Comande o exército cartaginês de Aníbal, da invasão alpina de 218 a.C. até Zama, em 202 a.C. Destrua acampamentos romanos, tome cidades fortificadas, preserve as economias aliadas e sobreviva às legiões com que a República responde — enquanto o Sepulcro de Ferro observa de estradas mais antigas que ambos os impérios.</translation>
     </message>
     <message>
-        <source>Flaminius and much of his army are lost beside the lake. Rome names Fabius dictator. In the drowned reeds, an Iron Sepulcher altar has fed well without choosing a side.</source>
-        <translation>Flamínio e boa parte de seu exército se perdem à beira do lago. Roma nomeia Fábio ditador. Entre os juncos submersos, um altar do Sepulcro de Ferro se alimentou bem sem tomar partido algum.</translation>
-    </message>
-    <message>
         <source>The Barcid Road</source>
         <translation>A Estrada Bárcida</translation>
     </message>
     <message>
         <source>The Roman army is destroyed and the camps are taken, yet Rome refuses negotiation. So many dead lie on the plain that the Sepulcher&apos;s iron bells sound beneath the earth for seven nights.</source>
         <translation>O exército romano é destruído e os acampamentos são tomados, mas Roma recusa qualquer negociação. Há tantos mortos na planície que os sinos de ferro do Sepulcro soam sob a terra por sete noites.</translation>
-    </message>
-    <message>
-        <source>The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale riders still haunt the abandoned ford.</source>
-        <translation>A cortina romana se rompe e Cipião é retirado do campo, ferido. Os ínsubres veem que Cartago pode derrotar Roma em solo itálico — mas cavaleiros pálidos ainda assombram o vau abandonado.</translation>
     </message>
     <message>
         <source>The column reaches the plain of the Po diminished but unbroken. Italy lies below, and fires answer from Gallic settlements. Behind you, the sealed shrine in the pass begins counting the dead.</source>
@@ -786,6 +762,30 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
         <translation>Os sobreviventes fogem rumo a Placência através da saraiva e da lama. Tendas, grãos e armas romanas são capturados; os corpos sob o gelo só se erguem quando ninguém está olhando.</translation>
+    </message>
+    <message>
+        <source>216 BC: the consuls mass Rome&apos;s greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the allied camp to the south, Varro&apos;s town behind the line and the reserve camp across the river.</source>
+        <translation>216 a.C.: os cônsules reúnem junto ao Áufido o maior exército de campanha de Roma. Ceda o centro púnico de propósito, vença as duas alas de cavalaria, feche o duplo envolvimento e depois tome o acampamento aliado ao sul, a cidade de Varrão atrás da linha e o acampamento de reserva do outro lado do rio.</translation>
+    </message>
+    <message>
+        <source>217 BC: Flaminius pursues along the shore road of Lake Trasimene. Mist closes the road between lake and wooded height — and it will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</source>
+        <translation>217 a.C.: Flamínio avança em perseguição pela estrada da margem do Lago Trasimeno. A névoa fecha a estrada entre o lago e a elevação arborizada, e não vai durar muito. Ataque a coluna em toda a sua extensão e tome os dois postos de campanha em vinte minutos, antes que o ar clareie e uma coorte leve a notícia para fora da bacia.</translation>
+    </message>
+    <message>
+        <source>218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line, break all three crossings, then ride down the officers who sent them. You need not take his camp — you need only be standing when the river has finished with him.</source>
+        <translation>218 a.C., inverno: Semprônio Longo morde a isca e lança seu exército faminto através do gélido Trébia. Segure a linha sul, rompa as três travessias e depois cace os oficiais que as enviaram. Você não precisa tomar o acampamento dele: basta estar de pé quando o rio tiver terminado com ele.</translation>
+    </message>
+    <message>
+        <source>218 BC: near the Ticinus, Scipio&apos;s reconnaissance force tests Hannibal&apos;s cavalry. Win the mounted engagement, cut the bridge road, and overrun both Roman camps before Scipio can pull his screen back across the river.</source>
+        <translation>218 a.C.: perto do Ticino, a força de reconhecimento de Cipião testa a cavalaria de Aníbal. Vença o combate montado, corte a estrada da ponte e arrase os dois acampamentos romanos antes que Cipião consiga recuar sua cortina para o outro lado do rio.</translation>
+    </message>
+    <message>
+        <source>Flaminius and fifteen thousand are lost beside the lake; next morning Maharbal&apos;s horse rounds up the six thousand who broke through the van. Rome names Fabius dictator. Past the eastern stream, an Iron Sepulcher altar has fed well without choosing a side.</source>
+        <translation>Flamínio e quinze mil homens tombam junto ao lago; na manhã seguinte, os cavaleiros de Maarbal recolhem os seis mil que romperam pela vanguarda. Roma nomeia Fábio ditador. Além do riacho oriental, um altar do Sepulcro de Ferro se alimentou bem sem escolher lado.</translation>
+    </message>
+    <message>
+        <source>The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale bowmen still haunt the abandoned ford.</source>
+        <translation>A cortina romana se rompe e Cipião é levado ferido do campo. Os ínsubres veem que Cartago pode derrotar Roma em solo itálico, mas arqueiros pálidos ainda assombram o vau abandonado.</translation>
     </message>
 </context>
 <context>
@@ -6972,10 +6972,6 @@ para ver a prévia</translation>
         <translation>Um novo estandarte no vale, e ninguém sob ele que tenha empunhado uma lança mais de duas vezes. Meu posto avançado tem ordens de ir dar uma olhada em você. Tente ainda estar de pé quando chegarem; assim o relatório valerá a escrita.</translation>
     </message>
     <message>
-        <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand in the same field as you.</source>
-        <translation>África, então, e nós dois, e nenhum rio atrás do qual se abrigar. Já tomei a medida dos seus elefantes e tenho os seus númidas. O que quer que pretenda fazer, faça onde eu possa ver. Esperei dezesseis anos para pisar o mesmo campo que você.</translation>
-    </message>
-    <message>
         <source>After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</source>
         <translation>Depois de Canas, Roma recusa a batalha que Aníbal deseja. Em vez disso, a República pressiona cada estrada, aliado, celeiro e cidade murada. Sob os pomares, as sepulturas do Sepulcro de Ferro fazem até uma defesa bem-sucedida parecer provisória.</translation>
     </message>
@@ -7008,24 +7004,12 @@ para ver a prévia</translation>
         <translation>Rompa as três fases de assalto romanas. O quarteirão resiste quando a última coluna consular jazer morta nas ruas.</translation>
     </message>
     <message>
-        <source>Break three Roman columns before the survivors find the ford again.</source>
-        <translation>Rompa três colunas romanas antes que os sobreviventes reencontrem o vau.</translation>
-    </message>
-    <message>
         <source>Burn every cursed guardian from the sepulcher ruins. Kill what cannot die.</source>
         <translation>Queime todo guardião amaldiçoado nas ruínas do sepulcro. Mate o que não pode morrer.</translation>
     </message>
     <message>
-        <source>Clear the pass before the mountain closes it. Every hour lost is more men fed to the cold.</source>
-        <translation>Limpe a passagem antes que a montanha a feche. Cada hora perdida é mais gente entregue ao frio.</translation>
-    </message>
-    <message>
         <source>Cold water and an early start, and my colleague is very pleased with both. He has the men in the river before their porridge. I said what I thought and was overruled, so I shall stand here and watch your ambush do its arithmetic.</source>
         <translation>Água fria e uma partida cedo, e meu colega está muito satisfeito com as duas coisas. Ele pôs os homens no rio antes do mingau. Eu disse o que pensava e fui vencido no voto, então ficarei aqui vendo sua emboscada fazer as contas.</translation>
-    </message>
-    <message>
-        <source>Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade.</source>
-        <translation>Atravesse antes que os mensageiros romanos alcancem sua guarnição. Cada segundo de espera alimenta a lâmina.</translation>
     </message>
     <message>
         <source>Cross the Rhône by one of several prepared routes, sever the eastern supply road, and capture two Roman advance camps before Scipio reaches the river.</source>
@@ -7042,10 +7026,6 @@ para ver a prévia</translation>
     <message>
         <source>Crush all three Roman camps and seal the iron tomb shut. No escape.</source>
         <translation>Esmague os três acampamentos romanos e sele o túmulo de ferro. Sem fuga.</translation>
-    </message>
-    <message>
-        <source>Crush both Roman breakout columns before they claw through the hillside.</source>
-        <translation>Esmague as duas colunas romanas de rompimento antes que abram caminho pela encosta.</translation>
     </message>
     <message>
         <source>Cut timber for the sledges, break stone for the road, and draw iron for the shoes and axles. The column crosses on what your builders can carry.</source>
@@ -7084,10 +7064,6 @@ para ver a prévia</translation>
         <translation>Batalha final na África: contenha a linha de Cipião, sobreviva à cavalaria númida e tome os quatro acampamentos romanos enquanto rompe as duas revoltas dos mortos.</translation>
     </message>
     <message>
-        <source>Fine. Sempronius rides to Rome to explain his morning. Half a legion walked out of that water and kept walking, and they will meet you again in the spring with dry feet and long memories.</source>
-        <translation>Muito bem. Semprônio cavalga a Roma para explicar sua manhã. Meia legião saiu daquela água e seguiu andando, e voltará a encontrá-lo na primavera com os pés secos e a memória longa.</translation>
-    </message>
-    <message>
         <source>First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.</source>
         <translation>Primeira batalha em solo itálico. Vença o duelo de cavalaria e então tome o acampamento de reserva romano antes que reforços frescos se reagrupem.</translation>
     </message>
@@ -7110,14 +7086,6 @@ para ver a prévia</translation>
     <message>
         <source>Hold the river line and break all three Roman crossings. Let the cold and the water do the work Sempronius will not.</source>
         <translation>Mantenha a linha do rio e rompa as três travessias romanas. Deixe que o frio e a água façam o trabalho que Semprônio não fará.</translation>
-    </message>
-    <message>
-        <source>Hold the ruins. Force the Romans to fight on two grounds at once.</source>
-        <translation>Mantenha as ruínas. Force os romanos a lutar em dois terrenos ao mesmo tempo.</translation>
-    </message>
-    <message>
-        <source>Hold the southern bank through all three crossings. Sempronius spends his army on the ice; you have only to still be standing.</source>
-        <translation>Mantenha a margem sul durante as três travessias. Semprônio gasta seu exército no gelo; a você basta continuar de pé.</translation>
     </message>
     <message>
         <source>If the central camp falls, the Campanian alliance dies with it.</source>
@@ -7164,24 +7132,12 @@ para ver a prévia</translation>
         <translation>Abasteça a coluna para a descida: colha madeira, pedra e ferro na passagem enquanto as tribos da montanha disputam cada curva.</translation>
     </message>
     <message>
-        <source>Raze every Roman post. Leave Scipio nothing to rally behind.</source>
-        <translation>Arrase todo posto romano. Não deixe a Cipião nada atrás do que se reagrupar.</translation>
-    </message>
-    <message>
-        <source>Seal the road. Let no scout cross the Ticino alive.</source>
-        <translation>Feche a estrada. Que nenhum batedor atravesse o Ticino com vida.</translation>
-    </message>
-    <message>
         <source>Seize all four Roman camps — the consular line, Masinissa&apos;s Numidians, the rear guard, and the northern camp — before the cavalry closes your rear.</source>
         <translation>Tome os quatro acampamentos romanos — a linha consular, os númidas de Masinissa, a retaguarda e o acampamento do norte — antes que a cavalaria feche sua retaguarda.</translation>
     </message>
     <message>
         <source>Seize both Roman camps. The ambush is not finished until their flags come down.</source>
         <translation>Tome os dois acampamentos romanos. A emboscada só termina quando os estandartes deles caírem.</translation>
-    </message>
-    <message>
-        <source>Seize the two river forts. Leave no crossing for Scipio&apos;s army to inherit.</source>
-        <translation>Tome os dois fortes ribeirinhos. Não deixe travessia alguma para o exército de Cipião herdar.</translation>
     </message>
     <message>
         <source>Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.</source>
@@ -7210,10 +7166,6 @@ para ver a prévia</translation>
     <message>
         <source>Stand your ground. The last soldier alone is not a force — he is a sacrifice.</source>
         <translation>Mantenha a posição. O último soldado, sozinho, não é uma força — é um sacrifício.</translation>
-    </message>
-    <message>
-        <source>Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog.</source>
-        <translation>Tome o acampamento da ponte e o quarteirão de reserva a leste antes que os batedores romanos sumam na névoa.</translation>
     </message>
     <message>
         <source>Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all.</source>
@@ -7252,10 +7204,6 @@ para ver a prévia</translation>
         <translation>As luzes se apagaram e o chão está quieto. Contem-nos duas vezes e queimem o que arder. Seja lá o que estivesse ali dentro, já estava aqui antes de Roma e estará aqui depois dela. Hoje à noite, simplesmente, tem outros afazeres.</translation>
     </message>
     <message>
-        <source>The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar on the shore is not particular about whose it is.</source>
-        <translation>A névoa levantou um pouco cedo demais para você. Acontece. O lago guardará o que lhe foi dado, e a coisa sob o altar na margem não é exigente quanto a de quem seja.</translation>
-    </message>
-    <message>
         <source>The pass keeps them, then. A word of advice to whoever reads this: do not follow the lights on the snowfield. Whatever carries a lantern at that height stopped being a shepherd a long time ago.</source>
         <translation>O desfiladeiro fica com eles, então. Um conselho a quem ler isto: não siga as luzes no campo de neve. O que carrega uma lanterna naquela altitude deixou de ser pastor há muito tempo.</translation>
     </message>
@@ -7288,10 +7236,6 @@ para ver a prévia</translation>
         <translation>Eles estão se levantando de novo. Não olhe para os rostos; você reconhecerá alguns. Recuem para a estrada, continuem andando e não parem para enterrar nada. Aqui nada permanece enterrado.</translation>
     </message>
     <message>
-        <source>They tell me you have taken an army into the Alps in October, with elephants. I have stopped chasing you. The mountain is a more thorough officer than I am and it does not require pay.</source>
-        <translation>Dizem-me que você levou um exército aos Alpes em outubro, com elefantes. Parei de persegui-lo. A montanha é um oficial mais minucioso do que eu e não exige soldo.</translation>
-    </message>
-    <message>
         <source>Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap.</source>
         <translation>Vinte minutos até a névoa se levantar. Se uma coorte sair da bacia, Roma descobrirá o formato da armadilha.</translation>
     </message>
@@ -7320,30 +7264,6 @@ para ver a prévia</translation>
         <translation>Seu comando tomba — e as alas se dobram para dentro.</translation>
     </message>
     <message>
-        <source>ASSAULT I: infantry from north and south; cavalry raiders and engineers on the eastern consular road.</source>
-        <translation>ASSALTO I: infantaria pelo norte e pelo sul; cavalaria de incursão e engenheiros na estrada consular a leste.</translation>
-    </message>
-    <message>
-        <source>ASSAULT II: the Roman horns answer one another. Rotate the reserve before all three roads close.</source>
-        <translation>ASSALTO II: as trombetas romanas respondem umas às outras. Desloque a reserva antes que as três estradas se fechem.</translation>
-    </message>
-    <message>
-        <source>ASSAULT III: siege engines and veteran cohorts. Hold every gate until the twentieth minute.</source>
-        <translation>ASSALTO III: máquinas de cerco e coortes veteranas. Mantenha todos os portões até o vigésimo minuto.</translation>
-    </message>
-    <message>
-        <source>Another Roman wave is flanking from the southeast. Rotate quickly.</source>
-        <translation>Outra onda romana flanqueia pelo sudeste. Desloque-se rápido.</translation>
-    </message>
-    <message>
-        <source>Counterattack now. Break them while they are split by the river.</source>
-        <translation>Contra-ataque agora. Rompa-os enquanto o rio os mantém divididos.</translation>
-    </message>
-    <message>
-        <source>Final ridge ahead. Break the last camp to open the descent.</source>
-        <translation>Última crista à frente. Destrua o acampamento final para abrir a descida.</translation>
-    </message>
-    <message>
         <source>Fix the Roman center in place. Keep both cavalry wings active.</source>
         <translation>Prenda o centro romano no lugar. Mantenha as duas alas de cavalaria ativas.</translation>
     </message>
@@ -7356,18 +7276,6 @@ para ver a prévia</translation>
         <translation>Mantenha a disciplina. Deixe os romanos se comprometerem no vau.</translation>
     </message>
     <message>
-        <source>Navigate through the maze of hills and valleys. Watch for enemy patrols!</source>
-        <translation>Abra caminho pelo labirinto de colinas e vales. Cuidado com as patrulhas inimigas!</translation>
-    </message>
-    <message>
-        <source>One minute. Spend the reserve; save the camp.</source>
-        <translation>Um minuto. Gaste a reserva; salve o acampamento.</translation>
-    </message>
-    <message>
-        <source>Roman cavalry is attempting a breakout from the south. Intercept them.</source>
-        <translation>A cavalaria romana tenta romper pelo sul. Intercepte-a.</translation>
-    </message>
-    <message>
         <source>Roman cavalry screens the field. Punch through before reserves arrive.</source>
         <translation>A cavalaria romana cobre o campo. Rompa antes que as reservas cheguem.</translation>
     </message>
@@ -7376,32 +7284,12 @@ para ver a prévia</translation>
         <translation>As ondas de cavalaria romana se intensificam. Derrube um flanco antes que a retaguarda chegue.</translation>
     </message>
     <message>
-        <source>Roman reinforcements are approaching from the eastern road.</source>
-        <translation>Reforços romanos se aproximam pela estrada a leste.</translation>
-    </message>
-    <message>
         <source>Roman reserves are entering from the northern camp. Close the pocket faster.</source>
         <translation>Reservas romanas entram pelo acampamento do norte. Feche o cerco mais rápido.</translation>
     </message>
     <message>
-        <source>Roman reserves are moving from the western bank.</source>
-        <translation>As reservas romanas se deslocam da margem oeste.</translation>
-    </message>
-    <message>
         <source>Scipio extends the line. Keep your center steady and protect elephants from isolation.</source>
         <translation>Cipião estende a linha. Mantenha seu centro firme e proteja os elefantes do isolamento.</translation>
-    </message>
-    <message>
-        <source>Second pass defenders are reinforcing. Keep the column moving.</source>
-        <translation>Os defensores da segunda passagem estão sendo reforçados. Mantenha a coluna em marcha.</translation>
-    </message>
-    <message>
-        <source>Second-wave Roman cavalry is maneuvering for your rear. Rebalance your flanks.</source>
-        <translation>A cavalaria romana da segunda onda manobra para sua retaguarda. Reequilibre seus flancos.</translation>
-    </message>
-    <message>
-        <source>Strike now. Close the western route and split their line.</source>
-        <translation>Ataque agora. Feche a rota oeste e divida a linha deles.</translation>
     </message>
     <message>
         <source>Take the first pass quickly before the next ambush line assembles.</source>
@@ -7410,18 +7298,6 @@ para ver a prévia</translation>
     <message>
         <source>The Roman column enters the corridor. Wait for full commitment.</source>
         <translation>A coluna romana entra no corredor. Espere que ela se comprometa por inteiro.</translation>
-    </message>
-    <message>
-        <source>The Roman villages are heavily defended. Coordinate your attacks!</source>
-        <translation>As aldeias romanas estão fortemente defendidas. Coordene seus ataques!</translation>
-    </message>
-    <message>
-        <source>Three Roman columns have entered the consular roads. The first coordinated assault arrives at 17:00.</source>
-        <translation>Três colunas romanas entraram nas estradas consulares. O primeiro assalto coordenado chega às 17:00.</translation>
-    </message>
-    <message>
-        <source>Two bridges cross the Rhône. Choose your path wisely - you may need both routes!</source>
-        <translation>Duas pontes cruzam o Ródano. Escolha seu caminho com cuidado — você pode precisar das duas rotas!</translation>
     </message>
     <message>
         <source>A camp is taken by standing in it, not by levelling it. Nine men cannot kill thirty-eight, but they can hold two gate yards long enough to claim them - and a Roman column without its commander stops being a column.</source>
@@ -7504,10 +7380,6 @@ para ver a prévia</translation>
         <translation>Uma coluna sem o seu comandante deixa de ser uma coluna.</translation>
     </message>
     <message>
-        <source>Break the chiefs contesting the descent.</source>
-        <translation>Quebre os chefes que disputam a descida.</translation>
-    </message>
-    <message>
         <source>Break the consular line at its centre.</source>
         <translation>Quebre a linha consular pelo seu centro.</translation>
     </message>
@@ -7564,14 +7436,6 @@ para ver a prévia</translation>
         <translation>Acabe com os oficiais dentro do cerco.</translation>
     </message>
     <message>
-        <source>Flaminius must not leave the shore.</source>
-        <translation>Flamínio não deve deixar a margem.</translation>
-    </message>
-    <message>
-        <source>Follow the valley floor east; the mountain peoples hold the switchbacks above.</source>
-        <translation>Siga o fundo do vale para leste; os povos da montanha dominam as curvas acima.</translation>
-    </message>
-    <message>
         <source>Hold the Punic quarter through every consular column.</source>
         <translation>Segure o bairro púnico contra cada coluna consular.</translation>
     </message>
@@ -7592,20 +7456,12 @@ para ver a prévia</translation>
         <translation>É o mais próximo da sua linha entre os quatro acampamentos.</translation>
     </message>
     <message>
-        <source>Kill Sempronius and his officers</source>
-        <translation>Matar Semprônio e seus oficiais</translation>
-    </message>
-    <message>
         <source>Kill the Roman commanders</source>
         <translation>Matar os comandantes romanos</translation>
     </message>
     <message>
         <source>Kill the consular commanders</source>
         <translation>Matar os comandantes consulares</translation>
-    </message>
-    <message>
-        <source>Kill the mountain commanders</source>
-        <translation>Matar os chefes da montanha</translation>
     </message>
     <message>
         <source>Move the army up to the lower pass camp before the snow closes it.</source>
@@ -7656,10 +7512,6 @@ para ver a prévia</translation>
         <translation>Tome o segundo acampamento na ponta leste do lago.</translation>
     </message>
     <message>
-        <source>Sempronius spends his army on the ice; you only have to still be standing.</source>
-        <translation>Semprônio gasta o exército dele no gelo; a você basta continuar de pé.</translation>
-    </message>
-    <message>
         <source>Set builders on the slopes; the pass is paid for in materials, not blood.</source>
         <translation>Ponha construtores nas encostas; o desfiladeiro se paga com materiais, não com sangue.</translation>
     </message>
@@ -7674,10 +7526,6 @@ para ver a prévia</translation>
     <message>
         <source>Take the Numidian camp</source>
         <translation>Tomar o acampamento numida</translation>
-    </message>
-    <message>
-        <source>Take the Roman marching town at the head of the lakeside road.</source>
-        <translation>Tome a cidade de marcha romana à frente da estrada do lago.</translation>
     </message>
     <message>
         <source>Take the allied camp</source>
@@ -7712,20 +7560,12 @@ para ver a prévia</translation>
         <translation>Tomar o acampamento da margem</translation>
     </message>
     <message>
-        <source>Taking the rear first denies the cavalry a place to rally.</source>
-        <translation>Tomar primeiro a retaguarda deixa a cavalaria sem ponto de reunião.</translation>
-    </message>
-    <message>
         <source>The centre gives way once the wings are wrapped around it.</source>
         <translation>O centro cede assim que as alas o envolvem.</translation>
     </message>
     <message>
         <source>The centre is the strongest camp; bring the elephants up first.</source>
         <translation>O centro é o acampamento mais forte; leve os elefantes à frente primeiro.</translation>
-    </message>
-    <message>
-        <source>The dead of the Iron Sepulcher still contest the field; keep a reserve.</source>
-        <translation>Os mortos do Sepulcro de Ferro ainda disputam o campo; guarde uma reserva.</translation>
     </message>
     <message>
         <source>The last camp lies to the north-east, beyond the consular line.</source>
@@ -7742,14 +7582,6 @@ para ver a prévia</translation>
     <message>
         <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp.</source>
         <translation>O rio corre de norte a sul pelo meio do vale; a travessia mais próxima fica a leste do acampamento.</translation>
-    </message>
-    <message>
-        <source>The road runs north-west along the shore; strike the head of the column first.</source>
-        <translation>A estrada corre a noroeste junto à margem; golpeie primeiro a cabeça da coluna.</translation>
-    </message>
-    <message>
-        <source>The siege works stand to the east of the quarter.</source>
-        <translation>As obras de cerco ficam a leste do bairro.</translation>
     </message>
     <message>
         <source>The winter camp lies north across the river.</source>
@@ -7864,14 +7696,6 @@ para ver a prévia</translation>
         <translation>Aníbal morre na neve. Então os elefantes foram para nada, e a estrada também. A história vai achar isso muito arrumadinho.</translation>
     </message>
     <message>
-        <source>Hannibal falls at the Rhone. Then Rome never sees the elephants, and I never see Cannae. I shall spend the rest of my life not knowing what I was spared.</source>
-        <translation>Aníbal cai no Ródano. Então Roma nunca vê os elefantes, e eu nunca vejo Canas. Passarei o resto da vida sem saber do que fui poupado.</translation>
-    </message>
-    <message>
-        <source>Hannibal falls in Campania, among the orchards, in a war he did not choose. There is a kind of mercy in that, and I did not intend it.</source>
-        <translation>Aníbal cai na Campânia, entre os pomares, numa guerra que não escolheu. Há uma espécie de misericórdia nisso, e não foi minha intenção.</translation>
-    </message>
-    <message>
         <source>Hannibal has fallen at Zama. I wanted to meet him after, and ask him about Cannae. I shall have to ask the ground instead.</source>
         <translation>Aníbal caiu em Zama. Eu queria encontrá-lo depois e perguntar sobre Canas. Terei de perguntar ao chão.</translation>
     </message>
@@ -7976,10 +7800,6 @@ para ver a prévia</translation>
         <translation>A coluna está na estrada do lago. Na névoa, num desfiladeiro, com pressa. Cada palavra dessa frase é um erro e todos pertencem a Flamínio.</translation>
     </message>
     <message>
-        <source>The final pass is nearly cleared. Whatever comes down the far side, I shall be in Italy waiting for it with a great many more men than this.</source>
-        <translation>O passo final está quase liberado. O que quer que desça pelo outro lado, estarei na Itália esperando com muitíssimos mais homens do que estes.</translation>
-    </message>
-    <message>
         <source>The high pass is sending everything it has. They have been paid in Roman silver to hold that road, and mountain men earn their silver.</source>
         <translation>O passo alto está mandando tudo o que tem. Foram pagos em prata romana para segurar aquela estrada, e homens da montanha merecem sua prata.</translation>
     </message>
@@ -8012,20 +7832,8 @@ para ver a prévia</translation>
         <translation>O acampamento do passo baixo é seu. Mantenha-o aquecido. As tribos vão querê-lo de volta na primavera e eu não estarei aqui para impedir.</translation>
     </message>
     <message>
-        <source>The main line is advancing. No trumpets, no tricks, no gaps between the maniples for your elephants to find. I learned. You taught me.</source>
-        <translation>A linha principal avança. Sem trombetas, sem truques, sem brechas entre os manípulos para seus elefantes acharem. Eu aprendi. Você me ensinou.</translation>
-    </message>
-    <message>
         <source>The northern camp is gone. Fine. It was a camp. Scipio&apos;s line still stands, and that is the only thing on this plain that matters.</source>
         <translation>O acampamento do norte se foi. Tudo bem. Era um acampamento. A linha de Cipião ainda está de pé, e é a única coisa nesta planície que importa.</translation>
-    </message>
-    <message>
-        <source>The northern legion is coming down through the orchards. Slowly. I ordered slowly. Every tree they pass is one you will not harvest.</source>
-        <translation>A legião do norte desce pelos pomares. Devagar. Ordenei devagar. Cada árvore por que passam é uma que você não colherá.</translation>
-    </message>
-    <message>
-        <source>The northern legion is spent. I have others. I have always had others. That is what the delaying was for.</source>
-        <translation>A legião do norte está gasta. Tenho outras. Sempre tive outras. Era para isso que servia a demora.</translation>
     </message>
     <message>
         <source>The patrols are nearly finished. So be it. I shall take the fleet back to Italy and wait for you there with the rest of the Republic.</source>
@@ -8042,10 +7850,6 @@ para ver a prévia</translation>
     <message>
         <source>The reserve is moving, and moving fast. I do not hold men back for the look of the thing.</source>
         <translation>A reserva está se movendo, e depressa. Não seguro homens só para fazer bonito.</translation>
-    </message>
-    <message>
-        <source>The screen is coming across the flats. Velites, cavalry, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
-        <translation>A cortina vem cruzando a planície. Vélites, cavalaria, o arranjo de sempre. Faça o favor de ficar parado; deixa os relatórios muito mais arrumados.</translation>
     </message>
     <message>
         <source>The second pass. You are buying road with men and paying in snow. I have never seen an army spend itself so willingly on scenery.</source>
@@ -8244,10 +8048,6 @@ para ver a prévia</translation>
         <translation>Você não pode cobrir todos os portões. Fique atento ao aviso e mova-se por linhas interiores.</translation>
     </message>
     <message>
-        <source>Break both risings of the dead at the sepulcher ruins by the south-western crossing. The guardians will not leave their ground; you must go to them.</source>
-        <translation>Quebra ambas as insurreições dos mortos nas ruínas do sepulcro junto à travessia sudoeste. Os guardiões não deixarão o seu terreno; tens de ir até eles.</translation>
-    </message>
-    <message>
         <source>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</source>
         <translation>Expulsa os mortos do santuário e depois planta o estandarte sobre ele. Salga a terra onde estiveram.</translation>
     </message>
@@ -8262,6 +8062,462 @@ para ver a prévia</translation>
     <message>
         <source>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</source>
         <translation>Ali estão. Não olhem para os rostos. Arqueiros, disparem; escudos, cerrem fileiras; e ninguém persegue nada de volta para aquele nevoeiro.</translation>
+    </message>
+    <message>
+        <source>Both risings of the dead at the south-western ruins must also fall before the war ends.</source>
+        <translation>As duas revoltas dos mortos nas ruínas do sudoeste também precisam cair antes que a guerra termine.</translation>
+    </message>
+    <message>
+        <source>Break both risings of the dead at the sepulcher ruins by the south-western crossing. The war does not end while they stand.</source>
+        <translation>Rompa as duas revoltas dos mortos nas ruínas do sepulcro junto à travessia do sudoeste. A guerra não termina enquanto elas estiverem de pé.</translation>
+    </message>
+    <message>
+        <source>Break the barrow-guard south of the camp. The dead keep gold no Roman has counted.</source>
+        <translation>Rompa a guarda do túmulo ao sul do acampamento. Os mortos guardam ouro que nenhum romano contou.</translation>
+    </message>
+    <message>
+        <source>Break the old grave west of your hill before the Romans count its dead as theirs.</source>
+        <translation>Rompa o velho túmulo a oeste da sua colina antes que os romanos contem os mortos dele como seus.</translation>
+    </message>
+    <message>
+        <source>Break two Roman waves in the field.</source>
+        <translation>Rompa duas ondas romanas no campo.</translation>
+    </message>
+    <message>
+        <source>Break two of the Roman columns on the shore road.</source>
+        <translation>Rompa duas das colunas romanas na estrada da margem.</translation>
+    </message>
+    <message>
+        <source>Clear the desert shrine north-west of your camp; its hoard pays for the push east.</source>
+        <translation>Limpe o santuário do deserto a noroeste do seu acampamento; o tesouro dele paga o avanço para o leste.</translation>
+    </message>
+    <message>
+        <source>Eighty elephants, and he has cut a lane for every one. Hold the men of Italy back in the third line. They are the last answer I have.</source>
+        <translation>Oitenta elefantes, e ele abriu um corredor para cada um. Mantenha os homens da Itália atrás, na terceira linha. São a última resposta que me resta.</translation>
+    </message>
+    <message>
+        <source>Fabius waits at the basin watch south of the road; Scipio holds the sanctuary above the eastern ford. Take them before the column turns on your camp.</source>
+        <translation>Fábio espera na vigia da bacia ao sul da estrada; Cipião ocupa o santuário acima do vau oriental. Tome-os antes que a coluna se volte contra o seu acampamento.</translation>
+    </message>
+    <message>
+        <source>Fine. Sempronius rides to Rome to explain his morning. Ten thousand of ours cut through your centre and walked on to Placentia, and they will meet you in the spring with dry feet and long memories.</source>
+        <translation>Pois bem. Semprônio cavalga até Roma para explicar sua manhã. Dez mil dos nossos atravessaram o seu centro e seguiram até Placência, e vão encontrá-lo na primavera com os pés secos e a memória longa.</translation>
+    </message>
+    <message>
+        <source>Fresh Roman horse is coming up from the consular town and the allied camp. Keep your own cavalry between it and your centre.</source>
+        <translation>Cavalaria romana descansada está subindo da cidade consular e do acampamento aliado. Mantenha sua própria cavalaria entre ela e o seu centro.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls at the Rhône. Then Rome never sees the elephants, and no one ever learns the name Cannae. I shall spend the rest of my life not knowing what I was spared.</source>
+        <translation>Aníbal cai no Ródano. Então Roma nunca vê os elefantes, e ninguém jamais aprende o nome Canas. Passarei o resto da vida sem saber do que fui poupado.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls in Campania, among the orchards, in a war he began at Saguntum. There is a kind of mercy in that, and I did not intend it.</source>
+        <translation>Aníbal cai na Campânia, entre os pomares, numa guerra que começou em Sagunto. Há uma espécie de misericórdia nisso, e não foi minha intenção.</translation>
+    </message>
+    <message>
+        <source>Hanno&apos;s smoke is up on the far bank. Across, all of you - Scipio is three days behind and I intend to keep him there.</source>
+        <translation>A fumaça de Hanão subiu na outra margem. Atravessem, todos - Cipião está três dias atrás e pretendo mantê-lo lá.</translation>
+    </message>
+    <message>
+        <source>He will not fight me, so he will starve me. Good. Every column he sends to the walls is a battle he swore he would not give.</source>
+        <translation>Ele não quer me enfrentar, então vai me matar de fome. Ótimo. Cada coluna que ele manda às muralhas é uma batalha que jurou não travar.</translation>
+    </message>
+    <message>
+        <source>His ladders, his grain, his camp. Marcellus may walk back to Nola and explain.</source>
+        <translation>As escadas dele, o grão dele, o acampamento dele. Marcelo pode voltar a pé para Nola e dar explicações.</translation>
+    </message>
+    <message>
+        <source>Hold the southern bank through all three crossings. Sempronius spends his army in the river; spend less of yours.</source>
+        <translation>Segure a margem sul durante as três travessias. Semprônio gasta o exército dele no rio; gaste menos do seu.</translation>
+    </message>
+    <message>
+        <source>It lies south-east across the wadi; its column marches late, so strike before it does.</source>
+        <translation>Fica a sudeste, do outro lado do uádi; a coluna dele marcha tarde, então ataque antes que ela marche.</translation>
+    </message>
+    <message>
+        <source>Keep the column alive on the mountain for fifteen minutes. The pass belongs to whoever is still standing when the weather turns.</source>
+        <translation>Mantenha a coluna viva na montanha por quinze minutos. O passo pertence a quem ainda estiver de pé quando o tempo virar.</translation>
+    </message>
+    <message>
+        <source>Kill the Roman officers in the passes</source>
+        <translation>Mate os oficiais romanos nos passos</translation>
+    </message>
+    <message>
+        <source>Lake on their left, hills on their right, mist over both. Nobody moves until the whole column is inside.</source>
+        <translation>Lago à esquerda deles, colinas à direita, névoa sobre ambos. Ninguém se move até que a coluna inteira esteja lá dentro.</translation>
+    </message>
+    <message>
+        <source>Last column. Spend the reserve at the gate it chooses, not the one you fear.</source>
+        <translation>Última coluna. Gaste a reserva no portão que ela escolher, não naquele que você teme.</translation>
+    </message>
+    <message>
+        <source>Let him count. Numidians on the wings, the bridled horse in the centre, and nobody waits for the consul to finish his sentence.</source>
+        <translation>Deixe que conte. Númidas nas alas, a cavalaria de freio no centro, e ninguém espera o cônsul terminar a frase.</translation>
+    </message>
+    <message>
+        <source>Let the centre give. The Africans wait on the wings, Hasdrubal has the river. Eighty thousand men walk into a sack as easily as into a field.</source>
+        <translation>Deixe o centro ceder. Os africanos esperam nas alas, Asdrúbal tem o rio. Oitenta mil homens entram num saco tão facilmente quanto num campo.</translation>
+    </message>
+    <message>
+        <source>Masinissa has no one left to ride for. Turn the elephants on the centre.</source>
+        <translation>Masinissa não tem mais por quem cavalgar. Lance os elefantes contra o centro.</translation>
+    </message>
+    <message>
+        <source>Not here. There is nothing behind this field but Carthage.</source>
+        <translation>Aqui não. Atrás deste campo não há nada além de Cartago.</translation>
+    </message>
+    <message>
+        <source>Now, Mago. Out of the reeds and into their backs, and find me the men who sent them across.</source>
+        <translation>Agora, Magão. Para fora dos juncos e contra as costas deles, e me traga os homens que os mandaram atravessar.</translation>
+    </message>
+    <message>
+        <source>One crossing broken. Nobody follows them into the water; the river is ours only while we stay out of it.</source>
+        <translation>Uma travessia rompida. Ninguém os segue na água; o rio só é nosso enquanto ficarmos fora dele.</translation>
+    </message>
+    <message>
+        <source>Rome has paid the tribes and sent officers to hold them to the bargain. Kill the officers and the tribes go home.</source>
+        <translation>Roma pagou as tribos e mandou oficiais para mantê-las no acordo. Mate os oficiais e as tribos voltam para casa.</translation>
+    </message>
+    <message>
+        <source>Scipio holds the forest sanctuary north-east of your camp; the reserve&apos;s officer waits at the bridge below his camp.</source>
+        <translation>Cipião ocupa o santuário da floresta a nordeste do seu acampamento; o oficial da reserva espera na ponte abaixo do acampamento dele.</translation>
+    </message>
+    <message>
+        <source>Scipio&apos;s reserve is crossing the bridge road from the east.</source>
+        <translation>A reserva de Cipião está cruzando a estrada da ponte vindo do leste.</translation>
+    </message>
+    <message>
+        <source>Seize the hill fort and the river town. Leave no crossing for Scipio&apos;s army to inherit.</source>
+        <translation>Tome o forte da colina e a cidade do rio. Não deixe nenhuma travessia para o exército de Cipião herdar.</translation>
+    </message>
+    <message>
+        <source>Six bridges span the Rhône, and Roman eyes watch the far end of every one. Pick a crossing and commit.</source>
+        <translation>Seis pontes cruzam o Ródano, e olhos romanos vigiam a outra ponta de cada uma. Escolha uma travessia e comprometa-se.</translation>
+    </message>
+    <message>
+        <source>Stay out of the water. Every Roman who wades it reaches you cold and slow.</source>
+        <translation>Fique fora da água. Cada romano que a atravessa chega até você frio e lento.</translation>
+    </message>
+    <message>
+        <source>Strike now. Take Fabius at the basin watch before the column finds your camp.</source>
+        <translation>Ataque agora. Pegue Fábio na vigia da bacia antes que a coluna encontre o seu acampamento.</translation>
+    </message>
+    <message>
+        <source>Take a Roman barracks. The winter camp&apos;s grain is worth the ride.</source>
+        <translation>Tome um quartel romano. O grão do acampamento de inverno vale a cavalgada.</translation>
+    </message>
+    <message>
+        <source>Take the Roman marching town at the western mouth of the lake road.</source>
+        <translation>Tome a cidade de marcha romana na boca ocidental da estrada do lago.</translation>
+    </message>
+    <message>
+        <source>Take the consul&apos;s forward town and the reserve camp across the bridge road.</source>
+        <translation>Tome a cidade avançada do cônsul e o acampamento de reserva do outro lado da estrada da ponte.</translation>
+    </message>
+    <message>
+        <source>That was the screen. Put the archers on the ridge before the reserve remembers it is there.</source>
+        <translation>Aquela era a cortina. Ponha os arqueiros na crista antes que a reserva se lembre de que está lá.</translation>
+    </message>
+    <message>
+        <source>That was the van&apos;s road home. Maharbal will collect whoever is still walking in the morning.</source>
+        <translation>Aquele era o caminho de volta da vanguarda. Maarbal recolherá pela manhã quem ainda estiver andando.</translation>
+    </message>
+    <message>
+        <source>The Rhône runs north to south through the valley. Roman pickets watch every approach on the near bank.</source>
+        <translation>O Ródano corre de norte a sul pelo vale. Piquetes romanos vigiam cada acesso na margem de cá.</translation>
+    </message>
+    <message>
+        <source>The Roman van is cutting east along the shore road. Ride it down before it clears the basin.</source>
+        <translation>A vanguarda romana está abrindo caminho para o leste pela estrada da margem. Alcance-a antes que ela saia da bacia.</translation>
+    </message>
+    <message>
+        <source>The Volturnus legion is coming down through the orchards. Slowly. I ordered slowly. Every tree they pass is one you will not harvest.</source>
+        <translation>A legião do Volturno está descendo pelos pomares. Devagar. Mandei devagar. Cada árvore por que passam é uma que você não vai colher.</translation>
+    </message>
+    <message>
+        <source>The Volturnus legion is spent. I have others. I have always had others. That is what the delaying was for.</source>
+        <translation>A legião do Volturno está esgotada. Tenho outras. Sempre tive outras. Era para isso que servia a demora.</translation>
+    </message>
+    <message>
+        <source>The allies have lost their consul. Turn that wing inward.</source>
+        <translation>Os aliados perderam seu cônsul. Vire essa ala para dentro.</translation>
+    </message>
+    <message>
+        <source>The column has lost its head. Take the town before anyone thinks to pick it up.</source>
+        <translation>A coluna perdeu a cabeça. Tome a cidade antes que alguém pense em apanhá-la.</translation>
+    </message>
+    <message>
+        <source>The descent garrison is marching up from the south-east. Hold the camp and keep the sledges loading.</source>
+        <translation>A guarnição da descida está subindo do sudeste. Segure o acampamento e continue carregando os trenós.</translation>
+    </message>
+    <message>
+        <source>The descent is nearly yours. I came up to shut this door and it would not shut. Very well - I shall wait at the Ticinus with a great many more men than this.</source>
+        <translation>A descida é quase sua. Subi para fechar esta porta e ela não quis fechar. Muito bem - esperarei no Ticino com muito mais homens que estes.</translation>
+    </message>
+    <message>
+        <source>The fort is ours. Hold the gate - its barracks will give us the men the river took.</source>
+        <translation>O forte é nosso. Segurem o portão - o quartel dele nos dará os homens que o rio levou.</translation>
+    </message>
+    <message>
+        <source>The high pass fort is sending spears and bows down the southern track. Get the builders behind the palisade.</source>
+        <translation>O forte do passo alto está mandando lanças e arcos pela trilha do sul. Leve os construtores para trás da paliçada.</translation>
+    </message>
+    <message>
+        <source>The lower pass camp lies just south of your palisade. Roman-paid tribesmen hold it - go in together.</source>
+        <translation>O acampamento do passo baixo fica logo ao sul da sua paliçada. Tribos pagas por Roma o defendem - entrem juntos.</translation>
+    </message>
+    <message>
+        <source>The main line is advancing, with lanes left open between the maniples. Send your elephants down them. My skirmishers are waiting at the far end.</source>
+        <translation>A linha principal avança, com corredores abertos entre os manípulos. Mande seus elefantes por eles. Meus escaramuçadores esperam na outra ponta.</translation>
+    </message>
+    <message>
+        <source>The men have eaten and oiled their limbs by the fires, and Mago is in the stream bed with two thousand. Let the Romans come to us wet.</source>
+        <translation>Os homens comeram e untaram os membros com óleo junto às fogueiras, e Magão está no leito do riacho com dois mil. Que os romanos venham até nós molhados.</translation>
+    </message>
+    <message>
+        <source>The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar past the eastern stream is not particular about whose it is.</source>
+        <translation>A névoa se ergueu um pouco cedo para você. Acontece. O lago guardará o que lhe foi dado, e a coisa sob o altar além do riacho oriental não faz questão de saber de quem é.</translation>
+    </message>
+    <message>
+        <source>The road runs east along the lake. Shut its western mouth and the column has only one way left to go.</source>
+        <translation>A estrada corre para o leste ao longo do lago. Feche a boca ocidental e a coluna terá apenas um caminho.</translation>
+    </message>
+    <message>
+        <source>The screen is coming across the flats. Spears in front, horse on the wings, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
+        <translation>A cortina está atravessando a planície. Lanças à frente, cavalaria nas alas, o arranjo de sempre. Tente ficar parado; os relatórios ficam muito mais organizados assim.</translation>
+    </message>
+    <message>
+        <source>The screen&apos;s cavalry comes again from the east. Rotate quickly.</source>
+        <translation>A cavalaria da cortina volta do leste. Reveze rápido.</translation>
+    </message>
+    <message>
+        <source>Their centre has nowhere left to step back. Open the ring for no one.</source>
+        <translation>O centro deles não tem mais para onde recuar. Não abra o cerco para ninguém.</translation>
+    </message>
+    <message>
+        <source>Their scouts have seen us. Good. Let them ride back and tell Scipio what they saw.</source>
+        <translation>Os batedores deles nos viram. Ótimo. Que voltem cavalgando e contem a Cipião o que viram.</translation>
+    </message>
+    <message>
+        <source>They came down the slope, and on the slope they stay. Back to the timber.</source>
+        <translation>Desceram pela encosta, e na encosta ficarão. De volta à madeira.</translation>
+    </message>
+    <message>
+        <source>They tell me you have taken an army into the Alps in October, with elephants. I came round by sea to hold the far side. The mountain is a more thorough officer than I am, and it does not require pay.</source>
+        <translation>Dizem-me que você levou um exército aos Alpes em outubro, com elefantes. Dei a volta por mar para guardar o outro lado. A montanha é um oficial mais minucioso do que eu, e não exige soldo.</translation>
+    </message>
+    <message>
+        <source>Three Roman columns are on the roads: Fabius down the Volturnus, the allied wing from the south, Marcellus&apos;s siege column out of Nola to the east. The first assault reaches the walls within the minute.</source>
+        <translation>Três colunas romanas estão nas estradas: Fábio descendo o Volturno, a ala aliada vindo do sul, a coluna de cerco de Marcelo saindo de Nola, a leste. O primeiro assalto chega às muralhas em menos de um minuto.</translation>
+    </message>
+    <message>
+        <source>Three men lead the siege: Fabius in the Volturnus camp to the north-west, the allied commander at the southern camp, Marcellus in the siege works to the east.</source>
+        <translation>Três homens comandam o cerco: Fábio no acampamento do Volturno, a noroeste, o comandante aliado no acampamento do sul, Marcelo nas obras de cerco, a leste.</translation>
+    </message>
+    <message>
+        <source>Two camps hold the far bank: a hill fort to the north-east, a walled river town far to the south-east. Stand in their gate yards to take them.</source>
+        <translation>Dois acampamentos ocupam a outra margem: um forte na colina a nordeste e uma cidade murada à beira do rio, bem a sudeste. Posicione-se nos pátios dos portões para tomá-los.</translation>
+    </message>
+    <message>
+        <source>We will either find a way or make one. Builders to the slopes - this road is cut before it is walked.</source>
+        <translation>Ou encontraremos um caminho ou abriremos um. Construtores às encostas - esta estrada é aberta antes de ser percorrida.</translation>
+    </message>
+    <message>
+        <source>Descent garrison sortie</source>
+        <translation>Surtida da guarnição</translation>
+    </message>
+    <message>
+        <source>Everything they have left</source>
+        <translation>Tudo o que lhes resta</translation>
+    </message>
+    <message>
+        <source>Fabius&apos;s Volturnus legion</source>
+        <translation>Legião do Volturno de Fábio</translation>
+    </message>
+    <message>
+        <source>High-pass riders</source>
+        <translation>Cavaleiros do passo alto</translation>
+    </message>
+    <message>
+        <source>High-pass skirmishers</source>
+        <translation>Escaramuçadores do passo alto</translation>
+    </message>
+    <message>
+        <source>Laelius&apos;s Italian horse</source>
+        <translation>Cavalaria itálica de Lélio</translation>
+    </message>
+    <message>
+        <source>Lower-pass tribesmen</source>
+        <translation>Tribos do passo baixo</translation>
+    </message>
+    <message>
+        <source>Lower-pass war band</source>
+        <translation>Bando guerreiro do passo baixo</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s Numidian horse</source>
+        <translation>Cavalaria númida de Masinissa</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s Numidians</source>
+        <translation>Númidas de Masinissa</translation>
+    </message>
+    <message>
+        <source>Riders in the pasture</source>
+        <translation>Cavaleiros no pasto</translation>
+    </message>
+    <message>
+        <source>Roman raiding party</source>
+        <translation>Grupo de saque romano</translation>
+    </message>
+    <message>
+        <source>Scipio&apos;s horse</source>
+        <translation>Cavalaria de Cipião</translation>
+    </message>
+    <message>
+        <source>Scipio&apos;s legions</source>
+        <translation>Legiões de Cipião</translation>
+    </message>
+    <message>
+        <source>Scipio&apos;s scouting horse</source>
+        <translation>Batedores montados de Cipião</translation>
+    </message>
+    <message>
+        <source>Sempronius’ first crossing</source>
+        <translation>Travessia inicial de Semprônio</translation>
+    </message>
+    <message>
+        <source>The Roman-paid host</source>
+        <translation>A hoste paga por Roma</translation>
+    </message>
+    <message>
+        <source>The allied foot</source>
+        <translation>A infantaria aliada</translation>
+    </message>
+    <message>
+        <source>The allied horse</source>
+        <translation>A cavalaria aliada</translation>
+    </message>
+    <message>
+        <source>The allied wing</source>
+        <translation>A ala aliada</translation>
+    </message>
+    <message>
+        <source>The bridge column</source>
+        <translation>A coluna da ponte</translation>
+    </message>
+    <message>
+        <source>The column&apos;s rearguard</source>
+        <translation>A retaguarda da coluna</translation>
+    </message>
+    <message>
+        <source>The column&apos;s second line</source>
+        <translation>Segunda linha da coluna</translation>
+    </message>
+    <message>
+        <source>The consul&apos;s screen</source>
+        <translation>A cortina do cônsul</translation>
+    </message>
+    <message>
+        <source>The consular horse</source>
+        <translation>A cavalaria consular</translation>
+    </message>
+    <message>
+        <source>The first column</source>
+        <translation>A primeira coluna</translation>
+    </message>
+    <message>
+        <source>The fourth column</source>
+        <translation>A quarta coluna</translation>
+    </message>
+    <message>
+        <source>The landing at the quay</source>
+        <translation>O desembarque no cais</translation>
+    </message>
+    <message>
+        <source>The last column</source>
+        <translation>A última coluna</translation>
+    </message>
+    <message>
+        <source>The last of the legions</source>
+        <translation>As últimas legiões</translation>
+    </message>
+    <message>
+        <source>The northern camp&apos;s cohorts</source>
+        <translation>Coortes do acampamento norte</translation>
+    </message>
+    <message>
+        <source>The northern camp&apos;s reserve</source>
+        <translation>Reserva do acampamento norte</translation>
+    </message>
+    <message>
+        <source>The rear guard</source>
+        <translation>A retaguarda</translation>
+    </message>
+    <message>
+        <source>The reserve column</source>
+        <translation>A coluna de reserva</translation>
+    </message>
+    <message>
+        <source>The reserve&apos;s horse</source>
+        <translation>Cavalaria da reserva</translation>
+    </message>
+    <message>
+        <source>The reserve&apos;s second line</source>
+        <translation>Segunda linha da reserva</translation>
+    </message>
+    <message>
+        <source>The reserve&apos;s vanguard</source>
+        <translation>Vanguarda da reserva</translation>
+    </message>
+    <message>
+        <source>The river reserve</source>
+        <translation>A reserva do rio</translation>
+    </message>
+    <message>
+        <source>The second column</source>
+        <translation>A segunda coluna</translation>
+    </message>
+    <message>
+        <source>The second crossing</source>
+        <translation>A segunda travessia</translation>
+    </message>
+    <message>
+        <source>The second reserve</source>
+        <translation>A segunda reserva</translation>
+    </message>
+    <message>
+        <source>The siege column</source>
+        <translation>A coluna de cerco</translation>
+    </message>
+    <message>
+        <source>The third column</source>
+        <translation>A terceira coluna</translation>
+    </message>
+    <message>
+        <source>The van breaking out</source>
+        <translation>A vanguarda em fuga</translation>
+    </message>
+    <message>
+        <source>The via militaris</source>
+        <translation>A via militaris</translation>
+    </message>
+    <message>
+        <source>The western reserve</source>
+        <translation>A reserva ocidental</translation>
+    </message>
+    <message>
+        <source>Two gates at once</source>
+        <translation>Dois portões ao mesmo tempo</translation>
+    </message>
+    <message>
+        <source>Varro&apos;s legions</source>
+        <translation>Legiões de Varrão</translation>
+    </message>
+    <message>
+        <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand across a field from you with an army of my own.</source>
+        <translation>África, então, e nós dois, e nenhum rio para nos abrigar. Conheço a medida dos seus elefantes e tenho os seus númidas. O que quer que pretenda fazer, faça onde eu possa ver. Esperei dezesseis anos para estar diante de você num campo com um exército meu.</translation>
     </message>
 </context>
 <context>

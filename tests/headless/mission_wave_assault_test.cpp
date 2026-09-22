@@ -166,9 +166,14 @@ protected:
       if (id == 0) {
         continue;
       }
-      session.world()
-          .get_entity(id)
-          ->add_component<Engine::Core::AssaultWaveComponent>();
+
+      auto* assault = session.world()
+                          .get_entity(id)
+                          ->add_component<Engine::Core::AssaultWaveComponent>();
+      const QVector3D camp = world_of(k_camp_grid_x, k_gate_grid_z);
+      assault->has_march_target = true;
+      assault->march_target_x = camp.x();
+      assault->march_target_z = camp.z();
       wave.push_back(id);
     }
     return wave;
@@ -246,7 +251,27 @@ TEST_F(MissionWaveAssaultTest, WaveUnitsAttackTheRampartInTheirWay) {
   const auto wave = spawn_wave(session, 6);
   ASSERT_EQ(wave.size(), 6U);
 
-  run_for(session, 240.0);
+  std::unordered_set<EntityID> rampart;
+  for (auto* entity :
+       session.world().collect_entities_with<Engine::Core::WallSegmentComponent>()) {
+    rampart.insert(entity->get_id());
+  }
+
+  int attacking_the_rampart = 0;
+  for (int second = 0; second < 240; ++second) {
+    run_for(session, 1.0);
+    for (const auto id : wave) {
+      auto* entity = session.world().get_entity(id);
+      if (entity == nullptr) {
+        continue;
+      }
+      const auto* attack_target =
+          entity->get_component<Engine::Core::AttackTargetComponent>();
+      if (attack_target != nullptr && rampart.contains(attack_target->target_id)) {
+        attacking_the_rampart++;
+      }
+    }
+  }
 
   int damage_dealt = 0;
   std::unordered_set<EntityID> barriers;
@@ -258,19 +283,6 @@ TEST_F(MissionWaveAssaultTest, WaveUnitsAttackTheRampartInTheirWay) {
     }
     barriers.insert(entity->get_id());
     damage_dealt += unit->max_health - unit->health;
-  }
-
-  int attacking_the_rampart = 0;
-  for (const auto id : wave) {
-    auto* entity = session.world().get_entity(id);
-    if (entity == nullptr) {
-      continue;
-    }
-    const auto* attack_target =
-        entity->get_component<Engine::Core::AttackTargetComponent>();
-    if (attack_target != nullptr && barriers.contains(attack_target->target_id)) {
-      attacking_the_rampart++;
-    }
   }
 
   const auto rampart_left = barriers.size();

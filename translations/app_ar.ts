@@ -724,24 +724,8 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>215-212 ق.م: تسند كابوا وحلفاء كامبانيا حنبعل، بينما تتجنب روما كانّاي أخرى وتهاجم الطرق والمزارع والولاءات. حصّن حي الإمداد البوني واكسر الهجمات الثلاثة المنسّقة — لا يُعدّ الحي محفوظاً حتى يسقط آخر رتل قنصلي صريعاً في الشوارع.</translation>
     </message>
     <message>
-        <source>216 BC: the consuls mass Rome&apos;s greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the principal camp, the reserve camp, and the allied camp across the river road.</source>
-        <translation>216 ق.م: يحشد القنصلان أعظم جيوش روما الميدانية بجانب نهر أوفيدوس. تراجع بالقلب البوني عمداً، واظفر بجناحَي الفرسان، وأطبق التطويق المزدوج، ثم استولِ على المعسكر الرئيسي ومعسكر الاحتياط والمعسكر الحليف عبر طريق النهر.</translation>
-    </message>
-    <message>
-        <source>217 BC: Flaminius pursues along the northern shore of Lake Trasimene. Mist closes the road between lake and wooded height — and it will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</source>
-        <translation>217 ق.م: يطارد فلامينيوس على طول الشاطئ الشمالي لبحيرة تراسيميني. يغلق الضباب الطريق بين البحيرة والمرتفع المشجَّر — ولن يدوم طويلاً. اضرب الرتل على امتداده واستولِ على المركزين الميدانيين خلال عشرين دقيقة، قبل أن يصفو الهواء وتحمل كتيبة الخبر خارج الحوض.</translation>
-    </message>
-    <message>
-        <source>218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line and break all three crossings. You need not take his camp — you need only be standing when the river has finished with him.</source>
-        <translation>218 ق.م، شتاءً: يبتلع سمبرونيوس لونغوس الطُّعم ويدفع جيشه الجائع عبر مياه تريبيا المتجمدة. اثبت على الخط الجنوبي واكسر المعابر الثلاثة. لا حاجة بك إلى الاستيلاء على معسكره — يكفي أن تظل واقفاً حين يفرغ النهر منه.</translation>
-    </message>
-    <message>
         <source>218 BC: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, baggage animals, and elephants. The pass cannot be taken by the sword alone — it must be paid for in timber, stone and iron. Set your builders to the slopes while the mountain peoples contest every switchback; do not follow the grave-lights into the snow.</source>
         <translation>218 ق.م: ينعطف حنبعل من نهر الرون إلى جبال الألب بجنوده وفرسانه ودوابّ الحمل والفيلة. لا يُؤخذ الممر بالسيف وحده — بل يُدفع ثمنه خشباً وحجراً وحديداً. أرسل بنّاءيك إلى المنحدرات بينما تنازعك شعوب الجبل كل منعطف؛ ولا تتبع أضواء القبور إلى الثلج.</translation>
-    </message>
-    <message>
-        <source>218 BC: near the Ticinus, Scipio&apos;s reconnaissance force tests Hannibal&apos;s cavalry. Win the mounted engagement, cut the bridge road, and overrun both Roman camps before their scouts carry a clean account back to the consul.</source>
-        <translation>218 ق.م: قرب نهر تيتشينو، تختبر قوة استطلاع سكيبيو فرسان حنبعل. اظفر باشتباك الفرسان، واقطع طريق الجسر، واجتَح المعسكرين الرومانيين قبل أن يحمل كشّافتهم تقريراً واضحاً إلى القنصل.</translation>
     </message>
     <message>
         <source>218 BC: the Rhône must be secured faster than Publius Cornelius Scipio can bring his army from Massalia. In this altered campaign, Roman advance posts hold the eastern approaches. Cross by ford, pontoon, or wooded detour and seize their river camps.</source>
@@ -756,20 +740,12 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>قُد جيش حنبعل القرطاجي من اجتياح الألب عام 218 ق.م حتى زاما عام 202 ق.م. اكسر المعسكرات الرومانية، وخذ المدن المحصّنة، واحفظ اقتصادات الحلفاء، وانجُ من فيالق الجمهورية المضادّة، بينما يراقب ضريح الحديد من طرق أقدم من الإمبراطوريتين معاً.</translation>
     </message>
     <message>
-        <source>Flaminius and much of his army are lost beside the lake. Rome names Fabius dictator. In the drowned reeds, an Iron Sepulcher altar has fed well without choosing a side.</source>
-        <translation>يهلك فلامينيوس ومعظم جيشه بجانب البحيرة. تسمّي روما فابيوس ديكتاتوراً. وبين القصب الغارق، شبع مذبح لضريح الحديد دون أن ينحاز إلى أحد.</translation>
-    </message>
-    <message>
         <source>The Barcid Road</source>
         <translation>طريق البرقيين</translation>
     </message>
     <message>
         <source>The Roman army is destroyed and the camps are taken, yet Rome refuses negotiation. So many dead lie on the plain that the Sepulcher&apos;s iron bells sound beneath the earth for seven nights.</source>
         <translation>دُمِّر الجيش الروماني وأُخذت المعسكرات، ومع ذلك ترفض روما التفاوض. من كثرة القتلى في السهل ظلّت أجراس الضريح الحديدية تُقرع تحت الأرض سبع ليالٍ.</translation>
-    </message>
-    <message>
-        <source>The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale riders still haunt the abandoned ford.</source>
-        <translation>ينكسر الستار الروماني ويُحمل سكيبيو جريحاً من الميدان. يرى الإنسوبريون أن قرطاج قادرة على هزيمة روما فوق تراب إيطاليا — لكن فرساناً شاحبين ما زالوا يجوبون المخاضة المهجورة.</translation>
     </message>
     <message>
         <source>The column reaches the plain of the Po diminished but unbroken. Italy lies below, and fires answer from Gallic settlements. Behind you, the sealed shrine in the pass begins counting the dead.</source>
@@ -786,6 +762,30 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
         <translation>يفرّ الناجون نحو بلاسنتيا عبر الصقيع والوحل. تُغنم الخيام والحبوب والأسلحة الرومانية؛ أما الأجساد تحت الجليد فلا تنهض إلا حين لا يراها أحد.</translation>
+    </message>
+    <message>
+        <source>216 BC: the consuls mass Rome&apos;s greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the allied camp to the south, Varro&apos;s town behind the line and the reserve camp across the river.</source>
+        <translation>216 ق.م: يحشد القنصلان أعظم جيش ميداني لروما بجانب نهر أوفيدوس. تنازل عن القلب البوني عمداً، واكسب جناحَي الفرسان كليهما، وأطبق التطويق المزدوج، ثم خذ معسكر الحلفاء في الجنوب، ومدينة فارو خلف الخط، ومعسكر الاحتياط عبر النهر.</translation>
+    </message>
+    <message>
+        <source>217 BC: Flaminius pursues along the shore road of Lake Trasimene. Mist closes the road between lake and wooded height — and it will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</source>
+        <translation>217 ق.م: يطارد فلامينيوس على طول طريق شاطئ بحيرة تراسيميني. يُطبق الضباب على الطريق بين البحيرة والمرتفع المشجَّر — ولن يدوم طويلاً. اضرب الرتل على امتداده واستولِ على المركزين الميدانيين كليهما خلال عشرين دقيقة، قبل أن ينقشع الجو وتحمل كتيبةٌ الخبر خارج الحوض.</translation>
+    </message>
+    <message>
+        <source>218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line, break all three crossings, then ride down the officers who sent them. You need not take his camp — you need only be standing when the river has finished with him.</source>
+        <translation>218 ق.م، الشتاء: يبتلع سمبرونيوس لونغوس الطُّعم ويدفع جيشه الجائع عبر نهر تريبيا المتجمّد. اثبت على الخط الجنوبي، واكسر المعابر الثلاثة كلها، ثم الحق بالضباط الذين أرسلوها. لا حاجة بك إلى أخذ معسكره — يكفيك أن تبقى واقفاً حين يفرغ النهر منه.</translation>
+    </message>
+    <message>
+        <source>218 BC: near the Ticinus, Scipio&apos;s reconnaissance force tests Hannibal&apos;s cavalry. Win the mounted engagement, cut the bridge road, and overrun both Roman camps before Scipio can pull his screen back across the river.</source>
+        <translation>218 ق.م: قرب تيتشينو، تختبر قوة استطلاع سكيبيو فرسان حنبعل. انتصر في اشتباك الفرسان، واقطع طريق الجسر، واجتح المعسكرين الرومانيين كليهما قبل أن يسحب سكيبيو ستاره عبر النهر.</translation>
+    </message>
+    <message>
+        <source>Flaminius and fifteen thousand are lost beside the lake; next morning Maharbal&apos;s horse rounds up the six thousand who broke through the van. Rome names Fabius dictator. Past the eastern stream, an Iron Sepulcher altar has fed well without choosing a side.</source>
+        <translation>هلك فلامينيوس وخمسة عشر ألفاً بجانب البحيرة؛ وفي صباح اليوم التالي جمع فرسان مهربعل الستة آلاف الذين اخترقوا الطليعة. تُعيّن روما فابيوس دكتاتوراً. ووراء الجدول الشرقي، شبع مذبحٌ لضريح الحديد دون أن ينحاز إلى أحد.</translation>
+    </message>
+    <message>
+        <source>The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale bowmen still haunt the abandoned ford.</source>
+        <translation>ينكسر الستار الروماني ويُحمل سكيبيو جريحاً من الميدان. يرى الإنسوبريون أن قرطاج قادرة على هزيمة روما على أرض إيطالية — لكن رماةً شاحبين ما زالوا يطوفون بالمخاضة المهجورة.</translation>
     </message>
 </context>
 <context>
@@ -6984,10 +6984,6 @@ to see preview</source>
         <translation>رايةٌ جديدة في الوادي، وليس تحتها أحد حمل رمحًا أكثر من مرتين. مخفري مأمورٌ بأن يذهب فينظر إليك. حاول أن تبقى واقفًا حين يصلون؛ فذلك يجعل التقرير جديرًا بالكتابة.</translation>
     </message>
     <message>
-        <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand in the same field as you.</source>
-        <translation>إفريقيةُ إذن، ونحن الاثنان، ولا نهر يُحتمى بظهره. عرفتُ مقدار فيلتك، وصار النوميديون عندي. مهما نويت أن تفعل، فافعله حيث أراك. انتظرتُ ستة عشر عامًا لأقف في الميدان نفسه معك.</translation>
-    </message>
-    <message>
         <source>After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</source>
         <translation>بعد كانّاي، ترفض روما المعركة التي يريدها حنبعل. وتضغط الجمهورية بدلاً من ذلك على كل طريق وحليف ومخزن غلال ومدينة مسوّرة. وتحت البساتين، تجعل قبور ضريح الحديد حتى الدفاع الناجح يبدو مؤقتاً.</translation>
     </message>
@@ -7020,24 +7016,12 @@ to see preview</source>
         <translation>اكسر مراحل الاقتحام الرومانية الثلاث. لا يصمد الحي إلا حين يسقط آخر رتل قنصلي صريعاً في الشوارع.</translation>
     </message>
     <message>
-        <source>Break three Roman columns before the survivors find the ford again.</source>
-        <translation>اكسر ثلاثة أرتال رومانية قبل أن يجد الناجون المخاضة من جديد.</translation>
-    </message>
-    <message>
         <source>Burn every cursed guardian from the sepulcher ruins. Kill what cannot die.</source>
         <translation>أحرق كل حارس ملعون في أطلال الضريح. اقتل ما لا يموت.</translation>
     </message>
     <message>
-        <source>Clear the pass before the mountain closes it. Every hour lost is more men fed to the cold.</source>
-        <translation>افتح الممر قبل أن يغلقه الجبل. كل ساعة تضيع تعني رجالاً أكثر يلتهمهم البرد.</translation>
-    </message>
-    <message>
         <source>Cold water and an early start, and my colleague is very pleased with both. He has the men in the river before their porridge. I said what I thought and was overruled, so I shall stand here and watch your ambush do its arithmetic.</source>
         <translation>ماءٌ بارد وانطلاقٌ مبكر، وزميلي مسرورٌ بهما جميعًا. أنزل الرجال في النهر قبل عصيدتهم. قلتُ رأيي فغُلبت عليه، فسأقف ها هنا أشاهد كمينك وهو يُجري حسابه.</translation>
-    </message>
-    <message>
-        <source>Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade.</source>
-        <translation>اعبر قبل أن يبلغ سُعاة روما حاميتهم. كل ثانية انتظار تُطعم النصل.</translation>
     </message>
     <message>
         <source>Cross the Rhône by one of several prepared routes, sever the eastern supply road, and capture two Roman advance camps before Scipio reaches the river.</source>
@@ -7054,10 +7038,6 @@ to see preview</source>
     <message>
         <source>Crush all three Roman camps and seal the iron tomb shut. No escape.</source>
         <translation>اسحق المعسكرات الرومانية الثلاثة واختم القبر الحديدي. لا مهرب.</translation>
-    </message>
-    <message>
-        <source>Crush both Roman breakout columns before they claw through the hillside.</source>
-        <translation>اسحق رتلَي الاختراق الرومانيين قبل أن يشقّا طريقهما عبر سفح التل.</translation>
     </message>
     <message>
         <source>Cut timber for the sledges, break stone for the road, and draw iron for the shoes and axles. The column crosses on what your builders can carry.</source>
@@ -7096,10 +7076,6 @@ to see preview</source>
         <translation>المعركة الأخيرة في أفريقيا: حيّد خط سكيبيو، وانجُ من الفرسان النوميديين، واستولِ على المعسكرات الرومانية الأربعة مع كسر نهضتَي الموتى.</translation>
     </message>
     <message>
-        <source>Fine. Sempronius rides to Rome to explain his morning. Half a legion walked out of that water and kept walking, and they will meet you again in the spring with dry feet and long memories.</source>
-        <translation>حسنًا. يمضي سمبرونيوس إلى روما ليفسّر صباحه. نصفُ فيلقٍ خرج من ذلك الماء وواصل السير، وسيلقاك في الربيع بأقدامٍ جافّة وذاكرةٍ طويلة.</translation>
-    </message>
-    <message>
         <source>First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.</source>
         <translation>أول معركة على التراب الإيطالي. اظفر بمبارزة الفرسان، ثم استولِ على معسكر الاحتياط الروماني قبل أن تتجمع نجدات جديدة.</translation>
     </message>
@@ -7122,14 +7098,6 @@ to see preview</source>
     <message>
         <source>Hold the river line and break all three Roman crossings. Let the cold and the water do the work Sempronius will not.</source>
         <translation>اثبت على خط النهر واكسر المعابر الرومانية الثلاثة. ودَع البرد والماء يؤديان العمل الذي يأباه سمبرونيوس.</translation>
-    </message>
-    <message>
-        <source>Hold the ruins. Force the Romans to fight on two grounds at once.</source>
-        <translation>اثبت في الأطلال. أجبر الرومان على القتال في أرضين معاً.</translation>
-    </message>
-    <message>
-        <source>Hold the southern bank through all three crossings. Sempronius spends his army on the ice; you have only to still be standing.</source>
-        <translation>اثبت على الضفة الجنوبية خلال المعابر الثلاثة. سمبرونيوس ينفق جيشه على الجليد؛ وليس عليك إلا أن تظل واقفاً.</translation>
     </message>
     <message>
         <source>If the central camp falls, the Campanian alliance dies with it.</source>
@@ -7176,24 +7144,12 @@ to see preview</source>
         <translation>جهّز الرتل للنزول: احصد الخشب والحجر والحديد من الممر بينما تنازعك قبائل الجبل كل منعطف.</translation>
     </message>
     <message>
-        <source>Raze every Roman post. Leave Scipio nothing to rally behind.</source>
-        <translation>سوِّ كل مركز روماني بالأرض. لا تترك لسكيبيو ما يلتفّ خلفه.</translation>
-    </message>
-    <message>
-        <source>Seal the road. Let no scout cross the Ticino alive.</source>
-        <translation>أغلق الطريق. لا تدع كشّافاً يعبر تيتشينو حياً.</translation>
-    </message>
-    <message>
         <source>Seize all four Roman camps — the consular line, Masinissa&apos;s Numidians, the rear guard, and the northern camp — before the cavalry closes your rear.</source>
         <translation>استولِ على المعسكرات الرومانية الأربعة — الخط القنصلي، ونوميديّي ماسينيسا، ومؤخرة الجيش، والمعسكر الشمالي — قبل أن يطبق الفرسان على مؤخرتك.</translation>
     </message>
     <message>
         <source>Seize both Roman camps. The ambush is not finished until their flags come down.</source>
         <translation>استولِ على المعسكرين الرومانيين. لا ينتهي الكمين حتى تُنزَل راياتهم.</translation>
-    </message>
-    <message>
-        <source>Seize the two river forts. Leave no crossing for Scipio&apos;s army to inherit.</source>
-        <translation>استولِ على حصنَي النهر. لا تترك معبراً يرثه جيش سكيبيو.</translation>
     </message>
     <message>
         <source>Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.</source>
@@ -7222,10 +7178,6 @@ to see preview</source>
     <message>
         <source>Stand your ground. The last soldier alone is not a force — he is a sacrifice.</source>
         <translation>اثبت في أرضك. آخر جندي وحده ليس قوة — بل قرباناً.</translation>
-    </message>
-    <message>
-        <source>Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog.</source>
-        <translation>خذ معسكر الجسر وحيّ الاحتياط الشرقي قبل أن يذوب كشّافة روما في الضباب.</translation>
     </message>
     <message>
         <source>Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all.</source>
@@ -7264,10 +7216,6 @@ to see preview</source>
         <translation>خمدت الأنوار وسكنت الأرض. عُدُّوهم مرتين وأحرقوا ما يحترق. أيًّا كان ما في الداخل فقد كان هنا قبل روما وسيبقى بعدها. أما الليلة فله شأنٌ آخر لا غير.</translation>
     </message>
     <message>
-        <source>The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar on the shore is not particular about whose it is.</source>
-        <translation>انقشع الضباب مبكرًا قليلًا في غير صالحك. يحدث هذا. ستحتفظ البحيرة بما أُعطيته، وما تحت المذبح على الشاطئ لا يُدقّق لمن يكون.</translation>
-    </message>
-    <message>
         <source>The pass keeps them, then. A word of advice to whoever reads this: do not follow the lights on the snowfield. Whatever carries a lantern at that height stopped being a shepherd a long time ago.</source>
         <translation>فليحتفظ بهم الممرّ إذن. ونصيحةٌ لمن يقرأ هذا: لا تتبع الأضواء على حقل الثلج. فما يحمل قنديلًا على ذلك العلوّ قد كفّ عن كونه راعيًا منذ زمنٍ بعيد.</translation>
     </message>
@@ -7300,10 +7248,6 @@ to see preview</source>
         <translation>ها هم ينهضون من جديد. لا تنظر إلى الوجوه؛ ستعرف بعضها. انسحبوا إلى الطريق، وامضوا في السير، ولا تقفوا لتدفنوا شيئًا. فلا شيء يبقى مدفونًا هنا.</translation>
     </message>
     <message>
-        <source>They tell me you have taken an army into the Alps in October, with elephants. I have stopped chasing you. The mountain is a more thorough officer than I am and it does not require pay.</source>
-        <translation>يقولون لي إنك أدخلتَ جيشًا جبال الألب في تشرين الأول، ومعك فِيَلة. كففتُ عن مطاردتك. فالجبل ضابطٌ أدقُّ مني، وهو لا يطلب أجرًا.</translation>
-    </message>
-    <message>
         <source>Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap.</source>
         <translation>عشرون دقيقة قبل أن ينقشع الضباب. إن خرجت كتيبة من الحوض، عرفت روما شكل الفخ.</translation>
     </message>
@@ -7332,30 +7276,6 @@ to see preview</source>
         <translation>تسقط قيادتك — فينطوي الجناحان إلى الداخل.</translation>
     </message>
     <message>
-        <source>ASSAULT I: infantry from north and south; cavalry raiders and engineers on the eastern consular road.</source>
-        <translation>الاقتحام الأول: مشاة من الشمال والجنوب؛ ومغيرون من الفرسان ومهندسون على الطريق القنصلي الشرقي.</translation>
-    </message>
-    <message>
-        <source>ASSAULT II: the Roman horns answer one another. Rotate the reserve before all three roads close.</source>
-        <translation>الاقتحام الثاني: أبواق روما يجيب بعضها بعضاً. أدِر الاحتياط قبل أن تُغلق الطرق الثلاثة.</translation>
-    </message>
-    <message>
-        <source>ASSAULT III: siege engines and veteran cohorts. Hold every gate until the twentieth minute.</source>
-        <translation>الاقتحام الثالث: آلات حصار وكتائب مخضرمة. اثبت عند كل بوابة حتى الدقيقة العشرين.</translation>
-    </message>
-    <message>
-        <source>Another Roman wave is flanking from the southeast. Rotate quickly.</source>
-        <translation>موجة رومانية أخرى تلتف من الجنوب الشرقي. أدِر قواتك سريعاً.</translation>
-    </message>
-    <message>
-        <source>Counterattack now. Break them while they are split by the river.</source>
-        <translation>هاجم مضاداً الآن. اكسرهم والنهر يشطرهم.</translation>
-    </message>
-    <message>
-        <source>Final ridge ahead. Break the last camp to open the descent.</source>
-        <translation>الحافة الأخيرة أمامك. اكسر المعسكر الأخير لتفتح طريق النزول.</translation>
-    </message>
-    <message>
         <source>Fix the Roman center in place. Keep both cavalry wings active.</source>
         <translation>ثبّت القلب الروماني في مكانه. وأبقِ جناحَي الفرسان فاعلين.</translation>
     </message>
@@ -7368,18 +7288,6 @@ to see preview</source>
         <translation>تمسّك بالانضباط. ودَع الرومان يزجّون بقواتهم عند المخاضة.</translation>
     </message>
     <message>
-        <source>Navigate through the maze of hills and valleys. Watch for enemy patrols!</source>
-        <translation>شقّ طريقك عبر متاهة التلال والوديان. احذر دوريات العدو!</translation>
-    </message>
-    <message>
-        <source>One minute. Spend the reserve; save the camp.</source>
-        <translation>دقيقة واحدة. أنفق الاحتياط؛ وأنقذ المعسكر.</translation>
-    </message>
-    <message>
-        <source>Roman cavalry is attempting a breakout from the south. Intercept them.</source>
-        <translation>الفرسان الرومان يحاولون اختراقاً من الجنوب. اعترضهم.</translation>
-    </message>
-    <message>
         <source>Roman cavalry screens the field. Punch through before reserves arrive.</source>
         <translation>الفرسان الرومان يسترون الميدان. اخترقهم قبل وصول الاحتياط.</translation>
     </message>
@@ -7388,32 +7296,12 @@ to see preview</source>
         <translation>تشتد موجات الفرسان الرومان. أسقط أحد الجناحين قبل وصول مؤخرة الجيش.</translation>
     </message>
     <message>
-        <source>Roman reinforcements are approaching from the eastern road.</source>
-        <translation>نجدات رومانية تقترب من الطريق الشرقي.</translation>
-    </message>
-    <message>
         <source>Roman reserves are entering from the northern camp. Close the pocket faster.</source>
         <translation>احتياط روما يدخل من المعسكر الشمالي. أغلق الجيب أسرع.</translation>
     </message>
     <message>
-        <source>Roman reserves are moving from the western bank.</source>
-        <translation>احتياط روما يتحرك من الضفة الغربية.</translation>
-    </message>
-    <message>
         <source>Scipio extends the line. Keep your center steady and protect elephants from isolation.</source>
         <translation>سكيبيو يمدّ خطه. أبقِ قلبك ثابتاً واحمِ الفيلة من العزل.</translation>
-    </message>
-    <message>
-        <source>Second pass defenders are reinforcing. Keep the column moving.</source>
-        <translation>مدافعو الممر الثاني يتلقون نجدات. أبقِ الرتل متحركاً.</translation>
-    </message>
-    <message>
-        <source>Second-wave Roman cavalry is maneuvering for your rear. Rebalance your flanks.</source>
-        <translation>فرسان الموجة الرومانية الثانية يناورون نحو مؤخرتك. أعد توازن جناحيك.</translation>
-    </message>
-    <message>
-        <source>Strike now. Close the western route and split their line.</source>
-        <translation>اضرب الآن. أغلق المسار الغربي واشطر خطهم.</translation>
     </message>
     <message>
         <source>Take the first pass quickly before the next ambush line assembles.</source>
@@ -7422,18 +7310,6 @@ to see preview</source>
     <message>
         <source>The Roman column enters the corridor. Wait for full commitment.</source>
         <translation>الرتل الروماني يدخل الممر. انتظر حتى ينخرط بالكامل.</translation>
-    </message>
-    <message>
-        <source>The Roman villages are heavily defended. Coordinate your attacks!</source>
-        <translation>القرى الرومانية محميّة بشدة. نسّق هجماتك!</translation>
-    </message>
-    <message>
-        <source>Three Roman columns have entered the consular roads. The first coordinated assault arrives at 17:00.</source>
-        <translation>دخلت ثلاثة أرتال رومانية الطرق القنصلية. يصل الاقتحام المنسّق الأول في الساعة 17:00.</translation>
-    </message>
-    <message>
-        <source>Two bridges cross the Rhône. Choose your path wisely - you may need both routes!</source>
-        <translation>جسران يعبران نهر الرون. اختر طريقك بحكمة - قد تحتاج المسارين معاً!</translation>
     </message>
     <message>
         <source>A camp is taken by standing in it, not by levelling it. Nine men cannot kill thirty-eight, but they can hold two gate yards long enough to claim them - and a Roman column without its commander stops being a column.</source>
@@ -7516,10 +7392,6 @@ to see preview</source>
         <translation>الرتل بلا قائده لم يعد رتلاً.</translation>
     </message>
     <message>
-        <source>Break the chiefs contesting the descent.</source>
-        <translation>اكسر الزعماء الذين ينازعونك النزول.</translation>
-    </message>
-    <message>
         <source>Break the consular line at its centre.</source>
         <translation>اكسر الخط القنصلي من وسطه.</translation>
     </message>
@@ -7576,14 +7448,6 @@ to see preview</source>
         <translation>أجهز على الضباط داخل الطوق.</translation>
     </message>
     <message>
-        <source>Flaminius must not leave the shore.</source>
-        <translation>لا يجوز أن يغادر فلامينيوس الشاطئ.</translation>
-    </message>
-    <message>
-        <source>Follow the valley floor east; the mountain peoples hold the switchbacks above.</source>
-        <translation>اتبع قاع الوادي شرقًا؛ فأهل الجبال يسيطرون على المنعطفات في الأعلى.</translation>
-    </message>
-    <message>
         <source>Hold the Punic quarter through every consular column.</source>
         <translation>احتفظ بالحي القرطاجي أمام كل رتل قنصلي.</translation>
     </message>
@@ -7604,20 +7468,12 @@ to see preview</source>
         <translation>هو أقرب المعسكرات الأربعة إلى خطك.</translation>
     </message>
     <message>
-        <source>Kill Sempronius and his officers</source>
-        <translation>قتل سمبرونيوس وضباطه</translation>
-    </message>
-    <message>
         <source>Kill the Roman commanders</source>
         <translation>قتل القادة الرومان</translation>
     </message>
     <message>
         <source>Kill the consular commanders</source>
         <translation>قتل القادة القنصليين</translation>
-    </message>
-    <message>
-        <source>Kill the mountain commanders</source>
-        <translation>قتل زعماء الجبال</translation>
     </message>
     <message>
         <source>Move the army up to the lower pass camp before the snow closes it.</source>
@@ -7668,10 +7524,6 @@ to see preview</source>
         <translation>استولِ على المعسكر الثاني عند الطرف الشرقي للبحيرة.</translation>
     </message>
     <message>
-        <source>Sempronius spends his army on the ice; you only have to still be standing.</source>
-        <translation>يُفني سمبرونيوس جيشه على الجليد؛ وما عليك إلا أن تبقى واقفًا.</translation>
-    </message>
-    <message>
         <source>Set builders on the slopes; the pass is paid for in materials, not blood.</source>
         <translation>أرسل البنّائين إلى المنحدرات؛ فثمن الممر مواد لا دماء.</translation>
     </message>
@@ -7686,10 +7538,6 @@ to see preview</source>
     <message>
         <source>Take the Numidian camp</source>
         <translation>الاستيلاء على المعسكر النوميدي</translation>
-    </message>
-    <message>
-        <source>Take the Roman marching town at the head of the lakeside road.</source>
-        <translation>استولِ على مدينة المسير الرومانية عند رأس طريق البحيرة.</translation>
     </message>
     <message>
         <source>Take the allied camp</source>
@@ -7724,20 +7572,12 @@ to see preview</source>
         <translation>الاستيلاء على معسكر الشاطئ</translation>
     </message>
     <message>
-        <source>Taking the rear first denies the cavalry a place to rally.</source>
-        <translation>أخذ المؤخرة أولاً يحرم الفرسان موضع تجمّع.</translation>
-    </message>
-    <message>
         <source>The centre gives way once the wings are wrapped around it.</source>
         <translation>ينهار الوسط ما إن يلتف الجناحان حوله.</translation>
     </message>
     <message>
         <source>The centre is the strongest camp; bring the elephants up first.</source>
         <translation>الوسط أقوى المعسكرات؛ فقدِّم الفيلة أولاً.</translation>
-    </message>
-    <message>
-        <source>The dead of the Iron Sepulcher still contest the field; keep a reserve.</source>
-        <translation>لا يزال موتى القبر الحديدي ينازعون على الميدان؛ فأبقِ احتياطًا.</translation>
     </message>
     <message>
         <source>The last camp lies to the north-east, beyond the consular line.</source>
@@ -7754,14 +7594,6 @@ to see preview</source>
     <message>
         <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp.</source>
         <translation>يجري النهر من الشمال إلى الجنوب عبر وسط الوادي؛ وأقرب معبر يقع شرق المعسكر تمامًا.</translation>
-    </message>
-    <message>
-        <source>The road runs north-west along the shore; strike the head of the column first.</source>
-        <translation>يمتد الطريق شمالاً غربًا بمحاذاة الشاطئ؛ فاضرب رأس الرتل أولاً.</translation>
-    </message>
-    <message>
-        <source>The siege works stand to the east of the quarter.</source>
-        <translation>تقوم أعمال الحصار شرق الحي.</translation>
     </message>
     <message>
         <source>The winter camp lies north across the river.</source>
@@ -7876,14 +7708,6 @@ to see preview</source>
         <translation>يموت حنبعل في الثلج. عندئذٍ كانت الفيلة عبثاً، وكذلك الطريق. سيجد التاريخ ذلك مرتّباً جداً.</translation>
     </message>
     <message>
-        <source>Hannibal falls at the Rhone. Then Rome never sees the elephants, and I never see Cannae. I shall spend the rest of my life not knowing what I was spared.</source>
-        <translation>يسقط حنبعل عند الرون. عندئذٍ لا ترى روما الفيلة أبداً، ولا أرى أنا كانّاي أبداً. سأقضي بقية عمري لا أدري مِمَّ نجوت.</translation>
-    </message>
-    <message>
-        <source>Hannibal falls in Campania, among the orchards, in a war he did not choose. There is a kind of mercy in that, and I did not intend it.</source>
-        <translation>يسقط حنبعل في كامبانيا، بين البساتين، في حربٍ لم يخترها. في ذلك ضربٌ من الرحمة، ولم أقصدها.</translation>
-    </message>
-    <message>
         <source>Hannibal has fallen at Zama. I wanted to meet him after, and ask him about Cannae. I shall have to ask the ground instead.</source>
         <translation>سقط حنبعل في زاما. أردتُ لقاءه بعدها وسؤاله عن كانّاي. سيلزمني أن أسأل الأرض بدلاً منه.</translation>
     </message>
@@ -7988,10 +7812,6 @@ to see preview</source>
         <translation>الرتل على طريق البحيرة. في ضباب، في مضيق، على عجل. كل كلمة في هذه الجملة خطأ، وكلها من نصيب فلامينيوس.</translation>
     </message>
     <message>
-        <source>The final pass is nearly cleared. Whatever comes down the far side, I shall be in Italy waiting for it with a great many more men than this.</source>
-        <translation>كاد الممر الأخير يُفتح. مهما نزل من الجانب الآخر، سأكون في إيطاليا في انتظاره برجالٍ أكثر من هؤلاء بكثير.</translation>
-    </message>
-    <message>
         <source>The high pass is sending everything it has. They have been paid in Roman silver to hold that road, and mountain men earn their silver.</source>
         <translation>الممر العالي يرسل كل ما لديه. دُفع لهم بفضة رومانية ليمسكوا ذلك الطريق، ورجال الجبال يستحقون فضتهم.</translation>
     </message>
@@ -8024,20 +7844,8 @@ to see preview</source>
         <translation>معسكر الممر الأسفل لك. أبقه دافئاً. ستريده القبائل في الربيع ولن أكون هنا لأمنعها.</translation>
     </message>
     <message>
-        <source>The main line is advancing. No trumpets, no tricks, no gaps between the maniples for your elephants to find. I learned. You taught me.</source>
-        <translation>الصفّ الرئيسي يتقدم. لا أبواق، ولا حيل، ولا فجوات بين المانيبولات تجدها فيلتك. لقد تعلّمت. أنت علّمتني.</translation>
-    </message>
-    <message>
         <source>The northern camp is gone. Fine. It was a camp. Scipio&apos;s line still stands, and that is the only thing on this plain that matters.</source>
         <translation>ذهب المعسكر الشمالي. لا بأس. كان معسكراً. صفّ سكيبيو ما زال قائماً، وهو الشيء الوحيد المهم في هذا السهل.</translation>
-    </message>
-    <message>
-        <source>The northern legion is coming down through the orchards. Slowly. I ordered slowly. Every tree they pass is one you will not harvest.</source>
-        <translation>الفيلق الشمالي ينزل عبر البساتين. ببطء. أمرتُ بالبطء. كل شجرة يمرّون بها شجرة لن تحصدها أنت.</translation>
-    </message>
-    <message>
-        <source>The northern legion is spent. I have others. I have always had others. That is what the delaying was for.</source>
-        <translation>استُنفد الفيلق الشمالي. عندي غيره. كان عندي غيره دائماً. لهذا كان التأجيل.</translation>
     </message>
     <message>
         <source>The patrols are nearly finished. So be it. I shall take the fleet back to Italy and wait for you there with the rest of the Republic.</source>
@@ -8054,10 +7862,6 @@ to see preview</source>
     <message>
         <source>The reserve is moving, and moving fast. I do not hold men back for the look of the thing.</source>
         <translation>الاحتياط يتحرك، ويتحرك سريعاً. أنا لا أُبقي الرجال في الخلف من أجل المظهر.</translation>
-    </message>
-    <message>
-        <source>The screen is coming across the flats. Velites, cavalry, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
-        <translation>الستار يعبر السهول. ڤيليتيس، خيّالة، الترتيب المعتاد. تفضّل وحاول أن تقف ساكناً؛ فذلك يجعل التقارير أكثر ترتيباً.</translation>
     </message>
     <message>
         <source>The second pass. You are buying road with men and paying in snow. I have never seen an army spend itself so willingly on scenery.</source>
@@ -8256,10 +8060,6 @@ to see preview</source>
         <translation>لا تستطيع تغطية كل بوابة. راقب الإنذار المسبق وتحرّك على الخطوط الداخلية.</translation>
     </message>
     <message>
-        <source>Break both risings of the dead at the sepulcher ruins by the south-western crossing. The guardians will not leave their ground; you must go to them.</source>
-        <translation>اكسر نهضتي الموتى عند أطلال المدفن قرب المعبر الجنوبي الغربي. لن يغادر الحرّاس أرضهم؛ عليك أن تذهب إليهم.</translation>
-    </message>
-    <message>
         <source>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</source>
         <translation>اطرد الموتى من المزار ثم اغرس الراية عليه. املأ الأرض التي وقفوا عليها ملحاً.</translation>
     </message>
@@ -8274,6 +8074,462 @@ to see preview</source>
     <message>
         <source>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</source>
         <translation>ها هم. لا تنظروا إلى الوجوه. الرماة أطلِقوا، والدروع أغلِقوا الصفوف، ولا أحد يطارد شيئاً عائداً إلى ذلك الضباب.</translation>
+    </message>
+    <message>
+        <source>Both risings of the dead at the south-western ruins must also fall before the war ends.</source>
+        <translation>يجب أن تسقط أيضاً نهضتا الموتى عند الأطلال الجنوبية الغربية قبل أن تنتهي الحرب.</translation>
+    </message>
+    <message>
+        <source>Break both risings of the dead at the sepulcher ruins by the south-western crossing. The war does not end while they stand.</source>
+        <translation>اكسر نهضتَي الموتى عند أطلال الضريح قرب المعبر الجنوبي الغربي. لا تنتهي الحرب ما داموا واقفين.</translation>
+    </message>
+    <message>
+        <source>Break the barrow-guard south of the camp. The dead keep gold no Roman has counted.</source>
+        <translation>اكسر حرس الرابية جنوب المعسكر. يحرس الموتى ذهباً لم يُحصِه روماني.</translation>
+    </message>
+    <message>
+        <source>Break the old grave west of your hill before the Romans count its dead as theirs.</source>
+        <translation>اكسر القبر القديم غرب تلّك قبل أن يعدّ الرومان موتاه من موتاهم.</translation>
+    </message>
+    <message>
+        <source>Break two Roman waves in the field.</source>
+        <translation>اكسر موجتين رومانيتين في الميدان.</translation>
+    </message>
+    <message>
+        <source>Break two of the Roman columns on the shore road.</source>
+        <translation>اكسر رتلين من الأرتال الرومانية على طريق الشاطئ.</translation>
+    </message>
+    <message>
+        <source>Clear the desert shrine north-west of your camp; its hoard pays for the push east.</source>
+        <translation>طهّر المزار الصحراوي شمال غرب معسكرك؛ فكنزه يموّل الزحف شرقاً.</translation>
+    </message>
+    <message>
+        <source>Eighty elephants, and he has cut a lane for every one. Hold the men of Italy back in the third line. They are the last answer I have.</source>
+        <translation>ثمانون فيلاً، وقد شقّ لكل واحد منها ممراً. أبقِ رجال إيطاليا في الخط الثالث. إنهم آخر جواب لديّ.</translation>
+    </message>
+    <message>
+        <source>Fabius waits at the basin watch south of the road; Scipio holds the sanctuary above the eastern ford. Take them before the column turns on your camp.</source>
+        <translation>ينتظر فابيوس عند مرقب الحوض جنوب الطريق؛ ويمسك سكيبيو المعبد فوق المخاضة الشرقية. خذهما قبل أن ينقلب الرتل على معسكرك.</translation>
+    </message>
+    <message>
+        <source>Fine. Sempronius rides to Rome to explain his morning. Ten thousand of ours cut through your centre and walked on to Placentia, and they will meet you in the spring with dry feet and long memories.</source>
+        <translation>حسناً. يعود سمبرونيوس إلى روما ليشرح صباحه. عشرة آلاف من رجالنا شقّوا قلبك ومضوا إلى بلاسنتيا، وسيلقونك في الربيع بأقدام جافة وذاكرة طويلة.</translation>
+    </message>
+    <message>
+        <source>Fresh Roman horse is coming up from the consular town and the allied camp. Keep your own cavalry between it and your centre.</source>
+        <translation>فرسان رومان جدد قادمون من المدينة القنصلية ومعسكر الحلفاء. أبقِ فرسانك بينهم وبين قلبك.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls at the Rhône. Then Rome never sees the elephants, and no one ever learns the name Cannae. I shall spend the rest of my life not knowing what I was spared.</source>
+        <translation>يسقط حنبعل عند الرون. عندئذ لا ترى روما الفيلة أبداً، ولا يعرف أحد اسم كاناي. سأقضي بقية عمري دون أن أعرف ما الذي نجوتُ منه.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls in Campania, among the orchards, in a war he began at Saguntum. There is a kind of mercy in that, and I did not intend it.</source>
+        <translation>يسقط حنبعل في كامبانيا، بين البساتين، في حرب بدأها عند ساغونتوم. في ذلك ضربٌ من الرحمة، ولم أقصده.</translation>
+    </message>
+    <message>
+        <source>Hanno&apos;s smoke is up on the far bank. Across, all of you - Scipio is three days behind and I intend to keep him there.</source>
+        <translation>دخان حنون يتصاعد على الضفة البعيدة. اعبروا جميعاً - سكيبيو متأخر ثلاثة أيام وأنوي أن أبقيه كذلك.</translation>
+    </message>
+    <message>
+        <source>He will not fight me, so he will starve me. Good. Every column he sends to the walls is a battle he swore he would not give.</source>
+        <translation>لن يقاتلني، فسيجوّعني إذاً. حسن. كل رتل يرسله إلى الأسوار معركةٌ أقسم ألا يخوضها.</translation>
+    </message>
+    <message>
+        <source>His ladders, his grain, his camp. Marcellus may walk back to Nola and explain.</source>
+        <translation>سلالمه، وحبوبه، ومعسكره. فليعد مارتشيلوس سيراً إلى نولا وليشرح.</translation>
+    </message>
+    <message>
+        <source>Hold the southern bank through all three crossings. Sempronius spends his army in the river; spend less of yours.</source>
+        <translation>اثبت على الضفة الجنوبية طوال المعابر الثلاثة. سمبرونيوس ينفق جيشه في النهر؛ فأنفق أقل من جيشك.</translation>
+    </message>
+    <message>
+        <source>It lies south-east across the wadi; its column marches late, so strike before it does.</source>
+        <translation>يقع جنوب شرق الوادي؛ رتله يزحف متأخراً، فاضرب قبل أن يزحف.</translation>
+    </message>
+    <message>
+        <source>Keep the column alive on the mountain for fifteen minutes. The pass belongs to whoever is still standing when the weather turns.</source>
+        <translation>أبقِ الرتل حياً على الجبل خمس عشرة دقيقة. الممر لمن يبقى واقفاً حين ينقلب الطقس.</translation>
+    </message>
+    <message>
+        <source>Kill the Roman officers in the passes</source>
+        <translation>اقتل الضباط الرومان في الممرات</translation>
+    </message>
+    <message>
+        <source>Lake on their left, hills on their right, mist over both. Nobody moves until the whole column is inside.</source>
+        <translation>البحيرة عن يسارهم، والتلال عن يمينهم، والضباب فوق كليهما. لا يتحرك أحد حتى يدخل الرتل كله.</translation>
+    </message>
+    <message>
+        <source>Last column. Spend the reserve at the gate it chooses, not the one you fear.</source>
+        <translation>آخر رتل. أنفق الاحتياط عند البوابة التي يختارها، لا التي تخشاها.</translation>
+    </message>
+    <message>
+        <source>Let him count. Numidians on the wings, the bridled horse in the centre, and nobody waits for the consul to finish his sentence.</source>
+        <translation>دعه يعدّ. النوميديون على الجناحين، والخيل الملجمة في القلب، ولا ينتظر أحد أن يُتمّ القنصل جملته.</translation>
+    </message>
+    <message>
+        <source>Let the centre give. The Africans wait on the wings, Hasdrubal has the river. Eighty thousand men walk into a sack as easily as into a field.</source>
+        <translation>دع القلب يتراجع. الأفارقة ينتظرون على الجناحين، وحصدربعل يمسك النهر. ثمانون ألف رجل يدخلون كيساً بالسهولة التي يدخلون بها حقلاً.</translation>
+    </message>
+    <message>
+        <source>Masinissa has no one left to ride for. Turn the elephants on the centre.</source>
+        <translation>لم يبقَ لماسينيسا من يركب لأجله. وجّه الفيلة إلى القلب.</translation>
+    </message>
+    <message>
+        <source>Not here. There is nothing behind this field but Carthage.</source>
+        <translation>ليس هنا. لا شيء خلف هذا الميدان إلا قرطاج.</translation>
+    </message>
+    <message>
+        <source>Now, Mago. Out of the reeds and into their backs, and find me the men who sent them across.</source>
+        <translation>الآن يا ماغو. اخرج من القصب إلى ظهورهم، وجِد لي الرجال الذين أرسلوهم عبر النهر.</translation>
+    </message>
+    <message>
+        <source>One crossing broken. Nobody follows them into the water; the river is ours only while we stay out of it.</source>
+        <translation>انكسر معبر واحد. لا يتبعهم أحد إلى الماء؛ فالنهر لنا ما دمنا خارجه.</translation>
+    </message>
+    <message>
+        <source>Rome has paid the tribes and sent officers to hold them to the bargain. Kill the officers and the tribes go home.</source>
+        <translation>دفعت روما للقبائل وأرسلت ضباطاً يُلزمونها بالصفقة. اقتل الضباط فتعود القبائل إلى ديارها.</translation>
+    </message>
+    <message>
+        <source>Scipio holds the forest sanctuary north-east of your camp; the reserve&apos;s officer waits at the bridge below his camp.</source>
+        <translation>يمسك سكيبيو معبد الغابة شمال شرق معسكرك؛ وضابط الاحتياط ينتظر عند الجسر أسفل معسكره.</translation>
+    </message>
+    <message>
+        <source>Scipio&apos;s reserve is crossing the bridge road from the east.</source>
+        <translation>احتياط سكيبيو يعبر طريق الجسر من الشرق.</translation>
+    </message>
+    <message>
+        <source>Seize the hill fort and the river town. Leave no crossing for Scipio&apos;s army to inherit.</source>
+        <translation>استولِ على حصن التل ومدينة النهر. لا تترك معبراً يرثه جيش سكيبيو.</translation>
+    </message>
+    <message>
+        <source>Six bridges span the Rhône, and Roman eyes watch the far end of every one. Pick a crossing and commit.</source>
+        <translation>ستة جسور تمتد فوق الرون، وعيون رومانية تراقب الطرف البعيد من كل منها. اختر معبراً والتزم به.</translation>
+    </message>
+    <message>
+        <source>Stay out of the water. Every Roman who wades it reaches you cold and slow.</source>
+        <translation>ابقَ خارج الماء. كل روماني يخوضه يصلك بارداً بطيئاً.</translation>
+    </message>
+    <message>
+        <source>Strike now. Take Fabius at the basin watch before the column finds your camp.</source>
+        <translation>اضرب الآن. خذ فابيوس عند مرقب الحوض قبل أن يجد الرتل معسكرك.</translation>
+    </message>
+    <message>
+        <source>Take a Roman barracks. The winter camp&apos;s grain is worth the ride.</source>
+        <translation>استولِ على ثكنة رومانية. حبوب المعسكر الشتوي تستحق الركوب إليها.</translation>
+    </message>
+    <message>
+        <source>Take the Roman marching town at the western mouth of the lake road.</source>
+        <translation>استولِ على مدينة الزحف الرومانية عند المدخل الغربي لطريق البحيرة.</translation>
+    </message>
+    <message>
+        <source>Take the consul&apos;s forward town and the reserve camp across the bridge road.</source>
+        <translation>استولِ على مدينة القنصل المتقدمة ومعسكر الاحتياط عبر طريق الجسر.</translation>
+    </message>
+    <message>
+        <source>That was the screen. Put the archers on the ridge before the reserve remembers it is there.</source>
+        <translation>كان ذلك الستار. ضع الرماة على السلسلة قبل أن يتذكر الاحتياط أنه هناك.</translation>
+    </message>
+    <message>
+        <source>That was the van&apos;s road home. Maharbal will collect whoever is still walking in the morning.</source>
+        <translation>كان ذلك طريق الطليعة إلى الديار. سيجمع مهربعل من بقي يمشي في الصباح.</translation>
+    </message>
+    <message>
+        <source>The Rhône runs north to south through the valley. Roman pickets watch every approach on the near bank.</source>
+        <translation>يجري الرون من الشمال إلى الجنوب عبر الوادي. تراقب المخافر الرومانية كل مقترب على الضفة القريبة.</translation>
+    </message>
+    <message>
+        <source>The Roman van is cutting east along the shore road. Ride it down before it clears the basin.</source>
+        <translation>الطليعة الرومانية تشقّ طريقها شرقاً على طريق الشاطئ. الحق بها قبل أن تخرج من الحوض.</translation>
+    </message>
+    <message>
+        <source>The Volturnus legion is coming down through the orchards. Slowly. I ordered slowly. Every tree they pass is one you will not harvest.</source>
+        <translation>فيلق فولتورنوس ينزل عبر البساتين. ببطء. أمرتُ بالبطء. كل شجرة يمرّون بها شجرةٌ لن تحصدها.</translation>
+    </message>
+    <message>
+        <source>The Volturnus legion is spent. I have others. I have always had others. That is what the delaying was for.</source>
+        <translation>استُنفد فيلق فولتورنوس. لديّ غيره. كان لديّ غيره دائماً. ولهذا كان التأجيل.</translation>
+    </message>
+    <message>
+        <source>The allies have lost their consul. Turn that wing inward.</source>
+        <translation>فقد الحلفاء قنصلهم. اعطف ذلك الجناح إلى الداخل.</translation>
+    </message>
+    <message>
+        <source>The column has lost its head. Take the town before anyone thinks to pick it up.</source>
+        <translation>فقد الرتل رأسه. خذ المدينة قبل أن يفكر أحد في التقاطه.</translation>
+    </message>
+    <message>
+        <source>The descent garrison is marching up from the south-east. Hold the camp and keep the sledges loading.</source>
+        <translation>حامية المنحدر تزحف صعوداً من الجنوب الشرقي. اثبت في المعسكر وأبقِ الزلاجات تُحمَّل.</translation>
+    </message>
+    <message>
+        <source>The descent is nearly yours. I came up to shut this door and it would not shut. Very well - I shall wait at the Ticinus with a great many more men than this.</source>
+        <translation>المنحدر يكاد يكون لك. صعدتُ لأغلق هذا الباب فأبى أن يُغلق. لا بأس - سأنتظر عند تيتشينو برجال أكثر من هؤلاء بكثير.</translation>
+    </message>
+    <message>
+        <source>The fort is ours. Hold the gate - its barracks will give us the men the river took.</source>
+        <translation>الحصن لنا. اثبت عند البوابة - ثكنته ستعطينا الرجال الذين أخذهم النهر.</translation>
+    </message>
+    <message>
+        <source>The high pass fort is sending spears and bows down the southern track. Get the builders behind the palisade.</source>
+        <translation>حصن الممر العالي يرسل الرماح والأقواس عبر المسلك الجنوبي. أدخل البنّائين خلف السياج.</translation>
+    </message>
+    <message>
+        <source>The lower pass camp lies just south of your palisade. Roman-paid tribesmen hold it - go in together.</source>
+        <translation>معسكر الممر السفلي يقع جنوب سياجك مباشرة. تمسكه قبائل مأجورة لروما - ادخلوا معاً.</translation>
+    </message>
+    <message>
+        <source>The main line is advancing, with lanes left open between the maniples. Send your elephants down them. My skirmishers are waiting at the far end.</source>
+        <translation>الخط الرئيسي يتقدم، تاركاً ممرات مفتوحة بين المفارز. أرسل فيلتك فيها. رماتي الخفاف ينتظرون عند طرفها الآخر.</translation>
+    </message>
+    <message>
+        <source>The men have eaten and oiled their limbs by the fires, and Mago is in the stream bed with two thousand. Let the Romans come to us wet.</source>
+        <translation>أكل الرجال ودهنوا أطرافهم عند النيران، وماغو في مجرى الجدول مع ألفين. دع الرومان يأتوننا مبتلّين.</translation>
+    </message>
+    <message>
+        <source>The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar past the eastern stream is not particular about whose it is.</source>
+        <translation>انقشع الضباب أبكر قليلاً مما يناسبك. يحدث ذلك. ستحتفظ البحيرة بما أُعطيته، وما يقبع تحت المذبح وراء الجدول الشرقي لا يبالي لمن يكون.</translation>
+    </message>
+    <message>
+        <source>The road runs east along the lake. Shut its western mouth and the column has only one way left to go.</source>
+        <translation>يمتد الطريق شرقاً على طول البحيرة. أغلق مدخله الغربي فلا يبقى للرتل إلا سبيل واحد.</translation>
+    </message>
+    <message>
+        <source>The screen is coming across the flats. Spears in front, horse on the wings, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
+        <translation>الستار يعبر السهول. الرماح في المقدمة، والخيل على الجناحين، الترتيب المعتاد. حاول أن تثبت في مكانك من فضلك؛ فذلك يجعل التقارير أكثر ترتيباً بكثير.</translation>
+    </message>
+    <message>
+        <source>The screen&apos;s cavalry comes again from the east. Rotate quickly.</source>
+        <translation>فرسان الستار يعودون من الشرق. بدّل بسرعة.</translation>
+    </message>
+    <message>
+        <source>Their centre has nowhere left to step back. Open the ring for no one.</source>
+        <translation>لم يعد لقلبهم مكان يتراجع إليه. لا تفتح الحلقة لأحد.</translation>
+    </message>
+    <message>
+        <source>Their scouts have seen us. Good. Let them ride back and tell Scipio what they saw.</source>
+        <translation>رآنا كشّافتهم. حسن. دعهم يعودون ويخبرون سكيبيو بما رأوا.</translation>
+    </message>
+    <message>
+        <source>They came down the slope, and on the slope they stay. Back to the timber.</source>
+        <translation>نزلوا المنحدر، وعلى المنحدر يبقون. عودوا إلى الأخشاب.</translation>
+    </message>
+    <message>
+        <source>They tell me you have taken an army into the Alps in October, with elephants. I came round by sea to hold the far side. The mountain is a more thorough officer than I am, and it does not require pay.</source>
+        <translation>يقولون لي إنك أخذت جيشاً إلى الألب في تشرين الأول، ومعه فيلة. جئتُ بحراً لأمسك الجانب الآخر. الجبل ضابط أكثر إتقاناً مني، ولا يطلب أجراً.</translation>
+    </message>
+    <message>
+        <source>Three Roman columns are on the roads: Fabius down the Volturnus, the allied wing from the south, Marcellus&apos;s siege column out of Nola to the east. The first assault reaches the walls within the minute.</source>
+        <translation>ثلاثة أرتال رومانية على الطرق: فابيوس نزولاً مع فولتورنوس، وجناح الحلفاء من الجنوب، ورتل حصار مارتشيلوس خارجاً من نولا في الشرق. يبلغ الهجوم الأول الأسوار خلال دقيقة.</translation>
+    </message>
+    <message>
+        <source>Three men lead the siege: Fabius in the Volturnus camp to the north-west, the allied commander at the southern camp, Marcellus in the siege works to the east.</source>
+        <translation>ثلاثة رجال يقودون الحصار: فابيوس في معسكر فولتورنوس شمال غرب، وقائد الحلفاء في المعسكر الجنوبي، ومارتشيلوس في أعمال الحصار شرقاً.</translation>
+    </message>
+    <message>
+        <source>Two camps hold the far bank: a hill fort to the north-east, a walled river town far to the south-east. Stand in their gate yards to take them.</source>
+        <translation>معسكران يمسكان الضفة البعيدة: حصن تل في الشمال الشرقي، ومدينة نهرية مسوّرة بعيداً في الجنوب الشرقي. قف في ساحات بواباتهما لتأخذهما.</translation>
+    </message>
+    <message>
+        <source>We will either find a way or make one. Builders to the slopes - this road is cut before it is walked.</source>
+        <translation>إما أن نجد طريقاً أو نصنعه. البنّاؤون إلى المنحدرات - هذا الطريق يُشقّ قبل أن يُسلك.</translation>
+    </message>
+    <message>
+        <source>Descent garrison sortie</source>
+        <translation>غارة حامية المنحدر</translation>
+    </message>
+    <message>
+        <source>Everything they have left</source>
+        <translation>كل ما تبقى لديهم</translation>
+    </message>
+    <message>
+        <source>Fabius&apos;s Volturnus legion</source>
+        <translation>فيلق فابيوس في فولتورنوس</translation>
+    </message>
+    <message>
+        <source>High-pass riders</source>
+        <translation>فرسان الممر العالي</translation>
+    </message>
+    <message>
+        <source>High-pass skirmishers</source>
+        <translation>رماة الممر العالي الخفاف</translation>
+    </message>
+    <message>
+        <source>Laelius&apos;s Italian horse</source>
+        <translation>خيالة لاليوس الإيطاليون</translation>
+    </message>
+    <message>
+        <source>Lower-pass tribesmen</source>
+        <translation>قبائل الممر السفلي</translation>
+    </message>
+    <message>
+        <source>Lower-pass war band</source>
+        <translation>عصابة حرب الممر السفلي</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s Numidian horse</source>
+        <translation>خيالة ماسينيسا النوميديون</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s Numidians</source>
+        <translation>نوميديو ماسينيسا</translation>
+    </message>
+    <message>
+        <source>Riders in the pasture</source>
+        <translation>فرسان في المرعى</translation>
+    </message>
+    <message>
+        <source>Roman raiding party</source>
+        <translation>مفرزة إغارة رومانية</translation>
+    </message>
+    <message>
+        <source>Scipio&apos;s horse</source>
+        <translation>خيالة سكيبيو</translation>
+    </message>
+    <message>
+        <source>Scipio&apos;s legions</source>
+        <translation>فيالق سكيبيو</translation>
+    </message>
+    <message>
+        <source>Scipio&apos;s scouting horse</source>
+        <translation>خيالة استطلاع سكيبيو</translation>
+    </message>
+    <message>
+        <source>Sempronius’ first crossing</source>
+        <translation>عبور سمبرونيوس الأول</translation>
+    </message>
+    <message>
+        <source>The Roman-paid host</source>
+        <translation>الحشد المأجور لروما</translation>
+    </message>
+    <message>
+        <source>The allied foot</source>
+        <translation>مشاة الحلفاء</translation>
+    </message>
+    <message>
+        <source>The allied horse</source>
+        <translation>خيالة الحلفاء</translation>
+    </message>
+    <message>
+        <source>The allied wing</source>
+        <translation>جناح الحلفاء</translation>
+    </message>
+    <message>
+        <source>The bridge column</source>
+        <translation>رتل الجسر</translation>
+    </message>
+    <message>
+        <source>The column&apos;s rearguard</source>
+        <translation>مؤخرة الرتل</translation>
+    </message>
+    <message>
+        <source>The column&apos;s second line</source>
+        <translation>الخط الثاني للرتل</translation>
+    </message>
+    <message>
+        <source>The consul&apos;s screen</source>
+        <translation>ستار القنصل</translation>
+    </message>
+    <message>
+        <source>The consular horse</source>
+        <translation>الخيالة القنصلية</translation>
+    </message>
+    <message>
+        <source>The first column</source>
+        <translation>الرتل الأول</translation>
+    </message>
+    <message>
+        <source>The fourth column</source>
+        <translation>الرتل الرابع</translation>
+    </message>
+    <message>
+        <source>The landing at the quay</source>
+        <translation>الإنزال عند الرصيف</translation>
+    </message>
+    <message>
+        <source>The last column</source>
+        <translation>الرتل الأخير</translation>
+    </message>
+    <message>
+        <source>The last of the legions</source>
+        <translation>آخر الفيالق</translation>
+    </message>
+    <message>
+        <source>The northern camp&apos;s cohorts</source>
+        <translation>كتائب المعسكر الشمالي</translation>
+    </message>
+    <message>
+        <source>The northern camp&apos;s reserve</source>
+        <translation>احتياط المعسكر الشمالي</translation>
+    </message>
+    <message>
+        <source>The rear guard</source>
+        <translation>المؤخرة</translation>
+    </message>
+    <message>
+        <source>The reserve column</source>
+        <translation>رتل الاحتياط</translation>
+    </message>
+    <message>
+        <source>The reserve&apos;s horse</source>
+        <translation>خيالة الاحتياط</translation>
+    </message>
+    <message>
+        <source>The reserve&apos;s second line</source>
+        <translation>الخط الثاني للاحتياط</translation>
+    </message>
+    <message>
+        <source>The reserve&apos;s vanguard</source>
+        <translation>طليعة الاحتياط</translation>
+    </message>
+    <message>
+        <source>The river reserve</source>
+        <translation>احتياط النهر</translation>
+    </message>
+    <message>
+        <source>The second column</source>
+        <translation>الرتل الثاني</translation>
+    </message>
+    <message>
+        <source>The second crossing</source>
+        <translation>العبور الثاني</translation>
+    </message>
+    <message>
+        <source>The second reserve</source>
+        <translation>الاحتياط الثاني</translation>
+    </message>
+    <message>
+        <source>The siege column</source>
+        <translation>رتل الحصار</translation>
+    </message>
+    <message>
+        <source>The third column</source>
+        <translation>الرتل الثالث</translation>
+    </message>
+    <message>
+        <source>The van breaking out</source>
+        <translation>الطليعة تخترق</translation>
+    </message>
+    <message>
+        <source>The via militaris</source>
+        <translation>الطريق العسكري</translation>
+    </message>
+    <message>
+        <source>The western reserve</source>
+        <translation>الاحتياط الغربي</translation>
+    </message>
+    <message>
+        <source>Two gates at once</source>
+        <translation>بوابتان في آن واحد</translation>
+    </message>
+    <message>
+        <source>Varro&apos;s legions</source>
+        <translation>فيالق فارو</translation>
+    </message>
+    <message>
+        <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand across a field from you with an army of my own.</source>
+        <translation>أفريقيا إذاً، ونحن الاثنان، ولا نهر نقف خلفه. قد عرفتُ قدر فيلتك، ولديّ نوميديّوك. أيّاً كان ما تنوي فعله، فافعله حيث أراه. انتظرتُ ستة عشر عاماً لأقف قبالتك في ميدان بجيش هو لي.</translation>
     </message>
 </context>
 <context>

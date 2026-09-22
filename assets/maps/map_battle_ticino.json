@@ -43,7 +43,11 @@
             0.16
         ],
         "sway_speed": 1,
-        "sway_strength": 0.18
+        "sway_strength": 0.18,
+        "tree_mix": {
+            "palm": 0.0,
+            "cypress": 0.8
+        }
     },
     "bridges": [
         {
@@ -3460,6 +3464,96 @@
             ],
             "type": "wall_segment",
             "width": 2
+        },
+        {
+            "type": "farm",
+            "x": 416.5,
+            "z": 219.5,
+            "rotation": 0,
+            "dressing": "ticino_town_fields_north",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 433.5,
+            "z": 236.5,
+            "rotation": 0,
+            "dressing": "ticino_town_fields_north",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 430.5,
+            "z": 364.0,
+            "rotation": 0,
+            "dressing": "ticino_town_fields_south",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 447.5,
+            "z": 364.0,
+            "rotation": 0,
+            "dressing": "ticino_town_fields_south",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 581.0,
+            "z": 79.5,
+            "rotation": 0,
+            "dressing": "ticino_reserve_fields",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 598.0,
+            "z": 79.5,
+            "rotation": 0,
+            "dressing": "ticino_reserve_fields",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 615.0,
+            "z": 79.5,
+            "rotation": 0,
+            "dressing": "ticino_reserve_fields",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 581.0,
+            "z": 96.5,
+            "rotation": 0,
+            "dressing": "ticino_reserve_fields",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 598.0,
+            "z": 96.5,
+            "rotation": 0,
+            "dressing": "ticino_reserve_fields",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 615.0,
+            "z": 96.5,
+            "rotation": 0,
+            "dressing": "ticino_reserve_fields",
+            "player_id": 3,
+            "nation": "roman_republic"
         }
     ],
     "terrain": [
@@ -6779,6 +6873,1094 @@
             "scale": 1.0,
             "rotation": -1.571,
             "dressing": "ticino_gate_5"
+        },
+        {
+            "type": "tent",
+            "x": 406.63,
+            "z": 283.12,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "ticino_town_tent_lines"
+        },
+        {
+            "type": "tent",
+            "x": 414.23,
+            "z": 283.12,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "ticino_town_tent_lines"
+        },
+        {
+            "type": "supply_cart",
+            "x": 406.31,
+            "z": 216.22,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_town_fields_north"
+        },
+        {
+            "type": "supply_cart",
+            "x": 419.67,
+            "z": 365.72,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_town_fields_south"
+        },
+        {
+            "type": "supply_cart",
+            "x": 570.17,
+            "z": 81.22,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_reserve_fields"
+        },
+        {
+            "type": "pine_tree",
+            "x": 88.52,
+            "z": 590.91,
+            "scale": 1.25,
+            "rotation": 2.772,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 80.14,
+            "z": 600.33,
+            "scale": 1.08,
+            "rotation": 4.354,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 90.63,
+            "z": 604.05,
+            "scale": 0.95,
+            "rotation": 2.539,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 86.78,
+            "z": 611.84,
+            "scale": 0.89,
+            "rotation": 5.431,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 86.35,
+            "z": 604.31,
+            "scale": 0.8,
+            "rotation": 4.315,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 102.87,
+            "z": 607.02,
+            "scale": 1.24,
+            "rotation": 5.118,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 94.88,
+            "z": 614.67,
+            "scale": 0.98,
+            "rotation": 2.809,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 79.47,
+            "z": 604.11,
+            "scale": 0.82,
+            "rotation": 2.104,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 80.91,
+            "z": 614.24,
+            "scale": 1.07,
+            "rotation": 2.871,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 79.37,
+            "z": 607.21,
+            "scale": 0.87,
+            "rotation": 3.236,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 83.41,
+            "z": 599.36,
+            "scale": 0.86,
+            "rotation": 5.49,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 82.34,
+            "z": 606.51,
+            "scale": 1.01,
+            "rotation": 6.261,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 100.15,
+            "z": 612.54,
+            "scale": 0.98,
+            "rotation": 3.795,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 92.15,
+            "z": 594.12,
+            "scale": 1.15,
+            "rotation": 4.634,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 86.53,
+            "z": 608.52,
+            "scale": 0.9,
+            "rotation": 5.321,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 98.89,
+            "z": 625.25,
+            "scale": 1.37,
+            "rotation": 5.178,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 107.06,
+            "z": 600.69,
+            "scale": 1.31,
+            "rotation": 4.825,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 69.65,
+            "z": 611.15,
+            "scale": 1.27,
+            "rotation": 4.09,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 73.47,
+            "z": 607.64,
+            "scale": 1.35,
+            "rotation": 3.362,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 91.35,
+            "z": 583.87,
+            "scale": 1.22,
+            "rotation": 1.082,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "boulder",
+            "x": 93.06,
+            "z": 585.01,
+            "scale": 0.66,
+            "rotation": 3.991,
+            "dressing": "ticino_wood_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 170.79,
+            "z": 609.89,
+            "scale": 1.11,
+            "rotation": 5.709,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 163.42,
+            "z": 619.09,
+            "scale": 0.83,
+            "rotation": 4.695,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 176.06,
+            "z": 610.35,
+            "scale": 1.01,
+            "rotation": 1.112,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 161.04,
+            "z": 616.93,
+            "scale": 1.0,
+            "rotation": 4.769,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 170.84,
+            "z": 598.2,
+            "scale": 1.18,
+            "rotation": 4.912,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 167.96,
+            "z": 611.08,
+            "scale": 0.8,
+            "rotation": 2.587,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 158.4,
+            "z": 600.51,
+            "scale": 0.86,
+            "rotation": 5.036,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 170.59,
+            "z": 604.08,
+            "scale": 0.94,
+            "rotation": 5.694,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 157.02,
+            "z": 603.88,
+            "scale": 1.1,
+            "rotation": 3.09,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 154.46,
+            "z": 601.98,
+            "scale": 0.95,
+            "rotation": 4.748,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 159.62,
+            "z": 611.11,
+            "scale": 0.86,
+            "rotation": 3.287,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 168.52,
+            "z": 618.6,
+            "scale": 1.22,
+            "rotation": 3.67,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "plant",
+            "x": 160.32,
+            "z": 593.59,
+            "scale": 1.26,
+            "rotation": 3.313,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "plant",
+            "x": 154.55,
+            "z": 615.06,
+            "scale": 1.28,
+            "rotation": 5.478,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "plant",
+            "x": 174.18,
+            "z": 615.74,
+            "scale": 1.35,
+            "rotation": 3.563,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "boulder",
+            "x": 177.29,
+            "z": 603.79,
+            "scale": 0.74,
+            "rotation": 3.362,
+            "dressing": "ticino_wood_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 36.93,
+            "z": 501.75,
+            "scale": 0.87,
+            "rotation": 2.897,
+            "dressing": "ticino_wood_west_bank"
+        },
+        {
+            "type": "pine_tree",
+            "x": 22.29,
+            "z": 505.57,
+            "scale": 1.11,
+            "rotation": 4.055,
+            "dressing": "ticino_wood_west_bank"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 35.74,
+            "z": 511.25,
+            "scale": 0.92,
+            "rotation": 4.966,
+            "dressing": "ticino_wood_west_bank"
+        },
+        {
+            "type": "pine_tree",
+            "x": 33.57,
+            "z": 506.05,
+            "scale": 1.24,
+            "rotation": 4.589,
+            "dressing": "ticino_wood_west_bank"
+        },
+        {
+            "type": "pine_tree",
+            "x": 34.73,
+            "z": 493.26,
+            "scale": 1.13,
+            "rotation": 1.277,
+            "dressing": "ticino_wood_west_bank"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 32.42,
+            "z": 496.47,
+            "scale": 0.97,
+            "rotation": 4.008,
+            "dressing": "ticino_wood_west_bank"
+        },
+        {
+            "type": "pine_tree",
+            "x": 29.58,
+            "z": 495.56,
+            "scale": 0.9,
+            "rotation": 2.476,
+            "dressing": "ticino_wood_west_bank"
+        },
+        {
+            "type": "pine_tree",
+            "x": 25.06,
+            "z": 511.7,
+            "scale": 1.02,
+            "rotation": 6.231,
+            "dressing": "ticino_wood_west_bank"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 34.58,
+            "z": 513.93,
+            "scale": 1.07,
+            "rotation": 5.647,
+            "dressing": "ticino_wood_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 20.86,
+            "z": 494.32,
+            "scale": 1.21,
+            "rotation": 3.533,
+            "dressing": "ticino_wood_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 18.66,
+            "z": 497.2,
+            "scale": 1.01,
+            "rotation": 0.153,
+            "dressing": "ticino_wood_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 28.22,
+            "z": 489.31,
+            "scale": 1.2,
+            "rotation": 1.488,
+            "dressing": "ticino_wood_west_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 42.21,
+            "z": 505.24,
+            "scale": 0.8,
+            "rotation": 2.042,
+            "dressing": "ticino_wood_west_bank"
+        },
+        {
+            "type": "pine_tree",
+            "x": 620.32,
+            "z": 567.23,
+            "scale": 1.13,
+            "rotation": 0.533,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 611.22,
+            "z": 567.67,
+            "scale": 0.98,
+            "rotation": 0.219,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 610.33,
+            "z": 556.09,
+            "scale": 1.08,
+            "rotation": 6.248,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 615.02,
+            "z": 571.33,
+            "scale": 1.24,
+            "rotation": 1.824,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 614.27,
+            "z": 561.41,
+            "scale": 1.07,
+            "rotation": 5.937,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 609.31,
+            "z": 547.54,
+            "scale": 1.11,
+            "rotation": 2.858,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 615.72,
+            "z": 567.39,
+            "scale": 1.01,
+            "rotation": 3.01,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 608.7,
+            "z": 559.88,
+            "scale": 1.11,
+            "rotation": 3.101,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 599.99,
+            "z": 554.86,
+            "scale": 0.97,
+            "rotation": 3.438,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 603.91,
+            "z": 570.26,
+            "scale": 0.86,
+            "rotation": 3.663,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 615.31,
+            "z": 558.18,
+            "scale": 0.88,
+            "rotation": 0.348,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 606.2,
+            "z": 567.52,
+            "scale": 1.24,
+            "rotation": 5.409,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 622.74,
+            "z": 558.36,
+            "scale": 1.03,
+            "rotation": 3.547,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 604.53,
+            "z": 543.89,
+            "scale": 1.08,
+            "rotation": 2.812,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 616.45,
+            "z": 551.7,
+            "scale": 1.32,
+            "rotation": 1.627,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 613.96,
+            "z": 544.06,
+            "scale": 1.24,
+            "rotation": 1.63,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 607.76,
+            "z": 574.33,
+            "scale": 1.33,
+            "rotation": 5.513,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "boulder",
+            "x": 600.58,
+            "z": 564.43,
+            "scale": 0.88,
+            "rotation": 0.925,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "boulder",
+            "x": 614.21,
+            "z": 551.48,
+            "scale": 0.7,
+            "rotation": 0.528,
+            "dressing": "ticino_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 76.81,
+            "z": 546.13,
+            "scale": 1.18,
+            "rotation": 1.834,
+            "dressing": "ticino_wood_south_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 82.26,
+            "z": 544.9,
+            "scale": 1.07,
+            "rotation": 4.432,
+            "dressing": "ticino_wood_south_meadow"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 85.66,
+            "z": 543.46,
+            "scale": 1.05,
+            "rotation": 2.608,
+            "dressing": "ticino_wood_south_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 83.75,
+            "z": 550.62,
+            "scale": 1.2,
+            "rotation": 0.083,
+            "dressing": "ticino_wood_south_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 73.79,
+            "z": 561.06,
+            "scale": 1.18,
+            "rotation": 4.725,
+            "dressing": "ticino_wood_south_meadow"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 88.35,
+            "z": 551.24,
+            "scale": 1.14,
+            "rotation": 1.413,
+            "dressing": "ticino_wood_south_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 76.01,
+            "z": 554.28,
+            "scale": 1.24,
+            "rotation": 2.578,
+            "dressing": "ticino_wood_south_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 82.81,
+            "z": 560.68,
+            "scale": 1.01,
+            "rotation": 4.68,
+            "dressing": "ticino_wood_south_meadow"
+        },
+        {
+            "type": "plant",
+            "x": 67.96,
+            "z": 550.87,
+            "scale": 1.14,
+            "rotation": 4.559,
+            "dressing": "ticino_wood_south_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 216.72,
+            "z": 596.28,
+            "scale": 1.05,
+            "rotation": 1.106,
+            "dressing": "ticino_wood_river_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 228.93,
+            "z": 591.6,
+            "scale": 1.01,
+            "rotation": 5.954,
+            "dressing": "ticino_wood_river_south"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 217.74,
+            "z": 604.21,
+            "scale": 1.16,
+            "rotation": 2.244,
+            "dressing": "ticino_wood_river_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 233.85,
+            "z": 607.32,
+            "scale": 1.02,
+            "rotation": 4.039,
+            "dressing": "ticino_wood_river_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 225.8,
+            "z": 594.59,
+            "scale": 1.09,
+            "rotation": 1.708,
+            "dressing": "ticino_wood_river_south"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 220.15,
+            "z": 606.04,
+            "scale": 0.88,
+            "rotation": 4.342,
+            "dressing": "ticino_wood_river_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 224.16,
+            "z": 601.38,
+            "scale": 0.99,
+            "rotation": 6.066,
+            "dressing": "ticino_wood_river_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 233.34,
+            "z": 603.58,
+            "scale": 0.92,
+            "rotation": 5.319,
+            "dressing": "ticino_wood_river_south"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 218.04,
+            "z": 608.7,
+            "scale": 1.1,
+            "rotation": 4.64,
+            "dressing": "ticino_wood_river_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 232.82,
+            "z": 597.75,
+            "scale": 1.06,
+            "rotation": 3.291,
+            "dressing": "ticino_wood_river_south"
+        },
+        {
+            "type": "plant",
+            "x": 217.27,
+            "z": 589.67,
+            "scale": 1.19,
+            "rotation": 5.929,
+            "dressing": "ticino_wood_river_south"
+        },
+        {
+            "type": "plant",
+            "x": 222.78,
+            "z": 588.63,
+            "scale": 1.25,
+            "rotation": 2.601,
+            "dressing": "ticino_wood_river_south"
+        },
+        {
+            "type": "plant",
+            "x": 227.64,
+            "z": 609.53,
+            "scale": 1.28,
+            "rotation": 5.119,
+            "dressing": "ticino_wood_river_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 403.29,
+            "z": 600.99,
+            "scale": 1.11,
+            "rotation": 5.692,
+            "dressing": "ticino_wood_far_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 417.97,
+            "z": 609.39,
+            "scale": 1.06,
+            "rotation": 5.636,
+            "dressing": "ticino_wood_far_south"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 398.86,
+            "z": 603.8,
+            "scale": 1.2,
+            "rotation": 2.978,
+            "dressing": "ticino_wood_far_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 406.93,
+            "z": 600.42,
+            "scale": 0.95,
+            "rotation": 2.451,
+            "dressing": "ticino_wood_far_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 418.61,
+            "z": 619.53,
+            "scale": 0.89,
+            "rotation": 1.288,
+            "dressing": "ticino_wood_far_south"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 400.77,
+            "z": 610.93,
+            "scale": 0.81,
+            "rotation": 4.663,
+            "dressing": "ticino_wood_far_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 406.84,
+            "z": 610.88,
+            "scale": 0.97,
+            "rotation": 5.81,
+            "dressing": "ticino_wood_far_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 412.69,
+            "z": 610.02,
+            "scale": 0.82,
+            "rotation": 0.854,
+            "dressing": "ticino_wood_far_south"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 416.84,
+            "z": 617.13,
+            "scale": 0.81,
+            "rotation": 2.168,
+            "dressing": "ticino_wood_far_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 411.36,
+            "z": 598.92,
+            "scale": 0.9,
+            "rotation": 0.61,
+            "dressing": "ticino_wood_far_south"
+        },
+        {
+            "type": "plant",
+            "x": 402.8,
+            "z": 615.58,
+            "scale": 1.08,
+            "rotation": 3.441,
+            "dressing": "ticino_wood_far_south"
+        },
+        {
+            "type": "plant",
+            "x": 396.69,
+            "z": 613.11,
+            "scale": 1.36,
+            "rotation": 2.504,
+            "dressing": "ticino_wood_far_south"
+        },
+        {
+            "type": "pine_tree",
+            "x": 563.06,
+            "z": 611.02,
+            "scale": 1.1,
+            "rotation": 2.907,
+            "dressing": "ticino_wood_south_east_bank"
+        },
+        {
+            "type": "pine_tree",
+            "x": 560.79,
+            "z": 601.18,
+            "scale": 1.21,
+            "rotation": 5.138,
+            "dressing": "ticino_wood_south_east_bank"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 554.38,
+            "z": 603.04,
+            "scale": 1.24,
+            "rotation": 4.309,
+            "dressing": "ticino_wood_south_east_bank"
+        },
+        {
+            "type": "pine_tree",
+            "x": 564.15,
+            "z": 606.21,
+            "scale": 1.21,
+            "rotation": 0.37,
+            "dressing": "ticino_wood_south_east_bank"
+        },
+        {
+            "type": "pine_tree",
+            "x": 556.62,
+            "z": 598.79,
+            "scale": 1.19,
+            "rotation": 1.828,
+            "dressing": "ticino_wood_south_east_bank"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 555.64,
+            "z": 590.91,
+            "scale": 0.95,
+            "rotation": 4.802,
+            "dressing": "ticino_wood_south_east_bank"
+        },
+        {
+            "type": "pine_tree",
+            "x": 555.61,
+            "z": 595.09,
+            "scale": 0.81,
+            "rotation": 3.999,
+            "dressing": "ticino_wood_south_east_bank"
+        },
+        {
+            "type": "pine_tree",
+            "x": 557.41,
+            "z": 606.86,
+            "scale": 0.96,
+            "rotation": 0.233,
+            "dressing": "ticino_wood_south_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 549.58,
+            "z": 591.27,
+            "scale": 1.16,
+            "rotation": 0.788,
+            "dressing": "ticino_wood_south_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 550.46,
+            "z": 593.16,
+            "scale": 1.24,
+            "rotation": 0.27,
+            "dressing": "ticino_wood_south_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 560.59,
+            "z": 592.53,
+            "scale": 1.11,
+            "rotation": 5.498,
+            "dressing": "ticino_wood_south_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 550.02,
+            "z": 596.01,
+            "scale": 0.97,
+            "rotation": 5.858,
+            "dressing": "ticino_wood_south_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 548.24,
+            "z": 600.9,
+            "scale": 0.96,
+            "rotation": 3.938,
+            "dressing": "ticino_wood_south_east_bank"
+        },
+        {
+            "type": "pine_tree",
+            "x": 77.66,
+            "z": 33.39,
+            "scale": 1.07,
+            "rotation": 3.768,
+            "dressing": "ticino_wood_northwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 88.83,
+            "z": 34.29,
+            "scale": 0.97,
+            "rotation": 3.205,
+            "dressing": "ticino_wood_northwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 75.49,
+            "z": 28.44,
+            "scale": 0.8,
+            "rotation": 3.933,
+            "dressing": "ticino_wood_northwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 86.59,
+            "z": 36.94,
+            "scale": 1.06,
+            "rotation": 2.072,
+            "dressing": "ticino_wood_northwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 82.16,
+            "z": 34.8,
+            "scale": 0.85,
+            "rotation": 1.587,
+            "dressing": "ticino_wood_northwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 94.33,
+            "z": 29.47,
+            "scale": 0.85,
+            "rotation": 3.317,
+            "dressing": "ticino_wood_northwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 91.0,
+            "z": 27.4,
+            "scale": 1.17,
+            "rotation": 3.792,
+            "dressing": "ticino_wood_northwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 84.12,
+            "z": 19.41,
+            "scale": 1.24,
+            "rotation": 3.153,
+            "dressing": "ticino_wood_northwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 81.88,
+            "z": 22.31,
+            "scale": 1.19,
+            "rotation": 2.766,
+            "dressing": "ticino_wood_northwest"
+        },
+        {
+            "type": "plant",
+            "x": 96.95,
+            "z": 37.98,
+            "scale": 1.12,
+            "rotation": 1.4,
+            "dressing": "ticino_wood_northwest"
+        },
+        {
+            "type": "plant",
+            "x": 79.2,
+            "z": 44.43,
+            "scale": 1.31,
+            "rotation": 4.938,
+            "dressing": "ticino_wood_northwest"
+        },
+        {
+            "type": "plant",
+            "x": 70.77,
+            "z": 27.94,
+            "scale": 1.27,
+            "rotation": 2.498,
+            "dressing": "ticino_wood_northwest"
+        },
+        {
+            "type": "plant",
+            "x": 99.54,
+            "z": 32.68,
+            "scale": 0.92,
+            "rotation": 3.144,
+            "dressing": "ticino_wood_northwest"
+        },
+        {
+            "type": "boulder",
+            "x": 72.98,
+            "z": 38.44,
+            "scale": 0.99,
+            "rotation": 1.54,
+            "dressing": "ticino_wood_northwest"
+        },
+        {
+            "type": "boulder",
+            "x": 91.29,
+            "z": 19.31,
+            "scale": 0.89,
+            "rotation": 3.287,
+            "dressing": "ticino_wood_northwest"
         }
     ],
     "dressing": [
@@ -6985,6 +8167,165 @@
             "x": 400,
             "z": 298,
             "statues": true
+        },
+        {
+            "id": "ticino_town_tent_lines",
+            "kind": "camp_lines",
+            "x": 410,
+            "z": 286,
+            "rows": 2,
+            "cols": 2,
+            "rotation": 0
+        },
+        {
+            "id": "ticino_town_fields_north",
+            "kind": "farmland",
+            "x": 425,
+            "z": 228,
+            "cols": 2,
+            "rows": 2,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "ticino_town_fields_south",
+            "kind": "farmland",
+            "x": 439,
+            "z": 364,
+            "cols": 2,
+            "rows": 1,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "ticino_reserve_fields",
+            "kind": "farmland",
+            "x": 598,
+            "z": 88,
+            "cols": 3,
+            "rows": 2,
+            "player_id": 3,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "ticino_wood_southwest",
+            "kind": "copse",
+            "x": 90,
+            "z": 605,
+            "radius": 20,
+            "count": 16,
+            "trees": [
+                "pine_tree",
+                "pine_tree",
+                "cypress_tree"
+            ]
+        },
+        {
+            "id": "ticino_wood_south",
+            "kind": "copse",
+            "x": 165,
+            "z": 610,
+            "radius": 16,
+            "count": 12,
+            "trees": [
+                "pine_tree",
+                "pine_tree",
+                "cypress_tree"
+            ]
+        },
+        {
+            "id": "ticino_wood_west_bank",
+            "kind": "copse",
+            "x": 30,
+            "z": 500,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "pine_tree",
+                "pine_tree",
+                "cypress_tree"
+            ]
+        },
+        {
+            "id": "ticino_wood_southeast",
+            "kind": "copse",
+            "x": 610,
+            "z": 560,
+            "radius": 16,
+            "count": 12,
+            "trees": [
+                "pine_tree",
+                "pine_tree",
+                "cypress_tree"
+            ]
+        },
+        {
+            "id": "ticino_wood_south_meadow",
+            "kind": "copse",
+            "x": 80,
+            "z": 555,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "pine_tree",
+                "pine_tree",
+                "cypress_tree"
+            ]
+        },
+        {
+            "id": "ticino_wood_river_south",
+            "kind": "copse",
+            "x": 225,
+            "z": 600,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "pine_tree",
+                "pine_tree",
+                "cypress_tree"
+            ]
+        },
+        {
+            "id": "ticino_wood_far_south",
+            "kind": "copse",
+            "x": 410,
+            "z": 610,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "pine_tree",
+                "pine_tree",
+                "cypress_tree"
+            ]
+        },
+        {
+            "id": "ticino_wood_south_east_bank",
+            "kind": "copse",
+            "x": 560,
+            "z": 600,
+            "radius": 12,
+            "count": 9,
+            "trees": [
+                "pine_tree",
+                "pine_tree",
+                "cypress_tree"
+            ]
+        },
+        {
+            "id": "ticino_wood_northwest",
+            "kind": "copse",
+            "x": 85,
+            "z": 30,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "pine_tree",
+                "pine_tree",
+                "cypress_tree"
+            ]
         }
     ]
 }

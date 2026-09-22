@@ -52,16 +52,16 @@
       "starting_buildings": [],
       "waves": [
         {
-          "timing": 15.0,
-          "warning_seconds": 8.0,
-          "label": "Roman scouting party",
+          "timing": 30.0,
+          "warning_seconds": 10.0,
+          "label": "Scipio's scouting horse",
           "entry_point": {
-            "x": 70,
+            "x": 84,
             "z": 172
           },
           "composition": [
             {
-              "type": "swordsman",
+              "type": "horse_swordsman",
               "count": 2
             }
           ]
@@ -76,7 +76,7 @@
         "barracks"
       ],
       "min_count": 2,
-      "description": "Seize the two river forts. Leave no crossing for Scipio's army to inherit."
+      "description": "Seize the hill fort and the river town. Leave no crossing for Scipio's army to inherit."
     },
     {
       "type": "eliminate_commanders",
@@ -99,9 +99,9 @@
   ],
   "optional_objectives": [
     {
-      "type": "time_pressure",
-      "time_limit": 600.0,
-      "description": "Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade."
+      "type": "clear_undead_zone",
+      "zone_id": "rhone_gaul_barrows",
+      "description": "Break the barrow-guard south of the camp. The dead keep gold no Roman has counted."
     }
   ],
   "stages": [
@@ -166,7 +166,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Navigate through the maze of hills and valleys. Watch for enemy patrols!"
+          "text": "The Rh\u00f4ne runs north to south through the valley. Roman pickets watch every approach on the near bank."
         }
       ]
     },
@@ -178,7 +178,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Two bridges cross the Rh\u00f4ne. Choose your path wisely - you may need both routes!"
+          "text": "Six bridges span the Rh\u00f4ne, and Roman eyes watch the far end of every one. Pick a crossing and commit."
         }
       ]
     },
@@ -190,7 +190,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "The Roman villages are heavily defended. Coordinate your attacks!"
+          "text": "Two camps hold the far bank: a hill fort to the north-east, a walled river town far to the south-east. Stand in their gate yards to take them."
         }
       ]
     }
@@ -230,7 +230,7 @@
       "pose": "cynical",
       "trigger": {
         "type": "commander_defeated",
-        "nation": "roman_republic",
+        "owner_id": 3,
         "by_owner_id": "player",
         "delay": 2.0
       },
@@ -334,7 +334,7 @@
         "owner_id": "player",
         "delay": 2.0
       },
-      "text": "Hannibal falls at the Rhone. Then Rome never sees the elephants, and I never see Cannae. I shall spend the rest of my life not knowing what I was spared.",
+      "text": "Hannibal falls at the Rh\u00f4ne. Then Rome never sees the elephants, and no one ever learns the name Cannae. I shall spend the rest of my life not knowing what I was spared.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80
@@ -348,6 +348,46 @@
         "owner_id": 3
       },
       "text": "The patrols are nearly finished. So be it. I shall take the fleet back to Italy and wait for you there with the rest of the Republic.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "rhone_hannibal_open",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 17.0
+      },
+      "text": "Hanno's smoke is up on the far bank. Across, all of you - Scipio is three days behind and I intend to keep him there.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 90
+    },
+    {
+      "id": "rhone_hannibal_scouts_broken",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_cleared"
+      },
+      "text": "Their scouts have seen us. Good. Let them ride back and tell Scipio what they saw.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "rhone_hannibal_fort_taken",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 2,
+        "by_owner_id": "player",
+        "delay": 11.0
+      },
+      "text": "The fort is ours. Hold the gate - its barracks will give us the men the river took.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80

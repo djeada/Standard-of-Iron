@@ -90,7 +90,11 @@ void CommanderMessageDirector::configure(const CommanderMessageScript& script,
   clear();
   m_local_owner_id = local_owner_id;
 
-  add_mission_rules(script.mission_lines, script.speakers, to_world);
+  std::vector<CommanderSpeaker> mission_speakers = script.speakers;
+  if (script.local_speaker.has_value()) {
+    mission_speakers.push_back(*script.local_speaker);
+  }
+  add_mission_rules(script.mission_lines, mission_speakers, to_world);
   if (script.policy.generic && script.voices != nullptr) {
     add_bank_rules(script, to_world);
   }

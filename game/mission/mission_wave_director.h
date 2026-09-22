@@ -65,6 +65,7 @@ private:
   [[nodiscard]] auto wave_is_cleared(const PendingMissionWave& wave) const -> bool;
   [[nodiscard]] auto ready_time_for(std::size_t index) const -> float;
   void refresh_ready_times();
+  void stand_down_leaderless_waves();
 
   std::vector<PendingMissionWave>* m_waves = nullptr;
   Engine::Core::World* m_world = nullptr;
@@ -72,6 +73,7 @@ private:
   int m_announced_cleared_phases = 0;
   bool m_announced_all_cleared = false;
   std::set<int> m_settled_phases;
+  std::set<int> m_commanded_owners;
   QVariantMap m_last_status;
 };
 

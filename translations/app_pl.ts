@@ -724,24 +724,8 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <translation>215-212 p.n.e.: Kapua i sprzymierzeńcy z Kampanii żywią Hannibala, a Rzym unika drugich Kann i uderza w drogi, gospodarstwa i lojalność. Ufortyfikuj punicką dzielnicę zaopatrzeniową i złam wszystkie trzy zgrane natarcia — dzielnica nie jest utrzymana, dopóki ostatnia kolumna konsularna nie legnie na ulicach.</translation>
     </message>
     <message>
-        <source>216 BC: the consuls mass Rome&apos;s greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the principal camp, the reserve camp, and the allied camp across the river road.</source>
-        <translation>216 p.n.e.: konsulowie gromadzą nad Aufidusem największą armię polową Rzymu. Ustąp punickim środkiem zgodnie z planem, wygraj oba skrzydła jazdy, zamknij podwójne okrążenie, a potem zdobądź obóz główny, obóz odwodowy i obóz sprzymierzeńców przy drodze za rzeką.</translation>
-    </message>
-    <message>
-        <source>217 BC: Flaminius pursues along the northern shore of Lake Trasimene. Mist closes the road between lake and wooded height — and it will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</source>
-        <translation>217 p.n.e.: Flaminiusz idzie w pościg wzdłuż północnego brzegu Jeziora Trazymeńskiego. Mgła zamyka drogę między jeziorem a zalesionym wzgórzem — i nie utrzyma się długo. Uderz na całą długość kolumny i zajmij oba posterunki polowe w ciągu dwudziestu minut, zanim powietrze się przejaśni i kohorta wyniesie wieść z kotliny.</translation>
-    </message>
-    <message>
-        <source>218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line and break all three crossings. You need not take his camp — you need only be standing when the river has finished with him.</source>
-        <translation>218 p.n.e., zima: Semproniusz Longus łyka przynętę i pędzi swą głodną armię przez lodowatą Trebię. Utrzymaj południową linię i złam wszystkie trzy przeprawy. Nie musisz zdobywać jego obozu — musisz tylko stać, gdy rzeka skończy z nim swoje.</translation>
-    </message>
-    <message>
         <source>218 BC: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, baggage animals, and elephants. The pass cannot be taken by the sword alone — it must be paid for in timber, stone and iron. Set your builders to the slopes while the mountain peoples contest every switchback; do not follow the grave-lights into the snow.</source>
         <translation>218 p.n.e.: Hannibal skręca znad Rodanu w Alpy z piechotą, jazdą, jucznymi zwierzętami i słoniami. Przełęczy nie zdobędzie sam miecz — trzeba za nią zapłacić drewnem, kamieniem i żelazem. Poślij budowniczych na stoki, gdy górskie ludy bronią każdego zakrętu; nie idź za grobowymi światłami w śnieg.</translation>
-    </message>
-    <message>
-        <source>218 BC: near the Ticinus, Scipio&apos;s reconnaissance force tests Hannibal&apos;s cavalry. Win the mounted engagement, cut the bridge road, and overrun both Roman camps before their scouts carry a clean account back to the consul.</source>
-        <translation>218 p.n.e.: nad Ticinusem siły rozpoznawcze Scypiona wystawiają na próbę jazdę Hannibala. Wygraj starcie konne, przetnij drogę mostową i rozbij oba obozy rzymskie, zanim ich zwiadowcy zaniosą konsulowi rzetelną relację.</translation>
     </message>
     <message>
         <source>218 BC: the Rhône must be secured faster than Publius Cornelius Scipio can bring his army from Massalia. In this altered campaign, Roman advance posts hold the eastern approaches. Cross by ford, pontoon, or wooded detour and seize their river camps.</source>
@@ -756,20 +740,12 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <translation>Dowodź armią kartagińską Hannibala od inwazji alpejskiej w 218 p.n.e. po Zamę w 202 p.n.e. Rozbijaj rzymskie obozy, zdobywaj ufortyfikowane miasta, chroń gospodarki sprzymierzeńców i przetrwaj odpowiedź legionów Republiki, gdy Żelazny Grobowiec patrzy z dróg starszych niż oba imperia.</translation>
     </message>
     <message>
-        <source>Flaminius and much of his army are lost beside the lake. Rome names Fabius dictator. In the drowned reeds, an Iron Sepulcher altar has fed well without choosing a side.</source>
-        <translation>Flaminiusz i większość jego armii giną nad jeziorem. Rzym mianuje Fabiusza dyktatorem. W zatopionych trzcinach ołtarz Żelaznego Grobowca najadł się do syta, nie wybierając strony.</translation>
-    </message>
-    <message>
         <source>The Barcid Road</source>
         <translation>Droga Barkidów</translation>
     </message>
     <message>
         <source>The Roman army is destroyed and the camps are taken, yet Rome refuses negotiation. So many dead lie on the plain that the Sepulcher&apos;s iron bells sound beneath the earth for seven nights.</source>
         <translation>Armia rzymska jest zniszczona, obozy zdobyte, a jednak Rzym odmawia rokowań. Na równinie leży tylu zabitych, że żelazne dzwony Grobowca biją pod ziemią przez siedem nocy.</translation>
-    </message>
-    <message>
-        <source>The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale riders still haunt the abandoned ford.</source>
-        <translation>Rzymska zasłona pęka, a rannego Scypiona wynoszą z pola. Insubrowie widzą, że Kartagina potrafi pokonać Rzym na italskiej ziemi — lecz przy opuszczonym brodzie wciąż straszą bladzi jeźdźcy.</translation>
     </message>
     <message>
         <source>The column reaches the plain of the Po diminished but unbroken. Italy lies below, and fires answer from Gallic settlements. Behind you, the sealed shrine in the pass begins counting the dead.</source>
@@ -786,6 +762,30 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     <message>
         <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
         <translation>Ocaleni uciekają ku Placentii przez deszcz ze śniegiem i błoto. Rzymskie namioty, zboże i broń zostają zdobyte; ciała pod lodem podnoszą się tylko wtedy, gdy nikt nie patrzy.</translation>
+    </message>
+    <message>
+        <source>216 BC: the consuls mass Rome&apos;s greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the allied camp to the south, Varro&apos;s town behind the line and the reserve camp across the river.</source>
+        <translation>216 p.n.e.: konsulowie gromadzą nad Aufidusem największą armię polową Rzymu. Oddaj punickie centrum celowo, wygraj oba skrzydła jazdy, zamknij podwójne okrążenie, a potem zdobądź obóz sprzymierzeńców na południu, miasto Warrona za linią i obóz odwodowy za rzeką.</translation>
+    </message>
+    <message>
+        <source>217 BC: Flaminius pursues along the shore road of Lake Trasimene. Mist closes the road between lake and wooded height — and it will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</source>
+        <translation>217 p.n.e.: Flaminiusz ściga wzdłuż nadbrzeżnej drogi nad Jeziorem Trazymeńskim. Mgła zamyka drogę między jeziorem a zalesionym wzgórzem — i nie utrzyma się długo. Uderz na całej długości kolumny i w ciągu dwudziestu minut zajmij oba posterunki polowe, zanim powietrze się przejaśni, a jakaś kohorta wyniesie wieść z kotliny.</translation>
+    </message>
+    <message>
+        <source>218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line, break all three crossings, then ride down the officers who sent them. You need not take his camp — you need only be standing when the river has finished with him.</source>
+        <translation>218 p.n.e., zima: Semproniusz Longus połyka przynętę i pędzi swoją głodną armię przez lodowatą Trebię. Utrzymaj południową linię, złam wszystkie trzy przeprawy, a potem dopadnij oficerów, którzy je wysłali. Nie musisz zdobywać jego obozu — wystarczy, że będziesz jeszcze stał, gdy rzeka z nim skończy.</translation>
+    </message>
+    <message>
+        <source>218 BC: near the Ticinus, Scipio&apos;s reconnaissance force tests Hannibal&apos;s cavalry. Win the mounted engagement, cut the bridge road, and overrun both Roman camps before Scipio can pull his screen back across the river.</source>
+        <translation>218 p.n.e.: nad Ticinusem oddział rozpoznawczy Scypiona sprawdza jazdę Hannibala. Wygraj starcie konnicy, przetnij drogę mostową i zajmij oba rzymskie obozy, zanim Scypion zdoła wycofać swoją osłonę za rzekę.</translation>
+    </message>
+    <message>
+        <source>Flaminius and fifteen thousand are lost beside the lake; next morning Maharbal&apos;s horse rounds up the six thousand who broke through the van. Rome names Fabius dictator. Past the eastern stream, an Iron Sepulcher altar has fed well without choosing a side.</source>
+        <translation>Flaminiusz i piętnaście tysięcy giną nad jeziorem; nazajutrz jazda Maharbala spędza sześć tysięcy, którzy przebili się przez straż przednią. Rzym ogłasza Fabiusza dyktatorem. Za wschodnim strumieniem ołtarz Żelaznego Grobowca nasycił się do syta, nie opowiadając się po żadnej stronie.</translation>
+    </message>
+    <message>
+        <source>The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale bowmen still haunt the abandoned ford.</source>
+        <translation>Rzymska osłona pęka, a Scypiona znoszą z pola rannego. Insubrowie widzą, że Kartagina może pokonać Rzym na italskiej ziemi — lecz nad porzuconym brodem wciąż straszą bladzi łucznicy.</translation>
     </message>
 </context>
 <context>
@@ -6995,32 +6995,12 @@ by zobaczyć podgląd</translation>
         <translation>Nowy sztandar w dolinie, a pod nim nikt, kto trzymał włócznię więcej niż dwa razy. Moja strażnica ma rozkaz pójść i ci się przyjrzeć. Postaraj się jeszcze stać, gdy dotrą; wtedy raport będzie wart pisania.</translation>
     </message>
     <message>
-        <source>ASSAULT I: infantry from north and south; cavalry raiders and engineers on the eastern consular road.</source>
-        <translation>NATARCIE I: piechota z północy i południa; jazda łupieżcza i saperzy na wschodniej drodze konsularnej.</translation>
-    </message>
-    <message>
-        <source>ASSAULT II: the Roman horns answer one another. Rotate the reserve before all three roads close.</source>
-        <translation>NATARCIE II: rzymskie rogi odpowiadają sobie nawzajem. Przerzuć odwód, zanim zamkną się wszystkie trzy drogi.</translation>
-    </message>
-    <message>
-        <source>ASSAULT III: siege engines and veteran cohorts. Hold every gate until the twentieth minute.</source>
-        <translation>NATARCIE III: machiny oblężnicze i kohorty weteranów. Utrzymaj każdą bramę do dwudziestej minuty.</translation>
-    </message>
-    <message>
-        <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand in the same field as you.</source>
-        <translation>A więc Afryka, i my dwaj, i żadnej rzeki, za którą można stanąć. Zmierzyłem twoje słonie i mam twoich Numidyjczyków. Cokolwiek zamierzasz, zrób to tam, gdzie to zobaczę. Czekałem szesnaście lat, by stanąć z tobą na jednym polu.</translation>
-    </message>
-    <message>
         <source>After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</source>
         <translation>Po Kannach Rzym odmawia bitwy, jakiej chce Hannibal. Republika naciska zamiast tego na każdą drogę, sprzymierzeńca, spichlerz i miasto w murach. Pod sadami groby Żelaznego Grobowca sprawiają, że nawet udana obrona wydaje się tymczasowa.</translation>
     </message>
     <message>
         <source>An assault walks toward your camp but turns for whatever it can see. Bait it with something visible and it will take the ground you chose instead of the ground it wanted.</source>
         <translation>Natarcie idzie ku twojemu obozowi, ale skręca ku wszystkiemu, co zobaczy. Zwab je czymś widocznym, a zajmie grunt, który wybrałeś, zamiast tego, którego chciało.</translation>
-    </message>
-    <message>
-        <source>Another Roman wave is flanking from the southeast. Rotate quickly.</source>
-        <translation>Kolejna rzymska fala obchodzi od południowego wschodu. Przerzuć siły szybko.</translation>
     </message>
     <message>
         <source>Battle of Cannae</source>
@@ -7055,10 +7035,6 @@ by zobaczyć podgląd</translation>
         <translation>Złam wszystkie trzy rzymskie fazy natarcia. Dzielnica trzyma, gdy ostatnia kolumna konsularna legnie martwa na ulicach.</translation>
     </message>
     <message>
-        <source>Break the chiefs contesting the descent.</source>
-        <translation>Złam wodzów broniących zejścia.</translation>
-    </message>
-    <message>
         <source>Break the consular line at its centre.</source>
         <translation>Przełam linię konsularną w jej środku.</translation>
     </message>
@@ -7073,10 +7049,6 @@ by zobaczyć podgląd</translation>
     <message>
         <source>Break the three crossings</source>
         <translation>Złam trzy przeprawy</translation>
-    </message>
-    <message>
-        <source>Break three Roman columns before the survivors find the ford again.</source>
-        <translation>Złam trzy rzymskie kolumny, zanim ocaleni znów znajdą bród.</translation>
     </message>
     <message>
         <source>Bring the column to the first pass</source>
@@ -7095,10 +7067,6 @@ by zobaczyć podgląd</translation>
         <translation>Jazda dociera tam pierwsza; utrzymaj dziedziniec, aż zmieni się sztandar.</translation>
     </message>
     <message>
-        <source>Clear the pass before the mountain closes it. Every hour lost is more men fed to the cold.</source>
-        <translation>Oczyść przełęcz, zanim góra ją zamknie. Każda stracona godzina to kolejni ludzie skarmieni mrozowi.</translation>
-    </message>
-    <message>
         <source>Close the encirclement on the Aufidus camp to the north.</source>
         <translation>Zamknij okrążenie na obozie nad Aufidusem na północy.</translation>
     </message>
@@ -7109,14 +7077,6 @@ by zobaczyć podgląd</translation>
     <message>
         <source>Cold water and an early start, and my colleague is very pleased with both. He has the men in the river before their porridge. I said what I thought and was overruled, so I shall stand here and watch your ambush do its arithmetic.</source>
         <translation>Zimna woda i wczesna pobudka, a mój kolega jest zachwycony jednym i drugim. Ma ludzi w rzece, zanim zjedli owsiankę. Powiedziałem, co myślę, i mnie przegłosowano, więc będę tu stał i patrzył, jak twoja zasadzka odrabia swoje rachunki.</translation>
-    </message>
-    <message>
-        <source>Counterattack now. Break them while they are split by the river.</source>
-        <translation>Kontratakuj teraz. Złam ich, póki rozdziela ich rzeka.</translation>
-    </message>
-    <message>
-        <source>Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade.</source>
-        <translation>Przepraw się, zanim rzymscy gońcy dotrą do swojej załogi. Każda sekunda czekania karmi ostrze.</translation>
     </message>
     <message>
         <source>Cross the Rhône by one of several prepared routes, sever the eastern supply road, and capture two Roman advance camps before Scipio reaches the river.</source>
@@ -7133,10 +7093,6 @@ by zobaczyć podgląd</translation>
     <message>
         <source>Crush all three Roman camps and seal the iron tomb shut. No escape.</source>
         <translation>Zmiażdż wszystkie trzy obozy rzymskie i zapieczętuj żelazny grobowiec. Bez ucieczki.</translation>
-    </message>
-    <message>
-        <source>Crush both Roman breakout columns before they claw through the hillside.</source>
-        <translation>Zmiażdż obie rzymskie kolumny przebijające się, zanim wydrapią się przez zbocze.</translation>
     </message>
     <message>
         <source>Cut the stores for the road</source>
@@ -7195,14 +7151,6 @@ by zobaczyć podgląd</translation>
         <translation>Ostatnia bitwa w Afryce: stęp linię Scypiona, przetrwaj jazdę numidyjską i zajmij wszystkie cztery obozy rzymskie, łamiąc przy tym oba powstania umarłych.</translation>
     </message>
     <message>
-        <source>Final ridge ahead. Break the last camp to open the descent.</source>
-        <translation>Ostatni grzbiet przed tobą. Rozbij ostatni obóz, by otworzyć zejście.</translation>
-    </message>
-    <message>
-        <source>Fine. Sempronius rides to Rome to explain his morning. Half a legion walked out of that water and kept walking, and they will meet you again in the spring with dry feet and long memories.</source>
-        <translation>Dobrze. Semproniusz jedzie do Rzymu tłumaczyć swój poranek. Pół legionu wyszło z tej wody i szło dalej, i spotkają cię znowu na wiosnę, z suchymi stopami i długą pamięcią.</translation>
-    </message>
-    <message>
         <source>Finish the consular officers on the field.</source>
         <translation>Dobij oficerów konsularnych na polu.</translation>
     </message>
@@ -7221,14 +7169,6 @@ by zobaczyć podgląd</translation>
     <message>
         <source>Fix the Roman center in place. Keep both cavalry wings active.</source>
         <translation>Przykuj środek rzymski do miejsca. Utrzymaj oba skrzydła jazdy w ruchu.</translation>
-    </message>
-    <message>
-        <source>Flaminius must not leave the shore.</source>
-        <translation>Flaminiusz nie może opuścić brzegu.</translation>
-    </message>
-    <message>
-        <source>Follow the valley floor east; the mountain peoples hold the switchbacks above.</source>
-        <translation>Idź dnem doliny na wschód; ludy gór trzymają serpentyny powyżej.</translation>
     </message>
     <message>
         <source>Grave-lights move among the western orchards. The Iron Sepulcher is watching, but the legions remain the greater danger.</source>
@@ -7275,14 +7215,6 @@ by zobaczyć podgląd</translation>
         <translation>Utrzymaj linię rzeki i złam wszystkie trzy przeprawy rzymskie. Niech mróz i woda zrobią robotę, której Semproniusz nie zrobi.</translation>
     </message>
     <message>
-        <source>Hold the ruins. Force the Romans to fight on two grounds at once.</source>
-        <translation>Utrzymaj ruiny. Zmuś Rzymian do walki na dwóch gruntach naraz.</translation>
-    </message>
-    <message>
-        <source>Hold the southern bank through all three crossings. Sempronius spends his army on the ice; you have only to still be standing.</source>
-        <translation>Utrzymaj południowy brzeg przez wszystkie trzy przeprawy. Semproniusz przepuszcza armię na lodzie; tobie wystarczy jeszcze stać.</translation>
-    </message>
-    <message>
         <source>Hold the southern bank through every Roman assault phase.</source>
         <translation>Utrzymaj południowy brzeg przez każdą rzymską fazę natarcia.</translation>
     </message>
@@ -7319,10 +7251,6 @@ by zobaczyć podgląd</translation>
         <translation>Utrzymaj obie wieże. Strać jedną, a korytarz, którego pilnowała, będziesz musiał obchodzić sam.</translation>
     </message>
     <message>
-        <source>Kill Sempronius and his officers</source>
-        <translation>Zabij Semproniusza i jego oficerów</translation>
-    </message>
-    <message>
         <source>Kill every enemy commander. A nation dies with the man who leads it: its camps fall neutral, its works come down and its troops leave the field.</source>
         <translation>Zabij każdego dowódcę wroga. Naród umiera wraz z człowiekiem, który go prowadzi: jego obozy stają się neutralne, jego umocnienia padają, a wojska schodzą z pola.</translation>
     </message>
@@ -7337,10 +7265,6 @@ by zobaczyć podgląd</translation>
     <message>
         <source>Kill the consular commanders</source>
         <translation>Zabij dowódców konsularnych</translation>
-    </message>
-    <message>
-        <source>Kill the mountain commanders</source>
-        <translation>Zabij dowódców górskich</translation>
     </message>
     <message>
         <source>Learn to command before Rome comes looking for you: select and move troops, drive off a scouting party, put builders to work on timber, stone and ore, raise a Home, recruit an army, break a Roman raid, and take the enemy camp.</source>
@@ -7379,10 +7303,6 @@ by zobaczyć podgląd</translation>
         <translation>Podprowadź armię do niższego obozu na przełęczy, zanim zamknie ją śnieg.</translation>
     </message>
     <message>
-        <source>Navigate through the maze of hills and valleys. Watch for enemy patrols!</source>
-        <translation>Przejdź przez labirynt wzgórz i dolin. Uważaj na patrole wroga!</translation>
-    </message>
-    <message>
         <source>No living formation remains to hold the gates.</source>
         <translation>Nie został żaden żywy szyk, który utrzymałby bramy.</translation>
     </message>
@@ -7393,10 +7313,6 @@ by zobaczyć podgląd</translation>
     <message>
         <source>Nothing on the shore road survives once both ends are held.</source>
         <translation>Nic na nadbrzeżnej drodze nie przeżyje, gdy oba jej końce są w twoich rękach.</translation>
-    </message>
-    <message>
-        <source>One minute. Spend the reserve; save the camp.</source>
-        <translation>Jedna minuta. Wydaj odwód; ocal obóz.</translation>
     </message>
     <message>
         <source>One officer, no line. The next column will not even slow down.</source>
@@ -7419,10 +7335,6 @@ by zobaczyć podgląd</translation>
         <translation>Zaopatrz kolumnę na zejście: pozyskaj z przełęczy drewno, kamień i żelazo, gdy górskie plemiona bronią każdego zakrętu.</translation>
     </message>
     <message>
-        <source>Raze every Roman post. Leave Scipio nothing to rally behind.</source>
-        <translation>Zrównaj z ziemią każdy posterunek rzymski. Nie zostaw Scypionowi niczego, wokół czego mógłby się zebrać.</translation>
-    </message>
-    <message>
         <source>Reach the Rhone crossing</source>
         <translation>Dotrzyj do przeprawy na Rodanie</translation>
     </message>
@@ -7435,10 +7347,6 @@ by zobaczyć podgląd</translation>
         <translation>Stratuj dowódców, gdy przeprawy się załamią.</translation>
     </message>
     <message>
-        <source>Roman cavalry is attempting a breakout from the south. Intercept them.</source>
-        <translation>Jazda rzymska próbuje przebić się od południa. Przechwyć ją.</translation>
-    </message>
-    <message>
         <source>Roman cavalry screens the field. Punch through before reserves arrive.</source>
         <translation>Jazda rzymska osłania pole. Przebij się, zanim nadejdą odwody.</translation>
     </message>
@@ -7447,16 +7355,8 @@ by zobaczyć podgląd</translation>
         <translation>Fale jazdy rzymskiej się nasilają. Zawal jedno skrzydło, zanim przybędzie straż tylna.</translation>
     </message>
     <message>
-        <source>Roman reinforcements are approaching from the eastern road.</source>
-        <translation>Posiłki rzymskie zbliżają się drogą od wschodu.</translation>
-    </message>
-    <message>
         <source>Roman reserves are entering from the northern camp. Close the pocket faster.</source>
         <translation>Odwody rzymskie wchodzą z obozu północnego. Zamykaj kocioł szybciej.</translation>
-    </message>
-    <message>
-        <source>Roman reserves are moving from the western bank.</source>
-        <translation>Odwody rzymskie ruszają z zachodniego brzegu.</translation>
     </message>
     <message>
         <source>Scipio extends the line. Keep your center steady and protect elephants from isolation.</source>
@@ -7465,18 +7365,6 @@ by zobaczyć podgląd</translation>
     <message>
         <source>Scipio inherits any crossing you leave behind.</source>
         <translation>Scypion odziedziczy każdą przeprawę, którą zostawisz.</translation>
-    </message>
-    <message>
-        <source>Seal the road. Let no scout cross the Ticino alive.</source>
-        <translation>Zapieczętuj drogę. Niech żaden zwiadowca nie przejdzie Ticinusa żywy.</translation>
-    </message>
-    <message>
-        <source>Second pass defenders are reinforcing. Keep the column moving.</source>
-        <translation>Obrońcy drugiej przełęczy dostają wsparcie. Nie zatrzymuj kolumny.</translation>
-    </message>
-    <message>
-        <source>Second-wave Roman cavalry is maneuvering for your rear. Rebalance your flanks.</source>
-        <translation>Jazda rzymska drugiej fali manewruje na twoje tyły. Wyrównaj skrzydła.</translation>
     </message>
     <message>
         <source>Seize Masinissa&apos;s camp to finish the four.</source>
@@ -7515,14 +7403,6 @@ by zobaczyć podgląd</translation>
         <translation>Zajmij drugi obóz na wschodnim krańcu jeziora.</translation>
     </message>
     <message>
-        <source>Seize the two river forts. Leave no crossing for Scipio&apos;s army to inherit.</source>
-        <translation>Zajmij oba forty nad rzeką. Nie zostaw armii Scypiona żadnej przeprawy w spadku.</translation>
-    </message>
-    <message>
-        <source>Sempronius spends his army on the ice; you only have to still be standing.</source>
-        <translation>Semproniusz przepuszcza armię na lodzie; tobie wystarczy jeszcze stać.</translation>
-    </message>
-    <message>
         <source>Set builders on the slopes; the pass is paid for in materials, not blood.</source>
         <translation>Poślij budowniczych na stoki; za przełęcz płaci się materiałami, nie krwią.</translation>
     </message>
@@ -7559,10 +7439,6 @@ by zobaczyć podgląd</translation>
         <translation>Trzymaj się. Ostatni żołnierz w pojedynkę nie jest siłą — jest ofiarą.</translation>
     </message>
     <message>
-        <source>Strike now. Close the western route and split their line.</source>
-        <translation>Uderz teraz. Zamknij zachodnią trasę i rozłam ich linię.</translation>
-    </message>
-    <message>
         <source>Supply is a target - and it cuts both ways. Your market and your homes are what the Romans are actually marching at, and their siege camp keeps its own stockpile within reach of a raid.</source>
         <translation>Zaopatrzenie jest celem — i tnie w obie strony. To twój targ i twoje domy są tym, na co naprawdę maszerują Rzymianie, a ich obóz oblężniczy trzyma własny skład w zasięgu wypadu.</translation>
     </message>
@@ -7575,16 +7451,8 @@ by zobaczyć podgląd</translation>
         <translation>Zdobądź obóz numidyjski</translation>
     </message>
     <message>
-        <source>Take the Roman marching town at the head of the lakeside road.</source>
-        <translation>Zdobądź rzymskie miasto marszowe u wylotu drogi nad jeziorem.</translation>
-    </message>
-    <message>
         <source>Take the allied camp</source>
         <translation>Zdobądź obóz sprzymierzeńców</translation>
-    </message>
-    <message>
-        <source>Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog.</source>
-        <translation>Zdobądź obóz mostowy i wschodnią dzielnicę odwodów, zanim rzymscy zwiadowcy znikną we mgle.</translation>
     </message>
     <message>
         <source>Take the consular town</source>
@@ -7623,10 +7491,6 @@ by zobaczyć podgląd</translation>
         <translation>Zdobądź obóz nadbrzeżny</translation>
     </message>
     <message>
-        <source>Taking the rear first denies the cavalry a place to rally.</source>
-        <translation>Zdobycie tyłów najpierw odbiera jeździe miejsce zbiórki.</translation>
-    </message>
-    <message>
         <source>The Campanian Vigil</source>
         <translation>Kampańska warta</translation>
     </message>
@@ -7637,10 +7501,6 @@ by zobaczyć podgląd</translation>
     <message>
         <source>The Roman column walks into a geographical trap and is destroyed by converging attacks while the lakeside Sepulcher altar remains an optional horror.</source>
         <translation>Rzymska kolumna wchodzi w pułapkę terenu i zostaje zniszczona zbieżnymi uderzeniami, a ołtarz Grobowca nad jeziorem pozostaje opcjonalną grozą.</translation>
-    </message>
-    <message>
-        <source>The Roman villages are heavily defended. Coordinate your attacks!</source>
-        <translation>Wioski rzymskie są mocno bronione. Zgraj swoje uderzenia!</translation>
     </message>
     <message>
         <source>The Romans are baited into the winter river and punished by Mago&apos;s concealed force, then the defense becomes an assault on a complete winter camp.</source>
@@ -7679,10 +7539,6 @@ by zobaczyć podgląd</translation>
         <translation>Przeprawa to ruchoma walka z terenem, miejscowym oporem i wpływami Rzymu. Grobowe światła pozostają niebezpieczną ścieżką poboczną, a nie głównym wrogiem kampanii.</translation>
     </message>
     <message>
-        <source>The dead of the Iron Sepulcher still contest the field; keep a reserve.</source>
-        <translation>Umarli z Żelaznego Grobowca wciąż walczą o pole; trzymaj odwód.</translation>
-    </message>
-    <message>
         <source>The final confrontation is Carthage against three coordinated Roman commands, until an Iron Sepulcher host attacks from the battlefield&apos;s neglected flank.</source>
         <translation>Ostateczne starcie to Kartagina przeciw trzem zgranym dowództwom rzymskim — dopóki zastęp Żelaznego Grobowca nie uderzy z zaniedbanego skrzydła pola bitwy.</translation>
     </message>
@@ -7693,10 +7549,6 @@ by zobaczyć podgląd</translation>
     <message>
         <source>The lights are out and the ground is quiet. Count them twice and burn what will burn. Whatever was in there stood here before Rome and will stand here after it. Tonight it simply has other business.</source>
         <translation>Światła zgasły, a ziemia jest cicha. Przelicz ich dwa razy i spal, co się da spalić. Cokolwiek tam było, stało tu przed Rzymem i będzie stało po nim. Dziś w nocy ma po prostu inne sprawy.</translation>
-    </message>
-    <message>
-        <source>The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar on the shore is not particular about whose it is.</source>
-        <translation>Mgła podniosła się dla ciebie odrobinę za wcześnie. Bywa. Jezioro zatrzyma to, co mu dano, a to, co jest pod ołtarzem na brzegu, nie wybrzydza, czyje to.</translation>
     </message>
     <message>
         <source>The officer of the detail falls. Nobody else here can sign for the levy.</source>
@@ -7727,20 +7579,12 @@ by zobaczyć podgląd</translation>
         <translation>Rzeka płynie z północy na południe przez środek doliny; najbliższa przeprawa leży dokładnie na wschód od obozu.</translation>
     </message>
     <message>
-        <source>The road runs north-west along the shore; strike the head of the column first.</source>
-        <translation>Droga biegnie na północny zachód wzdłuż brzegu; uderz najpierw w czoło kolumny.</translation>
-    </message>
-    <message>
         <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.</source>
         <translation>A więc zwiadowcy nie wracają. Cóż — każdy gdzieś zaczyna, a ty zacząłeś od zabicia jedenastu ludzi, którzy spodziewali się obiadu. Następnym razem Rzym przyśle kogoś, kto liczy.</translation>
     </message>
     <message>
         <source>The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here.</source>
         <translation>Świątynie, obok których przechodziłeś przez całą kampanię, nigdy nie były dekoracją. Zama czyta wstecz każdą mapę za sobą — a Grobowiec nie ma dowódcy do zabicia, więc jedyna zasada, która służyła ci od Trazymenu, jest tą jedną, która tu nie zadziała.</translation>
-    </message>
-    <message>
-        <source>The siege works stand to the east of the quarter.</source>
-        <translation>Prace oblężnicze stoją na wschód od dzielnicy.</translation>
     </message>
     <message>
         <source>The spur splits them for us, which is the only kindness this ground offers. Cart gate west, goat path east, and they only meet where we are standing. You cannot hold both mouths. Pick one, hold it, and move when the horns tell you to.</source>
@@ -7779,14 +7623,6 @@ by zobaczyć podgląd</translation>
         <translation>Znowu wstają. Nie patrz im w twarze; niektóre rozpoznasz. Cofnij się na drogę, idź dalej i nie zatrzymuj się, by cokolwiek pogrzebać. Tu nic nie zostaje pogrzebane.</translation>
     </message>
     <message>
-        <source>They tell me you have taken an army into the Alps in October, with elephants. I have stopped chasing you. The mountain is a more thorough officer than I am and it does not require pay.</source>
-        <translation>Mówią mi, że wprowadziłeś armię w Alpy w październiku, ze słoniami. Przestałem cię ścigać. Góra jest sumienniejszym oficerem niż ja i nie żąda żołdu.</translation>
-    </message>
-    <message>
-        <source>Three Roman columns have entered the consular roads. The first coordinated assault arrives at 17:00.</source>
-        <translation>Trzy rzymskie kolumny weszły na drogi konsularne. Pierwsze zgrane natarcie nadejdzie o 17:00.</translation>
-    </message>
-    <message>
         <source>Timber for the sledges, stone for the roadbed, iron for shoes and axles.</source>
         <translation>Drewno na sanie, kamień na podkład drogi, żelazo na okucia i osie.</translation>
     </message>
@@ -7805,10 +7641,6 @@ by zobaczyć podgląd</translation>
     <message>
         <source>Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap.</source>
         <translation>Dwadzieścia minut, zanim mgła się podniesie. Jeśli kohorta wyjdzie z kotliny, Rzym pozna kształt pułapki.</translation>
-    </message>
-    <message>
-        <source>Two bridges cross the Rhône. Choose your path wisely - you may need both routes!</source>
-        <translation>Rodan przecinają dwa mosty. Wybierz drogę mądrze — możesz potrzebować obu tras!</translation>
     </message>
     <message>
         <source>With the river camp taken there is nowhere left for the legions to reform.</source>
@@ -7865,14 +7697,6 @@ by zobaczyć podgląd</translation>
     <message>
         <source>Hannibal dies in the snow. Then the elephants were for nothing, and so was the road. History will find that very tidy.</source>
         <translation>Hannibal ginie w śniegu. Wtedy słonie były na nic, i droga także. Historia uzna to za bardzo schludne.</translation>
-    </message>
-    <message>
-        <source>Hannibal falls at the Rhone. Then Rome never sees the elephants, and I never see Cannae. I shall spend the rest of my life not knowing what I was spared.</source>
-        <translation>Hannibal pada nad Rodanem. Wtedy Rzym nigdy nie zobaczy słoni, a ja nigdy nie zobaczę Kann. Do końca życia nie będę wiedział, czego mi oszczędzono.</translation>
-    </message>
-    <message>
-        <source>Hannibal falls in Campania, among the orchards, in a war he did not choose. There is a kind of mercy in that, and I did not intend it.</source>
-        <translation>Hannibal pada w Kampanii, wśród sadów, w wojnie, której nie wybrał. Jest w tym pewna łaska, a ja jej nie zamierzałem.</translation>
     </message>
     <message>
         <source>Hannibal has fallen at Zama. I wanted to meet him after, and ask him about Cannae. I shall have to ask the ground instead.</source>
@@ -7979,10 +7803,6 @@ by zobaczyć podgląd</translation>
         <translation>Kolumna jest na drodze nad jeziorem. We mgle, w wąwozie, w pośpiechu. Każde słowo tego zdania to błąd i wszystkie należą do Flaminiusza.</translation>
     </message>
     <message>
-        <source>The final pass is nearly cleared. Whatever comes down the far side, I shall be in Italy waiting for it with a great many more men than this.</source>
-        <translation>Ostatnia przełęcz jest prawie oczyszczona. Cokolwiek zejdzie po drugiej stronie, będę czekał w Italii ze znacznie liczniejszym wojskiem niż to.</translation>
-    </message>
-    <message>
         <source>The high pass is sending everything it has. They have been paid in Roman silver to hold that road, and mountain men earn their silver.</source>
         <translation>Wysoka przełęcz wysyła wszystko, co ma. Zapłacono im rzymskim srebrem za trzymanie tej drogi, a górale zarabiają na swoje srebro.</translation>
     </message>
@@ -8015,20 +7835,8 @@ by zobaczyć podgląd</translation>
         <translation>Niższy obóz na przełęczy jest twój. Trzymaj go ciepło. Plemiona zechcą go z powrotem na wiosnę, a mnie nie będzie, by je powstrzymać.</translation>
     </message>
     <message>
-        <source>The main line is advancing. No trumpets, no tricks, no gaps between the maniples for your elephants to find. I learned. You taught me.</source>
-        <translation>Główna linia naciera. Bez trąb, bez sztuczek, bez luk między manipułami, które znalazłyby twoje słonie. Nauczyłem się. Ty mnie nauczyłeś.</translation>
-    </message>
-    <message>
         <source>The northern camp is gone. Fine. It was a camp. Scipio&apos;s line still stands, and that is the only thing on this plain that matters.</source>
         <translation>Północny obóz przepadł. Trudno. To był obóz. Linia Scypiona wciąż stoi, a to jedyna rzecz na tej równinie, która się liczy.</translation>
-    </message>
-    <message>
-        <source>The northern legion is coming down through the orchards. Slowly. I ordered slowly. Every tree they pass is one you will not harvest.</source>
-        <translation>Północny legion schodzi przez sady. Powoli. Kazałem powoli. Każde drzewo, które mijają, to jedno, którego nie zbierzesz.</translation>
-    </message>
-    <message>
-        <source>The northern legion is spent. I have others. I have always had others. That is what the delaying was for.</source>
-        <translation>Północny legion jest zużyty. Mam inne. Zawsze miałem inne. Po to była zwłoka.</translation>
     </message>
     <message>
         <source>The patrols are nearly finished. So be it. I shall take the fleet back to Italy and wait for you there with the rest of the Republic.</source>
@@ -8045,10 +7853,6 @@ by zobaczyć podgląd</translation>
     <message>
         <source>The reserve is moving, and moving fast. I do not hold men back for the look of the thing.</source>
         <translation>Odwód rusza i to szybko. Nie trzymam ludzi w tyle dla pozorów.</translation>
-    </message>
-    <message>
-        <source>The screen is coming across the flats. Velites, cavalry, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
-        <translation>Osłona idzie przez równinę. Welici, jazda, zwykły układ. Postaraj się stać spokojnie; raporty wychodzą wtedy znacznie schludniejsze.</translation>
     </message>
     <message>
         <source>The second pass. You are buying road with men and paying in snow. I have never seen an army spend itself so willingly on scenery.</source>
@@ -8247,10 +8051,6 @@ by zobaczyć podgląd</translation>
         <translation>Nie zakryjesz każdej bramy. Pilnuj zapowiedzi ataku i przerzucaj siły po liniach wewnętrznych.</translation>
     </message>
     <message>
-        <source>Break both risings of the dead at the sepulcher ruins by the south-western crossing. The guardians will not leave their ground; you must go to them.</source>
-        <translation>Rozbij oba powstania umarłych przy ruinach grobowca u południowo-zachodniej przeprawy. Strażnicy nie opuszczą swojej ziemi; musisz do nich pójść.</translation>
-    </message>
-    <message>
         <source>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</source>
         <translation>Przepędź umarłych z kapliczki, a potem zatknij na niej sztandar. Posyp solą ziemię, na której stali.</translation>
     </message>
@@ -8265,6 +8065,462 @@ by zobaczyć podgląd</translation>
     <message>
         <source>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</source>
         <translation>Oto oni. Nie patrzcie na twarze. Łucznicy, strzelać; tarcze, zewrzeć szyk; i nikt niczego nie goni z powrotem w tę mgłę.</translation>
+    </message>
+    <message>
+        <source>Both risings of the dead at the south-western ruins must also fall before the war ends.</source>
+        <translation>Oba powstania zmarłych przy południowo-zachodnich ruinach także muszą upaść, zanim wojna się skończy.</translation>
+    </message>
+    <message>
+        <source>Break both risings of the dead at the sepulcher ruins by the south-western crossing. The war does not end while they stand.</source>
+        <translation>Złam oba powstania zmarłych w ruinach grobowca przy południowo-zachodniej przeprawie. Wojna nie skończy się, dopóki one stoją.</translation>
+    </message>
+    <message>
+        <source>Break the barrow-guard south of the camp. The dead keep gold no Roman has counted.</source>
+        <translation>Rozbij straż kurhanu na południe od obozu. Zmarli strzegą złota, którego żaden Rzymianin nie policzył.</translation>
+    </message>
+    <message>
+        <source>Break the old grave west of your hill before the Romans count its dead as theirs.</source>
+        <translation>Rozbij stary grób na zachód od twojego wzgórza, zanim Rzymianie policzą jego zmarłych jako swoich.</translation>
+    </message>
+    <message>
+        <source>Break two Roman waves in the field.</source>
+        <translation>Rozbij dwie rzymskie fale w polu.</translation>
+    </message>
+    <message>
+        <source>Break two of the Roman columns on the shore road.</source>
+        <translation>Rozbij dwie rzymskie kolumny na nadbrzeżnej drodze.</translation>
+    </message>
+    <message>
+        <source>Clear the desert shrine north-west of your camp; its hoard pays for the push east.</source>
+        <translation>Oczyść pustynną kapliczkę na północny zachód od obozu; jej skarb opłaci natarcie na wschód.</translation>
+    </message>
+    <message>
+        <source>Eighty elephants, and he has cut a lane for every one. Hold the men of Italy back in the third line. They are the last answer I have.</source>
+        <translation>Osiemdziesiąt słoni, a on każdemu wyciął korytarz. Trzymaj ludzi z Italii w odwodzie, w trzeciej linii. To ostatnia odpowiedź, jaką mam.</translation>
+    </message>
+    <message>
+        <source>Fabius waits at the basin watch south of the road; Scipio holds the sanctuary above the eastern ford. Take them before the column turns on your camp.</source>
+        <translation>Fabiusz czeka na strażnicy w kotlinie na południe od drogi; Scypion trzyma sanktuarium nad wschodnim brodem. Rozbij ich, zanim kolumna zwróci się przeciw twojemu obozowi.</translation>
+    </message>
+    <message>
+        <source>Fine. Sempronius rides to Rome to explain his morning. Ten thousand of ours cut through your centre and walked on to Placentia, and they will meet you in the spring with dry feet and long memories.</source>
+        <translation>Dobrze. Semproniusz jedzie do Rzymu tłumaczyć się ze swojego poranka. Dziesięć tysięcy naszych przebiło się przez twoje centrum i poszło dalej do Placencji, a wiosną spotkają cię z suchymi stopami i długą pamięcią.</translation>
+    </message>
+    <message>
+        <source>Fresh Roman horse is coming up from the consular town and the allied camp. Keep your own cavalry between it and your centre.</source>
+        <translation>Świeża rzymska jazda nadciąga z miasta konsula i z obozu sprzymierzeńców. Trzymaj własną jazdę między nią a swoim centrum.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls at the Rhône. Then Rome never sees the elephants, and no one ever learns the name Cannae. I shall spend the rest of my life not knowing what I was spared.</source>
+        <translation>Hannibal pada nad Rodanem. Wtedy Rzym nigdy nie ujrzy słoni i nikt nigdy nie pozna nazwy Kanny. Resztę życia spędzę, nie wiedząc, czego mi oszczędzono.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls in Campania, among the orchards, in a war he began at Saguntum. There is a kind of mercy in that, and I did not intend it.</source>
+        <translation>Hannibal pada w Kampanii, wśród sadów, w wojnie, którą zaczął pod Saguntem. Jest w tym jakiś rodzaj łaski, a ja jej nie zamierzałem.</translation>
+    </message>
+    <message>
+        <source>Hanno&apos;s smoke is up on the far bank. Across, all of you - Scipio is three days behind and I intend to keep him there.</source>
+        <translation>Dym Hannona wznosi się na drugim brzegu. Na drugą stronę, wszyscy - Scypion jest trzy dni za nami i zamierzam go tam zatrzymać.</translation>
+    </message>
+    <message>
+        <source>He will not fight me, so he will starve me. Good. Every column he sends to the walls is a battle he swore he would not give.</source>
+        <translation>Nie chce ze mną walczyć, więc chce mnie zagłodzić. Dobrze. Każda kolumna, którą śle pod mury, to bitwa, której przysięgał nie wydawać.</translation>
+    </message>
+    <message>
+        <source>His ladders, his grain, his camp. Marcellus may walk back to Nola and explain.</source>
+        <translation>Jego drabiny, jego zboże, jego obóz. Marcellus może wrócić do Noli i się tłumaczyć.</translation>
+    </message>
+    <message>
+        <source>Hold the southern bank through all three crossings. Sempronius spends his army in the river; spend less of yours.</source>
+        <translation>Utrzymaj południowy brzeg przez wszystkie trzy przeprawy. Semproniusz trwoni armię w rzece; ty trwoń mniej swojej.</translation>
+    </message>
+    <message>
+        <source>It lies south-east across the wadi; its column marches late, so strike before it does.</source>
+        <translation>Leży na południowym wschodzie, za wadi; jego kolumna wyrusza późno, więc uderz, zanim to zrobi.</translation>
+    </message>
+    <message>
+        <source>Keep the column alive on the mountain for fifteen minutes. The pass belongs to whoever is still standing when the weather turns.</source>
+        <translation>Utrzymaj kolumnę przy życiu na górze przez piętnaście minut. Przełęcz należy do tego, kto jeszcze stoi, gdy pogoda się zmieni.</translation>
+    </message>
+    <message>
+        <source>Kill the Roman officers in the passes</source>
+        <translation>Zabij rzymskich oficerów na przełęczach</translation>
+    </message>
+    <message>
+        <source>Lake on their left, hills on their right, mist over both. Nobody moves until the whole column is inside.</source>
+        <translation>Jezioro po lewej, wzgórza po prawej, mgła nad jednym i drugim. Nikt się nie rusza, dopóki cała kolumna nie wejdzie do środka.</translation>
+    </message>
+    <message>
+        <source>Last column. Spend the reserve at the gate it chooses, not the one you fear.</source>
+        <translation>Ostatnia kolumna. Rzuć odwód pod bramę, którą ona wybierze, nie pod tę, której się boisz.</translation>
+    </message>
+    <message>
+        <source>Let him count. Numidians on the wings, the bridled horse in the centre, and nobody waits for the consul to finish his sentence.</source>
+        <translation>Niech liczy. Numidowie na skrzydłach, okiełznana jazda w centrum i nikt nie czeka, aż konsul skończy zdanie.</translation>
+    </message>
+    <message>
+        <source>Let the centre give. The Africans wait on the wings, Hasdrubal has the river. Eighty thousand men walk into a sack as easily as into a field.</source>
+        <translation>Niech centrum ustąpi. Afrykanie czekają na skrzydłach, Hazdrubal ma rzekę. Osiemdziesiąt tysięcy ludzi wejdzie w worek równie łatwo jak w pole.</translation>
+    </message>
+    <message>
+        <source>Masinissa has no one left to ride for. Turn the elephants on the centre.</source>
+        <translation>Masynissa nie ma już dla kogo jechać. Zwróćcie słonie na centrum.</translation>
+    </message>
+    <message>
+        <source>Not here. There is nothing behind this field but Carthage.</source>
+        <translation>Nie tutaj. Za tym polem nie ma nic prócz Kartaginy.</translation>
+    </message>
+    <message>
+        <source>Now, Mago. Out of the reeds and into their backs, and find me the men who sent them across.</source>
+        <translation>Teraz, Magonie. Z trzcin i w ich plecy, i znajdź mi ludzi, którzy ich przez nią posłali.</translation>
+    </message>
+    <message>
+        <source>One crossing broken. Nobody follows them into the water; the river is ours only while we stay out of it.</source>
+        <translation>Jedna przeprawa złamana. Nikt nie idzie za nimi do wody; rzeka jest nasza tylko, dopóki trzymamy się od niej z dala.</translation>
+    </message>
+    <message>
+        <source>Rome has paid the tribes and sent officers to hold them to the bargain. Kill the officers and the tribes go home.</source>
+        <translation>Rzym opłacił plemiona i przysłał oficerów, by pilnowali umowy. Zabij oficerów, a plemiona wrócą do domów.</translation>
+    </message>
+    <message>
+        <source>Scipio holds the forest sanctuary north-east of your camp; the reserve&apos;s officer waits at the bridge below his camp.</source>
+        <translation>Scypion trzyma leśne sanktuarium na północny wschód od twojego obozu; oficer odwodu czeka przy moście poniżej jego obozu.</translation>
+    </message>
+    <message>
+        <source>Scipio&apos;s reserve is crossing the bridge road from the east.</source>
+        <translation>Odwód Scypiona przekracza drogę mostową od wschodu.</translation>
+    </message>
+    <message>
+        <source>Seize the hill fort and the river town. Leave no crossing for Scipio&apos;s army to inherit.</source>
+        <translation>Zajmij warownię na wzgórzu i miasto nad rzeką. Nie zostaw armii Scypiona żadnej przeprawy w spadku.</translation>
+    </message>
+    <message>
+        <source>Six bridges span the Rhône, and Roman eyes watch the far end of every one. Pick a crossing and commit.</source>
+        <translation>Sześć mostów spina brzegi Rodanu, a na drugim końcu każdego czuwają rzymskie oczy. Wybierz przeprawę i idź na całość.</translation>
+    </message>
+    <message>
+        <source>Stay out of the water. Every Roman who wades it reaches you cold and slow.</source>
+        <translation>Trzymaj się z dala od wody. Każdy Rzymianin, który ją przebrodzi, dotrze do ciebie zziębnięty i powolny.</translation>
+    </message>
+    <message>
+        <source>Strike now. Take Fabius at the basin watch before the column finds your camp.</source>
+        <translation>Uderz teraz. Rozbij Fabiusza na strażnicy w kotlinie, zanim kolumna znajdzie twój obóz.</translation>
+    </message>
+    <message>
+        <source>Take a Roman barracks. The winter camp&apos;s grain is worth the ride.</source>
+        <translation>Zdobądź rzymskie koszary. Zboże z obozu zimowego jest warte tej jazdy.</translation>
+    </message>
+    <message>
+        <source>Take the Roman marching town at the western mouth of the lake road.</source>
+        <translation>Zdobądź rzymskie miasto marszowe u zachodniego wylotu drogi nad jeziorem.</translation>
+    </message>
+    <message>
+        <source>Take the consul&apos;s forward town and the reserve camp across the bridge road.</source>
+        <translation>Zdobądź wysunięte miasto konsula i obóz odwodowy za drogą mostową.</translation>
+    </message>
+    <message>
+        <source>That was the screen. Put the archers on the ridge before the reserve remembers it is there.</source>
+        <translation>To była osłona. Postaw łuczników na grani, zanim odwód sobie o niej przypomni.</translation>
+    </message>
+    <message>
+        <source>That was the van&apos;s road home. Maharbal will collect whoever is still walking in the morning.</source>
+        <translation>To była droga do domu dla straży przedniej. Maharbal rano zbierze tych, którzy jeszcze będą szli.</translation>
+    </message>
+    <message>
+        <source>The Rhône runs north to south through the valley. Roman pickets watch every approach on the near bank.</source>
+        <translation>Rodan płynie przez dolinę z północy na południe. Rzymskie czujki pilnują każdego podejścia na bliższym brzegu.</translation>
+    </message>
+    <message>
+        <source>The Roman van is cutting east along the shore road. Ride it down before it clears the basin.</source>
+        <translation>Rzymska straż przednia przebija się na wschód nadbrzeżną drogą. Dopadnij ją, zanim wydostanie się z kotliny.</translation>
+    </message>
+    <message>
+        <source>The Volturnus legion is coming down through the orchards. Slowly. I ordered slowly. Every tree they pass is one you will not harvest.</source>
+        <translation>Legion znad Wolturnu schodzi przez sady. Powoli. Rozkazałem powoli. Każde drzewo, które minie, to jedno, z którego nie zbierzesz plonu.</translation>
+    </message>
+    <message>
+        <source>The Volturnus legion is spent. I have others. I have always had others. That is what the delaying was for.</source>
+        <translation>Legion znad Wolturnu jest wyczerpany. Mam inne. Zawsze miałem inne. Po to było całe to zwlekanie.</translation>
+    </message>
+    <message>
+        <source>The allies have lost their consul. Turn that wing inward.</source>
+        <translation>Sprzymierzeńcy stracili konsula. Zawróć to skrzydło do środka.</translation>
+    </message>
+    <message>
+        <source>The column has lost its head. Take the town before anyone thinks to pick it up.</source>
+        <translation>Kolumna straciła głowę. Zdobądź miasto, zanim ktoś pomyśli, żeby ją podnieść.</translation>
+    </message>
+    <message>
+        <source>The descent garrison is marching up from the south-east. Hold the camp and keep the sledges loading.</source>
+        <translation>Załoga zejścia maszeruje z południowego wschodu. Utrzymaj obóz i niech sanie wciąż się ładują.</translation>
+    </message>
+    <message>
+        <source>The descent is nearly yours. I came up to shut this door and it would not shut. Very well - I shall wait at the Ticinus with a great many more men than this.</source>
+        <translation>Zejście jest prawie twoje. Przyszedłem zamknąć te drzwi, a nie dały się zamknąć. No cóż - poczekam nad Ticinusem ze znacznie większą liczbą ludzi niż ta.</translation>
+    </message>
+    <message>
+        <source>The fort is ours. Hold the gate - its barracks will give us the men the river took.</source>
+        <translation>Fort jest nasz. Utrzymaj bramę - jego koszary dadzą nam ludzi, których zabrała rzeka.</translation>
+    </message>
+    <message>
+        <source>The high pass fort is sending spears and bows down the southern track. Get the builders behind the palisade.</source>
+        <translation>Warownia na wysokiej przełęczy śle włócznie i łuki południowym szlakiem. Zabierz budowniczych za palisadę.</translation>
+    </message>
+    <message>
+        <source>The lower pass camp lies just south of your palisade. Roman-paid tribesmen hold it - go in together.</source>
+        <translation>Obóz na niższej przełęczy leży tuż na południe od twojej palisady. Trzymają go plemiona opłacone przez Rzym - wejdźcie razem.</translation>
+    </message>
+    <message>
+        <source>The main line is advancing, with lanes left open between the maniples. Send your elephants down them. My skirmishers are waiting at the far end.</source>
+        <translation>Główna linia naciera, z korytarzami zostawionymi między manipułami. Poślij w nie słonie. Moi harcownicy czekają na drugim końcu.</translation>
+    </message>
+    <message>
+        <source>The men have eaten and oiled their limbs by the fires, and Mago is in the stream bed with two thousand. Let the Romans come to us wet.</source>
+        <translation>Ludzie zjedli i natarli członki oliwą przy ogniskach, a Magon leży w korycie strumienia z dwoma tysiącami. Niech Rzymianie przyjdą do nas mokrzy.</translation>
+    </message>
+    <message>
+        <source>The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar past the eastern stream is not particular about whose it is.</source>
+        <translation>Mgła opadła dla ciebie trochę za wcześnie. Zdarza się. Jezioro zatrzyma to, co mu dano, a to coś pod ołtarzem za wschodnim strumieniem nie wybrzydza, czyje to jest.</translation>
+    </message>
+    <message>
+        <source>The road runs east along the lake. Shut its western mouth and the column has only one way left to go.</source>
+        <translation>Droga biegnie na wschód wzdłuż jeziora. Zamknij jej zachodni wylot, a kolumnie zostanie tylko jedna droga.</translation>
+    </message>
+    <message>
+        <source>The screen is coming across the flats. Spears in front, horse on the wings, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
+        <translation>Osłona nadchodzi przez równinę. Włócznie z przodu, jazda na skrzydłach, zwykły układ. Postaraj się, proszę, stać spokojnie; raporty są wtedy o wiele schludniejsze.</translation>
+    </message>
+    <message>
+        <source>The screen&apos;s cavalry comes again from the east. Rotate quickly.</source>
+        <translation>Jazda osłony znów nadciąga od wschodu. Szybko zmieniaj oddziały.</translation>
+    </message>
+    <message>
+        <source>Their centre has nowhere left to step back. Open the ring for no one.</source>
+        <translation>Ich centrum nie ma już dokąd się cofnąć. Nie otwieraj pierścienia dla nikogo.</translation>
+    </message>
+    <message>
+        <source>Their scouts have seen us. Good. Let them ride back and tell Scipio what they saw.</source>
+        <translation>Ich zwiadowcy nas zobaczyli. Dobrze. Niech wrócą i opowiedzą Scypionowi, co widzieli.</translation>
+    </message>
+    <message>
+        <source>They came down the slope, and on the slope they stay. Back to the timber.</source>
+        <translation>Zeszli po stoku i na stoku zostaną. Wracać do drewna.</translation>
+    </message>
+    <message>
+        <source>They tell me you have taken an army into the Alps in October, with elephants. I came round by sea to hold the far side. The mountain is a more thorough officer than I am, and it does not require pay.</source>
+        <translation>Mówią mi, że w październiku poprowadziłeś armię w Alpy, ze słoniami. Przypłynąłem morzem, by utrzymać drugą stronę. Góra jest dokładniejszym oficerem niż ja i nie żąda żołdu.</translation>
+    </message>
+    <message>
+        <source>Three Roman columns are on the roads: Fabius down the Volturnus, the allied wing from the south, Marcellus&apos;s siege column out of Nola to the east. The first assault reaches the walls within the minute.</source>
+        <translation>Trzy rzymskie kolumny są na drogach: Fabiusz w dół Wolturnu, skrzydło sprzymierzeńców od południa, kolumna oblężnicza Marcellusa z Noli na wschodzie. Pierwszy szturm dotrze do murów w ciągu minuty.</translation>
+    </message>
+    <message>
+        <source>Three men lead the siege: Fabius in the Volturnus camp to the north-west, the allied commander at the southern camp, Marcellus in the siege works to the east.</source>
+        <translation>Oblężeniem kieruje trzech ludzi: Fabiusz w obozie nad Wolturnem na północnym zachodzie, dowódca sprzymierzeńców w obozie południowym, Marcellus w robotach oblężniczych na wschodzie.</translation>
+    </message>
+    <message>
+        <source>Two camps hold the far bank: a hill fort to the north-east, a walled river town far to the south-east. Stand in their gate yards to take them.</source>
+        <translation>Dwa obozy trzymają drugi brzeg: warownia na wzgórzu na północnym wschodzie i otoczone murem miasto nad rzeką daleko na południowym wschodzie. Stań na ich dziedzińcach bramnych, by je zająć.</translation>
+    </message>
+    <message>
+        <source>We will either find a way or make one. Builders to the slopes - this road is cut before it is walked.</source>
+        <translation>Albo znajdziemy drogę, albo ją zbudujemy. Budowniczowie na stoki - tę drogę trzeba wyciąć, zanim się nią pójdzie.</translation>
+    </message>
+    <message>
+        <source>Descent garrison sortie</source>
+        <translation>Wypad załogi zejścia</translation>
+    </message>
+    <message>
+        <source>Everything they have left</source>
+        <translation>Wszystko, co im zostało</translation>
+    </message>
+    <message>
+        <source>Fabius&apos;s Volturnus legion</source>
+        <translation>Legion Fabiusza znad Wolturnu</translation>
+    </message>
+    <message>
+        <source>High-pass riders</source>
+        <translation>Jeźdźcy z górnej przełęczy</translation>
+    </message>
+    <message>
+        <source>High-pass skirmishers</source>
+        <translation>Harcownicy z górnej przełęczy</translation>
+    </message>
+    <message>
+        <source>Laelius&apos;s Italian horse</source>
+        <translation>Italska jazda Leliusza</translation>
+    </message>
+    <message>
+        <source>Lower-pass tribesmen</source>
+        <translation>Plemiona z dolnej przełęczy</translation>
+    </message>
+    <message>
+        <source>Lower-pass war band</source>
+        <translation>Wojownicy z dolnej przełęczy</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s Numidian horse</source>
+        <translation>Numidyjska jazda Masynissy</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s Numidians</source>
+        <translation>Numidowie Masynissy</translation>
+    </message>
+    <message>
+        <source>Riders in the pasture</source>
+        <translation>Jeźdźcy na pastwisku</translation>
+    </message>
+    <message>
+        <source>Roman raiding party</source>
+        <translation>Rzymski oddział łupieżczy</translation>
+    </message>
+    <message>
+        <source>Scipio&apos;s horse</source>
+        <translation>Jazda Scypiona</translation>
+    </message>
+    <message>
+        <source>Scipio&apos;s legions</source>
+        <translation>Legiony Scypiona</translation>
+    </message>
+    <message>
+        <source>Scipio&apos;s scouting horse</source>
+        <translation>Zwiad konny Scypiona</translation>
+    </message>
+    <message>
+        <source>Sempronius’ first crossing</source>
+        <translation>Pierwsza przeprawa Semproniusza</translation>
+    </message>
+    <message>
+        <source>The Roman-paid host</source>
+        <translation>Zastęp opłacony przez Rzym</translation>
+    </message>
+    <message>
+        <source>The allied foot</source>
+        <translation>Piechota sprzymierzeńców</translation>
+    </message>
+    <message>
+        <source>The allied horse</source>
+        <translation>Jazda sprzymierzeńców</translation>
+    </message>
+    <message>
+        <source>The allied wing</source>
+        <translation>Skrzydło sprzymierzeńców</translation>
+    </message>
+    <message>
+        <source>The bridge column</source>
+        <translation>Kolumna mostowa</translation>
+    </message>
+    <message>
+        <source>The column&apos;s rearguard</source>
+        <translation>Straż tylna kolumny</translation>
+    </message>
+    <message>
+        <source>The column&apos;s second line</source>
+        <translation>Druga linia kolumny</translation>
+    </message>
+    <message>
+        <source>The consul&apos;s screen</source>
+        <translation>Osłona konsula</translation>
+    </message>
+    <message>
+        <source>The consular horse</source>
+        <translation>Jazda konsularna</translation>
+    </message>
+    <message>
+        <source>The first column</source>
+        <translation>Pierwsza kolumna</translation>
+    </message>
+    <message>
+        <source>The fourth column</source>
+        <translation>Czwarta kolumna</translation>
+    </message>
+    <message>
+        <source>The landing at the quay</source>
+        <translation>Desant przy nabrzeżu</translation>
+    </message>
+    <message>
+        <source>The last column</source>
+        <translation>Ostatnia kolumna</translation>
+    </message>
+    <message>
+        <source>The last of the legions</source>
+        <translation>Ostatnie legiony</translation>
+    </message>
+    <message>
+        <source>The northern camp&apos;s cohorts</source>
+        <translation>Kohorty obozu północnego</translation>
+    </message>
+    <message>
+        <source>The northern camp&apos;s reserve</source>
+        <translation>Odwód obozu północnego</translation>
+    </message>
+    <message>
+        <source>The rear guard</source>
+        <translation>Straż tylna</translation>
+    </message>
+    <message>
+        <source>The reserve column</source>
+        <translation>Kolumna odwodowa</translation>
+    </message>
+    <message>
+        <source>The reserve&apos;s horse</source>
+        <translation>Jazda odwodu</translation>
+    </message>
+    <message>
+        <source>The reserve&apos;s second line</source>
+        <translation>Druga linia odwodu</translation>
+    </message>
+    <message>
+        <source>The reserve&apos;s vanguard</source>
+        <translation>Straż przednia odwodu</translation>
+    </message>
+    <message>
+        <source>The river reserve</source>
+        <translation>Odwód nad rzeką</translation>
+    </message>
+    <message>
+        <source>The second column</source>
+        <translation>Druga kolumna</translation>
+    </message>
+    <message>
+        <source>The second crossing</source>
+        <translation>Druga przeprawa</translation>
+    </message>
+    <message>
+        <source>The second reserve</source>
+        <translation>Drugi odwód</translation>
+    </message>
+    <message>
+        <source>The siege column</source>
+        <translation>Kolumna oblężnicza</translation>
+    </message>
+    <message>
+        <source>The third column</source>
+        <translation>Trzecia kolumna</translation>
+    </message>
+    <message>
+        <source>The van breaking out</source>
+        <translation>Wyrywająca się straż przednia</translation>
+    </message>
+    <message>
+        <source>The via militaris</source>
+        <translation>Via militaris</translation>
+    </message>
+    <message>
+        <source>The western reserve</source>
+        <translation>Zachodni odwód</translation>
+    </message>
+    <message>
+        <source>Two gates at once</source>
+        <translation>Dwie bramy naraz</translation>
+    </message>
+    <message>
+        <source>Varro&apos;s legions</source>
+        <translation>Legiony Warrona</translation>
+    </message>
+    <message>
+        <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand across a field from you with an army of my own.</source>
+        <translation>A więc Afryka, my dwaj i żadnej rzeki, za którą można by stanąć. Przejrzałem twoje słonie i mam twoich Numidów. Cokolwiek zamierzasz, zrób to tam, gdzie mogę to zobaczyć. Szesnaście lat czekałem, by stanąć naprzeciw ciebie przez pole z własną armią.</translation>
     </message>
 </context>
 <context>

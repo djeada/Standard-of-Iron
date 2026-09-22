@@ -39,8 +39,9 @@ using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Game::Session {
+class SelectionService;
 class SessionContext;
-}
+} // namespace Game::Session
 
 namespace Game::Systems {
 class CameraService;

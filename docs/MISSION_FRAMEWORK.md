@@ -448,6 +448,8 @@ A message can specify:
 
 The current trigger enum covers mission start/outcome, captures, commander defeat, attack/under-attack, first contact, heavy losses, near defeat, owner elimination, and wave incoming/cleared events.
 
+A line may be spoken by the player's own commander (in the campaign, `carthage_sword_commander` is Hannibal). The player's commander is kept out of the generic voice-bank roster, but `local_commander_speaker` binds authored lines to it, so they show with the ally styling and resolve `owner_id: "player"` roles against the player. A `wave_cleared` phase can span several owners and reports the owner of its last wave, so a Hannibal line on a cleared phase should filter on `final_wave` rather than `owner_id`.
+
 `commander_voices` controls generic commander-line behavior and mission-level trigger/line muting.
 
 ## Dialogue vs objective state

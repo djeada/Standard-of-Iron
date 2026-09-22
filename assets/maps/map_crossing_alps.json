@@ -6364,6 +6364,1414 @@
             "scale": 1.0,
             "rotation": 1.571,
             "dressing": "alps_gate_7"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 537.84,
+            "z": 566.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_descent_tent_lines"
+        },
+        {
+            "type": "tent",
+            "x": 546.2,
+            "z": 574.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "alps_descent_tent_lines"
+        },
+        {
+            "type": "tent",
+            "x": 553.8,
+            "z": 574.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "alps_descent_tent_lines"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 537.84,
+            "z": 574.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_descent_tent_lines"
+        },
+        {
+            "type": "pine_tree",
+            "x": 381.86,
+            "z": 290.0,
+            "scale": 1.18,
+            "rotation": 4.196,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 376.65,
+            "z": 284.58,
+            "scale": 1.04,
+            "rotation": 2.351,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 390.76,
+            "z": 285.72,
+            "scale": 1.13,
+            "rotation": 3.785,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 390.36,
+            "z": 279.5,
+            "scale": 0.97,
+            "rotation": 4.335,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 375.33,
+            "z": 301.62,
+            "scale": 1.06,
+            "rotation": 3.329,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 385.79,
+            "z": 290.62,
+            "scale": 1.16,
+            "rotation": 0.737,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 386.86,
+            "z": 286.84,
+            "scale": 0.9,
+            "rotation": 4.362,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 391.81,
+            "z": 290.98,
+            "scale": 1.01,
+            "rotation": 1.722,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 374.63,
+            "z": 296.53,
+            "scale": 1.02,
+            "rotation": 6.088,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 365.19,
+            "z": 285.75,
+            "scale": 0.85,
+            "rotation": 5.287,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 370.8,
+            "z": 277.04,
+            "scale": 0.84,
+            "rotation": 5.075,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 376.45,
+            "z": 280.6,
+            "scale": 1.02,
+            "rotation": 0.308,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 385.37,
+            "z": 276.77,
+            "scale": 1.05,
+            "rotation": 5.739,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 375.95,
+            "z": 288.21,
+            "scale": 1.16,
+            "rotation": 2.636,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 374.25,
+            "z": 291.78,
+            "scale": 0.92,
+            "rotation": 4.354,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 377.42,
+            "z": 293.12,
+            "scale": 0.87,
+            "rotation": 2.099,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "plant",
+            "x": 396.28,
+            "z": 301.1,
+            "scale": 1.12,
+            "rotation": 2.704,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "plant",
+            "x": 390.59,
+            "z": 297.7,
+            "scale": 1.32,
+            "rotation": 2.482,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "plant",
+            "x": 380.88,
+            "z": 271.83,
+            "scale": 1.11,
+            "rotation": 2.848,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "dead_tree",
+            "x": 383.59,
+            "z": 300.67,
+            "scale": 1.0,
+            "rotation": 0.418,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "boulder",
+            "x": 365.27,
+            "z": 292.87,
+            "scale": 0.88,
+            "rotation": 4.015,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "boulder",
+            "x": 362.83,
+            "z": 279.75,
+            "scale": 0.83,
+            "rotation": 3.012,
+            "dressing": "alps_larch_saddle"
+        },
+        {
+            "type": "pine_tree",
+            "x": 445.16,
+            "z": 278.02,
+            "scale": 0.98,
+            "rotation": 0.917,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 453.34,
+            "z": 269.17,
+            "scale": 0.91,
+            "rotation": 4.768,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 437.95,
+            "z": 257.65,
+            "scale": 0.99,
+            "rotation": 2.092,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 448.3,
+            "z": 263.68,
+            "scale": 0.88,
+            "rotation": 1.655,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 428.46,
+            "z": 266.76,
+            "scale": 1.04,
+            "rotation": 3.771,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 445.73,
+            "z": 269.7,
+            "scale": 0.82,
+            "rotation": 0.276,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 437.08,
+            "z": 261.95,
+            "scale": 1.22,
+            "rotation": 1.217,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 441.87,
+            "z": 268.97,
+            "scale": 1.19,
+            "rotation": 5.351,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 437.82,
+            "z": 268.09,
+            "scale": 1.21,
+            "rotation": 2.768,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 440.21,
+            "z": 251.91,
+            "scale": 0.99,
+            "rotation": 0.429,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 448.12,
+            "z": 267.08,
+            "scale": 1.06,
+            "rotation": 2.607,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 443.25,
+            "z": 253.95,
+            "scale": 1.13,
+            "rotation": 2.729,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "plant",
+            "x": 439.8,
+            "z": 281.68,
+            "scale": 1.3,
+            "rotation": 4.728,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "plant",
+            "x": 422.04,
+            "z": 267.26,
+            "scale": 1.09,
+            "rotation": 2.866,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "boulder",
+            "x": 428.02,
+            "z": 273.98,
+            "scale": 0.65,
+            "rotation": 0.55,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "boulder",
+            "x": 445.55,
+            "z": 247.37,
+            "scale": 0.74,
+            "rotation": 3.816,
+            "dressing": "alps_larch_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 233.62,
+            "z": 236.5,
+            "scale": 1.1,
+            "rotation": 1.359,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "pine_tree",
+            "x": 222.59,
+            "z": 228.04,
+            "scale": 0.91,
+            "rotation": 5.788,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "pine_tree",
+            "x": 240.49,
+            "z": 233.93,
+            "scale": 1.22,
+            "rotation": 2.201,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "pine_tree",
+            "x": 225.26,
+            "z": 220.84,
+            "scale": 1.08,
+            "rotation": 3.088,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "pine_tree",
+            "x": 243.9,
+            "z": 229.05,
+            "scale": 0.94,
+            "rotation": 2.765,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "pine_tree",
+            "x": 228.88,
+            "z": 221.37,
+            "scale": 1.07,
+            "rotation": 0.245,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "pine_tree",
+            "x": 227.95,
+            "z": 224.95,
+            "scale": 1.12,
+            "rotation": 3.371,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "pine_tree",
+            "x": 231.49,
+            "z": 232.51,
+            "scale": 1.09,
+            "rotation": 5.32,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "pine_tree",
+            "x": 233.54,
+            "z": 220.73,
+            "scale": 0.95,
+            "rotation": 5.982,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "pine_tree",
+            "x": 219.25,
+            "z": 234.07,
+            "scale": 0.85,
+            "rotation": 0.874,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "pine_tree",
+            "x": 226.72,
+            "z": 237.74,
+            "scale": 1.09,
+            "rotation": 3.289,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "plant",
+            "x": 235.76,
+            "z": 215.11,
+            "scale": 1.17,
+            "rotation": 0.984,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "plant",
+            "x": 247.7,
+            "z": 234.2,
+            "scale": 1.24,
+            "rotation": 3.754,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "plant",
+            "x": 242.82,
+            "z": 242.61,
+            "scale": 1.21,
+            "rotation": 4.343,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "plant",
+            "x": 216.84,
+            "z": 225.52,
+            "scale": 1.37,
+            "rotation": 2.217,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "dead_tree",
+            "x": 216.98,
+            "z": 220.89,
+            "scale": 1.0,
+            "rotation": 0.519,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "boulder",
+            "x": 214.83,
+            "z": 224.31,
+            "scale": 0.72,
+            "rotation": 3.285,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "boulder",
+            "x": 235.99,
+            "z": 227.45,
+            "scale": 0.82,
+            "rotation": 5.716,
+            "dressing": "alps_pines_first_bend"
+        },
+        {
+            "type": "pine_tree",
+            "x": 317.64,
+            "z": 341.63,
+            "scale": 0.98,
+            "rotation": 2.655,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "pine_tree",
+            "x": 310.5,
+            "z": 332.61,
+            "scale": 0.85,
+            "rotation": 5.153,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "pine_tree",
+            "x": 331.52,
+            "z": 318.64,
+            "scale": 1.14,
+            "rotation": 0.704,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "pine_tree",
+            "x": 315.79,
+            "z": 319.07,
+            "scale": 1.07,
+            "rotation": 3.24,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "pine_tree",
+            "x": 333.09,
+            "z": 340.49,
+            "scale": 1.2,
+            "rotation": 4.515,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "pine_tree",
+            "x": 322.49,
+            "z": 320.01,
+            "scale": 0.83,
+            "rotation": 3.244,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "pine_tree",
+            "x": 333.81,
+            "z": 333.19,
+            "scale": 0.96,
+            "rotation": 4.269,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "pine_tree",
+            "x": 307.03,
+            "z": 322.0,
+            "scale": 1.2,
+            "rotation": 2.597,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "pine_tree",
+            "x": 317.19,
+            "z": 338.03,
+            "scale": 1.17,
+            "rotation": 1.411,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "pine_tree",
+            "x": 314.88,
+            "z": 343.76,
+            "scale": 0.93,
+            "rotation": 0.117,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "pine_tree",
+            "x": 321.61,
+            "z": 323.91,
+            "scale": 1.21,
+            "rotation": 5.506,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "pine_tree",
+            "x": 325.8,
+            "z": 320.89,
+            "scale": 1.14,
+            "rotation": 1.979,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "pine_tree",
+            "x": 320.44,
+            "z": 344.78,
+            "scale": 0.88,
+            "rotation": 5.078,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "plant",
+            "x": 309.6,
+            "z": 340.57,
+            "scale": 1.05,
+            "rotation": 3.346,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "plant",
+            "x": 302.56,
+            "z": 340.29,
+            "scale": 1.18,
+            "rotation": 0.091,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "boulder",
+            "x": 317.78,
+            "z": 330.55,
+            "scale": 0.62,
+            "rotation": 5.192,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "boulder",
+            "x": 336.99,
+            "z": 327.59,
+            "scale": 0.68,
+            "rotation": 2.965,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "boulder",
+            "x": 314.02,
+            "z": 325.95,
+            "scale": 0.85,
+            "rotation": 3.996,
+            "dressing": "alps_pines_mid_slope"
+        },
+        {
+            "type": "pine_tree",
+            "x": 191.94,
+            "z": 625.59,
+            "scale": 0.81,
+            "rotation": 6.131,
+            "dressing": "alps_pines_south_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 198.01,
+            "z": 614.15,
+            "scale": 0.86,
+            "rotation": 6.079,
+            "dressing": "alps_pines_south_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 189.19,
+            "z": 611.17,
+            "scale": 1.11,
+            "rotation": 1.933,
+            "dressing": "alps_pines_south_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 194.23,
+            "z": 602.47,
+            "scale": 0.8,
+            "rotation": 2.151,
+            "dressing": "alps_pines_south_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 198.46,
+            "z": 620.55,
+            "scale": 0.99,
+            "rotation": 3.95,
+            "dressing": "alps_pines_south_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 201.94,
+            "z": 605.44,
+            "scale": 1.01,
+            "rotation": 1.114,
+            "dressing": "alps_pines_south_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 202.1,
+            "z": 613.34,
+            "scale": 1.1,
+            "rotation": 5.425,
+            "dressing": "alps_pines_south_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 197.2,
+            "z": 610.68,
+            "scale": 1.09,
+            "rotation": 3.739,
+            "dressing": "alps_pines_south_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 207.35,
+            "z": 616.78,
+            "scale": 1.0,
+            "rotation": 2.423,
+            "dressing": "alps_pines_south_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 209.16,
+            "z": 607.07,
+            "scale": 1.19,
+            "rotation": 5.725,
+            "dressing": "alps_pines_south_edge"
+        },
+        {
+            "type": "plant",
+            "x": 188.98,
+            "z": 600.26,
+            "scale": 1.26,
+            "rotation": 4.888,
+            "dressing": "alps_pines_south_edge"
+        },
+        {
+            "type": "plant",
+            "x": 189.55,
+            "z": 620.27,
+            "scale": 1.12,
+            "rotation": 2.892,
+            "dressing": "alps_pines_south_edge"
+        },
+        {
+            "type": "plant",
+            "x": 184.7,
+            "z": 616.6,
+            "scale": 1.22,
+            "rotation": 1.809,
+            "dressing": "alps_pines_south_edge"
+        },
+        {
+            "type": "boulder",
+            "x": 182.04,
+            "z": 612.16,
+            "scale": 0.74,
+            "rotation": 1.051,
+            "dressing": "alps_pines_south_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 228.13,
+            "z": 500.12,
+            "scale": 0.98,
+            "rotation": 1.051,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "pine_tree",
+            "x": 231.25,
+            "z": 488.81,
+            "scale": 1.04,
+            "rotation": 5.042,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "pine_tree",
+            "x": 235.41,
+            "z": 485.66,
+            "scale": 1.02,
+            "rotation": 4.335,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "pine_tree",
+            "x": 221.41,
+            "z": 499.53,
+            "scale": 0.96,
+            "rotation": 1.725,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "pine_tree",
+            "x": 225.26,
+            "z": 494.2,
+            "scale": 1.07,
+            "rotation": 5.628,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "pine_tree",
+            "x": 233.5,
+            "z": 495.4,
+            "scale": 1.12,
+            "rotation": 0.695,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "pine_tree",
+            "x": 220.41,
+            "z": 491.09,
+            "scale": 0.96,
+            "rotation": 1.129,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "pine_tree",
+            "x": 241.65,
+            "z": 488.35,
+            "scale": 1.11,
+            "rotation": 4.799,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "pine_tree",
+            "x": 217.06,
+            "z": 492.56,
+            "scale": 0.99,
+            "rotation": 2.024,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "pine_tree",
+            "x": 231.55,
+            "z": 498.49,
+            "scale": 0.8,
+            "rotation": 4.417,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "pine_tree",
+            "x": 224.68,
+            "z": 501.85,
+            "scale": 0.94,
+            "rotation": 2.002,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "plant",
+            "x": 225.17,
+            "z": 480.81,
+            "scale": 1.39,
+            "rotation": 5.188,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "plant",
+            "x": 239.5,
+            "z": 480.56,
+            "scale": 1.04,
+            "rotation": 4.65,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "plant",
+            "x": 242.22,
+            "z": 501.47,
+            "scale": 1.27,
+            "rotation": 3.487,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "plant",
+            "x": 224.91,
+            "z": 478.41,
+            "scale": 0.99,
+            "rotation": 0.291,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "plant",
+            "x": 220.59,
+            "z": 507.36,
+            "scale": 1.12,
+            "rotation": 3.049,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "dead_tree",
+            "x": 243.92,
+            "z": 480.19,
+            "scale": 1.0,
+            "rotation": 1.822,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "dead_tree",
+            "x": 233.75,
+            "z": 478.07,
+            "scale": 1.0,
+            "rotation": 1.756,
+            "dressing": "alps_pines_lower_track"
+        },
+        {
+            "type": "pine_tree",
+            "x": 499.57,
+            "z": 332.04,
+            "scale": 1.16,
+            "rotation": 1.527,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 483.8,
+            "z": 339.2,
+            "scale": 1.25,
+            "rotation": 1.399,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 493.86,
+            "z": 354.61,
+            "scale": 1.15,
+            "rotation": 1.191,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 506.94,
+            "z": 338.39,
+            "scale": 1.24,
+            "rotation": 2.037,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 495.92,
+            "z": 351.55,
+            "scale": 0.89,
+            "rotation": 5.527,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 489.01,
+            "z": 337.78,
+            "scale": 1.25,
+            "rotation": 1.682,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 493.29,
+            "z": 336.27,
+            "scale": 1.2,
+            "rotation": 3.568,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 499.08,
+            "z": 349.57,
+            "scale": 1.11,
+            "rotation": 5.264,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 484.75,
+            "z": 347.42,
+            "scale": 0.91,
+            "rotation": 0.571,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 498.49,
+            "z": 346.26,
+            "scale": 0.81,
+            "rotation": 4.351,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 482.74,
+            "z": 351.06,
+            "scale": 1.22,
+            "rotation": 2.124,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 495.57,
+            "z": 332.73,
+            "scale": 1.2,
+            "rotation": 2.199,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 480.89,
+            "z": 336.23,
+            "scale": 1.23,
+            "rotation": 3.798,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "plant",
+            "x": 478.8,
+            "z": 327.97,
+            "scale": 0.99,
+            "rotation": 5.353,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "plant",
+            "x": 486.32,
+            "z": 325.15,
+            "scale": 1.29,
+            "rotation": 3.253,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "dead_tree",
+            "x": 487.6,
+            "z": 329.03,
+            "scale": 1.0,
+            "rotation": 0.821,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "boulder",
+            "x": 493.12,
+            "z": 344.31,
+            "scale": 0.84,
+            "rotation": 4.344,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "boulder",
+            "x": 474.41,
+            "z": 331.78,
+            "scale": 0.8,
+            "rotation": 6.096,
+            "dressing": "alps_pines_east_shelf"
+        },
+        {
+            "type": "pine_tree",
+            "x": 557.95,
+            "z": 270.47,
+            "scale": 0.87,
+            "rotation": 4.813,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 557.12,
+            "z": 266.95,
+            "scale": 1.21,
+            "rotation": 1.834,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 580.68,
+            "z": 267.09,
+            "scale": 1.21,
+            "rotation": 1.087,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 576.77,
+            "z": 267.39,
+            "scale": 0.98,
+            "rotation": 3.852,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 570.0,
+            "z": 277.18,
+            "scale": 1.24,
+            "rotation": 5.918,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 560.56,
+            "z": 274.68,
+            "scale": 1.21,
+            "rotation": 6.241,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 582.43,
+            "z": 277.1,
+            "scale": 1.0,
+            "rotation": 0.037,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 578.45,
+            "z": 263.47,
+            "scale": 0.86,
+            "rotation": 5.277,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 573.88,
+            "z": 276.31,
+            "scale": 1.12,
+            "rotation": 2.536,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 576.0,
+            "z": 271.09,
+            "scale": 0.99,
+            "rotation": 2.095,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 570.34,
+            "z": 269.61,
+            "scale": 0.84,
+            "rotation": 2.02,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 579.68,
+            "z": 274.34,
+            "scale": 1.23,
+            "rotation": 0.755,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "plant",
+            "x": 570.44,
+            "z": 284.55,
+            "scale": 1.33,
+            "rotation": 3.643,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "plant",
+            "x": 569.07,
+            "z": 257.79,
+            "scale": 1.21,
+            "rotation": 5.912,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "plant",
+            "x": 587.93,
+            "z": 273.87,
+            "scale": 1.02,
+            "rotation": 1.48,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "plant",
+            "x": 587.24,
+            "z": 270.18,
+            "scale": 1.25,
+            "rotation": 4.326,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "plant",
+            "x": 566.29,
+            "z": 284.54,
+            "scale": 1.31,
+            "rotation": 3.191,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "dead_tree",
+            "x": 565.55,
+            "z": 259.47,
+            "scale": 1.0,
+            "rotation": 5.013,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "boulder",
+            "x": 579.76,
+            "z": 282.96,
+            "scale": 0.67,
+            "rotation": 6.011,
+            "dressing": "alps_pines_high_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 614.9,
+            "z": 299.83,
+            "scale": 1.03,
+            "rotation": 4.17,
+            "dressing": "alps_pines_far_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 605.97,
+            "z": 309.69,
+            "scale": 1.21,
+            "rotation": 4.264,
+            "dressing": "alps_pines_far_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 613.01,
+            "z": 305.05,
+            "scale": 0.85,
+            "rotation": 0.709,
+            "dressing": "alps_pines_far_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 621.64,
+            "z": 304.36,
+            "scale": 1.0,
+            "rotation": 2.874,
+            "dressing": "alps_pines_far_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 612.28,
+            "z": 314.97,
+            "scale": 1.13,
+            "rotation": 5.772,
+            "dressing": "alps_pines_far_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 607.36,
+            "z": 319.3,
+            "scale": 1.22,
+            "rotation": 2.465,
+            "dressing": "alps_pines_far_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 608.69,
+            "z": 306.53,
+            "scale": 1.15,
+            "rotation": 2.962,
+            "dressing": "alps_pines_far_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 618.62,
+            "z": 300.47,
+            "scale": 1.21,
+            "rotation": 0.138,
+            "dressing": "alps_pines_far_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 618.77,
+            "z": 318.72,
+            "scale": 0.88,
+            "rotation": 2.862,
+            "dressing": "alps_pines_far_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 619.5,
+            "z": 315.05,
+            "scale": 0.83,
+            "rotation": 0.007,
+            "dressing": "alps_pines_far_east"
+        },
+        {
+            "type": "plant",
+            "x": 627.82,
+            "z": 316.69,
+            "scale": 1.2,
+            "rotation": 4.358,
+            "dressing": "alps_pines_far_east"
+        },
+        {
+            "type": "dead_tree",
+            "x": 606.22,
+            "z": 298.17,
+            "scale": 1.0,
+            "rotation": 0.566,
+            "dressing": "alps_pines_far_east"
+        },
+        {
+            "type": "boulder",
+            "x": 621.39,
+            "z": 323.9,
+            "scale": 0.86,
+            "rotation": 1.146,
+            "dressing": "alps_pines_far_east"
+        },
+        {
+            "type": "boulder",
+            "x": 616.05,
+            "z": 292.92,
+            "scale": 0.71,
+            "rotation": 2.304,
+            "dressing": "alps_pines_far_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 375.67,
+            "z": 19.95,
+            "scale": 0.81,
+            "rotation": 1.419,
+            "dressing": "alps_pines_north_crest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 377.14,
+            "z": 36.83,
+            "scale": 1.1,
+            "rotation": 5.731,
+            "dressing": "alps_pines_north_crest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 379.27,
+            "z": 33.09,
+            "scale": 1.04,
+            "rotation": 5.297,
+            "dressing": "alps_pines_north_crest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 381.42,
+            "z": 25.21,
+            "scale": 0.92,
+            "rotation": 3.598,
+            "dressing": "alps_pines_north_crest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 388.77,
+            "z": 31.15,
+            "scale": 1.03,
+            "rotation": 2.507,
+            "dressing": "alps_pines_north_crest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 383.68,
+            "z": 33.31,
+            "scale": 0.98,
+            "rotation": 0.406,
+            "dressing": "alps_pines_north_crest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 379.88,
+            "z": 20.2,
+            "scale": 1.05,
+            "rotation": 2.587,
+            "dressing": "alps_pines_north_crest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 373.55,
+            "z": 32.19,
+            "scale": 1.15,
+            "rotation": 3.582,
+            "dressing": "alps_pines_north_crest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 385.62,
+            "z": 28.24,
+            "scale": 1.21,
+            "rotation": 2.261,
+            "dressing": "alps_pines_north_crest"
+        },
+        {
+            "type": "plant",
+            "x": 384.35,
+            "z": 14.72,
+            "scale": 1.26,
+            "rotation": 3.911,
+            "dressing": "alps_pines_north_crest"
+        },
+        {
+            "type": "plant",
+            "x": 374.67,
+            "z": 13.57,
+            "scale": 0.98,
+            "rotation": 4.509,
+            "dressing": "alps_pines_north_crest"
+        },
+        {
+            "type": "plant",
+            "x": 388.88,
+            "z": 13.89,
+            "scale": 0.93,
+            "rotation": 1.349,
+            "dressing": "alps_pines_north_crest"
+        },
+        {
+            "type": "plant",
+            "x": 392.67,
+            "z": 25.15,
+            "scale": 1.05,
+            "rotation": 0.392,
+            "dressing": "alps_pines_north_crest"
+        },
+        {
+            "type": "dead_tree",
+            "x": 369.83,
+            "z": 23.96,
+            "scale": 1.0,
+            "rotation": 4.402,
+            "dressing": "alps_pines_north_crest"
+        },
+        {
+            "type": "boulder",
+            "x": 372.49,
+            "z": 15.21,
+            "scale": 0.66,
+            "rotation": 2.084,
+            "dressing": "alps_pines_north_crest"
         }
     ],
     "dressing": [
@@ -6564,6 +7972,148 @@
             "x": 92,
             "z": 112,
             "tents": 2
+        },
+        {
+            "id": "alps_descent_tent_lines",
+            "kind": "camp_lines",
+            "x": 550,
+            "z": 570,
+            "rows": 2,
+            "cols": 2,
+            "rotation": 0
+        },
+        {
+            "id": "alps_descent_fields",
+            "kind": "farmland",
+            "x": 516,
+            "z": 613,
+            "cols": 2,
+            "rows": 1,
+            "player_id": 4,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "alps_larch_saddle",
+            "kind": "copse",
+            "x": 380,
+            "z": 290,
+            "radius": 20,
+            "count": 18,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 2,
+            "boulders": 4
+        },
+        {
+            "id": "alps_larch_shelf",
+            "kind": "copse",
+            "x": 440,
+            "z": 265,
+            "radius": 16,
+            "count": 13,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 2,
+            "boulders": 3
+        },
+        {
+            "id": "alps_pines_first_bend",
+            "kind": "copse",
+            "x": 230,
+            "z": 230,
+            "radius": 16,
+            "count": 12,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 1,
+            "boulders": 3
+        },
+        {
+            "id": "alps_pines_mid_slope",
+            "kind": "copse",
+            "x": 320,
+            "z": 330,
+            "radius": 18,
+            "count": 14,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 2,
+            "boulders": 3
+        },
+        {
+            "id": "alps_pines_south_edge",
+            "kind": "copse",
+            "x": 200,
+            "z": 615,
+            "radius": 16,
+            "count": 12,
+            "trees": [
+                "pine_tree"
+            ]
+        },
+        {
+            "id": "alps_pines_lower_track",
+            "kind": "copse",
+            "x": 230,
+            "z": 490,
+            "radius": 16,
+            "count": 12,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 2
+        },
+        {
+            "id": "alps_pines_east_shelf",
+            "kind": "copse",
+            "x": 490,
+            "z": 340,
+            "radius": 18,
+            "count": 14,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 2,
+            "boulders": 3
+        },
+        {
+            "id": "alps_pines_high_meadow",
+            "kind": "copse",
+            "x": 570,
+            "z": 270,
+            "radius": 16,
+            "count": 12,
+            "trees": [
+                "pine_tree"
+            ]
+        },
+        {
+            "id": "alps_pines_far_east",
+            "kind": "copse",
+            "x": 615,
+            "z": 310,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "pine_tree"
+            ]
+        },
+        {
+            "id": "alps_pines_north_crest",
+            "kind": "copse",
+            "x": 380,
+            "z": 26,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 2
         }
     ]
 }
