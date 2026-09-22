@@ -10,6 +10,8 @@ name: Pull Request
 # release validation instead of occupying a PR runner for an hour or more.
 on:
   workflow_call:
+  push:
+    branches: [main]
   pull_request:
     branches: [main, develop]
   merge_group:
@@ -29,19 +31,19 @@ env:
 jobs:
   quality:
     name: Quality and source policy
+    # The main push exists to seed the shared compilation cache; quality has
+    # already run on the PR and must still run for PRs and merge queues.
+    if: github.event_name != 'push'
     uses: ./.github/workflows/quality.yml
 
   test:
     name: Fast build and test (ubuntu-24.04)
     runs-on: ubuntu-24.04
-    # Roughly ten minutes of work on a warm ccache: the build measures 11
-    # minutes and the tests single digits. The ceiling is here to kill a hung
-    # run, but it has to clear a COLD one, because the first run on a new branch
-    # always is: the cache this job saves is scoped to the branch that saved it,
-    # and a branch may only read its own caches and main's, which this job never
-    # runs on. A cold build measured 33 minutes on 21 Sep 2026 and left the last
-    # gate, the promo first-frame test, cancelled 50 seconds in with every other
-    # step green.
+    # This lane also runs on main so a cache saved on the default branch is
+    # available to new PR branches. Previously only PR branches saved caches,
+    # so every new PR started cold: 33 minutes of build on 21 Sep 2026 versus
+    # roughly 11 minutes with a warm ccache. Keep a cold-build-safe timeout for
+    # the first main run, cache misses and substantial source changes.
     timeout-minutes: 60
     env:
       CMAKE_CXX_COMPILER_LAUNCHER: ccache
@@ -72,8 +74,13 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
+          # The identical key on main and PRs is essential: PRs can restore
+          # default-branch caches, but cannot read caches from other PRs.
           key: pr-fast-ubuntu-24.04-${{ env.BUILD_TYPE }}
           max-size: 1G
+          # ccache-action resets statistics before building and publishes them
+          # after the job; verbose stats make cache misses/eviction visible.
+          verbose: 1
 
       - name: Cache CMake FetchContent dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -110,8 +117,8 @@ jobs:
       # The split is only worth anything while it stays true. This fails if a
       # test that ran took longer than the per-test budget -- the way this lane
       # grew to ninety minutes in the first place -- and if a pattern in the
-      # manifest has stopped matching anything, which would silently retire the
-      # gate it names.
+      # manifest has stopped matching anything, which would silently retire
+      # the gate it names.
       - name: Fast profile stays fast
         if: always()
         run: |
@@ -136,7 +143,8 @@ jobs:
 
   readiness:
     name: PR diagnostics complete
-    if: always()
+    # This is a PR/merge-queue gate, not a check on main's cache warmer.
+    if: github.event_name != 'push' && always()
     needs: [quality, test]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
