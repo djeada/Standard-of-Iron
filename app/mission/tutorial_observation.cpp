@@ -14,9 +14,10 @@
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
+#include "game/session/selection_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
-#include "game/systems/selection_system.h"
 #include "game/units/spawn_type.h"
 
 namespace App::Mission {
@@ -57,7 +58,7 @@ auto observe_tutorial_frame(const TutorialObservationInputs& inputs)
     o.iron = stock.get(Game::Systems::ResourceType::Iron);
   }
 
-  if (auto* selection = inputs.world->get_system<Game::Systems::SelectionSystem>()) {
+  if (auto* selection = &Game::Session::session_for(*inputs.world).selection()) {
     for (const auto id : selection->get_selected_units()) {
       const auto* entity = inputs.world->get_entity(id);
       const auto* unit = entity != nullptr

@@ -52,7 +52,7 @@ void ArrowSystem::spawn_arrow(const QVector3D& start,
   m_arrows.push_back(a);
 }
 
-void ArrowSystem::update(Engine::Core::World*, float delta_time) {
+void ArrowSystem::update(Engine::Core::World* world, float delta_time) {
   for (auto& arrow : m_arrows) {
     if (!arrow.active) {
       continue;
@@ -69,6 +69,10 @@ void ArrowSystem::update(Engine::Core::World*, float delta_time) {
                                 m_arrows.end(),
                                 [](const ArrowInstance& a) { return !a.active; }),
                  m_arrows.end());
+
+  if (world != nullptr) {
+    world->render_effects_frame().arrows = m_arrows;
+  }
 }
 
 auto ArrowSystem::access() const -> Engine::Core::SystemAccess {

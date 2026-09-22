@@ -13,6 +13,7 @@
 #include "game/core/world.h"
 #include "game/map/environment_lighting.h"
 #include "game/map/map_definition.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
 #include "game/session/world_digest.h"
@@ -21,7 +22,6 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
-#include "game/systems/selection_system.h"
 #include "game/systems/victory_service.h"
 #include "game/units/spawn_type.h"
 #include "scene/camera.h"
@@ -54,7 +54,7 @@ auto add_unit(Engine::Core::World& world,
 TEST(RuntimeFrameOrchestratorTest, SimulationRunsBeforeMinimapNotifier) {
   Game::Session::SessionContext session;
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  Game::Session::SelectionService test_selection;
 
   (void)add_unit(world, 1.0F, 1.0F, 1);
 
@@ -327,7 +327,7 @@ TEST(RuntimeFrameOrchestratorTest, AZeroTimeScaleStopsTheSimulationWithoutBankin
 TEST(RuntimeFrameOrchestratorTest, MovingUnitMarkersUpdateAtMinimapCadence) {
   Game::Session::SessionContext session;
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  Game::Session::SelectionService test_selection;
   auto* unit = add_unit(world, 1.0F, 1.0F, 1);
   ASSERT_NE(unit, nullptr);
 
@@ -453,10 +453,9 @@ TEST(RuntimeFrameOrchestratorTest, TheSameBattleTimeLandsIdenticallyAtEverySpeed
 
 TEST(RuntimeFrameOrchestratorTest, SelectionRefreshNotifierFiresAtThreshold) {
   Game::Session::SessionContext session;
-  Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection_system = world.get_system<Game::Systems::SelectionSystem>();
-  ASSERT_NE(selection_system, nullptr);
+  const Game::Session::ScopedSession scope(session);
+  auto& world = session.world();
+  auto* selection_system = &session.selection();
 
   auto* unit = add_unit(world, 0.0F, 0.0F, 1);
   ASSERT_NE(unit, nullptr);
@@ -490,7 +489,7 @@ TEST(RuntimeFrameOrchestratorTest, SelectionRefreshNotifierFiresAtThreshold) {
 TEST(RuntimeFrameOrchestratorTest, MinimapReadsThePublishedSnapshotNotTheLiveWorld) {
   Game::Session::SessionContext session;
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  Game::Session::SelectionService test_selection;
 
   auto* moving_unit = add_unit(world, 1.0F, 1.0F, 1);
   (void)add_unit(world, 6.0F, 6.0F, 2);

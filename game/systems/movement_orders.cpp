@@ -45,7 +45,7 @@ auto is_direct_path_walkable(const QVector3D& from,
   if (pathfinder != nullptr) {
     pathfinder->update_navigation_grid();
     return pathfinder->is_world_segment_walkable(
-        from, to, passability, clearance_radius);
+        from, to, passability, Pathfinding::routing_clearance(clearance_radius));
   }
 
   return NavGrid::is_world_position_walkable(to);
@@ -777,11 +777,10 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
     QVector3D const member_target = resolve_walkable_target_toward(
         targets[i], current, passability_for(*move.movement));
     if (options.kind == MoveOrderKind::FormationMove &&
-        pathfinder->is_world_segment_walkable(
-            current,
-            member_target,
-            passability_for(*move.movement),
-            move.movement->get_navigation_clearance())) {
+        is_direct_path_walkable(current,
+                                member_target,
+                                passability_for(*move.movement),
+                                move.movement->get_navigation_clearance())) {
       assign_direct_target(*move.movement, member_target);
       assigned = true;
     }
@@ -1004,12 +1003,11 @@ void MovementSystem::follow_formation_slot(Engine::Core::World& world,
   const QVector3D current(transform->position.x, 0.0F, transform->position.z);
   auto* pathfinder = NavGrid::get_pathfinder();
 
-  bool const direct =
-      pathfinder == nullptr ||
-      pathfinder->is_world_segment_walkable(current,
-                                            intent.target,
-                                            passability_for(*movement),
-                                            movement->get_navigation_clearance());
+  bool const direct = pathfinder == nullptr ||
+                      is_direct_path_walkable(current,
+                                              intent.target,
+                                              passability_for(*movement),
+                                              movement->get_navigation_clearance());
   if (direct) {
 
     stamp_route_revision(*movement);

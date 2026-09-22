@@ -17,7 +17,11 @@ script with --check-timings and records the hardware it ran on.
 The counter set covers navigation query amplification and, since the route
 cache learned to invalidate by region rather than by flush, its hit ratio and
 its eviction and flush counts. A ratio is gated from below: a cache that stops
-hitting is a regression even when every absolute count falls with it.
+hitting is a regression even when every absolute count falls with it -- but
+only once the sample is large enough to carry that claim, see
+MIN_RATIO_SAMPLE. The fixture the armies muster into decides that: a healthy
+one buys very few routes, because group routing shares a route across a
+formation and a unit with a clear line never asks the pathfinder at all.
 
 What is still NOT gated anywhere: rendered frame percentiles, the portable
 rigged fallback, allocation counts, the longest GUI stall during a save, and
@@ -51,6 +55,22 @@ AMPLIFICATION_COUNTERS = (
 )
 
 RATIO_METRICS = ("route_cache_hit_ratio",)
+
+# A ratio computed from a handful of samples is noise, not a budget. The route
+# cache only sees a large number of requests when something is wrong: group
+# routing shares one route across a formation, and a unit with a clear line
+# walks it without asking the pathfinder at all. The baseline recorded before
+# the fixture was fixed showed 916 individual routes at 1,000 units purely
+# because every pair believed a structure separated it. Gate the ratio only
+# when the sample is big enough to mean something.
+MIN_RATIO_SAMPLE = 200
+
+# A counter whose baseline is zero cannot be gated multiplicatively: 0 * 1.25
+# is still 0, so a single event over a whole run fails the gate and no amount
+# of headroom ever makes it pass. Give those counters an absolute allowance of
+# a few events across the run instead, so the gate fires on a real change in
+# behaviour rather than on one lazy rebuild.
+ZERO_BASELINE_EVENT_ALLOWANCE = 16
 
 
 def run_benchmark(binary: Path, units: int, ticks: int, out: Path) -> dict:
@@ -88,6 +108,7 @@ def scenario_metrics(scenario: dict) -> dict:
     hits = totals.get("route_cache_hits", 0)
     misses = totals.get("route_cache_misses", 0)
     metrics["route_cache_hit_ratio"] = hits / max(1, hits + misses)
+    metrics["route_cache_requests"] = hits + misses
     return metrics
 
 
@@ -112,6 +133,13 @@ def compare(name: str, measured: dict, budget: dict, tolerance: float) -> list[s
         if value is None:
             continue
         if key in RATIO_METRICS:
+            sample = measured.get("route_cache_requests", 0)
+            if sample < MIN_RATIO_SAMPLE:
+                print(
+                    f"  note: {name}: {key} not enforced, only {sample} route "
+                    f"requests (need {MIN_RATIO_SAMPLE})"
+                )
+                continue
             floor = limit * (1.0 - tolerance)
             if value < floor:
                 failures.append(
@@ -120,6 +148,16 @@ def compare(name: str, measured: dict, budget: dict, tolerance: float) -> list[s
                 )
             continue
         allowed = limit * (1.0 + tolerance)
+        if limit == 0.0:
+            unit_ticks = max(1, measured.get("units", 1) * measured.get("ticks", 1))
+            allowed = ZERO_BASELINE_EVENT_ALLOWANCE / unit_ticks
+            if value > allowed:
+                failures.append(
+                    f"{name}: {key} was {value:.6f}, baseline 0 "
+                    f"(allowance {ZERO_BASELINE_EVENT_ALLOWANCE} events "
+                    f"= {allowed:.6f})"
+                )
+            continue
         if value > allowed:
             failures.append(
                 f"{name}: {key} was {value:.4f}, budget {limit:.4f} "
@@ -233,7 +271,7 @@ def main(argv: list[str]) -> int:
             f"{entry['position_tests_per_unit_tick']:>16.1f}"
             f"{entry['standability_cells_scanned_per_unit_tick']:>18.1f}"
         )
-        skipped = {"units", "ticks", "digest"}
+        skipped = {"units", "ticks", "digest", "route_cache_requests"}
         if not args.check_timings:
             skipped |= set(TIMING_METRICS)
         gate = {key: value for key, value in budget.items() if key not in skipped}

@@ -6,6 +6,7 @@
 #include "app/economy/unit_profile.h"
 #include "game/core/component_economy.h"
 #include "game/core/world.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/construction_cost_catalog.h"
 #include "game/systems/food_targets.h"
@@ -14,7 +15,6 @@
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/production_service.h"
-#include "game/systems/selection_system.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/commander_catalog.h"
 #include "game/units/troop_config.h"
@@ -41,7 +41,7 @@ auto selected_barracks_state(Engine::Core::World* world,
     return m;
   }
 
-  auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*world).selection();
   if (selection_system == nullptr) {
     return m;
   }
@@ -87,7 +87,7 @@ auto selected_builder_state(Engine::Core::World* world) -> QVariantMap {
     return m;
   }
 
-  auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*world).selection();
   if (selection_system == nullptr) {
     return m;
   }
@@ -130,7 +130,7 @@ auto selected_farm_state(Engine::Core::World* world,
     return m;
   }
 
-  auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*world).selection();
   if (selection_system == nullptr) {
     return m;
   }
@@ -176,7 +176,7 @@ auto selected_marketplace_state(Engine::Core::World* world,
     return m;
   }
 
-  auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*world).selection();
   if (selection_system == nullptr) {
     return m;
   }
@@ -239,7 +239,7 @@ auto selected_home_state(Engine::Core::World* world,
     return m;
   }
 
-  auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*world).selection();
   if (selection_system == nullptr) {
     return m;
   }
@@ -294,7 +294,7 @@ auto selected_temple_state(Engine::Core::World* world,
     return m;
   }
 
-  auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*world).selection();
   if (selection_system == nullptr) {
     return m;
   }

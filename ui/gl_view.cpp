@@ -334,11 +334,6 @@ void GLView::GLRenderer::render() {
       dt = std::min(dt, 0.1F);
     }
     m_last_frame_time = frame_work_start;
-    {
-      Render::Profiling::PhaseScope const frame_scope(&profile,
-                                                      Render::Profiling::Phase::Frame);
-      m_engine->update_presentation(dt);
-    }
     m_engine->render(m_size.width(), m_size.height());
     auto const render_end = std::chrono::steady_clock::now();
     m_last_render_end = render_end;

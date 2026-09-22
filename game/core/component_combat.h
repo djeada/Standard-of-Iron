@@ -78,6 +78,20 @@ public:
   static constexpr float k_melee_contact_range_grace = 0.75F;
   static constexpr float k_melee_lock_separation_release = 1.5F;
 
+  void release_melee_lock() noexcept {
+    in_melee_lock = false;
+    melee_lock_target_id = 0;
+    melee_lock_separation_time = 0.0F;
+  }
+
+  [[nodiscard]] auto melee_locked_on(EntityID target_id) const noexcept -> bool {
+    return in_melee_lock && melee_lock_target_id == target_id;
+  }
+
+  [[nodiscard]] auto attacks_in_melee() const noexcept -> bool {
+    return current_mode == CombatMode::Melee;
+  }
+
   [[nodiscard]] auto is_in_melee_range(float distance,
                                        float height_diff) const -> bool {
     return distance <= melee_range && height_diff <= max_height_difference;

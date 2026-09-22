@@ -6,10 +6,9 @@
 #include <numbers>
 
 #include "game/core/component.h"
-#include "game/systems/healing_beam.h"
-#include "game/systems/healing_beam_system.h"
 #include "game/systems/healing_colors.h"
 #include "game/systems/nation_id.h"
+#include "game/systems/render_effects_frame.h"
 #include "render/scene_renderer.h"
 
 namespace Render::GL {
@@ -29,26 +28,22 @@ constexpr float k_edge_fade_factor = 1.5F;
 
 void render_healing_waves(Renderer* renderer,
                           ResourceManager*,
-                          const Game::Systems::HealingBeamSystem& beam_system) {
-  if (renderer == nullptr || beam_system.get_beam_count() == 0) {
+                          const std::vector<Game::Systems::HealingBeamView>& beams) {
+  if (renderer == nullptr || beams.empty()) {
     return;
   }
 
   float animation_time = renderer->get_animation_time();
 
-  for (const auto& beam : beam_system.get_beams()) {
-    if (!beam || !beam->is_active()) {
-      continue;
-    }
-
-    float intensity = beam->get_intensity();
+  for (const auto& beam : beams) {
+    float intensity = beam.intensity;
     if (intensity < 0.01F) {
       continue;
     }
 
-    QVector3D start = beam->get_start();
-    QVector3D end = beam->get_end();
-    QVector3D color = beam->get_color();
+    QVector3D start = beam.start;
+    QVector3D end = beam.end;
+    QVector3D color = beam.color;
 
     if (!Game::Systems::is_roman_healing_color(color)) {
       continue;

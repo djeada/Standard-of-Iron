@@ -8,11 +8,11 @@
 #include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/combat_system/combat_types.h"
 #include "game/systems/owner_registry.h"
-#include "game/systems/selection_system.h"
 #include "game/units/spawn_type.h"
 #include "game/units/squad.h"
 #include "game/util/asset_text.h"
@@ -187,7 +187,7 @@ auto selected_units(Engine::Core::World* world)
   if (world == nullptr) {
     return nullptr;
   }
-  auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*world).selection();
   if (selection_system == nullptr) {
     return nullptr;
   }

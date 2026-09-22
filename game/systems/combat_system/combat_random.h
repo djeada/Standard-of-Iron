@@ -4,13 +4,23 @@
 
 namespace Game::Systems::Combat {
 
-[[nodiscard]] inline auto hash_to_unit(std::uint32_t value) noexcept -> float {
+[[nodiscard]] inline auto mix_hash32(std::uint32_t value) noexcept -> std::uint32_t {
   value ^= value >> 16U;
   value *= 0x7feb352dU;
   value ^= value >> 15U;
   value *= 0x846ca68bU;
   value ^= value >> 16U;
-  return static_cast<float>(value & 0x00FFFFFFU) / static_cast<float>(0x00FFFFFFU);
+  return value;
+}
+
+[[nodiscard]] inline auto hash_to_unit(std::uint32_t value) noexcept -> float {
+  return static_cast<float>(mix_hash32(value) & 0x00FFFFFFU) /
+         static_cast<float>(0x00FFFFFFU);
+}
+
+[[nodiscard]] inline auto hash_to_unit_open(std::uint32_t value) noexcept -> float {
+  return static_cast<float>(mix_hash32(value) & 0x00FFFFFFU) /
+         static_cast<float>(0x01000000U);
 }
 
 [[nodiscard]] inline auto

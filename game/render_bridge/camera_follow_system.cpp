@@ -4,13 +4,13 @@
 
 #include "../core/component_core.h"
 #include "../core/world.h"
-#include "../systems/selection_system.h"
+#include "../session/selection_service.h"
 #include "scene/camera.h"
 
 namespace Game::Systems {
 
 void CameraFollowSystem::update(Engine::Core::World& world,
-                                SelectionSystem& selection,
+                                Game::Session::SelectionService& selection,
                                 Render::GL::Camera& camera) {
   const auto& sel = selection.get_selected_units();
   if (sel.empty()) {
@@ -34,7 +34,7 @@ void CameraFollowSystem::update(Engine::Core::World& world,
 }
 
 void CameraFollowSystem::snap_to_selection(Engine::Core::World& world,
-                                           SelectionSystem& selection,
+                                           Game::Session::SelectionService& selection,
                                            Render::GL::Camera& camera) {
   const auto& sel = selection.get_selected_units();
   if (sel.empty()) {

@@ -19,6 +19,7 @@
 #include "../formation_combat_geometry.h"
 #include "../nav_grid.h"
 #include "../pathfinding.h"
+#include "combat_random.h"
 #include "combat_utils.h"
 #include "structure_combat.h"
 
@@ -193,18 +194,8 @@ auto evaluate_pair(Engine::Core::Entity& attacker,
   return g_pair_cache.insert_or_assign(key, std::move(evaluation)).first->second;
 }
 
-auto mix_hash(std::uint32_t value) noexcept -> std::uint32_t {
-  value ^= value >> 16U;
-  value *= 0x7feb352dU;
-  value ^= value >> 15U;
-  value *= 0x846ca68bU;
-  value ^= value >> 16U;
-  return value;
-}
-
 auto hash_unit_float(std::uint32_t seed, std::uint32_t salt) noexcept -> float {
-  return static_cast<float>(mix_hash(seed ^ salt) & 0x00ffffffU) /
-         static_cast<float>(0x01000000U);
+  return hash_to_unit_open(seed ^ salt);
 }
 
 auto valid_melee_edge(Engine::Core::World& world,
@@ -213,8 +204,7 @@ auto valid_melee_edge(Engine::Core::World& world,
   auto const* attack = attacker.get_component<Engine::Core::AttackComponent>();
   auto const* target_ref =
       attacker.get_component<Engine::Core::AttackTargetComponent>();
-  if (attack == nullptr || target_ref == nullptr || target_ref->target_id == 0 ||
-      attack->current_mode != Engine::Core::AttackComponent::CombatMode::Melee) {
+  if (!is_melee_mode(attack) || target_ref == nullptr || target_ref->target_id == 0) {
     return false;
   }
 
@@ -382,8 +372,8 @@ auto combat_role_for(std::uint32_t formation_seed,
     return Engine::Core::FormationSoldierCombatRole::Ready;
   }
   std::uint32_t const choice =
-      mix_hash(formation_seed ^
-               (static_cast<std::uint32_t>(stable_slot) * 0x9e3779b9U)) %
+      mix_hash32(formation_seed ^
+                 (static_cast<std::uint32_t>(stable_slot) * 0x9e3779b9U)) %
       100U;
   if (choice < 26U) {
     return Engine::Core::FormationSoldierCombatRole::LeadStrike;
@@ -553,15 +543,20 @@ auto local_contact_vector(const Engine::Core::TransformComponent& actor,
   return result;
 }
 
-auto world_to_local(const Engine::Core::TransformComponent& actor,
-                    float world_x,
-                    float world_z) -> std::pair<float, float> {
+auto world_vector_to_local(const Engine::Core::TransformComponent& actor,
+                           float world_x,
+                           float world_z) -> std::pair<float, float> {
   float const yaw = actor.rotation.y * std::numbers::pi_v<float> / 180.0F;
   float const sin_yaw = std::sin(yaw);
   float const cos_yaw = std::cos(yaw);
-  float const dx = world_x - actor.position.x;
-  float const dz = world_z - actor.position.z;
-  return {cos_yaw * dx - sin_yaw * dz, sin_yaw * dx + cos_yaw * dz};
+  return {cos_yaw * world_x - sin_yaw * world_z, sin_yaw * world_x + cos_yaw * world_z};
+}
+
+auto world_to_local(const Engine::Core::TransformComponent& actor,
+                    float world_x,
+                    float world_z) -> std::pair<float, float> {
+  return world_vector_to_local(
+      actor, world_x - actor.position.x, world_z - actor.position.z);
 }
 
 auto walk_to_new_slot(Engine::Core::SquadReformComponent& reform,
@@ -840,11 +835,10 @@ void walk_formation_slot(
       world_to_local(actor, previous->world_x, previous->world_z);
   soldier.previous_local_x = previous_local.first;
   soldier.previous_local_z = previous_local.second;
-  const float yaw = actor.rotation.y * std::numbers::pi_v<float> / 180.0F;
-  soldier.relocation_velocity_x = std::cos(yaw) * soldier.world_velocity_x -
-                                  std::sin(yaw) * soldier.world_velocity_z;
-  soldier.relocation_velocity_z = std::sin(yaw) * soldier.world_velocity_x +
-                                  std::cos(yaw) * soldier.world_velocity_z;
+  const auto [relocation_vx, relocation_vz] =
+      world_vector_to_local(actor, soldier.world_velocity_x, soldier.world_velocity_z);
+  soldier.relocation_velocity_x = relocation_vx;
+  soldier.relocation_velocity_z = relocation_vz;
   const float remaining =
       std::hypot(destination.x() - soldier.world_x, destination.z() - soldier.world_z);
   const float facing_error =
@@ -906,9 +900,7 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
             entity->get_id());
     Engine::Core::EntityID const outgoing_target =
         target_ref != nullptr ? target_ref->target_id : 0U;
-    bool const outgoing_melee =
-        attack != nullptr && outgoing_target != 0U &&
-        attack->current_mode == Engine::Core::AttackComponent::CombatMode::Melee;
+    bool const outgoing_melee = is_melee_mode(attack) && outgoing_target != 0U;
     bool const incoming_contact =
         contact != nullptr && std::any_of(contact->fronts.begin(),
                                           contact->fronts.end(),
@@ -958,14 +950,12 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         float const desired_gap = structure_attack_profile(entity).contact_clearance;
         structure_render_shift = std::max(0.0F, desired_gap - closest_structure_gap);
 
-        float const yaw =
-            actor_transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
-        float const sin_yaw = std::sin(yaw);
-        float const cos_yaw = std::cos(yaw);
         QVector3D const world_shift =
             structure_facade.outward_normal * structure_render_shift;
-        structure_shift_local_x = cos_yaw * world_shift.x() - sin_yaw * world_shift.z();
-        structure_shift_local_z = sin_yaw * world_shift.x() + cos_yaw * world_shift.z();
+        auto const [shift_local_x, shift_local_z] =
+            world_vector_to_local(*actor_transform, world_shift.x(), world_shift.z());
+        structure_shift_local_x = shift_local_x;
+        structure_shift_local_z = shift_local_z;
       }
     }
 
@@ -1029,10 +1019,7 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
     const auto passability = movement != nullptr && movement->get_can_enter_forest()
                                  ? Pathfinding::Passability::Light
                                  : Pathfinding::Passability::Heavy;
-    const bool mounted =
-        entity_unit.spawn_type == Game::Units::SpawnType::MountedSwordsman ||
-        entity_unit.spawn_type == Game::Units::SpawnType::HorseArcher ||
-        entity_unit.spawn_type == Game::Units::SpawnType::HorseSpearman;
+    const bool mounted = Game::Units::is_cavalry(entity_unit.spawn_type);
     std::size_t const previous_directive_count = directives.size();
     bool soldiers_changed = previous_directive_count != layout.all_slots.size();
     directives.resize(layout.all_slots.size());
@@ -1358,12 +1345,10 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
             rendered - structure_facade.point, structure_facade.outward_normal);
         if (facade_gap < 0.0F) {
           QVector3D const correction = structure_facade.outward_normal * (-facade_gap);
-          float const yaw =
-              actor_transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
-          float const sin_yaw = std::sin(yaw);
-          float const cos_yaw = std::cos(yaw);
-          directive.local_x += cos_yaw * correction.x() - sin_yaw * correction.z();
-          directive.local_z += sin_yaw * correction.x() + cos_yaw * correction.z();
+          auto const [correction_x, correction_z] =
+              world_vector_to_local(*actor_transform, correction.x(), correction.z());
+          directive.local_x += correction_x;
+          directive.local_z += correction_z;
         }
       }
       if (directive.alive && actor_transform != nullptr &&

@@ -663,6 +663,61 @@ corners — the same rule the search applies to its own neighbours. Sampling the
 line at fixed intervals is a second, weaker rule that steps over the thin corner
 of an obstacle and hands out a shortcut through a wall that has no gap in it.
 
+### One clearance for every hard walkability test
+
+A formation carries two radii. `formation_navigation_clearance()` is the lateral
+half-extent of the whole body (3 m or more for a wide line) and is what A* _costs_
+against: cells within that distance of an obstacle get an overlap penalty so a wide
+body prefers the middle of a street. `Pathfinding::routing_clearance()` (the same
+value capped at `k_person_body_radius`, 0.34 m) is what A* _blocks_ against: a cell is
+open when one man fits, and the lane fitter folds the formation into whatever width
+the corridor actually has.
+
+Every yes/no walkability test that decides whether a single body needs a route
+uses `routing_clearance()`: the direct-line test in
+`MovementSystem::assign_navigation_target` (`is_direct_path_walkable`), the
+formation-move and slot-follow direct tests, and the taut-pull. The corridor
+planner is the deliberate exception: `RouteCorridorPlanner::fit_lane` places a
+lane for a whole formation and folds it toward the centreline when the street
+is too narrow for the full lateral offset, so its position and segment tests
+must use the formation clearance — with the one-man radius the lanes stop
+folding, a squad gets pressed into a house wall and never sets off
+(`MovementPaceTest.AnArmyReorderedThroughATownHoldsPace` pins this). The reason
+for the single-body rule is a feedback loop that was measured, not imagined. When the direct test was made with the full formation
+clearance, any goal within one formation width of a map edge, a wall, or a tree
+failed it, so the order fell through to a corridor plan whose A* (blocking on
+the one-man radius) found a trivial straight path, the taut-pull reduced it to
+one waypoint, and the next chase re-issue a few ticks later found no
+multi-waypoint route to keep and planned again. On `sim_benchmark --units 1000`
+that was 0.22 A* searches per unit per tick, 2.3 cells expanded per unit per
+tick, and nearly every "group" corridor plan being bought by a single unit.
+With one rule for the hard tests the same run makes 0.004 searches per unit
+per tick, all of them from units whose target genuinely has no straight line.
+
+The remaining searches on that benchmark are mostly `melee_walk_around_length`,
+the detour-length query the opportunity scan asks before it lets an idle unit
+engage an enemy whose straight line crosses an obstacle. That query is a
+"how far" question, not a "which corridor" question, so it searches with the
+routing clearance rather than the formation clearance: with the formation
+clearance the overlap costing (`k_rigid_overlap_cost` over a
+`k_max_cost_clearance` band) treats a 3 m strip along every obstacle and the map
+edge as nearly impassable and expands about 150 cells per search; with the
+one-man radius the same detours take about 80. It also asks `can_reach()` first,
+so a target in another connected region, or off the grid, is "walled off"
+without exhausting the attacker's whole region in A*; the only behaviour that
+changes is an enemy standing on an unwalkable cell, which now counts as walled
+off rather than reachable through the nearest open cell (pairs within
+`k_contact_separation_exemption` never reach this test anyway).
+
+The path cache holds `k_max_cached_paths` = 2048 entries. At 256 the 1000-unit
+benchmark filled it and cold-evicted a quarter of it five times in 240 ticks
+(320 evictions) while locked melee pairs re-asked the walled-off question every
+rescan; at 2048 both fixtures run with zero evictions and the 2000-unit run
+answers 62% of its 2816 searches from the cache. The 1000-unit hit and miss
+counts do not move with the larger cache, because its remaining searches are
+genuinely new start/goal pairs. Each entry is a short cell list plus a bounding
+box, so the whole cache is well under a megabyte.
+
 ### The path is pulled taut before it is followed
 
 An 8-connected grid path is a staircase: a goal 27 degrees off-axis comes back

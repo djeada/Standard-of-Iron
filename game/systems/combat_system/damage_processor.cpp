@@ -6,6 +6,7 @@
 #include "../combat_rules.h"
 #include "../rpg_combat_system/rpg_commander_damage.h"
 #include "combat_hit_resolver.h"
+#include "combat_utils.h"
 #include "damage_application.h"
 
 namespace Game::Systems::Combat {
@@ -35,12 +36,7 @@ void deal_damage(Engine::Core::World* world,
     return;
   }
 
-  bool const infantry_target =
-      !Game::Units::is_cavalry(target_unit->spawn_type) &&
-      target_unit->spawn_type != Game::Units::SpawnType::Elephant &&
-      target_unit->spawn_type != Game::Units::SpawnType::Catapult &&
-      target_unit->spawn_type != Game::Units::SpawnType::Ballista;
-  if (infantry_target) {
+  if (is_infantry_spawn(target_unit->spawn_type)) {
     launch_new_casualties(
         *target, *attacker, application.queued_soldier_casualties, 5.5F);
   }

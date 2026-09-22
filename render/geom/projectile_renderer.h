@@ -3,7 +3,6 @@
 #include <QVector3D>
 
 #include <cstdint>
-#include <functional>
 
 namespace Render {
 namespace GL {
@@ -13,10 +12,10 @@ class ResourceManager;
 } // namespace Render
 
 namespace Game::Systems {
-class ProjectileSystem;
-class Projectile;
-class ArrowProjectile;
-class StoneProjectile;
+struct RenderEffectsFrame;
+struct ProjectileView;
+struct ProjectileImpactEvent;
+struct SpentProjectile;
 } // namespace Game::Systems
 
 namespace Render::GL {
@@ -36,11 +35,10 @@ classify_projectile_relation(int local_owner_id,
 
 struct ProjectileViewContext {
   int local_owner_id = 0;
-  std::function<int(std::uint64_t)> owner_of;
   bool reduced_effects = false;
 
-  [[nodiscard]] auto relation_for(std::uint64_t attacker_id,
-                                  std::uint64_t target_id) const -> ProjectileRelation;
+  [[nodiscard]] auto relation_for_owners(int attacker_owner,
+                                         int target_owner) const -> ProjectileRelation;
 };
 
 inline constexpr int k_projectile_impact_effect_budget = 40;
@@ -49,19 +47,19 @@ inline constexpr int k_projectile_impact_effect_budget = 40;
 
 void render_projectiles(Renderer* renderer,
                         ResourceManager* resources,
-                        const Game::Systems::ProjectileSystem& projectile_system,
+                        const Game::Systems::RenderEffectsFrame& effects,
                         const ProjectileViewContext* view = nullptr);
 
 void render_arrow_projectile(Renderer* renderer,
                              ResourceManager* resources,
-                             const Game::Systems::ArrowProjectile& arrow,
+                             const Game::Systems::ProjectileView& projectile,
                              const QVector3D& pos,
                              const QMatrix4x4& base_model,
                              ProjectileRelation relation = ProjectileRelation::Neutral);
 
 void render_stone_projectile(Renderer* renderer,
                              ResourceManager* resources,
-                             const Game::Systems::StoneProjectile& stone,
+                             const Game::Systems::ProjectileView& projectile,
                              const QVector3D& pos,
                              const QMatrix4x4& base_model);
 

@@ -1,30 +1,23 @@
 #pragma once
 
-#include <functional>
 #include <vector>
 
-#include "../core/entity.h"
-#include "../core/system.h"
+#include "../core/entity_id.h"
 
-namespace Engine::Core {
-class Entity;
-class World;
-} // namespace Engine::Core
+namespace Game::Session {
 
-namespace Game::Systems {
-
-class PickingService;
-
-class SelectionSystem : public Engine::Core::System {
+// Which units this client has selected, and which one it is inspecting.
+//
+// This is client state, not match state: two players in one match select
+// different units and a spectator selects none, so it is deliberately absent
+// from the world and from the replay digest. It lived in the world as a
+// Systems::SelectionSystem with an empty update() and an access() declaring
+// neither reads nor writes -- a system in name only.
+class SelectionService {
 public:
-  void update(Engine::Core::World* world, float delta_time) override;
-
-  [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
-
   void select_unit(Engine::Core::EntityID unit_id);
   void deselect_unit(Engine::Core::EntityID unit_id);
   void clear_selection();
-  void select_units_in_area(float x1, float y1, float x2, float y2);
 
   [[nodiscard]] auto
   get_selected_units() const -> const std::vector<Engine::Core::EntityID>& {
@@ -42,8 +35,6 @@ public:
 private:
   std::vector<Engine::Core::EntityID> m_selected_units;
   Engine::Core::EntityID m_inspected_entity = Engine::Core::NULL_ENTITY;
-  static auto is_unit_in_area(
-      Engine::Core::Entity* entity, float x1, float y1, float x2, float y2) -> bool;
 };
 
-} // namespace Game::Systems
+} // namespace Game::Session

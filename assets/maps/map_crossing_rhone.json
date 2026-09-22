@@ -7207,7 +7207,7 @@
             "scale": 1,
             "type": "firecamp",
             "x": 572,
-            "z": 536
+            "z": 535.83
         },
         {
             "intensity": 1,
@@ -8787,8 +8787,8 @@
         },
         {
             "type": "dead_tree",
-            "x": 559.66,
-            "z": 483.97,
+            "x": 560.84,
+            "z": 486.61,
             "scale": 1.0,
             "rotation": 3.446,
             "dressing": "rhone_town_bridge"

@@ -1,6 +1,7 @@
 
 
 #include <QCoreApplication>
+#include <QVector3D>
 
 #include <algorithm>
 #include <array>
@@ -25,9 +26,11 @@
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
 #include "game/session/world_digest.h"
+#include "game/systems/command_service.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/pathfinding.h"
 #include "game/systems/runtime_system_registry.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
@@ -50,6 +53,9 @@ constexpr float k_rank_spacing = 5.0F;
 constexpr int k_default_ticks = 240;
 
 constexpr int k_ranks_per_army = 8;
+
+constexpr float k_army_standoff = 8.0F;
+constexpr float k_march_depth = 48.0F;
 
 struct Options {
   std::vector<int> unit_counts{1000, 5000, 10000};
@@ -89,22 +95,29 @@ auto peak_rss_kb() -> std::uint64_t {
 #endif
 }
 
-void muster(SessionContext& session,
+auto muster(SessionContext& session,
             int owner_id,
             int count,
             float origin_x,
             float origin_z,
-            float facing_z) {
+            float facing_z) -> std::vector<Engine::Core::EntityID> {
   const int files = files_per_army(count);
+  std::vector<Engine::Core::EntityID> raised;
+  raised.reserve(static_cast<std::size_t>(count));
   for (int index = 0; index < count; ++index) {
     const int rank = index / files;
     const int file = index % files;
 
+    const QVector3D desired(origin_x + static_cast<float>(file) * k_file_spacing,
+                            0.0F,
+                            origin_z +
+                                static_cast<float>(rank) * k_rank_spacing * facing_z);
+    const QVector3D placed = Game::Systems::NavGrid::snap_to_walkable_ground(desired);
+
     auto* entity = session.world().create_entity();
     auto* transform = entity->add_component<TransformComponent>();
-    transform->position.x = origin_x + static_cast<float>(file) * k_file_spacing;
-    transform->position.z =
-        origin_z + static_cast<float>(rank) * k_rank_spacing * facing_z;
+    transform->position.x = placed.x();
+    transform->position.z = placed.z();
 
     auto* unit = entity->add_component<UnitComponent>(120, 120, 2.4F, 14.0F);
     unit->owner_id = owner_id;
@@ -113,7 +126,65 @@ void muster(SessionContext& session,
 
     entity->add_component<MovementComponent>();
     entity->add_component<AttackComponent>(12.0F, 8.0F, 1.0F);
+    raised.push_back(entity->get_id());
   }
+  return raised;
+}
+
+auto muster_stands_on_the_grid(
+    SessionContext& session, const std::vector<Engine::Core::EntityID>& units) -> bool {
+  for (const Engine::Core::EntityID id : units) {
+    auto* transform = session.world().try_get<TransformComponent>(id);
+    if (transform == nullptr) {
+      continue;
+    }
+    const QVector3D position(transform->position.x, 0.0F, transform->position.z);
+    if (!Game::Systems::NavGrid::is_world_position_walkable(position)) {
+      const Game::Systems::Point cell =
+          Game::Systems::NavGrid::world_to_grid(position.x(), position.z());
+      auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+      const int value = pathfinder != nullptr
+                            ? static_cast<int>(pathfinder->cell_value(cell.x, cell.y))
+                            : -1;
+      std::fprintf(stderr,
+                   "sim_benchmark: unit %llu stands at (%.1f, %.1f) = cell "
+                   "(%d, %d), cell value %d, which the navigation grid does "
+                   "not cover. Every counter this tool reports would be "
+                   "measuring off-grid pathology rather than the game.\n",
+                   static_cast<unsigned long long>(id),
+                   static_cast<double>(position.x()),
+                   static_cast<double>(position.z()),
+                   cell.x,
+                   cell.y,
+                   value);
+      return false;
+    }
+  }
+  return true;
+}
+
+void order_march(Engine::Core::World& world,
+                 const std::vector<Engine::Core::EntityID>& units,
+                 std::size_t first,
+                 std::size_t last,
+                 float target_z) {
+  first = std::min(first, units.size());
+  last = std::min(last, units.size());
+  if (first >= last) {
+    return;
+  }
+
+  const std::vector<Engine::Core::EntityID> wave(
+      units.begin() + static_cast<std::ptrdiff_t>(first),
+      units.begin() + static_cast<std::ptrdiff_t>(last));
+  std::vector<QVector3D> targets;
+  targets.reserve(wave.size());
+  for (const Engine::Core::EntityID id : wave) {
+    auto* transform = world.try_get<TransformComponent>(id);
+    const float x = transform != nullptr ? transform->position.x : 0.0F;
+    targets.emplace_back(x, 0.0F, target_z);
+  }
+  Game::Systems::CommandService::move_units(world, wave, targets);
 }
 
 struct Result {
@@ -164,19 +235,39 @@ auto run_scenario(int units_per_side, int ticks, bool per_system) -> Result {
   map_definition.grid.tile_size = 1.0F;
   session->terrain().initialize(map_definition);
 
-  const auto centre = static_cast<float>(map_size) * 0.5F;
+  if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
+    pathfinder->update_navigation_grid();
+  }
+
+  const QVector3D grid_centre =
+      Game::Systems::NavGrid::grid_to_world({map_size / 2, map_size / 2});
+  const float centre_x = grid_centre.x();
+  const float centre_z = grid_centre.z();
   const float line_width =
       static_cast<float>(files_per_army(units_per_side)) * k_file_spacing;
-  const float line_left = centre - line_width * 0.5F;
+  const float line_left = centre_x - line_width * 0.5F;
 
-  muster(*session, k_left_owner, units_per_side, line_left, centre - 8.0F, -1.0F);
-  muster(*session, k_right_owner, units_per_side, line_left, centre + 8.0F, 1.0F);
+  const auto left_units = muster(*session,
+                                 k_left_owner,
+                                 units_per_side,
+                                 line_left,
+                                 centre_z - k_army_standoff,
+                                 -1.0F);
+  const auto right_units = muster(*session,
+                                  k_right_owner,
+                                  units_per_side,
+                                  line_left,
+                                  centre_z + k_army_standoff,
+                                  1.0F);
 
   auto& world = session->world();
+
+  if (!muster_stands_on_the_grid(*session, left_units) ||
+      !muster_stands_on_the_grid(*session, right_units)) {
+    std::exit(2);
+  }
+
   auto& profiler = world.system_profiler();
-  profiler.set_enabled(per_system);
-  Engine::Core::nav_profile().clear();
-  Engine::Core::nav_profile().set_enabled(per_system);
 
   Result result;
   result.units = units_per_side * 2;
@@ -184,6 +275,15 @@ auto run_scenario(int units_per_side, int ticks, bool per_system) -> Result {
   result.entities = world.entity_count();
 
   const auto step = static_cast<float>(session->clock().tick_seconds());
+
+  world.update(step);
+
+  order_march(world, left_units, 0U, left_units.size(), centre_z + k_march_depth);
+  order_march(world, right_units, 0U, right_units.size(), centre_z - k_march_depth);
+
+  profiler.set_enabled(per_system);
+  Engine::Core::nav_profile().clear();
+  Engine::Core::nav_profile().set_enabled(per_system);
 
   world.update(step);
 

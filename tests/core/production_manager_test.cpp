@@ -7,6 +7,7 @@
 
 #include "app/input/input_command_handler.h"
 #include "game/command/command_queue.h"
+#include "game/session/session_context.h"
 #include "game/systems/nav_grid.h"
 #define private public
 #include "app/economy/production_manager.h"
@@ -17,12 +18,12 @@
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/selection_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/resource_types.h"
-#include "game/systems/selection_system.h"
 #include "game/systems/wall_network_service.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
@@ -35,6 +36,7 @@ protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
+    Game::Session::SessionContext::active().selection().clear_selection();
     Game::Systems::PlayerResourceRegistry::instance().clear();
     auto& resources = Game::Systems::PlayerResourceRegistry::instance();
     resources.set(1, Game::Systems::ResourceType::Wood, 1000);
@@ -46,8 +48,7 @@ protected:
     Game::Units::register_built_in_units(*registry);
     Game::Map::MapTransformer::setFactoryRegistry(std::move(registry));
 
-    world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-    selection = world.get_system<Game::Systems::SelectionSystem>();
+    selection = &Game::Session::SessionContext::active().selection();
     ASSERT_NE(selection, nullptr);
 
     camera.set_perspective(60.0F, 4.0F / 3.0F, 0.1F, 100.0F);
@@ -276,7 +277,7 @@ protected:
 
   Game::Command::ScopedImmediateDispatch immediate_orders;
   Engine::Core::World world;
-  Game::Systems::SelectionSystem* selection = nullptr;
+  Game::Session::SelectionService* selection = nullptr;
   Game::Systems::PickingService picking_service;
   Render::GL::Camera camera;
   ViewportState viewport{800, 600};

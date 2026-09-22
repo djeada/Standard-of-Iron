@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "../systems/render_effects_frame.h"
 #include "deferred_mutations.h"
 #include "entity.h"
 #include "registry.h"
@@ -139,6 +140,15 @@ public:
   void ensure_render_snapshot();
 
   [[nodiscard]] auto acquire_render_snapshot() const -> std::shared_ptr<World>;
+
+  [[nodiscard]] auto
+  render_effects_frame() noexcept -> Game::Systems::RenderEffectsFrame& {
+    return m_render_effects_frame;
+  }
+  [[nodiscard]] auto
+  render_effects_frame() const noexcept -> const Game::Systems::RenderEffectsFrame& {
+    return m_render_effects_frame;
+  }
 
   [[nodiscard]] auto render_publication_stats() const -> const RenderPublicationStats& {
     return m_render_publication_stats;
@@ -357,7 +367,8 @@ private:
   std::vector<EntityID> m_render_building_ids;
   std::vector<EntityID> m_render_other_ids;
   std::vector<std::uint64_t> m_render_entity_signatures;
-  std::uint64_t m_render_publish_revision{0};
+  std::atomic<std::uint64_t> m_render_publish_revision{0};
+  Game::Systems::RenderEffectsFrame m_render_effects_frame;
 
   std::uint64_t m_content_epoch{0};
   std::uint64_t m_render_snapshot_epoch{0};

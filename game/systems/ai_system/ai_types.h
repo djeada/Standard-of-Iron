@@ -22,6 +22,10 @@ namespace Game::Systems {
 struct Nation;
 }
 
+namespace Game::Session {
+class SessionContext;
+}
+
 namespace Game::Systems::AI {
 
 struct AIDoctrine;
@@ -577,6 +581,8 @@ struct AIJob {
   AISnapshot snapshot;
   AIContext context;
   float delta_time = 0.0F;
+
+  Game::Session::SessionContext* session = nullptr;
 };
 
 } // namespace Game::Systems::AI

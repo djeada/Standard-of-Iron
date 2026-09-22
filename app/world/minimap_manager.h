@@ -23,8 +23,8 @@ class World;
 using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
-namespace Game::Systems {
-class SelectionSystem;
+namespace Game::Session {
+class SelectionService;
 }
 
 namespace Render::GL {
@@ -54,7 +54,7 @@ public:
   void update_fog(const Game::Map::VisibilityService::Snapshot& snapshot);
   void clear_fog();
   void update_units(Engine::Core::World* world,
-                    Game::Systems::SelectionSystem* selection_system,
+                    Game::Session::SelectionService* selection_system,
                     int local_owner_id);
   void update_camera_viewport(const Render::GL::Camera* camera,
                               float screen_width,

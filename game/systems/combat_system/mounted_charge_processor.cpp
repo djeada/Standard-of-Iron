@@ -144,12 +144,21 @@ void clear_charge_action(Engine::Core::Entity& entity) {
 
 } // namespace
 
+auto charges_on_horseback(Game::Units::SpawnType type) noexcept -> bool {
+  return Game::Units::is_cavalry(type) && type != Game::Units::SpawnType::HorseArcher;
+}
+
+auto mounted_charge_in_progress(const Engine::Core::Entity& entity) -> bool {
+  auto const* charge = entity.get_component<Engine::Core::MountedChargeComponent>();
+  return charge != nullptr &&
+         (charge->state == Engine::Core::MountedChargeState::Charging ||
+          charge->state == Engine::Core::MountedChargeState::ImpactActive);
+}
+
 auto request_mounted_charge(Engine::Core::Entity& entity,
                             Engine::Core::MountedChargeIntentSource source) -> bool {
   auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
-  if (unit == nullptr || unit->health <= 0 ||
-      !Game::Units::is_cavalry(unit->spawn_type) ||
-      unit->spawn_type == Game::Units::SpawnType::HorseArcher ||
+  if (unit == nullptr || unit->health <= 0 || !charges_on_horseback(unit->spawn_type) ||
       source == Engine::Core::MountedChargeIntentSource::None) {
     return false;
   }
@@ -197,8 +206,7 @@ void process_mounted_charge_intents(Engine::Core::World* world, float delta_time
     if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
-    if (!Game::Units::is_cavalry(unit->spawn_type) ||
-        unit->spawn_type == Game::Units::SpawnType::HorseArcher) {
+    if (!charges_on_horseback(unit->spawn_type)) {
       continue;
     }
 
@@ -227,8 +235,7 @@ void process_mounted_charge_intents(Engine::Core::World* world, float delta_time
     float const speed = movement_speed(*movement);
     bool const gaining_speed = speed > charge->last_observed_speed + 0.01F;
     charge->last_observed_speed = speed;
-    if (charge->state == Engine::Core::MountedChargeState::Charging ||
-        charge->state == Engine::Core::MountedChargeState::ImpactActive) {
+    if (mounted_charge_in_progress(*entity)) {
       if (is_knockdown_interrupted(*entity)) {
         (void)cancel_mounted_charge(
             *entity, Engine::Core::MountedChargeCancelReason::Interrupted);

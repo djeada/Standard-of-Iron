@@ -11,6 +11,10 @@
 
 namespace Game::Systems::Combat {
 
+auto is_building(const Engine::Core::Entity* entity) -> bool {
+  return entity != nullptr && entity->has_component<Engine::Core::BuildingComponent>();
+}
+
 auto is_passive_wildlife_target(Engine::Core::Entity* target) -> bool {
   if (target == nullptr) {
     return false;
@@ -42,8 +46,7 @@ auto evaluate_target(Engine::Core::Entity* target,
     return TargetRefusal::SelfOrAllied;
   }
 
-  if (!query.allow_buildings &&
-      target->has_component<Engine::Core::BuildingComponent>()) {
+  if (!query.allow_buildings && is_building(target)) {
     return TargetRefusal::Structure;
   }
 
@@ -60,7 +63,7 @@ auto evaluate_target(Engine::Core::Entity* target,
 }
 
 auto is_warded_structure(Engine::Core::Entity* target) -> bool {
-  if (target == nullptr || !target->has_component<Engine::Core::BuildingComponent>()) {
+  if (!is_building(target)) {
     return false;
   }
   const auto* capture = target->get_component<Engine::Core::CaptureComponent>();

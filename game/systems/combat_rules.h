@@ -43,8 +43,7 @@ inline void clear_rts_melee_lock(Engine::Core::Entity* entity) {
     return;
   }
 
-  attack->in_melee_lock = false;
-  attack->melee_lock_target_id = 0;
+  attack->release_melee_lock();
 }
 
 inline void clear_rts_combat_tracking(Engine::Core::Entity* entity) {

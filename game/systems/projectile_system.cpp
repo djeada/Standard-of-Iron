@@ -350,6 +350,73 @@ void ProjectileSystem::update(Engine::Core::World* world, float delta_time) {
                      m_projectiles.end(),
                      [](const ProjectilePtr& p) { return !p->is_active(); }),
       m_projectiles.end());
+
+  publish_render_views(world);
+}
+
+void ProjectileSystem::publish_render_views(Engine::Core::World* world) {
+  if (world == nullptr) {
+    return;
+  }
+
+  auto owner_of = [world](Engine::Core::EntityID id) -> int {
+    auto* entity = world->get_entity(id);
+    const auto* unit = entity != nullptr
+                           ? entity->get_component<Engine::Core::UnitComponent>()
+                           : nullptr;
+    return unit != nullptr ? unit->owner_id : 0;
+  };
+
+  auto& frame = world->render_effects_frame();
+
+  frame.projectiles.clear();
+  frame.projectiles.reserve(m_projectiles.size());
+  for (const auto& projectile : m_projectiles) {
+    if (!projectile || !projectile->is_active() || projectile->get_progress() < 0.0F) {
+      continue;
+    }
+
+    ProjectileView view;
+    view.start = projectile->get_start();
+    view.end = projectile->get_end();
+    view.color = projectile->get_color();
+    view.progress = projectile->get_progress();
+    view.arc_height = projectile->get_arc_height();
+    view.scale = projectile->get_scale();
+    view.kind = projectile->get_kind();
+
+    if (const auto* arrow = dynamic_cast<const ArrowProjectile*>(projectile.get())) {
+      view.shape = ProjectileShape::Arrow;
+      view.length_scale = arrow->length_scale();
+      view.roll_deg = arrow->roll_deg();
+      view.spin_rate_deg = arrow->spin_rate_deg();
+      view.trail_alpha = arrow->trail_alpha();
+      view.trail_length = arrow->trail_length();
+      view.brightness = arrow->brightness();
+      view.visual_style = arrow->visual_style();
+      view.ballista_bolt = arrow->is_ballista_bolt();
+      view.attacker_owner = owner_of(arrow->get_attacker_id());
+      view.target_owner = owner_of(arrow->get_target_id());
+    } else if (dynamic_cast<const StoneProjectile*>(projectile.get()) != nullptr) {
+      view.shape = ProjectileShape::Stone;
+    } else {
+      continue;
+    }
+
+    frame.projectiles.push_back(view);
+  }
+
+  frame.spent_projectiles = m_spent;
+
+  frame.projectile_impacts = m_impacts;
+  frame.impact_attacker_owners.clear();
+  frame.impact_target_owners.clear();
+  frame.impact_attacker_owners.reserve(m_impacts.size());
+  frame.impact_target_owners.reserve(m_impacts.size());
+  for (const auto& impact : m_impacts) {
+    frame.impact_attacker_owners.push_back(owner_of(impact.attacker_id));
+    frame.impact_target_owners.push_back(owner_of(impact.target_id));
+  }
 }
 
 auto ProjectileSystem::resolve_impact(Engine::Core::World* world,

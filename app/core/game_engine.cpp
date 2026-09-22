@@ -134,6 +134,9 @@
 #include "game/render_bridge/minimap/unit_layer.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/render_bridge/selection_controller.h"
+#include "game/session/selection_service.h"
+#include "game/session/selection_utils.h"
+#include "game/session/session_context.h"
 #include "game/session/session_snapshot.h"
 #include "game/session/simulation_clock.h"
 #include "game/systems/ai_system.h"
@@ -167,7 +170,6 @@
 #include "game/systems/rain_manager.h"
 #include "game/systems/rpg_combat_system/rpg_combat_processor.h"
 #include "game/systems/save_load_service.h"
-#include "game/systems/selection_system.h"
 #include "game/systems/terrain_alignment_system.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/troop_profile_service.h"
@@ -179,7 +181,6 @@
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 #include "game/util/asset_text.h"
-#include "game/util/selection_utils.h"
 #include "game/visuals/team_colors.h"
 #include "render/camera_visibility.h"
 #include "render/geom/projectile_renderer.h"
@@ -416,9 +417,8 @@ void GameEngine::sync_render_camera() {
 }
 
 void GameEngine::capture_render_selection() {
-  auto* selection_system = m_world != nullptr
-                               ? m_world->get_system<Game::Systems::SelectionSystem>()
-                               : nullptr;
+  auto* selection_system =
+      m_world != nullptr ? &Game::Session::session_for(*m_world).selection() : nullptr;
   if (selection_system == nullptr) {
     return;
   }
@@ -433,7 +433,6 @@ void GameEngine::capture_render_selection() {
   }
   if (m_scratch_selected_ids != m_selected_render_ids) {
     m_selected_render_ids = m_scratch_selected_ids;
-    m_selected_render_ids_dirty = true;
   }
 }
 
@@ -768,6 +767,7 @@ void GameEngine::run_simulation_thread() {
       }
       auto const tick_start = std::chrono::steady_clock::now();
       simulate(dt);
+      update_presentation(dt);
       drain_pending_save_capture();
       auto const tick_end = std::chrono::steady_clock::now();
       end_simulation_tick();
@@ -779,10 +779,8 @@ void GameEngine::run_simulation_thread() {
           std::memory_order_acq_rel);
     }
 
-    for (int spin = 0;
-         spin < k_frame_lock_handoff_yields &&
-         (m_frame_lock_waiters.load(std::memory_order_acquire) > 0 ||
-          m_presentation_awaiting_frame_lock.load(std::memory_order_acquire));
+    for (int spin = 0; spin < k_frame_lock_handoff_yields &&
+                       m_frame_lock_waiters.load(std::memory_order_acquire) > 0;
          ++spin) {
       m_frame_lock_stats.simulation_handoff_yields.fetch_add(1,
                                                              std::memory_order_relaxed);
@@ -833,25 +831,6 @@ void GameEngine::simulate(float dt) {
 }
 
 void GameEngine::update_presentation(float dt) {
-  std::unique_lock<std::recursive_mutex> frame_lock(m_frame_mutex, std::try_to_lock);
-  if (!frame_lock.owns_lock()) {
-    if (m_deferred_presentation_dt < k_max_deferred_presentation_seconds) {
-      m_deferred_presentation_dt += dt;
-      m_frame_lock_stats.deferred_presentations.fetch_add(1, std::memory_order_relaxed);
-      m_presentation_awaiting_frame_lock.store(true, std::memory_order_release);
-      return;
-    }
-    const FrameLockWaiter waiter(m_frame_lock_waiters);
-    m_frame_lock_stats.forced_presentation_waits.fetch_add(1,
-                                                           std::memory_order_relaxed);
-    const Render::Profiling::PhaseScope wait_scope(
-        &Render::Profiling::global_profile(),
-        Render::Profiling::Phase::PresentationLockWait);
-    frame_lock.lock();
-  }
-  m_presentation_awaiting_frame_lock.store(false, std::memory_order_release);
-  dt = std::min(dt + m_deferred_presentation_dt, k_simulation_max_frame_seconds);
-  m_deferred_presentation_dt = 0.0F;
   if (m_runtime.loading) {
     return;
   }
@@ -918,6 +897,31 @@ void GameEngine::update_presentation(float dt) {
     sync_target_focus_markers();
     update_tutorial(real_dt);
   }
+
+  publish_presentation_frame();
+}
+
+void GameEngine::publish_presentation_frame() {
+  auto frame = std::make_shared<App::Core::PresentationFrame>();
+  frame->has_camera = m_camera != nullptr;
+  if (frame->has_camera) {
+    frame->camera = m_render_camera;
+  }
+  frame->selected_ids = m_selected_render_ids;
+  frame->attack_targeting = m_attack_targeting;
+  frame->interaction_targeting = m_interaction_targeting;
+  frame->attack_range_rings = m_attack_range_rings;
+  frame->order_markers = m_order_markers.markers();
+  frame->target_focus = m_target_focus;
+  frame->objective_marker = m_mission_stage_tracker.active_target();
+  frame->commander_rally_preview_pos = m_commander_view_model->rally_preview_position();
+  frame->local_owner_id = m_runtime.local_owner_id;
+  frame->spectator_mode = m_level.is_spectator_mode;
+
+  std::atomic_store_explicit(
+      &m_presentation_frame,
+      std::shared_ptr<const App::Core::PresentationFrame>(std::move(frame)),
+      std::memory_order_release);
 }
 
 void GameEngine::announce_player_defeats(float dt) {
@@ -958,6 +962,7 @@ void GameEngine::publish_frame_snapshots() {
 }
 
 void GameEngine::update(float dt) {
+  const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
   simulate(dt);
   update_presentation(dt);
 }
@@ -974,6 +979,15 @@ void GameEngine::render(int pixel_width, int pixel_height) {
     m_viewport.height = pixel_height;
   }
 
+  const auto presentation =
+      std::atomic_load_explicit(&m_presentation_frame, std::memory_order_acquire);
+  if (presentation == nullptr) {
+    return;
+  }
+
+  if (presentation->has_camera) {
+    m_render_camera = presentation->camera;
+  }
   if (m_viewport.width > 0 && m_viewport.height > 0) {
     const float aspect =
         static_cast<float>(m_viewport.width) / static_cast<float>(m_viewport.height);
@@ -982,9 +996,9 @@ void GameEngine::render(int pixel_width, int pixel_height) {
                                     m_render_camera.get_near(),
                                     m_render_camera.get_far());
   }
-  if (m_selected_render_ids_dirty) {
-    m_selected_render_ids_dirty = false;
-    m_renderer->set_selected_entities(m_selected_render_ids);
+  if (m_drawn_selected_ids != presentation->selected_ids) {
+    m_drawn_selected_ids = presentation->selected_ids;
+    m_renderer->set_selected_entities(m_drawn_selected_ids);
   }
 
   m_renderer->set_camera(&m_render_camera);
@@ -1025,43 +1039,29 @@ void GameEngine::render(int pixel_width, int pixel_height) {
     m_renderer->set_hovered_entity_id(m_hover_tracker->get_last_hovered_entity());
   }
   if (m_renderer) {
-    m_renderer->set_local_owner_id(m_runtime.local_owner_id);
-    m_renderer->set_order_marker_spectator_mode(m_level.is_spectator_mode);
+    m_renderer->set_local_owner_id(presentation->local_owner_id);
+    m_renderer->set_order_marker_spectator_mode(presentation->spectator_mode);
   }
 
   m_renderer->render_world(m_world);
-  {
-    std::unique_lock<std::recursive_mutex> frame_lock(m_frame_mutex, std::defer_lock);
-    {
-      const FrameLockWaiter waiter(m_frame_lock_waiters);
-      const Render::Profiling::PhaseScope wait_scope(
-          &Render::Profiling::global_profile(),
-          Render::Profiling::Phase::EffectsLockWait);
-      auto const deadline =
-          std::chrono::steady_clock::now() + k_render_effects_lock_budget;
-      while (!frame_lock.try_lock()) {
-        if (std::chrono::steady_clock::now() >= deadline) {
-          break;
-        }
-        std::this_thread::yield();
-      }
-    }
-    if (frame_lock.owns_lock()) {
-      App::Core::FrameUiCoordinator::render_effects(
-          {.renderer = m_renderer.get(),
-           .world = m_world,
-           .command_controller = m_command_controller.get(),
-           .local_owner_id = m_runtime.local_owner_id,
-           .commander_rally_preview_pos =
-               m_commander_view_model->rally_preview_position(),
-           .attack_targeting = &m_attack_targeting,
-           .attack_range_rings = &m_attack_range_rings,
-           .order_markers = &m_order_markers.markers(),
-           .target_focus = &m_target_focus,
-           .interaction_targeting = &m_interaction_targeting,
-           .objective_marker = m_mission_stage_tracker.active_target()},
-          [this]() { m_commander_view_model->render_effects(); });
-    }
+  const std::shared_ptr<Engine::Core::World> effects_snapshot =
+      m_world->acquire_render_snapshot();
+  if (effects_snapshot != nullptr) {
+    App::Core::FrameUiCoordinator::render_effects(
+        {.renderer = m_renderer.get(),
+         .command_controller = m_command_controller.get(),
+         .local_owner_id = presentation->local_owner_id,
+         .commander_rally_preview_pos = presentation->commander_rally_preview_pos,
+         .attack_targeting = &presentation->attack_targeting,
+         .attack_range_rings = &presentation->attack_range_rings,
+         .order_markers = &presentation->order_markers,
+         .target_focus = &presentation->target_focus,
+         .interaction_targeting = &presentation->interaction_targeting,
+         .objective_marker = presentation->objective_marker,
+         .effects = &effects_snapshot->render_effects_frame(),
+         .snapshot = effects_snapshot.get(),
+         .session = m_session.get()},
+        [this]() { m_commander_view_model->render_effects(); });
   }
   m_renderer->end_frame();
 
@@ -1193,7 +1193,7 @@ void GameEngine::sync_selection_flags() {
   if (!m_world) {
     return;
   }
-  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*m_world).selection();
   if (selection_system == nullptr) {
     return;
   }
@@ -1440,8 +1440,7 @@ void GameEngine::sync_interaction_targeting(float delta_time) {
 
   if ((m_world != nullptr) && !m_level.is_spectator_mode && interaction_mode_armed) {
     std::vector<Engine::Core::EntityID> selection;
-    if (auto* selection_system =
-            m_world->get_system<Game::Systems::SelectionSystem>()) {
+    if (auto* selection_system = &Game::Session::session_for(*m_world).selection()) {
       selection = selection_system->get_selected_units();
     }
 
@@ -2125,8 +2124,7 @@ void GameEngine::reset_preload_interaction_state() {
   }
 
   if (m_world) {
-    if (auto* selection_system =
-            m_world->get_system<Game::Systems::SelectionSystem>()) {
+    if (auto* selection_system = &Game::Session::session_for(*m_world).selection()) {
       selection_system->clear_selection();
     }
   }
@@ -3264,7 +3262,7 @@ void GameEngine::sync_focus_targets() {
   QVariantMap inspect;
   QVariantMap target;
   if (m_world != nullptr) {
-    auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+    auto* selection_system = &Game::Session::session_for(*m_world).selection();
     if (selection_system != nullptr) {
       const auto& selection = selection_system->get_selected_units();
       const auto inspected = selection_system->inspected_entity();
@@ -3299,7 +3297,7 @@ void GameEngine::sync_target_focus_markers() {
   if (m_world == nullptr || m_level.is_spectator_mode) {
     return;
   }
-  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*m_world).selection();
   if (selection_system == nullptr) {
     return;
   }

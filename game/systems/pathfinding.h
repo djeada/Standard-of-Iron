@@ -314,7 +314,7 @@ private:
   };
 
   static constexpr std::size_t k_max_tracked_nav_changes = 64U;
-  static constexpr std::size_t k_max_cached_paths = 256U;
+  static constexpr std::size_t k_max_cached_paths = 2048U;
 
   void note_navigation_change(int min_x, int max_x, int min_z, int max_z);
   void drop_paths_crossing_changes(std::uint64_t from_revision,

@@ -12,10 +12,11 @@
 #include "game/map/visibility_service.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/render_bridge/selection_controller.h"
+#include "game/session/selection_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/interaction_targeting.h"
 #include "game/systems/nav_grid.h"
-#include "game/systems/selection_system.h"
 #include "scene/camera.h"
 
 InputCommandHandler::InputCommandHandler(
@@ -90,7 +91,7 @@ void InputCommandHandler::on_right_click(qreal sx,
     return;
   }
 
-  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*m_world).selection();
   if (selection_system == nullptr) {
     return;
   }
@@ -155,7 +156,7 @@ auto InputCommandHandler::resolve_context_interaction(
     return interaction;
   }
 
-  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*m_world).selection();
   if (selection_system == nullptr) {
     return interaction;
   }
@@ -245,7 +246,7 @@ void InputCommandHandler::on_minimap_right_click(const QVector3D& world_target,
     return;
   }
 
-  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*m_world).selection();
   if (selection_system == nullptr) {
     return;
   }
@@ -267,7 +268,7 @@ void InputCommandHandler::on_right_double_click(qreal sx,
     return;
   }
 
-  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*m_world).selection();
   if (selection_system == nullptr) {
     return;
   }
@@ -302,7 +303,7 @@ auto InputCommandHandler::on_right_press(qreal sx,
     return false;
   }
 
-  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*m_world).selection();
   if (selection_system == nullptr) {
     return false;
   }

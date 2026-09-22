@@ -4,13 +4,14 @@
 #include "app/orders/rts_action_model.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
+#include "game/session/selection_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/builder_product_types.h"
-#include "game/systems/selection_system.h"
 
 namespace {
 
 auto add_selected_unit(Engine::Core::World& world,
-                       Game::Systems::SelectionSystem& selection,
+                       Game::Session::SelectionService& selection,
                        Game::Units::SpawnType spawn_type) -> Engine::Core::Entity* {
   auto* entity = world.create_entity();
   auto* unit = entity->add_component<Engine::Core::UnitComponent>();
@@ -21,8 +22,7 @@ auto add_selected_unit(Engine::Core::World& world,
 
 TEST(RtsActionModel, EngagedUnitDoesNotReportAttackCommandModeWithNormalCursor) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   auto* unit = add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
@@ -37,8 +37,7 @@ TEST(RtsActionModel, EngagedUnitDoesNotReportAttackCommandModeWithNormalCursor) 
 
 TEST(RtsActionModel, AttackCursorModeReportsAttackCommandMode) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
@@ -52,8 +51,7 @@ TEST(RtsActionModel, AttackCursorModeReportsAttackCommandMode) {
 
 TEST(RtsActionModel, GuardModeStillReportsGuardCommandMode) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   auto* unit = add_selected_unit(world, *selection, Game::Units::SpawnType::Spearman);
@@ -68,8 +66,7 @@ TEST(RtsActionModel, GuardModeStillReportsGuardCommandMode) {
 
 TEST(RtsActionModel, SelectedCommanderAuraReflectsReadyActiveAndCooldownStates) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   auto* entity =
@@ -99,8 +96,7 @@ TEST(RtsActionModel, SelectedCommanderAuraReflectsReadyActiveAndCooldownStates) 
 
 TEST(RtsActionModel, RepairIsOfferedToBuildersAndNobodyElse) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
@@ -126,8 +122,7 @@ TEST(RtsActionModel, RepairIsOfferedToBuildersAndNobodyElse) {
 
 TEST(RtsActionModel, ARepairingBuilderReportsTheOrderAsActive) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   auto* builder = add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
@@ -146,8 +141,7 @@ TEST(RtsActionModel, ARepairingBuilderReportsTheOrderAsActive) {
 
 TEST(RtsActionModel, ArmingRepairShowsUpAsTheCurrentCommandMode) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   auto* builder = add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
@@ -164,8 +158,7 @@ TEST(RtsActionModel, ArmingRepairShowsUpAsTheCurrentCommandMode) {
 
 TEST(RtsActionModel, AutoGatherIsOfferedToBuildersAndNobodyElse) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
@@ -194,8 +187,7 @@ TEST(RtsActionModel, AutoGatherIsOfferedToBuildersAndNobodyElse) {
 
 TEST(RtsActionModel, AnAutoGatheringBuilderShowsTheOrderAsActive) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   auto* first = add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
@@ -213,8 +205,7 @@ TEST(RtsActionModel, AnAutoGatheringBuilderShowsTheOrderAsActive) {
 
 TEST(RtsActionModel, TheAutoGatherStateNamesTheResourceItIsFavouring) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   auto* worker = add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
@@ -239,8 +230,7 @@ TEST(RtsActionModel, TheAutoGatherStateNamesTheResourceItIsFavouring) {
 
 TEST(RtsActionModel, GuardQuotesTheRingItActuallyFightsIn) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   auto* unit = add_selected_unit(world, *selection, Game::Units::SpawnType::Spearman);
@@ -264,8 +254,7 @@ TEST(RtsActionModel, GuardQuotesTheRingItActuallyFightsIn) {
 
 TEST(RtsActionModel, HoldQuotesTheBonusesThatMakeItWorthPressing) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
@@ -284,8 +273,7 @@ TEST(RtsActionModel, HoldQuotesTheBonusesThatMakeItWorthPressing) {
 
 TEST(RtsActionModel, PatrolSaysWhichWaypointComesNext) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
@@ -310,8 +298,7 @@ TEST(RtsActionModel, PatrolSaysWhichWaypointComesNext) {
 
 TEST(RtsActionModel, AuraQuotesTheSelectedCommandersOwnNumbers) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   auto* entity =
@@ -340,7 +327,6 @@ TEST(RtsActionModel, AuraQuotesTheSelectedCommandersOwnNumbers) {
 
 TEST(RtsActionModel, AnEmptySelectionStillCarriesTheStaticOrderFacts) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
 
   App::Core::ActionContext context;
   context.world = &world;
@@ -358,8 +344,7 @@ TEST(RtsActionModel, AnEmptySelectionStillCarriesTheStaticOrderFacts) {
 
 TEST(RtsActionModel, ASelectedCommanderCountsAsACommandableSelection) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   add_selected_unit(world, *selection, Game::Units::SpawnType::RomanFieldCommander);
@@ -379,8 +364,7 @@ TEST(RtsActionModel, ASelectedCommanderCountsAsACommandableSelection) {
 
 TEST(RtsActionModel, BuildingsAndWildlifeAreNotACommandableSelection) {
   Engine::Core::World world;
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  auto* selection = &Game::Session::SessionContext::active().selection();
   ASSERT_NE(selection, nullptr);
 
   EXPECT_FALSE(App::Core::has_commandable_selection(&world));

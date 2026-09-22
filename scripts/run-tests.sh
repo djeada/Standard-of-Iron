@@ -58,6 +58,29 @@ case "${profile}" in
     ;;
 esac
 
+# One job per suite, for a caller that has to fit each suite inside its own
+# budget: SOI_TEST_SUITES narrows what this invocation runs, and the array above
+# stays the whole truth about which suites exist. A name that is not in it is an
+# error, not a silent no-op -- that is how a suite stops being run by anyone.
+selected_suites=${SOI_TEST_SUITES:-}
+if [ -n "${selected_suites}" ]; then
+  read -r -a requested <<<"${selected_suites}"
+  for name in "${requested[@]}"; do
+    known=0
+    for suite in "${suites[@]}"; do
+      if [ "${name}" = "${suite}" ]; then
+        known=1
+        break
+      fi
+    done
+    if [ "${known}" -eq 0 ]; then
+      echo "error: SOI_TEST_SUITES names '${name}', which is not one of: ${suites[*]}" >&2
+      exit 2
+    fi
+  done
+  suites=("${requested[@]}")
+fi
+
 manifest="${repo_root}/tests/extended_tests.txt"
 gtest_filter=()
 if [ "${run_extended}" -eq 0 ]; then
@@ -119,8 +142,17 @@ done
 
 # The acceptance and presentation binaries below are not GoogleTest suites, so
 # there is nothing in them for a test-level filter to subtract. They are whole
-# scenarios measured in minutes and belong to the full profile only.
+# scenarios measured in minutes and belong to the full profile only. A run that
+# narrowed the suites skips them, so that splitting the suites across jobs runs
+# them once rather than once per job; SOI_RUN_ACCEPTANCE=1 is how exactly one of
+# those jobs asks for them anyway.
+run_acceptance=0
 if [ "${run_extended}" -eq 1 ]; then
+  if [ -z "${selected_suites}" ] || [ "${SOI_RUN_ACCEPTANCE:-0}" = "1" ]; then
+    run_acceptance=1
+  fi
+fi
+if [ "${run_acceptance}" -eq 1 ]; then
   verifier=$(resolve battlefield_gameplay_verifier)
   if [ -n "${verifier}" ]; then
     echo "--- battlefield_gameplay_verifier ---"

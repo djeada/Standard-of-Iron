@@ -12,7 +12,6 @@
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
 #include "../../visuals/team_colors.h"
-#include "../combat_rules.h"
 #include "../projectile_kind.h"
 #include "../projectile_system.h"
 #include "combat_random.h"
@@ -23,12 +22,6 @@
 namespace Game::Systems::Combat {
 
 namespace {
-
-[[nodiscard]] auto get_entity_from_query_context(
-    const CombatQueryContext& query_context,
-    Engine::Core::EntityID entity_id) -> Engine::Core::Entity* {
-  return query_context.find_entity(entity_id);
-}
 
 [[nodiscard]] auto
 is_motion_active(const Engine::Core::Entity& entity) noexcept -> bool {
@@ -50,8 +43,7 @@ void reset_loading(Engine::Core::CatapultLoadingComponent& loading) {
 ammunition_for_target(Engine::Core::Entity* siege,
                       Engine::Core::Entity* target,
                       Game::Units::SpawnType spawn_type) -> ProjectileKind {
-  if (spawn_type != Game::Units::SpawnType::Catapult || target == nullptr ||
-      !target->has_component<Engine::Core::BuildingComponent>()) {
+  if (spawn_type != Game::Units::SpawnType::Catapult || !is_building(target)) {
     return ProjectileKind::Stone;
   }
   auto const* target_unit = target->get_component<Engine::Core::UnitComponent>();
@@ -94,7 +86,7 @@ void start_loading(Engine::Core::Entity* siege,
                          siege_transform->position.y,
                          siege_transform->position.z);
   QVector3D const locked_target =
-      target->has_component<Engine::Core::BuildingComponent>()
+      is_building(target)
           ? structure_impact_point(
                 *target, source, 0.0F, structure_attack_profile(siege).impact_height)
           : QVector3D(target_transform->position.x,
@@ -124,7 +116,7 @@ void start_loading(Engine::Core::Entity* siege,
     return false;
   }
 
-  if (target->has_component<Engine::Core::BuildingComponent>()) {
+  if (is_building(target)) {
     QVector3D const source(siege_transform->position.x,
                            siege_transform->position.y,
                            siege_transform->position.z);
@@ -287,10 +279,7 @@ void process_loading_siege_unit(Engine::Core::World* world,
   auto* loading =
       Engine::Core::get_or_add_component<Engine::Core::CatapultLoadingComponent>(siege);
 
-  auto const* attack = siege->get_component<Engine::Core::AttackComponent>();
-  bool const in_melee_lock =
-      attack != nullptr && attack->in_melee_lock &&
-      Game::Systems::CombatRules::participates_in_rts_melee_lock(siege);
+  bool const in_melee_lock = in_rts_melee_lock(siege);
 
   if ((is_motion_active(*siege) || in_melee_lock) &&
       loading->state != Engine::Core::CatapultLoadingComponent::LoadingState::Idle) {
@@ -306,8 +295,7 @@ void process_loading_siege_unit(Engine::Core::World* world,
     auto* attack_target = siege->get_component<Engine::Core::AttackTargetComponent>();
     if (attack_target != nullptr && attack_target->target_id != 0 &&
         attack_target->target_id != loading->target_id) {
-      auto* retarget =
-          get_entity_from_query_context(query_context, attack_target->target_id);
+      auto* retarget = query_context.find_entity(attack_target->target_id);
       if (may_attack(unit,
                      retarget,
                      {.intent = EngagementIntent::Ordered, .allow_buildings = true}) &&
@@ -323,8 +311,7 @@ void process_loading_siege_unit(Engine::Core::World* world,
     if (attack_target == nullptr || attack_target->target_id == 0) {
       break;
     }
-    auto* target =
-        get_entity_from_query_context(query_context, attack_target->target_id);
+    auto* target = query_context.find_entity(attack_target->target_id);
     if (may_attack(unit,
                    target,
                    {.intent = EngagementIntent::Ordered, .allow_buildings = true}) &&
@@ -358,7 +345,7 @@ void process_loading_siege_unit(Engine::Core::World* world,
 }
 
 [[nodiscard]] auto is_enemy_tower_building(Engine::Core::Entity* entity) -> bool {
-  if (entity == nullptr || !entity->has_component<Engine::Core::BuildingComponent>()) {
+  if (!is_building(entity)) {
     return false;
   }
 
@@ -390,8 +377,7 @@ find_nearest_tower_target(Engine::Core::Entity* tower,
             {.intent = EngagementIntent::AutoAcquired, .allow_buildings = true})) {
       continue;
     }
-    if (entity->has_component<Engine::Core::BuildingComponent>() &&
-        !is_enemy_tower_building(entity)) {
+    if (is_building(entity) && !is_enemy_tower_building(entity)) {
       continue;
     }
 
@@ -480,7 +466,7 @@ void process_defense_tower(Engine::Core::World* world,
   auto* tower_unit = tower->get_component<Engine::Core::UnitComponent>();
   if (tower_unit == nullptr || tower_unit->health <= 0 ||
       tower_unit->spawn_type != Game::Units::SpawnType::DefenseTower ||
-      !tower->has_component<Engine::Core::BuildingComponent>()) {
+      !is_building(tower)) {
     return;
   }
 

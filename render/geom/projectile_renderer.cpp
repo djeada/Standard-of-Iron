@@ -7,7 +7,7 @@
 
 #include "arrow.h"
 #include "game/systems/arrow_projectile.h"
-#include "game/systems/projectile_system.h"
+#include "game/systems/render_effects_frame.h"
 #include "game/systems/stone_projectile.h"
 #include "render/gl/mesh_prewarmer.h"
 #include "render/gl/primitives.h"
@@ -50,13 +50,11 @@ auto classify_projectile_relation(int local_owner_id,
   return ProjectileRelation::Neutral;
 }
 
-auto ProjectileViewContext::relation_for(
-    std::uint64_t attacker_id, std::uint64_t target_id) const -> ProjectileRelation {
-  if (!owner_of || local_owner_id <= 0) {
+auto ProjectileViewContext::relation_for_owners(
+    int attacker_owner, int target_owner) const -> ProjectileRelation {
+  if (local_owner_id <= 0) {
     return ProjectileRelation::Neutral;
   }
-  const int attacker_owner = attacker_id != 0U ? owner_of(attacker_id) : 0;
-  const int target_owner = target_id != 0U ? owner_of(target_id) : 0;
   return classify_projectile_relation(local_owner_id, attacker_owner, target_owner);
 }
 
@@ -485,7 +483,7 @@ void render_spent_projectile(Renderer* renderer,
 
 void render_arrow_projectile(Renderer* renderer,
                              ResourceManager* resources,
-                             const Game::Systems::ArrowProjectile& arrow,
+                             const Game::Systems::ProjectileView& projectile,
                              const QVector3D& pos,
                              const QMatrix4x4& base_model,
                              ProjectileRelation relation) {
@@ -501,22 +499,22 @@ void render_arrow_projectile(Renderer* renderer,
     return;
   }
 
-  const QVector3D delta = arrow.get_end() - arrow.get_start();
+  const QVector3D delta = projectile.end - projectile.start;
   const float dist = std::max(0.001F, delta.length());
 
   QMatrix4x4 model = base_model;
 
   constexpr float k_arc_height_multiplier = 8.0F;
   constexpr float k_arc_center_offset = 0.5F;
-  float const vy = (arrow.get_end().y() - arrow.get_start().y()) / dist;
+  float const vy = (projectile.end.y() - projectile.start.y()) / dist;
   float const pitch_deg =
-      -std::atan2(vy - (k_arc_height_multiplier * arrow.get_arc_height() *
-                        (arrow.get_progress() - k_arc_center_offset) / dist),
+      -std::atan2(vy - (k_arc_height_multiplier * projectile.arc_height *
+                        (projectile.progress - k_arc_center_offset) / dist),
                   1.0F) *
       (180.0F / std::numbers::pi_v<float>);
   model.rotate(pitch_deg, QVector3D(1, 0, 0));
 
-  if (arrow.get_kind() == Game::Systems::ProjectileKind::Fireball) {
+  if (projectile.kind == Game::Systems::ProjectileKind::Fireball) {
     auto* fireball_mesh = get_unit_sphere();
     if (fireball_mesh == nullptr) {
       return;
@@ -524,8 +522,8 @@ void render_arrow_projectile(Renderer* renderer,
 
     float const animation_time = renderer->get_animation_time();
     float const pulse =
-        0.94F + 0.08F * std::sin(animation_time * 12.0F + arrow.get_progress() * 32.0F);
-    float const spell_phase = animation_time + arrow.get_progress() * 3.7F;
+        0.94F + 0.08F * std::sin(animation_time * 12.0F + projectile.progress * 32.0F);
+    float const spell_phase = animation_time + projectile.progress * 3.7F;
 
     renderer->fireball(
         pos, QVector3D(0.34F, 0.09F, 0.02F), 0.205F * pulse, 0.72F, spell_phase);
@@ -543,13 +541,13 @@ void render_arrow_projectile(Renderer* renderer,
     constexpr int k_trail_segments = 18;
     for (int trail_idx = 1; trail_idx <= k_trail_segments; ++trail_idx) {
       float const trail_t =
-          arrow.get_progress() - static_cast<float>(trail_idx) * 0.013F;
+          projectile.progress - static_cast<float>(trail_idx) * 0.013F;
       if (trail_t < 0.0F) {
         continue;
       }
 
-      QVector3D trail_pos = arrow.get_start() + delta * trail_t;
-      float const trail_h = arrow.get_arc_height() * 4.0F * trail_t * (1.0F - trail_t);
+      QVector3D trail_pos = projectile.start + delta * trail_t;
+      float const trail_h = projectile.arc_height * 4.0F * trail_t * (1.0F - trail_t);
       float const age =
           static_cast<float>(trail_idx) / static_cast<float>(k_trail_segments);
       trail_pos.setY(trail_pos.y() + trail_h + age * 0.055F);
@@ -592,10 +590,10 @@ void render_arrow_projectile(Renderer* renderer,
     return;
   }
 
-  if (arrow.is_ballista_bolt()) {
+  if (projectile.ballista_bolt) {
 
     float const spin_speed = 190.0F;
-    float const spin_angle = arrow.get_progress() * spin_speed;
+    float const spin_angle = projectile.progress * spin_speed;
     model.rotate(spin_angle, QVector3D(0, 0, 1));
 
     QMatrix4x4 bolt_model = model;
@@ -603,7 +601,7 @@ void render_arrow_projectile(Renderer* renderer,
         0.0F, 0.0F, -k_bolt_z_scale * Geom::Arrow::k_arrow_z_translate_factor);
     bolt_model.scale(k_bolt_xy_scale, k_bolt_xy_scale, k_bolt_z_scale);
 
-    QVector3D const base_color = arrow.get_color();
+    QVector3D const base_color = projectile.color;
     QVector3D const wood_color =
         scaled_color(Geom::Arrow::shaft_color(base_color), 0.84F);
     QVector3D const iron_color = Geom::Arrow::tip_color(0.94F);
@@ -621,17 +619,17 @@ void render_arrow_projectile(Renderer* renderer,
                     1.15F);
 
     for (int trail_idx = 1; trail_idx <= 2; trail_idx++) {
-      float const trail_t = arrow.get_progress() - (trail_idx * 0.055F);
+      float const trail_t = projectile.progress - (trail_idx * 0.055F);
       if (trail_t <= 0.0F) {
         continue;
       }
-      QVector3D trail_pos = arrow.get_start() + delta * trail_t;
+      QVector3D trail_pos = projectile.start + delta * trail_t;
       trail_pos.setY(trail_pos.y() +
-                     arrow.get_arc_height() * 4.0F * trail_t * (1.0F - trail_t));
+                     projectile.arc_height * 4.0F * trail_t * (1.0F - trail_t));
 
       QVector3D tangent = delta;
       tangent.setY(tangent.y() +
-                   arrow.get_arc_height() * 4.0F * (1.0F - 2.0F * trail_t));
+                   projectile.arc_height * 4.0F * (1.0F - 2.0F * trail_t));
       QMatrix4x4 trail_model = projectile_model_at(trail_pos, tangent);
       trail_model.rotate(trail_t * spin_speed, QVector3D(0, 0, 1));
       trail_model.translate(
@@ -647,31 +645,32 @@ void render_arrow_projectile(Renderer* renderer,
     }
   } else {
     bool const commander_shot =
-        arrow.visual_style() == Game::Systems::ArrowVisualStyle::Commander;
+        projectile.visual_style == Game::Systems::ArrowVisualStyle::Commander;
     bool const signature_shot =
-        arrow.visual_style() == Game::Systems::ArrowVisualStyle::CommanderSignature;
-    bool const aimed = arrow.visual_style() == Game::Systems::ArrowVisualStyle::Aimed ||
-                       commander_shot || signature_shot;
+        projectile.visual_style == Game::Systems::ArrowVisualStyle::CommanderSignature;
+    bool const aimed =
+        projectile.visual_style == Game::Systems::ArrowVisualStyle::Aimed ||
+        commander_shot || signature_shot;
     int const trail_segments = signature_shot ? 8 : (aimed ? 6 : 2);
     float const trail_step = aimed ? 0.17F : 0.38F;
-    if (arrow.trail_alpha() > 0.001F && arrow.trail_length() > 0.0F) {
+    if (projectile.trail_alpha > 0.001F && projectile.trail_length > 0.0F) {
       for (int segment = 1; segment <= trail_segments; ++segment) {
-        float const trail_t =
-            arrow.get_progress() -
-            arrow.trail_length() * (0.55F + trail_step * static_cast<float>(segment));
+        float const trail_t = projectile.progress -
+                              projectile.trail_length *
+                                  (0.55F + trail_step * static_cast<float>(segment));
         if (trail_t <= 0.0F) {
           continue;
         }
-        QVector3D trail_pos = arrow.get_start() + delta * trail_t;
+        QVector3D trail_pos = projectile.start + delta * trail_t;
         trail_pos.setY(trail_pos.y() +
-                       arrow.get_arc_height() * 4.0F * trail_t * (1.0F - trail_t));
+                       projectile.arc_height * 4.0F * trail_t * (1.0F - trail_t));
         QVector3D tangent = delta;
         tangent.setY(tangent.y() +
-                     arrow.get_arc_height() * 4.0F * (1.0F - 2.0F * trail_t));
+                     projectile.arc_height * 4.0F * (1.0F - 2.0F * trail_t));
         QMatrix4x4 trail_model = projectile_model_at(trail_pos, tangent);
-        trail_model.rotate(arrow.roll_deg() + trail_t * arrow.spin_rate_deg(),
+        trail_model.rotate(projectile.roll_deg + trail_t * projectile.spin_rate_deg,
                            QVector3D(0, 0, 1));
-        float const trail_scale = arrow.get_scale() * (1.0F - 0.06F * segment);
+        float const trail_scale = projectile.scale * (1.0F - 0.06F * segment);
         trail_model.translate(0.0F,
                               0.0F,
                               -Geom::Arrow::k_arrow_z_scale * trail_scale *
@@ -680,17 +679,17 @@ void render_arrow_projectile(Renderer* renderer,
         trail_model.scale(Geom::Arrow::k_arrow_xy_scale * trail_scale * streak_xy,
                           Geom::Arrow::k_arrow_xy_scale * trail_scale * streak_xy,
                           Geom::Arrow::k_arrow_z_scale * trail_scale *
-                              arrow.length_scale() * (aimed ? 1.35F : 1.0F));
+                              projectile.length_scale * (aimed ? 1.35F : 1.0F));
         float const falloff = 1.0F - (static_cast<float>(segment) /
                                       static_cast<float>(trail_segments + 1));
         float const alpha =
-            (aimed ? arrow.trail_alpha() * falloff * falloff
-                   : arrow.trail_alpha() *
+            (aimed ? projectile.trail_alpha * falloff * falloff
+                   : projectile.trail_alpha *
                          (0.55F - 0.16F * static_cast<float>(segment))) *
             relation_trail_boost(relation);
         renderer->mesh(arrow_shaft_mesh,
                        trail_model,
-                       scaled_color(Geom::Arrow::shaft_color(arrow.get_color()),
+                       scaled_color(Geom::Arrow::shaft_color(projectile.color),
                                     aimed ? 1.10F : 0.88F),
                        nullptr,
                        alpha);
@@ -699,34 +698,34 @@ void render_arrow_projectile(Renderer* renderer,
 
     if (aimed) {
 
-      float const flight = std::clamp(arrow.get_progress(), 0.0F, 1.0F);
+      float const flight = std::clamp(projectile.progress, 0.0F, 1.0F);
       float const settle = std::clamp(flight * 6.0F, 0.0F, 1.0F);
-      QVector3D const glow_color = Geom::Arrow::glow_color(arrow.get_color());
+      QVector3D const glow_color = Geom::Arrow::glow_color(projectile.color);
       QVector3D const head_color = signature_shot ? QVector3D(1.0F, 0.72F, 0.38F)
                                                   : QVector3D(1.0F, 0.92F, 0.72F);
 
       renderer->metal_spark(pos,
                             head_color,
-                            (signature_shot ? 0.085F : 0.055F) * arrow.get_scale(),
+                            (signature_shot ? 0.085F : 0.055F) * projectile.scale,
                             (signature_shot ? 2.1F : 1.35F) * settle,
-                            arrow.get_progress() * 0.24F,
+                            projectile.progress * 0.24F,
                             delta.normalized());
       if (signature_shot) {
         for (int ember = 1; ember <= 3; ++ember) {
           float const ember_t =
-              arrow.get_progress() - 0.045F * static_cast<float>(ember);
+              projectile.progress - 0.045F * static_cast<float>(ember);
           if (ember_t <= 0.0F) {
             continue;
           }
-          QVector3D ember_pos = arrow.get_start() + delta * ember_t;
+          QVector3D ember_pos = projectile.start + delta * ember_t;
           ember_pos.setY(ember_pos.y() +
-                         arrow.get_arc_height() * 4.0F * ember_t * (1.0F - ember_t));
+                         projectile.arc_height * 4.0F * ember_t * (1.0F - ember_t));
           renderer->metal_spark(
               ember_pos,
               QVector3D(1.0F, 0.55F, 0.22F),
-              0.05F * arrow.get_scale(),
+              0.05F * projectile.scale,
               1.2F * settle,
-              std::fmod(arrow.get_progress() * 0.6F + static_cast<float>(ember) * 0.07F,
+              std::fmod(projectile.progress * 0.6F + static_cast<float>(ember) * 0.07F,
                         0.26F),
               delta.normalized());
         }
@@ -740,27 +739,27 @@ void render_arrow_projectile(Renderer* renderer,
               : (glow_color * 0.45F) + (QVector3D(1.0F, 0.90F, 0.66F) * 0.55F);
       flight_light.radius = signature_shot ? 3.4F : 2.6F;
       flight_light.intensity =
-          (signature_shot ? 0.95F : 0.65F) * settle * arrow.brightness();
+          (signature_shot ? 0.95F : 0.65F) * settle * projectile.brightness;
       renderer->local_light(flight_light);
     }
-    model.rotate(arrow.roll_deg() + arrow.get_progress() * arrow.spin_rate_deg(),
+    model.rotate(projectile.roll_deg + projectile.progress * projectile.spin_rate_deg,
                  QVector3D(0, 0, 1));
     constexpr float arrow_z_scale = Geom::Arrow::k_arrow_z_scale;
     constexpr float arrow_xy_scale = Geom::Arrow::k_arrow_xy_scale;
     constexpr float arrow_z_translate_factor = Geom::Arrow::k_arrow_z_translate_factor;
     model.translate(0.0F, 0.0F, -arrow_z_scale * arrow_z_translate_factor);
-    model.scale(arrow_xy_scale * arrow.get_scale(),
-                arrow_xy_scale * arrow.get_scale(),
-                arrow_z_scale * arrow.get_scale() * arrow.length_scale());
+    model.scale(arrow_xy_scale * projectile.scale,
+                arrow_xy_scale * projectile.scale,
+                arrow_z_scale * projectile.scale * projectile.length_scale);
 
-    QVector3D const team_color = arrow.get_color();
-    float const brightness = arrow.brightness() * relation_brightness(relation);
+    QVector3D const team_color = projectile.color;
+    float const brightness = projectile.brightness * relation_brightness(relation);
     QVector3D shaft_color =
         scaled_color(Geom::Arrow::shaft_color(team_color), brightness);
     QVector3D tip_color = scaled_color(Geom::Arrow::tip_color(), brightness);
     QVector3D fletch_color =
         scaled_color(Geom::Arrow::fletch_color(team_color), brightness);
-    if (arrow.get_kind() == Game::Systems::ProjectileKind::CursedArrow) {
+    if (projectile.kind == Game::Systems::ProjectileKind::CursedArrow) {
       shaft_color = QVector3D(0.42F, 0.18F, 0.58F);
       tip_color = QVector3D(0.72F, 0.32F, 0.92F);
       fletch_color = QVector3D(0.58F, 0.22F, 0.82F);
@@ -778,7 +777,7 @@ void render_arrow_projectile(Renderer* renderer,
     renderer->mesh(arrow_tip_mesh, model, tip_color, nullptr, 1.0F);
 
     QVector3D const glow =
-        arrow.get_kind() == Game::Systems::ProjectileKind::CursedArrow
+        projectile.kind == Game::Systems::ProjectileKind::CursedArrow
             ? QVector3D(0.78F, 0.35F, 1.0F)
             : (signature_shot
                    ? QVector3D(1.0F, 0.62F, 0.28F)
@@ -803,7 +802,7 @@ void render_arrow_projectile(Renderer* renderer,
 
 void render_stone_projectile(Renderer* renderer,
                              ResourceManager* resources,
-                             const Game::Systems::StoneProjectile& stone,
+                             const Game::Systems::ProjectileView& projectile,
                              const QVector3D& position,
                              const QMatrix4x4& base_model) {
   if ((renderer == nullptr) || (resources == nullptr)) {
@@ -818,14 +817,14 @@ void render_stone_projectile(Renderer* renderer,
   QMatrix4x4 model = base_model;
 
   float const tumble_speed = 720.0F;
-  float const tumble_angle = stone.get_progress() * tumble_speed;
+  float const tumble_angle = projectile.progress * tumble_speed;
   model.rotate(tumble_angle, QVector3D(1, 0.5F, 0.3F).normalized());
 
-  float const stone_scale = stone.get_scale();
+  float const stone_scale = projectile.scale;
   float const mesh_scale = stone_scale * Geom::Stone::k_projectile_radius;
   model.scale(mesh_scale, mesh_scale, mesh_scale);
 
-  bool const flaming = stone.get_kind() == Game::Systems::ProjectileKind::FlamingStone;
+  bool const flaming = projectile.kind == Game::Systems::ProjectileKind::FlamingStone;
   QVector3D const stone_color =
       flaming ? QVector3D(0.32F, 0.24F, 0.20F) : QVector3D(0.45F, 0.42F, 0.38F);
   renderer->mesh(stone_mesh, model, stone_color, nullptr, 1.0F);
@@ -836,30 +835,30 @@ void render_stone_projectile(Renderer* renderer,
 
   float const animation_time = renderer->get_animation_time();
   float const pulse =
-      0.92F + 0.10F * std::sin(animation_time * 11.0F + stone.get_progress() * 27.0F);
+      0.92F + 0.10F * std::sin(animation_time * 11.0F + projectile.progress * 27.0F);
   float const core_radius = 0.20F * stone_scale * pulse;
   renderer->fireball(position,
                      QVector3D(0.95F, 0.26F, 0.04F),
                      core_radius,
                      0.92F,
-                     animation_time + stone.get_progress() * 3.1F);
+                     animation_time + projectile.progress * 3.1F);
   renderer->fireball(position,
                      QVector3D(1.0F, 0.66F, 0.18F),
                      core_radius * 0.55F,
                      1.28F,
                      animation_time * 1.29F + 1.4F);
 
-  const QVector3D delta = stone.get_end() - stone.get_start();
+  const QVector3D delta = projectile.end - projectile.start;
   constexpr int k_trail_segments = 4;
   for (int trail_idx = 1; trail_idx <= k_trail_segments; ++trail_idx) {
-    float const trail_t = stone.get_progress() - static_cast<float>(trail_idx) * 0.045F;
+    float const trail_t = projectile.progress - static_cast<float>(trail_idx) * 0.045F;
     if (trail_t < 0.0F) {
       continue;
     }
 
-    QVector3D trail_pos = stone.get_start() + delta * trail_t;
+    QVector3D trail_pos = projectile.start + delta * trail_t;
     trail_pos.setY(trail_pos.y() +
-                   stone.get_arc_height() * 4.0F * trail_t * (1.0F - trail_t));
+                   projectile.arc_height * 4.0F * trail_t * (1.0F - trail_t));
 
     float const falloff =
         1.0F - static_cast<float>(trail_idx) / static_cast<float>(k_trail_segments);
@@ -873,29 +872,23 @@ void render_stone_projectile(Renderer* renderer,
 
 void render_projectiles(Renderer* renderer,
                         ResourceManager* resources,
-                        const Game::Systems::ProjectileSystem& projectile_system,
+                        const Game::Systems::RenderEffectsFrame& effects,
                         const ProjectileViewContext* view) {
   if ((renderer == nullptr) || (resources == nullptr)) {
     return;
   }
-  auto relation_of = [&](std::uint64_t attacker, std::uint64_t target) {
-    return view != nullptr ? view->relation_for(attacker, target)
+  auto relation_of = [&](int attacker_owner, int target_owner) {
+    return view != nullptr ? view->relation_for_owners(attacker_owner, target_owner)
                            : ProjectileRelation::Neutral;
   };
   bool const reduced_effects = view != nullptr && view->reduced_effects;
 
-  const auto& projectiles = projectile_system.projectiles();
+  for (const auto& projectile : effects.projectiles) {
+    const QVector3D delta = projectile.end - projectile.start;
+    QVector3D pos = projectile.start + delta * projectile.progress;
 
-  for (const auto& projectile : projectiles) {
-    if (!projectile->is_active() || projectile->get_progress() < 0.0F) {
-      continue;
-    }
-
-    const QVector3D delta = projectile->get_end() - projectile->get_start();
-    QVector3D pos = projectile->get_start() + delta * projectile->get_progress();
-
-    float const h = projectile->get_arc_height() * 4.0F * projectile->get_progress() *
-                    (1.0F - projectile->get_progress());
+    float const h = projectile.arc_height * 4.0F * projectile.progress *
+                    (1.0F - projectile.progress);
     pos.setY(pos.y() + h);
 
     QMatrix4x4 model;
@@ -905,27 +898,26 @@ void render_projectiles(Renderer* renderer,
     float const yaw_deg = std::atan2(dir.x(), dir.z()) * k_rad_to_deg;
     model.rotate(yaw_deg, QVector3D(0, 1, 0));
 
-    if (const auto* arrow =
-            dynamic_cast<const Game::Systems::ArrowProjectile*>(projectile.get())) {
+    if (projectile.shape == Game::Systems::ProjectileShape::Arrow) {
       render_arrow_projectile(
           renderer,
           resources,
-          *arrow,
+          projectile,
           pos,
           model,
-          relation_of(arrow->get_attacker_id(), arrow->get_target_id()));
-    } else if (const auto* stone = dynamic_cast<const Game::Systems::StoneProjectile*>(
-                   projectile.get())) {
-      render_stone_projectile(renderer, resources, *stone, pos, model);
+          relation_of(projectile.attacker_owner, projectile.target_owner));
+    } else {
+      render_stone_projectile(renderer, resources, projectile, pos, model);
     }
   }
 
-  for (auto const& spent : projectile_system.spent_projectiles()) {
+  for (auto const& spent : effects.spent_projectiles) {
     render_spent_projectile(renderer, spent);
   }
 
   int plain_impact_budget = k_projectile_impact_effect_budget;
-  for (auto const& impact : projectile_system.impacts()) {
+  for (std::size_t index = 0; index < effects.projectile_impacts.size(); ++index) {
+    auto const& impact = effects.projectile_impacts[index];
     ProjectileRelation relation = ProjectileRelation::Neutral;
     if (!impact.aimed_shot && !impact.ballista_bolt &&
         (impact.kind == Game::Systems::ProjectileKind::Arrow ||
@@ -933,7 +925,8 @@ void render_projectiles(Renderer* renderer,
       if (plain_impact_budget <= 0) {
         continue;
       }
-      relation = relation_of(impact.attacker_id, impact.target_id);
+      relation = relation_of(effects.impact_attacker_owners[index],
+                             effects.impact_target_owners[index]);
       if (relation != ProjectileRelation::Neutral) {
         --plain_impact_budget;
       }

@@ -21,6 +21,7 @@
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/build_site.h"
 #include "game/systems/building_collision_registry.h"
@@ -32,7 +33,6 @@
 #include "game/systems/pathfinding.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/production_service.h"
-#include "game/systems/selection_system.h"
 #include "game/systems/structure_placement_service.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/systems/wall_network_service.h"
@@ -1439,7 +1439,7 @@ auto ProductionManager::set_rally_at_screen(qreal sx,
     return false;
   }
 
-  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*m_world).selection();
   if (selection_system == nullptr) {
     return false;
   }
@@ -1477,7 +1477,7 @@ auto ProductionManager::collect_available_builders(bool include_busy)
     -> std::vector<Engine::Core::EntityID> {
   std::vector<Engine::Core::EntityID> builders;
 
-  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*m_world).selection();
   if (selection_system == nullptr) {
     return builders;
   }
