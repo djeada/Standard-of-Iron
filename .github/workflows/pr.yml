@@ -31,9 +31,9 @@ env:
 jobs:
   quality:
     name: Quality and source policy
-    # The main push exists to seed the shared compilation cache; quality has
-    # already run on the PR and must still run for PRs and merge queues.
-    if: github.event_name != 'push'
+    # Direct main pushes seed ccache after PR checks have passed. Release tags
+    # also invoke this reusable workflow, so their quality gate must still run.
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     uses: ./.github/workflows/quality.yml
 
   test:
@@ -143,8 +143,8 @@ jobs:
 
   readiness:
     name: PR diagnostics complete
-    # This is a PR/merge-queue gate, not a check on main's cache warmer.
-    if: github.event_name != 'push' && always()
+    # Keep release-tag preflight gating intact; main-only pushes seed the cache.
+    if: (github.event_name != 'push' || github.ref != 'refs/heads/main') && always()
     needs: [quality, test]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
