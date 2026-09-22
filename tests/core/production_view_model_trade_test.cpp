@@ -8,11 +8,11 @@
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/render_bridge/selection_controller.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/resource_types.h"
-#include "game/systems/selection_system.h"
 #include "game/units/spawn_type.h"
 
 namespace {
@@ -38,11 +38,7 @@ protected:
     m_session.owners().register_owner_with_id(
         1, Game::Systems::OwnerType::Player, "player");
     auto& world = m_session.world();
-    m_selection_system = world.get_system<Game::Systems::SelectionSystem>();
-    if (m_selection_system == nullptr) {
-      world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-      m_selection_system = world.get_system<Game::Systems::SelectionSystem>();
-    }
+    m_selection_system = &m_session.selection();
     m_selection = std::make_unique<Game::Systems::SelectionController>(
         &world, m_selection_system, nullptr);
     m_context.session = &m_session;
@@ -66,7 +62,7 @@ protected:
 
   Game::Session::SessionContext m_session;
   std::unique_ptr<Game::Session::ScopedSession> m_scope;
-  Game::Systems::SelectionSystem* m_selection_system = nullptr;
+  Game::Session::SelectionService* m_selection_system = nullptr;
   std::unique_ptr<Game::Systems::SelectionController> m_selection;
   App::Core::ClientContext m_context;
   StubClientHost m_host;

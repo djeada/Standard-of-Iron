@@ -106,7 +106,7 @@ TEST(ArrowCloudRender, MarkerArrowUsesTwentyPercentShorterMeshSpan) {
 
   RecordingRenderer renderer;
   Render::GL::render_arrows(
-      &renderer, reinterpret_cast<Render::GL::ResourceManager*>(0x1), system);
+      &renderer, reinterpret_cast<Render::GL::ResourceManager*>(0x1), system.arrows());
 
   auto* shaft_mesh = Render::Geom::Arrow::get_shaft();
   auto* tip_mesh = Render::Geom::Arrow::get_tip();
@@ -163,7 +163,7 @@ TEST(ArrowCloudRender, VolleyArrowTrailsAreShaftOnlyStreaks) {
 
   RecordingRenderer renderer;
   Render::GL::render_arrows(
-      &renderer, reinterpret_cast<Render::GL::ResourceManager*>(0x1), system);
+      &renderer, reinterpret_cast<Render::GL::ResourceManager*>(0x1), system.arrows());
 
   auto* shaft_mesh = Render::Geom::Arrow::get_shaft();
   auto* tip_mesh = Render::Geom::Arrow::get_tip();
@@ -214,7 +214,7 @@ TEST(ArrowCloudRender, ArrowGlowHugsTheShaftInsteadOfSwallowingIt) {
 
   RecordingRenderer renderer;
   Render::GL::render_arrows(
-      &renderer, reinterpret_cast<Render::GL::ResourceManager*>(0x1), system);
+      &renderer, reinterpret_cast<Render::GL::ResourceManager*>(0x1), system.arrows());
 
   auto* shaft_mesh = Render::Geom::Arrow::get_shaft();
   const RecordedMeshDraw* body = find_draw(renderer.meshes, shaft_mesh);
@@ -253,7 +253,7 @@ TEST(ArrowCloudRender, MarkerArrowTipUsesBrightMetallicColor) {
 
   RecordingRenderer renderer;
   Render::GL::render_arrows(
-      &renderer, reinterpret_cast<Render::GL::ResourceManager*>(0x1), system);
+      &renderer, reinterpret_cast<Render::GL::ResourceManager*>(0x1), system.arrows());
 
   auto* shaft_mesh = Render::Geom::Arrow::get_shaft();
   auto* tip_mesh = Render::Geom::Arrow::get_tip();

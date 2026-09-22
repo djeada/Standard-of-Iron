@@ -18,6 +18,7 @@
 #include "../systems/troop_count_registry.h"
 #include "../wildlife/bird_flock.h"
 #include "deterministic_rng.h"
+#include "selection_service.h"
 #include "simulation_clock.h"
 
 namespace Game::Session {
@@ -40,6 +41,7 @@ struct SessionContext::State {
   Game::Systems::NationRegistry nations;
   Game::Systems::GlobalStatsRegistry stats;
   Game::Systems::TroopCountRegistry troop_counts;
+  SelectionService selection;
   Game::Systems::BuildingCollisionRegistry building_collision;
   Game::Systems::MarketplaceSystem marketplace;
   Game::Systems::NavigationService navigation;
@@ -179,6 +181,14 @@ auto SessionContext::troop_counts() -> Game::Systems::TroopCountRegistry& {
   return m_state->troop_counts;
 }
 
+auto SessionContext::selection() -> SelectionService& {
+  return m_state->selection;
+}
+
+auto SessionContext::selection() const -> const SelectionService& {
+  return m_state->selection;
+}
+
 auto SessionContext::building_collision() -> Game::Systems::BuildingCollisionRegistry& {
   return m_state->building_collision;
 }
@@ -264,6 +274,7 @@ void SessionContext::reset() {
   m_state->nations.clear_player_assignments();
   m_state->stats.clear();
   m_state->troop_counts.clear();
+  m_state->selection.clear_selection();
   m_state->building_collision.clear();
   m_state->navigation.clear();
   m_state->army_formations.clear();

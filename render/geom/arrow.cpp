@@ -10,7 +10,7 @@
 #include <numbers>
 #include <vector>
 
-#include "game/systems/arrow_system.h"
+#include "game/systems/arrow_instance.h"
 #include "render/entity/registry.h"
 #include "render/gl/mesh.h"
 #include "render/gl/resources.h"
@@ -457,7 +457,7 @@ void draw_arrow_mesh(Renderer* renderer,
 
 void render_arrows(Renderer* renderer,
                    ResourceManager* resources,
-                   const Game::Systems::ArrowSystem& arrow_system) {
+                   const std::vector<Game::Systems::ArrowInstance>& arrows) {
   if ((renderer == nullptr) || (resources == nullptr)) {
     return;
   }
@@ -469,7 +469,6 @@ void render_arrows(Renderer* renderer,
     return;
   }
 
-  const auto& arrows = arrow_system.arrows();
   for (const auto& arrow : arrows) {
     if (!arrow.active || arrow.t < 0.0F) {
       continue;

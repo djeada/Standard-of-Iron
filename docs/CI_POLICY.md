@@ -58,6 +58,10 @@ The pull-request path intentionally does **not** run the battlefield verifier, r
 - the engine-backed terrain-surface authored-placement audit; and
 - the full test profile, which combines the fast profile, every entry in `tests/extended_tests.txt`, and acceptance binaries that are not GoogleTest suites.
 
+The full test profile runs as one job per group rather than one job for everything, because one job could not finish the set. `ai_tests` carries the headless AI matches and the mission wave assaults; in the 21 September 2026 run it was still going after 2 h 12 m when the job died on its three-hour budget, which meant `render_tests`, `app_tests`, `arena_tests` and `tools_tests` had never reached the full profile at all — for three weeks the lane reported a timeout and nobody could tell the difference between "these suites pass" and "these suites did not run". `ai_tests` now has a job and a five-hour budget of its own, and the other seven suites share a second job that also runs the acceptance binaries.
+
+`scripts/run-tests.sh` takes `SOI_TEST_SUITES` (a space-separated subset of its `suites` array; an unknown name is an error, not a silent no-op) and `SOI_RUN_ACCEPTANCE=1`, which is how exactly one of those jobs runs the acceptance binaries rather than each of them running the set. The suite array itself stays the whole truth about which suites exist, and `ModuleBoundaries.TheSuiteListsCiRunsAndCmakeBuildsAgree` still parses it against CMake.
+
 Run extended validation manually when a change touches shipped content. Those are the checks that read and validate the complete content surface.
 
 Release validation remains the final exhaustive shipping gate.

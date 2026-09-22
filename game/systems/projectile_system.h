@@ -12,32 +12,17 @@
 #include "../game_config.h"
 #include "arrow_visual_profile.h"
 #include "projectile.h"
+#include "projectile_impact_event.h"
 #include "spent_projectile.h"
 
 namespace Game::Systems {
-
-struct ProjectileImpactEvent {
-  std::uint64_t sequence{0};
-  QVector3D position;
-  QVector3D incoming_direction;
-  QVector3D color;
-  ProjectileKind kind{ProjectileKind::Arrow};
-  float age{0.0F};
-  float lifetime{0.65F};
-  float scale{1.0F};
-  bool ballista_bolt{false};
-
-  bool aimed_shot{false};
-  bool hit_target{false};
-  bool damage_applied{false};
-  Engine::Core::EntityID attacker_id{0};
-  Engine::Core::EntityID target_id{0};
-};
 
 class ProjectileSystem : public Engine::Core::System {
 public:
   ProjectileSystem();
   void update(Engine::Core::World* world, float delta_time) override;
+
+  void publish_render_views(Engine::Core::World* world);
 
   void spawn_arrow(const QVector3D& start,
                    const QVector3D& end,

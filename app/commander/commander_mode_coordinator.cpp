@@ -11,9 +11,9 @@
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/order_service.h"
-#include "game/systems/selection_system.h"
 
 namespace App::Core {
 namespace {
@@ -37,7 +37,7 @@ auto seed_barracks_rally_preview_impl(Engine::Core::World* world,
     return std::nullopt;
   }
 
-  auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*world).selection();
   if (selection_system == nullptr) {
     return std::nullopt;
   }
@@ -167,7 +167,7 @@ auto CommanderModeCoordinator::restore_rts_selection(
     return effects;
   }
 
-  auto* selection_system = context.world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*context.world).selection();
   if (selection_system == nullptr) {
     return effects;
   }
@@ -622,7 +622,7 @@ auto CommanderModeCoordinator::has_selected_local_barracks(Engine::Core::World* 
     return false;
   }
 
-  auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = &Game::Session::session_for(*world).selection();
   if (selection_system == nullptr) {
     return false;
   }

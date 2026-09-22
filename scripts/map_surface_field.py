@@ -81,10 +81,18 @@ def default_cache_dir() -> Path:
 class SurfaceField:
     """The built heightfield of one map, indexed in authored grid coordinates.
 
-    Grid coordinate ``(x, z)`` is cell ``(x, z)`` of the heightfield: the engine
-    inverts its own world conversion with ``grid_half = size * 0.5 - 0.5``, so a
-    map coordinate lands on a cell *centre* and no half-cell correction belongs
-    here.  See `docs/MAP_OBJECT_PLACEMENT.md`.
+    A map authored in ``coord_system: "grid"`` -- every map in ``assets/maps`` but
+    one -- names cell ``(x, z)`` directly: the engine inverts its own world
+    conversion with ``grid_half = size * 0.5 - 0.5``, so a map coordinate lands on
+    a cell *centre* and no half-cell correction belongs here.
+
+    A map authored in ``coord_system: "world"`` measures from the middle of the
+    map instead, and ``origin`` carries that same ``size * 0.5 - 0.5`` so an
+    authored coordinate reaches the cell the engine raised. Without it
+    ``map_aurelia_magna.json`` -- the one world-space map in the repo -- was read
+    384 cells away from where its buildings stand, clamped into the corner of the
+    field, and reported 563 bodies on broken ground that are standing on ground
+    the engine built flat.  See `docs/MAP_OBJECT_PLACEMENT.md`.
     """
 
     width: int
@@ -92,6 +100,7 @@ class SurfaceField:
     tile_size: float
     heights: array.array
     entrances: bytes
+    origin: float = 0.0
 
     def height_at(self, x: float, z: float) -> float:
         clamped_x = min(max(x, 0.0), self.width - 1.001)
@@ -124,6 +133,8 @@ class SurfaceField:
         is_disc: bool,
     ) -> list[tuple[float, float]]:
         """The ground a body covers, as points in grid coordinates."""
+        x += self.origin
+        z += self.origin
         steps_x = max(1, int(math.ceil(2.0 * half_x / SAMPLE_STEP)))
         steps_z = max(1, int(math.ceil(2.0 * half_z / SAMPLE_STEP)))
         cosine = math.cos(rotation)
@@ -181,6 +192,8 @@ class SurfaceField:
         points at a bump and not at the foot of the hill.  Flattest wins, and
         leaving the ramp wins first when it is a ramp being escaped -- a body
         pushed along a gateway is still in the gateway."""
+        x += self.origin
+        z += self.origin
         best_score = None
         best = (1.0, 0.0)
         for step in range(24):
@@ -249,6 +262,8 @@ def load_surface(
     map_path: Path, probe: Path, cache_dir: Path | None = None
 ) -> SurfaceField:
     """Build (or reuse) the probe dump for one map and read it back."""
+    definition = json.loads(map_path.read_text(encoding="utf-8"))
+    world_space = str(definition.get("coord_system", "grid")).lower() == "world"
     dump = _probe_output(map_path, probe, cache_dir or default_cache_dir())
     raw = dump.read_bytes()
     break_index = raw.index(b"\n")
@@ -269,4 +284,5 @@ def load_surface(
         tile_size=float(header["tile_size"]),
         heights=heights,
         entrances=entrances,
+        origin=(width * 0.5 - 0.5) if world_space else 0.0,
     )

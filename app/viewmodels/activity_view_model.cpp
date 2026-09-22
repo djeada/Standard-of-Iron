@@ -19,9 +19,9 @@
 #include "game/core/world.h"
 #include "game/map/render_visibility_rules.h"
 #include "game/render_bridge/selection_controller.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/match_snapshot.h"
-#include "game/systems/selection_system.h"
 
 namespace App::ViewModels {
 namespace {
@@ -188,7 +188,7 @@ void ActivityViewModel::clear_inspect_target() {
     if (world == nullptr) {
       return;
     }
-    auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+    auto* selection_system = &Game::Session::session_for(*world).selection();
     if (selection_system == nullptr) {
       return;
     }
@@ -265,7 +265,7 @@ void ActivityViewModel::record_hit(const Engine::Core::CombatHitEvent& event,
     return;
   }
 
-  if (auto* selection_system = world->get_system<Game::Systems::SelectionSystem>()) {
+  if (auto* selection_system = &Game::Session::session_for(*world).selection()) {
     const auto& selected = selection_system->get_selected_units();
     hit.focused = selection_system->inspected_entity() == event.target_id ||
                   std::find(selected.begin(), selected.end(), event.target_id) !=
@@ -294,7 +294,7 @@ void ActivityViewModel::record_world_feedback(
   }
   App::Core::WorldFeedbackTick tick = *mapped;
 
-  if (auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+  if (auto* selection_system = &Game::Session::session_for(*world).selection();
       selection_system != nullptr && tick.anchor != Engine::Core::NULL_ENTITY) {
     const auto& selected = selection_system->get_selected_units();
     tick.focused =

@@ -44,10 +44,18 @@ jobs:
   # job now. --require-all so a missing clang fails the job rather than
   # skipping the pass and reporting a green it did not earn.
   # ---------------------------------------------------------------------
+  # The budget is the measured cost, not a round number. On 21 Sep 2026 this job
+  # was cancelled at its 90-minute ceiling with the reparse still running: the
+  # build before it takes about 35 minutes because ccache is effectively cold
+  # every week (a restored 330 MB cache hit 4 of 1377 compilations -- a week of
+  # commits invalidates it), and the reparse itself is 1342 first-party
+  # translation units at 3.5 s each on average and 7.4 s for the largest, which
+  # is 80-165 CPU-minutes and 20-45 minutes on a four-core runner. 150 leaves
+  # room for both without leaving a hung pass running for hours.
   portability:
     name: Portability (Clang + libc++)
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 150
     env:
       CMAKE_CXX_COMPILER_LAUNCHER: ccache
     steps:

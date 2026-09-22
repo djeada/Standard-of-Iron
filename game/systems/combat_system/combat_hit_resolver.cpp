@@ -11,6 +11,7 @@
 #include "../../units/spawn_type.h"
 #include "../combat_rules.h"
 #include "../rpg_combat_system/rpg_commander_damage.h"
+#include "combat_utils.h"
 #include "damage_application.h"
 #include "mounted_charge_processor.h"
 #include "structure_fire.h"
@@ -30,19 +31,6 @@ constexpr float k_fire_patch_ground_offset = 0.85F;
 constexpr float k_rts_charge_casualty_fraction = 0.25F;
 constexpr float k_braced_spear_charge_casualty_fraction = 0.50F;
 constexpr float k_catapult_stone_impact_speed = 8.0F;
-
-[[nodiscard]] auto
-is_rts_charge_attacker(const Engine::Core::UnitComponent& unit) -> bool {
-  return (unit.spawn_type == Game::Units::SpawnType::MountedSwordsman ||
-          unit.spawn_type == Game::Units::SpawnType::HorseSpearman);
-}
-
-[[nodiscard]] auto is_infantry(const Engine::Core::UnitComponent& unit) -> bool {
-  return !Game::Units::is_cavalry(unit.spawn_type) &&
-         unit.spawn_type != Game::Units::SpawnType::Elephant &&
-         unit.spawn_type != Game::Units::SpawnType::Catapult &&
-         unit.spawn_type != Game::Units::SpawnType::Ballista;
-}
 
 [[nodiscard]] auto proportional_charge_damage(const Engine::Core::UnitComponent& unit,
                                               float fraction) -> int {
@@ -327,60 +315,75 @@ void apply_cursed_projectile_status_if_needed(
   Engine::Core::refresh_morale_state(*morale);
 }
 
-void apply_fireball_burning_status_if_needed(
-    Engine::Core::Entity& target,
-    const Engine::Core::SpecialAttackComponent* special_attack,
-    const CombatHitContact& contact) {
-  if (special_attack == nullptr ||
-      contact.projectile_kind != Game::Systems::ProjectileKind::Fireball ||
-      special_attack->burn_duration <= 0.0F ||
-      special_attack->burn_damage_per_tick <= 0) {
-    return;
-  }
+struct BurnProfile {
+  float duration{0.0F};
+  float tick_interval{0.0F};
+  int damage_per_tick{0};
+  Engine::Core::EntityID attacker_id{0};
+  float fire_bonus_multiplier{1.0F};
+};
 
-  if (is_structure(target)) {
-    return;
+[[nodiscard]] auto ignite_unit(Engine::Core::Entity& target,
+                               const BurnProfile& profile) -> bool {
+  if (profile.damage_per_tick <= 0 || profile.duration <= 0.0F) {
+    return false;
   }
 
   auto* target_unit = target.get_component<Engine::Core::UnitComponent>();
   if (target_unit == nullptr || target_unit->health <= 0) {
-    return;
+    return false;
   }
 
   auto* burning = target.get_component<Engine::Core::BurningStatusComponent>();
   if (burning == nullptr) {
     burning = target.add_component<Engine::Core::BurningStatusComponent>();
     if (burning != nullptr) {
-      burning->duration = special_attack->burn_duration;
-      burning->remaining_duration = special_attack->burn_duration;
+      burning->duration = profile.duration;
+      burning->remaining_duration = profile.duration;
       burning->ignition_elapsed = k_initial_burning_visual_age;
-      burning->tick_interval = special_attack->burn_tick_interval;
-      burning->damage_per_tick = special_attack->burn_damage_per_tick;
-      burning->fire_bonus_multiplier =
-          special_attack->bonus_damage_multiplier_vs_fire_vulnerable;
+      burning->tick_interval = profile.tick_interval;
+      burning->damage_per_tick = profile.damage_per_tick;
+      burning->fire_bonus_multiplier = profile.fire_bonus_multiplier;
     }
   }
   if (burning == nullptr) {
-    return;
+    return false;
   }
 
-  burning->duration = std::max(burning->duration, special_attack->burn_duration);
-  burning->remaining_duration =
-      std::max(burning->remaining_duration, special_attack->burn_duration);
-  burning->tick_interval = special_attack->burn_tick_interval;
+  burning->duration = std::max(burning->duration, profile.duration);
+  burning->remaining_duration = std::max(burning->remaining_duration, profile.duration);
+  burning->tick_interval = profile.tick_interval;
   burning->damage_per_tick =
-      std::max(burning->damage_per_tick, special_attack->burn_damage_per_tick);
-  burning->attacker_id = contact.attacker_id;
+      std::max(burning->damage_per_tick, profile.damage_per_tick);
+  burning->attacker_id = profile.attacker_id;
   burning->fire_bonus_multiplier =
-      std::max(burning->fire_bonus_multiplier,
-               special_attack->bonus_damage_multiplier_vs_fire_vulnerable);
+      std::max(burning->fire_bonus_multiplier, profile.fire_bonus_multiplier);
+  return true;
+}
+
+void apply_fireball_burning_status_if_needed(
+    Engine::Core::Entity& target,
+    const Engine::Core::SpecialAttackComponent* special_attack,
+    const CombatHitContact& contact) {
+  if (special_attack == nullptr ||
+      contact.projectile_kind != Game::Systems::ProjectileKind::Fireball ||
+      is_building(&target)) {
+    return;
+  }
+  (void)ignite_unit(target,
+                    {.duration = special_attack->burn_duration,
+                     .tick_interval = special_attack->burn_tick_interval,
+                     .damage_per_tick = special_attack->burn_damage_per_tick,
+                     .attacker_id = contact.attacker_id,
+                     .fire_bonus_multiplier =
+                         special_attack->bonus_damage_multiplier_vs_fire_vulnerable});
 }
 
 void apply_structure_ignition_if_needed(Engine::Core::Entity& target,
                                         const CombatHitContact& contact,
                                         int applied_damage) {
   if (!is_incendiary_projectile_kind(contact.projectile_kind) ||
-      !is_structure(target)) {
+      !is_building(&target)) {
     return;
   }
   (void)apply_structure_incendiary_damage(target, applied_damage, contact.attacker_id);
@@ -399,41 +402,12 @@ void apply_projectile_impact_effects_if_needed(
 [[nodiscard]] auto refresh_burning_status_from_fire_patch(
     Engine::Core::Entity& target,
     const Engine::Core::FirePatchComponent& fire_patch) -> bool {
-  if (fire_patch.burn_damage_per_tick <= 0 || fire_patch.burn_duration <= 0.0F) {
-    return false;
-  }
-
-  auto* target_unit = target.get_component<Engine::Core::UnitComponent>();
-  if (target_unit == nullptr || target_unit->health <= 0) {
-    return false;
-  }
-
-  auto* burning = target.get_component<Engine::Core::BurningStatusComponent>();
-  if (burning == nullptr) {
-    burning = target.add_component<Engine::Core::BurningStatusComponent>();
-    if (burning != nullptr) {
-      burning->duration = fire_patch.burn_duration;
-      burning->remaining_duration = fire_patch.burn_duration;
-      burning->ignition_elapsed = k_initial_burning_visual_age;
-      burning->tick_interval = fire_patch.burn_tick_interval;
-      burning->damage_per_tick = fire_patch.burn_damage_per_tick;
-      burning->fire_bonus_multiplier = fire_patch.fire_bonus_multiplier;
-    }
-  }
-  if (burning == nullptr) {
-    return false;
-  }
-
-  burning->duration = std::max(burning->duration, fire_patch.burn_duration);
-  burning->remaining_duration =
-      std::max(burning->remaining_duration, fire_patch.burn_duration);
-  burning->tick_interval = fire_patch.burn_tick_interval;
-  burning->damage_per_tick =
-      std::max(burning->damage_per_tick, fire_patch.burn_damage_per_tick);
-  burning->attacker_id = fire_patch.attacker_id;
-  burning->fire_bonus_multiplier =
-      std::max(burning->fire_bonus_multiplier, fire_patch.fire_bonus_multiplier);
-  return true;
+  return ignite_unit(target,
+                     {.duration = fire_patch.burn_duration,
+                      .tick_interval = fire_patch.burn_tick_interval,
+                      .damage_per_tick = fire_patch.burn_damage_per_tick,
+                      .attacker_id = fire_patch.attacker_id,
+                      .fire_bonus_multiplier = fire_patch.fire_bonus_multiplier});
 }
 
 [[nodiscard]] auto spawn_fire_patch_for_projectile_impact(
@@ -689,7 +663,7 @@ auto resolve_projectile_impact_hit(Engine::Core::World* world,
       attacker != nullptr && attacker_unit != nullptr && target_unit != nullptr &&
       attacker_unit->spawn_type == Game::Units::SpawnType::Catapult &&
       request.contact.projectile_kind == Game::Systems::ProjectileKind::Stone &&
-      is_infantry(*target_unit);
+      is_infantry_spawn(target_unit->spawn_type);
   if (catapult_stone_into_infantry) {
     launch_new_casualties(*target,
                           *attacker,
@@ -838,7 +812,8 @@ auto resolve_mounted_charge_impact_hit(
   auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
   bool const rts_cavalry_into_infantry =
       attacker_unit != nullptr && target_unit != nullptr &&
-      is_rts_charge_attacker(*attacker_unit) && is_infantry(*target_unit);
+      charges_on_horseback(attacker_unit->spawn_type) &&
+      is_infantry_spawn(target_unit->spawn_type);
   auto const* target_hold = target->get_component<Engine::Core::HoldModeComponent>();
   bool const braced_spears =
       rts_cavalry_into_infantry &&

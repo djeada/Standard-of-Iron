@@ -14,9 +14,9 @@
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../render_bridge/picking_service.h"
+#include "../session/selection_utils.h"
 #include "../systems/command_service.h"
 #include "../units/spawn_type.h"
-#include "../util/selection_utils.h"
 #include "scene/camera.h"
 
 namespace Game::Systems {
@@ -38,10 +38,11 @@ void play_deselect_cue() {
 
 } // namespace
 
-SelectionController::SelectionController(Engine::Core::World* world,
-                                         SelectionSystem* selection_system,
-                                         PickingService* picking_service,
-                                         QObject* parent)
+SelectionController::SelectionController(
+    Engine::Core::World* world,
+    Game::Session::SelectionService* selection_system,
+    PickingService* picking_service,
+    QObject* parent)
     : QObject(parent)
     , m_world(world)
     , m_selection_system(selection_system)

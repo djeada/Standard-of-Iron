@@ -29,6 +29,7 @@
 #include "app/core/frame_barrier.h"
 #include "app/core/match_presentation_sync.h"
 #include "app/core/player_feedback.h"
+#include "app/core/presentation_frame.h"
 #include "app/core/runtime_frame_orchestrator.h"
 #include "app/economy/economy_overview.h"
 #include "app/input/cursor_manager.h"
@@ -78,6 +79,7 @@
 #include "game/mission/mission_waves.h"
 #include "game/mission/tutorial_director.h"
 #include "game/render_bridge/selection_controller.h"
+#include "game/session/selection_utils.h"
 #include "game/session/session_context.h"
 #include "game/systems/attack_range.h"
 #include "game/systems/attack_targeting.h"
@@ -86,7 +88,6 @@
 #include "game/systems/save_format.h"
 #include "game/systems/target_focus.h"
 #include "game/systems/unit_activity.h"
-#include "game/util/selection_utils.h"
 #include "scene/camera.h"
 
 class ProductionManager;
@@ -122,7 +123,6 @@ namespace Map::Minimap {
 class UnitLayer;
 }
 namespace Systems {
-class SelectionSystem;
 class SelectionController;
 class ArrowSystem;
 class PickingService;
@@ -358,6 +358,7 @@ public:
 
   void film_step(float dt);
   void update_presentation(float dt);
+  void publish_presentation_frame();
   void publish_frame_snapshots();
   void announce_player_defeats(float dt);
   void capture_render_selection();
@@ -587,13 +588,14 @@ private:
   std::unique_ptr<Game::Session::ScopedSession> m_session_scope;
   Engine::Core::World* m_world = nullptr;
   std::vector<Engine::Core::EntityID> m_selected_render_ids;
-  bool m_selected_render_ids_dirty = false;
   std::vector<Engine::Core::EntityID> m_scratch_selected_ids;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
   std::unique_ptr<Render::GL::Camera> m_rts_camera;
   std::unique_ptr<Render::GL::Camera> m_commander_camera;
   Render::GL::Camera* m_camera = nullptr;
   Render::GL::Camera m_render_camera;
+  std::shared_ptr<const App::Core::PresentationFrame> m_presentation_frame;
+  std::vector<Engine::Core::EntityID> m_drawn_selected_ids;
   std::unique_ptr<Render::GL::TerrainSceneProxy> m_terrain_scene;
   std::shared_ptr<Render::GL::ResourceManager> m_resources;
   std::unique_ptr<Render::GL::TerrainSurfaceManager> m_surface;
@@ -669,13 +671,8 @@ private:
   std::unique_ptr<QThread> m_simulation_thread;
   mutable std::recursive_mutex m_frame_mutex;
 
-  static constexpr float k_max_deferred_presentation_seconds = 0.1F;
-  float m_deferred_presentation_dt = 0.0F;
-
   static constexpr int k_frame_lock_handoff_yields = 64;
-  std::atomic<bool> m_presentation_awaiting_frame_lock{false};
 
-  static constexpr std::chrono::milliseconds k_render_effects_lock_budget{8};
   std::atomic<int> m_frame_lock_waiters{0};
   mutable FrameLockStats m_frame_lock_stats;
 

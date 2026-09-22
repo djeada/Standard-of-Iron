@@ -46,7 +46,12 @@
         "game/systems/nav_grid_types",
         "game/formation/formation_roles",
         "game/formation/army_formation_types",
-        "game/audio/cue_ids"
+        "game/audio/cue_ids",
+        "game/systems/spent_projectile",
+        "game/systems/arrow_instance",
+        "game/systems/projectile_impact_event",
+        "game/systems/render_effects_frame",
+        "game/systems/arrow_visual_style"
       ],
       "may_use": []
     },
@@ -113,7 +118,6 @@
         "game/systems/resource_stockpile",
         "game/systems/run_stamina",
         "game/systems/spawn_flare",
-        "game/systems/spent_projectile",
         "game/systems/troop_count_registry",
         "game/systems/troop_profile_service",
         "game/systems/undead_zone_query"
@@ -279,7 +283,6 @@
         "game/systems/target_focus",
         "game/systems/arrow_system",
         "game/systems/arrow_projectile",
-        "game/systems/arrow_visual_profile",
         "game/systems/stone_projectile",
         "game/systems/projectile_system",
         "game/systems/engagement_slot_system",
@@ -291,7 +294,8 @@
         "game/systems/guard_system",
         "game/systems/patrol_system",
         "game/systems/commander_system",
-        "game/systems/stamina_system"
+        "game/systems/stamina_system",
+        "game/systems/arrow_visual_profile"
       ],
       "may_use": [
         "domain_types",
@@ -340,7 +344,7 @@
         "combat",
         "wildlife"
       ],
-      "files": ["game/util/selection_utils", "game/systems/default_content"]
+      "files": ["game/systems/default_content"]
     },
     "session": {
       "targets": ["game_sim"],

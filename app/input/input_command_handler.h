@@ -17,7 +17,6 @@ class Camera;
 }
 
 namespace Game::Systems {
-class SelectionSystem;
 class SelectionController;
 class PickingService;
 } // namespace Game::Systems

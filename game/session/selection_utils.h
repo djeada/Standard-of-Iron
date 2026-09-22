@@ -4,14 +4,13 @@
 #include <vector>
 
 #include "game/core/component_core.h"
-#include "game/core/entity.h"
 #include "game/core/world.h"
-#include "game/systems/selection_system.h"
+#include "game/session/selection_service.h"
 
 namespace Game::Selection {
 
 inline void sanitize_selection(Engine::Core::World* world,
-                               Game::Systems::SelectionSystem* selection_system) {
+                               Game::Session::SelectionService* selection_system) {
   if ((world == nullptr) || (selection_system == nullptr)) {
     return;
   }
@@ -19,12 +18,9 @@ inline void sanitize_selection(Engine::Core::World* world,
   std::vector<Engine::Core::EntityID> to_keep;
   to_keep.reserve(sel.size());
   for (auto id : sel) {
-    if (auto* e = world->get_entity(id)) {
-      if (auto* u = e->get_component<Engine::Core::UnitComponent>()) {
-        if (u->health > 0) {
-          to_keep.push_back(id);
-        }
-      }
+    const auto* unit = world->try_get<Engine::Core::UnitComponent>(id);
+    if (unit != nullptr && unit->health > 0) {
+      to_keep.push_back(id);
     }
   }
   if (to_keep.size() != sel.size() ||

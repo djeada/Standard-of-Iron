@@ -2,6 +2,7 @@
 
 #include <span>
 
+#include "../../units/spawn_type.h"
 #include "../combat_actions/combat_action_definition.h"
 
 namespace Engine::Core {
@@ -12,6 +13,11 @@ enum class MountedChargeIntentSource : std::uint8_t;
 } // namespace Engine::Core
 
 namespace Game::Systems::Combat {
+
+[[nodiscard]] auto charges_on_horseback(Game::Units::SpawnType type) noexcept -> bool;
+
+[[nodiscard]] auto
+mounted_charge_in_progress(const Engine::Core::Entity& entity) -> bool;
 
 [[nodiscard]] auto
 request_mounted_charge(Engine::Core::Entity& entity,

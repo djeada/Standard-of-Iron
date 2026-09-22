@@ -16,8 +16,6 @@ inline constexpr float k_structure_fire_duration = 7.0F;
 inline constexpr float k_structure_fire_tick_interval = 0.75F;
 inline constexpr float k_structure_fire_damage_fraction_per_tick = 0.0025F;
 
-[[nodiscard]] auto is_structure(const Engine::Core::Entity& entity) -> bool;
-
 [[nodiscard]] auto can_ignite_structure(const Engine::Core::Entity& entity) -> bool;
 
 [[nodiscard]] auto structure_is_burning(const Engine::Core::Entity& entity) -> bool;

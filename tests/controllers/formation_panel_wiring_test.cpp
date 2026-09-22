@@ -14,11 +14,11 @@
 #include "game/core/world.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nav_grid.h"
-#include "game/systems/selection_system.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 
@@ -56,8 +56,7 @@ protected:
     Game::Map::MapTransformer::setFactoryRegistry(m_factory);
     Game::Systems::initialize_default_content(m_session->nations());
 
-    m_session->world().add_system(std::make_unique<Game::Systems::SelectionSystem>());
-    m_selection = m_session->world().get_system<Game::Systems::SelectionSystem>();
+    m_selection = &m_session->selection();
     ASSERT_NE(m_selection, nullptr);
 
     m_commands = std::make_unique<App::Controllers::CommandController>(
@@ -115,7 +114,7 @@ protected:
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory;
   std::unique_ptr<Game::Session::SessionContext> m_session;
   std::unique_ptr<Game::Session::ScopedSession> m_scope;
-  Game::Systems::SelectionSystem* m_selection = nullptr;
+  Game::Session::SelectionService* m_selection = nullptr;
   std::unique_ptr<App::Controllers::CommandController> m_commands;
   StubClientHost m_host;
   App::Core::ClientContext m_context;

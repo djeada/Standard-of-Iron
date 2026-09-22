@@ -147,11 +147,33 @@ jobs:
   # sanitizers and coverage, which is thorough and takes hours; this is the
   # plain Debug run, so a content change can be checked against it on demand
   # through workflow_dispatch before it merges rather than after.
+  #
+  # One job per group, because a single job could not finish the set. In the
+  # 21 Sep 2026 run ai_tests alone was still going after 2 h 12 m and the job
+  # died on its three-hour budget with render, app, arena and tools untouched:
+  # the suites the split protects had not run in the full profile for three
+  # weeks, and nothing said so -- the lane simply reported a timeout. ai_tests
+  # carries the headless AI matches and gets the long budget; "rest" runs the
+  # remaining seven suites and, because it is the whole-set job in
+  # scripts/run-tests.sh terms, also the acceptance binaries.
   # ---------------------------------------------------------------------
   full-tests:
-    name: Full test profile (ubuntu-24.04)
+    name: Full test profile (${{ matrix.group }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: ai_tests
+            suites: ai_tests
+            timeout: 300
+          - group: rest
+            suites: >-
+              simulation_tests combat_balance_tests campaign_tests
+              persistence_tests render_tests app_tests arena_tests tools_tests
+            acceptance: "1"
+            timeout: 180
     env:
       CMAKE_CXX_COMPILER_LAUNCHER: ccache
       CMAKE_C_COMPILER_LAUNCHER: ccache
@@ -203,4 +225,6 @@ jobs:
       - name: Full test profile
         env:
           QT_QPA_PLATFORM: offscreen
+          SOI_TEST_SUITES: ${{ matrix.suites }}
+          SOI_RUN_ACCEPTANCE: ${{ matrix.acceptance }}
         run: bash scripts/run-tests.sh build --gtest_brief=1

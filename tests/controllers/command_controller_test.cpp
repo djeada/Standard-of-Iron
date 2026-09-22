@@ -11,10 +11,10 @@
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/selection_service.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/nav_grid.h"
-#include "game/systems/selection_system.h"
 #include "game/wildlife/wildlife_species.h"
 #include "scene/camera.h"
 
@@ -27,8 +27,7 @@ protected:
     Game::Map::TerrainService::instance().clear();
     Game::Systems::NavGrid::initialize(32, 32);
 
-    world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-    selection_system = world.get_system<Game::Systems::SelectionSystem>();
+    selection_system = &test_selection;
     ASSERT_NE(selection_system, nullptr);
 
     command_controller = std::make_unique<App::Controllers::CommandController>(
@@ -107,7 +106,8 @@ protected:
 
   Game::Command::ScopedImmediateDispatch immediate_orders;
   Engine::Core::World world;
-  Game::Systems::SelectionSystem* selection_system = nullptr;
+  Game::Session::SelectionService test_selection;
+  Game::Session::SelectionService* selection_system = nullptr;
   Game::Systems::PickingService picking_service;
   std::unique_ptr<App::Controllers::CommandController> command_controller;
   Render::GL::Camera camera;

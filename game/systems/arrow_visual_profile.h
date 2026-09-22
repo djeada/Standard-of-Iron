@@ -2,19 +2,9 @@
 
 #include <cstdint>
 
+#include "arrow_visual_style.h"
+
 namespace Game::Systems {
-
-enum class ArrowVisualStyle : std::uint8_t {
-  Focused,
-  Volley,
-  Marker,
-  Javelin,
-
-  Aimed,
-
-  Commander,
-  CommanderSignature,
-};
 
 struct ArrowVisualProfile {
   float initial_progress{0.0F};

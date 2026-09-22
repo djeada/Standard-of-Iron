@@ -2016,7 +2016,7 @@
             "max_population": -1,
             "player_id": 2,
             "type": "archer",
-            "x": 644.5,
+            "x": 645.44,
             "z": 393.47
         },
         {
@@ -2220,7 +2220,7 @@
             "player_id": 2,
             "settlement": "zama_scipio_town",
             "type": "defense_tower",
-            "x": 646.1,
+            "x": 646.24,
             "z": 389.78
         },
         {
@@ -6305,7 +6305,7 @@
             "scale": 1,
             "type": "supply_cart",
             "x": 441.87,
-            "z": 169.15
+            "z": 167.91
         },
         {
             "rotation": 0.24,

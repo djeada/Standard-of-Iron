@@ -30,13 +30,13 @@
 #include "game/formation/formation_doctrine.h"
 #include "game/game_config.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/combat_rules.h"
 #include "game/systems/command_service.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/production_service.h"
-#include "game/systems/selection_system.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/spawn_type.h"
 #include "game/util/asset_text.h"
@@ -82,7 +82,7 @@ auto preset_index_for_scale(float scale, float low, float mid, float high) -> in
 
 ArmyFormationController::ArmyFormationController(
     Engine::Core::World* world,
-    Game::Systems::SelectionSystem* selection_system,
+    Game::Session::SelectionService* selection_system,
     App::Orders::OrderIssuer::FeedbackSink feedback,
     QObject* parent)
     : QObject(parent)

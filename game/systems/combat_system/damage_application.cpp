@@ -27,6 +27,7 @@
 #include "../order_service.h"
 #include "../wall_network_service.h"
 #include "animation/death_pose_manifest.h"
+#include "combat_random.h"
 #include "combat_types.h"
 #include "combat_utils.h"
 #include "engagement_trace.h"
@@ -37,12 +38,6 @@
 namespace Game::Systems::Combat {
 
 namespace {
-
-auto is_mounted_spawn(Game::Units::SpawnType spawn_type) -> bool {
-  using Game::Units::SpawnType;
-  return spawn_type == SpawnType::MountedSwordsman ||
-         spawn_type == SpawnType::HorseArcher || spawn_type == SpawnType::HorseSpearman;
-}
 
 auto infantry_death_variant(Engine::Core::Entity* target,
                             Engine::Core::Entity* attacker,
@@ -436,15 +431,6 @@ void prune_oldest_blood_stain(Engine::Core::World* world) {
   }
 }
 
-auto hash01(std::uint32_t value) -> float {
-  value ^= value >> 16U;
-  value *= 0x7feb352dU;
-  value ^= value >> 15U;
-  value *= 0x846ca68bU;
-  value ^= value >> 16U;
-  return static_cast<float>(value & 0x00ffffffU) / static_cast<float>(0x01000000U);
-}
-
 auto blood_stain_scale(const Engine::Core::UnitComponent* unit) -> float {
   if (unit == nullptr) {
     return 1.0F;
@@ -452,12 +438,10 @@ auto blood_stain_scale(const Engine::Core::UnitComponent* unit) -> float {
   if (unit->spawn_type == Game::Units::SpawnType::Elephant) {
     return 1.65F;
   }
-  if (is_mounted_spawn(unit->spawn_type)) {
+  if (Game::Units::is_cavalry(unit->spawn_type)) {
     return 1.25F;
   }
-  if (unit->spawn_type == Game::Units::SpawnType::Sheep ||
-      unit->spawn_type == Game::Units::SpawnType::Wolf) {
-
+  if (Game::Units::is_wildlife_spawn(unit->spawn_type)) {
     return 0.42F;
   }
   return 1.0F;
@@ -471,7 +455,7 @@ auto is_valid_retaliation_attacker(Engine::Core::Entity* attacker) -> bool {
   if (unit == nullptr) {
     return false;
   }
-  if (attacker->has_component<Engine::Core::BuildingComponent>()) {
+  if (is_building(attacker)) {
     return unit->spawn_type == Game::Units::SpawnType::DefenseTower;
   }
   return true;
@@ -629,18 +613,19 @@ void spawn_blood_stain(Engine::Core::World* world,
       static_cast<std::uint32_t>(std::abs(transform->position.x) * 31.0F +
                                  std::abs(transform->position.z) * 131.0F);
   float const scale = blood_stain_scale(unit);
-  float const radius = Engine::Core::Defaults::k_blood_stain_default_radius * scale *
-                       (0.78F + hash01(id_seed * 17U + position_seed) * 0.46F);
-  float const rotation =
-      hash01(id_seed * 97U + position_seed * 3U) * std::numbers::pi_v<float> * 2.0F;
+  float const radius =
+      Engine::Core::Defaults::k_blood_stain_default_radius * scale *
+      (0.78F + hash_to_unit_open(id_seed * 17U + position_seed) * 0.46F);
+  float const rotation = hash_to_unit_open(id_seed * 97U + position_seed * 3U) *
+                         std::numbers::pi_v<float> * 2.0F;
   float const aspect_ratio =
-      0.58F + hash01(id_seed * 53U + position_seed * 11U) * 0.72F;
-  float const seed = hash01(id_seed * 193U + position_seed * 29U);
+      0.58F + hash_to_unit_open(id_seed * 53U + position_seed * 11U) * 0.72F;
+  float const seed = hash_to_unit_open(id_seed * 193U + position_seed * 29U);
 
-  float const offset_angle =
-      hash01(id_seed * 311U + position_seed * 7U) * std::numbers::pi_v<float> * 2.0F;
+  float const offset_angle = hash_to_unit_open(id_seed * 311U + position_seed * 7U) *
+                             std::numbers::pi_v<float> * 2.0F;
   float const offset_reach =
-      spread * std::sqrt(hash01(id_seed * 419U + position_seed * 13U));
+      spread * std::sqrt(hash_to_unit_open(id_seed * 419U + position_seed * 13U));
 
   blood_stain->add_component<Engine::Core::TransformComponent>(
       transform->position.x + (std::cos(offset_angle) * offset_reach),
@@ -708,7 +693,7 @@ namespace {
   if (attacker != nullptr) {
     if (const auto* attacker_unit =
             attacker->get_component<Engine::Core::UnitComponent>()) {
-      context.is_cavalry_impact = is_mounted_spawn(attacker_unit->spawn_type);
+      context.is_cavalry_impact = Game::Units::is_cavalry(attacker_unit->spawn_type);
     }
     if (const auto* attack = attacker->get_component<Engine::Core::AttackComponent>()) {
       context.is_missile =
@@ -774,7 +759,7 @@ apply_unit_damage(Engine::Core::World* world,
     }
   }
 
-  bool const structure = target->has_component<Engine::Core::BuildingComponent>();
+  bool const structure = is_building(target);
   int const raw_damage =
       structure ? resolve_structure_damage(attacker, damage) : damage;
   int const effective_damage = structure
@@ -820,8 +805,7 @@ apply_unit_damage(Engine::Core::World* world,
                                                               result.new_health,
                                                               preferred_hit_slot,
                                                               previous_layout);
-  if (result.queued_soldier_casualties > 0 && !is_killing_blow &&
-      !target->has_component<Engine::Core::BuildingComponent>()) {
+  if (result.queued_soldier_casualties > 0 && !is_killing_blow && !structure) {
     spawn_blood_stain(world, target);
   }
 
@@ -867,7 +851,7 @@ apply_unit_damage(Engine::Core::World* world,
     assign_retaliation_target_if_needed(world, target, attacker);
   }
 
-  if (target->has_component<Engine::Core::BuildingComponent>() && unit->health > 0) {
+  if (structure && unit->health > 0) {
     Engine::Core::EventManager::instance().publish(
         Engine::Core::BuildingAttackedEvent(target->get_id(),
                                             unit->owner_id,
@@ -893,23 +877,20 @@ apply_unit_damage(Engine::Core::World* world,
 
     auto* target_atk = target->get_component<Engine::Core::AttackComponent>();
     if ((target_atk != nullptr) && target_atk->in_melee_lock &&
-        target_atk->melee_lock_target_id != 0) {
-      if (world != nullptr) {
-        auto* lock_partner = world->get_entity(target_atk->melee_lock_target_id);
-        if ((lock_partner != nullptr) &&
-            !lock_partner->has_component<Engine::Core::PendingRemovalComponent>()) {
-          auto* partner_atk =
-              lock_partner->get_component<Engine::Core::AttackComponent>();
-          if ((partner_atk != nullptr) &&
-              partner_atk->melee_lock_target_id == target->get_id()) {
-            partner_atk->in_melee_lock = false;
-            partner_atk->melee_lock_target_id = 0;
-          }
-        }
+        target_atk->melee_lock_target_id != 0 && world != nullptr) {
+      auto* lock_partner = world->get_entity(target_atk->melee_lock_target_id);
+      auto* partner_atk =
+          (lock_partner != nullptr &&
+           !lock_partner->has_component<Engine::Core::PendingRemovalComponent>())
+              ? lock_partner->get_component<Engine::Core::AttackComponent>()
+              : nullptr;
+      if ((partner_atk != nullptr) &&
+          partner_atk->melee_lock_target_id == target->get_id()) {
+        partner_atk->release_melee_lock();
       }
     }
 
-    if (world != nullptr && target->has_component<Engine::Core::BuildingComponent>()) {
+    if (world != nullptr && structure) {
       Game::Session::services_for(*world).building_collision->unregister_building(
           target->get_id());
     }
@@ -924,10 +905,8 @@ apply_unit_damage(Engine::Core::World* world,
 
     Game::Systems::OrderService::exit_hold_mode(target);
 
-    auto* attack = target->get_component<Engine::Core::AttackComponent>();
-    if (attack != nullptr) {
-      attack->in_melee_lock = false;
-      attack->melee_lock_target_id = 0;
+    if (target_atk != nullptr) {
+      target_atk->release_melee_lock();
     }
     auto* target_selector =
         target->get_component<Engine::Core::AttackTargetComponent>();
@@ -936,7 +915,7 @@ apply_unit_damage(Engine::Core::World* world,
       target_selector->should_chase = false;
     }
 
-    if (target->has_component<Engine::Core::BuildingComponent>()) {
+    if (structure) {
       if (auto* r = target->get_component<Engine::Core::RenderableComponent>()) {
         r->visible = false;
       }

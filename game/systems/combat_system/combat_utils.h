@@ -11,6 +11,7 @@
 
 #include "../../core/entity.h"
 #include "../../units/combat_role.h"
+#include "../../units/spawn_type.h"
 #include "target_rules.h"
 
 namespace Engine::Core {
@@ -18,6 +19,10 @@ class World;
 class AttackComponent;
 class UnitComponent;
 } // namespace Engine::Core
+
+namespace Game::Systems::FormationCombat {
+struct ContactGeometry;
+} // namespace Game::Systems::FormationCombat
 
 namespace Game::Systems::Combat {
 
@@ -115,13 +120,28 @@ void send_guard_home(Engine::Core::World& world,
                      Engine::Core::Entity* entity,
                      float arrival_threshold = -1.0F);
 
-auto is_building(Engine::Core::Entity* entity) -> bool;
+[[nodiscard]] auto is_infantry_spawn(Game::Units::SpawnType type) noexcept -> bool;
+
+[[nodiscard]] auto is_melee_mode(const Engine::Core::AttackComponent* attack) -> bool;
+
+[[nodiscard]] auto is_ranged_mode(const Engine::Core::AttackComponent* attack) -> bool;
+
+[[nodiscard]] auto in_rts_melee_lock(const Engine::Core::Entity* entity) -> bool;
 
 auto combat_radius(Engine::Core::Entity* entity) -> float;
 
 auto is_in_range(Engine::Core::Entity* attacker,
                  Engine::Core::Entity* target,
                  float range) -> bool;
+
+auto elephant_formation_penetration_distance(
+    const Engine::Core::Entity& attacker,
+    const Engine::Core::Entity& target,
+    const FormationCombat::ContactGeometry& geometry) -> std::optional<float>;
+
+auto melee_contact_reached(const Engine::Core::Entity& attacker,
+                           const Engine::Core::Entity& target,
+                           const FormationCombat::ContactGeometry& geometry) -> bool;
 
 auto structure_separates_positions(const QVector3D& from, const QVector3D& to) -> bool;
 

@@ -42,12 +42,6 @@ struct FootOffset {
 
 constexpr float k_pi = std::numbers::pi_v<float>;
 
-[[nodiscard]] auto get_entity_from_query_context(
-    const CombatQueryContext& query_context,
-    Engine::Core::EntityID entity_id) -> Engine::Core::Entity* {
-  return query_context.find_entity(entity_id);
-}
-
 [[nodiscard]] auto
 is_motion_active(const Engine::Core::Entity& entity) noexcept -> bool {
   auto const* motion =
@@ -120,12 +114,7 @@ auto apply_stomp_damage(Engine::Core::Entity& elephant,
     int const old_health = other_unit->health;
     auto const application =
         apply_unit_damage(&world, other_entity, damage, elephant.get_id());
-    bool const infantry_target =
-        !Game::Units::is_cavalry(other_unit->spawn_type) &&
-        other_unit->spawn_type != Game::Units::SpawnType::Elephant &&
-        other_unit->spawn_type != Game::Units::SpawnType::Catapult &&
-        other_unit->spawn_type != Game::Units::SpawnType::Ballista;
-    if (infantry_target) {
+    if (is_infantry_spawn(other_unit->spawn_type)) {
       float impact_speed = minimum_launch_speed;
       if (auto const* motion =
               elephant.get_component<Engine::Core::MotionPresentationComponent>();
@@ -206,8 +195,7 @@ void process_charge_attack(Engine::Core::Entity* elephant,
       break;
     }
 
-    auto* target =
-        get_entity_from_query_context(query_context, attack_target->target_id);
+    auto* target = query_context.find_entity(attack_target->target_id);
     if (!may_attack(unit,
                     target,
                     {.intent = EngagementIntent::Ordered, .allow_buildings = false})) {

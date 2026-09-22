@@ -21,6 +21,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/selection_controller.h"
+#include "game/session/selection_service.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_system/damage_application.h"
@@ -36,7 +37,6 @@
 #include "game/systems/production_service.h"
 #include "game/systems/production_system.h"
 #include "game/systems/projectile_system.h"
-#include "game/systems/selection_system.h"
 #include "game/systems/wall_network_service.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
@@ -356,8 +356,8 @@ TEST_F(AudioGameplayScenarioTest, AGateOpeningAndClosingIsHeard) {
 }
 
 TEST_F(AudioGameplayScenarioTest, SelectingAndDeselectingTroopsIsHeard) {
-  m_world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
-  auto* selection_system = m_world.get_system<Game::Systems::SelectionSystem>();
+  Game::Session::SelectionService test_selection;
+  auto* selection_system = &test_selection;
   ASSERT_NE(selection_system, nullptr);
   Game::Systems::SelectionController controller(&m_world, selection_system, nullptr);
 
