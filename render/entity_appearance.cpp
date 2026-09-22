@@ -1,6 +1,7 @@
 #include "entity_appearance.h"
 
 #include "../game/core/component_core.h"
+#include "../game/core/component_gameplay.h"
 #include "../game/core/entity.h"
 #include "../game/visuals/team_colors.h"
 
@@ -26,6 +27,14 @@ auto coat_color(Game::Units::SpawnType spawn_type) -> QVector3D {
 auto entity_color(const Engine::Core::Entity& entity) -> QVector3D {
   const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
   if (unit == nullptr) {
+
+    if (const auto* registry = entity.registry(); registry != nullptr) {
+      if (const auto* preview =
+              registry->try_get<Engine::Core::ConstructionPreviewComponent>(
+                  entity.get_id())) {
+        return team_color(preview->owner_id);
+      }
+    }
     return {1.0F, 1.0F, 1.0F};
   }
   if (Game::Units::is_wildlife_spawn(unit->spawn_type)) {

@@ -41,6 +41,15 @@ struct PlanarBounds {
 class BoundsSubmitter final : public Render::GL::ISubmitter {
 public:
   PlanarBounds bounds;
+  bool skip_yard{false};
+  static constexpr float k_knee_height = 0.32F;
+  static constexpr float k_plinth_reach = 1.19F;
+
+  static auto outside_structure(const std::vector<QVector3D>& points) -> bool {
+    return std::any_of(points.begin(), points.end(), [](const QVector3D& p) {
+      return std::abs(p.x()) > k_plinth_reach || std::abs(p.z()) > k_plinth_reach;
+    });
+  }
 
   void mesh(Render::GL::Mesh* mesh,
             const QMatrix4x4& model,
@@ -51,9 +60,20 @@ public:
     if (mesh == nullptr) {
       return;
     }
+    std::vector<QVector3D> points;
+    points.reserve(mesh->get_vertices().size());
+    float top = std::numeric_limits<float>::lowest();
     for (const auto& vertex : mesh->get_vertices()) {
-      bounds.include(model.map(
+      points.push_back(model.map(
           QVector3D(vertex.position[0], vertex.position[1], vertex.position[2])));
+      top = std::max(top, points.back().y());
+    }
+
+    if (skip_yard && top < k_knee_height && outside_structure(points)) {
+      return;
+    }
+    for (const auto& point : points) {
+      bounds.include(point);
     }
   }
 
@@ -62,6 +82,10 @@ public:
                 float,
                 const QVector3D&,
                 float) override {
+    if (skip_yard && std::max(from.y(), to.y()) < k_knee_height &&
+        outside_structure({from, to})) {
+      return;
+    }
     bounds.include(from);
     bounds.include(to);
   }
@@ -117,6 +141,7 @@ protected:
     ctx.model = QMatrix4x4{};
 
     BoundsSubmitter submitter;
+    submitter.skip_yard = renderer_key == "home";
     func(ctx, submitter);
     return submitter.bounds;
   }

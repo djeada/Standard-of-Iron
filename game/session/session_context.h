@@ -90,7 +90,6 @@ public:
 
   [[nodiscard]] auto troop_counts() -> Game::Systems::TroopCountRegistry&;
 
-  // Client state, not match state -- see SelectionService.
   [[nodiscard]] auto selection() -> SelectionService&;
   [[nodiscard]] auto selection() const -> const SelectionService&;
 

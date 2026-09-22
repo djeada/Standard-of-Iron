@@ -400,10 +400,10 @@ void Renderer::mesh(Mesh* mesh,
     return;
   }
 
-  float const effective_alpha = alpha * m_alpha_override;
+  float const effective_alpha = submitted_alpha(alpha);
 
   if (mesh == m_unit_cylinder_mesh && (texture == nullptr) &&
-      (m_current_shader == nullptr)) {
+      (m_current_shader == nullptr) && m_ghost_coverage <= 0.0F) {
     QVector3D start;
     QVector3D end;
     float radius = 0.0F;
@@ -445,7 +445,7 @@ void Renderer::banner(Mesh* mesh,
   cmd.color = color;
   cmd.trim_color = trim_color;
   cmd.has_trim_color = true;
-  cmd.alpha = alpha * m_alpha_override;
+  cmd.alpha = submitted_alpha(alpha);
   cmd.material_id = resolve_material_id(material_id, color);
   cmd.shader = m_current_shader;
   if (m_active_queue != nullptr) {
@@ -468,7 +468,7 @@ void Renderer::part(Mesh* mesh,
     this->mesh(mesh, model, color, texture, alpha, material_id);
     return;
   }
-  float const effective_alpha = alpha * m_alpha_override;
+  float const effective_alpha = submitted_alpha(alpha);
   DrawPartCmd cmd;
   cmd.mesh = mesh;
   cmd.material = material;
@@ -482,13 +482,26 @@ void Renderer::part(Mesh* mesh,
   }
 }
 
+auto Renderer::submitted_alpha(float alpha) const -> float {
+  float const effective = alpha * m_alpha_override;
+  if (m_ghost_coverage <= 0.0F) {
+    return effective;
+  }
+  if (effective >= k_opaque_threshold) {
+    return 1.0F + std::clamp(m_ghost_coverage, 0.05F, 0.95F);
+  }
+  return effective * m_ghost_coverage;
+}
+
 void Renderer::cylinder(const QVector3D& start,
                         const QVector3D& end,
                         float radius,
                         const QVector3D& color,
                         float alpha) {
 
-  float const effective_alpha = alpha * m_alpha_override;
+  float const effective_alpha = m_ghost_coverage > 0.0F
+                                    ? alpha * m_alpha_override * m_ghost_coverage
+                                    : alpha * m_alpha_override;
   CylinderCmd cmd;
   cmd.start = start;
   cmd.end = end;

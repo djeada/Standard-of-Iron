@@ -828,7 +828,8 @@ void raise_site_ghost(Engine::Core::World& world, const SiteGhost& site) {
   }
   transform->position = {site.x, surface_y, site.z};
   transform->rotation = {0.0F, site.rotation_y, 0.0F};
-  transform->scale = {1.0F, 1.0F, 1.0F};
+  const QVector3D scale = Game::Units::building_transform_scale(site.product_type);
+  transform->scale = {scale.x(), scale.y(), scale.z()};
 
   auto* renderable =
       Game::Units::add_building_renderable(*entity, site.nation_id, site.product_type);
@@ -1009,6 +1010,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     }
   }
 
+  constexpr float k_work_spot_arrival_distance_sq = 0.2F * 0.2F;
   constexpr float k_site_arrival_distance_sq = 1.0F * 1.0F;
 
   constexpr float k_site_approach_limit_seconds = 30.0F;
@@ -1110,10 +1112,13 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         float const dz = builder_prod->construction_site_z - transform->position.z;
         float const dist_sq = dx * dx + dz * dz;
 
-        const float arrival_sq = k_site_arrival_distance_sq;
+        bool const work_spot = is_gather_builder_product(builder_prod->product_type);
+        const float arrival_sq =
+            work_spot ? k_work_spot_arrival_distance_sq : k_site_arrival_distance_sq;
         float const edge = distance_to_site_edge(
             *builder_prod, transform->position.x, transform->position.z);
-        if (dist_sq < arrival_sq || (edge * edge) < arrival_sq) {
+        bool const reached_footprint = !work_spot && (edge * edge) < arrival_sq;
+        if (dist_sq < arrival_sq || reached_footprint) {
 
           builder_prod->at_construction_site = true;
           builder_prod->in_progress = true;

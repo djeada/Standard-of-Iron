@@ -18,9 +18,6 @@ namespace {
 
 constexpr int k_temple_health = 900;
 constexpr float k_temple_vision_range = 18.0F;
-constexpr float k_temple_scale_factor = 1.5F;
-constexpr float k_temple_scale_xz = 1.3F * k_temple_scale_factor;
-constexpr float k_temple_scale_y = 1.15F * k_temple_scale_factor;
 
 } // namespace
 
@@ -44,7 +41,8 @@ void Temple::init(const SpawnParams& params) {
   m_t = e->add_component<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(), params.position.z()};
   m_t->rotation = {0.0F, params.rotation_y, 0.0F};
-  m_t->scale = {k_temple_scale_xz, k_temple_scale_y, k_temple_scale_xz};
+  const QVector3D scale = building_transform_scale("temple");
+  m_t->scale = {scale.x(), scale.y(), scale.z()};
 
   m_u = e->add_component<Engine::Core::UnitComponent>();
   m_u->spawn_type = params.spawn_type;

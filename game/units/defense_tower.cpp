@@ -32,7 +32,8 @@ void DefenseTower::init(const SpawnParams& params) {
   m_t = e->add_component<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(), params.position.z()};
   m_t->rotation = {0.0F, params.rotation_y, 0.0F};
-  m_t->scale = {1.0F, 2.0F, 1.0F};
+  const QVector3D scale = building_transform_scale("defense_tower");
+  m_t->scale = {scale.x(), scale.y(), scale.z()};
 
   m_u = e->add_component<Engine::Core::UnitComponent>();
   m_u->spawn_type = SpawnType::DefenseTower;

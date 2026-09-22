@@ -120,6 +120,7 @@ private:
   [[nodiscard]] auto ground_refusal(const QString& building_type,
                                     float world_x,
                                     float world_z) const -> QString;
+  [[nodiscard]] auto nearest_legal_site(const QVector3D& wanted) const -> QVector3D;
 
   void set_construction_preview_valid(bool valid);
   void set_construction_preview_ruling(bool valid, const QString& reason);

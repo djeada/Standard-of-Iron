@@ -56,20 +56,10 @@ AMPLIFICATION_COUNTERS = (
 
 RATIO_METRICS = ("route_cache_hit_ratio",)
 
-# A ratio computed from a handful of samples is noise, not a budget. The route
-# cache only sees a large number of requests when something is wrong: group
-# routing shares one route across a formation, and a unit with a clear line
-# walks it without asking the pathfinder at all. The baseline recorded before
-# the fixture was fixed showed 916 individual routes at 1,000 units purely
-# because every pair believed a structure separated it. Gate the ratio only
-# when the sample is big enough to mean something.
+
 MIN_RATIO_SAMPLE = 200
 
-# A counter whose baseline is zero cannot be gated multiplicatively: 0 * 1.25
-# is still 0, so a single event over a whole run fails the gate and no amount
-# of headroom ever makes it pass. Give those counters an absolute allowance of
-# a few events across the run instead, so the gate fires on a real change in
-# behaviour rather than on one lazy rebuild.
+
 ZERO_BASELINE_EVENT_ALLOWANCE = 16
 
 

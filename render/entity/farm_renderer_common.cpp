@@ -1,6 +1,7 @@
 #include "farm_renderer_common.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 
@@ -55,7 +56,20 @@ struct StalkLook {
   bool leaf{false};
 };
 
-auto stalk_look(int stage) -> StalkLook {
+constexpr float k_crop_height_scale = 0.62F;
+constexpr float k_crop_head_scale = 0.80F;
+
+auto scaled_look(StalkLook look) -> StalkLook {
+  look.height *= k_crop_height_scale;
+  look.lean *= k_crop_height_scale;
+  look.leaf_length *= k_crop_height_scale;
+  look.head_length *= k_crop_head_scale;
+  look.head_radius *= k_crop_head_scale;
+  look.awn_length *= k_crop_head_scale;
+  return look;
+}
+
+auto authored_stalk_look(int stage) -> StalkLook {
   switch (stage) {
   case 1:
     return {.height = 0.050F, .radius = 0.0042F, .lean = 0.010F};
@@ -98,6 +112,10 @@ auto stalk_look(int stage) -> StalkLook {
   default:
     return {};
   }
+}
+
+auto stalk_look(int stage) -> StalkLook {
+  return scaled_look(authored_stalk_look(stage));
 }
 
 void add_soil_bed(BuildingArchetypeDesc& desc,
@@ -419,6 +437,70 @@ void add_crop(BuildingArchetypeDesc& desc,
   }
 }
 
+void add_field_margin(BuildingArchetypeDesc& desc, const FarmFieldSpec& spec) {
+  constexpr float k_fence_half = 0.94F;
+  constexpr float k_fence_clearance = 0.035F;
+  static const std::array<QVector3D, 3> k_grass{QVector3D(0.20F, 0.33F, 0.11F),
+                                                QVector3D(0.27F, 0.38F, 0.13F),
+                                                QVector3D(0.17F, 0.28F, 0.10F)};
+  static const std::array<QVector3D, 3> k_flowers{QVector3D(0.82F, 0.18F, 0.14F),
+                                                  QVector3D(0.92F, 0.90F, 0.82F),
+                                                  QVector3D(0.34F, 0.44F, 0.82F)};
+  const float min_x = spec.center.x() - spec.half_x;
+  const float max_x = spec.center.x() + spec.half_x;
+  const float min_z = spec.center.z() - spec.half_z;
+  const float max_z = spec.center.z() + spec.half_z;
+
+  struct Strip {
+    float x0, x1, z0, z1;
+  };
+  const std::array<Strip, 3> strips{{
+      {min_x, max_x, -k_fence_half + k_fence_clearance, min_z - 0.012F},
+      {max_x + 0.012F, k_fence_half - k_fence_clearance, min_z, max_z},
+      {-k_fence_half + k_fence_clearance, min_x - 0.012F, min_z, max_z},
+  }};
+  int seed = spec.seed * 389;
+  for (const Strip& strip : strips) {
+    const float width = strip.x1 - strip.x0;
+    const float depth = strip.z1 - strip.z0;
+    if (width < 0.02F || depth < 0.02F) {
+      continue;
+    }
+    const int tufts = static_cast<int>((width * depth) / 0.0016F);
+    for (int i = 0; i < std::min(tufts, 48); ++i) {
+      ++seed;
+      const QVector3D base(strip.x0 + hash01(seed) * width,
+                           spec.ground_y + 0.004F,
+                           strip.z0 + hash01(seed + 3) * depth);
+      const float height = 0.030F + hash01(seed + 5) * 0.030F;
+      const QVector3D green =
+          k_grass[static_cast<std::size_t>(hash01(seed + 7) * 2.99F)] *
+          (0.92F + hash01(seed + 9) * 0.16F);
+      for (int blade = 0; blade < 3; ++blade) {
+        const float angle = hash01(seed + 23 + blade) * 6.2831853F;
+        const float splay = 0.004F + hash01(seed + 29 + blade) * 0.006F;
+        desc.add_cone(base,
+                      base +
+                          QVector3D(std::cos(angle) * splay,
+                                    height * (0.7F + 0.15F * static_cast<float>(blade)),
+                                    std::sin(angle) * splay),
+                      0.0045F + hash01(seed + 13 + blade) * 0.002F,
+                      green * (0.94F + 0.05F * static_cast<float>(blade)),
+                      k_building_state_mask_intact);
+      }
+      if (hash01(seed + 17) < 0.32F) {
+        const QVector3D bloom_at = base + QVector3D(0.0F, height * 0.9F, 0.0F);
+        desc.add_cylinder(
+            bloom_at,
+            bloom_at + QVector3D(0.0F, 0.003F, 0.0F),
+            0.0075F,
+            k_flowers[static_cast<std::size_t>(hash01(seed + 19) * 2.99F)],
+            k_building_state_mask_intact);
+      }
+    }
+  }
+}
+
 } // namespace
 
 void add_farm_field(BuildingArchetypeDesc& desc,
@@ -427,6 +509,7 @@ void add_farm_field(BuildingArchetypeDesc& desc,
                     int stage) {
   const int clamped_stage = std::clamp(stage, 0, k_farm_render_stage_count - 1);
   add_soil_bed(desc, spec, palette, clamped_stage);
+  add_field_margin(desc, spec);
   if (clamped_stage == 0) {
     add_stubble(desc, spec, palette);
     return;
@@ -439,43 +522,49 @@ void add_farm_scarecrow(BuildingArchetypeDesc& desc,
                         const QVector3D& timber,
                         const QVector3D& cloth,
                         const QVector3D& straw) {
-  desc.add_cylinder(base,
-                    base + QVector3D(0.0F, 0.52F, 0.0F),
-                    0.018F,
+
+  constexpr float k_up = 0.36F;
+  constexpr float k_across = k_up * (5.1F / 7.14F);
+  auto const at = [&](float x, float y, float z) {
+    return base + QVector3D(x * k_across, y * k_up, z * k_across);
+  };
+  desc.add_cylinder(at(0.0F, 0.0F, 0.0F),
+                    at(0.0F, 0.52F, 0.0F),
+                    0.018F * k_across,
                     timber,
                     k_building_state_mask_intact);
-  desc.add_cylinder(base + QVector3D(-0.16F, 0.40F, 0.0F),
-                    base + QVector3D(0.16F, 0.40F, 0.0F),
-                    0.014F,
+  desc.add_cylinder(at(-0.16F, 0.40F, 0.0F),
+                    at(0.16F, 0.40F, 0.0F),
+                    0.014F * k_across,
                     timber,
                     k_building_state_mask_intact);
-  desc.add_box(base + QVector3D(0.0F, 0.36F, 0.0F),
-               QVector3D(0.075F, 0.085F, 0.045F),
+  desc.add_box(at(0.0F, 0.36F, 0.0F),
+               QVector3D(0.075F * k_across, 0.085F * k_up, 0.045F * k_across),
                cloth,
                k_building_state_mask_intact);
-  desc.add_cylinder(base + QVector3D(-0.16F, 0.40F, 0.0F),
-                    base + QVector3D(-0.19F, 0.32F, 0.0F),
-                    0.02F,
+  desc.add_cylinder(at(-0.16F, 0.40F, 0.0F),
+                    at(-0.19F, 0.32F, 0.0F),
+                    0.02F * k_across,
                     straw,
                     k_building_state_mask_intact);
-  desc.add_cylinder(base + QVector3D(0.16F, 0.40F, 0.0F),
-                    base + QVector3D(0.19F, 0.32F, 0.0F),
-                    0.02F,
+  desc.add_cylinder(at(0.16F, 0.40F, 0.0F),
+                    at(0.19F, 0.32F, 0.0F),
+                    0.02F * k_across,
                     straw,
                     k_building_state_mask_intact);
-  desc.add_cylinder(base + QVector3D(0.0F, 0.45F, 0.0F),
-                    base + QVector3D(0.0F, 0.53F, 0.0F),
-                    0.045F,
+  desc.add_cylinder(at(0.0F, 0.45F, 0.0F),
+                    at(0.0F, 0.53F, 0.0F),
+                    0.045F * k_across,
                     straw,
                     k_building_state_mask_intact);
-  desc.add_cone(base + QVector3D(0.0F, 0.52F, 0.0F),
-                base + QVector3D(0.0F, 0.60F, 0.0F),
-                0.075F,
+  desc.add_cone(at(0.0F, 0.52F, 0.0F),
+                at(0.0F, 0.60F, 0.0F),
+                0.075F * k_across,
                 straw * 0.85F,
                 k_building_state_mask_intact);
-  desc.add_cylinder(base,
-                    base + QVector3D(0.06F, 0.18F, 0.02F),
-                    0.018F,
+  desc.add_cylinder(at(0.0F, 0.0F, 0.0F),
+                    at(0.06F, 0.18F, 0.02F),
+                    0.018F * k_across,
                     timber * 0.6F,
                     BuildingStateMask::Destroyed);
 }
@@ -512,6 +601,7 @@ void register_farm_renderer_variant(EntityRendererRegistry& registry,
         const BuildingState state = resolve_building_state(ctx);
         submit_building_instance(out, ctx, config.archetype(state, stage));
         submit_farm_activity(ctx, out, config.nation_slug == "carthage");
+        submit_building_torches(ctx, out, config.torches);
         draw_building_selection_overlay(out, ctx, config.selection);
       });
 }

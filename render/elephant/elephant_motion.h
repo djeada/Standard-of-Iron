@@ -2,6 +2,8 @@
 
 #include <QVector3D>
 
+#include <optional>
+
 #include "animation/individuality_manifest.h"
 #include "render/elephant/runtime/gait_state.h"
 #include "render/elephant/runtime/motion_sample.h"
@@ -60,7 +62,8 @@ auto evaluate_elephant_motion(
     Render::Creature::ElephantAnimationStateComponent* io_state = nullptr,
     float model_scale = 1.0F,
 
-    const Animation::SoldierIndividuality& individuality = {}) -> ElephantMotionSample;
+    const Animation::SoldierIndividuality& individuality = {},
+    std::optional<float> body_yaw_degrees = std::nullopt) -> ElephantMotionSample;
 
 auto build_elephant_pose_motion(const ElephantMotionSample& motion,
                                 const AnimationInputs& anim)

@@ -132,6 +132,41 @@ TEST_F(FormationCombatGeometry, NavigationUsesTheCompressedAuthoredWidth) {
   }
 }
 
+TEST_F(FormationCombatGeometry, BuildersRingTheSiteTheyAreRaising) {
+  Engine::Core::World world;
+  auto* entity = world.create_entity();
+  auto* transform = entity->add_component<Engine::Core::TransformComponent>();
+  auto* unit =
+      entity->add_component<Engine::Core::UnitComponent>(100, 100, 2.0F, 10.0F);
+  auto* builder = entity->add_component<Engine::Core::BuilderProductionComponent>();
+  transform->position = {6.0F, 0.0F, -4.0F};
+  transform->rotation.y = 30.0F;
+  transform->scale = {0.5F, 0.5F, 0.5F};
+  unit->spawn_type = Game::Units::SpawnType::Builder;
+  unit->render_individuals_per_unit_override = 6;
+  builder->in_progress = true;
+  builder->at_construction_site = true;
+  builder->has_construction_site = true;
+  builder->product_type = "home";
+  builder->construction_site_x = 6.0F;
+  builder->construction_site_z = -4.0F;
+
+  auto const layout = Game::Systems::FormationCombat::resolve_layout(*entity);
+  ASSERT_EQ(layout.live_slots.size(), 6U);
+
+  float min_bearing = 360.0F;
+  float max_bearing = -360.0F;
+  for (auto const& slot : layout.live_slots) {
+    float const dx = slot.world_x - 6.0F;
+    float const dz = slot.world_z + 4.0F;
+    EXPECT_GT(std::max(std::abs(dx), std::abs(dz)), 2.1F);
+    float const bearing = std::atan2(dx, dz) * 180.0F / 3.14159265F;
+    min_bearing = std::min(min_bearing, bearing);
+    max_bearing = std::max(max_bearing, bearing);
+  }
+  EXPECT_GT(max_bearing - min_bearing, 180.0F);
+}
+
 TEST_F(FormationCombatGeometry,
        TraversalAnchorsDriveSpatialQueriesWithoutPresentation) {
   Engine::Core::World world;

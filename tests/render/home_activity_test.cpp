@@ -1,5 +1,9 @@
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
 #include <gtest/gtest.h>
 #include <set>
+#include <vector>
 
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
@@ -108,6 +112,7 @@ protected:
     ctx.entity = entity;
     ctx.world = &world;
     ctx.home_activity = &activity;
+    activity.hens = false;
     ctx.submission_visibility = &visibility;
     ctx.submission_fog_mode = SubmissionFogMode::Revealed;
     visibility.reset(nullptr, nullptr);
@@ -121,6 +126,17 @@ protected:
     ctx.animation_time = time;
     activity.begin_frame(&world, time);
     submit_home_activity(ctx, recorder, carthage);
+  }
+
+  auto hen_props(float time) -> std::vector<QMatrix4x4> {
+    activity.hens = false;
+    draw(time);
+    auto const without = recorder.props.size();
+    activity.hens = true;
+    draw(time);
+    activity.hens = false;
+    return {recorder.props.begin() + static_cast<std::ptrdiff_t>(without),
+            recorder.props.end()};
   }
 
   auto lit_time(std::uint64_t id) -> float {
@@ -718,8 +734,8 @@ TEST_F(HomeActivityTest, ResidentsStandOnTheStreetSideAndPairsFaceEachOther) {
       EXPECT_GT(apart, 0.8F);
       EXPECT_LT(apart, 1.6F);
 
-      const auto forward_a = bodies[0].mapVector(QVector3D(0, 0, 1));
-      const auto forward_b = bodies[1].mapVector(QVector3D(0, 0, 1));
+      const auto forward_a = bodies[0].mapVector(QVector3D(0, 0, 1)).normalized();
+      const auto forward_b = bodies[1].mapVector(QVector3D(0, 0, 1)).normalized();
       EXPECT_GT(QVector3D::dotProduct(forward_a, (b - a).normalized()), 0.9F);
       EXPECT_GT(QVector3D::dotProduct(forward_b, (a - b).normalized()), 0.9F);
     } else {
@@ -765,4 +781,36 @@ TEST_F(HomeActivityTest, DetailPropsSitOnTheHouseAndVaryBetweenHouses) {
   }
   EXPECT_GT(differ, 0);
 }
+TEST_F(HomeActivityTest, HensScratchAboutTheYardOnTheGround) {
+  std::vector<QMatrix4x4> hens;
+  std::uint64_t home = 0;
+  for (int attempt = 0; attempt < 12 && hens.empty(); ++attempt) {
+    auto* house = world.create_entity();
+    auto* unit = house->add_component<Engine::Core::UnitComponent>();
+    unit->spawn_type = Game::Units::SpawnType::Home;
+    unit->owner_id = 1;
+    unit->health = 400;
+    unit->max_health = 400;
+    ctx.entity = house;
+    home = house->get_id();
+    hens = hen_props(20.0F);
+  }
+  ASSERT_FALSE(hens.empty()) << "no house in a dozen kept any hens";
+  for (const auto& piece : hens) {
+    const auto at = piece.column(3).toVector3D();
+    EXPECT_LT(at.y(), 0.35F) << "a hen floated off the ground";
+    EXPECT_GT(std::hypot(at.x(), at.z()), 1.1F * 1.36F) << "a hen is inside the house";
+    EXPECT_LT(std::hypot(at.x(), at.z()), 2.4F * 1.36F)
+        << "a hen wandered off the plot";
+  }
+
+  bool moved = false;
+  for (float time = 21.0F; time < 40.0F && !moved; time += 1.0F) {
+    auto const later = hen_props(time);
+    moved = later.size() == hens.size() &&
+            !std::equal(later.begin(), later.end(), hens.begin());
+  }
+  EXPECT_TRUE(moved) << "house " << home << " has hens frozen in place";
+}
+
 } // namespace

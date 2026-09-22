@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include <array>
 #include <cmath>
 #include <string>
 
@@ -105,6 +106,14 @@ void add_granary_shed(BuildingArchetypeDesc& desc, const RomanFarmPalette& c) {
                QVector3D(k_half_x + 0.004F, 0.05F, k_half_z + 0.004F),
                c.plaster_shade,
                k_building_state_mask_intact);
+  for (const float x : {-k_half_x, k_half_x}) {
+    for (const float z : {-k_half_z, k_half_z}) {
+      desc.add_box(centre + QVector3D(x, 0.11F + k_wall_h * 0.5F, z),
+                   QVector3D(0.035F, k_wall_h * 0.5F, 0.035F),
+                   c.limestone_shade,
+                   k_building_state_mask_intact);
+    }
+  }
   desc.add_box(centre + QVector3D(0.0F, 0.11F + 0.09F, 0.0F),
                QVector3D(k_half_x * 0.9F, 0.09F, k_half_z * 0.9F),
                c.limestone_shade,
@@ -329,6 +338,15 @@ auto farm_archetype(BuildingState state, int stage) -> const RenderArchetype& {
   return farm_archetype_from_table(k_table, state, stage);
 }
 
+const std::array<TorchMount, 3> k_torches{{
+    TorchMount{.at = QVector3D(0.94F, 0.16F, 0.2F),
+               .outward = QVector3D(1.0F, 0.0F, 0.0F)},
+    TorchMount{.at = QVector3D(0.94F, 0.16F, 0.42F),
+               .outward = QVector3D(1.0F, 0.0F, 0.0F)},
+    TorchMount{.at = QVector3D(0.36F, 0.25F, 0.51F),
+               .outward = QVector3D(0.0F, 0.0F, -1.0F)},
+}};
+
 } // namespace
 
 auto build_farm_desc(BuildingState state, int stage) -> BuildingArchetypeDesc {
@@ -340,7 +358,8 @@ void register_farm_renderer(EntityRendererRegistry& registry) {
       registry,
       FarmRendererConfig{.nation_slug = "roman",
                          .archetype = &farm_archetype,
-                         .selection = BuildingSelectionStyle{2.2F, 2.2F}});
+                         .selection = BuildingSelectionStyle{2.2F, 2.2F},
+                         .torches = k_torches});
 }
 
 } // namespace Render::GL::Roman

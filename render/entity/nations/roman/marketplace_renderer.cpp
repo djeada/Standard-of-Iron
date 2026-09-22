@@ -207,6 +207,14 @@ auto build_marketplace_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                       col_radius,
                       c.limestone_shade);
 
+    for (const float y : {0.22F, 0.16F + col_height - 0.06F}) {
+      desc.add_cylinder(QVector3D(-0.96F, y, cz),
+                        QVector3D(-0.96F, y + 0.025F, cz),
+                        col_radius * 1.24F,
+                        c.marble,
+                        k_building_state_mask_intact);
+    }
+
     desc.add_box(QVector3D(-0.96F, 0.16F + col_height + 0.04F, cz),
                  QVector3D(col_radius * 1.5F, 0.05F, col_radius * 1.5F),
                  c.marble,
@@ -393,6 +401,58 @@ auto marketplace_archetype(BuildingState state) -> const RenderArchetype& {
   return k_set.for_state(state);
 }
 
+const std::array<TorchMount, 4> k_torches{{
+    TorchMount{.at = QVector3D(-1.01F, 0.62F, 0.8F),
+               .outward = QVector3D(-1.0F, 0.0F, 0.0F)},
+    TorchMount{.at = QVector3D(-1.01F, 0.62F, -0.8F),
+               .outward = QVector3D(-1.0F, 0.0F, 0.0F)},
+    TorchMount{.at = QVector3D(0.32F, 0.7F, 0.855F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+    TorchMount{.at = QVector3D(0.32F, 0.7F, -0.855F),
+               .outward = QVector3D(0.0F, 0.0F, -1.0F)},
+}};
+const std::array<QVector3D, 4> k_buyer_a{QVector3D(-1.75F, 0.0F, -0.45F),
+                                         QVector3D(-1.34F, 0.0F, -0.42F),
+                                         QVector3D(-1.3F, 0.16F, -0.4F),
+                                         QVector3D(-1.12F, 0.16F, -0.35F)};
+const std::array<QVector3D, 2> k_buyer_b{QVector3D(-1.14F, 0.16F, 1.02F),
+                                         QVector3D(-1.12F, 0.16F, 0.42F)};
+const std::array<QVector3D, 2> k_stroll_route{QVector3D(-1.18F, 0.16F, -1.04F),
+                                              QVector3D(0.55F, 0.16F, -1.06F)};
+const std::array<QVector3D, 5> k_porter_route{QVector3D(-1.75F, 0.0F, 0.95F),
+                                              QVector3D(-1.34F, 0.0F, 0.96F),
+                                              QVector3D(-1.3F, 0.16F, 0.96F),
+                                              QVector3D(-1.16F, 0.16F, 0.98F),
+                                              QVector3D(0.5F, 0.16F, 1.06F)};
+const std::array<QVector3D, 1> k_seller_spot{QVector3D(-0.92F, 0.16F, -0.62F)};
+const std::array<QVector3D, 1> k_vendor_spot{QVector3D(0.76F, 0.16F, 0.02F)};
+const std::array<WalkSurface, 1> k_walk_surfaces{{
+    WalkSurface{
+        .min_x = -1.24F, .max_x = 1.24F, .min_z = -1.24F, .max_z = 1.24F, .top = 0.16F},
+}};
+const std::array<AmbientPerson, 6> k_people{{
+    AmbientPerson{.role = AmbientRole::Stroll,
+                  .route = k_buyer_a,
+                  .facing = QVector3D(-0.5F, 0.4F, -0.35F),
+                  .linger = AmbientRole::Haggle},
+    AmbientPerson{.role = AmbientRole::Stroll,
+                  .route = k_buyer_b,
+                  .facing = QVector3D(-0.5F, 0.4F, 0.42F),
+                  .linger = AmbientRole::Haggle},
+    AmbientPerson{.role = AmbientRole::Haggle,
+                  .route = k_seller_spot,
+                  .facing = QVector3D(-1.12F, 0.3F, -0.35F)},
+    AmbientPerson{.role = AmbientRole::Weave,
+                  .route = k_vendor_spot,
+                  .facing = QVector3D(-0.2F, 0.4F, 0.0F)},
+    AmbientPerson{.role = AmbientRole::Stroll,
+                  .route = k_stroll_route,
+                  .facing = QVector3D(-0.3F, 0.4F, -0.6F)},
+    AmbientPerson{.role = AmbientRole::Porter,
+                  .route = k_porter_route,
+                  .facing = QVector3D(0.46F, 0.35F, 0.74F)},
+}};
+
 } // namespace
 
 auto build_marketplace_desc(BuildingState state) -> BuildingArchetypeDesc {
@@ -405,7 +465,10 @@ void register_marketplace_renderer(EntityRendererRegistry& registry) {
       MarketplaceRendererConfig{.nation_slug = "roman",
                                 .archetype = &marketplace_archetype,
                                 .palette_slots = &marketplace_palette_slots,
-                                .selection = BuildingSelectionStyle{1.8F, 1.8F}});
+                                .selection = BuildingSelectionStyle{1.8F, 1.8F},
+                                .torches = k_torches,
+                                .people = k_people,
+                                .walk_surfaces = k_walk_surfaces});
 }
 
 } // namespace Render::GL::Roman

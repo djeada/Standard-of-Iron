@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QVector3D>
+
 #include <string_view>
 
 #include "../systems/nation_id.h"
@@ -16,4 +18,6 @@ auto add_building_renderable(Engine::Core::Entity& entity,
                              std::string_view building_type)
     -> Engine::Core::RenderableComponent*;
 
-}
+auto building_transform_scale(std::string_view building_type) -> QVector3D;
+
+} // namespace Game::Units

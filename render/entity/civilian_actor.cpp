@@ -9,10 +9,16 @@
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/humanoid_animation_selection.h"
 #include "render/gl/humanoid/humanoid_types.h"
+#include "render/world_view.h"
 
 namespace Render::GL {
 namespace {
 auto rigs() -> std::array<NationCivilianRig, 2>& {
+  static std::array<NationCivilianRig, 2> registered{};
+  return registered;
+}
+
+auto priest_rigs() -> std::array<NationCivilianRig, 2>& {
   static std::array<NationCivilianRig, 2> registered{};
   return registered;
 }
@@ -40,7 +46,28 @@ auto ambient_review_interval(const char* environment_variable) -> float {
   return seconds > 0.0F ? seconds : 0.0F;
 }
 
+auto civilian_render_scale(const DrawContext& ctx,
+                           const NationCivilianRig& rig) -> float {
+  constexpr float k_fallback_civilian_scale = 0.48F;
+  return ctx.world_view.troop_render_scale(
+      rig.carthage ? Game::Systems::NationID::Carthage
+                   : Game::Systems::NationID::RomanRepublic,
+      rig.healer ? Game::Units::TroopType::Healer : Game::Units::TroopType::Civilian,
+      k_fallback_civilian_scale);
+}
+
+void register_nation_priest_rig(bool carthage, NationCivilianRig rig) {
+  rig.carthage = carthage;
+  rig.healer = true;
+  priest_rigs()[carthage ? 1U : 0U] = rig;
+}
+
+auto nation_priest_rig(bool carthage) -> const NationCivilianRig& {
+  return priest_rigs()[carthage ? 1U : 0U];
+}
+
 void register_nation_civilian_rig(bool carthage, NationCivilianRig rig) {
+  rig.carthage = carthage;
   rigs()[carthage ? 1U : 0U] = rig;
 }
 
@@ -67,7 +94,10 @@ void add_civilian_actor(const DrawContext& ctx,
   output.lod = actor.distant ? CreatureLOD::Minimal : CreatureLOD::Full;
   output.pass_intent = Pipeline::RenderPassIntent::Main;
   output.seed = actor.seed;
-  output.world_matrix = actor.world;
+
+  QMatrix4x4 world = actor.world;
+  world.scale(civilian_render_scale(ctx, rig));
+  output.world_matrix = world;
   output.world_already_grounded = true;
   output.entity_id = static_cast<Pipeline::EntityId>(actor.owner_id);
   output.instance_index = actor.instance;

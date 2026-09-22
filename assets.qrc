@@ -276,6 +276,7 @@
         <file>assets/audio/sfx/combat/stone_impact_01.ogg</file>
         <file>assets/audio/sfx/combat/sword_hit_01.ogg</file>
         <file>assets/audio/sfx/combat/vanguard_rush.ogg</file>
+        <file>assets/audio/sfx/economy/gather_success.ogg</file>
         <file>assets/audio/sfx/economy/income_tick.ogg</file>
         <file>assets/audio/sfx/movement/footstep_grass_01.ogg</file>
         <file>assets/audio/sfx/movement/footstep_grass_02.ogg</file>

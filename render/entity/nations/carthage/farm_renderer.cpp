@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include <array>
 #include <cmath>
 #include <string>
 
@@ -150,6 +151,13 @@ void add_storehouse(BuildingArchetypeDesc& desc, const CarthageFarmPalette& c) {
                QVector3D(k_half_x + 0.03F, 0.014F, k_half_z + 0.03F),
                c.lime_wash,
                k_building_state_mask_intact);
+
+  for (const float x : {-0.18F, 0.0F, 0.18F}) {
+    desc.add_box(centre + QVector3D(x, roof_y + 0.063F, 0.0F),
+                 QVector3D(0.025F, 0.012F, k_half_z + 0.04F),
+                 c.palm_dark,
+                 k_building_state_mask_intact);
+  }
 
   const float eave_x_inner = k_half_x + 0.015F - 0.022F;
   for (const float side : {-1.0F, 1.0F}) {
@@ -385,6 +393,15 @@ auto farm_archetype(BuildingState state, int stage) -> const RenderArchetype& {
   return farm_archetype_from_table(k_table, state, stage);
 }
 
+const std::array<TorchMount, 3> k_torches{{
+    TorchMount{.at = QVector3D(0.985F, 0.09F, 0.18F),
+               .outward = QVector3D(1.0F, 0.0F, 0.0F)},
+    TorchMount{.at = QVector3D(0.985F, 0.09F, 0.44F),
+               .outward = QVector3D(1.0F, 0.0F, 0.0F)},
+    TorchMount{.at = QVector3D(0.35F, 0.24F, 0.48F),
+               .outward = QVector3D(0.0F, 0.0F, -1.0F)},
+}};
+
 } // namespace
 
 auto build_farm_desc(BuildingState state, int stage) -> BuildingArchetypeDesc {
@@ -396,7 +413,8 @@ void register_farm_renderer(EntityRendererRegistry& registry) {
       registry,
       FarmRendererConfig{.nation_slug = "carthage",
                          .archetype = &farm_archetype,
-                         .selection = BuildingSelectionStyle{2.2F, 2.2F}});
+                         .selection = BuildingSelectionStyle{2.2F, 2.2F},
+                         .torches = k_torches});
 }
 
 } // namespace Render::GL::Carthage

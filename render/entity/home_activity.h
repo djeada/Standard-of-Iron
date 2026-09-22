@@ -117,6 +117,10 @@ struct HomeActivity {
   int remaining_actors{0};
   float night_factor{0.0F};
   bool actors_allowed{false};
+
+  bool hens{true};
+
+  int remaining_ambient_actors{0};
   std::vector<std::uint64_t> homes;
   Engine::Core::World* world{nullptr};
   float previous_time{0.0F};
@@ -136,7 +140,8 @@ inline constexpr float k_rise_end = 5.0F;
 inline constexpr float k_stare_end = 6.2F;
 inline constexpr float k_return_end = 8.4F;
 inline constexpr float k_sequence_end = 9.5F;
-inline constexpr float k_walk_metres_per_cycle = 1.35F;
+
+inline constexpr float k_walk_metres_per_cycle = 0.66F;
 inline constexpr float k_walk_out_metres = 2.4F;
 } // namespace Spill
 

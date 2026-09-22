@@ -969,4 +969,35 @@ TEST_F(PathfindingTest, ReachableRegionsFollowGridEdits) {
             Game::Systems::Pathfinding::k_unreachable_region);
 }
 
+TEST_F(PathfindingTest, UnitSealedInByBuildingsGetsAnEscapeToOpenGround) {
+  using Passability = Game::Systems::Pathfinding::Passability;
+  constexpr int k_extent = 24;
+  constexpr float k_origin = -((static_cast<float>(k_extent) * 0.5F) - 0.5F);
+
+  Game::Systems::Pathfinding pathfinding(k_extent, k_extent);
+  pathfinding.set_grid_offset(k_origin, k_origin);
+  pathfinding.update_navigation_grid();
+
+  for (int offset = 10; offset <= 14; ++offset) {
+    pathfinding.set_obstacle(offset, 10, true);
+    pathfinding.set_obstacle(offset, 14, true);
+    pathfinding.set_obstacle(10, offset, true);
+    pathfinding.set_obstacle(14, offset, true);
+  }
+
+  Game::Systems::Point const trapped{12, 12};
+  Game::Systems::Point const goal{2, 2};
+  ASSERT_FALSE(pathfinding.can_reach(trapped, goal, Passability::Light));
+
+  auto const exit = pathfinding.find_escape_point(trapped, goal, Passability::Light);
+  ASSERT_TRUE(exit.has_value());
+  EXPECT_TRUE(pathfinding.can_reach(*exit, goal, Passability::Light));
+  EXPECT_LE(std::max(std::abs(exit->x - trapped.x), std::abs(exit->y - trapped.y)), 3);
+
+  EXPECT_FALSE(
+      pathfinding.find_escape_point({3, 3}, goal, Passability::Light).has_value());
+  EXPECT_FALSE(
+      pathfinding.find_escape_point({3, 3}, trapped, Passability::Light).has_value());
+}
+
 } // namespace

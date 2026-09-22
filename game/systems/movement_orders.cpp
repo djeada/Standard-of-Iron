@@ -489,6 +489,20 @@ void MovementSystem::assign_navigation_target(
       NavGrid::world_to_grid(transform.position.x, transform.position.z);
   Point const end = NavGrid::world_to_grid(planned_target.x(), planned_target.z());
 
+  movement.end_escape();
+  if (auto const exit =
+          pathfinder->find_escape_point(start, end, passability_for(movement))) {
+    assign_escape_route(*pathfinder,
+                        transform,
+                        movement,
+                        NavGrid::grid_to_world(*exit),
+                        planned_target);
+    movement.requested_goal_x = requested_target.x();
+    movement.requested_goal_z = requested_target.z();
+    movement.has_requested_goal = true;
+    return;
+  }
+
   bool const portal_route =
       segment_traverses_navigation_portal(current_pos, planned_target);
   bool const direct_clear =
@@ -523,6 +537,40 @@ void MovementSystem::assign_navigation_target(
   movement.requested_goal_x = requested_target.x();
   movement.requested_goal_z = requested_target.z();
   movement.has_requested_goal = true;
+}
+
+void MovementSystem::assign_escape_route(
+    Pathfinding& pathfinder,
+    const Engine::Core::TransformComponent& transform,
+    Engine::Core::MovementComponent& movement,
+    const QVector3D& exit,
+    const QVector3D& target) {
+  Engine::Core::TransformComponent at_exit = transform;
+  at_exit.position.x = exit.x();
+  at_exit.position.z = exit.z();
+  auto const corridor = RouteCorridorPlanner::plan(pathfinder,
+                                                   QVector3D(exit.x(), 0.0F, exit.z()),
+                                                   target,
+                                                   passability_for(movement),
+                                                   movement.get_navigation_clearance());
+  bool const routed =
+      corridor.reachable() && assign_waypoints_to_movement(pathfinder,
+                                                           corridor.centerline,
+                                                           corridor.centerline.back(),
+                                                           at_exit,
+                                                           movement);
+  if (!routed) {
+    assign_direct_target(movement, target);
+    movement.path.emplace_back(target.x(), target.z());
+    movement.path_index = 0;
+  }
+  movement.path.insert(movement.path.begin() +
+                           static_cast<std::ptrdiff_t>(movement.path_index),
+                       {exit.x(), exit.z()});
+  movement.target_x = exit.x();
+  movement.target_y = exit.z();
+  movement.has_target = true;
+  movement.begin_escape(exit.x(), exit.z());
 }
 
 auto MovementSystem::assign_local_recovery_move(

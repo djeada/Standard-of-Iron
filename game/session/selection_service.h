@@ -6,13 +6,6 @@
 
 namespace Game::Session {
 
-// Which units this client has selected, and which one it is inspecting.
-//
-// This is client state, not match state: two players in one match select
-// different units and a spectator selects none, so it is deliberately absent
-// from the world and from the replay digest. It lived in the world as a
-// Systems::SelectionSystem with an empty update() and an access() declaring
-// neither reads nor writes -- a system in name only.
 class SelectionService {
 public:
   void select_unit(Engine::Core::EntityID unit_id);

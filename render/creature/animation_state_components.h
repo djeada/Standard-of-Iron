@@ -65,6 +65,10 @@ struct ElephantAnimationStateComponent {
   float locomotion_phase{0.0F};
   float locomotion_phase_time{0.0F};
   bool locomotion_phase_valid{false};
+  float body_yaw{0.0F};
+  float body_yaw_time{0.0F};
+  float turn_rate{0.0F};
+  bool body_yaw_valid{false};
 };
 
 struct HorseAnatomyComponent {

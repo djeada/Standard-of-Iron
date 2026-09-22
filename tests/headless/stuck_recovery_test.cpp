@@ -172,10 +172,29 @@ protected:
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory;
 };
 
+TEST_F(StuckRecoveryTest, AUnitSealedInAPenWalksOutToOpenGround) {
+  constexpr int k_pen_x = 12;
+  constexpr int k_pen_z = 24;
+  seal_a_pen(k_pen_x, k_pen_z, 3);
+
+  const EntityID id = spawn(world_of(k_pen_x, k_pen_z));
+  ASSERT_NE(id, 0U);
+  CommandService::move_unit(m_session->world(), id, world_of(40, k_pen_z));
+  run_for(k_recovery_budget_seconds + 20.0);
+
+  EXPECT_LT((position_of(id) - world_of(40, k_pen_z)).length(), 2.5F)
+      << "buildings raised around the unit held it forever";
+  const auto* facts = facts_of(id);
+  ASSERT_NE(facts, nullptr);
+  EXPECT_FALSE(facts->progress.stall.objective_abandoned);
+}
+
 TEST_F(StuckRecoveryTest, AnOrderIntoASealedPenIsGivenUpOnWithinTheRecoveryBudget) {
   constexpr int k_pen_x = 12;
   constexpr int k_pen_z = 24;
   seal_a_pen(k_pen_x, k_pen_z, 3);
+
+  seal_a_pen(40, k_pen_z, 1);
 
   const EntityID id = spawn(world_of(k_pen_x, k_pen_z));
   ASSERT_NE(id, 0U);
@@ -202,6 +221,8 @@ TEST_F(StuckRecoveryTest, ANoRouteOrderWaitsWithoutShufflingThenEndsOnce) {
   constexpr int k_pen_x = 12;
   constexpr int k_pen_z = 24;
   seal_a_pen(k_pen_x, k_pen_z, 3);
+
+  seal_a_pen(40, k_pen_z, 1);
 
   const EntityID id = spawn(world_of(k_pen_x, k_pen_z));
   ASSERT_NE(id, 0U);
@@ -245,6 +266,8 @@ TEST_F(StuckRecoveryTest, AnOrderFromACellWithNoWayOutIsGivenUpNotHeldForever) {
   constexpr int k_pen_z = 24;
   seal_a_pen(k_pen_x, k_pen_z, 1);
 
+  seal_a_pen(40, k_pen_z, 1);
+
   const EntityID id = spawn(world_of(k_pen_x, k_pen_z));
   ASSERT_NE(id, 0U);
   CommandService::move_unit(m_session->world(), id, world_of(40, k_pen_z));
@@ -268,6 +291,8 @@ TEST_F(StuckRecoveryTest, GivingUpDoesNotTurnIntoARepathLoop) {
   constexpr int k_pen_x = 12;
   constexpr int k_pen_z = 24;
   seal_a_pen(k_pen_x, k_pen_z, 3);
+
+  seal_a_pen(40, k_pen_z, 1);
 
   const EntityID id = spawn(world_of(k_pen_x, k_pen_z));
   ASSERT_NE(id, 0U);
@@ -412,6 +437,8 @@ TEST_F(StuckRecoveryTest, RecoveryIsIssuedByOneLadder) {
   constexpr int k_pen_x = 12;
   constexpr int k_pen_z = 24;
   seal_a_pen(k_pen_x, k_pen_z, 3);
+
+  seal_a_pen(40, k_pen_z, 1);
 
   const EntityID id = spawn(world_of(k_pen_x, k_pen_z));
   ASSERT_NE(id, 0U);

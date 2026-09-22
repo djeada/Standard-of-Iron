@@ -7,6 +7,7 @@
 #include <atomic>
 #include <cstdint>
 #include <mutex>
+#include <optional>
 #include <shared_mutex>
 #include <unordered_map>
 #include <vector>
@@ -153,6 +154,20 @@ public:
   [[nodiscard]] auto navigation_revision() const -> std::uint64_t {
     return m_navigation_revision.load(std::memory_order_acquire);
   }
+
+  [[nodiscard]] auto find_escape_point(const Point& point,
+                                       const Point& target,
+                                       Passability passability) -> std::optional<Point>;
+
+  [[nodiscard]] auto walkable_region_size(const Point& seed,
+                                          std::size_t cap,
+                                          Passability passability) const -> std::size_t;
+
+  [[nodiscard]] auto
+  find_nearest_connected_point(const Point& point,
+                               const Point& target,
+                               int max_search_radius,
+                               Passability passability) -> std::optional<Point>;
 
   static auto
   find_nearest_walkable_point(const Point& point,

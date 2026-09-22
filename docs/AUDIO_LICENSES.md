@@ -51,7 +51,7 @@ The ElevenLabs renders were generated under a licence held by the project author
 
 | Licence | Files |
 | --- | ---: |
-| ElevenLabs licence held by the project author; commercial use permitted | 76 |
+| ElevenLabs licence held by the project author; commercial use permitted | 77 |
 | Own work (MIT) | 68 |
 | CC0 1.0 | 62 |
 | Proprietary -- supplied by the project owner | 4 |
@@ -245,6 +245,7 @@ The ElevenLabs renders were generated under a licence held by the project author
 
 | File | Origin | Licence |
 | --- | --- | --- |
+| `gather_success.ogg` | ElevenLabs render `Ancient_Gathering`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
 | `income_tick.ogg` | ElevenLabs render `Economy_Income_Tick`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
 
 ### `sfx/movement/`

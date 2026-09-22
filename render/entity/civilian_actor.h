@@ -13,6 +13,9 @@ struct HumanoidVariant;
 class ISubmitter;
 
 struct NationCivilianRig {
+  bool carthage{false};
+
+  bool healer{false};
   Render::Creature::Pipeline::UnitVisualSpec spec{};
   Render::Creature::ArchetypeId idle{Render::Creature::k_invalid_archetype};
   Render::Creature::ArchetypeId working{Render::Creature::k_invalid_archetype};
@@ -28,6 +31,8 @@ struct NationCivilianRig {
 
 void register_nation_civilian_rig(bool carthage, NationCivilianRig rig);
 [[nodiscard]] auto nation_civilian_rig(bool carthage) -> const NationCivilianRig&;
+void register_nation_priest_rig(bool carthage, NationCivilianRig rig);
+[[nodiscard]] auto nation_priest_rig(bool carthage) -> const NationCivilianRig&;
 
 struct CivilianActor {
   Render::Creature::ArchetypeId archetype{Render::Creature::k_invalid_archetype};
@@ -43,6 +48,9 @@ struct CivilianActor {
   float blend_phase{0.0F};
   float blend_weight{0.0F};
 };
+
+[[nodiscard]] auto civilian_render_scale(const DrawContext& ctx,
+                                         const NationCivilianRig& rig) -> float;
 
 void begin_civilian_actors();
 void add_civilian_actor(const DrawContext& ctx,

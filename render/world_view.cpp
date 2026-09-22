@@ -63,6 +63,15 @@ auto WorldView::find_troop_profile(Game::Systems::NationID nation_id,
                                      : nullptr;
 }
 
+auto WorldView::troop_render_scale(Game::Systems::NationID nation_id,
+                                   Game::Units::TroopType type,
+                                   float fallback) const -> float {
+  const auto* profile = find_troop_profile(nation_id, type);
+  return profile != nullptr && profile->visuals.render_scale > 0.0F
+             ? profile->visuals.render_scale
+             : fallback;
+}
+
 auto WorldView::has_visibility() const noexcept -> bool {
   return m_visibility != nullptr && m_visibility->is_initialized();
 }

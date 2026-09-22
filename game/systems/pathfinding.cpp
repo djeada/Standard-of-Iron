@@ -1155,6 +1155,112 @@ auto Pathfinding::region_of(const Point& cell,
   return label;
 }
 
+auto Pathfinding::walkable_region_size(const Point& seed,
+                                       std::size_t cap,
+                                       Passability passability) const -> std::size_t {
+  if (!is_walkable(seed.x, seed.y, passability)) {
+    return 0;
+  }
+  auto const key = [](const Point& cell) {
+    return (static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell.x)) << 32U) |
+           static_cast<std::uint32_t>(cell.y);
+  };
+  std::vector<Point> frontier{seed};
+  std::vector<std::uint64_t> visited{key(seed)};
+  constexpr std::array<std::pair<int, int>, 4> k_steps{
+      {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}};
+  while (!frontier.empty() && visited.size() < cap) {
+    Point const cell = frontier.back();
+    frontier.pop_back();
+    for (auto const& [dx, dy] : k_steps) {
+      Point const next{cell.x + dx, cell.y + dy};
+      if (!is_walkable(next.x, next.y, passability) ||
+          std::find(visited.begin(), visited.end(), key(next)) != visited.end()) {
+        continue;
+      }
+      visited.push_back(key(next));
+      frontier.push_back(next);
+      if (visited.size() >= cap) {
+        break;
+      }
+    }
+  }
+  return visited.size();
+}
+
+auto Pathfinding::find_escape_point(const Point& point,
+                                    const Point& target,
+                                    Passability passability) -> std::optional<Point> {
+  constexpr int k_pocket_search_cells = 8;
+  constexpr std::size_t k_sealed_pocket_max_cells = 900;
+  constexpr int k_escape_search_cells = 32;
+
+  if (can_reach(
+          find_nearest_walkable_point(point, k_pocket_search_cells, *this, passability),
+          target,
+          passability)) {
+    return std::nullopt;
+  }
+
+  Point const seed =
+      find_nearest_walkable_point(point, k_pocket_search_cells, *this, passability);
+  Point const goal =
+      find_nearest_walkable_point(target, k_pocket_search_cells, *this, passability);
+  std::size_t const own =
+      walkable_region_size(seed, k_sealed_pocket_max_cells, passability);
+  if (own >= k_sealed_pocket_max_cells) {
+    return std::nullopt;
+  }
+  if (own > 0 && walkable_region_size(goal, own + 1, passability) <= own) {
+    return std::nullopt;
+  }
+
+  auto exit =
+      find_nearest_connected_point(point, target, k_escape_search_cells, passability);
+  if (!exit.has_value() || (exit->x == point.x && exit->y == point.y)) {
+    return std::nullopt;
+  }
+  return exit;
+}
+
+auto Pathfinding::find_nearest_connected_point(const Point& point,
+                                               const Point& target,
+                                               int max_search_radius,
+                                               Passability passability)
+    -> std::optional<Point> {
+  std::uint32_t const target_label = region_of(target, passability);
+  if (target_label == k_unreachable_region) {
+    return std::nullopt;
+  }
+  auto const connected = [&](int x, int y) {
+    return is_walkable(x, y, passability) &&
+           region_of({x, y}, passability) == target_label;
+  };
+  if (connected(point.x, point.y)) {
+    return point;
+  }
+  for (int radius = 1; radius <= max_search_radius; ++radius) {
+    std::optional<Point> best;
+    int best_distance_sq = std::numeric_limits<int>::max();
+    for (int dy = -radius; dy <= radius; ++dy) {
+      for (int dx = -radius; dx <= radius; ++dx) {
+        if (std::abs(dx) != radius && std::abs(dy) != radius) {
+          continue;
+        }
+        int const distance_sq = (dx * dx) + (dy * dy);
+        if (distance_sq < best_distance_sq && connected(point.x + dx, point.y + dy)) {
+          best = Point{point.x + dx, point.y + dy};
+          best_distance_sq = distance_sq;
+        }
+      }
+    }
+    if (best.has_value()) {
+      return best;
+    }
+  }
+  return std::nullopt;
+}
+
 auto Pathfinding::can_reach(const Point& start,
                             const Point& end,
                             Passability passability) -> bool {

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <utility>
 #include <vector>
 
 #include "../core/ambient_session.h"
@@ -24,29 +25,56 @@ constexpr float k_level_ground_tolerance = 0.85F;
 
 constexpr float k_wall_ground_tolerance = 2.0F;
 
+constexpr float k_field_ground_tolerance = 1.6F;
+
 [[nodiscard]] auto tolerance_for(const std::string& building_type) -> float {
-  return building_type == "wall_segment" || building_type == "gate"
-             ? k_wall_ground_tolerance
-             : k_level_ground_tolerance;
+  if (building_type == "wall_segment" || building_type == "gate") {
+    return k_wall_ground_tolerance;
+  }
+
+  if (building_type == "farm") {
+    return k_field_ground_tolerance;
+  }
+  return k_level_ground_tolerance;
 }
 
+struct SiteFrame {
+  float x{0.0F};
+  float z{0.0F};
+  float cos_yaw{1.0F};
+  float sin_yaw{0.0F};
+  float half_width{0.0F};
+  float half_depth{0.0F};
+
+  [[nodiscard]] auto to_world(float local_x,
+                              float local_z) const -> std::pair<float, float> {
+    return {x + (cos_yaw * local_x) + (sin_yaw * local_z),
+            z - (sin_yaw * local_x) + (cos_yaw * local_z)};
+  }
+  [[nodiscard]] auto to_local(float world_x,
+                              float world_z) const -> std::pair<float, float> {
+    const float dx = world_x - x;
+    const float dz = world_z - z;
+    return {(cos_yaw * dx) - (sin_yaw * dz), (sin_yaw * dx) + (cos_yaw * dz)};
+  }
+};
+
 [[nodiscard]] auto obstructed_by_a_prop(const Game::Map::TerrainService& terrain,
-                                        float x,
-                                        float z,
-                                        float reach) -> bool {
+                                        const SiteFrame& frame) -> bool {
+  const float reach = std::hypot(frame.half_width, frame.half_depth);
   for (const auto& prop : terrain.world_props()) {
     if (!Game::Map::is_solid_world_prop_type(prop.type)) {
       continue;
     }
-    const float clearance =
-        reach + Game::Map::world_prop_ground_radius(prop.type, prop.scale);
+    const float radius = Game::Map::world_prop_ground_radius(prop.type, prop.scale);
     const QVector3D at = terrain.world_prop_world_position(prop);
-    const float dx = at.x() - x;
-    const float dz = at.z() - z;
-    if (std::abs(dx) > clearance || std::abs(dz) > clearance) {
+    if (std::abs(at.x() - frame.x) > reach + radius ||
+        std::abs(at.z() - frame.z) > reach + radius) {
       continue;
     }
-    if ((dx * dx) + (dz * dz) <= clearance * clearance) {
+    const auto [local_x, local_z] = frame.to_local(at.x(), at.z());
+    if (std::abs(local_x) < frame.half_width + radius &&
+        std::abs(local_z) < frame.half_depth + radius) {
       return true;
     }
   }
@@ -264,20 +292,29 @@ auto assess_ground(const Engine::Core::World& world,
   const auto& terrain_service = *Game::Session::services_for(world).terrain;
   const auto* terrain = terrain_service.get_height_map();
 
+  const auto own = BuildingCollisionRegistry::get_building_size(building_type);
+  constexpr float k_deg_to_rad = 3.14159265F / 180.0F;
+  SiteFrame frame;
+  frame.x = x;
+  frame.z = z;
+  frame.cos_yaw = std::cos(facing_degrees * k_deg_to_rad);
+  frame.sin_yaw = std::sin(facing_degrees * k_deg_to_rad);
+  frame.half_width = (own.width * 0.5F) + k_site_margin;
+  frame.half_depth = (own.depth * 0.5F) + k_site_margin;
+
   const float step =
       terrain != nullptr ? std::max(terrain->get_tile_size(), 0.5F) : 1.0F;
-  const int steps_x = std::max(1, static_cast<int>(std::ceil(half_width / step)));
-  const int steps_z = std::max(1, static_cast<int>(std::ceil(half_depth / step)));
+  const int steps_x = std::max(1, static_cast<int>(std::ceil(frame.half_width / step)));
+  const int steps_z = std::max(1, static_cast<int>(std::ceil(frame.half_depth / step)));
 
   float lowest = std::numeric_limits<float>::max();
   float highest = std::numeric_limits<float>::lowest();
 
   for (int ix = -steps_x; ix <= steps_x; ++ix) {
     for (int iz = -steps_z; iz <= steps_z; ++iz) {
-      const float sample_x =
-          x + (half_width * static_cast<float>(ix) / static_cast<float>(steps_x));
-      const float sample_z =
-          z + (half_depth * static_cast<float>(iz) / static_cast<float>(steps_z));
+      const auto [sample_x, sample_z] = frame.to_world(
+          frame.half_width * static_cast<float>(ix) / static_cast<float>(steps_x),
+          frame.half_depth * static_cast<float>(iz) / static_cast<float>(steps_z));
 
       if (terrain != nullptr) {
         const float reach_x = terrain->get_width() * terrain->get_tile_size() * 0.5F;
@@ -299,7 +336,7 @@ auto assess_ground(const Engine::Core::World& world,
     }
   }
 
-  if (obstructed_by_a_prop(terrain_service, x, z, std::hypot(half_width, half_depth))) {
+  if (obstructed_by_a_prop(terrain_service, frame)) {
     return GroundVerdict::Impassable;
   }
 

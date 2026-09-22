@@ -107,6 +107,12 @@ void add_gate_tower(BuildingArchetypeDesc& desc,
                QVector3D(k_tower_half_x + 0.08F, 0.035F, k_tower_half_z + 0.08F),
                palette.wood_light,
                k_mask_intact);
+  for (const float depth : {-1.0F, 1.0F}) {
+    desc.add_box(QVector3D(cx, top - 0.12F, depth * (k_tower_half_z + 0.025F)),
+                 QVector3D(k_tower_half_x + 0.04F, 0.035F, 0.025F),
+                 palette.masonry_accent,
+                 k_mask_intact);
+  }
   const float parapet_y = top + 0.21F;
   desc.add_box(QVector3D(cx, parapet_y, 0.0F),
                QVector3D(k_tower_half_x + 0.08F, 0.15F, 0.025F),

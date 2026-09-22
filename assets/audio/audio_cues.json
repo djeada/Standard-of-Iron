@@ -1339,6 +1339,19 @@
         "sfx.economy.income_tick"
       ],
       "wanted": "Coins and grain into a wooden bowl. Fires often, so it must stay small."
+    },
+    {
+      "id": "economy.gather_success",
+      "description": "A worker brings a gathered load home. Rare on purpose: the delivery system gates it and the cooldown keeps it from repeating.",
+      "category": "sfx",
+      "importance": "optional",
+      "volume": 0.55,
+      "priority": 2,
+      "cooldown_ms": 45000,
+      "resources": [
+        "sfx.economy.gather_success"
+      ],
+      "wanted": "A short, warm phrase that rewards gathering without nagging."
     }
   ]
 }

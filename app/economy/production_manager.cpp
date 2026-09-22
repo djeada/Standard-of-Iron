@@ -357,6 +357,37 @@ auto ProductionManager::ground_refusal(const QString& building_type,
                                                     : 0.0F));
 }
 
+auto ProductionManager::nearest_legal_site(const QVector3D& wanted) const -> QVector3D {
+  if (m_world == nullptr || m_pending_construction_type.isEmpty() ||
+      is_harvest_construction_item(m_pending_construction_type) ||
+      is_wall_construction_mode() ||
+      ground_refusal(m_pending_construction_type, wanted.x(), wanted.z()).isEmpty()) {
+    return wanted;
+  }
+
+  if (Game::Session::session_for(*m_world)
+          .building_collision()
+          .is_point_in_blocking_building(wanted.x(), wanted.z())) {
+    return wanted;
+  }
+  const std::string type = m_pending_construction_type.toStdString();
+  const auto size = Game::Systems::BuildingCollisionRegistry::get_building_size(type);
+  const float search = std::clamp(std::max(size.width, size.depth) * 0.5F, 3.0F, 8.0F);
+  const auto site = Game::Systems::find_clear_site(
+      *m_world,
+      type,
+      wanted,
+      search,
+      item_supports_preview_rotation(m_pending_construction_type)
+          ? m_construction_preview_rotation_y
+          : 0.0F,
+      m_pending_construction_builders);
+  if (!site.has_value()) {
+    return wanted;
+  }
+  return QVector3D(site->x(), wanted.y(), site->z());
+}
+
 void ProductionManager::start_building_placement(const QString& building_type,
                                                  int local_owner_id) {
   if (building_type.isEmpty() || m_world == nullptr) {
@@ -759,6 +790,8 @@ void ProductionManager::on_construction_confirm() {
     return;
   }
 
+  m_construction_placement_position =
+      nearest_legal_site(m_construction_placement_position);
   if (const QString refusal = ground_refusal(m_pending_construction_type,
                                              m_construction_placement_position.x(),
                                              m_construction_placement_position.z());
@@ -995,9 +1028,10 @@ void ProductionManager::update_non_wall_construction_preview(
   }
 
   set_construction_preview_active(true);
-  const QString reason = non_wall_preview_ruling(world_position);
+  const QVector3D site = nearest_legal_site(world_position);
+  const QString reason = non_wall_preview_ruling(site);
   set_construction_preview_ruling(reason.isEmpty(), reason);
-  rebuild_non_wall_preview_entity(world_position);
+  rebuild_non_wall_preview_entity(site);
 }
 
 void ProductionManager::clear_non_wall_construction_preview() {
@@ -1145,7 +1179,9 @@ void ProductionManager::append_preview_entity(const QString& item_type,
   transform->position = {
       resolved_position.x(), resolved_position.y(), resolved_position.z()};
   transform->rotation = {0.0F, rotation_y, 0.0F};
-  transform->scale = {1.0F, 1.0F, 1.0F};
+  const QVector3D scale =
+      Game::Units::building_transform_scale(item_type.toStdString());
+  transform->scale = {scale.x(), scale.y(), scale.z()};
 
   auto* renderable = Game::Units::add_building_renderable(
       *entity, pending_construction_nation_id(), item_type.toStdString());
@@ -1214,7 +1250,9 @@ void ProductionManager::rebuild_wall_preview_entities() {
 
     transform->position = {world_position.x(), world_position.y(), world_position.z()};
     transform->rotation = {0.0F, segment.rotation_y, 0.0F};
-    transform->scale = {1.0F, 1.0F, 1.0F};
+    const QVector3D scale =
+        Game::Units::building_transform_scale(gate_mode ? "wall_gate" : "wall_segment");
+    transform->scale = {scale.x(), scale.y(), scale.z()};
 
     renderable->visible = false;
     renderable->renderer_id =

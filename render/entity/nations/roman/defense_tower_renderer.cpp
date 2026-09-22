@@ -105,6 +105,15 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                       even ? c.limestone : c.limestone_shade);
   }
 
+  for (const float angle : {0.0F, 1.5708F, 3.1416F, 4.7124F}) {
+    desc.add_box(QVector3D(std::sin(angle) * shaft_radius,
+                           0.76F,
+                           std::cos(angle) * shaft_radius),
+                 QVector3D(0.095F, 0.11F, 0.095F),
+                 c.limestone_shade,
+                 k_building_state_mask_intact);
+  }
+
   if (!destroyed) {
     const float belt_low = 0.52F + (shaft_top - 0.52F) * 0.40F;
     const float belt_high = 0.52F + (shaft_top - 0.52F) * 0.72F;
@@ -394,6 +403,15 @@ auto build_tower_desc(BuildingState state) -> BuildingArchetypeDesc {
   return build_tower_desc_impl(state);
 }
 
+namespace {
+const std::array<TorchMount, 2> k_torches{{
+    TorchMount{.at = QVector3D(-0.375F, 1.10F, 0.803F),
+               .outward = QVector3D(-0.423F, 0.0F, 0.906F)},
+    TorchMount{.at = QVector3D(0.375F, 1.10F, 0.803F),
+               .outward = QVector3D(0.423F, 0.0F, 0.906F)},
+}};
+} // namespace
+
 void register_defense_tower_renderer(Render::GL::EntityRendererRegistry& registry) {
   register_defense_tower_renderer_variant(
       registry,
@@ -402,7 +420,8 @@ void register_defense_tower_renderer(Render::GL::EntityRendererRegistry& registr
                                  .draw_banner = &draw_tower_banner_for_team,
                                  .selection = BuildingSelectionStyle{1.6F, 1.6F},
                                  .night_brazier_deck_y = 3.20F,
-                                 .night_brazier_offset = 0.62F});
+                                 .night_brazier_offset = 0.62F,
+                                 .torches = k_torches});
 }
 
 } // namespace Render::GL::Roman

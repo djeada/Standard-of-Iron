@@ -11,6 +11,23 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **Homes, farms, markets and temples come alive, and every building carries fire
+  at night.** Homes gain a household yard: beaten earth and a flagstone path, a
+  woodpile with its chopping block, an herb planter, a vine on the front corner,
+  storage jars, a chimney where the hearth smoke rises, and hens that trot about
+  and peck. Farm margins grow grass and wildflowers, and the scarecrow and the wheat
+  are sized to the field hands. Markets fill with buyers who walk up to the counter
+  and haggle while vendors work their stalls and porters carry goods in; temple
+  healers walk out of the cella, kneel in prayer and walk back, with pilgrims on
+  the steps, braziers in the porch and incense rising from the altars. Homes,
+  farms, barracks, markets, temples and towers carry wall torches
+  (`render/entity/building_torches.h`) whose flames and warm local lights come up
+  at dusk, so a settlement at night reads as lit streets rather than dark boxes.
+  Townsfolk come from `render/entity/ambient_people.h`, a stateless time-driven
+  crowd on the home residents' quality, fog and on-screen rules with its own
+  per-frame budget. A rare gather fanfare (`economy.gather_success`) plays on
+  about one delivery in four, never more than once every 45 seconds.
+
 - **Missions: a third mode beside Skirmish and Campaign.** Small authored maps
   built around one order — cut a timber levy, hold a ford through five assaults,
   take the cursed shrine — never fitted the skirmish model, which assumes two
@@ -183,6 +200,35 @@ tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
   `Ui::BrandFonts`, and `scripts/promo-edit.py` resolves them repo-relative.
 
 ### Fixed
+
+- **Every box in the game was shaded with broken normals.** The shared unit cube
+  had eight corners carrying only ±z normals, so the tops and sides of every
+  building part interpolated opposing normals to nothing and rendered black or at
+  random — the black fence stones, soil patches and roof bands. It now has four
+  vertices per face. The basic shaders also transform normals by the cofactor
+  matrix instead of the model matrix, so thin or non-uniformly scaled parts (leaf
+  blades, the farm drawn at 7.14 × 5.1) no longer shade dark on their lit side.
+- **Placement ghosts match the finished building.** They were drawn at scale 1
+  instead of the building's spawn scale (now one table,
+  `Game::Units::building_transform_scale`), in white instead of the owner's
+  colours, and translucent without depth, so every buried box and back wall
+  showed through. Ghosts now use screen-door transparency that keeps depth, so
+  only the building's real front surfaces show.
+- **Units sealed in by new buildings walk out.** A move order from a unit boxed
+  into a small pocket was refused forever; the unit now crosses the blocked
+  ground in a straight line to the nearest cell that reaches its goal
+  (`Pathfinding::find_escape_point`), then follows its path. Only the smaller
+  side of a split may cross, so nothing walks into an enclosed yard from outside.
+- **Builders ring the site they raise.** The work circle existed only for
+  selection rings; the bodies stayed in marching rows. The simulation now lays the
+  crew out on the footprint's perimeter, and rings are drawn where bodies stand.
+- **Farm hands and home residents are civilian-sized** (0.48 of the rig, not 1.0),
+  with stride retuned so their feet do not skate.
+- **The Carthaginian civilian's jar sits against the back** instead of a hand's
+  breadth behind it.
+- **War elephants turn like animals, not drifting cars.** Their velocity now
+  follows the body's heading, the heading turns no tighter than a 2.6 m radius
+  while moving, and a sharp change of course slows them to pivot in place.
 
 - **A troop that cannot reach where it was sent stops pretending it is going
   there.** The recovery path rewrote the unit's own goal as it went: a sidestep

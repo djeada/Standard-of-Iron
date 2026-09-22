@@ -99,6 +99,18 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                  k_building_state_mask_intact);
   }
 
+  const float stringcourse_y = 0.20F + wall_height * height_multiplier - 0.12F;
+  for (const float side : {-1.0F, 1.0F}) {
+    desc.add_box(QVector3D(0.0F, stringcourse_y, side * 1.024F),
+                 QVector3D(0.90F, 0.025F, 0.025F),
+                 c.stone_base,
+                 k_building_state_mask_intact);
+    desc.add_box(QVector3D(side * 1.024F, stringcourse_y, 0.0F),
+                 QVector3D(0.025F, 0.025F, 0.90F),
+                 c.stone_base,
+                 k_building_state_mask_intact);
+  }
+
   float const post_hy = wall_height * 0.5F * height_multiplier;
   float const post_cy = post_hy + 0.20F;
   for (float const px : {-0.96F, 0.96F}) {
@@ -279,6 +291,19 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                          0.28F,
                          c.bronze,
                          c.stone_dark);
+  add_home_yard(desc,
+                HomeYardStyle{.plinth_half = 1.14F,
+                              .wall_half = 1.04F,
+                              .door_half_width = 0.40F,
+                              .vent = QVector3D(0.48F, 1.70F, -0.46F),
+                              .chimney_base_y = roof_y + 0.04F,
+                              .clay_oven_chimney = true,
+                              .stone = c.stone_base,
+                              .clay = QVector3D(0.68F, 0.43F, 0.26F),
+                              .clay_dark = c.indigo,
+                              .chimney = c.stone_light,
+                              .seed = 7});
+
   add_ruin_dressing(desc,
                     RuinDressing{.extent = QVector3D(0.94F, 0.0F, 0.94F),
                                  .stone = c.stone_base,
@@ -300,6 +325,13 @@ auto home_archetype(BuildingState state) -> const RenderArchetype& {
       build_stateful_building_archetype_set(build_home_archetype);
   return k_set.for_state(state);
 }
+
+const std::array<TorchMount, 2> k_torches{{
+    TorchMount{.at = QVector3D(-0.5F, 0.62F, 1.02F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+    TorchMount{.at = QVector3D(0.5F, 0.62F, 1.02F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+}};
 
 } // namespace
 
@@ -336,7 +368,8 @@ void register_home_renderer(Render::GL::EntityRendererRegistry& registry) {
       HomeRendererConfig{.nation_slug = "carthage",
                          .archetype = &home_archetype,
                          .palette_slots = &home_palette_slots,
-                         .selection = BuildingSelectionStyle{2.1F, 2.1F}});
+                         .selection = BuildingSelectionStyle{2.1F, 2.1F},
+                         .torches = k_torches});
 }
 
 } // namespace Render::GL::Carthage

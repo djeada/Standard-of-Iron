@@ -57,7 +57,16 @@ auto slot_is_reachable(Engine::Core::World& world,
       k_stranded_start_recovery_cells,
       *pathfinder,
       passability);
-  return pathfinder->can_reach(start, target, passability);
+  if (pathfinder->can_reach(start, target, passability)) {
+    return true;
+  }
+
+  return pathfinder
+      ->find_escape_point(
+          NavGrid::world_to_grid(transform->position.x, transform->position.z),
+          target,
+          passability)
+      .has_value();
 }
 
 auto rescued_slot_position(Engine::Core::World& world,

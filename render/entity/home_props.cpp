@@ -13,6 +13,7 @@
 #include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/equipment/render_archetype_registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
+#include "render/gl/primitives.h"
 #include "render/humanoid/asset/bind_skeleton.h"
 #include "render/humanoid/asset/humanoid_spec.h"
 #include "render/humanoid/schema/skeleton_schema.h"
@@ -262,6 +263,93 @@ auto lamp_glow_archetype() -> const RenderArchetype& {
     return std::move(builder).build();
   }();
   return archetype;
+}
+
+namespace {
+
+auto hen_feather(int breed) -> QVector3D {
+  constexpr std::array<QVector3D, k_hen_breeds> k_feathers{
+      QVector3D(0.90F, 0.87F, 0.80F),
+      QVector3D(0.58F, 0.34F, 0.17F),
+      QVector3D(0.30F, 0.24F, 0.20F)};
+  return k_feathers[static_cast<std::size_t>(std::clamp(breed, 0, k_hen_breeds - 1))];
+}
+
+void add_ellipsoid(RenderArchetypeBuilder& builder,
+                   const QVector3D& centre,
+                   const QVector3D& radii,
+                   const QVector3D& colour) {
+  QMatrix4x4 model;
+  model.translate(centre);
+  model.scale(radii);
+  builder.add_mesh(get_unit_sphere(), model, colour);
+}
+
+const QVector3D k_hen_comb{0.78F, 0.12F, 0.10F};
+const QVector3D k_hen_horn{0.90F, 0.64F, 0.22F};
+
+} // namespace
+
+auto hen_body_archetype(int breed) -> const RenderArchetype& {
+  static const auto build = [](int which) {
+    RenderArchetypeBuilder builder{"home_hen_body"};
+    const QVector3D feather = hen_feather(which);
+    add_ellipsoid(builder,
+                  QVector3D(0.0F, 0.085F, 0.0F),
+                  QVector3D(0.052F, 0.048F, 0.074F),
+                  feather);
+    add_ellipsoid(builder,
+                  QVector3D(0.0F, 0.088F, 0.046F),
+                  QVector3D(0.042F, 0.042F, 0.038F),
+                  feather * 1.03F);
+    for (float const side : {-1.0F, 1.0F}) {
+      add_ellipsoid(builder,
+                    QVector3D(side * 0.044F, 0.092F, -0.006F),
+                    QVector3D(0.022F, 0.034F, 0.052F),
+                    feather * 0.86F);
+      builder.add_cylinder(QVector3D(side * 0.018F, 0.050F, 0.004F),
+                           QVector3D(side * 0.020F, 0.0F, 0.010F),
+                           0.0055F,
+                           k_hen_horn);
+    }
+    builder.add_cone(QVector3D(0.0F, 0.098F, -0.050F),
+                     QVector3D(0.0F, 0.158F, -0.096F),
+                     0.034F,
+                     feather * 0.92F);
+    builder.add_cylinder(QVector3D(0.0F, 0.100F, 0.050F),
+                         QVector3D(0.0F, 0.142F, 0.068F),
+                         0.021F,
+                         feather);
+    return std::move(builder).build();
+  };
+  static const std::array<RenderArchetype, k_hen_breeds> bodies{
+      {build(0), build(1), build(2)}};
+  return bodies[static_cast<std::size_t>(std::clamp(breed, 0, k_hen_breeds - 1))];
+}
+
+auto hen_head_archetype(int breed) -> const RenderArchetype& {
+  static const auto build = [](int which) {
+    RenderArchetypeBuilder builder{"home_hen_head"};
+    const QVector3D feather = hen_feather(which);
+    add_ellipsoid(builder,
+                  QVector3D(0.0F, 0.012F, 0.012F),
+                  QVector3D(0.024F, 0.026F, 0.030F),
+                  feather);
+    builder.add_cone(QVector3D(0.0F, 0.010F, 0.038F),
+                     QVector3D(0.0F, 0.004F, 0.060F),
+                     0.008F,
+                     k_hen_horn);
+    builder.add_box(
+        QVector3D(0.0F, 0.040F, 0.012F), QVector3D(0.005F, 0.012F, 0.016F), k_hen_comb);
+    add_ellipsoid(builder,
+                  QVector3D(0.0F, -0.010F, 0.032F),
+                  QVector3D(0.007F, 0.011F, 0.007F),
+                  k_hen_comb);
+    return std::move(builder).build();
+  };
+  static const std::array<RenderArchetype, k_hen_breeds> heads{
+      {build(0), build(1), build(2)}};
+  return heads[static_cast<std::size_t>(std::clamp(breed, 0, k_hen_breeds - 1))];
 }
 
 } // namespace Render::GL

@@ -128,6 +128,7 @@ void HomeActivity::begin_frame(Engine::Core::World* snapshot,
       quality != GraphicsQuality::Low && quality != GraphicsQuality::Medium;
   remaining_plumes = max_plumes;
   remaining_actors = actors_allowed ? (max_plumes >= 32 ? 10 : 6) : 0;
+  remaining_ambient_actors = actors_allowed ? (max_plumes >= 32 ? 28 : 16) : 0;
   homes.clear();
   if (snapshot == nullptr || max_plumes == 0) {
     return;
@@ -764,6 +765,96 @@ void submit_laundry(const DrawContext& ctx,
 }
 } // namespace
 
+namespace {
+
+void submit_hens(const DrawContext& ctx,
+                 ISubmitter& out,
+                 const HomeSmokeAnchor& anchor,
+                 std::uint64_t id) {
+  const auto seed = mix(low32(id) ^ 0x6a09e667U);
+  if (roll(seed, 1U) < 0.30F) {
+    return;
+  }
+  const int count = 2 + static_cast<int>(roll(seed, 2U) * 2.99F);
+  const float front = anchor.doorstep.z();
+  const float time = ctx.animation_time;
+
+  auto yard_point = [&](std::uint32_t hen_seed, std::int64_t leg) {
+    const auto leg_seed =
+        mix(hen_seed ^ static_cast<std::uint32_t>(leg * 0x27d4eb2dLL));
+    const bool side = roll(hen_seed, 3U) > 0.6F;
+    if (side) {
+      return QVector3D(front + 0.10F + roll(leg_seed, 1U) * 0.16F,
+                       0.012F,
+                       -0.80F + roll(leg_seed, 2U) * 1.60F);
+    }
+    return QVector3D(-0.95F + roll(leg_seed, 1U) * 1.90F,
+                     0.012F,
+                     front + 0.06F + roll(leg_seed, 2U) * 0.26F);
+  };
+  auto to_world = [&](const QVector3D& local) {
+    auto placed = ctx.model;
+    placed.translate(local);
+    return placed.column(3).toVector3D();
+  };
+
+  for (int hen = 0; hen < count; ++hen) {
+    const auto hen_seed = mix(seed + static_cast<std::uint32_t>(hen) * 0x9e3779b9U);
+    const float leg_seconds = 4.5F + roll(hen_seed, 4U) * 3.5F;
+    const float clock = (time + roll(hen_seed, 5U) * 97.0F) / leg_seconds;
+    const auto leg = static_cast<std::int64_t>(std::floor(clock));
+    const float u = clock - std::floor(clock);
+    constexpr float k_trot_share = 0.22F;
+
+    const QVector3D from = to_world(yard_point(hen_seed, leg));
+    const QVector3D to = to_world(yard_point(hen_seed, leg + 1));
+    QVector3D heading = to - from;
+    heading.setY(0.0F);
+    const float yaw = heading.lengthSquared() > 1e-6F
+                          ? std::atan2(heading.x(), heading.z()) * 180.0F / k_pi
+                          : 0.0F;
+
+    QVector3D position = to;
+    float body_bob = 0.0F;
+    float head_drop = 0.0F;
+    float head_turn = 0.0F;
+    if (u < k_trot_share) {
+      const float s = smoothstep(0.0F, 1.0F, u / k_trot_share);
+      position = from + (to - from) * s;
+      body_bob = std::abs(std::sin(u / k_trot_share * k_pi * 7.0F)) * 0.010F;
+    } else {
+      const float pecking = (u - k_trot_share) * leg_seconds;
+      const float cycle = wrap(pecking + roll(hen_seed, 6U), 1.9F);
+      if (cycle < 1.1F) {
+        const float jab = wrap(cycle, 0.37F) / 0.37F;
+        head_drop =
+            jab < 0.35F ? jab / 0.35F : std::max(0.0F, 1.0F - (jab - 0.35F) / 0.4F);
+      } else {
+        head_turn =
+            std::sin((cycle - 1.1F) * 7.0F + roll(hen_seed, 7U) * k_tau) * 40.0F;
+      }
+    }
+
+    const int breed = static_cast<int>(roll(hen_seed, 8U) * (k_hen_breeds - 0.01F));
+    QMatrix4x4 body;
+    body.translate(position + QVector3D(0.0F, body_bob, 0.0F));
+    body.rotate(yaw, 0.0F, 1.0F, 0.0F);
+    submit_render_instance(
+        out, RenderInstance{.archetype = &hen_body_archetype(breed), .world = body});
+
+    QMatrix4x4 head = body;
+    const QVector3D neck_up(0.0F, 0.146F, 0.070F);
+    const QVector3D neck_down(0.0F, 0.046F, 0.118F);
+    head.translate(neck_up + (neck_down - neck_up) * head_drop);
+    head.rotate(head_turn, 0.0F, 1.0F, 0.0F);
+    head.rotate(72.0F * head_drop, 1.0F, 0.0F, 0.0F);
+    submit_render_instance(
+        out, RenderInstance{.archetype = &hen_head_archetype(breed), .world = head});
+  }
+}
+
+} // namespace
+
 void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage) {
   auto* activity = ctx.home_activity;
   if (activity == nullptr || ctx.entity == nullptr || ctx.template_prewarm ||
@@ -854,6 +945,9 @@ void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
   }
   if (anchor.max_laundry > 0 && detailed) {
     submit_laundry(ctx, out, carthage, anchor, id);
+  }
+  if (detailed && activity->hens) {
+    submit_hens(ctx, out, anchor, id);
   }
 
   if (activity->night() > 0.02F) {

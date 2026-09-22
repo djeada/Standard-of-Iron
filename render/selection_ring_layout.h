@@ -85,6 +85,11 @@ selection_ring_visual_size(const Game::Units::TroopConfig& config,
       continue;
     }
 
+    if (soldier.world_motion_valid) {
+      placements.push_back({soldier.world_x, soldier.world_z, input.ring_size});
+      continue;
+    }
+
     float const local_x =
         use_body_slots ? input.body_slots[index].offset_x : soldier.local_x;
     float const local_z =

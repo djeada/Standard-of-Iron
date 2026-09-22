@@ -1421,10 +1421,11 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     ctx.renderer_handle = renderer_handle;
     ctx.backend = m_gl_backend;
     ctx.camera = m_camera;
-    ctx.alpha_multiplier = alpha_multiplier;
     ctx.order_markers_visible = order_markers_visible_for_owner(preview_owner);
 
+    m_ghost_coverage = alpha_multiplier;
     (*fn)(ctx, *this);
+    m_ghost_coverage = 0.0F;
 
     if (progress > 0.0F) {
       if (auto* quad = (resources() != nullptr) ? resources()->quad() : nullptr;

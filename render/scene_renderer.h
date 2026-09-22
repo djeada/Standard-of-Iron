@@ -572,6 +572,9 @@ private:
   Render::WorldView m_world_view;
   float m_alpha_override = 1.0F;
 
+  float m_ghost_coverage = 0.0F;
+  [[nodiscard]] auto submitted_alpha(float alpha) const -> float;
+
   Mesh* m_unit_cylinder_mesh = nullptr;
   std::shared_ptr<Engine::Core::World> m_render_world_snapshot;
 

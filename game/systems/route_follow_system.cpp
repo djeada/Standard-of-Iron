@@ -419,7 +419,7 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
   bool const current_position_allowed = is_movement_point_allowed(current_pos, entity);
   bool const destination_allowed = is_movement_point_allowed(final_goal, entity);
 
-  if (!current_position_allowed &&
+  if (!current_position_allowed && !movement->get_escape_active() &&
       MovementSystem::assign_local_recovery_move(
           current_pos, order_goal_of(*movement), movement)) {
     facts->progress.state = Engine::Core::MovementOrderState::Recovering;

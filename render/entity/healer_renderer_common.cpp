@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "civilian_actor.h"
 #include "game/core/component_core.h"
 #include "game/systems/nation_id.h"
 #include "nations/equipment_loadout_catalog.h"
@@ -237,6 +238,36 @@ void register_healer_styles(std::span<const HealerStyleRegistration> styles) {
   }
 }
 
+namespace {
+
+std::array<std::shared_ptr<const HealerRenderer>, 2> g_priest_renderers{};
+
+template <std::size_t Nation>
+void fill_priest_variant(const DrawContext& ctx,
+                         std::uint32_t seed,
+                         HumanoidVariant& v) {
+  if (const auto& renderer = g_priest_renderers[Nation]; renderer != nullptr) {
+    renderer->get_variant(ctx, seed, v);
+  }
+}
+
+void register_priest_rig(std::string_view renderer_key,
+                         const std::shared_ptr<const HealerRenderer>& renderer) {
+  const bool carthage = renderer_key.find("carthage") != std::string_view::npos;
+  if (!carthage && renderer_key.find("roman") == std::string_view::npos) {
+    return;
+  }
+  g_priest_renderers[carthage ? 1U : 0U] = renderer;
+  NationCivilianRig rig{};
+  rig.spec = renderer->build_visual_spec();
+  rig.idle = rig.spec.archetype_id;
+  rig.working = rig.spec.archetype_id;
+  rig.fill_variant = carthage ? &fill_priest_variant<1> : &fill_priest_variant<0>;
+  register_nation_priest_rig(carthage, rig);
+}
+
+} // namespace
+
 void register_healer_renderer_profile(
     EntityRendererRegistry& registry,
     const HealerRendererProfile& profile,
@@ -250,6 +281,7 @@ void register_healer_renderer_profile(
         profile, renderer.renderer_key, renderer.style_key, renderer.creature_asset_id);
     register_humanoid_renderer(
         registry, std::string(renderer.renderer_key), renderer_instance);
+    register_priest_rig(renderer.renderer_key, renderer_instance);
   }
 }
 

@@ -31,6 +31,11 @@ private:
   friend class CommandService;
   friend class RouteFollowSystem;
 
+  static void assign_escape_route(Pathfinding& pathfinder,
+                                  const Engine::Core::TransformComponent& transform,
+                                  Engine::Core::MovementComponent& movement,
+                                  const QVector3D& exit,
+                                  const QVector3D& target);
   static auto
   assign_local_recovery_move(const QVector3D& current_position,
                              const QVector3D& goal,
