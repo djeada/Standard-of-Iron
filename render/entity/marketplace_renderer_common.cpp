@@ -22,6 +22,12 @@ void register_marketplace_renderer_variant(EntityRendererRegistry& registry,
         } else {
           submit_building_instance(out, ctx, config.archetype(state));
         }
+        submit_building_torches(ctx, out, config.torches);
+        submit_ambient_people(ctx,
+                              out,
+                              config.nation_slug == "carthage",
+                              config.people,
+                              config.walk_surfaces);
         draw_building_selection_overlay(out, ctx, config.selection);
       });
 }

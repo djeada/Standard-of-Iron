@@ -47,6 +47,7 @@ void register_barracks_renderer_variant(EntityRendererRegistry& registry,
             config.archetype(resolve_building_state(ctx), unit, white),
             palette);
         config.draw_ornaments(ctx, out, unit, white, team, &cloth);
+        submit_building_torches(ctx, out, config.torches);
         draw_building_selection_overlay(out, ctx, config.selection);
       });
 }

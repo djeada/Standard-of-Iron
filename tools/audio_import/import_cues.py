@@ -116,6 +116,11 @@ PLAN = {
         None,
         "sfx/ui/click_confirm.ogg",
     ),
+    "Ancient_Gathering": (
+        "sfx/economy/gather_success.ogg",
+        "whole",
+        "sfx/combat/heal_bind_wound.ogg",
+    ),
     "Charge_of_the_War_Elephant": (
         "sfx/combat/elephant_trumpet_charge.ogg",
         None,

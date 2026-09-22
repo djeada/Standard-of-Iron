@@ -1,6 +1,8 @@
 #include <QVector3D>
 
+#include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -86,6 +88,27 @@ TEST_F(ResourceDeliverySystemTest,
   EXPECT_EQ(
       Game::Systems::PlayerResourceRegistry::instance().get(1, ResourceType::Wood), 0);
   EXPECT_TRUE(hauler->has_component<Engine::Core::ResourceCarryComponent>());
+}
+
+TEST(ResourceDeliveryGatherCue, TheGatherFanfareFollowsOnlySomeDeliveries) {
+  int due = 0;
+  int longest_quiet_run = 0;
+  int quiet = 0;
+  constexpr int k_deliveries = 4000;
+  for (std::uint32_t delivery = 0; delivery < k_deliveries; ++delivery) {
+    if (Game::Systems::ResourceDeliverySystem::gather_success_due(
+            delivery, 7U + (delivery % 5U))) {
+      ++due;
+      quiet = 0;
+    } else {
+      longest_quiet_run = std::max(longest_quiet_run, ++quiet);
+    }
+  }
+  EXPECT_GT(due, k_deliveries / 6);
+  EXPECT_LT(due, k_deliveries / 3);
+  EXPECT_GT(longest_quiet_run, 4);
+  EXPECT_EQ(Game::Systems::ResourceDeliverySystem::gather_success_due(12U, 3U),
+            Game::Systems::ResourceDeliverySystem::gather_success_due(12U, 3U));
 }
 
 TEST_F(ResourceDeliverySystemTest, AHaulerIsWalkedTowardsTheStockpile) {

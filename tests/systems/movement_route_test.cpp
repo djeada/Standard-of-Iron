@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <limits>
@@ -455,6 +456,61 @@ TEST_F(MovementMotorTest, AnElephantWindsUpInsteadOfLeapingToSpeed) {
             Game::Units::body_acceleration(Game::Units::SpawnType::Elephant) + 0.3F)
       << "the elephant leapt to speed instead of winding up";
   EXPECT_GT(peak_speed, 1.4F) << "the ramp never let the elephant reach travel speed";
+}
+
+TEST_F(MovementMotorTest, AnElephantTurnsItsBodyInsteadOfDriftingSideways) {
+  const EntityID id = spawn(Game::Units::SpawnType::Elephant, world_of(8, 12));
+  ASSERT_NE(id, 0U);
+
+  CommandService::move_unit(m_session->world(), id, world_of(40, 12));
+  run_for(5.0);
+  CommandService::move_unit(m_session->world(), id, world_of(20, 44));
+
+  const double step = m_session->clock().tick_seconds();
+  QVector3D last = position_of(id);
+  float worst_slip_degrees = 0.0F;
+  float turned_distance = 0.0F;
+  for (int tick = 0; tick < 360; ++tick) {
+    run_for(step);
+    const QVector3D now = position_of(id);
+    const float dx = now.x() - last.x();
+    const float dz = now.z() - last.z();
+    const float travelled = std::hypot(dx, dz);
+    last = now;
+    if (travelled / static_cast<float>(step) < 0.3F) {
+      continue;
+    }
+    turned_distance += travelled;
+    const auto* transform =
+        m_session->world().get_entity(id)->get_component<TransformComponent>();
+    const float travel_yaw = std::atan2(dx, dz) * 180.0F / 3.14159265F;
+    const float slip =
+        std::abs(std::remainder(travel_yaw - transform->rotation.y, 360.0F));
+    worst_slip_degrees = std::max(worst_slip_degrees, slip);
+  }
+  EXPECT_GT(turned_distance, 3.0F) << "the elephant never set off on the new heading";
+  EXPECT_LT(worst_slip_degrees, 12.0F)
+      << "the elephant slid sideways relative to where its body faced";
+}
+
+TEST_F(MovementMotorTest, AUnitBoxedInByBuildingsWalksOutWhenOrdered) {
+  for (int offset = 21; offset <= 27; ++offset) {
+    block_cell(offset, 21);
+    block_cell(offset, 27);
+    block_cell(21, offset);
+    block_cell(27, offset);
+  }
+  auto* pathfinder = NavGrid::get_pathfinder();
+  pathfinder->mark_navigation_grid_dirty();
+  pathfinder->update_navigation_grid();
+
+  const EntityID id = spawn(Game::Units::SpawnType::Spearman, world_of(24, 24));
+  ASSERT_NE(id, 0U);
+  CommandService::move_unit(m_session->world(), id, world_of(40, 24));
+  run_for(20.0);
+
+  EXPECT_GT(position_of(id).x(), world_of(32, 24).x())
+      << "the unit stayed sealed inside the buildings raised around it";
 }
 
 TEST_F(MovementMotorTest, AFootSoldierStillStepsOffAtOnce) {

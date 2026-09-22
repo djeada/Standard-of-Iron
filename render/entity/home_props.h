@@ -29,4 +29,8 @@ inline constexpr int k_laundry_colours = 4;
 [[nodiscard]] auto washing_line_archetype() -> const RenderArchetype&;
 [[nodiscard]] auto washing_pole_archetype() -> const RenderArchetype&;
 
+inline constexpr int k_hen_breeds = 3;
+[[nodiscard]] auto hen_body_archetype(int breed) -> const RenderArchetype&;
+[[nodiscard]] auto hen_head_archetype(int breed) -> const RenderArchetype&;
+
 } // namespace Render::GL

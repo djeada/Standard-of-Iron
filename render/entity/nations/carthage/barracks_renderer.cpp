@@ -132,6 +132,15 @@ void add_platform(BuildingArchetypeDesc& desc, const CarthagePalette& c) {
   desc.add_box(
       QVector3D(0.0F, 0.18F, 0.0F), QVector3D(1.78F, 0.04F, 1.48F), c.sandstone);
 
+  for (const float x : {-1.70F, 1.70F}) {
+    for (const float z : {-1.40F, 1.40F}) {
+      desc.add_box(QVector3D(x, 0.22F, z),
+                   QVector3D(0.14F, 0.055F, 0.14F),
+                   c.sandstone_light,
+                   k_mask_intact);
+    }
+  }
+
   desc.add_box(
       QVector3D(0.0F, 0.056F, 1.68F), QVector3D(0.86F, 0.04F, 0.20F), c.stone_dark);
   desc.add_box(QVector3D(0.0F, 0.13F, 1.52F),
@@ -1063,6 +1072,17 @@ void draw_barracks_ornaments(const DrawContext& p,
   draw_rally_flag(p, out, white, c, cloth);
 }
 
+const std::array<TorchMount, 4> k_torches{{
+    TorchMount{.at = QVector3D(-0.53F, 0.82F, 1.185F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+    TorchMount{.at = QVector3D(0.53F, 0.82F, 1.185F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+    TorchMount{.at = QVector3D(-1.28F, 0.9F, 0.92F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+    TorchMount{.at = QVector3D(1.28F, 0.9F, 0.92F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+}};
+
 } // namespace
 
 auto build_barracks_desc(BuildingState state) -> BuildingArchetypeDesc {
@@ -1075,7 +1095,8 @@ void register_barracks_renderer(Render::GL::EntityRendererRegistry& registry) {
       BarracksRendererConfig{.nation_slug = "carthage",
                              .archetype = &barracks_archetype,
                              .draw_ornaments = &draw_barracks_ornaments,
-                             .selection = BuildingSelectionStyle{2.4F, 2.0F}});
+                             .selection = BuildingSelectionStyle{2.4F, 2.0F},
+                             .torches = k_torches});
 }
 
 } // namespace Render::GL::Carthage

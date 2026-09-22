@@ -206,12 +206,7 @@ void AIWorker::run_pending_job() {
   }
 
   try {
-    // Behaviours reach per-match services through the ambient session --
-    // ArmyFormationService fits formations to ground, which wants the nav grid
-    // and the building collision registry. The pool's threads have no binding
-    // of their own, so carry the one the job was raised in. The submitting
-    // thread is parked in wait_idle() for the whole job, so this is a hand-off,
-    // not shared access.
+
     std::optional<Game::Session::ScopedThreadSession> bound;
     if (job.session != nullptr) {
       bound.emplace(*job.session);

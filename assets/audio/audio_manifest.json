@@ -3542,6 +3542,19 @@
       }
     },
     {
+      "id": "sfx.economy.gather_success",
+      "path": "sfx/economy/gather_success.ogg",
+      "category": "sfx",
+      "load_policy": "startup",
+      "tags": {
+        "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render `Ancient_Gathering`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
+      }
+    },
+    {
       "id": "sfx.combat.elephant_trumpet_charge",
       "path": "sfx/combat/elephant_trumpet_charge.ogg",
       "category": "sfx",

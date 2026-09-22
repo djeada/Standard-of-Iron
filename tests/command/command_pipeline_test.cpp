@@ -954,6 +954,44 @@ TEST(CommandPipelineTest, NothingIsRaisedOnTopOfATree) {
             Game::Systems::GroundVerdict::Clear);
 }
 
+TEST(CommandPipelineTest, AFarmIsKeptOffByTreesUnderItNotByTreesAtItsCorners) {
+  Match match;
+  auto& terrain = match.session.terrain();
+  terrain.restore_from_serialized(
+      96,
+      96,
+      1.0F,
+      std::vector<float>(96U * 96U, 0.0F),
+      std::vector<Game::Map::TerrainType>(96U * 96U, Game::Map::TerrainType::Flat),
+      {},
+      {},
+      {},
+      bare_biome());
+
+  Game::Map::WorldProp tree;
+  tree.type = Game::Map::WorldProp::Type::PineTree;
+  tree.scale = 1.0F;
+  terrain.add_world_prop_at_world(tree, 8.6F, 8.6F);
+
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "farm", 0.0F, 0.0F),
+            Game::Systems::GroundVerdict::Clear)
+      << "a tree beyond the corner of the field refused the farm";
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "farm", 4.0F, 4.0F),
+            Game::Systems::GroundVerdict::Impassable)
+      << "a tree inside the field did not refuse the farm";
+
+  EXPECT_EQ(
+      Game::Systems::assess_ground(match.session.world(), "farm", 0.0F, 0.0F, 0, 10.0F),
+      Game::Systems::GroundVerdict::Clear);
+
+  auto const site = Game::Systems::find_clear_site(
+      match.session.world(), "farm", QVector3D(4.0F, 0.0F, 4.0F), 8.0F);
+  ASSERT_TRUE(site.has_value()) << "no legal field within 8 m of a refused spot";
+  EXPECT_EQ(
+      Game::Systems::assess_ground(match.session.world(), "farm", site->x(), site->z()),
+      Game::Systems::GroundVerdict::Clear);
+}
+
 TEST(CommandPipelineTest, HillSlopesRefuseBuildingsButTheCrownDoesNot) {
   Match match;
 

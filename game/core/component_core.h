@@ -183,6 +183,7 @@ public:
     precise_arrival = false;
     structure_approach_target_id = 0;
     has_requested_goal = false;
+    escape_active = false;
   }
 
   [[nodiscard]] auto get_has_requested_goal() const -> bool {
@@ -302,6 +303,16 @@ public:
     topology_revision = topology;
   }
 
+  [[nodiscard]] auto get_escape_active() const -> bool { return escape_active; }
+  [[nodiscard]] auto get_escape_x() const -> float { return escape_x; }
+  [[nodiscard]] auto get_escape_z() const -> float { return escape_z; }
+  void begin_escape(float x, float z) {
+    escape_active = true;
+    escape_x = x;
+    escape_z = z;
+  }
+  void end_escape() { escape_active = false; }
+
   [[nodiscard]] auto get_can_enter_forest() const -> bool { return can_enter_forest; }
   void set_can_enter_forest(bool allowed) { can_enter_forest = allowed; }
 
@@ -320,6 +331,8 @@ private:
 
   bool has_target{false};
   float target_x{0.0F}, target_y{0.0F};
+  bool escape_active{false};
+  float escape_x{0.0F}, escape_z{0.0F};
   float goal_x{0.0F}, goal_y{0.0F};
   float vx{0.0F}, vz{0.0F};
 

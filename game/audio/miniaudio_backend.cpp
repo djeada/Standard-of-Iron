@@ -304,8 +304,6 @@ void MiniaudioBackend::finish_job(const DecodeJob& job, bool decoded) {
       }
       m_deferred_loops.remove(job.track);
     }
-    --m_decode_in_flight;
-    m_decode_idle.wakeAll();
   }
 
   if (deferred.has_value()) {
@@ -320,6 +318,10 @@ void MiniaudioBackend::finish_job(const DecodeJob& job, bool decoded) {
     command.loop = true;
     submit(command);
   }
+
+  QMutexLocker const locker(&m_decode_mutex);
+  --m_decode_in_flight;
+  m_decode_idle.wakeAll();
 }
 
 void MiniaudioBackend::release_slot(int slot) {

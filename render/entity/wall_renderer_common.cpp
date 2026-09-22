@@ -496,6 +496,11 @@ void add_junction_post(BuildingArchetypeDesc& desc,
                       binding_color(palette, geometry),
                       k_mask_intact);
   }
+  desc.add_box(
+      QVector3D(0.0F, top - 0.10F, 0.0F),
+      QVector3D(geometry.post_radius * 1.20F, 0.055F, geometry.post_radius * 1.20F),
+      palette.masonry_accent,
+      k_mask_intact);
 }
 
 void add_earth_berm(BuildingArchetypeDesc& desc,

@@ -139,6 +139,7 @@ inline constexpr float k_sequence_end = 9.0F;
 inline constexpr float k_approach_start = 0.8F;
 inline constexpr float k_approach_end = 3.6F;
 inline constexpr float k_return_start = 7.2F;
-inline constexpr float k_walk_metres_per_cycle = 1.35F;
+
+inline constexpr float k_walk_metres_per_cycle = 0.66F;
 } // namespace Nap
 } // namespace Render::GL

@@ -105,6 +105,18 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                    QVector3D(core_half + 0.006F, 0.011F, core_half + 0.006F),
                    c.stone_base * 0.86F);
     }
+    if (!destroyed) {
+      for (const float side : {-1.0F, 1.0F}) {
+        desc.add_box(QVector3D(0.0F, 1.03F, side * (core_half + 0.025F)),
+                     QVector3D(core_half + 0.035F, 0.035F, 0.035F),
+                     c.brick,
+                     k_building_state_mask_intact);
+        desc.add_box(QVector3D(side * (core_half + 0.025F), 1.03F, 0.0F),
+                     QVector3D(0.035F, 0.035F, core_half + 0.035F),
+                     c.brick,
+                     k_building_state_mask_intact);
+      }
+    }
   }
 
   if (!destroyed) {
@@ -397,6 +409,15 @@ auto build_tower_desc(BuildingState state) -> BuildingArchetypeDesc {
   return build_tower_desc_impl(state);
 }
 
+namespace {
+const std::array<TorchMount, 2> k_torches{{
+    TorchMount{.at = QVector3D(-0.40F, 1.10F, 0.78F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+    TorchMount{.at = QVector3D(0.40F, 1.10F, 0.78F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+}};
+} // namespace
+
 void register_defense_tower_renderer(Render::GL::EntityRendererRegistry& registry) {
   register_defense_tower_renderer_variant(
       registry,
@@ -405,7 +426,8 @@ void register_defense_tower_renderer(Render::GL::EntityRendererRegistry& registr
                                  .draw_banner = &draw_tower_banner_for_team,
                                  .selection = BuildingSelectionStyle{1.6F, 1.6F},
                                  .night_brazier_deck_y = 2.68F,
-                                 .night_brazier_offset = 0.60F});
+                                 .night_brazier_offset = 0.60F,
+                                 .torches = k_torches});
 }
 
 } // namespace Render::GL::Carthage

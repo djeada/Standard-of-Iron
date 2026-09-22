@@ -3,9 +3,11 @@
 #include <QDebug>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_3_3_Core>
+#include <QVector3D>
 #include <qopenglext.h>
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <limits>
 #include <memory>
@@ -214,30 +216,62 @@ auto create_quad_mesh() -> std::unique_ptr<Mesh> {
 }
 
 auto create_cube_mesh() -> std::unique_ptr<Mesh> {
-  std::vector<Vertex> const vertices = {
 
-      {{-1.0F, -1.0F, 1.0F}, {0.0F, 0.0F, 1.0F}, {0.0F, 0.0F}},
-      {{1.0F, -1.0F, 1.0F}, {0.0F, 0.0F, 1.0F}, {1.0F, 0.0F}},
-      {{1.0F, 1.0F, 1.0F}, {0.0F, 0.0F, 1.0F}, {1.0F, 1.0F}},
-      {{-1.0F, 1.0F, 1.0F}, {0.0F, 0.0F, 1.0F}, {0.0F, 1.0F}},
-
-      {{-1.0F, -1.0F, -1.0F}, {0.0F, 0.0F, -1.0F}, {1.0F, 0.0F}},
-      {{-1.0F, 1.0F, -1.0F}, {0.0F, 0.0F, -1.0F}, {1.0F, 1.0F}},
-      {{1.0F, 1.0F, -1.0F}, {0.0F, 0.0F, -1.0F}, {0.0F, 1.0F}},
-      {{1.0F, -1.0F, -1.0F}, {0.0F, 0.0F, -1.0F}, {0.0F, 0.0F}},
+  struct Face {
+    QVector3D normal;
+    std::array<QVector3D, 4> corners;
   };
+  const std::array<Face, 6> faces{{
+      {{0.0F, 0.0F, 1.0F},
+       {{{-1.0F, -1.0F, 1.0F},
+         {1.0F, -1.0F, 1.0F},
+         {1.0F, 1.0F, 1.0F},
+         {-1.0F, 1.0F, 1.0F}}}},
+      {{0.0F, 0.0F, -1.0F},
+       {{{1.0F, -1.0F, -1.0F},
+         {-1.0F, -1.0F, -1.0F},
+         {-1.0F, 1.0F, -1.0F},
+         {1.0F, 1.0F, -1.0F}}}},
+      {{1.0F, 0.0F, 0.0F},
+       {{{1.0F, -1.0F, 1.0F},
+         {1.0F, -1.0F, -1.0F},
+         {1.0F, 1.0F, -1.0F},
+         {1.0F, 1.0F, 1.0F}}}},
+      {{-1.0F, 0.0F, 0.0F},
+       {{{-1.0F, -1.0F, -1.0F},
+         {-1.0F, -1.0F, 1.0F},
+         {-1.0F, 1.0F, 1.0F},
+         {-1.0F, 1.0F, -1.0F}}}},
+      {{0.0F, 1.0F, 0.0F},
+       {{{-1.0F, 1.0F, 1.0F},
+         {1.0F, 1.0F, 1.0F},
+         {1.0F, 1.0F, -1.0F},
+         {-1.0F, 1.0F, -1.0F}}}},
+      {{0.0F, -1.0F, 0.0F},
+       {{{-1.0F, -1.0F, -1.0F},
+         {1.0F, -1.0F, -1.0F},
+         {1.0F, -1.0F, 1.0F},
+         {-1.0F, -1.0F, 1.0F}}}},
+  }};
+  constexpr std::array<std::array<float, 2>, 4> k_uv{
+      {{0.0F, 0.0F}, {1.0F, 0.0F}, {1.0F, 1.0F}, {0.0F, 1.0F}}};
 
-  std::vector<unsigned int> const indices = {0, 1, 2, 2, 3, 0,
-
-                                             4, 5, 6, 6, 7, 4,
-
-                                             4, 0, 3, 3, 5, 4,
-
-                                             1, 7, 6, 6, 2, 1,
-
-                                             3, 2, 6, 6, 5, 3,
-
-                                             4, 7, 1, 1, 0, 4};
+  std::vector<Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve(24);
+  indices.reserve(36);
+  for (const Face& face : faces) {
+    auto const base = static_cast<unsigned int>(vertices.size());
+    for (std::size_t corner = 0; corner < face.corners.size(); ++corner) {
+      const QVector3D& p = face.corners[corner];
+      vertices.push_back({{p.x(), p.y(), p.z()},
+                          {face.normal.x(), face.normal.y(), face.normal.z()},
+                          {k_uv[corner][0], k_uv[corner][1]}});
+    }
+    for (unsigned int const offset : {0U, 1U, 2U, 2U, 3U, 0U}) {
+      indices.push_back(base + offset);
+    }
+  }
 
   return std::make_unique<Mesh>(vertices, indices);
 }

@@ -44,6 +44,7 @@
 #include "arena_scenario.h"
 #include "arena_scenarios.h"
 #include "game/accessibility/motion_settings.h"
+#include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
@@ -591,6 +592,8 @@ void ArenaViewport::paintGL() {
   apply_cinematic_view();
 
   if (!m_paused) {
+
+    const Game::Command::ScopedImmediateDispatch immediate_orders;
     update_rpg_scenario_controller(simulation_dt);
 
     int const substeps = std::max(

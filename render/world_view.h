@@ -80,6 +80,10 @@ public:
                                         Game::Units::TroopType type) const
       -> const Game::Systems::TroopProfile*;
 
+  [[nodiscard]] auto troop_render_scale(Game::Systems::NationID nation_id,
+                                        Game::Units::TroopType type,
+                                        float fallback) const -> float;
+
   [[nodiscard]] auto owners() const noexcept -> const Game::Systems::OwnerRegistry* {
     return m_owners;
   }

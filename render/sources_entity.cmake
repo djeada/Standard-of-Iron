@@ -95,6 +95,8 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_worker_props.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/home_props.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/home_activity.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/building_torches.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/ambient_people.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/defense_tower_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_stockpile.cpp

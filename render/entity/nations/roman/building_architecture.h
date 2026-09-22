@@ -57,6 +57,16 @@ inline void add_tiled_roof(BuildingArchetypeDesc& desc,
                     BuildingPalette::k_terracotta_dark,
                     states);
 
+  for (const float end : {-1.0F, 1.0F}) {
+    for (const float side : {-1.0F, 1.0F}) {
+      desc.add_cylinder(point(end * half_length, 0.0F, side * half_depth),
+                        point(end * half_length, rise, 0.0F),
+                        thickness * 0.58F,
+                        BuildingPalette::k_terracotta_dark,
+                        states);
+    }
+  }
+
   if (close_gables) {
 
     constexpr int k_courses = 16;

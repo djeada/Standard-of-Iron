@@ -499,6 +499,19 @@ inline auto is_wall_network_spawn(SpawnType type) -> bool {
   }
 }
 
+[[nodiscard]] inline auto heading_locked_locomotion(SpawnType type) noexcept -> bool {
+  return type == SpawnType::Elephant;
+}
+
+[[nodiscard]] inline auto min_turn_radius(SpawnType type) noexcept -> float {
+  return type == SpawnType::Elephant ? 2.6F : 0.0F;
+}
+
+[[nodiscard]] inline auto
+turn_in_place_speed_degrees(SpawnType type) noexcept -> float {
+  return type == SpawnType::Elephant ? 60.0F : 0.0F;
+}
+
 [[nodiscard]] inline auto body_acceleration(SpawnType type) noexcept -> float {
   switch (type) {
   case SpawnType::Elephant:

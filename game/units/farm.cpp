@@ -12,13 +12,7 @@
 
 namespace Game::Units {
 
-namespace {
-
-constexpr float k_farm_scale_factor = 5.1F;
-constexpr float k_farm_scale_xz = 1.4F * k_farm_scale_factor;
-constexpr float k_farm_scale_y = 1.0F * k_farm_scale_factor;
-
-} // namespace
+namespace {}
 
 Farm::Farm(Engine::Core::World& world)
     : Unit(world, "farm") {
@@ -40,7 +34,8 @@ void Farm::init(const SpawnParams& params) {
   m_t = e->add_component<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(), params.position.z()};
   m_t->rotation = {0.0F, params.rotation_y, 0.0F};
-  m_t->scale = {k_farm_scale_xz, k_farm_scale_y, k_farm_scale_xz};
+  const QVector3D scale = building_transform_scale("farm");
+  m_t->scale = {scale.x(), scale.y(), scale.z()};
 
   m_u = e->add_component<Engine::Core::UnitComponent>();
   m_u->spawn_type = params.spawn_type;

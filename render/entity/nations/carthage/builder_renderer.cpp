@@ -238,6 +238,8 @@ auto civilian_pack_extra_role_colors(const void* variant_void,
                           variant.palette, out + base_count, max_count - base_count);
 }
 
+constexpr float k_pack_back_distance = 1.05F;
+
 auto carthage_civilian_pack_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = [] {
     const auto& bind = Render::Humanoid::humanoid_bind_body_frames();
@@ -251,7 +253,8 @@ auto carthage_civilian_pack_archetype() -> const RenderArchetype& {
 
     RenderArchetypeBuilder builder{"carthage_civilian_pack"};
 
-    QVector3D const jar(0.0F, y_sh - 0.115F, -tr * 2.05F);
+    float const pack_z = -tr * k_pack_back_distance;
+    QVector3D const jar(0.0F, y_sh - 0.115F, pack_z);
     builder.add_palette_mesh(
         get_unit_sphere(),
         local_scale_model(jar, QVector3D(tr * 0.52F, 0.135F, tr * 0.44F)),
@@ -282,9 +285,10 @@ auto carthage_civilian_pack_archetype() -> const RenderArchetype& {
           k_pack_clay_slot);
       builder.add_palette_mesh(
           get_unit_cylinder(),
-          cylinder_between(QVector3D(sx * tr * 0.40F, y_sh + 0.010F, -tr * 1.95F),
-                           QVector3D(sx * tr * 0.52F, y_sh - 0.060F, tr * 0.80F),
-                           tr * 0.060F),
+          cylinder_between(
+              QVector3D(sx * tr * 0.40F, y_sh + 0.010F, pack_z + tr * 0.10F),
+              QVector3D(sx * tr * 0.52F, y_sh - 0.060F, tr * 0.80F),
+              tr * 0.060F),
           k_pack_strap_slot);
     }
 

@@ -169,7 +169,9 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
                         ctx.entity != nullptr
                             ? Render::Creature::stable_entity_seed(ctx.entity->get_id())
                             : 0U,
-                }));
+                }),
+                std::atan2(ctx.model.column(2).x(), ctx.model.column(2).z()) * 180.0F /
+                    3.14159265F);
 
   HowdahAttachmentFrame const howdah =
       (shared_howdah != nullptr) ? *shared_howdah : motion.howdah;

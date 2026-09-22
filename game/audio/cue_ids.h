@@ -107,6 +107,7 @@ inline constexpr const char* k_build_building_burning = "build.building_burning"
 inline constexpr const char* k_combat_stagger = "combat.stagger";
 inline constexpr const char* k_combat_elephant_panic = "combat.elephant_panic";
 inline constexpr const char* k_economy_income = "economy.income";
+inline constexpr const char* k_economy_gather_success = "economy.gather_success";
 
 inline constexpr const char* k_wildlife_wolf_hunt = "wildlife.wolf_hunt";
 inline constexpr const char* k_wildlife_wolf_bite = "wildlife.wolf_bite";
@@ -119,7 +120,7 @@ inline constexpr const char* k_state_load_complete = "state.load_complete";
 inline constexpr const char* k_state_commander_enter = "state.commander_enter";
 inline constexpr const char* k_state_commander_exit = "state.commander_exit";
 
-inline constexpr std::array<const char*, 100> k_all = {
+inline constexpr std::array<const char*, 101> k_all = {
     k_ui_hover,
     k_ui_click,
     k_ui_back,
@@ -211,6 +212,7 @@ inline constexpr std::array<const char*, 100> k_all = {
     k_combat_stagger,
     k_combat_elephant_panic,
     k_economy_income,
+    k_economy_gather_success,
     k_wildlife_wolf_hunt,
     k_wildlife_wolf_bite,
     k_state_victory,

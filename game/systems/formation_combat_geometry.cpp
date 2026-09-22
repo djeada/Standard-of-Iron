@@ -6,10 +6,12 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <iterator>
 #include <limits>
 #include <numbers>
 #include <numeric>
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -22,12 +24,75 @@
 #include "../units/spawn_type.h"
 #include "../units/troop_catalog.h"
 #include "../units/troop_config.h"
+#include "building_collision_registry.h"
 #include "troop_profile_service.h"
 
 namespace Game::Systems::FormationCombat {
 namespace {
 
 constexpr float k_elephant_visual_body_radius = 1.15F;
+
+constexpr float k_work_site_clearance = 0.35F;
+constexpr float k_work_site_centre_tolerance = 0.5F;
+
+struct WorkSite {
+  bool active{false};
+  float half_width{0.0F};
+  float half_depth{0.0F};
+  float relative_yaw_radians{0.0F};
+};
+
+auto work_site_for(const Engine::Core::Entity& entity,
+                   const Engine::Core::TransformComponent& transform) -> WorkSite {
+  auto const* builder =
+      entity.get_component<Engine::Core::BuilderProductionComponent>();
+  if (builder == nullptr || !builder->in_progress || !builder->at_construction_site) {
+    return {};
+  }
+  WorkSite site;
+  site.active = true;
+  if (!builder->has_construction_site) {
+    return site;
+  }
+  float const dx = transform.position.x - builder->construction_site_x;
+  float const dz = transform.position.z - builder->construction_site_z;
+  if ((dx * dx) + (dz * dz) >
+      k_work_site_centre_tolerance * k_work_site_centre_tolerance) {
+    return site;
+  }
+
+  auto const size = BuildingCollisionRegistry::get_building_size(builder->product_type);
+  site.half_width = std::max(0.0F, size.width * 0.5F);
+  site.half_depth = std::max(0.0F, size.depth * 0.5F);
+  site.relative_yaw_radians =
+      (transform.rotation.y - builder->construction_site_rotation_y) *
+      std::numbers::pi_v<float> / 180.0F;
+  return site;
+}
+
+void place_on_site_perimeter(const WorkSite& site, float& offset_x, float& offset_z) {
+  if (site.half_width <= 0.0F || site.half_depth <= 0.0F) {
+    return;
+  }
+  float const length = std::hypot(offset_x, offset_z);
+  if (length < 1.0e-4F) {
+    return;
+  }
+  float const sin_yaw = std::sin(site.relative_yaw_radians);
+  float const cos_yaw = std::cos(site.relative_yaw_radians);
+  float const unit_x = offset_x / length;
+  float const unit_z = offset_z / length;
+  float const site_x = cos_yaw * unit_x + sin_yaw * unit_z;
+  float const site_z = -sin_yaw * unit_x + cos_yaw * unit_z;
+  float const reach_x = std::abs(site_x) > 1.0e-4F ? site.half_width / std::abs(site_x)
+                                                   : std::numeric_limits<float>::max();
+  float const reach_z = std::abs(site_z) > 1.0e-4F ? site.half_depth / std::abs(site_z)
+                                                   : std::numeric_limits<float>::max();
+  float const distance =
+      std::max(length, std::min(reach_x, reach_z) + k_work_site_clearance);
+  offset_x = unit_x * distance;
+  offset_z = unit_z * distance;
+}
 
 constexpr float k_elephant_chase_penetration = 1.50F;
 constexpr float k_elephant_contact_penetration = 1.10F;
@@ -233,6 +298,17 @@ auto layout_signature(const Engine::Core::Entity& entity) -> std::uint64_t {
   if (transform != nullptr) {
     hash_float(signature, transform->scale.x);
     hash_float(signature, transform->scale.z);
+  }
+  if (auto const* builder =
+          entity.get_component<Engine::Core::BuilderProductionComponent>()) {
+    bool const working = builder->in_progress && builder->at_construction_site;
+    hash_combine(signature, working ? 1U : 0U);
+    if (working) {
+      hash_combine(signature, std::hash<std::string>{}(builder->product_type));
+      hash_float(signature, builder->construction_site_x);
+      hash_float(signature, builder->construction_site_z);
+      hash_float(signature, builder->construction_site_rotation_y);
+    }
   }
   hash_combine(signature, is_building ? 1U : 0U);
   hash_combine(signature, is_elephant ? 1U : 0U);
@@ -531,7 +607,12 @@ void build_layout_into_cache(const Engine::Core::Entity& entity,
     return;
   }
 
-  auto const definition = resolve_definition(*unit);
+  auto definition = resolve_definition(*unit);
+  auto const work_site = work_site_for(entity, resolved_transform);
+  if (work_site.active) {
+    definition.layout = Game::Formation::UnitLayoutLibrary::instance().resolve(
+        definition.doctrine, "work_party");
+  }
   result.total_count = definition.total_count;
   result.cols = definition.max_per_row;
   result.rows = std::max(1, (result.total_count + result.cols - 1) / result.cols);
@@ -562,7 +643,10 @@ void build_layout_into_cache(const Engine::Core::Entity& entity,
     query.count = layout_count;
     query.spacing = result.spacing;
     query.seed = result.seed;
-    auto const offset = Game::Formation::UnitLayoutSystem::instance().offset(query);
+    auto offset = Game::Formation::UnitLayoutSystem::instance().offset(query);
+    if (work_site.active) {
+      place_on_site_perimeter(work_site, offset.offset_x, offset.offset_z);
+    }
     auto const [world_x, world_z] =
         world_slot(resolved_transform, offset.offset_x, offset.offset_z);
     return SoldierSlot{static_cast<std::uint16_t>(stable_idx),

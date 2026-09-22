@@ -26,6 +26,8 @@ namespace {
 constexpr float k_haul_repath_interval = 1.5F;
 constexpr float k_stockpile_fill_smoothing = 3.0F;
 constexpr const char* k_deposit_cue = "economy.income";
+constexpr const char* k_gather_success_cue = "economy.gather_success";
+constexpr std::uint32_t k_gather_success_one_in = 4U;
 
 auto is_live_depot(Engine::Core::Entity* entity, int owner_id) -> bool {
   if (entity == nullptr) {
@@ -68,6 +70,15 @@ auto find_nearest_depot(Engine::Core::World* world,
   }
 
   return nearest;
+}
+
+auto mix_bits(std::uint32_t value) -> std::uint32_t {
+  value ^= value >> 16U;
+  value *= 0x7feb352dU;
+  value ^= value >> 15U;
+  value *= 0x846ca68bU;
+  value ^= value >> 16U;
+  return value;
 }
 
 auto drop_point_for(const Engine::Core::TransformComponent& depot) -> StockpilePoint {
@@ -237,6 +248,11 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
       }
       Engine::Core::EventManager::instance().publish(
           Engine::Core::AudioCueEvent::for_owner(unit->owner_id, k_deposit_cue));
+      if (gather_success_due(m_deliveries++, static_cast<std::uint32_t>(hauler_id))) {
+        Engine::Core::EventManager::instance().publish(
+            Engine::Core::AudioCueEvent::for_owner(unit->owner_id,
+                                                   k_gather_success_cue));
+      }
       unloaded.push_back(hauler->get_id());
       continue;
     }
@@ -280,6 +296,13 @@ auto ResourceDeliverySystem::access() const -> Engine::Core::SystemAccess {
                                       StockpileComponent,
                                       BuilderProductionComponent,
                                       MovementComponent>{});
+}
+
+auto ResourceDeliverySystem::gather_success_due(std::uint32_t delivery_index,
+                                                std::uint32_t hauler_id) -> bool {
+  return mix_bits(delivery_index ^ (hauler_id * 0x9e3779b9U)) %
+             k_gather_success_one_in ==
+         0U;
 }
 
 } // namespace Game::Systems

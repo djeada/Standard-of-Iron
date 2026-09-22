@@ -71,6 +71,7 @@ constexpr float k_motor_substep_cells = 0.45F;
 constexpr int k_max_motor_substeps = 8;
 
 constexpr float k_motor_ramp_seconds = 0.12F;
+constexpr float k_escape_arrival_radius = 0.6F;
 
 auto formation_turn_speed_degrees(const Engine::Core::Entity& entity,
                                   const Engine::Core::UnitComponent& unit,
@@ -721,14 +722,67 @@ auto motor_limits(const Engine::Core::Entity& entity,
   return limits;
 }
 
+constexpr float k_heading_locked_deceleration = 2.6F;
+constexpr float k_heading_locked_pivot_degrees = 65.0F;
+constexpr float k_heading_locked_idle_speed = 0.05F;
+
+void drive_along_heading(Engine::Core::TransformComponent& transform,
+                         Engine::Core::MovementComponent& movement,
+                         const Engine::Core::UnitComponent& unit,
+                         float target_vx,
+                         float target_vz,
+                         float delta_time) {
+  float const dt = std::max(0.0F, delta_time);
+  float yaw = transform.rotation.y;
+  float const forward_x0 = std::sin(yaw * std::numbers::pi_v<float> / 180.0F);
+  float const forward_z0 = std::cos(yaw * std::numbers::pi_v<float> / 180.0F);
+  float speed = std::max(
+      0.0F, (movement.get_vx() * forward_x0) + (movement.get_vz() * forward_z0));
+
+  float const wanted_speed = std::hypot(target_vx, target_vz);
+  float target_speed = 0.0F;
+  if (wanted_speed > k_heading_locked_idle_speed) {
+    float const desired_yaw =
+        Game::Systems::yaw_degrees_from_direction(target_vx, target_vz);
+    float const radius = Game::Units::min_turn_radius(unit.spawn_type);
+    float const arc_rate = radius > 0.0F
+                               ? (speed / radius) * 180.0F / std::numbers::pi_v<float>
+                               : Game::Units::body_turn_speed_degrees(unit.spawn_type);
+    float const yaw_rate = std::min(
+        Game::Units::body_turn_speed_degrees(unit.spawn_type),
+        std::max(Game::Units::turn_in_place_speed_degrees(unit.spawn_type), arc_rate));
+    yaw = Game::Systems::turn_yaw_toward(yaw, desired_yaw, yaw_rate * dt);
+    transform.rotation.y = yaw;
+    float const error = std::abs(Game::Systems::signed_yaw_delta(yaw, desired_yaw));
+    if (error < k_heading_locked_pivot_degrees) {
+      target_speed =
+          wanted_speed *
+          std::max(0.0F, std::cos(error * std::numbers::pi_v<float> / 180.0F));
+    }
+  }
+
+  float const accelerate =
+      std::max(0.1F, Game::Units::body_acceleration(unit.spawn_type));
+  if (speed < target_speed) {
+    speed = std::min(target_speed, speed + accelerate * dt);
+  } else {
+    speed = std::max(target_speed, speed - k_heading_locked_deceleration * dt);
+  }
+  float const yaw_radians = yaw * std::numbers::pi_v<float> / 180.0F;
+  movement.set_manual_velocity(std::sin(yaw_radians) * speed,
+                               std::cos(yaw_radians) * speed);
+}
+
 class MotorCollision {
 public:
   MotorCollision(const Engine::Core::Entity& entity,
                  float origin_x,
                  float origin_z,
-                 bool respect_body_radius = false)
+                 bool respect_body_radius = false,
+                 bool escaping = false)
       : m_entity(&entity)
-      , m_respect_body_radius(respect_body_radius) {
+      , m_respect_body_radius(respect_body_radius)
+      , m_escaping(escaping) {
     QVector3D const origin(origin_x, 0.0F, origin_z);
     m_valid_tile = allowed_here(origin);
     if (!m_valid_tile) {
@@ -739,6 +793,9 @@ public:
   [[nodiscard]] auto was_on_valid_tile() const -> bool { return m_valid_tile; }
 
   [[nodiscard]] auto point_allowed(float wx, float wz) const -> bool {
+    if (m_escaping) {
+      return true;
+    }
     QVector3D const point(wx, 0.0F, wz);
     if (m_valid_tile) {
       return allowed_here(point);
@@ -781,6 +838,7 @@ private:
 
   const Engine::Core::Entity* m_entity;
   bool m_respect_body_radius{false};
+  bool m_escaping{false};
   bool m_valid_tile{true};
   float m_trapped_depth{0.0F};
 };
@@ -977,7 +1035,18 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     return;
   }
 
-  unstick_body(*entity, *transform, delta_time);
+  if (movement->get_escape_active()) {
+    float const to_exit_x = movement->get_escape_x() - transform->position.x;
+    float const to_exit_z = movement->get_escape_z() - transform->position.z;
+    if ((to_exit_x * to_exit_x) + (to_exit_z * to_exit_z) <=
+            k_escape_arrival_radius * k_escape_arrival_radius ||
+        !movement->get_has_target()) {
+      movement->end_escape();
+    }
+  }
+  if (!movement->get_escape_active()) {
+    unstick_body(*entity, *transform, delta_time);
+  }
 
   MovementGate const gate = classify_movement_gate(*entity);
 
@@ -1109,7 +1178,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
   float const old_x = transform->position.x;
   float const old_z = transform->position.z;
-  MotorCollision const collision(*entity, old_x, old_z);
+  MotorCollision const collision(
+      *entity, old_x, old_z, false, movement->get_escape_active());
 
   auto* stamina = world->try_get<Engine::Core::StaminaComponent>(id);
   MotorLimits const limits = motor_limits(*entity, *unit, stamina);
@@ -1149,7 +1219,15 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     }
   }
 
-  if (!have_target_velocity) {
+  bool const heading_locked = Game::Units::heading_locked_locomotion(unit->spawn_type);
+  if (heading_locked) {
+    drive_along_heading(*transform,
+                        *movement,
+                        *unit,
+                        have_target_velocity ? target_vx : 0.0F,
+                        have_target_velocity ? target_vz : 0.0F,
+                        delta_time);
+  } else if (!have_target_velocity) {
     movement->vx *= std::max(0.0F, 1.0F - limits.damping * delta_time);
     movement->vz *= std::max(0.0F, 1.0F - limits.damping * delta_time);
   } else {
@@ -1212,6 +1290,16 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     if (into < 0.0F) {
       movement->vx -= sweep.normal_x * into;
       movement->vz -= sweep.normal_z * into;
+    }
+    if (heading_locked) {
+
+      float const yaw = transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
+      float const forward_x = std::sin(yaw);
+      float const forward_z = std::cos(yaw);
+      float const along =
+          std::max(0.0F, (movement->vx * forward_x) + (movement->vz * forward_z));
+      movement->vx = forward_x * along;
+      movement->vz = forward_z * along;
     }
   }
 

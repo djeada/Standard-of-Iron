@@ -12,13 +12,7 @@
 
 namespace Game::Units {
 
-namespace {
-
-constexpr float k_marketplace_scale_factor = 1.5F;
-constexpr float k_marketplace_scale_xz = 1.3F * k_marketplace_scale_factor;
-constexpr float k_marketplace_scale_y = 1.0F * k_marketplace_scale_factor;
-
-} // namespace
+namespace {}
 
 Marketplace::Marketplace(Engine::Core::World& world)
     : Unit(world, "marketplace") {
@@ -40,7 +34,8 @@ void Marketplace::init(const SpawnParams& params) {
   m_t = e->add_component<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(), params.position.z()};
   m_t->rotation = {0.0F, params.rotation_y, 0.0F};
-  m_t->scale = {k_marketplace_scale_xz, k_marketplace_scale_y, k_marketplace_scale_xz};
+  const QVector3D scale = building_transform_scale("marketplace");
+  m_t->scale = {scale.x(), scale.y(), scale.z()};
 
   m_u = e->add_component<Engine::Core::UnitComponent>();
   m_u->spawn_type = params.spawn_type;

@@ -3,10 +3,13 @@
 #include <QVector3D>
 
 #include <array>
+#include <span>
 #include <string_view>
 
+#include "ambient_people.h"
 #include "building_render_common.h"
 #include "building_state.h"
+#include "building_torches.h"
 #include "registry.h"
 #include "render/render_archetype.h"
 
@@ -21,6 +24,9 @@ struct MarketplaceRendererConfig {
 
   MarketplacePaletteSlotsResolver palette_slots;
   BuildingSelectionStyle selection;
+  std::span<const TorchMount> torches{};
+  std::span<const AmbientPerson> people{};
+  std::span<const WalkSurface> walk_surfaces{};
 };
 
 void register_marketplace_renderer_variant(EntityRendererRegistry& registry,

@@ -112,6 +112,15 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                c.marble,
                k_building_state_mask_intact);
 
+  for (const float x : {-0.68F, -0.34F, 0.0F, 0.34F, 0.68F}) {
+    for (const float side : {-1.0F, 1.0F}) {
+      desc.add_box(QVector3D(x, cornice_y - 0.12F, side * 0.98F),
+                   QVector3D(0.045F, 0.055F, 0.035F),
+                   c.limestone_shade,
+                   k_building_state_mask_intact);
+    }
+  }
+
   for (float const xw : {-0.92F, 0.92F}) {
     desc.add_box(QVector3D(xw, 0.58F, -0.30F),
                  QVector3D(0.015F, 0.20F, 0.16F),
@@ -242,6 +251,19 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                        k_home_team_slot,
                        BuildingStateMask::All);
 
+  add_home_yard(desc,
+                HomeYardStyle{.plinth_half = 1.18F,
+                              .wall_half = 0.96F,
+                              .door_half_width = 0.60F,
+                              .vent = QVector3D(0.0F, 1.66F, -0.42F),
+                              .chimney_base_y = 1.30F,
+                              .clay_oven_chimney = false,
+                              .stone = c.limestone_shade,
+                              .clay = c.terracotta,
+                              .clay_dark = c.terracotta_dark,
+                              .chimney = c.limestone_shade,
+                              .seed = 3});
+
   add_ruin_dressing(desc,
                     RuinDressing{.extent = QVector3D(0.98F, 0.0F, 0.98F),
                                  .stone = c.limestone_shade,
@@ -263,6 +285,13 @@ auto home_archetype(BuildingState state) -> const RenderArchetype& {
       build_stateful_building_archetype_set(build_home_archetype);
   return k_set.for_state(state);
 }
+
+const std::array<TorchMount, 2> k_torches{{
+    TorchMount{.at = QVector3D(-0.38F, 0.6F, 0.975F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+    TorchMount{.at = QVector3D(0.38F, 0.6F, 0.975F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+}};
 
 } // namespace
 
@@ -299,7 +328,8 @@ void register_home_renderer(Render::GL::EntityRendererRegistry& registry) {
       HomeRendererConfig{.nation_slug = "roman",
                          .archetype = &home_archetype,
                          .palette_slots = &home_palette_slots,
-                         .selection = BuildingSelectionStyle{2.25F, 2.25F}});
+                         .selection = BuildingSelectionStyle{2.25F, 2.25F},
+                         .torches = k_torches});
 }
 
 } // namespace Render::GL::Roman

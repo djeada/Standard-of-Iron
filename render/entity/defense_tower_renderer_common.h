@@ -2,10 +2,12 @@
 
 #include <QVector3D>
 
+#include <span>
 #include <string_view>
 
 #include "building_render_common.h"
 #include "building_state.h"
+#include "building_torches.h"
 #include "registry.h"
 #include "render/render_archetype.h"
 
@@ -24,6 +26,7 @@ struct DefenseTowerRendererConfig {
   BuildingSelectionStyle selection;
   float night_brazier_deck_y = 2.90F;
   float night_brazier_offset = 0.62F;
+  std::span<const TorchMount> torches{};
 };
 
 void register_defense_tower_renderer_variant(EntityRendererRegistry& registry,

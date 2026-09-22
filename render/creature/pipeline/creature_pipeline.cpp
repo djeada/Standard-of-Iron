@@ -549,6 +549,7 @@ public:
                      const LocalPose& layer,
                      std::uint32_t bone_count) -> std::uint64_t {
     std::uint32_t const now = Render::GL::humanoid_current_frame();
+    std::uint32_t const generation = Render::GL::humanoid_runtime_generation();
     std::lock_guard<std::mutex> const lock(m_mutex);
     if (m_layers.size() > k_max_layers) {
       std::erase_if(m_layers, [now](const auto& item) {
@@ -556,7 +557,8 @@ public:
       });
     }
     auto& state = m_layers[layer_key];
-    bool const continues = state.valid && state.clip_id == clip_id &&
+    bool const continues = state.valid && state.generation == generation &&
+                           state.clip_id == clip_id &&
                            now - state.frame <= k_continuity_frames;
     std::uint64_t flipped = 0ULL;
     if (continues) {
@@ -580,6 +582,7 @@ public:
     state.valid = true;
     state.clip_id = clip_id;
     state.frame = now;
+    state.generation = generation;
     state.flipped = flipped;
     return flipped;
   }
@@ -593,6 +596,7 @@ private:
     bool valid{false};
     std::uint16_t clip_id{0U};
     std::uint32_t frame{0U};
+    std::uint32_t generation{0U};
     std::uint64_t flipped{0ULL};
     std::array<QQuaternion, Render::GL::RiggedCreatureCmd::k_max_owned_bones> base{};
     std::array<QQuaternion, Render::GL::RiggedCreatureCmd::k_max_owned_bones> layer{};

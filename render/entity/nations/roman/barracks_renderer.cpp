@@ -121,6 +121,15 @@ void add_platform(BuildingArchetypeDesc& desc, const RomanPalette& c) {
   desc.add_box(
       QVector3D(0.0F, 0.14F, 0.0F), QVector3D(1.60F, 0.02F, 1.42F), c.limestone);
 
+  for (const float x : {-1.54F, 1.54F}) {
+    for (const float z : {-1.36F, 1.36F}) {
+      desc.add_box(QVector3D(x, 0.18F, z),
+                   QVector3D(0.12F, 0.045F, 0.12F),
+                   c.limestone_shade,
+                   k_mask_intact);
+    }
+  }
+
   desc.add_box(QVector3D(0.0F, 0.032F, 1.68F),
                QVector3D(1.02F, 0.032F, 0.20F),
                c.limestone_dark);
@@ -1084,6 +1093,17 @@ void draw_barracks_ornaments(const DrawContext& p,
   draw_rally_flag(p, out, white, c, cloth);
 }
 
+const std::array<TorchMount, 4> k_torches{{
+    TorchMount{.at = QVector3D(-1.45F, 0.81F, 1.05F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+    TorchMount{.at = QVector3D(-0.85F, 0.81F, 1.05F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+    TorchMount{.at = QVector3D(-0.52F, 0.8F, 1.112F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+    TorchMount{.at = QVector3D(1.16F, 0.8F, 1.112F),
+               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+}};
+
 } // namespace
 
 auto build_barracks_desc(BuildingState state) -> BuildingArchetypeDesc {
@@ -1096,7 +1116,8 @@ void register_barracks_renderer(Render::GL::EntityRendererRegistry& registry) {
       BarracksRendererConfig{.nation_slug = "roman",
                              .archetype = &barracks_archetype,
                              .draw_ornaments = &draw_barracks_ornaments,
-                             .selection = BuildingSelectionStyle{2.6F, 2.2F}});
+                             .selection = BuildingSelectionStyle{2.6F, 2.2F},
+                             .torches = k_torches});
 }
 
 } // namespace Render::GL::Roman

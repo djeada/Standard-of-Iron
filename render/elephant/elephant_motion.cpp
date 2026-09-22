@@ -156,7 +156,8 @@ auto evaluate_elephant_motion(
     const AnimationInputs& anim,
     Render::Creature::ElephantAnimationStateComponent* io_state,
     float model_scale,
-    const Animation::SoldierIndividuality& individuality) -> ElephantMotionSample {
+    const Animation::SoldierIndividuality& individuality,
+    std::optional<float> body_yaw_degrees) -> ElephantMotionSample {
   Render::Creature::ElephantAnimationStateComponent fallback_state{};
   Render::Creature::ElephantAnimationStateComponent& state =
       io_state != nullptr ? *io_state : fallback_state;
@@ -187,6 +188,30 @@ auto evaluate_elephant_motion(
       anim.movement_state;
   sample.movement_state = movement_animation;
   sample.is_moving = Render::Creature::is_moving_animation(movement_animation);
+
+  if (body_yaw_degrees.has_value()) {
+    float const now = anim.time;
+    if (state.body_yaw_valid && now > state.body_yaw_time) {
+      float const dt = now - state.body_yaw_time;
+      float const delta = std::remainder(*body_yaw_degrees - state.body_yaw, 360.0F);
+      float const rate = std::abs(delta) / std::max(dt, 1e-3F);
+      float const blend = std::clamp(dt * 6.0F, 0.0F, 1.0F);
+      state.turn_rate += (rate - state.turn_rate) * blend;
+    } else if (!state.body_yaw_valid) {
+      state.turn_rate = 0.0F;
+    }
+    state.body_yaw = *body_yaw_degrees;
+    state.body_yaw_time = now;
+    state.body_yaw_valid = true;
+    constexpr float k_pivot_step_degrees_per_second = 8.0F;
+    constexpr float k_pivot_cadence_slowdown = 1.7F;
+    if (!sample.is_moving && state.turn_rate > k_pivot_step_degrees_per_second) {
+      sample.is_moving = true;
+      g.cycle_time *= k_pivot_cadence_slowdown;
+      g.stride_swing *= 0.45F;
+      sample.gait = g;
+    }
+  }
   sample.is_fighting =
       anim.is_attacking || (anim.combat_phase != Render::GL::CombatAnimPhase::Idle);
   float motion_time = anim.time;
