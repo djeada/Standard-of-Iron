@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <utility>
 
 #include "game/map/river_geometry.h"
@@ -974,8 +975,10 @@ void MapData::parse_bridges_array(const QJsonArray& arr) {
 }
 
 void MapData::parse_structures_array(const QJsonArray& arr) {
+  int structure_order = 0;
   for (const auto val : arr) {
     QJsonObject obj = val.toObject();
+    const int order = structure_order++;
     const QString type = normalizedSpawnType(obj);
     if (type == QStringLiteral("wall_segment")) {
       LinearElement elem;
@@ -991,6 +994,7 @@ void MapData::parse_structures_array(const QJsonArray& arr) {
                                       MapJsonKeys::player_id,
                                       MapJsonKeys::nation};
       elem.extra_fields = copyExtraFields(obj, known_keys);
+      elem.structure_order = order;
       m_linear_elements.append(elem);
       continue;
     }
@@ -1014,6 +1018,7 @@ void MapData::parse_structures_array(const QJsonArray& arr) {
                                     MapJsonKeys::max_population,
                                     MapJsonKeys::nation};
     elem.extra_fields = copyExtraFields(obj, known_keys);
+    elem.structure_order = order;
     m_structures.append(elem);
   }
 }
@@ -1207,7 +1212,11 @@ QJsonArray MapData::bridges_to_json() const {
 }
 
 QJsonArray MapData::structures_to_json() const {
-  QJsonArray arr;
+  QVector<OrderedSpawnEntry> ordered;
+  ordered.reserve(m_structures.size() + m_linear_elements.size());
+  auto const order_of = [](int structure_order) {
+    return structure_order < 0 ? std::numeric_limits<int>::max() : structure_order;
+  };
   for (const auto& elem : m_structures) {
     QJsonObject obj;
     obj[MapJsonKeys::type] = elem.type;
@@ -1230,7 +1239,7 @@ QJsonArray MapData::structures_to_json() const {
       obj[key] = elem.extra_fields[key];
     }
 
-    arr.append(obj);
+    ordered.append({order_of(elem.structure_order), obj});
   }
   for (const auto& elem : m_linear_elements) {
     if (elem.type != "wall") {
@@ -1254,7 +1263,16 @@ QJsonArray MapData::structures_to_json() const {
       obj[key] = elem.extra_fields[key];
     }
 
-    arr.append(obj);
+    ordered.append({order_of(elem.structure_order), obj});
+  }
+  std::stable_sort(ordered.begin(),
+                   ordered.end(),
+                   [](const OrderedSpawnEntry& lhs, const OrderedSpawnEntry& rhs) {
+                     return lhs.order < rhs.order;
+                   });
+  QJsonArray arr;
+  for (const auto& entry : ordered) {
+    arr.append(entry.object);
   }
   return arr;
 }
@@ -1341,6 +1359,9 @@ void MapData::update_linear_element(int index, const LinearElement& element) {
   if (index >= 0 && index < m_linear_elements.size()) {
     LinearElement normalized = element;
     syncLinearWaypointsWithEndpoints(normalized);
+    if (normalized.structure_order < 0) {
+      normalized.structure_order = m_linear_elements[index].structure_order;
+    }
     m_linear_elements[index] = normalized;
     set_modified(true);
     emit data_changed();
@@ -1382,6 +1403,9 @@ void MapData::update_structure(int index, const StructureElement& element) {
     StructureElement normalized = element;
     if (normalized.spawn_order < 0) {
       normalized.spawn_order = m_structures[index].spawn_order;
+    }
+    if (normalized.structure_order < 0) {
+      normalized.structure_order = m_structures[index].structure_order;
     }
     m_structures[index] = normalized;
     set_modified(true);
