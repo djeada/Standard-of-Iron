@@ -38,6 +38,7 @@
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "game/util/asset_text.h"
 #include "utils/resource_utils.h"
 
 namespace Game::Mission {
@@ -184,7 +185,7 @@ namespace {
 
 auto wave_display_name(const PendingMissionWave& wave) -> QString {
   if (!wave.label.isEmpty()) {
-    return wave.label;
+    return Game::Util::tr_asset(Game::Util::k_missions_context, wave.label);
   }
   QString name = wave.ai_id;
   name.replace('_', ' ');

@@ -54,7 +54,8 @@
           "entry_point": {
             "x": 556,
             "z": 372
-          }
+          },
+          "label": "Scipio's legions"
         },
         {
           "timing": 460.0,
@@ -71,7 +72,8 @@
           "entry_point": {
             "x": 520,
             "z": 420
-          }
+          },
+          "label": "Laelius's Italian horse"
         }
       ]
     },
@@ -106,7 +108,8 @@
           "entry_point": {
             "x": 700,
             "z": 232
-          }
+          },
+          "label": "Masinissa's Numidian horse"
         },
         {
           "timing": 420.0,
@@ -127,7 +130,8 @@
           "entry_point": {
             "x": 676,
             "z": 252
-          }
+          },
+          "label": "Masinissa's Numidians"
         }
       ]
     },
@@ -170,7 +174,8 @@
           "entry_point": {
             "x": 548,
             "z": 596
-          }
+          },
+          "label": "The rear guard"
         }
       ]
     },
@@ -205,7 +210,8 @@
           "entry_point": {
             "x": 448,
             "z": 216
-          }
+          },
+          "label": "The northern camp's cohorts"
         },
         {
           "timing": 460.0,
@@ -222,7 +228,8 @@
           "entry_point": {
             "x": 472,
             "z": 240
-          }
+          },
+          "label": "The northern camp's reserve"
         }
       ]
     }
@@ -241,7 +248,7 @@
       "type": "survive_undead_wave",
       "zone_id": "sepulcher_vanguard",
       "wave_count": 2,
-      "description": "Break both risings of the dead at the sepulcher ruins by the south-western crossing. The guardians will not leave their ground; you must go to them."
+      "description": "Break both risings of the dead at the sepulcher ruins by the south-western crossing. The war does not end while they stand."
     },
     {
       "type": "eliminate_commanders",
@@ -269,12 +276,9 @@
   ],
   "optional_objectives": [
     {
-      "type": "capture_structures",
-      "structure_types": [
-        "barracks"
-      ],
-      "min_count": 3,
-      "description": "Raze every Roman post. Leave Scipio nothing to rally behind."
+      "type": "clear_undead_zone",
+      "zone_id": "zama_desert_shrine",
+      "description": "Clear the desert shrine north-west of your camp; its hoard pays for the push east."
     }
   ],
   "stages": [
@@ -303,7 +307,7 @@
       "required_count": 2,
       "title": "Take the rearguard camp",
       "description": "Seize the camp guarding Scipio's rear.",
-      "hint": "Taking the rear first denies the cavalry a place to rally.",
+      "hint": "It lies south-east across the wadi; its column marches late, so strike before it does.",
       "target": {
         "x": 556,
         "z": 636
@@ -347,7 +351,7 @@
       "type": "eliminate_commanders",
       "title": "Kill the Roman commanders",
       "description": "End the war with the men who lead it.",
-      "hint": "The dead of the Iron Sepulcher still contest the field; keep a reserve."
+      "hint": "Both risings of the dead at the south-western ruins must also fall before the war ends."
     }
   ],
   "events": [
@@ -421,7 +425,7 @@
         "type": "mission_start",
         "delay": 2.5
       },
-      "text": "Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand in the same field as you.",
+      "text": "Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand across a field from you with an army of my own.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 100
@@ -521,7 +525,7 @@
         "owner_id": 2,
         "delay": 0.5
       },
-      "text": "The main line is advancing. No trumpets, no tricks, no gaps between the maniples for your elephants to find. I learned. You taught me.",
+      "text": "The main line is advancing, with lanes left open between the maniples. Send your elephants down them. My skirmishers are waiting at the far end.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 60
@@ -597,6 +601,47 @@
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80
+    },
+    {
+      "id": "zama_hannibal_open",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 16.0
+      },
+      "text": "Eighty elephants, and he has cut a lane for every one. Hold the men of Italy back in the third line. They are the last answer I have.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 90
+    },
+    {
+      "id": "zama_hannibal_numidians_gone",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "commander_defeated",
+        "owner_id": 3,
+        "by_owner_id": "player",
+        "delay": 6.0
+      },
+      "text": "Masinissa has no one left to ride for. Turn the elephants on the centre.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "zama_hannibal_last_field",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "near_defeat",
+        "owner_id": "player"
+      },
+      "text": "Not here. There is nothing behind this field but Carthage.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 85
     }
   ],
   "include_ambient_undead": true,

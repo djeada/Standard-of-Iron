@@ -59,7 +59,8 @@
           "entry_point": {
             "x": 146,
             "z": 196
-          }
+          },
+          "label": "Lower-pass tribesmen"
         },
         {
           "timing": 360.0,
@@ -76,7 +77,8 @@
           "entry_point": {
             "x": 172,
             "z": 216
-          }
+          },
+          "label": "Lower-pass war band"
         }
       ]
     },
@@ -111,7 +113,8 @@
           "entry_point": {
             "x": 196,
             "z": 316
-          }
+          },
+          "label": "High-pass skirmishers"
         },
         {
           "timing": 480.0,
@@ -128,7 +131,8 @@
           "entry_point": {
             "x": 216,
             "z": 336
-          }
+          },
+          "label": "High-pass riders"
         }
       ]
     },
@@ -167,7 +171,8 @@
           "entry_point": {
             "x": 540,
             "z": 512
-          }
+          },
+          "label": "Descent garrison sortie"
         },
         {
           "timing": 780.0,
@@ -188,7 +193,8 @@
           "entry_point": {
             "x": 508,
             "z": 536
-          }
+          },
+          "label": "The Roman-paid host"
         }
       ]
     }
@@ -231,7 +237,7 @@
     {
       "type": "survive_duration",
       "duration": 900.0,
-      "description": "Clear the pass before the mountain closes it. Every hour lost is more men fed to the cold."
+      "description": "Keep the column alive on the mountain for fifteen minutes. The pass belongs to whoever is still standing when the weather turns."
     }
   ],
   "stages": [
@@ -240,7 +246,7 @@
       "type": "reach_position",
       "title": "Bring the column to the first pass",
       "description": "Move the army up to the lower pass camp before the snow closes it.",
-      "hint": "Follow the valley floor east; the mountain peoples hold the switchbacks above.",
+      "hint": "The lower pass camp lies just south of your palisade. Roman-paid tribesmen hold it - go in together.",
       "target": {
         "x": 116,
         "z": 168
@@ -262,8 +268,8 @@
     {
       "id": "kill_commanders",
       "type": "eliminate_commanders",
-      "title": "Kill the mountain commanders",
-      "description": "Break the chiefs contesting the descent.",
+      "title": "Kill the Roman officers in the passes",
+      "description": "Rome has paid the tribes and sent officers to hold them to the bargain. Kill the officers and the tribes go home.",
       "hint": "Their camps fall neutral once their commander is dead."
     }
   ],
@@ -288,7 +294,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Second pass defenders are reinforcing. Keep the column moving."
+          "text": "The high pass fort is sending spears and bows down the southern track. Get the builders behind the palisade."
         }
       ]
     },
@@ -300,7 +306,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Final ridge ahead. Break the last camp to open the descent."
+          "text": "The descent garrison is marching up from the south-east. Hold the camp and keep the sledges loading."
         }
       ]
     }
@@ -314,7 +320,7 @@
         "type": "mission_start",
         "delay": 2.5
       },
-      "text": "They tell me you have taken an army into the Alps in October, with elephants. I have stopped chasing you. The mountain is a more thorough officer than I am and it does not require pay.",
+      "text": "They tell me you have taken an army into the Alps in October, with elephants. I came round by sea to hold the far side. The mountain is a more thorough officer than I am, and it does not require pay.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 100
@@ -455,7 +461,33 @@
         "type": "near_defeat",
         "owner_id": 4
       },
-      "text": "The final pass is nearly cleared. Whatever comes down the far side, I shall be in Italy waiting for it with a great many more men than this.",
+      "text": "The descent is nearly yours. I came up to shut this door and it would not shut. Very well - I shall wait at the Ticinus with a great many more men than this.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "alps_hannibal_open",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 15.0
+      },
+      "text": "We will either find a way or make one. Builders to the slopes - this road is cut before it is walked.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 90
+    },
+    {
+      "id": "alps_hannibal_slope_held",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_cleared",
+        "final_wave": false
+      },
+      "text": "They came down the slope, and on the slope they stay. Back to the timber.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80

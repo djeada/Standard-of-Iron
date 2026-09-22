@@ -2291,6 +2291,8 @@ void GameEngine::configure_commander_messages() {
   }
   script.speakers = Game::Mission::build_commander_speaker_roster(
       *m_world, m_session->owners(), m_session->nations(), m_runtime.local_owner_id);
+  script.local_speaker =
+      Game::Mission::local_commander_speaker(*m_world, m_runtime.local_owner_id);
   script.voices = &commander_voices();
 
   m_commander_message_director.configure(

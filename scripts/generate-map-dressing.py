@@ -37,6 +37,23 @@ Pieces
                    reeds and stones at the water. ``facing`` is toward the
                    water.
     sheepfold      a shepherd's steading by a pasture.
+    camp_lines     a legion's tent lines in an empty yard: ``rows`` x
+                   ``cols`` tents at ``spacing`` along and ``gap`` between
+                   rows, a weapon rack at each row's head and a fire in
+                   every other lane.
+  Country - what a settled landscape grows:
+    orchard        trees planted in rows: an olive grove, a cypress
+                   windbreak, a palm garden. ``rows`` x ``cols`` at
+                   ``spacing`` metres, turned by ``facing``/``rotation``;
+                   ``gaps`` is the share of trees missing from the rows.
+    copse          a natural stand: ``count`` trees clustered in ``radius``,
+                   thickest at the centre, drawn from ``trees`` (a list of
+                   species), with undergrowth and a fallen trunk.
+    farmland       worked fields round a settlement: ``cols`` x ``rows``
+                   farm plots owned by ``player_id`` of ``nation``, laid on a
+                   quarter-turn grid with a cart lane between plots. A plot
+                   that would stand on a road, a slope, water or anything
+                   built is left fallow rather than pushed.
   Routes - the small things that say a road is used:
     bridgehead     both ends of the nearest bridge: stones, a fire, a cart.
     junction       the nearest road junction: a wayside statue and a fire.
@@ -415,6 +432,7 @@ class Placer:
         self.piece_id = piece_id
         self.rng = random.Random(seed)
         self.placed: list[dict] = []
+        self.structures: list[dict] = []
         self.dropped: list[str] = []
 
     def jitter(self, amount: float) -> float:
@@ -974,6 +992,199 @@ def sheepfold(p: Placer, spec: dict, x: float, z: float) -> None:
     p.put("supply_cart", x + dx, z + dz, rotation=heading + 0.4)
 
 
+def camp_lines(p: Placer, spec: dict, x: float, z: float) -> None:
+    rows = int(spec.get("rows", 3))
+    cols = int(spec.get("cols", 4))
+    spacing = float(spec.get("spacing", 7.6))
+    gap = float(spec.get("gap", 8.0))
+    heading = heading_of(spec.get("facing"), spec.get("rotation"))
+    for r in range(rows):
+        across = (r - (rows - 1) * 0.5) * gap
+        for c in range(cols):
+            along = (c - (cols - 1) * 0.5) * spacing
+            dx, dz = rotate(along, across, heading)
+            p.put("tent", x + dx, z + dz, rotation=heading + math.pi * 0.5, slack=1.2)
+        dx, dz = rotate(-(cols * 0.5 + 0.6) * spacing, across, heading)
+        p.put("weapon_rack", x + dx, z + dz, rotation=heading, slack=1.5)
+        if r % 2 == 0 and r + 1 < rows:
+            dx, dz = rotate((cols * 0.5 + 0.4) * spacing, across + gap * 0.5, heading)
+            p.put("firecamp", x + dx, z + dz, rotation=0.0, slack=1.5)
+
+
+def orchard(p: Placer, spec: dict, x: float, z: float) -> None:
+    tree = str(spec.get("tree", "olive_tree"))
+    rows = int(spec.get("rows", 4))
+    cols = int(spec.get("cols", 6))
+    spacing = float(spec.get("spacing", 7.0))
+    gaps = float(spec.get("gaps", 0.08))
+    heading = heading_of(spec.get("facing"), spec.get("rotation"))
+    for r in range(rows):
+        for c in range(cols):
+            if p.rng.random() < gaps:
+                continue
+            along = (c - (cols - 1) * 0.5) * spacing
+            across = (r - (rows - 1) * 0.5) * spacing
+            dx, dz = rotate(along, across, heading)
+            p.put(
+                tree,
+                x + dx + p.jitter(0.5),
+                z + dz + p.jitter(0.5),
+                scale=p.rng.uniform(0.85, 1.1),
+                slack=1.5,
+            )
+
+
+def copse(p: Placer, spec: dict, x: float, z: float) -> None:
+    trees = spec.get("trees") or [spec.get("tree", "pine_tree")]
+    radius = float(spec.get("radius", 14.0))
+    for i in range(int(spec.get("count", 12))):
+        angle = p.rng.uniform(0.0, math.tau)
+        r = radius * math.sqrt(p.rng.random()) * p.rng.uniform(0.75, 1.0)
+        p.put(
+            str(trees[i % len(trees)]),
+            x + math.cos(angle) * r,
+            z + math.sin(angle) * r,
+            scale=p.rng.uniform(0.8, 1.25),
+            slack=3.0,
+        )
+    for _ in range(int(spec.get("plants", 5))):
+        angle = p.rng.uniform(0.0, math.tau)
+        r = radius * p.rng.uniform(0.6, 1.15)
+        p.put(
+            "plant",
+            x + math.cos(angle) * r,
+            z + math.sin(angle) * r,
+            scale=p.rng.uniform(0.9, 1.4),
+            slack=2.5,
+        )
+    for _ in range(int(spec.get("dead_trees", 1))):
+        angle = p.rng.uniform(0.0, math.tau)
+        r = radius * p.rng.uniform(0.3, 0.8)
+        p.put("dead_tree", x + math.cos(angle) * r, z + math.sin(angle) * r)
+    for _ in range(int(spec.get("boulders", 2))):
+        angle = p.rng.uniform(0.0, math.tau)
+        r = radius * p.rng.uniform(0.2, 1.0)
+        p.put(
+            "boulder",
+            x + math.cos(angle) * r,
+            z + math.sin(angle) * r,
+            scale=p.rng.uniform(0.6, 1.0),
+        )
+
+
+FARM_HALF = 6.8
+"""Half the farm's 13.6 m placement footprint in the building registry."""
+FARM_LANE = 3.4
+FARM_ROAD_CLEARANCE = 2.5
+FARM_STRUCTURE_CLEARANCE = 3.0
+FARM_SPAWN_CLEARANCE = 6.0
+
+
+def farm_plot_why(site: Site, x: float, z: float) -> str | None:
+    """Why a whole farm plot cannot be laid at (x, z), or None.
+
+    A plot is a 13.6 m square the pathfinder routes round, so it is checked as
+    that square, not as a prop: it stays off roads with a verge a cart can use,
+    off water, walls and anything already standing, and on ground flat enough
+    for a ploughed field."""
+    reach = FARM_HALF * math.sqrt(2.0)
+    if not (
+        EDGE_MARGIN + reach <= x <= site.width - EDGE_MARGIN - reach
+        and EDGE_MARGIN + reach <= z <= site.height - EDGE_MARGIN - reach
+    ):
+        return "map edge"
+    for stream in site.water:
+        if stream.distance(x, z) < stream.half + reach + 2.0:
+            return "water"
+    for lx, lz, hx, hz in site.lakes:
+        if ((x - lx) / (hx + reach + 3.0)) ** 2 + (
+            (z - lz) / (hz + reach + 3.0)
+        ) ** 2 < 1.0:
+            return "lake"
+    for deck in site.bridges:
+        if deck.distance(x, z) < deck.half + reach + 4.0:
+            return "bridge deck"
+    for road in site.roads:
+        if road.distance(x, z) < road.half + FARM_ROAD_CLEARANCE + reach:
+            return "road"
+    for wall in site.walls:
+        if wall.distance(x, z) < WALL_KEEP_OUT + reach + 2.0:
+            return "wall"
+    for body in site.bodies:
+        if body.kind == "farm":
+            reach_x = reach_z = FARM_HALF * 2.0 + FARM_LANE * 0.5
+        else:
+            reach_x = reach_z = FARM_HALF + body.radius + FARM_STRUCTURE_CLEARANCE
+        if abs(x - body.x) < reach_x and abs(z - body.z) < reach_z:
+            return f"body ({body.kind})"
+    for sx, sz in site.spawns:
+        if math.hypot(x - sx, z - sz) < FARM_SPAWN_CLEARANCE + reach:
+            return "spawn"
+    wildlife = site.definition.get("wildlife") or {}
+    for herd in ("sheep", "wolves"):
+        for area in (wildlife.get(herd) or {}).get("spawn_areas") or []:
+            if (
+                math.hypot(x - float(area["x"]), z - float(area["z"]))
+                < float(area.get("radius", 10.0)) + reach
+            ):
+                return f"{herd} range"
+    for zone in site.definition.get("undead_zones") or []:
+        if (
+            math.hypot(x - float(zone["x"]), z - float(zone["z"]))
+            < float(zone.get("radius", 10.0)) + reach
+        ):
+            return "undead zone"
+    if site.surface is not None:
+        points = site.surface.footprint_samples(x, z, FARM_HALF, FARM_HALF, 0.0, False)
+        if site.surface.relief(points) > GROUND_RELIEF:
+            return "broken ground"
+        if site.surface.entrance_coverage(points) > 0.0:
+            return "hill ramp"
+    return None
+
+
+def farmland(p: Placer, spec: dict, x: float, z: float) -> None:
+    owner = spec.get("player_id")
+    nation = spec.get("nation")
+    cols = int(spec.get("cols", 3))
+    rows = int(spec.get("rows", 2))
+    pitch = FARM_HALF * 2.0 + float(spec.get("lane", FARM_LANE))
+    quarter = round(
+        heading_of(spec.get("facing"), spec.get("rotation")) / (math.pi * 0.5)
+    )
+    heading = quarter * math.pi * 0.5
+    rotation_deg = (quarter % 4) * 90
+    for r in range(rows):
+        for c in range(cols):
+            along = (c - (cols - 1) * 0.5) * pitch
+            across = (r - (rows - 1) * 0.5) * pitch
+            dx, dz = rotate(along, across, heading)
+            fx, fz = round(x + dx, 1), round(z + dz, 1)
+            reason = farm_plot_why(p.site, fx, fz)
+            if reason is not None:
+                p.dropped.append(f"farm at ({fx:.0f}, {fz:.0f}): {reason}")
+                continue
+            plot = {
+                "type": "farm",
+                "x": fx,
+                "z": fz,
+                "rotation": rotation_deg,
+                DRESSING_KEY: p.piece_id,
+            }
+            if owner is not None:
+                plot["player_id"] = owner
+            if nation:
+                plot["nation"] = nation
+            p.site.bodies.append(Body(fx, fz, FARM_HALF + 1.0, "farm"))
+            p.structures.append(plot)
+    if spec.get("cart", True) and p.structures:
+        lead = p.structures[0]
+        dx, dz = rotate(-(FARM_HALF + 2.5), 0.0, heading)
+        p.put(
+            "supply_cart", lead["x"] + dx, lead["z"] + dz, rotation=heading, slack=4.0
+        )
+
+
 def nearest_bridge(site: Site, x: float, z: float) -> Segment | None:
     best = None
     best_distance = float("inf")
@@ -1348,16 +1559,28 @@ COMPOSERS: dict[str, Composer] = {
     "gate_approach": gate_approach,
     "ramp_mouth": ramp_mouth,
     "riverbank": riverbank,
+    "camp_lines": camp_lines,
+    "orchard": orchard,
+    "copse": copse,
+    "farmland": farmland,
 }
 
 
-def strip_generated(entries: Sequence[dict] | None) -> list[dict]:
-    return [entry for entry in entries or [] if entry.get(DRESSING_KEY) is None]
+def strip_generated(
+    entries: Sequence[dict] | None, only: set[str] | None = None
+) -> list[dict]:
+    """Drop this tool's previous output: all of it, or just the ``only`` pieces."""
+    return [
+        entry
+        for entry in entries or []
+        if entry.get(DRESSING_KEY) is None
+        or (only is not None and entry.get(DRESSING_KEY) not in only)
+    ]
 
 
-def detect_format(source: str, data: dict) -> tuple[int, bool, bool]:
+def detect_format(source: str, data: dict) -> tuple[int, bool, bool, bool]:
     found = AUDIT.detect_format(source, data)
-    return found if found is not None else (4, True, True)
+    return found if found is not None else (4, True, True, False)
 
 
 def run(
@@ -1367,11 +1590,13 @@ def run(
     probe: str | None,
     cache_dir: str | None,
     verbose: bool,
+    only: set[str] | None = None,
 ) -> int:
     source = map_path.read_text()
     definition = json.loads(source)
-    indent, sort_keys, newline = detect_format(source, definition)
-    definition["world_props"] = strip_generated(definition.get("world_props"))
+    style = detect_format(source, definition)
+    definition["world_props"] = strip_generated(definition.get("world_props"), only)
+    definition["structures"] = strip_generated(definition.get("structures"), only)
     pieces = definition.get(DRESSING_KEY) or []
     surface = None
     if surface_mode != "off":
@@ -1388,6 +1613,15 @@ def run(
                 file=sys.stderr,
             )
     site = Site.build(definition, surface)
+    if only is not None:
+        for prop in definition["world_props"]:
+            if prop.get(DRESSING_KEY) is not None:
+                site.add_prop_body(prop)
+        for plot in definition["structures"]:
+            if plot.get(DRESSING_KEY) is not None and plot.get("type") == "farm":
+                site.bodies.append(
+                    Body(float(plot["x"]), float(plot["z"]), FARM_HALF + 1.0, "farm")
+                )
     placed_total = 0
     dropped_total = 0
     seen: set[str] = set()
@@ -1404,6 +1638,8 @@ def run(
             print(f"{map_path.name}: duplicate piece id {piece_id}", file=sys.stderr)
             return 2
         seen.add(piece_id)
+        if only is not None and piece_id not in only:
+            continue
         seed = int(spec.get("seed", sum(ord(c) for c in piece_id) * 7919))
         placer = Placer(site, piece_id, seed)
         anchor = spec.get("from") or [spec.get("x", 0.0), spec.get("z", 0.0)]
@@ -1413,12 +1649,13 @@ def run(
             float(spec.get("x", anchor[0])),
             float(spec.get("z", anchor[1])),
         )
-        placed_total += len(placer.placed)
+        placed_total += len(placer.placed) + len(placer.structures)
         dropped_total += len(placer.dropped)
         definition["world_props"].extend(placer.placed)
+        definition["structures"].extend(placer.structures)
         if verbose or placer.dropped:
             print(
-                f"  {piece_id} ({kind}): {len(placer.placed)} placed, {len(placer.dropped)} dropped"
+                f"  {piece_id} ({kind}): {len(placer.placed) + len(placer.structures)} placed, {len(placer.dropped)} dropped"
             )
             for line in placer.dropped:
                 print(f"      dropped {line}")
@@ -1426,10 +1663,7 @@ def run(
         f"{map_path.name}: {len(pieces)} pieces, {placed_total} props placed, {dropped_total} dropped"
     )
     if write:
-        text = json.dumps(definition, indent=indent, sort_keys=sort_keys) + (
-            "\n" if newline else ""
-        )
-        map_path.write_text(text)
+        map_path.write_text(AUDIT.render(definition, style))
     return 0
 
 
@@ -1450,6 +1684,12 @@ def main() -> int:
     parser.add_argument("--probe", help="Path to the terrain_probe binary.")
     parser.add_argument("--surface-cache", help="Directory for probe dumps.")
     parser.add_argument("--verbose", action="store_true")
+    parser.add_argument(
+        "--only",
+        help="Comma-separated piece ids to (re)compose; every other piece keeps "
+        "the props it already has. Use it to add a piece without re-rolling a "
+        "map whose older dressing has since been nudged by the overlap fixer.",
+    )
     args = parser.parse_args()
     status = 0
     for map_path in args.maps:
@@ -1462,6 +1702,7 @@ def main() -> int:
                 args.probe,
                 args.surface_cache,
                 args.verbose,
+                set(args.only.split(",")) if args.only else None,
             ),
         )
     return status

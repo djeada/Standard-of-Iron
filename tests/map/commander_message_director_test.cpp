@@ -65,6 +65,25 @@ TEST_F(CommanderMessageDirectorTest, MissionStartLineResolvesItsSpeakerFromTheCa
   EXPECT_EQ(m_director.active().nation, QStringLiteral("roman_republic"));
 }
 
+TEST_F(CommanderMessageDirectorTest, TheLocalGeneralSpeaksAsAnAlly) {
+  auto line = make_message(QStringLiteral("hannibal_open"),
+                           Game::Mission::CommanderMessageTrigger::MissionStart);
+  line.speaker = QStringLiteral("carthage_sword_commander");
+  Game::Mission::CommanderMessageScript script;
+  script.mission_lines.push_back(line);
+  script.local_speaker = Game::Mission::CommanderSpeaker{
+      .owner_id = k_local_owner,
+      .troop_type = QStringLiteral("carthage_sword_commander"),
+      .relationship = Game::Mission::CommanderRelationship::Ally};
+  m_director.configure(script, k_local_owner, identity_to_world());
+
+  m_director.notify_mission_start();
+  EXPECT_TRUE(m_director.update(0.0F));
+  ASSERT_TRUE(m_director.has_active());
+  EXPECT_EQ(m_director.active().relationship, QStringLiteral("ally"));
+  EXPECT_EQ(m_director.active().speaker_owner_id, k_local_owner);
+}
+
 TEST_F(CommanderMessageDirectorTest, ADelayedLineWaitsBeforeItIsShown) {
   auto message = make_message(QStringLiteral("open"),
                               Game::Mission::CommanderMessageTrigger::MissionStart);

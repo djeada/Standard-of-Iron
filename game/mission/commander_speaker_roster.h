@@ -2,6 +2,7 @@
 
 #include <QString>
 
+#include <optional>
 #include <vector>
 
 #include "game/map/mission_definition.h"
@@ -28,5 +29,9 @@ build_commander_speaker_roster(Engine::Core::World& world,
                                const Game::Systems::OwnerRegistry& owners,
                                const Game::Systems::NationRegistry& nations,
                                int local_owner_id) -> std::vector<CommanderSpeaker>;
+
+[[nodiscard]] auto
+local_commander_speaker(Engine::Core::World& world,
+                        int local_owner_id) -> std::optional<CommanderSpeaker>;
 
 } // namespace Game::Mission

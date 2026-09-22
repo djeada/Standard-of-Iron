@@ -196,7 +196,8 @@
           "phase": 2,
           "trigger": "after_previous_cleared",
           "grace_seconds": 35.0,
-          "warning_seconds": 18.0
+          "warning_seconds": 18.0,
+          "label": "The reserve's second line"
         },
         {
           "timing": 0.0,
@@ -217,7 +218,8 @@
           "phase": 3,
           "trigger": "after_previous_cleared",
           "grace_seconds": 40.0,
-          "warning_seconds": 18.0
+          "warning_seconds": 18.0,
+          "label": "The reserve's horse"
         }
       ]
     }
@@ -226,7 +228,7 @@
     {
       "type": "survive_waves",
       "wave_count": 3,
-      "description": "Hold the southern bank through all three crossings. Sempronius spends his army on the ice; you have only to still be standing."
+      "description": "Hold the southern bank through all three crossings. Sempronius spends his army in the river; spend less of yours."
     },
     {
       "type": "eliminate_commanders",
@@ -254,9 +256,12 @@
   ],
   "optional_objectives": [
     {
-      "type": "wave_count",
-      "wave_count": 3,
-      "description": "Break three Roman columns before the survivors find the ford again."
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "min_count": 1,
+      "description": "Take a Roman barracks. The winter camp's grain is worth the ride."
     }
   ],
   "stages": [
@@ -266,12 +271,12 @@
       "wave_count": 3,
       "title": "Break the three crossings",
       "description": "Hold the southern bank through every Roman assault phase.",
-      "hint": "Sempronius spends his army on the ice; you only have to still be standing."
+      "hint": "Stay out of the water. Every Roman who wades it reaches you cold and slow."
     },
     {
       "id": "kill_commanders",
       "type": "eliminate_commanders",
-      "title": "Kill Sempronius and his officers",
+      "title": "Kill the Roman commanders",
       "description": "Ride down the commanders once the crossings break.",
       "hint": "The winter camp lies north across the river.",
       "target": {
@@ -293,36 +298,12 @@
           "text": "Hold discipline. Let the Romans commit at the ford."
         }
       ]
-    },
-    {
-      "trigger": {
-        "type": "timer",
-        "time": 180.0
-      },
-      "actions": [
-        {
-          "type": "show_message",
-          "text": "Roman reserves are moving from the western bank."
-        }
-      ]
-    },
-    {
-      "trigger": {
-        "type": "timer",
-        "time": 320.0
-      },
-      "actions": [
-        {
-          "type": "show_message",
-          "text": "Counterattack now. Break them while they are split by the river."
-        }
-      ]
     }
   ],
   "commander_messages": [
     {
       "id": "trebia_marcellus_open",
-      "speaker": "roman_field_commander",
+      "speaker": "roman_veteran_consul",
       "pose": "dismissive",
       "trigger": {
         "type": "mission_start",
@@ -335,20 +316,20 @@
     },
     {
       "id": "trebia_marcellus_victory",
-      "speaker": "roman_field_commander",
+      "speaker": "roman_veteran_consul",
       "pose": "cynical",
       "trigger": {
         "type": "mission_victory",
         "delay": 1.0
       },
-      "text": "Fine. Sempronius rides to Rome to explain his morning. Half a legion walked out of that water and kept walking, and they will meet you again in the spring with dry feet and long memories.",
+      "text": "Fine. Sempronius rides to Rome to explain his morning. Ten thousand of ours cut through your centre and walked on to Placentia, and they will meet you in the spring with dry feet and long memories.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
     },
     {
       "id": "trebia_marcellus_defeat",
-      "speaker": "roman_field_commander",
+      "speaker": "roman_veteran_consul",
       "pose": "dismissive",
       "trigger": {
         "type": "mission_defeat",
@@ -361,7 +342,7 @@
     },
     {
       "id": "trebia_first_crossing",
-      "speaker": "roman_field_commander",
+      "speaker": "roman_veteran_consul",
       "pose": "dismissive",
       "trigger": {
         "type": "wave_incoming",
@@ -376,7 +357,7 @@
     },
     {
       "id": "trebia_last_crossing",
-      "speaker": "roman_field_commander",
+      "speaker": "roman_veteran_consul",
       "pose": "dismissive",
       "trigger": {
         "type": "wave_incoming",
@@ -396,7 +377,7 @@
       "trigger": {
         "type": "wave_incoming",
         "owner_id": 3,
-        "delay": 0.5
+        "delay": 10.0
       },
       "text": "The western reserve is moving, against my advice. I gave the advice knowing it would be ignored; it is still worth having given.",
       "voice_cue": "alert.commander_message",
@@ -405,7 +386,7 @@
     },
     {
       "id": "trebia_crossing_hits_bank",
-      "speaker": "roman_field_commander",
+      "speaker": "roman_veteran_consul",
       "pose": "dismissive",
       "trigger": {
         "type": "under_attack",
@@ -421,7 +402,7 @@
     },
     {
       "id": "trebia_your_losses",
-      "speaker": "roman_field_commander",
+      "speaker": "roman_veteran_consul",
       "pose": "dismissive",
       "trigger": {
         "type": "heavy_losses",
@@ -436,7 +417,7 @@
     },
     {
       "id": "trebia_hannibal_fallen",
-      "speaker": "roman_field_commander",
+      "speaker": "roman_veteran_consul",
       "pose": "dismissive",
       "trigger": {
         "type": "commander_defeated",
@@ -450,7 +431,7 @@
     },
     {
       "id": "trebia_marcellus_last_stand",
-      "speaker": "roman_field_commander",
+      "speaker": "roman_veteran_consul",
       "pose": "cynical",
       "trigger": {
         "type": "near_defeat",
@@ -460,6 +441,45 @@
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80
+    },
+    {
+      "id": "trebia_hannibal_open",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 16.0
+      },
+      "text": "The men have eaten and oiled their limbs by the fires, and Mago is in the stream bed with two thousand. Let the Romans come to us wet.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 90
+    },
+    {
+      "id": "trebia_hannibal_crossing_broken",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_cleared",
+        "final_wave": false
+      },
+      "text": "One crossing broken. Nobody follows them into the water; the river is ours only while we stay out of it.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "trebia_hannibal_now",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_cleared",
+        "final_wave": true
+      },
+      "text": "Now, Mago. Out of the reeds and into their backs, and find me the men who sent them across.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 85
     }
   ],
   "include_ambient_undead": false,

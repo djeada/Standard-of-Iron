@@ -43,7 +43,12 @@
             0.17
         ],
         "sway_speed": 0.9,
-        "sway_strength": 0.13
+        "sway_strength": 0.13,
+        "tree_mix": {
+            "palm": 0.0,
+            "olive": 1.4,
+            "cypress": 0.8
+        }
     },
     "bridges": [
         {
@@ -1394,14 +1399,14 @@
         {
             "max_population": -1,
             "player_id": 1,
-            "type": "spearman",
+            "type": "swordsman",
             "x": 191.01,
             "z": 270.69
         },
         {
             "max_population": -1,
             "player_id": 1,
-            "type": "spearman",
+            "type": "swordsman",
             "x": 186.67000000000002,
             "z": 286.99
         },
@@ -1450,7 +1455,7 @@
         {
             "max_population": -1,
             "player_id": 1,
-            "type": "swordsman",
+            "type": "spearman",
             "x": 217.06,
             "z": 189.16
         },
@@ -1478,7 +1483,7 @@
         {
             "max_population": -1,
             "player_id": 1,
-            "type": "swordsman",
+            "type": "spearman",
             "x": 217.06,
             "z": 332.65000000000003
         },
@@ -1492,7 +1497,7 @@
         {
             "max_population": -1,
             "player_id": 1,
-            "type": "horse_swordsman",
+            "type": "horse_spearman",
             "x": 167.13,
             "z": 146.76
         },
@@ -1869,8 +1874,8 @@
             "nation": "roman_republic",
             "player_id": 4,
             "type": "roman_veteran_consul",
-            "x": 140.0,
-            "z": 606.0
+            "x": 420.88,
+            "z": 470.12
         }
     ],
     "starting_resources": {
@@ -2730,6 +2735,159 @@
             ],
             "type": "wall_segment",
             "width": 2
+        },
+        {
+            "type": "farm",
+            "x": 558.0,
+            "z": 363.5,
+            "rotation": 0,
+            "dressing": "cannae_town_fields_southeast",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 573.5,
+            "z": 262.5,
+            "rotation": 0,
+            "dressing": "cannae_town_fields_northeast",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 590.5,
+            "z": 262.5,
+            "rotation": 0,
+            "dressing": "cannae_town_fields_northeast",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 573.5,
+            "z": 279.5,
+            "rotation": 0,
+            "dressing": "cannae_town_fields_northeast",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 590.5,
+            "z": 279.5,
+            "rotation": 0,
+            "dressing": "cannae_town_fields_northeast",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 432.0,
+            "z": 34.0,
+            "rotation": 0,
+            "dressing": "cannae_river_fields_northeast",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 449.0,
+            "z": 34.0,
+            "rotation": 0,
+            "dressing": "cannae_river_fields_northeast",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 466.0,
+            "z": 34.0,
+            "rotation": 0,
+            "dressing": "cannae_river_fields_northeast",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 295.5,
+            "z": 81.5,
+            "rotation": 0,
+            "dressing": "cannae_river_fields_west",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 312.5,
+            "z": 81.5,
+            "rotation": 0,
+            "dressing": "cannae_river_fields_west",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 295.5,
+            "z": 98.5,
+            "rotation": 0,
+            "dressing": "cannae_river_fields_west",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 482.5,
+            "z": 518.5,
+            "rotation": 0,
+            "dressing": "cannae_allied_fields_southeast",
+            "player_id": 4,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 499.5,
+            "z": 518.5,
+            "rotation": 0,
+            "dressing": "cannae_allied_fields_southeast",
+            "player_id": 4,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 482.5,
+            "z": 535.5,
+            "rotation": 0,
+            "dressing": "cannae_allied_fields_southeast",
+            "player_id": 4,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 499.5,
+            "z": 535.5,
+            "rotation": 0,
+            "dressing": "cannae_allied_fields_southeast",
+            "player_id": 4,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 508.5,
+            "z": 469.0,
+            "rotation": 0,
+            "dressing": "cannae_allied_fields_east",
+            "player_id": 4,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 525.5,
+            "z": 469.0,
+            "rotation": 0,
+            "dressing": "cannae_allied_fields_east",
+            "player_id": 4,
+            "nation": "roman_republic"
         }
     ],
     "terrain": [
@@ -6139,6 +6297,961 @@
             "scale": 1.0,
             "rotation": 3.442,
             "dressing": "cannae_gate_9"
+        },
+        {
+            "type": "tent",
+            "x": 374.2,
+            "z": 96.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "cannae_river_camp_tent_lines"
+        },
+        {
+            "type": "tent",
+            "x": 375.32,
+            "z": 103.57,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "cannae_river_camp_tent_lines"
+        },
+        {
+            "type": "tent",
+            "x": 382.92,
+            "z": 103.57,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "cannae_river_camp_tent_lines"
+        },
+        {
+            "type": "tent",
+            "x": 444.0,
+            "z": 468.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "cannae_allied_camp_tent_lines"
+        },
+        {
+            "type": "firecamp",
+            "x": 450.66,
+            "z": 473.19,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_allied_camp_tent_lines",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "tent",
+            "x": 538.2,
+            "z": 298.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "cannae_town_tent_lines"
+        },
+        {
+            "type": "supply_cart",
+            "x": 547.17,
+            "z": 365.22,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_town_fields_southeast"
+        },
+        {
+            "type": "supply_cart",
+            "x": 562.67,
+            "z": 264.22,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_town_fields_northeast"
+        },
+        {
+            "type": "supply_cart",
+            "x": 421.17,
+            "z": 35.72,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_river_fields_northeast"
+        },
+        {
+            "type": "supply_cart",
+            "x": 284.67,
+            "z": 83.22,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_river_fields_west"
+        },
+        {
+            "type": "supply_cart",
+            "x": 471.67,
+            "z": 520.22,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_allied_fields_southeast"
+        },
+        {
+            "type": "supply_cart",
+            "x": 497.67,
+            "z": 470.72,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_allied_fields_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 325.54,
+            "z": 603.28,
+            "scale": 0.86,
+            "rotation": 3.182,
+            "dressing": "cannae_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 339.67,
+            "z": 602.57,
+            "scale": 0.89,
+            "rotation": 5.436,
+            "dressing": "cannae_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 354.29,
+            "z": 603.27,
+            "scale": 1.09,
+            "rotation": 5.024,
+            "dressing": "cannae_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 325.55,
+            "z": 610.01,
+            "scale": 1.01,
+            "rotation": 1.19,
+            "dressing": "cannae_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 332.84,
+            "z": 609.84,
+            "scale": 1.08,
+            "rotation": 2.747,
+            "dressing": "cannae_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 339.89,
+            "z": 610.15,
+            "scale": 0.9,
+            "rotation": 3.552,
+            "dressing": "cannae_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 346.82,
+            "z": 610.49,
+            "scale": 1.02,
+            "rotation": 2.47,
+            "dressing": "cannae_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 354.09,
+            "z": 610.16,
+            "scale": 0.89,
+            "rotation": 5.376,
+            "dressing": "cannae_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 325.63,
+            "z": 617.24,
+            "scale": 1.02,
+            "rotation": 5.212,
+            "dressing": "cannae_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 333.0,
+            "z": 616.92,
+            "scale": 1.01,
+            "rotation": 1.349,
+            "dressing": "cannae_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 340.13,
+            "z": 617.32,
+            "scale": 1.02,
+            "rotation": 3.11,
+            "dressing": "cannae_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 347.4,
+            "z": 617.41,
+            "scale": 0.88,
+            "rotation": 5.561,
+            "dressing": "cannae_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 353.64,
+            "z": 616.94,
+            "scale": 0.97,
+            "rotation": 5.52,
+            "dressing": "cannae_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 499.67,
+            "z": 604.84,
+            "scale": 0.95,
+            "rotation": 2.334,
+            "dressing": "cannae_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 506.94,
+            "z": 605.36,
+            "scale": 1.0,
+            "rotation": 5.104,
+            "dressing": "cannae_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 513.21,
+            "z": 605.5,
+            "scale": 1.09,
+            "rotation": 4.478,
+            "dressing": "cannae_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 520.16,
+            "z": 604.66,
+            "scale": 0.91,
+            "rotation": 1.148,
+            "dressing": "cannae_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 499.62,
+            "z": 611.99,
+            "scale": 1.02,
+            "rotation": 5.946,
+            "dressing": "cannae_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 506.52,
+            "z": 611.75,
+            "scale": 1.05,
+            "rotation": 3.607,
+            "dressing": "cannae_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 513.03,
+            "z": 612.49,
+            "scale": 1.07,
+            "rotation": 4.46,
+            "dressing": "cannae_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 520.85,
+            "z": 611.67,
+            "scale": 0.86,
+            "rotation": 2.426,
+            "dressing": "cannae_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 499.85,
+            "z": 619.13,
+            "scale": 0.93,
+            "rotation": 4.328,
+            "dressing": "cannae_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 506.41,
+            "z": 618.55,
+            "scale": 1.09,
+            "rotation": 4.515,
+            "dressing": "cannae_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 513.09,
+            "z": 618.7,
+            "scale": 0.94,
+            "rotation": 0.045,
+            "dressing": "cannae_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 520.73,
+            "z": 618.76,
+            "scale": 0.87,
+            "rotation": 3.667,
+            "dressing": "cannae_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 602.64,
+            "z": 479.07,
+            "scale": 0.93,
+            "rotation": 5.798,
+            "dressing": "cannae_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 610.16,
+            "z": 479.02,
+            "scale": 1.1,
+            "rotation": 2.487,
+            "dressing": "cannae_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 617.25,
+            "z": 479.12,
+            "scale": 0.94,
+            "rotation": 1.439,
+            "dressing": "cannae_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 602.84,
+            "z": 486.4,
+            "scale": 0.99,
+            "rotation": 2.504,
+            "dressing": "cannae_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 610.23,
+            "z": 486.7,
+            "scale": 0.99,
+            "rotation": 4.738,
+            "dressing": "cannae_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 616.73,
+            "z": 486.78,
+            "scale": 0.9,
+            "rotation": 5.074,
+            "dressing": "cannae_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 602.53,
+            "z": 493.54,
+            "scale": 0.89,
+            "rotation": 4.607,
+            "dressing": "cannae_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 610.16,
+            "z": 493.6,
+            "scale": 0.98,
+            "rotation": 4.256,
+            "dressing": "cannae_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 617.31,
+            "z": 493.0,
+            "scale": 0.87,
+            "rotation": 2.387,
+            "dressing": "cannae_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 610.15,
+            "z": 500.93,
+            "scale": 0.99,
+            "rotation": 6.171,
+            "dressing": "cannae_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 617.31,
+            "z": 500.44,
+            "scale": 0.91,
+            "rotation": 2.036,
+            "dressing": "cannae_olives_east"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 60.56,
+            "z": 23.15,
+            "scale": 1.16,
+            "rotation": 1.816,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 72.76,
+            "z": 31.71,
+            "scale": 1.03,
+            "rotation": 5.145,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 58.51,
+            "z": 41.49,
+            "scale": 1.05,
+            "rotation": 4.446,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 65.82,
+            "z": 41.61,
+            "scale": 0.84,
+            "rotation": 3.215,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 51.63,
+            "z": 25.9,
+            "scale": 1.23,
+            "rotation": 4.117,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 53.03,
+            "z": 22.69,
+            "scale": 0.96,
+            "rotation": 5.869,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 57.07,
+            "z": 25.87,
+            "scale": 0.82,
+            "rotation": 0.489,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 58.89,
+            "z": 37.73,
+            "scale": 0.9,
+            "rotation": 2.531,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 64.39,
+            "z": 38.43,
+            "scale": 1.2,
+            "rotation": 5.421,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "plant",
+            "x": 51.99,
+            "z": 38.34,
+            "scale": 1.16,
+            "rotation": 0.475,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "plant",
+            "x": 65.83,
+            "z": 18.58,
+            "scale": 1.09,
+            "rotation": 2.72,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "plant",
+            "x": 45.54,
+            "z": 37.6,
+            "scale": 0.99,
+            "rotation": 4.051,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "plant",
+            "x": 46.65,
+            "z": 35.58,
+            "scale": 1.05,
+            "rotation": 4.744,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "plant",
+            "x": 51.81,
+            "z": 16.96,
+            "scale": 1.36,
+            "rotation": 6.083,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "dead_tree",
+            "x": 52.29,
+            "z": 34.03,
+            "scale": 1.0,
+            "rotation": 3.926,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "boulder",
+            "x": 48.23,
+            "z": 33.78,
+            "scale": 0.78,
+            "rotation": 0.492,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "boulder",
+            "x": 60.69,
+            "z": 32.13,
+            "scale": 0.79,
+            "rotation": 4.534,
+            "dressing": "cannae_grove_northwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 51.08,
+            "z": 601.93,
+            "scale": 0.95,
+            "rotation": 1.418,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 36.76,
+            "z": 604.66,
+            "scale": 0.81,
+            "rotation": 3.493,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 44.2,
+            "z": 591.17,
+            "scale": 1.07,
+            "rotation": 2.007,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 44.13,
+            "z": 609.1,
+            "scale": 0.8,
+            "rotation": 1.642,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 40.77,
+            "z": 606.84,
+            "scale": 1.22,
+            "rotation": 1.293,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 50.68,
+            "z": 598.91,
+            "scale": 0.84,
+            "rotation": 4.788,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 34.36,
+            "z": 607.41,
+            "scale": 1.11,
+            "rotation": 0.13,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 33.39,
+            "z": 600.48,
+            "scale": 0.85,
+            "rotation": 3.813,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 41.43,
+            "z": 592.75,
+            "scale": 0.9,
+            "rotation": 4.035,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 38.8,
+            "z": 602.83,
+            "scale": 0.91,
+            "rotation": 0.557,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 27.78,
+            "z": 601.33,
+            "scale": 1.11,
+            "rotation": 5.559,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 29.32,
+            "z": 611.25,
+            "scale": 1.16,
+            "rotation": 3.056,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 52.64,
+            "z": 594.09,
+            "scale": 1.03,
+            "rotation": 0.259,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 51.09,
+            "z": 607.2,
+            "scale": 1.29,
+            "rotation": 1.143,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "dead_tree",
+            "x": 34.09,
+            "z": 591.01,
+            "scale": 1.0,
+            "rotation": 3.312,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "boulder",
+            "x": 30.31,
+            "z": 591.34,
+            "scale": 0.95,
+            "rotation": 2.532,
+            "dressing": "cannae_grove_southwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 598.01,
+            "z": 602.16,
+            "scale": 1.05,
+            "rotation": 4.98,
+            "dressing": "cannae_grove_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 598.42,
+            "z": 619.97,
+            "scale": 1.04,
+            "rotation": 2.021,
+            "dressing": "cannae_grove_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 596.17,
+            "z": 604.77,
+            "scale": 0.97,
+            "rotation": 0.736,
+            "dressing": "cannae_grove_southeast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 597.75,
+            "z": 599.04,
+            "scale": 1.09,
+            "rotation": 3.626,
+            "dressing": "cannae_grove_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 597.74,
+            "z": 609.99,
+            "scale": 1.11,
+            "rotation": 1.865,
+            "dressing": "cannae_grove_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 594.62,
+            "z": 619.38,
+            "scale": 1.22,
+            "rotation": 4.319,
+            "dressing": "cannae_grove_southeast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 609.62,
+            "z": 611.12,
+            "scale": 0.87,
+            "rotation": 5.392,
+            "dressing": "cannae_grove_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 600.69,
+            "z": 617.73,
+            "scale": 0.83,
+            "rotation": 1.025,
+            "dressing": "cannae_grove_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 609.13,
+            "z": 616.28,
+            "scale": 0.9,
+            "rotation": 2.049,
+            "dressing": "cannae_grove_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 592.02,
+            "z": 600.74,
+            "scale": 1.06,
+            "rotation": 5.525,
+            "dressing": "cannae_grove_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 607.19,
+            "z": 602.52,
+            "scale": 1.02,
+            "rotation": 4.219,
+            "dressing": "cannae_grove_southeast"
+        },
+        {
+            "type": "dead_tree",
+            "x": 605.83,
+            "z": 599.12,
+            "scale": 1.0,
+            "rotation": 2.206,
+            "dressing": "cannae_grove_southeast"
+        },
+        {
+            "type": "boulder",
+            "x": 602.58,
+            "z": 605.61,
+            "scale": 0.76,
+            "rotation": 5.306,
+            "dressing": "cannae_grove_southeast"
+        },
+        {
+            "type": "boulder",
+            "x": 604.97,
+            "z": 608.34,
+            "scale": 0.8,
+            "rotation": 5.061,
+            "dressing": "cannae_grove_southeast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 21.31,
+            "z": 260.86,
+            "scale": 0.84,
+            "rotation": 4.681,
+            "dressing": "cannae_grove_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 33.82,
+            "z": 254.9,
+            "scale": 0.9,
+            "rotation": 2.04,
+            "dressing": "cannae_grove_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 22.85,
+            "z": 268.15,
+            "scale": 0.81,
+            "rotation": 1.816,
+            "dressing": "cannae_grove_west"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 24.47,
+            "z": 261.21,
+            "scale": 1.21,
+            "rotation": 3.68,
+            "dressing": "cannae_grove_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 27.91,
+            "z": 259.4,
+            "scale": 1.15,
+            "rotation": 3.273,
+            "dressing": "cannae_grove_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 27.01,
+            "z": 252.61,
+            "scale": 1.23,
+            "rotation": 0.1,
+            "dressing": "cannae_grove_west"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 35.91,
+            "z": 252.63,
+            "scale": 0.94,
+            "rotation": 0.441,
+            "dressing": "cannae_grove_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 25.59,
+            "z": 268.14,
+            "scale": 0.87,
+            "rotation": 4.999,
+            "dressing": "cannae_grove_west"
+        },
+        {
+            "type": "plant",
+            "x": 19.83,
+            "z": 256.35,
+            "scale": 1.01,
+            "rotation": 4.253,
+            "dressing": "cannae_grove_west"
+        },
+        {
+            "type": "plant",
+            "x": 35.68,
+            "z": 271.67,
+            "scale": 0.93,
+            "rotation": 4.66,
+            "dressing": "cannae_grove_west"
+        },
+        {
+            "type": "dead_tree",
+            "x": 34.93,
+            "z": 268.2,
+            "scale": 1.0,
+            "rotation": 1.522,
+            "dressing": "cannae_grove_west"
+        },
+        {
+            "type": "boulder",
+            "x": 17.87,
+            "z": 265.1,
+            "scale": 0.79,
+            "rotation": 1.995,
+            "dressing": "cannae_grove_west"
+        },
+        {
+            "type": "boulder",
+            "x": 35.21,
+            "z": 260.69,
+            "scale": 0.85,
+            "rotation": 2.765,
+            "dressing": "cannae_grove_west"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 35.94,
+            "z": 331.5,
+            "scale": 0.87,
+            "rotation": 2.897,
+            "dressing": "cannae_grove_west_low"
+        },
+        {
+            "type": "olive_tree",
+            "x": 23.39,
+            "z": 334.77,
+            "scale": 1.11,
+            "rotation": 4.055,
+            "dressing": "cannae_grove_west_low"
+        },
+        {
+            "type": "olive_tree",
+            "x": 34.92,
+            "z": 339.64,
+            "scale": 0.92,
+            "rotation": 4.966,
+            "dressing": "cannae_grove_west_low"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 33.06,
+            "z": 335.19,
+            "scale": 1.24,
+            "rotation": 4.589,
+            "dressing": "cannae_grove_west_low"
+        },
+        {
+            "type": "olive_tree",
+            "x": 34.06,
+            "z": 324.22,
+            "scale": 1.13,
+            "rotation": 1.277,
+            "dressing": "cannae_grove_west_low"
+        },
+        {
+            "type": "olive_tree",
+            "x": 32.07,
+            "z": 326.97,
+            "scale": 0.97,
+            "rotation": 4.008,
+            "dressing": "cannae_grove_west_low"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 29.12,
+            "z": 328.07,
+            "scale": 0.9,
+            "rotation": 2.476,
+            "dressing": "cannae_grove_west_low"
+        },
+        {
+            "type": "olive_tree",
+            "x": 25.76,
+            "z": 340.03,
+            "scale": 1.02,
+            "rotation": 6.231,
+            "dressing": "cannae_grove_west_low"
+        },
+        {
+            "type": "plant",
+            "x": 21.71,
+            "z": 322.91,
+            "scale": 1.32,
+            "rotation": 0.622,
+            "dressing": "cannae_grove_west_low"
+        },
+        {
+            "type": "plant",
+            "x": 30.05,
+            "z": 319.42,
+            "scale": 1.17,
+            "rotation": 2.68,
+            "dressing": "cannae_grove_west_low"
+        },
+        {
+            "type": "boulder",
+            "x": 41.11,
+            "z": 332.14,
+            "scale": 0.66,
+            "rotation": 4.759,
+            "dressing": "cannae_grove_west_low"
         }
     ],
     "dressing": [
@@ -6373,6 +7486,197 @@
             "kind": "gate_approach",
             "x": 366,
             "z": 74
+        },
+        {
+            "id": "cannae_river_camp_tent_lines",
+            "kind": "camp_lines",
+            "x": 378,
+            "z": 100,
+            "rows": 2,
+            "cols": 2,
+            "rotation": 0
+        },
+        {
+            "id": "cannae_allied_camp_tent_lines",
+            "kind": "camp_lines",
+            "x": 444,
+            "z": 472,
+            "rows": 2,
+            "cols": 1,
+            "rotation": 0
+        },
+        {
+            "id": "cannae_town_tent_lines",
+            "kind": "camp_lines",
+            "x": 542,
+            "z": 298,
+            "rows": 1,
+            "cols": 2,
+            "rotation": 0
+        },
+        {
+            "id": "cannae_town_fields_southeast",
+            "kind": "farmland",
+            "x": 575,
+            "z": 372,
+            "cols": 3,
+            "rows": 2,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "cannae_town_fields_northeast",
+            "kind": "farmland",
+            "x": 582,
+            "z": 271,
+            "cols": 2,
+            "rows": 2,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "cannae_river_fields_northeast",
+            "kind": "farmland",
+            "x": 449,
+            "z": 34,
+            "cols": 3,
+            "rows": 1,
+            "player_id": 3,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "cannae_river_fields_west",
+            "kind": "farmland",
+            "x": 304,
+            "z": 90,
+            "cols": 2,
+            "rows": 2,
+            "player_id": 3,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "cannae_allied_fields_southeast",
+            "kind": "farmland",
+            "x": 491,
+            "z": 527,
+            "cols": 2,
+            "rows": 2,
+            "player_id": 4,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "cannae_allied_fields_east",
+            "kind": "farmland",
+            "x": 517,
+            "z": 469,
+            "cols": 2,
+            "rows": 1,
+            "player_id": 4,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "cannae_olives_south",
+            "kind": "orchard",
+            "x": 340,
+            "z": 610,
+            "rows": 3,
+            "cols": 5,
+            "tree": "olive_tree",
+            "rotation": 0,
+            "spacing": 7.0
+        },
+        {
+            "id": "cannae_olives_southeast",
+            "kind": "orchard",
+            "x": 510,
+            "z": 612,
+            "rows": 3,
+            "cols": 4,
+            "tree": "olive_tree",
+            "rotation": 0,
+            "spacing": 7.0
+        },
+        {
+            "id": "cannae_olives_east",
+            "kind": "orchard",
+            "x": 610,
+            "z": 490,
+            "rows": 4,
+            "cols": 3,
+            "tree": "olive_tree",
+            "rotation": 0,
+            "spacing": 7.0
+        },
+        {
+            "id": "cannae_grove_northwest",
+            "kind": "copse",
+            "x": 60,
+            "z": 32,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "cannae_grove_southwest",
+            "kind": "copse",
+            "x": 40,
+            "z": 600,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "cannae_grove_southeast",
+            "kind": "copse",
+            "x": 600,
+            "z": 610,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "cannae_grove_west",
+            "kind": "copse",
+            "x": 30,
+            "z": 262,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "cannae_grove_west_low",
+            "kind": "copse",
+            "x": 30,
+            "z": 330,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
         }
     ]
 }

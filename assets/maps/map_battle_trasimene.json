@@ -43,7 +43,12 @@
             0.18
         ],
         "sway_speed": 0.8,
-        "sway_strength": 0.12
+        "sway_strength": 0.12,
+        "tree_mix": {
+            "palm": 0.0,
+            "olive": 1.3,
+            "cypress": 1.2
+        }
     },
     "bridges": [
         {
@@ -3093,6 +3098,51 @@
             ],
             "type": "wall_segment",
             "width": 2
+        },
+        {
+            "type": "farm",
+            "x": 52.5,
+            "z": 257.5,
+            "rotation": 0,
+            "dressing": "trasimene_town_fields_south",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 52.5,
+            "z": 274.5,
+            "rotation": 0,
+            "dressing": "trasimene_town_fields_south",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 69.5,
+            "z": 274.5,
+            "rotation": 0,
+            "dressing": "trasimene_town_fields_south",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 55.5,
+            "z": 108.0,
+            "rotation": 0,
+            "dressing": "trasimene_town_fields_lakeside",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 72.5,
+            "z": 108.0,
+            "rotation": 0,
+            "dressing": "trasimene_town_fields_lakeside",
+            "player_id": 2,
+            "nation": "roman_republic"
         }
     ],
     "terrain": [
@@ -6452,6 +6502,1246 @@
             "scale": 1.0,
             "rotation": -0.0,
             "dressing": "trasimene_gate_6"
+        },
+        {
+            "type": "supply_cart",
+            "x": 41.67,
+            "z": 259.22,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_town_fields_south"
+        },
+        {
+            "type": "supply_cart",
+            "x": 44.67,
+            "z": 109.72,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_town_fields_lakeside"
+        },
+        {
+            "type": "olive_tree",
+            "x": 31.45,
+            "z": 498.43,
+            "scale": 1.02,
+            "rotation": 2.723,
+            "dressing": "trasimene_olives_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 38.01,
+            "z": 498.19,
+            "scale": 0.86,
+            "rotation": 0.828,
+            "dressing": "trasimene_olives_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 45.4,
+            "z": 498.37,
+            "scale": 1.07,
+            "rotation": 3.42,
+            "dressing": "trasimene_olives_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 52.37,
+            "z": 498.3,
+            "scale": 0.89,
+            "rotation": 2.217,
+            "dressing": "trasimene_olives_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 31.08,
+            "z": 504.59,
+            "scale": 1.04,
+            "rotation": 4.353,
+            "dressing": "trasimene_olives_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 38.15,
+            "z": 505.18,
+            "scale": 0.88,
+            "rotation": 3.485,
+            "dressing": "trasimene_olives_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 45.35,
+            "z": 505.32,
+            "scale": 0.9,
+            "rotation": 2.351,
+            "dressing": "trasimene_olives_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 52.88,
+            "z": 504.92,
+            "scale": 0.99,
+            "rotation": 2.283,
+            "dressing": "trasimene_olives_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 31.3,
+            "z": 512.01,
+            "scale": 1.0,
+            "rotation": 4.846,
+            "dressing": "trasimene_olives_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 38.99,
+            "z": 511.93,
+            "scale": 0.91,
+            "rotation": 5.121,
+            "dressing": "trasimene_olives_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 45.42,
+            "z": 511.63,
+            "scale": 1.1,
+            "rotation": 2.788,
+            "dressing": "trasimene_olives_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 52.46,
+            "z": 512.47,
+            "scale": 1.05,
+            "rotation": 2.202,
+            "dressing": "trasimene_olives_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 578.53,
+            "z": 381.92,
+            "scale": 1.09,
+            "rotation": 6.233,
+            "dressing": "trasimene_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 579.45,
+            "z": 388.2,
+            "scale": 0.98,
+            "rotation": 2.472,
+            "dressing": "trasimene_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 579.19,
+            "z": 402.75,
+            "scale": 1.1,
+            "rotation": 0.178,
+            "dressing": "trasimene_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 571.68,
+            "z": 381.2,
+            "scale": 0.99,
+            "rotation": 0.334,
+            "dressing": "trasimene_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 571.85,
+            "z": 388.03,
+            "scale": 1.05,
+            "rotation": 4.567,
+            "dressing": "trasimene_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 572.04,
+            "z": 395.86,
+            "scale": 0.87,
+            "rotation": 2.624,
+            "dressing": "trasimene_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 572.36,
+            "z": 402.37,
+            "scale": 1.06,
+            "rotation": 5.074,
+            "dressing": "trasimene_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 565.37,
+            "z": 381.98,
+            "scale": 1.04,
+            "rotation": 5.191,
+            "dressing": "trasimene_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 565.36,
+            "z": 388.09,
+            "scale": 0.86,
+            "rotation": 0.041,
+            "dressing": "trasimene_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 565.31,
+            "z": 395.36,
+            "scale": 1.08,
+            "rotation": 0.703,
+            "dressing": "trasimene_olives_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 565.12,
+            "z": 402.92,
+            "scale": 1.07,
+            "rotation": 1.884,
+            "dressing": "trasimene_olives_east"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 590.66,
+            "z": 594.46,
+            "scale": 1.01,
+            "rotation": 2.062,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 599.36,
+            "z": 593.79,
+            "scale": 0.95,
+            "rotation": 1.781,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 611.93,
+            "z": 598.42,
+            "scale": 1.1,
+            "rotation": 2.314,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 589.13,
+            "z": 596.8,
+            "scale": 0.95,
+            "rotation": 3.736,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 599.07,
+            "z": 596.65,
+            "scale": 0.87,
+            "rotation": 4.01,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 607.85,
+            "z": 601.05,
+            "scale": 1.1,
+            "rotation": 1.921,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 602.05,
+            "z": 602.25,
+            "scale": 0.99,
+            "rotation": 0.122,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 607.12,
+            "z": 605.56,
+            "scale": 1.12,
+            "rotation": 1.088,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 594.92,
+            "z": 595.08,
+            "scale": 1.07,
+            "rotation": 4.835,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 595.43,
+            "z": 602.12,
+            "scale": 1.2,
+            "rotation": 4.794,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 606.03,
+            "z": 611.07,
+            "scale": 1.15,
+            "rotation": 6.185,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 592.43,
+            "z": 597.47,
+            "scale": 1.13,
+            "rotation": 4.386,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 615.02,
+            "z": 593.14,
+            "scale": 1.12,
+            "rotation": 2.742,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 583.02,
+            "z": 600.04,
+            "scale": 1.38,
+            "rotation": 1.272,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 593.45,
+            "z": 615.97,
+            "scale": 0.97,
+            "rotation": 2.365,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 612.96,
+            "z": 608.55,
+            "scale": 1.12,
+            "rotation": 2.606,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 607.06,
+            "z": 617.65,
+            "scale": 1.06,
+            "rotation": 6.188,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "dead_tree",
+            "x": 588.06,
+            "z": 603.84,
+            "scale": 1.0,
+            "rotation": 4.739,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "boulder",
+            "x": 583.11,
+            "z": 596.13,
+            "scale": 0.99,
+            "rotation": 3.216,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "boulder",
+            "x": 584.43,
+            "z": 601.59,
+            "scale": 0.68,
+            "rotation": 1.845,
+            "dressing": "trasimene_cypress_southeast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 58.73,
+            "z": 599.85,
+            "scale": 0.94,
+            "rotation": 5.88,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 51.61,
+            "z": 604.28,
+            "scale": 1.16,
+            "rotation": 5.459,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 53.7,
+            "z": 591.83,
+            "scale": 1.1,
+            "rotation": 0.748,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 50.53,
+            "z": 590.6,
+            "scale": 1.07,
+            "rotation": 0.827,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 39.57,
+            "z": 601.62,
+            "scale": 0.9,
+            "rotation": 4.307,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 51.41,
+            "z": 597.09,
+            "scale": 1.1,
+            "rotation": 5.755,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 40.09,
+            "z": 596.62,
+            "scale": 1.17,
+            "rotation": 5.832,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 49.73,
+            "z": 594.21,
+            "scale": 1.01,
+            "rotation": 2.83,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 46.98,
+            "z": 612.7,
+            "scale": 0.97,
+            "rotation": 3.703,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 51.64,
+            "z": 586.84,
+            "scale": 1.23,
+            "rotation": 3.644,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 46.68,
+            "z": 601.17,
+            "scale": 0.95,
+            "rotation": 2.065,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 40.42,
+            "z": 593.14,
+            "scale": 1.14,
+            "rotation": 0.967,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 65.18,
+            "z": 601.52,
+            "scale": 1.25,
+            "rotation": 3.399,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 63.17,
+            "z": 591.38,
+            "scale": 1.08,
+            "rotation": 4.595,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 44.48,
+            "z": 587.67,
+            "scale": 0.95,
+            "rotation": 1.893,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 38.3,
+            "z": 606.89,
+            "scale": 1.2,
+            "rotation": 5.604,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "boulder",
+            "x": 45.89,
+            "z": 607.09,
+            "scale": 0.64,
+            "rotation": 0.462,
+            "dressing": "trasimene_cypress_southwest"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 44.03,
+            "z": 360.81,
+            "scale": 1.04,
+            "rotation": 4.948,
+            "dressing": "trasimene_wood_west_rise"
+        },
+        {
+            "type": "olive_tree",
+            "x": 51.3,
+            "z": 368.56,
+            "scale": 1.18,
+            "rotation": 1.442,
+            "dressing": "trasimene_wood_west_rise"
+        },
+        {
+            "type": "olive_tree",
+            "x": 40.01,
+            "z": 359.58,
+            "scale": 1.06,
+            "rotation": 3.388,
+            "dressing": "trasimene_wood_west_rise"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 41.83,
+            "z": 374.05,
+            "scale": 1.09,
+            "rotation": 0.949,
+            "dressing": "trasimene_wood_west_rise"
+        },
+        {
+            "type": "olive_tree",
+            "x": 33.21,
+            "z": 368.99,
+            "scale": 0.89,
+            "rotation": 5.0,
+            "dressing": "trasimene_wood_west_rise"
+        },
+        {
+            "type": "olive_tree",
+            "x": 44.06,
+            "z": 365.9,
+            "scale": 0.9,
+            "rotation": 5.522,
+            "dressing": "trasimene_wood_west_rise"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 34.82,
+            "z": 374.33,
+            "scale": 0.95,
+            "rotation": 1.038,
+            "dressing": "trasimene_wood_west_rise"
+        },
+        {
+            "type": "olive_tree",
+            "x": 29.53,
+            "z": 369.35,
+            "scale": 0.91,
+            "rotation": 2.768,
+            "dressing": "trasimene_wood_west_rise"
+        },
+        {
+            "type": "olive_tree",
+            "x": 45.12,
+            "z": 379.49,
+            "scale": 1.1,
+            "rotation": 5.008,
+            "dressing": "trasimene_wood_west_rise"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 32.48,
+            "z": 365.65,
+            "scale": 0.96,
+            "rotation": 0.709,
+            "dressing": "trasimene_wood_west_rise"
+        },
+        {
+            "type": "plant",
+            "x": 56.85,
+            "z": 365.07,
+            "scale": 0.97,
+            "rotation": 4.218,
+            "dressing": "trasimene_wood_west_rise"
+        },
+        {
+            "type": "plant",
+            "x": 37.88,
+            "z": 384.99,
+            "scale": 0.99,
+            "rotation": 2.475,
+            "dressing": "trasimene_wood_west_rise"
+        },
+        {
+            "type": "boulder",
+            "x": 40.51,
+            "z": 383.79,
+            "scale": 0.84,
+            "rotation": 2.347,
+            "dressing": "trasimene_wood_west_rise"
+        },
+        {
+            "type": "boulder",
+            "x": 38.14,
+            "z": 365.96,
+            "scale": 0.94,
+            "rotation": 1.37,
+            "dressing": "trasimene_wood_west_rise"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 475.99,
+            "z": 614.31,
+            "scale": 1.12,
+            "rotation": 0.587,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 476.3,
+            "z": 604.23,
+            "scale": 0.98,
+            "rotation": 4.568,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 479.58,
+            "z": 605.02,
+            "scale": 0.93,
+            "rotation": 2.865,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 473.85,
+            "z": 608.32,
+            "scale": 0.88,
+            "rotation": 4.568,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 482.67,
+            "z": 607.89,
+            "scale": 1.24,
+            "rotation": 1.083,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 476.97,
+            "z": 607.81,
+            "scale": 1.25,
+            "rotation": 0.522,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 474.28,
+            "z": 611.68,
+            "scale": 0.95,
+            "rotation": 2.43,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 477.08,
+            "z": 611.57,
+            "scale": 0.86,
+            "rotation": 3.044,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 479.67,
+            "z": 599.23,
+            "scale": 1.16,
+            "rotation": 0.089,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 486.69,
+            "z": 608.16,
+            "scale": 1.07,
+            "rotation": 0.35,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "plant",
+            "x": 470.45,
+            "z": 619.69,
+            "scale": 0.99,
+            "rotation": 2.659,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "plant",
+            "x": 470.7,
+            "z": 599.3,
+            "scale": 1.38,
+            "rotation": 0.917,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "plant",
+            "x": 485.96,
+            "z": 600.45,
+            "scale": 1.24,
+            "rotation": 5.824,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "plant",
+            "x": 486.74,
+            "z": 602.59,
+            "scale": 0.97,
+            "rotation": 2.325,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "plant",
+            "x": 470.52,
+            "z": 602.16,
+            "scale": 1.3,
+            "rotation": 2.946,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "boulder",
+            "x": 468.98,
+            "z": 606.82,
+            "scale": 0.94,
+            "rotation": 3.573,
+            "dressing": "trasimene_wood_south_ridge"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 462.36,
+            "z": 536.67,
+            "scale": 0.92,
+            "rotation": 5.998,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 473.4,
+            "z": 532.01,
+            "scale": 1.22,
+            "rotation": 4.36,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 465.66,
+            "z": 546.39,
+            "scale": 1.0,
+            "rotation": 3.272,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 469.83,
+            "z": 531.44,
+            "scale": 1.23,
+            "rotation": 5.501,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 479.44,
+            "z": 545.02,
+            "scale": 1.17,
+            "rotation": 5.619,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 477.73,
+            "z": 548.73,
+            "scale": 1.11,
+            "rotation": 2.942,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 466.13,
+            "z": 529.14,
+            "scale": 1.1,
+            "rotation": 2.291,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 467.49,
+            "z": 539.17,
+            "scale": 0.91,
+            "rotation": 0.876,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 462.45,
+            "z": 543.66,
+            "scale": 1.18,
+            "rotation": 3.574,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 459.7,
+            "z": 538.77,
+            "scale": 1.11,
+            "rotation": 2.537,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "plant",
+            "x": 471.68,
+            "z": 525.22,
+            "scale": 1.02,
+            "rotation": 2.024,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "plant",
+            "x": 484.4,
+            "z": 534.39,
+            "scale": 1.38,
+            "rotation": 4.251,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "plant",
+            "x": 479.63,
+            "z": 534.61,
+            "scale": 0.95,
+            "rotation": 5.448,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "plant",
+            "x": 481.1,
+            "z": 538.43,
+            "scale": 1.36,
+            "rotation": 1.421,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "boulder",
+            "x": 471.22,
+            "z": 544.12,
+            "scale": 0.7,
+            "rotation": 3.146,
+            "dressing": "trasimene_wood_south_east"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 562.14,
+            "z": 325.23,
+            "scale": 1.06,
+            "rotation": 1.787,
+            "dressing": "trasimene_wood_east_stream"
+        },
+        {
+            "type": "olive_tree",
+            "x": 567.72,
+            "z": 317.36,
+            "scale": 0.81,
+            "rotation": 1.343,
+            "dressing": "trasimene_wood_east_stream"
+        },
+        {
+            "type": "olive_tree",
+            "x": 552.87,
+            "z": 329.94,
+            "scale": 1.21,
+            "rotation": 1.7,
+            "dressing": "trasimene_wood_east_stream"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 559.13,
+            "z": 320.18,
+            "scale": 0.82,
+            "rotation": 2.448,
+            "dressing": "trasimene_wood_east_stream"
+        },
+        {
+            "type": "olive_tree",
+            "x": 556.71,
+            "z": 317.83,
+            "scale": 1.0,
+            "rotation": 1.59,
+            "dressing": "trasimene_wood_east_stream"
+        },
+        {
+            "type": "olive_tree",
+            "x": 571.37,
+            "z": 323.27,
+            "scale": 1.0,
+            "rotation": 0.354,
+            "dressing": "trasimene_wood_east_stream"
+        },
+        {
+            "type": "olive_tree",
+            "x": 552.71,
+            "z": 323.06,
+            "scale": 1.08,
+            "rotation": 4.62,
+            "dressing": "trasimene_wood_east_stream"
+        },
+        {
+            "type": "plant",
+            "x": 546.44,
+            "z": 323.49,
+            "scale": 0.99,
+            "rotation": 3.428,
+            "dressing": "trasimene_wood_east_stream"
+        },
+        {
+            "type": "plant",
+            "x": 549.35,
+            "z": 313.35,
+            "scale": 1.17,
+            "rotation": 6.08,
+            "dressing": "trasimene_wood_east_stream"
+        },
+        {
+            "type": "plant",
+            "x": 568.82,
+            "z": 329.2,
+            "scale": 0.96,
+            "rotation": 3.713,
+            "dressing": "trasimene_wood_east_stream"
+        },
+        {
+            "type": "boulder",
+            "x": 560.84,
+            "z": 331.02,
+            "scale": 0.7,
+            "rotation": 1.142,
+            "dressing": "trasimene_wood_east_stream"
+        },
+        {
+            "type": "boulder",
+            "x": 571.1,
+            "z": 329.62,
+            "scale": 0.95,
+            "rotation": 4.69,
+            "dressing": "trasimene_wood_east_stream"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 78.56,
+            "z": 493.35,
+            "scale": 0.84,
+            "rotation": 1.599,
+            "dressing": "trasimene_wood_camp_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 75.39,
+            "z": 503.88,
+            "scale": 0.96,
+            "rotation": 5.793,
+            "dressing": "trasimene_wood_camp_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 83.92,
+            "z": 508.07,
+            "scale": 1.01,
+            "rotation": 1.2,
+            "dressing": "trasimene_wood_camp_west"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 75.42,
+            "z": 494.63,
+            "scale": 0.98,
+            "rotation": 0.46,
+            "dressing": "trasimene_wood_camp_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 86.35,
+            "z": 493.37,
+            "scale": 1.17,
+            "rotation": 0.433,
+            "dressing": "trasimene_wood_camp_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 82.52,
+            "z": 493.36,
+            "scale": 1.12,
+            "rotation": 3.786,
+            "dressing": "trasimene_wood_camp_west"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 83.14,
+            "z": 503.69,
+            "scale": 1.03,
+            "rotation": 2.051,
+            "dressing": "trasimene_wood_camp_west"
+        },
+        {
+            "type": "plant",
+            "x": 81.68,
+            "z": 487.21,
+            "scale": 1.24,
+            "rotation": 3.632,
+            "dressing": "trasimene_wood_camp_west"
+        },
+        {
+            "type": "plant",
+            "x": 92.63,
+            "z": 500.69,
+            "scale": 1.37,
+            "rotation": 1.957,
+            "dressing": "trasimene_wood_camp_west"
+        },
+        {
+            "type": "plant",
+            "x": 71.86,
+            "z": 499.24,
+            "scale": 1.1,
+            "rotation": 5.566,
+            "dressing": "trasimene_wood_camp_west"
+        },
+        {
+            "type": "plant",
+            "x": 70.9,
+            "z": 507.71,
+            "scale": 1.02,
+            "rotation": 3.529,
+            "dressing": "trasimene_wood_camp_west"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 552.11,
+            "z": 591.18,
+            "scale": 0.81,
+            "rotation": 2.962,
+            "dressing": "trasimene_wood_far_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 568.46,
+            "z": 591.23,
+            "scale": 0.91,
+            "rotation": 5.065,
+            "dressing": "trasimene_wood_far_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 553.39,
+            "z": 596.85,
+            "scale": 1.14,
+            "rotation": 0.831,
+            "dressing": "trasimene_wood_far_southeast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 566.23,
+            "z": 585.82,
+            "scale": 1.16,
+            "rotation": 5.889,
+            "dressing": "trasimene_wood_far_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 564.6,
+            "z": 594.47,
+            "scale": 1.17,
+            "rotation": 6.113,
+            "dressing": "trasimene_wood_far_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 558.62,
+            "z": 596.35,
+            "scale": 0.95,
+            "rotation": 2.213,
+            "dressing": "trasimene_wood_far_southeast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 550.47,
+            "z": 588.62,
+            "scale": 0.96,
+            "rotation": 5.59,
+            "dressing": "trasimene_wood_far_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 560.41,
+            "z": 593.57,
+            "scale": 1.09,
+            "rotation": 0.191,
+            "dressing": "trasimene_wood_far_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 564.0,
+            "z": 600.87,
+            "scale": 0.97,
+            "rotation": 0.349,
+            "dressing": "trasimene_wood_far_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 552.19,
+            "z": 582.58,
+            "scale": 0.92,
+            "rotation": 5.586,
+            "dressing": "trasimene_wood_far_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 567.04,
+            "z": 600.63,
+            "scale": 1.08,
+            "rotation": 0.033,
+            "dressing": "trasimene_wood_far_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 550.29,
+            "z": 581.66,
+            "scale": 1.2,
+            "rotation": 5.747,
+            "dressing": "trasimene_wood_far_southeast"
+        },
+        {
+            "type": "boulder",
+            "x": 559.88,
+            "z": 585.15,
+            "scale": 0.81,
+            "rotation": 4.63,
+            "dressing": "trasimene_wood_far_southeast"
+        },
+        {
+            "type": "boulder",
+            "x": 556.03,
+            "z": 583.28,
+            "scale": 0.67,
+            "rotation": 4.727,
+            "dressing": "trasimene_wood_far_southeast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 466.61,
+            "z": 466.12,
+            "scale": 1.01,
+            "rotation": 5.308,
+            "dressing": "trasimene_wood_basin_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 451.03,
+            "z": 459.1,
+            "scale": 1.03,
+            "rotation": 3.675,
+            "dressing": "trasimene_wood_basin_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 463.86,
+            "z": 454.46,
+            "scale": 1.16,
+            "rotation": 0.613,
+            "dressing": "trasimene_wood_basin_east"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 453.96,
+            "z": 462.25,
+            "scale": 1.01,
+            "rotation": 2.117,
+            "dressing": "trasimene_wood_basin_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 456.68,
+            "z": 468.13,
+            "scale": 1.23,
+            "rotation": 2.719,
+            "dressing": "trasimene_wood_basin_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 465.78,
+            "z": 460.63,
+            "scale": 0.99,
+            "rotation": 2.182,
+            "dressing": "trasimene_wood_basin_east"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 455.02,
+            "z": 458.57,
+            "scale": 0.88,
+            "rotation": 2.24,
+            "dressing": "trasimene_wood_basin_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 453.57,
+            "z": 466.3,
+            "scale": 1.08,
+            "rotation": 0.002,
+            "dressing": "trasimene_wood_basin_east"
+        },
+        {
+            "type": "plant",
+            "x": 446.44,
+            "z": 463.2,
+            "scale": 1.05,
+            "rotation": 4.856,
+            "dressing": "trasimene_wood_basin_east"
+        },
+        {
+            "type": "plant",
+            "x": 470.2,
+            "z": 451.98,
+            "scale": 1.16,
+            "rotation": 0.268,
+            "dressing": "trasimene_wood_basin_east"
+        },
+        {
+            "type": "boulder",
+            "x": 459.88,
+            "z": 461.95,
+            "scale": 0.94,
+            "rotation": 3.278,
+            "dressing": "trasimene_wood_basin_east"
         }
     ],
     "dressing": [
@@ -6670,6 +7960,167 @@
             "x": 262,
             "z": 542,
             "tents": 2
+        },
+        {
+            "id": "trasimene_town_fields_south",
+            "kind": "farmland",
+            "x": 61,
+            "z": 266,
+            "cols": 2,
+            "rows": 2,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "trasimene_town_fields_lakeside",
+            "kind": "farmland",
+            "x": 64,
+            "z": 108,
+            "cols": 2,
+            "rows": 1,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "trasimene_olives_west",
+            "kind": "orchard",
+            "x": 42,
+            "z": 505,
+            "rows": 3,
+            "cols": 4,
+            "tree": "olive_tree",
+            "rotation": 0,
+            "spacing": 7.0
+        },
+        {
+            "id": "trasimene_olives_east",
+            "kind": "orchard",
+            "x": 572,
+            "z": 392,
+            "rows": 3,
+            "cols": 4,
+            "tree": "olive_tree",
+            "rotation": 90,
+            "spacing": 7.0
+        },
+        {
+            "id": "trasimene_cypress_southeast",
+            "kind": "copse",
+            "x": 600,
+            "z": 600,
+            "radius": 16,
+            "count": 12,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "trasimene_cypress_southwest",
+            "kind": "copse",
+            "x": 50,
+            "z": 600,
+            "radius": 16,
+            "count": 12,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "trasimene_wood_west_rise",
+            "kind": "copse",
+            "x": 40,
+            "z": 370,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "trasimene_wood_south_ridge",
+            "kind": "copse",
+            "x": 480,
+            "z": 610,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "trasimene_wood_south_east",
+            "kind": "copse",
+            "x": 470,
+            "z": 540,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "trasimene_wood_east_stream",
+            "kind": "copse",
+            "x": 560,
+            "z": 322,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "trasimene_wood_camp_west",
+            "kind": "copse",
+            "x": 82,
+            "z": 500,
+            "radius": 10,
+            "count": 7,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "trasimene_wood_far_southeast",
+            "kind": "copse",
+            "x": 560,
+            "z": 590,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "trasimene_wood_basin_east",
+            "kind": "copse",
+            "x": 460,
+            "z": 460,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
         }
     ]
 }

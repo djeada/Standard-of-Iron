@@ -2245,8 +2245,8 @@
             "max_population": -1,
             "player_id": 1,
             "type": "horse_archer",
-            "x": 439.45,
-            "z": 425.21000000000004
+            "x": 405.0,
+            "z": 470.0
         },
         {
             "max_population": -1,
@@ -2565,9 +2565,9 @@
             "max_population": -1,
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "roman_field_commander",
-            "x": 300.0,
-            "z": 290.0
+            "type": "roman_veteran_consul",
+            "x": 153.0,
+            "z": 50.0
         },
         {
             "max_population": -1,
@@ -4053,6 +4053,114 @@
             ],
             "type": "wall_segment",
             "width": 2
+        },
+        {
+            "type": "farm",
+            "x": 550.0,
+            "z": 33.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 567.0,
+            "z": 33.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 584.0,
+            "z": 33.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 550.0,
+            "z": 50.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 567.0,
+            "z": 50.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 584.0,
+            "z": 50.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 504.5,
+            "z": 52.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_northwest",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 521.5,
+            "z": 52.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_northwest",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 504.5,
+            "z": 69.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_northwest",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 521.5,
+            "z": 69.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_northwest",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 608.5,
+            "z": 191.0,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_southeast",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 625.5,
+            "z": 191.0,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_southeast",
+            "player_id": 3,
+            "nation": "roman_republic"
         }
     ],
     "terrain": [
@@ -7035,6 +7143,966 @@
             "scale": 1.0,
             "rotation": 1.571,
             "dressing": "trebia_gate_6"
+        },
+        {
+            "type": "supply_cart",
+            "x": 539.17,
+            "z": 35.22,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_placentia_fields_north"
+        },
+        {
+            "type": "supply_cart",
+            "x": 493.67,
+            "z": 54.22,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_placentia_fields_northwest"
+        },
+        {
+            "type": "supply_cart",
+            "x": 597.67,
+            "z": 192.72,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_placentia_fields_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 549.35,
+            "z": 610.57,
+            "scale": 1.02,
+            "rotation": 2.493,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 542.19,
+            "z": 612.97,
+            "scale": 1.22,
+            "rotation": 0.017,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 534.68,
+            "z": 618.63,
+            "scale": 0.86,
+            "rotation": 6.279,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 544.9,
+            "z": 618.99,
+            "scale": 1.24,
+            "rotation": 5.827,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 545.49,
+            "z": 614.79,
+            "scale": 1.04,
+            "rotation": 5.645,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 537.96,
+            "z": 624.06,
+            "scale": 1.23,
+            "rotation": 0.29,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 532.31,
+            "z": 625.46,
+            "scale": 0.86,
+            "rotation": 5.032,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 540.35,
+            "z": 605.88,
+            "scale": 1.16,
+            "rotation": 2.361,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 546.28,
+            "z": 628.95,
+            "scale": 0.9,
+            "rotation": 5.071,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 532.69,
+            "z": 610.66,
+            "scale": 0.98,
+            "rotation": 1.372,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 542.51,
+            "z": 631.95,
+            "scale": 1.0,
+            "rotation": 5.492,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 537.83,
+            "z": 602.1,
+            "scale": 1.21,
+            "rotation": 1.276,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 541.2,
+            "z": 617.97,
+            "scale": 0.92,
+            "rotation": 2.081,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 530.39,
+            "z": 630.74,
+            "scale": 1.35,
+            "rotation": 1.353,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 529.69,
+            "z": 604.34,
+            "scale": 1.33,
+            "rotation": 3.468,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "boulder",
+            "x": 524.57,
+            "z": 607.49,
+            "scale": 0.87,
+            "rotation": 4.267,
+            "dressing": "trebia_wood_southeast"
+        },
+        {
+            "type": "pine_tree",
+            "x": 415.18,
+            "z": 554.06,
+            "scale": 1.24,
+            "rotation": 0.722,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 421.73,
+            "z": 572.53,
+            "scale": 1.2,
+            "rotation": 5.434,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 424.51,
+            "z": 560.73,
+            "scale": 0.93,
+            "rotation": 5.176,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 424.49,
+            "z": 548.86,
+            "scale": 1.1,
+            "rotation": 5.994,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 426.23,
+            "z": 557.5,
+            "scale": 1.07,
+            "rotation": 1.054,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 433.33,
+            "z": 560.83,
+            "scale": 0.81,
+            "rotation": 4.021,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 430.42,
+            "z": 567.31,
+            "scale": 1.01,
+            "rotation": 3.773,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 416.8,
+            "z": 573.97,
+            "scale": 0.84,
+            "rotation": 0.87,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 409.95,
+            "z": 564.84,
+            "scale": 1.07,
+            "rotation": 0.076,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 424.91,
+            "z": 552.5,
+            "scale": 0.84,
+            "rotation": 1.769,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 418.24,
+            "z": 571.11,
+            "scale": 0.93,
+            "rotation": 3.409,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 418.23,
+            "z": 558.29,
+            "scale": 1.19,
+            "rotation": 3.081,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "plant",
+            "x": 431.09,
+            "z": 547.77,
+            "scale": 1.1,
+            "rotation": 1.766,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "plant",
+            "x": 436.85,
+            "z": 567.17,
+            "scale": 0.97,
+            "rotation": 2.495,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "boulder",
+            "x": 436.24,
+            "z": 556.06,
+            "scale": 0.65,
+            "rotation": 0.29,
+            "dressing": "trebia_wood_camp_east"
+        },
+        {
+            "type": "pine_tree",
+            "x": 390.87,
+            "z": 608.44,
+            "scale": 1.08,
+            "rotation": 5.637,
+            "dressing": "trebia_wood_south_rise"
+        },
+        {
+            "type": "pine_tree",
+            "x": 402.63,
+            "z": 622.41,
+            "scale": 0.8,
+            "rotation": 4.802,
+            "dressing": "trebia_wood_south_rise"
+        },
+        {
+            "type": "pine_tree",
+            "x": 397.72,
+            "z": 607.75,
+            "scale": 0.84,
+            "rotation": 3.584,
+            "dressing": "trebia_wood_south_rise"
+        },
+        {
+            "type": "pine_tree",
+            "x": 396.16,
+            "z": 627.92,
+            "scale": 0.92,
+            "rotation": 4.469,
+            "dressing": "trebia_wood_south_rise"
+        },
+        {
+            "type": "pine_tree",
+            "x": 395.15,
+            "z": 613.7,
+            "scale": 0.86,
+            "rotation": 2.004,
+            "dressing": "trebia_wood_south_rise"
+        },
+        {
+            "type": "pine_tree",
+            "x": 401.99,
+            "z": 613.03,
+            "scale": 1.09,
+            "rotation": 3.073,
+            "dressing": "trebia_wood_south_rise"
+        },
+        {
+            "type": "pine_tree",
+            "x": 392.33,
+            "z": 615.72,
+            "scale": 1.03,
+            "rotation": 2.996,
+            "dressing": "trebia_wood_south_rise"
+        },
+        {
+            "type": "pine_tree",
+            "x": 394.01,
+            "z": 610.63,
+            "scale": 0.94,
+            "rotation": 5.022,
+            "dressing": "trebia_wood_south_rise"
+        },
+        {
+            "type": "pine_tree",
+            "x": 399.58,
+            "z": 623.75,
+            "scale": 0.84,
+            "rotation": 1.431,
+            "dressing": "trebia_wood_south_rise"
+        },
+        {
+            "type": "pine_tree",
+            "x": 399.83,
+            "z": 616.92,
+            "scale": 1.1,
+            "rotation": 1.089,
+            "dressing": "trebia_wood_south_rise"
+        },
+        {
+            "type": "plant",
+            "x": 405.84,
+            "z": 628.52,
+            "scale": 0.91,
+            "rotation": 3.297,
+            "dressing": "trebia_wood_south_rise"
+        },
+        {
+            "type": "plant",
+            "x": 393.67,
+            "z": 602.38,
+            "scale": 1.31,
+            "rotation": 5.04,
+            "dressing": "trebia_wood_south_rise"
+        },
+        {
+            "type": "plant",
+            "x": 415.01,
+            "z": 612.49,
+            "scale": 1.21,
+            "rotation": 1.247,
+            "dressing": "trebia_wood_south_rise"
+        },
+        {
+            "type": "boulder",
+            "x": 407.07,
+            "z": 617.72,
+            "scale": 0.98,
+            "rotation": 4.701,
+            "dressing": "trebia_wood_south_rise"
+        },
+        {
+            "type": "pine_tree",
+            "x": 560.41,
+            "z": 527.95,
+            "scale": 1.21,
+            "rotation": 3.352,
+            "dressing": "trebia_wood_east_hollow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 563.66,
+            "z": 544.66,
+            "scale": 0.85,
+            "rotation": 1.773,
+            "dressing": "trebia_wood_east_hollow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 556.08,
+            "z": 548.31,
+            "scale": 1.18,
+            "rotation": 0.066,
+            "dressing": "trebia_wood_east_hollow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 546.68,
+            "z": 540.71,
+            "scale": 0.96,
+            "rotation": 0.564,
+            "dressing": "trebia_wood_east_hollow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 561.82,
+            "z": 534.04,
+            "scale": 1.23,
+            "rotation": 4.67,
+            "dressing": "trebia_wood_east_hollow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 554.83,
+            "z": 529.72,
+            "scale": 0.9,
+            "rotation": 4.725,
+            "dressing": "trebia_wood_east_hollow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 558.78,
+            "z": 531.79,
+            "scale": 0.87,
+            "rotation": 4.304,
+            "dressing": "trebia_wood_east_hollow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 569.35,
+            "z": 544.23,
+            "scale": 1.12,
+            "rotation": 0.457,
+            "dressing": "trebia_wood_east_hollow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 564.39,
+            "z": 529.25,
+            "scale": 1.18,
+            "rotation": 4.822,
+            "dressing": "trebia_wood_east_hollow"
+        },
+        {
+            "type": "plant",
+            "x": 549.4,
+            "z": 534.86,
+            "scale": 1.23,
+            "rotation": 1.9,
+            "dressing": "trebia_wood_east_hollow"
+        },
+        {
+            "type": "plant",
+            "x": 571.91,
+            "z": 550.59,
+            "scale": 1.02,
+            "rotation": 4.828,
+            "dressing": "trebia_wood_east_hollow"
+        },
+        {
+            "type": "dead_tree",
+            "x": 553.37,
+            "z": 536.91,
+            "scale": 1.0,
+            "rotation": 5.815,
+            "dressing": "trebia_wood_east_hollow"
+        },
+        {
+            "type": "boulder",
+            "x": 570.01,
+            "z": 551.29,
+            "scale": 0.7,
+            "rotation": 2.059,
+            "dressing": "trebia_wood_east_hollow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 254.06,
+            "z": 619.49,
+            "scale": 1.02,
+            "rotation": 1.192,
+            "dressing": "trebia_wood_south_west"
+        },
+        {
+            "type": "pine_tree",
+            "x": 248.21,
+            "z": 615.18,
+            "scale": 1.07,
+            "rotation": 1.767,
+            "dressing": "trebia_wood_south_west"
+        },
+        {
+            "type": "pine_tree",
+            "x": 251.55,
+            "z": 621.87,
+            "scale": 0.91,
+            "rotation": 3.405,
+            "dressing": "trebia_wood_south_west"
+        },
+        {
+            "type": "pine_tree",
+            "x": 248.89,
+            "z": 618.8,
+            "scale": 1.11,
+            "rotation": 4.425,
+            "dressing": "trebia_wood_south_west"
+        },
+        {
+            "type": "pine_tree",
+            "x": 237.35,
+            "z": 617.5,
+            "scale": 0.86,
+            "rotation": 1.215,
+            "dressing": "trebia_wood_south_west"
+        },
+        {
+            "type": "pine_tree",
+            "x": 240.56,
+            "z": 618.95,
+            "scale": 0.98,
+            "rotation": 2.936,
+            "dressing": "trebia_wood_south_west"
+        },
+        {
+            "type": "pine_tree",
+            "x": 240.76,
+            "z": 614.57,
+            "scale": 0.86,
+            "rotation": 1.663,
+            "dressing": "trebia_wood_south_west"
+        },
+        {
+            "type": "pine_tree",
+            "x": 252.21,
+            "z": 602.3,
+            "scale": 0.96,
+            "rotation": 5.116,
+            "dressing": "trebia_wood_south_west"
+        },
+        {
+            "type": "pine_tree",
+            "x": 255.15,
+            "z": 626.29,
+            "scale": 1.19,
+            "rotation": 6.073,
+            "dressing": "trebia_wood_south_west"
+        },
+        {
+            "type": "plant",
+            "x": 243.65,
+            "z": 602.34,
+            "scale": 1.26,
+            "rotation": 2.304,
+            "dressing": "trebia_wood_south_west"
+        },
+        {
+            "type": "dead_tree",
+            "x": 245.19,
+            "z": 607.58,
+            "scale": 1.0,
+            "rotation": 2.653,
+            "dressing": "trebia_wood_south_west"
+        },
+        {
+            "type": "boulder",
+            "x": 248.76,
+            "z": 607.39,
+            "scale": 0.72,
+            "rotation": 4.525,
+            "dressing": "trebia_wood_south_west"
+        },
+        {
+            "type": "pine_tree",
+            "x": 145.48,
+            "z": 606.82,
+            "scale": 1.14,
+            "rotation": 6.234,
+            "dressing": "trebia_wood_far_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 150.2,
+            "z": 604.7,
+            "scale": 0.88,
+            "rotation": 5.373,
+            "dressing": "trebia_wood_far_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 146.71,
+            "z": 624.98,
+            "scale": 0.86,
+            "rotation": 2.995,
+            "dressing": "trebia_wood_far_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 157.82,
+            "z": 610.73,
+            "scale": 1.08,
+            "rotation": 5.701,
+            "dressing": "trebia_wood_far_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 152.39,
+            "z": 617.4,
+            "scale": 1.16,
+            "rotation": 6.269,
+            "dressing": "trebia_wood_far_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 151.57,
+            "z": 625.34,
+            "scale": 1.11,
+            "rotation": 2.288,
+            "dressing": "trebia_wood_far_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 146.39,
+            "z": 618.1,
+            "scale": 1.02,
+            "rotation": 5.371,
+            "dressing": "trebia_wood_far_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 153.94,
+            "z": 611.79,
+            "scale": 0.9,
+            "rotation": 3.948,
+            "dressing": "trebia_wood_far_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 139.08,
+            "z": 604.08,
+            "scale": 1.15,
+            "rotation": 3.969,
+            "dressing": "trebia_wood_far_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 139.17,
+            "z": 612.78,
+            "scale": 1.28,
+            "rotation": 2.563,
+            "dressing": "trebia_wood_far_southwest"
+        },
+        {
+            "type": "boulder",
+            "x": 147.33,
+            "z": 631.37,
+            "scale": 0.69,
+            "rotation": 0.69,
+            "dressing": "trebia_wood_far_southwest"
+        },
+        {
+            "type": "pine_tree",
+            "x": 28.39,
+            "z": 393.79,
+            "scale": 1.13,
+            "rotation": 2.774,
+            "dressing": "trebia_wood_west_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 22.3,
+            "z": 399.96,
+            "scale": 1.2,
+            "rotation": 1.757,
+            "dressing": "trebia_wood_west_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 37.49,
+            "z": 399.98,
+            "scale": 0.94,
+            "rotation": 1.543,
+            "dressing": "trebia_wood_west_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 27.15,
+            "z": 397.1,
+            "scale": 0.84,
+            "rotation": 2.69,
+            "dressing": "trebia_wood_west_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 34.89,
+            "z": 402.69,
+            "scale": 1.24,
+            "rotation": 0.591,
+            "dressing": "trebia_wood_west_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 21.44,
+            "z": 407.23,
+            "scale": 1.07,
+            "rotation": 3.752,
+            "dressing": "trebia_wood_west_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 25.12,
+            "z": 402.94,
+            "scale": 0.85,
+            "rotation": 0.605,
+            "dressing": "trebia_wood_west_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 31.95,
+            "z": 406.88,
+            "scale": 1.2,
+            "rotation": 2.739,
+            "dressing": "trebia_wood_west_edge"
+        },
+        {
+            "type": "plant",
+            "x": 42.21,
+            "z": 403.8,
+            "scale": 1.33,
+            "rotation": 5.248,
+            "dressing": "trebia_wood_west_edge"
+        },
+        {
+            "type": "plant",
+            "x": 39.5,
+            "z": 409.29,
+            "scale": 1.27,
+            "rotation": 0.022,
+            "dressing": "trebia_wood_west_edge"
+        },
+        {
+            "type": "plant",
+            "x": 41.2,
+            "z": 407.89,
+            "scale": 1.27,
+            "rotation": 5.678,
+            "dressing": "trebia_wood_west_edge"
+        },
+        {
+            "type": "dead_tree",
+            "x": 37.04,
+            "z": 391.63,
+            "scale": 1.0,
+            "rotation": 5.339,
+            "dressing": "trebia_wood_west_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 75.45,
+            "z": 549.05,
+            "scale": 1.14,
+            "rotation": 3.637,
+            "dressing": "trebia_wood_southwest_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 76.66,
+            "z": 528.16,
+            "scale": 1.23,
+            "rotation": 3.8,
+            "dressing": "trebia_wood_southwest_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 89.71,
+            "z": 542.98,
+            "scale": 1.23,
+            "rotation": 5.899,
+            "dressing": "trebia_wood_southwest_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 82.76,
+            "z": 544.72,
+            "scale": 1.11,
+            "rotation": 6.062,
+            "dressing": "trebia_wood_southwest_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 70.37,
+            "z": 544.58,
+            "scale": 1.17,
+            "rotation": 1.16,
+            "dressing": "trebia_wood_southwest_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 70.4,
+            "z": 534.51,
+            "scale": 1.13,
+            "rotation": 6.061,
+            "dressing": "trebia_wood_southwest_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 78.98,
+            "z": 547.07,
+            "scale": 1.19,
+            "rotation": 5.577,
+            "dressing": "trebia_wood_southwest_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 73.83,
+            "z": 545.68,
+            "scale": 0.89,
+            "rotation": 5.937,
+            "dressing": "trebia_wood_southwest_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 85.64,
+            "z": 548.21,
+            "scale": 1.04,
+            "rotation": 2.334,
+            "dressing": "trebia_wood_southwest_meadow"
+        },
+        {
+            "type": "plant",
+            "x": 80.75,
+            "z": 521.66,
+            "scale": 0.99,
+            "rotation": 3.433,
+            "dressing": "trebia_wood_southwest_meadow"
+        },
+        {
+            "type": "plant",
+            "x": 89.6,
+            "z": 530.75,
+            "scale": 0.95,
+            "rotation": 5.025,
+            "dressing": "trebia_wood_southwest_meadow"
+        },
+        {
+            "type": "dead_tree",
+            "x": 84.97,
+            "z": 531.62,
+            "scale": 1.0,
+            "rotation": 6.237,
+            "dressing": "trebia_wood_southwest_meadow"
+        },
+        {
+            "type": "boulder",
+            "x": 80.9,
+            "z": 536.06,
+            "scale": 0.9,
+            "rotation": 2.98,
+            "dressing": "trebia_wood_southwest_meadow"
+        },
+        {
+            "type": "pine_tree",
+            "x": 391.17,
+            "z": 29.96,
+            "scale": 0.97,
+            "rotation": 4.667,
+            "dressing": "trebia_wood_north_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 398.29,
+            "z": 19.29,
+            "scale": 1.12,
+            "rotation": 5.004,
+            "dressing": "trebia_wood_north_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 395.1,
+            "z": 25.73,
+            "scale": 0.92,
+            "rotation": 4.347,
+            "dressing": "trebia_wood_north_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 396.98,
+            "z": 28.53,
+            "scale": 0.94,
+            "rotation": 5.472,
+            "dressing": "trebia_wood_north_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 400.8,
+            "z": 32.41,
+            "scale": 1.24,
+            "rotation": 4.149,
+            "dressing": "trebia_wood_north_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 404.64,
+            "z": 21.73,
+            "scale": 0.96,
+            "rotation": 4.725,
+            "dressing": "trebia_wood_north_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 397.9,
+            "z": 36.8,
+            "scale": 1.15,
+            "rotation": 0.694,
+            "dressing": "trebia_wood_north_edge"
+        },
+        {
+            "type": "pine_tree",
+            "x": 409.19,
+            "z": 25.18,
+            "scale": 1.04,
+            "rotation": 1.976,
+            "dressing": "trebia_wood_north_edge"
+        },
+        {
+            "type": "plant",
+            "x": 385.35,
+            "z": 27.95,
+            "scale": 1.26,
+            "rotation": 4.436,
+            "dressing": "trebia_wood_north_edge"
+        },
+        {
+            "type": "plant",
+            "x": 387.89,
+            "z": 24.57,
+            "scale": 1.13,
+            "rotation": 5.395,
+            "dressing": "trebia_wood_north_edge"
+        },
+        {
+            "type": "boulder",
+            "x": 403.97,
+            "z": 40.37,
+            "scale": 0.64,
+            "rotation": 5.57,
+            "dressing": "trebia_wood_north_edge"
         }
     ],
     "dressing": [
@@ -7232,6 +8300,147 @@
             "x": 312,
             "z": 504,
             "tents": 2
+        },
+        {
+            "id": "trebia_placentia_fields_north",
+            "kind": "farmland",
+            "x": 567,
+            "z": 42,
+            "cols": 3,
+            "rows": 2,
+            "player_id": 3,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "trebia_placentia_fields_northwest",
+            "kind": "farmland",
+            "x": 513,
+            "z": 61,
+            "cols": 2,
+            "rows": 2,
+            "player_id": 3,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "trebia_placentia_fields_southeast",
+            "kind": "farmland",
+            "x": 617,
+            "z": 191,
+            "cols": 2,
+            "rows": 1,
+            "player_id": 3,
+            "nation": "roman_republic",
+            "rotation": 0
+        },
+        {
+            "id": "trebia_wood_southeast",
+            "kind": "copse",
+            "x": 540,
+            "z": 615,
+            "radius": 18,
+            "count": 14,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 3
+        },
+        {
+            "id": "trebia_wood_camp_east",
+            "kind": "copse",
+            "x": 420,
+            "z": 560,
+            "radius": 16,
+            "count": 12,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 2
+        },
+        {
+            "id": "trebia_wood_south_rise",
+            "kind": "copse",
+            "x": 400,
+            "z": 615,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 2
+        },
+        {
+            "id": "trebia_wood_east_hollow",
+            "kind": "copse",
+            "x": 560,
+            "z": 540,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 2
+        },
+        {
+            "id": "trebia_wood_south_west",
+            "kind": "copse",
+            "x": 250,
+            "z": 615,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 2
+        },
+        {
+            "id": "trebia_wood_far_southwest",
+            "kind": "copse",
+            "x": 150,
+            "z": 615,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 2
+        },
+        {
+            "id": "trebia_wood_west_edge",
+            "kind": "copse",
+            "x": 30,
+            "z": 400,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 2
+        },
+        {
+            "id": "trebia_wood_southwest_meadow",
+            "kind": "copse",
+            "x": 80,
+            "z": 540,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 2
+        },
+        {
+            "id": "trebia_wood_north_edge",
+            "kind": "copse",
+            "x": 400,
+            "z": 28,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "pine_tree"
+            ],
+            "dead_trees": 2
         }
     ]
 }

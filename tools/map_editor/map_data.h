@@ -61,6 +61,7 @@ struct LinearElement {
   int player_id = 0;
   QString nation;
   QJsonObject extra_fields;
+  int structure_order = -1;
 };
 
 [[nodiscard]] auto waypoints_from_json(const QJsonArray& array) -> QVector<QPointF>;
@@ -86,6 +87,7 @@ struct StructureElement {
   QString nation;
   QJsonObject extra_fields;
   int spawn_order = -1;
+  int structure_order = -1;
 };
 
 struct TroopSpawnElement {

@@ -54,7 +54,8 @@
           "entry_point": {
             "x": 486,
             "z": 330
-          }
+          },
+          "label": "Varro's legions"
         },
         {
           "timing": 420.0,
@@ -71,7 +72,8 @@
           "entry_point": {
             "x": 452,
             "z": 296
-          }
+          },
+          "label": "The consular horse"
         }
       ]
     },
@@ -110,7 +112,8 @@
           "entry_point": {
             "x": 420,
             "z": 132
-          }
+          },
+          "label": "The river reserve"
         },
         {
           "timing": 540.0,
@@ -131,7 +134,8 @@
           "entry_point": {
             "x": 452,
             "z": 152
-          }
+          },
+          "label": "The second reserve"
         }
       ]
     },
@@ -166,7 +170,8 @@
           "entry_point": {
             "x": 400,
             "z": 448
-          }
+          },
+          "label": "The allied foot"
         },
         {
           "timing": 420.0,
@@ -183,7 +188,8 @@
           "entry_point": {
             "x": 376,
             "z": 430
-          }
+          },
+          "label": "The allied horse"
         }
       ]
     }
@@ -223,12 +229,9 @@
   ],
   "optional_objectives": [
     {
-      "type": "control_structures",
-      "structure_types": [
-        "village"
-      ],
-      "min_count": 1,
-      "description": "Hold the ruins. Force the Romans to fight on two grounds at once."
+      "type": "clear_undead_zone",
+      "zone_id": "cannae_old_grave",
+      "description": "Break the old grave west of your hill before the Romans count its dead as theirs."
     }
   ],
   "stages": [
@@ -243,8 +246,8 @@
       "description": "Turn the nearest Roman allied camp south of the field.",
       "hint": "It is the closest camp to your hill; take it before the wings close.",
       "target": {
-        "x": 432,
-        "z": 470
+        "x": 407,
+        "z": 472
       },
       "target_radius": 30.0
     },
@@ -321,7 +324,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Second-wave Roman cavalry is maneuvering for your rear. Rebalance your flanks."
+          "text": "Fresh Roman horse is coming up from the consular town and the allied camp. Keep your own cavalry between it and your centre."
         }
       ]
     }
@@ -482,6 +485,47 @@
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80
+    },
+    {
+      "id": "cannae_hannibal_open",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 16.0
+      },
+      "text": "Let the centre give. The Africans wait on the wings, Hasdrubal has the river. Eighty thousand men walk into a sack as easily as into a field.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 90
+    },
+    {
+      "id": "cannae_hannibal_allies_headless",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "commander_defeated",
+        "owner_id": 4,
+        "by_owner_id": "player",
+        "delay": 6.0
+      },
+      "text": "The allies have lost their consul. Turn that wing inward.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "cannae_hannibal_close_ring",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "near_defeat",
+        "owner_id": 2
+      },
+      "text": "Their centre has nowhere left to step back. Open the ring for no one.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 85
     }
   ],
   "include_ambient_undead": false,

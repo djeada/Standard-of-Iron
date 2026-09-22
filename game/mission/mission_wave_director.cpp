@@ -13,6 +13,7 @@
 #include "game/core/component_structures.h"
 #include "game/core/world.h"
 #include "game/mission/mission_waves.h"
+#include "game/systems/nation_collapse_service.h"
 
 namespace Game::Mission {
 
@@ -51,6 +52,7 @@ void MissionWaveDirector::bind(std::vector<PendingMissionWave>* waves,
   m_waves = waves;
   m_world = world;
   m_settled_phases.clear();
+  m_commanded_owners.clear();
   m_last_status.clear();
   refresh_ready_times();
 }
@@ -62,7 +64,29 @@ void MissionWaveDirector::reset() {
   m_announced_cleared_phases = 0;
   m_announced_all_cleared = false;
   m_settled_phases.clear();
+  m_commanded_owners.clear();
   m_last_status.clear();
+}
+
+void MissionWaveDirector::stand_down_leaderless_waves() {
+  std::set<int> checked;
+  for (auto& wave : *m_waves) {
+    if (wave.spawned || !checked.insert(wave.owner_id).second) {
+      continue;
+    }
+    if (Game::Systems::NationCollapse::has_living_commander(*m_world, wave.owner_id)) {
+      m_commanded_owners.insert(wave.owner_id);
+    }
+  }
+  for (auto& wave : *m_waves) {
+    if (wave.spawned || !m_commanded_owners.contains(wave.owner_id) ||
+        Game::Systems::NationCollapse::has_living_commander(*m_world, wave.owner_id)) {
+      continue;
+    }
+    wave.spawned = true;
+    wave.warned = true;
+    wave.spawned_entity_ids.clear();
+  }
 }
 
 auto MissionWaveDirector::wave_is_cleared(const PendingMissionWave& wave) const
@@ -201,6 +225,8 @@ auto MissionWaveDirector::advance() -> Effects {
   if (m_waves == nullptr || m_world == nullptr || m_waves->empty()) {
     return effects;
   }
+
+  stand_down_leaderless_waves();
 
   for (auto& wave : *m_waves) {
     if (wave.cleared || !wave.spawned) {
@@ -434,6 +460,11 @@ auto MissionWaveDirector::serialize() const -> QJsonObject {
     }
   }
   root["waves"] = waves;
+  QJsonArray commanded;
+  for (const int owner_id : m_commanded_owners) {
+    commanded.append(owner_id);
+  }
+  root["commanded_owners"] = commanded;
   return root;
 }
 
@@ -441,6 +472,10 @@ void MissionWaveDirector::restore(const QJsonObject& state) {
   m_elapsed = static_cast<float>(state.value("elapsed").toDouble(0.0));
   m_announced_cleared_phases = state.value("announced_cleared_phases").toInt(0);
   m_announced_all_cleared = state.value("announced_all_cleared").toBool(false);
+  m_commanded_owners.clear();
+  for (const auto owner_value : state.value("commanded_owners").toArray()) {
+    m_commanded_owners.insert(owner_value.toInt());
+  }
 
   if (m_waves == nullptr) {
     return;

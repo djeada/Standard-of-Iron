@@ -1,19 +1,19 @@
 {
     "biome": {
         "grass_dry": [
-            0.52,
-            0.5,
-            0.27
+            0.64,
+            0.56,
+            0.33
         ],
         "grass_primary": [
-            0.29,
-            0.44,
-            0.2
+            0.45,
+            0.43,
+            0.24
         ],
         "grass_secondary": [
-            0.4,
             0.54,
-            0.25
+            0.5,
+            0.29
         ],
         "ground_irregularity_enabled": true,
         "ground_type": "grass_dry",
@@ -25,7 +25,7 @@
         "irregularity_scale": 0.11,
         "patch_density": 2.45,
         "patch_jitter": 0.78,
-        "plant_density": 0.3,
+        "plant_density": 0.2,
         "rock_high": [
             0.7000000000000001,
             0.66,
@@ -38,12 +38,18 @@
         ],
         "seed": 10088,
         "soil_color": [
-            0.36,
-            0.28,
-            0.18
+            0.46,
+            0.35,
+            0.22
         ],
         "sway_speed": 0.85,
-        "sway_strength": 0.12
+        "sway_strength": 0.12,
+        "tree_mix": {
+            "pine": 0.0,
+            "cypress": 0.25,
+            "olive": 0.8,
+            "palm": 1.4
+        }
     },
     "bridges": [
         {
@@ -2119,8 +2125,8 @@
             "nation": "roman_republic",
             "player_id": 5,
             "type": "roman_field_commander",
-            "x": 100.0,
-            "z": 472.0
+            "x": 436.0,
+            "z": 156.0
         }
     ],
     "starting_resources": {
@@ -8014,6 +8020,1649 @@
             "scale": 1.0,
             "rotation": 3.442,
             "dressing": "zama_gate_7"
+        },
+        {
+            "type": "tent",
+            "x": 448.2,
+            "z": 150.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "zama_north_camp_tent_lines_east"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 439.84,
+            "z": 150.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_north_camp_tent_lines_east"
+        },
+        {
+            "type": "tent",
+            "x": 455.8,
+            "z": 158.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "zama_north_camp_tent_lines_east"
+        },
+        {
+            "type": "tent",
+            "x": 423.8,
+            "z": 150.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "zama_north_camp_tent_lines_west"
+        },
+        {
+            "type": "firecamp",
+            "x": 430.64,
+            "z": 154.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_north_camp_tent_lines_west",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "tent",
+            "x": 416.2,
+            "z": 158.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "zama_north_camp_tent_lines_west"
+        },
+        {
+            "type": "tent",
+            "x": 572.2,
+            "z": 632.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "zama_rearguard_tent_lines"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 563.84,
+            "z": 632.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_rearguard_tent_lines"
+        },
+        {
+            "type": "olive_tree",
+            "x": 741.42,
+            "z": 669.6,
+            "scale": 1.0,
+            "rotation": 2.182,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 747.53,
+            "z": 669.77,
+            "scale": 0.92,
+            "rotation": 1.311,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 755.3,
+            "z": 669.48,
+            "scale": 0.93,
+            "rotation": 4.297,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 762.34,
+            "z": 669.14,
+            "scale": 0.95,
+            "rotation": 5.728,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 768.74,
+            "z": 670.0,
+            "scale": 0.92,
+            "rotation": 1.643,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 741.19,
+            "z": 676.78,
+            "scale": 1.07,
+            "rotation": 2.352,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 748.44,
+            "z": 676.23,
+            "scale": 0.91,
+            "rotation": 2.675,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 762.32,
+            "z": 676.51,
+            "scale": 0.91,
+            "rotation": 4.276,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 769.1,
+            "z": 676.44,
+            "scale": 0.85,
+            "rotation": 6.006,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 741.4,
+            "z": 683.47,
+            "scale": 0.98,
+            "rotation": 1.911,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 748.14,
+            "z": 683.68,
+            "scale": 0.91,
+            "rotation": 6.247,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 755.34,
+            "z": 683.43,
+            "scale": 0.9,
+            "rotation": 4.759,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 761.6,
+            "z": 683.39,
+            "scale": 0.98,
+            "rotation": 1.525,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 768.86,
+            "z": 683.85,
+            "scale": 0.98,
+            "rotation": 3.619,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 740.6,
+            "z": 690.97,
+            "scale": 1.01,
+            "rotation": 1.137,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 747.82,
+            "z": 690.42,
+            "scale": 0.93,
+            "rotation": 3.827,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 755.28,
+            "z": 690.95,
+            "scale": 1.04,
+            "rotation": 3.567,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 761.65,
+            "z": 690.91,
+            "scale": 0.86,
+            "rotation": 1.384,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 768.67,
+            "z": 690.17,
+            "scale": 1.06,
+            "rotation": 1.037,
+            "dressing": "zama_olives_east_plain"
+        },
+        {
+            "type": "olive_tree",
+            "x": 205.9,
+            "z": 749.49,
+            "scale": 1.06,
+            "rotation": 0.102,
+            "dressing": "zama_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 220.23,
+            "z": 748.9,
+            "scale": 0.97,
+            "rotation": 6.278,
+            "dressing": "zama_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 227.34,
+            "z": 749.23,
+            "scale": 1.05,
+            "rotation": 1.505,
+            "dressing": "zama_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 233.59,
+            "z": 749.3,
+            "scale": 1.08,
+            "rotation": 5.057,
+            "dressing": "zama_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 206.22,
+            "z": 756.28,
+            "scale": 0.96,
+            "rotation": 6.28,
+            "dressing": "zama_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 212.76,
+            "z": 755.86,
+            "scale": 1.0,
+            "rotation": 4.082,
+            "dressing": "zama_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 220.38,
+            "z": 756.47,
+            "scale": 1.08,
+            "rotation": 2.861,
+            "dressing": "zama_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 226.8,
+            "z": 756.02,
+            "scale": 0.95,
+            "rotation": 4.539,
+            "dressing": "zama_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 234.32,
+            "z": 755.83,
+            "scale": 0.91,
+            "rotation": 4.952,
+            "dressing": "zama_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 205.84,
+            "z": 763.36,
+            "scale": 0.89,
+            "rotation": 4.232,
+            "dressing": "zama_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 212.64,
+            "z": 762.88,
+            "scale": 0.93,
+            "rotation": 3.401,
+            "dressing": "zama_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 219.87,
+            "z": 763.01,
+            "scale": 0.86,
+            "rotation": 3.956,
+            "dressing": "zama_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 226.92,
+            "z": 763.21,
+            "scale": 1.02,
+            "rotation": 3.28,
+            "dressing": "zama_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 234.04,
+            "z": 762.64,
+            "scale": 0.92,
+            "rotation": 5.381,
+            "dressing": "zama_olives_south"
+        },
+        {
+            "type": "palm_tree",
+            "x": 37.63,
+            "z": 29.58,
+            "scale": 1.18,
+            "rotation": 0.327,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "palm_tree",
+            "x": 39.39,
+            "z": 45.95,
+            "scale": 0.97,
+            "rotation": 6.28,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 33.57,
+            "z": 34.27,
+            "scale": 0.81,
+            "rotation": 5.317,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "palm_tree",
+            "x": 42.93,
+            "z": 26.5,
+            "scale": 1.05,
+            "rotation": 2.348,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "palm_tree",
+            "x": 35.81,
+            "z": 44.08,
+            "scale": 1.25,
+            "rotation": 0.604,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 43.87,
+            "z": 50.96,
+            "scale": 0.93,
+            "rotation": 1.395,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "palm_tree",
+            "x": 43.38,
+            "z": 40.56,
+            "scale": 1.01,
+            "rotation": 1.515,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "palm_tree",
+            "x": 48.33,
+            "z": 34.21,
+            "scale": 0.86,
+            "rotation": 4.681,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 30.49,
+            "z": 36.67,
+            "scale": 1.14,
+            "rotation": 0.431,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "palm_tree",
+            "x": 30.12,
+            "z": 32.88,
+            "scale": 1.19,
+            "rotation": 5.241,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "plant",
+            "x": 24.22,
+            "z": 38.1,
+            "scale": 1.37,
+            "rotation": 1.26,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "plant",
+            "x": 29.42,
+            "z": 49.87,
+            "scale": 1.33,
+            "rotation": 5.705,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "plant",
+            "x": 32.45,
+            "z": 25.25,
+            "scale": 1.34,
+            "rotation": 5.92,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "plant",
+            "x": 32.88,
+            "z": 23.21,
+            "scale": 0.9,
+            "rotation": 4.193,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "plant",
+            "x": 30.48,
+            "z": 52.01,
+            "scale": 1.28,
+            "rotation": 1.568,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "boulder",
+            "x": 50.02,
+            "z": 41.26,
+            "scale": 0.98,
+            "rotation": 1.877,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "boulder",
+            "x": 52.2,
+            "z": 42.5,
+            "scale": 0.94,
+            "rotation": 5.715,
+            "dressing": "zama_palms_northwest"
+        },
+        {
+            "type": "palm_tree",
+            "x": 748.5,
+            "z": 741.0,
+            "scale": 0.96,
+            "rotation": 4.029,
+            "dressing": "zama_palms_southeast"
+        },
+        {
+            "type": "palm_tree",
+            "x": 754.81,
+            "z": 752.04,
+            "scale": 0.98,
+            "rotation": 0.077,
+            "dressing": "zama_palms_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 762.09,
+            "z": 739.66,
+            "scale": 1.24,
+            "rotation": 1.207,
+            "dressing": "zama_palms_southeast"
+        },
+        {
+            "type": "palm_tree",
+            "x": 758.62,
+            "z": 733.14,
+            "scale": 0.98,
+            "rotation": 3.713,
+            "dressing": "zama_palms_southeast"
+        },
+        {
+            "type": "palm_tree",
+            "x": 760.98,
+            "z": 748.41,
+            "scale": 0.83,
+            "rotation": 2.717,
+            "dressing": "zama_palms_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 756.86,
+            "z": 754.83,
+            "scale": 1.14,
+            "rotation": 5.421,
+            "dressing": "zama_palms_southeast"
+        },
+        {
+            "type": "palm_tree",
+            "x": 757.53,
+            "z": 744.22,
+            "scale": 0.8,
+            "rotation": 2.649,
+            "dressing": "zama_palms_southeast"
+        },
+        {
+            "type": "palm_tree",
+            "x": 764.71,
+            "z": 744.76,
+            "scale": 0.88,
+            "rotation": 0.079,
+            "dressing": "zama_palms_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 756.71,
+            "z": 746.85,
+            "scale": 0.8,
+            "rotation": 2.579,
+            "dressing": "zama_palms_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 767.38,
+            "z": 755.17,
+            "scale": 1.27,
+            "rotation": 5.03,
+            "dressing": "zama_palms_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 771.58,
+            "z": 742.05,
+            "scale": 0.91,
+            "rotation": 1.595,
+            "dressing": "zama_palms_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 763.65,
+            "z": 753.26,
+            "scale": 1.23,
+            "rotation": 4.542,
+            "dressing": "zama_palms_southeast"
+        },
+        {
+            "type": "plant",
+            "x": 766.08,
+            "z": 750.23,
+            "scale": 1.07,
+            "rotation": 5.172,
+            "dressing": "zama_palms_southeast"
+        },
+        {
+            "type": "boulder",
+            "x": 754.28,
+            "z": 739.46,
+            "scale": 0.8,
+            "rotation": 4.47,
+            "dressing": "zama_palms_southeast"
+        },
+        {
+            "type": "palm_tree",
+            "x": 696.45,
+            "z": 671.18,
+            "scale": 0.98,
+            "rotation": 1.62,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "palm_tree",
+            "x": 699.39,
+            "z": 672.88,
+            "scale": 0.97,
+            "rotation": 5.51,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 706.43,
+            "z": 673.61,
+            "scale": 1.07,
+            "rotation": 2.299,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "palm_tree",
+            "x": 694.71,
+            "z": 662.89,
+            "scale": 0.9,
+            "rotation": 5.579,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "palm_tree",
+            "x": 714.72,
+            "z": 669.96,
+            "scale": 1.12,
+            "rotation": 1.385,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 706.12,
+            "z": 658.82,
+            "scale": 1.12,
+            "rotation": 2.777,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "palm_tree",
+            "x": 716.44,
+            "z": 663.87,
+            "scale": 1.16,
+            "rotation": 4.926,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "palm_tree",
+            "x": 712.62,
+            "z": 667.17,
+            "scale": 0.89,
+            "rotation": 5.007,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 707.02,
+            "z": 679.87,
+            "scale": 0.88,
+            "rotation": 4.842,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "plant",
+            "x": 701.5,
+            "z": 679.35,
+            "scale": 0.94,
+            "rotation": 0.856,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "plant",
+            "x": 718.58,
+            "z": 677.53,
+            "scale": 0.92,
+            "rotation": 2.021,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "plant",
+            "x": 701.95,
+            "z": 682.15,
+            "scale": 1.08,
+            "rotation": 5.38,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "plant",
+            "x": 695.0,
+            "z": 678.13,
+            "scale": 0.95,
+            "rotation": 0.008,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "boulder",
+            "x": 709.89,
+            "z": 684.44,
+            "scale": 0.78,
+            "rotation": 1.535,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "boulder",
+            "x": 700.13,
+            "z": 656.41,
+            "scale": 0.69,
+            "rotation": 3.829,
+            "dressing": "zama_palms_wadi_east"
+        },
+        {
+            "type": "palm_tree",
+            "x": 762.43,
+            "z": 47.48,
+            "scale": 0.87,
+            "rotation": 5.886,
+            "dressing": "zama_palms_northeast"
+        },
+        {
+            "type": "palm_tree",
+            "x": 764.1,
+            "z": 42.42,
+            "scale": 0.81,
+            "rotation": 3.844,
+            "dressing": "zama_palms_northeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 768.58,
+            "z": 44.06,
+            "scale": 0.92,
+            "rotation": 0.83,
+            "dressing": "zama_palms_northeast"
+        },
+        {
+            "type": "palm_tree",
+            "x": 756.1,
+            "z": 31.23,
+            "scale": 1.15,
+            "rotation": 2.59,
+            "dressing": "zama_palms_northeast"
+        },
+        {
+            "type": "palm_tree",
+            "x": 766.12,
+            "z": 39.9,
+            "scale": 0.91,
+            "rotation": 4.003,
+            "dressing": "zama_palms_northeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 744.34,
+            "z": 38.42,
+            "scale": 1.16,
+            "rotation": 4.868,
+            "dressing": "zama_palms_northeast"
+        },
+        {
+            "type": "palm_tree",
+            "x": 747.17,
+            "z": 40.62,
+            "scale": 1.17,
+            "rotation": 2.571,
+            "dressing": "zama_palms_northeast"
+        },
+        {
+            "type": "palm_tree",
+            "x": 756.03,
+            "z": 37.56,
+            "scale": 0.99,
+            "rotation": 6.035,
+            "dressing": "zama_palms_northeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 743.17,
+            "z": 35.12,
+            "scale": 0.92,
+            "rotation": 3.414,
+            "dressing": "zama_palms_northeast"
+        },
+        {
+            "type": "plant",
+            "x": 748.01,
+            "z": 47.94,
+            "scale": 1.17,
+            "rotation": 2.359,
+            "dressing": "zama_palms_northeast"
+        },
+        {
+            "type": "plant",
+            "x": 746.84,
+            "z": 30.92,
+            "scale": 1.34,
+            "rotation": 1.422,
+            "dressing": "zama_palms_northeast"
+        },
+        {
+            "type": "plant",
+            "x": 761.58,
+            "z": 52.89,
+            "scale": 1.33,
+            "rotation": 2.662,
+            "dressing": "zama_palms_northeast"
+        },
+        {
+            "type": "boulder",
+            "x": 762.69,
+            "z": 34.5,
+            "scale": 0.89,
+            "rotation": 1.762,
+            "dressing": "zama_palms_northeast"
+        },
+        {
+            "type": "boulder",
+            "x": 749.35,
+            "z": 33.79,
+            "scale": 0.98,
+            "rotation": 1.982,
+            "dressing": "zama_palms_northeast"
+        },
+        {
+            "type": "palm_tree",
+            "x": 751.52,
+            "z": 602.14,
+            "scale": 0.91,
+            "rotation": 1.439,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "palm_tree",
+            "x": 754.45,
+            "z": 602.96,
+            "scale": 0.84,
+            "rotation": 0.105,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 761.47,
+            "z": 600.86,
+            "scale": 1.2,
+            "rotation": 3.05,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "palm_tree",
+            "x": 762.29,
+            "z": 607.18,
+            "scale": 1.11,
+            "rotation": 5.466,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "palm_tree",
+            "x": 757.82,
+            "z": 613.16,
+            "scale": 1.05,
+            "rotation": 4.627,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 760.11,
+            "z": 604.6,
+            "scale": 1.03,
+            "rotation": 1.078,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "palm_tree",
+            "x": 759.28,
+            "z": 609.1,
+            "scale": 0.82,
+            "rotation": 1.945,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "palm_tree",
+            "x": 765.83,
+            "z": 614.34,
+            "scale": 0.95,
+            "rotation": 1.057,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "plant",
+            "x": 764.92,
+            "z": 619.98,
+            "scale": 1.26,
+            "rotation": 2.284,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "plant",
+            "x": 750.0,
+            "z": 620.58,
+            "scale": 1.04,
+            "rotation": 4.026,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "plant",
+            "x": 762.16,
+            "z": 622.77,
+            "scale": 1.05,
+            "rotation": 3.174,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "plant",
+            "x": 752.87,
+            "z": 620.21,
+            "scale": 1.32,
+            "rotation": 6.092,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "dead_tree",
+            "x": 758.02,
+            "z": 621.6,
+            "scale": 1.0,
+            "rotation": 0.273,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "boulder",
+            "x": 751.89,
+            "z": 611.38,
+            "scale": 0.7,
+            "rotation": 5.275,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "boulder",
+            "x": 752.58,
+            "z": 609.37,
+            "scale": 0.71,
+            "rotation": 5.517,
+            "dressing": "zama_palms_east_edge"
+        },
+        {
+            "type": "palm_tree",
+            "x": 409.78,
+            "z": 748.76,
+            "scale": 0.83,
+            "rotation": 5.584,
+            "dressing": "zama_palms_south"
+        },
+        {
+            "type": "palm_tree",
+            "x": 410.91,
+            "z": 744.71,
+            "scale": 0.87,
+            "rotation": 4.562,
+            "dressing": "zama_palms_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 410.74,
+            "z": 754.31,
+            "scale": 1.06,
+            "rotation": 0.158,
+            "dressing": "zama_palms_south"
+        },
+        {
+            "type": "palm_tree",
+            "x": 410.11,
+            "z": 761.06,
+            "scale": 1.03,
+            "rotation": 5.955,
+            "dressing": "zama_palms_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 407.35,
+            "z": 754.97,
+            "scale": 0.86,
+            "rotation": 1.897,
+            "dressing": "zama_palms_south"
+        },
+        {
+            "type": "palm_tree",
+            "x": 417.09,
+            "z": 763.37,
+            "scale": 0.9,
+            "rotation": 3.938,
+            "dressing": "zama_palms_south"
+        },
+        {
+            "type": "palm_tree",
+            "x": 417.8,
+            "z": 756.13,
+            "scale": 1.0,
+            "rotation": 2.611,
+            "dressing": "zama_palms_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 406.99,
+            "z": 747.2,
+            "scale": 1.0,
+            "rotation": 3.175,
+            "dressing": "zama_palms_south"
+        },
+        {
+            "type": "plant",
+            "x": 399.21,
+            "z": 766.73,
+            "scale": 1.01,
+            "rotation": 1.701,
+            "dressing": "zama_palms_south"
+        },
+        {
+            "type": "plant",
+            "x": 417.11,
+            "z": 747.24,
+            "scale": 0.91,
+            "rotation": 5.065,
+            "dressing": "zama_palms_south"
+        },
+        {
+            "type": "plant",
+            "x": 408.29,
+            "z": 767.49,
+            "scale": 1.07,
+            "rotation": 5.537,
+            "dressing": "zama_palms_south"
+        },
+        {
+            "type": "plant",
+            "x": 397.49,
+            "z": 765.65,
+            "scale": 1.07,
+            "rotation": 4.337,
+            "dressing": "zama_palms_south"
+        },
+        {
+            "type": "boulder",
+            "x": 415.43,
+            "z": 750.48,
+            "scale": 0.65,
+            "rotation": 2.424,
+            "dressing": "zama_palms_south"
+        },
+        {
+            "type": "palm_tree",
+            "x": 77.86,
+            "z": 31.52,
+            "scale": 0.92,
+            "rotation": 0.698,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "palm_tree",
+            "x": 78.89,
+            "z": 28.51,
+            "scale": 0.89,
+            "rotation": 6.053,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "olive_tree",
+            "x": 70.6,
+            "z": 37.54,
+            "scale": 0.92,
+            "rotation": 5.436,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "palm_tree",
+            "x": 80.62,
+            "z": 49.18,
+            "scale": 0.9,
+            "rotation": 3.732,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "palm_tree",
+            "x": 85.38,
+            "z": 44.94,
+            "scale": 1.14,
+            "rotation": 5.649,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "olive_tree",
+            "x": 74.99,
+            "z": 33.79,
+            "scale": 0.97,
+            "rotation": 3.331,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "palm_tree",
+            "x": 78.81,
+            "z": 34.9,
+            "scale": 1.24,
+            "rotation": 2.732,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "palm_tree",
+            "x": 73.74,
+            "z": 39.13,
+            "scale": 1.04,
+            "rotation": 2.529,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "plant",
+            "x": 70.74,
+            "z": 45.25,
+            "scale": 1.04,
+            "rotation": 3.364,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "plant",
+            "x": 85.41,
+            "z": 31.95,
+            "scale": 1.11,
+            "rotation": 3.872,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "plant",
+            "x": 68.93,
+            "z": 43.77,
+            "scale": 0.9,
+            "rotation": 0.872,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "plant",
+            "x": 87.9,
+            "z": 30.71,
+            "scale": 0.99,
+            "rotation": 5.961,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "plant",
+            "x": 73.15,
+            "z": 49.13,
+            "scale": 1.33,
+            "rotation": 4.103,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "dead_tree",
+            "x": 88.95,
+            "z": 37.2,
+            "scale": 1.0,
+            "rotation": 4.381,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "boulder",
+            "x": 76.83,
+            "z": 44.87,
+            "scale": 0.65,
+            "rotation": 5.155,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "boulder",
+            "x": 74.48,
+            "z": 46.44,
+            "scale": 0.84,
+            "rotation": 6.029,
+            "dressing": "zama_palms_north"
+        },
+        {
+            "type": "palm_tree",
+            "x": 34.51,
+            "z": 760.91,
+            "scale": 1.13,
+            "rotation": 6.049,
+            "dressing": "zama_palms_southwest"
+        },
+        {
+            "type": "palm_tree",
+            "x": 29.06,
+            "z": 757.6,
+            "scale": 0.82,
+            "rotation": 1.446,
+            "dressing": "zama_palms_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 40.13,
+            "z": 752.84,
+            "scale": 1.11,
+            "rotation": 3.622,
+            "dressing": "zama_palms_southwest"
+        },
+        {
+            "type": "palm_tree",
+            "x": 32.39,
+            "z": 752.89,
+            "scale": 0.91,
+            "rotation": 4.255,
+            "dressing": "zama_palms_southwest"
+        },
+        {
+            "type": "palm_tree",
+            "x": 48.44,
+            "z": 755.08,
+            "scale": 1.09,
+            "rotation": 2.991,
+            "dressing": "zama_palms_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 44.47,
+            "z": 759.12,
+            "scale": 0.89,
+            "rotation": 5.385,
+            "dressing": "zama_palms_southwest"
+        },
+        {
+            "type": "palm_tree",
+            "x": 39.81,
+            "z": 767.15,
+            "scale": 0.86,
+            "rotation": 2.933,
+            "dressing": "zama_palms_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 34.2,
+            "z": 757.53,
+            "scale": 0.95,
+            "rotation": 5.504,
+            "dressing": "zama_palms_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 26.64,
+            "z": 749.7,
+            "scale": 1.33,
+            "rotation": 4.307,
+            "dressing": "zama_palms_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 46.84,
+            "z": 746.58,
+            "scale": 1.36,
+            "rotation": 0.619,
+            "dressing": "zama_palms_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 29.57,
+            "z": 767.1,
+            "scale": 0.99,
+            "rotation": 3.035,
+            "dressing": "zama_palms_southwest"
+        },
+        {
+            "type": "plant",
+            "x": 43.2,
+            "z": 742.05,
+            "scale": 1.2,
+            "rotation": 6.248,
+            "dressing": "zama_palms_southwest"
+        },
+        {
+            "type": "boulder",
+            "x": 49.39,
+            "z": 762.27,
+            "scale": 1.0,
+            "rotation": 2.554,
+            "dressing": "zama_palms_southwest"
+        },
+        {
+            "type": "boulder",
+            "x": 45.37,
+            "z": 766.96,
+            "scale": 0.88,
+            "rotation": 0.143,
+            "dressing": "zama_palms_southwest"
+        },
+        {
+            "type": "palm_tree",
+            "x": 706.41,
+            "z": 26.28,
+            "scale": 1.17,
+            "rotation": 1.741,
+            "dressing": "zama_palms_north_edge"
+        },
+        {
+            "type": "palm_tree",
+            "x": 694.74,
+            "z": 24.0,
+            "scale": 1.07,
+            "rotation": 1.536,
+            "dressing": "zama_palms_north_edge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 698.09,
+            "z": 25.74,
+            "scale": 1.17,
+            "rotation": 3.6,
+            "dressing": "zama_palms_north_edge"
+        },
+        {
+            "type": "palm_tree",
+            "x": 707.11,
+            "z": 29.87,
+            "scale": 1.05,
+            "rotation": 0.677,
+            "dressing": "zama_palms_north_edge"
+        },
+        {
+            "type": "palm_tree",
+            "x": 699.31,
+            "z": 29.2,
+            "scale": 1.09,
+            "rotation": 2.381,
+            "dressing": "zama_palms_north_edge"
+        },
+        {
+            "type": "palm_tree",
+            "x": 709.2,
+            "z": 32.44,
+            "scale": 0.99,
+            "rotation": 3.515,
+            "dressing": "zama_palms_north_edge"
+        },
+        {
+            "type": "palm_tree",
+            "x": 702.81,
+            "z": 28.22,
+            "scale": 1.12,
+            "rotation": 5.355,
+            "dressing": "zama_palms_north_edge"
+        },
+        {
+            "type": "plant",
+            "x": 687.79,
+            "z": 28.63,
+            "scale": 1.35,
+            "rotation": 4.843,
+            "dressing": "zama_palms_north_edge"
+        },
+        {
+            "type": "plant",
+            "x": 689.47,
+            "z": 36.22,
+            "scale": 1.29,
+            "rotation": 4.211,
+            "dressing": "zama_palms_north_edge"
+        },
+        {
+            "type": "plant",
+            "x": 713.54,
+            "z": 27.85,
+            "scale": 1.07,
+            "rotation": 5.249,
+            "dressing": "zama_palms_north_edge"
+        },
+        {
+            "type": "plant",
+            "x": 689.55,
+            "z": 34.0,
+            "scale": 1.4,
+            "rotation": 2.286,
+            "dressing": "zama_palms_north_edge"
+        },
+        {
+            "type": "boulder",
+            "x": 689.74,
+            "z": 29.89,
+            "scale": 0.96,
+            "rotation": 2.547,
+            "dressing": "zama_palms_north_edge"
+        },
+        {
+            "type": "boulder",
+            "x": 702.94,
+            "z": 34.83,
+            "scale": 0.66,
+            "rotation": 2.07,
+            "dressing": "zama_palms_north_edge"
+        },
+        {
+            "type": "palm_tree",
+            "x": 473.28,
+            "z": 750.71,
+            "scale": 1.24,
+            "rotation": 3.983,
+            "dressing": "zama_palms_south_middle"
+        },
+        {
+            "type": "palm_tree",
+            "x": 459.52,
+            "z": 750.49,
+            "scale": 0.94,
+            "rotation": 4.101,
+            "dressing": "zama_palms_south_middle"
+        },
+        {
+            "type": "olive_tree",
+            "x": 462.56,
+            "z": 752.63,
+            "scale": 0.86,
+            "rotation": 5.374,
+            "dressing": "zama_palms_south_middle"
+        },
+        {
+            "type": "palm_tree",
+            "x": 473.68,
+            "z": 741.12,
+            "scale": 1.11,
+            "rotation": 0.008,
+            "dressing": "zama_palms_south_middle"
+        },
+        {
+            "type": "palm_tree",
+            "x": 465.37,
+            "z": 744.23,
+            "scale": 1.1,
+            "rotation": 5.617,
+            "dressing": "zama_palms_south_middle"
+        },
+        {
+            "type": "olive_tree",
+            "x": 477.98,
+            "z": 746.23,
+            "scale": 1.12,
+            "rotation": 3.62,
+            "dressing": "zama_palms_south_middle"
+        },
+        {
+            "type": "palm_tree",
+            "x": 471.99,
+            "z": 747.5,
+            "scale": 0.87,
+            "rotation": 3.39,
+            "dressing": "zama_palms_south_middle"
+        },
+        {
+            "type": "plant",
+            "x": 470.22,
+            "z": 757.48,
+            "scale": 1.18,
+            "rotation": 1.607,
+            "dressing": "zama_palms_south_middle"
+        },
+        {
+            "type": "plant",
+            "x": 481.07,
+            "z": 752.28,
+            "scale": 1.3,
+            "rotation": 2.376,
+            "dressing": "zama_palms_south_middle"
+        },
+        {
+            "type": "dead_tree",
+            "x": 466.62,
+            "z": 736.56,
+            "scale": 1.0,
+            "rotation": 5.988,
+            "dressing": "zama_palms_south_middle"
+        },
+        {
+            "type": "palm_tree",
+            "x": 341.89,
+            "z": 756.93,
+            "scale": 0.97,
+            "rotation": 2.208,
+            "dressing": "zama_palms_south_west"
+        },
+        {
+            "type": "palm_tree",
+            "x": 336.08,
+            "z": 756.08,
+            "scale": 1.18,
+            "rotation": 3.189,
+            "dressing": "zama_palms_south_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 340.29,
+            "z": 745.44,
+            "scale": 1.22,
+            "rotation": 3.295,
+            "dressing": "zama_palms_south_west"
+        },
+        {
+            "type": "palm_tree",
+            "x": 348.58,
+            "z": 761.51,
+            "scale": 1.15,
+            "rotation": 2.341,
+            "dressing": "zama_palms_south_west"
+        },
+        {
+            "type": "palm_tree",
+            "x": 334.7,
+            "z": 760.55,
+            "scale": 0.88,
+            "rotation": 2.755,
+            "dressing": "zama_palms_south_west"
+        },
+        {
+            "type": "palm_tree",
+            "x": 343.2,
+            "z": 748.56,
+            "scale": 1.02,
+            "rotation": 0.077,
+            "dressing": "zama_palms_south_west"
+        },
+        {
+            "type": "palm_tree",
+            "x": 347.01,
+            "z": 757.91,
+            "scale": 1.13,
+            "rotation": 0.17,
+            "dressing": "zama_palms_south_west"
+        },
+        {
+            "type": "plant",
+            "x": 344.05,
+            "z": 767.06,
+            "scale": 1.0,
+            "rotation": 1.527,
+            "dressing": "zama_palms_south_west"
+        },
+        {
+            "type": "plant",
+            "x": 348.78,
+            "z": 750.74,
+            "scale": 1.14,
+            "rotation": 1.455,
+            "dressing": "zama_palms_south_west"
+        },
+        {
+            "type": "plant",
+            "x": 331.44,
+            "z": 750.99,
+            "scale": 1.01,
+            "rotation": 2.241,
+            "dressing": "zama_palms_south_west"
+        },
+        {
+            "type": "boulder",
+            "x": 347.75,
+            "z": 744.09,
+            "scale": 0.92,
+            "rotation": 4.178,
+            "dressing": "zama_palms_south_west"
+        },
+        {
+            "type": "boulder",
+            "x": 351.44,
+            "z": 752.92,
+            "scale": 0.81,
+            "rotation": 2.001,
+            "dressing": "zama_palms_south_west"
+        },
+        {
+            "type": "palm_tree",
+            "x": 650.82,
+            "z": 707.63,
+            "scale": 0.87,
+            "rotation": 1.549,
+            "dressing": "zama_palms_rearguard_east"
+        },
+        {
+            "type": "palm_tree",
+            "x": 644.64,
+            "z": 701.94,
+            "scale": 1.06,
+            "rotation": 1.337,
+            "dressing": "zama_palms_rearguard_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 659.29,
+            "z": 696.72,
+            "scale": 1.18,
+            "rotation": 4.146,
+            "dressing": "zama_palms_rearguard_east"
+        },
+        {
+            "type": "palm_tree",
+            "x": 647.8,
+            "z": 692.89,
+            "scale": 0.95,
+            "rotation": 2.662,
+            "dressing": "zama_palms_rearguard_east"
+        },
+        {
+            "type": "palm_tree",
+            "x": 643.64,
+            "z": 705.91,
+            "scale": 1.17,
+            "rotation": 4.899,
+            "dressing": "zama_palms_rearguard_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 657.67,
+            "z": 700.49,
+            "scale": 1.11,
+            "rotation": 5.336,
+            "dressing": "zama_palms_rearguard_east"
+        },
+        {
+            "type": "palm_tree",
+            "x": 653.47,
+            "z": 709.93,
+            "scale": 0.87,
+            "rotation": 5.175,
+            "dressing": "zama_palms_rearguard_east"
+        },
+        {
+            "type": "palm_tree",
+            "x": 659.42,
+            "z": 693.4,
+            "scale": 0.96,
+            "rotation": 2.792,
+            "dressing": "zama_palms_rearguard_east"
+        },
+        {
+            "type": "plant",
+            "x": 648.62,
+            "z": 714.13,
+            "scale": 1.24,
+            "rotation": 4.639,
+            "dressing": "zama_palms_rearguard_east"
+        },
+        {
+            "type": "boulder",
+            "x": 641.87,
+            "z": 692.94,
+            "scale": 0.89,
+            "rotation": 3.671,
+            "dressing": "zama_palms_rearguard_east"
+        },
+        {
+            "type": "boulder",
+            "x": 653.56,
+            "z": 693.42,
+            "scale": 0.79,
+            "rotation": 0.901,
+            "dressing": "zama_palms_rearguard_east"
         }
     ],
     "dressing": [
@@ -8235,6 +9884,211 @@
             "kind": "gate_approach",
             "x": 528,
             "z": 622
+        },
+        {
+            "id": "zama_north_camp_tent_lines_east",
+            "kind": "camp_lines",
+            "x": 452,
+            "z": 154,
+            "rows": 2,
+            "cols": 2,
+            "rotation": 0
+        },
+        {
+            "id": "zama_north_camp_tent_lines_west",
+            "kind": "camp_lines",
+            "x": 420,
+            "z": 154,
+            "rows": 2,
+            "cols": 2,
+            "rotation": 0
+        },
+        {
+            "id": "zama_rearguard_tent_lines",
+            "kind": "camp_lines",
+            "x": 576,
+            "z": 632,
+            "rows": 1,
+            "cols": 2,
+            "rotation": 0
+        },
+        {
+            "id": "zama_olives_east_plain",
+            "kind": "orchard",
+            "x": 755,
+            "z": 680,
+            "rows": 4,
+            "cols": 5,
+            "tree": "olive_tree",
+            "rotation": 0,
+            "spacing": 7.0
+        },
+        {
+            "id": "zama_olives_south",
+            "kind": "orchard",
+            "x": 220,
+            "z": 756,
+            "rows": 3,
+            "cols": 5,
+            "tree": "olive_tree",
+            "rotation": 0,
+            "spacing": 7.0
+        },
+        {
+            "id": "zama_palms_northwest",
+            "kind": "copse",
+            "x": 40,
+            "z": 40,
+            "radius": 16,
+            "count": 11,
+            "trees": [
+                "palm_tree",
+                "palm_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "zama_palms_southeast",
+            "kind": "copse",
+            "x": 756,
+            "z": 744,
+            "radius": 14,
+            "count": 9,
+            "trees": [
+                "palm_tree",
+                "palm_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "zama_palms_wadi_east",
+            "kind": "copse",
+            "x": 706,
+            "z": 668,
+            "radius": 14,
+            "count": 9,
+            "trees": [
+                "palm_tree",
+                "palm_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "zama_palms_northeast",
+            "kind": "copse",
+            "x": 756,
+            "z": 40,
+            "radius": 14,
+            "count": 9,
+            "trees": [
+                "palm_tree",
+                "palm_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "zama_palms_east_edge",
+            "kind": "copse",
+            "x": 758,
+            "z": 610,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "palm_tree",
+                "palm_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "zama_palms_south",
+            "kind": "copse",
+            "x": 410,
+            "z": 756,
+            "radius": 14,
+            "count": 9,
+            "trees": [
+                "palm_tree",
+                "palm_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "zama_palms_north",
+            "kind": "copse",
+            "x": 80,
+            "z": 40,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "palm_tree",
+                "palm_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "zama_palms_southwest",
+            "kind": "copse",
+            "x": 40,
+            "z": 756,
+            "radius": 14,
+            "count": 9,
+            "trees": [
+                "palm_tree",
+                "palm_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "zama_palms_north_edge",
+            "kind": "copse",
+            "x": 700,
+            "z": 30,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "palm_tree",
+                "palm_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "zama_palms_south_middle",
+            "kind": "copse",
+            "x": 470,
+            "z": 748,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "palm_tree",
+                "palm_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "zama_palms_south_west",
+            "kind": "copse",
+            "x": 340,
+            "z": 756,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "palm_tree",
+                "palm_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "zama_palms_rearguard_east",
+            "kind": "copse",
+            "x": 650,
+            "z": 700,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "palm_tree",
+                "palm_tree",
+                "olive_tree"
+            ]
         }
     ]
 }

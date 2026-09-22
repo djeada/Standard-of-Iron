@@ -50,7 +50,8 @@
           "entry_point": {
             "x": 120,
             "z": 180
-          }
+          },
+          "label": "The column's rearguard"
         },
         {
           "timing": 320.0,
@@ -71,7 +72,8 @@
           "entry_point": {
             "x": 196,
             "z": 172
-          }
+          },
+          "label": "The column's second line"
         }
       ]
     },
@@ -106,7 +108,8 @@
           "entry_point": {
             "x": 560,
             "z": 152
-          }
+          },
+          "label": "The van breaking out"
         }
       ]
     }
@@ -153,7 +156,7 @@
     {
       "type": "wave_count",
       "wave_count": 2,
-      "description": "Crush both Roman breakout columns before they claw through the hillside."
+      "description": "Break two of the Roman columns on the shore road."
     }
   ],
   "stages": [
@@ -165,8 +168,8 @@
       ],
       "required_count": 1,
       "title": "Close the trap on the column town",
-      "description": "Take the Roman marching town at the head of the lakeside road.",
-      "hint": "The road runs north-west along the shore; strike the head of the column first.",
+      "description": "Take the Roman marching town at the western mouth of the lake road.",
+      "hint": "The road runs east along the lake. Shut its western mouth and the column has only one way left to go.",
       "target": {
         "x": 72,
         "z": 186
@@ -193,7 +196,7 @@
       "id": "kill_commanders",
       "type": "eliminate_commanders",
       "title": "Kill the Roman commanders",
-      "description": "Flaminius must not leave the shore.",
+      "description": "Fabius waits at the basin watch south of the road; Scipio holds the sanctuary above the eastern ford. Take them before the column turns on your camp.",
       "hint": "Their camps fall neutral once their commander is dead."
     }
   ],
@@ -218,7 +221,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Strike now. Close the western route and split their line."
+          "text": "Strike now. Take Fabius at the basin watch before the column finds your camp."
         }
       ]
     },
@@ -230,7 +233,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Roman cavalry is attempting a breakout from the south. Intercept them."
+          "text": "The Roman van is cutting east along the shore road. Ride it down before it clears the basin."
         }
       ]
     }
@@ -270,7 +273,7 @@
         "type": "mission_defeat",
         "delay": 1.0
       },
-      "text": "The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar on the shore is not particular about whose it is.",
+      "text": "The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar past the eastern stream is not particular about whose it is.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
@@ -387,6 +390,49 @@
         "owner_id": 2
       },
       "text": "The column is nearly gone. What is left of it will hold until the fog lifts, because that is the only order anyone can still hear.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "trasimene_hannibal_open",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 16.0
+      },
+      "text": "Lake on their left, hills on their right, mist over both. Nobody moves until the whole column is inside.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 90
+    },
+    {
+      "id": "trasimene_hannibal_column_headless",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "commander_defeated",
+        "owner_id": 2,
+        "by_owner_id": "player",
+        "delay": 6.0
+      },
+      "text": "The column has lost its head. Take the town before anyone thinks to pick it up.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "trasimene_hannibal_van_cut",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "commander_defeated",
+        "owner_id": 3,
+        "by_owner_id": "player",
+        "delay": 6.0
+      },
+      "text": "That was the van's road home. Maharbal will collect whoever is still walking in the morning.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80

@@ -54,7 +54,8 @@
           "entry_point": {
             "x": 390,
             "z": 306
-          }
+          },
+          "label": "The consul's screen"
         },
         {
           "timing": 360.0,
@@ -75,7 +76,8 @@
           "entry_point": {
             "x": 356,
             "z": 330
-          }
+          },
+          "label": "Scipio's horse"
         }
       ]
     },
@@ -114,7 +116,8 @@
           "entry_point": {
             "x": 548,
             "z": 200
-          }
+          },
+          "label": "The reserve's vanguard"
         },
         {
           "timing": 480.0,
@@ -135,7 +138,8 @@
           "entry_point": {
             "x": 520,
             "z": 232
-          }
+          },
+          "label": "The reserve column"
         }
       ]
     }
@@ -147,7 +151,7 @@
         "barracks"
       ],
       "min_count": 2,
-      "description": "Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog."
+      "description": "Take the consul's forward town and the reserve camp across the bridge road."
     },
     {
       "type": "eliminate_commanders",
@@ -177,7 +181,7 @@
     {
       "type": "wave_count",
       "wave_count": 2,
-      "description": "Seal the road. Let no scout cross the Ticino alive."
+      "description": "Break two Roman waves in the field."
     }
   ],
   "stages": [
@@ -218,7 +222,7 @@
       "type": "eliminate_commanders",
       "title": "Kill the Roman commanders",
       "description": "Finish the consular officers on the field.",
-      "hint": "Their troops leave the field with them."
+      "hint": "Scipio holds the forest sanctuary north-east of your camp; the reserve's officer waits at the bridge below his camp."
     }
   ],
   "events": [
@@ -237,12 +241,12 @@
     {
       "trigger": {
         "type": "timer",
-        "time": 170.0
+        "time": 225.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "Roman reinforcements are approaching from the eastern road."
+          "text": "Scipio's reserve is crossing the bridge road from the east."
         }
       ]
     },
@@ -254,7 +258,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Another Roman wave is flanking from the southeast. Rotate quickly."
+          "text": "The screen's cavalry comes again from the east. Rotate quickly."
         }
       ]
     }
@@ -338,7 +342,7 @@
         "owner_id": 2,
         "delay": 0.5
       },
-      "text": "The screen is coming across the flats. Velites, cavalry, the usual arrangement. Please try to stand still; it makes the reports so much tidier.",
+      "text": "The screen is coming across the flats. Spears in front, horse on the wings, the usual arrangement. Please try to stand still; it makes the reports so much tidier.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 60
@@ -411,6 +415,32 @@
         "owner_id": 2
       },
       "text": "A few of the screen left, and me. My son is somewhere on this field; if he finds me, he will be insufferable about it for the rest of his life.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "ticino_hannibal_open",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 16.0
+      },
+      "text": "Let him count. Numidians on the wings, the bridled horse in the centre, and nobody waits for the consul to finish his sentence.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 90
+    },
+    {
+      "id": "ticino_hannibal_screen_broken",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_cleared",
+        "final_wave": false
+      },
+      "text": "That was the screen. Put the archers on the ridge before the reserve remembers it is there.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80

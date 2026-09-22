@@ -43,7 +43,12 @@
             0.16
         ],
         "sway_speed": 1.05,
-        "sway_strength": 0.18
+        "sway_strength": 0.18,
+        "tree_mix": {
+            "palm": 0.0,
+            "olive": 1.3,
+            "cypress": 1.1
+        }
     },
     "bridges": [
         {
@@ -1925,112 +1930,112 @@
         },
         {
             "max_population": -1,
-            "player_id": 2,
+            "player_id": 3,
             "type": "spearman",
             "x": 232.62,
             "z": 451.28000000000003
         },
         {
             "max_population": -1,
-            "player_id": 2,
+            "player_id": 3,
             "type": "spearman",
             "x": 255.88,
             "z": 451.28000000000003
         },
         {
             "max_population": -1,
-            "player_id": 2,
+            "player_id": 3,
             "type": "spearman",
             "x": 279.14,
             "z": 451.28000000000003
         },
         {
             "max_population": -1,
-            "player_id": 2,
+            "player_id": 3,
             "type": "swordsman",
             "x": 241.92000000000002,
             "z": 469.89
         },
         {
             "max_population": -1,
-            "player_id": 2,
+            "player_id": 3,
             "type": "swordsman",
             "x": 269.84000000000003,
             "z": 469.89
         },
         {
             "max_population": -1,
-            "player_id": 2,
+            "player_id": 3,
             "type": "archer",
             "x": 254.51,
             "z": 460.75
         },
         {
             "max_population": -1,
-            "player_id": 2,
+            "player_id": 3,
             "type": "horse_swordsman",
             "x": 204.70000000000002,
             "z": 437.32
         },
         {
             "max_population": -1,
-            "player_id": 2,
+            "player_id": 3,
             "type": "horse_swordsman",
             "x": 307.05,
             "z": 437.32
         },
         {
             "max_population": -1,
-            "player_id": 3,
+            "player_id": 2,
             "type": "spearman",
             "x": 232.86,
             "z": 60.39
         },
         {
             "max_population": -1,
-            "player_id": 3,
+            "player_id": 2,
             "type": "spearman",
             "x": 255.88,
             "z": 60.480000000000004
         },
         {
             "max_population": -1,
-            "player_id": 3,
+            "player_id": 2,
             "type": "spearman",
             "x": 258,
             "z": 75
         },
         {
             "max_population": -1,
-            "player_id": 3,
+            "player_id": 2,
             "type": "swordsman",
             "x": 241.92000000000002,
             "z": 41.87
         },
         {
             "max_population": -1,
-            "player_id": 3,
+            "player_id": 2,
             "type": "swordsman",
             "x": 269.84000000000003,
             "z": 41.87
         },
         {
             "max_population": -1,
-            "player_id": 3,
+            "player_id": 2,
             "type": "archer",
             "x": 255.88,
             "z": 51.18
         },
         {
             "max_population": -1,
-            "player_id": 3,
+            "player_id": 2,
             "type": "horse_swordsman",
             "x": 204.70000000000002,
             "z": 74.44
         },
         {
             "max_population": -1,
-            "player_id": 3,
+            "player_id": 2,
             "type": "horse_swordsman",
             "x": 302,
             "z": 68
@@ -2107,42 +2112,42 @@
         },
         {
             "max_population": -1,
-            "player_id": 2,
+            "player_id": 3,
             "type": "spearman",
             "x": 167.48,
             "z": 437.32
         },
         {
             "max_population": -1,
-            "player_id": 2,
+            "player_id": 3,
             "type": "archer",
             "x": 176.79,
             "z": 451.28000000000003
         },
         {
             "max_population": -1,
-            "player_id": 2,
+            "player_id": 3,
             "type": "swordsman",
             "x": 158.18,
             "z": 451.28000000000003
         },
         {
             "max_population": -1,
-            "player_id": 2,
+            "player_id": 3,
             "type": "spearman",
             "x": 344.27,
             "z": 437.32
         },
         {
             "max_population": -1,
-            "player_id": 2,
+            "player_id": 3,
             "type": "archer",
             "x": 334.97,
             "z": 451.28000000000003
         },
         {
             "max_population": -1,
-            "player_id": 2,
+            "player_id": 3,
             "type": "swordsman",
             "x": 353.58,
             "z": 451.28000000000003
@@ -4918,6 +4923,42 @@
             ],
             "type": "wall_segment",
             "width": 2
+        },
+        {
+            "type": "farm",
+            "x": 334.5,
+            "z": 153.5,
+            "rotation": 0,
+            "dressing": "campania_quarter_fields",
+            "player_id": 1,
+            "nation": "carthage"
+        },
+        {
+            "type": "farm",
+            "x": 351.5,
+            "z": 153.5,
+            "rotation": 0,
+            "dressing": "campania_quarter_fields",
+            "player_id": 1,
+            "nation": "carthage"
+        },
+        {
+            "type": "farm",
+            "x": 284.5,
+            "z": 205.0,
+            "rotation": 0,
+            "dressing": "campania_quarter_fields_west",
+            "player_id": 1,
+            "nation": "carthage"
+        },
+        {
+            "type": "farm",
+            "x": 301.5,
+            "z": 205.0,
+            "rotation": 0,
+            "dressing": "campania_quarter_fields_west",
+            "player_id": 1,
+            "nation": "carthage"
         }
     ],
     "terrain": [
@@ -9031,6 +9072,1273 @@
             "scale": 1.0,
             "rotation": 1.871,
             "dressing": "campania_gate_12"
+        },
+        {
+            "type": "tent",
+            "x": 520.0,
+            "z": 240.2,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "campania_siege_tent_lines"
+        },
+        {
+            "type": "tent",
+            "x": 520.0,
+            "z": 247.8,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "campania_siege_tent_lines"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 520.0,
+            "z": 231.84,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "campania_siege_tent_lines"
+        },
+        {
+            "type": "firecamp",
+            "x": 516.0,
+            "z": 254.64,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_siege_tent_lines",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "tent",
+            "x": 512.0,
+            "z": 240.2,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "campania_siege_tent_lines"
+        },
+        {
+            "type": "tent",
+            "x": 512.0,
+            "z": 247.8,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "campania_siege_tent_lines"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 512.0,
+            "z": 231.84,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "campania_siege_tent_lines"
+        },
+        {
+            "type": "tent",
+            "x": 390.95,
+            "z": 539.06,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "campania_appian_tent_lines"
+        },
+        {
+            "type": "supply_cart",
+            "x": 323.67,
+            "z": 155.22,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_quarter_fields"
+        },
+        {
+            "type": "supply_cart",
+            "x": 273.67,
+            "z": 206.72,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "campania_quarter_fields_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 27.93,
+            "z": 604.74,
+            "scale": 1.07,
+            "rotation": 3.438,
+            "dressing": "campania_olives_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 49.24,
+            "z": 604.51,
+            "scale": 0.95,
+            "rotation": 4.956,
+            "dressing": "campania_olives_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 55.6,
+            "z": 604.58,
+            "scale": 1.01,
+            "rotation": 1.493,
+            "dressing": "campania_olives_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 28.27,
+            "z": 612.14,
+            "scale": 1.02,
+            "rotation": 0.594,
+            "dressing": "campania_olives_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 34.63,
+            "z": 612.1,
+            "scale": 1.05,
+            "rotation": 1.614,
+            "dressing": "campania_olives_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 48.89,
+            "z": 612.25,
+            "scale": 0.93,
+            "rotation": 0.322,
+            "dressing": "campania_olives_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 56.01,
+            "z": 611.92,
+            "scale": 0.92,
+            "rotation": 4.514,
+            "dressing": "campania_olives_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 27.73,
+            "z": 619.42,
+            "scale": 0.93,
+            "rotation": 0.378,
+            "dressing": "campania_olives_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 35.36,
+            "z": 619.46,
+            "scale": 0.92,
+            "rotation": 2.644,
+            "dressing": "campania_olives_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 42.43,
+            "z": 619.46,
+            "scale": 0.97,
+            "rotation": 1.311,
+            "dressing": "campania_olives_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 49.33,
+            "z": 618.57,
+            "scale": 1.03,
+            "rotation": 5.37,
+            "dressing": "campania_olives_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 55.54,
+            "z": 619.02,
+            "scale": 1.05,
+            "rotation": 2.664,
+            "dressing": "campania_olives_southwest"
+        },
+        {
+            "type": "olive_tree",
+            "x": 599.24,
+            "z": 605.45,
+            "scale": 0.92,
+            "rotation": 5.459,
+            "dressing": "campania_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 606.4,
+            "z": 604.89,
+            "scale": 0.93,
+            "rotation": 2.858,
+            "dressing": "campania_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 613.78,
+            "z": 605.08,
+            "scale": 1.0,
+            "rotation": 0.957,
+            "dressing": "campania_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 620.21,
+            "z": 604.85,
+            "scale": 1.08,
+            "rotation": 5.415,
+            "dressing": "campania_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 599.01,
+            "z": 612.2,
+            "scale": 1.06,
+            "rotation": 2.219,
+            "dressing": "campania_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 606.03,
+            "z": 612.23,
+            "scale": 0.91,
+            "rotation": 1.882,
+            "dressing": "campania_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 599.81,
+            "z": 618.76,
+            "scale": 1.06,
+            "rotation": 2.637,
+            "dressing": "campania_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 606.95,
+            "z": 618.75,
+            "scale": 1.02,
+            "rotation": 4.571,
+            "dressing": "campania_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 613.41,
+            "z": 619.12,
+            "scale": 0.93,
+            "rotation": 4.499,
+            "dressing": "campania_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 620.97,
+            "z": 618.72,
+            "scale": 0.9,
+            "rotation": 1.118,
+            "dressing": "campania_olives_southeast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 604.75,
+            "z": 519.56,
+            "scale": 1.09,
+            "rotation": 4.537,
+            "dressing": "campania_olives_east_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 611.52,
+            "z": 520.0,
+            "scale": 1.06,
+            "rotation": 3.0,
+            "dressing": "campania_olives_east_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 619.19,
+            "z": 519.98,
+            "scale": 0.93,
+            "rotation": 0.205,
+            "dressing": "campania_olives_east_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 604.97,
+            "z": 526.25,
+            "scale": 0.9,
+            "rotation": 6.264,
+            "dressing": "campania_olives_east_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 612.44,
+            "z": 526.97,
+            "scale": 1.0,
+            "rotation": 5.657,
+            "dressing": "campania_olives_east_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 618.73,
+            "z": 526.88,
+            "scale": 0.92,
+            "rotation": 2.811,
+            "dressing": "campania_olives_east_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 605.12,
+            "z": 533.68,
+            "scale": 0.99,
+            "rotation": 0.35,
+            "dressing": "campania_olives_east_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 619.22,
+            "z": 533.47,
+            "scale": 0.91,
+            "rotation": 3.283,
+            "dressing": "campania_olives_east_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 605.14,
+            "z": 540.39,
+            "scale": 0.88,
+            "rotation": 4.836,
+            "dressing": "campania_olives_east_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 611.8,
+            "z": 540.33,
+            "scale": 0.88,
+            "rotation": 2.61,
+            "dressing": "campania_olives_east_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 618.81,
+            "z": 540.64,
+            "scale": 0.95,
+            "rotation": 2.471,
+            "dressing": "campania_olives_east_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 89.14,
+            "z": 592.79,
+            "scale": 0.99,
+            "rotation": 1.161,
+            "dressing": "campania_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 96.41,
+            "z": 592.83,
+            "scale": 0.86,
+            "rotation": 1.888,
+            "dressing": "campania_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 103.67,
+            "z": 592.74,
+            "scale": 0.94,
+            "rotation": 5.781,
+            "dressing": "campania_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 110.35,
+            "z": 593.13,
+            "scale": 0.95,
+            "rotation": 0.243,
+            "dressing": "campania_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 89.02,
+            "z": 599.87,
+            "scale": 1.08,
+            "rotation": 4.857,
+            "dressing": "campania_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 96.17,
+            "z": 600.38,
+            "scale": 1.09,
+            "rotation": 1.707,
+            "dressing": "campania_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 110.38,
+            "z": 599.81,
+            "scale": 0.92,
+            "rotation": 1.34,
+            "dressing": "campania_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 89.02,
+            "z": 607.47,
+            "scale": 0.98,
+            "rotation": 3.372,
+            "dressing": "campania_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 96.25,
+            "z": 606.97,
+            "scale": 0.93,
+            "rotation": 1.585,
+            "dressing": "campania_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 103.41,
+            "z": 607.17,
+            "scale": 0.96,
+            "rotation": 0.412,
+            "dressing": "campania_olives_south"
+        },
+        {
+            "type": "olive_tree",
+            "x": 110.93,
+            "z": 607.18,
+            "scale": 0.87,
+            "rotation": 4.852,
+            "dressing": "campania_olives_south"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 288.29,
+            "z": 606.36,
+            "scale": 0.9,
+            "rotation": 3.181,
+            "dressing": "campania_vines_south_road"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 293.5,
+            "z": 605.75,
+            "scale": 0.89,
+            "rotation": 1.338,
+            "dressing": "campania_vines_south_road"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 299.83,
+            "z": 606.09,
+            "scale": 1.08,
+            "rotation": 0.966,
+            "dressing": "campania_vines_south_road"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 306.19,
+            "z": 605.85,
+            "scale": 1.04,
+            "rotation": 1.699,
+            "dressing": "campania_vines_south_road"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 311.73,
+            "z": 606.21,
+            "scale": 0.89,
+            "rotation": 1.377,
+            "dressing": "campania_vines_south_road"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 288.41,
+            "z": 611.54,
+            "scale": 0.89,
+            "rotation": 1.785,
+            "dressing": "campania_vines_south_road"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 294.09,
+            "z": 611.77,
+            "scale": 0.87,
+            "rotation": 5.411,
+            "dressing": "campania_vines_south_road"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 299.79,
+            "z": 611.9,
+            "scale": 1.01,
+            "rotation": 2.654,
+            "dressing": "campania_vines_south_road"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 305.93,
+            "z": 612.38,
+            "scale": 0.93,
+            "rotation": 4.173,
+            "dressing": "campania_vines_south_road"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 312.12,
+            "z": 612.4,
+            "scale": 0.94,
+            "rotation": 3.401,
+            "dressing": "campania_vines_south_road"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 287.72,
+            "z": 617.71,
+            "scale": 0.98,
+            "rotation": 4.493,
+            "dressing": "campania_vines_south_road"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 293.71,
+            "z": 618.38,
+            "scale": 1.09,
+            "rotation": 5.744,
+            "dressing": "campania_vines_south_road"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 299.55,
+            "z": 617.67,
+            "scale": 1.01,
+            "rotation": 3.48,
+            "dressing": "campania_vines_south_road"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 305.53,
+            "z": 617.58,
+            "scale": 0.86,
+            "rotation": 5.485,
+            "dressing": "campania_vines_south_road"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 283.14,
+            "z": 562.67,
+            "scale": 1.06,
+            "rotation": 2.521,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 295.55,
+            "z": 560.36,
+            "scale": 0.81,
+            "rotation": 3.018,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 294.01,
+            "z": 565.84,
+            "scale": 1.0,
+            "rotation": 4.293,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 300.83,
+            "z": 554.1,
+            "scale": 1.23,
+            "rotation": 1.395,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 285.53,
+            "z": 554.63,
+            "scale": 0.96,
+            "rotation": 1.453,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 285.02,
+            "z": 566.73,
+            "scale": 0.88,
+            "rotation": 3.326,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 288.12,
+            "z": 560.62,
+            "scale": 0.99,
+            "rotation": 2.865,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 284.29,
+            "z": 559.73,
+            "scale": 0.96,
+            "rotation": 0.079,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "olive_tree",
+            "x": 292.63,
+            "z": 553.8,
+            "scale": 0.82,
+            "rotation": 0.983,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 281.27,
+            "z": 552.59,
+            "scale": 1.15,
+            "rotation": 5.616,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "plant",
+            "x": 284.44,
+            "z": 547.03,
+            "scale": 1.25,
+            "rotation": 0.44,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "plant",
+            "x": 295.58,
+            "z": 545.89,
+            "scale": 1.02,
+            "rotation": 0.296,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "plant",
+            "x": 278.47,
+            "z": 570.67,
+            "scale": 1.26,
+            "rotation": 4.054,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "plant",
+            "x": 278.7,
+            "z": 558.14,
+            "scale": 1.33,
+            "rotation": 4.75,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "boulder",
+            "x": 275.16,
+            "z": 552.69,
+            "scale": 0.96,
+            "rotation": 2.811,
+            "dressing": "campania_grove_appian_west"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 41.81,
+            "z": 562.73,
+            "scale": 0.98,
+            "rotation": 1.62,
+            "dressing": "campania_grove_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 44.4,
+            "z": 564.34,
+            "scale": 0.97,
+            "rotation": 5.51,
+            "dressing": "campania_grove_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 50.37,
+            "z": 564.81,
+            "scale": 1.07,
+            "rotation": 2.299,
+            "dressing": "campania_grove_coast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 40.32,
+            "z": 555.62,
+            "scale": 0.9,
+            "rotation": 5.579,
+            "dressing": "campania_grove_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 57.47,
+            "z": 561.68,
+            "scale": 1.12,
+            "rotation": 1.385,
+            "dressing": "campania_grove_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 50.1,
+            "z": 552.13,
+            "scale": 1.12,
+            "rotation": 2.777,
+            "dressing": "campania_grove_coast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 58.95,
+            "z": 556.46,
+            "scale": 1.16,
+            "rotation": 4.926,
+            "dressing": "campania_grove_coast"
+        },
+        {
+            "type": "olive_tree",
+            "x": 55.5,
+            "z": 559.26,
+            "scale": 0.89,
+            "rotation": 5.007,
+            "dressing": "campania_grove_coast"
+        },
+        {
+            "type": "plant",
+            "x": 51.12,
+            "z": 573.03,
+            "scale": 1.2,
+            "rotation": 1.059,
+            "dressing": "campania_grove_coast"
+        },
+        {
+            "type": "plant",
+            "x": 50.83,
+            "z": 545.75,
+            "scale": 1.08,
+            "rotation": 2.623,
+            "dressing": "campania_grove_coast"
+        },
+        {
+            "type": "plant",
+            "x": 55.88,
+            "z": 568.14,
+            "scale": 1.38,
+            "rotation": 0.278,
+            "dressing": "campania_grove_coast"
+        },
+        {
+            "type": "plant",
+            "x": 44.47,
+            "z": 570.0,
+            "scale": 1.25,
+            "rotation": 2.281,
+            "dressing": "campania_grove_coast"
+        },
+        {
+            "type": "boulder",
+            "x": 46.71,
+            "z": 558.25,
+            "scale": 0.97,
+            "rotation": 2.857,
+            "dressing": "campania_grove_coast"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 474.39,
+            "z": 526.13,
+            "scale": 1.06,
+            "rotation": 4.375,
+            "dressing": "campania_grove_appian_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 490.67,
+            "z": 534.13,
+            "scale": 1.0,
+            "rotation": 0.159,
+            "dressing": "campania_grove_appian_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 479.46,
+            "z": 526.52,
+            "scale": 1.18,
+            "rotation": 3.077,
+            "dressing": "campania_grove_appian_east"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 478.63,
+            "z": 523.42,
+            "scale": 0.88,
+            "rotation": 2.445,
+            "dressing": "campania_grove_appian_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 472.26,
+            "z": 536.15,
+            "scale": 0.96,
+            "rotation": 1.659,
+            "dressing": "campania_grove_appian_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 480.08,
+            "z": 533.01,
+            "scale": 0.99,
+            "rotation": 3.651,
+            "dressing": "campania_grove_appian_east"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 476.07,
+            "z": 535.09,
+            "scale": 1.23,
+            "rotation": 0.598,
+            "dressing": "campania_grove_appian_east"
+        },
+        {
+            "type": "olive_tree",
+            "x": 474.91,
+            "z": 538.14,
+            "scale": 0.95,
+            "rotation": 3.414,
+            "dressing": "campania_grove_appian_east"
+        },
+        {
+            "type": "plant",
+            "x": 466.72,
+            "z": 529.61,
+            "scale": 1.29,
+            "rotation": 3.696,
+            "dressing": "campania_grove_appian_east"
+        },
+        {
+            "type": "plant",
+            "x": 484.33,
+            "z": 543.97,
+            "scale": 0.97,
+            "rotation": 5.662,
+            "dressing": "campania_grove_appian_east"
+        },
+        {
+            "type": "plant",
+            "x": 481.1,
+            "z": 518.7,
+            "scale": 1.11,
+            "rotation": 2.166,
+            "dressing": "campania_grove_appian_east"
+        },
+        {
+            "type": "plant",
+            "x": 470.03,
+            "z": 522.59,
+            "scale": 1.34,
+            "rotation": 4.309,
+            "dressing": "campania_grove_appian_east"
+        },
+        {
+            "type": "boulder",
+            "x": 480.02,
+            "z": 541.84,
+            "scale": 0.9,
+            "rotation": 1.275,
+            "dressing": "campania_grove_appian_east"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 493.84,
+            "z": 613.45,
+            "scale": 0.97,
+            "rotation": 3.137,
+            "dressing": "campania_grove_south_edge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 488.92,
+            "z": 620.14,
+            "scale": 1.21,
+            "rotation": 1.725,
+            "dressing": "campania_grove_south_edge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 498.22,
+            "z": 605.25,
+            "scale": 1.14,
+            "rotation": 2.628,
+            "dressing": "campania_grove_south_edge"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 494.5,
+            "z": 606.66,
+            "scale": 0.86,
+            "rotation": 1.531,
+            "dressing": "campania_grove_south_edge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 496.26,
+            "z": 609.09,
+            "scale": 1.1,
+            "rotation": 6.222,
+            "dressing": "campania_grove_south_edge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 481.34,
+            "z": 614.02,
+            "scale": 0.92,
+            "rotation": 1.818,
+            "dressing": "campania_grove_south_edge"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 495.73,
+            "z": 621.24,
+            "scale": 0.98,
+            "rotation": 1.989,
+            "dressing": "campania_grove_south_edge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 490.12,
+            "z": 611.39,
+            "scale": 1.17,
+            "rotation": 0.02,
+            "dressing": "campania_grove_south_edge"
+        },
+        {
+            "type": "plant",
+            "x": 477.24,
+            "z": 609.72,
+            "scale": 1.11,
+            "rotation": 6.084,
+            "dressing": "campania_grove_south_edge"
+        },
+        {
+            "type": "plant",
+            "x": 483.27,
+            "z": 608.69,
+            "scale": 0.99,
+            "rotation": 4.599,
+            "dressing": "campania_grove_south_edge"
+        },
+        {
+            "type": "plant",
+            "x": 479.18,
+            "z": 608.57,
+            "scale": 1.31,
+            "rotation": 2.897,
+            "dressing": "campania_grove_south_edge"
+        },
+        {
+            "type": "dead_tree",
+            "x": 487.26,
+            "z": 604.06,
+            "scale": 1.0,
+            "rotation": 3.324,
+            "dressing": "campania_grove_south_edge"
+        },
+        {
+            "type": "boulder",
+            "x": 492.77,
+            "z": 625.78,
+            "scale": 0.7,
+            "rotation": 1.511,
+            "dressing": "campania_grove_south_edge"
+        },
+        {
+            "type": "boulder",
+            "x": 480.89,
+            "z": 620.38,
+            "scale": 0.72,
+            "rotation": 0.161,
+            "dressing": "campania_grove_south_edge"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 144.06,
+            "z": 524.67,
+            "scale": 1.06,
+            "rotation": 4.254,
+            "dressing": "campania_grove_southwest_meadow"
+        },
+        {
+            "type": "olive_tree",
+            "x": 139.85,
+            "z": 527.64,
+            "scale": 0.98,
+            "rotation": 3.079,
+            "dressing": "campania_grove_southwest_meadow"
+        },
+        {
+            "type": "olive_tree",
+            "x": 143.32,
+            "z": 540.57,
+            "scale": 1.02,
+            "rotation": 3.03,
+            "dressing": "campania_grove_southwest_meadow"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 143.66,
+            "z": 529.4,
+            "scale": 0.81,
+            "rotation": 0.449,
+            "dressing": "campania_grove_southwest_meadow"
+        },
+        {
+            "type": "olive_tree",
+            "x": 145.34,
+            "z": 537.98,
+            "scale": 0.81,
+            "rotation": 4.302,
+            "dressing": "campania_grove_southwest_meadow"
+        },
+        {
+            "type": "olive_tree",
+            "x": 139.26,
+            "z": 534.08,
+            "scale": 0.92,
+            "rotation": 1.036,
+            "dressing": "campania_grove_southwest_meadow"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 131.4,
+            "z": 526.2,
+            "scale": 0.8,
+            "rotation": 1.873,
+            "dressing": "campania_grove_southwest_meadow"
+        },
+        {
+            "type": "olive_tree",
+            "x": 146.19,
+            "z": 528.11,
+            "scale": 1.01,
+            "rotation": 0.607,
+            "dressing": "campania_grove_southwest_meadow"
+        },
+        {
+            "type": "plant",
+            "x": 132.93,
+            "z": 536.91,
+            "scale": 1.26,
+            "rotation": 3.04,
+            "dressing": "campania_grove_southwest_meadow"
+        },
+        {
+            "type": "plant",
+            "x": 149.55,
+            "z": 534.53,
+            "scale": 1.36,
+            "rotation": 4.237,
+            "dressing": "campania_grove_southwest_meadow"
+        },
+        {
+            "type": "boulder",
+            "x": 140.32,
+            "z": 520.08,
+            "scale": 0.71,
+            "rotation": 2.87,
+            "dressing": "campania_grove_southwest_meadow"
+        },
+        {
+            "type": "boulder",
+            "x": 135.08,
+            "z": 538.36,
+            "scale": 0.64,
+            "rotation": 0.004,
+            "dressing": "campania_grove_southwest_meadow"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 215.16,
+            "z": 604.43,
+            "scale": 1.18,
+            "rotation": 1.485,
+            "dressing": "campania_grove_southwest_edge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 216.74,
+            "z": 610.01,
+            "scale": 1.16,
+            "rotation": 3.182,
+            "dressing": "campania_grove_southwest_edge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 215.49,
+            "z": 613.67,
+            "scale": 0.98,
+            "rotation": 6.092,
+            "dressing": "campania_grove_southwest_edge"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 219.03,
+            "z": 618.46,
+            "scale": 0.87,
+            "rotation": 1.949,
+            "dressing": "campania_grove_southwest_edge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 217.99,
+            "z": 606.94,
+            "scale": 1.0,
+            "rotation": 0.309,
+            "dressing": "campania_grove_southwest_edge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 210.73,
+            "z": 609.1,
+            "scale": 1.03,
+            "rotation": 5.466,
+            "dressing": "campania_grove_southwest_edge"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 209.8,
+            "z": 617.25,
+            "scale": 0.81,
+            "rotation": 3.704,
+            "dressing": "campania_grove_southwest_edge"
+        },
+        {
+            "type": "olive_tree",
+            "x": 224.38,
+            "z": 604.87,
+            "scale": 1.09,
+            "rotation": 3.111,
+            "dressing": "campania_grove_southwest_edge"
+        },
+        {
+            "type": "plant",
+            "x": 223.98,
+            "z": 619.7,
+            "scale": 1.1,
+            "rotation": 3.973,
+            "dressing": "campania_grove_southwest_edge"
+        },
+        {
+            "type": "plant",
+            "x": 213.97,
+            "z": 619.35,
+            "scale": 1.05,
+            "rotation": 5.536,
+            "dressing": "campania_grove_southwest_edge"
+        },
+        {
+            "type": "plant",
+            "x": 231.03,
+            "z": 611.3,
+            "scale": 0.96,
+            "rotation": 2.203,
+            "dressing": "campania_grove_southwest_edge"
+        },
+        {
+            "type": "boulder",
+            "x": 224.94,
+            "z": 611.07,
+            "scale": 0.74,
+            "rotation": 5.544,
+            "dressing": "campania_grove_southwest_edge"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 534.21,
+            "z": 28.4,
+            "scale": 0.91,
+            "rotation": 4.834,
+            "dressing": "campania_grove_northeast_corner"
+        },
+        {
+            "type": "olive_tree",
+            "x": 533.77,
+            "z": 32.15,
+            "scale": 1.16,
+            "rotation": 1.521,
+            "dressing": "campania_grove_northeast_corner"
+        },
+        {
+            "type": "olive_tree",
+            "x": 531.31,
+            "z": 30.0,
+            "scale": 0.93,
+            "rotation": 3.188,
+            "dressing": "campania_grove_northeast_corner"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 545.04,
+            "z": 29.74,
+            "scale": 0.83,
+            "rotation": 3.701,
+            "dressing": "campania_grove_northeast_corner"
+        },
+        {
+            "type": "olive_tree",
+            "x": 539.91,
+            "z": 24.13,
+            "scale": 0.96,
+            "rotation": 1.408,
+            "dressing": "campania_grove_northeast_corner"
+        },
+        {
+            "type": "olive_tree",
+            "x": 543.83,
+            "z": 26.63,
+            "scale": 1.22,
+            "rotation": 1.881,
+            "dressing": "campania_grove_northeast_corner"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 532.83,
+            "z": 20.25,
+            "scale": 1.24,
+            "rotation": 1.53,
+            "dressing": "campania_grove_northeast_corner"
+        },
+        {
+            "type": "olive_tree",
+            "x": 535.82,
+            "z": 17.36,
+            "scale": 1.2,
+            "rotation": 0.037,
+            "dressing": "campania_grove_northeast_corner"
+        },
+        {
+            "type": "plant",
+            "x": 545.24,
+            "z": 17.68,
+            "scale": 1.32,
+            "rotation": 2.753,
+            "dressing": "campania_grove_northeast_corner"
+        },
+        {
+            "type": "boulder",
+            "x": 543.39,
+            "z": 16.37,
+            "scale": 0.95,
+            "rotation": 2.835,
+            "dressing": "campania_grove_northeast_corner"
+        },
+        {
+            "type": "boulder",
+            "x": 541.27,
+            "z": 32.89,
+            "scale": 0.87,
+            "rotation": 2.371,
+            "dressing": "campania_grove_northeast_corner"
         }
     ],
     "dressing": [
@@ -9289,6 +10597,192 @@
             "kind": "gate_approach",
             "x": 374,
             "z": 548
+        },
+        {
+            "id": "campania_siege_tent_lines",
+            "kind": "camp_lines",
+            "x": 516,
+            "z": 244,
+            "rows": 2,
+            "cols": 2,
+            "rotation": 90
+        },
+        {
+            "id": "campania_appian_tent_lines",
+            "kind": "camp_lines",
+            "x": 394,
+            "z": 540,
+            "rows": 1,
+            "cols": 2,
+            "rotation": 0
+        },
+        {
+            "id": "campania_quarter_fields",
+            "kind": "farmland",
+            "x": 343,
+            "z": 162,
+            "cols": 2,
+            "rows": 2,
+            "player_id": 1,
+            "nation": "carthage",
+            "rotation": 0
+        },
+        {
+            "id": "campania_quarter_fields_west",
+            "kind": "farmland",
+            "x": 293,
+            "z": 205,
+            "cols": 2,
+            "rows": 1,
+            "player_id": 1,
+            "nation": "carthage",
+            "rotation": 0
+        },
+        {
+            "id": "campania_olives_southwest",
+            "kind": "orchard",
+            "x": 42,
+            "z": 612,
+            "rows": 3,
+            "cols": 5,
+            "tree": "olive_tree",
+            "rotation": 0,
+            "spacing": 7.0
+        },
+        {
+            "id": "campania_olives_southeast",
+            "kind": "orchard",
+            "x": 610,
+            "z": 612,
+            "rows": 3,
+            "cols": 4,
+            "tree": "olive_tree",
+            "rotation": 0,
+            "spacing": 7.0
+        },
+        {
+            "id": "campania_olives_east_coast",
+            "kind": "orchard",
+            "x": 612,
+            "z": 530,
+            "rows": 4,
+            "cols": 3,
+            "tree": "olive_tree",
+            "rotation": 0,
+            "spacing": 7.0
+        },
+        {
+            "id": "campania_olives_south",
+            "kind": "orchard",
+            "x": 100,
+            "z": 600,
+            "rows": 3,
+            "cols": 4,
+            "tree": "olive_tree",
+            "rotation": 0,
+            "spacing": 7.0
+        },
+        {
+            "id": "campania_vines_south_road",
+            "kind": "orchard",
+            "x": 300,
+            "z": 612,
+            "rows": 3,
+            "cols": 5,
+            "tree": "cypress_tree",
+            "rotation": 0,
+            "spacing": 6.0
+        },
+        {
+            "id": "campania_grove_appian_west",
+            "kind": "copse",
+            "x": 290,
+            "z": 560,
+            "radius": 14,
+            "count": 10,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "campania_grove_coast",
+            "kind": "copse",
+            "x": 50,
+            "z": 560,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "campania_grove_appian_east",
+            "kind": "copse",
+            "x": 480,
+            "z": 532,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "campania_grove_south_edge",
+            "kind": "copse",
+            "x": 490,
+            "z": 612,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "campania_grove_southwest_meadow",
+            "kind": "copse",
+            "x": 140,
+            "z": 530,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "campania_grove_southwest_edge",
+            "kind": "copse",
+            "x": 220,
+            "z": 612,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
+        },
+        {
+            "id": "campania_grove_northeast_corner",
+            "kind": "copse",
+            "x": 540,
+            "z": 24,
+            "radius": 12,
+            "count": 8,
+            "trees": [
+                "cypress_tree",
+                "olive_tree",
+                "olive_tree"
+            ]
         }
     ]
 }

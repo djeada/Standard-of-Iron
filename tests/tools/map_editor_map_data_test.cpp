@@ -456,6 +456,45 @@ TEST(MapEditorMapDataTest, RealMapRoundTripsSpawnTypeSequenceWithoutDuplicates) 
   }
 }
 
+TEST(MapEditorMapDataTest, StructuresAfterWallsKeepTheirPlaceAndNewOnesAppend) {
+  QTemporaryDir const temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+  const QString input_path = temp_dir.filePath("interleaved.json");
+  const QString output_path = temp_dir.filePath("interleaved_out.json");
+
+  const QJsonObject wall{{MapJsonKeys::type, "wall_segment"},
+                         {MapJsonKeys::start, QJsonArray{2.0, 2.0}},
+                         {MapJsonKeys::end, QJsonArray{10.0, 2.0}}};
+  write_json(input_path,
+             QJsonObject{{MapJsonKeys::grid,
+                          QJsonObject{{MapJsonKeys::width, 32},
+                                      {MapJsonKeys::height, 32},
+                                      {MapJsonKeys::tile_size, 1.0}}},
+                         {MapJsonKeys::structures,
+                          QJsonArray{QJsonObject{{MapJsonKeys::type, "home"},
+                                                 {MapJsonKeys::x, 5.0},
+                                                 {MapJsonKeys::z, 5.0}},
+                                     wall,
+                                     QJsonObject{{MapJsonKeys::type, "farm"},
+                                                 {MapJsonKeys::x, 20.0},
+                                                 {MapJsonKeys::z, 20.0}}}}});
+
+  MapEditor::MapData data;
+  ASSERT_TRUE(data.load_from_json(input_path));
+  MapEditor::StructureElement added;
+  added.type = QStringLiteral("temple");
+  data.add_structure(added);
+  ASSERT_TRUE(data.save_to_json(output_path));
+
+  const QJsonArray saved =
+      read_json(output_path).value(MapJsonKeys::structures).toArray();
+  ASSERT_EQ(saved.size(), 4);
+  EXPECT_EQ(saved[0].toObject().value(MapJsonKeys::type).toString(), "home");
+  EXPECT_EQ(saved[1].toObject().value(MapJsonKeys::type).toString(), "wall_segment");
+  EXPECT_EQ(saved[2].toObject().value(MapJsonKeys::type).toString(), "farm");
+  EXPECT_EQ(saved[3].toObject().value(MapJsonKeys::type).toString(), "temple");
+}
+
 TEST(MapEditorMapDataTest, RingRiverRoundTripsAsARingAndDrawsAsALoop) {
   QTemporaryDir const temp_dir;
   ASSERT_TRUE(temp_dir.isValid());
