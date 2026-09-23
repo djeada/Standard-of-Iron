@@ -40,6 +40,10 @@ void move_stock(int owner_id, ResourceType type, int amount) {
   PlayerResourceRegistry::instance().add(owner_id, type, amount);
 }
 
+void add_harvested_stock(int owner_id, ResourceType type, int amount) {
+  PlayerResourceRegistry::instance().add_harvested(owner_id, type, amount);
+}
+
 } // namespace
 
 void grant_resource(int owner_id,
@@ -60,7 +64,7 @@ void grant_harvested_resource(int owner_id,
   if (owner_id <= 0 || amount <= 0) {
     return;
   }
-  PlayerResourceRegistry::instance().add_harvested(owner_id, type, amount);
+  add_harvested_stock(owner_id, type, amount);
   announce_resource(owner_id, anchor, type, amount);
 }
 
@@ -69,7 +73,7 @@ void grant_harvested_resource_at(
   if (owner_id <= 0 || amount <= 0) {
     return;
   }
-  PlayerResourceRegistry::instance().add_harvested(owner_id, type, amount);
+  add_harvested_stock(owner_id, type, amount);
   announce_resource_at(owner_id, x, y, z, type, amount);
 }
 

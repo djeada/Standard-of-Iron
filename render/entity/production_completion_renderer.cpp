@@ -233,10 +233,10 @@ void render_ripe_fields(Renderer* renderer,
       continue;
     }
     const float offset = static_cast<float>(entity_id % 97U) * 0.137F;
-    const float cycle = reduced_motion ? 0.25F
-                                       : std::fmod(clock / k_ripe_pulse_seconds + offset,
-                                                   1.0F);
-    const float pulse = 0.5F - 0.5F * std::cos(cycle * 2.0F * std::numbers::pi_v<float>);
+    const float cycle =
+        reduced_motion ? 0.25F : std::fmod(clock / k_ripe_pulse_seconds + offset, 1.0F);
+    const float pulse =
+        0.5F - 0.5F * std::cos(cycle * 2.0F * std::numbers::pi_v<float>);
     const float intensity = 0.34F + 0.26F * pulse;
     const QVector3D ground(
         transform.position.x, transform.position.y, transform.position.z);
@@ -246,7 +246,8 @@ void render_ripe_fields(Renderer* renderer,
 
     submit_ground_disc(renderer, ground, radius, 0.07F + 0.07F * pulse, palette);
     renderer->healer_aura(position, palette.core, radius, intensity, time);
-    renderer->healer_aura(position, palette.pale, radius * 0.7F, intensity * 0.7F, time);
+    renderer->healer_aura(
+        position, palette.pale, radius * 0.7F, intensity * 0.7F, time);
     submit_ground_ring(renderer,
                        ground,
                        radius * 0.8F,

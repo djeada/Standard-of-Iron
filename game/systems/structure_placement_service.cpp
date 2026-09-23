@@ -1,7 +1,5 @@
 #include "structure_placement_service.h"
 
-#include "player_feedback.h"
-
 #include "../core/ambient_session.h"
 #include "../core/world.h"
 #include "../map/map_transformer.h"
@@ -11,6 +9,7 @@
 #include "build_site.h"
 #include "construction_cost_catalog.h"
 #include "nation_registry.h"
+#include "player_feedback.h"
 #include "player_resource_registry.h"
 #include "wall_network_service.h"
 

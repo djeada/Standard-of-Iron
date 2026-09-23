@@ -105,7 +105,8 @@ void credit_load_at_yard(int owner_id,
   for (ResourceType const type : k_all_resource_types) {
     int const amount = carry.amounts.get(type);
     if (amount > 0) {
-      grant_harvested_resource_at(owner_id, x, y + k_delivery_number_height, z, type, amount);
+      grant_harvested_resource_at(
+          owner_id, x, y + k_delivery_number_height, z, type, amount);
     }
   }
 }

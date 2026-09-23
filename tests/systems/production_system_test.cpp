@@ -1048,8 +1048,10 @@ TEST_F(ProductionSystemTest, TheArrivalFlareReachesTheRenderSnapshot) {
   Engine::Core::World snapshot;
   auto* copy = snapshot.create_entity();
   (void)Engine::Core::copy_render_components(*recruit, *copy);
-  const auto* flare = copy->get_component<Engine::Core::ProductionCompletionComponent>();
-  ASSERT_NE(flare, nullptr) << "the effect pass draws from the snapshot, never the live world";
+  const auto* flare =
+      copy->get_component<Engine::Core::ProductionCompletionComponent>();
+  ASSERT_NE(flare, nullptr)
+      << "the effect pass draws from the snapshot, never the live world";
   EXPECT_FLOAT_EQ(flare->radius, 2.5F);
 
   recruit->remove_component<Engine::Core::ProductionCompletionComponent>();

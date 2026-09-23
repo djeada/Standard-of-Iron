@@ -177,7 +177,8 @@ TEST_F(ResourceDeliverySystemTest, EveryDeliveryFloatsItsNumberOverTheStoneYard)
     EXPECT_TRUE(event.has_position);
     EXPECT_NEAR(event.x, drop.x, 0.01F);
     EXPECT_NEAR(event.z, drop.z, 0.01F);
-    EXPECT_GT(event.y, 0.5F) << "the number rises above the piles, not out of the ground";
+    EXPECT_GT(event.y, 0.5F)
+        << "the number rises above the piles, not out of the ground";
     EXPECT_EQ(event.amount, 10);
   }
 }
