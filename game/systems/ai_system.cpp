@@ -17,6 +17,8 @@
 #include "ai_system/ai_doctrine_catalog.h"
 #include "ai_system/ai_snapshot_builder.h"
 #include "ai_system/ai_strategy.h"
+#include "ai_system/ai_tribute.h"
+#include "ai_system/behaviors/ally_aid_behavior.h"
 #include "ai_system/behaviors/assault_behavior.h"
 #include "ai_system/behaviors/attack_behavior.h"
 #include "ai_system/behaviors/builder_behavior.h"
@@ -87,6 +89,7 @@ AISystem::AISystem(Services services)
 void AISystem::populate_behavior_registry(AI::AIBehaviorRegistry& registry) {
   registry.register_behavior(std::make_unique<AI::RetreatBehavior>());
   registry.register_behavior(std::make_unique<AI::DefendBehavior>());
+  registry.register_behavior(std::make_unique<AI::AllyAidBehavior>());
   registry.register_behavior(std::make_unique<AI::AssaultBehavior>());
   registry.register_behavior(std::make_unique<AI::ProductionBehavior>());
   registry.register_behavior(std::make_unique<AI::BuilderBehavior>());
@@ -362,6 +365,7 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
   m_command_filter.update(m_total_game_time);
 
   process_results(*world);
+  answer_ally_requests(*world);
 
   for (auto& ai : m_ai_instances) {
 
@@ -381,6 +385,25 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
 
     if (submit_decision_job(ai, *world, ai.update_timer)) {
       ai.update_timer = 0.0F;
+    }
+  }
+}
+
+void AISystem::answer_ally_requests(Engine::Core::World& world) {
+  auto& session = Game::Session::session_for(world);
+  auto& marketplace = session.marketplace();
+  for (auto& ai : m_ai_instances) {
+    const int giver = ai.context.player_id;
+    for (const auto& request : marketplace.take_ally_requests_for(giver)) {
+      auto answer = AI::answer_ally_request(ai.context.strategy_config,
+                                            session.economy().get_all(giver),
+                                            request,
+                                            ai.context.barracks_under_threat);
+      if (answer.granted > 0) {
+        answer.granted = marketplace.send_to_ally(
+            world, giver, request.requester, request.resource, answer.granted);
+      }
+      marketplace.record_ally_answer(answer);
     }
   }
 }

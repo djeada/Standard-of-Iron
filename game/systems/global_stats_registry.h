@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QJsonArray>
+
 #include <chrono>
 #include <unordered_map>
 
@@ -50,6 +52,9 @@ public:
   void on_barrack_captured(const Engine::Core::BarrackCapturedEvent& event);
 
   void rebuild_from_world(Engine::Core::World& world);
+
+  [[nodiscard]] auto serialize_counters() const -> QJsonArray;
+  void restore_counters(const QJsonArray& counters);
 
 private:
   std::unordered_map<int, PlayerStats> m_player_stats;

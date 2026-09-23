@@ -838,6 +838,7 @@ void GameEngine::update_presentation(float dt) {
   const float real_dt = dt;
   m_order_markers.update(dt, m_world);
   announce_player_defeats(real_dt);
+  announce_ally_exchanges();
   m_activity_view_model->advance_feedback(dt);
 
   const float simulation_time_scale =
@@ -922,6 +923,83 @@ void GameEngine::publish_presentation_frame() {
       &m_presentation_frame,
       std::shared_ptr<const App::Core::PresentationFrame>(std::move(frame)),
       std::memory_order_release);
+}
+
+void GameEngine::announce_ally_exchanges() {
+  if (m_session == nullptr) {
+    return;
+  }
+  const auto answers = m_session->marketplace().take_ally_answers();
+  if (answers.empty()) {
+    return;
+  }
+  const auto& owners = m_session->owners();
+  const auto name_of = [&owners](int owner_id) {
+    for (const auto& owner : owners.get_all_owners()) {
+      if (owner.owner_id == owner_id) {
+        return QString::fromStdString(owner.name);
+      }
+    }
+    return tr("your ally");
+  };
+  const auto resource_name = [](Game::Systems::ResourceType type) {
+    switch (type) {
+    case Game::Systems::ResourceType::Gold:
+      return tr("gold");
+    case Game::Systems::ResourceType::Food:
+      return tr("food");
+    case Game::Systems::ResourceType::Wood:
+      return tr("wood");
+    case Game::Systems::ResourceType::Stone:
+      return tr("stone");
+    case Game::Systems::ResourceType::Iron:
+      return tr("iron");
+    default:
+      break;
+    }
+    return QString();
+  };
+  const int local = m_runtime.local_owner_id;
+  for (const auto& answer : answers) {
+    const QString what = resource_name(answer.resource);
+    using Game::Systems::AllyTributeVerdict;
+    if (answer.verdict == AllyTributeVerdict::Sent) {
+      if (answer.giver != local || answer.granted <= 0) {
+        continue;
+      }
+      emit ally_exchange(tr("Sent %1 %2 to %3.")
+                             .arg(answer.granted)
+                             .arg(what, name_of(answer.requester)),
+                         true);
+      continue;
+    }
+    if (answer.requester != local) {
+      continue;
+    }
+    const QString ally = name_of(answer.giver);
+    switch (answer.verdict) {
+    case AllyTributeVerdict::Granted:
+      emit ally_exchange(
+          tr("%1 sends you %2 %3.").arg(ally).arg(answer.granted).arg(what), true);
+      break;
+    case AllyTributeVerdict::Partial:
+      emit ally_exchange(tr("%1 can spare only %2 of the %3 %4 you asked for.")
+                             .arg(ally)
+                             .arg(answer.granted)
+                             .arg(answer.requested)
+                             .arg(what),
+                         true);
+      break;
+    case AllyTributeVerdict::RefusedShort:
+      emit ally_exchange(tr("%1 has no %2 to spare.").arg(ally, what), false);
+      break;
+    case AllyTributeVerdict::RefusedStingy:
+      emit ally_exchange(tr("%1 refuses to part with any %2.").arg(ally, what), false);
+      break;
+    case AllyTributeVerdict::Sent:
+      break;
+    }
+  }
 }
 
 void GameEngine::announce_player_defeats(float dt) {
@@ -1332,6 +1410,7 @@ void GameEngine::handle_order_feedback(const App::Core::OrderOutcome& outcome) {
   if (outcome.accepted()) {
     switch (outcome.kind) {
     case App::Core::OrderKind::Move:
+    case App::Core::OrderKind::Formation:
       m_tutorial_notes.move_accepted = true;
       break;
     case App::Core::OrderKind::Attack:
@@ -1684,6 +1763,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
   if (m_victory_service) {
     m_victory_service->reset();
   }
+  m_enemy_units_defeated = 0;
   if (m_enemy_troops_defeated != 0) {
     m_enemy_troops_defeated = 0;
     emit enemy_troops_defeated_changed();
@@ -2927,7 +3007,10 @@ auto GameEngine::capture_save_to_slot(const QString& slot_name,
        .autosave_retention = autosave_retention,
        .mission_wave_state = m_mission_waves.director().serialize(),
        .mission_stage_state = m_mission_stage_tracker.serialize(),
-       .commander_message_state = commander_message_state()});
+       .commander_message_state = commander_message_state(),
+       .tutorial_state =
+           m_tutorial_director ? m_tutorial_director->serialize() : QJsonObject{},
+       .battle_stats = battle_stats_state()});
 }
 
 void GameEngine::finish_save_request(const QString& slot_name,
@@ -3040,6 +3123,7 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
 
   reset_preload_interaction_state();
   reset_mission_runtime_state();
+  m_enemy_units_defeated = 0;
   if (m_enemy_troops_defeated != 0) {
     m_enemy_troops_defeated = 0;
     emit enemy_troops_defeated_changed();
@@ -3085,6 +3169,14 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
            .restore_commander_messages =
                [this](const QJsonObject& message_state) {
                  restore_commander_message_state(message_state);
+               },
+           .restore_tutorial =
+               [this](const QJsonObject& tutorial_state) {
+                 restore_tutorial_state(tutorial_state);
+               },
+           .restore_battle_stats =
+               [this](const QJsonObject& stats) {
+                 restore_battle_stats(stats);
                }});
   if (effects.success) {
     m_match_difficulty = effects.match_difficulty;
@@ -3731,6 +3823,40 @@ void GameEngine::activate_tutorial_if_configured() {
   }
 }
 
+auto GameEngine::battle_stats_state() const -> QJsonObject {
+  QJsonObject state;
+  state["version"] = 1;
+  state["enemy_troops_defeated"] = m_enemy_troops_defeated;
+  state["enemy_units_defeated"] = m_enemy_units_defeated;
+  if (m_session != nullptr) {
+    state["players"] = m_session->stats().serialize_counters();
+  }
+  return state;
+}
+
+void GameEngine::restore_battle_stats(const QJsonObject& state) {
+  if (state.isEmpty() || state.value("version").toInt(0) > 1) {
+    return;
+  }
+  m_enemy_units_defeated = state.value("enemy_units_defeated").toInt();
+  const int troops = state.value("enemy_troops_defeated").toInt();
+  if (m_enemy_troops_defeated != troops) {
+    m_enemy_troops_defeated = troops;
+    emit enemy_troops_defeated_changed();
+  }
+  if (m_session != nullptr) {
+    m_session->stats().restore_counters(state.value("players").toArray());
+  }
+}
+
+void GameEngine::restore_tutorial_state(const QJsonObject& state) {
+  activate_tutorial_if_configured();
+  if (m_tutorial_director && m_tutorial_director->active()) {
+    m_tutorial_director->restore(state,
+                                 m_mission_waves.director().cleared_wave_count());
+  }
+}
+
 void GameEngine::update_tutorial(float real_dt) {
   if (!m_tutorial_director || !m_tutorial_director->active()) {
     m_tutorial_notes.reset();
@@ -3751,7 +3877,7 @@ void GameEngine::update_tutorial(float real_dt) {
            .notes = m_tutorial_notes,
            .local_owner_id = m_runtime.local_owner_id,
            .victory_state = m_runtime.victory_state,
-           .enemy_troops_defeated = m_enemy_troops_defeated,
+           .enemy_units_defeated = m_enemy_units_defeated,
            .mission_running = m_runtime.initialized && !is_loading(),
            .placement = m_placement_view_model.get(),
            .wave_status = wave_status,

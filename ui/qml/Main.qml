@@ -1132,6 +1132,19 @@ ApplicationWindow {
         target: game
     }
 
+    Connections {
+        function onAlly_exchange(text, positive) {
+            if (!text || !mainWindow.game_started)
+                return;
+            Design.Notifications.push("info", text, {
+                    "channel": "ally-exchange",
+                    "icon": Design.Icons.resourceGlyph("gold")
+                });
+        }
+
+        target: game
+    }
+
     SystemVoice {
         engine: typeof game !== 'undefined' ? game : null
     }

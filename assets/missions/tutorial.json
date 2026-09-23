@@ -103,7 +103,7 @@
         "type": "mission_victory",
         "delay": 1.0
       },
-      "text": "The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.",
+      "text": "The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120

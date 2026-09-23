@@ -31,4 +31,17 @@ void attach_spawn_flare(Engine::Core::World& world,
   }
 }
 
+void attach_harvest_flare(Engine::Core::World& world, Engine::Core::EntityID field_id) {
+  auto* entity = world.get_entity(field_id);
+  if (entity == nullptr) {
+    return;
+  }
+  auto* effect = entity->add_component<Engine::Core::ProductionCompletionComponent>();
+  effect->style = Engine::Core::SpawnFlareStyle::Recruit;
+  effect->duration = Engine::Core::ProductionCompletionComponent::k_duration;
+  effect->remaining = effect->duration;
+  const auto size = BuildingCollisionRegistry::get_building_size("farm");
+  effect->radius = std::max(1.0F, 0.42F * std::max(size.width, size.depth));
+}
+
 } // namespace Game::Systems

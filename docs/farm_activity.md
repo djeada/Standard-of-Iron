@@ -60,12 +60,19 @@ instant (`FarmActivityTest.AHundredFieldsDoNotMoveInLockstep` pins this on
 both the pure schedule and the submitted bone palettes).
 
 Clip changes are placed on shared poses -- work bouts end on a stroke
-boundary, steps start from a standing idle -- so the swap is as quiet as it
-can be without blending. Every pose also carries the outgoing clip, its phase
-and a 0.35 s fade weight; the actor path picks those up as soon as
-`CivilianActor` grows `blend_clip` / `blend_phase` / `blend_weight` fields
-(a compile-time seam in `farm_activity.cpp`), and `blend_out_interrupted_clip`
-already does the work on the pipeline side.
+boundary, steps start from a standing idle -- and every pose also carries the
+outgoing clip, its phase and a 0.35 s fade weight, which `CivilianActor`
+passes to `blend_out_interrupted_clip`.
+
+A bout's length comes from the tending rhythm whatever the crop's growth, and
+each bout divides it into a whole number of strokes near the reaping rhythm
+when the field is ripe. Ripening therefore changes how fast the sickle swings,
+never where the worker stands: letting the ripe rhythm set the bout lengths
+moved every lane worker along the row the moment a field ripened.
+
+Walk speeds (0.62-0.80 m/s tending, 0.66-0.86 m/s carrying) keep the leg
+cadence near the baked walk's 1.09 Hz at the civilian scale, and idle plays
+at the baked 8 s breath -- faster values read as panting.
 
 ## Harvest reading
 
@@ -212,3 +219,32 @@ would cut every capture short. Pair it with `SOI_FARM_GAG_SECONDS`; the
 deterministic scheduling test already covers the real cooldown, the shared
 concurrency cap and cancellation, so nobody has to sit through ten minutes of
 wheat to check the timing.
+
+## Ripe and reaped fields
+
+A field that is ripe and waiting for a builder is marked with the same gold
+illumination as a freshly recruited unit: a soft ground disc, two layered
+`healer_aura` glows, a slow expanding ring and a handful of rising glints, all
+breathing on a 2.4 s pulse (`render_ripe_fields` in
+`production_completion_renderer.cpp`). It is deliberately not a `LocalLight`.
+A torch-style light reads as natural firelight, and the point is to read as
+"this field wants attention". Only the local player's own fields glow, and each
+field has its own pulse phase, so a row of farms doesn't blink in unison.
+Reduced motion freezes the pulse and drops the glints.
+
+When a builder reaps the field, `complete_food_harvest` attaches the recruit
+spawn flare to the farm itself (`attach_harvest_flare`, radius 0.42 of the
+13.6 m footprint). The field flashes gold and rings outward exactly as a new
+recruit does. While that flare plays, the ripe glow is suppressed. After it,
+the field is green again.
+
+The flare is `ProductionCompletionComponent`, and it must be copied into the
+render snapshot (`copy_presentation_snapshot_components`). The effect pass
+draws from the snapshot, and before that copy was added no recruit flare was
+ever visible either.
+
+When the builder delivers the sheaf, the "+N food" floating number rises from
+the stone yard's drop point, not from the barracks entity. Anchoring on the
+barracks let the per-anchor limit of two live numbers swallow most deliveries
+in a busy economy (`credit_load_at_yard` in `resource_delivery_system.cpp`).
+The same applies to every resource a hauler delivers.

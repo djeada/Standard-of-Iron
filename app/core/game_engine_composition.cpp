@@ -649,6 +649,7 @@ void GameEngine::build_services_and_controllers() {
                                              Game::Systems::troop_type_men(
                                                  Game::Systems::NationID::RomanRepublic,
                                                  e.spawn_type));
+              ++m_enemy_units_defeated;
               emit enemy_troops_defeated_changed();
             }
           });

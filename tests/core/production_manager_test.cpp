@@ -809,6 +809,25 @@ TEST_F(ProductionManagerTest, CollectCanRetaskABuilderThatIsAlreadyWorking) {
          "otherwise the button silently does nothing after the first trip";
 }
 
+TEST_F(ProductionManagerTest, AGatheringBuilderCanStillBeSentToBuild) {
+  auto* builder = add_selected_builder();
+  auto* builder_prod =
+      builder->get_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_NE(builder_prod, nullptr);
+  builder_prod->has_construction_site = true;
+  builder_prod->in_progress = true;
+  builder_prod->product_type = "collect_iron_ore";
+
+  const auto state = App::Economy::selected_builder_state(&world);
+  EXPECT_TRUE(state.value("gathering").toBool())
+      << "a worker at an ore seam is not building; its Build cards must not read "
+         "'Already building...'";
+
+  ProductionManager manager(&world, &picking_service, &camera);
+  manager.start_builder_construction(QStringLiteral("home"));
+  EXPECT_TRUE(manager.is_placing_construction());
+}
+
 TEST_F(ProductionManagerTest, ACatapultPlacedFromTheBuilderPanelSendsTheBuilder) {
   auto* builder = add_selected_builder();
   ProductionManager manager(&world, &picking_service, &camera);

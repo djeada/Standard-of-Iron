@@ -4,21 +4,25 @@ The RTS camera supports nine ways to move or restore the view. The same control 
 
 ## The nine camera controls
 
-| Control      | How                                               | Implementation                                 |
-| ------------ | ------------------------------------------------- | ---------------------------------------------- |
-| Edge scroll  | Push the cursor into a screen edge                | `ui/qml/Main.qml`, `edge_scroll_overlay`       |
-| Keyboard pan | Arrow keys **or** `WASD`; Shift for a double step | `rts.camera_pan_*` in `ui/input_bindings.cpp`  |
-| Drag pan     | Hold the right mouse button and drag              | `ui/qml/GameView.qml`, `renderArea` mouse area |
-| Zoom         | Mouse wheel, or `PgUp` / `PgDown`                 | `rts.camera_zoom_*`                            |
-| Rotate       | `Q` / `E`; Shift for a larger step                | `rts.camera_rotate_*`                          |
-| Tilt         | `Ctrl+Up` / `Ctrl+Down`; Shift for a larger step  | `rts.camera_tilt_*`                            |
-| Minimap jump | Left-click or drag the minimap                    | `ui/qml/HUDTop.qml`, `minimapMouse`            |
-| Follow       | Button in the top bar                             | `ui/qml/HUDTop.qml`                            |
-| Reset        | `Home`, or the Reset button in the top bar        | `rts.camera_reset`                             |
+| Control      | How                                                           | Implementation                                 |
+| ------------ | ------------------------------------------------------------- | ---------------------------------------------- |
+| Edge scroll  | Push the cursor into a screen edge                            | `ui/qml/Main.qml`, `edge_scroll_overlay`       |
+| Keyboard pan | Arrow keys **or** `WASD`; Shift for a double step             | `rts.camera_pan_*` in `ui/input_bindings.cpp`  |
+| Drag pan     | Hold the right mouse button and drag                          | `ui/qml/GameView.qml`, `renderArea` mouse area |
+| Zoom         | Mouse wheel, or `PgUp` / `PgDown`                             | `rts.camera_zoom_*`                            |
+| Rotate       | `Q` / `E`; Shift for a larger step                            | `rts.camera_rotate_*`                          |
+| Tilt         | `R` / `F` or `Ctrl+Up` / `Ctrl+Down`; Shift for a larger step | `rts.camera_tilt_*`                            |
+| Minimap jump | Left-click or drag the minimap                                | `ui/qml/HUDTop.qml`, `minimapMouse`            |
+| Follow       | Button in the top bar                                         | `ui/qml/HUDTop.qml`                            |
+| Reset        | `Home`, or the Reset button in the top bar                    | `rts.camera_reset`                             |
 
 `ui/qml/CameraGuide.qml` is the single descriptive list used by every help surface: the compact in-battle legend in `CameraLegend.qml`, the Camera tab in `HelpPanel.qml`, and the live edge-scroll status shown by both.
 
 Adding or renaming a camera control should therefore start in `CameraGuide.qml` rather than by duplicating text in several interfaces.
+
+### Follow keeps the viewing angle
+
+`Camera::update_follow` eases the look-at point and places the eye at `target + follow offset` on every frame, so the viewing angle never changes while following. Snapping the target while only the eye eased made any jump in the selection's centre (select-all reaching a far builder, a unit dying at the edge of a group) swing the camera down towards the horizon. `CameraFollowSystem::snap_to_selection` likewise carries the eye with the target. The top-bar Follow button is bound to `following_selection`, so it goes dark when Reset turns following off.
 
 ## Pan, rotate, and tilt are different operations
 
@@ -30,7 +34,7 @@ The three basic camera motions should remain distinct in both code and player-fa
 
 `Camera::orbit(yaw, pitch)` remains the lower-level two-axis primitive used by both rotation and tilt.
 
-Tilt is bound to `Ctrl+Up` and `Ctrl+Down`. `R` is reserved for the commander rally action, avoiding a contextual collision between camera motion and rally placement.
+Tilt is bound to `R` / `F` and, as the primary chords, `Ctrl+Up` / `Ctrl+Down`. `R` is shared with the commander rally action, which is contextual: while a rally flag can be placed, `R` places it and the camera stays still; otherwise `R` tilts up. The formation planner, which used to sit on `F`, is on `V`.
 
 ### The pitch sign convention
 
@@ -212,7 +216,8 @@ Automated tests cover geometry, binding behavior, and legend contents, but sever
 - [ ] Clearing only the alternate with `Backspace` leaves the primary binding intact; **Default** restores both.
 - [ ] `WASD` pans; `A` and `S` no longer mean Stop or Attack, while `C` and `Z` do.
 - [ ] `Ctrl+Up` and `Ctrl+Down` tilt; plain `Up` and `Down` continue to pan when Ctrl is not held.
-- [ ] `R` places a rally flag without moving the camera.
+- [ ] `R` / `F` tilt up and down. While a rally flag can be placed, `R` places it without moving the camera.
+- [ ] `V` opens the formation planner.
 - [ ] `Home` and the top-bar Reset button land on the same view.
 - [ ] On Cannae, Reset frames the camp and surrounding battlefield rather than a single soldier. On the tutorial, Reset is closer but still wider than one formation.
 - [ ] Load a save from a build predating the camera-action rename and confirm custom bindings survive with tilt mapped to the behavior formerly labeled orbit.

@@ -26,6 +26,7 @@ namespace {
 constexpr float k_haul_repath_interval = 1.5F;
 constexpr float k_stockpile_fill_smoothing = 3.0F;
 constexpr const char* k_deposit_cue = "economy.income";
+constexpr float k_delivery_number_height = 1.2F;
 constexpr const char* k_gather_success_cue = "economy.gather_success";
 constexpr std::uint32_t k_gather_success_one_in = 4U;
 
@@ -92,6 +93,19 @@ void credit_load(int owner_id,
     int const amount = carry.amounts.get(type);
     if (amount > 0) {
       grant_harvested_resource(owner_id, anchor, type, amount);
+    }
+  }
+}
+
+void credit_load_at_yard(int owner_id,
+                         const Engine::Core::ResourceCarryComponent& carry,
+                         float x,
+                         float y,
+                         float z) {
+  for (ResourceType const type : k_all_resource_types) {
+    int const amount = carry.amounts.get(type);
+    if (amount > 0) {
+      grant_harvested_resource_at(owner_id, x, y + k_delivery_number_height, z, type, amount);
     }
   }
 }
@@ -241,7 +255,8 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
         stand_dist_sq <= k_stockpile_drop_radius * k_stockpile_drop_radius ||
         (out_of_patience && depot_dist_sq <= k_stockpile_depot_arrival_radius *
                                                  k_stockpile_depot_arrival_radius)) {
-      credit_load(unit->owner_id, *carry, depot->get_id());
+      credit_load_at_yard(
+          unit->owner_id, *carry, drop.x, depot_transform->position.y, drop.z);
       if (auto* stockpile =
               world->try_get<Engine::Core::StockpileComponent>(depot->get_id())) {
         stockpile->deposit_flash = k_stockpile_deposit_flash_seconds;

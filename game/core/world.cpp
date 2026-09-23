@@ -979,6 +979,7 @@ auto copy_presentation_snapshot_components(const Entity& source,
   copy_snapshot_component<RpgContactPresentationComponent>(source, destination);
   copy_snapshot_component<BloodStainComponent>(source, destination);
   copy_snapshot_component<StockpileComponent>(source, destination);
+  copy_snapshot_component<ProductionCompletionComponent>(source, destination);
   return skipped;
 }
 

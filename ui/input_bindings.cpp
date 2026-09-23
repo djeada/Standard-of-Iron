@@ -227,7 +227,8 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   QObject::tr("Raises the camera towards an overhead view. Hold Shift "
                               "to tilt further."),
                   QStringLiteral("Ctrl+Up"),
-                  false});
+                  false,
+                  QStringLiteral("R")});
   catalog.append({QStringLiteral("rts.camera_tilt_down"),
                   rts,
                   camera,
@@ -235,7 +236,8 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   QObject::tr("Lowers the camera towards the horizon. Hold Shift to "
                               "tilt further."),
                   QStringLiteral("Ctrl+Down"),
-                  false});
+                  false,
+                  QStringLiteral("F")});
   catalog.append(
       {QStringLiteral("rts.camera_zoom_in"),
        rts,
@@ -327,7 +329,7 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   orders,
                   QObject::tr("Deploy the selection in a formation"),
                   QObject::tr("Opens the formation planner for the selected troops"),
-                  QStringLiteral("F"),
+                  QStringLiteral("V"),
                   false});
   catalog.append({QStringLiteral("rts.commander_rally"),
                   rts,

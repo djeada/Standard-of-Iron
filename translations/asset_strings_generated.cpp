@@ -343,7 +343,7 @@ namespace {
     QT_TRANSLATE_NOOP("Missions", "The river reserve"),
     QT_TRANSLATE_NOOP("Missions", "The river runs north to south across the middle of the valley; the nearest crossing is due east of camp."),
     QT_TRANSLATE_NOOP("Missions", "The road runs east along the lake. Shut its western mouth and the column has only one way left to go."),
-    QT_TRANSLATE_NOOP("Missions", "The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time."),
+    QT_TRANSLATE_NOOP("Missions", "The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time."),
     QT_TRANSLATE_NOOP("Missions", "The screen is coming across the flats. Spears in front, horse on the wings, the usual arrangement. Please try to stand still; it makes the reports so much tidier."),
     QT_TRANSLATE_NOOP("Missions", "The screen's cavalry comes again from the east. Rotate quickly."),
     QT_TRANSLATE_NOOP("Missions", "The second column"),

@@ -461,6 +461,9 @@ auto authored_humanoid_clip_markers(
   case k_humanoid_construct_chisel_clip:
   case k_humanoid_construct_kneel_chisel_clip:
   case k_humanoid_construct_reap_clip:
+  case k_humanoid_crew_push_clip:
+  case k_humanoid_crew_crank_clip:
+  case k_humanoid_crew_heave_clip:
     return locomotion_markers();
   case k_humanoid_attack_sword_a_clip:
   case k_humanoid_attack_sword_b_clip:

@@ -1,3 +1,5 @@
+#include <QJsonArray>
+
 #include <gtest/gtest.h>
 #include <thread>
 #include <utility>
@@ -313,4 +315,40 @@ TEST(SessionContextTest, TheRuntimeLoopSaysWhatToDoWithATickItCouldNotRun) {
   EXPECT_EQ(kept.first, 4);
   EXPECT_EQ(kept.second, 12)
       << "a kept backlog must be waiting for the next turn of the loop";
+}
+
+TEST(SessionStatsTest, BattleCountersSurviveASaveRoundTrip) {
+  SessionContext saved_session;
+  QJsonArray counters;
+  {
+    const ScopedSession scope(saved_session);
+    auto& stats = saved_session.stats();
+    stats.mark_game_start(1);
+    stats.mark_game_start(2);
+    auto* player = stats.get_stats(1);
+    ASSERT_NE(player, nullptr);
+    player->enemies_killed = 91;
+    player->losses = 73;
+    player->troops_recruited = 4;
+    stats.get_stats(2)->enemies_killed = 12;
+    counters = stats.serialize_counters();
+  }
+
+  SessionContext loaded_session;
+  const ScopedSession scope(loaded_session);
+  auto& stats = loaded_session.stats();
+  stats.mark_game_start(1);
+  stats.restore_counters(counters);
+
+  const auto* player = stats.get_stats(1);
+  ASSERT_NE(player, nullptr);
+  EXPECT_EQ(player->enemies_killed, 91) << "a loaded match forgot its kills";
+  EXPECT_EQ(player->losses, 73);
+  EXPECT_EQ(player->troops_recruited, 4);
+  ASSERT_NE(stats.get_stats(2), nullptr);
+  EXPECT_EQ(stats.get_stats(2)->enemies_killed, 12);
+
+  stats.restore_counters(QJsonArray{});
+  EXPECT_EQ(stats.get_stats(1)->enemies_killed, 91)
+      << "a save without counters must not wipe the ones the match has";
 }

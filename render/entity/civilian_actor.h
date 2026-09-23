@@ -16,6 +16,7 @@ struct NationCivilianRig {
   bool carthage{false};
 
   bool healer{false};
+  bool builder{false};
   Render::Creature::Pipeline::UnitVisualSpec spec{};
   Render::Creature::ArchetypeId idle{Render::Creature::k_invalid_archetype};
   Render::Creature::ArchetypeId working{Render::Creature::k_invalid_archetype};
@@ -33,6 +34,8 @@ void register_nation_civilian_rig(bool carthage, NationCivilianRig rig);
 [[nodiscard]] auto nation_civilian_rig(bool carthage) -> const NationCivilianRig&;
 void register_nation_priest_rig(bool carthage, NationCivilianRig rig);
 [[nodiscard]] auto nation_priest_rig(bool carthage) -> const NationCivilianRig&;
+void register_nation_crew_rig(bool carthage, NationCivilianRig rig);
+[[nodiscard]] auto nation_crew_rig(bool carthage) -> const NationCivilianRig&;
 
 struct CivilianActor {
   Render::Creature::ArchetypeId archetype{Render::Creature::k_invalid_archetype};
@@ -47,6 +50,10 @@ struct CivilianActor {
   std::uint16_t blend_clip{0xFFFFU};
   float blend_phase{0.0F};
   float blend_weight{0.0F};
+
+  std::uint16_t overlay_clip{0xFFFFU};
+  float overlay_phase{0.0F};
+  float overlay_weight{1.0F};
 };
 
 [[nodiscard]] auto civilian_render_scale(const DrawContext& ctx,

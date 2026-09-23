@@ -264,13 +264,25 @@ Item {
                         spacing: Design.Metrics.space8
 
                         Design.IronIconButton {
+                            id: followButton
+
                             iconText: Design.Icons.follow
                             tooltip: qsTr("Follow the selection with the camera")
                             checkable: true
+                            checked: topRoot.game_ready() && game.camera.following_selection === true
                             tone: checked ? "primary" : "secondary"
                             onToggled: {
                                 if (topRoot.game_ready() && game.camera.follow_selection)
                                     game.camera.follow_selection(checked);
+                            }
+
+                            Connections {
+                                function onFollowing_selectionChanged() {
+                                    followButton.checked = game.camera.following_selection === true;
+                                }
+
+                                target: topRoot.game_ready() ? game.camera : null
+                                ignoreUnknownSignals: true
                             }
                         }
 
@@ -318,7 +330,8 @@ Item {
 
                     readonly property real budget: Math.max(0, objectiveZone.width - (objectivesButton.visible ? objectivesButton.width + Design.Metrics.space8 : 0))
 
-                    readonly property bool fits: topRoot.objectiveDetailText === "" || objectiveGlyph.implicitWidth + spacing + objectivePercentMetrics.advanceWidth <= budget
+                    readonly property real minimumTextWidth: Design.Metrics.space24 * 5
+                    readonly property bool fits: objectiveGlyph.implicitWidth + spacing + Math.min(objectiveText.implicitWidth, minimumTextWidth) <= budget && (topRoot.objectiveDetailText === "" || objectiveGlyph.implicitWidth + spacing + objectivePercentMetrics.advanceWidth <= budget)
 
                     anchors.verticalCenter: parent.verticalCenter
                     x: Math.max(0, (budget - width) / 2)
@@ -428,7 +441,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: topRoot.objectivesAvailable
                     iconText: Design.Icons.briefing
-                    tooltip: (objectiveButtonProgress.visible ? topRoot.primaryObjectiveText + "\n" + topRoot.objectiveDetailText + "\n\n" : "") + (topRoot.objectives_visible ? qsTr("Hide the objectives list") : qsTr("Show every objective and defeat condition")) + " (O)"
+                    tooltip: ((!objectiveRow.fits && topRoot.primaryObjectiveText !== "") ? topRoot.primaryObjectiveText + (topRoot.objectiveDetailText !== "" ? "\n" + topRoot.objectiveDetailText : "") + "\n\n" : "") + (topRoot.objectives_visible ? qsTr("Hide the objectives list") : qsTr("Show every objective and defeat condition")) + " (O)"
                     accessibleName: qsTr("Objectives")
                     checkable: true
                     checked: topRoot.objectives_visible

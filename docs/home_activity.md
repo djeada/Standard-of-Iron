@@ -176,6 +176,13 @@ where they settle (their own spot across the door, 1.1-2.0 m out). Off the
 plinth they stand on the terrain. Residents are rigged actors and share the
 per-frame actor budget; a pair costs two.
 
+Residents turn over 0.6 s instead of snapping (on arrival, before the walk
+back, and at each end of an errand) and fade walk and activity clips into each
+other over 0.35 s. The errand's walk phase counts the whole distance covered,
+so the return leg steps forward instead of replaying the outward stride
+backwards, and a resident standing idle breathes on a 7-9 s cycle, close to the
+baked 8 s idle.
+
 ## Budget
 
 | Quality | Plumes per world render | Rigged actors |

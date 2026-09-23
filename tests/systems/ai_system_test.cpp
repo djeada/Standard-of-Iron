@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "game/command/command_queue.h"
+#include "game/core/component_combat.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
@@ -27,10 +28,13 @@
 #include "game/systems/ai_system/ai_settlement_frame.h"
 #include "game/systems/ai_system/ai_snapshot_builder.h"
 #include "game/systems/ai_system/ai_strategy.h"
+#include "game/systems/ai_system/ai_tribute.h"
 #include "game/systems/ai_system/ai_utils.h"
+#include "game/systems/ai_system/behaviors/ally_aid_behavior.h"
 #include "game/systems/ai_system/behaviors/assault_behavior.h"
 #include "game/systems/ai_system/behaviors/attack_behavior.h"
 #include "game/systems/ai_system/behaviors/builder_behavior.h"
+#include "game/systems/ai_system/behaviors/commander_behavior.h"
 #include "game/systems/ai_system/behaviors/defend_behavior.h"
 #include "game/systems/ai_system/behaviors/economy_behavior.h"
 #include "game/systems/ai_system/behaviors/expand_behavior.h"
@@ -4620,4 +4624,415 @@ TEST_F(AISystemTest, ADecisionThatOverrunsItsWallClockBudgetStillLandsOnItsOwnTi
   EXPECT_LT(with_room_to_spare, 400);
   EXPECT_EQ(with_room_to_spare, with_no_budget_at_all)
       << "how long the worker took must not decide which update applies its plan";
+}
+
+TEST_F(AISystemTest, ARaidWaveDoesNotDrawTheCommanderOutOfHisCamp) {
+  Game::Systems::AI::CommanderBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  auto commander = make_unit(1, 0.0F, 0.0F);
+  commander.is_commander = true;
+  snapshot.friendly_units.push_back(commander);
+  for (Engine::Core::EntityID id = 10; id < 16; ++id) {
+    auto raider = make_unit(id, 20.0F, static_cast<float>(id - 10));
+    raider.is_assault = true;
+    snapshot.friendly_units.push_back(raider);
+  }
+  snapshot.visible_enemies = {make_enemy(50, 30.0F, 0.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.commander_ids = {1};
+  context.has_base_anchor = true;
+  context.station.x = 0.0F;
+  context.station.z = 0.0F;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 5.0F, commands);
+
+  for (const auto& command : commands) {
+    if (command.type != Game::Systems::AI::AICommandType::MoveUnits) {
+      continue;
+    }
+    ASSERT_FALSE(command.move_target_x.empty());
+    EXPECT_LT(command.move_target_x.front(), 8.0F)
+        << "the commander marched after a mission raid wave he does not lead";
+  }
+}
+
+namespace {
+
+auto committed_wave_context(Game::Systems::AI::AIDoctrine& doctrine)
+    -> Game::Systems::AI::AIContext {
+  doctrine.wave.size = 3;
+  doctrine.wave.target_priority = {Game::Systems::AI::DoctrineTarget::Any};
+  doctrine.garrison.minimum_units = 0;
+  doctrine.garrison.fraction = 0.0F;
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  context.station.x = 40.0F;
+  context.station.z = 50.0F;
+  context.macro_targets.assembly_radius = 8.0F;
+  context.strategy_config.doctrine = &doctrine;
+  context.strategy_config.aggression_modifier = 1.0F;
+  context.wave.committed = true;
+  context.wave.members = {1, 2, 3, 4};
+  context.wave.initial_size = 4;
+  context.wave.target_id = 90;
+  context.wave.target_x = 140.0F;
+  context.wave.target_z = 55.0F;
+  context.wave.committed_at = 100.0F;
+  context.wave.progress_at = 100.0F;
+  return context;
+}
+
+} // namespace
+
+TEST_F(AISystemTest, AWaveThatMakesNoHeadwayForThreeMinutesIsCalledOff) {
+  Game::Systems::AI::AIDoctrine doctrine;
+  auto context = committed_wave_context(doctrine);
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.friendly_units = {make_unit(1, 80.0F, 55.0F),
+                             make_unit(2, 81.0F, 55.0F),
+                             make_unit(3, 82.0F, 55.0F),
+                             make_unit(4, 83.0F, 55.0F)};
+  snapshot.visible_enemies = {make_enemy_building(90, 140.0F, 55.0F)};
+
+  for (float t = 110.0F; t < 250.0F; t += 10.0F) {
+    snapshot.game_time = t;
+    Game::Systems::AI::update_attack_wave(snapshot, context);
+  }
+  ASSERT_TRUE(context.wave.committed) << "under three minutes is still patience";
+  snapshot.game_time = 300.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  EXPECT_FALSE(context.wave.committed)
+      << "a wave standing still for over three minutes must end, not march forever";
+}
+
+TEST_F(AISystemTest, AWaveThatKeepsClosingOnItsTargetStaysCommitted) {
+  Game::Systems::AI::AIDoctrine doctrine;
+  auto context = committed_wave_context(doctrine);
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.visible_enemies = {make_enemy_building(90, 400.0F, 55.0F)};
+  context.wave.target_x = 400.0F;
+  for (float t = 110.0F; t < 500.0F; t += 10.0F) {
+    const float front = 40.0F + (t - 100.0F) * 0.6F;
+    snapshot.game_time = t;
+    snapshot.friendly_units = {make_unit(1, front, 55.0F),
+                               make_unit(2, front + 1.0F, 55.0F),
+                               make_unit(3, front + 2.0F, 55.0F),
+                               make_unit(4, front + 3.0F, 55.0F)};
+    Game::Systems::AI::update_attack_wave(snapshot, context);
+  }
+  EXPECT_TRUE(context.wave.committed) << "a long march that is getting there is fine";
+}
+
+TEST_F(AISystemTest, ReinforcementsJoinAWaveOnlyNearItsFront) {
+  Game::Systems::AI::AIDoctrine doctrine;
+  auto context = committed_wave_context(doctrine);
+  context.wave.members = {1, 2, 3};
+  context.wave.initial_size = 3;
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 120.0F;
+  snapshot.friendly_units = {make_unit(1, 120.0F, 55.0F),
+                             make_unit(2, 121.0F, 55.0F),
+                             make_unit(3, 122.0F, 55.0F),
+                             make_unit(7, 40.0F, 50.0F),
+                             make_unit(8, 118.0F, 57.0F)};
+  snapshot.visible_enemies = {make_enemy_building(90, 140.0F, 55.0F)};
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  const auto& members = context.wave.members;
+  EXPECT_NE(std::find(members.begin(), members.end(), 8U), members.end())
+      << "a soldier beside the front joins it";
+  EXPECT_EQ(std::find(members.begin(), members.end(), 7U), members.end())
+      << "a recruit at home must not be counted into a wave 80 m away";
+}
+
+TEST_F(AISystemTest, AnArmyTargetIsNeverAWorker) {
+  Game::Systems::AI::AIDoctrine doctrine;
+  doctrine.wave.size = 3;
+  doctrine.wave.target_priority = {Game::Systems::AI::DoctrineTarget::Army,
+                                   Game::Systems::AI::DoctrineTarget::Any};
+  doctrine.garrison.minimum_units = 0;
+  doctrine.garrison.fraction = 0.0F;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 500.0F;
+  snapshot.friendly_units = {make_unit(1, 40.0F, 50.0F),
+                             make_unit(2, 41.0F, 50.0F),
+                             make_unit(3, 42.0F, 50.0F)};
+  auto builder = make_enemy(80, 60.0F, 50.0F);
+  builder.spawn_type = Game::Units::SpawnType::Builder;
+  auto soldier = make_enemy(81, 120.0F, 50.0F);
+  snapshot.visible_enemies = {builder, soldier};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  context.station.x = 41.0F;
+  context.station.z = 50.0F;
+  context.macro_targets.assembly_radius = 8.0F;
+  context.strategy_config.doctrine = &doctrine;
+  context.strategy_config.aggression_modifier = 1.0F;
+
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  snapshot.game_time = 540.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  ASSERT_TRUE(context.wave.committed);
+  EXPECT_EQ(context.wave.target_id, 81U)
+      << "the army target is the soldier; the nearer builder is the economy";
+}
+
+TEST_F(AISystemTest, CheapestRecruitIgnoresMountsElephantsAndEngines) {
+  using Game::Systems::AI::is_foot_line_recruit;
+  using Game::Units::TroopType;
+  EXPECT_TRUE(is_foot_line_recruit(TroopType::Spearman));
+  EXPECT_TRUE(is_foot_line_recruit(TroopType::Archer));
+  EXPECT_FALSE(is_foot_line_recruit(TroopType::Elephant));
+  EXPECT_FALSE(is_foot_line_recruit(TroopType::MountedSwordsman));
+  EXPECT_FALSE(is_foot_line_recruit(TroopType::Catapult));
+  EXPECT_FALSE(is_foot_line_recruit(TroopType::Builder));
+  EXPECT_FALSE(is_foot_line_recruit(TroopType::Civilian));
+}
+
+TEST_F(AISystemTest, ACommittedWaveWithNothingInSightMarchesOnItsOwnTarget) {
+  Game::Systems::AI::AttackBehavior behavior;
+  Game::Systems::AI::AIDoctrine doctrine;
+  auto context = committed_wave_context(doctrine);
+  context.wave.members = {1, 2, 3};
+  context.state = Game::Systems::AI::AIState::Attacking;
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 200.0F;
+  snapshot.friendly_units = {make_unit(1, 60.0F, 55.0F),
+                             make_unit(2, 61.0F, 55.0F),
+                             make_unit(3, 62.0F, 55.0F)};
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.6F, commands);
+  ASSERT_FALSE(commands.empty()) << "the wave stood still with nobody in sight";
+  const auto& move = commands.front();
+  ASSERT_EQ(move.type, Game::Systems::AI::AICommandType::MoveUnits);
+  float mean_x = 0.0F;
+  for (float x : move.move_target_x) {
+    mean_x += x;
+  }
+  mean_x /= static_cast<float>(move.move_target_x.size());
+  EXPECT_GT(mean_x, 120.0F) << "the march goes to the wave's remembered target";
+}
+
+namespace {
+
+auto commander_config(Game::Systems::AI::AIStrategy strategy,
+                      float aggression,
+                      float defense) -> Game::Systems::AI::AIStrategyConfig {
+  Game::Systems::AI::AIStrategyConfig config;
+  config.strategy = strategy;
+  config.personality.aggression = aggression;
+  config.personality.defense = defense;
+  config.personality.harassment = 0.2F;
+  return config;
+}
+
+auto stock_of(Game::Systems::ResourceType type,
+              int amount) -> Game::Systems::ResourceAmounts {
+  Game::Systems::ResourceAmounts stock{};
+  stock.set(type, amount);
+  return stock;
+}
+
+} // namespace
+
+TEST_F(AISystemTest, AnEconomicCommanderIsMoreGenerousThanARusher) {
+  using Game::Systems::AI::AIStrategy;
+  const auto hanno = commander_config(AIStrategy::Economic, 0.35F, 0.75F);
+  const auto marcellus = commander_config(AIStrategy::Rusher, 0.9F, 0.3F);
+  EXPECT_GT(Game::Systems::AI::ally_generosity(hanno),
+            Game::Systems::AI::ally_generosity(marcellus) + 0.3F);
+
+  const Game::Systems::AllyTributeRequest ask{.requester = 1,
+                                              .giver = 3,
+                                              .resource =
+                                                  Game::Systems::ResourceType::Wood,
+                                              .amount = 100};
+  const auto rich = stock_of(Game::Systems::ResourceType::Wood, 600);
+  const auto generous = Game::Systems::AI::answer_ally_request(hanno, rich, ask, false);
+  EXPECT_EQ(generous.verdict, Game::Systems::AllyTributeVerdict::Granted);
+  EXPECT_EQ(generous.granted, 100);
+
+  const auto stingy =
+      Game::Systems::AI::answer_ally_request(marcellus, rich, ask, false);
+  EXPECT_NE(stingy.verdict, Game::Systems::AllyTributeVerdict::Granted)
+      << "a rusher keeps its wood for the next wave";
+}
+
+TEST_F(AISystemTest, AnAllyWithNothingToSpareRefusesAndOneUnderAttackGivesLess) {
+  using Game::Systems::AI::AIStrategy;
+  const auto hanno = commander_config(AIStrategy::Economic, 0.35F, 0.75F);
+  const Game::Systems::AllyTributeRequest ask{.requester = 1,
+                                              .giver = 3,
+                                              .resource =
+                                                  Game::Systems::ResourceType::Iron,
+                                              .amount = 100};
+  const auto poor = Game::Systems::AI::answer_ally_request(
+      hanno, stock_of(Game::Systems::ResourceType::Iron, 70), ask, false);
+  EXPECT_EQ(poor.verdict, Game::Systems::AllyTributeVerdict::RefusedShort);
+  EXPECT_EQ(poor.granted, 0);
+
+  const auto rich = stock_of(Game::Systems::ResourceType::Iron, 400);
+  const auto calm = Game::Systems::AI::answer_ally_request(hanno, rich, ask, false);
+  const auto besieged = Game::Systems::AI::answer_ally_request(hanno, rich, ask, true);
+  EXPECT_LT(besieged.granted, calm.granted)
+      << "a commander defending his own walls keeps more of his iron";
+}
+
+TEST_F(AISystemTest, SpareTroopsMarchToAnAllyWhoseBarracksIsUnderAttack) {
+  Game::Systems::AI::AllyAidBehavior behavior;
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 100.0F;
+  for (Engine::Core::EntityID id = 1; id <= 6; ++id) {
+    snapshot.friendly_units.push_back(
+        make_unit(id, 40.0F + static_cast<float>(id), 50.0F));
+  }
+  snapshot.allies_under_attack.push_back(Game::Systems::AI::AllyCall{
+      .owner_id = 4, .pos_x = 120.0F, .pos_z = 50.0F, .strength = 5});
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  ASSERT_TRUE(behavior.should_execute(snapshot, context));
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 3.5F, commands);
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_EQ(commands.front().units.size(), 3U) << "half the spare troops go, half stay";
+  EXPECT_NEAR(commands.front().move_target_x.front(), 120.0F, 4.0F);
+
+  context.barracks_under_threat = true;
+  EXPECT_FALSE(behavior.should_execute(snapshot, context))
+      << "an AI under attack itself looks to its own walls first";
+}
+
+TEST_F(AISystemTest, AnAllyOnTheAttackIsJoinedBeforeTheFullWaveHasGathered) {
+  Game::Systems::AI::AIDoctrine doctrine;
+  doctrine.wave.size = 8;
+  doctrine.wave.target_priority = {Game::Systems::AI::DoctrineTarget::Any};
+  doctrine.garrison.minimum_units = 0;
+  doctrine.garrison.fraction = 0.0F;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 600.0F;
+  snapshot.friendly_units = {make_unit(1, 40.0F, 50.0F),
+                             make_unit(2, 41.0F, 50.0F),
+                             make_unit(3, 42.0F, 50.0F),
+                             make_unit(4, 43.0F, 50.0F)};
+  snapshot.visible_enemies = {make_enemy(90, 150.0F, 60.0F),
+                              make_enemy(91, 60.0F, 150.0F)};
+  snapshot.ally_attacks.push_back(Game::Systems::AI::AllyCall{
+      .owner_id = 4, .pos_x = 145.0F, .pos_z = 58.0F, .strength = 6});
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  context.station.x = 41.0F;
+  context.station.z = 50.0F;
+  context.macro_targets.assembly_radius = 8.0F;
+  context.strategy_config.doctrine = &doctrine;
+  context.strategy_config.aggression_modifier = 1.0F;
+
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  ASSERT_TRUE(context.wave.committed)
+      << "four men are short of a wave of eight, but enough to join an ally's fight";
+  EXPECT_EQ(context.wave.target_id, 90U)
+      << "the target is the enemy the ally is fighting";
+}
+
+TEST_F(AISystemTest, CiviliansAreQueuedOnlyWhenTheHomeCanRaiseThemAndFoodPaysForThem) {
+  Game::Systems::Nation nation;
+  nation.id = Game::Systems::NationID::Carthage;
+  nation.has_economy = true;
+  Game::Systems::TroopType civilian;
+  civilian.unit_type = Game::Units::TroopType::Civilian;
+  civilian.cost = 1;
+  civilian.resource_costs.set(Game::Systems::ResourceType::Food, 20);
+  nation.available_troops.push_back(civilian);
+
+  auto home = make_building(60, 40.0F, 40.0F, Game::Units::SpawnType::Home);
+  home.owner_id = 3;
+  home.production.has_component = true;
+  home.production.max_units = 3;
+  home.production.manpower_available = 3;
+
+  const auto civilians_ordered = [&](int food, int home_manpower) {
+    Game::Systems::AI::ProductionBehavior behavior;
+    Game::Systems::AI::AISnapshot snapshot;
+    snapshot.player_id = 3;
+    snapshot.game_time = 10.0F;
+    auto house = home;
+    house.production.manpower_available = home_manpower;
+    snapshot.friendly_units = {house};
+    snapshot.has_resource_snapshot = true;
+    snapshot.resources.set(Game::Systems::ResourceType::Food, food);
+    Game::Systems::AI::AIContext context;
+    context.player_id = 3;
+    context.max_troops_per_player = 500;
+    context.nation = &nation;
+    std::vector<Game::Systems::AI::AICommand> commands;
+    behavior.execute(snapshot, context, 5.0F, commands);
+    return std::count_if(commands.begin(), commands.end(), [](const auto& command) {
+      return command.type == Game::Systems::AI::AICommandType::StartProduction &&
+             command.product_type == Game::Units::TroopType::Civilian;
+    });
+  };
+
+  EXPECT_EQ(civilians_ordered(5, 3), 0) << "five food cannot raise a civilian";
+  EXPECT_EQ(civilians_ordered(100, 0), 0) << "a Home that has raised its three is done";
+  EXPECT_EQ(civilians_ordered(100, 3), 1);
+}
+
+TEST_F(AISystemTest, AnAllySharesItsSightAndCallsForHelpAndAttacks) {
+  Engine::Core::World world;
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "AI");
+  owners.register_owner_with_id(4, Game::Systems::OwnerType::Player, "Ally");
+  owners.register_owner_with_id(7, Game::Systems::OwnerType::AI, "Enemy");
+  owners.set_owner_team(3, 1);
+  owners.set_owner_team(4, 1);
+  owners.set_owner_team(7, 2);
+
+  (void)add_world_unit(world, 3, 0.0F, 0.0F, 12.0F, true, false);
+  (void)add_world_unit(
+      world, 4, 100.0F, 0.0F, 14.0F, false, true, Game::Units::SpawnType::Barracks);
+  auto* raider_a = add_world_unit(world, 7, 108.0F, 0.0F, 10.0F, false, false);
+  (void)add_world_unit(world, 7, 110.0F, 4.0F, 10.0F, false, false);
+
+  auto* far_enemy = add_world_unit(world, 7, 200.0F, 60.0F, 10.0F, false, false);
+  for (int i = 0; i < 3; ++i) {
+    auto* fighter = add_world_unit(
+        world, 4, 195.0F + static_cast<float>(i), 58.0F, 12.0F, false, false);
+    auto* target = fighter->add_component<Engine::Core::AttackTargetComponent>();
+    target->target_id = far_enemy->get_id();
+  }
+
+  const auto snapshot = Game::Systems::AI::AISnapshotBuilder::build(world, 3);
+  const bool sees_raider = std::any_of(
+      snapshot.visible_enemies.begin(),
+      snapshot.visible_enemies.end(),
+      [&](const auto& contact) { return contact.id == raider_a->get_id(); });
+  EXPECT_TRUE(sees_raider) << "the ally's barracks sees what the AI cannot";
+  ASSERT_EQ(snapshot.allies_under_attack.size(), 1U);
+  EXPECT_EQ(snapshot.allies_under_attack.front().owner_id, 4);
+  ASSERT_EQ(snapshot.ally_attacks.size(), 1U);
+  EXPECT_NEAR(snapshot.ally_attacks.front().pos_x, 196.0F, 1.0F);
 }

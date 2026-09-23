@@ -55,7 +55,7 @@ AudioBattleLoadTest.*
 CampaignWaveAssaultTest.*
 
 # campaign_tests
-TutorialMissionTest.TheRaidClosesOnThePlayerCamp
+TutorialMissionTest.TheRaidClosesOnThePlayerCampWhileTheCommanderKeepsHisPost
 TutorialMissionTest.TheScoutingPartyWaitsToBeAttacked
 
 # tools_tests

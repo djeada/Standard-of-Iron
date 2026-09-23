@@ -422,6 +422,8 @@ add_executable(
     render/building_archetype_desc_test.cpp
     render/farm_activity_test.cpp
     render/home_activity_test.cpp
+    render/siege_crew_test.cpp
+    render/market_awning_test.cpp
     render/building_facade_coplanarity_test.cpp
     render/building_body_footprint_test.cpp
     render/building_render_common_test.cpp

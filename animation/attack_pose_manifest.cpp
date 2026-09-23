@@ -1257,6 +1257,105 @@ auto resolve_humanoid_construction_pose(
     return sample;
   }
 
+  if (inputs.kind == HumanoidConstructionPoseKind::CrewPush) {
+    float const two_pi = 2.0F * std::numbers::pi_v<float>;
+    float const cycle = work_phase * two_pi;
+    float const drive = 0.5F + 0.5F * std::sin(cycle * 2.0F - 0.6F);
+    float const hand_y = shoulder_y - 0.42F + std::sin(cycle * 2.0F) * 0.010F;
+    float const hand_z = 0.47F + drive * 0.025F;
+    sample.right_hand = {0.18F, hand_y, hand_z};
+    sample.left_hand = {-0.18F, hand_y, hand_z};
+
+    float const lean = 0.20F + drive * 0.025F;
+    sample.shoulder_l_z_delta += lean;
+    sample.shoulder_r_z_delta += lean;
+    sample.neck_z_delta += lean * 0.80F;
+    sample.head_z_delta += lean * 0.62F;
+    sample.shoulder_l_y_delta -= 0.055F;
+    sample.shoulder_r_y_delta -= 0.055F;
+    sample.head_y_delta -= 0.035F;
+    sample.shoulder_l_x_delta += std::sin(cycle) * 0.012F;
+    sample.shoulder_r_x_delta += std::sin(cycle) * 0.012F;
+    sample.pelvis_y_delta -= 0.030F + drive * 0.008F;
+    sample.pelvis_z_delta -= 0.045F;
+    return sample;
+  }
+
+  if (inputs.kind == HumanoidConstructionPoseKind::CrewCrank) {
+    float const two_pi = 2.0F * std::numbers::pi_v<float>;
+    float const angle = work_phase * two_pi;
+    float const radius = 0.11F;
+    float const reach = std::sin(angle);
+    sample.use_two_handed_grip = true;
+    sample.grip_center = {
+        0.0F, shoulder_y - 0.48F + std::cos(angle) * radius, 0.40F + reach * radius};
+    sample.hand_separation = 0.13F;
+
+    float const lean = 0.17F + reach * 0.045F;
+    sample.shoulder_l_z_delta += lean;
+    sample.shoulder_r_z_delta += lean;
+    sample.neck_z_delta += lean * 0.75F;
+    sample.head_z_delta += lean * 0.55F;
+    float const heave = 0.5F - 0.5F * std::cos(angle);
+    sample.shoulder_l_y_delta -= 0.05F + heave * 0.025F;
+    sample.shoulder_r_y_delta -= 0.05F + heave * 0.025F;
+    sample.head_y_delta -= 0.04F;
+    sample.pelvis_y_delta -= 0.035F + heave * 0.012F;
+    sample.pelvis_z_delta -= 0.030F - reach * 0.020F;
+    sample.foot_l_z_delta -= 0.07F;
+    sample.foot_r_z_delta += 0.09F;
+    sample.knee_l_z_delta -= 0.030F;
+    sample.knee_r_z_delta += 0.050F;
+    return sample;
+  }
+
+  if (inputs.kind == HumanoidConstructionPoseKind::CrewHeave) {
+    PoseVec3 const ground{0.0F, shoulder_y - 0.60F, 0.38F};
+    PoseVec3 const chest{0.0F, shoulder_y - 0.30F, 0.24F};
+    PoseVec3 const press{0.0F, shoulder_y + 0.02F, 0.44F};
+    float lean = 0.0F;
+    float crouch = 0.0F;
+    PoseVec3 grip = ground;
+    if (work_phase < 0.22F) {
+      float const t = smoothstep(work_phase / 0.22F);
+      grip = ground;
+      lean = 0.30F;
+      crouch = 0.050F + 0.010F * t;
+    } else if (work_phase < 0.52F) {
+      float const t = smoothstep((work_phase - 0.22F) / 0.30F);
+      grip = lerp(ground, chest, t);
+      lean = 0.30F - 0.24F * t;
+      crouch = 0.060F * (1.0F - t);
+    } else if (work_phase < 0.72F) {
+      float const t = smoothstep((work_phase - 0.52F) / 0.20F);
+      grip = lerp(chest, press, t);
+      lean = 0.06F + 0.06F * t;
+      crouch = 0.012F * t;
+    } else {
+      float const t = smoothstep((work_phase - 0.72F) / 0.28F);
+      grip = lerp(press, ground, t);
+      lean = 0.12F + 0.18F * t;
+      crouch = 0.012F + 0.048F * t;
+    }
+    sample.use_two_handed_grip = true;
+    sample.grip_center = grip;
+    sample.hand_separation = 0.24F;
+    sample.shoulder_l_z_delta += lean;
+    sample.shoulder_r_z_delta += lean;
+    sample.neck_z_delta += lean * 0.75F;
+    sample.head_z_delta += lean * 0.55F;
+    sample.shoulder_l_y_delta -= lean * 0.25F;
+    sample.shoulder_r_y_delta -= lean * 0.25F;
+    sample.head_y_delta -= lean * 0.15F;
+    sample.pelvis_y_delta -= crouch;
+    sample.pelvis_z_delta -= lean * 0.12F;
+    sample.foot_l_z_delta -= 0.04F;
+    sample.foot_r_z_delta += 0.04F;
+    sample.knee_l_z_delta -= 0.018F - crouch * 0.4F;
+    sample.knee_r_z_delta += 0.020F + crouch * 0.6F;
+    return sample;
+  }
+
   if (inputs.kind == HumanoidConstructionPoseKind::Reap) {
 
     float const two_pi = 2.0F * std::numbers::pi_v<float>;

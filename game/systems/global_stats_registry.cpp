@@ -1,5 +1,7 @@
 #include "global_stats_registry.h"
 
+#include <QJsonObject>
+
 #include <algorithm>
 #include <unordered_map>
 
@@ -53,6 +55,32 @@ void GlobalStatsRegistry::initialize() {
 
 void GlobalStatsRegistry::clear() {
   m_player_stats.clear();
+}
+
+auto GlobalStatsRegistry::serialize_counters() const -> QJsonArray {
+  QJsonArray counters;
+  for (const auto& [owner_id, stats] : m_player_stats) {
+    QJsonObject entry;
+    entry["owner_id"] = owner_id;
+    entry["troops_recruited"] = stats.troops_recruited;
+    entry["enemies_killed"] = stats.enemies_killed;
+    entry["losses"] = stats.losses;
+    counters.append(entry);
+  }
+  return counters;
+}
+
+void GlobalStatsRegistry::restore_counters(const QJsonArray& counters) {
+  for (const auto& value : counters) {
+    const QJsonObject entry = value.toObject();
+    if (!entry.contains("owner_id")) {
+      continue;
+    }
+    auto& stats = m_player_stats[entry.value("owner_id").toInt()];
+    stats.troops_recruited = entry.value("troops_recruited").toInt();
+    stats.enemies_killed = entry.value("enemies_killed").toInt();
+    stats.losses = entry.value("losses").toInt();
+  }
 }
 
 auto GlobalStatsRegistry::get_stats(int owner_id) const -> const PlayerStats* {

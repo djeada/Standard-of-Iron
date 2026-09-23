@@ -57,6 +57,9 @@ enum class BakerWorkType : std::uint8_t {
   Chisel,
   KneelingChisel,
   Reap,
+  CrewPush,
+  CrewCrank,
+  CrewHeave,
 };
 enum class BakerCombatPoseType : std::uint8_t {
   None,
@@ -251,6 +254,7 @@ struct HumanoidClipSpec {
 }
 
 constexpr auto k_humanoid_baker_clip_count = Animation::k_humanoid_clip_count;
+constexpr float k_crew_push_bake_speed = Animation::k_humanoid_crew_push_bake_speed;
 constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_clips{{
     {"idle",
      Render::GL::HumanoidMotionState::Idle,
@@ -1350,6 +1354,48 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerWorkType::None,
      BakerCombatPoseType::None,
      1.0F},
+    {"crew_push",
+     Render::GL::HumanoidMotionState::Walk,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     1.1F,
+     true,
+     BakerWorkType::CrewPush},
+    {"crew_crank",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     1.4F,
+     true,
+     BakerWorkType::CrewCrank},
+    {"crew_heave",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     48U,
+     24.0F,
+     2.0F,
+     true,
+     BakerWorkType::CrewHeave},
 }};
 
 struct HumanoidSocketSpec {
@@ -2370,7 +2416,18 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       break;
     }
 
-    if (clip.work_type != BakerWorkType::None) {
+    if (clip.work_type == BakerWorkType::CrewPush) {
+      gait.speed = k_crew_push_bake_speed;
+      gait.cycle_phase = phase;
+      Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+          0U, phase * clip.cycle_time, gait, variation, pose);
+      Render::GL::HumanoidAnimationContext anim_ctx{};
+      anim_ctx.gait = gait;
+      anim_ctx.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
+      anim_ctx.inputs.is_constructing = true;
+      Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
+      ctrl.construction_pose(Animation::HumanoidConstructionPoseKind::CrewPush, phase);
+    } else if (clip.work_type != BakerWorkType::None) {
       gait.cycle_phase = 0.0F;
       Render::GL::HumanoidRendererBase::compute_locomotion_pose(
           0U, 0.0F, gait, variation, pose);
@@ -2396,6 +2453,15 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       case BakerWorkType::Reap:
         ctrl.construction_reap(phase);
         break;
+      case BakerWorkType::CrewCrank:
+        ctrl.construction_pose(Animation::HumanoidConstructionPoseKind::CrewCrank,
+                               phase);
+        break;
+      case BakerWorkType::CrewHeave:
+        ctrl.construction_pose(Animation::HumanoidConstructionPoseKind::CrewHeave,
+                               phase);
+        break;
+      case BakerWorkType::CrewPush:
       case BakerWorkType::None:
         break;
       }

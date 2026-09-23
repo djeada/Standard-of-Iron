@@ -45,7 +45,7 @@ auto observe_tutorial_frame(const TutorialObservationInputs& inputs)
   o.camera_used = notes.camera_used;
 
   const int owner = inputs.local_owner_id;
-  o.enemy_troops_defeated = inputs.enemy_troops_defeated;
+  o.enemy_units_defeated = inputs.enemy_units_defeated;
 
   if (inputs.resources != nullptr) {
     const auto harvested = inputs.resources->get_harvested_all(owner);
@@ -71,6 +71,8 @@ auto observe_tutorial_frame(const TutorialObservationInputs& inputs)
         ++o.selected_building_count;
         if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
           ++o.selected_barracks_count;
+        } else if (unit->spawn_type == Game::Units::SpawnType::Home) {
+          ++o.selected_home_count;
         }
         continue;
       }
@@ -83,6 +85,8 @@ auto observe_tutorial_frame(const TutorialObservationInputs& inputs)
       }
       if (unit->spawn_type != Game::Units::SpawnType::Civilian) {
         ++o.selected_troop_count;
+      } else {
+        ++o.selected_civilian_count;
       }
     }
   }

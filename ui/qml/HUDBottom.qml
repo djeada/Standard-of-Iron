@@ -782,8 +782,9 @@ RowLayout {
 
                 Text {
                     Layout.fillWidth: true
-                    text: commandBanner.showTarget ? commandBanner.target.name : ""
-                    color: Design.Theme.textPrimary
+                    text: !commandBanner.showTarget ? "" : commandBanner.target.isEnemy === true ? qsTr("%1 · Enemy").arg(commandBanner.target.name) : commandBanner.target.isOwn === true ? qsTr("%1 · Yours").arg(commandBanner.target.name) : commandBanner.target.name
+
+                    color: !commandBanner.showTarget ? Design.Theme.textPrimary : commandBanner.target.isEnemy === true ? Design.Theme.danger : commandBanner.target.isOwn === true ? Design.Theme.success : Design.Theme.textPrimary
                     font.family: Design.Typography.family
                     font.pixelSize: Design.Typography.caption
                     font.weight: Design.Typography.bold

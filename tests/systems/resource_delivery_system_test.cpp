@@ -5,8 +5,10 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <memory>
+#include <vector>
 
 #include "core/component_economy.h"
+#include "core/event_manager.h"
 #include "core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
@@ -150,6 +152,34 @@ TEST_F(ResourceDeliverySystemTest, UnloadingAtTheYardCreditsTheOwnerOnce) {
   system.update(&world, 0.1F);
   EXPECT_EQ(
       Game::Systems::PlayerResourceRegistry::instance().get(1, ResourceType::Iron), 30);
+}
+
+TEST_F(ResourceDeliverySystemTest, EveryDeliveryFloatsItsNumberOverTheStoneYard) {
+  std::vector<Engine::Core::WorldFeedbackEvent> events;
+  Engine::Core::ScopedEventSubscription<Engine::Core::WorldFeedbackEvent> subscription(
+      [&events](const Engine::Core::WorldFeedbackEvent& event) {
+        events.push_back(event);
+      });
+  Engine::Core::World world;
+  add_barracks(world, 1, 0.0F, 0.0F);
+  auto const drop = Game::Systems::stockpile_drop_point(0.0F, 0.0F, 0.0F);
+  for (int i = 0; i < 4; ++i) {
+    add_hauler(world, 1, drop.x, drop.z, ResourceType::Food, 10);
+  }
+
+  Game::Systems::ResourceDeliverySystem system;
+  system.update(&world, 0.1F);
+
+  ASSERT_EQ(events.size(), 4U) << "one number per load, however many arrive together";
+  for (const auto& event : events) {
+    EXPECT_EQ(event.anchor_id, Engine::Core::NULL_ENTITY)
+        << "an entity anchor lets the per-building limit swallow deliveries";
+    EXPECT_TRUE(event.has_position);
+    EXPECT_NEAR(event.x, drop.x, 0.01F);
+    EXPECT_NEAR(event.z, drop.z, 0.01F);
+    EXPECT_GT(event.y, 0.5F) << "the number rises above the piles, not out of the ground";
+    EXPECT_EQ(event.amount, 10);
+  }
 }
 
 TEST_F(ResourceDeliverySystemTest, TheYardIsFoundThroughARotatedBarracks) {

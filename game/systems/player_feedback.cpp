@@ -64,6 +64,15 @@ void grant_harvested_resource(int owner_id,
   announce_resource(owner_id, anchor, type, amount);
 }
 
+void grant_harvested_resource_at(
+    int owner_id, float x, float y, float z, ResourceType type, int amount) {
+  if (owner_id <= 0 || amount <= 0) {
+    return;
+  }
+  PlayerResourceRegistry::instance().add_harvested(owner_id, type, amount);
+  announce_resource_at(owner_id, x, y, z, type, amount);
+}
+
 void grant_resources(int owner_id,
                      Engine::Core::EntityID anchor,
                      const ResourceAmounts& amounts) {
@@ -94,6 +103,16 @@ void spend_resources(int owner_id,
     }
     move_stock(owner_id, type, -amount);
     announce_resource(owner_id, anchor, type, -amount);
+  }
+}
+
+void announce_spent_at(
+    int owner_id, float x, float y, float z, const ResourceAmounts& cost) {
+  for (ResourceType const type : k_all_resource_types) {
+    int const amount = cost.get(type);
+    if (amount > 0) {
+      announce_resource_at(owner_id, x, y, z, type, -amount);
+    }
   }
 }
 

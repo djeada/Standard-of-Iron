@@ -81,9 +81,7 @@ standing_in_the_order_of_battle(const std::vector<std::string>& preferred,
 [[nodiscard]] auto cheapest_fighting_cost(const Game::Systems::Nation& nation) -> int {
   int cheapest = std::numeric_limits<int>::max();
   for (const auto& troop : nation.available_troops) {
-    if (Game::Units::is_commander_troop(troop.unit_type) ||
-        troop.unit_type == Game::Units::TroopType::Builder ||
-        troop.unit_type == Game::Units::TroopType::Civilian ||
+    if (!is_foot_line_recruit(troop.unit_type) ||
         !is_recruitable_from(troop, Game::Units::SpawnType::Barracks)) {
       continue;
     }
@@ -349,7 +347,16 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
     troop_type = choose_recruit(*nation, context);
   }
 
+  constexpr int k_troop_cap_margin = 12;
+  if (troop_type != nullptr && snapshot.troop_count >= 0 &&
+      snapshot.max_troops_per_player > 0 &&
+      snapshot.troop_count + k_troop_cap_margin > snapshot.max_troops_per_player) {
+    troop_type = nullptr;
+  }
+
   if (troop_type == nullptr) {
+    queue_civilians_at_homes(snapshot, context, out_commands);
+    deliver_idle_civilians(snapshot, out_commands);
     return;
   }
 
@@ -528,7 +535,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
     m_production_counter++;
   }
 
-  queue_civilians_at_homes(snapshot, out_commands);
+  queue_civilians_at_homes(snapshot, context, out_commands);
   deliver_idle_civilians(snapshot, out_commands);
 }
 
@@ -598,7 +605,37 @@ void ProductionBehavior::deliver_idle_civilians(
 }
 
 void ProductionBehavior::queue_civilians_at_homes(
-    const AISnapshot& snapshot, std::vector<AICommand>& out_commands) const {
+    const AISnapshot& snapshot,
+    const AIContext& context,
+    std::vector<AICommand>& out_commands) const {
+  Game::Systems::ResourceAmounts civilian_cost{};
+  int civilian_manpower = 1;
+  if (context.nation != nullptr) {
+    for (const auto& troop : context.nation->available_troops) {
+      if (troop.unit_type == Game::Units::TroopType::Civilian) {
+        civilian_cost = troop.resource_costs;
+        civilian_manpower = troop.cost;
+        break;
+      }
+    }
+  }
+  Game::Systems::ResourceAmounts budget = snapshot.resources;
+  if (context.nation != nullptr) {
+    for (const auto& command : out_commands) {
+      if (command.type != AICommandType::StartProduction) {
+        continue;
+      }
+      for (const auto& troop : context.nation->available_troops) {
+        if (troop.unit_type != command.product_type) {
+          continue;
+        }
+        for (const auto type : Game::Systems::k_all_resource_types) {
+          budget.set(type, budget.get(type) - troop.resource_costs.get(type));
+        }
+        break;
+      }
+    }
+  }
   for (const auto& entity : snapshot.friendly_units) {
     if (!entity.is_building || entity.spawn_type != Game::Units::SpawnType::Home) {
       continue;
@@ -617,6 +654,22 @@ void ProductionBehavior::queue_civilians_at_homes(
     }
     if ((prod.in_progress ? 1 : 0) + prod.queue_size >= k_home_queue_size) {
       continue;
+    }
+    if (prod.manpower_available < civilian_manpower) {
+      continue;
+    }
+
+    bool can_pay = true;
+    for (const auto type : Game::Systems::k_all_resource_types) {
+      if (budget.get(type) < civilian_cost.get(type)) {
+        can_pay = false;
+      }
+    }
+    if (!can_pay) {
+      return;
+    }
+    for (const auto type : Game::Systems::k_all_resource_types) {
+      budget.set(type, budget.get(type) - civilian_cost.get(type));
     }
 
     AICommand command;

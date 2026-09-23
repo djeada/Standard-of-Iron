@@ -1,10 +1,12 @@
 #include "game/mission/tutorial_director.h"
 
+#include <QJsonArray>
 #include <QVariantMap>
 
 #include <algorithm>
 #include <array>
 #include <initializer_list>
+#include <optional>
 
 #include "game/systems/construction_cost_catalog.h"
 #include "game/systems/resource_types.h"
@@ -14,6 +16,7 @@ namespace Game::Mission {
 namespace {
 
 constexpr float k_step_complete_hold_seconds = 4.0F;
+constexpr int k_save_version = 1;
 
 constexpr std::array k_steps = {
     TutorialStepId::SelectTroops,
@@ -236,6 +239,103 @@ void TutorialDirector::continue_step() {
   go_to_next_step();
 }
 
+auto TutorialDirector::serialize() const -> QJsonObject {
+  if (!m_active && !m_finished) {
+    return {};
+  }
+  QJsonObject state;
+  state["version"] = k_save_version;
+  state["finished"] = m_finished;
+  state["visible"] = m_visible;
+  state["step"] = step_id_name(step());
+  state["step_complete"] = m_step_complete;
+  state["objectives_opened"] = m_objectives_opened;
+  QJsonArray done;
+  for (std::size_t i = 0; i < k_steps.size(); ++i) {
+    if (m_done[i]) {
+      done.append(step_id_name(k_steps[i]));
+    }
+  }
+  state["done"] = done;
+  if (m_baseline.captured) {
+    QJsonObject baseline;
+    baseline["enemy_units_defeated"] = m_baseline.enemy_units_defeated;
+    baseline["harvested_wood"] = m_baseline.harvested_wood;
+    baseline["harvested_stone"] = m_baseline.harvested_stone;
+    baseline["harvested_iron"] = m_baseline.harvested_iron;
+    baseline["home_count"] = m_baseline.home_count;
+    baseline["soldier_count"] = m_baseline.soldier_count;
+    baseline["waves_cleared"] = m_baseline.waves_cleared;
+    state["baseline"] = baseline;
+  }
+  return state;
+}
+
+void TutorialDirector::restore(const QJsonObject& state, int waves_cleared) {
+  if (!m_active) {
+    return;
+  }
+  const auto index_of = [](const QString& id) -> std::optional<std::size_t> {
+    for (std::size_t i = 0; i < k_steps.size(); ++i) {
+      if (step_id_name(k_steps[i]) == id) {
+        return i;
+      }
+    }
+    return std::nullopt;
+  };
+
+  if (state.isEmpty() || state.value("version").toInt(0) > k_save_version) {
+    if (waves_cleared > 0) {
+      const auto defend = index_of(step_id_name(TutorialStepId::DefendCamp));
+      std::fill(m_done.begin(),
+                m_done.begin() + static_cast<std::ptrdiff_t>(*defend) + 1,
+                true);
+      enter_step(*defend + 1, false);
+    }
+    return;
+  }
+
+  if (state.value("finished").toBool()) {
+    std::fill(m_done.begin(), m_done.end(), true);
+    m_index = k_steps.size() - 1;
+    m_finished = true;
+    m_active = false;
+    m_step_complete = true;
+    publish(-1.0, {}, {}, {});
+    emit step_changed();
+    emit state_changed();
+    return;
+  }
+
+  std::fill(m_done.begin(), m_done.end(), false);
+  for (const auto& id : state.value("done").toArray()) {
+    if (const auto index = index_of(id.toString())) {
+      m_done[*index] = true;
+    }
+  }
+  const auto index = index_of(state.value("step").toString()).value_or(0);
+  enter_step(index, false);
+  m_visible = state.value("visible").toBool(true);
+  m_objectives_opened = state.value("objectives_opened").toBool(false);
+
+  const QJsonObject baseline = state.value("baseline").toObject();
+  if (!baseline.isEmpty()) {
+    m_baseline.captured = true;
+
+    m_baseline.enemy_units_defeated = baseline.value("enemy_units_defeated").toInt();
+    m_baseline.harvested_wood = baseline.value("harvested_wood").toInt();
+    m_baseline.harvested_stone = baseline.value("harvested_stone").toInt();
+    m_baseline.harvested_iron = baseline.value("harvested_iron").toInt();
+    m_baseline.home_count = baseline.value("home_count").toInt();
+    m_baseline.soldier_count = baseline.value("soldier_count").toInt();
+    m_baseline.waves_cleared = baseline.value("waves_cleared").toInt();
+  }
+  if (state.value("step_complete").toBool()) {
+    mark_step_complete();
+  }
+  emit state_changed();
+}
+
 void TutorialDirector::publish(qreal progress,
                                const QString& progress_text,
                                const QString& hint,
@@ -306,7 +406,7 @@ void TutorialDirector::advance(const TutorialObservation& observation, float rea
 
   if (!m_baseline.captured) {
     m_baseline.captured = true;
-    m_baseline.enemy_troops_defeated = observation.enemy_troops_defeated;
+    m_baseline.enemy_units_defeated = observation.enemy_units_defeated;
     m_baseline.harvested_wood = observation.harvested_wood;
     m_baseline.harvested_stone = observation.harvested_stone;
     m_baseline.harvested_iron = observation.harvested_iron;
@@ -349,7 +449,7 @@ auto TutorialDirector::evaluate(const TutorialObservation& o,
     return o.move_order_accepted;
 
   case TutorialStepId::AttackScouts: {
-    const int killed = o.enemy_troops_defeated - m_baseline.enemy_troops_defeated;
+    const int killed = o.enemy_units_defeated - m_baseline.enemy_units_defeated;
     progress = ratio(killed, k_tutorial_scout_count);
     progress_text = count_text(killed, k_tutorial_scout_count);
     return killed >= k_tutorial_scout_count;
@@ -503,6 +603,15 @@ auto TutorialDirector::hint_for(const TutorialObservation& o) const -> QString {
 
   case TutorialStepId::RecruitSoldier:
   case TutorialStepId::AssembleArmy: {
+    if (o.selected_civilian_count > 0) {
+      return tr("Press Deliver, then click your barracks: the civilian walks there "
+                "and joins its reserve, and you can recruit again.");
+    }
+    if (o.selected_home_count > 0) {
+      return tr("A Home raises civilians, not soldiers. Recruit a civilian here, "
+                "select it when it steps out, press Deliver and click your "
+                "barracks to refill its reserve.");
+    }
     if (o.selected_barracks_count == 0) {
       return tr("Recruits come from the barracks. Left-click your barracks to open "
                 "its production panel on the right.");
@@ -820,7 +929,7 @@ auto TutorialDirector::step_objective(TutorialStepId id) -> QString {
   case TutorialStepId::MoveTroops:
     return tr("Right-click the ground to move your selected troops");
   case TutorialStepId::AttackScouts:
-    return tr("Destroy the Roman scouting party (%1 soldiers)")
+    return tr("Destroy the Roman scouting party (%1 units)")
         .arg(k_tutorial_scout_count);
   case TutorialStepId::GatherWood:
     return tr("Deliver %1 wood to your barracks yard").arg(k_tutorial_wood_target);

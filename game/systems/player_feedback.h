@@ -15,6 +15,9 @@ void grant_resource(int owner_id,
                     ResourceType type,
                     int amount);
 
+void grant_harvested_resource_at(
+    int owner_id, float x, float y, float z, ResourceType type, int amount);
+
 void grant_harvested_resource(int owner_id,
                               Engine::Core::EntityID anchor,
                               ResourceType type,
@@ -30,6 +33,9 @@ void grant_resources_at(
 void spend_resources(int owner_id,
                      Engine::Core::EntityID anchor,
                      const ResourceAmounts& cost);
+
+void announce_spent_at(
+    int owner_id, float x, float y, float z, const ResourceAmounts& cost);
 
 void spend_resources_at(
     int owner_id, float x, float y, float z, const ResourceAmounts& cost);

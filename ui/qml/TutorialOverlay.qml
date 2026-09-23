@@ -94,13 +94,17 @@ Item {
         visible: !root.collapsed
         raised: true
         border.color: root.tutorial && root.tutorial.step_complete ? Design.Theme.success : Design.Theme.borderStrong
-        implicitHeight: column.implicitHeight + Design.Metrics.space12 * 2
+        implicitHeight: column.implicitHeight + Design.Metrics.space8 + actions.implicitHeight + card.contentPadding * 2
         accessibleName: qsTr("Tutorial step")
 
         Flickable {
             id: cardScroller
 
-            anchors.fill: parent
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.bottom: actions.top
+            anchors.bottomMargin: Design.Metrics.space8
             contentWidth: width
             contentHeight: column.implicitHeight
             clip: true
@@ -108,13 +112,13 @@ Item {
             interactive: contentHeight > height
 
             ScrollBar.vertical: ScrollBar {
-                policy: cardScroller.contentHeight > cardScroller.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
+                policy: cardScroller.contentHeight > cardScroller.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
             }
 
             ColumnLayout {
                 id: column
 
-                width: cardScroller.width
+                width: cardScroller.width - (cardScroller.contentHeight > cardScroller.height ? Design.Metrics.space8 : 0)
                 spacing: Design.Metrics.space8
 
                 RowLayout {
@@ -232,54 +236,61 @@ Item {
                     font.weight: Design.Typography.medium
                     wrapMode: Text.WordWrap
                 }
+            }
+        }
 
-                Flow {
-                    Layout.fillWidth: true
-                    spacing: Design.Metrics.space8
+        Flow {
+            id: actions
 
-                    Design.IronButton {
-                        text: root.game_is_paused ? qsTr("Resume") : qsTr("Pause")
-                        tone: root.game_is_paused ? "primary" : "secondary"
-                        implicitWidth: Math.max(88, contentItem.implicitWidth + Design.Metrics.space16)
-                        onClicked: root.pause_requested()
-                    }
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            spacing: Design.Metrics.space8
 
-                    Design.IronButton {
-                        text: qsTr("Show me")
-                        tone: "secondary"
-                        implicitWidth: Math.max(88, contentItem.implicitWidth + Design.Metrics.space16)
-                        visible: root.can_show_target && !root.tutorial.step_complete
-                        onClicked: root.look_at_focus()
-                    }
+            Design.IronButton {
+                text: root.game_is_paused ? qsTr("Resume") : qsTr("Pause")
+                tone: root.game_is_paused ? "primary" : "secondary"
+                implicitWidth: Math.max(88, contentItem.implicitWidth + Design.Metrics.space16)
+                onClicked: root.pause_requested()
+            }
 
-                    Design.IronButton {
-                        text: qsTr("Replay step")
-                        implicitWidth: Math.max(88, contentItem.implicitWidth + Design.Metrics.space16)
-                        onClicked: root.tutorial.replay_step()
-                    }
+            Design.IronButton {
+                objectName: "tutorialShowMeButton"
+                text: qsTr("Show me")
+                tone: "secondary"
+                implicitWidth: Math.max(88, contentItem.implicitWidth + Design.Metrics.space16)
+                enabled: root.can_show_target && !root.tutorial.step_complete
+                onClicked: root.look_at_focus()
+            }
 
-                    Design.IronButton {
-                        text: qsTr("Skip step")
-                        implicitWidth: Math.max(88, contentItem.implicitWidth + Design.Metrics.space16)
-                        visible: root.tutorial && !root.tutorial.step_complete
-                        onClicked: root.tutorial.skip_step()
-                    }
+            Design.IronButton {
+                text: qsTr("Replay step")
+                implicitWidth: Math.max(88, contentItem.implicitWidth + Design.Metrics.space16)
+                onClicked: root.tutorial.replay_step()
+            }
 
-                    Design.IronButton {
-                        text: qsTr("Continue")
-                        tone: "primary"
-                        implicitWidth: Math.max(88, contentItem.implicitWidth + Design.Metrics.space16)
-                        visible: root.tutorial && root.tutorial.step_complete
-                        onClicked: root.tutorial.continue_step()
-                    }
+            Design.IronButton {
+                objectName: "tutorialSkipButton"
+                text: qsTr("Skip step")
+                implicitWidth: Math.max(88, contentItem.implicitWidth + Design.Metrics.space16)
+                visible: root.tutorial && !root.tutorial.step_complete
+                onClicked: root.tutorial.skip_step()
+            }
 
-                    Design.IronButton {
-                        text: qsTr("End tutorial")
-                        tone: "destructive"
-                        implicitWidth: Math.max(88, contentItem.implicitWidth + Design.Metrics.space16)
-                        onClicked: root.tutorial.stop()
-                    }
-                }
+            Design.IronButton {
+                text: qsTr("Continue")
+                tone: "primary"
+                implicitWidth: Math.max(88, contentItem.implicitWidth + Design.Metrics.space16)
+                visible: root.tutorial && root.tutorial.step_complete
+                onClicked: root.tutorial.continue_step()
+            }
+
+            Design.IronButton {
+                objectName: "tutorialEndButton"
+                text: qsTr("End tutorial")
+                tone: "destructive"
+                implicitWidth: Math.max(88, contentItem.implicitWidth + Design.Metrics.space16)
+                onClicked: root.tutorial.stop()
             }
         }
     }

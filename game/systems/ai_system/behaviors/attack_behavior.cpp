@@ -149,6 +149,31 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
 
   if (snapshot.visible_enemies.empty()) {
 
+    constexpr float k_wave_march_reorder_seconds = 4.0F;
+    if (context.wave.committed && context.wave.target_id != 0 &&
+        snapshot.game_time - context.wave.last_order_time >=
+            k_wave_march_reorder_seconds) {
+      std::vector<Engine::Core::EntityID> unit_ids;
+      unit_ids.reserve(ready_units.size());
+      for (const auto* unit : ready_units) {
+        unit_ids.push_back(unit->id);
+      }
+      AIFormationRequest formation_request;
+      formation_request.player_id = context.player_id;
+      formation_request.nation = context.nation;
+      formation_request.anchor =
+          QVector3D(context.wave.target_x, 0.0F, context.wave.target_z);
+      formation_request.spacing = context.strategy_config.attack_formation_spacing;
+      formation_request.intent = select_ai_intent(snapshot, context, false, false);
+      auto cmd =
+          move_to_slots(unit_ids, plan_ai_formation(formation_request, ready_units));
+      if (!cmd.units.empty()) {
+        context.wave.last_order_time = snapshot.game_time;
+        out_commands.push_back(std::move(cmd));
+      }
+      return;
+    }
+
     constexpr int MIN_UNITS_FOR_SCOUTING = 3;
     if ((context.state == AIState::Attacking || context.wave.committed) &&
         !marches_only_in_waves(context) &&

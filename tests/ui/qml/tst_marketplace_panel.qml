@@ -18,6 +18,7 @@ TestCase {
     function init() {
         Core.UiPreferences.reset_to_defaults();
         testCase.calls = [];
+        market.allies = [];
     }
 
     function cleanupTestCase() {
@@ -58,6 +59,22 @@ TestCase {
 
         function marketplace_sell(key) {
             testCase.calls.push("sell " + key);
+            return true;
+        }
+
+        property var allies: []
+
+        function marketplace_allies() {
+            return market.allies;
+        }
+
+        function send_to_ally(owner, key, amount) {
+            testCase.calls.push("send " + owner + " " + key + " " + amount);
+            return true;
+        }
+
+        function request_from_ally(owner, key, amount) {
+            testCase.calls.push("request " + owner + " " + key + " " + amount);
             return true;
         }
     }
@@ -118,5 +135,45 @@ TestCase {
         verify(!sell_wood.allowed, "five wood cannot fill a lot of ten");
         mouseClick(sell_wood);
         compare(testCase.calls, []);
+    }
+
+    function test_without_allies_the_exchange_says_so() {
+        var panel = create_panel();
+        var exchange = findChild(panel, "allyExchange");
+        verify(exchange !== null && exchange.visible);
+        verify(findChild(panel, "allySendButton").visible === false);
+    }
+
+    function test_resources_are_sent_to_and_requested_from_the_chosen_ally() {
+        market.allies = [{
+                "owner_id": 3,
+                "name": "Hanno",
+                "is_ai": true
+            }, {
+                "owner_id": 4,
+                "name": "Mago",
+                "is_ai": true
+            }];
+        var panel = create_panel();
+        var exchange = findChild(panel, "allyExchange");
+        exchange.ally_index = 1;
+        exchange.resource_key = "gold";
+        exchange.amount = 100;
+        findChild(panel, "allySendButton").clicked();
+        findChild(panel, "allyRequestButton").clicked();
+        compare(testCase.calls, ["send 4 gold 100", "request 4 gold 100"]);
+    }
+
+    function test_sending_more_than_the_player_holds_is_disabled() {
+        market.allies = [{
+                "owner_id": 3,
+                "name": "Hanno",
+                "is_ai": true
+            }];
+        var panel = create_panel();
+        var exchange = findChild(panel, "allyExchange");
+        exchange.resource_key = "wood";
+        exchange.amount = 50;
+        verify(!findChild(panel, "allySendButton").enabled, "five wood cannot make a gift of fifty");
     }
 }

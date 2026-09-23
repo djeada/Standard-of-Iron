@@ -145,4 +145,49 @@ TestCase {
         ProductionPanel {
         }
     }
+
+    QtObject {
+        id: builderProduction
+
+        function has_selected_type(type) {
+            return type === "builder";
+        }
+
+        function selected_builder_state() {
+            return {
+                "in_progress": true,
+                "gathering": true,
+                "build_time": 10,
+                "time_remaining": 4,
+                "product_type": "collect_iron_ore"
+            };
+        }
+    }
+
+    function test_a_gathering_builder_can_still_open_a_build_card() {
+        var panel = makePanel(builderProduction, null, fundedPlayer);
+        var gathering = panel.construction_card_state({
+                "in_progress": true,
+                "gathering": true
+            }, {
+                "resource_costs": {}
+            });
+        verify(gathering.enabled, "a worker at an ore seam is not busy building");
+        var building = panel.construction_card_state({
+                "in_progress": true,
+                "gathering": false
+            }, {
+                "resource_costs": {}
+            });
+        verify(!building.enabled);
+        panel.destroy();
+    }
+
+    function test_the_builder_cards_fit_the_panel_width() {
+        var panel = makePanel(builderProduction, null, fundedPlayer, 380);
+        var grid = findChild(panel, "builderCardGrid");
+        verify(grid !== null, "the builder card grid was not found");
+        verify(grid.width <= grid.parent.width + 0.5, "the builder grid is " + grid.width + " px wide in a " + grid.parent.width + " px column; the outer cards' costs get clipped");
+        panel.destroy();
+    }
 }

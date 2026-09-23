@@ -3433,6 +3433,50 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>A save is already in progress.</source>
         <translation>A save is already in progress.</translation>
     </message>
+    <message>
+        <source>your ally</source>
+        <translation>ваш союзник</translation>
+    </message>
+    <message>
+        <source>gold</source>
+        <translation>золота</translation>
+    </message>
+    <message>
+        <source>food</source>
+        <translation>еды</translation>
+    </message>
+    <message>
+        <source>wood</source>
+        <translation>дерева</translation>
+    </message>
+    <message>
+        <source>stone</source>
+        <translation>камня</translation>
+    </message>
+    <message>
+        <source>iron</source>
+        <translation>железа</translation>
+    </message>
+    <message>
+        <source>Sent %1 %2 to %3.</source>
+        <translation>Отправлено %1 %2: %3.</translation>
+    </message>
+    <message>
+        <source>%1 sends you %2 %3.</source>
+        <translation>%1 присылает вам %2 %3.</translation>
+    </message>
+    <message>
+        <source>%1 can spare only %2 of the %3 %4 you asked for.</source>
+        <translation>%1 может выделить лишь %2 из %3 %4, о которых вы просили.</translation>
+    </message>
+    <message>
+        <source>%1 has no %2 to spare.</source>
+        <translation>У %1 нет лишнего %2.</translation>
+    </message>
+    <message>
+        <source>%1 refuses to part with any %2.</source>
+        <translation>%1 отказывается расставаться с %2.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -4116,6 +4160,14 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>TARGET</source>
         <translation>ЦЕЛЬ</translation>
+    </message>
+    <message>
+        <source>%1 · Enemy</source>
+        <translation>%1 · Враг</translation>
+    </message>
+    <message>
+        <source>%1 · Yours</source>
+        <translation>%1 · Ваши</translation>
     </message>
     <message numerus="yes">
         <source>%n attacking</source>
@@ -7579,8 +7631,8 @@ to see preview</source>
         <translation>Река течёт с севера на юг через середину долины; ближайшая переправа лежит прямо к востоку от лагеря.</translation>
     </message>
     <message>
-        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.</source>
-        <translation>Значит, разведчики не возвращаются. Что ж, все с чего-то начинают, а ты начал с того, что убил одиннадцать человек, ждавших обеда. В следующий раз Рим пришлёт того, кто умеет считать.</translation>
+        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
+        <translation>Значит, разведчики не возвращаются. Что ж, все с чего-то начинают, а ты начал с того, что разгромил заставу, полную людей, ждавших обеда. В следующий раз Рим пришлёт того, кто умеет считать.</translation>
     </message>
     <message>
         <source>The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here.</source>
@@ -9617,6 +9669,30 @@ Wide vision and a durable settlement anchor</source>
         <source>Not enough %1: %2 needed</source>
         <translation>Недостаточно ресурса «%1»: нужно %2</translation>
     </message>
+    <message>
+        <source>ALLIES</source>
+        <translation>СОЮЗНИКИ</translation>
+    </message>
+    <message>
+        <source>No allies to trade with in this battle.</source>
+        <translation>В этой битве нет союзников для обмена.</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Отправить</translation>
+    </message>
+    <message>
+        <source>Give %1 %2 to %3</source>
+        <translation>Передать %1 %2: %3</translation>
+    </message>
+    <message>
+        <source>Request</source>
+        <translation>Попросить</translation>
+    </message>
+    <message>
+        <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
+        <translation>Попросить у %1 %2 %3. Щедрый полководец с запасами согласится; воинственный или бедный оставит себе.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionViewModel</name>
@@ -9651,6 +9727,26 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>Not enough %1 to sell.</source>
         <translation>Не хватает %1 на продажу.</translation>
+    </message>
+    <message>
+        <source>gold</source>
+        <translation>золота</translation>
+    </message>
+    <message>
+        <source>Allies can only exchange gold, food, wood, stone or iron.</source>
+        <translation>Союзники могут обмениваться только золотом, едой, деревом, камнем или железом.</translation>
+    </message>
+    <message>
+        <source>Choose an ally to trade with.</source>
+        <translation>Выберите союзника для обмена.</translation>
+    </message>
+    <message>
+        <source>You need a marketplace to deal with your allies.</source>
+        <translation>Для обмена с союзниками нужен рынок.</translation>
+    </message>
+    <message>
+        <source>Not enough %1 to send.</source>
+        <translation>Недостаточно %1 для отправки.</translation>
     </message>
 </context>
 <context>
@@ -10998,6 +11094,14 @@ Wide vision and a durable settlement anchor</source>
         <translation>Красный контур означает, что площадка занята: слишком близко к другой постройке, на воде или на склоне. Сдвиньте его на ровную открытую землю и подтвердите левой кнопкой. Правая отменяет.</translation>
     </message>
     <message>
+        <source>Press Deliver, then click your barracks: the civilian walks there and joins its reserve, and you can recruit again.</source>
+        <translation>Нажмите «Доставить», затем щёлкните по казарме: житель придёт туда и пополнит её резерв, и вы снова сможете набирать войска.</translation>
+    </message>
+    <message>
+        <source>A Home raises civilians, not soldiers. Recruit a civilian here, select it when it steps out, press Deliver and click your barracks to refill its reserve.</source>
+        <translation>Дом растит жителей, а не солдат. Наберите здесь жителя, выберите его, когда он выйдет, нажмите «Доставить» и щёлкните по казарме, чтобы пополнить её резерв.</translation>
+    </message>
+    <message>
         <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
         <translation>Новобранцы приходят из казарм. Щёлкните левой по своим казармам, чтобы справа открылась их панель найма.</translation>
     </message>
@@ -11158,8 +11262,8 @@ Wide vision and a durable settlement anchor</source>
         <translation>Щёлкните правой по земле, чтобы двинуть выделенные отряды</translation>
     </message>
     <message>
-        <source>Destroy the Roman scouting party (%1 soldiers)</source>
-        <translation>Уничтожьте римский разведывательный отряд (воинов: %1)</translation>
+        <source>Destroy the Roman scouting party (%1 units)</source>
+        <translation>Уничтожьте римский разведывательный отряд (отрядов: %1)</translation>
     </message>
     <message>
         <source>Deliver %1 wood to your barracks yard</source>

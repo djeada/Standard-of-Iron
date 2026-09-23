@@ -54,6 +54,10 @@ auto every_payload() -> std::vector<Payload> {
       Produce{.building = 14, .product = Game::Units::TroopType::Spearman});
   all.emplace_back(Trade{.resource = Game::Systems::ResourceType::Stone,
                          .direction = TradeDirection::Sell});
+  all.emplace_back(AllyTribute{.ally_owner = 3,
+                               .resource = Game::Systems::ResourceType::Iron,
+                               .amount = 75,
+                               .request = true});
   all.emplace_back(UseCommanderAbility{.commander = 15,
                                        .ability = CommanderAbility::FlagRally,
                                        .target = QVector3D(8.0F, 0.0F, 9.0F)});

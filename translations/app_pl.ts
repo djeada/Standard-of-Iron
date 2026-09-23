@@ -3433,6 +3433,50 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <source>A save is already in progress.</source>
         <translation>A save is already in progress.</translation>
     </message>
+    <message>
+        <source>your ally</source>
+        <translation>twój sojusznik</translation>
+    </message>
+    <message>
+        <source>gold</source>
+        <translation>złota</translation>
+    </message>
+    <message>
+        <source>food</source>
+        <translation>żywności</translation>
+    </message>
+    <message>
+        <source>wood</source>
+        <translation>drewna</translation>
+    </message>
+    <message>
+        <source>stone</source>
+        <translation>kamienia</translation>
+    </message>
+    <message>
+        <source>iron</source>
+        <translation>żelaza</translation>
+    </message>
+    <message>
+        <source>Sent %1 %2 to %3.</source>
+        <translation>Wysłano %1 %2 do: %3.</translation>
+    </message>
+    <message>
+        <source>%1 sends you %2 %3.</source>
+        <translation>%1 przysyła ci %2 %3.</translation>
+    </message>
+    <message>
+        <source>%1 can spare only %2 of the %3 %4 you asked for.</source>
+        <translation>%1 może oddać tylko %2 z %3 %4, o które prosisz.</translation>
+    </message>
+    <message>
+        <source>%1 has no %2 to spare.</source>
+        <translation>%1 nie ma %2 na zbyciu.</translation>
+    </message>
+    <message>
+        <source>%1 refuses to part with any %2.</source>
+        <translation>%1 odmawia oddania %2.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -4116,6 +4160,14 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     <message>
         <source>TARGET</source>
         <translation>CEL</translation>
+    </message>
+    <message>
+        <source>%1 · Enemy</source>
+        <translation>%1 · Wróg</translation>
+    </message>
+    <message>
+        <source>%1 · Yours</source>
+        <translation>%1 · Twoje</translation>
     </message>
     <message numerus="yes">
         <source>%n attacking</source>
@@ -7579,8 +7631,8 @@ by zobaczyć podgląd</translation>
         <translation>Rzeka płynie z północy na południe przez środek doliny; najbliższa przeprawa leży dokładnie na wschód od obozu.</translation>
     </message>
     <message>
-        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.</source>
-        <translation>A więc zwiadowcy nie wracają. Cóż — każdy gdzieś zaczyna, a ty zacząłeś od zabicia jedenastu ludzi, którzy spodziewali się obiadu. Następnym razem Rzym przyśle kogoś, kto liczy.</translation>
+        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
+        <translation>A więc zwiadowcy nie wracają. Cóż — każdy gdzieś zaczyna, a ty zacząłeś od rozbicia placówki pełnej ludzi, którzy spodziewali się obiadu. Następnym razem Rzym przyśle kogoś, kto liczy.</translation>
     </message>
     <message>
         <source>The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here.</source>
@@ -9617,6 +9669,30 @@ Szerokie pole widzenia i trwała kotwica osady</translation>
         <source>Not enough %1: %2 needed</source>
         <translation>Za mało: %1, potrzeba %2</translation>
     </message>
+    <message>
+        <source>ALLIES</source>
+        <translation>SOJUSZNICY</translation>
+    </message>
+    <message>
+        <source>No allies to trade with in this battle.</source>
+        <translation>W tej bitwie nie masz sojuszników do wymiany.</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Wyślij</translation>
+    </message>
+    <message>
+        <source>Give %1 %2 to %3</source>
+        <translation>Daj %1 %2: %3</translation>
+    </message>
+    <message>
+        <source>Request</source>
+        <translation>Poproś</translation>
+    </message>
+    <message>
+        <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
+        <translation>Poproś %1 o %2 %3. Hojny wódz z nadwyżką się zgodzi; wojowniczy lub biedny zatrzyma wszystko.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionViewModel</name>
@@ -9651,6 +9727,26 @@ Szerokie pole widzenia i trwała kotwica osady</translation>
     <message>
         <source>Not enough %1 to sell.</source>
         <translation>Za mało %1 na sprzedaż.</translation>
+    </message>
+    <message>
+        <source>gold</source>
+        <translation>złota</translation>
+    </message>
+    <message>
+        <source>Allies can only exchange gold, food, wood, stone or iron.</source>
+        <translation>Sojusznicy mogą wymieniać tylko złoto, żywność, drewno, kamień lub żelazo.</translation>
+    </message>
+    <message>
+        <source>Choose an ally to trade with.</source>
+        <translation>Wybierz sojusznika do wymiany.</translation>
+    </message>
+    <message>
+        <source>You need a marketplace to deal with your allies.</source>
+        <translation>Potrzebujesz targowiska, by handlować z sojusznikami.</translation>
+    </message>
+    <message>
+        <source>Not enough %1 to send.</source>
+        <translation>Za mało %1 do wysłania.</translation>
     </message>
 </context>
 <context>
@@ -10998,6 +11094,14 @@ Szerokie pole widzenia i trwała kotwica osady</translation>
         <translation>Czerwony obrys znaczy, że plac jest zablokowany: za blisko innej budowli, na wodzie albo na stoku. Przesuń go na płaski, otwarty grunt i zatwierdź lewym przyciskiem. Prawy anuluje.</translation>
     </message>
     <message>
+        <source>Press Deliver, then click your barracks: the civilian walks there and joins its reserve, and you can recruit again.</source>
+        <translation>Naciśnij Odstaw, a potem kliknij koszary: cywil pójdzie tam i zasili ich rezerwę, a ty znów będziesz mógł rekrutować.</translation>
+    </message>
+    <message>
+        <source>A Home raises civilians, not soldiers. Recruit a civilian here, select it when it steps out, press Deliver and click your barracks to refill its reserve.</source>
+        <translation>Dom wychowuje cywilów, nie żołnierzy. Zrekrutuj tu cywila, zaznacz go, gdy wyjdzie, naciśnij Odstaw i kliknij koszary, aby uzupełnić ich rezerwę.</translation>
+    </message>
+    <message>
         <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
         <translation>Rekruci pochodzą z koszar. Kliknij lewym swoje koszary, by otworzyć po prawej ich panel produkcji.</translation>
     </message>
@@ -11158,8 +11262,8 @@ Szerokie pole widzenia i trwała kotwica osady</translation>
         <translation>Kliknij ziemię prawym przyciskiem, by ruszyć zaznaczone oddziały</translation>
     </message>
     <message>
-        <source>Destroy the Roman scouting party (%1 soldiers)</source>
-        <translation>Zniszcz rzymski patrol zwiadowczy (żołnierzy: %1)</translation>
+        <source>Destroy the Roman scouting party (%1 units)</source>
+        <translation>Zniszcz rzymski patrol zwiadowczy (oddziałów: %1)</translation>
     </message>
     <message>
         <source>Deliver %1 wood to your barracks yard</source>

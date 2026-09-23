@@ -147,9 +147,9 @@ A Roman legionary of eighteen costs eighteen men of reserve; a Carthaginian one 
 - `fielded` — men in the field (`troop_count_for`);
 - `reserve` — men held by the owner's barracks and temples (`manpower_available`), not Home families;
 - `map_cap` — the map's `max_troops_per_player`, in men;
-- `cap` — `min(map_cap, fielded + reserve)`, or `fielded + reserve` when the map has no cap.
+- `cap` — the map's `max_troops_per_player`, or `fielded + reserve` when the map has no cap.
 
-`GameEngine::build_player_state_map` publishes it as `manpower`, `manpower_cap`, `manpower_reserve`, `manpower_map_cap`, `manpower_cap_source` (`"reserve"` or `"map"`) and `manpower_tooltip`. The readout therefore means "men in the field / men you can have right now": when the reserve is the binding constraint, the denominator grows as civilians are delivered and shrinks as it is spent, and the bar turns red the moment nothing more can be raised. `build_production_help` quotes the same cap.
+`GameEngine::build_player_state_map` publishes it as `manpower`, `manpower_cap`, `manpower_reserve`, `manpower_map_cap`, `manpower_cap_source` (`"reserve"` or `"map"`) and `manpower_tooltip`. The readout therefore means "men in the field / the most this map ever allows". The denominator is a hard, per-map constant: it never grows as civilians are delivered, so hoarding stops at the same number all match. An earlier version showed `min(map_cap, fielded + reserve)`, which made the denominator climb with every refilled reserve and read as a growing cap. The reserve is still a separate limit on what can be raised right now; it is reported in the tooltip and on each recruit card (`reserve_met`, "Not enough reserve" refusals). Map caps sit at 360–900 for skirmish maps. Historical battles run to about 2,500 only because their starting armies already field that many men, and Aurelia Magna's 8,100 covers its pre-placed citizens. `build_production_help` quotes the same cap.
 
 ### Battle report
 
@@ -185,6 +185,14 @@ squads are the ones kept, the rest are absorbed.
 Because a squad's `squad_strength` becomes the men it actually has, joining battered squads frees
 the population their dead were still holding. The AI's squad discipline still judges strength by
 the roster, not by survivors; it only ever asks for two-squad joins and goes through the same code.
+
+### Calling a gathering crew off
+
+A gather job borrows the construction-site fields of `BuilderProductionComponent` (`has_construction_site`, `in_progress`, the reserved node). Stop, and any player move, therefore end the gather job itself through `OrderService::clear_builder_gather_job` — clearing only the standing gather flags left the claimed node behind, and `ProductionSystem` walked the builder straight back to it and re-armed the order when the harvest finished. A construction job is left untouched by the same call.
+
+Stop is the one order a hauling crew accepts: the carried load is still walked home, but the crew stays idle afterwards. Every other order is still refused until the load is dropped off.
+
+For the same reason the Build cards of a gathering builder stay open (`gathering` in `selected_builder_state()`), and `ProductionManager::collect_available_builders` treats a gatherer as free to be sent to a construction.
 
 ### Several crews on one building
 

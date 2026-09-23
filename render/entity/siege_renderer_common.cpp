@@ -41,7 +41,9 @@ auto siege_motion(const DrawContext& ctx,
   const float dt = ctx.animation_time - state.time;
   const auto delta = position - state.position;
   if (!state.initialized || dt < 0.0F || dt > 1.0F || delta.lengthSquared() > 36.0F) {
+    const SiegeCrewState crew = state.crew;
     state = {};
+    state.crew = crew;
     state.initialized = true;
   } else if (dt > 0.0F) {
     const float turn = std::remainder(yaw - state.yaw, tau);
@@ -53,6 +55,7 @@ auto siege_motion(const DrawContext& ctx,
         std::remainder(state.left_roll + (travel + turn * half_track) / radius, tau);
     state.right_roll =
         std::remainder(state.right_roll + (travel - turn * half_track) / radius, tau);
+    state.travelled += delta.length();
     const float speed = std::clamp(delta.length() / dt, 0.0F, 1.0F);
     state.movement += (speed - state.movement) * (1.0F - std::exp(-dt * 7.0F));
   }
@@ -262,6 +265,30 @@ void register_siege_renderer_variant(EntityRendererRegistry& registry,
         const auto motion = siege_motion(
             presentation, state, ballista ? 0.155F : 0.21F, ballista ? 0.355F : 0.57F);
         config.draw_body(presentation, out, unit, white, team_color, motion);
+
+        SiegeCrewFrame crew_frame{};
+        crew_frame.ballista = ballista;
+        crew_frame.engine_scale = presentation.model.column(0).toVector3D().length();
+        crew_frame.travelled = state.travelled;
+        crew_frame.movement = motion.movement;
+        if (ctx.entity != nullptr && ctx.world != nullptr) {
+          using Loading = Engine::Core::CatapultLoadingComponent;
+          if (const auto* loading = ctx.world->try_get<Loading>(ctx.entity->get_id())) {
+            crew_frame.loading = loading->state == Loading::LoadingState::Loading ||
+                                 loading->state == Loading::LoadingState::ReadyToFire;
+            crew_frame.firing = loading->state == Loading::LoadingState::Firing;
+            crew_frame.loading_time = loading->loading_time;
+            crew_frame.loading_progress =
+                crew_frame.firing ? 1.0F : loading->get_loading_progress();
+          }
+        }
+        advance_siege_crew(state.crew, crew_frame, ctx.animation_time);
+        submit_siege_crew(ctx,
+                          out,
+                          state.crew,
+                          crew_frame,
+                          config.renderer_key.find("carthage") !=
+                              std::string_view::npos);
       });
 }
 

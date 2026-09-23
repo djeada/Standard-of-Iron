@@ -38,6 +38,11 @@ public:
 
   Q_INVOKABLE bool marketplace_buy(const QString& resource_key);
   Q_INVOKABLE bool marketplace_sell(const QString& resource_key);
+  Q_INVOKABLE [[nodiscard]] QVariantList marketplace_allies() const;
+  Q_INVOKABLE bool
+  send_to_ally(int ally_owner, const QString& resource_key, int amount);
+  Q_INVOKABLE bool
+  request_from_ally(int ally_owner, const QString& resource_key, int amount);
 
   Q_INVOKABLE void set_rally_at_screen(qreal sx, qreal sy);
 
@@ -50,6 +55,10 @@ signals:
 private:
   App::Core::Published<App::Core::SelectionReadout> m_readout;
 
+  auto ally_tribute(int ally_owner,
+                    const QString& resource_key,
+                    int amount,
+                    bool request) -> bool;
   [[nodiscard]] auto trade(const QString& resource_key,
                            Game::Command::TradeDirection direction) -> bool;
 

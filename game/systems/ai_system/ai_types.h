@@ -231,8 +231,22 @@ struct ContactSnapshot {
 
 using KnownObjectives = std::unordered_map<Engine::Core::EntityID, ContactSnapshot>;
 
+struct AllyCall {
+  int owner_id = 0;
+  float pos_x = 0.0F;
+  float pos_z = 0.0F;
+  int strength = 0;
+};
+
+inline constexpr float k_ally_base_threat_radius = 25.0F;
+inline constexpr int k_ally_base_threat_minimum = 2;
+inline constexpr float k_ally_front_from_home = 45.0F;
+inline constexpr int k_ally_front_minimum = 3;
+
 struct AISnapshot {
   int player_id = 0;
+  std::vector<AllyCall> allies_under_attack;
+  std::vector<AllyCall> ally_attacks;
   std::vector<EntitySnapshot> friendly_units;
   std::vector<ContactSnapshot> visible_enemies;
   std::vector<ContactSnapshot> strategic_objectives;
@@ -243,6 +257,7 @@ struct AISnapshot {
 
   std::shared_ptr<const Game::Systems::Nation> nation;
   int max_troops_per_player = 0;
+  int troop_count = -1;
 
   bool has_map_bounds = false;
   float map_min_x = 0.0F;
@@ -522,6 +537,8 @@ struct AIContext {
     bool committed = false;
     int initial_size = 0;
     float committed_at = -1000.0F;
+    float best_gap = -1.0F;
+    float progress_at = -1000.0F;
     float ended_at = -1000.0F;
     float last_order_time = -1000.0F;
   };

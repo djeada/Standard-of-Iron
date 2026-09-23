@@ -1,5 +1,7 @@
 #include "structure_placement_service.h"
 
+#include "player_feedback.h"
+
 #include "../core/ambient_session.h"
 #include "../core/world.h"
 #include "../map/map_transformer.h"
@@ -94,8 +96,9 @@ auto StructurePlacementService::place(Engine::Core::World& world,
   if (!unit) {
     return Engine::Core::NULL_ENTITY;
   }
-  Game::Session::services_for(world).economy->spend(
-      owner_id, construction_cost_info(building_type).resource_costs);
+  const auto costs = construction_cost_info(building_type).resource_costs;
+  Game::Session::services_for(world).economy->spend(owner_id, costs);
+  announce_spent_at(owner_id, position.x(), position.y(), position.z(), costs);
   if (params.spawn_type == Game::Units::SpawnType::WallSegment) {
     WallNetworkService::refresh_world(world);
   }

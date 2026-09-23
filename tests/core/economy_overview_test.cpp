@@ -251,7 +251,7 @@ TEST_F(EconomyOverviewTest, TheFieldIsCountedInMenNotInSquadsOrPrices) {
       << "a half squad fields half its men";
 }
 
-TEST_F(EconomyOverviewTest, TheTopBarCapIsWhatThePlayerCanActuallyRaise) {
+TEST_F(EconomyOverviewTest, TheTopBarCapIsTheMapsHardLimit) {
   add_unit(Game::Units::SpawnType::Archer);
   auto* barracks = add_unit(Game::Units::SpawnType::Barracks);
   auto* production = barracks->add_component<Engine::Core::ProductionComponent>();
@@ -264,25 +264,30 @@ TEST_F(EconomyOverviewTest, TheTopBarCapIsWhatThePlayerCanActuallyRaise) {
       App::Core::build_manpower_summary(&world, k_owner, k_manpower_cap);
   EXPECT_EQ(summary.fielded, fielded);
   EXPECT_EQ(summary.reserve, 60) << "a Home's families are not soldiers in reserve";
-  EXPECT_EQ(summary.cap, fielded + 60)
-      << "the map cap is far away; the reserve is the cap";
+  EXPECT_EQ(summary.cap, k_manpower_cap)
+      << "the cap is the map's hard limit, however full the reserve is";
   EXPECT_TRUE(summary.cap_is_reserve_bound());
 
   const auto tight = App::Core::build_manpower_summary(&world, k_owner, fielded + 10);
-  EXPECT_EQ(tight.cap, fielded + 10) << "a map cap below the reserve is the real limit";
+  EXPECT_EQ(tight.cap, fielded + 10) << "a map cap below the reserve is the limit too";
   EXPECT_FALSE(tight.cap_is_reserve_bound());
 
   const QVariantMap state = App::Core::manpower_summary_map(summary);
   EXPECT_EQ(state.value(QStringLiteral("manpower")).toInt(), fielded);
-  EXPECT_EQ(state.value(QStringLiteral("manpower_cap")).toInt(), fielded + 60);
+  EXPECT_EQ(state.value(QStringLiteral("manpower_cap")).toInt(), k_manpower_cap);
   EXPECT_EQ(state.value(QStringLiteral("manpower_reserve")).toInt(), 60);
   EXPECT_EQ(state.value(QStringLiteral("manpower_map_cap")).toInt(), k_manpower_cap);
   EXPECT_EQ(state.value(QStringLiteral("manpower_cap_source")).toString(),
             QStringLiteral("reserve"));
   EXPECT_FALSE(state.value(QStringLiteral("manpower_tooltip")).toString().isEmpty());
 
+  production->manpower_available = 400;
+  EXPECT_EQ(App::Core::build_manpower_summary(&world, k_owner, k_manpower_cap).cap,
+            k_manpower_cap)
+      << "a refilling reserve must never raise the cap above the map's limit";
+
   const QVariantMap help = App::Core::build_production_help(request());
-  EXPECT_EQ(help.value(QStringLiteral("manpower_cap")).toInt(), fielded + 60)
+  EXPECT_EQ(help.value(QStringLiteral("manpower_cap")).toInt(), k_manpower_cap)
       << "the help panel and the top bar must quote the same cap";
 }
 

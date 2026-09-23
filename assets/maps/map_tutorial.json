@@ -238,7 +238,9 @@
       "player_id": 2,
       "team_id": 2,
       "nation": "roman_republic",
-      "max_population": -1
+      "max_population": -1,
+      "behavior": "guard",
+      "guard_radius": 12
     },
     {
       "id": "rome_guard_spear_01",
@@ -281,7 +283,7 @@
       "player_id": 1,
       "team_id": 1,
       "nation": "carthage",
-      "max_population": 80
+      "max_population": 140
     },
     {
       "type": "barracks",

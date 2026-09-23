@@ -10,6 +10,7 @@
 #include "game/render_bridge/selection_controller.h"
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
+#include "game/systems/marketplace_system.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/resource_types.h"
@@ -85,6 +86,41 @@ TEST_F(ProductionViewModelTradeTest, BuyingFromTheSelectedMarketplaceMovesStock)
   m_session.commands().drain(m_session.world(), 1);
   EXPECT_GT(economy.get(1, ResourceType::Food), food_before);
   EXPECT_LT(economy.get(1, ResourceType::Gold), 200);
+}
+
+TEST_F(ProductionViewModelTradeTest, ResourcesGoToAnAllyAndARequestIsQueuedForIt) {
+  spawn_marketplace();
+  m_session.owners().register_owner_with_id(3, Game::Systems::OwnerType::AI, "Hanno");
+  m_session.owners().register_owner_with_id(5, Game::Systems::OwnerType::AI, "Rome");
+  m_session.owners().set_owner_team(1, 1);
+  m_session.owners().set_owner_team(3, 1);
+  m_session.owners().set_owner_team(5, 2);
+  auto& economy = m_session.economy();
+  economy.set(1, ResourceType::Wood, 300);
+  economy.set(3, ResourceType::Wood, 0);
+
+  const auto allies = m_view_model->marketplace_allies();
+  ASSERT_EQ(allies.size(), 1) << "only team-mates are offered";
+  EXPECT_EQ(allies.front().toMap().value("owner_id").toInt(), 3);
+
+  ASSERT_TRUE(m_view_model->send_to_ally(3, QStringLiteral("wood"), 100));
+  m_session.commands().drain(m_session.world(), 1);
+  EXPECT_EQ(economy.get(1, ResourceType::Wood), 200);
+  EXPECT_EQ(economy.get(3, ResourceType::Wood), 100);
+  const auto sent = m_session.marketplace().take_ally_answers();
+  ASSERT_EQ(sent.size(), 1U);
+  EXPECT_EQ(sent.front().granted, 100);
+
+  EXPECT_FALSE(m_view_model->send_to_ally(5, QStringLiteral("wood"), 50))
+      << "an enemy is not a trading partner";
+
+  ASSERT_TRUE(m_view_model->request_from_ally(3, QStringLiteral("gold"), 50));
+  m_session.commands().drain(m_session.world(), 1);
+  const auto asked = m_session.marketplace().take_ally_requests_for(3);
+  ASSERT_EQ(asked.size(), 1U);
+  EXPECT_EQ(asked.front().requester, 1);
+  EXPECT_EQ(asked.front().resource, ResourceType::Gold);
+  EXPECT_EQ(asked.front().amount, 50);
 }
 
 } // namespace

@@ -235,3 +235,23 @@ TEST_F(SaveCaptureCoherenceTest, TheSimulationThreadCapturesQueuedSavesUnderTheL
          "thread that asked for it";
   EXPECT_LT(frame_lock, drain);
 }
+
+TEST_F(SaveCaptureCoherenceTest,
+       ALoadRestoresTheCameraAfterTheEnvironmentFramesTheMap) {
+  const auto root = find_repo_root();
+  ASSERT_FALSE(root.empty());
+  const std::string source =
+      read_text(root / "app" / "persistence" / "save_load_coordinator.cpp");
+  ASSERT_FALSE(source.empty());
+
+  const std::size_t load = source.find("SaveLoadCoordinator::load_from_slot(");
+  ASSERT_NE(load, std::string::npos);
+  const std::size_t environment =
+      source.find("restore_environment_from_metadata(", load);
+  const std::size_t camera = source.find("restore_camera_from_metadata(", load);
+  ASSERT_NE(environment, std::string::npos);
+  ASSERT_NE(camera, std::string::npos);
+  EXPECT_GT(camera, environment)
+      << "Environment::apply frames the map's opening view; a camera restored before "
+         "it is overwritten and every load opens on that view";
+}

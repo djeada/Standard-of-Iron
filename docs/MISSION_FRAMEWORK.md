@@ -470,6 +470,21 @@ Objectives such as `clear_undead_zone`, `purify_shrine`, and `survive_undead_wav
 
 The tutorial still uses the ordinary mission/map/simulation systems. Its guided progression, hinting, and UI surfaces are additional orchestration around the same command/economy/combat systems the player uses elsewhere.
 
+### Tutorial progress in saves
+
+`TutorialDirector::serialize()` is written to save metadata under `"tutorial"` (versioned by its own `"version"` key, so the snapshot and database versions do not move). Loading a slot runs `GameEngine::restore_tutorial_state`, which re-activates the director when the restored mission is the tutorial and puts it back on the saved step with its completed steps and counting baselines. Steps are stored by id, not index, so reordering the step list does not shift old saves. A save without the key (made before this existed) restarts the tutorial at step one, except that a raid already broken skips to the step after Defend: otherwise the mission clock would be held for a raid that has already come.
+
+Kill counts survive a load: save metadata carries a versioned `"battle_stats"` key with the top-bar enemy counters and each player's recruited/killed/lost totals (`GlobalStatsRegistry::serialize_counters`), so the scout step's baseline is saved with the tutorial and compared against the restored counter.
+
+A load restores the camera **after** the environment: `Environment::apply` frames the map's authored opening view, and restoring the saved camera before it meant every load opened on that view instead of where the player was looking.
+
+### Tutorial step conditions worth knowing
+
+- The move step accepts a formation order as a move: with soldiers selected, a right-click on the ground goes through formation placement and is issued as `OrderKind::Formation`.
+- The scout step counts enemy **units** (squads) killed, not men. Kills are reported in men everywhere else, and one scout squad alone is more men than the step's target.
+- The tutorial Roman commander carries a `guard` behaviour in `map_tutorial.json`, which keeps him out of the AI snapshot and at his outpost until the assault step.
+- The tutorial barracks reserve (140) covers the three recruits the army step needs even after a squad is lost to the scouts; a Home or civilian selected during the recruit steps gets a hint that walks through Recruit Civilian → Deliver.
+
 ## Campaign membership
 
 Campaign JSON lists mission IDs in campaign order.

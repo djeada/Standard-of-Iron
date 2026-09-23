@@ -233,6 +233,12 @@ void encode(QJsonObject& o, const Trade& p) {
   o["resource"] = QLatin1String(Game::Systems::resource_type_key(p.resource));
   o["direction"] = enum_value(p.direction);
 }
+void encode(QJsonObject& o, const AllyTribute& p) {
+  o["ally"] = p.ally_owner;
+  o["resource"] = QLatin1String(Game::Systems::resource_type_key(p.resource));
+  o["amount"] = p.amount;
+  o["request"] = p.request;
+}
 void encode(QJsonObject& o, const UseCommanderAbility& p) {
   o["commander"] = id_to_json(p.commander);
   o["ability"] = enum_value(p.ability);
@@ -385,6 +391,18 @@ auto decode<Trade>(Reader& r) -> Trade {
     (void)r.number("resource");
   }
   p.direction = r.enumeration("direction", TradeDirection::Sell);
+  return p;
+}
+template <>
+auto decode<AllyTribute>(Reader& r) -> AllyTribute {
+  AllyTribute p;
+  p.ally_owner = static_cast<int>(r.number("ally"));
+  const auto key = QString::fromStdString(r.text("resource"));
+  if (!Game::Systems::resource_type_from_key(key, p.resource)) {
+    p.resource = Game::Systems::ResourceType::Wood;
+  }
+  p.amount = static_cast<int>(r.number("amount"));
+  p.request = r.boolean("request");
   return p;
 }
 template <>

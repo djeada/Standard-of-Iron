@@ -19,7 +19,7 @@ Item {
     readonly property int activeTicks: tickLayer.children.length
     readonly property int activeBursts: burstLayer.children.length
     readonly property var resourceKeys: ["gold", "food", "wood", "stone", "iron"]
-    property var activeByAnchor: ({})
+    property var activeByAnchor: new Map()
 
     Accessible.ignored: true
 
@@ -30,26 +30,30 @@ Item {
         return (burst ? "b" : "t") + anchor;
     }
 
+    function anchor_count(key) {
+        return Number(root.activeByAnchor.get(key) || 0);
+    }
+
     function anchor_busy(key, limit) {
         if (key.length === 0)
             return false;
-        return Number(root.activeByAnchor[key] || 0) >= limit;
+        return root.anchor_count(key) >= limit;
     }
 
     function acquire_anchor(key) {
         if (key.length === 0)
             return;
-        root.activeByAnchor[key] = Number(root.activeByAnchor[key] || 0) + 1;
+        root.activeByAnchor.set(key, root.anchor_count(key) + 1);
     }
 
     function release_anchor(key) {
         if (key.length === 0)
             return;
-        var left = Number(root.activeByAnchor[key] || 0) - 1;
+        var left = root.anchor_count(key) - 1;
         if (left <= 0)
-            delete root.activeByAnchor[key];
+            root.activeByAnchor.delete(key);
         else
-            root.activeByAnchor[key] = left;
+            root.activeByAnchor.set(key, left);
     }
 
     function resource_key(index) {

@@ -1044,6 +1044,15 @@ public:
     return s;
   }
 
+  static void
+  fill_crew_variant(const DrawContext& ctx, std::uint32_t seed, HumanoidVariant& v) {
+    QVector3D const team_tint = resolve_team_tint(ctx);
+    v.palette = make_humanoid_palette(team_tint, seed);
+    auto const& style = resolve_builder_style(ctx);
+    apply_builder_palette_overrides(style, team_tint, v);
+    seed_missing_humanoid_wear(v, seed);
+  }
+
   void get_variant(const DrawContext& ctx,
                    uint32_t seed,
                    HumanoidVariant& v) const override {
@@ -1086,6 +1095,15 @@ public:
   }
 };
 
+void register_crew_rig_for_nation() {
+  NationCivilianRig rig{};
+  rig.spec = BuilderRenderer::make_visual_spec();
+  rig.idle = roman_builder_idle_archetype();
+  rig.working = roman_builder_hammer_unit_archetype();
+  rig.fill_variant = &BuilderRenderer::fill_crew_variant;
+  register_nation_crew_rig(false, rig);
+}
+
 void register_civilian_rig_for_nation() {
 
   NationCivilianRig rig{};
@@ -1098,6 +1116,7 @@ void register_civilian_rig_for_nation() {
 
 void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_builder_styles_registered();
+  register_crew_rig_for_nation();
   register_humanoid_renderer(
       registry, "troops/roman/builder", std::make_shared<BuilderRenderer const>());
 

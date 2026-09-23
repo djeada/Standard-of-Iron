@@ -275,14 +275,19 @@ TEST_F(InputBindingsTest, AnExactModifierMatchBeatsTheUnmodifiedFallback) {
   EXPECT_EQ(resolved, QStringList{QStringLiteral("rts.order_hold")});
 }
 
-TEST_F(InputBindingsTest, TheRallyFlagNoLongerHasToShareItsKeyWithTheCamera) {
+TEST_F(InputBindingsTest, RAndFTiltTheCameraAndTheRallyFlagLayersOverR) {
   auto* bindings = InputBindings::instance();
+  const QString rts = QString::fromLatin1(InputBindings::kContextRts);
 
-  const auto resolved = bindings->actions_for_key(
-      Qt::Key_R, Qt::NoModifier, QString::fromLatin1(InputBindings::kContextRts));
+  const auto on_r = bindings->actions_for_key(Qt::Key_R, Qt::NoModifier, rts);
+  ASSERT_EQ(on_r.size(), 2);
+  EXPECT_EQ(on_r.at(0), QStringLiteral("rts.commander_rally"))
+      << "the rally flag claims R first while a rally can be placed";
+  EXPECT_EQ(on_r.at(1), QStringLiteral("rts.camera_tilt_up"));
 
-  ASSERT_EQ(resolved.size(), 1);
-  EXPECT_EQ(resolved.at(0), QStringLiteral("rts.commander_rally"));
+  EXPECT_EQ(bindings->actions_for_key(Qt::Key_F, Qt::NoModifier, rts),
+            QStringList{QStringLiteral("rts.camera_tilt_down")});
+  EXPECT_FALSE(bindings->has_conflicts());
 }
 
 TEST_F(InputBindingsTest, ContextualCommandsLayerOverTheGeneralOneTheyShareAKeyWith) {
@@ -384,12 +389,12 @@ TEST_F(InputBindingsTest, TheFormationOrderOwnsTheKeyItIsDocumentedWith) {
   auto* bindings = InputBindings::instance();
 
   const auto resolved = bindings->actions_for_key(
-      Qt::Key_F, Qt::NoModifier, QString::fromLatin1(InputBindings::kContextRts));
+      Qt::Key_V, Qt::NoModifier, QString::fromLatin1(InputBindings::kContextRts));
 
   ASSERT_EQ(resolved.size(), 1);
   EXPECT_EQ(resolved.at(0), QStringLiteral("rts.order_formation"));
   EXPECT_EQ(bindings->display_shortcut_for(QStringLiteral("rts.order_formation")),
-            QStringLiteral("F"));
+            QStringLiteral("V"));
 }
 
 TEST_F(InputBindingsTest, BattleSpeedIsReachableFromTheKeyboardInBothDirections) {

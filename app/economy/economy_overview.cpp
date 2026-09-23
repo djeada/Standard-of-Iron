@@ -371,7 +371,7 @@ auto build_manpower_summary(Engine::Core::World* world,
     summary.reserve += std::max(0, production.manpower_available);
   }
   const int raisable = summary.fielded + summary.reserve;
-  summary.cap = summary.map_cap > 0 ? std::min(summary.map_cap, raisable) : raisable;
+  summary.cap = summary.map_cap > 0 ? summary.map_cap : raisable;
   return summary;
 }
 
