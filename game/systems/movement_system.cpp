@@ -48,6 +48,9 @@ constexpr float k_duel_min_separation = 0.55F;
 constexpr float k_duel_base_separation_fraction = 0.70F;
 constexpr float k_duel_base_separation_min = 0.85F;
 constexpr float k_duel_base_separation_max = 1.70F;
+
+constexpr float k_duel_body_clearance_per_scale = 0.90F;
+constexpr float k_duel_body_min_per_scale = 0.70F;
 constexpr float desired_yaw_turn_speed_degrees = 720.0F;
 
 constexpr float k_formation_heading_min_speed = 0.4F;
@@ -968,12 +971,20 @@ auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
     float const own_reach = attack.melee_range;
     float const opponent_reach =
         opponent_attack != nullptr ? opponent_attack->melee_range : own_reach;
-    float const base_separation = std::clamp(0.5F * (own_reach + opponent_reach) *
-                                                 k_duel_base_separation_fraction,
-                                             k_duel_base_separation_min,
-                                             k_duel_base_separation_max);
+    float const body_scales =
+        std::max(0.0F, transform.scale.x) + std::max(0.0F, opponent_transform->scale.x);
+
+    float const weapon_span = std::min(own_reach, opponent_reach);
+    float const base_separation =
+        std::max(std::clamp(0.5F * (own_reach + opponent_reach) *
+                                k_duel_base_separation_fraction,
+                            k_duel_base_separation_min,
+                            k_duel_base_separation_max),
+                 std::min(body_scales * k_duel_body_clearance_per_scale, weapon_span));
+    float const min_separation =
+        std::max(k_duel_min_separation, body_scales * k_duel_body_min_per_scale);
     float const desired_separation =
-        std::max(k_duel_min_separation, base_separation - advance);
+        std::max(min_separation, base_separation - advance);
     float const to_x = opponent_transform->position.x - transform.position.x;
     float const to_z = opponent_transform->position.z - transform.position.z;
     float const separation = std::hypot(to_x, to_z);
@@ -982,7 +993,7 @@ auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
       float const max_step = k_duel_measure_step_speed * delta_time;
       float step = std::clamp(
           error * k_duel_measure_gain_per_second * delta_time, -max_step, max_step);
-      step = std::min(step, std::max(0.0F, separation - k_duel_min_separation));
+      step = std::min(step, std::max(0.0F, separation - min_separation));
       auto const measure =
           slide_body_to(*entity,
                         transform,

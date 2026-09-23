@@ -174,6 +174,9 @@ inline constexpr char k_architecture_and_props_showcase_id[] =
     "architecture_and_props_showcase";
 inline constexpr char k_world_prop_lineup_id[] = "world_prop_lineup";
 inline constexpr char k_humanoid_gait_review_id[] = "humanoid_gait_review";
+inline constexpr char k_humanoid_gait_review_leaders_id[] =
+    "humanoid_gait_review_leaders";
+inline constexpr char k_idle_weapon_grip_review_id[] = "idle_weapon_grip_review";
 inline constexpr char k_sanctuary_precinct_day_id[] = "sanctuary_precinct_day";
 inline constexpr char k_sanctuary_precinct_night_id[] = "sanctuary_precinct_night";
 inline constexpr char k_sanctuary_precinct_storm_id[] = "sanctuary_precinct_storm";

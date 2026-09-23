@@ -11,6 +11,7 @@ enum class HumanoidHeldPoseKind : std::uint8_t {
   SpearIdle,
   SpearBrace,
   BowReady,
+  BowRest,
   SwordShieldCarry,
   CasterChannel,
   StaveCarry,

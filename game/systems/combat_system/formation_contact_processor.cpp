@@ -601,6 +601,73 @@ auto walk_to_new_slot(Engine::Core::SquadReformComponent& reform,
   return true;
 }
 
+struct ForeignSoldier {
+  Engine::Core::EntityID entity_id{0};
+  std::uint16_t slot_index{0};
+  float x{0.0F};
+  float z{0.0F};
+};
+
+constexpr float k_foreign_soldier_cell = 0.75F;
+
+constexpr float k_foreign_push_speed = 1.1F;
+constexpr float k_crowd_offset_relax_seconds = 2.5F;
+constexpr float k_crowd_offset_max_spacing = 0.9F;
+constexpr float k_crowd_offset_settled = 0.005F;
+constexpr float k_mounted_crowd_width = 0.75F;
+constexpr float k_mounted_crowd_length_ratio = 0.55F;
+constexpr float k_authored_velocity_smoothing_seconds = 0.10F;
+
+class ForeignSoldierGrid {
+public:
+  void clear() { m_cells.clear(); }
+
+  void insert(const ForeignSoldier& soldier) {
+    m_cells[key(cell_of(soldier.x), cell_of(soldier.z))].push_back(soldier);
+  }
+
+  void gather(Engine::Core::EntityID self,
+              std::uint16_t self_slot,
+              float x,
+              float z,
+              float radius,
+              std::vector<ForeignSoldier>& out) const {
+    out.clear();
+    if (m_cells.empty()) {
+      return;
+    }
+    int const reach = static_cast<int>(std::ceil(radius / k_foreign_soldier_cell));
+    int const cx = cell_of(x);
+    int const cz = cell_of(z);
+    for (int ix = cx - reach; ix <= cx + reach; ++ix) {
+      for (int iz = cz - reach; iz <= cz + reach; ++iz) {
+        auto const found = m_cells.find(key(ix, iz));
+        if (found == m_cells.end()) {
+          continue;
+        }
+        for (auto const& soldier : found->second) {
+          bool const is_self =
+              soldier.entity_id == self && soldier.slot_index == self_slot;
+          if (!is_self && std::hypot(soldier.x - x, soldier.z - z) < radius) {
+            out.push_back(soldier);
+          }
+        }
+      }
+    }
+  }
+
+private:
+  [[nodiscard]] static auto cell_of(float value) -> int {
+    return static_cast<int>(std::floor(value / k_foreign_soldier_cell));
+  }
+  [[nodiscard]] static auto key(int x, int z) -> std::uint64_t {
+    return (static_cast<std::uint64_t>(static_cast<std::uint32_t>(x)) << 32U) |
+           static_cast<std::uint64_t>(static_cast<std::uint32_t>(z));
+  }
+
+  std::unordered_map<std::uint64_t, std::vector<ForeignSoldier>> m_cells;
+};
+
 constexpr float k_slot_settle_distance = 0.12F;
 
 void walk_formation_slot(
@@ -608,6 +675,8 @@ void walk_formation_slot(
     const Engine::Core::FormationPresentationComponent& formation,
     const Engine::Core::FormationSoldierPresentation* previous,
     const std::vector<Engine::Core::FormationSoldierPresentation>& neighbors,
+    const std::vector<ForeignSoldier>& foreign_neighbors,
+    float crowd_step_budget,
     float squad_speed,
     float march_speed,
     float spacing,
@@ -622,7 +691,7 @@ void walk_formation_slot(
     float delta_time,
     Engine::Core::FormationSoldierPresentation& soldier) {
   const float dt = std::max(0.0F, delta_time);
-  const QVector3D destination = local_to_world(actor, soldier.local_x, soldier.local_z);
+  QVector3D destination = local_to_world(actor, soldier.local_x, soldier.local_z);
   const float desired_facing = actor.rotation.y + soldier.local_yaw;
   const float variation = hash_unit_float(seed, soldier.slot_index * 97U + 43U);
   const float max_speed = std::max(1.4F, std::max(march_speed, squad_speed) * 1.15F) *
@@ -652,6 +721,68 @@ void walk_formation_slot(
   soldier.world_velocity_z = previous->world_velocity_z;
   soldier.turning = previous->turning;
   soldier.turn_response_remaining = previous->turn_response_remaining;
+
+  const float personal_space = std::max(0.28F, spacing * 0.72F);
+
+  float const crowd_radius =
+      mounted ? std::max(k_mounted_crowd_width, personal_space) : personal_space;
+  float const along_scale = mounted ? k_mounted_crowd_length_ratio : 1.0F;
+  float const heading = soldier.world_yaw * std::numbers::pi_v<float> / 180.0F;
+  float const heading_x = std::sin(heading);
+  float const heading_z = std::cos(heading);
+  float foreign_push_x = 0.0F;
+  float foreign_push_z = 0.0F;
+  for (const auto& neighbor : foreign_neighbors) {
+    float away_x = soldier.world_x - neighbor.x;
+    float away_z = soldier.world_z - neighbor.z;
+    float const along = (away_x * heading_x) + (away_z * heading_z);
+    float const across = (away_x * heading_z) - (away_z * heading_x);
+    float const separation = std::hypot(across, along * along_scale);
+    if (separation >= crowd_radius) {
+      continue;
+    }
+    if (separation < 0.001F) {
+
+      float const angle = hash_unit_float(seed, soldier.slot_index * 211U + 7U) * 2.0F *
+                          std::numbers::pi_v<float>;
+      away_x = std::cos(angle);
+      away_z = std::sin(angle);
+    } else {
+      float const length = std::hypot(away_x, away_z);
+      away_x /= length;
+      away_z /= length;
+    }
+    float const overlap = 1.0F - separation / crowd_radius;
+    foreign_push_x += away_x * overlap;
+    foreign_push_z += away_z * overlap;
+  }
+  float const push = std::hypot(foreign_push_x, foreign_push_z);
+  if (push > 1.0F) {
+    foreign_push_x /= push;
+    foreign_push_z /= push;
+  }
+  float const relax = std::exp(-dt / k_crowd_offset_relax_seconds);
+  float crowd_step_x = previous->crowd_offset_x * (relax - 1.0F) +
+                       foreign_push_x * k_foreign_push_speed * dt;
+  float crowd_step_z = previous->crowd_offset_z * (relax - 1.0F) +
+                       foreign_push_z * k_foreign_push_speed * dt;
+
+  float const crowd_step = std::hypot(crowd_step_x, crowd_step_z);
+  float const budget = std::max(0.0F, crowd_step_budget);
+  if (crowd_step > budget && crowd_step > 1.0e-6F) {
+    crowd_step_x *= budget / crowd_step;
+    crowd_step_z *= budget / crowd_step;
+  }
+  soldier.crowd_offset_x = previous->crowd_offset_x + crowd_step_x;
+  soldier.crowd_offset_z = previous->crowd_offset_z + crowd_step_z;
+  float const crowd_offset = std::hypot(soldier.crowd_offset_x, soldier.crowd_offset_z);
+  float const crowd_limit = spacing * k_crowd_offset_max_spacing;
+  if (crowd_offset > crowd_limit && crowd_offset > 0.0001F) {
+    soldier.crowd_offset_x *= crowd_limit / crowd_offset;
+    soldier.crowd_offset_z *= crowd_limit / crowd_offset;
+  }
+  destination.setX(destination.x() + soldier.crowd_offset_x);
+  destination.setZ(destination.z() + soldier.crowd_offset_z);
   const float heading_change =
       signed_yaw_delta(formation.motion_root_yaw, actor.rotation.y);
   if (std::abs(heading_change) > 0.05F && !soldier.turning) {
@@ -705,7 +836,6 @@ void walk_formation_slot(
         bend;
   }
 
-  const float personal_space = std::max(0.28F, spacing * 0.72F);
   float crowd_speed = 1.0F;
   for (const auto& neighbor : neighbors) {
     if (!neighbor.alive || !neighbor.world_motion_valid ||
@@ -814,8 +944,11 @@ void walk_formation_slot(
   if (position_is_authored) {
     step_x = dx;
     step_z = dz;
-  } else if (!soldier.relocation_blocked && distance > 0.0001F &&
-             distance < k_slot_settle_distance) {
+  } else if (!soldier.relocation_blocked && foreign_neighbors.empty() &&
+             std::hypot(soldier.crowd_offset_x, soldier.crowd_offset_z) <
+                 k_crowd_offset_settled &&
+             distance > 0.0001F && distance < k_slot_settle_distance) {
+
     step_x = dx;
     step_z = dz;
   }
@@ -824,6 +957,16 @@ void walk_formation_slot(
   if (dt > 0.0F) {
     soldier.world_velocity_x = step_x / dt;
     soldier.world_velocity_z = step_z / dt;
+    if (position_is_authored) {
+
+      float const blend = std::min(1.0F, dt / k_authored_velocity_smoothing_seconds);
+      soldier.world_velocity_x =
+          previous->world_velocity_x +
+          (soldier.world_velocity_x - previous->world_velocity_x) * blend;
+      soldier.world_velocity_z =
+          previous->world_velocity_z +
+          (soldier.world_velocity_z - previous->world_velocity_z) * blend;
+    }
     soldier.angular_speed =
         std::abs(signed_yaw_delta(previous->world_yaw, soldier.world_yaw)) / dt;
   }
@@ -875,6 +1018,39 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
     return entry->second;
   };
 
+  thread_local ForeignSoldierGrid foreign_grid;
+  thread_local std::vector<ForeignSoldier> foreign_scratch;
+  foreign_grid.clear();
+  for (auto [entity_ref, entity_unit] :
+       world.entity_view<Engine::Core::UnitComponent>()) {
+    auto const* published = world.try_get<Engine::Core::FormationPresentationComponent>(
+        entity_ref.get_id());
+    if (published == nullptr || !published->melee_ordered) {
+      continue;
+    }
+    auto const* published_attack =
+        world.try_get<Engine::Core::AttackComponent>(entity_ref.get_id());
+    auto const* published_contact =
+        world.try_get<Engine::Core::FormationContactComponent>(entity_ref.get_id());
+    bool const fighting =
+        (published_attack != nullptr && published_attack->in_melee_lock) ||
+        (published_contact != nullptr &&
+         std::any_of(published_contact->fronts.begin(),
+                     published_contact->fronts.end(),
+                     [](auto const& front) { return front.in_contact; }));
+    if (!fighting) {
+      continue;
+    }
+    for (auto const& soldier : published->soldiers) {
+      if (soldier.alive && soldier.world_motion_valid) {
+        foreign_grid.insert({entity_ref.get_id(),
+                             soldier.slot_index,
+                             soldier.world_x,
+                             soldier.world_z});
+      }
+    }
+  }
+
   for (auto [entity_ref, entity_unit] :
        world.entity_view<Engine::Core::UnitComponent>()) {
     Engine::Core::Entity* entity = &entity_ref;
@@ -908,6 +1084,13 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
                                             return !front.outgoing && front.in_contact;
                                           });
     bool const melee_ordered = outgoing_melee || incoming_contact;
+
+    bool const in_melee_contact =
+        (attack != nullptr && attack->in_melee_lock) ||
+        (contact != nullptr &&
+         std::any_of(contact->fronts.begin(),
+                     contact->fronts.end(),
+                     [](auto const& front) { return front.in_contact; }));
 
     Engine::Core::EntityID display_target = outgoing_target;
     if (display_target == 0U && contact != nullptr) {
@@ -1293,6 +1476,15 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         directive.local_x = anchor_local_x + previous->contact_offset_x;
         directive.local_z = anchor_local_z + previous->contact_offset_z;
         directive.local_yaw = previous->local_yaw;
+
+        directive.crowd_offset_x = previous->crowd_offset_x;
+        directive.crowd_offset_z = previous->crowd_offset_z;
+        if (actor_transform != nullptr) {
+          auto const [crowd_local_x, crowd_local_z] = world_vector_to_local(
+              *actor_transform, previous->crowd_offset_x, previous->crowd_offset_z);
+          directive.local_x += crowd_local_x;
+          directive.local_z += crowd_local_z;
+        }
       }
       if (directive.alive) {
         float const desired_offset_x = directive.local_x - anchor_local_x;
@@ -1358,10 +1550,33 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
           directive.local_yaw =
               live_slot != nullptr ? live_slot->local_yaw : original_slot.local_yaw;
         }
+        foreign_scratch.clear();
+        if (in_melee_contact && previous != nullptr && previous->world_motion_valid) {
+          float const personal_space = std::max(0.28F, layout.spacing * 0.72F);
+          float const gather_radius =
+              mounted ? std::max(k_mounted_crowd_width, personal_space) /
+                            k_mounted_crowd_length_ratio
+                      : personal_space;
+          foreign_grid.gather(entity->get_id(),
+                              original_slot.index,
+                              previous->world_x,
+                              previous->world_z,
+                              gather_radius,
+                              foreign_scratch);
+        }
+        float const contact_step =
+            previous != nullptr
+                ? std::hypot(directive.contact_offset_x - previous->contact_offset_x,
+                             directive.contact_offset_z - previous->contact_offset_z)
+                : 0.0F;
+        float const crowd_step_budget =
+            k_engage_close_speed * std::max(0.0F, delta_time) - contact_step;
         walk_formation_slot(*actor_transform,
                             *presentation,
                             previous,
                             previous_soldiers,
+                            foreign_scratch,
+                            crowd_step_budget,
                             squad_speed,
                             entity_unit.speed,
                             layout.spacing,

@@ -66,9 +66,8 @@ auto archer_base_archetype(const ArcherRendererProfile& profile)
 
   ArchetypeDescriptor desc = *base_desc;
   desc.debug_name = debug_name;
-  auto const attack_bow_clip =
-      desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::AttackBow)];
-  desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Idle)] = attack_bow_clip;
+  desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Idle)] =
+      Render::Creature::k_humanoid_idle_bow_rest_clip;
   desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] =
       Render::Creature::k_humanoid_hold_bow_clip;
   desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =

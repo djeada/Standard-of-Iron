@@ -4281,6 +4281,10 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
                                    : scenario_center(m_world.get(), entities);
       Arena::ArenaCameraView scaled = view;
       scaled.distance = view.distance * std::max(0.05F, m_scenario_distance_scale);
+      if (m_scenario_tilt_override.has_value()) {
+        scaled.angle = *m_scenario_tilt_override;
+      }
+      scaled.yaw += m_scenario_yaw_offset;
       m_camera->set_rts_view(center, scaled.distance, scaled.angle, scaled.yaw);
       apply_scenario_camera_projection(scaled.distance);
       m_capture_orbit_center = center;

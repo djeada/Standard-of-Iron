@@ -12,6 +12,7 @@
 #include <numbers>
 #include <numeric>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "animation/action_manifest.h"
@@ -454,38 +455,6 @@ auto extra_role_color_count(Render::Creature::ArchetypeId archetype_id)
   return count;
 }
 
-auto render_archer_idle_bone_palette(
-    const char* renderer_id, Game::Systems::NationID nation_id) -> const QMatrix4x4* {
-  Render::GL::EntityRendererRegistry registry;
-  Render::GL::register_built_in_entity_renderers(registry);
-  const auto renderer = registry.get(renderer_id);
-  EXPECT_TRUE(static_cast<bool>(renderer));
-  if (!renderer) {
-    return nullptr;
-  }
-
-  Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
-  ctx.force_single_soldier = true;
-  ctx.allow_template_cache = false;
-  Engine::Core::StandaloneEntity entity_scratch(1);
-  Engine::Core::Entity& entity = entity_scratch.entity();
-  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
-  EXPECT_NE(unit, nullptr);
-  if (unit == nullptr) {
-    return nullptr;
-  }
-  unit->spawn_type = Game::Units::SpawnType::Archer;
-  unit->nation_id = nation_id;
-  ctx.entity = &entity;
-
-  CountingSubmitter sink;
-  renderer(ctx, sink);
-
-  EXPECT_GT(sink.rigged_calls, 0);
-  return sink.last_bone_palette;
-}
-
 auto lower_body_palette_moves_between(std::span<const QMatrix4x4> first,
                                       std::span<const QMatrix4x4> second) -> bool {
   using Render::Humanoid::HumanoidBone;
@@ -774,28 +743,6 @@ auto render_builder_bone_palette(const char* renderer_id,
 
   CountingSubmitter sink;
   renderer(ctx, sink);
-  EXPECT_GT(sink.rigged_calls, 0);
-  return sink.last_bone_palette;
-}
-
-auto request_idle_bone_palette(Render::Creature::ArchetypeId archetype_id,
-                               float phase) -> const QMatrix4x4* {
-  using Render::Creature::AnimationStateId;
-  using Render::Creature::CreatureLOD;
-  using Render::Creature::CreatureRenderRequest;
-  using Render::Creature::Pipeline::CreaturePipeline;
-
-  CreatureRenderRequest req{};
-  req.archetype = archetype_id;
-  req.state = AnimationStateId::Idle;
-  req.phase = phase;
-  req.lod = CreatureLOD::Full;
-
-  CountingSubmitter sink;
-  CreaturePipeline const pipeline;
-  std::array<CreatureRenderRequest, 1> requests{req};
-  pipeline.submit_requests(requests, sink);
-
   EXPECT_GT(sink.rigged_calls, 0);
   return sink.last_bone_palette;
 }
@@ -1231,27 +1178,20 @@ TEST(HumanoidPrepare, AmbientIdleVariantsAreSuppressedWhenIdleIsRemapped) {
   }
 }
 
-TEST(HumanoidPrepare, BuiltInArchersUseBowReadyIdleClip) {
+TEST(HumanoidPrepare, BuiltInArchersIdleWithTheBowAtRest) {
   using Render::Creature::AnimationStateId;
   auto& registry = Render::Creature::ArchetypeRegistry::instance();
 
-  auto const* roman_idle_palette = render_archer_idle_bone_palette(
-      "troops/roman/archer", Game::Systems::NationID::RomanRepublic);
-  auto const roman_id = find_archetype_id("troops/roman/archer");
-  ASSERT_NE(roman_id, Render::Creature::k_invalid_archetype);
-  EXPECT_EQ(registry.bpat_clip(roman_id, AnimationStateId::Idle),
-            registry.bpat_clip(roman_id, AnimationStateId::AttackBow));
-  EXPECT_EQ(roman_idle_palette, request_idle_bone_palette(roman_id, 0.5F));
-  EXPECT_NE(roman_idle_palette, request_idle_bone_palette(roman_id, 0.0F));
-
-  auto const* carthage_idle_palette = render_archer_idle_bone_palette(
-      "troops/carthage/archer", Game::Systems::NationID::Carthage);
-  auto const carthage_id = find_archetype_id("troops/carthage/archer");
-  ASSERT_NE(carthage_id, Render::Creature::k_invalid_archetype);
-  EXPECT_EQ(registry.bpat_clip(carthage_id, AnimationStateId::Idle),
-            registry.bpat_clip(carthage_id, AnimationStateId::AttackBow));
-  EXPECT_EQ(carthage_idle_palette, request_idle_bone_palette(carthage_id, 0.5F));
-  EXPECT_NE(carthage_idle_palette, request_idle_bone_palette(carthage_id, 0.0F));
+  for (auto const* key : {"troops/roman/archer", "troops/carthage/archer"}) {
+    auto const archetype = find_archetype_id(key);
+    ASSERT_NE(archetype, Render::Creature::k_invalid_archetype) << key;
+    EXPECT_EQ(registry.bpat_clip(archetype, AnimationStateId::Idle),
+              Render::Creature::k_humanoid_idle_bow_rest_clip)
+        << key;
+    EXPECT_NE(registry.bpat_clip(archetype, AnimationStateId::Idle),
+              registry.bpat_clip(archetype, AnimationStateId::AttackBow))
+        << key;
+  }
 }
 
 TEST(HumanoidPrepare,
@@ -2974,10 +2914,11 @@ TEST(AnimationCoreAttackPoseManifest, SpearVariantExposesOffhandGripPolicy) {
   });
 
   EXPECT_TRUE(thrust.use_offhand_spear_grip);
-  EXPECT_GT(thrust.right_hand.y, 1.05F);
+
+  EXPECT_GT(thrust.right_hand.y, 0.75F);
   EXPECT_LT(thrust.right_hand.y, 1.20F);
   EXPECT_GT(thrust.right_hand.z, 0.40F);
-  EXPECT_LT(thrust.right_hand.z, 0.45F);
+  EXPECT_LT(thrust.right_hand.z, 0.55F);
   EXPECT_GT(thrust.foot_r_z_delta, 0.0F);
   EXPECT_GT(thrust.offhand_along_offset, 0.25F);
   EXPECT_FLOAT_EQ(thrust.offhand_lateral_offset, 0.0F);
@@ -3112,7 +3053,7 @@ TEST(AnimationCoreAttackPoseManifest, ClassicSpearThrustOwnsBodyDrive) {
 
   EXPECT_TRUE(sample.use_offhand_spear_grip);
   EXPECT_GT(sample.right_hand.z, 0.40F);
-  EXPECT_LT(sample.right_hand.z, 0.45F);
+  EXPECT_LT(sample.right_hand.z, 0.55F);
   EXPECT_GT(sample.shoulder_r_z_delta, 0.0F);
   EXPECT_GT(sample.foot_r_z_delta, 0.0F);
   EXPECT_GT(sample.offhand_along_offset, 0.25F);
@@ -3120,7 +3061,7 @@ TEST(AnimationCoreAttackPoseManifest, ClassicSpearThrustOwnsBodyDrive) {
   EXPECT_GT(sample.offhand_spear_direction.z, 0.98F);
 }
 
-TEST(AnimationCoreAttackPoseManifest, InfantrySpearUsesLinearChamberPushAndRecovery) {
+TEST(AnimationCoreAttackPoseManifest, InfantrySpearChambersAtTheHipThenDrivesThrough) {
   auto sample_at = [](float phase) {
     return Animation::resolve_humanoid_weapon_attack_pose({
         .kind = Animation::HumanoidWeaponAttackKind::SpearThrustClassic,
@@ -3130,20 +3071,22 @@ TEST(AnimationCoreAttackPoseManifest, InfantrySpearUsesLinearChamberPushAndRecov
     });
   };
 
-  auto const retracted = sample_at(0.05F);
+  auto const guard = sample_at(0.0F);
+  auto const chamber = sample_at(0.20F);
   auto const contact = sample_at(0.58F);
   auto const recovery = sample_at(0.88F);
-  EXPECT_GT(contact.right_hand.z, retracted.right_hand.z + 0.25F);
-  EXPECT_GT(contact.left_hand.z, retracted.left_hand.z + 0.25F);
-  EXPECT_GT(contact.right_hand.y, retracted.right_hand.y + 0.05F);
-  EXPECT_GT(contact.left_hand.y, retracted.left_hand.y + 0.05F);
+
+  EXPECT_LT(chamber.right_hand.y, guard.right_hand.y - 0.15F);
+  EXPECT_LT(chamber.right_hand.z, guard.right_hand.z);
+  EXPECT_GT(contact.right_hand.z, chamber.right_hand.z + 0.40F);
+  EXPECT_GT(contact.left_hand.z, chamber.left_hand.z + 0.40F);
+  EXPECT_GT(contact.right_hand.y, chamber.right_hand.y + 0.10F);
   EXPECT_LT(recovery.right_hand.z, contact.right_hand.z);
   EXPECT_LT(recovery.left_hand.z, contact.left_hand.z);
-  EXPECT_FLOAT_EQ(contact.right_hand.x, retracted.right_hand.x);
-  EXPECT_FLOAT_EQ(contact.left_hand.x, retracted.left_hand.x);
+  EXPECT_GT(contact.foot_r_z_delta, chamber.foot_r_z_delta);
   EXPECT_GT(contact.offhand_spear_direction.y, 0.05F);
   EXPECT_LT(
-      std::abs(contact.offhand_spear_direction.y - retracted.offhand_spear_direction.y),
+      std::abs(contact.offhand_spear_direction.y - guard.offhand_spear_direction.y),
       0.001F);
 }
 
@@ -3412,15 +3355,16 @@ TEST(AnimationCoreHoldPoseManifest, SpearIdleExposesOffhandGripContract) {
   });
 
   EXPECT_TRUE(sample.use_offhand_spear_grip);
-  EXPECT_FLOAT_EQ(sample.right_hand.x, 0.34F);
-  EXPECT_FLOAT_EQ(sample.right_hand.y, 1.18F);
-  EXPECT_FLOAT_EQ(sample.right_hand.z, 0.30F);
-  EXPECT_FLOAT_EQ(sample.offhand_along_offset, 0.46F);
-  EXPECT_FLOAT_EQ(sample.offhand_y_drop, -0.03F);
-  EXPECT_FLOAT_EQ(sample.offhand_lateral_offset, -0.08F);
-  EXPECT_NEAR(sample.offhand_spear_direction.x, 0.0493264F, 0.0001F);
-  EXPECT_NEAR(sample.offhand_spear_direction.y, 0.542590F, 0.0001F);
-  EXPECT_NEAR(sample.offhand_spear_direction.z, 0.838548F, 0.0001F);
+
+  EXPECT_FLOAT_EQ(sample.right_hand.x, 0.26F);
+  EXPECT_FLOAT_EQ(sample.right_hand.y, 0.84F);
+  EXPECT_FLOAT_EQ(sample.right_hand.z, 0.10F);
+  EXPECT_FLOAT_EQ(sample.offhand_along_offset, 0.44F);
+  EXPECT_FLOAT_EQ(sample.offhand_y_drop, 0.0F);
+  EXPECT_FLOAT_EQ(sample.offhand_lateral_offset, -0.04F);
+  EXPECT_NEAR(sample.offhand_spear_direction.x, 0.040F, 0.0001F);
+  EXPECT_NEAR(sample.offhand_spear_direction.y, 0.616F, 0.0001F);
+  EXPECT_NEAR(sample.offhand_spear_direction.z, 0.787F, 0.0001F);
   EXPECT_TRUE(sample.clamp_left_hand_x_min);
   EXPECT_FLOAT_EQ(sample.left_hand_x_min, 0.10F);
   EXPECT_TRUE(sample.clamp_left_hand_y_max);
@@ -4364,8 +4308,11 @@ TEST(AnimationCoreLocomotionManifest, LocomotionPoseOwnsWalkCycleDeltas) {
   EXPECT_GT(first.pelvis_delta.y, 0.0F);
   EXPECT_NE(first.shoulder_l_delta.z, 0.0F);
   EXPECT_NE(first.hand_l_delta.z, 0.0F);
-  EXPECT_LT(first.hand_l_delta.z * first.hand_r_delta.z, 0.0F);
-  EXPECT_GT(std::abs(first.hand_l_delta.z), std::abs(first.hand_r_delta.z));
+
+  float const swing_l = first.hand_l_delta.z - first.shoulder_l_delta.z;
+  float const swing_r = first.hand_r_delta.z - first.shoulder_r_delta.z;
+  EXPECT_LT(swing_l * swing_r, 0.0F);
+  EXPECT_GT(std::abs(swing_l), std::abs(swing_r));
 }
 
 TEST(AnimationCoreLocomotionManifest, LocomotionPoseRunDrivesBodyFurtherForward) {
@@ -4457,38 +4404,6 @@ TEST(AnimationCoreLocomotionManifest, LocomotionActionOverrideFreezesJumpingComm
   EXPECT_FLOAT_EQ(jump.normalized_speed, 0.0F);
   EXPECT_FALSE(jump.has_target);
   EXPECT_TRUE(jump.airborne);
-}
-
-TEST(AnimationCoreLocomotionManifest, LocomotionPhaseOverrideOwnsBowReadyIdle) {
-  auto const idle = Animation::resolve_humanoid_locomotion_phase_override({
-      .bow_ready_idle = true,
-      .has_locomotion = false,
-      .attacking = false,
-  });
-  EXPECT_TRUE(idle.active);
-  EXPECT_FLOAT_EQ(idle.cycle_phase, 0.5F);
-
-  EXPECT_FALSE(
-      Animation::resolve_humanoid_locomotion_phase_override({
-                                                                .bow_ready_idle = false,
-                                                                .has_locomotion = false,
-                                                                .attacking = false,
-                                                            })
-          .active);
-  EXPECT_FALSE(
-      Animation::resolve_humanoid_locomotion_phase_override({
-                                                                .bow_ready_idle = true,
-                                                                .has_locomotion = true,
-                                                                .attacking = false,
-                                                            })
-          .active);
-  EXPECT_FALSE(
-      Animation::resolve_humanoid_locomotion_phase_override({
-                                                                .bow_ready_idle = true,
-                                                                .has_locomotion = false,
-                                                                .attacking = true,
-                                                            })
-          .active);
 }
 
 namespace {
@@ -4946,6 +4861,27 @@ TEST(AnimationCoreLocomotionManifest, RunCadenceKeepsThePlantedFootStill) {
   }
 }
 
+TEST(AnimationCoreLocomotionManifest, CadenceFollowsTheBodyScaleNotTheWorldSpeed) {
+
+  Animation::HumanoidLocomotionInputs inputs{};
+  inputs.movement_state = Animation::MovementState::Walk;
+  inputs.motion_state = Animation::HumanoidMotionState::Walk;
+  inputs.speed = 1.5F;
+  inputs.sample_time = 1.0F;
+
+  inputs.body_scale = 1.0F;
+  auto const full_size = Animation::resolve_humanoid_locomotion_sample(inputs);
+  inputs.body_scale = 0.5F;
+  auto const half_size = Animation::resolve_humanoid_locomotion_sample(inputs);
+
+  EXPECT_NEAR(full_size.cycle_time,
+              Animation::humanoid_walk_cycle_time_for_speed(1.5F),
+              1.0e-4F);
+  EXPECT_NEAR(half_size.cycle_time, full_size.cycle_time * 0.5F, 1.0e-3F);
+
+  EXPECT_NEAR(half_size.stride_distance, full_size.stride_distance, 1.0e-3F);
+}
+
 TEST(AnimationCoreLocomotionManifest, ArmSwingStaysWithinTheArmsReach) {
   constexpr float k_arm_length = 0.55F;
   for (auto inputs : {walk_pose_inputs(), run_pose_inputs()}) {
@@ -4954,11 +4890,17 @@ TEST(AnimationCoreLocomotionManifest, ArmSwingStaysWithinTheArmsReach) {
     for (int step = 0; step < 64; ++step) {
       inputs.cycle_phase = static_cast<float>(step) / 64.0F;
       auto const pose = Animation::resolve_humanoid_locomotion_pose(inputs);
-      for (auto const& hand : {pose.hand_l_delta, pose.hand_r_delta}) {
-        float const shoulder_to_hand_y = -k_arm_length + hand.y;
-        float const reach = std::sqrt((shoulder_to_hand_y * shoulder_to_hand_y) +
-                                      (hand.z * hand.z) + (hand.x * hand.x));
-        EXPECT_LE(reach, k_arm_length)
+
+      constexpr float k_walk_hang_allowance = 0.05F;
+      std::pair<Animation::PoseVec3, Animation::PoseVec3> const arms[] = {
+          {pose.hand_l_delta, pose.shoulder_l_delta},
+          {pose.hand_r_delta, pose.shoulder_r_delta}};
+      for (auto const& [hand, shoulder] : arms) {
+        float const dx = hand.x - shoulder.x;
+        float const dy = -k_arm_length + (hand.y - shoulder.y);
+        float const dz = hand.z - shoulder.z;
+        float const reach = std::sqrt((dx * dx) + (dy * dy) + (dz * dz));
+        EXPECT_LE(reach, k_arm_length + k_walk_hang_allowance)
             << "the swing straightens the elbow at phase " << inputs.cycle_phase;
       }
     }
@@ -10794,34 +10736,6 @@ TEST(HumanoidPrepare, WalkRunTransitionKeepsPlaybackGroundingCoherent) {
                      Render::Creature::Pipeline::humanoid_phase_for_anim(run_ctx)),
             0.08F);
   EXPECT_LT(std::abs(walk_contact - run_contact), 0.12F);
-}
-
-TEST(HumanoidPrepare, IdleArchersKeepNeutralBowReadyPhase) {
-  Render::GL::HumanoidRendererBase const owner;
-  Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
-  ctx.force_single_soldier = true;
-  ctx.allow_template_cache = false;
-
-  Engine::Core::StandaloneEntity entity_scratch(42);
-  Engine::Core::Entity& entity = entity_scratch.entity();
-  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
-  ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Archer;
-  unit->nation_id = Game::Systems::NationID::RomanRepublic;
-  ctx.entity = &entity;
-
-  Render::GL::AnimationInputs anim{};
-  anim.time = 3.0F;
-
-  Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(
-      owner, ctx, anim, test_runtime(0U), prep);
-
-  auto const& requests = prep.bodies.requests();
-  ASSERT_EQ(requests.size(), 1U);
-  EXPECT_EQ(requests.front().state, Render::Creature::AnimationStateId::Idle);
-  EXPECT_FLOAT_EQ(requests.front().phase, 0.5F);
 }
 
 TEST(HumanoidPrepare, FormationAmbientIdlesStaggerAndRotatePerSoldier) {

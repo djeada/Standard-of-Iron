@@ -1858,7 +1858,10 @@ void process_attacks(Engine::Core::World* world,
 
           auto const geometry =
               FormationCombat::contact_geometry(*attacker, *best_target);
-          if (!geometry.uses_formation_slots &&
+
+          auto const* hold = attacker->get_component<Engine::Core::HoldModeComponent>();
+          bool const striking_from_hold = hold != nullptr && hold->active;
+          if (!geometry.uses_formation_slots && !striking_from_hold &&
               !melee_contact_reached(*attacker, *best_target, geometry)) {
             best_target = nullptr;
           }

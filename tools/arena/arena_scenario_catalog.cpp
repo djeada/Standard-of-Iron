@@ -7794,6 +7794,129 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_humanoid_gait_review_leaders_id),
+        QStringLiteral("Humanoid Gait Review: Leaders"),
+        QStringLiteral("A healer and three foot commanders cross the same close "
+                       "side-on camera at a walk and then at a run, so the single "
+                       "bodies that carry cloaks, staves, and command weapons can be "
+                       "read against the line infantry gait."),
+        16.0F,
+        {9.0F, 10.5F, 0.0F});
+    s.camera_focus = QVector3D(0.0F, 0.95F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.suppress_terrain_scatter = true;
+    s.force_full_creature_lod = true;
+
+    s.owner_teams = {{.owner_id = 1, .team_id = 1},
+                     {.owner_id = 2, .team_id = 1},
+                     {.owner_id = 3, .team_id = 1},
+                     {.owner_id = 4, .team_id = 1}};
+    auto leader =
+        [](const QString& name, Troop troop, Nation nation, int owner, float z) {
+          auto g = group(name, troop, owner, 1, {-6.0F, 0.0F, z}, 1);
+          g.nation_id = nation;
+          return g;
+        };
+    s.groups = {leader(QStringLiteral("gait_healer"),
+                       Troop::Healer,
+                       Nation::RomanRepublic,
+                       1,
+                       3.6F),
+                leader(QStringLiteral("gait_consul"),
+                       Troop::RomanVeteranConsul,
+                       Nation::RomanRepublic,
+                       2,
+                       1.2F),
+                leader(QStringLiteral("gait_sword_commander"),
+                       Troop::CarthageSwordCommander,
+                       Nation::Carthage,
+                       3,
+                       -1.2F),
+                leader(QStringLiteral("gait_bow_commander"),
+                       Troop::CarthageBowCommander,
+                       Nation::Carthage,
+                       4,
+                       -3.6F)};
+
+    auto line = group(
+        QStringLiteral("gait_line"), Troop::Swordsman, 1, 1, {-6.0F, 0.0F, -7.0F}, 6);
+    s.groups.push_back(line);
+
+    auto walk = [](float time, const QString& name, float to_x, float z) {
+      auto step = at(time, Command::Move, name);
+      step.destination = {to_x, 0.0F, z};
+      return step;
+    };
+    auto sprint = [](float time, const QString& name, float to_x, float z) {
+      auto step = at(time, Command::Run, name);
+      step.destination = {to_x, 0.0F, z};
+      step.enabled = true;
+      return step;
+    };
+
+    std::vector<std::pair<QString, float>> const lanes = {
+        {QStringLiteral("gait_healer"), 3.6F},
+        {QStringLiteral("gait_consul"), 1.2F},
+        {QStringLiteral("gait_sword_commander"), -1.2F},
+        {QStringLiteral("gait_bow_commander"), -3.6F},
+        {QStringLiteral("gait_line"), -7.0F}};
+    for (auto const& [name, z] : lanes) {
+      s.steps.push_back(walk(0.5F, name, 6.0F, z));
+    }
+    for (auto const& [name, z] : lanes) {
+      s.steps.push_back(sprint(8.5F, name, -6.0F, z));
+    }
+
+    add_visual_stability(s,
+                         {QStringLiteral("gait_healer"),
+                          QStringLiteral("gait_consul"),
+                          QStringLiteral("gait_sword_commander"),
+                          QStringLiteral("gait_bow_commander"),
+                          QStringLiteral("gait_line")});
+    for (auto const& [name, z] : lanes) {
+      s.expectations.push_back(expectation(Expect::NoLimbOverextension, name));
+      s.expectations.push_back(expectation(Expect::MovementAnimationObserved, name));
+    }
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_idle_weapon_grip_review_id),
+        QStringLiteral("Idle Weapon Grip Review"),
+        QStringLiteral("An archer, a spearman, a swordsman and a healer stand idle "
+                       "side by side under a close, low camera, so how each body "
+                       "holds its weapon at rest -- both hands on bow and spear -- "
+                       "can be read."),
+        4.0F,
+        {5.0F, 10.0F, 25.0F});
+    s.camera_focus = QVector3D(0.0F, 0.85F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.suppress_terrain_scatter = true;
+    s.force_full_creature_lod = true;
+    auto still = [](const QString& name, Troop troop, float x) {
+      auto g = group(name, troop, 1, 1, {x, 0.0F, 0.0F}, 1);
+      g.facing_degrees = 340.0F;
+      return g;
+    };
+    s.groups = {still(QStringLiteral("grip_archer"), Troop::Archer, -1.8F),
+                still(QStringLiteral("grip_spear"), Troop::Spearman, -0.6F),
+                still(QStringLiteral("grip_sword"), Troop::Swordsman, 0.6F),
+                still(QStringLiteral("grip_healer"), Troop::Healer, 1.8F)};
+    add_visual_stability(s,
+                         {QStringLiteral("grip_archer"),
+                          QStringLiteral("grip_spear"),
+                          QStringLiteral("grip_sword"),
+                          QStringLiteral("grip_healer")});
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_world_prop_lineup_id),
         QStringLiteral("World Prop Lineup"),
         QStringLiteral("Every authored world prop on clean ground in three rows "

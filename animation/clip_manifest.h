@@ -240,7 +240,9 @@ inline constexpr std::uint16_t k_humanoid_walk_strafe_right_clip = 79U;
 inline constexpr std::uint16_t k_humanoid_run_strafe_left_clip = 80U;
 inline constexpr std::uint16_t k_humanoid_run_strafe_right_clip = 81U;
 
-inline constexpr std::uint16_t k_humanoid_clip_count = 82U;
+inline constexpr std::uint16_t k_humanoid_idle_bow_rest_clip = 82U;
+
+inline constexpr std::uint16_t k_humanoid_clip_count = 83U;
 
 inline constexpr float k_humanoid_combat_ready_cycle_time = 2.2F;
 inline constexpr std::uint32_t k_humanoid_combat_ready_frames = 48U;

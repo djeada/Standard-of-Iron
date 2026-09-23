@@ -1005,6 +1005,8 @@ auto authored_drive(float s) -> float {
 
 constexpr float k_rts_commander_root_motion_max_speed = 5.5F;
 
+constexpr float k_rts_commander_lunge_clearance_per_scale = 0.70F;
+
 constexpr float k_rts_commander_assist_turn_degrees_per_second = 360.0F;
 
 void apply_rts_commander_root_motion(
@@ -1086,8 +1088,17 @@ void apply_rts_commander_root_motion(
         forward_x = std::sin(yaw_rad);
         forward_z = std::cos(yaw_rad);
       }
-      float const contact_gap =
-          nearest_distance - (nearest->body_radius + own_radius + 0.16F);
+
+      auto const* target_transform =
+          target->get_component<Engine::Core::TransformComponent>();
+      float const drawn_scales =
+          std::max(0.0F, transform->scale.x) +
+          (target_transform != nullptr ? std::max(0.0F, target_transform->scale.x)
+                                       : std::max(0.0F, transform->scale.x));
+      float const stop_distance =
+          std::max(nearest->body_radius + own_radius + 0.16F,
+                   drawn_scales * k_rts_commander_lunge_clearance_per_scale);
+      float const contact_gap = nearest_distance - stop_distance;
       allowed = std::clamp(step, 0.0F, std::max(0.0F, contact_gap));
     }
   }

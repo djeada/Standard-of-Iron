@@ -20,6 +20,9 @@ struct MovementTestAccess {
     m.path = std::move(v);
   }
   static void set_path_index(MovementComponent& m, std::size_t v) { m.path_index = v; }
+  static void set_declared_group_pace(MovementComponent& m, float v) {
+    m.declared_group_pace = v;
+  }
   static void set_route_lane_state(MovementComponent& m,
                                    float minimum_scale,
                                    std::size_t opening_waypoint,

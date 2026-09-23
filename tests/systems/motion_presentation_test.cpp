@@ -4,7 +4,10 @@
 #include "core/component_core.h"
 #include "core/system.h"
 #include "core/world.h"
+#include "game/core/component_gameplay.h"
+#include "game/systems/route_follow_system.h"
 #include "game/units/spawn_type.h"
+#include "tests/support/movement_test_access.h"
 
 namespace {
 
@@ -159,6 +162,56 @@ TEST(MotionPresentationTest, AStalledUnitWalksAgainOnceItIsFreed) {
 
   EXPECT_EQ(motion_state(*walker),
             Engine::Core::MotionPresentationState::ForcedDisplacement);
+}
+
+TEST(MotionPresentationTest, AZeroLengthTickKeepsTheGaitItFound) {
+  Engine::Core::World world;
+  auto glide = std::make_unique<ScriptedGlide>();
+  auto* glide_ref = glide.get();
+  world.add_system(std::move(glide));
+  auto* runner = add_walker(world);
+  auto* facts = runner->add_component<Engine::Core::MovementFactsComponent>();
+  auto* stamina = runner->add_component<Engine::Core::StaminaComponent>();
+  stamina->run_requested = true;
+  stamina->is_running = true;
+  glide_ref->speed = 4.6F;
+  facts->motor.valid = true;
+  facts->motor.accepted_dx = glide_ref->speed * k_step;
+  facts->motor.accepted_vx = glide_ref->speed;
+
+  world.update(k_step);
+  ASSERT_EQ(motion_state(*runner), Engine::Core::MotionPresentationState::Run);
+
+  facts->motor.accepted_dx = 0.0F;
+  facts->motor.accepted_vx = 0.0F;
+  world.update(0.0F);
+  EXPECT_EQ(motion_state(*runner), Engine::Core::MotionPresentationState::Run);
+  auto const* motion =
+      runner->get_component<Engine::Core::MotionPresentationComponent>();
+  EXPECT_FALSE(motion->state_changed);
+}
+
+TEST(MotionPresentationTest, RunningOutpacesTheDeclaredWalkingPace) {
+  Engine::Core::World world;
+  auto* runner = add_walker(world);
+  auto* unit = runner->get_component<Engine::Core::UnitComponent>();
+  auto* movement = runner->get_component<Engine::Core::MovementComponent>();
+  auto* stamina = runner->add_component<Engine::Core::StaminaComponent>();
+
+  MovementTestAccess::set_declared_group_pace(*movement, unit->speed);
+  float const walking =
+      Game::Systems::formation_navigation_speed(*runner, *unit, stamina);
+  stamina->is_running = true;
+  float const running =
+      Game::Systems::formation_navigation_speed(*runner, *unit, stamina);
+
+  EXPECT_FLOAT_EQ(walking, unit->speed);
+  EXPECT_FLOAT_EQ(running,
+                  unit->speed * Engine::Core::StaminaComponent::k_run_speed_multiplier);
+
+  MovementTestAccess::set_declared_group_pace(*movement, 1.5F);
+  EXPECT_FLOAT_EQ(Game::Systems::formation_navigation_speed(*runner, *unit, stamina),
+                  1.5F * Engine::Core::StaminaComponent::k_run_speed_multiplier);
 }
 
 } // namespace

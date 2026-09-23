@@ -169,6 +169,7 @@ auto build_humanoid_locomotion_state(const HumanoidLocomotionInputs& inputs)
       .sample_time = inputs.animation_time,
       .phase_offset = inputs.individuality.gait_phase_offset,
       .cadence_scale = inputs.individuality.cadence_scale,
+      .body_scale = inputs.body_scale,
       .tuning = humanoid_locomotion_tuning(inputs.variation),
       .has_persistent_state = inputs.persistent_state != nullptr,
       .previous = persistent,
