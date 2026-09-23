@@ -3433,6 +3433,50 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>A save is already in progress.</source>
         <translation>A save is already in progress.</translation>
     </message>
+    <message>
+        <source>your ally</source>
+        <translation>tu aliado</translation>
+    </message>
+    <message>
+        <source>gold</source>
+        <translation>oro</translation>
+    </message>
+    <message>
+        <source>food</source>
+        <translation>comida</translation>
+    </message>
+    <message>
+        <source>wood</source>
+        <translation>madera</translation>
+    </message>
+    <message>
+        <source>stone</source>
+        <translation>piedra</translation>
+    </message>
+    <message>
+        <source>iron</source>
+        <translation>hierro</translation>
+    </message>
+    <message>
+        <source>Sent %1 %2 to %3.</source>
+        <translation>Enviado %1 de %2 a %3.</translation>
+    </message>
+    <message>
+        <source>%1 sends you %2 %3.</source>
+        <translation>%1 te envía %2 de %3.</translation>
+    </message>
+    <message>
+        <source>%1 can spare only %2 of the %3 %4 you asked for.</source>
+        <translation>%1 solo puede darte %2 de los %3 de %4 que pediste.</translation>
+    </message>
+    <message>
+        <source>%1 has no %2 to spare.</source>
+        <translation>%1 no tiene %2 de sobra.</translation>
+    </message>
+    <message>
+        <source>%1 refuses to part with any %2.</source>
+        <translation>%1 se niega a desprenderse de su %2.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -3664,6 +3708,14 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>TARGET</source>
         <translation>OBJETIVO</translation>
+    </message>
+    <message>
+        <source>%1 · Enemy</source>
+        <translation>%1 · Enemigo</translation>
+    </message>
+    <message>
+        <source>%1 · Yours</source>
+        <translation>%1 · Tuyo</translation>
     </message>
     <message numerus="yes">
         <source>%n attacking</source>
@@ -7212,8 +7264,8 @@ para ver la vista previa</translation>
         <translation>El río se queda con cuanto se le da. Tus elefantes entraron y no todos salieron, y el Trebia no es un río grande. Roma nunca ha necesitado uno grande.</translation>
     </message>
     <message>
-        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.</source>
-        <translation>Conque los exploradores no vuelven. En fin: todos empiezan por algún sitio, y tú has empezado matando a once hombres que esperaban su almuerzo. La próxima vez Roma enviará a alguien que cuente.</translation>
+        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
+        <translation>Conque los exploradores no vuelven. En fin: todos empiezan por algún sitio, y tú has empezado arrasando un puesto lleno de hombres que esperaban su almuerzo. La próxima vez Roma enviará a alguien que cuente.</translation>
     </message>
     <message>
         <source>Then it holds a little longer. Go home to your Senate and tell them what a Roman looks like from close to. I shall be here in the spring, and the spring after that, and I am younger than you.</source>
@@ -9614,6 +9666,30 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <source>Not enough %1: %2 needed</source>
         <translation>%1 insuficiente: se necesitan %2</translation>
     </message>
+    <message>
+        <source>ALLIES</source>
+        <translation>ALIADOS</translation>
+    </message>
+    <message>
+        <source>No allies to trade with in this battle.</source>
+        <translation>No hay aliados con los que comerciar en esta batalla.</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Enviar</translation>
+    </message>
+    <message>
+        <source>Give %1 %2 to %3</source>
+        <translation>Dar %1 de %2 a %3</translation>
+    </message>
+    <message>
+        <source>Request</source>
+        <translation>Pedir</translation>
+    </message>
+    <message>
+        <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
+        <translation>Pedir a %1 %2 de %3. Un comandante generoso con excedentes dirá que sí; uno belicoso o pobre se lo quedará.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionViewModel</name>
@@ -9648,6 +9724,26 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     <message>
         <source>The marketplace does not trade that.</source>
         <translation>El mercado no comercia con eso.</translation>
+    </message>
+    <message>
+        <source>gold</source>
+        <translation>oro</translation>
+    </message>
+    <message>
+        <source>Allies can only exchange gold, food, wood, stone or iron.</source>
+        <translation>Los aliados solo pueden intercambiar oro, comida, madera, piedra o hierro.</translation>
+    </message>
+    <message>
+        <source>Choose an ally to trade with.</source>
+        <translation>Elige un aliado con quien comerciar.</translation>
+    </message>
+    <message>
+        <source>You need a marketplace to deal with your allies.</source>
+        <translation>Necesitas un mercado para tratar con tus aliados.</translation>
+    </message>
+    <message>
+        <source>Not enough %1 to send.</source>
+        <translation>No hay suficiente %1 para enviar.</translation>
     </message>
 </context>
 <context>
@@ -10995,6 +11091,14 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <translation>Un contorno rojo significa que el sitio está bloqueado: demasiado cerca de otro edificio, sobre agua o en una pendiente. Muévelo a terreno llano y despejado y confirma con clic izquierdo. El clic derecho cancela.</translation>
     </message>
     <message>
+        <source>Press Deliver, then click your barracks: the civilian walks there and joins its reserve, and you can recruit again.</source>
+        <translation>Pulsa Entregar y luego haz clic en tu cuartel: el civil irá allí, se sumará a su reserva y podrás reclutar de nuevo.</translation>
+    </message>
+    <message>
+        <source>A Home raises civilians, not soldiers. Recruit a civilian here, select it when it steps out, press Deliver and click your barracks to refill its reserve.</source>
+        <translation>Una Casa cría civiles, no soldados. Recluta aquí un civil, selecciónalo cuando salga, pulsa Entregar y haz clic en tu cuartel para rellenar su reserva.</translation>
+    </message>
+    <message>
         <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
         <translation>Los reclutas salen del cuartel. Haz clic izquierdo en tu cuartel para abrir su panel de producción a la derecha.</translation>
     </message>
@@ -11147,8 +11251,8 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <translation>Haz clic derecho en el suelo para mover las tropas seleccionadas</translation>
     </message>
     <message>
-        <source>Destroy the Roman scouting party (%1 soldiers)</source>
-        <translation>Destruye la partida de exploradores romanos (%1 soldados)</translation>
+        <source>Destroy the Roman scouting party (%1 units)</source>
+        <translation>Destruye la partida de exploradores romanos (%1 unidades)</translation>
     </message>
     <message>
         <source>Deliver %1 wood to your barracks yard</source>

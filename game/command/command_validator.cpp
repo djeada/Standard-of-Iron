@@ -6,6 +6,7 @@
 #include "../core/world.h"
 #include "../session/session_context.h"
 #include "../systems/combat_system/target_rules.h"
+#include "../systems/marketplace_system.h"
 #include "../systems/owner_registry.h"
 #include "../units/spawn_type.h"
 
@@ -222,6 +223,15 @@ auto validate(Engine::Core::World& world, const Command& command) -> Validation 
           return Rejection::None;
         } else if constexpr (std::is_same_v<T, Trade>) {
 
+          return Rejection::None;
+        } else if constexpr (std::is_same_v<T, AllyTribute>) {
+          const auto& owners = Game::Session::session_for(world).owners();
+          if (payload.amount <= 0 || payload.ally_owner == owner_id ||
+              !owners.are_allies(owner_id, payload.ally_owner) ||
+              !Game::Systems::MarketplaceSystem::owner_has_marketplace(world,
+                                                                       owner_id)) {
+            return Rejection::NoSubjects;
+          }
           return Rejection::None;
         } else if constexpr (std::is_same_v<T, UseCommanderAbility>) {
           if (!is_commandable(world, payload.commander, owner_id)) {

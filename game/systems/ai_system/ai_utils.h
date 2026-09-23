@@ -10,6 +10,8 @@
 
 #include "../../core/ownership_constants.h"
 #include "../../units/combat_role.h"
+#include "../../units/spawn_type.h"
+#include "../../units/troop_type.h"
 #include "ai_stall_recovery.h"
 #include "ai_types.h"
 
@@ -97,6 +99,18 @@ inline auto is_combat_role_unit(const EntitySnapshot& entity) -> bool {
 
   return !entity.is_building && Game::Units::combat_role(entity.spawn_type) !=
                                     Game::Units::CombatRole::Noncombatant;
+}
+
+inline auto is_foot_line_recruit(Game::Units::TroopType type) -> bool {
+  if (Game::Units::is_commander_troop(type) ||
+      type == Game::Units::TroopType::Builder ||
+      type == Game::Units::TroopType::Civilian) {
+    return false;
+  }
+  const auto spawn = Game::Units::spawn_typeFromTroopType(type);
+  return !Game::Units::is_cavalry(spawn) && spawn != Game::Units::SpawnType::Elephant &&
+         spawn != Game::Units::SpawnType::Catapult &&
+         spawn != Game::Units::SpawnType::Ballista;
 }
 
 inline auto marches_with_the_army(const EntitySnapshot& entity) -> bool {

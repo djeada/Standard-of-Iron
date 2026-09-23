@@ -301,6 +301,10 @@ void render_effects(const RenderEffectsContext& context,
       context.snapshot,
       context.local_owner_id,
       Game::Accessibility::MotionSettings::reduced_motion());
+  Render::GL::render_ripe_fields(context.renderer,
+                                 context.snapshot,
+                                 context.local_owner_id,
+                                 Game::Accessibility::MotionSettings::reduced_motion());
   Render::GL::render_healer_auras(context.renderer, res, context.snapshot);
   Render::GL::render_commander_auras(context.renderer, res, context.snapshot);
   Render::GL::render_combat_dust(context.renderer, res, context.snapshot);

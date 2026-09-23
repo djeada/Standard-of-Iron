@@ -150,6 +150,7 @@ void BuildingArchetypeDesc::add_box(const QVector3D& center,
   BuildingPartDesc part;
   part.kind = BuildingPartKind::Box;
   part.name = m_label;
+  part.material_id = m_material;
   part.origin = origin;
   part.point_a = center;
   part.point_b = scale;
@@ -166,6 +167,7 @@ void BuildingArchetypeDesc::add_palette_box(const QVector3D& center,
   BuildingPartDesc part;
   part.kind = BuildingPartKind::PaletteBox;
   part.name = m_label;
+  part.material_id = m_material;
   part.origin = origin;
   part.point_a = center;
   part.point_b = scale;
@@ -183,6 +185,7 @@ void BuildingArchetypeDesc::add_palette_rotated_box(const QVector3D& center,
   BuildingPartDesc part;
   part.kind = BuildingPartKind::PaletteRotatedBox;
   part.name = m_label;
+  part.material_id = m_material;
   part.origin = origin;
   part.point_a = center;
   part.point_b = scale;
@@ -201,6 +204,7 @@ void BuildingArchetypeDesc::add_rotated_box(const QVector3D& center,
   BuildingPartDesc part;
   part.kind = BuildingPartKind::RotatedBox;
   part.name = m_label;
+  part.material_id = m_material;
   part.origin = origin;
   part.point_a = center;
   part.point_b = scale;
@@ -219,6 +223,7 @@ void BuildingArchetypeDesc::add_cylinder(const QVector3D& start,
   BuildingPartDesc part;
   part.kind = BuildingPartKind::Cylinder;
   part.name = m_label;
+  part.material_id = m_material;
   part.origin = origin;
   part.point_a = start;
   part.point_b = end;
@@ -237,6 +242,7 @@ void BuildingArchetypeDesc::add_cone(const QVector3D& base,
   BuildingPartDesc part;
   part.kind = BuildingPartKind::Cone;
   part.name = m_label;
+  part.material_id = m_material;
   part.origin = origin;
   part.point_a = base;
   part.point_b = tip;
@@ -255,6 +261,7 @@ void BuildingArchetypeDesc::add_palette_cylinder(const QVector3D& start,
   BuildingPartDesc part;
   part.kind = BuildingPartKind::PaletteCylinder;
   part.name = m_label;
+  part.material_id = m_material;
   part.origin = origin;
   part.point_a = start;
   part.point_b = end;

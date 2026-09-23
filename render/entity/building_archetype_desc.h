@@ -62,6 +62,8 @@ public:
 
   void set_label(std::string label);
   [[nodiscard]] auto label() const -> const std::string& { return m_label; }
+  void set_material(int material_id) { m_material = material_id; }
+  [[nodiscard]] auto material() const -> int { return m_material; }
 
   void add_box(const QVector3D& center,
                const QVector3D& scale,
@@ -118,7 +120,32 @@ public:
 private:
   std::string m_name;
   std::string m_label;
+  int m_material{0};
   std::vector<BuildingPartDesc> m_parts;
+};
+
+inline constexpr int k_building_material_stone = 0;
+inline constexpr int k_building_material_metal = 1;
+inline constexpr int k_building_material_wood = 2;
+inline constexpr int k_building_material_cloth = 3;
+inline constexpr int k_building_material_leather = 4;
+
+class BuildingPartMaterial {
+public:
+  BuildingPartMaterial(BuildingArchetypeDesc& desc, int material_id)
+      : m_desc(&desc)
+      , m_previous(desc.material()) {
+    desc.set_material(material_id);
+  }
+  BuildingPartMaterial(const BuildingPartMaterial&) = delete;
+  BuildingPartMaterial(BuildingPartMaterial&&) = delete;
+  auto operator=(const BuildingPartMaterial&) -> BuildingPartMaterial& = delete;
+  auto operator=(BuildingPartMaterial&&) -> BuildingPartMaterial& = delete;
+  ~BuildingPartMaterial() { m_desc->set_material(m_previous); }
+
+private:
+  BuildingArchetypeDesc* m_desc;
+  int m_previous;
 };
 
 class BuildingPartLabel {

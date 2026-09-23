@@ -179,3 +179,21 @@ TEST_F(CameraFramingTest, AResetRestoresTheFramingEvenWhileFollowing) {
   EXPECT_GT(height_after_reset, 1.0F)
       << "the reset left the camera down at ground level";
 }
+
+TEST_F(CameraFramingTest, FollowingAJumpingSelectionKeepsTheViewingAngle) {
+  Render::GL::Camera camera;
+  camera.set_map_bounds({.tile_size = 1.0F, .width = 128, .height = 128});
+  camera.set_rts_view(QVector3D(0.0F, 0.0F, 0.0F), 30.0F, 48.0F, 225.0F);
+  settle(camera);
+  camera.set_follow_enabled(true);
+  camera.capture_follow_offset();
+  float const pitch_before = camera.get_pitch_deg();
+  float const height_before = height_above_target(camera);
+
+  for (int frame = 0; frame < 3; ++frame) {
+    camera.update_follow(QVector3D(30.0F, 0.0F, 20.0F));
+    EXPECT_NEAR(camera.get_pitch_deg(), pitch_before, 0.5F)
+        << "frame " << frame << ": the camera swung towards the horizon mid-follow";
+    EXPECT_NEAR(height_above_target(camera), height_before, 1.0F);
+  }
+}

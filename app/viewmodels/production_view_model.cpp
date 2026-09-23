@@ -1,5 +1,6 @@
 #include "app/viewmodels/production_view_model.h"
 
+#include <QColor>
 #include <QCoreApplication>
 #include <QStringView>
 
@@ -19,6 +20,8 @@
 #include "game/render_bridge/selection_controller.h"
 #include "game/session/session_context.h"
 #include "game/systems/marketplace_system.h"
+#include "game/systems/owner_registry.h"
+#include "game/systems/player_resource_registry.h"
 #include "game/systems/resource_types.h"
 #include "game/units/spawn_type.h"
 
@@ -54,6 +57,9 @@ auto trade_resource_label(QStringView key) -> QString {
   }
   if (key == QLatin1String("iron")) {
     return QCoreApplication::translate("ProductionViewModel", "iron");
+  }
+  if (key == QLatin1String("gold")) {
+    return QCoreApplication::translate("ProductionViewModel", "gold");
   }
   return key.toString();
 }
@@ -195,6 +201,81 @@ auto ProductionViewModel::trade(const QString& resource_key,
       m_context.local_owner_id,
       Game::Command::Trade{.resource = *resource_type, .direction = direction});
 
+  emit player_state_stale();
+  return true;
+}
+
+auto ProductionViewModel::marketplace_allies() const -> QVariantList {
+  const auto frame_lock = m_host.lock_frame();
+  QVariantList allies;
+  if (m_context.session == nullptr) {
+    return allies;
+  }
+  const auto& owners = m_context.session->owners();
+  for (const auto& owner : owners.get_all_owners()) {
+    if (owner.owner_id == m_context.local_owner_id || owner.owner_id <= 0 ||
+        !owners.are_allies(m_context.local_owner_id, owner.owner_id)) {
+      continue;
+    }
+    QVariantMap entry;
+    entry["owner_id"] = owner.owner_id;
+    entry["name"] = QString::fromStdString(owner.name);
+    entry["is_ai"] = owner.type == Game::Systems::OwnerType::AI;
+    entry["color"] = QColor::fromRgbF(owner.color[0], owner.color[1], owner.color[2]);
+    allies.append(entry);
+  }
+  return allies;
+}
+
+auto ProductionViewModel::send_to_ally(int ally_owner,
+                                       const QString& resource_key,
+                                       int amount) -> bool {
+  return ally_tribute(ally_owner, resource_key, amount, false);
+}
+
+auto ProductionViewModel::request_from_ally(int ally_owner,
+                                            const QString& resource_key,
+                                            int amount) -> bool {
+  return ally_tribute(ally_owner, resource_key, amount, true);
+}
+
+auto ProductionViewModel::ally_tribute(int ally_owner,
+                                       const QString& resource_key,
+                                       int amount,
+                                       bool request) -> bool {
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  if (m_context.world == nullptr || m_context.session == nullptr) {
+    return false;
+  }
+  Game::Systems::ResourceType resource{};
+  if (!Game::Systems::resource_type_from_key(resource_key, resource)) {
+    emit refused(tr("Allies can only exchange gold, food, wood, stone or iron."));
+    return false;
+  }
+  if (!m_context.session->owners().are_allies(m_context.local_owner_id, ally_owner) ||
+      ally_owner == m_context.local_owner_id) {
+    emit refused(tr("Choose an ally to trade with."));
+    return false;
+  }
+  if (!Game::Systems::MarketplaceSystem::owner_has_marketplace(
+          *m_context.world, m_context.local_owner_id)) {
+    emit refused(tr("You need a marketplace to deal with your allies."));
+    return false;
+  }
+  const int clamped = std::clamp(amount, 1, Game::Systems::k_max_ally_tribute);
+  if (!request &&
+      m_context.session->economy().get(m_context.local_owner_id, resource) < clamped) {
+    emit refused(tr("Not enough %1 to send.").arg(trade_resource_label(resource_key)));
+    return false;
+  }
+  Game::Command::submit(*m_context.world,
+                        Game::Command::Source::LocalPlayer,
+                        m_context.local_owner_id,
+                        Game::Command::AllyTribute{.ally_owner = ally_owner,
+                                                   .resource = resource,
+                                                   .amount = clamped,
+                                                   .request = request});
   emit player_state_stale();
   return true;
 }

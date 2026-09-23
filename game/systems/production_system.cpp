@@ -590,6 +590,7 @@ auto complete_food_harvest(Engine::Core::World* world,
       return false;
     }
     crop->reset_after_harvest();
+    attach_harvest_flare(*world, target->get_id());
     reward = k_harvest_grain_food_reward;
   } else {
     slaughter_sheep(world, worker, target->get_id());

@@ -22,6 +22,7 @@ public:
 
 private:
   void queue_civilians_at_homes(const AISnapshot& snapshot,
+                                const AIContext& context,
                                 std::vector<AICommand>& out_commands) const;
   void deliver_idle_civilians(const AISnapshot& snapshot,
                               std::vector<AICommand>& out_commands) const;

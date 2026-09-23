@@ -64,6 +64,12 @@ void apply_move(World& world, const Move& move) {
                                            : std::nullopt});
   }
 
+  if (Game::Systems::OrderService::move_ends_builder_gather_job(move.kind)) {
+    for_each_subject(world, move.units, [&world](Entity& entity) {
+      Game::Systems::OrderService::clear_builder_gather_job(world, &entity);
+    });
+  }
+
   Game::Systems::CommandService::MoveOptions options;
   options.kind = move.kind;
   options.preserve_formation_mode = move.preserve_formation_mode;
@@ -73,7 +79,8 @@ void apply_move(World& world, const Move& move) {
 }
 
 void apply_stop(World& world, const Stop& stop) {
-  for_each_subject(world, stop.units, [](Entity& entity) {
+  for_each_subject(world, stop.units, [&world](Entity& entity) {
+    Game::Systems::OrderService::clear_builder_gather_job(world, &entity);
     Game::Systems::OrderService::apply_stop(&entity);
 
     if (auto* formation =
@@ -277,6 +284,25 @@ void apply_trade(World& world, int owner_id, const Trade& trade) {
   } else {
     static_cast<void>(marketplace.sell_resource(world, owner_id, trade.resource));
   }
+}
+
+void apply_ally_tribute(World& world, int owner_id, const AllyTribute& tribute) {
+  auto& marketplace = Game::Session::session_for(world).marketplace();
+  if (tribute.request) {
+    marketplace.queue_ally_request({.requester = owner_id,
+                                    .giver = tribute.ally_owner,
+                                    .resource = tribute.resource,
+                                    .amount = tribute.amount});
+    return;
+  }
+  const int sent = marketplace.send_to_ally(
+      world, owner_id, tribute.ally_owner, tribute.resource, tribute.amount);
+  marketplace.record_ally_answer({.requester = tribute.ally_owner,
+                                  .giver = owner_id,
+                                  .resource = tribute.resource,
+                                  .requested = tribute.amount,
+                                  .granted = sent,
+                                  .verdict = Game::Systems::AllyTributeVerdict::Sent});
 }
 
 void apply_commander_ability(World& world, const UseCommanderAbility& order) {
@@ -879,6 +905,8 @@ void dispatch(World& world, const Command& command) {
               world, payload.building, payload.product);
         } else if constexpr (std::is_same_v<T, Trade>) {
           apply_trade(world, command.owner_id, payload);
+        } else if constexpr (std::is_same_v<T, AllyTribute>) {
+          apply_ally_tribute(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, UseCommanderAbility>) {
           apply_commander_ability(world, payload);
         } else if constexpr (std::is_same_v<T, SetFormationMode>) {

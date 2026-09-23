@@ -317,7 +317,7 @@ Rectangle {
     }
 
     function construction_card_state(builderProd, constructionInfo) {
-        if (builderProd.in_progress)
+        if (builderProd.in_progress && !builderProd.gathering)
             return {
                 "enabled": false,
                 "reason": qsTr("Already building...")
@@ -1068,8 +1068,15 @@ Rectangle {
                     }
 
                     Grid {
+                        id: builderCardGrid
+
+                        readonly property int cardWidth: 150
+
+                        objectName: "builderCardGrid"
+
                         anchors.horizontalCenter: parent.horizontalCenter
-                        columns: 3
+
+                        columns: Math.max(1, Math.min(3, Math.floor((parent.width + columnSpacing) / (cardWidth + columnSpacing))))
                         columnSpacing: 8
                         rowSpacing: 8
 
@@ -1081,7 +1088,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderCatapultMouseArea.containsMouse
 
-                            width: 150
+                            width: builderCardGrid.cardWidth
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -1251,7 +1258,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderBallistaMouseArea.containsMouse
 
-                            width: 150
+                            width: builderCardGrid.cardWidth
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -1421,7 +1428,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderDefenseTowerMouseArea.containsMouse
 
-                            width: 150
+                            width: builderCardGrid.cardWidth
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -1591,7 +1598,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderHomeMouseArea.containsMouse
 
-                            width: 150
+                            width: builderCardGrid.cardWidth
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -1761,7 +1768,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderFarmMouseArea.containsMouse
 
-                            width: 150
+                            width: builderCardGrid.cardWidth
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -1931,7 +1938,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderWallSegmentMouseArea.containsMouse
 
-                            width: 150
+                            width: builderCardGrid.cardWidth
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -2101,7 +2108,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderWallGateMouseArea.containsMouse
 
-                            width: 150
+                            width: builderCardGrid.cardWidth
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -2271,7 +2278,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderMarketplaceMouseArea.containsMouse
 
-                            width: 150
+                            width: builderCardGrid.cardWidth
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -2441,7 +2448,7 @@ Rectangle {
                             property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderTempleMouseArea.containsMouse
 
-                            width: 150
+                            width: builderCardGrid.cardWidth
                             height: 80
                             radius: 6
                             color: productionPanel.recruit_card_color(is_enabled, is_hovered)
@@ -2809,6 +2816,149 @@ Rectangle {
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+
+                    Column {
+                        id: allyExchange
+
+                        readonly property var allies: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.marketplace_allies) ? productionPanel.production.marketplace_allies() : [])
+                        property int ally_index: 0
+                        property string resource_key: "wood"
+                        property int amount: 50
+                        readonly property var ally: allies.length > 0 ? allies[Math.min(ally_index, allies.length - 1)] : null
+                        readonly property int held: productionPanel.resource_amount(productionPanel.current_resources(), resource_key)
+
+                        objectName: "allyExchange"
+                        width: parent.width
+                        spacing: Design.Metrics.space4
+                        visible: marketplaceSection.trading
+
+                        Text {
+                            text: qsTr("ALLIES")
+                            color: hs.bronze
+                            font.pixelSize: Design.Typography.caption
+                            font.bold: true
+                        }
+
+                        Text {
+                            width: parent.width
+                            visible: allyExchange.allies.length === 0
+                            text: qsTr("No allies to trade with in this battle.")
+                            color: Theme.textDim
+                            font.pixelSize: Design.Typography.caption
+                            wrapMode: Text.WordWrap
+                        }
+
+                        Flow {
+                            width: parent.width
+                            spacing: Design.Metrics.space4
+                            visible: allyExchange.allies.length > 0
+
+                            Repeater {
+                                model: allyExchange.allies
+
+                                delegate: Design.IronButton {
+                                    required property var modelData
+                                    required property int index
+
+                                    objectName: "allyChip" + index
+                                    text: modelData.name
+                                    tone: allyExchange.ally_index === index ? "primary" : "secondary"
+                                    implicitHeight: marketplaceSection.row_height
+                                    onClicked: allyExchange.ally_index = index
+                                }
+                            }
+                        }
+
+                        Row {
+                            spacing: Design.Metrics.space4
+                            visible: allyExchange.allies.length > 0
+
+                            Repeater {
+                                model: ["gold", "food", "wood", "stone", "iron"]
+
+                                delegate: Rectangle {
+                                    required property string modelData
+
+                                    objectName: "allyResource_" + modelData
+                                    width: marketplaceSection.row_height
+                                    height: marketplaceSection.row_height
+                                    radius: 4
+                                    color: allyExchange.resource_key === modelData ? "#553A2410" : "transparent"
+                                    border.color: allyExchange.resource_key === modelData ? hs.bronze : hs.bronzeDeep
+                                    border.width: 1
+
+                                    Image {
+                                        anchors.centerIn: parent
+                                        width: parent.width - 8
+                                        height: width
+                                        source: productionPanel.cost_icon_source(modelData)
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: allyExchange.resource_key = modelData
+                                    }
+                                }
+                            }
+                        }
+
+                        Row {
+                            spacing: Design.Metrics.space4
+                            visible: allyExchange.allies.length > 0
+
+                            Repeater {
+                                model: [25, 50, 100, 200]
+
+                                delegate: Design.IronButton {
+                                    required property int modelData
+
+                                    objectName: "allyAmount" + modelData
+                                    text: modelData
+                                    tone: allyExchange.amount === modelData ? "primary" : "secondary"
+                                    implicitHeight: marketplaceSection.row_height
+                                    implicitWidth: Math.max(40, contentItem.implicitWidth + Design.Metrics.space12)
+                                    onClicked: allyExchange.amount = modelData
+                                }
+                            }
+                        }
+
+                        Row {
+                            spacing: Design.Metrics.space8
+                            visible: allyExchange.allies.length > 0
+
+                            Design.IronButton {
+                                objectName: "allySendButton"
+                                text: qsTr("Send")
+                                tone: "primary"
+                                enabled: allyExchange.ally !== null && allyExchange.held >= allyExchange.amount
+                                implicitHeight: marketplaceSection.row_height
+                                onClicked: {
+                                    if (productionPanel.production && allyExchange.ally)
+                                        productionPanel.production.send_to_ally(allyExchange.ally.owner_id, allyExchange.resource_key, allyExchange.amount);
+                                }
+                                ToolTip.visible: hovered
+                                ToolTip.delay: Design.Metrics.tooltipDelay
+                                ToolTip.text: allyExchange.ally ? qsTr("Give %1 %2 to %3").arg(allyExchange.amount).arg(allyExchange.resource_key).arg(allyExchange.ally.name) : ""
+                            }
+
+                            Design.IronButton {
+                                objectName: "allyRequestButton"
+                                text: qsTr("Request")
+                                enabled: allyExchange.ally !== null && allyExchange.ally.is_ai === true
+                                implicitHeight: marketplaceSection.row_height
+                                onClicked: {
+                                    if (productionPanel.production && allyExchange.ally)
+                                        productionPanel.production.request_from_ally(allyExchange.ally.owner_id, allyExchange.resource_key, allyExchange.amount);
+                                }
+                                ToolTip.visible: hovered
+                                ToolTip.delay: Design.Metrics.tooltipDelay
+                                ToolTip.text: allyExchange.ally ? qsTr("Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.").arg(allyExchange.ally.name).arg(allyExchange.amount).arg(allyExchange.resource_key) : ""
                             }
                         }
                     }

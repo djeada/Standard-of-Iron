@@ -29,7 +29,7 @@ cheapest_recruit_cost(const Game::Systems::AI::AIContext& ctx) -> int {
   }
   int cheapest = std::numeric_limits<int>::max();
   for (const auto& troop : ctx.nation->available_troops) {
-    if (Game::Units::is_commander_troop(troop.unit_type)) {
+    if (!Game::Systems::AI::is_foot_line_recruit(troop.unit_type)) {
       continue;
     }
     if (Game::Systems::recruiting_building_for(troop.unit_type) !=

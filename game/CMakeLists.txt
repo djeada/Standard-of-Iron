@@ -561,6 +561,8 @@ add_library(
     systems/ai_system/behaviors/production_behavior.cpp
     systems/ai_system/behaviors/gather_behavior.cpp
     systems/ai_system/behaviors/harass_behavior.cpp
+    systems/ai_system/behaviors/ally_aid_behavior.cpp
+    systems/ai_system/ai_tribute.cpp
     systems/ai_system/behaviors/assault_behavior.cpp
     systems/ai_system/behaviors/attack_behavior.cpp
     systems/ai_system/behaviors/local_engagement_behavior.cpp

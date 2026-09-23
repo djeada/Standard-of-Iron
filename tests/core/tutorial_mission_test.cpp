@@ -197,7 +197,7 @@ TEST_F(TutorialMissionTest, TheScoutingPartyWaitsToBeAttacked) {
   }
 }
 
-TEST_F(TutorialMissionTest, TheRaidClosesOnThePlayerCamp) {
+TEST_F(TutorialMissionTest, TheRaidClosesOnThePlayerCampWhileTheCommanderKeepsHisPost) {
   ASSERT_EQ(m_pending_waves.size(), 1U) << "the defend step expects one raid";
   const auto& wave = m_pending_waves.front();
   const QVector3D camp = wave.defense_reference_world_position;
@@ -222,10 +222,24 @@ TEST_F(TutorialMissionTest, TheRaidClosesOnThePlayerCamp) {
     return best;
   };
 
+  Engine::Core::Entity* roman_commander = nullptr;
+  for (auto* entity :
+       m_world.collect_entities_with<Engine::Core::CommanderComponent>()) {
+    const auto* unit = entity->get_component<UnitComponent>();
+    if (unit != nullptr && unit->owner_id != k_local_owner) {
+      roman_commander = entity;
+    }
+  }
+  ASSERT_NE(roman_commander, nullptr);
+  const QVector3D post = position(roman_commander);
+
   const float at_spawn = closest();
   for (int tick = 0; tick < 60 * 40; ++tick) {
     m_world.update(k_tick);
   }
   EXPECT_LT(closest(), at_spawn - 10.0F)
       << "the raid never marched on the camp the defend step guards";
+  EXPECT_LT((position(roman_commander) - post).length(), 13.0F)
+      << "the Roman commander followed the raid; the assault step expects him at "
+         "his outpost";
 }

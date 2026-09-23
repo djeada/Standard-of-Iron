@@ -14,4 +14,6 @@ void attach_spawn_flare(Engine::Core::World& world,
                         Game::Units::SpawnType spawn_type,
                         Engine::Core::SpawnFlareStyle style);
 
+void attach_harvest_flare(Engine::Core::World& world, Engine::Core::EntityID field_id);
+
 } // namespace Game::Systems

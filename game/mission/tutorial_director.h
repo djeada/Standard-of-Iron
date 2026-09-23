@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QJsonObject>
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -19,6 +20,8 @@ struct TutorialObservation {
   int selected_builder_count = 0;
   int selected_barracks_count = 0;
   int selected_building_count = 0;
+  int selected_home_count = 0;
+  int selected_civilian_count = 0;
   bool commander_selected = false;
 
   bool move_order_accepted = false;
@@ -30,7 +33,7 @@ struct TutorialObservation {
   bool build_order_accepted = false;
   QString last_rejection_reason;
 
-  int enemy_troops_defeated = 0;
+  int enemy_units_defeated = 0;
   int harvested_wood = 0;
   int harvested_stone = 0;
   int harvested_iron = 0;
@@ -136,6 +139,9 @@ public:
   void end();
   void advance(const TutorialObservation& observation, float real_dt);
 
+  [[nodiscard]] auto serialize() const -> QJsonObject;
+  void restore(const QJsonObject& state, int waves_cleared);
+
   Q_INVOKABLE void start();
   Q_INVOKABLE void skip_step();
   Q_INVOKABLE void replay_step();
@@ -190,7 +196,7 @@ signals:
 
 private:
   struct Baseline {
-    int enemy_troops_defeated = 0;
+    int enemy_units_defeated = 0;
     int harvested_wood = 0;
     int harvested_stone = 0;
     int harvested_iron = 0;

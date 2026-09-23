@@ -5,6 +5,7 @@
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
+#include "builder_product_types.h"
 
 namespace Game::Systems {
 
@@ -137,6 +138,24 @@ void OrderService::clear_builder_gather_order(Engine::Core::Entity* entity) {
     builder->clear_gather_order();
     builder->clear_auto_gather();
   }
+}
+
+void OrderService::clear_builder_gather_job(Engine::Core::World& world,
+                                            Engine::Core::Entity* entity) {
+  if (entity == nullptr) {
+    return;
+  }
+  const auto* builder =
+      entity->get_component<Engine::Core::BuilderProductionComponent>();
+  if (builder == nullptr ||
+      !Game::Systems::is_gather_builder_product(builder->product_type)) {
+    return;
+  }
+  clear_builder_task(world, entity);
+}
+
+auto OrderService::move_ends_builder_gather_job(MoveOrderKind kind) -> bool {
+  return should_clear_auxiliary_orders(kind);
 }
 
 void OrderService::clear_builder_task(Engine::Core::World& world,

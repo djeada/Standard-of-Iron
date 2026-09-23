@@ -73,7 +73,8 @@ auto submit_player_order(Engine::Core::World& world,
   outcome.has_destination = request.has_destination;
   outcome.destination = request.destination;
 
-  if (every_unit_is_hauling(world, request.payload)) {
+  if (request.kind != OrderKind::Stop &&
+      every_unit_is_hauling(world, request.payload)) {
     outcome.unit_count = payload_unit_count(request.payload);
     outcome.status = OrderStatus::Rejected;
     auto refusal = hauling_load_reason();

@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include "registry.h"
+#include "siege_crew.h"
 
 namespace Render::GL {
 class Mesh;
@@ -17,7 +18,9 @@ struct SiegeTravelState {
   float left_roll{0.0F};
   float right_roll{0.0F};
   float movement{0.0F};
+  float travelled{0.0F};
   bool initialized{false};
+  SiegeCrewState crew{};
 };
 
 struct SiegeMotion {

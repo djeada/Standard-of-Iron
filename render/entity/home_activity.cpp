@@ -413,7 +413,31 @@ struct ResidentPose {
   float phase{0.0F};
   bool held{false};
   bool drawn{false};
+  std::uint16_t blend_clip{0xFFFFU};
+  float blend_phase{0.0F};
+  float blend_weight{0.0F};
 };
+
+constexpr float k_resident_turn_seconds = 0.6F;
+constexpr float k_resident_blend_seconds = 0.35F;
+
+auto resident_smooth(float t) -> float {
+  const float c = std::clamp(t, 0.0F, 1.0F);
+  return c * c * (3.0F - 2.0F * c);
+}
+
+auto resident_turn(float from, float to, float t) -> float {
+  return from + std::remainder(to - from, 360.0F) * resident_smooth(t);
+}
+
+void blend_from(ResidentPose& pose, std::uint16_t clip, float phase, float elapsed) {
+  if (elapsed < 0.0F || elapsed >= k_resident_blend_seconds || clip == pose.clip) {
+    return;
+  }
+  pose.blend_clip = clip;
+  pose.blend_phase = phase - std::floor(phase);
+  pose.blend_weight = 1.0F - resident_smooth(elapsed / k_resident_blend_seconds);
+}
 
 auto resident_pose(const DrawContext& ctx,
                    const DoorFrame& frame,
@@ -433,6 +457,7 @@ auto resident_pose(const DrawContext& ctx,
       visit.residents > 1 ? visit.lateral + (r == 0 ? -0.55F : 0.55F) : visit.lateral;
   const float time = ctx.animation_time;
   const float idle_rate = 0.24F + (0.10F * roll(seed, 11U));
+  const float breath_rate = 1.0F / (7.0F + (2.0F * roll(seed, 15U)));
   const float idle_phase = roll(seed, 12U);
 
   auto along = [&](float out, float across) {
@@ -457,11 +482,16 @@ auto resident_pose(const DrawContext& ctx,
     return pose;
   }
   if (t >= duration - step) {
-    const float s = 1.0F - ((t - (duration - step)) / step);
+    const float back = t - (duration - step);
+    const float s = 1.0F - (back / step);
     pose.position = path(s);
-    pose.yaw = yaw_of(-heading);
+    const float settled_yaw =
+        yaw_of(frame.outward) + ((roll(seed, 13U) - 0.5F) * 60.0F);
+    pose.yaw =
+        resident_turn(settled_yaw, yaw_of(-heading), back / k_resident_turn_seconds);
     pose.clip = Animation::k_humanoid_walk_clip;
     pose.phase = (visit.out_metres * (1.0F - s)) / Spill::k_walk_metres_per_cycle;
+    blend_from(pose, Animation::k_humanoid_idle_clip, time * breath_rate, back);
     pose.position = ground(ctx, frame, pose.position, visit.out_metres * s);
     return pose;
   }
@@ -473,6 +503,7 @@ auto resident_pose(const DrawContext& ctx,
   const float turn = (roll(seed, 13U) - 0.5F) * 60.0F;
   pose.yaw = yaw_of(frame.outward) + turn;
   pose.phase = (time * idle_rate) + idle_phase;
+  const float arrival_phase = visit.out_metres / Spill::k_walk_metres_per_cycle;
   switch (visit.activity) {
   case DoorstepActivity::Stand:
     pose.clip = Animation::k_humanoid_idle_weave_clip;
@@ -525,15 +556,35 @@ auto resident_pose(const DrawContext& ctx,
     walked = std::clamp(walked, 0.0F, visit.errand_metres);
     pose.position = ground(
         ctx, frame, settle + (frame.lateral * (side * walked)), visit.out_metres);
+    const float out_yaw = yaw_of((far_end - settle).normalized());
+    const float pause_yaw = yaw_of(frame.outward) + (side * 40.0F);
     if (walking) {
       pose.clip = Animation::k_humanoid_walk_clip;
-      pose.phase = walked / Spill::k_walk_metres_per_cycle;
-      pose.yaw = yaw_of((back ? settle - far_end : far_end - settle).normalized());
+      const float covered =
+          back ? visit.errand_metres + (visit.errand_metres - walked) : walked;
+      pose.phase = (arrival_phase * Spill::k_walk_metres_per_cycle + covered) /
+                   Spill::k_walk_metres_per_cycle;
+      if (back) {
+        const float since = busy - leg - pause;
+        pose.yaw =
+            resident_turn(pause_yaw, out_yaw + 180.0F, since / k_resident_turn_seconds);
+        blend_from(pose, Animation::k_humanoid_idle_weave_clip, pose.phase, since);
+      } else {
+        pose.yaw =
+            resident_turn(yaw_of(heading), out_yaw, busy / k_resident_turn_seconds);
+      }
     } else {
       pose.clip = Animation::k_humanoid_idle_weave_clip;
-      pose.yaw = yaw_of(frame.outward) + (side * 40.0F);
+      const float since = busy - leg;
+      pose.yaw = resident_turn(out_yaw, pause_yaw, since / k_resident_turn_seconds);
+      blend_from(
+          pose,
+          Animation::k_humanoid_walk_clip,
+          (arrival_phase * Spill::k_walk_metres_per_cycle + visit.errand_metres) /
+              Spill::k_walk_metres_per_cycle,
+          since);
     }
-    break;
+    return pose;
   }
   case DoorstepActivity::Talk: {
 
@@ -542,10 +593,18 @@ auto resident_pose(const DrawContext& ctx,
     pose.yaw = yaw_of((other - settle).normalized());
     pose.clip = r == 0 ? Animation::k_humanoid_idle_clip
                        : Animation::k_humanoid_idle_weave_clip;
+    if (r == 0) {
+      pose.phase = (time * breath_rate) + idle_phase;
+    }
     break;
   }
   case DoorstepActivity::Count:
     break;
+  }
+  const float heading_yaw = yaw_of(heading);
+  pose.yaw = resident_turn(heading_yaw, pose.yaw, busy / k_resident_turn_seconds);
+  if (!pose.held) {
+    blend_from(pose, Animation::k_humanoid_walk_clip, arrival_phase, busy);
   }
   return pose;
 }
@@ -593,6 +652,9 @@ void submit_doorstep_residents(const DrawContext& ctx,
                            .instance = static_cast<std::uint16_t>(2 + r),
                            .seed = seed,
                            .distant = false,
+                           .blend_clip = pose.blend_clip,
+                           .blend_phase = pose.blend_phase,
+                           .blend_weight = pose.blend_weight,
                        });
     --activity->remaining_actors;
     ++submitted;

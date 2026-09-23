@@ -46,6 +46,8 @@ auto payload_name(const Payload& payload) -> const char* {
           return "produce";
         } else if constexpr (std::is_same_v<T, Trade>) {
           return "trade";
+        } else if constexpr (std::is_same_v<T, AllyTribute>) {
+          return "ally-tribute";
         } else if constexpr (std::is_same_v<T, UseCommanderAbility>) {
           return "use-commander-ability";
         } else if constexpr (std::is_same_v<T, SetFormationMode>) {

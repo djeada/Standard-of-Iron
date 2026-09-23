@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#include "../../core/component_combat.h"
 #include "../../core/component_economy.h"
 #include "../../core/world.h"
 #include "../../game_config.h"
@@ -19,6 +20,7 @@
 #include "../nation_registry.h"
 #include "../nav_grid.h"
 #include "../owner_queries.h"
+#include "../owner_registry.h"
 #include "../pathfinding.h"
 #include "../player_resource_registry.h"
 #include "ai_utils.h"
@@ -55,6 +57,92 @@ private:
   const Game::Systems::NationRegistry* m_nations;
   std::unordered_map<int, bool> m_resolved;
 };
+
+void collect_ally_calls(const Engine::Core::World& world,
+                        const std::vector<Engine::Core::Entity*>& allied_units,
+                        Game::Systems::AI::AISnapshot& snapshot) {
+  using Game::Systems::AI::AllyCall;
+  struct Seat {
+    float x;
+    float z;
+  };
+  std::unordered_map<int, std::vector<Seat>> seats;
+  for (auto* entity : allied_units) {
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(entity->get_id());
+    const auto* transform =
+        world.try_get<Engine::Core::TransformComponent>(entity->get_id());
+    if (unit != nullptr && transform != nullptr &&
+        unit->spawn_type == Game::Units::SpawnType::Barracks) {
+      seats[unit->owner_id].push_back({transform->position.x, transform->position.z});
+    }
+  }
+
+  const float threat_sq = Game::Systems::AI::k_ally_base_threat_radius *
+                          Game::Systems::AI::k_ally_base_threat_radius;
+  for (const auto& [owner, owner_seats] : seats) {
+    for (const auto& seat : owner_seats) {
+      int threat = 0;
+      for (const auto& enemy : snapshot.visible_enemies) {
+        if (enemy.is_building || enemy.health <= 0 ||
+            !Game::Systems::AI::is_war_contact(enemy)) {
+          continue;
+        }
+        const float dx = enemy.pos_x - seat.x;
+        const float dz = enemy.pos_z - seat.z;
+        if (dx * dx + dz * dz <= threat_sq) {
+          ++threat;
+        }
+      }
+      if (threat >= Game::Systems::AI::k_ally_base_threat_minimum) {
+        snapshot.allies_under_attack.push_back(AllyCall{owner, seat.x, seat.z, threat});
+      }
+    }
+  }
+
+  struct Front {
+    float x = 0.0F;
+    float z = 0.0F;
+    int count = 0;
+  };
+  std::unordered_map<int, Front> fronts;
+  const float home_sq = Game::Systems::AI::k_ally_front_from_home *
+                        Game::Systems::AI::k_ally_front_from_home;
+  for (auto* entity : allied_units) {
+    const auto id = entity->get_id();
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
+    const auto* transform = world.try_get<Engine::Core::TransformComponent>(id);
+    const auto* attack = world.try_get<Engine::Core::AttackTargetComponent>(id);
+    if (unit == nullptr || transform == nullptr || attack == nullptr ||
+        attack->target_id == 0 || Game::Units::is_building_spawn(unit->spawn_type) ||
+        Game::Units::combat_role(unit->spawn_type) ==
+            Game::Units::CombatRole::Noncombatant) {
+      continue;
+    }
+    bool near_home = false;
+    if (const auto it = seats.find(unit->owner_id); it != seats.end()) {
+      for (const auto& seat : it->second) {
+        const float dx = transform->position.x - seat.x;
+        const float dz = transform->position.z - seat.z;
+        near_home = near_home || dx * dx + dz * dz <= home_sq;
+      }
+    }
+    if (near_home) {
+      continue;
+    }
+    auto& front = fronts[unit->owner_id];
+    front.x += transform->position.x;
+    front.z += transform->position.z;
+    ++front.count;
+  }
+  for (const auto& [owner, front] : fronts) {
+    if (front.count < Game::Systems::AI::k_ally_front_minimum) {
+      continue;
+    }
+    const float inv = 1.0F / static_cast<float>(front.count);
+    snapshot.ally_attacks.push_back(
+        AllyCall{owner, front.x * inv, front.z * inv, front.count});
+  }
+}
 
 auto collect_vision_sources(const std::vector<Engine::Core::Entity*>& entities)
     -> std::vector<VisionSource> {
@@ -198,6 +286,8 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
   attach_nation(snapshot, ai_owner_id, session.nations());
   snapshot.max_troops_per_player =
       Game::GameConfig::instance().get_max_troops_per_player();
+  snapshot.troop_count =
+      Game::Systems::authoritative_troop_count_for(world, ai_owner_id);
   if (const auto* height_map =
           terrain_service.is_initialized() ? terrain_service.get_height_map() : nullptr;
       height_map != nullptr && height_map->get_width() > 0 &&
@@ -211,7 +301,17 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     snapshot.map_min_z = -half_h * tile;
     snapshot.map_max_z = half_h * tile;
   }
-  const auto vision_sources = collect_vision_sources(friendlies);
+  std::vector<Engine::Core::Entity*> allied_units;
+  for (auto* entity : world.get_units_not_owned_by(ai_owner_id)) {
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(entity->get_id());
+    if (unit != nullptr && unit->health > 0 &&
+        session.owners().are_allies(ai_owner_id, unit->owner_id)) {
+      allied_units.push_back(entity);
+    }
+  }
+  std::vector<Engine::Core::Entity*> sighted_by = friendlies;
+  sighted_by.insert(sighted_by.end(), allied_units.begin(), allied_units.end());
+  const auto vision_sources = collect_vision_sources(sighted_by);
   const PointGrid vision_grid = build_vision_grid(vision_sources);
   snapshot.friendly_units.reserve(friendlies.size());
 
@@ -483,6 +583,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
   if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
     snapshot.navigation_revision = pathfinder->navigation_revision();
   }
+  collect_ally_calls(world, allied_units, snapshot);
 
   for (auto& friendly : snapshot.friendly_units) {
     friendly.engagement_resolved = true;

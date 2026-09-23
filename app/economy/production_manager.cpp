@@ -24,6 +24,7 @@
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/build_site.h"
+#include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/construction_cost_catalog.h"
 #include "game/systems/food_targets.h"
@@ -1532,6 +1533,7 @@ auto ProductionManager::collect_available_builders(bool include_busy)
     if (builder_prod != nullptr && unit != nullptr &&
         unit->spawn_type == Game::Units::SpawnType::Builder && unit->health > 0 &&
         (include_busy ||
+         Game::Systems::is_gather_builder_product(builder_prod->product_type) ||
          (!builder_prod->in_progress && !builder_prod->has_construction_site))) {
       builders.push_back(id);
     }

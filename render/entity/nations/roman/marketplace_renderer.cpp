@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 
 #include "building_architecture.h"
@@ -129,15 +130,94 @@ void add_produce_basket(BuildingArchetypeDesc& desc,
   }
 }
 
+void add_lean_to_roof(BuildingArchetypeDesc& desc,
+                      float low_x,
+                      float high_x,
+                      float low_y,
+                      float high_y,
+                      float half_z,
+                      const RomanMarketPalette& c) {
+  const float run = high_x - low_x;
+  const float rise = high_y - low_y;
+  const float angle = std::atan2(rise, run) * 180.0F / 3.14159265F;
+  const float slope = std::sqrt(run * run + rise * rise);
+  {
+    BuildingPartMaterial clay(desc, k_building_material_stone);
+    desc.add_rotated_box(
+        QVector3D((low_x + high_x) * 0.5F, (low_y + high_y) * 0.5F, 0.0F),
+        QVector3D(slope * 0.5F + 0.03F, 0.018F, half_z + 0.04F),
+        QVector3D(0.0F, 0.0F, angle),
+        c.terracotta,
+        k_building_state_mask_intact);
+    const int rolls = static_cast<int>(half_z * 2.0F / 0.16F);
+    for (int i = 0; i <= rolls; ++i) {
+      const float z =
+          -half_z + static_cast<float>(i) * (half_z * 2.0F / static_cast<float>(rolls));
+      desc.add_cylinder(QVector3D(low_x - 0.02F, low_y + 0.024F, z),
+                        QVector3D(high_x + 0.01F, high_y + 0.030F, z),
+                        0.022F,
+                        (i % 2 == 0) ? c.terracotta_dark : c.terracotta,
+                        k_building_state_mask_intact);
+    }
+  }
+  BuildingPartMaterial wood(desc, k_building_material_wood);
+  for (float z = -half_z + 0.10F; z <= half_z - 0.05F; z += 0.34F) {
+    desc.add_box(QVector3D(low_x + 0.02F, low_y - 0.030F, z),
+                 QVector3D(0.035F, 0.018F, 0.018F),
+                 c.cedar_dark,
+                 k_building_state_mask_intact);
+  }
+}
+
+void add_stall(BuildingArchetypeDesc& desc,
+               float cx,
+               float cz,
+               float side,
+               const QVector3D& produce_a,
+               const QVector3D& produce_b,
+               const RomanMarketPalette& c) {
+  BuildingPartMaterial wood(desc, k_building_material_wood);
+  desc.add_box(QVector3D(cx, 0.352F, cz),
+               QVector3D(0.25F, 0.012F, 0.13F),
+               c.cedar,
+               BuildingStateMask::Normal | BuildingStateMask::Damaged);
+  desc.add_box(QVector3D(cx, 0.330F, cz + side * 0.125F),
+               QVector3D(0.25F, 0.018F, 0.006F),
+               c.cedar_dark,
+               BuildingStateMask::Normal | BuildingStateMask::Damaged);
+  for (float const lx : {-0.21F, 0.21F}) {
+    for (float const lz : {-0.10F, 0.10F}) {
+      desc.add_cylinder(QVector3D(cx + lx, 0.16F, cz + lz),
+                        QVector3D(cx + lx, 0.342F, cz + lz),
+                        0.014F,
+                        c.cedar_dark,
+                        k_building_state_mask_intact);
+    }
+  }
+  for (float const lx : {-0.26F, 0.26F}) {
+    desc.add_cylinder(QVector3D(cx + lx, 0.16F, cz + side * 0.22F),
+                      QVector3D(cx + lx, 0.87F, cz + side * 0.22F),
+                      0.016F,
+                      c.cedar_dark,
+                      k_building_state_mask_intact);
+    desc.add_cylinder(QVector3D(cx + lx, 0.16F, cz - side * 0.22F),
+                      QVector3D(cx + lx, 0.75F, cz - side * 0.22F),
+                      0.016F,
+                      c.cedar_dark,
+                      k_building_state_mask_intact);
+  }
+  add_produce_basket(desc, QVector3D(cx - 0.12F, 0.364F, cz), produce_a, produce_b, c);
+  add_produce_basket(desc, QVector3D(cx + 0.12F, 0.364F, cz), produce_b, c.olive, c);
+}
+
 auto build_marketplace_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   RomanMarketPalette const c;
-  float height_multiplier = 1.0F;
+  float hm = 1.0F;
   if (state == BuildingState::Damaged) {
-    height_multiplier = 0.7F;
+    hm = 0.75F;
   } else if (state == BuildingState::Destroyed) {
-    height_multiplier = 0.4F;
+    hm = 0.35F;
   }
-
   BuildingArchetypeDesc desc("roman_marketplace");
 
   desc.add_box(
@@ -146,238 +226,201 @@ auto build_marketplace_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
       QVector3D(0.0F, 0.10F, 0.0F), QVector3D(1.32F, 0.02F, 1.32F), c.limestone_shade);
   desc.add_box(
       QVector3D(0.0F, 0.14F, 0.0F), QVector3D(1.24F, 0.02F, 1.24F), c.limestone);
-
-  desc.add_box(QVector3D(0.0F, 0.165F, 0.0F),
-               QVector3D(0.90F, 0.005F, 0.90F),
-               c.marble,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(0.0F, 0.168F, 0.0F),
-               QVector3D(0.60F, 0.005F, 0.60F),
-               c.blue_accent,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(0.0F, 0.170F, 0.0F),
-               QVector3D(0.30F, 0.005F, 0.30F),
-               c.gold,
-               k_building_state_mask_intact);
-  for (float const offset : {-1.08F, -0.72F, 0.72F, 1.08F}) {
-    desc.add_box(QVector3D(offset, 0.171F, 0.0F),
-                 QVector3D(0.010F, 0.004F, 1.18F),
-                 c.limestone_dark,
+  for (float g = -0.90F; g <= 0.91F; g += 0.30F) {
+    desc.add_box(QVector3D(g, 0.1615F, -0.02F),
+                 QVector3D(0.005F, 0.0015F, 1.18F),
+                 c.mortar,
                  k_building_state_mask_intact);
-    desc.add_box(QVector3D(0.0F, 0.172F, offset),
-                 QVector3D(1.18F, 0.004F, 0.010F),
+    desc.add_box(QVector3D(-0.33F, 0.1615F, g),
+                 QVector3D(0.86F, 0.0015F, 0.005F),
                  c.mortar,
                  k_building_state_mask_intact);
   }
 
-  float const wall_h = 0.46F * height_multiplier;
-  desc.add_box(QVector3D(0.92F, wall_h * 0.5F + 0.16F, 0.0F),
-               QVector3D(0.12F, wall_h * 0.5F, 1.10F),
+  float const wall_h = 0.62F * hm;
+  float const wall_top = 0.16F + wall_h;
+  desc.add_box(QVector3D(1.16F, 0.16F + wall_h * 0.5F, 0.0F),
+               QVector3D(0.06F, wall_h * 0.5F, 1.22F),
                c.limestone);
-
-  desc.add_box(QVector3D(0.92F, wall_h + 0.18F, 0.0F),
-               QVector3D(0.14F, 0.04F, 1.14F),
-               c.limestone_shade,
-               k_building_state_mask_intact);
-  for (int course = 1; course < 4; ++course) {
-    float const course_y = 0.16F + wall_h * static_cast<float>(course) / 4.0F;
-    desc.add_box(QVector3D(0.795F, course_y, 0.0F),
-                 QVector3D(0.006F, 0.010F, 1.07F),
-                 c.mortar,
-                 k_building_state_mask_intact);
-  }
-  for (float const joint_z : {-0.72F, -0.24F, 0.24F, 0.72F}) {
-    desc.add_box(QVector3D(0.794F, 0.16F + wall_h * 0.50F, joint_z),
-                 QVector3D(0.006F, wall_h * 0.48F, 0.008F),
-                 c.limestone_dark,
-                 k_building_state_mask_intact);
-  }
-
-  float const col_height = 0.82F * height_multiplier;
-  float const col_radius = 0.05F;
-  for (float const cz : {-0.80F, -0.27F, 0.27F, 0.80F}) {
-
-    desc.add_box(QVector3D(-0.96F, 0.18F, cz),
-                 QVector3D(col_radius * 1.3F, 0.04F, col_radius * 1.3F),
-                 c.marble,
-                 BuildingStateMask::All);
-
-    desc.add_cylinder(QVector3D(-0.96F, 0.16F, cz),
-                      QVector3D(-0.96F, 0.16F + col_height, cz),
-                      col_radius,
-                      c.limestone_shade);
-
-    for (const float y : {0.22F, 0.16F + col_height - 0.06F}) {
-      desc.add_cylinder(QVector3D(-0.96F, y, cz),
-                        QVector3D(-0.96F, y + 0.025F, cz),
-                        col_radius * 1.24F,
-                        c.marble,
-                        k_building_state_mask_intact);
-    }
-
-    desc.add_box(QVector3D(-0.96F, 0.16F + col_height + 0.04F, cz),
-                 QVector3D(col_radius * 1.5F, 0.05F, col_radius * 1.5F),
+  for (float const z : {-1.17F, -0.40F, 0.40F, 1.17F}) {
+    desc.add_box(QVector3D(0.85F, 0.16F + wall_h * 0.5F - 0.004F, z),
+                 QVector3D(0.27F, wall_h * 0.5F - 0.004F, 0.04F),
+                 c.limestone_shade);
+    desc.add_box(QVector3D(0.585F, 0.16F + wall_h * 0.5F, z),
+                 QVector3D(0.012F, wall_h * 0.5F, 0.052F),
                  c.marble,
                  k_building_state_mask_intact);
   }
-
-  float const entab_y = 0.16F + col_height + 0.10F;
-  desc.add_box(QVector3D(-0.96F, entab_y, 0.0F),
-               QVector3D(0.08F, 0.05F, 0.92F),
+  for (float const zc : {-0.79F, 0.0F, 0.79F}) {
+    desc.add_box(QVector3D(1.097F, 0.16F + wall_h * 0.5F, zc),
+                 QVector3D(0.004F, wall_h * 0.5F - 0.01F, 0.34F),
+                 c.limestone_dark * 0.72F,
+                 k_building_state_mask_intact);
+    desc.add_box(QVector3D(0.67F, 0.26F, zc),
+                 QVector3D(0.07F, 0.10F, 0.30F),
+                 c.limestone_shade,
+                 k_building_state_mask_intact);
+    desc.add_box(QVector3D(0.67F, 0.366F, zc),
+                 QVector3D(0.09F, 0.008F, 0.32F),
+                 c.marble,
+                 k_building_state_mask_intact);
+  }
+  desc.add_box(QVector3D(0.58F, wall_top + 0.03F, 0.0F),
+               QVector3D(0.05F, 0.035F, 1.22F),
                c.limestone,
                k_building_state_mask_intact);
+  desc.add_box(QVector3D(0.522F, wall_top + 0.005F, 0.0F),
+               QVector3D(0.006F, 0.012F, 1.20F),
+               c.blue_accent,
+               BuildingStateMask::Normal);
+  add_lean_to_roof(desc, 0.50F, 1.24F, wall_top + 0.08F, wall_top + 0.30F, 1.22F, c);
 
-  float const counter_h = 0.44F * height_multiplier;
-  desc.add_box(
-      QVector3D(-0.20F, counter_h, 0.0F), QVector3D(0.62F, 0.05F, 0.86F), c.cedar);
-  for (int plank = 0; plank < 5; ++plank) {
-    float const z = -0.68F + static_cast<float>(plank) * 0.34F;
-    desc.add_box(QVector3D(-0.20F, counter_h + 0.055F, z),
-                 QVector3D(0.60F, 0.009F, 0.158F),
-                 (plank % 2 == 0) ? c.cedar_light : c.cedar,
-                 BuildingStateMask::Normal | BuildingStateMask::Damaged);
+  {
+    BuildingPartMaterial clay(desc, k_building_material_stone);
+    for (float const z : {-0.98F, -0.82F, -0.66F}) {
+      add_amphora(desc, QVector3D(0.95F, 0.16F, z), c.terracotta, c.terracotta_dark);
+    }
+    add_amphora(
+        desc, QVector3D(0.67F, 0.374F, -0.94F), c.terracotta_dark, c.cloth_gold);
   }
-
-  desc.add_box(QVector3D(-0.20F, counter_h * 0.5F, -0.78F),
-               QVector3D(0.04F, counter_h * 0.5F - 0.04F, 0.04F),
-               c.cedar_dark,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(-0.20F, counter_h * 0.5F, 0.78F),
-               QVector3D(0.04F, counter_h * 0.5F - 0.04F, 0.04F),
-               c.cedar_dark,
-               k_building_state_mask_intact);
-  for (float const z : {-0.78F, 0.78F}) {
-    desc.add_cylinder(QVector3D(-0.76F, 0.18F, z),
-                      QVector3D(0.36F, counter_h - 0.04F, z),
-                      0.018F,
-                      c.cedar_dark,
-                      k_building_state_mask_intact);
+  add_produce_basket(desc, QVector3D(0.67F, 0.374F, -0.17F), c.ochre, c.terracotta, c);
+  add_produce_basket(desc, QVector3D(0.67F, 0.374F, 0.17F), c.olive, c.grape, c);
+  {
+    BuildingPartMaterial cloth(desc, k_building_material_cloth);
+    int bolt = 0;
+    for (float const z : {0.60F, 0.74F, 0.88F}) {
+      for (float const y : {0.40F, 0.455F}) {
+        QVector3D const colour = (bolt % 3 == 0)   ? c.cloth_red
+                                 : (bolt % 3 == 1) ? c.cloth_gold
+                                                   : c.blue_accent;
+        desc.add_cylinder(QVector3D(0.61F, y, z),
+                          QVector3D(0.73F, y, z),
+                          0.028F,
+                          colour,
+                          BuildingStateMask::Normal);
+        ++bolt;
+      }
+    }
   }
-
-  const float portico_eave = entab_y + 0.08F;
-  for (const float z : {-0.80F, 0.80F}) {
-    desc.add_box(
-        QVector3D(0.32F, 0.18F, z), QVector3D(0.085F, 0.04F, 0.085F), c.marble);
-    desc.add_cylinder(QVector3D(0.32F, 0.20F, z),
-                      QVector3D(0.32F, portico_eave - 0.05F, z),
-                      0.055F,
-                      c.limestone,
-                      k_building_state_mask_intact);
-    desc.add_box(QVector3D(0.32F, portico_eave - 0.04F, z),
-                 QVector3D(0.085F, 0.04F, 0.085F),
-                 c.marble,
-                 k_building_state_mask_intact);
-  }
-  desc.add_box(QVector3D(0.32F, portico_eave - 0.025F, 0.0F),
-               QVector3D(0.08F, 0.035F, 0.94F),
-               c.limestone,
-               k_building_state_mask_intact);
-  add_tiled_roof(
-      desc, QVector3D(-0.32F, portico_eave, 0.0F), 1.02F, 0.72F, 0.32F, true);
-
-  for (float const z : {-0.74F, 0.0F, 0.74F}) {
-    desc.add_box(
-        QVector3D(0.46F, 0.16F + 0.19F, z), QVector3D(0.26F, 0.035F, 0.28F), c.cedar);
-    for (float const sz : {-1.0F, 1.0F}) {
-      desc.add_box(QVector3D(0.46F, 0.16F + 0.095F, z + sz * 0.24F),
-                   QVector3D(0.030F, 0.095F, 0.030F),
-                   c.cedar_dark,
-                   k_building_state_mask_intact);
+  {
+    BuildingPartMaterial metal(desc, k_building_material_metal);
+    float const top = 0.374F;
+    desc.add_cylinder(QVector3D(0.67F, top, 0.0F),
+                      QVector3D(0.67F, top + 0.22F, 0.0F),
+                      0.010F,
+                      c.bronze,
+                      BuildingStateMask::Normal);
+    desc.add_cylinder(QVector3D(0.67F, top + 0.20F, -0.12F),
+                      QVector3D(0.67F, top + 0.20F, 0.12F),
+                      0.008F,
+                      c.bronze,
+                      BuildingStateMask::Normal);
+    for (float const z : {-0.11F, 0.11F}) {
+      desc.add_cylinder(QVector3D(0.67F, top + 0.20F, z),
+                        QVector3D(0.67F, top + 0.11F, z),
+                        0.003F,
+                        c.iron,
+                        BuildingStateMask::Normal);
+      desc.add_cylinder(QVector3D(0.67F, top + 0.10F, z),
+                        QVector3D(0.67F, top + 0.11F, z),
+                        0.045F,
+                        c.bronze,
+                        BuildingStateMask::Normal);
     }
   }
 
-  for (float const z : {-0.52F, 0.52F}) {
-    desc.add_box(QVector3D(-0.35F, 0.34F, z),
-                 QVector3D(0.42F, 0.055F, 0.22F),
-                 c.cedar,
-                 BuildingStateMask::Normal | BuildingStateMask::Damaged);
-    for (float const x : {-0.68F, -0.02F}) {
-      desc.add_box(QVector3D(x, 0.22F, z),
-                   QVector3D(0.035F, 0.17F, 0.035F),
-                   c.cedar_dark,
-                   k_building_state_mask_intact);
-    }
-    add_produce_basket(desc,
-                       QVector3D(-0.50F, 0.395F, z),
-                       z < 0.0F ? c.ochre : c.olive,
-                       z < 0.0F ? c.terracotta : c.grape,
-                       c);
-    add_produce_basket(desc, QVector3D(-0.20F, 0.395F, z), c.olive, c.ochre, c);
-  }
-  desc.add_box(QVector3D(-0.92F, 0.35F, 0.0F),
-               QVector3D(0.13F, 0.20F, 0.13F),
-               c.limestone_shade,
-               k_building_state_mask_intact);
-  desc.add_cylinder(QVector3D(-0.92F, 0.55F, 0.0F),
-                    QVector3D(-0.92F, 0.82F, 0.0F),
-                    0.055F,
-                    c.gold,
+  add_stall(desc, -0.40F, 0.80F, 1.0F, c.ochre, c.terracotta, c);
+  add_stall(desc, -0.40F, -0.80F, -1.0F, c.grape, c.olive, c);
+
+  desc.add_cylinder(QVector3D(-0.30F, 0.16F, 0.0F),
+                    QVector3D(-0.30F, 0.165F, 0.0F),
+                    0.30F,
+                    c.limestone_dark,
+                    BuildingStateMask::All);
+  desc.add_cylinder(QVector3D(-0.30F, 0.16F, 0.0F),
+                    QVector3D(-0.30F, 0.26F * std::max(hm, 0.6F), 0.0F),
+                    0.20F,
+                    c.marble);
+  desc.add_cylinder(QVector3D(-0.30F, 0.16F, 0.0F),
+                    QVector3D(-0.30F, 0.255F, 0.0F),
+                    0.17F,
+                    QVector3D(0.22F, 0.38F, 0.44F),
+                    k_building_state_mask_intact);
+  desc.add_cylinder(QVector3D(-0.30F, 0.16F, 0.0F),
+                    QVector3D(-0.30F, 0.46F, 0.0F),
+                    0.035F,
+                    c.marble,
+                    k_building_state_mask_intact);
+  desc.add_cone(QVector3D(-0.30F, 0.44F, 0.0F),
+                QVector3D(-0.30F, 0.40F, 0.0F),
+                0.10F,
+                c.marble,
+                k_building_state_mask_intact);
+  desc.add_cylinder(QVector3D(-0.30F, 0.44F, 0.0F),
+                    QVector3D(-0.30F, 0.455F, 0.0F),
+                    0.09F,
+                    QVector3D(0.30F, 0.48F, 0.54F),
                     BuildingStateMask::Normal);
 
-  desc.add_box(QVector3D(0.50F, 0.28F, -0.70F),
-               QVector3D(0.14F, 0.10F, 0.14F),
-               c.cedar_dark,
-               BuildingStateMask::Normal);
-  for (float const y : {0.22F, 0.28F, 0.34F}) {
-    desc.add_box(QVector3D(0.50F, y, -0.845F),
-                 QVector3D(0.13F, 0.012F, 0.008F),
+  float const col_h = 0.84F * hm;
+  for (float const z : {-0.52F, 0.52F}) {
+    desc.add_box(QVector3D(-1.12F, 0.19F, z),
+                 QVector3D(0.075F, 0.03F, 0.075F),
+                 c.marble,
+                 BuildingStateMask::All);
+    desc.add_cylinder(QVector3D(-1.12F, 0.16F, z),
+                      QVector3D(-1.12F, 0.16F + col_h, z),
+                      0.052F,
+                      c.limestone_shade);
+    desc.add_box(QVector3D(-1.12F, 0.16F + col_h + 0.03F, z),
+                 QVector3D(0.075F, 0.03F, 0.075F),
+                 c.marble,
+                 k_building_state_mask_intact);
+  }
+  float const gate_y = 0.16F + col_h + 0.10F;
+  desc.add_box(QVector3D(-1.12F, gate_y, 0.0F),
+               QVector3D(0.07F, 0.065F, 0.64F),
+               c.limestone,
+               k_building_state_mask_intact);
+  desc.add_box(QVector3D(-1.12F, gate_y + 0.085F, 0.0F),
+               QVector3D(0.085F, 0.02F, 0.68F),
+               c.limestone_shade,
+               k_building_state_mask_intact);
+  add_roman_aquila_relief(desc,
+                          QVector3D(-1.15F, gate_y + 0.21F, 0.0F),
+                          BuildingFacadePlane::ZY,
+                          0.30F,
+                          c.gold,
+                          c.terracotta_dark);
+  {
+    BuildingPartMaterial cloth(desc, k_building_material_cloth);
+    desc.add_palette_box(QVector3D(-1.10F, gate_y - 0.15F, 0.0F),
+                         QVector3D(0.006F, 0.085F, 0.075F),
+                         k_marketplace_team_slot,
+                         BuildingStateMask::Normal);
+  }
+
+  {
+    BuildingPartMaterial wood(desc, k_building_material_wood);
+    desc.add_box(QVector3D(-0.98F, 0.24F, 1.02F),
+                 QVector3D(0.09F, 0.08F, 0.09F),
+                 c.cedar_dark,
+                 BuildingStateMask::Normal | BuildingStateMask::Damaged);
+    desc.add_box(QVector3D(-0.80F, 0.22F, 1.06F),
+                 QVector3D(0.07F, 0.06F, 0.07F),
+                 c.cedar,
+                 BuildingStateMask::Normal);
+    desc.add_box(QVector3D(-0.97F, 0.37F, 1.02F),
+                 QVector3D(0.07F, 0.05F, 0.07F),
                  c.cedar_light,
                  BuildingStateMask::Normal);
   }
-  desc.add_box(QVector3D(0.50F, 0.28F, 0.68F),
-               QVector3D(0.12F, 0.10F, 0.12F),
-               c.cedar,
-               BuildingStateMask::Normal);
-  add_amphora(desc,
-              QVector3D(0.02F, counter_h + 0.06F, -0.46F),
-              c.terracotta,
-              c.terracotta_dark);
-  add_amphora(desc, QVector3D(0.42F, 0.18F, 0.37F), c.terracotta_dark, c.cloth_gold);
-
-  desc.add_cylinder(QVector3D(0.20F, counter_h + 0.06F, 0.28F),
-                    QVector3D(0.20F, counter_h + 0.32F, 0.28F),
-                    0.012F,
-                    c.bronze,
-                    BuildingStateMask::Normal);
-  desc.add_cylinder(QVector3D(0.06F, counter_h + 0.29F, 0.28F),
-                    QVector3D(0.34F, counter_h + 0.29F, 0.28F),
-                    0.010F,
-                    c.bronze,
-                    BuildingStateMask::Normal);
-  for (float const x : {0.07F, 0.33F}) {
-    desc.add_cylinder(QVector3D(x, counter_h + 0.29F, 0.28F),
-                      QVector3D(x, counter_h + 0.19F, 0.28F),
-                      0.004F,
-                      c.iron,
-                      BuildingStateMask::Normal);
-    desc.add_cone(QVector3D(x, counter_h + 0.20F, 0.28F),
-                  QVector3D(x, counter_h + 0.17F, 0.28F),
-                  0.060F,
-                  c.bronze,
-                  BuildingStateMask::Normal);
+  {
+    BuildingPartMaterial clay(desc, k_building_material_stone);
+    add_amphora(desc, QVector3D(-0.98F, 0.16F, -1.04F), c.terracotta, c.cloth_gold);
+    add_amphora(
+        desc, QVector3D(-0.84F, 0.16F, -1.08F), c.terracotta_dark, c.terracotta);
   }
-
-  desc.add_box(QVector3D(0.92F, wall_h * 0.6F + 0.16F, 0.0F),
-               QVector3D(0.005F, 0.03F, 1.06F),
-               c.blue_accent,
-               BuildingStateMask::Normal);
-
-  desc.add_box(QVector3D(-0.96F, entab_y + 0.06F, 0.0F),
-               QVector3D(0.06F, 0.05F, 0.06F),
-               c.gold,
-               BuildingStateMask::Normal);
-
-  desc.add_palette_box(QVector3D(0.96F, 0.56F * height_multiplier, 0.0F),
-                       QVector3D(0.02F, 0.22F, 0.14F),
-                       k_marketplace_team_slot,
-                       BuildingStateMask::Normal | BuildingStateMask::Damaged);
-
-  add_roman_aquila_relief(desc,
-                          QVector3D(0.99F, 0.62F * height_multiplier, 0.0F),
-                          BuildingFacadePlane::ZY,
-                          0.72F,
-                          c.gold,
-                          c.terracotta_dark);
 
   add_ruin_dressing(desc,
                     RuinDressing{.extent = QVector3D(1.16F, 0.0F, 1.16F),
@@ -402,55 +445,121 @@ auto marketplace_archetype(BuildingState state) -> const RenderArchetype& {
 }
 
 const std::array<TorchMount, 4> k_torches{{
-    TorchMount{.at = QVector3D(-1.01F, 0.62F, 0.8F),
+    TorchMount{.at = QVector3D(-1.18F, 0.66F, 0.52F),
                .outward = QVector3D(-1.0F, 0.0F, 0.0F)},
-    TorchMount{.at = QVector3D(-1.01F, 0.62F, -0.8F),
+    TorchMount{.at = QVector3D(-1.18F, 0.66F, -0.52F),
                .outward = QVector3D(-1.0F, 0.0F, 0.0F)},
-    TorchMount{.at = QVector3D(0.32F, 0.7F, 0.855F),
-               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
-    TorchMount{.at = QVector3D(0.32F, 0.7F, -0.855F),
-               .outward = QVector3D(0.0F, 0.0F, -1.0F)},
+    TorchMount{.at = QVector3D(0.54F, 0.60F, 0.40F),
+               .outward = QVector3D(-1.0F, 0.0F, 0.0F)},
+    TorchMount{.at = QVector3D(0.54F, 0.60F, -0.40F),
+               .outward = QVector3D(-1.0F, 0.0F, 0.0F)},
 }};
-const std::array<QVector3D, 4> k_buyer_a{QVector3D(-1.75F, 0.0F, -0.45F),
-                                         QVector3D(-1.34F, 0.0F, -0.42F),
-                                         QVector3D(-1.3F, 0.16F, -0.4F),
-                                         QVector3D(-1.12F, 0.16F, -0.35F)};
-const std::array<QVector3D, 2> k_buyer_b{QVector3D(-1.14F, 0.16F, 1.02F),
-                                         QVector3D(-1.12F, 0.16F, 0.42F)};
-const std::array<QVector3D, 2> k_stroll_route{QVector3D(-1.18F, 0.16F, -1.04F),
-                                              QVector3D(0.55F, 0.16F, -1.06F)};
-const std::array<QVector3D, 5> k_porter_route{QVector3D(-1.75F, 0.0F, 0.95F),
-                                              QVector3D(-1.34F, 0.0F, 0.96F),
-                                              QVector3D(-1.3F, 0.16F, 0.96F),
-                                              QVector3D(-1.16F, 0.16F, 0.98F),
-                                              QVector3D(0.5F, 0.16F, 1.06F)};
-const std::array<QVector3D, 1> k_seller_spot{QVector3D(-0.92F, 0.16F, -0.62F)};
-const std::array<QVector3D, 1> k_vendor_spot{QVector3D(0.76F, 0.16F, 0.02F)};
+
+const std::array<MarketAwning, 2> k_awnings{{
+    MarketAwning{.back = QVector3D(-0.40F, 0.875F, 1.03F),
+                 .front = QVector3D(-0.40F, 0.755F, 0.57F),
+                 .width_axis = QVector3D(1.0F, 0.0F, 0.0F),
+                 .half_width = 0.30F,
+                 .stripe_a = QVector3D(0.60F, 0.10F, 0.07F),
+                 .stripe_b = QVector3D(0.86F, 0.80F, 0.66F),
+                 .stripes = 6},
+    MarketAwning{.back = QVector3D(-0.40F, 0.875F, -1.03F),
+                 .front = QVector3D(-0.40F, 0.755F, -0.57F),
+                 .width_axis = QVector3D(1.0F, 0.0F, 0.0F),
+                 .half_width = 0.30F,
+                 .stripe_a = QVector3D(0.22F, 0.30F, 0.52F),
+                 .stripe_b = QVector3D(0.86F, 0.80F, 0.66F),
+                 .stripes = 6},
+}};
+
+const std::array<MarketHanging, 6> k_hangings{{
+    MarketHanging{.pivot = QVector3D(0.55F, 0.76F, -0.98F),
+                  .length = 0.14F,
+                  .radius = 0.022F,
+                  .color = QVector3D(0.86F, 0.82F, 0.70F),
+                  .beads = 3},
+    MarketHanging{.pivot = QVector3D(0.55F, 0.76F, -0.62F),
+                  .length = 0.16F,
+                  .radius = 0.024F,
+                  .color = QVector3D(0.46F, 0.18F, 0.12F),
+                  .beads = 3},
+    MarketHanging{.pivot = QVector3D(0.55F, 0.76F, -0.20F),
+                  .length = 0.12F,
+                  .radius = 0.030F,
+                  .color = QVector3D(0.30F, 0.36F, 0.12F),
+                  .beads = 2},
+    MarketHanging{.pivot = QVector3D(0.55F, 0.76F, 0.22F),
+                  .length = 0.15F,
+                  .radius = 0.022F,
+                  .color = QVector3D(0.84F, 0.64F, 0.20F),
+                  .beads = 3},
+    MarketHanging{.pivot = QVector3D(-0.40F, 0.80F, 0.96F),
+                  .length = 0.10F,
+                  .radius = 0.020F,
+                  .color = QVector3D(0.86F, 0.82F, 0.70F),
+                  .beads = 2},
+    MarketHanging{.pivot = QVector3D(-0.40F, 0.80F, -0.96F),
+                  .length = 0.10F,
+                  .radius = 0.024F,
+                  .color = QVector3D(0.46F, 0.18F, 0.12F),
+                  .beads = 2},
+}};
+
+const std::array<QVector3D, 5> k_buyer_a{QVector3D(-1.80F, 0.0F, -0.20F),
+                                         QVector3D(-1.34F, 0.0F, -0.18F),
+                                         QVector3D(-1.28F, 0.16F, -0.18F),
+                                         QVector3D(-0.78F, 0.16F, -0.40F),
+                                         QVector3D(-0.40F, 0.16F, -0.44F)};
+const std::array<QVector3D, 5> k_buyer_b{QVector3D(-1.80F, 0.0F, 0.22F),
+                                         QVector3D(-1.34F, 0.0F, 0.20F),
+                                         QVector3D(-1.28F, 0.16F, 0.22F),
+                                         QVector3D(0.06F, 0.16F, 0.34F),
+                                         QVector3D(0.42F, 0.16F, 0.10F)};
+const std::array<QVector3D, 4> k_stroll_route{QVector3D(-0.90F, 0.16F, 0.36F),
+                                              QVector3D(0.05F, 0.16F, 0.32F),
+                                              QVector3D(0.08F, 0.16F, -0.32F),
+                                              QVector3D(-0.90F, 0.16F, -0.34F)};
+const std::array<QVector3D, 5> k_porter_route{QVector3D(-1.80F, 0.0F, 0.40F),
+                                              QVector3D(-1.34F, 0.0F, 0.40F),
+                                              QVector3D(-1.28F, 0.16F, 0.40F),
+                                              QVector3D(0.05F, 0.16F, 0.40F),
+                                              QVector3D(0.46F, 0.16F, 0.62F)};
+const std::array<QVector3D, 1> k_seller_a{QVector3D(-0.40F, 0.16F, 1.03F)};
+const std::array<QVector3D, 1> k_seller_b{QVector3D(-0.40F, 0.16F, -1.03F)};
+const std::array<QVector3D, 1> k_shopkeeper{QVector3D(0.86F, 0.16F, 0.02F)};
+const std::array<QVector3D, 1> k_fountain_rest{QVector3D(-0.30F, 0.16F, 0.30F)};
 const std::array<WalkSurface, 1> k_walk_surfaces{{
     WalkSurface{
         .min_x = -1.24F, .max_x = 1.24F, .min_z = -1.24F, .max_z = 1.24F, .top = 0.16F},
 }};
-const std::array<AmbientPerson, 6> k_people{{
+const std::array<AmbientPerson, 8> k_people{{
     AmbientPerson{.role = AmbientRole::Stroll,
                   .route = k_buyer_a,
-                  .facing = QVector3D(-0.5F, 0.4F, -0.35F),
+                  .facing = QVector3D(-0.40F, 0.4F, -0.80F),
                   .linger = AmbientRole::Haggle},
     AmbientPerson{.role = AmbientRole::Stroll,
                   .route = k_buyer_b,
-                  .facing = QVector3D(-0.5F, 0.4F, 0.42F),
+                  .facing = QVector3D(0.67F, 0.4F, 0.0F),
                   .linger = AmbientRole::Haggle},
     AmbientPerson{.role = AmbientRole::Haggle,
-                  .route = k_seller_spot,
-                  .facing = QVector3D(-1.12F, 0.3F, -0.35F)},
+                  .route = k_seller_a,
+                  .facing = QVector3D(-0.40F, 0.3F, 0.40F)},
     AmbientPerson{.role = AmbientRole::Weave,
-                  .route = k_vendor_spot,
-                  .facing = QVector3D(-0.2F, 0.4F, 0.0F)},
+                  .route = k_seller_b,
+                  .facing = QVector3D(-0.40F, 0.3F, -0.40F)},
+    AmbientPerson{.role = AmbientRole::Haggle,
+                  .route = k_shopkeeper,
+                  .facing = QVector3D(0.30F, 0.4F, 0.0F)},
     AmbientPerson{.role = AmbientRole::Stroll,
                   .route = k_stroll_route,
-                  .facing = QVector3D(-0.3F, 0.4F, -0.6F)},
+                  .facing = QVector3D(-0.30F, 0.3F, 0.0F),
+                  .linger = AmbientRole::Weave},
     AmbientPerson{.role = AmbientRole::Porter,
                   .route = k_porter_route,
-                  .facing = QVector3D(0.46F, 0.35F, 0.74F)},
+                  .facing = QVector3D(0.67F, 0.35F, 0.79F)},
+    AmbientPerson{.role = AmbientRole::Squat,
+                  .route = k_fountain_rest,
+                  .facing = QVector3D(-0.30F, 0.3F, 0.0F)},
 }};
 
 } // namespace
@@ -468,7 +577,9 @@ void register_marketplace_renderer(EntityRendererRegistry& registry) {
                                 .selection = BuildingSelectionStyle{1.8F, 1.8F},
                                 .torches = k_torches,
                                 .people = k_people,
-                                .walk_surfaces = k_walk_surfaces});
+                                .walk_surfaces = k_walk_surfaces,
+                                .awnings = k_awnings,
+                                .hangings = k_hangings});
 }
 
 } // namespace Render::GL::Roman

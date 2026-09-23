@@ -56,7 +56,7 @@ Conflict checking covers both slots, including attempts to assign the same chord
 
 One overlap is intentional. `rts.commander_rally` is a **contextual** command: it claims `R` only while a rally point can actually be placed. Outside that state, another command bound to `R` may receive the key normally.
 
-Contextual commands are excluded from ordinary conflict reporting because their layered behavior is deliberate. Nothing else ships on `R` by default—the camera pitch commands use `Ctrl+Up` and `Ctrl+Down`—but players remain free to create their own layered binding.
+Contextual commands are excluded from ordinary conflict reporting because their layered behavior is deliberate. By default the camera tilt-up command also lives on `R` (as its alternate chord, beside `Ctrl+Up`), so `R` tilts the camera whenever no rally can be placed.
 
 ### How a chord is resolved
 

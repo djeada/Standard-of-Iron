@@ -256,6 +256,8 @@ Assault-wave units are excluded from ordinary reserve, gathering, expansion, and
 
 This prevents the commander from being treated as merely another infantry entity in a bulk movement pool.
 
+The "army" the commander stations on is the muster only (`stands_in_the_muster`): living line units that are not part of a mission assault wave. Waves march on the enemy under their own orders, and counting them once walked the tutorial's Roman commander out of his outpost behind the raid and into the player's camp — his threat step averages its retreat point with the army centre, so an army centre inside the enemy camp drags him there.
+
 ## Local engagement vs strategic attack
 
 The AI distinguishes reacting to nearby threats from launching a committed strategic attack.
@@ -298,6 +300,29 @@ Targets can come from known strategic objectives as well as currently visible en
 
 Commander doctrine can tune committed wave size, garrison requirements, regroup timing, spent-wave threshold, and target priority.
 
+### Keeping a wave honest
+
+A committed wave records the closest it has come to its target (`best_gap`) and when it last got closer or fought (`progress_at`). A wave that neither gains 4 m on its target nor has a member engaged for 180 s is called off and regroups; before this, nothing read `committed_at`, and a wave that could not reach its target stayed "marching" for a whole match. Reinforcements join a committed wave only from within 30 m of its front, so recruits standing at home no longer keep an exhausted wave from ever counting as spent. When a committed wave sees no enemy, `AttackBehavior` marches it on the wave's own remembered target every 4 s instead of issuing nothing. The `Army` target class excludes non-combatants, so a wave aimed at an army goes for soldiers, not builders and civilians; those remain the `Economy` class. A commander who does not lead from the front anchors on the troops still at home, not on a wave that has marched out, so a garrison commander is not dragged after his own raid.
+
+## Allies
+
+An AI sees what its allies see: allied units are vision sources in its snapshot. Each snapshot also carries two calls from allies:
+
+- `allies_under_attack` — an allied barracks with at least two enemy fighters within 25 m;
+- `ally_attacks` — an ally fighting with three or more troops more than 45 m from its own barracks.
+
+`AllyAidBehavior` answers the first: when its own base is quiet, the AI sends half of its spare troops (not in the wave, not in the garrison, not already fighting; at least two) to the nearest threatened allied barracks within 170 m, re-deciding every 3 s. The second is answered by the wave: an AI not yet committed launches early — with half its wave size, at least three — against the enemy nearest the ally's front, so it fights beside the ally instead of mustering alone. Both work for a human ally as well as an AI one.
+
+### Sending and requesting resources
+
+Allies exchange resources through the marketplace panel (`AllyTribute` command). Sending moves up to 500 of a resource at once from the sender's stock. A request is queued on the session's `MarketplaceSystem`; the addressed AI answers it on its next tick (`AISystem::answer_ally_requests`) with `answer_ally_request`:
+
+- It keeps a reserve per resource (gold 150, food 120, wood 150, stone 80, iron 60, raised by up to half for an aggressive commander) and only gives from what is above it.
+- Its generosity is `0.45 + 0.35·defence − 0.30·aggression − 0.05·harassment` plus a strategy bias (economic +0.20, defensive +0.10, expansionist +0.05, aggressive −0.10, rusher −0.15, harasser −0.05), clamped to 0.05–0.95. Hanno (economic, defence 0.75) is about twice as open-handed as Marcellus (rusher).
+- It offers `surplus × generosity` (a third of that while its own barracks is under attack), rounded down to 5. At least the full request is granted; at least 40% and 10 is a partial grant; less is refused, as "cannot spare" when the surplus is short of the request and "refuses" when it simply will not.
+
+Answers come back as notifications for the player. Only AI allies answer requests.
+
 ## Mission reinforcement waves
 
 Mission `ai_setups[].waves` are not the same system as strategic committed waves.
@@ -309,6 +334,12 @@ That distinction lets a scenario author say, for example, “this fortress AI re
 See [MISSION_FRAMEWORK.md](MISSION_FRAMEWORK.md) for wave schema and the built-in archetype catalogue.
 
 ## Economy and production
+
+Homes are the only way to refill a barracks reserve (a Home raises three civilians in its lifetime, each worth 18 reserve). Three rules keep that working past the opening:
+
+- a town plan claims its Home slots only while the plan still has more Home steps than Homes standing, so extra Homes beyond the plan are built;
+- "raise Homes first" and the builder-versus-soldier check compare the reserve with the cheapest _foot line_ recruit (`is_foot_line_recruit`: not a commander, builder, civilian, horseman, elephant or engine), not with units the doctrine never buys;
+- civilians are queued at Homes only when the food to pay for them is in stock, and a starving AI sends every idle builder to ripe fields.
 
 The AI uses the same economy and production systems as the player.
 

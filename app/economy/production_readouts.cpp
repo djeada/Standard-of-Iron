@@ -8,6 +8,7 @@
 #include "game/core/world.h"
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
+#include "game/systems/builder_product_types.h"
 #include "game/systems/construction_cost_catalog.h"
 #include "game/systems/food_targets.h"
 #include "game/systems/harvest_yields.h"
@@ -103,6 +104,9 @@ auto selected_builder_state(Engine::Core::World* world) -> QVariantMap {
     if (builder_prod != nullptr) {
       m["in_progress"] =
           builder_prod->in_progress || builder_prod->has_construction_site;
+
+      m["gathering"] =
+          Game::Systems::is_gather_builder_product(builder_prod->product_type);
       m["time_remaining"] = builder_prod->time_remaining;
       m["build_time"] = builder_prod->build_time;
       m["product_type"] = QString::fromStdString(builder_prod->product_type);

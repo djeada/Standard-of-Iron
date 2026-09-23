@@ -3433,6 +3433,50 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>A save is already in progress.</source>
         <translation>A save is already in progress.</translation>
     </message>
+    <message>
+        <source>your ally</source>
+        <translation>your ally</translation>
+    </message>
+    <message>
+        <source>gold</source>
+        <translation>gold</translation>
+    </message>
+    <message>
+        <source>food</source>
+        <translation>food</translation>
+    </message>
+    <message>
+        <source>wood</source>
+        <translation>wood</translation>
+    </message>
+    <message>
+        <source>stone</source>
+        <translation>stone</translation>
+    </message>
+    <message>
+        <source>iron</source>
+        <translation>iron</translation>
+    </message>
+    <message>
+        <source>Sent %1 %2 to %3.</source>
+        <translation>Sent %1 %2 to %3.</translation>
+    </message>
+    <message>
+        <source>%1 sends you %2 %3.</source>
+        <translation>%1 sends you %2 %3.</translation>
+    </message>
+    <message>
+        <source>%1 can spare only %2 of the %3 %4 you asked for.</source>
+        <translation>%1 can spare only %2 of the %3 %4 you asked for.</translation>
+    </message>
+    <message>
+        <source>%1 has no %2 to spare.</source>
+        <translation>%1 has no %2 to spare.</translation>
+    </message>
+    <message>
+        <source>%1 refuses to part with any %2.</source>
+        <translation>%1 refuses to part with any %2.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -3664,6 +3708,14 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>TARGET</source>
         <translation>TARGET</translation>
+    </message>
+    <message>
+        <source>%1 · Enemy</source>
+        <translation>%1 · Enemy</translation>
+    </message>
+    <message>
+        <source>%1 · Yours</source>
+        <translation>%1 · Yours</translation>
     </message>
     <message numerus="yes">
         <source>%n attacking</source>
@@ -7212,8 +7264,8 @@ to see preview</translation>
         <translation>The river keeps whatever it is given. Your elephants went in and not all of them came out, and the Trebia is not a large river. Rome has never needed a large one.</translation>
     </message>
     <message>
-        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.</source>
-        <translation>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.</translation>
+        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
+        <translation>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</translation>
     </message>
     <message>
         <source>Then it holds a little longer. Go home to your Senate and tell them what a Roman looks like from close to. I shall be here in the spring, and the spring after that, and I am younger than you.</source>
@@ -9614,6 +9666,30 @@ Builders reap it for the food that recruits civilians</translation>
         <source>Not enough %1: %2 needed</source>
         <translation>Not enough %1: %2 needed</translation>
     </message>
+    <message>
+        <source>ALLIES</source>
+        <translation>ALLIES</translation>
+    </message>
+    <message>
+        <source>No allies to trade with in this battle.</source>
+        <translation>No allies to trade with in this battle.</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Send</translation>
+    </message>
+    <message>
+        <source>Give %1 %2 to %3</source>
+        <translation>Give %1 %2 to %3</translation>
+    </message>
+    <message>
+        <source>Request</source>
+        <translation>Request</translation>
+    </message>
+    <message>
+        <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
+        <translation>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionViewModel</name>
@@ -9648,6 +9724,26 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>The marketplace does not trade that.</source>
         <translation>The marketplace does not trade that.</translation>
+    </message>
+    <message>
+        <source>gold</source>
+        <translation>gold</translation>
+    </message>
+    <message>
+        <source>Allies can only exchange gold, food, wood, stone or iron.</source>
+        <translation>Allies can only exchange gold, food, wood, stone or iron.</translation>
+    </message>
+    <message>
+        <source>Choose an ally to trade with.</source>
+        <translation>Choose an ally to trade with.</translation>
+    </message>
+    <message>
+        <source>You need a marketplace to deal with your allies.</source>
+        <translation>You need a marketplace to deal with your allies.</translation>
+    </message>
+    <message>
+        <source>Not enough %1 to send.</source>
+        <translation>Not enough %1 to send.</translation>
     </message>
 </context>
 <context>
@@ -10995,6 +11091,14 @@ Builders reap it for the food that recruits civilians</translation>
         <translation>A red outline means the site is blocked: too close to another building, on water or on a slope. Move it onto flat, open ground and left-click to confirm. Right-click cancels.</translation>
     </message>
     <message>
+        <source>Press Deliver, then click your barracks: the civilian walks there and joins its reserve, and you can recruit again.</source>
+        <translation>Press Deliver, then click your barracks: the civilian walks there and joins its reserve, and you can recruit again.</translation>
+    </message>
+    <message>
+        <source>A Home raises civilians, not soldiers. Recruit a civilian here, select it when it steps out, press Deliver and click your barracks to refill its reserve.</source>
+        <translation>A Home raises civilians, not soldiers. Recruit a civilian here, select it when it steps out, press Deliver and click your barracks to refill its reserve.</translation>
+    </message>
+    <message>
         <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
         <translation>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</translation>
     </message>
@@ -11147,8 +11251,8 @@ Builders reap it for the food that recruits civilians</translation>
         <translation>Right-click the ground to move your selected troops</translation>
     </message>
     <message>
-        <source>Destroy the Roman scouting party (%1 soldiers)</source>
-        <translation>Destroy the Roman scouting party (%1 soldiers)</translation>
+        <source>Destroy the Roman scouting party (%1 units)</source>
+        <translation>Destroy the Roman scouting party (%1 units)</translation>
     </message>
     <message>
         <source>Deliver %1 wood to your barracks yard</source>

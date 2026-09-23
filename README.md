@@ -183,24 +183,24 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for platform setup, formatting, tests, an
 
 All gameplay bindings can be changed under **Settings → Controls**.
 
-| Context   | Default input          | Action                                |
-| --------- | ---------------------- | ------------------------------------- |
-| Camera    | Arrow keys or WASD     | Pan; Shift increases step/speed       |
-| Camera    | Q / E                  | Rotate                                |
-| Camera    | Ctrl+Up / Ctrl+Down    | Tilt                                  |
-| Camera    | Wheel or PgUp / PgDown | Zoom                                  |
-| Camera    | Home                   | Reset/focus the authored camp framing |
-| Camera    | Right-drag             | Drag-pan                              |
-| Selection | Left-click / drag      | Select a unit or rectangle            |
-| Selection | Shift + left-click     | Add to selection                      |
-| Orders    | Right-click            | Context move, attack, or interact     |
-| Orders    | C / M                  | Attack mode / move mode               |
-| Orders    | Z / H / G              | Stop / hold / guard                   |
-| Orders    | P, then two clicks     | Patrol route                          |
-| Game      | Space                  | Pause/resume                          |
-| Game      | Enter                  | Enter/leave direct commander control  |
-| Game      | F5 / F9                | Quick-save / quick-load               |
-| Game      | Escape                 | Cancel current mode or open the menu  |
+| Context   | Default input                | Action                                |
+| --------- | ---------------------------- | ------------------------------------- |
+| Camera    | Arrow keys or WASD           | Pan; Shift increases step/speed       |
+| Camera    | Q / E                        | Rotate                                |
+| Camera    | R / F or Ctrl+Up / Ctrl+Down | Tilt                                  |
+| Camera    | Wheel or PgUp / PgDown       | Zoom                                  |
+| Camera    | Home                         | Reset/focus the authored camp framing |
+| Camera    | Right-drag                   | Drag-pan                              |
+| Selection | Left-click / drag            | Select a unit or rectangle            |
+| Selection | Shift + left-click           | Add to selection                      |
+| Orders    | Right-click                  | Context move, attack, or interact     |
+| Orders    | C / M                        | Attack mode / move mode               |
+| Orders    | Z / H / G                    | Stop / hold / guard                   |
+| Orders    | P, then two clicks           | Patrol route                          |
+| Game      | Space                        | Pause/resume                          |
+| Game      | Enter                        | Enter/leave direct commander control  |
+| Game      | F5 / F9                      | Quick-save / quick-load               |
+| Game      | Escape                       | Cancel current mode or open the menu  |
 
 ## Architecture
 

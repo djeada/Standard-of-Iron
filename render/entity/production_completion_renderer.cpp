@@ -6,6 +6,7 @@
 #include <cmath>
 #include <numbers>
 
+#include "game/core/component_economy.h"
 #include "game/core/component_presentation.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
@@ -30,6 +31,10 @@ constexpr float k_spark_cycle_seconds = 0.28F;
 constexpr int k_glint_count = 12;
 constexpr QVector3D k_gold{1.0F, 0.78F, 0.30F};
 constexpr QVector3D k_pale_gold{1.0F, 0.94F, 0.72F};
+
+constexpr float k_ripe_pulse_seconds = 2.4F;
+constexpr float k_ripe_field_radius = 5.7F;
+constexpr int k_ripe_glint_count = 8;
 
 constexpr QVector3D k_grave_light{0.30F, 0.86F, 0.52F};
 constexpr QVector3D k_pale_grave{0.76F, 1.0F, 0.84F};
@@ -205,6 +210,68 @@ void render_production_completions(Renderer* renderer,
           (intensity + flare) * shimmer * 1.3F,
           spark_age,
           (outward * 0.5F + QVector3D(0.0F, 1.0F, 0.0F)).normalized());
+    }
+  }
+}
+
+void render_ripe_fields(Renderer* renderer,
+                        Engine::Core::World* world,
+                        int local_owner_id,
+                        bool reduced_motion) {
+  if (renderer == nullptr || world == nullptr) {
+    return;
+  }
+  const FlarePalette palette = palette_for(Engine::Core::SpawnFlareStyle::Recruit);
+  const float clock = renderer->get_animation_time();
+  for (auto [entity_id, farm, transform, unit] :
+       world->view<Engine::Core::FarmComponent,
+                   Engine::Core::TransformComponent,
+                   Engine::Core::UnitComponent>()) {
+    if (!farm.ripe() || unit.owner_id != local_owner_id || unit.health <= 0 ||
+        world->has<Engine::Core::PendingRemovalComponent>(entity_id) ||
+        world->has<Engine::Core::ProductionCompletionComponent>(entity_id)) {
+      continue;
+    }
+    const float offset = static_cast<float>(entity_id % 97U) * 0.137F;
+    const float cycle =
+        reduced_motion ? 0.25F : std::fmod(clock / k_ripe_pulse_seconds + offset, 1.0F);
+    const float pulse =
+        0.5F - 0.5F * std::cos(cycle * 2.0F * std::numbers::pi_v<float>);
+    const float intensity = 0.34F + 0.26F * pulse;
+    const QVector3D ground(
+        transform.position.x, transform.position.y, transform.position.z);
+    const QVector3D position(ground.x(), ground.y() + 0.08F, ground.z());
+    const float radius = k_ripe_field_radius;
+    const float time = reduced_motion ? 0.0F : clock;
+
+    submit_ground_disc(renderer, ground, radius, 0.07F + 0.07F * pulse, palette);
+    renderer->healer_aura(position, palette.core, radius, intensity, time);
+    renderer->healer_aura(
+        position, palette.pale, radius * 0.7F, intensity * 0.7F, time);
+    submit_ground_ring(renderer,
+                       ground,
+                       radius * 0.8F,
+                       cycle * k_ring_seconds,
+                       0.30F + 0.15F * pulse,
+                       palette);
+    if (reduced_motion) {
+      continue;
+    }
+    for (int i = 0; i < k_ripe_glint_count; ++i) {
+      const float phase = static_cast<float>(i) / k_ripe_glint_count;
+      const float rise = std::fmod(clock * 0.35F + phase * 1.7F + offset, 1.0F);
+      const float angle = phase * 2.0F * std::numbers::pi_v<float> + clock * 0.2F;
+      const float orbit = radius * (0.35F + 0.5F * std::fmod(phase * 7.3F, 1.0F));
+      const QVector3D outward(std::cos(angle), 0.0F, std::sin(angle));
+      const QVector3D glint =
+          position + outward * orbit + QVector3D(0.0F, 0.3F + 1.6F * rise, 0.0F);
+      const float fade = std::sin(rise * std::numbers::pi_v<float>);
+      renderer->metal_spark(glint,
+                            i % 2 == 0 ? palette.pale : palette.core,
+                            0.14F,
+                            0.8F * fade * intensity,
+                            std::fmod(clock + phase, k_spark_cycle_seconds),
+                            QVector3D(0.0F, 1.0F, 0.0F));
     }
   }
 }

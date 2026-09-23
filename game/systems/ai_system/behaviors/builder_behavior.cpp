@@ -396,6 +396,32 @@ using SettlementTargets = SettlementCensus;
   return false;
 }
 
+[[nodiscard]] auto standing_count(const SettlementCensus& standing,
+                                  const char* building) -> int {
+  if (building == BUILDING_TYPE_HOME) {
+    return standing.homes;
+  }
+  if (building == BUILDING_TYPE_BARRACKS) {
+    return standing.barracks;
+  }
+  if (building == BUILDING_TYPE_DEFENSE_TOWER) {
+    return standing.towers;
+  }
+  if (building == BUILDING_TYPE_WALL_SEGMENT) {
+    return standing.walls;
+  }
+  if (building == BUILDING_TYPE_WALL_GATE) {
+    return standing.gates;
+  }
+  if (building == BUILDING_TYPE_MARKETPLACE) {
+    return standing.markets;
+  }
+  if (building == BUILDING_TYPE_FARM) {
+    return standing.farms;
+  }
+  return -1;
+}
+
 struct PlanStepChoice {
   const char* building = nullptr;
   QVector3D offset;
@@ -573,17 +599,24 @@ auto plan_still_sites_this_itself(const AIContext& context,
   }
 
   int slot = -1;
+  int plan_slots = 0;
+  bool open_slot = false;
   for (const auto& step : doctrine->town_plan->steps) {
     ++slot;
     if (building_type_name(step.building) != building) {
       continue;
     }
+    ++plan_slots;
     if (std::find(blocked_slots.begin(), blocked_slots.end(), slot) ==
         blocked_slots.end()) {
-      return true;
+      open_slot = true;
     }
   }
-  return false;
+  const int standing_of_type = standing_count(standing, building);
+  if (standing_of_type >= 0 && standing_of_type >= plan_slots) {
+    return false;
+  }
+  return open_slot;
 }
 
 auto site_is_free(const AISnapshot& snapshot,
@@ -1743,8 +1776,12 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     }
   }
 
-  order_field_work(
-      snapshot, context, available_builders, 1, take_builder, out_commands);
+  order_field_work(snapshot,
+                   context,
+                   available_builders,
+                   starved_of_food(snapshot) ? 0 : 1,
+                   take_builder,
+                   out_commands);
   order_repairs(snapshot, available_builders, 1, take_builder, out_commands);
 
   if (building_to_construct != nullptr && site_resolved && plan_slot >= 0 &&

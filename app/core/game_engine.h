@@ -361,6 +361,7 @@ public:
   void publish_presentation_frame();
   void publish_frame_snapshots();
   void announce_player_defeats(float dt);
+  void announce_ally_exchanges();
   void capture_render_selection();
   void update(float dt);
   void render(int pixel_width, int pixel_height);
@@ -525,6 +526,9 @@ private:
   void update_tutorial(float real_dt);
   void publish_tutorial_focus_points(const QVariantMap& wave_status);
   void activate_tutorial_if_configured();
+  void restore_tutorial_state(const QJsonObject& state);
+  [[nodiscard]] auto battle_stats_state() const -> QJsonObject;
+  void restore_battle_stats(const QJsonObject& state);
   void update_loading_overlay();
   void update_cursor_position();
   void on_frame_image_captured(const QImage& image);
@@ -652,6 +656,7 @@ private:
   Game::Systems::LevelSnapshot m_level;
   SelectedUnitsModel* m_selected_units_model = nullptr;
   int m_enemy_troops_defeated = 0;
+  int m_enemy_units_defeated = 0;
   int m_selected_player_id = 1;
   QVariantMap m_selected_player_state;
   QVariantList m_economy_resources;
@@ -746,6 +751,7 @@ signals:
   void commander_control_available_changed();
   void mission_announcement(QString text);
   void player_defeated(QString text, bool ally, int owner_id);
+  void ally_exchange(QString text, bool positive);
   void order_feedback(QString kind, bool accepted, QString message, QString failure);
   void autosave_settings_changed();
 

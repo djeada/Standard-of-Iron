@@ -130,6 +130,12 @@ auto SaveLoadCoordinator::begin_save_to_slot(const SaveToSlotContext& context) c
   if (!context.commander_message_state.isEmpty()) {
     metadata["commander_messages"] = context.commander_message_state;
   }
+  if (!context.tutorial_state.isEmpty()) {
+    metadata["tutorial"] = context.tutorial_state;
+  }
+  if (!context.battle_stats.isEmpty()) {
+    metadata["battle_stats"] = context.battle_stats;
+  }
 
   Game::Systems::SaveRequest request;
   request.slot_name = context.slot;
@@ -217,8 +223,6 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
       Game::Session::session_for(context.world).nations(), metadata);
   Game::Systems::GameStateSerializer::restore_level_from_metadata(metadata,
                                                                   context.level);
-  Game::Systems::GameStateSerializer::restore_camera_from_metadata(
-      metadata, context.camera, context.viewport_width, context.viewport_height);
   Game::Systems::GameStateSerializer::restore_runtime_from_metadata(
       metadata, context.runtime_snapshot);
   context.apply_runtime_snapshot(context.runtime_snapshot);
@@ -230,6 +234,8 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
       context.runtime_snapshot.local_owner_id,
       context.scene.minimap_manager,
       context.scene.visibility_coordinator);
+  Game::Systems::GameStateSerializer::restore_camera_from_metadata(
+      metadata, context.camera, context.viewport_width, context.viewport_height);
 
   Game::Systems::GameStateSerializer::restore_visibility_from_metadata(
       Game::Session::session_for(context.world).visibility(), metadata);
@@ -303,6 +309,12 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
   }
   if (context.restore_commander_messages) {
     context.restore_commander_messages(metadata.value("commander_messages").toObject());
+  }
+  if (context.restore_tutorial) {
+    context.restore_tutorial(metadata.value("tutorial").toObject());
+  }
+  if (context.restore_battle_stats) {
+    context.restore_battle_stats(metadata.value("battle_stats").toObject());
   }
 
   AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);

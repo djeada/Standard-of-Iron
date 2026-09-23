@@ -4,6 +4,7 @@
 
 #include <cstdint>
 
+#include "animation/attack_pose_manifest.h"
 #include "animation/death_pose_manifest.h"
 #include "animation/melee_swing_manifest.h"
 #include "animation/reaction_pose_manifest.h"
@@ -46,6 +47,8 @@ public:
   void spear_thrust(float attack_phase);
   void spear_thrust_from_hold(float attack_phase, float hold_depth);
   void construction_saw(float work_phase);
+  void construction_pose(Animation::HumanoidConstructionPoseKind kind,
+                         float work_phase);
   void construction_chisel(float work_phase, bool kneeling);
   void construction_hammer(float work_phase);
   void construction_reap(float work_phase);

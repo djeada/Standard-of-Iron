@@ -850,18 +850,19 @@ void Camera::update_follow(const QVector3D& target_center) {
   if (m_follow_offset.lengthSquared() < 1e-5F) {
     m_follow_offset = m_position - m_target;
   }
-  QVector3D const desired_pos = target_center + m_follow_offset;
-  QVector3D const new_pos =
-      (m_follow_lerp >= 0.999F)
-          ? desired_pos
-          : (m_position +
-             (desired_pos - m_position) * std::clamp(m_follow_lerp, 0.0F, 1.0F));
 
-  if (!finite(new_pos)) {
+  QVector3D const new_target =
+      (m_follow_lerp >= 0.999F)
+          ? target_center
+          : (m_target +
+             (target_center - m_target) * std::clamp(m_follow_lerp, 0.0F, 1.0F));
+  QVector3D const new_pos = new_target + m_follow_offset;
+
+  if (!finite(new_pos) || !finite(new_target)) {
     return;
   }
 
-  m_target = target_center;
+  m_target = new_target;
   m_position = new_pos;
 
   apply_soft_boundaries();

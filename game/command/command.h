@@ -98,6 +98,13 @@ struct Trade {
   TradeDirection direction = TradeDirection::Buy;
 };
 
+struct AllyTribute {
+  int ally_owner = 0;
+  Game::Systems::ResourceType resource = Game::Systems::ResourceType::Wood;
+  int amount = 0;
+  bool request = false;
+};
+
 enum class CommanderAbility : std::uint8_t {
   Aura,
   Rally,
@@ -207,7 +214,8 @@ using Payload = std::variant<Move,
                              DivideSquads,
                              MergeSquads,
                              PlaceWallPlan,
-                             PlaceBuilding>;
+                             PlaceBuilding,
+                             AllyTribute>;
 
 struct Command {
   Source source = Source::LocalPlayer;

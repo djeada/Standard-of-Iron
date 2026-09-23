@@ -234,4 +234,21 @@ TEST_F(PlayerFeedbackTest, NeutralAndZeroChangesAreNotWorthATick) {
   EXPECT_EQ(stock(0, ResourceType::Gold), 0);
 }
 
+TEST_F(PlayerFeedbackTest, RaisingABuildingFloatsEachCostAsANegativeNumberAtTheSite) {
+  Game::Systems::ResourceAmounts cost;
+  cost.add(ResourceType::Wood, 80);
+  cost.add(ResourceType::Stone, 40);
+  Game::Systems::announce_spent_at(1, 12.0F, 0.5F, -6.0F, cost);
+
+  ASSERT_EQ(m_events.size(), 2U);
+  for (const auto& event : m_events) {
+    EXPECT_EQ(event.kind, WorldFeedbackKind::Resource);
+    EXPECT_LT(event.amount, 0) << "a cost is shown as money leaving";
+    EXPECT_TRUE(event.has_position);
+    EXPECT_FLOAT_EQ(event.x, 12.0F);
+    EXPECT_FLOAT_EQ(event.z, -6.0F);
+  }
+  EXPECT_EQ(stock(1, ResourceType::Wood), 0) << "announcing moves no stock";
+}
+
 } // namespace

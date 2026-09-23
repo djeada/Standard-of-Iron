@@ -1,5 +1,6 @@
 #include "civilian_actor.h"
 
+#include <algorithm>
 #include <array>
 #include <cstdlib>
 #include <string>
@@ -19,6 +20,11 @@ auto rigs() -> std::array<NationCivilianRig, 2>& {
 }
 
 auto priest_rigs() -> std::array<NationCivilianRig, 2>& {
+  static std::array<NationCivilianRig, 2> registered{};
+  return registered;
+}
+
+auto crew_rigs() -> std::array<NationCivilianRig, 2>& {
   static std::array<NationCivilianRig, 2> registered{};
   return registered;
 }
@@ -49,11 +55,15 @@ auto ambient_review_interval(const char* environment_variable) -> float {
 auto civilian_render_scale(const DrawContext& ctx,
                            const NationCivilianRig& rig) -> float {
   constexpr float k_fallback_civilian_scale = 0.48F;
+  constexpr float k_fallback_builder_scale = 0.5F;
+  const auto type = rig.builder  ? Game::Units::TroopType::Builder
+                    : rig.healer ? Game::Units::TroopType::Healer
+                                 : Game::Units::TroopType::Civilian;
   return ctx.world_view.troop_render_scale(
       rig.carthage ? Game::Systems::NationID::Carthage
                    : Game::Systems::NationID::RomanRepublic,
-      rig.healer ? Game::Units::TroopType::Healer : Game::Units::TroopType::Civilian,
-      k_fallback_civilian_scale);
+      type,
+      rig.builder ? k_fallback_builder_scale : k_fallback_civilian_scale);
 }
 
 void register_nation_priest_rig(bool carthage, NationCivilianRig rig) {
@@ -64,6 +74,16 @@ void register_nation_priest_rig(bool carthage, NationCivilianRig rig) {
 
 auto nation_priest_rig(bool carthage) -> const NationCivilianRig& {
   return priest_rigs()[carthage ? 1U : 0U];
+}
+
+void register_nation_crew_rig(bool carthage, NationCivilianRig rig) {
+  rig.carthage = carthage;
+  rig.builder = true;
+  crew_rigs()[carthage ? 1U : 0U] = rig;
+}
+
+auto nation_crew_rig(bool carthage) -> const NationCivilianRig& {
+  return crew_rigs()[carthage ? 1U : 0U];
 }
 
 void register_nation_civilian_rig(bool carthage, NationCivilianRig rig) {
@@ -111,6 +131,16 @@ void add_civilian_actor(const DrawContext& ctx,
   if (actor.blend_weight > 0.0F && actor.blend_clip != 0xFFFFU) {
     Pipeline::blend_out_interrupted_clip(
         selection, actor.blend_clip, actor.blend_phase, actor.blend_weight);
+  }
+  if (actor.overlay_clip != 0xFFFFU && actor.overlay_weight > 0.0F) {
+    Pipeline::HumanoidPlaybackLayerSelection overlay{};
+    overlay.archetype = actor.archetype;
+    overlay.state = AnimationStateId::Idle;
+    overlay.phase = actor.overlay_phase;
+    overlay.clip_id = actor.overlay_clip;
+    overlay.weight = std::clamp(actor.overlay_weight, 0.0F, 1.0F);
+    overlay.mode = Render::Creature::PlaybackLayerMode::UpperBodyOverlay;
+    selection.upper_body_overlay = overlay;
   }
   output.humanoid_selection = selection;
   const Render::GL::HumanoidPose pose{};

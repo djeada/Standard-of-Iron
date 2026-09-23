@@ -28,6 +28,9 @@ public:
   static void clear_builder_task(Engine::Core::World& world,
                                  Engine::Core::Entity* entity);
   static void clear_builder_gather_order(Engine::Core::Entity* entity);
+
+  static void clear_builder_gather_job(Engine::Core::World& world,
+                                       Engine::Core::Entity* entity);
   static void release_settlement_resident(Engine::Core::Entity* entity);
   static void clear_patrol(Engine::Core::Entity* entity);
   static void clear_attack_target(Engine::Core::Entity* entity);
@@ -40,6 +43,7 @@ public:
                                bool preserve_formation_mode);
   static void prepare_for_attack(Engine::Core::Entity* entity);
   static void apply_stop(Engine::Core::Entity* entity);
+  [[nodiscard]] static auto move_ends_builder_gather_job(MoveOrderKind kind) -> bool;
 };
 
 [[nodiscard]] auto move_order_kind_name(MoveOrderKind kind) -> const char*;

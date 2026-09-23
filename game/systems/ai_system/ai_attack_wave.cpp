@@ -1,5 +1,8 @@
 #include "ai_attack_wave.h"
 
+#include <QDebug>
+#include <QtGlobal>
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -29,6 +32,10 @@ auto minimum_deployable_strength(const AIContext& context, int required) -> int 
 
 namespace {
 
+constexpr float k_wave_refill_radius = 30.0F;
+constexpr float k_wave_progress_metres = 4.0F;
+constexpr float k_wave_stall_seconds = 180.0F;
+
 auto is_commander_contact(const ContactSnapshot& contact) -> bool {
   const auto troop = Game::Units::spawn_typeToTroopType(contact.spawn_type);
   return troop.has_value() && Game::Units::is_commander_troop(*troop);
@@ -37,7 +44,9 @@ auto is_commander_contact(const ContactSnapshot& contact) -> bool {
 auto matches_target(const ContactSnapshot& contact, DoctrineTarget target) -> bool {
   switch (target) {
   case DoctrineTarget::Army:
-    return !contact.is_building && !is_commander_contact(contact);
+    return !contact.is_building && !is_commander_contact(contact) &&
+           Game::Units::combat_role(contact.spawn_type) !=
+               Game::Units::CombatRole::Noncombatant;
   case DoctrineTarget::Barracks:
     return contact.spawn_type == Game::Units::SpawnType::Barracks;
   case DoctrineTarget::Economy:
@@ -240,6 +249,71 @@ auto garrison_target_for(const AIContext& context,
   return std::clamp(wanted, 0, std::max(ceiling, floor_units));
 }
 
+namespace {
+
+auto join_an_ally_attack(const AISnapshot& snapshot,
+                         AIContext& context,
+                         const std::vector<const EntitySnapshot*>& available,
+                         int required) -> bool {
+  constexpr float k_join_reach = 60.0F;
+  if (snapshot.ally_attacks.empty() || !commander_may_attack(context.strategy_config)) {
+    return false;
+  }
+  const int enough = std::max(3, (required + 1) / 2);
+  if (static_cast<int>(available.size()) < enough) {
+    return false;
+  }
+  const ContactSnapshot* best = nullptr;
+  float best_sq = k_join_reach * k_join_reach;
+  for (const auto& front : snapshot.ally_attacks) {
+    for (const auto* pool :
+         {&snapshot.visible_enemies, &snapshot.strategic_objectives}) {
+      for (const auto& contact : *pool) {
+        if (contact.health <= 0 || !is_war_contact(contact)) {
+          continue;
+        }
+        const float sq = distance_squared(
+            contact.pos_x, 0.0F, contact.pos_z, front.pos_x, 0.0F, front.pos_z);
+        if (sq < best_sq) {
+          best_sq = sq;
+          best = &contact;
+        }
+      }
+    }
+  }
+  if (best == nullptr) {
+    return false;
+  }
+  auto& wave = context.wave;
+  const int capacity = wave_capacity_for(context, required);
+  wave.members.clear();
+  for (const auto* entity : available) {
+    if (static_cast<int>(wave.members.size()) >= capacity) {
+      break;
+    }
+    wave.members.push_back(entity->id);
+  }
+  wave.initial_size = static_cast<int>(wave.members.size());
+  wave.target_id = best->id;
+  wave.target_x = best->pos_x;
+  wave.target_z = best->pos_z;
+  wave.committed = true;
+  wave.committed_at = snapshot.game_time;
+  wave.best_gap = -1.0F;
+  wave.progress_at = snapshot.game_time;
+  wave.assembling = false;
+  wave.departed_under_strength = false;
+  wave.ready_since = -1000.0F;
+  if (!qEnvironmentVariableIsEmpty("SOI_AI_TRACE")) {
+    qInfo().nospace() << "SOI_AI_TRACE ally_join player=" << context.player_id
+                      << " members=" << wave.members.size() << " target=" << best->id
+                      << " t=" << snapshot.game_time;
+  }
+  return true;
+}
+
+} // namespace
+
 void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
   auto& wave = context.wave;
   const auto candidates = committable_units(snapshot, context);
@@ -290,6 +364,7 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
     survivors.reserve(wave.members.size());
     float centre_x = 0.0F;
     float centre_z = 0.0F;
+    bool engaged = false;
     for (const auto id : wave.members) {
       const auto* entity = find_friendly(snapshot, id);
       if (entity == nullptr || entity->health <= 0) {
@@ -298,23 +373,33 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
       survivors.push_back(id);
       centre_x += entity->pos_x;
       centre_z += entity->pos_z;
+      engaged = engaged || entity->engaged;
     }
     wave.members = std::move(survivors);
 
-    const std::unordered_set<Engine::Core::EntityID> marching(wave.members.begin(),
-                                                              wave.members.end());
-    const int wave_capacity = wave_capacity_for(context, required);
-    for (const auto* entity : candidates) {
-
-      if (static_cast<int>(wave.members.size()) >= wave_capacity) {
-        break;
+    if (!wave.members.empty()) {
+      const float count = static_cast<float>(wave.members.size());
+      const float front_x = centre_x / count;
+      const float front_z = centre_z / count;
+      const std::unordered_set<Engine::Core::EntityID> marching(wave.members.begin(),
+                                                                wave.members.end());
+      const int wave_capacity = wave_capacity_for(context, required);
+      for (const auto* entity : candidates) {
+        if (static_cast<int>(wave.members.size()) >= wave_capacity) {
+          break;
+        }
+        if (marching.contains(entity->id) || garrison.contains(entity->id)) {
+          continue;
+        }
+        if (distance_squared(
+                entity->pos_x, 0.0F, entity->pos_z, front_x, 0.0F, front_z) >
+            k_wave_refill_radius * k_wave_refill_radius) {
+          continue;
+        }
+        wave.members.push_back(entity->id);
+        centre_x += entity->pos_x;
+        centre_z += entity->pos_z;
       }
-      if (marching.contains(entity->id) || garrison.contains(entity->id)) {
-        continue;
-      }
-      wave.members.push_back(entity->id);
-      centre_x += entity->pos_x;
-      centre_z += entity->pos_z;
     }
 
     const int remaining = static_cast<int>(wave.members.size());
@@ -334,6 +419,23 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
 
     centre_x /= static_cast<float>(remaining);
     centre_z /= static_cast<float>(remaining);
+
+    const float gap = std::sqrt(
+        distance_squared(centre_x, 0.0F, centre_z, wave.target_x, 0.0F, wave.target_z));
+    if (engaged || wave.best_gap < 0.0F ||
+        gap < wave.best_gap - k_wave_progress_metres) {
+      wave.best_gap = wave.best_gap < 0.0F ? gap : std::min(wave.best_gap, gap);
+      wave.progress_at = snapshot.game_time;
+    }
+    if (snapshot.game_time - std::max(wave.progress_at, wave.committed_at) >
+        k_wave_stall_seconds) {
+      wave.committed = false;
+      wave.members.clear();
+      wave.target_id = 0;
+      wave.best_gap = -1.0F;
+      wave.ended_at = snapshot.game_time;
+      return;
+    }
 
     const ContactSnapshot* target = find_contact(snapshot, wave.target_id);
     if (target == nullptr) {
@@ -363,6 +465,10 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
       continue;
     }
     available.push_back(entity);
+  }
+
+  if (join_an_ally_attack(snapshot, context, available, required)) {
+    return;
   }
 
   if (static_cast<int>(available.size()) < required ||
@@ -429,6 +535,8 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
   const ContactSnapshot* target =
       select_wave_target(snapshot, context, centre_x, centre_z);
   if (target == nullptr) {
+    wave.assembling = false;
+    wave.ready_since = -1000.0F;
     return;
   }
 
@@ -482,6 +590,8 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
   wave.target_z = target->pos_z;
   wave.committed = true;
   wave.committed_at = snapshot.game_time;
+  wave.best_gap = -1.0F;
+  wave.progress_at = snapshot.game_time;
   wave.assembling = false;
   wave.ready_since = -1000.0F;
 }

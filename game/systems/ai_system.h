@@ -162,6 +162,7 @@ private:
   static void populate_behavior_registry(AI::AIBehaviorRegistry& registry);
 
   void process_results(Engine::Core::World& world);
+  void answer_ally_requests(Engine::Core::World& world);
 
   static void merge_building_attacks(const AIInstance& ai, AI::AIContext& context);
 

@@ -46,7 +46,7 @@ struct TutorialObservationInputs {
   const TutorialFrameNotes& notes;
   int local_owner_id = 1;
   QString victory_state;
-  int enemy_troops_defeated = 0;
+  int enemy_units_defeated = 0;
   bool mission_running = false;
   const App::ViewModels::PlacementViewModel* placement = nullptr;
   QVariantMap wave_status;

@@ -3433,6 +3433,50 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>A save is already in progress.</source>
         <translation>A save is already in progress.</translation>
     </message>
+    <message>
+        <source>your ally</source>
+        <translation>müttefikin</translation>
+    </message>
+    <message>
+        <source>gold</source>
+        <translation>altın</translation>
+    </message>
+    <message>
+        <source>food</source>
+        <translation>yiyecek</translation>
+    </message>
+    <message>
+        <source>wood</source>
+        <translation>odun</translation>
+    </message>
+    <message>
+        <source>stone</source>
+        <translation>taş</translation>
+    </message>
+    <message>
+        <source>iron</source>
+        <translation>demir</translation>
+    </message>
+    <message>
+        <source>Sent %1 %2 to %3.</source>
+        <translation>%3 için %1 %2 gönderildi.</translation>
+    </message>
+    <message>
+        <source>%1 sends you %2 %3.</source>
+        <translation>%1 sana %2 %3 gönderiyor.</translation>
+    </message>
+    <message>
+        <source>%1 can spare only %2 of the %3 %4 you asked for.</source>
+        <translation>%1, istediğin %3 %4 yerine ancak %2 verebilir.</translation>
+    </message>
+    <message>
+        <source>%1 has no %2 to spare.</source>
+        <translation>%1 verebilecek %2 bulamıyor.</translation>
+    </message>
+    <message>
+        <source>%1 refuses to part with any %2.</source>
+        <translation>%1 hiç %2 vermeyi reddediyor.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -4116,6 +4160,14 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>TARGET</source>
         <translation>HEDEF</translation>
+    </message>
+    <message>
+        <source>%1 · Enemy</source>
+        <translation>%1 · Düşman</translation>
+    </message>
+    <message>
+        <source>%1 · Yours</source>
+        <translation>%1 · Senin</translation>
     </message>
     <message numerus="yes">
         <source>%n attacking</source>
@@ -7573,8 +7625,8 @@ bir harita seç</translation>
         <translation>Nehir vadinin ortasından kuzeyden güneye akar; en yakın geçit kampın tam doğusunda.</translation>
     </message>
     <message>
-        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.</source>
-        <translation>Demek izciler geri dönmüyor. Peki - herkes bir yerden başlar ve sen öğle yemeğini bekleyen on bir adamı öldürerek başladın. Roma bir dahakine sayabilen birini yollar.</translation>
+        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
+        <translation>Demek izciler geri dönmüyor. Peki - herkes bir yerden başlar ve sen öğle yemeğini bekleyen adamlarla dolu bir karakolu dağıtarak başladın. Roma bir dahakine sayabilen birini yollar.</translation>
     </message>
     <message>
         <source>The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here.</source>
@@ -9611,6 +9663,30 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
         <source>Not enough %1: %2 needed</source>
         <translation>Yetersiz %1: %2 gerekli</translation>
     </message>
+    <message>
+        <source>ALLIES</source>
+        <translation>MÜTTEFİKLER</translation>
+    </message>
+    <message>
+        <source>No allies to trade with in this battle.</source>
+        <translation>Bu savaşta ticaret yapılacak müttefik yok.</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Gönder</translation>
+    </message>
+    <message>
+        <source>Give %1 %2 to %3</source>
+        <translation>%3 için %1 %2 ver</translation>
+    </message>
+    <message>
+        <source>Request</source>
+        <translation>İste</translation>
+    </message>
+    <message>
+        <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
+        <translation>%1 komutanından %2 %3 iste. Fazlası olan cömert bir komutan kabul eder; savaşçı ya da yoksul olan vermez.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionViewModel</name>
@@ -9645,6 +9721,26 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <message>
         <source>Not enough %1 to sell.</source>
         <translation>Satmak için yeterli %1 yok.</translation>
+    </message>
+    <message>
+        <source>gold</source>
+        <translation>altın</translation>
+    </message>
+    <message>
+        <source>Allies can only exchange gold, food, wood, stone or iron.</source>
+        <translation>Müttefikler yalnızca altın, yiyecek, odun, taş veya demir değiş tokuş edebilir.</translation>
+    </message>
+    <message>
+        <source>Choose an ally to trade with.</source>
+        <translation>Ticaret yapacağın bir müttefik seç.</translation>
+    </message>
+    <message>
+        <source>You need a marketplace to deal with your allies.</source>
+        <translation>Müttefiklerinle anlaşmak için bir pazar yerine ihtiyacın var.</translation>
+    </message>
+    <message>
+        <source>Not enough %1 to send.</source>
+        <translation>Göndermek için yeterli %1 yok.</translation>
     </message>
 </context>
 <context>
@@ -10992,6 +11088,14 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
         <translation>Kırmızı taslak alanın kapalı olduğunu gösterir: başka bir yapıya fazla yakın, suyun üstünde ya da eğimde. Onu düz ve açık zemine taşı ve onaylamak için sol tıkla. Sağ tık iptal eder.</translation>
     </message>
     <message>
+        <source>Press Deliver, then click your barracks: the civilian walks there and joins its reserve, and you can recruit again.</source>
+        <translation>Teslim et&apos;e bas, sonra kışlana tıkla: sivil oraya yürür, yedeğine katılır ve yeniden asker toplayabilirsin.</translation>
+    </message>
+    <message>
+        <source>A Home raises civilians, not soldiers. Recruit a civilian here, select it when it steps out, press Deliver and click your barracks to refill its reserve.</source>
+        <translation>Ev asker değil sivil yetiştirir. Burada bir sivil topla, dışarı çıkınca onu seç, Teslim et&apos;e bas ve yedeğini doldurmak için kışlana tıkla.</translation>
+    </message>
+    <message>
         <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
         <translation>Devşirilenler kışladan gelir. Sağdaki üretim panelini açmak için kışlana sol tıkla.</translation>
     </message>
@@ -11152,8 +11256,8 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
         <translation>Seçili birliklerini hareket ettirmek için zemine sağ tıkla</translation>
     </message>
     <message>
-        <source>Destroy the Roman scouting party (%1 soldiers)</source>
-        <translation>Roma keşif kolunu yok et (%1 asker)</translation>
+        <source>Destroy the Roman scouting party (%1 units)</source>
+        <translation>Roma keşif kolunu yok et (%1 birlik)</translation>
     </message>
     <message>
         <source>Deliver %1 wood to your barracks yard</source>

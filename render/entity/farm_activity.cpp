@@ -32,7 +32,7 @@ constexpr float k_pi = 3.14159265F;
 constexpr float k_tend_cycle_seconds = 2.6F;
 constexpr float k_reap_cycle_seconds = 2.2F;
 constexpr float k_kneel_cycle_seconds = 3.0F;
-constexpr float k_idle_cycle_seconds = 3.6F;
+constexpr float k_idle_cycle_seconds = 8.0F;
 constexpr float k_soil_y = 0.035F;
 
 constexpr float k_blend_seconds = 0.35F;
@@ -205,6 +205,7 @@ struct Bout {
   float pause{0.0F};
   float step{0.0F};
   float step_metres{0.0F};
+  float stroke_cycle{0.0F};
 };
 
 struct WorkerPlan {
@@ -224,17 +225,22 @@ auto worker_plan(std::uint64_t field_id, int worker, bool ripe) -> WorkerPlan {
       salt(field_seed(field_id), 101U + static_cast<std::uint32_t>(worker) * 17U);
   WorkerPlan plan{};
   const bool kneeling = worker == k_farm_headland_lane;
+  const float jitter = 0.86F + 0.28F * unit(salt(w, 1U));
+  const float schedule_cycle =
+      (kneeling ? k_kneel_cycle_seconds : k_tend_cycle_seconds) * jitter;
   const float base = kneeling ? k_kneel_cycle_seconds
                      : ripe   ? k_reap_cycle_seconds
                               : k_tend_cycle_seconds;
-  plan.stroke_cycle = base * (0.86F + 0.28F * unit(salt(w, 1U)));
+  plan.stroke_cycle = base * jitter;
 
-  plan.walk_speed = 0.85F + 0.35F * unit(salt(w, 2U));
+  plan.walk_speed = 0.62F + 0.18F * unit(salt(w, 2U));
   for (std::uint32_t j = 0; j < 3U; ++j) {
     auto& bout = plan.bouts[j];
     const auto strokes =
         static_cast<float>((kneeling ? 4U : 3U) + (salt(w, 10U + j) % 4U));
-    bout.work = strokes * plan.stroke_cycle;
+    bout.work = strokes * schedule_cycle;
+    const float wanted = base * jitter;
+    bout.stroke_cycle = bout.work / std::max(1.0F, std::round(bout.work / wanted));
     bout.pause = 1.3F + 2.4F * unit(salt(w, 20U + j));
     bout.step = 1.0F + 1.1F * unit(salt(w, 30U + j));
     bout.step_metres = bout.step * plan.walk_speed;
@@ -266,6 +272,7 @@ auto sample_worker(const WorkerPlan& plan, float time) -> FarmWorkerBeat {
       beat.kind = FarmWorkerBeat::Kind::Work;
       beat.elapsed = local;
       beat.duration = bout.work;
+      beat.stroke_cycle = bout.stroke_cycle;
 
       beat.previous_phase = fract(before.step_metres / Nap::k_walk_metres_per_cycle);
       return beat;
@@ -315,7 +322,7 @@ auto gatherer_plan(std::uint64_t field_id) -> GathererPlan {
   plan.bundle = 5.5F + 5.0F * unit(salt(w, 1U));
   plan.lift = 0.9F + 0.3F * unit(salt(w, 2U));
   plan.drop = 1.0F + 0.4F * unit(salt(w, 3U));
-  plan.walk_speed = 0.9F + 0.3F * unit(salt(w, 4U));
+  plan.walk_speed = 0.66F + 0.20F * unit(salt(w, 4U));
   plan.offset_fraction = unit(salt(w, 5U));
   plan.bundle_z = 0.02F + 0.28F * unit(salt(w, 6U));
   plan.hatted = (salt(w, 7U) % 5U) != 0U;

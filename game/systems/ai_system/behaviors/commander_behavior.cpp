@@ -21,10 +21,21 @@ struct ArmyCentre {
   int count = 0;
 };
 
-auto compute_army_centre(const AISnapshot& snapshot) -> ArmyCentre {
+auto leads_from_the_front(const AIStrategyConfig& config) -> bool;
+
+auto compute_army_centre(const AISnapshot& snapshot,
+                         const AIContext& context) -> ArmyCentre {
+  const bool wave_marches_alone =
+      context.wave.committed && !leads_from_the_front(context.strategy_config);
   ArmyCentre centre;
   for (const auto& entity : snapshot.friendly_units) {
-    if (!marches_with_the_army(entity)) {
+
+    if (!stands_in_the_muster(entity)) {
+      continue;
+    }
+    if (wave_marches_alone && std::find(context.wave.members.begin(),
+                                        context.wave.members.end(),
+                                        entity.id) != context.wave.members.end()) {
       continue;
     }
     centre.x += entity.pos_x;
@@ -228,7 +239,7 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
   m_rally_timer += delta_time;
   m_aura_timer += delta_time;
 
-  const ArmyCentre army = compute_army_centre(snapshot);
+  const ArmyCentre army = compute_army_centre(snapshot, context);
   const auto& config = context.strategy_config;
 
   if (m_rally_timer >= rally_interval_for(config)) {

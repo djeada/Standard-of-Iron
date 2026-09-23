@@ -1,3 +1,4 @@
+#include <QJsonObject>
 #include <QSet>
 #include <QStringList>
 #include <QVariantList>
@@ -60,10 +61,10 @@ TEST(TutorialDirectorTest, StepsFollowTheTeachingOrderAndFinishOnVictory) {
   EXPECT_EQ(director.step(), TutorialStepId::AttackScouts);
 
   o = running();
-  o.enemy_troops_defeated = 5;
+  o.enemy_units_defeated = 5;
   director.advance(o, 0.2F);
   EXPECT_FALSE(director.step_complete());
-  o.enemy_troops_defeated = 5 + Game::Mission::k_tutorial_scout_count;
+  o.enemy_units_defeated = 5 + Game::Mission::k_tutorial_scout_count;
   ASSERT_TRUE(complete_with(director, o));
   EXPECT_EQ(director.step(), TutorialStepId::GatherWood);
 
@@ -189,15 +190,15 @@ TEST(TutorialDirectorTest, SkipReplayContinueAndRestartMoveTheStepPointer) {
   EXPECT_FALSE(director.step_complete());
 
   o = running();
-  o.enemy_troops_defeated = 1;
+  o.enemy_units_defeated = 1;
   director.advance(o, 0.2F);
   director.replay_step();
   EXPECT_EQ(director.step(), TutorialStepId::AttackScouts);
-  o.enemy_troops_defeated = 2;
+  o.enemy_units_defeated = 2;
   director.advance(o, 0.2F);
   EXPECT_FALSE(director.step_complete())
       << "after a replay the kills before the replay do not count";
-  o.enemy_troops_defeated = 2 + Game::Mission::k_tutorial_scout_count;
+  o.enemy_units_defeated = 2 + Game::Mission::k_tutorial_scout_count;
   director.advance(o, 0.2F);
   EXPECT_TRUE(director.step_complete());
 
@@ -433,4 +434,141 @@ TEST(TutorialDirectorTest, CompletedStepStopsPointing) {
   EXPECT_TRUE(director.focus_actions().isEmpty());
   EXPECT_TRUE(director.focus_region().isEmpty());
   EXPECT_TRUE(director.focus_target().isEmpty());
+}
+
+TEST(TutorialDirectorTest, TheScoutStepCountsWholeEnemyUnitsNotMen) {
+  TutorialDirector director;
+  director.begin();
+  director.skip_step();
+  director.skip_step();
+  ASSERT_EQ(director.step(), TutorialStepId::AttackScouts);
+
+  TutorialObservation o = running();
+  director.advance(o, 0.2F);
+  o.enemy_units_defeated = Game::Mission::k_tutorial_scout_count - 1;
+  director.advance(o, 0.2F);
+  EXPECT_FALSE(director.step_complete())
+      << "one scout squad down is not the whole scouting party";
+  o.enemy_units_defeated = Game::Mission::k_tutorial_scout_count;
+  director.advance(o, 0.2F);
+  EXPECT_TRUE(director.step_complete());
+}
+
+TEST(TutorialDirectorTest, ASavedTutorialResumesOnTheSameStepWithItsProgress) {
+  TutorialDirector director;
+  director.begin();
+  for (int i = 0; i < 3; ++i) {
+    director.skip_step();
+  }
+  ASSERT_EQ(director.step(), TutorialStepId::GatherWood);
+  TutorialObservation o = running();
+  o.harvested_wood = 100;
+  director.advance(o, 0.2F);
+  o.harvested_wood = 125;
+  director.advance(o, 0.2F);
+  director.set_visible(false);
+
+  const QJsonObject state = director.serialize();
+  ASSERT_FALSE(state.isEmpty());
+
+  TutorialDirector loaded;
+  loaded.begin();
+  loaded.restore(state, 0);
+  EXPECT_TRUE(loaded.active());
+  EXPECT_EQ(loaded.step(), TutorialStepId::GatherWood);
+  EXPECT_FALSE(loaded.visible());
+  EXPECT_TRUE(loaded.holds_mission_clock());
+  const QVariantList steps = loaded.steps();
+  EXPECT_EQ(steps[0].toMap()["state"].toString(), QStringLiteral("complete"));
+  EXPECT_EQ(steps[3].toMap()["state"].toString(), QStringLiteral("active"));
+
+  o.harvested_wood = 125;
+  loaded.advance(o, 0.2F);
+  EXPECT_EQ(loaded.progress_text(), QStringLiteral("25 / 40"))
+      << "the wood hauled before the save still counts";
+  o.harvested_wood = 100 + Game::Mission::k_tutorial_wood_target;
+  loaded.advance(o, 0.2F);
+  EXPECT_TRUE(loaded.step_complete());
+}
+
+TEST(TutorialDirectorTest, ASaveWithoutTutorialStateSkipsPastABrokenRaid) {
+  TutorialDirector fresh;
+  fresh.begin();
+  fresh.restore({}, 0);
+  EXPECT_EQ(fresh.step(), TutorialStepId::SelectTroops);
+
+  TutorialDirector late;
+  late.begin();
+  late.restore({}, 1);
+  EXPECT_EQ(late.step(), TutorialStepId::Stances);
+  EXPECT_FALSE(late.holds_mission_clock());
+
+  TutorialDirector future;
+  future.begin();
+  QJsonObject newer;
+  newer["version"] = 99;
+  newer["step"] = QStringLiteral("assault");
+  future.restore(newer, 0);
+  EXPECT_EQ(future.step(), TutorialStepId::SelectTroops);
+}
+
+TEST(TutorialDirectorTest, AFinishedTutorialStaysFinishedAfterALoad) {
+  TutorialDirector director;
+  director.begin();
+  while (director.active()) {
+    director.skip_step();
+  }
+  ASSERT_TRUE(director.finished());
+  const QJsonObject state = director.serialize();
+
+  TutorialDirector loaded;
+  loaded.begin();
+  loaded.restore(state, 1);
+  EXPECT_TRUE(loaded.finished());
+  EXPECT_FALSE(loaded.active());
+  EXPECT_TRUE(TutorialDirector().serialize().isEmpty());
+}
+
+TEST(TutorialDirectorTest, TheArmyStepExplainsHowAHomeRefillsTheBarracks) {
+  TutorialDirector director;
+  director.begin();
+  while (director.step() != TutorialStepId::AssembleArmy) {
+    director.skip_step();
+  }
+
+  TutorialObservation o = running();
+  o.selected_building_count = 1;
+  o.selected_home_count = 1;
+  director.advance(o, 0.2F);
+  EXPECT_TRUE(director.hint().contains(QStringLiteral("Deliver")))
+      << "with a Home selected the hint must not just repeat 'click your barracks'";
+
+  o = running();
+  o.selected_civilian_count = 1;
+  director.advance(o, 0.2F);
+  EXPECT_TRUE(director.hint().contains(QStringLiteral("Deliver")));
+}
+
+TEST(TutorialDirectorTest, ScoutKillsBeforeASaveStillCountAfterTheLoad) {
+  TutorialDirector director;
+  director.begin();
+  director.skip_step();
+  director.skip_step();
+  ASSERT_EQ(director.step(), TutorialStepId::AttackScouts);
+  TutorialObservation o = running();
+  o.enemy_units_defeated = 3;
+  director.advance(o, 0.2F);
+  o.enemy_units_defeated = 4;
+  director.advance(o, 0.2F);
+  ASSERT_FALSE(director.step_complete());
+
+  TutorialDirector loaded;
+  loaded.begin();
+  loaded.restore(director.serialize(), 0);
+  o.enemy_units_defeated = 4;
+  loaded.advance(o, 0.2F);
+  EXPECT_EQ(loaded.progress_text(), QStringLiteral("1 / 2"));
+  o.enemy_units_defeated = 5;
+  loaded.advance(o, 0.2F);
+  EXPECT_TRUE(loaded.step_complete());
 }

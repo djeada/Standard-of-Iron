@@ -3433,6 +3433,50 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>A save is already in progress.</source>
         <translation>A save is already in progress.</translation>
     </message>
+    <message>
+        <source>your ally</source>
+        <translation>حليفك</translation>
+    </message>
+    <message>
+        <source>gold</source>
+        <translation>ذهب</translation>
+    </message>
+    <message>
+        <source>food</source>
+        <translation>طعام</translation>
+    </message>
+    <message>
+        <source>wood</source>
+        <translation>خشب</translation>
+    </message>
+    <message>
+        <source>stone</source>
+        <translation>حجر</translation>
+    </message>
+    <message>
+        <source>iron</source>
+        <translation>حديد</translation>
+    </message>
+    <message>
+        <source>Sent %1 %2 to %3.</source>
+        <translation>أُرسل %1 %2 إلى %3.</translation>
+    </message>
+    <message>
+        <source>%1 sends you %2 %3.</source>
+        <translation>يرسل إليك %1 ‏%2 %3.</translation>
+    </message>
+    <message>
+        <source>%1 can spare only %2 of the %3 %4 you asked for.</source>
+        <translation>لا يستطيع %1 أن يمنح سوى %2 من %3 %4 التي طلبتها.</translation>
+    </message>
+    <message>
+        <source>%1 has no %2 to spare.</source>
+        <translation>ليس لدى %1 %2 فائض.</translation>
+    </message>
+    <message>
+        <source>%1 refuses to part with any %2.</source>
+        <translation>يرفض %1 التخلي عن أي %2.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -3664,6 +3708,14 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>TARGET</source>
         <translation>الهدف</translation>
+    </message>
+    <message>
+        <source>%1 · Enemy</source>
+        <translation>%1 · عدو</translation>
+    </message>
+    <message>
+        <source>%1 · Yours</source>
+        <translation>%1 · لك</translation>
     </message>
     <message numerus="yes">
         <source>%n attacking</source>
@@ -7224,8 +7276,8 @@ to see preview</source>
         <translation>يحتفظ النهر بكل ما يُعطاه. دخلت فيلتك ولم تخرج كلها، والتريبيا ليس نهرًا كبيرًا. وما احتاجت روما يومًا إلى نهرٍ كبير.</translation>
     </message>
     <message>
-        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.</source>
-        <translation>فالطلائع لن تعود إذن. حسنٌ — كلٌّ يبدأ من مكانٍ ما، وقد بدأتَ بقتل أحد عشر رجلًا كانوا ينتظرون غداءهم. وستُرسل روما في المرة القادمة مَن له وزن.</translation>
+        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
+        <translation>فالطلائع لن تعود إذن. حسنٌ — كلٌّ يبدأ من مكانٍ ما، وقد بدأتَ بتحطيم مخفرٍ مليءٍ برجالٍ كانوا ينتظرون غداءهم. وستُرسل روما في المرة القادمة مَن له وزن.</translation>
     </message>
     <message>
         <source>Then it holds a little longer. Go home to your Senate and tell them what a Roman looks like from close to. I shall be here in the spring, and the spring after that, and I am younger than you.</source>
@@ -9626,6 +9678,30 @@ Builders reap it for the food that recruits civilians</source>
         <source>Not enough %1: %2 needed</source>
         <translation>%1 غير كافٍ: يلزم %2</translation>
     </message>
+    <message>
+        <source>ALLIES</source>
+        <translation>الحلفاء</translation>
+    </message>
+    <message>
+        <source>No allies to trade with in this battle.</source>
+        <translation>لا حلفاء للتبادل معهم في هذه المعركة.</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>أرسل</translation>
+    </message>
+    <message>
+        <source>Give %1 %2 to %3</source>
+        <translation>امنح %3 ‏%1 %2</translation>
+    </message>
+    <message>
+        <source>Request</source>
+        <translation>اطلب</translation>
+    </message>
+    <message>
+        <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
+        <translation>اطلب من %1 ‏%2 %3. القائد الكريم ذو الفائض يوافق؛ والمحارب أو الفقير يحتفظ به.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionViewModel</name>
@@ -9660,6 +9736,26 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>The marketplace does not trade that.</source>
         <translation>السوق لا يتاجر بهذا.</translation>
+    </message>
+    <message>
+        <source>gold</source>
+        <translation>ذهب</translation>
+    </message>
+    <message>
+        <source>Allies can only exchange gold, food, wood, stone or iron.</source>
+        <translation>لا يتبادل الحلفاء إلا الذهب والطعام والخشب والحجر والحديد.</translation>
+    </message>
+    <message>
+        <source>Choose an ally to trade with.</source>
+        <translation>اختر حليفًا للتبادل معه.</translation>
+    </message>
+    <message>
+        <source>You need a marketplace to deal with your allies.</source>
+        <translation>تحتاج إلى سوق للتعامل مع حلفائك.</translation>
+    </message>
+    <message>
+        <source>Not enough %1 to send.</source>
+        <translation>لا يكفي %1 للإرسال.</translation>
     </message>
 </context>
 <context>
@@ -11007,6 +11103,14 @@ Builders reap it for the food that recruits civilians</source>
         <translation>الإطار الأحمر يعني أن الموقع محجوب: قريب جدًا من مبنى آخر، أو فوق الماء، أو على منحدر. انقله إلى أرض مستوية مكشوفة وانقر بالزر الأيسر للتأكيد. الزر الأيمن يلغي.</translation>
     </message>
     <message>
+        <source>Press Deliver, then click your barracks: the civilian walks there and joins its reserve, and you can recruit again.</source>
+        <translation>اضغط «أوصِل» ثم انقر على ثكنتك: سيمشي المدني إليها وينضم إلى احتياطها، ويمكنك التجنيد من جديد.</translation>
+    </message>
+    <message>
+        <source>A Home raises civilians, not soldiers. Recruit a civilian here, select it when it steps out, press Deliver and click your barracks to refill its reserve.</source>
+        <translation>المنزل يربّي مدنيين لا جنودًا. جنّد مدنيًا هنا، واختره حين يخرج، ثم اضغط «أوصِل» وانقر على ثكنتك لتعبئة احتياطها.</translation>
+    </message>
+    <message>
         <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
         <translation>يأتي المجنّدون من الثكنة. انقر بالزر الأيسر على ثكنتك لفتح لوحة الإنتاج على اليمين.</translation>
     </message>
@@ -11159,8 +11263,8 @@ Builders reap it for the food that recruits civilians</source>
         <translation>انقر بالزر الأيمن على الأرض لتحريك قواتك المحددة</translation>
     </message>
     <message>
-        <source>Destroy the Roman scouting party (%1 soldiers)</source>
-        <translation>دمّر فرقة الكشافة الرومانية (%1 جنود)</translation>
+        <source>Destroy the Roman scouting party (%1 units)</source>
+        <translation>دمّر فرقة الكشافة الرومانية (%1 وحدات)</translation>
     </message>
     <message>
         <source>Deliver %1 wood to your barracks yard</source>

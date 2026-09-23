@@ -285,6 +285,69 @@ TEST_F(AutoGatherTest, AStopOrderCancelsTheStandingOrder) {
   EXPECT_FALSE(builder_of(worker)->auto_gather);
 }
 
+TEST_F(AutoGatherTest, AStopOrderCallsOffTheNodeTheWorkerIsAlreadyOn) {
+  lay_out({{.type = WorldProp::Type::PineTree, .x = 3.0F, .z = 0.0F}});
+  Engine::Core::World world;
+  auto* worker = add_builder(world, 0.0F, 0.0F);
+  order_auto_gather(world, worker);
+  think(world);
+  const auto claimed = builder_of(worker)->task_target_id;
+  ASSERT_TRUE(builder_of(worker)->has_task_target);
+  builder_of(worker)->in_progress = true;
+
+  Game::Command::Command command;
+  command.owner_id = 1;
+  command.payload = Game::Command::Stop{.units = {worker->get_id()}};
+  Game::Command::dispatch(world, command);
+
+  const auto* builder = builder_of(worker);
+  EXPECT_FALSE(builder->auto_gather);
+  EXPECT_FALSE(builder->has_gather_order);
+  EXPECT_FALSE(builder->has_task_target);
+  EXPECT_FALSE(builder->has_construction_site)
+      << "a claimed node left behind walks the worker straight back to it";
+  EXPECT_FALSE(builder->in_progress);
+  EXPECT_FALSE(Game::Map::TerrainService::instance().is_world_prop_reserved(claimed));
+
+  think(world);
+  EXPECT_FALSE(builder_of(worker)->has_task_target);
+}
+
+TEST_F(AutoGatherTest, APlayerMoveCallsOffTheNodeTheWorkerIsAlreadyOn) {
+  lay_out({{.type = WorldProp::Type::PineTree, .x = 3.0F, .z = 0.0F}});
+  Engine::Core::World world;
+  auto* worker = add_builder(world, 0.0F, 0.0F);
+  order_auto_gather(world, worker);
+  think(world);
+  ASSERT_TRUE(builder_of(worker)->has_task_target);
+
+  Game::Command::Command command;
+  command.owner_id = 1;
+  command.payload = Game::Command::Move{.units = {worker->get_id()},
+                                        .targets = {QVector3D(-4.0F, 0.0F, 0.0F)}};
+  Game::Command::dispatch(world, command);
+
+  EXPECT_FALSE(builder_of(worker)->has_task_target);
+  EXPECT_FALSE(builder_of(worker)->has_construction_site);
+}
+
+TEST_F(AutoGatherTest, AStopOrderLeavesAConstructionJobAlone) {
+  lay_out({});
+  Engine::Core::World world;
+  auto* worker = add_builder(world, 0.0F, 0.0F);
+  auto* builder = builder_of(worker);
+  builder->product_type = "home";
+  builder->has_construction_site = true;
+
+  Game::Command::Command command;
+  command.owner_id = 1;
+  command.payload = Game::Command::Stop{.units = {worker->get_id()}};
+  Game::Command::dispatch(world, command);
+
+  EXPECT_TRUE(builder_of(worker)->has_construction_site);
+  EXPECT_EQ(builder_of(worker)->product_type, "home");
+}
+
 TEST_F(AutoGatherTest, TheOrderCanBeToggledOffWithoutTouchingTheRest) {
   lay_out({{.type = WorldProp::Type::PineTree, .x = 3.0F, .z = 0.0F}});
   Engine::Core::World world;

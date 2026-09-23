@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "core/component_economy.h"
+#include "core/component_presentation.h"
 #include "core/ownership_constants.h"
 #include "core/world.h"
 #include "game/command/command_dispatcher.h"
@@ -201,6 +202,11 @@ TEST_F(FoodEconomyTest, ReapingARipeFarmLoadsFoodAndSowsTheFieldAgain) {
   const auto* farm = farm_entity->get_component<Engine::Core::FarmComponent>();
   EXPECT_FLOAT_EQ(farm->growth, 0.0F) << "the reaped field starts its next cycle";
   EXPECT_EQ(farm->harvests, 1);
+  const auto* flare =
+      farm_entity->get_component<Engine::Core::ProductionCompletionComponent>();
+  ASSERT_NE(flare, nullptr) << "a reaped field flares gold like a fresh recruit";
+  EXPECT_EQ(flare->style, Engine::Core::SpawnFlareStyle::Recruit);
+  EXPECT_GT(flare->radius, 3.0F) << "the flare covers the field, not a single man";
 
   const auto* builder =
       worker->get_component<Engine::Core::BuilderProductionComponent>();

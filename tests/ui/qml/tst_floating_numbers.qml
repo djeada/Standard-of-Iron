@@ -238,4 +238,22 @@ TestCase {
             }, 3000);
         verify(numbers.activeTicks <= numbers.maxTicks, "the cap held at " + numbers.activeTicks);
     }
+
+    function test_anchor_bookkeeping_survives_a_long_battle_of_churn() {
+        for (var round = 0; round < 40; ++round) {
+            for (var anchor = 1; anchor <= 400; ++anchor) {
+                var key = (anchor % 2 === 0 ? "b" : "t") + (anchor + round * 7919);
+                numbers.acquire_anchor(key);
+                numbers.acquire_anchor(key);
+                verify(numbers.anchor_busy(key, 2));
+                numbers.release_anchor(key);
+                numbers.release_anchor(key);
+                verify(!numbers.anchor_busy(key, 1));
+            }
+        }
+        compare(numbers.activeByAnchor.size, 0);
+        numbers.release_anchor("t1");
+        compare(numbers.activeByAnchor.size, 0);
+        verify(!numbers.anchor_busy("", 0));
+    }
 }

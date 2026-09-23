@@ -46,14 +46,48 @@ struct Pose {
   float phase{0.0F};
   bool dwelling{false};
   float dwell_time{0.0F};
+  std::uint16_t blend_clip{0xFFFFU};
+  float blend_phase{0.0F};
+  float blend_weight{0.0F};
+  std::uint16_t overlay_clip{0xFFFFU};
+  float overlay_phase{0.0F};
 };
+
+constexpr float k_idle_cycle_seconds = 8.0F;
+constexpr float k_ramp_fraction = 0.16F;
+constexpr float k_turn_metres = 0.30F;
+constexpr float k_turn_seconds = 0.55F;
+constexpr float k_blend_seconds = 0.30F;
+
+auto smooth(float t) -> float {
+  const float c = std::clamp(t, 0.0F, 1.0F);
+  return c * c * (3.0F - 2.0F * c);
+}
+
+auto lerp_yaw(float from, float to, float t) -> float {
+  const float delta = std::remainder(to - from, 360.0F);
+  return from + delta * std::clamp(t, 0.0F, 1.0F);
+}
+
+auto eased_travel(float s) -> float {
+  const float r = k_ramp_fraction;
+  const float v = 1.0F / (1.0F - r);
+  if (s < r) {
+    return 0.5F * v * s * s / r;
+  }
+  if (s > 1.0F - r) {
+    const float left = 1.0F - s;
+    return 1.0F - (0.5F * v * left * left / r);
+  }
+  return 0.5F * v * r + v * (s - r);
+}
 
 auto walk_route(const std::array<QVector3D, k_max_route>& points,
                 std::size_t count,
                 const QVector3D& facing,
                 float time,
                 std::uint32_t seed,
-                std::uint16_t walk_clip) -> Pose {
+                bool porter) -> Pose {
   std::array<std::size_t, (k_max_route * 2) - 2> order{};
   std::size_t stops = 0;
   for (std::size_t p = 0; p < count; ++p) {
@@ -62,33 +96,60 @@ auto walk_route(const std::array<QVector3D, k_max_route>& points,
   for (std::size_t p = count - 2; p >= 1 && p < count; --p) {
     order[stops++] = p;
   }
+  const float walk_speed = k_walk_speed * (0.92F + roll(seed, 17U) * 0.16F);
+  auto leg_heading = [&](std::size_t leg) {
+    QVector3D heading = points[order[(leg + 1) % stops]] - points[order[leg]];
+    heading.setY(0.0F);
+    return yaw_of(heading);
+  };
+  auto leg_time = [&](std::size_t leg) {
+    const float length =
+        (points[order[(leg + 1) % stops]] - points[order[leg]]).length();
+    return length / (walk_speed * (1.0F - 0.5F * k_ramp_fraction * 2.0F)) + 1e-4F;
+  };
   float cycle = 0.0F;
   const float far_dwell = 5.0F + roll(seed, 11U) * 6.0F;
   const float near_dwell = 2.5F + roll(seed, 13U) * 4.0F;
   for (std::size_t leg = 0; leg < stops; ++leg) {
-    cycle +=
-        (points[order[(leg + 1) % stops]] - points[order[leg]]).length() / k_walk_speed;
+    cycle += leg_time(leg);
   }
   cycle += far_dwell + near_dwell;
   float t = std::fmod(time + roll(seed, 3U) * cycle, std::max(cycle, 0.01F));
   float walked = 0.0F;
+  const std::uint16_t walk_clip = Animation::k_humanoid_walk_clip;
+  auto apply_carry = [&](Pose& pose) {
+    if (porter) {
+      pose.overlay_clip = Animation::k_humanoid_resource_carry_clip;
+      pose.overlay_phase = fract(time / 1.8F);
+    }
+  };
   for (std::size_t leg = 0; leg < stops; ++leg) {
     const QVector3D& from = points[order[leg]];
     const QVector3D& to = points[order[(leg + 1) % stops]];
-    const float leg_seconds = (to - from).length() / k_walk_speed;
-    if (t < leg_seconds) {
-      const float s = t / std::max(leg_seconds, 1e-4F);
+    const float length = (to - from).length();
+    const float seconds = leg_time(leg);
+    const float heading = leg_heading(leg);
+    const std::size_t started_at = order[leg];
+    const bool from_dwell = started_at == 0 || started_at == count - 1;
+    if (t < seconds) {
+      const float travelled = eased_travel(t / seconds) * length;
       Pose pose;
-      pose.position = from + (to - from) * s;
-      QVector3D heading = to - from;
-      heading.setY(0.0F);
-      pose.yaw = yaw_of(heading);
+      pose.position = from + (to - from) * (travelled / std::max(length, 1e-4F));
+      const float previous =
+          from_dwell ? yaw_of(facing - from) : leg_heading((leg + stops - 1) % stops);
+      pose.yaw = lerp_yaw(previous, heading, smooth(travelled / k_turn_metres));
       pose.clip = walk_clip;
-      pose.phase = fract((walked + t * k_walk_speed) / k_metres_per_cycle);
+      pose.phase = fract((walked + travelled) / k_metres_per_cycle);
+      if (from_dwell && t < k_blend_seconds) {
+        pose.blend_clip = Animation::k_humanoid_idle_clip;
+        pose.blend_phase = 0.0F;
+        pose.blend_weight = 1.0F - smooth(t / k_blend_seconds);
+      }
+      apply_carry(pose);
       return pose;
     }
-    t -= leg_seconds;
-    walked += leg_seconds * k_walk_speed;
+    t -= seconds;
+    walked += length;
     const std::size_t arrived = order[(leg + 1) % stops];
     const bool far_end = arrived == count - 1;
     const bool near_end = arrived == 0;
@@ -99,11 +160,21 @@ auto walk_route(const std::array<QVector3D, k_max_route>& points,
     if (t < dwell) {
       Pose pose;
       pose.position = to;
-      pose.yaw = yaw_of(facing - to);
+      const float stand = yaw_of(facing - to);
+      const float next = leg_heading((leg + 1) % stops);
+      pose.yaw = lerp_yaw(heading, stand, smooth(t / k_turn_seconds));
+      pose.yaw = lerp_yaw(
+          pose.yaw, next, smooth((t - (dwell - k_turn_seconds)) / k_turn_seconds));
       pose.clip = Animation::k_humanoid_idle_clip;
-      pose.phase = fract(t / 3.6F);
+      pose.phase = fract(t / k_idle_cycle_seconds + roll(seed, 5U));
       pose.dwelling = far_end;
       pose.dwell_time = t;
+      if (t < k_blend_seconds) {
+        pose.blend_clip = walk_clip;
+        pose.blend_phase = fract(walked / k_metres_per_cycle);
+        pose.blend_weight = 1.0F - smooth(t / k_blend_seconds);
+      }
+      apply_carry(pose);
       return pose;
     }
     t -= dwell;
@@ -178,21 +249,17 @@ void submit_ambient_people(const DrawContext& ctx,
     AmbientRole stance = person.role;
     float stance_time = time;
     if (walks) {
-      pose = walk_route(world_route,
-                        count,
-                        facing,
-                        time,
-                        seed,
-                        person.role == AmbientRole::Porter
-                            ? Animation::k_humanoid_resource_carry_clip
-                            : Animation::k_humanoid_walk_clip);
+      pose = walk_route(
+          world_route, count, facing, time, seed, person.role == AmbientRole::Porter);
       stance = pose.dwelling ? person.linger : AmbientRole::Stroll;
       stance_time = pose.dwell_time;
     } else {
       pose.position = world_route[0];
     }
     if (stance != AmbientRole::Stroll && stance != AmbientRole::Porter) {
-      pose.yaw = yaw_of(facing - pose.position);
+      if (!walks) {
+        pose.yaw = yaw_of(facing - pose.position);
+      }
       switch (stance) {
       case AmbientRole::Weave:
         pose.clip = Animation::k_humanoid_idle_weave_clip;
@@ -213,13 +280,13 @@ void submit_ambient_people(const DrawContext& ctx,
           pose.phase = std::clamp((cycle - 5.4F) / 2.1F, 0.0F, 1.0F);
         } else {
           pose.clip = Animation::k_humanoid_idle_clip;
-          pose.phase = fract(cycle / 3.6F);
+          pose.phase = fract(cycle / k_idle_cycle_seconds);
         }
         break;
       }
       default:
         pose.clip = Animation::k_humanoid_idle_clip;
-        pose.phase = fract(stance_time / 3.6F + roll(seed, 1U));
+        pose.phase = fract(stance_time / k_idle_cycle_seconds + roll(seed, 1U));
         pose.yaw += linger_turn;
         break;
       }
@@ -253,6 +320,11 @@ void submit_ambient_people(const DrawContext& ctx,
                            .instance = instance++,
                            .seed = seed,
                            .distant = pixels >= 0.0F && pixels < 60.0F,
+                           .blend_clip = pose.blend_clip,
+                           .blend_phase = pose.blend_phase,
+                           .blend_weight = pose.blend_weight,
+                           .overlay_clip = pose.overlay_clip,
+                           .overlay_phase = pose.overlay_phase,
                        });
     --activity->remaining_ambient_actors;
   }

@@ -101,7 +101,8 @@ TEST_F(OrderFeedbackTest, FriendlyTargetIsRejectedAndNothingIsDispatched) {
   EXPECT_EQ(archer->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
 }
 
-TEST_F(OrderFeedbackTest, ACrewHaulingALoadRefusesEveryOrderUntilItIsDroppedOff) {
+TEST_F(OrderFeedbackTest,
+       ACrewHaulingALoadRefusesEveryOrderButStopUntilItIsDroppedOff) {
   auto* hauler = create_unit(0.0F, 0.0F, 1);
   auto* carry = hauler->add_component<Engine::Core::ResourceCarryComponent>();
   carry->amounts.set(Game::Systems::ResourceType::Wood, 10);
@@ -123,8 +124,8 @@ TEST_F(OrderFeedbackTest, ACrewHaulingALoadRefusesEveryOrderUntilItIsDroppedOff)
   stop.kind = OrderKind::Stop;
   stop.payload = Game::Command::Stop{.units = {hauler->get_id()}};
   const auto stop_outcome = App::Core::submit_player_order(world, 1, std::move(stop));
-  EXPECT_TRUE(stop_outcome.rejected());
-  EXPECT_EQ(stop_outcome.failure, App::Core::OrderFailure::UnitBusy);
+  EXPECT_TRUE(stop_outcome.accepted())
+      << "Stop must reach a hauler, or a gathering crew can never be called off";
 
   carry->amounts.set(Game::Systems::ResourceType::Wood, 0);
   OrderRequest after_dropoff;
