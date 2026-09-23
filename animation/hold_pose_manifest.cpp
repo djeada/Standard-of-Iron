@@ -16,18 +16,18 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
 
   switch (inputs.kind) {
   case HumanoidHeldPoseKind::SpearIdle:
+
     sample.right_hand = {
-        0.34F - 0.05F * run_mix,
-        shoulder_y - 0.02F - 0.11F * run_mix,
-        0.30F + 0.16F * run_mix,
+        0.26F - 0.04F * run_mix,
+        shoulder_y - 0.36F - 0.04F * run_mix,
+        0.10F + 0.14F * run_mix,
     };
     sample.use_offhand_spear_grip = true;
-    sample.offhand_spear_direction = inputs.running
-                                         ? PoseVec3{0.035F, 0.350F, 0.936F}
-                                         : PoseVec3{0.0493264F, 0.542590F, 0.838548F};
-    sample.offhand_along_offset = 0.46F - 0.10F * run_mix;
-    sample.offhand_y_drop = -0.03F - 0.02F * run_mix;
-    sample.offhand_lateral_offset = -0.08F + 0.02F * run_mix;
+    sample.offhand_spear_direction = inputs.running ? PoseVec3{0.030F, 0.420F, 0.907F}
+                                                    : PoseVec3{0.040F, 0.616F, 0.787F};
+    sample.offhand_along_offset = 0.44F - 0.06F * run_mix;
+    sample.offhand_y_drop = 0.0F;
+    sample.offhand_lateral_offset = -0.04F;
     sample.clamp_left_hand_x_min = true;
     sample.left_hand_x_min = 0.10F;
     sample.clamp_left_hand_y_max = true;
@@ -72,25 +72,38 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     sample.head_z_delta = 0.02F;
     sample.head_y_delta = -0.01F + 0.004F * hold_cycle;
     break;
+  case HumanoidHeldPoseKind::BowRest: {
+
+    float const breath =
+        std::sin(inputs.cycle_phase * (2.0F * std::numbers::pi_v<float>));
+    sample.right_hand = {0.13F, shoulder_y - 0.40F + 0.006F * breath, 0.30F};
+    sample.left_hand = {0.06F, shoulder_y - 0.36F + 0.006F * breath, 0.20F};
+    sample.shoulder_r_z_delta = 0.02F;
+    sample.shoulder_l_z_delta = 0.03F;
+    sample.shoulder_l_x_delta = 0.02F;
+    sample.neck_z_delta = 0.015F;
+    sample.head_y_delta = -0.008F;
+    break;
+  }
   case HumanoidHeldPoseKind::CasterChannel: {
 
-    float const bob = 0.014F * hold_cycle;
+    float const bob = 0.006F * hold_cycle;
     sample.right_hand = {
-        0.145F - 0.015F * run_mix,
-        shoulder_y - 0.095F - 0.085F * run_mix + bob,
-        0.52F - 0.12F * run_mix,
+        0.075F - 0.015F * run_mix,
+        shoulder_y - 0.40F - 0.085F * run_mix + bob,
+        0.22F + 0.10F * run_mix,
     };
     sample.left_hand = {
-        -0.145F + 0.015F * run_mix,
-        shoulder_y - 0.095F - 0.085F * run_mix - bob,
-        0.52F - 0.12F * run_mix,
+        -0.075F + 0.015F * run_mix,
+        shoulder_y - 0.40F - 0.085F * run_mix + bob,
+        0.22F + 0.10F * run_mix,
     };
-    sample.shoulder_r_z_delta = 0.09F - 0.025F * run_mix;
-    sample.shoulder_l_z_delta = 0.09F - 0.025F * run_mix;
+    sample.shoulder_r_z_delta = 0.03F - 0.010F * run_mix;
+    sample.shoulder_l_z_delta = 0.03F - 0.010F * run_mix;
     sample.shoulder_r_y_delta = -0.01F - 0.020F * run_mix;
     sample.shoulder_l_y_delta = -0.01F - 0.020F * run_mix;
-    sample.neck_z_delta = 0.02F + 0.025F * run_mix;
-    sample.head_z_delta = 0.015F + 0.020F * run_mix;
+    sample.neck_z_delta = 0.015F + 0.025F * run_mix;
+    sample.head_z_delta = 0.010F + 0.020F * run_mix;
     sample.head_y_delta = -0.012F - 0.008F * run_mix;
     break;
   }

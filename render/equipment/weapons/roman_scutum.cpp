@@ -296,7 +296,7 @@ auto shield_basis_transform(const QMatrix4x4& parent,
 auto scutum_local_pose() -> QMatrix4x4 {
   QMatrix4x4 pose;
   pose.rotate(90.0F, 0.0F, 1.0F, 0.0F);
-  pose.translate(0.0F, 0.0F, 0.07F);
+  pose.translate(0.0F, 0.0F, 0.13F);
   return pose;
 }
 

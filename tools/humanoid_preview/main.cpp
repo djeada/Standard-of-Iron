@@ -218,12 +218,32 @@ struct FrameMetrics {
   float shoulder_l_z{0.0F};
   float max_bone_stretch{0.0F};
   const char* worst_bone{"-"};
+  float min_bone_stretch{1.0F};
+  const char* shortest_bone{"-"};
   float arm_reach_l{0.0F};
   float arm_reach_r{0.0F};
   float lowest_foot_y{0.0F};
   float torso_up_y{1.0F};
   QVector3D hand_r_axis{};
+  QVector3D hand_l_right{};
+  float knee_flex_l{0.0F};
+  float knee_flex_r{0.0F};
+  float elbow_flex_l{0.0F};
+  float elbow_flex_r{0.0F};
 };
+
+auto joint_flex_degrees(const QVector3D& from,
+                        const QVector3D& joint,
+                        const QVector3D& to) -> float {
+  QVector3D const a = from - joint;
+  QVector3D const b = to - joint;
+  if (a.lengthSquared() < 1.0e-8F || b.lengthSquared() < 1.0e-8F) {
+    return 0.0F;
+  }
+  float const cos_angle =
+      std::clamp(QVector3D::dotProduct(a.normalized(), b.normalized()), -1.0F, 1.0F);
+  return 180.0F - (std::acos(cos_angle) * 180.0F / std::numbers::pi_v<float>);
+}
 
 auto measure(std::span<const QMatrix4x4> palette, float phase) -> FrameMetrics {
   FrameMetrics metrics{};
@@ -245,6 +265,10 @@ auto measure(std::span<const QMatrix4x4> palette, float phase) -> FrameMetrics {
       metrics.max_bone_stretch = stretch;
       metrics.worst_bone = rule.label;
     }
+    if (stretch < metrics.min_bone_stretch) {
+      metrics.min_bone_stretch = stretch;
+      metrics.shortest_bone = rule.label;
+    }
   }
   metrics.arm_reach_l =
       (bone_origin(palette, Bone::HandL) - bone_origin(palette, Bone::ShoulderL))
@@ -252,11 +276,27 @@ auto measure(std::span<const QMatrix4x4> palette, float phase) -> FrameMetrics {
   metrics.arm_reach_r =
       (bone_origin(palette, Bone::HandR) - bone_origin(palette, Bone::ShoulderR))
           .length();
+  metrics.knee_flex_l = joint_flex_degrees(bone_origin(palette, Bone::HipL),
+                                           bone_origin(palette, Bone::KneeL),
+                                           bone_origin(palette, Bone::FootL));
+  metrics.knee_flex_r = joint_flex_degrees(bone_origin(palette, Bone::HipR),
+                                           bone_origin(palette, Bone::KneeR),
+                                           bone_origin(palette, Bone::FootR));
+  metrics.elbow_flex_l = joint_flex_degrees(bone_origin(palette, Bone::UpperArmL),
+                                            bone_origin(palette, Bone::ForearmL),
+                                            bone_origin(palette, Bone::HandL));
+  metrics.elbow_flex_r = joint_flex_degrees(bone_origin(palette, Bone::UpperArmR),
+                                            bone_origin(palette, Bone::ForearmR),
+                                            bone_origin(palette, Bone::HandR));
   metrics.lowest_foot_y = std::min(bone_origin(palette, Bone::FootL).y(),
                                    bone_origin(palette, Bone::FootR).y());
   QVector3D const torso =
       bone_origin(palette, Bone::Neck) - bone_origin(palette, Bone::Pelvis);
   metrics.torso_up_y = torso.lengthSquared() > 1.0e-8F ? torso.normalized().y() : 1.0F;
+  auto const hand_l_index = static_cast<std::size_t>(Bone::HandL);
+  if (hand_l_index < palette.size()) {
+    metrics.hand_l_right = palette[hand_l_index].column(0).toVector3D().normalized();
+  }
   auto const hand_index = static_cast<std::size_t>(Bone::HandR);
   if (hand_index < palette.size()) {
     metrics.hand_r_axis = palette[hand_index].column(1).toVector3D();
@@ -597,31 +637,50 @@ auto main(int argc, char** argv) -> int {
             << ")\n";
 
   if (report) {
-    std::cout << "phase\tstretch\tworst\t\treach_l\treach_r\tfoot_y\tfoot_l_z\tfoot_r_"
-                 "z\tup_y\tblade_axis\n";
+    std::cout
+        << "phase\tstretch\tworst\t\treach_l\treach_r\tfoot_y\tfoot_l_z\tfoot_r_"
+           "z\tup_y\tknee_l\tknee_r\telbow_l\telbow_r\tblade_axis\t\thand_l_right\n";
     float worst_stretch = 0.0F;
     for (auto const& m : metrics) {
-      std::cout
-          << QString::asprintf(
-                 "%.2f\t%.2f\t%-12s\t%.2f\t%.2f\t%+.3f\t%+.3f\t\t%+.3f\t\t%.2f\t(%+."
-                 "2f,%+.2f,%+.2f)",
-                 static_cast<double>(m.phase),
-                 static_cast<double>(m.max_bone_stretch),
-                 m.worst_bone,
-                 static_cast<double>(m.arm_reach_l),
-                 static_cast<double>(m.arm_reach_r),
-                 static_cast<double>(m.lowest_foot_y),
-                 static_cast<double>(m.foot_l_z),
-                 static_cast<double>(m.foot_r_z),
-                 static_cast<double>(m.torso_up_y),
-                 static_cast<double>(m.hand_r_axis.x()),
-                 static_cast<double>(m.hand_r_axis.y()),
-                 static_cast<double>(m.hand_r_axis.z()))
-                 .toStdString()
-          << "\n";
+      std::cout << QString::asprintf(
+                       "%.2f\t%.2f\t%-12s\t%.2f\t%.2f\t%+.3f\t%+.3f\t\t%+.3f\t\t%.2f\t%"
+                       ".0f\t%."
+                       "0f\t%.0f\t%.0f\t(%+.2f,%+.2f,%+.2f)\t(%+.2f,%+.2f,%+.2f)",
+                       static_cast<double>(m.phase),
+                       static_cast<double>(m.max_bone_stretch),
+                       m.worst_bone,
+                       static_cast<double>(m.arm_reach_l),
+                       static_cast<double>(m.arm_reach_r),
+                       static_cast<double>(m.lowest_foot_y),
+                       static_cast<double>(m.foot_l_z),
+                       static_cast<double>(m.foot_r_z),
+                       static_cast<double>(m.torso_up_y),
+                       static_cast<double>(m.knee_flex_l),
+                       static_cast<double>(m.knee_flex_r),
+                       static_cast<double>(m.elbow_flex_l),
+                       static_cast<double>(m.elbow_flex_r),
+                       static_cast<double>(m.hand_r_axis.x()),
+                       static_cast<double>(m.hand_r_axis.y()),
+                       static_cast<double>(m.hand_r_axis.z()),
+                       static_cast<double>(m.hand_l_right.x()),
+                       static_cast<double>(m.hand_l_right.y()),
+                       static_cast<double>(m.hand_l_right.z()))
+                       .toStdString()
+                << "\n";
       worst_stretch = std::max(worst_stretch, m.max_bone_stretch);
     }
     std::cout << "worst bone stretch: " << worst_stretch << "x bind length\n";
+    auto const shortest =
+        std::min_element(metrics.begin(),
+                         metrics.end(),
+                         [](const FrameMetrics& a, const FrameMetrics& b) {
+                           return a.min_bone_stretch < b.min_bone_stretch;
+                         });
+    if (shortest != metrics.end()) {
+      std::cout << "worst bone compression: " << shortest->min_bone_stretch
+                << "x bind length (" << shortest->shortest_bone << " at phase "
+                << shortest->phase << ")\n";
+    }
 
     auto const stride = summarize_stride(blob, clip);
     std::cout << QString::asprintf(

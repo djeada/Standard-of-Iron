@@ -98,6 +98,11 @@ public:
 
 public:
   void set_scenario_distance_scale(float scale) { m_scenario_distance_scale = scale; }
+
+  void set_scenario_tilt_override(std::optional<float> degrees) {
+    m_scenario_tilt_override = degrees;
+  }
+  void set_scenario_yaw_offset(float degrees) { m_scenario_yaw_offset = degrees; }
   void set_graphics_quality_override(Render::GraphicsQuality quality) {
     m_graphics_quality_override = quality;
   }
@@ -506,6 +511,8 @@ private:
   bool m_terrain_review_mode = false;
   bool m_terrain_review_content_enabled = false;
   float m_scenario_distance_scale = 1.0F;
+  std::optional<float> m_scenario_tilt_override;
+  float m_scenario_yaw_offset = 0.0F;
   bool m_clean_capture = false;
   bool m_promo_mode = false;
   bool m_capture_gameplay_ui = false;

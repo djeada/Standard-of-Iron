@@ -29,6 +29,8 @@ struct BoneResolution {
   BoneBasisKind kind{BoneBasisKind::FromParent};
   QVector3D head{};
   QVector3D tail{};
+
+  QVector3D right_hint{};
 };
 
 using JointProviderFn = BoneResolution (*)(void* user, BoneIndex bone);

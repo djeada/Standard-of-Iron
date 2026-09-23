@@ -58,6 +58,8 @@ struct HumanoidLocomotionInputs {
   float phase_offset{0.0F};
 
   float cadence_scale{1.0F};
+
+  float body_scale{1.0F};
   HumanoidLocomotionTuning tuning{};
   bool has_persistent_state{false};
   HumanoidLocomotionPersistentState previous{};
@@ -97,17 +99,6 @@ struct HumanoidLocomotionActionOverrideSample {
   float normalized_speed{0.0F};
   bool has_target{false};
   bool airborne{false};
-};
-
-struct HumanoidLocomotionPhaseOverrideInputs {
-  bool bow_ready_idle{false};
-  bool has_locomotion{false};
-  bool attacking{false};
-};
-
-struct HumanoidLocomotionPhaseOverrideSample {
-  bool active{false};
-  float cycle_phase{0.0F};
 };
 
 struct HumanoidLocomotionVariationInputs {
@@ -230,10 +221,6 @@ struct HumanoidLocomotionPoseSample {
 [[nodiscard]] auto resolve_humanoid_locomotion_action_override(
     const HumanoidLocomotionActionOverrideInputs& inputs) noexcept
     -> HumanoidLocomotionActionOverrideSample;
-
-[[nodiscard]] auto resolve_humanoid_locomotion_phase_override(
-    const HumanoidLocomotionPhaseOverrideInputs& inputs) noexcept
-    -> HumanoidLocomotionPhaseOverrideSample;
 
 [[nodiscard]] auto resolve_humanoid_locomotion_variation(
     const HumanoidLocomotionVariationInputs& inputs) noexcept

@@ -296,6 +296,12 @@ void apply_held_pose_sample(HumanoidPoseController& controller,
   if (sample.has_blade_direction) {
     aim_held_weapon(pose, to_qvec(sample.blade_direction), baked_sword_direction());
   }
+  if (sample.use_offhand_spear_grip) {
+
+    aim_held_weapon(pose,
+                    spear_qvec_from_pose(sample.offhand_spear_direction),
+                    baked_spear_direction());
+  }
   if (sample.has_offhand_axis) {
     pose.grip_axis_l = to_qvec(sample.offhand_axis).normalized();
   }
@@ -769,6 +775,18 @@ void HumanoidPoseController::hold_bow_ready() {
   });
   apply_held_pose_sample(*this, m_pose, sample);
   aim_held_weapon(m_pose, QVector3D(0.0F, 0.90F, 0.44F), k_baked_bow_axis);
+}
+
+void HumanoidPoseController::rest_bow_idle(float cycle_phase) {
+  using HP = HumanProportions;
+
+  auto const sample = Animation::resolve_humanoid_held_pose({
+      .kind = Animation::HumanoidHeldPoseKind::BowRest,
+      .shoulder_y = HP::SHOULDER_Y,
+      .cycle_phase = cycle_phase,
+  });
+  apply_held_pose_sample(*this, m_pose, sample);
+  aim_held_weapon(m_pose, QVector3D(-0.10F, 0.86F, 0.50F), k_baked_bow_axis);
 }
 
 void HumanoidPoseController::guard_sword_and_shield_for_defense() {

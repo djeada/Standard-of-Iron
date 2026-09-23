@@ -1065,13 +1065,46 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   if (has_shared_footsteps && !soldier_render_anim.is_attacking &&
       !soldier_render_anim.is_in_melee_lock && !soldier_render_anim.is_constructing) {
     const float speed = turn_smoothing.travel_speed;
-    const bool stepping = speed > 0.06F || shared_footing->angular_speed > 8.0F;
+
     const float running_speed =
-        std::max(2.4F, (unit_comp != nullptr ? unit_comp->speed : 2.0F) * 1.15F);
+        std::max(2.6F, (unit_comp != nullptr ? unit_comp->speed : 2.0F) * 1.45F);
+    SoldierTurnSmoothingState* footing_latch =
+        (layout_cache_comp != nullptr &&
+         static_cast<std::size_t>(idx) < layout_cache_comp->turn_states.size())
+            ? &layout_cache_comp->turn_states[static_cast<std::size_t>(idx)]
+            : nullptr;
+    bool const was_stepping =
+        footing_latch != nullptr && footing_latch->footing_stepping;
+    bool const was_running = footing_latch != nullptr && footing_latch->footing_running;
+    const bool stepping = speed > (was_stepping ? 0.03F : 0.06F) ||
+                          shared_footing->angular_speed > (was_stepping ? 5.0F : 8.0F);
+
+    constexpr float k_run_entry_seconds = 0.15F;
+    bool running = false;
+    if (stepping && was_running) {
+      running = speed > running_speed * 0.85F;
+    } else if (stepping && speed > running_speed) {
+      float const pending =
+          (footing_latch != nullptr ? footing_latch->footing_run_pending_seconds
+                                    : k_run_entry_seconds) +
+          turn_smoothing_dt;
+      running = pending >= k_run_entry_seconds;
+      if (footing_latch != nullptr) {
+        footing_latch->footing_run_pending_seconds = pending;
+      }
+    } else if (footing_latch != nullptr) {
+      footing_latch->footing_run_pending_seconds = 0.0F;
+    }
+    if (footing_latch != nullptr) {
+      footing_latch->footing_stepping = stepping;
+      footing_latch->footing_running = running;
+      if (running) {
+        footing_latch->footing_run_pending_seconds = 0.0F;
+      }
+    }
     soldier_render_anim.movement_state = !stepping ? Animation::MovementState::Idle
-                                         : speed > running_speed
-                                             ? Animation::MovementState::Run
-                                             : Animation::MovementState::Walk;
+                                         : running ? Animation::MovementState::Run
+                                                   : Animation::MovementState::Walk;
   } else if (has_shared_formation_layout &&
              formation_presentation->soldiers[static_cast<std::size_t>(idx)]
                  .reforming &&
@@ -1446,6 +1479,9 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   locomotion_inputs.anim = soldier_render_anim;
   locomotion_inputs.variation = variation;
   locomotion_inputs.move_speed = visual_locomotion.speed;
+  if (transform_comp != nullptr && transform_comp->scale.x > 1.0e-3F) {
+    locomotion_inputs.body_scale = transform_comp->scale.x;
+  }
   locomotion_inputs.entity_forward = forward;
   locomotion_inputs.locomotion_direction = visual_locomotion.direction;
   locomotion_inputs.movement_target = visual_locomotion.movement_target;
@@ -1486,15 +1522,6 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     locomotion_state.gait.has_target = locomotion_override.has_target;
     locomotion_state.gait.is_airborne = locomotion_override.airborne;
   }
-  auto const phase_override = Animation::resolve_humanoid_locomotion_phase_override({
-      .bow_ready_idle = unit_is_archer,
-      .has_locomotion = render_has_locomotion,
-      .attacking = soldier_render_anim.is_attacking,
-  });
-  if (phase_override.active) {
-    locomotion_state.gait.cycle_phase = phase_override.cycle_phase;
-  }
-
   ConstructionRole construction_role = ConstructionRole::None;
   if (soldier_render_anim.is_constructing) {
     construction_role = resolve_construction_role(visual_spec,
@@ -1856,11 +1883,8 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   }
   auto const soldier_lod = static_cast<HumanoidLOD>(lod_decision.lod);
 
-  anim_ctx.idle_breath_phase =
-      phase_override.active
-          ? locomotion_state.gait.cycle_phase
-          : RCP::humanoid_idle_breath_phase_for_lod(
-                anim.time, inst_seed, soldier_lod, ctx.prewarming_via_runtime_path);
+  anim_ctx.idle_breath_phase = RCP::humanoid_idle_breath_phase_for_lod(
+      anim.time, inst_seed, soldier_lod, ctx.prewarming_via_runtime_path);
 
   ++stats.soldiers_rendered;
 

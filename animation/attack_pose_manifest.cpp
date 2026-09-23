@@ -133,42 +133,44 @@ lerp(MountedSeatOffset a, MountedSeatOffset b, float t) noexcept -> MountedSeatO
     break;
   }
 
-  PoseVec3 const retracted_rear{0.28F, shoulder_y + 0.035F + height_bias, 0.12F};
+  PoseVec3 const start_rear{0.26F, shoulder_y - 0.12F + height_bias * 0.5F, 0.22F};
+  PoseVec3 const chamber_rear{0.22F, shoulder_y - 0.38F + height_bias, -0.04F};
   PoseVec3 const contact_rear{
-      0.28F, shoulder_y + 0.095F + height_bias, 0.42F + reach_bias};
-  PoseVec3 const retracted_front{-0.03F, shoulder_y + 0.035F + height_bias, 0.42F};
-  PoseVec3 const contact_front{
-      -0.03F, shoulder_y + 0.095F + height_bias, 0.72F + reach_bias};
+      0.14F, shoulder_y - 0.22F + height_bias, 0.44F + reach_bias};
 
   HumanoidWeaponAttackPoseSample sample{};
   float drive = 0.0F;
-  if (phase < 0.10F) {
-    sample.right_hand = retracted_rear;
-    sample.left_hand = retracted_front;
-  } else if (phase < 0.42F) {
-    drive = smoothstep((phase - 0.10F) / 0.32F);
-    sample.right_hand = lerp(retracted_rear, contact_rear, drive);
-    sample.left_hand = lerp(retracted_front, contact_front, drive);
-  } else if (phase < 0.62F) {
-
-    drive = 1.0F + 0.08F * smoothstep((phase - 0.42F) / 0.20F);
-    sample.right_hand = lerp(retracted_rear, contact_rear, drive);
-    sample.left_hand = lerp(retracted_front, contact_front, drive);
+  float chamber = 0.0F;
+  if (phase < 0.20F) {
+    chamber = smoothstep(phase / 0.20F);
+    sample.right_hand = lerp(start_rear, chamber_rear, chamber);
+  } else if (phase < 0.44F) {
+    float const t = (phase - 0.20F) / 0.24F;
+    drive = t * t * (3.0F - 2.0F * t);
+    chamber = 1.0F - drive;
+    sample.right_hand = lerp(chamber_rear, contact_rear, drive * drive);
+  } else if (phase < 0.60F) {
+    drive = 1.0F;
+    sample.right_hand = lerp(contact_rear,
+                             add(contact_rear, {0.0F, 0.01F, 0.04F}),
+                             smoothstep((phase - 0.44F) / 0.16F));
   } else {
-    float const recover = smoothstep((phase - 0.62F) / 0.38F);
-    drive = 1.08F * (1.0F - recover);
-    sample.right_hand = lerp(retracted_rear, contact_rear, drive);
-    sample.left_hand = lerp(retracted_front, contact_front, drive);
+    float const recover = smoothstep((phase - 0.60F) / 0.40F);
+    drive = 1.0F - recover;
+    sample.right_hand =
+        lerp(add(contact_rear, {0.0F, 0.01F, 0.04F}), start_rear, recover);
   }
 
-  float const forward_commit = 0.075F * drive;
-  sample.shoulder_r_z_delta += forward_commit;
-  sample.shoulder_l_z_delta += forward_commit;
-  sample.neck_z_delta += forward_commit * 0.70F;
-  sample.head_z_delta += forward_commit * 0.60F;
-  sample.pelvis_z_delta += forward_commit * 0.55F;
-  sample.foot_r_z_delta += 0.060F * drive;
-  sample.knee_r_z_delta += 0.035F * drive;
+  float const forward_commit = 0.13F * drive - 0.03F * chamber;
+  float const rear_shoulder_drive = 0.07F * drive - 0.03F * chamber;
+  sample.shoulder_r_z_delta += forward_commit + rear_shoulder_drive;
+  sample.shoulder_l_z_delta += forward_commit - rear_shoulder_drive * 0.5F;
+  sample.neck_z_delta += forward_commit * 0.75F;
+  sample.head_z_delta += forward_commit * 0.65F;
+  sample.pelvis_z_delta += forward_commit * 0.70F;
+  sample.pelvis_y_delta -= 0.025F * drive;
+  sample.foot_r_z_delta += 0.16F * drive;
+  sample.knee_r_z_delta += 0.10F * drive;
 
   if (crouch > 0.001F || crouch < -0.001F) {
     float const sink = crouch * drive;
@@ -189,9 +191,11 @@ lerp(MountedSeatOffset a, MountedSeatOffset b, float t) noexcept -> MountedSeatO
   shaft = normalize({shaft.x, shaft.y + pitch, shaft.z});
   sample.offhand_spear_direction = shaft;
 
-  sample.offhand_along_offset = 0.30F;
+  sample.offhand_along_offset = 0.36F;
   sample.offhand_y_drop = 0.0F;
   sample.offhand_lateral_offset = 0.0F;
+
+  sample.left_hand = add(sample.right_hand, scale(shaft, sample.offhand_along_offset));
   return sample;
 }
 
@@ -230,9 +234,8 @@ void apply_sword_body_drive(HumanoidWeaponAttackPoseSample& sample,
     sample.shoulder_r_z_delta += forward_lean;
     sample.neck_z_delta += forward_lean * (combat_variant ? 0.72F : 0.70F);
     sample.head_z_delta += forward_lean * (combat_variant ? 0.56F : 0.50F);
-    if (combat_variant) {
-      sample.pelvis_z_delta += forward_lean * 0.26F;
-    }
+
+    sample.pelvis_z_delta += forward_lean * 0.50F;
   }
 
   float const swing_phase = combat_variant
@@ -414,18 +417,18 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
           offhand_contact,
           strike_blade,
           0.19F,
-          0.26F,
+          0.12F,
           -0.12F,
-          0.16F},
-      Key{0.72F,
+          0.22F},
+      Key{0.66F,
           followthrough_pos,
           offhand_contact,
           followthrough_blade,
           0.13F,
-          0.18F,
+          0.09F,
           -0.05F,
-          0.16F},
-      Key{0.90F,
+          0.20F},
+      Key{0.85F,
           recover_pos,
           offhand_guard,
           recover_blade,

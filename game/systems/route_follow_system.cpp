@@ -236,7 +236,8 @@ auto formation_navigation_speed(const Engine::Core::Entity& entity,
                                 const Engine::Core::UnitComponent& unit,
                                 const Engine::Core::StaminaComponent* stamina)
     -> float {
-  float speed = max_navigation_speed(unit, stamina) *
+
+  float speed = max_navigation_speed(unit, nullptr) *
                 DefensiveUnitLayoutService::move_speed_multiplier(entity) *
                 Game::Formation::ArmyFormationRuntime::move_speed_multiplier(entity);
   const auto* movement = entity.get_component<Engine::Core::MovementComponent>();
@@ -244,7 +245,10 @@ auto formation_navigation_speed(const Engine::Core::Entity& entity,
     speed = std::min(speed, movement->get_declared_group_pace());
   }
   if (!std::isfinite(speed) || speed <= 0.0F) {
-    speed = max_navigation_speed(unit, stamina);
+    speed = max_navigation_speed(unit, nullptr);
+  }
+  if (stamina != nullptr && stamina->is_running) {
+    speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
   }
   return speed;
 }

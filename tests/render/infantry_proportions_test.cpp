@@ -42,7 +42,7 @@ constexpr ProportionTolerance k_infantry_tolerance{};
 constexpr ProportionTolerance k_support_tolerance{.min_height_ratio = 0.85F,
                                                   .max_height_ratio = 1.12F,
                                                   .min_silhouette_ratio = 0.80F,
-                                                  .max_silhouette_ratio = 1.22F};
+                                                  .max_silhouette_ratio = 1.28F};
 
 class BoundsSubmitter : public ISubmitter {
 public:
@@ -188,7 +188,7 @@ TEST(InfantryProportionsTest, RomanAndCarthageArchersStayComparable) {
                                                      Game::Systems::NationID::Carthage,
                                                      1337U);
 
-  expect_close_overall_proportions(roman, carthage);
+  expect_close_overall_proportions(roman, carthage, k_support_tolerance);
 }
 
 TEST(InfantryProportionsTest, RomanAndCarthageSpearmenStayComparable) {

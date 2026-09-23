@@ -60,7 +60,8 @@ constexpr auto make_full_chest() noexcept -> Creature::PrimitiveInstance {
   p.params.tail_bone = bone(HumanoidBone::Chest);
   p.params.tail_offset = QVector3D(0.0F, -0.17F, 0.0F);
   p.params.radius = HP::TORSO_TOP_R * 0.86F;
-  p.params.depth_radius = HP::TORSO_TOP_R * 0.62F;
+
+  p.params.depth_radius = HP::TORSO_TOP_R * 0.54F;
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -85,7 +86,8 @@ constexpr auto make_full_upper_back() noexcept -> Creature::PrimitiveInstance {
   p.debug_name = "humanoid_full_upper_back";
   p.shape = Creature::PrimitiveShape::OrientedSphere;
   p.params.anchor_bone = bone(HumanoidBone::Chest);
-  p.params.head_offset = QVector3D(0.0F, -0.04F, -HP::TORSO_TOP_R * 0.40F);
+
+  p.params.head_offset = QVector3D(0.0F, 0.16F, -HP::TORSO_TOP_R * 0.40F);
   p.params.half_extents = QVector3D(
       HP::TORSO_TOP_R * 0.64F, HP::TORSO_TOP_R * 0.34F, HP::TORSO_TOP_R * 0.16F);
   p.color_role = Cloth;
