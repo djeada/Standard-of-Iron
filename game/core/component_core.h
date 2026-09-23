@@ -424,6 +424,8 @@ public:
 
   bool snapshot_valid{false};
   bool initialized{false};
+
+  bool classified{false};
   float previous_x{0.0F}, previous_y{0.0F}, previous_z{0.0F};
   float previous_rotation_y{0.0F};
   float displacement_x{0.0F}, displacement_z{0.0F};

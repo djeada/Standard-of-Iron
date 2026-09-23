@@ -881,7 +881,8 @@ TEST(BpatRegistry, SkeletonHumanoidSwordAttackReachIsShorterThanDefaultHumanoid)
 
   std::array<QMatrix4x4, 64> default_palette{};
   std::array<QMatrix4x4, 64> skeleton_palette{};
-  constexpr std::uint32_t k_frame = 14U;
+
+  constexpr std::uint32_t k_frame = 18U;
   auto const bone_count =
       reg.sample_palette(k_species_humanoid,
                          Render::Creature::k_humanoid_attack_sword_a_clip,

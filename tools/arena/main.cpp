@@ -289,6 +289,16 @@ auto main(int argc, char** argv) -> int {
       QStringLiteral("Camera distance multiplier for batch scenario capture."),
       QStringLiteral("scale"),
       QStringLiteral("1.0"));
+  QCommandLineOption const scenario_tilt_option(
+      QStringList{QStringLiteral("scenario-tilt")},
+      QStringLiteral("Camera tilt in degrees for batch scenario capture, replacing "
+                     "the scenario's own."),
+      QStringLiteral("degrees"));
+  QCommandLineOption const scenario_yaw_option(
+      QStringList{QStringLiteral("scenario-yaw")},
+      QStringLiteral("Degrees added to the scenario's camera yaw for batch capture."),
+      QStringLiteral("degrees"),
+      QStringLiteral("0"));
   QCommandLineOption const promo_distance_option(
       QStringList{QStringLiteral("promo-distance")},
       QStringLiteral("Camera distance multiplier for campaign promo capture."),
@@ -445,6 +455,8 @@ auto main(int argc, char** argv) -> int {
                      profile_option,
                      watchdog_multiplier_option,
                      scenario_distance_option,
+                     scenario_tilt_option,
+                     scenario_yaw_option,
                      promo_distance_option,
                      promo_tilt_option,
                      fog_of_war_option,
@@ -528,6 +540,12 @@ auto main(int argc, char** argv) -> int {
   window.viewport()->set_clean_capture(parser.isSet(clean_capture_option));
   window.viewport()->set_scenario_distance_scale(
       parser.value(scenario_distance_option).toFloat());
+  if (parser.isSet(scenario_tilt_option)) {
+    window.viewport()->set_scenario_tilt_override(
+        parser.value(scenario_tilt_option).toFloat());
+  }
+  window.viewport()->set_scenario_yaw_offset(
+      parser.value(scenario_yaw_option).toFloat());
   window.viewport()->set_prewarm_unit_templates(parser.isSet(prewarm_option));
   window.viewport()->set_force_animation_diagnostics(
       parser.isSet(animation_diagnostics_option));

@@ -173,6 +173,9 @@ struct FormationSoldierPresentation {
 
   bool reforming{false};
 
+  float crowd_offset_x{0.0F};
+  float crowd_offset_z{0.0F};
+
   auto operator==(const FormationSoldierPresentation&) const -> bool = default;
 };
 

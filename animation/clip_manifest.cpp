@@ -554,7 +554,8 @@ auto authored_generic_clip_markers(std::string_view clip_name) noexcept -> ClipM
     return hold_markers();
   }
   if (clip_name == "walk" || clip_name == "run" || clip_name == "idle" ||
-      clip_name == "riding_idle" || clip_name == "riding_charge") {
+      clip_name == "idle_bow_rest" || clip_name == "riding_idle" ||
+      clip_name == "riding_charge") {
     return locomotion_markers();
   }
   return {};

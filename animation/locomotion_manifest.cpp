@@ -18,6 +18,8 @@ constexpr float k_arm_swing_phase_shift = 0.30F;
 constexpr float k_arm_forward_bias = 0.86F;
 constexpr float k_arm_backward_bias = 1.18F;
 
+constexpr float k_walk_arm_hang = 0.045F;
+
 constexpr float k_reverse_stride_scale = 0.74F;
 
 constexpr float k_foot_toe_length = 0.165F;
@@ -44,6 +46,12 @@ constexpr float k_max_cycle_time = 1.30F;
 constexpr float k_min_cadence_speed = 0.35F;
 
 constexpr float k_run_bob_phase_advance = 0.07F;
+
+constexpr float k_stance_reach_limit = 0.995F;
+
+constexpr float k_walk_stance_extension = 0.990F;
+
+constexpr float k_unsupported_leg_slack = 0.40F;
 
 constexpr float k_run_flight_lift = 0.032F;
 constexpr float k_run_locomotion_blend_floor = 0.92F;
@@ -264,7 +272,7 @@ struct LocomotionPoseProfile {
   profile.head_stabilization = 0.90F;
   profile.contact_lift = 0.010F;
   profile.knee_drive = 0.065F;
-  profile.heel_recovery = 0.24F;
+  profile.heel_recovery = 0.17F;
 
   profile.heel_strike_pitch = -0.06F;
   profile.toe_off_pitch = -0.66F;
@@ -441,6 +449,11 @@ travel_shares_of(const HumanoidLocomotionPoseInputs& inputs) noexcept -> TravelS
 }
 
 [[nodiscard]] auto
+body_space_speed(const HumanoidLocomotionInputs& inputs) noexcept -> float {
+  return inputs.speed / std::clamp(inputs.body_scale, 0.25F, 4.0F);
+}
+
+[[nodiscard]] auto
 build_targets(const HumanoidLocomotionInputs& inputs) noexcept -> LocomotionTargets {
   LocomotionTargets targets{};
   bool const has_locomotion = is_moving(inputs.movement_state);
@@ -478,8 +491,9 @@ build_targets(const HumanoidLocomotionInputs& inputs) noexcept -> LocomotionTarg
                                                inputs.locomotion_direction_z)
                      : 1.0F;
   if (has_locomotion) {
-    float const walk_cycle_time = humanoid_walk_cycle_time_for_speed(inputs.speed);
-    float const run_cycle_time = humanoid_run_cycle_time_for_speed(inputs.speed);
+    float const body_speed = body_space_speed(inputs);
+    float const walk_cycle_time = humanoid_walk_cycle_time_for_speed(body_speed);
+    float const run_cycle_time = humanoid_run_cycle_time_for_speed(body_speed);
     targets.cycle_time = lerp(walk_cycle_time, run_cycle_time, targets.run_blend);
   } else {
     targets.cycle_time = inputs.tuning.idle_cycle_time;
@@ -646,7 +660,7 @@ auto resolve_humanoid_locomotion_sample(const HumanoidLocomotionInputs& inputs) 
                                          inputs.tuning.acceleration_blend_tau);
   }
 
-  sample.stride_distance = gait_running ? sample.speed * sample.cycle_time *
+  sample.stride_distance = gait_running ? body_space_speed(inputs) * sample.cycle_time *
                                               std::max(0.0F, sample.locomotion_blend)
                                         : 0.0F;
 
@@ -687,18 +701,6 @@ auto resolve_humanoid_locomotion_action_override(
       .normalized_speed = 0.0F,
       .has_target = false,
       .airborne = true,
-  };
-}
-
-auto resolve_humanoid_locomotion_phase_override(
-    const HumanoidLocomotionPhaseOverrideInputs& inputs) noexcept
-    -> HumanoidLocomotionPhaseOverrideSample {
-  if (!inputs.bow_ready_idle || inputs.has_locomotion || inputs.attacking) {
-    return {};
-  }
-  return {
-      .active = true,
-      .cycle_phase = 0.5F,
   };
 }
 
@@ -950,38 +952,53 @@ auto resolve_humanoid_locomotion_pose(
                                           inputs.base_foot_r,
                                           sample.foot_pitch_r);
 
-  float stride_hip_drop = 0.0F;
+  float const authored_pelvis_y = vertical_bob + flight_lift - pelvis_drop;
+  float hip_adjust = 0.0F;
   if (inputs.leg_length > 1.0e-3F && inputs.pelvis_y > 1.0e-3F) {
-
     float const hip_y = inputs.pelvis_y + inputs.hip_vertical_offset;
-    float const reach = inputs.leg_length * 0.995F;
-    auto required_drop = [&](const PoseVec3& foot, float lateral_sign) {
+    auto hip_height_for = [&](const PoseVec3& foot, float lateral_sign, float ext) {
+      float const reach = inputs.leg_length * ext;
       float const dx = foot.x - (lateral_sign * inputs.hip_lateral_offset);
       float const dz = foot.z;
       float const horizontal_sq = (dx * dx) + (dz * dz);
       if (horizontal_sq >= reach * reach) {
-        return hip_y - foot.y;
+        return foot.y;
       }
-      float const vertical = std::sqrt((reach * reach) - horizontal_sq);
-      return std::max(0.0F, (hip_y - foot.y) - vertical);
+      return foot.y + std::sqrt((reach * reach) - horizontal_sq);
     };
-    stride_hip_drop = std::max(required_drop(sample.foot_l, -1.0F),
-                               required_drop(sample.foot_r, 1.0F));
+    float const reach_cap =
+        std::min(hip_height_for(sample.foot_l, -1.0F, k_stance_reach_limit),
+                 hip_height_for(sample.foot_r, 1.0F, k_stance_reach_limit)) -
+        hip_y;
+
+    float const sunk = authored_pelvis_y + std::min(0.0F, reach_cap);
+    float const lift_weight =
+        locomotion_blend * (1.0F - run_blend) * std::clamp(1.0F - braking, 0.0F, 1.0F);
+    float offset = sunk;
+    if (lift_weight > 0.0F) {
+      float const left_target =
+          hip_height_for(sample.foot_l, -1.0F, k_walk_stance_extension) +
+          (1.0F - left_support) * k_unsupported_leg_slack;
+      float const right_target =
+          hip_height_for(sample.foot_r, 1.0F, k_walk_stance_extension) +
+          (1.0F - right_support) * k_unsupported_leg_slack;
+      float const extended =
+          std::min(std::min(left_target, right_target) - hip_y, reach_cap);
+      offset += lift_weight * std::max(0.0F, extended - sunk);
+    }
+    hip_adjust = offset - authored_pelvis_y;
   }
 
-  sample.pelvis_delta.y +=
-      vertical_bob + flight_lift - braking_sink - pelvis_drop - stride_hip_drop;
+  sample.pelvis_delta.y += authored_pelvis_y - braking_sink + hip_adjust;
   sample.shoulder_l_delta.y += shoulder_bob * 0.45F + flight_lift -
-                               braking_sink * 0.20F - torso_support_drop -
-                               stride_hip_drop;
+                               braking_sink * 0.20F - torso_support_drop + hip_adjust;
   sample.shoulder_r_delta.y += shoulder_bob * 0.45F + flight_lift -
-                               braking_sink * 0.20F - torso_support_drop -
-                               stride_hip_drop;
+                               braking_sink * 0.20F - torso_support_drop + hip_adjust;
   sample.neck_delta.y += neck_bob * 0.28F + flight_lift + head_counter_bob * 0.55F -
-                         torso_support_drop * 0.84F - stride_hip_drop;
-  sample.head_delta.y +=
-      head_bob * 0.18F + flight_lift + acceleration_push * 0.003F * locomotion_blend +
-      head_counter_bob - torso_support_drop * 0.68F - stride_hip_drop;
+                         torso_support_drop * 0.84F + hip_adjust;
+  sample.head_delta.y += head_bob * 0.18F + flight_lift +
+                         acceleration_push * 0.003F * locomotion_blend +
+                         head_counter_bob - torso_support_drop * 0.68F + hip_adjust;
   sample.foot_l.y += flight_lift;
   sample.foot_r.y += flight_lift;
 
@@ -1024,10 +1041,12 @@ auto resolve_humanoid_locomotion_pose(
     float const walk_z = extension * std::sin(angle);
     float const walk_y = arm_length - extension * std::cos(angle);
 
-    float const upper_angle = raw * 0.85F * inputs.arm_swing_amplitude * stride_scale *
-                                  arm_swing_travel_scale -
+    float const upper_swing = (raw >= 0.0F) ? 0.60F : 0.85F;
+    float const upper_angle = raw * upper_swing * inputs.arm_swing_amplitude *
+                                  stride_scale * arm_swing_travel_scale -
                               0.20F;
-    float const elbow_angle = 1.45F + 0.15F * raw;
+
+    float const elbow_angle = 1.32F - 0.14F * raw;
     float const upper_length = arm_length * 0.50F;
     float const forearm_length = arm_length * 0.45F;
     float const run_z = upper_length * std::sin(upper_angle) +
@@ -1035,15 +1054,18 @@ auto resolve_humanoid_locomotion_pose(
     float const run_y = arm_length - upper_length * std::cos(upper_angle) -
                         forearm_length * std::cos(upper_angle + elbow_angle);
     hand_delta.z += lerp(walk_z, run_z, run_blend);
-    hand_delta.y += lerp(walk_y, run_y, run_blend);
+    hand_delta.y += lerp(walk_y - k_walk_arm_hang, run_y, run_blend);
     hand_delta.x -= lateral_sign * forward * profile.arm_counter_shift;
   };
   apply_arm_swing(sample.hand_l_delta, left_phase, -1.0F);
   apply_arm_swing(sample.hand_r_delta, right_phase, 1.0F);
-  sample.hand_l_delta.y += flight_lift - stride_hip_drop;
-  sample.hand_r_delta.y += flight_lift - stride_hip_drop;
-  sample.hand_l_delta.x += turn_amount * 0.010F * locomotion_blend;
-  sample.hand_r_delta.x += turn_amount * 0.010F * locomotion_blend;
+
+  sample.hand_l_delta.x += sample.shoulder_l_delta.x;
+  sample.hand_l_delta.y += sample.shoulder_l_delta.y;
+  sample.hand_l_delta.z += sample.shoulder_l_delta.z;
+  sample.hand_r_delta.x += sample.shoulder_r_delta.x;
+  sample.hand_r_delta.y += sample.shoulder_r_delta.y;
+  sample.hand_r_delta.z += sample.shoulder_r_delta.z;
 
   float const arm_lateral_drift =
       travel.lateral * lateral_share * 0.055F * locomotion_blend * stride_scale;

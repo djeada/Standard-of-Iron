@@ -72,6 +72,7 @@ public:
   void carry_resource_load();
   void brace_spear_for_hold();
   void hold_bow_ready();
+  void rest_bow_idle(float cycle_phase);
   void guard_sword_and_shield_for_defense();
   void carry_sword_and_shield();
   void guard_sword_and_shield_formation(ShieldFormationPose pose, float amount);

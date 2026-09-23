@@ -31,6 +31,10 @@ struct SoldierTurnSmoothingState {
   bool relocating{false};
   bool wheeling{false};
   bool turn_pending{false};
+
+  bool footing_stepping{false};
+  bool footing_running{false};
+  float footing_run_pending_seconds{0.0F};
 };
 
 struct SoldierTurnVariation {

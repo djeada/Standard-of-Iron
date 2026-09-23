@@ -119,7 +119,10 @@ void evaluate_skeleton(const SkeletonTopology& topo,
           out_palette[i] = basis_from_root_up(r.head, right);
         }
       } else {
-        out_palette[i] = make_bone_basis(r.head, r.tail, right);
+        out_palette[i] = make_bone_basis(
+            r.head,
+            r.tail,
+            r.right_hint.lengthSquared() > 1.0e-6F ? r.right_hint : right);
       }
       break;
     }

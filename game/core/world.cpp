@@ -308,6 +308,12 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         Entity& entity = *entity_ptr;
         auto* motion = &motion_value;
         auto* transform = &transform_value;
+
+        if (delta_time <= 0.0F && motion->classified) {
+          motion->state_changed = false;
+          motion->snapshot_valid = true;
+          return;
+        }
         auto* movement = entity.get_component<MovementComponent>();
         auto* attack = entity.get_component<AttackComponent>();
         auto* attack_target = entity.get_component<AttackTargetComponent>();
@@ -518,6 +524,7 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
             motion->has_locomotion()
                 ? 0.0F
                 : motion->seconds_since_motion + std::max(0.0F, delta_time);
+        motion->classified = motion->classified || delta_time > 0.0F;
         motion->snapshot_valid = true;
       });
 }

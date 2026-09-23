@@ -240,15 +240,17 @@ inline constexpr std::uint16_t k_humanoid_walk_strafe_right_clip = 79U;
 inline constexpr std::uint16_t k_humanoid_run_strafe_left_clip = 80U;
 inline constexpr std::uint16_t k_humanoid_run_strafe_right_clip = 81U;
 
-inline constexpr std::uint16_t k_humanoid_crew_push_clip = 82U;
-inline constexpr std::uint16_t k_humanoid_crew_crank_clip = 83U;
-inline constexpr std::uint16_t k_humanoid_crew_heave_clip = 84U;
+inline constexpr std::uint16_t k_humanoid_idle_bow_rest_clip = 82U;
+
+inline constexpr std::uint16_t k_humanoid_crew_push_clip = 83U;
+inline constexpr std::uint16_t k_humanoid_crew_crank_clip = 84U;
+inline constexpr std::uint16_t k_humanoid_crew_heave_clip = 85U;
 inline constexpr float k_humanoid_crew_push_bake_speed = 1.1F;
 inline constexpr float k_humanoid_crew_push_cycle_time = 1.1F;
 inline constexpr float k_humanoid_crew_crank_cycle_time = 1.4F;
 inline constexpr float k_humanoid_crew_heave_cycle_time = 2.0F;
 
-inline constexpr std::uint16_t k_humanoid_clip_count = 85U;
+inline constexpr std::uint16_t k_humanoid_clip_count = 86U;
 
 inline constexpr float k_humanoid_combat_ready_cycle_time = 2.2F;
 inline constexpr std::uint32_t k_humanoid_combat_ready_frames = 48U;

@@ -18,6 +18,7 @@
 #include "animation/commander_spear_manifest.h"
 #include "animation/death_pose_manifest.h"
 #include "animation/pose_curve.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "animation/showcase_pose_manifest.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/movement_state.h"
@@ -33,6 +34,7 @@
 #include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/humanoid/runtime/mounted_pose_controller.h"
 #include "render/humanoid/runtime/pose_controller.h"
+#include "render/humanoid/runtime/pose_primitives.h"
 #include "render/humanoid/runtime/skeleton_evaluator.h"
 #include "render/humanoid/runtime/spear_pose_utils.h"
 
@@ -1354,6 +1356,19 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerWorkType::None,
      BakerCombatPoseType::None,
      1.0F},
+    {"idle_bow_rest",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     Animation::k_humanoid_idle_breath_frames,
+     Animation::k_humanoid_idle_breath_fps,
+     Animation::k_humanoid_idle_breath_cycle_time,
+     true},
     {"crew_push",
      Render::GL::HumanoidMotionState::Walk,
      BakerAttackType::None,
@@ -2123,16 +2138,20 @@ to_ambient_idle_type(BakerAmbientIdleType t) noexcept -> Render::GL::AmbientIdle
 }
 
 auto apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
-                                     BakeProfile profile) -> bool {
+                                     BakeProfile profile,
+                                     bool moving = false) -> bool {
   switch (profile) {
   case BakeProfile::SwordReady:
     ctrl.carry_sword_and_shield();
     return true;
   case BakeProfile::SpearReady:
     ctrl.hold_spear_idle();
-    break;
+    return true;
   case BakeProfile::Caster:
-    ctrl.channel_spell_idle();
+
+    if (!moving) {
+      ctrl.channel_spell_idle();
+    }
     break;
   case BakeProfile::StaveCaster:
     ctrl.carry_stave();
@@ -2142,6 +2161,74 @@ auto apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
     break;
   }
   return false;
+}
+
+void restore_leg_lengths(Render::GL::HumanoidPose& pose) {
+  using HP = Render::GL::HumanProportions;
+  constexpr float k_length_tolerance = 0.03F;
+  constexpr int k_hip_iterations = 4;
+
+  auto skeleton_hip = [&](const QVector3D& knee) {
+    QVector3D const to_knee = knee - pose.pelvis_pos;
+    return pose.pelvis_pos + QVector3D(to_knee.x(), 0.0F, to_knee.z()) * 0.3F;
+  };
+  auto restore = [&](QVector3D& knee, const QVector3D& foot, float lateral_sign) {
+    auto lengths_hold = [&]() {
+      QVector3D const hip = skeleton_hip(knee);
+      float const thigh = (knee - hip).length() / HP::UPPER_LEG_LEN;
+      float const shin = (foot - knee).length() / HP::LOWER_LEG_LEN;
+      return std::abs(thigh - 1.0F) <= k_length_tolerance &&
+             std::abs(shin - 1.0F) <= k_length_tolerance;
+    };
+    if (lengths_hold()) {
+      return;
+    }
+    QVector3D const authored_knee = knee;
+    for (int round = 0; round < k_hip_iterations; ++round) {
+      QVector3D const hip = skeleton_hip(knee);
+      QVector3D bend = authored_knee - (hip + foot) * 0.5F;
+      if (bend.lengthSquared() < 1.0e-6F) {
+        bend = QVector3D(lateral_sign * 0.24F, 0.0F, 0.95F);
+      }
+      knee = Render::Humanoid::PosePrimitives::solve_knee_ik(
+          hip,
+          foot,
+          {.upper_leg_len = HP::UPPER_LEG_LEN,
+           .lower_leg_len = HP::LOWER_LEG_LEN,
+           .knee_floor = HP::GROUND_Y + pose.foot_y_offset * 0.5F,
+           .bend_preference = bend});
+    }
+  };
+  restore(pose.knee_l, pose.foot_l, -1.0F);
+  restore(pose.knee_r, pose.foot_r, 1.0F);
+}
+
+auto shield_faces_forward(BakeProfile profile, const HumanoidClipSpec& clip) -> bool {
+  if (profile != BakeProfile::SwordReady && profile != BakeProfile::Skeleton) {
+    return false;
+  }
+  return clip.combat_pose_type == BakerCombatPoseType::ReadyStance ||
+         clip.combat_pose_type == BakerCombatPoseType::ReactBlock;
+}
+
+auto hold_shield_upright(BakeProfile profile, Render::GL::HumanoidPose& pose) -> bool {
+  if (profile != BakeProfile::SwordReady && profile != BakeProfile::Skeleton) {
+    return false;
+  }
+  if (pose.grip_axis_l.lengthSquared() > 1.0e-6F) {
+    return false;
+  }
+  QVector3D torso_up = pose.neck_base - pose.pelvis_pos;
+  torso_up = torso_up.lengthSquared() > 1.0e-6F ? torso_up.normalized()
+                                                : QVector3D(0.0F, 1.0F, 0.0F);
+  QVector3D right = pose.shoulder_r - pose.shoulder_l;
+  right = right - torso_up * QVector3D::dotProduct(right, torso_up);
+  right = right.lengthSquared() > 1.0e-6F ? right.normalized()
+                                          : QVector3D(1.0F, 0.0F, 0.0F);
+  QVector3D const forward = QVector3D::crossProduct(right, torso_up).normalized();
+
+  pose.grip_axis_l = (right * -0.10F + torso_up * 0.98F + forward * 0.17F).normalized();
+  return true;
 }
 
 void bake_humanoid_clip_frame(BakeProfile profile,
@@ -2512,16 +2599,32 @@ void bake_humanoid_clip_frame(BakeProfile profile,
         anim_ctx.inputs.movement_state = Render::Creature::MovementAnimationState::Idle;
       }
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
-      grip_oriented_by_stance = apply_ground_stance_for_profile(ctrl, profile);
+      grip_oriented_by_stance = apply_ground_stance_for_profile(
+          ctrl, profile, clip.state != Render::GL::HumanoidMotionState::Idle);
+      if (std::string_view{clip.name} == "idle_bow_rest") {
+        ctrl.rest_bow_idle(phase);
+        grip_oriented_by_stance = true;
+      }
       if (clip.state == Render::GL::HumanoidMotionState::Idle) {
         ctrl.apply_idle_breath(phase, false);
       }
     }
   }
 
-  if (grip_oriented_by_stance || clip.showcase_type != BakerShowcaseType::None ||
-      is_rpg_sword_clip(clip) || is_rpg_spear_clip(clip) ||
-      clip.work_type != BakerWorkType::None ||
+  if (clip.death_collapse == Animation::HumanoidDeathCollapse::None &&
+      clip.riding_type == BakerRidingType::None &&
+      clip.showcase_type == BakerShowcaseType::None) {
+    restore_leg_lengths(pose);
+  }
+
+  bool const shield_axis_applied = hold_shield_upright(profile, pose);
+  if (shield_faces_forward(profile, clip)) {
+    pose.shield_face_forward = 1.0F;
+  }
+
+  if (grip_oriented_by_stance || shield_axis_applied ||
+      clip.showcase_type != BakerShowcaseType::None || is_rpg_sword_clip(clip) ||
+      is_rpg_spear_clip(clip) || clip.work_type != BakerWorkType::None ||
       clip.combat_pose_type != BakerCombatPoseType::None ||
       clip.attack_type == BakerAttackType::Unarmed ||
       clip.attack_type == BakerAttackType::Sword ||
