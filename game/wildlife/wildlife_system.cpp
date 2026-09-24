@@ -417,7 +417,7 @@ void WildlifeSystem::release_due_packs(Engine::Core::World& world, float delta_t
     return;
   }
 
-  m_elapsed += delta_time;
+  m_elapsed += static_cast<double>(delta_time);
   if (m_released_waves.size() != config.waves.size()) {
     m_released_waves.resize(config.waves.size(), false);
   }
@@ -427,7 +427,7 @@ void WildlifeSystem::release_due_packs(Engine::Core::World& world, float delta_t
       continue;
     }
     const auto& wave = config.waves[index];
-    if (m_elapsed < wave.timing) {
+    if (m_elapsed < static_cast<double>(wave.timing)) {
 
       break;
     }
@@ -1273,7 +1273,7 @@ auto WildlifeSystem::serialize_state() const -> QJsonObject {
   state["enabled"] = m_enabled;
   state["seed"] = static_cast<qint64>(m_seed);
   state["next_group_id"] = static_cast<int>(m_next_group_id);
-  state["elapsed"] = static_cast<double>(m_elapsed);
+  state["elapsed"] = m_elapsed;
 
   QJsonArray released_waves;
   for (bool const released : m_released_waves) {
@@ -1356,7 +1356,7 @@ void WildlifeSystem::restore_state(const QJsonObject& state) {
   m_seed = static_cast<std::uint32_t>(state.value("seed").toVariant().toULongLong());
   m_next_group_id =
       static_cast<std::uint16_t>(state.value("next_group_id").toInt(m_next_group_id));
-  m_elapsed = static_cast<float>(state.value("elapsed").toDouble(0.0));
+  m_elapsed = state.value("elapsed").toDouble(0.0);
 
   m_released_waves.clear();
   for (const auto value : state.value("released_waves").toArray()) {

@@ -612,6 +612,9 @@ private:
 
   AsyncTemplatePrewarm m_async_prewarm;
   bool m_loading_overlay_active = false;
+  bool m_forbids_runtime_bake = false;
+
+  void set_forbids_runtime_bake(bool forbidden);
 };
 
 struct FrameScope {

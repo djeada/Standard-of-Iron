@@ -47,6 +47,7 @@
 #endif
 
 #include "../render/draw_cmd_traits.h"
+#include "../render/gl/gl_capabilities.h"
 #include "../render/graphics_settings.h"
 #include "../render/i_render_backend.h"
 #include "../render/profiling/combat_animation_diagnostics.h"
@@ -126,13 +127,12 @@ auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer* {
 
   const auto fmt = ctx->format();
   const auto version = fmt.version();
-  if (version.first < 3 || (version.first == 3 && version.second < 3)) {
+  if (!Render::GL::GLCapabilities::meets_minimum_version()) {
     qWarning() << "GLView::createRenderer() - OpenGL" << version.first << "."
                << version.second
-               << "detected; at least 3.3 required. Falling back to "
-                  "ShaderQuality::None (software backend). Launch with "
-                  "--force-software to silence this warning.";
-    Render::GraphicsSettings::instance().set_backend_kind(Render::ShaderQuality::None);
+               << (fmt.profile() == QSurfaceFormat::CoreProfile ? "Core" : "non-Core")
+               << "is below the 3.3 Core floor; the renderer will refuse to start "
+                  "and report the driver requirement.";
   } else {
     qInfo() << "GLView::createRenderer() - OpenGL" << version.first << "."
             << version.second << "context OK";

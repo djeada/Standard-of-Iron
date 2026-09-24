@@ -3,6 +3,8 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <QString>
 
+#include "gl_lifetime.h"
+
 namespace Render::GL {
 
 class Texture : protected QOpenGLFunctions_3_3_Core {
@@ -44,6 +46,7 @@ public:
 
 private:
   GLuint m_texture = 0;
+  GlShareGroup m_share_group = k_unknown_share_group;
   int m_width = 0;
   int m_height = 0;
   Format m_format = Format::RGBA;

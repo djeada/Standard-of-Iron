@@ -1170,3 +1170,31 @@ TEST(BridgeApproach, DeckMeetsTheBankAtAWalkableGrade) {
   EXPECT_LT(entry_deck - bank, 0.35F)
       << "the deck starts " << (entry_deck - bank) << " m above the bank";
 }
+
+TEST(TerrainServiceRevision, TwoMatchesNeverShareARevision) {
+  Game::Map::MapDefinition first_map;
+  first_map.grid.width = 8;
+  first_map.grid.height = 8;
+  first_map.grid.tile_size = 1.0F;
+  first_map.world_props.push_back(
+      {.type = Game::Map::WorldProp::Type::PineTree, .x = 2.0F, .z = 3.0F});
+  Game::Map::MapDefinition second_map = first_map;
+  second_map.world_props.front().x = 5.0F;
+
+  Game::Map::TerrainService first;
+  Game::Map::TerrainService second;
+  first.initialize(first_map);
+  second.initialize(second_map);
+
+  EXPECT_NE(first.world_props_revision(), second.world_props_revision())
+      << "a cache keyed on the revision would hand the second match the first "
+         "match's props";
+  EXPECT_NE(first.navigation_topology_revision(),
+            second.navigation_topology_revision());
+
+  const auto before_clear = first.world_props_revision();
+  first.clear();
+  first.initialize(second_map);
+  EXPECT_NE(first.world_props_revision(), before_clear);
+  EXPECT_NE(first.world_props_revision(), second.world_props_revision());
+}

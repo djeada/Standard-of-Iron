@@ -1006,3 +1006,31 @@ TEST_F(VictoryServiceTest, KillingTheEnemyCommanderWinsJustAsLosingYoursLoses) {
       << "the enemy commander fell and the match carried on";
   EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("victory"));
 }
+
+TEST_F(VictoryServiceTest, ALongMissionClockDoesNotDriftAcrossThousandsOfTicks) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.victory_rules.push_back(capture_structures({QStringLiteral("barracks")}, 4));
+  rules.defeat_rules.emplace_back(Game::Systems::TimeLimitDefeatRule{1200.0F});
+  m_service->configure(rules, 1);
+  advance_past_startup_delay(world);
+
+  constexpr int k_ticks = 30000;
+  constexpr float k_step = 1.0F / 30.0F;
+  for (int tick = 0; tick < k_ticks; ++tick) {
+    m_service->update(world, k_step);
+  }
+  ASSERT_FALSE(m_service->is_game_over());
+
+  const double expected_elapsed =
+      static_cast<double>(0.4F) + (static_cast<double>(k_step) * k_ticks);
+  EXPECT_NEAR(m_service->seconds_until_deadline(), 1200.0 - expected_elapsed, 0.01)
+      << "a float running sum of the tick step drifts by a fraction of a second "
+         "every thousand seconds, which moves the deadline off its tick";
+}

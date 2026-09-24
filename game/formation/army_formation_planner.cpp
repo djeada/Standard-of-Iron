@@ -365,7 +365,6 @@ void emit_split_flanks(const DoctrineLineRule& rule,
                                std::max(1.0F, rule.lateral_spacing_scale);
     float const depth_step =
         max_depth_step(side, base_spacing) * std::max(1.0F, rule.depth_spacing_scale);
-    float const spacing = lateral_step;
     int const abreast_for_depth =
         rows_allowed > 0
             ? (static_cast<int>(side.size()) + rows_allowed - 1) / rows_allowed
@@ -538,31 +537,6 @@ void separate_footprints(std::vector<FormationSlot>& slot_list,
     }
     settled.push_back(index);
   }
-}
-
-auto widest_rank(const std::vector<FormationSlot>& slot_list, float spacing) -> int {
-  if (slot_list.empty()) {
-    return 0;
-  }
-  std::vector<float> depths;
-  depths.reserve(slot_list.size());
-  for (const auto& slot : slot_list) {
-    depths.push_back(slot.local_offset.z());
-  }
-  std::sort(depths.begin(), depths.end(), std::greater<>());
-  float const band = std::max(spacing, 0.2F) * 0.5F;
-  int widest = 0;
-  int in_band = 0;
-  float start = depths.front();
-  for (float const depth : depths) {
-    if (std::abs(depth - start) > band) {
-      widest = std::max(widest, in_band);
-      start = depth;
-      in_band = 0;
-    }
-    ++in_band;
-  }
-  return std::max(widest, in_band);
 }
 
 void recentre_on_centroid(std::vector<FormationSlot>& slot_list) {

@@ -183,9 +183,9 @@ void UnitLayoutStateSystem::update(Engine::Core::World* world, float delta_time)
     return;
   }
 
-  world->for_each_entity([world, delta_time](Engine::Core::Entity& entity) {
-    const auto* unit = world->try_get<Engine::Core::UnitComponent>(entity.get_id());
-    if (unit == nullptr || !Game::Units::is_troop_spawn(unit->spawn_type)) {
+  auto update_entity = [delta_time](Engine::Core::Entity& entity,
+                                    const Engine::Core::UnitComponent* unit) {
+    if (!Game::Units::is_troop_spawn(unit->spawn_type)) {
       return;
     }
 
@@ -274,7 +274,11 @@ void UnitLayoutStateSystem::update(Engine::Core::World* world, float delta_time)
       layout->phase = static_cast<std::uint8_t>(LayoutPhase::Formed);
       layout->transition_progress = 1.0F;
     }
-  });
+  };
+
+  for (auto [entity, unit] : world->entity_view<const Engine::Core::UnitComponent>()) {
+    update_entity(entity, &unit);
+  }
 }
 
 auto UnitLayoutStateSystem::access() const -> Engine::Core::SystemAccess {

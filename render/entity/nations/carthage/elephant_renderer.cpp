@@ -19,6 +19,7 @@
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
+#include "render/math/creature_math_utils.h"
 #include "render/scene_renderer.h"
 #include "render/submitter.h"
 
@@ -56,6 +57,10 @@ private:
 
 } // namespace
 
+auto elephant_anatomy_seed(const Engine::Core::Entity& entity) -> std::uint32_t {
+  return Render::Creature::stable_entity_seed(entity.get_id());
+}
+
 void register_elephant_renderer(EntityRendererRegistry& registry) {
   registry.register_renderer(
       "troops/carthage/elephant", [](const DrawContext& p, ISubmitter& out) {
@@ -70,9 +75,7 @@ void register_elephant_renderer(EntityRendererRegistry& registry) {
           team_color = Render::entity_color(*p.entity);
         }
 
-        uint32_t seed = 0U;
-        seed =
-            static_cast<uint32_t>(reinterpret_cast<uintptr_t>(p.entity) & 0xFFFFFFFFU);
+        uint32_t const seed = elephant_anatomy_seed(*p.entity);
 
         QVector3D const fabric_base(0.45F, 0.18F, 0.55F);
         QVector3D const metal_base(0.70F, 0.50F, 0.28F);

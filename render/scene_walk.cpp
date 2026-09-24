@@ -16,6 +16,7 @@
 #include <span>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 
@@ -204,12 +205,34 @@ auto is_formation_render_spawn(Game::Units::SpawnType spawn_type) noexcept -> bo
   }
 }
 
-float get_unit_cull_radius(const Engine::Core::UnitComponent& unit) {
-  const float base_radius = get_unit_base_cull_radius(unit.spawn_type);
-  if (!is_formation_render_spawn(unit.spawn_type)) {
-    return base_radius;
-  }
+struct CullRadiusKey {
+  Game::Units::SpawnType spawn_type;
+  Game::Systems::NationID nation_id;
+  bool uses_nation_formation_profile;
+  int render_individuals_per_unit_override;
+  int formation_files_override;
+  int squad_strength;
 
+  auto operator==(const CullRadiusKey&) const -> bool = default;
+};
+
+struct CullRadiusKeyHash {
+  auto operator()(const CullRadiusKey& key) const noexcept -> std::size_t {
+    std::size_t hash = static_cast<std::size_t>(key.spawn_type);
+    auto mix = [&hash](std::size_t value) {
+      hash ^= value + 0x9E3779B97F4A7C15ULL + (hash << 6U) + (hash >> 2U);
+    };
+    mix(static_cast<std::size_t>(key.nation_id));
+    mix(static_cast<std::size_t>(key.uses_nation_formation_profile));
+    mix(static_cast<std::size_t>(key.render_individuals_per_unit_override));
+    mix(static_cast<std::size_t>(key.formation_files_override));
+    mix(static_cast<std::size_t>(key.squad_strength));
+    return hash;
+  }
+};
+
+float compute_unit_cull_radius(const Engine::Core::UnitComponent& unit,
+                               float base_radius) {
   const auto definition = Game::Systems::FormationCombat::resolve_definition(unit);
   const int columns = std::clamp(definition.max_per_row, 1, definition.total_count);
   const int rows = (definition.total_count + columns - 1) / columns;
@@ -221,6 +244,35 @@ float get_unit_cull_radius(const Engine::Core::UnitComponent& unit) {
   const float body_padding = mounted ? 2.75F : 1.75F;
   const float formation_radius = std::hypot(half_width, half_depth) + body_padding;
   return std::max(base_radius, formation_radius);
+}
+
+float get_unit_cull_radius(const Engine::Core::UnitComponent& unit) {
+  const float base_radius = get_unit_base_cull_radius(unit.spawn_type);
+  if (!is_formation_render_spawn(unit.spawn_type)) {
+    return base_radius;
+  }
+
+  thread_local std::unordered_map<CullRadiusKey, float, CullRadiusKeyHash> cache;
+  thread_local std::uint64_t cache_epoch = 0;
+  const std::uint64_t epoch =
+      Game::Systems::FormationCombat::formation_definition_epoch();
+  if (epoch != cache_epoch || cache.size() > 4096U) {
+    cache.clear();
+    cache_epoch = epoch;
+  }
+  const CullRadiusKey key{
+      .spawn_type = unit.spawn_type,
+      .nation_id = unit.nation_id,
+      .uses_nation_formation_profile = unit.uses_nation_formation_profile,
+      .render_individuals_per_unit_override = unit.render_individuals_per_unit_override,
+      .formation_files_override = unit.formation_files_override,
+      .squad_strength = unit.squad_strength};
+  if (auto found = cache.find(key); found != cache.end()) {
+    return found->second;
+  }
+  const float radius = compute_unit_cull_radius(unit, base_radius);
+  cache.emplace(key, radius);
+  return radius;
 }
 
 auto resolved_individuals_per_unit(const Engine::Core::UnitComponent& unit_comp)
@@ -288,19 +340,19 @@ struct UnitRenderEntry {
   Render::GL::BuildingCollapse collapse{};
 };
 
-[[nodiscard]] auto preview_structure_spawn_type(const Engine::Core::Entity& entity)
+[[nodiscard]] auto preview_structure_spawn_type(const Engine::Core::World& world,
+                                                Engine::Core::EntityID id)
     -> std::optional<Game::Units::SpawnType> {
-  if (const auto* site =
-          entity.get_component<Engine::Core::WallConstructionSiteComponent>();
+  if (const auto* site = world.try_get<Engine::Core::WallConstructionSiteComponent>(id);
       site != nullptr) {
     return site->product_type;
   }
-  if (const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
+  if (const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
       unit != nullptr) {
     return unit->spawn_type;
   }
   if (const auto* preview =
-          entity.get_component<Engine::Core::ConstructionPreviewComponent>();
+          world.try_get<Engine::Core::ConstructionPreviewComponent>(id);
       preview != nullptr && !preview->product_type.empty()) {
     Game::Units::SpawnType type{};
     if (Game::Units::try_parse_spawn_type(QString::fromStdString(preview->product_type),
@@ -1126,10 +1178,22 @@ void Renderer::prepare_unit_plans(std::vector<UnitRenderEntry>& entries,
     m_prepare_warmed_handles[handle] = 1U;
   }
 
+  Engine::Core::World* frozen_world = nullptr;
+  for (std::size_t const i : parallel_jobs) {
+    if (plans[i].draw_ctx.world != nullptr) {
+      frozen_world = plans[i].draw_ctx.world;
+      break;
+    }
+  }
+  std::optional<Engine::Core::Registry::StructureFreeze> structure_freeze;
+  if (frozen_world != nullptr && !parallel_jobs.empty()) {
+    structure_freeze.emplace(frozen_world->registry());
+  }
   m_prepare_pool.run(parallel_jobs.size(), [&](std::size_t job) {
     std::size_t const i = parallel_jobs[job];
     plans[i].preparer->prepare(plans[i].draw_ctx, m_unit_preparations[i]);
   });
+  structure_freeze.reset();
 
   frame_profile.humanoid_preparation_us =
       static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
@@ -1519,7 +1583,7 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
 
     m_ghost_coverage = alpha_multiplier;
     (*fn)(ctx, *this);
-    if (auto const ghost_type = preview_structure_spawn_type(*entity);
+    if (auto const ghost_type = preview_structure_spawn_type(*world, entity->get_id());
         ghost_type.has_value()) {
 
       Render::GL::submit_structure_foundation(

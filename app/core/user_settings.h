@@ -129,14 +129,14 @@ inline auto load_graphics_quality_level() -> std::optional<int> {
 
 inline void apply_saved_graphics_quality() {
   const auto level = load_graphics_quality_level();
+  auto& graphics = Render::GraphicsSettings::instance();
+  graphics.set_quality_chosen_by_user(level.has_value());
   if (!level.has_value()) {
-    Render::GraphicsSettings::instance().set_quality(
-        Render::k_default_graphics_quality);
+    graphics.set_quality(Render::k_default_graphics_quality);
     return;
   }
 
-  Render::GraphicsSettings::instance().set_quality(
-      static_cast<Render::GraphicsQuality>(*level));
+  graphics.set_quality(static_cast<Render::GraphicsQuality>(*level));
 }
 
 inline void save_graphics_quality_level(int level) {
@@ -145,6 +145,7 @@ inline void save_graphics_quality_level(int level) {
     return;
   }
 
+  Render::GraphicsSettings::instance().set_quality_chosen_by_user(true);
   auto settings = open();
   settings.setValue(QString::fromLatin1(kGraphicsQualityKey), level);
   settings.sync();

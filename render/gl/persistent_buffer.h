@@ -194,10 +194,12 @@ public:
       glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
 
       std::size_t const write_offset = m_frame_offset + m_current_count * sizeof(T);
-      void* ptr = glMapBufferRange(GL_ARRAY_BUFFER,
-                                   write_offset,
-                                   count * sizeof(T),
-                                   GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+      const GLbitfield sync_bit = m_slot_writable ? GL_MAP_UNSYNCHRONIZED_BIT : 0U;
+      void* ptr =
+          glMapBufferRange(GL_ARRAY_BUFFER,
+                           write_offset,
+                           count * sizeof(T),
+                           GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT | sync_bit);
       note_mapped_buffer_range(ptr != nullptr ? count * sizeof(T) : 0U);
 
       if (ptr == nullptr) {

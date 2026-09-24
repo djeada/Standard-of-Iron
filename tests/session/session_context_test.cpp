@@ -1,6 +1,8 @@
 #include <QJsonArray>
 
+#include <algorithm>
 #include <gtest/gtest.h>
+#include <string>
 #include <thread>
 #include <utility>
 
@@ -9,7 +11,9 @@
 #include "game/map/terrain_service.h"
 #include "game/session/deterministic_rng.h"
 #include "game/session/session_context.h"
+#include "game/session/session_snapshot.h"
 #include "game/session/simulation_clock.h"
+#include "game/session/world_digest.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
@@ -352,3 +356,46 @@ TEST(SessionStatsTest, BattleCountersSurviveASaveRoundTrip) {
   EXPECT_EQ(stats.get_stats(1)->enemies_killed, 91)
       << "a save without counters must not wipe the ones the match has";
 }
+
+namespace {
+
+TEST(SessionDigestTest, ReplayHashCoversAllAuthoritativeState) {
+  SessionContext session;
+  int authoritative = 1;
+  int presentation = 1;
+  Game::Session::SessionSnapshot::register_contributor(
+      {.key = "digest_probe",
+       .capture = [&authoritative, &presentation](const Game::Session::SnapshotScope&)
+           -> QJsonValue { return QJsonArray{authoritative, presentation}; },
+       .restore = {},
+       .digest = [&authoritative](const Game::Session::SnapshotScope&) -> QJsonValue {
+         return authoritative;
+       }});
+
+  const auto before = Game::Session::subsystem_digests(session);
+  const auto before_root = Game::Session::session_digest(session);
+
+  presentation = 2;
+  EXPECT_EQ(Game::Session::subsystem_digests(session).root, before.root)
+      << "state a contributor leaves out of its digest view moved the replay hash";
+
+  authoritative = 2;
+  const auto after = Game::Session::subsystem_digests(session);
+  EXPECT_NE(after.systems, before.systems);
+  EXPECT_NE(after.root, before.root);
+  EXPECT_STREQ(Game::Session::name_of_first_difference(before, after), "systems");
+  EXPECT_NE(Game::Session::session_digest(session), before_root);
+
+  Game::Session::SessionSnapshot::forget_contributor("digest_probe");
+}
+
+TEST(SessionDigestTest, EveryBuiltInSnapshotContributorIsHashed) {
+  Game::Session::register_built_in_snapshot_contributors();
+  const auto hashed = Game::Session::SessionSnapshot::digest_keys();
+  for (const char* key : {"undead_zones", "cursed_gold_veins", "wildlife"}) {
+    EXPECT_NE(std::find(hashed.begin(), hashed.end(), std::string(key)), hashed.end())
+        << key << " is saved but not covered by the replay digest";
+  }
+}
+
+} // namespace

@@ -285,7 +285,7 @@ private:
   QSet<QString> m_tracked_local_structure_types;
   std::array<bool, Game::Units::k_spawn_type_count> m_tracked_enemy_spawn_types{};
   std::array<bool, Game::Units::k_spawn_type_count> m_tracked_local_spawn_types{};
-  float m_elapsed_time = 0.0F;
+  double m_elapsed_time = 0.0;
   float m_startup_delay = 0.0F;
   bool m_has_time_based_victory = false;
   bool m_has_undead_zone_rules = false;

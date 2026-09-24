@@ -308,7 +308,7 @@ void TutorialDirector::restore(const QJsonObject& state, int waves_cleared) {
   }
 
   std::fill(m_done.begin(), m_done.end(), false);
-  for (const auto& id : state.value("done").toArray()) {
+  for (const QJsonValue id : state.value("done").toArray()) {
     if (const auto index = index_of(id.toString())) {
       m_done[*index] = true;
     }

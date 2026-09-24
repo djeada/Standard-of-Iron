@@ -57,16 +57,13 @@ auto TroopCountRegistry::get_troop_count(int owner_id) const -> int {
 void TroopCountRegistry::rebuild_from_world(const Engine::Core::World& world) {
   m_troop_counts.clear();
 
-  world.for_each_entity([this, &world](const Engine::Core::Entity& entity) {
-    const auto* unit = world.try_get<Engine::Core::UnitComponent>(entity.get_id());
-    if (unit == nullptr || unit->health <= 0) {
-      return;
+  for (auto [entity_id, unit] : world.view<Engine::Core::UnitComponent>()) {
+    (void)entity_id;
+    if (unit.health <= 0 || !Game::Units::is_troop_spawn(unit.spawn_type)) {
+      continue;
     }
-    if (!Game::Units::is_troop_spawn(unit->spawn_type)) {
-      return;
-    }
-    m_troop_counts[unit->owner_id] += squad_men(*unit);
-  });
+    m_troop_counts[unit.owner_id] += squad_men(unit);
+  }
 
   m_source_instance_id = world.instance_id();
   m_source_tick_id = world.tick_id();

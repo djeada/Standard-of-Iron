@@ -368,12 +368,11 @@ auto CombatActionService::request_attack(
       combat_state->intent = swing;
     }
 
-    static std::uint8_t s_fpv_attack_seed = 0;
-    combat_state->attack_offset = static_cast<float>(s_fpv_attack_seed % 7) * 0.022F;
+    auto const attack_seed =
+        static_cast<std::uint8_t>(combat_state->attack_variant + 1U);
+    combat_state->attack_offset = static_cast<float>(attack_seed % 7) * 0.022F;
     combat_state->attack_variant =
-        s_fpv_attack_seed %
-        Engine::Core::CombatStateComponent::k_attack_variant_seed_slots;
-    ++s_fpv_attack_seed;
+        attack_seed % Engine::Core::CombatStateComponent::k_attack_variant_seed_slots;
   }
 
   if (definition == nullptr || (definition->commander_only && commander == nullptr)) {

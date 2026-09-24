@@ -851,7 +851,6 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   const bool turn_smoothing_travel_yaw = u.turn_smoothing_travel_yaw;
   const bool turn_smoothing_stagger = u.turn_smoothing_stagger;
   const bool turn_smoothing_pivot_wheel = u.turn_smoothing_pivot_wheel;
-  const bool unit_is_archer = u.unit_is_archer;
   const std::uint32_t ctx_entity_id = u.ctx_entity_id;
   const bool unit_fog_visible = u.unit_fog_visible;
   auto& stats = *u.stats;

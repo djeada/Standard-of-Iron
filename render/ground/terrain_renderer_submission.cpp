@@ -12,6 +12,7 @@
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/shader.h"
 #include "render/gl/texture.h"
+#include "render/graphics_settings.h"
 #include "render/scene_renderer.h"
 #include "terrain_renderer.h"
 
@@ -34,7 +35,14 @@ constexpr float k_openness_dir_z[k_openness_directions] = {
     0.0F, 0.866F, 0.866F, 0.0F, -0.866F, -0.866F};
 constexpr std::size_t k_terrain_field_channels = 4U;
 
-constexpr int k_microdetail_size = 1024;
+constexpr int k_microdetail_size_full = 1024;
+constexpr int k_microdetail_size_low = 512;
+constexpr int k_max_atlas_size_full = 4096;
+constexpr int k_max_atlas_size_low = 2048;
+
+auto low_graphics_tier() -> bool {
+  return Render::GraphicsSettings::instance().quality() == Render::GraphicsQuality::Low;
+}
 constexpr float k_microdetail_cells = 32.0F;
 
 } // namespace
@@ -140,6 +148,8 @@ void TerrainRenderer::bake_terrain_microdetail() {
         QStringLiteral("terrain_microdetail_bake"));
   }
 
+  const int microdetail_size =
+      low_graphics_tier() ? k_microdetail_size_low : k_microdetail_size_full;
   GLuint texture = 0U;
   gl->glGenTextures(1, &texture);
   note_textures_created(1);
@@ -147,15 +157,15 @@ void TerrainRenderer::bake_terrain_microdetail() {
   gl->glTexImage2D(GL_TEXTURE_2D,
                    0,
                    GL_RGBA16F,
-                   k_microdetail_size,
-                   k_microdetail_size,
+                   microdetail_size,
+                   microdetail_size,
                    0,
                    GL_RGBA,
                    GL_FLOAT,
                    nullptr);
   note_texture_storage(
-      texture_transfer_bytes(static_cast<std::size_t>(k_microdetail_size),
-                             static_cast<std::size_t>(k_microdetail_size),
+      texture_transfer_bytes(static_cast<std::size_t>(microdetail_size),
+                             static_cast<std::size_t>(microdetail_size),
                              8U),
       false);
   gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -190,7 +200,7 @@ void TerrainRenderer::bake_terrain_microdetail() {
     return;
   }
 
-  gl->glViewport(0, 0, k_microdetail_size, k_microdetail_size);
+  gl->glViewport(0, 0, microdetail_size, microdetail_size);
   gl->glDisable(GL_DEPTH_TEST);
   gl->glDisable(GL_BLEND);
   gl->glDisable(GL_CULL_FACE);
@@ -233,9 +243,10 @@ void TerrainRenderer::bake_terrain_noise_atlas() {
   }
 
   constexpr int k_texels_per_tile = 2;
-  constexpr int k_max_atlas_size = 4096;
+  const int max_atlas_size =
+      low_graphics_tier() ? k_max_atlas_size_low : k_max_atlas_size_full;
   const int requested = std::max(m_width, m_height) * k_texels_per_tile;
-  const int atlas_size = std::clamp(requested, 256, k_max_atlas_size);
+  const int atlas_size = std::clamp(requested, 256, max_atlas_size);
 
   if (m_noise_bake_shader == nullptr) {
     m_noise_bake_shader = std::make_unique<Shader>();

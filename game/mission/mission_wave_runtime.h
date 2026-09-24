@@ -45,7 +45,7 @@ struct MissionWaveBinding {
 
 class MissionWaveRuntime {
 public:
-  [[nodiscard]] auto elapsed() const -> float { return m_elapsed; }
+  [[nodiscard]] auto elapsed() const -> float { return static_cast<float>(m_elapsed); }
   [[nodiscard]] auto director() -> Game::Mission::MissionWaveDirector& {
     return m_director;
   }
@@ -68,7 +68,7 @@ public:
 private:
   [[nodiscard]] auto fire_due_events() -> QStringList;
 
-  float m_elapsed = 0.0F;
+  double m_elapsed = 0.0;
   std::vector<Game::Mission::PendingMissionWave> m_waves;
   std::vector<Game::Mission::PendingMissionEvent> m_events;
   Game::Mission::MissionWaveDirector m_director;

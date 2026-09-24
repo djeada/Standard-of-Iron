@@ -192,6 +192,21 @@ if [ "${run_acceptance}" -eq 1 ]; then
   fi
 fi
 
+# The fast profile still proves one behavioural invariant end to end: a short
+# recorded bot skirmish replays to the same digests, AI and system state
+# included. The full profile runs the longer round trip above instead.
+if [ "${run_extended}" -eq 0 ] && [ -z "${selected_suites}" ]; then
+  headless=$(resolve soi_headless)
+  if [ -n "${headless}" ]; then
+    echo "--- headless_replay_round_trip (short) ---"
+    if ! SOI_HEADLESS="${headless}" bash scripts/check-headless-replay.sh \
+      bot_skirmish "${SOI_PR_REPLAY_SECONDS:-8}" 7; then
+      status=1
+      failed+=("headless_replay_round_trip")
+    fi
+  fi
+fi
+
 if [ ${status} -ne 0 ]; then
   echo ""
   echo "failing suites: ${failed[*]}" >&2

@@ -7,6 +7,8 @@
 #include <QOpenGLExtraFunctions>
 #include <QOpenGLFunctions>
 
+#include <atomic>
+#include <cstdint>
 #include <mutex>
 #include <unordered_map>
 #include <utility>
@@ -38,6 +40,7 @@ struct ShareGroups {
   std::mutex mutex;
   std::unordered_map<const QOpenGLContextGroup*, GlShareGroup> ids;
   GlShareGroup next = 1;
+  std::atomic<std::uint64_t> generation{0};
 };
 
 auto share_groups() -> ShareGroups& {
@@ -68,16 +71,36 @@ auto id_for(const QOpenGLContextGroup* group) -> GlShareGroup {
     assigned = inserted.first->second;
   }
 
-  QObject::connect(group, &QObject::destroyed, [assigned](QObject* dead) {
+  QObject::connect(group, &QObject::destroyed, [assigned, group]() {
     auto& groups = share_groups();
     {
       const std::lock_guard<std::mutex> lock(groups.mutex);
-      groups.ids.erase(static_cast<const QOpenGLContextGroup*>(dead));
+      groups.ids.erase(group);
     }
+    groups.generation.fetch_add(1, std::memory_order_acq_rel);
     forget_gl_share_group(assigned);
   });
 
   return assigned;
+}
+
+void delete_now(QOpenGLExtraFunctions& functions,
+                DeferredGlObject kind,
+                unsigned int name) {
+  switch (kind) {
+  case DeferredGlObject::Buffer:
+    functions.glDeleteBuffers(1, &name);
+    break;
+  case DeferredGlObject::VertexArray:
+    functions.glDeleteVertexArrays(1, &name);
+    break;
+  case DeferredGlObject::Texture:
+    functions.glDeleteTextures(1, &name);
+    break;
+  case DeferredGlObject::Program:
+    functions.glDeleteProgram(name);
+    break;
+  }
 }
 
 } // namespace
@@ -90,7 +113,21 @@ auto current_gl_share_group() noexcept -> GlShareGroup {
   if (context == nullptr) {
     return k_unknown_share_group;
   }
-  return id_for(context->shareGroup());
+  struct CachedGroup {
+    const QOpenGLContextGroup* group = nullptr;
+    std::uint64_t generation = 0;
+    GlShareGroup id = k_unknown_share_group;
+  };
+  thread_local CachedGroup cached;
+  const QOpenGLContextGroup* group = context->shareGroup();
+  const std::uint64_t generation =
+      share_groups().generation.load(std::memory_order_acquire);
+  if (group != nullptr && cached.group == group && cached.generation == generation) {
+    return cached.id;
+  }
+  const GlShareGroup id = id_for(group);
+  cached = CachedGroup{.group = group, .generation = generation, .id = id};
+  return id;
 }
 
 auto gl_objects_can_be_released() noexcept -> bool {
@@ -170,19 +207,23 @@ void drain_deferred_gl_deletes() {
   QOpenGLExtraFunctions functions(QOpenGLContext::currentContext());
   functions.initializeOpenGLFunctions();
   for (const auto& entry : batch) {
-    const unsigned int name = entry.name;
-    switch (entry.kind) {
-    case DeferredGlObject::Buffer:
-      functions.glDeleteBuffers(1, &name);
-      break;
-    case DeferredGlObject::VertexArray:
-      functions.glDeleteVertexArrays(1, &name);
-      break;
-    case DeferredGlObject::Texture:
-      functions.glDeleteTextures(1, &name);
-      break;
-    }
+    delete_now(functions, entry.kind, entry.name);
   }
+}
+
+void release_gl_object(DeferredGlObject kind,
+                       unsigned int name,
+                       GlShareGroup group) noexcept {
+  if (name == 0U) {
+    return;
+  }
+  if (!gl_objects_can_be_released(group)) {
+    defer_gl_delete(kind, name, group);
+    return;
+  }
+  QOpenGLExtraFunctions functions(QOpenGLContext::currentContext());
+  functions.initializeOpenGLFunctions();
+  delete_now(functions, kind, name);
 }
 
 auto deferred_gl_delete_count() noexcept -> std::size_t {

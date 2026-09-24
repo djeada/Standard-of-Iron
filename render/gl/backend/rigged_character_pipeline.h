@@ -83,7 +83,7 @@ private:
 
   GL::Shader* m_last_bound_shader = nullptr;
   unsigned int m_wear_volume = 0;
-  static constexpr std::size_t k_palette_ring_slots = 64;
+  static constexpr std::size_t k_palette_ring_slots = 1024;
 
   unsigned int m_palette_ubo = 0;
   std::size_t m_palette_ubo_capacity_bytes = 0;

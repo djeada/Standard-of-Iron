@@ -105,8 +105,10 @@ Backend::Backend(ShaderQuality quality)
 Backend::~Backend() {
   const bool last_backend = release_backend() == 0;
   if (QOpenGLContext::currentContext() == nullptr) {
-
     for_each_pipeline_slot([](auto& slot) { (void)slot.release(); });
+    if (last_backend) {
+      SharedGeometryCache::instance().release_all();
+    }
     return;
   }
 

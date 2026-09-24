@@ -588,6 +588,8 @@ void GameEngine::note_dropped_simulation_ticks(std::uint64_t dropped, float real
   }
 
   m_dropped_simulation_ticks += dropped;
+  Render::Profiling::global_profile().dropped_sim_ticks.store(
+      m_dropped_simulation_ticks, std::memory_order_relaxed);
   if (m_dropped_tick_report_cooldown > 0.0F) {
     return;
   }
@@ -1476,6 +1478,7 @@ auto accepted_order_cue(App::Core::OrderKind kind,
   case App::Core::OrderKind::Hold:
   case App::Core::OrderKind::Formation:
   case App::Core::OrderKind::Squad:
+  case App::Core::OrderKind::Recruit:
   case App::Core::OrderKind::None:
     break;
   }

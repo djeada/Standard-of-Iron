@@ -371,3 +371,20 @@ TEST(FramePacingTest, PresentationWaitIsAttributedSeparatelyFromCpuWork) {
   EXPECT_DOUBLE_EQ(evidence["phase_ms"].toObject()["presentation_lock_wait"].toDouble(),
                    249);
 }
+
+TEST(FrameProfileTest, TwoRenderersHaveIndependentFrameProfiles) {
+  auto& gameplay = Render::Profiling::global_profile();
+  gameplay.draw_calls = 1234U;
+
+  {
+    Render::Profiling::FrameProfile portrait;
+    const Render::Profiling::ScopedFrameProfileRedirect redirect(portrait);
+    EXPECT_EQ(&Render::Profiling::global_profile(), &portrait);
+    Render::Profiling::global_profile().draw_calls = 7U;
+  }
+
+  EXPECT_EQ(&Render::Profiling::global_profile(), &gameplay);
+  EXPECT_EQ(gameplay.draw_calls, 1234U)
+      << "the portrait renderer's frame overwrote the gameplay frame's stats";
+  gameplay.draw_calls = 0U;
+}

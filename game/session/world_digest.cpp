@@ -1,5 +1,9 @@
 #include "world_digest.h"
 
+#include <QByteArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -15,6 +19,7 @@
 #include "../systems/resource_types.h"
 #include "deterministic_rng.h"
 #include "session_context.h"
+#include "session_snapshot.h"
 #include "simulation_clock.h"
 
 namespace Game::Session {
@@ -29,6 +34,18 @@ void mix(std::uint64_t& digest, std::uint64_t value) {
     digest ^= (value >> shift) & 0xFFU;
     digest *= k_prime;
   }
+}
+
+auto systems_digest(SessionContext& session) -> std::uint64_t {
+  std::uint64_t digest = k_offset;
+  const QJsonObject view =
+      SessionSnapshot::digest_view(SnapshotScope{.world = &session.world()});
+  const QByteArray bytes = QJsonDocument(view).toJson(QJsonDocument::Compact);
+  for (const char byte : bytes) {
+    digest ^= static_cast<std::uint8_t>(byte);
+    digest *= k_prime;
+  }
+  return digest;
 }
 
 auto quantise(float value) -> std::int64_t {
@@ -284,6 +301,7 @@ auto subsystem_digests(SessionContext& session) -> SubsystemDigests {
   digests.economy = k_offset;
   digests.wildlife = k_offset;
   digests.session = k_offset;
+  digests.systems = systems_digest(session);
 
   for (const auto& line : collect(session.world())) {
     mix_identity(digests.identity, line);
@@ -312,6 +330,7 @@ auto subsystem_digests(SessionContext& session) -> SubsystemDigests {
   mix(digests.root, digests.economy);
   mix(digests.root, digests.wildlife);
   mix(digests.root, digests.session);
+  mix(digests.root, digests.systems);
   return digests;
 }
 
@@ -338,6 +357,9 @@ auto name_of_first_difference(const SubsystemDigests& recorded,
   if (recorded.session != observed.session) {
     return "session";
   }
+  if (recorded.systems != observed.systems) {
+    return "systems";
+  }
   if (recorded.root != observed.root) {
     return "root";
   }
@@ -355,6 +377,7 @@ auto session_digest(SessionContext& session) -> std::uint64_t {
       mix(digest, static_cast<std::uint64_t>(stock.get(type)));
     }
   }
+  mix(digest, systems_digest(session));
   return digest;
 }
 

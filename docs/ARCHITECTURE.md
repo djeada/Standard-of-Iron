@@ -128,7 +128,9 @@ That separation has several consequences:
 - command ordering is tied to simulation updates;
 - AI decisions are scheduled against simulation updates;
 - replay digests compare deterministic simulation state rather than visual frames; and
-- the renderer can skip or interpolate presentation frames without changing the authoritative battle.
+- the renderer can skip or interpolate presentation frames without changing what any given simulation tick computes.
+
+That last guarantee is per tick, not per wall-clock second. When a frame cannot run the whole backlog, the live runtime passes `OverloadPolicy::DiscardBacklog` to `SessionContext::advance()` and the unrun ticks are dropped and counted (`SimulationClock::consume_dropped_ticks`). The battle then runs slower than real time, but every tick that does run is the same tick a headless replay runs. The running total is shown on the F10 profiler overlay (`dropped N ticks`) and logged by `GameEngine::note_dropped_simulation_ticks`.
 
 The live application, `soi_headless`, replay verification, `balance_sim`, Arena scenarios, and performance tooling all reuse this simulation-facing contract.
 
@@ -142,10 +144,23 @@ The main ingredients are:
 - typed, ordered commands;
 - deterministic RNG owned by the session;
 - AI results applied on scheduled simulation updates rather than on whichever wall-clock instant a worker finishes;
-- save/replay snapshots that capture authoritative non-entity state; and
+- save/replay snapshots that capture authoritative non-entity state for the systems that register a `SessionSnapshot` contributor; and
 - world digests used by replay verification.
 
+### What the replay digest covers
+
+`subsystem_digests()` hashes per-entity lines (identity, movement, combat, status, economy, wildlife), the session clock, RNG draw count and resource stock. It also hashes a `systems` part: the `digest` view of every registered `SessionSnapshot` contributor, serialized as compact JSON. Today those are AI runtime state (without `next_trace_time`, which only drives tracing), undead zones, cursed gold veins, and wildlife groups (without the bird flocks, which are cosmetic and follow the camera).
+
+A contributor opts in by providing `SnapshotContributor::digest`. The victory contributor does not: `VictoryService` and the mission-wave runtime are owned by `GameEngine`, so a headless replay would not produce the same part. Their timers are still tick-driven (see [VICTORY_SYSTEM.md](VICTORY_SYSTEM.md)), but a divergence there is not caught by the digest until they move into the session.
+
+Digests are recorded every `digest_interval` ticks (30 by default). A reported divergence is therefore the first checkpoint whose digest differs, which can be up to one interval after the first divergent tick.
+
 Presentation randomness and visual interpolation can remain renderer-side as long as they do not feed back into authoritative gameplay decisions.
+
+Two rules keep a second match in the same process identical to the first:
+
+- **No process-wide sequences in the simulation.** Random draws come from the world's session (`DeterministicRng`). A per-entity counter derives from that entity's own state, as the RPG swing variant does. A `static` generator or counter would continue its sequence from whatever the previous match drew. The RPG crit roll used to fall back to one; it now rolls no crit when no session is bound.
+- **Revisions are process-unique.** `TerrainService` draws its world-prop, authored-prop and navigation-topology revisions from one process-wide counter, and `clear()` bumps all three. Caches keyed on a revision (the navigation grid, the prop clearance index, camera obstruction) therefore never mistake a new map for the previous one. When every service counted from zero, a second match could inherit the first match's obstacles; `AiDuelMatchTest.HannibalMirrorGetsItsArmyAcrossTheRiver` failed whenever it ran after another AI match in the same binary.
 
 ## Render dependency boundary
 
@@ -278,7 +293,7 @@ The same ownership principle applies: replacement happens at a defined boundary 
 
 The limitations in this section are repository-backed rather than roadmap estimates.
 
-**56 call sites still reach per-match state through the ambient access path:** `app/world` 2, `game/core` 1, `game/formation` 4, `game/map` 14, `game/systems` 22, `game/units` 9, `game/visuals` 1, `game/wildlife` 3. `scripts/ambient_instance_budget.json` is the source of truth, and `scripts/check-architecture-doc.py` fails when this sentence disagrees with it.
+**55 call sites still reach per-match state through the ambient access path:** `app/world` 2, `game/core` 1, `game/formation` 4, `game/map` 13, `game/systems` 22, `game/units` 9, `game/visuals` 1, `game/wildlife` 3. `scripts/ambient_instance_budget.json` is the source of truth, and `scripts/check-architecture-doc.py` fails when this sentence disagrees with it.
 
 **72 full-world entity scans remain, of which 0 are allow-listed as loop-nested scans.** `scripts/world_scan_budget.json` and `scripts/world_scan_nested_allow.json` are the source of truth for those counts, and the same documentation check verifies them.
 

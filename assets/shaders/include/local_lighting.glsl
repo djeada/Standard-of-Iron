@@ -1,4 +1,9 @@
 const int SOI_MAX_LOCAL_LIGHTS = 16;
+#if defined(SOI_QUALITY_TIER) && SOI_QUALITY_TIER <= 0
+const int SOI_LOCAL_LIGHT_BUDGET = 4;
+#else
+const int SOI_LOCAL_LIGHT_BUDGET = SOI_MAX_LOCAL_LIGHTS;
+#endif
 
 layout(std140) uniform LocalLighting {
   vec4 u_local_position_radius[SOI_MAX_LOCAL_LIGHTS];
@@ -30,7 +35,7 @@ float soi_local_falloff(float distance_to_light, float radius) {
 
 vec3 local_lighting(vec3 world_position, vec3 normal) {
   vec3 result = vec3(0.0);
-  int count = clamp(int(u_local_light_meta.x + 0.5), 0, SOI_MAX_LOCAL_LIGHTS);
+  int count = clamp(int(u_local_light_meta.x + 0.5), 0, SOI_LOCAL_LIGHT_BUDGET);
   for (int i = 0; i < SOI_MAX_LOCAL_LIGHTS; ++i) {
     if (i >= count) {
       break;
@@ -58,7 +63,10 @@ vec3 local_lighting_specular(vec3 world_position,
                              vec3 view_dir,
                              float gloss) {
   vec3 result = vec3(0.0);
-  int count = clamp(int(u_local_light_meta.x + 0.5), 0, SOI_MAX_LOCAL_LIGHTS);
+#if defined(SOI_QUALITY_TIER) && SOI_QUALITY_TIER <= 0
+  return result;
+#endif
+  int count = clamp(int(u_local_light_meta.x + 0.5), 0, SOI_LOCAL_LIGHT_BUDGET);
   for (int i = 0; i < SOI_MAX_LOCAL_LIGHTS; ++i) {
     if (i >= count) {
       break;

@@ -16,6 +16,7 @@
 #include "game/units/unit.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/graphics_settings.h"
+#include "render/profiling/frame_profile.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 #include "scene/environment_lighting.h"
@@ -185,6 +186,8 @@ void CommanderPortraitScenes::warm(const QStringList& troop_types) {
   }
 
   Render::Creature::RuntimeBakeAllowScope const allow_bakes;
+  Render::Profiling::FrameProfile portrait_profile;
+  Render::Profiling::ScopedFrameProfileRedirect const own_profile(portrait_profile);
 
   QOpenGLContext* context = QOpenGLContext::currentContext();
   if ((context == nullptr) || !context->isValid()) {

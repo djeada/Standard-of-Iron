@@ -92,8 +92,8 @@ void apply_production_profile(Engine::Core::ProductionComponent* prod,
   if (prod == nullptr) {
     return;
   }
-  const auto profile =
-      TroopProfileService::instance().get_profile(nation_id, troop_type);
+  const auto& profile =
+      TroopProfileService::instance().get_profile_ref(nation_id, troop_type);
   prod->build_time = profile.production.build_time;
   prod->villager_cost = profile.production.cost;
 }
@@ -933,8 +933,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
 
     const int owner_id = (unit_comp != nullptr) ? unit_comp->owner_id : -1;
     const auto nation_id = resolve_nation_id(*world, owner_id);
-    const auto current_profile =
-        TroopProfileService::instance().get_profile(nation_id, prod->product_type);
+    const auto& current_profile =
+        TroopProfileService::instance().get_profile_ref(nation_id, prod->product_type);
     int const production_cost = current_profile.production.cost;
     int const capacity_increment =
         production_count_increment(unit_comp, production_cost);

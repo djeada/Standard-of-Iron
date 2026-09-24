@@ -71,7 +71,7 @@ auto GlobalStatsRegistry::serialize_counters() const -> QJsonArray {
 }
 
 void GlobalStatsRegistry::restore_counters(const QJsonArray& counters) {
-  for (const auto& value : counters) {
+  for (const QJsonValue value : counters) {
     const QJsonObject entry = value.toObject();
     if (!entry.contains("owner_id")) {
       continue;

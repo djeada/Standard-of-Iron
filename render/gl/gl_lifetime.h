@@ -19,12 +19,17 @@ enum class DeferredGlObject : std::uint8_t {
   Buffer,
   VertexArray,
   Texture,
+  Program,
 };
 
 void defer_gl_delete(DeferredGlObject kind,
                      unsigned int name,
                      GlShareGroup group = k_unknown_share_group) noexcept;
 void drain_deferred_gl_deletes();
+
+void release_gl_object(DeferredGlObject kind,
+                       unsigned int name,
+                       GlShareGroup group) noexcept;
 
 void forget_gl_share_group(GlShareGroup group) noexcept;
 

@@ -23,18 +23,6 @@ constexpr float k_base_color_r = 0.30F;
 constexpr float k_base_color_g = 0.27F;
 constexpr float k_base_color_b = 0.22F;
 
-auto resolve_tree_surface_position(const Game::Map::TerrainService& terrain_service,
-                                   float world_x,
-                                   float world_z,
-                                   float fallback_y,
-                                   float footprint_radius) -> QVector3D {
-  if (terrain_service.is_initialized()) {
-    return terrain_service.resolve_footprint_world_position(
-        world_x, world_z, footprint_radius, 0.0F, fallback_y);
-  }
-  return {world_x, fallback_y, world_z};
-}
-
 } // namespace
 
 namespace Render::GL {

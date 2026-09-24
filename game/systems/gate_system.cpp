@@ -132,7 +132,12 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
+    auto const* movement = world->try_get<Engine::Core::MovementComponent>(entity_id);
+
     for (auto& record : gates) {
+      if (record.wants_open && record.occupied) {
+        continue;
+      }
 
       if (!GateService::serves_owner(*world, record.owner_id, unit->owner_id)) {
         continue;
@@ -145,12 +150,7 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
         record.wants_open = true;
       }
 
-      auto const* moving_entity = world->get_entity(entity_id);
-      auto const* movement =
-          moving_entity != nullptr
-              ? moving_entity->get_component<Engine::Core::MovementComponent>()
-              : nullptr;
-      if (movement != nullptr &&
+      if (!record.wants_open && movement != nullptr &&
           movement_intends_to_cross(record, *transform, *movement)) {
         record.wants_open = true;
       }

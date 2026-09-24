@@ -19,6 +19,7 @@ struct SubsystemDigests {
   std::uint64_t economy = 0;
   std::uint64_t wildlife = 0;
   std::uint64_t session = 0;
+  std::uint64_t systems = 0;
   std::uint64_t root = 0;
 };
 

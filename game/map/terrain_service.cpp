@@ -433,6 +433,9 @@ void TerrainService::initialize_keeping_world_props(const MapDefinition& map_def
 }
 
 void TerrainService::clear() {
+  bump_world_props_revision();
+  bump_authored_world_props_revision();
+  bump_navigation_topology_revision();
   m_sealed = false;
   m_world_props_from_save = false;
   m_height_map.reset();
@@ -1301,7 +1304,7 @@ void TerrainService::bump_authored_world_props_revision() {
 }
 
 void TerrainService::bump_navigation_topology_revision() {
-  ++m_navigation_topology_revision;
+  m_navigation_topology_revision = next_props_revision();
 }
 
 } // namespace Game::Map

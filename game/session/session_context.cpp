@@ -301,6 +301,9 @@ auto session_for(const Engine::Core::World& world) -> SessionContext& {
   if (auto* session = SessionContext::for_world(world)) {
     return *session;
   }
+  if (auto* fallback = services_for(world).session) {
+    return *fallback;
+  }
   return SessionContext::active();
 }
 

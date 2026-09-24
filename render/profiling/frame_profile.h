@@ -71,6 +71,7 @@ struct FrameProfile {
   std::atomic<std::uint64_t> weather_lighting_us{0};
   std::atomic<std::uint64_t> victory_update_us{0};
   std::atomic<std::uint64_t> view_model_sync_us{0};
+  std::atomic<std::uint64_t> dropped_sim_ticks{0};
   std::atomic<std::uint64_t> animation_input_sampling_us{0};
   std::atomic<std::uint64_t> humanoid_preparation_us{0};
   std::atomic<std::uint64_t> bpat_playback_us{0};
@@ -206,6 +207,18 @@ private:
 };
 
 [[nodiscard]] auto global_profile() -> FrameProfile&;
+
+class ScopedFrameProfileRedirect {
+public:
+  explicit ScopedFrameProfileRedirect(FrameProfile& target) noexcept;
+  ~ScopedFrameProfileRedirect();
+  ScopedFrameProfileRedirect(const ScopedFrameProfileRedirect&) = delete;
+  auto
+  operator=(const ScopedFrameProfileRedirect&) -> ScopedFrameProfileRedirect& = delete;
+
+private:
+  FrameProfile* m_previous;
+};
 
 class PhaseScope {
 public:

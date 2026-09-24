@@ -4,6 +4,7 @@
 
 #include <memory>
 
+#include "gl_lifetime.h"
 #include "mesh.h"
 #include "render/geom/arrow.h"
 #include "texture.h"
@@ -13,7 +14,10 @@ namespace Render::GL {
 class ResourceManager : protected QOpenGLFunctions_3_3_Core {
 public:
   ResourceManager() = default;
-  ~ResourceManager() override = default;
+  ~ResourceManager() override;
+
+  ResourceManager(const ResourceManager&) = delete;
+  auto operator=(const ResourceManager&) -> ResourceManager& = delete;
 
   auto initialize() -> bool;
 
@@ -36,6 +40,7 @@ private:
   std::unique_ptr<Texture> m_white_texture;
   std::unique_ptr<Texture> m_material_detail_texture;
   unsigned int m_wear_volume = 0U;
+  GlShareGroup m_wear_volume_group = k_unknown_share_group;
 };
 
 } // namespace Render::GL

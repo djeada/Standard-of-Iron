@@ -95,7 +95,7 @@ void CaptureSystem::transfer_barrack_ownership(Engine::Core::World* world,
       prod->rally_x = transform->position.x + 4.0F;
       prod->rally_z = transform->position.z + 2.0F;
       prod->rally_set = true;
-      const auto profile = TroopProfileService::instance().get_profile(
+      const auto& profile = TroopProfileService::instance().get_profile_ref(
           unit->nation_id, prod->product_type);
       prod->build_time = profile.production.build_time;
       prod->villager_cost = profile.production.cost;
@@ -104,7 +104,7 @@ void CaptureSystem::transfer_barrack_ownership(Engine::Core::World* world,
     barrack->remove_component<Engine::Core::ProductionComponent>();
   } else if (prod != nullptr) {
     prod->produced_count = 0;
-    const auto profile = TroopProfileService::instance().get_profile(
+    const auto& profile = TroopProfileService::instance().get_profile_ref(
         unit->nation_id, prod->product_type);
     prod->build_time = profile.production.build_time;
     prod->villager_cost = profile.production.cost;

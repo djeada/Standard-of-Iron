@@ -109,6 +109,12 @@ resolve_definition(const Engine::Core::UnitComponent& unit,
 [[nodiscard]] auto
 resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout;
 
+void resolve_layout_into(const Engine::Core::Entity& entity, FormationLayout& out);
+
+[[nodiscard]] auto formation_definition_epoch() -> std::uint64_t;
+
+[[nodiscard]] auto resolve_layout_spacing(const Engine::Core::Entity& entity) -> float;
+
 struct LayoutReach {
   float half_x{0.0F};
   float half_z{0.0F};

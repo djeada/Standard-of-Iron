@@ -2,7 +2,7 @@
   "app/world": 2,
   "game/core": 1,
   "game/formation": 4,
-  "game/map": 14,
+  "game/map": 13,
   "game/systems": 22,
   "game/units": 9,
   "game/visuals": 1,

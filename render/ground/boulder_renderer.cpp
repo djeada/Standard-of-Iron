@@ -21,7 +21,6 @@ namespace {
 
 using std::uint32_t;
 using namespace Render::Ground;
-constexpr float k_reference_scatter_extent = 220.0F;
 
 } // namespace
 

@@ -157,7 +157,7 @@ auto Renderer::visibility_mask() -> const TerrainSurfaceCmd::VisibilityResources
 }
 
 auto Renderer::initialize() -> bool {
-  Render::Creature::set_runtime_bake_forbidden(false);
+  set_forbids_runtime_bake(false);
   if (!m_backend) {
     m_backend = RenderBackendFactory::create(m_shader_quality);
     m_gl_backend = dynamic_cast<Backend*>(m_backend.get());
@@ -194,9 +194,17 @@ auto Renderer::initialize() -> bool {
   return true;
 }
 
+void Renderer::set_forbids_runtime_bake(bool forbidden) {
+  const bool owned_barrier = m_forbids_runtime_bake;
+  m_forbids_runtime_bake = forbidden;
+  if (forbidden || owned_barrier) {
+    Render::Creature::set_runtime_bake_forbidden(forbidden);
+  }
+}
+
 void Renderer::shutdown() {
   cancel_async_template_prewarm();
-  Render::Creature::set_runtime_bake_forbidden(false);
+  set_forbids_runtime_bake(false);
   m_unit_cylinder_mesh = nullptr;
   m_gl_backend = nullptr;
   m_backend.reset();

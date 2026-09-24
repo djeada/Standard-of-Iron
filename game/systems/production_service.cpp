@@ -93,8 +93,8 @@ void apply_production_profile(Engine::Core::ProductionComponent* prod,
   if (prod == nullptr) {
     return;
   }
-  const auto profile =
-      TroopProfileService::instance().get_profile(nation_id, unit_type);
+  const auto& profile =
+      TroopProfileService::instance().get_profile_ref(nation_id, unit_type);
   prod->build_time = profile.production.build_time;
   prod->villager_cost = profile.production.cost;
 }
@@ -128,7 +128,7 @@ auto production_ruling(Engine::Core::World& world,
     return ProductionResult::WrongBuilding;
   }
   const auto* production = building.get_component<Engine::Core::ProductionComponent>();
-  const auto profile = TroopProfileService::instance().get_profile(
+  const auto& profile = TroopProfileService::instance().get_profile_ref(
       resolve_nation_id(world, unit->owner_id), unit_type);
   const int production_cost = profile.production.cost;
   const int manpower_available =
@@ -198,8 +198,8 @@ auto ProductionService::start_production(Engine::Core::World& world,
   const auto* unit = building->get_component<Engine::Core::UnitComponent>();
   const int owner_id = unit->owner_id;
   const auto nation_id = resolve_nation_id(world, owner_id);
-  const auto profile =
-      TroopProfileService::instance().get_profile(nation_id, unit_type);
+  const auto& profile =
+      TroopProfileService::instance().get_profile_ref(nation_id, unit_type);
 
   if (p->in_progress) {
     p->production_queue.push_back(unit_type);

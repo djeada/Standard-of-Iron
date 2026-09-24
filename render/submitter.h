@@ -22,6 +22,11 @@ namespace Render::GL {
 
 class ISubmitter {
 public:
+  ISubmitter() = default;
+  ISubmitter(const ISubmitter&) = default;
+  ISubmitter(ISubmitter&&) = default;
+  auto operator=(const ISubmitter&) -> ISubmitter& = default;
+  auto operator=(ISubmitter&&) -> ISubmitter& = default;
   virtual ~ISubmitter() = default;
   [[nodiscard]] virtual auto unwrap_submitter() noexcept -> ISubmitter* { return this; }
   virtual void mesh(Mesh* mesh,

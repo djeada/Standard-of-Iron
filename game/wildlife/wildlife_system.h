@@ -205,7 +205,7 @@ private:
   bool m_enabled{false};
   bool m_spawn_pending{false};
   bool m_restored{false};
-  float m_elapsed{0.0F};
+  double m_elapsed{0.0};
   std::vector<bool> m_released_waves;
 };
 

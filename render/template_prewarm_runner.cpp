@@ -388,7 +388,7 @@ void Renderer::process_async_template_prewarm() {
   if (state->cancel_requested.load(std::memory_order_relaxed) ||
       (state->next_index.load(std::memory_order_relaxed) >= state->work_items.size())) {
     if (m_async_prewarm.finish(state)) {
-      Render::Creature::set_runtime_bake_forbidden(true);
+      set_forbids_runtime_bake(true);
     }
   }
 }
@@ -397,6 +397,7 @@ void Renderer::prewarm_unit_templates(
     Engine::Core::World* world, TemplatePrewarmProgressCallback progress_callback) {
   Render::Profiling::count_asset(Render::Profiling::AssetCounter::PrewarmInvocations);
   cancel_async_template_prewarm();
+  m_forbids_runtime_bake = false;
   Render::Creature::set_runtime_bake_forbidden(false);
   m_async_prewarm.clear_forbid_runtime_bake();
   if (!m_entity_registry) {
@@ -686,7 +687,7 @@ void Renderer::prewarm_unit_templates(
   }
 
   if (profiles.empty()) {
-    Render::Creature::set_runtime_bake_forbidden(true);
+    set_forbids_runtime_bake(true);
     report_progress(TemplatePrewarmProgress::Phase::Completed, 0, 0);
     return;
   }
@@ -781,7 +782,7 @@ void Renderer::prewarm_unit_templates(
   const std::size_t domain_count =
       profiles.size() * owner_ids.size() * lod_domain_count;
   if (domain_count == 0) {
-    Render::Creature::set_runtime_bake_forbidden(true);
+    set_forbids_runtime_bake(true);
     report_progress(TemplatePrewarmProgress::Phase::Completed, 0, 0);
     return;
   }
@@ -794,7 +795,7 @@ void Renderer::prewarm_unit_templates(
 
   if (anim_selection.selected_core_keys.empty() ||
       anim_selection.variant_values.empty()) {
-    Render::Creature::set_runtime_bake_forbidden(true);
+    set_forbids_runtime_bake(true);
     report_progress(TemplatePrewarmProgress::Phase::Completed, 0, 0);
     return;
   }
@@ -817,7 +818,7 @@ void Renderer::prewarm_unit_templates(
   const std::size_t total_work_count =
       core_work_items.size() + extended_work_items.size();
   if (core_work_items.empty()) {
-    Render::Creature::set_runtime_bake_forbidden(true);
+    set_forbids_runtime_bake(true);
     report_progress(TemplatePrewarmProgress::Phase::Completed, 0, total_work_count);
     return;
   }
@@ -938,7 +939,7 @@ void Renderer::prewarm_unit_templates(
                                    extended_work_items.size());
     m_async_prewarm.start(std::move(async_state), true);
   } else {
-    Render::Creature::set_runtime_bake_forbidden(true);
+    set_forbids_runtime_bake(true);
   }
 
   report_progress(

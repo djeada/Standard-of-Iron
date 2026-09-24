@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <deque>
 #include <limits>
 #include <numbers>
 #include <optional>
@@ -670,6 +671,7 @@ private:
 };
 
 constexpr float k_slot_settle_distance = 0.12F;
+constexpr float k_squared_distance_clear_margin = 1.001F;
 constexpr float k_obstacle_catch_up_ratio = 1.25F;
 constexpr float k_min_prop_clearance = 0.22F;
 
@@ -791,6 +793,8 @@ void walk_formation_slot(const SlotWalk& walk,
   float const heading = soldier.world_yaw * std::numbers::pi_v<float> / 180.0F;
   float const heading_x = std::sin(heading);
   float const heading_z = std::cos(heading);
+  float const crowd_radius_sq_clear =
+      crowd_radius * crowd_radius * k_squared_distance_clear_margin;
   float foreign_push_x = 0.0F;
   float foreign_push_z = 0.0F;
   for (const auto& neighbor : walk.foreign_neighbors) {
@@ -798,7 +802,11 @@ void walk_formation_slot(const SlotWalk& walk,
     float away_z = soldier.world_z - neighbor.z;
     float const along = (away_x * heading_x) + (away_z * heading_z);
     float const across = (away_x * heading_z) - (away_z * heading_x);
-    float const separation = std::hypot(across, along * along_scale);
+    float const scaled_along = along * along_scale;
+    if ((across * across) + (scaled_along * scaled_along) >= crowd_radius_sq_clear) {
+      continue;
+    }
+    float const separation = std::hypot(across, scaled_along);
     if (separation >= crowd_radius) {
       continue;
     }
@@ -912,6 +920,8 @@ void walk_formation_slot(const SlotWalk& walk,
   }
 
   float crowd_speed = 1.0F;
+  const float personal_space_sq_clear =
+      personal_space * personal_space * k_squared_distance_clear_margin;
   for (const auto& neighbor : walk.neighbors) {
     if (!neighbor.alive || !neighbor.world_motion_valid ||
         neighbor.slot_index == soldier.slot_index) {
@@ -919,6 +929,9 @@ void walk_formation_slot(const SlotWalk& walk,
     }
     const float away_x = soldier.world_x - neighbor.world_x;
     const float away_z = soldier.world_z - neighbor.world_z;
+    if ((away_x * away_x) + (away_z * away_z) >= personal_space_sq_clear) {
+      continue;
+    }
     const float separation = std::hypot(away_x, away_z);
     if (separation > 0.001F && separation < personal_space) {
       const bool approaching = catch_x * away_x + catch_z * away_z < 0.0F;
@@ -1135,17 +1148,23 @@ void tick_formation_hit(Engine::Core::Entity& entity, float delta_time) {
 }
 
 void publish_formation_presentation(Engine::Core::World& world, float delta_time) {
-  std::unordered_map<Engine::Core::EntityID, FormationCombat::FormationLayout>
-      layout_cache;
-  layout_cache.reserve(world.entities_with<Engine::Core::UnitComponent>().size());
+  thread_local std::unordered_map<Engine::Core::EntityID, std::size_t> layout_index;
+  thread_local std::deque<FormationCombat::FormationLayout> layout_pool;
+  layout_index.clear();
+  std::size_t layouts_used = 0U;
   auto layout_for =
-      [&layout_cache](
+      [&layouts_used](
           Engine::Core::Entity& entity) -> const FormationCombat::FormationLayout& {
-    auto const [entry, inserted] = layout_cache.try_emplace(entity.get_id());
+    auto const [entry, inserted] =
+        layout_index.try_emplace(entity.get_id(), layouts_used);
     if (inserted) {
-      entry->second = FormationCombat::resolve_layout(entity);
+      if (layouts_used == layout_pool.size()) {
+        layout_pool.emplace_back();
+      }
+      FormationCombat::resolve_layout_into(entity, layout_pool[layouts_used]);
+      ++layouts_used;
     }
-    return entry->second;
+    return layout_pool[entry->second];
   };
 
   thread_local ForeignSoldierGrid foreign_grid;

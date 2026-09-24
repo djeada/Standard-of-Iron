@@ -7,9 +7,25 @@
 
 namespace Render::Profiling {
 
+namespace {
+thread_local FrameProfile* t_profile_redirect = nullptr;
+}
+
 auto global_profile() -> FrameProfile& {
+  if (t_profile_redirect != nullptr) {
+    return *t_profile_redirect;
+  }
   static FrameProfile g_profile;
   return g_profile;
+}
+
+ScopedFrameProfileRedirect::ScopedFrameProfileRedirect(FrameProfile& target) noexcept
+    : m_previous(t_profile_redirect) {
+  t_profile_redirect = &target;
+}
+
+ScopedFrameProfileRedirect::~ScopedFrameProfileRedirect() {
+  t_profile_redirect = m_previous;
 }
 
 auto format_overlay(const FrameProfile& profile) -> std::string {
@@ -63,13 +79,14 @@ auto format_overlay(const FrameProfile& profile) -> std::string {
   std::snprintf(line,
                 sizeof(line),
                 "world %5.2f  vis %5.2f  minimap %5.2f  weather %5.2f  victory %5.2f  "
-                "vm %5.2f ms\n",
+                "vm %5.2f ms  dropped %llu ticks\n",
                 static_cast<double>(profile.world_update_us) / 1000.0,
                 static_cast<double>(profile.visibility_update_us) / 1000.0,
                 static_cast<double>(profile.minimap_update_us) / 1000.0,
                 static_cast<double>(profile.weather_lighting_us) / 1000.0,
                 static_cast<double>(profile.victory_update_us) / 1000.0,
-                static_cast<double>(profile.view_model_sync_us) / 1000.0);
+                static_cast<double>(profile.view_model_sync_us) / 1000.0,
+                static_cast<unsigned long long>(profile.dropped_sim_ticks.load()));
   out += line;
 
   std::snprintf(line,

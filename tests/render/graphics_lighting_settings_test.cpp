@@ -1,4 +1,8 @@
+#include <algorithm>
+#include <atomic>
 #include <gtest/gtest.h>
+#include <thread>
+#include <vector>
 
 #include "render/graphics_settings.h"
 #include "scene/camera.h"
@@ -84,4 +88,49 @@ TEST(GraphicsLightingSettingsTest, PresetsScaleEdgeAntiAliasing) {
   EXPECT_EQ(graphics.presentation().msaa_samples, 8);
 
   graphics.set_quality(Render::k_default_graphics_quality);
+}
+
+TEST(GraphicsLightingSettingsTest, GraphicsQualityToggleIsThreadSafe) {
+  auto& graphics = Render::GraphicsSettings::instance();
+  const auto original = graphics.quality();
+
+  static_assert(std::atomic<Render::GraphicsQuality>::is_always_lock_free);
+  static_assert(std::atomic<const Render::GraphicsProfile*>::is_always_lock_free);
+
+  std::vector<const Render::GraphicsProfile*> known;
+  for (std::size_t i = 0; i < Render::k_graphics_quality_count; ++i) {
+    known.push_back(
+        &Render::graphics_profile_for(static_cast<Render::GraphicsQuality>(i)));
+  }
+
+  std::atomic<bool> stop{false};
+  std::atomic<int> foreign_profiles{0};
+  std::vector<std::thread> readers;
+  for (int r = 0; r < 2; ++r) {
+    readers.emplace_back([&] {
+      while (!stop.load(std::memory_order_acquire)) {
+        const auto* seen = &graphics.profile();
+        if (std::find(known.begin(), known.end(), seen) == known.end()) {
+          foreign_profiles.fetch_add(1);
+        }
+        (void)graphics.creature_lod().full_distance_scale;
+        (void)graphics.quality();
+      }
+    });
+  }
+  for (int i = 0; i < 20000; ++i) {
+    graphics.set_quality(static_cast<Render::GraphicsQuality>(
+        i % static_cast<int>(Render::k_graphics_quality_count)));
+  }
+  stop.store(true, std::memory_order_release);
+  for (auto& reader : readers) {
+    reader.join();
+  }
+
+  EXPECT_EQ(foreign_profiles.load(), 0);
+  graphics.set_quality(Render::GraphicsQuality::Low);
+  EXPECT_EQ(graphics.quality(), Render::GraphicsQuality::Low);
+  EXPECT_EQ(&graphics.profile(),
+            &Render::graphics_profile_for(Render::GraphicsQuality::Low));
+  graphics.set_quality(original);
 }

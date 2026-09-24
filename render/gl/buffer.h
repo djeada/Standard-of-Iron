@@ -69,6 +69,7 @@ public:
   void add_vertex_buffer(Buffer& buffer, const std::vector<int>& layout);
   void set_index_buffer(Buffer& buffer);
   [[nodiscard]] auto id() const -> GLuint { return m_vao; }
+  [[nodiscard]] auto share_group() const -> GlShareGroup { return m_share_group; }
 
 private:
   GLuint m_vao = 0;

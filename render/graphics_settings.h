@@ -267,16 +267,25 @@ public:
     return inst;
   }
 
-  [[nodiscard]] auto quality() const noexcept -> GraphicsQuality { return m_quality; }
+  [[nodiscard]] auto quality() const noexcept -> GraphicsQuality {
+    return m_quality.load(std::memory_order_acquire);
+  }
 
   void set_quality(GraphicsQuality q) noexcept {
-    m_quality = q;
-    m_profile = &graphics_profile_for(q);
+    m_profile.store(&graphics_profile_for(q), std::memory_order_release);
+    m_quality.store(q, std::memory_order_release);
     m_generation.fetch_add(1U, std::memory_order_release);
   }
 
+  [[nodiscard]] auto quality_chosen_by_user() const noexcept -> bool {
+    return m_quality_chosen_by_user.load(std::memory_order_acquire);
+  }
+  void set_quality_chosen_by_user(bool chosen) noexcept {
+    m_quality_chosen_by_user.store(chosen, std::memory_order_release);
+  }
+
   [[nodiscard]] auto profile() const noexcept -> const GraphicsProfile& {
-    return *m_profile;
+    return *m_profile.load(std::memory_order_acquire);
   }
 
   [[nodiscard]] auto generation() const noexcept -> std::uint32_t {
@@ -284,45 +293,47 @@ public:
   }
 
   [[nodiscard]] auto backend_kind() const noexcept -> ShaderQuality {
-    return m_backend_kind;
+    return m_backend_kind.load(std::memory_order_acquire);
   }
-  void set_backend_kind(ShaderQuality kind) noexcept { m_backend_kind = kind; }
+  void set_backend_kind(ShaderQuality kind) noexcept {
+    m_backend_kind.store(kind, std::memory_order_release);
+  }
 
   [[nodiscard]] auto creature_lod() const noexcept -> const CreatureLodSettings& {
-    return m_profile->creature_lod;
+    return profile().creature_lod;
   }
   [[nodiscard]] auto batching_config() const noexcept -> const BatchingConfig& {
-    return m_profile->batching;
+    return profile().batching;
   }
   [[nodiscard]] auto
   contact_shadow_budget() const noexcept -> const ContactShadowBudget& {
-    return m_profile->contact_shadows;
+    return profile().contact_shadows;
   }
   [[nodiscard]] auto
   directional_shadows() const noexcept -> const DirectionalShadowSettings& {
-    return m_profile->directional_shadows;
+    return profile().directional_shadows;
   }
   [[nodiscard]] auto weather_budget() const noexcept -> const WeatherBudget& {
-    return m_profile->weather;
+    return profile().weather;
   }
   [[nodiscard]] auto presentation() const noexcept -> const PresentationSettings& {
-    return m_profile->presentation;
+    return profile().presentation;
   }
   [[nodiscard]] auto post_process() const noexcept -> const PostProcessSettings& {
-    return m_profile->post_process;
+    return profile().post_process;
   }
   [[nodiscard]] auto prewarm_budget() const noexcept -> const TemplatePrewarmBudget& {
-    return m_profile->prewarm;
+    return profile().prewarm;
   }
 
   [[nodiscard]] auto creature_lod_enabled() const noexcept -> bool {
-    return m_profile->creature_lod.enabled;
+    return profile().creature_lod.enabled;
   }
 
   [[nodiscard]] auto
   calculate_batching_ratio(int visible_units,
                            float camera_height) const noexcept -> float {
-    const BatchingConfig& batching = m_profile->batching;
+    const BatchingConfig& batching = profile().batching;
     if (batching.never_batch) {
       return 0.0F;
     }
@@ -351,20 +362,20 @@ public:
   }
 
   [[nodiscard]] auto humanoid_full_detail_distance() const noexcept -> float {
-    return k_base_humanoid_full * m_profile->creature_lod.full_distance_scale;
+    return k_base_humanoid_full * profile().creature_lod.full_distance_scale;
   }
   [[nodiscard]] auto horse_full_detail_distance() const noexcept -> float {
-    return k_base_horse_full * m_profile->creature_lod.full_distance_scale;
+    return k_base_horse_full * profile().creature_lod.full_distance_scale;
   }
   [[nodiscard]] auto elephant_full_detail_distance() const noexcept -> float {
-    return k_base_elephant_full * m_profile->creature_lod.full_distance_scale;
+    return k_base_elephant_full * profile().creature_lod.full_distance_scale;
   }
   [[nodiscard]] auto creature_cull_distance() const noexcept -> float {
-    return m_profile->creature_lod.cull_distance;
+    return profile().creature_lod.cull_distance;
   }
 
   [[nodiscard]] auto shadow_max_distance() const noexcept -> float {
-    return m_profile->contact_shadows.max_distance;
+    return profile().contact_shadows.max_distance;
   }
 
 private:
@@ -374,10 +385,12 @@ private:
   static constexpr float k_base_horse_full = 20.0F;
   static constexpr float k_base_elephant_full = 35.0F;
 
-  GraphicsQuality m_quality{k_default_graphics_quality};
-  const GraphicsProfile* m_profile{&graphics_profile_for(k_default_graphics_quality)};
-  ShaderQuality m_backend_kind{ShaderQuality::Full};
+  std::atomic<GraphicsQuality> m_quality{k_default_graphics_quality};
+  std::atomic<const GraphicsProfile*> m_profile{
+      &graphics_profile_for(k_default_graphics_quality)};
+  std::atomic<ShaderQuality> m_backend_kind{ShaderQuality::Full};
   std::atomic<std::uint32_t> m_generation{0U};
+  std::atomic<bool> m_quality_chosen_by_user{false};
 };
 
 } // namespace Render

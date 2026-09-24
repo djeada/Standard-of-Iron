@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <shared_mutex>
 #include <string>
 #include <unordered_map>
 
@@ -47,6 +48,7 @@ private:
 
   std::unordered_map<NationID, std::unordered_map<Game::Units::TroopType, TroopProfile>>
       m_cache;
+  mutable std::shared_mutex m_mutex;
 };
 
 } // namespace Game::Systems

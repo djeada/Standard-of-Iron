@@ -25,17 +25,6 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
-auto resolve_tree_surface_position(const Game::Map::TerrainService& terrain_service,
-                                   float world_x,
-                                   float world_z,
-                                   float fallback_y) -> QVector3D {
-  if (terrain_service.is_initialized()) {
-    return terrain_service.resolve_surface_world_position(
-        world_x, world_z, 0.0F, fallback_y);
-  }
-  return {world_x, fallback_y, world_z};
-}
-
 auto trunk_contact_radius(Game::Map::TreeSpecies species) -> float {
   switch (species) {
   case Game::Map::TreeSpecies::Pine:
