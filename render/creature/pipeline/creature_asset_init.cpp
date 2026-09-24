@@ -1,7 +1,5 @@
 #include "creature_asset_init.h"
 
-#include <sstream>
-
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_reader.h"
 #include "render/bone_palette_arena.h"
@@ -20,23 +18,6 @@ auto rigged_asset_key(const CreatureRenderAssetHandle& handle,
       .skin_species_id = skin_species_id,
       .attachment_set_id = handle.attachment_set_id,
       .attachments_hash = handle.attachments_hash};
-}
-
-auto describe_rigged_asset(const CreatureRenderAssetHandle& handle,
-                           Render::Creature::CreatureLOD lod) -> std::string {
-  std::ostringstream out;
-  out << "asset="
-      << static_cast<std::uint32_t>(handle.asset != nullptr ? handle.asset->id
-                                                            : k_invalid_creature_asset)
-      << " archetype="
-      << static_cast<std::uint32_t>(handle.archetype != nullptr
-                                        ? handle.archetype->id
-                                        : static_cast<Render::Creature::ArchetypeId>(
-                                              Render::Creature::k_invalid_archetype))
-      << " lod=" << static_cast<int>(lod)
-      << " attachment_set_id=" << handle.attachment_set_id << " attachments_hash=0x"
-      << std::hex << handle.attachments_hash;
-  return out.str();
 }
 
 auto create_creature_render_asset(Render::GL::RiggedMeshCache& cache,

@@ -101,7 +101,7 @@ TEST(HumanoidAssetPrewarm, StrictLookupReportsAMissInsteadOfBaking) {
   const Render::GL::RiggedMeshCache::Key key =
       Render::Creature::Pipeline::rigged_asset_key(*handle, request.lod, 0U);
 
-  EXPECT_EQ(cache.require_rigged_asset(key, "tests/never_prewarmed"), nullptr);
+  EXPECT_EQ(cache.require_rigged_asset(key), nullptr);
   EXPECT_EQ(cache.size(), 0U) << "a strict lookup must never construct an asset";
 }
 

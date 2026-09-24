@@ -344,63 +344,34 @@ void process_loading_siege_unit(Engine::Core::World* world,
   }
 }
 
-[[nodiscard]] auto is_enemy_tower_building(Engine::Core::Entity* entity) -> bool {
-  if (!is_building(entity)) {
-    return false;
-  }
-
-  auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-  return unit != nullptr && unit->spawn_type == Game::Units::SpawnType::DefenseTower;
-}
-
-[[nodiscard]] auto
-find_nearest_tower_target(Engine::Core::Entity* tower,
-                          const CombatQueryContext& query_context,
-                          float range,
-                          float max_height_diff) -> Engine::Core::Entity* {
-  auto* tower_unit = tower->get_component<Engine::Core::UnitComponent>();
+[[nodiscard]] auto find_nearest_tower_target(
+    Engine::Core::Entity* tower,
+    const CombatQueryContext& query_context,
+    const Engine::Core::AttackComponent& attack) -> Engine::Core::Entity* {
   auto* tower_transform = tower->get_component<Engine::Core::TransformComponent>();
-  if (tower_unit == nullptr || tower_transform == nullptr) {
+  if (tower_transform == nullptr) {
     return nullptr;
   }
-
-  float best_dist_sq = range * range;
-  Engine::Core::Entity* best_target = nullptr;
-
-  for (auto* entity : query_context.units) {
-    if (entity == tower) {
-      continue;
+  float const tower_y = tower_transform->position.y;
+  auto const in_arc = [tower_y, &attack](Engine::Core::Entity* candidate) {
+    if (is_building(candidate) &&
+        candidate->get_component<Engine::Core::UnitComponent>()->spawn_type !=
+            Game::Units::SpawnType::DefenseTower) {
+      return false;
     }
-    if (!may_attack(
-            tower_unit,
-            entity,
-            {.intent = EngagementIntent::AutoAcquired, .allow_buildings = true})) {
-      continue;
-    }
-    if (is_building(entity) && !is_enemy_tower_building(entity)) {
-      continue;
-    }
-
-    auto* target_transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (target_transform == nullptr) {
-      continue;
-    }
-
-    float const dx = target_transform->position.x - tower_transform->position.x;
-    float const dy = target_transform->position.y - tower_transform->position.y;
-    float const dz = target_transform->position.z - tower_transform->position.z;
-    if (std::fabs(dy) > max_height_diff) {
-      continue;
-    }
-
-    float const dist_sq = dx * dx + dz * dz;
-    if (dist_sq < best_dist_sq) {
-      best_dist_sq = dist_sq;
-      best_target = entity;
-    }
-  }
-
-  return best_target;
+    float const dy =
+        candidate->get_component<Engine::Core::TransformComponent>()->position.y -
+        tower_y;
+    return std::fabs(dy) <= attack.max_height_difference;
+  };
+  return find_nearest_enemy(
+      tower,
+      query_context,
+      attack.range,
+      nullptr,
+      in_arc,
+      nullptr,
+      {.intent = EngagementIntent::AutoAcquired, .allow_buildings = true});
 }
 
 void spawn_tower_arrows(Engine::Core::Entity* tower,
@@ -484,8 +455,7 @@ void process_defense_tower(Engine::Core::World* world,
     return;
   }
 
-  auto* target = find_nearest_tower_target(
-      tower, query_context, attack->range, attack->max_height_difference);
+  auto* target = find_nearest_tower_target(tower, query_context, *attack);
   if (target == nullptr) {
     return;
   }

@@ -275,7 +275,7 @@ Subsystem-specific constraints belong in the documentation for the subsystem tha
 | Campaign/data | [Mission roster](docs/CAMPAIGN_MISSIONS.md), [mission framework](docs/MISSION_FRAMEWORK.md), [difficulty presets](docs/DIFFICULTY.md), [hill shapes](docs/HILL_SHAPES.md)                                                                   |
 | Persistence   | [Save/load system](docs/SAVE_LOAD_SYSTEM.md)                                                                                                                                                                                                |
 | Presentation  | [UI design system](docs/UI_DESIGN_SYSTEM.md), [typography](docs/TYPOGRAPHY.md), [accessibility](docs/ACCESSIBILITY.md), [audio](docs/AUDIO_SYSTEM.md), [audio mastering](docs/AUDIO_MASTERING.md), [audio licences](docs/AUDIO_LICENSES.md) |
-| Performance   | [Instrumentation](docs/PERFORMANCE_INSTRUMENTATION.md), [mission startup](docs/MISSION_STARTUP.md), [massed battles](docs/MASSED_BATTLE_PERFORMANCE.md), [pathfinding](docs/PATHFINDING_ARCHITECTURE.md)                                    |
+| Performance   | [Profiling and hot paths](docs/PERFORMANCE.md), [mission startup](docs/MISSION_STARTUP.md), [pathfinding](docs/PATHFINDING_ARCHITECTURE.md)                                                                                                 |
 | Development   | [Contributing](CONTRIBUTING.md), [tests](tests/README.md), [arena](tools/arena/README.md)                                                                                                                                                   |
 
 ## Contributing

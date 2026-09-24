@@ -41,6 +41,9 @@ public:
   [[nodiscard]] auto
   strength_within(float world_x, float world_z, float radius) const -> float;
 
+  [[nodiscard]] auto
+  any_within(float world_x, float world_z, float radius) const -> bool;
+
 private:
   struct Cell {
     std::uint32_t first{0U};

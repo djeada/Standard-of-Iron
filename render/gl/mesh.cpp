@@ -81,6 +81,7 @@ void Mesh::setup_buffers() {
                 << " radius=" << m_bounds_radius;
     Render::Profiling::record_mesh_upload(fingerprint.str());
   }
+  m_instance_layout_ready = false;
   m_vao = std::make_unique<VertexArray>();
   m_vbo = std::make_unique<Buffer>(Buffer::Type::Vertex);
   m_ebo = std::make_unique<Buffer>(Buffer::Type::Index);
@@ -134,9 +135,9 @@ auto Mesh::prepare_draw(const char* caller_name) -> bool {
     return false;
   }
   m_vao->bind();
+  initializeOpenGLFunctions();
 
 #ifndef NDEBUG
-  initializeOpenGLFunctions();
   GLenum const pre_err = glGetError();
   if (pre_err != GL_NO_ERROR) {
     qWarning() << caller_name << "pre-draw GL error" << pre_err << "vao"
@@ -150,43 +151,8 @@ void Mesh::draw() {
   if (!prepare_draw("Mesh::draw")) {
     return;
   }
-  glDrawElements(
-      GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()), GL_UNSIGNED_INT, nullptr);
-  tally_draw(m_indices.size());
-
+  draw_bound();
   m_vao->unbind();
-
-#ifndef NDEBUG
-  GLenum const err = glGetError();
-  if (err != GL_NO_ERROR) {
-    qWarning() << "Mesh::draw GL error" << err << "indices" << m_indices.size();
-  }
-#endif
-}
-
-void Mesh::draw_instanced(std::size_t instance_count) {
-  if (instance_count == 0) {
-    return;
-  }
-  if (!prepare_draw("Mesh::draw_instanced")) {
-    return;
-  }
-  glDrawElementsInstanced(GL_TRIANGLES,
-                          static_cast<GLsizei>(m_indices.size()),
-                          GL_UNSIGNED_INT,
-                          nullptr,
-                          static_cast<GLsizei>(instance_count));
-  tally_draw(m_indices.size(), instance_count);
-
-  m_vao->unbind();
-
-#ifndef NDEBUG
-  GLenum const err = glGetError();
-  if (err != GL_NO_ERROR) {
-    qWarning() << "Mesh::draw_instanced GL error" << err << "indices"
-               << m_indices.size() << "instances" << instance_count;
-  }
-#endif
 }
 
 void Mesh::unbind_vao() {
@@ -195,19 +161,23 @@ void Mesh::unbind_vao() {
   }
 }
 
-void Mesh::draw_instanced_raw(std::size_t instance_count) {
-  initializeOpenGLFunctions();
-  glDrawElementsInstanced(GL_TRIANGLES,
-                          static_cast<GLsizei>(m_indices.size()),
-                          GL_UNSIGNED_INT,
-                          nullptr,
-                          static_cast<GLsizei>(instance_count));
+void Mesh::draw_bound(std::size_t instance_count) {
+  const auto index_count = static_cast<GLsizei>(m_indices.size());
+  if (instance_count == 1U) {
+    glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, nullptr);
+  } else {
+    glDrawElementsInstanced(GL_TRIANGLES,
+                            index_count,
+                            GL_UNSIGNED_INT,
+                            nullptr,
+                            static_cast<GLsizei>(instance_count));
+  }
   tally_draw(m_indices.size(), instance_count);
 #ifndef NDEBUG
   GLenum const err = glGetError();
   if (err != GL_NO_ERROR) {
-    qWarning() << "Mesh::draw_instanced_raw GL error" << err << "indices"
-               << m_indices.size() << "instances" << instance_count;
+    qWarning() << "Mesh::draw_bound GL error" << err << "indices" << m_indices.size()
+               << "instances" << instance_count;
   }
 #endif
 }

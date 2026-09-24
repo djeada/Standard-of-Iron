@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "../core/system.h"
 
 namespace Game::Systems {
@@ -22,12 +20,6 @@ public:
   static constexpr float k_flee_distance = 11.0F;
   static constexpr float k_flee_leg_seconds = 2.5F;
 
-  struct ArmedUnit {
-    float x{0.0F};
-    float z{0.0F};
-    int owner_id{0};
-  };
-
   SettlementLifeSystem() = default;
   ~SettlementLifeSystem() override = default;
 
@@ -36,7 +28,6 @@ public:
 private:
   float m_adoption_cooldown{k_adoption_interval};
   float m_alarm_cooldown{0.0F};
-  std::vector<ArmedUnit> m_armed_units;
 };
 
 } // namespace Game::Systems

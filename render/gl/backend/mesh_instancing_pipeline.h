@@ -4,7 +4,9 @@
 #include <QVector3D>
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "instance_draw_guard.h"
@@ -14,10 +16,12 @@
 
 namespace Render::GL {
 class Mesh;
-class Texture;
+struct MergedBuildingMesh;
 } // namespace Render::GL
 
 namespace Render::GL::BackendPipelines {
+
+using Render::GL::MergedBuildingMesh;
 
 struct MeshInstanceGpu {
   float model_col0[4]{1, 0, 0, 0};
@@ -38,33 +42,34 @@ public:
 
   void begin_frame();
 
-  [[nodiscard]] auto
-  can_batch(Mesh* mesh, Shader* shader, Texture* texture) const -> bool;
+  void accumulate(const QMatrix4x4& model, const QVector3D& color, float alpha);
 
-  void accumulate(const QMatrix4x4& model,
-                  const QVector3D& color,
-                  float alpha,
-                  int material_id = 0);
-
-  void begin_batch(Mesh* mesh, Shader* shader, Texture* texture);
+  void begin_batch(Mesh* mesh);
 
   void flush();
 
-  [[nodiscard]] auto instance_count() const -> std::size_t;
+  auto upload(const void* data, std::size_t bytes, std::size_t& byte_offset) -> bool;
 
-  [[nodiscard]] auto has_pending() const -> bool;
+  void draw_merged(const MergedBuildingMesh& mesh,
+                   std::size_t instance_byte_offset,
+                   std::size_t instance_count,
+                   std::uint32_t first_index,
+                   std::uint32_t index_count);
 
 private:
-  void setup_instance_attributes(std::size_t byte_offset);
-  auto upload_instances(const MeshInstanceGpu* data,
-                        std::size_t count,
-                        std::size_t& byte_offset) -> std::size_t;
+  struct MergedBuffers {
+    GLuint vao{0};
+    GLuint vertices{0};
+    GLuint indices{0};
+  };
+
+  auto bind_mesh(Mesh* mesh) -> bool;
+  void point_instance_attributes(std::size_t byte_offset);
+  auto merged_vao(const MergedBuildingMesh& mesh) -> GLuint;
 
   bool m_initialized{false};
 
   Mesh* m_current_mesh{nullptr};
-  Shader* m_current_shader{nullptr};
-  Texture* m_current_texture{nullptr};
 
   std::vector<MeshInstanceGpu> m_instances;
   std::size_t m_instance_capacity{0};
@@ -72,6 +77,8 @@ private:
   GLuint m_instance_buffer{0};
   std::size_t m_ring_capacity_bytes{0};
   std::size_t m_ring_offset_bytes{0};
+
+  std::unordered_map<std::uint64_t, MergedBuffers> m_merged;
 
   InstanceDrawGuard m_draw_guard{"MeshInstancingPipeline"};
 };

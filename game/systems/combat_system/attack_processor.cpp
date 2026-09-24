@@ -298,49 +298,41 @@ auto matches_heal_affinity(const Engine::Core::Entity* target,
 }
 
 auto should_prioritize_healing(Engine::Core::Entity* healer,
-                               Engine::Core::World* world) -> bool {
-  if (healer == nullptr || world == nullptr) {
-    return false;
-  }
-
+                               const CombatQueryContext& query_context) -> bool {
   auto* healer_component = healer->get_component<Engine::Core::HealerComponent>();
   auto* healer_unit = healer->get_component<Engine::Core::UnitComponent>();
   auto* healer_transform = healer->get_component<Engine::Core::TransformComponent>();
-  if (healer_component == nullptr || healer_unit == nullptr ||
-      healer_transform == nullptr || !healer_component->suppress_attack_while_healing ||
-      healer_component->time_since_last_heal < healer_component->healing_cooldown) {
+  if (query_context.world == nullptr || healer_component == nullptr ||
+      healer_unit == nullptr || healer_transform == nullptr ||
+      !healer_component->suppress_attack_while_healing ||
+      healer_component->time_since_last_heal < healer_component->healing_cooldown ||
+      in_rts_melee_lock(healer)) {
     return false;
   }
 
-  if (in_rts_melee_lock(healer)) {
-    return false;
-  }
-
-  for (auto [target_ref, target_unit_ref, target_transform_ref] :
-       world->entity_view<Engine::Core::UnitComponent,
-                          Engine::Core::TransformComponent>()) {
-    Engine::Core::Entity* target = &target_ref;
-    const auto* target_unit = &target_unit_ref;
-    const auto* target_transform = &target_transform_ref;
-    if (world->has<Engine::Core::PendingRemovalComponent>(target->get_id())) {
-      continue;
-    }
-
-    if (target_unit->owner_id != healer_unit->owner_id ||
-        !HealingRules::can_receive_healing(*target) ||
-        !matches_heal_affinity(target, healer_component->target_affinity)) {
-      continue;
-    }
-
-    float const dx = target_transform->position.x - healer_transform->position.x;
-    float const dz = target_transform->position.z - healer_transform->position.z;
-    float const dist_sq = dx * dx + dz * dz;
-    if (dist_sq <= healer_component->healing_range * healer_component->healing_range) {
-      return true;
-    }
-  }
-
-  return false;
+  float const range = healer_component->healing_range;
+  bool found = false;
+  query_context.world->spatial_index().for_each_in_radius(
+      healer_transform->position.x,
+      healer_transform->position.z,
+      range + k_combat_query_stale_margin,
+      [&](const Engine::Core::WorldSpatialIndex::Entry& entry) {
+        auto* target = found ? nullptr : query_context.find_entity(entry.id);
+        if (target == nullptr ||
+            target->has_component<Engine::Core::PendingRemovalComponent>()) {
+          return;
+        }
+        auto const& position =
+            target->get_component<Engine::Core::TransformComponent>()->position;
+        float const dx = position.x - healer_transform->position.x;
+        float const dz = position.z - healer_transform->position.z;
+        found = dx * dx + dz * dz <= range * range &&
+                target->get_component<Engine::Core::UnitComponent>()->owner_id ==
+                    healer_unit->owner_id &&
+                matches_heal_affinity(target, healer_component->target_affinity) &&
+                HealingRules::can_receive_healing(*target);
+      });
+  return found;
 }
 
 void face_target(Engine::Core::TransformComponent* attacker_transform,
@@ -1650,7 +1642,7 @@ void process_attacks(Engine::Core::World* world,
       attack_ready = false;
     }
 
-    if (attack_ready && should_prioritize_healing(attacker, world)) {
+    if (attack_ready && should_prioritize_healing(attacker, query_context)) {
       continue;
     }
 

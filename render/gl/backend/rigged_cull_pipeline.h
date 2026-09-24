@@ -111,6 +111,11 @@ private:
                               std::size_t& capacity_bytes,
                               std::size_t& cursor_bytes,
                               std::size_t wanted_bytes) -> bool;
+  void orphan_stream(GLenum target,
+                     GLuint buffer,
+                     std::size_t capacity_bytes,
+                     std::size_t& cursor_bytes);
+  void reset_role_color_stream();
   auto upload_instances(const RiggedCreatureCmd* const* cmds,
                         std::size_t count,
                         std::size_t bone_count,

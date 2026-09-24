@@ -338,6 +338,9 @@ auto Backend::initialize() -> bool {
   m_directional_shadow_depth_instanced_shader = m_shader_cache->get_or_load(
       QStringLiteral(":/assets/shaders/directional_shadow_depth_instanced.vert"),
       QStringLiteral(":/assets/shaders/directional_shadow_depth.frag"));
+  m_building_merged_shader = m_shader_cache->get_or_load(
+      QStringLiteral(":/assets/shaders/building_merged.vert"),
+      QStringLiteral(":/assets/shaders/basic_instanced.frag"));
   m_directional_shadow_rigged_shader = m_shader_cache->get_or_load(
       QStringLiteral(":/assets/shaders/directional_shadow_rigged.vert"),
       QStringLiteral(":/assets/shaders/directional_shadow_depth.frag"));
@@ -670,6 +673,7 @@ namespace {
 
 constexpr float k_shadow_min_caster_texels = 0.75F;
 constexpr std::size_t k_shadow_min_instanced_run = 2;
+constexpr float k_shadow_receiver_margin_texels = 16.0F;
 
 constexpr float k_shadow_caster_height_allowance = 10.0F;
 
@@ -677,6 +681,23 @@ constexpr float k_shadow_default_slab_min = -2.0F;
 constexpr float k_shadow_default_slab_max = 6.0F;
 
 } // namespace
+
+auto Backend::ShadowCascadeCull::accepts(const QVector3D& caster_center,
+                                         float caster_radius) const -> bool {
+  const QVector3D relative = caster_center - center;
+  const float reach = radius + caster_radius;
+  if (std::abs(QVector3D::dotProduct(relative, light_right)) > reach ||
+      std::abs(QVector3D::dotProduct(relative, light_up)) > reach) {
+    return false;
+  }
+  const float caster_height =
+      std::max(0.0F, caster_center.y() + caster_radius - ground_height);
+  const float receiver_reach =
+      caster_radius + receiver_margin + caster_height * shadow_throw;
+  const float distance = (caster_center - camera_position).length();
+  return distance + receiver_reach >= receiver_near &&
+         distance - receiver_reach <= receiver_far;
+}
 
 void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& cam) {
   const Render::DirectionalShadowSettings& settings = m_shadow_settings;
@@ -851,13 +872,9 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
               return lhs.mesh < rhs.mesh;
             });
 
-  static const bool shadow_instancing_allowed =
-      qEnvironmentVariableIntValue("SOI_SHADOW_INSTANCING") != 0 ||
-      !qEnvironmentVariableIsSet("SOI_SHADOW_INSTANCING");
-  const bool can_instance_shadow_casters =
-      shadow_instancing_allowed && m_mesh_instancing_pipeline != nullptr &&
-      m_mesh_instancing_pipeline->is_initialized() &&
-      m_directional_shadow_depth_instanced_shader != nullptr;
+  const bool can_instance_shadow_casters = supports_static_batch();
+  const StaticBuildingBatch* const static_batch =
+      can_instance_shadow_casters ? queue.static_batch() : nullptr;
 
   const QMatrix4x4 camera_view_projection = view_projection;
   const auto upload_frame_view_projection = [this](const QMatrix4x4& matrix) {
@@ -882,6 +899,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   const float sun_stretch = std::hypot(light_direction.x(), light_direction.z()) /
                             std::max(light_direction.y(), 0.15F);
   const float rigged_shadow_slack = 6.0F + 4.0F * std::min(sun_stretch, 4.0F);
+  const float shadow_throw = std::sqrt(1.0F + sun_stretch * sun_stretch);
 
   float cascade_near = near_distance;
   for (int cascade = 0; cascade < cascade_count; ++cascade) {
@@ -921,19 +939,27 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
         far_cascade ? cascade - m_directional_shadow_near_cascades : cascade);
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    const float min_caster_radius = world_texel * k_shadow_min_caster_texels;
+    const ShadowCascadeCull cull{
+        .center = center,
+        .radius = radius,
+        .light_right = light_right,
+        .light_up = stable_up,
+        .camera_position = cam.get_position(),
+        .receiver_near = cascade == 0 ? 0.0F
+                                      : m_directional_shadow_splits[cascade - 1] *
+                                            (1.0F - settings.cascade_blend),
+        .receiver_far = cascade_far,
+        .receiver_margin = world_texel * k_shadow_receiver_margin_texels,
+        .ground_height = slab_min,
+        .shadow_throw = shadow_throw,
+        .min_caster_radius = world_texel * k_shadow_min_caster_texels,
+    };
     m_shadow_cascade_casters.clear();
     for (const auto& caster : m_shadow_static_casters) {
-      if (caster.world_radius < min_caster_radius) {
-        continue;
+      if (caster.world_radius >= cull.min_caster_radius &&
+          cull.accepts(caster.world_center, caster.world_radius)) {
+        m_shadow_cascade_casters.push_back(&caster);
       }
-      const QVector3D relative = caster.world_center - center;
-      const float reach = radius + caster.world_radius;
-      if (std::abs(QVector3D::dotProduct(relative, light_right)) > reach ||
-          std::abs(QVector3D::dotProduct(relative, stable_up)) > reach) {
-        continue;
-      }
-      m_shadow_cascade_casters.push_back(&caster);
     }
 
     Shader* bound_depth_shader = nullptr;
@@ -959,8 +985,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       if (can_instance_shadow_casters && run >= k_shadow_min_instanced_run) {
         bind_depth_shader(m_directional_shadow_depth_instanced_shader,
                           m_shadow_depth_instanced_light_vp);
-        m_mesh_instancing_pipeline->begin_batch(
-            mesh, m_directional_shadow_depth_instanced_shader, nullptr);
+        m_mesh_instancing_pipeline->begin_batch(mesh);
         for (std::size_t j = index; j < run_end; ++j) {
           m_mesh_instancing_pipeline->accumulate(
               *m_shadow_cascade_casters[j]->model, QVector3D(1.0F, 1.0F, 1.0F), 1.0F);
@@ -978,6 +1003,12 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
         }
       }
       index = run_end;
+    }
+
+    if (static_batch != nullptr) {
+      bind_depth_shader(m_directional_shadow_depth_instanced_shader,
+                        m_shadow_depth_instanced_light_vp);
+      draw_static_batch_shadow(*static_batch, cull);
     }
 
     const auto draw_single_rigged_shadow = [&](const RiggedCreatureCmd& rigged) {
@@ -1469,23 +1500,39 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   draw_tally.reset();
 
   int breakdown_last_type = -1;
+  const auto breakdown_enter = [&](DrawCmdType type) {
+    const int index = static_cast<int>(type);
+    if (m_gpu_breakdown_enabled && index != breakdown_last_type) {
+      if (breakdown_last_type >= 0) {
+        gpu_breakdown_mark(frame_timing,
+                           static_cast<std::uint8_t>(breakdown_last_type));
+      }
+      breakdown_last_type = index;
+    }
+  };
+
+  const StaticBuildingBatch* pending_static_batch =
+      supports_static_batch() ? queue.static_batch() : nullptr;
+  const auto draw_pending_static_batch = [&]() {
+    if (pending_static_batch == nullptr) {
+      return;
+    }
+    breakdown_enter(DrawCmdType::Mesh);
+    draw_tally.set_type(static_cast<std::size_t>(DrawCmdType::Mesh));
+    execute_static_batch(*pending_static_batch, context);
+    pending_static_batch = nullptr;
+  };
+
   std::size_t batch_index = 0;
   while (batch_index < prepared_batches.size()) {
     const PreparedBatch& prepared = prepared_batches[batch_index];
     const std::size_t i = prepared.start;
     const auto& cmd = queue.get_sorted(i);
-    if (prepared.type == DrawCmdType::RiggedCreature) {
+    if ((queue.sort_key_for_sorted(i) >> k_sort_key_bucket_shift) >=
+        static_cast<std::uint64_t>(RenderPassOrder::Mesh)) {
+      draw_pending_static_batch();
     }
-    if (m_gpu_breakdown_enabled) {
-      const int type = static_cast<int>(draw_cmd_type(cmd));
-      if (type != breakdown_last_type) {
-        if (breakdown_last_type >= 0) {
-          gpu_breakdown_mark(frame_timing,
-                             static_cast<std::uint8_t>(breakdown_last_type));
-        }
-        breakdown_last_type = type;
-      }
-    }
+    breakdown_enter(draw_cmd_type(cmd));
     draw_tally.set_type(static_cast<std::size_t>(draw_cmd_type(cmd)));
     switch (draw_cmd_type(cmd)) {
     case DrawCmdType::Cylinder:
@@ -1558,6 +1605,7 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
 
     ++batch_index;
   }
+  draw_pending_static_batch();
   if (m_last_bound_shader != nullptr) {
     m_last_bound_shader->release();
     m_last_bound_shader = nullptr;

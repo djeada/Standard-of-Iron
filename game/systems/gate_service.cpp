@@ -35,17 +35,14 @@ auto same_blocker(const GateBlocker& lhs, const GateBlocker& rhs) -> bool {
 }
 
 void publish_navigation_blocker_change(std::span<const GateBlocker> previous,
-                                       std::span<const GateBlocker> current,
-                                       bool obstruction_released) {
+                                       std::span<const GateBlocker> current) {
   auto* pathfinder = NavGrid::get_pathfinder();
   if (pathfinder == nullptr) {
     return;
   }
   const auto mark = [pathfinder](const GateBlocker& blocker) {
-    const float center_x = (blocker.min_x + blocker.max_x) * 0.5F;
-    const float center_z = (blocker.min_z + blocker.max_z) * 0.5F;
-    pathfinder->mark_building_region_dirty(center_x,
-                                           center_z,
+    pathfinder->mark_building_region_dirty((blocker.min_x + blocker.max_x) * 0.5F,
+                                           (blocker.min_z + blocker.max_z) * 0.5F,
                                            blocker.max_x - blocker.min_x,
                                            blocker.max_z - blocker.min_z);
   };
@@ -55,8 +52,17 @@ void publish_navigation_blocker_change(std::span<const GateBlocker> previous,
   for (const auto& blocker : current) {
     mark(blocker);
   }
-  if (obstruction_released) {
-    pathfinder->mark_obstruction_released();
+  const auto released =
+      std::find_if(previous.begin(), previous.end(), [&current](const auto& blocker) {
+        return std::none_of(
+            current.begin(), current.end(), [&blocker](const auto& now) {
+              return same_blocker(blocker, now);
+            });
+      });
+  if (released != previous.end()) {
+    pathfinder->mark_obstruction_released_at((released->min_x + released->max_x) * 0.5F,
+                                             (released->min_z + released->max_z) *
+                                                 0.5F);
   }
 }
 
@@ -188,16 +194,9 @@ void GateService::refresh_blockers(Engine::Core::World& world) {
   if (!changed) {
     return;
   }
-  bool const obstruction_released =
-      std::any_of(storage.begin(), storage.end(), [&refreshed](auto const& previous) {
-        return std::none_of(
-            refreshed.begin(), refreshed.end(), [&previous](auto const& current) {
-              return same_blocker(previous, current);
-            });
-      });
   const std::vector<GateBlocker> previous = std::move(storage);
   storage = std::move(refreshed);
-  publish_navigation_blocker_change(previous, storage, obstruction_released);
+  publish_navigation_blocker_change(previous, storage);
 }
 
 void GateService::clear_blockers() {
@@ -207,7 +206,7 @@ void GateService::clear_blockers() {
   }
   const std::vector<GateBlocker> previous = std::move(storage);
   storage.clear();
-  publish_navigation_blocker_change(previous, {}, true);
+  publish_navigation_blocker_change(previous, {});
 }
 
 auto GateService::blockers() -> const std::vector<GateBlocker>& {

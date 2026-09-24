@@ -8,7 +8,6 @@
 #include <functional>
 #include <memory>
 #include <span>
-#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -151,8 +150,8 @@ public:
   [[nodiscard]] auto
   find_rigged_asset(const Key& key) const noexcept -> const RiggedMeshEntry*;
 
-  [[nodiscard]] auto require_rigged_asset(const Key& key, std::string_view detail) const
-      -> const RiggedMeshEntry*;
+  [[nodiscard]] auto
+  require_rigged_asset(const Key& key) const -> const RiggedMeshEntry*;
 
   void clear() {
     release_skin_atlases();

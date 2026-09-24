@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
-#include <shared_mutex>
 #include <utility>
 #include <vector>
 
@@ -32,15 +31,9 @@ constexpr float k_fog_reveal_scale = Engine::Core::Defaults::k_vision_reveal_sca
 constexpr float k_half_cell_offset = 0.5F;
 constexpr float k_min_tile_size = 0.0001F;
 constexpr std::chrono::milliseconds k_min_job_interval{50};
-constexpr std::uint8_t k_current_visible_marker = 0x80U;
-constexpr std::uint64_t k_rally_flag_visibility_tag = 0x8000000000000000ULL;
 
 auto index_static(int grid_x, int grid_z, int width) -> int {
   return grid_z * width + grid_x;
-}
-
-auto rally_flag_visibility_id(std::uint64_t commander_id) -> std::uint64_t {
-  return commander_id ^ k_rally_flag_visibility_tag;
 }
 
 } // namespace
@@ -55,24 +48,17 @@ VisibilityService::~VisibilityService() {
 
 void VisibilityService::initialize(int width, int height, float tile_size) {
   reset_worker_state();
-  std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
+  std::lock_guard<std::mutex> const lock(m_publish_mutex);
   m_width = std::max(1, width);
   m_height = std::max(1, height);
   m_tile_size = std::max(k_min_tile_size, tile_size);
   m_half_width = static_cast<float>(m_width) * k_half_cell_offset - k_half_cell_offset;
   m_half_height =
       static_cast<float>(m_height) * k_half_cell_offset - k_half_cell_offset;
-
-  const int count = m_width * m_height;
-  m_cells.assign(count, static_cast<std::uint8_t>(VisibilityState::Unseen));
-  const auto next_version =
-      std::max<std::uint64_t>(1ULL, m_version.load(std::memory_order_relaxed) + 1ULL);
-  m_version.store(next_version, std::memory_order_release);
-  m_last_positions.clear();
-  m_force_full_update = true;
-  reset_throttle();
   m_initialized = true;
-  publish_snapshot_locked(next_version);
+  publish_snapshot_locked(std::vector<std::uint8_t>(
+      static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height),
+      static_cast<std::uint8_t>(VisibilityState::Unseen)));
 }
 
 void VisibilityService::shutdown() {
@@ -80,18 +66,13 @@ void VisibilityService::shutdown() {
     return;
   }
   reset_worker_state();
-  std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
-  m_cells.clear();
+  std::lock_guard<std::mutex> const lock(m_publish_mutex);
   m_width = 0;
   m_height = 0;
   m_half_width = 0.0F;
   m_half_height = 0.0F;
-  m_last_positions.clear();
-  m_force_full_update = true;
   m_initialized = false;
-  reset_throttle();
-  const auto next_version = m_version.fetch_add(1, std::memory_order_release) + 1ULL;
-  publish_snapshot_locked(next_version);
+  publish_snapshot_locked({});
 }
 
 void VisibilityService::reset() {
@@ -99,15 +80,10 @@ void VisibilityService::reset() {
     return;
   }
   reset_worker_state();
-  std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
-  std::fill(m_cells.begin(),
-            m_cells.end(),
-            static_cast<std::uint8_t>(VisibilityState::Unseen));
-  const auto next_version = m_version.fetch_add(1, std::memory_order_release) + 1ULL;
-  m_last_positions.clear();
-  m_force_full_update = true;
-  reset_throttle();
-  publish_snapshot_locked(next_version);
+  std::lock_guard<std::mutex> const lock(m_publish_mutex);
+  publish_snapshot_locked(
+      std::vector<std::uint8_t>(snapshot_ptr()->cells.size(),
+                                static_cast<std::uint8_t>(VisibilityState::Unseen)));
 }
 
 auto VisibilityService::update(Engine::Core::World& world, int player_id) -> bool {
@@ -126,11 +102,10 @@ auto VisibilityService::update(Engine::Core::World& world, int player_id) -> boo
   }
 
   if (should_start_new_job()) {
-    auto gathered = gather_vision_sources(world, player_id);
-
-    if (gathered.changed) {
-      auto payload = compose_job_payload(gathered.sources);
-      enqueue_job(std::move(payload));
+    auto sources = gather_vision_sources(world, player_id);
+    if (sources != m_last_sources) {
+      m_last_sources = sources;
+      enqueue_job(compose_job_payload(std::move(sources)));
     }
   }
 
@@ -142,128 +117,72 @@ void VisibilityService::compute_immediate(Engine::Core::World& world, int player
     return;
   }
 
-  const auto gathered = gather_vision_sources(world, player_id);
-  auto payload = compose_job_payload(gathered.sources);
-  auto result = execute_job(std::move(payload));
-
-  if (result.changed) {
-    std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
-    m_cells = std::move(result.cells);
-    const auto next_version = m_version.fetch_add(1, std::memory_order_release) + 1ULL;
-    publish_snapshot_locked(next_version);
-    Engine::Core::note_coverage(Engine::Core::CoverageEvent::FogReveal);
-  }
+  m_last_sources = gather_vision_sources(world, player_id);
+  integrate_result(execute_job(compose_job_payload(m_last_sources)));
   reset_throttle();
 }
 
-auto VisibilityService::gather_vision_sources(Engine::Core::World& world, int player_id)
-    -> VisibilityService::GatheredVision {
+auto VisibilityService::gather_vision_sources(
+    Engine::Core::World& world, int player_id) const -> std::vector<VisionSource> {
   std::vector<VisionSource> sources;
-  const auto entities = world.collect_entities_with<Engine::Core::TransformComponent>();
   const float range_padding = m_tile_size * k_half_cell_offset;
-
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
   const float inverse_tile_size_sq = 1.0F / (m_tile_size * m_tile_size);
+  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
 
-  std::unordered_map<std::uint64_t, CachedPosition> current_positions;
-  bool any_moved = m_force_full_update;
+  auto add_source =
+      [&](float world_x, float world_z, int cell_radius, float radius_sq) {
+        const int center_x = world_to_grid(world_x, m_half_width);
+        const int center_z = world_to_grid(world_z, m_half_height);
+        if (!in_bounds(center_x, center_z)) {
+          return false;
+        }
+        sources.push_back({center_z, center_x, cell_radius, radius_sq});
+        return true;
+      };
 
-  for (auto* entity : entities) {
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (transform == nullptr || unit == nullptr) {
-      continue;
-    }
-
-    if (Game::Core::is_neutral_owner(unit->owner_id)) {
-      continue;
-    }
-
-    if (unit->owner_id != player_id &&
-        !owner_registry.are_allies(player_id, unit->owner_id)) {
-      continue;
-    }
-
-    if (unit->health <= 0) {
+  for (auto [entity, transform, unit] :
+       world.entity_view<const Engine::Core::TransformComponent,
+                         const Engine::Core::UnitComponent>()) {
+    if (Game::Core::is_neutral_owner(unit.owner_id) || unit.health <= 0 ||
+        (unit.owner_id != player_id &&
+         !owner_registry.are_allies(player_id, unit.owner_id))) {
       continue;
     }
 
     const float vision_range =
-        std::max(unit->vision_range, k_default_vision_range) * k_fog_reveal_scale;
-    const int center_x = world_to_grid(transform->position.x, m_half_width);
-    const int center_z = world_to_grid(transform->position.z, m_half_height);
-    if (!in_bounds(center_x, center_z)) {
-      continue;
-    }
-
-    const std::uint64_t entity_id = entity->get_id();
+        std::max(unit.vision_range, k_default_vision_range) * k_fog_reveal_scale;
     const int cell_radius =
         std::max(1, static_cast<int>(std::ceil(vision_range / m_tile_size)));
-    current_positions[entity_id] = {center_x, center_z, cell_radius};
+    const float expanded_radius_cells_sq = (vision_range + range_padding) *
+                                           (vision_range + range_padding) *
+                                           inverse_tile_size_sq;
 
-    if (!any_moved) {
-      auto it = m_last_positions.find(entity_id);
-      if (it == m_last_positions.end() || it->second.grid_x != center_x ||
-          it->second.grid_z != center_z || it->second.cell_radius != cell_radius) {
-        any_moved = true;
-      }
-    }
-
-    const float expanded_range_sq =
-        (vision_range + range_padding) * (vision_range + range_padding);
-    const float expanded_radius_cells_sq = expanded_range_sq * inverse_tile_size_sq;
-
-    sources.push_back({center_x, center_z, cell_radius, expanded_radius_cells_sq});
-
-    auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
-    if (commander == nullptr || !commander->flag_rally_flag_active) {
+    if (!add_source(transform.position.x,
+                    transform.position.z,
+                    cell_radius,
+                    expanded_radius_cells_sq)) {
       continue;
     }
 
-    const int rally_center_x =
-        world_to_grid(commander->flag_rally_flag_x, m_half_width);
-    const int rally_center_z =
-        world_to_grid(commander->flag_rally_flag_z, m_half_height);
-    if (!in_bounds(rally_center_x, rally_center_z)) {
-      continue;
-    }
-
-    const std::uint64_t rally_id = rally_flag_visibility_id(entity_id);
-    current_positions[rally_id] = {rally_center_x, rally_center_z, cell_radius};
-    if (!any_moved) {
-      auto it = m_last_positions.find(rally_id);
-      if (it == m_last_positions.end() || it->second.grid_x != rally_center_x ||
-          it->second.grid_z != rally_center_z ||
-          it->second.cell_radius != cell_radius) {
-        any_moved = true;
-      }
-    }
-
-    sources.push_back(
-        {rally_center_x, rally_center_z, cell_radius, expanded_radius_cells_sq});
-  }
-
-  if (!any_moved) {
-    for (const auto& [entity_id, pos] : m_last_positions) {
-      if (current_positions.find(entity_id) == current_positions.end()) {
-        any_moved = true;
-        break;
-      }
+    const auto* commander = entity.get_component<Engine::Core::CommanderComponent>();
+    if (commander != nullptr && commander->flag_rally_flag_active) {
+      add_source(commander->flag_rally_flag_x,
+                 commander->flag_rally_flag_z,
+                 cell_radius,
+                 expanded_radius_cells_sq);
     }
   }
 
-  m_last_positions = std::move(current_positions);
-  m_force_full_update = false;
-
-  return {.changed = any_moved, .sources = std::move(sources)};
+  std::sort(sources.begin(), sources.end());
+  sources.erase(std::unique(sources.begin(), sources.end()), sources.end());
+  return sources;
 }
 
-auto VisibilityService::compose_job_payload(
-    const std::vector<VisionSource>& sources) const -> VisibilityService::JobPayload {
-  std::shared_lock<std::shared_mutex> const lock(m_cells_mutex);
-  const auto generation_value =
-      m_generation.fetch_add(1ULL, std::memory_order_relaxed) + 1ULL;
-  return JobPayload{m_width, m_height, m_cells, sources, generation_value};
+auto VisibilityService::compose_job_payload(std::vector<VisionSource> sources) const
+    -> VisibilityService::JobPayload {
+  return JobPayload{snapshot_ptr(),
+                    std::move(sources),
+                    m_generation.fetch_add(1ULL, std::memory_order_relaxed) + 1ULL};
 }
 
 void VisibilityService::enqueue_job(JobPayload&& payload) {
@@ -277,17 +196,13 @@ void VisibilityService::enqueue_job(JobPayload&& payload) {
 }
 
 void VisibilityService::integrate_result(JobResult&& result) {
-  const auto current_generation = m_generation.load(std::memory_order_acquire);
-  if (result.generation != current_generation) {
+  if (!result.changed ||
+      result.generation != m_generation.load(std::memory_order_acquire)) {
     return;
   }
-  if (result.changed) {
-    std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
-    m_cells = std::move(result.cells);
-    const auto next_version = m_version.fetch_add(1, std::memory_order_release) + 1ULL;
-    publish_snapshot_locked(next_version);
-    Engine::Core::note_coverage(Engine::Core::CoverageEvent::FogReveal);
-  }
+  std::lock_guard<std::mutex> const lock(m_publish_mutex);
+  publish_snapshot_locked(std::move(result.cells));
+  Engine::Core::note_coverage(Engine::Core::CoverageEvent::FogReveal);
 }
 
 void VisibilityService::ensure_worker_running() {
@@ -323,7 +238,7 @@ void VisibilityService::worker_loop() {
     }
 
     if (payload_to_process.has_value()) {
-      auto result = execute_job(std::move(payload_to_process.value()));
+      auto result = execute_job(payload_to_process.value());
       std::lock_guard<std::mutex> const lock(m_queue_mutex);
       if (!m_completed_result.has_value() || result.changed) {
         m_completed_result = std::move(result);
@@ -332,49 +247,39 @@ void VisibilityService::worker_loop() {
   }
 }
 
-auto VisibilityService::execute_job(JobPayload payload)
+auto VisibilityService::execute_job(const JobPayload& payload)
     -> VisibilityService::JobResult {
-  const int cell_count = payload.width * payload.height;
+  const auto& base = *payload.base;
   const auto visible_val = static_cast<std::uint8_t>(VisibilityState::Visible);
   const auto explored_val = static_cast<std::uint8_t>(VisibilityState::Explored);
 
+  std::vector<std::uint8_t> cells(base.cells.size());
+  std::transform(
+      base.cells.begin(), base.cells.end(), cells.begin(), [&](std::uint8_t state) {
+        return state == visible_val ? explored_val : state;
+      });
+
   for (const auto& source : payload.sources) {
     const int min_z = std::max(0, source.center_z - source.cell_radius);
-    const int max_z =
-        std::min(payload.height - 1, source.center_z + source.cell_radius);
-    const int min_x = std::max(0, source.center_x - source.cell_radius);
-    const int max_x = std::min(payload.width - 1, source.center_x + source.cell_radius);
-
+    const int max_z = std::min(base.height - 1, source.center_z + source.cell_radius);
     for (int grid_z = min_z; grid_z <= max_z; ++grid_z) {
       const int dz = grid_z - source.center_z;
-      const int dz_sq = dz * dz;
-      if (static_cast<float>(dz_sq) > source.expanded_radius_cells_sq) {
+      const double room =
+          static_cast<double>(source.expanded_radius_cells_sq) - dz * dz;
+      if (room < 0.0) {
         continue;
       }
-
-      for (int grid_x = min_x; grid_x <= max_x; ++grid_x) {
-        const int dx = grid_x - source.center_x;
-        const int dist_cells_sq = dx * dx + dz_sq;
-        if (static_cast<float>(dist_cells_sq) <= source.expanded_radius_cells_sq) {
-          const int idx = index_static(grid_x, grid_z, payload.width);
-          payload.cells[idx] |= k_current_visible_marker;
-        }
-      }
+      const int half = std::min(source.cell_radius, static_cast<int>(std::sqrt(room)));
+      const int min_x = std::max(0, source.center_x - half);
+      const int max_x = std::min(base.width - 1, source.center_x + half);
+      std::fill(cells.begin() + index_static(min_x, grid_z, base.width),
+                cells.begin() + index_static(max_x, grid_z, base.width) + 1,
+                visible_val);
     }
   }
 
-  bool changed = false;
-  for (int idx = 0; idx < cell_count; ++idx) {
-    const std::uint8_t previous_state = payload.cells[idx] & ~k_current_visible_marker;
-    const bool now_visible = (payload.cells[idx] & k_current_visible_marker) != 0U;
-    const std::uint8_t next_state =
-        now_visible ? visible_val
-                    : (previous_state == visible_val ? explored_val : previous_state);
-    changed = changed || (next_state != previous_state);
-    payload.cells[idx] = next_state;
-  }
-
-  return JobResult{std::move(payload.cells), payload.generation, changed};
+  const bool changed = cells != base.cells;
+  return JobResult{std::move(cells), payload.generation, changed};
 }
 
 auto VisibilityService::Snapshot::in_bounds(int grid_x, int grid_z) const -> bool {
@@ -441,40 +346,21 @@ auto VisibilityService::Snapshot::is_explored_world(float world_x,
 }
 
 auto VisibilityService::state_at(int grid_x, int grid_z) const -> VisibilityState {
-  if (!m_initialized || !in_bounds(grid_x, grid_z)) {
-    return VisibilityState::Visible;
-  }
-  std::shared_lock<std::shared_mutex> const lock(m_cells_mutex);
-  return static_cast<VisibilityState>(m_cells[index(grid_x, grid_z)]);
+  const auto current = snapshot_ptr();
+  return current != nullptr ? current->state_at(grid_x, grid_z)
+                            : Snapshot{}.state_at(grid_x, grid_z);
 }
 
 auto VisibilityService::is_visible_world(float world_x, float world_z) const -> bool {
-  if (!m_initialized) {
-    return true;
-  }
-  const int grid_x = world_to_grid(world_x, m_half_width);
-  const int grid_z = world_to_grid(world_z, m_half_height);
-  if (!in_bounds(grid_x, grid_z)) {
-    return false;
-  }
-  std::shared_lock<std::shared_mutex> const lock(m_cells_mutex);
-  return m_cells[index(grid_x, grid_z)] ==
-         static_cast<std::uint8_t>(VisibilityState::Visible);
+  const auto current = snapshot_ptr();
+  return current != nullptr ? current->is_visible_world(world_x, world_z)
+                            : Snapshot{}.is_visible_world(world_x, world_z);
 }
 
 auto VisibilityService::is_explored_world(float world_x, float world_z) const -> bool {
-  if (!m_initialized) {
-    return true;
-  }
-  const int grid_x = world_to_grid(world_x, m_half_width);
-  const int grid_z = world_to_grid(world_z, m_half_height);
-  if (!in_bounds(grid_x, grid_z)) {
-    return false;
-  }
-  std::shared_lock<std::shared_mutex> const lock(m_cells_mutex);
-  const auto state = m_cells[index(grid_x, grid_z)];
-  return state == static_cast<std::uint8_t>(VisibilityState::Visible) ||
-         state == static_cast<std::uint8_t>(VisibilityState::Explored);
+  const auto current = snapshot_ptr();
+  return current != nullptr ? current->is_explored_world(world_x, world_z)
+                            : Snapshot{}.is_explored_world(world_x, world_z);
 }
 
 auto VisibilityService::snapshot() const -> VisibilityService::Snapshot {
@@ -499,13 +385,11 @@ void VisibilityService::reveal_all() {
   if (!m_initialized) {
     return;
   }
-  std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
-  std::fill(m_cells.begin(),
-            m_cells.end(),
-            static_cast<std::uint8_t>(VisibilityState::Visible));
-  const auto next_version = m_version.fetch_add(1, std::memory_order_release) + 1ULL;
+  std::lock_guard<std::mutex> const lock(m_publish_mutex);
   reset_throttle();
-  publish_snapshot_locked(next_version);
+  publish_snapshot_locked(
+      std::vector<std::uint8_t>(snapshot_ptr()->cells.size(),
+                                static_cast<std::uint8_t>(VisibilityState::Visible)));
 }
 
 auto VisibilityService::restore_explored(const std::vector<std::uint8_t>& explored,
@@ -514,36 +398,30 @@ auto VisibilityService::restore_explored(const std::vector<std::uint8_t>& explor
   if (!m_initialized) {
     return false;
   }
-  std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
-  if (width != m_width || height != m_height || explored.size() != m_cells.size()) {
+  std::lock_guard<std::mutex> const lock(m_publish_mutex);
+  auto cells = snapshot_ptr()->cells;
+  if (width != m_width || height != m_height || explored.size() != cells.size()) {
     return false;
   }
 
   const auto explored_val = static_cast<std::uint8_t>(VisibilityState::Explored);
   const auto unseen_val = static_cast<std::uint8_t>(VisibilityState::Unseen);
   bool changed = false;
-  for (std::size_t idx = 0; idx < m_cells.size(); ++idx) {
-    if (explored[idx] != 0U && m_cells[idx] == unseen_val) {
-      m_cells[idx] = explored_val;
+  for (std::size_t idx = 0; idx < cells.size(); ++idx) {
+    if (explored[idx] != 0U && cells[idx] == unseen_val) {
+      cells[idx] = explored_val;
       changed = true;
     }
   }
 
-  if (!changed) {
-    return true;
+  if (changed) {
+    publish_snapshot_locked(std::move(cells));
   }
-
-  const auto next_version = m_version.fetch_add(1, std::memory_order_release) + 1ULL;
-  publish_snapshot_locked(next_version);
   return true;
 }
 
 auto VisibilityService::in_bounds(int grid_x, int grid_z) const -> bool {
   return grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height;
-}
-
-auto VisibilityService::index(int grid_x, int grid_z) const -> int {
-  return grid_z * m_width + grid_x;
 }
 
 auto VisibilityService::world_to_grid(float world_coord, float half) const -> int {
@@ -565,21 +443,24 @@ void VisibilityService::reset_worker_state() {
   m_pending_payload.reset();
   m_completed_result.reset();
   m_generation.store(0, std::memory_order_release);
+  m_last_sources.clear();
+  reset_throttle();
 }
 
-void VisibilityService::publish_snapshot_locked(std::uint64_t version) {
+void VisibilityService::publish_snapshot_locked(std::vector<std::uint8_t> cells) {
+  const auto previous = snapshot_ptr();
   auto snapshot = std::make_shared<Snapshot>();
-  snapshot->version = version;
+  snapshot->version = previous != nullptr ? previous->version + 1ULL : 1ULL;
   snapshot->initialized = m_initialized;
   snapshot->width = m_width;
   snapshot->height = m_height;
   snapshot->tile_size = m_tile_size;
   snapshot->half_width = m_half_width;
   snapshot->half_height = m_half_height;
-  snapshot->cells = m_cells;
-  auto published_snapshot = std::shared_ptr<const Snapshot>(std::move(snapshot));
-  std::atomic_store_explicit(
-      &m_published_snapshot, std::move(published_snapshot), std::memory_order_release);
+  snapshot->cells = std::move(cells);
+  std::atomic_store_explicit(&m_published_snapshot,
+                             std::shared_ptr<const Snapshot>(std::move(snapshot)),
+                             std::memory_order_release);
 }
 
 } // namespace Game::Map

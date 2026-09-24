@@ -107,7 +107,9 @@ void ThreatField::visit(float world_x,
   }
   if (!m_indexed) {
     for (const auto& source : m_sources) {
-      visitor(source);
+      if (visitor(source)) {
+        return;
+      }
     }
     return;
   }
@@ -133,7 +135,9 @@ void ThreatField::visit(float world_x,
     for (int cell_x = min_cell_x; cell_x <= max_cell_x; ++cell_x) {
       const auto& cell = m_cells[cell_index(cell_x, cell_z)];
       for (std::uint32_t offset = 0U; offset < cell.count; ++offset) {
-        visitor(m_sources[m_order[cell.first + offset]]);
+        if (visitor(m_sources[m_order[cell.first + offset]])) {
+          return;
+        }
       }
     }
   }
@@ -146,14 +150,11 @@ auto ThreatField::nearest(float world_x,
   ThreatQuery result;
   float best_sq = radius * radius;
   visit(world_x, world_z, radius, [&](const ThreatSource& source) {
-    if (civilians_only && !source.civilian) {
-      return;
-    }
     float const dx = source.x - world_x;
     float const dz = source.z - world_z;
     float const distance_sq = (dx * dx) + (dz * dz);
-    if (distance_sq > best_sq) {
-      return;
+    if ((civilians_only && !source.civilian) || distance_sq > best_sq) {
+      return false;
     }
     best_sq = distance_sq;
     result.found = true;
@@ -162,6 +163,7 @@ auto ThreatField::nearest(float world_x,
     result.distance = std::sqrt(distance_sq);
     result.strength = source.strength;
     result.civilian = source.civilian;
+    return false;
   });
   return result;
 }
@@ -174,12 +176,23 @@ auto ThreatField::strength_within(float world_x,
   visit(world_x, world_z, radius, [&](const ThreatSource& source) {
     float const dx = source.x - world_x;
     float const dz = source.z - world_z;
-    if ((dx * dx) + (dz * dz) > radius_sq) {
-      return;
+    if ((dx * dx) + (dz * dz) <= radius_sq) {
+      total += source.strength;
     }
-    total += source.strength;
+    return false;
   });
   return total;
+}
+
+auto ThreatField::any_within(float world_x, float world_z, float radius) const -> bool {
+  bool found = false;
+  visit(world_x, world_z, radius, [&](const ThreatSource& source) {
+    float const dx = source.x - world_x;
+    float const dz = source.z - world_z;
+    found = (dx * dx) + (dz * dz) <= radius * radius;
+    return found;
+  });
+  return found;
 }
 
 } // namespace Game::Wildlife

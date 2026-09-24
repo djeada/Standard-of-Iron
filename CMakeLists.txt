@@ -1154,3 +1154,6 @@ add_custom_target(
 # Optionally make validation run as part of the build
 # Uncomment the following line to make build fail on invalid content:
 # add_dependencies(standard_of_iron validate-content)
+
+include(cmake/PrecompiledHeaders.cmake)
+soi_precompile_common_headers()

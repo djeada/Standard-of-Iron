@@ -718,8 +718,7 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
   auto& cache = rigged_cache_for(renderer);
 
   const auto asset_key = rigged_asset_key(handle, lod, blob.species_id());
-  const auto* entry =
-      cache.require_rigged_asset(asset_key, describe_rigged_asset(handle, lod));
+  const auto* entry = cache.require_rigged_asset(asset_key);
   if (entry == nullptr || entry->mesh == nullptr || entry->mesh->index_count() == 0U) {
     report_submit_cache_miss("rigged",
                              handle,

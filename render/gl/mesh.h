@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "buffer.h"
@@ -31,12 +32,14 @@ public:
 
   void draw();
 
-  void draw_instanced(std::size_t instance_count);
-
   auto bind_vao() -> bool { return prepare_draw("Mesh::bind_vao"); }
   void unbind_vao();
 
-  void draw_instanced_raw(std::size_t instance_count);
+  void draw_bound(std::size_t instance_count = 1);
+
+  [[nodiscard]] auto claim_instance_layout() noexcept -> bool {
+    return !std::exchange(m_instance_layout_ready, true);
+  }
 
   [[nodiscard]] auto get_vertices() const -> const std::vector<Vertex>& {
     return m_vertices;
@@ -82,6 +85,7 @@ private:
   std::vector<unsigned int> m_indices;
   QVector3D m_bounds_center;
   float m_bounds_radius = 0.0F;
+  bool m_instance_layout_ready = false;
 
   std::unique_ptr<VertexArray> m_vao;
   std::unique_ptr<Buffer> m_vbo;

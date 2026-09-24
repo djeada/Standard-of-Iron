@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <numbers>
+#include <tuple>
 #include <vector>
 
 #include "../formation/army_formation_registry.h"
@@ -494,78 +495,38 @@ void MovementSystem::repath_after_obstruction_release(
   };
 
   std::vector<RepathCandidate> candidates;
-  candidates.reserve(movers.size());
-
   for (auto* entity : movers) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
-
     auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr || unit->health <= 0) {
-      continue;
-    }
-
-    auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-    if (movement == nullptr || !movement->get_has_target()) {
-      continue;
-    }
-
-    RepathCandidate candidate;
-    candidate.entity_id = entity->get_id();
-    candidate.goal =
-        movement->get_has_requested_goal()
-            ? QVector3D(movement->get_requested_goal_x(),
-                        0.0F,
-                        movement->get_requested_goal_z())
-            : QVector3D(movement->get_goal_x(), 0.0F, movement->get_goal_y());
-
+    auto const* movement = entity->get_component<Engine::Core::MovementComponent>();
     auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (release.located && transform != nullptr) {
-      float const dx = transform->position.x - release.center.x();
-      float const dz = transform->position.z - release.center.z();
-      candidate.distance_to_release_sq = (dx * dx) + (dz * dz);
+    if (unit == nullptr || unit->health <= 0 || movement == nullptr ||
+        transform == nullptr || !movement->get_has_target() ||
+        !movement->get_order_fell_short()) {
+      continue;
     }
-    candidates.push_back(candidate);
+    float const dx = transform->position.x - release.center.x();
+    float const dz = transform->position.z - release.center.z();
+    candidates.push_back(
+        {.entity_id = entity->get_id(),
+         .goal = QVector3D(
+             movement->get_requested_goal_x(), 0.0F, movement->get_requested_goal_z()),
+         .distance_to_release_sq = release.located ? (dx * dx) + (dz * dz) : 0.0F});
   }
 
-  if (release.located && candidates.size() > k_path_requests_per_tick) {
-    std::partial_sort(candidates.begin(),
-                      candidates.begin() +
-                          static_cast<std::ptrdiff_t>(k_path_requests_per_tick),
-                      candidates.end(),
-                      [](const RepathCandidate& lhs, const RepathCandidate& rhs) {
-                        return lhs.distance_to_release_sq < rhs.distance_to_release_sq;
-                      });
-  }
-
-  std::uint64_t const navigation_revision =
-      pathfinder != nullptr ? pathfinder->navigation_revision() : 0U;
-  std::size_t repathed_now = 0;
-
-  for (auto const& candidate : candidates) {
-    auto* entity = world.get_entity(candidate.entity_id);
-    if (entity == nullptr) {
-      continue;
-    }
-    auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-    if (movement == nullptr) {
-      continue;
-    }
-
-    if (repathed_now < k_path_requests_per_tick) {
-      if (!retarget_unit(world, candidate.entity_id, candidate.goal)) {
-        continue;
-      }
-      ++repathed_now;
-    } else if (!enqueue_pending_path_request(candidate.entity_id,
-                                             candidate.goal,
-                                             movement->get_precise_arrival(),
-                                             navigation_revision,
-                                             movement->get_order_sequence())) {
-      continue;
-    }
+  std::size_t const repaths = std::min(candidates.size(), k_path_requests_per_tick);
+  std::partial_sort(candidates.begin(),
+                    candidates.begin() + static_cast<std::ptrdiff_t>(repaths),
+                    candidates.end(),
+                    [](const RepathCandidate& lhs, const RepathCandidate& rhs) {
+                      return std::tie(lhs.distance_to_release_sq, lhs.entity_id) <
+                             std::tie(rhs.distance_to_release_sq, rhs.entity_id);
+                    });
+  for (std::size_t index = 0; index < repaths; ++index) {
+    retarget_unit(world, candidates[index].entity_id, candidates[index].goal);
   }
 }
 

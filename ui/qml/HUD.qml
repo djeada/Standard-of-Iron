@@ -46,6 +46,7 @@ Item {
         return Math.max(Design.Metrics.space8, Math.min(preferred, latest));
     }
     property int selection_tick: 0
+    property bool has_production_selection: false
     property bool has_movable_units: false
     property bool commander_rpg_mode: typeof game !== 'undefined' && game.commander.mode_state === "active"
     property var commander_status: ({})
@@ -121,6 +122,7 @@ Item {
     Connections {
         function onSelected_units_changed() {
             selection_tick += 1;
+            has_production_selection = typeof game !== 'undefined' && game.production ? (game.production.selected_building_id() !== 0 || game.production.has_selected_type("builder")) : false;
             has_movable_units = typeof game !== 'undefined' && game.orders.has_commandable_selection ? game.orders.has_commandable_selection() : false;
             refresh_command_mode();
             Core.UiHints.on_selection_changed();
@@ -136,7 +138,8 @@ Item {
         repeat: true
         running: true
         onTriggered: {
-            selection_tick += 1;
+            if (has_production_selection)
+                selection_tick += 1;
             refresh_command_mode();
         }
     }

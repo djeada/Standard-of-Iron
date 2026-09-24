@@ -25,6 +25,7 @@ constexpr int k_full_circle_degrees = 360;
 constexpr int k_neutral_fill_alpha = 245;
 constexpr float k_ink_shadow_offset = 0.9F;
 constexpr int k_minor_ink_blend = 55;
+constexpr float k_troop_pen_width = 1.1F;
 
 constexpr auto by_owner = [](const auto& lhs, const auto& rhs) -> bool {
   return lhs.owner_id < rhs.owner_id;
@@ -38,6 +39,31 @@ auto blend_to_ink(std::uint8_t channel, std::uint8_t ink) -> int {
   return (static_cast<int>(channel) * (100 - k_minor_ink_blend) +
           static_cast<int>(ink) * k_minor_ink_blend) /
          100;
+}
+
+auto dot_sprite_half(float radius) -> int {
+  return static_cast<int>(std::ceil(radius + k_troop_pen_width));
+}
+
+void render_dot_sprite(QImage& sprite,
+                       float radius,
+                       const QColor& fill,
+                       const QPen& pen) {
+  const int half = dot_sprite_half(radius);
+  sprite = QImage(2 * half + 1, 2 * half + 1, QImage::Format_ARGB32_Premultiplied);
+  sprite.fill(Qt::transparent);
+  QPainter painter(&sprite);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+  painter.setBrush(fill);
+  painter.setPen(pen);
+  painter.drawEllipse(QPointF(half + 0.5, half + 0.5), radius, radius);
+}
+
+void blit_dot_sprite(QPainter& painter, const QImage& sprite, float px, float py) {
+  const int half = sprite.width() / 2;
+  painter.drawImage(QPoint(static_cast<int>(std::floor(px)) - half,
+                           static_cast<int>(std::floor(py)) - half),
+                    sprite);
 }
 
 } // namespace
@@ -55,7 +81,7 @@ void UnitLayer::init(
   m_offset_x = world_width * 0.5F;
   m_offset_y = world_height * 0.5F;
 
-  m_image = QImage(width, height, QImage::Format_ARGB32);
+  m_image = QImage(width, height, QImage::Format_ARGB32_Premultiplied);
   m_image.fill(Qt::transparent);
   m_content_rect = QRect();
 }
@@ -194,52 +220,42 @@ void UnitLayer::update(const std::vector<UnitMarker>& markers,
 
 void UnitLayer::draw_minor_structures(QPainter& painter,
                                       const PlayerColorFn& player_color_fn) {
-  if (m_minor_structures.empty()) {
-    return;
-  }
   std::sort(m_minor_structures.begin(), m_minor_structures.end(), by_owner);
 
-  const qreal radius = static_cast<qreal>(m_unit_radius * k_minor_radius_scale);
-  painter.setPen(Qt::NoPen);
-
-  int current_owner = m_minor_structures.front().owner_id - 1;
+  QImage sprite;
+  int current_owner = 0;
   for (const auto& placed : m_minor_structures) {
-    if (placed.owner_id != current_owner) {
+    if (sprite.isNull() || placed.owner_id != current_owner) {
       current_owner = placed.owner_id;
       const auto colors = get_color_for_owner(current_owner, player_color_fn);
-      painter.setBrush(QColor(blend_to_ink(colors.r, TeamColors::INK_R),
-                              blend_to_ink(colors.g, TeamColors::INK_G),
-                              blend_to_ink(colors.b, TeamColors::INK_B),
-                              k_minor_alpha));
+      render_dot_sprite(sprite,
+                        m_unit_radius * k_minor_radius_scale,
+                        QColor(blend_to_ink(colors.r, TeamColors::INK_R),
+                               blend_to_ink(colors.g, TeamColors::INK_G),
+                               blend_to_ink(colors.b, TeamColors::INK_B),
+                               k_minor_alpha),
+                        Qt::NoPen);
     }
-    painter.drawEllipse(
-        QPointF(static_cast<qreal>(placed.px), static_cast<qreal>(placed.py)),
-        radius,
-        radius);
+    blit_dot_sprite(painter, sprite, placed.px, placed.py);
   }
 }
 
 void UnitLayer::draw_troops(QPainter& painter, const PlayerColorFn& player_color_fn) {
-  if (m_troops.empty()) {
-    return;
-  }
   std::sort(m_troops.begin(), m_troops.end(), by_owner);
 
-  const qreal radius = static_cast<qreal>(m_unit_radius);
-
-  int current_owner = m_troops.front().owner_id - 1;
+  QImage sprite;
+  int current_owner = 0;
   for (const auto& placed : m_troops) {
-    if (placed.owner_id != current_owner) {
+    if (sprite.isNull() || placed.owner_id != current_owner) {
       current_owner = placed.owner_id;
       const auto colors = get_color_for_owner(current_owner, player_color_fn);
-      painter.setBrush(QColor(colors.r, colors.g, colors.b));
-      painter.setPen(
-          QPen(QColor(colors.border_r, colors.border_g, colors.border_b), 1.1));
+      render_dot_sprite(sprite,
+                        m_unit_radius,
+                        QColor(colors.r, colors.g, colors.b),
+                        QPen(QColor(colors.border_r, colors.border_g, colors.border_b),
+                             k_troop_pen_width));
     }
-    painter.drawEllipse(
-        QPointF(static_cast<qreal>(placed.px), static_cast<qreal>(placed.py)),
-        radius,
-        radius);
+    blit_dot_sprite(painter, sprite, placed.px, placed.py);
   }
 }
 
@@ -304,7 +320,7 @@ void UnitLayer::draw_selected(QPainter& painter, const PlayerColorFn& player_col
       break;
     case MarkerClass::Troop:
       painter.setBrush(fill);
-      painter.setPen(QPen(border, 1.1));
+      painter.setPen(QPen(border, k_troop_pen_width));
       painter.drawEllipse(
           QPointF(static_cast<qreal>(placed.px), static_cast<qreal>(placed.py)),
           static_cast<qreal>(m_unit_radius),

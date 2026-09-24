@@ -10,6 +10,7 @@
 #include "gl/primitives.h"
 #include "material.h"
 #include "primitive_batch.h"
+#include "render_archetype.h"
 
 namespace Render::GL {
 class Mesh;
@@ -55,6 +56,10 @@ public:
                     int material_id = 0) {
     (void)material;
     this->mesh(mesh, model, color, tex, alpha, material_id);
+  }
+
+  virtual void render_instance(const RenderInstance& instance) {
+    submit_render_instance(*this, instance);
   }
 
   virtual void rigged(const RiggedCreatureCmd& cmd) { (void)cmd; }
@@ -149,6 +154,9 @@ public:
             float alpha = 1.0F,
             int material_id = 0) override {
     m_inner.part(mesh, material, model, color, tex, alpha, material_id);
+  }
+  void render_instance(const RenderInstance& instance) override {
+    m_inner.render_instance(instance);
   }
   void rigged(const RiggedCreatureCmd& cmd) override { m_inner.rigged(cmd); }
   void rigged(RiggedCreatureCmd&& cmd) override { m_inner.rigged(std::move(cmd)); }
@@ -577,6 +585,14 @@ public:
     }
   }
 
+  void render_instance(const RenderInstance& instance) override {
+    if (m_fallback != nullptr && instance.default_texture != nullptr) {
+      m_fallback->render_instance(instance);
+      return;
+    }
+    submit_render_instance(*this, instance);
+  }
+
   void cylinder(const QVector3D& start,
                 const QVector3D& end,
                 float radius,
@@ -695,52 +711,6 @@ private:
   ISubmitter* m_fallback = nullptr;
   PrimitiveBatcher* m_batcher = nullptr;
   bool m_enabled = true;
-};
-
-class DamageStateSubmitter : public ForwardingSubmitter {
-public:
-  explicit DamageStateSubmitter(ISubmitter& inner, int damage_material_id)
-      : ForwardingSubmitter(inner)
-      , m_damage_id(damage_material_id) {}
-
-  void mesh(Mesh* mesh,
-            const QMatrix4x4& model,
-            const QVector3D& color,
-            Texture* tex = nullptr,
-            float alpha = 1.0F,
-            int material_id = 0) override {
-    ForwardingSubmitter::mesh(mesh, model, color, tex, alpha, pick(material_id));
-  }
-  void part(Mesh* mesh,
-            Material* material,
-            const QMatrix4x4& model,
-            const QVector3D& color,
-            Texture* tex = nullptr,
-            float alpha = 1.0F,
-            int material_id = 0) override {
-    ForwardingSubmitter::part(
-        mesh, material, model, color, tex, alpha, pick(material_id));
-  }
-  void banner(Mesh* mesh,
-              const QMatrix4x4& model,
-              const QVector3D& color,
-              const QVector3D& trim_color,
-              Texture* tex = nullptr,
-              float alpha = 1.0F,
-              int material_id = 0) override {
-    ForwardingSubmitter::banner(
-        mesh, model, color, trim_color, tex, alpha, pick(material_id));
-  }
-
-private:
-  [[nodiscard]] auto pick(int incoming_id) const noexcept -> int {
-    if (m_damage_id == 0 || incoming_id < 0 || incoming_id >= 10) {
-      return incoming_id;
-    }
-    return incoming_id + m_damage_id;
-  }
-
-  int m_damage_id;
 };
 
 } // namespace Render::GL

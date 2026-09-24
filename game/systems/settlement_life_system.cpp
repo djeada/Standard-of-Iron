@@ -185,13 +185,13 @@ void collect_settlement_candidates(Engine::Core::World& world,
     if (!is_life_prop(prop.type)) {
       continue;
     }
-    QVector3D const position = terrain.world_prop_world_position(prop);
-    float const dx = position.x() - resident.hearth_x;
-    float const dz = position.z() - resident.hearth_z;
+    auto const [prop_x, prop_z] = terrain.world_prop_world_xz(prop);
+    float const dx = prop_x - resident.hearth_x;
+    float const dz = prop_z - resident.hearth_z;
     if ((dx * dx) + (dz * dz) > radius_sq) {
       continue;
     }
-    out.push_back({Candidate::Kind::Prop, 0, position});
+    out.push_back({Candidate::Kind::Prop, 0, {prop_x, 0.0F, prop_z}});
   }
 }
 
@@ -256,44 +256,36 @@ auto endangers_residents(Game::Units::SpawnType type) -> bool {
          type != Game::Units::SpawnType::Civilian;
 }
 
-void collect_armed_units(Engine::Core::World& world,
-                         std::vector<SettlementLifeSystem::ArmedUnit>& out) {
-  out.clear();
-  for (auto [entity_id, unit, transform] :
-       world.view<Engine::Core::UnitComponent, Engine::Core::TransformComponent>()) {
-    (void)entity_id;
-    if (unit.health <= 0 || !endangers_residents(unit.spawn_type)) {
-      continue;
-    }
-    out.push_back({transform.position.x, transform.position.z, unit.owner_id});
-  }
-}
-
 auto nearest_danger(const Engine::Core::World& world,
-                    const std::vector<SettlementLifeSystem::ArmedUnit>& armed_units,
                     int resident_owner_id,
                     float x,
                     float z,
                     float radius) -> std::optional<QVector3D> {
+  auto const& owners = *Game::Session::services_for(world).owners;
   std::optional<QVector3D> nearest;
   float nearest_distance_sq = radius * radius;
-
-  for (auto const& armed : armed_units) {
-    float const dx = armed.x - x;
-    float const dz = armed.z - z;
-    float const distance_sq = (dx * dx) + (dz * dz);
-    if (distance_sq > nearest_distance_sq) {
-      continue;
-    }
-    if (!Game::Session::services_for(world).owners->are_enemies(resident_owner_id,
-                                                                armed.owner_id)) {
-      continue;
-    }
-    nearest_distance_sq = distance_sq;
-    nearest = QVector3D(armed.x, 0.0F, armed.z);
-  }
-
+  world.spatial_index().for_each_in_radius(
+      x, z, radius, [&](const Engine::Core::WorldSpatialIndex::Entry& entry) {
+        float const dx = entry.x - x;
+        float const dz = entry.z - z;
+        float const distance_sq = (dx * dx) + (dz * dz);
+        auto const* unit = world.try_get<Engine::Core::UnitComponent>(entry.id);
+        if (distance_sq > nearest_distance_sq || unit == nullptr || unit->health <= 0 ||
+            !endangers_residents(unit->spawn_type) ||
+            !owners.are_enemies(resident_owner_id, unit->owner_id)) {
+          return;
+        }
+        nearest_distance_sq = distance_sq;
+        nearest = QVector3D(entry.x, 0.0F, entry.z);
+      });
   return nearest;
+}
+
+void rest_briefly(SettlementResidentComponent& resident) {
+  resident.errand = SettlementErrand::Working;
+  resident.role = SettlementErrandRole::Loiter;
+  resident.work_elapsed = 0.0F;
+  resident.errand_remaining = random_range(resident.rng_state, 1.0F, 3.0F);
 }
 
 void run_from(Engine::Core::World& world,
@@ -402,7 +394,7 @@ void SettlementLifeSystem::update(Engine::Core::World* world, float delta_time) 
   bool const alarm_due = m_alarm_cooldown <= 0.0F;
   if (alarm_due) {
     m_alarm_cooldown = k_alarm_interval;
-    collect_armed_units(*world, m_armed_units);
+    world->spatial_index().refresh(*world);
   }
 
   std::vector<Candidate> candidates;
@@ -444,7 +436,6 @@ void SettlementLifeSystem::update(Engine::Core::World* world, float delta_time) 
 
       if (alarm_due) {
         auto const danger = nearest_danger(*world,
-                                           m_armed_units,
                                            unit->owner_id,
                                            transform->position.x,
                                            transform->position.z,
@@ -481,7 +472,6 @@ void SettlementLifeSystem::update(Engine::Core::World* world, float delta_time) 
       bool const already_fleeing = resident->errand == SettlementErrand::Fleeing;
       auto const danger =
           nearest_danger(*world,
-                         m_armed_units,
                          unit->owner_id,
                          transform->position.x,
                          transform->position.z,
@@ -545,10 +535,9 @@ void SettlementLifeSystem::update(Engine::Core::World* world, float delta_time) 
         resident->errand_remaining = resident->planned_dwell;
         resident->work_elapsed = 0.0F;
         face_focus(*transform, *resident);
-      } else if (resident->errand_remaining <= 0.0F) {
-        pick_new_errand = true;
       } else if (movement->get_state() == Engine::Core::MovementState::Idle) {
-
+        rest_briefly(*resident);
+      } else if (resident->errand_remaining <= 0.0F) {
         pick_new_errand = true;
       }
       break;
@@ -611,10 +600,7 @@ void SettlementLifeSystem::update(Engine::Core::World* world, float delta_time) 
     }
 
     if (!has_choice) {
-      resident->errand = SettlementErrand::Working;
-      resident->role = SettlementErrandRole::Loiter;
-      resident->work_elapsed = 0.0F;
-      resident->errand_remaining = random_range(resident->rng_state, 1.0F, 3.0F);
+      rest_briefly(*resident);
       continue;
     }
 

@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <tuple>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -14,6 +15,8 @@
 #include "render/frame_budget.h"
 
 namespace Render::GL {
+
+class StaticBuildingBatch;
 
 enum class PreparedBatchKind : std::uint8_t {
   Single,
@@ -31,7 +34,6 @@ struct PreparedBatch {
   std::size_t count = 0;
   DrawCmdType type = DrawCmdType::Grid;
   PreparedBatchKind kind = PreparedBatchKind::Single;
-  std::uint64_t sort_key = 0;
 
   [[nodiscard]] auto end() const noexcept -> std::size_t { return start + count; }
 
@@ -45,6 +47,13 @@ public:
   void clear();
 
   void submit_local_light(const LocalLight& light);
+
+  void set_static_batch(const StaticBuildingBatch* batch) noexcept {
+    m_static_batch = batch;
+  }
+  [[nodiscard]] auto static_batch() const noexcept -> const StaticBuildingBatch* {
+    return m_static_batch;
+  }
 
   [[nodiscard]] auto local_lights() const noexcept -> const std::vector<LocalLight>& {
     return m_local_lights;
@@ -84,7 +93,7 @@ public:
   [[nodiscard]] auto size() const -> std::size_t { return m_items.size(); }
 
   [[nodiscard]] auto get_sorted(std::size_t i) const -> const DrawCmd& {
-    return m_items[m_sort_indices[i]];
+    return m_items[m_sort_entries[i].index];
   }
 
   [[nodiscard]] auto items() const -> const std::vector<DrawCmd>& { return m_items; }
@@ -94,7 +103,7 @@ public:
   }
 
   [[nodiscard]] auto sort_key_for_sorted(std::size_t i) const -> std::uint64_t {
-    return m_sort_keys[m_sort_indices[i]];
+    return m_sort_entries[i].key;
   }
 
   void sort_for_batching();
@@ -120,6 +129,17 @@ private:
              (static_cast<std::uint64_t>(mesh) << 16) |
              (static_cast<std::uint64_t>(texture & 0x0FFFU) << 4) |
              static_cast<std::uint64_t>(skeleton & 0x0FU);
+    }
+  };
+
+  struct SortEntry {
+    std::uint64_t key = 0;
+    std::array<std::uintptr_t, 4> resources{};
+    std::uint32_t index = 0;
+
+    [[nodiscard]] auto operator<(const SortEntry& other) const noexcept -> bool {
+      return std::tie(key, resources, index) <
+             std::tie(other.key, other.resources, other.index);
     }
   };
 
@@ -160,7 +180,7 @@ private:
     ModeIndicator = 34
   };
 
-  void sort_full_keys(std::size_t start, std::size_t end);
+  void sort_entries(std::size_t start, std::size_t end);
 
   [[nodiscard]] auto sort_bucketed_ranges(std::size_t count) -> bool;
 
@@ -173,7 +193,8 @@ private:
 
   void record_submission_bucket(const DrawCmd& cmd);
 
-  [[nodiscard]] auto compute_sort_key(const DrawCmd& cmd) -> uint64_t;
+  [[nodiscard]] auto compute_sort_entry(const DrawCmd& cmd,
+                                        std::uint32_t index) const -> SortEntry;
 
   void build_prepared_batches();
 
@@ -211,12 +232,8 @@ private:
     return reinterpret_cast<std::uintptr_t>(ptr);
   }
 
-  [[nodiscard]] static auto
-  full_resource_identity(const DrawCmd& cmd) noexcept -> std::array<std::uintptr_t, 4>;
-
   std::vector<DrawCmd> m_items;
-  std::vector<uint32_t> m_sort_indices;
-  std::vector<uint64_t> m_sort_keys;
+  std::vector<SortEntry> m_sort_entries;
   std::vector<PreparedBatch> m_prepared_batches;
   std::vector<SubmissionBucketSpan> m_submission_bucket_spans;
   bool m_submission_bucket_ordered = true;
@@ -226,6 +243,7 @@ private:
   std::size_t m_local_light_high_water = 0;
   std::vector<LocalLight> m_local_lights;
   TypeCounts m_type_counts{};
+  const StaticBuildingBatch* m_static_batch = nullptr;
 };
 
 } // namespace Render::GL

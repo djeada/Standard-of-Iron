@@ -34,6 +34,8 @@ struct CandidateRecord {
   bool is_building{false};
 };
 
+inline constexpr float k_combat_query_stale_margin = 1.0F;
+
 struct CombatQueryContext {
   CombatQueryContext();
 

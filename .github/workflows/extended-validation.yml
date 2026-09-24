@@ -28,6 +28,7 @@ jobs:
     timeout-minutes: 60
     env:
       CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      CCACHE_SLOPPINESS: pch_defines,time_macros,include_file_mtime,include_file_ctime
       CMAKE_C_COMPILER_LAUNCHER: ccache
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -91,6 +92,7 @@ jobs:
     timeout-minutes: 45
     env:
       CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      CCACHE_SLOPPINESS: pch_defines,time_macros,include_file_mtime,include_file_ctime
       CMAKE_C_COMPILER_LAUNCHER: ccache
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -176,6 +178,7 @@ jobs:
             timeout: 180
     env:
       CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      CCACHE_SLOPPINESS: pch_defines,time_macros,include_file_mtime,include_file_ctime
       CMAKE_C_COMPILER_LAUNCHER: ccache
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
