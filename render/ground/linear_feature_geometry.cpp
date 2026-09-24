@@ -11,6 +11,7 @@
 
 #include "game/map/river_ribbon.h"
 #include "game/map/scatter/ground_utils.h"
+#include "game/map/terrain_surface.h"
 #include "render/gl/render_constants.h"
 
 namespace {
@@ -32,25 +33,8 @@ auto sample_height_clamped(const Game::Map::TerrainHeightMap& height_map,
   float gx = (world_x / tile_size) + half_width;
   float gz = (world_z / tile_size) + half_height;
 
-  gx = std::clamp(gx, 0.0F, static_cast<float>(grid_width - 1));
-  gz = std::clamp(gz, 0.0F, static_cast<float>(grid_height - 1));
-
-  int const x0 = static_cast<int>(std::floor(gx));
-  int const z0 = static_cast<int>(std::floor(gz));
-  int const x1 = std::min(x0 + 1, grid_width - 1);
-  int const z1 = std::min(z0 + 1, grid_height - 1);
-
-  float const tx = gx - static_cast<float>(x0);
-  float const tz = gz - static_cast<float>(z0);
-
-  float const h00 = heights[static_cast<size_t>(z0 * grid_width + x0)];
-  float const h10 = heights[static_cast<size_t>(z0 * grid_width + x1)];
-  float const h01 = heights[static_cast<size_t>(z1 * grid_width + x0)];
-  float const h11 = heights[static_cast<size_t>(z1 * grid_width + x1)];
-
-  float const h0 = h00 * (1.0F - tx) + h10 * tx;
-  float const h1 = h01 * (1.0F - tx) + h11 * tx;
-  return h0 * (1.0F - tz) + h1 * tz;
+  return Game::Map::sample_triangulated_height(
+      heights.data(), grid_width, grid_height, gx, gz);
 }
 
 auto sample_water_surface_height_clamped(const Game::Map::TerrainHeightMap& height_map,

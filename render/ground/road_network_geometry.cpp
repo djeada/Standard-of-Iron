@@ -14,6 +14,8 @@
 #include <utility>
 
 #include "game/map/scatter/ground_utils.h"
+#include "game/map/terrain.h"
+#include "game/map/terrain_surface.h"
 
 namespace Render::Ground {
 
@@ -48,33 +50,22 @@ constexpr std::size_t k_lateral_samples = 7;
     return 0.0F;
   }
 
-  float gx = (world_x / tile_size) + (static_cast<float>(grid_width) * 0.5F - 0.5F);
-  float gz = (world_z / tile_size) + (static_cast<float>(grid_height) * 0.5F - 0.5F);
-  gx = std::clamp(gx, 0.0F, static_cast<float>(grid_width - 1));
-  gz = std::clamp(gz, 0.0F, static_cast<float>(grid_height - 1));
-
-  const int x0 = static_cast<int>(std::floor(gx));
-  const int z0 = static_cast<int>(std::floor(gz));
-  const int x1 = std::min(x0 + 1, grid_width - 1);
-  const int z1 = std::min(z0 + 1, grid_height - 1);
-  const float tx = gx - static_cast<float>(x0);
-  const float tz = gz - static_cast<float>(z0);
-
-  const float h00 = heights[static_cast<std::size_t>(z0 * grid_width + x0)];
-  const float h10 = heights[static_cast<std::size_t>(z0 * grid_width + x1)];
-  const float h01 = heights[static_cast<std::size_t>(z1 * grid_width + x0)];
-  const float h11 = heights[static_cast<std::size_t>(z1 * grid_width + x1)];
-  return (h00 * (1.0F - tx) + h10 * tx) * (1.0F - tz) +
-         (h01 * (1.0F - tx) + h11 * tx) * tz;
+  const float gx =
+      (world_x / tile_size) + (static_cast<float>(grid_width) * 0.5F - 0.5F);
+  const float gz =
+      (world_z / tile_size) + (static_cast<float>(grid_height) * 0.5F - 0.5F);
+  return Game::Map::sample_triangulated_height(
+      heights.data(), grid_width, grid_height, gx, gz);
 }
 
 [[nodiscard]] auto sample_surface_height(const Game::Map::TerrainHeightMap& height_map,
                                          const QVector2D& position,
                                          float footprint) -> float {
   const float tile_size = std::max(height_map.get_tile_size(), 1.0e-4F);
-  const float radius = std::max(footprint, tile_size * 0.35F);
+  const float radius =
+      std::max(footprint, tile_size * Game::Map::k_road_surface_envelope_tiles);
   float highest = sample_height_clamped(height_map, position.x(), position.y());
-  constexpr int k_taps = 4;
+  constexpr int k_taps = Game::Map::k_road_surface_envelope_taps;
   for (int index = 0; index < k_taps; ++index) {
     const float angle =
         k_two_pi * static_cast<float>(index) / static_cast<float>(k_taps);

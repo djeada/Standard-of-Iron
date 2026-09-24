@@ -14,6 +14,7 @@
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "render/scene_renderer.h"
+#include "render/terrain_contact.h"
 #include "scatter_runtime.h"
 
 namespace {
@@ -96,9 +97,19 @@ void IronOreRenderer::generate_instances(
     float const iron_mix = remap(rand_01(state), 0.32F, 0.54F);
     color = color * (1.0F - iron_mix) + iron_tint * iron_mix;
 
+    // The outcrop is a low dome; seat it so its downhill rim meets the slope.
+    float const ground_radius = Game::Map::world_prop_ground_radius(
+        Game::Map::WorldProp::Type::IronOre, prop.scale);
+    float const bedded_y = Render::bedded_prop_world_y(terrain_service,
+                                                       resolved.x(),
+                                                       resolved.z(),
+                                                       resolved.y(),
+                                                       ground_radius * 0.8F,
+                                                       ground_radius * 0.6F);
+
     PropInstanceGpu inst;
     inst.pos_scale = QVector4D(resolved.x(),
-                               resolved.y(),
+                               bedded_y,
                                resolved.z(),
                                prop.scale * Game::Map::world_prop_render_scale(
                                                 Game::Map::WorldProp::Type::IronOre));

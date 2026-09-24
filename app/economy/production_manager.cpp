@@ -1199,6 +1199,7 @@ void ProductionManager::append_preview_entity(const QString& item_type,
   preview->owner_id = pending_construction_owner_id();
   preview->nation_id = pending_construction_nation_id();
   preview->valid = valid;
+  preview->product_type = item_type.toStdString();
 
   m_preview_entity_ids.push_back(entity->get_id());
 }
@@ -1268,6 +1269,7 @@ void ProductionManager::rebuild_wall_preview_entities() {
     preview->grid_x = segment.grid_x;
     preview->grid_z = segment.grid_z;
     preview->valid = segment.valid;
+    preview->product_type = gate_mode ? "wall_gate" : "wall_segment";
 
     m_preview_entity_ids.push_back(entity->get_id());
   }

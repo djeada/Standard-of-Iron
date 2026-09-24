@@ -42,11 +42,14 @@
 #include "render/profiling/combat_animation_diagnostics.h"
 #include "render/profiling/frame_profile.h"
 #include "render/submission_visibility.h"
+#include "render/terrain_contact.h"
 #include "scene/camera.h"
 
 namespace Render::Humanoid {
 
 namespace {
+
+constexpr float k_corpse_max_ground_tilt_degrees = 24.0F;
 
 struct CasualtyLaunch {
   float x{0.0F};
@@ -1726,6 +1729,17 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     RCP::set_model_world_y(inst_ctx.model,
                            RCP::model_world_origin(inst_ctx.model).y() +
                                casualty_offset_y + corpse_sink);
+  }
+  if (soldier_is_casualty_body && !ctx.skip_ground_offset) {
+    // A fallen body lies along the slope. Upright, it would bury its head
+    // uphill and hang in the air downhill; the tilt eases in as it goes down.
+    float const fall = soldier_render_anim.is_dead
+                           ? 1.0F
+                           : std::clamp(soldier_render_anim.death_progress, 0.0F, 1.0F);
+    Render::tilt_model_to_ground(inst_ctx.model,
+                                 ctx.world_view.terrain_or_empty(),
+                                 k_corpse_max_ground_tilt_degrees,
+                                 fall * fall * (3.0F - 2.0F * fall));
   }
 
   bool const combat_root_eligible = !soldier_is_casualty_body && !is_mounted_spawn &&

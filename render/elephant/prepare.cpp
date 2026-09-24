@@ -25,11 +25,14 @@
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/math/creature_math_utils.h"
 #include "render/submitter.h"
+#include "render/terrain_contact.h"
 #include "scene/camera.h"
 
 namespace Render::Elephant {
 
 namespace {
+
+constexpr float k_elephant_max_ground_pitch_degrees = 16.0F;
 
 auto elephant_state_for_motion(const Render::GL::ElephantMotionSample& motion,
                                const Render::GL::AnimationInputs& presentation) noexcept
@@ -178,6 +181,14 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
   Render::GL::DrawContext elephant_ctx = ctx;
   elephant_ctx.model = ctx.model;
   elephant_ctx.model.translate(howdah.ground_offset);
+  const float elephant_surface_world_y =
+      Render::Creature::Pipeline::ground_model_to_terrain(
+          ctx.world_view.terrain_or_empty(), elephant_ctx.model);
+  Render::pitch_model_to_ground(elephant_ctx.model,
+                                ctx.world_view.terrain_or_empty(),
+                                k_elephant_max_ground_pitch_degrees);
+  // Sink after grounding: grounding rewrites the origin height, so a sink
+  // applied first would be erased and the corpse would never settle.
   if (anim.death_sink_progress > 0.0F) {
     QMatrix4x4 sink;
     sink.translate(0.0F,
@@ -187,9 +198,6 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
                    0.0F);
     elephant_ctx.model = sink * elephant_ctx.model;
   }
-  const float elephant_surface_world_y =
-      Render::Creature::Pipeline::ground_model_to_terrain(
-          ctx.world_view.terrain_or_empty(), elephant_ctx.model);
 
   namespace RCP = Render::Creature::Pipeline;
   namespace RCQ = Render::Creature::Quadruped;
