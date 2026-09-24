@@ -71,6 +71,13 @@ auto action_names() -> QStringList {
           QStringLiteral("commander_dodge"),
           QStringLiteral("commander_look"),
           QStringLiteral("commander_lock_on"),
+          QStringLiteral("commander_guard_down"),
+          QStringLiteral("commander_guard_up"),
+          QStringLiteral("commander_jump"),
+          QStringLiteral("commander_second_wind"),
+          QStringLiteral("commander_toggle_camera"),
+          QStringLiteral("commander_toggle_weapon"),
+          QStringLiteral("commander_rally"),
 
           QStringLiteral("select_id"),
           QStringLiteral("select_at_world"),

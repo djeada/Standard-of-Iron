@@ -27,6 +27,7 @@ public:
 
   void set_message(const QVariantMap& message);
   void clear();
+  void set_outcome_line_pending(bool pending);
 
   [[nodiscard]] auto active() const -> bool;
   [[nodiscard]] auto message_id() const -> QString;
@@ -50,6 +51,7 @@ signals:
 
 private:
   QVariantMap m_message;
+  bool m_outcome_line_pending = false;
 };
 
 } // namespace App::ViewModels

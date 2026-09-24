@@ -234,7 +234,8 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        height: Design.Metrics.bottomBarHeight(parent.height, hud.commander_rpg_mode)
+        height: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked ? 0 : Design.Metrics.bottomBarHeight(parent.height, hud.commander_rpg_mode)
+        visible: height > 0
         clip: true
 
         Loader {

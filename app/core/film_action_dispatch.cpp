@@ -380,6 +380,20 @@ void apply_benchmark_action(GameEngine* engine,
     }
   } else if (commander != nullptr && name == QLatin1String("commander_lock_on")) {
     commander->cycle_lock_on();
+  } else if (commander != nullptr && name == QLatin1String("commander_guard_down")) {
+    commander->secondary_action_down();
+  } else if (commander != nullptr && name == QLatin1String("commander_guard_up")) {
+    commander->secondary_action_up();
+  } else if (commander != nullptr && name == QLatin1String("commander_jump")) {
+    commander->jump();
+  } else if (commander != nullptr && name == QLatin1String("commander_second_wind")) {
+    commander->second_wind();
+  } else if (commander != nullptr && name == QLatin1String("commander_toggle_camera")) {
+    commander->toggle_camera_mode();
+  } else if (commander != nullptr && name == QLatin1String("commander_toggle_weapon")) {
+    commander->toggle_weapon_stance();
+  } else if (commander != nullptr && name == QLatin1String("commander_rally")) {
+    commander->trigger_rally();
   }
 }
 

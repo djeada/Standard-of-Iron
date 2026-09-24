@@ -631,6 +631,21 @@ auto CommanderMessageDirector::update(float delta_time) -> bool {
   return changed;
 }
 
+auto CommanderMessageDirector::outcome_line_pending() const -> bool {
+  if (std::any_of(m_pending.begin(), m_pending.end(), [this](const Pending& pending) {
+        return m_rules[pending.rule_index].cue.holds_outcome;
+      })) {
+    return true;
+  }
+  const std::lock_guard<std::mutex> lock(m_inbox_mutex);
+  return std::any_of(m_inbox.begin(), m_inbox.end(), [this](const auto& fact) {
+    return commander_message_trigger_is_outcome(fact.trigger) &&
+           std::any_of(m_rules.begin(), m_rules.end(), [this, &fact](const Rule& rule) {
+             return rule_matches(rule, fact);
+           });
+  });
+}
+
 void CommanderMessageDirector::end_active() {
   m_active.reset();
   m_active_rule.reset();

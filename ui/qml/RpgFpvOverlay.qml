@@ -1,5 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 2.15
+import StandardOfIron 1.0
+import StandardOfIron.Core 1.0
 import StandardOfIron.Design 1.0 as Design
 
 Item {
@@ -77,6 +79,12 @@ Item {
             return fallback;
         }
         return status[key];
+    }
+
+    function key_for(actionId) {
+        var bindings = InputBindings.actions;
+        var label = InputBindings.display_shortcut_for(actionId);
+        return label && label.length > 0 ? label : "?";
     }
 
     function cooldown_ratio(remainingKey, totalKey) {
@@ -652,6 +660,51 @@ Item {
         }
     }
 
+    Row {
+        id: comboIndicator
+        objectName: "rpgComboIndicator"
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.verticalCenter
+        anchors.topMargin: root.scaled(44)
+        spacing: root.scaled(5)
+        opacity: root.comboStep > 0 ? 0.95 : 0.0
+        visible: opacity > 0.0
+
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: Design.Motion.normal
+            }
+        }
+
+        Repeater {
+            model: 4
+
+            delegate: Rectangle {
+                required property int index
+
+                readonly property bool lit: index < root.comboStep
+                readonly property bool isFinisher: index === 3
+
+                width: root.scaled(isFinisher ? 9 : 7)
+                height: width
+                anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+                rotation: 45
+                radius: 1
+                color: lit ? (isFinisher ? root.bronzeBright : root.bronze) : root.shade(root.bone, 0.22)
+                border.width: 1
+                border.color: root.shade(root.iron, 0.6)
+                opacity: lit && isFinisher ? (0.6 + 0.4 * root.slowPulse) : 1.0
+
+                Behavior on color  {
+                    ColorAnimation {
+                        duration: Design.Motion.fast
+                    }
+                }
+            }
+        }
+    }
+
     Canvas {
         id: drawRing
         objectName: "rpgBowDrawRing"
@@ -752,6 +805,165 @@ Item {
     }
 
     Item {
+        id: modeToast
+        objectName: "rpgModeToast"
+
+        property string text: ""
+
+        function show(message) {
+            modeToast.text = message;
+            modeToastFade.restart();
+        }
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.verticalCenter
+        anchors.topMargin: root.scaled(74)
+        width: toastLabel.implicitWidth + root.scaled(28)
+        height: toastLabel.implicitHeight + root.scaled(10)
+        opacity: 0.0
+        visible: opacity > 0.0
+
+        Rectangle {
+            anchors.fill: parent
+            radius: Design.Metrics.radiusSmall
+            color: root.shade(root.iron, 0.62)
+            border.width: Design.Metrics.borderThin
+            border.color: root.shade(root.bronze, 0.55)
+        }
+
+        Text {
+            id: toastLabel
+            anchors.centerIn: parent
+            text: modeToast.text
+            color: root.shade(root.bone, 0.95)
+            font.family: Design.Typography.family
+            font.pixelSize: root.fontSize(Design.Typography.caption)
+            font.weight: Design.Typography.bold
+            font.letterSpacing: Design.Typography.trackingWide
+        }
+
+        SequentialAnimation {
+            id: modeToastFade
+
+            NumberAnimation {
+                target: modeToast
+                property: "opacity"
+                to: 1.0
+                duration: Design.Motion.fast
+            }
+            PauseAnimation {
+                duration: 1100
+            }
+            NumberAnimation {
+                target: modeToast
+                property: "opacity"
+                to: 0.0
+                duration: Design.Motion.normal
+            }
+        }
+    }
+
+    Item {
+        id: controlsStrip
+        objectName: "rpgControlsStrip"
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: root.topInset + root.scaled(12)
+        width: controlsFlow.childrenRect.width + root.scaled(24)
+        height: controlsFlow.childrenRect.height + root.scaled(12)
+        opacity: 0.0
+        visible: opacity > 0.0
+
+        readonly property var entries: [[root.key_for("commander.primary_action"), qsTr("Strike")], [root.key_for("commander.heavy_action"), qsTr("Heavy")], [root.key_for("commander.secondary_action"), qsTr("Guard")], [root.key_for("commander.dodge"), qsTr("Dodge")], [root.key_for("commander.cycle_lock_on"), qsTr("Lock on")], [root.key_for("commander.sprint"), qsTr("Sprint")], [root.key_for("commander.toggle_camera_mode"), qsTr("Camera")], [root.key_for("global.toggle_control_mode"), qsTr("Army view")]]
+
+        function reveal() {
+            controlsStripFade.restart();
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: Design.Metrics.radiusMedium
+            color: root.shade(root.iron, 0.55)
+            border.width: Design.Metrics.borderThin
+            border.color: root.shade(root.bronze, 0.4)
+        }
+
+        Flow {
+            id: controlsFlow
+
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.leftMargin: root.scaled(12)
+            anchors.topMargin: root.scaled(6)
+            width: Math.max(root.scaled(120), root.width - root.scaled(56))
+            spacing: root.scaled(14)
+
+            Repeater {
+                id: controlsRepeater
+                model: controlsStrip.entries
+
+                delegate: Row {
+                    required property var modelData
+
+                    spacing: root.scaled(5)
+
+                    Rectangle {
+                        width: Math.max(root.scaled(18), keyLabel.implicitWidth + root.scaled(8))
+                        height: root.scaled(18)
+                        radius: Design.Metrics.radiusSmall
+                        color: root.shade(root.bronze, 0.9)
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Text {
+                            id: keyLabel
+                            anchors.centerIn: parent
+                            text: modelData[0]
+                            color: root.iron
+                            font.family: Design.Typography.family
+                            font.pixelSize: root.fontSize(Design.Typography.caption)
+                            font.weight: Design.Typography.bold
+                        }
+                    }
+
+                    Text {
+                        text: modelData[1]
+                        color: root.shade(root.bone, 0.9)
+                        anchors.verticalCenter: parent.verticalCenter
+                        font.family: Design.Typography.family
+                        font.pixelSize: root.fontSize(Design.Typography.caption)
+                    }
+                }
+            }
+        }
+
+        SequentialAnimation {
+            id: controlsStripFade
+
+            NumberAnimation {
+                target: controlsStrip
+                property: "opacity"
+                to: 1.0
+                duration: Design.Motion.normal
+            }
+            PauseAnimation {
+                duration: 6500
+            }
+            NumberAnimation {
+                target: controlsStrip
+                property: "opacity"
+                to: 0.0
+                duration: Design.Motion.cinematic
+            }
+        }
+    }
+
+    onVisibleChanged: {
+        if (root.visible)
+            controlsStrip.reveal();
+    }
+
+    Item {
         id: hudBand
         objectName: "rpgHudBand"
 
@@ -849,54 +1061,14 @@ Item {
                     Layout.fillWidth: true
                     spacing: root.scaled(8)
 
-                    Row {
-                        id: comboIndicator
-                        objectName: "rpgComboIndicator"
-
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: root.scaled(4)
-                        opacity: root.comboStep > 0 ? 1.0 : 0.25
-
-                        Behavior on opacity  {
-                            NumberAnimation {
-                                duration: Design.Motion.normal
-                            }
-                        }
-
-                        Repeater {
-                            model: 4
-
-                            delegate: Rectangle {
-                                required property int index
-
-                                readonly property bool lit: index < root.comboStep
-                                readonly property bool isFinisher: index === 3
-
-                                anchors.verticalCenter: comboIndicator.verticalCenter
-                                width: root.scaled(7)
-                                height: width
-                                rotation: 45
-                                radius: 1
-                                color: lit ? (isFinisher ? root.bronzeBright : root.bronze) : root.shade(root.bone, 0.16)
-                                opacity: lit && isFinisher ? (0.6 + 0.4 * root.slowPulse) : 1.0
-
-                                Behavior on color  {
-                                    ColorAnimation {
-                                        duration: Design.Motion.fast
-                                    }
-                                }
-                            }
-                        }
-                    }
-
                     Text {
                         Layout.fillWidth: true
                         text: String(root.status_value("name", ""))
                         color: root.shade(root.bone, 0.88)
                         elide: Text.ElideRight
                         font.family: Design.Typography.titleFamily
-                        font.pixelSize: root.fontSize(Design.Typography.label)
-                        font.letterSpacing: Design.Typography.trackingTitle
+                        font.pixelSize: root.fontSize(Design.Typography.caption)
+                        font.letterSpacing: Design.Typography.trackingNormal
                         font.capitalization: Font.AllUppercase
                         font.hintingPreference: Design.Typography.titleHinting
                         font.kerning: true
@@ -907,7 +1079,7 @@ Item {
                         text: qsTr("HP %1/%2").arg(Number(root.status_value("health", 0))).arg(Number(root.status_value("max_health", 0)))
                         color: root.shade(root.bone, 0.96)
                         font.family: Design.Typography.family
-                        font.pixelSize: root.fontSize(Design.Typography.label)
+                        font.pixelSize: root.fontSize(Design.Typography.caption)
                         font.weight: Design.Typography.bold
                     }
                 }
@@ -926,16 +1098,37 @@ Item {
                     segments: 4
                 }
 
-                RpgMeter {
+                RowLayout {
                     Layout.fillWidth: true
-                    Layout.maximumWidth: vitalsColumn.width * 0.84
-                    Layout.preferredHeight: root.scaled(10)
-                    value: root.staminaRatio
-                    fillColor: Qt.darker(Design.Theme.success, 1.35)
-                    frameColor: root.bronze
-                    frameOpacity: 0.4
-                    crest: false
-                    starved: root.staminaRatio < 0.2
+                    spacing: root.scaled(6)
+
+                    RpgMeter {
+                        objectName: "rpgStaminaMeter"
+
+                        Layout.fillWidth: true
+                        Layout.maximumWidth: vitalsColumn.width * 0.84
+                        Layout.preferredHeight: root.scaled(10)
+                        value: root.staminaRatio
+                        fillColor: Qt.darker(Design.Theme.success, 1.35)
+                        frameColor: root.staminaDenied > 0.0 ? root.ember : root.bronze
+                        frameOpacity: 0.4 + 0.6 * root.staminaDenied
+                        crest: false
+                        starved: root.staminaRatio < 0.2
+                    }
+
+                    Text {
+                        objectName: "rpgStaminaDenied"
+
+                        Layout.fillWidth: true
+                        text: qsTr("WINDED")
+                        color: root.ember
+                        opacity: root.staminaDenied
+                        elide: Text.ElideRight
+                        font.family: Design.Typography.family
+                        font.pixelSize: root.fontSize(Design.Typography.caption)
+                        font.weight: Design.Typography.bold
+                        font.letterSpacing: Design.Typography.trackingWide
+                    }
                 }
 
                 Item {
@@ -1123,7 +1316,7 @@ Item {
                 Text {
                     id: stanceLabel
                     anchors.centerIn: parent
-                    text: root.bowStance ? qsTr("BOW  ·  X") : qsTr("BLADE  ·  X")
+                    text: qsTr("%1  ·  %2 to swap").arg(root.bowStance ? qsTr("BOW") : qsTr("BLADE")).arg(root.key_for("commander.toggle_weapon"))
                     color: root.shade(root.bone, 0.85)
                     font.family: Design.Typography.family
                     font.pixelSize: root.fontSize(Design.Typography.caption)
@@ -1140,32 +1333,55 @@ Item {
                 spacing: root.scaled(9)
 
                 Repeater {
-                    model: [{
-                            "name": qsTr("SPECIAL"),
-                            "key": "F",
-                            "cdKey": "shield_bash_cooldown_remaining",
-                            "totalKey": "shield_bash_cooldown",
-                            "readyKey": "shield_bash_ready"
-                        }, {
-                            "name": qsTr("RUSH"),
-                            "key": "1",
-                            "cdKey": "vanguard_rush_cooldown_remaining",
-                            "totalKey": "vanguard_rush_cooldown",
-                            "readyKey": "vanguard_rush_ready"
-                        }, {
-                            "name": qsTr("WIND"),
-                            "key": "2",
-                            "cdKey": "second_wind_cooldown_remaining",
-                            "totalKey": "second_wind_cooldown",
-                            "readyKey": "second_wind_ready"
-                        }]
+                    model: {
+                        var tiles = [{
+                                "name": qsTr("SPECIAL"),
+                                "action": "commander.special_action",
+                                "cdKey": "shield_bash_cooldown_remaining",
+                                "totalKey": "shield_bash_cooldown",
+                                "readyKey": "shield_bash_ready"
+                            }, {
+                                "name": qsTr("RUSH"),
+                                "action": "commander.ability_vanguard_rush",
+                                "cdKey": "vanguard_rush_cooldown_remaining",
+                                "totalKey": "vanguard_rush_cooldown",
+                                "readyKey": "vanguard_rush_ready"
+                            }, {
+                                "name": qsTr("WIND"),
+                                "action": "commander.ability_second_wind",
+                                "cdKey": "second_wind_cooldown_remaining",
+                                "totalKey": "second_wind_cooldown",
+                                "readyKey": "second_wind_ready"
+                            }];
+                        if (root.status_value("aura_available", false) === true || root.status_value("aura_active", false) === true)
+                            tiles.push({
+                                    "name": qsTr("AURA"),
+                                    "action": "commander.ability_aura",
+                                    "cdKey": "aura_cooldown_remaining",
+                                    "totalKey": "aura_cooldown",
+                                    "readyKey": "aura_ready",
+                                    "activeKey": "aura_active",
+                                    "activeRemainingKey": "aura_remaining",
+                                    "activeTotalKey": "aura_duration"
+                                });
+                        tiles.push({
+                                "name": qsTr("RALLY"),
+                                "action": "commander.rally",
+                                "cdKey": "rally_cooldown_remaining",
+                                "totalKey": "rally_cooldown",
+                                "readyKey": "rally_ready",
+                                "activeKey": "rally_in_progress"
+                            });
+                        return tiles;
+                    }
 
                     delegate: Item {
                         id: abilityTile
                         required property var modelData
 
-                        readonly property bool isReady: root.status_value(abilityTile.modelData.readyKey, true) === true
-                        readonly property real cdRatio: root.cooldown_ratio(abilityTile.modelData.cdKey, abilityTile.modelData.totalKey)
+                        readonly property bool isActive: abilityTile.modelData.activeKey !== undefined && root.status_value(abilityTile.modelData.activeKey, false) === true
+                        readonly property bool isReady: !abilityTile.isActive && root.status_value(abilityTile.modelData.readyKey, true) === true
+                        readonly property real cdRatio: abilityTile.isActive ? (abilityTile.modelData.activeRemainingKey !== undefined ? 1.0 - root.cooldown_ratio(abilityTile.modelData.activeRemainingKey, abilityTile.modelData.activeTotalKey) : 0.0) : root.cooldown_ratio(abilityTile.modelData.cdKey, abilityTile.modelData.totalKey)
 
                         width: Math.max(abilityColumn.tileSize, tileLabels.implicitWidth + root.scaled(22))
                         height: Math.max(abilityColumn.tileSize, tileLabels.implicitHeight + keycap.height + root.scaled(20))
@@ -1174,8 +1390,8 @@ Item {
                             id: tileFace
                             anchors.fill: parent
                             radius: Design.Metrics.radiusMedium
-                            border.width: Design.Metrics.borderThin
-                            border.color: abilityTile.isReady ? root.shade(root.bronze, 0.95) : root.shade(root.bone, 0.24)
+                            border.color: abilityTile.isActive ? root.bronzeBright : (abilityTile.isReady ? root.shade(root.bronze, 0.95) : root.shade(root.bone, 0.24))
+                            border.width: abilityTile.isActive ? Design.Metrics.borderFocus : Design.Metrics.borderThin
                             clip: true
                             gradient: Gradient {
                                 GradientStop {
@@ -1193,7 +1409,7 @@ Item {
                                 anchors.bottom: parent.bottom
                                 width: parent.width * (1.0 - abilityTile.cdRatio)
                                 height: Math.max(2, root.scaled(4))
-                                visible: !abilityTile.isReady
+                                visible: !abilityTile.isReady && width > 0
                                 color: root.shade(root.bronze, 0.8)
 
                                 Behavior on width  {
@@ -1225,14 +1441,16 @@ Item {
                             anchors.right: parent.right
                             anchors.topMargin: root.scaled(6)
                             anchors.rightMargin: root.scaled(6)
-                            width: root.scaled(17)
-                            height: width
+                            width: Math.max(root.scaled(17), keycapLabel.implicitWidth + root.scaled(6))
+                            height: root.scaled(17)
                             radius: Design.Metrics.radiusSmall
                             color: abilityTile.isReady ? root.shade(root.bronze, 0.95) : root.shade(root.bone, 0.26)
 
                             Text {
+                                id: keycapLabel
+                                objectName: "rpgAbilityKey_" + abilityTile.modelData.action
                                 anchors.centerIn: parent
-                                text: abilityTile.modelData.key
+                                text: root.key_for(abilityTile.modelData.action)
                                 color: abilityTile.isReady ? root.iron : root.shade(root.bone, 0.6)
                                 font.family: Design.Typography.family
                                 font.pixelSize: root.fontSize(Design.Typography.caption)
@@ -1259,8 +1477,8 @@ Item {
 
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                text: abilityTile.isReady ? qsTr("READY") : Math.ceil(Number(root.status_value(abilityTile.modelData.cdKey, 0.0))).toString()
-                                color: abilityTile.isReady ? root.shade(root.bronze, 0.95) : root.shade(root.bone, 0.72)
+                                text: abilityTile.isActive ? (abilityTile.modelData.activeRemainingKey !== undefined ? qsTr("ON %1").arg(Math.ceil(Number(root.status_value(abilityTile.modelData.activeRemainingKey, 0.0)))) : qsTr("ON")) : (abilityTile.isReady ? qsTr("READY") : Math.ceil(Number(root.status_value(abilityTile.modelData.cdKey, 0.0))).toString())
+                                color: abilityTile.isActive ? root.bronzeBright : (abilityTile.isReady ? root.shade(root.bronze, 0.95) : root.shade(root.bone, 0.72))
                                 font.family: Design.Typography.family
                                 font.pixelSize: root.fontSize(Design.Typography.caption)
                                 font.weight: Design.Typography.medium
@@ -1273,6 +1491,20 @@ Item {
         }
     }
 
+    property real staminaDenied: 0.0
+
+    NumberAnimation on staminaDenied  {
+        id: staminaDeniedFade
+        running: false
+        from: 1.0
+        to: 0.0
+        duration: 900
+        easing.type: Easing.InQuad
+    }
+
+    property string _prevCameraMode: ""
+    property string _prevWeaponStance: ""
+    property real _prevOutcomeAge: -1.0
     property real _prevHealth: -1.0
     property bool _prevAttacking: false
     property bool _prevGuardBroken: false
@@ -1309,6 +1541,18 @@ Item {
             dodgeTrail.opacity = 0.42;
             dodgeTrailDecay.restart();
         }
+        var cameraMode = String(root.status_value("camera_mode", ""));
+        if (_prevCameraMode !== "" && cameraMode !== "" && cameraMode !== _prevCameraMode)
+            modeToast.show(cameraMode === "Close" ? qsTr("CAMERA  ·  CLOSE") : qsTr("CAMERA  ·  CHASE"));
+        _prevCameraMode = cameraMode;
+        var stance = String(root.status_value("weapon_stance", ""));
+        if (_prevWeaponStance !== "" && stance !== "" && stance !== _prevWeaponStance)
+            modeToast.show(stance === "bow" ? qsTr("BOW DRAWN") : qsTr("BLADE DRAWN"));
+        _prevWeaponStance = stance;
+        var outcomeAge = Number(root.status_value("last_input_outcome_age", 0.0));
+        if (Number(root.status_value("last_input_outcome", 0)) === 2 && _prevOutcomeAge >= 0.0 && outcomeAge < _prevOutcomeAge)
+            staminaDeniedFade.restart();
+        _prevOutcomeAge = outcomeAge;
         if (hasLockedTarget && !_prevLockedTarget) {
             combatEntryFlash.accentColor = root.bronze;
             combatEntryFlash.opacity = 0.14;

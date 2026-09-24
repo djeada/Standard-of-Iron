@@ -1,5 +1,7 @@
 import QtQuick 2.15
 import QtTest 1.15
+import StandardOfIron 1.0
+import StandardOfIron.Core 1.0
 
 TestCase {
     id: testCase
@@ -328,6 +330,79 @@ TestCase {
         overlay.status = raised;
         var lit = settledExtraElements(overlay, baseline, 1, 600);
         verify(lit <= 1, data.flag + " lights " + lit + " new overlay elements; " + "one state may only raise one signal");
+        host.destroy();
+    }
+
+    function test_ability_keycaps_follow_the_bindings() {
+        var status = quietStatus();
+        status["aura_available"] = true;
+        status["aura_ready"] = true;
+        status["rally_ready"] = true;
+        var host = makeOverlay(1280, 720, status);
+        var overlay = host.overlay;
+        var actions = ["commander.special_action", "commander.ability_vanguard_rush", "commander.ability_second_wind", "commander.ability_aura", "commander.rally"];
+        for (var i = 0; i < actions.length; ++i) {
+            var keycap = findChild(overlay, "rpgAbilityKey_" + actions[i]);
+            verify(keycap !== null, actions[i] + " has no ability tile");
+            compare(keycap.text, InputBindings.display_shortcut_for(actions[i]), actions[i] + " advertises a key the player did not bind");
+        }
+        host.destroy();
+    }
+
+    function test_the_aura_tile_needs_an_aura() {
+        var host = makeOverlay(1280, 720, quietStatus());
+        verify(findChild(host.overlay, "rpgAbilityKey_commander.ability_aura") === null, "a commander without an aura shows an aura tile");
+        host.destroy();
+    }
+
+    function test_a_refused_attack_says_the_commander_is_winded() {
+        var status = quietStatus();
+        status["last_input_outcome"] = 2;
+        status["last_input_outcome_age"] = 0.5;
+        var host = makeOverlay(1280, 720, status);
+        var overlay = host.overlay;
+        var label = findChild(overlay, "rpgStaminaDenied");
+        verify(label !== null, "stamina refusal label is missing");
+        compare(label.opacity, 0.0, "an old refusal must not flash");
+        var refused = quietStatus();
+        refused["last_input_outcome"] = 2;
+        refused["last_input_outcome_age"] = 0.0;
+        overlay.status = refused;
+        wait(30);
+        verify(label.opacity > 0.0, "a fresh stamina refusal gave no feedback");
+        host.destroy();
+    }
+
+    function test_a_camera_toggle_is_announced() {
+        var status = quietStatus();
+        status["camera_mode"] = "Chase";
+        var host = makeOverlay(1280, 720, status);
+        var overlay = host.overlay;
+        var toast = findChild(overlay, "rpgModeToast");
+        verify(toast !== null, "mode toast is missing");
+        verify(!toast.visible, "the toast must stay quiet until something changes");
+        var close = quietStatus();
+        close["camera_mode"] = "Close";
+        overlay.status = close;
+        tryVerify(function () {
+                return toast.visible && toast.text.indexOf("CLOSE") >= 0;
+            }, 1000, "switching to the close camera gave no feedback");
+        host.destroy();
+    }
+
+    function test_entering_direct_control_names_the_keys() {
+        var host = makeOverlay(1280, 720, quietStatus());
+        var overlay = host.overlay;
+        var strip = findChild(overlay, "rpgControlsStrip");
+        verify(strip !== null, "controls strip is missing");
+        overlay.visible = false;
+        overlay.visible = true;
+        tryVerify(function () {
+                return strip.visible && strip.opacity > 0.5;
+            }, 1000, "entering direct control did not show the controls");
+        var r = rectIn(overlay, strip);
+        verify(r.left >= 0 && r.right <= overlay.width, "the controls strip overflows the viewport");
+        verify(strip.width > 100, "the controls strip collapsed");
         host.destroy();
     }
 

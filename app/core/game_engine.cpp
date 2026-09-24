@@ -795,6 +795,7 @@ void GameEngine::film_step(float dt) {
     return;
   }
   simulate(dt);
+  update_presentation(dt);
   drain_pending_save_capture();
   end_simulation_tick();
 }
@@ -1310,6 +1311,11 @@ void GameEngine::sync_selection_flags() {
 }
 
 void GameEngine::sync_attack_range_rings() {
+
+  if (m_commander_view_model->active()) {
+    m_attack_range_rings.clear();
+    return;
+  }
   m_attack_range_rings =
       App::Core::PresentationSync::collect_attack_range_rings(attack_sync_context());
 }
@@ -2143,15 +2149,31 @@ void GameEngine::wire_victory_service() {
       if (state == "defeat") {
         Game::Audio::play_cue(Game::Audio::Cue::k_alert_objective_failed);
       }
-      m_runtime.victory_state = state;
-      m_runtime.defeat_reason =
-          state == "defeat" ? m_victory_service->get_defeat_description() : QString();
-      emit victory_state_changed();
 
       if (state == "victory") {
         m_commander_message_director.notify_victory();
       } else if (state == "defeat") {
         m_commander_message_director.notify_defeat();
+      }
+      if (m_commander_message_view_model) {
+        m_commander_message_view_model->set_outcome_line_pending(
+            m_commander_message_director.outcome_line_pending());
+      }
+      m_runtime.victory_state = state;
+      m_runtime.defeat_reason =
+          state == "defeat" ? m_victory_service->get_defeat_description() : QString();
+      emit victory_state_changed();
+
+      if (!state.isEmpty() && m_commander_view_model->active()) {
+        QMetaObject::invokeMethod(
+            this,
+            [this]() {
+              if (!m_runtime.victory_state.isEmpty() &&
+                  m_commander_view_model->active()) {
+                m_commander_view_model->exit_mode();
+              }
+            },
+            Qt::QueuedConnection);
       }
 
       if (state == "victory" &&
@@ -2257,6 +2279,7 @@ void GameEngine::reset_mission_runtime_state() {
   }
   if (m_commander_message_view_model) {
     m_commander_message_view_model->clear();
+    m_commander_message_view_model->set_outcome_line_pending(false);
   }
   m_session->economy().clear();
   sync_selected_player_state();
@@ -2462,6 +2485,10 @@ void GameEngine::update_commander_messages(float delta_time) {
   }
   if (m_commander_message_director.update(delta_time)) {
     publish_commander_message();
+  }
+  if (m_commander_message_view_model) {
+    m_commander_message_view_model->set_outcome_line_pending(
+        m_commander_message_director.outcome_line_pending());
   }
 }
 
