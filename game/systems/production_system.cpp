@@ -1353,8 +1353,17 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
             Game::Units::SpawnParams sp;
 
             if (builder_prod->has_construction_site) {
+              float site_y = t->position.y;
+              auto* terrain = Game::Session::services_for(*world).terrain;
+              if (terrain != nullptr && terrain->is_initialized()) {
+                site_y =
+                    terrain->resolve_surface_world_y(builder_prod->construction_site_x,
+                                                     builder_prod->construction_site_z,
+                                                     0.0F,
+                                                     site_y);
+              }
               sp.position = QVector3D(builder_prod->construction_site_x,
-                                      t->position.y,
+                                      site_y,
                                       builder_prod->construction_site_z);
             } else {
               sp.position = QVector3D(t->position.x, t->position.y, t->position.z);

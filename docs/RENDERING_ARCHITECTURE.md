@@ -352,6 +352,46 @@ Terrain/world-prop positions are resolved from authored map/grid space through t
 
 See [MAP_OBJECT_PLACEMENT.md](MAP_OBJECT_PLACEMENT.md) for the placement contract.
 
+### Terrain contact
+
+Everything that stands on the ground samples one surface, and it is the surface on screen.
+
+- **One height function.** The terrain mesh splits every grid quad along its
+  (x+1, z)-(x, z+1) diagonal, and subdivided quads place their extra vertices on those same
+  triangles. `Game::Map::sample_triangulated_height` (`game/map/terrain_surface.h`) returns
+  exactly that height. `TerrainHeightMap::get_base_height_at`, `TerrainField`, the scatter
+  spawn cache, stone ground fit, riverbank dressing, linear features, roads and the
+  `ground_marker` shader (via `texelFetch`) all go through it. A bilinear patch can sit up
+  to a quarter of the quad's twist away from the triangles, which is how feet sank and
+  props floated on curved ground. `TerrainService::sample_ground_normal` is the smoothed
+  up-vector used for anything that tilts.
+- **Roads.** The road ribbon is draped over the highest terrain within
+  `k_road_surface_envelope_tiles` of each vertex. `TerrainService` samples the same
+  envelope for points on a road, so units walk on the paving rather than on the ground
+  under it.
+- **Structures stay upright and get a foundation.** Buildings, walls, towers, construction
+  sites and placement ghosts are seated at the height under their centre.
+  `render/entity/structure_foundation` measures the drop across the drawn body (the
+  `BuildingCollisionRegistry` body table × transform scale) and adds a fieldstone
+  foundation down to the lowest ground. Completed buildings cache it in `CachedUnitData`
+  and recompute it only when the model matrix changes. Ghosts resolve it on the spot, using
+  the same rule the finished structure will use.
+- **Upright props are bedded, not tilted.** Trees, iron ore and plants sink by
+  `slope_bed_depth` (contact radius × tan slope) so the downhill side of the trunk or base
+  meets the ground. Rocks keep their tilt-and-sink ground fit (`stone_ground_fit.h`).
+  Footprint props (tents, ruins, carts, shrines) sit at the lowest ground under their
+  footprint. All of this is resolved when instances are built, never per frame.
+- **Things that rest on the ground follow it.** Siege carriages tilt to the slope and each
+  crew member stands on their own ground. Horses and elephants pitch along their heading
+  (the rider inherits it) but stay upright across the slope. Fallen soldiers ease onto
+  the slope as they go down. Selection rings drape over the terrain unless their owner is
+  raised well above it (a bridge deck).
+
+`grounding_flat`, `grounding_hill`, `grounding_ridge`, `grounding_riverbank`,
+`grounding_road` and `grounding_scatter` put the same cast on each kind of ground for
+arena captures. `tests/render/terrain_grounding_test.cpp` pins the surface, road,
+foundation and tilt rules.
+
 ### Ground plane draws after the terrain
 
 The ground plane (`GroundRenderer`, the map-plus-48-tile skirt at y = -0.08) and the terrain
@@ -374,6 +414,19 @@ program per draw when the command's height resources carry all three textures, a
 table resolves every handle as optional because the stripped program no longer has the
 fallback-only uniforms. Measured on Zama Ultra: 1.23 ms to 0.97 ms for the terrain pass on
 top of the ground-plane change.
+
+### Weapon rack carries a per-vertex surface stream
+
+Most instanced props pick their materials in the shader from the model-space position (bands keyed to where a part happens to sit) or from a length packed into the normal (the tent). The weapon rack (`render/gl/backend/weapon_rack_mesh.cpp`) has too many small, overlapping parts for that to work. Every vertex therefore carries a fourth attribute at location 4, `(material, u, v, seed)`, uploaded by `VegetationPipeline::upload_prop_mesh_with_surface_impl`. Location 4 is free on prop VAOs because the instance stream only binds locations 2 and 3.
+
+- `material` is one of the `WeaponRackMaterial` ids, which match the `k_mat_*` constants in `weapon_rack_instanced.frag`: oak, ash, steel, iron, bronze, leather, yew, linen, shield paint, shield back, bone and feather.
+- `u, v` depend on how the part was built:
+    - Boxes and beams are projected so that `v` runs along the member. The shader lays grain, forging streaks and wear along it.
+    - Swept parts use `u` for the distance around the section (0 to 1) and `v` for the distance along the sweep. Blades and spearheads have `v` normalised from 0 at the base to 1 at the tip, and their four-facet diamond section puts the edges at `cos(u·2π) = ±1`.
+    - Shield faces use the flat face coordinates in [-1, 1]. The scutum outline is the superellipse `|s|^2.4 + |t|^2.4 = 1`, and the shader paints its border against that curve. On the parma the coordinates are polar.
+- `seed` varies each part. For shield paint it also chooses the design: below 0.5 is a scutum, 0.5 and above is a parma.
+
+The frame parts in `weapon_rack_parts.h` are still the source for `PropModelFootprintTest`. Weapons and shields are built only in the mesh builder and stay inside the declared `{0.88, 0.54}` half extents. The shader builds a height field for each material and turns it into a bump normal from screen-space derivatives. Every derivative is taken outside the material branches, and the bump fades out beyond about 48 m. Lighting is GGX specular plus a sky/ground reflection. Directional shadow blocks sun specular completely but only tints the ambient and diffuse terms, so metal in shadow does not glint.
 
 ## Terrain scatter readiness
 

@@ -18,6 +18,7 @@
 #include "map_definition.h"
 #include "procedural_tree_generation.h"
 #include "terrain.h"
+#include "terrain_surface.h"
 
 namespace Game::Map {
 
@@ -28,6 +29,7 @@ auto TerrainService::instance() -> TerrainService& {
 namespace {
 
 constexpr float k_min_tile_size = 0.0001F;
+constexpr float k_two_pi = 6.28318530717958647692F;
 constexpr float k_harvest_grid_snap_distance = 3.0F;
 constexpr float k_road_index_tile_span = 8.0F;
 
@@ -874,7 +876,18 @@ auto TerrainService::sample_surface_base_height(
 
   const float terrain_height = m_height_map->get_base_height_at(world_x, world_z);
   if (is_point_near_indexed_road(world_x, world_z, 0.0F)) {
-    return {.world_y = terrain_height, .kind = SurfaceHeightKind::Road};
+    const float radius = std::max(m_height_map->get_tile_size(), k_min_tile_size) *
+                         k_road_surface_envelope_tiles;
+    float highest = terrain_height;
+    for (int tap = 0; tap < k_road_surface_envelope_taps; ++tap) {
+      const float angle = k_two_pi * static_cast<float>(tap) /
+                          static_cast<float>(k_road_surface_envelope_taps);
+      highest = std::max(
+          highest,
+          m_height_map->get_base_height_at(world_x + std::cos(angle) * radius,
+                                           world_z + std::sin(angle) * radius));
+    }
+    return {.world_y = highest, .kind = SurfaceHeightKind::Road};
   }
 
   return {.world_y = terrain_height, .kind = SurfaceHeightKind::Terrain};
@@ -927,7 +940,6 @@ auto TerrainService::resolve_footprint_world_y(float world_x,
 
   constexpr int k_rings = 2;
   constexpr int k_spokes = 8;
-  constexpr float k_two_pi = 6.28318530717958647692F;
   for (int ring = 1; ring <= k_rings; ++ring) {
     const float reach =
         footprint_radius * (static_cast<float>(ring) / static_cast<float>(k_rings));
@@ -970,6 +982,20 @@ auto TerrainService::world_prop_footprint_world_position(const WorldProp& prop,
       authored_prop_world_xz(m_height_map.get(), m_coord_system, prop);
   return resolve_footprint_world_position(
       world_x, world_z, footprint_radius, world_y_offset, fallback_y);
+}
+
+auto TerrainService::sample_ground_normal(float world_x,
+                                          float world_z) const -> QVector3D {
+  if (m_height_map == nullptr) {
+    return {0.0F, 1.0F, 0.0F};
+  }
+  const float tile_size = std::max(m_height_map->get_tile_size(), k_min_tile_size);
+  const int width = m_height_map->get_width();
+  const int height = m_height_map->get_height();
+  const float gx = world_x / tile_size + (static_cast<float>(width) * 0.5F - 0.5F);
+  const float gz = world_z / tile_size + (static_cast<float>(height) * 0.5F - 0.5F);
+  return sample_smoothed_ground_normal(
+      m_height_map->get_height_data().data(), width, height, tile_size, gx, gz);
 }
 
 auto TerrainService::get_terrain_height_grid(int grid_x, int grid_z) const -> float {
@@ -1264,25 +1290,21 @@ void TerrainService::sync_world_prop_identity_state() {
   m_next_world_prop_id = std::max(m_next_world_prop_id, max_id + 1);
 }
 
-namespace {
-
-auto next_terrain_revision() -> std::uint64_t {
+auto TerrainService::next_props_revision() -> std::uint64_t {
   static std::atomic<std::uint64_t> counter{0};
-  return counter.fetch_add(1, std::memory_order_relaxed) + 1U;
+  return ++counter;
 }
 
-} // namespace
-
 void TerrainService::bump_world_props_revision() {
-  m_world_props_revision = next_terrain_revision();
+  m_world_props_revision = next_props_revision();
 }
 
 void TerrainService::bump_authored_world_props_revision() {
-  m_authored_world_props_revision = next_terrain_revision();
+  m_authored_world_props_revision = next_props_revision();
 }
 
 void TerrainService::bump_navigation_topology_revision() {
-  m_navigation_topology_revision = next_terrain_revision();
+  m_navigation_topology_revision = next_props_revision();
 }
 
 } // namespace Game::Map

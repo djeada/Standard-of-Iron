@@ -18,6 +18,7 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/iron_ore_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rock_outcrop_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/tent_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/weapon_rack_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/prop_mesh_builder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/prop_parts.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/ring_loft_builder.cpp

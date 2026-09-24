@@ -12,6 +12,7 @@
 #include "../core/ambient_session.h"
 #include "../core/component_gameplay.h"
 #include "../core/world.h"
+#include "../units/building_body.h"
 #include "../units/spawn_type.h"
 
 namespace Game::Systems {
@@ -31,19 +32,6 @@ const std::map<std::string, BuildingCollisionRegistry::BuildingSize, std::less<>
         {"wall_gate",
          {Engine::Core::GateComponent::k_structure_half_span * 2.0F,
           Engine::Core::GateComponent::k_cross_half_extent * 2.0F}},
-
-};
-
-const std::map<std::string, BuildingCollisionRegistry::BuildingBody, std::less<>>
-    BuildingCollisionRegistry::s_building_bodies = {
-        {"barracks", {8.65F, 4.20F, 2.325F, 0.0F}},
-        {"home", {2.36F, 2.42F, 0.0F, 0.03F}},
-        {"marketplace", {2.80F, 2.80F, 0.0F, 0.0F}},
-        {"temple", {6.32F, 4.66F, -0.38F, 0.0F}},
-        {"farm", {1.98F, 2.04F, 0.0F, 0.03F}},
-        {"defense_tower", {2.60F, 2.60F, 0.0F, 0.0F}},
-        {"wall_segment", {2.02F, 0.76F, 0.0F, 0.0F}},
-        {"wall_gate", {2.02F, 0.76F, 0.0F, 0.0F}},
 
 };
 
@@ -137,9 +125,9 @@ auto BuildingCollisionRegistry::get_building_size(std::string_view building_type
 
 auto BuildingCollisionRegistry::get_building_body(const std::string& building_type)
     -> BuildingCollisionRegistry::BuildingBody {
-  auto it = s_building_bodies.find(building_type);
-  if (it != s_building_bodies.end()) {
-    return it->second;
+  if (auto const extent = Game::Units::find_building_body_extent(building_type);
+      extent.has_value()) {
+    return {extent->width, extent->depth, extent->offset_x, extent->offset_z};
   }
 
   BuildingSize const nav = get_building_size(building_type);

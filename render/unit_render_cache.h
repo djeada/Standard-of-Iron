@@ -10,6 +10,7 @@
 #include "game/core/presentation_clock.h"
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
+#include "render/entity/structure_foundation.h"
 #include "render/world_view.h"
 
 namespace Engine::Core {
@@ -65,6 +66,9 @@ struct CachedUnitData {
   float last_scale_y{0.0F};
   float last_scale_z{0.0F};
   bool model_matrix_valid{false};
+
+  Render::GL::StructureFoundation foundation;
+  bool foundation_valid{false};
   Engine::Core::PresentationClock presentation_clock;
   bool renderer_key_valid{false};
   bool last_is_building{false};

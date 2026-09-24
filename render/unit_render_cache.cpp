@@ -201,6 +201,7 @@ auto UnitRenderCache::update_model_matrix(CachedUnitData& data,
   m.rotate(rot.z, 0.0F, 0.0F, 1.0F);
   m.scale(sc.x, sc.y, sc.z);
   data.model_matrix = m;
+  data.foundation_valid = false;
 
   data.last_pos_x = pos.x;
   data.last_pos_y = pos.y;

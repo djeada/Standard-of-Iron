@@ -129,6 +129,7 @@ inline constexpr int k_building_material_metal = 1;
 inline constexpr int k_building_material_wood = 2;
 inline constexpr int k_building_material_cloth = 3;
 inline constexpr int k_building_material_leather = 4;
+inline constexpr int k_building_material_ceramic = 9;
 
 class BuildingPartMaterial {
 public:

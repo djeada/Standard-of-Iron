@@ -106,6 +106,7 @@ struct FormationSlot {
 
   QVector3D local_offset;
   QVector3D world_position;
+  float local_facing{0.0F};
   float facing{0.0F};
 
   int rank{0};

@@ -534,6 +534,10 @@ inline auto can_use_attack_mode(SpawnType type) -> bool {
          !is_building_spawn(type) && !is_wildlife_spawn(type);
 }
 
+[[nodiscard]] inline auto is_combatant_spawn(SpawnType type) -> bool {
+  return can_use_attack_mode(type) && type != SpawnType::Civilian;
+}
+
 inline auto can_use_guard_mode(SpawnType type) -> bool {
   return !is_building_spawn(type) && !is_wildlife_spawn(type);
 }

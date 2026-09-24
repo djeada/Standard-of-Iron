@@ -3326,12 +3326,12 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>ضيق وعميق. الأفضل للعبور من البوابات والممرات.</translation>
     </message>
     <message>
-        <source>Compressed frontage with reserves. Best for holding ground.</source>
-        <translation>جبهة مضغوطة مع احتياطي. الأفضل للثبات على الأرض.</translation>
+        <source>A closed square facing out on every side, archers inside. Best for holding ground.</source>
+        <translation>مربع مغلق يواجه الخارج من كل جانب، والرماة في داخله. الأفضل للثبات على الأرض.</translation>
     </message>
     <message>
-        <source>Weighted front with skirmishers ahead. Best for breaking a line.</source>
-        <translation>جبهة مثقلة مع مناوشين في المقدمة. الأفضل لكسر خط.</translation>
+        <source>A wedge that drives its point into the enemy. Best for breaking a line.</source>
+        <translation>إسفين يدفع رأسه في صفوف العدو. الأفضل لكسر خط.</translation>
     </message>
     <message>
         <source>Wide flanks that close around a target. Needs cavalry.</source>
@@ -6328,6 +6328,166 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Slaying the last guardian clears a zone, but the shrine is not purified until you capture or destroy it.</source>
         <translation>قتل آخر حارس يُخلي المنطقة، لكن المزار لا يتطهّر حتى تستولي عليه أو تدمّره.</translation>
     </message>
+    <message>
+        <source>A Roman army built a fortified camp to the same plan at the end of every march, so a tired soldier could find his tent in the dark.</source>
+        <translation>كان الجيش الروماني يبني في نهاية كل مسيرة معسكرًا محصّنًا وفق المخطط نفسه، حتى يجد الجندي المتعب خيمته في الظلام.</translation>
+    </message>
+    <message>
+        <source>A Roman legion of this period fought in three lines: the young hastati, the prime-aged principes, and the veteran triarii.</source>
+        <translation>كان الفيلق الروماني في تلك الحقبة يقاتل في ثلاثة صفوف: الهاستاتي الشبان، والبرينكيبس في أوج العمر، والترياري المخضرمون.</translation>
+    </message>
+    <message>
+        <source>According to Polybius, the young Hannibal swore at an altar, at his father&apos;s request, never to be a friend of Rome.</source>
+        <translation>بحسب بوليبيوس، أقسم حنبعل في صباه عند مذبح، بطلب من أبيه، ألّا يكون صديقًا لروما أبدًا.</translation>
+    </message>
+    <message>
+        <source>After Cannae, Livy says Hannibal sent home the gold rings taken from fallen Roman nobles. They were measured not by count, but by volume.</source>
+        <translation>بعد كاناي، يقول ليفيوس إن حنبعل أرسل إلى بلاده الخواتم الذهبية المأخوذة من نبلاء الرومان القتلى. ولم تُعَدّ عدًّا، بل كِيلت كيلًا.</translation>
+    </message>
+    <message>
+        <source>After Zama, Scipio took the name Africanus. He was among the first Roman generals named after the land he had conquered.</source>
+        <translation>بعد زاما اتخذ سكيبيو لقب «الأفريقي»، فكان من أوائل القادة الرومان الذين سُمّوا باسم الأرض التي فتحوها.</translation>
+    </message>
+    <message>
+        <source>After the First Punic War, Carthage could not pay its mercenaries. They revolted, and the brutal Mercenary War nearly destroyed the city.</source>
+        <translation>بعد الحرب البونيقية الأولى عجزت قرطاج عن دفع أجور مرتزقتها، فثاروا، وكادت حرب المرتزقة الوحشية أن تدمّر المدينة.</translation>
+    </message>
+    <message>
+        <source>Archimedes helped defend Syracuse against Rome with war machines, including a crane-like &apos;claw&apos; said to lift ships out of the water.</source>
+        <translation>ساعد أرخميدس في الدفاع عن سرقوسة ضد روما بآلات حربية، منها «مخلب» يشبه الرافعة يُقال إنه كان يرفع السفن من الماء.</translation>
+    </message>
+    <message>
+        <source>At Zama, the Romans blew trumpets and horns to frighten Hannibal&apos;s elephants. Some panicked and trampled Carthage&apos;s own cavalry.</source>
+        <translation>في زاما نفخ الرومان في الأبواق والقرون ليُرعبوا أفيال حنبعل، فذُعر بعضها ودهس فرسان قرطاج أنفسهم.</translation>
+    </message>
+    <message>
+        <source>Balearic slingers were famous marksmen. One ancient tale says their children were not given bread until they had hit it with a sling.</source>
+        <translation>كان مقلاعيّو البليار رماةً مشهورين بالدقة. وتقول حكاية قديمة إن أطفالهم لم يكونوا يُعطون الخبز حتى يصيبوه بالمقلاع.</translation>
+    </message>
+    <message>
+        <source>Before the sea battle of Drepana in 249 BC, the sacred chickens refused to eat. The consul threw them overboard, saying &apos;Let them drink.&apos; He lost the battle.</source>
+        <translation>قبل معركة دريبانا البحرية عام 249 ق.م، أبت الدجاجات المقدسة أن تأكل. فرماها القنصل في البحر قائلًا: «فلتشرب إذن». وخسر المعركة.</translation>
+    </message>
+    <message>
+        <source>Carthage fought mostly with allies and mercenaries: Libyans, Numidians, Iberians, Celts, and Balearic islanders. Hannibal kept this mixed army together in Italy for fifteen years.</source>
+        <translation>قاتلت قرطاج في الغالب بالحلفاء والمرتزقة: ليبيين ونوميديين وإيبيريين وكلت وأهل جزر البليار. وأبقى حنبعل هذا الجيش المختلط متماسكًا في إيطاليا خمسة عشر عامًا.</translation>
+    </message>
+    <message>
+        <source>Carthage offered to pay its war debt to Rome decades early. Rome refused. A debtor who pays promptly is harder to keep in line.</source>
+        <translation>عرضت قرطاج أن تسدّد دين الحرب لروما قبل موعده بعقود، فرفضت روما. فالمدين الذي يسدّد سريعًا يصعب إبقاؤه طائعًا.</translation>
+    </message>
+    <message>
+        <source>Carthage was founded by Phoenician settlers from Tyre. Its name, Qart-hadasht, simply means &apos;New City&apos;.</source>
+        <translation>أسّس مستوطنون فينيقيون من صور مدينة قرطاج، واسمها «قرت حدشت» يعني ببساطة «المدينة الجديدة».</translation>
+    </message>
+    <message>
+        <source>Carthage was led by two elected magistrates called suffetes. Aristotle praised its constitution as one of the best of his day.</source>
+        <translation>كان يحكم قرطاج قاضيان منتخبان يُسمّيان الشوفيطين. وقد أثنى أرسطو على دستورها بوصفه من أفضل دساتير عصره.</translation>
+    </message>
+    <message>
+        <source>Carthage&apos;s circular military harbor surrounded an island headquarters. The historian Appian says its ship sheds could hold about 220 warships.</source>
+        <translation>كان ميناء قرطاج الحربي الدائري يحيط بجزيرة فيها مقر القيادة. ويقول المؤرخ أبيانوس إن أحواض سفنه كانت تتسع لنحو 220 سفينة حربية.</translation>
+    </message>
+    <message>
+        <source>Carthage&apos;s war elephants were probably North African forest elephants, a smaller kind that later became extinct.</source>
+        <translation>كانت أفيال قرطاج الحربية على الأرجح أفيال غابات شمال أفريقيا، وهي نوع أصغر حجمًا انقرض لاحقًا.</translation>
+    </message>
+    <message>
+        <source>Cato the Elder ended his speeches with &apos;Carthage must be destroyed.&apos; Once he showed the Senate fresh figs from Carthage to prove how close the enemy was.</source>
+        <translation>كان كاتو الأكبر يختم خطبه بعبارة «يجب أن تُدمَّر قرطاج». وعرض مرة على مجلس الشيوخ تينًا طازجًا من قرطاج ليُثبت مدى قرب العدو.</translation>
+    </message>
+    <message>
+        <source>Decimation was a Roman punishment for units that fled: one soldier in ten, chosen by lot, was killed by his own comrades.</source>
+        <translation>كان «التعشير» عقوبة رومانية للوحدات الفارّة: يُقتل جندي من كل عشرة، يُختار بالقرعة، على أيدي رفاقه.</translation>
+    </message>
+    <message>
+        <source>Hamilcar Barca&apos;s nickname, Barca, probably means &apos;lightning&apos;. Hannibal&apos;s own name means roughly &apos;grace of Baal&apos;.</source>
+        <translation>لقب هملقار برقة، «برقة»، يعني على الأرجح «البرق». أما اسم حنبعل نفسه فمعناه تقريبًا «نعمة بعل».</translation>
+    </message>
+    <message>
+        <source>Herodotus reports that Phoenician sailors circled Africa for an Egyptian pharaoh. He doubted their claim that the sun appeared on their right, which is exactly what would happen.</source>
+        <translation>يروي هيرودوت أن بحّارة فينيقيين داروا حول أفريقيا لحساب فرعون مصري. وقد شكّ في قولهم إن الشمس كانت عن يمينهم، وهذا بالضبط ما كان سيحدث.</translation>
+    </message>
+    <message>
+        <source>In a later war, Hannibal reportedly had pots full of snakes hurled onto enemy ships. The sailors laughed, then stopped laughing.</source>
+        <translation>في حرب لاحقة، يُروى أن حنبعل أمر بقذف جرار مملوءة بالأفاعي على سفن الأعداء. فضحك البحّارة، ثم كفّوا عن الضحك.</translation>
+    </message>
+    <message>
+        <source>In the First Punic War, storms sank more Roman ships than the Carthaginian navy did. Whole fleets were lost in bad weather.</source>
+        <translation>في الحرب البونيقية الأولى، أغرقت العواصف من السفن الرومانية أكثر مما أغرقه الأسطول القرطاجي. وضاعت أساطيل كاملة في سوء الطقس.</translation>
+    </message>
+    <message>
+        <source>Legend says Queen Elissa, or Dido, was offered as much land as an ox hide could cover. She cut the hide into thin strips and encircled an entire hill.</source>
+        <translation>تقول الأسطورة إن الملكة عليسة، أو ديدو، عُرض عليها من الأرض قدر ما يغطيه جلد ثور. فقطّعت الجلد سيورًا رفيعة وأحاطت بها تلًّا كاملًا.</translation>
+    </message>
+    <message>
+        <source>Livy claims Hannibal split rocks on the Alpine path by heating them with fire and dousing them with vinegar. Historians are still arguing about it.</source>
+        <translation>يزعم ليفيوس أن حنبعل فلق الصخور على طريق الألب بتسخينها بالنار ثم صبّ الخل عليها. وما زال المؤرخون يتجادلون في ذلك.</translation>
+    </message>
+    <message>
+        <source>Numidian horsemen rode without saddles or bridles, guiding their mounts with a light neck rope and their knees.</source>
+        <translation>كان الفرسان النوميديون يركبون بلا سروج ولا لُجُم، يوجّهون خيولهم بحبل خفيف حول العنق وبركبهم.</translation>
+    </message>
+    <message>
+        <source>Phoenician purple dye came from murex sea snails. Thousands of snails made a small amount of dye, and the dye works were famous for their stench.</source>
+        <translation>كانت الصبغة الأرجوانية الفينيقية تُستخرج من حلزون الموركس البحري. آلاف الحلزونات لا تعطي إلا قليلًا من الصبغ، وكانت مصابغها مشهورة بنتانتها.</translation>
+    </message>
+    <message>
+        <source>Polybius says Roman light troops, the velites, sometimes wore wolf skins over their helmets so their officers could recognize them in battle.</source>
+        <translation>يقول بوليبيوس إن المشاة الرومان الخفاف، الفيليتس، كانوا أحيانًا يلبسون جلود الذئاب فوق خوذهم ليتعرّف إليهم ضباطهم في المعركة.</translation>
+    </message>
+    <message>
+        <source>Rome destroyed Carthage in 146 BC. The famous story that it sowed the fields with salt was invented many centuries later.</source>
+        <translation>دمّرت روما قرطاج عام 146 ق.م. أما الحكاية الشهيرة عن نثرها الملح في حقولها فقد اختُلقت بعد ذلك بقرون كثيرة.</translation>
+    </message>
+    <message>
+        <source>Rome had almost no warships when the First Punic War began. Polybius says it copied a stranded Carthaginian ship and trained rowers on benches on dry land.</source>
+        <translation>لم تكن لروما سفن حربية تقريبًا حين بدأت الحرب البونيقية الأولى. ويقول بوليبيوس إنها نسخت سفينة قرطاجية جانحة ودرّبت المجدّفين على مقاعد فوق اليابسة.</translation>
+    </message>
+    <message>
+        <source>Rome rebuilt Carthage as a Roman city about a century after destroying it. It became one of the largest cities in the western Empire.</source>
+        <translation>أعادت روما بناء قرطاج مدينةً رومانية بعد نحو قرن من تدميرها، فصارت من أكبر مدن الإمبراطورية في الغرب.</translation>
+    </message>
+    <message>
+        <source>The Carthaginian Mago wrote a 28-book work on farming. After Carthage fell, the Roman Senate ordered it translated into Latin.</source>
+        <translation>ألّف القرطاجي ماغون كتابًا في الزراعة من 28 جزءًا. وبعد سقوط قرطاج أمر مجلس الشيوخ الروماني بترجمته إلى اللاتينية.</translation>
+    </message>
+    <message>
+        <source>The Carthaginian explorer Hanno sailed down the coast of West Africa and described hairy wild people called &apos;gorillai&apos;. Modern gorillas are named after them.</source>
+        <translation>أبحر المستكشف القرطاجي حانون على طول ساحل غرب أفريقيا، ووصف أناسًا متوحشين كثيفي الشعر سمّاهم «غوريلاي». ومنهم أخذت الغوريلا الحديثة اسمها.</translation>
+    </message>
+    <message>
+        <source>The Latin word &apos;salarium&apos;, the root of &apos;salary&apos;, comes from the word for salt. The story that soldiers were paid in salt is probably a myth.</source>
+        <translation>الكلمة اللاتينية «سالاريوم»، أصل كلمة «salary» أي الراتب، مشتقة من كلمة الملح. أما الحكاية القائلة إن الجنود كانوا يُدفع لهم ملحًا فهي على الأرجح خرافة.</translation>
+    </message>
+    <message>
+        <source>The Phoenician alphabet had 22 letters and no vowels. Through Greek and Latin, it is an ancestor of the letters you are reading now.</source>
+        <translation>كانت الأبجدية الفينيقية من 22 حرفًا بلا حروف علّة. وعبر اليونانية واللاتينية، هي سلف الحروف التي تقرؤها الآن.</translation>
+    </message>
+    <message>
+        <source>The Roman corvus was a boarding bridge with an iron spike. It dropped onto an enemy deck and turned a sea battle into an infantry fight.</source>
+        <translation>كان «الكورفوس» الروماني جسرًا للاقتحام في طرفه مسمار حديدي، يسقط على سطح سفينة العدو فيحوّل المعركة البحرية إلى قتال مشاة.</translation>
+    </message>
+    <message>
+        <source>The Roman gladius was based on an Iberian sword. The Romans were never too proud to borrow a good idea from an enemy.</source>
+        <translation>كان الغلاديوس الروماني مأخوذًا عن سيف إيبيري. فالرومان لم يكونوا يومًا أشد كبرياءً من أن يقتبسوا فكرة جيدة من عدو.</translation>
+    </message>
+    <message>
+        <source>The Roman saying &apos;it has come down to the triarii&apos; meant a situation was desperate. The veterans in the last line were the final reserve.</source>
+        <translation>كان القول الروماني «وصل الأمر إلى الترياري» يعني أن الموقف يائس، فالمخضرمون في الصف الأخير كانوا الاحتياط الأخير.</translation>
+    </message>
+    <message>
+        <source>The pilum&apos;s long, thin iron neck could bend on impact. A pilum stuck in a shield was hard to pull out and impossible to throw back.</source>
+        <translation>كان عنق البيلوم الحديدي الطويل الرفيع قابلًا للانثناء عند الارتطام. فالبيلوم المنغرس في ترس يصعب نزعه ويستحيل ردّه على راميه.</translation>
+    </message>
+    <message>
+        <source>Trapped near Casilinum in 217 BC, Hannibal tied burning torches to the horns of about two thousand oxen. The Romans followed the lights; his army walked out.</source>
+        <translation>حين حوصر قرب كاسيلينوم عام 217 ق.م، ربط حنبعل مشاعل مشتعلة بقرون نحو ألفي ثور. فتبع الرومان الأضواء، وخرج جيشه ماشيًا.</translation>
+    </message>
+    <message>
+        <source>Tyre, the mother city of Carthage, stood on an island. Alexander the Great took it in 332 BC only by building a causeway out to it.</source>
+        <translation>كانت صور، المدينة الأم لقرطاج، قائمة على جزيرة. ولم يستولِ عليها الإسكندر الأكبر عام 332 ق.م إلا ببناء جسر ممتد إليها.</translation>
+    </message>
 </context>
 <context>
     <name>Main</name>
@@ -6963,10 +7123,6 @@ to see preview</source>
         <translation>حراسة ضريح الحديد</translation>
     </message>
     <message>
-        <source>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</source>
-        <translation>سيناريو صغير مُعدّ يعرض أطلالاً ومزاراً ومناطق لصحوة الموتى.</translation>
-    </message>
-    <message>
         <source>A quiet meadow between a Carthaginian camp and a Roman outpost, laid out for the tutorial: timber, stone and ore within a short walk of the barracks, a scouting party to practise on, and a small enemy camp to take once the army is ready.</source>
         <translation>مرج هادئ بين معسكر قرطاجي وموقع روماني متقدم، أُعدّ للدليل التعليمي: خشب وحجر وخام على مسافة قصيرة من الثكنة، وفرقة كشافة للتدرب عليها، ومعسكر عدو صغير للاستيلاء عليه حين يجهز الجيش.</translation>
     </message>
@@ -7049,6 +7205,10 @@ to see preview</source>
     <message>
         <source>Aurelia Magna</source>
         <translation>أوريليا ماغنا</translation>
+    </message>
+    <message>
+        <source>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</source>
+        <translation>معسكر حراسة روماني على الطريق القديم، في الليلة التي يكتشف فيها لماذا كفّ الرعاة عن سلوكه. الخشب والحجر وقطيع من الماشية قريبة من المعسكر؛ وأطلال المدفن تتوسّط الأرض؛ والمزار الملعون يقف وحيدًا في الأرض الشمالية الشرقية. رابية منخفضة بين المعسكر والمدفن هي الأرض المرتفعة الوحيدة التي تستحق الامتلاك، والطريق يمرّ بمحاذاة الموتى طوال الوقت.</translation>
     </message>
 </context>
 <context>
@@ -7540,10 +7700,6 @@ to see preview</source>
         <translation>اكسر مراحل الاقتحام الرومانية الثلاث. لا يصمد الحي إلا حين يسقط آخر رتل قنصلي صريعاً في الشوارع.</translation>
     </message>
     <message>
-        <source>Burn every cursed guardian from the sepulcher ruins. Kill what cannot die.</source>
-        <translation>أحرق كل حارس ملعون في أطلال الضريح. اقتل ما لا يموت.</translation>
-    </message>
-    <message>
         <source>Cold water and an early start, and my colleague is very pleased with both. He has the men in the river before their porridge. I said what I thought and was overruled, so I shall stand here and watch your ambush do its arithmetic.</source>
         <translation>ماءٌ بارد وانطلاقٌ مبكر، وزميلي مسرورٌ بهما جميعًا. أنزل الرجال في النهر قبل عصيدتهم. قلتُ رأيي فغُلبت عليه، فسأقف ها هنا أشاهد كمينك وهو يُجري حسابه.</translation>
     </message>
@@ -7578,10 +7734,6 @@ to see preview</source>
     <message>
         <source>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</source>
         <translation>ثمانون ألفًا. أُوثِر أن تسمع العدد على أن تراه، فرؤيته تستغرق أكثر الصباح. الأمر اليوم بيد وارّو، ووارّو يؤمن بالتقدّم. قِف حيث شئت.</translation>
-    </message>
-    <message>
-        <source>Endure both waves from the depths. Do not flinch when the ground tears open.</source>
-        <translation>اصمد أمام الموجتين الصاعدتين من الأعماق. لا تجفل حين تنشقّ الأرض.</translation>
     </message>
     <message>
         <source>Every soldier lost is counted by the enemy tonight.</source>
@@ -7676,10 +7828,6 @@ to see preview</source>
         <translation>استولِ على المعسكرين الرومانيين. لا ينتهي الكمين حتى تُنزَل راياتهم.</translation>
     </message>
     <message>
-        <source>Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.</source>
-        <translation>ستون رجلًا ومَزارٌ لا يمرّ به أهل المكان بعد المغيب. أوامري تقول: تحقَّق. وكنت أُوثر أن أحرقه وأكتب أننا تحقّقنا، لكنّ مجلس الشيوخ يقرأ.</translation>
-    </message>
-    <message>
         <source>So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.</source>
         <translation>فانثنى القلب ولم ينثنِ الجناحان. كان ذلك إحكامًا، وأنا أقولها، وقد كنتُ داخله. خسرت روما جيشًا وخاتمًا عن كل فارسٍ فيه. ولم تخسر روما بعدُ شيئًا ذا بال.</translation>
     </message>
@@ -7700,10 +7848,6 @@ to see preview</source>
         <translation>أطلق الكمين واستولِ على المعسكرين الرومانيين الميدانيين خلال عشرين دقيقة، قبل أن ينقشع الضباب وتفلت كتيبة من الحوض.</translation>
     </message>
     <message>
-        <source>Stand your ground. The last soldier alone is not a force — he is a sacrifice.</source>
-        <translation>اثبت في أرضك. آخر جندي وحده ليس قوة — بل قرباناً.</translation>
-    </message>
-    <message>
         <source>Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all.</source>
         <translation>خُذ المعابر إذن. خُذ طول الطريق الشمالي البارد كلَّه وكلَّ حجرٍ رُصف فيه. روما لا تخسر الولايات — بل تُقرضها بفائدة، ويقولون لي إنّ جُباة هذا الطريق بلا وجوهٍ البتّة.</translation>
     </message>
@@ -7722,10 +7866,6 @@ to see preview</source>
     <message>
         <source>The commander falls — and every line collapses behind him.</source>
         <translation>يسقط القائد — فينهار كل خط خلفه.</translation>
-    </message>
-    <message>
-        <source>The commander falls — the vigil ends. And the dead keep walking.</source>
-        <translation>يسقط القائد — وينتهي السهر. ويواصل الموتى مسيرهم.</translation>
     </message>
     <message>
         <source>The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign&apos;s main enemy.</source>
@@ -8584,22 +8724,6 @@ to see preview</source>
         <translation>لا تستطيع تغطية كل بوابة. راقب الإنذار المسبق وتحرّك على الخطوط الداخلية.</translation>
     </message>
     <message>
-        <source>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</source>
-        <translation>اطرد الموتى من المزار ثم اغرس الراية عليه. املأ الأرض التي وقفوا عليها ملحاً.</translation>
-    </message>
-    <message>
-        <source>Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
-        <translation>اسحبوا الجرحى إلى المنزل وأرسلوا في طلب الرجال الذين ما زالوا لدينا. الموتى صبورون. وبوسعنا نحن أيضاً أن نصبر.</translation>
-    </message>
-    <message>
-        <source>Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it.</source>
-        <translation>استولِ على المزار الملعون فوق أطلال المدفن واحتفظ بما تأخذه. ستون رجلاً وثكنة ومنزل واحد هم كل ما استطاعت روما تخصيصه: طهّر الأطلال من الحرّاس، ثم اطرد الموتى من المزار واغرس الراية عليه.</translation>
-    </message>
-    <message>
-        <source>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</source>
-        <translation>ها هم. لا تنظروا إلى الوجوه. الرماة أطلِقوا، والدروع أغلِقوا الصفوف، ولا أحد يطارد شيئاً عائداً إلى ذلك الضباب.</translation>
-    </message>
-    <message>
         <source>Both risings of the dead at the south-western ruins must also fall before the war ends.</source>
         <translation>يجب أن تسقط أيضاً نهضتا الموتى عند الأطلال الجنوبية الغربية قبل أن تنتهي الحرب.</translation>
     </message>
@@ -9054,6 +9178,70 @@ to see preview</source>
     <message>
         <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand across a field from you with an army of my own.</source>
         <translation>أفريقيا إذاً، ونحن الاثنان، ولا نهر نقف خلفه. قد عرفتُ قدر فيلتك، ولديّ نوميديّوك. أيّاً كان ما تنوي فعله، فافعله حيث أراه. انتظرتُ ستة عشر عاماً لأقف قبالتك في ميدان بجيش هو لي.</translation>
+    </message>
+    <message>
+        <source>Break both risings at the shrine. Do not flinch when the ground tears open.</source>
+        <translation>اكسر النهضتين كلتيهما عند المزار. لا تجفل حين تنشقّ الأرض.</translation>
+    </message>
+    <message>
+        <source>Clear the barrow ruins. Both risings of the dead must fall.</source>
+        <translation>طهّر أطلال المدفن. يجب أن تسقط نهضتا الموتى كلتاهما.</translation>
+    </message>
+    <message>
+        <source>Fabius falls. The watch ends, and the dead keep walking.</source>
+        <translation>يسقط فابيوس. تنتهي الحراسة، ويواصل الموتى المسير.</translation>
+    </message>
+    <message>
+        <source>Fabius stands alone, with no soldiers left and no barracks to raise more.</source>
+        <translation>يقف فابيوس وحيدًا، بلا جنود ولا ثكنة يجنّد منها المزيد.</translation>
+    </message>
+    <message>
+        <source>It is calling up the last of them, and another priest with them. Whatever comes out of that ground now is all it has left. So is what we have.</source>
+        <translation>إنه يستدعي آخرهم، ومعهم كاهن قبور آخر. ما يخرج من تلك الأرض الآن هو كل ما تبقّى له. وكذلك ما لدينا.</translation>
+    </message>
+    <message>
+        <source>Listen. The ground is still moving, and one of them is coming up in robes. That one first, archers. The rest are only bones.</source>
+        <translation>اسمعوا. الأرض ما زالت تتحرّك، وواحد منهم يصعد في أردية. ذاك أولًا أيها الرماة. والبقية مجرّد عظام.</translation>
+    </message>
+    <message>
+        <source>Now. Get men onto that shrine and keep them there until the standard is up. Nobody steps off it. Not for loot, not for the wounded, not for me.</source>
+        <translation>الآن. ضعوا رجالًا على ذلك المزار وأبقوهم هناك حتى تُرفع الراية. لا يتنحّى أحد عنه. لا من أجل الغنيمة، ولا من أجل الجرحى، ولا من أجلي.</translation>
+    </message>
+    <message>
+        <source>Pull the wounded back to the camp and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
+        <translation>أعيدوا الجرحى إلى المعسكر واستدعوا من بقي لنا من الرجال. الموتى صبورون. ونحن أيضًا نملك أن نصبر.</translation>
+    </message>
+    <message>
+        <source>Quiet again. Count the living, bring the builders up, and find out what the dead were sitting on. Then look at that shrine and tell me you want to go up there.</source>
+        <translation>عاد الهدوء. عُدّوا الأحياء، وقدّموا البنّائين، واكتشفوا على ماذا كان الموتى جاثمين. ثم انظروا إلى ذلك المزار وقولوا لي إنكم تريدون الصعود إليه.</translation>
+    </message>
+    <message>
+        <source>Raise a marketplace at the watch camp. Gold buys nothing buried in a barrow.</source>
+        <translation>أقِم سوقًا في معسكر الحراسة. فالذهب لا يشتري شيئًا مدفونًا في مدفن.</translation>
+    </message>
+    <message>
+        <source>Rome sent sixty men to find out why the shepherds will not use the old road after dark. Build up the watch camp first, then clear the barrow ruins and take the shrine on the rise. The dead will not come to you: you choose when to wake them, and you can choose to be ready.</source>
+        <translation>أرسلت روما ستين رجلًا ليعرفوا لماذا لا يسلك الرعاة الطريق القديم بعد المغيب. عزّز معسكر الحراسة أولًا، ثم طهّر أطلال المدفن واستولِ على المزار فوق الرابية. لن يأتي الموتى إليك: أنت تختار متى توقظهم، ولك أن تختار أن تكون مستعدًّا.</translation>
+    </message>
+    <message>
+        <source>Sixty men and a road the shepherds will not walk after dark. The Senate wants a report. Cut timber, raise the camp, and keep everyone off that barrow until I say otherwise.</source>
+        <translation>ستون رجلًا وطريقٌ لا يسلكه الرعاة بعد المغيب. مجلس الشيوخ يريد تقريرًا. اقطعوا الخشب، وأقيموا المعسكر، وأبعدوا الجميع عن ذلك المدفن حتى آمر بغير ذلك.</translation>
+    </message>
+    <message>
+        <source>Take the shrine on the rise: cut down its guardians, then keep troops beside it until the standard is planted.</source>
+        <translation>استولِ على المزار فوق الرابية: اصرع حرّاسه، ثم أبقِ جنودًا بجانبه حتى تُغرس الراية.</translation>
+    </message>
+    <message>
+        <source>The hill as well. Of course the hill as well. Shields in front, every bow on the one in robes, and nobody chases anything into that haze.</source>
+        <translation>والتلّ أيضًا. طبعًا والتلّ أيضًا. الدروع في المقدمة، وكل قوس على ذي الأردية، ولا أحد يطارد شيئًا داخل ذلك الضباب.</translation>
+    </message>
+    <message>
+        <source>The quartermaster sent gold, and gold does not hold a shield wall. Build a market and turn it into iron. When we do go to that barrow, the archers stand still and let the dead walk onto the shields.</source>
+        <translation>أرسل أمين المؤن ذهبًا، والذهب لا يصمد في جدار دروع. ابنوا سوقًا وحوّلوه إلى حديد. وحين نذهب إلى ذلك المدفن، يثبت الرماة في أماكنهم ويدعون الموتى يمشون إلى الدروع.</translation>
+    </message>
+    <message>
+        <source>Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.</source>
+        <translation>هؤلاء رجال. كانوا رجالًا. جوبيتر يحفظنا. ...اثبتوا. العظام تنكسر كأيّ شيء آخر. أيها الرماة، الزموا أماكنكم ودعوهم يأتون إلى الدروع.</translation>
     </message>
 </context>
 <context>
@@ -10679,7 +10867,7 @@ Builders reap it for the food that recruits civilians</source>
     </message>
     <message>
         <source>Heavy</source>
-        <translation>ضربة قوية</translation>
+        <translation>ثقيلة</translation>
     </message>
     <message>
         <source>Guard</source>
@@ -10691,11 +10879,11 @@ Builders reap it for the food that recruits civilians</source>
     </message>
     <message>
         <source>Lock on</source>
-        <translation>تثبيت الهدف</translation>
+        <translation>قفل الهدف</translation>
     </message>
     <message>
         <source>Sprint</source>
-        <translation>عدو</translation>
+        <translation>عَدْو</translation>
     </message>
     <message>
         <source>Camera</source>
@@ -10707,7 +10895,7 @@ Builders reap it for the food that recruits civilians</source>
     </message>
     <message>
         <source>WINDED</source>
-        <translation>منهك</translation>
+        <translation>منقطع النفَس</translation>
     </message>
     <message>
         <source>%1  ·  %2 to swap</source>
@@ -10715,15 +10903,15 @@ Builders reap it for the food that recruits civilians</source>
     </message>
     <message>
         <source>BOW</source>
-        <translation>القوس</translation>
+        <translation>قوس</translation>
     </message>
     <message>
         <source>BLADE</source>
-        <translation>النصل</translation>
+        <translation>نصل</translation>
     </message>
     <message>
         <source>AURA</source>
-        <translation>الهالة</translation>
+        <translation>هالة</translation>
     </message>
     <message>
         <source>RALLY</source>
@@ -10731,11 +10919,11 @@ Builders reap it for the food that recruits civilians</source>
     </message>
     <message>
         <source>ON %1</source>
-        <translation>نشط %1</translation>
+        <translation>مفعّل %1</translation>
     </message>
     <message>
         <source>ON</source>
-        <translation>نشط</translation>
+        <translation>مفعّل</translation>
     </message>
     <message>
         <source>CAMERA  ·  CLOSE</source>
@@ -10743,7 +10931,7 @@ Builders reap it for the food that recruits civilians</source>
     </message>
     <message>
         <source>CAMERA  ·  CHASE</source>
-        <translation>الكاميرا  ·  مطاردة</translation>
+        <translation>الكاميرا  ·  مُلاحِقة</translation>
     </message>
     <message>
         <source>BOW DRAWN</source>
@@ -11987,6 +12175,10 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>The risen guardians are put down. Hold the shrine to purify it.</source>
         <translation>أُخمد الحرّاس الناهضون. تمسّك بالمزار لتطهيره.</translation>
+    </message>
+    <message>
+        <source>The ground is moving under the dead. More are coming up.</source>
+        <translation>الأرض تتحرّك تحت الموتى. المزيد منهم يصعدون.</translation>
     </message>
 </context>
 <context>

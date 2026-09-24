@@ -1,4 +1,5 @@
 #include <QDebug>
+#include <QQuaternion>
 #include <qglobal.h>
 #include <qvectornd.h>
 
@@ -74,6 +75,7 @@
 #include "primitive_batch.h"
 #include "profiling/combat_animation_diagnostics.h"
 #include "profiling/frame_profile.h"
+#include "render/entity/structure_foundation.h"
 #include "render_backend_factory.h"
 #include "scene/camera.h"
 #include "scene_renderer.h"
@@ -334,6 +336,30 @@ struct UnitRenderEntry {
   float view_distance_sq{0.0F};
   float cull_radius{0.0F};
 };
+
+[[nodiscard]] auto preview_structure_spawn_type(const Engine::Core::World& world,
+                                                Engine::Core::EntityID id)
+    -> std::optional<Game::Units::SpawnType> {
+  if (const auto* site = world.try_get<Engine::Core::WallConstructionSiteComponent>(id);
+      site != nullptr) {
+    return site->product_type;
+  }
+  if (const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
+      unit != nullptr) {
+    return unit->spawn_type;
+  }
+  if (const auto* preview =
+          world.try_get<Engine::Core::ConstructionPreviewComponent>(id);
+      preview != nullptr && !preview->product_type.empty()) {
+    Game::Units::SpawnType type{};
+    if (Game::Units::try_parse_spawn_type(QString::fromStdString(preview->product_type),
+                                          type) &&
+        Game::Units::is_building_spawn(type)) {
+      return type;
+    }
+  }
+  return std::nullopt;
+}
 
 [[nodiscard]] auto is_map_landmark(const Engine::Core::UnitComponent& unit) -> bool {
 
@@ -974,6 +1000,21 @@ void Renderer::submit_unit_entry(
       } else {
         (*plan.fn)(plan.draw_ctx, probe);
       }
+      if (entry.unit != nullptr &&
+          Game::Units::is_building_spawn(entry.unit->spawn_type)) {
+        auto& cache = *entry.cache;
+        if (!cache.foundation_valid) {
+          cache.foundation = Render::GL::resolve_structure_foundation(
+              world_view().terrain_or_empty(), entry.unit->spawn_type, model_matrix);
+          cache.foundation_valid = true;
+        }
+        Render::GL::submit_structure_foundation(
+            cache.foundation,
+            model_matrix,
+            probe,
+            nullptr,
+            (ctx.resources != nullptr) ? ctx.resources->white() : nullptr);
+      }
       bool const use_batching = plan.use_batching;
 
       auto const* animation_debug =
@@ -1466,6 +1507,11 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
       QMatrix4x4 marker_model;
       marker_model.translate(
           transform->position.x, transform->position.y + 0.03F, transform->position.z);
+
+      marker_model.rotate(
+          QQuaternion::rotationTo(QVector3D(0.0F, 1.0F, 0.0F),
+                                  world_view().terrain_or_empty().sample_ground_normal(
+                                      transform->position.x, transform->position.z)));
       marker_model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
       marker_model.scale(1.15F, 1.15F, 1.0F);
       mesh(quad,
@@ -1489,6 +1535,17 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
 
     m_ghost_coverage = alpha_multiplier;
     (*fn)(ctx, *this);
+    if (auto const ghost_type = preview_structure_spawn_type(*world, entity->get_id());
+        ghost_type.has_value()) {
+
+      Render::GL::submit_structure_foundation(
+          Render::GL::resolve_structure_foundation(
+              world_view().terrain_or_empty(), *ghost_type, model_matrix),
+          model_matrix,
+          *this,
+          nullptr,
+          (resources() != nullptr) ? resources()->white() : nullptr);
+    }
     m_ghost_coverage = 0.0F;
 
     if (progress > 0.0F) {

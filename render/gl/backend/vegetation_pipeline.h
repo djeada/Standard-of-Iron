@@ -2,6 +2,7 @@
 
 #include <QVector2D>
 #include <QVector3D>
+#include <QVector4D>
 
 #include <array>
 #include <cstddef>
@@ -146,6 +147,11 @@ private:
   void upload_prop_mesh_impl(const std::vector<std::pair<QVector3D, QVector3D>>& verts,
                              const std::vector<uint16_t>& idx,
                              StaticMeshBuffers& mesh);
+  void upload_prop_mesh_with_surface_impl(
+      const std::vector<std::pair<QVector3D, QVector3D>>& verts,
+      const std::vector<QVector4D>& surface,
+      const std::vector<uint16_t>& idx,
+      StaticMeshBuffers& mesh);
 
   GL::ShaderCache* m_shader_cache;
   bool m_initialized{false};

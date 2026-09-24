@@ -2,18 +2,21 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
 #include "game/map/map_definition.h"
 
-namespace Render::Ground {
+namespace Game::Map {
 
 class WorldPropClearanceIndex {
 public:
-  void rebuild(const std::vector<Game::Map::WorldProp>& props, float cell_size);
+  void rebuild(const std::vector<WorldProp>& props, float cell_size);
 
   [[nodiscard]] auto overlaps(float world_x, float world_z, float radius) const -> bool;
+
+  auto push_out(float& world_x, float& world_z, float radius) const -> bool;
 
   [[nodiscard]] auto empty() const -> bool { return m_bodies.empty(); }
 
@@ -23,7 +26,7 @@ public:
 
 private:
   struct Body {
-    Game::Map::WorldProp::Type type{};
+    WorldProp::Type type{};
     float x = 0.0F;
     float z = 0.0F;
     float scale = 1.0F;
@@ -39,6 +42,10 @@ private:
 
   [[nodiscard]] static auto cell_key(int cell_x, int cell_z) -> std::uint64_t;
 
+  template <typename Visit>
+  void
+  for_each_candidate(float world_x, float world_z, float reach, Visit&& visit) const;
+
   std::vector<Body> m_bodies;
   std::unordered_map<std::uint64_t, std::vector<std::uint32_t>, CellHash> m_cells;
   float m_cell_size = 4.0F;
@@ -46,6 +53,6 @@ private:
 };
 
 [[nodiscard]] auto
-shared_world_prop_clearance_index() -> const WorldPropClearanceIndex&;
+shared_world_prop_clearance_index() -> std::shared_ptr<const WorldPropClearanceIndex>;
 
-} // namespace Render::Ground
+} // namespace Game::Map

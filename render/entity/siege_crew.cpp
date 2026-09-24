@@ -11,6 +11,7 @@
 #include "civilian_actor.h"
 #include "game/core/component_core.h"
 #include "game/core/world.h"
+#include "game/map/terrain_service.h"
 #include "registry.h"
 
 namespace Render::GL {
@@ -259,6 +260,7 @@ void submit_siege_crew(const DrawContext& ctx,
   const auto owner = static_cast<std::uint32_t>(ctx.entity->get_id());
   const bool distant = pixels >= 0.0F && pixels < k_minimal_pixels;
 
+  const auto& terrain = ctx.world_view.terrain_or_empty();
   begin_civilian_actors();
   for (std::size_t i = 0; i < siege_crew_size(frame.ballista); ++i) {
     const auto& member = state.members[i];
@@ -278,8 +280,14 @@ void submit_siege_crew(const DrawContext& ctx,
       actor.blend_phase = member.previous_phase;
       actor.blend_weight = member.blend * member.blend * (3.0F - 2.0F * member.blend);
     }
+
+    QVector3D stand = origin + right * member.x + forward * member.z;
+    if (terrain.is_initialized()) {
+      stand.setY(
+          terrain.resolve_surface_world_y(stand.x(), stand.z(), 0.0F, stand.y()));
+    }
     QMatrix4x4 world;
-    world.translate(origin + right * member.x + forward * member.z);
+    world.translate(stand);
     world.rotate((engine_yaw + member.yaw) * 180.0F / k_pi, 0.0F, 1.0F, 0.0F);
     actor.world = world;
     add_civilian_actor(ctx, rig, actor);

@@ -154,8 +154,7 @@ void GameStateRestorer::restore_environment_from_metadata(
         scene.scatter->configure(*height_map,
                                  terrain_service.biome_settings(),
                                  terrain_service.authored_world_props(),
-                                 terrain_service.world_props(),
-                                 false);
+                                 terrain_service.world_props());
       }
     }
 

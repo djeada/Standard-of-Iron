@@ -1,11 +1,12 @@
 {
   "name": "Iron Sepulcher Watch",
-  "description": "Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.",
+  "description": "A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.",
+  "theme": "The dead do not rest here. Neither will you.",
   "coord_system": "grid",
-  "max_troops_per_player": 630,
+  "max_troops_per_player": 300,
   "grid": {
-    "width": 48,
-    "height": 48,
+    "width": 72,
+    "height": 72,
     "tile_size": 1.0
   },
   "camera": {
@@ -14,74 +15,366 @@
       0.0,
       0.0
     ],
-    "distance": 18.0,
+    "distance": 24.0,
     "tilt_deg": 48.0,
     "yaw": 225.0,
     "fov_y": 45.0,
     "near": 1.0,
-    "far": 220.0
+    "far": 280.0
   },
+  "environment": {
+    "start_time": 2.0,
+    "time_mode": "continuous",
+    "day_length_seconds": 9600.0,
+    "lighting_profile": "iron_sepulcher"
+  },
+  "biome": {
+    "ground_type": "forest_mud",
+    "seed": 61813,
+    "patch_density": 3.2,
+    "patch_jitter": 0.85,
+    "plant_density": 0.6,
+    "moisture_level": 0.7,
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.13,
+    "irregularity_amplitude": 0.07,
+    "procedural_boulders_enabled": false
+  },
+  "rain": {
+    "enabled": true,
+    "type": "rain",
+    "intensity": "light",
+    "cycle_duration": 360.0,
+    "active_duration": 110.0,
+    "fade_duration": 10.0,
+    "wind_strength": 0.14,
+    "wind_direction": 300.0
+  },
+  "terrain": [
+    {
+      "id": "camp_floor",
+      "type": "flat",
+      "x": 15.0,
+      "z": 58.0,
+      "width": 24.0,
+      "depth": 18.0,
+      "description": "The watch camp's floor."
+    },
+    {
+      "id": "barrow_floor",
+      "type": "flat",
+      "x": 38.0,
+      "z": 33.0,
+      "width": 20.0,
+      "depth": 20.0,
+      "description": "The sunken ground around the barrow ruins."
+    },
+    {
+      "id": "shrine_floor",
+      "type": "flat",
+      "x": 57.0,
+      "z": 15.0,
+      "width": 16.0,
+      "depth": 14.0,
+      "description": "The trampled ground in front of the shrine."
+    },
+    {
+      "id": "watch_knoll",
+      "type": "hill",
+      "x": 27.0,
+      "z": 45.0,
+      "radius": 5.0,
+      "height": 2.2,
+      "description": "The knoll between the camp and the barrow; archers on it see the whole approach."
+    },
+    {
+      "id": "grave_mound",
+      "type": "hill",
+      "x": 52.0,
+      "z": 52.0,
+      "radius": 6.0,
+      "height": 2.4,
+      "description": "An old grave mound east of the road, with iron in its flank."
+    }
+  ],
+  "forests": [
+    {
+      "id": "camp_woods",
+      "x": 5.0,
+      "z": 46.0,
+      "radius": 6.0
+    },
+    {
+      "id": "south_copse",
+      "x": 33.0,
+      "z": 66.0,
+      "radius": 4.0
+    },
+    {
+      "id": "vein_thicket",
+      "x": 19.0,
+      "z": 17.0,
+      "radius": 5.0
+    },
+    {
+      "id": "east_pines",
+      "x": 65.0,
+      "z": 38.0,
+      "radius": 5.0
+    }
+  ],
+  "roads": [
+    {
+      "id": "watch_road",
+      "start": [
+        18.0,
+        54.0
+      ],
+      "end": [
+        55.0,
+        21.0
+      ],
+      "width": 3.0,
+      "style": "default",
+      "waypoints": [
+        [
+          18.0,
+          54.0
+        ],
+        [
+          24.0,
+          50.0
+        ],
+        [
+          31.0,
+          46.0
+        ],
+        [
+          40.0,
+          45.0
+        ],
+        [
+          47.0,
+          40.0
+        ],
+        [
+          51.0,
+          30.0
+        ],
+        [
+          55.0,
+          21.0
+        ]
+      ]
+    }
+  ],
+  "rivers": [],
+  "lakes": [],
+  "bridges": [],
   "spawns": [
     {
+      "id": "p1_commander",
       "type": "roman_legion_organizer",
-      "x": 14.0,
-      "z": 30.0,
+      "x": 20.0,
+      "z": 55.0,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"
     }
   ],
+  "structures": [
+    {
+      "id": "p1_barracks",
+      "type": "barracks",
+      "x": 14.0,
+      "z": 58.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic",
+      "max_population": 60,
+      "description": "The watch camp."
+    }
+  ],
+  "firecamps": [
+    {
+      "id": "camp_fire",
+      "x": 19,
+      "z": 61.17,
+      "intensity": 1.1,
+      "radius": 3.4
+    }
+  ],
   "world_props": [
     {
+      "id": "barrow_ruins",
       "type": "ruins",
-      "x": 24,
-      "z": 24,
-      "scale": 1.1
+      "x": 38,
+      "z": 33,
+      "scale": 1.2
     },
     {
+      "id": "sepulcher_shrine",
       "type": "magic_shrine",
-      "x": 33,
-      "z": 16,
+      "x": 57,
+      "z": 15,
       "scale": 1.0
     },
     {
+      "id": "barrow_deadfall_a",
       "type": "dead_tree",
-      "x": 29,
-      "z": 21,
+      "x": 44,
+      "z": 27,
       "scale": 1.1
     },
     {
-      "type": "boulder",
-      "x": 19,
-      "z": 27,
+      "id": "barrow_deadfall_b",
+      "type": "dead_tree",
+      "x": 31,
+      "z": 38,
+      "scale": 0.95
+    },
+    {
+      "id": "shrine_deadfall_a",
+      "type": "dead_tree",
+      "x": 51,
+      "z": 11,
+      "scale": 1.15
+    },
+    {
+      "id": "shrine_deadfall_b",
+      "type": "dead_tree",
+      "x": 63,
+      "z": 21,
       "scale": 1.0
     },
     {
+      "id": "road_watcher",
+      "type": "statue",
+      "x": 49,
+      "z": 24,
+      "scale": 1.0,
+      "rotation": 210
+    },
+    {
+      "id": "shepherd_house",
+      "type": "abandoned_home",
+      "x": 49.6,
+      "z": 43,
+      "rotation": 40
+    },
+    {
+      "id": "camp_tent_a",
+      "type": "tent",
+      "x": 4,
+      "z": 67,
+      "rotation": 15
+    },
+    {
+      "id": "camp_tent_b",
+      "type": "tent",
+      "x": 21,
+      "z": 65,
+      "rotation": 340
+    },
+    {
+      "id": "camp_cart",
+      "type": "supply_cart",
+      "x": 16.31,
+      "z": 66.81,
+      "rotation": 90
+    },
+    {
+      "id": "camp_rack",
+      "type": "weapon_rack",
+      "x": 23,
+      "z": 58,
+      "rotation": 210
+    },
+    {
+      "id": "camp_stone_a",
+      "type": "boulder",
+      "x": 26,
+      "z": 62,
+      "scale": 1.15
+    },
+    {
+      "id": "camp_stone_b",
+      "type": "boulder",
+      "x": 29,
+      "z": 64,
+      "scale": 1.05
+    },
+    {
+      "id": "camp_stone_c",
+      "type": "boulder",
+      "x": 25,
+      "z": 67,
+      "scale": 1.2
+    },
+    {
+      "id": "camp_stone_d",
+      "type": "boulder",
+      "x": 6,
+      "z": 55,
+      "scale": 1.0
+    },
+    {
+      "id": "knoll_stone",
+      "type": "boulder",
+      "x": 22.96,
+      "z": 39.13,
+      "scale": 1.1
+    },
+    {
+      "id": "camp_iron",
+      "type": "iron_ore",
+      "x": 38,
+      "z": 60,
+      "scale": 1.0
+    },
+    {
+      "id": "barrow_iron",
+      "type": "iron_ore",
+      "x": 27,
+      "z": 30,
+      "scale": 1.0
+    },
+    {
+      "id": "mound_iron",
+      "type": "iron_ore",
+      "x": 60,
+      "z": 56,
+      "scale": 1.0
+    },
+    {
+      "id": "north_vein",
       "type": "cursed_gold_vein",
-      "x": 10,
-      "z": 12,
+      "x": 12,
+      "z": 22,
       "scale": 1.0,
       "rotation": 2.26
     }
   ],
+  "landmarks": [],
   "undead_zones": [
     {
       "id": "ruins_guard",
       "anchor_type": "ruins",
-      "x": 24,
-      "z": 24,
+      "x": 38,
+      "z": 33,
       "radius": 8.0,
-      "leash_radius": 14.0,
+      "leash_radius": 13.0,
       "owner_id": 99,
       "team_id": 99,
       "awaken_on": [
         "unit_enters_radius"
       ],
+      "wave_delay": 18.0,
       "waves": [
         {
           "trigger": "initial",
           "units": {
-            "skeleton_archer": 3,
+            "skeleton_archer": 2,
             "skeleton_swordsman": 1
           }
         },
@@ -94,7 +387,7 @@
         }
       ],
       "clear_reward": {
-        "wood": 60,
+        "wood": 80,
         "iron": 90,
         "food": 40
       }
@@ -102,8 +395,8 @@
     {
       "id": "shrine_sentinels",
       "anchor_type": "magic_shrine",
-      "x": 33,
-      "z": 16,
+      "x": 57,
+      "z": 15,
       "radius": 7.0,
       "leash_radius": 12.0,
       "owner_id": 99,
@@ -111,12 +404,12 @@
       "awaken_on": [
         "unit_enters_radius"
       ],
+      "wave_delay": 20.0,
       "waves": [
         {
           "trigger": "initial",
           "units": {
-            "skeleton_swordsman": 2,
-            "skeleton_archer": 2,
+            "skeleton_swordsman": 3,
             "grave_priest": 1
           }
         },
@@ -124,16 +417,60 @@
           "trigger": "after_clear",
           "units": {
             "skeleton_swordsman": 2,
-            "skeleton_archer": 1
+            "skeleton_archer": 2,
+            "grave_priest": 1
           }
         }
       ],
       "clear_reward": {
-        "gold": 120,
+        "gold": 150,
         "iron": 60
       }
     }
   ],
+  "wildlife": {
+    "enabled": true,
+    "seed": 61813,
+    "near_simulation_radius": 46.0,
+    "far_simulation_radius": 90.0,
+    "sheep": {
+      "enabled": true,
+      "groups": 1,
+      "group_size_min": 4,
+      "group_size_max": 6,
+      "roam_radius": 8.0,
+      "respawn": true,
+      "respawn_delay": 160.0,
+      "spawn_areas": [
+        {
+          "x": 8.0,
+          "z": 36.0,
+          "radius": 6.0
+        }
+      ],
+      "alert_radius": 10.0
+    },
+    "wolves": {
+      "enabled": false,
+      "groups": 0
+    },
+    "birds": {
+      "enabled": true,
+      "groups": 1,
+      "group_size_min": 3,
+      "group_size_max": 6,
+      "flight_height": 9.0,
+      "flyover_interval_min": 24.0,
+      "flyover_interval_max": 50.0
+    }
+  },
+  "starting_resources": {
+    "gold": 220,
+    "food": 160,
+    "wood": 240,
+    "stone": 140,
+    "iron": 120
+  },
   "victory": {
     "type": "undead_zones",
     "undead_objectives": [
@@ -150,34 +487,5 @@
       "no_commander",
       "only_commander_remaining"
     ]
-  },
-  "time_of_day": "night",
-  "starting_resources": {
-    "gold": 250,
-    "food": 120,
-    "wood": 90,
-    "stone": 60,
-    "iron": 120
-  },
-  "structures": [
-    {
-      "type": "barracks",
-      "x": 11,
-      "z": 36,
-      "player_id": 1,
-      "team_id": 1,
-      "nation": "roman_republic",
-      "max_population": 60
-    }
-  ],
-  "rain": {
-    "enabled": true,
-    "type": "rain",
-    "intensity": "light",
-    "cycle_duration": 360.0,
-    "active_duration": 110.0,
-    "fade_duration": 10.0,
-    "wind_strength": 0.14,
-    "wind_direction": 300.0
   }
 }

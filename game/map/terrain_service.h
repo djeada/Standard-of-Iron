@@ -87,6 +87,9 @@ public:
                                    float world_y_offset = 0.0F,
                                    float fallback_y = 0.0F) const -> QVector3D;
 
+  [[nodiscard]] auto sample_ground_normal(float world_x,
+                                          float world_z) const -> QVector3D;
+
   [[nodiscard]] auto get_terrain_height_grid(int grid_x, int grid_z) const -> float;
 
   [[nodiscard]] auto is_walkable(int grid_x, int grid_z) const -> bool;
@@ -243,6 +246,7 @@ private:
       float world_x, float world_z, float fallback_y) const -> SurfaceHeightSample;
   void normalize_world_props(std::vector<WorldProp>& world_props);
   void sync_world_prop_identity_state();
+  [[nodiscard]] static auto next_props_revision() -> std::uint64_t;
   void bump_world_props_revision();
   void bump_authored_world_props_revision();
   void bump_navigation_topology_revision();

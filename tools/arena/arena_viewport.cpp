@@ -1670,6 +1670,12 @@ auto ArenaViewport::build_selection_summary() const -> QString {
 }
 
 void ArenaViewport::regenerate_terrain() {
+  if (m_terrain_from_map && m_terrain_review_definition.has_value()) {
+    qInfo() << "Arena: regenerate_terrain keeps the loaded map terrain";
+    apply_map_terrain();
+    update();
+    return;
+  }
   std::vector<float> heights(
       static_cast<size_t>(m_terrain_grid_extent * m_terrain_grid_extent), 0.0F);
   std::vector<Game::Map::TerrainType> terrain_types(heights.size(),
@@ -1764,6 +1770,11 @@ void ArenaViewport::regenerate_terrain() {
 
   Game::Map::BiomeSettings biome;
   Game::Map::apply_ground_type_defaults(biome, m_ground_type);
+  if (m_suppress_procedural_props) {
+    biome.procedural_boulders_enabled = false;
+    biome.procedural_iron_ore_enabled = false;
+    biome.procedural_trees_enabled = false;
+  }
   if (m_terrain_snowbound) {
 
     biome.grass_primary = QVector3D(0.64F, 0.70F, 0.80F);
@@ -2393,8 +2404,8 @@ auto ArenaViewport::spawn_single_building(int owner_id,
                                           Game::Units::SpawnType building_type,
                                           std::optional<QVector3D> requested_position,
                                           bool ai_controlled,
-                                          int max_population)
-    -> Engine::Core::EntityID {
+                                          int max_population,
+                                          float rotation_y) -> Engine::Core::EntityID {
   if (m_unit_factory == nullptr || m_world == nullptr) {
     return 0U;
   }
@@ -2416,6 +2427,7 @@ auto ArenaViewport::spawn_single_building(int owner_id,
   if (max_population > 0) {
     params.max_population = max_population;
   }
+  params.rotation_y = rotation_y;
 
   auto unit = m_unit_factory->create(building_type, *m_world, params);
   if (unit == nullptr) {
@@ -2430,6 +2442,15 @@ auto ArenaViewport::spawn_single_building(int owner_id,
       spawn_position.x(),
       spawn_position.z(),
       owner_id);
+  if (rotation_y != 0.0F) {
+    auto& collision = m_session.building_collision();
+    collision.resize_building(
+        entity_id,
+        Game::Systems::BuildingCollisionRegistry::axis_aligned_size(
+            Game::Systems::BuildingCollisionRegistry::get_building_size(
+                Game::Units::spawn_typeToQString(building_type).toStdString()),
+            rotation_y));
+  }
 
   m_units.push_back(std::move(unit));
   return entity_id;
@@ -2857,7 +2878,9 @@ void ArenaViewport::reset_arena() {
       m_terrain_settings.height_scale != k_default_terrain_height_scale ||
       m_ground_type != m_ground_type_baseline ||
       m_terrain_settings.seed != m_terrain_seed_baseline ||
-      m_suppress_boundary_mountains;
+      m_suppress_boundary_mountains || m_suppress_procedural_props ||
+      m_terrain_from_map;
+  m_terrain_from_map = false;
   m_arena_rivers.clear();
   m_arena_lakes.clear();
   m_arena_bridges.clear();
@@ -2869,6 +2892,7 @@ void ArenaViewport::reset_arena() {
   m_ground_type = m_ground_type_baseline;
   m_terrain_settings.seed = m_terrain_seed_baseline;
   m_suppress_boundary_mountains = false;
+  m_suppress_procedural_props = false;
   clear_world_props();
   if (had_custom_terrain && m_world_props.empty()) {
     reconfigure_terrain_from_state();
@@ -3704,6 +3728,7 @@ auto ArenaViewport::load_terrain_review_map(const QString& map_path,
   reset_arena();
   clear_camera_key_state();
   m_terrain_review_mode = true;
+  m_terrain_from_map = true;
   m_terrain_review_definition = std::move(definition);
   apply_environment_definition(m_terrain_review_definition->environment);
   if (m_renderer != nullptr) {
@@ -3730,6 +3755,35 @@ auto ArenaViewport::load_terrain_review_map(const QString& map_path,
   set_terrain_review_gameplay_camera();
   update();
   return true;
+}
+
+auto ArenaViewport::initialize_terrain_from_map(const QString& map_path) -> bool {
+  Game::Map::MapDefinition definition;
+  QString error;
+  if (!Game::Map::MapLoader::load_from_json_file(
+          Utils::Resources::resolve_resource_path(map_path), definition, &error)) {
+    qWarning() << "Arena: cannot read map" << map_path << ":" << error;
+    return false;
+  }
+  m_terrain_from_map = true;
+  m_terrain_review_definition = std::move(definition);
+  apply_map_terrain();
+  return true;
+}
+
+void ArenaViewport::apply_map_terrain() {
+  const auto& map = *m_terrain_review_definition;
+  m_terrain_grid_extent = map.grid.width;
+
+  m_session.terrain().initialize(map);
+  m_session.visibility().initialize(
+      map.grid.width, map.grid.height, map.grid.tile_size);
+  Game::Systems::NavGrid::initialize(map.grid.width, map.grid.height);
+  apply_initial_visibility();
+  sync_camera_map_bounds(m_camera.get(), m_session.visibility());
+  if (m_gl_initialized) {
+    configure_rendering_from_terrain();
+  }
 }
 
 void ArenaViewport::set_terrain_review_content_enabled(bool enabled) {
@@ -3801,7 +3855,9 @@ void ArenaViewport::spawn_terrain_review_structures() {
           resolve_nation(structure.player_id, parse_nation(structure.nation)),
           structure.type,
           point->position,
-          false);
+          false,
+          0,
+          structure.rotation);
       continue;
     }
 
@@ -4096,16 +4152,24 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     m_terrain_settings.seed = definition->terrain_seed_override;
   }
   m_suppress_boundary_mountains = definition->suppress_boundary_mountains;
+  m_suppress_procedural_props = definition->suppress_procedural_props;
   const bool snow_changed = m_terrain_snowbound != definition->terrain_snowbound;
   m_terrain_snowbound = definition->terrain_snowbound;
-  if (snow_changed || m_terrain_snowbound || !m_arena_rivers.empty() ||
-      !m_arena_lakes.empty() || !m_arena_bridges.empty() || !m_arena_roads.empty() ||
-      !m_arena_elevation_patches.empty() || m_terrain_grid_extent != k_terrain_width ||
-      m_arena_floor_half_extent != k_default_floor_extent ||
-      m_terrain_settings.height_scale != k_default_terrain_height_scale ||
-      m_ground_type != m_ground_type_baseline ||
-      m_terrain_settings.seed != m_terrain_seed_baseline ||
-      m_suppress_boundary_mountains) {
+  const bool map_terrain = !definition->campaign_map_path.isEmpty();
+  if (map_terrain) {
+    if (!initialize_terrain_from_map(definition->campaign_map_path)) {
+      qWarning() << "Arena scenario" << definition->id << "cannot load its map"
+                 << definition->campaign_map_path;
+    }
+  } else if (snow_changed || m_terrain_snowbound || !m_arena_rivers.empty() ||
+             !m_arena_lakes.empty() || !m_arena_bridges.empty() ||
+             !m_arena_roads.empty() || !m_arena_elevation_patches.empty() ||
+             m_terrain_grid_extent != k_terrain_width ||
+             m_arena_floor_half_extent != k_default_floor_extent ||
+             m_terrain_settings.height_scale != k_default_terrain_height_scale ||
+             m_ground_type != m_ground_type_baseline ||
+             m_terrain_settings.seed != m_terrain_seed_baseline ||
+             m_suppress_boundary_mountains || m_suppress_procedural_props) {
     reconfigure_terrain_from_state();
   }
   auto& owners = m_session.owners();
@@ -4142,7 +4206,11 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     resources.set(group.owner_id, Game::Systems::ResourceType::Stone, stock.stone);
     resources.set(group.owner_id, Game::Systems::ResourceType::Iron, stock.iron);
   }
-  QVector3D const scenario_origin = resolve_spawn_anchor_world();
+  if (map_terrain && m_terrain_review_definition.has_value()) {
+    spawn_terrain_review_structures();
+  }
+  QVector3D const scenario_origin =
+      map_terrain ? QVector3D() : resolve_spawn_anchor_world();
 
   configure_scenario_wildlife(*definition, scenario_origin);
 

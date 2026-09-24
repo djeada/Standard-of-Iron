@@ -320,29 +320,6 @@ constexpr float k_patch_density = 3.4F;
 constexpr float k_patch_jitter = 0.9F;
 constexpr float k_moisture = 0.55F;
 
-[[nodiscard]] auto city_biome(const CityPlan& plan) -> Game::Map::BiomeSettings {
-  Game::Map::BiomeSettings biome;
-  Game::Map::GroundType ground = Game::Map::GroundType::GrassDry;
-  Game::Map::try_parse_ground_type(plan.definition.ground_type, ground);
-  Game::Map::apply_ground_type_defaults(biome, ground);
-  biome.ground_type = ground;
-  biome.seed = static_cast<std::uint32_t>(plan.definition.terrain_seed_override);
-  biome.height_noise_amplitude = k_height_noise;
-  biome.height_noise_frequency = k_height_noise_frequency;
-  biome.patch_density = k_patch_density;
-  biome.patch_jitter = k_patch_jitter;
-  biome.plant_density = k_plant_density;
-  biome.moisture_level = k_moisture;
-  biome.ground_irregularity_enabled = true;
-  biome.irregularity_scale = k_irregularity_scale;
-  biome.irregularity_amplitude = k_irregularity_amplitude;
-
-  biome.procedural_boulders_enabled = false;
-  biome.procedural_iron_ore_enabled = false;
-  biome.procedural_trees_enabled = false;
-  return biome;
-}
-
 [[nodiscard]] auto field_of_written_map(const QString& path,
                                         Game::Map::MapDefinition& map,
                                         QString* error) -> Game::Map::TerrainHeightMap {
@@ -391,37 +368,6 @@ constexpr float k_moisture = 0.55F;
     }
   }
   return seen;
-}
-
-[[nodiscard]] auto stands_on_ground(const Game::Map::TerrainHeightMap& field,
-                                    const std::vector<std::uint8_t>& reachable,
-                                    double world_x,
-                                    double world_z) -> bool {
-  const int offset = (k_grid_extent - 1) / 2;
-  const int grid_x = static_cast<int>(std::lround(world_x)) + offset;
-  const int grid_z = static_cast<int>(std::lround(world_z)) + offset;
-
-  constexpr int k_nudge = 6;
-  for (int radius = 0; radius <= k_nudge; ++radius) {
-    for (int dz = -radius; dz <= radius; ++dz) {
-      for (int dx = -radius; dx <= radius; ++dx) {
-        if (std::max(std::abs(dx), std::abs(dz)) != radius) {
-          continue;
-        }
-        const int x = grid_x + dx;
-        const int z = grid_z + dz;
-        if (x < 0 || z < 0 || x >= k_grid_extent || z >= k_grid_extent) {
-          continue;
-        }
-        if (!field.is_walkable(x, z)) {
-          continue;
-        }
-
-        return reachable[static_cast<std::size_t>(z) * k_grid_extent + x] != 0U;
-      }
-    }
-  }
-  return false;
 }
 
 [[nodiscard]] auto first_player_barracks(const QJsonObject& root) -> QVector3D {

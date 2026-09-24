@@ -3180,7 +3180,7 @@
             "rotation": 90,
             "type": "wall_gate",
             "x": 310,
-            "z": 242
+            "z": 244
         },
         {
             "authored": true,
@@ -4808,7 +4808,7 @@
             "authored": true,
             "end": [
                 310,
-                239
+                240
             ],
             "nation": "carthage",
             "player_id": 1,
@@ -4829,7 +4829,7 @@
             "player_id": 1,
             "start": [
                 310,
-                247
+                248
             ],
             "type": "wall_segment",
             "width": 2

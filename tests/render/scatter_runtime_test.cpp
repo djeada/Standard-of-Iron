@@ -210,7 +210,7 @@ TEST(ScatterRuntimeTest, BiomeRendererConfiguresLargeTerrainWithoutReallocationC
   EXPECT_GT(renderer.instance_count(), 0U);
 }
 
-TEST(ScatterRuntimeTest, LargeRockyMapsGetProceduralBouldersAndLogs) {
+TEST(ScatterRuntimeTest, LargeRockyMapsGrowBouldersAndLogsAsWorldProps) {
   Game::Map::TerrainHeightMap const height_map(96, 96, 1.0F);
   Game::Map::BiomeSettings biome_settings;
   Game::Map::apply_ground_type_defaults(biome_settings,
@@ -220,18 +220,19 @@ TEST(ScatterRuntimeTest, LargeRockyMapsGetProceduralBouldersAndLogs) {
   biome_settings.moisture_level = 0.20F;
   biome_settings.plant_density = 0.35F;
 
-  std::vector<Game::Map::WorldProp> const no_authored_props;
+  auto const world_props = Game::Map::generate_procedural_world_props(
+      height_map, biome_settings, Game::Map::CoordSystem::Grid, {});
 
   Render::GL::BoulderRenderer boulders;
   boulders.set_world_view(
       Render::WorldView::of(Game::Session::SessionContext::active()));
-  boulders.configure(height_map, biome_settings, no_authored_props, no_authored_props);
+  boulders.configure(height_map, biome_settings, world_props);
   EXPECT_GT(boulders.instance_count(), 0U);
 
   Render::GL::DeadTreeRenderer dead_trees;
   dead_trees.set_world_view(
       Render::WorldView::of(Game::Session::SessionContext::active()));
-  dead_trees.configure(height_map, biome_settings, no_authored_props);
+  dead_trees.configure(height_map, biome_settings, world_props);
   EXPECT_GT(dead_trees.instance_count(), 0U);
 }
 
@@ -260,15 +261,14 @@ TEST(ScatterRuntimeTest, CampaniaCampaignMaintainsRichNaturalScatter) {
   Render::GL::BoulderRenderer boulders;
   boulders.set_world_view(
       Render::WorldView::of(Game::Session::SessionContext::active()));
-  boulders.configure(
-      *height_map, map_def.biome, map_def.world_props, map_def.world_props);
+  boulders.configure(*height_map, map_def.biome, terrain.world_props());
 
   EXPECT_GE(plants.instance_count(), 2500U);
   EXPECT_LE(plants.instance_count(), 7000U);
   EXPECT_GE(stones.instance_count(), 140U);
   EXPECT_LE(stones.instance_count(), 900U);
-  EXPECT_GE(boulders.instance_count(), 14U);
-  EXPECT_LE(boulders.instance_count(), 120U);
+  EXPECT_GE(boulders.instance_count(), 200U);
+  EXPECT_LE(boulders.instance_count(), 600U);
 
   terrain.clear();
 }
@@ -347,7 +347,7 @@ TEST(ScatterRuntimeTest, RuntimePropRefreshDoesNotRescatterPlantsOrStones) {
   terrain.clear();
 }
 
-TEST(ScatterRuntimeTest, ProceduralPinesUseResolvedSurfaceHeightAndReducedScaleRange) {
+TEST(ScatterRuntimeTest, ProceduralPinesRestOnResolvedSurfaceWithReducedScaleRange) {
   auto& terrain = Game::Map::TerrainService::instance();
   terrain.initialize(make_tree_map_definition(Game::Map::GroundType::ForestMud, 1337U));
   auto const* height_map = terrain.get_height_map();
@@ -356,20 +356,19 @@ TEST(ScatterRuntimeTest, ProceduralPinesUseResolvedSurfaceHeightAndReducedScaleR
   Render::GL::TreeRenderer renderer(Game::Map::TreeSpecies::Pine);
   renderer.set_world_view(
       Render::WorldView::of(Game::Session::SessionContext::active()));
-  renderer.configure(*height_map,
-                     terrain.biome_settings(),
-                     terrain.authored_world_props(),
-                     terrain.world_props());
+  renderer.configure(*height_map, terrain.biome_settings(), terrain.world_props());
 
   ASSERT_GT(renderer.instance_count(), 0U);
 
   auto const scatter_rules =
       Game::Map::make_scatter_rules(terrain.biome_settings().ground_type);
   for (auto const& instance : renderer.instances_for_test()) {
-    EXPECT_NEAR(instance.pos_scale.y(),
-                terrain.resolve_surface_world_y(
-                    instance.pos_scale.x(), instance.pos_scale.z(), 0.0F, 0.0F),
-                0.001F);
+
+    float const surface_y = terrain.resolve_surface_world_y(
+        instance.pos_scale.x(), instance.pos_scale.z(), 0.0F, 0.0F);
+    EXPECT_LE(instance.pos_scale.y(), surface_y + 0.001F);
+    EXPECT_GE(instance.pos_scale.y(),
+              surface_y - 0.35F * instance.pos_scale.w() - 0.001F);
     EXPECT_LE(instance.pos_scale.w(),
               scatter_rules.tree(Game::Map::TreeSpecies::Pine).scale_max *
                       height_map->get_tile_size() * 1.18F +
@@ -379,7 +378,7 @@ TEST(ScatterRuntimeTest, ProceduralPinesUseResolvedSurfaceHeightAndReducedScaleR
   terrain.clear();
 }
 
-TEST(ScatterRuntimeTest, ProceduralOlivesUseResolvedSurfaceHeightAndReducedScaleRange) {
+TEST(ScatterRuntimeTest, ProceduralOlivesRestOnResolvedSurfaceWithReducedScaleRange) {
   auto& terrain = Game::Map::TerrainService::instance();
   terrain.initialize(make_tree_map_definition(Game::Map::GroundType::GrassDry, 4242U));
   auto const* height_map = terrain.get_height_map();
@@ -388,20 +387,19 @@ TEST(ScatterRuntimeTest, ProceduralOlivesUseResolvedSurfaceHeightAndReducedScale
   Render::GL::TreeRenderer renderer(Game::Map::TreeSpecies::Olive);
   renderer.set_world_view(
       Render::WorldView::of(Game::Session::SessionContext::active()));
-  renderer.configure(*height_map,
-                     terrain.biome_settings(),
-                     terrain.authored_world_props(),
-                     terrain.world_props());
+  renderer.configure(*height_map, terrain.biome_settings(), terrain.world_props());
 
   ASSERT_GT(renderer.instance_count(), 0U);
 
   auto const scatter_rules =
       Game::Map::make_scatter_rules(terrain.biome_settings().ground_type);
   for (auto const& instance : renderer.instances_for_test()) {
-    EXPECT_NEAR(instance.pos_scale.y(),
-                terrain.resolve_surface_world_y(
-                    instance.pos_scale.x(), instance.pos_scale.z(), 0.0F, 0.0F),
-                0.001F);
+
+    float const surface_y = terrain.resolve_surface_world_y(
+        instance.pos_scale.x(), instance.pos_scale.z(), 0.0F, 0.0F);
+    EXPECT_LE(instance.pos_scale.y(), surface_y + 0.001F);
+    EXPECT_GE(instance.pos_scale.y(),
+              surface_y - 0.35F * instance.pos_scale.w() - 0.001F);
     EXPECT_LE(instance.pos_scale.w(),
               scatter_rules.tree(Game::Map::TreeSpecies::Olive).scale_max *
                       height_map->get_tile_size() * 1.22F +
@@ -433,53 +431,13 @@ TEST(ScatterRuntimeTest, EveryTreeSpeciesScattersOnAGroundTypeThatAllowsIt) {
     Render::GL::TreeRenderer renderer(test_case.species);
     renderer.set_world_view(
         Render::WorldView::of(Game::Session::SessionContext::active()));
-    renderer.configure(*height_map,
-                       terrain.biome_settings(),
-                       terrain.authored_world_props(),
-                       terrain.world_props());
+    renderer.configure(*height_map, terrain.biome_settings(), terrain.world_props());
 
     EXPECT_GT(renderer.instance_count(), 0U)
         << "tree species " << static_cast<int>(test_case.species)
         << " is allowed on its ground type but scattered nothing";
     terrain.clear();
   }
-}
-
-TEST(ScatterRuntimeTest, TheWorldPropGeneratorAgreesWithTheProceduralScatter) {
-  auto& terrain = Game::Map::TerrainService::instance();
-  terrain.initialize(make_tree_map_definition(Game::Map::GroundType::GrassDry, 4242U));
-  auto const* height_map = terrain.get_height_map();
-  ASSERT_NE(height_map, nullptr);
-
-  const auto generated =
-      Game::Map::generate_procedural_world_props(*height_map,
-                                                 terrain.biome_settings(),
-                                                 terrain.coord_system(),
-                                                 terrain.authored_world_props());
-
-  for (std::size_t i = 0; i < Game::Map::k_tree_species_count; ++i) {
-    const auto species = static_cast<Game::Map::TreeSpecies>(i);
-    const auto prop_type = Render::Ground::tree_scatter_profile(species).prop_type;
-
-    Render::GL::TreeRenderer renderer(species);
-    renderer.set_world_view(
-        Render::WorldView::of(Game::Session::SessionContext::active()));
-    renderer.configure(
-        *height_map, terrain.biome_settings(), terrain.authored_world_props(), {});
-
-    const auto generated_count = static_cast<std::size_t>(
-        std::count_if(generated.begin(),
-                      generated.end(),
-                      [prop_type](const Game::Map::WorldProp& prop) {
-                        return prop.type == prop_type;
-                      }));
-    EXPECT_EQ(renderer.instance_count(), generated_count)
-        << "the harvestable world props and the drawn biome scatter must come "
-           "from the same walk for tree species "
-        << i;
-  }
-
-  terrain.clear();
 }
 
 TEST(ScatterRuntimeTest, RuntimePlantedShrineReachesTheScatterPass) {
@@ -515,14 +473,18 @@ TEST(ScatterRuntimeTest, RuntimePlantedShrineReachesTheScatterPass) {
   terrain.clear();
 }
 
-TEST(ScatterRuntimeTest, WorldPropRefreshReusesTheProceduralBiomeScatter) {
+TEST(ScatterRuntimeTest, SolidScatterDrawsOnlyTheSimulationsWorldProps) {
   auto& terrain = Game::Map::TerrainService::instance();
   terrain.initialize(make_tree_map_definition(Game::Map::GroundType::ForestMud, 8081U));
   auto const* height_map = terrain.get_height_map();
   ASSERT_NE(height_map, nullptr);
-
-  const auto& seed_props = terrain.authored_world_props();
-  auto runtime_props = terrain.world_props();
+  auto world_props = terrain.world_props();
+  auto count_of = [&world_props](Game::Map::WorldProp::Type type) {
+    return static_cast<std::size_t>(
+        std::count_if(world_props.begin(), world_props.end(), [type](const auto& p) {
+          return p.type == type;
+        }));
+  };
 
   Render::GL::TreeRenderer pines(Game::Map::TreeSpecies::Pine);
   pines.set_world_view(Render::WorldView::of(Game::Session::SessionContext::active()));
@@ -532,45 +494,26 @@ TEST(ScatterRuntimeTest, WorldPropRefreshReusesTheProceduralBiomeScatter) {
   Render::GL::DeadTreeRenderer dead_trees;
   dead_trees.set_world_view(
       Render::WorldView::of(Game::Session::SessionContext::active()));
-  pines.configure(*height_map, terrain.biome_settings(), seed_props, runtime_props);
-  boulders.configure(*height_map, terrain.biome_settings(), seed_props, runtime_props);
-  dead_trees.configure(
-      *height_map, terrain.biome_settings(), seed_props, runtime_props);
+  pines.configure(*height_map, terrain.biome_settings(), world_props);
+  boulders.configure(*height_map, terrain.biome_settings(), world_props);
+  dead_trees.configure(*height_map, terrain.biome_settings(), world_props);
 
-  ASSERT_GT(pines.instance_count(), 0U)
-      << "forest mud must scatter pines procedurally for this test to mean anything";
-  ASSERT_EQ(pines.procedural_generations_for_test(), 1U);
-  ASSERT_EQ(boulders.procedural_generations_for_test(), 1U);
-  ASSERT_EQ(dead_trees.procedural_generations_for_test(), 1U);
+  ASSERT_GT(count_of(Game::Map::WorldProp::Type::PineTree), 0U)
+      << "forest mud must grow pines for this test to mean anything";
+  EXPECT_EQ(pines.instance_count(), count_of(Game::Map::WorldProp::Type::PineTree))
+      << "every drawn pine is one the simulation routes around, and no more";
+  EXPECT_EQ(boulders.instance_count(), count_of(Game::Map::WorldProp::Type::Boulder));
+  EXPECT_EQ(dead_trees.instance_count(),
+            count_of(Game::Map::WorldProp::Type::DeadTree));
 
-  const std::size_t pine_count = pines.instance_count();
-  const std::size_t boulder_count = boulders.instance_count();
-  const std::size_t dead_tree_count = dead_trees.instance_count();
-
-  Game::Map::WorldProp shrine;
-  shrine.type = Game::Map::WorldProp::Type::MagicShrine;
-  shrine.x = 12.0F;
-  shrine.z = 9.0F;
-  runtime_props.push_back(shrine);
-
-  pines.refresh_world_props(runtime_props, false);
-  boulders.refresh_world_props(runtime_props, false);
-  dead_trees.refresh_world_props(runtime_props);
-
-  EXPECT_EQ(pines.procedural_generations_for_test(), 1U)
-      << "planting a prop must not re-run the map-wide pine scatter";
-  EXPECT_EQ(boulders.procedural_generations_for_test(), 1U);
-  EXPECT_EQ(dead_trees.procedural_generations_for_test(), 1U);
-
-  EXPECT_EQ(pines.instance_count(), pine_count);
-  EXPECT_EQ(boulders.instance_count(), boulder_count);
-  EXPECT_EQ(dead_trees.instance_count(), dead_tree_count)
-      << "an unrelated prop must not shift the biome scatter around it";
-
-  pines.configure(*height_map, terrain.biome_settings(), seed_props, runtime_props);
-  EXPECT_EQ(pines.procedural_generations_for_test(), 1U)
-      << "a full reconfigure must drop the cache and generate exactly once";
-  EXPECT_EQ(pines.instance_count(), pine_count);
+  Game::Map::WorldProp log;
+  log.type = Game::Map::WorldProp::Type::DeadTree;
+  log.x = 12.0F;
+  log.z = 9.0F;
+  world_props.push_back(log);
+  dead_trees.refresh_world_props(world_props);
+  EXPECT_EQ(dead_trees.instance_count(), count_of(Game::Map::WorldProp::Type::DeadTree))
+      << "a prop the simulation adds at runtime is drawn";
 
   terrain.clear();
 }

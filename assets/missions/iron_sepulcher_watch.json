@@ -2,7 +2,7 @@
   "id": "iron_sepulcher_watch",
   "menu_order": 30,
   "title": "Iron Sepulcher Watch",
-  "summary": "Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it.",
+  "summary": "Rome sent sixty men to find out why the shepherds will not use the old road after dark. Build up the watch camp first, then clear the barrow ruins and take the shrine on the rise. The dead will not come to you: you choose when to wake them, and you can choose to be ready.",
   "map_path": ":/assets/maps/map_iron_sepulcher_watch.json",
   "player_setup": {
     "nation": "roman_republic",
@@ -11,26 +11,34 @@
     "starting_units": [
       {
         "type": "swordsman",
-        "count": 2,
+        "count": 1,
         "position": {
-          "x": 10.0,
-          "z": 31.0
+          "x": 22.0,
+          "z": 52.0
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 1,
+        "position": {
+          "x": 24.5,
+          "z": 55.0
         }
       },
       {
         "type": "archer",
         "count": 1,
         "position": {
-          "x": 13.0,
-          "z": 29.5
+          "x": 18.0,
+          "z": 51.0
         }
       },
       {
         "type": "builder",
         "count": 1,
         "position": {
-          "x": 6.0,
-          "z": 30.0
+          "x": 11.0,
+          "z": 54.0
         }
       }
     ],
@@ -38,17 +46,16 @@
       {
         "type": "home",
         "position": {
-          "x": 5.5,
-          "z": 36.5
-        },
-        "max_population": 60
+          "x": 7.5,
+          "z": 62.0
+        }
       }
     ],
     "starting_resources": {
-      "gold": 250,
-      "food": 120,
-      "wood": 90,
-      "stone": 60,
+      "gold": 220,
+      "food": 160,
+      "wood": 240,
+      "stone": 140,
       "iron": 120
     }
   },
@@ -58,30 +65,38 @@
     {
       "type": "clear_undead_zone",
       "zone_id": "ruins_guard",
-      "description": "Burn every cursed guardian from the sepulcher ruins. Kill what cannot die."
+      "description": "Clear the barrow ruins. Both risings of the dead must fall."
     },
     {
       "type": "purify_shrine",
       "zone_id": "shrine_sentinels",
-      "description": "Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood."
+      "description": "Take the shrine on the rise: cut down its guardians, then keep troops beside it until the standard is planted."
     }
   ],
   "optional_objectives": [
     {
+      "type": "control_structures",
+      "structure_types": [
+        "marketplace"
+      ],
+      "min_count": 1,
+      "description": "Raise a marketplace at the watch camp. Gold buys nothing buried in a barrow."
+    },
+    {
       "type": "survive_undead_wave",
-      "zone_id": "ruins_guard",
+      "zone_id": "shrine_sentinels",
       "wave_count": 2,
-      "description": "Endure both waves from the depths. Do not flinch when the ground tears open."
+      "description": "Break both risings at the shrine. Do not flinch when the ground tears open."
     }
   ],
   "defeat_conditions": [
     {
       "type": "lose_commander",
-      "description": "The commander falls — the vigil ends. And the dead keep walking."
+      "description": "Fabius falls. The watch ends, and the dead keep walking."
     },
     {
       "type": "only_commander_remaining",
-      "description": "Stand your ground. The last soldier alone is not a force — he is a sacrifice."
+      "description": "Fabius stands alone, with no soldiers left and no barracks to raise more."
     }
   ],
   "events": [],
@@ -94,23 +109,107 @@
         "type": "mission_start",
         "delay": 2.5
       },
-      "text": "Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.",
+      "text": "Sixty men and a road the shepherds will not walk after dark. The Senate wants a report. Cut timber, raise the camp, and keep everyone off that barrow until I say otherwise.",
       "voice_cue": "alert.commander_message",
-      "duration": 9.0,
+      "duration": 10.0,
       "priority": 100
     },
     {
-      "id": "sepulcher_fabius_first_contact",
+      "id": "sepulcher_fabius_plan",
       "speaker": "roman_legion_organizer",
       "pose": "dismissive",
       "trigger": {
-        "type": "first_contact",
+        "type": "mission_start",
+        "delay": 28.0
+      },
+      "text": "The quartermaster sent gold, and gold does not hold a shield wall. Build a market and turn it into iron. When we do go to that barrow, the archers stand still and let the dead walk onto the shields.",
+      "voice_cue": "alert.commander_message",
+      "duration": 10.0,
+      "priority": 90
+    },
+    {
+      "id": "sepulcher_fabius_ruins_wake",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "undead_awakened",
+        "zone_id": "ruins_guard",
+        "delay": 0.8
+      },
+      "text": "Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.",
+      "voice_cue": "alert.commander_message",
+      "duration": 10.0,
+      "priority": 110
+    },
+    {
+      "id": "sepulcher_fabius_ruins_stir",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "undead_stirring",
+        "zone_id": "ruins_guard",
         "delay": 0.5
       },
-      "text": "There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.",
+      "text": "Listen. The ground is still moving, and one of them is coming up in robes. That one first, archers. The rest are only bones.",
       "voice_cue": "alert.commander_message",
       "duration": 8.0,
+      "priority": 105
+    },
+    {
+      "id": "sepulcher_fabius_ruins_clear",
+      "speaker": "roman_legion_organizer",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "undead_cleared",
+        "zone_id": "ruins_guard",
+        "delay": 2.0
+      },
+      "text": "Quiet again. Count the living, bring the builders up, and find out what the dead were sitting on. Then look at that shrine and tell me you want to go up there.",
+      "voice_cue": "alert.commander_message",
+      "duration": 10.0,
+      "priority": 100
+    },
+    {
+      "id": "sepulcher_fabius_shrine_wake",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "undead_awakened",
+        "zone_id": "shrine_sentinels",
+        "delay": 0.8
+      },
+      "text": "The hill as well. Of course the hill as well. Shields in front, every bow on the one in robes, and nobody chases anything into that haze.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
       "priority": 110
+    },
+    {
+      "id": "sepulcher_fabius_shrine_stir",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "undead_stirring",
+        "zone_id": "shrine_sentinels",
+        "delay": 0.5
+      },
+      "text": "It is calling up the last of them, and another priest with them. Whatever comes out of that ground now is all it has left. So is what we have.",
+      "voice_cue": "alert.commander_message",
+      "duration": 8.0,
+      "priority": 105
+    },
+    {
+      "id": "sepulcher_fabius_shrine_clear",
+      "speaker": "roman_legion_organizer",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "undead_cleared",
+        "zone_id": "shrine_sentinels",
+        "delay": 1.0
+      },
+      "text": "Now. Get men onto that shrine and keep them there until the standard is up. Nobody steps off it. Not for loot, not for the wounded, not for me.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 115
     },
     {
       "id": "sepulcher_fabius_heavy_losses",
@@ -120,7 +219,7 @@
         "type": "heavy_losses",
         "delay": 1.0
       },
-      "text": "Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too.",
+      "text": "Pull the wounded back to the camp and send for the men we still have. The dead are patient. We can afford to be patient too.",
       "voice_cue": "alert.commander_message",
       "duration": 8.0,
       "priority": 105

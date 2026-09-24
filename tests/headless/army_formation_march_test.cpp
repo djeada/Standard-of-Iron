@@ -273,10 +273,10 @@ protected:
                 const auto* f = formation_of(id);
                 std::printf("[slotchange] tick=%d unit=%llu %d->%d comp=%d rev=%u\n",
                             record.ticks,
-                            (unsigned long long)id,
+                            static_cast<unsigned long long>(id),
                             found->second,
                             membership->slot_id,
-                            f ? (int)f->compressed : -1,
+                            f ? static_cast<int>(f->compressed) : -1,
                             f ? f->plan_revision : 0U);
               }
               ++record.slot_changes;
@@ -302,7 +302,7 @@ protected:
                       penetration,
                       f ? Game::Formation::phase_to_string(f->phase) : "-",
                       f ? f->facing : 0.0F,
-                      f ? (int)f->morph.active : -1);
+                      f ? static_cast<int>(f->morph.active) : -1);
           for (auto const id : units) {
             const auto* tr =
                 m_session->world().try_get<Engine::Core::TransformComponent>(id);
@@ -334,10 +334,10 @@ protected:
                         formation->anchor.z(),
                         formation->facing,
                         Game::Formation::phase_to_string(formation->phase),
-                        (int)formation->compressed,
+                        static_cast<int>(formation->compressed),
                         formation->move_plan.corridor_index,
                         formation->move_plan.corridor.size(),
-                        (int)formation->has_destination,
+                        static_cast<int>(formation->has_destination),
                         formation->plan_revision,
                         formation->cohesion);
             for (auto const id : units) {
@@ -353,13 +353,13 @@ protected:
               std::printf("[trace]   %llu pos=(%.1f,%.1f) slot=(%.1f,%.1f) st=%d "
                           "tgt=%d goal=(%.1f,%.1f) path=%zu state=%s v=%.2f trav=%d "
                           "files=%u blocked=%u\n",
-                          (unsigned long long)id,
+                          static_cast<unsigned long long>(id),
                           p.x(),
                           p.z(),
                           slot ? slot->world_position.x() : 0.0F,
                           slot ? slot->world_position.z() : 0.0F,
-                          slot ? (int)slot->status : -1,
-                          mv ? (int)mv->get_has_target() : -1,
+                          slot ? static_cast<int>(slot->status) : -1,
+                          mv ? static_cast<int>(mv->get_has_target()) : -1,
                           mv ? mv->get_goal_x() : 0.0F,
                           mv ? mv->get_goal_y() : 0.0F,
                           mv ? mv->get_path().size() : 0U,
@@ -367,7 +367,7 @@ protected:
                               ? Engine::Core::movement_state_name(facts->progress.state)
                               : "-",
                           facts ? facts->last_accepted_speed : 0.0F,
-                          trav ? (int)trav->active : -1,
+                          trav ? static_cast<int>(trav->active) : -1,
                           trav ? trav->current_files : 0U,
                           trav ? trav->blocked_slot_count : 0U);
             }

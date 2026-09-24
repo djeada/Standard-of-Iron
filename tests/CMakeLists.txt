@@ -234,6 +234,7 @@ add_executable(
     headless/movement_pace_test.cpp
     headless/army_formation_march_test.cpp
     headless/formation_ux_lab_test.cpp
+    headless/formation_prop_clearance_test.cpp
     headless/hill_traversal_test.cpp
     headless/playable_ground_test.cpp
     headless/wildlife_fight_motion_test.cpp
@@ -450,6 +451,7 @@ add_executable(
     render/prop_mesh_builder_test.cpp
     render/local_lighting_test.cpp
     render/contact_shadow_test.cpp
+    render/terrain_grounding_test.cpp
     render/shadow_cascade_fit_test.cpp
     render/shader_reload_test.cpp
     render/weather_particle_budget_test.cpp
@@ -604,6 +606,7 @@ add_executable(
     core/tutorial_mission_test.cpp
     core/campaign_wave_assault_test.cpp
     core/difficulty_presets_test.cpp
+    core/iron_sepulcher_watch_mission_test.cpp
     core/match_setup_difficulty_test.cpp
     core/mission_startup_test.cpp
     core/production_manager_test.cpp

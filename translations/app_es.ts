@@ -3326,12 +3326,12 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Estrecha y profunda. Ideal para atravesar puertas y desfiladeros.</translation>
     </message>
     <message>
-        <source>Compressed frontage with reserves. Best for holding ground.</source>
-        <translation>Frente comprimido con reservas. Ideal para mantener el terreno.</translation>
+        <source>A closed square facing out on every side, archers inside. Best for holding ground.</source>
+        <translation>Un cuadro cerrado que mira hacia fuera por todos los lados, con los tiradores dentro. Ideal para mantener el terreno.</translation>
     </message>
     <message>
-        <source>Weighted front with skirmishers ahead. Best for breaking a line.</source>
-        <translation>Frente reforzado con hostigadores delante. Ideal para quebrar una línea.</translation>
+        <source>A wedge that drives its point into the enemy. Best for breaking a line.</source>
+        <translation>Una cuña que clava su punta en el enemigo. Ideal para quebrar una línea.</translation>
     </message>
     <message>
         <source>Wide flanks that close around a target. Needs cavalry.</source>
@@ -6316,6 +6316,166 @@ Cada recluta cuesta los hombres de su escuadra; la reserva de un cuartel eleva e
         <source>Slaying the last guardian clears a zone, but the shrine is not purified until you capture or destroy it.</source>
         <translation>Abatir al último guardián despeja una zona, pero el santuario no queda purificado hasta que lo capturas o lo destruyes.</translation>
     </message>
+    <message>
+        <source>A Roman army built a fortified camp to the same plan at the end of every march, so a tired soldier could find his tent in the dark.</source>
+        <translation>Al final de cada marcha, un ejército romano levantaba un campamento fortificado con el mismo plano, para que un soldado cansado pudiera encontrar su tienda a oscuras.</translation>
+    </message>
+    <message>
+        <source>A Roman legion of this period fought in three lines: the young hastati, the prime-aged principes, and the veteran triarii.</source>
+        <translation>Una legión romana de esta época combatía en tres líneas: los jóvenes hastados, los príncipes en la flor de la edad y los veteranos triarios.</translation>
+    </message>
+    <message>
+        <source>According to Polybius, the young Hannibal swore at an altar, at his father&apos;s request, never to be a friend of Rome.</source>
+        <translation>Según Polibio, el joven Aníbal juró ante un altar, a petición de su padre, no ser nunca amigo de Roma.</translation>
+    </message>
+    <message>
+        <source>After Cannae, Livy says Hannibal sent home the gold rings taken from fallen Roman nobles. They were measured not by count, but by volume.</source>
+        <translation>Tras Cannas, Livio dice que Aníbal envió a casa los anillos de oro arrebatados a los nobles romanos caídos. No se contaron: se midieron por volumen.</translation>
+    </message>
+    <message>
+        <source>After Zama, Scipio took the name Africanus. He was among the first Roman generals named after the land he had conquered.</source>
+        <translation>Tras Zama, Escipión adoptó el nombre de Africano. Fue de los primeros generales romanos en llevar el nombre de la tierra que había conquistado.</translation>
+    </message>
+    <message>
+        <source>After the First Punic War, Carthage could not pay its mercenaries. They revolted, and the brutal Mercenary War nearly destroyed the city.</source>
+        <translation>Tras la primera guerra púnica, Cartago no pudo pagar a sus mercenarios. Se sublevaron, y la brutal guerra de los Mercenarios estuvo a punto de destruir la ciudad.</translation>
+    </message>
+    <message>
+        <source>Archimedes helped defend Syracuse against Rome with war machines, including a crane-like &apos;claw&apos; said to lift ships out of the water.</source>
+        <translation>Arquímedes ayudó a defender Siracusa contra Roma con máquinas de guerra, entre ellas una «garra» a modo de grúa que, según se decía, sacaba barcos del agua.</translation>
+    </message>
+    <message>
+        <source>At Zama, the Romans blew trumpets and horns to frighten Hannibal&apos;s elephants. Some panicked and trampled Carthage&apos;s own cavalry.</source>
+        <translation>En Zama, los romanos tocaron trompetas y cuernos para asustar a los elefantes de Aníbal. Algunos se desbocaron y pisotearon a la propia caballería cartaginesa.</translation>
+    </message>
+    <message>
+        <source>Balearic slingers were famous marksmen. One ancient tale says their children were not given bread until they had hit it with a sling.</source>
+        <translation>Los honderos baleáricos eran tiradores famosos. Un relato antiguo cuenta que a sus hijos no se les daba el pan hasta que lo acertaban con la honda.</translation>
+    </message>
+    <message>
+        <source>Before the sea battle of Drepana in 249 BC, the sacred chickens refused to eat. The consul threw them overboard, saying &apos;Let them drink.&apos; He lost the battle.</source>
+        <translation>Antes de la batalla naval de Drépano, en el 249 a. C., los pollos sagrados se negaron a comer. El cónsul los arrojó por la borda diciendo: «Que beban». Perdió la batalla.</translation>
+    </message>
+    <message>
+        <source>Carthage fought mostly with allies and mercenaries: Libyans, Numidians, Iberians, Celts, and Balearic islanders. Hannibal kept this mixed army together in Italy for fifteen years.</source>
+        <translation>Cartago combatía sobre todo con aliados y mercenarios: libios, númidas, íberos, celtas y baleáricos. Aníbal mantuvo unido este ejército variopinto en Italia durante quince años.</translation>
+    </message>
+    <message>
+        <source>Carthage offered to pay its war debt to Rome decades early. Rome refused. A debtor who pays promptly is harder to keep in line.</source>
+        <translation>Cartago se ofreció a pagar su deuda de guerra a Roma con décadas de antelación. Roma se negó. Un deudor que paga puntualmente es más difícil de tener a raya.</translation>
+    </message>
+    <message>
+        <source>Carthage was founded by Phoenician settlers from Tyre. Its name, Qart-hadasht, simply means &apos;New City&apos;.</source>
+        <translation>Cartago fue fundada por colonos fenicios de Tiro. Su nombre, Qart-hadasht, significa simplemente «Ciudad Nueva».</translation>
+    </message>
+    <message>
+        <source>Carthage was led by two elected magistrates called suffetes. Aristotle praised its constitution as one of the best of his day.</source>
+        <translation>Cartago estaba gobernada por dos magistrados electos llamados sufetes. Aristóteles elogió su constitución como una de las mejores de su tiempo.</translation>
+    </message>
+    <message>
+        <source>Carthage&apos;s circular military harbor surrounded an island headquarters. The historian Appian says its ship sheds could hold about 220 warships.</source>
+        <translation>El puerto militar circular de Cartago rodeaba una isla que servía de cuartel general. El historiador Apiano dice que sus atarazanas podían albergar unos 220 buques de guerra.</translation>
+    </message>
+    <message>
+        <source>Carthage&apos;s war elephants were probably North African forest elephants, a smaller kind that later became extinct.</source>
+        <translation>Los elefantes de guerra de Cartago eran probablemente elefantes de bosque norteafricanos, una variedad más pequeña que luego se extinguió.</translation>
+    </message>
+    <message>
+        <source>Cato the Elder ended his speeches with &apos;Carthage must be destroyed.&apos; Once he showed the Senate fresh figs from Carthage to prove how close the enemy was.</source>
+        <translation>Catón el Viejo terminaba sus discursos con «Cartago debe ser destruida». Una vez mostró al Senado higos frescos de Cartago para demostrar lo cerca que estaba el enemigo.</translation>
+    </message>
+    <message>
+        <source>Decimation was a Roman punishment for units that fled: one soldier in ten, chosen by lot, was killed by his own comrades.</source>
+        <translation>El diezmado era un castigo romano para las unidades que huían: uno de cada diez soldados, elegido a suertes, era ejecutado por sus propios compañeros.</translation>
+    </message>
+    <message>
+        <source>Hamilcar Barca&apos;s nickname, Barca, probably means &apos;lightning&apos;. Hannibal&apos;s own name means roughly &apos;grace of Baal&apos;.</source>
+        <translation>El apodo de Amílcar, Barca, probablemente significa «rayo». El propio nombre de Aníbal significa aproximadamente «gracia de Baal».</translation>
+    </message>
+    <message>
+        <source>Herodotus reports that Phoenician sailors circled Africa for an Egyptian pharaoh. He doubted their claim that the sun appeared on their right, which is exactly what would happen.</source>
+        <translation>Heródoto cuenta que unos marineros fenicios circunnavegaron África por encargo de un faraón egipcio. Dudaba de su afirmación de que el sol les quedaba a la derecha, que es exactamente lo que ocurriría.</translation>
+    </message>
+    <message>
+        <source>In a later war, Hannibal reportedly had pots full of snakes hurled onto enemy ships. The sailors laughed, then stopped laughing.</source>
+        <translation>En una guerra posterior, Aníbal hizo lanzar, según se cuenta, vasijas llenas de serpientes sobre los barcos enemigos. Los marineros se rieron, y luego dejaron de reírse.</translation>
+    </message>
+    <message>
+        <source>In the First Punic War, storms sank more Roman ships than the Carthaginian navy did. Whole fleets were lost in bad weather.</source>
+        <translation>En la primera guerra púnica, las tormentas hundieron más barcos romanos que la flota cartaginesa. Flotas enteras se perdieron por el mal tiempo.</translation>
+    </message>
+    <message>
+        <source>Legend says Queen Elissa, or Dido, was offered as much land as an ox hide could cover. She cut the hide into thin strips and encircled an entire hill.</source>
+        <translation>Según la leyenda, a la reina Elisa, o Dido, le ofrecieron tanta tierra como pudiera cubrir una piel de buey. Cortó la piel en tiras finas y rodeó una colina entera.</translation>
+    </message>
+    <message>
+        <source>Livy claims Hannibal split rocks on the Alpine path by heating them with fire and dousing them with vinegar. Historians are still arguing about it.</source>
+        <translation>Livio afirma que Aníbal partió rocas en el camino alpino calentándolas con fuego y rociándolas con vinagre. Los historiadores todavía discuten al respecto.</translation>
+    </message>
+    <message>
+        <source>Numidian horsemen rode without saddles or bridles, guiding their mounts with a light neck rope and their knees.</source>
+        <translation>Los jinetes númidas montaban sin silla ni brida, y guiaban a sus monturas con una ligera cuerda al cuello y con las rodillas.</translation>
+    </message>
+    <message>
+        <source>Phoenician purple dye came from murex sea snails. Thousands of snails made a small amount of dye, and the dye works were famous for their stench.</source>
+        <translation>La púrpura fenicia se obtenía de los caracoles marinos múrex. Miles de caracoles daban una pequeña cantidad de tinte, y los talleres de tintura eran famosos por su hedor.</translation>
+    </message>
+    <message>
+        <source>Polybius says Roman light troops, the velites, sometimes wore wolf skins over their helmets so their officers could recognize them in battle.</source>
+        <translation>Polibio dice que las tropas ligeras romanas, los vélites, a veces llevaban pieles de lobo sobre el casco para que sus oficiales los reconocieran en combate.</translation>
+    </message>
+    <message>
+        <source>Rome destroyed Carthage in 146 BC. The famous story that it sowed the fields with salt was invented many centuries later.</source>
+        <translation>Roma destruyó Cartago en el 146 a. C. La famosa historia de que sembró sus campos con sal se inventó muchos siglos después.</translation>
+    </message>
+    <message>
+        <source>Rome had almost no warships when the First Punic War began. Polybius says it copied a stranded Carthaginian ship and trained rowers on benches on dry land.</source>
+        <translation>Roma casi no tenía barcos de guerra al empezar la primera guerra púnica. Polibio dice que copió un barco cartaginés varado y entrenó a los remeros en bancos en tierra firme.</translation>
+    </message>
+    <message>
+        <source>Rome rebuilt Carthage as a Roman city about a century after destroying it. It became one of the largest cities in the western Empire.</source>
+        <translation>Roma reconstruyó Cartago como ciudad romana aproximadamente un siglo después de destruirla. Llegó a ser una de las mayores ciudades de la mitad occidental del Imperio.</translation>
+    </message>
+    <message>
+        <source>The Carthaginian Mago wrote a 28-book work on farming. After Carthage fell, the Roman Senate ordered it translated into Latin.</source>
+        <translation>El cartaginés Magón escribió una obra de 28 libros sobre agricultura. Tras la caída de Cartago, el Senado romano ordenó traducirla al latín.</translation>
+    </message>
+    <message>
+        <source>The Carthaginian explorer Hanno sailed down the coast of West Africa and described hairy wild people called &apos;gorillai&apos;. Modern gorillas are named after them.</source>
+        <translation>El explorador cartaginés Hannón navegó a lo largo de la costa de África occidental y describió a unos salvajes peludos llamados «gorillai». Los gorilas actuales llevan su nombre.</translation>
+    </message>
+    <message>
+        <source>The Latin word &apos;salarium&apos;, the root of &apos;salary&apos;, comes from the word for salt. The story that soldiers were paid in salt is probably a myth.</source>
+        <translation>La palabra latina «salarium», raíz de «salario», viene de la palabra para la sal. La historia de que a los soldados se les pagaba en sal es probablemente un mito.</translation>
+    </message>
+    <message>
+        <source>The Phoenician alphabet had 22 letters and no vowels. Through Greek and Latin, it is an ancestor of the letters you are reading now.</source>
+        <translation>El alfabeto fenicio tenía 22 letras y ninguna vocal. A través del griego y el latín, es antepasado de las letras que estás leyendo ahora.</translation>
+    </message>
+    <message>
+        <source>The Roman corvus was a boarding bridge with an iron spike. It dropped onto an enemy deck and turned a sea battle into an infantry fight.</source>
+        <translation>El corvus romano era un puente de abordaje con un pico de hierro. Caía sobre la cubierta enemiga y convertía una batalla naval en un combate de infantería.</translation>
+    </message>
+    <message>
+        <source>The Roman gladius was based on an Iberian sword. The Romans were never too proud to borrow a good idea from an enemy.</source>
+        <translation>El gladius romano se basaba en una espada ibérica. Los romanos nunca fueron demasiado orgullosos para copiar una buena idea al enemigo.</translation>
+    </message>
+    <message>
+        <source>The Roman saying &apos;it has come down to the triarii&apos; meant a situation was desperate. The veterans in the last line were the final reserve.</source>
+        <translation>El dicho romano «la cosa ha llegado a los triarios» significaba que la situación era desesperada. Los veteranos de la última línea eran la reserva final.</translation>
+    </message>
+    <message>
+        <source>The pilum&apos;s long, thin iron neck could bend on impact. A pilum stuck in a shield was hard to pull out and impossible to throw back.</source>
+        <translation>El largo y fino cuello de hierro del pilum podía doblarse con el impacto. Un pilum clavado en un escudo era difícil de arrancar e imposible de devolver.</translation>
+    </message>
+    <message>
+        <source>Trapped near Casilinum in 217 BC, Hannibal tied burning torches to the horns of about two thousand oxen. The Romans followed the lights; his army walked out.</source>
+        <translation>Atrapado cerca de Casilino en el 217 a. C., Aníbal ató antorchas encendidas a los cuernos de unos dos mil bueyes. Los romanos siguieron las luces; su ejército salió caminando.</translation>
+    </message>
+    <message>
+        <source>Tyre, the mother city of Carthage, stood on an island. Alexander the Great took it in 332 BC only by building a causeway out to it.</source>
+        <translation>Tiro, la metrópoli de Cartago, se alzaba en una isla. Alejandro Magno solo logró tomarla en el 332 a. C. construyendo una calzada hasta ella.</translation>
+    </message>
 </context>
 <context>
     <name>Main</name>
@@ -6951,10 +7111,6 @@ para ver la vista previa</translation>
         <translation>Vigilia del Sepulcro de Hierro</translation>
     </message>
     <message>
-        <source>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</source>
-        <translation>Pequeño escenario diseñado que muestra ruinas, un santuario y zonas de despertar de los no muertos.</translation>
-    </message>
-    <message>
         <source>A quiet meadow between a Carthaginian camp and a Roman outpost, laid out for the tutorial: timber, stone and ore within a short walk of the barracks, a scouting party to practise on, and a small enemy camp to take once the army is ready.</source>
         <translation>Una pradera tranquila entre un campamento cartaginés y un puesto avanzado romano, dispuesta para el tutorial: madera, piedra y mineral a un corto paseo del cuartel, una partida de exploradores con la que practicar y un pequeño campamento enemigo que tomar cuando el ejército esté listo.</translation>
     </message>
@@ -7037,6 +7193,10 @@ para ver la vista previa</translation>
     <message>
         <source>Aurelia Magna</source>
         <translation>Aurelia Magna</translation>
+    </message>
+    <message>
+        <source>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</source>
+        <translation>Un campamento de guardia romano en el viejo camino, la noche en que descubre por qué los pastores dejaron de usarlo. Madera, piedra y un rebaño quedan cerca del campamento; las ruinas del sepulcro ocupan el terreno central; el santuario maldito se alza solo en el terreno del noreste. Un otero bajo entre el campamento y el sepulcro es la única altura que vale la pena, y el camino pasa junto a los muertos todo el trayecto.</translation>
     </message>
 </context>
 <context>
@@ -7528,10 +7688,6 @@ para ver la vista previa</translation>
         <translation>Quiebra las tres fases de asalto romanas. El barrio resiste cuando la última columna consular yazca muerta en las calles.</translation>
     </message>
     <message>
-        <source>Burn every cursed guardian from the sepulcher ruins. Kill what cannot die.</source>
-        <translation>Quema a todos los guardianes malditos de las ruinas del sepulcro. Mata a lo que no puede morir.</translation>
-    </message>
-    <message>
         <source>Cold water and an early start, and my colleague is very pleased with both. He has the men in the river before their porridge. I said what I thought and was overruled, so I shall stand here and watch your ambush do its arithmetic.</source>
         <translation>Agua fría y una marcha temprana, y a mi colega le complacen ambas cosas. Ha metido a los hombres en el río antes de las gachas. Dije lo que pensaba y me desautorizaron, así que me quedaré aquí a ver cómo tu emboscada hace sus cuentas.</translation>
     </message>
@@ -7566,10 +7722,6 @@ para ver la vista previa</translation>
     <message>
         <source>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</source>
         <translation>Ochenta mil. Prefiero que oigas la cifra a que la veas, porque verla lleva casi toda una mañana. Hoy manda Varrón, y Varrón cree en avanzar. Colócate donde te plazca.</translation>
-    </message>
-    <message>
-        <source>Endure both waves from the depths. Do not flinch when the ground tears open.</source>
-        <translation>Resiste ambas oleadas surgidas de las profundidades. No retrocedas cuando la tierra se abra.</translation>
     </message>
     <message>
         <source>Every soldier lost is counted by the enemy tonight.</source>
@@ -7664,10 +7816,6 @@ para ver la vista previa</translation>
         <translation>Toma ambos campamentos romanos. La emboscada no termina hasta que caigan sus estandartes.</translation>
     </message>
     <message>
-        <source>Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.</source>
-        <translation>Sesenta hombres y un santuario junto al que los lugareños no pasan después del anochecer. Mis órdenes dicen investigar. Preferiría quemarlo y escribir que investigamos, pero el Senado lee.</translation>
-    </message>
-    <message>
         <source>So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.</source>
         <translation>Así que el centro cedió y las alas no. Estuvo bien hecho, y lo digo yo, que estaba dentro. Roma ha perdido un ejército y un anillo por cada caballero que había en él. Roma aún no ha perdido nada que importe.</translation>
     </message>
@@ -7688,10 +7836,6 @@ para ver la vista previa</translation>
         <translation>Desata la emboscada y captura ambos campamentos de campaña romanos en veinte minutos, antes de que la niebla se levante y una cohorte escape de la cuenca.</translation>
     </message>
     <message>
-        <source>Stand your ground. The last soldier alone is not a force — he is a sacrifice.</source>
-        <translation>Mantén el terreno. El último soldado a solas no es una fuerza: es un sacrificio.</translation>
-    </message>
-    <message>
         <source>Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all.</source>
         <translation>Toma los pasos, pues. Toma toda la fría longitud del camino del norte y cada piedra puesta en él. Roma no pierde provincias: las presta, con interés, y me dicen que los cobradores de este camino no tienen rostro alguno.</translation>
     </message>
@@ -7710,10 +7854,6 @@ para ver la vista previa</translation>
     <message>
         <source>The commander falls — and every line collapses behind him.</source>
         <translation>El comandante cae, y todas las líneas se derrumban tras él.</translation>
-    </message>
-    <message>
-        <source>The commander falls — the vigil ends. And the dead keep walking.</source>
-        <translation>El comandante cae y la vigilia termina. Y los muertos siguen caminando.</translation>
     </message>
     <message>
         <source>The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign&apos;s main enemy.</source>
@@ -8572,22 +8712,6 @@ para ver la vista previa</translation>
         <translation>No puedes cubrir todas las puertas. Vigila el aviso previo y muévete por líneas interiores.</translation>
     </message>
     <message>
-        <source>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</source>
-        <translation>Expulsa a los muertos del santuario y luego planta el estandarte sobre él. Sala la tierra donde estuvieron.</translation>
-    </message>
-    <message>
-        <source>Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
-        <translation>Retirad a los heridos a la casa y mandad a buscar a los hombres que aún nos quedan. Los muertos son pacientes. Nosotros también podemos permitirnos serlo.</translation>
-    </message>
-    <message>
-        <source>Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it.</source>
-        <translation>Toma el santuario maldito sobre las ruinas del sepulcro y conserva lo que tomes. Sesenta hombres, un cuartel y una casa son todo lo que Roma pudo prescindir: limpia las ruinas de guardianes, luego expulsa a los muertos del santuario y planta el estandarte sobre él.</translation>
-    </message>
-    <message>
-        <source>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</source>
-        <translation>Ahí están. No miréis las caras. Arqueros, disparad; escudos, cerrad filas; y nadie persigue nada de vuelta a esa niebla.</translation>
-    </message>
-    <message>
         <source>Both risings of the dead at the south-western ruins must also fall before the war ends.</source>
         <translation>Ambos alzamientos de los muertos en las ruinas del suroeste también deben caer antes de que termine la guerra.</translation>
     </message>
@@ -9042,6 +9166,70 @@ para ver la vista previa</translation>
     <message>
         <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand across a field from you with an army of my own.</source>
         <translation>África, pues, y nosotros dos, y ningún río tras el que resguardarse. Conozco la medida de tus elefantes y tengo a tus númidas. Hagas lo que hagas, hazlo donde pueda verlo. He esperado dieciséis años para plantarme frente a ti en un campo con un ejército propio.</translation>
+    </message>
+    <message>
+        <source>Break both risings at the shrine. Do not flinch when the ground tears open.</source>
+        <translation>Quiebra ambos alzamientos en el santuario. No te inmutes cuando la tierra se abra.</translation>
+    </message>
+    <message>
+        <source>Clear the barrow ruins. Both risings of the dead must fall.</source>
+        <translation>Limpia las ruinas del sepulcro. Ambos alzamientos de los muertos deben caer.</translation>
+    </message>
+    <message>
+        <source>Fabius falls. The watch ends, and the dead keep walking.</source>
+        <translation>Fabio cae. La guardia termina, y los muertos siguen caminando.</translation>
+    </message>
+    <message>
+        <source>Fabius stands alone, with no soldiers left and no barracks to raise more.</source>
+        <translation>Fabio queda solo, sin soldados y sin cuartel para reclutar más.</translation>
+    </message>
+    <message>
+        <source>It is calling up the last of them, and another priest with them. Whatever comes out of that ground now is all it has left. So is what we have.</source>
+        <translation>Está llamando a los últimos, y a otro sacerdote sepulcral con ellos. Lo que salga ahora de esa tierra es todo lo que le queda. Igual que lo que tenemos nosotros.</translation>
+    </message>
+    <message>
+        <source>Listen. The ground is still moving, and one of them is coming up in robes. That one first, archers. The rest are only bones.</source>
+        <translation>Escuchad. La tierra aún se mueve, y uno de ellos sube con túnica. Ese primero, arqueros. El resto no son más que huesos.</translation>
+    </message>
+    <message>
+        <source>Now. Get men onto that shrine and keep them there until the standard is up. Nobody steps off it. Not for loot, not for the wounded, not for me.</source>
+        <translation>Ahora. Subid hombres a ese santuario y mantenedlos allí hasta que el estandarte esté en pie. Nadie se baja. Ni por el botín, ni por los heridos, ni por mí.</translation>
+    </message>
+    <message>
+        <source>Pull the wounded back to the camp and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
+        <translation>Llevad a los heridos de vuelta al campamento y mandad a buscar a los hombres que aún tenemos. Los muertos son pacientes. Nosotros también podemos permitirnos serlo.</translation>
+    </message>
+    <message>
+        <source>Quiet again. Count the living, bring the builders up, and find out what the dead were sitting on. Then look at that shrine and tell me you want to go up there.</source>
+        <translation>Otra vez en calma. Contad a los vivos, traed a los constructores y averiguad sobre qué estaban sentados los muertos. Luego mirad ese santuario y decidme que queréis subir allí.</translation>
+    </message>
+    <message>
+        <source>Raise a marketplace at the watch camp. Gold buys nothing buried in a barrow.</source>
+        <translation>Levanta un mercado en el campamento de guardia. El oro no compra nada de lo que yace en un sepulcro.</translation>
+    </message>
+    <message>
+        <source>Rome sent sixty men to find out why the shepherds will not use the old road after dark. Build up the watch camp first, then clear the barrow ruins and take the shrine on the rise. The dead will not come to you: you choose when to wake them, and you can choose to be ready.</source>
+        <translation>Roma envió a sesenta hombres a averiguar por qué los pastores no usan el viejo camino después del anochecer. Refuerza primero el campamento de guardia, luego limpia las ruinas del sepulcro y toma el santuario de la loma. Los muertos no vendrán a ti: tú eliges cuándo despertarlos, y puedes elegir estar preparado.</translation>
+    </message>
+    <message>
+        <source>Sixty men and a road the shepherds will not walk after dark. The Senate wants a report. Cut timber, raise the camp, and keep everyone off that barrow until I say otherwise.</source>
+        <translation>Sesenta hombres y un camino que los pastores no pisan después del anochecer. El Senado quiere un informe. Cortad madera, levantad el campamento y que nadie se acerque a ese sepulcro hasta que yo diga lo contrario.</translation>
+    </message>
+    <message>
+        <source>Take the shrine on the rise: cut down its guardians, then keep troops beside it until the standard is planted.</source>
+        <translation>Toma el santuario de la loma: abate a sus guardianes y luego mantén tropas a su lado hasta que se plante el estandarte.</translation>
+    </message>
+    <message>
+        <source>The hill as well. Of course the hill as well. Shields in front, every bow on the one in robes, and nobody chases anything into that haze.</source>
+        <translation>La colina también. Claro, la colina también. Escudos al frente, todos los arcos sobre el de la túnica, y nadie persigue nada dentro de esa neblina.</translation>
+    </message>
+    <message>
+        <source>The quartermaster sent gold, and gold does not hold a shield wall. Build a market and turn it into iron. When we do go to that barrow, the archers stand still and let the dead walk onto the shields.</source>
+        <translation>El intendente envió oro, y el oro no sostiene un muro de escudos. Construid un mercado y convertidlo en hierro. Cuando vayamos a ese sepulcro, los arqueros se quedan quietos y dejan que los muertos caminen hasta los escudos.</translation>
+    </message>
+    <message>
+        <source>Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.</source>
+        <translation>Son hombres. Eran hombres. Júpiter nos guarde. ...Calma. Los huesos se rompen como cualquier otra cosa. Arqueros, quietos donde estáis, y dejad que lleguen a los escudos.</translation>
     </message>
 </context>
 <context>
@@ -10667,11 +10855,11 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     </message>
     <message>
         <source>Heavy</source>
-        <translation>Pesado</translation>
+        <translation>Fuerte</translation>
     </message>
     <message>
         <source>Guard</source>
-        <translation>Bloquear</translation>
+        <translation>Guardia</translation>
     </message>
     <message>
         <source>Dodge</source>
@@ -10679,11 +10867,11 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     </message>
     <message>
         <source>Lock on</source>
-        <translation>Fijar objetivo</translation>
+        <translation>Fijar</translation>
     </message>
     <message>
         <source>Sprint</source>
-        <translation>Correr</translation>
+        <translation>Esprintar</translation>
     </message>
     <message>
         <source>Camera</source>
@@ -10731,7 +10919,7 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     </message>
     <message>
         <source>CAMERA  ·  CHASE</source>
-        <translation>CÁMARA  ·  PERSECUCIÓN</translation>
+        <translation>CÁMARA  ·  SEGUIMIENTO</translation>
     </message>
     <message>
         <source>BOW DRAWN</source>
@@ -11975,6 +12163,10 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     <message>
         <source>The risen guardians are put down. Hold the shrine to purify it.</source>
         <translation>Los guardianes alzados han sido abatidos. Mantén el santuario para purificarlo.</translation>
+    </message>
+    <message>
+        <source>The ground is moving under the dead. More are coming up.</source>
+        <translation>La tierra se mueve bajo los muertos. Vienen más.</translation>
     </message>
 </context>
 <context>

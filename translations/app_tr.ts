@@ -3362,12 +3362,12 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <translation>Dar ve derin. Kapılardan ve geçitlerden geçmek için en iyisi.</translation>
     </message>
     <message>
-        <source>Compressed frontage with reserves. Best for holding ground.</source>
-        <translation>Yedekli, sıkıştırılmış cephe. Mevzi tutmak için en iyisi.</translation>
+        <source>A closed square facing out on every side, archers inside. Best for holding ground.</source>
+        <translation>Her yana dışa dönük kapalı bir kare, okçular içeride. Mevzi tutmak için en iyisi.</translation>
     </message>
     <message>
-        <source>Weighted front with skirmishers ahead. Best for breaking a line.</source>
-        <translation>Önde avcılarla ağırlıklı cephe. Bir hattı kırmak için en iyisi.</translation>
+        <source>A wedge that drives its point into the enemy. Best for breaking a line.</source>
+        <translation>Ucunu düşmana saplayan bir kama. Bir hattı yarmak için en iyisi.</translation>
     </message>
     <message>
         <source>Wide flanks that close around a target. Needs cavalry.</source>
@@ -6313,6 +6313,166 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
         <source>Slaying the last guardian clears a zone, but the shrine is not purified until you capture or destroy it.</source>
         <translation>Son muhafızı öldürmek bir bölgeyi temizler, ama tapınak onu ele geçirene ya da yıkana kadar arınmaz.</translation>
     </message>
+    <message>
+        <source>A Roman army built a fortified camp to the same plan at the end of every march, so a tired soldier could find his tent in the dark.</source>
+        <translation>Roma ordusu her yürüyüşün sonunda aynı plana göre tahkimli bir kamp kurardı; böylece yorgun bir asker çadırını karanlıkta bile bulabilirdi.</translation>
+    </message>
+    <message>
+        <source>A Roman legion of this period fought in three lines: the young hastati, the prime-aged principes, and the veteran triarii.</source>
+        <translation>Bu dönemin Roma lejyonu üç hat hâlinde savaşırdı: genç hastati, olgun yaştaki principes ve kıdemli triarii.</translation>
+    </message>
+    <message>
+        <source>According to Polybius, the young Hannibal swore at an altar, at his father&apos;s request, never to be a friend of Rome.</source>
+        <translation>Polybios&apos;a göre genç Hannibal, babasının isteği üzerine bir sunağın önünde asla Roma&apos;nın dostu olmayacağına yemin etti.</translation>
+    </message>
+    <message>
+        <source>After Cannae, Livy says Hannibal sent home the gold rings taken from fallen Roman nobles. They were measured not by count, but by volume.</source>
+        <translation>Livius&apos;a göre Cannae&apos;den sonra Hannibal, düşen Romalı soylulardan alınan altın yüzükleri memleketine gönderdi. Yüzükler tek tek sayılmadı, ölçekle ölçüldü.</translation>
+    </message>
+    <message>
+        <source>After Zama, Scipio took the name Africanus. He was among the first Roman generals named after the land he had conquered.</source>
+        <translation>Zama&apos;dan sonra Scipio, Africanus adını aldı. Fethettiği toprağın adıyla anılan ilk Roma generallerinden biriydi.</translation>
+    </message>
+    <message>
+        <source>After the First Punic War, Carthage could not pay its mercenaries. They revolted, and the brutal Mercenary War nearly destroyed the city.</source>
+        <translation>Birinci Pön Savaşı&apos;ndan sonra Kartaca paralı askerlerine ödeme yapamadı. Askerler ayaklandı ve acımasız Paralı Askerler Savaşı şehri neredeyse yok etti.</translation>
+    </message>
+    <message>
+        <source>Archimedes helped defend Syracuse against Rome with war machines, including a crane-like &apos;claw&apos; said to lift ships out of the water.</source>
+        <translation>Arşimet, Siraküza&apos;yı Roma&apos;ya karşı savaş makineleriyle savunmaya yardım etti; bunların arasında gemileri sudan kaldırdığı söylenen, vinç benzeri bir “pençe” de vardı.</translation>
+    </message>
+    <message>
+        <source>At Zama, the Romans blew trumpets and horns to frighten Hannibal&apos;s elephants. Some panicked and trampled Carthage&apos;s own cavalry.</source>
+        <translation>Zama&apos;da Romalılar, Hannibal&apos;in fillerini korkutmak için borazan ve boru çaldı. Bazı filler paniğe kapılıp Kartaca&apos;nın kendi süvarisini ezdi.</translation>
+    </message>
+    <message>
+        <source>Balearic slingers were famous marksmen. One ancient tale says their children were not given bread until they had hit it with a sling.</source>
+        <translation>Balear sapancıları ünlü nişancılardı. Eski bir anlatıya göre çocuklarına, ekmeği sapanla vurmadıkça ekmek verilmezdi.</translation>
+    </message>
+    <message>
+        <source>Before the sea battle of Drepana in 249 BC, the sacred chickens refused to eat. The consul threw them overboard, saying &apos;Let them drink.&apos; He lost the battle.</source>
+        <translation>MÖ 249&apos;daki Drepana deniz savaşından önce kutsal tavuklar yem yemeyi reddetti. Konsül onları “İçsinler bari” diyerek denize attı. Savaşı kaybetti.</translation>
+    </message>
+    <message>
+        <source>Carthage fought mostly with allies and mercenaries: Libyans, Numidians, Iberians, Celts, and Balearic islanders. Hannibal kept this mixed army together in Italy for fifteen years.</source>
+        <translation>Kartaca çoğunlukla müttefikler ve paralı askerlerle savaştı: Libyalılar, Numidyalılar, İberler, Keltler ve Balear adalıları. Hannibal bu karma orduyu İtalya&apos;da on beş yıl bir arada tuttu.</translation>
+    </message>
+    <message>
+        <source>Carthage offered to pay its war debt to Rome decades early. Rome refused. A debtor who pays promptly is harder to keep in line.</source>
+        <translation>Kartaca, Roma&apos;ya olan savaş borcunu on yıllarca erken ödemeyi teklif etti. Roma reddetti. Borcunu vaktinde ödeyen bir borçluyu hizada tutmak daha zordur.</translation>
+    </message>
+    <message>
+        <source>Carthage was founded by Phoenician settlers from Tyre. Its name, Qart-hadasht, simply means &apos;New City&apos;.</source>
+        <translation>Kartaca, Tyros&apos;tan gelen Fenikeli yerleşimciler tarafından kuruldu. Adı Qart-hadasht, düpedüz “Yeni Şehir” demektir.</translation>
+    </message>
+    <message>
+        <source>Carthage was led by two elected magistrates called suffetes. Aristotle praised its constitution as one of the best of his day.</source>
+        <translation>Kartaca&apos;yı sufet denen iki seçilmiş yönetici idare ederdi. Aristoteles, Kartaca anayasasını çağının en iyilerinden biri olarak övmüştü.</translation>
+    </message>
+    <message>
+        <source>Carthage&apos;s circular military harbor surrounded an island headquarters. The historian Appian says its ship sheds could hold about 220 warships.</source>
+        <translation>Kartaca&apos;nın dairesel askerî limanı, ortadaki bir ada karargâhını çevreliyordu. Tarihçi Appianos, gemi barınaklarının yaklaşık 220 savaş gemisi alabildiğini söyler.</translation>
+    </message>
+    <message>
+        <source>Carthage&apos;s war elephants were probably North African forest elephants, a smaller kind that later became extinct.</source>
+        <translation>Kartaca&apos;nın savaş filleri muhtemelen Kuzey Afrika orman filleriydi; daha küçük olan bu tür sonradan nesli tükendi.</translation>
+    </message>
+    <message>
+        <source>Cato the Elder ended his speeches with &apos;Carthage must be destroyed.&apos; Once he showed the Senate fresh figs from Carthage to prove how close the enemy was.</source>
+        <translation>Yaşlı Cato konuşmalarını “Kartaca yıkılmalıdır” diye bitirirdi. Bir keresinde düşmanın ne kadar yakın olduğunu kanıtlamak için Senato&apos;ya Kartaca&apos;dan gelmiş taze incirler gösterdi.</translation>
+    </message>
+    <message>
+        <source>Decimation was a Roman punishment for units that fled: one soldier in ten, chosen by lot, was killed by his own comrades.</source>
+        <translation>Desimasyon, kaçan birliklere verilen bir Roma cezasıydı: kurayla seçilen her on askerden biri kendi silah arkadaşları tarafından öldürülürdü.</translation>
+    </message>
+    <message>
+        <source>Hamilcar Barca&apos;s nickname, Barca, probably means &apos;lightning&apos;. Hannibal&apos;s own name means roughly &apos;grace of Baal&apos;.</source>
+        <translation>Hamilkar Barka&apos;nın lakabı Barka muhtemelen “yıldırım” anlamına gelir. Hannibal&apos;in kendi adı ise kabaca “Baal&apos;in lütfu” demektir.</translation>
+    </message>
+    <message>
+        <source>Herodotus reports that Phoenician sailors circled Africa for an Egyptian pharaoh. He doubted their claim that the sun appeared on their right, which is exactly what would happen.</source>
+        <translation>Herodot, Fenikeli denizcilerin bir Mısır firavunu için Afrika&apos;nın çevresini dolaştığını aktarır. Güneşin sağlarında göründüğü iddialarına inanmadı; oysa tam olarak böyle olması gerekirdi.</translation>
+    </message>
+    <message>
+        <source>In a later war, Hannibal reportedly had pots full of snakes hurled onto enemy ships. The sailors laughed, then stopped laughing.</source>
+        <translation>Hannibal&apos;in daha sonraki bir savaşta düşman gemilerine yılan dolu çömlekler fırlattırdığı anlatılır. Denizciler güldü, sonra gülmeyi bıraktılar.</translation>
+    </message>
+    <message>
+        <source>In the First Punic War, storms sank more Roman ships than the Carthaginian navy did. Whole fleets were lost in bad weather.</source>
+        <translation>Birinci Pön Savaşı&apos;nda fırtınalar, Kartaca donanmasından daha fazla Roma gemisi batırdı. Koca filolar kötü havada yitip gitti.</translation>
+    </message>
+    <message>
+        <source>Legend says Queen Elissa, or Dido, was offered as much land as an ox hide could cover. She cut the hide into thin strips and encircled an entire hill.</source>
+        <translation>Efsaneye göre Kraliçe Elissa&apos;ya, yani Dido&apos;ya, bir öküz postunun kaplayabileceği kadar toprak teklif edildi. O da postu ince şeritlere kesip koca bir tepenin çevresini sardı.</translation>
+    </message>
+    <message>
+        <source>Livy claims Hannibal split rocks on the Alpine path by heating them with fire and dousing them with vinegar. Historians are still arguing about it.</source>
+        <translation>Livius, Hannibal&apos;in Alp yolundaki kayaları ateşle ısıtıp üzerlerine sirke dökerek yardırdığını iddia eder. Tarihçiler bunu hâlâ tartışıyor.</translation>
+    </message>
+    <message>
+        <source>Numidian horsemen rode without saddles or bridles, guiding their mounts with a light neck rope and their knees.</source>
+        <translation>Numidyalı atlılar eyersiz ve dizginsiz binerdi; atlarını boyunlarına geçirilmiş hafif bir iple ve dizleriyle yönlendirirlerdi.</translation>
+    </message>
+    <message>
+        <source>Phoenician purple dye came from murex sea snails. Thousands of snails made a small amount of dye, and the dye works were famous for their stench.</source>
+        <translation>Fenike moru, murex adlı deniz salyangozlarından elde edilirdi. Binlerce salyangozdan az miktarda boya çıkardı ve boyahaneler pis kokularıyla ünlüydü.</translation>
+    </message>
+    <message>
+        <source>Polybius says Roman light troops, the velites, sometimes wore wolf skins over their helmets so their officers could recognize them in battle.</source>
+        <translation>Polybios&apos;a göre Roma hafif piyadeleri velites, subaylarının onları savaşta tanıyabilmesi için bazen miğferlerinin üzerine kurt postu giyerdi.</translation>
+    </message>
+    <message>
+        <source>Rome destroyed Carthage in 146 BC. The famous story that it sowed the fields with salt was invented many centuries later.</source>
+        <translation>Roma, Kartaca&apos;yı MÖ 146&apos;da yıktı. Tarlalara tuz ekildiğine dair ünlü hikâye yüzyıllar sonra uydurulmuştur.</translation>
+    </message>
+    <message>
+        <source>Rome had almost no warships when the First Punic War began. Polybius says it copied a stranded Carthaginian ship and trained rowers on benches on dry land.</source>
+        <translation>Birinci Pön Savaşı başladığında Roma&apos;nın neredeyse hiç savaş gemisi yoktu. Polybios&apos;a göre Romalılar karaya oturmuş bir Kartaca gemisini kopyaladı ve kürekçileri karada, sıralar üzerinde eğitti.</translation>
+    </message>
+    <message>
+        <source>Rome rebuilt Carthage as a Roman city about a century after destroying it. It became one of the largest cities in the western Empire.</source>
+        <translation>Roma, Kartaca&apos;yı yıktıktan yaklaşık bir yüzyıl sonra onu bir Roma şehri olarak yeniden kurdu. Şehir, batı İmparatorluğu&apos;nun en büyük şehirlerinden biri oldu.</translation>
+    </message>
+    <message>
+        <source>The Carthaginian Mago wrote a 28-book work on farming. After Carthage fell, the Roman Senate ordered it translated into Latin.</source>
+        <translation>Kartacalı Mago tarım üzerine 28 kitaplık bir eser yazdı. Kartaca düştükten sonra Roma Senatosu bu eserin Latinceye çevrilmesini emretti.</translation>
+    </message>
+    <message>
+        <source>The Carthaginian explorer Hanno sailed down the coast of West Africa and described hairy wild people called &apos;gorillai&apos;. Modern gorillas are named after them.</source>
+        <translation>Kartacalı kâşif Hanno, Batı Afrika kıyıları boyunca güneye yelken açtı ve “gorillai” adını verdiği kıllı, vahşi insanları anlattı. Bugünkü goriller adlarını onlardan alır.</translation>
+    </message>
+    <message>
+        <source>The Latin word &apos;salarium&apos;, the root of &apos;salary&apos;, comes from the word for salt. The story that soldiers were paid in salt is probably a myth.</source>
+        <translation>“Maaş” anlamındaki İngilizce “salary” sözcüğünün kökü olan Latince “salarium”, tuz sözcüğünden gelir. Askerlere maaşlarının tuzla ödendiği hikâyesi muhtemelen bir efsanedir.</translation>
+    </message>
+    <message>
+        <source>The Phoenician alphabet had 22 letters and no vowels. Through Greek and Latin, it is an ancestor of the letters you are reading now.</source>
+        <translation>Fenike alfabesinde 22 harf vardı ve hiç ünlü yoktu. Yunanca ve Latince aracılığıyla şu an okuduğunuz harflerin atasıdır.</translation>
+    </message>
+    <message>
+        <source>The Roman corvus was a boarding bridge with an iron spike. It dropped onto an enemy deck and turned a sea battle into an infantry fight.</source>
+        <translation>Roma corvus&apos;u, ucunda demir bir çivi olan bir çıkarma köprüsüydü. Düşman güvertesine iner ve deniz savaşını bir piyade çarpışmasına çevirirdi.</translation>
+    </message>
+    <message>
+        <source>The Roman gladius was based on an Iberian sword. The Romans were never too proud to borrow a good idea from an enemy.</source>
+        <translation>Roma gladius&apos;u bir İber kılıcından örnek alınmıştı. Romalılar düşmandan iyi bir fikir ödünç almaya asla burun kıvırmadı.</translation>
+    </message>
+    <message>
+        <source>The Roman saying &apos;it has come down to the triarii&apos; meant a situation was desperate. The veterans in the last line were the final reserve.</source>
+        <translation>Romalıların “iş triarii&apos;ye kaldı” sözü, durumun umutsuz olduğu anlamına gelirdi. Son hattaki kıdemliler son yedekti.</translation>
+    </message>
+    <message>
+        <source>The pilum&apos;s long, thin iron neck could bend on impact. A pilum stuck in a shield was hard to pull out and impossible to throw back.</source>
+        <translation>Pilum&apos;un uzun, ince demir boynu çarpınca bükülebilirdi. Kalkana saplanan bir pilum güçlükle çıkarılır ve asla geri fırlatılamazdı.</translation>
+    </message>
+    <message>
+        <source>Trapped near Casilinum in 217 BC, Hannibal tied burning torches to the horns of about two thousand oxen. The Romans followed the lights; his army walked out.</source>
+        <translation>MÖ 217&apos;de Casilinum yakınlarında kıstırılan Hannibal, yaklaşık iki bin öküzün boynuzlarına yanan meşaleler bağlattı. Romalılar ışıkların peşine düştü; onun ordusu ise çekip gitti.</translation>
+    </message>
+    <message>
+        <source>Tyre, the mother city of Carthage, stood on an island. Alexander the Great took it in 332 BC only by building a causeway out to it.</source>
+        <translation>Kartaca&apos;nın ana şehri Tyros bir ada üzerindeydi. Büyük İskender onu MÖ 332&apos;de ancak adaya uzanan bir geçit yol inşa ederek alabildi.</translation>
+    </message>
 </context>
 <context>
     <name>Main</name>
@@ -7004,10 +7164,6 @@ bir harita seç</translation>
         <translation>Katmanlı kayalık bir çölde altı kamp. Üç dere ortada kesişir ve zemini altı dilime böler, böylece her komşu iki geçit uzağındadır: biri kavşak çakıllarının altında, biri kenar yığınlarının dışında. Her dilimin karşısında bir mesa uzanır ve bölge, onun yanındaki koridorda kazanılır.</translation>
     </message>
     <message>
-        <source>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</source>
-        <translation>Harabeleri, bir mabedi ve ölülerin uyanış bölgelerini gösteren küçük, elle yazılmış senaryo.</translation>
-    </message>
-    <message>
         <source>Sunbaked Terraces</source>
         <translation>Güneş Kavurmuş Taraçalar</translation>
     </message>
@@ -7034,6 +7190,10 @@ bir harita seç</translation>
     <message>
         <source>Aurelia Magna</source>
         <translation>Aurelia Magna</translation>
+    </message>
+    <message>
+        <source>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</source>
+        <translation>Eski yol üzerinde bir Roma gözcü kampı, çobanların o yolu neden bıraktığını öğrendiği gece. Kereste, taş ve bir sürü kampa yakındır; mezar harabeleri ortadaki araziyi tutar; lanetli tapınak kuzeydoğudaki arazide tek başına durur. Kampla mezar arasındaki alçak bir tümsek, sahip olmaya değer tek yüksek yerdir ve yol baştan sona ölülerin yanından geçer.</translation>
     </message>
 </context>
 <context>
@@ -7577,10 +7737,6 @@ bir harita seç</translation>
         <translation>Kolu yakın kıyıdaki dubalı köprüye ulaştır.</translation>
     </message>
     <message>
-        <source>Burn every cursed guardian from the sepulcher ruins. Kill what cannot die.</source>
-        <translation>Kabir harabelerindeki lanetli bekçilerin hepsini yak. Ölemeyeni öldür.</translation>
-    </message>
-    <message>
         <source>Cavalry reaches it first; hold the yard until the standard changes.</source>
         <translation>Oraya önce süvari varır; sancak değişene kadar avluyu tut.</translation>
     </message>
@@ -7635,10 +7791,6 @@ bir harita seç</translation>
     <message>
         <source>End the war with the men who lead it.</source>
         <translation>Savaşı, onu yönetenlerle birlikte bitir.</translation>
-    </message>
-    <message>
-        <source>Endure both waves from the depths. Do not flinch when the ground tears open.</source>
-        <translation>Derinlerden gelen iki dalgaya da dayan. Toprak yarıldığında irkilme.</translation>
     </message>
     <message>
         <source>Enemy camps fall neutral once their commander is dead.</source>
@@ -7925,10 +8077,6 @@ bir harita seç</translation>
         <translation>İnşaatçıları yamaçlara koş; geçidin bedeli kanla değil malzemeyle ödenir.</translation>
     </message>
     <message>
-        <source>Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.</source>
-        <translation>Altmış adam ve yerlilerin karanlıktan sonra yanından geçmediği bir mabet. Emrim araştırmak diyor. Onu yakıp araştırdık diye yazmayı yeğlerdim, ama Senato okuyor.</translation>
-    </message>
-    <message>
         <source>So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.</source>
         <translation>Demek merkez verdi, kanatlar vermedi. İyi yapılmıştı, bunu söylüyorum ve içindeydim. Roma bir ordu ve içindeki her şövalye için bir yüzük yitirdi. Roma henüz önemli olan bir şey yitirmedi.</translation>
     </message>
@@ -7951,10 +8099,6 @@ bir harita seç</translation>
     <message>
         <source>Stand in the gate yard of the northern advance camp until it falls to Carthage.</source>
         <translation>Kuzeydeki ileri kampın kapı avlusunda, orası Kartaca&apos;ya düşene kadar dur.</translation>
-    </message>
-    <message>
-        <source>Stand your ground. The last soldier alone is not a force — he is a sacrifice.</source>
-        <translation>Yerinde dur. Tek başına kalan son asker bir kuvvet değildir — bir kurbandır.</translation>
     </message>
     <message>
         <source>Supply is a target - and it cuts both ways. Your market and your homes are what the Romans are actually marching at, and their siege camp keeps its own stockpile within reach of a raid.</source>
@@ -8043,10 +8187,6 @@ bir harita seç</translation>
     <message>
         <source>The commander falls — and every line collapses behind him.</source>
         <translation>Komutan düşer — ve arkasındaki her hat çöker.</translation>
-    </message>
-    <message>
-        <source>The commander falls — the vigil ends. And the dead keep walking.</source>
-        <translation>Komutan düşer — nöbet biter. Ve ölüler yürümeyi sürdürür.</translation>
     </message>
     <message>
         <source>The crew is gone and the officer is standing in a clearing with an axe. That is not a work party.</source>
@@ -8569,22 +8709,6 @@ bir harita seç</translation>
         <translation>Her kapıyı örtemezsin. Ön uyarıyı izle ve iç hatlardan kaydır.</translation>
     </message>
     <message>
-        <source>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</source>
-        <translation>Ölüleri tapınaktan sür, sonra sancağı üzerine dik. Durdukları toprağa tuz ek.</translation>
-    </message>
-    <message>
-        <source>Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
-        <translation>Yaralıları eve çekin ve elimizde kalan adamları çağırın. Ölüler sabırlıdır. Biz de sabırlı olmayı göze alabiliriz.</translation>
-    </message>
-    <message>
-        <source>Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it.</source>
-        <translation>Mezar harabelerinin üstündeki lanetli tapınağı al ve aldığını elinde tut. Altmış adam, bir kışla ve bir ev, Roma&apos;nın ayırabildiğinin tamamı: muhafızları harabelerden temizle, sonra ölüleri tapınaktan sür ve sancağı üzerine dik.</translation>
-    </message>
-    <message>
-        <source>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</source>
-        <translation>İşte oradalar. Yüzlere bakmayın. Okçular atsın, kalkanlar kapansın ve kimse hiçbir şeyi o sisin içine geri kovalamasın.</translation>
-    </message>
-    <message>
         <source>Both risings of the dead at the south-western ruins must also fall before the war ends.</source>
         <translation>Savaş bitmeden güneybatı harabelerindeki iki ölü kalkışı da düşmeli.</translation>
     </message>
@@ -9039,6 +9163,70 @@ bir harita seç</translation>
     <message>
         <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand across a field from you with an army of my own.</source>
         <translation>Demek Afrika, ikimiz ve arkasında durulacak bir nehir yok. Fillerinin ölçüsünü aldım, Numidyalıların da artık bende. Ne yapacaksan, göreceğim yerde yap. On altı yıldır, kendi ordumla bir alanın karşı yakasında sana karşı durmayı bekledim.</translation>
+    </message>
+    <message>
+        <source>Break both risings at the shrine. Do not flinch when the ground tears open.</source>
+        <translation>Tapınaktaki iki kalkışı da kır. Toprak yarıldığında gözünü kırpma.</translation>
+    </message>
+    <message>
+        <source>Clear the barrow ruins. Both risings of the dead must fall.</source>
+        <translation>Mezar harabelerini temizle. Ölülerin iki kalkışı da düşmeli.</translation>
+    </message>
+    <message>
+        <source>Fabius falls. The watch ends, and the dead keep walking.</source>
+        <translation>Fabius düşer. Nöbet sona erer, ölüler ise yürümeye devam eder.</translation>
+    </message>
+    <message>
+        <source>Fabius stands alone, with no soldiers left and no barracks to raise more.</source>
+        <translation>Fabius yapayalnız kaldı; ne askeri var ne de yenilerini toplayacak bir kışlası.</translation>
+    </message>
+    <message>
+        <source>It is calling up the last of them, and another priest with them. Whatever comes out of that ground now is all it has left. So is what we have.</source>
+        <translation>Sonuncularını çağırıyor, yanlarında bir mezar rahibi daha. O topraktan şimdi ne çıkarsa, elinde kalan tek şey o. Bizim elimizdeki de öyle.</translation>
+    </message>
+    <message>
+        <source>Listen. The ground is still moving, and one of them is coming up in robes. That one first, archers. The rest are only bones.</source>
+        <translation>Dinleyin. Toprak hâlâ kıpırdıyor ve içlerinden biri cübbeyle çıkıyor. Önce o, okçular. Gerisi sadece kemik.</translation>
+    </message>
+    <message>
+        <source>Now. Get men onto that shrine and keep them there until the standard is up. Nobody steps off it. Not for loot, not for the wounded, not for me.</source>
+        <translation>Şimdi. O tapınağa adam çıkarın ve sancak dikilene dek orada tutun. Kimse ayrılmıyor. Ganimet için de, yaralılar için de, benim için de.</translation>
+    </message>
+    <message>
+        <source>Pull the wounded back to the camp and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
+        <translation>Yaralıları kampa geri çekin ve elimizde kalan adamları çağırın. Ölüler sabırlıdır. Biz de sabırlı olmayı göze alabiliriz.</translation>
+    </message>
+    <message>
+        <source>Quiet again. Count the living, bring the builders up, and find out what the dead were sitting on. Then look at that shrine and tell me you want to go up there.</source>
+        <translation>Yine sessiz. Yaşayanları sayın, inşaatçıları getirin ve ölülerin neyin üstünde oturduğunu öğrenin. Sonra o tapınağa bakın ve bana oraya çıkmak istediğinizi söyleyin.</translation>
+    </message>
+    <message>
+        <source>Raise a marketplace at the watch camp. Gold buys nothing buried in a barrow.</source>
+        <translation>Gözcü kampına bir pazar yeri kur. Altın, bir mezarda gömülü hiçbir şeyi satın almaz.</translation>
+    </message>
+    <message>
+        <source>Rome sent sixty men to find out why the shepherds will not use the old road after dark. Build up the watch camp first, then clear the barrow ruins and take the shrine on the rise. The dead will not come to you: you choose when to wake them, and you can choose to be ready.</source>
+        <translation>Roma, çobanların karanlıktan sonra eski yolu neden kullanmadığını öğrenmek için altmış adam gönderdi. Önce gözcü kampını büyüt, sonra mezar harabelerini temizle ve yamaçtaki tapınağı al. Ölüler sana gelmeyecek: onları ne zaman uyandıracağını sen seçersin, hazır olmayı da seçebilirsin.</translation>
+    </message>
+    <message>
+        <source>Sixty men and a road the shepherds will not walk after dark. The Senate wants a report. Cut timber, raise the camp, and keep everyone off that barrow until I say otherwise.</source>
+        <translation>Altmış adam ve çobanların karanlıktan sonra yürümediği bir yol. Senato bir rapor istiyor. Kereste kesin, kampı kurun ve ben aksini söyleyene dek herkesi o mezardan uzak tutun.</translation>
+    </message>
+    <message>
+        <source>Take the shrine on the rise: cut down its guardians, then keep troops beside it until the standard is planted.</source>
+        <translation>Yamaçtaki tapınağı al: muhafızlarını biç, sonra sancak dikilene dek yanında asker tut.</translation>
+    </message>
+    <message>
+        <source>The hill as well. Of course the hill as well. Shields in front, every bow on the one in robes, and nobody chases anything into that haze.</source>
+        <translation>Tepe de. Tabii ki tepe de. Kalkanlar önde, bütün yaylar cübbeliye, ve kimse o pusun içine hiçbir şeyin peşinden gitmiyor.</translation>
+    </message>
+    <message>
+        <source>The quartermaster sent gold, and gold does not hold a shield wall. Build a market and turn it into iron. When we do go to that barrow, the archers stand still and let the dead walk onto the shields.</source>
+        <translation>Levazımcı altın gönderdi, altın ise kalkan duvarını ayakta tutmaz. Bir pazar kurun ve onu demire çevirin. O mezara gittiğimizde okçular kıpırdamadan durur ve ölülerin kalkanlara yürümesine izin verir.</translation>
+    </message>
+    <message>
+        <source>Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.</source>
+        <translation>Bunlar insan. İnsandı. Jüpiter bizi korusun. ...Sakin. Kemik de her şey gibi kırılır. Okçular, olduğunuz yerde durun, bırakın kalkanlara gelsinler.</translation>
     </message>
 </context>
 <context>
@@ -10668,15 +10856,15 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     </message>
     <message>
         <source>Guard</source>
-        <translation>Savun</translation>
+        <translation>Siper</translation>
     </message>
     <message>
         <source>Dodge</source>
-        <translation>Kaç</translation>
+        <translation>Sıyrıl</translation>
     </message>
     <message>
         <source>Lock on</source>
-        <translation>Hedefe kilitlen</translation>
+        <translation>Kilitlen</translation>
     </message>
     <message>
         <source>Sprint</source>
@@ -10716,11 +10904,11 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     </message>
     <message>
         <source>ON %1</source>
-        <translation>AKTİF %1</translation>
+        <translation>AÇIK %1</translation>
     </message>
     <message>
         <source>ON</source>
-        <translation>AKTİF</translation>
+        <translation>AÇIK</translation>
     </message>
     <message>
         <source>CAMERA  ·  CLOSE</source>
@@ -11972,6 +12160,10 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <message>
         <source>The risen guardians are put down. Hold the shrine to purify it.</source>
         <translation>Dirilen muhafızlar yere serildi. Arındırmak için tapınağı tut.</translation>
+    </message>
+    <message>
+        <source>The ground is moving under the dead. More are coming up.</source>
+        <translation>Ölülerin altında toprak kıpırdıyor. Daha fazlası yükseliyor.</translation>
     </message>
 </context>
 <context>

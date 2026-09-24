@@ -27,24 +27,6 @@
 
 namespace Render::GL {
 
-namespace {
-
-auto should_use_runtime_harvest_props_exclusively(
-    const std::vector<Game::Map::WorldProp>& runtime_world_props,
-    bool requested_exclusive) -> bool {
-  if (requested_exclusive) {
-    return true;
-  }
-  return std::any_of(runtime_world_props.begin(),
-                     runtime_world_props.end(),
-                     [](const Game::Map::WorldProp& prop) {
-                       return !prop.persistent &&
-                              Game::Map::is_harvestable_world_prop_type(prop.type);
-                     });
-}
-
-} // namespace
-
 TerrainScatterManager::TerrainScatterManager()
     : m_biome(std::make_unique<BiomeRenderer>())
     , m_stone(std::make_unique<StoneRenderer>())
@@ -101,37 +83,25 @@ void TerrainScatterManager::configure(
     const Game::Map::TerrainHeightMap& height_map,
     const Game::Map::BiomeSettings& biome_settings,
     const std::vector<Game::Map::WorldProp>& scatter_seed_world_props,
-    const std::vector<Game::Map::WorldProp>& runtime_world_props,
-    bool use_world_props_exclusively) {
+    const std::vector<Game::Map::WorldProp>& runtime_world_props) {
   std::lock_guard<std::mutex> const lock(m_mutex);
   m_height_map = &height_map;
   m_biome_settings = biome_settings;
   m_scatter_seed_world_props = scatter_seed_world_props;
-  m_use_world_props_exclusively = should_use_runtime_harvest_props_exclusively(
-      runtime_world_props, use_world_props_exclusively);
 
   m_biome->configure(height_map, biome_settings);
   m_stone->configure(height_map, biome_settings, m_scatter_seed_world_props);
   m_plant->configure(height_map, biome_settings, m_scatter_seed_world_props);
   for (auto& tree_pass : m_trees) {
-    tree_pass->configure(height_map,
-                         biome_settings,
-                         m_scatter_seed_world_props,
-                         runtime_world_props,
-                         m_use_world_props_exclusively);
+    tree_pass->configure(height_map, biome_settings, runtime_world_props);
   }
   m_firecamp->configure(height_map, biome_settings, runtime_world_props);
   m_tent->configure(height_map, biome_settings, runtime_world_props);
   m_supply_cart->configure(height_map, biome_settings, runtime_world_props);
   m_weapon_rack->configure(height_map, biome_settings, runtime_world_props);
   m_ruins->configure(height_map, biome_settings, runtime_world_props);
-  m_dead_tree->configure(
-      height_map, biome_settings, m_scatter_seed_world_props, runtime_world_props);
-  m_boulder->configure(height_map,
-                       biome_settings,
-                       m_scatter_seed_world_props,
-                       runtime_world_props,
-                       m_use_world_props_exclusively);
+  m_dead_tree->configure(height_map, biome_settings, runtime_world_props);
+  m_boulder->configure(height_map, biome_settings, runtime_world_props);
   m_iron_ore->configure(height_map, biome_settings, runtime_world_props);
   m_magic_shrine->configure(height_map, biome_settings, runtime_world_props);
   m_cursed_gold_vein->configure(height_map, biome_settings, runtime_world_props);
@@ -147,13 +117,10 @@ void TerrainScatterManager::refresh_runtime_world_props(
     return;
   }
 
-  m_use_world_props_exclusively =
-      should_use_runtime_harvest_props_exclusively(runtime_world_props, false);
-
   for (auto& tree_pass : m_trees) {
-    tree_pass->refresh_world_props(runtime_world_props, m_use_world_props_exclusively);
+    tree_pass->refresh_world_props(runtime_world_props);
   }
-  m_boulder->refresh_world_props(runtime_world_props, m_use_world_props_exclusively);
+  m_boulder->refresh_world_props(runtime_world_props);
   m_dead_tree->refresh_world_props(runtime_world_props);
 
   m_iron_ore->configure(*m_height_map, m_biome_settings, runtime_world_props);
@@ -213,7 +180,6 @@ void TerrainScatterManager::clear() {
   m_height_map = nullptr;
   m_biome_settings = Game::Map::BiomeSettings{};
   m_scatter_seed_world_props.clear();
-  m_use_world_props_exclusively = false;
 
   for (const auto& entry : m_scatter_passes) {
     entry.pass->clear();

@@ -15,7 +15,7 @@ struct TriggerName {
   const char* name;
 };
 
-constexpr std::array<TriggerName, 19> k_trigger_names{{
+constexpr std::array<TriggerName, 22> k_trigger_names{{
     {CommanderMessageTrigger::MissionStart, "mission_start"},
     {CommanderMessageTrigger::MissionVictory, "mission_victory"},
     {CommanderMessageTrigger::MissionDefeat, "mission_defeat"},
@@ -35,6 +35,9 @@ constexpr std::array<TriggerName, 19> k_trigger_names{{
     {CommanderMessageTrigger::CallRefused, "call_refused"},
     {CommanderMessageTrigger::AllyNeedsResources, "ally_needs_resources"},
     {CommanderMessageTrigger::GiftReceived, "gift_received"},
+    {CommanderMessageTrigger::UndeadAwakened, "undead_awakened"},
+    {CommanderMessageTrigger::UndeadStirring, "undead_stirring"},
+    {CommanderMessageTrigger::UndeadCleared, "undead_cleared"},
 }};
 
 auto parse_position(const QJsonObject& obj) -> Position {
@@ -166,6 +169,8 @@ auto parse_commander_message_condition(const QJsonObject& trigger)
     condition.subject_type = trigger["unit_type"].toString();
   } else if (trigger.contains("kind")) {
     condition.subject_type = trigger["kind"].toString();
+  } else if (trigger.contains("zone_id")) {
+    condition.subject_type = trigger["zone_id"].toString();
   }
   if (trigger.contains("reason")) {
     condition.reason = trigger["reason"].toString();

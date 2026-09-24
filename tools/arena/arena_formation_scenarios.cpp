@@ -1574,6 +1574,227 @@ void add_formation_promo_scenarios(std::vector<ArenaScenarioDefinition>& out) {
   }
 }
 
+void dress_spotlight_field(ArenaScenarioDefinition& scenario) {
+  dress_for_capture(scenario, 16.2F);
+  scenario.ground_type = QStringLiteral("grass_dry");
+  scenario.suppress_boundary_mountains = true;
+  scenario.terrain_grid_extent = 321;
+  scenario.arena_floor_half_extent = 70.0F;
+  scenario.terrain_height_scale_override = 9.0F;
+  scenario.environment.exposure_override = 1.18F;
+  scenario.environment.fog_density_override = 0.0015F;
+}
+
+auto carthaginian_host(float z) -> std::vector<ArenaScenarioGroup> {
+  return {
+      troop_group(QStringLiteral("libyan_spears"),
+                  Troop::Spearman,
+                  Nation::Carthage,
+                  1,
+                  8,
+                  {-24.0F, 0.0F, z},
+                  18,
+                  {6.5F, 0.0F, 0.0F}),
+      troop_group(QStringLiteral("iberian_swords"),
+                  Troop::Swordsman,
+                  Nation::Carthage,
+                  1,
+                  8,
+                  {-24.0F, 0.0F, z - 6.0F},
+                  16,
+                  {6.5F, 0.0F, 0.0F}),
+      troop_group(QStringLiteral("balearic_slingers"),
+                  Troop::Archer,
+                  Nation::Carthage,
+                  1,
+                  5,
+                  {-14.0F, 0.0F, z - 12.0F},
+                  12,
+                  {6.5F, 0.0F, 0.0F}),
+      troop_group(QStringLiteral("numidian_left"),
+                  Troop::HorseArcher,
+                  Nation::Carthage,
+                  1,
+                  5,
+                  {-44.0F, 0.0F, z - 4.0F},
+                  8,
+                  {5.0F, 0.0F, 0.0F}),
+      troop_group(QStringLiteral("numidian_right"),
+                  Troop::HorseSpearman,
+                  Nation::Carthage,
+                  1,
+                  5,
+                  {24.0F, 0.0F, z - 4.0F},
+                  8,
+                  {5.0F, 0.0F, 0.0F}),
+      troop_group(QStringLiteral("hannibal"),
+                  Troop::CarthageSwordCommander,
+                  Nation::Carthage,
+                  1,
+                  1,
+                  {0.0F, 0.0F, z - 16.0F},
+                  1),
+  };
+}
+
+auto carthaginian_host_names() -> QStringList {
+  return {QStringLiteral("libyan_spears"),
+          QStringLiteral("iberian_swords"),
+          QStringLiteral("balearic_slingers"),
+          QStringLiteral("numidian_left"),
+          QStringLiteral("numidian_right"),
+          QStringLiteral("hannibal")};
+}
+
+void add_spotlight_formation_scenarios(std::vector<ArenaScenarioDefinition>& out) {
+  {
+    auto s = formation_definition(
+        QStringLiteral("spotlight_formations_drill"),
+        QStringLiteral("Spotlight: Formations Drill"),
+        QStringLiteral("One Carthaginian host on an empty field goes through the "
+                       "army formation vocabulary in order - line, column, "
+                       "defensive, assault, encirclement - with time between "
+                       "orders for every shape to settle."),
+        90.0F,
+        three_quarter_camera(80.0F));
+    dress_spotlight_field(s);
+    s.suppress_procedural_props = true;
+    s.groups = carthaginian_host(-14.0F);
+    const QStringList host = carthaginian_host_names();
+    s.steps = {
+        form_step(0.3F, host, Intent::Line, {0.0F, 0.0F, -10.0F}, 0.0F, 64.0F),
+        form_step(13.0F, host, Intent::Column, {0.0F, 0.0F, -8.0F}, 0.0F, 10.0F),
+        form_step(26.0F, host, Intent::Defensive, {0.0F, 0.0F, -6.0F}, 0.0F, 46.0F),
+    };
+    s.steps.push_back(
+        form_step(39.0F, host, Intent::Assault, {0.0F, 0.0F, 2.0F}, 0.0F, 58.0F));
+    auto left_horn = form_step(56.0F,
+                               {QStringLiteral("numidian_left")},
+                               Intent::Assault,
+                               {-34.0F, 0.0F, 22.0F},
+                               35.0F,
+                               16.0F);
+    left_horn.formation.options.flank_preference =
+        Game::Formation::FlankPreference::StrongLeft;
+    s.steps.push_back(std::move(left_horn));
+    auto right_horn = form_step(56.0F,
+                                {QStringLiteral("numidian_right")},
+                                Intent::Assault,
+                                {34.0F, 0.0F, 22.0F},
+                                -35.0F,
+                                16.0F);
+    right_horn.formation.options.flank_preference =
+        Game::Formation::FlankPreference::StrongRight;
+    s.steps.push_back(std::move(right_horn));
+    s.steps.push_back(
+        form_step(60.0F, host, Intent::Encirclement, {0.0F, 0.0F, 14.0F}, 0.0F, 58.0F));
+    s.expectations = {
+        expect(Expect::GroupIsRendered, QStringLiteral("libyan_spears")),
+        expect(Expect::MovementIsContinuous, QStringLiteral("iberian_swords")),
+        expect(Expect::NoRootTeleport, QStringLiteral("libyan_spears")),
+    };
+    out.push_back(std::move(s));
+  }
+
+  {
+    auto s = formation_definition(
+        QStringLiteral("spotlight_formations_battle"),
+        QStringLiteral("Spotlight: Formations In Battle"),
+        QStringLiteral("A Roman legion marches up in column, deploys into line "
+                       "and drives a wedge forward; the Carthaginian host waits "
+                       "in its square, then opens into a crescent before the "
+                       "wedge lands so the horns close around it."),
+        60.0F,
+        three_quarter_camera(90.0F));
+    dress_spotlight_field(s);
+    s.groups = carthaginian_host(-16.0F);
+    const QStringList host = carthaginian_host_names();
+    const QStringList legion{QStringLiteral("hastati"),
+                             QStringLiteral("principes"),
+                             QStringLiteral("triarii"),
+                             QStringLiteral("velites"),
+                             QStringLiteral("equites"),
+                             QStringLiteral("consul")};
+    s.groups.push_back(troop_group(legion[0],
+                                   Troop::Swordsman,
+                                   Nation::RomanRepublic,
+                                   2,
+                                   7,
+                                   {-10.0F, 0.0F, 52.0F},
+                                   16,
+                                   {0.0F, 0.0F, 5.0F}));
+    s.groups.push_back(troop_group(legion[1],
+                                   Troop::Swordsman,
+                                   Nation::RomanRepublic,
+                                   2,
+                                   6,
+                                   {-4.0F, 0.0F, 52.0F},
+                                   16,
+                                   {0.0F, 0.0F, 5.0F}));
+    s.groups.push_back(troop_group(legion[2],
+                                   Troop::Spearman,
+                                   Nation::RomanRepublic,
+                                   2,
+                                   4,
+                                   {2.0F, 0.0F, 52.0F},
+                                   16,
+                                   {0.0F, 0.0F, 5.0F}));
+    s.groups.push_back(troop_group(legion[3],
+                                   Troop::Archer,
+                                   Nation::RomanRepublic,
+                                   2,
+                                   4,
+                                   {8.0F, 0.0F, 52.0F},
+                                   12,
+                                   {0.0F, 0.0F, 5.0F}));
+    s.groups.push_back(troop_group(legion[4],
+                                   Troop::MountedSwordsman,
+                                   Nation::RomanRepublic,
+                                   2,
+                                   3,
+                                   {14.0F, 0.0F, 52.0F},
+                                   8,
+                                   {0.0F, 0.0F, 5.0F}));
+    s.groups.push_back(troop_group(legion[5],
+                                   Troop::RomanVeteranConsul,
+                                   Nation::RomanRepublic,
+                                   2,
+                                   1,
+                                   {0.0F, 0.0F, 76.0F},
+                                   1));
+
+    auto line = form_step(0.3F, host, Intent::Line, {0.0F, 0.0F, -14.0F}, 0.0F, 64.0F);
+    line.formation.options.ranged_placement =
+        Game::Formation::RangedPlacement::Skirmish;
+    s.steps.push_back(std::move(line));
+    s.steps.push_back(
+        form_step(0.3F, legion, Intent::Column, {0.0F, 0.0F, 36.0F}, 180.0F, 18.0F));
+    s.steps.push_back(
+        form_step(3.0F, host, Intent::Defensive, {0.0F, 0.0F, -12.0F}, 0.0F, 50.0F));
+    s.steps.push_back(
+        form_step(9.0F, legion, Intent::Line, {0.0F, 0.0F, 22.0F}, 180.0F, 54.0F));
+    s.steps.push_back(
+        form_step(17.0F, legion, Intent::Assault, {0.0F, 0.0F, -12.0F}, 180.0F, 50.0F));
+    s.steps.push_back(
+        form_step(22.0F, host, Intent::Encirclement, {0.0F, 0.0F, -4.0F}, 0.0F, 58.0F));
+    for (auto const& [horn, quarry] :
+         {std::pair{QStringLiteral("numidian_left"), QStringLiteral("triarii")},
+          std::pair{QStringLiteral("numidian_right"), QStringLiteral("velites")}}) {
+      auto close = step_at(36.0F, Command::AttackMove, horn);
+      close.target_group = quarry;
+      s.steps.push_back(std::move(close));
+    }
+    s.battle_sides = {{1, QStringLiteral("Carthage"), {0.0F, 0.0F, -16.0F}, 30.0F},
+                      {2, QStringLiteral("Rome"), {0.0F, 0.0F, 52.0F}, 30.0F}};
+    s.expectations = {
+        expect(Expect::GroupIsRendered, QStringLiteral("hastati")),
+        expect(Expect::GroupIsRendered, QStringLiteral("libyan_spears")),
+        expect(Expect::NoRootTeleport, QStringLiteral("iberian_swords")),
+    };
+    out.push_back(std::move(s));
+  }
+}
+
 } // namespace
 
 auto build_formation_definitions() -> std::vector<ArenaScenarioDefinition> {
@@ -1583,6 +1804,7 @@ auto build_formation_definitions() -> std::vector<ArenaScenarioDefinition> {
   add_army_formation_scenarios(result);
   add_terrain_formation_scenarios(result);
   add_formation_promo_scenarios(result);
+  add_spotlight_formation_scenarios(result);
   return result;
 }
 

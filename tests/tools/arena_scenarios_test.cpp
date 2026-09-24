@@ -834,6 +834,49 @@ TEST(ArenaScenariosTest, ResourcePatchesAreUnvariedUnlessAScenarioAsksForIt) {
   EXPECT_FLOAT_EQ(plain.scale_spread, 0.0F);
 }
 
+TEST(ArenaScenariosTest, GroundingCapturesCoverEveryKindOfGroundWithOneCast) {
+
+  const std::vector<const char*> ids{Arena::Scenarios::k_grounding_flat_id,
+                                     Arena::Scenarios::k_grounding_hill_id,
+                                     Arena::Scenarios::k_grounding_ridge_id,
+                                     Arena::Scenarios::k_grounding_riverbank_id,
+                                     Arena::Scenarios::k_grounding_road_id,
+                                     Arena::Scenarios::k_grounding_scatter_id};
+  const auto* flat =
+      Arena::Scenarios::find_definition(QString::fromLatin1(ids.front()));
+  ASSERT_NE(flat, nullptr);
+  for (const char* id : ids) {
+    const auto* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    ASSERT_EQ(scenario->groups.size(), flat->groups.size()) << id;
+    for (std::size_t i = 0; i < flat->groups.size(); ++i) {
+      EXPECT_EQ(scenario->groups[i].name, flat->groups[i].name) << id;
+      EXPECT_EQ(scenario->groups[i].origin, flat->groups[i].origin) << id;
+    }
+  }
+
+  const auto has_terrain = [](const char* id) {
+    const auto* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    return scenario != nullptr && (!scenario->terrain_features.empty() ||
+                                   !scenario->elevation_patches.empty());
+  };
+  EXPECT_TRUE(flat->terrain_features.empty());
+  EXPECT_TRUE(flat->suppress_terrain_features);
+  EXPECT_TRUE(has_terrain(Arena::Scenarios::k_grounding_hill_id));
+  EXPECT_TRUE(has_terrain(Arena::Scenarios::k_grounding_ridge_id));
+  EXPECT_FALSE(Arena::Scenarios::find_definition(
+                   QString::fromLatin1(Arena::Scenarios::k_grounding_riverbank_id))
+                   ->rivers.empty());
+  EXPECT_FALSE(Arena::Scenarios::find_definition(
+                   QString::fromLatin1(Arena::Scenarios::k_grounding_road_id))
+                   ->roads.empty());
+  for (const char* id : ids) {
+    EXPECT_FALSE(Arena::Scenarios::find_definition(QString::fromLatin1(id))
+                     ->suppress_terrain_scatter)
+        << id << ": the scatter pass also draws the world-prop trees and rocks";
+  }
+}
+
 TEST(ArenaScenariosTest, RejectsUnknownScenarioIds) {
   EXPECT_EQ(Arena::Scenarios::find_option(QStringLiteral("not_a_real_scenario")),
             nullptr);

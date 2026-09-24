@@ -115,9 +115,9 @@ Item {
         case "column":
             return "..###.." + "..###.." + "..###.." + "..###..";
         case "defensive":
-            return ".#####." + ".#####." + "......." + "..###..";
+            return ".#####." + ".#...#." + ".#.@.#." + ".#####.";
         case "assault":
-            return "..@.@.." + ".#####." + "..###.." + "...#...";
+            return "...#..." + "..###.." + ".#####." + "#######";
         case "encirclement":
             return "##...##" + "#.....#" + ".#####." + ".#####.";
         case "siege_escort":
@@ -135,9 +135,9 @@ Item {
         case "column":
             return qsTr("Narrow and deep. Best for moving through gates and passes.");
         case "defensive":
-            return qsTr("Compressed frontage with reserves. Best for holding ground.");
+            return qsTr("A closed square facing out on every side, archers inside. Best for holding ground.");
         case "assault":
-            return qsTr("Weighted front with skirmishers ahead. Best for breaking a line.");
+            return qsTr("A wedge that drives its point into the enemy. Best for breaking a line.");
         case "encirclement":
             return qsTr("Wide flanks that close around a target. Needs cavalry.");
         case "siege_escort":

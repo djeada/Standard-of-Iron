@@ -8,6 +8,7 @@
 #include "game/core/component_structures.h"
 #include "game/core/world.h"
 #include "game/systems/command_service.h"
+#include "game/systems/undead_awakening_system.h"
 #include "game/systems/walkability.h"
 
 namespace Game::Mission {
@@ -61,8 +62,17 @@ auto find_free_ground_near(Engine::Core::World& world,
 
   const std::vector<Occupied> occupied = collect_occupied(world, placed);
 
+  const auto* undead = world.get_system<Game::Systems::UndeadAwakeningSystem>();
+  const bool authored_inside_a_zone =
+      undead != nullptr && undead->would_wake_a_zone(origin.x(), origin.z(), 0.0F);
+  const auto wakes_the_dead = [&](const QVector3D& centre) {
+    return undead != nullptr && !authored_inside_a_zone &&
+           undead->would_wake_a_zone(centre.x(), centre.z(), radius);
+  };
+
   const auto fits = [&](const QVector3D& centre) {
-    if (!Game::Systems::Walkability::can_stand(centre, ground)) {
+    if (wakes_the_dead(centre) ||
+        !Game::Systems::Walkability::can_stand(centre, ground)) {
       return false;
     }
     for (int probe = 0; probe < k_footprint_probes; ++probe) {

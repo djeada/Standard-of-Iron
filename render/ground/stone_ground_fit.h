@@ -10,34 +10,20 @@
 #include <vector>
 
 #include "game/map/scatter/ground_utils.h"
+#include "game/map/terrain_surface.h"
 
 namespace Render::Ground {
 
-inline auto sample_grid_height_bilinear(const std::vector<float>& heights,
-                                        int width,
-                                        int height,
-                                        float gx,
-                                        float gz) -> float {
-  if (width < 2 || height < 2 ||
-      heights.size() <
-          static_cast<std::size_t>(width) * static_cast<std::size_t>(height)) {
+inline auto sample_grid_height(const std::vector<float>& heights,
+                               int width,
+                               int height,
+                               float gx,
+                               float gz) -> float {
+  if (heights.size() <
+      static_cast<std::size_t>(width) * static_cast<std::size_t>(height)) {
     return 0.0F;
   }
-  float const cx = std::clamp(gx, 0.0F, static_cast<float>(width - 1));
-  float const cz = std::clamp(gz, 0.0F, static_cast<float>(height - 1));
-  int const x0 = static_cast<int>(std::floor(cx));
-  int const z0 = static_cast<int>(std::floor(cz));
-  int const x1 = std::min(x0 + 1, width - 1);
-  int const z1 = std::min(z0 + 1, height - 1);
-  float const fx = cx - static_cast<float>(x0);
-  float const fz = cz - static_cast<float>(z0);
-  auto at = [&](int x, int z) {
-    return heights[static_cast<std::size_t>(z) * static_cast<std::size_t>(width) +
-                   static_cast<std::size_t>(x)];
-  };
-  float const h0 = at(x0, z0) * (1.0F - fx) + at(x1, z0) * fx;
-  float const h1 = at(x0, z1) * (1.0F - fx) + at(x1, z1) * fx;
-  return h0 * (1.0F - fz) + h1 * fz;
+  return Game::Map::sample_triangulated_height(heights.data(), width, height, gx, gz);
 }
 
 inline auto sample_ground_normal(const std::vector<float>& heights,
@@ -49,14 +35,10 @@ inline auto sample_ground_normal(const std::vector<float>& heights,
   constexpr float k_half_step = 0.5F;
   constexpr float k_min_tile = 1.0e-4F;
   float const ts = std::max(tile_size, k_min_tile);
-  float const left =
-      sample_grid_height_bilinear(heights, width, height, gx - k_half_step, gz);
-  float const right =
-      sample_grid_height_bilinear(heights, width, height, gx + k_half_step, gz);
-  float const back =
-      sample_grid_height_bilinear(heights, width, height, gx, gz - k_half_step);
-  float const front =
-      sample_grid_height_bilinear(heights, width, height, gx, gz + k_half_step);
+  float const left = sample_grid_height(heights, width, height, gx - k_half_step, gz);
+  float const right = sample_grid_height(heights, width, height, gx + k_half_step, gz);
+  float const back = sample_grid_height(heights, width, height, gx, gz - k_half_step);
+  float const front = sample_grid_height(heights, width, height, gx, gz + k_half_step);
   QVector3D normal(-(right - left) / ts, 1.0F, -(front - back) / ts);
   if (normal.lengthSquared() < k_min_tile) {
     return {0.0F, 1.0F, 0.0F};

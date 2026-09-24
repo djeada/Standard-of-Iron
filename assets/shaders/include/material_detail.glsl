@@ -8,6 +8,7 @@ const int k_material_metal = 1;
 const int k_material_wood = 2;
 const int k_material_cloth = 3;
 const int k_material_leather = 4;
+const int k_material_ceramic = 9;
 
 const float k_detail_cells_coarse = 4.0;
 const float k_detail_cells_mid = 16.0;
@@ -102,15 +103,43 @@ vec3 soi_leather_variation(vec3 base_color, vec2 uv) {
   return base_color * (1.0 + leather_noise * 0.14 - 0.07 + blotches);
 }
 
+vec3 soi_ceramic_variation(
+    vec3 base_color, vec2 uv, vec3 normal, vec3 view_dir, vec3 world_pos) {
+  float firing = soi_detail_coarse(uv * 0.9) - 0.5;
+  float mottle = soi_detail_mid(uv * 3.1) - 0.5;
+  float grit = soi_detail_fine(uv * 11.0) - 0.5;
+  vec3 kiln_warm = base_color * vec3(1.08, 0.97, 0.86);
+  vec3 kiln_smoke = base_color * vec3(0.76, 0.73, 0.71);
+  vec3 variation = mix(kiln_warm, kiln_smoke, smoothstep(0.08, 0.42, firing));
+  variation *= 0.97 + mottle * 0.09 + grit * 0.05;
+
+  float side = 1.0 - abs(normal.y);
+  float ring_visibility = 1.0 - smoothstep(0.2, 0.8, fwidth(world_pos.y) * 90.0);
+  float throwing_rings = sin(world_pos.y * 260.0 + mottle * 2.0);
+  variation *= 1.0 + throwing_rings * 0.028 * ring_visibility * side;
+
+  float upness = max(normal.y, 0.0);
+  float dust = upness * smoothstep(0.45, 0.85, soi_detail_coarse(uv * 0.5));
+  variation = mix(variation, vec3(0.70, 0.62, 0.50), dust * 0.20);
+
+  float chip = step(0.955, soi_detail_mid(uv * 5.3)) * side;
+  variation = mix(variation, base_color * vec3(1.18, 1.05, 0.92), chip * 0.35);
+
+  float view_angle = abs(dot(normal, view_dir));
+  float burnish = pow(1.0 - view_angle, 3.0) * 0.06;
+  return variation + base_color * burnish;
+}
+
 vec3 soi_material_variation(vec3 base_color,
                             vec3 world_pos,
                             vec3 normal,
                             int material_id) {
   float tactical = ground_tactical_distance(length(u_camera_pos - world_pos));
 
-  if (material_id == k_material_mineral || material_id == k_material_wood) {
+  if (material_id == k_material_mineral || material_id == k_material_wood ||
+      material_id == k_material_ceramic) {
     float luma = dot(base_color, vec3(0.299, 0.587, 0.114));
-    float saturation = material_id == k_material_mineral ? 0.86 : 0.92;
+    float saturation = material_id == k_material_wood ? 0.92 : 0.86;
     base_color = mix(vec3(luma), base_color, mix(1.0, saturation, tactical));
   }
   if (!u_has_material_detail) {
@@ -129,6 +158,8 @@ vec3 soi_material_variation(vec3 base_color,
     variation = soi_cloth_variation(base_color, uv, normal, view_dir, world_pos);
   } else if (material_id == k_material_leather) {
     variation = soi_leather_variation(base_color, uv);
+  } else if (material_id == k_material_ceramic) {
+    variation = soi_ceramic_variation(base_color, uv, normal, view_dir, world_pos);
   }
 
   variation = mix(base_color, variation, mix(1.0, 0.55, tactical));

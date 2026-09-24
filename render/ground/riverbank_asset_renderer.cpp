@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "game/map/scatter/ground_utils.h"
+#include "game/map/terrain_surface.h"
 #include "game/map/visibility_service.h"
 #include "gl/resources.h"
 #include "map/terrain.h"
@@ -84,21 +85,8 @@ void RiverbankAssetRenderer::generate_asset_instances() {
   const float half_height = m_height * 0.5F - 0.5F;
 
   auto sample_height_at = [&](float gx, float gz) -> float {
-    gx = std::clamp(gx, 0.0F, float(m_width - 1));
-    gz = std::clamp(gz, 0.0F, float(m_height - 1));
-    int const x0 = int(std::floor(gx));
-    int const z0 = int(std::floor(gz));
-    int const x1 = std::min(x0 + 1, m_width - 1);
-    int const z1 = std::min(z0 + 1, m_height - 1);
-    float const tx = gx - float(x0);
-    float const tz = gz - float(z0);
-    float const h00 = m_height_data[z0 * m_width + x0];
-    float const h10 = m_height_data[z0 * m_width + x1];
-    float const h01 = m_height_data[z1 * m_width + x0];
-    float const h11 = m_height_data[z1 * m_width + x1];
-    float const h0 = h00 * (1.0F - tx) + h10 * tx;
-    float const h1 = h01 * (1.0F - tx) + h11 * tx;
-    return h0 * (1.0F - tz) + h1 * tz;
+    return Game::Map::sample_triangulated_height(
+        m_height_data.data(), m_width, m_height, gx, gz);
   };
 
   for (size_t seg_idx = 0; seg_idx < m_river_segments.size(); ++seg_idx) {

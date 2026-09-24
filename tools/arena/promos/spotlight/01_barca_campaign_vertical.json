@@ -1,0 +1,520 @@
+{
+  "id": "spotlight_01_barca_campaign_vertical",
+  "title": "STANDARD OF IRON",
+  "subtitle": "FEATURE SPOTLIGHT — THE BARCA CAMPAIGN",
+  "end_card_seconds": 5.0,
+  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+  "width": 1080,
+  "height": 1920,
+  "fps": 60,
+  "supersample": 2,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "motion_limits": {
+    "yaw_degrees_per_second": 12,
+    "pitch_degrees_per_second": 6,
+    "fov_degrees_per_second": 6,
+    "minimum_clip_seconds": 2.5,
+    "mean_clip_seconds": 3.0
+  },
+  "transition": {
+    "type": "cut"
+  },
+  "music": "artifacts/promo/spotlight/01_barca_campaign/score.ogg",
+  "music_start": 0.0,
+  "music_volume": 0.55,
+  "grade": {
+    "contrast": 1.1,
+    "saturation": 1.12,
+    "brightness": 0.05,
+    "gamma": 1.14,
+    "grain": 4,
+    "vignette": 0.1
+  },
+  "shots": [
+    {
+      "name": "ident",
+      "scenario": "trailer_flame_card",
+      "start": 0.5,
+      "duration": 3.0,
+      "flame_card": true,
+      "flame_speed": 0.85,
+      "flame_intensity": 0.9,
+      "act_kicker": "FEATURE SPOTLIGHT",
+      "act_title": "STANDARD OF IRON"
+    },
+    {
+      "name": "establish",
+      "scenario": "spotlight_crossing_the_rhone",
+      "start": 1.0,
+      "duration": 5.0,
+      "focus": {
+        "mode": "point",
+        "point": [-36.3, 0.0, -32.6]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 363.0,
+          "pitch": 41,
+          "yaw": 210,
+          "fov": 54,
+          "ease": "smooth"
+        },
+        {
+          "time": 5.0,
+          "distance": 275.0,
+          "pitch": 39,
+          "yaw": 220,
+          "fov": 52,
+          "ease": "smooth"
+        }
+      ],
+      "act_kicker": "FEATURE SPOTLIGHT — 01",
+      "act_title": "THE BARCID ROAD",
+      "transition": {
+        "type": "dip",
+        "duration": 0.5
+      }
+    },
+    {
+      "name": "rhone",
+      "scenario": "spotlight_crossing_the_rhone",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [-294.6, 0.0, -154.2]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 137.5,
+          "pitch": 35,
+          "yaw": 210,
+          "fov": 54,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 110.0,
+          "pitch": 33,
+          "yaw": 218,
+          "fov": 52,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "RHÔNE",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    },
+    {
+      "name": "alps",
+      "scenario": "spotlight_crossing_the_alps",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [-178.8, 0.0, -153.7]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 231.0,
+          "pitch": 35,
+          "yaw": 225,
+          "fov": 54,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 192.5,
+          "pitch": 33,
+          "yaw": 233,
+          "fov": 52,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "ALPS",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    },
+    {
+      "name": "ticino",
+      "scenario": "spotlight_battle_of_ticino",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [-20.6, 0.0, -32.6]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 242.0,
+          "pitch": 35,
+          "yaw": 225,
+          "fov": 54,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 203.5,
+          "pitch": 33,
+          "yaw": 233,
+          "fov": 52,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "TICINO",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    },
+    {
+      "name": "trebia",
+      "scenario": "spotlight_battle_of_trebia",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [-38, 0.0, -30]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 170.5,
+          "pitch": 31,
+          "yaw": 135,
+          "fov": 54,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 143.0,
+          "pitch": 29,
+          "yaw": 143,
+          "fov": 52,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "TREBIA",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    },
+    {
+      "name": "trasimene",
+      "scenario": "spotlight_battle_of_trasimene",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0.0, -215]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 181.5,
+          "pitch": 27,
+          "yaw": 0,
+          "fov": 54,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 154.0,
+          "pitch": 25,
+          "yaw": 8,
+          "fov": 52,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "TRASIMENE",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    },
+    {
+      "name": "cannae",
+      "scenario": "spotlight_battle_of_cannae",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [87, 0.0, -6]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 132.0,
+          "pitch": 31,
+          "yaw": 225,
+          "fov": 54,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 104.5,
+          "pitch": 29,
+          "yaw": 233,
+          "fov": 52,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "CANNAE",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    },
+    {
+      "name": "campania",
+      "scenario": "spotlight_campania_campaign",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [-53.1, 0.0, -68.3]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 132.0,
+          "pitch": 35,
+          "yaw": 225,
+          "fov": 54,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 104.5,
+          "pitch": 33,
+          "yaw": 233,
+          "fov": 52,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "CAMPANIA",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    },
+    {
+      "name": "zama",
+      "scenario": "spotlight_battle_of_zama",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [-163.3, 0.0, -39.3]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 88.0,
+          "pitch": 25,
+          "yaw": 45,
+          "fov": 54,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 70.4,
+          "pitch": 23,
+          "yaw": 53,
+          "fov": 52,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "ZAMA",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    },
+    {
+      "name": "host",
+      "scenario": "spotlight_battle_of_cannae_battle",
+      "start": 0.2,
+      "duration": 3.6,
+      "gameplay_ui": false,
+      "gameplay_ui_all_owners": true,
+      "focus": {
+        "mode": "army",
+        "owner": 1,
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "ease": "smooth",
+          "distance": 77.0,
+          "pitch": 27,
+          "yaw": 250,
+          "fov": 54
+        },
+        {
+          "time": 3.6,
+          "ease": "smooth",
+          "distance": 63.8,
+          "pitch": 23,
+          "yaw": 262,
+          "fov": 52
+        }
+      ],
+      "caption": "LEAD THE CAMPAIGN OF HANNIBAL FROM THE RHÔNE TO ZAMA",
+      "transition": {
+        "type": "dip",
+        "duration": 0.4
+      }
+    },
+    {
+      "name": "play_advance",
+      "scenario": "spotlight_battle_of_cannae_battle",
+      "start": 4.2,
+      "duration": 4.0,
+      "gameplay_ui": true,
+      "gameplay_ui_all_owners": true,
+      "focus": {
+        "mode": "army",
+        "owner": 1,
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "ease": "smooth",
+          "distance": 39.6,
+          "pitch": 19,
+          "yaw": 268,
+          "fov": 56
+        },
+        {
+          "time": 4.0,
+          "ease": "smooth",
+          "distance": 33.0,
+          "pitch": 17,
+          "yaw": 276,
+          "fov": 54
+        }
+      ],
+      "transition": {
+        "type": "cut"
+      }
+    },
+    {
+      "name": "play_clash",
+      "scenario": "spotlight_battle_of_cannae_battle",
+      "start": 10.5,
+      "duration": 4.5,
+      "gameplay_ui": true,
+      "gameplay_ui_all_owners": true,
+      "focus": {
+        "mode": "battle",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "ease": "smooth",
+          "distance": 48.4,
+          "pitch": 21,
+          "yaw": 175,
+          "fov": 54
+        },
+        {
+          "time": 4.5,
+          "ease": "smooth",
+          "distance": 41.8,
+          "pitch": 20,
+          "yaw": 188,
+          "fov": 54
+        }
+      ]
+    },
+    {
+      "name": "play_melee",
+      "scenario": "spotlight_battle_of_cannae_battle",
+      "start": 16.0,
+      "duration": 4.0,
+      "gameplay_ui": true,
+      "gameplay_ui_all_owners": true,
+      "focus": {
+        "mode": "battle",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "ease": "smooth",
+          "distance": 28.6,
+          "pitch": 17,
+          "yaw": 20,
+          "fov": 56
+        },
+        {
+          "time": 4.0,
+          "ease": "smooth",
+          "distance": 24.2,
+          "pitch": 16,
+          "yaw": 30,
+          "fov": 56
+        }
+      ]
+    },
+    {
+      "name": "play_overview",
+      "scenario": "spotlight_battle_of_cannae_battle",
+      "start": 21.0,
+      "duration": 4.5,
+      "gameplay_ui": true,
+      "gameplay_ui_all_owners": true,
+      "focus": {
+        "mode": "battle",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "ease": "smooth",
+          "distance": 104.5,
+          "pitch": 53,
+          "yaw": 200,
+          "fov": 54
+        },
+        {
+          "time": 4.5,
+          "ease": "smooth",
+          "distance": 93.5,
+          "pitch": 51,
+          "yaw": 206,
+          "fov": 54
+        }
+      ],
+      "act_title": "8 MISSIONS. ONE WAR."
+    },
+    {
+      "name": "end_card",
+      "scenario": "trailer_flame_card",
+      "start": 0.5,
+      "duration": 5.0,
+      "flame_card": true,
+      "flame_speed": 0.85,
+      "flame_intensity": 0.9,
+      "transition": {
+        "type": "dip",
+        "duration": 0.5
+      }
+    }
+  ]
+}

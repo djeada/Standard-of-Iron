@@ -1478,6 +1478,7 @@ auto accepted_order_cue(App::Core::OrderKind kind,
   case App::Core::OrderKind::Hold:
   case App::Core::OrderKind::Formation:
   case App::Core::OrderKind::Squad:
+  case App::Core::OrderKind::Recruit:
   case App::Core::OrderKind::None:
     break;
   }
@@ -2021,6 +2022,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
       const Engine::Core::ScopedStartupPhase phase("mission.difficulty_forces");
       const auto forces = Game::Mission::apply_starting_force_difficulty(
           *m_world, difficulty, m_runtime.local_owner_id);
+      (void)Game::Mission::apply_undead_wave_difficulty(*m_world, difficulty);
       if (forces.units_added != 0 || forces.units_withdrawn != 0) {
         qInfo() << "Difficulty:" << difficulty.baseline_id() << "reinforced"
                 << forces.owners_scaled << "opponent(s) by" << forces.units_added
@@ -2642,7 +2644,9 @@ void GameEngine::publish_commander_message() {
   message["speaker_role"] =
       Game::Util::tr_asset(Game::Util::k_commanders_context, cue.speaker_role);
   message["nation"] = cue.nation;
-  message["relationship"] = cue.relationship;
+  message["relationship"] = cue.speaker_owner_id == m_runtime.local_owner_id
+                                ? QStringLiteral("own")
+                                : cue.relationship;
   message["speaker_owner_id"] = cue.speaker_owner_id;
   message["pose"] = cue.pose;
   QString text = Game::Util::tr_asset(
@@ -3355,6 +3359,9 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
                }});
   if (effects.success) {
     m_match_difficulty = effects.match_difficulty;
+    if (m_world != nullptr) {
+      (void)Game::Mission::apply_undead_wave_difficulty(*m_world, m_match_difficulty);
+    }
   }
   if (effects.success && !effects.warning.isEmpty()) {
 

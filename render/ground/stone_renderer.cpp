@@ -29,6 +29,8 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 constexpr float k_reference_scatter_extent = 220.0F;
+constexpr float k_pebble_scale_min = 0.10F;
+constexpr float k_pebble_scale_max = 0.26F;
 
 } // namespace
 
@@ -40,7 +42,7 @@ StoneRenderer::~StoneRenderer() = default;
 void StoneRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
                               const Game::Map::BiomeSettings& biome_settings,
                               const std::vector<Game::Map::WorldProp>& world_props) {
-  configure_height_scatter_common(height_map, biome_settings, {}, world_props, false);
+  configure_height_scatter_common(height_map, biome_settings, world_props);
   auto& stone_params = m_state.params;
 
   stone_params.light_direction = m_light_direction;
@@ -115,7 +117,8 @@ void StoneRenderer::generate_stone_instances() {
     validator.grid_to_world(gx, gz, world_x, world_z);
     float const world_y = terrain_cache.sample_height_at(sgx, sgz);
 
-    float const scale = remap(rand_01(state), 0.25F, 0.68F) * tile_safe *
+    float const scale = remap(rand_01(state), k_pebble_scale_min, k_pebble_scale_max) *
+                        tile_safe *
                         scatter_scale_bias(ScatterRuleSpecies::Stone, scene);
 
     QVector3D const color = stone_instance_color(surface_profile.rock_low,
