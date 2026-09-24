@@ -299,9 +299,7 @@ TEST_F(IronSepulcherWatchMissionTest, FabiusAnswersEveryZoneAsItWakesAndFalls) {
 }
 
 TEST_F(IronSepulcherWatchMissionTest, ACrowdedMusterNeverSpillsIntoTheDead) {
-  // The layout the watch shipped with before September 2026: the archers were authored
-  // a metre from the commander, the spawn search pushed the squad seven metres east to
-  // find room, and that put it inside the barrow's radius on the first tick.
+
   QTemporaryDir dir;
   ASSERT_TRUE(dir.isValid());
   const QString map_path = dir.filePath(QStringLiteral("crowded_watch_map.json"));

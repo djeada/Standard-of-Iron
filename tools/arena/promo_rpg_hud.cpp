@@ -15,7 +15,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <mutex>
 #include <utility>
+
+#include "ui/input_bindings.h"
 
 static void init_rpg_hud_resources() {
   Q_INIT_RESOURCE(promo_rpg_hud);
@@ -166,6 +169,11 @@ void RpgHud::select_software_scene_graph() {
 RpgHud::RpgHud()
     : m_impl(std::make_unique<Impl>()) {
   init_rpg_hud_resources();
+  static std::once_flag registered;
+  std::call_once(registered, [] {
+    qmlRegisterSingletonType<InputBindings>(
+        "StandardOfIron", 1, 0, "InputBindings", &InputBindings::create);
+  });
   auto& impl = *m_impl;
   impl.animation.install();
   impl.engine.addImportPath(QStringLiteral("qrc:/"));

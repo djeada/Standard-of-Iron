@@ -280,8 +280,7 @@ void submit_siege_crew(const DrawContext& ctx,
       actor.blend_phase = member.previous_phase;
       actor.blend_weight = member.blend * member.blend * (3.0F - 2.0F * member.blend);
     }
-    // Each crew member stands on the ground under their own feet; on a slope
-    // the engine's centre height would bury the uphill crew and float the rest.
+
     QVector3D stand = origin + right * member.x + forward * member.z;
     if (terrain.is_initialized()) {
       stand.setY(

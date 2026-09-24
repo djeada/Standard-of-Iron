@@ -246,11 +246,9 @@ auto SpawnValidator::check_building_collision(float world_x,
 
 auto SpawnValidator::check_world_prop_collision(float world_x,
                                                 float world_z) const -> bool {
-  const auto& index = shared_world_prop_clearance_index();
-  if (index.empty()) {
-    return true;
-  }
-  return !index.overlaps(world_x, world_z, m_config.world_prop_clearance);
+  const auto index = Game::Map::shared_world_prop_clearance_index();
+  return index->empty() ||
+         !index->overlaps(world_x, world_z, m_config.world_prop_clearance);
 }
 
 auto SpawnValidator::check_road_collision(float world_x, float world_z) const -> bool {

@@ -66,8 +66,7 @@ struct CachedUnitData {
   float last_scale_y{0.0F};
   float last_scale_z{0.0F};
   bool model_matrix_valid{false};
-  // Resolved from the terrain once per model-matrix change, never per frame:
-  // a standing structure keeps its foundation without re-sampling the ground.
+
   Render::GL::StructureFoundation foundation;
   bool foundation_valid{false};
   Engine::Core::PresentationClock presentation_clock;

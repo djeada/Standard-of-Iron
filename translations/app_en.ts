@@ -3326,12 +3326,12 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Narrow and deep. Best for moving through gates and passes.</translation>
     </message>
     <message>
-        <source>Compressed frontage with reserves. Best for holding ground.</source>
-        <translation>Compressed frontage with reserves. Best for holding ground.</translation>
+        <source>A closed square facing out on every side, archers inside. Best for holding ground.</source>
+        <translation>A closed square facing out on every side, archers inside. Best for holding ground.</translation>
     </message>
     <message>
-        <source>Weighted front with skirmishers ahead. Best for breaking a line.</source>
-        <translation>Weighted front with skirmishers ahead. Best for breaking a line.</translation>
+        <source>A wedge that drives its point into the enemy. Best for breaking a line.</source>
+        <translation>A wedge that drives its point into the enemy. Best for breaking a line.</translation>
     </message>
     <message>
         <source>Wide flanks that close around a target. Needs cavalry.</source>
@@ -6315,6 +6315,166 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Slaying the last guardian clears a zone, but the shrine is not purified until you capture or destroy it.</source>
         <translation>Slaying the last guardian clears a zone, but the shrine is not purified until you capture or destroy it.</translation>
+    </message>
+    <message>
+        <source>A Roman army built a fortified camp to the same plan at the end of every march, so a tired soldier could find his tent in the dark.</source>
+        <translation>A Roman army built a fortified camp to the same plan at the end of every march, so a tired soldier could find his tent in the dark.</translation>
+    </message>
+    <message>
+        <source>A Roman legion of this period fought in three lines: the young hastati, the prime-aged principes, and the veteran triarii.</source>
+        <translation>A Roman legion of this period fought in three lines: the young hastati, the prime-aged principes, and the veteran triarii.</translation>
+    </message>
+    <message>
+        <source>According to Polybius, the young Hannibal swore at an altar, at his father&apos;s request, never to be a friend of Rome.</source>
+        <translation>According to Polybius, the young Hannibal swore at an altar, at his father&apos;s request, never to be a friend of Rome.</translation>
+    </message>
+    <message>
+        <source>After Cannae, Livy says Hannibal sent home the gold rings taken from fallen Roman nobles. They were measured not by count, but by volume.</source>
+        <translation>After Cannae, Livy says Hannibal sent home the gold rings taken from fallen Roman nobles. They were measured not by count, but by volume.</translation>
+    </message>
+    <message>
+        <source>After Zama, Scipio took the name Africanus. He was among the first Roman generals named after the land he had conquered.</source>
+        <translation>After Zama, Scipio took the name Africanus. He was among the first Roman generals named after the land he had conquered.</translation>
+    </message>
+    <message>
+        <source>After the First Punic War, Carthage could not pay its mercenaries. They revolted, and the brutal Mercenary War nearly destroyed the city.</source>
+        <translation>After the First Punic War, Carthage could not pay its mercenaries. They revolted, and the brutal Mercenary War nearly destroyed the city.</translation>
+    </message>
+    <message>
+        <source>Archimedes helped defend Syracuse against Rome with war machines, including a crane-like &apos;claw&apos; said to lift ships out of the water.</source>
+        <translation>Archimedes helped defend Syracuse against Rome with war machines, including a crane-like &apos;claw&apos; said to lift ships out of the water.</translation>
+    </message>
+    <message>
+        <source>At Zama, the Romans blew trumpets and horns to frighten Hannibal&apos;s elephants. Some panicked and trampled Carthage&apos;s own cavalry.</source>
+        <translation>At Zama, the Romans blew trumpets and horns to frighten Hannibal&apos;s elephants. Some panicked and trampled Carthage&apos;s own cavalry.</translation>
+    </message>
+    <message>
+        <source>Balearic slingers were famous marksmen. One ancient tale says their children were not given bread until they had hit it with a sling.</source>
+        <translation>Balearic slingers were famous marksmen. One ancient tale says their children were not given bread until they had hit it with a sling.</translation>
+    </message>
+    <message>
+        <source>Before the sea battle of Drepana in 249 BC, the sacred chickens refused to eat. The consul threw them overboard, saying &apos;Let them drink.&apos; He lost the battle.</source>
+        <translation>Before the sea battle of Drepana in 249 BC, the sacred chickens refused to eat. The consul threw them overboard, saying &apos;Let them drink.&apos; He lost the battle.</translation>
+    </message>
+    <message>
+        <source>Carthage fought mostly with allies and mercenaries: Libyans, Numidians, Iberians, Celts, and Balearic islanders. Hannibal kept this mixed army together in Italy for fifteen years.</source>
+        <translation>Carthage fought mostly with allies and mercenaries: Libyans, Numidians, Iberians, Celts, and Balearic islanders. Hannibal kept this mixed army together in Italy for fifteen years.</translation>
+    </message>
+    <message>
+        <source>Carthage offered to pay its war debt to Rome decades early. Rome refused. A debtor who pays promptly is harder to keep in line.</source>
+        <translation>Carthage offered to pay its war debt to Rome decades early. Rome refused. A debtor who pays promptly is harder to keep in line.</translation>
+    </message>
+    <message>
+        <source>Carthage was founded by Phoenician settlers from Tyre. Its name, Qart-hadasht, simply means &apos;New City&apos;.</source>
+        <translation>Carthage was founded by Phoenician settlers from Tyre. Its name, Qart-hadasht, simply means &apos;New City&apos;.</translation>
+    </message>
+    <message>
+        <source>Carthage was led by two elected magistrates called suffetes. Aristotle praised its constitution as one of the best of his day.</source>
+        <translation>Carthage was led by two elected magistrates called suffetes. Aristotle praised its constitution as one of the best of his day.</translation>
+    </message>
+    <message>
+        <source>Carthage&apos;s circular military harbor surrounded an island headquarters. The historian Appian says its ship sheds could hold about 220 warships.</source>
+        <translation>Carthage&apos;s circular military harbor surrounded an island headquarters. The historian Appian says its ship sheds could hold about 220 warships.</translation>
+    </message>
+    <message>
+        <source>Carthage&apos;s war elephants were probably North African forest elephants, a smaller kind that later became extinct.</source>
+        <translation>Carthage&apos;s war elephants were probably North African forest elephants, a smaller kind that later became extinct.</translation>
+    </message>
+    <message>
+        <source>Cato the Elder ended his speeches with &apos;Carthage must be destroyed.&apos; Once he showed the Senate fresh figs from Carthage to prove how close the enemy was.</source>
+        <translation>Cato the Elder ended his speeches with &apos;Carthage must be destroyed.&apos; Once he showed the Senate fresh figs from Carthage to prove how close the enemy was.</translation>
+    </message>
+    <message>
+        <source>Decimation was a Roman punishment for units that fled: one soldier in ten, chosen by lot, was killed by his own comrades.</source>
+        <translation>Decimation was a Roman punishment for units that fled: one soldier in ten, chosen by lot, was killed by his own comrades.</translation>
+    </message>
+    <message>
+        <source>Hamilcar Barca&apos;s nickname, Barca, probably means &apos;lightning&apos;. Hannibal&apos;s own name means roughly &apos;grace of Baal&apos;.</source>
+        <translation>Hamilcar Barca&apos;s nickname, Barca, probably means &apos;lightning&apos;. Hannibal&apos;s own name means roughly &apos;grace of Baal&apos;.</translation>
+    </message>
+    <message>
+        <source>Herodotus reports that Phoenician sailors circled Africa for an Egyptian pharaoh. He doubted their claim that the sun appeared on their right, which is exactly what would happen.</source>
+        <translation>Herodotus reports that Phoenician sailors circled Africa for an Egyptian pharaoh. He doubted their claim that the sun appeared on their right, which is exactly what would happen.</translation>
+    </message>
+    <message>
+        <source>In a later war, Hannibal reportedly had pots full of snakes hurled onto enemy ships. The sailors laughed, then stopped laughing.</source>
+        <translation>In a later war, Hannibal reportedly had pots full of snakes hurled onto enemy ships. The sailors laughed, then stopped laughing.</translation>
+    </message>
+    <message>
+        <source>In the First Punic War, storms sank more Roman ships than the Carthaginian navy did. Whole fleets were lost in bad weather.</source>
+        <translation>In the First Punic War, storms sank more Roman ships than the Carthaginian navy did. Whole fleets were lost in bad weather.</translation>
+    </message>
+    <message>
+        <source>Legend says Queen Elissa, or Dido, was offered as much land as an ox hide could cover. She cut the hide into thin strips and encircled an entire hill.</source>
+        <translation>Legend says Queen Elissa, or Dido, was offered as much land as an ox hide could cover. She cut the hide into thin strips and encircled an entire hill.</translation>
+    </message>
+    <message>
+        <source>Livy claims Hannibal split rocks on the Alpine path by heating them with fire and dousing them with vinegar. Historians are still arguing about it.</source>
+        <translation>Livy claims Hannibal split rocks on the Alpine path by heating them with fire and dousing them with vinegar. Historians are still arguing about it.</translation>
+    </message>
+    <message>
+        <source>Numidian horsemen rode without saddles or bridles, guiding their mounts with a light neck rope and their knees.</source>
+        <translation>Numidian horsemen rode without saddles or bridles, guiding their mounts with a light neck rope and their knees.</translation>
+    </message>
+    <message>
+        <source>Phoenician purple dye came from murex sea snails. Thousands of snails made a small amount of dye, and the dye works were famous for their stench.</source>
+        <translation>Phoenician purple dye came from murex sea snails. Thousands of snails made a small amount of dye, and the dye works were famous for their stench.</translation>
+    </message>
+    <message>
+        <source>Polybius says Roman light troops, the velites, sometimes wore wolf skins over their helmets so their officers could recognize them in battle.</source>
+        <translation>Polybius says Roman light troops, the velites, sometimes wore wolf skins over their helmets so their officers could recognize them in battle.</translation>
+    </message>
+    <message>
+        <source>Rome destroyed Carthage in 146 BC. The famous story that it sowed the fields with salt was invented many centuries later.</source>
+        <translation>Rome destroyed Carthage in 146 BC. The famous story that it sowed the fields with salt was invented many centuries later.</translation>
+    </message>
+    <message>
+        <source>Rome had almost no warships when the First Punic War began. Polybius says it copied a stranded Carthaginian ship and trained rowers on benches on dry land.</source>
+        <translation>Rome had almost no warships when the First Punic War began. Polybius says it copied a stranded Carthaginian ship and trained rowers on benches on dry land.</translation>
+    </message>
+    <message>
+        <source>Rome rebuilt Carthage as a Roman city about a century after destroying it. It became one of the largest cities in the western Empire.</source>
+        <translation>Rome rebuilt Carthage as a Roman city about a century after destroying it. It became one of the largest cities in the western Empire.</translation>
+    </message>
+    <message>
+        <source>The Carthaginian Mago wrote a 28-book work on farming. After Carthage fell, the Roman Senate ordered it translated into Latin.</source>
+        <translation>The Carthaginian Mago wrote a 28-book work on farming. After Carthage fell, the Roman Senate ordered it translated into Latin.</translation>
+    </message>
+    <message>
+        <source>The Carthaginian explorer Hanno sailed down the coast of West Africa and described hairy wild people called &apos;gorillai&apos;. Modern gorillas are named after them.</source>
+        <translation>The Carthaginian explorer Hanno sailed down the coast of West Africa and described hairy wild people called &apos;gorillai&apos;. Modern gorillas are named after them.</translation>
+    </message>
+    <message>
+        <source>The Latin word &apos;salarium&apos;, the root of &apos;salary&apos;, comes from the word for salt. The story that soldiers were paid in salt is probably a myth.</source>
+        <translation>The Latin word &apos;salarium&apos;, the root of &apos;salary&apos;, comes from the word for salt. The story that soldiers were paid in salt is probably a myth.</translation>
+    </message>
+    <message>
+        <source>The Phoenician alphabet had 22 letters and no vowels. Through Greek and Latin, it is an ancestor of the letters you are reading now.</source>
+        <translation>The Phoenician alphabet had 22 letters and no vowels. Through Greek and Latin, it is an ancestor of the letters you are reading now.</translation>
+    </message>
+    <message>
+        <source>The Roman corvus was a boarding bridge with an iron spike. It dropped onto an enemy deck and turned a sea battle into an infantry fight.</source>
+        <translation>The Roman corvus was a boarding bridge with an iron spike. It dropped onto an enemy deck and turned a sea battle into an infantry fight.</translation>
+    </message>
+    <message>
+        <source>The Roman gladius was based on an Iberian sword. The Romans were never too proud to borrow a good idea from an enemy.</source>
+        <translation>The Roman gladius was based on an Iberian sword. The Romans were never too proud to borrow a good idea from an enemy.</translation>
+    </message>
+    <message>
+        <source>The Roman saying &apos;it has come down to the triarii&apos; meant a situation was desperate. The veterans in the last line were the final reserve.</source>
+        <translation>The Roman saying &apos;it has come down to the triarii&apos; meant a situation was desperate. The veterans in the last line were the final reserve.</translation>
+    </message>
+    <message>
+        <source>The pilum&apos;s long, thin iron neck could bend on impact. A pilum stuck in a shield was hard to pull out and impossible to throw back.</source>
+        <translation>The pilum&apos;s long, thin iron neck could bend on impact. A pilum stuck in a shield was hard to pull out and impossible to throw back.</translation>
+    </message>
+    <message>
+        <source>Trapped near Casilinum in 217 BC, Hannibal tied burning torches to the horns of about two thousand oxen. The Romans followed the lights; his army walked out.</source>
+        <translation>Trapped near Casilinum in 217 BC, Hannibal tied burning torches to the horns of about two thousand oxen. The Romans followed the lights; his army walked out.</translation>
+    </message>
+    <message>
+        <source>Tyre, the mother city of Carthage, stood on an island. Alexander the Great took it in 332 BC only by building a causeway out to it.</source>
+        <translation>Tyre, the mother city of Carthage, stood on an island. Alexander the Great took it in 332 BC only by building a causeway out to it.</translation>
     </message>
 </context>
 <context>

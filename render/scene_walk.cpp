@@ -1443,7 +1443,7 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
       QMatrix4x4 marker_model;
       marker_model.translate(
           transform->position.x, transform->position.y + 0.03F, transform->position.z);
-      // Lie on the slope rather than cutting into its uphill side.
+
       marker_model.rotate(
           QQuaternion::rotationTo(QVector3D(0.0F, 1.0F, 0.0F),
                                   world_view().terrain_or_empty().sample_ground_normal(
@@ -1473,8 +1473,7 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     (*fn)(ctx, *this);
     if (auto const ghost_type = preview_structure_spawn_type(*entity);
         ghost_type.has_value()) {
-      // Ghosts follow the cursor, so their foundation is resolved on the spot;
-      // it is the same rule the finished structure will stand on.
+
       Render::GL::submit_structure_foundation(
           Render::GL::resolve_structure_foundation(
               world_view().terrain_or_empty(), *ghost_type, model_matrix),

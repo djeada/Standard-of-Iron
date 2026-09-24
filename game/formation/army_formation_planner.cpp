@@ -278,7 +278,6 @@ void emit_centre_block(const DoctrineLineRule& rule,
           QVector3D(centred_col * lateral_step + echelon + stagger + lateral_noise,
                     0.0F,
                     row_z + depth_noise);
-      slot.facing = 0.0F;
       slot.rank = static_cast<int>(row);
       slot.file = col;
       slot.occupant = member->entity_id;
@@ -419,7 +418,6 @@ void emit_split_flanks(const DoctrineLineRule& rule,
             0.0F,
             row_z + centred_col * depth_step * rule.flank_forward_step_scale +
                 depth_noise);
-        slot.facing = 0.0F;
         slot.rank = static_cast<int>(row);
         slot.file = col;
         slot.occupant = member->entity_id;
@@ -1893,6 +1891,40 @@ auto even_rows(int total, int row_count) -> std::vector<int> {
   return rows;
 }
 
+constexpr int k_hollow_square_minimum = 4;
+constexpr float k_crescent_bend = 0.85F;
+constexpr float k_horn_turn_degrees = 28.0F;
+constexpr float k_horn_reach_ratio = 1.35F;
+constexpr float k_crescent_turn_share = 0.6F;
+
+auto wedge_rows(int total, int growth = 1) -> std::vector<int> {
+  std::vector<int> rows;
+  int placed = 0;
+  for (int width = 1; placed + width <= total; width += std::max(1, growth)) {
+    rows.push_back(width);
+    placed += width;
+  }
+  if (rows.empty()) {
+    return {total};
+  }
+  if (rows.size() == 1U) {
+    rows.front() = total;
+    return rows;
+  }
+  int leftover = total - placed;
+  for (std::size_t row = rows.size() - 1U; leftover > 0; --leftover) {
+    ++rows[row];
+    row = row > 1U ? row - 1U : rows.size() - 1U;
+  }
+  return rows;
+}
+
+auto intent_owns_its_rows(ArmyFormationIntent intent) -> bool {
+  return intent == ArmyFormationIntent::Column ||
+         intent == ArmyFormationIntent::Assault ||
+         intent == ArmyFormationIntent::Defensive;
+}
+
 auto silhouette_rows(ArmyFormationIntent intent,
                      int total,
                      const ArmyFormationOptions& options,
@@ -1917,10 +1949,7 @@ auto silhouette_rows(ArmyFormationIntent intent,
     return even_rows(total, (total + files - 1) / files);
   }
   case ArmyFormationIntent::Assault:
-    if (total <= 3) {
-      return even_rows(total, total);
-    }
-    return split_rows(total, {5.0F, 3.0F, 1.0F});
+    return wedge_rows(total);
   case ArmyFormationIntent::SiegeEscort:
     return total <= 4 ? even_rows(total, 2) : split_rows(total, {7.0F, 5.0F});
   case ArmyFormationIntent::FactionDefault:
@@ -1936,6 +1965,103 @@ auto silhouette_rows(ArmyFormationIntent intent,
 auto is_core_role(ArmyRole role) -> bool {
   return role == ArmyRole::Centre || role == ArmyRole::Screen ||
          role == ArmyRole::Vanguard;
+}
+
+template <typename HalfWidth, typename HalfDepth>
+void place_hollow_square(std::vector<FormationSlot>& slot_list,
+                         const std::vector<std::size_t>& perimeter,
+                         const std::vector<std::size_t>& inner,
+                         const HalfWidth& half_width,
+                         const HalfDepth& half_depth,
+                         float lateral_gap,
+                         float rank_gap) {
+  float body = 0.0F;
+  for (auto const index : perimeter) {
+    body = std::max(body, std::max(half_width(index), half_depth(index)));
+  }
+  float const pitch = 2.0F * body + lateral_gap;
+  int const count = static_cast<int>(perimeter.size());
+  int const across = std::max(2, (count + 3) / 4 + 1);
+  float const half_side = pitch * static_cast<float>(across - 1) * 0.5F;
+
+  struct Post {
+    float x;
+    float z;
+    float facing;
+  };
+  std::vector<Post> posts;
+  for (int i = 0; i < across; ++i) {
+    float const t = -half_side + pitch * static_cast<float>(i);
+    posts.push_back({t, half_side, 0.0F});
+    posts.push_back({t, -half_side, 180.0F});
+  }
+  for (int i = 1; i + 1 < across; ++i) {
+    float const t = -half_side + pitch * static_cast<float>(i);
+    posts.push_back({-half_side, t, -90.0F});
+    posts.push_back({half_side, t, 90.0F});
+  }
+  std::stable_sort(posts.begin(), posts.end(), [](const Post& a, const Post& b) {
+    if (std::abs(a.z - b.z) > 0.01F) {
+      return a.z > b.z;
+    }
+    return std::abs(a.x) < std::abs(b.x);
+  });
+  for (std::size_t k = 0; k < perimeter.size(); ++k) {
+    auto& slot = slot_list[perimeter[k]];
+    const Post& post = posts[k];
+    slot.local_offset = QVector3D(post.x, 0.0F, post.z);
+    slot.local_facing = post.facing;
+    slot.rank = post.z > 0.0F ? 0 : 1;
+    slot.file = static_cast<int>(k);
+  }
+
+  int const inner_files = std::max(
+      1, static_cast<int>(std::ceil(std::sqrt(static_cast<float>(inner.size())))));
+  float inner_body = 0.0F;
+  for (auto const index : inner) {
+    inner_body = std::max(inner_body, std::max(half_width(index), half_depth(index)));
+  }
+  float const inner_pitch = 2.0F * inner_body + std::min(lateral_gap, rank_gap);
+  int const inner_rows =
+      (static_cast<int>(inner.size()) + inner_files - 1) / std::max(1, inner_files);
+  for (std::size_t k = 0; k < inner.size(); ++k) {
+    int const row = static_cast<int>(k) / inner_files;
+    int const file = static_cast<int>(k) % inner_files;
+    auto& slot = slot_list[inner[k]];
+    slot.local_offset = QVector3D(
+        (static_cast<float>(file) - static_cast<float>(inner_files - 1) * 0.5F) *
+            inner_pitch,
+        0.0F,
+        (static_cast<float>(inner_rows - 1) * 0.5F - static_cast<float>(row)) *
+            inner_pitch);
+    slot.local_facing = 0.0F;
+    slot.rank = 2 + row;
+    slot.file = file;
+  }
+}
+
+void bend_into_crescent(std::vector<FormationSlot>& slot_list,
+                        const std::vector<std::size_t>& left_wing,
+                        const std::vector<std::size_t>& right_wing,
+                        float front_half_width) {
+  float const half = std::max(1.0F, front_half_width);
+  float const bend = half * k_crescent_bend;
+  auto is_horn = [&](std::size_t index) {
+    return std::find(left_wing.begin(), left_wing.end(), index) != left_wing.end() ||
+           std::find(right_wing.begin(), right_wing.end(), index) != right_wing.end();
+  };
+  for (std::size_t index = 0; index < slot_list.size(); ++index) {
+    auto& slot = slot_list[index];
+    float const x = slot.local_offset.x();
+    if (is_horn(index)) {
+      slot.local_offset.setZ(slot.local_offset.z() + bend * k_horn_reach_ratio);
+      slot.local_facing = x < 0.0F ? k_horn_turn_degrees : -k_horn_turn_degrees;
+      continue;
+    }
+    float const t = std::clamp(x / half, -1.0F, 1.0F);
+    slot.local_offset.setZ(slot.local_offset.z() + bend * t * t);
+    slot.local_facing = -t * k_horn_turn_degrees * k_crescent_turn_share;
+  }
 }
 
 void regularize_silhouette(
@@ -2010,6 +2136,12 @@ void regularize_silhouette(
   std::stable_sort(tiers.begin(), tiers.end(), [](const Tier& a, const Tier& b) {
     return a.mean_z > b.mean_z;
   });
+  if (intent == ArmyFormationIntent::Assault &&
+      request.options.ranged_placement == RangedPlacement::Automatic) {
+    std::stable_partition(tiers.begin(), tiers.end(), [](const Tier& tier) {
+      return tier.role != ArmyRole::Ranged;
+    });
+  }
   if (tiers.empty()) {
     return;
   }
@@ -2038,7 +2170,7 @@ void regularize_silhouette(
     }
   }
   std::vector<int> core_rows;
-  if (request.frontage > 0.01F) {
+  if (request.frontage > 0.01F && !intent_owns_its_rows(intent)) {
     int const per_row =
         std::max(1, static_cast<int>(std::floor(request.frontage / average_width)) + 1);
     core_rows = even_rows(core_count, (core_count + per_row - 1) / per_row);
@@ -2057,7 +2189,8 @@ void regularize_silhouette(
         silhouette_rows(intent, static_cast<int>(slot_list.size()), request.options)
             .front());
   }
-  if (tmpl.max_frontage > 0.1F && request.frontage <= 0.01F) {
+  if (tmpl.max_frontage > 0.1F && request.frontage <= 0.01F &&
+      !intent_owns_its_rows(intent)) {
     auto wing_width = [&](const std::vector<std::size_t>& wing) {
       float width = 0.0F;
       for (std::size_t k = 0; k < wing.size(); k += 2U) {
@@ -2080,9 +2213,26 @@ void regularize_silhouette(
     }
   }
 
+  if (intent == ArmyFormationIntent::Defensive) {
+    std::vector<std::size_t> perimeter = left_wing;
+    std::vector<std::size_t> inner;
+    for (const auto& tier : tiers) {
+      auto& target = tier.core ? perimeter : inner;
+      target.insert(target.end(), tier.members.begin(), tier.members.end());
+    }
+    perimeter.insert(perimeter.end(), right_wing.begin(), right_wing.end());
+    if (static_cast<int>(perimeter.size()) >= k_hollow_square_minimum) {
+      place_hollow_square(
+          slot_list, perimeter, inner, half_width, half_depth, lateral_gap, rank_gap);
+      recentre_on_centroid(slot_list);
+      return;
+    }
+  }
+
   RangedPlacement ranged_placement = request.options.ranged_placement;
   if (ranged_placement == RangedPlacement::Automatic) {
-    ranged_placement = tmpl.default_ranged;
+    ranged_placement = intent == ArmyFormationIntent::Assault ? RangedPlacement::Rear
+                                                              : tmpl.default_ranged;
   }
   auto build_rows = [&](int capacity, const std::vector<int>& core_sizes) {
     std::vector<std::vector<std::size_t>> rows;
@@ -2137,10 +2287,16 @@ void regularize_silhouette(
   };
   auto placed_rows = build_rows(row_capacity, core_rows);
   int const total = static_cast<int>(slot_list.size());
+  int wedge_growth = 1;
   while (tmpl.max_depth > 0.1F && rows_depth(placed_rows) > tmpl.max_depth &&
          row_capacity < total) {
-    ++row_capacity;
-    core_rows = even_rows(core_count, (core_count + row_capacity - 1) / row_capacity);
+    if (intent == ArmyFormationIntent::Assault && core_rows.size() > 2U) {
+      core_rows = wedge_rows(core_count, ++wedge_growth);
+      row_capacity = std::max(row_capacity, core_rows.back());
+    } else {
+      ++row_capacity;
+      core_rows = even_rows(core_count, (core_count + row_capacity - 1) / row_capacity);
+    }
     placed_rows = build_rows(row_capacity, core_rows);
   }
 
@@ -2149,6 +2305,8 @@ void regularize_silhouette(
   float front_z = 0.0F;
   float front_half_depth = 0.0F;
   float front_half_width = 0.0F;
+  float widest_z = 0.0F;
+  float widest_half_width = 0.0F;
   bool first = true;
   int rank = 0;
   for (auto const& row : placed_rows) {
@@ -2161,7 +2319,7 @@ void regularize_silhouette(
       row_half_depth = std::max(row_half_depth, half_depth(index));
     }
     float gap = lateral_gap;
-    if (request.frontage > 0.01F && row.size() > 1U) {
+    if (request.frontage > 0.01F && row.size() > 1U && !intent_owns_its_rows(intent)) {
       float const outer = half_width(row.front()) + half_width(row.back());
       float const bodies =
           row_width(row) - lateral_gap * static_cast<float>(row.size() - 1U) - outer;
@@ -2191,6 +2349,10 @@ void regularize_silhouette(
       front_half_width = width * 0.5F;
       first = false;
     }
+    if (width * 0.5F > widest_half_width) {
+      widest_half_width = width * 0.5F;
+      widest_z = z;
+    }
     previous_half_depth = row_half_depth;
     ++rank;
   }
@@ -2203,10 +2365,12 @@ void regularize_silhouette(
     float const reach = intent == ArmyFormationIntent::Encirclement
                             ? front_half_depth * 2.0F + rank_gap
                             : 0.0F;
-    float x = front_half_width + lateral_gap;
+    bool const beside_widest = intent == ArmyFormationIntent::Assault;
+    float const base_z = (beside_widest ? widest_z : front_z) + reach;
+    float x = (beside_widest ? widest_half_width : front_half_width) + lateral_gap;
     int column = 0;
     float column_width = 0.0F;
-    float wing_z = front_z + reach;
+    float wing_z = base_z;
     for (std::size_t k = 0; k < wing.size(); ++k) {
       auto& slot = slot_list[wing[k]];
       float const hw = half_width(wing[k]);
@@ -2218,13 +2382,16 @@ void regularize_silhouette(
       if ((k + 1U) % 2U == 0U) {
         x += 2.0F * column_width + lateral_gap;
         column_width = 0.0F;
-        wing_z = front_z + reach;
+        wing_z = base_z;
         ++column;
       }
     }
   };
   place_wing(left_wing, -1.0F);
   place_wing(right_wing, 1.0F);
+  if (intent == ArmyFormationIntent::Encirclement) {
+    bend_into_crescent(slot_list, left_wing, right_wing, front_half_width);
+  }
   recentre_on_centroid(slot_list);
 }
 
@@ -2546,7 +2713,7 @@ auto ArmyFormationPlanner::place(const ArmyFormationLayout& layout,
                                       slot->heavy,
                                       status);
     slot->status = status;
-    slot->facing = request.facing;
+    slot->facing = request.facing + slot->local_facing;
     if (status == SlotStatus::Adjusted) {
       plan.displacement += (slot->world_position - ideal).length();
     }

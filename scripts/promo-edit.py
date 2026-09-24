@@ -1115,7 +1115,12 @@ def main() -> int:
     manifest = json.loads(manifest_path.read_text())
 
     shots = manifest.get("shots", [])
-    if any("clip" in shot for shot in spec.get("shots", [])):
+    captured = {shot.get("name") for shot in shots}
+    authored_names = [shot.get("name") for shot in spec.get("shots", [])]
+    if any("clip" in shot for shot in spec.get("shots", [])) or (
+        [name for name in authored_names if name in captured]
+        != [shot.get("name") for shot in shots]
+    ):
 
         by_name = {shot.get("name"): shot for shot in shots}
         ordered: list[dict] = []

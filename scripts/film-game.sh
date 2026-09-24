@@ -14,10 +14,12 @@
 # simulation exactly one frame per grab. A throwaway XDG_CONFIG_HOME keeps the
 # run muted, off the user's profile, and -- because the camera otherwise drifts
 # for the whole take when the pointer happens to rest against a screen edge --
-# with edge scrolling off. --ui-scale writes the accessibility UI
-# scale into it, which is how a HUD panel is filmed big enough to read once the
-# clip is three seconds of a trailer rather than a screen someone is sitting in
-# front of.
+# with edge scrolling off, and with vsync off: the film steps one frame per grab,
+# so vsync buys nothing, and a vsynced swap blocks for good once the monitor
+# has gone to sleep, which leaves an unattended take stuck on its loading
+# screen. --ui-scale writes the accessibility UI scale into it, which is how a
+# HUD panel is filmed big enough to read once the clip is three seconds of a
+# trailer rather than a screen someone is sitting in front of.
 set -euo pipefail
 export LC_ALL=C
 
@@ -109,9 +111,10 @@ command -v ffmpeg >/dev/null || {
 absolute() { python3 -c 'import os,sys;print(os.path.abspath(sys.argv[1]))' "$1"; }
 OUT="$(absolute "${OUT}")"
 # The game runs from build/bin, so every path handed to it must be absolute.
+# A --campaign-mission is a campaign_id/mission_id pair, not a path.
 [[ -n "${FIXTURE}" ]] && FIXTURE="$(absolute "${FIXTURE}")"
 for index in "${!MISSION[@]}"; do
-  if ((index % 2 == 1)) && [[ "${MISSION[index - 1]}" != "--observe" ]]; then
+  if ((index % 2 == 1)) && [[ "${MISSION[index - 1]}" == "--mission-file" ]]; then
     MISSION[index]="$(absolute "${MISSION[index]}")"
   fi
 done
@@ -119,7 +122,7 @@ readonly WORK="${OUT%.mp4}.frames"
 readonly CFG="${WORK}/.cfg"
 rm -rf "${WORK}"
 mkdir -p "${WORK}" "${CFG}/djeada"
-printf '[audio]\nmaster_volume=0\n[ui]\ncamera_legend_seen=true\neconomy_coach=false\nformation_hints=false\nedge_scroll_enabled=false\nscale=%s\n' \
+printf '[audio]\nmaster_volume=0\n[display]\nvsync=false\n[ui]\ncamera_legend_seen=true\neconomy_coach=false\nformation_hints=false\nedge_scroll_enabled=false\nscale=%s\n' \
   "${UI_SCALE}" >"${CFG}/djeada/StandardOfIron.ini"
 
 ARGS=("${MISSION[@]}" --skip-briefing --film "${WORK}" --film-fps "${FPS}"

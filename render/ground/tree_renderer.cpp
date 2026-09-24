@@ -36,7 +36,6 @@ auto resolve_tree_surface_position(const Game::Map::TerrainService& terrain_serv
   return {world_x, fallback_y, world_z};
 }
 
-// Trunk base radius in mesh units (the root ring of each species' loft).
 auto trunk_contact_radius(Game::Map::TreeSpecies species) -> float {
   switch (species) {
   case Game::Map::TreeSpecies::Pine:
@@ -51,8 +50,6 @@ auto trunk_contact_radius(Game::Map::TreeSpecies species) -> float {
   return 0.10F;
 }
 
-// Trees stay upright, so on a slope the trunk is sunk until its downhill side
-// meets the ground rather than standing on its uphill edge.
 auto bed_tree_base(const Game::Map::TerrainService& terrain_service,
                    Game::Map::TreeSpecies species,
                    const QVector3D& surface,
@@ -94,17 +91,10 @@ TreeRenderer::TreeRenderer(Game::Map::TreeSpecies species)
 
 TreeRenderer::~TreeRenderer() = default;
 
-void TreeRenderer::configure(
-    const Game::Map::TerrainHeightMap& height_map,
-    const Game::Map::BiomeSettings& biome_settings,
-    const std::vector<Game::Map::WorldProp>& scatter_seed_world_props,
-    const std::vector<Game::Map::WorldProp>& runtime_world_props,
-    bool use_world_props_exclusively) {
-  configure_height_scatter_common(height_map,
-                                  biome_settings,
-                                  scatter_seed_world_props,
-                                  runtime_world_props,
-                                  use_world_props_exclusively);
+void TreeRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
+                             const Game::Map::BiomeSettings& biome_settings,
+                             const std::vector<Game::Map::WorldProp>& world_props) {
+  configure_height_scatter_common(height_map, biome_settings, world_props);
 
   const auto wind_profile = Game::Map::make_wind_profile(m_biome_settings);
   auto& params = m_state.params;
@@ -117,19 +107,14 @@ void TreeRenderer::configure(
 }
 
 void TreeRenderer::refresh_world_props(
-    const std::vector<Game::Map::WorldProp>& runtime_world_props,
-    bool use_world_props_exclusively) {
-  adopt_runtime_world_props(runtime_world_props, use_world_props_exclusively);
+    const std::vector<Game::Map::WorldProp>& world_props) {
+  m_world_props = world_props;
   rebuild_instances();
 }
 
 void TreeRenderer::rebuild_instances() {
   m_state.instances.clear();
   append_world_prop_trees();
-  if (!m_use_world_props_exclusively) {
-    append_procedural_instances(
-        [this](std::vector<TreeInstanceGpu>& out) { generate_procedural_trees(out); });
-  }
   finish_instance_rebuild();
 }
 
@@ -151,7 +136,7 @@ void TreeRenderer::append_world_prop_trees() {
   const auto& profile = *m_profile;
   const auto& terrain_service = world().terrain_or_empty();
 
-  for (const auto& prop : m_runtime_world_props) {
+  for (const auto& prop : m_world_props) {
     if (prop.type != profile.prop_type) {
       continue;
     }
@@ -175,72 +160,6 @@ void TreeRenderer::append_world_prop_trees() {
         QVector4D(prop.rotation, look.silhouette_seed, look.leaf_seed, look.bark_seed);
     m_state.instances.push_back(inst);
   }
-}
-
-void TreeRenderer::generate_procedural_trees(std::vector<TreeInstanceGpu>& out) const {
-  if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
-    return;
-  }
-
-  const auto scatter_profile = Game::Map::make_scatter_profile(m_biome_settings);
-  const auto scatter_rules = Game::Map::make_scatter_rules(scatter_profile.ground_type);
-  const auto& rule = scatter_rules.tree(m_species);
-  if (!rule.allowed) {
-    return;
-  }
-
-  SpawnTerrainCache terrain_cache;
-  terrain_cache.build_from_height_map(
-      m_height_data, m_terrain_types, m_width, m_height, m_tile_size);
-
-  TreeScatterWalkInput input;
-  input.terrain_cache = &terrain_cache;
-  input.width = m_width;
-  input.height = m_height;
-  input.tile_size = m_tile_size;
-  input.noise_seed = m_noise_seed;
-  input.density = tree_scatter_density(scatter_rules, scatter_profile, m_species);
-  input.scale_min = rule.scale_min;
-  input.scale_max = rule.scale_max;
-
-  const SpawnValidationConfig config = make_tree_scatter_spawn_config(
-      *m_profile, input, scatter_profile.spawn_edge_padding);
-  SpawnValidator validator(terrain_cache, config);
-  ScatterCompositionContext composition(terrain_cache,
-                                        m_width,
-                                        m_height,
-                                        m_tile_size,
-                                        m_biome_settings,
-                                        m_scatter_seed_world_props);
-  input.validator = &validator;
-  input.composition = &composition;
-
-  const auto& terrain_service = world().terrain_or_empty();
-  walk_tree_scatter(
-      *m_profile,
-      input,
-      [&](const TreeScatterSample& sample, const ScatterCompositionSample&) {
-        QVector3D const world_pos = resolve_tree_surface_position(
-            terrain_service,
-            sample.world_x,
-            sample.world_z,
-            terrain_cache.sample_height_at(sample.grid_x, sample.grid_z));
-
-        TreeInstanceGpu instance;
-        instance.pos_scale = QVector4D(
-            world_pos.x(),
-            bed_tree_base(terrain_service, m_species, world_pos, sample.scale),
-            world_pos.z(),
-            sample.scale);
-        instance.color_sway = QVector4D(
-            sample.tint.x(), sample.tint.y(), sample.tint.z(), sample.sway_phase);
-        instance.rotation = QVector4D(sample.rotation,
-                                      sample.silhouette_seed,
-                                      sample.leaf_seed,
-                                      sample.bark_seed);
-        out.push_back(instance);
-        return true;
-      });
 }
 
 } // namespace Render::GL

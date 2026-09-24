@@ -4,6 +4,7 @@ layout(location = 0) in vec3 a_pos;
 layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec4 a_pos_scale;
 layout(location = 3) in vec4 a_color_rot;
+layout(location = 4) in vec4 a_surface;
 
 layout(std140) uniform FrameData {
   mat4 u_view_proj;
@@ -14,6 +15,10 @@ out vec3 v_normal;
 out vec3 v_color;
 out vec3 v_local_pos;
 out vec3 v_local_normal;
+out vec2 v_uv;
+flat out float v_material;
+flat out float v_seed;
+flat out float v_instance_hash;
 
 void main() {
   float scale = a_pos_scale.w;
@@ -36,6 +41,10 @@ void main() {
   v_color = a_color_rot.rgb;
   v_local_pos = a_pos;
   v_local_normal = normalize(a_normal);
+  v_uv = a_surface.yz;
+  v_material = a_surface.x;
+  v_seed = a_surface.w;
+  v_instance_hash = fract(sin(dot(world_pos.xz, vec2(12.9898, 78.233))) * 43758.5453);
 
   gl_Position = u_view_proj * vec4(v_world_pos, 1.0);
 }

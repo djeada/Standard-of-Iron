@@ -6,11 +6,6 @@
 
 namespace Game::Units {
 
-// The drawn body of each building type, in local mesh units (width along
-// local X, depth along local Z, and the body centre's offset from the origin).
-// Multiply by the entity's transform scale for world units. This is static
-// content, shared by the collision registry (walkability, line of sight) and
-// the renderer (foundations), so it lives here rather than in either system.
 struct BuildingBodyExtent {
   std::string_view type;
   float width;

@@ -1,0 +1,207 @@
+{
+  "id": "spotlight_01_reel_cannae",
+  "title": "STANDARD OF IRON",
+  "subtitle": "8 MISSIONS. ONE WAR.",
+  "end_card_seconds": 5.0,
+  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+  "width": 1080,
+  "height": 1920,
+  "fps": 60,
+  "supersample": 2,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "motion_limits": {
+    "yaw_degrees_per_second": 12,
+    "pitch_degrees_per_second": 6,
+    "fov_degrees_per_second": 6,
+    "minimum_clip_seconds": 2.5,
+    "mean_clip_seconds": 3.0
+  },
+  "transition": {
+    "type": "cut"
+  },
+  "music": "artifacts/promo/spotlight/01_barca_campaign/reel_cannae_score.ogg",
+  "music_start": 0.0,
+  "music_volume": 0.55,
+  "grade": {
+    "contrast": 1.1,
+    "saturation": 1.12,
+    "brightness": 0.05,
+    "gamma": 1.14,
+    "grain": 4,
+    "vignette": 0.1
+  },
+  "shots": [
+    {
+      "name": "host",
+      "scenario": "spotlight_battle_of_cannae_battle",
+      "start": 0.2,
+      "duration": 3.6,
+      "gameplay_ui": false,
+      "gameplay_ui_all_owners": true,
+      "focus": {
+        "mode": "army",
+        "owner": 1,
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "ease": "smooth",
+          "distance": 77.0,
+          "pitch": 27,
+          "yaw": 250,
+          "fov": 54
+        },
+        {
+          "time": 3.6,
+          "ease": "smooth",
+          "distance": 63.8,
+          "pitch": 23,
+          "yaw": 262,
+          "fov": 52
+        }
+      ],
+      "act_kicker": "FEATURE SPOTLIGHT — 01",
+      "act_title": "CANNAE"
+    },
+    {
+      "name": "play_advance",
+      "scenario": "spotlight_battle_of_cannae_battle",
+      "start": 4.2,
+      "duration": 4.0,
+      "gameplay_ui": true,
+      "gameplay_ui_all_owners": true,
+      "focus": {
+        "mode": "army",
+        "owner": 1,
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "ease": "smooth",
+          "distance": 39.6,
+          "pitch": 19,
+          "yaw": 268,
+          "fov": 56
+        },
+        {
+          "time": 4.0,
+          "ease": "smooth",
+          "distance": 33.0,
+          "pitch": 17,
+          "yaw": 276,
+          "fov": 54
+        }
+      ],
+      "transition": {
+        "type": "cut"
+      }
+    },
+    {
+      "name": "play_clash",
+      "scenario": "spotlight_battle_of_cannae_battle",
+      "start": 10.5,
+      "duration": 4.5,
+      "gameplay_ui": true,
+      "gameplay_ui_all_owners": true,
+      "focus": {
+        "mode": "battle",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "ease": "smooth",
+          "distance": 48.4,
+          "pitch": 21,
+          "yaw": 175,
+          "fov": 54
+        },
+        {
+          "time": 4.5,
+          "ease": "smooth",
+          "distance": 41.8,
+          "pitch": 20,
+          "yaw": 188,
+          "fov": 54
+        }
+      ]
+    },
+    {
+      "name": "play_melee",
+      "scenario": "spotlight_battle_of_cannae_battle",
+      "start": 16.0,
+      "duration": 4.0,
+      "gameplay_ui": true,
+      "gameplay_ui_all_owners": true,
+      "focus": {
+        "mode": "battle",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "ease": "smooth",
+          "distance": 28.6,
+          "pitch": 17,
+          "yaw": 20,
+          "fov": 56
+        },
+        {
+          "time": 4.0,
+          "ease": "smooth",
+          "distance": 24.2,
+          "pitch": 16,
+          "yaw": 30,
+          "fov": 56
+        }
+      ]
+    },
+    {
+      "name": "play_overview",
+      "scenario": "spotlight_battle_of_cannae_battle",
+      "start": 21.0,
+      "duration": 4.5,
+      "gameplay_ui": true,
+      "gameplay_ui_all_owners": true,
+      "focus": {
+        "mode": "battle",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "ease": "smooth",
+          "distance": 104.5,
+          "pitch": 53,
+          "yaw": 200,
+          "fov": 54
+        },
+        {
+          "time": 4.5,
+          "ease": "smooth",
+          "distance": 93.5,
+          "pitch": 51,
+          "yaw": 206,
+          "fov": 54
+        }
+      ]
+    },
+    {
+      "name": "end_card",
+      "scenario": "trailer_flame_card",
+      "start": 0.5,
+      "duration": 5.0,
+      "flame_card": true,
+      "flame_speed": 0.85,
+      "flame_intensity": 0.9,
+      "transition": {
+        "type": "dip",
+        "duration": 0.5
+      }
+    }
+  ]
+}

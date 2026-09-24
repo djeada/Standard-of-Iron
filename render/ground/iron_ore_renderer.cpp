@@ -97,7 +97,6 @@ void IronOreRenderer::generate_instances(
     float const iron_mix = remap(rand_01(state), 0.32F, 0.54F);
     color = color * (1.0F - iron_mix) + iron_tint * iron_mix;
 
-    // The outcrop is a low dome; seat it so its downhill rim meets the slope.
     float const ground_radius = Game::Map::world_prop_ground_radius(
         Game::Map::WorldProp::Type::IronOre, prop.scale);
     float const bedded_y = Render::bedded_prop_world_y(terrain_service,

@@ -376,7 +376,8 @@ private:
                              Game::Units::SpawnType building_type,
                              std::optional<QVector3D> requested_position = std::nullopt,
                              bool ai_controlled = false,
-                             int max_population = 0) -> Engine::Core::EntityID;
+                             int max_population = 0,
+                             float rotation_y = 0.0F) -> Engine::Core::EntityID;
   auto owner_display_name(int owner_id) const -> QString;
   auto nation_display_name(Game::Systems::NationID nation_id) const -> QString;
   auto troop_display_name(Game::Systems::NationID nation_id,
@@ -388,6 +389,8 @@ private:
   void sync_spawn_selection_defaults();
   void clear_forced_animation_state(const std::vector<Engine::Core::EntityID>& ids);
   void spawn_terrain_review_structures();
+  auto initialize_terrain_from_map(const QString& map_path) -> bool;
+  void apply_map_terrain();
   void draw_debug_overlay(QPainter& painter);
   void draw_floating_numbers(QPainter& painter);
   void draw_spawn_anchor_marker(QPainter& painter);
@@ -478,6 +481,7 @@ private:
   float m_arena_floor_half_extent = 18.0F;
   int m_terrain_grid_extent = 128;
   bool m_suppress_boundary_mountains = false;
+  bool m_suppress_procedural_props = false;
   std::vector<Game::Map::UndeadZone> m_arena_undead_zones;
   Game::Map::WorldProp::Type m_spawn_world_prop_type =
       Game::Map::WorldProp::Type::FireCamp;
@@ -510,6 +514,7 @@ private:
   float m_visibility_accumulator = 0.0F;
   bool m_terrain_review_mode = false;
   bool m_terrain_review_content_enabled = false;
+  bool m_terrain_from_map = false;
   float m_scenario_distance_scale = 1.0F;
   std::optional<float> m_scenario_tilt_override;
   float m_scenario_yaw_offset = 0.0F;
