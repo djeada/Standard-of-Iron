@@ -237,9 +237,9 @@ Low is the preset that has to run on a GL 3.3 Core driver with no 4.x features. 
 - **Context.** The entry point still asks for 4.5 Core. On Linux, Qt falls back to what the driver grants, so a 3.3-only Mesa driver still gets a 3.3 Core context. Do not request 3.3 on Linux: the NVIDIA driver then returns exactly 3.3 and the GPU culling path turns off on capable hardware.
 - **4.x features stay behind probes.** The only callers of compute, indirect draw, immutable storage and SSBO entry points are `rigged_cull_pipeline.cpp` and `platform_gl.h`, and 4.30 GLSL includes are used only by the optional 4.30 shaders. `scripts/validate_opengl_requirements.py` check 5 enforces both.
 - **Cheaper Low tier.**
-  - The post-process scene target is packed `R11F_G11F_B10F` when bloom, god rays and FXAA are all off. It keeps HDR range at half the bandwidth of RGBA16F.
-  - Local lights are capped at four per pixel, and local specular is skipped.
-  - The terrain noise atlas is capped at 2048² and the microdetail texture is 512².
+    - The post-process scene target is packed `R11F_G11F_B10F` when bloom, god rays and FXAA are all off. It keeps HDR range at half the bandwidth of RGBA16F.
+    - Local lights are capped at four per pixel, and local specular is skipped.
+    - The terrain noise atlas is capped at 2048² and the microdetail texture is 512².
 - **Rigged creatures without GL 4.3** draw one command each through `RiggedCharacterPipeline`. Its bone-palette ring has 1024 slots, so it orphans the buffer about twice per frame at two thousand creatures instead of about thirty. When there is no persistent mapping, the fallback streaming ring maps unsynchronised because each slot is already fenced.
 
 To reproduce locally on an NVIDIA machine, force Mesa and cap it at 3.3:
