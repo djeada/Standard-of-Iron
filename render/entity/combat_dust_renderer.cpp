@@ -6,6 +6,7 @@
 #include <cmath>
 #include <numbers>
 
+#include "building_collapse.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/render_visibility_rules.h"
@@ -662,6 +663,26 @@ void render_combat_dust(Renderer* renderer,
                               animation_time + impact.x * 0.17F + impact.z * 0.11F);
       }
     }
+  }
+
+  for (auto [entity_id, death, building] :
+       world->view<Engine::Core::DeathAnimationComponent,
+                   Engine::Core::BuildingComponent>()) {
+    (void)death;
+    (void)building;
+    if (world->has<Engine::Core::PendingRemovalComponent>(entity_id)) {
+      continue;
+    }
+    auto const collapse = resolve_building_collapse(*world, entity_id);
+    if (!collapse.active || !is_fog_visible(collapse.base.x(), collapse.base.z()) ||
+        !visibility.is_entity_visible(
+            collapse.base.x(),
+            collapse.base.z(),
+            std::max(k_visibility_check_radius,
+                     collapse.footprint.half_width + collapse.footprint.half_depth))) {
+      continue;
+    }
+    submit_building_collapse_effects(*renderer, collapse, animation_time);
   }
 
   auto rpg_contacts =

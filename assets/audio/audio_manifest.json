@@ -2265,11 +2265,11 @@
       "cooldown_ms": 600,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `build.building_destroyed`",
-        "licence": "Own work (MIT)"
+        "origin": "ElevenLabs render `Turns_to_Rubble`, imported by `tools/audio_import/import_cues.py`",
+        "licence": "ElevenLabs licence held by the project author; commercial use permitted"
       }
     },
     {

@@ -303,7 +303,8 @@ enum class DeathSequenceProfile : std::uint8_t {
   Infantry = 0,
   MountedRider = 1,
   Horse = 2,
-  Elephant = 3
+  Elephant = 3,
+  Structure = 4
 };
 
 enum class DeathSequenceState : std::uint8_t {
@@ -730,6 +731,22 @@ public:
   StructureDamagePresentationComponent() = default;
 
   std::vector<ImpactRecord> impacts;
+};
+
+// Present while a builder crew repairs a structure. Drives the scaffolding the
+// renderer raises around it and the dust of each restored course. `scaffold`
+// eases towards 1 while the crew works and back to 0 once it stops, so the
+// scaffolding goes up and comes down rather than popping.
+class StructureRepairPresentationComponent {
+public:
+  static constexpr float k_scaffold_seconds = 0.8F;
+  static constexpr float k_idle_since_restore = 60.0F;
+
+  StructureRepairPresentationComponent() = default;
+
+  float active_for{0.0F};
+  float since_restore{k_idle_since_restore};
+  float scaffold{0.0F};
 };
 
 } // namespace Engine::Core

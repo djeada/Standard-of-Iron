@@ -42,6 +42,9 @@ void HomeSystem::update(Engine::Core::World* world, float delta_time) {
     const auto* home_transform = &home_transform_ref;
     const auto* home_unit = &home_unit_ref;
     auto* home_prod = world->try_get<Engine::Core::ProductionComponent>(home_id);
+    if (home_unit->health <= 0) {
+      continue;
+    }
 
     home_comp->update_cooldown -= delta_time;
     home_comp->family_generation_cooldown -= delta_time;
@@ -59,7 +62,8 @@ void HomeSystem::update(Engine::Core::World* world, float delta_time) {
                      const Engine::Core::TransformComponent,
                      const Engine::Core::UnitComponent>()) {
       (void)production;
-      if (barracks_unit.spawn_type != Game::Units::SpawnType::Barracks) {
+      if (barracks_unit.spawn_type != Game::Units::SpawnType::Barracks ||
+          barracks_unit.health <= 0) {
         continue;
       }
 

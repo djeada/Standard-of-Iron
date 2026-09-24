@@ -32,6 +32,16 @@ struct CachedBuildingInstance {
 thread_local std::unordered_map<std::uint32_t, CachedBuildingInstance>
     s_building_instance_cache;
 thread_local std::uint64_t s_building_submit_tick{0};
+
+struct BuildingStateMemory {
+  BuildingState state{BuildingState::Normal};
+  float changed_at{0.0F};
+  bool switched{false};
+  std::uint64_t last_seen_tick{0};
+};
+
+thread_local std::unordered_map<std::uint32_t, BuildingStateMemory>
+    s_building_state_memory;
 thread_local BuildingInstanceCacheStats s_building_instance_cache_stats;
 
 auto matrix_equals(const QMatrix4x4& lhs, const QMatrix4x4& rhs) -> bool {
@@ -71,6 +81,9 @@ void prune_building_instance_cache(std::uint64_t current_tick) {
       ++it;
     }
   }
+  std::erase_if(s_building_state_memory, [current_tick](auto const& entry) {
+    return current_tick - entry.second.last_seen_tick > k_building_cache_max_age;
+  });
 }
 
 auto building_unit(const DrawContext& ctx) -> Engine::Core::UnitComponent* {
@@ -99,7 +112,37 @@ auto resolve_building_state(const DrawContext& ctx) -> BuildingState {
   if (unit == nullptr) {
     return BuildingState::Normal;
   }
-  return get_building_state(resolve_building_health_ratio(ctx));
+  float const ratio = resolve_building_health_ratio(ctx);
+  if (ctx.template_prewarm || ctx.entity == nullptr) {
+    return get_building_state(ratio);
+  }
+
+  auto const entity_id = static_cast<std::uint32_t>(ctx.entity->get_id());
+  auto [it, inserted] = s_building_state_memory.try_emplace(entity_id);
+  auto& memory = it->second;
+  if (inserted ||
+      s_building_submit_tick - memory.last_seen_tick > k_building_cache_max_age) {
+    memory.state = get_building_state(ratio);
+    memory.changed_at = 0.0F;
+    memory.switched = false;
+  } else {
+    BuildingState const next = get_building_state(ratio, memory.state);
+    if (next != memory.state) {
+      memory.state = next;
+      memory.changed_at = ctx.animation_time;
+      memory.switched = true;
+    }
+  }
+  memory.last_seen_tick = s_building_submit_tick;
+  return memory.state;
+}
+
+auto building_state_transition_age(std::uint32_t entity_id, float now) -> float {
+  auto const it = s_building_state_memory.find(entity_id);
+  if (it == s_building_state_memory.end() || !it->second.switched) {
+    return -1.0F;
+  }
+  return now - it->second.changed_at;
 }
 
 auto building_renderer_key(std::string_view nation_slug,
@@ -202,6 +245,7 @@ auto get_building_instance_cache_stats() -> BuildingInstanceCacheStats {
 
 void reset_building_instance_cache_for_tests() {
   s_building_instance_cache.clear();
+  s_building_state_memory.clear();
   s_building_submit_tick = 0;
   s_building_instance_cache_stats = {};
 }

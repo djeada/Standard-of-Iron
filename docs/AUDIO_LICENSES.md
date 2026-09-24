@@ -51,8 +51,8 @@ The ElevenLabs renders were generated under a licence held by the project author
 
 | Licence | Files |
 | --- | ---: |
-| ElevenLabs licence held by the project author; commercial use permitted | 77 |
-| Own work (MIT) | 68 |
+| ElevenLabs licence held by the project author; commercial use permitted | 78 |
+| Own work (MIT) | 67 |
 | CC0 1.0 | 62 |
 | Proprietary -- supplied by the project owner | 4 |
 | Public Domain Mark 1.0 | 4 |
@@ -167,7 +167,7 @@ The ElevenLabs renders were generated under a licence held by the project author
 | File | Origin | Licence |
 | --- | --- | --- |
 | `building_burning.ogg` | ElevenLabs render `Timber_Structure_Inferno`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
-| `building_destroyed.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `build.building_destroyed` | Own work (MIT) |
+| `building_destroyed.ogg` | ElevenLabs render `Turns_to_Rubble`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
 | `construction_complete.ogg` | ElevenLabs render imported in #1366; its name was not kept (`UNNAMED_IMPORTS`) | ElevenLabs licence held by the project author; commercial use permitted |
 | `construction_started.ogg` | ElevenLabs render imported in #1366; its name was not kept (`UNNAMED_IMPORTS`) | ElevenLabs licence held by the project author; commercial use permitted |
 | `gate_close.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `build.gate_close` | Own work (MIT) |

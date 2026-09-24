@@ -14,6 +14,7 @@
 #include "game/units/spawn_type.h"
 #include "tools/arena/arena_scenario.h"
 #include "tools/arena/arena_scenarios.h"
+#include "tools/arena/arena_structure_lifecycle_scenarios.h"
 
 TEST(ArenaScenariosTest, MagicReviewsAssertBodyContinuityAsWellAsProjectileTiming) {
   using Expect = Arena::ArenaExpectationKind;
@@ -1117,6 +1118,43 @@ TEST(ArenaScenariosTest, MeleeDestructionScenarioDemandsAFlamelessCollapse) {
   EXPECT_TRUE(has_expectation(
       *scenario, Kind::NoStructureFireObserved, QStringLiteral("doomed_wall")));
   EXPECT_FALSE(has_expectation(*scenario, Kind::StructureFireObserved));
+}
+
+TEST(ArenaScenariosTest, StructureLifecycleScenariosCoverEveryStateOfAStructure) {
+  using Kind = Arena::ArenaExpectationKind;
+  namespace S = Arena::Scenarios;
+
+  auto const* stages =
+      S::find_definition(QString::fromLatin1(S::k_structure_damage_stages_id));
+  ASSERT_NE(stages, nullptr);
+  EXPECT_TRUE(Arena::validate_scenario(*stages).empty());
+  for (auto const& group : stages->groups) {
+    EXPECT_TRUE(has_expectation(*stages, Kind::StructureCollapseObserved, group.name))
+        << group.name.toStdString() << " must be seen coming down, not vanishing";
+    EXPECT_TRUE(has_expectation(*stages, Kind::GroupDestroyed, group.name));
+  }
+
+  auto const* repair =
+      S::find_definition(QString::fromLatin1(S::k_structure_repair_id));
+  ASSERT_NE(repair, nullptr);
+  EXPECT_TRUE(Arena::validate_scenario(*repair).empty());
+  EXPECT_TRUE(
+      has_expectation(*repair, Kind::StructureRepairObserved, QStringLiteral("home")));
+
+  auto const* dismantle =
+      S::find_definition(QString::fromLatin1(S::k_structure_dismantle_id));
+  ASSERT_NE(dismantle, nullptr);
+  EXPECT_TRUE(Arena::validate_scenario(*dismantle).empty());
+  EXPECT_TRUE(has_expectation(
+      *dismantle, Kind::StructureDismantleObserved, QStringLiteral("home")));
+  EXPECT_FALSE(has_expectation(*dismantle, Kind::StructureCollapseObserved))
+      << "a dismantled building is taken apart, not knocked down";
+
+  auto const* construction =
+      S::find_definition(QString::fromLatin1(S::k_structure_construction_id));
+  ASSERT_NE(construction, nullptr);
+  EXPECT_TRUE(Arena::validate_scenario(*construction).empty());
+  EXPECT_TRUE(has_expectation(*construction, Kind::OwnerCompletesConstruction));
 }
 
 TEST(ArenaScenariosTest, RetargetScenarioChecksBothAmmunitionTypes) {

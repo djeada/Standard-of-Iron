@@ -24,7 +24,6 @@ from dsp import (
     place,
     seconds,
     silence,
-    tail,
 )
 
 
@@ -155,16 +154,6 @@ def build_unit_queued():
     return highpass(gain_of(inst.paper(0.09, 320, density=42), 1.0), 1300.0)
 
 
-def build_building_destroyed():
-    out = silence(seconds(2.5))
-    out = place(out, gain_of(inst.thud(70.0, 0.5, 322), 1.0), 0.0)
-    for at, freq, seed in ((0.06, 240.0, 323), (0.21, 300.0, 324), (0.44, 190.0, 325)):
-        out = place(out, gain_of(inst.wood(freq, 0.16, seed, bright=1.5), 0.7), at)
-    out = mix(out, at_db(inst.rubble(2.4, 326, density=340, curve=0.9), -5.0))
-    out = place(out, at_db(inst.drum(60.0, 0.6, 327), -7.0), 0.02)
-    return tail(out, 0.7, 0.2)
-
-
 def build_gate_open():
     hinge = at_db(inst.creak(1.15, 328, 320.0, 880.0, rate=17.0), -2.0)
     rumble = at_db(
@@ -266,9 +255,6 @@ RECIPES: dict[str, Recipe] = {
     ),
     "build.unit_queued": Recipe(
         "sfx/build/unit_queued.ogg", -20.0, build_unit_queued, 1, takes=2
-    ),
-    "build.building_destroyed": Recipe(
-        "sfx/build/building_destroyed.ogg", -6.0, build_building_destroyed, 3
     ),
     "build.gate_open": Recipe("sfx/build/gate_open.ogg", -11.0, build_gate_open, 3),
     "build.gate_close": Recipe("sfx/build/gate_close.ogg", -10.0, build_gate_close, 3),

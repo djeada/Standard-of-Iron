@@ -156,6 +156,7 @@ PLAN = {
         None,
         "ambience/camp_fire_night.ogg",
     ),
+    "Turns_to_Rubble": ("sfx/build/building_destroyed.ogg", None, None),
 }
 
 

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "core/component_gameplay.h"
+#include "core/death_sequence.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "game/map/map_transformer.h"
@@ -151,7 +152,7 @@ TEST_F(WallMechanicsTest, PlacementAllowsWallTouchingTowerSocket) {
   EXPECT_TRUE(validation.failure_reason.empty());
 }
 
-TEST_F(WallMechanicsTest, CombatDamageRemovesWallSegmentThroughBuildingLifecycle) {
+TEST_F(WallMechanicsTest, CombatDamageCollapsesWallSegmentAndOpensItsFootprint) {
   Engine::Core::World world;
 
   auto* attacker = world.create_entity();
@@ -168,9 +169,11 @@ TEST_F(WallMechanicsTest, CombatDamageRemovesWallSegmentThroughBuildingLifecycle
 
   Game::Systems::Combat::deal_damage(&world, wall, 40, attacker->get_id());
 
-  EXPECT_TRUE(wall->has_component<PendingRemovalComponent>());
-  EXPECT_FALSE(renderable->visible);
-  EXPECT_FALSE(BuildingCollisionRegistry::instance().is_point_in_building(4.0F, 1.0F));
+  EXPECT_TRUE(Engine::Core::is_collapsing_structure(*wall))
+      << "a destroyed segment collapses before CleanupSystem removes it";
+  EXPECT_TRUE(renderable->visible);
+  EXPECT_FALSE(BuildingCollisionRegistry::instance().is_point_in_building(4.0F, 1.0F))
+      << "the breach opens the moment the segment falls, not when the rubble sinks";
 }
 
 TEST_F(WallMechanicsTest, BuilderConstructionSpawnsWallSegment) {

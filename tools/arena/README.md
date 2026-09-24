@@ -1753,3 +1753,40 @@ Three acceptance kinds back these scenes:
 
 Scenarios that need two owners on one team declare it with `owner_teams`, which
 the Arena applies to the owner registry before spawning.
+
+## Structure lifecycle
+
+Every state a structure passes through has to read on its own at gameplay zoom,
+without a selection panel or a health bar. Four scenes, one per activity, each
+framed on its own structures (`arena_structure_lifecycle_scenarios.cpp`):
+
+- `structure_damage_stages` stands a barracks, house, tower, market and a gated
+  wall run side by side and steps them healthy (to 3 s), damaged (60 %, to 7 s)
+  and critical (20 %, to 11 s), then brings everything down at once and follows
+  the collapse, the rubble resting, and the rubble settling into the ground.
+- `structure_repair` sets a house critical and a tower damaged and sends a
+  builder to each; scaffolding goes up round them, each state change back up
+  happens under a burst of dust, and the scaffolding comes down when they are
+  whole again.
+- `structure_dismantle` has a crew take a healthy house apart: it is lowered
+  from the top while its timber and dressed stone are stacked beside it, and it
+  leaves without the collapse a destroyed building plays.
+- `structure_construction` has a crew build a house: a stone curb marks the
+  site, the walls rise inside scaffolding, and the scaffolding is struck as the
+  building is finished.
+
+Three acceptance kinds back these scenes:
+
+- `StructureCollapseObserved` fails unless the group was sampled as a visible,
+  collapsing ruin, i.e. it came down on screen rather than vanishing.
+- `StructureRepairObserved` fails unless repair scaffolding was fully raised on
+  the group.
+- `StructureDismantleObserved` fails unless a crew got the group at least half
+  taken apart.
+
+`DismantleStructure` is the scenario command that orders a crew (`group`) to take
+down a structure (`target_group`); it mirrors `RepairStructure`.
+
+For stills of the collapse itself, capture between 11 and 14 s with a short
+interval, e.g. `--duration 17 --capture-interval 0.25 --scenario-distance 0.75
+--scenario-tilt 38`.

@@ -189,6 +189,11 @@ auto PickingService::pick_single(float sx,
     if (owner_filter != 0 && u->owner_id != owner_filter) {
       continue;
     }
+    // A collapsing structure is rubble, not a target, and it must not shadow
+    // the units standing in front of it.
+    if (u->health <= 0 && world.has<Engine::Core::BuildingComponent>(e->get_id())) {
+      continue;
+    }
 
     QPointF sp;
     if (!camera.world_to_screen(QVector3D(t->position.x, t->position.y, t->position.z),

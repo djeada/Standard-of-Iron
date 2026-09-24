@@ -93,6 +93,7 @@ enum class ScenarioCommandKind : std::uint8_t {
   RpgCycleLockOn,
 
   RepairStructure,
+  DismantleStructure,
   StartConstruction,
   DeliverToStructure,
   HarvestResource,
@@ -283,6 +284,9 @@ enum class ArenaExpectationKind : std::uint8_t {
   StructureFacadeContactObserved,
   StructureFireObserved,
   NoStructureFireObserved,
+  StructureCollapseObserved,
+  StructureRepairObserved,
+  StructureDismantleObserved,
   FlamingProjectileObserved,
   NoFlamingProjectileObserved,
   AttackRecoveryObserved,

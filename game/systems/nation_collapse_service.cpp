@@ -25,10 +25,15 @@ void tear_down_structure(Engine::Core::World& world, Engine::Core::Entity& entit
   const bool was_wall =
       entity.get_component<Engine::Core::WallSegmentComponent>() != nullptr;
 
-  if (auto* renderable = entity.get_component<Engine::Core::RenderableComponent>()) {
-    renderable->visible = false;
+  // The structure comes down like one destroyed in battle: a collapse, then
+  // rubble that CleanupSystem removes once it has sunk.
+  Engine::Core::begin_death_sequence(entity, 0U);
+  if (const auto* transform =
+          entity.get_component<Engine::Core::TransformComponent>()) {
+    Engine::Core::AudioCueEvent cue("build.building_destroyed");
+    cue.at(transform->position.x, transform->position.y, transform->position.z);
+    Engine::Core::EventManager::instance().publish(cue);
   }
-  entity.add_component<Engine::Core::PendingRemovalComponent>();
 
   if (was_wall) {
     WallNetworkService::refresh_world(world);
@@ -91,6 +96,9 @@ auto collapse_owner(Engine::Core::World& world, int owner_id) -> bool {
     }
 
     if (Game::Units::is_building_spawn(unit->spawn_type)) {
+      if (unit->health <= 0) {
+        continue;
+      }
       tear_down_structure(world, *entity);
       collapsed_anything = true;
       continue;

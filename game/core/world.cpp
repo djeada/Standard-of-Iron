@@ -951,6 +951,7 @@ void copy_authoritative_snapshot_components(const Entity& source, Entity& destin
   copy_snapshot_component<CombatLaunchComponent>(source, destination);
   copy_snapshot_component<HitFeedbackComponent>(source, destination);
   copy_snapshot_component<WallConstructionSiteComponent>(source, destination);
+  copy_snapshot_component<DismantleSiteComponent>(source, destination);
   copy_snapshot_component<FirePatchComponent>(source, destination);
   copy_snapshot_component<StructureFireComponent>(source, destination);
   copy_snapshot_component<ElephantComponent>(source, destination);
@@ -983,6 +984,7 @@ auto copy_presentation_snapshot_components(const Entity& source,
   copy_snapshot_component<DeathAnimationComponent>(source, destination);
   copy_snapshot_component<ConstructionPreviewComponent>(source, destination);
   copy_snapshot_component<StructureDamagePresentationComponent>(source, destination);
+  copy_snapshot_component<StructureRepairPresentationComponent>(source, destination);
   copy_snapshot_component<RpgContactPresentationComponent>(source, destination);
   copy_snapshot_component<BloodStainComponent>(source, destination);
   copy_snapshot_component<StockpileComponent>(source, destination);
@@ -1058,7 +1060,9 @@ auto render_entity_is_stable(const Entity& entity) -> bool {
                          entity.has_component<FormationHitPresentationComponent>() ||
                          entity.has_component<ConstructionPreviewComponent>() ||
                          entity.has_component<WallConstructionSiteComponent>() ||
+                         entity.has_component<DismantleSiteComponent>() ||
                          entity.has_component<StructureDamagePresentationComponent>() ||
+                         entity.has_component<StructureRepairPresentationComponent>() ||
                          entity.has_component<RpgContactPresentationComponent>() ||
                          entity.has_component<BloodStainComponent>() ||
                          entity.has_component<FirePatchComponent>() ||

@@ -443,7 +443,9 @@ auto repair_target_of(Engine::Core::World* world,
       builder->structure_task_entity_id == 0) {
     return nullptr;
   }
-  return world->get_entity(builder->structure_task_entity_id);
+  auto* structure = world->get_entity(builder->structure_task_entity_id);
+  return structure != nullptr && Engine::Core::is_live_entity(*structure) ? structure
+                                                                          : nullptr;
 }
 
 auto structure_needs_repair(const Engine::Core::Entity* structure) -> bool {
@@ -468,6 +470,10 @@ auto apply_structure_repair_tick(Engine::Core::World* world,
                                                  k_repair_fraction_per_tick));
   restore_health(
       unit->owner_id, structure->get_id(), *unit, per_tick, unit->max_health);
+  if (auto* shown = Engine::Core::get_or_add_component<
+          Engine::Core::StructureRepairPresentationComponent>(*structure)) {
+    shown->since_restore = 0.0F;
+  }
 
   if (unit->health >= unit->max_health) {
     if (auto* fire = structure->get_component<Engine::Core::StructureFireComponent>()) {
@@ -914,6 +920,9 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     if ((unit_comp != nullptr) && Game::Core::is_neutral_owner(unit_comp->owner_id)) {
       continue;
     }
+    if (unit_comp != nullptr && !Engine::Core::is_live_entity(*e)) {
+      continue;
+    }
 
     prod->reserve_short = unit_comp != nullptr && ProductionService::reserve_is_short(
                                                       *prod, unit_comp->spawn_type);
@@ -1241,6 +1250,17 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     if (!raises_shared_site(*builder_prod)) {
       builder_prod->time_remaining -= delta_time;
     }
+    if (builder_prod->product_type == k_builder_product_repair &&
+        builder_prod->at_construction_site) {
+      if (auto* structure = repair_target_of(world, builder_prod);
+          structure_needs_repair(structure)) {
+        auto* shown = Engine::Core::get_or_add_component<
+            Engine::Core::StructureRepairPresentationComponent>(*structure);
+        if (shown != nullptr) {
+          shown->active_for = std::max(shown->active_for, 0.5F);
+        }
+      }
+    }
     if (is_wall_network_product(builder_prod->product_type) &&
         builder_prod->construction_site_entity_id != 0) {
       if (auto* site_entity =
@@ -1255,8 +1275,11 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       }
     }
     if (builder_prod->product_type == k_builder_product_dismantle) {
-      if (builder_prod->structure_task_entity_id != 0 &&
-          world->get_entity(builder_prod->structure_task_entity_id) != nullptr) {
+      auto const* dismantling =
+          builder_prod->structure_task_entity_id != 0
+              ? world->get_entity(builder_prod->structure_task_entity_id)
+              : nullptr;
+      if (dismantling != nullptr && Engine::Core::is_live_entity(*dismantling)) {
         builder_prod->time_remaining = builder_prod->build_time;
         continue;
       }

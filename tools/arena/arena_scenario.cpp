@@ -21,6 +21,7 @@
 #include "game/command/command.h"
 #include "game/command/command_dispatcher.h"
 #include "game/core/component.h"
+#include "game/core/death_sequence.h"
 #include "game/core/world.h"
 #include "game/formation/army_formation_service.h"
 #include "game/map/terrain_service.h"
@@ -171,6 +172,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("RpgWeaponSwitch");
   case ScenarioCommandKind::RepairStructure:
     return QStringLiteral("RepairStructure");
+  case ScenarioCommandKind::DismantleStructure:
+    return QStringLiteral("DismantleStructure");
   case ScenarioCommandKind::StartConstruction:
     return QStringLiteral("StartConstruction");
   case ScenarioCommandKind::DeliverToStructure:
@@ -986,6 +989,9 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, bool> flaming_projectile_flights;
   QHash<QString, bool> plain_projectile_flights;
   QHash<QString, bool> structure_fires;
+  QHash<QString, bool> structure_collapses;
+  QHash<QString, bool> structure_repairs;
+  QHash<QString, bool> structure_dismantles;
   QHash<QString, bool> projectile_contacts;
   QHash<QString, bool> projectile_impacts;
   QSet<std::uint64_t> observed_projectile_impacts;
@@ -1725,6 +1731,22 @@ struct ArenaScenarioRunner::Impl {
               .source = Game::Command::Source::Script,
               .owner_id = owner_of(world, workers.front()),
               .payload = Game::Command::RepairStructure{
+                  .units = workers, .structure = structures.front()}});
+      arm_response(step.group, command_name(step.command));
+      break;
+    }
+    case ScenarioCommandKind::DismantleStructure: {
+      auto const& structures = ids(step.target_group);
+      auto const workers = ids(step.group);
+      if (structures.empty() || workers.empty()) {
+        break;
+      }
+      Game::Command::dispatch(
+          world,
+          Game::Command::Command{
+              .source = Game::Command::Source::Script,
+              .owner_id = owner_of(world, workers.front()),
+              .payload = Game::Command::DismantleStructure{
                   .units = workers, .structure = structures.front()}});
       arm_response(step.group, command_name(step.command));
       break;
@@ -3071,6 +3093,24 @@ struct ArenaScenarioRunner::Impl {
     }
     if (Game::Systems::Combat::structure_fire_intensity(*entity) > 0.0F) {
       structure_fires[group] = true;
+    }
+    if (Engine::Core::is_collapsing_structure(*entity)) {
+      auto const* renderable =
+          world.try_get<Engine::Core::RenderableComponent>(entity_id);
+      if (renderable != nullptr && renderable->visible) {
+        structure_collapses[group] = true;
+      }
+    }
+    if (auto const* repair =
+            world.try_get<Engine::Core::StructureRepairPresentationComponent>(
+                entity_id);
+        repair != nullptr && repair->scaffold >= 0.99F) {
+      structure_repairs[group] = true;
+    }
+    if (auto const* dismantle =
+            world.try_get<Engine::Core::DismantleSiteComponent>(entity_id);
+        dismantle != nullptr && dismantle->progress >= 0.5F) {
+      structure_dismantles[group] = true;
     }
     for (auto const& expectation : scenario.expectations) {
       if (expectation.kind != ArenaExpectationKind::StructureFacadeContactObserved ||
@@ -4986,6 +5026,28 @@ struct ArenaScenarioRunner::Impl {
         if (!structure_fires.value(expectation.group, false)) {
           add_issue(QStringLiteral("structure_fire_not_observed"),
                     QStringLiteral("%1 never caught fire").arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::StructureCollapseObserved:
+        if (!structure_collapses.value(expectation.group, false)) {
+          add_issue(QStringLiteral("structure_collapse_not_observed"),
+                    QStringLiteral("%1 never stood as a collapsing ruin; it must come "
+                                   "down on screen rather than vanish")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::StructureRepairObserved:
+        if (!structure_repairs.value(expectation.group, false)) {
+          add_issue(QStringLiteral("structure_repair_not_observed"),
+                    QStringLiteral("%1 never had repair scaffolding fully raised")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::StructureDismantleObserved:
+        if (!structure_dismantles.value(expectation.group, false)) {
+          add_issue(QStringLiteral("structure_dismantle_not_observed"),
+                    QStringLiteral("%1 was never taken half apart by a crew")
+                        .arg(expectation.group));
         }
         break;
       case ArenaExpectationKind::NoStructureFireObserved:

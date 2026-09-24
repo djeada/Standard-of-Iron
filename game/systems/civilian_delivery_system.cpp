@@ -77,7 +77,7 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
         world->try_get<Engine::Core::ProductionComponent>(barracks_id);
 
     if ((barracks_unit == nullptr) || (barracks_transform == nullptr) ||
-        (barracks_prod == nullptr) ||
+        (barracks_prod == nullptr) || (barracks_unit->health <= 0) ||
         !Game::Units::is_recruitment_building(barracks_unit->spawn_type) ||
         (barracks_unit->owner_id != civilian_unit->owner_id)) {
       to_release.push_back(civilian_id);

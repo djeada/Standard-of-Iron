@@ -20,6 +20,7 @@
 #include "arena_scenarios.h"
 #include "arena_showcase_scenarios.h"
 #include "arena_spotlight_scenarios.h"
+#include "arena_structure_lifecycle_scenarios.h"
 #include "arena_stuck_recovery_scenarios.h"
 #include "arena_trailer_scenarios.h"
 #include "arena_traversal_scenarios.h"
@@ -12033,6 +12034,10 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(engagement.begin()),
                   std::make_move_iterator(engagement.end()));
+    auto structure_lifecycle = build_structure_lifecycle_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(structure_lifecycle.begin()),
+                  std::make_move_iterator(structure_lifecycle.end()));
     auto grounding = build_grounding_definitions();
     values.insert(values.end(),
                   std::make_move_iterator(grounding.begin()),

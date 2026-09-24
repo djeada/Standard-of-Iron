@@ -118,3 +118,23 @@ TEST_F(CaptureSystemTest, EachBarracksIsJudgedByItsOwnNeighbourhood) {
 }
 
 } // namespace
+
+TEST_F(CaptureSystemTest, ADestroyedBarracksCannotBeCaptured) {
+  auto* barracks = add_barracks(k_defender, 0.0F, 0.0F);
+  for (int i = 0; i < 4; ++i) {
+    add_troop(k_attacker, 1.0F + static_cast<float>(i), 0.0F);
+  }
+  barracks->get_component<Engine::Core::UnitComponent>()->health = 0;
+  barracks->add_component<Engine::Core::DeathAnimationComponent>()->profile =
+      Engine::Core::DeathSequenceProfile::Structure;
+
+  for (int tick = 0; tick < 200; ++tick) {
+    m_system.update(&world(), 0.1F);
+  }
+
+  EXPECT_EQ(barracks->get_component<Engine::Core::UnitComponent>()->owner_id,
+            k_defender)
+      << "a collapsing barracks is rubble; it goes away rather than changing hands";
+  auto const* capture = barracks->get_component<Engine::Core::CaptureComponent>();
+  EXPECT_TRUE(capture == nullptr || !capture->is_being_captured);
+}
