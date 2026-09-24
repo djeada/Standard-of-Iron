@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QElapsedTimer>
 #include <QObject>
 #include <QString>
 #include <QVariantMap>
@@ -44,6 +45,10 @@ public:
   Q_INVOKABLE bool
   request_from_ally(int ally_owner, const QString& resource_key, int amount);
 
+  Q_INVOKABLE [[nodiscard]] qulonglong selected_building_id() const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap ally_call_state(qulonglong entity) const;
+  Q_INVOKABLE bool call_allies(qulonglong entity);
+
   Q_INVOKABLE void set_rally_at_screen(qreal sx, qreal sy);
 
 signals:
@@ -64,6 +69,7 @@ private:
 
   const App::Core::ClientContext& m_context;
   App::Core::ClientHost& m_host;
+  QElapsedTimer m_last_ally_call;
 };
 
 } // namespace App::ViewModels

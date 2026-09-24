@@ -8,6 +8,7 @@
 #include <QSet>
 
 #include <algorithm>
+#include <map>
 #include <optional>
 
 #include "app/core/client_context.h"
@@ -439,6 +440,7 @@ auto MatchSetupViewModel::build_observer_player_configs(const QString& map_path)
   }
 
   int index = 0;
+  std::map<QString, int> seats_by_nation;
   for (const int player_id : slot_ids) {
     const int side = index % 2;
     const QString nation_id = nation_ids.at(side % nation_ids.size());
@@ -448,8 +450,8 @@ auto MatchSetupViewModel::build_observer_player_configs(const QString& map_path)
     config["colorIndex"] = index;
     config["team_id"] = side + 1;
     config["nationId"] = nation_id;
-    config["commanderTroop"] =
-        Game::Mission::resolve_commander_troop(nation_id, std::nullopt);
+    config["commanderTroop"] = Game::Mission::commander_troop_for_seat(
+        nation_id, seats_by_nation[nation_id]++);
     config["isHuman"] = false;
     configs.append(config);
     ++index;

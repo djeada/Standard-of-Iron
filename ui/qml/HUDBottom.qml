@@ -656,6 +656,10 @@ RowLayout {
         onProfileRequested: function (unitType, nation) {
             bottomRoot.unit_profile_requested(unitType, nation, true);
         }
+        onAllyCallRequested: function (entityId) {
+            if (bottomRoot.game_ready() && game.production && game.production.call_allies)
+                game.production.call_allies(entityId);
+        }
         onUnitActivated: function (unitId) {
             if (bottomRoot.game_ready() && game.orders.select_unit_by_id)
                 game.orders.select_unit_by_id(unitId);

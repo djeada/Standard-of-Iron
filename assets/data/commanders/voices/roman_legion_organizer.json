@@ -372,6 +372,216 @@
       "variants": [
         "Your commander has fallen. Grief later; line now. The field does not pause for either of us."
       ]
+    },
+    {
+      "id": "fabius.ally.request_granted",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_granted",
+        "subject": "player",
+        "actor": "self",
+        "reason": "full",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource}, sent. The granary will not notice; that is what granaries are for.",
+        "You shall have {amount} {resource}. I laid it by for exactly this kind of day."
+      ]
+    },
+    {
+      "id": "fabius.ally.request_partial",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_granted",
+        "subject": "player",
+        "actor": "self",
+        "reason": "partial",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource} I can spare without starving the next season. The rest stays in the stores."
+      ]
+    },
+    {
+      "id": "fabius.ally.request_refused_short",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "short",
+        "cooldown": 1
+      },
+      "variants": [
+        "I have no {resource} to spare. The stores are thin, and I do not empty them for anyone."
+      ]
+    },
+    {
+      "id": "fabius.ally.request_refused_stingy",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "stingy",
+        "cooldown": 1
+      },
+      "variants": [
+        "No. My {resource} is counted against the winter. Ask again after the harvest."
+      ]
+    },
+    {
+      "id": "fabius.ally.call_accepted_defend",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_accepted",
+        "subject": "player",
+        "actor": "self",
+        "kind": "defend",
+        "cooldown": 1
+      },
+      "variants": [
+        "I will send a cohort to hold it. Slowly, in order. It will still be there when they arrive.",
+        "Men are on their way to hold it. They will dig in; that is what they are good at."
+      ]
+    },
+    {
+      "id": "fabius.ally.call_accepted_attack",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_accepted",
+        "subject": "player",
+        "actor": "self",
+        "kind": "attack",
+        "cooldown": 1
+      },
+      "variants": [
+        "Very well. My line will advance on it. Not quickly, but it will arrive.",
+        "Agreed. I shall move on it in good order. Be ready when they break."
+      ]
+    },
+    {
+      "id": "fabius.ally.call_refused_threat",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "under_threat",
+        "cooldown": 1
+      },
+      "variants": [
+        "Not now. My own walls are being tested, and I intend to pass."
+      ]
+    },
+    {
+      "id": "fabius.ally.call_refused_no_army",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "no_army",
+        "cooldown": 1
+      },
+      "variants": [
+        "I have no men to send. I am rebuilding, and rebuilding takes the time it takes."
+      ]
+    },
+    {
+      "id": "fabius.ally.call_refused_attack",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "kind": "attack",
+        "reason": "unwilling",
+        "cooldown": 1
+      },
+      "variants": [
+        "Not yet. An attack before the line is ready is a gift to the enemy. Wait for me."
+      ]
+    },
+    {
+      "id": "fabius.ally.call_refused_defend",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "kind": "defend",
+        "reason": "unwilling",
+        "cooldown": 1
+      },
+      "variants": [
+        "I will not scatter my cohorts to guard every building. Hold that one; I shall hold the rest."
+      ]
+    },
+    {
+      "id": "fabius.ally.needs_resources",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "once": false,
+      "trigger": {
+        "type": "ally_needs_resources",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 1
+      },
+      "duration": 20.0,
+      "variants": [
+        "I am running short of {resource}. {amount} would see me through. I do not ask lightly.",
+        "The stores are low: {amount} {resource} would keep the line fed, if you can spare it."
+      ]
+    },
+    {
+      "id": "fabius.ally.gift_received",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "gift_received",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource}. It goes into the stores, and it will be there when we need it.",
+        "Your {resource} arrived. Thank you. I shall make it last longer than you expect."
+      ]
     }
   ]
 }

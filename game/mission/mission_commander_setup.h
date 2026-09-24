@@ -30,6 +30,8 @@ struct ResolvedCommanderPosition {
 resolve_commander_troop(const QString& nation,
                         const std::optional<QString>& configured_commander) -> QString;
 
+[[nodiscard]] auto commander_troop_for_seat(const QString& nation, int seat) -> QString;
+
 [[nodiscard]] auto commander_troops_by_owner(const Game::Map::MapDefinition& map)
     -> std::map<int, QString>;
 

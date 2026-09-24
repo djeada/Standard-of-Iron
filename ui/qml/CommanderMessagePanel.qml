@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
@@ -15,12 +16,24 @@ Item {
     readonly property string speakerPose: source ? source.pose : ""
     readonly property bool allySpeaker: source !== null && source.relationship === "ally"
     readonly property string relationshipTag: allySpeaker ? qsTr("ALLY") : ""
+    readonly property var request: source && source.request ? source.request : ({})
+    readonly property bool asking: showing && (request.amount || 0) > 0 && !!request.resource
+
+    signal requestAnswered(bool accepted)
 
     property int revealed: 0
 
     function dismiss() {
         if (messageRoot.source)
             messageRoot.source.dismiss();
+    }
+
+    function answer_request(accepted) {
+        var ask = messageRoot.request;
+        if (accepted && typeof game !== 'undefined' && game && game.production && game.production.send_to_ally)
+            game.production.send_to_ally(ask.owner_id, ask.resource, ask.amount);
+        messageRoot.requestAnswered(accepted);
+        messageRoot.dismiss();
     }
 
     implicitWidth: panel.implicitWidth
@@ -257,9 +270,38 @@ Item {
                     lineHeight: 1.25
                 }
 
+                RowLayout {
+                    objectName: "commanderRequestRow"
+                    Layout.fillWidth: true
+                    Layout.topMargin: Design.Metrics.space4
+                    visible: messageRoot.asking
+                    spacing: Design.Metrics.space8
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
+                    Design.IronButton {
+                        objectName: "commanderRequestDecline"
+                        text: qsTr("Decline")
+                        onClicked: messageRoot.answer_request(false)
+                    }
+
+                    Design.IronButton {
+                        objectName: "commanderRequestSend"
+                        tone: "primary"
+                        text: qsTr("Send %1 %2").arg(messageRoot.request.amount || 0).arg(messageRoot.request.resource_label || "")
+                        onClicked: messageRoot.answer_request(true)
+                        ToolTip.visible: hovered
+                        ToolTip.delay: Design.Metrics.tooltipDelay
+                        ToolTip.text: qsTr("Give it from your stores. Sending needs a marketplace.")
+                    }
+                }
+
                 Text {
                     Layout.fillWidth: true
                     Layout.topMargin: Design.Metrics.space4
+                    visible: !messageRoot.asking
                     text: qsTr("Click to dismiss")
                     color: Design.Theme.textDisabled
                     horizontalAlignment: Text.AlignRight
@@ -270,6 +312,7 @@ Item {
         }
 
         MouseArea {
+            z: -1
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             enabled: messageRoot.showing

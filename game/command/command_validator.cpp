@@ -233,6 +233,22 @@ auto validate(Engine::Core::World& world, const Command& command) -> Validation 
             return Rejection::NoSubjects;
           }
           return Rejection::None;
+        } else if constexpr (std::is_same_v<T, AllyCall>) {
+          switch (Game::Systems::check_ally_call(
+              world, owners_for(world), owner_id, payload.target, payload.kind)) {
+          case Game::Systems::AllyCallProblem::None:
+            return Rejection::None;
+          case Game::Systems::AllyCallProblem::NoTarget:
+            return Rejection::DeadTarget;
+          case Game::Systems::AllyCallProblem::WrongSide:
+            return payload.kind == Game::Systems::AllyCallKind::Attack
+                       ? Rejection::FriendlyTarget
+                       : Rejection::ProtectedTarget;
+          case Game::Systems::AllyCallProblem::NotAStructure:
+          case Game::Systems::AllyCallProblem::NoAiAllies:
+            break;
+          }
+          return Rejection::NoSubjects;
         } else if constexpr (std::is_same_v<T, UseCommanderAbility>) {
           if (!is_commandable(world, payload.commander, owner_id)) {
             return Rejection::NoSubjects;

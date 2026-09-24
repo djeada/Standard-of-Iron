@@ -372,6 +372,216 @@
       "variants": [
         "Your commander has fallen. Sorry. Keep your men moving; grief stands still and standing still kills."
       ]
+    },
+    {
+      "id": "marcellus.ally.request_granted",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_granted",
+        "subject": "player",
+        "actor": "self",
+        "reason": "full",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource}. Sent. Use it fast.",
+        "Take it: {amount} {resource}. Do not sit on it."
+      ]
+    },
+    {
+      "id": "marcellus.ally.request_partial",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_granted",
+        "subject": "player",
+        "actor": "self",
+        "reason": "partial",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource} is all I can spare. Make it count."
+      ]
+    },
+    {
+      "id": "marcellus.ally.request_refused_short",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "short",
+        "cooldown": 1
+      },
+      "variants": [
+        "No {resource} left. I spent it on the last attack. It was worth it."
+      ]
+    },
+    {
+      "id": "marcellus.ally.request_refused_stingy",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "stingy",
+        "cooldown": 1
+      },
+      "variants": [
+        "No. My {resource} goes to my cohorts. Win something first."
+      ]
+    },
+    {
+      "id": "marcellus.ally.call_accepted_defend",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_accepted",
+        "subject": "player",
+        "actor": "self",
+        "kind": "defend",
+        "cooldown": 1
+      },
+      "variants": [
+        "Men are coming to hold it. Fast.",
+        "On my way. Keep them busy until my cohorts arrive."
+      ]
+    },
+    {
+      "id": "marcellus.ally.call_accepted_attack",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_accepted",
+        "subject": "player",
+        "actor": "self",
+        "kind": "attack",
+        "cooldown": 1
+      },
+      "variants": [
+        "Yes. Attacking now. Hit it with me.",
+        "Good. I have been itching for that one. Cohorts, go."
+      ]
+    },
+    {
+      "id": "marcellus.ally.call_refused_threat",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "under_threat",
+        "cooldown": 1
+      },
+      "variants": [
+        "Not now. They are on my own walls. Kill yours; I will kill mine."
+      ]
+    },
+    {
+      "id": "marcellus.ally.call_refused_no_army",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "no_army",
+        "cooldown": 1
+      },
+      "variants": [
+        "No men to send. They are all dead or bleeding. Give me time."
+      ]
+    },
+    {
+      "id": "marcellus.ally.call_refused_attack",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "kind": "attack",
+        "reason": "unwilling",
+        "cooldown": 1
+      },
+      "variants": [
+        "Not that one. Bad ground. Pick another and I will be there."
+      ]
+    },
+    {
+      "id": "marcellus.ally.call_refused_defend",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "kind": "defend",
+        "reason": "unwilling",
+        "cooldown": 1
+      },
+      "variants": [
+        "I do not sit behind walls. Hold it yourself or let it burn."
+      ]
+    },
+    {
+      "id": "marcellus.ally.needs_resources",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "once": false,
+      "trigger": {
+        "type": "ally_needs_resources",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 1
+      },
+      "duration": 20.0,
+      "variants": [
+        "I need {amount} {resource}. Now, if you can. My cohorts are running on nothing.",
+        "Short on {resource}. Send {amount} and I keep attacking."
+      ]
+    },
+    {
+      "id": "marcellus.ally.gift_received",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "gift_received",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource}. Good. That buys another attack.",
+        "Got your {resource}. Thanks. Back to work."
+      ]
     }
   ]
 }

@@ -15,7 +15,7 @@ struct TriggerName {
   const char* name;
 };
 
-constexpr std::array<TriggerName, 13> k_trigger_names{{
+constexpr std::array<TriggerName, 19> k_trigger_names{{
     {CommanderMessageTrigger::MissionStart, "mission_start"},
     {CommanderMessageTrigger::MissionVictory, "mission_victory"},
     {CommanderMessageTrigger::MissionDefeat, "mission_defeat"},
@@ -29,6 +29,12 @@ constexpr std::array<TriggerName, 13> k_trigger_names{{
     {CommanderMessageTrigger::OwnerEliminated, "owner_eliminated"},
     {CommanderMessageTrigger::WaveIncoming, "wave_incoming"},
     {CommanderMessageTrigger::WaveCleared, "wave_cleared"},
+    {CommanderMessageTrigger::RequestGranted, "request_granted"},
+    {CommanderMessageTrigger::RequestRefused, "request_refused"},
+    {CommanderMessageTrigger::CallAccepted, "call_accepted"},
+    {CommanderMessageTrigger::CallRefused, "call_refused"},
+    {CommanderMessageTrigger::AllyNeedsResources, "ally_needs_resources"},
+    {CommanderMessageTrigger::GiftReceived, "gift_received"},
 }};
 
 auto parse_position(const QJsonObject& obj) -> Position {
@@ -158,6 +164,11 @@ auto parse_commander_message_condition(const QJsonObject& trigger)
     condition.subject_type = trigger["structure_type"].toString();
   } else if (trigger.contains("unit_type")) {
     condition.subject_type = trigger["unit_type"].toString();
+  } else if (trigger.contains("kind")) {
+    condition.subject_type = trigger["kind"].toString();
+  }
+  if (trigger.contains("reason")) {
+    condition.reason = trigger["reason"].toString();
   }
   if (trigger.contains("nation")) {
     condition.nation = trigger["nation"].toString();

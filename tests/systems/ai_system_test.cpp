@@ -4921,6 +4921,151 @@ TEST_F(AISystemTest, SpareTroopsMarchToAnAllyWhoseBarracksIsUnderAttack) {
       << "an AI under attack itself looks to its own walls first";
 }
 
+TEST_F(AISystemTest, ACallForHelpIsAnsweredByTemperamentAndCircumstance) {
+  using Game::Systems::AllyCallKind;
+  using Game::Systems::AllyCallVerdict;
+  using Game::Systems::AI::AIStrategy;
+  auto cautious = commander_config(AIStrategy::Defensive, 0.25F, 0.85F);
+  cautious.aggression_modifier = 1.0F;
+  auto warlike = commander_config(AIStrategy::Rusher, 0.9F, 0.3F);
+  warlike.aggression_modifier = 1.0F;
+  const Game::Systems::AI::AllyCallStanding ready{.under_threat = false,
+                                                  .spare_units = 10};
+
+  EXPECT_EQ(Game::Systems::AI::answer_ally_call(cautious, ready, AllyCallKind::Defend),
+            AllyCallVerdict::Accepted);
+  EXPECT_EQ(Game::Systems::AI::answer_ally_call(cautious, ready, AllyCallKind::Attack),
+            AllyCallVerdict::RefusedUnwilling)
+      << "a cautious commander will not storm a camp on request";
+  EXPECT_EQ(Game::Systems::AI::answer_ally_call(warlike, ready, AllyCallKind::Attack),
+            AllyCallVerdict::Accepted);
+
+  const Game::Systems::AI::AllyCallStanding besieged{.under_threat = true,
+                                                     .spare_units = 10};
+  EXPECT_EQ(
+      Game::Systems::AI::answer_ally_call(cautious, besieged, AllyCallKind::Defend),
+      AllyCallVerdict::RefusedUnderThreat);
+  const Game::Systems::AI::AllyCallStanding spent{.under_threat = false,
+                                                  .spare_units = 1};
+  EXPECT_EQ(Game::Systems::AI::answer_ally_call(warlike, spent, AllyCallKind::Attack),
+            AllyCallVerdict::RefusedNoArmy);
+
+  auto timid = warlike;
+  timid.aggression_modifier = 0.0F;
+  EXPECT_EQ(Game::Systems::AI::answer_ally_call(timid, ready, AllyCallKind::Attack),
+            AllyCallVerdict::RefusedUnwilling)
+      << "a commander that never attacks cannot promise to";
+}
+
+TEST_F(AISystemTest, APledgedDefenceMarchesBeyondTheUsualReachWithNoThreatInSight) {
+  Game::Systems::AI::AllyAidBehavior behavior;
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 100.0F;
+  for (Engine::Core::EntityID id = 1; id <= 6; ++id) {
+    snapshot.friendly_units.push_back(
+        make_unit(id, 40.0F + static_cast<float>(id), 50.0F));
+  }
+  const float far_x = 40.0F + Game::Systems::AI::k_ally_aid_reach + 60.0F;
+  snapshot.pledges.push_back({.kind = Game::Systems::AllyCallKind::Defend,
+                              .requester = 1,
+                              .target = 77,
+                              .pos_x = far_x,
+                              .pos_z = 50.0F,
+                              .expires_at = 150.0F});
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  ASSERT_TRUE(behavior.should_execute(snapshot, context));
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 3.5F, commands);
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_NEAR(commands.front().move_target_x.front(), far_x, 4.0F);
+
+  snapshot.game_time = 151.0F;
+  EXPECT_FALSE(behavior.should_execute(snapshot, context)) << "the pledge has lapsed";
+}
+
+TEST_F(AISystemTest, AnAttackPledgeSendsTheWaveAtTheCalledBuilding) {
+  Game::Systems::AI::AIDoctrine doctrine;
+  doctrine.wave.size = 8;
+  doctrine.wave.target_priority = {Game::Systems::AI::DoctrineTarget::Any};
+  doctrine.garrison.minimum_units = 0;
+  doctrine.garrison.fraction = 0.0F;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 600.0F;
+  for (Engine::Core::EntityID id = 1; id <= 5; ++id) {
+    snapshot.friendly_units.push_back(
+        make_unit(id, 40.0F + static_cast<float>(id), 50.0F));
+  }
+  snapshot.visible_enemies = {make_enemy(90, 70.0F, 50.0F)};
+  snapshot.strategic_objectives = {make_enemy_building(95, 220.0F, 180.0F)};
+  snapshot.pledges.push_back({.kind = Game::Systems::AllyCallKind::Attack,
+                              .requester = 1,
+                              .target = 95,
+                              .pos_x = 220.0F,
+                              .pos_z = 180.0F,
+                              .expires_at = 690.0F});
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.anchor_is_structural = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  context.station.x = 41.0F;
+  context.station.z = 50.0F;
+  context.strategy_config.doctrine = &doctrine;
+  context.strategy_config.aggression_modifier = 1.0F;
+  context.wave.ended_at = 590.0F;
+
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  EXPECT_FALSE(context.wave.committed) << "the men rest a moment after the last wave";
+
+  context.wave.ended_at = 500.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  ASSERT_TRUE(context.wave.committed)
+      << "five men are short of a wave of eight, but a promise is a promise";
+  EXPECT_EQ(context.wave.target_id, 95U)
+      << "the wave goes to the building the player named, not the nearest enemy";
+
+  context.wave.target_id = 90;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  EXPECT_EQ(context.wave.target_id, 95U) << "a wave already out turns toward the call";
+}
+
+TEST_F(AISystemTest, AnAllyAsksThePlayerOnlyForWhatItLacksAndThePlayerHas) {
+  using Game::Systems::ResourceType;
+  Game::Systems::ResourceAmounts ai{};
+  ai.set(ResourceType::Food, 10);
+  ai.set(ResourceType::Wood, 400);
+  ai.set(ResourceType::Gold, 400);
+  ai.set(ResourceType::Stone, 400);
+  ai.set(ResourceType::Iron, 400);
+  Game::Systems::ResourceAmounts player{};
+  player.set(ResourceType::Food, 800);
+
+  const auto plea = Game::Systems::AI::pick_ally_plea(ai, player);
+  ASSERT_TRUE(plea.has_value());
+  EXPECT_EQ(plea->resource, ResourceType::Food);
+  EXPECT_GE(plea->amount, 50);
+  EXPECT_LE(plea->amount, 200);
+  EXPECT_EQ(plea->amount % 25, 0);
+
+  Game::Systems::ResourceAmounts poor_player{};
+  poor_player.set(ResourceType::Food, 60);
+  EXPECT_FALSE(Game::Systems::AI::pick_ally_plea(ai, poor_player).has_value())
+      << "never ask a player who cannot spare it";
+
+  ai.set(ResourceType::Food, 400);
+  EXPECT_FALSE(Game::Systems::AI::pick_ally_plea(ai, player).has_value())
+      << "a well-stocked ally does not beg";
+}
+
 TEST_F(AISystemTest, AnAllyOnTheAttackIsJoinedBeforeTheFullWaveHasGathered) {
   Game::Systems::AI::AIDoctrine doctrine;
   doctrine.wave.size = 8;

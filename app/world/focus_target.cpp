@@ -188,6 +188,8 @@ auto focus_target_to_variant(const FocusTargetInfo& info) -> QVariantMap {
   map[QStringLiteral("isBuilding")] = info.is_building;
   map[QStringLiteral("isEnemy")] = info.is_enemy;
   map[QStringLiteral("isOwn")] = info.is_own;
+  map[QStringLiteral("isAlly")] = info.is_ally;
+  map[QStringLiteral("allyCall")] = info.ally_call;
   map[QStringLiteral("health")] = info.health;
   map[QStringLiteral("maxHealth")] = info.max_health;
   map[QStringLiteral("soldiers")] = info.soldiers;

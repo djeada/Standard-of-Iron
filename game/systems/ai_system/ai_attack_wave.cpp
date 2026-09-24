@@ -14,6 +14,7 @@
 #include "ai_doctrine_catalog.h"
 #include "ai_settlement_frame.h"
 #include "ai_stall_recovery.h"
+#include "ai_tribute.h"
 #include "ai_utils.h"
 
 namespace Game::Systems::AI {
@@ -312,6 +313,59 @@ auto join_an_ally_attack(const AISnapshot& snapshot,
   return true;
 }
 
+auto called_attack(const AISnapshot& snapshot) -> const AllyPledge* {
+  for (const auto& pledge : snapshot.pledges) {
+    if (pledge.kind == Game::Systems::AllyCallKind::Attack &&
+        pledge.expires_at >= snapshot.game_time) {
+      return &pledge;
+    }
+  }
+  return nullptr;
+}
+
+auto answer_an_ally_call(const AISnapshot& snapshot,
+                         AIContext& context,
+                         const std::vector<const EntitySnapshot*>& available,
+                         int required) -> bool {
+  constexpr float k_rest_after_wave = 15.0F;
+  const auto* pledge = called_attack(snapshot);
+  if (pledge == nullptr ||
+      static_cast<int>(available.size()) < k_ally_call_min_attackers ||
+      snapshot.game_time - context.wave.ended_at < k_rest_after_wave) {
+    return false;
+  }
+  const ContactSnapshot* target = find_contact(snapshot, pledge->target);
+  if (target == nullptr) {
+    return false;
+  }
+  auto& wave = context.wave;
+  const int capacity = wave_capacity_for(context, required);
+  wave.members.clear();
+  for (const auto* entity : available) {
+    if (static_cast<int>(wave.members.size()) >= capacity) {
+      break;
+    }
+    wave.members.push_back(entity->id);
+  }
+  wave.initial_size = static_cast<int>(wave.members.size());
+  wave.target_id = target->id;
+  wave.target_x = target->pos_x;
+  wave.target_z = target->pos_z;
+  wave.committed = true;
+  wave.committed_at = snapshot.game_time;
+  wave.best_gap = -1.0F;
+  wave.progress_at = snapshot.game_time;
+  wave.assembling = false;
+  wave.departed_under_strength = false;
+  wave.ready_since = -1000.0F;
+  if (!qEnvironmentVariableIsEmpty("SOI_AI_TRACE")) {
+    qInfo().nospace() << "SOI_AI_TRACE ally_called_attack player=" << context.player_id
+                      << " members=" << wave.members.size() << " target=" << target->id
+                      << " t=" << snapshot.game_time;
+  }
+  return true;
+}
+
 } // namespace
 
 void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
@@ -437,6 +491,13 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
       return;
     }
 
+    if (const auto* pledge = called_attack(snapshot);
+        pledge != nullptr && pledge->target != wave.target_id &&
+        find_contact(snapshot, pledge->target) != nullptr) {
+      wave.target_id = pledge->target;
+      wave.best_gap = -1.0F;
+      wave.progress_at = snapshot.game_time;
+    }
     const ContactSnapshot* target = find_contact(snapshot, wave.target_id);
     if (target == nullptr) {
       target = select_wave_target(snapshot, context, centre_x, centre_z);
@@ -454,10 +515,6 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
     return;
   }
 
-  if (snapshot.game_time - wave.ended_at < regroup_seconds_for(context)) {
-    return;
-  }
-
   std::vector<const EntitySnapshot*> available;
   available.reserve(candidates.size());
   for (const auto* entity : candidates) {
@@ -465,6 +522,14 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
       continue;
     }
     available.push_back(entity);
+  }
+
+  if (answer_an_ally_call(snapshot, context, available, required)) {
+    return;
+  }
+
+  if (snapshot.game_time - wave.ended_at < regroup_seconds_for(context)) {
+    return;
   }
 
   if (join_an_ally_attack(snapshot, context, available, required)) {

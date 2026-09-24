@@ -4,6 +4,7 @@
 #include <QtGlobal>
 
 #include <algorithm>
+#include <optional>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -18,6 +19,16 @@ namespace {
 constexpr float k_aid_interval_seconds = 3.0F;
 constexpr float k_aid_share = 0.5F;
 constexpr int k_aid_minimum = 2;
+
+auto pledged_defence(const AISnapshot& snapshot) -> std::optional<AllyCall> {
+  for (const auto& pledge : snapshot.pledges) {
+    if (pledge.kind == Game::Systems::AllyCallKind::Defend &&
+        pledge.expires_at >= snapshot.game_time) {
+      return AllyCall{pledge.requester, pledge.pos_x, pledge.pos_z, 0};
+    }
+  }
+  return std::nullopt;
+}
 
 auto nearest_call(const AISnapshot& snapshot,
                   const AIContext& context) -> const AllyCall* {
@@ -38,9 +49,10 @@ auto nearest_call(const AISnapshot& snapshot,
 
 auto AllyAidBehavior::should_execute(const AISnapshot& snapshot,
                                      const AIContext& context) const -> bool {
-  return !snapshot.allies_under_attack.empty() && context.has_base_anchor &&
-         !context.barracks_under_threat && context.state != AIState::Defending &&
-         context.state != AIState::Retreating;
+  const bool called =
+      !snapshot.allies_under_attack.empty() || pledged_defence(snapshot).has_value();
+  return called && context.has_base_anchor && !context.barracks_under_threat &&
+         context.state != AIState::Defending && context.state != AIState::Retreating;
 }
 
 void AllyAidBehavior::execute(const AISnapshot& snapshot,
@@ -53,7 +65,9 @@ void AllyAidBehavior::execute(const AISnapshot& snapshot,
   }
   m_timer = 0.0F;
 
-  const AllyCall* call = nearest_call(snapshot, context);
+  const auto pledged = pledged_defence(snapshot);
+  const AllyCall* call =
+      pledged.has_value() ? &*pledged : nearest_call(snapshot, context);
   if (call == nullptr) {
     return;
   }

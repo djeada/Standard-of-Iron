@@ -58,6 +58,7 @@ auto every_payload() -> std::vector<Payload> {
                                .resource = Game::Systems::ResourceType::Iron,
                                .amount = 75,
                                .request = true});
+  all.emplace_back(AllyCall{.target = 21, .kind = Game::Systems::AllyCallKind::Attack});
   all.emplace_back(UseCommanderAbility{.commander = 15,
                                        .ability = CommanderAbility::FlagRally,
                                        .target = QVector3D(8.0F, 0.0F, 9.0F)});

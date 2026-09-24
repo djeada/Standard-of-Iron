@@ -257,6 +257,10 @@
         <source>Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.</source>
         <translation>Bu kışlanın hâlâ elinde tuttuğu adamlar. Her asker mangasındaki adamları harcar; bir Evde yetişen siviller daha fazlasını getirir.</translation>
     </message>
+    <message>
+        <source>Ask allies to defend</source>
+        <translation>Müttefiklerden savunmasını iste</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -797,6 +801,18 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>ALLY</source>
         <translation>MÜTTEFİK</translation>
+    </message>
+    <message>
+        <source>Decline</source>
+        <translation>Reddet</translation>
+    </message>
+    <message>
+        <source>Send %1 %2</source>
+        <translation>%1 %2 gönder</translation>
+    </message>
+    <message>
+        <source>Give it from your stores. Sending needs a marketplace.</source>
+        <translation>Kendi deponundan ver. Göndermek için bir pazar gerekir.</translation>
     </message>
 </context>
 <context>
@@ -1675,6 +1691,414 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>Your men are falling in rows. That is what happens when you fight a wall&apos;s war against a river.</source>
         <translation>Adamların sıra sıra düşüyor. Bir duvarın savaşını bir nehre karşı verince böyle olur.</translation>
+    </message>
+    <message>
+        <source>A request, between allies: {amount} {resource}. Italy is generous with enemies and stingy with bread.</source>
+        <translation>Bir istek, müttefikler arasında: {amount} {resource}. İtalya düşmanlarına cömert, ekmeğine cimridir.</translation>
+    </message>
+    <message>
+        <source>Agreed. I have wanted an excuse. My legion moves on it now.</source>
+        <translation>Anlaştık. Bir bahane arıyordum zaten. Lejyonum şimdi üzerine yürüyor.</translation>
+    </message>
+    <message>
+        <source>Agreed. I shall move on it in good order. Be ready when they break.</source>
+        <translation>Anlaştık. Düzenli biçimde üzerine yürüyeceğim. Onlar dağılınca hazır ol.</translation>
+    </message>
+    <message>
+        <source>An attack on that position. Agreed. It looks profitable, and I do so like profit.</source>
+        <translation>O mevkiye bir saldırı. Anlaştık. Kârlı görünüyor, kârı da pek severim.</translation>
+    </message>
+    <message>
+        <source>An attack? Splendid. My cohorts will march on it. Do keep up.</source>
+        <translation>Bir saldırı mı? Muhteşem. Kohortlarım üzerine yürüyecek. Yetişmeye çalış.</translation>
+    </message>
+    <message>
+        <source>Certainly not. My {resource} is for Roman purposes. Yours, I fear, are merely yours.</source>
+        <translation>Kesinlikle hayır. {resource} Roma&apos;nın amaçlarına aittir. Seninkiler ise korkarım yalnızca sana ait.</translation>
+    </message>
+    <message>
+        <source>Charge a camp head-on? That is how hunters become meat. Find another way and I will follow it.</source>
+        <translation>Bir ordugâha doğrudan hücum mu? Avcılar böyle et olur. Başka bir yol bul, peşinden gelirim.</translation>
+    </message>
+    <message>
+        <source>Consider it covered. If they come for it, they will find a trap rather than a prize.</source>
+        <translation>Halledildi say. Onun için gelirlerse, bir ödül yerine bir tuzak bulurlar.</translation>
+    </message>
+    <message>
+        <source>Defend it yourself. A consul does not stand guard over an ally&apos;s barn.</source>
+        <translation>Kendini kendin savun. Bir konsül, bir müttefikin ambarında nöbet tutmaz.</translation>
+    </message>
+    <message>
+        <source>Good choice; I was looking at it too. Hit it from the front. I will be the part they did not see.</source>
+        <translation>İyi seçim; ben de ona bakıyordum. Önden vur. Görmedikleri kısım ben olacağım.</translation>
+    </message>
+    <message>
+        <source>Good target. I will move on it from the ridges. Strike when you hear my arrows.</source>
+        <translation>İyi hedef. Sırtlardan üzerine gideceğim. Oklarımı duyunca vur.</translation>
+    </message>
+    <message>
+        <source>Good. I have been itching for that one. Cohorts, go.</source>
+        <translation>Güzel. O hedef için can atıyordum. Kohortlar, hadi.</translation>
+    </message>
+    <message>
+        <source>Got your {resource}. Thanks. Back to work.</source>
+        <translation>{resource} elime geçti. Sağ ol. İşe dönüyorum.</translation>
+    </message>
+    <message>
+        <source>Hold your own building. Mine are costly enough without adopting yours.</source>
+        <translation>Kendi yapını kendin tut. Benimkiler seninkini de üstlenmeden zaten pahalıya geliyor.</translation>
+    </message>
+    <message>
+        <source>I am running short of {resource}. {amount} would see me through. I do not ask lightly.</source>
+        <translation>{resource} azalıyor. {amount} beni idare eder. Bunu hafife alıp istemiyorum.</translation>
+    </message>
+    <message>
+        <source>I am short of {resource}. {amount} would keep this army moving, and a moving army is a winning one.</source>
+        <translation>{resource} kıtlığı çekiyorum. {amount}, bu orduyu hareket halinde tutar; hareket eden ordu kazanan ordudur.</translation>
+    </message>
+    <message>
+        <source>I am short. {amount} {resource} would keep my archers in the field. If you can spare it, send it.</source>
+        <translation>Elim dar. {amount} {resource} okçularımı meydanda tutar. Ayırabilirsen, gönder.</translation>
+    </message>
+    <message>
+        <source>I am under attack myself. My men are paid to guard my walls first, and I have read the contract.</source>
+        <translation>Kendim saldırı altındayım. Adamlarıma önce kendi surlarımı korumaları için ödeniyor, sözleşmeyi de okudum.</translation>
+    </message>
+    <message>
+        <source>I can spare {amount} {resource}, no more. The rest feeds my archers, and hungry archers miss.</source>
+        <translation>{amount} {resource} ayırabilirim, fazlasını değil. Gerisi okçularımı doyurur, aç okçu ıskalar.</translation>
+    </message>
+    <message>
+        <source>I can spare {amount} {resource}. The rest crosses the mountains with me; that is not negotiable.</source>
+        <translation>{amount} {resource} ayırabilirim. Gerisi benimle dağları aşıyor; bu konuda pazarlık yok.</translation>
+    </message>
+    <message>
+        <source>I do not guard buildings. I win battles, and then the buildings guard themselves.</source>
+        <translation>Ben yapı korumam. Savaş kazanırım, sonra yapılar kendini korur.</translation>
+    </message>
+    <message>
+        <source>I do not sit behind walls. Hold it yourself or let it burn.</source>
+        <translation>Surların ardında oturmam. Ya kendin tut ya da yansın.</translation>
+    </message>
+    <message>
+        <source>I find myself short: {amount} {resource}. A loan, between allies. I will repay it, in principle.</source>
+        <translation>Kendimi kıt buluyorum: {amount} {resource}. Müttefikler arasında bir borç. İlke olarak geri öderim.</translation>
+    </message>
+    <message>
+        <source>I find myself temporarily short: {amount} {resource}. A loan, naturally. Rome always repays, in her own time.</source>
+        <translation>Kendimi geçici olarak kıt buluyorum: {amount} {resource}. Elbette bir borç. Roma her zaman öder, kendi zamanında.</translation>
+    </message>
+    <message>
+        <source>I have no cohorts to spare. They are either dead or very busy, and I cannot spare the busy ones.</source>
+        <translation>Ayıracak kohortum yok. Ya ölüler ya da çok meşguller, meşgul olanları da ayıramam.</translation>
+    </message>
+    <message>
+        <source>I have no men to send. I am rebuilding, and rebuilding takes the time it takes.</source>
+        <translation>Gönderecek adamım yok. Yeniden topluyorum, bu da aldığı kadar zaman alır.</translation>
+    </message>
+    <message>
+        <source>I have no men to spare. The last of them are guarding what little I have left to lose.</source>
+        <translation>Ayıracak adamım yok. Kalanların hepsi, kaybedecek pek az şeyimi koruyor.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to give. I came over the Alps; I carry what the mules could.</source>
+        <translation>Verecek {resource} yok. Alpler&apos;i aştım; katırların taşıyabildiğini taşıyorum.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to give. Out here we live on what we carry, and I am carrying very little.</source>
+        <translation>Verecek {resource} yok. Burada taşıdığımızla yaşarız, ben de pek az taşıyorum.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. Even a consul&apos;s stores run dry, though mine run dry with dignity.</source>
+        <translation>Ayıracak {resource} yok. Bir konsülün deposu bile kuruyabilir, ama benimki onurluca kurur.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. My stores are thinner than my patience, and that is saying something.</source>
+        <translation>Ayıracak {resource} yok. Depom sabrımdan daha ince, bu da bir şey ifade eder.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. The stores are thin, and I do not empty them for anyone.</source>
+        <translation>Ayıracak {resource} yok. Depo az, kimse için de boşaltmam.</translation>
+    </message>
+    <message>
+        <source>I have too few bows left to spare any. Ask me again once I have rebuilt.</source>
+        <translation>Ayıracak kadar yayım kalmadı. Yeniden toparlandığımda tekrar sor.</translation>
+    </message>
+    <message>
+        <source>I have too few men left for anything clever, and too few for anything stupid. Wait.</source>
+        <translation>Elimde ne akıllıca bir şey için yeterli adam var, ne de aptalca bir şey için. Bekle.</translation>
+    </message>
+    <message>
+        <source>I need {amount} {resource}. Now, if you can. My cohorts are running on nothing.</source>
+        <translation>{amount} {resource} lazım. Mümkünse hemen. Kohortlarım hiçbir şeyle idare ediyor.</translation>
+    </message>
+    <message>
+        <source>I shall send a cohort to hold it. Do try not to lose it before they arrive; it would embarrass us both.</source>
+        <translation>Onu tutmak için bir kohort göndereceğim. Onlar varmadan kaybetmemeye çalış; ikimizi de mahcup eder.</translation>
+    </message>
+    <message>
+        <source>I will garrison it. Every man I send is billed to the war, so the war had better be grateful.</source>
+        <translation>Garnizonu ben tutarım. Gönderdiğim her adam savaşa fatura edilir, savaş da minnettar olsa iyi eder.</translation>
+    </message>
+    <message>
+        <source>I will hunt that one with you. Drive them toward me and I will do the rest.</source>
+        <translation>Onu seninle avlarım. Onları bana doğru sür, gerisini ben hallederim.</translation>
+    </message>
+    <message>
+        <source>I will not pin my archers to a wall. They die standing still. Hold it yourself.</source>
+        <translation>Okçularımı bir surun dibine çakmam. Kımıldamadan dururlarsa ölürler. Kendin tut.</translation>
+    </message>
+    <message>
+        <source>I will not scatter my cohorts to guard every building. Hold that one; I shall hold the rest.</source>
+        <translation>Kohortlarımı her yapıyı korumak için dağıtmam. Onu sen tut; gerisini ben tutarım.</translation>
+    </message>
+    <message>
+        <source>I will send a cohort to hold it. Slowly, in order. It will still be there when they arrive.</source>
+        <translation>Onu tutmak için bir kohort göndereceğim. Yavaşça, düzenle. Onlar vardığında hâlâ orada olacak.</translation>
+    </message>
+    <message>
+        <source>I will send archers to cover it. They will be on the high ground before the enemy sees them.</source>
+        <translation>Onu korumak için okçu göndereceğim. Düşman onları görmeden yüksek zemine yerleşirler.</translation>
+    </message>
+    <message>
+        <source>I will send men to hold it. Not in front; where the enemy thinks the ground is empty.</source>
+        <translation>Onu tutmak için adam göndereceğim. Önden değil; düşmanın zemini boş sandığı yerden.</translation>
+    </message>
+    <message>
+        <source>Men are coming to hold it. Fast.</source>
+        <translation>Onu tutmak için adamlar geliyor. Hızlı.</translation>
+    </message>
+    <message>
+        <source>Men are going to hold it. Mercenaries, fully paid. Do try not to let it burn; I am insuring it.</source>
+        <translation>Onu tutmaya adamlar gidiyor. Paralı asker, tam ödenmiş. Yanmasına izin vermemeye çalış; onu sigortalıyorum.</translation>
+    </message>
+    <message>
+        <source>Men are on their way to hold it. Keep the enemy busy in front; my archers will do the rest from the side.</source>
+        <translation>Adamlar onu tutmaya yolda. Düşmanı önden oyala; okçularım gerisini yandan halleder.</translation>
+    </message>
+    <message>
+        <source>Men are on their way to hold it. They will dig in; that is what they are good at.</source>
+        <translation>Adamlar onu tutmaya yolda. Siper kazarlar; en iyi yaptıkları şey budur.</translation>
+    </message>
+    <message>
+        <source>My spears will march on it. They are paid for the season; they may as well earn it.</source>
+        <translation>Mızraklarım üzerine yürüyecek. Sezon için ödendiler; hak etseler iyi olur.</translation>
+    </message>
+    <message>
+        <source>My stores of {resource} are empty. {amount} would keep my men paid and, more to the point, fighting.</source>
+        <translation>{resource} depom tükendi. {amount}, adamlarımın hem maaşını hem de -daha önemlisi- savaşmasını sağlar.</translation>
+    </message>
+    <message>
+        <source>My {resource} stays where it is. Charity is for temples. Come back with a better offer.</source>
+        <translation>{resource} yerinden kımıldamaz. Hayırseverlik tapınaklara özgüdür. Daha iyi bir teklifle gel.</translation>
+    </message>
+    <message>
+        <source>No men to send. They are all dead or bleeding. Give me time.</source>
+        <translation>Gönderecek adam yok. Hepsi ya öldü ya kanıyor. Bana zaman ver.</translation>
+    </message>
+    <message>
+        <source>No {resource} left. I spent it on the last attack. It was worth it.</source>
+        <translation>{resource} kalmadı. Son saldırıda harcadım. Değdi.</translation>
+    </message>
+    <message>
+        <source>No {resource}. Not because I cannot - because I need it for something you will enjoy watching later.</source>
+        <translation>{resource} yok. Veremediğimden değil; onu sonra izlemekten keyif alacağın bir şey için saklıyorum.</translation>
+    </message>
+    <message>
+        <source>No. I have {resource}, and I am keeping it. Ask me again when you have earned it in the field.</source>
+        <translation>Hayır. {resource} bende var ve onu tutuyorum. Meydanda hak ettiğinde tekrar sor.</translation>
+    </message>
+    <message>
+        <source>No. My {resource} goes to my cohorts. Win something first.</source>
+        <translation>Hayır. {resource} kohortlarıma gider. Önce bir şey kazan.</translation>
+    </message>
+    <message>
+        <source>No. My {resource} is counted against the winter. Ask again after the harvest.</source>
+        <translation>Hayır. {resource} kışa karşı sayılıyor. Hasattan sonra tekrar sor.</translation>
+    </message>
+    <message>
+        <source>Not now. My own camp is under the hammer, and I am rather attached to it.</source>
+        <translation>Şimdi olmaz. Kendi ordugâhım çekiç altında ve ona bir hayli bağlıyım.</translation>
+    </message>
+    <message>
+        <source>Not now. My own walls are being tested, and I intend to pass.</source>
+        <translation>Şimdi olmaz. Kendi surlarım sınanıyor ve geçmeyi düşünüyorum.</translation>
+    </message>
+    <message>
+        <source>Not now. They are at my own camp, and I cannot guard two hides at once.</source>
+        <translation>Şimdi olmaz. Kendi ordugâhımdalar, aynı anda iki ini birden koruyamam.</translation>
+    </message>
+    <message>
+        <source>Not now. They are at my own camp, and I need every blade to make them regret it.</source>
+        <translation>Şimdi olmaz. Kendi ordugâhımdalar ve pişman etmek için her kılıca ihtiyacım var.</translation>
+    </message>
+    <message>
+        <source>Not now. They are on my own walls. Kill yours; I will kill mine.</source>
+        <translation>Şimdi olmaz. Kendi surlarımdalar. Sen kendininkini öldür, ben kendiminkini öldürürüm.</translation>
+    </message>
+    <message>
+        <source>Not that one. Bad ground. Pick another and I will be there.</source>
+        <translation>O değil. Kötü zemin. Başka bir hedef seç, orada olurum.</translation>
+    </message>
+    <message>
+        <source>Not yet. An attack before the line is ready is a gift to the enemy. Wait for me.</source>
+        <translation>Henüz değil. Hat hazır olmadan yapılan bir saldırı düşmana hediyedir. Beni bekle.</translation>
+    </message>
+    <message>
+        <source>On my way. Keep them busy until my cohorts arrive.</source>
+        <translation>Yoldayım. Kohortlarım varana kadar onları oyala.</translation>
+    </message>
+    <message>
+        <source>Send {amount} {resource}, would you? My quartermaster has been embezzling again.</source>
+        <translation>{amount} {resource} gönderir misin? Levazımcım yine zimmetine para geçiriyor.</translation>
+    </message>
+    <message>
+        <source>Short on {resource}. Send {amount} and I keep attacking.</source>
+        <translation>{resource} azaldı. {amount} gönder, saldırmaya devam edeyim.</translation>
+    </message>
+    <message>
+        <source>Straight at their walls? That is a Roman idea. Give me a reason to come from somewhere else.</source>
+        <translation>Doğruca surlarına mı? Bu bir Roma fikri. Bana başka bir yerden gelmek için bir sebep ver.</translation>
+    </message>
+    <message>
+        <source>Take it: {amount} {resource}. A hunter shares the kill when the pack is hungry.</source>
+        <translation>Al: {amount} {resource}. Sürü açken avcı avını paylaşır.</translation>
+    </message>
+    <message>
+        <source>Take it: {amount} {resource}. Do not sit on it.</source>
+        <translation>Al: {amount} {resource}. Üstüne oturma.</translation>
+    </message>
+    <message>
+        <source>Take {amount} {resource}. I would rather lose stores than lose an ally who can still surprise them.</source>
+        <translation>{amount} {resource} al. Hâlâ onları şaşırtabilen bir müttefiki kaybetmektense, depoyu kaybetmeyi yeğlerim.</translation>
+    </message>
+    <message>
+        <source>The hills do not feed an army. I need {amount} {resource}, or my line thins.</source>
+        <translation>Tepeler bir orduyu doyurmaz. {amount} {resource} lazım, yoksa hattım incelir.</translation>
+    </message>
+    <message>
+        <source>The stores are low: {amount} {resource} would keep the line fed, if you can spare it.</source>
+        <translation>Depolar azaldı: {amount} {resource}, ayırabilirsen hattı doyurur.</translation>
+    </message>
+    <message>
+        <source>Throw my legion at that? I think not. Rome does not spend cohorts on your whims.</source>
+        <translation>Lejyonumu ona mı fırlatayım? Sanmıyorum. Roma kohortlarını senin keyfin için harcamaz.</translation>
+    </message>
+    <message>
+        <source>Throw paid spears at a fortified camp? The Council would have my head. No.</source>
+        <translation>Ücretli mızrakları tahkimli bir ordugâha mı fırlatayım? Meclis kellemi ister. Hayır.</translation>
+    </message>
+    <message>
+        <source>Very well, it will be held. Rome defends her friends - eventually, and with paperwork.</source>
+        <translation>Pekâlâ, tutulacak. Roma dostlarını savunur - er ya da geç, hem de evrakla.</translation>
+    </message>
+    <message>
+        <source>Very well. My line will advance on it. Not quickly, but it will arrive.</source>
+        <translation>Pekâlâ. Hattım üzerine ilerleyecek. Hızlı değil, ama varacak.</translation>
+    </message>
+    <message>
+        <source>Very well: {amount} {resource}. Consider it an investment. I expect the returns in dead Romans.</source>
+        <translation>Pekâlâ: {amount} {resource}. Bunu bir yatırım say. Karşılığını ölü Romalılarda bekliyorum.</translation>
+    </message>
+    <message>
+        <source>Yes. Attacking now. Hit it with me.</source>
+        <translation>Evet. Şimdi saldırıyorum. Benimle vur.</translation>
+    </message>
+    <message>
+        <source>Yes. That one. I will come at it from the side nobody guards.</source>
+        <translation>Evet. O hedef. Kimsenin korumadığı taraftan geleceğim.</translation>
+    </message>
+    <message>
+        <source>You may have {amount} {resource}. I shall note it in the ledger under charitable causes.</source>
+        <translation>{amount} {resource} alabilirsin. Bunu defterde hayır işleri diye not edeceğim.</translation>
+    </message>
+    <message>
+        <source>You shall have {amount} {resource}. I laid it by for exactly this kind of day.</source>
+        <translation>{amount} {resource} senin olsun. Onu tam da böyle bir gün için saklamıştım.</translation>
+    </message>
+    <message>
+        <source>Your {resource} arrived. Thank you. I shall make it last longer than you expect.</source>
+        <translation>Gönderdiğin {resource} ulaştı. Sağ ol. Beklediğinden daha uzun dayandıracağım.</translation>
+    </message>
+    <message>
+        <source>Your {resource} arrived. Well timed. I shall make sure they feel it.</source>
+        <translation>Gönderdiğin {resource} ulaştı. Tam zamanında. Hissetmelerini sağlayacağım.</translation>
+    </message>
+    <message>
+        <source>Your {resource} came through. My archers eat tonight because of you.</source>
+        <translation>Gönderdiğin {resource} ulaştı. Okçularım bu gece senin sayende karnını doyuruyor.</translation>
+    </message>
+    <message>
+        <source>Your {resource} has arrived. Generous. I shall pretend to be surprised when the Council asks.</source>
+        <translation>Gönderdiğin {resource} ulaştı. Cömertsin. Meclis sorunca şaşırmış gibi yapacağım.</translation>
+    </message>
+    <message>
+        <source>Your {resource} has arrived. Rome thanks you. So, grudgingly, do I.</source>
+        <translation>Gönderdiğin {resource} ulaştı. Roma sana teşekkür ediyor. Ben de, gönülsüzce, ediyorum.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} I can spare without starving the next season. The rest stays in the stores.</source>
+        <translation>{amount} {resource} bir sonraki mevsimi aç bırakmadan ayırabilirim. Gerisi depoda kalır.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} is all I can spare. Make it count.</source>
+        <translation>{amount} {resource}, ayırabildiğimin hepsi bu. Boşa harcama.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} is what the books allow. The rest is committed. Contracts, you understand.</source>
+        <translation>{amount} {resource}, defterlerin izin verdiği kadar. Gerisi taahhütlü. Sözleşmeler, anlarsın.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, and not a scrap more. A consul&apos;s generosity has limits, and I have just found them.</source>
+        <translation>{amount} {resource}, bir parça fazlası değil. Bir konsülün cömertliğinin sınırları var, ben de onları az önce buldum.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, dispatched. Do mention it in your reports; Rome likes to hear of generosity.</source>
+        <translation>{amount} {resource}, yollandı. Raporlarında bundan söz et; Roma cömertlik duymayı sever.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, dispatched. I shall invoice the Council, not you. Probably.</source>
+        <translation>{amount} {resource}, yollandı. Faturayı sana değil Meclis&apos;e keseceğim. Muhtemelen.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, on its way. I hunt light; I can spare it. Do not make me regret carrying less.</source>
+        <translation>{amount} {resource}, yolda. Hafif avlanırım; ayırabilirim. Az taşıdığıma pişman etme beni.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, sent. Spend it on something they will not expect.</source>
+        <translation>{amount} {resource}, gönderildi. Beklemedikleri bir şeye harca.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, sent. The granary will not notice; that is what granaries are for.</source>
+        <translation>{amount} {resource}, gönderildi. Ambar fark etmez bile; ambarlar zaten bunun için var.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Good. That buys another attack.</source>
+        <translation>{amount} {resource}. Güzel. Bu bir saldırı daha satın alır.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. It goes into the stores, and it will be there when we need it.</source>
+        <translation>{amount} {resource}. Depoya gidiyor, ihtiyacımız olduğunda orada olacak.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received and entered in the ledger, on the credit side, for once.</source>
+        <translation>{amount} {resource}. Alındı ve defterin alacak tarafına yazıldı, bir kez olsun.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received, and remembered. The next kill is yours.</source>
+        <translation>{amount} {resource}. Alındı ve unutulmadı. Bir sonraki av senin.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received. I shall mention you favourably to the Senate, if it comes up.</source>
+        <translation>{amount} {resource}. Alındı. Konusu açılırsa Senato&apos;ya senden övgüyle söz ederim.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Sent. Use it fast.</source>
+        <translation>{amount} {resource}. Gönderildi. Çabuk kullan.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Thank you. I will spend it where it hurts them most.</source>
+        <translation>{amount} {resource}. Sağ ol. Onları en çok acıtacak yerde harcayacağım.</translation>
     </message>
 </context>
 <context>
@@ -3477,6 +3901,26 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>%1 refuses to part with any %2.</source>
         <translation>%1 hiç %2 vermeyi reddediyor.</translation>
     </message>
+    <message>
+        <source>No ally will join the attack.</source>
+        <translation>Hiçbir müttefik saldırıya katılmayacak.</translation>
+    </message>
+    <message>
+        <source>No ally can spare men to defend it.</source>
+        <translation>Hiçbir müttefik onu savunmak için adam ayıramıyor.</translation>
+    </message>
+    <message>
+        <source>%1 will march on that position.</source>
+        <translation>%1 o mevki üzerine yürüyecek.</translation>
+    </message>
+    <message>
+        <source>%1 will send men to hold it.</source>
+        <translation>%1 onu tutmak için adam gönderecek.</translation>
+    </message>
+    <message>
+        <source>%1 asks you for %2 %3.</source>
+        <translation>%1 senden %2 %3 istiyor.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -5242,6 +5686,34 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     <message>
         <source>%1 wounded</source>
         <translation>%1 yaralı</translation>
+    </message>
+    <message>
+        <source>ALLIED BUILDING</source>
+        <translation>MÜTTEFİK YAPISI</translation>
+    </message>
+    <message>
+        <source>ALLIED UNIT</source>
+        <translation>MÜTTEFİK BİRİMİ</translation>
+    </message>
+    <message>
+        <source>Ally</source>
+        <translation>Müttefik</translation>
+    </message>
+    <message>
+        <source>Ask allies to attack</source>
+        <translation>Müttefiklerden saldırmasını iste</translation>
+    </message>
+    <message>
+        <source>Ask allies to defend</source>
+        <translation>Müttefiklerden savunmasını iste</translation>
+    </message>
+    <message>
+        <source>Your allied commanders march on this building if they are willing and have men to spare.</source>
+        <translation>Müttefik komutanların istekli olur ve ayıracak adamları varsa bu yapının üzerine yürür.</translation>
+    </message>
+    <message>
+        <source>Your allied commanders send men to hold this building if they are willing and have men to spare.</source>
+        <translation>Müttefik komutanların istekli olur ve ayıracak adamları varsa bu yapıyı tutmak için adam gönderir.</translation>
     </message>
 </context>
 <context>
@@ -9741,6 +10213,26 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <message>
         <source>Not enough %1 to send.</source>
         <translation>Göndermek için yeterli %1 yok.</translation>
+    </message>
+    <message>
+        <source>No allied commander fights beside you in this battle.</source>
+        <translation>Bu savaşta hiçbir müttefik komutan yanında dövüşmüyor.</translation>
+    </message>
+    <message>
+        <source>Your allies cannot be called to this building.</source>
+        <translation>Müttefiklerin bu yapıya çağrılamaz.</translation>
+    </message>
+    <message>
+        <source>Your allies are still answering your last call.</source>
+        <translation>Müttefiklerin hâlâ son çağrına yanıt veriyor.</translation>
+    </message>
+    <message>
+        <source>Ask your allied commanders to march on this building. Each decides for himself: a warlike commander with men to spare agrees, one whose own camp is threatened refuses.</source>
+        <translation>Müttefik komutanlarından bu yapının üzerine yürümelerini iste. Her biri kendi kararını verir: ayıracak adamı olan savaşçı bir komutan kabul eder, kendi ordugâhı tehdit altındaki ise reddeder.</translation>
+    </message>
+    <message>
+        <source>Ask your allied commanders to send men to hold this building. A cautious commander with men to spare agrees, one whose own camp is threatened refuses.</source>
+        <translation>Müttefik komutanlarından bu yapıyı tutmak için adam göndermelerini iste. Ayıracak adamı olan tedbirli bir komutan kabul eder, kendi ordugâhı tehdit altındaki ise reddeder.</translation>
     </message>
 </context>
 <context>

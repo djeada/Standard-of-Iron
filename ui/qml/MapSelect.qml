@@ -80,6 +80,26 @@ Item {
         };
     }
 
+    function least_used_commander_entry(nationId, skipIndex) {
+        let commanders = commanders_for_nation(nationId);
+        if (commanders.length === 0)
+            return default_commander_entry(nationId);
+        let best = commanders[0];
+        let bestUses = -1;
+        for (let c = 0; c < commanders.length; c++) {
+            let uses = 0;
+            for (let i = 0; i < players_model.count; i++) {
+                if (i !== skipIndex && players_model.get(i).commanderTroop === commanders[c].troop)
+                    uses++;
+            }
+            if (bestUses < 0 || uses < bestUses) {
+                best = commanders[c];
+                bestUses = uses;
+            }
+        }
+        return best;
+    }
+
     function commander_field(entry, key) {
         if (!entry)
             return "";
@@ -515,7 +535,7 @@ Item {
         }
         let defaultTeamId = players_model.count > 0 ? 1 : 0;
         let defaultNation = nation_entry_at(players_model.count);
-        let defaultCommander = default_commander_entry(defaultNation.id);
+        let defaultCommander = least_used_commander_entry(defaultNation.id, -1);
         players_model.append({
                 "player_id": nextId,
                 "playerName": qsTr("CPU %1").arg(Design.Numerals.roman(nextId)),
@@ -634,7 +654,7 @@ Item {
             }
         }
         let nextNation = available_nations[nextIndex];
-        let nextCommander = default_commander_entry(nextNation.id);
+        let nextCommander = least_used_commander_entry(nextNation.id, index);
         players_model.setProperty(index, "nationId", nextNation.id);
         players_model.setProperty(index, "nationName", nextNation.name);
         apply_commander(index, nextCommander);

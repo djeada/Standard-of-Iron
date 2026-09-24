@@ -26,6 +26,8 @@ struct FocusTargetInfo {
   bool is_building = false;
   bool is_enemy = false;
   bool is_own = false;
+  bool is_ally = false;
+  QString ally_call;
   int health = 0;
   int max_health = 0;
   int soldiers = 0;

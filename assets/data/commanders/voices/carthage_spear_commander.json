@@ -372,6 +372,216 @@
       "variants": [
         "Your commander is dead. Unfortunate, and expensive. Keep your line; a leaderless ally is a liability I did not agree to insure."
       ]
+    },
+    {
+      "id": "hanno.ally.request_granted",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_granted",
+        "subject": "player",
+        "actor": "self",
+        "reason": "full",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource}, dispatched. I shall invoice the Council, not you. Probably.",
+        "Very well: {amount} {resource}. Consider it an investment. I expect the returns in dead Romans."
+      ]
+    },
+    {
+      "id": "hanno.ally.request_partial",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_granted",
+        "subject": "player",
+        "actor": "self",
+        "reason": "partial",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource} is what the books allow. The rest is committed. Contracts, you understand."
+      ]
+    },
+    {
+      "id": "hanno.ally.request_refused_short",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "short",
+        "cooldown": 1
+      },
+      "variants": [
+        "I have no {resource} to spare. My stores are thinner than my patience, and that is saying something."
+      ]
+    },
+    {
+      "id": "hanno.ally.request_refused_stingy",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "stingy",
+        "cooldown": 1
+      },
+      "variants": [
+        "My {resource} stays where it is. Charity is for temples. Come back with a better offer."
+      ]
+    },
+    {
+      "id": "hanno.ally.call_accepted_defend",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_accepted",
+        "subject": "player",
+        "actor": "self",
+        "kind": "defend",
+        "cooldown": 1
+      },
+      "variants": [
+        "Men are going to hold it. Mercenaries, fully paid. Do try not to let it burn; I am insuring it.",
+        "I will garrison it. Every man I send is billed to the war, so the war had better be grateful."
+      ]
+    },
+    {
+      "id": "hanno.ally.call_accepted_attack",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_accepted",
+        "subject": "player",
+        "actor": "self",
+        "kind": "attack",
+        "cooldown": 1
+      },
+      "variants": [
+        "An attack on that position. Agreed. It looks profitable, and I do so like profit.",
+        "My spears will march on it. They are paid for the season; they may as well earn it."
+      ]
+    },
+    {
+      "id": "hanno.ally.call_refused_threat",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "under_threat",
+        "cooldown": 1
+      },
+      "variants": [
+        "I am under attack myself. My men are paid to guard my walls first, and I have read the contract."
+      ]
+    },
+    {
+      "id": "hanno.ally.call_refused_no_army",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "no_army",
+        "cooldown": 1
+      },
+      "variants": [
+        "I have no men to spare. The last of them are guarding what little I have left to lose."
+      ]
+    },
+    {
+      "id": "hanno.ally.call_refused_attack",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "kind": "attack",
+        "reason": "unwilling",
+        "cooldown": 1
+      },
+      "variants": [
+        "Throw paid spears at a fortified camp? The Council would have my head. No."
+      ]
+    },
+    {
+      "id": "hanno.ally.call_refused_defend",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "kind": "defend",
+        "reason": "unwilling",
+        "cooldown": 1
+      },
+      "variants": [
+        "Hold your own building. Mine are costly enough without adopting yours."
+      ]
+    },
+    {
+      "id": "hanno.ally.needs_resources",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "once": false,
+      "trigger": {
+        "type": "ally_needs_resources",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 1
+      },
+      "duration": 20.0,
+      "variants": [
+        "I find myself short: {amount} {resource}. A loan, between allies. I will repay it, in principle.",
+        "My stores of {resource} are empty. {amount} would keep my men paid and, more to the point, fighting."
+      ]
+    },
+    {
+      "id": "hanno.ally.gift_received",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "gift_received",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource}. Received and entered in the ledger, on the credit side, for once.",
+        "Your {resource} has arrived. Generous. I shall pretend to be surprised when the Council asks."
+      ]
     }
   ]
 }

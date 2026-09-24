@@ -51,6 +51,11 @@ struct CommanderMessageCue {
   const char* text_context = nullptr;
 
   bool holds_outcome = false;
+
+  int amount = 0;
+  QString resource;
+
+  int request_owner_id = -1;
 };
 
 struct CommanderMessageScript {
@@ -69,6 +74,10 @@ struct CommanderMessageFact {
   QString nation;
   std::optional<Engine::Core::EntityID> structure_id;
   std::optional<bool> final_wave;
+  std::optional<QString> reason;
+
+  int amount = 0;
+  QString resource;
 };
 
 class CommanderMessageDirector {
@@ -134,6 +143,7 @@ private:
     bool generic = false;
 
     int variant_group = -1;
+    int variant_offset = 0;
     float last_fired_at = -1.0e9F;
   };
 
@@ -142,6 +152,9 @@ private:
     float delay_remaining = 0.0F;
 
     std::optional<float> expires_in;
+
+    std::optional<CommanderMessageCue> cue;
+    bool involves_local = false;
   };
 
   struct SpeakerTriggerKey {
@@ -176,7 +189,9 @@ private:
   [[nodiscard]] auto is_queued(std::size_t index) const -> bool;
   [[nodiscard]] auto pick_variant(const std::vector<std::size_t>& group) const
       -> std::optional<std::size_t>;
-  void queue_rule(std::size_t index);
+  void queue_rule(std::size_t index, const CommanderMessageFact* fact = nullptr);
+  void queue_intros(const std::vector<std::size_t>& choices);
+  [[nodiscard]] auto chatter_window_open(bool involves_local) const -> bool;
   void drop_pending_chatter();
 
   auto promote_next() -> bool;
@@ -195,6 +210,7 @@ private:
   float m_last_line_ended_at = -1.0e9F;
   bool m_outcome_reached = false;
 
+  std::vector<float> m_chatter_shown_at;
   std::map<int, int> m_chatter_budget;
   std::map<int, int> m_chatter_spent;
   std::map<SpeakerTriggerKey, float> m_speaker_trigger_fired_at;

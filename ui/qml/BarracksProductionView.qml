@@ -9,6 +9,7 @@ Item {
 
     property var panel: null
     property var prod: ({})
+    property var allyCall: ({})
 
     readonly property int queueSlots: 5
     readonly property int queueTotal: (root.prod.in_progress ? 1 : 0) + (root.prod.queue_size || 0)
@@ -23,6 +24,7 @@ Item {
     signal recruit_requested(string unit_type)
     signal details_requested(string unit_type, string nation)
     signal rally_requested
+    signal ally_call_requested
 
     function filtered_cards() {
         if (!root.panel)
@@ -133,6 +135,17 @@ Item {
                 Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 1
+                }
+
+                Design.IronButton {
+                    objectName: "barracksAllyCallButton"
+                    Layout.alignment: Qt.AlignVCenter
+                    visible: root.allyCall.kind === "defend" && (root.allyCall.allies || 0) > 0
+                    text: qsTr("Ask allies to defend")
+                    onClicked: root.ally_call_requested()
+                    ToolTip.visible: hovered
+                    ToolTip.delay: Design.Metrics.tooltipDelay
+                    ToolTip.text: root.allyCall.reason || ""
                 }
 
                 Column {

@@ -2,6 +2,7 @@
 #include <QJsonObject>
 #include <QStringList>
 
+#include <algorithm>
 #include <gtest/gtest.h>
 
 #include "game/core/event_manager.h"
@@ -771,6 +772,281 @@ TEST_F(CommanderMessageDirectorTest, RestoringAnOldSaveShapeStillWorks) {
   m_director.notify_mission_start();
   m_director.update(0.0F);
   EXPECT_FALSE(m_director.has_active());
+}
+
+class CommanderCrowdDirectorTest : public CommanderMessageDirectorTest {
+protected:
+  static constexpr int k_first_enemy = 10;
+
+  void configure_crowd(int enemies, int allies, int chatter_per_match = 10) {
+    Game::Mission::CommanderVoiceBank consul;
+    consul.commander_id = QStringLiteral("roman_veteran_consul");
+    consul.chatter_per_match = chatter_per_match;
+    auto open =
+        make_line(QStringLiteral("scipio.enemy.match_start"),
+                  Game::Mission::CommanderRelationship::Enemy,
+                  Game::Mission::CommanderMessageTrigger::MissionStart,
+                  {QStringLiteral("Opening one."), QStringLiteral("Opening two.")});
+    open.priority = 100;
+    consul.lines.push_back(open);
+    auto hit = make_line(QStringLiteral("scipio.enemy.under_attack"),
+                         Game::Mission::CommanderRelationship::Enemy,
+                         Game::Mission::CommanderMessageTrigger::UnderAttack,
+                         {QStringLiteral("You are at my walls.")});
+    hit.condition.subject_role = Game::Mission::CommanderMessageRole::Self;
+    hit.once = false;
+    hit.condition.cooldown = 1.0F;
+    consul.lines.push_back(hit);
+
+    Game::Mission::CommanderVoiceBank hannibal;
+    hannibal.commander_id = QStringLiteral("carthage_sword_commander");
+    auto ally_open = make_line(QStringLiteral("hannibal.ally.match_start"),
+                               Game::Mission::CommanderRelationship::Ally,
+                               Game::Mission::CommanderMessageTrigger::MissionStart,
+                               {QStringLiteral("Together, then.")});
+    ally_open.priority = 90;
+    hannibal.lines.push_back(ally_open);
+    auto granted = make_line(QStringLiteral("hannibal.ally.request_granted"),
+                             Game::Mission::CommanderRelationship::Ally,
+                             Game::Mission::CommanderMessageTrigger::RequestGranted,
+                             {QStringLiteral("Take {amount} {resource}.")});
+    granted.condition.owner_is_local = true;
+    granted.condition.actor_role = Game::Mission::CommanderMessageRole::Self;
+    granted.condition.reason = QStringLiteral("full");
+    granted.once = false;
+    granted.condition.cooldown = 1.0F;
+    granted.priority = 85;
+    hannibal.lines.push_back(granted);
+    auto needs = make_line(QStringLiteral("hannibal.ally.needs_resources"),
+                           Game::Mission::CommanderRelationship::Ally,
+                           Game::Mission::CommanderMessageTrigger::AllyNeedsResources,
+                           {QStringLiteral("Send me {amount} {resource}.")});
+    needs.condition.owner_is_local = true;
+    needs.condition.actor_role = Game::Mission::CommanderMessageRole::Self;
+    needs.once = false;
+    needs.condition.cooldown = 1.0F;
+    needs.priority = 90;
+    hannibal.lines.push_back(needs);
+
+    m_library = Game::Mission::CommanderVoiceLibrary{};
+    m_library.add(consul);
+    m_library.add(hannibal);
+    Game::Mission::CommanderMessageScript script;
+    for (int i = 0; i < enemies; ++i) {
+      script.speakers.push_back(
+          {.owner_id = k_first_enemy + i,
+           .troop_type = QStringLiteral("roman_veteran_consul"),
+           .relationship = Game::Mission::CommanderRelationship::Enemy});
+    }
+    for (int i = 0; i < allies; ++i) {
+      script.speakers.push_back(
+          {.owner_id = k_ally_owner + i * 100,
+           .troop_type = QStringLiteral("carthage_sword_commander"),
+           .relationship = Game::Mission::CommanderRelationship::Ally});
+    }
+    script.voices = &m_library;
+    m_director.set_relationship_lookup([](int a, int b) {
+      const auto ally_side = [](int owner) {
+        return owner == k_local_owner || owner % 100 == k_ally_owner;
+      };
+      return ally_side(a) == ally_side(b);
+    });
+    m_director.configure(script, k_local_owner, identity_to_world());
+  }
+
+  auto drain(float step = 1.0F, int steps = 600) -> QStringList {
+    QStringList shown;
+    for (int i = 0; i < steps; ++i) {
+      if (m_director.has_active()) {
+        shown.append(m_director.active().text);
+        m_director.dismiss_active();
+        continue;
+      }
+      m_director.update(step);
+    }
+    return shown;
+  }
+
+  Game::Mission::CommanderVoiceLibrary m_library;
+};
+
+TEST_F(CommanderCrowdDirectorTest, SevenOpponentsDoNotAllIntroduceThemselves) {
+  configure_crowd(5, 2);
+  m_director.notify_mission_start();
+  m_director.update(0.0F);
+  const QStringList shown = drain(0.5F, 200);
+  EXPECT_EQ(shown.count(QStringLiteral("Together, then.")),
+            Game::Mission::k_commander_intro_ally_limit);
+  EXPECT_EQ(shown.size(),
+            Game::Mission::k_commander_intro_enemy_limit +
+                Game::Mission::k_commander_intro_ally_limit)
+      << shown.join(QStringLiteral(" | ")).toStdString();
+}
+
+TEST_F(CommanderCrowdDirectorTest, TwoCommandersOfOneKindDoNotOpenWithTheSameLine) {
+  configure_crowd(2, 0);
+  m_director.notify_mission_start();
+  m_director.update(0.0F);
+  const QStringList shown = drain(0.5F, 200);
+  ASSERT_EQ(shown.size(), 2);
+  EXPECT_NE(shown[0], shown[1]) << "both consuls said " << shown[0].toStdString();
+}
+
+TEST_F(CommanderCrowdDirectorTest, ARollingWindowCapsChatterAcrossEveryCommander) {
+  configure_crowd(7, 0);
+  int shown = 0;
+  float elapsed = 0.0F;
+  while (elapsed < Game::Mission::k_commander_chatter_window_seconds - 1.0F) {
+    for (int i = 0; i < 7; ++i) {
+      m_director.notify_fact(
+          {.trigger = Game::Mission::CommanderMessageTrigger::UnderAttack,
+           .subject_owner_id = k_first_enemy + i,
+           .actor_owner_id = k_local_owner});
+    }
+    m_director.update(1.0F);
+    elapsed += 1.0F;
+    if (m_director.has_active()) {
+      ++shown;
+      m_director.dismiss_active();
+    }
+  }
+  EXPECT_LE(shown, Game::Mission::k_commander_chatter_per_window)
+      << "seven commanders under attack at once must not flood the panel";
+  EXPECT_GE(shown, 1);
+}
+
+TEST_F(CommanderCrowdDirectorTest, BystanderChatterGetsAThinnerWindow) {
+  configure_crowd(7, 0);
+  int shown = 0;
+  for (int second = 0; second < 80; ++second) {
+    m_director.notify_fact(
+        {.trigger = Game::Mission::CommanderMessageTrigger::UnderAttack,
+         .subject_owner_id = k_first_enemy + (second % 7),
+         .actor_owner_id = k_ally_owner});
+    m_director.update(1.0F);
+    if (m_director.has_active()) {
+      ++shown;
+      m_director.dismiss_active();
+    }
+  }
+  EXPECT_LE(shown, Game::Mission::k_commander_bystander_chatter_per_window)
+      << "a fight between an ally and an enemy is background, not a headline";
+}
+
+TEST_F(CommanderCrowdDirectorTest, ManyCommandersShareASmallerChatterBudget) {
+  configure_crowd(7, 0, 10);
+  int shown = 0;
+  for (int round = 0; round < 40; ++round) {
+    m_director.notify_fact(
+        {.trigger = Game::Mission::CommanderMessageTrigger::UnderAttack,
+         .subject_owner_id = k_first_enemy,
+         .actor_owner_id = k_local_owner});
+    m_director.update(0.0F);
+    if (m_director.has_active()) {
+      ++shown;
+      m_director.dismiss_active();
+    }
+    m_director.update(Game::Mission::k_commander_chatter_window_seconds);
+  }
+  EXPECT_EQ(shown, std::max(Game::Mission::k_commander_chatter_min_budget, 10 * 3 / 7));
+}
+
+TEST_F(CommanderCrowdDirectorTest, AReplyIgnoresTheChatterCapsAndCarriesItsAmount) {
+  configure_crowd(1, 1, 1);
+  m_director.notify_fact(
+      {.trigger = Game::Mission::CommanderMessageTrigger::UnderAttack,
+       .subject_owner_id = k_first_enemy,
+       .actor_owner_id = k_local_owner});
+  m_director.update(0.0F);
+  ASSERT_TRUE(m_director.has_active());
+  m_director.dismiss_active();
+
+  m_director.notify_fact(
+      {.trigger = Game::Mission::CommanderMessageTrigger::RequestGranted,
+       .subject_owner_id = k_local_owner,
+       .actor_owner_id = k_ally_owner,
+       .reason = QStringLiteral("full"),
+       .amount = 150,
+       .resource = QStringLiteral("wood")});
+  m_director.update(0.0F);
+  ASSERT_TRUE(m_director.has_active()) << "a reply must not wait out the chatter gap";
+  EXPECT_EQ(m_director.active().text, QStringLiteral("Take {amount} {resource}."));
+  EXPECT_EQ(m_director.active().amount, 150);
+  EXPECT_EQ(m_director.active().resource, QStringLiteral("wood"));
+  EXPECT_EQ(m_director.active().request_owner_id, -1)
+      << "a reply is not a request the player can answer";
+}
+
+TEST_F(CommanderCrowdDirectorTest, AReplyForAnotherReasonDoesNotMatch) {
+  configure_crowd(0, 1);
+  m_director.notify_fact(
+      {.trigger = Game::Mission::CommanderMessageTrigger::RequestGranted,
+       .subject_owner_id = k_local_owner,
+       .actor_owner_id = k_ally_owner,
+       .reason = QStringLiteral("partial"),
+       .amount = 50,
+       .resource = QStringLiteral("gold")});
+  m_director.update(0.0F);
+  EXPECT_FALSE(m_director.has_active());
+}
+
+TEST_F(CommanderCrowdDirectorTest, AnAllyPleaCarriesAnAnswerableRequest) {
+  configure_crowd(0, 1);
+  m_director.notify_fact(
+      {.trigger = Game::Mission::CommanderMessageTrigger::AllyNeedsResources,
+       .subject_owner_id = k_local_owner,
+       .actor_owner_id = k_ally_owner,
+       .amount = 100,
+       .resource = QStringLiteral("food")});
+  m_director.update(0.0F);
+  ASSERT_TRUE(m_director.has_active());
+  EXPECT_EQ(m_director.active().request_owner_id, k_ally_owner);
+  EXPECT_EQ(m_director.active().amount, 100);
+  EXPECT_EQ(m_director.active().resource, QStringLiteral("food"));
+}
+
+TEST_F(CommanderCrowdDirectorTest, AnUnheardReplyExpires) {
+  configure_crowd(0, 1);
+  m_director.notify_fact(
+      {.trigger = Game::Mission::CommanderMessageTrigger::AllyNeedsResources,
+       .subject_owner_id = k_local_owner,
+       .actor_owner_id = k_ally_owner,
+       .amount = 100,
+       .resource = QStringLiteral("food")});
+  m_director.update(0.0F);
+  ASSERT_TRUE(m_director.has_active());
+  m_director.notify_fact(
+      {.trigger = Game::Mission::CommanderMessageTrigger::RequestGranted,
+       .subject_owner_id = k_local_owner,
+       .actor_owner_id = k_ally_owner,
+       .reason = QStringLiteral("full"),
+       .amount = 25,
+       .resource = QStringLiteral("iron")});
+  m_director.update(Game::Mission::k_commander_dialogue_expiry_seconds + 1.0F);
+  m_director.update(0.0F);
+  m_director.dismiss_active();
+  m_director.update(0.0F);
+  EXPECT_FALSE(m_director.has_active()) << "a reply to a stale request is dropped";
+}
+
+TEST_F(CommanderCrowdDirectorTest, TheChatterWindowSurvivesASave) {
+  configure_crowd(7, 0);
+  for (int i = 0; i < 12; ++i) {
+    m_director.notify_fact(
+        {.trigger = Game::Mission::CommanderMessageTrigger::UnderAttack,
+         .subject_owner_id = k_first_enemy + (i % 7),
+         .actor_owner_id = k_local_owner});
+    m_director.update(1.0F);
+    if (m_director.has_active()) {
+      m_director.dismiss_active();
+    }
+  }
+  const QJsonObject state = m_director.serialize();
+  ASSERT_FALSE(state["chatter_window"].toArray().isEmpty());
+  configure_crowd(7, 0);
+  m_director.restore(state);
+  EXPECT_EQ(m_director.serialize()["chatter_window"].toArray(),
+            state["chatter_window"].toArray());
 }
 
 } // namespace

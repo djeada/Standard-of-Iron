@@ -17,6 +17,7 @@ class VisibilityService;
 namespace Game::Systems {
 class BuildingCollisionRegistry;
 class GlobalStatsRegistry;
+class AllianceBoard;
 class MarketplaceSystem;
 class NationRegistry;
 class NavigationService;
@@ -96,6 +97,8 @@ public:
   [[nodiscard]] auto building_collision() -> Game::Systems::BuildingCollisionRegistry&;
 
   [[nodiscard]] auto marketplace() -> Game::Systems::MarketplaceSystem&;
+
+  [[nodiscard]] auto alliance() -> Game::Systems::AllianceBoard&;
 
   [[nodiscard]] auto navigation() -> Game::Systems::NavigationService&;
   [[nodiscard]] auto navigation() const -> const Game::Systems::NavigationService&;

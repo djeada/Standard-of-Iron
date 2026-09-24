@@ -21,6 +21,7 @@ class CommanderMessageViewModel : public QObject {
   Q_PROPERTY(QString text READ text NOTIFY message_changed)
   Q_PROPERTY(qreal duration READ duration NOTIFY message_changed)
   Q_PROPERTY(bool holds_outcome READ holds_outcome NOTIFY message_changed)
+  Q_PROPERTY(QVariantMap request READ request NOTIFY message_changed)
 
 public:
   explicit CommanderMessageViewModel(QObject* parent = nullptr);
@@ -42,6 +43,8 @@ public:
   [[nodiscard]] auto duration() const -> qreal;
 
   [[nodiscard]] auto holds_outcome() const -> bool;
+
+  [[nodiscard]] auto request() const -> QVariantMap;
 
   Q_INVOKABLE void dismiss();
 

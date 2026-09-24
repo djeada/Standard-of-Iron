@@ -372,6 +372,216 @@
       "variants": [
         "Your commander is down. Their moment of joy is your moment of opportunity; nobody watches the flanks while they cheer."
       ]
+    },
+    {
+      "id": "hannibal.ally.request_granted",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_granted",
+        "subject": "player",
+        "actor": "self",
+        "reason": "full",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource}, sent. Spend it on something they will not expect.",
+        "Take {amount} {resource}. I would rather lose stores than lose an ally who can still surprise them."
+      ]
+    },
+    {
+      "id": "hannibal.ally.request_partial",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_granted",
+        "subject": "player",
+        "actor": "self",
+        "reason": "partial",
+        "cooldown": 1
+      },
+      "variants": [
+        "I can spare {amount} {resource}. The rest crosses the mountains with me; that is not negotiable."
+      ]
+    },
+    {
+      "id": "hannibal.ally.request_refused_short",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "short",
+        "cooldown": 1
+      },
+      "variants": [
+        "I have no {resource} to give. I came over the Alps; I carry what the mules could."
+      ]
+    },
+    {
+      "id": "hannibal.ally.request_refused_stingy",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "stingy",
+        "cooldown": 1
+      },
+      "variants": [
+        "No {resource}. Not because I cannot - because I need it for something you will enjoy watching later."
+      ]
+    },
+    {
+      "id": "hannibal.ally.call_accepted_defend",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_accepted",
+        "subject": "player",
+        "actor": "self",
+        "kind": "defend",
+        "cooldown": 1
+      },
+      "variants": [
+        "I will send men to hold it. Not in front; where the enemy thinks the ground is empty.",
+        "Consider it covered. If they come for it, they will find a trap rather than a prize."
+      ]
+    },
+    {
+      "id": "hannibal.ally.call_accepted_attack",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_accepted",
+        "subject": "player",
+        "actor": "self",
+        "kind": "attack",
+        "cooldown": 1
+      },
+      "variants": [
+        "Yes. That one. I will come at it from the side nobody guards.",
+        "Good choice; I was looking at it too. Hit it from the front. I will be the part they did not see."
+      ]
+    },
+    {
+      "id": "hannibal.ally.call_refused_threat",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "under_threat",
+        "cooldown": 1
+      },
+      "variants": [
+        "Not now. They are at my own camp, and I need every blade to make them regret it."
+      ]
+    },
+    {
+      "id": "hannibal.ally.call_refused_no_army",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "no_army",
+        "cooldown": 1
+      },
+      "variants": [
+        "I have too few men left for anything clever, and too few for anything stupid. Wait."
+      ]
+    },
+    {
+      "id": "hannibal.ally.call_refused_attack",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "kind": "attack",
+        "reason": "unwilling",
+        "cooldown": 1
+      },
+      "variants": [
+        "Straight at their walls? That is a Roman idea. Give me a reason to come from somewhere else."
+      ]
+    },
+    {
+      "id": "hannibal.ally.call_refused_defend",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "kind": "defend",
+        "reason": "unwilling",
+        "cooldown": 1
+      },
+      "variants": [
+        "I do not guard buildings. I win battles, and then the buildings guard themselves."
+      ]
+    },
+    {
+      "id": "hannibal.ally.needs_resources",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "once": false,
+      "trigger": {
+        "type": "ally_needs_resources",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 1
+      },
+      "duration": 20.0,
+      "variants": [
+        "I am short of {resource}. {amount} would keep this army moving, and a moving army is a winning one.",
+        "A request, between allies: {amount} {resource}. Italy is generous with enemies and stingy with bread."
+      ]
+    },
+    {
+      "id": "hannibal.ally.gift_received",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "gift_received",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource}. Thank you. I will spend it where it hurts them most.",
+        "Your {resource} arrived. Well timed. I shall make sure they feel it."
+      ]
     }
   ]
 }
