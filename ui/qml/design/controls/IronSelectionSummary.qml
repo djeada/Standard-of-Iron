@@ -26,6 +26,7 @@ Design.IronPanel {
     signal unitActivated(var unitId)
     signal groupActivated(string unitType)
     signal profileRequested(string unitType, string nation)
+    signal allyCallRequested(var entityId)
 
     property var profileLookup: null
 
@@ -119,6 +120,8 @@ Design.IronPanel {
             return root.inspected.isBuilding ? qsTr("YOUR BUILDING") : qsTr("YOUR UNIT");
         if (root.inspected.isEnemy)
             return root.inspected.isBuilding ? qsTr("ENEMY BUILDING") : qsTr("ENEMY UNIT");
+        if (root.inspected.isAlly)
+            return root.inspected.isBuilding ? qsTr("ALLIED BUILDING") : qsTr("ALLIED UNIT");
         return root.inspected.isBuilding ? qsTr("BUILDING") : qsTr("UNIT");
     }
 
@@ -234,7 +237,7 @@ Design.IronPanel {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: !root.empty || root.inspecting
                     tone: root.inspecting ? root.focusTone(root.inspected) : Design.Theme.accent
-                    text: root.inspecting ? (root.inspected.isEnemy ? qsTr("Enemy") : root.inspected.isOwn ? qsTr("Yours") : qsTr("Neutral")) : root.singleUnit ? qsTr("1 unit") : root.groups.length === 1 ? qsTr("%1 units").arg(root.unitCount) : qsTr("%1 units  ·  %2 types").arg(root.unitCount).arg(root.groups.length)
+                    text: root.inspecting ? (root.inspected.isEnemy ? qsTr("Enemy") : root.inspected.isOwn ? qsTr("Yours") : root.inspected.isAlly ? qsTr("Ally") : qsTr("Neutral")) : root.singleUnit ? qsTr("1 unit") : root.groups.length === 1 ? qsTr("%1 units").arg(root.unitCount) : qsTr("%1 units  ·  %2 types").arg(root.unitCount).arg(root.groups.length)
                 }
             }
 
@@ -342,7 +345,7 @@ Design.IronPanel {
 
             objectName: "selectionInspectCard"
             width: parent.width
-            height: Design.Metrics.space24 * 4 + (root.hasSoldierCount(root.inspected) ? Design.Metrics.space16 : 0)
+            height: Design.Metrics.space24 * 4 + (root.hasSoldierCount(root.inspected) ? Design.Metrics.space16 : 0) + (allyCallButton.visible ? allyCallButton.implicitHeight + Design.Metrics.space4 : 0)
             radius: Design.Metrics.radiusMedium
             color: Design.Theme.backgroundDeep
             border.width: Design.Metrics.borderThin
@@ -447,6 +450,21 @@ Design.IronPanel {
                     font.family: Design.Typography.family
                     font.pixelSize: Design.Typography.caption
                     elide: Text.ElideRight
+                }
+
+                Design.IronButton {
+                    id: allyCallButton
+
+                    readonly property bool attack: root.inspected.allyCall === "attack"
+
+                    objectName: "inspectAllyCallButton"
+                    visible: !!root.inspected.allyCall
+                    text: attack ? qsTr("Ask allies to attack") : qsTr("Ask allies to defend")
+                    tone: attack ? "destructive" : "primary"
+                    onClicked: root.allyCallRequested(root.inspected.id)
+                    ToolTip.visible: hovered
+                    ToolTip.delay: Design.Metrics.tooltipDelay
+                    ToolTip.text: attack ? qsTr("Your allied commanders march on this building if they are willing and have men to spare.") : qsTr("Your allied commanders send men to hold this building if they are willing and have men to spare.")
                 }
             }
         }

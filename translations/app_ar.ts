@@ -257,6 +257,10 @@
         <source>Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.</source>
         <translation>الرجال الذين لا تزال هذه الثكنة تحتفظ بهم. كل مجنّد يستهلك رجال فرقته؛ والمدنيون الذين يُربَّون في منزل يجلبون المزيد.</translation>
     </message>
+    <message>
+        <source>Ask allies to defend</source>
+        <translation>اطلب من الحلفاء الدفاع</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -797,6 +801,18 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>ALLY</source>
         <translation>حليف</translation>
+    </message>
+    <message>
+        <source>Decline</source>
+        <translation>رفض</translation>
+    </message>
+    <message>
+        <source>Send %1 %2</source>
+        <translation>أرسل %1 %2</translation>
+    </message>
+    <message>
+        <source>Give it from your stores. Sending needs a marketplace.</source>
+        <translation>أرسلها من مخازنك. الإرسال يتطلب سوقاً.</translation>
     </message>
 </context>
 <context>
@@ -1675,6 +1691,414 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Your men are falling in rows. That is what happens when you fight a wall&apos;s war against a river.</source>
         <translation>رجالك يسقطون صفوفاً. هكذا يحدث حين تخوض حرب جدارٍ ضد نهر.</translation>
+    </message>
+    <message>
+        <source>A request, between allies: {amount} {resource}. Italy is generous with enemies and stingy with bread.</source>
+        <translation>طلب، بين حليفين: {amount} {resource}. إيطاليا كريمة مع أعدائها، شحيحة بخبزها.</translation>
+    </message>
+    <message>
+        <source>Agreed. I have wanted an excuse. My legion moves on it now.</source>
+        <translation>موافق. كنت أبحث عن ذريعة. فيلقي يتحرك إليه الآن.</translation>
+    </message>
+    <message>
+        <source>Agreed. I shall move on it in good order. Be ready when they break.</source>
+        <translation>موافق. سأتقدّم إليه بنظام. كن جاهزاً حين ينهارون.</translation>
+    </message>
+    <message>
+        <source>An attack on that position. Agreed. It looks profitable, and I do so like profit.</source>
+        <translation>هجوم على ذلك الموقع. موافق. يبدو مربحاً، وأنا أحب الربح.</translation>
+    </message>
+    <message>
+        <source>An attack? Splendid. My cohorts will march on it. Do keep up.</source>
+        <translation>هجوم؟ رائع. الكوهورتات ستزحف عليه. حاول أن تجاريني.</translation>
+    </message>
+    <message>
+        <source>Certainly not. My {resource} is for Roman purposes. Yours, I fear, are merely yours.</source>
+        <translation>بالتأكيد لا. {resource} لدي لأغراض رومانية. أما شؤونك، فهي شؤونك أنت فحسب، على ما أخشى.</translation>
+    </message>
+    <message>
+        <source>Charge a camp head-on? That is how hunters become meat. Find another way and I will follow it.</source>
+        <translation>نقتحم معسكراً وجهاً لوجه؟ هكذا يتحول الصيادون إلى فريسة. جد طريقاً آخر وسأتبعك فيه.</translation>
+    </message>
+    <message>
+        <source>Consider it covered. If they come for it, they will find a trap rather than a prize.</source>
+        <translation>اعتبره محمياً. إن جاؤوا من أجله، سيجدون فخّاً لا غنيمة.</translation>
+    </message>
+    <message>
+        <source>Defend it yourself. A consul does not stand guard over an ally&apos;s barn.</source>
+        <translation>دافع عنه بنفسك. القنصل لا يحرس حظيرة حليف.</translation>
+    </message>
+    <message>
+        <source>Good choice; I was looking at it too. Hit it from the front. I will be the part they did not see.</source>
+        <translation>اختيار جيد؛ كنت أرقبه أنا أيضاً. اضربه من الأمام. سأكون الجزء الذي لم يروه.</translation>
+    </message>
+    <message>
+        <source>Good target. I will move on it from the ridges. Strike when you hear my arrows.</source>
+        <translation>هدف جيد. سأتقدّم إليه من التلال. اضرب حين تسمع سهامي.</translation>
+    </message>
+    <message>
+        <source>Good. I have been itching for that one. Cohorts, go.</source>
+        <translation>جيد. كنت أتوق لهذا. أيتها الكوهورتات، انطلقي.</translation>
+    </message>
+    <message>
+        <source>Got your {resource}. Thanks. Back to work.</source>
+        <translation>وصلني {resource}. شكراً. عائد إلى العمل.</translation>
+    </message>
+    <message>
+        <source>Hold your own building. Mine are costly enough without adopting yours.</source>
+        <translation>احمِ مبناك بنفسك. مباني تكلفني ما يكفي دون أن أتبنى مبانيك.</translation>
+    </message>
+    <message>
+        <source>I am running short of {resource}. {amount} would see me through. I do not ask lightly.</source>
+        <translation>بدأ {resource} ينفد عندي. {amount} تكفيني لأتجاوز الأزمة. لا أطلب هذا باستخفاف.</translation>
+    </message>
+    <message>
+        <source>I am short of {resource}. {amount} would keep this army moving, and a moving army is a winning one.</source>
+        <translation>أنا قصير في {resource}. {amount} تُبقي هذا الجيش متحركاً، والجيش المتحرك هو الجيش المنتصر.</translation>
+    </message>
+    <message>
+        <source>I am short. {amount} {resource} would keep my archers in the field. If you can spare it, send it.</source>
+        <translation>أنا في نقص. {amount} {resource} تُبقي رماتي في الميدان. إن استطعت الاستغناء عنها، أرسلها.</translation>
+    </message>
+    <message>
+        <source>I am under attack myself. My men are paid to guard my walls first, and I have read the contract.</source>
+        <translation>أنا نفسي تحت الهجوم. رجالي مأجورون لحراسة أسواري أولاً، وقد قرأتُ العقد.</translation>
+    </message>
+    <message>
+        <source>I can spare {amount} {resource}, no more. The rest feeds my archers, and hungry archers miss.</source>
+        <translation>يمكنني الاستغناء عن {amount} {resource}، لا أكثر. الباقي يُطعم رماتي، والرامي الجائع يخطئ الهدف.</translation>
+    </message>
+    <message>
+        <source>I can spare {amount} {resource}. The rest crosses the mountains with me; that is not negotiable.</source>
+        <translation>يمكنني الاستغناء عن {amount} {resource}. الباقي يعبر الجبال معي؛ وهذا غير قابل للنقاش.</translation>
+    </message>
+    <message>
+        <source>I do not guard buildings. I win battles, and then the buildings guard themselves.</source>
+        <translation>أنا لا أحرس المباني. أنا أكسب المعارك، وعندها تحرس المباني نفسها.</translation>
+    </message>
+    <message>
+        <source>I do not sit behind walls. Hold it yourself or let it burn.</source>
+        <translation>أنا لا أجلس خلف الأسوار. احمه بنفسك أو دعه يحترق.</translation>
+    </message>
+    <message>
+        <source>I find myself short: {amount} {resource}. A loan, between allies. I will repay it, in principle.</source>
+        <translation>أجد نفسي في نقص: {amount} {resource}. قرض، بين حليفين. سأردّه، من حيث المبدأ.</translation>
+    </message>
+    <message>
+        <source>I find myself temporarily short: {amount} {resource}. A loan, naturally. Rome always repays, in her own time.</source>
+        <translation>أجد نفسي في نقص مؤقت: {amount} {resource}. قرض، بالطبع. روما تردّ ديونها دائماً، في وقتها الخاص.</translation>
+    </message>
+    <message>
+        <source>I have no cohorts to spare. They are either dead or very busy, and I cannot spare the busy ones.</source>
+        <translation>ليس لدي كوهورتات أستغني عنها. إما أنها ماتت أو مشغولة جداً، ولا يمكنني الاستغناء عن المشغولين.</translation>
+    </message>
+    <message>
+        <source>I have no men to send. I am rebuilding, and rebuilding takes the time it takes.</source>
+        <translation>لا رجال عندي لأرسلهم. أنا أعيد البناء، وإعادة البناء تأخذ ما تأخذه من وقت.</translation>
+    </message>
+    <message>
+        <source>I have no men to spare. The last of them are guarding what little I have left to lose.</source>
+        <translation>لا رجال أستغني عنهم. آخرهم يحرسون ما تبقى لي مما يمكن أن أخسره.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to give. I came over the Alps; I carry what the mules could.</source>
+        <translation>ليس لدي {resource} لأعطيه. عبرتُ جبال الألب؛ أحمل ما استطاعت البغال حمله.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to give. Out here we live on what we carry, and I am carrying very little.</source>
+        <translation>ليس لدي {resource} لأعطيه. هنا نعيش على ما نحمله، وأنا أحمل القليل جداً.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. Even a consul&apos;s stores run dry, though mine run dry with dignity.</source>
+        <translation>ليس لدي {resource} أستغني عنه. حتى مخازن القنصل تنضب، وإن كانت مخازني تنضب بكرامة.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. My stores are thinner than my patience, and that is saying something.</source>
+        <translation>ليس لدي {resource} أستغني عنه. مخازني أرقّ من صبري، وهذا يعني الكثير.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. The stores are thin, and I do not empty them for anyone.</source>
+        <translation>ليس لدي {resource} أستغني عنه. المخازن شحيحة، ولا أفرّغها لأحد.</translation>
+    </message>
+    <message>
+        <source>I have too few bows left to spare any. Ask me again once I have rebuilt.</source>
+        <translation>بقي عندي أقواس قليلة جداً لأستغني عن أي منها. اسألني مجدداً بعد أن أعيد بناء صفوفي.</translation>
+    </message>
+    <message>
+        <source>I have too few men left for anything clever, and too few for anything stupid. Wait.</source>
+        <translation>بقي عندي رجال أقل من أن يفعلوا شيئاً ذكياً، وأقل من أن يفعلوا شيئاً أحمق. انتظر.</translation>
+    </message>
+    <message>
+        <source>I need {amount} {resource}. Now, if you can. My cohorts are running on nothing.</source>
+        <translation>أحتاج {amount} {resource}. الآن، إن استطعت. كوهورتاتي تقاتل على الفراغ.</translation>
+    </message>
+    <message>
+        <source>I shall send a cohort to hold it. Do try not to lose it before they arrive; it would embarrass us both.</source>
+        <translation>سأرسل كوهورت لحمايته. حاول ألا تخسره قبل وصولهم؛ فذلك سيُحرجنا كلينا.</translation>
+    </message>
+    <message>
+        <source>I will garrison it. Every man I send is billed to the war, so the war had better be grateful.</source>
+        <translation>سأحصّنه بحامية. كل رجل أرسله يُقيّد على حساب الحرب، فليكن للحرب امتنان يليق بذلك.</translation>
+    </message>
+    <message>
+        <source>I will hunt that one with you. Drive them toward me and I will do the rest.</source>
+        <translation>سأصطاد ذلك الهدف معك. سُقهم نحوي وسأتولى الباقي.</translation>
+    </message>
+    <message>
+        <source>I will not pin my archers to a wall. They die standing still. Hold it yourself.</source>
+        <translation>لن أُسمّر رماتي عند سور. يموتون وهم واقفون بلا حراك. احمه بنفسك.</translation>
+    </message>
+    <message>
+        <source>I will not scatter my cohorts to guard every building. Hold that one; I shall hold the rest.</source>
+        <translation>لن أُبعثر كوهورتاتي لحراسة كل مبنى. احمِ ذلك المبنى؛ وسأحمي الباقي.</translation>
+    </message>
+    <message>
+        <source>I will send a cohort to hold it. Slowly, in order. It will still be there when they arrive.</source>
+        <translation>سأرسل كوهورت لحمايته. ببطء، بنظام. سيظل هناك حين يصلون.</translation>
+    </message>
+    <message>
+        <source>I will send archers to cover it. They will be on the high ground before the enemy sees them.</source>
+        <translation>سأرسل رماة لتغطيته. سيكونون على المرتفعات قبل أن يراهم العدو.</translation>
+    </message>
+    <message>
+        <source>I will send men to hold it. Not in front; where the enemy thinks the ground is empty.</source>
+        <translation>سأرسل رجالاً لحمايته. ليس من الأمام؛ بل من حيث يظن العدو أن الأرض خالية.</translation>
+    </message>
+    <message>
+        <source>Men are coming to hold it. Fast.</source>
+        <translation>رجال قادمون لحمايته. بسرعة.</translation>
+    </message>
+    <message>
+        <source>Men are going to hold it. Mercenaries, fully paid. Do try not to let it burn; I am insuring it.</source>
+        <translation>رجال في طريقهم لحمايته. مرتزقة، مدفوعو الأجر بالكامل. حاول ألا تدعه يحترق؛ فأنا أُؤمّن عليه.</translation>
+    </message>
+    <message>
+        <source>Men are on their way to hold it. Keep the enemy busy in front; my archers will do the rest from the side.</source>
+        <translation>رجال في طريقهم لحمايته. أشغل العدو من الأمام؛ وسيتولى رماتي الباقي من الجانب.</translation>
+    </message>
+    <message>
+        <source>Men are on their way to hold it. They will dig in; that is what they are good at.</source>
+        <translation>رجال في طريقهم لحمايته. سيتحصّنون فيه؛ فهذا ما يجيدونه.</translation>
+    </message>
+    <message>
+        <source>My spears will march on it. They are paid for the season; they may as well earn it.</source>
+        <translation>رماحي ستزحف عليه. هم مدفوعو الأجر عن الموسم؛ فليستحقوا أجرهم إذن.</translation>
+    </message>
+    <message>
+        <source>My stores of {resource} are empty. {amount} would keep my men paid and, more to the point, fighting.</source>
+        <translation>مخازني من {resource} فارغة. {amount} تُبقي رجالي مدفوعي الأجر، والأهم، مقاتلين.</translation>
+    </message>
+    <message>
+        <source>My {resource} stays where it is. Charity is for temples. Come back with a better offer.</source>
+        <translation>{resource} يبقى حيث هو. الصدقة من شأن المعابد. عد بعرض أفضل.</translation>
+    </message>
+    <message>
+        <source>No men to send. They are all dead or bleeding. Give me time.</source>
+        <translation>لا رجال لأرسلهم. كلهم إما موتى أو ينزفون. أمهلني وقتاً.</translation>
+    </message>
+    <message>
+        <source>No {resource} left. I spent it on the last attack. It was worth it.</source>
+        <translation>لم يبق {resource}. أنفقته على الهجوم الأخير. كان يستحق ذلك.</translation>
+    </message>
+    <message>
+        <source>No {resource}. Not because I cannot - because I need it for something you will enjoy watching later.</source>
+        <translation>لا {resource}. ليس لأنني عاجز - بل لأنني أحتاجه لأمرٍ ستستمتع بمشاهدته لاحقاً.</translation>
+    </message>
+    <message>
+        <source>No. I have {resource}, and I am keeping it. Ask me again when you have earned it in the field.</source>
+        <translation>لا. لدي {resource}، وسأحتفظ به. اسألني مجدداً حين تكون قد استحققته في الميدان.</translation>
+    </message>
+    <message>
+        <source>No. My {resource} goes to my cohorts. Win something first.</source>
+        <translation>لا. {resource} يذهب إلى كوهورتاتي. انتصر في شيء أولاً.</translation>
+    </message>
+    <message>
+        <source>No. My {resource} is counted against the winter. Ask again after the harvest.</source>
+        <translation>لا. {resource} محسوب لأجل الشتاء. اسأل مجدداً بعد الحصاد.</translation>
+    </message>
+    <message>
+        <source>Not now. My own camp is under the hammer, and I am rather attached to it.</source>
+        <translation>ليس الآن. معسكري نفسه تحت المطرقة، وأنا متعلق به إلى حد ما.</translation>
+    </message>
+    <message>
+        <source>Not now. My own walls are being tested, and I intend to pass.</source>
+        <translation>ليس الآن. أسواري نفسها تُختبر، وأنوي أن أنجح في الامتحان.</translation>
+    </message>
+    <message>
+        <source>Not now. They are at my own camp, and I cannot guard two hides at once.</source>
+        <translation>ليس الآن. إنهم عند معسكري نفسه، ولا يمكنني حراسة وكرين في آن واحد.</translation>
+    </message>
+    <message>
+        <source>Not now. They are at my own camp, and I need every blade to make them regret it.</source>
+        <translation>ليس الآن. إنهم عند معسكري نفسه، وأحتاج كل نصل لأجعلهم يندمون.</translation>
+    </message>
+    <message>
+        <source>Not now. They are on my own walls. Kill yours; I will kill mine.</source>
+        <translation>ليس الآن. إنهم على أسواري أنا. اقتل من عندك؛ وسأقتل من عندي.</translation>
+    </message>
+    <message>
+        <source>Not that one. Bad ground. Pick another and I will be there.</source>
+        <translation>ليس ذلك الهدف. أرض سيئة. اختر آخر وسأكون هناك.</translation>
+    </message>
+    <message>
+        <source>Not yet. An attack before the line is ready is a gift to the enemy. Wait for me.</source>
+        <translation>ليس بعد. الهجوم قبل أن يستعد الصف هدية للعدو. انتظرني.</translation>
+    </message>
+    <message>
+        <source>On my way. Keep them busy until my cohorts arrive.</source>
+        <translation>في طريقي. أشغلهم حتى تصل كوهورتاتي.</translation>
+    </message>
+    <message>
+        <source>Send {amount} {resource}, would you? My quartermaster has been embezzling again.</source>
+        <translation>أرسل {amount} {resource}، أتفعل؟ أمين مخزني يختلس مجدداً.</translation>
+    </message>
+    <message>
+        <source>Short on {resource}. Send {amount} and I keep attacking.</source>
+        <translation>نقص في {resource}. أرسل {amount} وسأواصل الهجوم.</translation>
+    </message>
+    <message>
+        <source>Straight at their walls? That is a Roman idea. Give me a reason to come from somewhere else.</source>
+        <translation>مباشرة نحو أسوارهم؟ هذه فكرة رومانية. أعطني سبباً لآتي من مكان آخر.</translation>
+    </message>
+    <message>
+        <source>Take it: {amount} {resource}. A hunter shares the kill when the pack is hungry.</source>
+        <translation>خذها: {amount} {resource}. الصياد يقاسم فريسته حين تجوع الجماعة.</translation>
+    </message>
+    <message>
+        <source>Take it: {amount} {resource}. Do not sit on it.</source>
+        <translation>خذها: {amount} {resource}. لا تدعها تتكدّس عندك.</translation>
+    </message>
+    <message>
+        <source>Take {amount} {resource}. I would rather lose stores than lose an ally who can still surprise them.</source>
+        <translation>خذ {amount} {resource}. أفضّل أن أخسر مخزوناً على أن أخسر حليفاً ما زال قادراً على مفاجأتهم.</translation>
+    </message>
+    <message>
+        <source>The hills do not feed an army. I need {amount} {resource}, or my line thins.</source>
+        <translation>التلال لا تُطعم جيشاً. أحتاج {amount} {resource}، وإلا سيترقّق صفي.</translation>
+    </message>
+    <message>
+        <source>The stores are low: {amount} {resource} would keep the line fed, if you can spare it.</source>
+        <translation>المخازن منخفضة: {amount} {resource} تُبقي الصف مُطعَماً، إن استطعت الاستغناء عنها.</translation>
+    </message>
+    <message>
+        <source>Throw my legion at that? I think not. Rome does not spend cohorts on your whims.</source>
+        <translation>أرمي فيلقي على ذلك؟ لا أظن. روما لا تُنفق كوهورتاتها على أهوائك.</translation>
+    </message>
+    <message>
+        <source>Throw paid spears at a fortified camp? The Council would have my head. No.</source>
+        <translation>أرمي رماحاً مأجورة على معسكر محصّن؟ سيقطع المجلس رأسي. لا.</translation>
+    </message>
+    <message>
+        <source>Very well, it will be held. Rome defends her friends - eventually, and with paperwork.</source>
+        <translation>حسناً، سيُحمى. روما تدافع عن أصدقائها - في النهاية، ومع الكثير من الأوراق.</translation>
+    </message>
+    <message>
+        <source>Very well. My line will advance on it. Not quickly, but it will arrive.</source>
+        <translation>حسناً. صفي سيتقدّم عليه. ليس بسرعة، لكنه سيصل.</translation>
+    </message>
+    <message>
+        <source>Very well: {amount} {resource}. Consider it an investment. I expect the returns in dead Romans.</source>
+        <translation>حسناً: {amount} {resource}. اعتبرها استثماراً. أتوقع العائد رومانياً ميتاً.</translation>
+    </message>
+    <message>
+        <source>Yes. Attacking now. Hit it with me.</source>
+        <translation>نعم. أهاجم الآن. اضربه معي.</translation>
+    </message>
+    <message>
+        <source>Yes. That one. I will come at it from the side nobody guards.</source>
+        <translation>نعم. ذلك الهدف. سآتيه من الجانب الذي لا يحرسه أحد.</translation>
+    </message>
+    <message>
+        <source>You may have {amount} {resource}. I shall note it in the ledger under charitable causes.</source>
+        <translation>يمكنك أن تأخذ {amount} {resource}. سأدوّنها في الدفاتر تحت بند الأعمال الخيرية.</translation>
+    </message>
+    <message>
+        <source>You shall have {amount} {resource}. I laid it by for exactly this kind of day.</source>
+        <translation>ستحصل على {amount} {resource}. كنت قد ادّخرتها تحديداً ليومٍ كهذا.</translation>
+    </message>
+    <message>
+        <source>Your {resource} arrived. Thank you. I shall make it last longer than you expect.</source>
+        <translation>وصل {resource} الخاص بك. شكراً. سأجعله يدوم أطول مما تتوقع.</translation>
+    </message>
+    <message>
+        <source>Your {resource} arrived. Well timed. I shall make sure they feel it.</source>
+        <translation>وصل {resource} الخاص بك. في الوقت المناسب. سأحرص على أن يشعروا به.</translation>
+    </message>
+    <message>
+        <source>Your {resource} came through. My archers eat tonight because of you.</source>
+        <translation>وصل {resource} الخاص بك. رماتي يأكلون الليلة بفضلك.</translation>
+    </message>
+    <message>
+        <source>Your {resource} has arrived. Generous. I shall pretend to be surprised when the Council asks.</source>
+        <translation>وصل {resource} الخاص بك. سخي. سأتظاهر بالدهشة حين يسأل المجلس.</translation>
+    </message>
+    <message>
+        <source>Your {resource} has arrived. Rome thanks you. So, grudgingly, do I.</source>
+        <translation>وصل {resource} الخاص بك. روما تشكرك. وأنا أيضاً، على مضض.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} I can spare without starving the next season. The rest stays in the stores.</source>
+        <translation>{amount} {resource} يمكنني الاستغناء عنها دون أن أُجوّع الموسم القادم. الباقي يبقى في المخازن.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} is all I can spare. Make it count.</source>
+        <translation>{amount} {resource} هو كل ما يمكنني الاستغناء عنه. فلا تُهدره.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} is what the books allow. The rest is committed. Contracts, you understand.</source>
+        <translation>{amount} {resource} هو ما تسمح به الدفاتر. الباقي مُلتزَم به. عقود، تفهم قصدي.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, and not a scrap more. A consul&apos;s generosity has limits, and I have just found them.</source>
+        <translation>{amount} {resource}، ولا شيء أكثر من ذلك. لسخاء القنصل حدود، وقد وجدتها للتو.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, dispatched. Do mention it in your reports; Rome likes to hear of generosity.</source>
+        <translation>{amount} {resource}، أُرسلت. اذكرها في تقاريرك؛ روما تحب أن تسمع عن السخاء.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, dispatched. I shall invoice the Council, not you. Probably.</source>
+        <translation>{amount} {resource}، أُرسلت. سأرسل الفاتورة إلى المجلس، لا إليك. على الأرجح.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, on its way. I hunt light; I can spare it. Do not make me regret carrying less.</source>
+        <translation>{amount} {resource}، في طريقها. أصطاد بحمل خفيف؛ يمكنني الاستغناء عنها. لا تجعلني أندم على حمل أقل.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, sent. Spend it on something they will not expect.</source>
+        <translation>{amount} {resource}، أُرسلت. أنفقها على شيء لن يتوقعوه.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, sent. The granary will not notice; that is what granaries are for.</source>
+        <translation>{amount} {resource}، أُرسلت. لن يلحظ المخزن ذلك؛ فلهذا وُجدت المخازن.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Good. That buys another attack.</source>
+        <translation>{amount} {resource}. جيد. هذا يشتري هجوماً آخر.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. It goes into the stores, and it will be there when we need it.</source>
+        <translation>{amount} {resource}. يذهب إلى المخازن، وسيكون هناك حين نحتاجه.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received and entered in the ledger, on the credit side, for once.</source>
+        <translation>{amount} {resource}. استُلمت ودُوّنت في الدفاتر، في الجانب الدائن، لمرة واحدة.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received, and remembered. The next kill is yours.</source>
+        <translation>{amount} {resource}. استُلمت، ولن أنساها. الفريسة القادمة لك.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received. I shall mention you favourably to the Senate, if it comes up.</source>
+        <translation>{amount} {resource}. استُلمت. سأذكرك بخير أمام مجلس الشيوخ، إن سنحت الفرصة.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Sent. Use it fast.</source>
+        <translation>{amount} {resource}. أُرسلت. استخدمها بسرعة.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Thank you. I will spend it where it hurts them most.</source>
+        <translation>{amount} {resource}. شكراً. سأنفقها حيث تؤلمهم أكثر.</translation>
     </message>
 </context>
 <context>
@@ -3477,6 +3901,26 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>%1 refuses to part with any %2.</source>
         <translation>يرفض %1 التخلي عن أي %2.</translation>
     </message>
+    <message>
+        <source>No ally will join the attack.</source>
+        <translation>لن ينضم أي حليف إلى الهجوم.</translation>
+    </message>
+    <message>
+        <source>No ally can spare men to defend it.</source>
+        <translation>لا يملك أي حليف رجالاً يستغني عنهم للدفاع عنه.</translation>
+    </message>
+    <message>
+        <source>%1 will march on that position.</source>
+        <translation>سيزحف %1 نحو ذلك الموقع.</translation>
+    </message>
+    <message>
+        <source>%1 will send men to hold it.</source>
+        <translation>سيرسل %1 رجالاً لحمايته.</translation>
+    </message>
+    <message>
+        <source>%1 asks you for %2 %3.</source>
+        <translation>%1 يطلب منك %2 %3.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -5257,6 +5701,34 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source> soldiers — </source>
         <translation> جنود — </translation>
+    </message>
+    <message>
+        <source>ALLIED BUILDING</source>
+        <translation>مبنى حليف</translation>
+    </message>
+    <message>
+        <source>ALLIED UNIT</source>
+        <translation>وحدة حليفة</translation>
+    </message>
+    <message>
+        <source>Ally</source>
+        <translation>حليف</translation>
+    </message>
+    <message>
+        <source>Ask allies to attack</source>
+        <translation>اطلب من الحلفاء الهجوم</translation>
+    </message>
+    <message>
+        <source>Ask allies to defend</source>
+        <translation>اطلب من الحلفاء الدفاع</translation>
+    </message>
+    <message>
+        <source>Your allied commanders march on this building if they are willing and have men to spare.</source>
+        <translation>يزحف قادتك الحلفاء على هذا المبنى إن كانوا راغبين ولديهم رجال يستغنون عنهم.</translation>
+    </message>
+    <message>
+        <source>Your allied commanders send men to hold this building if they are willing and have men to spare.</source>
+        <translation>يرسل قادتك الحلفاء رجالاً لحماية هذا المبنى إن كانوا راغبين ولديهم رجال يستغنون عنهم.</translation>
     </message>
 </context>
 <context>
@@ -9756,6 +10228,26 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Not enough %1 to send.</source>
         <translation>لا يكفي %1 للإرسال.</translation>
+    </message>
+    <message>
+        <source>No allied commander fights beside you in this battle.</source>
+        <translation>لا يقاتل معك أي قائد حليف في هذه المعركة.</translation>
+    </message>
+    <message>
+        <source>Your allies cannot be called to this building.</source>
+        <translation>لا يمكن استدعاء حلفائك إلى هذا المبنى.</translation>
+    </message>
+    <message>
+        <source>Your allies are still answering your last call.</source>
+        <translation>ما زال حلفاؤك يستجيبون لندائك الأخير.</translation>
+    </message>
+    <message>
+        <source>Ask your allied commanders to march on this building. Each decides for himself: a warlike commander with men to spare agrees, one whose own camp is threatened refuses.</source>
+        <translation>اطلب من قادتك الحلفاء الزحف على هذا المبنى. كل منهم يقرر بنفسه: القائد المحارب الذي لديه رجال يستغني عنهم يوافق، ومن يتهدد معسكره يرفض.</translation>
+    </message>
+    <message>
+        <source>Ask your allied commanders to send men to hold this building. A cautious commander with men to spare agrees, one whose own camp is threatened refuses.</source>
+        <translation>اطلب من قادتك الحلفاء إرسال رجال لحماية هذا المبنى. القائد الحذر الذي لديه رجال يستغني عنهم يوافق، ومن يتهدد معسكره يرفض.</translation>
     </message>
 </context>
 <context>

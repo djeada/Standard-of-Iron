@@ -6,6 +6,8 @@
 #include <memory>
 #include <vector>
 
+#include "game/command/command.h"
+#include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
@@ -20,6 +22,7 @@
 #include "game/session/simulation_clock.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_commander_doctrine.h"
+#include "game/systems/alliance_board.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
@@ -122,6 +125,83 @@ protected:
       }
     }
     return session;
+  }
+
+  auto make_alliance_match() -> SessionContext& {
+    m_session = std::make_unique<SessionContext>();
+    auto& session = *m_session;
+    session.world().set_presentation_enabled(false);
+    m_scope = std::make_unique<Game::Session::ScopedSession>(session);
+    Game::Map::MapTransformer::setFactoryRegistry(m_factory);
+    Game::Systems::NavGrid::initialize(k_map_size, k_map_size);
+
+    auto& owners = session.owners();
+    owners.register_owner_with_id(k_human, Game::Systems::OwnerType::Player, "you");
+    owners.register_owner_with_id(k_player, Game::Systems::OwnerType::AI, "ally");
+    owners.register_owner_with_id(k_enemy, Game::Systems::OwnerType::AI, "enemy");
+    owners.set_local_player_id(k_human);
+    owners.set_owner_team(k_human, 1);
+    owners.set_owner_team(k_player, 1);
+    owners.set_owner_team(k_enemy, 2);
+
+    Game::Systems::initialize_default_content(session.nations());
+    for (const int owner : {k_human, k_player}) {
+      session.nations().set_player_nation(owner,
+                                          Game::Systems::NationID::RomanRepublic);
+    }
+    session.nations().set_player_nation(k_enemy, Game::Systems::NationID::Carthage);
+
+    Game::Map::MapDefinition map_definition;
+    map_definition.grid.width = k_map_size;
+    map_definition.grid.height = k_map_size;
+    map_definition.grid.tile_size = 1.0F;
+    session.terrain().initialize(map_definition);
+    Game::Systems::register_runtime_systems(session.world());
+
+    for (const int owner : {k_human, k_player, k_enemy}) {
+      auto& economy = session.economy();
+      economy.ensure_owner(owner);
+      economy.set(owner, Game::Systems::ResourceType::Gold, 500);
+      economy.set(owner, Game::Systems::ResourceType::Food, 300);
+    }
+
+    seat_town(
+        session, k_player, k_player_grid, Game::Units::SpawnType::RomanFieldCommander);
+    for (int index = 0; index < 12; ++index) {
+      spawn(session,
+            Game::Units::SpawnType::Spearman,
+            k_player,
+            world_of(k_player_grid + 6 + (index % 4) * 2,
+                     k_player_grid + 6 + (index / 4) * 2));
+    }
+    m_enemy_barracks = spawn(session,
+                             Game::Units::SpawnType::Barracks,
+                             k_enemy,
+                             world_of(k_enemy_grid, k_enemy_grid));
+    m_human_barracks = spawn(session,
+                             Game::Units::SpawnType::Barracks,
+                             k_human,
+                             world_of(k_player_grid, k_enemy_grid));
+
+    if (auto* ai = session.world().get_system<Game::Systems::AISystem>()) {
+      ai->reinitialize();
+      if (auto profile =
+              Game::Systems::AI::doctrine_profile_for_owner(session.world(), k_player);
+          profile.has_value()) {
+        ai->set_ai_profile(k_player, *profile);
+      }
+    }
+    return session;
+  }
+
+  static void run_for(SessionContext& session, double seconds) {
+    const double step = session.clock().tick_seconds();
+    for (double elapsed = 0.0; elapsed < seconds; elapsed += step) {
+      session.clock().advance(step);
+      while (session.clock().consume_tick()) {
+        session.world().update(static_cast<float>(step));
+      }
+    }
   }
 
   static void scatter_resources(Game::Map::MapDefinition& map, int grid_x, int grid_z) {
@@ -234,7 +314,11 @@ protected:
     return Game::Mission::CommanderMessageTrigger::HeavyLosses;
   }
 
+  static constexpr int k_human = 1;
+
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory;
+  EntityID m_enemy_barracks = 0;
+  EntityID m_human_barracks = 0;
   std::unique_ptr<SessionContext> m_session;
   std::unique_ptr<Game::Session::ScopedSession> m_scope;
   Game::Mission::CommanderVoiceLibrary m_library;
@@ -300,4 +384,62 @@ TEST_F(CommanderVoiceSkirmishTest, HannibalAnnouncesHisOwnAttackOnThePlayer) {
   EXPECT_TRUE(cue.id.startsWith(QStringLiteral("3:hannibal.enemy.attack_launched.")))
       << cue.id.toStdString();
   EXPECT_FALSE(cue.text.isEmpty());
+}
+
+TEST_F(CommanderVoiceSkirmishTest,
+       AnAllyAnswersACallToAttackAndMarchesOnTheNamedBarracks) {
+  auto& session = make_alliance_match();
+  ASSERT_NE(m_enemy_barracks, 0U);
+  run_for(session, 8.0);
+
+  ASSERT_TRUE(Game::Command::dispatch_immediately(
+      session.world(),
+      Game::Command::Source::LocalPlayer,
+      k_human,
+      Game::Command::AllyCall{.target = m_enemy_barracks,
+                              .kind = Game::Systems::AllyCallKind::Attack}));
+  run_for(session, 1.0);
+  const auto answers = session.alliance().take_call_answers();
+  ASSERT_EQ(answers.size(), 1U) << "the one AI ally answers, and only once";
+  EXPECT_EQ(answers.front().ally, k_player);
+  EXPECT_EQ(answers.front().requester, k_human);
+  ASSERT_EQ(answers.front().verdict, Game::Systems::AllyCallVerdict::Accepted)
+      << "Marcellus with a dozen idle spearmen should agree to attack, got verdict "
+      << static_cast<int>(answers.front().verdict);
+
+  auto* ai = session.world().get_system<Game::Systems::AISystem>();
+  ASSERT_NE(ai, nullptr);
+  bool marched = false;
+  const double step = 1.0;
+  for (double waited = 0.0; waited < 40.0 && !marched; waited += step) {
+    run_for(session, step);
+    const auto* plan = ai->plan_for(k_player);
+    marched = plan != nullptr && plan->wave.committed &&
+              plan->wave.target_id == m_enemy_barracks;
+  }
+  EXPECT_TRUE(marched) << "the ally agreed but never sent a wave at the barracks";
+}
+
+TEST_F(CommanderVoiceSkirmishTest, ACallOnTheWrongSideIsRejectedBeforeAnyAllyHearsIt) {
+  auto& session = make_alliance_match();
+  EXPECT_FALSE(Game::Command::dispatch_immediately(
+      session.world(),
+      Game::Command::Source::LocalPlayer,
+      k_human,
+      Game::Command::AllyCall{.target = m_enemy_barracks,
+                              .kind = Game::Systems::AllyCallKind::Defend}))
+      << "nobody defends the enemy's barracks";
+  EXPECT_FALSE(Game::Command::dispatch_immediately(
+      session.world(),
+      Game::Command::Source::LocalPlayer,
+      k_human,
+      Game::Command::AllyCall{.target = m_human_barracks,
+                              .kind = Game::Systems::AllyCallKind::Attack}))
+      << "nobody attacks the player's own barracks";
+  EXPECT_TRUE(Game::Command::dispatch_immediately(
+      session.world(),
+      Game::Command::Source::LocalPlayer,
+      k_human,
+      Game::Command::AllyCall{.target = m_human_barracks,
+                              .kind = Game::Systems::AllyCallKind::Defend}));
 }

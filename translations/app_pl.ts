@@ -257,6 +257,10 @@
         <source>Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.</source>
         <translation>Ludzie, których te koszary wciąż mają. Każdy rekrut zużywa ludzi swojego oddziału; cywile wychowani w Domu dostarczają więcej.</translation>
     </message>
+    <message>
+        <source>Ask allies to defend</source>
+        <translation>Poproś sojuszników o obronę</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -797,6 +801,18 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     <message>
         <source>ALLY</source>
         <translation>SOJUSZNIK</translation>
+    </message>
+    <message>
+        <source>Decline</source>
+        <translation>Odmów</translation>
+    </message>
+    <message>
+        <source>Send %1 %2</source>
+        <translation>Wyślij %1 %2</translation>
+    </message>
+    <message>
+        <source>Give it from your stores. Sending needs a marketplace.</source>
+        <translation>Wyślij to ze swoich zapasów. Wysyłka wymaga targowiska.</translation>
     </message>
 </context>
 <context>
@@ -1675,6 +1691,414 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     <message>
         <source>Your men are falling in rows. That is what happens when you fight a wall&apos;s war against a river.</source>
         <translation>Twoi ludzie padają rzędami. Tak bywa, gdy prowadzi się wojnę muru przeciwko rzece.</translation>
+    </message>
+    <message>
+        <source>A request, between allies: {amount} {resource}. Italy is generous with enemies and stingy with bread.</source>
+        <translation>Prośba między sojusznikami: {amount} {resource}. Italia jest hojna dla wrogów, a skąpa dla chleba.</translation>
+    </message>
+    <message>
+        <source>Agreed. I have wanted an excuse. My legion moves on it now.</source>
+        <translation>Zgoda. Szukałem pretekstu. Mój legion rusza na to już teraz.</translation>
+    </message>
+    <message>
+        <source>Agreed. I shall move on it in good order. Be ready when they break.</source>
+        <translation>Zgoda. Ruszę na to w dobrym porządku. Bądź gotów, gdy się załamią.</translation>
+    </message>
+    <message>
+        <source>An attack on that position. Agreed. It looks profitable, and I do so like profit.</source>
+        <translation>Atak na tę pozycję. Zgoda. Wygląda zyskownie, a ja tak lubię zysk.</translation>
+    </message>
+    <message>
+        <source>An attack? Splendid. My cohorts will march on it. Do keep up.</source>
+        <translation>Atak? Wspaniale. Moje kohorty na to ruszą. Postaraj się nadążyć.</translation>
+    </message>
+    <message>
+        <source>Certainly not. My {resource} is for Roman purposes. Yours, I fear, are merely yours.</source>
+        <translation>Z pewnością nie. Moje zapasy surowca {resource} służą sprawom Rzymu. Twoje, obawiam się, służą tylko tobie.</translation>
+    </message>
+    <message>
+        <source>Charge a camp head-on? That is how hunters become meat. Find another way and I will follow it.</source>
+        <translation>Szarżować na obóz wprost? Tak łowcy stają się mięsem. Znajdź inną drogę, a pójdę za tobą.</translation>
+    </message>
+    <message>
+        <source>Consider it covered. If they come for it, they will find a trap rather than a prize.</source>
+        <translation>Uznaj to za osłonięte. Jeśli po to przyjdą, znajdą pułapkę, nie łup.</translation>
+    </message>
+    <message>
+        <source>Defend it yourself. A consul does not stand guard over an ally&apos;s barn.</source>
+        <translation>Broń tego sam. Konsul nie stoi na straży sojuszniczej stodoły.</translation>
+    </message>
+    <message>
+        <source>Good choice; I was looking at it too. Hit it from the front. I will be the part they did not see.</source>
+        <translation>Dobry wybór; też na to patrzyłem. Uderz od frontu. Ja będę tą częścią, której nie zobaczą.</translation>
+    </message>
+    <message>
+        <source>Good target. I will move on it from the ridges. Strike when you hear my arrows.</source>
+        <translation>Dobry cel. Podejdę od grzbietów wzgórz. Uderzaj, gdy usłyszysz moje strzały.</translation>
+    </message>
+    <message>
+        <source>Good. I have been itching for that one. Cohorts, go.</source>
+        <translation>Dobrze. Rwałem się do tego. Kohorty, naprzód.</translation>
+    </message>
+    <message>
+        <source>Got your {resource}. Thanks. Back to work.</source>
+        <translation>Dostałem to, co przysłałeś: {resource}. Dzięki. Wracam do roboty.</translation>
+    </message>
+    <message>
+        <source>Hold your own building. Mine are costly enough without adopting yours.</source>
+        <translation>Broń własnego budynku. Moje są wystarczająco kosztowne bez przygarniania twoich.</translation>
+    </message>
+    <message>
+        <source>I am running short of {resource}. {amount} would see me through. I do not ask lightly.</source>
+        <translation>Brakuje mi surowca {resource}. {amount} by mi wystarczyło. Nie proszę bez powodu.</translation>
+    </message>
+    <message>
+        <source>I am short of {resource}. {amount} would keep this army moving, and a moving army is a winning one.</source>
+        <translation>Brakuje mi surowca {resource}. {amount} utrzymałoby tę armię w marszu, a armia w marszu to armia, która wygrywa.</translation>
+    </message>
+    <message>
+        <source>I am short. {amount} {resource} would keep my archers in the field. If you can spare it, send it.</source>
+        <translation>Brak mi zapasów. {amount} {resource} utrzymałoby moich łuczników w polu. Jeśli możesz to zebrać, wyślij.</translation>
+    </message>
+    <message>
+        <source>I am under attack myself. My men are paid to guard my walls first, and I have read the contract.</source>
+        <translation>Sam jestem atakowany. Moi ludzie są opłaceni, by najpierw bronić moich murów, a umowę czytałem uważnie.</translation>
+    </message>
+    <message>
+        <source>I can spare {amount} {resource}, no more. The rest feeds my archers, and hungry archers miss.</source>
+        <translation>Mogę wygospodarować {amount} {resource}, nie więcej. Reszta żywi łuczników, a głodni łucznicy chybiają.</translation>
+    </message>
+    <message>
+        <source>I can spare {amount} {resource}. The rest crosses the mountains with me; that is not negotiable.</source>
+        <translation>Mogę wygospodarować {amount} {resource}. Reszta przechodzi ze mną przez góry; to nie podlega negocjacjom.</translation>
+    </message>
+    <message>
+        <source>I do not guard buildings. I win battles, and then the buildings guard themselves.</source>
+        <translation>Nie pilnuję budynków. Wygrywam bitwy, a potem budynki pilnują się same.</translation>
+    </message>
+    <message>
+        <source>I do not sit behind walls. Hold it yourself or let it burn.</source>
+        <translation>Nie siedzę za murami. Broń tego sam albo niech płonie.</translation>
+    </message>
+    <message>
+        <source>I find myself short: {amount} {resource}. A loan, between allies. I will repay it, in principle.</source>
+        <translation>Brakuje mi: {amount} {resource}. Pożyczka, między sojusznikami. Oddam ją, przynajmniej w teorii.</translation>
+    </message>
+    <message>
+        <source>I find myself temporarily short: {amount} {resource}. A loan, naturally. Rome always repays, in her own time.</source>
+        <translation>Chwilowo brakuje mi: {amount} {resource}. Pożyczka, rzecz jasna. Rzym zawsze oddaje - we własnym czasie.</translation>
+    </message>
+    <message>
+        <source>I have no cohorts to spare. They are either dead or very busy, and I cannot spare the busy ones.</source>
+        <translation>Nie mam kohort do oddania. Są albo martwe, albo bardzo zajęte, a zajętych nie mogę sobie odpuścić.</translation>
+    </message>
+    <message>
+        <source>I have no men to send. I am rebuilding, and rebuilding takes the time it takes.</source>
+        <translation>Nie mam ludzi do wysłania. Odbudowuję się, a odbudowa trwa tyle, ile musi.</translation>
+    </message>
+    <message>
+        <source>I have no men to spare. The last of them are guarding what little I have left to lose.</source>
+        <translation>Nie mam ludzi do oddania. Ostatni z nich pilnują tego niewiele, co mi zostało do stracenia.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to give. I came over the Alps; I carry what the mules could.</source>
+        <translation>Brak zapasów: {resource}. Przyszedłem przez Alpy; niosę to, co uniosły muły.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to give. Out here we live on what we carry, and I am carrying very little.</source>
+        <translation>Brak zapasów: {resource}. Tutaj żyjemy z tego, co niesiemy, a niosę bardzo niewiele.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. Even a consul&apos;s stores run dry, though mine run dry with dignity.</source>
+        <translation>Brak zapasów: {resource}. Nawet zapasy konsula w końcu wysychają, choć moje wysychają z godnością.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. My stores are thinner than my patience, and that is saying something.</source>
+        <translation>Brak zapasów: {resource}. Moje zapasy są cieńsze niż moja cierpliwość, a to już coś znaczy.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. The stores are thin, and I do not empty them for anyone.</source>
+        <translation>Brak zapasów: {resource}. Zapasy są skromne i nie opróżniam ich dla nikogo.</translation>
+    </message>
+    <message>
+        <source>I have too few bows left to spare any. Ask me again once I have rebuilt.</source>
+        <translation>Mam zbyt mało łuków, by którykolwiek oddać. Zapytaj ponownie, gdy się odbuduję.</translation>
+    </message>
+    <message>
+        <source>I have too few men left for anything clever, and too few for anything stupid. Wait.</source>
+        <translation>Mam zbyt mało ludzi na coś sprytnego i zbyt mało na coś głupiego. Czekaj.</translation>
+    </message>
+    <message>
+        <source>I need {amount} {resource}. Now, if you can. My cohorts are running on nothing.</source>
+        <translation>Potrzebuję: {amount} {resource}. Teraz, jeśli możesz. Moje kohorty żyją z niczego.</translation>
+    </message>
+    <message>
+        <source>I shall send a cohort to hold it. Do try not to lose it before they arrive; it would embarrass us both.</source>
+        <translation>Wyślę kohortę, by tego bronić. Postaraj się tego nie stracić, zanim dotrą; zawstydziłoby to nas obu.</translation>
+    </message>
+    <message>
+        <source>I will garrison it. Every man I send is billed to the war, so the war had better be grateful.</source>
+        <translation>Obsadzę to garnizonem. Każdy wysłany człowiek idzie na rachunek wojny, więc niech wojna będzie wdzięczna.</translation>
+    </message>
+    <message>
+        <source>I will hunt that one with you. Drive them toward me and I will do the rest.</source>
+        <translation>Zapoluję na to razem z tobą. Pędź ich w moją stronę, a ja zrobię resztę.</translation>
+    </message>
+    <message>
+        <source>I will not pin my archers to a wall. They die standing still. Hold it yourself.</source>
+        <translation>Nie przypnę łuczników do muru. Giną, stojąc w miejscu. Broń tego sam.</translation>
+    </message>
+    <message>
+        <source>I will not scatter my cohorts to guard every building. Hold that one; I shall hold the rest.</source>
+        <translation>Nie rozproszę kohort, by pilnować każdego budynku. Broń tego jednego; ja utrzymam resztę.</translation>
+    </message>
+    <message>
+        <source>I will send a cohort to hold it. Slowly, in order. It will still be there when they arrive.</source>
+        <translation>Wyślę kohortę, by tego bronić. Powoli, w szyku. Wciąż tam będzie, gdy dotrą.</translation>
+    </message>
+    <message>
+        <source>I will send archers to cover it. They will be on the high ground before the enemy sees them.</source>
+        <translation>Wyślę łuczników, by to osłonić. Będą na wyżej położonym terenie, zanim wróg ich dostrzeże.</translation>
+    </message>
+    <message>
+        <source>I will send men to hold it. Not in front; where the enemy thinks the ground is empty.</source>
+        <translation>Wyślę ludzi, by tego bronić. Nie z przodu; tam, gdzie wróg myśli, że teren jest pusty.</translation>
+    </message>
+    <message>
+        <source>Men are coming to hold it. Fast.</source>
+        <translation>Ludzie idą to bronić. Szybko.</translation>
+    </message>
+    <message>
+        <source>Men are going to hold it. Mercenaries, fully paid. Do try not to let it burn; I am insuring it.</source>
+        <translation>Ludzie idą to bronić. Najemnicy, w pełni opłaceni. Postaraj się nie dać temu spłonąć; to jest ubezpieczone.</translation>
+    </message>
+    <message>
+        <source>Men are on their way to hold it. Keep the enemy busy in front; my archers will do the rest from the side.</source>
+        <translation>Ludzie są w drodze, by tego bronić. Zajmij wroga od frontu; moi łucznicy zrobią resztę z boku.</translation>
+    </message>
+    <message>
+        <source>Men are on their way to hold it. They will dig in; that is what they are good at.</source>
+        <translation>Ludzie są w drodze, by tego bronić. Okopią się; w tym są dobrzy.</translation>
+    </message>
+    <message>
+        <source>My spears will march on it. They are paid for the season; they may as well earn it.</source>
+        <translation>Moje oszczepy na to ruszą. Są opłacone na cały sezon; niech więc na to zapracują.</translation>
+    </message>
+    <message>
+        <source>My stores of {resource} are empty. {amount} would keep my men paid and, more to the point, fighting.</source>
+        <translation>Moje zapasy surowca {resource} są puste. {amount} utrzymałoby moich ludzi opłaconych i, co ważniejsze, walczących.</translation>
+    </message>
+    <message>
+        <source>My {resource} stays where it is. Charity is for temples. Come back with a better offer.</source>
+        <translation>Mój zapas surowca {resource} zostaje, gdzie jest. Miłosierdzie jest dla świątyń. Wróć z lepszą ofertą.</translation>
+    </message>
+    <message>
+        <source>No men to send. They are all dead or bleeding. Give me time.</source>
+        <translation>Nie mam ludzi do wysłania. Wszyscy martwi albo krwawią. Daj mi czas.</translation>
+    </message>
+    <message>
+        <source>No {resource} left. I spent it on the last attack. It was worth it.</source>
+        <translation>{resource}: nic nie zostało. Wydałem to na ostatni atak. Było warto.</translation>
+    </message>
+    <message>
+        <source>No {resource}. Not because I cannot - because I need it for something you will enjoy watching later.</source>
+        <translation>Brak: {resource}. Nie dlatego, że nie mogę - potrzebuję tego na coś, co z przyjemnością obejrzysz później.</translation>
+    </message>
+    <message>
+        <source>No. I have {resource}, and I am keeping it. Ask me again when you have earned it in the field.</source>
+        <translation>Nie. Mam {resource} i to zatrzymuję. Zapytaj ponownie, gdy zasłużysz na to w polu.</translation>
+    </message>
+    <message>
+        <source>No. My {resource} goes to my cohorts. Win something first.</source>
+        <translation>Nie. Mój zapas surowca {resource} idzie do moich kohort. Najpierw coś wygraj.</translation>
+    </message>
+    <message>
+        <source>No. My {resource} is counted against the winter. Ask again after the harvest.</source>
+        <translation>Nie. Mój zapas surowca {resource} jest liczony na poczet zimy. Zapytaj ponownie po żniwach.</translation>
+    </message>
+    <message>
+        <source>Not now. My own camp is under the hammer, and I am rather attached to it.</source>
+        <translation>Nie teraz. Mój własny obóz jest pod młotem, a jestem doń raczej przywiązany.</translation>
+    </message>
+    <message>
+        <source>Not now. My own walls are being tested, and I intend to pass.</source>
+        <translation>Nie teraz. Moje własne mury są wystawiane na próbę, a ja zamierzam ją zdać.</translation>
+    </message>
+    <message>
+        <source>Not now. They are at my own camp, and I cannot guard two hides at once.</source>
+        <translation>Nie teraz. Oni są przy moim obozie, a nie mogę pilnować dwóch legowisk naraz.</translation>
+    </message>
+    <message>
+        <source>Not now. They are at my own camp, and I need every blade to make them regret it.</source>
+        <translation>Nie teraz. Oni są przy moim obozie, a potrzebuję każdego ostrza, by tego pożałowali.</translation>
+    </message>
+    <message>
+        <source>Not now. They are on my own walls. Kill yours; I will kill mine.</source>
+        <translation>Nie teraz. Oni są na moich murach. Zabij swoich; ja zabiję swoich.</translation>
+    </message>
+    <message>
+        <source>Not that one. Bad ground. Pick another and I will be there.</source>
+        <translation>Nie ten. Zły teren. Wybierz inny, a tam będę.</translation>
+    </message>
+    <message>
+        <source>Not yet. An attack before the line is ready is a gift to the enemy. Wait for me.</source>
+        <translation>Jeszcze nie. Atak, zanim linia jest gotowa, to prezent dla wroga. Zaczekaj na mnie.</translation>
+    </message>
+    <message>
+        <source>On my way. Keep them busy until my cohorts arrive.</source>
+        <translation>Już idę. Zajmij ich, aż dotrą moje kohorty.</translation>
+    </message>
+    <message>
+        <source>Send {amount} {resource}, would you? My quartermaster has been embezzling again.</source>
+        <translation>Wyślij {amount} {resource}, dobrze? Mój kwatermistrz znowu malwersuje.</translation>
+    </message>
+    <message>
+        <source>Short on {resource}. Send {amount} and I keep attacking.</source>
+        <translation>Brak mi: {resource}. Wyślij {amount}, a będę dalej atakować.</translation>
+    </message>
+    <message>
+        <source>Straight at their walls? That is a Roman idea. Give me a reason to come from somewhere else.</source>
+        <translation>Prosto na ich mury? To rzymski pomysł. Daj mi powód, by nadejść skądinąd.</translation>
+    </message>
+    <message>
+        <source>Take it: {amount} {resource}. A hunter shares the kill when the pack is hungry.</source>
+        <translation>Weź to: {amount} {resource}. Łowca dzieli się zdobyczą, gdy watacha głoduje.</translation>
+    </message>
+    <message>
+        <source>Take it: {amount} {resource}. Do not sit on it.</source>
+        <translation>Weź to: {amount} {resource}. Nie siedź na tym.</translation>
+    </message>
+    <message>
+        <source>Take {amount} {resource}. I would rather lose stores than lose an ally who can still surprise them.</source>
+        <translation>Weź: {amount} {resource}. Wolę stracić zapasy niż stracić sojusznika, który wciąż potrafi ich zaskoczyć.</translation>
+    </message>
+    <message>
+        <source>The hills do not feed an army. I need {amount} {resource}, or my line thins.</source>
+        <translation>Wzgórza nie wyżywią armii. Potrzebuję: {amount} {resource}, albo moja linia się przerzedzi.</translation>
+    </message>
+    <message>
+        <source>The stores are low: {amount} {resource} would keep the line fed, if you can spare it.</source>
+        <translation>Zapasy są niskie: {amount} {resource} utrzymałoby linię wykarmioną, jeśli możesz to wygospodarować.</translation>
+    </message>
+    <message>
+        <source>Throw my legion at that? I think not. Rome does not spend cohorts on your whims.</source>
+        <translation>Rzucić mój legion na to? Nie sądzę. Rzym nie wydaje kohort na twoje zachcianki.</translation>
+    </message>
+    <message>
+        <source>Throw paid spears at a fortified camp? The Council would have my head. No.</source>
+        <translation>Rzucić opłacone oszczepy na ufortyfikowany obóz? Rada kazałaby mi ściąć głowę. Nie.</translation>
+    </message>
+    <message>
+        <source>Very well, it will be held. Rome defends her friends - eventually, and with paperwork.</source>
+        <translation>Dobrze, będzie broniony. Rzym broni swoich przyjaciół - w końcu, i z papierkową robotą.</translation>
+    </message>
+    <message>
+        <source>Very well. My line will advance on it. Not quickly, but it will arrive.</source>
+        <translation>Dobrze. Moja linia ruszy na to. Niespiesznie, ale dotrze.</translation>
+    </message>
+    <message>
+        <source>Very well: {amount} {resource}. Consider it an investment. I expect the returns in dead Romans.</source>
+        <translation>Niech będzie: {amount} {resource}. Uznaj to za inwestycję. Zwrotu oczekuję w martwych Rzymianach.</translation>
+    </message>
+    <message>
+        <source>Yes. Attacking now. Hit it with me.</source>
+        <translation>Tak. Atakuję już teraz. Uderz na to razem ze mną.</translation>
+    </message>
+    <message>
+        <source>Yes. That one. I will come at it from the side nobody guards.</source>
+        <translation>Tak. Ten. Podejdę od strony, której nikt nie pilnuje.</translation>
+    </message>
+    <message>
+        <source>You may have {amount} {resource}. I shall note it in the ledger under charitable causes.</source>
+        <translation>Możesz mieć: {amount} {resource}. Zapiszę to w księgach pod działalnością charytatywną.</translation>
+    </message>
+    <message>
+        <source>You shall have {amount} {resource}. I laid it by for exactly this kind of day.</source>
+        <translation>Dostaniesz: {amount} {resource}. Odłożyłem to właśnie na taki dzień.</translation>
+    </message>
+    <message>
+        <source>Your {resource} arrived. Thank you. I shall make it last longer than you expect.</source>
+        <translation>Zapasy dotarły: {resource}. Dziękuję. Sprawię, że wystarczą na dłużej, niż się spodziewasz.</translation>
+    </message>
+    <message>
+        <source>Your {resource} arrived. Well timed. I shall make sure they feel it.</source>
+        <translation>Zapasy dotarły: {resource}. W samą porę. Dopilnuję, żeby to poczuli.</translation>
+    </message>
+    <message>
+        <source>Your {resource} came through. My archers eat tonight because of you.</source>
+        <translation>Zapasy dotarły: {resource}. Moi łucznicy dziś zjedzą dzięki tobie.</translation>
+    </message>
+    <message>
+        <source>Your {resource} has arrived. Generous. I shall pretend to be surprised when the Council asks.</source>
+        <translation>Zapasy dotarły: {resource}. Hojnie. Udam zaskoczenie, gdy Rada zapyta.</translation>
+    </message>
+    <message>
+        <source>Your {resource} has arrived. Rome thanks you. So, grudgingly, do I.</source>
+        <translation>Zapasy dotarły: {resource}. Rzym ci dziękuje. Ja - z ociąganiem - również.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} I can spare without starving the next season. The rest stays in the stores.</source>
+        <translation>{amount} {resource} mogę wygospodarować, nie głodząc przyszłego sezonu. Reszta zostaje w zapasach.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} is all I can spare. Make it count.</source>
+        <translation>{amount} {resource} to wszystko, co mogę wygospodarować. Niech się liczy.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} is what the books allow. The rest is committed. Contracts, you understand.</source>
+        <translation>{amount} {resource} - tyle pozwalają księgi. Reszta jest już zobowiązana. Kontrakty, rozumiesz.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, and not a scrap more. A consul&apos;s generosity has limits, and I have just found them.</source>
+        <translation>{amount} {resource}, i ani odrobiny więcej. Hojność konsula ma granice, a ja właśnie je znalazłem.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, dispatched. Do mention it in your reports; Rome likes to hear of generosity.</source>
+        <translation>{amount} {resource}, wysłano. Wspomnij o tym w raportach; Rzym lubi słyszeć o hojności.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, dispatched. I shall invoice the Council, not you. Probably.</source>
+        <translation>{amount} {resource}, wysłano. Rachunek wystawię Radzie, nie tobie. Prawdopodobnie.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, on its way. I hunt light; I can spare it. Do not make me regret carrying less.</source>
+        <translation>{amount} {resource}, w drodze. Poluję lekko; mogę to oddać. Nie każ mi żałować, że niosę mniej.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, sent. Spend it on something they will not expect.</source>
+        <translation>{amount} {resource}, wysłano. Wydaj to na coś, czego się nie spodziewają.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, sent. The granary will not notice; that is what granaries are for.</source>
+        <translation>{amount} {resource}, wysłano. Spichlerz tego nie zauważy; po to właśnie są spichlerze.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Good. That buys another attack.</source>
+        <translation>{amount} {resource}. Dobrze. To kupuje kolejny atak.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. It goes into the stores, and it will be there when we need it.</source>
+        <translation>{amount} {resource}. Trafia do zapasów i będzie tam, gdy będzie potrzebne.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received and entered in the ledger, on the credit side, for once.</source>
+        <translation>{amount} {resource}. Przyjęto i wpisano w księgi, tym razem po stronie zysków.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received, and remembered. The next kill is yours.</source>
+        <translation>{amount} {resource}. Przyjęto i zapamiętano. Następny łup należy do ciebie.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received. I shall mention you favourably to the Senate, if it comes up.</source>
+        <translation>{amount} {resource}. Przyjęto. Wspomnę o tobie przychylnie Senatowi, jeśli wypadnie okazja.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Sent. Use it fast.</source>
+        <translation>{amount} {resource}. Wysłano. Wykorzystaj to szybko.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Thank you. I will spend it where it hurts them most.</source>
+        <translation>{amount} {resource}. Dziękuję. Wydam to tam, gdzie zaboli ich najbardziej.</translation>
     </message>
 </context>
 <context>
@@ -3477,6 +3901,26 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <source>%1 refuses to part with any %2.</source>
         <translation>%1 odmawia oddania %2.</translation>
     </message>
+    <message>
+        <source>No ally will join the attack.</source>
+        <translation>Żaden sojusznik nie przyłączy się do ataku.</translation>
+    </message>
+    <message>
+        <source>No ally can spare men to defend it.</source>
+        <translation>Żaden sojusznik nie ma ludzi do obrony.</translation>
+    </message>
+    <message>
+        <source>%1 will march on that position.</source>
+        <translation>%1 wyruszy na tę pozycję.</translation>
+    </message>
+    <message>
+        <source>%1 will send men to hold it.</source>
+        <translation>%1 wyśle ludzi, by tego bronić.</translation>
+    </message>
+    <message>
+        <source>%1 asks you for %2 %3.</source>
+        <translation>%1 prosi cię o %2 %3.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -5248,6 +5692,34 @@ Każdy rekrut kosztuje ludzi swojego oddziału; rezerwa w koszarach podnosi limi
     <message>
         <source>%1 wounded</source>
         <translation>rannych: %1</translation>
+    </message>
+    <message>
+        <source>ALLIED BUILDING</source>
+        <translation>SOJUSZNICZY BUDYNEK</translation>
+    </message>
+    <message>
+        <source>ALLIED UNIT</source>
+        <translation>SOJUSZNICZA JEDNOSTKA</translation>
+    </message>
+    <message>
+        <source>Ally</source>
+        <translation>Sojusznik</translation>
+    </message>
+    <message>
+        <source>Ask allies to attack</source>
+        <translation>Poproś sojuszników o atak</translation>
+    </message>
+    <message>
+        <source>Ask allies to defend</source>
+        <translation>Poproś sojuszników o obronę</translation>
+    </message>
+    <message>
+        <source>Your allied commanders march on this building if they are willing and have men to spare.</source>
+        <translation>Twoi sojuszniczy dowódcy ruszą na ten budynek, jeśli są chętni i mają ludzi do wysłania.</translation>
+    </message>
+    <message>
+        <source>Your allied commanders send men to hold this building if they are willing and have men to spare.</source>
+        <translation>Twoi sojuszniczy dowódcy wyślą ludzi, by bronić tego budynku, jeśli są chętni i mają ludzi do wysłania.</translation>
     </message>
 </context>
 <context>
@@ -9747,6 +10219,26 @@ Szerokie pole widzenia i trwała kotwica osady</translation>
     <message>
         <source>Not enough %1 to send.</source>
         <translation>Za mało %1 do wysłania.</translation>
+    </message>
+    <message>
+        <source>No allied commander fights beside you in this battle.</source>
+        <translation>Żaden sojuszniczy dowódca nie walczy u twojego boku w tej bitwie.</translation>
+    </message>
+    <message>
+        <source>Your allies cannot be called to this building.</source>
+        <translation>Twoich sojuszników nie można wezwać do tego budynku.</translation>
+    </message>
+    <message>
+        <source>Your allies are still answering your last call.</source>
+        <translation>Twoi sojusznicy wciąż odpowiadają na twoje poprzednie wezwanie.</translation>
+    </message>
+    <message>
+        <source>Ask your allied commanders to march on this building. Each decides for himself: a warlike commander with men to spare agrees, one whose own camp is threatened refuses.</source>
+        <translation>Poproś sojuszniczych dowódców, by ruszyli na ten budynek. Każdy decyduje sam: wojowniczy dowódca z ludźmi do oddania się zgadza, ten, którego własny obóz jest zagrożony, odmawia.</translation>
+    </message>
+    <message>
+        <source>Ask your allied commanders to send men to hold this building. A cautious commander with men to spare agrees, one whose own camp is threatened refuses.</source>
+        <translation>Poproś sojuszniczych dowódców, by wysłali ludzi na obronę tego budynku. Ostrożny dowódca z ludźmi do oddania się zgadza, ten, którego własny obóz jest zagrożony, odmawia.</translation>
     </message>
 </context>
 <context>

@@ -11,6 +11,7 @@
 #include "../../map/map_definition.h"
 #include "../../units/spawn_type.h"
 #include "../../units/troop_type.h"
+#include "../alliance_board.h"
 #include "../resource_types.h"
 #include "../site_keep_out.h"
 
@@ -238,6 +239,15 @@ struct AllyCall {
   int strength = 0;
 };
 
+struct AllyPledge {
+  Game::Systems::AllyCallKind kind = Game::Systems::AllyCallKind::Defend;
+  int requester = 0;
+  Engine::Core::EntityID target = 0;
+  float pos_x = 0.0F;
+  float pos_z = 0.0F;
+  float expires_at = 0.0F;
+};
+
 inline constexpr float k_ally_base_threat_radius = 25.0F;
 inline constexpr int k_ally_base_threat_minimum = 2;
 inline constexpr float k_ally_front_from_home = 45.0F;
@@ -247,6 +257,7 @@ struct AISnapshot {
   int player_id = 0;
   std::vector<AllyCall> allies_under_attack;
   std::vector<AllyCall> ally_attacks;
+  std::vector<AllyPledge> pledges;
   std::vector<EntitySnapshot> friendly_units;
   std::vector<ContactSnapshot> visible_enemies;
   std::vector<ContactSnapshot> strategic_objectives;

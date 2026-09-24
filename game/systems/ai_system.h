@@ -123,6 +123,9 @@ private:
     std::unordered_map<Engine::Core::EntityID, float> unmerged_building_attacks;
 
     AI::KnownObjectives known_objectives;
+
+    std::vector<AI::AllyPledge> pledges;
+    float last_plea_at = -1.0e9F;
   };
 
   static constexpr std::uint64_t k_decision_latency_updates = 6;
@@ -163,6 +166,12 @@ private:
 
   void process_results(Engine::Core::World& world);
   void answer_ally_requests(Engine::Core::World& world);
+  void answer_ally_calls(Engine::Core::World& world);
+  static void remember_called_target(Engine::Core::World& world,
+                                     AIInstance& ai,
+                                     const AllyCallRequest& call);
+  void plead_with_allies(Engine::Core::World& world);
+  float m_last_any_plea_at = -1.0e9F;
 
   static void merge_building_attacks(const AIInstance& ai, AI::AIContext& context);
 

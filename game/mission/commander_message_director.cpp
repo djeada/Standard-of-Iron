@@ -171,6 +171,8 @@ void CommanderMessageDirector::add_mission_rules(
 void CommanderMessageDirector::add_bank_rules(const CommanderMessageScript& script,
                                               const MissionPositionToWorld& to_world) {
   int next_group = 0;
+  const int speaker_count = static_cast<int>(script.speakers.size());
+  std::map<QString, int> bank_users;
   for (const auto& speaker : script.speakers) {
     const auto* bank = script.voices->bank_for(speaker.troop_type);
     if (bank == nullptr) {
@@ -178,7 +180,14 @@ void CommanderMessageDirector::add_bank_rules(const CommanderMessageScript& scri
                  << speaker.owner_id << ")";
       continue;
     }
-    m_chatter_budget[speaker.owner_id] = bank->chatter_per_match;
+    int budget = bank->chatter_per_match;
+    if (speaker_count > k_commander_chatter_speakers_at_full_budget) {
+      const int shared =
+          budget * k_commander_chatter_speakers_at_full_budget / speaker_count;
+      budget = std::min(budget, std::max(k_commander_chatter_min_budget, shared));
+    }
+    m_chatter_budget[speaker.owner_id] = budget;
+    const int variant_offset = bank_users[speaker.troop_type]++;
     for (const auto& line : bank->lines) {
       if (line.relationship != speaker.relationship || is_muted(script.policy, line)) {
         continue;
@@ -189,6 +198,7 @@ void CommanderMessageDirector::add_bank_rules(const CommanderMessageScript& scri
         Rule rule = make_rule(authored, to_world);
         rule.generic = true;
         rule.variant_group = group;
+        rule.variant_offset = variant_offset;
         rule.speaker_owner_id = speaker.owner_id;
         rule.cue.speaker_owner_id = speaker.owner_id;
         rule.cue.relationship = commander_relationship_name(speaker.relationship);
@@ -210,6 +220,7 @@ void CommanderMessageDirector::clear() {
   m_elapsed = 0.0F;
   m_last_line_ended_at = -1.0e9F;
   m_outcome_reached = false;
+  m_chatter_shown_at.clear();
   m_chatter_budget.clear();
   m_chatter_spent.clear();
   m_speaker_trigger_fired_at.clear();
@@ -311,6 +322,9 @@ void CommanderMessageDirector::unsubscribe() {
 }
 
 void CommanderMessageDirector::notify_fact(const CommanderMessageFact& fact) {
+  if (m_rules.empty()) {
+    return;
+  }
   const std::lock_guard<std::mutex> lock(m_inbox_mutex);
   m_inbox.push_back(fact);
 }
@@ -413,6 +427,10 @@ auto CommanderMessageDirector::rule_matches(
   if (condition.nation.has_value() && *condition.nation != fact.nation) {
     return false;
   }
+  if (condition.reason.has_value() &&
+      (!fact.reason.has_value() || *condition.reason != *fact.reason)) {
+    return false;
+  }
   if (condition.final_wave.has_value() &&
       (!fact.final_wave.has_value() || *condition.final_wave != *fact.final_wave)) {
     return false;
@@ -480,7 +498,11 @@ auto CommanderMessageDirector::rule_is_available(std::size_t index) const -> boo
 auto CommanderMessageDirector::pick_variant(const std::vector<std::size_t>& group) const
     -> std::optional<std::size_t> {
 
-  for (const std::size_t index : group) {
+  const std::size_t start =
+      static_cast<std::size_t>(std::max(0, m_rules[group.front()].variant_offset)) %
+      group.size();
+  for (std::size_t step = 0; step < group.size(); ++step) {
+    const std::size_t index = group[(start + step) % group.size()];
     if (!m_rules[index].fired) {
       return index;
     }
@@ -544,9 +566,7 @@ void CommanderMessageDirector::queue_fact(const CommanderMessageFact& fact) {
     return;
   }
   if (fact.trigger == CommanderMessageTrigger::MissionStart) {
-    for (const std::size_t index : generic_choices) {
-      queue_rule(index);
-    }
+    queue_intros(generic_choices);
     return;
   }
   std::size_t best = generic_choices.front();
@@ -559,10 +579,38 @@ void CommanderMessageDirector::queue_fact(const CommanderMessageFact& fact) {
       best = index;
     }
   }
-  queue_rule(best);
+  queue_rule(best, &fact);
 }
 
-void CommanderMessageDirector::queue_rule(std::size_t index) {
+void CommanderMessageDirector::queue_intros(const std::vector<std::size_t>& choices) {
+  int enemies = 0;
+  int allies = 0;
+  for (const std::size_t index : choices) {
+    const bool ally = m_rules[index].cue.relationship ==
+                      commander_relationship_name(CommanderRelationship::Ally);
+    int& used = ally ? allies : enemies;
+    const int limit =
+        ally ? k_commander_intro_ally_limit : k_commander_intro_enemy_limit;
+    if (used >= limit) {
+      continue;
+    }
+    ++used;
+    queue_rule(index);
+  }
+}
+
+auto CommanderMessageDirector::chatter_window_open(bool involves_local) const -> bool {
+  const int limit = involves_local ? k_commander_chatter_per_window
+                                   : k_commander_bystander_chatter_per_window;
+  const auto recent = std::count_if(
+      m_chatter_shown_at.begin(), m_chatter_shown_at.end(), [this](float shown_at) {
+        return m_elapsed - shown_at < k_commander_chatter_window_seconds;
+      });
+  return recent < limit;
+}
+
+void CommanderMessageDirector::queue_rule(std::size_t index,
+                                          const CommanderMessageFact* fact) {
   auto& rule = m_rules[index];
   if (is_queued(index)) {
     return;
@@ -573,12 +621,27 @@ void CommanderMessageDirector::queue_rule(std::size_t index) {
     m_speaker_trigger_fired_at[{.owner_id = rule.speaker_owner_id,
                                 .trigger = rule.authored.trigger}] = m_elapsed;
   }
-  m_pending.push_back(
-      {.rule_index = index,
-       .delay_remaining = std::max(0.0F, rule.authored.delay),
-       .expires_in = is_chatter(rule)
-                         ? std::optional<float>{k_commander_chatter_expiry_seconds}
-                         : std::nullopt});
+  Pending pending{.rule_index = index,
+                  .delay_remaining = std::max(0.0F, rule.authored.delay)};
+  if (is_chatter(rule)) {
+    pending.expires_in = k_commander_chatter_expiry_seconds;
+  } else if (commander_message_trigger_is_dialogue(rule.authored.trigger)) {
+    pending.expires_in = k_commander_dialogue_expiry_seconds;
+  }
+  if (fact != nullptr) {
+    pending.involves_local = fact->subject_owner_id == m_local_owner_id ||
+                             fact->actor_owner_id == m_local_owner_id;
+    if (fact->amount > 0 || !fact->resource.isEmpty()) {
+      CommanderMessageCue cue = rule.cue;
+      cue.amount = fact->amount;
+      cue.resource = fact->resource;
+      if (rule.authored.trigger == CommanderMessageTrigger::AllyNeedsResources) {
+        cue.request_owner_id = rule.speaker_owner_id;
+      }
+      pending.cue = std::move(cue);
+    }
+  }
+  m_pending.push_back(std::move(pending));
 }
 
 auto CommanderMessageDirector::update(float delta_time) -> bool {
@@ -647,7 +710,8 @@ auto CommanderMessageDirector::promote_next() -> bool {
       continue;
     }
     const auto& rule = m_rules[it->rule_index];
-    if (!gap_open && is_chatter(rule)) {
+    if (is_chatter(rule) &&
+        (!gap_open || (rule.generic && !chatter_window_open(it->involves_local)))) {
       continue;
     }
     if (best == m_pending.end() ||
@@ -662,10 +726,16 @@ auto CommanderMessageDirector::promote_next() -> bool {
   auto& rule = m_rules[best->rule_index];
   rule.fired = true;
   rule.last_fired_at = m_elapsed;
-  if (rule.generic && is_chatter(rule) && rule.speaker_owner_id >= 0) {
-    ++m_chatter_spent[rule.speaker_owner_id];
+  if (rule.generic && is_chatter(rule)) {
+    m_chatter_shown_at.push_back(m_elapsed);
+    std::erase_if(m_chatter_shown_at, [this](float shown_at) {
+      return m_elapsed - shown_at >= k_commander_chatter_window_seconds;
+    });
+    if (rule.speaker_owner_id >= 0) {
+      ++m_chatter_spent[rule.speaker_owner_id];
+    }
   }
-  m_active = rule.cue;
+  m_active = best->cue.has_value() ? *best->cue : rule.cue;
   m_active_rule = best->rule_index;
   m_active_remaining = m_active->duration;
   m_pending.erase(best);
@@ -703,6 +773,11 @@ auto CommanderMessageDirector::serialize() const -> QJsonObject {
   state["fired"] = fired;
   state["last_fired"] = last_fired;
   state["chatter_spent"] = spent;
+  QJsonArray window;
+  for (const float shown_at : m_chatter_shown_at) {
+    window.append(static_cast<double>(shown_at));
+  }
+  state["chatter_window"] = window;
   state["elapsed"] = static_cast<double>(m_elapsed);
   state["last_line_ended_at"] = static_cast<double>(m_last_line_ended_at);
   state["outcome_reached"] = m_outcome_reached;
@@ -715,7 +790,12 @@ void CommanderMessageDirector::restore(const QJsonObject& state) {
   m_active_rule.reset();
   m_active_remaining = 0.0F;
   m_chatter_spent.clear();
+  m_chatter_shown_at.clear();
   m_speaker_trigger_fired_at.clear();
+
+  for (const auto value : state["chatter_window"].toArray()) {
+    m_chatter_shown_at.push_back(static_cast<float>(value.toDouble()));
+  }
 
   m_elapsed = static_cast<float>(state["elapsed"].toDouble(0.0));
   m_last_line_ended_at =

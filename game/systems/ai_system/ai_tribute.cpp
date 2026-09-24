@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "ai_utils.h"
+
 namespace Game::Systems::AI {
 
 namespace {
@@ -98,6 +100,63 @@ auto answer_ally_request(const AIStrategyConfig& config,
                                        : AllyTributeVerdict::RefusedShort;
   }
   return answer;
+}
+
+auto pick_ally_plea(const ResourceAmounts& own_stock,
+                    const ResourceAmounts& ally_stock) -> std::optional<AllyPleaNeed> {
+  constexpr float k_desperate_share = 0.35F;
+  std::optional<AllyPleaNeed> best;
+  float best_share = k_desperate_share;
+  for (const auto type : {ResourceType::Food,
+                          ResourceType::Wood,
+                          ResourceType::Gold,
+                          ResourceType::Stone,
+                          ResourceType::Iron}) {
+    const int need = reserve_for(type, 0.0F);
+    const int held = std::max(0, own_stock.get(type));
+    const float share = static_cast<float>(held) / static_cast<float>(need);
+    if (share >= best_share) {
+      continue;
+    }
+    const int shortfall = need - held;
+    const int amount = std::clamp((shortfall + 24) / 25 * 25, 50, 200);
+    if (ally_stock.get(type) < amount + need) {
+      continue;
+    }
+    best_share = share;
+    best = AllyPleaNeed{.resource = type, .amount = amount};
+  }
+  return best;
+}
+
+auto answer_ally_call(const AIStrategyConfig& config,
+                      const AllyCallStanding& standing,
+                      AllyCallKind kind) -> AllyCallVerdict {
+  constexpr float k_willing = 0.35F;
+  if (standing.under_threat) {
+    return AllyCallVerdict::RefusedUnderThreat;
+  }
+  const auto& p = config.personality;
+  if (kind == AllyCallKind::Defend) {
+    if (standing.spare_units < k_ally_call_min_defenders) {
+      return AllyCallVerdict::RefusedNoArmy;
+    }
+    const float willing = 0.50F + 0.40F * p.defense - 0.20F * p.aggression +
+                          0.5F * strategy_bias(config.strategy);
+    return willing >= k_willing ? AllyCallVerdict::Accepted
+                                : AllyCallVerdict::RefusedUnwilling;
+  }
+  if (!commander_may_attack(config) ||
+      (config.posture == AIPosture::Garrison && config.doctrine == nullptr)) {
+    return AllyCallVerdict::RefusedUnwilling;
+  }
+  if (standing.spare_units < k_ally_call_min_attackers) {
+    return AllyCallVerdict::RefusedNoArmy;
+  }
+  const float willing = 0.40F + 0.50F * p.aggression - 0.20F * p.defense -
+                        0.5F * strategy_bias(config.strategy);
+  return willing >= k_willing ? AllyCallVerdict::Accepted
+                              : AllyCallVerdict::RefusedUnwilling;
 }
 
 } // namespace Game::Systems::AI

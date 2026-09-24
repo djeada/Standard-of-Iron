@@ -372,6 +372,216 @@
       "variants": [
         "Your commander has fallen. I know that grief. Keep your men together; scattered men are what the enemy is hunting."
       ]
+    },
+    {
+      "id": "hasdrubal.ally.request_granted",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_granted",
+        "subject": "player",
+        "actor": "self",
+        "reason": "full",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource}, on its way. I hunt light; I can spare it. Do not make me regret carrying less.",
+        "Take it: {amount} {resource}. A hunter shares the kill when the pack is hungry."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.request_partial",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_granted",
+        "subject": "player",
+        "actor": "self",
+        "reason": "partial",
+        "cooldown": 1
+      },
+      "variants": [
+        "I can spare {amount} {resource}, no more. The rest feeds my archers, and hungry archers miss."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.request_refused_short",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "short",
+        "cooldown": 1
+      },
+      "variants": [
+        "I have no {resource} to give. Out here we live on what we carry, and I am carrying very little."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.request_refused_stingy",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "stingy",
+        "cooldown": 1
+      },
+      "variants": [
+        "No. I have {resource}, and I am keeping it. Ask me again when you have earned it in the field."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.call_accepted_defend",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_accepted",
+        "subject": "player",
+        "actor": "self",
+        "kind": "defend",
+        "cooldown": 1
+      },
+      "variants": [
+        "I will send archers to cover it. They will be on the high ground before the enemy sees them.",
+        "Men are on their way to hold it. Keep the enemy busy in front; my archers will do the rest from the side."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.call_accepted_attack",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_accepted",
+        "subject": "player",
+        "actor": "self",
+        "kind": "attack",
+        "cooldown": 1
+      },
+      "variants": [
+        "Good target. I will move on it from the ridges. Strike when you hear my arrows.",
+        "I will hunt that one with you. Drive them toward me and I will do the rest."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.call_refused_threat",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "under_threat",
+        "cooldown": 1
+      },
+      "variants": [
+        "Not now. They are at my own camp, and I cannot guard two hides at once."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.call_refused_no_army",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "no_army",
+        "cooldown": 1
+      },
+      "variants": [
+        "I have too few bows left to spare any. Ask me again once I have rebuilt."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.call_refused_attack",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "kind": "attack",
+        "reason": "unwilling",
+        "cooldown": 1
+      },
+      "variants": [
+        "Charge a camp head-on? That is how hunters become meat. Find another way and I will follow it."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.call_refused_defend",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "kind": "defend",
+        "reason": "unwilling",
+        "cooldown": 1
+      },
+      "variants": [
+        "I will not pin my archers to a wall. They die standing still. Hold it yourself."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.needs_resources",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "once": false,
+      "trigger": {
+        "type": "ally_needs_resources",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 1
+      },
+      "duration": 20.0,
+      "variants": [
+        "I am short. {amount} {resource} would keep my archers in the field. If you can spare it, send it.",
+        "The hills do not feed an army. I need {amount} {resource}, or my line thins."
+      ]
+    },
+    {
+      "id": "hasdrubal.ally.gift_received",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "gift_received",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource}. Received, and remembered. The next kill is yours.",
+        "Your {resource} came through. My archers eat tonight because of you."
+      ]
     }
   ]
 }

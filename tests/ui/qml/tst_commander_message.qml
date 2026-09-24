@@ -82,6 +82,50 @@ TestCase {
         source.destroy();
     }
 
+    function test_a_plain_line_offers_no_request_buttons() {
+        var source = testCase.makeSource("Hold the flank.");
+        var panel = testCase.makePanel(source);
+        var row = findChild(panel, "commanderRequestRow");
+        verify(row !== null, "the request row was not created");
+        compare(row.visible, false, "a line that asks for nothing must not show Send/Decline");
+        panel.destroy();
+        source.destroy();
+    }
+
+    function test_an_ally_plea_offers_send_and_decline_and_both_dismiss() {
+        var source = testCase.makeSource("Send me 100 food.");
+        source.relationship = "ally";
+        source.request = {
+            "owner_id": 3,
+            "owner_name": "CPU III",
+            "resource": "food",
+            "resource_label": "food",
+            "amount": 100
+        };
+        var panel = testCase.makePanel(source);
+        var row = findChild(panel, "commanderRequestRow");
+        compare(row.visible, true, "an ally plea must show the Send/Decline row");
+        var send = findChild(panel, "commanderRequestSend");
+        verify(send.text.indexOf("100") >= 0, "the Send button must name the amount: " + send.text);
+        answeredSpy.target = panel;
+        answeredSpy.clear();
+        panel.answer_request(false);
+        compare(answeredSpy.count, 1);
+        compare(answeredSpy.signalArguments[0][0], false);
+        compare(source.dismissed, 1, "declining must close the message");
+        panel.answer_request(true);
+        compare(answeredSpy.signalArguments[1][0], true);
+        compare(source.dismissed, 2, "sending must close the message");
+        panel.destroy();
+        source.destroy();
+    }
+
+    SignalSpy {
+        id: answeredSpy
+
+        signalName: "requestAnswered"
+    }
+
     Component {
         id: sourceComponent
 
@@ -96,8 +140,11 @@ TestCase {
             property string speaker_role: "Commander"
             property real duration: 4
             property bool holds_outcome: false
+            property var request: ({})
+            property int dismissed: 0
 
             function dismiss() {
+                dismissed += 1;
             }
         }
     }

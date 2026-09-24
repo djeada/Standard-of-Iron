@@ -239,6 +239,10 @@ void encode(QJsonObject& o, const AllyTribute& p) {
   o["amount"] = p.amount;
   o["request"] = p.request;
 }
+void encode(QJsonObject& o, const AllyCall& p) {
+  o["target"] = id_to_json(p.target);
+  o["kind"] = enum_value(p.kind);
+}
 void encode(QJsonObject& o, const UseCommanderAbility& p) {
   o["commander"] = id_to_json(p.commander);
   o["ability"] = enum_value(p.ability);
@@ -404,6 +408,11 @@ auto decode<AllyTribute>(Reader& r) -> AllyTribute {
   p.amount = static_cast<int>(r.number("amount"));
   p.request = r.boolean("request");
   return p;
+}
+template <>
+auto decode<AllyCall>(Reader& r) -> AllyCall {
+  return {.target = r.id("target"),
+          .kind = r.enumeration("kind", Game::Systems::AllyCallKind::Attack)};
 }
 template <>
 auto decode<UseCommanderAbility>(Reader& r) -> UseCommanderAbility {

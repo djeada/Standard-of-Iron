@@ -257,6 +257,10 @@
         <source>Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.</source>
         <translation>Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.</translation>
     </message>
+    <message>
+        <source>Ask allies to defend</source>
+        <translation>Ask allies to defend</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -797,6 +801,18 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>ALLY</source>
         <translation>ALLY</translation>
+    </message>
+    <message>
+        <source>Decline</source>
+        <translation>Decline</translation>
+    </message>
+    <message>
+        <source>Send %1 %2</source>
+        <translation>Send %1 %2</translation>
+    </message>
+    <message>
+        <source>Give it from your stores. Sending needs a marketplace.</source>
+        <translation>Give it from your stores. Sending needs a marketplace.</translation>
     </message>
 </context>
 <context>
@@ -1675,6 +1691,414 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Your men are falling in rows. That is what happens when you fight a wall&apos;s war against a river.</source>
         <translation>Your men are falling in rows. That is what happens when you fight a wall&apos;s war against a river.</translation>
+    </message>
+    <message>
+        <source>A request, between allies: {amount} {resource}. Italy is generous with enemies and stingy with bread.</source>
+        <translation>A request, between allies: {amount} {resource}. Italy is generous with enemies and stingy with bread.</translation>
+    </message>
+    <message>
+        <source>Agreed. I have wanted an excuse. My legion moves on it now.</source>
+        <translation>Agreed. I have wanted an excuse. My legion moves on it now.</translation>
+    </message>
+    <message>
+        <source>Agreed. I shall move on it in good order. Be ready when they break.</source>
+        <translation>Agreed. I shall move on it in good order. Be ready when they break.</translation>
+    </message>
+    <message>
+        <source>An attack on that position. Agreed. It looks profitable, and I do so like profit.</source>
+        <translation>An attack on that position. Agreed. It looks profitable, and I do so like profit.</translation>
+    </message>
+    <message>
+        <source>An attack? Splendid. My cohorts will march on it. Do keep up.</source>
+        <translation>An attack? Splendid. My cohorts will march on it. Do keep up.</translation>
+    </message>
+    <message>
+        <source>Certainly not. My {resource} is for Roman purposes. Yours, I fear, are merely yours.</source>
+        <translation>Certainly not. My {resource} is for Roman purposes. Yours, I fear, are merely yours.</translation>
+    </message>
+    <message>
+        <source>Charge a camp head-on? That is how hunters become meat. Find another way and I will follow it.</source>
+        <translation>Charge a camp head-on? That is how hunters become meat. Find another way and I will follow it.</translation>
+    </message>
+    <message>
+        <source>Consider it covered. If they come for it, they will find a trap rather than a prize.</source>
+        <translation>Consider it covered. If they come for it, they will find a trap rather than a prize.</translation>
+    </message>
+    <message>
+        <source>Defend it yourself. A consul does not stand guard over an ally&apos;s barn.</source>
+        <translation>Defend it yourself. A consul does not stand guard over an ally&apos;s barn.</translation>
+    </message>
+    <message>
+        <source>Good choice; I was looking at it too. Hit it from the front. I will be the part they did not see.</source>
+        <translation>Good choice; I was looking at it too. Hit it from the front. I will be the part they did not see.</translation>
+    </message>
+    <message>
+        <source>Good target. I will move on it from the ridges. Strike when you hear my arrows.</source>
+        <translation>Good target. I will move on it from the ridges. Strike when you hear my arrows.</translation>
+    </message>
+    <message>
+        <source>Good. I have been itching for that one. Cohorts, go.</source>
+        <translation>Good. I have been itching for that one. Cohorts, go.</translation>
+    </message>
+    <message>
+        <source>Got your {resource}. Thanks. Back to work.</source>
+        <translation>Got your {resource}. Thanks. Back to work.</translation>
+    </message>
+    <message>
+        <source>Hold your own building. Mine are costly enough without adopting yours.</source>
+        <translation>Hold your own building. Mine are costly enough without adopting yours.</translation>
+    </message>
+    <message>
+        <source>I am running short of {resource}. {amount} would see me through. I do not ask lightly.</source>
+        <translation>I am running short of {resource}. {amount} would see me through. I do not ask lightly.</translation>
+    </message>
+    <message>
+        <source>I am short of {resource}. {amount} would keep this army moving, and a moving army is a winning one.</source>
+        <translation>I am short of {resource}. {amount} would keep this army moving, and a moving army is a winning one.</translation>
+    </message>
+    <message>
+        <source>I am short. {amount} {resource} would keep my archers in the field. If you can spare it, send it.</source>
+        <translation>I am short. {amount} {resource} would keep my archers in the field. If you can spare it, send it.</translation>
+    </message>
+    <message>
+        <source>I am under attack myself. My men are paid to guard my walls first, and I have read the contract.</source>
+        <translation>I am under attack myself. My men are paid to guard my walls first, and I have read the contract.</translation>
+    </message>
+    <message>
+        <source>I can spare {amount} {resource}, no more. The rest feeds my archers, and hungry archers miss.</source>
+        <translation>I can spare {amount} {resource}, no more. The rest feeds my archers, and hungry archers miss.</translation>
+    </message>
+    <message>
+        <source>I can spare {amount} {resource}. The rest crosses the mountains with me; that is not negotiable.</source>
+        <translation>I can spare {amount} {resource}. The rest crosses the mountains with me; that is not negotiable.</translation>
+    </message>
+    <message>
+        <source>I do not guard buildings. I win battles, and then the buildings guard themselves.</source>
+        <translation>I do not guard buildings. I win battles, and then the buildings guard themselves.</translation>
+    </message>
+    <message>
+        <source>I do not sit behind walls. Hold it yourself or let it burn.</source>
+        <translation>I do not sit behind walls. Hold it yourself or let it burn.</translation>
+    </message>
+    <message>
+        <source>I find myself short: {amount} {resource}. A loan, between allies. I will repay it, in principle.</source>
+        <translation>I find myself short: {amount} {resource}. A loan, between allies. I will repay it, in principle.</translation>
+    </message>
+    <message>
+        <source>I find myself temporarily short: {amount} {resource}. A loan, naturally. Rome always repays, in her own time.</source>
+        <translation>I find myself temporarily short: {amount} {resource}. A loan, naturally. Rome always repays, in her own time.</translation>
+    </message>
+    <message>
+        <source>I have no cohorts to spare. They are either dead or very busy, and I cannot spare the busy ones.</source>
+        <translation>I have no cohorts to spare. They are either dead or very busy, and I cannot spare the busy ones.</translation>
+    </message>
+    <message>
+        <source>I have no men to send. I am rebuilding, and rebuilding takes the time it takes.</source>
+        <translation>I have no men to send. I am rebuilding, and rebuilding takes the time it takes.</translation>
+    </message>
+    <message>
+        <source>I have no men to spare. The last of them are guarding what little I have left to lose.</source>
+        <translation>I have no men to spare. The last of them are guarding what little I have left to lose.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to give. I came over the Alps; I carry what the mules could.</source>
+        <translation>I have no {resource} to give. I came over the Alps; I carry what the mules could.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to give. Out here we live on what we carry, and I am carrying very little.</source>
+        <translation>I have no {resource} to give. Out here we live on what we carry, and I am carrying very little.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. Even a consul&apos;s stores run dry, though mine run dry with dignity.</source>
+        <translation>I have no {resource} to spare. Even a consul&apos;s stores run dry, though mine run dry with dignity.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. My stores are thinner than my patience, and that is saying something.</source>
+        <translation>I have no {resource} to spare. My stores are thinner than my patience, and that is saying something.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. The stores are thin, and I do not empty them for anyone.</source>
+        <translation>I have no {resource} to spare. The stores are thin, and I do not empty them for anyone.</translation>
+    </message>
+    <message>
+        <source>I have too few bows left to spare any. Ask me again once I have rebuilt.</source>
+        <translation>I have too few bows left to spare any. Ask me again once I have rebuilt.</translation>
+    </message>
+    <message>
+        <source>I have too few men left for anything clever, and too few for anything stupid. Wait.</source>
+        <translation>I have too few men left for anything clever, and too few for anything stupid. Wait.</translation>
+    </message>
+    <message>
+        <source>I need {amount} {resource}. Now, if you can. My cohorts are running on nothing.</source>
+        <translation>I need {amount} {resource}. Now, if you can. My cohorts are running on nothing.</translation>
+    </message>
+    <message>
+        <source>I shall send a cohort to hold it. Do try not to lose it before they arrive; it would embarrass us both.</source>
+        <translation>I shall send a cohort to hold it. Do try not to lose it before they arrive; it would embarrass us both.</translation>
+    </message>
+    <message>
+        <source>I will garrison it. Every man I send is billed to the war, so the war had better be grateful.</source>
+        <translation>I will garrison it. Every man I send is billed to the war, so the war had better be grateful.</translation>
+    </message>
+    <message>
+        <source>I will hunt that one with you. Drive them toward me and I will do the rest.</source>
+        <translation>I will hunt that one with you. Drive them toward me and I will do the rest.</translation>
+    </message>
+    <message>
+        <source>I will not pin my archers to a wall. They die standing still. Hold it yourself.</source>
+        <translation>I will not pin my archers to a wall. They die standing still. Hold it yourself.</translation>
+    </message>
+    <message>
+        <source>I will not scatter my cohorts to guard every building. Hold that one; I shall hold the rest.</source>
+        <translation>I will not scatter my cohorts to guard every building. Hold that one; I shall hold the rest.</translation>
+    </message>
+    <message>
+        <source>I will send a cohort to hold it. Slowly, in order. It will still be there when they arrive.</source>
+        <translation>I will send a cohort to hold it. Slowly, in order. It will still be there when they arrive.</translation>
+    </message>
+    <message>
+        <source>I will send archers to cover it. They will be on the high ground before the enemy sees them.</source>
+        <translation>I will send archers to cover it. They will be on the high ground before the enemy sees them.</translation>
+    </message>
+    <message>
+        <source>I will send men to hold it. Not in front; where the enemy thinks the ground is empty.</source>
+        <translation>I will send men to hold it. Not in front; where the enemy thinks the ground is empty.</translation>
+    </message>
+    <message>
+        <source>Men are coming to hold it. Fast.</source>
+        <translation>Men are coming to hold it. Fast.</translation>
+    </message>
+    <message>
+        <source>Men are going to hold it. Mercenaries, fully paid. Do try not to let it burn; I am insuring it.</source>
+        <translation>Men are going to hold it. Mercenaries, fully paid. Do try not to let it burn; I am insuring it.</translation>
+    </message>
+    <message>
+        <source>Men are on their way to hold it. Keep the enemy busy in front; my archers will do the rest from the side.</source>
+        <translation>Men are on their way to hold it. Keep the enemy busy in front; my archers will do the rest from the side.</translation>
+    </message>
+    <message>
+        <source>Men are on their way to hold it. They will dig in; that is what they are good at.</source>
+        <translation>Men are on their way to hold it. They will dig in; that is what they are good at.</translation>
+    </message>
+    <message>
+        <source>My spears will march on it. They are paid for the season; they may as well earn it.</source>
+        <translation>My spears will march on it. They are paid for the season; they may as well earn it.</translation>
+    </message>
+    <message>
+        <source>My stores of {resource} are empty. {amount} would keep my men paid and, more to the point, fighting.</source>
+        <translation>My stores of {resource} are empty. {amount} would keep my men paid and, more to the point, fighting.</translation>
+    </message>
+    <message>
+        <source>My {resource} stays where it is. Charity is for temples. Come back with a better offer.</source>
+        <translation>My {resource} stays where it is. Charity is for temples. Come back with a better offer.</translation>
+    </message>
+    <message>
+        <source>No men to send. They are all dead or bleeding. Give me time.</source>
+        <translation>No men to send. They are all dead or bleeding. Give me time.</translation>
+    </message>
+    <message>
+        <source>No {resource} left. I spent it on the last attack. It was worth it.</source>
+        <translation>No {resource} left. I spent it on the last attack. It was worth it.</translation>
+    </message>
+    <message>
+        <source>No {resource}. Not because I cannot - because I need it for something you will enjoy watching later.</source>
+        <translation>No {resource}. Not because I cannot - because I need it for something you will enjoy watching later.</translation>
+    </message>
+    <message>
+        <source>No. I have {resource}, and I am keeping it. Ask me again when you have earned it in the field.</source>
+        <translation>No. I have {resource}, and I am keeping it. Ask me again when you have earned it in the field.</translation>
+    </message>
+    <message>
+        <source>No. My {resource} goes to my cohorts. Win something first.</source>
+        <translation>No. My {resource} goes to my cohorts. Win something first.</translation>
+    </message>
+    <message>
+        <source>No. My {resource} is counted against the winter. Ask again after the harvest.</source>
+        <translation>No. My {resource} is counted against the winter. Ask again after the harvest.</translation>
+    </message>
+    <message>
+        <source>Not now. My own camp is under the hammer, and I am rather attached to it.</source>
+        <translation>Not now. My own camp is under the hammer, and I am rather attached to it.</translation>
+    </message>
+    <message>
+        <source>Not now. My own walls are being tested, and I intend to pass.</source>
+        <translation>Not now. My own walls are being tested, and I intend to pass.</translation>
+    </message>
+    <message>
+        <source>Not now. They are at my own camp, and I cannot guard two hides at once.</source>
+        <translation>Not now. They are at my own camp, and I cannot guard two hides at once.</translation>
+    </message>
+    <message>
+        <source>Not now. They are at my own camp, and I need every blade to make them regret it.</source>
+        <translation>Not now. They are at my own camp, and I need every blade to make them regret it.</translation>
+    </message>
+    <message>
+        <source>Not now. They are on my own walls. Kill yours; I will kill mine.</source>
+        <translation>Not now. They are on my own walls. Kill yours; I will kill mine.</translation>
+    </message>
+    <message>
+        <source>Not that one. Bad ground. Pick another and I will be there.</source>
+        <translation>Not that one. Bad ground. Pick another and I will be there.</translation>
+    </message>
+    <message>
+        <source>Not yet. An attack before the line is ready is a gift to the enemy. Wait for me.</source>
+        <translation>Not yet. An attack before the line is ready is a gift to the enemy. Wait for me.</translation>
+    </message>
+    <message>
+        <source>On my way. Keep them busy until my cohorts arrive.</source>
+        <translation>On my way. Keep them busy until my cohorts arrive.</translation>
+    </message>
+    <message>
+        <source>Send {amount} {resource}, would you? My quartermaster has been embezzling again.</source>
+        <translation>Send {amount} {resource}, would you? My quartermaster has been embezzling again.</translation>
+    </message>
+    <message>
+        <source>Short on {resource}. Send {amount} and I keep attacking.</source>
+        <translation>Short on {resource}. Send {amount} and I keep attacking.</translation>
+    </message>
+    <message>
+        <source>Straight at their walls? That is a Roman idea. Give me a reason to come from somewhere else.</source>
+        <translation>Straight at their walls? That is a Roman idea. Give me a reason to come from somewhere else.</translation>
+    </message>
+    <message>
+        <source>Take it: {amount} {resource}. A hunter shares the kill when the pack is hungry.</source>
+        <translation>Take it: {amount} {resource}. A hunter shares the kill when the pack is hungry.</translation>
+    </message>
+    <message>
+        <source>Take it: {amount} {resource}. Do not sit on it.</source>
+        <translation>Take it: {amount} {resource}. Do not sit on it.</translation>
+    </message>
+    <message>
+        <source>Take {amount} {resource}. I would rather lose stores than lose an ally who can still surprise them.</source>
+        <translation>Take {amount} {resource}. I would rather lose stores than lose an ally who can still surprise them.</translation>
+    </message>
+    <message>
+        <source>The hills do not feed an army. I need {amount} {resource}, or my line thins.</source>
+        <translation>The hills do not feed an army. I need {amount} {resource}, or my line thins.</translation>
+    </message>
+    <message>
+        <source>The stores are low: {amount} {resource} would keep the line fed, if you can spare it.</source>
+        <translation>The stores are low: {amount} {resource} would keep the line fed, if you can spare it.</translation>
+    </message>
+    <message>
+        <source>Throw my legion at that? I think not. Rome does not spend cohorts on your whims.</source>
+        <translation>Throw my legion at that? I think not. Rome does not spend cohorts on your whims.</translation>
+    </message>
+    <message>
+        <source>Throw paid spears at a fortified camp? The Council would have my head. No.</source>
+        <translation>Throw paid spears at a fortified camp? The Council would have my head. No.</translation>
+    </message>
+    <message>
+        <source>Very well, it will be held. Rome defends her friends - eventually, and with paperwork.</source>
+        <translation>Very well, it will be held. Rome defends her friends - eventually, and with paperwork.</translation>
+    </message>
+    <message>
+        <source>Very well. My line will advance on it. Not quickly, but it will arrive.</source>
+        <translation>Very well. My line will advance on it. Not quickly, but it will arrive.</translation>
+    </message>
+    <message>
+        <source>Very well: {amount} {resource}. Consider it an investment. I expect the returns in dead Romans.</source>
+        <translation>Very well: {amount} {resource}. Consider it an investment. I expect the returns in dead Romans.</translation>
+    </message>
+    <message>
+        <source>Yes. Attacking now. Hit it with me.</source>
+        <translation>Yes. Attacking now. Hit it with me.</translation>
+    </message>
+    <message>
+        <source>Yes. That one. I will come at it from the side nobody guards.</source>
+        <translation>Yes. That one. I will come at it from the side nobody guards.</translation>
+    </message>
+    <message>
+        <source>You may have {amount} {resource}. I shall note it in the ledger under charitable causes.</source>
+        <translation>You may have {amount} {resource}. I shall note it in the ledger under charitable causes.</translation>
+    </message>
+    <message>
+        <source>You shall have {amount} {resource}. I laid it by for exactly this kind of day.</source>
+        <translation>You shall have {amount} {resource}. I laid it by for exactly this kind of day.</translation>
+    </message>
+    <message>
+        <source>Your {resource} arrived. Thank you. I shall make it last longer than you expect.</source>
+        <translation>Your {resource} arrived. Thank you. I shall make it last longer than you expect.</translation>
+    </message>
+    <message>
+        <source>Your {resource} arrived. Well timed. I shall make sure they feel it.</source>
+        <translation>Your {resource} arrived. Well timed. I shall make sure they feel it.</translation>
+    </message>
+    <message>
+        <source>Your {resource} came through. My archers eat tonight because of you.</source>
+        <translation>Your {resource} came through. My archers eat tonight because of you.</translation>
+    </message>
+    <message>
+        <source>Your {resource} has arrived. Generous. I shall pretend to be surprised when the Council asks.</source>
+        <translation>Your {resource} has arrived. Generous. I shall pretend to be surprised when the Council asks.</translation>
+    </message>
+    <message>
+        <source>Your {resource} has arrived. Rome thanks you. So, grudgingly, do I.</source>
+        <translation>Your {resource} has arrived. Rome thanks you. So, grudgingly, do I.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} I can spare without starving the next season. The rest stays in the stores.</source>
+        <translation>{amount} {resource} I can spare without starving the next season. The rest stays in the stores.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} is all I can spare. Make it count.</source>
+        <translation>{amount} {resource} is all I can spare. Make it count.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} is what the books allow. The rest is committed. Contracts, you understand.</source>
+        <translation>{amount} {resource} is what the books allow. The rest is committed. Contracts, you understand.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, and not a scrap more. A consul&apos;s generosity has limits, and I have just found them.</source>
+        <translation>{amount} {resource}, and not a scrap more. A consul&apos;s generosity has limits, and I have just found them.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, dispatched. Do mention it in your reports; Rome likes to hear of generosity.</source>
+        <translation>{amount} {resource}, dispatched. Do mention it in your reports; Rome likes to hear of generosity.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, dispatched. I shall invoice the Council, not you. Probably.</source>
+        <translation>{amount} {resource}, dispatched. I shall invoice the Council, not you. Probably.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, on its way. I hunt light; I can spare it. Do not make me regret carrying less.</source>
+        <translation>{amount} {resource}, on its way. I hunt light; I can spare it. Do not make me regret carrying less.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, sent. Spend it on something they will not expect.</source>
+        <translation>{amount} {resource}, sent. Spend it on something they will not expect.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, sent. The granary will not notice; that is what granaries are for.</source>
+        <translation>{amount} {resource}, sent. The granary will not notice; that is what granaries are for.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Good. That buys another attack.</source>
+        <translation>{amount} {resource}. Good. That buys another attack.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. It goes into the stores, and it will be there when we need it.</source>
+        <translation>{amount} {resource}. It goes into the stores, and it will be there when we need it.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received and entered in the ledger, on the credit side, for once.</source>
+        <translation>{amount} {resource}. Received and entered in the ledger, on the credit side, for once.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received, and remembered. The next kill is yours.</source>
+        <translation>{amount} {resource}. Received, and remembered. The next kill is yours.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received. I shall mention you favourably to the Senate, if it comes up.</source>
+        <translation>{amount} {resource}. Received. I shall mention you favourably to the Senate, if it comes up.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Sent. Use it fast.</source>
+        <translation>{amount} {resource}. Sent. Use it fast.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Thank you. I will spend it where it hurts them most.</source>
+        <translation>{amount} {resource}. Thank you. I will spend it where it hurts them most.</translation>
     </message>
 </context>
 <context>
@@ -3477,6 +3901,26 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>%1 refuses to part with any %2.</source>
         <translation>%1 refuses to part with any %2.</translation>
     </message>
+    <message>
+        <source>No ally will join the attack.</source>
+        <translation>No ally will join the attack.</translation>
+    </message>
+    <message>
+        <source>No ally can spare men to defend it.</source>
+        <translation>No ally can spare men to defend it.</translation>
+    </message>
+    <message>
+        <source>%1 will march on that position.</source>
+        <translation>%1 will march on that position.</translation>
+    </message>
+    <message>
+        <source>%1 will send men to hold it.</source>
+        <translation>%1 will send men to hold it.</translation>
+    </message>
+    <message>
+        <source>%1 asks you for %2 %3.</source>
+        <translation>%1 asks you for %2 %3.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -5245,6 +5689,34 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source> soldiers — </source>
         <translation> soldiers — </translation>
+    </message>
+    <message>
+        <source>ALLIED BUILDING</source>
+        <translation>ALLIED BUILDING</translation>
+    </message>
+    <message>
+        <source>ALLIED UNIT</source>
+        <translation>ALLIED UNIT</translation>
+    </message>
+    <message>
+        <source>Ally</source>
+        <translation>Ally</translation>
+    </message>
+    <message>
+        <source>Ask allies to attack</source>
+        <translation>Ask allies to attack</translation>
+    </message>
+    <message>
+        <source>Ask allies to defend</source>
+        <translation>Ask allies to defend</translation>
+    </message>
+    <message>
+        <source>Your allied commanders march on this building if they are willing and have men to spare.</source>
+        <translation>Your allied commanders march on this building if they are willing and have men to spare.</translation>
+    </message>
+    <message>
+        <source>Your allied commanders send men to hold this building if they are willing and have men to spare.</source>
+        <translation>Your allied commanders send men to hold this building if they are willing and have men to spare.</translation>
     </message>
 </context>
 <context>
@@ -9744,6 +10216,26 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>Not enough %1 to send.</source>
         <translation>Not enough %1 to send.</translation>
+    </message>
+    <message>
+        <source>No allied commander fights beside you in this battle.</source>
+        <translation>No allied commander fights beside you in this battle.</translation>
+    </message>
+    <message>
+        <source>Your allies cannot be called to this building.</source>
+        <translation>Your allies cannot be called to this building.</translation>
+    </message>
+    <message>
+        <source>Your allies are still answering your last call.</source>
+        <translation>Your allies are still answering your last call.</translation>
+    </message>
+    <message>
+        <source>Ask your allied commanders to march on this building. Each decides for himself: a warlike commander with men to spare agrees, one whose own camp is threatened refuses.</source>
+        <translation>Ask your allied commanders to march on this building. Each decides for himself: a warlike commander with men to spare agrees, one whose own camp is threatened refuses.</translation>
+    </message>
+    <message>
+        <source>Ask your allied commanders to send men to hold this building. A cautious commander with men to spare agrees, one whose own camp is threatened refuses.</source>
+        <translation>Ask your allied commanders to send men to hold this building. A cautious commander with men to spare agrees, one whose own camp is threatened refuses.</translation>
     </message>
 </context>
 <context>

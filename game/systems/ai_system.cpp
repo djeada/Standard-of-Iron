@@ -11,8 +11,10 @@
 #include <utility>
 
 #include "../core/ambient_session.h"
+#include "../core/component_core.h"
 #include "../core/world.h"
 #include "../session/session_context.h"
+#include "../units/spawn_type.h"
 #include "ai_system/ai_command_applier.h"
 #include "ai_system/ai_doctrine_catalog.h"
 #include "ai_system/ai_snapshot_builder.h"
@@ -123,6 +125,7 @@ auto AISystem::submit_decision_job(AIInstance& ai,
   AI::AISnapshot snapshot = Game::Systems::AI::AISnapshotBuilder::build(
       world, ai.context.player_id, &ai.known_objectives);
   snapshot.game_time = m_total_game_time;
+  snapshot.pledges = ai.pledges;
   ++m_snapshot_build_count;
 
   AI::AIJob job;
@@ -366,6 +369,8 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
 
   process_results(*world);
   answer_ally_requests(*world);
+  answer_ally_calls(*world);
+  plead_with_allies(*world);
 
   for (auto& ai : m_ai_instances) {
 
@@ -404,6 +409,110 @@ void AISystem::answer_ally_requests(Engine::Core::World& world) {
             world, giver, request.requester, request.resource, answer.granted);
       }
       marketplace.record_ally_answer(answer);
+    }
+  }
+}
+
+void AISystem::answer_ally_calls(Engine::Core::World& world) {
+  auto& board = Game::Session::session_for(world).alliance();
+  for (auto& ai : m_ai_instances) {
+    std::erase_if(ai.pledges, [this](const AI::AllyPledge& pledge) {
+      return pledge.expires_at < m_total_game_time;
+    });
+    for (const auto& call : board.take_calls_for(ai.context.player_id)) {
+      const int garrison = static_cast<int>(ai.context.garrison_unit_ids.size());
+      const int in_wave = static_cast<int>(ai.context.wave.members.size());
+      const AI::AllyCallStanding standing{
+          .under_threat = ai.context.barracks_under_threat,
+          .spare_units = call.kind == AllyCallKind::Attack
+                             ? ai.context.combat_units - garrison
+                             : ai.context.combat_units - garrison - in_wave};
+      const auto verdict =
+          AI::answer_ally_call(ai.context.strategy_config, standing, call.kind);
+      if (verdict == AllyCallVerdict::Accepted) {
+        std::erase_if(ai.pledges, [&call](const AI::AllyPledge& pledge) {
+          return pledge.kind == call.kind;
+        });
+        ai.pledges.push_back({.kind = call.kind,
+                              .requester = call.requester,
+                              .target = call.target,
+                              .pos_x = call.target_x,
+                              .pos_z = call.target_z,
+                              .expires_at = m_total_game_time + k_ally_pledge_seconds});
+        if (call.kind == AllyCallKind::Attack) {
+          remember_called_target(world, ai, call);
+        }
+      }
+      board.record_call_answer({.call_id = call.call_id,
+                                .requester = call.requester,
+                                .ally = call.ally,
+                                .kind = call.kind,
+                                .target = call.target,
+                                .verdict = verdict});
+      if (!qEnvironmentVariableIsEmpty("SOI_AI_TRACE")) {
+        qInfo().nospace() << "SOI_AI_TRACE ally_call player=" << ai.context.player_id
+                          << " from=" << call.requester
+                          << " kind=" << ally_call_kind_key(call.kind)
+                          << " target=" << call.target
+                          << " verdict=" << static_cast<int>(verdict)
+                          << " spare=" << standing.spare_units;
+      }
+    }
+  }
+}
+
+void AISystem::remember_called_target(Engine::Core::World& world,
+                                      AIInstance& ai,
+                                      const AllyCallRequest& call) {
+  const auto* unit = world.try_get<Engine::Core::UnitComponent>(call.target);
+  if (unit == nullptr || unit->health <= 0) {
+    return;
+  }
+  AI::ContactSnapshot contact;
+  contact.id = call.target;
+  contact.owner_id = unit->owner_id;
+  contact.is_building = Game::Units::is_building_spawn(unit->spawn_type);
+  contact.pos_x = call.target_x;
+  contact.pos_z = call.target_z;
+  contact.health = unit->health;
+  contact.max_health = unit->max_health;
+  contact.spawn_type = unit->spawn_type;
+  ai.known_objectives[call.target] = contact;
+}
+
+void AISystem::plead_with_allies(Engine::Core::World& world) {
+  constexpr float k_first_plea_at = 240.0F;
+  constexpr float k_plea_interval = 300.0F;
+  constexpr float k_any_plea_interval = 120.0F;
+  if (m_total_game_time < k_first_plea_at ||
+      m_total_game_time - m_last_any_plea_at < k_any_plea_interval) {
+    return;
+  }
+  auto& session = Game::Session::session_for(world);
+  const auto& owners = session.owners();
+  for (auto& ai : m_ai_instances) {
+    const int owner = ai.context.player_id;
+    if (m_total_game_time - ai.last_plea_at < k_plea_interval ||
+        ai.context.nation == nullptr || !ai.context.nation->has_economy ||
+        ai.context.total_units == 0) {
+      continue;
+    }
+    for (const int ally : owners.get_allies_of(owner)) {
+      if (!owners.is_player(ally)) {
+        continue;
+      }
+      const auto need = AI::pick_ally_plea(session.economy().get_all(owner),
+                                           session.economy().get_all(ally));
+      if (!need.has_value()) {
+        continue;
+      }
+      session.alliance().record_plea({.from_ally = owner,
+                                      .to_owner = ally,
+                                      .resource = need->resource,
+                                      .amount = need->amount});
+      ai.last_plea_at = m_total_game_time;
+      m_last_any_plea_at = m_total_game_time;
+      return;
     }
   }
 }

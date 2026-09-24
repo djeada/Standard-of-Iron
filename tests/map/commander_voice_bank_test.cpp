@@ -3,6 +3,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QRegularExpression>
 #include <QSet>
 #include <QString>
 
@@ -124,6 +125,36 @@ const std::vector<RequiredBeat> k_ally_beats{
      Role::Unset,
      1,
      "player commander fell"},
+    {CommanderMessageTrigger::RequestGranted,
+     Role::Player,
+     Role::Self,
+     1,
+     "grants a request"},
+    {CommanderMessageTrigger::RequestRefused,
+     Role::Player,
+     Role::Self,
+     1,
+     "refuses a request"},
+    {CommanderMessageTrigger::CallAccepted,
+     Role::Player,
+     Role::Self,
+     2,
+     "answers a call"},
+    {CommanderMessageTrigger::CallRefused,
+     Role::Player,
+     Role::Self,
+     1,
+     "refuses a call"},
+    {CommanderMessageTrigger::AllyNeedsResources,
+     Role::Player,
+     Role::Self,
+     2,
+     "asks the player for resources"},
+    {CommanderMessageTrigger::GiftReceived,
+     Role::Self,
+     Role::Player,
+     1,
+     "thanks the player for a gift"},
 };
 
 auto effective_role(Game::Mission::CommanderMessageRole role, bool is_local) -> Role {
@@ -226,7 +257,7 @@ TEST(CommanderVoiceBankTest, ExpandsVariantsIntoOwnerScopedRules) {
 }
 
 TEST(CommanderVoiceBankTest, TriggerNamesRoundTrip) {
-  for (int raw = 0; raw <= static_cast<int>(CommanderMessageTrigger::WaveCleared);
+  for (int raw = 0; raw <= static_cast<int>(CommanderMessageTrigger::GiftReceived);
        ++raw) {
     const auto trigger = static_cast<CommanderMessageTrigger>(raw);
     CommanderMessageTrigger parsed{};
@@ -313,6 +344,73 @@ TEST(CommanderVoiceAssetTest, ChatterFitsTheReadingBudget) {
               << line.id.toStdString();
         }
         EXPECT_GE(variant.length(), 20) << line.id.toStdString() << " is a grunt";
+      }
+    }
+  }
+}
+
+TEST(CommanderVoiceAssetTest, EveryAllyAnswersEachKindOfRequestInItsOwnWords) {
+  struct Reply {
+    CommanderMessageTrigger trigger;
+    const char* kind;
+    const char* reason;
+  };
+  const std::vector<Reply> replies{
+      {CommanderMessageTrigger::RequestGranted, nullptr, "full"},
+      {CommanderMessageTrigger::RequestGranted, nullptr, "partial"},
+      {CommanderMessageTrigger::RequestRefused, nullptr, "short"},
+      {CommanderMessageTrigger::RequestRefused, nullptr, "stingy"},
+      {CommanderMessageTrigger::CallAccepted, "defend", nullptr},
+      {CommanderMessageTrigger::CallAccepted, "attack", nullptr},
+      {CommanderMessageTrigger::CallRefused, "defend", "under_threat"},
+      {CommanderMessageTrigger::CallRefused, "attack", "under_threat"},
+      {CommanderMessageTrigger::CallRefused, "defend", "no_army"},
+      {CommanderMessageTrigger::CallRefused, "attack", "no_army"},
+      {CommanderMessageTrigger::CallRefused, "defend", "unwilling"},
+      {CommanderMessageTrigger::CallRefused, "attack", "unwilling"},
+  };
+  const auto library = load_shipped_library();
+  std::set<QString> texts;
+  for (const auto& bank : library.banks()) {
+    for (const auto& reply : replies) {
+      bool answered = false;
+      for (const auto& line : bank.lines) {
+        if (line.relationship != CommanderRelationship::Ally ||
+            line.trigger != reply.trigger) {
+          continue;
+        }
+        const auto& condition = line.condition;
+        const bool kind_ok = !condition.subject_type.has_value() ||
+                             (reply.kind != nullptr &&
+                              *condition.subject_type == QLatin1String(reply.kind));
+        const bool reason_ok = !condition.reason.has_value() ||
+                               (reply.reason != nullptr &&
+                                *condition.reason == QLatin1String(reply.reason));
+        answered = answered || (kind_ok && reason_ok);
+      }
+      EXPECT_TRUE(answered)
+          << bank.commander_id.toStdString() << " has no reply to "
+          << Game::Mission::commander_message_trigger_name(reply.trigger).toStdString()
+          << " kind=" << (reply.kind ? reply.kind : "-")
+          << " reason=" << (reply.reason ? reply.reason : "-");
+    }
+    for (const auto& line : bank.lines) {
+      if (!Game::Mission::commander_message_trigger_is_dialogue(line.trigger)) {
+        continue;
+      }
+      EXPECT_FALSE(line.once) << line.id.toStdString() << " must answer every time";
+      for (const QString& variant : line.variants) {
+        EXPECT_TRUE(texts.insert(variant).second)
+            << "two commanders share the line: " << variant.toStdString();
+        if (line.trigger == CommanderMessageTrigger::AllyNeedsResources) {
+          EXPECT_TRUE(variant.contains(QStringLiteral("{amount}")) &&
+                      variant.contains(QStringLiteral("{resource}")))
+              << line.id.toStdString()
+              << " must name what it asks for: " << variant.toStdString();
+        }
+        EXPECT_FALSE(variant.contains(
+            QRegularExpression(QStringLiteral(R"(\{(?!amount\}|resource\})[^}]*\})"))))
+            << line.id.toStdString() << " uses an unknown placeholder";
       }
     }
   }

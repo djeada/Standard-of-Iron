@@ -452,6 +452,44 @@ A line may be spoken by the player's own commander (in the campaign, `carthage_s
 
 `commander_voices` controls generic commander-line behavior and mission-level trigger/line muting.
 
+### Allied dialogue
+
+Six triggers are _dialogue_: replies to something the player did, or an ally asking the player for something. They are never chatter, so they ignore the chatter budget, the 12 s gap and the rolling window below, but they expire after 20 s (`k_commander_dialogue_expiry_seconds`) so a reply never arrives long after the question.
+
+| Trigger                | Fired when                                                          | `subject` / `actor` | Filter                                                       |
+| ---------------------- | ------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------ |
+| `request_granted`      | an AI ally answers a marketplace **Request** with some or all of it | player / self       | `reason`: `full`, `partial`                                  |
+| `request_refused`      | the ally keeps it                                                   | player / self       | `reason`: `short` (has none spare), `stingy` (will not)      |
+| `call_accepted`        | an ally agrees to a barracks call                                   | player / self       | `kind`: `defend`, `attack`                                   |
+| `call_refused`         | an ally declines one                                                | player / self       | `kind`, and `reason`: `under_threat`, `no_army`, `unwilling` |
+| `ally_needs_resources` | an AI ally asks the player for resources                            | player / self       |                                                              |
+| `gift_received`        | the player sends an ally anything                                   | self / player       |                                                              |
+
+A line without a `kind` or `reason` answers every kind or reason. Dialogue text may carry `{amount}` and `{resource}`; the engine substitutes them after translation, so translators keep the braces. An `ally_needs_resources` line puts **Send** / **Decline** buttons on the message panel; Send goes through the same `AllyTribute` command as the marketplace, so it still needs a marketplace.
+
+Every shipped bank answers every kind and reason (`EveryAllyAnswersEachKindOfRequestInItsOwnWords`), in that commander's own words: the test also rejects a dialogue line shared between two commanders.
+
+### Barracks calls
+
+Clicking an allied or enemy building shows **Ask allies to defend** or **Ask allies to attack** on the inspect card; the player's own barracks panel has **Ask allies to defend**. The button submits an `AllyCall` command (target entity plus kind), validated by `check_ally_call`: defend needs the player's or an ally's building, attack needs an enemy's, and the player needs at least one AI ally. The dispatcher sends the call to every AI ally through the session's `AllianceBoard`.
+
+Each AI answers in `AISystem::answer_ally_calls` with `answer_ally_call`: a commander whose own barracks is threatened refuses; one with too few spare men refuses (3 to defend, 4 to attack); otherwise temperament decides, defensive commanders favouring defence and aggressive ones attack. A commander that may not attack at all (`commander_may_attack`) never promises to. An accepted call becomes a 90 s pledge: a defend pledge sends spare men through `AllyAidBehavior` with no reach limit and no threat required; an attack pledge adds the target to the AI's known objectives and commits a wave on it, or turns a wave already out, bypassing the usual regroup wait but not a 15 s rest.
+
+All answers to one call are gathered into one notification ("X and Y will march on that position") and **one** voiced reply, from the first ally who agreed, else the first who refused. Asking again inside 12 s is refused in the UI.
+
+AI allies also ask the player (`plead_with_allies`): no earlier than 4 minutes in, at most once per ally every 5 minutes and once per 2 minutes across all allies, only for a resource the AI holds under 35% of its reserve **and** the player holds enough of to spare.
+
+### Crowded matches
+
+With many commanders the panel would otherwise never be quiet, so generic bank lines are rationed:
+
+- **Openings**: at mission start only 2 enemy and 1 ally opening lines play (`k_commander_intro_*_limit`); the rest meet the player at first contact.
+- **Rolling window**: at most 4 chatter lines in any 90 s across every commander, and only 2 of those for fights the player is not part of (an ally against an enemy). A line that cannot fit expires as usual.
+- **Budget**: past 3 commanders, each one's `chatter_per_match` shrinks to its share of three commanders' worth, never below 4.
+- **Same commander twice**: two seats with the same commander start their variant cycles at different offsets, so they do not open with the same sentence. Skirmish setup also gives each new CPU seat the least-used commander of its nation.
+
+Mission-authored lines and outcome lines are exempt from all of this.
+
 ## Dialogue vs objective state
 
 Commander messages are presentation/narrative reactions to mission events. They do not replace objective evaluation.

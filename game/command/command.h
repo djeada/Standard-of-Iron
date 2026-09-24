@@ -10,6 +10,7 @@
 #include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../formation/army_formation_types.h"
+#include "../systems/alliance_board.h"
 #include "../systems/order_service.h"
 #include "../systems/resource_types.h"
 #include "../units/troop_type.h"
@@ -103,6 +104,11 @@ struct AllyTribute {
   Game::Systems::ResourceType resource = Game::Systems::ResourceType::Wood;
   int amount = 0;
   bool request = false;
+};
+
+struct AllyCall {
+  Engine::Core::EntityID target = Engine::Core::NULL_ENTITY;
+  Game::Systems::AllyCallKind kind = Game::Systems::AllyCallKind::Defend;
 };
 
 enum class CommanderAbility : std::uint8_t {
@@ -215,7 +221,8 @@ using Payload = std::variant<Move,
                              MergeSquads,
                              PlaceWallPlan,
                              PlaceBuilding,
-                             AllyTribute>;
+                             AllyTribute,
+                             AllyCall>;
 
 struct Command {
   Source source = Source::LocalPlayer;

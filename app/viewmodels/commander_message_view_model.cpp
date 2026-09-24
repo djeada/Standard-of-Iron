@@ -70,6 +70,10 @@ auto CommanderMessageViewModel::holds_outcome() const -> bool {
   return active() && m_message.value("holds_outcome", false).toBool();
 }
 
+auto CommanderMessageViewModel::request() const -> QVariantMap {
+  return m_message.value("request").toMap();
+}
+
 void CommanderMessageViewModel::dismiss() {
   if (!active()) {
     return;

@@ -257,6 +257,10 @@
         <source>Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.</source>
         <translation>Люди, которых ещё держат эти казармы. Каждый рекрут расходует людей своего отряда; жители, выросшие в Доме, приводят больше.</translation>
     </message>
+    <message>
+        <source>Ask allies to defend</source>
+        <translation>Просить союзников защитить</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -797,6 +801,18 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>ALLY</source>
         <translation>СОЮЗНИК</translation>
+    </message>
+    <message>
+        <source>Decline</source>
+        <translation>Отклонить</translation>
+    </message>
+    <message>
+        <source>Send %1 %2</source>
+        <translation>Отправить %1 %2</translation>
+    </message>
+    <message>
+        <source>Give it from your stores. Sending needs a marketplace.</source>
+        <translation>Дай из своих запасов. Для отправки нужен рынок.</translation>
     </message>
 </context>
 <context>
@@ -1675,6 +1691,414 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Your men are falling in rows. That is what happens when you fight a wall&apos;s war against a river.</source>
         <translation>Твои люди падают рядами. Так бывает, когда ведёшь войну стены против реки.</translation>
+    </message>
+    <message>
+        <source>A request, between allies: {amount} {resource}. Italy is generous with enemies and stingy with bread.</source>
+        <translation>Просьба, как между союзниками: {amount} ед. ({resource}). Италия щедра к врагам и скупа на хлеб.</translation>
+    </message>
+    <message>
+        <source>Agreed. I have wanted an excuse. My legion moves on it now.</source>
+        <translation>Согласен. Я давно искал повод. Мой легион уже выступает.</translation>
+    </message>
+    <message>
+        <source>Agreed. I shall move on it in good order. Be ready when they break.</source>
+        <translation>Согласен. Выступлю на это в должном порядке. Будь готов, когда они дрогнут.</translation>
+    </message>
+    <message>
+        <source>An attack on that position. Agreed. It looks profitable, and I do so like profit.</source>
+        <translation>Атака на эту позицию. Согласен. Выглядит прибыльно, а прибыль я люблю.</translation>
+    </message>
+    <message>
+        <source>An attack? Splendid. My cohorts will march on it. Do keep up.</source>
+        <translation>Атака? Чудесно. Мои когорты выступят на неё. Постарайся не отставать.</translation>
+    </message>
+    <message>
+        <source>Certainly not. My {resource} is for Roman purposes. Yours, I fear, are merely yours.</source>
+        <translation>Разумеется, нет. Мой ресурс {resource} — для римских нужд. Твой же, боюсь, — просто твой.</translation>
+    </message>
+    <message>
+        <source>Charge a camp head-on? That is how hunters become meat. Find another way and I will follow it.</source>
+        <translation>Штурмовать лагерь в лоб? Так охотники становятся дичью. Найди другой путь, и я пойду за тобой.</translation>
+    </message>
+    <message>
+        <source>Consider it covered. If they come for it, they will find a trap rather than a prize.</source>
+        <translation>Считай, что прикрыто. Придут за этим — найдут ловушку, а не добычу.</translation>
+    </message>
+    <message>
+        <source>Defend it yourself. A consul does not stand guard over an ally&apos;s barn.</source>
+        <translation>Защищай сам. Консул не стоит на страже амбара союзника.</translation>
+    </message>
+    <message>
+        <source>Good choice; I was looking at it too. Hit it from the front. I will be the part they did not see.</source>
+        <translation>Хороший выбор; я тоже на это смотрел. Бей в лоб. А я стану тем, чего они не заметили.</translation>
+    </message>
+    <message>
+        <source>Good target. I will move on it from the ridges. Strike when you hear my arrows.</source>
+        <translation>Хорошая цель. Выйду на неё с гребней. Бей, когда услышишь мои стрелы.</translation>
+    </message>
+    <message>
+        <source>Good. I have been itching for that one. Cohorts, go.</source>
+        <translation>Хорошо. Давно на это зарился. Когорты, вперёд.</translation>
+    </message>
+    <message>
+        <source>Got your {resource}. Thanks. Back to work.</source>
+        <translation>Получил твой ресурс {resource}. Спасибо. Возвращаюсь к делу.</translation>
+    </message>
+    <message>
+        <source>Hold your own building. Mine are costly enough without adopting yours.</source>
+        <translation>Держи свою постройку сам. Мои и так недёшевы, без того чтобы брать на себя ещё и твои.</translation>
+    </message>
+    <message>
+        <source>I am running short of {resource}. {amount} would see me through. I do not ask lightly.</source>
+        <translation>У меня заканчивается ресурс {resource}. {amount} ед. хватило бы мне продержаться. Прошу не с лёгким сердцем.</translation>
+    </message>
+    <message>
+        <source>I am short of {resource}. {amount} would keep this army moving, and a moving army is a winning one.</source>
+        <translation>Мне не хватает ресурса {resource}. {amount} ед. удержали бы это войско в движении, а войско в движении — войско побеждающее.</translation>
+    </message>
+    <message>
+        <source>I am short. {amount} {resource} would keep my archers in the field. If you can spare it, send it.</source>
+        <translation>Мне не хватает. {amount} ед. ({resource}) удержали бы моих лучников в поле. Если можешь выделить — пришли.</translation>
+    </message>
+    <message>
+        <source>I am under attack myself. My men are paid to guard my walls first, and I have read the contract.</source>
+        <translation>Меня самого атакуют. Моим людям платят прежде всего за охрану моих стен, а договор я читал внимательно.</translation>
+    </message>
+    <message>
+        <source>I can spare {amount} {resource}, no more. The rest feeds my archers, and hungry archers miss.</source>
+        <translation>Могу выделить {amount} ед. ({resource}), не больше. Остальное кормит моих лучников, а голодный лучник мажет.</translation>
+    </message>
+    <message>
+        <source>I can spare {amount} {resource}. The rest crosses the mountains with me; that is not negotiable.</source>
+        <translation>Могу выделить {amount} ед. ({resource}). Остальное идёт со мной через горы; это не обсуждается.</translation>
+    </message>
+    <message>
+        <source>I do not guard buildings. I win battles, and then the buildings guard themselves.</source>
+        <translation>Я не охраняю постройки. Я выигрываю битвы, а после постройки охраняют себя сами.</translation>
+    </message>
+    <message>
+        <source>I do not sit behind walls. Hold it yourself or let it burn.</source>
+        <translation>Я не отсиживаюсь за стенами. Держи сам или дай ему сгореть.</translation>
+    </message>
+    <message>
+        <source>I find myself short: {amount} {resource}. A loan, between allies. I will repay it, in principle.</source>
+        <translation>Оказался в недостаче: {amount} ед. ({resource}). Заём, как между союзниками. Верну — в принципе.</translation>
+    </message>
+    <message>
+        <source>I find myself temporarily short: {amount} {resource}. A loan, naturally. Rome always repays, in her own time.</source>
+        <translation>Оказался временно в недостаче: {amount} ед. ({resource}). Заём, разумеется. Рим всегда возвращает долги — в своё время.</translation>
+    </message>
+    <message>
+        <source>I have no cohorts to spare. They are either dead or very busy, and I cannot spare the busy ones.</source>
+        <translation>У меня нет лишних когорт. Они либо мертвы, либо очень заняты, а занятых я не могу отдать.</translation>
+    </message>
+    <message>
+        <source>I have no men to send. I am rebuilding, and rebuilding takes the time it takes.</source>
+        <translation>Мне некого послать. Я отстраиваюсь заново, а на это уходит столько времени, сколько уходит.</translation>
+    </message>
+    <message>
+        <source>I have no men to spare. The last of them are guarding what little I have left to lose.</source>
+        <translation>У меня нет лишних людей. Последние стерегут то немногое, что мне ещё есть терять.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to give. I came over the Alps; I carry what the mules could.</source>
+        <translation>Мне нечего дать из ресурса {resource}. Я перешёл Альпы; несу то, что смогли унести мулы.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to give. Out here we live on what we carry, and I am carrying very little.</source>
+        <translation>Мне нечего дать из ресурса {resource}. Здесь мы живём тем, что несём с собой, а несу я немного.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. Even a consul&apos;s stores run dry, though mine run dry with dignity.</source>
+        <translation>У меня нет лишнего ресурса {resource}. Даже запасы консула иссякают, хотя мои иссякают с достоинством.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. My stores are thinner than my patience, and that is saying something.</source>
+        <translation>У меня нет лишнего ресурса {resource}. Мои запасы тоньше моего терпения, а это уже кое-что значит.</translation>
+    </message>
+    <message>
+        <source>I have no {resource} to spare. The stores are thin, and I do not empty them for anyone.</source>
+        <translation>У меня нет лишнего ресурса {resource}. Запасы скудны, и я не опустошаю их ни для кого.</translation>
+    </message>
+    <message>
+        <source>I have too few bows left to spare any. Ask me again once I have rebuilt.</source>
+        <translation>Луков у меня осталось слишком мало, чтобы делиться. Спроси снова, когда я отстроюсь заново.</translation>
+    </message>
+    <message>
+        <source>I have too few men left for anything clever, and too few for anything stupid. Wait.</source>
+        <translation>Людей у меня осталось слишком мало для чего-то хитрого, да и для глупостей тоже мало. Жди.</translation>
+    </message>
+    <message>
+        <source>I need {amount} {resource}. Now, if you can. My cohorts are running on nothing.</source>
+        <translation>Мне нужно {amount} ед. ({resource}). Сейчас, если можешь. Мои когорты держатся на пустом месте.</translation>
+    </message>
+    <message>
+        <source>I shall send a cohort to hold it. Do try not to lose it before they arrive; it would embarrass us both.</source>
+        <translation>Пришлю когорту удержать это. Постарайся не потерять это до их прихода; это было бы неловко для нас обоих.</translation>
+    </message>
+    <message>
+        <source>I will garrison it. Every man I send is billed to the war, so the war had better be grateful.</source>
+        <translation>Поставлю туда гарнизон. Каждый посланный мной человек выставлен счётом войне, так что войне лучше быть благодарной.</translation>
+    </message>
+    <message>
+        <source>I will hunt that one with you. Drive them toward me and I will do the rest.</source>
+        <translation>Буду охотиться на это вместе с тобой. Гони их на меня, остальное сделаю я.</translation>
+    </message>
+    <message>
+        <source>I will not pin my archers to a wall. They die standing still. Hold it yourself.</source>
+        <translation>Не стану пришпиливать моих лучников к стене. Они гибнут, стоя на месте. Держи сам.</translation>
+    </message>
+    <message>
+        <source>I will not scatter my cohorts to guard every building. Hold that one; I shall hold the rest.</source>
+        <translation>Не стану дробить когорты, чтобы стеречь каждую постройку. Держи эту; остальные удержу я.</translation>
+    </message>
+    <message>
+        <source>I will send a cohort to hold it. Slowly, in order. It will still be there when they arrive.</source>
+        <translation>Пришлю когорту удержать это. Медленно, по порядку. Она всё ещё будет там, когда они подойдут.</translation>
+    </message>
+    <message>
+        <source>I will send archers to cover it. They will be on the high ground before the enemy sees them.</source>
+        <translation>Пришлю лучников прикрыть это. Они займут высоту прежде, чем враг их заметит.</translation>
+    </message>
+    <message>
+        <source>I will send men to hold it. Not in front; where the enemy thinks the ground is empty.</source>
+        <translation>Пришлю людей удержать это. Не спереди — там, где враг считает землю пустой.</translation>
+    </message>
+    <message>
+        <source>Men are coming to hold it. Fast.</source>
+        <translation>Люди идут удержать это. Быстро.</translation>
+    </message>
+    <message>
+        <source>Men are going to hold it. Mercenaries, fully paid. Do try not to let it burn; I am insuring it.</source>
+        <translation>Люди идут удержать это. Наёмники, полностью оплаченные. Постарайся не дать этому сгореть; я его застраховал.</translation>
+    </message>
+    <message>
+        <source>Men are on their way to hold it. Keep the enemy busy in front; my archers will do the rest from the side.</source>
+        <translation>Люди уже в пути, чтобы удержать это. Займи врага спереди; остальное сделают мои лучники сбоку.</translation>
+    </message>
+    <message>
+        <source>Men are on their way to hold it. They will dig in; that is what they are good at.</source>
+        <translation>Люди уже в пути, чтобы удержать это. Они окопаются; в этом они хороши.</translation>
+    </message>
+    <message>
+        <source>My spears will march on it. They are paid for the season; they may as well earn it.</source>
+        <translation>Мои копейщики выступят на это. Им заплачено за сезон; пусть отрабатывают.</translation>
+    </message>
+    <message>
+        <source>My stores of {resource} are empty. {amount} would keep my men paid and, more to the point, fighting.</source>
+        <translation>Мои запасы ресурса {resource} пусты. {amount} ед. удержали бы моих людей на жалованье и, что важнее, в бою.</translation>
+    </message>
+    <message>
+        <source>My {resource} stays where it is. Charity is for temples. Come back with a better offer.</source>
+        <translation>Мой ресурс {resource} остаётся на месте. Милостыня — дело храмов. Вернись с предложением получше.</translation>
+    </message>
+    <message>
+        <source>No men to send. They are all dead or bleeding. Give me time.</source>
+        <translation>Людей послать не могу. Все либо мертвы, либо истекают кровью. Дай мне время.</translation>
+    </message>
+    <message>
+        <source>No {resource} left. I spent it on the last attack. It was worth it.</source>
+        <translation>Ресурса {resource} не осталось. Потратил на последнюю атаку. Оно того стоило.</translation>
+    </message>
+    <message>
+        <source>No {resource}. Not because I cannot - because I need it for something you will enjoy watching later.</source>
+        <translation>Ресурса {resource} нет. Не потому что не могу — потому что он нужен мне для того, на что тебе понравится смотреть позже.</translation>
+    </message>
+    <message>
+        <source>No. I have {resource}, and I am keeping it. Ask me again when you have earned it in the field.</source>
+        <translation>Нет. У меня есть ресурс {resource}, и я его оставляю себе. Спроси снова, когда заслужишь его в поле.</translation>
+    </message>
+    <message>
+        <source>No. My {resource} goes to my cohorts. Win something first.</source>
+        <translation>Нет. Мой ресурс {resource} идёт моим когортам. Сперва выиграй что-нибудь.</translation>
+    </message>
+    <message>
+        <source>No. My {resource} is counted against the winter. Ask again after the harvest.</source>
+        <translation>Нет. Мой ресурс {resource} рассчитан на зиму. Спроси снова после урожая.</translation>
+    </message>
+    <message>
+        <source>Not now. My own camp is under the hammer, and I am rather attached to it.</source>
+        <translation>Не сейчас. Мой собственный лагерь под молотом, а я к нему довольно привязан.</translation>
+    </message>
+    <message>
+        <source>Not now. My own walls are being tested, and I intend to pass.</source>
+        <translation>Не сейчас. Мои собственные стены проходят испытание, и я намерен его выдержать.</translation>
+    </message>
+    <message>
+        <source>Not now. They are at my own camp, and I cannot guard two hides at once.</source>
+        <translation>Не сейчас. Они у моего собственного лагеря, а стеречь два логова разом я не могу.</translation>
+    </message>
+    <message>
+        <source>Not now. They are at my own camp, and I need every blade to make them regret it.</source>
+        <translation>Не сейчас. Они у моего собственного лагеря, и мне нужен каждый клинок, чтобы они об этом пожалели.</translation>
+    </message>
+    <message>
+        <source>Not now. They are on my own walls. Kill yours; I will kill mine.</source>
+        <translation>Не сейчас. Они на моих собственных стенах. Убивай своих, я убью своих.</translation>
+    </message>
+    <message>
+        <source>Not that one. Bad ground. Pick another and I will be there.</source>
+        <translation>Не это. Плохая земля. Выбери другое, и я буду там.</translation>
+    </message>
+    <message>
+        <source>Not yet. An attack before the line is ready is a gift to the enemy. Wait for me.</source>
+        <translation>Ещё нет. Атака прежде, чем линия готова, — подарок врагу. Подожди меня.</translation>
+    </message>
+    <message>
+        <source>On my way. Keep them busy until my cohorts arrive.</source>
+        <translation>Уже иду. Займи их, пока не подойдут мои когорты.</translation>
+    </message>
+    <message>
+        <source>Send {amount} {resource}, would you? My quartermaster has been embezzling again.</source>
+        <translation>Пришли {amount} ед. ({resource}), будь добр. Мой интендант опять проворовался.</translation>
+    </message>
+    <message>
+        <source>Short on {resource}. Send {amount} and I keep attacking.</source>
+        <translation>Не хватает ресурса {resource}. Пришли {amount} ед., и я продолжу атаковать.</translation>
+    </message>
+    <message>
+        <source>Straight at their walls? That is a Roman idea. Give me a reason to come from somewhere else.</source>
+        <translation>Прямо на их стены? Это по-римски. Дай мне повод зайти откуда-то ещё.</translation>
+    </message>
+    <message>
+        <source>Take it: {amount} {resource}. A hunter shares the kill when the pack is hungry.</source>
+        <translation>Держи: {amount} ед. ({resource}). Охотник делится добычей, когда стая голодна.</translation>
+    </message>
+    <message>
+        <source>Take it: {amount} {resource}. Do not sit on it.</source>
+        <translation>Держи: {amount} ед. ({resource}). Не залёживай это.</translation>
+    </message>
+    <message>
+        <source>Take {amount} {resource}. I would rather lose stores than lose an ally who can still surprise them.</source>
+        <translation>Возьми {amount} ед. ({resource}). Лучше потерять запасы, чем союзника, который ещё способен их удивить.</translation>
+    </message>
+    <message>
+        <source>The hills do not feed an army. I need {amount} {resource}, or my line thins.</source>
+        <translation>Холмы не кормят войско. Мне нужно {amount} ед. ({resource}), иначе моя линия редеет.</translation>
+    </message>
+    <message>
+        <source>The stores are low: {amount} {resource} would keep the line fed, if you can spare it.</source>
+        <translation>Запасы на исходе: {amount} ед. ({resource}) удержали бы линию сытой, если можешь выделить.</translation>
+    </message>
+    <message>
+        <source>Throw my legion at that? I think not. Rome does not spend cohorts on your whims.</source>
+        <translation>Бросить мой легион на это? Едва ли. Рим не тратит когорты на твои капризы.</translation>
+    </message>
+    <message>
+        <source>Throw paid spears at a fortified camp? The Council would have my head. No.</source>
+        <translation>Бросить оплаченных копейщиков на укреплённый лагерь? Совет снял бы мне голову. Нет.</translation>
+    </message>
+    <message>
+        <source>Very well, it will be held. Rome defends her friends - eventually, and with paperwork.</source>
+        <translation>Что ж, будет удержано. Рим защищает своих друзей — в конце концов, и с бумагами в придачу.</translation>
+    </message>
+    <message>
+        <source>Very well. My line will advance on it. Not quickly, but it will arrive.</source>
+        <translation>Что ж. Моя линия выступит на это. Не быстро, но дойдёт.</translation>
+    </message>
+    <message>
+        <source>Very well: {amount} {resource}. Consider it an investment. I expect the returns in dead Romans.</source>
+        <translation>Что ж: {amount} ед. ({resource}). Считай это вложением. Отдачу жду мёртвыми римлянами.</translation>
+    </message>
+    <message>
+        <source>Yes. Attacking now. Hit it with me.</source>
+        <translation>Да. Атакую сейчас. Бей вместе со мной.</translation>
+    </message>
+    <message>
+        <source>Yes. That one. I will come at it from the side nobody guards.</source>
+        <translation>Да. Вот это. Зайду с той стороны, которую никто не стережёт.</translation>
+    </message>
+    <message>
+        <source>You may have {amount} {resource}. I shall note it in the ledger under charitable causes.</source>
+        <translation>Можешь взять {amount} ед. ({resource}). Занесу это в книги по статье «благотворительность».</translation>
+    </message>
+    <message>
+        <source>You shall have {amount} {resource}. I laid it by for exactly this kind of day.</source>
+        <translation>Получишь {amount} ед. ({resource}). Я отложил это как раз для такого дня.</translation>
+    </message>
+    <message>
+        <source>Your {resource} arrived. Thank you. I shall make it last longer than you expect.</source>
+        <translation>Твой ресурс {resource} прибыл. Спасибо. Растяну его дольше, чем ты ожидаешь.</translation>
+    </message>
+    <message>
+        <source>Your {resource} arrived. Well timed. I shall make sure they feel it.</source>
+        <translation>Твой ресурс {resource} прибыл. Вовремя. Позабочусь, чтобы они это почувствовали.</translation>
+    </message>
+    <message>
+        <source>Your {resource} came through. My archers eat tonight because of you.</source>
+        <translation>Твой ресурс {resource} дошёл. Сегодня мои лучники поедят благодаря тебе.</translation>
+    </message>
+    <message>
+        <source>Your {resource} has arrived. Generous. I shall pretend to be surprised when the Council asks.</source>
+        <translation>Твой ресурс {resource} прибыл. Щедро. Изображу удивление, когда спросит Совет.</translation>
+    </message>
+    <message>
+        <source>Your {resource} has arrived. Rome thanks you. So, grudgingly, do I.</source>
+        <translation>Твой ресурс {resource} прибыл. Рим благодарит тебя. И я тоже, хоть и нехотя.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} I can spare without starving the next season. The rest stays in the stores.</source>
+        <translation>{amount} ед. ({resource}) я могу выделить, не голодая в следующем сезоне. Остальное остаётся в запасах.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} is all I can spare. Make it count.</source>
+        <translation>{amount} ед. ({resource}) — это всё, что я могу выделить. Используй с толком.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource} is what the books allow. The rest is committed. Contracts, you understand.</source>
+        <translation>{amount} ед. ({resource}) — это то, что позволяют книги. Остальное уже расписано. Контракты, понимаешь ли.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, and not a scrap more. A consul&apos;s generosity has limits, and I have just found them.</source>
+        <translation>{amount} ед. ({resource}), и ни крохой больше. У щедрости консула есть пределы, и я их только что нашёл.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, dispatched. Do mention it in your reports; Rome likes to hear of generosity.</source>
+        <translation>{amount} ед. ({resource}) отправлено. Упомяни это в донесениях; Рим любит слышать о щедрости.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, dispatched. I shall invoice the Council, not you. Probably.</source>
+        <translation>{amount} ед. ({resource}) отправлено. Счёт выставлю Совету, не тебе. Вероятно.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, on its way. I hunt light; I can spare it. Do not make me regret carrying less.</source>
+        <translation>{amount} ед. ({resource}) уже в пути. Я хожу налегке — могу это выделить. Не заставь меня пожалеть, что взял меньше.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, sent. Spend it on something they will not expect.</source>
+        <translation>{amount} ед. ({resource}) отправлено. Потрать на то, чего они не ждут.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}, sent. The granary will not notice; that is what granaries are for.</source>
+        <translation>{amount} ед. ({resource}) отправлено. Амбар не заметит недостачи; для того амбары и существуют.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Good. That buys another attack.</source>
+        <translation>{amount} ед. ({resource}). Хорошо. Это покупает ещё одну атаку.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. It goes into the stores, and it will be there when we need it.</source>
+        <translation>{amount} ед. ({resource}). Отправится в запасы и будет там, когда понадобится.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received and entered in the ledger, on the credit side, for once.</source>
+        <translation>{amount} ед. ({resource}). Получено и занесено в книги — на этот раз в графу доходов.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received, and remembered. The next kill is yours.</source>
+        <translation>{amount} ед. ({resource}). Получено и не забыто. Следующая добыча твоя.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Received. I shall mention you favourably to the Senate, if it comes up.</source>
+        <translation>{amount} ед. ({resource}). Получено. Упомяну тебя доброжелательно перед Сенатом, если к слову придётся.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Sent. Use it fast.</source>
+        <translation>{amount} ед. ({resource}). Отправлено. Используй быстро.</translation>
+    </message>
+    <message>
+        <source>{amount} {resource}. Thank you. I will spend it where it hurts them most.</source>
+        <translation>{amount} ед. ({resource}). Спасибо. Потрачу там, где им будет больнее всего.</translation>
     </message>
 </context>
 <context>
@@ -3477,6 +3901,26 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>%1 refuses to part with any %2.</source>
         <translation>%1 отказывается расставаться с %2.</translation>
     </message>
+    <message>
+        <source>No ally will join the attack.</source>
+        <translation>Ни один союзник не присоединится к атаке.</translation>
+    </message>
+    <message>
+        <source>No ally can spare men to defend it.</source>
+        <translation>Ни один союзник не может выделить людей для защиты.</translation>
+    </message>
+    <message>
+        <source>%1 will march on that position.</source>
+        <translation>%1 выступит на эту позицию.</translation>
+    </message>
+    <message>
+        <source>%1 will send men to hold it.</source>
+        <translation>%1 пришлёт людей, чтобы удержать это.</translation>
+    </message>
+    <message>
+        <source>%1 asks you for %2 %3.</source>
+        <translation>%1 просит у вас %2 %3.</translation>
+    </message>
 </context>
 <context>
     <name>GameView</name>
@@ -5248,6 +5692,34 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>%1 wounded</source>
         <translation>ранено: %1</translation>
+    </message>
+    <message>
+        <source>ALLIED BUILDING</source>
+        <translation>ПОСТРОЙКА СОЮЗНИКА</translation>
+    </message>
+    <message>
+        <source>ALLIED UNIT</source>
+        <translation>ОТРЯД СОЮЗНИКА</translation>
+    </message>
+    <message>
+        <source>Ally</source>
+        <translation>Союзник</translation>
+    </message>
+    <message>
+        <source>Ask allies to attack</source>
+        <translation>Просить союзников атаковать</translation>
+    </message>
+    <message>
+        <source>Ask allies to defend</source>
+        <translation>Просить союзников защитить</translation>
+    </message>
+    <message>
+        <source>Your allied commanders march on this building if they are willing and have men to spare.</source>
+        <translation>Ваши союзные командиры выступят на эту постройку, если согласятся и у них найдутся лишние люди.</translation>
+    </message>
+    <message>
+        <source>Your allied commanders send men to hold this building if they are willing and have men to spare.</source>
+        <translation>Ваши союзные командиры пришлют людей удержать эту постройку, если согласятся и у них найдутся лишние люди.</translation>
     </message>
 </context>
 <context>
@@ -9747,6 +10219,26 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>Not enough %1 to send.</source>
         <translation>Недостаточно %1 для отправки.</translation>
+    </message>
+    <message>
+        <source>No allied commander fights beside you in this battle.</source>
+        <translation>В этой битве рядом с вами не сражается ни один союзный командир.</translation>
+    </message>
+    <message>
+        <source>Your allies cannot be called to this building.</source>
+        <translation>Ваших союзников нельзя призвать к этой постройке.</translation>
+    </message>
+    <message>
+        <source>Your allies are still answering your last call.</source>
+        <translation>Ваши союзники всё ещё отвечают на ваш прошлый призыв.</translation>
+    </message>
+    <message>
+        <source>Ask your allied commanders to march on this building. Each decides for himself: a warlike commander with men to spare agrees, one whose own camp is threatened refuses.</source>
+        <translation>Просите своих союзных командиров выступить на эту постройку. Каждый решает сам: воинственный командир с лишними людьми согласится, а тот, чей лагерь под угрозой, откажет.</translation>
+    </message>
+    <message>
+        <source>Ask your allied commanders to send men to hold this building. A cautious commander with men to spare agrees, one whose own camp is threatened refuses.</source>
+        <translation>Просите своих союзных командиров прислать людей удержать эту постройку. Осторожный командир с лишними людьми согласится, а тот, чей лагерь под угрозой, откажет.</translation>
     </message>
 </context>
 <context>

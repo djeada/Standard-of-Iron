@@ -4,6 +4,7 @@
 #include <QCoreApplication>
 #include <QStringView>
 
+#include <algorithm>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -19,6 +20,7 @@
 #include "game/core/world.h"
 #include "game/render_bridge/selection_controller.h"
 #include "game/session/session_context.h"
+#include "game/systems/alliance_board.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
@@ -277,6 +279,107 @@ auto ProductionViewModel::ally_tribute(int ally_owner,
                                                    .amount = clamped,
                                                    .request = request});
   emit player_state_stale();
+  return true;
+}
+
+namespace {
+
+constexpr qint64 k_ally_call_cooldown_ms = 12000;
+
+} // namespace
+
+auto ProductionViewModel::selected_building_id() const -> qulonglong {
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  if (m_context.world == nullptr || m_context.session == nullptr) {
+    return 0;
+  }
+  for (const auto id : m_context.session->selection().get_selected_units()) {
+    const auto* unit = m_context.world->try_get<Engine::Core::UnitComponent>(id);
+    if (unit != nullptr && Game::Units::is_building_spawn(unit->spawn_type)) {
+      return id;
+    }
+  }
+  return 0;
+}
+
+auto ProductionViewModel::ally_call_state(qulonglong entity) const -> QVariantMap {
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  QVariantMap state;
+  state["available"] = false;
+  state["kind"] = QString();
+  if (m_context.world == nullptr || m_context.session == nullptr || entity == 0) {
+    return state;
+  }
+  const auto& owners = m_context.session->owners();
+  const int local = m_context.local_owner_id;
+  const auto* unit = m_context.world->try_get<Engine::Core::UnitComponent>(entity);
+  if (unit == nullptr || !Game::Units::is_building_spawn(unit->spawn_type)) {
+    return state;
+  }
+  const bool hostile = owners.are_enemies(local, unit->owner_id);
+  const bool friendly =
+      unit->owner_id == local || owners.are_allies(local, unit->owner_id);
+  if (!hostile && !friendly) {
+    return state;
+  }
+  const auto kind = hostile ? Game::Systems::AllyCallKind::Attack
+                            : Game::Systems::AllyCallKind::Defend;
+  state["kind"] = QLatin1String(Game::Systems::ally_call_kind_key(kind));
+  const int allies =
+      static_cast<int>(Game::Systems::ai_allies_of(owners, local).size());
+  state["allies"] = allies;
+  const qint64 since =
+      m_last_ally_call.isValid() ? m_last_ally_call.elapsed() : k_ally_call_cooldown_ms;
+  const int wait_seconds = static_cast<int>(
+      std::max<qint64>(0, (k_ally_call_cooldown_ms - since + 999) / 1000));
+  state["cooldown"] = wait_seconds;
+  const auto problem =
+      Game::Systems::check_ally_call(*m_context.world,
+                                     owners,
+                                     local,
+                                     static_cast<Engine::Core::EntityID>(entity),
+                                     kind);
+  state["available"] =
+      problem == Game::Systems::AllyCallProblem::None && wait_seconds == 0;
+  if (problem == Game::Systems::AllyCallProblem::NoAiAllies) {
+    state["reason"] = tr("No allied commander fights beside you in this battle.");
+  } else if (problem != Game::Systems::AllyCallProblem::None) {
+    state["reason"] = tr("Your allies cannot be called to this building.");
+  } else if (wait_seconds > 0) {
+    state["reason"] = tr("Your allies are still answering your last call.");
+  } else if (kind == Game::Systems::AllyCallKind::Attack) {
+    state["reason"] = tr("Ask your allied commanders to march on this building. Each "
+                         "decides for himself: a warlike commander with men to spare "
+                         "agrees, one whose own camp is threatened refuses.");
+  } else {
+    state["reason"] =
+        tr("Ask your allied commanders to send men to hold this building. "
+           "A cautious commander with men to spare agrees, one whose own "
+           "camp is threatened refuses.");
+  }
+  return state;
+}
+
+auto ProductionViewModel::call_allies(qulonglong entity) -> bool {
+  const auto state = ally_call_state(entity);
+  if (!state.value("available").toBool()) {
+    emit refused(state.value("reason").toString());
+    return false;
+  }
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  const auto kind = state.value("kind").toString() == QStringLiteral("attack")
+                        ? Game::Systems::AllyCallKind::Attack
+                        : Game::Systems::AllyCallKind::Defend;
+  Game::Command::submit(
+      *m_context.world,
+      Game::Command::Source::LocalPlayer,
+      m_context.local_owner_id,
+      Game::Command::AllyCall{.target = static_cast<Engine::Core::EntityID>(entity),
+                              .kind = kind});
+  m_last_ally_call.start();
   return true;
 }
 

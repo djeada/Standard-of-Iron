@@ -1,0 +1,406 @@
+{
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "transition": {
+    "type": "cut"
+  },
+  "grade": {
+    "contrast": 1.12,
+    "saturation": 1.18,
+    "brightness": 0.03,
+    "gamma": 1.08,
+    "grain": 3,
+    "vignette": 0.1,
+    "sharpen": 0.6
+  },
+  "motion_limits": {
+    "yaw_degrees_per_second": 16,
+    "pitch_degrees_per_second": 8,
+    "fov_degrees_per_second": 6,
+    "minimum_clip_seconds": 1.5,
+    "mean_clip_seconds": 2.0
+  },
+  "id": "reel_cannae",
+  "title": "STANDARD OF IRON",
+  "subtitle": "FREE ROME VS CARTHAGE RTS",
+  "end_card_seconds": 4.0,
+  "end_card_background": "dim",
+  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+  "end_card_lines": ["FREE AND OPEN SOURCE  -  WINDOWS  -  MACOS  -  LINUX"],
+  "music": "assets/audio/music/combat/combat_dust_of_cannae.ogg",
+  "music_start": 0.0,
+  "shots": [
+    {
+      "name": "hook",
+      "scenario": "reel_cannae",
+      "seed": 7,
+      "duration": 3.5,
+      "focus": {
+        "mode": "group",
+        "group": "rome_hastati",
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 9,
+          "pitch": 10,
+          "yaw": 180,
+          "fov": 46,
+          "height": 1.7
+        },
+        {
+          "time": 3.5,
+          "distance": 7.5,
+          "pitch": 11,
+          "yaw": 188,
+          "fov": 46,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ],
+      "start": 2.0,
+      "caption": "HOW HANNIBAL DESTROYED AN ARMY TWICE HIS SIZE",
+      "clip_audio": 0.7
+    },
+    {
+      "name": "rome_marches",
+      "scenario": "reel_cannae",
+      "seed": 7,
+      "duration": 5.0,
+      "focus": {
+        "mode": "group",
+        "group": "rome_principes",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 34,
+          "pitch": 16,
+          "yaw": 215,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 5,
+          "distance": 28,
+          "pitch": 20,
+          "yaw": 200,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "start": 5.5,
+      "caption": "216 BC. CANNAE. 86000 ROMANS MARCH ON 50000",
+      "clip_audio": 0.6
+    },
+    {
+      "name": "hannibal",
+      "scenario": "reel_cannae",
+      "seed": 7,
+      "duration": 4.0,
+      "focus": {
+        "mode": "group",
+        "group": "hannibal",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 8,
+          "pitch": 11,
+          "yaw": 20,
+          "fov": 40,
+          "height": 1.8
+        },
+        {
+          "time": 4,
+          "distance": 6.5,
+          "pitch": 12,
+          "yaw": 5,
+          "fov": 40,
+          "height": 1.8,
+          "ease": "smooth"
+        }
+      ],
+      "start": 8.0,
+      "caption": "HANNIBAL PUTS HIS WEAKEST MEN IN THE CENTRE",
+      "clip_audio": 0.6
+    },
+    {
+      "name": "gives_ground",
+      "scenario": "reel_cannae",
+      "seed": 7,
+      "duration": 4.5,
+      "focus": {
+        "mode": "group",
+        "group": "punic_gauls",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 40,
+          "pitch": 34,
+          "yaw": 170,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 4.5,
+          "distance": 36,
+          "pitch": 38,
+          "yaw": 160,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "start": 11.0,
+      "caption": "AND ORDERS THEM TO FALL BACK",
+      "clip_audio": 0.6
+    },
+    {
+      "name": "veterans",
+      "scenario": "reel_cannae",
+      "seed": 7,
+      "duration": 4.5,
+      "focus": {
+        "mode": "group",
+        "group": "punic_libyans_left",
+        "smoothing": 0.7
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 14,
+          "pitch": 11,
+          "yaw": 285,
+          "fov": 46,
+          "height": 1.7
+        },
+        {
+          "time": 4.5,
+          "distance": 12,
+          "pitch": 12,
+          "yaw": 272,
+          "fov": 46,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ],
+      "start": 14.0,
+      "caption": "HIS VETERANS WAIT ON THE FLANKS",
+      "clip_audio": 0.8
+    },
+    {
+      "name": "horse_rear",
+      "scenario": "reel_cannae",
+      "seed": 7,
+      "duration": 3.0,
+      "focus": {
+        "mode": "group",
+        "group": "punic_horse_left",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 13,
+          "pitch": 11,
+          "yaw": 60,
+          "fov": 50,
+          "height": 1.6
+        },
+        {
+          "time": 3.0,
+          "distance": 11,
+          "pitch": 12,
+          "yaw": 45,
+          "fov": 50,
+          "height": 1.6,
+          "ease": "linear"
+        }
+      ],
+      "start": 17.5,
+      "caption": "HIS CAVALRY RIDES INTO THE ROMAN REAR",
+      "slow_motion": 1.5,
+      "clip_audio": 0.9
+    },
+    {
+      "name": "closed",
+      "scenario": "reel_cannae",
+      "seed": 7,
+      "duration": 6.0,
+      "focus": {
+        "mode": "battle",
+        "engagement_radius": 45,
+        "smoothing": 1.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 36,
+          "pitch": 34,
+          "yaw": 200,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 6,
+          "distance": 46,
+          "pitch": 44,
+          "yaw": 188,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "start": 22.0,
+      "caption": "THE TRAP CLOSES ON FOUR SIDES",
+      "clip_audio": 0.7
+    },
+    {
+      "name": "crush",
+      "scenario": "reel_cannae",
+      "seed": 7,
+      "duration": 2.6,
+      "focus": {
+        "mode": "battle",
+        "engagement_radius": 30,
+        "smoothing": 0.9
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 11,
+          "pitch": 12,
+          "yaw": 120,
+          "fov": 48,
+          "height": 1.6
+        },
+        {
+          "time": 2.6,
+          "distance": 9.5,
+          "pitch": 13,
+          "yaw": 108,
+          "fov": 48,
+          "height": 1.6,
+          "ease": "linear"
+        }
+      ],
+      "start": 26.0,
+      "caption": "PACKED SO TIGHT THEY CANNOT SWING A SWORD",
+      "slow_motion": 1.6,
+      "shake": 0.02,
+      "clip_audio": 1.0
+    },
+    {
+      "name": "slaughter",
+      "scenario": "reel_cannae",
+      "seed": 7,
+      "duration": 5.0,
+      "focus": {
+        "mode": "battle",
+        "engagement_radius": 30,
+        "smoothing": 1.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 16,
+          "pitch": 12,
+          "yaw": 300,
+          "fov": 46,
+          "height": 1.6
+        },
+        {
+          "time": 5,
+          "distance": 13,
+          "pitch": 14,
+          "yaw": 285,
+          "fov": 46,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "start": 31.0,
+      "caption": "50000 ROMANS DIE BEFORE SUNSET",
+      "clip_audio": 0.9
+    },
+    {
+      "name": "aftermath",
+      "scenario": "reel_cannae",
+      "seed": 7,
+      "duration": 12.0,
+      "focus": {
+        "mode": "battle",
+        "engagement_radius": 45,
+        "smoothing": 1.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 22,
+          "pitch": 14,
+          "yaw": 160,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 12,
+          "distance": 80,
+          "pitch": 40,
+          "yaw": 140,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "start": 40.0,
+      "caption": "THE WORST DAY IN ROMAN HISTORY",
+      "time_lapse": 2.0,
+      "clip_audio": 0.5
+    },
+    {
+      "name": "question",
+      "scenario": "reel_cannae",
+      "seed": 7,
+      "duration": 5.0,
+      "focus": {
+        "mode": "battle",
+        "engagement_radius": 45,
+        "smoothing": 1.2
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 30,
+          "pitch": 20,
+          "yaw": 60,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 5,
+          "distance": 26,
+          "pitch": 18,
+          "yaw": 80,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "start": 64.5,
+      "caption": "COULD ROME HAVE WON? TELL ME BELOW",
+      "clip_audio": 0.5
+    }
+  ]
+}

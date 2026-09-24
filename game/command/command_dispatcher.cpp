@@ -14,6 +14,7 @@
 #include "../formation/army_formation_service.h"
 #include "../map/terrain_service.h"
 #include "../session/session_context.h"
+#include "../systems/alliance_board.h"
 #include "../systems/build_site.h"
 #include "../systems/builder_product_types.h"
 #include "../systems/civilian_delivery_system.h"
@@ -303,6 +304,27 @@ void apply_ally_tribute(World& world, int owner_id, const AllyTribute& tribute) 
                                   .requested = tribute.amount,
                                   .granted = sent,
                                   .verdict = Game::Systems::AllyTributeVerdict::Sent});
+}
+
+void apply_ally_call(World& world, int owner_id, const AllyCall& call) {
+  auto& session = Game::Session::session_for(world);
+  const auto* unit = world.try_get<Engine::Core::UnitComponent>(call.target);
+  const auto* transform = world.try_get<Engine::Core::TransformComponent>(call.target);
+  if (unit == nullptr || transform == nullptr) {
+    return;
+  }
+  auto& board = session.alliance();
+  const auto call_id = board.next_call_id();
+  for (const int ally : Game::Systems::ai_allies_of(session.owners(), owner_id)) {
+    board.queue_call({.call_id = call_id,
+                      .requester = owner_id,
+                      .ally = ally,
+                      .kind = call.kind,
+                      .target = call.target,
+                      .target_owner = unit->owner_id,
+                      .target_x = transform->position.x,
+                      .target_z = transform->position.z});
+  }
 }
 
 void apply_commander_ability(World& world, const UseCommanderAbility& order) {
@@ -907,6 +929,8 @@ void dispatch(World& world, const Command& command) {
           apply_trade(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, AllyTribute>) {
           apply_ally_tribute(world, command.owner_id, payload);
+        } else if constexpr (std::is_same_v<T, AllyCall>) {
+          apply_ally_call(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, UseCommanderAbility>) {
           apply_commander_ability(world, payload);
         } else if constexpr (std::is_same_v<T, SetFormationMode>) {

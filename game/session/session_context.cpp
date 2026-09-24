@@ -8,6 +8,7 @@
 #include "../formation/army_formation_registry.h"
 #include "../map/terrain_service.h"
 #include "../map/visibility_service.h"
+#include "../systems/alliance_board.h"
 #include "../systems/building_collision_registry.h"
 #include "../systems/global_stats_registry.h"
 #include "../systems/marketplace_system.h"
@@ -44,6 +45,7 @@ struct SessionContext::State {
   SelectionService selection;
   Game::Systems::BuildingCollisionRegistry building_collision;
   Game::Systems::MarketplaceSystem marketplace;
+  Game::Systems::AllianceBoard alliance;
   Game::Systems::NavigationService navigation;
   Game::Formation::ArmyFormationRegistry army_formations;
   std::shared_ptr<Game::Units::UnitFactoryRegistry> units;
@@ -195,6 +197,10 @@ auto SessionContext::building_collision() -> Game::Systems::BuildingCollisionReg
 
 auto SessionContext::marketplace() -> Game::Systems::MarketplaceSystem& {
   return m_state->marketplace;
+}
+
+auto SessionContext::alliance() -> Game::Systems::AllianceBoard& {
+  return m_state->alliance;
 }
 
 auto SessionContext::clock() -> SimulationClock& {

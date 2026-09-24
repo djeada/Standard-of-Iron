@@ -15,6 +15,7 @@ Rectangle {
     readonly property var hs: StyleGuide.historical
     readonly property bool has_barracks_selection: (productionPanel.selection_tick, productionPanel.has_selected_type("barracks"))
     readonly property var barracks_state: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_state) ? productionPanel.production.selected_state() : productionPanel.default_production_state())
+    readonly property var barracks_ally_call: (productionPanel.selection_tick, (productionPanel.has_barracks_selection && productionPanel.production && productionPanel.production.ally_call_state) ? productionPanel.production.ally_call_state(productionPanel.production.selected_building_id()) : ({}))
 
     signal recruit_unit(string unit_type)
     signal rally_mode_toggled
@@ -368,6 +369,7 @@ Rectangle {
         visible: productionPanel.has_barracks_selection
         panel: productionPanel
         prod: productionPanel.barracks_state
+        allyCall: productionPanel.barracks_ally_call
 
         onRecruit_requested: function (unitType) {
             productionPanel.recruit_unit(unitType);
@@ -376,6 +378,10 @@ Rectangle {
             productionPanel.unit_details_requested(unitType, nation);
         }
         onRally_requested: productionPanel.rally_mode_toggled()
+        onAlly_call_requested: {
+            if (productionPanel.production && productionPanel.production.call_allies)
+                productionPanel.production.call_allies(productionPanel.production.selected_building_id());
+        }
     }
 
     Flickable {

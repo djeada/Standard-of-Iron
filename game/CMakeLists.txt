@@ -387,6 +387,7 @@ add_library(
     map/match_loader.cpp
     session/map_session.cpp
     session/session_context.cpp
+    systems/alliance_board.cpp
     session/session_snapshot.cpp
     session/world_digest.cpp
     systems/default_content.cpp

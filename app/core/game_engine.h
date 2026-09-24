@@ -362,6 +362,10 @@ public:
   void publish_frame_snapshots();
   void announce_player_defeats(float dt);
   void announce_ally_exchanges();
+  void announce_ally_calls();
+  void announce_ally_pleas();
+  [[nodiscard]] auto owner_display_name(int owner_id) const -> QString;
+  [[nodiscard]] static auto ally_resource_word(const QString& resource_key) -> QString;
   void capture_render_selection();
   void update(float dt);
   void render(int pixel_width, int pixel_height);

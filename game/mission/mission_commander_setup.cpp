@@ -92,6 +92,19 @@ auto resolve_commander_troop(const QString& nation,
           parsed_nation ? nation_id : Game::Systems::NationID::RomanRepublic));
 }
 
+auto commander_troop_for_seat(const QString& nation, int seat) -> QString {
+  Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
+  if (!Game::Systems::try_parse_nation_id(nation, nation_id)) {
+    return resolve_commander_troop(nation, std::nullopt);
+  }
+  const auto roster = Game::Units::commander_definitions_for_nation(nation_id);
+  if (roster.empty()) {
+    return resolve_commander_troop(nation, std::nullopt);
+  }
+  const auto index = static_cast<std::size_t>(std::max(0, seat)) % roster.size();
+  return Game::Units::troop_typeToQString(roster[index]->troop_type);
+}
+
 auto commander_troops_by_owner(const Game::Map::MapDefinition& map)
     -> std::map<int, QString> {
   std::map<int, QString> by_owner;

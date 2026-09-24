@@ -372,6 +372,216 @@
       "variants": [
         "Your commander has fallen. Unfortunate. Hold your line; I shall not hold mine for a leaderless ally very long."
       ]
+    },
+    {
+      "id": "scipio.ally.request_granted",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_granted",
+        "subject": "player",
+        "actor": "self",
+        "reason": "full",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource}, dispatched. Do mention it in your reports; Rome likes to hear of generosity.",
+        "You may have {amount} {resource}. I shall note it in the ledger under charitable causes."
+      ]
+    },
+    {
+      "id": "scipio.ally.request_partial",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_granted",
+        "subject": "player",
+        "actor": "self",
+        "reason": "partial",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource}, and not a scrap more. A consul's generosity has limits, and I have just found them."
+      ]
+    },
+    {
+      "id": "scipio.ally.request_refused_short",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "short",
+        "cooldown": 1
+      },
+      "variants": [
+        "I have no {resource} to spare. Even a consul's stores run dry, though mine run dry with dignity."
+      ]
+    },
+    {
+      "id": "scipio.ally.request_refused_stingy",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "request_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "stingy",
+        "cooldown": 1
+      },
+      "variants": [
+        "Certainly not. My {resource} is for Roman purposes. Yours, I fear, are merely yours."
+      ]
+    },
+    {
+      "id": "scipio.ally.call_accepted_defend",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_accepted",
+        "subject": "player",
+        "actor": "self",
+        "kind": "defend",
+        "cooldown": 1
+      },
+      "variants": [
+        "I shall send a cohort to hold it. Do try not to lose it before they arrive; it would embarrass us both.",
+        "Very well, it will be held. Rome defends her friends - eventually, and with paperwork."
+      ]
+    },
+    {
+      "id": "scipio.ally.call_accepted_attack",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_accepted",
+        "subject": "player",
+        "actor": "self",
+        "kind": "attack",
+        "cooldown": 1
+      },
+      "variants": [
+        "An attack? Splendid. My cohorts will march on it. Do keep up.",
+        "Agreed. I have wanted an excuse. My legion moves on it now."
+      ]
+    },
+    {
+      "id": "scipio.ally.call_refused_threat",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "under_threat",
+        "cooldown": 1
+      },
+      "variants": [
+        "Not now. My own camp is under the hammer, and I am rather attached to it."
+      ]
+    },
+    {
+      "id": "scipio.ally.call_refused_no_army",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "reason": "no_army",
+        "cooldown": 1
+      },
+      "variants": [
+        "I have no cohorts to spare. They are either dead or very busy, and I cannot spare the busy ones."
+      ]
+    },
+    {
+      "id": "scipio.ally.call_refused_attack",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "kind": "attack",
+        "reason": "unwilling",
+        "cooldown": 1
+      },
+      "variants": [
+        "Throw my legion at that? I think not. Rome does not spend cohorts on your whims."
+      ]
+    },
+    {
+      "id": "scipio.ally.call_refused_defend",
+      "relationship": "ally",
+      "pose": "dismissive",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "call_refused",
+        "subject": "player",
+        "actor": "self",
+        "kind": "defend",
+        "reason": "unwilling",
+        "cooldown": 1
+      },
+      "variants": [
+        "Defend it yourself. A consul does not stand guard over an ally's barn."
+      ]
+    },
+    {
+      "id": "scipio.ally.needs_resources",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 90,
+      "once": false,
+      "trigger": {
+        "type": "ally_needs_resources",
+        "subject": "player",
+        "actor": "self",
+        "cooldown": 1
+      },
+      "duration": 20.0,
+      "variants": [
+        "I find myself temporarily short: {amount} {resource}. A loan, naturally. Rome always repays, in her own time.",
+        "Send {amount} {resource}, would you? My quartermaster has been embezzling again."
+      ]
+    },
+    {
+      "id": "scipio.ally.gift_received",
+      "relationship": "ally",
+      "pose": "cynical",
+      "priority": 85,
+      "once": false,
+      "trigger": {
+        "type": "gift_received",
+        "subject": "self",
+        "actor": "player",
+        "cooldown": 1
+      },
+      "variants": [
+        "{amount} {resource}. Received. I shall mention you favourably to the Senate, if it comes up.",
+        "Your {resource} has arrived. Rome thanks you. So, grudgingly, do I."
+      ]
     }
   ]
 }

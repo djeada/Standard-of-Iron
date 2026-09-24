@@ -156,8 +156,29 @@ enum class CommanderMessageTrigger {
   NearDefeat,
   OwnerEliminated,
   WaveIncoming,
-  WaveCleared
+  WaveCleared,
+  RequestGranted,
+  RequestRefused,
+  CallAccepted,
+  CallRefused,
+  AllyNeedsResources,
+  GiftReceived
 };
+
+[[nodiscard]] inline constexpr auto
+commander_message_trigger_is_dialogue(CommanderMessageTrigger trigger) -> bool {
+  switch (trigger) {
+  case CommanderMessageTrigger::RequestGranted:
+  case CommanderMessageTrigger::RequestRefused:
+  case CommanderMessageTrigger::CallAccepted:
+  case CommanderMessageTrigger::CallRefused:
+  case CommanderMessageTrigger::AllyNeedsResources:
+  case CommanderMessageTrigger::GiftReceived:
+    return true;
+  default:
+    return false;
+  }
+}
 
 [[nodiscard]] inline constexpr auto
 commander_message_trigger_is_outcome(CommanderMessageTrigger trigger) -> bool {
@@ -175,7 +196,7 @@ commander_message_trigger_is_chatter(CommanderMessageTrigger trigger) -> bool {
   case CommanderMessageTrigger::OwnerEliminated:
     return false;
   default:
-    return true;
+    return !commander_message_trigger_is_dialogue(trigger);
   }
 }
 
@@ -210,6 +231,8 @@ struct CommanderMessageCondition {
 
   std::optional<bool> final_wave;
 
+  std::optional<QString> reason;
+
   std::optional<Position> at;
   std::optional<float> radius;
 
@@ -231,6 +254,22 @@ inline constexpr float k_commander_chatter_expiry_seconds = 15.0F;
 inline constexpr int k_commander_chatter_exempt_priority = 80;
 
 inline constexpr int k_default_commander_chatter_per_match = 10;
+
+inline constexpr float k_commander_dialogue_expiry_seconds = 20.0F;
+
+inline constexpr int k_commander_intro_enemy_limit = 2;
+
+inline constexpr int k_commander_intro_ally_limit = 1;
+
+inline constexpr float k_commander_chatter_window_seconds = 90.0F;
+
+inline constexpr int k_commander_chatter_per_window = 4;
+
+inline constexpr int k_commander_bystander_chatter_per_window = 2;
+
+inline constexpr int k_commander_chatter_speakers_at_full_budget = 3;
+
+inline constexpr int k_commander_chatter_min_budget = 4;
 
 [[nodiscard]] inline auto
 legible_commander_message_seconds(int character_count,

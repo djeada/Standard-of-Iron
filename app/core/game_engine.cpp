@@ -14,6 +14,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLocale>
 #include <QOpenGLContext>
 #include <QPainter>
 #include <QPointer>
@@ -141,6 +142,7 @@
 #include "game/session/simulation_clock.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_strategy.h"
+#include "game/systems/alliance_board.h"
 #include "game/systems/attack_range.h"
 #include "game/systems/attack_targeting.h"
 #include "game/systems/building_collision_registry.h"
@@ -839,6 +841,8 @@ void GameEngine::update_presentation(float dt) {
   m_order_markers.update(dt, m_world);
   announce_player_defeats(real_dt);
   announce_ally_exchanges();
+  announce_ally_calls();
+  announce_ally_pleas();
   m_activity_view_model->advance_feedback(dt);
 
   const float simulation_time_scale =
@@ -925,6 +929,39 @@ void GameEngine::publish_presentation_frame() {
       std::memory_order_release);
 }
 
+auto GameEngine::owner_display_name(int owner_id) const -> QString {
+  if (m_session != nullptr) {
+    for (const auto& owner : m_session->owners().get_all_owners()) {
+      if (owner.owner_id == owner_id) {
+        return QString::fromStdString(owner.name);
+      }
+    }
+  }
+  return tr("your ally");
+}
+
+auto GameEngine::ally_resource_word(const QString& resource_key) -> QString {
+  Game::Systems::ResourceType type{};
+  if (!Game::Systems::resource_type_from_key(resource_key, type)) {
+    return resource_key;
+  }
+  switch (type) {
+  case Game::Systems::ResourceType::Gold:
+    return tr("gold");
+  case Game::Systems::ResourceType::Food:
+    return tr("food");
+  case Game::Systems::ResourceType::Wood:
+    return tr("wood");
+  case Game::Systems::ResourceType::Stone:
+    return tr("stone");
+  case Game::Systems::ResourceType::Iron:
+    return tr("iron");
+  default:
+    break;
+  }
+  return resource_key;
+}
+
 void GameEngine::announce_ally_exchanges() {
   if (m_session == nullptr) {
     return;
@@ -933,35 +970,12 @@ void GameEngine::announce_ally_exchanges() {
   if (answers.empty()) {
     return;
   }
-  const auto& owners = m_session->owners();
-  const auto name_of = [&owners](int owner_id) {
-    for (const auto& owner : owners.get_all_owners()) {
-      if (owner.owner_id == owner_id) {
-        return QString::fromStdString(owner.name);
-      }
-    }
-    return tr("your ally");
-  };
-  const auto resource_name = [](Game::Systems::ResourceType type) {
-    switch (type) {
-    case Game::Systems::ResourceType::Gold:
-      return tr("gold");
-    case Game::Systems::ResourceType::Food:
-      return tr("food");
-    case Game::Systems::ResourceType::Wood:
-      return tr("wood");
-    case Game::Systems::ResourceType::Stone:
-      return tr("stone");
-    case Game::Systems::ResourceType::Iron:
-      return tr("iron");
-    default:
-      break;
-    }
-    return QString();
-  };
   const int local = m_runtime.local_owner_id;
   for (const auto& answer : answers) {
-    const QString what = resource_name(answer.resource);
+    const QString key =
+        QLatin1String(Game::Systems::resource_type_key(answer.resource));
+    const QString what = ally_resource_word(key);
+    using Game::Mission::CommanderMessageTrigger;
     using Game::Systems::AllyTributeVerdict;
     if (answer.verdict == AllyTributeVerdict::Sent) {
       if (answer.giver != local || answer.granted <= 0) {
@@ -969,18 +983,30 @@ void GameEngine::announce_ally_exchanges() {
       }
       emit ally_exchange(tr("Sent %1 %2 to %3.")
                              .arg(answer.granted)
-                             .arg(what, name_of(answer.requester)),
+                             .arg(what, owner_display_name(answer.requester)),
                          true);
+      m_commander_message_director.notify_fact(
+          {.trigger = CommanderMessageTrigger::GiftReceived,
+           .subject_owner_id = answer.requester,
+           .actor_owner_id = local,
+           .amount = answer.granted,
+           .resource = key});
       continue;
     }
     if (answer.requester != local) {
       continue;
     }
-    const QString ally = name_of(answer.giver);
+    const QString ally = owner_display_name(answer.giver);
+    Game::Mission::CommanderMessageFact reply{.subject_owner_id = local,
+                                              .actor_owner_id = answer.giver,
+                                              .amount = answer.granted,
+                                              .resource = key};
     switch (answer.verdict) {
     case AllyTributeVerdict::Granted:
       emit ally_exchange(
           tr("%1 sends you %2 %3.").arg(ally).arg(answer.granted).arg(what), true);
+      reply.trigger = CommanderMessageTrigger::RequestGranted;
+      reply.reason = QStringLiteral("full");
       break;
     case AllyTributeVerdict::Partial:
       emit ally_exchange(tr("%1 can spare only %2 of the %3 %4 you asked for.")
@@ -989,16 +1015,120 @@ void GameEngine::announce_ally_exchanges() {
                              .arg(answer.requested)
                              .arg(what),
                          true);
+      reply.trigger = CommanderMessageTrigger::RequestGranted;
+      reply.reason = QStringLiteral("partial");
       break;
     case AllyTributeVerdict::RefusedShort:
       emit ally_exchange(tr("%1 has no %2 to spare.").arg(ally, what), false);
+      reply.trigger = CommanderMessageTrigger::RequestRefused;
+      reply.reason = QStringLiteral("short");
+      reply.amount = answer.requested;
       break;
     case AllyTributeVerdict::RefusedStingy:
       emit ally_exchange(tr("%1 refuses to part with any %2.").arg(ally, what), false);
+      reply.trigger = CommanderMessageTrigger::RequestRefused;
+      reply.reason = QStringLiteral("stingy");
+      reply.amount = answer.requested;
       break;
     case AllyTributeVerdict::Sent:
+      continue;
+    }
+    m_commander_message_director.notify_fact(reply);
+  }
+}
+
+void GameEngine::announce_ally_calls() {
+  if (m_session == nullptr) {
+    return;
+  }
+  const auto answers = m_session->alliance().take_call_answers();
+  if (answers.empty()) {
+    return;
+  }
+  using Game::Systems::AllyCallVerdict;
+  const int local = m_runtime.local_owner_id;
+  std::map<std::uint32_t, std::vector<Game::Systems::AllyCallAnswer>> by_call;
+  for (const auto& answer : answers) {
+    if (answer.requester == local) {
+      by_call[answer.call_id].push_back(answer);
+    }
+  }
+  for (auto& [call_id, replies] : by_call) {
+    std::sort(replies.begin(), replies.end(), [](const auto& a, const auto& b) {
+      return a.ally < b.ally;
+    });
+    const bool attack = replies.front().kind == Game::Systems::AllyCallKind::Attack;
+    QStringList coming;
+    const Game::Systems::AllyCallAnswer* speaker = nullptr;
+    for (const auto& reply : replies) {
+      if (reply.verdict == AllyCallVerdict::Accepted) {
+        coming.append(owner_display_name(reply.ally));
+        if (speaker == nullptr || speaker->verdict != AllyCallVerdict::Accepted) {
+          speaker = &reply;
+        }
+      } else if (speaker == nullptr) {
+        speaker = &reply;
+      }
+    }
+    if (coming.isEmpty()) {
+      emit ally_exchange(attack ? tr("No ally will join the attack.")
+                                : tr("No ally can spare men to defend it."),
+                         false);
+    } else {
+      const QString names = QLocale().createSeparatedList(coming);
+      emit ally_exchange(attack ? tr("%1 will march on that position.").arg(names)
+                                : tr("%1 will send men to hold it.").arg(names),
+                         true);
+    }
+    if (speaker == nullptr) {
+      continue;
+    }
+    Game::Mission::CommanderMessageFact fact{
+        .trigger = speaker->verdict == AllyCallVerdict::Accepted
+                       ? Game::Mission::CommanderMessageTrigger::CallAccepted
+                       : Game::Mission::CommanderMessageTrigger::CallRefused,
+        .subject_owner_id = local,
+        .actor_owner_id = speaker->ally,
+        .subject_type =
+            QLatin1String(Game::Systems::ally_call_kind_key(speaker->kind))};
+    switch (speaker->verdict) {
+    case AllyCallVerdict::RefusedUnderThreat:
+      fact.reason = QStringLiteral("under_threat");
+      break;
+    case AllyCallVerdict::RefusedNoArmy:
+      fact.reason = QStringLiteral("no_army");
+      break;
+    case AllyCallVerdict::RefusedUnwilling:
+      fact.reason = QStringLiteral("unwilling");
+      break;
+    case AllyCallVerdict::Accepted:
       break;
     }
+    m_commander_message_director.notify_fact(fact);
+  }
+}
+
+void GameEngine::announce_ally_pleas() {
+  if (m_session == nullptr) {
+    return;
+  }
+  const int local = m_runtime.local_owner_id;
+  for (const auto& plea : m_session->alliance().take_pleas()) {
+    if (plea.to_owner != local) {
+      continue;
+    }
+    const QString key = QLatin1String(Game::Systems::resource_type_key(plea.resource));
+    emit ally_exchange(tr("%1 asks you for %2 %3.")
+                           .arg(owner_display_name(plea.from_ally))
+                           .arg(plea.amount)
+                           .arg(ally_resource_word(key)),
+                       true);
+    m_commander_message_director.notify_fact(
+        {.trigger = Game::Mission::CommanderMessageTrigger::AllyNeedsResources,
+         .subject_owner_id = local,
+         .actor_owner_id = plea.from_ally,
+         .amount = plea.amount,
+         .resource = key});
   }
 }
 
@@ -2486,9 +2616,25 @@ void GameEngine::publish_commander_message() {
   message["relationship"] = cue.relationship;
   message["speaker_owner_id"] = cue.speaker_owner_id;
   message["pose"] = cue.pose;
-  message["text"] = Game::Util::tr_asset(
+  QString text = Game::Util::tr_asset(
       cue.text_context != nullptr ? cue.text_context : Game::Util::k_missions_context,
       cue.text);
+  if (cue.amount > 0) {
+    text.replace(QStringLiteral("{amount}"), QString::number(cue.amount));
+  }
+  if (!cue.resource.isEmpty()) {
+    text.replace(QStringLiteral("{resource}"), ally_resource_word(cue.resource));
+  }
+  message["text"] = text;
+  if (cue.request_owner_id >= 0 && cue.amount > 0 && !cue.resource.isEmpty()) {
+    QVariantMap request;
+    request["owner_id"] = cue.request_owner_id;
+    request["owner_name"] = owner_display_name(cue.request_owner_id);
+    request["resource"] = cue.resource;
+    request["resource_label"] = ally_resource_word(cue.resource);
+    request["amount"] = cue.amount;
+    message["request"] = request;
+  }
   message["duration"] = cue.duration;
   message["holds_outcome"] = cue.holds_outcome;
   m_commander_message_view_model->set_message(message);
@@ -3326,6 +3472,18 @@ auto GameEngine::describe_focus_entity(Engine::Core::EntityID id) const
       (m_session != nullptr
            ? m_session->owners().are_enemies(m_runtime.local_owner_id, unit->owner_id)
            : true);
+  info.is_ally =
+      !info.is_own && m_session != nullptr &&
+      m_session->owners().are_allies(m_runtime.local_owner_id, unit->owner_id);
+  if (described.is_building && m_session != nullptr && !m_level.is_spectator_mode) {
+    const auto kind = info.is_enemy ? Game::Systems::AllyCallKind::Attack
+                                    : Game::Systems::AllyCallKind::Defend;
+    if (Game::Systems::check_ally_call(
+            *m_world, m_session->owners(), m_runtime.local_owner_id, id, kind) ==
+        Game::Systems::AllyCallProblem::None) {
+      info.ally_call = QLatin1String(Game::Systems::ally_call_kind_key(kind));
+    }
+  }
   info.health = described.health;
   info.max_health = described.max_health;
   info.soldiers = described.soldiers;
