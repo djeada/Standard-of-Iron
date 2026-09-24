@@ -10646,14 +10646,6 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <translation>TAMBALEANTE</translation>
     </message>
     <message>
-        <source>BOW  ·  X</source>
-        <translation>ARCO  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>HOJA  ·  X</translation>
-    </message>
-    <message>
         <source>RUSH</source>
         <translation>EMBESTIDA</translation>
     </message>
@@ -10668,6 +10660,86 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     <message>
         <source>SPECIAL</source>
         <translation>ESPECIAL</translation>
+    </message>
+    <message>
+        <source>Strike</source>
+        <translation>Golpe</translation>
+    </message>
+    <message>
+        <source>Heavy</source>
+        <translation>Pesado</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>Bloquear</translation>
+    </message>
+    <message>
+        <source>Dodge</source>
+        <translation>Esquivar</translation>
+    </message>
+    <message>
+        <source>Lock on</source>
+        <translation>Fijar objetivo</translation>
+    </message>
+    <message>
+        <source>Sprint</source>
+        <translation>Correr</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>Cámara</translation>
+    </message>
+    <message>
+        <source>Army view</source>
+        <translation>Vista del ejército</translation>
+    </message>
+    <message>
+        <source>WINDED</source>
+        <translation>SIN ALIENTO</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2 to swap</source>
+        <translation>%1  ·  %2 para cambiar</translation>
+    </message>
+    <message>
+        <source>BOW</source>
+        <translation>ARCO</translation>
+    </message>
+    <message>
+        <source>BLADE</source>
+        <translation>HOJA</translation>
+    </message>
+    <message>
+        <source>AURA</source>
+        <translation>AURA</translation>
+    </message>
+    <message>
+        <source>RALLY</source>
+        <translation>REUNIR</translation>
+    </message>
+    <message>
+        <source>ON %1</source>
+        <translation>ACTIVO %1</translation>
+    </message>
+    <message>
+        <source>ON</source>
+        <translation>ACTIVO</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CLOSE</source>
+        <translation>CÁMARA  ·  CERCANA</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CHASE</source>
+        <translation>CÁMARA  ·  PERSECUCIÓN</translation>
+    </message>
+    <message>
+        <source>BOW DRAWN</source>
+        <translation>ARCO TENSADO</translation>
+    </message>
+    <message>
+        <source>BLADE DRAWN</source>
+        <translation>HOJA DESENVAINADA</translation>
     </message>
 </context>
 <context>

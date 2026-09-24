@@ -209,8 +209,9 @@ void apply_run_mode(World& world, const SetRunMode& run) {
       stamina = entity.add_component<Engine::Core::StaminaComponent>();
       const auto troop_type = Game::Units::spawn_typeToTroopType(unit->spawn_type);
       if (troop_type.has_value()) {
-        const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-            unit->nation_id, *troop_type);
+        const auto& profile =
+            Game::Systems::TroopProfileService::instance().get_profile_ref(
+                unit->nation_id, *troop_type);
         stamina->initialize_from_stats(profile.combat.max_stamina,
                                        profile.combat.stamina_regen_rate,
                                        profile.combat.stamina_depletion_rate);

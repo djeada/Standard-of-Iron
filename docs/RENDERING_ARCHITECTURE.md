@@ -229,6 +229,29 @@ Current Low settings include:
 
 Low is therefore not merely “High with smaller textures.” It changes several rendering features and content densities together.
 
+### Low on an old or software GPU
+
+Low is the preset that has to run on a GL 3.3 Core driver with no 4.x features. That covers old Intel and AMD integrated GPUs, and Mesa llvmpipe.
+
+- **First run picks Low on weak adapters.** If no graphics preset has been saved, `RenderBootstrap::initialize` switches to Low when the adapter is a software renderer (llvmpipe, softpipe, swrast, SwiftShader, Microsoft Basic Render, GDI Generic, Apple Software Renderer), or, except on macOS, when the context is below GL 4.3. macOS caps OpenGL at 4.1 on every GPU, so the version says nothing about a Mac's speed. `GraphicsSettings::quality_chosen_by_user()` stops a saved choice from being overridden.
+- **Context.** The entry point still asks for 4.5 Core. On Linux, Qt falls back to what the driver grants, so a 3.3-only Mesa driver still gets a 3.3 Core context. Do not request 3.3 on Linux: the NVIDIA driver then returns exactly 3.3 and the GPU culling path turns off on capable hardware.
+- **4.x features stay behind probes.** The only callers of compute, indirect draw, immutable storage and SSBO entry points are `rigged_cull_pipeline.cpp` and `platform_gl.h`, and 4.30 GLSL includes are used only by the optional 4.30 shaders. `scripts/validate_opengl_requirements.py` check 5 enforces both.
+- **Cheaper Low tier.**
+  - The post-process scene target is packed `R11F_G11F_B10F` when bloom, god rays and FXAA are all off. It keeps HDR range at half the bandwidth of RGBA16F.
+  - Local lights are capped at four per pixel, and local specular is skipped.
+  - The terrain noise atlas is capped at 2048² and the microdetail texture is 512².
+- **Rigged creatures without GL 4.3** draw one command each through `RiggedCharacterPipeline`. Its bone-palette ring has 1024 slots, so it orphans the buffer about twice per frame at two thousand creatures instead of about thirty. When there is no persistent mapping, the fallback streaming ring maps unsynchronised because each slot is already fenced.
+
+To reproduce locally on an NVIDIA machine, force Mesa and cap it at 3.3:
+
+```
+__GLX_VENDOR_LIBRARY_NAME=mesa LIBGL_ALWAYS_SOFTWARE=1 \
+MESA_GL_VERSION_OVERRIDE=3.3 MESA_GLSL_VERSION_OVERRIDE=330 \
+  build/bin/standard_of_iron --renderer-self-test
+```
+
+Point `XDG_CONFIG_HOME` at an empty directory to see the first-run Low selection.
+
 ## Medium profile
 
 Current Medium settings include:
@@ -478,6 +501,36 @@ The OpenGL backend consumes the draw queue and owns the GL-specific execution de
 - resource lifetime.
 
 Higher layers submit render intent. They should not depend on raw GL state layout unless they are explicitly part of the backend implementation.
+
+### GL object lifetime
+
+The process has one GL context that is never recreated. The gameplay `GLView` and the commander portrait are both `QQuickFramebufferObject` items in the same window, so they share the scene-graph context and render thread. The portrait still owns a second `Renderer` and `Backend`, and that is why per-renderer state matters even with one context.
+
+Every GL name records the share group it was created in (`current_gl_share_group()`), and is released through one policy in `render/gl/gl_lifetime.*`:
+
+- If the owning share group is current, the name is deleted immediately.
+- Otherwise it is queued with `defer_gl_delete`. The queue drains only into its own group, and is discarded (`forget_gl_share_group`) when that group is destroyed.
+- No destructor issues a GL call without a current context.
+
+`Buffer`, `VertexArray`, `Texture`, `Shader` (as `DeferredGlObject::Program`) and the resource manager's 3D wear volume all use `release_gl_object`. Pipeline objects in `render/gl/backend/*` still delete their own names. For that reason `Backend::~Backend()`, when it runs without a context, releases (abandons) the pipelines rather than destroying them, but it still clears the shared geometry cache: cached meshes defer their names safely.
+
+`Mesh::prepare_draw` re-uploads when its vertex array belongs to a different share group than the current one. The process-global `SharedGeometryCache` can therefore survive a context change without handing out dead VAO names.
+
+`current_gl_share_group()` is called per draw, so it caches the last context group per thread. The cache is invalidated by a generation counter bumped whenever a group is destroyed, so a reused `QOpenGLContextGroup` address cannot resolve to a stale id.
+
+### Renderer-scoped state
+
+- **Graphics quality.** `GraphicsSettings` publishes quality, profile pointer and backend kind as atomics. The profiles are immutable `constexpr` tables, so a reader on the render thread or a prepare worker always sees a whole profile while the GUI thread changes quality.
+- **Shader reload.** `Shader::set_global_defines` bumps a generation only when the defines actually change. `Shader::reload_all()` recompiles only programs that were compiled under an older generation and that belong to the current share group. When both backends apply the same tier, the second one recompiles nothing.
+- **Runtime-bake barrier.** A `Renderer` lifts the global no-runtime-bake barrier on `initialize()`/`shutdown()` only if it raised it. Initializing or tearing down the portrait renderer no longer re-enables runtime bakes for the gameplay renderer. The barrier itself remains process-global because bake sites deep in the creature caches read it without a renderer in hand. Both renderers run one after the other on the render thread, and the portrait wraps its frames in `RuntimeBakeAllowScope`.
+- **Frame profile.** The portrait wraps its frames in `ScopedFrameProfileRedirect`, so its draw counts and phase timings go to a local `FrameProfile` instead of overwriting the gameplay frame shown by F10 and the benchmark.
+- **Parallel prepare.** `prepare_unit_plans` freezes the render world's registry (`Registry::StructureFreeze`) while worker threads prepare creatures. Adding or removing components, creating storages, or creating or destroying entities while frozen is counted in `structure_violations()` and asserts in debug builds. A preparer that forgets to add a component in `ensure_prepare_components` fails there instead of racing.
+
+Not changed, deliberately:
+
+- `CameraVisibility` and `VisibilityBudgetTracker` stay process-global. The portrait renderer draws no dust or contact shadows that consult them, and `begin_frame` resets run one after the other on one thread.
+- `Renderer::shutdown()` is terminal. Every caller destroys the renderer right after it, so there is no re-initialize contract to honour.
+- Draw commands keep borrowed raw pointers. The queue is filled, sorted and played back within one `end_frame`, and the only reader of a previous frame's queue (`render_software_preview`) is test-only.
 
 ## Software backend
 

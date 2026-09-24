@@ -10649,14 +10649,6 @@ Szerokie pole widzenia i trwała kotwica osady</translation>
         <translation>ZACHWIANY</translation>
     </message>
     <message>
-        <source>BOW  ·  X</source>
-        <translation>ŁUK  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>OSTRZE  ·  X</translation>
-    </message>
-    <message>
         <source>SPECIAL</source>
         <translation>SZTUKA</translation>
     </message>
@@ -10671,6 +10663,86 @@ Szerokie pole widzenia i trwała kotwica osady</translation>
     <message>
         <source>READY</source>
         <translation>GOTOWE</translation>
+    </message>
+    <message>
+        <source>Strike</source>
+        <translation>Cios</translation>
+    </message>
+    <message>
+        <source>Heavy</source>
+        <translation>Ciężki</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>Blok</translation>
+    </message>
+    <message>
+        <source>Dodge</source>
+        <translation>Unik</translation>
+    </message>
+    <message>
+        <source>Lock on</source>
+        <translation>Namierz</translation>
+    </message>
+    <message>
+        <source>Sprint</source>
+        <translation>Sprint</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>Kamera</translation>
+    </message>
+    <message>
+        <source>Army view</source>
+        <translation>Widok armii</translation>
+    </message>
+    <message>
+        <source>WINDED</source>
+        <translation>ZADYSZKA</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2 to swap</source>
+        <translation>%1  ·  %2, aby zmienić</translation>
+    </message>
+    <message>
+        <source>BOW</source>
+        <translation>ŁUK</translation>
+    </message>
+    <message>
+        <source>BLADE</source>
+        <translation>OSTRZE</translation>
+    </message>
+    <message>
+        <source>AURA</source>
+        <translation>AURA</translation>
+    </message>
+    <message>
+        <source>RALLY</source>
+        <translation>ZBIÓRKA</translation>
+    </message>
+    <message>
+        <source>ON %1</source>
+        <translation>AKTYWNE %1</translation>
+    </message>
+    <message>
+        <source>ON</source>
+        <translation>AKTYWNE</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CLOSE</source>
+        <translation>KAMERA  ·  BLISKA</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CHASE</source>
+        <translation>KAMERA  ·  POŚCIG</translation>
+    </message>
+    <message>
+        <source>BOW DRAWN</source>
+        <translation>ŁUK NAPIĘTY</translation>
+    </message>
+    <message>
+        <source>BLADE DRAWN</source>
+        <translation>OSTRZE DOBYTE</translation>
     </message>
 </context>
 <context>

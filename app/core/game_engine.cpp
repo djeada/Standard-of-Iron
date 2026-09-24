@@ -588,6 +588,8 @@ void GameEngine::note_dropped_simulation_ticks(std::uint64_t dropped, float real
   }
 
   m_dropped_simulation_ticks += dropped;
+  Render::Profiling::global_profile().dropped_sim_ticks.store(
+      m_dropped_simulation_ticks, std::memory_order_relaxed);
   if (m_dropped_tick_report_cooldown > 0.0F) {
     return;
   }

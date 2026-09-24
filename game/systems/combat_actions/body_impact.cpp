@@ -92,11 +92,33 @@ auto find_body_impact_contact(
     return contact;
   }
 
+  auto const* attacker_transform =
+      attacker.get_component<Engine::Core::TransformComponent>();
+  float const hit_radius = std::max(0.0F, definition.hit_shape.radius);
+  float const max_forward =
+      std::max(definition.hit_shape.reach + hit_radius, hit_radius);
+  float const max_lateral = 2.0F * hit_radius;
+  float const reach_squared = (max_forward * max_forward) + (max_lateral * max_lateral);
+
   auto consider = [&](Engine::Core::Entity* candidate,
                       float& best_score,
                       BodyImpactContact& best_contact) {
-    if (candidate == nullptr || candidate == &attacker ||
-        !Game::Systems::Combat::may_attack(
+    if (candidate == nullptr || candidate == &attacker) {
+      return;
+    }
+    if (attacker_transform != nullptr) {
+      auto const* candidate_transform =
+          candidate->get_component<Engine::Core::TransformComponent>();
+      if (candidate_transform == nullptr) {
+        return;
+      }
+      float const dx = candidate_transform->position.x - attacker_transform->position.x;
+      float const dz = candidate_transform->position.z - attacker_transform->position.z;
+      if ((dx * dx) + (dz * dz) > reach_squared * 1.0001F + 1.0e-4F) {
+        return;
+      }
+    }
+    if (!Game::Systems::Combat::may_attack(
             attacker_unit,
             candidate,
             {.intent = Game::Systems::Combat::EngagementIntent::Ordered,

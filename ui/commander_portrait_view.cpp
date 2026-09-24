@@ -30,6 +30,7 @@
 #include "render/graphics_settings.h"
 #include "render/humanoid/schema/skeleton_schema.h"
 #include "render/palette.h"
+#include "render/profiling/frame_profile.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 #include "scene/environment_lighting.h"
@@ -762,6 +763,8 @@ void CommanderPortraitView::PortraitRenderer::render() {
   }
 
   Render::Creature::RuntimeBakeAllowScope const allow_bakes;
+  Render::Profiling::FrameProfile portrait_profile;
+  Render::Profiling::ScopedFrameProfileRedirect const own_profile(portrait_profile);
 
   if (!ensure_scene()) {
     return;

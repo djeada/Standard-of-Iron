@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -64,6 +65,7 @@ public:
   using EntityCreatedCallback = std::function<void(EntityID)>;
 
   class Lock;
+  class StructureFreeze;
 
   Registry();
   ~Registry();
@@ -113,6 +115,9 @@ public:
     const Detail::ScopedRegistryLock lock(m_mutex, m_lock_owner);
     auto& store = storage<T>();
     const bool existed = store.contains(entity_id);
+    if (!existed) {
+      note_structure_change();
+    }
     T& component = store.emplace(entity_id, std::forward<Args>(args)...);
     if (!existed) {
       notify(entity_id, store, true);
@@ -145,6 +150,7 @@ public:
       return false;
     }
     const Detail::ScopedRegistryLock lock(m_mutex, m_lock_owner);
+    note_structure_change();
     if (!store->erase(entity_id)) {
       return false;
     }
@@ -157,6 +163,7 @@ public:
     const ComponentTypeId type_id = component_type_id<T>();
     Detail::note_component_access(type_id, true);
     if (m_storages.size() <= type_id) {
+      note_structure_change();
       m_storages.resize(static_cast<std::size_t>(type_id) + 1U);
     }
     if (m_storages[type_id] == nullptr) {
@@ -203,6 +210,13 @@ public:
   }
 
   [[nodiscard]] auto mutex() const noexcept -> std::recursive_mutex& { return m_mutex; }
+
+  [[nodiscard]] auto structure_frozen() const noexcept -> bool {
+    return m_structure_frozen.load(std::memory_order_acquire);
+  }
+  [[nodiscard]] auto structure_violations() const noexcept -> std::uint64_t {
+    return m_structure_violations.load(std::memory_order_relaxed);
+  }
   [[nodiscard]] auto lock_owner() const noexcept -> std::atomic<std::uint64_t>& {
     return m_lock_owner;
   }
@@ -222,6 +236,13 @@ private:
 
   void detach_all_components(EntityID entity_id);
 
+  void note_structure_change() noexcept {
+    if (m_structure_frozen.load(std::memory_order_acquire)) {
+      m_structure_violations.fetch_add(1, std::memory_order_relaxed);
+      assert(false && "component layout changed while the registry was frozen");
+    }
+  }
+
   std::vector<Slot> m_slots;
   std::vector<std::uint32_t> m_free_slots;
   std::size_t m_live_count = 0;
@@ -230,6 +251,25 @@ private:
 
   mutable std::recursive_mutex m_mutex;
   mutable std::atomic<std::uint64_t> m_lock_owner{0};
+  std::atomic<bool> m_structure_frozen{false};
+  std::atomic<std::uint64_t> m_structure_violations{0};
+};
+
+class Registry::StructureFreeze {
+public:
+  explicit StructureFreeze(Registry& registry) noexcept
+      : m_registry(registry)
+      , m_previous(
+            registry.m_structure_frozen.exchange(true, std::memory_order_acq_rel)) {}
+  ~StructureFreeze() {
+    m_registry.m_structure_frozen.store(m_previous, std::memory_order_release);
+  }
+  StructureFreeze(const StructureFreeze&) = delete;
+  auto operator=(const StructureFreeze&) -> StructureFreeze& = delete;
+
+private:
+  Registry& m_registry;
+  bool m_previous;
 };
 
 class Registry::Lock {

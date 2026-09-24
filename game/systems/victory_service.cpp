@@ -209,7 +209,7 @@ void VictoryService::reset() {
   m_tracked_enemy_spawn_types.fill(false);
   m_tracked_local_spawn_types.fill(false);
   m_only_commander_structure_types.clear();
-  m_elapsed_time = 0.0F;
+  m_elapsed_time = 0.0;
   m_startup_delay = 0.0F;
   m_has_time_based_victory = false;
   m_has_undead_zone_rules = false;
@@ -274,7 +274,7 @@ void VictoryService::configure(const VictoryRuleSet& rules, int local_owner_id) 
 
 auto VictoryService::serialize_state() const -> QJsonObject {
   QJsonObject state;
-  state["elapsed_time"] = static_cast<double>(m_elapsed_time);
+  state["elapsed_time"] = m_elapsed_time;
   state["startup_delay"] = static_cast<double>(m_startup_delay);
   state["spectator_poll_timer"] = static_cast<double>(m_spectator_poll_timer);
   state["only_commander_defeat_armed"] = m_only_commander_defeat_armed;
@@ -299,7 +299,7 @@ void VictoryService::restore_state(const QJsonObject& state) {
   if (state.isEmpty()) {
     return;
   }
-  m_elapsed_time = static_cast<float>(state.value("elapsed_time").toDouble(0.0));
+  m_elapsed_time = state.value("elapsed_time").toDouble(0.0);
   m_startup_delay = static_cast<float>(state.value("startup_delay").toDouble(0.0));
   m_spectator_poll_timer =
       static_cast<float>(state.value("spectator_poll_timer").toDouble(0.0));
@@ -342,7 +342,7 @@ void VictoryService::update(Engine::Core::World& world, float delta_time) {
     mark_world_dirty();
   }
 
-  m_elapsed_time += delta_time;
+  m_elapsed_time += static_cast<double>(delta_time);
 
   if (m_spectator_mode) {
 
@@ -865,7 +865,7 @@ auto VictoryService::check_victory_rule(const VictoryRule& rule,
                                              elimination_rule.structure_types) == 0;
           },
           [this](const SurviveTimeVictoryRule& survive_rule) {
-            return m_elapsed_time >= survive_rule.duration;
+            return m_elapsed_time >= static_cast<double>(survive_rule.duration);
           },
           [&summary](const ControlStructuresVictoryRule& control_rule) {
             return count_matching_structures(summary.local_owned_structure_counts,
@@ -909,7 +909,9 @@ auto VictoryService::seconds_until_deadline() const -> float {
   float shortest = -1.0F;
   for (const auto& condition : m_rule_set.defeat_rules) {
     if (const auto* rule = std::get_if<TimeLimitDefeatRule>(&condition.rule)) {
-      const float remaining = std::max(0.0F, rule->duration - m_elapsed_time);
+      const float remaining = std::max(
+          0.0F,
+          static_cast<float>(static_cast<double>(rule->duration) - m_elapsed_time));
       if (shortest < 0.0F || remaining < shortest) {
         shortest = remaining;
       }
@@ -942,7 +944,7 @@ auto VictoryService::check_defeat_rule(const DefeatRule& rule,
                        0;
           },
           [this](const TimeLimitDefeatRule& time_limit_rule) {
-            return m_elapsed_time >= time_limit_rule.duration;
+            return m_elapsed_time >= static_cast<double>(time_limit_rule.duration);
           }},
       rule);
 }

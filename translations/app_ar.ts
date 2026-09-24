@@ -10658,14 +10658,6 @@ Builders reap it for the food that recruits civilians</source>
         <translation>مترنّح</translation>
     </message>
     <message>
-        <source>BOW  ·  X</source>
-        <translation>قوس  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>نصل  ·  X</translation>
-    </message>
-    <message>
         <source>RUSH</source>
         <translation>اندفاعة</translation>
     </message>
@@ -10680,6 +10672,86 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>SPECIAL</source>
         <translation>خاص</translation>
+    </message>
+    <message>
+        <source>Strike</source>
+        <translation>ضربة</translation>
+    </message>
+    <message>
+        <source>Heavy</source>
+        <translation>ضربة قوية</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>صدّ</translation>
+    </message>
+    <message>
+        <source>Dodge</source>
+        <translation>مراوغة</translation>
+    </message>
+    <message>
+        <source>Lock on</source>
+        <translation>تثبيت الهدف</translation>
+    </message>
+    <message>
+        <source>Sprint</source>
+        <translation>عدو</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>الكاميرا</translation>
+    </message>
+    <message>
+        <source>Army view</source>
+        <translation>عرض الجيش</translation>
+    </message>
+    <message>
+        <source>WINDED</source>
+        <translation>منهك</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2 to swap</source>
+        <translation>%1  ·  %2 للتبديل</translation>
+    </message>
+    <message>
+        <source>BOW</source>
+        <translation>القوس</translation>
+    </message>
+    <message>
+        <source>BLADE</source>
+        <translation>النصل</translation>
+    </message>
+    <message>
+        <source>AURA</source>
+        <translation>الهالة</translation>
+    </message>
+    <message>
+        <source>RALLY</source>
+        <translation>تجميع</translation>
+    </message>
+    <message>
+        <source>ON %1</source>
+        <translation>نشط %1</translation>
+    </message>
+    <message>
+        <source>ON</source>
+        <translation>نشط</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CLOSE</source>
+        <translation>الكاميرا  ·  قريبة</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CHASE</source>
+        <translation>الكاميرا  ·  مطاردة</translation>
+    </message>
+    <message>
+        <source>BOW DRAWN</source>
+        <translation>القوس مشدود</translation>
+    </message>
+    <message>
+        <source>BLADE DRAWN</source>
+        <translation>النصل مسلول</translation>
     </message>
 </context>
 <context>

@@ -71,6 +71,10 @@ auto detail_band(float u, float v, int cells, int band) -> float {
 
 } // namespace
 
+ResourceManager::~ResourceManager() {
+  release_gl_object(DeferredGlObject::Texture, m_wear_volume, m_wear_volume_group);
+}
+
 auto ResourceManager::initialize() -> bool {
   initializeOpenGLFunctions();
 
@@ -157,7 +161,9 @@ auto ResourceManager::initialize() -> bool {
     }
   }
 
+  release_gl_object(DeferredGlObject::Texture, m_wear_volume, m_wear_volume_group);
   glGenTextures(1, &m_wear_volume);
+  m_wear_volume_group = current_gl_share_group();
   note_textures_created(1);
   glBindTexture(GL_TEXTURE_3D, m_wear_volume);
   glTexImage3D(GL_TEXTURE_3D,

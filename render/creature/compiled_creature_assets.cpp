@@ -893,6 +893,73 @@ auto sample_source_clip(SourceAsset const& asset,
   return true;
 }
 
+auto sample_source_slots(SourceAsset const& asset,
+                         SourceConfig const& config,
+                         std::string_view source_clip,
+                         float normalized_phase,
+                         std::span<const std::size_t> joint_slots,
+                         std::span<QMatrix4x4> out) noexcept -> bool {
+  if (!asset.status.loaded || out.size() < asset.bind_palette.size()) {
+    return false;
+  }
+  auto const clip_it =
+      std::find_if(asset.clips.begin(), asset.clips.end(), [&](SourceClip const& clip) {
+        return clip.name == source_clip;
+      });
+  if (clip_it == asset.clips.end()) {
+    return false;
+  }
+  SourceClip const& clip = *clip_it;
+  float const phase = std::clamp(normalized_phase, 0.0F, 1.0F);
+  float const time = phase * clip.duration;
+
+  thread_local std::vector<bool> needed;
+  needed.assign(asset.default_poses.size(), false);
+  for (std::size_t const slot : joint_slots) {
+    if (slot >= asset.joint_nodes.size()) {
+      return false;
+    }
+    int node = asset.joint_nodes[slot];
+    while (node >= 0 && !needed[static_cast<std::size_t>(node)]) {
+      needed[static_cast<std::size_t>(node)] = true;
+      node = asset.parents[static_cast<std::size_t>(node)];
+    }
+  }
+
+  thread_local std::vector<NodePose> poses;
+  poses.assign(asset.default_poses.begin(), asset.default_poses.end());
+  for (AnimationChannel const& channel : clip.channels) {
+    auto const node = static_cast<std::size_t>(channel.node);
+    if (needed[node]) {
+      sample_channel(channel, time, poses[node]);
+    }
+  }
+
+  thread_local std::vector<QMatrix4x4> world;
+  thread_local std::vector<bool> evaluated;
+  world.resize(poses.size());
+  evaluated.assign(poses.size(), false);
+  auto evaluate = [&](auto&& self, std::size_t node) -> void {
+    if (evaluated[node]) {
+      return;
+    }
+    int const parent = asset.parents[node];
+    if (parent >= 0) {
+      self(self, static_cast<std::size_t>(parent));
+      world[node] = world[static_cast<std::size_t>(parent)] * local_matrix(poses[node]);
+    } else {
+      world[node] = local_matrix(poses[node]);
+    }
+    evaluated[node] = true;
+  };
+  for (std::size_t const slot : joint_slots) {
+    auto const node = static_cast<std::size_t>(asset.joint_nodes[slot]);
+    evaluate(evaluate, node);
+    out[slot] = normalize_world_matrix(world[node], config);
+  }
+  return true;
+}
+
 void rotate_elephant_subtree(std::span<QMatrix4x4> palette,
                              std::span<const BoneDef> bones,
                              std::size_t root,
@@ -993,18 +1060,29 @@ auto horse_source_pose_mount_frame(std::string_view source_clip,
                                    float normalized_phase,
                                    Render::GL::MountedAttachmentFrame& frame) noexcept
     -> bool {
-  thread_local std::array<QMatrix4x4, k_horse_source_bone_count> pose{};
-  if (!horse_source_sample_clip(source_clip, normalized_phase, pose)) {
+  auto const sockets = Render::Horse::mounted_socket_set();
+  auto const saddle = static_cast<std::size_t>(sockets.saddle);
+  auto const bridle = static_cast<std::size_t>(sockets.bridle);
+  auto const& bind = source_asset().bind_palette;
+  if (saddle >= bind.size() || bridle >= bind.size()) {
     return false;
   }
-
-  namespace RCQ = Render::Creature::Quadruped;
-  auto const bind = source_asset().bind_palette;
-  auto const sockets = Render::Horse::mounted_socket_set();
+  thread_local std::array<QMatrix4x4, k_horse_source_bone_count> pose{};
+  const std::array<std::size_t, 2> mount_joints{saddle, bridle};
+  if (!sample_source_slots(source_asset(),
+                           k_horse_config,
+                           source_clip,
+                           normalized_phase,
+                           mount_joints,
+                           pose)) {
+    return false;
+  }
+  static const std::array<QMatrix4x4, 2> inverse_bind{bind[saddle].inverted(),
+                                                      bind[bridle].inverted()};
   auto const back =
-      RCQ::bone_delta(pose, bind, static_cast<std::size_t>(sockets.saddle));
+      Render::Creature::Quadruped::BoneDelta{pose[saddle] * inverse_bind[0]};
   auto const head =
-      RCQ::bone_delta(pose, bind, static_cast<std::size_t>(sockets.bridle));
+      Render::Creature::Quadruped::BoneDelta{pose[bridle] * inverse_bind[1]};
 
   frame.saddle_center = back.point(frame.saddle_center);
   frame.seat_position = back.point(frame.seat_position);

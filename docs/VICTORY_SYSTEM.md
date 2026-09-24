@@ -134,6 +134,8 @@ This makes timed objectives deterministic. A survive-time objective expires afte
 
 A paused match advances no simulation ticks, so objective time also stops.
 
+Elapsed objective time is accumulated in a `double`. With a `float`, repeatedly adding a 1/30 s step rounds the same way every time, so the error does not average out: after 30,000 ticks the float clock is about 0.16 s behind, and a long time limit expires ticks late. `VictoryServiceTest.ALongMissionClockDoesNotDriftAcrossThousandsOfTicks` pins this.
+
 `RuntimeFrameOrchestratorTest.TheObjectiveClockRunsOnTicksNotOnFrames` verifies that the same survive-time rule resolves on the same tick under 60 FPS, 15 FPS, and a deliberately stuttering presentation schedule.
 
 Because the victory update now runs on the simulation path, its completion callback also runs on the simulation thread. `GameEngine` serializes simulation and render access through the frame mutex, preserving the same world consistency expected by callers.

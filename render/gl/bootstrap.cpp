@@ -5,6 +5,7 @@
 #include <qglobal.h>
 
 #include "gl_capabilities.h"
+#include "render/graphics_settings.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 
@@ -32,6 +33,15 @@ auto RenderBootstrap::initialize(Renderer& renderer, Camera& camera) -> bool {
                 << GLCapabilities::k_required_minor
                 << "Core floor the renderer requires";
     return false;
+  }
+
+  auto& graphics = Render::GraphicsSettings::instance();
+  if (!graphics.quality_chosen_by_user() &&
+      graphics.quality() != Render::GraphicsQuality::Low &&
+      GLCapabilities::is_low_end_adapter(RenderBootstrap::adapter())) {
+    qInfo() << "RenderBootstrap: no saved graphics preset and a low-end adapter ("
+            << RenderBootstrap::adapter().renderer << "); starting on the Low preset";
+    graphics.set_quality(Render::GraphicsQuality::Low);
   }
 
   qInfo() << "RenderBootstrap: Calling renderer.initialize()...";

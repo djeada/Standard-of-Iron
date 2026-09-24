@@ -18,6 +18,8 @@
 #include <variant>
 #include <vector>
 
+#include "gl_lifetime.h"
+
 namespace Render::GL {
 
 class Shader : protected QOpenGLFunctions_3_3_Core {
@@ -100,6 +102,8 @@ private:
   };
 
   GLuint m_program = 0;
+  GlShareGroup m_share_group = k_unknown_share_group;
+  std::uint64_t m_defines_generation = 0;
   QString m_debug_name;
   auto compile_shader(const QString& source, GLenum type) -> GLuint;
   auto link_program(GLuint vertex_shader, GLuint fragment_shader) -> GLuint;

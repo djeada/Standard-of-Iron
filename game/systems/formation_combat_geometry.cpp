@@ -785,6 +785,23 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
   return entry != nullptr ? entry->layout : FormationLayout{};
 }
 
+auto formation_definition_epoch() -> std::uint64_t {
+  return formation_cache_epoch();
+}
+
+void resolve_layout_into(const Engine::Core::Entity& entity, FormationLayout& out) {
+  if (auto const* entry = resolve_layout_entry(entity)) {
+    out = entry->layout;
+    return;
+  }
+  out = FormationLayout{};
+}
+
+auto resolve_layout_spacing(const Engine::Core::Entity& entity) -> float {
+  auto const* entry = resolve_layout_entry(entity);
+  return entry != nullptr ? entry->layout.spacing : FormationLayout{}.spacing;
+}
+
 void soldier_spatial_anchors_into(const Engine::Core::Entity& entity,
                                   const FormationLayout& base_layout,
                                   std::vector<SoldierSpatialAnchor>& result) {
@@ -1666,8 +1683,11 @@ auto engaged_soldiers(const Engine::Core::Entity& attacker,
 auto engagement_pairs(const Engine::Core::Entity& attacker,
                       const Engine::Core::Entity& target)
     -> std::vector<Engine::Core::FormationEngagementPair> {
-  return engagement_pairs(
-      attacker, target, resolve_layout(attacker), resolve_layout(target));
+  thread_local FormationLayout attacker_layout;
+  thread_local FormationLayout target_layout;
+  resolve_layout_into(attacker, attacker_layout);
+  resolve_layout_into(target, target_layout);
+  return engagement_pairs(attacker, target, attacker_layout, target_layout);
 }
 
 auto engagement_pairs(const Engine::Core::Entity& attacker,
@@ -1733,7 +1753,7 @@ auto select_damage_engagement_pair(
         }
         return lhs.attacker_slot < rhs.attacker_slot;
       });
-  float const spacing = resolve_layout(attacker).spacing;
+  float const spacing = resolve_layout_spacing(attacker);
   float const equivalent_contact_band = std::max(0.05F, spacing * 0.18F);
   std::size_t contact_candidate_count = 0U;
   for (auto const& pair : pairs) {

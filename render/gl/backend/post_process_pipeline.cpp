@@ -17,6 +17,7 @@ namespace {
 
 constexpr unsigned int k_format_rgba16f = 0x881A;
 constexpr unsigned int k_format_rgba8 = 0x8058;
+constexpr unsigned int k_format_r11g11b10f = 0x8C3A;
 
 } // namespace
 
@@ -89,8 +90,8 @@ auto PostProcessPipeline::create_color_target(RenderTarget& target,
                width,
                height,
                0,
-               GL_RGBA,
-               internal_format == k_format_rgba16f ? GL_FLOAT : GL_UNSIGNED_BYTE,
+               internal_format == k_format_r11g11b10f ? GL_RGB : GL_RGBA,
+               internal_format == k_format_rgba8 ? GL_UNSIGNED_BYTE : GL_FLOAT,
                nullptr);
   note_texture_storage(
       texture_transfer_bytes(static_cast<std::size_t>(width),
@@ -127,7 +128,13 @@ auto PostProcessPipeline::ensure_targets(int width, int height) -> bool {
   const int bloom_height = std::max(height / k_bloom_divisor, 1);
 
   m_scene_is_float = true;
-  if (!create_color_target(m_scene, width, height, k_format_rgba16f)) {
+  const bool compact_scene = !m_passes.bloom && !m_passes.godrays && !m_passes.fxaa;
+  const bool scene_ready =
+      compact_scene && create_color_target(m_scene, width, height, k_format_r11g11b10f);
+  if (!scene_ready && compact_scene) {
+    release_targets();
+  }
+  if (!scene_ready && !create_color_target(m_scene, width, height, k_format_rgba16f)) {
     release_targets();
     m_scene_is_float = false;
     if (!create_color_target(m_scene, width, height, k_format_rgba8)) {

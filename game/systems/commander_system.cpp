@@ -233,8 +233,8 @@ void reset_commander_modified_stats(Engine::Core::World* world) {
       continue;
     }
 
-    const auto profile =
-        TroopProfileService::instance().get_profile(unit->nation_id, *troop_type);
+    const auto& profile =
+        TroopProfileService::instance().get_profile_ref(unit->nation_id, *troop_type);
     unit->speed = profile.combat.speed;
 
     if (auto* attack = world->try_get<Engine::Core::AttackComponent>(entity_id)) {

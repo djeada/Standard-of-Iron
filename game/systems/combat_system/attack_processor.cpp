@@ -6,6 +6,7 @@
 #include <cmath>
 #include <numbers>
 #include <optional>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "../../core/component.h"
@@ -1154,26 +1155,64 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
   begin_attack_animation(attacker, held_before);
 }
 
-auto is_formation_reserve(Engine::Core::Entity* entity,
-                          Engine::Core::World* world) -> bool {
-  auto const* mode = entity->get_component<Engine::Core::FormationModeComponent>();
-  if (mode == nullptr || !mode->active || mode->formation_id == 0 ||
-      mode->stable_rank < 0) {
-    return false;
-  }
-  int front_rank = mode->stable_rank;
-  for (auto [member_id, member_mode, member_unit] :
-       world->view<Engine::Core::FormationModeComponent,
-                   Engine::Core::UnitComponent>()) {
-    (void)member_id;
-    if (member_unit.health > 0 && member_mode.active &&
-        member_mode.formation_id == mode->formation_id &&
-        member_mode.stable_rank >= 0) {
-      front_rank = std::min(front_rank, member_mode.stable_rank);
+class FormationRanks {
+public:
+  explicit FormationRanks(Engine::Core::World& world)
+      : m_world(world) {
+    for (auto [member_id, member_mode, member_unit] :
+         world.view<Engine::Core::FormationModeComponent,
+                    Engine::Core::UnitComponent>()) {
+      (void)member_unit;
+      if (member_mode.formation_id == 0 || member_mode.stable_rank < 0) {
+        continue;
+      }
+      m_members[member_mode.formation_id].push_back(
+          Member{.rank = member_mode.stable_rank, .id = member_id});
+    }
+    for (auto& [formation_id, members] : m_members) {
+      (void)formation_id;
+      std::sort(members.begin(), members.end(), [](const Member& a, const Member& b) {
+        return a.rank != b.rank ? a.rank < b.rank : a.id < b.id;
+      });
     }
   }
-  return mode->stable_rank > front_rank;
-}
+
+  [[nodiscard]] auto is_reserve(Engine::Core::Entity* entity) const -> bool {
+    auto const* mode = entity->get_component<Engine::Core::FormationModeComponent>();
+    if (mode == nullptr || !mode->active || mode->formation_id == 0 ||
+        mode->stable_rank < 0) {
+      return false;
+    }
+    auto const found = m_members.find(mode->formation_id);
+    if (found == m_members.end()) {
+      return false;
+    }
+    for (const Member& member : found->second) {
+      if (member.rank >= mode->stable_rank) {
+        return false;
+      }
+      auto const* member_mode =
+          m_world.try_get<Engine::Core::FormationModeComponent>(member.id);
+      auto const* member_unit = m_world.try_get<Engine::Core::UnitComponent>(member.id);
+      if (member_mode != nullptr && member_unit != nullptr && member_unit->health > 0 &&
+          member_mode->active && member_mode->formation_id == mode->formation_id &&
+          member_mode->stable_rank >= 0 &&
+          member_mode->stable_rank < mode->stable_rank) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+private:
+  struct Member {
+    int rank = 0;
+    Engine::Core::EntityID id = 0;
+  };
+
+  Engine::Core::World& m_world;
+  std::unordered_map<std::uint64_t, std::vector<Member>> m_members;
+};
 
 auto claim_commander_signature(Engine::Core::Entity* attacker, int& damage)
     -> std::optional<Game::Systems::CombatActions::CombatActionId> {
@@ -1536,6 +1575,7 @@ void process_attacks(Engine::Core::World* world,
   std::vector<CommandService::MoveIntent> chase_move_intents;
   chase_move_intents.reserve(units.size());
   FacingLedger facing_ledger;
+  const FormationRanks formation_ranks(*world);
 
   for (auto* attacker : units) {
     if (attacker->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -1564,7 +1604,7 @@ void process_attacks(Engine::Core::World* world,
       continue;
     }
 
-    if (is_formation_reserve(attacker, world)) {
+    if (formation_ranks.is_reserve(attacker)) {
       Game::Systems::CombatRules::clear_rts_combat_tracking(attacker);
       continue;
     }

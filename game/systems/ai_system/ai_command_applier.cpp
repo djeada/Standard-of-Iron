@@ -212,10 +212,11 @@ auto AICommandApplier::apply(Engine::Core::World& world,
         const auto* owner_nation =
             Game::Session::session_for(world).nations().get_nation_for_player(
                 ai_owner_id);
-        const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-            owner_nation != nullptr ? owner_nation->id
-                                    : Game::Systems::NationID::RomanRepublic,
-            command.product_type);
+        const auto& profile =
+            Game::Systems::TroopProfileService::instance().get_profile_ref(
+                owner_nation != nullptr ? owner_nation->id
+                                        : Game::Systems::NationID::RomanRepublic,
+                command.product_type);
         trace_refused_production(
             ai_owner_id,
             command.product_type,

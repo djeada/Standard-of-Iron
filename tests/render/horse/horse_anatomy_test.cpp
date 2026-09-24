@@ -14,6 +14,7 @@
 #include "render/horse/horse_profile_data.h"
 #include "render/horse/horse_source_asset.h"
 #include "render/horse/horse_spec.h"
+#include "render/horse/schema/mounted_sockets.h"
 
 namespace {
 
@@ -213,6 +214,37 @@ TEST(HorseSourceAssetTest, RiderSocketFollowsAuthoredBackBone) {
     EXPECT_NEAR(mount.seat_right.length(), 1.0F, 1.0e-5F);
     EXPECT_NEAR(mount.seat_up.length(), 1.0F, 1.0e-5F);
     EXPECT_NEAR(mount.seat_forward.length(), 1.0F, 1.0e-5F);
+  }
+}
+
+TEST(HorseSourceAssetTest, MountFrameMatchesTheFullClipSample) {
+  auto const profile = Render::GL::make_horse_profile(
+      0U, QVector3D(0.4F, 0.25F, 0.12F), QVector3D(0.7F, 0.2F, 0.1F));
+  auto const bind = Render::Horse::horse_source_bind_palette();
+  auto const sockets = Render::Horse::mounted_socket_set();
+  auto const saddle = static_cast<std::size_t>(sockets.saddle);
+  auto const bridle = static_cast<std::size_t>(sockets.bridle);
+
+  for (std::string_view const clip : {"Idle", "Walk", "Gallop"}) {
+    for (int frame = 0; frame < 32; ++frame) {
+      float const phase = static_cast<float>(frame) / 32.0F;
+      auto fast = Render::GL::compute_mount_frame(profile);
+      ASSERT_TRUE(Render::Horse::horse_source_pose_mount_frame(clip, phase, fast));
+
+      Render::Horse::BonePalette pose{};
+      ASSERT_TRUE(Render::Horse::horse_source_sample_clip(clip, phase, pose));
+      QMatrix4x4 const back = pose[saddle] * bind[saddle].inverted();
+      QMatrix4x4 const head = pose[bridle] * bind[bridle].inverted();
+      auto const rest = Render::GL::compute_mount_frame(profile);
+      EXPECT_LT((fast.seat_position - back.map(rest.seat_position)).length(), 1.0e-6F)
+          << clip.data();
+      EXPECT_LT((fast.saddle_center - back.map(rest.saddle_center)).length(), 1.0e-6F)
+          << clip.data();
+      EXPECT_LT((fast.bridle_base - head.map(rest.bridle_base)).length(), 1.0e-6F)
+          << clip.data();
+      EXPECT_LT((fast.rein_bit_left - head.map(rest.rein_bit_left)).length(), 1.0e-6F)
+          << clip.data();
+    }
   }
 }
 

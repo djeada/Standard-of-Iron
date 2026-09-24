@@ -4,6 +4,12 @@
 #include <sstream>
 #include <string>
 
+#include "game/core/component_core.h"
+#include "game/core/entity.h"
+#include "game/core/world.h"
+#include "render/creature/anatomy_bake.h"
+#include "render/elephant/dimensions.h"
+#include "render/entity/nations/carthage/elephant_renderer.h"
 #include "render/math/creature_math_utils.h"
 
 namespace {
@@ -131,17 +137,53 @@ TEST(SceneWalkEntityHandleTest, CreatureSeedsDeriveFromTheUnitNotItsAddress) {
   const auto root = find_repo_root();
   ASSERT_FALSE(root.empty());
 
-  for (const char* relative : {"render/horse/prepare.cpp",
-                               "render/entity/mounted_humanoid_renderer_base.cpp",
-                               "render/equipment/weapons/quiver_renderer.cpp"}) {
+  for (const char* relative :
+       {"render/horse/prepare.cpp",
+        "render/entity/mounted_humanoid_renderer_base.cpp",
+        "render/equipment/weapons/quiver_renderer.cpp",
+        "render/entity/nations/carthage/elephant_renderer.cpp"}) {
     const auto source = read_text(root / relative);
     ASSERT_FALSE(source.empty()) << relative;
-    EXPECT_EQ(source.find("reinterpret_cast<uintptr_t>(ctx.entity)"), std::string::npos)
-        << relative << " seeds a creature from its entity address";
-    EXPECT_EQ(source.find("reinterpret_cast<std::uintptr_t>(ctx.entity)"),
-              std::string::npos)
-        << relative << " seeds a creature from its entity address";
+    for (const char* spelling : {"reinterpret_cast<uintptr_t>(ctx.entity)",
+                                 "reinterpret_cast<std::uintptr_t>(ctx.entity)",
+                                 "reinterpret_cast<uintptr_t>(p.entity)",
+                                 "reinterpret_cast<std::uintptr_t>(p.entity)"}) {
+      EXPECT_EQ(source.find(spelling), std::string::npos)
+          << relative << " seeds a creature from its entity address";
+    }
   }
+}
+
+TEST(SceneWalkEntityHandleTest, ElephantAnatomySeedIsEntityIdStable) {
+  Engine::Core::World first;
+  Engine::Core::World second;
+  auto* in_first = first.create_entity_with_id(77U);
+  auto* in_second = second.create_entity_with_id(77U);
+  ASSERT_NE(in_first, nullptr);
+  ASSERT_NE(in_second, nullptr);
+  ASSERT_NE(in_first, in_second);
+
+  const auto seed = Render::GL::Carthage::elephant_anatomy_seed(*in_first);
+  EXPECT_EQ(seed, Render::GL::Carthage::elephant_anatomy_seed(*in_second))
+      << "the same unit in two snapshot buffers must seed the same elephant";
+
+  const QVector3D fabric(0.45F, 0.18F, 0.55F);
+  const QVector3D metal(0.70F, 0.50F, 0.28F);
+  const auto& a =
+      Render::Creature::get_or_bake_elephant_anatomy(in_first, seed, fabric, metal);
+  const auto& b = Render::Creature::get_or_bake_elephant_anatomy(
+      in_second,
+      Render::GL::Carthage::elephant_anatomy_seed(*in_second),
+      fabric,
+      metal);
+  EXPECT_EQ(a.seed, b.seed);
+  EXPECT_FLOAT_EQ(a.profile.dims.body_length, b.profile.dims.body_length);
+  EXPECT_FLOAT_EQ(a.profile.dims.trunk_length, b.profile.dims.trunk_length);
+  EXPECT_FLOAT_EQ(a.profile.dims.ear_width, b.profile.dims.ear_width);
+
+  auto* other = second.create_entity_with_id(78U);
+  ASSERT_NE(other, nullptr);
+  EXPECT_NE(seed, Render::GL::Carthage::elephant_anatomy_seed(*other));
 }
 
 TEST(SceneWalkEntityHandleTest, StableEntitySeedIsAFunctionOfTheHandleAlone) {
@@ -153,3 +195,45 @@ TEST(SceneWalkEntityHandleTest, StableEntitySeedIsAFunctionOfTheHandleAlone) {
   EXPECT_NE(Render::Creature::stable_entity_seed(1U),
             Render::Creature::stable_entity_seed((1ULL << 32U) | 1ULL));
 }
+
+TEST(SceneWalkEntityHandleTest, AFrozenRegistryAcceptsReadsOfExistingComponents) {
+  Engine::Core::World world;
+  auto* entity = world.create_entity();
+  ASSERT_NE(entity, nullptr);
+  Engine::Core::get_or_add_component<Engine::Core::TransformComponent>(entity);
+
+  {
+    const Engine::Core::Registry::StructureFreeze freeze(world.registry());
+    EXPECT_TRUE(world.registry().structure_frozen());
+    EXPECT_NE(
+        Engine::Core::get_or_add_component<Engine::Core::TransformComponent>(entity),
+        nullptr);
+  }
+  EXPECT_FALSE(world.registry().structure_frozen());
+  EXPECT_EQ(world.registry().structure_violations(), 0U);
+}
+
+#ifdef NDEBUG
+TEST(SceneWalkEntityHandleTest, AddingAComponentDuringParallelPrepareIsCounted) {
+  Engine::Core::World world;
+  auto* entity = world.create_entity();
+  ASSERT_NE(entity, nullptr);
+  {
+    const Engine::Core::Registry::StructureFreeze freeze(world.registry());
+    Engine::Core::get_or_add_component<Engine::Core::TransformComponent>(entity);
+  }
+  EXPECT_GT(world.registry().structure_violations(), 0U)
+      << "a preparer inserted a component while workers were reading the registry";
+}
+#else
+TEST(SceneWalkEntityHandleTest, AddingAComponentDuringParallelPrepareAsserts) {
+  EXPECT_DEATH(
+      {
+        Engine::Core::World world;
+        auto* entity = world.create_entity();
+        const Engine::Core::Registry::StructureFreeze freeze(world.registry());
+        Engine::Core::get_or_add_component<Engine::Core::TransformComponent>(entity);
+      },
+      "frozen");
+}
+#endif

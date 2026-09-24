@@ -51,6 +51,44 @@ auto active_registry() -> const std::shared_ptr<Game::Units::UnitFactoryRegistry
   return s_unbound_registry;
 }
 
+auto registry_for(const Engine::Core::World& world)
+    -> const std::shared_ptr<Game::Units::UnitFactoryRegistry>& {
+  const auto* services = Game::Session::services_for_or_null(world);
+  if (services != nullptr && services->units != nullptr && *services->units) {
+    return *services->units;
+  }
+  return active_registry();
+}
+
+auto owners_for(const Engine::Core::World& world) -> Game::Systems::OwnerRegistry& {
+  const auto* services = Game::Session::services_for_or_null(world);
+  return services != nullptr && services->owners != nullptr
+             ? *services->owners
+             : Game::Systems::OwnerRegistry::instance();
+}
+
+auto nations_for(const Engine::Core::World& world) -> Game::Systems::NationRegistry& {
+  const auto* services = Game::Session::services_for_or_null(world);
+  return services != nullptr && services->nations != nullptr
+             ? *services->nations
+             : Game::Systems::NationRegistry::instance();
+}
+
+auto terrain_for(const Engine::Core::World& world) -> Game::Map::TerrainService& {
+  const auto* services = Game::Session::services_for_or_null(world);
+  return services != nullptr && services->terrain != nullptr
+             ? *services->terrain
+             : Game::Map::TerrainService::instance();
+}
+
+auto building_collision_for(const Engine::Core::World& world)
+    -> Game::Systems::BuildingCollisionRegistry& {
+  const auto* services = Game::Session::services_for_or_null(world);
+  return services != nullptr && services->building_collision != nullptr
+             ? *services->building_collision
+             : Game::Systems::BuildingCollisionRegistry::instance();
+}
+
 struct ResolvedBaseSeating {
   std::unordered_map<std::size_t, int> structure_owner;
   std::unordered_map<std::size_t, int> structure_population;
@@ -180,21 +218,21 @@ auto effective_player_id_for_map_owner(
   return player_id;
 }
 
-auto resolve_nation_id_for_map_owner(int effective_player_id,
+auto resolve_nation_id_for_map_owner(const Game::Systems::NationRegistry& nations,
+                                     int effective_player_id,
                                      const std::optional<Game::Systems::NationID>&
                                          explicit_nation) -> Game::Systems::NationID {
   if (explicit_nation.has_value()) {
     return *explicit_nation;
   }
-  if (const auto* nation =
-          Game::Systems::NationRegistry::instance().get_nation_for_player(
-              effective_player_id)) {
+  if (const auto* nation = nations.get_nation_for_player(effective_player_id)) {
     return nation->id;
   }
-  return Game::Systems::NationRegistry::instance().default_nation_id();
+  return nations.default_nation_id();
 }
 
-auto resolve_nation_id_for_map_owner(int effective_player_id,
+auto resolve_nation_id_for_map_owner(const Game::Systems::NationRegistry& nations,
+                                     int effective_player_id,
                                      const QString& authored_nation)
     -> Game::Systems::NationID {
   if (!authored_nation.trimmed().isEmpty()) {
@@ -205,8 +243,8 @@ auto resolve_nation_id_for_map_owner(int effective_player_id,
     qWarning() << "MapTransformer: unknown nation" << authored_nation
                << "- using owner/default nation";
   }
-  return resolve_nation_id_for_map_owner(effective_player_id,
-                                         std::optional<Game::Systems::NationID>{});
+  return resolve_nation_id_for_map_owner(
+      nations, effective_player_id, std::optional<Game::Systems::NationID>{});
 }
 
 auto parse_authored_unit_behavior(const QString& value) -> AuthoredUnitBehavior {
@@ -297,7 +335,7 @@ auto spawn_map_unit(const Game::Units::SpawnParams& params,
                     Engine::Core::World& world,
                     std::vector<Engine::Core::EntityID>* runtime_unit_ids = nullptr)
     -> Engine::Core::Entity* {
-  const auto& registry = active_registry();
+  const auto& registry = registry_for(world);
   if (!registry) {
     qWarning() << "MapTransformer: no factory registry set; skipping spawn";
     return nullptr;
@@ -356,7 +394,9 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
   const ResolvedBaseSeating seating =
       resolve_base_seating(def, options.base_assignments);
 
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto& owner_registry = owners_for(world);
+  auto& nations = nations_for(world);
+  auto& terrain = terrain_for(world);
   std::set<int> unique_player_ids;
   std::unordered_map<int, int> player_id_to_team;
 
@@ -448,7 +488,6 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     world_x += camp_offset.x();
     world_z += camp_offset.z();
 
-    auto& terrain = Game::Map::TerrainService::instance();
     if (terrain.is_initialized() && terrain.is_forbidden_world(world_x, world_z)) {
       const float tile = std::max(0.0001F, def.grid.tile_size);
       bool found = false;
@@ -486,7 +525,8 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     sp.ai_controlled = !owner_registry.is_player(effective_player_id) &&
                        !is_scenario_controlled(authored_behavior);
     sp.max_population = s.max_population;
-    sp.nation_id = resolve_nation_id_for_map_owner(effective_player_id, s.nation);
+    sp.nation_id =
+        resolve_nation_id_for_map_owner(nations, effective_player_id, s.nation);
 
     e = spawn_map_unit(sp, world, &rt.unit_ids);
     if (e == nullptr) {
@@ -517,7 +557,8 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     sp.ai_controlled = !owner_registry.is_player(sp.player_id);
     sp.max_population =
         seating.population_for(structure_index, structure.max_population);
-    sp.nation_id = resolve_nation_id_for_map_owner(sp.player_id, structure.nation);
+    sp.nation_id =
+        resolve_nation_id_for_map_owner(nations, sp.player_id, structure.nation);
 
     const QVector3D structure_offset =
         seating.structure_owner.count(structure_index) != 0U
@@ -562,9 +603,9 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     }
   }
 
-  if (active_registry()) {
+  if (registry_for(world)) {
 
-    Game::Systems::BuildingCollisionRegistry::instance().clear_authored_obstacles();
+    building_collision_for(world).clear_authored_obstacles();
   }
 
   return rt;

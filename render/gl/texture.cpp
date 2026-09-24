@@ -8,6 +8,7 @@
 
 #include <cstddef>
 
+#include "gl_lifetime.h"
 #include "gl_resource_tracking.h"
 #include "platform_gl.h"
 #include "render/profiling/asset_counters.h"
@@ -40,9 +41,7 @@ auto bytes_per_texel(GLenum internal_format, GLenum type) -> std::size_t {
 Texture::Texture() = default;
 
 Texture::~Texture() {
-  if (m_texture != 0) {
-    glDeleteTextures(1, &m_texture);
-  }
+  release_gl_object(DeferredGlObject::Texture, m_texture, m_share_group);
 }
 
 auto Texture::load_from_file(const QString& path) -> bool {
@@ -130,6 +129,7 @@ void Texture::bind(int unit) {
   initializeOpenGLFunctions();
   if (m_texture == 0U) {
     glGenTextures(1, &m_texture);
+    m_share_group = current_gl_share_group();
     note_textures_created();
   }
   glActiveTexture(GL_TEXTURE0 + unit);

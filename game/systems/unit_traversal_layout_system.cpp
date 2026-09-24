@@ -154,7 +154,8 @@ void UnitTraversalLayoutSystem::update(Engine::Core::World* world, float delta_t
           return;
         }
 
-        auto const layout = FormationCombat::resolve_layout(entity);
+        thread_local FormationCombat::FormationLayout layout;
+        FormationCombat::resolve_layout_into(entity, layout);
         state->route_id = movement->get_route_id();
         std::uint16_t layout_id = 0xFFFFU;
         if (auto const* normal =

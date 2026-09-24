@@ -32,6 +32,7 @@ struct SnapshotContributor {
   std::string key;
   SnapshotCapture capture;
   SnapshotRestore restore;
+  SnapshotCapture digest;
 };
 
 struct SnapshotRestoreReport {
@@ -53,7 +54,11 @@ public:
 
   [[nodiscard]] static auto contributor_keys() -> std::vector<std::string>;
 
+  [[nodiscard]] static auto digest_keys() -> std::vector<std::string>;
+
   [[nodiscard]] static auto capture(const SnapshotScope& scope) -> QJsonObject;
+
+  [[nodiscard]] static auto digest_view(const SnapshotScope& scope) -> QJsonObject;
 
   static auto restore(const SnapshotScope& scope,
                       const QJsonObject& snapshot) -> SnapshotRestoreReport;

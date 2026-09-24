@@ -10646,14 +10646,6 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
         <translation>TAUMELND</translation>
     </message>
     <message>
-        <source>BOW  ·  X</source>
-        <translation>BOGEN  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>KLINGE  ·  X</translation>
-    </message>
-    <message>
         <source>RUSH</source>
         <translation>ANSTURM</translation>
     </message>
@@ -10668,6 +10660,86 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     <message>
         <source>SPECIAL</source>
         <translation>SPEZIAL</translation>
+    </message>
+    <message>
+        <source>Strike</source>
+        <translation>Schlag</translation>
+    </message>
+    <message>
+        <source>Heavy</source>
+        <translation>Wucht</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>Parieren</translation>
+    </message>
+    <message>
+        <source>Dodge</source>
+        <translation>Ausweichen</translation>
+    </message>
+    <message>
+        <source>Lock on</source>
+        <translation>Anvisieren</translation>
+    </message>
+    <message>
+        <source>Sprint</source>
+        <translation>Sprinten</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>Kamera</translation>
+    </message>
+    <message>
+        <source>Army view</source>
+        <translation>Heeresansicht</translation>
+    </message>
+    <message>
+        <source>WINDED</source>
+        <translation>ERSCHÖPFT</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2 to swap</source>
+        <translation>%1  ·  %2 zum Wechseln</translation>
+    </message>
+    <message>
+        <source>BOW</source>
+        <translation>BOGEN</translation>
+    </message>
+    <message>
+        <source>BLADE</source>
+        <translation>KLINGE</translation>
+    </message>
+    <message>
+        <source>AURA</source>
+        <translation>AURA</translation>
+    </message>
+    <message>
+        <source>RALLY</source>
+        <translation>SAMMELN</translation>
+    </message>
+    <message>
+        <source>ON %1</source>
+        <translation>AKTIV %1</translation>
+    </message>
+    <message>
+        <source>ON</source>
+        <translation>AKTIV</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CLOSE</source>
+        <translation>KAMERA  ·  NAH</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CHASE</source>
+        <translation>KAMERA  ·  VERFOLGUNG</translation>
+    </message>
+    <message>
+        <source>BOW DRAWN</source>
+        <translation>BOGEN GESPANNT</translation>
+    </message>
+    <message>
+        <source>BLADE DRAWN</source>
+        <translation>KLINGE GEZOGEN</translation>
     </message>
 </context>
 <context>

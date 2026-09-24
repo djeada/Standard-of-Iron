@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <memory>
 #include <optional>
@@ -430,6 +431,9 @@ void TerrainService::initialize_keeping_world_props(const MapDefinition& map_def
 }
 
 void TerrainService::clear() {
+  bump_world_props_revision();
+  bump_authored_world_props_revision();
+  bump_navigation_topology_revision();
   m_sealed = false;
   m_world_props_from_save = false;
   m_height_map.reset();
@@ -1260,16 +1264,25 @@ void TerrainService::sync_world_prop_identity_state() {
   m_next_world_prop_id = std::max(m_next_world_prop_id, max_id + 1);
 }
 
+namespace {
+
+auto next_terrain_revision() -> std::uint64_t {
+  static std::atomic<std::uint64_t> counter{0};
+  return counter.fetch_add(1, std::memory_order_relaxed) + 1U;
+}
+
+} // namespace
+
 void TerrainService::bump_world_props_revision() {
-  ++m_world_props_revision;
+  m_world_props_revision = next_terrain_revision();
 }
 
 void TerrainService::bump_authored_world_props_revision() {
-  ++m_authored_world_props_revision;
+  m_authored_world_props_revision = next_terrain_revision();
 }
 
 void TerrainService::bump_navigation_topology_revision() {
-  ++m_navigation_topology_revision;
+  m_navigation_topology_revision = next_terrain_revision();
 }
 
 } // namespace Game::Map

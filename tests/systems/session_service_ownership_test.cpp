@@ -171,6 +171,12 @@ TEST(SessionServiceOwnershipTest, AWorldWithNoSessionIsCountedAsAnUnboundLookup)
   EXPECT_NE(Game::Session::services_for_or_null(session.world()), nullptr);
   EXPECT_EQ(Game::Session::services_for_or_null(detached), nullptr);
 
+  (void)Game::Session::session_for(detached);
+  EXPECT_EQ(Game::Session::unbound_world_lookups(), 2U)
+      << "session_for fell back to the ambient match without being counted";
+  (void)Game::Session::session_for(session.world());
+  EXPECT_EQ(Game::Session::unbound_world_lookups(), 2U);
+
   Game::Session::reset_unbound_world_lookups();
 }
 
@@ -289,6 +295,15 @@ TEST(SessionServiceOwnershipDeathTest, StrictBindingRefusesAWorldWithNoSession) 
         Game::Session::set_strict_world_binding(true);
         Engine::Core::World detached;
         (void)Game::Session::services_for(detached);
+      },
+      "strict world binding");
+  EXPECT_DEATH(
+      {
+        SessionContext session;
+        const ScopedSession scope(session);
+        Game::Session::set_strict_world_binding(true);
+        Engine::Core::World detached;
+        (void)Game::Session::session_for(detached);
       },
       "strict world binding");
   EXPECT_FALSE(Game::Session::strict_world_binding())

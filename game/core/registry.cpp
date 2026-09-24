@@ -33,6 +33,7 @@ void Registry::detach_all_components(EntityID entity_id) {
 
 auto Registry::create_entity() -> EntityID {
   const Lock lock(*this);
+  note_structure_change();
 
   std::uint32_t index = 0;
   if (!m_free_slots.empty()) {
@@ -51,6 +52,7 @@ auto Registry::create_entity() -> EntityID {
 
 auto Registry::create_entity_with_id(EntityID entity_id) -> EntityID {
   const Lock lock(*this);
+  note_structure_change();
   if (entity_id == NULL_ENTITY) {
     return NULL_ENTITY;
   }
@@ -85,6 +87,7 @@ auto Registry::create_entity_with_id(EntityID entity_id) -> EntityID {
 
 auto Registry::destroy_entity(EntityID entity_id) -> bool {
   const Lock lock(*this);
+  note_structure_change();
 
   const std::uint32_t index = Handle::index_of(entity_id);
   if (index == 0 || index >= m_slots.size()) {
@@ -105,6 +108,7 @@ auto Registry::destroy_entity(EntityID entity_id) -> bool {
 
 void Registry::clear() {
   const Lock lock(*this);
+  note_structure_change();
 
   for (std::size_t i = 1; i < m_slots.size(); ++i) {
     if (m_slots[i].alive) {

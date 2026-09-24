@@ -10646,14 +10646,6 @@ Builders reap it for the food that recruits civilians</translation>
         <translation>STAGGERED</translation>
     </message>
     <message>
-        <source>BOW  ·  X</source>
-        <translation>BOW  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>BLADE  ·  X</translation>
-    </message>
-    <message>
         <source>RUSH</source>
         <translation>RUSH</translation>
     </message>
@@ -10668,6 +10660,86 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>SPECIAL</source>
         <translation>SPECIAL</translation>
+    </message>
+    <message>
+        <source>Strike</source>
+        <translation>Strike</translation>
+    </message>
+    <message>
+        <source>Heavy</source>
+        <translation>Heavy</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>Guard</translation>
+    </message>
+    <message>
+        <source>Dodge</source>
+        <translation>Dodge</translation>
+    </message>
+    <message>
+        <source>Lock on</source>
+        <translation>Lock on</translation>
+    </message>
+    <message>
+        <source>Sprint</source>
+        <translation>Sprint</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>Camera</translation>
+    </message>
+    <message>
+        <source>Army view</source>
+        <translation>Army view</translation>
+    </message>
+    <message>
+        <source>WINDED</source>
+        <translation>WINDED</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2 to swap</source>
+        <translation>%1  ·  %2 to swap</translation>
+    </message>
+    <message>
+        <source>BOW</source>
+        <translation>BOW</translation>
+    </message>
+    <message>
+        <source>BLADE</source>
+        <translation>BLADE</translation>
+    </message>
+    <message>
+        <source>AURA</source>
+        <translation>AURA</translation>
+    </message>
+    <message>
+        <source>RALLY</source>
+        <translation>RALLY</translation>
+    </message>
+    <message>
+        <source>ON %1</source>
+        <translation>ON %1</translation>
+    </message>
+    <message>
+        <source>ON</source>
+        <translation>ON</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CLOSE</source>
+        <translation>CAMERA  ·  CLOSE</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CHASE</source>
+        <translation>CAMERA  ·  CHASE</translation>
+    </message>
+    <message>
+        <source>BOW DRAWN</source>
+        <translation>BOW DRAWN</translation>
+    </message>
+    <message>
+        <source>BLADE DRAWN</source>
+        <translation>BLADE DRAWN</translation>
     </message>
 </context>
 <context>

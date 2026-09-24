@@ -1228,3 +1228,20 @@ TEST(TemplatePrewarmRegression,
 }
 
 } // namespace
+
+TEST(TemplatePrewarmRegression, RuntimeBakePolicyIsRendererScoped) {
+  Render::Creature::set_runtime_bake_forbidden(true);
+
+  {
+    Render::GL::Renderer portrait(Render::ShaderQuality::None);
+    ASSERT_TRUE(portrait.initialize());
+    EXPECT_TRUE(Render::Creature::runtime_bake_forbidden())
+        << "a second renderer starting up must not lift the gameplay barrier";
+    portrait.shutdown();
+    EXPECT_TRUE(Render::Creature::runtime_bake_forbidden())
+        << "a second renderer shutting down must not lift the gameplay barrier";
+  }
+  EXPECT_TRUE(Render::Creature::runtime_bake_forbidden());
+
+  Render::Creature::set_runtime_bake_forbidden(false);
+}

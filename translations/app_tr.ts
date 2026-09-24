@@ -10643,14 +10643,6 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
         <translation>SERSEMLEDİ</translation>
     </message>
     <message>
-        <source>BOW  ·  X</source>
-        <translation>YAY  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>KILIÇ  ·  X</translation>
-    </message>
-    <message>
         <source>SPECIAL</source>
         <translation>ÖZEL</translation>
     </message>
@@ -10665,6 +10657,86 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <message>
         <source>READY</source>
         <translation>HAZIR</translation>
+    </message>
+    <message>
+        <source>Strike</source>
+        <translation>Vuruş</translation>
+    </message>
+    <message>
+        <source>Heavy</source>
+        <translation>Ağır</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>Savun</translation>
+    </message>
+    <message>
+        <source>Dodge</source>
+        <translation>Kaç</translation>
+    </message>
+    <message>
+        <source>Lock on</source>
+        <translation>Hedefe kilitlen</translation>
+    </message>
+    <message>
+        <source>Sprint</source>
+        <translation>Koş</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>Kamera</translation>
+    </message>
+    <message>
+        <source>Army view</source>
+        <translation>Ordu görünümü</translation>
+    </message>
+    <message>
+        <source>WINDED</source>
+        <translation>SOLUKSUZ</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2 to swap</source>
+        <translation>%1  ·  değiştirmek için %2</translation>
+    </message>
+    <message>
+        <source>BOW</source>
+        <translation>YAY</translation>
+    </message>
+    <message>
+        <source>BLADE</source>
+        <translation>KILIÇ</translation>
+    </message>
+    <message>
+        <source>AURA</source>
+        <translation>AURA</translation>
+    </message>
+    <message>
+        <source>RALLY</source>
+        <translation>TOPLAN</translation>
+    </message>
+    <message>
+        <source>ON %1</source>
+        <translation>AKTİF %1</translation>
+    </message>
+    <message>
+        <source>ON</source>
+        <translation>AKTİF</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CLOSE</source>
+        <translation>KAMERA  ·  YAKIN</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CHASE</source>
+        <translation>KAMERA  ·  TAKİP</translation>
+    </message>
+    <message>
+        <source>BOW DRAWN</source>
+        <translation>YAY GERİLDİ</translation>
+    </message>
+    <message>
+        <source>BLADE DRAWN</source>
+        <translation>KILIÇ ÇEKİLDİ</translation>
     </message>
 </context>
 <context>

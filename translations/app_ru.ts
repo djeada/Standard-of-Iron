@@ -10649,14 +10649,6 @@ Wide vision and a durable settlement anchor</source>
         <translation>ОГЛУШЁН</translation>
     </message>
     <message>
-        <source>BOW  ·  X</source>
-        <translation>ЛУК  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>КЛИНОК  ·  X</translation>
-    </message>
-    <message>
         <source>SPECIAL</source>
         <translation>ПРИЁМ</translation>
     </message>
@@ -10671,6 +10663,86 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>READY</source>
         <translation>ГОТОВО</translation>
+    </message>
+    <message>
+        <source>Strike</source>
+        <translation>Удар</translation>
+    </message>
+    <message>
+        <source>Heavy</source>
+        <translation>Мощный</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>Блок</translation>
+    </message>
+    <message>
+        <source>Dodge</source>
+        <translation>Уклон</translation>
+    </message>
+    <message>
+        <source>Lock on</source>
+        <translation>Захват цели</translation>
+    </message>
+    <message>
+        <source>Sprint</source>
+        <translation>Бег</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>Камера</translation>
+    </message>
+    <message>
+        <source>Army view</source>
+        <translation>Вид армии</translation>
+    </message>
+    <message>
+        <source>WINDED</source>
+        <translation>ОДЫШКА</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2 to swap</source>
+        <translation>%1  ·  %2 — сменить</translation>
+    </message>
+    <message>
+        <source>BOW</source>
+        <translation>ЛУК</translation>
+    </message>
+    <message>
+        <source>BLADE</source>
+        <translation>КЛИНОК</translation>
+    </message>
+    <message>
+        <source>AURA</source>
+        <translation>АУРА</translation>
+    </message>
+    <message>
+        <source>RALLY</source>
+        <translation>СБОР</translation>
+    </message>
+    <message>
+        <source>ON %1</source>
+        <translation>АКТИВНО %1</translation>
+    </message>
+    <message>
+        <source>ON</source>
+        <translation>АКТИВНО</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CLOSE</source>
+        <translation>КАМЕРА  ·  БЛИЗКО</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CHASE</source>
+        <translation>КАМЕРА  ·  ПРЕСЛЕДОВАНИЕ</translation>
+    </message>
+    <message>
+        <source>BOW DRAWN</source>
+        <translation>ЛУК НАТЯНУТ</translation>
+    </message>
+    <message>
+        <source>BLADE DRAWN</source>
+        <translation>КЛИНОК ОБНАЖЁН</translation>
     </message>
 </context>
 <context>

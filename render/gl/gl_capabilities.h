@@ -150,6 +150,31 @@ public:
     QString version;
   };
 
+  [[nodiscard]] static auto
+  is_software_renderer(const AdapterDescription& adapter) -> bool {
+    for (const char* marker : {"llvmpipe",
+                               "softpipe",
+                               "swrast",
+                               "SwiftShader",
+                               "Microsoft Basic Render",
+                               "GDI Generic",
+                               "Apple Software Renderer"}) {
+      if (adapter.renderer.contains(QLatin1String(marker), Qt::CaseInsensitive)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  [[nodiscard]] static auto
+  is_low_end_adapter(const AdapterDescription& adapter) -> bool {
+#if defined(Q_OS_MACOS)
+    return is_software_renderer(adapter);
+#else
+    return is_software_renderer(adapter) || !has_core_4_3();
+#endif
+  }
+
   [[nodiscard]] static auto describe_adapter() -> AdapterDescription {
     AdapterDescription description;
     auto* ctx = QOpenGLContext::currentContext();

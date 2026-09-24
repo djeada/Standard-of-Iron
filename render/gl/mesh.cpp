@@ -114,6 +114,16 @@ void Mesh::setup_buffers() {
 }
 
 auto Mesh::prepare_draw(const char* caller_name) -> bool {
+  if (m_vao && m_vao->id() != 0U) {
+    const GlShareGroup owner = m_vao->share_group();
+    const GlShareGroup current = current_gl_share_group();
+    if (owner != k_unknown_share_group && current != k_unknown_share_group &&
+        owner != current) {
+      m_vao.reset();
+      m_vbo.reset();
+      m_ebo.reset();
+    }
+  }
   if (!m_vao) {
     setup_buffers();
   }

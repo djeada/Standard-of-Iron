@@ -158,6 +158,7 @@ void ReplayRecorder::record_digest(std::uint64_t tick,
   parts["economy"] = QString::number(digests.economy);
   parts["wildlife"] = QString::number(digests.wildlife);
   parts["session"] = QString::number(digests.session);
+  parts["systems"] = QString::number(digests.systems);
   object["parts"] = parts;
 
   object["tick"] = static_cast<qint64>(tick);
@@ -269,6 +270,7 @@ auto ReplayFile::load(const QString& path,
         recorded.parts.economy = read("economy");
         recorded.parts.wildlife = read("wildlife");
         recorded.parts.session = read("session");
+        recorded.parts.systems = read("systems");
         recorded.parts.root = digest;
         recorded.has_parts = true;
       }

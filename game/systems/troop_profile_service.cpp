@@ -1,6 +1,7 @@
 #include "troop_profile_service.h"
 
 #include <algorithm>
+#include <mutex>
 
 #include "nation_registry.h"
 #include "units/troop_catalog.h"
@@ -33,6 +34,7 @@ auto TroopProfile::has_ability(const std::string& ability_id) const -> bool {
 }
 
 void TroopProfileService::clear() {
+  const std::unique_lock lock(m_mutex);
   m_cache.clear();
 }
 
@@ -48,6 +50,7 @@ void TroopProfileService::prime() {
 
 auto TroopProfileService::find_profile(
     NationID nation_id, Game::Units::TroopType type) const -> const TroopProfile* {
+  const std::shared_lock lock(m_mutex);
   auto const nation_cache = m_cache.find(nation_id);
   if (nation_cache == m_cache.end()) {
     return nullptr;
@@ -63,6 +66,10 @@ auto TroopProfileService::get_profile(NationID nation_id,
 
 auto TroopProfileService::get_profile_ref(
     NationID nation_id, Game::Units::TroopType type) -> const TroopProfile& {
+  if (const TroopProfile* cached = find_profile(nation_id, type)) {
+    return *cached;
+  }
+  const std::unique_lock lock(m_mutex);
   auto& nation_cache = m_cache[nation_id];
   auto cached = nation_cache.find(type);
   if (cached != nation_cache.end()) {

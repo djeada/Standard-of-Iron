@@ -29,7 +29,11 @@ Checks:
   3. Entry points must request the preferred 4.5 Core context (4.1 on macOS)
      while keeping the portable renderer floor explicitly at 3.3 Core.
   4. Every shader, including compute shaders, must be compiled into assets.qrc.
-  5. Every release workflow must execute the packaged renderer self-test, and
+  5. OpenGL 4.x entry points (compute dispatch, indirect draws, immutable
+     storage, SSBO/image bindings) appear only in the capability-gated files,
+     and shader includes that use 4.30 features are included only by the
+     optional 4.30 shaders.  A 3.3-only GPU must never reach either.
+  6. Every release workflow must execute the packaged renderer self-test, and
      must assert the driver actually granted the 3.3 Core floor.  Requesting a
      context is not the same as getting one: macOS caps OpenGL at 4.1 and can
      hand back a 2.1 compatibility context, which draws nothing.
@@ -38,6 +42,7 @@ Usage:
     python3 scripts/validate_opengl_requirements.py
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -107,6 +112,60 @@ def check_optional_path_is_gated(root: Path) -> list[str]:
                 f"  {name}: not referenced by {OPTIONAL_PATH_OWNER};"
                 f" its capability gate cannot be verified"
             )
+    return errors
+
+
+GL4_API_PATTERN = re.compile(
+    r"glDispatchCompute|glMemoryBarrier|glDraw(?:Elements|Arrays)Indirect"
+    r"|glMultiDraw(?:Elements|Arrays)Indirect|glBufferStorage|glTexStorage[123]D"
+    r"|glBindImageTexture|GL_SHADER_STORAGE_BUFFER|glCopyImageSubData"
+    r"|glClearBufferData"
+)
+GL4_API_OWNERS = {
+    Path("render/gl/backend/rigged_cull_pipeline.cpp"),
+    Path("render/gl/platform_gl.h"),
+}
+GL43_INCLUDE_PATTERN = re.compile(
+    r"layout\s*\(\s*(?:std430|binding)|^\s*buffer\s|imageLoad|imageStore"
+    r"|atomicAdd|gl_GlobalInvocationID",
+    re.MULTILINE,
+)
+
+
+def check_gl4_api_is_gated(root: Path, shader_dir: Path) -> list[str]:
+    errors: list[str] = []
+    for top in ("render", "ui", "app", "tools/arena"):
+        for path in sorted((root / top).rglob("*")):
+            if path.suffix not in {".cpp", ".h"}:
+                continue
+            relative = path.relative_to(root)
+            if relative in GL4_API_OWNERS:
+                continue
+            match = GL4_API_PATTERN.search(path.read_text(encoding="utf-8"))
+            if match:
+                errors.append(
+                    f"  {relative}: calls {match.group(0)}, an OpenGL 4.x entry point"
+                    f" outside the capability-gated owners"
+                )
+    include_dir = shader_dir / "include"
+    for include in sorted(include_dir.glob("*.glsl")):
+        text = include.read_text(encoding="utf-8")
+        if "#version" in text:
+            errors.append(
+                f"  include/{include.name}: an include must not declare #version"
+            )
+        if not GL43_INCLUDE_PATTERN.search(text):
+            continue
+        for shader in sorted(shader_dir.glob("*.*")):
+            if shader.suffix not in {".vert", ".frag", ".comp"}:
+                continue
+            if include.name in shader.read_text(encoding="utf-8") and (
+                shader.name not in OPTIONAL_GL43_SHADERS
+            ):
+                errors.append(
+                    f"  {shader.name}: includes {include.name}, which needs GLSL 4.30,"
+                    f" but is not an optional 4.30 shader"
+                )
     return errors
 
 
@@ -234,7 +293,7 @@ def main() -> int:
         + list(shader_dir.glob("*.comp"))
     )
     baseline = len(shaders) - len(OPTIONAL_GL43_SHADERS)
-    print(f"\n[1/5] Shader GLSL version headers  ({len(shaders)} files)")
+    print(f"\n[1/6] Shader GLSL version headers  ({len(shaders)} files)")
     errs = check_shader_versions(shader_dir)
     if errs:
         total_errors.extend(errs)
@@ -246,7 +305,7 @@ def main() -> int:
             f" {len(OPTIONAL_GL43_SHADERS)} optional 4.30 shaders listed"
         )
 
-    print("\n[2/5] Optional 4.30 path is capability gated")
+    print("\n[2/6] Optional 4.30 path is capability gated")
     errs = check_optional_path_is_gated(root)
     if errs:
         total_errors.extend(errs)
@@ -255,7 +314,7 @@ def main() -> int:
     else:
         print("  OK   every 4.30 shader sits behind a runtime capability probe")
 
-    print("\n[3/5] Surface format profile  (entry points)")
+    print("\n[3/6] Surface format profile  (entry points)")
     errs = check_context_policy(root)
     if errs:
         total_errors.extend(errs)
@@ -264,7 +323,7 @@ def main() -> int:
     else:
         print("  OK   Core Profile, OpenGL 4.5 preferred with Apple's 4.1 ceiling")
 
-    print("\n[4/5] Embedded shader resources  (assets.qrc)")
+    print("\n[4/6] Embedded shader resources  (assets.qrc)")
     errs = check_embedded_shaders(root, shader_dir)
     if errs:
         total_errors.extend(errs)
@@ -273,7 +332,16 @@ def main() -> int:
     else:
         print(f"  OK   all {len(shaders)} shaders are embedded")
 
-    print("\n[5/5] Packaged renderer self-tests  (release workflows)")
+    print("\n[5/6] OpenGL 4.x entry points stay behind capability probes")
+    errs = check_gl4_api_is_gated(root, shader_dir)
+    if errs:
+        total_errors.extend(errs)
+        for e in errs:
+            print(f"  FAIL {e}")
+    else:
+        print("  OK   a 3.3-only driver never reaches a 4.x call or 4.30 include")
+
+    print("\n[6/6] Packaged renderer self-tests  (release workflows)")
     errs = check_release_renderer_self_tests(root)
     if errs:
         total_errors.extend(errs)

@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <random>
 
 #include "../../core/ambient_session.h"
 #include "../../core/component_commander.h"
@@ -13,14 +12,16 @@ namespace Game::Systems::RpgCombat {
 
 namespace {
 
-auto random_float_01() -> float {
-  if (const auto* services = Game::Session::ambient_services_or_null();
-      services != nullptr && services->rng != nullptr) {
+auto random_float_01(const Engine::Core::World* world) -> float {
+  const Game::Session::AmbientServices* services =
+      world != nullptr ? Game::Session::services_for_or_null(*world) : nullptr;
+  if (services == nullptr) {
+    services = Game::Session::ambient_services_or_null();
+  }
+  if (services != nullptr && services->rng != nullptr) {
     return services->rng->next_float();
   }
-  static std::mt19937 rng{0x5EEDU};
-  static std::uniform_real_distribution<float> dist{0.0F, 1.0F};
-  return dist(rng);
+  return 1.0F;
 }
 
 } // namespace
@@ -48,7 +49,7 @@ RpgDamageResult resolve_rpg_damage(Engine::Core::World* world,
                            static_cast<int>(std::lround(scaled)) -
                                static_cast<int>(std::lround(rpg->armor)));
 
-  result.is_crit = (random_float_01() < rpg->crit_chance);
+  result.is_crit = (random_float_01(world) < rpg->crit_chance);
   if (result.is_crit) {
     effective = static_cast<int>(
         std::roundf(static_cast<float>(effective) * rpg->crit_multiplier));

@@ -124,6 +124,11 @@ auto global_defines_storage() -> QString& {
   return defines;
 }
 
+auto global_defines_generation() -> std::uint64_t& {
+  static std::uint64_t generation = 1;
+  return generation;
+}
+
 auto inject_defines(const QString& source, const QString& extra) -> QString {
   QString defines;
   {
@@ -176,14 +181,16 @@ Shader::~Shader() {
     auto& shaders = live_shaders();
     shaders.erase(std::remove(shaders.begin(), shaders.end(), this), shaders.end());
   }
-  if (m_program != 0) {
-    glDeleteProgram(m_program);
-  }
+  release_gl_object(DeferredGlObject::Program, m_program, m_share_group);
 }
 
 void Shader::set_global_defines(const QString& defines) {
   std::lock_guard const lock(shader_registry_mutex());
+  if (global_defines_storage() == defines) {
+    return;
+  }
   global_defines_storage() = defines;
+  ++global_defines_generation();
 }
 
 auto Shader::global_defines() -> QString {
@@ -193,13 +200,24 @@ auto Shader::global_defines() -> QString {
 
 auto Shader::reload_all() -> std::size_t {
   std::vector<Shader*> snapshot;
+  std::uint64_t generation = 0;
   {
     std::lock_guard const lock(shader_registry_mutex());
     snapshot = live_shaders();
+    generation = global_defines_generation();
   }
+  const GlShareGroup current = current_gl_share_group();
   std::size_t reloaded = 0;
   for (Shader* shader : snapshot) {
-    if (shader->m_source_kind != SourceKind::None && shader->reload()) {
+    if (shader->m_source_kind == SourceKind::None ||
+        shader->m_defines_generation == generation) {
+      continue;
+    }
+    if (shader->m_share_group != k_unknown_share_group &&
+        shader->m_share_group != current) {
+      continue;
+    }
+    if (shader->reload()) {
       ++reloaded;
     }
   }
@@ -396,6 +414,11 @@ void Shader::adopt_program(GLuint program) {
     glDeleteProgram(m_program);
   }
   m_program = program;
+  m_share_group = current_gl_share_group();
+  {
+    std::lock_guard const lock(shader_registry_mutex());
+    m_defines_generation = global_defines_generation();
+  }
 
   for (std::size_t i = 0; i < m_uniform_names.size(); ++i) {
     m_uniform_locations[i] =

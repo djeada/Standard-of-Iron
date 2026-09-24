@@ -19,7 +19,7 @@ auto MissionWaveRuntime::owner_has_unspawned_waves(int owner_id) const -> bool {
 }
 
 void MissionWaveRuntime::reset() {
-  m_elapsed = 0.0F;
+  m_elapsed = 0.0;
   m_waves.clear();
   m_events.clear();
   m_director.reset();
@@ -32,7 +32,7 @@ void MissionWaveRuntime::bind_after_setup(
   m_waves = std::move(waves);
   m_events = std::move(events);
   m_director.bind(&m_waves, binding.world);
-  m_director.set_elapsed(m_elapsed);
+  m_director.set_elapsed(static_cast<float>(m_elapsed));
   if (binding.victory_service != nullptr) {
     binding.victory_service->set_mission_wave_query(&m_director);
   }
@@ -68,7 +68,7 @@ void MissionWaveRuntime::restore(const MissionWaveBinding& binding,
   m_director.restore(wave_state);
   m_elapsed = m_director.elapsed();
   for (auto& event : m_events) {
-    event.fired = m_elapsed >= event.trigger_time;
+    event.fired = m_elapsed >= static_cast<double>(event.trigger_time);
   }
 
   if (binding.victory_service != nullptr) {
@@ -79,7 +79,7 @@ void MissionWaveRuntime::restore(const MissionWaveBinding& binding,
 auto MissionWaveRuntime::fire_due_events() -> QStringList {
   QStringList announcements;
   for (auto& event : m_events) {
-    if (event.fired || m_elapsed < event.trigger_time) {
+    if (event.fired || m_elapsed < static_cast<double>(event.trigger_time)) {
       continue;
     }
     event.fired = true;
@@ -98,20 +98,21 @@ auto MissionWaveRuntime::advance(const MissionWaveBinding& binding,
     return effects;
   }
 
-  m_elapsed += delta_seconds;
+  m_elapsed += static_cast<double>(delta_seconds);
   effects.announcements = fire_due_events();
 
   if (m_waves.empty()) {
     return effects;
   }
 
-  m_director.set_elapsed(m_elapsed);
+  m_director.set_elapsed(static_cast<float>(m_elapsed));
   const auto director_effects = m_director.advance();
 
   bool spawned_any = false;
   for (const auto index : director_effects.waves_to_spawn) {
     const auto spawn_effects =
-        m_spawner.spawn({*binding.world, *binding.level, m_elapsed}, m_waves[index]);
+        m_spawner.spawn({*binding.world, *binding.level, static_cast<float>(m_elapsed)},
+                        m_waves[index]);
     for (const auto& announcement : spawn_effects.mission_announcements) {
       effects.announcements.append(announcement);
     }

@@ -73,6 +73,19 @@ auto SessionSnapshot::contributor_keys() -> std::vector<std::string> {
   return keys;
 }
 
+auto SessionSnapshot::digest_keys() -> std::vector<std::string> {
+  auto& state = registry();
+  const std::lock_guard<std::mutex> lock(state.mutex);
+  std::vector<std::string> keys;
+  for (const auto& contributor : state.contributors) {
+    if (contributor.digest) {
+      keys.push_back(contributor.key);
+    }
+  }
+  std::sort(keys.begin(), keys.end());
+  return keys;
+}
+
 auto SessionSnapshot::capture(const SnapshotScope& scope) -> QJsonObject {
   std::vector<SnapshotContributor> snapshot_of_registry;
   {
@@ -97,6 +110,28 @@ auto SessionSnapshot::capture(const SnapshotScope& scope) -> QJsonObject {
   snapshot[QStringLiteral("version")] = k_session_snapshot_version;
   snapshot[QStringLiteral("parts")] = parts;
   return snapshot;
+}
+
+auto SessionSnapshot::digest_view(const SnapshotScope& scope) -> QJsonObject {
+  std::vector<SnapshotContributor> snapshot_of_registry;
+  {
+    auto& state = registry();
+    const std::lock_guard<std::mutex> lock(state.mutex);
+    snapshot_of_registry = state.contributors;
+  }
+
+  QJsonObject parts;
+  for (const auto& contributor : snapshot_of_registry) {
+    if (!contributor.digest) {
+      continue;
+    }
+    const QJsonValue value = contributor.digest(scope);
+    if (value.isUndefined() || value.isNull()) {
+      continue;
+    }
+    parts[QString::fromStdString(contributor.key)] = value;
+  }
+  return parts;
 }
 
 auto SessionSnapshot::restore(const SnapshotScope& scope,
@@ -153,7 +188,12 @@ void register_built_in_snapshot_contributors() {
                      system_of<Game::Systems::UndeadAwakeningSystem>(scope)) {
                system->restore_state(value.toArray());
              }
-           }});
+           },
+       .digest = [](const SnapshotScope& scope) -> QJsonValue {
+         auto* system = system_of<Game::Systems::UndeadAwakeningSystem>(scope);
+         return system != nullptr ? QJsonValue(system->serialize_state())
+                                  : QJsonValue();
+       }});
 
   SessionSnapshot::register_contributor(
       {.key = "cursed_gold_veins",
@@ -167,7 +207,12 @@ void register_built_in_snapshot_contributors() {
              if (auto* system = system_of<Game::Systems::CursedGoldVeinSystem>(scope)) {
                system->restore_state(value.toArray());
              }
-           }});
+           },
+       .digest = [](const SnapshotScope& scope) -> QJsonValue {
+         auto* system = system_of<Game::Systems::CursedGoldVeinSystem>(scope);
+         return system != nullptr ? QJsonValue(system->serialize_state())
+                                  : QJsonValue();
+       }});
 
   SessionSnapshot::register_contributor(
       {.key = "wildlife",
@@ -181,7 +226,17 @@ void register_built_in_snapshot_contributors() {
              if (auto* system = system_of<Game::Wildlife::WildlifeSystem>(scope)) {
                system->restore_state(value.toObject());
              }
-           }});
+           },
+       .digest = [](const SnapshotScope& scope) -> QJsonValue {
+         auto* system = system_of<Game::Wildlife::WildlifeSystem>(scope);
+         if (system == nullptr) {
+           return {};
+         }
+         QJsonObject state = system->serialize_state();
+         state.remove(QStringLiteral("flocks"));
+         state.remove(QStringLiteral("birds"));
+         return state;
+       }});
 }
 
 } // namespace Game::Session

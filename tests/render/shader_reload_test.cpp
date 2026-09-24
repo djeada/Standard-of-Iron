@@ -210,6 +210,58 @@ TEST(ShaderReload, ReloadAllCountsLivePrograms) {
   ASSERT_TRUE(b.load_from_source(QString::fromLatin1(k_vertex),
                                  QString::fromLatin1(k_fragment)));
   Render::GL::Shader never_loaded;
+  Render::GL::Shader::set_global_defines(
+      QStringLiteral("#define SOI_QUALITY_TIER 1\n"));
   EXPECT_GE(Render::GL::Shader::reload_all(), 2U);
+  Render::GL::Shader::set_global_defines(QString());
+}
+
+TEST(ShaderReload, ASecondBackendApplyingTheSameTierRecompilesNothing) {
+  OffscreenGl gl;
+  if (!gl.ready) {
+    GTEST_SKIP() << "No OpenGL 3.3 context available in this environment";
+  }
+  Render::GL::Shader::set_global_defines(
+      QStringLiteral("#define SOI_QUALITY_TIER 2\n"));
+  Render::GL::Shader a;
+  ASSERT_TRUE(a.load_from_source(QString::fromLatin1(k_vertex),
+                                 QString::fromLatin1(k_fragment)));
+
+  Render::GL::Shader::set_global_defines(
+      QStringLiteral("#define SOI_QUALITY_TIER 1\n"));
+  EXPECT_GE(Render::GL::Shader::reload_all(), 1U);
+
+  Render::GL::Shader::set_global_defines(
+      QStringLiteral("#define SOI_QUALITY_TIER 1\n"));
+  EXPECT_EQ(Render::GL::Shader::reload_all(), 0U)
+      << "programs already compiled for this tier were compiled again";
+  Render::GL::Shader::set_global_defines(QString());
+}
+
+TEST(ShaderReload, ShaderReloadIsShareGroupScoped) {
+  OffscreenGl first;
+  if (!first.ready) {
+    GTEST_SKIP() << "No OpenGL 3.3 context available in this environment";
+  }
+  Render::GL::Shader::set_global_defines(
+      QStringLiteral("#define SOI_QUALITY_TIER 2\n"));
+  Render::GL::Shader owned_by_first;
+  ASSERT_TRUE(owned_by_first.load_from_source(QString::fromLatin1(k_vertex),
+                                              QString::fromLatin1(k_fragment)));
+  first.context.doneCurrent();
+
+  OffscreenGl second;
+  if (!second.ready) {
+    GTEST_SKIP() << "No second OpenGL context available in this environment";
+  }
+  ASSERT_NE(first.context.shareGroup(), second.context.shareGroup());
+  Render::GL::Shader::set_global_defines(
+      QStringLiteral("#define SOI_QUALITY_TIER 1\n"));
+  EXPECT_EQ(Render::GL::Shader::reload_all(), 0U)
+      << "a program from another share group was recompiled in this context";
+  second.context.doneCurrent();
+
+  ASSERT_TRUE(first.context.makeCurrent(&first.surface));
+  EXPECT_EQ(Render::GL::Shader::reload_all(), 1U);
   Render::GL::Shader::set_global_defines(QString());
 }
