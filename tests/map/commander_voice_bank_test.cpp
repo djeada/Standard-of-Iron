@@ -257,7 +257,7 @@ TEST(CommanderVoiceBankTest, ExpandsVariantsIntoOwnerScopedRules) {
 }
 
 TEST(CommanderVoiceBankTest, TriggerNamesRoundTrip) {
-  for (int raw = 0; raw <= static_cast<int>(CommanderMessageTrigger::GiftReceived);
+  for (int raw = 0; raw <= static_cast<int>(CommanderMessageTrigger::UndeadCleared);
        ++raw) {
     const auto trigger = static_cast<CommanderMessageTrigger>(raw);
     CommanderMessageTrigger parsed{};

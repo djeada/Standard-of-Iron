@@ -95,6 +95,7 @@ inline constexpr const char* GROUP = "group";
 inline constexpr const char* ANCHOR_TYPE = "anchor_type";
 inline constexpr const char* FOG_DENSITY = "fog_density";
 inline constexpr const char* WAVE_TIMEOUT = "wave_timeout";
+inline constexpr const char* WAVE_DELAY = "wave_delay";
 inline constexpr const char* CLEAR_REWARD = "clear_reward";
 inline constexpr const char* LEASH_RADIUS = "leash_radius";
 inline constexpr const char* AWAKEN_ON = "awaken_on";

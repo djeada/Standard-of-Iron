@@ -196,7 +196,7 @@ TEST_F(IronSepulcherSkirmishTest, SoloSkirmishAwakensAndIsWonByPurifyingTheShrin
       guardian->health = 0;
     }
     undead->update(&world, 0.1F);
-    undead->update(&world, 2.0F);
+    undead->update(&world, shrine->wave_delay_seconds + 0.5F);
     undead->update(&world, 0.1F);
   }
   EXPECT_TRUE(undead->is_zone_cleared(QStringLiteral("shrine_sentinels")))
@@ -572,7 +572,7 @@ TEST_F(IronSepulcherSkirmishTest, ShrineFlagOnlyFallsBetweenWaves) {
       guardian->health = 0;
     }
     undead->update(&world, 0.25F);
-    undead->update(&world, 2.0F);
+    undead->update(&world, shrine->wave_delay_seconds + 0.5F);
     undead->update(&world, 0.25F);
   }
   EXPECT_FALSE(capture->capture_blocked)

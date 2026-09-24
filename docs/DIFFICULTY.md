@@ -21,8 +21,8 @@ Older authored spellings still resolve: `medium`/`standard` become `normal`, `re
 
 A preset moves computer opponents and nothing else. Which opponents is decided
 once, by `Game::Mission::difficulty_applies_to()` in
-`game/mission/difficulty_forces.h`, and every one of the four application points
-below asks it rather than deciding for itself:
+`game/mission/difficulty_forces.h`, and every application point below except the
+undead risings asks it rather than deciding for itself:
 
 - a seat that was given its own preset always uses it. That is how the skirmish
   roster works, and it holds in an observed match where every seat is an AI and
@@ -72,10 +72,13 @@ Each category is scaled exactly once, from an immutable authored baseline:
 | Mission-authored enemy troops | `MissionSetupCoordinator::apply_mission_setup()`            | once, while spawning `ai_setups[].starting_units`    |
 | Enemy resources               | `SkirmishRuntimeCoordinator::initialize_player_resources()` | once, when the economy is endowed                    |
 | Wave composition              | `build_pending_mission_waves()`                             | once, while the pending waves are built              |
+| Undead zone risings           | `Game::Mission::apply_undead_wave_difficulty()`             | after the level loads, and again after a save loads  |
 
 Rounding is to the nearest whole unit, and a force that exists never rounds to nothing: `scaled_force_count()` keeps at least one unit. A resource stock that is authored empty stays empty, and an authored number too large to scale saturates rather than wrapping.
 
 Waves round **role by role**, so the advertised percentage is the multiplier applied to each role, not a promise about the total. A wave of 1 + 3 + 5 at Hard becomes 2 + 5 + 8 — fifteen troops where an exact +50% would be thirteen and a half. Small waves therefore come out slightly heavier than the headline number; the alternative is a role that rounds away to nothing. `tests/map/wave_archetype_catalog_test.cpp` pins the actual outcomes.
+
+Undead zones have no seat and no AI setup, so their risings follow the match **baseline** wave multiplier: the mission's chosen preset, and Normal in a skirmish. `UndeadAwakeningSystem` keeps each zone's authored waves untouched and rescales a copy whenever `set_wave_multiplier()` is called, so calling it again (a loaded save, a retry) never compounds. Only the squad count of each unit type in a rising is scaled, with the same keep-at-least-one rounding; the number of risings, their triggers and `wave_delay` are not.
 
 The tutorial is always Normal, whatever the player last chose, and playing it does not change the remembered default.
 

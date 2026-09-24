@@ -7004,10 +7004,6 @@ bir harita seç</translation>
         <translation>Katmanlı kayalık bir çölde altı kamp. Üç dere ortada kesişir ve zemini altı dilime böler, böylece her komşu iki geçit uzağındadır: biri kavşak çakıllarının altında, biri kenar yığınlarının dışında. Her dilimin karşısında bir mesa uzanır ve bölge, onun yanındaki koridorda kazanılır.</translation>
     </message>
     <message>
-        <source>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</source>
-        <translation>Harabeleri, bir mabedi ve ölülerin uyanış bölgelerini gösteren küçük, elle yazılmış senaryo.</translation>
-    </message>
-    <message>
         <source>Sunbaked Terraces</source>
         <translation>Güneş Kavurmuş Taraçalar</translation>
     </message>
@@ -7034,6 +7030,10 @@ bir harita seç</translation>
     <message>
         <source>Aurelia Magna</source>
         <translation>Aurelia Magna</translation>
+    </message>
+    <message>
+        <source>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</source>
+        <translation>Eski yol üzerinde bir Roma gözcü kampı, çobanların o yolu neden bıraktığını öğrendiği gece. Kereste, taş ve bir sürü kampa yakındır; mezar harabeleri ortadaki araziyi tutar; lanetli tapınak kuzeydoğudaki arazide tek başına durur. Kampla mezar arasındaki alçak bir tümsek, sahip olmaya değer tek yüksek yerdir ve yol baştan sona ölülerin yanından geçer.</translation>
     </message>
 </context>
 <context>
@@ -7577,10 +7577,6 @@ bir harita seç</translation>
         <translation>Kolu yakın kıyıdaki dubalı köprüye ulaştır.</translation>
     </message>
     <message>
-        <source>Burn every cursed guardian from the sepulcher ruins. Kill what cannot die.</source>
-        <translation>Kabir harabelerindeki lanetli bekçilerin hepsini yak. Ölemeyeni öldür.</translation>
-    </message>
-    <message>
         <source>Cavalry reaches it first; hold the yard until the standard changes.</source>
         <translation>Oraya önce süvari varır; sancak değişene kadar avluyu tut.</translation>
     </message>
@@ -7635,10 +7631,6 @@ bir harita seç</translation>
     <message>
         <source>End the war with the men who lead it.</source>
         <translation>Savaşı, onu yönetenlerle birlikte bitir.</translation>
-    </message>
-    <message>
-        <source>Endure both waves from the depths. Do not flinch when the ground tears open.</source>
-        <translation>Derinlerden gelen iki dalgaya da dayan. Toprak yarıldığında irkilme.</translation>
     </message>
     <message>
         <source>Enemy camps fall neutral once their commander is dead.</source>
@@ -7925,10 +7917,6 @@ bir harita seç</translation>
         <translation>İnşaatçıları yamaçlara koş; geçidin bedeli kanla değil malzemeyle ödenir.</translation>
     </message>
     <message>
-        <source>Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.</source>
-        <translation>Altmış adam ve yerlilerin karanlıktan sonra yanından geçmediği bir mabet. Emrim araştırmak diyor. Onu yakıp araştırdık diye yazmayı yeğlerdim, ama Senato okuyor.</translation>
-    </message>
-    <message>
         <source>So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.</source>
         <translation>Demek merkez verdi, kanatlar vermedi. İyi yapılmıştı, bunu söylüyorum ve içindeydim. Roma bir ordu ve içindeki her şövalye için bir yüzük yitirdi. Roma henüz önemli olan bir şey yitirmedi.</translation>
     </message>
@@ -7951,10 +7939,6 @@ bir harita seç</translation>
     <message>
         <source>Stand in the gate yard of the northern advance camp until it falls to Carthage.</source>
         <translation>Kuzeydeki ileri kampın kapı avlusunda, orası Kartaca&apos;ya düşene kadar dur.</translation>
-    </message>
-    <message>
-        <source>Stand your ground. The last soldier alone is not a force — he is a sacrifice.</source>
-        <translation>Yerinde dur. Tek başına kalan son asker bir kuvvet değildir — bir kurbandır.</translation>
     </message>
     <message>
         <source>Supply is a target - and it cuts both ways. Your market and your homes are what the Romans are actually marching at, and their siege camp keeps its own stockpile within reach of a raid.</source>
@@ -8043,10 +8027,6 @@ bir harita seç</translation>
     <message>
         <source>The commander falls — and every line collapses behind him.</source>
         <translation>Komutan düşer — ve arkasındaki her hat çöker.</translation>
-    </message>
-    <message>
-        <source>The commander falls — the vigil ends. And the dead keep walking.</source>
-        <translation>Komutan düşer — nöbet biter. Ve ölüler yürümeyi sürdürür.</translation>
     </message>
     <message>
         <source>The crew is gone and the officer is standing in a clearing with an axe. That is not a work party.</source>
@@ -8569,22 +8549,6 @@ bir harita seç</translation>
         <translation>Her kapıyı örtemezsin. Ön uyarıyı izle ve iç hatlardan kaydır.</translation>
     </message>
     <message>
-        <source>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</source>
-        <translation>Ölüleri tapınaktan sür, sonra sancağı üzerine dik. Durdukları toprağa tuz ek.</translation>
-    </message>
-    <message>
-        <source>Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
-        <translation>Yaralıları eve çekin ve elimizde kalan adamları çağırın. Ölüler sabırlıdır. Biz de sabırlı olmayı göze alabiliriz.</translation>
-    </message>
-    <message>
-        <source>Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it.</source>
-        <translation>Mezar harabelerinin üstündeki lanetli tapınağı al ve aldığını elinde tut. Altmış adam, bir kışla ve bir ev, Roma&apos;nın ayırabildiğinin tamamı: muhafızları harabelerden temizle, sonra ölüleri tapınaktan sür ve sancağı üzerine dik.</translation>
-    </message>
-    <message>
-        <source>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</source>
-        <translation>İşte oradalar. Yüzlere bakmayın. Okçular atsın, kalkanlar kapansın ve kimse hiçbir şeyi o sisin içine geri kovalamasın.</translation>
-    </message>
-    <message>
         <source>Both risings of the dead at the south-western ruins must also fall before the war ends.</source>
         <translation>Savaş bitmeden güneybatı harabelerindeki iki ölü kalkışı da düşmeli.</translation>
     </message>
@@ -9039,6 +9003,70 @@ bir harita seç</translation>
     <message>
         <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand across a field from you with an army of my own.</source>
         <translation>Demek Afrika, ikimiz ve arkasında durulacak bir nehir yok. Fillerinin ölçüsünü aldım, Numidyalıların da artık bende. Ne yapacaksan, göreceğim yerde yap. On altı yıldır, kendi ordumla bir alanın karşı yakasında sana karşı durmayı bekledim.</translation>
+    </message>
+    <message>
+        <source>Break both risings at the shrine. Do not flinch when the ground tears open.</source>
+        <translation>Tapınaktaki iki kalkışı da kır. Toprak yarıldığında gözünü kırpma.</translation>
+    </message>
+    <message>
+        <source>Clear the barrow ruins. Both risings of the dead must fall.</source>
+        <translation>Mezar harabelerini temizle. Ölülerin iki kalkışı da düşmeli.</translation>
+    </message>
+    <message>
+        <source>Fabius falls. The watch ends, and the dead keep walking.</source>
+        <translation>Fabius düşer. Nöbet sona erer, ölüler ise yürümeye devam eder.</translation>
+    </message>
+    <message>
+        <source>Fabius stands alone, with no soldiers left and no barracks to raise more.</source>
+        <translation>Fabius yapayalnız kaldı; ne askeri var ne de yenilerini toplayacak bir kışlası.</translation>
+    </message>
+    <message>
+        <source>It is calling up the last of them, and another priest with them. Whatever comes out of that ground now is all it has left. So is what we have.</source>
+        <translation>Sonuncularını çağırıyor, yanlarında bir mezar rahibi daha. O topraktan şimdi ne çıkarsa, elinde kalan tek şey o. Bizim elimizdeki de öyle.</translation>
+    </message>
+    <message>
+        <source>Listen. The ground is still moving, and one of them is coming up in robes. That one first, archers. The rest are only bones.</source>
+        <translation>Dinleyin. Toprak hâlâ kıpırdıyor ve içlerinden biri cübbeyle çıkıyor. Önce o, okçular. Gerisi sadece kemik.</translation>
+    </message>
+    <message>
+        <source>Now. Get men onto that shrine and keep them there until the standard is up. Nobody steps off it. Not for loot, not for the wounded, not for me.</source>
+        <translation>Şimdi. O tapınağa adam çıkarın ve sancak dikilene dek orada tutun. Kimse ayrılmıyor. Ganimet için de, yaralılar için de, benim için de.</translation>
+    </message>
+    <message>
+        <source>Pull the wounded back to the camp and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
+        <translation>Yaralıları kampa geri çekin ve elimizde kalan adamları çağırın. Ölüler sabırlıdır. Biz de sabırlı olmayı göze alabiliriz.</translation>
+    </message>
+    <message>
+        <source>Quiet again. Count the living, bring the builders up, and find out what the dead were sitting on. Then look at that shrine and tell me you want to go up there.</source>
+        <translation>Yine sessiz. Yaşayanları sayın, inşaatçıları getirin ve ölülerin neyin üstünde oturduğunu öğrenin. Sonra o tapınağa bakın ve bana oraya çıkmak istediğinizi söyleyin.</translation>
+    </message>
+    <message>
+        <source>Raise a marketplace at the watch camp. Gold buys nothing buried in a barrow.</source>
+        <translation>Gözcü kampına bir pazar yeri kur. Altın, bir mezarda gömülü hiçbir şeyi satın almaz.</translation>
+    </message>
+    <message>
+        <source>Rome sent sixty men to find out why the shepherds will not use the old road after dark. Build up the watch camp first, then clear the barrow ruins and take the shrine on the rise. The dead will not come to you: you choose when to wake them, and you can choose to be ready.</source>
+        <translation>Roma, çobanların karanlıktan sonra eski yolu neden kullanmadığını öğrenmek için altmış adam gönderdi. Önce gözcü kampını büyüt, sonra mezar harabelerini temizle ve yamaçtaki tapınağı al. Ölüler sana gelmeyecek: onları ne zaman uyandıracağını sen seçersin, hazır olmayı da seçebilirsin.</translation>
+    </message>
+    <message>
+        <source>Sixty men and a road the shepherds will not walk after dark. The Senate wants a report. Cut timber, raise the camp, and keep everyone off that barrow until I say otherwise.</source>
+        <translation>Altmış adam ve çobanların karanlıktan sonra yürümediği bir yol. Senato bir rapor istiyor. Kereste kesin, kampı kurun ve ben aksini söyleyene dek herkesi o mezardan uzak tutun.</translation>
+    </message>
+    <message>
+        <source>Take the shrine on the rise: cut down its guardians, then keep troops beside it until the standard is planted.</source>
+        <translation>Yamaçtaki tapınağı al: muhafızlarını biç, sonra sancak dikilene dek yanında asker tut.</translation>
+    </message>
+    <message>
+        <source>The hill as well. Of course the hill as well. Shields in front, every bow on the one in robes, and nobody chases anything into that haze.</source>
+        <translation>Tepe de. Tabii ki tepe de. Kalkanlar önde, bütün yaylar cübbeliye, ve kimse o pusun içine hiçbir şeyin peşinden gitmiyor.</translation>
+    </message>
+    <message>
+        <source>The quartermaster sent gold, and gold does not hold a shield wall. Build a market and turn it into iron. When we do go to that barrow, the archers stand still and let the dead walk onto the shields.</source>
+        <translation>Levazımcı altın gönderdi, altın ise kalkan duvarını ayakta tutmaz. Bir pazar kurun ve onu demire çevirin. O mezara gittiğimizde okçular kıpırdamadan durur ve ölülerin kalkanlara yürümesine izin verir.</translation>
+    </message>
+    <message>
+        <source>Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.</source>
+        <translation>Bunlar insan. İnsandı. Jüpiter bizi korusun. ...Sakin. Kemik de her şey gibi kırılır. Okçular, olduğunuz yerde durun, bırakın kalkanlara gelsinler.</translation>
     </message>
 </context>
 <context>
@@ -10643,14 +10671,6 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
         <translation>SERSEMLEDİ</translation>
     </message>
     <message>
-        <source>BOW  ·  X</source>
-        <translation>YAY  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>KILIÇ  ·  X</translation>
-    </message>
-    <message>
         <source>SPECIAL</source>
         <translation>ÖZEL</translation>
     </message>
@@ -10665,6 +10685,86 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <message>
         <source>READY</source>
         <translation>HAZIR</translation>
+    </message>
+    <message>
+        <source>Strike</source>
+        <translation>Vuruş</translation>
+    </message>
+    <message>
+        <source>Heavy</source>
+        <translation>Ağır</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>Siper</translation>
+    </message>
+    <message>
+        <source>Dodge</source>
+        <translation>Sıyrıl</translation>
+    </message>
+    <message>
+        <source>Lock on</source>
+        <translation>Kilitlen</translation>
+    </message>
+    <message>
+        <source>Sprint</source>
+        <translation>Koş</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>Kamera</translation>
+    </message>
+    <message>
+        <source>Army view</source>
+        <translation>Ordu görünümü</translation>
+    </message>
+    <message>
+        <source>WINDED</source>
+        <translation>SOLUKSUZ</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2 to swap</source>
+        <translation>%1  ·  değiştirmek için %2</translation>
+    </message>
+    <message>
+        <source>BOW</source>
+        <translation>YAY</translation>
+    </message>
+    <message>
+        <source>BLADE</source>
+        <translation>KILIÇ</translation>
+    </message>
+    <message>
+        <source>AURA</source>
+        <translation>AURA</translation>
+    </message>
+    <message>
+        <source>RALLY</source>
+        <translation>TOPLAN</translation>
+    </message>
+    <message>
+        <source>ON %1</source>
+        <translation>AÇIK %1</translation>
+    </message>
+    <message>
+        <source>ON</source>
+        <translation>AÇIK</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CLOSE</source>
+        <translation>KAMERA  ·  YAKIN</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CHASE</source>
+        <translation>KAMERA  ·  TAKİP</translation>
+    </message>
+    <message>
+        <source>BOW DRAWN</source>
+        <translation>YAY GERİLDİ</translation>
+    </message>
+    <message>
+        <source>BLADE DRAWN</source>
+        <translation>KILIÇ ÇEKİLDİ</translation>
     </message>
 </context>
 <context>
@@ -11900,6 +12000,10 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <message>
         <source>The risen guardians are put down. Hold the shrine to purify it.</source>
         <translation>Dirilen muhafızlar yere serildi. Arındırmak için tapınağı tut.</translation>
+    </message>
+    <message>
+        <source>The ground is moving under the dead. More are coming up.</source>
+        <translation>Ölülerin altında toprak kıpırdıyor. Daha fazlası yükseliyor.</translation>
     </message>
 </context>
 <context>

@@ -82,6 +82,17 @@ TestCase {
         source.destroy();
     }
 
+    function test_the_players_own_commander_is_not_tagged_as_an_ally() {
+        var source = testCase.makeSource("Sixty men and a shrine.");
+        source.relationship = "own";
+        var panel = testCase.makePanel(source);
+        var tag = findChild(panel, "commanderAllyTag");
+        verify(tag !== null, "the ally tag was not created");
+        compare(tag.visible, false, "the player's own commander must not be labelled an ally");
+        panel.destroy();
+        source.destroy();
+    }
+
     function test_a_plain_line_offers_no_request_buttons() {
         var source = testCase.makeSource("Hold the flank.");
         var panel = testCase.makePanel(source);

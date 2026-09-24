@@ -603,6 +603,7 @@ add_executable(
     core/tutorial_mission_test.cpp
     core/campaign_wave_assault_test.cpp
     core/difficulty_presets_test.cpp
+    core/iron_sepulcher_watch_mission_test.cpp
     core/match_setup_difficulty_test.cpp
     core/mission_startup_test.cpp
     core/production_manager_test.cpp

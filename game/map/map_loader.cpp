@@ -709,6 +709,8 @@ void read_undead_zones(const QJsonArray& arr, std::vector<UndeadZone>& out) {
     zone.fog_density = float(obj.value(FOG_DENSITY).toDouble(zone.fog_density));
     zone.wave_timeout_seconds =
         float(obj.value(WAVE_TIMEOUT).toDouble(zone.wave_timeout_seconds));
+    zone.wave_delay_seconds =
+        std::max(0.0F, float(obj.value(WAVE_DELAY).toDouble(zone.wave_delay_seconds)));
 
     if (obj.contains(AWAKEN_ON) && obj.value(AWAKEN_ON).isArray()) {
       const auto awaken_on = obj.value(AWAKEN_ON).toArray();

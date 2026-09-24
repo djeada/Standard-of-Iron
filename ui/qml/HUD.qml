@@ -338,7 +338,7 @@ Item {
         anchors.bottom: bottomPanel.top
         anchors.bottomMargin: Design.Metrics.space12
 
-        gate: !hud.commander_rpg_mode && !hud.overlay_active && !hud.tutorial_active
+        gate: !hud.commander_rpg_mode && !hud.overlay_active && !hud.tutorial_active && !commanderMessage.showing
         onOpen_settings_requested: {
             cameraLegend.dismiss();
             hud.camera_settings_requested();
