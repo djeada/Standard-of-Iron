@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "game/core/component.h"
+#include "game/core/death_sequence.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/systems/commander_system.h"
@@ -1276,8 +1277,10 @@ TEST(CommanderSystemTest, CommanderDeathTurnsTheNationsCampsNeutralAndDisbandsIt
             Game::Core::NEUTRAL_OWNER_ID)
       << "camps must be left standing and capturable, not destroyed";
   EXPECT_GT(fixture.barracks->get_component<Engine::Core::UnitComponent>()->health, 0);
-  EXPECT_TRUE(
-      fixture.marketplace->has_component<Engine::Core::PendingRemovalComponent>());
+  EXPECT_TRUE(Engine::Core::is_collapsing_structure(*fixture.marketplace))
+      << "the nation's other structures come down rather than vanish";
+  EXPECT_EQ(fixture.marketplace->get_component<Engine::Core::UnitComponent>()->health,
+            0);
   EXPECT_EQ(fixture.troop->get_component<Engine::Core::UnitComponent>()->health, 0);
 
   EXPECT_EQ(bystander->get_component<Engine::Core::UnitComponent>()->health, 100)

@@ -31,7 +31,9 @@
 #include "draw_queue.h"
 #include "elephant/dimensions.h"
 #include "elephant/elephant_renderer_base.h"
+#include "entity/building_collapse.h"
 #include "entity/building_render_common.h"
+#include "entity/building_worksite.h"
 #include "entity/carried_load_renderer.h"
 #include "entity/registry.h"
 #include "entity/unseen_submitter.h"
@@ -281,6 +283,7 @@ struct UnitRenderEntry {
 
   float view_distance_sq{0.0F};
   float cull_radius{0.0F};
+  Render::GL::BuildingCollapse collapse{};
 };
 
 [[nodiscard]] auto is_map_landmark(const Engine::Core::UnitComponent& unit) -> bool {
@@ -593,9 +596,11 @@ void Renderer::collect_unit_entries(Engine::Core::World& world,
     }
     auto const* creature_presentation =
         entity->get_component<Engine::Core::CreaturePresentationComponent>();
+    auto const collapse = Render::GL::resolve_building_collapse(*entity);
     bool const has_death_motion =
-        creature_presentation != nullptr && creature_presentation->snapshot_valid &&
-        (creature_presentation->is_dying || creature_presentation->is_dead);
+        collapse.active ||
+        (creature_presentation != nullptr && creature_presentation->snapshot_valid &&
+         (creature_presentation->is_dying || creature_presentation->is_dead));
     if (entity->has_component<Engine::Core::PendingRemovalComponent>() &&
         !has_death_motion) {
       continue;
@@ -628,8 +633,9 @@ void Renderer::collect_unit_entries(Engine::Core::World& world,
 
       bool const is_selected = (m_selected_ids.find(entity_id) != m_selected_ids.end());
       bool const is_hovered = (entity_id == m_view.hovered_entity_id());
-      entry.selected = is_selected;
-      entry.hovered = is_hovered;
+      entry.selected = is_selected && !collapse.active;
+      entry.hovered = is_hovered && !collapse.active;
+      entry.collapse = collapse;
       if (m_entity_registry != nullptr && !cached.has_renderer_handle &&
           !cached.renderer_key.empty()) {
         const auto renderer_handle = m_entity_registry->get_handle(cached.renderer_key);
@@ -801,8 +807,14 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
   }
   {
     DrawContext& draw_ctx = plan.draw_ctx;
-    draw_ctx =
-        DrawContext{ctx.resources, entry.entity, ctx.world, world_view(), model_matrix};
+    draw_ctx = DrawContext{
+        ctx.resources,
+        entry.entity,
+        ctx.world,
+        world_view(),
+        entry.collapse.active
+            ? Render::GL::building_collapse_model(model_matrix, entry.collapse)
+            : Render::GL::structure_work_model(model_matrix, *entry.entity)};
 
     draw_ctx.humanoid_runtime = &m_humanoid_runtime;
 
@@ -922,6 +934,13 @@ void Renderer::submit_unit_entry(
       } else {
         (*plan.fn)(plan.draw_ctx, probe);
       }
+      if (entry.collapse.active) {
+        Render::GL::submit_building_collapse_rubble(probe, entry.collapse);
+      } else if (entry.unit != nullptr &&
+                 Game::Units::is_building_spawn(entry.unit->spawn_type)) {
+        Render::GL::submit_structure_work_dressing(
+            probe, *entry.entity, plan.draw_ctx.animation_time);
+      }
       bool const use_batching = plan.use_batching;
 
       auto const* animation_debug =
@@ -984,6 +1003,9 @@ void Renderer::submit_unit_entry(
     }
   }
   if (drawn_by_registry) {
+    if (entry.collapse.active) {
+      return;
+    }
 
     if (entry.selected || entry.hovered) {
       enqueue_selection_ring(
@@ -1338,7 +1360,8 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
                                         float alpha_multiplier,
                                         const QVector3D& marker_color,
                                         float marker_alpha,
-                                        float progress) {
+                                        float progress,
+                                        bool under_construction) {
     if (entity == nullptr) {
       return;
     }
@@ -1388,6 +1411,19 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     model_matrix.rotate(transform->rotation.y, 0.0F, 1.0F, 0.0F);
     model_matrix.rotate(transform->rotation.z, 0.0F, 0.0F, 1.0F);
     model_matrix.scale(transform->scale.x, transform->scale.y, transform->scale.z);
+
+    // A site under way reads as a building going up: a stone curb, the walls
+    // rising inside scaffolding, the scaffolding coming down to finish.
+    if (under_construction) {
+      auto const site = Render::GL::building_worksite_for(*entity);
+      Render::GL::submit_foundation_curb(*this, site);
+      Render::GL::submit_scaffolding(
+          *this, site, Render::GL::construction_scaffold_fraction(progress));
+      model_matrix = Render::GL::building_standing_model(
+          model_matrix,
+          preview_position,
+          Render::GL::construction_built_fraction(progress));
+    }
 
     float preview_distance_sq = 0.0F;
     if (m_camera != nullptr) {
@@ -1465,12 +1501,13 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     if (preview->site_ghost) {
 
       const float ghost_alpha =
-          0.22F + 0.42F * std::clamp(preview->progress, 0.0F, 1.0F);
+          0.45F + 0.40F * std::clamp(preview->progress, 0.0F, 1.0F);
       render_preview_like_entity(entity,
                                  ghost_alpha,
                                  QVector3D(0.78F, 0.60F, 0.20F),
                                  0.26F,
-                                 preview->progress);
+                                 preview->progress,
+                                 true);
       continue;
     }
     render_preview_like_entity(entity,
@@ -1478,7 +1515,8 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
                                preview->valid ? QVector3D(0.24F, 0.75F, 0.30F)
                                               : QVector3D(0.82F, 0.24F, 0.24F),
                                preview->valid ? 0.28F : 0.36F,
-                               0.0F);
+                               0.0F,
+                               false);
   }
 
   auto site_entities =
@@ -1490,7 +1528,7 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
       continue;
     }
     render_preview_like_entity(
-        entity, 0.82F, QVector3D(0.78F, 0.60F, 0.20F), 0.22F, site->progress);
+        entity, 0.82F, QVector3D(0.78F, 0.60F, 0.20F), 0.22F, site->progress, true);
   }
 }
 

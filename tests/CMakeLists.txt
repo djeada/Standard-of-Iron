@@ -138,6 +138,7 @@ add_executable(
     systems/unit_activity_test.cpp
     systems/victory_service_test.cpp
     systems/capture_system_test.cpp
+    systems/structure_collapse_test.cpp
     systems/undead_awakening_system_test.cpp
     systems/cursed_gold_vein_system_test.cpp
     architecture/layering_test.cpp

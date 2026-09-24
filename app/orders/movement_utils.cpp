@@ -53,7 +53,7 @@ auto issue_civilian_delivery_command(
           ? target_entity->get_component<Engine::Core::ProductionComponent>()
           : nullptr;
   if ((target_unit == nullptr) || (target_production == nullptr) ||
-      (target_unit->owner_id != local_owner_id) ||
+      (target_unit->health <= 0) || (target_unit->owner_id != local_owner_id) ||
       !Game::Units::is_recruitment_building(target_unit->spawn_type)) {
     return App::Core::rejected_order_on(
         OrderKind::Deliver,

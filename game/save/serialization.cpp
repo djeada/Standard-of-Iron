@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "../core/component_economy.h"
+#include "../core/death_sequence.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../formation/army_formation_registry.h"
@@ -2384,6 +2385,11 @@ auto Serialization::serialize_world(const World* world) -> QJsonDocument {
 
   world->for_each_entity([&entities_array](Entity& entity) {
     if (entity.get_component<ConstructionPreviewComponent>() != nullptr) {
+      return;
+    }
+    // A collapsing structure is already gone for gameplay, and its death
+    // sequence is presentation-only, so a restored copy would never be removed.
+    if (is_collapsing_structure(entity)) {
       return;
     }
     entities_array.append(serialize_entity(&entity));

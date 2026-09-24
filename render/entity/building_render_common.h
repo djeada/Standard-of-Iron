@@ -26,6 +26,11 @@ struct BuildingInstanceCacheStats {
 auto resolve_building_health_ratio(const DrawContext& ctx) -> float;
 
 auto resolve_building_state(const DrawContext& ctx) -> BuildingState;
+
+// Seconds since the structure last switched damage state on screen, measured
+// on the clock of the DrawContexts that resolved it; negative when it has not
+// switched since it was first drawn.
+auto building_state_transition_age(std::uint32_t entity_id, float now) -> float;
 auto building_renderer_key(std::string_view nation_slug,
                            std::string_view building_type) -> std::string;
 auto building_renderer_key(Game::Systems::NationID nation_id,

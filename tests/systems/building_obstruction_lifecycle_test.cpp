@@ -6,6 +6,7 @@
 
 #include "../../game/core/movement_facts.h"
 #include "core/component_gameplay.h"
+#include "core/death_sequence.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "game/systems/world_restore.h"
@@ -309,7 +310,7 @@ TEST_F(BuildingObstructionLifecycleTest, ReloadDoesNotRestoreDestroyedStructures
   make_wall(world, -6.0F, 0.0F, 2);
 
   destroy_by_combat(world, wall, attacker);
-  ASSERT_TRUE(wall->has_component<PendingRemovalComponent>());
+  ASSERT_TRUE(Engine::Core::is_collapsing_structure(*wall));
 
   std::vector<BuildingFootprint> authored;
   authored.emplace_back(2.0F, 0.0F, 2.0F, 2.0F, 0, 0U);

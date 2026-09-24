@@ -11,6 +11,12 @@
 
 namespace Engine::Core {
 
+// A structure's collapse is timed to the `build.building_destroyed` cue (2.2 s);
+// the rubble then lingers before settling into the ground.
+inline constexpr float k_structure_collapse_duration = 2.2F;
+inline constexpr float k_structure_rubble_hold_duration = 12.0F;
+inline constexpr float k_structure_rubble_sink_duration = 3.5F;
+
 struct DeathSequenceTiming {
   float state_duration{1.0F};
   float dead_hold_duration{Defaults::k_corpse_hold_duration};
@@ -96,6 +102,9 @@ resolve_death_profile(const UnitComponent* unit,
   if (unit == nullptr) {
     return DeathSequenceProfile::Infantry;
   }
+  if (Game::Units::is_building_spawn(unit->spawn_type)) {
+    return DeathSequenceProfile::Structure;
+  }
   if (unit->death_sequence_override != 0xFFU &&
       unit->death_sequence_override <=
           static_cast<std::uint8_t>(DeathSequenceProfile::Elephant)) {
@@ -141,6 +150,11 @@ resolve_death_timing(DeathSequenceProfile profile,
     timing.dead_hold_duration = 10.0F;
     timing.sink_duration = 2.4F;
     break;
+  case DeathSequenceProfile::Structure:
+    timing.state_duration = k_structure_collapse_duration;
+    timing.dead_hold_duration = k_structure_rubble_hold_duration;
+    timing.sink_duration = k_structure_rubble_sink_duration;
+    break;
   case DeathSequenceProfile::Infantry:
   default:
     timing.state_duration = Animation::humanoid_death_collapse_duration(
@@ -148,6 +162,21 @@ resolve_death_timing(DeathSequenceProfile profile,
     break;
   }
   return timing;
+}
+
+// Alive in the gameplay sense. Dead units and collapsing structures stay in the
+// world for their death sequence, so existence alone is not enough.
+[[nodiscard]] inline auto is_live_entity(const Entity& entity) noexcept -> bool {
+  auto const* unit = entity.get_component<UnitComponent>();
+  return unit != nullptr && unit->health > 0 &&
+         !entity.has_component<PendingRemovalComponent>() &&
+         !entity.has_component<DeathAnimationComponent>();
+}
+
+[[nodiscard]] inline auto
+is_collapsing_structure(const Entity& entity) noexcept -> bool {
+  auto const* death = entity.get_component<DeathAnimationComponent>();
+  return death != nullptr && death->profile == DeathSequenceProfile::Structure;
 }
 
 inline auto begin_death_sequence(Entity& entity, std::uint8_t variant) noexcept

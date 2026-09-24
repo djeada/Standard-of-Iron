@@ -134,7 +134,7 @@ auto validate_building_order(Engine::Core::World& world,
                              int owner_id,
                              Engine::Core::EntityID building) -> Rejection {
   const auto* unit = building_owner(world, building);
-  if (unit == nullptr) {
+  if (unit == nullptr || unit->health <= 0) {
     return Rejection::MissingBuilding;
   }
   if (unit->owner_id != owner_id) {

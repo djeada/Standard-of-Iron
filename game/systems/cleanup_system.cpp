@@ -85,6 +85,22 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
   drop_components<Engine::Core::StructureDamagePresentationComponent>(*world, expired);
   expired.clear();
 
+  using RepairShown = Engine::Core::StructureRepairPresentationComponent;
+  for (auto [entity_id, repair] : world->view<RepairShown>()) {
+    float const dt = std::max(0.0F, delta_time);
+    repair.active_for = std::max(0.0F, repair.active_for - dt);
+    repair.since_restore =
+        std::min(repair.since_restore + dt, RepairShown::k_idle_since_restore);
+    float const step = dt / RepairShown::k_scaffold_seconds;
+    repair.scaffold = std::clamp(
+        repair.scaffold + (repair.active_for > 0.0F ? step : -step), 0.0F, 1.0F);
+    if (repair.active_for <= 0.0F && repair.scaffold <= 0.0F) {
+      expired.push_back(entity_id);
+    }
+  }
+  drop_components<RepairShown>(*world, expired);
+  expired.clear();
+
   for (auto [entity_id, presentation] :
        world->view<Engine::Core::RpgContactPresentationComponent>()) {
     if (world->has<Engine::Core::PendingRemovalComponent>(entity_id)) {
@@ -135,7 +151,10 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
       world->emplace<Engine::Core::PendingRemovalComponent>(entity_id);
       continue;
     }
-    note_settled_corpse(death, settled);
+    // Ruins keep their own timing; the budget exists to cap soldier corpses.
+    if (death.profile != Engine::Core::DeathSequenceProfile::Structure) {
+      note_settled_corpse(death, settled);
+    }
   }
   enforce_corpse_budget(settled);
 

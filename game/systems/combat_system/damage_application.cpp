@@ -95,6 +95,30 @@ auto infantry_death_variant(Engine::Core::Entity* target,
   return variant_for(HumanoidDeathCollapse::SideCrumple);
 }
 
+// A structure's variant is the compass heading its ruin falls toward, in
+// 1/256ths of a turn: away from whoever landed the blow.
+auto structure_fall_heading(Engine::Core::Entity* target,
+                            Engine::Core::Entity* attacker) -> std::uint8_t {
+  auto const* target_tf =
+      target != nullptr ? target->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  auto const* attacker_tf =
+      attacker != nullptr ? attacker->get_component<Engine::Core::TransformComponent>()
+                          : nullptr;
+  if (target_tf == nullptr || attacker_tf == nullptr) {
+    return static_cast<std::uint8_t>(
+        (target != nullptr ? target->get_id() : 0U) * 2654435761U >> 24U);
+  }
+  float const dx = target_tf->position.x - attacker_tf->position.x;
+  float const dz = target_tf->position.z - attacker_tf->position.z;
+  if (dx * dx + dz * dz < 1.0e-6F) {
+    return static_cast<std::uint8_t>(target->get_id() * 2654435761U >> 24U);
+  }
+  float const turns = std::atan2(dx, dz) / (2.0F * std::numbers::pi_v<float>);
+  return static_cast<std::uint8_t>(
+      static_cast<int>(std::lround((turns + 1.0F) * 256.0F)) & 0xFF);
+}
+
 auto resolve_death_variant(Engine::Core::Entity* target,
                            Engine::Core::Entity* attacker,
                            Engine::Core::DeathSequenceProfile profile,
@@ -102,6 +126,8 @@ auto resolve_death_variant(Engine::Core::Entity* target,
   switch (profile) {
   case Engine::Core::DeathSequenceProfile::Infantry:
     return infantry_death_variant(target, attacker, slot);
+  case Engine::Core::DeathSequenceProfile::Structure:
+    return structure_fall_heading(target, attacker);
   case Engine::Core::DeathSequenceProfile::MountedRider:
   case Engine::Core::DeathSequenceProfile::Elephant:
   case Engine::Core::DeathSequenceProfile::Horse:
@@ -915,17 +941,10 @@ apply_unit_damage(Engine::Core::World* world,
       target_selector->should_chase = false;
     }
 
-    if (structure) {
-      if (auto* r = target->get_component<Engine::Core::RenderableComponent>()) {
-        r->visible = false;
-      }
-      target->add_component<Engine::Core::PendingRemovalComponent>();
-    } else {
-      if (is_killing_blow) {
-        spawn_blood_stain(world, target);
-      }
-      begin_death_sequence(target, attacker);
+    if (!structure && is_killing_blow) {
+      spawn_blood_stain(world, target);
     }
+    begin_death_sequence(target, attacker);
   }
 
   return result;

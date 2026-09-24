@@ -442,7 +442,12 @@ void AudioEventHandler::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
   }
 
   if (Game::Units::is_building_spawn(event.spawn_type)) {
-    play_cue(Cue::k_build_building_destroyed);
+    WorldPoint where;
+    if (entity_point(m_world, event.unit_id, where)) {
+      play_cue_at(Cue::k_build_building_destroyed, where);
+    } else {
+      play_cue(Cue::k_build_building_destroyed);
+    }
     return;
   }
 

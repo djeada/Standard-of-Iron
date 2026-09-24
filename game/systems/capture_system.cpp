@@ -134,7 +134,7 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
     const auto* unit = &unit_ref;
     const auto* transform = &transform_ref;
 
-    if (unit->spawn_type != Game::Units::SpawnType::Barracks) {
+    if (unit->spawn_type != Game::Units::SpawnType::Barracks || unit->health <= 0) {
       continue;
     }
 
