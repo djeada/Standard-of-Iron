@@ -670,6 +670,26 @@ private:
 
 constexpr float k_slot_settle_distance = 0.12F;
 
+// A horse travels along its own nose. It turns on an arc no tighter than
+// k_mounted_turn_radius, pivots on its haunches when nearly stopped, and can
+// only sidestep a little to settle into its slot.
+constexpr float k_mounted_turn_radius = 1.8F;
+constexpr float k_mounted_pivot_degrees = 130.0F;
+constexpr float k_mounted_turn_cap_degrees = 150.0F;
+
+// Riders who have turned about gallop to rejoin a troop that set off at once.
+constexpr float k_mounted_catch_up_headroom = 1.3F;
+constexpr float k_mounted_sidestep_speed = 0.45F;
+
+// A slot that has slid just behind the horse (the inner flank of a wheel) is
+// waited for, not ridden round to.
+constexpr float k_mounted_slot_behind_degrees = 100.0F;
+constexpr float k_mounted_slot_behind_distance = 2.5F;
+
+// Snapping onto a slot that is still moving would drag the horse sideways
+// with the block, so riders only settle onto a slot that has stopped.
+constexpr float k_mounted_settle_slot_speed = 0.25F;
+
 void walk_formation_slot(
     const Engine::Core::TransformComponent& actor,
     const Engine::Core::FormationPresentationComponent& formation,
@@ -694,8 +714,11 @@ void walk_formation_slot(
   QVector3D destination = local_to_world(actor, soldier.local_x, soldier.local_z);
   const float desired_facing = actor.rotation.y + soldier.local_yaw;
   const float variation = hash_unit_float(seed, soldier.slot_index * 97U + 43U);
-  const float max_speed = std::max(1.4F, std::max(march_speed, squad_speed) * 1.15F) *
-                          (0.94F + variation * 0.12F);
+  const float max_speed =
+      std::max(1.4F,
+               std::max(march_speed, squad_speed) *
+                   (mounted ? k_mounted_catch_up_headroom : 1.15F)) *
+      (0.94F + variation * 0.12F);
   const float root_travel = std::hypot(actor.position.x - formation.motion_root_x,
                                        actor.position.z - formation.motion_root_z);
   const bool reset = previous == nullptr || !previous->alive ||
@@ -891,34 +914,79 @@ void walk_formation_slot(
   const float facing_target =
       !engaged && desired_magnitude > 0.25F ? travel_yaw : desired_facing;
   const bool responding = soldier.turn_response_remaining <= 0.0F;
-  if (responding) {
-    soldier.world_yaw =
-        turn_yaw_toward(soldier.world_yaw,
-                        facing_target,
-                        (mounted ? 125.0F : 185.0F) * (0.85F + variation * 0.30F) * dt);
-  }
-  const float alignment = std::cos(signed_yaw_delta(soldier.world_yaw, travel_yaw) *
-                                   std::numbers::pi_v<float> / 180.0F);
-  const float mobility =
-      engaged ? 1.0F : std::clamp((alignment - 0.15F) / 0.85F, 0.0F, 1.0F);
-  if (responding) {
-    desired_x *= mobility;
-    desired_z *= mobility;
-  } else {
-
-    desired_x = soldier.world_velocity_x;
-    desired_z = soldier.world_velocity_z;
-  }
-  const float velocity_dx = desired_x - soldier.world_velocity_x;
-  const float velocity_dz = desired_z - soldier.world_velocity_z;
-  const float velocity_change = std::hypot(velocity_dx, velocity_dz);
   const float acceleration_step =
       std::max(max_speed, desired_magnitude) / (mounted ? 0.45F : 0.28F) * dt;
-  const float velocity_blend = velocity_change > 0.0001F
-                                   ? std::min(1.0F, acceleration_step / velocity_change)
-                                   : 1.0F;
-  soldier.world_velocity_x += velocity_dx * velocity_blend;
-  soldier.world_velocity_z += velocity_dz * velocity_blend;
+  if (mounted && !engaged) {
+    if (responding) {
+      const bool slot_behind = desired_magnitude > 0.25F &&
+                               std::abs(signed_yaw_delta(desired_facing, travel_yaw)) >
+                                   k_mounted_slot_behind_degrees &&
+                               distance < k_mounted_slot_behind_distance;
+      const float heading_target = slot_behind ? desired_facing : facing_target;
+      const float ground_speed =
+          std::hypot(soldier.world_velocity_x, soldier.world_velocity_z);
+      const float arc_rate =
+          ground_speed / k_mounted_turn_radius * 180.0F / std::numbers::pi_v<float>;
+      const float turn_rate = std::min(k_mounted_turn_cap_degrees,
+                                       std::max(k_mounted_pivot_degrees, arc_rate)) *
+                              (0.85F + variation * 0.30F);
+      soldier.world_yaw =
+          turn_yaw_toward(soldier.world_yaw, heading_target, turn_rate * dt);
+    }
+    const float yaw_radians = soldier.world_yaw * std::numbers::pi_v<float> / 180.0F;
+    const float forward_x = std::sin(yaw_radians);
+    const float forward_z = std::cos(yaw_radians);
+    const float side_x = forward_z;
+    const float side_z = -forward_x;
+    float forward_speed = std::max(0.0F,
+                                   soldier.world_velocity_x * forward_x +
+                                       soldier.world_velocity_z * forward_z);
+    float side_speed =
+        soldier.world_velocity_x * side_x + soldier.world_velocity_z * side_z;
+    const float wanted_forward =
+        responding ? std::max(0.0F, desired_x * forward_x + desired_z * forward_z)
+                   : forward_speed;
+    const float wanted_side = responding
+                                  ? std::clamp(desired_x * side_x + desired_z * side_z,
+                                               -k_mounted_sidestep_speed,
+                                               k_mounted_sidestep_speed)
+                                  : std::clamp(side_speed,
+                                               -k_mounted_sidestep_speed,
+                                               k_mounted_sidestep_speed);
+    forward_speed += std::clamp(
+        wanted_forward - forward_speed, -acceleration_step, acceleration_step);
+    side_speed +=
+        std::clamp(wanted_side - side_speed, -acceleration_step, acceleration_step);
+    soldier.world_velocity_x = forward_x * forward_speed + side_x * side_speed;
+    soldier.world_velocity_z = forward_z * forward_speed + side_z * side_speed;
+  } else {
+    if (responding) {
+      soldier.world_yaw = turn_yaw_toward(soldier.world_yaw,
+                                          facing_target,
+                                          (mounted ? 125.0F : 185.0F) *
+                                              (0.85F + variation * 0.30F) * dt);
+    }
+    const float alignment = std::cos(signed_yaw_delta(soldier.world_yaw, travel_yaw) *
+                                     std::numbers::pi_v<float> / 180.0F);
+    const float mobility =
+        engaged ? 1.0F : std::clamp((alignment - 0.15F) / 0.85F, 0.0F, 1.0F);
+    if (responding) {
+      desired_x *= mobility;
+      desired_z *= mobility;
+    } else {
+
+      desired_x = soldier.world_velocity_x;
+      desired_z = soldier.world_velocity_z;
+    }
+    const float velocity_dx = desired_x - soldier.world_velocity_x;
+    const float velocity_dz = desired_z - soldier.world_velocity_z;
+    const float velocity_change = std::hypot(velocity_dx, velocity_dz);
+    const float velocity_blend =
+        velocity_change > 0.0001F ? std::min(1.0F, acceleration_step / velocity_change)
+                                  : 1.0F;
+    soldier.world_velocity_x += velocity_dx * velocity_blend;
+    soldier.world_velocity_z += velocity_dz * velocity_blend;
+  }
   float step_x = soldier.world_velocity_x * dt;
   float step_z = soldier.world_velocity_z * dt;
   if (auto const* pathfinder = NavGrid::get_pathfinder();
@@ -947,7 +1015,9 @@ void walk_formation_slot(
   } else if (!soldier.relocation_blocked && foreign_neighbors.empty() &&
              std::hypot(soldier.crowd_offset_x, soldier.crowd_offset_z) <
                  k_crowd_offset_settled &&
-             distance > 0.0001F && distance < k_slot_settle_distance) {
+             distance > 0.0001F && distance < k_slot_settle_distance &&
+             (!mounted || std::hypot(slot_velocity_x, slot_velocity_z) <
+                              k_mounted_settle_slot_speed)) {
 
     step_x = dx;
     step_z = dz;
@@ -1585,7 +1655,9 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
                             mounted,
                             melee_ordered,
                             reform != nullptr,
-                            traversal_slot != nullptr,
+                            // Riders are not pinned to the rigid block: each
+                            // horse rides its own line into the slot.
+                            traversal_slot != nullptr && !mounted,
                             passability,
                             delta_time,
                             directive);

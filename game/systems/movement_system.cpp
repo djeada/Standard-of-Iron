@@ -252,6 +252,11 @@ void publish_displacement(Engine::Core::MovementFactsComponent& facts,
                           float delta_time) {
   float const seconds = std::max(1.0e-5F, delta_time);
   facts.motor.valid = true;
+  if (delta_time <= 0.0F) {
+    // A zero-length tick moved nothing; reporting 0 m/s would read as a stop
+    // and restart every body_acceleration ramp from standstill.
+    return;
+  }
   facts.motor.accepted_dx = transform.position.x - previous_x;
   facts.motor.accepted_dz = transform.position.z - previous_z;
   facts.motor.accepted_vx = facts.motor.accepted_dx / seconds;
