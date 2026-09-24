@@ -31,7 +31,7 @@ FireCampRenderer::~FireCampRenderer() = default;
 void FireCampRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
                                  const Game::Map::BiomeSettings& biome_settings,
                                  const std::vector<Game::Map::WorldProp>& world_props) {
-  configure_height_scatter_common(height_map, biome_settings, {}, world_props, false);
+  configure_height_scatter_common(height_map, biome_settings, world_props);
 
   m_state.track_visible_instances = true;
 

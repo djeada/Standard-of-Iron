@@ -7,6 +7,7 @@ add_library(
     arena_economy_scenarios.cpp
     arena_ambience_scenarios.cpp
     arena_city_scenarios.cpp
+    arena_spotlight_scenarios.cpp
     arena_engagement_scenarios.cpp
     arena_formation_scenarios.cpp
     arena_grounding_scenarios.cpp

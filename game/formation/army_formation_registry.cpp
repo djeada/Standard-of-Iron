@@ -133,6 +133,7 @@ auto slot_to_json(const FormationSlot& slot) -> QJsonObject {
   obj["local"] = vector_to_json(slot.local_offset);
   obj["world"] = vector_to_json(slot.world_position);
   obj["facing"] = static_cast<double>(slot.facing);
+  obj["local_facing"] = static_cast<double>(slot.local_facing);
   obj["rank"] = slot.rank;
   obj["file"] = slot.file;
   obj["status"] = static_cast<int>(slot.status);
@@ -150,6 +151,7 @@ auto slot_from_json(const QJsonObject& obj) -> FormationSlot {
   slot.local_offset = vector_from_json(obj["local"].toArray());
   slot.world_position = vector_from_json(obj["world"].toArray());
   slot.facing = static_cast<float>(obj["facing"].toDouble(0.0));
+  slot.local_facing = static_cast<float>(obj["local_facing"].toDouble(0.0));
   slot.rank = obj["rank"].toInt(0);
   slot.file = obj["file"].toInt(0);
   slot.status = static_cast<SlotStatus>(obj["status"].toInt(0));
@@ -773,7 +775,7 @@ auto start_morph(Engine::Core::World& world,
     auto const index = static_cast<std::size_t>(
         std::distance(formation.morph.occupants.begin(), found));
     slot.world_position = morph_point(formation.morph, index, 0.0F);
-    slot.facing = formation.facing;
+    slot.facing = formation.facing + slot.local_facing;
   }
   return true;
 }
@@ -1103,7 +1105,7 @@ void ArmyFormationRuntime::advance_morphs(Engine::Core::World& world,
           static_cast<std::size_t>(std::distance(morph.occupants.begin(), found));
       slot.world_position =
           t >= 1.0F ? morph.world_to[index] : morph_point(morph, index, t);
-      slot.facing = formation->facing;
+      slot.facing = formation->facing + slot.local_facing;
     }
     formation->moves_pending = true;
     if (t >= 1.0F) {

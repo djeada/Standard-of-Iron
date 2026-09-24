@@ -36,9 +36,6 @@ out float v_pattern;
 out float v_flags;
 out float v_phase;
 
-// Same triangle split as the terrain mesh (quad diagonal from (x+1,z) to
-// (x,z+1)), so the marker rests on the drawn surface rather than on a
-// bilinear patch that can sit above or below it.
 float sample_terrain_height(vec2 world_xz, float fallback) {
   if (u_has_height_tex != 1) {
     return fallback;
@@ -89,9 +86,6 @@ void main() {
   float center_ground = sample_terrain_height(center.xz, center.y);
   float height = max(center.y, center_ground);
 
-  // A marker whose owner stands on the terrain drapes over it, so its uphill
-  // edge does not cut into a slope and its downhill edge does not hover. One
-  // raised well clear of the terrain (a bridge deck) stays level at its owner.
   bool drape = u_has_height_tex == 1 && center.y <= center_ground + 0.25;
 
   float band_thickness = thickness;

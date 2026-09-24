@@ -3362,12 +3362,12 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <translation>Wąska i głęboka. Najlepsza do przechodzenia przez bramy i przełęcze.</translation>
     </message>
     <message>
-        <source>Compressed frontage with reserves. Best for holding ground.</source>
-        <translation>Ściśnięty front z odwodami. Najlepszy do utrzymania terenu.</translation>
+        <source>A closed square facing out on every side, archers inside. Best for holding ground.</source>
+        <translation>Zamknięty czworobok zwrócony na zewnątrz z każdej strony, strzelcy w środku. Najlepszy do utrzymania terenu.</translation>
     </message>
     <message>
-        <source>Weighted front with skirmishers ahead. Best for breaking a line.</source>
-        <translation>Wzmocnione czoło z harcownikami przed nim. Najlepsze do przełamania linii.</translation>
+        <source>A wedge that drives its point into the enemy. Best for breaking a line.</source>
+        <translation>Klin wbijający ostrze w nieprzyjaciela. Najlepszy do przełamania linii.</translation>
     </message>
     <message>
         <source>Wide flanks that close around a target. Needs cavalry.</source>
@@ -6318,6 +6318,166 @@ Każdy rekrut kosztuje ludzi swojego oddziału; rezerwa w koszarach podnosi limi
     <message>
         <source>Slaying the last guardian clears a zone, but the shrine is not purified until you capture or destroy it.</source>
         <translation>Zabicie ostatniego strażnika oczyszcza strefę, ale kapliczka nie zostanie oczyszczona, dopóki jej nie zdobędziesz lub nie zniszczysz.</translation>
+    </message>
+    <message>
+        <source>A Roman army built a fortified camp to the same plan at the end of every march, so a tired soldier could find his tent in the dark.</source>
+        <translation>Pod koniec każdego marszu rzymska armia budowała ufortyfikowany obóz według tego samego planu, więc zmęczony żołnierz mógł znaleźć swój namiot po ciemku.</translation>
+    </message>
+    <message>
+        <source>A Roman legion of this period fought in three lines: the young hastati, the prime-aged principes, and the veteran triarii.</source>
+        <translation>Rzymski legion tego okresu walczył w trzech liniach: młodzi hastati, principes w sile wieku i weterani triarii.</translation>
+    </message>
+    <message>
+        <source>According to Polybius, the young Hannibal swore at an altar, at his father&apos;s request, never to be a friend of Rome.</source>
+        <translation>Według Polibiusza młody Hannibal na prośbę ojca przysiągł przy ołtarzu, że nigdy nie będzie przyjacielem Rzymu.</translation>
+    </message>
+    <message>
+        <source>After Cannae, Livy says Hannibal sent home the gold rings taken from fallen Roman nobles. They were measured not by count, but by volume.</source>
+        <translation>Liwiusz podaje, że po Kannach Hannibal odesłał do domu złote pierścienie zdjęte z poległych rzymskich możnych. Nie liczono ich na sztuki, lecz mierzono objętością.</translation>
+    </message>
+    <message>
+        <source>After Zama, Scipio took the name Africanus. He was among the first Roman generals named after the land he had conquered.</source>
+        <translation>Po Zamie Scypion przyjął przydomek Afrykański. Był jednym z pierwszych rzymskich wodzów nazwanych od podbitej przez siebie krainy.</translation>
+    </message>
+    <message>
+        <source>After the First Punic War, Carthage could not pay its mercenaries. They revolted, and the brutal Mercenary War nearly destroyed the city.</source>
+        <translation>Po pierwszej wojnie punickiej Kartagina nie mogła zapłacić najemnikom. Zbuntowali się, a okrutna wojna z najemnikami omal nie zniszczyła miasta.</translation>
+    </message>
+    <message>
+        <source>Archimedes helped defend Syracuse against Rome with war machines, including a crane-like &apos;claw&apos; said to lift ships out of the water.</source>
+        <translation>Archimedes pomagał bronić Syrakuz przed Rzymem za pomocą machin wojennych, w tym podobnego do dźwigu „szponu”, który podobno unosił okręty z wody.</translation>
+    </message>
+    <message>
+        <source>At Zama, the Romans blew trumpets and horns to frighten Hannibal&apos;s elephants. Some panicked and trampled Carthage&apos;s own cavalry.</source>
+        <translation>Pod Zamą Rzymianie dęli w trąby i rogi, by wystraszyć słonie Hannibala. Część z nich wpadła w panikę i stratowała własną jazdę Kartaginy.</translation>
+    </message>
+    <message>
+        <source>Balearic slingers were famous marksmen. One ancient tale says their children were not given bread until they had hit it with a sling.</source>
+        <translation>Balearscy procarze słynęli z celności. Według starożytnej opowieści ich dzieci nie dostawały chleba, dopóki nie trafiły go z procy.</translation>
+    </message>
+    <message>
+        <source>Before the sea battle of Drepana in 249 BC, the sacred chickens refused to eat. The consul threw them overboard, saying &apos;Let them drink.&apos; He lost the battle.</source>
+        <translation>Przed bitwą morską pod Drepanum w 249 r. p.n.e. święte kurczęta nie chciały jeść. Konsul wyrzucił je za burtę, mówiąc: „Niech się napiją”. Przegrał bitwę.</translation>
+    </message>
+    <message>
+        <source>Carthage fought mostly with allies and mercenaries: Libyans, Numidians, Iberians, Celts, and Balearic islanders. Hannibal kept this mixed army together in Italy for fifteen years.</source>
+        <translation>Kartagina walczyła głównie rękami sprzymierzeńców i najemników: Libijczyków, Numidów, Iberów, Celtów i mieszkańców Balearów. Hannibal utrzymał tę zbieraninę w jedności w Italii przez piętnaście lat.</translation>
+    </message>
+    <message>
+        <source>Carthage offered to pay its war debt to Rome decades early. Rome refused. A debtor who pays promptly is harder to keep in line.</source>
+        <translation>Kartagina zaproponowała, że spłaci Rzymowi dług wojenny o dziesięciolecia wcześniej. Rzym odmówił. Dłużnika, który płaci w terminie, trudniej trzymać w ryzach.</translation>
+    </message>
+    <message>
+        <source>Carthage was founded by Phoenician settlers from Tyre. Its name, Qart-hadasht, simply means &apos;New City&apos;.</source>
+        <translation>Kartaginę założyli feniccy osadnicy z Tyru. Jej nazwa, Qart-hadaszt, oznacza po prostu „Nowe Miasto”.</translation>
+    </message>
+    <message>
+        <source>Carthage was led by two elected magistrates called suffetes. Aristotle praised its constitution as one of the best of his day.</source>
+        <translation>Kartaginą kierowało dwóch wybieranych urzędników zwanych sufetami. Arystoteles chwalił jej ustrój jako jeden z najlepszych w jego czasach.</translation>
+    </message>
+    <message>
+        <source>Carthage&apos;s circular military harbor surrounded an island headquarters. The historian Appian says its ship sheds could hold about 220 warships.</source>
+        <translation>Okrągły port wojenny Kartaginy otaczał wyspę z kwaterą główną. Historyk Appian podaje, że jego hangary mieściły około 220 okrętów wojennych.</translation>
+    </message>
+    <message>
+        <source>Carthage&apos;s war elephants were probably North African forest elephants, a smaller kind that later became extinct.</source>
+        <translation>Słonie bojowe Kartaginy były prawdopodobnie północnoafrykańskimi słoniami leśnymi, mniejszym gatunkiem, który później wymarł.</translation>
+    </message>
+    <message>
+        <source>Cato the Elder ended his speeches with &apos;Carthage must be destroyed.&apos; Once he showed the Senate fresh figs from Carthage to prove how close the enemy was.</source>
+        <translation>Katon Starszy kończył swoje przemówienia słowami „Kartagina musi zostać zniszczona”. Raz pokazał senatowi świeże figi z Kartaginy, by dowieść, jak blisko jest wróg.</translation>
+    </message>
+    <message>
+        <source>Decimation was a Roman punishment for units that fled: one soldier in ten, chosen by lot, was killed by his own comrades.</source>
+        <translation>Decymacja była rzymską karą dla oddziałów, które uciekły: co dziesiąty żołnierz, wybrany losem, ginął z rąk własnych towarzyszy.</translation>
+    </message>
+    <message>
+        <source>Hamilcar Barca&apos;s nickname, Barca, probably means &apos;lightning&apos;. Hannibal&apos;s own name means roughly &apos;grace of Baal&apos;.</source>
+        <translation>Przydomek Hamilkara, Barkas, oznacza prawdopodobnie „piorun”. Samo imię Hannibal znaczy mniej więcej „łaska Baala”.</translation>
+    </message>
+    <message>
+        <source>Herodotus reports that Phoenician sailors circled Africa for an Egyptian pharaoh. He doubted their claim that the sun appeared on their right, which is exactly what would happen.</source>
+        <translation>Herodot podaje, że feniccy żeglarze opłynęli Afrykę na zlecenie egipskiego faraona. Nie dał wiary ich twierdzeniu, że słońce mieli po prawej stronie, a właśnie tak by się stało.</translation>
+    </message>
+    <message>
+        <source>In a later war, Hannibal reportedly had pots full of snakes hurled onto enemy ships. The sailors laughed, then stopped laughing.</source>
+        <translation>W późniejszej wojnie Hannibal podobno kazał ciskać na wrogie okręty garnki pełne węży. Marynarze się śmiali, a potem przestali.</translation>
+    </message>
+    <message>
+        <source>In the First Punic War, storms sank more Roman ships than the Carthaginian navy did. Whole fleets were lost in bad weather.</source>
+        <translation>W pierwszej wojnie punickiej burze zatopiły więcej rzymskich okrętów niż flota kartagińska. Całe floty ginęły przy złej pogodzie.</translation>
+    </message>
+    <message>
+        <source>Legend says Queen Elissa, or Dido, was offered as much land as an ox hide could cover. She cut the hide into thin strips and encircled an entire hill.</source>
+        <translation>Legenda głosi, że królowej Elissie, czyli Dydonie, zaoferowano tyle ziemi, ile zdoła pokryć wołowa skóra. Pocięła skórę na cienkie paski i otoczyła nimi całe wzgórze.</translation>
+    </message>
+    <message>
+        <source>Livy claims Hannibal split rocks on the Alpine path by heating them with fire and dousing them with vinegar. Historians are still arguing about it.</source>
+        <translation>Liwiusz twierdzi, że Hannibal kruszył skały na alpejskiej ścieżce, rozgrzewając je ogniem i polewając octem. Historycy wciąż się o to spierają.</translation>
+    </message>
+    <message>
+        <source>Numidian horsemen rode without saddles or bridles, guiding their mounts with a light neck rope and their knees.</source>
+        <translation>Numidyjscy jeźdźcy jeździli bez siodeł i uzd, kierując wierzchowcami za pomocą lekkiego sznura na szyi i kolan.</translation>
+    </message>
+    <message>
+        <source>Phoenician purple dye came from murex sea snails. Thousands of snails made a small amount of dye, and the dye works were famous for their stench.</source>
+        <translation>Fenicką purpurę pozyskiwano ze ślimaków morskich z rodziny rozkolcowatych. Tysiące ślimaków dawały odrobinę barwnika, a farbiarnie słynęły z odoru.</translation>
+    </message>
+    <message>
+        <source>Polybius says Roman light troops, the velites, sometimes wore wolf skins over their helmets so their officers could recognize them in battle.</source>
+        <translation>Polibiusz pisze, że rzymska lekka piechota, velites, nosiła czasem na hełmach wilcze skóry, by dowódcy mogli ich rozpoznać w bitwie.</translation>
+    </message>
+    <message>
+        <source>Rome destroyed Carthage in 146 BC. The famous story that it sowed the fields with salt was invented many centuries later.</source>
+        <translation>Rzym zniszczył Kartaginę w 146 r. p.n.e. Słynną opowieść o posypaniu jej pól solą wymyślono wiele wieków później.</translation>
+    </message>
+    <message>
+        <source>Rome had almost no warships when the First Punic War began. Polybius says it copied a stranded Carthaginian ship and trained rowers on benches on dry land.</source>
+        <translation>Gdy wybuchła pierwsza wojna punicka, Rzym prawie nie miał okrętów wojennych. Polibiusz pisze, że skopiował wyrzucony na brzeg okręt kartagiński, a wioślarzy szkolił na ławach na suchym lądzie.</translation>
+    </message>
+    <message>
+        <source>Rome rebuilt Carthage as a Roman city about a century after destroying it. It became one of the largest cities in the western Empire.</source>
+        <translation>Mniej więcej sto lat po zniszczeniu Kartaginy Rzym odbudował ją jako miasto rzymskie. Stała się jednym z największych miast zachodniej części cesarstwa.</translation>
+    </message>
+    <message>
+        <source>The Carthaginian Mago wrote a 28-book work on farming. After Carthage fell, the Roman Senate ordered it translated into Latin.</source>
+        <translation>Kartagińczyk Magon napisał dzieło o rolnictwie w 28 księgach. Po upadku Kartaginy rzymski senat nakazał przetłumaczyć je na łacinę.</translation>
+    </message>
+    <message>
+        <source>The Carthaginian explorer Hanno sailed down the coast of West Africa and described hairy wild people called &apos;gorillai&apos;. Modern gorillas are named after them.</source>
+        <translation>Kartagiński żeglarz Hannon popłynął wzdłuż wybrzeża Afryki Zachodniej i opisał owłosionych dzikich ludzi zwanych „gorillai”. Od nich wzięła się nazwa dzisiejszych goryli.</translation>
+    </message>
+    <message>
+        <source>The Latin word &apos;salarium&apos;, the root of &apos;salary&apos;, comes from the word for salt. The story that soldiers were paid in salt is probably a myth.</source>
+        <translation>Łacińskie słowo „salarium”, od którego pochodzi angielskie „salary”, czyli pensja, wywodzi się od słowa oznaczającego sól. Opowieść, że żołnierzom płacono solą, to prawdopodobnie mit.</translation>
+    </message>
+    <message>
+        <source>The Phoenician alphabet had 22 letters and no vowels. Through Greek and Latin, it is an ancestor of the letters you are reading now.</source>
+        <translation>Alfabet fenicki miał 22 litery i żadnych samogłosek. Za pośrednictwem greki i łaciny jest przodkiem liter, które właśnie czytasz.</translation>
+    </message>
+    <message>
+        <source>The Roman corvus was a boarding bridge with an iron spike. It dropped onto an enemy deck and turned a sea battle into an infantry fight.</source>
+        <translation>Rzymski corvus był pomostem abordażowym z żelaznym kolcem. Spadał na pokład wroga i zamieniał bitwę morską w starcie piechoty.</translation>
+    </message>
+    <message>
+        <source>The Roman gladius was based on an Iberian sword. The Romans were never too proud to borrow a good idea from an enemy.</source>
+        <translation>Rzymski gladius wzorowano na mieczu iberyjskim. Rzymianie nigdy nie byli zbyt dumni, by pożyczyć od wroga dobry pomysł.</translation>
+    </message>
+    <message>
+        <source>The Roman saying &apos;it has come down to the triarii&apos; meant a situation was desperate. The veterans in the last line were the final reserve.</source>
+        <translation>Rzymskie powiedzenie „doszło do triariów” oznaczało rozpaczliwe położenie. Weterani z ostatniej linii byli ostatnim odwodem.</translation>
+    </message>
+    <message>
+        <source>The pilum&apos;s long, thin iron neck could bend on impact. A pilum stuck in a shield was hard to pull out and impossible to throw back.</source>
+        <translation>Długa, cienka żelazna szyjka pilum mogła wygiąć się przy uderzeniu. Pilum wbite w tarczę trudno było wyciągnąć i nie dało się go odrzucić.</translation>
+    </message>
+    <message>
+        <source>Trapped near Casilinum in 217 BC, Hannibal tied burning torches to the horns of about two thousand oxen. The Romans followed the lights; his army walked out.</source>
+        <translation>Osaczony pod Kasilinum w 217 r. p.n.e. Hannibal kazał przywiązać płonące pochodnie do rogów około dwóch tysięcy wołów. Rzymianie poszli za światłami; jego armia spokojnie wymaszerowała.</translation>
+    </message>
+    <message>
+        <source>Tyre, the mother city of Carthage, stood on an island. Alexander the Great took it in 332 BC only by building a causeway out to it.</source>
+        <translation>Tyr, miasto macierzyste Kartaginy, leżał na wyspie. Aleksander Wielki zdobył go w 332 r. p.n.e. dopiero po usypaniu grobli prowadzącej do wyspy.</translation>
     </message>
 </context>
 <context>

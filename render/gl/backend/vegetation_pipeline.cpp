@@ -256,4 +256,87 @@ void VegetationPipeline::upload_prop_mesh_impl(
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
+void VegetationPipeline::upload_prop_mesh_with_surface_impl(
+    const std::vector<std::pair<QVector3D, QVector3D>>& verts,
+    const std::vector<QVector4D>& surface,
+    const std::vector<uint16_t>& idx,
+    StaticMeshBuffers& mesh) {
+
+  using namespace Render::GL::VertexAttrib;
+  using namespace Render::GL::ComponentCount;
+
+  constexpr GLuint k_surface_attrib = 4;
+
+  struct V {
+    QVector3D pos;
+    QVector3D nrm;
+    QVector4D surface;
+  };
+  std::vector<V> flat;
+  flat.reserve(verts.size());
+  for (std::size_t i = 0; i < verts.size(); ++i) {
+    flat.push_back({verts[i].first,
+                    verts[i].second,
+                    i < surface.size() ? surface[i] : QVector4D()});
+  }
+
+  glGenVertexArrays(1, &mesh.vao);
+  note_vertex_arrays_created(1);
+  glBindVertexArray(mesh.vao);
+
+  glGenBuffers(1, &mesh.vertex_buffer);
+  note_buffers_created(1);
+  glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer);
+  glBufferData(GL_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(flat.size() * sizeof(V)),
+               flat.data(),
+               GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(flat.size() * sizeof(V)),
+                      flat.data() != nullptr);
+  mesh.vertex_count = static_cast<GLsizei>(flat.size());
+
+  glEnableVertexAttribArray(position);
+  glVertexAttribPointer(position,
+                        vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(V),
+                        reinterpret_cast<void*>(offsetof(V, pos)));
+  glEnableVertexAttribArray(normal);
+  glVertexAttribPointer(normal,
+                        vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(V),
+                        reinterpret_cast<void*>(offsetof(V, nrm)));
+  glEnableVertexAttribArray(k_surface_attrib);
+  glVertexAttribPointer(k_surface_attrib,
+                        vec4,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(V),
+                        reinterpret_cast<void*>(offsetof(V, surface)));
+  glVertexAttribDivisor(k_surface_attrib, 0);
+
+  glGenBuffers(1, &mesh.index_buffer);
+  note_buffers_created(1);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(idx.size() * sizeof(uint16_t)),
+               idx.data(),
+               GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(idx.size() * sizeof(uint16_t)),
+                      idx.data() != nullptr);
+  mesh.index_count = static_cast<GLsizei>(idx.size());
+
+  glEnableVertexAttribArray(tex_coord);
+  glVertexAttribDivisor(tex_coord, 1);
+  glEnableVertexAttribArray(instance_position);
+  glVertexAttribDivisor(instance_position, 1);
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
 } // namespace Render::GL::BackendPipelines

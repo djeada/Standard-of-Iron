@@ -3663,22 +3663,6 @@
         {
             "authored": true,
             "end": [
-                536.0,
-                118.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "start": [
-                536.0,
-                118.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
                 540.0,
                 130.0
             ],

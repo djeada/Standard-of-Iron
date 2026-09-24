@@ -8,12 +8,6 @@
 
 namespace Game::Map {
 
-// The rendered terrain is a triangle mesh over the height grid: every quad
-// (x, z)..(x + 1, z + 1) is split along the (x + 1, z)-(x, z + 1) diagonal.
-// Subdivided quads place their extra vertices on those same triangles, so this
-// is the exact height of the drawn surface. Every consumer that plants
-// something on the ground samples through here, so nothing floats or sinks by
-// the difference between a bilinear patch and the triangles on screen.
 [[nodiscard]] inline auto sample_triangulated_height(
     const float* heights, int width, int height, float gx, float gz) -> float {
   if (heights == nullptr || width <= 0 || height <= 0) {
@@ -42,10 +36,6 @@ namespace Game::Map {
   return h11 + (h01 - h11) * (1.0F - tx) + (h10 - h11) * (1.0F - tz);
 }
 
-// Smoothed ground normal from central differences one tile apart, the same
-// stencil the terrain mesh uses for its shading normals. Per-triangle normals
-// would flip between neighbouring triangles, so anything tilted to the ground
-// uses this to stay steady as it moves.
 [[nodiscard]] inline auto
 sample_smoothed_ground_normal(const float* heights,
                               int width,
@@ -65,9 +55,6 @@ sample_smoothed_ground_normal(const float* heights,
   return normal.normalized();
 }
 
-// How far an upright object resting on a disc of `contact_radius` must sink so
-// its downhill edge meets the ground: radius * tan(slope). Capped so a cliff
-// sample cannot bury a prop whole.
 [[nodiscard]] inline auto slope_bed_depth(const QVector3D& ground_normal,
                                           float contact_radius,
                                           float max_depth) -> float {

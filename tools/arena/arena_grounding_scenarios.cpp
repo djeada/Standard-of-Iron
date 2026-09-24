@@ -16,10 +16,6 @@ using Troop = Game::Units::TroopType;
 using Game::Map::HillShape;
 using Game::Map::TerrainType;
 
-// One cast, laid out the same way on every ground type, so captures of flat
-// ground, hills, ridge edges, riverbanks, roads and scatter compare like for
-// like: props in the back row, structures in the middle, troops, a fallen
-// squad, cavalry and siege in front.
 constexpr float k_back_row_z = -7.0F;
 constexpr float k_middle_row_z = 0.0F;
 constexpr float k_front_row_z = 6.0F;
@@ -66,8 +62,7 @@ auto prop(const char* type,
   patch.origin = origin;
   patch.spacing = {};
   patch.scale = scale;
-  // Not `exact`: that snaps to walkable ground, which would pull props off the
-  // slopes these captures exist to show.
+
   return patch;
 }
 
@@ -134,8 +129,7 @@ auto grounding_definition(const char* id,
   s.select_spawned_units = false;
   s.suppress_spawn_anchor = true;
   s.suppress_ui_overlays = true;
-  // Scatter stays on: the scatter pass also draws the world-prop trees, rocks
-  // and ore under review.
+
   s.suppress_combat_dust = true;
   s.force_full_creature_lod = true;
 
@@ -179,13 +173,9 @@ auto grounding_definition(const char* id,
           QStringLiteral("ballista"), Troop::Ballista, {9.5F, 0.0F, k_front_row_z}, 0),
   };
 
-  // Most of the fallen squad goes down at once (damage runs the real death
-  // sequence), leaving bodies on the ground for the rest of the run.
   auto fell = at(0.6F, Command::ApplyDamage, QStringLiteral("fallen"));
   fell.value = 650;
 
-  // The cavalry rides across the slope and back while the camera circles, so
-  // captures show whether anything snaps between sampled heights.
   auto ride_out = at(2.0F, Command::Move, QStringLiteral("cavalry"));
   ride_out.destination = QVector3D(1.5F, 0.0F, k_front_row_z + 5.0F);
   auto ride_back = at(6.5F, Command::Move, QStringLiteral("cavalry"));
@@ -197,7 +187,7 @@ auto grounding_definition(const char* id,
              camera_step(3.0F, 22.0F, 34.0F, 70.0F),
              camera_step(6.0F, 18.0F, 30.0F, 160.0F),
              camera_step(9.0F, 26.0F, 40.0F, 250.0F),
-             // Low and side-on: any gap under a base or hoof shows as daylight.
+
              camera_step(10.5F, 20.0F, 12.0F, 100.0F)};
 
   for (const char* name : {"home", "tower", "wall", "catapult", "ballista"}) {

@@ -1731,8 +1731,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
                                casualty_offset_y + corpse_sink);
   }
   if (soldier_is_casualty_body && !ctx.skip_ground_offset) {
-    // A fallen body lies along the slope. Upright, it would bury its head
-    // uphill and hang in the air downhill; the tilt eases in as it goes down.
+
     float const fall = soldier_render_anim.is_dead
                            ? 1.0F
                            : std::clamp(soldier_render_anim.death_progress, 0.0F, 1.0F);

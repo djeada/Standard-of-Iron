@@ -1215,6 +1215,59 @@ performer to the unarmed renderer so the spear leaves his hand.
 See `docs/PROMO_CAPTURE.md` for why the reel uses `render_scale_override`, seed
 44, and shots confined to the acrobat's first routine loop.
 
+## Feature Spotlight series
+
+The Feature Spotlight videos explain one system each, 30 to 60 seconds long,
+with one house style: a flame ident reading FEATURE SPOTLIGHT over STANDARD OF
+IRON, act titles and captions in the bundled display face, aerials filmed on
+the real content, gameplay filmed from the real simulation, and the flame end
+card. Specs live in `tools/arena/promos/spotlight/`, numbered by episode; each
+episode has a 16:9 spec, a `_vertical` twin that reframes every shot for 9:16,
+and excerpt specs (`NN_reel_*.json`) cut from the vertical capture for Reels,
+TikTok and Shorts.
+
+### Campaign maps as scenarios
+
+`arena_spotlight_scenarios.cpp` registers one `spotlight_<mission_id>` scenario
+per Barcid Road mission, in campaign order. A scenario with a
+`campaign_map_path` loads that production map instead of the synthetic arena
+floor: `load_scenario` hands the map to `TerrainService::initialize`, spawns its
+authored structures with their authored rotation, and turns every map spawn
+into a scenario group owned and oriented the way the mission sets them up. The
+map's environment is kept, but its hour is clamped to 07:30-17:00 because two
+missions open in the dark and an establishing shot has to be seen.
+`regenerate_terrain` re-applies the loaded map rather than the synthetic
+heightfield: during promo capture the terrain is rebuilt after the scenario
+loads, and without that guard the campaign ground came out as a flat arena
+floor with no rivers, hills or forests.
+
+Cannae and Zama also get a `_battle` variant. The mission spawns are spread
+over hundreds of metres, which films as scattered dots, so the variant draws
+the Carthaginian host and the largest opposing army up in lines 44 m apart
+across the midpoint of their camps - infantry in front, missile troops and
+commanders behind, horse on the wings - and orders every group to attack-move
+on its nearest enemy. Contact comes at about 11 s. Filmed with
+`"gameplay_ui": true`, that is the episode's gameplay footage.
+
+### Episode 01: the Barca campaign
+
+```bash
+build/bin/arena_app --promo-spec tools/arena/promos/spotlight/01_barca_campaign.json \
+  --promo-out artifacts/promo/spotlight
+build/bin/arena_app --promo-spec tools/arena/promos/spotlight/01_barca_campaign_vertical.json \
+  --promo-out artifacts/promo/spotlight
+scripts/promo-edit.py --spec tools/arena/promos/spotlight/01_barca_campaign.json \
+  --clips artifacts/promo/spotlight/spotlight_01_barca_campaign
+scripts/promo-edit.py --spec tools/arena/promos/spotlight/01_reel_cannae.json \
+  --clips artifacts/promo/spotlight/spotlight_01_barca_campaign_vertical
+```
+
+The scores (`artifacts/promo/spotlight/01_barca_campaign/*.ogg`) are cut from
+`campaign_hannibals_ascent`, `combat_dust_of_cannae` and
+`victory_carthage_triumph`; the ascent starts 6 s in because its opening
+passage sits under the title almost silent. Promo copy is capitals only with no
+apostrophes, and the display face has no middle dot, so kickers use an em dash.
+
 ## Campaign terrain review
 
 Arena can render production campaign maps as terrain-only review scenes. This

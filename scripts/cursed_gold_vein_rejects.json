@@ -17,7 +17,12 @@
   "map_crossing_alps.json": [[312, 442]],
   "map_crossing_rhone.json": [
     [572, 92],
-    [92, 252]
+    [92, 252],
+    [102, 52],
+    [102, 62],
+    [82, 262],
+    [112, 72],
+    [52, 292]
   ],
   "map_rivers.json": [[78, 96]],
   "map_spanish_grove.json": [[187, 79]]

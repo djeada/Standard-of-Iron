@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <memory>
 #include <optional>
@@ -1286,12 +1287,17 @@ void TerrainService::sync_world_prop_identity_state() {
   m_next_world_prop_id = std::max(m_next_world_prop_id, max_id + 1);
 }
 
+auto TerrainService::next_props_revision() -> std::uint64_t {
+  static std::atomic<std::uint64_t> counter{0};
+  return ++counter;
+}
+
 void TerrainService::bump_world_props_revision() {
-  ++m_world_props_revision;
+  m_world_props_revision = next_props_revision();
 }
 
 void TerrainService::bump_authored_world_props_revision() {
-  ++m_authored_world_props_revision;
+  m_authored_world_props_revision = next_props_revision();
 }
 
 void TerrainService::bump_navigation_topology_revision() {

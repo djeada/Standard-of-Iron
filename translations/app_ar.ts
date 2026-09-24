@@ -3326,12 +3326,12 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>ضيق وعميق. الأفضل للعبور من البوابات والممرات.</translation>
     </message>
     <message>
-        <source>Compressed frontage with reserves. Best for holding ground.</source>
-        <translation>جبهة مضغوطة مع احتياطي. الأفضل للثبات على الأرض.</translation>
+        <source>A closed square facing out on every side, archers inside. Best for holding ground.</source>
+        <translation>مربع مغلق يواجه الخارج من كل جانب، والرماة في داخله. الأفضل للثبات على الأرض.</translation>
     </message>
     <message>
-        <source>Weighted front with skirmishers ahead. Best for breaking a line.</source>
-        <translation>جبهة مثقلة مع مناوشين في المقدمة. الأفضل لكسر خط.</translation>
+        <source>A wedge that drives its point into the enemy. Best for breaking a line.</source>
+        <translation>إسفين يدفع رأسه في صفوف العدو. الأفضل لكسر خط.</translation>
     </message>
     <message>
         <source>Wide flanks that close around a target. Needs cavalry.</source>
@@ -6327,6 +6327,166 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Slaying the last guardian clears a zone, but the shrine is not purified until you capture or destroy it.</source>
         <translation>قتل آخر حارس يُخلي المنطقة، لكن المزار لا يتطهّر حتى تستولي عليه أو تدمّره.</translation>
+    </message>
+    <message>
+        <source>A Roman army built a fortified camp to the same plan at the end of every march, so a tired soldier could find his tent in the dark.</source>
+        <translation>كان الجيش الروماني يبني في نهاية كل مسيرة معسكرًا محصّنًا وفق المخطط نفسه، حتى يجد الجندي المتعب خيمته في الظلام.</translation>
+    </message>
+    <message>
+        <source>A Roman legion of this period fought in three lines: the young hastati, the prime-aged principes, and the veteran triarii.</source>
+        <translation>كان الفيلق الروماني في تلك الحقبة يقاتل في ثلاثة صفوف: الهاستاتي الشبان، والبرينكيبس في أوج العمر، والترياري المخضرمون.</translation>
+    </message>
+    <message>
+        <source>According to Polybius, the young Hannibal swore at an altar, at his father&apos;s request, never to be a friend of Rome.</source>
+        <translation>بحسب بوليبيوس، أقسم حنبعل في صباه عند مذبح، بطلب من أبيه، ألّا يكون صديقًا لروما أبدًا.</translation>
+    </message>
+    <message>
+        <source>After Cannae, Livy says Hannibal sent home the gold rings taken from fallen Roman nobles. They were measured not by count, but by volume.</source>
+        <translation>بعد كاناي، يقول ليفيوس إن حنبعل أرسل إلى بلاده الخواتم الذهبية المأخوذة من نبلاء الرومان القتلى. ولم تُعَدّ عدًّا، بل كِيلت كيلًا.</translation>
+    </message>
+    <message>
+        <source>After Zama, Scipio took the name Africanus. He was among the first Roman generals named after the land he had conquered.</source>
+        <translation>بعد زاما اتخذ سكيبيو لقب «الأفريقي»، فكان من أوائل القادة الرومان الذين سُمّوا باسم الأرض التي فتحوها.</translation>
+    </message>
+    <message>
+        <source>After the First Punic War, Carthage could not pay its mercenaries. They revolted, and the brutal Mercenary War nearly destroyed the city.</source>
+        <translation>بعد الحرب البونيقية الأولى عجزت قرطاج عن دفع أجور مرتزقتها، فثاروا، وكادت حرب المرتزقة الوحشية أن تدمّر المدينة.</translation>
+    </message>
+    <message>
+        <source>Archimedes helped defend Syracuse against Rome with war machines, including a crane-like &apos;claw&apos; said to lift ships out of the water.</source>
+        <translation>ساعد أرخميدس في الدفاع عن سرقوسة ضد روما بآلات حربية، منها «مخلب» يشبه الرافعة يُقال إنه كان يرفع السفن من الماء.</translation>
+    </message>
+    <message>
+        <source>At Zama, the Romans blew trumpets and horns to frighten Hannibal&apos;s elephants. Some panicked and trampled Carthage&apos;s own cavalry.</source>
+        <translation>في زاما نفخ الرومان في الأبواق والقرون ليُرعبوا أفيال حنبعل، فذُعر بعضها ودهس فرسان قرطاج أنفسهم.</translation>
+    </message>
+    <message>
+        <source>Balearic slingers were famous marksmen. One ancient tale says their children were not given bread until they had hit it with a sling.</source>
+        <translation>كان مقلاعيّو البليار رماةً مشهورين بالدقة. وتقول حكاية قديمة إن أطفالهم لم يكونوا يُعطون الخبز حتى يصيبوه بالمقلاع.</translation>
+    </message>
+    <message>
+        <source>Before the sea battle of Drepana in 249 BC, the sacred chickens refused to eat. The consul threw them overboard, saying &apos;Let them drink.&apos; He lost the battle.</source>
+        <translation>قبل معركة دريبانا البحرية عام 249 ق.م، أبت الدجاجات المقدسة أن تأكل. فرماها القنصل في البحر قائلًا: «فلتشرب إذن». وخسر المعركة.</translation>
+    </message>
+    <message>
+        <source>Carthage fought mostly with allies and mercenaries: Libyans, Numidians, Iberians, Celts, and Balearic islanders. Hannibal kept this mixed army together in Italy for fifteen years.</source>
+        <translation>قاتلت قرطاج في الغالب بالحلفاء والمرتزقة: ليبيين ونوميديين وإيبيريين وكلت وأهل جزر البليار. وأبقى حنبعل هذا الجيش المختلط متماسكًا في إيطاليا خمسة عشر عامًا.</translation>
+    </message>
+    <message>
+        <source>Carthage offered to pay its war debt to Rome decades early. Rome refused. A debtor who pays promptly is harder to keep in line.</source>
+        <translation>عرضت قرطاج أن تسدّد دين الحرب لروما قبل موعده بعقود، فرفضت روما. فالمدين الذي يسدّد سريعًا يصعب إبقاؤه طائعًا.</translation>
+    </message>
+    <message>
+        <source>Carthage was founded by Phoenician settlers from Tyre. Its name, Qart-hadasht, simply means &apos;New City&apos;.</source>
+        <translation>أسّس مستوطنون فينيقيون من صور مدينة قرطاج، واسمها «قرت حدشت» يعني ببساطة «المدينة الجديدة».</translation>
+    </message>
+    <message>
+        <source>Carthage was led by two elected magistrates called suffetes. Aristotle praised its constitution as one of the best of his day.</source>
+        <translation>كان يحكم قرطاج قاضيان منتخبان يُسمّيان الشوفيطين. وقد أثنى أرسطو على دستورها بوصفه من أفضل دساتير عصره.</translation>
+    </message>
+    <message>
+        <source>Carthage&apos;s circular military harbor surrounded an island headquarters. The historian Appian says its ship sheds could hold about 220 warships.</source>
+        <translation>كان ميناء قرطاج الحربي الدائري يحيط بجزيرة فيها مقر القيادة. ويقول المؤرخ أبيانوس إن أحواض سفنه كانت تتسع لنحو 220 سفينة حربية.</translation>
+    </message>
+    <message>
+        <source>Carthage&apos;s war elephants were probably North African forest elephants, a smaller kind that later became extinct.</source>
+        <translation>كانت أفيال قرطاج الحربية على الأرجح أفيال غابات شمال أفريقيا، وهي نوع أصغر حجمًا انقرض لاحقًا.</translation>
+    </message>
+    <message>
+        <source>Cato the Elder ended his speeches with &apos;Carthage must be destroyed.&apos; Once he showed the Senate fresh figs from Carthage to prove how close the enemy was.</source>
+        <translation>كان كاتو الأكبر يختم خطبه بعبارة «يجب أن تُدمَّر قرطاج». وعرض مرة على مجلس الشيوخ تينًا طازجًا من قرطاج ليُثبت مدى قرب العدو.</translation>
+    </message>
+    <message>
+        <source>Decimation was a Roman punishment for units that fled: one soldier in ten, chosen by lot, was killed by his own comrades.</source>
+        <translation>كان «التعشير» عقوبة رومانية للوحدات الفارّة: يُقتل جندي من كل عشرة، يُختار بالقرعة، على أيدي رفاقه.</translation>
+    </message>
+    <message>
+        <source>Hamilcar Barca&apos;s nickname, Barca, probably means &apos;lightning&apos;. Hannibal&apos;s own name means roughly &apos;grace of Baal&apos;.</source>
+        <translation>لقب هملقار برقة، «برقة»، يعني على الأرجح «البرق». أما اسم حنبعل نفسه فمعناه تقريبًا «نعمة بعل».</translation>
+    </message>
+    <message>
+        <source>Herodotus reports that Phoenician sailors circled Africa for an Egyptian pharaoh. He doubted their claim that the sun appeared on their right, which is exactly what would happen.</source>
+        <translation>يروي هيرودوت أن بحّارة فينيقيين داروا حول أفريقيا لحساب فرعون مصري. وقد شكّ في قولهم إن الشمس كانت عن يمينهم، وهذا بالضبط ما كان سيحدث.</translation>
+    </message>
+    <message>
+        <source>In a later war, Hannibal reportedly had pots full of snakes hurled onto enemy ships. The sailors laughed, then stopped laughing.</source>
+        <translation>في حرب لاحقة، يُروى أن حنبعل أمر بقذف جرار مملوءة بالأفاعي على سفن الأعداء. فضحك البحّارة، ثم كفّوا عن الضحك.</translation>
+    </message>
+    <message>
+        <source>In the First Punic War, storms sank more Roman ships than the Carthaginian navy did. Whole fleets were lost in bad weather.</source>
+        <translation>في الحرب البونيقية الأولى، أغرقت العواصف من السفن الرومانية أكثر مما أغرقه الأسطول القرطاجي. وضاعت أساطيل كاملة في سوء الطقس.</translation>
+    </message>
+    <message>
+        <source>Legend says Queen Elissa, or Dido, was offered as much land as an ox hide could cover. She cut the hide into thin strips and encircled an entire hill.</source>
+        <translation>تقول الأسطورة إن الملكة عليسة، أو ديدو، عُرض عليها من الأرض قدر ما يغطيه جلد ثور. فقطّعت الجلد سيورًا رفيعة وأحاطت بها تلًّا كاملًا.</translation>
+    </message>
+    <message>
+        <source>Livy claims Hannibal split rocks on the Alpine path by heating them with fire and dousing them with vinegar. Historians are still arguing about it.</source>
+        <translation>يزعم ليفيوس أن حنبعل فلق الصخور على طريق الألب بتسخينها بالنار ثم صبّ الخل عليها. وما زال المؤرخون يتجادلون في ذلك.</translation>
+    </message>
+    <message>
+        <source>Numidian horsemen rode without saddles or bridles, guiding their mounts with a light neck rope and their knees.</source>
+        <translation>كان الفرسان النوميديون يركبون بلا سروج ولا لُجُم، يوجّهون خيولهم بحبل خفيف حول العنق وبركبهم.</translation>
+    </message>
+    <message>
+        <source>Phoenician purple dye came from murex sea snails. Thousands of snails made a small amount of dye, and the dye works were famous for their stench.</source>
+        <translation>كانت الصبغة الأرجوانية الفينيقية تُستخرج من حلزون الموركس البحري. آلاف الحلزونات لا تعطي إلا قليلًا من الصبغ، وكانت مصابغها مشهورة بنتانتها.</translation>
+    </message>
+    <message>
+        <source>Polybius says Roman light troops, the velites, sometimes wore wolf skins over their helmets so their officers could recognize them in battle.</source>
+        <translation>يقول بوليبيوس إن المشاة الرومان الخفاف، الفيليتس، كانوا أحيانًا يلبسون جلود الذئاب فوق خوذهم ليتعرّف إليهم ضباطهم في المعركة.</translation>
+    </message>
+    <message>
+        <source>Rome destroyed Carthage in 146 BC. The famous story that it sowed the fields with salt was invented many centuries later.</source>
+        <translation>دمّرت روما قرطاج عام 146 ق.م. أما الحكاية الشهيرة عن نثرها الملح في حقولها فقد اختُلقت بعد ذلك بقرون كثيرة.</translation>
+    </message>
+    <message>
+        <source>Rome had almost no warships when the First Punic War began. Polybius says it copied a stranded Carthaginian ship and trained rowers on benches on dry land.</source>
+        <translation>لم تكن لروما سفن حربية تقريبًا حين بدأت الحرب البونيقية الأولى. ويقول بوليبيوس إنها نسخت سفينة قرطاجية جانحة ودرّبت المجدّفين على مقاعد فوق اليابسة.</translation>
+    </message>
+    <message>
+        <source>Rome rebuilt Carthage as a Roman city about a century after destroying it. It became one of the largest cities in the western Empire.</source>
+        <translation>أعادت روما بناء قرطاج مدينةً رومانية بعد نحو قرن من تدميرها، فصارت من أكبر مدن الإمبراطورية في الغرب.</translation>
+    </message>
+    <message>
+        <source>The Carthaginian Mago wrote a 28-book work on farming. After Carthage fell, the Roman Senate ordered it translated into Latin.</source>
+        <translation>ألّف القرطاجي ماغون كتابًا في الزراعة من 28 جزءًا. وبعد سقوط قرطاج أمر مجلس الشيوخ الروماني بترجمته إلى اللاتينية.</translation>
+    </message>
+    <message>
+        <source>The Carthaginian explorer Hanno sailed down the coast of West Africa and described hairy wild people called &apos;gorillai&apos;. Modern gorillas are named after them.</source>
+        <translation>أبحر المستكشف القرطاجي حانون على طول ساحل غرب أفريقيا، ووصف أناسًا متوحشين كثيفي الشعر سمّاهم «غوريلاي». ومنهم أخذت الغوريلا الحديثة اسمها.</translation>
+    </message>
+    <message>
+        <source>The Latin word &apos;salarium&apos;, the root of &apos;salary&apos;, comes from the word for salt. The story that soldiers were paid in salt is probably a myth.</source>
+        <translation>الكلمة اللاتينية «سالاريوم»، أصل كلمة «salary» أي الراتب، مشتقة من كلمة الملح. أما الحكاية القائلة إن الجنود كانوا يُدفع لهم ملحًا فهي على الأرجح خرافة.</translation>
+    </message>
+    <message>
+        <source>The Phoenician alphabet had 22 letters and no vowels. Through Greek and Latin, it is an ancestor of the letters you are reading now.</source>
+        <translation>كانت الأبجدية الفينيقية من 22 حرفًا بلا حروف علّة. وعبر اليونانية واللاتينية، هي سلف الحروف التي تقرؤها الآن.</translation>
+    </message>
+    <message>
+        <source>The Roman corvus was a boarding bridge with an iron spike. It dropped onto an enemy deck and turned a sea battle into an infantry fight.</source>
+        <translation>كان «الكورفوس» الروماني جسرًا للاقتحام في طرفه مسمار حديدي، يسقط على سطح سفينة العدو فيحوّل المعركة البحرية إلى قتال مشاة.</translation>
+    </message>
+    <message>
+        <source>The Roman gladius was based on an Iberian sword. The Romans were never too proud to borrow a good idea from an enemy.</source>
+        <translation>كان الغلاديوس الروماني مأخوذًا عن سيف إيبيري. فالرومان لم يكونوا يومًا أشد كبرياءً من أن يقتبسوا فكرة جيدة من عدو.</translation>
+    </message>
+    <message>
+        <source>The Roman saying &apos;it has come down to the triarii&apos; meant a situation was desperate. The veterans in the last line were the final reserve.</source>
+        <translation>كان القول الروماني «وصل الأمر إلى الترياري» يعني أن الموقف يائس، فالمخضرمون في الصف الأخير كانوا الاحتياط الأخير.</translation>
+    </message>
+    <message>
+        <source>The pilum&apos;s long, thin iron neck could bend on impact. A pilum stuck in a shield was hard to pull out and impossible to throw back.</source>
+        <translation>كان عنق البيلوم الحديدي الطويل الرفيع قابلًا للانثناء عند الارتطام. فالبيلوم المنغرس في ترس يصعب نزعه ويستحيل ردّه على راميه.</translation>
+    </message>
+    <message>
+        <source>Trapped near Casilinum in 217 BC, Hannibal tied burning torches to the horns of about two thousand oxen. The Romans followed the lights; his army walked out.</source>
+        <translation>حين حوصر قرب كاسيلينوم عام 217 ق.م، ربط حنبعل مشاعل مشتعلة بقرون نحو ألفي ثور. فتبع الرومان الأضواء، وخرج جيشه ماشيًا.</translation>
+    </message>
+    <message>
+        <source>Tyre, the mother city of Carthage, stood on an island. Alexander the Great took it in 332 BC only by building a causeway out to it.</source>
+        <translation>كانت صور، المدينة الأم لقرطاج، قائمة على جزيرة. ولم يستولِ عليها الإسكندر الأكبر عام 332 ق.م إلا ببناء جسر ممتد إليها.</translation>
     </message>
 </context>
 <context>

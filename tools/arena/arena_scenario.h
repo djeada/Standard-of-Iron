@@ -434,6 +434,10 @@ struct ArenaScenarioDefinition {
 
   bool suppress_boundary_mountains{false};
 
+  QString campaign_map_path;
+
+  bool suppress_procedural_props{false};
+
   bool suppress_combat_dust{false};
   ArenaCameraView camera;
   std::optional<QVector3D> camera_focus;

@@ -3189,22 +3189,6 @@
         {
             "authored": true,
             "end": [
-                686.0,
-                196.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "zama_numidian_camp",
-            "start": [
-                686.0,
-                196.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
                 690.0,
                 208.0
             ],
@@ -3758,22 +3742,6 @@
             "start": [
                 474.0,
                 162.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                396.0,
-                172.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 5,
-            "settlement": "zama_north_camp",
-            "start": [
-                396.0,
-                172.0
             ],
             "type": "wall_segment",
             "width": 2.0

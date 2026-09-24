@@ -365,9 +365,11 @@ next plan is built fresh for the survivors and becomes the new reference.
 
 What a formation looks like is fixed by the pictograms of the formation panel
 (`FormationPanel.qml`): Line is two full rows, Column three files deep, the
-faction default 5/5/3, Defensive two rows and a reserve behind a gap, Assault a
-wedge behind its skirmishers, Encirclement a horseshoe, Siege Escort two rows
-and the engines behind. The doctrine template decides who stands where; a final
+faction default 5/5/3, Defensive a hollow square, Assault a wedge with its point
+forward, Encirclement a crescent whose horns reach forward, Siege Escort two rows
+and the engines behind. The five player intents have to read as five different
+shapes from the camera; when they were all rows of blocks, a Feature Spotlight
+filmed on them showed the same formation five times. The doctrine template decides who stands where; a final
 pass (`regularize_silhouette`) then lays the troops out on clean rows with uniform
 gaps (1.6 m between troops, 2 m between ranks, scaled by the spacing option).
 
@@ -377,10 +379,28 @@ gaps (1.6 m between troops, 2 m between ranks, scaled by the spacing option).
   line in front of them. When a rear tier exists, it is the pictogram's short
   last row, and the core takes only the full rows. Skirmishers stand a clear rank
   ahead.
-- Cavalry wings stand at the ends of the front rank (one rank forward for an
-  encirclement).
-- A dragged frontage is the span between the outermost troop centres; rows then
-  hold as many troops as fit, with gaps stretched to that width. Without one,
+- Cavalry wings stand at the ends of the front rank; an assault puts them
+  beside its widest (rearmost) rank so the point stays alone.
+- Defensive stands the fighting core and the wings on the four sides of a square,
+  each side facing outward, with ranged, command and reserve troops inside.
+  Per-slot facing is `FormationSlot::local_facing`, relative to the formation;
+  `facing` is the world facing, always the formation facing plus the local one,
+  including when the registry re-derives slots for a morph.
+- Encirclement bends the line into a crescent (`bend_into_crescent`): troops sit
+  further forward the further out they stand, turned inward, and the wings go
+  further still as the horns.
+- An assault's rows grow by one troop per rank from a single-troop point, and
+  leftover troops widen the rear ranks, never the point. When the template's
+  `max_depth` cuts that short, the ranks grow faster (1, 3, 5...) so the wedge
+  gets shallower but keeps its point. With automatic ranged placement the
+  missile troops stand behind the wedge rather than skirmishing ahead of it, or
+  the front rank is six archers and the point disappears.
+- A dragged frontage is the span between the outermost troop centres; for line,
+  encirclement and the faction default, rows then hold as many troops as fit,
+  with gaps stretched to that width. Column, assault and defensive own their
+  rows (`intent_owns_its_rows`): a frontage used to replace their silhouette
+  with plain rows, which is how every order issued with a frontage came out the
+  same shape. Without one,
   rows follow the pictogram, the frontage and depth options, and the template's
   `max_frontage` (counting the wings) and `max_depth` (a column too deep gains a
   file).
@@ -633,6 +653,28 @@ This layering allows a shield formation to pass through a narrow opening without
 Consumers such as combat geometry, RPG/direct-control targeting, weapon traces, casualty effects, and selection/presentation can use the same resolved anchor precedence instead of calculating independent soldier positions.
 
 Ordinary RTS entity selection still operates on troop/entity identity; the soldier-level query is used where exact internal geometry is required.
+
+## Soldiers and world props
+
+Pathfinding routes a troop's centre around solid world props, but a troop is a
+block several metres wide, and the traversal layout authors every soldier's
+slot without looking at props. `walk_formation_slot` therefore resolves each
+soldier against the props' real ground footprints
+(`WorldPropClearanceIndex::push_out`, padded by the soldier body radius): a slot
+that falls inside a prop is moved to the prop's edge, and a step that would land
+inside one slides along it, at no more than walking pace so a soldier who was
+held back walks back to his slot instead of popping. The nav grid alone was not
+enough: its 1 m cells are coarser than a boulder's outline, and authored soldiers
+used to snap to their slot past any walkability check, which is how a column
+marched straight through rocks and trees (`FormationPropClearance` measures it:
+79 soldier-seconds inside props before, none after).
+
+Anything a soldier could visibly walk through must be known to the simulation.
+Trees, boulders and dead trees are generated only as world props by
+`TerrainService`; the scatter renderers draw exactly the simulation's props and
+never invent their own (they used to, whenever a map carried no runtime harvest
+props, which included every synthetic arena floor). The renderer's own stone
+scatter is kept to ankle-high pebbles.
 
 # Defence Mode
 

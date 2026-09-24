@@ -37,9 +37,6 @@ constexpr float k_plant_type_rosette = 1.0F;
 constexpr float k_plant_type_frond = 2.0F;
 constexpr float k_plant_type_count = 3.0F;
 
-// Plants are crossed cards rising from their origin. They rest on the ground
-// with the downhill edge of their base sunk into the slope, never lifted clear
-// of it: a few centimetres of air under a knee-high shrub reads as floating.
 auto bed_plant_base(const Game::Map::TerrainService& terrain,
                     float world_x,
                     float world_z,
@@ -59,7 +56,7 @@ PlantRenderer::~PlantRenderer() = default;
 void PlantRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
                               const Game::Map::BiomeSettings& biome_settings,
                               const std::vector<Game::Map::WorldProp>& world_props) {
-  configure_height_scatter_common(height_map, biome_settings, {}, world_props, false);
+  configure_height_scatter_common(height_map, biome_settings, world_props);
 
   const auto profiles = Game::Map::make_biome_profiles(m_biome_settings);
   const auto& wind_profile = profiles.wind;

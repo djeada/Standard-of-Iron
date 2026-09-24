@@ -392,6 +392,19 @@ table resolves every handle as optional because the stripped program no longer h
 fallback-only uniforms. Measured on Zama Ultra: 1.23 ms to 0.97 ms for the terrain pass on
 top of the ground-plane change.
 
+### Weapon rack carries a per-vertex surface stream
+
+Most instanced props pick their materials in the shader from the model-space position (bands keyed to where a part happens to sit) or from a length packed into the normal (the tent). The weapon rack (`render/gl/backend/weapon_rack_mesh.cpp`) has too many small, overlapping parts for that to work. Every vertex therefore carries a fourth attribute at location 4, `(material, u, v, seed)`, uploaded by `VegetationPipeline::upload_prop_mesh_with_surface_impl`. Location 4 is free on prop VAOs because the instance stream only binds locations 2 and 3.
+
+- `material` is one of the `WeaponRackMaterial` ids, which match the `k_mat_*` constants in `weapon_rack_instanced.frag`: oak, ash, steel, iron, bronze, leather, yew, linen, shield paint, shield back, bone and feather.
+- `u, v` depend on how the part was built:
+    - Boxes and beams are projected so that `v` runs along the member. The shader lays grain, forging streaks and wear along it.
+    - Swept parts use `u` for the distance around the section (0 to 1) and `v` for the distance along the sweep. Blades and spearheads have `v` normalised from 0 at the base to 1 at the tip, and their four-facet diamond section puts the edges at `cos(u·2π) = ±1`.
+    - Shield faces use the flat face coordinates in [-1, 1]. The scutum outline is the superellipse `|s|^2.4 + |t|^2.4 = 1`, and the shader paints its border against that curve. On the parma the coordinates are polar.
+- `seed` varies each part. For shield paint it also chooses the design: below 0.5 is a scutum, 0.5 and above is a parma.
+
+The frame parts in `weapon_rack_parts.h` are still the source for `PropModelFootprintTest`. Weapons and shields are built only in the mesh builder and stay inside the declared `{0.88, 0.54}` half extents. The shader builds a height field for each material and turns it into a bump normal from screen-space derivatives. Every derivative is taken outside the material branches, and the bump fades out beyond about 48 m. Lighting is GGX specular plus a sky/ground reflection. Directional shadow blocks sun specular completely but only tints the ambient and diffuse terms, so metal in shadow does not glint.
+
 ## Terrain scatter readiness
 
 Terrain scatter has an explicit GPU-readiness state.

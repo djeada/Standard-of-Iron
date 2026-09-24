@@ -20,11 +20,9 @@ public:
 
   void configure(const Game::Map::TerrainHeightMap& height_map,
                  const Game::Map::BiomeSettings& biome_settings,
-                 const std::vector<Game::Map::WorldProp>& scatter_seed_world_props = {},
-                 const std::vector<Game::Map::WorldProp>& runtime_world_props = {});
+                 const std::vector<Game::Map::WorldProp>& world_props = {});
 
-  void
-  refresh_world_props(const std::vector<Game::Map::WorldProp>& runtime_world_props);
+  void refresh_world_props(const std::vector<Game::Map::WorldProp>& world_props);
 
   void set_light_direction(const QVector3D& dir) override;
 
@@ -35,7 +33,6 @@ public:
 private:
   void rebuild_dead_tree_instances();
   void append_world_prop_dead_trees();
-  void generate_procedural_dead_trees(std::vector<PropInstanceGpu>& out) const;
 };
 
 } // namespace Render::GL

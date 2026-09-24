@@ -204,6 +204,7 @@ struct EntitySnapshot {
   bool has_march_target = false;
   float march_target_x = 0.0F;
   float march_target_z = 0.0F;
+  bool march_target_reachable = true;
 
   bool has_delivery_order = false;
 

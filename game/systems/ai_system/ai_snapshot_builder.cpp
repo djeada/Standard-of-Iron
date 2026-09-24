@@ -17,6 +17,7 @@
 #include "../../session/session_context.h"
 #include "../../units/squad.h"
 #include "../combat_system/target_rules.h"
+#include "../gate_service.h"
 #include "../nation_registry.h"
 #include "../nav_grid.h"
 #include "../owner_queries.h"
@@ -27,6 +28,9 @@
 #include "systems/ai_system/ai_types.h"
 
 namespace {
+
+constexpr std::size_t k_sealed_search_cells = 6000U;
+constexpr int k_sealed_seed_reach = 3;
 
 struct VisionSource {
   float x = 0.0F;
@@ -242,6 +246,87 @@ auto is_visible_to_sources(const Engine::Core::TransformComponent& transform,
     const float dz = z - source.z;
     return (dx * dx + dz * dz) <= source.radius_sq;
   });
+}
+
+struct HostileGate {
+  float x{0.0F};
+  float z{0.0F};
+  Game::Systems::GateService::GateExtent extent;
+};
+
+auto hostile_gates(const Engine::Core::World& world,
+                   const Game::Systems::AI::AISnapshot& snapshot)
+    -> std::vector<HostileGate> {
+  std::vector<HostileGate> gates;
+  auto collect = [&](const Game::Systems::AI::ContactSnapshot& contact) {
+    if (contact.spawn_type != Game::Units::SpawnType::WallGate) {
+      return;
+    }
+    const auto* transform = world.try_get<Engine::Core::TransformComponent>(contact.id);
+    const float rotation = transform != nullptr ? transform->rotation.y : 0.0F;
+    gates.push_back({contact.pos_x,
+                     contact.pos_z,
+                     Game::Systems::GateService::structure_extent(rotation)});
+  };
+  std::for_each(
+      snapshot.visible_enemies.begin(), snapshot.visible_enemies.end(), collect);
+  std::for_each(snapshot.strategic_objectives.begin(),
+                snapshot.strategic_objectives.end(),
+                collect);
+  return gates;
+}
+
+auto objective_is_sealed(Game::Systems::Pathfinding& pathfinder,
+                         const std::vector<HostileGate>& gates,
+                         float from_x,
+                         float from_z,
+                         float objective_x,
+                         float objective_z) -> bool {
+  using Game::Systems::Point;
+  auto const origin = pathfinder.world_to_grid(from_x, from_z);
+  auto const target = pathfinder.world_to_grid(objective_x, objective_z);
+  auto const open = [&](const Point& cell) {
+    if (!pathfinder.is_walkable(cell.x, cell.y)) {
+      return false;
+    }
+    QVector3D const world = pathfinder.grid_to_world(cell);
+    return std::none_of(gates.begin(), gates.end(), [&](const HostileGate& gate) {
+      return std::abs(world.x() - gate.x) <= gate.extent.half_x &&
+             std::abs(world.z() - gate.z) <= gate.extent.half_z;
+    });
+  };
+
+  std::vector<Point> frontier;
+  std::unordered_set<std::uint64_t> seen;
+  auto const key = [](const Point& cell) {
+    return (static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell.x)) << 32U) |
+           static_cast<std::uint32_t>(cell.y);
+  };
+  for (int dz = -k_sealed_seed_reach; dz <= k_sealed_seed_reach; ++dz) {
+    for (int dx = -k_sealed_seed_reach; dx <= k_sealed_seed_reach; ++dx) {
+      Point const cell{target.x + dx, target.y + dz};
+      if (open(cell) && seen.insert(key(cell)).second) {
+        frontier.push_back(cell);
+      }
+    }
+  }
+  while (!frontier.empty()) {
+    if (seen.size() > k_sealed_search_cells) {
+      return false;
+    }
+    Point const cell = frontier.back();
+    frontier.pop_back();
+    if (std::abs(cell.x - origin.x) <= 1 && std::abs(cell.y - origin.y) <= 1) {
+      return false;
+    }
+    for (auto const& step : {Point{1, 0}, Point{-1, 0}, Point{0, 1}, Point{0, -1}}) {
+      Point const next{cell.x + step.x, cell.y + step.y};
+      if (open(next) && seen.insert(key(next)).second) {
+        frontier.push_back(next);
+      }
+    }
+  }
+  return !seen.empty();
 }
 
 } // namespace
@@ -582,6 +667,23 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
   }
   if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
     snapshot.navigation_revision = pathfinder->navigation_revision();
+    std::vector<HostileGate> gates;
+    bool gates_collected = false;
+    for (auto& friendly : snapshot.friendly_units) {
+      if (!friendly.has_march_target) {
+        continue;
+      }
+      if (!gates_collected) {
+        gates = hostile_gates(world, snapshot);
+        gates_collected = true;
+      }
+      friendly.march_target_reachable = !objective_is_sealed(*pathfinder,
+                                                             gates,
+                                                             friendly.pos_x,
+                                                             friendly.pos_z,
+                                                             friendly.march_target_x,
+                                                             friendly.march_target_z);
+    }
   }
   collect_ally_calls(world, allied_units, snapshot);
 
