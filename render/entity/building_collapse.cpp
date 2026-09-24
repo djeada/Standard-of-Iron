@@ -13,6 +13,7 @@
 #include "game/core/component_structures.h"
 #include "game/core/death_sequence.h"
 #include "game/core/entity.h"
+#include "game/core/world.h"
 #include "render/gl/primitives.h"
 #include "render/submitter.h"
 
@@ -108,13 +109,14 @@ auto building_collapse_footprint(Game::Units::SpawnType type) noexcept
   }
 }
 
-auto resolve_building_collapse(const Engine::Core::Entity& entity) -> BuildingCollapse {
+auto resolve_building_collapse(const Engine::Core::World& world,
+                               Engine::Core::EntityID entity_id) -> BuildingCollapse {
   BuildingCollapse collapse;
-  if (!entity.has_component<Engine::Core::BuildingComponent>()) {
+  if (!world.has<Engine::Core::BuildingComponent>(entity_id)) {
     return collapse;
   }
-  auto const* death = entity.get_component<Engine::Core::DeathAnimationComponent>();
-  auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
+  auto const* death = world.try_get<Engine::Core::DeathAnimationComponent>(entity_id);
+  auto const* transform = world.try_get<Engine::Core::TransformComponent>(entity_id);
   if (death == nullptr || transform == nullptr ||
       death->profile != Engine::Core::DeathSequenceProfile::Structure) {
     return collapse;
@@ -128,10 +130,10 @@ auto resolve_building_collapse(const Engine::Core::Entity& entity) -> BuildingCo
   collapse.heading =
       static_cast<float>(death->sequence_variant) * (2.0F * k_pi / 256.0F);
   collapse.yaw_degrees = transform->rotation.y;
-  collapse.seed = static_cast<std::uint32_t>(entity.get_id()) * 2654435761U;
+  collapse.seed = static_cast<std::uint32_t>(entity_id) * 2654435761U;
   collapse.base =
       QVector3D(transform->position.x, transform->position.y, transform->position.z);
-  if (auto const* unit = entity.get_component<Engine::Core::UnitComponent>()) {
+  if (auto const* unit = world.try_get<Engine::Core::UnitComponent>(entity_id)) {
     collapse.footprint = building_collapse_footprint(unit->spawn_type);
   }
 

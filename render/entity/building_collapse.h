@@ -6,10 +6,11 @@
 #include <cstdint>
 
 #include "game/core/component_gameplay.h"
+#include "game/core/entity_id.h"
 #include "game/units/spawn_type.h"
 
 namespace Engine::Core {
-class Entity;
+class World;
 }
 
 namespace Render::GL {
@@ -51,7 +52,8 @@ inline constexpr float k_collapse_remaining_height = 0.24F;
     -> BuildingCollapseFootprint;
 
 [[nodiscard]] auto
-resolve_building_collapse(const Engine::Core::Entity& entity) -> BuildingCollapse;
+resolve_building_collapse(const Engine::Core::World& world,
+                          Engine::Core::EntityID entity_id) -> BuildingCollapse;
 
 [[nodiscard]] auto
 building_collapse_model(const QMatrix4x4& model,

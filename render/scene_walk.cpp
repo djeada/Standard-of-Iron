@@ -596,7 +596,7 @@ void Renderer::collect_unit_entries(Engine::Core::World& world,
     }
     auto const* creature_presentation =
         entity->get_component<Engine::Core::CreaturePresentationComponent>();
-    auto const collapse = Render::GL::resolve_building_collapse(*entity);
+    auto const collapse = Render::GL::resolve_building_collapse(world, entity_id);
     bool const has_death_motion =
         collapse.active ||
         (creature_presentation != nullptr && creature_presentation->snapshot_valid &&
@@ -814,7 +814,9 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
         world_view(),
         entry.collapse.active
             ? Render::GL::building_collapse_model(model_matrix, entry.collapse)
-            : Render::GL::structure_work_model(model_matrix, *entry.entity)};
+        : ctx.world != nullptr ? Render::GL::structure_work_model(
+                                     model_matrix, *ctx.world, entry.entity_id)
+                               : model_matrix};
 
     draw_ctx.humanoid_runtime = &m_humanoid_runtime;
 
@@ -936,10 +938,10 @@ void Renderer::submit_unit_entry(
       }
       if (entry.collapse.active) {
         Render::GL::submit_building_collapse_rubble(probe, entry.collapse);
-      } else if (entry.unit != nullptr &&
+      } else if (ctx.world != nullptr && entry.unit != nullptr &&
                  Game::Units::is_building_spawn(entry.unit->spawn_type)) {
         Render::GL::submit_structure_work_dressing(
-            probe, *entry.entity, plan.draw_ctx.animation_time);
+            probe, *ctx.world, entry.entity_id, plan.draw_ctx.animation_time);
       }
       bool const use_batching = plan.use_batching;
 
@@ -1415,7 +1417,7 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     // A site under way reads as a building going up: a stone curb, the walls
     // rising inside scaffolding, the scaffolding coming down to finish.
     if (under_construction) {
-      auto const site = Render::GL::building_worksite_for(*entity);
+      auto const site = Render::GL::building_worksite_for(*world, entity->get_id());
       Render::GL::submit_foundation_curb(*this, site);
       Render::GL::submit_scaffolding(
           *this, site, Render::GL::construction_scaffold_fraction(progress));

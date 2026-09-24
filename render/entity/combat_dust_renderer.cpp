@@ -665,13 +665,15 @@ void render_combat_dust(Renderer* renderer,
     }
   }
 
-  auto dying = world->collect_entities_with<Engine::Core::DeathAnimationComponent>();
-  for (auto* entity : dying) {
-    if (entity == nullptr ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto [entity_id, death, building] :
+       world->view<Engine::Core::DeathAnimationComponent,
+                   Engine::Core::BuildingComponent>()) {
+    (void)death;
+    (void)building;
+    if (world->has<Engine::Core::PendingRemovalComponent>(entity_id)) {
       continue;
     }
-    auto const collapse = resolve_building_collapse(*entity);
+    auto const collapse = resolve_building_collapse(*world, entity_id);
     if (!collapse.active || !is_fog_visible(collapse.base.x(), collapse.base.z()) ||
         !visibility.is_entity_visible(
             collapse.base.x(),

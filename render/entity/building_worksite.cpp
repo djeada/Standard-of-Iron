@@ -14,6 +14,7 @@
 #include "game/core/component_gameplay.h"
 #include "game/core/component_structures.h"
 #include "game/core/entity.h"
+#include "game/core/world.h"
 #include "game/units/spawn_type.h"
 #include "render/gl/primitives.h"
 #include "render/submitter.h"
@@ -86,26 +87,28 @@ auto side_posts(float half_length) -> int {
 
 } // namespace
 
-auto building_worksite_for(const Engine::Core::Entity& entity) -> BuildingWorksite {
+auto building_worksite_for(const Engine::Core::World& world,
+                           Engine::Core::EntityID entity_id) -> BuildingWorksite {
   BuildingWorksite site;
   if (auto const* transform =
-          entity.get_component<Engine::Core::TransformComponent>()) {
+          world.try_get<Engine::Core::TransformComponent>(entity_id)) {
     site.base =
         QVector3D(transform->position.x, transform->position.y, transform->position.z);
     site.yaw_degrees = transform->rotation.y;
   }
-  if (auto const* unit = entity.get_component<Engine::Core::UnitComponent>()) {
+  if (auto const* unit = world.try_get<Engine::Core::UnitComponent>(entity_id)) {
     site.footprint = building_collapse_footprint(unit->spawn_type);
   } else if (auto const* preview =
-                 entity.get_component<Engine::Core::ConstructionPreviewComponent>()) {
+                 world.try_get<Engine::Core::ConstructionPreviewComponent>(entity_id)) {
     if (auto const type = Game::Units::spawn_typeFromString(preview->product_type)) {
       site.footprint = building_collapse_footprint(*type);
     }
   } else if (auto const* wall =
-                 entity.get_component<Engine::Core::WallConstructionSiteComponent>()) {
+                 world.try_get<Engine::Core::WallConstructionSiteComponent>(
+                     entity_id)) {
     site.footprint = building_collapse_footprint(wall->product_type);
   }
-  site.seed = static_cast<std::uint32_t>(entity.get_id()) * 2654435761U;
+  site.seed = static_cast<std::uint32_t>(entity_id) * 2654435761U;
   return site;
 }
 
@@ -322,22 +325,24 @@ void submit_worksite_dust(ISubmitter& out,
 }
 
 void submit_structure_work_dressing(ISubmitter& out,
-                                    const Engine::Core::Entity& entity,
+                                    const Engine::Core::World& world,
+                                    Engine::Core::EntityID entity_id,
                                     float animation_time) {
-  if (!entity.has_component<Engine::Core::BuildingComponent>()) {
+  if (!world.has<Engine::Core::BuildingComponent>(entity_id)) {
     return;
   }
   auto const* repair =
-      entity.get_component<Engine::Core::StructureRepairPresentationComponent>();
-  auto const* dismantle = entity.get_component<Engine::Core::DismantleSiteComponent>();
+      world.try_get<Engine::Core::StructureRepairPresentationComponent>(entity_id);
+  auto const* dismantle =
+      world.try_get<Engine::Core::DismantleSiteComponent>(entity_id);
   float const transition = building_state_transition_age(
-      static_cast<std::uint32_t>(entity.get_id()), animation_time);
+      static_cast<std::uint32_t>(entity_id), animation_time);
   if (repair == nullptr && dismantle == nullptr &&
       (transition < 0.0F || transition > k_transition_puff_seconds)) {
     return;
   }
 
-  BuildingWorksite const site = building_worksite_for(entity);
+  BuildingWorksite const site = building_worksite_for(world, entity_id);
 
   if (repair != nullptr && dismantle == nullptr) {
     submit_scaffolding(out, site, smooth(0.0F, 1.0F, repair->scaffold));
@@ -368,13 +373,14 @@ void submit_structure_work_dressing(ISubmitter& out,
 }
 
 auto structure_work_model(const QMatrix4x4& model,
-                          const Engine::Core::Entity& entity) -> QMatrix4x4 {
-  auto const* dismantle = entity.get_component<Engine::Core::DismantleSiteComponent>();
-  if (dismantle == nullptr ||
-      !entity.has_component<Engine::Core::BuildingComponent>()) {
+                          const Engine::Core::World& world,
+                          Engine::Core::EntityID entity_id) -> QMatrix4x4 {
+  auto const* dismantle =
+      world.try_get<Engine::Core::DismantleSiteComponent>(entity_id);
+  if (dismantle == nullptr || !world.has<Engine::Core::BuildingComponent>(entity_id)) {
     return model;
   }
-  auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
+  auto const* transform = world.try_get<Engine::Core::TransformComponent>(entity_id);
   if (transform == nullptr) {
     return model;
   }

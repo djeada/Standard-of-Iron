@@ -7,10 +7,6 @@
 
 #include "building_collapse.h"
 
-namespace Engine::Core {
-class Entity;
-}
-
 namespace Render::GL {
 
 class ISubmitter;
@@ -30,7 +26,8 @@ struct BuildingWorksite {
 };
 
 [[nodiscard]] auto
-building_worksite_for(const Engine::Core::Entity& entity) -> BuildingWorksite;
+building_worksite_for(const Engine::Core::World& world,
+                      Engine::Core::EntityID entity_id) -> BuildingWorksite;
 
 // How much of the building stands while it is built. The lowest courses go in
 // before any scaffolding rises; the last ones as it comes down.
@@ -59,13 +56,14 @@ void submit_worksite_dust(ISubmitter& out,
 // repair scaffolding, dismantling stacks, and the puff that covers a swap
 // between damage states. Called once per structure per frame.
 void submit_structure_work_dressing(ISubmitter& out,
-                                    const Engine::Core::Entity& entity,
+                                    const Engine::Core::World& world,
+                                    Engine::Core::EntityID entity_id,
                                     float animation_time);
 
 // The model a live structure is drawn with: pressed down while it is being
 // dismantled, otherwise unchanged.
-[[nodiscard]] auto
-structure_work_model(const QMatrix4x4& model,
-                     const Engine::Core::Entity& entity) -> QMatrix4x4;
+[[nodiscard]] auto structure_work_model(const QMatrix4x4& model,
+                                        const Engine::Core::World& world,
+                                        Engine::Core::EntityID entity_id) -> QMatrix4x4;
 
 } // namespace Render::GL
