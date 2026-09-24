@@ -14,6 +14,7 @@
 #include "arena_engagement_scenarios.h"
 #include "arena_facade_scenarios.h"
 #include "arena_formation_scenarios.h"
+#include "arena_grounding_scenarios.h"
 #include "arena_maneuver_scenarios.h"
 #include "arena_navigation_scenarios.h"
 #include "arena_scenarios.h"
@@ -12027,6 +12028,10 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(engagement.begin()),
                   std::make_move_iterator(engagement.end()));
+    auto grounding = build_grounding_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(grounding.begin()),
+                  std::make_move_iterator(grounding.end()));
 
     for (auto& scenario : values) {
       if (scenario.rpg_mode && !scenario.rpg_commander_group.isEmpty()) {

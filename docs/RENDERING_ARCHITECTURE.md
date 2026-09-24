@@ -329,6 +329,46 @@ Terrain/world-prop positions are resolved from authored map/grid space through t
 
 See [MAP_OBJECT_PLACEMENT.md](MAP_OBJECT_PLACEMENT.md) for the placement contract.
 
+### Terrain contact
+
+Everything that stands on the ground samples one surface, and it is the surface on screen.
+
+- **One height function.** The terrain mesh splits every grid quad along its
+  (x+1, z)-(x, z+1) diagonal, and subdivided quads place their extra vertices on those same
+  triangles. `Game::Map::sample_triangulated_height` (`game/map/terrain_surface.h`) returns
+  exactly that height. `TerrainHeightMap::get_base_height_at`, `TerrainField`, the scatter
+  spawn cache, stone ground fit, riverbank dressing, linear features, roads and the
+  `ground_marker` shader (via `texelFetch`) all go through it. A bilinear patch can sit up
+  to a quarter of the quad's twist away from the triangles, which is how feet sank and
+  props floated on curved ground. `TerrainService::sample_ground_normal` is the smoothed
+  up-vector used for anything that tilts.
+- **Roads.** The road ribbon is draped over the highest terrain within
+  `k_road_surface_envelope_tiles` of each vertex. `TerrainService` samples the same
+  envelope for points on a road, so units walk on the paving rather than on the ground
+  under it.
+- **Structures stay upright and get a foundation.** Buildings, walls, towers, construction
+  sites and placement ghosts are seated at the height under their centre.
+  `render/entity/structure_foundation` measures the drop across the drawn body (the
+  `BuildingCollisionRegistry` body table × transform scale) and adds a fieldstone
+  foundation down to the lowest ground. Completed buildings cache it in `CachedUnitData`
+  and recompute it only when the model matrix changes. Ghosts resolve it on the spot, using
+  the same rule the finished structure will use.
+- **Upright props are bedded, not tilted.** Trees, iron ore and plants sink by
+  `slope_bed_depth` (contact radius × tan slope) so the downhill side of the trunk or base
+  meets the ground. Rocks keep their tilt-and-sink ground fit (`stone_ground_fit.h`).
+  Footprint props (tents, ruins, carts, shrines) sit at the lowest ground under their
+  footprint. All of this is resolved when instances are built, never per frame.
+- **Things that rest on the ground follow it.** Siege carriages tilt to the slope and each
+  crew member stands on their own ground. Horses and elephants pitch along their heading
+  (the rider inherits it) but stay upright across the slope. Fallen soldiers ease onto
+  the slope as they go down. Selection rings drape over the terrain unless their owner is
+  raised well above it (a bridge deck).
+
+`grounding_flat`, `grounding_hill`, `grounding_ridge`, `grounding_riverbank`,
+`grounding_road` and `grounding_scatter` put the same cast on each kind of ground for
+arena captures. `tests/render/terrain_grounding_test.cpp` pins the surface, road,
+foundation and tilt rules.
+
 ### Ground plane draws after the terrain
 
 The ground plane (`GroundRenderer`, the map-plus-48-tile skirt at y = -0.08) and the terrain

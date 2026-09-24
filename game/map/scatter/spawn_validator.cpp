@@ -6,6 +6,7 @@
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/scatter/world_prop_clearance_index.h"
 #include "game/map/terrain_service.h"
+#include "game/map/terrain_surface.h"
 #include "game/systems/building_collision_registry.h"
 
 namespace Render::Ground {
@@ -62,26 +63,7 @@ auto SpawnTerrainCache::sample_height_at(float gx, float gz) const -> float {
   if (heights.empty() || width < 1 || height < 1) {
     return 0.0F;
   }
-
-  gx = std::clamp(gx, 0.0F, static_cast<float>(width - 1));
-  gz = std::clamp(gz, 0.0F, static_cast<float>(height - 1));
-
-  int const x0 = static_cast<int>(std::floor(gx));
-  int const z0 = static_cast<int>(std::floor(gz));
-  int const x1 = std::min(x0 + 1, width - 1);
-  int const z1 = std::min(z0 + 1, height - 1);
-
-  float const tx = gx - static_cast<float>(x0);
-  float const tz = gz - static_cast<float>(z0);
-
-  float const h00 = heights[static_cast<size_t>(z0 * width + x0)];
-  float const h10 = heights[static_cast<size_t>(z0 * width + x1)];
-  float const h01 = heights[static_cast<size_t>(z1 * width + x0)];
-  float const h11 = heights[static_cast<size_t>(z1 * width + x1)];
-
-  float const h0 = h00 * (1.0F - tx) + h10 * tx;
-  float const h1 = h01 * (1.0F - tx) + h11 * tx;
-  return h0 * (1.0F - tz) + h1 * tz;
+  return Game::Map::sample_triangulated_height(heights.data(), width, height, gx, gz);
 }
 
 auto SpawnTerrainCache::get_slope_at(int grid_x, int grid_z) const -> float {

@@ -27,6 +27,7 @@
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/math/creature_math_utils.h"
 #include "render/submitter.h"
+#include "render/terrain_contact.h"
 #include "scene/camera.h"
 
 namespace Render::Horse {
@@ -35,6 +36,7 @@ namespace {
 
 constexpr Render::Creature::Quadruped::ClipSet k_horse_clips{0U, 1U, 2U, 3U, 4U, 5U};
 constexpr float k_ground_clearance_epsilon = 1.0e-5F;
+constexpr float k_horse_max_ground_pitch_degrees = 22.0F;
 
 auto default_full_horse_request_seed(const Render::GL::DrawContext& ctx) noexcept
     -> std::uint32_t {
@@ -90,6 +92,9 @@ auto grounded_horse_world(const Render::GL::DrawContext& ctx,
                      world,
                      horse_clip_for_motion(motion),
                      motion.phase);
+  // Fore and hind hooves both reach the slope; the rider inherits the pitch.
+  Render::pitch_model_to_ground(
+      world, ctx.world_view.terrain_or_empty(), k_horse_max_ground_pitch_degrees);
   return world;
 }
 

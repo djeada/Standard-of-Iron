@@ -347,7 +347,7 @@ TEST(ScatterRuntimeTest, RuntimePropRefreshDoesNotRescatterPlantsOrStones) {
   terrain.clear();
 }
 
-TEST(ScatterRuntimeTest, ProceduralPinesUseResolvedSurfaceHeightAndReducedScaleRange) {
+TEST(ScatterRuntimeTest, ProceduralPinesRestOnTheResolvedSurfaceWithReducedScaleRange) {
   auto& terrain = Game::Map::TerrainService::instance();
   terrain.initialize(make_tree_map_definition(Game::Map::GroundType::ForestMud, 1337U));
   auto const* height_map = terrain.get_height_map();
@@ -366,10 +366,13 @@ TEST(ScatterRuntimeTest, ProceduralPinesUseResolvedSurfaceHeightAndReducedScaleR
   auto const scatter_rules =
       Game::Map::make_scatter_rules(terrain.biome_settings().ground_type);
   for (auto const& instance : renderer.instances_for_test()) {
-    EXPECT_NEAR(instance.pos_scale.y(),
-                terrain.resolve_surface_world_y(
-                    instance.pos_scale.x(), instance.pos_scale.z(), 0.0F, 0.0F),
-                0.001F);
+    // Trunks are bedded into slopes: never above the surface, and never
+    // deeper than the bedding cap (0.35 x scale).
+    float const surface_y = terrain.resolve_surface_world_y(
+        instance.pos_scale.x(), instance.pos_scale.z(), 0.0F, 0.0F);
+    EXPECT_LE(instance.pos_scale.y(), surface_y + 0.001F);
+    EXPECT_GE(instance.pos_scale.y(),
+              surface_y - 0.35F * instance.pos_scale.w() - 0.001F);
     EXPECT_LE(instance.pos_scale.w(),
               scatter_rules.tree(Game::Map::TreeSpecies::Pine).scale_max *
                       height_map->get_tile_size() * 1.18F +
@@ -379,7 +382,8 @@ TEST(ScatterRuntimeTest, ProceduralPinesUseResolvedSurfaceHeightAndReducedScaleR
   terrain.clear();
 }
 
-TEST(ScatterRuntimeTest, ProceduralOlivesUseResolvedSurfaceHeightAndReducedScaleRange) {
+TEST(ScatterRuntimeTest,
+     ProceduralOlivesRestOnTheResolvedSurfaceWithReducedScaleRange) {
   auto& terrain = Game::Map::TerrainService::instance();
   terrain.initialize(make_tree_map_definition(Game::Map::GroundType::GrassDry, 4242U));
   auto const* height_map = terrain.get_height_map();
@@ -398,10 +402,13 @@ TEST(ScatterRuntimeTest, ProceduralOlivesUseResolvedSurfaceHeightAndReducedScale
   auto const scatter_rules =
       Game::Map::make_scatter_rules(terrain.biome_settings().ground_type);
   for (auto const& instance : renderer.instances_for_test()) {
-    EXPECT_NEAR(instance.pos_scale.y(),
-                terrain.resolve_surface_world_y(
-                    instance.pos_scale.x(), instance.pos_scale.z(), 0.0F, 0.0F),
-                0.001F);
+    // Trunks are bedded into slopes: never above the surface, and never
+    // deeper than the bedding cap (0.35 x scale).
+    float const surface_y = terrain.resolve_surface_world_y(
+        instance.pos_scale.x(), instance.pos_scale.z(), 0.0F, 0.0F);
+    EXPECT_LE(instance.pos_scale.y(), surface_y + 0.001F);
+    EXPECT_GE(instance.pos_scale.y(),
+              surface_y - 0.35F * instance.pos_scale.w() - 0.001F);
     EXPECT_LE(instance.pos_scale.w(),
               scatter_rules.tree(Game::Map::TreeSpecies::Olive).scale_max *
                       height_map->get_tile_size() * 1.22F +

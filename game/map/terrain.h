@@ -1023,6 +1023,12 @@ inline void extend_bridge_to_span_riverbanks(Bridge& bridge,
 
 inline constexpr float k_road_surface_y_offset = 0.02F;
 
+// The road ribbon is draped over the highest terrain within this many tiles of
+// each vertex so terrain never pokes through it. Anything standing on a road
+// samples the same envelope, or its feet sink below the drawn paving on slopes.
+inline constexpr float k_road_surface_envelope_tiles = 0.35F;
+inline constexpr int k_road_surface_envelope_taps = 4;
+
 [[nodiscard]] inline auto road_surface_world_y(float terrain_height) -> float {
   return terrain_height + k_road_surface_y_offset;
 }

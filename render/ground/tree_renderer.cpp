@@ -17,6 +17,7 @@
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "render/scene_renderer.h"
+#include "render/terrain_contact.h"
 #include "scatter_runtime.h"
 
 namespace {
@@ -33,6 +34,37 @@ auto resolve_tree_surface_position(const Game::Map::TerrainService& terrain_serv
         world_x, world_z, 0.0F, fallback_y);
   }
   return {world_x, fallback_y, world_z};
+}
+
+// Trunk base radius in mesh units (the root ring of each species' loft).
+auto trunk_contact_radius(Game::Map::TreeSpecies species) -> float {
+  switch (species) {
+  case Game::Map::TreeSpecies::Pine:
+    return 0.09F;
+  case Game::Map::TreeSpecies::Olive:
+    return 0.22F;
+  case Game::Map::TreeSpecies::Cypress:
+    return 0.065F;
+  case Game::Map::TreeSpecies::Palm:
+    return 0.10F;
+  }
+  return 0.10F;
+}
+
+// Trees stay upright, so on a slope the trunk is sunk until its downhill side
+// meets the ground rather than standing on its uphill edge.
+auto bed_tree_base(const Game::Map::TerrainService& terrain_service,
+                   Game::Map::TreeSpecies species,
+                   const QVector3D& surface,
+                   float scale) -> float {
+  constexpr float k_max_bed_scale = 0.35F;
+  float const radius = trunk_contact_radius(species) * scale;
+  return Render::bedded_prop_world_y(terrain_service,
+                                     surface.x(),
+                                     surface.z(),
+                                     surface.y(),
+                                     radius,
+                                     k_max_bed_scale * scale);
 }
 
 auto draw_species(Game::Map::TreeSpecies species)
@@ -123,7 +155,12 @@ void TreeRenderer::append_world_prop_trees() {
     if (prop.type != profile.prop_type) {
       continue;
     }
-    const QVector3D pos = terrain_service.world_prop_world_position(prop);
+    const QVector3D surface = terrain_service.world_prop_world_position(prop);
+    const float scale =
+        prop.scale * Game::Map::world_prop_render_scale(profile.prop_type);
+    const QVector3D pos(surface.x(),
+                        bed_tree_base(terrain_service, m_species, surface, scale),
+                        surface.z());
 
     uint32_t var_state = hash_coords(static_cast<int>(std::round(prop.x)),
                                      static_cast<int>(std::round(prop.z)),
@@ -131,11 +168,7 @@ void TreeRenderer::append_world_prop_trees() {
     const auto look = tree_world_prop_look(profile, var_state);
 
     TreeInstanceGpu inst;
-    inst.pos_scale =
-        QVector4D(pos.x(),
-                  pos.y(),
-                  pos.z(),
-                  prop.scale * Game::Map::world_prop_render_scale(profile.prop_type));
+    inst.pos_scale = QVector4D(pos.x(), pos.y(), pos.z(), scale);
     inst.color_sway =
         QVector4D(look.tint.x(), look.tint.y(), look.tint.z(), look.sway_phase);
     inst.rotation =
@@ -194,8 +227,11 @@ void TreeRenderer::generate_procedural_trees(std::vector<TreeInstanceGpu>& out) 
             terrain_cache.sample_height_at(sample.grid_x, sample.grid_z));
 
         TreeInstanceGpu instance;
-        instance.pos_scale =
-            QVector4D(world_pos.x(), world_pos.y(), world_pos.z(), sample.scale);
+        instance.pos_scale = QVector4D(
+            world_pos.x(),
+            bed_tree_base(terrain_service, m_species, world_pos, sample.scale),
+            world_pos.z(),
+            sample.scale);
         instance.color_sway = QVector4D(
             sample.tint.x(), sample.tint.y(), sample.tint.z(), sample.sway_phase);
         instance.rotation = QVector4D(sample.rotation,

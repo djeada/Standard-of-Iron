@@ -10,6 +10,7 @@
 
 #include "terrain_footprint.h"
 #include "terrain_landform.h"
+#include "terrain_surface.h"
 
 namespace {
 constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
@@ -107,26 +108,7 @@ auto TerrainField::sample_height_at(float gx, float gz) const -> float {
   if (empty()) {
     return 0.0F;
   }
-
-  gx = std::clamp(gx, 0.0F, static_cast<float>(width - 1));
-  gz = std::clamp(gz, 0.0F, static_cast<float>(height - 1));
-
-  int const x0 = static_cast<int>(std::floor(gx));
-  int const z0 = static_cast<int>(std::floor(gz));
-  int const x1 = std::min(x0 + 1, width - 1);
-  int const z1 = std::min(z0 + 1, height - 1);
-
-  float const tx = gx - static_cast<float>(x0);
-  float const tz = gz - static_cast<float>(z0);
-
-  float const h00 = heights[static_cast<size_t>(z0 * width + x0)];
-  float const h10 = heights[static_cast<size_t>(z0 * width + x1)];
-  float const h01 = heights[static_cast<size_t>(z1 * width + x0)];
-  float const h11 = heights[static_cast<size_t>(z1 * width + x1)];
-
-  float const h0 = h00 * (1.0F - tx) + h10 * tx;
-  float const h1 = h01 * (1.0F - tx) + h11 * tx;
-  return h0 * (1.0F - tz) + h1 * tz;
+  return sample_triangulated_height(heights.data(), width, height, gx, gz);
 }
 
 auto TerrainField::sample_slope_at(int grid_x, int grid_z) const -> float {
@@ -1001,27 +983,11 @@ auto TerrainHeightMap::get_base_height_at(float world_x, float world_z) const ->
   float const gx = world_x / m_tile_size + grid_half_width;
   float const gz = world_z / m_tile_size + grid_half_height;
 
-  int const x0 = int(std::floor(gx));
-  int const z0 = int(std::floor(gz));
-  int const x1 = x0 + 1;
-  int const z1 = z0 + 1;
-
-  if (!in_bounds(x0, z0)) {
+  if (!in_bounds(int(std::floor(gx)), int(std::floor(gz)))) {
     return 0.0F;
   }
 
-  float const tx = gx - x0;
-  float const tz = gz - z0;
-
-  float const h00 = in_bounds(x0, z0) ? m_heights[indexAt(x0, z0)] : 0.0F;
-  float const h10 = in_bounds(x1, z0) ? m_heights[indexAt(x1, z0)] : 0.0F;
-  float const h01 = in_bounds(x0, z1) ? m_heights[indexAt(x0, z1)] : 0.0F;
-  float const h11 = in_bounds(x1, z1) ? m_heights[indexAt(x1, z1)] : 0.0F;
-
-  float const h0 = h00 * (1.0F - tx) + h10 * tx;
-  float const h1 = h01 * (1.0F - tx) + h11 * tx;
-
-  return h0 * (1.0F - tz) + h1 * tz;
+  return sample_triangulated_height(m_heights.data(), m_width, m_height, gx, gz);
 }
 
 auto TerrainHeightMap::get_height_at_grid(int grid_x, int grid_z) const -> float {
