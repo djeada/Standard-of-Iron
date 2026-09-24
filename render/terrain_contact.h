@@ -12,9 +12,6 @@
 
 namespace Render {
 
-// Rotation that lays an upright object's up axis onto the terrain normal,
-// limited to `max_degrees` so a cliff sample cannot tip it over, and scaled by
-// `weight` (0 keeps it upright, 1 lies fully on the slope).
 [[nodiscard]] inline auto ground_tilt_rotation(const QVector3D& ground_normal,
                                                float max_degrees,
                                                float weight = 1.0F) -> QQuaternion {
@@ -33,9 +30,6 @@ namespace Render {
   return QQuaternion::fromAxisAndAngle(axis, applied);
 }
 
-// Tilts `model` about its own origin (the ground contact point) so the object
-// rests on the slope beneath it. The origin itself does not move, so anything
-// already grounded at that point stays grounded.
 inline void tilt_model_to_ground(QMatrix4x4& model,
                                  const Game::Map::TerrainService& terrain,
                                  float max_degrees,
@@ -56,9 +50,6 @@ inline void tilt_model_to_ground(QMatrix4x4& model,
   model = world_tilt * model;
 }
 
-// Pitches `model` about its origin so its forward axis follows the slope,
-// leaving it upright across the slope. Quadrupeds stand this way: the body
-// follows the gradient it walks along while the legs absorb any side slope.
 inline void pitch_model_to_ground(QMatrix4x4& model,
                                   const Game::Map::TerrainService& terrain,
                                   float max_degrees) {
@@ -92,9 +83,6 @@ inline void pitch_model_to_ground(QMatrix4x4& model,
   model = world_pitch * model;
 }
 
-// Lowers an upright prop resting on a disc of `contact_radius` so its downhill
-// edge meets the slope instead of showing daylight under the trunk or base.
-// Resolved once when the prop's instance is built, never per frame.
 [[nodiscard]] inline auto bedded_prop_world_y(const Game::Map::TerrainService& terrain,
                                               float world_x,
                                               float world_z,

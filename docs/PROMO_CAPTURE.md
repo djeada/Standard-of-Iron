@@ -453,6 +453,26 @@ Fix `promo-edit.py` fields/spec and rebuild from existing clips.
 
 Keeping those layers distinct avoids re-rendering a deterministic battle just to move a caption.
 
+## Excerpts from one capture
+
+A spec whose shots are a subset of a capture's manifest is an excerpt:
+`promo-edit.py` picks the named shots, in the spec's order, from the clips
+directory it is given. The Feature Spotlight reels use this to cut several 9:16
+excerpts from one vertical capture without re-simulating anything; see
+"Feature Spotlight series" in `tools/arena/README.md`.
+
+## Filming the game window
+
+`scripts/film-game.sh` films the real game, HUD included. The game only
+leaves its loading screen after it has presented frames, and takes on a shared
+desktop were seen to stop right after audio preload with no error and no
+`SOI_FILM: match loaded` line: once with the monitor asleep, and repeatedly
+with another game or Arena window open. The script turns vsync off in the
+take's throwaway profile and `-- --film-visible` helped once, but the stall is
+not understood; Arena capture renders offscreen and is the dependable path for
+unattended footage. `--campaign-mission` takes a `campaign_id/mission_id`
+pair, not a path.
+
 ## Reproducibility rules
 
 The current pipeline depends on several invariants:

@@ -1,0 +1,251 @@
+{
+  "id": "spotlight_03_reel_transform",
+  "title": "STANDARD OF IRON",
+  "subtitle": "FEATURE SPOTLIGHT — FORMATIONS",
+  "end_card_seconds": 5.0,
+  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+  "width": 1080,
+  "height": 1920,
+  "fps": 60,
+  "supersample": 2,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "motion_limits": {
+    "yaw_degrees_per_second": 12,
+    "pitch_degrees_per_second": 6,
+    "fov_degrees_per_second": 6,
+    "minimum_clip_seconds": 2.5,
+    "mean_clip_seconds": 3.0
+  },
+  "transition": {
+    "type": "cut"
+  },
+  "music": "artifacts/promo/spotlight/03_formations/reel_transform_score.ogg",
+  "music_start": 0.0,
+  "music_volume": 0.55,
+  "grade": {
+    "contrast": 1.12,
+    "saturation": 1.14,
+    "brightness": 0.06,
+    "gamma": 1.12,
+    "grain": 3,
+    "vignette": 0.1,
+    "sharpen": 0.6
+  },
+  "shots": [
+    {
+      "name": "field",
+      "scenario": "spotlight_formations_drill",
+      "start": 0.3,
+      "duration": 4.0,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 48]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 50.6,
+          "pitch": 14,
+          "yaw": 180,
+          "fov": 58,
+          "ease": "smooth"
+        },
+        {
+          "time": 4.0,
+          "distance": 44.0,
+          "pitch": 12,
+          "yaw": 186,
+          "fov": 56,
+          "ease": "smooth"
+        }
+      ],
+      "act_kicker": "FEATURE SPOTLIGHT — 03",
+      "act_title": "FORMATIONS"
+    },
+    {
+      "name": "line",
+      "scenario": "spotlight_formations_drill",
+      "start": 1.5,
+      "duration": 10.0,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 180,
+          "pitch": 72,
+          "yaw": 180,
+          "fov": 54,
+          "ease": "smooth"
+        },
+        {
+          "time": 10.0,
+          "distance": 171,
+          "pitch": 71,
+          "yaw": 184,
+          "fov": 54,
+          "ease": "smooth"
+        }
+      ],
+      "time_lapse": 2.5,
+      "caption": "LINE",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    },
+    {
+      "name": "column",
+      "scenario": "spotlight_formations_drill",
+      "start": 13.0,
+      "duration": 12.0,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 110,
+          "pitch": 72,
+          "yaw": 180,
+          "fov": 54,
+          "ease": "smooth"
+        },
+        {
+          "time": 12.0,
+          "distance": 104,
+          "pitch": 71,
+          "yaw": 184,
+          "fov": 54,
+          "ease": "smooth"
+        }
+      ],
+      "time_lapse": 3.0,
+      "caption": "COLUMN",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    },
+    {
+      "name": "defensive",
+      "scenario": "spotlight_formations_drill",
+      "start": 26.0,
+      "duration": 10.0,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 130,
+          "pitch": 72,
+          "yaw": 180,
+          "fov": 54,
+          "ease": "smooth"
+        },
+        {
+          "time": 10.0,
+          "distance": 124,
+          "pitch": 71,
+          "yaw": 184,
+          "fov": 54,
+          "ease": "smooth"
+        }
+      ],
+      "time_lapse": 2.5,
+      "caption": "DEFENSIVE",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    },
+    {
+      "name": "assault",
+      "scenario": "spotlight_formations_drill",
+      "start": 41.0,
+      "duration": 14.0,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 150,
+          "pitch": 72,
+          "yaw": 180,
+          "fov": 54,
+          "ease": "smooth"
+        },
+        {
+          "time": 14.0,
+          "distance": 142,
+          "pitch": 71,
+          "yaw": 184,
+          "fov": 54,
+          "ease": "smooth"
+        }
+      ],
+      "time_lapse": 3.5,
+      "caption": "ASSAULT",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    },
+    {
+      "name": "encirclement",
+      "scenario": "spotlight_formations_drill",
+      "start": 58.0,
+      "duration": 26.0,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 200,
+          "pitch": 75,
+          "yaw": 180,
+          "fov": 54,
+          "ease": "smooth"
+        },
+        {
+          "time": 26.0,
+          "distance": 190,
+          "pitch": 74,
+          "yaw": 184,
+          "fov": 54,
+          "ease": "smooth"
+        }
+      ],
+      "time_lapse": 5.0,
+      "caption": "ENCIRCLEMENT",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    },
+    {
+      "name": "end_card",
+      "scenario": "trailer_flame_card",
+      "start": 0.5,
+      "duration": 5.0,
+      "flame_card": true,
+      "flame_speed": 0.85,
+      "flame_intensity": 0.9,
+      "transition": {
+        "type": "dip",
+        "duration": 0.5
+      }
+    }
+  ]
+}

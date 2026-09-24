@@ -40,8 +40,7 @@ public:
   void configure(const Game::Map::TerrainHeightMap& height_map,
                  const Game::Map::BiomeSettings& biome_settings,
                  const std::vector<Game::Map::WorldProp>& scatter_seed_world_props = {},
-                 const std::vector<Game::Map::WorldProp>& runtime_world_props = {},
-                 bool use_world_props_exclusively = false);
+                 const std::vector<Game::Map::WorldProp>& runtime_world_props = {});
   void refresh_runtime_world_props(
       const std::vector<Game::Map::WorldProp>& runtime_world_props);
 
@@ -112,7 +111,6 @@ private:
   const Game::Map::TerrainHeightMap* m_height_map = nullptr;
   Game::Map::BiomeSettings m_biome_settings;
   std::vector<Game::Map::WorldProp> m_scatter_seed_world_props;
-  bool m_use_world_props_exclusively = false;
   mutable std::mutex m_mutex;
 };
 

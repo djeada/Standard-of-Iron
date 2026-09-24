@@ -92,7 +92,7 @@ auto grounded_horse_world(const Render::GL::DrawContext& ctx,
                      world,
                      horse_clip_for_motion(motion),
                      motion.phase);
-  // Fore and hind hooves both reach the slope; the rider inherits the pitch.
+
   Render::pitch_model_to_ground(
       world, ctx.world_view.terrain_or_empty(), k_horse_max_ground_pitch_degrees);
   return world;

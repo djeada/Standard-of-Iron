@@ -168,8 +168,9 @@ inline auto is_threatening_contact(const ContactSnapshot& contact) -> bool {
   if (!is_war_contact(contact)) {
     return false;
   }
-  return !contact.is_building ||
-         contact.spawn_type == Game::Units::SpawnType::DefenseTower;
+  return contact.is_building
+             ? contact.spawn_type == Game::Units::SpawnType::DefenseTower
+             : Game::Units::is_combatant_spawn(contact.spawn_type);
 }
 
 inline auto has_troop_contact(const std::vector<ContactSnapshot>& contacts) -> bool {

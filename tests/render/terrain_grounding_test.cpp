@@ -25,8 +25,6 @@ auto lcg(std::uint32_t& state) -> float {
   return static_cast<float>(state >> 8U) / static_cast<float>(1U << 24U);
 }
 
-// A hill on an otherwise level map, small enough (< 32 tiles) that no
-// procedural props are scattered on it.
 auto hill_map() -> Game::Map::MapDefinition {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 28;
@@ -56,7 +54,6 @@ auto flat_map() -> Game::Map::MapDefinition {
   return map_def;
 }
 
-// Where on the hill flank the ground falls away most steeply.
 auto steepest_point(const Game::Map::TerrainService& terrain) -> QVector3D {
   QVector3D best(0.0F, 0.0F, 0.0F);
   float best_slope = -1.0F;
@@ -86,8 +83,6 @@ TEST(TerrainGroundingTest, TriangulatedHeightHitsVerticesAndIsPlanarPerTriangle)
   EXPECT_NEAR(
       Game::Map::sample_triangulated_height(heights.data(), 2, 2, 1, 1), 0.5F, k_eps);
 
-  // The quad centre lies on the (1,0)-(0,1) diagonal the mesh draws, not at
-  // the bilinear average of all four corners.
   EXPECT_NEAR(Game::Map::sample_triangulated_height(heights.data(), 2, 2, 0.5F, 0.5F),
               2.0F,
               k_eps);
@@ -96,9 +91,7 @@ TEST(TerrainGroundingTest, TriangulatedHeightHitsVerticesAndIsPlanarPerTriangle)
 }
 
 TEST(TerrainGroundingTest, SubdividedMeshQuadsLieExactlyOnTheCoarseTriangles) {
-  // TerrainRenderer subdivides some quads into four, placing the new vertices
-  // with sample_triangulated_height and splitting each sub-quad along the same
-  // diagonal. That drawn surface must equal the coarse triangles everywhere.
+
   std::uint32_t state = 91U;
   for (int trial = 0; trial < 32; ++trial) {
     std::array<float, 4> const heights{
@@ -146,7 +139,6 @@ TEST(TerrainGroundingTest, GameplayHeightIsTheDrawnSurfaceAndClampsAtTheFarEdge)
                 k_eps);
   }
 
-  // Past the last vertex column the height holds instead of sagging to zero.
   EXPECT_NEAR(height_map.get_base_height_at(9.8F, 0.5F),
               Game::Map::sample_triangulated_height(data.data(), 20, 20, 19.0F, 10.0F),
               k_eps);
@@ -198,8 +190,6 @@ TEST(TerrainGroundingTest, StructuresOnLevelGroundNeedNoFoundation) {
   Game::Map::TerrainService terrain;
   terrain.initialize(flat_map());
 
-  // Level maps still carry a few centimetres of gentle relief; that must not
-  // grow a foundation under every building.
   QMatrix4x4 model;
   model.translate(0.0F, terrain.get_terrain_height(0.0F, 0.0F), 0.0F);
   model.scale(1.5F);
@@ -223,8 +213,6 @@ TEST(TerrainGroundingTest, StructuresOnASlopeReachDownToTheLowestGround) {
       terrain, Game::Units::SpawnType::Home, model);
   ASSERT_GT(foundation.depth, Render::GL::k_structure_foundation_min_depth);
 
-  // The foundation's bottom is at or below every sampled point of the drawn
-  // body, so no daylight shows under its downhill edge.
   float lowest = site.y();
   for (float u = -1.0F; u <= 1.0F; u += 0.125F) {
     for (float v = -1.0F; v <= 1.0F; v += 0.125F) {
@@ -237,7 +225,6 @@ TEST(TerrainGroundingTest, StructuresOnASlopeReachDownToTheLowestGround) {
   }
   EXPECT_LE(site.y() - foundation.depth - 0.08F, lowest + 1.0e-3F);
 
-  // Deterministic: the same placement resolves to the same foundation.
   auto const again = Render::GL::resolve_structure_foundation(
       terrain, Game::Units::SpawnType::Home, model);
   EXPECT_FLOAT_EQ(again.depth, foundation.depth);
@@ -252,7 +239,6 @@ TEST(TerrainGroundingTest, PitchFollowsTheSlopeAlongTheHeading) {
   ASSERT_GT(downhill.length(), 0.05F);
   downhill.normalize();
 
-  // Face straight downhill: local +Z is the heading.
   float const yaw = std::atan2(downhill.x(), downhill.z()) * 180.0F / 3.14159265F;
   QMatrix4x4 model;
   model.translate(site);
@@ -268,7 +254,6 @@ TEST(TerrainGroundingTest, PitchFollowsTheSlopeAlongTheHeading) {
                      QVector2D(nose.x() - tail.x(), nose.z() - tail.z()).length();
   EXPECT_NEAR(drop, expected_drop, 0.02F);
 
-  // Across the slope the body stays upright.
   QVector3D const right = model.map(QVector3D(1.0F, 0.0F, 0.0F));
   QVector3D const left = model.map(QVector3D(-1.0F, 0.0F, 0.0F));
   EXPECT_NEAR(right.y(), left.y(), 1.0e-3F);

@@ -19,6 +19,7 @@ using namespace Render::Ground;
 using std::uint32_t;
 
 constexpr int k_boulder_cell_span = 6;
+constexpr int k_dead_tree_cell_span = 10;
 constexpr int k_iron_ore_cell_span = 18;
 constexpr int k_min_runtime_tree_map_size = 32;
 constexpr float k_min_tile_size = 0.0001F;
@@ -338,6 +339,105 @@ void append_generated_iron_ore(std::vector<WorldProp>& out,
   }
 }
 
+void append_generated_dead_trees(std::vector<WorldProp>& out,
+                                 const TerrainHeightMap& height_map,
+                                 const BiomeSettings& biome_settings,
+                                 CoordSystem coord_system,
+                                 const std::vector<WorldProp>& anchor_world_props) {
+  const int width = height_map.get_width();
+  const int height = height_map.get_height();
+  const float tile_size = height_map.get_tile_size();
+
+  SpawnTerrainCache terrain_cache;
+  terrain_cache.build_from_height_map(height_map.get_height_data(),
+                                      height_map.getTerrainTypes(),
+                                      width,
+                                      height,
+                                      tile_size);
+
+  const auto scatter_profile = make_scatter_profile(biome_settings);
+  SpawnValidationConfig config = make_camp_prop_spawn_config();
+  config.grid_width = width;
+  config.grid_height = height;
+  config.tile_size = tile_size;
+  config.edge_padding = scatter_profile.spawn_edge_padding * 0.55F;
+  config.max_slope = 0.42F;
+  config.building_clearance = 3.2F;
+  config.road_clearance = 1.3F;
+  config.river_clearance = 1.4F;
+
+  SpawnValidator validator(terrain_cache, config);
+  ScatterCompositionContext composition(
+      terrain_cache, width, height, tile_size, biome_settings, anchor_world_props);
+
+  auto add_dead_tree = [&](float gx,
+                           float gz,
+                           float scale_min,
+                           float scale_max,
+                           uint32_t& state) -> bool {
+    if (!validator.can_spawn_at_grid(gx, gz)) {
+      return false;
+    }
+    auto const scene = composition.sample_grid(gx, gz, state ^ 0x3ED78341U);
+    if (scene.obstacle_influence >= 1.0F) {
+      return false;
+    }
+    if (scene.fertility > 0.74F && scene.dryness < 0.38F) {
+      return false;
+    }
+    float const chance = scatter_spawn_chance(ScatterRuleSpecies::DeadTree, scene) *
+                         (0.18F + scene.dryness * 0.44F + scene.rockiness * 0.22F +
+                          scene.cluster_bias * 0.16F);
+    if (rand_01(state) > chance) {
+      return false;
+    }
+
+    float world_x = 0.0F;
+    float world_z = 0.0F;
+    validator.grid_to_world(gx, gz, world_x, world_z);
+    float const scale = remap(rand_01(state), scale_min, scale_max) *
+                        scatter_scale_bias(ScatterRuleSpecies::DeadTree, scene);
+    float const rotation = rand_01(state) * MathConstants::k_two_pi;
+    append_generated_world_prop(out,
+                                WorldProp::Type::DeadTree,
+                                height_map,
+                                coord_system,
+                                world_x,
+                                world_z,
+                                scale,
+                                rotation);
+    return true;
+  };
+
+  float const base_density =
+      std::clamp(0.030F + (1.0F - biome_settings.moisture_level) * 0.038F +
+                     biome_settings.rock_exposure * 0.030F,
+                 0.018F,
+                 0.090F);
+  for (int z = 0; z < height; z += k_dead_tree_cell_span) {
+    for (int x = 0; x < width; x += k_dead_tree_cell_span) {
+      int const sample_x = std::min(x + k_dead_tree_cell_span / 2, width - 1);
+      int const sample_z = std::min(z + k_dead_tree_cell_span / 2, height - 1);
+      uint32_t state = hash_coords(x, z, biome_settings.seed ^ 0xB91CF237U);
+      auto const scene = composition.sample_grid(static_cast<float>(sample_x),
+                                                 static_cast<float>(sample_z),
+                                                 state ^ 0x62B68DD1U);
+      float const density =
+          base_density *
+          scatter_density_multiplier(ScatterRuleSpecies::DeadTree, scene) *
+          (0.45F + scene.cluster_bias * 1.10F);
+      if (rand_01(state) > density) {
+        continue;
+      }
+      float const gx =
+          static_cast<float>(x) + rand_01(state) * float(k_dead_tree_cell_span);
+      float const gz =
+          static_cast<float>(z) + rand_01(state) * float(k_dead_tree_cell_span);
+      (void)add_dead_tree(gx, gz, 1.35F, 2.30F, state);
+    }
+  }
+}
+
 } // namespace
 
 auto generate_procedural_world_props(const TerrainHeightMap& height_map,
@@ -362,6 +462,8 @@ auto generate_procedural_world_props(const TerrainHeightMap& height_map,
         generated, height_map, biome_settings, coord_system, anchor_world_props);
   }
   if (biome_settings.procedural_trees_enabled) {
+    append_generated_dead_trees(
+        generated, height_map, biome_settings, coord_system, anchor_world_props);
     for (std::size_t i = 0; i < k_tree_species_count; ++i) {
       append_generated_trees(generated,
                              height_map,

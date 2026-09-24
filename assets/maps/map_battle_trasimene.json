@@ -2662,22 +2662,6 @@
         {
             "authored": true,
             "end": [
-                570.0,
-                138.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "start": [
-                570.0,
-                138.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
                 574.0,
                 150.0
             ],

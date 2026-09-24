@@ -14,16 +14,10 @@ namespace Render::GL {
 
 namespace {
 
-// Samples per axis across the drawn body: corners, edge midpoints and quarter
-// points, so a ridge running under a long barracks is still found.
 constexpr int k_foundation_samples = 5;
 
-// Pulled in slightly so the stonework does not stick out past the walls.
 constexpr float k_foundation_inset = 0.96F;
 
-// The top sits just above the seat so no sliver of terrain shows between the
-// building floor and its foundation; the bottom reaches past the lowest sample
-// so the triangle between two samples cannot open a gap.
 constexpr float k_foundation_top_lift = 0.012F;
 constexpr float k_foundation_bottom_margin = 0.08F;
 
@@ -92,8 +86,6 @@ void submit_structure_foundation(const StructureFoundation& foundation,
     return;
   }
 
-  // The model carries the building's scale, so world heights are converted to
-  // local units along its up axis.
   float const up_scale = std::max(model.column(1).toVector3D().length(), 1.0e-4F);
   float const top = k_foundation_top_lift / up_scale;
   float const bottom = -(foundation.depth + k_foundation_bottom_margin) / up_scale;

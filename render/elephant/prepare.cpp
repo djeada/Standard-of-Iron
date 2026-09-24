@@ -187,8 +187,7 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
   Render::pitch_model_to_ground(elephant_ctx.model,
                                 ctx.world_view.terrain_or_empty(),
                                 k_elephant_max_ground_pitch_degrees);
-  // Sink after grounding: grounding rewrites the origin height, so a sink
-  // applied first would be erased and the corpse would never settle.
+
   if (anim.death_sink_progress > 0.0F) {
     QMatrix4x4 sink;
     sink.translate(0.0F,

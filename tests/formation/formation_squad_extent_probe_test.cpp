@@ -246,6 +246,76 @@ TEST_F(FormationFootprintTest, AColumnIsNarrowAndALineIsWide) {
   EXPECT_GT(column.depth, line.depth * 2.0F);
 }
 
+TEST_F(FormationFootprintTest, EveryIntentHasItsOwnSilhouette) {
+  Engine::Core::World world;
+  auto const ids = host(world, NationID::Carthage);
+  for (float const frontage : {0.0F, 60.0F}) {
+    SCOPED_TRACE(frontage);
+    auto const line = plan_for(world, ids, ArmyFormationIntent::Line, frontage);
+    auto const column = plan_for(world, ids, ArmyFormationIntent::Column, frontage);
+    auto const defensive =
+        plan_for(world, ids, ArmyFormationIntent::Defensive, frontage);
+    auto const assault = plan_for(world, ids, ArmyFormationIntent::Assault, frontage);
+    auto const crescent =
+        plan_for(world, ids, ArmyFormationIntent::Encirclement, frontage);
+    for (const auto* plan : {&line, &column, &defensive, &assault, &crescent}) {
+      ASSERT_TRUE(plan->valid) << plan->rejection_reason;
+    }
+
+    EXPECT_GT(line.frontage, line.depth * 2.0F) << "a line is wide and shallow";
+    EXPECT_GT(column.depth, column.frontage * 1.8F) << "a column is deep and narrow";
+
+    float const front_z =
+        std::max_element(assault.slot_list.begin(),
+                         assault.slot_list.end(),
+                         [](const auto& a, const auto& b) {
+                           return a.local_offset.z() < b.local_offset.z();
+                         })
+            ->local_offset.z();
+    auto rank_width = [&](float z) {
+      return std::count_if(
+          assault.slot_list.begin(), assault.slot_list.end(), [&](const auto& slot) {
+            return std::abs(slot.local_offset.z() - z) < 0.5F;
+          });
+    };
+    std::ptrdiff_t widest_rank = 0;
+    for (const auto& slot : assault.slot_list) {
+      widest_rank = std::max(widest_rank, rank_width(slot.local_offset.z()));
+    }
+    EXPECT_LE(rank_width(front_z) * 2, widest_rank)
+        << "an assault leads with the point of a wedge";
+
+    auto faces = [&](float local_facing) {
+      return std::any_of(defensive.slot_list.begin(),
+                         defensive.slot_list.end(),
+                         [&](const auto& slot) {
+                           return std::abs(slot.local_facing - local_facing) < 1.0F;
+                         });
+    };
+    EXPECT_TRUE(faces(180.0F) && faces(90.0F) && faces(-90.0F))
+        << "a defensive square faces out on every side";
+
+    std::vector<const Game::Formation::FormationSlot*> by_reach;
+    for (const auto& slot : crescent.slot_list) {
+      by_reach.push_back(&slot);
+    }
+    std::sort(by_reach.begin(), by_reach.end(), [](const auto* a, const auto* b) {
+      return std::abs(a->local_offset.x()) < std::abs(b->local_offset.x());
+    });
+    auto mean_z = [](auto first, auto last) {
+      float sum = 0.0F;
+      int count = 0;
+      for (auto it = first; it != last; ++it, ++count) {
+        sum += (*it)->local_offset.z();
+      }
+      return sum / static_cast<float>(std::max(1, count));
+    };
+    float const centre_z = mean_z(by_reach.begin(), by_reach.begin() + 4);
+    float const horns_z = mean_z(by_reach.end() - 4, by_reach.end());
+    EXPECT_GT(horns_z, centre_z + 4.0F) << "an encirclement throws its horns forward";
+  }
+}
+
 TEST_F(FormationFootprintTest, ReportsTheShapeOfEachIntent) {
   Engine::Core::World world;
   auto const ids = host(world, NationID::RomanRepublic);

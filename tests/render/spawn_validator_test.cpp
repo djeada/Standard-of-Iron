@@ -417,6 +417,32 @@ TEST(WorldPropClearanceIndexTest, ASolidPropClaimsItsGroundBody) {
       << "the corner outside both axes is open ground";
 }
 
+TEST(WorldPropClearanceIndexTest, PushOutLeavesAPointJustClearOfTheBody) {
+  WorldPropClearanceIndex index;
+
+  WorldProp tent;
+  tent.type = WorldProp::Type::Tent;
+  tent.x = 12.0F;
+  tent.z = -7.0F;
+  tent.scale = 1.0F;
+  index.rebuild({tent}, 4.0F);
+  const auto body = world_prop_ground_half_extents(WorldProp::Type::Tent, 1.0F);
+  constexpr float k_radius = 0.3F;
+
+  float x = tent.x + body.x * 0.5F;
+  float z = tent.z;
+  ASSERT_TRUE(index.push_out(x, z, k_radius));
+  EXPECT_NEAR(x, tent.x + body.x + k_radius, 1.0e-4F)
+      << "a soldier inside the tent leaves by its nearest side";
+  EXPECT_NEAR(z, tent.z, 1.0e-4F);
+  EXPECT_FALSE(index.overlaps(x, z, k_radius - 0.01F));
+
+  float clear_x = tent.x + body.x + 1.0F;
+  float clear_z = tent.z;
+  EXPECT_FALSE(index.push_out(clear_x, clear_z, k_radius));
+  EXPECT_EQ(clear_x, tent.x + body.x + 1.0F) << "open ground is left alone";
+}
+
 TEST(WorldPropClearanceIndexTest, ATreeOnlyClaimsItsStem) {
   WorldPropClearanceIndex index;
 
@@ -521,12 +547,12 @@ TEST(WorldPropClearanceIndexTest, TheIndexAnswersInTheSpaceScatterAsksIn) {
   const QVector3D drawn =
       Game::Map::TerrainService::instance().world_prop_world_position(tent);
 
-  const auto& index = shared_world_prop_clearance_index();
-  ASSERT_FALSE(index.empty());
+  const auto index = shared_world_prop_clearance_index();
+  ASSERT_FALSE(index->empty());
 
-  EXPECT_TRUE(index.overlaps(drawn.x(), drawn.z(), 0.0F))
+  EXPECT_TRUE(index->overlaps(drawn.x(), drawn.z(), 0.0F))
       << "the index does not claim the ground the tent is drawn on";
-  EXPECT_FALSE(index.overlaps(tent.x, tent.z, 0.0F))
+  EXPECT_FALSE(index->overlaps(tent.x, tent.z, 0.0F))
       << "the index is still holding authored grid coordinates as if they were "
          "world coordinates";
 

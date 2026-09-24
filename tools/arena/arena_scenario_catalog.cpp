@@ -19,6 +19,7 @@
 #include "arena_navigation_scenarios.h"
 #include "arena_scenarios.h"
 #include "arena_showcase_scenarios.h"
+#include "arena_spotlight_scenarios.h"
 #include "arena_stuck_recovery_scenarios.h"
 #include "arena_trailer_scenarios.h"
 #include "arena_traversal_scenarios.h"
@@ -12012,6 +12013,10 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(ambience.begin()),
                   std::make_move_iterator(ambience.end()));
+    auto spotlight = build_spotlight_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(spotlight.begin()),
+                  std::make_move_iterator(spotlight.end()));
     auto city = build_city_definitions();
     values.insert(values.end(),
                   std::make_move_iterator(city.begin()),

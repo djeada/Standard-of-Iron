@@ -250,6 +250,8 @@ These units are intentionally separated from the AI's ordinary strategic posture
 
 Assault-wave units are excluded from ordinary reserve, gathering, expansion, and retreat pools. Their attack path advances toward eligible hostile targets and can breach obstructing barriers when movement toward the objective has stalled.
 
+A wave whose objective is sealed off counts as stalled from its first decision. The snapshot builder flood-fills walkable cells outward from each wave's march target, treating every visible hostile gate as a wall whatever its current open state (the pathfinder's region map connects through gates, because a gate opens for its owner), and gives up as reachable after a few thousand cells. If the fill never reaches the wave (`EntitySnapshot::march_target_reachable`), the objective is inside a closed ring: the wave commits to breaching the barrier on its line at once, instead of walking to the nearest reachable point outside the ring and waiting there for the stall timer.
+
 ### Commander
 
 `CommanderBehavior` manages the commander separately from line units. It positions the commander relative to the force, uses commander abilities, and respects doctrine/health/escort constraints.
@@ -434,6 +436,8 @@ That means AI formation behavior inherits the same terrain fitting, doctrine tem
 ## Defence model
 
 Base defence combines strategic assignments with current threat information.
+
+A threat is an enemy that can fight (`is_threatening_contact`): combat troops and defence towers, never workers, civilians, healers, other buildings, wildlife, or a garrison nation that holds its ground. An enemy builder wandering past a forward base used to mark the base under threat and flip the whole AI into Defending (`AiSkirmishOpeningTest.AGarrisonNationCampedNextDoorIsNotAStandingThreat`).
 
 The AI can retain a garrison in advance, but active defence still evaluates where the threat is, which base is affected, which defenders are available, and whether ordinary strategic units need to be pulled into the response.
 

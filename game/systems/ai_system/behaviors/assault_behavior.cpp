@@ -264,7 +264,10 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
   const float advance_goal_z =
       marching != assault_units.end() ? (*marching)->march_target_z : objective_z;
 
-  bool advance_stalled = false;
+  bool advance_stalled = std::any_of(
+      assault_units.begin(), assault_units.end(), [](const EntitySnapshot* unit) {
+        return unit->has_march_target && !unit->march_target_reachable;
+      });
   for (const auto* unit : assault_units) {
     const float distance_to_objective = std::sqrt(distance_squared(
         unit->pos_x, 0.0F, unit->pos_z, advance_goal_x, 0.0F, advance_goal_z));
