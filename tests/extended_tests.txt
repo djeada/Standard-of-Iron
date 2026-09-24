@@ -49,6 +49,7 @@ TightGapNavigationTest.*
 WallSiegeTest.*
 WildlifeFightMotionTest.*
 FormationPlannerCacheTest.ReportsPlanCostAcrossArmySizes
+FormationPropClearance.SoldiersMarchAroundSolidProps
 
 # app_tests
 AudioBattleLoadTest.*
