@@ -205,6 +205,20 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment& segment,
     float const lateral_radius =
         row_half_width / static_cast<float>(cross_section_segments);
 
+    float joint_weight = 0.0F;
+    if (segment.start_is_joint || segment.end_is_joint) {
+      float const reach = std::max(row_half_width * 1.6F, 0.001F);
+      auto ease_from = [&](float distance) {
+        return 1.0F - smoothstep01(std::clamp(distance / reach, 0.0F, 1.0F));
+      };
+      if (segment.start_is_joint) {
+        joint_weight = std::max(joint_weight, ease_from(t * length));
+      }
+      if (segment.end_is_joint) {
+        joint_weight = std::max(joint_weight, ease_from((1.0F - t) * length));
+      }
+    }
+
     for (int lateral_index = 0; lateral_index < vertices_per_row; ++lateral_index) {
       float const cross_t = static_cast<float>(lateral_index) /
                             static_cast<float>(cross_section_segments);
@@ -239,7 +253,7 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment& segment,
       vertex.normal[0] = normal[0];
       vertex.normal[1] = normal[1];
       vertex.normal[2] = normal[2];
-      vertex.tex_coord[0] = cross_t;
+      vertex.tex_coord[0] = mixf(cross_t, 0.5F, joint_weight * 0.85F);
       vertex.tex_coord[1] = t;
       vertices.push_back(vertex);
     }
@@ -340,6 +354,12 @@ auto build_linear_feature_junction_meshes(
     vertices.reserve(static_cast<std::size_t>(ring_segments + 1));
     indices.reserve(static_cast<std::size_t>(ring_segments * 3));
 
+    // Where segments meet, the disc only has to fill the wedge the ribbons
+    // leave on the outside of a bend. Sitting a few millimetres under them lets
+    // the ribbons win the depth test wherever they overlap, instead of the
+    // disc's rim painting a ring of shallow-water foam across the channel.
+    const float joint_drop =
+        junction.samples > 1 ? settings.shared_junction_drop : 0.0F;
     auto append_vertex = [&](const QVector3D& position, float radial_t, float angle_t) {
       QVector3D surface_position = position;
       if (!settings.use_segment_elevation_profile && settings.height_map != nullptr) {
@@ -352,7 +372,7 @@ auto build_linear_feature_junction_meshes(
       }
       Render::GL::Vertex vertex{};
       vertex.position = {surface_position.x(),
-                         surface_position.y() + settings.y_offset,
+                         surface_position.y() + settings.y_offset - joint_drop,
                          surface_position.z()};
       vertex.normal = {0.0F, 1.0F, 0.0F};
       vertex.tex_coord = {
@@ -383,7 +403,9 @@ auto build_linear_feature_junction_meshes(
 
 auto build_lake_surface_mesh(const Game::Map::Lake& lake,
                              float tile_size,
-                             float y_offset) -> std::unique_ptr<Render::GL::Mesh> {
+                             float y_offset,
+                             const std::vector<Game::Map::RiverSegment>* inflows)
+    -> std::unique_ptr<Render::GL::Mesh> {
   constexpr float two_pi = 6.28318530717958647692F;
   constexpr float deg_to_rad = 0.01745329251994329577F;
   const float half_width = std::max(lake.width * 0.5F, tile_size * 0.5F);
@@ -419,8 +441,30 @@ auto build_lake_surface_mesh(const Game::Map::Lake& lake,
                        lake.center.z() + rotated_z};
     vertex.normal = {0.0F, 1.0F, 0.0F};
 
-    vertex.tex_coord = {0.5F + local_x / (half_width * 2.2F),
-                        std::clamp(0.5F * (1.0F - radial_t), 0.0F, 0.5F)};
+    float shore = std::clamp(0.5F * (1.0F - radial_t), 0.0F, 0.5F);
+    if (inflows != nullptr) {
+      float const x = vertex.position[0];
+      float const z = vertex.position[2];
+      for (const auto& river : *inflows) {
+        float const dx = river.end.x() - river.start.x();
+        float const dz = river.end.z() - river.start.z();
+        float const length_sq = dx * dx + dz * dz;
+        float const along =
+            length_sq > 1.0e-4F
+                ? std::clamp(((x - river.start.x()) * dx + (z - river.start.z()) * dz) /
+                                 length_sq,
+                             0.0F,
+                             1.0F)
+                : 0.0F;
+        float const distance = std::hypot(x - (river.start.x() + dx * along),
+                                          z - (river.start.z() + dz * along));
+        float const half = river.width * Game::Map::k_river_drawn_edge_scale * 0.5F;
+        float const open_water =
+            1.0F - smoothstep01(std::clamp((distance - half) / half, 0.0F, 1.0F));
+        shore = mixf(shore, 0.5F, open_water);
+      }
+    }
+    vertex.tex_coord = {0.5F + local_x / (half_width * 2.2F), shore};
     vertices.push_back(vertex);
   };
 
@@ -474,7 +518,7 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
 
   dir.normalize();
   QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
-  float const bridge_width = std::max(bridge.width, Game::Map::k_min_bridge_width);
+  float const bridge_width = Game::Map::bridge_drawn_width(bridge);
   float const half_width = bridge_width * 0.5F;
 
   float const landing_run = Game::Map::bridge_visual_landing_run(bridge_width);
@@ -557,16 +601,19 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
     } else if (span_distance > visual_length - landing_run) {
       landing = smoothstep01((visual_length - span_distance) / landing_run);
     }
-    float const ground_y =
-        height_map.get_base_height_at(center_pos.x(), center_pos.z());
-    float const deck_height = mixf(ground_y + Game::Map::k_bridge_deck_visual_lift,
-                                   Game::Map::bridge_deck_world_y(bridge, authored_t),
-                                   landing);
+    // The same deck height units walk at, landings included.
+    float const deck_height =
+        height_map.bridge_deck_surface_y(bridge, authored_distance)
+            .value_or(Game::Map::bridge_deck_world_y(bridge, authored_t));
+    auto const station_ground =
+        height_map.bridge_station_ground(bridge, authored_distance);
 
     float const stone_noise =
         std::sin(center_pos.x() * 3.0F) * std::cos(center_pos.z() * 2.5F) * 0.02F;
 
-    float const ring_half_width = half_width * (1.0F + 0.22F * (1.0F - profile_blend));
+    float const ring_half_width =
+        half_width *
+        (1.0F + (Game::Map::k_bridge_end_flare - 1.0F) * (1.0F - profile_blend));
     float const bottom_half_width =
         std::max(ring_half_width - side_bevel * (0.55F + 0.45F * profile_blend),
                  ring_half_width * 0.68F);
@@ -582,7 +629,13 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
         std::max(ring_half_width - parapet_half_width * 0.45F, ring_half_width * 0.72F);
 
     float const deck_y = deck_height + stone_noise * (0.55F + 0.45F * profile_blend);
-    float const underside_y = deck_y - ring_thickness;
+    // On the landings the masonry reaches down to the lowest ground across the
+    // deck: a solid abutment, so a cross-slope or a falling bank never shows
+    // daylight under the deck end.
+    float underside_y = deck_y - ring_thickness;
+    if (landing < 1.0F) {
+      underside_y = std::min(underside_y, station_ground.lowest - 0.06F);
+    }
     float const rail_top_y = deck_y + ring_parapet_height;
 
     QVector3D top_left = center_pos + perpendicular * (-ring_half_width);
@@ -633,12 +686,16 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
     const QVector3D right_outer_top =
         rail_point(ring_parapet_offset + parapet_half_width, rail_top_y);
 
-    const float profile_step = 0.02F;
-    const float t0 = std::max(0.0F, authored_t - profile_step / length);
-    const float t1 = std::min(1.0F, authored_t + profile_step / length);
-    const float grade = (Game::Map::bridge_deck_world_y(bridge, t1) -
-                         Game::Map::bridge_deck_world_y(bridge, t0)) /
-                        std::max((t1 - t0) * length, 0.001F);
+    // Grade of the drawn deck, landings included, so the ramps down to the
+    // ground shade as slopes rather than as flat stone.
+    const float profile_step = 0.05F;
+    const float along0 = std::max(authored_distance - profile_step, -landing_run);
+    const float along1 =
+        std::min(authored_distance + profile_step, length + landing_run);
+    const float grade =
+        (height_map.bridge_deck_surface_y(bridge, along1).value_or(deck_height) -
+         height_map.bridge_deck_surface_y(bridge, along0).value_or(deck_height)) /
+        std::max(along1 - along0, 0.001F);
     const QVector3D deck_normal =
         (QVector3D(0.0F, 1.0F, 0.0F) - dir * grade).normalized();
 
@@ -1084,8 +1141,17 @@ auto build_riverbank_mesh(const std::vector<Game::Map::RiverSegment>& river_netw
 
       const float channel_height = std::min(terrain_height, center_height + 0.05F);
       const float follow = k_bank_rings[ring].terrain_follow;
-      return channel_height + (terrain_height - channel_height) * follow +
-             k_bank_rings[ring].height_offset;
+      const float blended = channel_height +
+                            (terrain_height - channel_height) * follow +
+                            k_bank_rings[ring].height_offset;
+      // The waterline ring tucks under the water; every ring beyond it drapes
+      // over the ground. Blending toward the channel alone put the middle rings
+      // below any real bank slope, so the wet margin vanished and dry grass met
+      // the water's hard edge.
+      // Same lift profile as the lake shore: a hair above the ground near the
+      // water, flush where the strip fades out into the grass.
+      const float drape_lift = 0.010F * (1.0F - k_bank_rings[ring].distance_from_water);
+      return ring == 0 ? blended : std::max(blended, terrain_height + drape_lift);
     };
 
     auto const ring_start_idx = static_cast<unsigned int>(vertices.size());

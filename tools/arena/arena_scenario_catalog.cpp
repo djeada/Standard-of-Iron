@@ -22,6 +22,7 @@
 #include "arena_stuck_recovery_scenarios.h"
 #include "arena_trailer_scenarios.h"
 #include "arena_traversal_scenarios.h"
+#include "arena_water_scenarios.h"
 #include "arena_wildlife_scenarios.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/wildlife/wildlife_config.h"
@@ -12032,6 +12033,10 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(grounding.begin()),
                   std::make_move_iterator(grounding.end()));
+    auto water = build_water_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(water.begin()),
+                  std::make_move_iterator(water.end()));
 
     for (auto& scenario : values) {
       if (scenario.rpg_mode && !scenario.rpg_commander_group.isEmpty()) {

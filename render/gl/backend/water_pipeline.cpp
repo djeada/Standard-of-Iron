@@ -87,6 +87,15 @@ void WaterPipeline::cache_water_uniforms() {
       m_water_shader->optional_uniform_handle("u_camera_pos");
   m_water_uniforms.light_direction =
       m_water_shader->optional_uniform_handle("u_light_dir");
+  m_water_uniforms.has_height_tex =
+      m_water_shader->optional_uniform_handle("u_has_height_tex");
+  m_water_uniforms.height_tex = m_water_shader->optional_uniform_handle("u_height_tex");
+  m_water_uniforms.height_uv_scale =
+      m_water_shader->optional_uniform_handle("u_height_uv_scale");
+  m_water_uniforms.height_uv_offset =
+      m_water_shader->optional_uniform_handle("u_height_uv_offset");
+  m_water_uniforms.height_to_world =
+      m_water_shader->optional_uniform_handle("u_height_to_world");
 }
 
 void WaterPipeline::cache_riverbank_uniforms() {

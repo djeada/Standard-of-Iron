@@ -326,6 +326,10 @@ public:
                 float alpha = 1.0F) override;
   void ground_marker(const GroundMarkerCmd& marker) override;
 
+  [[nodiscard]] auto
+  terrain_height_resources() const -> const TerrainSurfaceCmd::HeightResources& {
+    return m_terrain_height_resources;
+  }
   void set_terrain_height_resources(const TerrainSurfaceCmd::HeightResources& height) {
     m_terrain_height_resources = height;
   }

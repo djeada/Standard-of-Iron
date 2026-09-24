@@ -1,5 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
+#include "local_lighting.glsl"
 #include "noise.glsl"
 #include "visibility_mask.glsl"
 
@@ -15,7 +17,36 @@ uniform vec3 u_soil_color;
 uniform float u_moisture_level;
 uniform float u_snow_coverage;
 
+uniform int u_has_height_tex;
+uniform sampler2D u_height_tex;
+uniform vec2 u_height_uv_scale;
+uniform vec2 u_height_uv_offset;
+uniform float u_height_to_world;
+
 const float PI = 3.14159265359;
+
+// Depth of water, surface to bed, at which the channel reads as fully deep.
+const float k_full_depth = 0.12;
+
+// Terrain height under a point, on the same triangles the terrain mesh draws.
+float terrain_height_at(vec2 world_xz) {
+  ivec2 size = textureSize(u_height_tex, 0);
+  vec2 uv = world_xz * u_height_uv_scale + u_height_uv_offset;
+  vec2 grid = clamp(uv * vec2(size) - 0.5, vec2(0.0), vec2(size - ivec2(1)));
+  ivec2 cell = min(ivec2(floor(grid)), max(size - ivec2(2), ivec2(0)));
+  vec2 t = grid - vec2(cell);
+  float h10 = texelFetch(u_height_tex, cell + ivec2(1, 0), 0).r;
+  float h01 = texelFetch(u_height_tex, cell + ivec2(0, 1), 0).r;
+  float h;
+  if (t.x + t.y <= 1.0) {
+    float h00 = texelFetch(u_height_tex, cell, 0).r;
+    h = h00 + (h10 - h00) * t.x + (h01 - h00) * t.y;
+  } else {
+    float h11 = texelFetch(u_height_tex, cell + ivec2(1, 1), 0).r;
+    h = h11 + (h01 - h11) * (1.0 - t.x) + (h10 - h11) * (1.0 - t.y);
+  }
+  return h * u_height_to_world;
+}
 
 float saturate(float value) {
   return clamp(value, 0.0, 1.0);
@@ -141,8 +172,17 @@ void main() {
   shallow_water = mix(shallow_water, suspended_silt, sediment * 0.45);
   vec3 deep_water = mix(vec3(0.062, 0.205, 0.220), vec3(0.055, 0.180, 0.235), snow);
 
+  // Shade by how deep the water really is over the ground beneath it. Every
+  // overlapping ribbon, bend disc and lake computes the same value at the same
+  // point, so their joins cannot show, and the shoreline sits exactly where
+  // the water meets the bank. Without the height field, fall back to the
+  // mesh's own across-channel coordinate.
   float shore_distance =
       u_water_surface_kind == 1 ? tex_coord.y : min(tex_coord.x, 1.0 - tex_coord.x);
+  if (u_has_height_tex == 1) {
+    float depth = world_pos.y - terrain_height_at(world_pos.xz);
+    shore_distance = 0.5 * saturate(depth / k_full_depth);
+  }
   float normalized_depth = smoothstep(0.018, 0.38, shore_distance);
   float depth_variation = (fbm(world_pos.xz * 0.026 + vec2(17.0, -9.0)) - 0.5) * 0.055;
   float optical_depth = saturate(normalized_depth * 0.72 + depth_variation + 0.16);
@@ -162,7 +202,9 @@ void main() {
   float reflection_weight = 0.035 + fresnel * 0.22;
   vec3 color = mix(body_color * water_lighting, reflection, reflection_weight);
 
-  float roughness = mix(0.34, 0.46, saturate(length(gradient) * 1.5));
+  // Rain breaks up the surface: a rougher, duller sheen than calm water.
+  float roughness = mix(0.34, 0.46, saturate(length(gradient) * 1.5)) +
+                    environment_wetness() * 0.14;
   float specular = ggx_specular(normal, view_dir, light_dir, roughness, 0.020);
   color += sun_light * environment_exposure() * min(specular, 0.42) * 0.19;
 
@@ -177,8 +219,16 @@ void main() {
   float foam = saturate(shore_foam + crest * mix(0.010, 0.022, river_energy));
   color = mix(color, vec3(0.76, 0.86, 0.84) * water_lighting, foam);
 
-  color = apply_visibility_world_shading(color, world_pos.xz);
-  color *= u_segment_visibility;
+  // Shadows and torchlight carry across the waterline instead of stopping at
+  // the bank, which lights the water as if nothing stood beside it.
+  color = apply_directional_shadow(color, world_pos, vec3(0.0, 1.0, 0.0));
+  color += color * local_lighting(world_pos, normal) * 0.6;
 
-  frag_color = vec4(color, 1.0);
+  color = apply_visibility_world_shading(color, world_pos.xz);
+
+  // The last few percent toward the shore let the bank show through, so the
+  // water meets the ground in a soft margin rather than a hard polygon edge.
+  // Segment fades go transparent rather than dark.
+  float edge_alpha = mix(0.42, 1.0, smoothstep(0.0, 0.075, shore_distance));
+  frag_color = vec4(color, edge_alpha * saturate(u_segment_visibility));
 }

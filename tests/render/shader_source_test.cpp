@@ -1261,3 +1261,27 @@ void main() {
   gl.glDeleteVertexArrays(1, &vao);
   gl.glDeleteBuffers(1, &buffer);
 }
+
+TEST(ShaderSource, WaterShadesByItsRealDepthAndReadsTheMeshUv) {
+  const auto root = find_repo_root();
+  const auto vert = read_text(root / "assets" / "shaders" / "river.vert");
+  const auto frag = read_text(root / "assets" / "shaders" / "river.frag");
+  ASSERT_FALSE(vert.empty());
+  ASSERT_FALSE(frag.empty());
+  const auto flat_vert = collapse_whitespace(vert);
+  const auto flat_frag = collapse_whitespace(frag);
+
+  EXPECT_NE(flat_vert.find("layout(location = 2) in vec2 a_tex_coord"),
+            std::string::npos)
+      << "Mesh vertices carry the normal at location 1 and the UV at location 2; "
+         "reading location 1 fed the water shader its normal as a UV";
+  EXPECT_NE(flat_vert.find("shore_damping"), std::string::npos)
+      << "waves must die out at the shore or the waterline bobs through the bank";
+
+  EXPECT_NE(flat_frag.find("world_pos.y - terrain_height_at(world_pos.xz)"),
+            std::string::npos)
+      << "water shades by its depth over the terrain, so overlapping pieces agree";
+  EXPECT_NE(flat_frag.find("#include \"directional_shadows.glsl\""), std::string::npos);
+  EXPECT_NE(flat_frag.find("edge_alpha"), std::string::npos)
+      << "the shoreline is a soft margin, not a hard polygon edge";
+}

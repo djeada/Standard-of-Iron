@@ -450,6 +450,7 @@ add_executable(
     render/local_lighting_test.cpp
     render/contact_shadow_test.cpp
     render/terrain_grounding_test.cpp
+    render/water_transition_test.cpp
     render/shadow_cascade_fit_test.cpp
     render/shader_reload_test.cpp
     render/weather_particle_budget_test.cpp

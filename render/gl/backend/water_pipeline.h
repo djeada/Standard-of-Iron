@@ -36,6 +36,11 @@ public:
     GL::Shader::UniformHandle surface_kind{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_height_tex{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle height_tex{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle height_uv_scale{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle height_uv_offset{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle height_to_world{GL::Shader::InvalidUniform};
   };
 
   struct RiverbankUniforms {

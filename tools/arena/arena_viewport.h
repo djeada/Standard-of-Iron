@@ -507,6 +507,7 @@ private:
   bool m_force_full_creature_lod = true;
   bool m_force_animation_diagnostics = false;
   bool m_fog_of_war_enabled = false;
+  bool m_scenario_forced_fog_of_war = false;
   float m_visibility_accumulator = 0.0F;
   bool m_terrain_review_mode = false;
   bool m_terrain_review_content_enabled = false;

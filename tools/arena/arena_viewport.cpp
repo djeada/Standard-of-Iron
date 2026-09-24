@@ -4498,6 +4498,14 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   }
 
   place_scenario_resource_patches(*definition, scenario_origin);
+  if (m_scenario_forced_fog_of_war && !definition->fog_of_war) {
+    m_scenario_forced_fog_of_war = false;
+    set_fog_of_war_enabled(false);
+  }
+  if (definition->fog_of_war && !m_fog_of_war_enabled) {
+    m_scenario_forced_fog_of_war = true;
+    set_fog_of_war_enabled(true);
+  }
   if (m_prewarm_unit_templates && m_renderer != nullptr) {
     m_renderer->prewarm_unit_templates(m_world.get(), {});
   }

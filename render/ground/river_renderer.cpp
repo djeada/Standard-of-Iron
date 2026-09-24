@@ -29,6 +29,15 @@ auto WaterRenderer::prewarm_gpu_resources() -> bool {
   return prewarm_mesh_buffers(m_meshes, [](auto& entry) { return entry.mesh.get(); });
 }
 
+namespace {
+
+// Height of every water surface above its datum (the river network's level or
+// the lake's centre height); the carved bed sits 0.10 below the datum.
+constexpr float k_water_surface_lift = 0.02F;
+constexpr float k_lake_surface_lift = k_water_surface_lift + 0.006F;
+
+} // namespace
+
 WaterRenderer::WaterRenderer() = default;
 WaterRenderer::~WaterRenderer() = default;
 
@@ -55,12 +64,36 @@ void WaterRenderer::build_meshes() {
   Ground::LinearFeatureRibbonSettings settings = Ground::make_river_ribbon_settings();
   settings.height_map = m_height_map;
   settings.use_segment_elevation_profile = true;
-  settings.y_offset = 0.02F;
+  settings.y_offset = k_water_surface_lift;
+  settings.shared_junction_drop = 0.008F;
+
+  // An end that meets another segment, or runs into a lake, is not a shore.
+  const float join_distance = std::max(m_tile_size * 0.30F, 0.05F);
+  auto continues_into_water = [&](const QVector3D& point, std::size_t self) {
+    for (std::size_t other = 0; other < m_river_segments.size(); ++other) {
+      if (other == self) {
+        continue;
+      }
+      const auto& segment = m_river_segments[other];
+      if ((segment.start - point).toVector2D().length() <= join_distance ||
+          (segment.end - point).toVector2D().length() <= join_distance) {
+        return true;
+      }
+    }
+    return std::any_of(m_lakes.begin(), m_lakes.end(), [&](const auto& lake) {
+      return Game::Map::point_in_lake(lake, point.x(), point.z());
+    });
+  };
 
   std::vector<Ground::LinearFeatureRibbonSegment> segments;
   segments.reserve(m_river_segments.size());
-  for (const auto& segment : m_river_segments) {
-    segments.push_back({segment.start, segment.end, segment.width});
+  for (std::size_t index = 0; index < m_river_segments.size(); ++index) {
+    const auto& segment = m_river_segments[index];
+    Ground::LinearFeatureRibbonSegment ribbon{
+        segment.start, segment.end, segment.width};
+    ribbon.start_is_joint = continues_into_water(segment.start, index);
+    ribbon.end_is_joint = continues_into_water(segment.end, index);
+    segments.push_back(ribbon);
   }
 
   auto river_meshes =
@@ -81,7 +114,11 @@ void WaterRenderer::build_meshes() {
                         junction.center});
   }
   for (const auto& lake : m_lakes) {
-    m_meshes.push_back({Ground::build_lake_surface_mesh(lake, m_tile_size),
+    // Lakes sit a hair above the rivers (not the 10 cm they used to), so a
+    // river mouth runs level into the lake and the lake covers the river's
+    // end where the two overlap.
+    m_meshes.push_back({Ground::build_lake_surface_mesh(
+                            lake, m_tile_size, k_lake_surface_lift, &m_river_segments),
                         WaterSurfaceKind::Lake,
                         lake.center,
                         lake.center});
@@ -134,6 +171,7 @@ void WaterRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     cmd.biome_snow_coverage = climate.snow_coverage;
     cmd.alpha = 1.0F;
     cmd.visibility = vis_res;
+    cmd.height = renderer.terrain_height_resources();
     renderer.terrain_feature(cmd);
   }
 }

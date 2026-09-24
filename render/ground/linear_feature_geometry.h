@@ -16,6 +16,12 @@ struct LinearFeatureRibbonSegment {
   QVector3D start;
   QVector3D end;
   float width = 1.0F;
+  // An end that continues into more water (another segment, or a lake) rather
+  // than ending at a shore. Near such an end the ribbon's shore coordinate eases
+  // toward mid-channel, so its shore band does not cross the open water of the
+  // ribbon or lake it overlaps there.
+  bool start_is_joint = false;
+  bool end_is_joint = false;
 };
 
 struct LinearFeatureRibbonSettings {
@@ -34,6 +40,9 @@ struct LinearFeatureRibbonSettings {
   bool follow_terrain_centerline = false;
   bool use_segment_elevation_profile = false;
   bool junction_uses_center_uv = false;
+  // Lowers junction discs where segments meet, so the ribbons they join win
+  // the depth test. Water uses it; roads sit their junction caps on the road.
+  float shared_junction_drop = 0.0F;
   const Game::Map::TerrainHeightMap* height_map = nullptr;
 };
 
@@ -77,10 +86,14 @@ build_linear_ribbon_meshes(const std::vector<LinearFeatureRibbonSegment>& segmen
     const LinearFeatureRibbonSettings& settings)
     -> std::vector<LinearFeatureJunctionMesh>;
 
+// `inflows` are rivers that run into the lake: where one crosses the lake's
+// edge there is no shore, so the lake's shore band is suppressed there.
 [[nodiscard]] auto
 build_lake_surface_mesh(const Game::Map::Lake& lake,
                         float tile_size,
-                        float y_offset = 0.12F) -> std::unique_ptr<Render::GL::Mesh>;
+                        float y_offset = 0.12F,
+                        const std::vector<Game::Map::RiverSegment>* inflows = nullptr)
+    -> std::unique_ptr<Render::GL::Mesh>;
 
 [[nodiscard]] auto build_bridge_mesh(const Game::Map::Bridge& bridge,
                                      float tile_size,

@@ -1781,13 +1781,74 @@ auto TerrainHeightMap::getBridgeDeckHeight(float world_x, float world_z) const
       continue;
     }
 
-    float const t = std::clamp(along / length, 0.0F, 1.0F);
+    // Walk the deck as drawn: the arch over the span, the landings ramping
+    // down past each end, and plain ground beyond them.
+    auto const surface = bridge_deck_surface_y(bridge, along);
+    if (!surface.has_value()) {
+      continue;
+    }
 
     nearest_perp_dist = perp_dist;
-    deck_y = bridge_deck_world_y(bridge, t);
+    deck_y = *surface;
   }
 
   return deck_y;
+}
+
+auto TerrainHeightMap::bridge_station_ground(const Bridge& bridge,
+                                             float along) const -> BridgeStationGround {
+  QVector3D dir = bridge.end - bridge.start;
+  dir.setY(0.0F);
+  if (dir.lengthSquared() < 1.0e-6F) {
+    float const y = get_base_height_at(bridge.start.x(), bridge.start.z());
+    return {y, y};
+  }
+  dir.normalize();
+  QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
+  float const reach = bridge_drawn_width(bridge) * 0.5F * k_bridge_end_flare;
+  QVector3D const station = bridge.start + dir * along;
+
+  BridgeStationGround ground{std::numeric_limits<float>::max(),
+                             std::numeric_limits<float>::lowest()};
+  constexpr int k_lateral_samples = 5;
+  for (int i = 0; i < k_lateral_samples; ++i) {
+    float const offset =
+        reach * (-1.0F + 2.0F * static_cast<float>(i) /
+                             static_cast<float>(k_lateral_samples - 1));
+    QVector3D const at = station + perpendicular * offset;
+    float const y = get_base_height_at(at.x(), at.z());
+    ground.lowest = std::min(ground.lowest, y);
+    ground.highest = std::max(ground.highest, y);
+  }
+  return ground;
+}
+
+auto TerrainHeightMap::bridge_deck_surface_y(const Bridge& bridge, float along) const
+    -> std::optional<float> {
+  QVector3D span = bridge.end - bridge.start;
+  span.setY(0.0F);
+  float const length = span.length();
+  if (length < 0.01F) {
+    return std::nullopt;
+  }
+  float const landing_run = bridge_visual_landing_run(bridge_drawn_width(bridge));
+  if (along < -landing_run || along > length + landing_run) {
+    return std::nullopt;
+  }
+
+  float const t = std::clamp(along / length, 0.0F, 1.0F);
+  float const deck = bridge_deck_world_y(bridge, t);
+  float const beyond = along < 0.0F ? -along : along - length;
+  if (beyond <= 0.0F) {
+    return deck;
+  }
+
+  float const reach = std::clamp(1.0F - beyond / landing_run, 0.0F, 1.0F);
+  float const landing = reach * reach * (3.0F - 2.0F * reach);
+  float const ground = bridge_station_ground(bridge, along).highest;
+  float const lift = k_bridge_landing_end_lift +
+                     (k_bridge_deck_visual_lift - k_bridge_landing_end_lift) * landing;
+  return ground + lift + (deck - (ground + lift)) * landing;
 }
 
 auto TerrainHeightMap::isOnBridge(float world_x, float world_z) const -> bool {

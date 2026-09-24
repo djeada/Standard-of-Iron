@@ -434,6 +434,10 @@ struct ArenaScenarioDefinition {
   ArenaCameraView camera;
   std::optional<QVector3D> camera_focus;
   bool suppress_terrain_scatter{false};
+
+  // Runs the scenario under fog of war whether or not --fog-of-war was passed,
+  // for captures whose subject is the explored/unexplored boundary.
+  bool fog_of_war{false};
   bool suppress_terrain_features{false};
   bool select_spawned_units{true};
   bool suppress_spawn_anchor{false};

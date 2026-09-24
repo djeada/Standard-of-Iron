@@ -17,6 +17,7 @@ add_library(
     arena_showcase_scenarios.cpp
     arena_facade_scenarios.cpp
     arena_trailer_scenarios.cpp
+    arena_water_scenarios.cpp
     arena_wildlife_scenarios.cpp
     terrain_alignment.cpp
     # The promo camera and capture schedule. It needs no GL, so it belongs in

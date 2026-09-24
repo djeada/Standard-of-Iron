@@ -1079,6 +1079,24 @@ inline constexpr float k_bridge_max_entry_grade = 0.11F;
          bridge_effective_height(bridge) * bridge_arch_curve(clamped_t);
 }
 
+// The deck is never narrower than the minimum crossing, whatever was authored.
+[[nodiscard]] inline auto bridge_drawn_width(const Bridge& bridge) -> float {
+  return std::max(bridge.width, k_min_bridge_width);
+}
+
+// Each deck end flares this much wider than the span, like a splayed abutment;
+// a road arriving at the bridge widens to meet it.
+inline constexpr float k_bridge_end_flare = 1.22F;
+
+// Where a landing reaches the ground it sits at road height above the highest
+// ground across the deck, so a road meets the deck end flush.
+inline constexpr float k_bridge_landing_end_lift = k_road_surface_y_offset;
+
+struct BridgeStationGround {
+  float lowest{0.0F};
+  float highest{0.0F};
+};
+
 inline constexpr float k_bridge_entry_margin_tiles = 1.0F;
 inline constexpr float k_bridge_cell_half_span_tiles = 0.5F;
 
@@ -1177,6 +1195,18 @@ public:
 
   [[nodiscard]] auto getBridgeDeckHeight(float world_x,
                                          float world_z) const -> std::optional<float>;
+
+  // Ground under a deck station `along` metres from bridge.start, sampled
+  // across the full flared width so a cross-slope is seen from both edges.
+  [[nodiscard]] auto bridge_station_ground(const Bridge& bridge,
+                                           float along) const -> BridgeStationGround;
+
+  // Height of the drawn deck `along` metres from bridge.start, including the
+  // landings that run past each end down to the ground. The bridge mesh, the
+  // roads that meet it and the height units walk at all read this, so what is
+  // drawn is what is walked. Beyond the landings there is no deck.
+  [[nodiscard]] auto bridge_deck_surface_y(const Bridge& bridge,
+                                           float along) const -> std::optional<float>;
 
   void apply_biome_variation(const BiomeSettings& settings);
 
