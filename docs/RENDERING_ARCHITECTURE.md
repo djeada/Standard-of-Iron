@@ -369,6 +369,47 @@ Everything that stands on the ground samples one surface, and it is the surface 
 arena captures. `tests/render/terrain_grounding_test.cpp` pins the surface, road,
 foundation and tilt rules.
 
+### Water, shorelines and bridges
+
+Water is drawn as part of the terrain, not as an overlay laid on top of it.
+
+- **One water level.** Every river network sits `k_water_surface_lift` (0.02) above its
+  datum, and lakes sit 6 mm higher so they cover the river end at a mouth. The carved
+  bed is 0.10 below the datum.
+- **Water shades by its real depth.** `river.frag` samples the terrain height field
+  (the same triangles the terrain draws) and derives shallows, foam and the soft edge
+  from the water's depth over the ground. It no longer uses each mesh's own
+  across-channel coordinate. Overlapping ribbons, bend discs and a lake therefore
+  compute the same pixel at the same point, joins cannot show, and the shoreline sits
+  exactly where water meets bank. The mesh UV remains the fallback without a height
+  field. `river.vert` reads the UV from attribute location 2; it used to read location
+  1, which is the normal, so no river ever had a shore gradient.
+- **Soft, still shoreline.** Alpha eases down in the shallows so the bank shows through a
+  soft margin. Waves die out at the shore so the waterline does not bob through the
+  bank. Water blends but still writes depth, so units and props wade into it rather
+  than being painted over. Segment fades go transparent, not dark.
+- **Banks drape over the ground.** In the riverbank strip, every ring past the waterline
+  sits on or just above the terrain (the lake shore already did). Bends are closed by
+  `build_riverbank_junction_meshes`. Where segments meet, the water junction discs sit
+  8 mm under the ribbons, so the ribbons win the depth test and no foam ring crosses the
+  channel. Open river ends keep their rounded shore.
+- **Light carries across the waterline.** Water receives directional shadows and local
+  lights like the banks do, and rain roughens its surface.
+- **Bridges end where the ground is.** `TerrainHeightMap::bridge_deck_surface_y` is the
+  single deck height: the arch over the span plus landings that ramp down past each end,
+  to road height over the highest ground across the flared deck. The bridge mesh, the
+  roads snapped to its heads, and the height units walk at all read it, so what is drawn
+  is what is walked, and there is no deck beyond the landings. Landing masonry reaches
+  the lowest ground across the deck, so a cross-slope or a falling bank shows an
+  abutment rather than daylight. Roads meet the deck end flush and widen to its flare
+  (`k_bridge_end_flare`).
+
+`water_crossing`, `water_ford`, `water_rain`, `water_snow`, `water_dusk`, `water_night`
+and `water_fog_boundary` capture the same crossing under each condition;
+`water_fog_boundary` sets the scenario's `fog_of_war` flag, so it needs no CLI switch.
+`tests/render/water_transition_test.cpp` pins the bank draping, junction depth,
+walked-versus-drawn deck and abutment rules.
+
 ### Ground plane draws after the terrain
 
 The ground plane (`GroundRenderer`, the map-plus-48-tile skirt at y = -0.08) and the terrain

@@ -140,7 +140,40 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
         }
       }
       {
+        const auto& water_uniforms = m_water_pipeline->m_water_uniforms;
+        const auto& height = feature.height;
+        const bool has_height = height.enabled && height.texture != nullptr;
+        if (water_uniforms.has_height_tex != Shader::InvalidUniform) {
+          water_shader->set_uniform(water_uniforms.has_height_tex, has_height ? 1 : 0);
+        }
+        if (has_height) {
+          height.texture->bind(TextureUnit::terrain_height);
+          m_last_bound_texture = height.texture;
+          if (water_uniforms.height_tex != Shader::InvalidUniform) {
+            water_shader->set_uniform(water_uniforms.height_tex,
+                                      static_cast<int>(TextureUnit::terrain_height));
+          }
+          if (water_uniforms.height_uv_scale != Shader::InvalidUniform) {
+            water_shader->set_uniform(water_uniforms.height_uv_scale, height.uv_scale);
+          }
+          if (water_uniforms.height_uv_offset != Shader::InvalidUniform) {
+            water_shader->set_uniform(water_uniforms.height_uv_offset,
+                                      height.uv_offset);
+          }
+          if (water_uniforms.height_to_world != Shader::InvalidUniform) {
+            water_shader->set_uniform(water_uniforms.height_to_world, height.to_world);
+          }
+        }
+      }
+      {
         PolygonOffsetScope const poly(-1.0F, -1.0F);
+        // Water is drawn over the finished terrain with a soft shoreline
+        // margin; it still writes depth so units and props wade into it.
+        std::optional<BlendScope> water_blend;
+        if (!is_transparent) {
+          water_blend.emplace(true);
+          glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        }
         for (std::size_t j = i; j < batch_end; ++j) {
           const auto& single = std::get<TerrainFeatureCmdIndex>(queue.get_sorted(j));
           const auto& uniforms = m_water_pipeline->m_water_uniforms;

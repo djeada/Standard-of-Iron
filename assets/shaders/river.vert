@@ -1,6 +1,9 @@
 #version 330 core
 layout(location = 0) in vec3 a_pos;
-layout(location = 1) in vec2 a_tex_coord;
+// Mesh vertices are position (0), normal (1), tex_coord (2). Reading location 1
+// as the UV fed the water shader its normal: every river pixel looked like
+// shoreline and every lake pixel like open water.
+layout(location = 2) in vec2 a_tex_coord;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -23,7 +26,12 @@ void main() {
   float ripple1 = sin(a_pos.x * 1.65 + a_pos.z * 1.18 + time * 1.85 * speed) * 0.003;
   float ripple2 = cos(a_pos.z * 2.05 - a_pos.x * 0.92 + time * 1.55 * speed) * 0.002;
 
-  pos.y += (wave1 + wave2 + wave3 + ripple1 + ripple2) * amplitude;
+  // Waves die out at the shore, so the waterline holds still against the bank
+  // instead of bobbing through it.
+  float shore = u_water_surface_kind == 1 ? a_tex_coord.y
+                                           : min(a_tex_coord.x, 1.0 - a_tex_coord.x);
+  float shore_damping = smoothstep(0.0, 0.14, shore);
+  pos.y += (wave1 + wave2 + wave3 + ripple1 + ripple2) * amplitude * shore_damping;
 
   world_pos = (model * vec4(pos, 1.0)).xyz;
 

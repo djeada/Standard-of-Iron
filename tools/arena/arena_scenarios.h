@@ -179,6 +179,13 @@ inline constexpr char k_grounding_ridge_id[] = "grounding_ridge";
 inline constexpr char k_grounding_riverbank_id[] = "grounding_riverbank";
 inline constexpr char k_grounding_road_id[] = "grounding_road";
 inline constexpr char k_grounding_scatter_id[] = "grounding_scatter";
+inline constexpr char k_water_crossing_id[] = "water_crossing";
+inline constexpr char k_water_ford_id[] = "water_ford";
+inline constexpr char k_water_rain_id[] = "water_rain";
+inline constexpr char k_water_snow_id[] = "water_snow";
+inline constexpr char k_water_dusk_id[] = "water_dusk";
+inline constexpr char k_water_night_id[] = "water_night";
+inline constexpr char k_water_fog_boundary_id[] = "water_fog_boundary";
 inline constexpr char k_humanoid_gait_review_id[] = "humanoid_gait_review";
 inline constexpr char k_humanoid_gait_review_leaders_id[] =
     "humanoid_gait_review_leaders";

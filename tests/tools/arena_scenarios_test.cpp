@@ -877,6 +877,44 @@ TEST(ArenaScenariosTest, GroundingCapturesCoverEveryKindOfGroundWithOneCast) {
   }
 }
 
+TEST(ArenaScenariosTest, WaterCapturesShareOneCrossingUnderEveryCondition) {
+
+  const auto* base = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_water_crossing_id));
+  ASSERT_NE(base, nullptr);
+  EXPECT_GE(base->rivers.size(), 3U) << "the crossing needs bends";
+  EXPECT_FALSE(base->lakes.empty()) << "and a river mouth";
+  EXPECT_FALSE(base->bridges.empty());
+  EXPECT_FALSE(base->roads.empty());
+
+  for (const char* id : {Arena::Scenarios::k_water_ford_id,
+                         Arena::Scenarios::k_water_rain_id,
+                         Arena::Scenarios::k_water_snow_id,
+                         Arena::Scenarios::k_water_dusk_id,
+                         Arena::Scenarios::k_water_night_id,
+                         Arena::Scenarios::k_water_fog_boundary_id}) {
+    const auto* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    EXPECT_EQ(scenario->rivers.size(), base->rivers.size()) << id;
+    EXPECT_EQ(scenario->bridges.size(), base->bridges.size()) << id;
+    EXPECT_EQ(scenario->groups.size(), base->groups.size()) << id;
+  }
+
+  auto find = [](const char* id) {
+    return Arena::Scenarios::find_definition(QString::fromLatin1(id));
+  };
+  EXPECT_TRUE(find(Arena::Scenarios::k_water_rain_id)->precipitation.enabled);
+  EXPECT_EQ(find(Arena::Scenarios::k_water_snow_id)->precipitation.type,
+            Game::Map::WeatherType::Snow);
+  EXPECT_TRUE(find(Arena::Scenarios::k_water_snow_id)->terrain_snowbound);
+  EXPECT_GT(find(Arena::Scenarios::k_water_dusk_id)->environment.start_time, 18.0F);
+  EXPECT_GT(find(Arena::Scenarios::k_water_night_id)->environment.start_time, 21.0F);
+  EXPECT_TRUE(find(Arena::Scenarios::k_water_fog_boundary_id)->fog_of_war);
+  EXPECT_FALSE(base->fog_of_war);
+  EXPECT_LT(find(Arena::Scenarios::k_water_ford_id)->bridges.front().height,
+            base->bridges.front().height);
+}
+
 TEST(ArenaScenariosTest, RejectsUnknownScenarioIds) {
   EXPECT_EQ(Arena::Scenarios::find_option(QStringLiteral("not_a_real_scenario")),
             nullptr);

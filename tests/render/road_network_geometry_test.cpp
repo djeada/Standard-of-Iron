@@ -7,6 +7,7 @@
 
 #include "game/map/terrain.h"
 #include "render/gl/mesh.h"
+#include "render/ground/linear_feature_geometry.h"
 #include "render/ground/road_network_geometry.h"
 
 namespace {
@@ -243,7 +244,7 @@ TEST(RoadNetworkGeometryTest, KeepsRoadSurfaceAboveASlope) {
   }
 }
 
-TEST(RoadNetworkGeometryTest, LiftsApproachOntoTheBridgeDeck) {
+TEST(RoadNetworkGeometryTest, MeetsTheDeckWhereTheBridgeLandingTouchesTheGround) {
   auto height_map = flat_height_map(61, 0.0F);
   Game::Map::Bridge bridge;
   bridge.start = QVector3D(4.0F, 0.0F, 0.0F);
@@ -262,9 +263,23 @@ TEST(RoadNetworkGeometryTest, LiftsApproachOntoTheBridgeDeck) {
   const auto surfaces = Render::Ground::build_road_network_surfaces(road, settings);
   ASSERT_FALSE(surfaces.empty());
 
-  const float deck_y = Game::Map::bridge_deck_world_y(bridge, 0.0F);
-  const float abutment = Game::Map::bridge_abutment_reach(bridge.width);
-  const float deck_edge_x = bridge.start.x() + abutment;
+  const float landing =
+      Game::Map::bridge_visual_landing_run(Game::Map::bridge_drawn_width(bridge));
+  const float deck_edge_x = bridge.start.x() + landing;
+  const auto deck_end_y = height_map.bridge_deck_surface_y(bridge, -landing);
+  ASSERT_TRUE(deck_end_y.has_value());
+
+  // The drawn deck's own end, from the bridge mesh.
+  auto bridge_mesh = Render::Ground::build_bridge_mesh(bridge, 1.0F, height_map);
+  ASSERT_NE(bridge_mesh, nullptr);
+  float drawn_deck_end = std::numeric_limits<float>::lowest();
+  for (const auto& vertex : bridge_mesh->get_vertices()) {
+    if (std::abs(vertex.position[0] - deck_edge_x) < 0.05F &&
+        std::abs(vertex.position[2]) < 6.0F) {
+      drawn_deck_end = std::max(drawn_deck_end, vertex.position[1]);
+    }
+  }
+  ASSERT_GT(drawn_deck_end, std::numeric_limits<float>::lowest());
 
   float highest_near_deck = std::numeric_limits<float>::lowest();
   float lowest_far_from_deck = std::numeric_limits<float>::max();
@@ -281,7 +296,9 @@ TEST(RoadNetworkGeometryTest, LiftsApproachOntoTheBridgeDeck) {
 
   ASSERT_GT(highest_near_deck, std::numeric_limits<float>::lowest());
   ASSERT_LT(lowest_far_from_deck, std::numeric_limits<float>::max());
-  EXPECT_NEAR(highest_near_deck, deck_y, 0.05F);
+  // Flush with the landing, and with the stone deck drawn there: no step.
+  EXPECT_NEAR(highest_near_deck, *deck_end_y, 0.02F);
+  EXPECT_NEAR(highest_near_deck, drawn_deck_end, 0.03F);
   EXPECT_NEAR(lowest_far_from_deck, Game::Map::k_road_surface_y_offset, 0.05F);
 }
 

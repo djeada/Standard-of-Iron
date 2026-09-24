@@ -62,6 +62,15 @@ void ShorelineRenderer::build_meshes(const Game::Map::TerrainHeightMap& height_m
     m_visibility_samples.push_back(std::move(mesh_result.visibility_samples));
     m_water_kinds.push_back(WaterSurfaceKind::River);
   }
+  // Each segment's bank strip ends square. Where segments meet at a bend the
+  // strips leave a wedge of bare ground on the outside of the turn and overlap
+  // on the inside; the junction pieces close those joints.
+  for (auto& junction :
+       Ground::build_riverbank_junction_meshes(m_river_segments, height_map)) {
+    m_meshes.push_back(std::move(junction.mesh));
+    m_visibility_samples.push_back(std::move(junction.visibility_samples));
+    m_water_kinds.push_back(WaterSurfaceKind::River);
+  }
   for (const auto& lake : m_lakes) {
     auto mesh_result = Ground::build_lake_shore_mesh(lake, height_map);
     m_meshes.push_back(std::move(mesh_result.mesh));

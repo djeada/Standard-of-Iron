@@ -189,6 +189,8 @@ struct TerrainFeatureCmd {
   WaterSurfaceKind water_kind = WaterSurfaceKind::River;
   RoadSurfaceKind road_surface_kind = RoadSurfaceKind::PackedEarth;
   TerrainSurfaceCmd::VisibilityResources visibility{};
+  // The terrain height field, for water that shades by its real depth.
+  TerrainSurfaceCmd::HeightResources height{};
   FogMaskResources fog_mask{};
   CommandPriority priority{CommandPriority::High};
 };

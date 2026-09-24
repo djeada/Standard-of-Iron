@@ -996,6 +996,7 @@ void resolve_junction_trims(std::vector<JunctionArm>& arms, float min_trim) {
 
 void snap_chain_ends_to_bridges(RoadGraph& graph,
                                 const std::vector<Game::Map::Bridge>& bridges,
+                                const Game::Map::TerrainHeightMap* height_map,
                                 float tile_size) {
   for (auto& node : graph.nodes) {
     if (node.incident.size() != 1U) {
@@ -1012,16 +1013,28 @@ void snap_chain_ends_to_bridges(RoadGraph& graph,
       }
       axis.normalize();
 
-      const float abutment = Game::Map::bridge_abutment_reach(bridge.width);
-      const float tolerance = std::max(bridge.width * 0.75F, tile_size * 3.0F);
+      const float drawn_width = Game::Map::bridge_drawn_width(bridge);
+      const float abutment = Game::Map::bridge_visual_landing_run(drawn_width);
+      const float tolerance = std::max(drawn_width * 0.75F, tile_size * 3.0F);
+      const float span = (flat(bridge.end) - flat(bridge.start)).length();
+      // The road meets the deck where the drawn landing touches the ground,
+      // at the height the landing has there, not at the top of the span.
+      auto head_deck_y = [&](float along, float fallback_t) {
+        if (height_map != nullptr) {
+          if (auto const y = height_map->bridge_deck_surface_y(bridge, along)) {
+            return *y;
+          }
+        }
+        return Game::Map::bridge_deck_world_y(bridge, fallback_t);
+      };
       struct Head {
         QVector2D anchor;
         QVector2D outward;
         float deck_y;
       };
       const std::array<Head, 2> heads{
-          Head{flat(bridge.start), -axis, Game::Map::bridge_deck_world_y(bridge, 0.0F)},
-          Head{flat(bridge.end), axis, Game::Map::bridge_deck_world_y(bridge, 1.0F)}};
+          Head{flat(bridge.start), -axis, head_deck_y(-abutment, 0.0F)},
+          Head{flat(bridge.end), axis, head_deck_y(span + abutment, 1.0F)}};
       for (const auto& head : heads) {
         const QVector2D offset = node.position - head.anchor;
 
@@ -1033,7 +1046,7 @@ void snap_chain_ends_to_bridges(RoadGraph& graph,
           best_distance = distance;
           best_position = head.anchor + head.outward * abutment;
           best_deck = head.deck_y;
-          best_half_width = bridge.width * 0.5F;
+          best_half_width = drawn_width * 0.5F * Game::Map::k_bridge_end_flare;
         }
       }
     }
@@ -1068,7 +1081,8 @@ auto build_road_network_surfaces(const std::vector<Game::Map::RoadSegment>& segm
   split_crossing_edges(graph, std::max(tile_size * 0.75F, 0.25F));
   classify_junctions(graph);
   if (settings.bridges != nullptr) {
-    snap_chain_ends_to_bridges(graph, *settings.bridges, tile_size);
+    snap_chain_ends_to_bridges(
+        graph, *settings.bridges, settings.height_map, tile_size);
   }
 
   const std::vector<Chain> chains = build_chains(graph);
