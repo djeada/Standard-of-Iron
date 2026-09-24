@@ -110,6 +110,8 @@ public:
   auto update(float delta_time) -> bool;
 
   [[nodiscard]] auto has_active() const -> bool { return m_active.has_value(); }
+
+  [[nodiscard]] auto outcome_line_pending() const -> bool;
   [[nodiscard]] auto active() const -> const CommanderMessageCue&;
   [[nodiscard]] auto active_remaining() const -> float { return m_active_remaining; }
 

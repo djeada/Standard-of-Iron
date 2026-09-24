@@ -249,6 +249,42 @@ TEST_F(CommanderMessageDirectorTest, TheOutcomeLineSpeaksAndFlushesTheChatterBeh
       << "a capture quip has no place after the loser's last word";
 }
 
+TEST_F(CommanderMessageDirectorTest, ADelayedClosingLineHoldsTheVerdictUntilItSpeaks) {
+  Game::Mission::MissionDefinition mission;
+  auto closing = make_message(QStringLiteral("victory"),
+                              Game::Mission::CommanderMessageTrigger::MissionVictory);
+  closing.delay = 1.0F;
+  mission.commander_messages.push_back(closing);
+  configure(std::move(mission));
+
+  EXPECT_FALSE(m_director.outcome_line_pending());
+  m_director.notify_victory();
+  EXPECT_TRUE(m_director.outcome_line_pending())
+      << "the verdict must be held from the moment the outcome is known";
+
+  m_director.update(0.5F);
+  EXPECT_FALSE(m_director.has_active());
+  EXPECT_TRUE(m_director.outcome_line_pending())
+      << "a line still inside its authored delay keeps the verdict back";
+
+  m_director.update(0.6F);
+  ASSERT_TRUE(m_director.has_active());
+  EXPECT_TRUE(m_director.active().holds_outcome);
+  EXPECT_FALSE(m_director.outcome_line_pending());
+}
+
+TEST_F(CommanderMessageDirectorTest, AnOutcomeWithoutAClosingLineHoldsNothing) {
+  Game::Mission::MissionDefinition mission;
+  mission.commander_messages.push_back(make_message(
+      QStringLiteral("open"), Game::Mission::CommanderMessageTrigger::MissionStart));
+  configure(std::move(mission));
+
+  m_director.notify_defeat();
+  EXPECT_FALSE(m_director.outcome_line_pending());
+  m_director.update(0.0F);
+  EXPECT_FALSE(m_director.outcome_line_pending());
+}
+
 TEST_F(CommanderMessageDirectorTest, RestoringASaveDoesNotReplayASpentLine) {
   Game::Mission::MissionDefinition mission;
   mission.commander_messages.push_back(make_message(

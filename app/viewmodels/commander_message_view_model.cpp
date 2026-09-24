@@ -14,6 +14,14 @@ void CommanderMessageViewModel::set_message(const QVariantMap& message) {
   emit message_changed();
 }
 
+void CommanderMessageViewModel::set_outcome_line_pending(bool pending) {
+  if (m_outcome_line_pending == pending) {
+    return;
+  }
+  m_outcome_line_pending = pending;
+  emit message_changed();
+}
+
 void CommanderMessageViewModel::clear() {
   if (m_message.isEmpty()) {
     return;
@@ -67,7 +75,8 @@ auto CommanderMessageViewModel::duration() const -> qreal {
 }
 
 auto CommanderMessageViewModel::holds_outcome() const -> bool {
-  return active() && m_message.value("holds_outcome", false).toBool();
+  return m_outcome_line_pending ||
+         (active() && m_message.value("holds_outcome", false).toBool());
 }
 
 void CommanderMessageViewModel::dismiss() {

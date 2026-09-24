@@ -281,6 +281,8 @@ void FilmRecorder::pump() {
   }
   if (m_engine->is_loading()) {
     m_seen_loading = true;
+
+    m_engine->film_step(0.0F);
     return;
   }
   if (!m_seen_loading) {

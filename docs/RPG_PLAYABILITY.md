@@ -377,7 +377,22 @@ Direct-control UI paths follow the same ownership rules as the gameplay systems.
 
 `OrdersViewModel::refresh_context_intent` clears RTS cursor intent while commander mode is active, preventing ground/order hints from leaking into the crosshair state.
 
-`Metrics.commanderBottomBarMinHeight` gives the commander bar enough vertical space for its actions. The compact bar remains below the RTS bar height and is covered by design-token/QML layout tests.
+Direct control has no bottom bar. The pointer is captured, so the commander bar's buttons cannot be reached in combat and its readouts repeat the combat overlay; `HUD.qml` collapses the bottom panel to zero height while `commander_rpg_mode` is set, and it returns only while a rally destination is chosen with a free cursor. `Metrics.commanderBottomBarMinHeight` sizes that placement bar, below the RTS bar height, and is covered by design-token/QML layout tests. The chase framing therefore uses the whole viewport, and the commander's feet are no longer hidden behind a panel.
+
+`RpgFpvOverlay.qml` owns everything direct control shows:
+
+- The ability row carries Special, Rush, Wind, Aura (only when the commander has one) and Rally. Keycaps read `InputBindings.display_shortcut_for`, so a rebound key is never misreported.
+- The weapon chip names the current weapon and its swap key.
+- The combo pips sit under the reticle.
+- A short toast confirms camera-mode and weapon changes.
+- The stamina bar flashes "WINDED" when `last_input_outcome` reports `InsufficientStamina`.
+- A controls strip, built from the live bindings, fades in on entry and out after a few seconds.
+
+`sync_attack_range_rings` publishes no RTS reach rings while direct control is active. The controlled commander stays selected, and a bow stance's ring otherwise lies across the chase view as a line on the horizon.
+
+When the match reaches a verdict, `GameEngine` leaves commander mode on the GUI thread. Otherwise the captured, recentred pointer could never reach the verdict's buttons.
+
+The autosave and save-progress card moves to the top centre in direct control, clear of the vitals and ability plates.
 
 When the game is paused, the pause binding may resume from any input context even though Space is also a commander dodge binding. The pause overlay names the actual bound key.
 
@@ -389,7 +404,7 @@ Notifications pass glyphs to `IronNotification.icon`, and commander faction labe
 
 Mission speech for `hold_the_sallow_ford` and `the_timber_levy` uses the field commander controlled by the player.
 
-The following integration items remain open: the autosave progress card can cover the battlefield during combat; moving the pointer to a top-bar control can continue feeding mouse-look; the empty production panel says "No Barracks" when it means no barracks is selected; the `C` camera-mode toggle has no visible feedback; and the `X` weapon-stance toggle has feedback while the camera toggle does not.
+The following integration items remain open: moving the pointer to a top-bar control can continue feeding mouse-look, and the empty production panel says "No Barracks" when it means no barracks is selected.
 
 ## Working rules
 
@@ -409,7 +424,7 @@ The following integration items remain open: the autosave progress card can cove
 - Idle-to-action and action-to-idle sword seams still have a visible arm-position discontinuity owned by the base/action blend.
 - Arena `--fps` changes simulation timestep, so it cannot yet prove identical behavior under different presentation sampling rates.
 - The barracks RTS navigation footprint is smaller than its rendered geometry; the RPG person-scale body does not change RTS pathing.
-- Several HUD/integration issues remain: autosave overlay placement, mouse-look over top-bar controls, empty-production wording, and missing feedback for the camera-mode toggle.
+- Two HUD/integration issues remain: mouse-look over top-bar controls and the empty-production wording.
 
 ## Related
 

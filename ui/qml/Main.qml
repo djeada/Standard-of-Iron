@@ -881,6 +881,8 @@ ApplicationWindow {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.bottomMargin: hud.visible ? hud.bottom_panel_height : 0
+        top_anchored: hud.visible && hud.commander_rpg_mode
+        top_margin: hud.visible ? hud.top_panel_height : 0
         z: 30
     }
 

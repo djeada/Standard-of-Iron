@@ -10,6 +10,8 @@ Item {
 
     readonly property var saves: (typeof game !== 'undefined' && game) ? game.saves : null
 
+    property bool top_anchored: false
+    property real top_margin: 0
     property string notice_text: ""
     property bool notice_is_bad: false
     readonly property bool saving: root.saves ? root.saves.save_in_progress : false
@@ -45,9 +47,12 @@ Item {
     Rectangle {
         id: card
 
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        anchors.right: root.top_anchored ? undefined : parent.right
+        anchors.bottom: root.top_anchored ? undefined : parent.bottom
+        anchors.horizontalCenter: root.top_anchored ? parent.horizontalCenter : undefined
+        anchors.top: root.top_anchored ? parent.top : undefined
         anchors.margins: Theme.spacingLarge
+        anchors.topMargin: root.top_anchored ? root.top_margin + Theme.spacingLarge : Theme.spacingLarge
         width: 320
         height: content.implicitHeight + Theme.spacingLarge * 2
         radius: Theme.radiusPanel

@@ -580,9 +580,16 @@ TEST(CommanderControlRegressionTest,
                         "id: combatEntryFlash\n        anchors.fill: parent"));
   EXPECT_FALSE(contains(fpv_overlay_source,
                         "id: guardBreakShock\n        anchors.fill: parent"));
-  EXPECT_TRUE(contains(fpv_overlay_source, "\"key\": \"F\""));
-  EXPECT_TRUE(contains(fpv_overlay_source, "\"key\": \"1\""));
-  EXPECT_TRUE(contains(fpv_overlay_source, "\"key\": \"2\""));
+  EXPECT_TRUE(contains(fpv_overlay_source, "\"action\": \"commander.special_action\""));
+  EXPECT_TRUE(
+      contains(fpv_overlay_source, "\"action\": \"commander.ability_vanguard_rush\""));
+  EXPECT_TRUE(
+      contains(fpv_overlay_source, "\"action\": \"commander.ability_second_wind\""));
+  EXPECT_TRUE(contains(fpv_overlay_source, "\"action\": \"commander.ability_aura\""));
+  EXPECT_TRUE(contains(fpv_overlay_source, "\"action\": \"commander.rally\""));
+  EXPECT_TRUE(
+      contains(fpv_overlay_source, "text: root.key_for(abilityTile.modelData.action)"))
+      << "ability keycaps follow the player's bindings rather than the defaults";
   EXPECT_TRUE(contains(damage_numbers_source, "id: burstCore"));
   EXPECT_TRUE(contains(damage_numbers_source, "id: burstLayer"));
   EXPECT_TRUE(contains(damage_numbers_source, "id: tickLayer"));
